@@ -1,0 +1,31 @@
+Name:	pam-panel-icon
+State:	S (sleeping)
+SleepAVG:	88%
+Tgid:	2701
+Pid:	2701
+PPid:	1
+TracerPid:	0
+Uid:	524	524	524	524
+Gid:	503	503	503	503
+FDSize:	32
+Groups:	501 503 512 
+VmSize:	   12152 kB
+VmLck:	       0 kB
+VmRSS:	    4196 kB
+VmData:	     512 kB
+VmStk:	      64 kB
+VmExe:	      35 kB
+VmLib:	    9101 kB
+StaBrk:	08053000 kB
+Brk:	080b6000 kB
+StaStk:	bffffa60 kB
+ExecLim:	08051000
+Threads:	1
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000020000000
+SigCgt:	0000000180000000
+CapInh:	0000000000000000
+CapPrm:	0000000000000000
+CapEff:	0000000000000000

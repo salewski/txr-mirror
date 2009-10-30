@@ -1,0 +1,2702 @@
+5\"Copyright (C) 2009, Kaz Kylheku <kkylheku@gmail.com>.
+.\"All rights reserved.
+.\"
+.\"BSD License:
+.\"
+.\"Redistribution and use in source and binary forms, with or without
+.\"modification, are permitted provided that the following conditions
+.\"are met:
+.\"
+.\"  1. Redistributions of source code must retain the above copyright
+.\"     notice, this list of conditions and the following disclaimer.
+.\"  2. Redistributions in binary form must reproduce the above copyright
+.\"     notice, this list of conditions and the following disclaimer in
+.\"     the documentation and/or other materials provided with the
+.\"     distribution.
+.\"  3. The name of the author may not be used to endorse or promote
+.\"     products derived from this software without specific prior
+.\"     written permission.
+.\"
+.\"THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
+.\"IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
+.\"WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+.TH txr 1 2009-10-17 "txr v. 018" "Text Extraction Utility"
+.SH NAME
+txr \- text extractor
+.SH SYNOPSIS
+.B txr [ options ] query-file { data-file }*
+.sp
+.SH DESCRIPTION
+.B txr
+is a query tool for extracting pieces of text buried in one or more text
+file based on pattern matching.  A
+.B txr
+query specifies a pattern which matches (a prefix of) entire file, or
+multiple files. The pattern is matched against the material in the files, and
+free variables occurring in the pattern are bound to the pieces of text
+occurring in the corresponding positions. If the overall match is
+successful, then
+.B txr
+can do one of two things: it can report the list of variables which were bound,
+in the form of a set of variable assignments which can be evaluated by the
+.B eval
+command of the POSIX shell language, or generate a custom report according
+to special directives in the query.
+
+In addition to embedded variables which implicitly match text, the
+.B txr
+query language supports a number of directives, for matching text using regular
+expressions, for continuing a match in another file, for searching through a
+file for the place where an entire sub-query matches, for collecting lists, and
+for combining sub-queries using logical conjunction, disjunction and negation.
+
+When
+.B txr
+finds a match for a variable and binds it, if that variable occurs again
+later in the query, the variable's text is substituted, forcing a match for
+that exact text. Thus txr supports a rudimentary form of backreferencing
+unification, if you will. For example, the query
+
+  @FOO=@FOO
+
+will match material from the start of the line until the first equal sign,
+and bind it to the variable
+.IR FOO.
+Then, the material which follows the equal sign to the end of the line must
+match the contents bound to FOO. Hence the line "abc=abc" will match, but
+"abc=xyz" will fail to match.
+
+Generally, the scope of a variable's binding
+extends from its first successful match where the binding is established, to
+the end of the query. Unsuccessful subqueries have no effect on the
+bindings.  Even if a failed subquery is partially successful, all of its
+bindings are thrown away.  Some directives treat the bindings emanating
+from their subqueries in special ways.
+
+.SH ARGUMENTS AND OPTIONS
+
+Options which don't take an argument may be combined together.
+The -v and -q options are mutually exclusive. Of these two, the one which
+occurs in the rightmost position in the argument list dominates.
+The -c and -f options are also mutually exclusive; if both are specified,
+it is a fatal error.
+
+.IP -Dvar=value
+Bind the variable
+.IR var
+to the value
+.IR value
+prior to processing the query. The name is in scope over the entire
+query, so that all occurrence of the variable are substituted and
+match the equivalent text.  If the value contains commas, these
+are interpreted as separators, which give rise to a list value.
+For instance -Da,b,c creates a list of the strings "a", "b" and "c".
+(See Collect Directive bellow). List variables provide a multiple
+match. That is to say, if a list variable occurs in a query, a successful
+match occurs if any of its values matches the text. If more than one
+value matches the text, the first one is taken.
+
+.IP -Dvar
+Binds the variable
+.IR var
+to an empty string value prior to processing the query.
+
+.IP -q
+Quiet operation during matching. Certain error messages are not reported on the
+standard error device (but the if the situations occur, they still fail the
+query). This option does not suppress error generation during the parsing
+of the query, only during its execution.
+
+.IP -v
+Verbose operation. Detailed logging is enabled.
+
+.IP -b
+Suppresses the printing of variable bindings for a successful query, and the
+word .IR false for a failed query. The program still sets an appropriate
+termination status.
+
+.IP -a num
+Specifies the maximum number of array dimensions to use for variables
+arising out of collect. The default is 1. Additional dimensions are
+expressed using numeric suffixes in the generated variable names.
+For instance, consider the three-dimensional list arising out of a triply
+nested collect: ((("a" "b") ("c" "d")) (("e" "f") ("g" "h"))).
+Suppose this is bound to a variable V.  With -a 1, this will be
+reported as:
+
+  V_0_0[0]="a"
+  V_0_1[0]="b"
+  V_1_0[0]="c"
+  V_1_1[0]="d"
+  V_0_0[1]="e"
+  V_0_1[1]="f"
+  V_1_0[1]="g"
+  V_1_1[1]="h"
+
+The leftmost bracketed index is the most major index. That is to say,
+the dimension order is: NAME_m_m+1_..._n[1][2]...[m-1].
+
+.IP -c query
+Specifies the query in the form of a command line argument. If this option is
+used, the query-file argument is omitted. The first non-option argument,
+if there is one, now specifies the first input source rather than a query.
+Queries specified as arguments must properly end in a newline, as if they
+were read from a text file, thus -c "@a" is not a properly formed query.
+
+Example:
+
+  # read two lines "1" and "2" from standard input,
+  # binding them to variables a and b. Standard
+  # input is specified as - and the data
+  # comes from shell "here document" redirection.
+
+  txr -c "@a
+  @b
+  " - <<!
+  1
+  2
+  !
+
+  Output:
+  a=1
+  b=2
+
+The @# comment syntax can be used for better formatting:
+
+  txr -c "@#
+  @a
+  @b
+  "
+
+.IP -f query-file
+Specifies the file from which the query is to be read, instead of the
+query-file argument. This is useful in #! scripts. (See Hash Bang Support
+below).
+
+.IP --help
+Prints usage summary on standard output, and terminates successfully.
+
+.IP --version
+Prints program version standard output, and terminates successfully.
+
+.IP --
+Signifies the end of the option list. This option does not combine with others, so for instance -b- does not mean -b --, but is an error.
+
+.IP -
+This argument is not interpreted as an option, but treated as a filename
+argument. After the first such argument, no more options are recognized. Even
+if another argument looks like an option, it is treated as a name.
+This special argument - means "read from standard input" instead of a file.
+The query file, or any of the data files, may be specified using this option.
+If two or more files are specified as -, the behavior is system-dependent.
+It may be possible to indicate EOF from the interactive terminal, and
+then specify more input which is interpreted as the second file, and so forth.
+
+.PP
+After the options, the remaining arguments are files. The first file argument
+specifies the query, and is mandatory.  A file argument consisting of a single
+- means to read the standard input instead of opening a file. A file argument
+which begins with an exclamation symbol means that the rest of the argument is
+a shell command which is to be run as a coprocess, and its output read like a
+file.
+
+.PP
+.B txr
+begins by reading the query. The entire query is scanned, internalized
+and then begins executing.  No file is opened until the query calls for a match
+for material from that file, but once opened, a file is always read in its
+entirety and stored in memory. A query may complete (successfully or not)
+before opening some or all of the files.
+
+If no files arguments are specified on the command line, it is up to the
+query to open a file, pipe or standard input via the @(next) directive
+prior to attempting to make a match. If a query attempts to match text,
+but has run out of files to process, the match fails.
+
+.SH STATUS AND ERROR REPORTING
+.B txr
+sends errors and verbose logs to the standard error device.  The following paragraphs apply when
+.B txr
+is run without enabling verbose mode. If verbose mode is enabled, then
+.B txr
+issues diagnostics on the standard error device even in situations which are
+not erroneous.
+
+If the command line arguments are incorrect, or the query has a malformed
+syntax, or fails to match,
+.B txr
+issues an error diagnostic and terminates with a failed status.
+
+If the query is accepted, but fails to execute, either due to a
+semantic error or due to a mismatch against the data,
+.B txr
+terminates with a failed status, it also prints the word
+.IR false
+on standard output. (See NOTES ON FALSE below).  Printing of false
+is suppressed if the query executed one or more @(output) directive
+directed to standard output.
+
+If the query is well-formed, and matches, then
+.B txr
+issues no diagnostics on standard error (except in the case of verbose
+reporting enabled by -v).  If no variables were bound in the query, then
+nothing is printed on standard output.  If the query has matched one or more
+variables, then these variables are printed on standard output, in the form of
+a shell script which, when evaluated, will cause shell variables to be
+assigned.  Printing of these variables is suppressed if the query executed one
+or more @(output) directive directed to standard output.
+
+.SH BASIC QUERY SYNTAX AND SEMANTICS
+
+.SS Comments
+
+A query may contain comments which are delimited by the sequence @# and
+extend to the end of the line. No whitespace can occur between the @ and #.
+A comment which begins on a line swallows that entire line, as well as the
+newline which terminates it. In essence, the entire comment disappears.
+If the comment follows some material in a line, then it does not consume
+the newline. Thus, the following two queries are equivalent:
+
+ 1.  @a@# comment: match whole line against variable @a
+     @# this comment disappears entirely
+     @b
+
+ 2.  @a
+     @b
+
+The comment after the @a does not consume the newline, but the
+comment which follows does. Without this intuitive behavior,
+line comment would give rise to empty lines that must match empty
+lines in the data, leading to spurious mismatches.
+
+.SS Hash Bang Support
+
+If the first line of a query begins with the characters #!,
+that entire line is deleted from the query. This allows
+for txr queries to be turned into standalone executable programs in the POSIX
+environment.
+
+Shell example: create a simple executable program called "twoline.txr" and
+run it. This assumes txr is installed in /usr/bin.
+
+  $ cat > twoline.txr
+  #!/usr/bin/txr
+  @a
+  @b
+  [Ctrl-D]
+  $ chmod a+x twoline.txr
+  $ ./twoline.txr -
+  1
+  2
+  [Ctrl-D]
+  a=1
+  b=2
+
+A script written in this manner will not pass options to txr.  For
+instance, if the above script is invoked like this
+
+  ./twoline.txr -Da=42
+
+the -D option isn't passed down to txr; -Da=42 is an ordinary
+argument (which the script will try to open as an input file).
+This behavior is useful if the script author wants not to
+expose the txr options to the user of the script.
+
+However, if the hash bang line can use the -f option:
+
+  #!/usr/bin/txr -f
+
+Now, the name of the script is passed as an argument to the -f option,
+and txr will look for more options after that.
+
+.SS Text
+
+Query material which is not escaped by the special character @ is
+literal text, which matches input character for character. Text which occurs at
+the beginning of a line matches the beginning of a line.  Text which starts in
+the middle of a line, other than following a variable, must match exactly at
+the current position, where the previous match left off. Moreover, if the text
+is the last element in the line, its match is anchored to the end of the line.
+
+The semantics of text matching next to a variable is discussed in the following
+section.
+
+A query may not leave unmatched material in a line which is covered by the
+query.  However, a query may leave unmatched lines.
+
+In the following example, the query matches the text, even though
+the text has an extra line.
+
+ Query:         Four score and seven
+                years ago our
+
+ Text:          Four score and seven
+                years ago our
+                forefathers
+
+In the following example, the query
+.B fails
+to match the text, because the text has extra material on one
+line.
+
+ Query:         I can carry nearly eighty gigs
+                in my head
+
+ Text:          I can carry nearly eighty gigs of data
+                in my head
+
+Needless to say, if the text has insufficient material relative
+to the query, that is a failure also.
+
+To match arbitrary material from the current position to the end
+of a line, the "match any sequence of characters, including empty"
+regular expression @/.*/ can be used. Example:
+
+ Query:         I can carry nearly eighty gigs@/.*/
+
+ Text:          I can carry nearly eighty gigs of data
+
+In this example, the query matches, since the regular expression
+matches the string "of data". (See Regular Expressions section below).
+
+.SS Special Characters in Text
+
+Control characters may be embedded directly in a query (with the exception of
+newline characters). An alternative to embedding is to use escape syntax.
+The following escapes are supported:
+
+.IP @\ea
+Alert character (ASCII 7, BEL).
+.IP @\eb
+Backspace (ASCII 8, BS).
+.IP @\et
+Horizontal tab (ASCII 9, HT).
+.IP @\en
+Line feed (ASCII 10, LF). Serves as abstract newline on POSIX systems.
+.IP @\ev
+Vertical tab (ASCII 11, VT).
+.IP @\ef
+Form feed (ASCII 12, FF). This character clears the screen on many
+kinds of terminals, or ejects a page of text from a line printer.
+.IP @\er
+Carriage return (ASCII 13, CR).
+.IP @\ee
+Escape (ASCII 27, ESC)
+.IP @\exHEX
+A @\ex followed by a sequence of hex digits is interpreted as a hexadecimal
+numeric character code. For instance @\ex41 is the ASCII character A.
+.IP @\eOCTAL
+A @\e followed by a sequence of octal digits (0 through 7) is interpreted
+as an octal character code. For instance @\e010 is character 8, same as @\eb.
+.PP
+
+Note that if a newline is embedded into a query line with @\en, this
+does not split the line into two; it's embedded into the line and
+thus cannot match anything. However, @\en may be useful in the @(cat)
+directive and in @(output).
+
+.SS Variables
+
+Much of the query syntax consists of arbitrary text, which matches file data
+character for character. Embedded within the query may be variables and
+directives which are introduced by a @ character.  Two consecutive @@
+characters encode a literal @.
+
+A variable matching or substitution directive is written in one of several
+ways:
+
+  @NAME
+  @{NAME}
+  @*NAME
+  @*{NAME}
+  @{NAME /RE/}
+  @{NAME NUMBER}
+
+The forms with an * indicate a long match, see Longest Match below.
+The last two forms with the embedded regexp /RE/ or number have special
+semantics, see Positive Match below.
+
+The name itself may consist of any combination of one or more letters, numbers,
+and underscores, and must begin with a letter or underscore.  Case is
+sensitive, so that @FOO is different from @foo, which is different from @Foo.
+The braces around a name can be used when material which follows would
+otherwise be interpreted as being part of the name. For instance @FOO_bar
+introduces the name "FOO_bar", whereas @{FOO}_bar means the variable named
+"FOO" followed by the text "_bar".   There may be whitespace between the @ and
+the name, or opening brace. Whitespace is also allowed in the interior of the
+braces. It is not significant.
+
+If a variable has no prior binding, then it specifies a match. The
+match is determined from some current position in the data: the
+character which immediately follows all that has been matched previously.
+If a variable occurs at the start of a line, it matches some text
+at the start of the line. If it occurs at the end of a line, it matches
+everything from the current position to the end of the line.
+
+The extent of the matched text (the text bound to the variable) is determined
+by looking at what follows the variable.  A variable may be followed by a piece
+of text, a regular expression directive, another variable, or nothing (i.e.
+occurs at the end of a line).
+
+If the variable is followed by nothing, the
+match extends from the current position in the data, to the end of the line.
+Example:
+
+  pattern:      "a b c @FOO"
+  data:         "a b c defghijk"
+  result:       FOO="defghijk"
+
+If the variable is followed by text (all non-directive material extending to
+the end of the line, or to the start of another directive), then the extent of
+the match is determined by searching for the first occurrence of that text
+within the line, starting at the current position. The variable matches
+everything between the current position and the matching position (not
+including the matching position). Any whitespace which follows the
+variable (and is not enclosed inside braces that surround the variable
+name) is part of the text. For example:
+
+  pattern:      "a b @FOO e f"
+  data:         "a b c d e f"
+  result:       FOO="c d"
+
+In the above example, the pattern text "a b " matches the
+data "a b ". So when the @FOO variable is processed, the data being
+matched is the remaining "c d e f". The text which follows @FOO
+is " e f". This is found within the data "c d e f" at position 3
+(counting from 0).  So positions 0-2 ("c d") constitute the matching
+text which is bound to FOO.
+
+If the variable is followed by a regular expression directive,
+the extent is determined by finding the closest match for the
+regular expression. (See Regular Expressions section below).
+
+.SS Consecutive Variables
+
+If an unbound variable is followed by another unbound variable, the
+combination is a semantic error which will fail the query. A
+diagnostic message will be issued, unless operating in quiet mode via -q.
+The reason is that there is no way to bind two consecutive variables to
+an extent of text; this is an ambiguous situation, since there is no
+matching criterion for dividing the text between two variables.
+(In theory, a repetition of the same variable, like @FOO@FOO, could
+find a solution by dividing the match extent in half, which would work
+only in the case when it contains an even number of characters.
+This behavior seems to have dubious value).
+
+An unbound variable may be followed by one which is bound. The bound
+variable is replaced by the text which it denotes, and the logic proceeds
+accordingly.  Variables are never bound to regular expressions, so
+the regular expression match does not arise in this case.
+The @* syntax for longest match is available. Example:
+
+  pattern:      "@FOO:@BAR@FOO"
+  data:         "xyz:defxyz"
+  result:       FOO=xyz, BAR=def
+
+Here, FOO is matched with "xyz", based on the delimiting around the
+colon. The colon in the pattern then matches the colon in the data,
+so that BAR is considered for matching against "defxyz".
+BAR is followed by FOO, which is already bound to "xyz".
+Thus "xyz" is located in the "defxyz" data following "def",
+and so BAR is bound to "def".
+
+If an unbound variable is followed by a variable which is bound to a list, or
+nested list, then each character string in the list is tried in turn to produce
+a match. The first match is taken.
+
+.SS Longest Match
+
+The closest-match behavior for text and regular expressions can be
+overridden to longest match behavior. A special syntax is provided
+for this: an asterisk between the @ and the variable, e.g:
+
+  pattern:      "a @*{FOO}cd"
+  data:         "a b cdcdcdcd"
+  result:       FOO="b cdcdcd"
+
+  pattern:      "a @{FOO}cd"
+  data:         "a b cdcdcd"
+  result:       FOO="b "
+
+In the former example, the match extends to the rightmost occurrence of "cd",
+and so FOO receives "b cdcdcd".  In the latter example, the *
+syntax isn't used, and so a leftmost match takes place. The extent
+covers only the "b ", stopping at the first "cd" occurrence.
+
+.SS Positive Match
+
+The syntax variants
+
+ @{NAME /RE/}
+ @{NAME NUMBER}
+
+specify a variable binding that is driven by a positive match derived
+from a regular expression or character count, rather than from trailing
+material (which may be regarded as a "negative" match, since the variable is
+bound to material which is
+.B skipped
+in order to match the trailing material). In the /RE/ form, the match
+extends over all characters from the current position which match
+the regular expression RE.
+
+In the NUMBER form, the match processes a field of text which
+consists of the specified number of characters, which must be nonnegative
+number.  If the data line doesn't have that many characters starting at the
+current position, the match fails. A match for zero characters produces an
+empty string.  The text which is actually matched by this construct
+is all text within the specified field, but excluding leading and
+trailing whitespace. If the field contains only spaces, then an empty
+string is extracted.
+
+A number is made up of digits, optionally preceded by a + or - sign.
+
+This syntax is processed without consideration of what other
+syntax follows.  A positive match may be directly followed by an unbound
+variable.
+
+.SS Regular Expressions
+
+Like text, a regular expression (regexp) must match text in the data.  A regexp
+which occurs at the beginning of a line matches the beginning of a line.  A
+regexp which occurs elsewhere, other than following a variable, must match
+exactly starting at the current position, where the previous match left off. A
+regexp which occurs at the end of a line must match from the current position
+to the end of the line.
+
+The semantics of a regular expression which follow variables is
+discussed in the preceding section Variables.
+
+A regular expression, as a standalone directive, looks like this:
+
+  @/RE/
+
+where RE is regular expression syntax.
+.B txr
+contains an original implementation of regular expressions, which
+supports the following syntax:
+.IP .
+matches any character.
+.IP []
+Character class: matches a single character, from the set specified by
+the class. Supports basic regexp character class syntax; no POSIX
+notation like [:digit:]. The class [a-zA-Z] means match an uppercase
+or lowercase letter; the class [0-9a-f] means match a digit or
+a lowercase letter, the class [^0-9] means match a non-digit, et cetera.
+A ] or - can be used within a character class, but must be escaped
+with a backslash. Two backslashes code for one backslash. So
+for instance [\e[\e-] means match a [ or - character, [^^] means match
+any character other than ^, and [\e^\e\e] means match either a ^ or a
+backslash.
+.IP (RE)
+If RE is a regular expression, then so is (RE).
+The contents of parentheses denote one regular expression unit, so that for
+instance in (RE)*, the * operator applies to the entire parenthesized group.
+.IP (RE)?
+optionally matches the preceding regular expression (RE).
+.IP (RE)+
+matches the preceding expression one or more times.
+.IP (RE)*
+matches the preceding expression zero or more times.
+.IP (RE1)(RE2)
+Two consecutive regular expressions denote catenation:
+the left expression must match, and then the right.
+
+.IP (RE1)|(RE2)
+matches either the expression RE1 or RE2.
+
+.PP
+Any of the special characters, including the delimiting /,  can be escaped with
+a backslash to suppress its meaning and denote the character itself.
+
+Furthermore, all of the same escapes are as described in the section Special
+Characters in Text above---the difference is that in regular expressions, the @
+character is not required, so for example a tab is coded as \et rather
+than @\e\t.
+
+Any escaped character which does not fall into the above escaping conventions,
+or any unescaped character which is not a regular expression operator, denotes
+one-position match of that character itself.
+
+Character classes and parentheses have the highest precedence.
+
+The postfix operators ?, + and * have the second highest precedence, and
+associate left to right, so that in A+?*, the * applies to A+?, and the ?
+applies to A+.
+
+Catenation is on the next lower precedence rung, so that AB? means "match A,
+and then optionally B" not "match A and B, as one optional unit".  The latter
+must be written (AB)?  using parentheses to override precedence.
+
+The disjunction operator | has the lowest precedence, lower than catenation.
+Thus abc|def means "match abc, or match def". The meaning "match ab,
+then c or d, then ef" must be expressed as ab(c|d)ef, or using
+a character class: ab[cd]ef.
+
+In
+.b txr,
+regular expression matches do not span multiple lines. There is no way
+to match a newline character since it's simply not internally represented in
+the data.
+
+It's possible for a regular expression to match an empty string.
+For instance, if the next input character is z, facing a
+the regular expression /a?/, there is a zero-character match:
+the regular expression's state machine can reach an acceptance
+state without consuming any characters. Examples:
+
+  pattern:      @A@/a?/@/.*/
+  data:         zzzzz
+  result:       A=""
+
+  pattern:      @{A /a?/}@B
+  data:         zzzzz
+  result:       A="", B="zzzz"
+
+  pattern:      @*A@/a?/
+  data:         zzzzz
+  result:       A="zzzzz"
+
+In the first example, variable @A is followed by a regular expression
+which can match an empty string. The expression faces the letter "z"
+at position 0 in the data line. A zero-character match occurs there,
+therefore the variable A takes on the empty string. The @/.*/ regular
+expression then consumes the line.
+
+Similarly, in the second example, the /a?/ regular expression faces
+a "z", and thus yields an empty string which is bound to A. Variable
+@B consumes the entire line.
+
+The third example request the longest match for the variable binding.
+Thus, a search takes place for the rightmost position where the
+regular expression matches. The regular expression matches anywhere,
+including the empty string after the last character, which is
+the rightmost place. Thus variable A fetches the entire line.
+
+.SS Directives
+
+The general syntax of a directive is:
+
+  @EXPR
+
+where expr is a parenthesized list of subexpressions. A subexpression
+is an symbol, number, string literal, character literal, quasiliteral, regular
+expression, or a parenthesized expression.  So, examples of syntactically valid
+directives are:
+
+  @(banana)
+
+  @(a b c (d e f))
+
+  @(  a (b (c d) (e  ) ))
+
+  @("apple" 'b' 3)
+
+  @(a /[a-z]*/ b)
+
+  @(_ `@file.txt`)
+
+A symbol is lexically the same thing as a variable and the same rules
+apply. Tokens that look like numbers are treated as numbers.
+
+String and character literals are delimited by double and single quotes,
+respectively, and may not span multiple lines. Character literals must contain
+exactly one character. Character and numeric escapes may be used within
+literals to escape the quotes, and to denote control characters.
+
+Quasiliterals are similar to string literals, except that they may
+contain variable references denoted by the usual @ syntax. The quasiliteral
+represents a string formed by substituting the values of those variables
+into the literal template. If a is bound to "apple" and b to "banana",
+the quasiliteral `one@a and two @{b}s` represents the string
+"one apple and two bananas". A backquote escaped by a backslash represents
+itself, and two consecutive @ characters code for a literal @.
+There is no \e@ escape.
+
+Some directives are involved in structuring the overall syntax of the query.
+
+There are syntactic constraints that depend on the directive.  For instance the
+@(next) directive can take argument material, which is everything that follows
+on the same line, until the end of the line.  But @(skip) does not take
+argument material.  Most directives must be the first item of a line.
+
+A summary of the available directives follows:
+
+.IP @(next)
+Continue matching in another file.
+
+.IP @(block)
+The remaining query is treated as an anonymous or named block.
+Blocks may be referenced by @(accept) and @(fail) directives.
+Blocks are discussed in the section BLOCKS below.
+
+.IP @(skip)
+Treat the remaining query as a subquery unit, and search the lines of
+the input file until that subquery matches somewhere.
+A skip is also an anonymous block.
+
+.IP @(trailer)
+Treat the remaining query or subquery as a match for a trailing context. That
+is to say, if the remainder matches, the data position is not advanced.
+
+.IP @(some)
+Match some clauses in parallel. At least one has to match.
+
+.IP @(all)
+Match some clauses in parallel. Each one must match.
+
+.IP @(none)
+Match some clauses in parallel. None must match.
+
+.IP @(maybe)
+Match some clauses in parallel, which may or may not match.
+No failure occurs if none match.
+
+.IP @(cases)
+Match some clauses sequentially, stopping if one of them
+matches successfully.
+
+.IP @(define NAME ( ARGUMENTS ...))
+Introduces a function. Functions are discussed in the FUNCTIONS section below.
+
+.IP @(collect)
+Search the data for multiple matches of a clause. Collect the
+bindings in the clause into lists, which are output as array variables.
+The @(collect) directive is line oriented. It works with a multi-line
+pattern and scans line by line. A similar directive called @(coll)
+works within one line.
+
+A collect is an anonymous block.
+
+.IP @(and)
+Separator of clauses for @(some), @(all), and @(none).
+Equivalent to @(or). Choice is stylistic.
+
+.IP @(or)
+Separator of clauses for @(some), @(all), and @(none).
+Equivalent to @(and). Choice is stylistic.
+
+.IP @(end)
+Required terminator for @(some), @(all), @(none), @(maybe), @(cases),
+@(collect), @(output), and @(repeat).
+
+.IP @(fail)
+Terminate the processing of a block, as if it were a failed match.
+Blocks are discussed in the section BLOCKS below.
+
+.IP @(accept)
+Terminate the processing of a block, as if it were a successful match.
+What bindings emerge may depend on the kind of block: collect
+has special semantics.  Blocks are discussed in the section BLOCKS below.
+
+.IP @(try)
+Indicates the start of a try block, which is related to exception
+handling, discussed in the EXCEPTIONS section below.
+
+.IP @(catch), @(finally)
+Special clauses within @(try). See EXCEPTIONS below.
+
+.IP @(defex), @(throw)
+Define custom exception types; throw an exception.  See EXCEPTIONS below.
+
+.IP @(flatten)
+Normalizes a set of specified variables to one-dimensional lists. Those
+variables which have scalar value are reduced to lists of that value.
+Those which are lists of lists (to an arbitrary level of nesting) are converted
+to flat lists of their leaf values.
+
+.IP @(merge)
+Binds a new variable which is the result of merging two or more
+other variables. Merging has somewhat complicated semantics.
+
+.IP @(cat)
+Decimates a list (any number of dimensions) to a string, by catenating its
+constituent strings, with an optional separator string between all of the
+values.
+
+.IP @(bind)
+Binds one or more variables against another variable using a structural
+pattern. A limited form of unification takes place which can cause a match to
+fail.
+
+.IP @(output)
+A directive which encloses an output clause in the query. An output section
+does not match text, but produces text. The directives above are not
+understood in an output clause.
+
+.IP @(repeat)
+A directive understood within an @(output) section, for repeating multi-line
+text, with successive substitutions pulled from lists. A version @(rept)
+produces repeated text within one line.
+
+.PP
+
+.SS The Next Directive
+
+The next directive comes in two forms, one of which is obsolescent
+syntax.  The directive indicates that the remainder of the query
+is to be applied to a new input source.
+
+In the first form, it can occur by itself as the only element in a query line,
+with, or without arguments:
+
+  @(next)
+  @(next SOURCE)
+  @(next SOURCE nothrow)
+  @(next args)
+
+The lone @(next) without arguments switches to the next file in the
+argument list which was passed to the
+.B txr
+utility. If SOURCE is given, it must be text-valued expression which denotes an
+input source; it may be a string literal, quasiliteral or a variable.
+For instance, if variable A contains the text "data", then
+
+  @(next A)
+
+means switch to the file called "data", and
+
+  @(next `@A.txt`)
+
+means to switch to the file "data.txt".
+
+If the input source cannot be opened for whatever reason,
+.B txr
+throws an exception (see EXCEPTIONS below). An unhandled exception will
+terminate the program.  Often, such a drastic measure is inconvenient;
+if @(next) is invoked with the nothrow keyword, then if the input
+source cannot be opened, the situation is treated as a simple
+match failure.
+
+The variant @(next args) means that the remaining command line arguments are to
+be treated as a data source. For this purpose, each argument is considered to
+be a line of text. If an argument is currently being processed as an input
+source, that argument is included. Note that if the first entry in the argument
+list does not name an input source, then the query should begin with
+@(next args) or some other form of next directive, to prevent an attempt to
+open the input source named by that argument. If the very first directive of a query is any variant of the next directive, then
+.B txr
+avoids opening the first input source, but it does open the input source for
+any other directive, even one which does not consume any data.
+
+In the obsolescent second form, @(next) is followed by material on the same
+line, which may contain variables.  All of the variables must be bound. For
+example:
+
+  @(next)/path/to/@foo.txt
+
+The trailing material specifies gives the input source.
+The nothrow behavior is implicit in this form. The syntax will
+disappear in some future version of
+.B txr
+.
+
+
+Note that "remainder of the query" refers to the subquery in which
+the next directive appears, not necessarily the entire query.
+
+For example, the following query looks for the line starting with "xyz"
+at the top of the file "foo.txt", within a some directive.
+After the @(end) which terminates the @(some), the "abc" is matched in the
+current file.
+
+  @(some)
+  @(next "foo.txt")
+  xyz@suffix
+  @(end)
+  abc
+
+However, if the @(some) subquery successfully matched "xyz@suffix" within the
+file foo.text,  there is now a binding for the suffix variable, which
+is globally visible to the remainder of the entire query.
+
+The @(next) directive supports the file name conventions as the command
+line. The name - means standard input. Text which starts with a ! is
+interpreted as a shell command whose output is read like a file.  These
+interpretations are applied after variable substitution. If the file is
+specified as @a, but the variable a expands to "!echo foo", then the output of
+the "echo foo" command will be processed.
+
+.SS The Skip Directive
+
+The skip directive considers the remainder of the query as a search
+pattern. The remainder is no longer required to strictly match at the
+current line in the current file. Rather, the current file is searched,
+starting with the current line, for the first line where the entire remainder
+of the query will successfully match. If no such line is found, the skip
+directive fails. If a matching position is found, the remainder of
+the query is understood to be processed there.
+
+Of course, the remainder of the query can itself contain skip directives.
+Each such directive performs a recursive subsearch.
+
+The skip directive has an optional numeric argument. The value of this
+argument limits the range of lines scanned for a match. Judicious use
+of this feature can improve the performance of queries.
+
+Example: scan until "size: @SIZE" matches, which must happen within
+the next 15 lines:
+
+  @(skip 15)
+  size: @SIZE
+
+Without the range limitation skip will keep searching until it consumes
+the entire input source. While sometimes this is what is intended,
+often it is not. Sometimes a skip is nested within a collect, or
+following another skip. For instance, consider:
+
+  @(collect)
+  begin @BEG_SYMBOL
+  @(skip)
+  end @BEG_SYMBOL
+  @(end)
+
+The collect iterates over the entire input. But, potentially, so does
+the skip. Suppose that "begin x" is matched, but the data has no
+matching "end x". The skip will search in vain all the way to the end of the
+data, and then the collect will try another iteration back at the
+beginning, just one line down from the original starting point.  If it is a
+reasonable expectation that an "end x" occurs 15 lines of a "begin x", this can
+be written instead:
+
+  @(collect)
+  begin @BEG_SYMBOL
+  @(skip 15)
+  end @BEG_SYMBOL
+  @(end)
+
+.SS The Trailer directive
+
+The trailer directive introduces a trailing portion of a query or subquery
+which matches input material normally, but in the event of a successful match,
+does not advance the current position. This can be used, for instance, to
+cause @(collect) to match partially overlapping regions.
+
+Example:
+
+  @(collect)
+  @line
+  @(trailer)
+  @(skip)
+  @line
+  @(end)
+
+This script collects each line which has a duplicate somewhere later
+in the input. Without the @(trailer) directive, this does not work properly
+for inputs like:
+
+  111
+  222
+  111
+  222
+
+Without @(trailer), the first duplicate pair constitutes a match which
+spans over the 222. After that pair is found, the matching continues
+after the second 111.
+
+With the @(trailer) directive in place, the collect body, on each
+iteration, only consumes the lines matched prior to @(trailer).
+
+.SS The Some, All, None and Maybe directives
+
+These directives combine multiple subqueries, which are applied at the same position in parallel. The syntax of all three follows this example:
+
+  @(some)
+  subquery1
+  .
+  .
+  .
+  @(and)
+  subquery2
+  .
+  .
+  .
+  @(and)
+  subquery3
+  .
+  .
+  .
+  @(end)
+
+The @(some), @(all) or @(none) directive must appear as the only element in a
+query line. It must be followed by at least one subquery clause, and terminated
+by @(end). If there are two or more subqueries, these additional clauses are
+indicated by @(and) or @(or), which are interchangeable.  The @(and), @(or) and
+@(end) directives also must appear as the only element in a query line.
+
+The syntax supports arbitrary nesting. For example:
+
+  QUERY:            SYNTAX TREE:
+
+  @(all)            all -+
+  @  (skip)              +- skip -+
+  @  (some)              |        +- some -+
+  it                     |        |        +- TEXT
+  @  (and)               |        |        +- and
+  @    (none)            |        |        +- none -+
+  was                    |        |        |        +- TEXT
+  @    (end)             |        |        |        +- end
+  @  (end)               |        |        +- end
+  a dark                 |        +- TEXT
+  @(end)                 *- end
+
+nesting can be indicated using whitespace between @ and the
+directive expression. Thus, the above is an @(all) query containing a @(skip)
+clause which applies to a @(some) that is followed by the the text
+line "a dark". The @(some) clause combines the text line "it",
+and a @(none) clause which contains just one clause consisting of
+the line "was".
+
+The semantics of the some, all, none, maybe and cases directives is:
+
+.IP @(all)
+Each of the clauses is matched at the current position. If any of the
+clauses fails to match, the directive fails (and thus does not produce
+any variable bindings).
+
+.IP @(some)
+Each of the clauses is matched at the current position. If any
+of the clauses succeed, the directive succeeds. The bindings from
+all successful clauses are retained.
+
+.IP @(none)
+Each of the clauses is matched at the current position. The
+directive succeeds only if all of the clauses fail. If
+any clause succeeds, the directive fails. Thus, this
+directive never produces variable bindings.
+
+.IP @(maybe)
+Each of the clauses is matched at the current position.
+The directive succeeds even if all of the clauses fail.
+Whatever bindings are found in any of the clauses are
+retained.
+
+.IP @(cases)
+The clauses are matched, in order, at the current position.
+If any clause matches, the matching stops and the bindings
+collected from that clause are retained. Any remaining clauses
+after that one are not processed. If no clause matches, the
+directive fails, and produces no bindings.
+
+When a @(some), @(all), or @(cases) directive matches successfully, or a
+@(maybe) directive matches in at least one of its clauses, the query advances
+by the greatest number of lines matched in any of the subclauses. For instance
+if there are two subclauses, and one of them matches three lines, but the other
+one matches five lines, then the overall clause is considered to have made a
+five line match at its position. If more directives follow, they begin matching
+five lines down from that position.
+
+.SS The Collect Directive
+
+The syntax of the collect directive is:
+
+  @(collect)
+  ... lines of subquery
+  @(end)
+
+or with an until clause:
+
+  @(collect)
+  ... lines of subquery: main clause
+  @(until)
+  ... lines of subquery: until clause
+  @(end)
+
+
+The subquery is matched repeatedly, starting at the current line.
+If it fails to match, it is tried starting at the subsequent line.
+If it matches successfully, it is tried at the line following the
+entire extent of matched data, if there is one. Thus, the collected regions do
+not overlap.
+
+The collect as a whole always succeeds, even if the subquery does not match at
+any position, and even if the until clause does not match. That is to say, a
+query will never fail for the reason that a collect didn't collect anything.
+
+If no until clause is specified, the collect is unbounded. It consumes the entire data file. If any query material follows such the collect clause, it will
+fail if it tries to match anything in the current file; but of course, it
+is possible to continue matching in another file by means of @(next).
+
+If an until clause is specified, the collection stops when that clause matches
+at the current position. When an until clause matches at a position,
+no bindings are collected at that position, even if the main clause
+matches at that position also. Moreover, the position is not advanced.
+The remainder of the query begins matching at that position.
+
+Example:
+
+  Query:        @(collect)
+                @a
+                @(until)
+                42
+                @(end)
+
+  Data:         1
+                2
+                3
+                42
+                5
+                6
+
+  Output:       a[0]="1"
+                a[1]="2"
+                a[2]="3"
+
+The line 42 is not collected, even though it matches @a.
+
+The binding variables within the clause of a collect are treated specially.
+The multiple matches for each variable are collected into lists,
+which then appear as array variables in the final output.
+
+Example:
+
+  Query:        @(collect)
+                @a:@b:@c
+                @(end)
+
+  Data:         John:Doe:101
+                Mary:Jane:202
+                Bob:Coder:313
+
+  Output:
+                a[0]="John"
+                a[1]="Mary"
+                a[2]="Bob"
+                b[0]="Doe"
+                b[1]="Jane"
+                b[2]="Coder"
+                c[0]="101"
+                c[1]="202"
+                c[2]="313"
+
+The query matches the data in three places, so each variable becomes
+a list of three elements, reported as an array.
+
+Variables with list bindings may be referenced in a query. They denote a
+multiple match. The -D command line option can establish a one-dimensional
+list binding.
+
+Collect clauses may be nested.   Variable matches collated into lists in an
+inner collect, are again collated into nested lists in the outer collect.
+Thus an unbound variable wrapped in N nestings of @(collect) will
+be an N-dimensional list. A one dimensional list is a list of strings;
+a two dimensional list is a list of lists of strings, etc.
+
+It is important to note that the variables which are bound within the main
+clause of a collect---i.e. the variables which are subject to
+collection---appear, within the collect, as normal one-value bindings. The
+collation into lists happens outside of the collect. So for instance in the
+query:
+
+ @(collect)
+ @x=@x
+ @(end)
+
+The left @x establishes a binding for some material preceding an equal sign.
+The right @x refers to that binding. The value of @x is different in each
+iteration, and these values are collected. What finally comes out of the
+collect clause is list variable called x which holds each value that
+was ever instantiated under that name within the collect clause.
+
+Also note that the until clause has visibility over the bindings
+established in the main clause. This is true even in the terminating
+case when the until clause matches, and the bindings of the main clause
+are discarded.
+
+.SS The Coll Directive
+
+The coll directive is a kind of miniature version of the collect directive.
+Whereas the collect directive works with multi-line clauses on line-oriented
+material, coll works within a single line. With coll, it is possible to
+recognize repeating regularities within a line and collect lists.
+
+Regular-expression based Positive Match variables work well with coll.
+
+Example: collect a comma-separated list, terminated by a space.
+
+  pattern:  @(coll)@{A /[^, ]+/}@(until) @(end)@B
+  data:     foo,bar,xyzzy blorch
+  result:   A[0]="foo"
+            A[1]="bar"
+            A[2]="xyzzy"
+            B=blorch
+
+Here, the variable A is bound to tokens which match the regular
+expression /[^, ]+/: non-empty sequence of characters other than commas or
+spaces.
+
+Like its big cousin, the coll directive searches for matches.  If no match
+occurs at the current character position, it tries at the next character
+position. Whenever a match occurs, it continues at the character position which
+follows the last character of the match, if such a position exists.
+
+If not bounded by an until clause, it will exhaust the entire line.  If the
+until clause matches, then the collection stops at that position,
+and any bindings from that iteration are discarded.
+
+Coll clauses nest, and variables bound within a coll are available to within
+the rest of the coll clause, including the until clause, and appear as single
+values.  The final list aggregation is only visible after the coll clause.
+
+The behavior of coll is troublesome, when delimited variables are used,
+because in text file formats, the material which separates items is not
+repeated after the last item. For instance, a comma-separated list usually
+not appear as "a,b,c," but rather "a,b,c". There might not be any explicit
+termination---the last item might be at the very end of the line.
+
+So for instance, the following result is not satisfactory:
+
+  pattern:      @(coll)@a @(end)
+  data:         1 2 3 4 5
+  result:       a[0]="1"
+                a[1]="2"
+                a[2]="3"
+                a[3]="4"
+
+What happened to the 5? After matching "4 ", coll continues to look for
+matches. It tries "5", which does not match, because it is not followed by a
+space. Then the line is consumed.  So in this sequence, a valid item is either
+followed by a space, or by nothing. So it is tempting to try this:
+
+  pattern:      @(coll)@a@/ ?/@(end)
+  data:         1 2 3 4 5
+  result:       a[0]=""
+                a[1]=""
+                a[2]=""
+                a[3]=""
+                a[4]=""
+                a[5]=""
+                a[6]=""
+                a[7]=""
+                a[8]=""
+
+however, the problem is that the regular expression / ?/ (match either a space
+or nothing), matches at any position.  So when it is used as a variable
+delimiter, it matches at the current position, which binds the empty string to
+the variable, the extent of the match being zero. In this situation, the coll
+directive proceeds character by character. The solution is to use
+positive matching: specify the regular expression which matches the item,
+rather than a trying to match whatever follows.  The collect directive will
+recognize all items which match the regular expression.
+
+  pattern:      @(coll)@{a /[^ ]+/}@(end)
+  data:         1 2 3 4 5
+  result:       a[0]="1"
+                a[1]="2"
+                a[2]="3"
+                a[3]="4"
+                a[4]="5"
+
+The until clause can specify a pattern which, when recognized, terminates
+the collection. So for instance, suppose that the list of items may
+or may not be terminated by a semicolon. We must exclude
+the semicolon from being a valid character inside an item, and
+add an until clause which recognizes a semicolon:
+
+  pattern:      @(coll)@{a /[^ ;]+/}@(until);@(end);
+
+  data:         1 2 3 4 5;
+  result:       a[0]="1"
+                a[1]="2"
+                a[2]="3"
+                a[3]="4"
+                a[4]="5"
+
+  data:         1 2 3 4 5;
+  result:       a[0]="1"
+                a[1]="2"
+                a[2]="3"
+                a[3]="4"
+                a[4]="5"
+
+Semicolon or not, the items are collected properly.
+
+Note that the @(end) is followed by a semicolon. That's because
+when the @(until) clause meets a match, the matching material
+is not consumed.
+
+.SS The Flatten Directive.
+
+The flatten directive can be used to convert variables to one dimensional
+lists. Variables which have a scalar value are converted to lists containing
+that value. Variables which are multidimensional lists are flattened to
+one-dimensional lists.
+
+Example (without @(flatten))
+
+  pattern:      @b
+                @(collect)
+                @(collect)
+                @a
+                @(end)
+                @(end)
+
+  data:         0
+                1
+                2
+                3
+                4
+                5
+
+  result:       b="0"
+                a_0[0]="1"
+                a_1[0]="2"
+                a_2[0]="3"
+                a_3[0]="4"
+                a_4[0]="5"
+
+Example (with flatten):
+
+  pattern:      @b
+                @(collect)
+                @(collect)
+                @a
+                @(end)
+                @(end)
+                @(flatten a b)
+
+  data:         0
+                1
+                2
+                3
+                4
+                5
+
+  result:       b[0]="0"
+                a[0]="1"
+                a[1]="2"
+                a[2]="3"
+                a[3]="4"
+                a[4]="5"
+
+
+.SS The Cat Directive
+
+The @(cat) directive converts a list variable into a single
+piece of text. Optionally, a separating piece of text can be inserted
+in between the elements. This piece is written to the right of
+the @(cat) directive, and spans to the end of the line. It may
+contain variable substitutions.
+
+Example:
+
+  pattern:      @(coll)@{a /[^ ]+/}@(end)
+                @(cat a):
+  data:         1 2 3 4 5
+  result:       a="1:2:3:4:5"
+
+
+.SS The Bind Directive
+
+The @(bind) directive is a kind of pattern match, which matches one or more
+variables on the left hand side to the value of a variable on the right hand
+side.  The right hand side variable must have a binding, or else the directive
+fails. Any variables on the left hand side which are unbound receive a matching
+piece of the right hand side value. Any variables on the left which are already
+bound must match their corresponding value, or the bind fails. Any variables
+which are already bound and which do match their corresponding value remain
+unchanged (the match can be inexact).
+
+The simplest bind is of one variable against itself, for instance bind A
+against A:
+
+  @(bind A A)
+
+This will fail if A is not bound, (and complain loudly). If A is bound, it
+succeeds, since A matches A.
+
+The next simplest bind binds one variable to another:
+
+  @(bind A B)
+
+Here, if A is unbound, it takes on the same value as B. If A is bound, it has
+to match B, or the bind fails. Matching means that either
+
+- A and B are the same text
+- A is text, B is a list, and A occurs within B.
+- vice versa: B is text, A is a list, and B occurs within A.
+- A and B are lists and are either identical, or one is
+  found as substructure within the other.
+
+The right hand side does not have to be a variable. It may be some other
+object, like a string, or list of strings, et cetera. For instance
+
+  @(bind A "ab\tc")
+
+will bind the string "ab\tc" (the letter a, b, a tab character, and c)
+to the variable A if A is unbound. If A is bound, this will fail unless
+A already contains an identical string.
+
+The left hand side of a bind can be a nested list pattern containing variables.
+The last item of a list at any nesting level can be preceded by a dot, which
+means that the variable matches the rest of the list from that position.
+
+Example: suppose that the list A contains ("now" "now" "brown" "cow"). Then the
+directive @(bind (H N . C) A), assuming that H, N and C are unbound variables,
+will bind H to "how", N to "now", and C to the remainder of the list ("brown"
+"cow").
+
+Example: suppose that the list A is nested to two dimensions and  contains
+(("how" "now") ("brown" "cow")). Then @(bind ((H N) (B C)) A)
+binds H to "how", N to "now", B to "brown" and C to "cow".
+
+The dot notation may be used at any nesting level. it must be preceded and
+followed by a symbol: the forms (.) (. X) and (X .) are invalid.
+
+.SH BLOCKS
+
+.SS Introduction
+
+Blocks are sections of a query which are denoted by a name. Blocks denoted by
+the name nil are understood as anonymous.
+
+The @(block NAME) directive introduces a named block, except when the name is
+the word nil.  The @(block) directive introduces an unnamed block, equivalent
+to @(block nil).
+
+The @(skip) and @(collect) directives introduce implicit anonymous blocks,
+as do function bodies.
+
+.SS Block Scope
+
+The names of blocks are in a distinct namespace from the variable binding
+space. So @(block foo) has no interaction with the variable @foo.
+
+A block extends from the @(block ...) directive which introduces it,
+to the end of the subquery in which that directive is contained. For instance:
+
+  @(some)
+  abc
+  @(block foo)
+  xyz
+  @(end)
+
+Here, the block foo occurs in a @(some) clause, and so it extends to the @(end)
+which terminates that clause.  After that @(end), the name foo is not
+associated with a block (is not "in scope"). A block which is not contained in
+any subquery extends to the end of the overall query.  Blocks are never
+terminated by @(end).
+
+The implicit anonymous blocks introduced by @(skip) has the same scope
+as the @(skip): it extends over all of the material which follows the skip, to the end of the containing subquery.
+
+The scope of the implicit anonymous block introduced by @(collect) spans only
+that collect coincides with the scope of that collect: from the @(collect)
+to its matching @(end).
+
+.SS Block Nesting
+
+Blocks may nest, and nested blocks may have the same names as blocks in
+which they are nested. For instance:
+
+  @(block)
+  @(block)
+  ...
+
+is a nesting of two anonymous blocks, and
+
+  @(block foo)
+  @(block foo)
+
+is a nesting of two named blocks which happen to have the same name.
+When a nested block has the same name as an outer block, it creates
+a block scope in which the outer block is "shadowed"; that is to say,
+directives which refer to that block name within the nested block refer to the
+inner block, and not to the outer one.
+
+A more complicated example of nesting is:
+
+  @(skip)
+  abc
+  @(block)
+  @(some)
+  @(block foo)
+  @(end)
+
+Here, the @(skip) introduces an anonymous block. The explicit anonymous
+@(block) is nested within skip's anonymous block and shadows it.
+The foo block is nested within both of these.
+
+.SS Block Semantics
+
+A block normally does nothing. The query material in the block is evaluated
+normally. However, a block serves as a termination point for @(fail) and
+@(accept) directives which are in scope of that block and refer to it.
+
+The precise meaning of these directives is:
+
+.IP @(fail\ NAME)
+
+Immediately terminate the enclosing query block called NAME, as if that block failed to match anything. If more than one block by that name encloses
+the directive, the inner-most block is terminated. No bindings
+emerge from a failed block.
+
+.IP @(fail)
+
+Immediately terminate the innermost enclosing anonymous block, as if
+that block failed to match.
+
+If the implicit block introduced by @(skip) is terminated in this manner,
+this has the effect of causing the skip itself to fail. I.e. the behavior
+is as if skip search did not find a match for the trailing material,
+except that it takes place prematurely (before the end of the available
+data source is reached).
+
+If the implicit block associated with a @(collect)  is terminated this way,
+then the entire collect fails. This is a special behavior, because a
+collect normally does not fail, even if it matches and collects nothing!
+
+To prematurely terminate a collect by means of its anonymous block, without
+failing it, use @(accept).
+
+.IP @(accept\ NAME)
+
+Immediately terminate the enclosing query block called NAME, as if that block
+successfully matched. If more than one block by that name encloses the
+directive, the inner-most block is terminated.  Any bindings established within
+that block until this point emerge from that block.
+
+.IP @(accept)
+
+Immediately terminate the innermost enclosing anonymous block, as if
+that block successfully matched. Any bindings established within
+that block until this point emerge from that block.
+
+If the implicit block introduced by @(skip) is terminated in this manner,
+this has the effect of causing the skip itself to succeed, as if
+all of the trailing material successfully matched.
+
+If the implicit block associated with a @(collect)  is terminated this way,
+then the collection stops. All bindings collected in the current iteration of
+the collect are discarded. Bindings collected in previous iterations are
+retained, and collated into lists in accordance with the semantics of collect.
+
+Example: alternative way to @(until) termination:
+
+  @(collect)
+  @  (maybe)
+  ---
+  @  (accept)
+  @  (end)
+  @LINE
+  @(end)
+
+This query will collect entire lines into a list called LINE. However,
+if the line --- is matched (by the embedded @(maybe)), the collection
+is terminated. Only the lines up to, and not including the --- line,
+are collected. The effect is identical to:
+
+  @(collect)
+  @LINE
+  @(until)
+  ---
+  @(end)
+
+The difference (not relevant in these examples) is that the until clause has
+visibility into the bindings set up by the main clause.
+
+However, the following example has a different meaning:
+
+  @(collect)
+  @LINE
+  @  (maybe)
+  ---
+  @  (accept)
+  @  (end)
+  @(end)
+
+Now, lines are collected until the end of the data source, or until a line is
+found which is followed by a --- line. If such a line is found,
+the collection stops, and that line is not included in the collection!
+The @(accept) terminates the process of the collect body, and so the
+action of collecting the last @LINE binding into the list is not performed.
+
+.SS Data Extent of Terminated Blocks
+
+A query block may have matched some material prior to being terminated by
+accept. In that case, it is deemed to have only matched that material,
+and not any material which follows. This may matter, depending on the context
+in which the block occurs.
+
+Example:
+
+  Query:        @(some)
+                @(block foo)
+                @first
+                @(accept foo)
+                @ignored
+                @(end)
+                @second
+
+  Data:         1
+                2
+                3
+
+  Output:       first="1"
+                second="2"
+
+At the point where the accept occurs, the foo block has matched the first line,
+bound the text "1" to the variable @first. The block is then terminated.
+Not only does the @first binding emerge from this terminated block, but
+what also emerges is that the block advanced the data past the first line to
+the second line. So next, the @(some) directive ends, and propagates the
+bindings and position. Thus the @second which follows then matches the second
+line and takes the text "2".
+
+In the following query, the foo block occurs inside a maybe clause.
+Inside the foo block there is a @(some) clause. Its first subclause
+matches variable @first and then terminates block foo. Since block foo is
+outside of the @(some) directive, this has the effect of terminating the
+@(some) clause:
+
+  Query:        @(maybe)
+                @(block foo)
+                @  (some)
+                @first
+                @  (accept foo)
+                @  (or)
+                @one
+                @two
+                @three
+                @four
+                @  (end)
+                @(end)
+                @second
+
+  Data:         1
+                2
+                3
+                4
+                5
+
+  Output:       first="1"
+                second="2"
+
+The second clause of the @(some) directive, namely:
+
+  @one
+  @two
+  @three
+  @four
+
+is never processed. The reason is that subclauses are processed in top
+to bottom order, but the processing was aborted within the
+first clause the @(accept foo). The @(some) construct never had the
+opportunity to match four lines.
+
+If the @(accept foo) line is removed from the above query, the output
+is different:
+
+  Query:        @(maybe)
+                @(block foo)
+                @  (some)
+                @first
+                @#          <--  @(accept foo) removed from here!!!
+                @  (or)
+                @one
+                @two
+                @three
+                @four
+                @  (end)
+                @(end)
+                @second
+
+  Data:         1
+                2
+                3
+                4
+                5
+
+  Output:       first="1"
+                one="1"
+                two="2"
+                three="3"
+                four="4"
+                second="5"
+
+Now, all clauses of the @(some) directive have the opportunity to match.
+The second clause grabs four lines, which is the longest match.
+And so, the next line of input available for matching is 5, which goes
+to the @second variable.
+
+.SH FUNCTIONS
+
+.SS Introduction
+
+.B txr
+functions allow a query to be structured to avoid repetition.
+On a theoretical note, because
+.B txr
+functions support recursion, functions enable txr to match some
+kinds of patterns which exhibit self-embedding, or nesting,
+and thus cannot be matched by a regular language.
+
+Functions in
+.B txr
+are not exactly like functions in mathematics or functional languages, and are
+not like procedures in imperative programming languages. They are not exactly
+like macros either. What it means for a
+.B txr
+function to take arguments and produce a result is different from
+the conventional notion of a function.
+
+A
+.B txr
+function may have one or more parameters. When such a function is invoked, an
+argument must be specified for each parameter.  However, a special behavior is
+at play here. Namely, some or all of the argument expressions may be unbound
+variables.  In that case, the corresponding parameters behave like unbound
+variables also.  Thus
+.B txr
+function calls can transmit the "unbound" state from argument to parameter.
+
+It should be mentioned that functions have access to all bindings that are
+visible in the caller; functions may refer to variables which are not
+mentioned in their parameter list.
+
+With regard to returning,
+.B txr
+functions are also unconventional. If the function fails, then the function
+call is considered to have failed. The function call behaves like a kind of
+match; if the function fails, then the call is like a failed match.
+
+When a function call succeeds, then the bindings emanating from that function
+are processed specially. Firstly, any bindings for variables which do not
+correspond to one of the function's parameters are thrown away. Functions may
+internally bind arbitrary variables in order to get their job done, but only
+those variables which are named in the function argument list may propagate out
+of the function call.  Thus, a function with no arguments can only indicate
+matching success or failure, but not produce any bindings. Secondly,
+variables do not propagate out of the function directly, but undergo
+a renaming. For each parameter which went into the function as an unbound
+variable (because its corresponding argument was an unbound variable),
+if that parameter now has a value, that value is bound onto the corresponding
+argument.
+
+Example:
+
+  @(define collect_words (list))
+  @(coll)@{list /[^ \t]/}@(end)
+  @(end)
+
+The above function "collect_words" contains a query which collects words from a
+line (sequences of characters other than space or tab), into the list variable
+called "list".  This variable is named in the parameter list of the function,
+therefore, its value, if it has one, is permitted to escape from the function
+call.
+
+Suppose the input data is:
+
+  Fine summer day
+
+and the function is called like this:
+
+  @(collect_words wordlist)
+
+The result is:
+
+  wordlist[0]=Fine
+  wordlist[1]=summer
+  wordlist[1]=day
+
+How it works is that in the function call @(collect_words wordlist),
+"wordlist" is an unbound variable. The parameter corresponding to that
+unbound variable is the parameter "list". Therefore, that parameter
+is unbound over the body of the function.  The function body collects the
+words of "Fine summer day" into the variable "list", and then
+yields the that binding.   Then the function call completes by
+noticing that the function parameter "list" now has a binding, and
+that the corresponding argument "wordlist" has no binding. The binding
+is thus transferred to the "wordlist" variable.  After that, the
+bindings produced by the function are thrown away. The only enduring
+effects are:
+
+.IP -
+the function matched and consumed some input; and
+
+.IP -
+the function succeeded; and
+
+.IP -
+the wordlist variable now has a binding.
+.PP
+
+Another way to understand the parameter behavior is that function
+parameters behave like proxies which represent their arguments.  If an argument
+is an established value, such as a character string or bound variable, the
+parameter is a proxy for that value and behaves just like that value. If an
+argument is an unbound variable, the function parameter acts as a proxy
+representing that unbound variable. The effect of binding the proxy is
+that the variable becomes bound, an effect which is settled when the
+function goes out of scope.
+
+Within the function, both the original variable and the proxy are
+visible simultaneously, and are independent.  What if a function binds both of
+them? Suppose a function has a parameter called P, which is called
+with an argument A, and then in the function @A and @P are bound.  This is
+permitted, and they can even be bound to different values.  However, when the
+function terminates, the local binding of A simply disappears (because,
+remember, the symbol A is not a member of the list of parameters).
+Only the value bound to P emerges, and is bound to A, which still appears
+unbound at that point.
+
+.SS Definition Syntax
+
+A function definition begins with a @(define ...) directive which must be the
+only element in its line. The define must be followed by a symbol, which is the
+name of the function being defined. After the symbol, there is a parenthesized
+optional argument list. If there is no such list, or if the list is specified
+as () or the symbol "nil" then the function has no parameters. Examples of
+valid define syntax are:
+
+  @(define foo)
+  @(define bar ())
+  @(define match (a b c))
+
+The define directive may be followed directly by the @(end) directive,
+also on a line by itself, in which case the function has an empty body.
+Or it may be followed by one or more query lines and then @(end).
+What is between a @(define ...) and its matching @(end) constitutes the
+function body.
+
+Functions may be nested within function bodies. Such local functions have
+dynamic scope. They are visible in the function body in which they are defined,
+and in any functions invoked from that body.
+
+The body of a function is an anonymous block. (See BLOCKS above).
+
+The following trivial function b produces no bindings and has a body which
+simply matches the line "begin".
+
+ @(define b)
+ begin
+ @(end)
+
+Thus the call:
+
+ @(b)
+
+matches an input line "begin".
+
+.SS Call Syntax
+
+A function is invoked by compound directive whose first symbol is the name of
+that function. Additional elements in the directive are the arguments.
+Arguments may be symbols, or other objects like string and character
+literals.
+
+Example:
+
+ Query:         @(define pair (a b))
+                @a @b
+                @(end)
+                @(pair first second)
+                @(pair "ice" cream)
+
+ Data:          one two
+                ice milk
+
+ Output:        first="one"
+                second="two"
+                cream="milk"
+
+The first call to the function takes the line "one two". The parameter "a"
+takes "one" and parameter b takes "two". These are rebound to the arguments
+first and second. The second call to the function binds the a parameter
+to the word "ice", and the b is unbound, because the
+corresponding argument "cream" is unbound. Thus inside the function, @a
+is forced to match "ice". Then a space is matched and @b collects the text
+"milk". When the function returns, the unbound "cream" variable gets this value.
+
+If a symbol occurs multiple times in the argument list, it constrains
+both parameters to bind to the same value. That is to say, all parameters
+which, in the body of the function, bind a value, and which are all derived
+from the same argument symbol must bind to the same value. This is settled when
+the function terminates, not while it is matching. Example:
+
+ Query:         @(define pair (a b))
+                @a @b
+                @(end)
+                @(pair same same)
+
+ Data:          one two
+
+ Output:        [query fails, prints "false"]
+
+.SS Nested Functions
+
+Function definitions may appear in a function. Such definitions
+are visible in all functions which are invoked from the body
+(and not necessarily enclosed in the body). In other words, the
+scope is dynamic, not lexical.  Inner definitions shadow outer
+definitions. This means that a caller can redirect the function
+calls that take place in a callee, by defining local functions
+which capture the references.
+
+Example:
+
+  Query:        @(define which)
+                @  (fun)
+                @(end)
+                @(define fun)
+                @  (output)
+                toplevel fun!
+                @  (end)
+                @(end)
+                @(define callee)
+                @  (define fun)
+                @    (output)
+                local fun!
+                @    (end)
+                @  (end)
+                @  (which)
+                @(end)
+                @(callee)
+                @(which)
+
+   Output:      local fun!
+                toplevel fun!
+
+Here, the function "which" is defined which calls "fun".
+A toplevel definition of "fun" is introduced which
+outputs "toplevel fun!".  The function "callee" provides its own local
+definition of "fun" which outputs "local fun!" before calling "which".  When
+callee is invoked, it calls @(which), whose @(fun) call is routed to callee's
+local definition.  When @(which) is called directly from the top level, its
+@(fun) call goes to the toplevel definition.
+
+.SH OUTPUT
+
+A
+.B txr
+query may perform custom output. Output is performed by @(output) clauses,
+which may be embedded anywhere in the query, or placed at the end.  Output
+occurs as a side effect of producing a part of a query which contains an
+@(output) directive, and is executed even if that part of the query ultimately
+fails to find a match. Thus output can be useful for debugging.
+An output clause specifies that its output goes to a file, pipe, or (by
+default) standard output. If any output clause is executed whose destination is
+standard output,
+.B txr
+makes a note of this, and later, just prior to termination, suppresses the
+usual printing of the variable bindings or the word false.
+
+.SS The Output Directive
+
+The syntax of the @(output) directive is:
+
+  @(output [ DESTINATION ] [ nothrow ])
+  .
+  . one or more output directives or lines
+  .
+  @(end)
+
+An obsolescent syntax is also supported:
+
+  @(output)...optional destination...
+  .
+  . one or more output directives or lines
+  .
+  @(end)
+
+The optional destination is a filename, the special name, - which
+redirects to standard output, or a shell command preceded by the ! symbol.
+In the first form, the destination may be specified as a variable
+which holds text, a string literal or a quasiliteral
+
+In the second obsolescent form, the material to the right of @(output)
+is query text which may contain variables.
+
+The new syntax throws an exception if the output destination
+cannot be opened, unless the nothrow keyword is present, in which
+case the situation is treated as a match failure.  The old syntax throws an
+exception.
+
+.SS Output Text
+
+Text in an output clause is not matched against anything, but is output
+verbatim to the destination file, device or command pipe.
+
+.SS Output Variables
+
+Variables occurring in an output clause do not match anything, but instead their
+contents are output. A variable being output must be a simple string, not a
+list. Lists may be output within @(repeat) or @(rep) clauses. A list variable
+must be wrapped in as many nestings of these clauses as it has dimensions.  For
+instance, a two-dimensional list may be mentioned in output if it is inside a
+@(rep) or @(repeat) clause which is itself wrapped inside another @(rep) or
+@(repeat) clause.
+
+In an output clause, the @{NAME NUMBER} variable syntax generates fixed-width
+field, which contains the variable's text.  The absolute value of the
+number specifies the field width. For instance -20 and 20 both specify a field
+width of twenty.  If the text is longer than the field, then it overflows the
+field. If the text is shorter than the field, then it is left-adjusted within
+that field, if the width is specified as a positive number, and right-adjusted
+if the width is specified as negative.
+
+.SS The Repeat Directive
+
+The repeat directive is generates repeated text from a ``boilerplate'',
+by taking successive elements from lists. The syntax of repeat is
+like this:
+
+  @(repeat)
+  .
+  .
+  main clause material, required
+  .
+  .
+  special clauses, optional
+  .
+  .
+  @(end)
+
+Repeat has four types of special clauses, any of which may be
+specified with empty contents, or omitted entirely. They are explained
+below.
+
+All of the material in the main clause and optional clauses
+is examined for the presence of variables.  If none of the variables
+hold lists which contain at least one item, then no output is performed,
+(unless the repeat specifies an @(empty) clause, see below).
+Otherwise, among those variables which contain non-empty lists, repeat finds
+the length of the longest list. This length of this list determines the number
+of repetitions, R.
+
+If the repeat contains only a main clause, then the lines of this clause is
+output R times. Over the first repetition, all of the variables which, outside
+of the repeat, contain lists are locally rebound to just their first item. Over
+the second repetition, all of the list variables are bound to their second
+item, and so forth. Any variables which hold shorter lists than the longest
+list eventually end up with empty values over some repetitions.
+
+Example: if the list A holds "1", "2" and "3"; the list B holds "A", "B";
+and the variable C holds "X", then
+
+  @(repeat)
+  >> @C
+  >> @A @B
+  @(end)
+
+will produce three repetitions (since there are two lists, the longest
+of which has three items). The output is:
+
+  >> X
+  >> 1 A
+  >> X
+  >> 2 B
+  >> X
+  >> 3
+
+The last line has a trailing space, since it is produced by "@A @B",
+where @B has an empty value. Since C is not a list variable, it
+produces the same value in each repetition.
+
+The special clauses are:
+
+.IP @(single)
+If the repeat produces exactly one repetition, then the contents of this clause
+are processed for that one and only repetition, instead of the main clause
+or any other clause which would otherwise be processed.
+
+.IP @(first)
+The body of this clause specifies an alternative body to be used for the first
+repetition, instead of the material from the main clause.
+
+.IP @(last)
+The body of this clause is used instead of the main clause for the last
+repetition.
+
+.IP @(empty)
+If the repeat produces no repetitions, then the body of this clause is output.
+If this clause is absent or empty, the repeat produces no output.
+
+.PP
+The precedence among the clauses which take an iteration is:
+single > first > last > main.   That is if two or more of these clauses
+can apply to a repetition, then the leftmost one in this precedence list
+applies. For instance, if there is just a single repetition, then any of these
+special clause types can apply to that repetition, since it is the only
+repetition, as well as the first and last one. In this situation, if
+there is a single clause present, then the repetition is processed
+using that clause. Otherwise, if there is a first clause present, that
+clause is used. Failing that, a last clause applies. Only if none of these
+clauses are present will the repetition be processed using the main clause.
+
+.SS Nested Repeats
+
+If a repeat clause encloses variables which holds multidimensional lists,
+those lists require additional nesting levels of repeat (or rep).
+It is an error to attempt to output a list variable which has not been
+decimated into primary elements via a repeat construct.
+
+Suppose that a variable X is two-dimensional (contains a list of lists).  X
+must be twice nested in a repeat. The outer repeat will walk over the lists
+contained in X. The inner repeat will walk over the elements of each of these
+lists.
+
+A nested repeat may be embedded in any of the clauses of a repeat,
+not only the main clause.
+
+.SS The Rep Directive
+
+The @(rep) directive is similar to @(repeat), but whereas @(repeat) is line
+oriented, @(rep) generates material within a line. It has all the same clauses,
+but everything is specified within one line:
+
+  @(rep)... main material ... .... special clauses ...@(end)
+
+More than one @(rep) can occur within a line, mixed with other material.
+A @(rep) can be nested within a @(repeat) or within another @(rep).
+
+.SS Repeat and Rep Examples
+
+Example 1: show the list L in parentheses, with spaces between
+the elements, or the symbol NIL if the list is empty:
+
+  @(output)
+  @(rep)@L @(single)(@L)@(first)(@L @(last)@L)@(empty)NIL@(end)
+  @(end)
+
+Here, the @(empty) clause specifies NIL. So if there are no repetitions,
+the text NIL is produced. If there is a single item in the list L,
+then  @(single)(@L) produces that item between parentheses.  Otherwise
+if there are two or more items, the first item is produced with
+a leading parenthesis followed by a space by @(first)(@L , and
+the last item is produced with a closing parenthesis: @(last)@L).
+All items in between are emitted with a trailing space by
+the main clause: @(rep)@L .
+
+Example 2: show the list L like Example 1 above, but the empty list is ().
+
+  @(output)
+  (@(rep)@L @(last)@L@(end))
+  @(end)
+
+This is simpler. The parentheses are part of the text which
+surrounds the @(rep) construct, produced unconditionally.
+If the list L is empty, then @(rep) produces no output, resulting in ().
+If the list L has one or more items, then they are produced with
+spaces each one, except the last which has no space.
+If the list has exactly one item, then the @(last) applies to it
+instead of the main clause: it is produced with no trailing space.
+
+.SH EXCEPTIONS
+
+The exceptions mechanism in
+.B txr
+is disciplined way for representing and handling abnormal situations that may
+occur during query processing, such as using an unbound variable, or attempting
+to open a nonexistent file.
+
+An exception is a situation in the query which stops the query and
+demands handling. If handling is not provided for that exception,
+the execution of the program is terminated.
+
+An exception is always identified by a symbol, which is its type. Types are
+organized in a subtype-supertype hierarchy.  For instance, the file_error
+exception type is a subtype of the error type. This means that a file error is
+a kind of error. An exception handling block which catches exceptions of type
+error will catch exceptions of type file_error, but a block which catches
+file_error will not catch all exceptions of type error. A query_error is a kind
+of error, but not a kind of file_error. The symbol t is the supertype
+of every type: every exception type is considered to be a kind of t.
+(Mnemonic: t stands for type, as in any type).
+
+Exceptions are handled using @(catch) clauses within a @(try) directive.
+
+In addition to being useful for exception handling, the @(try) directive
+also provides unwind protection by means of a @(finally) clause,
+which specifies query material to be executed unconditionally when
+the try clause terminates, no matter how it terminates.
+
+.SS The Try Directive
+
+The general syntax of the try directive is
+
+  @(try)
+  ... main clause, required ...
+  ... optional catch clauses ...
+  ... optional finally clause
+  @(end)
+
+A catch clause looks like:
+
+  @(catch TYPE)
+  .
+  .
+  .
+
+and also the this form, equivalent to @(catch (t)):
+
+  @(catch)
+  .
+  .
+  .
+
+which catches all exceptions.
+
+A finally clause looks like:
+
+  @(finally)
+  ...
+  .
+  .
+
+The main clause may not be empty, but the catch and finally may be.
+
+A try clause is surrounded by an implicit anonymous block (see BLOCKS section
+above). So for instance, the following is a no-op (an operation with no effect,
+other than successful execution):
+
+  @(try)
+  @(accept)
+  @(end)
+
+The @(accept) causes a successful termination of the implicit anonymous block.
+Execution resumes with query lines or directives which follow, if any.
+
+Try clauses and blocks interact. For instance, a block accept from within
+a try clause invokes a finally.
+
+  Query:        @(block foo)
+                @  (try)
+                @    (accept foo)
+                @  (finally)
+                @     (output)
+                bye!
+                @     (end)
+                @  (end)
+
+  Output:       bye!
+
+How this works: the try block's main clause is @(accept foo). This causes
+the enclosing block named foo to terminate, as a successful match.
+Since the try is nested within this block, it too must terminate
+in order for the block to terminate. But the try has a finally clause,
+which executes unconditionally, no matter how the try block
+terminates. The finally clause performs some output, which is seen.
+
+.SS The Finally Clause
+
+A try directive can terminate in one of three ways. The main clause
+may match successfully, and possibly yield some new variable bindings.
+The main clause may fail to match. Or the main clause may be terminated
+by a non-local control transfer, like an exception being thrown or a block
+return (like the block foo example in the previous section).
+
+No matter how the try clause terminates, the finally clause is processed.
+
+Now, the finally clause is itself a query which binds variables, which leads to
+the question: what happens to such variables? What if the finally block fails
+as a query? Another question is: what if a finally clause itself initiates a
+control transfer?  Answers follow.
+
+Firstly, a finally clause will contribute variable bindings only if the main
+clause terminates normally (either as a successful or failed match).
+If the main clause successfully matches, then the finally block continues
+matching at the next position in the data, and contributes bindings.
+If the main clause fails, then the finally block matches at the
+same position.
+
+The overall try directive succeeds as a match if either the main clause
+or the finally clause succeed. If both fail, then the try directive is
+a failed match. The subquery in which it is located fails, et cetera.
+
+Example:
+
+  Query:        @(try)
+                @a
+                @(finally)
+                @b
+                @(end)
+                @c
+
+  Data:         1
+                2
+                3
+
+  Output:       a=1
+                b=2
+                c=3
+
+In this example, the main clause of the try captures line "1" of the data as
+variable a, then the finally clause captures "2" as b, and then the
+query continues with the @c variable after try block, and captures "3".
+
+
+Example:
+
+  Query:        @(try)
+                hello @a
+                @(finally)
+                @b
+                @(end)
+                @c
+
+  Data:         1
+                2
+
+  Output:       b=1
+                c=2
+
+In this example, the main clause of the try fails to match, because
+the input is not prefixed with "hello ". However, the finally clause
+matches, binding b to "1". This means that the try block is a successful
+match, and so processing continues with @c which captures "2".
+
+When finally clauses are processed during a non-local return,
+they have no externally visible effect if they do not bind variables.
+However, their execution makes itself known if they perform side effects,
+such as output.
+
+A finally clause guards only the main clause and the catch clauses. It does not
+guard itself.   Once the finally clause is executing, the try block is no
+longer guarded.  This means if a nonlocal transfer, such as a block accept
+or exception, is initiated within the finally clause, it will not re-execute
+the finally clause. The finally clause is simply abandoned.
+
+The disestablishment of blocks and try clauses is properly interleaved
+with the execution of finally clauses. This means that all surrounding
+exit points are visible in a finally clause, even if the finally clause
+is being invoked as part of a transfer to a distant exit point.
+The finally clause can make a control transfer to an exit point which
+is more near than the original one, thereby "hijacking" the control
+transfer. Also, the anonymous block established by the try directive
+is visible in the finally clause.
+
+Example:
+
+@(try)
+@  (try)
+@    (next "nonexistent-file")
+@  (finally)
+@    (accept)
+@  (end)
+@(catch file_error)
+@  (output)
+file error caught
+@  (end)
+@(end)
+
+In this example, the @(next) directive throws an exception of type file_error,
+because the given file does not exist. The exit point for this exception is the
+@(catch file_error) clause in the outer-most try block. The inner block is
+not eligible because it contains no catch clauses at all. However, the inner
+try block has a finally clause, and so during the processing of this
+exception which is headed for the @(catch file_error), the finally
+clause performs an anonymous accept. The exit point for the accept
+is the anonymous block surrounding the inner try.  So the original
+transfer to the catch clause is forgotten. The inner try terminates
+successfully, and since it constitutes the main clause of the outer try,
+that also terminates successfully. The "file error caught" message is
+never printed.
+
+.SS Catch Clauses
+
+Catch clauses establish a try block as a potential exit point for
+an exception-induced control transfer (called a ``throw'').
+
+A catch clause specifies an optional list of symbols which represent
+the exception types which it catches. The catch clause will catch
+exceptions which are a subtype of any one of those exception types.
+
+If a try block has more than one catch clause which can match a given
+exception, the first one will be invoked.
+
+The exception protection of a try block does not extend over the
+catch clauses.  Once a catch clause is being executed, if it throws
+an exception, that exception will not re-enter any catch within the
+same try block, even if it matches one.
+
+Catches are processed prior to finally.
+
+When a catch is invoked, it is of course understood that the main clause did
+not terminate normally, and so the main clause could not have produced any
+bindings.
+
+So the success or failure of the try block depends on the behavior of the catch
+clause or the finally, if there is one. If either of them succeed, then the try block is considered a successful match.
+
+Example:
+
+  Query:        @(try)
+                @  (next "nonexistent-file")
+                @  x
+                @  (catch file_error)
+                @a
+                @(finally)
+                @b
+                @(end)
+                @c
+
+  Data:         1
+                2
+                3
+
+  Output:       a=1
+                b=2
+                c=3
+
+Here, the try block's main clause is terminated abruptly by a file_error
+exception from the @(next) directive.   This is handled by the
+catch clause, which binds variable a to the input line "1".
+Then the finally clause executes, binding b to "2". The try block
+then terminates successfully, and so @c takes "3".
+
+.SS Catch Clauses with Parameters
+
+A catch may have parameters following the type name, like this:
+
+  @(catch pair (a b))
+
+To write a catch-all with parameters, explicitly write the
+master supertype t:
+
+  @(catch t (arg ...))
+
+Parameters are useful in conjunction with throw. The built-in
+error exceptions generate one argument, which is a string containing
+the error message. Using throw, arbitrary parameters can be passed
+from the throw site to the catches.
+
+.SS The Throw Directive
+
+The throw directive generates an exception. A type must be specified,
+followed by optional arguments. For example,
+
+  @(throw pair "a" `@file.txt`)
+
+throws an exception of type pair, with two arguments, being "a"
+and the expansion of the quasiliteral `@file.txt`.
+
+The selection of the target catch is performed purely using the type
+name; the parameters are not involved in the selection.
+
+Binding takes place between the arguments given in throw, and the
+target catch.
+
+If any catch parameter, for which a throw argument is given, is a bound
+variable, it has to be identical to the argument, otherwise the catch fails.
+(Control still passes to the catch, but the catch is a failed match).
+
+  Query:        @(bind a "apple")
+                @(try)
+                @(throw e "banana")
+                @(catch e (a))
+                @(end)
+
+  Output:       false
+
+If any argument is an unbound variable, the corresponding parameter
+in the catch is left alone: if it is an unbound variable, it remains
+unbound, and if it is bound, it stays as is.
+
+  Query:        @(try)
+                @(trow e "honda" unbound)
+                @(catch e (car1 car2))
+                @car1 @car2
+                @(end)
+
+  Data:         honda toyota
+
+  Output:       car1="honda"
+                car2="toyota"
+
+If a catch has fewer parameters than there are throw arguments,
+the excess arguments are ignored.
+
+  Query:         @(try)
+                 @(throw e "banana" "apple" "pear")
+                 @(catch e (fruit))
+                 @(end)
+
+  Output:        fruit="banana"
+
+If a catch has more parameters than there are throw arguments, the excess
+parameters are left alone. They may be bound or unbound variables.
+
+  Query:        @(try)
+                @(trow e "honda")
+                @(catch e (car1 car2))
+                @car1 @car2
+                @(end)
+
+  Data:         honda toyota
+
+  Output:       car1="honda"
+                car2="toyota"
+
+A throw argument passing a value to a catch parameter which is unbound causes
+that parameter to be bound to that value.
+
+Throw arguments are evaluated in the context of the throw, and the bindings
+which are available there. Consideration of what parameters are bound
+is done in the context of the catch.
+
+  Query:        @(bind c "c")
+                @(try)
+                @(forget c)
+                @(bind (a c) ("a" "lc"))
+                @(throw e a c)
+                @(catch e (b a))
+                @(end)
+
+   Output:      c="c"
+                b="a"
+                a="lc"
+
+In the above example, c has a toplevel binding to the string "c",
+but is then unbound within the try construct, and rebound to the value "c".
+Since the try construct is terminated by a throw, these modifications of the
+binding environment are discarded. Hence, at the end of the query, variable
+c ends up bound to the original value "c".  The throw still takes place
+within the scope of the bindings set up by the try clause, so the values of
+a and c that are thrown are "a" and "lc".  However, at the catch site, variable
+a does not have a binding.  At that point, the binding to "a" established in
+the try has disappeared already. Being unbound, the catch parameter a can take
+whatever value the corresponding throw argument provides, so it ends up with
+"lc".
+
+.SS The Defex Directive
+
+The defex directive allows the query writer to invent custom exception types,
+which are arranged in a type hierarchy (meaning that some exception types are
+considered subtypes of other types).
+
+Subtyping means that if an exception type B is a subtype of A, then every
+exception of type B is also considered to be of type A. So a catch for type A
+will also catch exceptions of type B.  Every type is a supertype of itself: an
+A is a kind of A. This of course implies that ever type is a subtype of itself
+also.  Furthermore, every type is a subtype of the type t, which has no
+supertype other than itself. Type nil is is a subtype of every type, including
+itself.  The subtyping relationship is transitive also. If A is a subtype
+of B, and B is a subtype of C, then A is a subtype of C.
+
+Defex may be invoked with no arguments, in which case it does nothing:
+
+  @(defex)
+
+It may be invoked with one argument, which must be a symbol. This introduces a
+new exception type. Strictly speaking, such an introduction is not necessary;
+any symbol may be used as an exception type without being introduced by
+@(defex):
+
+  @(defex a)
+
+Therefore, this also does nothing, other than document the intent to use
+a as an exception.
+
+If two or more argument symbols are given, the symbols are all introduced as
+types, engaged in a subtype-supertype relationship from left to right.
+That is to say, the first (leftmost) symbol is a subtype of the next one,
+which is a subtype of the next one and so on. The last symbol, if it
+had not been already defined as a subtype of some type, becomes a
+direct subtype of the master supertype t. Example:
+
+  @(defex d e)
+  @(defex a b c d)
+
+The fist directive defines d as a subtype of e, and e as a subtype of t.
+The second defines a as a subtype of b, b as a subtype of c, and
+c as a subtype of d, which is already defined as a subtype of e.
+Thus a is now a subtype of e. It should be obvious that the above
+could be condensed to:
+
+  @(defex a b c d e)
+
+Example:
+
+  Query:        @(defex gorilla ape primate)
+                @(defex monkey primate)
+                @(defex human primate)
+                @(collect)
+                @(try)
+                @(skip)
+                @(cases)
+                gorilla @name
+                @(throw gorilla name)
+                @(or)
+                monkey @name
+                @(throw monkey name)
+                @(or)
+                human @name
+                @(throw human name)
+                @(end)@#cases
+                @(catch primate (name))
+                @kind @name
+                @(output)
+                we have a primate @name of kind @kind
+                @(end)@#output
+                @(end)@#try
+                @(end)@#collect
+
+
+  Input:        gorilla joe
+                human bob
+                monkey alice
+
+  Output:       we have a primate joe of kind gorilla
+                we have a primate bob of kind human
+                we have a primate alice of kind monkey
+
+Exception types have a pervasive scope. Once a type relationship is introduced,
+it is visible everywhere. Moreover, the defex directive is destructive,
+meaning that the supertype of a type can be redefined. This is necessary so
+that something like the following works right.
+
+  @(defex gorilla ape)
+  @(defex ape primate)
+
+These directives are evaluated in sequence. So after the first one, the ape
+type has the type t as its immediate supertype.  But in the second directive,
+ape appears again, and is assigned the primate supertype, while retaining
+gorilla as a subtype.  This situation could instead be diagnosed as an
+error, forcing the programmer to reorder the statements, but instead
+txr obliges. However, there are limitations.  It is an error to define a
+subtype-supertype relationship between two types if they are already connected
+by such a relationship, directly or transitively. So the following
+definitions are in error:
+
+  @(defex a b)
+  @(defex b c)
+  @(defex a c)@# error: a is already a subtype of c, through b
+
+  @(defex x y)
+  @(defex y x)@# error: circularity; y is already a supertype of x.
+
+.SH NOTES ON FALSE
+
+The reason for printing the word
+.IR false
+on standard output when
+a query doesn't match, in addition to returning a failed termination
+status, is that the output of
+.B txr
+may be collected by a shell script, by the application of eval to command
+substitution syntax. Printing
+.IR false
+will cause eval to evaluate the
+.IR false
+command, and thus failed status will propagate from the eval
+itself.   The eval command conceals the termination status of a
+program run via command substitution.  That is to say, if a program
+fails, without producing output, its output is substituted into the eval
+command which then succeeds, masking the failure of the program. For example:
+
+  eval "$(false)"
+
+appears successful: the false utility indicates a failed status, but
+produces no output. Eval evaluates an empty script and reports success;
+the failed status of the false program is forgotten.
+Note the difference between the above and this:
+
+  eval "$(echo false)"
+
+This command has a failed status. The echo prints the word false and succeeds;
+this false word is then evaluated as a script, and thus interpreted as the
+false command which fails. This failure
+.B is
+propagated as the result of the eval
+command.

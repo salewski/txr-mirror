@@ -1,0 +1,31 @@
+Name:	rpc.statd
+State:	S (sleeping)
+SleepAVG:	88%
+Tgid:	1665
+Pid:	1665
+PPid:	1
+TracerPid:	0
+Uid:	29	29	29	29
+Gid:	29	29	29	29
+FDSize:	32
+Groups:	
+VmSize:	    1676 kB
+VmLck:	       0 kB
+VmRSS:	     796 kB
+VmData:	     156 kB
+VmStk:	      12 kB
+VmExe:	      38 kB
+VmLib:	    1414 kB
+StaBrk:	0011c000 kB
+Brk:	08021000 kB
+StaStk:	bffffe30 kB
+ExecLim:	b8000000
+Threads:	1
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000000011000
+SigCgt:	0000000000004203
+CapInh:	0000000000000000
+CapPrm:	0000000000000000
+CapEff:	0000000000000000

@@ -1,0 +1,31 @@
+Name:	xscreensaver
+State:	S (sleeping)
+SleepAVG:	88%
+Tgid:	2661
+Pid:	2661
+PPid:	1
+TracerPid:	0
+Uid:	524	524	524	524
+Gid:	503	503	503	503
+FDSize:	256
+Groups:	501 503 512 
+VmSize:	    4584 kB
+VmLck:	       0 kB
+VmRSS:	    2336 kB
+VmData:	     552 kB
+VmStk:	      52 kB
+VmExe:	     204 kB
+VmLib:	    3588 kB
+StaBrk:	0807d000 kB
+Brk:	080c9000 kB
+StaStk:	bffff7f0 kB
+ExecLim:	08079000
+Threads:	1
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000020000000
+SigCgt:	00000000418144ff
+CapInh:	0000000000000000
+CapPrm:	0000000000000000
+CapEff:	0000000000000000

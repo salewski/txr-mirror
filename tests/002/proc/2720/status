@@ -1,0 +1,31 @@
+Name:	wnck-applet
+State:	S (sleeping)
+SleepAVG:	88%
+Tgid:	2720
+Pid:	2720
+PPid:	1
+TracerPid:	0
+Uid:	524	524	524	524
+Gid:	503	503	503	503
+FDSize:	256
+Groups:	501 503 512 
+VmSize:	   19696 kB
+VmLck:	       0 kB
+VmRSS:	    8536 kB
+VmData:	    1804 kB
+VmStk:	      68 kB
+VmExe:	      66 kB
+VmLib:	   14574 kB
+StaBrk:	0805d000 kB
+Brk:	081ec000 kB
+StaStk:	bffff7b0 kB
+ExecLim:	08059000
+Threads:	1
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000020001000
+SigCgt:	00000001800104f0
+CapInh:	0000000000000000
+CapPrm:	0000000000000000
+CapEff:	0000000000000000

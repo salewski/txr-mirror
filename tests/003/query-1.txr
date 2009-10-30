@@ -1,0 +1,18 @@
+@(define which)
+@  (fun)
+@(end)
+@(define fun)
+@  (output)
+global fun!
+@  (end)
+@(end)
+@(define caller)
+@  (define fun)
+@    (output)
+local fun!
+@    (end)
+@  (end)
+@  (which)
+@(end)
+@(caller)
+@(which)

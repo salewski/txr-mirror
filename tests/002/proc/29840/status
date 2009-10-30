@@ -1,0 +1,31 @@
+Name:	bash
+State:	R (running)
+SleepAVG:	0%
+Tgid:	29840
+Pid:	29840
+PPid:	16249
+TracerPid:	0
+Uid:	0	0	0	0
+Gid:	0	0	0	0
+FDSize:	256
+Groups:	0 1 2 3 4 6 10 606 
+VmSize:	    4340 kB
+VmLck:	       0 kB
+VmRSS:	    1556 kB
+VmData:	     296 kB
+VmStk:	      20 kB
+VmExe:	     577 kB
+VmLib:	    1307 kB
+StaBrk:	080e3000 kB
+Brk:	08122000 kB
+StaStk:	bffffeb0 kB
+ExecLim:	080d8000
+Threads:	1
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000010002
+SigIgn:	0000000000000000
+SigCgt:	0000000008010002
+CapInh:	0000000000000000
+CapPrm:	00000000fffffeff
+CapEff:	00000000fffffeff

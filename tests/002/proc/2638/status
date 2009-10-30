@@ -1,0 +1,31 @@
+Name:	gnome-settings-
+State:	S (sleeping)
+SleepAVG:	88%
+Tgid:	2638
+Pid:	2638
+PPid:	1
+TracerPid:	0
+Uid:	524	524	524	524
+Gid:	503	503	503	503
+FDSize:	256
+Groups:	501 503 512 
+VmSize:	   18224 kB
+VmLck:	       0 kB
+VmRSS:	    6852 kB
+VmData:	     744 kB
+VmStk:	      68 kB
+VmExe:	     141 kB
+VmLib:	   14459 kB
+StaBrk:	08072000 kB
+Brk:	080f8000 kB
+StaStk:	bffff7a0 kB
+ExecLim:	0806c000
+Threads:	1
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000020001000
+SigCgt:	0000000180010cf0
+CapInh:	0000000000000000
+CapPrm:	0000000000000000
+CapEff:	0000000000000000

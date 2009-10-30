@@ -1,0 +1,11 @@
+@(next)$.
+@(collect)
+@file.c
+@(next)@file.c
+@(collect)
+#include "@header"
+@(end)
+@(output)
+@file.o:@(rep) @header@(end)
+@(end)
+@(end)

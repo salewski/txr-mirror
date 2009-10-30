@@ -1,0 +1,31 @@
+Name:	gnome-session
+State:	S (sleeping)
+SleepAVG:	88%
+Tgid:	2551
+Pid:	2551
+PPid:	2184
+TracerPid:	0
+Uid:	524	524	524	524
+Gid:	503	503	503	503
+FDSize:	256
+Groups:	501 503 512 
+VmSize:	   20324 kB
+VmLck:	       0 kB
+VmRSS:	    9800 kB
+VmData:	    2672 kB
+VmStk:	      64 kB
+VmExe:	     120 kB
+VmLib:	   14224 kB
+StaBrk:	0806b000 kB
+Brk:	08218000 kB
+StaStk:	bffffb50 kB
+ExecLim:	08067000
+Threads:	1
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000020000000
+SigCgt:	00000001800114f0
+CapInh:	0000000000000000
+CapPrm:	0000000000000000
+CapEff:	0000000000000000

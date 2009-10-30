@@ -1,0 +1,31 @@
+Name:	sshd
+State:	S (sleeping)
+SleepAVG:	97%
+Tgid:	27682
+Pid:	27682
+PPid:	1887
+TracerPid:	0
+Uid:	0	0	0	0
+Gid:	0	0	0	0
+FDSize:	32
+Groups:	
+VmSize:	    6836 kB
+VmLck:	       0 kB
+VmRSS:	    2368 kB
+VmData:	     436 kB
+VmStk:	      24 kB
+VmExe:	     295 kB
+VmLib:	    3277 kB
+StaBrk:	00161000 kB
+Brk:	08021000 kB
+StaStk:	bffffe10 kB
+ExecLim:	b8000000
+Threads:	1
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000000001000
+SigCgt:	0000000000006001
+CapInh:	0000000000000000
+CapPrm:	00000000fffffeff
+CapEff:	00000000fffffeff

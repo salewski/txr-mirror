@@ -1,0 +1,31 @@
+Name:	eggcups
+State:	S (sleeping)
+SleepAVG:	88%
+Tgid:	2695
+Pid:	2695
+PPid:	1
+TracerPid:	0
+Uid:	524	524	524	524
+Gid:	503	503	503	503
+FDSize:	32
+Groups:	501 503 512 
+VmSize:	   39476 kB
+VmLck:	       0 kB
+VmRSS:	    7744 kB
+VmData:	   21228 kB
+VmStk:	      64 kB
+VmExe:	     106 kB
+VmLib:	   14878 kB
+StaBrk:	08067000 kB
+Brk:	080ec000 kB
+StaStk:	bffffa70 kB
+ExecLim:	08063000
+Threads:	1
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000020001001
+SigCgt:	00000001800144f2
+CapInh:	0000000000000000
+CapPrm:	0000000000000000
+CapEff:	0000000000000000

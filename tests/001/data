@@ -1,0 +1,87 @@
+UID        PID  PPID  C STIME TTY          TIME CMD
+root         1     0  0 Aug21 ?        00:01:11 init [5]                             
+root         2     1  0 Aug21 ?        00:00:00 [ksoftirqd/0]
+root         3     1  0 Aug21 ?        00:01:23 [events/0]
+root         4     3  0 Aug21 ?        00:00:00 [khelper]
+root         5     3  0 Aug21 ?        00:00:00 [kacpid]
+root        16     3  0 Aug21 ?        00:00:00 [kblockd/0]
+root        29     3  0 Aug21 ?        00:00:00 [aio/0]
+root        17     1  0 Aug21 ?        00:00:00 [khubd]
+root        28     1  0 Aug21 ?        00:00:06 [kswapd0]
+root       103     1  0 Aug21 ?        00:00:00 [kseriod]
+root       175     1  0 Aug21 ?        00:00:00 [scsi_eh_0]
+root       186     1  0 Aug21 ?        00:04:49 [kjournald]
+root       870     1  0 Aug21 ?        00:00:00 udevd
+root      1068     1  0 Aug21 ?        00:00:00 /sbin/dhclient -1 -q -lf /var/lib/dhcp/dhclient-eth0.leases -pf /var/run/dhclient-eth0.pid eth0
+root      1235     1  0 Aug21 ?        00:00:00 [kjournald]
+root      1236     1  0 Aug21 ?        00:00:09 [kjournald]
+root      1620     1  0 Aug21 ?        00:00:16 syslogd -m 0
+root      1624     1  0 Aug21 ?        00:00:00 klogd -x
+rpc       1645     1  0 Aug21 ?        00:00:08 portmap
+rpcuser   1665     1  0 Aug21 ?        00:00:00 rpc.statd
+root      1698     1  0 Aug21 ?        00:00:07 rpc.idmapd
+root      1766     1  0 Aug21 ?        00:05:17 /usr/sbin/vmware-guestd --background /var/run/vmware-guestd.pid
+root      1790     1  0 Aug21 ?        00:00:23 [rpciod]
+root      1791     1  0 Aug21 ?        00:00:00 [lockd]
+root      1821     1  0 Aug21 ?        00:00:00 ypbind
+root      1839     1  0 Aug21 ?        00:00:00 /usr/sbin/acpid
+root      1851     1  0 Aug21 ?        00:01:33 cupsd
+root      1887     1  0 Aug21 ?        00:00:00 /usr/sbin/sshd
+root      1902     1  0 Aug21 ?        00:00:00 xinetd -stayalive -pidfile /var/run/xinetd.pid
+root      1921     1  0 Aug21 ?        00:00:00 rpc.rquotad
+root      1925     1  0 Aug21 ?        00:00:00 [nfsd]
+root      1926     1  0 Aug21 ?        00:00:00 [nfsd]
+root      1927     1  0 Aug21 ?        00:00:00 [nfsd]
+root      1928     1  0 Aug21 ?        00:00:00 [nfsd]
+root      1929     1  0 Aug21 ?        00:00:00 [nfsd]
+root      1930     1  0 Aug21 ?        00:00:00 [nfsd]
+root      1931     1  0 Aug21 ?        00:00:00 [nfsd]
+root      1932     1  0 Aug21 ?        00:00:00 [nfsd]
+root      1936     1  0 Aug21 ?        00:00:00 rpc.mountd
+root      1963     1  0 Aug21 ?        00:00:29 crond
+xfs       1989     1  0 Aug21 ?        00:00:01 xfs -droppriv -daemon
+daemon    2008     1  0 Aug21 ?        00:00:03 /usr/sbin/atd
+dbus      2027     1  0 Aug21 ?        00:00:00 dbus-daemon-1 --system
+root      2041     1  0 Aug21 ?        00:00:00 cups-config-daemon
+root      2052     1  0 Aug21 ?        00:05:00 hald
+root      2062     1  0 Aug21 tty1     00:00:00 /sbin/mingetty tty1
+root      2124     1  0 Aug21 ?        00:00:00 /usr/bin/gdm-binary -nodaemon
+root      2184  2124  0 Aug21 ?        00:00:00 /usr/bin/gdm-binary -nodaemon
+root      2354  2184  1 Aug21 ?        12:18:15 /usr/X11R6/bin/X :0 -audit 0 -auth /var/gdm/:0.Xauth -nolisten tcp vt7
+kaz       2551  2184  0 Aug21 ?        00:00:01 /usr/bin/gnome-session
+kaz       2579     1  0 Aug21 ?        00:00:00 /usr/bin/ssh-agent -s
+kaz       2625     1  0 Aug21 ?        00:00:00 /usr/bin/dbus-launch --exit-with-session /etc/X11/xinit/Xclients
+kaz       2626     1  0 Aug21 ?        00:00:00 dbus-daemon-1 --fork --print-pid 8 --print-address 6 --session
+kaz       2631     1  0 Aug21 ?        00:00:47 /usr/libexec/gconfd-2 11
+kaz       2634     1  0 Aug21 ?        00:00:00 /usr/bin/gnome-keyring-daemon
+kaz       2636     1  0 Aug21 ?        00:00:00 /usr/libexec/bonobo-activation-server --ac-activate --ior-output-fd=18
+kaz       2638     1  0 Aug21 ?        00:00:00 /usr/libexec/gnome-settings-daemon --oaf-activate-iid=OAFIID:GNOME_SettingsDaemon --oaf-ior-fd=22
+kaz       2644     1  0 Aug21 ?        00:13:10 /usr/libexec/gam_server
+kaz       2661     1  0 Aug21 ?        00:01:18 xscreensaver -nosplash
+kaz       2685     1  0 Aug21 ?        00:00:00 /usr/bin/metacity --sm-client-id=default1
+kaz       2689     1  0 Aug21 ?        00:00:02 gnome-panel --sm-client-id default2
+kaz       2691     1  0 Aug21 ?        00:27:25 nautilus --no-default-window --sm-client-id default3
+kaz       2693     1  0 Aug21 ?        00:00:00 gnome-volume-manager --sm-client-id default6
+kaz       2695     1  0 Aug21 ?        00:00:37 eggcups --sm-client-id default5
+kaz       2698     1  0 Aug21 ?        00:00:00 /usr/libexec/gnome-vfs-daemon --oaf-activate-iid=OAFIID:GNOME_VFS_Daemon_Factory --oaf-ior-fd=28
+kaz       2701     1  0 Aug21 ?        00:01:31 pam-panel-icon --sm-client-id default0
+kaz       2707     1  1 Aug21 ?        11:09:59 /usr/bin/python /usr/bin/rhn-applet-gui --sm-client-id default4
+root      2717  2701  0 Aug21 ?        00:02:30 /sbin/pam_timestamp_check -d root
+kaz       2718     1  0 Aug21 ?        00:00:05 /usr/libexec/mapping-daemon
+kaz       2720     1  0 Aug21 ?        00:00:00 /usr/libexec/wnck-applet --oaf-activate-iid=OAFIID:GNOME_Wncklet_Factory --oaf-ior-fd=30
+kaz       2722     1  0 Aug21 ?        00:14:36 /usr/libexec/mixer_applet2 --oaf-activate-iid=OAFIID:GNOME_MixerApplet_Factory --oaf-ior-fd=32
+kaz       2726     1  0 Aug21 ?        00:43:09 /usr/libexec/clock-applet --oaf-activate-iid=OAFIID:GNOME_ClockApplet_Factory --oaf-ior-fd=34
+kaz       2728     1  0 Aug21 ?        00:00:00 /usr/libexec/notification-area-applet --oaf-activate-iid=OAFIID:GNOME_NotificationAreaApplet_Factory --oaf-ior-fd=36
+root     30737     1  0 Aug26 ?        00:00:00 /sbin/dhclient -1 -q -lf /var/lib/dhcp/dhclient-eth0.leases -pf /var/run/dhclient-eth0.pid eth0
+root     31905  1887  0 Aug27 ?        00:00:06 sshd: kaz [priv] 
+kaz      31907 31905  0 Aug27 ?        00:00:55 sshd: kaz@pts/2  
+kaz      31908 31907  0 Aug27 pts/2    00:00:01 -bash
+root     32672  1887  0 Aug27 ?        00:00:06 sshd: kaz [priv] 
+kaz      32674 32672  0 Aug27 ?        00:02:11 sshd: kaz@pts/4  
+kaz      32675 32674  0 Aug27 pts/4    00:00:06 -bash
+root     27121     3  0 Sep12 ?        00:00:00 [pdflush]
+root     27243     3  0 Sep12 ?        00:00:31 [pdflush]
+root     27682  1887  0 Sep12 ?        00:00:03 sshd: kaz [priv] 
+kaz      27684 27682  0 Sep12 ?        00:09:06 sshd: kaz@pts/1  
+kaz      27685 27684  0 Sep12 pts/1    00:00:26 -bash
+kaz       6481 27685  0 17:47 pts/1    00:00:00 ps -ef

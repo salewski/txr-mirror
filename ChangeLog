@@ -1,0 +1,1042 @@
+2009-10-17 Kaz Kylheku  <kkylheku@gmail.com>
+
+	Version 018
+
+	Bugfixes: mistakes in debugging calls; infinite looping
+	bug in collect; skip directive not advancing match
+	by proper number of lines bug.
+
+	* match.c (debuglcf): Cosmetic fix.
+	(match_files): After recognizing nothrow in the file spec,
+	replace it by a string. A few places expect first(files) to be
+	a string. The skip directive must return whatever
+	return value it obtained from the nested match_files call,
+	and not substitute the current line number, so that the
+	caller can proceed past the correct number of lines that
+	were matched. Fixed obj_t * being passed to %s printf specifier
+	in debug printf. Collect directive must make progress even
+	if the nested spec makes no progress (returns successfully,
+	but with the original line number).
+	* txr.c (version): Bump.
+	* txr.1: Bump version and date.
+	* txr/tests/004/query-1.txr: New test case.
+	* tests/004/query-1.expected: Expected result for new test case.
+
+2009-10-17 Kaz Kylheku  <kkylheku@gmail.com>
+
+	Version 017
+
+	Bugfix in exception subtype definition (defex).
+
+	Tail recursion in marking function of garbage collector.
+
+	-f option for specifying query file, allowing more
+	options to follow, useful in hash-bang scripting and
+	other situations.
+
+	* txr.c: (version): Bump to 016
+	* txr.1: Bump version to 016.
+
+2009-10-17 Kaz Kylheku  <kkylheku@gmail.com>
+
+	* txr.1: Documented defex.
+	* unwind.c (uw_register_subtype): Bugfix: if the subtype
+	exists already, we must not delete it and create a new entry, but
+	destructively point its entry to its assigned supertype.
+	An exceptions is thrown rather than abort for attempts
+	to make t a subtype of something other than itself.
+	An attempt to make something other than nil a subtype of nil
+	is diagnosed.  Attempts to redefine the relationship
+	between two types if they are already connected by one;
+	this covers circularity and other cases, while still allowing
+	a relaxed order of definition.
+
+2009-10-17 Kaz Kylheku  <kkylheku@gmail.com>
+
+	* gc.c (mark_obj_tail): New macro.
+	(mark_obj): Optimized with manual tail recursion.
+	The funtion will no longer generate long call stacks
+	for long lists. Descending to the car field of
+	a cons is still recursive, but ``car-heavy''
+	trees are rare.
+
+2009-10-16  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Resurrect -f option, with different meaning.
+	We need "-f query-file" so that hash-bang scripts
+	can be written which can pass options to txr.
+
+	* txr.c (help, main): Inplement and document -f.
+	Also bugfix: do not throw file open errors as exceptions
+	of type error, because these cause an abort, potentially leading to a
+	core dump. They are now thrown as file_error.
+	* txr.1: Documented -f.
+
+2009-10-16  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Implemented @(next arg) for treating the command line
+	as an input source.
+
+	* txr.1: Updated, and fixed a few unrelated mistakes.
+	* lib.c (dir): Removed unused symbol globa.
+	(args): New symbol global.
+	* lib.h (dir): Declaration removed.
+	(args): Declared.
+	match.c (match_files): Implemented @(next arg).
+	Had to hack laziness to the file opening logic in match_files.
+	If the function is entered with a spec whose first
+	directive is @(next), then it defers opening the first
+	file in the list of files (since it will be immediately
+	abandoned in favor of another input source).
+	This prevents an error in the situation when the
+	arguments do not name files, and there is a @(next args)
+	directive to process them as an input source.
+
+2009-10-16  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Version 016
+
+	Catch clauses with parameters.
+
+	Directive for throwing exceptions: throw.
+
+	Directive for defining exception types: defex.
+
+	-f option renamed to -c.
+
+	* txr.c: (version): Bump to 016
+	* txr.1: Bump version to 016.
+
+2009-10-16  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* txr.c (help, main): Changed -f argument to -c. This
+	is consistent with the -c argument of the shell;
+	-f looks like awk's -f option, which specifies a file,
+	not a literal script body.
+
+	* txr.1: Updated.
+
+2009-10-15  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* txr.1: Grammar, spelling.
+
+2009-10-15  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* parser.y (clauses_opt): Long overdue nonterminal added.
+	(define_clause) simplified with clauses_opt.
+	(try_clause): Error handling improved.
+	(catch_clauses_opt): Catch and finally clauses can be empty.
+	Error cases added.
+	* txr.1: Updated.
+
+2009-10-15  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* match.c (match_files): Use alist_remove1 for a one
+	element removal.
+
+2009-10-15  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* unwind.c (uw_throw): Add program prefix before
+	unhandled exception text. Print it in the
+	standard notation if it's not a string literal.
+	* match.c (sem_error, file_err): Don't stick program
+	prefix into exception text.
+
+2009-10-15  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* unwind.c (uw_exception_subtype_p, uw_init):
+	Slight change in representation for exception subtypes,
+	saving one node in the list.
+
+2009-10-15  Kaz Kylheku  <kkylheku@gmail.com>
+
+	New throw and defex directives, catches with arguments.
+
+	* lib.c (defex, throw): New symbol globals.
+	(obj_init): Symbols interned.
+	* lib.h (defex, throw): Declared.
+	* match.c (match_files): Implemented throw and defex.
+	Argument handling in catches.
+	* unwind.c (uw_register_subtype): Returns right
+	argument, so we can cleverly use it with reduce_left.
+	* unwind.h (uw_register_subtype): Declaration updated.
+	* txr.1: Updated.
+
+2009-10-14  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Version 015
+
+	Code restructuring.
+
+	Corruption bugfix in gc-debugging code.
+
+	The nil symbol more properly implemented.
+
+	Semantics change: collect treated as a failed match if it
+	does not collect anything.
+
+	Bugfix in function argument reconciliation: must only
+	be done for unbound parameters.
+
+	New @(local) directive (synonym of forget) for expressing
+	local variables in functions.
+
+	Quasi-literals: backquote-delimited literals that contain interpolated
+	variables. Useful in next, output, bind and function calls.
+
+	Hygiene: some implementation-inserted syntax tree elements
+	are now in their own namespace so they can't clash with user-defined
+	constructs.
+
+	Rewritten streams implementation.
+
+	Exception handling: try/catch/finally.
+
+	Exceptions used internally and externally.
+
+	File errors are mapped to exceptions now.
+
+	Hash bang (#!) scripting supported.
+
+	New -f paramater, allowing entire query to be specified
+	as argument rather than from a file or stdin.
+
+	* txr.c: (version): Bump to 014.
+	* txr.1: Bump version to 014. More documentation about
+	exceptions.
+
+2009-10-14  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Support for hash bang execution, and embedding query
+	in a command line argument.
+
+	* txr.c (remove_hash_bang_line): New function.
+	(main): Added -f option. Initialize and gc-protect yyin_stream, and
+	use it in all places where yyin was previously set up.
+	Diagnose when -a, -D and -f are wrongly clumped with other options.
+	Remove the first line of the query if it starts with #!.
+	* parser.h (yyin): Declaration removed.
+	(yyin_stream): Declared.
+	* parser.l (YY_INPUT): Macro defined.
+	(yyin_stream): New global.
+	* stream.c (string_in_get_line, string_in_get_char): Bugfix:
+	wrong length function used.
+	(string_in_ops): Bugfix: wrong get_char function wired in.
+	(get_char): New function.
+	* stream.h (get_char): Declared.
+	* txr.1: -f option documented.
+
+2009-10-14  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* lib.c (obj_print, obj_pprint): Print #<garbage ...>
+	syntax if an object has a bad type code; do not just return
+	without printing anything.
+
+2009-10-14  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Code cleanup and documentation.
+
+	* txr.1: Start documenting quasiliterals, exception handling and
+	nothrow in next and output.
+	* parser.y (catch_clauses_opt): Add missing empty production, so that
+	a try block doesn't have to have a finally clause.
+	* lib.h (or2, or3, or4): New macros.
+	* match.c (match_files): Allow output and next forms which just
+	have one argument that is nothrow, as documented.
+	* stream.c common_vformat, string_out_vcformat, string_out_vcformat,
+	make_string_output_stream, make_dir_stream, close_stream, get_line,
+	vformat, vcformat, format, cformat, put_string, put_cstring,
+	put_char): Switch to new style type assertions.
+
+2009-10-13  Kaz Kylheku  <kkylheku@gmail.com>
+
+	New syntax for next and output directives, taking advantage
+	of quasi-literals. Non-throwing behavior can be specified in
+	both using nothrow. The old syntax is supported, and has
+	the old semantics (non-throwing). Hence, the test cases
+	pass again without modification.
+
+	File open errors thrown as file_error type.
+
+	* lib.c (nothrow, file_error): New symbol globals.
+	(obj_init): New symbols interned.
+	* lib.h (nothrow, file_error): Declared.
+	* match.c (file_err): New function.
+	(eval_form): Bugfix: if input is nil, or an atom other than a symbol,
+	return the value hoisted into a cons. A nil return strictly means,
+	unbound variable.
+	(match_files): Support new syntax for next and and output.
+	Throw open errors as file_err.
+	* parser.l (grammar): Change how OUTPUT is returned to the
+	style similar to DEFINE, so interior forms can be parsed.
+	* parser.y (grammar): Fix up output_clause with new syntax.
+	* unwind.c (uw_throw): Do not abort on unhandled file_error,
+	but terminate with a failed status.
+	(uw_init): Register file_error as a subtype of error exception.
+
+2009-10-13  Kaz Kylheku  <kkylheku@gmail.com>
+
+	First cut at working try/catch/finally implementation.
+
+	* lib.c (try, catch, finally): New symbol globals.
+	(obj_init): New symbols interned.
+	* lib.h (try, catch, finally: Declared.
+	* parser.y (TRY, CATCH, FINALLY): New tokens.
+	(try_clause, catch_clauses_opt): New nonterminal grammar symbols.
+	* parser.l (yybadtoken): TRY, CATCH and FINALLY handled.
+	(grammar): New cases for try, catch and finally.
+	* unwind.h (struct uw_catch): New member called visible.
+	(uw_continue): New parameter added.
+	(uw_exception_subtype_p): Declared.
+	(uw_catch_begin): Macro rewritten to use switch logic
+	around setjmp.
+	(uw_do_unwind, uw_catch, uw_unwind): New macros.
+	(uw_catch_end): Rewritten to close switch, and automatically
+	continue the unwinding if the block is entered as an unwind.
+	* unwind.c (uw_unwind_to_exit_point): Exception catching
+	frames made invisible via new flag prior to control passing to them.
+	longjmp code 2 introduced for distinguishing a catch from
+	an unwind. Visibility flag is checked and invisible frames
+	are skipped.
+	(uw_push_catch): cont member of the unwind frame initialized to zero.
+	(exception_subtype_p): Renamed to uw_exception_subtype_p, changed
+	to extern. Fixed wrong order of arguments to assoc.
+	(uw_throw): Honor visibility flag: do not consider invisible
+	catch frames.
+	(uw_register_subtype): sup/sub mixup bugfix.
+	(uw_continue): Takes extra argument: the continuation frame
+	that (re)establishes the exit point for the unwinding.
+	This allows nested unwinding action to take place in a finally,
+	and then to continue to the original exit point.
+	* match.c (match_files): Handling for try directive added.
+
+2009-10-13  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* parser.l (yybadtoken): Bugfix: added missing LITCHAR case.
+	* unwind.h (internal_error): Fixed broken macro.
+	* match.c (match_line, match_files): sem_error bugfix: used %a instead
+	of ~a.
+	(match_files): Wrap block handler in compound statement, otherwise the
+	macroexpansion declares a variable in the middle of a statement, which
+	is a gcc extension to C90 (or a C99 feature,
+	but we aren't using C99).
+
+2009-10-08  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Exception handling for query errors.
+	Verbose logging decoupled from yyerror functions.
+	Superior object-oriented formatting used for cleaner code.
+
+	* lib.c (query_error): New symbol global.
+	(obj_init): New symbol interned.
+	* lib.h (query_error): Declared.
+	* match.c (output_produced): Variable changed to external linkage.
+	(debugf, debuglf, debuglcf, sem_error): New static functions.
+	(dest_bind, match_line, match_files): Regtargetted away from
+	the yyerrorf and yyerrorlf functions to use debugf,
+	debuglf, debuglcf for logging and sem_error for throwing
+	query errors as exceptions.
+	* parser.h (spec_file_str): New global declared.
+	* parser.l (yyerror): Calls yyerrorf instead of yyerrorlf;
+	lets yyerrorf increment error count.
+	(yyerrorf): Loses level argument.
+	(yyerrorlf): Function removed.
+	(yybadtoken): Retargetted from yyerrorlf to yyerrorf.
+	(grammar): yyerrorf call fixed up.
+	* txr.c (spec_file_str): New global defined.
+	(main): Protects new global against gc, and initializes it.
+	* unwind.c (uw_throw): If an unhandled exception is of
+	type query_error, it results in an exit rather than abort.
+	The false string is conditionally printed.
+	(uw_init): Register query_error as subtype of error.
+
+2009-10-08  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Exception handling framework implemented.
+
+	* lib.c (cobj_t, error, type_error, internal_err, numeric_err,
+	range_err): New symbol globals.
+	(prog_string): New string global.
+	(code2type): New static function.
+	(typeof): Rewritten using code2type.
+	(type_check, type_check2): New static functions.
+	(car, cdr, list, plus, minus, length_str, chr_p, chr_str,
+	chr_str_set, apply, funcall, funcall1, funcall2,
+	vec_get_fill, vecref_l, lazy_stream_cons): Checks and
+	assertions rewritten using new functions and macros.
+	(obj_init): prog_string protected from gc.
+	New symbols interned.
+	(init): uw_init() call moved after obj_init() because
+	it needs stable symbols.
+	* lib.h (cobj_t, error, type_error, internal_err, numeric_err,
+	range_err, prog_string, type_check, type_check2): Declared.
+	* match.c (dump_var, complex_snarf, complex_close): abort
+	calls rewritten to use exception handling.
+	* regex.c (nfa_all_states, nfa_closure, nfa_move): Likewise.
+	* stream.c (string_out_vcformat): Bugfix: fill index not updated.
+	(make_string_output_stream): Bugfix: initial buffer not null terminated.
+	(get_string_from_stream): New function.
+	* stream.h (get_string_from_stream): Declared.
+	* txr.c (main): Some error prints turned to throws.
+	* unwind.c (unwind_to_exit_point): Supports UW_CATCH frames,
+	whose finalization logic has to be invoked during unwinding,
+	and as target exit points.
+	(uw_init): Installs exception symbols into
+	subtyping hirearchy.
+	(uw_push_catch, exception_subtype_p, uw_throw, uw_throwf,
+	uw_errorf, uw_throwcf, uw_errorcf, type_mismatch,
+	uw_register_subtype, uw_continue): New functions.
+	(exception_subtypes): New static global.
+	* unwind.h (noreturn): New macro, conditionally defined on __GNUC__.
+	(enum uw_frtype): New member, UW_CATCH.
+	(struct uw_catch): New struct type.
+	(union uw_frame): New member, ca.
+	(uw_push_catch, exception_subtype_p, uw_throw, uw_throwf,
+	uw_errorf, uw_throwcf, uw_errorcf, type_mismatch,
+	uw_register_subtype, uw_continue): New functions declared.
+	(uw_catch_begin, uw_catch_end, internal_error, type_assert,
+	bug_unless, numeric_assert, range_bug_unless): New macros.
+
+2009-10-07  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Rewritten streams implementation.
+
+	* stream.h, stream.c: New files.
+	* Makefile (OBJS): New object file stream.o.
+	* dep.mk: Dependencies updated.
+	* gc.c (finalize): STREAM case removed.  Call destroy only if not null.
+	(mark_obj): STREAM case removed.
+	* lib.c (push, pop): New functions.
+	(equal): STREAM case removed.
+	(sub_str): Allow from parameter to be nil, defaulting to zero.
+	(stdio_line_read, stdio_line_write, stdio_close, stdio_line_stream,
+	pipe_close, pipe_line_stream, dirent_read, dirent_close,
+	dirent_stream, stream_get, stream_pushback, stream_put,
+	stream_close): Functions removed.
+	(stream_ops dirent_stream_ops, stdio_line_stream_ops,
+	struct stream_ops, pipe_line_stream_op): Static structs removed.
+	(lazy_stream_func, lazy_stream_cons): Retargetted to new streams.
+	(cobj_print_op): Likewise.
+	(init): Disables and restores GC, instead of doing it in obj_init.
+	(obj_print): Retargetted to new streams.
+	(obj_pprint): New function.
+	(obj_init): Does not manipulate gc_state any more, moved to init.
+	Call to stream_init added.
+	(d, snarf): Retargetted to new streams.
+	(snarf_line): Removed, now appears in stream.c, retargetted
+	to new streams.
+	* lib.h (enum type): STREAM removed.
+	(struct stream, struct stream_ops): Removed.
+	(struct cobj_ops): Retargetted to new streams.
+	(union obj): sm member removed.
+	(push, pop, obj_pprint): Declared.
+	(stdio_line_stream, pipe_line_stream, dirent_stream, stream_get,
+	stream_pushback, stream_put, stream_close, snarf_line): Removed.
+	(cobj_print_op, dump, snarf): Modified.
+	* match.c (dump_bindings, complex_snarf): Retargetted to new streams.
+	* txr.c (main): format used to dump bindings and specs in verbose mode.
+
+2009-10-07  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Implemented quasi-literals: string literals which may
+	contain variables to be interpolated.
+
+	Also, took care of a hygiene problem with respect to some
+	parser-generated forms, which must be invisible to the user.
+
+	* Makefile (LEX_DB_FLAGS): New variable; helpful
+	in generating a lexical analyzer with debug tracing.
+	* parser.l (nesting, closechar): Static variables removed.
+	(char_esc): Add \` escape for quasi-literals.
+	(stack): New %option, to generate a scanner which has
+	a start condition stack.
+	(QSILIT): New start condition.
+	(grammar): Refactored to use start condition stacks.
+	Quasi-literal lexical analysis added.
+	* parser.y (lit_char_helper): New function, for factoring out
+	some common logic between string literals and quasi literals.
+	(quasilit, quasi_item, quasi_items): New grammar symbols and
+	production rules.
+	(strlit): Rule shortened with new helper function.
+	Bugfix: error case assigns nil to $$.
+	(chrlist): Bugfix: error case assigns nil to $$.
+	(LITCHAR): Added to %prec table to fix shift-reduce problem.
+	(expr): Production now can generate a quasilit.
+	* lib.c (quasi): New symbol global.
+	(obj_init): Intern quasi as "$quasi", so the user can
+	make a function called quasi.  Also, var and regex are now interned
+	with the names "$var" and "$regex" for the same reason.
+	* lib.h (quasi): Declared.
+	* match.c (eval_form): Rewritten with recursive processing
+	to handle deeply embedded variables, as well as quasi-strings.
+	(subst_vars): Handles quasi-strings.
+	(match_files): Function calls now use eval_form for function
+	argument evaluation, except of course in the special case that if an
+	argument is a symbol, it may be unbound.
+
+2009-10-06  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* match.c (match_files): No error message for merging to
+	a symbol which is already bound; the existing behavior
+	is to destructively update the binding, which is useful,
+	and so the error is pointless.
+
+2009-10-06  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Introduce local as synonym to forget. It does exactly the
+	same thing; a previous binding is forgotten. This spelling
+	is nicer for functions.
+	* lib.h (local): Declared.
+	* lib.c (local): Defined.
+	(obj_init): New symbol interned.
+
+2009-10-06  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Bugfix: function parameter reconciliation (after function call
+	completes) must only consider the unbound parameters.
+	Otherwise false mismatches result if the function destructively
+	manipulated some bindings of bound parameters.
+	E.g. @(define foo (a)) is called as @(foo "bar") and internally
+	it rebinds bound parameter a to "baz". This situation is
+	not a mismatch. The rebinding is thrown away.
+
+	* match.c (match_files): When processing a function call,
+	keep an alist which associates arguments and unbound parameters.
+	Then, after the function call, process the alist, rather
+	than the full parameter list.
+
+2009-10-06  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Semantics change: collect fails if it does not collect
+	anything. Non-failing behavior can be obtained by
+	wrapping with @(maybe) (but no such workaround for coll yet).
+
+	* match.c (match_line): Return nil if coll collected nothing.
+	(match_files): Return nil if collect collected nothing.
+
+
+2009-10-06  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Bugfix: nil must be on the list of interned symbols.
+
+	* lib.c (sym_name): Function removed. This was like
+	symbol_name but did not accept nil.
+	(intern): Use symbol_name instead of sym_name, allowing
+	nil to be on the list of interned symbols.
+	(obj_init): Add nil to interned_syms list.
+	(nil_string): Changed from "NIL" to "nil".
+	* match.c (dest_bind): Treat nil as a value, not a symbol.
+	(match_files): Treat nil as a value when it's
+	a function argument.
+
+2009-10-06  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* gc.c (more): Bugfix: free_tail was incorectly calculated,
+	thereby destroying the validity of the FIFO recycling algorithm
+	used when GC debugging is enabled. This showed up as mysterious
+	assertions and crashes.
+	(mark_obj): Do not abort if a free object is marked.
+	(mark_mem_region): Renamed bottom and top variables to low
+	and high. The naming was confusing inverted relative
+	to that in the caller.
+	(sweep): Abort if somehow a block is free and marked reachable.
+
+2009-10-06  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* match.c (match_files): Fixed nonexitent symbol warning for merge
+	directive (complained about wrong symbol).
+
+2009-10-05  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Refactoring matching code.
+
+	* lib.h (cobj_ops): New function pointer, mark.
+	* gc.c (mark_obj): For a COBJ type, call the mark function
+	if the pointer is non-null.
+	(gc_mark): New public function, wrapper that calls
+	the private mark_obj. Implementations of mark for COBJ
+	objects will need to call this.
+	* gc.h (mark_obj): Declared.
+	* regex.c (regex_obj_ops): Explicitly initialize mark function pointer
+	 to null.
+
+2009-10-05  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Code restructuring.
+
+	* Makefile (match.o): New object file.
+	(depend): New rule for generating dep.mk, using txr.
+	(lib.o, lex.yy.o, regex.o, y.tab.o unwind.o, txr.o, match.o, gc.o):
+	Dependency rules removed.
+	* dep.mk: New make include file; captures dependencies. Generated
+	by new depend rule in Makefile, using txr.
+	* depend.txr: Txr query to generate dependencies.
+	* extract.y: File renamed to parser.y
+	(output_produced): Variable removed,
+	moved into new file match.c.
+	(dump_shell_string, dump_shell_string, dump_var, dump_bindings, depth,
+	weird_merge, map_leaf_lists, dest_bind, eval_form, match_line,
+	format_field, subs_vars, complex_open, complex_open_failed,
+	complex_close, complex_snarf, robust_length, bind_car, bind_cdr,
+	extract_vars, extract_bindings, do_output_line, do_output,
+	match_files, extract): Functions removed, added to match.c.
+	(struct fpip): Definition removed, added to match.c
+	(<stdlib.h>, <string.h>, <ctype.h>, <errno.h>, <setjmp.h>,
+	"gc.h", "unwind.h"): Unneeded headers removed.
+	* match.c: New file.
+	* extract.l: Renamed to parser.l.
+	* extract.h: Renamed to parser.h.
+	(opt_loglevel, opt_nobindings, opt_arraydims, version, progname):
+	Declarations moved to txr.h.
+	(extract): Dclaration moved to match.h.
+	* txr.h, match.h: New headers.
+	* gc.h (opt_gc_debug): Moved to txr.h.
+
+2009-10-03  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Version 014
+
+	New cases directive.
+
+	New define directive: user-defined dynamically scoped functions.
+
+	String literals in bind and function calls.
+
+	EOF in the middle of a line handled properly.
+
+	* extract.l (version): Bump to 014.
+	* txr.1: Bump version to 014.
+
+
+2009-10-02  Kaz Kylheku  <kkylheku@gmail.com>
+
+	New cases directive.
+
+	* extract.l (yybadtoken): Add case for CASES.
+	(grammar): Tokenize cases directive.
+	* extract.y (CASES): New token kind.
+	(cases_clause): New grammar symbol.
+	(grammar): Implement new grammar cases.
+	(match_files): Implement semantics for cases.
+	* lib.c (cases): New global.
+	(obj_init): Intern cases symbol.
+	* lib.h (cases): Declared.
+	* txr.1: Documented.
+
+2009-10-02  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Support for string and character literals.
+
+	* extract.l (char_esc): Support \' and \" escapes.
+	(STRLIT, CHRLIT): New flex start conditions.
+	(grammar): New rules for tokenizing string literals.
+	* extract.y (LITCHAR): New token kind.
+	(strlit, chrlit, litchars): New grammar symbols.
+	(grammar): Implement string literal parsing.
+	(dump_var): Support character objects, treating
+	them as one-character strings.
+	(eval_form): New function.
+	(match_files): In bind directive, allow the right
+	hand side to be an arbitrary object.
+	* lib.c (mkustring, init_str): New functions.
+	(cat_str): Allow characters in the mix, treating
+	them as one-character strings.
+	* lib.h (mkustring, init_str): Declared.
+	(chrp, chr_str, chr_str_set): New function.
+	* txr.1: Documented.
+
+2009-10-02  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Support for query-defined functions.
+
+	* extract.l (yybadtoken): New DEFINE case.
+	(NESTED): New flex start condition.  This allows for different lexing
+	rules in nested lists, so even though for instance @(collect) is a
+	special token @((collect)) isn't.
+	(grammar): Refactored with NESTED.
+	Tokenize define directive.
+	* extract.y (define_transform): New function.
+	(DEFINE): New token kind.
+	(define_clause): New grammar symbol.
+	(match_files): Implement define semantics, and function calls.
+	* lib.c (define): New global.
+	* lib.h (define): Declared.
+	(proper_listp, alist_remove1, copy_cons, copy_alist): New functions.
+	(obj_init): Intern define symbol.
+	(init): Call new function uw_init.
+	* unwind.c (toplevel_env): New static structure.
+	(uw_unwind_to_exit_point): Support new UW_ENV frame type.
+	(uw_init, uw_find_env, uw_push_env, uw_get_func, uw_set_func): New
+	functions.
+	* unwind.h (UW_ENV): New enumeration member in uw_frtype.
+	(uw_dynamic_env): New struct.
+	(uw_block_begin, uw_block_end): Renamed some variables.
+	(uw_env_begin, uw_env_end): New macros.
+	* txr.1: Documented.
+
+2009-10-02  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Misc. bugfixes and improvements.
+
+	* extract.l (grammar): Newline in a directive
+	no longer an error. Why not allow it.
+	* extract.y (grammar): Productions for catching empty bodies in some
+	constructs now end with END newl, rather
+	than just END, so parsing can continue sanely.
+	(match_lines): In diagnostics, don't say "ignored" about material which
+	causes an error that fails the query!
+	* lib.c (mkstring): Initialize length since we know it!
+	(c_str): Take a symbol as an arg, so we don't have
+	to keep writing c_str(symbol_name(sym)).
+	(obj_print): Use isprint rather than isctrl to decide
+	whether to print a character as an escape.
+	(snarf_line): Properly handle EOF in the middle of line.
+
+2009-09-29  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Version 013
+
+	Some minor garbage collection issues fixed.
+
+	Infinite looping bug fixed.
+
+	New @(trailer) directive.
+
+	* extract.y (match_files): Implemented trailer directive.
+	* extract.l (version): Bump to 013.
+	* lib.h (trailer): Declaration added.
+	* lib.c (trailer): External definition added.
+	(obj_init): Initializer trailer with interned symbol.
+	* txr.1: Documented @(trailer) and bumped version to 013.
+
+2009-09-29  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Looping bug fixed. Certain directives could cause an infinite
+	loop if the query has run out of data.
+
+	* extract.y (match_files): The semantics of the first_file_parsed
+	argument changes a little bit. Previously, if nil was passed,
+	a new lazy stream would be opened for the first file.
+	But this is ambiguous because nil also means empty list;
+	sometimes when we recurse into match_files, the data has ran
+	out and this argument is thus nil. Now, that argument must be
+	the symbol t in order to mean ``open the first file''.
+	If the argument is nil, it unambiously means ``we are at the end of the
+	current file; don't open anything''.
+	(extract): The initial call to match_files now passes
+	the symbol t for the first_file_parsed argument.
+
+2009-09-29  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Fixing some gc issues. The test cases were found to bomb
+	with an assertion when run with --gc-debug enabled,
+	due to a garbage-collected object still being used.
+	This was due to the way the main function was structured.
+
+	Also, the stack ``top'' terminology in the gc was stupidly wrong. Leaf
+	function frames are at the stack top, and main is near the bottom.
+	I was thinking of the ``top caller''.
+
+	* Makefile (TXR_DBG_OPTS): New variable.
+	Tests are now run with --gc-debug, which makes them slower,
+	but has much greater chance of trapping gc problems.
+	* extract.l (main): Two variables are now used for determining the
+	stack bottom. We don't know in which order the compiler
+	places local variables into a stack frame.  (This is a separate
+	question from that of the direction of stack growth).
+	The call to the init function is now done right away.
+	The argument processing section of main does some processing
+	with GC objects, but the init function was being called afterward,
+	before the list of interned symbols is protected from garbage
+	collection! So with --gc-debug turned on, parts of the interned
+	symbol list were being garbage collected (since the variable
+	has not yet been added to the set of root pointers, which is
+	done in the init function).  Also, the use of an unknown --long-option
+	is diagnosed properly now.
+	* gc.c (gc_stack_top): Renamed to gc_stack_bottom, and converted from
+	extern to static.
+	(mark): Follows rename of gc_stack_top to gc_stack_bottom.
+	(sweep): Eliminated the freed variable for counting freed objects,
+	and the associated debug message, which was not useful.
+	Commented why the free list is managed differently when dbg
+	is turned on.
+	(gc_init): New function.
+	* gc.h (gc_stack_top): Declaration removed.
+	(gc_init): Declaration added.
+	* lib.c (min): New macro.
+	(init): Takes two additional arguments which are used to
+	determine the stack bottom. The function first determiens
+	whether the stack grows up or down. Then it takes the
+	greater or smaller of the two potential stack top pointers,
+	based on that. The result is passed go gc_init.
+	* lib.h (init): Declaration updated.
+
+2009-09-28  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Version 012
+
+	Semantics change of @(until) in @(collect) and @(coll).
+
+	Minor fixes.
+
+	* extract.y (match_line, match_files): The until clauses
+	continue to be processed after the main clauses of the collect
+	or coll (to see the bindings), but are processed before
+	the collection occurs, so that the until will veto
+	the bindings of the last iteration.  Moreover, the data
+	positions stays where it is when this happens, and no
+	arrangement is made to match the until material again.
+
+	* txr.1: Tried to document the change.
+
+
+2009-09-27  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* txr.1: following proofread, fixed various escaping problems and
+	instances of missing text.
+
+2009-09-26  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* lib.c (equal): Bugfixes: wrong fallthrough of FUN case.
+	VEC case must return nil, not break.
+
+2009-09-26  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Preparation for some sorting support.
+
+	* extract.y (merge): Renamed to weird_merge.
+	(map_leaf_lists): New functino.
+	(match_file): Follow weird_merge rename.
+	* lib.c (all_satisfy, none_satisfy, string_lt, do_bind2other,
+	bind2other, merge, do_sort, sort): New functions.
+	* lib.h (all_satsify, none_satisfy, string_lt,
+	bind2other, sort): Declared.
+
+2009-09-25  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Version 011
+
+	New @(maybe) clause optionally matches (does not fail if none of
+	its clauses match anything).
+
+	New blocks feature: allows a query or subquery to be
+	abruptly terminated by invoking an exit to a named or anonymous
+	block. @(collect) and @(skip) have implicit anonymous blocks now.
+
+	The @(skip) directive takes a numeric argument now, which limits
+	how many lines are searched.
+
+	* Makefile, extract.l, extract.y, extract.h, gc.c, gc.h, lib.c, lib.h,
+	regex.c, regex.h, txr.1, unwind.c, unwind.h: Copyright notice and
+	license text updated or added, and version bumped up to 011.
+	* tests/001/query-1.txr, tests/001/query-2.txr, tests/001/query-3.txr,
+	tests/002/query-1.txr: Assigned to public domain.
+
+2009-09-25  Kaz Kylheku  <kkylheku@gmail.com>
+
+	New features:
+	- named blocks;
+	- maybe clause;
+	- optional iteration bound on skip.
+
+	* extract.y: includes added: "unwind.h", <setjmp.h>.
+	(MAYBE, OR): New grammar tokens.
+	(maybe_clause): New nonterminal grammar symbol.
+	(expr): A NUMBER can be an expression now, so that @(skip 42)
+	is valid syntax.
+	(match_files): Support for numeric argument in skip directive
+	to bound the search to a maximum number of lines.
+	Anonymous block established around skip.
+	New directives implemented: maybe, block, accept and fail.
+	Anonymous block established around collect.
+	* txr.1: Documentation updated with new features.
+	* Makefile: new object file unwind.o, and associated rules.
+	* extract.l (yybadtoken): New cases for MAYBE and OR.
+	(grammar): Likewise.
+	* lib.c (block, fail, accept): New symbol variables.
+	(obj_init): New symbols interned.
+	* lib.h (block, fail, accept): Declared.
+	(if2, if3): Macros fixed so test expression is not compared to nil,
+	but implicitly tested as boolean.
+	* unwind.c, unwind.h: New source files.
+
+2009-09-24  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Stability fixes.
+
+	* extract.y (match_files): Fixed invalid string("-") to
+	string(chk_strdup("-")) which caused a freeing of
+	a non-malloced string at gc finalization time.
+	* regex.c (nfa_state_shallow_free): New function: does not
+	free satellite objects, just the structure itself.
+	(nfa_combine): Use nfa_state_shallow_free instead of nfa_state_free,
+	because the merged state inherits ownership of objects from the state
+	being spliced out.
+	(nfa_state_set): Fix lack of initialization of s.visited member of the
+	state structure.
+
+2009-09-24  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Version 010
+
+	A file specs can start with $, which means read a directory.
+
+	Data sources are not into memory at once, but on demand,
+	which can reduce memory for many queries.
+
+	Regular expressions are now compiled once, when the
+	query is parsed.
+
+	Character escapes are now supported in regular expressions,
+	and as a special syntax.
+
+	* extract.l (version): Bumped to 010.
+	(grammar): 8 and 9 are not octal digits; handle all regex
+	backslash escaping in lexical grammar.
+	* extract.y (grammar): Get rid of backslash handling from
+	regex grammar. Lexer returns a REGCHAR for every escaped
+	item. In situations where an operator character is implicily
+	literal, like * in a character class, we use the grammar
+	to include that alongside REGCHAR. Bugfixes: the character ], when not
+	closing a class, is not a syntax error but stands for itself;
+	the character - stands for itself outside of character class;
+	the | character is literal in a character class.
+	* txr.1: Updated version. Documented character escapes.
+
+2009-09-24  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Lazy stream list improvement: no extra NIL element caused
+	by end-of-file. Requires push-back support in streams.
+	To avoid introducing a new structure member into streams,
+	we extend the semantics of the label member, and rename
+	it to label_pushback.
+
+	* lib.c (stdio_line_stream, pipe_line_stream,
+	dirent_stream): Follow rename of struct stream member;
+	assert that label is an atom.
+	(stream_get): Check pushback stack first and get item from there.
+	(stream_pushback): New function.
+	(lazy_stream_func): Pull one more item from the stream and
+	use /that/ to decide whether to continue the lazy stream.
+	The extra item is pushed back, if valid.
+	(lazy_stream_cons): Simplified: no hack involving regular cons. Starts
+	the induction by peeking into the stream. If something is there, it is
+	pushed back, and a lazy cons is constructed which will fetch it.
+	(obj_print): Made aware of the pushback, which must be skipped
+	to get to the terminating label.
+	* lib.h (struct stream): Member renamed from label to label_pushback.
+	(stream_pushback): New function declaration.
+
+2009-09-23  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Escape syntax in regexes, and text. The
+	standard seven character escapes are supported,
+	namely \a, \b, \t, \n, \v, \f, and \r,
+	as well as hex and octal escapes, plus
+	the code \e for ASCII ESC.
+
+	* extract.l (char_esc, num_esc): New functions.
+	(grammar): New lex cases.
+	* lib.c (obj_print): Support all character escapes in printing.
+	Bugfix: backslash printed as two backslashes, not one.
+
+2009-09-23  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* tests/002/query-1.txr: Modified to use $ to scan thread
+	subdirectories.
+	* tests/002/query-1.expected: Updated.
+
+2009-09-23  Kaz Kylheku  <kkylheku@gmail.com>
+
+	New COBJ type for wrapping arbitrary C objects into the
+	Lisp-like framework. Compiled regexes are objects now.
+	Regexes in a query are now compiled just once.
+
+	* extract.y (grammar): Regexes compiled while parsing.
+	(match_line): Modify with respect to the abstract syntax
+	tree change, and the interface changes in the match_regex,
+	and search_regex functions.
+	* gc.c (mark_obj, finalize): Handle marking and finalization
+	of COBJ objects.
+	* lib.c (typeof, equal, obj_print): Handle COBJ.
+	(cobj, cobj_print_op): New functions.
+	* lib.h (type_t): New enum element, COBJ.
+	(struct cobj, struct subj_ops): New types.
+	(union obj): New member, co.
+	(cobj, cobj_print_op): New functions declared.
+	* regex.c (regex_equal, regex_destroy, regex_compile, regex_nfa): New
+	functions.
+	(regex_obj_ops): New static struct.
+	(search_regex, match_regex): Interface change. Regex arguments
+	are now compiled regexes. Functions won't handle raw regexes.
+	* regex.h (regex_compile, regex_nfa): New functions declared.
+
+2009-09-23  Kaz Kylheku  <kkylheku@gmail.com>
+
+	New feature: file specs that start with $ read directories.
+	Reading from an ``ls'' pipe is too slow.
+
+	Streams and lazy conses implemented. Lazy conses allow us to treat a
+	file or other kind of stream exactly as if it were a list.
+	We can use car and cdr, etc. But only the parts of the list
+	that we actually touch are instantiated on-the-fly by
+	reading from the underlying stream.
+
+	* extract.l: inclusion of <dirent.h> added.
+	* extract.l: inclusion of <dirent.h> added.
+	* extract.y (fpip_closedir): new enumeration in struct fpip,
+	and fpip_noclose removed.
+	(complex_open): Check for leading $, use opendir.
+	(complex_open_failed): New function.
+	(complex_close): Handle fpip_closedir case. Not closing
+	stdin and stdout is handled by explicit comparison now.
+	(complex_snarf): New function, constructs stream of
+	a suitable type, over object returned from complex_close,
+	wraps it in a lazy list.
+	(match_files): Use complex_snarf instead of snarf to get a lazy list.
+	* gc.c: Handle LCONS and STREAM cases.
+	* lib.c (stream_t, lcons_t): New variables holding symbols.
+	(typeof, equal, obj_print): Handle LCONS and STREAM.
+	(car, cdr, car_l, cdr_l, consp, atom, listp): Rewritten to handle
+	LCONS.
+	(chk_strdup, stdio_line_read, stdio_line_write, stdio_close
+	stdio_line_stream, pipe_close, pipe_line_stream,
+	dirent_read, dirent_close, dirent_stream,
+	stream_get, stream_put, stream_close,
+	make_lazycons, lazy_stream_func, lazy_stream_cons): New functions.
+	(stdio_line_stream_ops, pipe_line_stream_ops,
+	dirent_stream_ops): New static structs.
+	(obj_init): Intern new symbols lstream, lcons, and dir.
+	* lib.h (type_t): New enum members STREAM and LCONS.
+	(struct stream, struct stream_ops, struct lazy_cons): New types.
+	(union obj): New members sm and lc.
+	(chk_strdup, stdio_line_stream, pipe_line_stream,
+	dirent_stream, stream_get, stream_put, stream_close,
+	lazy_stream_cons): New function declarations.
+	* regex.c: inclusion of <dirent.h> added
+
+2009-09-23  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Version 009
+
+	User-friendly error messages from parser.
+	Fixed -q option.
+
+	* extract.l (version): Bumped to 009.
+	* txr.1: Updated version.
+
+2009-09-22  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* Makefile (LIBLEX): New variable.
+	Refer to lex library as -lfl, using variable
+	that can be overridden.
+
+2009-09-22  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* extract.h (yybadtoken): New function declaration.
+	* extract.l (yybadtoken): New function.
+	(main): Fixed -q option.
+	* extract.y (grammar): Lots of new error productions, some
+	phrase rules refactored, resulting in much more user-friendly
+	error diagnosis.
+	* txr.1: -q option semantics clarified.

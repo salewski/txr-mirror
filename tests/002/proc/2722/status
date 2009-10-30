@@ -1,0 +1,31 @@
+Name:	mixer_applet2
+State:	S (sleeping)
+SleepAVG:	98%
+Tgid:	2722
+Pid:	2722
+PPid:	1
+TracerPid:	0
+Uid:	524	524	524	524
+Gid:	503	503	503	503
+FDSize:	256
+Groups:	501 503 512 
+VmSize:	   21128 kB
+VmLck:	       0 kB
+VmRSS:	    9276 kB
+VmData:	    2188 kB
+VmStk:	      68 kB
+VmExe:	      29 kB
+VmLib:	   15639 kB
+StaBrk:	08053000 kB
+Brk:	08243000 kB
+StaStk:	bffff7a0 kB
+ExecLim:	08050000
+Threads:	1
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000020001000
+SigCgt:	00000001800100f0
+CapInh:	0000000000000000
+CapPrm:	0000000000000000
+CapEff:	0000000000000000
