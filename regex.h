@@ -101,6 +101,7 @@ nfa_t nfa_compile_regex(obj_t *regex);
 void nfa_free(nfa_t);
 long nfa_run(nfa_t nfa, const char *str);
 obj_t *regex_compile(obj_t *regex_sexp);
+obj_t *regexp(obj_t *);
 nfa_t *regex_nfa(obj_t *);
 obj_t *search_regex(obj_t *haystack, obj_t *needle_regex, obj_t *start_num,
                     obj_t *from_end);

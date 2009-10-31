@@ -1,3 +1,14 @@
+2009-10-18 Kaz Kylheku  <kkylheku@gmail.com>
+
+	Trivial change allows regexps to be bound to variables,
+	and used for matching. This Just Works because of
+	the way match_line treats variables.
+
+	* match.c (eval_form): Check for a regexp form and return
+	it as a value representing itself.
+	* regex.c (regexp): New function.
+	* regex.h (regexp): Declared.
+
 2009-10-17 Kaz Kylheku  <kkylheku@gmail.com>
 
 	* deps.mk: Updated.
