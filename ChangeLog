@@ -1,5 +1,9 @@
 2009-10-17 Kaz Kylheku  <kkylheku@gmail.com>
 
+	* deps.mk: Updated.
+
+2009-10-17 Kaz Kylheku  <kkylheku@gmail.com>
+
 	Version 018
 
 	Bugfixes: mistakes in debugging calls; infinite looping
