@@ -604,6 +604,8 @@ obj_t *eval_form(obj_t *form, obj_t *bindings)
   else if (consp(form)) {
     if (car(form) == quasi) {
       return cons(t, cat_str(subst_vars(rest(form), bindings), nil));
+    } else if (regexp(car(form))) {
+      return cons(t, form);
     } else {
       obj_t *subforms = mapcar(bind2other(func_n2(eval_form), bindings), form);
 

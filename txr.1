@@ -1419,7 +1419,8 @@ to match B, or the bind fails. Matching means that either
   found as substructure within the other.
 
 The right hand side does not have to be a variable. It may be some other
-object, like a string, or list of strings, et cetera. For instance
+object, like a string, quasiliteral, regexp, or list of strings, et cetera. For
+instance
 
   @(bind A "ab\tc")
 
@@ -1883,7 +1884,7 @@ matches an input line "begin".
 A function is invoked by compound directive whose first symbol is the name of
 that function. Additional elements in the directive are the arguments.
 Arguments may be symbols, or other objects like string and character
-literals.
+literals, quasiliterals ore regular expressions.
 
 Example:
 

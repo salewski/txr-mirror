@@ -593,6 +593,11 @@ obj_t *regex_compile(obj_t *regex_sexp)
   return cobj(pnfa, regex, &regex_obj_ops);
 }
 
+obj_t *regexp(obj_t *obj)
+{
+  return (obj->co.type == COBJ && obj->co.cls == regex) ? t : nil;
+}
+
 nfa_t *regex_nfa(obj_t *reg)
 {
   assert (reg->co.type == COBJ && reg->co.cls == regex);
