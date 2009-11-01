@@ -312,7 +312,7 @@ obj_t *sort(obj_t *list, obj_t *lessfun, obj_t *keyfun);
 void obj_print(obj_t *obj, obj_t *stream);
 void obj_pprint(obj_t *obj, obj_t *stream);
 void init(const char *progname, void *(*oom_realloc)(void *, size_t),
-          obj_t **maybe_bottom_0, obj_t **maybe_bottom_1);
+          obj_t **stack_bottom);
 void dump(obj_t *obj, obj_t *stream);
 obj_t *snarf(obj_t *in);
 obj_t *match(obj_t *spec, obj_t *data);

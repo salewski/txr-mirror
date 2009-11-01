@@ -1,3 +1,24 @@
+2009-11-01 Kaz Kylheku  <kkylheku@gmail.com>
+
+	Bug ID 27899: Garbage collection problem: method of locating stack
+	bottom is unreliable due to the unpredictable allocation order of local
+	variables. The addresses of stack_bottom_0 and stack_bottom_1 variables
+	do not necessarily bracket the others which means that some local
+	variables in main can be out of the reach of the garbage collector:
+	our stack bottom is wrongly in the middle of the frame.
+
+	* lib.c (init): Removed one of the stack bottom parameters, so there
+	is only one. This is passed straight down to gc_init.
+	Also noticed that the oom_realloc variable was not being set
+	from the oom parameter.
+
+	* lib.h (init): Declaration updated.
+
+	* txr.c (txr_main): New static function.
+	(main): Calls init, and then txr_main. The idea is that txr_main
+	should get fresh stack frame. So the stack_bottom variable in main
+	should be outside of that stack frame.
+
 2009-10-22 Kaz Kylheku  <kkylheku@gmail.com>
 
 	* lib.c (equal): Fix broken LSTR and FUN cases.

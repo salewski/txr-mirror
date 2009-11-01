@@ -133,17 +133,23 @@ obj_t *remove_hash_bang_line(obj_t *spec)
   }
 }
 
+static int txr_main(int argc, char **argv);
+
 int main(int argc, char **argv)
 {
-  obj_t *stack_bottom_0 = nil;
+  obj_t *stack_bottom = nil;
+  progname = argv[0] ? argv[0] : progname;
+  init(progname, oom_realloc_handler, &stack_bottom);
+  return txr_main(argc, argv);
+}
+
+static int txr_main(int argc, char **argv)
+{
   obj_t *specstring = nil;
   obj_t *spec = nil;
   obj_t *bindings = nil;
   int match_loglevel = opt_loglevel;
   progname = argv[0] ? argv[0] : progname;
-  obj_t *stack_bottom_1 = nil;
-
-  init(progname, oom_realloc_handler, &stack_bottom_0, &stack_bottom_1);
 
   protect(&spec_file_str, 0);
 

@@ -1949,26 +1949,13 @@ void obj_pprint(obj_t *obj, obj_t *out)
 }
 
 void init(const char *pn, void *(*oom)(void *, size_t),
-          obj_t **maybe_bottom_0, obj_t **maybe_bottom_1)
+          obj_t **stack_bottom)
 {
-  int growsdown;
-  obj_t *local_bottom = nil;
   progname = pn;
   int gc_save = gc_state(0);
 
-  /* If the local_bottom variable has a smaller address than
-     either of the two possible top variables from
-     the initializing function, then the stack grows
-     downward in memory. In that case, we take the
-     greater of the two values to be the top.
-     Otherwise we take the smaller of the two values. */
-
-  growsdown = &local_bottom < maybe_bottom_0;
-
-  gc_init(growsdown
-          ? max(maybe_bottom_0, maybe_bottom_1)
-          : min(maybe_bottom_0, maybe_bottom_1));
-
+  oom_realloc = oom;
+  gc_init(stack_bottom);
   obj_init();
   uw_init();
   stream_init();
