@@ -361,7 +361,7 @@ void uw_continue(uw_frame_t *current, uw_frame_t *cont)
 
 void uw_init(void)
 {
-  protect(&toplevel_env.ev.func_bindings, &exception_subtypes, 0);
+  protect(&toplevel_env.ev.func_bindings, &exception_subtypes, (obj_t **) 0);
   exception_subtypes = cons(cons(t, nil), exception_subtypes);
   uw_register_subtype(type_error, error);
   uw_register_subtype(internal_err, error);
