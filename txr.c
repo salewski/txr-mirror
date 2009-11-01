@@ -151,10 +151,10 @@ static int txr_main(int argc, char **argv)
   int match_loglevel = opt_loglevel;
   progname = argv[0] ? argv[0] : progname;
 
-  protect(&spec_file_str, 0);
+  prot1(&spec_file_str);
 
   yyin_stream = std_input;
-  protect(&yyin_stream, 0);
+  prot1(&yyin_stream);
 
   if (argc <= 1) {
     hint();

@@ -634,7 +634,7 @@ obj_t *put_line(obj_t *stream, obj_t *string)
 
 void stream_init(void)
 {
-  protect(&std_input, &std_output, &std_error, 0);
+  protect(&std_input, &std_output, &std_error, (obj_t **) 0);
   std_input = make_stdio_stream(stdin, t, nil);
   std_output = make_stdio_stream(stdout, nil, t);
   std_error = make_stdio_stream(stderr, nil, t);

@@ -1,5 +1,18 @@
 2009-11-01 Kaz Kylheku  <kkylheku@gmail.com>
 
+	Bug ID 27895: Calls to protect have an argument list terminated
+	by the integer constant 0 rather than a proper null pointer constant.
+
+	lib.c (obj_init): Properly terminate argument list of protect call.
+
+	stream.c (stream_init): Likewise.
+
+	unwind.c (unwind_init): Likewise.
+
+	txr.c (txr_main): two-argument protect calls rewritten using prot1.
+
+2009-11-01 Kaz Kylheku  <kkylheku@gmail.com>
+
 	Bug ID 27899: Garbage collection problem: method of locating stack
 	bottom is unreliable due to the unpredictable allocation order of local
 	variables. The addresses of stack_bottom_0 and stack_bottom_1 variables

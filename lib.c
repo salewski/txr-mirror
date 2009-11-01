@@ -1681,7 +1681,8 @@ static void obj_init(void)
           &two, &negone, &maxint, &minint,
           &null_string, &nil_string,
           &null_list, &equal_f,
-          &identity_f, &prog_string, 0);
+          &identity_f, &prog_string,
+          (obj_t **) 0);
 
   nil_string = string("nil");
 
