@@ -1357,7 +1357,7 @@ obj_t *lazy_stream_cons(obj_t *stream)
                        lazy_stream_func));
 }
 
-obj_t *lazy_str(obj_t *list)
+obj_t *lazy_str(obj_t *list, obj_t *sep, obj_t *limit)
 {
   obj_t *obj = make_obj();
   obj->ls.type = LSTR;
@@ -1368,19 +1368,31 @@ obj_t *lazy_str(obj_t *list)
   } else {
     obj->ls.prefix = first(list);
     obj->ls.list = rest(list);
+    limit = if2(limit, minus(limit, one));
   }
+
+  obj->ls.opts = cons(sep, limit);
 
   return obj;
 }
 
 obj_t *lazy_str_force(obj_t *lstr)
 {
+  obj_t *lim;
   type_check(lstr, LSTR);
+  lim = cdr(lstr->ls.opts);
 
-  if (lstr->ls.list) {
-    lstr->ls.prefix = cat_str(cons(lstr->ls.prefix, lstr->ls.list),
-                              string("\n"));
+  if (!lim) {
+    if (lstr->ls.list) {
+      lstr->ls.prefix = cat_str(cons(lstr->ls.prefix, lstr->ls.list),
+                                or2(car(lstr->ls.opts), string("\n")));
+      lstr->ls.list = nil;
+    } 
+  } else while (gt(lim, zero) && lstr->ls.list) {
+    lstr->ls.prefix = cat_str(list(lstr->ls.prefix, car(lstr->ls.list), nao),
+                              or2(car(lstr->ls.opts), string("\n")));
     lstr->ls.list = nil;
+    lim = minus(lim, one);
   }
 
   return lstr->ls.prefix;
@@ -1388,14 +1400,22 @@ obj_t *lazy_str_force(obj_t *lstr)
 
 obj_t *lazy_str_force_upto(obj_t *lstr, obj_t *index)
 {
+  obj_t *lim;
   type_check(lstr, LSTR);
+  lim = cdr(lstr->ls.opts);
 
-  while (gt(index, length_str(lstr->ls.prefix)) && lstr->ls.list) {
+  while (gt(index, length_str(lstr->ls.prefix)) && lstr->ls.list && 
+         or2(nullp(lim),gt(lim,zero)))
+  {
     obj_t *next = pop(&lstr->ls.list);
     lstr->ls.prefix = cat_str(cons(lstr->ls.prefix, cons(next, nil)), 
-                              string("\n"));
+                              or2(car(lstr->ls.opts), string("\n")));
+    if (lim)
+      lim = minus(lim, one);
   }
 
+  if (lim)
+    *cdr_l(lstr->ls.opts) = lim;
   return lt(index, length_str(lstr->ls.prefix));
 }
 
@@ -1469,7 +1489,7 @@ obj_t *lazy_str_get_trailing_list(obj_t *lstr, obj_t *index)
 
   {
     obj_t *split_suffix = split_str(sub_str(lstr->ls.prefix, index, nil),
-                                    string("\n"));
+                                    or2(car(lstr->ls.opts), string("\n")));
 
     return nappend2(split_suffix, lstr->ls.list);
   }
