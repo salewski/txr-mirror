@@ -25,7 +25,7 @@
  */
 
 typedef enum type {
-  CONS = 1, STR, CHR, NUM, SYM, FUN, VEC, LCONS, COBJ
+  CONS = 1, STR, CHR, NUM, SYM, FUN, VEC, LCONS, LSTR, COBJ
 } type_t;
 
 typedef enum functype
@@ -113,6 +113,16 @@ struct lazy_cons {
   obj_t *func; /* when nil, car and cdr are valid */
 };
 
+/*
+ * Lazy string: virtual string which dynamically grows as a catentation
+ * of a list of strings.
+ */
+struct lazy_string {
+  type_t type;
+  obj_t *prefix;        /* actual string part */
+  obj_t *list;          /* remaining list */
+};
+
 struct cobj {
   type_t type;
   void *handle;
@@ -137,15 +147,17 @@ union obj {
   struct func f;
   struct vec v;
   struct lazy_cons lc;
+  struct lazy_string ls;
   struct cobj co;
 };
 
 extern obj_t *interned_syms;
 
 extern obj_t *t, *cons_t, *str_t, *chr_t, *num_t, *sym_t, *fun_t, *vec_t;
-extern obj_t *stream_t, *lcons_t, *var, *regex, *set, *cset, *wild, *oneplus;
+extern obj_t *stream_t, *lcons_t, *lstr_t, *cobj_t;
+extern obj_t *var, *regex, *set, *cset, *wild, *oneplus;
 extern obj_t *zeroplus, *optional, *compound, *or, *quasi;
-extern obj_t *skip, *trailer, *block, *next, *fail, *accept;
+extern obj_t *skip, *trailer, *block, *next, *freeform, *fail, *accept;
 extern obj_t *all, *some, *none, *maybe, *cases, *collect, *until, *coll;
 extern obj_t *define, *output, *single, *frst, *lst, *empty, *repeat, *rep;
 extern obj_t *flattn, *forget, *local, *mrge, *bind, *cat, *args;
@@ -169,6 +181,7 @@ obj_t *identity(obj_t *obj);
 obj_t *typeof(obj_t *obj);
 obj_t *type_check(obj_t *obj, int);
 obj_t *type_check2(obj_t *obj, int, int);
+obj_t *type_check3(obj_t *obj, int, int, int);
 obj_t *car(obj_t *cons);
 obj_t *cdr(obj_t *cons);
 obj_t **car_l(obj_t *cons);
@@ -221,12 +234,14 @@ obj_t *le(obj_t *anum, obj_t *bnum);
 obj_t *numeq(obj_t *anum, obj_t *bnum);
 obj_t *max2(obj_t *anum, obj_t *bnum);
 obj_t *min2(obj_t *anum, obj_t *bnum);
-obj_t *string(char *str);
+obj_t *string_own(char *str);
+obj_t *string(const char *str);
 obj_t *mkstring(obj_t *len, obj_t *ch);
 obj_t *mkustring(obj_t *len); /* must initialize immediately with init_str! */
 obj_t *init_str(obj_t *str, const char *);
 obj_t *copy_str(obj_t *str);
 obj_t *stringp(obj_t *str);
+obj_t *lazy_stringp(obj_t *str);
 obj_t *length_str(obj_t *str);
 const char *c_str(obj_t *str);
 obj_t *search_str(obj_t *haystack, obj_t *needle, obj_t *start_num,
@@ -235,10 +250,11 @@ obj_t *search_str_tree(obj_t *haystack, obj_t *tree, obj_t *start_num,
                        obj_t *from_end);
 obj_t *sub_str(obj_t *str_in, obj_t *from_num, obj_t *to_num);
 obj_t *cat_str(obj_t *list, obj_t *sep);
+obj_t *split_str(obj_t *str, obj_t *sep);
 obj_t *trim_str(obj_t *str);
 obj_t *string_lt(obj_t *astr, obj_t *bstr);
 obj_t *chr(int ch);
-obj_t *chrp(obj_t *str);
+obj_t *chrp(obj_t *chr);
 int c_chr(obj_t *chr);
 obj_t *chr_str(obj_t *str, obj_t *index);
 obj_t *chr_str_set(obj_t *str, obj_t *index, obj_t *chr);
@@ -272,6 +288,14 @@ obj_t *vec_set_fill(obj_t *vec, obj_t *fill);
 obj_t **vecref_l(obj_t *vec, obj_t *ind);
 obj_t *vec_push(obj_t *vec, obj_t *item);
 obj_t *lazy_stream_cons(obj_t *stream);
+obj_t *lazy_str(obj_t *list);
+obj_t *lazy_str_force_upto(obj_t *lstr, obj_t *index);
+obj_t *lazy_str_force(obj_t *lstr);
+obj_t *lazy_str_get_trailing_list(obj_t *lstr, obj_t *index);
+obj_t *length_str_gt(obj_t *str, obj_t *len);
+obj_t *length_str_ge(obj_t *str, obj_t *len);
+obj_t *length_str_lt(obj_t *str, obj_t *len);
+obj_t *length_str_le(obj_t *str, obj_t *len);
 obj_t *cobj(void *handle, obj_t *cls_sym, struct cobj_ops *ops);
 void cobj_print_op(obj_t *, obj_t *); /* Default function for struct cobj_ops */
 obj_t *assoc(obj_t *list, obj_t *key);

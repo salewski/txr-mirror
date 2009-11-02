@@ -119,7 +119,7 @@ obj_t *remove_hash_bang_line(obj_t *spec)
     return spec;
 
   {
-    obj_t *shbang = string(strdup("#!"));
+    obj_t *shbang = string("#!");
     obj_t *firstline = first(spec);
     obj_t *items = rest(firstline);
 
@@ -183,7 +183,7 @@ int main(int argc, char **argv)
 
           val[piece] = 0;
 
-          list = cons(string(strdup(val)), list);
+          list = cons(string(val), list);
 
           if (!comma_p)
             break;
@@ -192,15 +192,13 @@ int main(int argc, char **argv)
         }
 
         list = nreverse(list);
-        bindings = cons(cons(intern(string(strdup(var))), list), bindings);
+        bindings = cons(cons(intern(string(var)), list), bindings);
       } else if (equals) {
         char *val = equals + 1;
         *equals = 0;
-        bindings = cons(cons(intern(string(strdup(var))),
-                        string(strdup(val))), bindings);
+        bindings = cons(cons(intern(string(var)), string(val)), bindings);
       } else {
-        bindings = cons(cons(intern(string(strdup(var))),
-                        null_string), bindings);
+        bindings = cons(cons(intern(string(var)), null_string), bindings);
       }
 
       argc--, argv++;
@@ -242,10 +240,10 @@ int main(int argc, char **argv)
         opt_arraydims = val;
         break;
       case 'c':
-        specstring = string(strdup(*argv));
+        specstring = string(*argv);
         break;
       case 'f':
-        spec_file_str = string(strdup(*argv));
+        spec_file_str = string(*argv);
         break;
       }
 
@@ -298,7 +296,7 @@ int main(int argc, char **argv)
 
   if (specstring) {
     spec_file = "cmdline";
-    spec_file_str = string(strdup(spec_file));
+    spec_file_str = string(spec_file);
     yyin_stream = make_string_input_stream(specstring);
   } else if (spec_file_str) {
     if (strcmp(c_str(spec_file_str), "-") != 0) {
@@ -325,7 +323,7 @@ int main(int argc, char **argv)
       spec_file = "stdin";
     }
     argc--, argv++;
-    spec_file_str = string(strdup(spec_file));
+    spec_file_str = string(spec_file);
   }
 
 

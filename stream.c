@@ -152,7 +152,7 @@ static obj_t *stdio_get_line(obj_t *stream)
     char *line = snarf_line((FILE *) stream->co.handle);
     if (!line)
       return nil;
-    return string(line);
+    return string_own(line);
   }
 }
 
@@ -407,7 +407,7 @@ static obj_t *dir_get_line(obj_t *stream)
         return nil;
       if (!strcmp(e->d_name, ".") || !strcmp(e->d_name, ".."))
         continue;
-      return string(chk_strdup(e->d_name));
+      return string(e->d_name);
     }
   }
 }
@@ -478,7 +478,7 @@ obj_t *get_string_from_stream(obj_t *stream)
       return out;
 
     so->buf = chk_realloc(so->buf, so->fill + 1);
-    out = string(so->buf);
+    out = string_own(so->buf);
     free(so);
     return out;
   } else if (stream->co.ops == &string_in_ops.cobj_ops) {

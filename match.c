@@ -902,7 +902,7 @@ obj_t *match_files(obj_t *spec, obj_t *files,
           return nil;
         } else if (errno != 0)
           file_err(nil, "could not open ~a (error ~a/~a)", name,
-                   num(errno), string(strdup(strerror(errno))), nao);
+                   num(errno), string(strerror(errno)), nao);
         else
           file_err(nil, "could not open ~a", name, nao);
         return nil;
@@ -983,6 +983,33 @@ repeat_spec_same_data:
             return cons(new_bindings, cons(data, num(data_lineno)));
           return nil;
         }
+      } else if (sym == freeform) {
+        if ((spec = rest(spec)) == nil) {
+          sem_error(spec_linenum,
+                    "freeform must be followed by a query line", nao);
+        } else {
+          obj_t *ff_specline = rest(first(spec));
+          obj_t *ff_dataline = lazy_str(data);
+
+          cons_bind (new_bindings, success,
+                     match_line(bindings, ff_specline, ff_dataline, zero,
+                                spec_linenum, num(data_lineno), first(files)));
+
+          if (!success) {
+            debuglf(spec_linenum, "freeform match failure", nao);
+            return nil;
+          }
+
+          if (nump(success))
+            data = lazy_str_get_trailing_list(ff_dataline, success);
+
+          bindings = new_bindings;
+        }
+
+        if ((spec = rest(spec)) == nil)
+          break;
+
+        goto repeat_spec_same_data;
       } else if (sym == block) {
         obj_t *name = first(rest(first_spec));
         if (rest(specline))
@@ -1027,7 +1054,7 @@ repeat_spec_same_data:
           if (eq(first(source), nothrow))
             push(nil, &source);
           else if (eq(first(source), args)) {
-            obj_t *input_name = string(strdup("args"));
+            obj_t *input_name = string("args");
             cons_bind (new_bindings, success,
                 match_files(spec, cons(input_name, files), 
                   bindings, files, one));
@@ -1378,7 +1405,7 @@ repeat_spec_same_data:
                         form, nao);
 
             nt = eq(second(new_style_dest), nothrow);
-            dest = or2(cdr(val), string(strdup("-")));
+            dest = or2(cdr(val), string("-"));
           }
         }
 
@@ -1393,7 +1420,7 @@ repeat_spec_same_data:
             return nil;
           } else if (errno != 0) {
             file_err(nil, "could not open ~a (error ~a/~a)", dest,
-                     num(errno), string(strdup(strerror(errno))), nao);
+                     num(errno), string(strerror(errno)), nao);
           } else {
             file_err(nil, "could not open ~a", dest, nao);
           }

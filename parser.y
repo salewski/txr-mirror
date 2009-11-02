@@ -183,7 +183,7 @@ elems : elem                    { $$ = cons($1, nil); }
                                   yyerror("rep outside of output"); }
       ;
 
-elem : TEXT                     { $$ = string($1); }
+elem : TEXT                     { $$ = string_own($1); }
      | var                      { $$ = $1; }
      | list                     { $$ = $1; }
      | regex                    { $$ = cons(regex_compile($1), $1); }
@@ -347,7 +347,7 @@ o_elems : o_elem                { $$ = cons($1, nil); }
         | o_elem o_elems        { $$ = cons($1, $2); }
         ;
 
-o_elem : TEXT                   { $$ = string($1); }
+o_elem : TEXT                   { $$ = string_own($1); }
        | var                    { $$ = $1; }
        | rep_elem               { $$ = $1; }
        ;
@@ -372,23 +372,32 @@ rep_parts_opt : SINGLE o_elems_opt2
 /* This sucks, but factoring '*' into a nonterminal
  * that generates an empty phrase causes reduce/reduce conflicts.
  */
-var : IDENT                     { $$ = list(var, intern(string($1)), nao); }
-    | IDENT elem                { $$ = list(var, intern(string($1)), $2, nao); }
-    | '{' IDENT '}'             { $$ = list(var, intern(string($2)), nao); }
-    | '{' IDENT '}' elem        { $$ = list(var, intern(string($2)), $4, nao); }
-    | '{' IDENT regex '}'       { $$ = list(var, intern(string($2)),
+var : IDENT                     { $$ = list(var, intern(string_own($1)),
+                                            nao); }
+    | IDENT elem                { $$ = list(var, intern(string_own($1)),
+                                            $2, nao); }
+    | '{' IDENT '}'             { $$ = list(var, intern(string_own($2)),
+                                            nao); }
+    | '{' IDENT '}' elem        { $$ = list(var, intern(string_own($2)),
+                                            $4, nao); }
+    | '{' IDENT regex '}'       { $$ = list(var, intern(string_own($2)),
                                             nil, cons(regex_compile($3), $3),
                                             nao); }
-    | '{' IDENT NUMBER '}'      { $$ = list(var, intern(string($2)),
+    | '{' IDENT NUMBER '}'      { $$ = list(var, intern(string_own($2)),
                                             nil, num($3), nao); }
-    | var_op IDENT              { $$ = list(var, intern(string($2)),
+    | var_op IDENT              { $$ = list(var, intern(string_own($2)),
                                             nil, $1, nao); }
-    | var_op IDENT elem         { $$ = list(var, intern(string($2)),
+    | var_op IDENT elem         { $$ = list(var, intern(string_own($2)),
                                             $3, $1, nao); }
-    | var_op '{' IDENT '}'      { $$ = list(var, intern(string($3)),
+    | var_op '{' IDENT '}'      { $$ = list(var, intern(string_own($3)),
                                             nil, $1, nao); }
-    | var_op '{' IDENT '}' elem { $$ = list(var, intern(string($3)),
+    | var_op '{' IDENT '}' elem { $$ = list(var, intern(string_own($3)),
                                             $5, $1, nao); }
+    | var_op '{' IDENT regex '}'        { yyerror("longest match "
+                                                  "not useable with regex"); }
+    | var_op '{' IDENT NUMBER '}'       { yyerror("longest match "
+                                                  "not useable with "
+                                                  "fixed width match"); }
     | IDENT error               { $$ = nil;
                                   yybadtoken(yychar, "variable spec"); }
     | var_op error              { $$ = nil;
@@ -409,7 +418,7 @@ exprs : expr                    { $$ = cons($1, nil); }
       | expr '.' expr           { $$ = cons($1, $3); }
       ;
 
-expr : IDENT                    { $$ = intern(string($1)); }
+expr : IDENT                    { $$ = intern(string_own($1)); }
      | NUMBER                   { $$ = num($1); }
      | list                     { $$ = $1; }
      | regex                    { $$ = cons(regex_compile($1), $1); }
@@ -502,7 +511,7 @@ quasi_items : quasi_item                { $$ = cons($1, nil); }
             ;
 
 quasi_item : litchars           { $$ = lit_char_helper($1); }
-           | TEXT               { $$ = string($1); }
+           | TEXT               { $$ = string_own($1); }
            | var                { $$ = $1; }
            | list               { $$ = $1; }
            ;

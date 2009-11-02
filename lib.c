@@ -44,9 +44,10 @@
 obj_t *interned_syms;
 
 obj_t *null, *t, *cons_t, *str_t, *chr_t, *num_t, *sym_t, *fun_t, *vec_t;
-obj_t *stream_t, *lcons_t, *cobj_t, *var, *regex, *set, *cset, *wild, *oneplus;
+obj_t *stream_t, *lcons_t, *lstr_t, *cobj_t;
+obj_t *var, *regex, *set, *cset, *wild, *oneplus;
 obj_t *zeroplus, *optional, *compound, *or, *quasi;
-obj_t *skip, *trailer, *block, *next, *fail, *accept;
+obj_t *skip, *trailer, *block, *next, *freeform, *fail, *accept;
 obj_t *all, *some, *none, *maybe, *cases, *collect, *until, *coll;
 obj_t *define, *output, *single, *frst, *lst, *empty, *repeat, *rep;
 obj_t *flattn, *forget, *local, *mrge, *bind, *cat, *args;
@@ -83,7 +84,7 @@ static obj_t *equal_tramp(obj_t *env, obj_t *, obj_t *);
 
 static obj_t *code2type(int code)
 {
-  switch (code) {
+  switch ((type_t) code) {
   case CONS: return cons_t;
   case STR: return str_t;
   case CHR: return chr_t;
@@ -92,6 +93,7 @@ static obj_t *code2type(int code)
   case FUN: return fun_t;
   case VEC: return vec_t;
   case LCONS: return lcons_t;
+  case LSTR: return lstr_t;
   case COBJ: return cobj_t;
   }
   return nil;
@@ -123,6 +125,14 @@ obj_t *type_check2(obj_t *obj, int t1, int t2)
   if (!obj || (obj->t.type != t1 && obj->t.type != t2))
     type_mismatch("~s is not of type ~s or ~s", obj,
                   code2type(t1), code2type(t2), nao);
+  return t;
+}
+
+obj_t *type_check3(obj_t *obj, int t1, int t2, int t3)
+{
+  if (!obj || (obj->t.type != t1 && obj->t.type != t2 && obj->t.type != t3))
+    type_mismatch("~s is not of type ~s, ~s nor ~s", obj,
+                  code2type(t1), code2type(t2), code2type(t3), nao);
   return t;
 }
 
@@ -451,6 +461,14 @@ obj_t *equal(obj_t *left, obj_t *right)
       return t;
     }
     return nil;
+  case LSTR:
+    if (right->t.type == STR || right->t.type == LSTR) {
+      lazy_str_force(left);
+      if (right->t.type == LSTR)
+        lazy_str_force(right);
+      return equal(left->ls.prefix, right->ls.prefix);
+    }
+    return nil;
   case COBJ:
     if (right->t.type == COBJ)
       return left->co.ops->equal(left, right);
@@ -655,7 +673,7 @@ obj_t *min2(obj_t *anum, obj_t *bnum)
   return c_num(anum) < c_num(bnum) ? anum : bnum;
 }
 
-obj_t *string(char *str)
+obj_t *string_own(char *str)
 {
   obj_t *obj = make_obj();
   obj->st.type = STR;
@@ -664,10 +682,19 @@ obj_t *string(char *str)
   return obj;
 }
 
+obj_t *string(const char *str)
+{
+  obj_t *obj = make_obj();
+  obj->st.type = STR;
+  obj->st.str = chk_strdup(str);
+  obj->st.len = nil;
+  return obj;
+}
+
 obj_t *mkstring(obj_t *len, obj_t *ch)
 {
   char *str = chk_malloc(c_num(len) + 1);
-  obj_t *s = string(str);
+  obj_t *s = string_own(str);
   memset(str, c_chr(ch), c_num(len));
   str[c_num(len)] = 0;
   s->st.len = len;
@@ -677,7 +704,7 @@ obj_t *mkstring(obj_t *len, obj_t *ch)
 obj_t *mkustring(obj_t *len)
 {
   char *str = chk_malloc(c_num(len) + 1);
-  obj_t *s = string(str);
+  obj_t *s = string_own(str);
   s->st.len = len;
   return s;
 }
@@ -690,17 +717,28 @@ obj_t *init_str(obj_t *str, const char *data)
 
 obj_t *copy_str(obj_t *str)
 {
-  return string(strdup(c_str(str)));
+  return string(c_str(str));
 }
 
 obj_t *stringp(obj_t *str)
 {
-  return (str && str->st.type == STR) ? t : nil;
+  return (str && (str->st.type == STR || str->st.type == LSTR)) ? t : nil;
+}
+
+obj_t *lazy_stringp(obj_t *str)
+{
+  return (str && (str->st.type == LSTR)) ? t : nil;
 }
 
 obj_t *length_str(obj_t *str)
 {
-  type_check (str, STR);
+  type_check2 (str, STR, LSTR);
+
+  if (str->ls.type == LSTR) {
+    lazy_str_force(str);
+    return length(str->ls.prefix);
+  }
+
   if (!str->st.len)
     str->st.len = num(strlen(str->st.str));
   return str->st.len;
@@ -708,13 +746,16 @@ obj_t *length_str(obj_t *str)
 
 const char *c_str(obj_t *obj)
 {
-  type_check2(obj, STR, SYM);
+  type_check3(obj, STR, SYM, LSTR);
 
   switch (obj->t.type) {
   case STR:
     return obj->st.str;
   case SYM:
     return c_str(symbol_name(obj));
+  case LSTR:
+    lazy_str_force(obj);
+    return c_str(obj->ls.prefix);
   default:
     abort();
   }
@@ -723,19 +764,38 @@ const char *c_str(obj_t *obj)
 obj_t *search_str(obj_t *haystack, obj_t *needle, obj_t *start_num,
                   obj_t *from_end)
 {
-  const char *h = c_str(haystack);
-  long len = c_num(length_str(haystack));
-  long start = c_num(start_num);
-
-  if (start > len) {
+  if (length_str_lt(haystack, start_num)) {
     return nil;
   } else {
-    const char *n = c_str(needle), *good = 0, *pos, *from = h + start;
+    obj_t *h_is_lazy = lazy_stringp(haystack);
+    long start = c_num(start_num);
+    long good = -1, pos = -1;
+    const char *n = c_str(needle), *h;
 
-    do {
-      pos = strstr(from, n);
-    } while (pos && (good = pos) && from_end && *(from = pos + 1));
-    return (good == 0) ? nil : num(good - h);
+    if (!h_is_lazy) {
+      do {
+        const char *f;
+        h = c_str(haystack);
+
+        f = strstr(h + start, n);
+
+        if (f)
+          pos = f - h;
+        else
+          pos = -1;
+      } while (pos != -1 && (good = pos) != -1 && from_end && h[++start]);
+    } else {
+      size_t ln = c_num(length_str(needle));
+
+      do {
+        lazy_str_force_upto(haystack, plus(num(start + 1), length_str(needle)));
+        h = c_str(haystack->ls.prefix);
+
+        if (!strncmp(h + start, n, ln))
+          good = start;
+      } while (h[++start] && (from_end || good == -1));
+    }
+    return (good == -1) ? nil : num(good);
   }
 }
 
@@ -758,30 +818,27 @@ obj_t *search_str_tree(obj_t *haystack, obj_t *tree, obj_t *start_num,
   return nil;
 }
 
-obj_t *sub_str(obj_t *str_in, obj_t *from_num, obj_t *to_num)
+obj_t *sub_str(obj_t *str_in, obj_t *from, obj_t *to)
 {
-  const char *str = c_str(str_in);
-  size_t len = c_num(length_str(str_in));
-  long from = from_num ? c_num(from_num) : 0;
-  long to = to_num ? c_num(to_num) : len;
+  if (from == nil || lt(from, zero))
+    from = zero;
+  if (to == nil)
+    to = length_str(str_in);
+  else if (lt(to, zero))
+    to = zero;
+  if (length_str_lt(str_in, from))
+    from = length_str(str_in);
+  if (length_str_lt(str_in, to))
+    to = length_str(str_in);
 
-  if (to < 0)
-    to = 0;
-  if (from < 0)
-    from = 0;
-  if (from > len)
-    from = len;
-  if (to > len)
-    to = len;
-
-  if (from >= to) {
+  if (ge(from, to)) {
     return null_string;
   } else {
-    size_t size = to - from + 1;
+    size_t size = c_num(to) - c_num(from) + 1;
     char *sub = chk_malloc(size);
-    strncpy(sub, str + from, size);
+    strncpy(sub, c_str(str_in) + c_num(from), size);
     sub[size-1] = 0;
-    return string(sub);
+    return string_own(sub);
   }
 }
 
@@ -833,7 +890,27 @@ obj_t *cat_str(obj_t *list, obj_t *sep)
   }
   *ptr = 0;
 
-  return string(str);
+  return string_own(str);
+}
+
+obj_t *split_str(obj_t *str, obj_t *sep)
+{
+  const char *cstr = c_str(str);
+  const char *csep = c_str(sep);
+  list_collect_decl (out, iter);
+
+  for (;;) {
+    size_t span = strcspn(cstr, csep);
+    obj_t *piece = mkustring(num(span));
+    init_str(piece, cstr);
+    list_collect (iter, piece);
+    cstr += span;
+    if (!*cstr)
+      break;
+    cstr++;
+  }
+
+  return out;
 }
 
 obj_t *trim_str(obj_t *str)
@@ -854,7 +931,7 @@ obj_t *trim_str(obj_t *str)
     char *new = chk_malloc(len + 1);
     memcpy(new, start, len);
     new[len] = 0;
-    return string(new);
+    return string_own(new);
   }
 }
 
@@ -885,24 +962,26 @@ int c_chr(obj_t *chr)
 
 obj_t *chr_str(obj_t *str, obj_t *index)
 {
-  long l = c_num(length_str(str));
-  long i = c_num(index);
-  const char *s = c_str(str);
+  bug_unless (length_str_gt(str, index));
 
-  bug_unless (i < l);
-
-  return chr(s[i]);
+  if (lazy_stringp(str)) {
+    lazy_str_force_upto(str, index);
+    return chr(c_str(str->ls.prefix)[c_num(index)]);
+  } else {
+    return chr(c_str(str)[c_num(index)]);
+  }
 }
 
 obj_t *chr_str_set(obj_t *str, obj_t *index, obj_t *chr)
 {
-  long l = c_num(length_str(str));
-  long i = c_num(index);
-  char *s = str->st.str;
+  bug_unless (length_str_gt(str, index));
 
-  bug_unless (i < l);
-
-  s[i] = c_chr(chr);
+  if (lazy_stringp(str)) {
+    lazy_str_force_upto(str, index);
+    str->ls.prefix->st.str[c_num(index)] = c_chr(chr);
+  } else {
+    str->st.str[c_num(index)] = c_chr(chr);
+  }
 
   return chr;
 }
@@ -1277,6 +1356,124 @@ obj_t *lazy_stream_cons(obj_t *stream)
                        lazy_stream_func));
 }
 
+obj_t *lazy_str(obj_t *list)
+{
+  obj_t *obj = make_obj();
+  obj->ls.type = LSTR;
+
+  if (nullp(list)) {
+    obj->ls.prefix = null_string;
+    obj->ls.list = nil;
+  } else {
+    obj->ls.prefix = first(list);
+    obj->ls.list = rest(list);
+  }
+
+  return obj;
+}
+
+obj_t *lazy_str_force(obj_t *lstr)
+{
+  type_check(lstr, LSTR);
+
+  if (lstr->ls.list) {
+    lstr->ls.prefix = cat_str(cons(lstr->ls.prefix, lstr->ls.list),
+                              string("\n"));
+    lstr->ls.list = nil;
+  }
+
+  return lstr->ls.prefix;
+}
+
+obj_t *lazy_str_force_upto(obj_t *lstr, obj_t *index)
+{
+  type_check(lstr, LSTR);
+
+  while (gt(index, length_str(lstr->ls.prefix)) && lstr->ls.list) {
+    obj_t *next = pop(&lstr->ls.list);
+    lstr->ls.prefix = cat_str(cons(lstr->ls.prefix, cons(next, nil)), 
+                              string("\n"));
+  }
+
+  return lt(index, length_str(lstr->ls.prefix));
+}
+
+obj_t *length_str_gt(obj_t *str, obj_t *len)
+{
+  type_check2 (str, STR, LSTR);
+
+  switch (str->t.type) {
+  case STR:
+    return gt(length_str(str), len);
+  case LSTR:
+    lazy_str_force_upto(str, len);
+    return gt(length_str(str->ls.prefix), len);
+  default:
+    internal_error("unexpected type value");
+  }
+}
+
+obj_t *length_str_ge(obj_t *str, obj_t *len)
+{
+  type_check2 (str, STR, LSTR);
+
+  switch (str->t.type) {
+  case STR:
+    return ge(length_str(str), len);
+  case LSTR:
+    lazy_str_force_upto(str, len);
+    return ge(length_str(str->ls.prefix), len);
+  default:
+    internal_error("unexpected type value");
+  }
+}
+
+obj_t *length_str_lt(obj_t *str, obj_t *len)
+{
+  type_check2 (str, STR, LSTR);
+
+  switch (str->t.type) {
+  case STR:
+    return lt(length_str(str), len);
+  case LSTR:
+    lazy_str_force_upto(str, len);
+    return lt(length_str(str->ls.prefix), len);
+  default:
+    internal_error("unexpected type value");
+  }
+}
+
+obj_t *length_str_le(obj_t *str, obj_t *len)
+{
+  type_check2 (str, STR, LSTR);
+
+  switch (str->t.type) {
+  case STR:
+    return le(length_str(str), len);
+  case LSTR:
+    lazy_str_force_upto(str, len);
+    return le(length_str(str->ls.prefix), len);
+  default:
+    internal_error("unexpected type value");
+  }
+}
+
+obj_t *lazy_str_get_trailing_list(obj_t *lstr, obj_t *index)
+{
+  type_check(lstr, LSTR);
+
+  /* Force lazy string up through the index position */
+  if (ge(index, length_str(lstr->ls.prefix)))
+    lazy_str_force_upto(lstr, index);
+
+  {
+    obj_t *split_suffix = split_str(sub_str(lstr->ls.prefix, index, nil),
+                                    string("\n"));
+
+    return nappend2(split_suffix, lstr->ls.list);
+  }
+}
+
 obj_t *cobj(void *handle, obj_t *cls_sym, struct cobj_ops *ops)
 {
   obj_t *obj = make_obj();
@@ -1463,73 +1660,75 @@ static void obj_init(void)
           &null_list, &equal_f,
           &identity_f, &prog_string, 0);
 
-  nil_string = string(strdup("nil"));
+  nil_string = string("nil");
 
-  null = intern(string(strdup("null")));
-  t = intern(string(strdup("t")));
-  cons_t = intern(string(strdup("cons")));
-  str_t = intern(string(strdup("str")));
-  chr_t = intern(string(strdup("chr")));
-  num_t = intern(string(strdup("num")));
-  sym_t = intern(string(strdup("sym")));
-  fun_t = intern(string(strdup("fun")));
-  vec_t = intern(string(strdup("vec")));
-  stream_t = intern(string(strdup("stream")));
-  lcons_t = intern(string(strdup("lcons")));
-  cobj_t = intern(string(strdup("cobj")));
-  var = intern(string(strdup("$var")));
-  regex = intern(string(strdup("$regex")));
-  set = intern(string(strdup("set")));
-  cset = intern(string(strdup("cset")));
-  wild = intern(string(strdup("wild")));
-  oneplus = intern(string(strdup("1+")));
-  zeroplus = intern(string(strdup("0+")));
-  optional = intern(string(strdup("?")));
-  compound = intern(string(strdup("compound")));
-  or = intern(string(strdup("or")));
-  quasi = intern(string(strdup("$quasi")));
-  skip = intern(string(strdup("skip")));
-  trailer = intern(string(strdup("trailer")));
-  block = intern(string(strdup("block")));
-  next = intern(string(strdup("next")));
-  fail = intern(string(strdup("fail")));
-  accept = intern(string(strdup("accept")));
-  all = intern(string(strdup("all")));
-  some = intern(string(strdup("some")));
-  none = intern(string(strdup("none")));
-  maybe = intern(string(strdup("maybe")));
-  cases = intern(string(strdup("cases")));
-  collect = intern(string(strdup("collect")));
-  until = intern(string(strdup("until")));
-  coll = intern(string(strdup("coll")));
-  define = intern(string(strdup("define")));
-  output = intern(string(strdup("output")));
-  single = intern(string(strdup("single")));
-  frst = intern(string(strdup("first")));
-  lst = intern(string(strdup("last")));
-  empty = intern(string(strdup("empty")));
-  repeat = intern(string(strdup("repeat")));
-  rep = intern(string(strdup("rep")));
-  flattn = intern(string(strdup("flatten")));
-  forget = intern(string(strdup("forget")));
-  local = intern(string(strdup("local")));
-  mrge = intern(string(strdup("merge")));
-  bind = intern(string(strdup("bind")));
-  cat = intern(string(strdup("cat")));
-  args = intern(string(strdup("args")));
-  try = intern(string(strdup("try")));
-  catch = intern(string(strdup("catch")));
-  finally = intern(string(strdup("finally")));
-  nothrow = intern(string(strdup("nothrow")));
-  throw = intern(string(strdup("throw")));
-  defex = intern(string(strdup("defex")));
-  error = intern(string(strdup("error")));
-  type_error = intern(string(strdup("type_error")));
-  internal_err = intern(string(strdup("internal_error")));
-  numeric_err = intern(string(strdup("numeric_error")));
-  range_err = intern(string(strdup("range_error")));
-  query_error = intern(string(strdup("query_error")));
-  file_error = intern(string(strdup("file_error")));
+  null = intern(string("null"));
+  t = intern(string("t"));
+  cons_t = intern(string("cons"));
+  str_t = intern(string("str"));
+  chr_t = intern(string("chr"));
+  num_t = intern(string("num"));
+  sym_t = intern(string("sym"));
+  fun_t = intern(string("fun"));
+  vec_t = intern(string("vec"));
+  stream_t = intern(string("stream"));
+  lcons_t = intern(string("lcons"));
+  lstr_t = intern(string("lstr"));
+  cobj_t = intern(string("cobj"));
+  var = intern(string("$var"));
+  regex = intern(string("$regex"));
+  set = intern(string("set"));
+  cset = intern(string("cset"));
+  wild = intern(string("wild"));
+  oneplus = intern(string("1+"));
+  zeroplus = intern(string("0+"));
+  optional = intern(string("?"));
+  compound = intern(string("compound"));
+  or = intern(string("or"));
+  quasi = intern(string("$quasi"));
+  skip = intern(string("skip"));
+  trailer = intern(string("trailer"));
+  block = intern(string("block"));
+  next = intern(string("next"));
+  freeform = intern(string("freeform"));
+  fail = intern(string("fail"));
+  accept = intern(string("accept"));
+  all = intern(string("all"));
+  some = intern(string("some"));
+  none = intern(string("none"));
+  maybe = intern(string("maybe"));
+  cases = intern(string("cases"));
+  collect = intern(string("collect"));
+  until = intern(string("until"));
+  coll = intern(string("coll"));
+  define = intern(string("define"));
+  output = intern(string("output"));
+  single = intern(string("single"));
+  frst = intern(string("first"));
+  lst = intern(string("last"));
+  empty = intern(string("empty"));
+  repeat = intern(string("repeat"));
+  rep = intern(string("rep"));
+  flattn = intern(string("flatten"));
+  forget = intern(string("forget"));
+  local = intern(string("local"));
+  mrge = intern(string("merge"));
+  bind = intern(string("bind"));
+  cat = intern(string("cat"));
+  args = intern(string("args"));
+  try = intern(string("try"));
+  catch = intern(string("catch"));
+  finally = intern(string("finally"));
+  nothrow = intern(string("nothrow"));
+  throw = intern(string("throw"));
+  defex = intern(string("defex"));
+  error = intern(string("error"));
+  type_error = intern(string("type_error"));
+  internal_err = intern(string("internal_error"));
+  numeric_err = intern(string("numeric_error"));
+  range_err = intern(string("range_error"));
+  query_error = intern(string("query_error"));
+  file_error = intern(string("file_error"));
 
   interned_syms = cons(nil, interned_syms);
 
@@ -1540,13 +1739,13 @@ static void obj_init(void)
   maxint = num(LONG_MAX);
   minint = num(LONG_MIN);
 
-  null_string = string(strdup(""));
+  null_string = string("");
 
   null_list = cons(nil, nil);
 
   equal_f = func_f2(nil, equal_tramp);
   identity_f = func_f1(nil, identity_tramp);
-  prog_string = string(strdup(progname));
+  prog_string = string(progname);
 }
 
 void obj_print(obj_t *obj, obj_t *out)
@@ -1648,6 +1847,10 @@ void obj_print(obj_t *obj, obj_t *out)
       put_cchar(out, ')');
     }
     return;
+  case LSTR:
+    obj_print(obj->ls.prefix, out);
+    put_cstring(out, "#<... lazy string>");
+    return;
   case COBJ:
     obj->co.ops->print(obj, out);
     return;
@@ -1709,6 +1912,10 @@ void obj_pprint(obj_t *obj, obj_t *out)
       }
       put_cchar(out, ')');
     }
+    return;
+  case LSTR:
+    obj_pprint(obj->ls.prefix, out);
+    put_cstring(out, "...");
     return;
   case COBJ:
     obj->co.ops->print(obj, out);
