@@ -1,5 +1,20 @@
 2009-10-20 Kaz Kylheku  <kkylheku@gmail.com>
 
+	Implement custom separator and limit in freeform.
+
+	* lib.h (lazy_string): New struct member, opts.
+	(lazy_str): Declaration updated.
+
+	* lib.c (lazy_str): New constructor parameters to set the
+	seprator string and numeric line limit.
+	(lazy_str_force, lazy_str_upto): Honor the line limit,
+	and use the separator string if provided.
+
+	* match.c (match_files): Process the arguments for freeform
+	directive.
+
+2009-10-20 Kaz Kylheku  <kkylheku@gmail.com>
+
 	* lib.c (sub_str): Avoid invoking c_str which forces the
 	lazy string.
 

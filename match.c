@@ -984,12 +984,21 @@ repeat_spec_same_data:
           return nil;
         }
       } else if (sym == freeform) {
+        obj_t *args = rest(rest(first_spec));
+        obj_t *vals = mapcar(func_n1(cdr), 
+                             mapcar(bind2other(func_n2(eval_form), 
+                                                bindings), args));
+
         if ((spec = rest(spec)) == nil) {
           sem_error(spec_linenum,
                     "freeform must be followed by a query line", nao);
         } else {
+          obj_t *limit = or2(if2(nump(first(vals)), first(vals)),
+                             if2(nump(second(vals)), second(vals)));
+          obj_t *sep = or2(if2(stringp(first(vals)), first(vals)),
+                           if2(stringp(second(vals)), second(vals)));
           obj_t *ff_specline = rest(first(spec));
-          obj_t *ff_dataline = lazy_str(data);
+          obj_t *ff_dataline = lazy_str(data, sep, limit);
 
           cons_bind (new_bindings, success,
                      match_line(bindings, ff_specline, ff_dataline, zero,

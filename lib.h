@@ -121,6 +121,7 @@ struct lazy_string {
   type_t type;
   obj_t *prefix;        /* actual string part */
   obj_t *list;          /* remaining list */
+  obj_t *opts;          /* ( limit . sepstring ) */
 };
 
 struct cobj {
@@ -288,7 +289,7 @@ obj_t *vec_set_fill(obj_t *vec, obj_t *fill);
 obj_t **vecref_l(obj_t *vec, obj_t *ind);
 obj_t *vec_push(obj_t *vec, obj_t *item);
 obj_t *lazy_stream_cons(obj_t *stream);
-obj_t *lazy_str(obj_t *list);
+obj_t *lazy_str(obj_t *list, obj_t *sep, obj_t *limit);
 obj_t *lazy_str_force_upto(obj_t *lstr, obj_t *index);
 obj_t *lazy_str_force(obj_t *lstr);
 obj_t *lazy_str_get_trailing_list(obj_t *lstr, obj_t *index);
