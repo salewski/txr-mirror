@@ -1,5 +1,10 @@
 2009-10-20 Kaz Kylheku  <kkylheku@gmail.com>
 
+	* lib.c (sub_str): Avoid invoking c_str which forces the
+	lazy string.
+
+2009-10-20 Kaz Kylheku  <kkylheku@gmail.com>
+
 	Start of implementation for freestyle matching.
 
 	Lazy strings implemented, incompletely.
