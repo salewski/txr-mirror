@@ -1,5 +1,18 @@
 2009-11-01 Kaz Kylheku  <kkylheku@gmail.com>
 
+	Bug ID 27898: Directory order dependencies in test case.
+	Converted some directories to text files.
+
+	* tests/002/proc/*/task: Directories removed.
+
+	* tests/002/proc/*/tasks: Files created.
+
+	* tests/002/query-1.txr: Query updated.
+
+	* tests/002/query-1.expected: Expected output updated.
+
+2009-11-01 Kaz Kylheku  <kkylheku@gmail.com>
+
 	Bug ID 27895: Calls to protect have an argument list terminated
 	by the integer constant 0 rather than a proper null pointer constant.
 
