@@ -1,5 +1,21 @@
 2009-11-01 Kaz Kylheku  <kkylheku@gmail.com>
 
+	Version 020
+
+	Improved documentation.
+
+	Building via configure script.
+
+	Support for cross compiling support.
+
+	Support for building in separate build directory.
+
+	Internal bugfixes.
+
+	Portability bugs fixed; works on x86-64 GNU/Linux.
+
+2009-11-01 Kaz Kylheku  <kkylheku@gmail.com>
+
 	Bug ID 27898: Directory order dependencies in test case.
 	Converted some directories to text files.
 

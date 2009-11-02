@@ -39,7 +39,7 @@
 #include "match.h"
 #include "txr.h"
 
-const char *version = "019";
+const char *version = "020";
 const char *progname = "txr";
 const char *spec_file = "stdin";
 obj_t *spec_file_str;
