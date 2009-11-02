@@ -836,7 +836,8 @@ obj_t *sub_str(obj_t *str_in, obj_t *from, obj_t *to)
   } else {
     size_t size = c_num(to) - c_num(from) + 1;
     char *sub = chk_malloc(size);
-    strncpy(sub, c_str(str_in) + c_num(from), size);
+    const char *str = c_str(lazy_stringp(str_in) ? str_in->ls.prefix : str_in);
+    strncpy(sub, str + c_num(from), size);
     sub[size-1] = 0;
     return string_own(sub);
   }
