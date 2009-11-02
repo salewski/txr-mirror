@@ -17,7 +17,7 @@ PPid:	@parent_id
 @(skip)
 Uid:	@uid	@/.*/
 Gid:	@gid	@/.*/
-@  (next)$@TESTDIR/proc/@process/task
+@  (next `@TESTDIR/proc/@process/tasks`)
 @  (collect)
 @thr
 @  (end)

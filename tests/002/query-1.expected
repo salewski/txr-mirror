@@ -23,7 +23,7 @@ root      1698     1 S rpc.idmapd       -
 root      1766     1 S vmware-guestd    -
 root      1790     1 S rpciod           -
 root      1791     1 S lockd            -
-root      1821     1 S ypbind           1826, 1821
+root      1821     1 S ypbind           1822, 1826
 root      1839     1 S acpid            -
 root      1851     1 S cupsd            -
 root      1887     1 S sshd             -
@@ -41,7 +41,7 @@ root      1936     1 S rpc.mountd       -
 root      1963     1 S crond            -
 xfs       1989     1 S xfs              -
 root      2008     1 S atd              -
-dbus      2027     1 S dbus-daemon-1    2027
+dbus      2027     1 S dbus-daemon-1    2032
 root      2041     1 S cups-config-dae  -
 root      2052     1 S hald             -
 root      2062     1 S mingetty         -
@@ -60,10 +60,10 @@ root      2354  2184 S X                -
 524       2661     1 S xscreensaver     -
 524       2685     1 S metacity         -
 524       2689     1 S gnome-panel      -
-524       2691     1 S nautilus         2715, 2691, 2708, 2711, 2714, 2713, 2709, 2710, 2696
+524       2691     1 S nautilus         2696, 2708, 2709, 2710, 2711, 2712, 2713, 2714, 2715
 524       2693     1 S gnome-volume-ma  -
 524       2695     1 S eggcups          -
-524       2698     1 S gnome-vfs-daemo  2698
+524       2698     1 S gnome-vfs-daemo  2699
 524       2701     1 S pam-panel-icon   -
 524       2707     1 R rhn-applet-gui   -
 524       2717  2701 S pam_timestamp_c  -
