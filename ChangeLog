@@ -1,3 +1,62 @@
+2009-10-20 Kaz Kylheku  <kkylheku@gmail.com>
+
+	Start of implementation for freestyle matching.
+
+	Lazy strings implemented, incompletely.
+
+	Changed string function to implicitly strdup; non-strdup
+	version changed to string_own. Fixed wrong uses of strdup
+	rather than chk_strdup.
+
+	Functions added to regex module to provide regex matching
+	as a state machine to which characters are fed.
+
+	* lib.h (type_t): New enum member LSTR, for lazy strings.
+	(lstr_t, freestyle, type_check3, string_own): Declared.
+	(string): Parameter changed to const char *.
+	(lazy_stringp, split_str, lazy_str, lazy_str_force_upto, 
+	lazy_str_force, lazy_str_get_trailing_list, length_str_gt,
+	length_str_ge, length_str_lt, length_str_le): Declared.
+
+	* lib.c (lstr_t, freestyle): New symbol globals.
+	(code2type, obj_print, obj_pprint, equal): Extended to handle LSTR.
+	(type_check3): New function.
+	(string_own): New function; does what string used to do.
+	(string): Duplicates the string with strdup, so callers don't have to.
+	(mkstring, copy_str, trim_str): Use string_own.
+	(stringp): A lazy string is a kind of string.
+	(lazy_stringp): New function.
+	(length_str, c_str, search_str, sub_str, chr_str,
+	chr_str_set): Handle lazy strings.
+	(split_str): New function.
+	(lazy_str, lazy_str_force_upto, lazy_str_force,
+	lazy_str_get_trailing_list, length_str_gt, length_str_ge,
+	length_str_lt, length_str_le): New functions.
+	(obj_init): New symbols interned. Eliminated strdup calls.
+	
+	* gc.c (finalize, mark_obj): Changed to handle LSTR type.
+	Eliminated default case from switch so we get a gcc
+	diagnostic if a case is not handled.
+
+	* match.c (match_files): Eliminated strdup calls.
+	Added freeform directive.
+
+	* parser.y (grammar): Changed string calls to string_own.
+
+	* stream.c (stdio_get_line, get_string_from_stream):
+	Changed string calls to string_own.
+	(dir_get_line): Eliminated chk_strdup call.
+
+	* txr.c (remove_hash_bang_line, main): Eliminated strdup calls.
+
+	* regex.h (nfam_result): New union.
+	(nfa_machine, nfa_machine_t): New struct and typedef.
+	(nfa_machine_init, nfa_machine_cleanup, nfa_machine_feed,
+	nfa_machine_match_span): New functions declared.
+
+	* regex.c (nfa_machine_init, nfa_machine_cleanup, nfa_machine_feed,
+	nfa_machine_match_span): New functions defined.
+
 2009-10-18 Kaz Kylheku  <kkylheku@gmail.com>
 
 	Trivial change allows regexps to be bound to variables,

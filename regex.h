@@ -90,16 +90,29 @@ void nfa_state_free(nfa_state_t *st);
 void nfa_state_shallow_free(nfa_state_t *st);
 void nfa_state_merge(nfa_state_t *accept, nfa_state_t *);
 
-typedef struct nfa nfa_t;
-
-struct nfa {
+typedef struct nfa {
   nfa_state_t *start;
   nfa_state_t *accept;
-};
+} nfa_t;
+
+enum nfam_result { NFAM_INCOMPLETE, NFAM_FAIL, NFAM_MATCH };
+
+typedef struct nfa_machine {
+  long last_accept_pos;
+  unsigned visited;
+  nfa_state_t **move, **clos, **stack;
+  int nmove, nclos;
+  long count;
+  nfa_t nfa;
+} nfa_machine_t;
 
 nfa_t nfa_compile_regex(obj_t *regex);
 void nfa_free(nfa_t);
 long nfa_run(nfa_t nfa, const char *str);
+void nfa_machine_init(nfa_machine_t *, nfa_t);
+void nfa_machine_cleanup(nfa_machine_t *);
+int nfa_machine_feed(nfa_machine_t *, int ch);
+long nfa_machine_match_span(nfa_machine_t *);
 obj_t *regex_compile(obj_t *regex_sexp);
 obj_t *regexp(obj_t *);
 nfa_t *regex_nfa(obj_t *);

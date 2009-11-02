@@ -147,33 +147,34 @@ static void finalize(obj_t *obj)
 {
   switch (obj->t.type) {
   case CONS:
-    break;
+    return;
   case STR:
     if (!opt_gc_debug) {
       free(obj->st.str);
       obj->st.str = 0;
     }
-    break;
+    return;
   case CHR:
   case NUM:
   case SYM:
   case FUN:
-    break;
+    return;
   case VEC:
     if (!opt_gc_debug) {
       free(obj->v.vec-2);
       obj->v.vec = 0;
     }
-    break;
+    return;
   case LCONS:
-    break;
+  case LSTR:
+    return;
   case COBJ:
     if (obj->co.ops->destroy)
       obj->co.ops->destroy(obj);
-    break;
-  default:
-    assert (0 && "corrupt type field");
+    return;
   }
+
+  assert (0 && "corrupt type field");
 }
 
 static void mark_obj(obj_t *obj)
@@ -208,7 +209,7 @@ tail_call:
     mark_obj_tail(obj->st.len);
   case CHR:
   case NUM:
-    break;
+    return;
   case SYM:
     mark_obj(obj->s.name);
     mark_obj_tail(obj->s.val);
@@ -216,7 +217,7 @@ tail_call:
     mark_obj(obj->f.env);
     if (obj->f.functype == FINTERP)
       mark_obj_tail(obj->f.f.interp_fun);
-    break;
+    return;
   case VEC:
     {
       obj_t *alloc_size = obj->v.vec[-2];
@@ -229,18 +230,21 @@ tail_call:
       for (i = 0; i < fp; i++)
         mark_obj(obj->v.vec[i]);
     }
-    break;
+    return;
   case LCONS:
     mark_obj(obj->lc.func);
     mark_obj(obj->lc.car);
     mark_obj_tail(obj->lc.cdr);
+  case LSTR:
+    mark_obj(obj->ls.prefix);
+    mark_obj_tail(obj->ls.list);
   case COBJ:
     if (obj->co.ops->mark)
       obj->co.ops->mark(obj);
     mark_obj_tail(obj->co.cls);
-  default:
-    assert (0 && "corrupt type field");
   }
+
+  assert (0 && "corrupt type field");
 }
 
 static int in_heap(obj_t *ptr)

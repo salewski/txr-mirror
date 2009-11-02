@@ -569,6 +569,82 @@ long nfa_run(nfa_t nfa, const char *str)
   return last_accept_pos ? last_accept_pos - str : -1;
 }
 
+long nfa_machine_match_span(nfa_machine_t *nfam)
+{
+  return nfam->last_accept_pos;
+}
+
+/*
+ * NFA machine: represents the logic of the nfa_run function as state machine
+ * object which can be fed one character at a time.
+ */
+void nfa_machine_init(nfa_machine_t *nfam, nfa_t nfa)
+{
+  int accept = 0;
+
+  nfam->nfa = nfa;
+  nfam->last_accept_pos = -1;
+  nfam->visited = nfa.start->a.visited + 1;
+  nfam->move = chk_malloc(NFA_SET_SIZE * sizeof *nfam->move);
+  nfam->clos = chk_malloc(NFA_SET_SIZE * sizeof *nfam->clos);
+  nfam->stack = chk_malloc(NFA_SET_SIZE * sizeof *nfam->stack);
+  nfam->nmove = 1;
+  nfam->count = 0;
+
+  nfam->move[0] = nfa.start;
+
+  nfam->nclos = nfa_closure(nfam->stack, nfam->move, nfam->nmove, 
+                            nfam->clos, nfam->visited++, &accept);
+
+  if (accept)
+    nfam->last_accept_pos = nfam->count;
+}
+
+void nfa_machine_cleanup(nfa_machine_t *nfam)
+{
+  free(nfam->stack);
+  free(nfam->clos);
+  free(nfam->move);
+  nfam->stack = 0;
+  nfam->clos = 0;
+  nfam->move = 0;
+  nfam->nfa.start = 0;
+  nfam->nfa.accept = 0;
+}
+
+int nfa_machine_feed(nfa_machine_t *nfam, int ch)
+{
+  int accept = 0;
+
+  if (ch != 0) {
+    nfam->count++;
+
+    nfam->nmove = nfa_move(nfam->clos, nfam->nclos, nfam->move, ch);
+    nfam->nclos = nfa_closure(nfam->stack, nfam->move, nfam->nmove, nfam->clos,
+                              nfam->visited++, &accept);
+
+    if (accept)
+      nfam->last_accept_pos = nfam->count;
+  }
+
+  nfam->nfa.start->a.visited = nfam->visited;
+
+  if (ch && nfam->nclos != 0) {
+    if (accept)
+       return NFAM_MATCH;
+    return NFAM_INCOMPLETE;
+  }
+
+  /* Reached if the null character is
+     consumed, or NFA hit a transition dead end. */
+
+  if (nfam->last_accept_pos == nfam->count)
+    return NFAM_MATCH;
+  if (nfam->last_accept_pos == -1)
+    return NFAM_FAIL;
+  return NFAM_INCOMPLETE;
+}
+
 static obj_t *regex_equal(obj_t *self, obj_t *other)
 {
   return self == other ? t : nil; /* eq equality only */
