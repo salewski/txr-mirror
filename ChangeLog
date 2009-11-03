@@ -1,5 +1,19 @@
 2009-10-22 Kaz Kylheku  <kkylheku@gmail.com>
 
+	Version 019
+
+	Regexps can be bound to variables.
+
+	New freeform directive.
+
+	* txr.c (version): Bump.
+	* txr.1: Bump version and date.
+
+	* lib.c, match.c, regex.c, regex.h, stream.c: Trailing whitespace
+	removed from lines.
+
+2009-10-22 Kaz Kylheku  <kkylheku@gmail.com>
+
 	* txr.1: Documented freeform.
 
 2009-10-21 Kaz Kylheku  <kkylheku@gmail.com>
@@ -80,7 +94,7 @@
 	* lib.h (type_t): New enum member LSTR, for lazy strings.
 	(lstr_t, freestyle, type_check3, string_own): Declared.
 	(string): Parameter changed to const char *.
-	(lazy_stringp, split_str, lazy_str, lazy_str_force_upto, 
+	(lazy_stringp, split_str, lazy_str, lazy_str_force_upto,
 	lazy_str_force, lazy_str_get_trailing_list, length_str_gt,
 	length_str_ge, length_str_lt, length_str_le): Declared.
 

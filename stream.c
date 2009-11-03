@@ -300,7 +300,7 @@ static void string_out_stream_destroy(obj_t *stream)
 static obj_t *string_out_put_string(obj_t *stream, const char *s)
 {
   struct string_output *so = (struct string_output *) stream->co.handle;
-  
+
   if (so == 0) {
     return nil;
   } else {
@@ -335,12 +335,12 @@ static obj_t *string_out_put_char(obj_t *stream, int ch)
 obj_t *string_out_vcformat(obj_t *stream, const char *fmt, va_list vl)
 {
   struct string_output *so = (struct string_output *) stream->co.handle;
-  
+
   if (so == 0) {
     return nil;
   } else {
     int nchars, nchars2;
-    char dummy_buf[1]; 
+    char dummy_buf[1];
     size_t old_size = so->size;
     size_t required_size;
     va_list vl_copy;
@@ -353,7 +353,7 @@ obj_t *string_out_vcformat(obj_t *stream, const char *fmt, va_list vl)
     vl_copy = vl;
 #endif
 
-    nchars = vsnprintf(dummy_buf, 0, fmt, vl_copy); 
+    nchars = vsnprintf(dummy_buf, 0, fmt, vl_copy);
 
 #if defined va_copy || defined __va_copy
     va_end (vl_copy);
@@ -373,11 +373,11 @@ obj_t *string_out_vcformat(obj_t *stream, const char *fmt, va_list vl)
     }
 
     so->buf = chk_realloc(so->buf, so->size);
-    nchars2 = vsnprintf(so->buf + so->fill, so->size-so->fill, fmt, vl); 
+    nchars2 = vsnprintf(so->buf + so->fill, so->size-so->fill, fmt, vl);
     bug_unless (nchars == nchars2);
     so->fill += nchars;
     return t;
-  } 
+  }
 }
 
 static struct strm_ops string_out_ops = {

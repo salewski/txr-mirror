@@ -1404,7 +1404,7 @@ obj_t *lazy_str_force_upto(obj_t *lstr, obj_t *index)
   type_check(lstr, LSTR);
   lim = cdr(lstr->ls.opts);
 
-  while (gt(index, length_str(lstr->ls.prefix)) && lstr->ls.list && 
+  while (gt(index, length_str(lstr->ls.prefix)) && lstr->ls.list &&
          or2(nullp(lim),gt(lim,zero)))
   {
     obj_t *next = pop(&lstr->ls.list);

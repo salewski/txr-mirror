@@ -888,7 +888,7 @@ obj_t *match_files(obj_t *spec, obj_t *files,
     obj_t *first_spec_item = second(first(spec));
 
     if (consp(first_spec_item) && eq(first(first_spec_item), next)) {
-      debugf("not opening source ~a since query starts with next directive", 
+      debugf("not opening source ~a since query starts with next directive",
              name, nao);
     } else {
       debugf("opening data source ~a", name, nao);
@@ -983,8 +983,8 @@ repeat_spec_same_data:
         }
       } else if (sym == freeform) {
         obj_t *args = rest(first_spec);
-        obj_t *vals = mapcar(func_n1(cdr), 
-                             mapcar(bind2other(func_n2(eval_form), 
+        obj_t *vals = mapcar(func_n1(cdr),
+                             mapcar(bind2other(func_n2(eval_form),
                                                 bindings), args));
 
         if ((spec = rest(spec)) == nil) {
@@ -1063,7 +1063,7 @@ repeat_spec_same_data:
           else if (eq(first(source), args)) {
             obj_t *input_name = string("args");
             cons_bind (new_bindings, success,
-                match_files(spec, cons(input_name, files), 
+                match_files(spec, cons(input_name, files),
                   bindings, files, one));
             if (success)
               return cons(new_bindings,
