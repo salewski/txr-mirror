@@ -237,6 +237,7 @@ tail_call:
     mark_obj_tail(obj->lc.cdr);
   case LSTR:
     mark_obj(obj->ls.prefix);
+    mark_obj(obj->ls.opts);
     mark_obj_tail(obj->ls.list);
   case COBJ:
     if (obj->co.ops->mark)
