@@ -195,7 +195,7 @@ nfa_t nfa_make(nfa_state_t *s, nfa_state_t *acc)
 }
 
 /*
- * Combine two NFA's representing regexps that are catenated. 
+ * Combine two NFA's representing regexps that are catenated.
  * The acceptance state of the predecessor is merged with the start state of
  * the successor.
  */
@@ -329,7 +329,7 @@ nfa_t nfa_compile_regex(obj_t *items)
     }
 
     return nfa;
-  } 
+  }
 }
 
 int nfa_all_states(nfa_state_t **inout, int num, int visited)
@@ -410,7 +410,7 @@ void nfa_free(nfa_t nfa)
  * states which are reachable from that set with empty (epsilon) transitions.
  * (Transitions that don't do not consume and match an input character).
  */
-int nfa_closure(nfa_state_t **stack, nfa_state_t **in, int nin, 
+int nfa_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
                 nfa_state_t **out, int visited, int *accept)
 {
   int i, nout = 0;
@@ -495,7 +495,7 @@ int nfa_move(nfa_state_t **in, int nin, nfa_state_t **out, int ch)
     }
 
     /* The state matches the character, so add it to the move set.
-       C trick: all character-transitioning state types have the 
+       C trick: all character-transitioning state types have the
        pointer to the next state in the same position,
        among a common set of leading struct members in the union. */
 
@@ -516,7 +516,7 @@ int nfa_move(nfa_state_t **in, int nin, nfa_state_t **out, int ch)
  * Returns the length of the prefix of the string
  * which matches the regex.  Or, if you will,
  * the position of the first mismatching
- * character. 
+ * character.
  *
  * If the regex does not match at all, zero is
  * returned.
@@ -565,7 +565,7 @@ long nfa_run(nfa_t nfa, const char *str)
   free(stack);
   free(clos);
   free(move);
- 
+
   return last_accept_pos ? last_accept_pos - str : -1;
 }
 
@@ -590,7 +590,7 @@ void nfa_machine_reset(nfa_machine_t *nfam)
 
   nfam->move[0] = nfam->nfa.start;
 
-  nfam->nclos = nfa_closure(nfam->stack, nfam->move, nfam->nmove, 
+  nfam->nclos = nfa_closure(nfam->stack, nfam->move, nfam->nmove,
                             nfam->clos, nfam->visited++, &accept);
 
   if (accept)

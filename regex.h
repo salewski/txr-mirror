@@ -42,8 +42,8 @@ void char_set_add(char_set_t *, int);
 void char_set_add_range(char_set_t *, int, int); /* inclusive */
 int char_set_contains(char_set_t *, int);
 
-typedef enum { 
-  nfa_accept, nfa_empty, nfa_wild, nfa_single, nfa_set 
+typedef enum {
+  nfa_accept, nfa_empty, nfa_wild, nfa_single, nfa_set
 } nfa_kind_t;
 
 typedef union nfa_state nfa_state_t;
@@ -95,7 +95,7 @@ typedef struct nfa {
   nfa_state_t *accept;
 } nfa_t;
 
-typedef enum nfam_result { 
+typedef enum nfam_result {
   NFAM_INCOMPLETE, NFAM_FAIL, NFAM_MATCH
 } nfam_result_t;
 
