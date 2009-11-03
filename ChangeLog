@@ -1,6 +1,6 @@
 2009-10-20 Kaz Kylheku  <kkylheku@gmail.com>
 
-	Working regex over lazy strings from freeform.
+	Got regex working over lazy strings from freeform.
 
 	Bugfixes.
 
