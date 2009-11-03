@@ -1,3 +1,8 @@
+2009-10-21 Kaz Kylheku  <kkylheku@gmail.com>
+
+	* gc.c (mark_obj): Bugfix: recurse over recently added
+	member, opts, in the lazy_string structure.
+
 2009-10-20 Kaz Kylheku  <kkylheku@gmail.com>
 
 	Got regex working over lazy strings from freeform.
