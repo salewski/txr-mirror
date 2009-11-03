@@ -993,10 +993,10 @@ repeat_spec_same_data:
         } else {
           obj_t *limit = or2(if2(nump(first(vals)), first(vals)),
                              if2(nump(second(vals)), second(vals)));
-          obj_t *sep = or2(if2(stringp(first(vals)), first(vals)),
-                           if2(stringp(second(vals)), second(vals)));
+          obj_t *term = or2(if2(stringp(first(vals)), first(vals)),
+                            if2(stringp(second(vals)), second(vals)));
           obj_t *ff_specline = rest(first(spec));
-          obj_t *ff_dataline = lazy_str(data, sep, limit);
+          obj_t *ff_dataline = lazy_str(data, term, limit);
 
           cons_bind (new_bindings, success,
                      match_line(bindings, ff_specline, ff_dataline, zero,

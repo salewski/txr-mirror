@@ -1,5 +1,20 @@
 2009-10-21 Kaz Kylheku  <kkylheku@gmail.com>
 
+	Change the freeform line catenation semantics to termination
+	rather than separation.
+
+	* lib.h (lazy_str): Declaration updated.
+
+	* lib.c (lazy_str): Tack terminator onto initial prefix
+	string. Parameter renamed. Also, terminator string cached
+	in the object.
+	(lazy_str_force, lazy_str_force_upto): Terminate, rather
+	than separate.
+
+	* match.c (match_files): sep variable renamed to term.
+
+2009-10-21 Kaz Kylheku  <kkylheku@gmail.com>
+
 	* gc.c (mark_obj): Bugfix: recurse over recently added
 	member, opts, in the lazy_string structure.
 
