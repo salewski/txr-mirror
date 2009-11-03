@@ -578,26 +578,32 @@ long nfa_machine_match_span(nfa_machine_t *nfam)
  * NFA machine: represents the logic of the nfa_run function as state machine
  * object which can be fed one character at a time.
  */
-void nfa_machine_init(nfa_machine_t *nfam, nfa_t nfa)
+
+void nfa_machine_reset(nfa_machine_t *nfam)
 {
   int accept = 0;
 
-  nfam->nfa = nfa;
   nfam->last_accept_pos = -1;
-  nfam->visited = nfa.start->a.visited + 1;
-  nfam->move = chk_malloc(NFA_SET_SIZE * sizeof *nfam->move);
-  nfam->clos = chk_malloc(NFA_SET_SIZE * sizeof *nfam->clos);
-  nfam->stack = chk_malloc(NFA_SET_SIZE * sizeof *nfam->stack);
+  nfam->visited = nfam->nfa.start->a.visited + 1;
   nfam->nmove = 1;
   nfam->count = 0;
 
-  nfam->move[0] = nfa.start;
+  nfam->move[0] = nfam->nfa.start;
 
   nfam->nclos = nfa_closure(nfam->stack, nfam->move, nfam->nmove, 
                             nfam->clos, nfam->visited++, &accept);
 
   if (accept)
     nfam->last_accept_pos = nfam->count;
+}
+
+void nfa_machine_init(nfa_machine_t *nfam, nfa_t nfa)
+{
+  nfam->nfa = nfa;
+  nfam->move = chk_malloc(NFA_SET_SIZE * sizeof *nfam->move);
+  nfam->clos = chk_malloc(NFA_SET_SIZE * sizeof *nfam->clos);
+  nfam->stack = chk_malloc(NFA_SET_SIZE * sizeof *nfam->stack);
+  nfa_machine_reset(nfam);
 }
 
 void nfa_machine_cleanup(nfa_machine_t *nfam)
@@ -612,7 +618,7 @@ void nfa_machine_cleanup(nfa_machine_t *nfam)
   nfam->nfa.accept = 0;
 }
 
-int nfa_machine_feed(nfa_machine_t *nfam, int ch)
+nfam_result_t nfa_machine_feed(nfa_machine_t *nfam, int ch)
 {
   int accept = 0;
 
@@ -680,26 +686,54 @@ nfa_t *regex_nfa(obj_t *reg)
   return (nfa_t *) reg->co.handle;
 }
 
-obj_t *search_regex(obj_t *haystack, obj_t *needle_regex, obj_t *start_num,
+obj_t *search_regex(obj_t *haystack, obj_t *needle_regex, obj_t *start,
                     obj_t *from_end)
 {
-  const char *h = c_str(haystack);
-  long len = c_num(length_str(haystack));
-  long start = c_num(start_num);
   nfa_t *pnfa = regex_nfa(needle_regex);
 
-  if (start > len) {
+  if (length_str_lt(haystack, start)) {
     return nil;
   } else {
-    long begin = from_end ? len : start;
-    long end = from_end ? start - 1 : len + 1;
-    int incr = from_end ? -1 : 1;
-    long i;
+    if (from_end) {
+      long i;
+      long s = c_num(start);
+      const char *h = c_str(haystack);
 
-    for (i = begin; i != end; i += incr) {
-      long span = nfa_run(*pnfa, h + i);
-      if (span >= 0)
-        return cons(num(i), num(span));
+      for (i = c_num(length_str(haystack)) - 1; i >= s; i--) {
+        long span = nfa_run(*pnfa, h + i);
+        if (span >= 0)
+          return cons(num(i), num(span));
+      }
+    } else {
+      nfa_machine_t nfam;
+      obj_t *i, *pos = start, *retval;
+      nfam_result_t last_res = NFAM_INCOMPLETE;
+
+      nfa_machine_init(&nfam, *pnfa);
+
+again:
+      for (i = pos; length_str_gt(haystack, i); i = plus(i, one)) {
+        last_res = nfa_machine_feed(&nfam, c_chr(chr_str(haystack, i)));
+
+        if (last_res == NFAM_FAIL) {
+          nfa_machine_reset(&nfam);
+          pos = plus(pos, one);
+          goto again;
+        }
+      }
+
+      last_res = nfa_machine_feed(&nfam, 0);
+
+      switch (last_res) {
+      case NFAM_INCOMPLETE:
+      case NFAM_MATCH:
+        retval = cons(pos, num(nfa_machine_match_span(&nfam)));
+        nfa_machine_cleanup(&nfam);
+        return retval;
+      case NFAM_FAIL:
+        nfa_machine_cleanup(&nfam);
+        return nil;
+      }
     }
 
     return nil;
@@ -708,8 +742,31 @@ obj_t *search_regex(obj_t *haystack, obj_t *needle_regex, obj_t *start_num,
 
 obj_t *match_regex(obj_t *str, obj_t *reg, obj_t *pos)
 {
+  nfa_machine_t nfam;
+  obj_t *i, *retval;
+  nfam_result_t last_res = NFAM_INCOMPLETE;
   nfa_t *pnfa = regex_nfa(reg);
-  long cpos = c_num(pos);
-  long span = nfa_run(*pnfa, c_str(str) + cpos);
-  return span >= 0 ? num(span + cpos) : nil;
+
+  nfa_machine_init(&nfam, *pnfa);
+
+  for (i = pos; length_str_gt(str, i); i = plus(i, one)) {
+    last_res = nfa_machine_feed(&nfam, c_chr(chr_str(str, i)));
+    if (last_res == NFAM_FAIL)
+      break;
+  }
+
+  last_res = nfa_machine_feed(&nfam, 0);
+
+  switch (last_res) {
+  case NFAM_INCOMPLETE:
+  case NFAM_MATCH:
+    retval = plus(pos, num(nfa_machine_match_span(&nfam)));
+    nfa_machine_cleanup(&nfam);
+    return retval;
+  case NFAM_FAIL:
+    nfa_machine_cleanup(&nfam);
+    return nil;
+  }
+
+  return nil;
 }

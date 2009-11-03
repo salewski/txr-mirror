@@ -318,8 +318,7 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
             } else if (nump(modifier)) {
               obj_t *past = plus(pos, modifier);
 
-              if (c_num(past) > c_num(length_str(dataline)) ||
-                  c_num(past) < c_num(pos))
+              if (length_str_lt(dataline, past) || lt(past, pos))
               {
                 LOG_MISMATCH("fixed field size");
                 return nil;
@@ -351,8 +350,7 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
               pos = past;
             } else if (nump(modifier)) {
               obj_t *past = plus(pos, modifier);
-              if (c_num(past) > c_num(length_str(dataline)) ||
-                  c_num(past) < c_num(pos))
+              if (length_str_lt(dataline, past) || lt(past, pos))
               {
                 LOG_MISMATCH("count based var");
                 return nil;
@@ -466,12 +464,12 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
 
             if (new_pos && !equal(new_pos, pos)) {
               pos = new_pos;
-              assert (c_num(pos) <= c_num(length_str(dataline)));
+              bug_unless (length_str_ge(dataline, pos));
             } else {
               pos = plus(pos, one);
             }
 
-            if (c_num(pos) >= c_num(length_str(dataline)))
+            if (length_str_le(dataline, pos))
               break;
           }
 
@@ -984,7 +982,7 @@ repeat_spec_same_data:
           return nil;
         }
       } else if (sym == freeform) {
-        obj_t *args = rest(rest(first_spec));
+        obj_t *args = rest(first_spec);
         obj_t *vals = mapcar(func_n1(cdr), 
                              mapcar(bind2other(func_n2(eval_form), 
                                                 bindings), args));

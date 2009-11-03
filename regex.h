@@ -95,7 +95,9 @@ typedef struct nfa {
   nfa_state_t *accept;
 } nfa_t;
 
-enum nfam_result { NFAM_INCOMPLETE, NFAM_FAIL, NFAM_MATCH };
+typedef enum nfam_result { 
+  NFAM_INCOMPLETE, NFAM_FAIL, NFAM_MATCH
+} nfam_result_t;
 
 typedef struct nfa_machine {
   long last_accept_pos;
@@ -109,9 +111,10 @@ typedef struct nfa_machine {
 nfa_t nfa_compile_regex(obj_t *regex);
 void nfa_free(nfa_t);
 long nfa_run(nfa_t nfa, const char *str);
+void nfa_machine_reset(nfa_machine_t *);
 void nfa_machine_init(nfa_machine_t *, nfa_t);
 void nfa_machine_cleanup(nfa_machine_t *);
-int nfa_machine_feed(nfa_machine_t *, int ch);
+nfam_result_t nfa_machine_feed(nfa_machine_t *, int ch);
 long nfa_machine_match_span(nfa_machine_t *);
 obj_t *regex_compile(obj_t *regex_sexp);
 obj_t *regexp(obj_t *);
