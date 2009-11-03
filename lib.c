@@ -1357,21 +1357,23 @@ obj_t *lazy_stream_cons(obj_t *stream)
                        lazy_stream_func));
 }
 
-obj_t *lazy_str(obj_t *list, obj_t *sep, obj_t *limit)
+obj_t *lazy_str(obj_t *lst, obj_t *term, obj_t *limit)
 {
   obj_t *obj = make_obj();
   obj->ls.type = LSTR;
 
-  if (nullp(list)) {
+  term = or2(term, string("\n"));
+
+  if (nullp(lst)) {
     obj->ls.prefix = null_string;
     obj->ls.list = nil;
   } else {
-    obj->ls.prefix = first(list);
-    obj->ls.list = rest(list);
+    obj->ls.prefix = cat_str(list(first(lst), term, nao), nil);
+    obj->ls.list = rest(lst);
     limit = if2(limit, minus(limit, one));
   }
 
-  obj->ls.opts = cons(sep, limit);
+  obj->ls.opts = cons(term, limit);
 
   return obj;
 }
@@ -1382,17 +1384,12 @@ obj_t *lazy_str_force(obj_t *lstr)
   type_check(lstr, LSTR);
   lim = cdr(lstr->ls.opts);
 
-  if (!lim) {
-    if (lstr->ls.list) {
-      lstr->ls.prefix = cat_str(cons(lstr->ls.prefix, lstr->ls.list),
-                                or2(car(lstr->ls.opts), string("\n")));
-      lstr->ls.list = nil;
-    } 
-  } else while (gt(lim, zero) && lstr->ls.list) {
-    lstr->ls.prefix = cat_str(list(lstr->ls.prefix, car(lstr->ls.list), nao),
-                              or2(car(lstr->ls.opts), string("\n")));
-    lstr->ls.list = cdr(lstr->ls.list);
-    lim = minus(lim, one);
+  while ((!lim || gt(lim, zero)) && lstr->ls.list) {
+    obj_t *next = pop(&lstr->ls.list);
+    obj_t *term = car(lstr->ls.opts);
+    lstr->ls.prefix = cat_str(list(lstr->ls.prefix, next, term, nao), nil);
+    if (lim)
+      lim = minus(lim, one);
   }
 
   if (lim)
@@ -1411,8 +1408,8 @@ obj_t *lazy_str_force_upto(obj_t *lstr, obj_t *index)
          or2(nullp(lim),gt(lim,zero)))
   {
     obj_t *next = pop(&lstr->ls.list);
-    lstr->ls.prefix = cat_str(cons(lstr->ls.prefix, cons(next, nil)), 
-                              or2(car(lstr->ls.opts), string("\n")));
+    obj_t *term = car(lstr->ls.opts);
+    lstr->ls.prefix = cat_str(list(lstr->ls.prefix, next, term, nao), nil);
     if (lim)
       lim = minus(lim, one);
   }
