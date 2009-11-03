@@ -1,5 +1,27 @@
 2009-10-20 Kaz Kylheku  <kkylheku@gmail.com>
 
+	Working regex over lazy strings from freeform.
+
+	Bugfixes.
+
+	* lib.c (length_str): Fixed recursion to wrong length function.
+	(lazy_str_force):  March down list properly. Update lazy
+	string's limit value.
+
+	* match.c (match_line): Convert to lazy-string-aware style; i.e.
+	avoidance of triggering a force of the whole string.
+	(match_files): Bugfix in argument processing of freeform directive.
+
+	* regex.h (nfam_result_t): New typedef.
+	(nfa_machine_reset): New function declaration.
+	(nfa_machine_feed): Updated declaration.
+
+	* regex.c (nfa_machine_init): Refactor to use nfa_machine_reset.
+	(nfa_machine_feed): Return nfam_result_t rather than just int.
+	(search_regex, match_regex): Refactor to work with lazy strings well.
+
+2009-10-20 Kaz Kylheku  <kkylheku@gmail.com>
+
 	Implement custom separator and limit in freeform.
 
 	* lib.h (lazy_string): New struct member, opts.

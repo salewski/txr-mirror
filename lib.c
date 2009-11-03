@@ -736,7 +736,7 @@ obj_t *length_str(obj_t *str)
 
   if (str->ls.type == LSTR) {
     lazy_str_force(str);
-    return length(str->ls.prefix);
+    return length_str(str->ls.prefix);
   }
 
   if (!str->st.len)
@@ -1391,9 +1391,12 @@ obj_t *lazy_str_force(obj_t *lstr)
   } else while (gt(lim, zero) && lstr->ls.list) {
     lstr->ls.prefix = cat_str(list(lstr->ls.prefix, car(lstr->ls.list), nao),
                               or2(car(lstr->ls.opts), string("\n")));
-    lstr->ls.list = nil;
+    lstr->ls.list = cdr(lstr->ls.list);
     lim = minus(lim, one);
   }
+
+  if (lim)
+    *cdr_l(lstr->ls.opts) = lim;
 
   return lstr->ls.prefix;
 }
