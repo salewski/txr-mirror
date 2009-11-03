@@ -1,3 +1,7 @@
+2009-10-22 Kaz Kylheku  <kkylheku@gmail.com>
+
+	* txr.1: Documented freeform.
+
 2009-10-21 Kaz Kylheku  <kkylheku@gmail.com>
 
 	Change the freeform line catenation semantics to termination

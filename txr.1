@@ -739,6 +739,11 @@ A skip is also an anonymous block.
 Treat the remaining query or subquery as a match for a trailing context. That
 is to say, if the remainder matches, the data position is not advanced.
 
+.IP @(freeform)
+Treat the remainder of the input as one big string, and apply the following
+query line to that string. The newline characters (or custom separators) appear
+explicitly in that string.
+
 .IP @(some)
 Match some clauses in parallel. At least one has to match.
 
@@ -965,7 +970,7 @@ be written instead:
   end @BEG_SYMBOL
   @(end)
 
-.SS The Trailer directive
+.SS The Trailer Directive
 
 The trailer directive introduces a trailing portion of a query or subquery
 which matches input material normally, but in the event of a successful match,
@@ -996,6 +1001,56 @@ after the second 111.
 
 With the @(trailer) directive in place, the collect body, on each
 iteration, only consumes the lines matched prior to @(trailer).
+
+.SS The Freeform Directive
+
+The freeform directive provides a useful alternative to
+.B txr's
+line-oriented matching discipline. The freeform directive treats all remaining
+input from the current input source as one big line. The directive which
+immediately follows freeform is applied to that line.
+
+The syntax variations are:
+
+  @(freeform)
+  ... query line ..
+
+  @(freeform NUMBER)
+  ... query line ..
+
+  @(freeform STRING)
+  ... query line ..
+
+  @(freeform NUMBER STRING)
+  ... query line ..
+
+The string and numeric arguments, if both are present, may be given in either
+order.
+
+If a numeric argument is given, it limits the range of lines which are combined
+together. For instance @(freeform 5) means to only consider the next five lines
+to to be one big line. Without a numeric argument, freeform is "bottomless". It
+can match the entire file, which creates the risk of allocating a large amount
+of memory.
+
+If a string argument is given, it specifies a custom line terminator. The
+default terminator is "\en". The terminator does not have to be one character
+long.
+
+In the following example, freeform is used to solve a tokenizing problem.  The
+Unix password file has fields separated by colons. Some fields may be empty.
+Using freeform, we can join the password file using ":" as a separator.
+By restricting freeform to one line, we can obtain each line of the password
+file with a terminating ":", allowing for a simple tokenization, because
+now the fields are colon-terminated rather than colon-separated.
+
+Example:
+
+  @(next "/etc/passwd")
+  @(collect)
+  @(freeform 1 ":")
+  @(coll)@{token /[^:]*/}:@(end)
+  @(end)
 
 .SS The Some, All, None and Maybe directives
 
