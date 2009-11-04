@@ -98,7 +98,9 @@ done
 
 prefix=${prefix-/usr/local}
 install_prefix=${install_prefix-}
+bindir=${datadir-'$(prefix)/bin'}
 datadir=${datadir-'$(prefix)/share/txr'}
+mandir=${mandir-'$(prefix)/share/man'}
 cross=${cross-}
 compiler_prefix=${compiler_prefix-}
 cc=${compiler-'$(cross)$(compiler_prefix)gcc'}
@@ -169,10 +171,18 @@ install_prefix [$install_prefix]
   Specifies an extra path prefix that will be prepended to all paths during
   installation. This allows the software to be installed in a temporary
   directory for packaging.
+
+bindir [$bindir]
+
+  Specifies where the program executable will be installed.
                              
 datadir [$datadir]
 
   Specifies where read-only program data is to be stored.
+
+mandir [$mandir]
+
+  Specifies the directory where to install man pages.
 
 cross
 
@@ -305,7 +315,7 @@ fi
 
 printf "Checking installation paths:\n"
 
-for name in prefix datadir; do
+for name in prefix bindir datadir mandir; do
   eval path="\$install_prefix\${$name}"
   printf "\$(install_prefix)\$(%s)=%s ... " $name "$path"
   test_access=y
@@ -420,12 +430,24 @@ prefix := $prefix
 # e.g. for an operating system distro.
 install_prefix := $install_prefix
 
-# read-only application data directory
+# executable directory
+bindir := $bindir
+
+# read-only data directory
 datadir := $datadir
 
+# man page directory
+mandir := $mandir
+
+# cross compiler toolchain root directory
 cross := $cross
+
+# prefix for compiler command
 compiler_prefix := $compiler_prefix
+
+# prefix for non-compiler toolchain commands
 tool_prefix := $tool_prefix
+
 CC := $cc
 LEX := $lex
 LEXLIB := $lexlib
@@ -437,7 +459,6 @@ DIAG_FLAGS := $diag_flags
 DBG_FLAGS := $debug_flags
 LEX_DBG_FLAGS := $lex_dbg_flags
 TXR_DBG_OPTS := $txr_dbg_opts
-
 !
 
 #
