@@ -39,7 +39,7 @@ $(PROG): $(OBJS)
 
 VPATH := $(top_srcdir)
 
--include dep.mk
+-include $(top_srcdir)/dep.mk
 
 lex.yy.c: parser.l
 	$(LEX) $(LEX_DBG_FLAGS) $<
@@ -55,23 +55,27 @@ distclean: clean
 	rm -f config.make
 
 depend: $(PROG)
-	$(PROG) depend.txr > dep.mk
+	$(PROG) $(top_srcdir)/depend.txr > $(top_srcdir)/dep.mk
 
-TESTS := $(patsubst %.txr,%.ok,$(shell find tests -name '*.txr' | sort))
+TESTS := $(patsubst $(top_srcdir)/%.txr,./%.ok,\
+                    $(shell find $(top_srcdir)/tests -name '*.txr' | sort))
+
+$(warning $(TESTS))
 
 tests: $(PROG) $(TESTS)
 	@echo "** tests passed!"
 
-tests/001/%: TXR_ARGS := tests/001/data
-tests/002/%: TXR_OPTS := -DTESTDIR=tests/002
+tests/001/%: TXR_ARGS := $(top_srcdir)/tests/001/data
+tests/002/%: TXR_OPTS := -DTESTDIR=$(top_srcdir)/tests/002
 tests/004/%: TXR_ARGS := -a 123 -b -c
 
 %.ok: %.txr
-	./txr $(TXR_DBG_OPTS) $(TXR_OPTS) $^ $(TXR_ARGS) > $(@:.ok=.out)
-	diff $(@:.ok=.expected) $(@:.ok=.out)
+	mkdir -p $(dir $@)
+	$(PROG) $(TXR_DBG_OPTS) $(TXR_OPTS) $^ $(TXR_ARGS) > $(@:.ok=.out)
+	diff $(^:.txr=.expected) $(@:.ok=.out)
 
 %.expected: %.txr
-	./txr $(TXR_OPTS) $^ $(TXR_ARGS) > $@
+	$(PROG) $(TXR_OPTS) $^ $(TXR_ARGS) > $@
 
 install: $(PROG)
 	mkdir -p $(install_prefix)$(bindir)
