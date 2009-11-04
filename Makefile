@@ -52,7 +52,7 @@ clean:
 	  y.tab.c lex.yy.c y.tab.h y.output $(TESTS:.ok=.out)
 
 distclean: clean
-	rm -f config.make
+	rm -f config.make config.log
 
 depend: $(PROG)
 	$(PROG) $(top_srcdir)/depend.txr > $(top_srcdir)/dep.mk
