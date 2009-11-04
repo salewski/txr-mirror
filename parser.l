@@ -41,18 +41,18 @@
 
 #define YY_NO_UNPUT
 
-#define YY_INPUT(buf, result, max_size)						\
-	do {																						\
-		obj_t *c = nil;																\
-		int n, ch;																		\
-		for (n = 0; n < max_size && 									\
-								(c = get_char(yyin_stream)) && 		\
-								(ch = c_chr(c)) != '\n'; ++n)		  \
-			buf[n] = (char) ch;													\
-		if (ch == '\n')														  	\
-			buf[n++] = (char) ch;                       \
-		result = n;                                   \
-	} while (0)
+#define YY_INPUT(buf, result, max_size)           \
+  do {                                            \
+    obj_t *c = nil;                               \
+    int n, ch = '*';                              \
+    for (n = 0; n < max_size &&                   \
+                (c = get_char(yyin_stream)) &&    \
+                (ch = c_chr(c)) != '\n'; ++n)     \
+      buf[n] = (char) ch;                         \
+    if (ch == '\n')                               \
+      buf[n++] = (char) ch;                       \
+    result = n;                                   \
+  } while (0)
 
 obj_t *yyin_stream;
 

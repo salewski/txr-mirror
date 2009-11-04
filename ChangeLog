@@ -1,10 +1,15 @@
 2009-10-22 Kaz Kylheku  <kkylheku@gmail.com>
 
+	* parser.l (YY_INPUT): Kill tabs with spaces (how did they sneak in?).
+	Fix possible use of uninitialized ch.
+
+2009-10-21 Kaz Kylheku  <kkylheku@gmail.com>
+
 	* txr.1: Fixed misleading wording (separation versus termination).
 	Added Introduction headings to some major sections.
 	Improved exception handling intro.
 
-2009-10-22 Kaz Kylheku  <kkylheku@gmail.com>
+2009-10-21 Kaz Kylheku  <kkylheku@gmail.com>
 
 	Version 019
 
@@ -18,7 +23,7 @@
 	* lib.c, match.c, regex.c, regex.h, stream.c: Trailing whitespace
 	removed from lines.
 
-2009-10-22 Kaz Kylheku  <kkylheku@gmail.com>
+2009-10-21 Kaz Kylheku  <kkylheku@gmail.com>
 
 	* txr.1: Documented freeform.
 
