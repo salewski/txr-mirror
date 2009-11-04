@@ -3,7 +3,13 @@
 @file.c
 @(next)@file.c
 @(collect)
-#include "@header"
+#include "@hdr"
+@(cases)
+@(bind hdr ("y.tab.h"))
+@(bind header hdr)
+@(or)
+@(bind header `$(top_srcdir)/@hdr`)
+@(end)
 @(end)
 @(output)
 @file.o:@(rep) @header@(end)

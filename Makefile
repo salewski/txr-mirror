@@ -28,11 +28,16 @@
 
 -include config.make
 
-CFLAGS := $(LANG_FLAGS) $(DIAG_FLAGS) $(OPT_FLAGS) $(DBG_FLAGS)
+CFLAGS := -I$(top_srcdir) $(LANG_FLAGS) $(DIAG_FLAGS) $(OPT_FLAGS) $(DBG_FLAGS)
 
 OBJS := txr.o lex.yy.o y.tab.o match.o lib.o regex.o gc.o unwind.o stream.o
-txr: $(OBJS)
+
+PROG := ./txr
+
+$(PROG): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LEXLIB)
+
+VPATH := $(top_srcdir)
 
 -include dep.mk
 
@@ -43,18 +48,18 @@ y.tab.c y.tab.h: parser.y
 	if $(YACC) -v -d $< ; then true ; else rm $@ ; false ; fi
 
 clean:
-	rm -f txr $(OBJS) \
+	rm -f $(PROG) $(OBJS) \
 	  y.tab.c lex.yy.c y.tab.h y.output $(TESTS:.ok=.out)
 
 distclean: clean
 	rm -f config.make
 
-depend: txr
-	./txr depend.txr > dep.mk
+depend: $(PROG)
+	$(PROG) depend.txr > dep.mk
 
 TESTS := $(patsubst %.txr,%.ok,$(shell find tests -name '*.txr' | sort))
 
-tests: txr $(TESTS)
+tests: $(PROG) $(TESTS)
 	@echo "** tests passed!"
 
 tests/001/%: TXR_ARGS := tests/001/data
