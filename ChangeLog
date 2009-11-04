@@ -1,5 +1,19 @@
 2009-10-22 Kaz Kylheku  <kkylheku@gmail.com>
 
+	Got "make tests" working in separate build directory,
+	with .out files going to local tests/ tree.
+
+	* Makefile (depend): Refer to depend.txr and dep.mk
+	using $top_srcdir; no need for symlinks.
+	Changed a few more ./txr references to use $(PROG).
+	(TESTS): Path munging to generate targets with local paths.
+	(%.ok): Fixed diff logic to compare between .expected file
+	in $(top_srcdir) and local .out file.
+
+	* configure: Don't generate symlinks for tests and dep.mk.
+
+2009-10-22 Kaz Kylheku  <kkylheku@gmail.com>
+
 	Got "make install" working.
 
 	* Makefile (install): New target.
