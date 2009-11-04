@@ -460,5 +460,17 @@ TXR_DBG_OPTS := $txr_dbg_opts
 #
 # Parting message#
 #
-printf "Configuration seems to have been successful.\n"
-printf "Now \"make install\".\n"
+cat <<!
+Configuration seems to have been successful. The next
+step is one of these two.
+
+Method 1: if you have permissions to the installation directories:
+   make install
+
+Method 2: if you have to or want to be another user such as root to install:
+   make
+   su <userid>
+   (give password, if asked)
+   make install
+
+!
