@@ -1,6 +1,8 @@
 2009-10-22 Kaz Kylheku  <kkylheku@gmail.com>
 
-	* txr.1: Fix misleading wording (separation versus termination).
+	* txr.1: Fixed misleading wording (separation versus termination).
+	Added Introduction headings to some major sections.
+	Improved exception handling intro.
 
 2009-10-22 Kaz Kylheku  <kkylheku@gmail.com>
 
