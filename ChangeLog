@@ -1,5 +1,9 @@
 2009-10-22 Kaz Kylheku  <kkylheku@gmail.com>
 
+	* txr.1: Fix misleading wording (separation versus termination).
+
+2009-10-22 Kaz Kylheku  <kkylheku@gmail.com>
+
 	Version 019
 
 	Regexps can be bound to variables.
