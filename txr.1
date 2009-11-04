@@ -2023,6 +2023,8 @@ local definition.  When @(which) is called directly from the top level, its
 
 .SH OUTPUT
 
+.SS Introduction
+
 A
 .B txr
 query may perform custom output. Output is performed by @(output) clauses,
@@ -2240,25 +2242,30 @@ instead of the main clause: it is produced with no trailing space.
 
 .SH EXCEPTIONS
 
+.SS Introduction
+
 The exceptions mechanism in
 .B txr
-is disciplined way for representing and handling abnormal situations that may
-occur during query processing, such as using an unbound variable, or attempting
-to open a nonexistent file.
+is another disciplined form of non-local transfer, in addition to the blocks
+mechanism (see BLOCKS above).  Like blocks, exceptions provide a construct
+which serves as the target for a dynamic exit.  Both blocks and exceptions
+can be used to bail out of deep nesting when some condition occurs.
+However, exceptions provide more complexity. Exceptions are useful for
+error handling, and txr in fact maps certain error situations to exception
+control transfers. However, exceptions are not inherently an error-handling
+mechanism; they are a structured dynamic control transfer mechanism, one
+of whose applications is error handling.
 
-An exception is a situation in the query which stops the query and
-demands handling. If handling is not provided for that exception,
-the execution of the program is terminated.
-
-An exception is always identified by a symbol, which is its type. Types are
-organized in a subtype-supertype hierarchy.  For instance, the file_error
-exception type is a subtype of the error type. This means that a file error is
-a kind of error. An exception handling block which catches exceptions of type
-error will catch exceptions of type file_error, but a block which catches
-file_error will not catch all exceptions of type error. A query_error is a kind
-of error, but not a kind of file_error. The symbol t is the supertype
-of every type: every exception type is considered to be a kind of t.
-(Mnemonic: t stands for type, as in any type).
+An exception control transfer (simply called an exception) is always identified
+by a symbol, which is its type. Types are organized in a subtype-supertype
+hierarchy.  For instance, the file_error exception type is a subtype of the
+error type. This means that a file error is a kind of error. An exception
+handling block which catches exceptions of type error will catch exceptions of
+type file_error, but a block which catches file_error will not catch all
+exceptions of type error. A query_error is a kind of error, but not a kind of
+file_error. The symbol t is the supertype of every type: every exception type
+is considered to be a kind of t.  (Mnemonic: t stands for type, as in any
+type).
 
 Exceptions are handled using @(catch) clauses within a @(try) directive.
 
