@@ -1,5 +1,20 @@
 2009-10-22 Kaz Kylheku  <kkylheku@gmail.com>
 
+	Got build to work in separate build directory.
+
+	* Makefile (CFLAGS): Added -I flag to point header inclusion to the
+	source directory.
+	(PROG): New variable to hold program name.
+	(VPATH): Variable set, as a quick and dirty way to get GNU make
+	to find the prerequisites back in the source directory.
+	* configure: Added steps to symlink the tests directory and dep.mk.
+	* depend.txr: Modified to generate the dependencies with
+	correct references to the top_srcdir, with the exception of
+	locally generated headers.
+	* dep.mk: Regenerated.
+
+2009-10-22 Kaz Kylheku  <kkylheku@gmail.com>
+
 	Build configuration via configure script, with cross compiling support.
 	(Tested by cross-compiling txr on an x86 GNU/Linux system
 	to run on a MIPS-based GNU/Linux system).
