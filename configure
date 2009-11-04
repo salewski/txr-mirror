@@ -1,0 +1,443 @@
+#!/bin/sh
+#
+# Copyright 2009
+# Kaz Kylheku <kkylheku@gmail.com>
+# Vancouver, Canada
+# All rights reserved.
+#
+# BSD License:
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+#   1. Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
+#   2. Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in
+#      the documentation and/or other materials provided with the
+#      distribution.
+#   3. The name of the author may not be used to endorse or promote
+#      products derived from this software without specific prior
+#      written permission.
+#
+# THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+#
+# Save command line in a way that can be re-run.
+# This takes care of spaces, but if there are shell-meta characters
+# in the arguments, oops.
+#
+
+cmdline=
+for arg in "$0" "$@" ; do
+  [ -n "$cmdline" ] && cmdline="$cmdline "
+  case $arg in
+  *" "* | " "* | *" " )
+    cmdline=$cmdline$(printf "\"%s\"" "$arg")
+    ;;
+  * )
+    cmdline=$cmdline$arg
+    ;;
+  esac
+done
+
+#
+# Parse configuration variables
+#
+while [ $# -gt 0 ] ; do
+  case $1 in
+  --no-* )
+    var=${1#--no-}
+    val=
+    ;;
+  --*=* )
+    var=${1%=*}
+    var=${var#--}
+    val=${1#*=}
+    ;;
+  --*= )
+    var=${1%=*}
+    var=${var#--}
+    val=
+    ;; --* )
+    var=${1#--}
+    val=y
+    ;;
+  *=* )
+    var=${1%=*}
+    val=${1#*=}
+    ;;
+  *= )
+    var=${1%=*}
+    val=
+    ;;
+  * )
+    printf "$0: '$1' doesn't look like a configuration variable assignment\n"
+    printf "$0: use --help to get help\n"
+    exit 1
+  esac
+
+  if ! printf $var | grep -q -E '^[A-Za-z_][A-Za-z0-9_]*$' ; then
+    printf "$0: '$var' isn't a proper configuration variable name\n"
+    exit 1;
+  fi
+
+  eval "$var='$val'"
+  shift
+done
+
+#
+# Establish default values for any variables that are not specified
+# on the command line. The default derivations from prefix are in
+# Make syntax. They go verbatim into the generated config.make.
+# This way they can be overridden more flexibly at make time.
+#
+
+prefix=${prefix-/usr/local}
+install_prefix=${install_prefix-}
+datadir=${datadir-'$(prefix)/share/txr'}
+cross=${cross-}
+compiler_prefix=${compiler_prefix-}
+cc=${compiler-'$(cross)$(compiler_prefix)gcc'}
+tool_prefix=${tool_prefix-}
+lex=${lex-'$(cross)$(tool_prefix)flex'}
+lexlib=${lexlib--lfl}
+yacc=${yacc-'$(cross)$(tool_prefix)yacc'}
+opt_flags=${opt_flags--O2}
+lang_flags=${lang_flags--ansi -D_GNU_SOURCE}
+diag_flags=${diag_flags--Wall}
+debug_flags=${debug_flags--g}
+lex_dbg_flags=${lex_dbg_flags-}
+txr_dbg_opts=${txr_dbg_opts---gc-debug}
+#
+# If --help was given (or --help=<nonempty> or help=<nonempty>) then
+# print help and exit. The termination status is failed, to indicate
+# that configuration was not done.
+#
+
+if [ -n "$help" ] ; then
+cat <<!
+
+usage: $0 { variable=value }*
+
+The configure script prepares txr program for compilation and installation.
+To configure a program means to establish the values of Makefile variables
+which influence how the software is built, where it is installed. 
+These variables can also influence what features are present in the
+software, and can determine various defaults for those behaviors which are
+dynamically configurable when the software is run.
+
+Configuration variables are recorded in a file called config.make. This is a
+GNU makefile, and consequently uses the GNU make syntax. It is included in the
+main Makefile by an include statement.
+
+The configure script is flexible. It allows variables to be entered in any
+of these forms:
+
+Canonical:
+
+   variable=value      Defines the given variable as having the given value.
+   variable=           Defines the variable as having an empty value.
+                       An empty value serves as boolean false.
+
+Long-option style:
+
+   --variable=value    Same as 'variable=value', but resembles a GNU-style
+                       long option.
+   --variable          Same as 'variable=y'.
+   --no-variable       Same as 'variable='.
+
+No variables are required. The configure script establishes default values
+for any variables which are needed by the build, but which are not specified
+on the command line. 
+
+After running $0, check that the config.make contents are sane.
+
+The following variables are supported.  Note that Makefile variable syntax may
+be used in paths. Default values are shown in [square brackets].
+
+prefix [$prefix]
+
+  Specifies root directory where the software will ultimately be installed and
+  run from.
+                             
+install_prefix [$install_prefix]
+
+  Specifies an extra path prefix that will be prepended to all paths during
+  installation. This allows the software to be installed in a temporary
+  directory for packaging.
+                             
+datadir [$datadir]
+
+  Specifies where read-only program data is to be stored.
+
+cross
+
+  Specifies the root of a cross-compiling toolchain.
+  This becomes the \$(cross) variable in the Makefile, and by default
+  will be added as a prefix to all of the toolchain commands.
+  It should include the trailing slash, unless the \$compiler_prefix
+  and \$tool_prefix variables take care of this by providing a leading slash.
+
+compiler_prefix [$compiler_prefix]
+
+  Specifies a prefix to be added to the compiler command.
+  This is added to the \$(cross) prefix. This can include some path name
+  components, and a name fragment. For instance, if
+  \$cross is "/cross/toolchain/" and \$compiler_prefix is
+  "bin/mips-linux-" then the compiler command, unless otherwise
+  specified, will be "/cross/toolchain/bin/mips-linux-gcc".
+
+cc [$cc]
+
+  Specifies the name of the toolchain front-end driver command to use for
+  compiling C sources to object files, and for linking object files to
+  executables. This becomes the CC variable in the Makefile.
+
+tool_prefix [$tool_prefix]
+
+  Specifies a prefix to be added to tool commands other than the
+  compiler, like lex and yacc, in addition to \$cross.
+
+lex [$lex]
+
+  Specifies the program to use for compiling lex scanners to C.
+  This must be compatible with GNU flex, since flex extensions are used.
+
+lexlib [$lexlib]
+
+  Specifies the linker flag to use for linking the lex library.
+
+yacc [$yacc]
+
+  Specifies the program to use for compiling yacc scanners to C.
+
+opt_flags [$opt_flags]
+
+  Specifies optimization flags to use for compiling and linking
+  C sources.
+
+lang_flags [$lang_flags]
+
+  Specifies compiler flags which control the C language dialect and standard
+  conformance in the language and header files. The txr program is written
+  in C90, and requires POSIX and possibly other extensions. 
+
+diag_flags [$diag_flags]
+
+  Specifies compiler flags for obtaining extra diagnostics.
+
+debug_flags [$debug_flags]
+
+  Specifies flags for requesting that debugging information be
+  retained in the compile and link.
+
+lex_dbg_flags [$lex_dbg_flags]
+
+  Specifies debug flags to be passed to lex, perhaps to generate a debugging
+  scanner.
+
+txr_dbg_opts [$txr_dbg_opts]
+
+  Specifies debug flags to pass to the txr program during the execution
+  of "make tests".
+!
+  exit 1
+fi 
+
+#
+# Variables are read, --help wasn't given, so let's configure!
+#
+
+
+txr_ver=019
+
+#
+# The all important banner. 
+#
+
+if [ $txr_ver ] ; then
+  banner_text=$(printf " Configuring txr %s " "$txr_ver")
+else
+  banner_text=" Configuring txr (unknown version) "
+fi
+banner_box=$(printf "%.*s\n" ${#banner_text} \
+		    "-------------------------------------------")
+printf "+%s+\n|%s|\n+%s+\n" $banner_box "$banner_text" $banner_box
+
+#
+# From here on in, we bail if any command fails.
+# 
+
+set -e
+
+#
+# Check for GNU make
+#
+
+printf "Checking for GNU Make ... "
+
+output=$(make --version 2>&1)
+set -- $output
+
+if [ $1 != "GNU" -o $2 != "Make" ] ; then
+  printf "missing\n"
+  exit 1
+fi
+
+make_version=$3
+
+save_ifs=$IFS ; IFS=. ; set -- $make_version ; IFS=$save_ifs
+
+if [ $1 -lt 3 -o \( $1 -eq 3 -a $2 -lt 80 \) ] ; then
+  printf "too old (%s found, 3.80 or newer needed)\n" $make_version
+  exit 1
+else
+  printf "yes (%s found)\n" $make_version
+fi
+
+#
+# Verify sanity of --prefix and other directories.
+#
+
+printf "Checking installation paths:\n"
+
+for name in prefix datadir; do
+  eval path="\$install_prefix\${$name}"
+  printf "\$(install_prefix)\$(%s)=%s ... " $name "$path"
+  test_access=y
+  case "$path" in
+  " "* | *" "* | *" " )
+    printf "incorrect (contains spaces)\n"
+    exit 1
+    ;;
+  -* )
+    printf "incorrect (resembles a command option)\n"
+    exit 1
+    ;;
+  *'$('* )
+    # It's a make expression; can't test it
+    test_access=
+    ;;
+  /* )
+    ;;
+  * )
+    printf "incorrect (must be absolute path)\n"
+    exit 1
+    ;;
+  esac
+
+  if [ $test_access ] ; then
+    test_prefix=$path
+
+    while true ; do
+      if [ -e $test_prefix ] ; then
+	if [ ! -d $test_prefix ] ; then
+	  printf "incorrect ('%s' is not a directory)!\n" $test_prefix
+	  exit 1
+	fi
+	if [ ! -w $test_prefix ] ; then
+	  printf "okay\n  (but no write access to '%s'\n" $test_prefix
+
+	  printf "   so 'make install' will require root privileges)\n"
+	else
+	  printf "okay\n"
+	fi
+	break
+      fi
+      test_prefix=$(dirname $test_prefix)
+    done
+  else
+    printf "okay\n  (make variable derivation)\n"
+  fi
+done
+
+#
+# First, we have to figure out whether we are configured straight
+# in the source directory, or whether we are in a separate build directory.
+# In the latter case, we set up a symbolic link to the Makefile.
+#
+source_dir="$(dirname $0)"
+
+#
+# Compute an absolute path to the source directory.
+#
+top_srcdir="$(cd "$source_dir" ; pwd -P)"
+
+printf "Checking source directory %s ..." "$top_srcdir"
+
+case "$top_srcdir" in
+" "* | *" "* | *" " )
+  printf " bad (contains spaces)\n"
+  exit 1
+  ;;
+* )
+  printf " okay\n"
+  ;;
+esac
+
+if [ "$source_dir" != "." ] ; then
+  printf "symlinking Makefile -> $source_dir/Makefile\n"
+  ln -sf "$source_dir/Makefile" .
+else
+  printf "warning: its recommended to build in a separate directory\n"
+fi
+
+#
+# Save configuration in config.log
+#
+cat > config.log <<!
+
+Configured on $(date) using
+
+   $cmdline
+
+!
+
+#
+# Finally, we generate config.make
+#
+printf "generating config.make\n"
+
+cat > config.make <<!
+# absolute path to source code directory
+top_srcdir := $top_srcdir
+
+# ultimate installation prefix, where the
+# application will be run.
+prefix := $prefix
+
+# packaging installation prefix, where the
+# application may be temporarily installed
+# for creating pre-compiled packages,
+# e.g. for an operating system distro.
+install_prefix := $install_prefix
+
+# read-only application data directory
+datadir := $datadir
+
+cross := $cross
+compiler_prefix := $compiler_prefix
+tool_prefix := $tool_prefix
+CC := $cc
+LEX := $lex
+LEXLIB := $lexlib
+YACC := $yacc
+
+OPT_FLAGS := $opt_flags
+LANG_FLAGS := $lang_flags
+DIAG_FLAGS := $diag_flags
+DBG_FLAGS := $debug_flags
+LEX_DBG_FLAGS := $lex_dbg_flags
+TXR_DBG_OPTS := $txr_dbg_opts
+
+!
+
+#
+# Parting message#
+#
+printf "Configuration seems to have been successful.\n"
+printf "Now \"make install\".\n"
