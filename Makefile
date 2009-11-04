@@ -26,19 +26,13 @@
 # Test data in the tests/ directory is in the public domain,
 # unless it contains notices to the contrary.
 
-OPT_FLAGS := -O2
-LANG_FLAGS := -ansi -D_GNU_SOURCE
-DIAG_FLAGS := -Wall
-DBG_FLAGS := -g
-LEX_DBG_FLAGS :=
-TXR_DBG_OPTS := --gc-debug
-LEXLIB := fl
+-include config.make
 
 CFLAGS := $(LANG_FLAGS) $(DIAG_FLAGS) $(OPT_FLAGS) $(DBG_FLAGS)
 
 OBJS := txr.o lex.yy.o y.tab.o match.o lib.o regex.o gc.o unwind.o stream.o
 txr: $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $^ -l$(LEXLIB)
+	$(CC) $(CFLAGS) -o $@ $^ $(LEXLIB)
 
 -include dep.mk
 
@@ -51,6 +45,9 @@ y.tab.c y.tab.h: parser.y
 clean:
 	rm -f txr $(OBJS) \
 	  y.tab.c lex.yy.c y.tab.h y.output $(TESTS:.ok=.out)
+
+distclean: clean
+	rm -f config.make
 
 depend: txr
 	./txr depend.txr > dep.mk
@@ -71,3 +68,7 @@ tests/004/%: TXR_ARGS := -a 123 -b -c
 %.expected: %.txr
 	./txr $(TXR_OPTS) $^ $(TXR_ARGS) > $@
 
+
+config.make:
+	@echo "config.make missing: you didn't run ./configure"
+	@exit 1

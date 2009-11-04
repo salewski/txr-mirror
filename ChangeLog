@@ -1,5 +1,19 @@
 2009-10-22 Kaz Kylheku  <kkylheku@gmail.com>
 
+	Build configuration via configure script, with cross compiling support.
+	(Tested by cross-compiling txr on an x86 GNU/Linux system
+	to run on a MIPS-based GNU/Linux system).
+
+	* configure: New script.
+	* Makefile: (OPT_FLAGS, LANG_FLAGS, DIAG_FLAGS, DBG_FLAGS,
+	LEX_DBG_FLAGS, TXR_DBG_OPTS, LEXLIB): Variables removed;
+	these are now generated in config.make by configure.
+	(config.make): New target to print friendlier diagnostic if
+	the build is not configured.
+	(distclean): New target to do clean, plus remove config.make.
+
+2009-10-22 Kaz Kylheku  <kkylheku@gmail.com>
+
 	* parser.l (YY_INPUT): Kill tabs with spaces (how did they sneak in?).
 	Fix possible use of uninitialized ch.
 
