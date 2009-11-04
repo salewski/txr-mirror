@@ -1,5 +1,13 @@
 2009-10-22 Kaz Kylheku  <kkylheku@gmail.com>
 
+	Got "make install" working.
+
+	* Makefile (install): New target.
+
+	* configure (mandir, bindir): New variables.
+
+2009-10-22 Kaz Kylheku  <kkylheku@gmail.com>
+
 	Got build to work in separate build directory.
 
 	* Makefile (CFLAGS): Added -I flag to point header inclusion to the

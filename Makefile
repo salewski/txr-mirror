@@ -73,6 +73,12 @@ tests/004/%: TXR_ARGS := -a 123 -b -c
 %.expected: %.txr
 	./txr $(TXR_OPTS) $^ $(TXR_ARGS) > $@
 
+install: $(PROG)
+	mkdir -p $(install_prefix)$(bindir)
+	mkdir -p $(install_prefix)$(datadir)
+	mkdir -p $(install_prefix)$(mandir)/man1
+	cp txr $(install_prefix)$(bindir)
+	cp $(top_srcdir)/txr.1 $(install_prefix)$(mandir)/man1
 
 config.make:
 	@echo "config.make missing: you didn't run ./configure"
