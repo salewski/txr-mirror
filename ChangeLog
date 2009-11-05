@@ -1,5 +1,9 @@
 2009-10-22 Kaz Kylheku  <kkylheku@gmail.com>
 
+	* lib.c (equal): Fix broken LSTR and FUN cases.
+
+2009-10-22 Kaz Kylheku  <kkylheku@gmail.com>
+
 	Got "make tests" working in separate build directory,
 	with .out files going to local tests/ tree.
 

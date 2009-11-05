@@ -412,9 +412,12 @@ obj_t *equal(obj_t *left, obj_t *right)
     }
     return nil;
   case STR:
-    if (right->t.type == STR &&
-        strcmp(left->st.str, right->st.str) == 0)
-      return t;
+    if (right->t.type == STR)
+      return strcmp(left->st.str, right->st.str) == 0 ? t : nil;
+    if (right->t.type == LSTR) {
+      lazy_str_force(right);
+      return equal(left, right->ls.prefix);
+    }
     return nil;
   case CHR:
     if (right->t.type == CHR &&
@@ -430,7 +433,8 @@ obj_t *equal(obj_t *left, obj_t *right)
     return right == left ? t : nil;
   case FUN:
     if (right->t.type == FUN &&
-        left->f.functype == right->f.functype)
+        left->f.functype == right->f.functype &&
+        equal(left->f.env, right->f.env))
     {
       switch (left->f.functype) {
       case FINTERP: return (equal(left->f.f.interp_fun, right->f.f.interp_fun));
@@ -464,9 +468,7 @@ obj_t *equal(obj_t *left, obj_t *right)
   case LSTR:
     if (right->t.type == STR || right->t.type == LSTR) {
       lazy_str_force(left);
-      if (right->t.type == LSTR)
-        lazy_str_force(right);
-      return equal(left->ls.prefix, right->ls.prefix);
+      return equal(left->ls.prefix, right);
     }
     return nil;
   case COBJ:
