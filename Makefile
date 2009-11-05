@@ -60,8 +60,6 @@ depend: $(PROG)
 TESTS := $(patsubst $(top_srcdir)/%.txr,./%.ok,\
                     $(shell find $(top_srcdir)/tests -name '*.txr' | sort))
 
-$(warning $(TESTS))
-
 tests: $(PROG) $(TESTS)
 	@echo "** tests passed!"
 
