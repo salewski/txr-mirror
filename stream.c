@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <setjmp.h>
+#include <errno.h>
 #include "lib.h"
 #include "gc.h"
 #include "unwind.h"
@@ -46,7 +47,7 @@ struct strm_ops {
   obj_t *(*get_char)(obj_t *);
   obj_t *(*vcformat)(obj_t *, const char *fmt, va_list vl);
   obj_t *(*vformat)(obj_t *, const char *fmt, va_list vl);
-  obj_t *(*close)(obj_t *);
+  obj_t *(*close)(obj_t *, obj_t *);
 };
 
 static obj_t *common_equal(obj_t *self, obj_t *other)
@@ -56,7 +57,7 @@ static obj_t *common_equal(obj_t *self, obj_t *other)
 
 static void common_destroy(obj_t *obj)
 {
-  (void) close_stream(obj);
+  (void) close_stream(obj, nil);
 }
 
 obj_t *common_vformat(obj_t *stream, const char *fmt, va_list vl)
@@ -100,16 +101,62 @@ obj_t *common_vformat(obj_t *stream, const char *fmt, va_list vl)
   return t;
 }
 
+struct stdio_handle {
+  FILE *f;
+  obj_t *descr;
+};
+
+void stdio_stream_print(obj_t *stream, obj_t *out)
+{
+  struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
+  format(out, "#<~s ~s>", stream->co.cls, h->descr, nao);
+}
+
+void stdio_stream_destroy(obj_t *stream)
+{
+  struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
+  common_destroy(stream);
+  free(h);
+}
+
+void stdio_stream_mark(obj_t *stream)
+{
+  struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
+  gc_mark(h->descr);
+}
+
+static obj_t *stdio_maybe_read_error(obj_t *stream)
+{
+  struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
+  if (ferror(h->f)) {
+    clearerr(h->f);
+    uw_throwf(file_error, "error reading ~a: ~a/~s",
+              stream, num(errno), string(strerror(errno)));
+  }
+  return nil;
+}
+
+static obj_t *stdio_maybe_write_error(obj_t *stream)
+{
+  struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
+  if (ferror(h->f)) {
+    clearerr(h->f);
+    uw_throwf(file_error, "error writing ~a: ~a/~s",
+              stream, num(errno), string(strerror(errno)));
+  }
+  return nil;
+}
+
 static obj_t *stdio_put_string(obj_t *stream, const char *s)
 {
-  FILE *f = (FILE *) stream->co.handle;
-  return (f && fputs(s, f) != EOF) ? t : nil;
+  struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
+  return (h->f && fputs(s, h->f) != EOF) ? t : stdio_maybe_write_error(stream);
 }
 
 static obj_t *stdio_put_char(obj_t *stream, int ch)
 {
-  FILE *f = (FILE *) stream->co.handle;
-  return (f && putc(ch, f) != EOF) ? t : nil;
+  struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
+  return (h->f && putc(ch, h->f) != EOF) ? t : stdio_maybe_write_error(stream);
 }
 
 static char *snarf_line(FILE *in)
@@ -149,41 +196,46 @@ static obj_t *stdio_get_line(obj_t *stream)
   if (stream->co.handle == 0) {
     return nil;
   } else {
-    char *line = snarf_line((FILE *) stream->co.handle);
+    struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
+    char *line = snarf_line(h->f);
     if (!line)
-      return nil;
+      return stdio_maybe_read_error(stream);
     return string_own(line);
   }
 }
 
 obj_t *stdio_get_char(obj_t *stream)
 {
-  FILE *f = (FILE *) stream->co.handle;
-  if (f) {
-    int ch = getc(f);
-    return (ch != EOF) ? chr(ch) : nil;
+  struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
+  if (h->f) {
+    int ch = getc(h->f);
+    return (ch != EOF) ? chr(ch) : stdio_maybe_read_error(stream);
   }
   return nil;
 }
 
 obj_t *stdio_vcformat(obj_t *stream, const char *fmt, va_list vl)
 {
-  FILE *f = (FILE *) stream->co.handle;
-  if (f) {
-    int n = vfprintf(f, fmt, vl);
-    return (n >= 0) ? num(n) : nil;
+  struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
+
+  if (h->f) {
+    int n = vfprintf(h->f, fmt, vl);
+    return (n >= 0) ? num(n) : stdio_maybe_write_error(stream);
   }
   return nil;
 }
 
-static obj_t *stdio_close(obj_t *stream)
+static obj_t *stdio_close(obj_t *stream, obj_t *throw_on_error)
 {
+  struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
 
-  FILE *f = (FILE *) stream->co.handle;
-
-  if (f != 0 && f != stdin && f != stdout) {
-    int result = fclose(f);
-    stream->co.handle = 0;
+  if (h->f != 0 && h->f != stdin && h->f != stdout) {
+    int result = fclose(h->f);
+    h->f = 0;
+    if (result == EOF && throw_on_error) {
+      uw_throwf(file_error, "error closing ~a: ~a/~s",
+                stream, num(errno), string(strerror(errno)));
+    }
     return result != EOF ? t : nil;
   }
   return nil;
@@ -191,9 +243,9 @@ static obj_t *stdio_close(obj_t *stream)
 
 static struct strm_ops stdio_ops = {
   { common_equal,
-    cobj_print_op,
-    common_destroy,
-    0 },
+    stdio_stream_print,
+    stdio_stream_destroy,
+    stdio_stream_mark },
   stdio_put_string,
   stdio_put_char,
   stdio_get_line,
@@ -203,23 +255,47 @@ static struct strm_ops stdio_ops = {
   stdio_close
 };
 
-static obj_t *pipe_close(obj_t *stream)
+static obj_t *pipe_close(obj_t *stream, obj_t *throw_on_error)
 {
-  FILE *f = (FILE *) stream->co.handle;
+  struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
 
-  if (f != 0) {
-    int result = pclose(f);
-    stream->co.handle = 0;
-    return result >= 0 ? t : nil;
+  if (h->f != 0) {
+    int status = pclose(h->f);
+
+    h->f = 0;
+
+    if (status != 0 && throw_on_error) {
+      if (status < 0) {
+        uw_throwf(process_error, "unable to obtain status of command ~a: ~a/~s",
+                  stream, num(errno), string(strerror(errno)), nao);
+      } else if (WIFEXITED(status)) {
+        int exitstatus = WEXITSTATUS(status);
+        uw_throwf(process_error, "pipe ~a terminated with status ~a",
+                  stream, num(exitstatus), nao);
+      } else if (WIFSIGNALED(status)) {
+        int termsig = WTERMSIG(status);
+        uw_throwf(process_error, "pipe ~a terminated by signal ~a",
+                  stream, num(termsig), nao);
+
+      } else if (WIFSTOPPED(status) || WIFCONTINUED(status)) {
+        uw_throwf(process_error, "processes of closed pipe ~a still running",
+                  stream, nao);
+      } else {
+        uw_throwf(file_error, "strange status in when closing pipe ~a",
+                  stream, nao);
+      }
+    }
+
+    return status == 0 ? t : nil;
   }
   return nil;
 }
 
 static struct strm_ops pipe_ops = {
   { common_equal,
-    cobj_print_op,
-    common_destroy,
-    0 },
+    stdio_stream_print,
+    stdio_stream_destroy,
+    stdio_stream_mark },
   stdio_put_string,
   stdio_put_char,
   stdio_get_line,
@@ -412,7 +488,7 @@ static obj_t *dir_get_line(obj_t *stream)
   }
 }
 
-static obj_t *dir_close(obj_t *stream)
+static obj_t *dir_close(obj_t *stream, obj_t *throw_on_error)
 {
   if (stream->co.handle != 0) {
     closedir((DIR *) stream->co.handle);
@@ -438,14 +514,20 @@ static struct strm_ops dir_ops = {
 };
 
 
-obj_t *make_stdio_stream(FILE *handle, obj_t *input, obj_t *output)
+obj_t *make_stdio_stream(FILE *f, obj_t *descr, obj_t *input, obj_t *output)
 {
-  return cobj((void *) handle, stream_t, &stdio_ops.cobj_ops);
+  struct stdio_handle *h = (struct stdio_handle *) chk_malloc(sizeof *h);
+  h->f = f;
+  h->descr = descr;
+  return cobj((void *) h, stream_t, &stdio_ops.cobj_ops);
 }
 
-obj_t *make_pipe_stream(FILE *handle, obj_t *input, obj_t *output)
+obj_t *make_pipe_stream(FILE *f, obj_t *descr, obj_t *input, obj_t *output)
 {
-  return cobj((void *) handle, stream_t, &pipe_ops.cobj_ops);
+  struct stdio_handle *h = (struct stdio_handle *) chk_malloc(sizeof *h);
+  h->f = f;
+  h->descr = descr;
+  return cobj((void *) h, stream_t, &pipe_ops.cobj_ops);
 }
 
 obj_t *make_string_input_stream(obj_t *string)
@@ -455,9 +537,9 @@ obj_t *make_string_input_stream(obj_t *string)
 
 obj_t *make_string_output_stream(void)
 {
-  struct string_output *so = chk_malloc(sizeof *so);
+  struct string_output *so = (struct string_output *) chk_malloc(sizeof *so);
   so->size = 128;
-  so->buf = chk_malloc(so->size);
+  so->buf = (char *) chk_malloc(so->size);
   so->fill = 0;
   so->buf[0] = 0;
   return cobj((void *) so, stream_t, &string_out_ops.cobj_ops);
@@ -494,14 +576,14 @@ obj_t *make_dir_stream(DIR *dir)
   return cobj((void *) dir, stream_t, &dir_ops.cobj_ops);
 }
 
-obj_t *close_stream(obj_t *stream)
+obj_t *close_stream(obj_t *stream, obj_t *throw_on_error)
 {
   type_check (stream, COBJ);
   type_assert (stream->co.cls == stream_t, ("~a is not a stream", stream));
 
   {
     struct strm_ops *ops = (struct strm_ops *) stream->co.ops;
-    return ops->close ? ops->close(stream) : nil;
+    return ops->close ? ops->close(stream, throw_on_error) : nil;
   }
 }
 
@@ -635,7 +717,7 @@ obj_t *put_line(obj_t *stream, obj_t *string)
 void stream_init(void)
 {
   protect(&std_input, &std_output, &std_error, (obj_t **) 0);
-  std_input = make_stdio_stream(stdin, t, nil);
-  std_output = make_stdio_stream(stdout, nil, t);
-  std_error = make_stdio_stream(stderr, nil, t);
+  std_input = make_stdio_stream(stdin, string("stdin"), t, nil);
+  std_output = make_stdio_stream(stdout, string("stdout"), nil, t);
+  std_error = make_stdio_stream(stderr, string("stderr"), nil, t);
 }

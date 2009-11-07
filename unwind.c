@@ -369,4 +369,5 @@ void uw_init(void)
   uw_register_subtype(range_err, error);
   uw_register_subtype(query_error, error);
   uw_register_subtype(file_error, error);
+  uw_register_subtype(process_error, error);
 }

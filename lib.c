@@ -53,7 +53,7 @@ obj_t *define, *output, *single, *frst, *lst, *empty, *repeat, *rep;
 obj_t *flattn, *forget, *local, *mrge, *bind, *cat, *args;
 obj_t *try, *catch, *finally, *nothrow, *throw, *defex;
 obj_t *error, *type_error, *internal_err, *numeric_err, *range_err;
-obj_t *query_error, *file_error;
+obj_t *query_error, *file_error, *process_error;
 
 obj_t *zero, *one, *two, *negone, *maxint, *minint;
 obj_t *null_string;
@@ -1338,7 +1338,7 @@ static obj_t *lazy_stream_func(obj_t *env, obj_t *lcons)
   lcons->lc.func = nil;
 
   if (!next || !ahead)
-    close_stream(stream);
+    close_stream(stream, t);
 
   if (ahead)
     push(ahead, cdr_l(env));
@@ -1351,7 +1351,7 @@ obj_t *lazy_stream_cons(obj_t *stream)
   obj_t *first = get_line(stream);
 
   if (!first) {
-    close_stream(stream);
+    close_stream(stream, t);
     return nil;
   }
 
@@ -1753,6 +1753,7 @@ static void obj_init(void)
   range_err = intern(string("range_error"));
   query_error = intern(string("query_error"));
   file_error = intern(string("file_error"));
+  process_error = intern(string("process_error"));
 
   interned_syms = cons(nil, interned_syms);
 

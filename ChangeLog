@@ -1,3 +1,51 @@
+2009-11-06 Kaz Kylheku  <kkylheku@gmail.com>
+
+	Throw exception on stream error during close, or I/O operations.  This
+	is needed for pipes that terminate abnormally or return failed
+	termination. Pipe and stdio streams have an extra description field
+	so they are printed in a readable way.
+
+	* lib.c (process_error): New global defined.
+	(obj_init): New symbol interned.
+	(lazy_stream_func): Pass t to close_stream, so exception
+	is thrown if the close fails.
+	(lazy_stream_cons): Ditto.
+	
+	* lib.h (process_error): Declared.
+
+	* match.c (complex_snarf): Pass new desr argument to make_stdio_stream
+	and make_pipe_stream.
+
+	* stream.c (strm_ops): New argument on close function pointer.
+	(common_destroy): Close without throwing exception. For objects
+	being finalized, we don't care if the close works or not; the
+	program has shown that it doesn't care about the stream by
+	letting it become unreachable, so we don't bother the program
+	by throwing an exception.
+	(stdio_handle): New struct.
+	(stdio_stream_print, stdio_stream_destroy, stdio_stream_mark,
+	stdio_maybe_read_error, stdio_maybe_write_error): New functions.
+	(stdio_put_string, stdio_put_char, stdio_get_line, 
+	stdio_get_char, stdio_vcformat, stdio_close): Updated to new
+	handle format, and throw errors now.
+	(stdio_ops, pipe_ops): Redirected to new functions stdio_stream_print,
+	stdio_stream_destroy and stdio_stream_mark.
+	(pipe_close): Updated to new handle format. Parses status from
+	pclose and throws exceptions appropriate to the situation.
+	(dir_close): Takes extra argument.
+	(make_stdio_stream, make_pipe_stream): New argument added.
+	(make_string_output_stream): Some casts added. 
+	(close_stream): Pass new argument down to virtual function.
+	(stream_init): Pass new argument to make_stdio_stream
+	when creating streams for stdin, stdout and stderr.
+
+	* stream.h (make_stdio_stream, make_pipe_stream, close_stream):
+	Declarations updated.
+
+	* txr.c (txr_main): Pass new argument to make_stdio_stream.
+
+	* unwind.c (uw_init): Register process_error.
+
 2009-11-01 Kaz Kylheku  <kkylheku@gmail.com>
 
 	Version 020
