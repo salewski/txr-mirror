@@ -309,7 +309,7 @@ static int txr_main(int argc, char **argv)
       FILE *in = fopen(c_str(spec_file_str), "r");
       if (in == 0)
         uw_throwcf(file_error, "unable to open %s", c_str(spec_file_str));
-      yyin_stream = make_stdio_stream(in, t, nil);
+      yyin_stream = make_stdio_stream(in, spec_file_str, t, nil);
     } else {
       spec_file = "stdin";
     }
@@ -323,7 +323,7 @@ static int txr_main(int argc, char **argv)
       FILE *in = fopen(*argv, "r");
       if (in == 0)
         uw_throwcf(file_error, "unable to open %s", *argv);
-      yyin_stream = make_stdio_stream(in, t, nil);
+      yyin_stream = make_stdio_stream(in, string(*argv), t, nil);
       spec_file = *argv;
     } else {
       spec_file = "stdin";

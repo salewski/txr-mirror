@@ -683,9 +683,9 @@ obj_t *complex_snarf(fpip_t fp, obj_t *name)
 {
   switch (fp.close) {
   case fpip_fclose:
-    return lazy_stream_cons(make_stdio_stream(fp.f, t, nil));
+    return lazy_stream_cons(make_stdio_stream(fp.f, name, t, nil));
   case fpip_pclose:
-    return lazy_stream_cons(make_pipe_stream(fp.f, t, nil));
+    return lazy_stream_cons(make_pipe_stream(fp.f, name, t, nil));
   case fpip_closedir:
     return lazy_stream_cons(make_dir_stream(fp.d));
   }

@@ -164,7 +164,7 @@ extern obj_t *define, *output, *single, *frst, *lst, *empty, *repeat, *rep;
 extern obj_t *flattn, *forget, *local, *mrge, *bind, *cat, *args;
 extern obj_t *try, *catch, *finally, *nothrow, *throw, *defex;
 extern obj_t *error, *type_error, *internal_err, *numeric_err, *range_err;
-extern obj_t *query_error, *file_error;
+extern obj_t *query_error, *file_error, *process_error;
 
 extern obj_t *zero, *one, *two, *negone, *maxint, *minint;
 extern obj_t *null_string;
