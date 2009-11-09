@@ -136,6 +136,7 @@ struct cobj_ops {
   void (*print)(obj_t *self, obj_t *stream);
   void (*destroy)(obj_t *self);
   void (*mark)(obj_t *self);
+  long (*hash)(obj_t *self);
 };
 
 union obj {
@@ -155,7 +156,7 @@ union obj {
 extern obj_t *interned_syms;
 
 extern obj_t *t, *cons_t, *str_t, *chr_t, *num_t, *sym_t, *fun_t, *vec_t;
-extern obj_t *stream_t, *lcons_t, *lstr_t, *cobj_t;
+extern obj_t *stream_t, *hash_t, *lcons_t, *lstr_t, *cobj_t;
 extern obj_t *var, *regex, *set, *cset, *wild, *oneplus;
 extern obj_t *zeroplus, *optional, *compound, *or, *quasi;
 extern obj_t *skip, *trailer, *block, *next, *freeform, *fail, *accept;
@@ -301,6 +302,7 @@ obj_t *cobj(void *handle, obj_t *cls_sym, struct cobj_ops *ops);
 void cobj_print_op(obj_t *, obj_t *); /* Default function for struct cobj_ops */
 obj_t *assoc(obj_t *list, obj_t *key);
 obj_t *acons_new(obj_t *list, obj_t *key, obj_t *value);
+obj_t **acons_new_l(obj_t **list, obj_t *key);
 obj_t *alist_remove(obj_t *list, obj_t *keys);
 obj_t *alist_remove1(obj_t *list, obj_t *key);
 obj_t *copy_cons(obj_t *cons);
