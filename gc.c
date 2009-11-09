@@ -32,6 +32,7 @@
 #include <dirent.h>
 #include "lib.h"
 #include "stream.h"
+#include "hash.h"
 #include "txr.h"
 #include "gc.h"
 
@@ -350,8 +351,11 @@ void gc(void)
   if (gc_enabled) {
     jmp_buf jmp;
     setjmp(jmp);
+    gc_enabled = 0;
     mark();
+    hash_process_weak();
     sweep();
+    gc_enabled = 1;
   }
 }
 
@@ -370,6 +374,18 @@ void gc_init(obj_t **stack_bottom)
 void gc_mark(obj_t *obj)
 {
   mark_obj(obj);
+}
+
+int gc_is_reachable(obj_t *obj)
+{
+  type_t t;
+
+  if (obj == nil)
+    return 1;
+
+  t = obj->t.type;
+
+  return (t & REACHABLE) != 0;
 }
 
 /*

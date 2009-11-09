@@ -1,5 +1,30 @@
 2009-11-06  Kaz Kylheku  <kkylheku@gmail.com>
 
+	First cut at hash tables. One known problem is allocation during gc,
+	due to use of boxed numbers for vector access.
+
+	* gc.c (gc): Disable gc when doing garbage collection, in case
+	something tries to allocate memory during gc, triggering a recursive
+	gc, which would be very bad. Also, call the new function,
+	hash_process_weak, in between the mark and sweep phases.
+	(gc_is_reachable): New function.
+
+	* gc.h (gc_is_reachable): Declared.
+
+	* lib.c (hash_t): New symbol global.
+	(acons_new_l): New function.
+	(obj_init): New symbol interned.
+
+	* lib.h (hash_t, acons_new_l): Declared.
+
+	* hash.c, hash.h: New files.
+
+	* Makefile: New target, hash.o.
+
+	* dep.mk: Regenerated.
+
+2009-11-06  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Throw exception on stream error during close, or I/O operations.  This
 	is needed for pipes that terminate abnormally or return failed
 	termination. Pipe and stdio streams have an extra description field

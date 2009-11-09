@@ -23,13 +23,11 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
-void gc_init(obj_t **stack_bottom);
-obj_t *prot1(obj_t **loc);
-void rel1(obj_t **loc);
-void protect(obj_t **, ...);
-void release(obj_t **, ...);
-obj_t *make_obj(void);
-void gc(void);
-int gc_state(int);
-void gc_mark(obj_t *);
-int gc_is_reachable(obj_t *);
+
+obj_t *hash_obj(obj_t *);
+obj_t *make_hash(obj_t *weak_keys, obj_t *weak_vals);
+obj_t **l_gethash(obj_t *hash, obj_t *key);
+obj_t *gethash(obj_t *hash, obj_t *key);
+void hash_process_weak(void);
+
+void hash_init(void);

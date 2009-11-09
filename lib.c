@@ -44,7 +44,7 @@
 obj_t *interned_syms;
 
 obj_t *null, *t, *cons_t, *str_t, *chr_t, *num_t, *sym_t, *fun_t, *vec_t;
-obj_t *stream_t, *lcons_t, *lstr_t, *cobj_t;
+obj_t *stream_t, *hash_t, *lcons_t, *lstr_t, *cobj_t;
 obj_t *var, *regex, *set, *cset, *wild, *oneplus;
 obj_t *zeroplus, *optional, *compound, *or, *quasi;
 obj_t *skip, *trailer, *block, *next, *freeform, *fail, *accept;
@@ -1538,6 +1538,19 @@ obj_t *acons_new(obj_t *list, obj_t *key, obj_t *value)
   }
 }
 
+obj_t **acons_new_l(obj_t **list, obj_t *key)
+{
+  obj_t *existing = assoc(*list, key);
+
+  if (existing) {
+    return cdr_l(existing);
+  } else {
+    obj_t *new = cons(key, nil);
+    *list = cons(new, *list);
+    return cdr_l(new);
+  }
+}
+
 obj_t *alist_remove(obj_t *list, obj_t *keys)
 {
   obj_t **plist = &list;
@@ -1696,6 +1709,7 @@ static void obj_init(void)
   fun_t = intern(string("fun"));
   vec_t = intern(string("vec"));
   stream_t = intern(string("stream"));
+  hash_t = intern(string("hash"));
   lcons_t = intern(string("lcons"));
   lstr_t = intern(string("lstr"));
   cobj_t = intern(string("cobj"));
