@@ -1,4 +1,4 @@
-2009-11-06 Kaz Kylheku  <kkylheku@gmail.com>
+2009-11-06  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Throw exception on stream error during close, or I/O operations.  This
 	is needed for pipes that terminate abnormally or return failed
@@ -46,7 +46,7 @@
 
 	* unwind.c (uw_init): Register process_error.
 
-2009-11-01 Kaz Kylheku  <kkylheku@gmail.com>
+2009-11-01  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Version 020
 
@@ -62,7 +62,7 @@
 
 	Portability bugs fixed; works on x86-64 GNU/Linux.
 
-2009-11-01 Kaz Kylheku  <kkylheku@gmail.com>
+2009-11-01  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Bug ID 27898: Directory order dependencies in test case.
 	Converted some directories to text files.
@@ -75,7 +75,7 @@
 
 	* tests/002/query-1.expected: Expected output updated.
 
-2009-11-01 Kaz Kylheku  <kkylheku@gmail.com>
+2009-11-01  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Bug ID 27895: Calls to protect have an argument list terminated
 	by the integer constant 0 rather than a proper null pointer constant.
@@ -88,7 +88,7 @@
 
 	txr.c (txr_main): two-argument protect calls rewritten using prot1.
 
-2009-11-01 Kaz Kylheku  <kkylheku@gmail.com>
+2009-11-01  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Bug ID 27899: Garbage collection problem: method of locating stack
 	bottom is unreliable due to the unpredictable allocation order of local
@@ -109,11 +109,11 @@
 	should get fresh stack frame. So the stack_bottom variable in main
 	should be outside of that stack frame.
 
-2009-10-22 Kaz Kylheku  <kkylheku@gmail.com>
+2009-10-22  Kaz Kylheku  <kkylheku@gmail.com>
 
 	* lib.c (equal): Fix broken LSTR and FUN cases.
 
-2009-10-22 Kaz Kylheku  <kkylheku@gmail.com>
+2009-10-22  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Got "make tests" working in separate build directory,
 	with .out files going to local tests/ tree.
@@ -127,7 +127,7 @@
 
 	* configure: Don't generate symlinks for tests and dep.mk.
 
-2009-10-22 Kaz Kylheku  <kkylheku@gmail.com>
+2009-10-22  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Got "make install" working.
 
@@ -135,7 +135,7 @@
 
 	* configure (mandir, bindir): New variables.
 
-2009-10-22 Kaz Kylheku  <kkylheku@gmail.com>
+2009-10-22  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Got build to work in separate build directory.
 
@@ -150,7 +150,7 @@
 	locally generated headers.
 	* dep.mk: Regenerated.
 
-2009-10-22 Kaz Kylheku  <kkylheku@gmail.com>
+2009-10-22  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Build configuration via configure script, with cross compiling support.
 	(Tested by cross-compiling txr on an x86 GNU/Linux system
@@ -164,18 +164,18 @@
 	the build is not configured.
 	(distclean): New target to do clean, plus remove config.make.
 
-2009-10-22 Kaz Kylheku  <kkylheku@gmail.com>
+2009-10-22  Kaz Kylheku  <kkylheku@gmail.com>
 
 	* parser.l (YY_INPUT): Kill tabs with spaces (how did they sneak in?).
 	Fix possible use of uninitialized ch.
 
-2009-10-21 Kaz Kylheku  <kkylheku@gmail.com>
+2009-10-21  Kaz Kylheku  <kkylheku@gmail.com>
 
 	* txr.1: Fixed misleading wording (separation versus termination).
 	Added Introduction headings to some major sections.
 	Improved exception handling intro.
 
-2009-10-21 Kaz Kylheku  <kkylheku@gmail.com>
+2009-10-21  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Version 019
 
@@ -189,11 +189,11 @@
 	* lib.c, match.c, regex.c, regex.h, stream.c: Trailing whitespace
 	removed from lines.
 
-2009-10-21 Kaz Kylheku  <kkylheku@gmail.com>
+2009-10-21  Kaz Kylheku  <kkylheku@gmail.com>
 
 	* txr.1: Documented freeform.
 
-2009-10-21 Kaz Kylheku  <kkylheku@gmail.com>
+2009-10-21  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Change the freeform line catenation semantics to termination
 	rather than separation.
@@ -208,12 +208,12 @@
 
 	* match.c (match_files): sep variable renamed to term.
 
-2009-10-21 Kaz Kylheku  <kkylheku@gmail.com>
+2009-10-21  Kaz Kylheku  <kkylheku@gmail.com>
 
 	* gc.c (mark_obj): Bugfix: recurse over recently added
 	member, opts, in the lazy_string structure.
 
-2009-10-20 Kaz Kylheku  <kkylheku@gmail.com>
+2009-10-20  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Got regex working over lazy strings from freeform.
 
@@ -235,7 +235,7 @@
 	(nfa_machine_feed): Return nfam_result_t rather than just int.
 	(search_regex, match_regex): Refactor to work with lazy strings well.
 
-2009-10-20 Kaz Kylheku  <kkylheku@gmail.com>
+2009-10-20  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Implement custom separator and limit in freeform.
 
@@ -250,12 +250,12 @@
 	* match.c (match_files): Process the arguments for freeform
 	directive.
 
-2009-10-20 Kaz Kylheku  <kkylheku@gmail.com>
+2009-10-20  Kaz Kylheku  <kkylheku@gmail.com>
 
 	* lib.c (sub_str): Avoid invoking c_str which forces the
 	lazy string.
 
-2009-10-20 Kaz Kylheku  <kkylheku@gmail.com>
+2009-10-20  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Start of implementation for freestyle matching.
 
@@ -314,7 +314,7 @@
 	* regex.c (nfa_machine_init, nfa_machine_cleanup, nfa_machine_feed,
 	nfa_machine_match_span): New functions defined.
 
-2009-10-18 Kaz Kylheku  <kkylheku@gmail.com>
+2009-10-18  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Trivial change allows regexps to be bound to variables,
 	and used for matching. This Just Works because of
@@ -325,11 +325,11 @@
 	* regex.c (regexp): New function.
 	* regex.h (regexp): Declared.
 
-2009-10-17 Kaz Kylheku  <kkylheku@gmail.com>
+2009-10-17  Kaz Kylheku  <kkylheku@gmail.com>
 
 	* deps.mk: Updated.
 
-2009-10-17 Kaz Kylheku  <kkylheku@gmail.com>
+2009-10-17  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Version 018
 
@@ -353,7 +353,7 @@
 	* txr/tests/004/query-1.txr: New test case.
 	* tests/004/query-1.expected: Expected result for new test case.
 
-2009-10-17 Kaz Kylheku  <kkylheku@gmail.com>
+2009-10-17  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Version 017
 
@@ -368,7 +368,7 @@
 	* txr.c: (version): Bump to 016
 	* txr.1: Bump version to 016.
 
-2009-10-17 Kaz Kylheku  <kkylheku@gmail.com>
+2009-10-17  Kaz Kylheku  <kkylheku@gmail.com>
 
 	* txr.1: Documented defex.
 	* unwind.c (uw_register_subtype): Bugfix: if the subtype
@@ -382,7 +382,7 @@
 	this covers circularity and other cases, while still allowing
 	a relaxed order of definition.
 
-2009-10-17 Kaz Kylheku  <kkylheku@gmail.com>
+2009-10-17  Kaz Kylheku  <kkylheku@gmail.com>
 
 	* gc.c (mark_obj_tail): New macro.
 	(mark_obj): Optimized with manual tail recursion.
