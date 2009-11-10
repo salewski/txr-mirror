@@ -1,5 +1,15 @@
 2009-11-06  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Add hash table growth.
+
+	hash.c (hash_grow): New function.
+	(l_gethash): Renamed to gethash_l. Increment count; if load
+	factor gets to two, call hash_grow to double the size.
+
+	hash.h (l_gethash): Declaration changed to gethash_l.
+
+2009-11-06  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Changing representation of objects to allow the NUM type to be
 	unboxed. If the lowest bit of the obj_t * pointer is 1, then
 	the remaining bits are a number. A lot of assumptions are made:
