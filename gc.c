@@ -189,7 +189,7 @@ tail_call:
 #define mark_obj_tail(o) return mark_obj(o)
 #endif
 
-  if (obj == nil)
+  if (!is_ptr(obj))
     return;
 
   t = obj->t.type;
@@ -380,7 +380,7 @@ int gc_is_reachable(obj_t *obj)
 {
   type_t t;
 
-  if (obj == nil)
+  if (!is_ptr(obj))
     return 1;
 
   t = obj->t.type;

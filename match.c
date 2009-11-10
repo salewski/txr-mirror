@@ -296,7 +296,7 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
 
     elem = first(specline);
 
-    switch (elem ? elem->t.type : 0) {
+    switch (elem ? type(elem) : 0) {
     case CONS: /* directive */
       {
         obj_t *directive = first(elem);
@@ -362,7 +362,7 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
               bindings = acons_new(bindings, sym, sub_str(dataline, pos, nil));
               pos = length_str(dataline);
             }
-          } else if (pat->t.type == STR) {
+          } else if (type(pat) == STR) {
             obj_t *find = search_str(dataline, pat, pos, modifier);
             if (!find) {
               LOG_MISMATCH("var delimiting string");
@@ -750,7 +750,7 @@ void do_output_line(obj_t *bindings, obj_t *specline,
   for (; specline; specline = rest(specline)) {
     obj_t *elem = first(specline);
 
-    switch (elem ? elem->t.type : 0) {
+    switch (elem ? type(elem) : 0) {
     case CONS:
       {
         obj_t *directive = first(elem);

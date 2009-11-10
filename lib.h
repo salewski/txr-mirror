@@ -35,6 +35,17 @@ typedef enum functype
    N0, N1, N2, N3, N4   /* No-env intrinsics. */
 } functype_t;
 
+#define TAG_SHIFT 1
+#define TAG_MASK ((1 << TAG_SHIFT) - 1)
+#define TAG_NUM 1
+#define TAG_PTR 0
+#define NUM_MAX (LONG_MAX/2)
+#define NUM_MIN (LONG_MIN/2)
+
+#define is_ptr(obj) ((obj) && (((long) obj) & TAG_MASK) == TAG_PTR)
+#define is_num(obj) ((((long) obj) & TAG_MASK) == TAG_NUM)
+#define type(obj) ((is_num(obj)) ? NUM : obj->t.type)
+
 typedef union obj obj_t;
 
 struct any {
@@ -57,11 +68,6 @@ struct string {
 struct chr {
   type_t type;
   int ch;
-};
-
-struct num {
-  type_t type;
-  long val;
 };
 
 struct sym {
@@ -144,7 +150,6 @@ union obj {
   struct cons c;
   struct string st;
   struct chr ch;
-  struct num n;
   struct sym s;
   struct func f;
   struct vec v;
@@ -321,7 +326,7 @@ obj_t *match(obj_t *spec, obj_t *data);
 
 #define nil ((obj_t *) 0)
 
-#define nao ((obj_t *) -1) /* "not an object", useful as a sentinel. */
+#define nao ((obj_t *) (-1 << TAG_SHIFT)) /* "not an object" sentinel value. */
 
 #define eq(a, b) ((a) == (b) ? t : nil)
 

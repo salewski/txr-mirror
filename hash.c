@@ -79,21 +79,21 @@ static long hash_c_str(const char *str)
 static long ll_hash(obj_t *obj)
 {
   if (obj == nil)
-    return LONG_MAX;
+    return NUM_MAX;
 
-  switch (obj->t.type) {
+  switch (type(obj)) {
   case CONS:
-    return (ll_hash(obj->c.car) + ll_hash(obj->c.cdr)) & LONG_MAX;
+    return (ll_hash(obj->c.car) + ll_hash(obj->c.cdr)) & NUM_MAX;
   case STR:
     return hash_c_str(obj->st.str);
   case CHR:
-    return obj->ch.ch + LONG_MAX / 2;
+    return obj->ch.ch + NUM_MAX / 2;
   case NUM:
-    return obj->n.val & LONG_MAX;
+    return c_num(obj) & NUM_MAX;
   case SYM:
-    return ((long) obj) & LONG_MAX;
+    return ((long) obj) & NUM_MAX;
   case FUN:
-    return ((long) obj->f.f.interp_fun + ll_hash(obj->f.env)) & LONG_MAX;
+    return ((long) obj->f.f.interp_fun + ll_hash(obj->f.env)) & NUM_MAX;
   case VEC:
     {
       obj_t *fill = obj->v.vec[vec_fill];
@@ -101,19 +101,19 @@ static long ll_hash(obj_t *obj)
       long len = c_num(fill);
 
       for (i = 0; i < len; i++) 
-        h = (h + ll_hash(obj->v.vec[i])) & LONG_MAX;
+        h = (h + ll_hash(obj->v.vec[i])) & NUM_MAX;
 
       return h;
     }
   case LCONS:
-    return (ll_hash(car(obj)) + ll_hash(cdr(obj))) & LONG_MAX;
+    return (ll_hash(car(obj)) + ll_hash(cdr(obj))) & NUM_MAX;
   case LSTR:
     lazy_str_force(obj);
     return ll_hash(obj->ls.prefix);
   case COBJ:
     if (obj->co.ops->hash)
       return obj->co.ops->hash(obj);
-    return ((long) obj) & LONG_MAX;
+    return ((long) obj) & NUM_MAX;
   }
 
   internal_error("unhandled case in equal function");

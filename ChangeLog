@@ -1,5 +1,32 @@
 2009-11-06  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Changing representation of objects to allow the NUM type to be
+	unboxed. If the lowest bit of the obj_t * pointer is 1, then
+	the remaining bits are a number. A lot of assumptions are made:
+	- the long type can be converted to and from a pointer
+	- two's complement.
+	- behavior of << and >> operators when the sign bit is involved.
+
+	* lib.h (TAG_SHIFT, TAG_MASK, TAG_NUM, TAG_PTR, NUM_MASK, NUM_MIN,
+	is_ptr, is_num, type): New macros.
+	(struct num): Removed.
+	(nao): Redefined, so that it doesn't have the numeric tag.
+
+	* lib.c (typeof, type_check2, type_check3, car, car_l, cdr, cdr_l,
+	equal, consp, atom, listp, num, c_num, nump, plus, minus,
+	stringp, lazy_stringp, obj_print, obj_pprint): Fixed these
+	functions to use the new number representation, and not to deference
+	the obj_t * poitner if it is actually a number.
+	(obj_init): Adjusted values of maxint and minint.
+
+	* gc.c (mark_obj, gc_is_reachable): Avoid dereferencing numbers.
+
+	* hash.c (ll_hash): Likewise.
+
+	* match.c (match_line, do_output_line): Likewise.
+
+2009-11-06  Kaz Kylheku  <kkylheku@gmail.com>
+
 	First cut at hash tables. One known problem is allocation during gc,
 	due to use of boxed numbers for vector access.
 

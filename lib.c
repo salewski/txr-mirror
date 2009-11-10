@@ -101,7 +101,9 @@ static obj_t *code2type(int code)
 
 obj_t *typeof(obj_t *obj)
 {
-  if (obj == nil) {
+  if (is_num(obj)) {
+    return num_t;
+  } else if (obj == nil) {
     return null;
   } else if (obj->t.type == COBJ) {
     return obj->co.cls;
@@ -115,14 +117,14 @@ obj_t *typeof(obj_t *obj)
 
 obj_t *type_check(obj_t *obj, int type)
 {
-  if (!obj || obj->t.type != type)
+  if (!is_ptr(obj) || obj->t.type != type)
     type_mismatch("~s is not of type ~s", obj, code2type(type), nao);
   return t;
 }
 
 obj_t *type_check2(obj_t *obj, int t1, int t2)
 {
-  if (!obj || (obj->t.type != t1 && obj->t.type != t2))
+  if (!is_ptr(obj) || (obj->t.type != t1 && obj->t.type != t2))
     type_mismatch("~s is not of type ~s or ~s", obj,
                   code2type(t1), code2type(t2), nao);
   return t;
@@ -130,7 +132,8 @@ obj_t *type_check2(obj_t *obj, int t1, int t2)
 
 obj_t *type_check3(obj_t *obj, int t1, int t2, int t3)
 {
-  if (!obj || (obj->t.type != t1 && obj->t.type != t2 && obj->t.type != t3))
+  if (!is_ptr(obj) || (obj->t.type != t1 && obj->t.type != t2 
+                       && obj->t.type != t3))
     type_mismatch("~s is not of type ~s, ~s nor ~s", obj,
                   code2type(t1), code2type(t2), code2type(t3), nao);
   return t;
@@ -140,7 +143,7 @@ obj_t *car(obj_t *cons)
 {
   if (cons == nil)
     return nil;
-  else switch (cons->t.type) {
+  else switch (type(cons)) {
   case CONS:
     return cons->c.car;
   case LCONS:
@@ -160,7 +163,7 @@ obj_t *cdr(obj_t *cons)
 {
   if (cons == nil)
     return nil;
-  else switch (cons->t.type) {
+  else switch (type(cons)) {
   case CONS:
     return cons->c.cdr;
   case LCONS:
@@ -178,7 +181,7 @@ obj_t *cdr(obj_t *cons)
 
 obj_t **car_l(obj_t *cons)
 {
-  switch (cons->t.type) {
+  switch (type(cons)) {
   case CONS:
     return &cons->c.car;
   case LCONS:
@@ -191,7 +194,7 @@ obj_t **car_l(obj_t *cons)
 
 obj_t **cdr_l(obj_t *cons)
 {
-  switch (cons->t.type) {
+  switch (type(cons)) {
   case CONS:
     return &cons->c.cdr;
   case LCONS:
@@ -401,10 +404,10 @@ obj_t *equal(obj_t *left, obj_t *right)
   if (left == nil || right == nil)
     return nil;
 
-  switch (left->t.type) {
+  switch (type(left)) {
   case CONS:
   case LCONS:
-    if ((right->t.type == CONS || left->t.type == LCONS) &&
+    if ((type(right) == CONS || type(right) == LCONS) &&
         equal(car(left), car(right)) &&
         equal(cdr(left), cdr(right)))
     {
@@ -412,27 +415,25 @@ obj_t *equal(obj_t *left, obj_t *right)
     }
     return nil;
   case STR:
-    if (right->t.type == STR)
+    if (type(right) == STR)
       return strcmp(left->st.str, right->st.str) == 0 ? t : nil;
-    if (right->t.type == LSTR) {
+    if (type(right) == LSTR) {
       lazy_str_force(right);
       return equal(left, right->ls.prefix);
     }
     return nil;
   case CHR:
-    if (right->t.type == CHR &&
-        left->ch.ch == right->ch.ch)
+    if (type(right) == CHR && left->ch.ch == right->ch.ch)
       return t;
     return nil;
   case NUM:
-    if (right->t.type == NUM &&
-        left->n.val == right->n.val)
+    if (type(right) == NUM && c_num(left) == c_num(right))
       return t;
     return nil;
   case SYM:
     return right == left ? t : nil;
   case FUN:
-    if (right->t.type == FUN &&
+    if (type(right) == FUN &&
         left->f.functype == right->f.functype &&
         equal(left->f.env, right->f.env))
     {
@@ -453,7 +454,7 @@ obj_t *equal(obj_t *left, obj_t *right)
     }
     return nil;
   case VEC:
-    if (right->t.type == VEC) {
+    if (type(right) == VEC) {
       long i, fill;
       if (!equal(left->v.vec[vec_fill], right->v.vec[vec_fill]))
         return nil;
@@ -466,13 +467,13 @@ obj_t *equal(obj_t *left, obj_t *right)
     }
     return nil;
   case LSTR:
-    if (right->t.type == STR || right->t.type == LSTR) {
+    if (type(right) == STR || type(right) == LSTR) {
       lazy_str_force(left);
       return equal(left->ls.prefix, right);
     }
     return nil;
   case COBJ:
-    if (right->t.type == COBJ)
+    if (type(right) == COBJ)
       return left->co.ops->equal(left, right);
     return nil;
   }
@@ -547,9 +548,12 @@ obj_t *list(obj_t *first, ...)
 
 obj_t *consp(obj_t *obj)
 {
-  if (!obj)
+  if (!obj) {
     return nil;
-  return (obj->t.type == CONS || obj->t.type == LCONS) ? t : nil;
+  } else {
+    type_t type = type(obj);
+    return (type == CONS || type == LCONS) ? t : nil;
+  }
 }
 
 obj_t *nullp(obj_t *obj)
@@ -559,14 +563,12 @@ obj_t *nullp(obj_t *obj)
 
 obj_t *atom(obj_t *obj)
 {
-  return (obj == nil || (obj->t.type != CONS && obj->t.type != LCONS))
-         ? t : nil;
+  return if3(consp(obj), nil, t);
 }
 
 obj_t *listp(obj_t *obj)
 {
-  return (obj == nil || obj->t.type == CONS || obj->t.type == LCONS)
-         ? t : nil;
+  return if2(obj == nil || consp(obj), t);
 }
 
 obj_t *proper_listp(obj_t *obj)
@@ -589,21 +591,20 @@ obj_t *length(obj_t *list)
 
 obj_t *num(long val)
 {
-  obj_t *obj = make_obj();
-  obj->n.type = NUM;
-  obj->n.val = val;
-  return obj;
+  numeric_assert (val >= NUM_MIN && val <= NUM_MAX);
+  return (obj_t *) ((val << TAG_SHIFT) | TAG_NUM);
 }
 
 long c_num(obj_t *num)
 {
-  type_check(num, NUM);
-  return num->n.val;
+  if (!is_num(num))
+    type_mismatch("~s is not a number", num, nao);
+  return ((long) num) >> TAG_SHIFT;
 }
 
 obj_t *nump(obj_t *num)
 {
-  return (num && num->n.type == NUM) ? t : nil;
+  return (is_num(num)) ? t : nil;
 }
 
 obj_t *plus(obj_t *anum, obj_t *bnum)
@@ -611,8 +612,8 @@ obj_t *plus(obj_t *anum, obj_t *bnum)
   long a = c_num(anum);
   long b = c_num(bnum);
 
-  numeric_assert (a <= 0 || b <= 0 || LONG_MAX - b >= a);
-  numeric_assert (a >= 0 || b >= 0 || LONG_MIN - b >= a);
+  numeric_assert (a <= 0 || b <= 0 || NUM_MAX - b >= a);
+  numeric_assert (a >= 0 || b >= 0 || NUM_MIN - b >= a);
 
   return num(a + b);
 }
@@ -622,9 +623,9 @@ obj_t *minus(obj_t *anum, obj_t *bnum)
   long a = c_num(anum);
   long b = c_num(bnum);
 
-  numeric_assert (b != LONG_MIN || LONG_MIN == -LONG_MAX);
-  numeric_assert (a <= 0 || -b <= 0 || LONG_MAX + b >= a);
-  numeric_assert (a >= 0 || -b >= 0 || LONG_MIN + b >= a);
+  numeric_assert (b != NUM_MIN || NUM_MIN == -NUM_MAX);
+  numeric_assert (a <= 0 || -b <= 0 || NUM_MAX + b >= a);
+  numeric_assert (a >= 0 || -b >= 0 || NUM_MIN + b >= a);
 
   return num(a - b);
 }
@@ -724,12 +725,17 @@ obj_t *copy_str(obj_t *str)
 
 obj_t *stringp(obj_t *str)
 {
-  return (str && (str->st.type == STR || str->st.type == LSTR)) ? t : nil;
+  if (!is_ptr(str)) {
+    return nil;
+  } else {
+    type_t type = type(str);
+    return if2(type == STR || type == LSTR, t);
+  }
 }
 
 obj_t *lazy_stringp(obj_t *str)
 {
-  return (str && (str->st.type == LSTR)) ? t : nil;
+  return (is_ptr(str) && (type(str) == LSTR)) ? t : nil;
 }
 
 obj_t *length_str(obj_t *str)
@@ -1775,8 +1781,8 @@ static void obj_init(void)
   one  = num(1);
   two = num(2);
   negone = num(-1);
-  maxint = num(LONG_MAX);
-  minint = num(LONG_MIN);
+  maxint = num(NUM_MAX);
+  minint = num(NUM_MIN);
 
   null_string = string("");
 
@@ -1794,7 +1800,7 @@ void obj_print(obj_t *obj, obj_t *out)
     return;
   }
 
-  switch (obj->t.type) {
+  switch (type(obj)) {
   case CONS:
   case LCONS:
     {
@@ -1905,7 +1911,7 @@ void obj_pprint(obj_t *obj, obj_t *out)
     return;
   }
 
-  switch (obj->t.type) {
+  switch (type(obj)) {
   case CONS:
   case LCONS:
     {
