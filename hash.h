@@ -26,7 +26,7 @@
 
 obj_t *hash_obj(obj_t *);
 obj_t *make_hash(obj_t *weak_keys, obj_t *weak_vals);
-obj_t **l_gethash(obj_t *hash, obj_t *key);
+obj_t **gethash_l(obj_t *hash, obj_t *key);
 obj_t *gethash(obj_t *hash, obj_t *key);
 void hash_process_weak(void);
 

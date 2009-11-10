@@ -189,6 +189,32 @@ static struct cobj_ops hash_ops = {
   hash_mark,
 };
 
+void hash_grow(struct hash *h)
+{
+  long i;
+  list_collect_decl (conses, ptr);
+
+  bug_unless (h->modulus < LONG_MAX/2);
+  h->modulus *= 2;
+  vec_set_fill(h->table, num(h->modulus));
+
+  for (i = 0; i < h->modulus; i++) {
+    obj_t **pchain = vecref_l(h->table, num(i));
+    list_collect_nconc(ptr, *pchain);
+    *pchain = nil;
+  }
+
+  while (conses) {
+    obj_t *entry = car(conses);
+    obj_t *next = cdr(conses);
+    obj_t *key = car(entry);
+    obj_t **pchain = vecref_l(h->table, num(ll_hash(key) % h->modulus));
+    *cdr_l(conses) = *pchain;
+    *pchain = conses;
+    conses = next;
+  }
+}
+
 obj_t *make_hash(obj_t *weak_keys, obj_t *weak_vals)
 {
   int flags = ((weak_vals != nil) << 1) | (weak_keys != nil);
@@ -201,11 +227,15 @@ obj_t *make_hash(obj_t *weak_keys, obj_t *weak_vals)
   return cobj((void *) h, hash_t, &hash_ops);
 }
 
-obj_t **l_gethash(obj_t *hash, obj_t *key)
+obj_t **gethash_l(obj_t *hash, obj_t *key)
 {
   struct hash *h = (struct hash *) hash->co.handle;
   obj_t **pchain = vecref_l(h->table, num(ll_hash(key) % h->modulus));
-  return acons_new_l(pchain, key);
+  obj_t *old = *pchain;
+  obj_t **place = acons_new_l(pchain, key);
+  if (old != *pchain && ++h->count > 2 * h->modulus)
+    hash_grow(h);
+  return place;
 }
 
 obj_t *gethash(obj_t *hash, obj_t *key)
