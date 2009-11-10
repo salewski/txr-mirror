@@ -1,5 +1,13 @@
 2009-11-06  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Add hash removal.
+
+	* hash.c (remhash): New function.
+
+	* hash.h (remhash): Declared.
+
+2009-11-06  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Add hash table growth.
 
 	hash.c (hash_grow): New function.
