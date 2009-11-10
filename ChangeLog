@@ -1,3 +1,11 @@
+2009-11-10  Kaz Kylheku  <kkylheku@gmail.com>
+
+	hash.c (hash_grow): Rewritten to avoid resizing the vector
+	in place, and thus having to pulling all conses into a big list.
+	TODO: avoid recomputing the hash function over the keys.
+	We could enhance cons cells with two more fields without using
+	additional storage.
+
 2009-11-06  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Changing representation of objects to allow for unboxed characters.

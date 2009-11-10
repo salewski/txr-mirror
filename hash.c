@@ -192,27 +192,30 @@ static struct cobj_ops hash_ops = {
 void hash_grow(struct hash *h)
 {
   long i;
-  list_collect_decl (conses, ptr);
+  long new_modulus = 2 * h->modulus;
+  obj_t *new_table = vector(num(new_modulus));
 
-  bug_unless (h->modulus < LONG_MAX/2);
-  h->modulus *= 2;
-  vec_set_fill(h->table, num(h->modulus));
+  bug_unless (new_modulus > h->modulus);
+
+  vec_set_fill(new_table, num(new_modulus));
 
   for (i = 0; i < h->modulus; i++) {
-    obj_t **pchain = vecref_l(h->table, num(i));
-    list_collect_nconc(ptr, *pchain);
-    *pchain = nil;
+    obj_t *conses = *vecref_l(h->table, num(i));
+
+    while (conses) {
+      obj_t *entry = car(conses);
+      obj_t *next = cdr(conses);
+      obj_t *key = car(entry);
+      obj_t **pchain = vecref_l(new_table,
+                                num(ll_hash(key) % new_modulus));
+      *cdr_l(conses) = *pchain;
+      *pchain = conses;
+      conses = next;
+    }
   }
 
-  while (conses) {
-    obj_t *entry = car(conses);
-    obj_t *next = cdr(conses);
-    obj_t *key = car(entry);
-    obj_t **pchain = vecref_l(h->table, num(ll_hash(key) % h->modulus));
-    *cdr_l(conses) = *pchain;
-    *pchain = conses;
-    conses = next;
-  }
+  h->modulus = new_modulus;
+  h->table = new_table;
 }
 
 obj_t *make_hash(obj_t *weak_keys, obj_t *weak_vals)
