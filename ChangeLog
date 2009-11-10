@@ -1,5 +1,22 @@
 2009-11-06  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Changing representation of objects to allow for unboxed characters.
+	Now numbers and characters fit into a cell. We lose one more bit
+	from the range of numbers.
+
+	* lib.h (TAG_SHIFT, TAG_MASK, TAG_NUM, TAG_PTR, NUM_MASK, NUM_MIN,
+	is_ptr, is_num):  Macros updated.
+	(is_chr, tag): New macros.
+	(struct chr): Removed.
+	(union obj): Updated.
+
+	* lib.c (typeof, equal, chr, chrp, c_chr, obj_print): Updated.
+
+	* hash.c (ll_hash): Characters aren't pointers any longer;
+	use abstract accessor.
+
+2009-11-06  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Add hash removal.
 
 	* hash.c (remhash): New function.
