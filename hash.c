@@ -246,6 +246,16 @@ obj_t *gethash(obj_t *hash, obj_t *key)
   return cdr(found);
 }
 
+obj_t *remhash(obj_t *hash, obj_t *key)
+{
+  struct hash *h = (struct hash *) hash->co.handle;
+  obj_t **pchain = vecref_l(h->table, num(ll_hash(key) % h->modulus));
+  *pchain = alist_remove1(*pchain, key);
+  h->count--;
+  bug_unless (h->count >= 0);
+  return nil;
+}
+
 /*
  * Called from garbage collector. Hash module must process all weak tables
  * that were visited during the marking phase, maintained in the list
