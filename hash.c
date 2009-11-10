@@ -87,7 +87,7 @@ static long ll_hash(obj_t *obj)
   case STR:
     return hash_c_str(obj->st.str);
   case CHR:
-    return obj->ch.ch + NUM_MAX / 2;
+    return c_chr(obj) + NUM_MAX / 2;
   case NUM:
     return c_num(obj) & NUM_MAX;
   case SYM:

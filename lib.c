@@ -101,17 +101,24 @@ static obj_t *code2type(int code)
 
 obj_t *typeof(obj_t *obj)
 {
-  if (is_num(obj)) {
+  switch (tag(obj)) {
+  case TAG_NUM:
     return num_t;
-  } else if (obj == nil) {
-    return null;
-  } else if (obj->t.type == COBJ) {
-    return obj->co.cls;
-  } else {
-    obj_t *type = code2type(obj->t.type);
-    if (!type)
-      internal_error("corrupt type field");
-    return type;
+  case TAG_CHR:
+    return chr_t;
+  case TAG_PTR:
+    if (obj == nil) {
+      return null;
+    } else if (obj->t.type == COBJ) {
+      return obj->co.cls;
+    } else {
+      obj_t *type = code2type(obj->t.type);
+      if (!type)
+        internal_error("corrupt type field");
+      return type;
+    }
+  default:
+    internal_error("invalid type tag");
   }
 }
 
@@ -398,10 +405,16 @@ long c_num(obj_t *num);
 
 obj_t *equal(obj_t *left, obj_t *right)
 {
-  if (left == nil && right == nil)
+  /* Bitwise equality is equality.
+     The object nil, and types CHR and NUM
+     need no further test. */
+  if (left == right)
     return t;
 
-  if (left == nil || right == nil)
+  /* If the objects are not bitwise equal,
+     and any one of them is not a pointer,
+     then they can't be equal. */
+  if (!is_ptr(left) || !is_ptr(right))
     return nil;
 
   switch (type(left)) {
@@ -421,14 +434,6 @@ obj_t *equal(obj_t *left, obj_t *right)
       lazy_str_force(right);
       return equal(left, right->ls.prefix);
     }
-    return nil;
-  case CHR:
-    if (type(right) == CHR && left->ch.ch == right->ch.ch)
-      return t;
-    return nil;
-  case NUM:
-    if (type(right) == NUM && c_num(left) == c_num(right))
-      return t;
     return nil;
   case SYM:
     return right == left ? t : nil;
@@ -952,21 +957,20 @@ obj_t *string_lt(obj_t *astr, obj_t *bstr)
 
 obj_t *chr(int ch)
 {
-  obj_t *obj = make_obj();
-  obj->ch.type = CHR;
-  obj->ch.ch = ch;
-  return obj;
+  numeric_assert (ch >= NUM_MIN && ch <= NUM_MAX);
+  return (obj_t *) ((ch << TAG_SHIFT) | TAG_CHR);
 }
 
 obj_t *chrp(obj_t *chr)
 {
-  return (chr && chr->st.type == CHR) ? t : nil;
+  return (is_chr(num)) ? t : nil;
 }
 
 int c_chr(obj_t *chr)
 {
-  type_check(chr, CHR);
-  return chr->ch.ch;
+  if (!is_chr(chr))
+    type_mismatch("~s is not a character", chr, nao);
+  return ((int) chr) >> TAG_SHIFT;
 }
 
 obj_t *chr_str(obj_t *str, obj_t *index)
@@ -1848,7 +1852,7 @@ void obj_print(obj_t *obj, obj_t *out)
     return;
   case CHR:
     {
-      int ch = obj->ch.ch;
+      int ch = c_chr(obj);
 
       put_cchar(out, '\'');
       switch (ch) {

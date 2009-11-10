@@ -24,8 +24,16 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+#define TAG_SHIFT 2
+#define TAG_MASK ((1 << TAG_SHIFT) - 1)
+#define TAG_PTR 0
+#define TAG_NUM 1
+#define TAG_CHR 2
+#define NUM_MAX (LONG_MAX/4)
+#define NUM_MIN (LONG_MIN/4)
+
 typedef enum type {
-  CONS = 1, STR, CHR, NUM, SYM, FUN, VEC, LCONS, LSTR, COBJ
+  NUM = TAG_NUM, CHR = TAG_CHR, CONS, STR, SYM, FUN, VEC, LCONS, LSTR, COBJ
 } type_t;
 
 typedef enum functype
@@ -35,16 +43,11 @@ typedef enum functype
    N0, N1, N2, N3, N4   /* No-env intrinsics. */
 } functype_t;
 
-#define TAG_SHIFT 1
-#define TAG_MASK ((1 << TAG_SHIFT) - 1)
-#define TAG_NUM 1
-#define TAG_PTR 0
-#define NUM_MAX (LONG_MAX/2)
-#define NUM_MIN (LONG_MIN/2)
-
-#define is_ptr(obj) ((obj) && (((long) obj) & TAG_MASK) == TAG_PTR)
-#define is_num(obj) ((((long) obj) & TAG_MASK) == TAG_NUM)
-#define type(obj) ((is_num(obj)) ? NUM : obj->t.type)
+#define tag(obj) (((long) (obj)) & TAG_MASK)
+#define is_ptr(obj) ((obj) && (tag(obj) == TAG_PTR))
+#define is_num(obj) (tag(obj) == TAG_NUM)
+#define is_chr(obj) (tag(obj) == TAG_CHR)
+#define type(obj) (tag(obj) ? ((type_t) tag(obj)) : obj->t.type)
 
 typedef union obj obj_t;
 
@@ -63,11 +66,6 @@ struct string {
   type_t type;
   char *str;
   obj_t *len;
-};
-
-struct chr {
-  type_t type;
-  int ch;
 };
 
 struct sym {
@@ -149,7 +147,6 @@ union obj {
   struct any t;
   struct cons c;
   struct string st;
-  struct chr ch;
   struct sym s;
   struct func f;
   struct vec v;
