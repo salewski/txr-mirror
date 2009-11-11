@@ -28,7 +28,7 @@
 long lineno;
 extern int errors;
 extern obj_t *yyin_stream;
-extern const char *spec_file;
+extern const wchar_t *spec_file;
 extern obj_t *spec_file_str;
 int yyparse(void);
 obj_t *get_spec(void);

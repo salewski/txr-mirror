@@ -31,17 +31,19 @@
 #include <limits.h>
 #include <dirent.h>
 #include <setjmp.h>
+#include <wchar.h>
 #include "lib.h"
 #include "stream.h"
 #include "gc.h"
 #include "unwind.h"
 #include "parser.h"
 #include "match.h"
+#include "utf8.h"
 #include "txr.h"
 
-const char *version = "020";
-const char *progname = "txr";
-const char *spec_file = "stdin";
+const wchar_t *version = L"020";
+const wchar_t *progname = L"txr";
+const wchar_t *spec_file = L"stdin";
 obj_t *spec_file_str;
 
 /*
@@ -51,7 +53,7 @@ obj_t *spec_file_str;
  */
 void *oom_realloc_handler(void *old, size_t size)
 {
-  fprintf(stderr, "%s: out of memory\n", progname);
+  fprintf(stderr, "%ls: out of memory\n", progname);
   puts("false");
   abort();
 }
@@ -60,13 +62,13 @@ void help(void)
 {
   const char *text =
 "\n"
-"txr version %s\n"
+"txr version %ls\n"
 "\n"
 "copyright 2009, Kaz Kylheku <kkylheku@gmail.com>\n"
 "\n"
 "usage:\n"
 "\n"
-"  %s [ options ] query-file { data-file }*\n"
+"  %ls [ options ] query-file { data-file }*\n"
 "\n"
 "The query-file or data-file arguments may be specified as -, in which case\n"
 "standard input is used. All data-file arguments which begin with a !\n"
@@ -110,7 +112,7 @@ void help(void)
 
 void hint(void)
 {
-  fprintf(stderr, "%s: incorrect arguments: try --help\n", progname);
+  fprintf(stderr, "%ls: incorrect arguments: try --help\n", progname);
 }
 
 obj_t *remove_hash_bang_line(obj_t *spec)
@@ -119,7 +121,7 @@ obj_t *remove_hash_bang_line(obj_t *spec)
     return spec;
 
   {
-    obj_t *shbang = string("#!");
+    obj_t *shbang = string(L"#!");
     obj_t *firstline = first(spec);
     obj_t *items = rest(firstline);
 
@@ -138,7 +140,7 @@ static int txr_main(int argc, char **argv);
 int main(int argc, char **argv)
 {
   obj_t *stack_bottom = nil;
-  progname = argv[0] ? argv[0] : progname;
+  progname = argv[0] ? utf8_dup_from(argv[0]) : progname;
   init(progname, oom_realloc_handler, &stack_bottom);
   return txr_main(argc, argv);
 }
@@ -149,7 +151,6 @@ static int txr_main(int argc, char **argv)
   obj_t *spec = nil;
   obj_t *bindings = nil;
   int match_loglevel = opt_loglevel;
-  progname = argv[0] ? argv[0] : progname;
 
   prot1(&spec_file_str);
 
@@ -189,7 +190,7 @@ static int txr_main(int argc, char **argv)
 
           val[piece] = 0;
 
-          list = cons(string(val), list);
+          list = cons(string_utf8(val), list);
 
           if (!comma_p)
             break;
@@ -198,13 +199,13 @@ static int txr_main(int argc, char **argv)
         }
 
         list = nreverse(list);
-        bindings = cons(cons(intern(string(var)), list), bindings);
+        bindings = cons(cons(intern(string_utf8(var)), list), bindings);
       } else if (equals) {
         char *val = equals + 1;
         *equals = 0;
-        bindings = cons(cons(intern(string(var)), string(val)), bindings);
+        bindings = cons(cons(intern(string_utf8(var)), string_utf8(val)), bindings);
       } else {
-        bindings = cons(cons(intern(string(var)), null_string), bindings);
+        bindings = cons(cons(intern(string_utf8(var)), null_string), bindings);
       }
 
       argc--, argv++;
@@ -212,7 +213,7 @@ static int txr_main(int argc, char **argv)
     }
 
     if (!strcmp(*argv, "--version")) {
-      printf("%s: version %s\n", progname, version);
+      printf("%ls: version %ls\n", progname, version);
       return 0;
     }
 
@@ -227,7 +228,7 @@ static int txr_main(int argc, char **argv)
       char opt = (*argv)[1];
 
       if (argc == 1) {
-        fprintf(stderr, "%s: option %c needs argument\n", progname, opt);
+        fprintf(stderr, "%ls: option %c needs argument\n", progname, opt);
 
         return EXIT_FAILURE;
       }
@@ -238,7 +239,7 @@ static int txr_main(int argc, char **argv)
       case 'a':
         val = strtol(*argv, &errp, 10);
         if (*errp != 0) {
-          fprintf(stderr, "%s: option %c needs numeric argument, not %s\n",
+          fprintf(stderr, "%ls: option %c needs numeric argument, not %s\n",
                   progname, opt, *argv);
           return EXIT_FAILURE;
         }
@@ -246,10 +247,10 @@ static int txr_main(int argc, char **argv)
         opt_arraydims = val;
         break;
       case 'c':
-        specstring = string(*argv);
+        specstring = string_utf8(*argv);
         break;
       case 'f':
-        spec_file_str = string(*argv);
+        spec_file_str = string_utf8(*argv);
         break;
       }
 
@@ -279,14 +280,14 @@ static int txr_main(int argc, char **argv)
         case 'a':
         case 'c':
         case 'D':
-          fprintf(stderr, "%s: option -%c does not clump\n", progname, *popt);
+          fprintf(stderr, "%ls: option -%c does not clump\n", progname, *popt);
           return EXIT_FAILURE;
         case '-':
-          fprintf(stderr, "%s: unrecognized long option: --%s\n",
+          fprintf(stderr, "%ls: unrecognized long option: --%s\n",
                   progname, popt + 1);
           return EXIT_FAILURE;
         default:
-          fprintf(stderr, "%s: unrecognized option: %c\n", progname, *popt);
+          fprintf(stderr, "%ls: unrecognized option: %c\n", progname, *popt);
           return EXIT_FAILURE;
         }
       }
@@ -296,22 +297,22 @@ static int txr_main(int argc, char **argv)
   }
 
   if (specstring && spec_file_str) {
-    fprintf(stderr, "%s: cannot specify both -f and -c\n", progname);
+    fprintf(stderr, "%ls: cannot specify both -f and -c\n", progname);
     return EXIT_FAILURE;
   }
 
   if (specstring) {
-    spec_file = "cmdline";
+    spec_file = L"cmdline";
     spec_file_str = string(spec_file);
     yyin_stream = make_string_input_stream(specstring);
   } else if (spec_file_str) {
-    if (strcmp(c_str(spec_file_str), "-") != 0) {
-      FILE *in = fopen(c_str(spec_file_str), "r");
+    if (wcscmp(c_str(spec_file_str), L"-") != 0) {
+      FILE *in = w_fopen(c_str(spec_file_str), L"r");
       if (in == 0)
         uw_throwcf(file_error, "unable to open %s", c_str(spec_file_str));
       yyin_stream = make_stdio_stream(in, spec_file_str, t, nil);
     } else {
-      spec_file = "stdin";
+      spec_file = L"stdin";
     }
   } else {
     if (argc < 1) {
@@ -323,10 +324,10 @@ static int txr_main(int argc, char **argv)
       FILE *in = fopen(*argv, "r");
       if (in == 0)
         uw_throwcf(file_error, "unable to open %s", *argv);
-      yyin_stream = make_stdio_stream(in, string(*argv), t, nil);
-      spec_file = *argv;
+      yyin_stream = make_stdio_stream(in, string_utf8(*argv), t, nil);
+      spec_file = utf8_dup_from(*argv);
     } else {
-      spec_file = "stdin";
+      spec_file = L"stdin";
     }
     argc--, argv++;
     spec_file_str = string(spec_file);
@@ -345,8 +346,8 @@ static int txr_main(int argc, char **argv)
     opt_loglevel = match_loglevel;
 
     if (opt_loglevel >= 2) {
-      format(std_error, "spec:\n~s\n", spec, nao);
-      format(std_error, "bindings:\n~s\n", bindings, nao);
+      format(std_error, L"spec:\n~s\n", spec, nao);
+      format(std_error, L"bindings:\n~s\n", bindings, nao);
     }
 
     {
@@ -354,7 +355,7 @@ static int txr_main(int argc, char **argv)
       list_collect_decl(filenames, iter);
 
       while (*argv)
-        list_collect(iter, string(*argv++));
+        list_collect(iter, string_utf8(*argv++));
 
       retval = extract(spec, filenames, bindings);
 

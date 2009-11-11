@@ -32,6 +32,7 @@
 #include <dirent.h>
 #include "lib.h"
 #include "regex.h"
+#include "utf8.h"
 #include "parser.h"
 
 int yylex(void);
@@ -46,9 +47,9 @@ static obj_t *parsed_spec;
 %}
 
 %union {
-  char *lexeme;
+  wchar_t *lexeme;
   union obj *obj;
-  char chr;
+  wchar_t chr;
   long num;
 }
 

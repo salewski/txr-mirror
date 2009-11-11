@@ -27,16 +27,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
+#include <wctype.h>
 #include <assert.h>
 #include <limits.h>
 #include <stdarg.h>
 #include <dirent.h>
 #include <setjmp.h>
+#include <wchar.h>
 #include "lib.h"
 #include "gc.h"
 #include "unwind.h"
 #include "stream.h"
+#include "utf8.h"
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
@@ -63,7 +65,7 @@ obj_t *null_list;
 obj_t *identity_f;
 obj_t *equal_f;
 
-const char *progname;
+const wchar_t *progname;
 obj_t *prog_string;
 
 void *(*oom_realloc)(void *, size_t);
@@ -125,14 +127,14 @@ obj_t *typeof(obj_t *obj)
 obj_t *type_check(obj_t *obj, int type)
 {
   if (!is_ptr(obj) || obj->t.type != type)
-    type_mismatch("~s is not of type ~s", obj, code2type(type), nao);
+    type_mismatch(L"~s is not of type ~s", obj, code2type(type), nao);
   return t;
 }
 
 obj_t *type_check2(obj_t *obj, int t1, int t2)
 {
   if (!is_ptr(obj) || (obj->t.type != t1 && obj->t.type != t2))
-    type_mismatch("~s is not of type ~s or ~s", obj,
+    type_mismatch(L"~s is not of type ~s or ~s", obj,
                   code2type(t1), code2type(t2), nao);
   return t;
 }
@@ -141,7 +143,7 @@ obj_t *type_check3(obj_t *obj, int t1, int t2, int t3)
 {
   if (!is_ptr(obj) || (obj->t.type != t1 && obj->t.type != t2 
                        && obj->t.type != t3))
-    type_mismatch("~s is not of type ~s, ~s nor ~s", obj,
+    type_mismatch(L"~s is not of type ~s, ~s nor ~s", obj,
                   code2type(t1), code2type(t2), code2type(t3), nao);
   return t;
 }
@@ -162,7 +164,7 @@ obj_t *car(obj_t *cons)
       return cons->lc.car;
     }
   default:
-    type_mismatch("~s is not a cons", cons, nao);
+    type_mismatch(L"~s is not a cons", cons, nao);
   }
 }
 
@@ -182,7 +184,7 @@ obj_t *cdr(obj_t *cons)
       return cons->lc.cdr;
     }
   default:
-    type_mismatch("~s is not a cons", cons, nao);
+    type_mismatch(L"~s is not a cons", cons, nao);
   }
 }
 
@@ -195,7 +197,7 @@ obj_t **car_l(obj_t *cons)
     funcall1(cons->lc.func, cons);
     return &cons->lc.car;
   default:
-    type_mismatch("~s is not a cons", cons, nao);
+    type_mismatch(L"~s is not a cons", cons, nao);
   }
 }
 
@@ -208,7 +210,7 @@ obj_t **cdr_l(obj_t *cons)
     funcall1(cons->lc.func, cons);
     return &cons->lc.cdr;
   default:
-    type_mismatch("~s is not a cons", cons, nao);
+    type_mismatch(L"~s is not a cons", cons, nao);
   }
 }
 
@@ -429,7 +431,7 @@ obj_t *equal(obj_t *left, obj_t *right)
     return nil;
   case STR:
     if (type(right) == STR)
-      return strcmp(left->st.str, right->st.str) == 0 ? t : nil;
+      return wcscmp(left->st.str, right->st.str) == 0 ? t : nil;
     if (type(right) == LSTR) {
       lazy_str_force(right);
       return equal(left, right->ls.prefix);
@@ -508,11 +510,11 @@ void *chk_realloc(void *old, size_t size)
   return newptr;
 }
 
-void *chk_strdup(const char *str)
+void *chk_strdup(const wchar_t *str)
 {
-  size_t size = strlen(str) + 1;
-  char *copy = chk_malloc(size);
-  memcpy(copy, str, size);
+  size_t nchar = wcslen(str) + 1;
+  wchar_t *copy = (wchar_t *) chk_malloc(nchar * sizeof *copy);
+  wmemcpy(copy, str, nchar);
   return copy;
 }
 
@@ -603,7 +605,7 @@ obj_t *num(long val)
 long c_num(obj_t *num)
 {
   if (!is_num(num))
-    type_mismatch("~s is not a number", num, nao);
+    type_mismatch(L"~s is not a number", num, nao);
   return ((long) num) >> TAG_SHIFT;
 }
 
@@ -681,7 +683,7 @@ obj_t *min2(obj_t *anum, obj_t *bnum)
   return c_num(anum) < c_num(bnum) ? anum : bnum;
 }
 
-obj_t *string_own(char *str)
+obj_t *string_own(wchar_t *str)
 {
   obj_t *obj = make_obj();
   obj->st.type = STR;
@@ -690,7 +692,7 @@ obj_t *string_own(char *str)
   return obj;
 }
 
-obj_t *string(const char *str)
+obj_t *string(const wchar_t *str)
 {
   obj_t *obj = make_obj();
   obj->st.type = STR;
@@ -699,27 +701,36 @@ obj_t *string(const char *str)
   return obj;
 }
 
+obj_t *string_utf8(const unsigned char *str)
+{
+  obj_t *obj = make_obj();
+  obj->st.type = STR;
+  obj->st.str = utf8_dup_from(str);
+  obj->st.len = nil;
+  return obj;
+}
+
 obj_t *mkstring(obj_t *len, obj_t *ch)
 {
-  char *str = chk_malloc(c_num(len) + 1);
+  size_t nchar = c_num(len) + 1;
+  wchar_t *str = (wchar_t *) chk_malloc(nchar * sizeof *str);
   obj_t *s = string_own(str);
-  memset(str, c_chr(ch), c_num(len));
-  str[c_num(len)] = 0;
+  wmemset(str, c_chr(ch), nchar);
   s->st.len = len;
   return s;
 }
 
 obj_t *mkustring(obj_t *len)
 {
-  char *str = chk_malloc(c_num(len) + 1);
+  wchar_t *str = (wchar_t *) chk_malloc((c_num(len) + 1) * sizeof *str);
   obj_t *s = string_own(str);
   s->st.len = len;
   return s;
 }
 
-obj_t *init_str(obj_t *str, const char *data)
+obj_t *init_str(obj_t *str, const wchar_t *data)
 {
-  memcpy(str->st.str, data, c_num(str->st.len));
+  wmemcpy(str->st.str, data, c_num(str->st.len) + 1);
   return str;
 }
 
@@ -753,11 +764,11 @@ obj_t *length_str(obj_t *str)
   }
 
   if (!str->st.len)
-    str->st.len = num(strlen(str->st.str));
+    str->st.len = num(wcslen(str->st.str));
   return str->st.len;
 }
 
-const char *c_str(obj_t *obj)
+const wchar_t *c_str(obj_t *obj)
 {
   type_check3(obj, STR, SYM, LSTR);
 
@@ -783,14 +794,14 @@ obj_t *search_str(obj_t *haystack, obj_t *needle, obj_t *start_num,
     obj_t *h_is_lazy = lazy_stringp(haystack);
     long start = c_num(start_num);
     long good = -1, pos = -1;
-    const char *n = c_str(needle), *h;
+    const wchar_t *n = c_str(needle), *h;
 
     if (!h_is_lazy) {
       do {
-        const char *f;
+        const wchar_t *f;
         h = c_str(haystack);
 
-        f = strstr(h + start, n);
+        f = wcsstr(h + start, n);
 
         if (f)
           pos = f - h;
@@ -804,7 +815,7 @@ obj_t *search_str(obj_t *haystack, obj_t *needle, obj_t *start_num,
         lazy_str_force_upto(haystack, plus(num(start + 1), length_str(needle)));
         h = c_str(haystack->ls.prefix);
 
-        if (!strncmp(h + start, n, ln))
+        if (!wcsncmp(h + start, n, ln))
           good = start;
       } while (h[++start] && (from_end || good == -1));
     }
@@ -847,11 +858,12 @@ obj_t *sub_str(obj_t *str_in, obj_t *from, obj_t *to)
   if (ge(from, to)) {
     return null_string;
   } else {
-    size_t size = c_num(to) - c_num(from) + 1;
-    char *sub = chk_malloc(size);
-    const char *str = c_str(lazy_stringp(str_in) ? str_in->ls.prefix : str_in);
-    strncpy(sub, str + c_num(from), size);
-    sub[size-1] = 0;
+    size_t nchar = c_num(to) - c_num(from) + 1;
+    wchar_t *sub = (wchar_t *) chk_malloc(nchar * sizeof (wchar_t));
+    const wchar_t *str = c_str(lazy_stringp(str_in)
+                               ? str_in->ls.prefix : str_in);
+    wcsncpy(sub, str + c_num(from), nchar);
+    sub[nchar-1] = 0;
     return string_own(sub);
   }
 }
@@ -860,7 +872,7 @@ obj_t *cat_str(obj_t *list, obj_t *sep)
 {
   long total = 0;
   obj_t *iter;
-  char *str, *ptr;
+  wchar_t *str, *ptr;
   long len_sep = sep ? c_num(length_str(sep)) : 0;
 
   for (iter = list; iter != nil; iter = cdr(iter)) {
@@ -882,7 +894,7 @@ obj_t *cat_str(obj_t *list, obj_t *sep)
     return nil;
   }
 
-  str = chk_malloc(total + 1);
+  str = (wchar_t *) chk_malloc((total + 1) * sizeof *str);
 
   for (ptr = str, iter = list; iter != nil; iter = cdr(iter)) {
     obj_t *item = car(iter);
@@ -891,14 +903,14 @@ obj_t *cat_str(obj_t *list, obj_t *sep)
       continue;
     if (stringp(item)) {
       len = c_num(length_str(item));
-      memcpy(ptr, c_str(item), len);
+      wmemcpy(ptr, c_str(item), len);
       ptr += len;
     } else {
       *ptr++ = c_chr(item);
     }
 
     if (len_sep && cdr(iter)) {
-      memcpy(ptr, c_str(sep), len_sep);
+      wmemcpy(ptr, c_str(sep), len_sep);
       ptr += len_sep;
     }
   }
@@ -909,12 +921,12 @@ obj_t *cat_str(obj_t *list, obj_t *sep)
 
 obj_t *split_str(obj_t *str, obj_t *sep)
 {
-  const char *cstr = c_str(str);
-  const char *csep = c_str(sep);
+  const wchar_t *cstr = c_str(str);
+  const wchar_t *csep = c_str(sep);
   list_collect_decl (out, iter);
 
   for (;;) {
-    size_t span = strcspn(cstr, csep);
+    size_t span = wcscspn(cstr, csep);
     obj_t *piece = mkustring(num(span));
     init_str(piece, cstr);
     list_collect (iter, piece);
@@ -929,21 +941,21 @@ obj_t *split_str(obj_t *str, obj_t *sep)
 
 obj_t *trim_str(obj_t *str)
 {
-  const char *start = c_str(str);
-  const char *end = start + c_num(length_str(str));
+  const wchar_t *start = c_str(str);
+  const wchar_t *end = start + c_num(length_str(str));
 
-  while (start[0] && isspace(start[0]))
+  while (start[0] && iswspace(start[0]))
     start++;
 
-  while (end > start && isspace(end[-1]))
+  while (end > start && iswspace(end[-1]))
     end--;
 
   if (end == start) {
     return null_string;
   } else {
     size_t len = end - start;
-    char *new = chk_malloc(len + 1);
-    memcpy(new, start, len);
+    wchar_t *new = (wchar_t *) chk_malloc((len + 1) * sizeof *new);
+    wmemcpy(new, start, len);
     new[len] = 0;
     return string_own(new);
   }
@@ -951,7 +963,7 @@ obj_t *trim_str(obj_t *str)
 
 obj_t *string_lt(obj_t *astr, obj_t *bstr)
 {
-  int cmp = strcmp(c_str(astr), c_str(bstr));
+  int cmp = wcscmp(c_str(astr), c_str(bstr));
   return cmp == -1 ? t : nil;
 }
 
@@ -969,7 +981,7 @@ obj_t *chrp(obj_t *chr)
 int c_chr(obj_t *chr)
 {
   if (!is_chr(chr))
-    type_mismatch("~s is not a character", chr, nao);
+    type_mismatch(L"~s is not a character", chr, nao);
   return ((int) chr) >> TAG_SHIFT;
 }
 
@@ -1141,7 +1153,7 @@ obj_t *apply(obj_t *fun, obj_t *arglist)
   type_check (fun, FUN);
 
   type_assert (listp(arglist),
-               ("apply arglist ~s is not a list", arglist, nao));
+               (L"apply arglist ~s is not a list", arglist, nao));
 
   *p++ = car(arglist); arglist = cdr(arglist);
   *p++ = car(arglist); arglist = cdr(arglist);
@@ -1267,7 +1279,7 @@ obj_t *vector(obj_t *alloc)
 {
   long alloc_plus = c_num(alloc) + 2;
   obj_t *vec = make_obj();
-  obj_t **v = chk_malloc(alloc_plus * sizeof *v);
+  obj_t **v = (obj_t **) chk_malloc(alloc_plus * sizeof *v);
   vec->v.type = VEC;
   vec->v.vec = v + 2;
   v[0] = alloc;
@@ -1374,7 +1386,7 @@ obj_t *lazy_str(obj_t *lst, obj_t *term, obj_t *limit)
   obj_t *obj = make_obj();
   obj->ls.type = LSTR;
 
-  term = or2(term, string("\n"));
+  term = or2(term, string(L"\n"));
 
   if (nullp(lst)) {
     obj->ls.prefix = null_string;
@@ -1501,7 +1513,7 @@ obj_t *lazy_str_get_trailing_list(obj_t *lstr, obj_t *index)
 
   {
     obj_t *split_suffix = split_str(sub_str(lstr->ls.prefix, index, nil),
-                                    or2(car(lstr->ls.opts), string("\n")));
+                                    or2(car(lstr->ls.opts), string(L"\n")));
 
     return nappend2(split_suffix, lstr->ls.list);
   }
@@ -1519,7 +1531,7 @@ obj_t *cobj(void *handle, obj_t *cls_sym, struct cobj_ops *ops)
 
 void cobj_print_op(obj_t *obj, obj_t *out)
 {
-  put_cstring(out, "#<");
+  put_cstring(out, L"#<");
   obj_print(obj->co.cls, out);
   cformat(out, ": %p>", obj->co.handle);
 }
@@ -1707,77 +1719,77 @@ static void obj_init(void)
           &identity_f, &prog_string,
           (obj_t **) 0);
 
-  nil_string = string("nil");
+  nil_string = string(L"nil");
 
-  null = intern(string("null"));
-  t = intern(string("t"));
-  cons_t = intern(string("cons"));
-  str_t = intern(string("str"));
-  chr_t = intern(string("chr"));
-  num_t = intern(string("num"));
-  sym_t = intern(string("sym"));
-  fun_t = intern(string("fun"));
-  vec_t = intern(string("vec"));
-  stream_t = intern(string("stream"));
-  hash_t = intern(string("hash"));
-  lcons_t = intern(string("lcons"));
-  lstr_t = intern(string("lstr"));
-  cobj_t = intern(string("cobj"));
-  var = intern(string("$var"));
-  regex = intern(string("$regex"));
-  set = intern(string("set"));
-  cset = intern(string("cset"));
-  wild = intern(string("wild"));
-  oneplus = intern(string("1+"));
-  zeroplus = intern(string("0+"));
-  optional = intern(string("?"));
-  compound = intern(string("compound"));
-  or = intern(string("or"));
-  quasi = intern(string("$quasi"));
-  skip = intern(string("skip"));
-  trailer = intern(string("trailer"));
-  block = intern(string("block"));
-  next = intern(string("next"));
-  freeform = intern(string("freeform"));
-  fail = intern(string("fail"));
-  accept = intern(string("accept"));
-  all = intern(string("all"));
-  some = intern(string("some"));
-  none = intern(string("none"));
-  maybe = intern(string("maybe"));
-  cases = intern(string("cases"));
-  collect = intern(string("collect"));
-  until = intern(string("until"));
-  coll = intern(string("coll"));
-  define = intern(string("define"));
-  output = intern(string("output"));
-  single = intern(string("single"));
-  frst = intern(string("first"));
-  lst = intern(string("last"));
-  empty = intern(string("empty"));
-  repeat = intern(string("repeat"));
-  rep = intern(string("rep"));
-  flattn = intern(string("flatten"));
-  forget = intern(string("forget"));
-  local = intern(string("local"));
-  mrge = intern(string("merge"));
-  bind = intern(string("bind"));
-  cat = intern(string("cat"));
-  args = intern(string("args"));
-  try = intern(string("try"));
-  catch = intern(string("catch"));
-  finally = intern(string("finally"));
-  nothrow = intern(string("nothrow"));
-  throw = intern(string("throw"));
-  defex = intern(string("defex"));
-  error = intern(string("error"));
-  type_error = intern(string("type_error"));
-  internal_err = intern(string("internal_error"));
-  numeric_err = intern(string("numeric_error"));
-  range_err = intern(string("range_error"));
-  query_error = intern(string("query_error"));
-  file_error = intern(string("file_error"));
-  process_error = intern(string("process_error"));
+  null = intern(string(L"null"));
+  t = intern(string(L"t"));
+  cons_t = intern(string(L"cons"));
+  str_t = intern(string(L"str"));
+  chr_t = intern(string(L"chr"));
+  num_t = intern(string(L"num"));
+  sym_t = intern(string(L"sym"));
+  fun_t = intern(string(L"fun"));
+  vec_t = intern(string(L"vec"));
+  stream_t = intern(string(L"stream"));
+  hash_t = intern(string(L"hash"));
+  lcons_t = intern(string(L"lcons"));
+  lstr_t = intern(string(L"lstr"));
+  cobj_t = intern(string(L"cobj"));
+  var = intern(string(L"$var"));
+  regex = intern(string(L"$regex"));
+  set = intern(string(L"set"));
+  cset = intern(string(L"cset"));
+  wild = intern(string(L"wild"));
+  oneplus = intern(string(L"1+"));
+  zeroplus = intern(string(L"0+"));
+  optional = intern(string(L"?"));
+  compound = intern(string(L"compound"));
+  or = intern(string(L"or"));
+  quasi = intern(string(L"$quasi"));
+  skip = intern(string(L"skip"));
+  trailer = intern(string(L"trailer"));
+  block = intern(string(L"block"));
+  next = intern(string(L"next"));
+  freeform = intern(string(L"freeform"));
+  fail = intern(string(L"fail"));
+  accept = intern(string(L"accept"));
+  all = intern(string(L"all"));
+  some = intern(string(L"some"));
+  none = intern(string(L"none"));
+  maybe = intern(string(L"maybe"));
+  cases = intern(string(L"cases"));
+  collect = intern(string(L"collect"));
+  until = intern(string(L"until"));
+  coll = intern(string(L"coll"));
+  define = intern(string(L"define"));
+  output = intern(string(L"output"));
+  single = intern(string(L"single"));
+  frst = intern(string(L"first"));
+  lst = intern(string(L"last"));
+  empty = intern(string(L"empty"));
+  repeat = intern(string(L"repeat"));
+  rep = intern(string(L"rep"));
+  flattn = intern(string(L"flatten"));
+  forget = intern(string(L"forget"));
+  local = intern(string(L"local"));
+  mrge = intern(string(L"merge"));
+  bind = intern(string(L"bind"));
+  cat = intern(string(L"cat"));
+  args = intern(string(L"args"));
+  try = intern(string(L"try"));
+  catch = intern(string(L"catch"));
+  finally = intern(string(L"finally"));
+  nothrow = intern(string(L"nothrow"));
+  throw = intern(string(L"throw"));
+  defex = intern(string(L"defex"));
+  error = intern(string(L"error"));
+  type_error = intern(string(L"type_error"));
+  internal_err = intern(string(L"internal_error"));
+  numeric_err = intern(string(L"numeric_error"));
+  range_err = intern(string(L"range_error"));
+  query_error = intern(string(L"query_error"));
+  file_error = intern(string(L"file_error"));
+  process_error = intern(string(L"process_error"));
 
   interned_syms = cons(nil, interned_syms);
 
@@ -1788,7 +1800,7 @@ static void obj_init(void)
   maxint = num(NUM_MAX);
   minint = num(NUM_MIN);
 
-  null_string = string("");
+  null_string = string(L"");
 
   null_list = cons(nil, nil);
 
@@ -1800,7 +1812,7 @@ static void obj_init(void)
 void obj_print(obj_t *obj, obj_t *out)
 {
   if (obj == nil) {
-    put_cstring(out, "nil");
+    put_cstring(out, L"nil");
     return;
   }
 
@@ -1817,7 +1829,7 @@ void obj_print(obj_t *obj, obj_t *out)
         } else if (consp(cdr(iter))) {
           put_cchar(out, ' ');
         } else {
-          put_cstring(out, " . ");
+          put_cstring(out, L" . ");
           obj_print(cdr(iter), out);
           put_cchar(out, ')');
         }
@@ -1826,22 +1838,22 @@ void obj_print(obj_t *obj, obj_t *out)
     return;
   case STR:
     {
-      const char *ptr;
+      const wchar_t *ptr;
       put_cchar(out, '"');
       for (ptr = obj->st.str; *ptr; ptr++) {
         switch (*ptr) {
-        case '\a': put_cstring(out, "\\a"); break;
-        case '\b': put_cstring(out, "\\b"); break;
-        case '\t': put_cstring(out, "\\t"); break;
-        case '\n': put_cstring(out, "\\n"); break;
-        case '\v': put_cstring(out, "\\v"); break;
-        case '\f': put_cstring(out, "\\f"); break;
-        case '\r': put_cstring(out, "\\r"); break;
-        case '"': put_cstring(out, "\\\""); break;
-        case '\\': put_cstring(out, "\\\\"); break;
-        case 27: put_cstring(out, "\\e"); break;
+        case L'\a': put_cstring(out, L"\\a"); break;
+        case L'\b': put_cstring(out, L"\\b"); break;
+        case L'\t': put_cstring(out, L"\\t"); break;
+        case L'\n': put_cstring(out, L"\\n"); break;
+        case L'\v': put_cstring(out, L"\\v"); break;
+        case L'\f': put_cstring(out, L"\\f"); break;
+        case L'\r': put_cstring(out, L"\\r"); break;
+        case L'"': put_cstring(out, L"\\\""); break;
+        case L'\\': put_cstring(out, L"\\\\"); break;
+        case 27: put_cstring(out, L"\\e"); break;
         default:
-          if (isprint(*ptr))
+          if (iswprint(*ptr))
             put_cchar(out, *ptr);
           else
             cformat(out, "\\%03o", (int) *ptr);
@@ -1856,18 +1868,18 @@ void obj_print(obj_t *obj, obj_t *out)
 
       put_cchar(out, '\'');
       switch (ch) {
-      case '\a': put_cstring(out, "\\a"); break;
-      case '\b': put_cstring(out, "\\b"); break;
-      case '\t': put_cstring(out, "\\t"); break;
-      case '\n': put_cstring(out, "\\n"); break;
-      case '\v': put_cstring(out, "\\v"); break;
-      case '\f': put_cstring(out, "\\f"); break;
-      case '\r': put_cstring(out, "\\r"); break;
-      case '"': put_cstring(out, "\\\""); break;
-      case '\\': put_cstring(out, "\\\\"); break;
-      case 27: put_cstring(out, "\\e"); break;
+      case L'\a': put_cstring(out, L"\\a"); break;
+      case L'\b': put_cstring(out, L"\\b"); break;
+      case L'\t': put_cstring(out, L"\\t"); break;
+      case L'\n': put_cstring(out, L"\\n"); break;
+      case L'\v': put_cstring(out, L"\\v"); break;
+      case L'\f': put_cstring(out, L"\\f"); break;
+      case L'\r': put_cstring(out, L"\\r"); break;
+      case L'"': put_cstring(out, L"\\\""); break;
+      case L'\\': put_cstring(out, L"\\\\"); break;
+      case 27: put_cstring(out, L"\\e"); break;
       default:
-        if (isprint(ch))
+        if (iswprint(ch))
           put_cchar(out, ch);
         else
           cformat(out, "\\%03o", ch);
@@ -1887,7 +1899,7 @@ void obj_print(obj_t *obj, obj_t *out)
   case VEC:
     {
       long i, fill = c_num(obj->v.vec[vec_fill]);
-      put_cstring(out, "#(");
+      put_cstring(out, L"#(");
       for (i = 0; i < fill; i++) {
         obj_print(obj->v.vec[i], out);
         if (i < fill - 1)
@@ -1898,7 +1910,7 @@ void obj_print(obj_t *obj, obj_t *out)
     return;
   case LSTR:
     obj_print(obj->ls.prefix, out);
-    put_cstring(out, "#<... lazy string>");
+    put_cstring(out, L"#<... lazy string>");
     return;
   case COBJ:
     obj->co.ops->print(obj, out);
@@ -1911,7 +1923,7 @@ void obj_print(obj_t *obj, obj_t *out)
 void obj_pprint(obj_t *obj, obj_t *out)
 {
   if (obj == nil) {
-    put_cstring(out, "nil");
+    put_cstring(out, L"nil");
     return;
   }
 
@@ -1928,7 +1940,7 @@ void obj_pprint(obj_t *obj, obj_t *out)
         } else if (consp(cdr(iter))) {
           put_cchar(out, ' ');
         } else {
-          put_cstring(out, " . ");
+          put_cstring(out, L" . ");
           obj_pprint(cdr(iter), out);
           put_cchar(out, ')');
         }
@@ -1953,7 +1965,7 @@ void obj_pprint(obj_t *obj, obj_t *out)
   case VEC:
     {
       long i, fill = c_num(obj->v.vec[vec_fill]);
-      put_cstring(out, "#(");
+      put_cstring(out, L"#(");
       for (i = 0; i < fill; i++) {
         obj_pprint(obj->v.vec[i], out);
         if (i < fill - 1)
@@ -1964,7 +1976,7 @@ void obj_pprint(obj_t *obj, obj_t *out)
     return;
   case LSTR:
     obj_pprint(obj->ls.prefix, out);
-    put_cstring(out, "...");
+    put_cstring(out, L"...");
     return;
   case COBJ:
     obj->co.ops->print(obj, out);
@@ -1974,7 +1986,7 @@ void obj_pprint(obj_t *obj, obj_t *out)
   cformat(out, "#<garbage: %p>", (void *) obj);
 }
 
-void init(const char *pn, void *(*oom)(void *, size_t),
+void init(const wchar_t *pn, void *(*oom)(void *, size_t),
           obj_t **stack_bottom)
 {
   progname = pn;

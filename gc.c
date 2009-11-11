@@ -321,7 +321,7 @@ static void sweep(void)
         continue;
 
       if (0 && dbg) {
-        fprintf(stderr, "%s: finalizing: ", progname);
+        fprintf(stderr, "%ls: finalizing: ", progname);
         obj_print(block, std_error);
         putc('\n', stderr);
       }

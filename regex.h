@@ -110,7 +110,7 @@ typedef struct nfa_machine {
 
 nfa_t nfa_compile_regex(obj_t *regex);
 void nfa_free(nfa_t);
-long nfa_run(nfa_t nfa, const char *str);
+long nfa_run(nfa_t nfa, const wchar_t *str);
 void nfa_machine_reset(nfa_machine_t *);
 void nfa_machine_init(nfa_machine_t *, nfa_t);
 void nfa_machine_cleanup(nfa_machine_t *);

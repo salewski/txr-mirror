@@ -31,7 +31,7 @@
 CFLAGS := -I$(top_srcdir) $(LANG_FLAGS) $(DIAG_FLAGS) $(OPT_FLAGS) $(DBG_FLAGS)
 
 OBJS := txr.o lex.yy.o y.tab.o match.o lib.o regex.o gc.o unwind.o stream.o
-OBJS += hash.o
+OBJS += hash.o utf8.o
 
 PROG := ./txr
 
