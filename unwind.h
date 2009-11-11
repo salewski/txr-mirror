@@ -79,8 +79,8 @@ obj_t *uw_set_func(obj_t *sym, obj_t *value);
 obj_t *uw_block_return(obj_t *tag, obj_t *result);
 void uw_push_catch(uw_frame_t *, obj_t *matches);
 noreturn obj_t *uw_throw(obj_t *sym, obj_t *exception);
-noreturn obj_t *uw_throwf(obj_t *sym, const char *fmt, ...);
-noreturn obj_t *uw_errorf(const char *fmt, ...);
+noreturn obj_t *uw_throwf(obj_t *sym, const wchar_t *fmt, ...);
+noreturn obj_t *uw_errorf(const wchar_t *fmt, ...);
 noreturn obj_t *uw_throwcf(obj_t *sym, const char *fmt, ...);
 noreturn obj_t *uw_errorcf(const char *fmt, ...);
 obj_t *uw_register_subtype(obj_t *sub, obj_t *super);
@@ -89,7 +89,7 @@ void uw_continue(uw_frame_t *curr, uw_frame_t *target);
 void uw_pop_frame(uw_frame_t *);
 void uw_init(void);
 
-noreturn obj_t *type_mismatch(const char *, ...);
+noreturn obj_t *type_mismatch(const wchar_t *, ...);
 
 #define uw_block_begin(TAG, RESULTVAR)  \
   obj_t *RESULTVAR = nil;               \

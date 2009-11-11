@@ -528,9 +528,9 @@ int nfa_move(nfa_state_t **in, int nin, nfa_state_t **out, int ch)
  * determines the match length (defaulting to zero
  * if no acceptance states were encountered).
  */
-long nfa_run(nfa_t nfa, const char *str)
+long nfa_run(nfa_t nfa, const wchar_t *str)
 {
-  const char *last_accept_pos = 0, *ptr = str;
+  const wchar_t *last_accept_pos = 0, *ptr = str;
   unsigned visited = nfa.start->a.visited + 1;
   nfa_state_t **move = chk_malloc(NFA_SET_SIZE * sizeof *move);
   nfa_state_t **clos = chk_malloc(NFA_SET_SIZE * sizeof *clos);
@@ -697,7 +697,7 @@ obj_t *search_regex(obj_t *haystack, obj_t *needle_regex, obj_t *start,
     if (from_end) {
       long i;
       long s = c_num(start);
-      const char *h = c_str(haystack);
+      const wchar_t *h = c_str(haystack);
 
       for (i = c_num(length_str(haystack)) - 1; i >= s; i--) {
         long span = nfa_run(*pnfa, h + i);

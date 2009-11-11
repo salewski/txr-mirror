@@ -33,10 +33,12 @@
 #include <limits.h>
 #include <errno.h>
 #include <dirent.h>
+#include <wchar.h>
 #include "y.tab.h"
 #include "lib.h"
 #include "gc.h"
 #include "stream.h"
+#include "utf8.h"
 #include "parser.h"
 
 #define YY_NO_UNPUT
@@ -73,7 +75,7 @@ void yyerrorf(const char *s, ...)
   if (opt_loglevel >= 1) {
     va_list vl;
     va_start (vl, s);
-    fprintf(stderr, "%s: (%s:%ld): ", progname, spec_file, lineno);
+    fprintf(stderr, "%ls: (%ls:%ld): ", progname, spec_file, lineno);
     vfprintf(stderr, s, vl);
     putc('\n', stderr);
     va_end (vl);
@@ -127,33 +129,33 @@ void yybadtoken(int tok, const char *context)
       yyerrorf("unexpected end of input");
 }
 
-static int char_esc(int letter)
+static wchar_t char_esc(int letter)
 {
   switch (letter) {
-  case 'a': return '\a';
-  case 'b': return '\b';
-  case 't': return '\t';
-  case 'n': return '\n';
-  case 'v': return '\v';
-  case 'f': return '\f';
-  case 'r': return '\r';
+  case 'a': return L'\a';
+  case 'b': return L'\b';
+  case 't': return L'\t';
+  case 'n': return L'\n';
+  case 'v': return L'\v';
+  case 'f': return L'\f';
+  case 'r': return L'\r';
   case 'e': return 27;
-  case '"': return '"';
-  case '\'': return '\'';
-  case '`': return '`';
+  case '"': return L'"';
+  case '\'': return L'\'';
+  case '`': return L'`';
   }
 
   abort();
 }
 
-static int num_esc(char *num)
+static wchar_t num_esc(char *num)
 {
   if (num[0] == 'x') {
-    if (strlen(num) > 3)
+    if (strlen(num) > 7)
       yyerror("too many digits in hex character escape");
     return strtol(num + 1, 0, 16);
   } else {
-    if (strlen(num) > 3)
+    if (strlen(num) > 8)
       yyerror("too many digits in octal character escape");
     return strtol(num, 0, 8);
   }
@@ -169,6 +171,17 @@ NUM_END [^0-9]
 WS      [\t ]*
 HEX     [0-9A-Fa-f]
 OCT     [0-7]
+
+ASC     [\x00-\x7f]
+ASCN    [\x00-\t\v-\x7f]
+U       [\x80-\xbf]
+U2      [\xc2-\xdf]
+U3      [\xe0-\xef]
+U4      [\xf0-\xf4]
+
+UANY    {ASC}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
+UANYN   {ASCN}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
+UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
 %x      SPECIAL NESTED REGEX REGCLASS STRLIT CHRLIT QSILIT
 
@@ -188,7 +201,7 @@ OCT     [0-7]
 
                           if (*errp != 0) {
                             /* not a number */
-                            yylval.lexeme = strdup(yytext);
+                            yylval.lexeme = utf8_dup_from(yytext);
                             return IDENT;
                           }
 
@@ -346,7 +359,7 @@ OCT     [0-7]
 
 <SPECIAL>@              {
                           yy_pop_state();
-                          yylval.lexeme = strdup("@");
+                          yylval.lexeme = wcsdup(L"@");
                           return TEXT;
                         }
 
@@ -365,26 +378,25 @@ OCT     [0-7]
                         }
 
 <SPECIAL>[\\][abtnvfre] {
-                          char lexeme[2];
+                          wchar_t lexeme[2];
                           lexeme[0] = char_esc(yytext[1]);
                           lexeme[1] = 0;
-                          yylval.lexeme = strdup(lexeme);
+                          yylval.lexeme = wcsdup(lexeme);
                           yy_pop_state();
                           return TEXT;
                         }
 
 <SPECIAL>[\\](x{HEX}+|{OCT}+)   {
-                                  char lexeme[2];
+                                  wchar_t lexeme[2];
                                   lexeme[0] = num_esc(yytext + 1);
                                   lexeme[1] = 0;
-                                  yylval.lexeme = strdup(lexeme);
+                                  yylval.lexeme = wcsdup(lexeme);
                                   yy_pop_state();
                                   return TEXT;
                                 }
 
-<SPECIAL,NESTED>.       {
-                          yyerrorf("bad character in directive: '%c'",
-                                   yytext[0]);
+<SPECIAL,NESTED>{UANYN} {
+                          yyerrorf("bad character in directive: '%s'", yytext);
                         }
 
 <REGEX>[/]      {
@@ -433,15 +445,17 @@ OCT     [0-7]
                   return REGCHAR;
                 }
 
-<REGEX>.        {
-                  yylval.chr = yytext[0];
+<REGEX>{UANYN}  {
+                  wchar_t buf[8];
+                  utf8_from(buf, yytext);
+                  yylval.chr = buf[0];
                   return REGCHAR;
                 }
 
-<INITIAL>[^@\n]+        {
-                          yylval.lexeme = strdup(yytext);
-                          return TEXT;
-                        }
+<INITIAL>({UONLY}|[^@\n])+        {
+                                    yylval.lexeme = utf8_dup_from(yytext);
+                                    return TEXT;
+                                  }
 
 <INITIAL>\n     {
                   lineno++;
@@ -515,9 +529,11 @@ OCT     [0-7]
                           yy_push_state(SPECIAL);
                         }
 
-<STRLIT,CHRLIT,QSILIT>. {
-                          yylval.chr = yytext[0];
-                          return LITCHAR;
-                        }
+<STRLIT,CHRLIT,QSILIT>{UANYN} {
+                                wchar_t buf[8];
+                                utf8_from(buf, yytext);
+                                yylval.chr = buf[0];
+                                return LITCHAR;
+                              }
 
 %%

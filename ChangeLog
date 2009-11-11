@@ -1,3 +1,71 @@
+2009-11-11  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Big conversion to wide characters and UTF-8 support.
+	This is incomplete. There are too many dependencies on
+	wide character support from the C stream I/O library.
+	The regex code does not handle wide characters properly.
+	Character type is still int in some places, rather than wchar_t.
+	Test suite passes though.
+
+	* hash.c (hash_str): Converted to wchar_t.
+
+	* lib.c (progname, type_check, type_check2, type_check3,
+	car, cdr, car_l, cdr_l, equal, chk_strdup, string_own,
+	string, mkstring, mkustring, init_str, length_str,
+	c_str, search_str, sub_str, cat_str, split_str, trim_str,
+	chrp, apply, lazy_str, lazy_str_get_trailing_list,
+	cobj, obj_init, obj_print, obj_pprint, init): Converted to wchar_t.
+	(vector): Cast of chk_malloc return value added.
+	(string_utf8): New function.
+
+	* lib.h (struct string): Member str changed to wchar_t *.
+	(progname, chk_strdup, string_own, string, init_str,
+	c_str, init): Declarations updated.
+	(string_utf8): Declared.
+
+	* match.c (debugf, debuglf, sem_error, file_err, dump_shell_string,
+	dump_var, dump_bindings, dest_bind, match_line, do_output_line,
+	do_output, match_files): Converted to wchar_t.
+
+	* parser.h (spec_file): Declaration updated.
+
+	* parser.l (yy_errorf, char_esc, num_esc): Converted to wchar_t.
+	(ASC, ASCN, U, U2, U3, U4, UANY, UNANN, UONLY): New named
+	regexes, used for lexing utf-8.
+	(grammar): Converted to wchar_t and utf-8 handling.
+
+	* parser.y (%union/yystype): lexeme member changed to wchar_t *,
+	chr member changed to wchar_t.
+
+	* regex.c (nfa_run): Input string is wchar_t *.
+	(search_regex): String from haystack is wchar_t *.
+
+	* regex.h (nfa_run): Declaration updated.
+
+	* stream.c (struct strm_ops, common_vformat, stdio_stream_print,
+	stdio_maybe_read_error, stdio_maybe_write_error, stdio_put_string,
+	stdio_put_char, snarf_line, stdio_get_line, stdio_close, pipe_close,
+	struct string_output, string_out_put_string, string_out_put_char,
+	string_out_vcformat, dir_get_line, make_string_output_stream,
+	get_string_from-stream, make_dir_stream, get_line, get_char,
+	vformat, vcformat, format, cformat, put_string, put_cstring,
+	put_char, put_cchar, stream_init): Converted to wchar_t.
+
+	* stream.h (vformat, format, put_cstring): Declarations updated.
+
+	* txr.c  (version, progname, spec_file, oom_realloc_handler,
+	help, hint, remove_hash_bang_line, main, txr_main): Converted
+	to wchar_t.
+
+	* txr.h (version, progname): Declarations updated.
+
+	* unwind.c (uw_throw, uw_throwf, uw_errorf, type_mismatch,
+	uw_register_subtype): Converted to wchar_t.
+
+	* unwind.h (uw_throwf, uw_errorf, type_mismatch): Declarations updated.
+
+	* utf8.c, utf8.h: New files.
+
 2009-11-10  Kaz Kylheku  <kkylheku@gmail.com>
 
 	hash.c (hash_grow): Rewritten to avoid resizing the vector

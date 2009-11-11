@@ -64,7 +64,7 @@ struct cons {
 
 struct string {
   type_t type;
-  char *str;
+  wchar_t *str;
   obj_t *len;
 };
 
@@ -176,7 +176,7 @@ extern obj_t *null_list; /* (nil) */
 extern obj_t *identity_f;
 extern obj_t *equal_f;
 
-extern const char *progname;
+extern const wchar_t *progname;
 extern obj_t *prog_string;
 
 extern void *(*oom_realloc)(void *, size_t);
@@ -216,7 +216,7 @@ obj_t *nump(obj_t *num);
 obj_t *equal(obj_t *left, obj_t *right);
 void *chk_malloc(size_t size);
 void *chk_realloc(void*, size_t size);
-void *chk_strdup(const char *str);
+void *chk_strdup(const wchar_t *str);
 obj_t *cons(obj_t *car, obj_t *cdr);
 obj_t *list(obj_t *first, ...); /* terminated by nao */
 obj_t *consp(obj_t *obj);
@@ -238,16 +238,17 @@ obj_t *le(obj_t *anum, obj_t *bnum);
 obj_t *numeq(obj_t *anum, obj_t *bnum);
 obj_t *max2(obj_t *anum, obj_t *bnum);
 obj_t *min2(obj_t *anum, obj_t *bnum);
-obj_t *string_own(char *str);
-obj_t *string(const char *str);
+obj_t *string_own(wchar_t *str);
+obj_t *string(const wchar_t *str);
+obj_t *string_utf8(const unsigned char *str);
 obj_t *mkstring(obj_t *len, obj_t *ch);
 obj_t *mkustring(obj_t *len); /* must initialize immediately with init_str! */
-obj_t *init_str(obj_t *str, const char *);
+obj_t *init_str(obj_t *str, const wchar_t *);
 obj_t *copy_str(obj_t *str);
 obj_t *stringp(obj_t *str);
 obj_t *lazy_stringp(obj_t *str);
 obj_t *length_str(obj_t *str);
-const char *c_str(obj_t *str);
+const wchar_t *c_str(obj_t *str);
 obj_t *search_str(obj_t *haystack, obj_t *needle, obj_t *start_num,
                   obj_t *from_end);
 obj_t *search_str_tree(obj_t *haystack, obj_t *tree, obj_t *start_num,
@@ -315,7 +316,7 @@ obj_t *sort(obj_t *list, obj_t *lessfun, obj_t *keyfun);
 
 void obj_print(obj_t *obj, obj_t *stream);
 void obj_pprint(obj_t *obj, obj_t *stream);
-void init(const char *progname, void *(*oom_realloc)(void *, size_t),
+void init(const wchar_t *progname, void *(*oom_realloc)(void *, size_t),
           obj_t **stack_bottom);
 void dump(obj_t *obj, obj_t *stream);
 obj_t *snarf(obj_t *in);

@@ -217,15 +217,15 @@ obj_t *uw_throw(obj_t *sym, obj_t *exception)
   if (ex == 0) {
     if (opt_loglevel >= 1) {
       obj_t *s = stringp(exception);
-      format(std_error, "~a: unhandled exception of type ~a:\n",
+      format(std_error, L"~a: unhandled exception of type ~a:\n",
              prog_string, sym, nao);
-      format(std_error, s ? "~a: ~a\n" : "~a: ~s\n",
+      format(std_error, s ? L"~a: ~a\n" : L"~a: ~s\n",
              prog_string, exception, nao);
     }
     if (uw_exception_subtype_p(sym, query_error) ||
         uw_exception_subtype_p(sym, file_error)) {
       if (!output_produced)
-        put_cstring(std_output, "false\n");
+        put_cstring(std_output, L"false\n");
       exit(EXIT_FAILURE);
     }
     abort();
@@ -238,7 +238,7 @@ obj_t *uw_throw(obj_t *sym, obj_t *exception)
   abort();
 }
 
-obj_t *uw_throwf(obj_t *sym, const char *fmt, ...)
+obj_t *uw_throwf(obj_t *sym, const wchar_t *fmt, ...)
 {
   va_list vl;
   obj_t *stream = make_string_output_stream();
@@ -251,7 +251,7 @@ obj_t *uw_throwf(obj_t *sym, const char *fmt, ...)
   abort();
 }
 
-obj_t *uw_errorf(const char *fmt, ...)
+obj_t *uw_errorf(const wchar_t *fmt, ...)
 {
   va_list vl;
   obj_t *stream = make_string_output_stream();
@@ -290,7 +290,7 @@ obj_t *uw_errorcf(const char *fmt, ...)
   abort();
 }
 
-obj_t *type_mismatch(const char *fmt, ...)
+obj_t *type_mismatch(const wchar_t *fmt, ...)
 {
   va_list vl;
   obj_t *stream = make_string_output_stream();
@@ -317,21 +317,21 @@ obj_t *uw_register_subtype(obj_t *sub, obj_t *sup)
   if (sub == t) {
     if (sup == t)
       return sup;
-    uw_throwf(type_error, "cannot define ~a as an exception subtype of ~a",
+    uw_throwf(type_error, L"cannot define ~a as an exception subtype of ~a",
               sub, sup, nao);
   }
 
   if (sup == nil) {
-    uw_throwf(type_error, "cannot define ~a as an exception subtype of ~a",
+    uw_throwf(type_error, L"cannot define ~a as an exception subtype of ~a",
               sub, sup, nao);
   }
 
   if (uw_exception_subtype_p(sub, sup))
-    uw_throwf(type_error, "~a is already an exception subtype of ~a",
+    uw_throwf(type_error, L"~a is already an exception subtype of ~a",
               sub, sup, nao);
 
   if (uw_exception_subtype_p(sup, sub))
-    uw_throwf(type_error, "~a is already an exception supertype of ~a",
+    uw_throwf(type_error, L"~a is already an exception supertype of ~a",
               sub, sup, nao);
 
   /* If sup symbol not registered, then we make it

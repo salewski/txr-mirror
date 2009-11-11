@@ -28,6 +28,6 @@ extern int opt_loglevel;
 extern int opt_nobindings;
 extern int opt_arraydims;
 extern int opt_gc_debug;
-extern const char *version;
-extern const char *progname;
+extern const wchar_t *version;
+extern const wchar_t *progname;
 extern int output_produced;

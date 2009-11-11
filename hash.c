@@ -64,7 +64,7 @@ static struct hash *reachable_weak_hashes;
  * We don't reduce the final result modulo a small prime, but leave it
  * as it is; let the hashing routines do their own reduction.
  */
-static long hash_c_str(const char *str)
+static long hash_c_str(const wchar_t *str)
 {
   unsigned long h = 0;
   while (*str) {
