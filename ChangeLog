@@ -1,3 +1,57 @@
+2009-11-12  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Regular expression module updated to do unicode character sets.
+	Most of the changes are in the area of representing sets.
+
+	Also, a bug was found in the compilation of regex character sets:
+	ranges straddling two adjacent blocks of 32 characters were
+	not being added to the character set. However, ranges falling
+	within a single 32 block, or spanning three or more such blocks,
+	worked properly. This bug is not tickled by common ranges
+	such as A-Z, or 0-9, which land within a 32 block.
+
+	* regex.h (BITCELL_LIT): Macro removed.
+	(CHAR_SET_SIZE): Macro does not depend on UCHAR_MAX any more,
+	but hard-codes a set size of 256. UCHAR_MAX means nothing to us any
+	more since we are using wchar_t. The number 256 is simply an
+	arbitrarily chosen size for representing the small character
+	sets (or the leaves of the radix tree for representing large sets).
+	(chset_type_t): New enum typedef.
+	(cset_L0_t, cset_L1_t, cset_L2_t, cset_L3_t): New array typedefs.
+	(struct char_set): Replaced by union char_set.
+	(struct any_char_set, struct small_char_set, struct displaced_char_set,
+	struct large_char_set, struct xlarge_char_set): New struct types.
+	(char_set_clear): Declaration removed.
+	(char_set_create, char_set_destroy): Declared.
+	(char_set_add, char_set_add_range, char_set_contains,
+	nfa_state_single, nfa_state_set, nfa_machine_feed): Declarations
+	updated for wchar_t.
+	(struct nfa_state_single): member ch changed to wchar_t.
+
+	* regex.c (char_set_clear): Function removed.
+	(CHAR_SET_L0, CHAR_SET_L1, CHAR_SET_L2, CHAR_SET_L3, CHAR_SET_L2_L0,
+	CHAR_SET_L2_HI, CHAR_SET_L1_L0, CHAR_SET_L1_HI, CHAR_SET_L0_L0,
+	CHAR_SET_L0_HI): New macros.
+	(L0_full, L0_fill_range, L0_contains, L1_full, L1_fill_range,
+	L1_contains, L1_free, L2_full, L2_fill_range, L2_contains,
+	L2_free, L3_fill_range, L3_contains, char_set_create,
+	char_set_destroy): New functions.
+	(char_set_compl): Works using a flag rather than by actually
+	computing a complemented set. Also, is no longer a toggle (and
+	was never used that way).
+	(char_set_add, char_set_add_range, char_set_contains): Polymorphic over
+	the different set types.
+	(nfa_state_single, nfa_move, nfa_run, nfa_machine_feed): Converted
+	to wchar_t.
+	(nfa_state_free): Use char_set_destroy to free set.
+	(nfa_state_set): Does not construct the set internally but
+	takes it as a parameter.
+	(nfa_compile_set): Rewritten to perform two passes over the
+	s-expression representing the list of characters and ranges
+	making up the set.  The first pass determines what representation
+	will be used for the set. The second pass stuffs the characters and
+	ranges into the set.
+
 2009-11-11  Kaz Kylheku  <kkylheku@gmail.com>
 
 	* txr.c (main): call setlocale to set the LC_CTYPE to en_US.UTF-8,

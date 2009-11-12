@@ -26,6 +26,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <wchar.h>
 #include <assert.h>
 #include <dirent.h>
 #include <setjmp.h>
@@ -39,53 +41,394 @@
 #define CHAR_SET_INDEX(CH) ((CH) / (sizeof (bitcell_t) * CHAR_BIT))
 #define CHAR_SET_BIT(CH) ((CH) % (sizeof (bitcell_t) * CHAR_BIT))
 
-void char_set_clear(char_set_t *set)
-{
-  static const char_set_t blank = { { 0 } };
-  *set = blank;
-}
+#define CHAR_SET_L0(CH) ((CH) & 0xFF)
+#define CHAR_SET_L1(CH) (((CH) >> 8) & 0xF)
+#define CHAR_SET_L2(CH) (((CH) >> 12) & 0xF)
+#define CHAR_SET_L3(CH) (((CH) >> 16) & 0x1F)
 
-void char_set_compl(char_set_t *set)
+#define CHAR_SET_L2_LO(CH) ((CH) & (~(wchar_t) 0xFFFF))
+#define CHAR_SET_L2_HI(CH) ((CH) | ((wchar_t) 0xFFFF))
+
+#define CHAR_SET_L1_LO(CH) ((CH) & (~(wchar_t) 0xFFF))
+#define CHAR_SET_L1_HI(CH) ((CH) | ((wchar_t) 0xFFF))
+
+#define CHAR_SET_L0_LO(CH) ((CH) & (~(wchar_t) 0xFF))
+#define CHAR_SET_L0_HI(CH) ((CH) | ((wchar_t) 0xFF))
+
+static int L0_full(cset_L0_t *L0)
 {
   int i;
+
   for (i = 0; i < CHAR_SET_SIZE; i++)
-    set->bitcell[i] ^= BITCELL_ALL1;
+    if ((*L0)[i] != ((bitcell_t) -1))
+      return 0;
+  return 1;
 }
 
-void char_set_add(char_set_t *set, int ch)
+void L0_fill_range(cset_L0_t *L0, wchar_t ch0, wchar_t ch1)
 {
-  set->bitcell[CHAR_SET_INDEX(ch)] |= (1 << CHAR_SET_BIT(ch));
+  int i;
+  int bt0 = CHAR_SET_BIT(ch0);
+  int bc0 = CHAR_SET_INDEX(ch0);
+  bitcell_t mask0 = ~(((bitcell_t) 1 << bt0) - 1);
+  int bt1 = CHAR_SET_BIT(ch1);
+  int bc1 = CHAR_SET_INDEX(ch1);
+  bitcell_t mask1 = (((bitcell_t) 1 << (bt1 + 1) % 32) - 1);
+
+  if (bc1 == bc0) {
+    (*L0)[bc0] |= (mask0 & mask1);
+  } else {
+    (*L0)[bc0] |= mask0;
+    (*L0)[bc1] |= mask1;
+    for (i = bc0 + 1; i < bc1; i++)
+      (*L0)[i] = ((bitcell_t) -1);
+  }
 }
 
-void char_set_add_range(char_set_t *set, int ch0, int ch1)
+int L0_contains(cset_L0_t *L0, wchar_t ch)
 {
-  if (ch0 <= ch1) {
-    int i;
-    int bt0 = CHAR_SET_BIT(ch0);
-    int bc0 = CHAR_SET_INDEX(ch0);
-    bitcell_t mask0 = ~((BITCELL_LIT(1) << bt0) - 1);
-    int bt1 = CHAR_SET_BIT(ch1);
-    int bc1 = CHAR_SET_INDEX(ch1);
-    bitcell_t mask1 = ((BITCELL_LIT(1) << (bt1 + 1) % 32) - 1);
+  return ((*L0)[CHAR_SET_INDEX(ch)] & (1 << CHAR_SET_BIT(ch))) != 0;
+}
 
-    switch (bc1 - bc0) {
-    case 0:
-      set->bitcell[bc0] |= (mask0 & mask1);
-      break;
-    default:
-      set->bitcell[bc0] |= mask0;
-      set->bitcell[bc1] |= mask1;
-    case 1:
-      for (i = bc0 + 1; i < bc1; i++)
-        set->bitcell[i] = BITCELL_ALL1;
-      break;
+int L1_full(cset_L1_t *L1)
+{
+  int i;
+  for (i = 0; i < 16; i++)
+    if ((*L1)[i] != (cset_L0_t *) -1)
+      return 0;
+  return 1;
+}
+
+void L1_fill_range(cset_L1_t *L1, wchar_t ch0, wchar_t ch1)
+{
+  int i1, i10, i11;
+
+  i10 = CHAR_SET_L1(ch0);
+  i11 = CHAR_SET_L1(ch1);
+
+  for (i1 = i10; i1 <= i11; i1++) {
+    wchar_t c0 = 0, c1 = 0;
+    cset_L0_t *L0;
+
+    if (i1 > i10 && i1 < i11) {
+      free((*L1)[i1]);
+      (*L1)[i1] = (cset_L0_t *) -1;
+      continue;
+    } else if (i10 == i11) {
+      c0 = ch0;
+      c1 = ch1;
+    } else if (i1 == i10) {
+      c0 = ch0;
+      c1 = CHAR_SET_L0_HI(ch0);
+    } else if (i1 == i11) {
+      c0 = CHAR_SET_L0_LO(ch1);
+      c1 = ch1;
+    }
+
+    if ((L0 = (*L1)[i1]) == (cset_L0_t *) -1)
+      continue;
+
+    if (L0 == 0) {
+      static const cset_L0_t blank;
+      L0 = (*L1)[i1] = (cset_L0_t *) chk_malloc(sizeof *L0);
+      memcpy(L0, &blank, sizeof *L0);
+    }
+
+    L0_fill_range(L0, CHAR_SET_L0(c0), CHAR_SET_L0(c1));
+
+    if (L0_full(L0)) {
+      free(L0);
+      (*L1)[i1] = (cset_L0_t *) -1;
     }
   }
 }
 
-int char_set_contains(char_set_t *set, int ch)
+int L1_contains(cset_L1_t *L1, wchar_t ch)
 {
-  return (set->bitcell[CHAR_SET_INDEX(ch)] & (1 << CHAR_SET_BIT(ch))) != 0;
+  int i1 = CHAR_SET_L1(ch);
+  cset_L0_t *L0 = (*L1)[i1];
+
+  if (L0 == 0)
+    return 0;
+  else if (L0 == (cset_L0_t *) -1)
+    return 1;
+  else
+    return L0_contains(L0, CHAR_SET_L0(ch));
+}
+
+
+void L1_free(cset_L1_t *L1)
+{
+  int i1;
+
+  if (L1 == (cset_L1_t *) -1)
+    return;
+
+  for (i1 = 0; i1 < 16; i1++)
+    if ((*L1)[i1] != (cset_L0_t *) -1)
+      free((*L1)[i1]);
+}
+
+int L2_full(cset_L2_t *L2)
+{
+  int i;
+  for (i = 0; i < 16; i++)
+    if ((*L2)[i] != (cset_L1_t *) -1)
+      return 0;
+  return 1;
+}
+
+void L2_fill_range(cset_L2_t *L2, wchar_t ch0, wchar_t ch1)
+{
+  int i2, i20, i21;
+
+  i20 = CHAR_SET_L2(ch0);
+  i21 = CHAR_SET_L2(ch1);
+
+  for (i2 = i20; i2 <= i21; i2++) {
+    wchar_t c0 = 0, c1 = 0;
+    cset_L1_t *L1;
+
+    if (i2 > i20 && i2 < i21) {
+      free((*L2)[i2]);
+      (*L2)[i2] = (cset_L1_t *) -1;
+      continue;
+    } else if (i20 == i21) {
+      c0 = ch0;
+      c1 = ch1;
+    } else if (i2 == i20) {
+      c0 = ch0;
+      c1 = CHAR_SET_L1_HI(ch0);
+    } else if (i2 == i21) {
+      c0 = CHAR_SET_L1_LO(ch1);
+      c1 = ch1;
+    }
+
+    if ((L1 = (*L2)[i2]) == (cset_L1_t *) -1)
+      continue;
+
+    if (L1 == 0) {
+      static const cset_L1_t blank;
+      L1 = (*L2)[i2] = (cset_L1_t *) chk_malloc(sizeof *L1);
+      memcpy(L1, &blank, sizeof *L1);
+    }
+
+    L1_fill_range(L1, c0, c1);
+
+    if (L1_full(L1)) {
+      free(L1);
+      (*L2)[i2] = (cset_L1_t *) -1;
+    }
+  }
+}
+
+int L2_contains(cset_L2_t *L2, wchar_t ch)
+{
+  int i2 = CHAR_SET_L2(ch);
+  cset_L1_t *L1 = (*L2)[i2];
+
+  if (L1 == 0)
+    return 0;
+  else if (L1 == (cset_L1_t *) -1)
+    return 1;
+  else
+    return L1_contains(L1, ch);
+}
+
+void L2_free(cset_L2_t *L2)
+{
+  int i2;
+
+  for (i2 = 0; i2 < 16; i2++) {
+    cset_L1_t *L1 = (*L2)[i2];
+    if (L1 != 0 && L1 != (cset_L1_t *) -1) {
+      L1_free((*L2)[i2]);
+      free((*L2)[i2]);
+    }
+  }
+}
+
+void L3_fill_range(cset_L3_t *L3, wchar_t ch0, wchar_t ch1)
+{
+  int i3, i30, i31;
+
+  i30 = CHAR_SET_L3(ch0);
+  i31 = CHAR_SET_L3(ch1);
+
+  for (i3 = i30; i3 <= i31; i3++) {
+    wchar_t c0 = 0, c1 = 0;
+    cset_L2_t *L2;
+
+    if (i3 > i30 && i3 < i31) {
+      free((*L3)[i3]);
+      (*L3)[i3] = (cset_L2_t *) -1;
+      continue;
+    } else if (i30 == i31) {
+      c0 = ch0;
+      c1 = ch1;
+    } else if (i3 == i30) {
+      c0 = ch0;
+      c1 = CHAR_SET_L2_HI(ch0);
+    } else if (i3 == i31) {
+      c0 = CHAR_SET_L2_LO(ch1);
+      c1 = ch1;
+    }
+
+    if ((L2 = (*L3)[i3]) == (cset_L2_t *) -1)
+      continue;
+
+    if (L2 == 0) {
+      static const cset_L2_t blank;
+      L2 = (*L3)[i3] = (cset_L2_t *) chk_malloc(sizeof *L2);
+      memcpy(L2, &blank, sizeof *L2);
+    }
+
+    L2_fill_range(L2, c0, c1);
+    if (L2_full(L2)) {
+      free(L2);
+      (*L3)[i3] = (cset_L2_t *) -1;
+    }
+  }
+}
+
+int L3_contains(cset_L3_t *L3, wchar_t ch)
+{
+  int i3 = CHAR_SET_L3(ch);
+  cset_L2_t *L2 = (*L3)[i3];
+
+  if (L2 == 0)
+    return 0;
+  else if (L2 == (cset_L2_t *) -1)
+    return 1;
+  else
+    return L2_contains(L2, ch);
+}
+
+void L3_free(cset_L3_t *L3)
+{
+  int i3;
+
+  for (i3 = 0; i3 < 17; i3++) {
+    cset_L2_t *L2 = (*L3)[i3];
+    if (L2 != 0 && L2 != (cset_L2_t *) -1) {
+      L2_free((*L3)[i3]);
+      free((*L3)[i3]);
+    }
+  }
+}
+
+char_set_t *char_set_create(chset_type_t type, wchar_t base)
+{
+  static const char_set_t blank;
+  char_set_t *cs = (char_set_t *) chk_malloc(sizeof *cs);
+  *cs = blank;
+  cs->any.type = type;
+
+  if (type == CHSET_DISPLACED)
+    cs->d.base = base;
+
+  return cs;
+}
+
+void char_set_destroy(char_set_t *set)
+{
+  switch (set->any.type) {
+  case CHSET_DISPLACED:
+  case CHSET_SMALL:
+    free(set);
+    break;
+  case CHSET_LARGE:
+    L2_free(&set->l.dir);
+    free(set);
+    break;
+  case CHSET_XLARGE:
+    L3_free(&set->xl.dir);
+    free(set);
+    break;
+  }
+}
+
+void char_set_compl(char_set_t *set)
+{
+  set->any.compl = 1;
+}
+
+void char_set_add(char_set_t *set, wchar_t ch)
+{
+  switch (set->any.type) {
+  case CHSET_DISPLACED:
+    assert (ch >= set->d.base && ch < set->d.base + 256);
+    ch -= set->d.base;
+    /* fallthrough */
+  case CHSET_SMALL:
+    assert (ch < 256);
+    set->s.bitcell[CHAR_SET_INDEX(ch)] |= (1 << CHAR_SET_BIT(ch));
+    break;
+  case CHSET_LARGE:
+    assert (ch < 0x10000);
+    L2_fill_range(&set->l.dir, ch, ch);
+    break;
+  case CHSET_XLARGE:
+    assert (ch < 0x110000);
+    L3_fill_range(&set->xl.dir, ch, ch);
+    break;
+  }
+}
+
+void char_set_add_range(char_set_t *set, wchar_t ch0, wchar_t ch1)
+{
+  if (ch0 >= ch1)
+    return;
+
+  switch (set->any.type) {
+  case CHSET_DISPLACED:
+    assert (ch0 >= set->d.base && ch1 < set->d.base + 256);
+    ch0 -= set->d.base;
+    ch1 -= set->d.base;
+    /* fallthrough */
+  case CHSET_SMALL:
+    assert (ch1 < 256);
+    L0_fill_range(&set->s.bitcell, ch0, ch1);
+    break;
+  case CHSET_LARGE:
+    assert (ch1 < 0x10000);
+    L2_fill_range(&set->l.dir, ch0, ch1);
+    break;
+  case CHSET_XLARGE:
+    assert (ch1 < 0x110000);
+    L3_fill_range(&set->xl.dir, ch0, ch1);
+    break;
+  }
+}
+
+int char_set_contains(char_set_t *set, wchar_t ch)
+{
+  int result = 0;
+
+  switch (set->any.type) {
+  case CHSET_DISPLACED:
+    if (ch < set->d.base)
+      break;
+    ch -= set->d.base;
+    /* fallthrough */
+  case CHSET_SMALL:
+    if (ch >= 256)
+      break;
+    result = L0_contains(&set->s.bitcell, ch);
+    break;
+  case CHSET_LARGE:
+    if (ch >= 0x10000)
+      break;
+    result = L2_contains(&set->l.dir, ch);
+    break;
+  case CHSET_XLARGE:
+    if (ch >= 0x110000)
+      break;
+    result = L3_contains(&set->xl.dir, ch);
+    break;
+  }
+
+  return set->any.compl ? !result : result;
 }
 
 nfa_state_t *nfa_state_accept(void)
@@ -106,7 +449,7 @@ nfa_state_t *nfa_state_empty(nfa_state_t *t0, nfa_state_t *t1)
   return st;
 }
 
-nfa_state_t *nfa_state_single(nfa_state_t *t, int ch)
+nfa_state_t *nfa_state_single(nfa_state_t *t, wchar_t ch)
 {
   nfa_state_t *st = (nfa_state_t *) chk_malloc(sizeof *st);
   st->o.kind = nfa_single;
@@ -129,7 +472,7 @@ nfa_state_t *nfa_state_wild(nfa_state_t *t)
 void nfa_state_free(nfa_state_t *st)
 {
   if (st->a.kind == nfa_set)
-    free(st->s.set);
+    char_set_destroy(st->s.set);
   free(st);
 }
 
@@ -138,11 +481,9 @@ void nfa_state_shallow_free(nfa_state_t *st)
   free(st);
 }
 
-nfa_state_t *nfa_state_set(nfa_state_t *t)
+nfa_state_t *nfa_state_set(nfa_state_t *t, char_set_t *cs)
 {
   nfa_state_t *st = (nfa_state_t *) chk_malloc(sizeof *st);
-  char_set_t *cs = (char_set_t *) chk_malloc(sizeof *cs);
-  char_set_clear(cs);
   st->s.kind = nfa_set;
   st->s.visited = 0;
   st->s.trans = t;
@@ -211,31 +552,74 @@ nfa_t nfa_combine(nfa_t pred, nfa_t succ)
 
 nfa_t nfa_compile_set(obj_t *args, int compl)
 {
-  nfa_state_t *acc = nfa_state_accept();
-  nfa_state_t *s = nfa_state_set(acc);
-  char_set_t *set = s->s.set;
-  nfa_t ret = nfa_make(s, acc);
+  obj_t *iter;
+  wchar_t min = WCHAR_MAX;
+  wchar_t max = 0;
+  chset_type_t cst;
 
-  for (; args; args = rest(args)) {
-    obj_t *item = first(args);
+  for (iter = args; iter; iter = rest(iter)) {
+    obj_t *item = first(iter);
 
     if (consp(item)) {
       obj_t *from = car(item);
       obj_t *to = cdr(item);
 
       assert (typeof(from) == chr_t && typeof(to) == chr_t);
-      char_set_add_range(set, c_chr(from), c_chr(to));
+
+      if (c_chr(from) < min)
+        min = c_chr(from);
+      if (c_chr(from) > max)
+        max = c_chr(from);
+
+      if (c_chr(to) < min)
+        min = c_chr(to);
+      if (c_chr(to) > max)
+        max = c_chr(to);
     } else if (typeof(item) == chr_t) {
-      char_set_add(set, c_chr(item));
+      if (c_chr(item) < min)
+        min = c_chr(item);
+      if (c_chr(item) > max)
+        max = c_chr(item);
     } else {
       assert(0 && "bad regex set");
     }
   }
 
-  if (compl)
-    char_set_compl(set);
+  if (max < 0x100)
+    cst = CHSET_SMALL;
+  else if (max - min < 0x100)
+    cst = CHSET_DISPLACED;
+  else if (max < 0x10000)
+    cst = CHSET_LARGE;
+  else
+    cst = CHSET_XLARGE;
 
-  return ret;
+  {
+    char_set_t *set = char_set_create(cst, min);
+    nfa_state_t *acc = nfa_state_accept();
+    nfa_state_t *s = nfa_state_set(acc, set);
+    nfa_t ret = nfa_make(s, acc);
+
+    for (iter = args; iter; iter = rest(iter)) {
+      obj_t *item = first(iter);
+
+      if (consp(item)) {
+        obj_t *from = car(item);
+        obj_t *to = cdr(item);
+
+        assert (typeof(from) == chr_t && typeof(to) == chr_t);
+        char_set_add_range(set, c_chr(from), c_chr(to));
+      } else if (typeof(item) == chr_t) {
+        char_set_add(set, c_chr(item));
+      } else {
+        assert(0 && "bad regex set");
+      }
+    }
+
+    if (compl)
+      char_set_compl(set);
+    return ret;
+  }
 }
 
 /*
@@ -470,7 +854,7 @@ int nfa_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
  * set is the set of states which are reachable from the set of
  * input states on the consumpion of the input character given by ch.
  */
-int nfa_move(nfa_state_t **in, int nin, nfa_state_t **out, int ch)
+int nfa_move(nfa_state_t **in, int nin, nfa_state_t **out, wchar_t ch)
 {
   int i, nmove;
 
@@ -546,7 +930,7 @@ long nfa_run(nfa_t nfa, const wchar_t *str)
     last_accept_pos = ptr;
 
   for (; *ptr != 0; ptr++) {
-    int ch = *ptr;
+    wchar_t ch = *ptr;
 
     accept = 0;
 
@@ -618,7 +1002,7 @@ void nfa_machine_cleanup(nfa_machine_t *nfam)
   nfam->nfa.accept = 0;
 }
 
-nfam_result_t nfa_machine_feed(nfa_machine_t *nfam, int ch)
+nfam_result_t nfa_machine_feed(nfa_machine_t *nfam, wchar_t ch)
 {
   int accept = 0;
 
