@@ -32,6 +32,7 @@
 #include <dirent.h>
 #include <setjmp.h>
 #include <wchar.h>
+#include <locale.h>
 #include "lib.h"
 #include "stream.h"
 #include "gc.h"
@@ -142,6 +143,7 @@ int main(int argc, char **argv)
   obj_t *stack_bottom = nil;
   progname = argv[0] ? utf8_dup_from(argv[0]) : progname;
   init(progname, oom_realloc_handler, &stack_bottom);
+  setlocale(LC_CTYPE, "en_US.UTF-8");
   return txr_main(argc, argv);
 }
 
