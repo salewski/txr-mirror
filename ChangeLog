@@ -1,5 +1,11 @@
 2009-11-11  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* txr.c (main): call setlocale to set the LC_CTYPE to en_US.UTF-8,
+	so that the C library streams do the encoding. Once the program
+	is weaned from C library wide character stream I/O, this can go away.
+
+2009-11-11  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Big conversion to wide characters and UTF-8 support.
 	This is incomplete. There are too many dependencies on
 	wide character support from the C stream I/O library.
