@@ -35,10 +35,10 @@ obj_t *make_dir_stream(DIR *);
 obj_t *close_stream(obj_t *stream, obj_t *throw_on_error);
 obj_t *get_line(obj_t *);
 obj_t *get_char(obj_t *);
-obj_t *vformat(obj_t *stream, const wchar_t *string, va_list); /* nao-term */
-obj_t *vcformat(obj_t *stream, const char *string, va_list); /* printf-style */
+obj_t *vformat(obj_t *stream, const wchar_t *string, va_list);
+obj_t *vcformat(obj_t *stream, const wchar_t *string, va_list);
 obj_t *format(obj_t *stream, const wchar_t *string, ...);
-obj_t *cformat(obj_t *stream, const char *string, ...);
+obj_t *cformat(obj_t *stream, const wchar_t *string, ...);
 obj_t *put_string(obj_t *stream, obj_t *string);
 obj_t *put_line(obj_t *stream, obj_t *string);
 obj_t *put_cstring(obj_t *stream, const wchar_t *);

@@ -264,7 +264,7 @@ obj_t *uw_errorf(const wchar_t *fmt, ...)
   abort();
 }
 
-obj_t *uw_throwcf(obj_t *sym, const char *fmt, ...)
+obj_t *uw_throwcf(obj_t *sym, const wchar_t *fmt, ...)
 {
   va_list vl;
   obj_t *stream = make_string_output_stream();
@@ -277,7 +277,7 @@ obj_t *uw_throwcf(obj_t *sym, const char *fmt, ...)
   abort();
 }
 
-obj_t *uw_errorcf(const char *fmt, ...)
+obj_t *uw_errorcf(const wchar_t *fmt, ...)
 {
   va_list vl;
   obj_t *stream = make_string_output_stream();

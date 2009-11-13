@@ -54,66 +54,66 @@ obj_t *spec_file_str;
  */
 void *oom_realloc_handler(void *old, size_t size)
 {
-  fprintf(stderr, "%ls: out of memory\n", progname);
-  puts("false");
+  fwprintf(stderr, L"%ls: out of memory\n", progname);
+  fputws(L"false", stderr);
   abort();
 }
 
 void help(void)
 {
-  const char *text =
-"\n"
-"txr version %ls\n"
-"\n"
-"copyright 2009, Kaz Kylheku <kkylheku@gmail.com>\n"
-"\n"
-"usage:\n"
-"\n"
-"  %ls [ options ] query-file { data-file }*\n"
-"\n"
-"The query-file or data-file arguments may be specified as -, in which case\n"
-"standard input is used. All data-file arguments which begin with a !\n"
-"character are treated as command pipes. Those which begin with a $\n"
-"are interpreted as directories to read. Leading arguments which begin\n"
-"with a - followed by one or more characters, and which are not arguments to\n"
-"options are interpreted as options. The -- option indicates the end of the\n"
-"options.\n"
-"\n"
-"If no data-file arguments sare supplied, then the query itself must open a\n"
-"a data source prior to attempting to make any pattern match, or it will\n"
-"simply fail due to a match which has run out of data.\n"
-"\n"
-"options:\n"
-"\n"
-"-Dvar=value            Pre-define variable var, with the given value.\n"
-"                       A list value can be specified using commas.\n"
-"-Dvar                  Predefine variable var, with empty string value.\n"
-"-q                     Quiet: don't report errors during query matching.\n"
-"-v                     Verbose: extra logging from matcher.\n"
-"-b                     Don't dump list of bindings.\n"
-"-a num                 Generate array variables up to num-dimensions.\n"
-"                       Default is 1. Additional dimensions are fudged\n"
-"                       by generating numeric suffixes\n"
-"-c query-text          The query is read from the query-text argument\n"
-"                       itself. The query-file argument is omitted in\n"
-"                       this case; the first argument is a data file.\n"
-"-f query-file          Specify the query-file as an option argument.\n"
-"                       option, instead of the query-file argument.\n"
-"                       This allows #! scripts to pass options through\n"
-"                       to the utility.\n"
-"--help                 You already know!\n"
-"--version              Display program version\n"
-"\n"
-"Options that take no argument can be combined. The -q and -v options\n"
-"are mutually exclusive; the right-most one dominates.\n"
-"\n"
+  const wchar_t *text =
+L"\n"
+L"txr version %ls\n"
+L"\n"
+L"copyright 2009, Kaz Kylheku <kkylheku@gmail.com>\n"
+L"\n"
+L"usage:\n"
+L"\n"
+L"  %ls [ options ] query-file { data-file }*\n"
+L"\n"
+L"The query-file or data-file arguments may be specified as -, in which case\n"
+L"standard input is used. All data-file arguments which begin with a !\n"
+L"character are treated as command pipes. Those which begin with a $\n"
+L"are interpreted as directories to read. Leading arguments which begin\n"
+L"with a - followed by one or more characters, and which are not arguments to\n"
+L"options are interpreted as options. The -- option indicates the end of the\n"
+L"options.\n"
+L"\n"
+L"If no data-file arguments sare supplied, then the query itself must open a\n"
+L"a data source prior to attempting to make any pattern match, or it will\n"
+L"simply fail due to a match which has run out of data.\n"
+L"\n"
+L"options:\n"
+L"\n"
+L"-Dvar=value            Pre-define variable var, with the given value.\n"
+L"                       A list value can be specified using commas.\n"
+L"-Dvar                  Predefine variable var, with empty string value.\n"
+L"-q                     Quiet: don't report errors during query matching.\n"
+L"-v                     Verbose: extra logging from matcher.\n"
+L"-b                     Don't dump list of bindings.\n"
+L"-a num                 Generate array variables up to num-dimensions.\n"
+L"                       Default is 1. Additional dimensions are fudged\n"
+L"                       by generating numeric suffixes\n"
+L"-c query-text          The query is read from the query-text argument\n"
+L"                       itself. The query-file argument is omitted in\n"
+L"                       this case; the first argument is a data file.\n"
+L"-f query-file          Specify the query-file as an option argument.\n"
+L"                       option, instead of the query-file argument.\n"
+L"                       This allows #! scripts to pass options through\n"
+L"                       to the utility.\n"
+L"--help                 You already know!\n"
+L"--version              Display program version\n"
+L"\n"
+L"Options that take no argument can be combined. The -q and -v options\n"
+L"are mutually exclusive; the right-most one dominates.\n"
+L"\n"
   ;
-  fprintf(stdout, text, version, progname);
+  fwprintf(stdout, text, version, progname);
 }
 
 void hint(void)
 {
-  fprintf(stderr, "%ls: incorrect arguments: try --help\n", progname);
+  fwprintf(stderr, L"%ls: incorrect arguments: try --help\n", progname);
 }
 
 obj_t *remove_hash_bang_line(obj_t *spec)
@@ -215,7 +215,7 @@ static int txr_main(int argc, char **argv)
     }
 
     if (!strcmp(*argv, "--version")) {
-      printf("%ls: version %ls\n", progname, version);
+      wprintf(L"%ls: version %ls\n", progname, version);
       return 0;
     }
 
@@ -230,7 +230,7 @@ static int txr_main(int argc, char **argv)
       char opt = (*argv)[1];
 
       if (argc == 1) {
-        fprintf(stderr, "%ls: option %c needs argument\n", progname, opt);
+        fwprintf(stderr, L"%ls: option %c needs argument\n", progname, opt);
 
         return EXIT_FAILURE;
       }
@@ -241,8 +241,8 @@ static int txr_main(int argc, char **argv)
       case 'a':
         val = strtol(*argv, &errp, 10);
         if (*errp != 0) {
-          fprintf(stderr, "%ls: option %c needs numeric argument, not %s\n",
-                  progname, opt, *argv);
+          fwprintf(stderr, L"%ls: option %c needs numeric argument, not %s\n",
+                   progname, opt, *argv);
           return EXIT_FAILURE;
         }
 
@@ -282,14 +282,15 @@ static int txr_main(int argc, char **argv)
         case 'a':
         case 'c':
         case 'D':
-          fprintf(stderr, "%ls: option -%c does not clump\n", progname, *popt);
+          fwprintf(stderr, L"%ls: option -%c does not clump\n",
+                   progname, *popt);
           return EXIT_FAILURE;
         case '-':
-          fprintf(stderr, "%ls: unrecognized long option: --%s\n",
-                  progname, popt + 1);
+          fwprintf(stderr, L"%ls: unrecognized long option: --%s\n",
+                   progname, popt + 1);
           return EXIT_FAILURE;
         default:
-          fprintf(stderr, "%ls: unrecognized option: %c\n", progname, *popt);
+          fwprintf(stderr, L"%ls: unrecognized option: %c\n", progname, *popt);
           return EXIT_FAILURE;
         }
       }
@@ -299,7 +300,7 @@ static int txr_main(int argc, char **argv)
   }
 
   if (specstring && spec_file_str) {
-    fprintf(stderr, "%ls: cannot specify both -f and -c\n", progname);
+    fwprintf(stderr, L"%ls: cannot specify both -f and -c\n", progname);
     return EXIT_FAILURE;
   }
 
@@ -311,7 +312,7 @@ static int txr_main(int argc, char **argv)
     if (wcscmp(c_str(spec_file_str), L"-") != 0) {
       FILE *in = w_fopen(c_str(spec_file_str), L"r");
       if (in == 0)
-        uw_throwcf(file_error, "unable to open %s", c_str(spec_file_str));
+        uw_throwcf(file_error, L"unable to open %ls", c_str(spec_file_str));
       yyin_stream = make_stdio_stream(in, spec_file_str, t, nil);
     } else {
       spec_file = L"stdin";
@@ -325,7 +326,7 @@ static int txr_main(int argc, char **argv)
     if (strcmp(*argv, "-") != 0) {
       FILE *in = fopen(*argv, "r");
       if (in == 0)
-        uw_throwcf(file_error, "unable to open %s", *argv);
+        uw_throwcf(file_error, L"unable to open %s", *argv);
       yyin_stream = make_stdio_stream(in, string_utf8(*argv), t, nil);
       spec_file = utf8_dup_from(*argv);
     } else {

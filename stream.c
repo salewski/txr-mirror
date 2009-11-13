@@ -54,7 +54,7 @@ struct strm_ops {
   obj_t *(*put_char)(obj_t *, wchar_t);
   obj_t *(*get_line)(obj_t *);
   obj_t *(*get_char)(obj_t *);
-  obj_t *(*vcformat)(obj_t *, const char *fmt, va_list vl);
+  obj_t *(*vcformat)(obj_t *, const wchar_t *fmt, va_list vl);
   obj_t *(*vformat)(obj_t *, const wchar_t *fmt, va_list vl);
   obj_t *(*close)(obj_t *, obj_t *);
 };
@@ -227,12 +227,12 @@ obj_t *stdio_get_char(obj_t *stream)
   return nil;
 }
 
-obj_t *stdio_vcformat(obj_t *stream, const char *fmt, va_list vl)
+obj_t *stdio_vcformat(obj_t *stream, const wchar_t *fmt, va_list vl)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
 
   if (h->f) {
-    int n = vfprintf(h->f, fmt, vl);
+    int n = vfwprintf(h->f, fmt, vl);
     return (n >= 0) ? num(n) : stdio_maybe_write_error(stream);
   }
   return nil;
@@ -426,19 +426,18 @@ static obj_t *string_out_put_char(obj_t *stream, wchar_t ch)
   return string_out_put_string(stream, mini);
 }
 
-obj_t *string_out_vcformat(obj_t *stream, const char *fmt, va_list vl)
+obj_t *string_out_vcformat(obj_t *stream, const wchar_t *fmt, va_list vl)
 {
   struct string_output *so = (struct string_output *) stream->co.handle;
 
   if (so == 0) {
     return nil;
   } else {
-    int nchars, nchars2, nchars3;
-    char dummy_buf[1];
+    int nchars, nchars2;
+    wchar_t dummy_buf[1];
     size_t old_size = so->size;
     size_t required_size;
     va_list vl_copy;
-    char *utf8_buf;
 
 #if defined va_copy
     va_copy (vl_copy, vl);
@@ -448,7 +447,7 @@ obj_t *string_out_vcformat(obj_t *stream, const char *fmt, va_list vl)
     vl_copy = vl;
 #endif
 
-    nchars = vsnprintf(dummy_buf, 0, fmt, vl_copy);
+    nchars = vswprintf(dummy_buf, 0, fmt, vl_copy);
 
 #if defined va_copy || defined __va_copy
     va_end (vl_copy);
@@ -456,31 +455,21 @@ obj_t *string_out_vcformat(obj_t *stream, const char *fmt, va_list vl)
 
     bug_unless (nchars >= 0);
 
-    utf8_buf = chk_malloc(nchars + 1);
-    nchars2 = vsnprintf(utf8_buf, nchars + 1, fmt, vl);
-    bug_unless (nchars == nchars2);
+    required_size = so->fill + nchars + 1;
 
-    nchars3 = utf8_from(0, utf8_buf);
-
-    required_size = so->fill + nchars3 + 1;
-
-    if (required_size < so->fill) {
-      free(utf8_buf);
+    if (required_size < so->fill)
       return nil;
-    }
 
     while (so->size <= required_size) {
       so->size *= 2;
-      if (so->size < old_size) {
-        free(utf8_buf);
+      if (so->size < old_size)
         return nil;
-      }
     }
 
     so->buf = chk_realloc(so->buf, so->size * sizeof *so->buf);
-    utf8_from(so->buf, utf8_buf);
-    free(utf8_buf);
-    so->fill += nchars3;
+    nchars2 = vswprintf(so->buf + so->fill, so->size-so->fill, fmt, vl);
+    bug_unless (nchars == nchars2);
+    so->fill += nchars;
     return t;
   }
 }
@@ -668,7 +657,7 @@ obj_t *vformat(obj_t *stream, const wchar_t *str, va_list vl)
   }
 }
 
-obj_t *vcformat(obj_t *stream, const char *string, va_list vl)
+obj_t *vcformat(obj_t *stream, const wchar_t *string, va_list vl)
 {
   type_check (stream, COBJ);
   type_assert (stream->co.cls == stream_t, (L"~a is not a stream", stream));
@@ -696,7 +685,7 @@ obj_t *format(obj_t *stream, const wchar_t *str, ...)
   }
 }
 
-obj_t *cformat(obj_t *stream, const char *string, ...)
+obj_t *cformat(obj_t *stream, const wchar_t *string, ...)
 {
   type_check (stream, COBJ);
   type_assert (stream->co.cls == stream_t, (L"~a is not a stream", stream));

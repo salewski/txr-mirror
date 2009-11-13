@@ -69,7 +69,7 @@ static void debuglf(obj_t *line, const wchar_t *fmt, ...)
   }
 }
 
-static void debuglcf(obj_t *line, const char *fmt, ...)
+static void debuglcf(obj_t *line, const wchar_t *fmt, ...)
 {
   if (opt_loglevel >= 2) {
     va_list vl;
@@ -171,7 +171,7 @@ void dump_var(const wchar_t *name, wchar_t *pfx1, size_t len1,
 void dump_bindings(obj_t *bindings)
 {
   if (opt_loglevel >= 2) {
-    fputs("raw_bindings:\n", stderr);
+    fputws(L"raw_bindings:\n", stderr);
     dump(bindings, std_error);
   }
 
@@ -280,15 +280,15 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
             file, data_lineno, nao);                                    \
   debuglf(spec_lineno, L"  ~a", dataline, nao);                         \
   if (c_num(pos) < 77)                                                  \
-    debuglcf(spec_lineno, "  %*s^", (int) c_num(pos), "")
+    debuglcf(spec_lineno, L"  %*ls^", (int) c_num(pos), L"")
 
 #define LOG_MATCH(KIND, EXTENT)                                         \
   debuglf(spec_lineno, KIND L" matched, position ~a-~a (~a:~a)",        \
             pos, EXTENT, file, data_lineno, nao);                       \
   debuglf(spec_lineno, L"  ~a", dataline, nao);                         \
   if (c_num(EXTENT) < 77)                                               \
-    debuglcf(spec_lineno, "  %*s%-*s^", (int) c_num(pos),               \
-              "", (int) (c_num(EXTENT) - c_num(pos)), "^")
+    debuglcf(spec_lineno, L"  %*ls%-*ls^", (int) c_num(pos),            \
+              L"", (int) (c_num(EXTENT) - c_num(pos)), L"^")
 
   for (;;) {
     obj_t *elem;
@@ -1227,7 +1227,7 @@ repeat_spec_same_data:
           }
 
           if (success) {
-            debuglcf(spec_linenum, "collect matched %s:%ld",
+            debuglcf(spec_linenum, L"collect matched %ls:%ld",
                      c_str(first(files)), data_lineno);
 
             for (iter = new_bindings; iter && iter != bindings;
@@ -1254,7 +1254,7 @@ repeat_spec_same_data:
               }
 
               debuglcf(spec_linenum,
-                       "collect advancing from line %ld to %ld",
+                       L"collect advancing from line %ld to %ld",
                        data_lineno, new_lineno);
 
               data = new_data;
@@ -1686,7 +1686,7 @@ repeat_spec_same_data:
 
               if (consp(success)) {
                 debuglcf(spec_linenum,
-                        "function matched; advancing from line %ld to %ld",
+                        L"function matched; advancing from line %ld to %ld",
                         data_lineno, c_num(cdr(success)));
                 data = car(success);
                 data_lineno = c_num(cdr(success));
@@ -1743,7 +1743,7 @@ int extract(obj_t *spec, obj_t *files, obj_t *predefined_bindings)
     }
 
     if (!success)
-      puts("false");
+      fputws(L"false", stdout);
   }
 
   return success ? 0 : EXIT_FAILURE;
