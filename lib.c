@@ -542,7 +542,7 @@ obj_t *list(obj_t *first, ...)
     do {
       *ptr++ = next;
       if (ptr == array + 32)
-        internal_error("runaway arguments in list function");
+        internal_error(L"runaway arguments in list function");
       next = va_arg(vl, obj_t *);
     } while (next != nao);
 
@@ -1533,7 +1533,7 @@ void cobj_print_op(obj_t *obj, obj_t *out)
 {
   put_cstring(out, L"#<");
   obj_print(obj->co.cls, out);
-  cformat(out, ": %p>", obj->co.handle);
+  cformat(out, L": %p>", obj->co.handle);
 }
 
 obj_t *assoc(obj_t *list, obj_t *key)
@@ -1856,7 +1856,7 @@ void obj_print(obj_t *obj, obj_t *out)
           if (iswprint(*ptr))
             put_cchar(out, *ptr);
           else
-            cformat(out, "\\%03o", (int) *ptr);
+            cformat(out, L"\\%03o", (int) *ptr);
         }
       }
       put_cchar(out, '"');
@@ -1882,19 +1882,19 @@ void obj_print(obj_t *obj, obj_t *out)
         if (iswprint(ch))
           put_cchar(out, ch);
         else
-          cformat(out, "\\%03o", ch);
+          cformat(out, L"\\%03o", ch);
       }
       put_cchar(out, '\'');
     }
     return;
   case NUM:
-    cformat(out, "%ld", c_num(obj));
+    cformat(out, L"%ld", c_num(obj));
     return;
   case SYM:
     put_string(out, symbol_name(obj));
     return;
   case FUN:
-    cformat(out, "#<function: f%d>", (int) obj->f.functype);
+    cformat(out, L"#<function: f%d>", (int) obj->f.functype);
     return;
   case VEC:
     {
@@ -1917,7 +1917,7 @@ void obj_print(obj_t *obj, obj_t *out)
     return;
   }
 
-  cformat(out, "#<garbage: %p>", (void *) obj);
+  cformat(out, L"#<garbage: %p>", (void *) obj);
 }
 
 void obj_pprint(obj_t *obj, obj_t *out)
@@ -1954,13 +1954,13 @@ void obj_pprint(obj_t *obj, obj_t *out)
     put_char(out, obj);
     return;
   case NUM:
-    cformat(out, "%ld", c_num(obj));
+    cformat(out, L"%ld", c_num(obj));
     return;
   case SYM:
     put_string(out, symbol_name(obj));
     return;
   case FUN:
-    cformat(out, "#<function: f%d>", (int) obj->f.functype);
+    cformat(out, L"#<function: f%d>", (int) obj->f.functype);
     return;
   case VEC:
     {
@@ -1983,7 +1983,7 @@ void obj_pprint(obj_t *obj, obj_t *out)
     return;
   }
 
-  cformat(out, "#<garbage: %p>", (void *) obj);
+  cformat(out, L"#<garbage: %p>", (void *) obj);
 }
 
 void init(const wchar_t *pn, void *(*oom)(void *, size_t),

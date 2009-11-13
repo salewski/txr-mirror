@@ -1,5 +1,39 @@
 2009-11-12  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Continuing wchar_t conversion. Making sure all stdio calls
+	use wide character functions so that there is no illicit
+	mixing. (But the goal is to replace this usage with txr streams).
+
+	* lib.c (list, cobj_print_op, obj_print, obj_pprint): Use
+	wide string literals and I/O functions.
+
+	* match.c (debuglcf): Converted to wchar_t.
+	(dump_bindings, match_line, match_lines, extract): Use wide string
+	literal and I/O function.
+
+	* parser.h (yyerrorf): Declaration updated.
+
+	* parser.l (yyerror): Use wide-string yyerrorf. Users of
+	yyerror continue to pass multibyte strings.
+	(yyerrorf): Converted to wchar_t.
+	(yybadtoken, grammar): Use wide string literals to call yyerrorf.
+
+	* stream.c (struct strm_ops): vcformat changed to wchar_t.
+	(stdio_vcformat, string_out_vcformat, vcformat, cformat): Likewise.
+
+	* stream.h (vformat, vcformat, cformat): Declarations updated.
+
+	* txr.c (oom_realloc_handler, help, hint, txr_main): Use wide string
+	literals and I/O functions.
+
+	* unwind.c (uw_throwcf, uw_errorcf): Converted to wchar_t.
+
+	* unwind.h (uw_throwcf, uw_errorcf): Declarations updated.
+	(internal_error, numeric_assert, range_bug_unless): Macros
+	fixed to use wide string literals.
+
+2009-11-12  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* utf8.c (utf8_from): Fix total breakage.
 	Was writing out incomplete wide characters on internal
 	state transtions while traversing a single multi-byte character.

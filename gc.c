@@ -30,6 +30,7 @@
 #include <assert.h>
 #include <setjmp.h>
 #include <dirent.h>
+#include <wchar.h>
 #include "lib.h"
 #include "stream.h"
 #include "hash.h"
@@ -321,9 +322,9 @@ static void sweep(void)
         continue;
 
       if (0 && dbg) {
-        fprintf(stderr, "%ls: finalizing: ", progname);
+        fwprintf(stderr, L"%ls: finalizing: ", progname);
         obj_print(block, std_error);
-        putc('\n', stderr);
+        putwc('\n', stderr);
       }
       finalize(block);
       block->t.type |= FREE;

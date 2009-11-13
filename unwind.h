@@ -81,8 +81,8 @@ void uw_push_catch(uw_frame_t *, obj_t *matches);
 noreturn obj_t *uw_throw(obj_t *sym, obj_t *exception);
 noreturn obj_t *uw_throwf(obj_t *sym, const wchar_t *fmt, ...);
 noreturn obj_t *uw_errorf(const wchar_t *fmt, ...);
-noreturn obj_t *uw_throwcf(obj_t *sym, const char *fmt, ...);
-noreturn obj_t *uw_errorcf(const char *fmt, ...);
+noreturn obj_t *uw_throwcf(obj_t *sym, const wchar_t *fmt, ...);
+noreturn obj_t *uw_errorcf(const wchar_t *fmt, ...);
 obj_t *uw_register_subtype(obj_t *sub, obj_t *super);
 obj_t *uw_exception_subtype_p(obj_t *sub, obj_t *sup);
 void uw_continue(uw_frame_t *curr, uw_frame_t *target);
@@ -150,7 +150,7 @@ noreturn obj_t *type_mismatch(const wchar_t *, ...);
 
 #define internal_error(STR)             \
   uw_throwcf(internal_err,              \
-             "%s:%d %s", __FILE__,      \
+             L"%s:%d %ls", __FILE__,    \
              __LINE__, STR)
 
 #define type_assert(EXPR, ARGS)         \
@@ -164,12 +164,12 @@ noreturn obj_t *type_mismatch(const wchar_t *, ...);
 
 #define numeric_assert(EXPR)            \
   if (!(EXPR))                          \
-   uw_throwcf(numeric_err, "%s",        \
-              "assertion " #EXPR        \
-              " failed")
+   uw_throwcf(numeric_err, L"%ls",      \
+              L"assertion " #EXPR       \
+              L" failed")
 
 #define range_bug_unless(EXPR)          \
   if (!(EXPR))                          \
-   uw_throwcf(range_err, "%s",          \
-              "assertion" #EXPR         \
-              " failed")
+   uw_throwcf(range_err, L"%ls",        \
+              L"assertion" #EXPR        \
+              L" failed")
