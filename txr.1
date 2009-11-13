@@ -141,8 +141,10 @@ the dimension order is: NAME_m_m+1_..._n[1][2]...[m-1].
 Specifies the query in the form of a command line argument. If this option is
 used, the query-file argument is omitted. The first non-option argument,
 if there is one, now specifies the first input source rather than a query.
-Queries specified as arguments must properly end in a newline, as if they
-were read from a text file, thus -c "@a" is not a properly formed query.
+Unlike queries read from a file, (non-empty) queries specified as arguments
+using -c do not have to properly end in a newline. Internally, txr
+adds the missing newline before parsing the query. Thus -c "@a"
+is a valid query which matches a line.
 
 Example:
 
@@ -152,8 +154,7 @@ Example:
   # comes from shell "here document" redirection.
 
   txr -c "@a
-  @b
-  " - <<!
+  @b" - <<!
   1
   2
   !
@@ -166,8 +167,7 @@ The @# comment syntax can be used for better formatting:
 
   txr -c "@#
   @a
-  @b
-  "
+  @b"
 
 .IP -f query-file
 Specifies the file from which the query is to be read, instead of the
