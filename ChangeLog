@@ -1,5 +1,27 @@
 2009-11-13  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Allow -c scripts to not have a trailing newline.
+	Test suite exercises -c now.
+
+	txr.c (txr_main): If the script specified with -c is not terminated
+	by a newline, just add a newline. On the shell command line, it's a
+	nuisance to have to add the extra line before closing the quote. 
+	It's also awkward in scripting, because the shell (or at
+	least Bash 3.0) does not produce a final terminating newline in command
+	substitution syntax like -c "$(cat file)". The last newline in
+	the file is trimmed, and has to be explicitly added in the script
+	itself, which is wrong in the case when the file is empty.
+
+	Makefile (TXR_SCRIPT_ON_CMDLINE): New target-specific variable,
+	arbitarily set for test 002.
+	(%.ok: %.txr): Rule updated to honor TXR_SCRIPT_ON_CMDLINE
+	variable, passing the script body to txr using -c rather than
+	as a file argument.
+
+	txr.1: Document -c change.
+
+2009-11-13  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Previous commit broke UTF-8 lexing, by changing the get_char
 	semantics on the input stream to wide character input.
 	Also, reading a query the command line (-c) must

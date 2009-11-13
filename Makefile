@@ -68,9 +68,14 @@ tests/001/%: TXR_ARGS := $(top_srcdir)/tests/001/data
 tests/002/%: TXR_OPTS := -DTESTDIR=$(top_srcdir)/tests/002
 tests/004/%: TXR_ARGS := -a 123 -b -c
 
+tests/002/%: TXR_SCRIPT_ON_CMDLINE := y
+
 %.ok: %.txr
 	mkdir -p $(dir $@)
-	$(PROG) $(TXR_DBG_OPTS) $(TXR_OPTS) $^ $(TXR_ARGS) > $(@:.ok=.out)
+	$(if $(TXR_SCRIPT_ON_CMDLINE),\
+	  $(PROG) $(TXR_DBG_OPTS) $(TXR_OPTS) -c "$$(cat $^)" \
+	    $(TXR_ARGS) > $(@:.ok=.out),\
+	  $(PROG) $(TXR_DBG_OPTS) $(TXR_OPTS) $^ $(TXR_ARGS) > $(@:.ok=.out))
 	diff $(^:.txr=.expected) $(@:.ok=.out)
 
 %.expected: %.txr
