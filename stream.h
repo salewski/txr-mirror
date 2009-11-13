@@ -43,6 +43,6 @@ obj_t *put_string(obj_t *stream, obj_t *string);
 obj_t *put_line(obj_t *stream, obj_t *string);
 obj_t *put_cstring(obj_t *stream, const wchar_t *);
 obj_t *put_char(obj_t *stream, obj_t *ch);
-obj_t *put_cchar(obj_t *stream, int ch);
+obj_t *put_cchar(obj_t *stream, wchar_t ch);
 
 void stream_init(void);

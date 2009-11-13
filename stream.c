@@ -24,6 +24,12 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+/*
+ * Enable code to work around getwc crash in glibc,
+ * which happens on FILE * handles from popen.
+ */
+#define BROKEN_POPEN_GETWC
+
 #include <stdio.h>
 #include <string.h>
 #include <dirent.h>
@@ -33,6 +39,7 @@
 #include <setjmp.h>
 #include <errno.h>
 #include <wchar.h>
+#include <unistd.h>
 #include "lib.h"
 #include "gc.h"
 #include "unwind.h"
@@ -44,7 +51,7 @@ obj_t *std_input, *std_output, *std_error;
 struct strm_ops {
   struct cobj_ops cobj_ops;
   obj_t *(*put_string)(obj_t *, const wchar_t *);
-  obj_t *(*put_char)(obj_t *, int);
+  obj_t *(*put_char)(obj_t *, wchar_t);
   obj_t *(*get_line)(obj_t *);
   obj_t *(*get_char)(obj_t *);
   obj_t *(*vcformat)(obj_t *, const char *fmt, va_list vl);
@@ -64,7 +71,7 @@ static void common_destroy(obj_t *obj)
 
 obj_t *common_vformat(obj_t *stream, const wchar_t *fmt, va_list vl)
 {
-  int ch;
+  wchar_t ch;
 
   for (; (ch = *fmt) != 0; fmt++) {
     obj_t *obj;
@@ -105,6 +112,9 @@ obj_t *common_vformat(obj_t *stream, const wchar_t *fmt, va_list vl)
 
 struct stdio_handle {
   FILE *f;
+#ifdef BROKEN_POPEN_GETWC
+  FILE *f_orig_pipe;
+#endif
   obj_t *descr;
 };
 
@@ -152,13 +162,14 @@ static obj_t *stdio_maybe_write_error(obj_t *stream)
 static obj_t *stdio_put_string(obj_t *stream, const wchar_t *s)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
-  return (h->f && fputws(s, h->f) != EOF) ? t : stdio_maybe_write_error(stream);
+  return (h->f && fputws(s, h->f) != -1) ? t : stdio_maybe_write_error(stream);
 }
 
-static obj_t *stdio_put_char(obj_t *stream, int ch)
+static obj_t *stdio_put_char(obj_t *stream, wchar_t ch)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
-  return (h->f && putc(ch, h->f) != EOF) ? t : stdio_maybe_write_error(stream);
+  return (h->f && putwc(ch, h->f) != WEOF) 
+         ? t : stdio_maybe_write_error(stream);
 }
 
 static wchar_t *snarf_line(FILE *in)
@@ -169,9 +180,9 @@ static wchar_t *snarf_line(FILE *in)
   wchar_t *buf = 0;
 
   for (;;) {
-    int ch = getc(in);
+    wint_t ch = getwc(in);
 
-    if (ch == EOF && buf == 0)
+    if (ch == WEOF && buf == 0)
       break;
 
     if (fill >= size) {
@@ -180,7 +191,7 @@ static wchar_t *snarf_line(FILE *in)
       size = newsize;
     }
 
-    if (ch == '\n' || ch == EOF) {
+    if (ch == '\n' || ch == WEOF) {
       buf[fill++] = 0;
       break;
     }
@@ -210,8 +221,8 @@ obj_t *stdio_get_char(obj_t *stream)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
   if (h->f) {
-    int ch = getc(h->f);
-    return (ch != EOF) ? chr(ch) : stdio_maybe_read_error(stream);
+    wint_t ch = getwc(h->f);
+    return (ch != WEOF) ? chr(ch) : stdio_maybe_read_error(stream);
   }
   return nil;
 }
@@ -262,9 +273,13 @@ static obj_t *pipe_close(obj_t *stream, obj_t *throw_on_error)
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
 
   if (h->f != 0) {
+#ifdef BROKEN_POPEN_GETWC
+    int status = (fclose(h->f), pclose(h->f_orig_pipe));
+    h->f = h->f_orig_pipe = 0;
+#else
     int status = pclose(h->f);
-
     h->f = 0;
+#endif
 
     if (status != 0 && throw_on_error) {
       if (status < 0) {
@@ -403,7 +418,7 @@ static obj_t *string_out_put_string(obj_t *stream, const wchar_t *s)
   }
 }
 
-static obj_t *string_out_put_char(obj_t *stream, int ch)
+static obj_t *string_out_put_char(obj_t *stream, wchar_t ch)
 {
   wchar_t mini[2];
   mini[0] = ch;
@@ -539,8 +554,27 @@ obj_t *make_stdio_stream(FILE *f, obj_t *descr, obj_t *input, obj_t *output)
 obj_t *make_pipe_stream(FILE *f, obj_t *descr, obj_t *input, obj_t *output)
 {
   struct stdio_handle *h = (struct stdio_handle *) chk_malloc(sizeof *h);
+#ifdef BROKEN_POPEN_GETWC
+  int dup_fd = dup(fileno(f));
+  FILE *dup_f = (dup_fd != -1) ? fdopen(dup_fd, output ? "w" : "r") : 0;
+
+  if (dup_fd == -1 || dup_f == 0) {
+    int error = errno;
+    if (dup_f != 0)
+      fclose(dup_f);
+    else if (dup_fd != -1)
+      close(dup_fd);
+    free(h);
+    uw_throwf(process_error, L"unable to create pipe ~a: ~a/~s", descr,
+              num(error), string_utf8(strerror(error)), nao);
+  }
+
+  h->f_orig_pipe = f;
+  h->f = dup_f;
+#else
   h->f = f;
   h->descr = descr;
+#endif
   return cobj((void *) h, stream_t, &pipe_ops.cobj_ops);
 }
 
@@ -712,7 +746,7 @@ obj_t *put_char(obj_t *stream, obj_t *ch)
   }
 }
 
-obj_t *put_cchar(obj_t *stream, int ch)
+obj_t *put_cchar(obj_t *stream, wchar_t ch)
 {
   type_check (stream, COBJ);
   type_assert (stream->co.cls == stream_t, (L"~a is not a stream", stream));
