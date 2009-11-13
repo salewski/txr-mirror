@@ -1,5 +1,19 @@
 2009-11-12  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* utf8.c (utf8_from): Fix total breakage.
+	Was writing out incomplete wide characters on internal
+	state transtions while traversing a single multi-byte character.
+	Also, improved handling of bad bytes close to EOF: if EOF
+	occurs in a multi-byte character, it will backtrack,
+	and skip one bad byte, etc.
+	(utf8_encode, utf8_decoder_init, utf8_decode): New functions.
+
+	* utf8.h (enum utf8_state): New enum.
+	(struct utf8_decoder, utf8_decoder_t): New struct.
+	(utf8_encode, utf8_decoder_init, utf8_decode): Declared.
+
+2009-11-12  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Documenting extended characters in man page.
 	Cleaned up some more issues related to extended characters.
 
