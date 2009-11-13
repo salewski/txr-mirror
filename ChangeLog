@@ -1,3 +1,28 @@
+2009-11-13  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Previous commit broke UTF-8 lexing, by changing the get_char
+	semantics on the input stream to wide character input.
+	Also, reading a query the command line (-c) must
+	read bytes from a UTF-8 encoding of the string.
+	We introduce a new get_byte function which can extract bytes
+	from streams which provide it.
+
+	* parser.l (YYINPUT): Call get_byte instead of get_char.
+
+	* stream.c (struct strm_ops): New function pointer, get_byte.
+	(stdio_get_byte): New function.
+	(stdio_ops, pipe_ops): Add new function.
+	(string_in_ops, string_out_ops, dir_ops): Null pointer added.
+	(struct byte_input): New struct type.
+	(byte_in_get_byte): New function.
+	(byte_in_ops): New structure.
+	(make_string_byte_input_stream, get_byte): New functions.
+
+	* stream.h (make_string_byte_input_stream, get_byte): New functions.
+
+	* txr.c (txr_main): Make a byte input stream from the command
+	line spec, rather than a string input stream.
+
 2009-11-12  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Continuing wchar_t conversion. Making sure all stdio calls

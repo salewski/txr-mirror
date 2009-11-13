@@ -48,8 +48,8 @@
     obj_t *c = nil;                               \
     int n, ch = '*';                              \
     for (n = 0; n < max_size &&                   \
-                (c = get_char(yyin_stream)) &&    \
-                (ch = c_chr(c)) != '\n'; ++n)     \
+                (c = get_byte(yyin_stream)) &&    \
+                (ch = c_num(c)) != '\n'; ++n)     \
       buf[n] = (char) ch;                         \
     if (ch == '\n')                               \
       buf[n++] = (char) ch;                       \
