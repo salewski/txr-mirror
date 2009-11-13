@@ -28,5 +28,19 @@ size_t utf8_from(wchar_t *, const unsigned char *);
 size_t utf8_to(unsigned char *, const wchar_t *);
 wchar_t *utf8_dup_from(const unsigned char *);
 unsigned char *utf8_dup_to(const wchar_t *);
+
+enum utf8_state { utf8_init, utf8_more1, utf8_more2, utf8_more3 };
+
+typedef struct utf8_decoder {
+  enum utf8_state state;
+  wchar_t wch;
+  int head, tail, back;
+  int buf[8];
+} utf8_decoder_t;
+
+int utf8_encode(wchar_t, int (*put)(int ch, void *ctx), void *ctx);
+void utf8_decoder_init(utf8_decoder_t *);
+wint_t utf8_decode(utf8_decoder_t *,int (*get)(void *ctx), void *ctx);
+
 FILE *w_fopen(const wchar_t *, const wchar_t *);
 FILE *w_popen(const wchar_t *, const wchar_t *);

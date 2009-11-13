@@ -27,31 +27,45 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <wchar.h>
 #include "lib.h"
+#include "utf8.h"
 
 size_t utf8_from(wchar_t *wdst, const unsigned char *src)
 {
   size_t nchar = 1;
-  enum { init, more1, more2, more3 } state;
+  enum utf8_state state = utf8_init;
   const char *backtrack = 0;
-  int ch;
   wchar_t wch = 0;
 
-  for (state = init; (ch = *src); src++) {
+  for (;;) {
+    int ch = *src++;
+
+    if (ch == 0) {
+      if (state == utf8_init)
+        break;
+      src = backtrack;
+      if (wdst)
+        *wdst++ = 0xdc00 | *src;
+      nchar++;
+      state = utf8_init;
+      continue;
+    }
+
     switch (state) {
-    case init:
+    case utf8_init:
       if (ch < 0x80) {
         if (wdst)
           *wdst++ = ch;
         nchar++;
       } else if (ch >= 0xc2 && ch <= 0xe0) {
-        state = more1;
+        state = utf8_more1;
         wch = (ch & 0x1f);
       } else if (ch >= 0xe0 && ch <= 0xef) {
-        state = more2;
+        state = utf8_more2;
         wch = (ch & 0xf);
       } else if (ch >= 0xf0 && ch < 0xf5) {
-        state = more3;
+        state = utf8_more3;
         wch = (ch & 0x7);
       } else {
         if (wdst)
@@ -60,31 +74,26 @@ size_t utf8_from(wchar_t *wdst, const unsigned char *src)
       }
       backtrack = src;
       break;
-    case more1:
-    case more2:
-    case more3:
+    case utf8_more1:
+    case utf8_more2:
+    case utf8_more3:
       if (ch >= 0x80 && ch < 0xc0) {
         wch <<= 6;
         wch |= (ch & 0x3f);
-        if (wdst)
-          *wdst++ = wch;
-        nchar++;
-        state--;
+        if (--state == utf8_init) {
+          if (wdst)
+            *wdst++ = wch;
+          nchar++;
+        }
       } else {
         src = backtrack;
         if (wdst)
           *wdst++ = 0xdc00 | *src;
         nchar++;
-        state = init;
+        state = utf8_init;
       }
       break;
     }
-  }
-
-  if (state != init) {
-    if (wdst)
-      *wdst++ = 0xdc00 | *backtrack;
-    nchar++;
   }
 
   if (wdst)
@@ -145,6 +154,99 @@ unsigned char *utf8_dup_to(const wchar_t *wstr)
   unsigned char *str = chk_malloc(nbyte);
   utf8_to(str, wstr);
   return str;
+}
+
+int utf8_encode(wchar_t wch, int (*put)(int ch, void *ctx), void *ctx)
+{
+  if (wch < 0x80) {
+    return put(wch, ctx);
+  } else if (wch < 0x800) {
+    return put(0xC0 | (wch >> 6), ctx) &&
+           put(0x80 | (wch & 0x3F), ctx);
+  } else if (wch < 0x10000) {
+    return put(0xE0 | (wch >> 12), ctx) &&
+           put(0x80 | ((wch >> 6) & 0x3F), ctx) &&
+           put(0x80 | (wch & 0x3F), ctx);
+  } else if (wch < 0x110000) {
+    return put(0xF0 | (wch >> 18), ctx) &&
+           put(0x80 | ((wch >> 12) & 0x3F), ctx) &&
+           put(0x80 | ((wch >> 6) & 0x3F), ctx) &&
+           put(0x80 | (wch & 0x3F), ctx);
+  }
+
+  return 0;
+}
+
+void utf8_decoder_init(utf8_decoder_t *ud)
+{
+  ud->state = utf8_init;
+  ud->wch = 0;
+  ud->head = ud->tail = ud->back = 0;
+}
+
+wint_t utf8_decode(utf8_decoder_t *ud, int (*get)(void *ctx), void *ctx)
+{
+  for (;;) {
+    int ch;
+
+    if (ud->tail != ud->head) {
+      ch = ud->buf[ud->tail];
+      ud->tail = (ud->tail + 1) % 8;
+    } else {
+      ch = get(ctx);
+      ud->buf[ud->head] = ch;
+      ud->head = ud->tail = (ud->head + 1) % 8;
+    }
+
+    if (ch == EOF) {
+      if (ud->state == utf8_init) {
+        return WEOF;
+      } else {
+        wchar_t wch = 0xdc00 | ud->buf[ud->back];
+        ud->tail = ud->back = (ud->back + 1) % 8;
+        ud->state = utf8_init;
+        return wch; 
+      }
+    }
+
+    switch (ud->state) {
+    case utf8_init:
+      if (ch < 0x80) {
+        ud->back = ud->tail;
+        return ch;
+      } else if (ch >= 0xc2 && ch <= 0xe0) {
+        ud->state = utf8_more1;
+        ud->wch = (ch & 0x1f);
+      } else if (ch >= 0xe0 && ch <= 0xef) {
+        ud->state = utf8_more2;
+        ud->wch = (ch & 0xf);
+      } else if (ch >= 0xf0 && ch < 0xf5) {
+        ud->state = utf8_more3;
+        ud->wch = (ch & 0x7);
+      } else {
+        ud->back = ud->tail;
+        return 0xdc00 | ch;
+      }
+      break;
+    case utf8_more1:
+    case utf8_more2:
+    case utf8_more3:
+      if (ch >= 0x80 && ch < 0xc0) {
+        ud->wch <<= 6;
+        ud->wch |= (ch & 0x3f);
+        if (--ud->state == utf8_init) {
+          ud->back = ud->tail;
+          return ud->wch;
+        }
+      } else {
+        wchar_t wch = 0xdc00 | ud->buf[ud->back];
+        ud->tail = ud->back = (ud->back + 1) % 8;
+        ud->state = utf8_init;
+        return wch; 
+      }
+      break;
+    }
+  }
 }
 
 FILE *w_fopen(const wchar_t *wname, const wchar_t *wmode)
