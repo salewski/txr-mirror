@@ -396,6 +396,28 @@ does not split the line into two; it's embedded into the line and
 thus cannot match anything. However, @\en may be useful in the @(cat)
 directive and in @(output).
 
+.SS International Characters
+
+.B txr
+represents text internally using wide characters, which are used to represent
+Unicode code points. The query language, as well as all data sources, are
+assumed to be in the UTF-8 encoding.  In the query language, extended
+characters can be used directly in comments, literal text, string literals,
+quasiliterals and regular expressions.  Extended characters can also be
+expressed indirectly using hexadecimal or octal escapes.
+On some platforms, wide characters may be restricted to 16 bits, so that
+.B txr
+can only work with characters in the BMP (Basic Multilingual Plane)
+subset of Unicode.
+
+If
+.B txr
+encounters an invalid bytes in the UTF-8 input, what happens depends on the
+context in which this occurs. Invalid bytes in a query are reported as errors.
+Invalid bytes in data are currently treated in an unspecified way. In
+the future, invalid bytes in data will be mapped to the Unicode codes
+U+DC00 through U+DCFF.
+
 .SS Variables
 
 Much of the query syntax consists of arbitrary text, which matches file data

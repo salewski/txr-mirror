@@ -1,5 +1,27 @@
 2009-11-12  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Documenting extended characters in man page.
+	Cleaned up some more issues related to extended characters.
+
+	* parser.l (grammar): Added error sctions for invalid UTF-8 bytes.
+
+	* stream.c (BROKEN_POPEN_GETWC): New macro. Enables workaround
+	for a glibc bug, whereby getwc blows up when applied to a FILE *
+	stream returned from a popen call.
+	(struct strm_ops): put_char function takes wchar_t.
+	(common_format): Use wchar_t rather than int.
+	(stdio_put_string): fputws returns -1, not EOF.
+	(stdio_put_char, put_cchar): Character argument changed to wchar_t.
+	Output done with putwc used instead of putc.
+	(snarf_line, stdio_get_char): Use getwc to read from the stream.
+	(pipe_close, make_pipe_stream): Implement workaround form glibc bug.
+
+	* stream.h (put_cchar): Declaration updated.
+
+	* txr.1: Added notes about international characters.
+
+2009-11-12  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Regular expression module updated to do unicode character sets.
 	Most of the changes are in the area of representing sets.
 

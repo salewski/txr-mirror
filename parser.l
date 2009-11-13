@@ -399,6 +399,11 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                           yyerrorf("bad character in directive: '%s'", yytext);
                         }
 
+<SPECIAL,NESTED>.       {
+                          yyerrorf("non-UTF-8 byte in directive: '\\x%02x'",
+                                   (unsigned char) yytext[0]);
+                        }
+
 <REGEX>[/]      {
                   yy_pop_state();
                   if (yy_top_state() == INITIAL
@@ -450,6 +455,11 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                   utf8_from(buf, yytext);
                   yylval.chr = buf[0];
                   return REGCHAR;
+                }
+
+<REGEX>.        {
+                   yyerrorf("non-UTF-8 byte in regex: '\\x%02x'",
+                            (unsigned char) yytext[0]);
                 }
 
 <INITIAL>({UONLY}|[^@\n])+        {
@@ -535,5 +545,10 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                                 yylval.chr = buf[0];
                                 return LITCHAR;
                               }
+
+<STRLIT,CHRLIT,QSILIT>. {
+                          yyerrorf("non-UTF-8 byte in literal: '\\x%02x'",
+                                   (unsigned char) yytext[0]);
+                        }
 
 %%
