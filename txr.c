@@ -343,6 +343,7 @@ static int txr_main(int argc, char **argv)
 
     if (errors)
       return EXIT_FAILURE;
+
     spec = remove_hash_bang_line(get_spec());
 
     opt_loglevel = match_loglevel;
