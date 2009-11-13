@@ -307,7 +307,7 @@ static int txr_main(int argc, char **argv)
   if (specstring) {
     spec_file = L"cmdline";
     spec_file_str = string(spec_file);
-    yyin_stream = make_string_input_stream(specstring);
+    yyin_stream = make_string_byte_input_stream(specstring);
   } else if (spec_file_str) {
     if (wcscmp(c_str(spec_file_str), L"-") != 0) {
       FILE *in = w_fopen(c_str(spec_file_str), L"r");

@@ -54,6 +54,7 @@ struct strm_ops {
   obj_t *(*put_char)(obj_t *, wchar_t);
   obj_t *(*get_line)(obj_t *);
   obj_t *(*get_char)(obj_t *);
+  obj_t *(*get_byte)(obj_t *);
   obj_t *(*vcformat)(obj_t *, const wchar_t *fmt, va_list vl);
   obj_t *(*vformat)(obj_t *, const wchar_t *fmt, va_list vl);
   obj_t *(*close)(obj_t *, obj_t *);
@@ -227,6 +228,16 @@ obj_t *stdio_get_char(obj_t *stream)
   return nil;
 }
 
+obj_t *stdio_get_byte(obj_t *stream)
+{
+  struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
+  if (h->f) {
+    int ch = getc(h->f);
+    return (ch != EOF) ? num(ch) : stdio_maybe_read_error(stream);
+  }
+  return nil;
+}
+
 obj_t *stdio_vcformat(obj_t *stream, const wchar_t *fmt, va_list vl)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
@@ -263,6 +274,7 @@ static struct strm_ops stdio_ops = {
   stdio_put_char,
   stdio_get_line,
   stdio_get_char,
+  stdio_get_byte,
   stdio_vcformat,
   common_vformat,
   stdio_close
@@ -318,6 +330,7 @@ static struct strm_ops pipe_ops = {
   stdio_put_char,
   stdio_get_line,
   stdio_get_char,
+  stdio_get_byte,
   stdio_vcformat,
   common_vformat,
   pipe_close
@@ -370,8 +383,40 @@ static struct strm_ops string_in_ops = {
   string_in_get_char,
   0,
   0,
+  0,
   0
 };
+
+struct byte_input {
+  unsigned char *buf;
+  size_t size;
+  size_t index;
+};
+
+static obj_t *byte_in_get_byte(obj_t *stream)
+{
+  struct byte_input *bi = (struct byte_input *) stream->co.handle;
+  
+  if (bi->index < bi->size)
+    return num(bi->buf[bi->index++]);
+  return nil;
+}
+
+static struct strm_ops byte_in_ops = {
+  { common_equal,
+    cobj_print_op,
+    0,
+    0 },
+  0,
+  0,
+  0,
+  0,
+  byte_in_get_byte,
+  0,
+  0,
+  0
+};
+
 
 struct string_output {
   wchar_t *buf;
@@ -483,6 +528,7 @@ static struct strm_ops string_out_ops = {
   string_out_put_char,
   0,
   0,
+  0,
   string_out_vcformat,
   common_vformat,
   0,
@@ -528,6 +574,7 @@ static struct strm_ops dir_ops = {
   0,
   0,
   0,
+  0,
   dir_close
 };
 
@@ -570,6 +617,20 @@ obj_t *make_pipe_stream(FILE *f, obj_t *descr, obj_t *input, obj_t *output)
 obj_t *make_string_input_stream(obj_t *string)
 {
   return cobj((void *) cons(string, zero), stream_t, &string_in_ops.cobj_ops);
+}
+
+obj_t *make_string_byte_input_stream(obj_t *string)
+{
+  type_assert (stringp(string), (L"~a is not a string", string));
+
+  {
+    struct byte_input *bi = (struct byte_input *) chk_malloc(sizeof *bi);
+    unsigned char *utf8 = utf8_dup_to(c_str(string));
+    bi->buf = utf8;
+    bi->size = strlen((char *) utf8);
+    bi->index = 0;
+    return cobj(bi, stream_t, &byte_in_ops.cobj_ops);
+  }
 }
 
 obj_t *make_string_output_stream(void)
@@ -643,6 +704,17 @@ obj_t *get_char(obj_t *stream)
   {
     struct strm_ops *ops = (struct strm_ops *) stream->co.ops;
     return ops->get_char ? ops->get_char(stream) : nil;
+  }
+}
+
+obj_t *get_byte(obj_t *stream)
+{
+  type_check (stream, COBJ);
+  type_assert (stream->co.cls == stream_t, (L"~a is not a stream", stream));
+
+  {
+    struct strm_ops *ops = (struct strm_ops *) stream->co.ops;
+    return ops->get_byte ? ops->get_byte(stream) : nil;
   }
 }
 
