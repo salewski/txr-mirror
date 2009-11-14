@@ -1,3 +1,28 @@
+2009-11-14  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Fixes for bug 28086. When constructing a cobj, whose associated
+	C structure contains obj_t * references, we should initialize
+	that C structure after allocating the cobj. If we initialize
+	the structure first, it may end up having the /only/ references
+	to the objects. In that case, the objects are invisible to the
+	garbage collector. The subsquent allocation of the cobj itself
+	then may invoke gc which will turn these objects into dust.
+	The result is a cobj which contains a handle structure that
+	contains references to free objects. The fix is to allocate
+	the handle structure, then the cobj which is associated with
+	that handle, and then initialize the handle, at which point it
+	is okay if the handle has the only references to some objects.
+	Care must be taken not to let a cobj escape with a partially
+	initialized handle structure, and not to trigger gc between
+	allocating the cobj, and initializing the fields.
+
+	* hash.c (make_hash): Fix cobj construction order.
+
+	* stream.c (make_stdio_stream): Fix cobj construction order.
+	(make_pipe_stream): Fix cobj construction order. Also
+	noticed and fixed a bug: h->descr field not being initialized
+	in the currently enabled BROKEN_POPEN_GETWC variant of the code.
+
 2009-11-13  Kaz Kylheku  <kkylheku@gmail.com>
 
 	New testcase which does some UTF-8 scanning, Unicode regexes,
