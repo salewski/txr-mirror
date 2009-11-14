@@ -1,5 +1,17 @@
 2009-11-13  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* lib.c (symbolp): Bugfix: function crashed on NUM argument.
+	(lazy_str): Fix for gc correctness: object from make_obj must be
+	completely intialized before any gc-triggering operation is invoked,
+	otherwise the garbage collector will be traversing an object
+	whose fields contain old garbage.
+	(lazy_str_force_upto): Off-by-one error. To force the object
+	up to index position N, means forcing up to length N+1.
+	This bug can make it look like a lazy string is much shorter
+	than it really is.
+
+2009-11-13  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Allow -c scripts to not have a trailing newline.
 	Test suite exercises -c now.
 

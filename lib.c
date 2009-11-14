@@ -1043,7 +1043,7 @@ obj_t *intern(obj_t *str)
 
 obj_t *symbolp(obj_t *sym)
 {
-  return (sym == nil || sym->s.type == SYM) ? t : nil;
+  return (sym == nil || (is_ptr(sym) && sym->s.type == SYM)) ? t : nil;
 }
 
 obj_t *func_f0(obj_t *env, obj_t *(*fun)(obj_t *))
@@ -1385,6 +1385,7 @@ obj_t *lazy_str(obj_t *lst, obj_t *term, obj_t *limit)
 {
   obj_t *obj = make_obj();
   obj->ls.type = LSTR;
+  obj->ls.opts = nil; /* Must init before calling something that can gc! */
 
   term = or2(term, string(L"\n"));
 
@@ -1428,7 +1429,7 @@ obj_t *lazy_str_force_upto(obj_t *lstr, obj_t *index)
   type_check(lstr, LSTR);
   lim = cdr(lstr->ls.opts);
 
-  while (gt(index, length_str(lstr->ls.prefix)) && lstr->ls.list &&
+  while (ge(index, length_str(lstr->ls.prefix)) && lstr->ls.list &&
          or2(nullp(lim),gt(lim,zero)))
   {
     obj_t *next = pop(&lstr->ls.list);
