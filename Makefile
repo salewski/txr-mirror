@@ -67,6 +67,7 @@ tests: $(PROG) $(TESTS)
 tests/001/%: TXR_ARGS := $(top_srcdir)/tests/001/data
 tests/002/%: TXR_OPTS := -DTESTDIR=$(top_srcdir)/tests/002
 tests/004/%: TXR_ARGS := -a 123 -b -c
+tests/005/%: TXR_ARGS := $(top_srcdir)/tests/005/data
 
 tests/002/%: TXR_SCRIPT_ON_CMDLINE := y
 

@@ -1,5 +1,19 @@
 2009-11-13  Kaz Kylheku  <kkylheku@gmail.com>
 
+	New testcase which does some UTF-8 scanning, Unicode regexes,
+	and @(freeform).
+
+	* tests/005/data: New UTF-8 file.
+
+	* tests/005/query-1.txr: Likewise.
+
+	* tests/005/query-1.expected: Likewise.
+
+	* Makefile (TXR_ARGS): New target-specific assignment to set
+	data for test case set 005.
+
+2009-11-13  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* lib.c (symbolp): Bugfix: function crashed on NUM argument.
 	(lazy_str): Fix for gc correctness: object from make_obj must be
 	completely intialized before any gc-triggering operation is invoked,
