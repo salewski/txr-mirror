@@ -582,14 +582,16 @@ static struct strm_ops dir_ops = {
 obj_t *make_stdio_stream(FILE *f, obj_t *descr, obj_t *input, obj_t *output)
 {
   struct stdio_handle *h = (struct stdio_handle *) chk_malloc(sizeof *h);
+  obj_t *stream = cobj((void *) h, stream_t, &stdio_ops.cobj_ops);
   h->f = f;
   h->descr = descr;
-  return cobj((void *) h, stream_t, &stdio_ops.cobj_ops);
+  return stream;
 }
 
 obj_t *make_pipe_stream(FILE *f, obj_t *descr, obj_t *input, obj_t *output)
 {
   struct stdio_handle *h = (struct stdio_handle *) chk_malloc(sizeof *h);
+  obj_t *stream = cobj((void *) h, stream_t, &pipe_ops.cobj_ops);
 #ifdef BROKEN_POPEN_GETWC
   int dup_fd = dup(fileno(f));
   FILE *dup_f = (dup_fd != -1) ? fdopen(dup_fd, output ? "w" : "r") : 0;
@@ -600,7 +602,9 @@ obj_t *make_pipe_stream(FILE *f, obj_t *descr, obj_t *input, obj_t *output)
       fclose(dup_f);
     else if (dup_fd != -1)
       close(dup_fd);
-    free(h);
+    /* Don't leave h uninitialized; it is gc-reachable through stream cobj. */
+    h->f = h->f_orig_pipe = 0;
+    h->descr = descr;
     uw_throwf(process_error, L"unable to create pipe ~a: ~a/~s", descr,
               num(error), string_utf8(strerror(error)), nao);
   }
@@ -609,9 +613,9 @@ obj_t *make_pipe_stream(FILE *f, obj_t *descr, obj_t *input, obj_t *output)
   h->f = dup_f;
 #else
   h->f = f;
-  h->descr = descr;
 #endif
-  return cobj((void *) h, stream_t, &pipe_ops.cobj_ops);
+  h->descr = descr;
+  return stream;
 }
 
 obj_t *make_string_input_stream(obj_t *string)

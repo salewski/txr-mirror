@@ -223,11 +223,16 @@ obj_t *make_hash(obj_t *weak_keys, obj_t *weak_vals)
   int flags = ((weak_vals != nil) << 1) | (weak_keys != nil);
   struct hash *h = (struct hash *) chk_malloc(sizeof *h);
   obj_t *mod = num(256);
+  obj_t *table = vector(mod);
+  obj_t *hash = cobj((void *) h, hash_t, &hash_ops);
+
+  vec_set_fill(table, mod);
+
   h->flags = (hash_flags_t) flags;
   h->modulus = c_num(mod);
-  h->table = vector(mod);
-  vec_set_fill(h->table, mod);
-  return cobj((void *) h, hash_t, &hash_ops);
+  h->table = table;
+
+  return hash;
 }
 
 obj_t **gethash_l(obj_t *hash, obj_t *key)
