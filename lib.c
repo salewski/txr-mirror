@@ -141,7 +141,7 @@ obj_t *type_check2(obj_t *obj, int t1, int t2)
 
 obj_t *type_check3(obj_t *obj, int t1, int t2, int t3)
 {
-  if (!is_ptr(obj) || (obj->t.type != t1 && obj->t.type != t2 
+  if (!is_ptr(obj) || (obj->t.type != t1 && obj->t.type != t2
                        && obj->t.type != t3))
     type_mismatch(L"~s is not of type ~s, ~s nor ~s", obj,
                   code2type(t1), code2type(t2), code2type(t3), nao);

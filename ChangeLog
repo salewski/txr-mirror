@@ -1,3 +1,48 @@
+2009-11-15  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Version 021.
+
+	Text is represented using wide characters now. Queries and data
+	are parsed as UTF-8, so extended characters can be directly used.
+	Numeric character escapes can go up to \x10FFF.  (More limited on
+	platforms where wchar_t is 16 bit).  Regular expressions support
+	extended characters, directly or through escapes. Regex character set
+	matches can use full Unicode range.  New test case 005 exercises
+	some of these features over Japanese text.
+
+	Failed exit status of pipes, and file close errors are exceptions now.
+
+	Bug fixed in regex character classes.
+
+	Fixed off-by-one error in lazy string implementation, which broke
+	some uses of the @(freeform) directive.
+
+	Fixed all instances of gc bug 28086: objects being prematurely
+	reclaimed.  This showed up when compiling for profiling (gcc -pg).
+
+	The --cc argument of the configure script works properly now.
+
+	Numbers and characters are unboxed types now, encoded directly in
+	the (obj_t *) value. Lowest two bits of (obj_t *) are a tag
+	distinguishing characters, integers and pointers.  The program
+	performs better from not having to cons memory when operating
+	on numbers and characters.
+
+	Discovered bug in glibc: getwc function segfaults when applied to
+	stream returned by popen. Worked around this bug. Bug is filed
+	as 10958 in glibc bugzilla.
+
+	Internals: 
+	
+	Hash tables implemented. Hash tables support weak keys and values.
+
+	* configure, hash.c, lib.c, stream.c, utf8.c: Removed trailing
+	from some lines.
+	
+	* txr.c (version): Bumped to 021. Removed trailing whitespace.
+
+	* txr.1: Bumped version to 021.
+
 2009-11-14  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Provide both char * and unsigned char * interfaces in UTF-8 module.

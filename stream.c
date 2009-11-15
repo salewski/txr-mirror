@@ -169,7 +169,7 @@ static obj_t *stdio_put_string(obj_t *stream, const wchar_t *s)
 static obj_t *stdio_put_char(obj_t *stream, wchar_t ch)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
-  return (h->f && putwc(ch, h->f) != WEOF) 
+  return (h->f && putwc(ch, h->f) != WEOF)
          ? t : stdio_maybe_write_error(stream);
 }
 
@@ -396,7 +396,7 @@ struct byte_input {
 static obj_t *byte_in_get_byte(obj_t *stream)
 {
   struct byte_input *bi = (struct byte_input *) stream->co.handle;
-  
+
   if (bi->index < bi->size)
     return num(bi->buf[bi->index++]);
   return nil;

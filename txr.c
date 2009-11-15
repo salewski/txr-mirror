@@ -42,7 +42,7 @@
 #include "utf8.h"
 #include "txr.h"
 
-const wchar_t *version = L"020";
+const wchar_t *version = L"021";
 const wchar_t *progname = L"txr";
 const wchar_t *spec_file = L"stdin";
 obj_t *spec_file_str;
@@ -307,7 +307,7 @@ static int txr_main(int argc, char **argv)
   if (specstring) {
     spec_file = L"cmdline";
     spec_file_str = string(spec_file);
-    if (gt(length_str(specstring), zero) && 
+    if (gt(length_str(specstring), zero) &&
         chr_str(specstring, minus(length_str(specstring), one)) != chr('\n'))
       specstring = cat_str(list(specstring, string(L"\n"), nao), nil);
     yyin_stream = make_string_byte_input_stream(specstring);
