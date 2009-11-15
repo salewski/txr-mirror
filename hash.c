@@ -60,7 +60,7 @@ static struct hash *reachable_weak_hashes;
 /*
  * This is is an adaptation of hashpjw, from Compilers: Principles, Techniques
  * and Tools, Aho, Sethi, Ulman, 1988. P. 436.  The register is wider by
- * a few bits, and we bring down five overflow bits instead of four. 
+ * a few bits, and we bring down five overflow bits instead of four.
  * We don't reduce the final result modulo a small prime, but leave it
  * as it is; let the hashing routines do their own reduction.
  */
@@ -100,7 +100,7 @@ static long ll_hash(obj_t *obj)
       long i, h = ll_hash(obj->v.vec[vec_fill]);
       long len = c_num(fill);
 
-      for (i = 0; i < len; i++) 
+      for (i = 0; i < len; i++)
         h = (h + ll_hash(obj->v.vec[i])) & NUM_MAX;
 
       return h;

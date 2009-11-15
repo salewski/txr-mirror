@@ -127,7 +127,7 @@ usage: $0 { variable=value }*
 
 The configure script prepares txr program for compilation and installation.
 To configure a program means to establish the values of Makefile variables
-which influence how the software is built, where it is installed. 
+which influence how the software is built, where it is installed.
 These variables can also influence what features are present in the
 software, and can determine various defaults for those behaviors which are
 dynamically configurable when the software is run.
@@ -154,7 +154,7 @@ Long-option style:
 
 No variables are required. The configure script establishes default values
 for any variables which are needed by the build, but which are not specified
-on the command line. 
+on the command line.
 
 After running $0, check that the config.make contents are sane.
 
@@ -165,7 +165,7 @@ prefix [$prefix]
 
   Specifies root directory where the software will ultimately be installed and
   run from.
-                             
+
 install_prefix [$install_prefix]
 
   Specifies an extra path prefix that will be prepended to all paths during
@@ -175,7 +175,7 @@ install_prefix [$install_prefix]
 bindir [$bindir]
 
   Specifies where the program executable will be installed.
-                             
+
 datadir [$datadir]
 
   Specifies where read-only program data is to be stored.
@@ -234,7 +234,7 @@ lang_flags [$lang_flags]
 
   Specifies compiler flags which control the C language dialect and standard
   conformance in the language and header files. The txr program is written
-  in C90, and requires POSIX and possibly other extensions. 
+  in C90, and requires POSIX and possibly other extensions.
 
 diag_flags [$diag_flags]
 
@@ -256,7 +256,7 @@ txr_dbg_opts [$txr_dbg_opts]
   of "make tests".
 !
   exit 1
-fi 
+fi
 
 #
 # Variables are read, --help wasn't given, so let's configure!
@@ -266,7 +266,7 @@ fi
 txr_ver=019
 
 #
-# The all important banner. 
+# The all important banner.
 #
 
 if [ $txr_ver ] ; then
@@ -280,7 +280,7 @@ printf "+%s+\n|%s|\n+%s+\n" $banner_box "$banner_text" $banner_box
 
 #
 # From here on in, we bail if any command fails.
-# 
+#
 
 set -e
 

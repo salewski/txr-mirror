@@ -231,7 +231,7 @@ wint_t utf8_decode(utf8_decoder_t *ud, int (*get)(void *ctx), void *ctx)
         wchar_t wch = 0xdc00 | ud->buf[ud->back];
         ud->tail = ud->back = (ud->back + 1) % 8;
         ud->state = utf8_init;
-        return wch; 
+        return wch;
       }
     }
 
@@ -268,7 +268,7 @@ wint_t utf8_decode(utf8_decoder_t *ud, int (*get)(void *ctx), void *ctx)
         wchar_t wch = 0xdc00 | ud->buf[ud->back];
         ud->tail = ud->back = (ud->back + 1) % 8;
         ud->state = utf8_init;
-        return wch; 
+        return wch;
       }
       break;
     }
