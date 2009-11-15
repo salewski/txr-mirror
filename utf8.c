@@ -31,11 +31,11 @@
 #include "lib.h"
 #include "utf8.h"
 
-size_t utf8_from(wchar_t *wdst, const unsigned char *src)
+size_t utf8_from_uc(wchar_t *wdst, const unsigned char *src)
 {
   size_t nchar = 1;
   enum utf8_state state = utf8_init;
-  const char *backtrack = 0;
+  const unsigned char *backtrack = 0;
   wchar_t wch = 0;
 
   for (;;) {
@@ -101,7 +101,12 @@ size_t utf8_from(wchar_t *wdst, const unsigned char *src)
   return nchar;
 }
 
-size_t utf8_to(unsigned char *dst, const wchar_t *wsrc)
+size_t utf8_from(wchar_t *wdst, const char *src)
+{
+   return utf8_from_uc(wdst, (const unsigned char *) src);
+}
+
+size_t utf8_to_uc(unsigned char *dst, const wchar_t *wsrc)
 {
   size_t nbyte = 1;
   wchar_t wch;
@@ -140,7 +145,20 @@ size_t utf8_to(unsigned char *dst, const wchar_t *wsrc)
   return nbyte;
 }
 
-wchar_t *utf8_dup_from(const unsigned char *str)
+size_t utf8_to(char *dst, const wchar_t *wsrc)
+{
+  return utf8_to_uc((unsigned char *) dst, wsrc);
+}
+
+wchar_t *utf8_dup_from_uc(const unsigned char *str)
+{
+  size_t nchar = utf8_from_uc(0, str);
+  wchar_t *wstr = chk_malloc(sizeof *wstr * nchar);
+  utf8_from_uc(wstr, str);
+  return wstr;
+}
+
+wchar_t *utf8_dup_from(const char *str)
 {
   size_t nchar = utf8_from(0, str);
   wchar_t *wstr = chk_malloc(sizeof *wstr * nchar);
@@ -148,10 +166,18 @@ wchar_t *utf8_dup_from(const unsigned char *str)
   return wstr;
 }
 
-unsigned char *utf8_dup_to(const wchar_t *wstr)
+unsigned char *utf8_dup_to_uc(const wchar_t *wstr)
+{
+  size_t nbyte = utf8_to_uc(0, wstr);
+  unsigned char *str = chk_malloc(nbyte);
+  utf8_to_uc(str, wstr);
+  return str;
+}
+
+char *utf8_dup_to(const wchar_t *wstr)
 {
   size_t nbyte = utf8_to(0, wstr);
-  unsigned char *str = chk_malloc(nbyte);
+  char *str = chk_malloc(nbyte);
   utf8_to(str, wstr);
   return str;
 }

@@ -24,10 +24,14 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-size_t utf8_from(wchar_t *, const unsigned char *);
-size_t utf8_to(unsigned char *, const wchar_t *);
-wchar_t *utf8_dup_from(const unsigned char *);
-unsigned char *utf8_dup_to(const wchar_t *);
+size_t utf8_from_uc(wchar_t *, const unsigned char *);
+size_t utf8_from(wchar_t *, const char *);
+size_t utf8_to_uc(unsigned char *, const wchar_t *);
+size_t utf8_to(char *, const wchar_t *);
+wchar_t *utf8_dup_from_uc(const unsigned char *);
+wchar_t *utf8_dup_from(const char *);
+char *utf8_dup_to(const wchar_t *);
+unsigned char *utf8_dup_to_uc(const wchar_t *);
 
 enum utf8_state { utf8_init, utf8_more1, utf8_more2, utf8_more3 };
 
