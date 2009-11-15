@@ -1,5 +1,9 @@
 2009-11-14  Kaz Kylheku  <kkylheku@gmail.com>
 
+	configure (cc): Compute variable properly.
+
+2009-11-14  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Fixes for bug 28086. When constructing a cobj, whose associated
 	C structure contains obj_t * references, we should initialize
 	that C structure after allocating the cobj. If we initialize
