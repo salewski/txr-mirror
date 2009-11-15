@@ -3,6 +3,8 @@
 	* Makefile (depend): Marked phony and $(PROG) prerequisite dropped. 
 	(clean, distclean, tests, install): Phony targets marked phony.
 
+	* dep.mk: Regenerated.
+
 2009-11-14  Kaz Kylheku  <kkylheku@gmail.com>
 
 	* configure (cc): Compute variable properly.
