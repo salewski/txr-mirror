@@ -1,5 +1,21 @@
 2009-11-14  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Provide both char * and unsigned char * interfaces in UTF-8 module.
+	Fix unsigned and plan char * mixing.
+
+	* utf8.c (utf8_from_uc, utf8_to_uc, utf8_dup_from_uc,
+	utf8_dup_to_uc): New functions.
+	(utf8_from): Fix type of backtrack pointer to unsigned char *.
+
+	* utf8.h (utf8_from_uc, utf8_to_uc, utf8_dup_from_uc,
+	utf8_dup_to_uc): Declared.
+
+	* lib.c (string_utf8): Changed to take char * argument.
+	
+	* lib.h (string_utf8): Declaration updated.
+
+2009-11-14  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* Makefile (depend): Marked phony and $(PROG) prerequisite dropped. 
 	(clean, distclean, tests, install): Phony targets marked phony.
 

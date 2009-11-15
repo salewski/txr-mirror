@@ -701,7 +701,7 @@ obj_t *string(const wchar_t *str)
   return obj;
 }
 
-obj_t *string_utf8(const unsigned char *str)
+obj_t *string_utf8(const char *str)
 {
   obj_t *obj = make_obj();
   obj->st.type = STR;

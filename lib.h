@@ -240,7 +240,7 @@ obj_t *max2(obj_t *anum, obj_t *bnum);
 obj_t *min2(obj_t *anum, obj_t *bnum);
 obj_t *string_own(wchar_t *str);
 obj_t *string(const wchar_t *str);
-obj_t *string_utf8(const unsigned char *str);
+obj_t *string_utf8(const char *str);
 obj_t *mkstring(obj_t *len, obj_t *ch);
 obj_t *mkustring(obj_t *len); /* must initialize immediately with init_str! */
 obj_t *init_str(obj_t *str, const wchar_t *);

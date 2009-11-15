@@ -629,7 +629,7 @@ obj_t *make_string_byte_input_stream(obj_t *string)
 
   {
     struct byte_input *bi = (struct byte_input *) chk_malloc(sizeof *bi);
-    unsigned char *utf8 = utf8_dup_to(c_str(string));
+    unsigned char *utf8 = utf8_dup_to_uc(c_str(string));
     bi->buf = utf8;
     bi->size = strlen((char *) utf8);
     bi->index = 0;
