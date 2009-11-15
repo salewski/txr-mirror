@@ -1,6 +1,11 @@
 2009-11-14  Kaz Kylheku  <kkylheku@gmail.com>
 
-	configure (cc): Compute variable properly.
+	* Makefile (depend): Marked phony and $(PROG) prerequisite dropped. 
+	(clean, distclean, tests, install): Phony targets marked phony.
+
+2009-11-14  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* configure (cc): Compute variable properly.
 
 2009-11-14  Kaz Kylheku  <kkylheku@gmail.com>
 

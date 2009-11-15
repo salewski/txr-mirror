@@ -48,19 +48,23 @@ lex.yy.c: parser.l
 y.tab.c y.tab.h: parser.y
 	if $(YACC) -v -d $< ; then true ; else rm $@ ; false ; fi
 
+.PHONY: clean
 clean:
 	rm -f $(PROG) $(OBJS) \
 	  y.tab.c lex.yy.c y.tab.h y.output $(TESTS:.ok=.out)
 
+.PHONY: distclean
 distclean: clean
 	rm -f config.make config.log
 
-depend: $(PROG)
+.PHONY: depend
+depend:
 	$(PROG) $(top_srcdir)/depend.txr > $(top_srcdir)/dep.mk
 
 TESTS := $(patsubst $(top_srcdir)/%.txr,./%.ok,\
                     $(shell find $(top_srcdir)/tests -name '*.txr' | sort))
 
+.PHONY: tests
 tests: $(PROG) $(TESTS)
 	@echo "** tests passed!"
 
@@ -82,6 +86,7 @@ tests/002/%: TXR_SCRIPT_ON_CMDLINE := y
 %.expected: %.txr
 	$(PROG) $(TXR_OPTS) $^ $(TXR_ARGS) > $@
 
+.PHONY: install
 install: $(PROG)
 	mkdir -p $(install_prefix)$(bindir)
 	mkdir -p $(install_prefix)$(datadir)
