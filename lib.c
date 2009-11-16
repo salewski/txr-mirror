@@ -967,9 +967,8 @@ obj_t *string_lt(obj_t *astr, obj_t *bstr)
   return cmp == -1 ? t : nil;
 }
 
-obj_t *chr(int ch)
+obj_t *chr(wchar_t ch)
 {
-  numeric_assert (ch >= NUM_MIN && ch <= NUM_MAX);
   return (obj_t *) ((ch << TAG_SHIFT) | TAG_CHR);
 }
 
@@ -978,11 +977,11 @@ obj_t *chrp(obj_t *chr)
   return (is_chr(num)) ? t : nil;
 }
 
-int c_chr(obj_t *chr)
+wchar_t c_chr(obj_t *chr)
 {
   if (!is_chr(chr))
     type_mismatch(L"~s is not a character", chr, nao);
-  return ((int) chr) >> TAG_SHIFT;
+  return ((wchar_t) chr) >> TAG_SHIFT;
 }
 
 obj_t *chr_str(obj_t *str, obj_t *index)
