@@ -25,15 +25,17 @@
  */
 
 #define TAG_SHIFT 2
-#define TAG_MASK ((1 << TAG_SHIFT) - 1)
+#define TAG_MASK ((1L << TAG_SHIFT) - 1)
 #define TAG_PTR 0
 #define TAG_NUM 1
 #define TAG_CHR 2
+#define TAG_LIT 3
 #define NUM_MAX (LONG_MAX/4)
 #define NUM_MIN (LONG_MIN/4)
 
 typedef enum type {
-  NUM = TAG_NUM, CHR = TAG_CHR, CONS, STR, SYM, FUN, VEC, LCONS, LSTR, COBJ
+  NUM = TAG_NUM, CHR = TAG_CHR, LIT = TAG_LIT, CONS,
+  STR, SYM, FUN, VEC, LCONS, LSTR, COBJ
 } type_t;
 
 typedef enum functype
@@ -47,7 +49,10 @@ typedef enum functype
 #define is_ptr(obj) ((obj) && (tag(obj) == TAG_PTR))
 #define is_num(obj) (tag(obj) == TAG_NUM)
 #define is_chr(obj) (tag(obj) == TAG_CHR)
-#define type(obj) (tag(obj) ? ((type_t) tag(obj)) : obj->t.type)
+#define is_lit(obj) (tag(obj) == TAG_LIT)
+#define type(obj) (tag(obj) ? ((type_t) tag(obj)) : (obj)->t.type)
+#define lit(strlit) ((obj_t *) ((long) (L ## strlit) | TAG_LIT))
+#define litptr(obj) ((wchar_t *) ((long) obj & ~TAG_MASK))
 
 typedef union obj obj_t;
 

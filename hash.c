@@ -82,6 +82,8 @@ static long ll_hash(obj_t *obj)
     return NUM_MAX;
 
   switch (type(obj)) {
+  case LIT:
+    return hash_c_str(litptr(obj));
   case CONS:
     return (ll_hash(obj->c.car) + ll_hash(obj->c.cdr)) & NUM_MAX;
   case STR:

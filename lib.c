@@ -89,6 +89,7 @@ static obj_t *code2type(int code)
   switch ((type_t) code) {
   case CONS: return cons_t;
   case STR: return str_t;
+  case LIT: return str_t;
   case CHR: return chr_t;
   case NUM: return num_t;
   case SYM: return sym_t;
@@ -407,19 +408,20 @@ long c_num(obj_t *num);
 
 obj_t *equal(obj_t *left, obj_t *right)
 {
-  /* Bitwise equality is equality.
-     The object nil, and types CHR and NUM
-     need no further test. */
+  /* Bitwise equality is equality, period. */
   if (left == right)
     return t;
 
-  /* If the objects are not bitwise equal,
-     and any one of them is not a pointer,
-     then they can't be equal. */
-  if (!is_ptr(left) || !is_ptr(right))
+  /* Objects are not bitwise equal. If either
+     is nil, then they are not equal,
+     since nil uses bitwise equality. */
+  if (left == nil || right == nil)
     return nil;
 
   switch (type(left)) {
+  case CHR:
+  case NUM:
+    return nil;
   case CONS:
   case LCONS:
     if ((type(right) == CONS || type(right) == LCONS) &&
@@ -429,10 +431,24 @@ obj_t *equal(obj_t *left, obj_t *right)
       return t;
     }
     return nil;
+  case LIT:
+    switch (type(right)) {
+    case LIT:
+      return wcscmp(litptr(left), litptr(right)) == 0 ? t : nil;
+    case STR:
+      return wcscmp(litptr(left), right->st.str) == 0 ? t : nil;
+    case LSTR:
+      lazy_str_force(right);
+      return equal(left, right->ls.prefix);
+    }
+    return nil;
   case STR:
-    if (type(right) == STR)
+    switch (type(right)) {
+    case LIT:
+      return wcscmp(left->st.str, litptr(right)) == 0 ? t : nil;
+    case STR:
       return wcscmp(left->st.str, right->st.str) == 0 ? t : nil;
-    if (type(right) == LSTR) {
+    case LSTR:
       lazy_str_force(right);
       return equal(left, right->ls.prefix);
     }
@@ -474,7 +490,10 @@ obj_t *equal(obj_t *left, obj_t *right)
     }
     return nil;
   case LSTR:
-    if (type(right) == STR || type(right) == LSTR) {
+    switch (type(right)) {
+    case LIT:
+    case STR:
+    case LSTR:
       lazy_str_force(left);
       return equal(left->ls.prefix, right);
     }
@@ -741,12 +760,18 @@ obj_t *copy_str(obj_t *str)
 
 obj_t *stringp(obj_t *str)
 {
-  if (!is_ptr(str)) {
-    return nil;
-  } else {
-    type_t type = type(str);
-    return if2(type == STR || type == LSTR, t);
+  switch (tag(str)) {
+  case TAG_LIT:
+    return t;
+  case TAG_PTR:
+    if (str == nil)
+      return nil;
+    switch (type(str)) {
+    case STR: case LSTR:
+      return t;
+    }
   }
+  return nil;
 }
 
 obj_t *lazy_stringp(obj_t *str)
@@ -756,20 +781,27 @@ obj_t *lazy_stringp(obj_t *str)
 
 obj_t *length_str(obj_t *str)
 {
-  type_check2 (str, STR, LSTR);
+  if (tag(str) == TAG_LIT) {
+    return num(wcslen(c_str(str)));
+  } else {
+    type_check2 (str, STR, LSTR);
 
-  if (str->ls.type == LSTR) {
-    lazy_str_force(str);
-    return length_str(str->ls.prefix);
+    if (str->ls.type == LSTR) {
+      lazy_str_force(str);
+      return length_str(str->ls.prefix);
+    }
+
+    if (!str->st.len)
+      str->st.len = num(wcslen(str->st.str));
+    return str->st.len;
   }
-
-  if (!str->st.len)
-    str->st.len = num(wcslen(str->st.str));
-  return str->st.len;
 }
 
 const wchar_t *c_str(obj_t *obj)
 {
+  if (tag(obj) == TAG_LIT)
+    return litptr(obj);
+
   type_check3(obj, STR, SYM, LSTR);
 
   switch (obj->t.type) {
@@ -1719,77 +1751,77 @@ static void obj_init(void)
           &identity_f, &prog_string,
           (obj_t **) 0);
 
-  nil_string = string(L"nil");
+  nil_string = lit("nil");
 
-  null = intern(string(L"null"));
-  t = intern(string(L"t"));
-  cons_t = intern(string(L"cons"));
-  str_t = intern(string(L"str"));
-  chr_t = intern(string(L"chr"));
-  num_t = intern(string(L"num"));
-  sym_t = intern(string(L"sym"));
-  fun_t = intern(string(L"fun"));
-  vec_t = intern(string(L"vec"));
-  stream_t = intern(string(L"stream"));
-  hash_t = intern(string(L"hash"));
-  lcons_t = intern(string(L"lcons"));
-  lstr_t = intern(string(L"lstr"));
-  cobj_t = intern(string(L"cobj"));
-  var = intern(string(L"$var"));
-  regex = intern(string(L"$regex"));
-  set = intern(string(L"set"));
-  cset = intern(string(L"cset"));
-  wild = intern(string(L"wild"));
-  oneplus = intern(string(L"1+"));
-  zeroplus = intern(string(L"0+"));
-  optional = intern(string(L"?"));
-  compound = intern(string(L"compound"));
-  or = intern(string(L"or"));
-  quasi = intern(string(L"$quasi"));
-  skip = intern(string(L"skip"));
-  trailer = intern(string(L"trailer"));
-  block = intern(string(L"block"));
-  next = intern(string(L"next"));
-  freeform = intern(string(L"freeform"));
-  fail = intern(string(L"fail"));
-  accept = intern(string(L"accept"));
-  all = intern(string(L"all"));
-  some = intern(string(L"some"));
-  none = intern(string(L"none"));
-  maybe = intern(string(L"maybe"));
-  cases = intern(string(L"cases"));
-  collect = intern(string(L"collect"));
-  until = intern(string(L"until"));
-  coll = intern(string(L"coll"));
-  define = intern(string(L"define"));
-  output = intern(string(L"output"));
-  single = intern(string(L"single"));
-  frst = intern(string(L"first"));
-  lst = intern(string(L"last"));
-  empty = intern(string(L"empty"));
-  repeat = intern(string(L"repeat"));
-  rep = intern(string(L"rep"));
-  flattn = intern(string(L"flatten"));
-  forget = intern(string(L"forget"));
-  local = intern(string(L"local"));
-  mrge = intern(string(L"merge"));
-  bind = intern(string(L"bind"));
-  cat = intern(string(L"cat"));
-  args = intern(string(L"args"));
-  try = intern(string(L"try"));
-  catch = intern(string(L"catch"));
-  finally = intern(string(L"finally"));
-  nothrow = intern(string(L"nothrow"));
-  throw = intern(string(L"throw"));
-  defex = intern(string(L"defex"));
-  error = intern(string(L"error"));
-  type_error = intern(string(L"type_error"));
-  internal_err = intern(string(L"internal_error"));
-  numeric_err = intern(string(L"numeric_error"));
-  range_err = intern(string(L"range_error"));
-  query_error = intern(string(L"query_error"));
-  file_error = intern(string(L"file_error"));
-  process_error = intern(string(L"process_error"));
+  null = intern(lit("null"));
+  t = intern(lit("t"));
+  cons_t = intern(lit("cons"));
+  str_t = intern(lit("str"));
+  chr_t = intern(lit("chr"));
+  num_t = intern(lit("num"));
+  sym_t = intern(lit("sym"));
+  fun_t = intern(lit("fun"));
+  vec_t = intern(lit("vec"));
+  stream_t = intern(lit("stream"));
+  hash_t = intern(lit("hash"));
+  lcons_t = intern(lit("lcons"));
+  lstr_t = intern(lit("lstr"));
+  cobj_t = intern(lit("cobj"));
+  var = intern(lit("$var"));
+  regex = intern(lit("$regex"));
+  set = intern(lit("set"));
+  cset = intern(lit("cset"));
+  wild = intern(lit("wild"));
+  oneplus = intern(lit("1+"));
+  zeroplus = intern(lit("0+"));
+  optional = intern(lit("?"));
+  compound = intern(lit("compound"));
+  or = intern(lit("or"));
+  quasi = intern(lit("$quasi"));
+  skip = intern(lit("skip"));
+  trailer = intern(lit("trailer"));
+  block = intern(lit("block"));
+  next = intern(lit("next"));
+  freeform = intern(lit("freeform"));
+  fail = intern(lit("fail"));
+  accept = intern(lit("accept"));
+  all = intern(lit("all"));
+  some = intern(lit("some"));
+  none = intern(lit("none"));
+  maybe = intern(lit("maybe"));
+  cases = intern(lit("cases"));
+  collect = intern(lit("collect"));
+  until = intern(lit("until"));
+  coll = intern(lit("coll"));
+  define = intern(lit("define"));
+  output = intern(lit("output"));
+  single = intern(lit("single"));
+  frst = intern(lit("first"));
+  lst = intern(lit("last"));
+  empty = intern(lit("empty"));
+  repeat = intern(lit("repeat"));
+  rep = intern(lit("rep"));
+  flattn = intern(lit("flatten"));
+  forget = intern(lit("forget"));
+  local = intern(lit("local"));
+  mrge = intern(lit("merge"));
+  bind = intern(lit("bind"));
+  cat = intern(lit("cat"));
+  args = intern(lit("args"));
+  try = intern(lit("try"));
+  catch = intern(lit("catch"));
+  finally = intern(lit("finally"));
+  nothrow = intern(lit("nothrow"));
+  throw = intern(lit("throw"));
+  defex = intern(lit("defex"));
+  error = intern(lit("error"));
+  type_error = intern(lit("type_error"));
+  internal_err = intern(lit("internal_error"));
+  numeric_err = intern(lit("numeric_error"));
+  range_err = intern(lit("range_error"));
+  query_error = intern(lit("query_error"));
+  file_error = intern(lit("file_error"));
+  process_error = intern(lit("process_error"));
 
   interned_syms = cons(nil, interned_syms);
 
@@ -1800,7 +1832,7 @@ static void obj_init(void)
   maxint = num(NUM_MAX);
   minint = num(NUM_MIN);
 
-  null_string = string(L"");
+  null_string = lit("");
 
   null_list = cons(nil, nil);
 
@@ -1837,10 +1869,11 @@ void obj_print(obj_t *obj, obj_t *out)
     }
     return;
   case STR:
+  case LIT:
     {
       const wchar_t *ptr;
       put_cchar(out, '"');
-      for (ptr = obj->st.str; *ptr; ptr++) {
+      for (ptr = c_str(obj); *ptr; ptr++) {
         switch (*ptr) {
         case L'\a': put_cstring(out, L"\\a"); break;
         case L'\b': put_cstring(out, L"\\b"); break;

@@ -1,5 +1,25 @@
 2009-11-15  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Use the 11 tag bit pattern to denote a new type: LIT. This is a
+	pointer to a C static string, intended for literals. We can now
+	treat literal strings as light-weight objects.
+
+	* lib.h (TAG_MASK): Ensure the constant expr has long type.
+	(TAG_LIT): New macro.
+	(enum type, type_t): New enum member, LIT.
+
+	* gc.c (finalize, mark_obj): Handle LIT type.
+
+	* hash.c (ll_hash): Likewise.
+
+	* lib.c (code2type, equal, stringp, length_str, c_str,
+	obj_print): Likewise.
+	(obj_init): Intern symbols using literal strings.
+	(type): Parentheses added to macro expansion.
+	(is_lit, lit, litptr): New macros.
+
+2009-11-15  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* lib.c (chr): Take wchar_t argument, not int. Dropped range check.
 	(c_chr): Return wchar_t not int.
 
