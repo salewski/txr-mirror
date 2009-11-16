@@ -1,5 +1,12 @@
 2009-11-15  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* lib.c (chr): Take wchar_t argument, not int. Dropped range check.
+	(c_chr): Return wchar_t not int.
+
+	* lib.h (chr, c_chr): Declarations updated.
+	
+2009-11-15  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Version 021.
 
 	Text is represented using wide characters now. Queries and data
