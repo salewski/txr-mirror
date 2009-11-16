@@ -158,6 +158,7 @@ static void finalize(obj_t *obj)
     return;
   case CHR:
   case NUM:
+  case LIT:
   case SYM:
   case FUN:
     return;
@@ -211,6 +212,7 @@ tail_call:
     mark_obj_tail(obj->st.len);
   case CHR:
   case NUM:
+  case LIT:
     return;
   case SYM:
     mark_obj(obj->s.name);
