@@ -716,7 +716,7 @@ nfa_t nfa_compile_regex(obj_t *items)
   }
 }
 
-int nfa_all_states(nfa_state_t **inout, int num, int visited)
+int nfa_all_states(nfa_state_t **inout, int num, unsigned visited)
 {
   int i;
 
@@ -795,7 +795,7 @@ void nfa_free(nfa_t nfa)
  * (Transitions that don't do not consume and match an input character).
  */
 int nfa_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
-                nfa_state_t **out, int visited, int *accept)
+                nfa_state_t **out, unsigned visited, int *accept)
 {
   int i, nout = 0;
   int stackp = 0;

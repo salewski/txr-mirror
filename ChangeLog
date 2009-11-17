@@ -1,5 +1,10 @@
 2009-11-17  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* regex.c (nfa_all_states, nfa_closure): visited parameter
+	should be unsigned.
+
+2009-11-17  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Fixes for compliance to C89.
 
 	* lib.c (init): Do not define variable after statements.
