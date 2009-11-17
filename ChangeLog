@@ -1,5 +1,31 @@
 2009-11-17  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Fixes for compliance to C89.
+
+	* lib.c (init): Do not define variable after statements.
+
+	* match.c (match_files): Likewise.
+
+	* regex.h (struct any_char_set, struct small_char_set, struct
+	displaced_char_set, struct large_char_set,
+	struct xlarge_char_set): do not use enum bitfields, which is a GCC
+	extension.
+
+	* unwind.h (enum uw_frtype, uw_frtype_t): Combine into one
+	declartion, eliminating forward enum reference which is a GCC
+	extension.
+	(uw_block_begin): Add dummy typedef to macro so that it requires
+	a following semicolon. Without this, if the macro use is followed
+	by a semicolon, that semicolon looks like a null statement. A
+	subsequent declaration thus follows a statement and is not conforming
+	to C89. Also added an opening do.
+	(uw_block_end): Add while(0) to match do in uw_block_begin.
+	(uw_env_begin, uw_env_end): Add do/while(0) to macro pair, so
+	uw_env_end reuqires a semicolon.
+	(uw_catch_begin, uw_catch_end): Likewise.
+
+2009-11-17  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Version 022
 
 	Fix for bug 28033: crash in string output stream.

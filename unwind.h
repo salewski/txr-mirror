@@ -31,9 +31,7 @@
 #endif
 
 typedef union uw_frame uw_frame_t;
-typedef enum uw_frtype uw_frtype_t;
-
-enum uw_frtype { UW_BLOCK, UW_ENV, UW_CATCH };
+typedef enum uw_frtype { UW_BLOCK, UW_ENV, UW_CATCH } uw_frtype_t;
 
 struct uw_common {
   uw_frame_t *up;
@@ -91,32 +89,34 @@ noreturn obj_t *type_mismatch(obj_t *, ...);
 
 #define uw_block_begin(TAG, RESULTVAR)  \
   obj_t *RESULTVAR = nil;               \
+  do                                    \
   {                                     \
     uw_frame_t uw_blk;                  \
     uw_push_block(&uw_blk, TAG);        \
     if (setjmp(uw_blk.bl.jb)) {         \
       RESULTVAR = uw_blk.bl.result;     \
-    } else  {
+    } else {                            \
+      typedef int uw_d_u_m_m_y
 
 #define uw_block_end                    \
     }                                   \
     uw_pop_frame(&uw_blk);              \
-  }
+  } while (0)
 
 #define uw_env_begin                    \
-  {                                     \
+  do {                                  \
     uw_frame_t uw_env;                  \
     uw_push_env(&uw_env)
 
 #define uw_env_end                      \
     uw_pop_frame(&uw_env);              \
-  }
+  } while (0)
 
 #define uw_catch_begin(MATCHES, SYMVAR, \
                        EXCVAR)          \
   obj_t *SYMVAR = nil;                  \
   obj_t *EXCVAR = nil;                  \
-  {                                     \
+  do {                                  \
     uw_frame_t uw_catch;                \
     uw_push_catch(&uw_catch, MATCHES);  \
     switch (setjmp(uw_catch.ca.jb)) {   \
@@ -129,7 +129,7 @@ noreturn obj_t *type_mismatch(obj_t *, ...);
       break;                            \
     case 2:                             \
       EXCVAR = uw_catch.ca.exception;   \
-      SYMVAR = uw_catch.ca.sym;         \
+      SYMVAR = uw_catch.ca.sym;
 
 #define uw_unwind                       \
       break;                            \
@@ -144,7 +144,7 @@ noreturn obj_t *type_mismatch(obj_t *, ...);
       uw_continue(&uw_catch,            \
                   uw_catch.ca.cont);    \
     uw_pop_frame(&uw_catch);            \
-  }
+  } while(0)
 
 #define internal_error(STR)             \
   do {                                  \

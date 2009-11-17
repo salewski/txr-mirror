@@ -2023,8 +2023,9 @@ void obj_pprint(obj_t *obj, obj_t *out)
 void init(const wchar_t *pn, void *(*oom)(void *, size_t),
           obj_t **stack_bottom)
 {
+  int gc_save;
   progname = pn;
-  int gc_save = gc_state(0);
+  gc_save = gc_state(0);
 
   oom_realloc = oom;
   gc_init(stack_bottom);
