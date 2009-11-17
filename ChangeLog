@@ -1,3 +1,21 @@
+2009-11-17  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Version 022
+
+	Fix for bug 28033: crash in string output stream.
+	(Used by exception handling).
+
+	New kernel object type introduced which allows C string literals
+	to be used as first-class objects.
+
+	Use of printf-like C formatting eliminated from the code base.
+
+	The dependency on C99 wide character I/O is now minimized.
+
+	* txr.c (version): Bumped to 022.
+
+	* txr.1: Bumped version to 022.
+
 2009-11-16  Kaz Kylheku  <kkylheku@gmail.com>
 
 	* Makefile (rebuild): New target. Tired of doing make clean; make.
