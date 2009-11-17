@@ -1,5 +1,9 @@
 2009-11-17  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* lib.c (chrp): Fix broken is_chr(num) call.
+
+2009-11-17  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* regex.c (nfa_all_states, nfa_closure): visited parameter
 	should be unsigned.
 
