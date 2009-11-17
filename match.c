@@ -617,7 +617,7 @@ typedef struct fpip {
 
 fpip_t complex_open(obj_t *name, obj_t *output)
 {
-  fpip_t ret = { 0 };
+  fpip_t ret = { 0, 0 };
 
   const wchar_t *namestr = c_str(name);
   long len = c_num(length_str(name));

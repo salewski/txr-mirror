@@ -1,5 +1,18 @@
 2009-11-17  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Warning fixes.
+
+	* hash.c (hash_ops): Add missing initializer.
+
+	* match.c (complex_open): Add missing intializer to ret variable.
+
+	* regex.c (regex_obj_ops): Add missing initializer.
+
+	* stream.c (stdio_ops, pipe_ops, string_in_ops, byte_in_ops,
+	string_out_ops, dir_ops): Likewise.
+
+2009-11-17  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* lib.c (chrp): Fix broken is_chr(num) call.
 
 2009-11-17  Kaz Kylheku  <kkylheku@gmail.com>

@@ -1049,7 +1049,7 @@ static void regex_destroy(obj_t *regex)
 }
 
 static struct cobj_ops regex_obj_ops = {
-  regex_equal, cobj_print_op, regex_destroy, 0,
+  regex_equal, cobj_print_op, regex_destroy, 0, 0
 };
 
 obj_t *regex_compile(obj_t *regex_sexp)
