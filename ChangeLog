@@ -1,5 +1,9 @@
 2009-11-16  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* Makefile (rebuild): New target. Tired of doing make clean; make.
+
+2009-11-16  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Big round of changes to switch the code base to use the stream
 	abstraction instead of directly using C standard I/O,
 	to eliminate most uses of C formatted I/O,
