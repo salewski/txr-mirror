@@ -32,5 +32,5 @@ extern const wchar_t *spec_file;
 extern obj_t *spec_file_str;
 int yyparse(void);
 obj_t *get_spec(void);
-void yyerrorf(const wchar_t *s, ...);
+void yyerrorf(obj_t *s, ...);
 void yybadtoken(int tok, const char *context);

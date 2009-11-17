@@ -37,14 +37,10 @@ obj_t *close_stream(obj_t *stream, obj_t *throw_on_error);
 obj_t *get_line(obj_t *);
 obj_t *get_char(obj_t *);
 obj_t *get_byte(obj_t *);
-obj_t *vformat(obj_t *stream, const wchar_t *string, va_list);
-obj_t *vcformat(obj_t *stream, const wchar_t *string, va_list);
-obj_t *format(obj_t *stream, const wchar_t *string, ...);
-obj_t *cformat(obj_t *stream, const wchar_t *string, ...);
+obj_t *vformat(obj_t *stream, obj_t *string, va_list);
+obj_t *format(obj_t *stream, obj_t *string, ...);
 obj_t *put_string(obj_t *stream, obj_t *string);
 obj_t *put_line(obj_t *stream, obj_t *string);
-obj_t *put_cstring(obj_t *stream, const wchar_t *);
 obj_t *put_char(obj_t *stream, obj_t *ch);
-obj_t *put_cchar(obj_t *stream, wchar_t ch);
 
 void stream_init(void);

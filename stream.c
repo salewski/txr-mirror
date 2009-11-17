@@ -50,13 +50,11 @@ obj_t *std_input, *std_output, *std_error;
 
 struct strm_ops {
   struct cobj_ops cobj_ops;
-  obj_t *(*put_string)(obj_t *, const wchar_t *);
-  obj_t *(*put_char)(obj_t *, wchar_t);
+  obj_t *(*put_string)(obj_t *, obj_t *);
+  obj_t *(*put_char)(obj_t *, obj_t *);
   obj_t *(*get_line)(obj_t *);
   obj_t *(*get_char)(obj_t *);
   obj_t *(*get_byte)(obj_t *);
-  obj_t *(*vcformat)(obj_t *, const wchar_t *fmt, va_list vl);
-  obj_t *(*vformat)(obj_t *, const wchar_t *fmt, va_list vl);
   obj_t *(*close)(obj_t *, obj_t *);
 };
 
@@ -70,47 +68,6 @@ static void common_destroy(obj_t *obj)
   (void) close_stream(obj, nil);
 }
 
-obj_t *common_vformat(obj_t *stream, const wchar_t *fmt, va_list vl)
-{
-  wchar_t ch;
-
-  for (; (ch = *fmt) != 0; fmt++) {
-    obj_t *obj;
-
-    if (ch == '~') {
-      ch = *++fmt;
-      if (ch == 0)
-        abort();
-      switch (ch) {
-      case '~':
-        put_cchar(stream, ch);
-        continue;
-      case 'a':
-        obj = va_arg(vl, obj_t *);
-        if (obj == nao)
-          abort();
-        obj_pprint(obj, stream);
-        continue;
-      case 's':
-        obj = va_arg(vl, obj_t *);
-        if (obj == nao)
-          abort();
-        obj_print(obj, stream);
-        continue;
-      default:
-        abort();
-      }
-      continue;
-    }
-
-    put_cchar(stream, ch);
-  }
-
-  if (va_arg(vl, obj_t *) != nao)
-    internal_error("unterminated format argument list");
-  return t;
-}
-
 struct stdio_handle {
   FILE *f;
 #ifdef BROKEN_POPEN_GETWC
@@ -122,7 +79,7 @@ struct stdio_handle {
 void stdio_stream_print(obj_t *stream, obj_t *out)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
-  format(out, L"#<~s ~s>", stream->co.cls, h->descr, nao);
+  format(out, lit("#<~s ~s>"), stream->co.cls, h->descr, nao);
 }
 
 void stdio_stream_destroy(obj_t *stream)
@@ -143,8 +100,8 @@ static obj_t *stdio_maybe_read_error(obj_t *stream)
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
   if (ferror(h->f)) {
     clearerr(h->f);
-    uw_throwf(file_error, L"error reading ~a: ~a/~s",
-              stream, num(errno), string_utf8(strerror(errno)));
+    uw_throwf(file_error, lit("error reading ~a: ~a/~s"),
+              stream, num(errno), string_utf8(strerror(errno)), nao);
   }
   return nil;
 }
@@ -154,22 +111,23 @@ static obj_t *stdio_maybe_write_error(obj_t *stream)
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
   if (ferror(h->f)) {
     clearerr(h->f);
-    uw_throwf(file_error, L"error writing ~a: ~a/~s",
-              stream, num(errno), string_utf8(strerror(errno)));
+    uw_throwf(file_error, lit("error writing ~a: ~a/~s"),
+              stream, num(errno), string_utf8(strerror(errno)), nao);
   }
   return nil;
 }
 
-static obj_t *stdio_put_string(obj_t *stream, const wchar_t *s)
+static obj_t *stdio_put_string(obj_t *stream, obj_t *s)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
-  return (h->f && fputws(s, h->f) != -1) ? t : stdio_maybe_write_error(stream);
+  return (h->f && fputws(c_str(s), h->f) != -1)
+         ? t : stdio_maybe_write_error(stream);
 }
 
-static obj_t *stdio_put_char(obj_t *stream, wchar_t ch)
+static obj_t *stdio_put_char(obj_t *stream, obj_t *ch)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
-  return (h->f && putwc(ch, h->f) != WEOF)
+  return (h->f && putwc(c_chr(ch), h->f) != WEOF)
          ? t : stdio_maybe_write_error(stream);
 }
 
@@ -238,17 +196,6 @@ obj_t *stdio_get_byte(obj_t *stream)
   return nil;
 }
 
-obj_t *stdio_vcformat(obj_t *stream, const wchar_t *fmt, va_list vl)
-{
-  struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
-
-  if (h->f) {
-    int n = vfwprintf(h->f, fmt, vl);
-    return (n >= 0) ? num(n) : stdio_maybe_write_error(stream);
-  }
-  return nil;
-}
-
 static obj_t *stdio_close(obj_t *stream, obj_t *throw_on_error)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
@@ -257,8 +204,8 @@ static obj_t *stdio_close(obj_t *stream, obj_t *throw_on_error)
     int result = fclose(h->f);
     h->f = 0;
     if (result == EOF && throw_on_error) {
-      uw_throwf(file_error, L"error closing ~a: ~a/~s",
-                stream, num(errno), string_utf8(strerror(errno)));
+      uw_throwf(file_error, lit("error closing ~a: ~a/~s"),
+                stream, num(errno), string_utf8(strerror(errno)), nao);
     }
     return result != EOF ? t : nil;
   }
@@ -275,8 +222,6 @@ static struct strm_ops stdio_ops = {
   stdio_get_line,
   stdio_get_char,
   stdio_get_byte,
-  stdio_vcformat,
-  common_vformat,
   stdio_close
 };
 
@@ -296,22 +241,23 @@ static obj_t *pipe_close(obj_t *stream, obj_t *throw_on_error)
     if (status != 0 && throw_on_error) {
       if (status < 0) {
         uw_throwf(process_error,
-                  L"unable to obtain status of command ~a: ~a/~s",
+                  lit("unable to obtain status of command ~a: ~a/~s"),
                   stream, num(errno), string_utf8(strerror(errno)), nao);
       } else if (WIFEXITED(status)) {
         int exitstatus = WEXITSTATUS(status);
-        uw_throwf(process_error, L"pipe ~a terminated with status ~a",
+        uw_throwf(process_error, lit("pipe ~a terminated with status ~a"),
                   stream, num(exitstatus), nao);
       } else if (WIFSIGNALED(status)) {
         int termsig = WTERMSIG(status);
-        uw_throwf(process_error, L"pipe ~a terminated by signal ~a",
+        uw_throwf(process_error, lit("pipe ~a terminated by signal ~a"),
                   stream, num(termsig), nao);
 
       } else if (WIFSTOPPED(status) || WIFCONTINUED(status)) {
-        uw_throwf(process_error, L"processes of closed pipe ~a still running",
+        uw_throwf(process_error,
+                  lit("processes of closed pipe ~a still running"),
                   stream, nao);
       } else {
-        uw_throwf(file_error, L"strange status in when closing pipe ~a",
+        uw_throwf(file_error, lit("strange status in when closing pipe ~a"),
                   stream, nao);
       }
     }
@@ -331,8 +277,6 @@ static struct strm_ops pipe_ops = {
   stdio_get_line,
   stdio_get_char,
   stdio_get_byte,
-  stdio_vcformat,
-  common_vformat,
   pipe_close
 };
 
@@ -382,8 +326,6 @@ static struct strm_ops string_in_ops = {
   string_in_get_line,
   string_in_get_char,
   0,
-  0,
-  0,
   0
 };
 
@@ -412,8 +354,6 @@ static struct strm_ops byte_in_ops = {
   0,
   0,
   byte_in_get_byte,
-  0,
-  0,
   0
 };
 
@@ -436,14 +376,15 @@ static void string_out_stream_destroy(obj_t *stream)
   }
 }
 
-static obj_t *string_out_put_string(obj_t *stream, const wchar_t *s)
+static obj_t *string_out_put_string(obj_t *stream, obj_t *str)
 {
   struct string_output *so = (struct string_output *) stream->co.handle;
 
   if (so == 0) {
     return nil;
   } else {
-    size_t len = wcslen(s);
+    const wchar_t *s = c_str(str);
+    size_t len = c_num(length_str(str));
     size_t old_size = so->size;
     size_t required_size = len + so->fill + 1;
 
@@ -456,67 +397,20 @@ static obj_t *string_out_put_string(obj_t *stream, const wchar_t *s)
         return nil;
     }
 
-    so->buf = chk_realloc(so->buf, so->size * sizeof *so->buf);
-    memcpy(so->buf + so->fill, s, (len + 1) * sizeof *so->buf);
+    if (so->size != old_size)
+      so->buf = chk_realloc(so->buf, so->size * sizeof *so->buf);
+    wmemcpy(so->buf + so->fill, s, len + 1);
     so->fill += len;
     return t;
   }
 }
 
-static obj_t *string_out_put_char(obj_t *stream, wchar_t ch)
+static obj_t *string_out_put_char(obj_t *stream, obj_t *ch)
 {
   wchar_t mini[2];
-  mini[0] = ch;
+  mini[0] = c_chr(ch);
   mini[1] = 0;
-  return string_out_put_string(stream, mini);
-}
-
-obj_t *string_out_vcformat(obj_t *stream, const wchar_t *fmt, va_list vl)
-{
-  struct string_output *so = (struct string_output *) stream->co.handle;
-
-  if (so == 0) {
-    return nil;
-  } else {
-    int nchars, nchars2;
-    wchar_t dummy_buf[1];
-    size_t old_size = so->size;
-    size_t required_size;
-    va_list vl_copy;
-
-#if defined va_copy
-    va_copy (vl_copy, vl);
-#elif defined __va_copy
-    __va_copy (vl_copy, vl);
-#else
-    vl_copy = vl;
-#endif
-
-    nchars = vswprintf(dummy_buf, 0, fmt, vl_copy);
-
-#if defined va_copy || defined __va_copy
-    va_end (vl_copy);
-#endif
-
-    bug_unless (nchars >= 0);
-
-    required_size = so->fill + nchars + 1;
-
-    if (required_size < so->fill)
-      return nil;
-
-    while (so->size <= required_size) {
-      so->size *= 2;
-      if (so->size < old_size)
-        return nil;
-    }
-
-    so->buf = chk_realloc(so->buf, so->size * sizeof *so->buf);
-    nchars2 = vswprintf(so->buf + so->fill, so->size-so->fill, fmt, vl);
-    bug_unless (nchars == nchars2);
-    so->fill += nchars;
-    return t;
-  }
+  return string_out_put_string(stream, auto_str(mini));
 }
 
 static struct strm_ops string_out_ops = {
@@ -529,8 +423,6 @@ static struct strm_ops string_out_ops = {
   0,
   0,
   0,
-  string_out_vcformat,
-  common_vformat,
   0,
 };
 
@@ -573,8 +465,6 @@ static struct strm_ops dir_ops = {
   dir_get_line,
   0,
   0,
-  0,
-  0,
   dir_close
 };
 
@@ -605,7 +495,7 @@ obj_t *make_pipe_stream(FILE *f, obj_t *descr, obj_t *input, obj_t *output)
     /* Don't leave h uninitialized; it is gc-reachable through stream cobj. */
     h->f = h->f_orig_pipe = 0;
     h->descr = descr;
-    uw_throwf(process_error, L"unable to create pipe ~a: ~a/~s", descr,
+    uw_throwf(process_error, lit("unable to create pipe ~a: ~a/~s"), descr,
               num(error), string_utf8(strerror(error)), nao);
   }
 
@@ -625,7 +515,7 @@ obj_t *make_string_input_stream(obj_t *string)
 
 obj_t *make_string_byte_input_stream(obj_t *string)
 {
-  type_assert (stringp(string), (L"~a is not a string", string));
+  type_assert (stringp(string), (lit("~a is not a string"), string, nao));
 
   {
     struct byte_input *bi = (struct byte_input *) chk_malloc(sizeof *bi);
@@ -650,7 +540,8 @@ obj_t *make_string_output_stream(void)
 obj_t *get_string_from_stream(obj_t *stream)
 {
   type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_t, (L"~a is not a stream", stream));
+  type_assert (stream->co.cls == stream_t,
+               (lit("~a is not a stream"), stream, nao));
 
   if (stream->co.ops == &string_out_ops.cobj_ops) {
     struct string_output *so = (struct string_output *) stream->co.handle;
@@ -661,7 +552,7 @@ obj_t *get_string_from_stream(obj_t *stream)
     if (!so)
       return out;
 
-    so->buf = chk_realloc(so->buf, so->fill + 1);
+    so->buf = chk_realloc(so->buf, (so->fill + 1) * sizeof *so->buf);
     out = string_own(so->buf);
     free(so);
     return out;
@@ -681,7 +572,8 @@ obj_t *make_dir_stream(DIR *dir)
 obj_t *close_stream(obj_t *stream, obj_t *throw_on_error)
 {
   type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_t, (L"~a is not a stream", stream));
+  type_assert (stream->co.cls == stream_t, (lit("~a is not a stream"),
+                                            stream, nao));
 
   {
     struct strm_ops *ops = (struct strm_ops *) stream->co.ops;
@@ -692,7 +584,8 @@ obj_t *close_stream(obj_t *stream, obj_t *throw_on_error)
 obj_t *get_line(obj_t *stream)
 {
   type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_t, (L"~a is not a stream", stream));
+  type_assert (stream->co.cls == stream_t, (lit("~a is not a stream"),
+                                            stream, nao));
 
   {
     struct strm_ops *ops = (struct strm_ops *) stream->co.ops;
@@ -703,7 +596,8 @@ obj_t *get_line(obj_t *stream)
 obj_t *get_char(obj_t *stream)
 {
   type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_t, (L"~a is not a stream", stream));
+  type_assert (stream->co.cls == stream_t, (lit("~a is not a stream"),
+                                            stream, nao));
 
   {
     struct strm_ops *ops = (struct strm_ops *) stream->co.ops;
@@ -714,7 +608,8 @@ obj_t *get_char(obj_t *stream)
 obj_t *get_byte(obj_t *stream)
 {
   type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_t, (L"~a is not a stream", stream));
+  type_assert (stream->co.cls == stream_t, (lit("~a is not a stream"),
+                                            stream, nao));
 
   {
     struct strm_ops *ops = (struct strm_ops *) stream->co.ops;
@@ -722,57 +617,269 @@ obj_t *get_byte(obj_t *stream)
   }
 }
 
-obj_t *vformat(obj_t *stream, const wchar_t *str, va_list vl)
+static obj_t *vformat_num(obj_t *stream, const char *str,
+                          int width, int left, int pad, int precision)
 {
-  type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_t, (L"~a is not a stream", stream));
+  int len = strlen(str);
+  int truewidth = (width < precision) ? width : precision;
+  int slack = (len < truewidth) ? truewidth - len : 0;
+  int padlen = (len < precision) ? precision - len : 0;
+  int i;
 
-  {
-    struct strm_ops *ops = (struct strm_ops *) stream->co.ops;
-    return ops->vformat ? ops->vformat(stream, str, vl) : nil;
-  }
+  if (!left)
+    for (i = 0; i < slack; i++)
+      if (!put_char(stream, pad ? chr('0') : chr(' ')))
+        return nil;
+
+  for (i = 0; i < padlen; i++)
+    if (!put_char(stream, pad ? chr('0') : chr(' ')))
+      return nil;
+
+  while (*str)
+    if (!put_char(stream, chr(*str++)))
+      return nil;
+
+  if (left)
+    for (i = 0; i < slack; i++)
+      if (!put_char(stream, chr(' ')))
+        return nil;
+
+  return t;
 }
 
-obj_t *vcformat(obj_t *stream, const wchar_t *string, va_list vl)
+obj_t *vformat_str(obj_t *stream, obj_t *str, int width, int left,
+                   int precision)
 {
-  type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_t, (L"~a is not a stream", stream));
+  const wchar_t *cstr = c_str(str);
+  int len = c_num(length_str(str));
+  int truelen = (precision && precision < len) ? precision : len;
+  int slack = (truelen < width) ? width - truelen : 0;
+  int i;
 
-  {
-    struct strm_ops *ops = (struct strm_ops *) stream->co.ops;
-    return ops->vcformat ? ops->vcformat(stream, string, vl) : nil;
-  }
+  if (!left)
+    for (i = 0; i < slack; i++)
+      if (!put_char(stream, chr(' ')))
+        return nil;
+
+  for (i = 0; i < truelen; i++)
+    if (!put_char(stream, chr(cstr[i])))
+      return nil;
+
+  if (left)
+    for (i = 0; i < slack; i++)
+      if (!put_char(stream, chr(' ')))
+        return nil;
+
+  return t;
 }
 
-obj_t *format(obj_t *stream, const wchar_t *str, ...)
+obj_t *vformat(obj_t *stream, obj_t *fmtstr, va_list vl)
 {
   type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_t, (L"~a is not a stream", stream));
+  type_assert (stream->co.cls == stream_t, (lit("~a is not a stream"),
+                                            stream, nao));
 
   {
-    struct strm_ops *ops = (struct strm_ops *) stream->co.ops;
+    const wchar_t *fmt = c_str(fmtstr);
+    enum {
+      vf_init, vf_width, vf_digits, vf_precision, vf_spec
+    } state = vf_init, saved_state = vf_init;
+    int width = 0, precision = 0, digits = 0;
+    int left = 0, zeropad = 0;
+    long val;
+    void *ptr;
+    char num_buf[64];
+
+    for (;;) {
+      obj_t *obj;
+      wchar_t ch = *fmt++;
+
+      switch (state) {
+      case vf_init:
+        switch (ch) {
+        case 0:
+          break;
+        case '~':
+          state = vf_width;
+          width = 0;
+          left = 0;
+          zeropad = 0;
+          precision = 0;
+          digits = 0;
+          continue;
+        default:
+          put_char(stream, chr(ch));
+          continue;
+        }
+        break;
+      case vf_width:
+        switch (ch) {
+        case '~':
+          put_char(stream, chr('~'));
+          continue;
+        case '-':
+          left = 1;
+          continue;
+        case ',':
+          state = vf_precision;
+          continue;
+        case '0':
+          saved_state = state;
+          state = vf_digits;
+          zeropad = 1;
+          continue;
+        case '1': case '2': case '3': case '4': case '5':
+        case '6': case '7': case '8': case '9':
+          saved_state = state;
+          state = vf_digits;
+          digits = ch - '0';
+          continue;
+        case '*':
+          obj = va_arg(vl, obj_t *);
+          width = c_num(obj);
+          state = vf_precision;
+          continue;
+        default:
+          state = vf_spec;
+          --fmt;
+          continue;
+        }
+        break;
+      case vf_precision:
+        switch (ch) {
+        case '0': case '1': case '2': case '3': case '4': case '5':
+        case '6': case '7': case '8': case '9':
+          saved_state = state;
+          state = vf_digits;
+          digits = ch - '0';
+          continue;
+        case '*':
+          obj = va_arg(vl, obj_t *);
+          width = c_num(obj);
+          precision = vf_precision;
+          continue;
+        default:
+          state = vf_spec;
+          continue;
+        }
+        break;
+      case vf_digits:
+        switch (ch) {
+        case '0': case '1': case '2': case '3': case '4':
+        case '5': case '6': case '7': case '8': case '9':
+          digits = (digits * 10) + (ch - '0');
+          if (digits > 999999)
+            goto toobig;
+          continue;
+        default:
+          switch (saved_state) {
+          case vf_width:
+            if (width < 0) {
+              width = -digits;
+              left = 1;
+            } else {
+              width = digits;
+            }
+            state = (ch == ',') ? vf_precision : vf_spec;
+            continue;
+          case vf_precision:
+            precision = digits;
+            state = vf_spec;
+            --fmt;
+            continue;
+          default:
+            internal_error("unexpected state in formatter");
+          }
+        }
+        break;
+      case vf_spec:
+        state = vf_init;
+        switch (ch) {
+        case 'x':
+          obj = va_arg(vl, obj_t *);
+          val = c_num(obj);
+          sprintf(num_buf, "%lx", val);
+          goto output_num;
+        case 'X':
+          obj = va_arg(vl, obj_t *);
+          val = c_num(obj);
+          sprintf(num_buf, "%lX", val);
+          goto output_num;
+        case 'o':
+          obj = va_arg(vl, obj_t *);
+          val = c_num(obj);
+          sprintf(num_buf, "%lo", val);
+          goto output_num;
+        case 'a':
+          obj = va_arg(vl, obj_t *);
+          if (obj == nao)
+            goto premature;
+          if (nump(obj)) {
+            val = c_num(obj);
+            sprintf(num_buf, "%ld", val);
+            goto output_num;
+          } else if (stringp(obj)) {
+            if (!vformat_str(stream, obj, width, left, precision))
+              return nil;
+            continue;
+          }
+          obj_pprint(obj, stream);
+          continue;
+        case 's':
+          obj = va_arg(vl, obj_t *);
+          if (obj == nao)
+            goto premature;
+          if (nump(obj)) {
+            val = c_num(obj);
+            sprintf(num_buf, "%ld", val);
+            if (vformat_num(stream, num_buf, 0, 0, 0, 0))
+              return nil;
+            continue;
+          }
+          obj_print(obj, stream);
+          continue;
+        case 'p':
+          ptr = va_arg(vl, void *);
+          val = (int) ptr;
+          sprintf(num_buf, "0x%lx", val);
+          goto output_num;
+        default:
+          abort();
+        output_num:
+          if (!vformat_num(stream, num_buf, width, left,
+                           precision ? 0 : zeropad,
+                           precision ? precision : 1))
+            return nil;
+          continue;
+        }
+        continue;
+      }
+
+      break;
+    }
+  }
+
+
+  if (va_arg(vl, obj_t *) != nao)
+    internal_error("unterminated format argument list");
+  return t;
+premature:
+  internal_error("insufficient arguments for format");
+toobig:
+  internal_error("ridiculous precision or field width in format");
+}
+
+obj_t *format(obj_t *stream, obj_t *str, ...)
+{
+  type_check (stream, COBJ);
+  type_assert (stream->co.cls == stream_t, (lit("~a is not a stream"),
+                                             stream, nao));
+
+  {
     va_list vl;
     obj_t *ret;
-
     va_start (vl, str);
-    ret = ops->vformat ? ops->vformat(stream, str, vl) : nil;
-    va_end (vl);
-    return ret;
-  }
-}
-
-obj_t *cformat(obj_t *stream, const wchar_t *string, ...)
-{
-  type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_t, (L"~a is not a stream", stream));
-
-  {
-    struct strm_ops *ops = (struct strm_ops *) stream->co.ops;
-    va_list vl;
-    obj_t *ret;
-
-    va_start (vl, string);
-    ret = ops->vformat ? ops->vcformat(stream, string, vl) : nil;
+    ret = vformat(stream, str, vl);
     va_end (vl);
     return ret;
   }
@@ -781,40 +888,20 @@ obj_t *cformat(obj_t *stream, const wchar_t *string, ...)
 obj_t *put_string(obj_t *stream, obj_t *string)
 {
   type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_t, (L"~a is not a stream", stream));
+  type_assert (stream->co.cls == stream_t, (lit("~a is not a stream"),
+                                            stream, nao));
 
   {
     struct strm_ops *ops = (struct strm_ops *) stream->co.ops;
-    return ops->put_string ? ops->put_string(stream, c_str(string)) : nil;
-  }
-}
-
-obj_t *put_cstring(obj_t *stream, const wchar_t *str)
-{
-  type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_t, (L"~a is not a stream", stream));
-
-  {
-    struct strm_ops *ops = (struct strm_ops *) stream->co.ops;
-    return ops->put_string ? ops->put_string(stream, str) : nil;
+    return ops->put_string ? ops->put_string(stream, string) : nil;
   }
 }
 
 obj_t *put_char(obj_t *stream, obj_t *ch)
 {
   type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_t, (L"~a is not a stream", stream));
-
-  {
-    struct strm_ops *ops = (struct strm_ops *) stream->co.ops;
-    return ops->put_char ? ops->put_char(stream, c_chr(ch)) : nil;
-  }
-}
-
-obj_t *put_cchar(obj_t *stream, wchar_t ch)
-{
-  type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_t, (L"~a is not a stream", stream));
+  type_assert (stream->co.cls == stream_t, (lit("~a is not a stream"),
+                                            stream, nao));
 
   {
     struct strm_ops *ops = (struct strm_ops *) stream->co.ops;
@@ -824,7 +911,7 @@ obj_t *put_cchar(obj_t *stream, wchar_t ch)
 
 obj_t *put_line(obj_t *stream, obj_t *string)
 {
-  return (put_string(stream, string), put_cchar(stream, '\n'));
+  return (put_string(stream, string), put_char(stream, chr('\n')));
 }
 
 void stream_init(void)
