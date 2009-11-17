@@ -324,9 +324,9 @@ static void sweep(void)
         continue;
 
       if (0 && dbg) {
-        fwprintf(stderr, L"%ls: finalizing: ", progname);
+        format(std_error, lit("~a: finalizing: "), progname, nao);
         obj_print(block, std_error);
-        putwc('\n', stderr);
+        put_char(std_error, chr('\n'));
       }
       finalize(block);
       block->t.type |= FREE;

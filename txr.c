@@ -54,66 +54,67 @@ obj_t *spec_file_str;
  */
 void *oom_realloc_handler(void *old, size_t size)
 {
-  fwprintf(stderr, L"%ls: out of memory\n", progname);
-  fputws(L"false", stderr);
+  format(std_error, lit("~a: out of memory\n"), prog_string, nao);
+  put_line(std_error, lit("false"));
   abort();
 }
 
 void help(void)
 {
-  const wchar_t *text =
-L"\n"
-L"txr version %ls\n"
-L"\n"
-L"copyright 2009, Kaz Kylheku <kkylheku@gmail.com>\n"
-L"\n"
-L"usage:\n"
-L"\n"
-L"  %ls [ options ] query-file { data-file }*\n"
-L"\n"
-L"The query-file or data-file arguments may be specified as -, in which case\n"
-L"standard input is used. All data-file arguments which begin with a !\n"
-L"character are treated as command pipes. Those which begin with a $\n"
-L"are interpreted as directories to read. Leading arguments which begin\n"
-L"with a - followed by one or more characters, and which are not arguments to\n"
-L"options are interpreted as options. The -- option indicates the end of the\n"
-L"options.\n"
-L"\n"
-L"If no data-file arguments sare supplied, then the query itself must open a\n"
-L"a data source prior to attempting to make any pattern match, or it will\n"
-L"simply fail due to a match which has run out of data.\n"
-L"\n"
-L"options:\n"
-L"\n"
-L"-Dvar=value            Pre-define variable var, with the given value.\n"
-L"                       A list value can be specified using commas.\n"
-L"-Dvar                  Predefine variable var, with empty string value.\n"
-L"-q                     Quiet: don't report errors during query matching.\n"
-L"-v                     Verbose: extra logging from matcher.\n"
-L"-b                     Don't dump list of bindings.\n"
-L"-a num                 Generate array variables up to num-dimensions.\n"
-L"                       Default is 1. Additional dimensions are fudged\n"
-L"                       by generating numeric suffixes\n"
-L"-c query-text          The query is read from the query-text argument\n"
-L"                       itself. The query-file argument is omitted in\n"
-L"                       this case; the first argument is a data file.\n"
-L"-f query-file          Specify the query-file as an option argument.\n"
-L"                       option, instead of the query-file argument.\n"
-L"                       This allows #! scripts to pass options through\n"
-L"                       to the utility.\n"
-L"--help                 You already know!\n"
-L"--version              Display program version\n"
-L"\n"
-L"Options that take no argument can be combined. The -q and -v options\n"
-L"are mutually exclusive; the right-most one dominates.\n"
-L"\n"
-  ;
-  fwprintf(stdout, text, version, progname);
+  obj_t *text = lit(
+"\n"
+"txr version ~a\n"
+"\n"
+"copyright 2009, Kaz Kylheku <kkylheku@gmail.com>\n"
+"\n"
+"usage:\n"
+"\n"
+"  ~a [ options ] query-file { data-file }*\n"
+"\n"
+"The query-file or data-file arguments may be specified as -, in which case\n"
+"standard input is used. All data-file arguments which begin with a !\n"
+"character are treated as command pipes. Those which begin with a $\n"
+"are interpreted as directories to read. Leading arguments which begin\n"
+"with a - followed by one or more characters, and which are not arguments to\n"
+"options are interpreted as options. The -- option indicates the end of the\n"
+"options.\n"
+"\n"
+"If no data-file arguments sare supplied, then the query itself must open a\n"
+"a data source prior to attempting to make any pattern match, or it will\n"
+"simply fail due to a match which has run out of data.\n"
+"\n"
+"options:\n"
+"\n"
+"-Dvar=value            Pre-define variable var, with the given value.\n"
+"                       A list value can be specified using commas.\n"
+"-Dvar                  Predefine variable var, with empty string value.\n"
+"-q                     Quiet: don't report errors during query matching.\n"
+"-v                     Verbose: extra logging from matcher.\n"
+"-b                     Don't dump list of bindings.\n"
+"-a num                 Generate array variables up to num-dimensions.\n"
+"                       Default is 1. Additional dimensions are fudged\n"
+"                       by generating numeric suffixes\n"
+"-c query-text          The query is read from the query-text argument\n"
+"                       itself. The query-file argument is omitted in\n"
+"                       this case; the first argument is a data file.\n"
+"-f query-file          Specify the query-file as an option argument.\n"
+"                       option, instead of the query-file argument.\n"
+"                       This allows #! scripts to pass options through\n"
+"                       to the utility.\n"
+"--help                 You already know!\n"
+"--version              Display program version\n"
+"\n"
+"Options that take no argument can be combined. The -q and -v options\n"
+"are mutually exclusive; the right-most one dominates.\n"
+"\n"
+);
+  format(std_output, text, auto_str(version), prog_string, nao);
 }
 
 void hint(void)
 {
-  fwprintf(stderr, L"%ls: incorrect arguments: try --help\n", progname);
+  format(std_error, lit("~a: incorrect arguments: try --help\n"),
+         prog_string, nao);
 }
 
 obj_t *remove_hash_bang_line(obj_t *spec)
@@ -215,7 +216,8 @@ static int txr_main(int argc, char **argv)
     }
 
     if (!strcmp(*argv, "--version")) {
-      wprintf(L"%ls: version %ls\n", progname, version);
+      format(std_output, lit("~a: version ~a\n"),
+             prog_string, auto_str(version), nao);
       return 0;
     }
 
@@ -230,7 +232,8 @@ static int txr_main(int argc, char **argv)
       char opt = (*argv)[1];
 
       if (argc == 1) {
-        fwprintf(stderr, L"%ls: option %c needs argument\n", progname, opt);
+        format(std_error, lit("~a: option -~a needs argument\n"),
+               prog_string, chr(opt), nao);
 
         return EXIT_FAILURE;
       }
@@ -241,8 +244,9 @@ static int txr_main(int argc, char **argv)
       case 'a':
         val = strtol(*argv, &errp, 10);
         if (*errp != 0) {
-          fwprintf(stderr, L"%ls: option %c needs numeric argument, not %s\n",
-                   progname, opt, *argv);
+          format(std_error, lit("~a: option -~a needs numeric argument, "
+                                "not ~a\n"), prog_string, chr(opt),
+                                string_utf8(*argv), nao);
           return EXIT_FAILURE;
         }
 
@@ -282,15 +286,16 @@ static int txr_main(int argc, char **argv)
         case 'a':
         case 'c':
         case 'D':
-          fwprintf(stderr, L"%ls: option -%c does not clump\n",
-                   progname, *popt);
+          format(std_error, lit("~a: option -~a does not clump\n"),
+                   prog_string, chr(*popt), nao);
           return EXIT_FAILURE;
         case '-':
-          fwprintf(stderr, L"%ls: unrecognized long option: --%s\n",
-                   progname, popt + 1);
+          format(std_error, lit("~a: unrecognized long option: --~a\n"),
+                 prog_string, string_utf8(popt + 1), nao);
           return EXIT_FAILURE;
         default:
-          fwprintf(stderr, L"%ls: unrecognized option: %c\n", progname, *popt);
+          format(std_error, lit("~a: unrecognized option: -~a\n"),
+                 prog_string, chr(*popt), nao);
           return EXIT_FAILURE;
         }
       }
@@ -300,7 +305,8 @@ static int txr_main(int argc, char **argv)
   }
 
   if (specstring && spec_file_str) {
-    fwprintf(stderr, L"%ls: cannot specify both -f and -c\n", progname);
+    format(std_error, lit("~a: cannot specify both -f and -c\n"),
+           prog_string, nao);
     return EXIT_FAILURE;
   }
 
@@ -315,7 +321,7 @@ static int txr_main(int argc, char **argv)
     if (wcscmp(c_str(spec_file_str), L"-") != 0) {
       FILE *in = w_fopen(c_str(spec_file_str), L"r");
       if (in == 0)
-        uw_throwcf(file_error, L"unable to open %ls", c_str(spec_file_str));
+        uw_throwf(file_error, lit("unable to open ~a"), spec_file_str, nao);
       yyin_stream = make_stdio_stream(in, spec_file_str, t, nil);
     } else {
       spec_file = L"stdin";
@@ -328,9 +334,10 @@ static int txr_main(int argc, char **argv)
 
     if (strcmp(*argv, "-") != 0) {
       FILE *in = fopen(*argv, "r");
+      obj_t *name = string_utf8(*argv);
       if (in == 0)
-        uw_throwcf(file_error, L"unable to open %s", *argv);
-      yyin_stream = make_stdio_stream(in, string_utf8(*argv), t, nil);
+        uw_throwf(file_error, lit("unable to open ~a"), name, nao);
+      yyin_stream = make_stdio_stream(in, name, t, nil);
       spec_file = utf8_dup_from(*argv);
     } else {
       spec_file = L"stdin";
@@ -353,8 +360,8 @@ static int txr_main(int argc, char **argv)
     opt_loglevel = match_loglevel;
 
     if (opt_loglevel >= 2) {
-      format(std_error, L"spec:\n~s\n", spec, nao);
-      format(std_error, L"bindings:\n~s\n", bindings, nao);
+      format(std_error, lit("spec:\n~s\n"), spec, nao);
+      format(std_error, lit("bindings:\n~s\n"), bindings, nao);
     }
 
     {

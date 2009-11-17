@@ -51,7 +51,10 @@ typedef enum functype
 #define is_chr(obj) (tag(obj) == TAG_CHR)
 #define is_lit(obj) (tag(obj) == TAG_LIT)
 #define type(obj) (tag(obj) ? ((type_t) tag(obj)) : (obj)->t.type)
-#define lit(strlit) ((obj_t *) ((long) (L ## strlit) | TAG_LIT))
+#define lit_noex(strlit) ((obj_t *) ((long) (L ## strlit) | TAG_LIT))
+#define lit(strlit) lit_noex(strlit)
+#define auto_str(str) ((obj_t *) ((long) (str) | TAG_LIT))
+#define static_str(str) ((obj_t *) ((long) (str) | TAG_LIT))
 #define litptr(obj) ((wchar_t *) ((long) obj & ~TAG_MASK))
 
 typedef union obj obj_t;

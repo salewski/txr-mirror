@@ -153,7 +153,7 @@ size_t utf8_to(char *dst, const wchar_t *wsrc)
 wchar_t *utf8_dup_from_uc(const unsigned char *str)
 {
   size_t nchar = utf8_from_uc(0, str);
-  wchar_t *wstr = chk_malloc(sizeof *wstr * nchar);
+  wchar_t *wstr = (wchar_t *) chk_malloc(nchar * sizeof *wstr);
   utf8_from_uc(wstr, str);
   return wstr;
 }
@@ -161,7 +161,7 @@ wchar_t *utf8_dup_from_uc(const unsigned char *str)
 wchar_t *utf8_dup_from(const char *str)
 {
   size_t nchar = utf8_from(0, str);
-  wchar_t *wstr = chk_malloc(sizeof *wstr * nchar);
+  wchar_t *wstr = (wchar_t *) chk_malloc(nchar * sizeof *wstr);
   utf8_from(wstr, str);
   return wstr;
 }
@@ -169,7 +169,7 @@ wchar_t *utf8_dup_from(const char *str)
 unsigned char *utf8_dup_to_uc(const wchar_t *wstr)
 {
   size_t nbyte = utf8_to_uc(0, wstr);
-  unsigned char *str = chk_malloc(nbyte);
+  unsigned char *str = (unsigned char *) chk_malloc(nbyte);
   utf8_to_uc(str, wstr);
   return str;
 }
@@ -177,7 +177,7 @@ unsigned char *utf8_dup_to_uc(const wchar_t *wstr)
 char *utf8_dup_to(const wchar_t *wstr)
 {
   size_t nbyte = utf8_to(0, wstr);
-  char *str = chk_malloc(nbyte);
+  char *str = (char *) chk_malloc(nbyte);
   utf8_to(str, wstr);
   return str;
 }

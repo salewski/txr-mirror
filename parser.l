@@ -67,17 +67,17 @@ int errors;
 
 void yyerror(const char *s)
 {
-  yyerrorf(L"%s", s);
+  yyerrorf(lit("~a"), auto_str(s), nao);
 }
 
-void yyerrorf(const wchar_t *s, ...)
+void yyerrorf(obj_t *fmt, ...)
 {
   if (opt_loglevel >= 1) {
     va_list vl;
-    va_start (vl, s);
-    fwprintf(stderr, L"%ls: (%ls:%ld): ", progname, spec_file, lineno);
-    vfwprintf(stderr, s, vl);
-    putwc('\n', stderr);
+    va_start (vl, fmt);
+    format(std_error, lit("~a: (~a:~a): "), progname, spec_file, lineno);
+    vformat(std_error, fmt, vl);
+    put_char(std_error, chr('\n'));
     va_end (vl);
   }
   errors++;
@@ -85,48 +85,48 @@ void yyerrorf(const wchar_t *s, ...)
 
 void yybadtoken(int tok, const char *context)
 {
-  const wchar_t *problem = 0;
+  const obj_t *problem = nil;
 
   switch (tok) {
-  case TEXT:    problem = L"text"; break;
-  case IDENT:   problem = L"identifier"; break;
-  case ALL:     problem = L"\"all\""; break;
-  case SOME:    problem = L"\"some\""; break;
-  case NONE:    problem = L"\"none\""; break;
-  case MAYBE:   problem = L"\"maybe\""; break;
-  case CASES:   problem = L"\"cases\""; break;
-  case AND:     problem = L"\"and\""; break;
-  case OR:      problem = L"\"or\""; break;
-  case END:     problem = L"\"end\""; break;
-  case COLLECT: problem = L"\"collect\""; break;
-  case UNTIL:   problem = L"\"until\""; break;
-  case COLL:    problem = L"\"coll\""; break;
-  case OUTPUT:  problem = L"\"output\""; break;
-  case REPEAT:  problem = L"\"repeat\""; break;
-  case REP:     problem = L"\"rep\""; break;
-  case SINGLE:  problem = L"\"single\""; break;
-  case FIRST:   problem = L"\"first\""; break;
-  case LAST:    problem = L"\"last\""; break;
-  case EMPTY:   problem = L"\"empty\""; break;
-  case DEFINE:  problem = L"\"define\""; break;
-  case TRY:     problem = L"\"try\""; break;
-  case CATCH:   problem = L"\"catch\""; break;
-  case FINALLY: problem = L"\"finally\""; break;
-  case NUMBER:  problem = L"\"number\""; break;
-  case REGCHAR: problem = L"regular expression character"; break;
-  case LITCHAR: problem = L"string literal character"; break;
+  case TEXT:    problem = lit("text"); break;
+  case IDENT:   problem = lit("identifier"); break;
+  case ALL:     problem = lit("\"all\""); break;
+  case SOME:    problem = lit("\"some\""); break;
+  case NONE:    problem = lit("\"none\""); break;
+  case MAYBE:   problem = lit("\"maybe\""); break;
+  case CASES:   problem = lit("\"cases\""); break;
+  case AND:     problem = lit("\"and\""); break;
+  case OR:      problem = lit("\"or\""); break;
+  case END:     problem = lit("\"end\""); break;
+  case COLLECT: problem = lit("\"collect\""); break;
+  case UNTIL:   problem = lit("\"until\""); break;
+  case COLL:    problem = lit("\"coll\""); break;
+  case OUTPUT:  problem = lit("\"output\""); break;
+  case REPEAT:  problem = lit("\"repeat\""); break;
+  case REP:     problem = lit("\"rep\""); break;
+  case SINGLE:  problem = lit("\"single\""); break;
+  case FIRST:   problem = lit("\"first\""); break;
+  case LAST:    problem = lit("\"last\""); break;
+  case EMPTY:   problem = lit("\"empty\""); break;
+  case DEFINE:  problem = lit("\"define\""); break;
+  case TRY:     problem = lit("\"try\""); break;
+  case CATCH:   problem = lit("\"catch\""); break;
+  case FINALLY: problem = lit("\"finally\""); break;
+  case NUMBER:  problem = lit("\"number\""); break;
+  case REGCHAR: problem = lit("regular expression character"); break;
+  case LITCHAR: problem = lit("string literal character"); break;
   }
 
   if (problem != 0)
     if (context)
-      yyerrorf(L"misplaced %ls in %ls", problem, context);
+      yyerrorf(lit("misplaced ~a in ~a"), problem, context, nao);
     else
-      yyerrorf(L"unexpected %ls", problem);
+      yyerrorf(lit("unexpected ~a"), problem, nao);
   else
     if (context)
-      yyerrorf(L"unterminated %ls", context);
+      yyerrorf(lit("unterminated ~a"), context, nao);
     else
-      yyerrorf(L"unexpected end of input");
+      yyerrorf(lit("unexpected end of input"), nao);
 }
 
 static wchar_t char_esc(int letter)
@@ -396,12 +396,14 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                                 }
 
 <SPECIAL,NESTED>{UANYN} {
-                          yyerrorf(L"bad character in directive: '%s'", yytext);
+                          yyerrorf(lit("bad character in directive: '~a'"),
+                                   string_utf8(yytext), nao);
                         }
 
 <SPECIAL,NESTED>.       {
-                          yyerrorf(L"non-UTF-8 byte in directive: '\\x%02x'",
-                                   (unsigned char) yytext[0]);
+                          yyerrorf(lit("non-UTF-8 byte in directive: "
+                                       "'\\x~02x'"),
+                                   num((unsigned char) yytext[0]), nao);
                         }
 
 <REGEX>[/]      {
@@ -458,8 +460,8 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                 }
 
 <REGEX>.        {
-                   yyerrorf(L"non-UTF-8 byte in regex: '\\x%02x'",
-                            (unsigned char) yytext[0]);
+                   yyerrorf(lit("non-UTF-8 byte in regex: '\\x~02x'"),
+                            num((unsigned char) yytext[0]), nao);
                 }
 
 <INITIAL>({UONLY}|[^@\n])+        {
@@ -547,8 +549,8 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                               }
 
 <STRLIT,CHRLIT,QSILIT>. {
-                          yyerrorf(L"non-UTF-8 byte in literal: '\\x%02x'",
-                                   (unsigned char) yytext[0]);
+                           yyerrorf(lit("non-UTF-8 byte in regex: '\\x~02x'"),
+                                    num((unsigned char) yytext[0]), nao);
                         }
 
 %%

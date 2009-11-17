@@ -128,14 +128,14 @@ obj_t *typeof(obj_t *obj)
 obj_t *type_check(obj_t *obj, int type)
 {
   if (!is_ptr(obj) || obj->t.type != type)
-    type_mismatch(L"~s is not of type ~s", obj, code2type(type), nao);
+    type_mismatch(lit("~s is not of type ~s"), obj, code2type(type), nao);
   return t;
 }
 
 obj_t *type_check2(obj_t *obj, int t1, int t2)
 {
   if (!is_ptr(obj) || (obj->t.type != t1 && obj->t.type != t2))
-    type_mismatch(L"~s is not of type ~s or ~s", obj,
+    type_mismatch(lit("~s is not of type ~s or ~s"), obj,
                   code2type(t1), code2type(t2), nao);
   return t;
 }
@@ -144,7 +144,7 @@ obj_t *type_check3(obj_t *obj, int t1, int t2, int t3)
 {
   if (!is_ptr(obj) || (obj->t.type != t1 && obj->t.type != t2
                        && obj->t.type != t3))
-    type_mismatch(L"~s is not of type ~s, ~s nor ~s", obj,
+    type_mismatch(lit("~s is not of type ~s, ~s nor ~s"), obj,
                   code2type(t1), code2type(t2), code2type(t3), nao);
   return t;
 }
@@ -165,7 +165,7 @@ obj_t *car(obj_t *cons)
       return cons->lc.car;
     }
   default:
-    type_mismatch(L"~s is not a cons", cons, nao);
+    type_mismatch(lit("~s is not a cons"), cons, nao);
   }
 }
 
@@ -185,7 +185,7 @@ obj_t *cdr(obj_t *cons)
       return cons->lc.cdr;
     }
   default:
-    type_mismatch(L"~s is not a cons", cons, nao);
+    type_mismatch(lit("~s is not a cons"), cons, nao);
   }
 }
 
@@ -198,7 +198,7 @@ obj_t **car_l(obj_t *cons)
     funcall1(cons->lc.func, cons);
     return &cons->lc.car;
   default:
-    type_mismatch(L"~s is not a cons", cons, nao);
+    type_mismatch(lit("~s is not a cons"), cons, nao);
   }
 }
 
@@ -211,7 +211,7 @@ obj_t **cdr_l(obj_t *cons)
     funcall1(cons->lc.func, cons);
     return &cons->lc.cdr;
   default:
-    type_mismatch(L"~s is not a cons", cons, nao);
+    type_mismatch(lit("~s is not a cons"), cons, nao);
   }
 }
 
@@ -561,7 +561,7 @@ obj_t *list(obj_t *first, ...)
     do {
       *ptr++ = next;
       if (ptr == array + 32)
-        internal_error(L"runaway arguments in list function");
+        internal_error("runaway arguments in list function");
       next = va_arg(vl, obj_t *);
     } while (next != nao);
 
@@ -624,7 +624,7 @@ obj_t *num(long val)
 long c_num(obj_t *num)
 {
   if (!is_num(num))
-    type_mismatch(L"~s is not a number", num, nao);
+    type_mismatch(lit("~s is not a number"), num, nao);
   return ((long) num) >> TAG_SHIFT;
 }
 
@@ -1012,7 +1012,7 @@ obj_t *chrp(obj_t *chr)
 wchar_t c_chr(obj_t *chr)
 {
   if (!is_chr(chr))
-    type_mismatch(L"~s is not a character", chr, nao);
+    type_mismatch(lit("~s is not a character"), chr, nao);
   return ((wchar_t) chr) >> TAG_SHIFT;
 }
 
@@ -1184,7 +1184,7 @@ obj_t *apply(obj_t *fun, obj_t *arglist)
   type_check (fun, FUN);
 
   type_assert (listp(arglist),
-               (L"apply arglist ~s is not a list", arglist, nao));
+               (lit("apply arglist ~s is not a list"), arglist, nao));
 
   *p++ = car(arglist); arglist = cdr(arglist);
   *p++ = car(arglist); arglist = cdr(arglist);
@@ -1563,9 +1563,9 @@ obj_t *cobj(void *handle, obj_t *cls_sym, struct cobj_ops *ops)
 
 void cobj_print_op(obj_t *obj, obj_t *out)
 {
-  put_cstring(out, L"#<");
+  put_string(out, lit("#<"));
   obj_print(obj->co.cls, out);
-  cformat(out, L": %p>", obj->co.handle);
+  format(out, lit(": ~p>"), obj->co.handle, nao);
 }
 
 obj_t *assoc(obj_t *list, obj_t *key)
@@ -1844,7 +1844,7 @@ static void obj_init(void)
 void obj_print(obj_t *obj, obj_t *out)
 {
   if (obj == nil) {
-    put_cstring(out, L"nil");
+    put_string(out, lit("nil"));
     return;
   }
 
@@ -1853,110 +1853,110 @@ void obj_print(obj_t *obj, obj_t *out)
   case LCONS:
     {
       obj_t *iter;
-      put_cchar(out, '(');
+      put_char(out, chr('('));
       for (iter = obj; consp(iter); iter = cdr(iter)) {
         obj_print(car(iter), out);
         if (nullp(cdr(iter))) {
-          put_cchar(out, ')');
+          put_char(out, chr(')'));
         } else if (consp(cdr(iter))) {
-          put_cchar(out, ' ');
+          put_char(out, chr(' '));
         } else {
-          put_cstring(out, L" . ");
+          put_string(out, lit(" . "));
           obj_print(cdr(iter), out);
-          put_cchar(out, ')');
+          put_char(out, chr(')'));
         }
       }
     }
     return;
-  case STR:
   case LIT:
+  case STR:
     {
       const wchar_t *ptr;
-      put_cchar(out, '"');
+      put_char(out, chr('"'));
       for (ptr = c_str(obj); *ptr; ptr++) {
         switch (*ptr) {
-        case L'\a': put_cstring(out, L"\\a"); break;
-        case L'\b': put_cstring(out, L"\\b"); break;
-        case L'\t': put_cstring(out, L"\\t"); break;
-        case L'\n': put_cstring(out, L"\\n"); break;
-        case L'\v': put_cstring(out, L"\\v"); break;
-        case L'\f': put_cstring(out, L"\\f"); break;
-        case L'\r': put_cstring(out, L"\\r"); break;
-        case L'"': put_cstring(out, L"\\\""); break;
-        case L'\\': put_cstring(out, L"\\\\"); break;
-        case 27: put_cstring(out, L"\\e"); break;
+        case '\a': put_string(out, lit("\\a")); break;
+        case '\b': put_string(out, lit("\\b")); break;
+        case '\t': put_string(out, lit("\\t")); break;
+        case '\n': put_string(out, lit("\\n")); break;
+        case '\v': put_string(out, lit("\\v")); break;
+        case '\f': put_string(out, lit("\\f")); break;
+        case '\r': put_string(out, lit("\\r")); break;
+        case '"': put_string(out, lit("\\\"")); break;
+        case '\\': put_string(out, lit("\\\\")); break;
+        case 27: put_string(out, lit("\\e")); break;
         default:
           if (iswprint(*ptr))
-            put_cchar(out, *ptr);
+            put_char(out, chr(*ptr));
           else
-            cformat(out, L"\\%03o", (int) *ptr);
+            format(out, lit("\\~03o"), num(*ptr), nao);
         }
       }
-      put_cchar(out, '"');
+      put_char(out, chr('"'));
     }
     return;
   case CHR:
     {
-      int ch = c_chr(obj);
+      wchar_t ch = c_chr(obj);
 
-      put_cchar(out, '\'');
+      put_char(out, chr('\''));
       switch (ch) {
-      case L'\a': put_cstring(out, L"\\a"); break;
-      case L'\b': put_cstring(out, L"\\b"); break;
-      case L'\t': put_cstring(out, L"\\t"); break;
-      case L'\n': put_cstring(out, L"\\n"); break;
-      case L'\v': put_cstring(out, L"\\v"); break;
-      case L'\f': put_cstring(out, L"\\f"); break;
-      case L'\r': put_cstring(out, L"\\r"); break;
-      case L'"': put_cstring(out, L"\\\""); break;
-      case L'\\': put_cstring(out, L"\\\\"); break;
-      case 27: put_cstring(out, L"\\e"); break;
+      case '\a': put_string(out, lit("\\a")); break;
+      case '\b': put_string(out, lit("\\b")); break;
+      case '\t': put_string(out, lit("\\t")); break;
+      case '\n': put_string(out, lit("\\n")); break;
+      case '\v': put_string(out, lit("\\v")); break;
+      case '\f': put_string(out, lit("\\f")); break;
+      case '\r': put_string(out, lit("\\r")); break;
+      case '"': put_string(out, lit("\\\"")); break;
+      case '\\': put_string(out, lit("\\\\")); break;
+      case 27: put_string(out, lit("\\e")); break;
       default:
         if (iswprint(ch))
-          put_cchar(out, ch);
+          put_char(out, chr(ch));
         else
-          cformat(out, L"\\%03o", ch);
+          format(out, lit("\\~03o"), num(ch), nao);
       }
-      put_cchar(out, '\'');
+      put_char(out, chr('\''));
     }
     return;
   case NUM:
-    cformat(out, L"%ld", c_num(obj));
+    format(out, lit("~s"), obj, nao);
     return;
   case SYM:
     put_string(out, symbol_name(obj));
     return;
   case FUN:
-    cformat(out, L"#<function: f%d>", (int) obj->f.functype);
+    format(out, lit("#<function: f~a>"), num(obj->f.functype), nao);
     return;
   case VEC:
     {
       long i, fill = c_num(obj->v.vec[vec_fill]);
-      put_cstring(out, L"#(");
+      put_string(out, lit("#("));
       for (i = 0; i < fill; i++) {
         obj_print(obj->v.vec[i], out);
         if (i < fill - 1)
-          put_cchar(out, ' ');
+          put_char(out, chr(' '));
       }
-      put_cchar(out, ')');
+      put_char(out, chr(')'));
     }
     return;
   case LSTR:
     obj_print(obj->ls.prefix, out);
-    put_cstring(out, L"#<... lazy string>");
+    put_string(out, lit("#<... lazy string>"));
     return;
   case COBJ:
     obj->co.ops->print(obj, out);
     return;
   }
 
-  cformat(out, L"#<garbage: %p>", (void *) obj);
+  format(out, lit("#<garbage: ~p>"), (void *) obj, nao);
 }
 
 void obj_pprint(obj_t *obj, obj_t *out)
 {
   if (obj == nil) {
-    put_cstring(out, L"nil");
+    put_string(out, lit("nil"));
     return;
   }
 
@@ -1965,21 +1965,22 @@ void obj_pprint(obj_t *obj, obj_t *out)
   case LCONS:
     {
       obj_t *iter;
-      put_cchar(out, '(');
+      put_char(out, chr('('));
       for (iter = obj; consp(iter); iter = cdr(iter)) {
         obj_pprint(car(iter), out);
         if (nullp(cdr(iter))) {
-          put_cchar(out, ')');
+          put_char(out, chr(')'));
         } else if (consp(cdr(iter))) {
-          put_cchar(out, ' ');
+          put_char(out, chr(' '));
         } else {
-          put_cstring(out, L" . ");
+          put_string(out, lit(" . "));
           obj_pprint(cdr(iter), out);
-          put_cchar(out, ')');
+          put_char(out, chr(')'));
         }
       }
     }
     return;
+  case LIT:
   case STR:
     put_string(out, obj);
     return;
@@ -1987,36 +1988,36 @@ void obj_pprint(obj_t *obj, obj_t *out)
     put_char(out, obj);
     return;
   case NUM:
-    cformat(out, L"%ld", c_num(obj));
+    format(out, lit("~s"), obj, nao);
     return;
   case SYM:
     put_string(out, symbol_name(obj));
     return;
   case FUN:
-    cformat(out, L"#<function: f%d>", (int) obj->f.functype);
+    format(out, lit("#<function: f~a>"), num(obj->f.functype), nao);
     return;
   case VEC:
     {
       long i, fill = c_num(obj->v.vec[vec_fill]);
-      put_cstring(out, L"#(");
+      put_string(out, lit("#("));
       for (i = 0; i < fill; i++) {
         obj_pprint(obj->v.vec[i], out);
         if (i < fill - 1)
-          put_cchar(out, ' ');
+          put_char(out, chr(' '));
       }
-      put_cchar(out, ')');
+      put_char(out, chr(')'));
     }
     return;
   case LSTR:
     obj_pprint(obj->ls.prefix, out);
-    put_cstring(out, L"...");
+    put_string(out, lit("..."));
     return;
   case COBJ:
     obj->co.ops->print(obj, out);
     return;
   }
 
-  cformat(out, L"#<garbage: %p>", (void *) obj);
+  format(out, lit("#<garbage: ~p>"), (void *) obj, nao);
 }
 
 void init(const wchar_t *pn, void *(*oom)(void *, size_t),
@@ -2037,7 +2038,7 @@ void init(const wchar_t *pn, void *(*oom)(void *, size_t),
 void dump(obj_t *obj, obj_t *out)
 {
   obj_print(obj, out);
-  put_cchar(out, '\n');
+  put_char(out, chr('\n'));
 }
 
 /*

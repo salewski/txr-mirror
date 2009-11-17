@@ -1,3 +1,99 @@
+2009-11-16  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Big round of changes to switch the code base to use the stream
+	abstraction instead of directly using C standard I/O,
+	to eliminate most uses of C formatted I/O,
+	and fix numerous bugs, such variadic argument lists which
+	lack a terminating ``nao'' sentinel. 
+	
+	Bug 28033 is addressed by this patch, since streams no longer provide
+	printf-compatible formatting. The native formatter is extended with
+	some additional capabilities to take over.
+
+	The work on literal objects is expanded and they are now used
+	throughout the code base.
+
+	Fixed bad realloc in string output stream: reallocating by number
+	of wide chars rather than bytes.
+
+	* gc.c (sweep): Debugging code switched from fprintf to format.
+
+	* lib.c (typ_check, type_check2, car, cdr, car_l, cdr_l, list,
+	num, chrp, apply, cobj_print_op, dump): Retargetted, with help of new
+	literals, to new funtions that take string objects, rather than raw C
+	strings.
+	(obj_print, obj_pprint): Revamped with support for LIT type.
+	Retargetted to not use C style I/O functions in streams.
+
+	* lib.h (lit): Macro retargetted to another macro so that it expands
+	its argument.
+	(lit_noex): New macro, like lit, but does not macro-expand argument.
+	(auto_str): New macro.
+	(static_str): New macro.
+
+	* match.c (debugf, debuglf, sem_error, file_err): Converted from C
+	string to string object.
+	(dest_bind, match_line, LOG_MISMATCH, LOG_MATCH, match_files):
+	Retargetted to new interfaces that take string objects rather than raw
+	C strings.
+	(complex_stream): New function.
+	(do_output_line, do_output, extract): Retargetted from C streams to
+	object streams.	
+
+	* parser.h (yyerrorf): Declaration updated.
+
+	* parser.l (yyerror): Call new yyerrorf interface, using auto_str
+	macro to dress up C string as a temporary object.
+	(yyerrorf): Changed from C strings to object strings.	
+	(yybadtoken, grammar): Retargetted to new yyerrorf.
+
+	* stream.c (strm_ops): put_string and put_char function pointers
+	changed to take object strings rather than C strings.  vcformat and
+	vformat virtuals removed. C formatting is not supported, and vformat is
+	handled above the stream switch level in one place for all streams.
+	(common_vformat, stdio_vcformat, string_out_vcformat, cformat,
+	put_cstring, put_cchar): Functions removed.	
+	(stdio_stream_print, stdio_stream_destroy, stdio_maybe_write_error,
+	stdio_put_string, stdio_put_char, stdio_close, pipe_close,
+	string_out_put_char, make_pipe_stream, make_string_input_stream,
+	make_string_output_stream, make_dir_stream, close_stream,
+	get_line, put_line, get_char, put_char, put_string): Retargetted to new
+	string object interfaces.
+	(stdio_ops, pipe_ops): stdio_vcformat and common_vcformat initializers
+	(string_out_ops): string_out_vcformat and common_vcformat initializers
+	removed.
+	(string_in_ops, byte_in_ops, dir_ops): Two null initializers removed.
+	(string_out_put_string): Converted to object string interface.
+	Unnecessary chk_realloc call suppressed.
+	(get_string_from_stream): Fixed bad call to realloc with incorrect
+	size.
+	(vformat_num, vformat_str): New functions, helper to vformat.
+	(vformat): Rewritten. Is now the formatting engine.
+	(format, put_string, put_char): Interface converted from C string to
+	object string.
+
+	* stream.h (vformat, format): Declarations updated.
+	(vcformat, cformat, put_cstring, put_cchar): Declarations removed.
+
+	* txr.c (oom_realloc_handler, help, txr_main): Retargetted to object
+	stream and strings.
+
+	* unwind.c (uw_throw, type_mismatch, uw_register_subtype): Retargetted
+	to new string object interfaces.
+	(uw_throwf, uw_errorf): Interface changed from C string to object
+	string.
+	(uw_throwcf, uw_errorcf): Functions removed.
+
+	* unwind.h (uw_throwf, uw_errorf, type_mismatch): Declarations updated.
+	(uw_throwcf, uw_errorcf): Declarations removed.
+	(internal_error): Macro interface changed and retargetted to
+	object strings. Also, num hygiene problem worked around with local
+	extern declaration.
+	(numeric_assert, range_bug_unless): Retargetted to object strings.
+
+	* utf8.c (utf8_to, utf8_dup_from_uc, utf8_dup_from,
+	utf8_dup_to_uc): Casts of chk_malloc return value added.
+
 2009-11-15  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Use the 11 tag bit pattern to denote a new type: LIT. This is a

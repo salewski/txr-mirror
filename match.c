@@ -45,50 +45,39 @@
 
 int output_produced;
 
-static void debugf(const wchar_t *fmt, ...)
+static void debugf(obj_t *fmt, ...)
 {
   if (opt_loglevel >= 2) {
     va_list vl;
     va_start (vl, fmt);
-    format(std_error, L"~a: ", prog_string, nao);
+    format(std_error, lit("~a: "), prog_string, nao);
     vformat(std_error, fmt, vl);
-    put_cchar(std_error, '\n');
+    put_char(std_error, chr('\n'));
     va_end (vl);
   }
 }
 
-static void debuglf(obj_t *line, const wchar_t *fmt, ...)
+static void debuglf(obj_t *line, obj_t *fmt, ...)
 {
   if (opt_loglevel >= 2) {
     va_list vl;
     va_start (vl, fmt);
-    format(std_error, L"~a: (~a:~a) ", prog_string, spec_file_str, line, nao);
+    format(std_error, lit("~a: (~a:~a) "), prog_string,
+           spec_file_str, line, nao);
     vformat(std_error, fmt, vl);
-    put_cchar(std_error, '\n');
+    put_char(std_error, chr('\n'));
     va_end (vl);
   }
 }
 
-static void debuglcf(obj_t *line, const wchar_t *fmt, ...)
-{
-  if (opt_loglevel >= 2) {
-    va_list vl;
-    va_start (vl, fmt);
-    format(std_error, L"~a: (~a:~a) ", prog_string, spec_file_str, line, nao);
-    vcformat(std_error, fmt, vl);
-    put_cchar(std_error, '\n');
-    va_end (vl);
-  }
-}
-
-static void sem_error(obj_t *line, const wchar_t *fmt, ...)
+static void sem_error(obj_t *line, obj_t *fmt, ...)
 {
   va_list vl;
   obj_t *stream = make_string_output_stream();
 
   va_start (vl, fmt);
   if (line)
-    format(stream, L"(~a:~a) ", spec_file_str, line, nao);
+    format(stream, lit("(~a:~a) "), spec_file_str, line, nao);
   (void) vformat(stream, fmt, vl);
   va_end (vl);
 
@@ -96,14 +85,14 @@ static void sem_error(obj_t *line, const wchar_t *fmt, ...)
   abort();
 }
 
-static void file_err(obj_t *line, const wchar_t *fmt, ...)
+static void file_err(obj_t *line, obj_t *fmt, ...)
 {
   va_list vl;
   obj_t *stream = make_string_output_stream();
 
   va_start (vl, fmt);
   if (line)
-    format(stream, L"(~a:~a) ", spec_file_str, line, nao);
+    format(stream, lit("(~a:~a) "), spec_file_str, line, nao);
   (void) vformat(stream, fmt, vl);
   va_end (vl);
 
@@ -243,7 +232,7 @@ obj_t *dest_bind(obj_t *bindings, obj_t *pattern, obj_t *value)
         return bindings;
       if (tree_find(cdr(existing), value))
         return bindings;
-      debugf(L"bind variable mismatch: ~a", pattern, nao);
+      debugf(lit("bind variable mismatch: ~a"), pattern, nao);
       return t;
     }
     return cons(cons(pattern, value), bindings);
@@ -276,19 +265,19 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
                   obj_t *file)
 {
 #define LOG_MISMATCH(KIND)                                              \
-  debuglf(spec_lineno, KIND L" mismatch, position ~a (~a:~a)", pos,     \
+  debuglf(spec_lineno, lit(KIND " mismatch, position ~a (~a:~a)"), pos, \
             file, data_lineno, nao);                                    \
-  debuglf(spec_lineno, L"  ~a", dataline, nao);                         \
+  debuglf(spec_lineno, lit("  ~a"), dataline, nao);                     \
   if (c_num(pos) < 77)                                                  \
-    debuglcf(spec_lineno, L"  %*ls^", (int) c_num(pos), L"")
+    debuglf(spec_lineno, lit("  ~*~a^"), pos, lit(""), nao)
 
 #define LOG_MATCH(KIND, EXTENT)                                         \
-  debuglf(spec_lineno, KIND L" matched, position ~a-~a (~a:~a)",        \
+  debuglf(spec_lineno, lit(KIND " matched, position ~a-~a (~a:~a)"),    \
             pos, EXTENT, file, data_lineno, nao);                       \
-  debuglf(spec_lineno, L"  ~a", dataline, nao);                         \
+  debuglf(spec_lineno, lit("  ~a"), dataline, nao);                     \
   if (c_num(EXTENT) < 77)                                               \
-    debuglcf(spec_lineno, L"  %*ls%-*ls^", (int) c_num(pos),            \
-              L"", (int) (c_num(EXTENT) - c_num(pos)), L"^")
+    debuglf(spec_lineno, lit("  ~*~a~-*~a^"), pos, lit(""),             \
+              minus(EXTENT, pos), lit("^"), nao)
 
   for (;;) {
     obj_t *elem;
@@ -322,18 +311,18 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
 
               if (length_str_lt(dataline, past) || lt(past, pos))
               {
-                LOG_MISMATCH(L"fixed field size");
+                LOG_MISMATCH("fixed field size");
                 return nil;
               }
 
               if (!tree_find(trim_str(sub_str(dataline, pos, past)),
                              cdr(pair)))
               {
-                LOG_MISMATCH(L"fixed field contents");
+                LOG_MISMATCH("fixed field contents");
                 return nil;
               }
 
-              LOG_MATCH(L"fixed field", past);
+              LOG_MATCH("fixed field", past);
               pos = past;
               specline = cdr(specline);
             } else {
@@ -344,20 +333,20 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
             if (consp(modifier)) {
               obj_t *past = match_regex(dataline, car(modifier), pos);
               if (nullp(past)) {
-                LOG_MISMATCH(L"var positive regex");
+                LOG_MISMATCH("var positive regex");
                 return nil;
               }
-              LOG_MATCH(L"var positive regex", past);
+              LOG_MATCH("var positive regex", past);
               bindings = acons_new(bindings, sym, sub_str(dataline, pos, past));
               pos = past;
             } else if (nump(modifier)) {
               obj_t *past = plus(pos, modifier);
               if (length_str_lt(dataline, past) || lt(past, pos))
               {
-                LOG_MISMATCH(L"count based var");
+                LOG_MISMATCH("count based var");
                 return nil;
               }
-              LOG_MATCH(L"count based var", past);
+              LOG_MATCH("count based var", past);
               bindings = acons_new(bindings, sym, trim_str(sub_str(dataline, pos, past)));
               pos = past;
             } else {
@@ -367,10 +356,10 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
           } else if (type(pat) == STR) {
             obj_t *find = search_str(dataline, pat, pos, modifier);
             if (!find) {
-              LOG_MISMATCH(L"var delimiting string");
+              LOG_MISMATCH("var delimiting string");
               return nil;
             }
-            LOG_MATCH(L"var delimiting string", find);
+            LOG_MATCH("var delimiting string", find);
             bindings = acons_new(bindings, sym, sub_str(dataline, pos, find));
             pos = plus(find, length_str(pat));
           } else if (consp(pat) && typeof(first(pat)) == regex) {
@@ -378,10 +367,10 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
             obj_t *fpos = car(find);
             obj_t *flen = cdr(find);
             if (!find) {
-              LOG_MISMATCH(L"var delimiting regex");
+              LOG_MISMATCH("var delimiting regex");
               return nil;
             }
-            LOG_MATCH(L"var delimiting regex", fpos);
+            LOG_MATCH("var delimiting regex", fpos);
             bindings = acons_new(bindings, sym, sub_str(dataline, pos, fpos));
             pos = plus(fpos, flen);
           } else if (consp(pat) && first(pat) == var) {
@@ -391,7 +380,7 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
             obj_t *pair = assoc(bindings, second_sym); /* var exists already? */
 
             if (!pair)
-              sem_error(spec_lineno, L"consecutive unbound variables", nao);
+              sem_error(spec_lineno, lit("consecutive unbound variables"), nao);
 
             /* Re-generate a new spec with an edited version of
                the element we just processed, and repeat. */
@@ -408,14 +397,14 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
           } else if (consp(pat) && (consp(first(pat)) || stringp(first(pat)))) {
             cons_bind (find, len, search_str(dataline, pat, pos, modifier));
             if (!find) {
-              LOG_MISMATCH(L"string");
+              LOG_MISMATCH("string");
               return nil;
             }
             bindings = acons_new(bindings, sym, sub_str(dataline, pos, find));
             pos = plus(find, len);
           } else {
             sem_error(spec_lineno,
-                      L"variable followed by invalid element", nao);
+                      lit("variable followed by invalid element"), nao);
           }
         } else if (typeof(directive) == regex) {
           obj_t *past = match_regex(dataline, directive, pos);
@@ -477,7 +466,7 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
 
 
           if (!bindings_coll) {
-            debuglf(spec_lineno, L"nothing was collected", nao);
+            debuglf(spec_lineno, lit("nothing was collected"), nao);
             return nil;
           }
 
@@ -491,15 +480,15 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
           obj_t *newpos;
 
           if (find == nil || !equal(find, pos)) {
-            LOG_MISMATCH(L"string tree");
+            LOG_MISMATCH("string tree");
             return nil;
           }
 
           newpos = plus(find, len);
-          LOG_MATCH(L"string tree", newpos);
+          LOG_MATCH("string tree", newpos);
           pos = newpos;
         } else {
-          sem_error(spec_lineno, L"unknown directive: ~a", directive, nao);
+          sem_error(spec_lineno, lit("unknown directive: ~a"), directive, nao);
         }
       }
       break;
@@ -517,7 +506,7 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
         break;
       }
     default:
-      sem_error(spec_lineno, L"unsupported object in spec: ~s", elem, nao);
+      sem_error(spec_lineno, lit("unsupported object in spec: ~s"), elem, nao);
     }
 
     specline = cdr(specline);
@@ -698,6 +687,21 @@ obj_t *complex_snarf(fpip_t fp, obj_t *name)
   internal_error("bad input source type");
 }
 
+obj_t *complex_stream(fpip_t fp, obj_t *name)
+{
+  switch (fp.close) {
+  case fpip_fclose:
+    return make_stdio_stream(fp.f, name, t, nil);
+  case fpip_pclose:
+    return make_pipe_stream(fp.f, name, t, nil);
+  case fpip_closedir:
+    uw_throwf(query_error, lit("cannot output to directory: ~a"), name, nao);
+  }
+
+  internal_error("bad input source type");
+}
+
+
 obj_t *robust_length(obj_t *obj)
 {
   if (obj == nil)
@@ -750,7 +754,7 @@ obj_t *extract_bindings(obj_t *bindings, obj_t *output_spec)
 }
 
 void do_output_line(obj_t *bindings, obj_t *specline,
-                    obj_t *spec_lineno, FILE *out)
+                    obj_t *spec_lineno, obj_t *out)
 {
   for (; specline; specline = rest(specline)) {
     obj_t *elem = first(specline);
@@ -763,8 +767,9 @@ void do_output_line(obj_t *bindings, obj_t *specline,
         if (directive == var) {
           obj_t *str = cat_str(subst_vars(cons(elem, nil), bindings), nil);
           if (str == nil)
-            sem_error(spec_lineno, L"bad substitution: ~a", second(elem), nao);
-          fputws(c_str(str), out);
+            sem_error(spec_lineno, lit("bad substitution: ~a"),
+                      second(elem), nao);
+          put_string(out, str);
         } else if (directive == rep) {
           obj_t *main_clauses = second(elem);
           obj_t *single_clauses = third(elem);
@@ -803,22 +808,23 @@ void do_output_line(obj_t *bindings, obj_t *specline,
           }
 
         } else {
-          sem_error(spec_lineno, L"unknown directive: ~a", directive, nao);
+          sem_error(spec_lineno, lit("unknown directive: ~a"), directive, nao);
         }
       }
       break;
     case STR:
-      fputws(c_str(elem), out);
+      put_string(out, elem);
       break;
     case 0:
       break;
     default:
-      sem_error(spec_lineno, L"unsupported object in output spec: ~s", elem);
+      sem_error(spec_lineno,
+                lit("unsupported object in output spec: ~s"), elem, nao);
     }
   }
 }
 
-void do_output(obj_t *bindings, obj_t *specs, FILE *out)
+void do_output(obj_t *bindings, obj_t *specs, obj_t *out)
 {
   if (equal(specs, null_list))
     return;
@@ -871,7 +877,7 @@ void do_output(obj_t *bindings, obj_t *specs, FILE *out)
     }
 
     do_output_line(bindings, specline, spec_lineno, out);
-    putwc('\n', out);
+    put_char(out, chr('\n'));
   }
 }
 
@@ -893,21 +899,21 @@ obj_t *match_files(obj_t *spec, obj_t *files,
     obj_t *first_spec_item = second(first(spec));
 
     if (consp(first_spec_item) && eq(first(first_spec_item), next)) {
-      debugf(L"not opening source ~a since query starts with next directive",
-             name, nao);
+      debugf(lit("not opening source ~a "
+                 "since query starts with next directive"), name, nao);
     } else {
-      debugf(L"opening data source ~a", name, nao);
+      debugf(lit("opening data source ~a"), name, nao);
 
       if (complex_open_failed(fp)) {
         if (consp(source_spec) && car(source_spec) == nothrow) {
-          debugf(L"could not open ~a: treating as failed match due to nothrow",
-                 name, nao);
+          debugf(lit("could not open ~a: "
+                     "treating as failed match due to nothrow"), name, nao);
           return nil;
         } else if (errno != 0)
-          file_err(nil, L"could not open ~a (error ~a/~a)", name,
+          file_err(nil, lit("could not open ~a (error ~a/~a)"), name,
                    num(errno), string_utf8(strerror(errno)), nao);
         else
-          file_err(nil, L"could not open ~a", name, nao);
+          file_err(nil, lit("could not open ~a"), name, nao);
         return nil;
       }
 
@@ -936,7 +942,7 @@ repeat_spec_same_data:
 
         if (rest(specline))
           sem_error(spec_linenum,
-                    L"unexpected material after skip directive", nao);
+                    lit("unexpected material after skip directive"), nao);
 
         if ((spec = rest(spec)) == nil)
           break;
@@ -949,12 +955,12 @@ repeat_spec_same_data:
                                  data, num(data_lineno));
 
             if (result) {
-              debuglf(spec_linenum, L"skip matched ~a:~a", first(files),
+              debuglf(spec_linenum, lit("skip matched ~a:~a"), first(files),
                       num(data_lineno), nao);
               break;
             }
 
-            debuglf(spec_linenum, L"skip didn't match ~a:~a", first(files),
+            debuglf(spec_linenum, lit("skip didn't match ~a:~a"), first(files),
                     num(data_lineno), nao);
             data = rest(data);
             data_lineno++;
@@ -967,12 +973,12 @@ repeat_spec_same_data:
             return result;
         }
 
-        debuglf(spec_linenum, L"skip failed", nao);
+        debuglf(spec_linenum, lit("skip failed"), nao);
         return nil;
       } else if (sym == trailer) {
         if (rest(specline))
           sem_error(spec_linenum,
-                    L"unexpected material after trailer directive", nao);
+                    lit("unexpected material after trailer directive"), nao);
 
         if ((spec = rest(spec)) == nil)
           break;
@@ -994,7 +1000,7 @@ repeat_spec_same_data:
 
         if ((spec = rest(spec)) == nil) {
           sem_error(spec_linenum,
-                    L"freeform must be followed by a query line", nao);
+                    lit("freeform must be followed by a query line"), nao);
         } else {
           obj_t *limit = or2(if2(nump(first(vals)), first(vals)),
                              if2(nump(second(vals)), second(vals)));
@@ -1008,7 +1014,7 @@ repeat_spec_same_data:
                                 spec_linenum, num(data_lineno), first(files)));
 
           if (!success) {
-            debuglf(spec_linenum, L"freeform match failure", nao);
+            debuglf(spec_linenum, lit("freeform match failure"), nao);
             return nil;
           }
 
@@ -1026,7 +1032,7 @@ repeat_spec_same_data:
         obj_t *name = first(rest(first_spec));
         if (rest(specline))
           sem_error(spec_linenum,
-                    L"unexpected material after block directive", nao);
+                    lit("unexpected material after block directive"), nao);
         if ((spec = rest(spec)) == nil)
           break;
         {
@@ -1039,7 +1045,7 @@ repeat_spec_same_data:
         obj_t *target = first(rest(first_spec));
 
         if (rest(specline))
-          sem_error(spec_linenum, L"unexpected material after ~a", sym, nao);
+          sem_error(spec_linenum, lit("unexpected material after ~a"), sym, nao);
 
         uw_block_return(target,
                         if2(sym == accept,
@@ -1047,15 +1053,16 @@ repeat_spec_same_data:
                                  if3(data, cons(data, num(data_lineno)), t))));
         /* TODO: uw_block_return could just throw this */
         if (target)
-          sem_error(spec_linenum, L"~a: no block named ~a in scope",
+          sem_error(spec_linenum, lit("~a: no block named ~a in scope"),
                     sym, target, nao);
         else
-          sem_error(spec_linenum, L"%~a: no anonymous block in scope", sym, nao);
+          sem_error(spec_linenum, lit("%~a: no anonymous block in scope"),
+                    sym, nao);
         return nil;
       } else if (sym == next) {
         if (rest(first_spec) && rest(specline))
-          sem_error(spec_linenum,
-                    L"invalid combination of old and new next syntax", nao);
+          sem_error(spec_linenum, lit("invalid combination of old "
+                                      "and new next syntax"), nao);
 
         if ((spec = rest(spec)) == nil)
           break;
@@ -1081,7 +1088,7 @@ repeat_spec_same_data:
             obj_t *name = cdr(val);
 
             if (!val)
-              sem_error(spec_linenum, L"next: unbound variable in form ~a",
+              sem_error(spec_linenum, lit("next: unbound variable in form ~a"),
                         first(source), nao);
 
             if (eq(second(source), nothrow)) {
@@ -1090,7 +1097,7 @@ repeat_spec_same_data:
               } else {
                 files = rest(files);
                 if (!files) {
-                  debuglf(spec_linenum, L"next: out of arguments", nao);
+                  debuglf(spec_linenum, lit("next: out of arguments"), nao);
                   return nil;
                 }
                 files = cons(cons(nothrow, first(files)), rest(files));
@@ -1101,7 +1108,7 @@ repeat_spec_same_data:
               } else {
                 files = rest(files);
                 if (!files)
-                  sem_error(spec_linenum, L"next: out of arguments", nao);
+                  sem_error(spec_linenum, lit("next: out of arguments"), nao);
                 files = cons(cons(nothrow, first(files)), rest(files));
               }
             }
@@ -1110,14 +1117,15 @@ repeat_spec_same_data:
           obj_t *sub = subst_vars(rest(specline), bindings);
           obj_t *str = cat_str(sub, nil);
           if (str == nil) {
-            sem_error(spec_linenum, L"bad substitution in next file spec", nao);
+            sem_error(spec_linenum, lit("bad substitution in next file spec"),
+                      nao);
             continue;
           }
           files = cons(cons(nothrow, str), files);
         } else {
           files = rest(files);
           if (!files)
-            sem_error(spec_linenum, L"next: out of arguments", nao);
+            sem_error(spec_linenum, lit("next: out of arguments"), nao);
         }
 
         /* We recursively process the file list, but the new
@@ -1171,17 +1179,17 @@ repeat_spec_same_data:
         }
 
         if (sym == all && !all_match) {
-          debuglf(spec_linenum, L"all: some clauses didn't match", nao);
+          debuglf(spec_linenum, lit("all: some clauses didn't match"), nao);
           return nil;
         }
 
         if ((sym == some || sym == cases) && !some_match) {
-          debuglf(spec_linenum, L"some/cases: no clauses matched", nao);
+          debuglf(spec_linenum, lit("some/cases: no clauses matched"), nao);
           return nil;
         }
 
         if (sym == none && some_match) {
-          debuglf(spec_linenum, L"none: some clauses matched", nao);
+          debuglf(spec_linenum, lit("none: some clauses matched"), nao);
           return nil;
         }
 
@@ -1227,8 +1235,8 @@ repeat_spec_same_data:
           }
 
           if (success) {
-            debuglcf(spec_linenum, L"collect matched %ls:%ld",
-                     c_str(first(files)), data_lineno);
+            debuglf(spec_linenum, lit("collect matched ~a:~a"),
+                    first(files), num(data_lineno), nao);
 
             for (iter = new_bindings; iter && iter != bindings;
                 iter = cdr(iter))
@@ -1253,14 +1261,13 @@ repeat_spec_same_data:
                 new_lineno++;
               }
 
-              debuglcf(spec_linenum,
-                       L"collect advancing from line %ld to %ld",
-                       data_lineno, new_lineno);
+              debuglf(spec_linenum, lit("collect advancing from line ~a to ~a"),
+                      num(data_lineno), num(new_lineno), nao);
 
               data = new_data;
               data_lineno = new_lineno;
             } else {
-              debuglf(spec_linenum, L"collect consumed entire file", nao);
+              debuglf(spec_linenum, lit("collect consumed entire file"), nao);
               data = nil;
             }
           } else {
@@ -1272,12 +1279,12 @@ repeat_spec_same_data:
         uw_block_end;
 
         if (!result) {
-          debuglf(spec_linenum, L"collect explicitly failed", nao);
+          debuglf(spec_linenum, lit("collect explicitly failed"), nao);
           return nil;
         }
 
         if (!bindings_coll) {
-          debuglf(spec_linenum, L"nothing was collected", nao);
+          debuglf(spec_linenum, lit("nothing was collected"), nao);
           return nil;
         }
 
@@ -1298,7 +1305,8 @@ repeat_spec_same_data:
           obj_t *sym = first(iter);
 
           if (!symbolp(sym)) {
-            sem_error(spec_linenum, L"non-symbol in flatten directive", nao);
+            sem_error(spec_linenum, lit("non-symbol in flatten directive"),
+                      nao);
           } else {
             obj_t *existing = assoc(bindings, sym);
 
@@ -1324,7 +1332,7 @@ repeat_spec_same_data:
         obj_t *merged = nil;
 
         if (!target || !symbolp(target))
-          sem_error(spec_linenum, L"bad merge directive", nao);
+          sem_error(spec_linenum, lit("bad merge directive"), nao);
 
         for (; args; args = rest(args)) {
           obj_t *other_sym = first(args);
@@ -1333,9 +1341,10 @@ repeat_spec_same_data:
             obj_t *other_lookup = assoc(bindings, other_sym);
 
             if (!symbolp(other_sym))
-              sem_error(spec_linenum, L"non-symbol in merge directive", nao);
+              sem_error(spec_linenum, lit("non-symbol in merge directive"),
+                        nao);
             else if (!other_lookup)
-              sem_error(spec_linenum, L"merge: nonexistent symbol ~a",
+              sem_error(spec_linenum, lit("merge: nonexistent symbol ~a"),
                         other_sym, nao);
 
             if (merged)
@@ -1358,7 +1367,8 @@ repeat_spec_same_data:
         obj_t *val = eval_form(form, bindings);
 
         if (!val)
-          sem_error(spec_linenum, L"bind: unbound variable on right side", nao);
+          sem_error(spec_linenum, lit("bind: unbound variable on right side"),
+                    nao);
 
         bindings = dest_bind(bindings, pattern, cdr(val));
 
@@ -1376,7 +1386,7 @@ repeat_spec_same_data:
           obj_t *sym = first(iter);
 
           if (!symbolp(sym)) {
-            sem_error(spec_linenum, L"non-symbol in cat directive", nao);
+            sem_error(spec_linenum, lit("non-symbol in cat directive"), nao);
           } else {
             obj_t *existing = assoc(bindings, sym);
             obj_t *sep = nil;
@@ -1413,8 +1423,8 @@ repeat_spec_same_data:
             obj_t *val = eval_form(form, bindings);
 
             if (!val)
-              sem_error(spec_linenum, L"output: unbound variable in form ~a",
-                        form, nao);
+              sem_error(spec_linenum,
+                        lit("output: unbound variable in form ~a"), form, nao);
 
             nt = eq(second(new_style_dest), nothrow);
             dest = or2(cdr(val), string(L"-"));
@@ -1423,22 +1433,23 @@ repeat_spec_same_data:
 
         fpip_t fp = (errno = 0, complex_open(dest, t));
 
-        debugf(L"opening data sink ~a", dest, nao);
+        debugf(lit("opening data sink ~a"), dest, nao);
 
         if (complex_open_failed(fp)) {
           if (nt) {
-            debugf(L"could not open ~a: treating as failed match due to nothrow",
-                   dest, nao);
+            debugf(lit("could not open ~a: "
+                       "treating as failed match due to nothrow"), dest, nao);
             return nil;
           } else if (errno != 0) {
-            file_err(nil, L"could not open ~a (error ~a/~a)", dest,
+            file_err(nil, lit("could not open ~a (error ~a/~a)"), dest,
                      num(errno), string_utf8(strerror(errno)), nao);
           } else {
-            file_err(nil, L"could not open ~a", dest, nao);
+            file_err(nil, lit("could not open ~a"), dest, nao);
           }
         } else {
-          do_output(bindings, specs, fp.f);
-          complex_close(fp);
+          obj_t *stream = complex_stream(fp, dest);
+          do_output(bindings, specs, stream);
+          close_stream(stream, t);
         }
 
         if ((spec = rest(spec)) == nil)
@@ -1452,7 +1463,8 @@ repeat_spec_same_data:
         obj_t *params = second(args);
 
         if (rest(specline))
-          sem_error(spec_linenum, L"unexpected material after define", nao);
+          sem_error(spec_linenum,
+                    lit("unexpected material after define"), nao);
 
         uw_set_func(name, cons(params, body));
 
@@ -1595,7 +1607,8 @@ repeat_spec_same_data:
       } else if (sym == defex) {
         obj_t *types = rest(first_spec);
         if (!all_satisfy(types, func_n1(symbolp), nil))
-          sem_error(spec_linenum, L"defex arguments must all be symbols", nao);
+          sem_error(spec_linenum, lit("defex arguments must all be symbols"),
+                    nao);
         (void) reduce_left(func_n2(uw_register_subtype), types, nil, nil);
         if ((spec = rest(spec)) == nil)
           break;
@@ -1604,7 +1617,7 @@ repeat_spec_same_data:
         obj_t *type = second(first_spec);
         obj_t *args = rest(rest(first_spec));
         if (!symbolp(type))
-          sem_error(spec_linenum, L"throw: ~a is not a type symbol",
+          sem_error(spec_linenum, lit("throw: ~a is not a type symbol"),
                     first(first_spec), nao);
         {
           obj_t *values = mapcar(bind2other(func_n2(eval_form), bindings),
@@ -1623,7 +1636,7 @@ repeat_spec_same_data:
           obj_t *bindings_cp = copy_alist(bindings);
 
           if (!equal(length(args), length(params)))
-            sem_error(spec_linenum, L"function ~a takes ~a argument(s)",
+            sem_error(spec_linenum, lit("function ~a takes ~a argument(s)"),
                       sym, length(params), nao);
 
           for (piter = params, aiter = args; piter;
@@ -1646,7 +1659,8 @@ repeat_spec_same_data:
               obj_t *val = eval_form(arg, bindings);
               if (!val)
                 sem_error(spec_linenum,
-                          L"unbound variable in function argument form", nao);
+                          lit("unbound variable in function argument form"),
+                          nao);
               bindings_cp = acons_new(bindings_cp, param, cdr(val));
             }
           }
@@ -1660,7 +1674,7 @@ repeat_spec_same_data:
             uw_block_end;
 
             if (!result) {
-              debuglf(spec_linenum, L"function failed", nao);
+              debuglf(spec_linenum, lit("function failed"), nao);
               return nil;
             }
 
@@ -1676,8 +1690,9 @@ repeat_spec_same_data:
                   if (newbind) {
                     bindings = dest_bind(bindings, arg, cdr(newbind));
                     if (bindings == t) {
-                      debuglf(spec_linenum, L"binding mismatch on ~a "
-                                L"when returning from ~a", arg, sym, nao);
+                      debuglf(spec_linenum,
+                              lit("binding mismatch on ~a "
+                                  "when returning from ~a"), arg, sym, nao);
                       return nil;
                     }
                   }
@@ -1685,13 +1700,15 @@ repeat_spec_same_data:
               }
 
               if (consp(success)) {
-                debuglcf(spec_linenum,
-                        L"function matched; advancing from line %ld to %ld",
-                        data_lineno, c_num(cdr(success)));
+                debuglf(spec_linenum,
+                        lit("function matched; "
+                            "advancing from line ~a to ~a"),
+                        num(data_lineno), cdr(success), nao);
                 data = car(success);
                 data_lineno = c_num(cdr(success));
               } else {
-                debuglf(spec_linenum, L"function consumed entire file", nao);
+                debuglf(spec_linenum, lit("function consumed entire file"),
+                        nao);
                 data = nil;
               }
             }
@@ -1714,7 +1731,7 @@ repeat_spec_same_data:
                             spec_linenum, num(data_lineno), first(files)));
 
       if (nump(success) && c_num(success) < c_num(length_str(dataline))) {
-        debuglf(spec_linenum, L"spec only matches line to position ~a: ~a",
+        debuglf(spec_linenum, lit("spec only matches line to position ~a: ~a"),
                 success, dataline, nao);
         return nil;
       }
@@ -1743,7 +1760,7 @@ int extract(obj_t *spec, obj_t *files, obj_t *predefined_bindings)
     }
 
     if (!success)
-      fputws(L"false", stdout);
+      put_line(std_output, lit("false"));
   }
 
   return success ? 0 : EXIT_FAILURE;
