@@ -1006,7 +1006,7 @@ obj_t *chr(wchar_t ch)
 
 obj_t *chrp(obj_t *chr)
 {
-  return (is_chr(num)) ? t : nil;
+  return (is_chr(chr)) ? t : nil;
 }
 
 wchar_t c_chr(obj_t *chr)
