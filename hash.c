@@ -189,6 +189,7 @@ static struct cobj_ops hash_ops = {
   cobj_print_op,
   hash_destroy,
   hash_mark,
+  0
 };
 
 void hash_grow(struct hash *h)
