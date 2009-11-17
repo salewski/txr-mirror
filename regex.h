@@ -41,33 +41,33 @@ typedef cset_L1_t *cset_L2_t[16];
 typedef cset_L2_t *cset_L3_t[17];
 
 struct any_char_set {
-  chset_type_t type : 4;
-  int compl : 2;
+  unsigned type : 3;
+  unsigned compl : 1;
 };
 
 struct small_char_set {
-  chset_type_t type : 4;
-  int compl : 2;
+  unsigned type : 3;
+  unsigned compl : 1;
   cset_L0_t bitcell;
 };
 
 struct displaced_char_set {
-  chset_type_t type : 4;
-  int compl : 2;
+  unsigned type : 3;
+  unsigned compl : 1;
   cset_L0_t bitcell;
   wchar_t base;
 };
 
 
 struct large_char_set {
-  chset_type_t type : 4;
-  int inv : 2;
+  unsigned type : 3;
+  unsigned compl : 1;
   cset_L2_t dir;
 };
 
 struct xlarge_char_set {
-  chset_type_t type : 4;
-  int inv : 2;
+  unsigned type : 3;
+  unsigned compl : 1;
   cset_L3_t dir;
 };
 

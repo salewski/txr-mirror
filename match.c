@@ -1411,6 +1411,7 @@ repeat_spec_same_data:
         obj_t *new_style_dest = fourth(first_spec);
         obj_t *nt = nil;
         obj_t *dest;
+        fpip_t fp;
 
         if (old_style_dest) {
           dest = cat_str(subst_vars(old_style_dest, bindings), nil);
@@ -1431,7 +1432,7 @@ repeat_spec_same_data:
           }
         }
 
-        fpip_t fp = (errno = 0, complex_open(dest, t));
+        fp = (errno = 0, complex_open(dest, t));
 
         debugf(lit("opening data sink ~a"), dest, nao);
 
