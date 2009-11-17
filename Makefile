@@ -48,6 +48,9 @@ lex.yy.c: parser.l
 y.tab.c y.tab.h: parser.y
 	if $(YACC) -v -d $< ; then true ; else rm $@ ; false ; fi
 
+.PHONY: rebuild
+rebuild: clean $(PROG)
+
 .PHONY: clean
 clean:
 	rm -f $(PROG) $(OBJS) \
