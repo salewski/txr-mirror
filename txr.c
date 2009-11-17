@@ -42,7 +42,7 @@
 #include "utf8.h"
 #include "txr.h"
 
-const wchar_t *version = L"021";
+const wchar_t *version = L"022";
 const wchar_t *progname = L"txr";
 const wchar_t *spec_file = L"stdin";
 obj_t *spec_file_str;
