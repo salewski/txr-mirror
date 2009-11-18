@@ -1,5 +1,30 @@
 2009-11-17  Kaz Kylheku  <kkylheku@gmail.com>
 
+	More removal of C99 wide character I/O, and tightening up
+	of standard conformance.
+
+	* configure (lang_flags): Specify -D_POSIX_C_SOURCE=2 to obtain
+	POSIX 1003.1 and POSIX 1003.2 functions from the headers,
+	without GNU extensions. Specify -std=c89 to get C89 conformance
+	from gcc. 
+
+	* match.c (dump_byte_string): New function.
+	(dump_shell_string): Retargetted to object streams.
+	(dump_var, dump_bindings): Retargetted to object streams.
+	Changed back to using a byte string for the array index prefixes,
+	to avoid using the wide-character swprintf.
+
+	* parser.l (grammar): Eliminate wcsdup uses in favor of chk_strdup.
+	Not only is wcsdup a GNU extension, it doesn't have the OOM check.
+
+	* stream.c: Added <sys/wait.h> header to define WIFEXITED and others.
+
+	* txr.c: Added include of <stdarg.h>. Removed <locale.h>,
+	(main): Removed setlocale call. Not needed any more, since wide
+	stream and string I/O is no longer used from the C library.
+
+2009-11-17  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Removing use of C99 wide character I/O.
 
 	* stream.c (BROKEN_POPEN_GETWC): Macro removed. Work around no
