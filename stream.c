@@ -24,12 +24,6 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-/*
- * Enable code to work around getwc crash in glibc,
- * which happens on FILE * handles from popen.
- */
-#define BROKEN_POPEN_GETWC
-
 #include <stdio.h>
 #include <string.h>
 #include <dirent.h>
@@ -70,10 +64,8 @@ static void common_destroy(obj_t *obj)
 
 struct stdio_handle {
   FILE *f;
-#ifdef BROKEN_POPEN_GETWC
-  FILE *f_orig_pipe;
-#endif
   obj_t *descr;
+  struct utf8_decoder ud;
 };
 
 void stdio_stream_print(obj_t *stream, obj_t *out)
@@ -98,6 +90,8 @@ void stdio_stream_mark(obj_t *stream)
 static obj_t *stdio_maybe_read_error(obj_t *stream)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
+  if (h->f == 0)
+    uw_throwf(file_error, lit("error reading ~a: file closed"), stream, nao);
   if (ferror(h->f)) {
     clearerr(h->f);
     uw_throwf(file_error, lit("error reading ~a: ~a/~s"),
@@ -109,29 +103,46 @@ static obj_t *stdio_maybe_read_error(obj_t *stream)
 static obj_t *stdio_maybe_write_error(obj_t *stream)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
-  if (ferror(h->f)) {
-    clearerr(h->f);
-    uw_throwf(file_error, lit("error writing ~a: ~a/~s"),
-              stream, num(errno), string_utf8(strerror(errno)), nao);
-  }
-  return nil;
+  if (h->f == 0)
+    uw_throwf(file_error, lit("error reading ~a: file closed"), stream, nao);
+  clearerr(h->f);
+  uw_throwf(file_error, lit("error writing ~a: ~a/~s"),
+            stream, num(errno), string_utf8(strerror(errno)), nao);
 }
 
-static obj_t *stdio_put_string(obj_t *stream, obj_t *s)
+static int stdio_put_char_callback(int ch, void *f)
+{
+  return putc(ch, (FILE *) f) != EOF;
+}
+
+static int stdio_get_char_callback(void *f)
+{
+  return getc((FILE *) f);
+}
+
+static obj_t *stdio_put_string(obj_t *stream, obj_t *str)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
-  return (h->f && fputws(c_str(s), h->f) != -1)
-         ? t : stdio_maybe_write_error(stream);
+
+  if (h->f != 0) {
+    const wchar_t *s = c_str(str);
+    while (*s) {
+      if (!utf8_encode(*s++, stdio_put_char_callback, h->f))
+        return stdio_maybe_write_error(stream);
+    }
+    return t;
+  }
+  return stdio_maybe_write_error(stream);
 }
 
 static obj_t *stdio_put_char(obj_t *stream, obj_t *ch)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
-  return (h->f && putwc(c_chr(ch), h->f) != WEOF)
+  return h->f != 0 && utf8_encode(c_chr(ch), stdio_put_char_callback, h->f)
          ? t : stdio_maybe_write_error(stream);
 }
 
-static wchar_t *snarf_line(FILE *in)
+static wchar_t *snarf_line(struct stdio_handle *h)
 {
   const size_t min_size = 512;
   size_t size = 0;
@@ -139,7 +150,7 @@ static wchar_t *snarf_line(FILE *in)
   wchar_t *buf = 0;
 
   for (;;) {
-    wint_t ch = getwc(in);
+    wint_t ch = utf8_decode(&h->ud, stdio_get_char_callback, h->f);
 
     if (ch == WEOF && buf == 0)
       break;
@@ -166,10 +177,10 @@ static wchar_t *snarf_line(FILE *in)
 static obj_t *stdio_get_line(obj_t *stream)
 {
   if (stream->co.handle == 0) {
-    return nil;
+    return stdio_maybe_read_error(stream);
   } else {
     struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
-    wchar_t *line = snarf_line(h->f);
+    wchar_t *line = snarf_line(h);
     if (!line)
       return stdio_maybe_read_error(stream);
     return string_own(line);
@@ -180,10 +191,10 @@ obj_t *stdio_get_char(obj_t *stream)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
   if (h->f) {
-    wint_t ch = getwc(h->f);
+    wint_t ch = utf8_decode(&h->ud, stdio_get_char_callback, h->f);
     return (ch != WEOF) ? chr(ch) : stdio_maybe_read_error(stream);
   }
-  return nil;
+  return stdio_maybe_read_error(stream);
 }
 
 obj_t *stdio_get_byte(obj_t *stream)
@@ -193,7 +204,7 @@ obj_t *stdio_get_byte(obj_t *stream)
     int ch = getc(h->f);
     return (ch != EOF) ? num(ch) : stdio_maybe_read_error(stream);
   }
-  return nil;
+  return stdio_maybe_read_error(stream);
 }
 
 static obj_t *stdio_close(obj_t *stream, obj_t *throw_on_error)
@@ -231,13 +242,8 @@ static obj_t *pipe_close(obj_t *stream, obj_t *throw_on_error)
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
 
   if (h->f != 0) {
-#ifdef BROKEN_POPEN_GETWC
-    int status = (fclose(h->f), pclose(h->f_orig_pipe));
-    h->f = h->f_orig_pipe = 0;
-#else
     int status = pclose(h->f);
     h->f = 0;
-#endif
 
     if (status != 0 && throw_on_error) {
       if (status < 0) {
@@ -481,6 +487,7 @@ obj_t *make_stdio_stream(FILE *f, obj_t *descr, obj_t *input, obj_t *output)
   obj_t *stream = cobj((void *) h, stream_t, &stdio_ops.cobj_ops);
   h->f = f;
   h->descr = descr;
+  utf8_decoder_init(&h->ud);
   return stream;
 }
 
@@ -488,29 +495,9 @@ obj_t *make_pipe_stream(FILE *f, obj_t *descr, obj_t *input, obj_t *output)
 {
   struct stdio_handle *h = (struct stdio_handle *) chk_malloc(sizeof *h);
   obj_t *stream = cobj((void *) h, stream_t, &pipe_ops.cobj_ops);
-#ifdef BROKEN_POPEN_GETWC
-  int dup_fd = dup(fileno(f));
-  FILE *dup_f = (dup_fd != -1) ? fdopen(dup_fd, output ? "w" : "r") : 0;
-
-  if (dup_fd == -1 || dup_f == 0) {
-    int error = errno;
-    if (dup_f != 0)
-      fclose(dup_f);
-    else if (dup_fd != -1)
-      close(dup_fd);
-    /* Don't leave h uninitialized; it is gc-reachable through stream cobj. */
-    h->f = h->f_orig_pipe = 0;
-    h->descr = descr;
-    uw_throwf(process_error, lit("unable to create pipe ~a: ~a/~s"), descr,
-              num(error), string_utf8(strerror(error)), nao);
-  }
-
-  h->f_orig_pipe = f;
-  h->f = dup_f;
-#else
   h->f = f;
-#endif
   h->descr = descr;
+  utf8_decoder_init(&h->ud);
   return stream;
 }
 
