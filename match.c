@@ -105,30 +105,37 @@ void dump_shell_string(const wchar_t *str)
 {
   int ch;
 
-  putwchar('"');
+  put_char(std_output, chr('"'));
   while ((ch = *str++) != 0) {
     switch (ch) {
     case '"': case '`': case '$': case '\\': case '\n':
-      putwchar('\\');
+      put_char(std_output, chr('\\'));
       /* fallthrough */
     default:
-      putwchar(ch);
+      put_char(std_output, chr(ch));
     }
   }
-  putwchar('"');
+  put_char(std_output, chr('"'));
 }
 
-void dump_var(const wchar_t *name, wchar_t *pfx1, size_t len1,
-              wchar_t *pfx2, size_t len2, obj_t *value, int level)
+void dump_byte_string(const char *str)
+{
+  while (*str)
+    put_char(std_output, chr(*str++));
+}
+
+
+void dump_var(obj_t *var, char *pfx1, size_t len1,
+              char *pfx2, size_t len2, obj_t *value, int level)
 {
   if (len1 >= 112 || len2 >= 112)
     internal_error("too much depth in bindings");
 
   if (stringp(value) || chrp(value)) {
-    fputws(name, stdout);
-    fputws(pfx1, stdout);
-    fputws(pfx2, stdout);
-    putwchar('=');
+    put_string(std_output, var);
+    dump_byte_string(pfx1);
+    dump_byte_string(pfx2);
+    put_char(std_output, chr('='));
     if (stringp(value)) {
       dump_shell_string(c_str(value));
     } else {
@@ -137,7 +144,7 @@ void dump_var(const wchar_t *name, wchar_t *pfx1, size_t len1,
       mini[1] = 0;
       dump_shell_string(mini);
     }
-    putwchar('\n');
+    put_char(std_output, chr('\n'));
   } else {
     obj_t *iter;
     int i;
@@ -145,14 +152,14 @@ void dump_var(const wchar_t *name, wchar_t *pfx1, size_t len1,
 
     for (i = 0, iter = value; iter; iter = cdr(iter), i++) {
       if (level < opt_arraydims) {
-        add2 = swprintf(pfx2 + len2, 12, L"[%d]", i);
+        add2 = sprintf(pfx2 + len2, "[%d]", i);
         add1 = 0;
       } else {
-        add1 = swprintf(pfx1 + len1, 12, L"_%d", i);
+        add1 = sprintf(pfx1 + len1, "_%d", i);
         add2 = 0;
       }
 
-      dump_var(name, pfx1, len1 + add1, pfx2, len2 + add2, car(iter), level + 1);
+      dump_var(var, pfx1, len1 + add1, pfx2, len2 + add2, car(iter), level + 1);
     }
   }
 }
@@ -160,17 +167,16 @@ void dump_var(const wchar_t *name, wchar_t *pfx1, size_t len1,
 void dump_bindings(obj_t *bindings)
 {
   if (opt_loglevel >= 2) {
-    fputws(L"raw_bindings:\n", stderr);
+    put_line(std_error, lit("raw_bindings:"));
     dump(bindings, std_error);
   }
 
   while (bindings) {
-    wchar_t pfx1[128], pfx2[128];
+    char pfx1[128], pfx2[128];
     obj_t *var = car(car(bindings));
     obj_t *value = cdr(car(bindings));
-    const wchar_t *name = c_str(symbol_name(var));
     *pfx1 = 0; *pfx2 = 0;
-    dump_var(name, pfx1, 0, pfx2, 0, value, 0);
+    dump_var(var, pfx1, 0, pfx2, 0, value, 0);
     bindings = cdr(bindings);
   }
 }

@@ -34,6 +34,7 @@
 #include <errno.h>
 #include <wchar.h>
 #include <unistd.h>
+#include <sys/wait.h>
 #include "lib.h"
 #include "gc.h"
 #include "unwind.h"

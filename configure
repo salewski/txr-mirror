@@ -109,7 +109,7 @@ lex=${lex-'$(cross)$(tool_prefix)flex'}
 lexlib=${lexlib--lfl}
 yacc=${yacc-'$(cross)$(tool_prefix)yacc'}
 opt_flags=${opt_flags--O2}
-lang_flags=${lang_flags--ansi -D_GNU_SOURCE}
+lang_flags=${lang_flags--ansi -std=c89 -D_POSIX_C_SOURCE=2}
 diag_flags=${diag_flags--Wall}
 debug_flags=${debug_flags--g}
 lex_dbg_flags=${lex_dbg_flags-}

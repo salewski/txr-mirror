@@ -359,7 +359,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
 <SPECIAL>@              {
                           yy_pop_state();
-                          yylval.lexeme = wcsdup(L"@");
+                          yylval.lexeme = chk_strdup(L"@");
                           return TEXT;
                         }
 
@@ -381,7 +381,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                           wchar_t lexeme[2];
                           lexeme[0] = char_esc(yytext[1]);
                           lexeme[1] = 0;
-                          yylval.lexeme = wcsdup(lexeme);
+                          yylval.lexeme = chk_strdup(lexeme);
                           yy_pop_state();
                           return TEXT;
                         }
@@ -390,7 +390,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                                   wchar_t lexeme[2];
                                   lexeme[0] = num_esc(yytext + 1);
                                   lexeme[1] = 0;
-                                  yylval.lexeme = wcsdup(lexeme);
+                                  yylval.lexeme = chk_strdup(lexeme);
                                   yy_pop_state();
                                   return TEXT;
                                 }
