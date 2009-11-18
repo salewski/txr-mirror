@@ -18,7 +18,7 @@
 	(pipe_close): #ifdef text removed.
 	(make_stdio_stream): utf8 decode initialized.
 	(make_pipe_stream): utf8 decoder initialized. #ifdef text removed.
- 
+
 2009-11-17  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Warning fixes.
