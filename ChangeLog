@@ -1,5 +1,9 @@
 2009-11-18  Kaz Kylheku  <kkylheku@gmail.com>
 
+	txr.1: Clarified handling of UTF-8, now that it's precise and portable.
+
+2009-11-18  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Version 023
 
 	Minor bugfix.
