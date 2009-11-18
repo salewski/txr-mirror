@@ -1,3 +1,23 @@
+2009-11-18  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Version 023
+
+	Minor bugfix.
+
+	Code cleanup. Portability.
+
+	Completely removed dependency on C99 wide character stream functions,
+	and character encoding support from glibc. All UTF-8 encoding
+	and decoding is done by the program itself.
+
+	Removed the use of all GNU extensions and C99 syntax.
+
+	txr now requires a C90 compiler, and POSIX 1003.1 and 1003.2.
+
+	* txr.c (version): Bumped to 023.
+
+	* txr.1: Bumped version to 023.
+
 2009-11-17  Kaz Kylheku  <kkylheku@gmail.com>
 
 	More removal of C99 wide character I/O, and tightening up
