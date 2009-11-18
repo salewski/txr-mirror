@@ -1,5 +1,26 @@
 2009-11-17  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Removing use of C99 wide character I/O.
+
+	* stream.c (BROKEN_POPEN_GETWC): Macro removed. Work around no
+	longer needed since the program does not call getwc.
+	(struct stdio_handle): #ifdef text removed.
+	New member added: utf8 decoder.
+	(stdio_maybe_read_error, stdio_maybe_write_error): Treat
+	null handle as an exception rather than nil return. No need
+	to check ferror in stdio_maybe_write_error, since there is no
+	need to distinguish an end-of-file situation from error.
+	(stdio_put_char_callback, stdio_get_char_callback): New functions.
+	(stdio_put_string, stdio_put_char): Retargetted to utf8 encoder.
+	Null handle treated as separate kind of error.
+	(snarf_line, stdio_get_line, stdio_get_char): Retargetted to utf8
+	decoder.
+	(pipe_close): #ifdef text removed.
+	(make_stdio_stream): utf8 decode initialized.
+	(make_pipe_stream): utf8 decoder initialized. #ifdef text removed.
+ 
+2009-11-17  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Warning fixes.
 
 	* hash.c (hash_ops): Add missing initializer.
