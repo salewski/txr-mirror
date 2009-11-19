@@ -1,3 +1,13 @@
+2009-11-19  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Use unsigned char * as allocator return value.
+
+	* lib.c (chk_malloc, chk_realloc): Return unsigned char *.
+
+	* lib.c (chk_malloc, chk_realloc): Declarations updated.
+
+	* utf8 (utf8_dup_to_uc): Remove cast to unsigned char *.
+
 2009-11-18  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Following-up on diagnostics obtained by running code through C++

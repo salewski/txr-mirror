@@ -518,7 +518,7 @@ static obj_t *equal_tramp(obj_t *env, obj_t *left, obj_t *right)
   return equal(left, right);
 }
 
-char *chk_malloc(size_t size)
+unsigned char *chk_malloc(size_t size)
 {
   char *ptr = malloc(size);
   if (size && ptr == 0)
@@ -526,7 +526,7 @@ char *chk_malloc(size_t size)
   return ptr;
 }
 
-char *chk_realloc(void *old, size_t size)
+unsigned char *chk_realloc(void *old, size_t size)
 {
   char *newptr = realloc(old, size);
   if (size != 0 && newptr == 0)
