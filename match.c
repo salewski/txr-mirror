@@ -471,10 +471,8 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
           }
 
 
-          if (!bindings_coll) {
+          if (!bindings_coll)
             debuglf(spec_lineno, lit("nothing was collected"), nao);
-            return nil;
-          }
 
           for (iter = bindings_coll; iter; iter = cdr(iter)) {
             obj_t *pair = car(iter);
@@ -1289,10 +1287,8 @@ repeat_spec_same_data:
           return nil;
         }
 
-        if (!bindings_coll) {
+        if (!bindings_coll)
           debuglf(spec_linenum, lit("nothing was collected"), nao);
-          return nil;
-        }
 
         for (iter = bindings_coll; iter; iter = cdr(iter)) {
           obj_t *pair = car(iter);
