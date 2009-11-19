@@ -1,5 +1,21 @@
 2009-11-19  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Get rid of macros in favor of safer inline functions. 
+
+	The recent auto_str("byte str") error could have been caught
+	at compile time.
+
+	* Makefile (CFLAGS): Include expansion of INLINE_FLAGS.
+
+	* configure (inline_flags): New variable.
+	(INLINE_FLAGS): New variable generated in config.make.
+
+	* lib.h (tag, is_ptr, is_num, is_chr, is_lit, type,
+	auto_str, static_str, litptr): Function-like macros converted to
+	functions.
+
+2009-11-19  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Version 024
 
 	Fixed show-stopper breakage in parse error diagnostic function.

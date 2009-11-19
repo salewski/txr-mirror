@@ -112,6 +112,7 @@ opt_flags=${opt_flags--O2}
 lang_flags=${lang_flags--ansi -std=c89 -D_POSIX_C_SOURCE=2}
 diag_flags=${diag_flags--Wall}
 debug_flags=${debug_flags--g}
+inline_flags=${inline_flags--Dinline=\"static __inline\"}
 lex_dbg_flags=${lex_dbg_flags-}
 txr_dbg_opts=${txr_dbg_opts---gc-debug}
 #
@@ -244,6 +245,11 @@ debug_flags [$debug_flags]
 
   Specifies flags for requesting that debugging information be
   retained in the compile and link.
+
+inline_flags [$inline_flags]
+
+  Specifies flag for defining a macro that expands to a suitable
+  compiler-specific inline specifier.
 
 lex_dbg_flags [$lex_dbg_flags]
 
@@ -453,6 +459,7 @@ OPT_FLAGS := $opt_flags
 LANG_FLAGS := $lang_flags
 DIAG_FLAGS := $diag_flags
 DBG_FLAGS := $debug_flags
+INLINE_FLAGS := $inline_flags
 LEX_DBG_FLAGS := $lex_dbg_flags
 TXR_DBG_OPTS := $txr_dbg_opts
 !

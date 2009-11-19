@@ -45,18 +45,6 @@ typedef enum functype
    N0, N1, N2, N3, N4   /* No-env intrinsics. */
 } functype_t;
 
-#define tag(obj) (((long) (obj)) & TAG_MASK)
-#define is_ptr(obj) ((obj) && (tag(obj) == TAG_PTR))
-#define is_num(obj) (tag(obj) == TAG_NUM)
-#define is_chr(obj) (tag(obj) == TAG_CHR)
-#define is_lit(obj) (tag(obj) == TAG_LIT)
-#define type(obj) (tag(obj) ? ((type_t) tag(obj)) : (obj)->t.type)
-#define lit_noex(strlit) ((obj_t *) ((long) (L ## strlit) | TAG_LIT))
-#define lit(strlit) lit_noex(strlit)
-#define auto_str(str) ((obj_t *) ((long) (str) | TAG_LIT))
-#define static_str(str) ((obj_t *) ((long) (str) | TAG_LIT))
-#define litptr(obj) ((wchar_t *) ((long) obj & ~TAG_MASK))
-
 typedef union obj obj_t;
 
 struct any {
@@ -162,6 +150,35 @@ union obj {
   struct lazy_string ls;
   struct cobj co;
 };
+
+inline long tag(obj_t *obj) { return ((long) obj) & TAG_MASK; }
+inline int is_ptr(obj_t *obj) { return obj && tag(obj) == TAG_PTR; }
+inline int is_num(obj_t *obj) { return tag(obj) == TAG_NUM; }
+inline int is_chr(obj_t *obj) { return tag(obj) == TAG_CHR; }
+inline int is_lit(obj_t *obj) { return tag(obj) == TAG_LIT; }
+
+inline type_t type(obj_t *obj)
+{ 
+ return tag(obj) ? (type_t) tag(obj) : obj->t.type;
+}
+
+inline obj_t *auto_str(const wchar_t *str)
+{
+  return (obj_t *) ((long) (str) | TAG_LIT);
+}
+
+inline obj_t *static_str(const wchar_t *str)
+{
+  return (obj_t *) ((long) (str) | TAG_LIT);
+}
+
+inline wchar_t *litptr(obj_t *obj)
+{
+ return (wchar_t *) ((long) obj & ~TAG_MASK);
+}
+
+#define lit_noex(strlit) ((obj_t *) ((long) (L ## strlit) | TAG_LIT))
+#define lit(strlit) lit_noex(strlit)
 
 extern obj_t *interned_syms;
 

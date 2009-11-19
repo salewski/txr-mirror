@@ -582,8 +582,8 @@ obj_t *consp(obj_t *obj)
   if (!obj) {
     return nil;
   } else {
-    type_t type = type(obj);
-    return (type == CONS || type == LCONS) ? t : nil;
+    type_t ty = type(obj);
+    return (ty == CONS || ty == LCONS) ? t : nil;
   }
 }
 
