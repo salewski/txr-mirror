@@ -766,7 +766,7 @@ int nfa_all_states(nfa_state_t **inout, int num, unsigned visited)
 
 void nfa_free(nfa_t nfa)
 {
-  nfa_state_t **all = chk_malloc(NFA_SET_SIZE * sizeof *all);
+  nfa_state_t **all = (nfa_state_t **) chk_malloc(NFA_SET_SIZE * sizeof *all);
   int nstates, i;
 
   all[0] = nfa.start;
@@ -916,9 +916,9 @@ long nfa_run(nfa_t nfa, const wchar_t *str)
 {
   const wchar_t *last_accept_pos = 0, *ptr = str;
   unsigned visited = nfa.start->a.visited + 1;
-  nfa_state_t **move = chk_malloc(NFA_SET_SIZE * sizeof *move);
-  nfa_state_t **clos = chk_malloc(NFA_SET_SIZE * sizeof *clos);
-  nfa_state_t **stack = chk_malloc(NFA_SET_SIZE * sizeof *stack);
+  nfa_state_t **move = (nfa_state_t **) chk_malloc(NFA_SET_SIZE * sizeof *move);
+  nfa_state_t **clos = (nfa_state_t **) chk_malloc(NFA_SET_SIZE * sizeof *clos);
+  nfa_state_t **stack = (nfa_state_t **) chk_malloc(NFA_SET_SIZE * sizeof *stack);
   int nmove = 1, nclos;
   int accept = 0;
 
@@ -984,9 +984,9 @@ void nfa_machine_reset(nfa_machine_t *nfam)
 void nfa_machine_init(nfa_machine_t *nfam, nfa_t nfa)
 {
   nfam->nfa = nfa;
-  nfam->move = chk_malloc(NFA_SET_SIZE * sizeof *nfam->move);
-  nfam->clos = chk_malloc(NFA_SET_SIZE * sizeof *nfam->clos);
-  nfam->stack = chk_malloc(NFA_SET_SIZE * sizeof *nfam->stack);
+  nfam->move = (nfa_state_t **) chk_malloc(NFA_SET_SIZE * sizeof *nfam->move);
+  nfam->clos = (nfa_state_t **) chk_malloc(NFA_SET_SIZE * sizeof *nfam->clos);
+  nfam->stack = (nfa_state_t **) chk_malloc(NFA_SET_SIZE * sizeof *nfam->stack);
   nfa_machine_reset(nfam);
 }
 
@@ -1054,7 +1054,7 @@ static struct cobj_ops regex_obj_ops = {
 
 obj_t *regex_compile(obj_t *regex_sexp)
 {
-  nfa_t *pnfa = chk_malloc(sizeof *pnfa);
+  nfa_t *pnfa = (nfa_t *) chk_malloc(sizeof *pnfa);
   *pnfa = nfa_compile_regex(regex_sexp);
   return cobj(pnfa, regex, &regex_obj_ops);
 }
