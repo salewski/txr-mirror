@@ -65,7 +65,6 @@ obj_t *null_list;
 obj_t *identity_f;
 obj_t *equal_f;
 
-const wchar_t *progname;
 obj_t *prog_string;
 
 void *(*oom_realloc)(void *, size_t);
@@ -440,6 +439,8 @@ obj_t *equal(obj_t *left, obj_t *right)
     case LSTR:
       lazy_str_force(right);
       return equal(left, right->ls.prefix);
+    default:
+      break;
     }
     return nil;
   case STR:
@@ -451,6 +452,8 @@ obj_t *equal(obj_t *left, obj_t *right)
     case LSTR:
       lazy_str_force(right);
       return equal(left, right->ls.prefix);
+    default:
+      break;
     }
     return nil;
   case SYM:
@@ -496,6 +499,8 @@ obj_t *equal(obj_t *left, obj_t *right)
     case LSTR:
       lazy_str_force(left);
       return equal(left->ls.prefix, right);
+    default:
+      break;
     }
     return nil;
   case COBJ:
@@ -513,23 +518,23 @@ static obj_t *equal_tramp(obj_t *env, obj_t *left, obj_t *right)
   return equal(left, right);
 }
 
-void *chk_malloc(size_t size)
+char *chk_malloc(size_t size)
 {
-  void *ptr = malloc(size);
+  char *ptr = malloc(size);
   if (size && ptr == 0)
     ptr = oom_realloc(0, size);
   return ptr;
 }
 
-void *chk_realloc(void *old, size_t size)
+char *chk_realloc(void *old, size_t size)
 {
-  void *newptr = realloc(old, size);
+  char *newptr = realloc(old, size);
   if (size != 0 && newptr == 0)
     newptr = oom_realloc(old, size);
   return newptr;
 }
 
-void *chk_strdup(const wchar_t *str)
+wchar_t *chk_strdup(const wchar_t *str)
 {
   size_t nchar = wcslen(str) + 1;
   wchar_t *copy = (wchar_t *) chk_malloc(nchar * sizeof *copy);
@@ -715,7 +720,7 @@ obj_t *string(const wchar_t *str)
 {
   obj_t *obj = make_obj();
   obj->st.type = STR;
-  obj->st.str = chk_strdup(str);
+  obj->st.str = (wchar_t *) chk_strdup(str);
   obj->st.len = nil;
   return obj;
 }
@@ -769,6 +774,8 @@ obj_t *stringp(obj_t *str)
     switch (type(str)) {
     case STR: case LSTR:
       return t;
+    default:
+      break;
     }
   }
   return nil;
@@ -1337,8 +1344,8 @@ obj_t *vec_set_fill(obj_t *vec, obj_t *fill)
 
     if (alloc_delta > 0) {
       long new_alloc = max(new_fill, 2*old_alloc);
-      obj_t **newvec = chk_realloc(vec->v.vec - 2,
-                                   (new_alloc + 2)*sizeof *newvec);
+      obj_t **newvec = (obj_t **) chk_realloc(vec->v.vec - 2,
+                                              (new_alloc + 2)*sizeof *newvec);
       vec->v.vec = newvec + 2;
       vec->v.vec[vec_alloc] = num(new_alloc);
     }

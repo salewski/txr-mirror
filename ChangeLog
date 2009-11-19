@@ -1,5 +1,33 @@
 2009-11-18  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Following-up on diagnostics obtained by running code through C++
+	compiler. Idea: allocator functions return char * instead of void *,
+	like malloc did in classic pre-ANSI C. That way we are forced to 
+	use a cast except when the target pointer is char * already.
+
+	* lib.c (progname): Duplicate definition of global removed.
+	(equal): Some default: cases to switch statements added.
+	(chk_malloc): Returns char *.
+	(chk_realloc): Returns char *, but takes void * on the way in.
+	That way we get C++-like behavior.
+	(chk_strdup): Oops, this returned void * instead of wchar_t *.
+	c++ catches boo boo.
+	(stringp): Added default: case to switch.
+	(vec_set_fill): Cast return value of chk_realloc.
+
+	* lib.h (chk_malloc, chk_realloc, chk_strdup): Declarations updated.
+
+	* parser.h (lineno): extern qualifier added to prevent duplicate
+	definitions of.
+
+	* regex.c (nfa_free, nfa_run, nfa_machine_init, regex_compile): Cast
+	return value of chk_malloc.
+
+	* stream.c (snarf_line, get_string_from_stream): Cast return value of
+	chk_realloc.
+
+2009-11-18  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* match.c (match_line, match_files): Fix broken behavior of collect
 	that doesn't match anything. It is not a failed match, as the
 	documentation makes perfectly clear.  Collect/coll were introduced

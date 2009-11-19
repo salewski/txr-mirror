@@ -158,7 +158,7 @@ static wchar_t *snarf_line(struct stdio_handle *h)
 
     if (fill >= size) {
       size_t newsize = size ? size * 2 : min_size;
-      buf = chk_realloc(buf, newsize * sizeof *buf);
+      buf = (wchar_t *) chk_realloc(buf, newsize * sizeof *buf);
       size = newsize;
     }
 
@@ -170,7 +170,7 @@ static wchar_t *snarf_line(struct stdio_handle *h)
   }
 
   if (buf)
-    buf = chk_realloc(buf, fill * sizeof *buf);
+    buf = (wchar_t *) chk_realloc(buf, fill * sizeof *buf);
 
   return buf;
 }
@@ -409,7 +409,7 @@ static obj_t *string_out_put_string(obj_t *stream, obj_t *str)
     }
 
     if (so->size != old_size)
-      so->buf = chk_realloc(so->buf, so->size * sizeof *so->buf);
+      so->buf = (wchar_t *) chk_realloc(so->buf, so->size * sizeof *so->buf);
     wmemcpy(so->buf + so->fill, s, len + 1);
     so->fill += len;
     return t;
@@ -546,7 +546,8 @@ obj_t *get_string_from_stream(obj_t *stream)
     if (!so)
       return out;
 
-    so->buf = chk_realloc(so->buf, (so->fill + 1) * sizeof *so->buf);
+    so->buf = (wchar_t *) chk_realloc(so->buf,
+                                      (so->fill + 1) * sizeof *so->buf);
     out = string_own(so->buf);
     free(so);
     return out;
