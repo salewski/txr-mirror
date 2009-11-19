@@ -67,7 +67,7 @@ int errors;
 
 void yyerror(const char *s)
 {
-  yyerrorf(lit("~a"), auto_str(s), nao);
+  yyerrorf(lit("~a"), string_utf8(s), nao);
 }
 
 void yyerrorf(obj_t *fmt, ...)
@@ -75,7 +75,8 @@ void yyerrorf(obj_t *fmt, ...)
   if (opt_loglevel >= 1) {
     va_list vl;
     va_start (vl, fmt);
-    format(std_error, lit("~a: (~a:~a): "), progname, spec_file, lineno);
+    format(std_error, lit("~a: (~a:~a): "), prog_string,
+           spec_file_str, num(lineno), nao);
     vformat(std_error, fmt, vl);
     put_char(std_error, chr('\n'));
     va_end (vl);

@@ -1,5 +1,12 @@
 2009-11-18  Kaz Kylheku  <kkylheku@gmail.com>
 
+	parser.l (yyerror): Total breakage: can't take auto_str of char *
+	string. 
+	(yyerrorf): Total breakage: arguments of wrong types. Detected
+	by vformat as garbage.
+
+2009-11-18  Kaz Kylheku  <kkylheku@gmail.com>
+
 	txr.1: Clarified handling of UTF-8, now that it's precise and portable.
 
 2009-11-18  Kaz Kylheku  <kkylheku@gmail.com>
