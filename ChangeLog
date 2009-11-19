@@ -1,5 +1,18 @@
 2009-11-19  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Version 024
+
+	Fixed show-stopper breakage in parse error diagnostic function.
+
+	Fixed bug introduced back in 015: collects that don't yield
+	any variable bindings being wrongly treated as failed.
+
+	* txr.c (version): Bumped to 024.
+
+	* txr.1: Bumped version to 024.
+
+2009-11-19  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Use unsigned char * as allocator return value.
 
 	* lib.c (chk_malloc, chk_realloc): Return unsigned char *.
