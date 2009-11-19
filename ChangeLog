@@ -1,6 +1,16 @@
 2009-11-18  Kaz Kylheku  <kkylheku@gmail.com>
 
-	parser.l (yyerror): Total breakage: can't take auto_str of char *
+	* match.c (match_line, match_files): Fix broken behavior of collect
+	that doesn't match anything. It is not a failed match, as the
+	documentation makes perfectly clear.  Collect/coll were introduced
+	in txr-006 and had the proper non-failing semantics.
+	However, in txr-015, during code restructuring, a bug crept in.
+	When changing to a different debugiging function, for some reason
+	I added the nil returns.
+
+2009-11-18  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* parser.l (yyerror): Total breakage: can't take auto_str of char *
 	string. 
 	(yyerrorf): Total breakage: arguments of wrong types. Detected
 	by vformat as garbage.
