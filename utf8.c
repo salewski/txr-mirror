@@ -169,7 +169,7 @@ wchar_t *utf8_dup_from(const char *str)
 unsigned char *utf8_dup_to_uc(const wchar_t *wstr)
 {
   size_t nbyte = utf8_to_uc(0, wstr);
-  unsigned char *str = (unsigned char *) chk_malloc(nbyte);
+  unsigned char *str = chk_malloc(nbyte);
   utf8_to_uc(str, wstr);
   return str;
 }

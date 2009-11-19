@@ -222,8 +222,8 @@ obj_t *none_satisfy(obj_t *list, obj_t *pred, obj_t *key);
 long c_num(obj_t *num);
 obj_t *nump(obj_t *num);
 obj_t *equal(obj_t *left, obj_t *right);
-char *chk_malloc(size_t size);
-char *chk_realloc(void *, size_t size);
+unsigned char *chk_malloc(size_t size);
+unsigned char *chk_realloc(void *, size_t size);
 wchar_t *chk_strdup(const wchar_t *str);
 obj_t *cons(obj_t *car, obj_t *cdr);
 obj_t *list(obj_t *first, ...); /* terminated by nao */
