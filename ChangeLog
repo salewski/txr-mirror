@@ -1,5 +1,9 @@
 2009-11-19  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* txr.1: Fixed mangled formatting of exception handling example.
+
+2009-11-19  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Get rid of macros in favor of safer inline functions. 
 
 	The recent auto_str("byte str") error could have been caught

@@ -2468,17 +2468,17 @@ is visible in the finally clause.
 
 Example:
 
-@(try)
-@  (try)
-@    (next "nonexistent-file")
-@  (finally)
-@    (accept)
-@  (end)
-@(catch file_error)
-@  (output)
-file error caught
-@  (end)
-@(end)
+  @(try)
+  @  (try)
+  @    (next "nonexistent-file")
+  @  (finally)
+  @    (accept)
+  @  (end)
+  @(catch file_error)
+  @  (output)
+  file error caught
+  @  (end)
+  @(end)
 
 In this example, the @(next) directive throws an exception of type file_error,
 because the given file does not exist. The exit point for this exception is the
