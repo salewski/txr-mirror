@@ -43,47 +43,47 @@
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
-obj_t *interned_syms;
+val interned_syms;
 
-obj_t *null, *t, *cons_t, *str_t, *chr_t, *num_t, *sym_t, *fun_t, *vec_t;
-obj_t *stream_t, *hash_t, *lcons_t, *lstr_t, *cobj_t;
-obj_t *var, *regex, *set, *cset, *wild, *oneplus;
-obj_t *zeroplus, *optional, *compound, *or, *quasi;
-obj_t *skip, *trailer, *block, *next, *freeform, *fail, *accept;
-obj_t *all, *some, *none, *maybe, *cases, *collect, *until, *coll;
-obj_t *define, *output, *single, *frst, *lst, *empty, *repeat, *rep;
-obj_t *flattn, *forget, *local, *mrge, *bind, *cat, *args;
-obj_t *try, *catch, *finally, *nothrow, *throw, *defex;
-obj_t *error, *type_error, *internal_err, *numeric_err, *range_err;
-obj_t *query_error, *file_error, *process_error;
+val null, t, cons_t, str_t, chr_t, num_t, sym_t, fun_t, vec_t;
+val stream_t, hash_t, lcons_t, lstr_t, cobj_t;
+val var, regex, set, cset, wild, oneplus;
+val zeroplus, optional, compound, or, quasi;
+val skip, trailer, block, next, freeform, fail, accept;
+val all, some, none, maybe, cases, collect, until, coll;
+val define, output, single, frst, lst, empty, repeat, rep;
+val flattn, forget, local, mrge, bind, cat, args;
+val try, catch, finally, nothrow, throw, defex;
+val error, type_error, internal_err, numeric_err, range_err;
+val query_error, file_error, process_error;
 
-obj_t *zero, *one, *two, *negone, *maxint, *minint;
-obj_t *null_string;
-obj_t *nil_string;
-obj_t *null_list;
+val zero, one, two, negone, maxint, minint;
+val null_string;
+val nil_string;
+val null_list;
 
-obj_t *identity_f;
-obj_t *equal_f;
+val identity_f;
+val equal_f;
 
-obj_t *prog_string;
+val prog_string;
 
 void *(*oom_realloc)(void *, size_t);
 
 
-obj_t *identity(obj_t *obj)
+val identity(val obj)
 {
   return obj;
 }
 
-static obj_t *identity_tramp(obj_t *env, obj_t *obj)
+static val identity_tramp(val env, val obj)
 {
   (void) env;
   return identity(obj);
 }
 
-static obj_t *equal_tramp(obj_t *env, obj_t *, obj_t *);
+static val equal_tramp(val env, val , val );
 
-static obj_t *code2type(int code)
+static val code2type(int code)
 {
   switch ((type_t) code) {
   case CONS: return cons_t;
@@ -101,7 +101,7 @@ static obj_t *code2type(int code)
   return nil;
 }
 
-obj_t *typeof(obj_t *obj)
+val typeof(val obj)
 {
   switch (tag(obj)) {
   case TAG_NUM:
@@ -114,7 +114,7 @@ obj_t *typeof(obj_t *obj)
     } else if (obj->t.type == COBJ) {
       return obj->co.cls;
     } else {
-      obj_t *type = code2type(obj->t.type);
+      val type = code2type(obj->t.type);
       if (!type)
         internal_error("corrupt type field");
       return type;
@@ -124,14 +124,14 @@ obj_t *typeof(obj_t *obj)
   }
 }
 
-obj_t *type_check(obj_t *obj, int type)
+val type_check(val obj, int type)
 {
   if (!is_ptr(obj) || obj->t.type != type)
     type_mismatch(lit("~s is not of type ~s"), obj, code2type(type), nao);
   return t;
 }
 
-obj_t *type_check2(obj_t *obj, int t1, int t2)
+val type_check2(val obj, int t1, int t2)
 {
   if (!is_ptr(obj) || (obj->t.type != t1 && obj->t.type != t2))
     type_mismatch(lit("~s is not of type ~s or ~s"), obj,
@@ -139,7 +139,7 @@ obj_t *type_check2(obj_t *obj, int t1, int t2)
   return t;
 }
 
-obj_t *type_check3(obj_t *obj, int t1, int t2, int t3)
+val type_check3(val obj, int t1, int t2, int t3)
 {
   if (!is_ptr(obj) || (obj->t.type != t1 && obj->t.type != t2
                        && obj->t.type != t3))
@@ -148,7 +148,7 @@ obj_t *type_check3(obj_t *obj, int t1, int t2, int t3)
   return t;
 }
 
-obj_t *car(obj_t *cons)
+val car(val cons)
 {
   if (cons == nil)
     return nil;
@@ -168,7 +168,7 @@ obj_t *car(obj_t *cons)
   }
 }
 
-obj_t *cdr(obj_t *cons)
+val cdr(val cons)
 {
   if (cons == nil)
     return nil;
@@ -188,7 +188,7 @@ obj_t *cdr(obj_t *cons)
   }
 }
 
-obj_t **car_l(obj_t *cons)
+val *car_l(val cons)
 {
   switch (type(cons)) {
   case CONS:
@@ -201,7 +201,7 @@ obj_t **car_l(obj_t *cons)
   }
 }
 
-obj_t **cdr_l(obj_t *cons)
+val *cdr_l(val cons)
 {
   switch (type(cons)) {
   case CONS:
@@ -214,61 +214,61 @@ obj_t **cdr_l(obj_t *cons)
   }
 }
 
-obj_t *first(obj_t *cons)
+val first(val cons)
 {
   return car(cons);
 }
 
-obj_t *rest(obj_t *cons)
+val rest(val cons)
 {
   return cdr(cons);
 }
 
-obj_t *second(obj_t *cons)
+val second(val cons)
 {
   return car(cdr(cons));
 }
 
-obj_t *third(obj_t *cons)
+val third(val cons)
 {
   return car(cdr(cdr(cons)));
 }
 
-obj_t *fourth(obj_t *cons)
+val fourth(val cons)
 {
   return car(cdr(cdr(cdr(cons))));
 }
 
-obj_t *fifth(obj_t *cons)
+val fifth(val cons)
 {
   return car(cdr(cdr(cdr(cdr(cons)))));
 }
 
-obj_t *sixth(obj_t *cons)
+val sixth(val cons)
 {
   return car(cdr(cdr(cdr(cdr(cdr(cons))))));
 }
 
-obj_t **tail(obj_t *cons)
+val *tail(val cons)
 {
   while (cdr(cons))
     cons = cdr(cons);
   return cdr_l(cons);
 }
 
-obj_t *pop(obj_t **plist)
+val pop(val *plist)
 {
-  obj_t *ret = car(*plist);
+  val ret = car(*plist);
   *plist = cdr(*plist);
   return ret;
 }
 
-obj_t *push(obj_t *val, obj_t **plist)
+val push(val value, val *plist)
 {
-  return *plist = cons(val, *plist);
+  return *plist = cons(value, *plist);
 }
 
-obj_t *copy_list(obj_t *list)
+val copy_list(val list)
 {
   list_collect_decl (out, tail);
 
@@ -282,12 +282,12 @@ obj_t *copy_list(obj_t *list)
   return out;
 }
 
-obj_t *nreverse(obj_t *in)
+val nreverse(val in)
 {
-  obj_t *rev = nil;
+  val rev = nil;
 
   while (in) {
-    obj_t *temp = cdr(in);
+    val temp = cdr(in);
     *cdr_l(in) = rev;
     rev = in;
     in = temp;
@@ -296,9 +296,9 @@ obj_t *nreverse(obj_t *in)
   return rev;
 }
 
-obj_t *reverse(obj_t *in)
+val reverse(val in)
 {
-  obj_t *rev = nil;
+  val rev = nil;
 
   while (in) {
     rev = cons(car(in), rev);
@@ -308,7 +308,7 @@ obj_t *reverse(obj_t *in)
   return rev;
 }
 
-obj_t *append2(obj_t *list1, obj_t *list2)
+val append2(val list1, val list2)
 {
   list_collect_decl (out, tail);
 
@@ -321,9 +321,9 @@ obj_t *append2(obj_t *list1, obj_t *list2)
   return out;
 }
 
-obj_t *nappend2(obj_t *list1, obj_t *list2)
+val nappend2(val list1, val list2)
 {
-  obj_t *temp, *iter;
+  val temp, iter;
 
   if (list1 == nil)
     return list2;
@@ -335,19 +335,19 @@ obj_t *nappend2(obj_t *list1, obj_t *list2)
   return list1;
 }
 
-obj_t *flatten_helper(obj_t *env, obj_t *item)
+val flatten_helper(val env, val item)
 {
   return flatten(item);
 }
 
-obj_t *memq(obj_t *obj, obj_t *list)
+val memq(val obj, val list)
 {
   while (list && car(list) != obj)
     list = cdr(list);
   return list;
 }
 
-obj_t *tree_find(obj_t *obj, obj_t *tree)
+val tree_find(val obj, val tree)
 {
   if (equal(obj, tree))
     return t;
@@ -356,7 +356,7 @@ obj_t *tree_find(obj_t *obj, obj_t *tree)
   return nil;
 }
 
-obj_t *some_satisfy(obj_t *list, obj_t *pred, obj_t *key)
+val some_satisfy(val list, val pred, val key)
 {
   if (!key)
     key = identity_f;
@@ -369,7 +369,7 @@ obj_t *some_satisfy(obj_t *list, obj_t *pred, obj_t *key)
   return nil;
 }
 
-obj_t *all_satisfy(obj_t *list, obj_t *pred, obj_t *key)
+val all_satisfy(val list, val pred, val key)
 {
   if (!key)
     key = identity_f;
@@ -382,7 +382,7 @@ obj_t *all_satisfy(obj_t *list, obj_t *pred, obj_t *key)
   return t;
 }
 
-obj_t *none_satisfy(obj_t *list, obj_t *pred, obj_t *key)
+val none_satisfy(val list, val pred, val key)
 {
   if (!key)
     key = identity_f;
@@ -395,7 +395,7 @@ obj_t *none_satisfy(obj_t *list, obj_t *pred, obj_t *key)
   return t;
 }
 
-obj_t *flatten(obj_t *list)
+val flatten(val list)
 {
   if (atom(list))
     return cons(list, nil);
@@ -403,9 +403,9 @@ obj_t *flatten(obj_t *list)
   return mappend(func_f1(nil, flatten_helper), list);
 }
 
-long c_num(obj_t *num);
+long c_num(val num);
 
-obj_t *equal(obj_t *left, obj_t *right)
+val equal(val left, val right)
 {
   /* Bitwise equality is equality, period. */
   if (left == right)
@@ -512,7 +512,7 @@ obj_t *equal(obj_t *left, obj_t *right)
   internal_error("unhandled case in equal function");
 }
 
-static obj_t *equal_tramp(obj_t *env, obj_t *left, obj_t *right)
+static val equal_tramp(val env, val left, val right)
 {
   (void) env;
   return equal(left, right);
@@ -543,23 +543,23 @@ wchar_t *chk_strdup(const wchar_t *str)
 }
 
 
-obj_t *cons(obj_t *car, obj_t *cdr)
+val cons(val car, val cdr)
 {
-  obj_t *obj = make_obj();
+  val obj = make_obj();
   obj->c.type = CONS;
   obj->c.car = car;
   obj->c.cdr = cdr;
   return obj;
 }
 
-obj_t *list(obj_t *first, ...)
+val list(val first, ...)
 {
   va_list vl;
-  obj_t *list = nil;
-  obj_t *array[32], **ptr = array;
+  val list = nil;
+  val array[32], *ptr = array;
 
   if (first != nao) {
-    obj_t *next = first;
+    val next = first;
 
     va_start (vl, first);
 
@@ -567,7 +567,7 @@ obj_t *list(obj_t *first, ...)
       *ptr++ = next;
       if (ptr == array + 32)
         internal_error("runaway arguments in list function");
-      next = va_arg(vl, obj_t *);
+      next = va_arg(vl, val);
     } while (next != nao);
 
     while (ptr > array)
@@ -577,7 +577,7 @@ obj_t *list(obj_t *first, ...)
   return list;
 }
 
-obj_t *consp(obj_t *obj)
+val consp(val obj)
 {
   if (!obj) {
     return nil;
@@ -587,22 +587,22 @@ obj_t *consp(obj_t *obj)
   }
 }
 
-obj_t *nullp(obj_t *obj)
+val nullp(val obj)
 {
   return obj == 0 ? t : nil;
 }
 
-obj_t *atom(obj_t *obj)
+val atom(val obj)
 {
   return if3(consp(obj), nil, t);
 }
 
-obj_t *listp(obj_t *obj)
+val listp(val obj)
 {
   return if2(obj == nil || consp(obj), t);
 }
 
-obj_t *proper_listp(obj_t *obj)
+val proper_listp(val obj)
 {
   while (consp(obj))
     obj = cdr(obj);
@@ -610,7 +610,7 @@ obj_t *proper_listp(obj_t *obj)
   return (obj == nil) ? t : nil;
 }
 
-obj_t *length(obj_t *list)
+val length(val list)
 {
   long len = 0;
   while (consp(list)) {
@@ -620,25 +620,25 @@ obj_t *length(obj_t *list)
   return num(len);
 }
 
-obj_t *num(long val)
+val num(long n)
 {
-  numeric_assert (val >= NUM_MIN && val <= NUM_MAX);
-  return (obj_t *) ((val << TAG_SHIFT) | TAG_NUM);
+  numeric_assert (n >= NUM_MIN && n <= NUM_MAX);
+  return (val) ((n << TAG_SHIFT) | TAG_NUM);
 }
 
-long c_num(obj_t *num)
+long c_num(val num)
 {
   if (!is_num(num))
     type_mismatch(lit("~s is not a number"), num, nao);
   return ((long) num) >> TAG_SHIFT;
 }
 
-obj_t *nump(obj_t *num)
+val nump(val num)
 {
   return (is_num(num)) ? t : nil;
 }
 
-obj_t *plus(obj_t *anum, obj_t *bnum)
+val plus(val anum, val bnum)
 {
   long a = c_num(anum);
   long b = c_num(bnum);
@@ -649,7 +649,7 @@ obj_t *plus(obj_t *anum, obj_t *bnum)
   return num(a + b);
 }
 
-obj_t *minus(obj_t *anum, obj_t *bnum)
+val minus(val anum, val bnum)
 {
   long a = c_num(anum);
   long b = c_num(bnum);
@@ -661,109 +661,109 @@ obj_t *minus(obj_t *anum, obj_t *bnum)
   return num(a - b);
 }
 
-obj_t *neg(obj_t *anum)
+val neg(val anum)
 {
   long n = c_num(anum);
   return num(-n);
 }
 
-obj_t *zerop(obj_t *num)
+val zerop(val num)
 {
   return c_num(num) == 0 ? t : nil;
 }
 
-obj_t *gt(obj_t *anum, obj_t *bnum)
+val gt(val anum, val bnum)
 {
   return c_num(anum) > c_num(bnum) ? t : nil;
 }
 
-obj_t *lt(obj_t *anum, obj_t *bnum)
+val lt(val anum, val bnum)
 {
   return c_num(anum) < c_num(bnum) ? t : nil;
 }
 
-obj_t *ge(obj_t *anum, obj_t *bnum)
+val ge(val anum, val bnum)
 {
   return c_num(anum) >= c_num(bnum) ? t : nil;
 }
 
-obj_t *le(obj_t *anum, obj_t *bnum)
+val le(val anum, val bnum)
 {
   return c_num(anum) <= c_num(bnum) ? t : nil;
 }
 
-obj_t *numeq(obj_t *anum, obj_t *bnum)
+val numeq(val anum, val bnum)
 {
   return c_num(anum) == c_num(bnum) ? t : nil;
 }
 
-obj_t *max2(obj_t *anum, obj_t *bnum)
+val max2(val anum, val bnum)
 {
   return c_num(anum) > c_num(bnum) ? anum : bnum;
 }
 
-obj_t *min2(obj_t *anum, obj_t *bnum)
+val min2(val anum, val bnum)
 {
   return c_num(anum) < c_num(bnum) ? anum : bnum;
 }
 
-obj_t *string_own(wchar_t *str)
+val string_own(wchar_t *str)
 {
-  obj_t *obj = make_obj();
+  val obj = make_obj();
   obj->st.type = STR;
   obj->st.str = str;
   obj->st.len = nil;
   return obj;
 }
 
-obj_t *string(const wchar_t *str)
+val string(const wchar_t *str)
 {
-  obj_t *obj = make_obj();
+  val obj = make_obj();
   obj->st.type = STR;
   obj->st.str = (wchar_t *) chk_strdup(str);
   obj->st.len = nil;
   return obj;
 }
 
-obj_t *string_utf8(const char *str)
+val string_utf8(const char *str)
 {
-  obj_t *obj = make_obj();
+  val obj = make_obj();
   obj->st.type = STR;
   obj->st.str = utf8_dup_from(str);
   obj->st.len = nil;
   return obj;
 }
 
-obj_t *mkstring(obj_t *len, obj_t *ch)
+val mkstring(val len, val ch)
 {
   size_t nchar = c_num(len) + 1;
   wchar_t *str = (wchar_t *) chk_malloc(nchar * sizeof *str);
-  obj_t *s = string_own(str);
+  val s = string_own(str);
   wmemset(str, c_chr(ch), nchar);
   s->st.len = len;
   return s;
 }
 
-obj_t *mkustring(obj_t *len)
+val mkustring(val len)
 {
   wchar_t *str = (wchar_t *) chk_malloc((c_num(len) + 1) * sizeof *str);
-  obj_t *s = string_own(str);
+  val s = string_own(str);
   s->st.len = len;
   return s;
 }
 
-obj_t *init_str(obj_t *str, const wchar_t *data)
+val init_str(val str, const wchar_t *data)
 {
   wmemcpy(str->st.str, data, c_num(str->st.len) + 1);
   return str;
 }
 
-obj_t *copy_str(obj_t *str)
+val copy_str(val str)
 {
   return string(c_str(str));
 }
 
-obj_t *stringp(obj_t *str)
+val stringp(val str)
 {
   switch (tag(str)) {
   case TAG_LIT:
@@ -781,12 +781,12 @@ obj_t *stringp(obj_t *str)
   return nil;
 }
 
-obj_t *lazy_stringp(obj_t *str)
+val lazy_stringp(val str)
 {
   return (is_ptr(str) && (type(str) == LSTR)) ? t : nil;
 }
 
-obj_t *length_str(obj_t *str)
+val length_str(val str)
 {
   if (tag(str) == TAG_LIT) {
     return num(wcslen(c_str(str)));
@@ -804,7 +804,7 @@ obj_t *length_str(obj_t *str)
   }
 }
 
-const wchar_t *c_str(obj_t *obj)
+const wchar_t *c_str(val obj)
 {
   if (tag(obj) == TAG_LIT)
     return litptr(obj);
@@ -824,13 +824,12 @@ const wchar_t *c_str(obj_t *obj)
   }
 }
 
-obj_t *search_str(obj_t *haystack, obj_t *needle, obj_t *start_num,
-                  obj_t *from_end)
+val search_str(val haystack, val needle, val start_num, val from_end)
 {
   if (length_str_lt(haystack, start_num)) {
     return nil;
   } else {
-    obj_t *h_is_lazy = lazy_stringp(haystack);
+    val h_is_lazy = lazy_stringp(haystack);
     long start = c_num(start_num);
     long good = -1, pos = -1;
     const wchar_t *n = c_str(needle), *h;
@@ -862,16 +861,15 @@ obj_t *search_str(obj_t *haystack, obj_t *needle, obj_t *start_num,
   }
 }
 
-obj_t *search_str_tree(obj_t *haystack, obj_t *tree, obj_t *start_num,
-                       obj_t *from_end)
+val search_str_tree(val haystack, val tree, val start_num, val from_end)
 {
   if (stringp(tree)) {
-    obj_t *result = search_str(haystack, tree, start_num, from_end);
+    val result = search_str(haystack, tree, start_num, from_end);
     if (result)
       return cons(result, length_str(tree));
   } else if (consp(tree)) {
     while (tree) {
-      obj_t *result = search_str_tree(haystack, car(tree), start_num, from_end);
+      val result = search_str_tree(haystack, car(tree), start_num, from_end);
       if (result)
         return result;
       tree = cdr(tree);
@@ -881,7 +879,7 @@ obj_t *search_str_tree(obj_t *haystack, obj_t *tree, obj_t *start_num,
   return nil;
 }
 
-obj_t *sub_str(obj_t *str_in, obj_t *from, obj_t *to)
+val sub_str(val str_in, val from, val to)
 {
   if (from == nil || lt(from, zero))
     from = zero;
@@ -907,15 +905,15 @@ obj_t *sub_str(obj_t *str_in, obj_t *from, obj_t *to)
   }
 }
 
-obj_t *cat_str(obj_t *list, obj_t *sep)
+val cat_str(val list, val sep)
 {
   long total = 0;
-  obj_t *iter;
+  val iter;
   wchar_t *str, *ptr;
   long len_sep = sep ? c_num(length_str(sep)) : 0;
 
   for (iter = list; iter != nil; iter = cdr(iter)) {
-    obj_t *item = car(iter);
+    val item = car(iter);
     if (!item)
       continue;
     if (stringp(item)) {
@@ -936,7 +934,7 @@ obj_t *cat_str(obj_t *list, obj_t *sep)
   str = (wchar_t *) chk_malloc((total + 1) * sizeof *str);
 
   for (ptr = str, iter = list; iter != nil; iter = cdr(iter)) {
-    obj_t *item = car(iter);
+    val item = car(iter);
     long len;
     if (!item)
       continue;
@@ -958,7 +956,7 @@ obj_t *cat_str(obj_t *list, obj_t *sep)
   return string_own(str);
 }
 
-obj_t *split_str(obj_t *str, obj_t *sep)
+val split_str(val str, val sep)
 {
   const wchar_t *cstr = c_str(str);
   const wchar_t *csep = c_str(sep);
@@ -966,7 +964,7 @@ obj_t *split_str(obj_t *str, obj_t *sep)
 
   for (;;) {
     size_t span = wcscspn(cstr, csep);
-    obj_t *piece = mkustring(num(span));
+    val piece = mkustring(num(span));
     init_str(piece, cstr);
     list_collect (iter, piece);
     cstr += span;
@@ -978,7 +976,7 @@ obj_t *split_str(obj_t *str, obj_t *sep)
   return out;
 }
 
-obj_t *trim_str(obj_t *str)
+val trim_str(val str)
 {
   const wchar_t *start = c_str(str);
   const wchar_t *end = start + c_num(length_str(str));
@@ -1000,30 +998,30 @@ obj_t *trim_str(obj_t *str)
   }
 }
 
-obj_t *string_lt(obj_t *astr, obj_t *bstr)
+val string_lt(val astr, val bstr)
 {
   int cmp = wcscmp(c_str(astr), c_str(bstr));
   return cmp == -1 ? t : nil;
 }
 
-obj_t *chr(wchar_t ch)
+val chr(wchar_t ch)
 {
-  return (obj_t *) ((ch << TAG_SHIFT) | TAG_CHR);
+  return (val) ((ch << TAG_SHIFT) | TAG_CHR);
 }
 
-obj_t *chrp(obj_t *chr)
+val chrp(val chr)
 {
   return (is_chr(chr)) ? t : nil;
 }
 
-wchar_t c_chr(obj_t *chr)
+wchar_t c_chr(val chr)
 {
   if (!is_chr(chr))
     type_mismatch(lit("~s is not a character"), chr, nao);
   return ((wchar_t) chr) >> TAG_SHIFT;
 }
 
-obj_t *chr_str(obj_t *str, obj_t *index)
+val chr_str(val str, val index)
 {
   bug_unless (length_str_gt(str, index));
 
@@ -1035,7 +1033,7 @@ obj_t *chr_str(obj_t *str, obj_t *index)
   }
 }
 
-obj_t *chr_str_set(obj_t *str, obj_t *index, obj_t *chr)
+val chr_str_set(val str, val index, val chr)
 {
   bug_unless (length_str_gt(str, index));
 
@@ -1049,28 +1047,28 @@ obj_t *chr_str_set(obj_t *str, obj_t *index, obj_t *chr)
   return chr;
 }
 
-obj_t *symbol_name(obj_t *sym)
+val symbol_name(val sym)
 {
   if (sym)
     type_check(sym, SYM);
   return sym ? sym->s.name : nil_string;
 }
 
-obj_t *make_sym(obj_t *name)
+val make_sym(val name)
 {
-  obj_t *obj = make_obj();
+  val obj = make_obj();
   obj->s.type = SYM;
   obj->s.name = name;
   obj->s.val = nil;
   return obj;
 }
 
-obj_t *intern(obj_t *str)
+val intern(val str)
 {
-  obj_t *iter;
+  val iter;
 
   for (iter = interned_syms; iter != nil; iter = cdr(iter)) {
-    obj_t *sym = car(iter);
+    val sym = car(iter);
     if (equal(symbol_name(sym), str))
       return sym;
   }
@@ -1079,14 +1077,14 @@ obj_t *intern(obj_t *str)
   return car(interned_syms);
 }
 
-obj_t *symbolp(obj_t *sym)
+val symbolp(val sym)
 {
   return (sym == nil || (is_ptr(sym) && sym->s.type == SYM)) ? t : nil;
 }
 
-obj_t *func_f0(obj_t *env, obj_t *(*fun)(obj_t *))
+val func_f0(val env, val (*fun)(val))
 {
-  obj_t *obj = make_obj();
+  val obj = make_obj();
   obj->f.type = FUN;
   obj->f.functype = F0;
   obj->f.env = env;
@@ -1094,9 +1092,9 @@ obj_t *func_f0(obj_t *env, obj_t *(*fun)(obj_t *))
   return obj;
 }
 
-obj_t *func_f1(obj_t *env, obj_t *(*fun)(obj_t *, obj_t *))
+val func_f1(val env, val (*fun)(val, val))
 {
-  obj_t *obj = make_obj();
+  val obj = make_obj();
   obj->f.type = FUN;
   obj->f.functype = F1;
   obj->f.env = env;
@@ -1104,9 +1102,9 @@ obj_t *func_f1(obj_t *env, obj_t *(*fun)(obj_t *, obj_t *))
   return obj;
 }
 
-obj_t *func_f2(obj_t *env, obj_t *(*fun)(obj_t *, obj_t *, obj_t *))
+val func_f2(val env, val (*fun)(val, val, val))
 {
-  obj_t *obj = make_obj();
+  val obj = make_obj();
   obj->f.type = FUN;
   obj->f.functype = F2;
   obj->f.env = env;
@@ -1114,9 +1112,9 @@ obj_t *func_f2(obj_t *env, obj_t *(*fun)(obj_t *, obj_t *, obj_t *))
   return obj;
 }
 
-obj_t *func_f3(obj_t *env, obj_t *(*fun)(obj_t *, obj_t *, obj_t *, obj_t *))
+val func_f3(val env, val (*fun)(val, val, val, val))
 {
-  obj_t *obj = make_obj();
+  val obj = make_obj();
   obj->f.type = FUN;
   obj->f.functype = F3;
   obj->f.env = env;
@@ -1124,10 +1122,9 @@ obj_t *func_f3(obj_t *env, obj_t *(*fun)(obj_t *, obj_t *, obj_t *, obj_t *))
   return obj;
 }
 
-obj_t *func_f4(obj_t *env, obj_t *(*fun)(obj_t *, obj_t *, obj_t *, obj_t *,
-                                         obj_t *))
+val func_f4(val env, val (*fun)(val, val, val, val, val))
 {
-  obj_t *obj = make_obj();
+  val obj = make_obj();
   obj->f.type = FUN;
   obj->f.functype = F4;
   obj->f.env = env;
@@ -1135,9 +1132,9 @@ obj_t *func_f4(obj_t *env, obj_t *(*fun)(obj_t *, obj_t *, obj_t *, obj_t *,
   return obj;
 }
 
-obj_t *func_n0(obj_t *(*fun)(void))
+val func_n0(val (*fun)(void))
 {
-  obj_t *obj = make_obj();
+  val obj = make_obj();
   obj->f.type = FUN;
   obj->f.functype = N0;
   obj->f.env = nil;
@@ -1145,9 +1142,9 @@ obj_t *func_n0(obj_t *(*fun)(void))
   return obj;
 }
 
-obj_t *func_n1(obj_t *(*fun)(obj_t *))
+val func_n1(val (*fun)(val))
 {
-  obj_t *obj = make_obj();
+  val obj = make_obj();
   obj->f.type = FUN;
   obj->f.functype = N1;
   obj->f.env = nil;
@@ -1155,9 +1152,9 @@ obj_t *func_n1(obj_t *(*fun)(obj_t *))
   return obj;
 }
 
-obj_t *func_n2(obj_t *(*fun)(obj_t *, obj_t *))
+val func_n2(val (*fun)(val, val))
 {
-  obj_t *obj = make_obj();
+  val obj = make_obj();
   obj->f.type = FUN;
   obj->f.functype = N2;
   obj->f.env = nil;
@@ -1165,18 +1162,18 @@ obj_t *func_n2(obj_t *(*fun)(obj_t *, obj_t *))
   return obj;
 }
 
-obj_t *func_n3(obj_t *(*fun)(obj_t *, obj_t *, obj_t *))
+val func_n3(val (*fun)(val, val, val))
 {
-  obj_t *obj = make_obj();
+  val obj = make_obj();
   obj->f.type = FUN;
   obj->f.functype = N3;
   obj->f.f.n3 = fun;
   return obj;
 }
 
-obj_t *func_n4(obj_t *(*fun)(obj_t *, obj_t *, obj_t *, obj_t *))
+val func_n4(val (*fun)(val, val, val, val))
 {
-  obj_t *obj = make_obj();
+  val obj = make_obj();
   obj->f.type = FUN;
   obj->f.functype = N4;
   obj->f.f.n4 = fun;
@@ -1184,9 +1181,9 @@ obj_t *func_n4(obj_t *(*fun)(obj_t *, obj_t *, obj_t *, obj_t *))
 }
 
 
-obj_t *apply(obj_t *fun, obj_t *arglist)
+val apply(val fun, val arglist)
 {
-  obj_t *arg[4], **p = arg;
+  val arg[4], *p = arg;
 
   type_check (fun, FUN);
 
@@ -1226,7 +1223,7 @@ obj_t *apply(obj_t *fun, obj_t *arglist)
   internal_error("corrupt function type field");
 }
 
-obj_t *funcall(obj_t *fun)
+val funcall(val fun)
 {
   type_check(fun, FUN);
 
@@ -1240,7 +1237,7 @@ obj_t *funcall(obj_t *fun)
   }
 }
 
-obj_t *funcall1(obj_t *fun, obj_t *arg)
+val funcall1(val fun, val arg)
 {
   type_check(fun, FUN);
 
@@ -1254,7 +1251,7 @@ obj_t *funcall1(obj_t *fun, obj_t *arg)
   }
 }
 
-obj_t *funcall2(obj_t *fun, obj_t *arg1, obj_t *arg2)
+val funcall2(val fun, val arg1, val arg2)
 {
   type_check(fun, FUN);
 
@@ -1268,7 +1265,7 @@ obj_t *funcall2(obj_t *fun, obj_t *arg1, obj_t *arg2)
   }
 }
 
-obj_t *reduce_left(obj_t *fun, obj_t *list, obj_t *init, obj_t *key)
+val reduce_left(val fun, val list, val init, val key)
 {
   if (!key)
     key = identity_f;
@@ -1279,28 +1276,28 @@ obj_t *reduce_left(obj_t *fun, obj_t *list, obj_t *init, obj_t *key)
   return init;
 }
 
-obj_t *do_bind2(obj_t *fcons, obj_t *arg2)
+val do_bind2(val fcons, val arg2)
 {
   return funcall2(car(fcons), cdr(fcons), arg2);
 }
 
-obj_t *bind2(obj_t *fun2, obj_t *arg)
+val bind2(val fun2, val arg)
 {
   return func_f1(cons(fun2, arg), do_bind2);
 }
 
-obj_t *do_bind2other(obj_t *fcons, obj_t *arg1)
+val do_bind2other(val fcons, val arg1)
 {
   return funcall2(car(fcons), arg1, cdr(fcons));
 }
 
-obj_t *bind2other(obj_t *fun2, obj_t *arg2)
+val bind2other(val fun2, val arg2)
 {
   return func_f1(cons(fun2, arg2), do_bind2other);
 }
 
 
-static obj_t *do_chain(obj_t *fun1_list, obj_t *arg)
+static val do_chain(val fun1_list, val arg)
 {
   for (; fun1_list; fun1_list = cdr(fun1_list))
     arg = funcall1(car(fun1_list), arg);
@@ -1308,16 +1305,16 @@ static obj_t *do_chain(obj_t *fun1_list, obj_t *arg)
   return arg;
 }
 
-obj_t *chain(obj_t *fun1_list)
+val chain(val fun1_list)
 {
   return func_f1(fun1_list, do_chain);
 }
 
-obj_t *vector(obj_t *alloc)
+val vector(val alloc)
 {
   long alloc_plus = c_num(alloc) + 2;
-  obj_t *vec = make_obj();
-  obj_t **v = (obj_t **) chk_malloc(alloc_plus * sizeof *v);
+  val vec = make_obj();
+  val *v = (val *) chk_malloc(alloc_plus * sizeof *v);
   vec->v.type = VEC;
   vec->v.vec = v + 2;
   v[0] = alloc;
@@ -1325,13 +1322,13 @@ obj_t *vector(obj_t *alloc)
   return vec;
 }
 
-obj_t *vec_get_fill(obj_t *vec)
+val vec_get_fill(val vec)
 {
   type_check(vec, VEC);
   return vec->v.vec[vec_fill];
 }
 
-obj_t *vec_set_fill(obj_t *vec, obj_t *fill)
+val vec_set_fill(val vec, val fill)
 {
   type_check(vec, VEC);
 
@@ -1344,8 +1341,8 @@ obj_t *vec_set_fill(obj_t *vec, obj_t *fill)
 
     if (alloc_delta > 0) {
       long new_alloc = max(new_fill, 2*old_alloc);
-      obj_t **newvec = (obj_t **) chk_realloc(vec->v.vec - 2,
-                                              (new_alloc + 2)*sizeof *newvec);
+      val *newvec = (val *) chk_realloc(vec->v.vec - 2,
+                                        (new_alloc + 2)*sizeof *newvec);
       vec->v.vec = newvec + 2;
       vec->v.vec[vec_alloc] = num(new_alloc);
     }
@@ -1363,35 +1360,35 @@ obj_t *vec_set_fill(obj_t *vec, obj_t *fill)
 }
 
 
-obj_t **vecref_l(obj_t *vec, obj_t *ind)
+val *vecref_l(val vec, val ind)
 {
   type_check(vec, VEC);
   range_bug_unless (c_num(ind) < c_num(vec->v.vec[vec_fill]));
   return vec->v.vec + c_num(ind);
 }
 
-obj_t *vec_push(obj_t *vec, obj_t *item)
+val vec_push(val vec, val item)
 {
-  obj_t *fill = vec_get_fill(vec);
+  val fill = vec_get_fill(vec);
   vec_set_fill(vec, plus(fill, one));
   *vecref_l(vec, fill) = item;
   return fill;
 }
 
-static obj_t *make_lazycons(obj_t *func)
+static val make_lazycons(val func)
 {
-  obj_t *obj = make_obj();
+  val obj = make_obj();
   obj->lc.type = LCONS;
   obj->lc.car = obj->lc.cdr = nil;
   obj->lc.func = func;
   return obj;
 }
 
-static obj_t *lazy_stream_func(obj_t *env, obj_t *lcons)
+static val lazy_stream_func(val env, val lcons)
 {
-  obj_t *stream = car(env);
-  obj_t *next = cdr(env) ? pop(cdr_l(env)) : get_line(stream);
-  obj_t *ahead = get_line(stream);
+  val stream = car(env);
+  val next = cdr(env) ? pop(cdr_l(env)) : get_line(stream);
+  val ahead = get_line(stream);
 
   lcons->lc.car = next;
   lcons->lc.cdr = if2(ahead, make_lazycons(lcons->lc.func));
@@ -1406,9 +1403,9 @@ static obj_t *lazy_stream_func(obj_t *env, obj_t *lcons)
   return next;
 }
 
-obj_t *lazy_stream_cons(obj_t *stream)
+val lazy_stream_cons(val stream)
 {
-  obj_t *first = get_line(stream);
+  val first = get_line(stream);
 
   if (!first) {
     close_stream(stream, t);
@@ -1419,9 +1416,9 @@ obj_t *lazy_stream_cons(obj_t *stream)
                        lazy_stream_func));
 }
 
-obj_t *lazy_str(obj_t *lst, obj_t *term, obj_t *limit)
+val lazy_str(val lst, val term, val limit)
 {
-  obj_t *obj = make_obj();
+  val obj = make_obj();
   obj->ls.type = LSTR;
   obj->ls.opts = nil; /* Must init before calling something that can gc! */
 
@@ -1441,15 +1438,15 @@ obj_t *lazy_str(obj_t *lst, obj_t *term, obj_t *limit)
   return obj;
 }
 
-obj_t *lazy_str_force(obj_t *lstr)
+val lazy_str_force(val lstr)
 {
-  obj_t *lim;
+  val lim;
   type_check(lstr, LSTR);
   lim = cdr(lstr->ls.opts);
 
   while ((!lim || gt(lim, zero)) && lstr->ls.list) {
-    obj_t *next = pop(&lstr->ls.list);
-    obj_t *term = car(lstr->ls.opts);
+    val next = pop(&lstr->ls.list);
+    val term = car(lstr->ls.opts);
     lstr->ls.prefix = cat_str(list(lstr->ls.prefix, next, term, nao), nil);
     if (lim)
       lim = minus(lim, one);
@@ -1461,17 +1458,17 @@ obj_t *lazy_str_force(obj_t *lstr)
   return lstr->ls.prefix;
 }
 
-obj_t *lazy_str_force_upto(obj_t *lstr, obj_t *index)
+val lazy_str_force_upto(val lstr, val index)
 {
-  obj_t *lim;
+  val lim;
   type_check(lstr, LSTR);
   lim = cdr(lstr->ls.opts);
 
   while (ge(index, length_str(lstr->ls.prefix)) && lstr->ls.list &&
          or2(nullp(lim),gt(lim,zero)))
   {
-    obj_t *next = pop(&lstr->ls.list);
-    obj_t *term = car(lstr->ls.opts);
+    val next = pop(&lstr->ls.list);
+    val term = car(lstr->ls.opts);
     lstr->ls.prefix = cat_str(list(lstr->ls.prefix, next, term, nao), nil);
     if (lim)
       lim = minus(lim, one);
@@ -1482,7 +1479,7 @@ obj_t *lazy_str_force_upto(obj_t *lstr, obj_t *index)
   return lt(index, length_str(lstr->ls.prefix));
 }
 
-obj_t *length_str_gt(obj_t *str, obj_t *len)
+val length_str_gt(val str, val len)
 {
   type_check2 (str, STR, LSTR);
 
@@ -1497,7 +1494,7 @@ obj_t *length_str_gt(obj_t *str, obj_t *len)
   }
 }
 
-obj_t *length_str_ge(obj_t *str, obj_t *len)
+val length_str_ge(val str, val len)
 {
   type_check2 (str, STR, LSTR);
 
@@ -1512,7 +1509,7 @@ obj_t *length_str_ge(obj_t *str, obj_t *len)
   }
 }
 
-obj_t *length_str_lt(obj_t *str, obj_t *len)
+val length_str_lt(val str, val len)
 {
   type_check2 (str, STR, LSTR);
 
@@ -1527,7 +1524,7 @@ obj_t *length_str_lt(obj_t *str, obj_t *len)
   }
 }
 
-obj_t *length_str_le(obj_t *str, obj_t *len)
+val length_str_le(val str, val len)
 {
   type_check2 (str, STR, LSTR);
 
@@ -1542,7 +1539,7 @@ obj_t *length_str_le(obj_t *str, obj_t *len)
   }
 }
 
-obj_t *lazy_str_get_trailing_list(obj_t *lstr, obj_t *index)
+val lazy_str_get_trailing_list(val lstr, val index)
 {
   type_check(lstr, LSTR);
 
@@ -1551,16 +1548,16 @@ obj_t *lazy_str_get_trailing_list(obj_t *lstr, obj_t *index)
     lazy_str_force_upto(lstr, index);
 
   {
-    obj_t *split_suffix = split_str(sub_str(lstr->ls.prefix, index, nil),
+    val split_suffix = split_str(sub_str(lstr->ls.prefix, index, nil),
                                     or2(car(lstr->ls.opts), string(L"\n")));
 
     return nappend2(split_suffix, lstr->ls.list);
   }
 }
 
-obj_t *cobj(void *handle, obj_t *cls_sym, struct cobj_ops *ops)
+val cobj(void *handle, val cls_sym, struct cobj_ops *ops)
 {
-  obj_t *obj = make_obj();
+  val obj = make_obj();
   obj->co.type = COBJ;
   obj->co.handle = handle;
   obj->co.ops = ops;
@@ -1568,17 +1565,17 @@ obj_t *cobj(void *handle, obj_t *cls_sym, struct cobj_ops *ops)
   return obj;
 }
 
-void cobj_print_op(obj_t *obj, obj_t *out)
+void cobj_print_op(val obj, val out)
 {
   put_string(out, lit("#<"));
   obj_print(obj->co.cls, out);
   format(out, lit(": ~p>"), obj->co.handle, nao);
 }
 
-obj_t *assoc(obj_t *list, obj_t *key)
+val assoc(val list, val key)
 {
   while (list) {
-    obj_t *elem = car(list);
+    val elem = car(list);
     if (equal(car(elem), key))
       return elem;
     list = cdr(list);
@@ -1587,9 +1584,9 @@ obj_t *assoc(obj_t *list, obj_t *key)
   return nil;
 }
 
-obj_t *acons_new(obj_t *list, obj_t *key, obj_t *value)
+val acons_new(val list, val key, val value)
 {
-  obj_t *existing = assoc(list, key);
+  val existing = assoc(list, key);
 
   if (existing) {
     *cdr_l(existing) = value;
@@ -1599,22 +1596,22 @@ obj_t *acons_new(obj_t *list, obj_t *key, obj_t *value)
   }
 }
 
-obj_t **acons_new_l(obj_t **list, obj_t *key)
+val *acons_new_l(val *list, val key)
 {
-  obj_t *existing = assoc(*list, key);
+  val existing = assoc(*list, key);
 
   if (existing) {
     return cdr_l(existing);
   } else {
-    obj_t *new = cons(key, nil);
+    val new = cons(key, nil);
     *list = cons(new, *list);
     return cdr_l(new);
   }
 }
 
-obj_t *alist_remove(obj_t *list, obj_t *keys)
+val alist_remove(val list, val keys)
 {
-  obj_t **plist = &list;
+  val *plist = &list;
 
   while (*plist) {
     if (memq(car(car(*plist)), keys))
@@ -1626,9 +1623,9 @@ obj_t *alist_remove(obj_t *list, obj_t *keys)
   return list;
 }
 
-obj_t *alist_remove1(obj_t *list, obj_t *key)
+val alist_remove1(val list, val key)
 {
-  obj_t **plist = &list;
+  val *plist = &list;
 
   while (*plist) {
     if (eq(car(car(*plist)), key))
@@ -1640,17 +1637,17 @@ obj_t *alist_remove1(obj_t *list, obj_t *key)
   return list;
 }
 
-obj_t *copy_cons(obj_t *c)
+val copy_cons(val c)
 {
   return cons(car(c), cdr(c));
 }
 
-obj_t *copy_alist(obj_t *list)
+val copy_alist(val list)
 {
   return mapcar(func_n1(copy_cons), list);
 }
 
-obj_t *mapcar(obj_t *fun, obj_t *list)
+val mapcar(val fun, val list)
 {
   list_collect_decl (out, iter);
 
@@ -1660,7 +1657,7 @@ obj_t *mapcar(obj_t *fun, obj_t *list)
   return out;
 }
 
-obj_t *mappend(obj_t *fun, obj_t *list)
+val mappend(val fun, val list)
 {
   list_collect_decl (out, iter);
 
@@ -1670,21 +1667,21 @@ obj_t *mappend(obj_t *fun, obj_t *list)
   return out;
 }
 
-obj_t *merge(obj_t *list1, obj_t *list2, obj_t *lessfun, obj_t *keyfun)
+val merge(val list1, val list2, val lessfun, val keyfun)
 {
   list_collect_decl (out, ptail);
 
   while (list1 && list2) {
-    obj_t *el1 = funcall1(keyfun, first(list1));
-    obj_t *el2 = funcall1(keyfun, first(list2));
+    val el1 = funcall1(keyfun, first(list1));
+    val el2 = funcall1(keyfun, first(list2));
 
     if (funcall2(lessfun, el1, el2)) {
-      obj_t *next = cdr(list1);
+      val next = cdr(list1);
       *cdr_l(list1) = nil;
       list_collect_append(ptail, list1);
       list1 = next;
     } else {
-      obj_t *next = cdr(list2);
+      val next = cdr(list2);
       *cdr_l(list2) = nil;
       list_collect_append(ptail, list2);
       list2 = next;
@@ -1699,7 +1696,7 @@ obj_t *merge(obj_t *list1, obj_t *list2, obj_t *lessfun, obj_t *keyfun)
   return out;
 }
 
-static obj_t *do_sort(obj_t *list, obj_t *lessfun, obj_t *keyfun)
+static val do_sort(val list, val lessfun, val keyfun)
 {
   if (list == nil)
     return nil;
@@ -1711,7 +1708,7 @@ static obj_t *do_sort(obj_t *list, obj_t *lessfun, obj_t *keyfun)
     {
       return list;
     } else {
-      obj_t *cons2 = cdr(list);
+      val cons2 = cdr(list);
       *cdr_l(cons2) = list;
       *cdr_l(list) = nil;
       return cons2;
@@ -1719,8 +1716,8 @@ static obj_t *do_sort(obj_t *list, obj_t *lessfun, obj_t *keyfun)
   }
 
   {
-    obj_t *bisect, *iter;
-    obj_t *list2;
+    val bisect, iter;
+    val list2;
 
     for (iter = cdr(cdr(list)), bisect = list; iter;
          bisect = cdr(bisect), iter = cdr(cdr(iter)))
@@ -1735,7 +1732,7 @@ static obj_t *do_sort(obj_t *list, obj_t *lessfun, obj_t *keyfun)
   }
 }
 
-obj_t *sort(obj_t *list, obj_t *lessfun, obj_t *keyfun)
+val sort(val list, val lessfun, val keyfun)
 {
   if (!keyfun)
     keyfun = identity_f;
@@ -1756,7 +1753,7 @@ static void obj_init(void)
           &null_string, &nil_string,
           &null_list, &equal_f,
           &identity_f, &prog_string,
-          (obj_t **) 0);
+          (val *) 0);
 
   nil_string = lit("nil");
 
@@ -1848,7 +1845,7 @@ static void obj_init(void)
   prog_string = string(progname);
 }
 
-void obj_print(obj_t *obj, obj_t *out)
+void obj_print(val obj, val out)
 {
   if (obj == nil) {
     put_string(out, lit("nil"));
@@ -1859,7 +1856,7 @@ void obj_print(obj_t *obj, obj_t *out)
   case CONS:
   case LCONS:
     {
-      obj_t *iter;
+      val iter;
       put_char(out, chr('('));
       for (iter = obj; consp(iter); iter = cdr(iter)) {
         obj_print(car(iter), out);
@@ -1960,7 +1957,7 @@ void obj_print(obj_t *obj, obj_t *out)
   format(out, lit("#<garbage: ~p>"), (void *) obj, nao);
 }
 
-void obj_pprint(obj_t *obj, obj_t *out)
+void obj_pprint(val obj, val out)
 {
   if (obj == nil) {
     put_string(out, lit("nil"));
@@ -1971,7 +1968,7 @@ void obj_pprint(obj_t *obj, obj_t *out)
   case CONS:
   case LCONS:
     {
-      obj_t *iter;
+      val iter;
       put_char(out, chr('('));
       for (iter = obj; consp(iter); iter = cdr(iter)) {
         obj_pprint(car(iter), out);
@@ -2028,7 +2025,7 @@ void obj_pprint(obj_t *obj, obj_t *out)
 }
 
 void init(const wchar_t *pn, void *(*oom)(void *, size_t),
-          obj_t **stack_bottom)
+          val *stack_bottom)
 {
   int gc_save;
   progname = pn;
@@ -2043,7 +2040,7 @@ void init(const wchar_t *pn, void *(*oom)(void *, size_t),
   gc_state(gc_save);
 }
 
-void dump(obj_t *obj, obj_t *out)
+void dump(val obj, val out)
 {
   obj_print(obj, out);
   put_char(out, chr('\n'));
@@ -2054,18 +2051,7 @@ void dump(obj_t *obj, obj_t *out)
  * so we don't have to keep typing:
  * (gdb) p dump(something, stdout)
  */
-void d(obj_t *obj)
+void d(val obj)
 {
   dump(obj, std_output);
-}
-
-obj_t *snarf(obj_t *in)
-{
-  list_collect_decl (list, iter);
-  obj_t *str;
-
-  while ((str = get_line(in)) != 0)
-    list_collect (iter, str);
-
-  return list;
 }

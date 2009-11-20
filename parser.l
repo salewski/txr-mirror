@@ -45,7 +45,7 @@
 
 #define YY_INPUT(buf, result, max_size)           \
   do {                                            \
-    obj_t *c = nil;                               \
+    val c = nil;                                  \
     int n, ch = '*';                              \
     for (n = 0; n < max_size &&                   \
                 (c = get_byte(yyin_stream)) &&    \
@@ -56,7 +56,7 @@
     result = n;                                   \
   } while (0)
 
-obj_t *yyin_stream;
+val yyin_stream;
 
 long lineno = 1;
 int opt_loglevel = 1;   /* 0 - quiet; 1 - normal; 2 - verbose */
@@ -70,7 +70,7 @@ void yyerror(const char *s)
   yyerrorf(lit("~a"), string_utf8(s), nao);
 }
 
-void yyerrorf(obj_t *fmt, ...)
+void yyerrorf(val fmt, ...)
 {
   if (opt_loglevel >= 1) {
     va_list vl;
@@ -86,7 +86,7 @@ void yyerrorf(obj_t *fmt, ...)
 
 void yybadtoken(int tok, const char *context)
 {
-  const obj_t *problem = nil;
+  val problem = nil;
 
   switch (tok) {
   case TEXT:    problem = lit("text"); break;

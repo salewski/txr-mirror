@@ -23,13 +23,13 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
-void gc_init(obj_t **stack_bottom);
-obj_t *prot1(obj_t **loc);
-void rel1(obj_t **loc);
-void protect(obj_t **, ...);
-void release(obj_t **, ...);
-obj_t *make_obj(void);
+void gc_init(val *stack_bottom);
+val prot1(val *loc);
+void rel1(val *loc);
+void protect(val *, ...);
+void release(val *, ...);
+val make_obj(void);
 void gc(void);
 int gc_state(int);
-void gc_mark(obj_t *);
-int gc_is_reachable(obj_t *);
+void gc_mark(val);
+int gc_is_reachable(val);

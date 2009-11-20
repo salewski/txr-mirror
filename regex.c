@@ -550,19 +550,19 @@ nfa_t nfa_combine(nfa_t pred, nfa_t succ)
   return ret;
 }
 
-nfa_t nfa_compile_set(obj_t *args, int compl)
+nfa_t nfa_compile_set(val args, int compl)
 {
-  obj_t *iter;
+  val iter;
   wchar_t min = WCHAR_MAX;
   wchar_t max = 0;
   chset_type_t cst;
 
   for (iter = args; iter; iter = rest(iter)) {
-    obj_t *item = first(iter);
+    val item = first(iter);
 
     if (consp(item)) {
-      obj_t *from = car(item);
-      obj_t *to = cdr(item);
+      val from = car(item);
+      val to = cdr(item);
 
       assert (typeof(from) == chr_t && typeof(to) == chr_t);
 
@@ -601,11 +601,11 @@ nfa_t nfa_compile_set(obj_t *args, int compl)
     nfa_t ret = nfa_make(s, acc);
 
     for (iter = args; iter; iter = rest(iter)) {
-      obj_t *item = first(iter);
+      val item = first(iter);
 
       if (consp(item)) {
-        obj_t *from = car(item);
-        obj_t *to = cdr(item);
+        val from = car(item);
+        val to = cdr(item);
 
         assert (typeof(from) == chr_t && typeof(to) == chr_t);
         char_set_add_range(set, c_chr(from), c_chr(to));
@@ -627,7 +627,7 @@ nfa_t nfa_compile_set(obj_t *args, int compl)
  * not including the regex symbol.
  * I.e.  (rest '(regex ...)) not '(regex ...).
  */
-nfa_t nfa_compile_regex(obj_t *items)
+nfa_t nfa_compile_regex(val items)
 {
   if (nullp(items)) {
     nfa_state_t *acc = nfa_state_accept();
@@ -635,7 +635,7 @@ nfa_t nfa_compile_regex(obj_t *items)
     nfa_t nfa = nfa_make(s, acc);
     return nfa;
   } else {
-    obj_t *item = first(items), *others = rest(items);
+    val item = first(items), others = rest(items);
     nfa_t nfa;
 
     if (typeof(item) == chr_t) {
@@ -647,8 +647,8 @@ nfa_t nfa_compile_regex(obj_t *items)
       nfa_state_t *s = nfa_state_wild(acc);
       nfa = nfa_make(s, acc);
     } else if (consp(item)) {
-      obj_t *sym = first(item);
-      obj_t *args = rest(item);
+      val sym = first(item);
+      val args = rest(item);
 
       if (sym == set) {
         nfa = nfa_compile_set(args, 0);
@@ -1035,12 +1035,12 @@ nfam_result_t nfa_machine_feed(nfa_machine_t *nfam, wchar_t ch)
   return NFAM_INCOMPLETE;
 }
 
-static obj_t *regex_equal(obj_t *self, obj_t *other)
+static val regex_equal(val self, val other)
 {
   return self == other ? t : nil; /* eq equality only */
 }
 
-static void regex_destroy(obj_t *regex)
+static void regex_destroy(val regex)
 {
   nfa_t *pnfa = (nfa_t *) regex->co.handle;
   nfa_free(*pnfa);
@@ -1052,26 +1052,26 @@ static struct cobj_ops regex_obj_ops = {
   regex_equal, cobj_print_op, regex_destroy, 0, 0
 };
 
-obj_t *regex_compile(obj_t *regex_sexp)
+val regex_compile(val regex_sexp)
 {
   nfa_t *pnfa = (nfa_t *) chk_malloc(sizeof *pnfa);
   *pnfa = nfa_compile_regex(regex_sexp);
   return cobj(pnfa, regex, &regex_obj_ops);
 }
 
-obj_t *regexp(obj_t *obj)
+val regexp(val obj)
 {
   return (obj->co.type == COBJ && obj->co.cls == regex) ? t : nil;
 }
 
-nfa_t *regex_nfa(obj_t *reg)
+nfa_t *regex_nfa(val reg)
 {
   assert (reg->co.type == COBJ && reg->co.cls == regex);
   return (nfa_t *) reg->co.handle;
 }
 
-obj_t *search_regex(obj_t *haystack, obj_t *needle_regex, obj_t *start,
-                    obj_t *from_end)
+val search_regex(val haystack, val needle_regex, val start,
+                 val from_end)
 {
   nfa_t *pnfa = regex_nfa(needle_regex);
 
@@ -1090,7 +1090,7 @@ obj_t *search_regex(obj_t *haystack, obj_t *needle_regex, obj_t *start,
       }
     } else {
       nfa_machine_t nfam;
-      obj_t *i, *pos = start, *retval;
+      val i, pos = start, retval;
       nfam_result_t last_res = NFAM_INCOMPLETE;
 
       nfa_machine_init(&nfam, *pnfa);
@@ -1124,10 +1124,10 @@ again:
   }
 }
 
-obj_t *match_regex(obj_t *str, obj_t *reg, obj_t *pos)
+val match_regex(val str, val reg, val pos)
 {
   nfa_machine_t nfam;
-  obj_t *i, *retval;
+  val i, retval;
   nfam_result_t last_res = NFAM_INCOMPLETE;
   nfa_t *pnfa = regex_nfa(reg);
 

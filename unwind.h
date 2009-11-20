@@ -41,23 +41,23 @@ struct uw_common {
 struct uw_block {
   uw_frame_t *up;
   uw_frtype_t type;
-  obj_t *tag;
-  obj_t *result;
+  val tag;
+  val result;
   jmp_buf jb;
 };
 
 struct uw_dynamic_env {
   uw_frame_t *up;
   uw_frtype_t type;
-  obj_t *func_bindings;
+  val func_bindings;
 };
 
 struct uw_catch {
   uw_frame_t *up;
   uw_frtype_t type;
-  obj_t *matches;
-  obj_t *sym;
-  obj_t *exception;
+  val matches;
+  val sym;
+  val exception;
   uw_frame_t *cont;
   int visible;
   jmp_buf jb;
@@ -70,22 +70,22 @@ union uw_frame {
   struct uw_catch ca;
 };
 
-void uw_push_block(uw_frame_t *, obj_t *tag);
+void uw_push_block(uw_frame_t *, val tag);
 void uw_push_env(uw_frame_t *);
-obj_t *uw_get_func(obj_t *sym);
-obj_t *uw_set_func(obj_t *sym, obj_t *value);
-obj_t *uw_block_return(obj_t *tag, obj_t *result);
-void uw_push_catch(uw_frame_t *, obj_t *matches);
-noreturn obj_t *uw_throw(obj_t *sym, obj_t *exception);
-noreturn obj_t *uw_throwf(obj_t *sym, obj_t *fmt, ...);
-noreturn obj_t *uw_errorf(obj_t *fmt, ...);
-obj_t *uw_register_subtype(obj_t *sub, obj_t *super);
-obj_t *uw_exception_subtype_p(obj_t *sub, obj_t *sup);
+val uw_get_func(val sym);
+val uw_set_func(val sym, val value);
+val uw_block_return(val tag, val result);
+void uw_push_catch(uw_frame_t *, val matches);
+noreturn val uw_throw(val sym, val exception);
+noreturn val uw_throwf(val sym, val fmt, ...);
+noreturn val uw_errorf(val fmt, ...);
+val uw_register_subtype(val sub, val super);
+val uw_exception_subtype_p(val sub, val sup);
 void uw_continue(uw_frame_t *curr, uw_frame_t *target);
 void uw_pop_frame(uw_frame_t *);
 void uw_init(void);
 
-noreturn obj_t *type_mismatch(obj_t *, ...);
+noreturn val type_mismatch(val, ...);
 
 #define uw_block_begin(TAG, RESULTVAR)  \
   obj_t *RESULTVAR = nil;               \

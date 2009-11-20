@@ -1,3 +1,19 @@
+2009-11-20  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Changing ``obj_t *'' occurences to a ``val'' typedef. (Ideally,
+	we wouldn't have to declare object variables at all, so why
+	use an obtuse syntax to do so?)
+
+	* lib.h (val): New typedef name. Used throughout.
+
+	* gc.c, gc.h, hash.c, hash.h, lib.c, match.c, match.h, parser.h,
+	parser.l, parser.y, regex.c, regex.h stream.c,, stream.h, txr.c,
+	unwind.c, unwind.h: Replace obj_t * with val almost everywhere.
+	Low-level gc functinos that work with arrays of obj_t use
+	obj_t *. Seeing pointer arithmetic on a val doesn't make sense.
+	In macros we use obj_t *, to reduce the chances of clashing
+	with some local variable called val.
+
 2009-11-19  Kaz Kylheku  <kkylheku@gmail.com>
 
 	* txr.1: Fixed mangled formatting of exception handling example.

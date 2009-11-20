@@ -47,7 +47,7 @@ typedef enum hash_flags {
 struct hash {
   hash_flags_t flags;
   struct hash *next;
-  obj_t *table;
+  val table;
   long modulus;
   long count;
 };
@@ -76,7 +76,7 @@ static long hash_c_str(const wchar_t *str)
   return h;
 }
 
-static long ll_hash(obj_t *obj)
+static long ll_hash(val obj)
 {
   if (obj == nil)
     return NUM_MAX;
@@ -98,7 +98,7 @@ static long ll_hash(obj_t *obj)
     return ((long) obj->f.f.interp_fun + ll_hash(obj->f.env)) & NUM_MAX;
   case VEC:
     {
-      obj_t *fill = obj->v.vec[vec_fill];
+      val fill = obj->v.vec[vec_fill];
       long i, h = ll_hash(obj->v.vec[vec_fill]);
       long len = c_num(fill);
 
@@ -121,22 +121,22 @@ static long ll_hash(obj_t *obj)
   internal_error("unhandled case in equal function");
 }
 
-obj_t *hash_obj(obj_t *obj)
+val hash_obj(val obj)
 {
   return num(ll_hash(obj));
 }
 
-obj_t *hash_equal(obj_t *self, obj_t *other)
+val hash_equal(val self, val other)
 {
   return self == other ? t : nil;
 }
 
-void hash_destroy(obj_t *hash)
+void hash_destroy(val hash)
 {
   free(hash->co.handle);
 }
 
-void hash_mark(obj_t *hash)
+void hash_mark(val hash)
 {
   struct hash *h = (struct hash *) hash->co.handle;
   long i;
@@ -150,12 +150,12 @@ void hash_mark(obj_t *hash)
   case hash_weak_keys:
     /* Keys are weak: mark the values only. */
     for (i = 0; i < h->modulus; i++) {
-      obj_t *ind = num(i);
-      obj_t **pchain = vecref_l(h->table, ind);
-      obj_t *iter;
+      val ind = num(i);
+      val *pchain = vecref_l(h->table, ind);
+      val iter;
 
       for (iter = *pchain; iter != nil; iter = cdr(iter)) {
-        obj_t *entry = car(iter);
+        val entry = car(iter);
         gc_mark(cdr(entry));
       }
     }
@@ -166,12 +166,12 @@ void hash_mark(obj_t *hash)
     /* Values are weak: mark the keys only. */
 
     for (i = 0; i < h->modulus; i++) {
-      obj_t *ind = num(i);
-      obj_t **pchain = vecref_l(h->table, ind);
-      obj_t *iter;
+      val ind = num(i);
+      val *pchain = vecref_l(h->table, ind);
+      val iter;
 
       for (iter = *pchain; iter != nil; iter = cdr(iter)) {
-        obj_t *entry = car(iter);
+        val entry = car(iter);
         gc_mark(car(entry));
       }
     }
@@ -196,20 +196,20 @@ void hash_grow(struct hash *h)
 {
   long i;
   long new_modulus = 2 * h->modulus;
-  obj_t *new_table = vector(num(new_modulus));
+  val new_table = vector(num(new_modulus));
 
   bug_unless (new_modulus > h->modulus);
 
   vec_set_fill(new_table, num(new_modulus));
 
   for (i = 0; i < h->modulus; i++) {
-    obj_t *conses = *vecref_l(h->table, num(i));
+    val conses = *vecref_l(h->table, num(i));
 
     while (conses) {
-      obj_t *entry = car(conses);
-      obj_t *next = cdr(conses);
-      obj_t *key = car(entry);
-      obj_t **pchain = vecref_l(new_table,
+      val entry = car(conses);
+      val next = cdr(conses);
+      val key = car(entry);
+      val *pchain = vecref_l(new_table,
                                 num(ll_hash(key) % new_modulus));
       *cdr_l(conses) = *pchain;
       *pchain = conses;
@@ -221,13 +221,13 @@ void hash_grow(struct hash *h)
   h->table = new_table;
 }
 
-obj_t *make_hash(obj_t *weak_keys, obj_t *weak_vals)
+val make_hash(val weak_keys, val weak_vals)
 {
   int flags = ((weak_vals != nil) << 1) | (weak_keys != nil);
   struct hash *h = (struct hash *) chk_malloc(sizeof *h);
-  obj_t *mod = num(256);
-  obj_t *table = vector(mod);
-  obj_t *hash = cobj((void *) h, hash_t, &hash_ops);
+  val mod = num(256);
+  val table = vector(mod);
+  val hash = cobj((void *) h, hash_t, &hash_ops);
 
   vec_set_fill(table, mod);
 
@@ -238,29 +238,29 @@ obj_t *make_hash(obj_t *weak_keys, obj_t *weak_vals)
   return hash;
 }
 
-obj_t **gethash_l(obj_t *hash, obj_t *key)
+val *gethash_l(val hash, val key)
 {
   struct hash *h = (struct hash *) hash->co.handle;
-  obj_t **pchain = vecref_l(h->table, num(ll_hash(key) % h->modulus));
-  obj_t *old = *pchain;
-  obj_t **place = acons_new_l(pchain, key);
+  val *pchain = vecref_l(h->table, num(ll_hash(key) % h->modulus));
+  val old = *pchain;
+  val *place = acons_new_l(pchain, key);
   if (old != *pchain && ++h->count > 2 * h->modulus)
     hash_grow(h);
   return place;
 }
 
-obj_t *gethash(obj_t *hash, obj_t *key)
+val gethash(val hash, val key)
 {
   struct hash *h = (struct hash *) hash->co.handle;
-  obj_t *chain = *vecref_l(h->table, num(ll_hash(key) % h->modulus));
-  obj_t *found = assoc(chain, key);
+  val chain = *vecref_l(h->table, num(ll_hash(key) % h->modulus));
+  val found = assoc(chain, key);
   return cdr(found);
 }
 
-obj_t *remhash(obj_t *hash, obj_t *key)
+val remhash(val hash, val key)
 {
   struct hash *h = (struct hash *) hash->co.handle;
-  obj_t **pchain = vecref_l(h->table, num(ll_hash(key) % h->modulus));
+  val *pchain = vecref_l(h->table, num(ll_hash(key) % h->modulus));
   *pchain = alist_remove1(*pchain, key);
   h->count--;
   bug_unless (h->count >= 0);
@@ -286,12 +286,12 @@ void hash_process_weak(void)
       /* Sweep through all entries. Delete any which have keys
          that are garbage. */
       for (i = 0; i < h->modulus; i++) {
-        obj_t *ind = num(i);
-        obj_t **pchain = vecref_l(h->table, ind);
-        obj_t **iter;
+        val ind = num(i);
+        val *pchain = vecref_l(h->table, ind);
+        val *iter;
 
         for (iter = pchain; *iter != nil; ) {
-          obj_t *entry = car(*iter);
+          val entry = car(*iter);
           if (!gc_is_reachable(car(entry)))
             *iter = cdr(*iter);
           else
@@ -305,12 +305,12 @@ void hash_process_weak(void)
       /* Sweep through all entries. Delete any which have values
          that are garbage. */
       for (i = 0; i < h->modulus; i++) {
-        obj_t *ind = num(i);
-        obj_t **pchain = vecref_l(h->table, ind);
-        obj_t **iter;
+        val ind = num(i);
+        val *pchain = vecref_l(h->table, ind);
+        val *iter;
 
         for (iter = pchain; *iter != nil; ) {
-          obj_t *entry = car(*iter);
+          val entry = car(*iter);
           if (!gc_is_reachable(cdr(entry)))
             *iter = cdr(*iter);
           else
@@ -324,12 +324,12 @@ void hash_process_weak(void)
       /* Sweep through all entries. Delete any which have keys
          or values that are garbage. */
       for (i = 0; i < h->modulus; i++) {
-        obj_t *ind = num(i);
-        obj_t **pchain = vecref_l(h->table, ind);
-        obj_t **iter;
+        val ind = num(i);
+        val *pchain = vecref_l(h->table, ind);
+        val *iter;
 
         for (iter = pchain; *iter != nil; ) {
-          obj_t *entry = car(*iter);
+          val entry = car(*iter);
           if (!gc_is_reachable(car(entry)) || !gc_is_reachable(cdr(entry)))
             *iter = cdr(*iter);
           else

@@ -38,11 +38,11 @@
 int yylex(void);
 void yyerror(const char *);
 
-obj_t *repeat_rep_helper(obj_t *sym, obj_t *main, obj_t *parts);
-obj_t *define_transform(obj_t *define_form);
-obj_t *lit_char_helper(obj_t *litchars);
+val repeat_rep_helper(val sym, val main, val parts);
+val define_transform(val define_form);
+val lit_char_helper(val litchars);
 
-static obj_t *parsed_spec;
+static val parsed_spec;
 
 %}
 
@@ -524,18 +524,18 @@ litchars : LITCHAR              { $$ = cons(chr($1), nil); }
 
 %%
 
-obj_t *repeat_rep_helper(obj_t *sym, obj_t *main, obj_t *parts)
+val repeat_rep_helper(val sym, val main, val parts)
 {
-  obj_t *single_parts = nil;
-  obj_t *first_parts = nil;
-  obj_t *last_parts = nil;
-  obj_t *empty_parts = nil;
-  obj_t *iter;
+  val single_parts = nil;
+  val first_parts = nil;
+  val last_parts = nil;
+  val empty_parts = nil;
+  val iter;
 
   for (iter = parts; iter != nil; iter = cdr(iter)) {
-    obj_t *part = car(iter);
-    obj_t *sym = car(part);
-    obj_t *clauses = cdr(part);
+    val part = car(iter);
+    val sym = car(part);
+    val clauses = cdr(part);
 
     if (sym == single)
       single_parts = nappend2(single_parts, clauses);
@@ -553,10 +553,10 @@ obj_t *repeat_rep_helper(obj_t *sym, obj_t *main, obj_t *parts)
               last_parts, empty_parts, nao);
 }
 
-obj_t *define_transform(obj_t *define_form)
+val define_transform(val define_form)
 {
-  obj_t *sym = first(define_form);
-  obj_t *args = second(define_form);
+  val sym = first(define_form);
+  val args = second(define_form);
 
   if (define_form == nil)
     return nil;
@@ -572,8 +572,8 @@ obj_t *define_transform(obj_t *define_form)
     yyerror("bad define argument syntax");
     return define_form;
   } else {
-    obj_t *name = first(args);
-    obj_t *params = second(args);
+    val name = first(args);
+    val params = second(args);
 
     if (!symbolp(name)) {
       yyerror("function name must be a symbol");
@@ -592,12 +592,12 @@ obj_t *define_transform(obj_t *define_form)
   return define_form;
 }
 
-obj_t *lit_char_helper(obj_t *litchars)
+val lit_char_helper(val litchars)
 {
-  obj_t *ret = nil;
+  val ret = nil;
 
   if (litchars) {
-    obj_t *len = length(litchars), *iter, *ix;
+    val len = length(litchars), iter, ix;
     ret = mkustring(len);
     for (iter = litchars, ix = zero;
         iter;
@@ -611,7 +611,7 @@ obj_t *lit_char_helper(obj_t *litchars)
   return ret;
 }
 
-obj_t *get_spec(void)
+val get_spec(void)
 {
   return parsed_spec;
 }

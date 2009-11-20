@@ -99,7 +99,7 @@ static void uw_unwind_to_exit_point()
   }
 }
 
-void uw_push_block(uw_frame_t *fr, obj_t *tag)
+void uw_push_block(uw_frame_t *fr, val tag)
 {
   fr->bl.type = UW_BLOCK;
   fr->bl.tag = tag;
@@ -135,13 +135,13 @@ void uw_push_env(uw_frame_t *fr)
   uw_stack = fr;
 }
 
-obj_t *uw_get_func(obj_t *sym)
+val uw_get_func(val sym)
 {
   uw_frame_t *env = uw_find_env();
   return cdr(assoc(env->ev.func_bindings, sym));
 }
 
-obj_t *uw_set_func(obj_t *sym, obj_t *value)
+val uw_set_func(val sym, val value)
 {
   uw_frame_t *env = uw_find_env();
   env->ev.func_bindings = acons_new(env->ev.func_bindings, sym, value);
@@ -154,7 +154,7 @@ void uw_pop_frame(uw_frame_t *fr)
   uw_stack = uw_stack->uw.up;
 }
 
-obj_t *uw_block_return(obj_t *tag, obj_t *result)
+val uw_block_return(val tag, val result)
 {
   uw_frame_t *ex;
 
@@ -172,7 +172,7 @@ obj_t *uw_block_return(obj_t *tag, obj_t *result)
   abort();
 }
 
-void uw_push_catch(uw_frame_t *fr, obj_t *matches)
+void uw_push_catch(uw_frame_t *fr, val matches)
 {
   fr->ca.type = UW_CATCH;
   fr->ca.matches = matches;
@@ -183,19 +183,19 @@ void uw_push_catch(uw_frame_t *fr, obj_t *matches)
   uw_stack = fr;
 }
 
-static obj_t *exception_subtypes;
+static val exception_subtypes;
 
-obj_t *uw_exception_subtype_p(obj_t *sub, obj_t *sup)
+val uw_exception_subtype_p(val sub, val sup)
 {
   if (sub == nil || sup == t || sub == sup) {
     return t;
   } else {
-    obj_t *entry = assoc(exception_subtypes, sub);
+    val entry = assoc(exception_subtypes, sub);
     return memq(sup, entry) ? t : nil;
   }
 }
 
-obj_t *uw_throw(obj_t *sym, obj_t *exception)
+val uw_throw(val sym, val exception)
 {
   uw_frame_t *ex;
 
@@ -204,8 +204,8 @@ obj_t *uw_throw(obj_t *sym, obj_t *exception)
       /* The some_satisfy would require us to
          cons up a function; we want to
          avoid consing in exception handling, if we can. */
-      obj_t *matches = ex->ca.matches;
-      obj_t *match;
+      val matches = ex->ca.matches;
+      val match;
       for (match = matches; match; match = cdr(match))
         if (uw_exception_subtype_p(sym, car(match)))
           break;
@@ -216,7 +216,7 @@ obj_t *uw_throw(obj_t *sym, obj_t *exception)
 
   if (ex == 0) {
     if (opt_loglevel >= 1) {
-      obj_t *s = stringp(exception);
+      val s = stringp(exception);
       format(std_error, lit("~a: unhandled exception of type ~a:\n"),
              prog_string, sym, nao);
       format(std_error, s ? lit("~a: ~a\n") : lit("~a: ~s\n"),
@@ -238,10 +238,10 @@ obj_t *uw_throw(obj_t *sym, obj_t *exception)
   abort();
 }
 
-obj_t *uw_throwf(obj_t *sym, obj_t *fmt, ...)
+val uw_throwf(val sym, val fmt, ...)
 {
   va_list vl;
-  obj_t *stream = make_string_output_stream();
+  val stream = make_string_output_stream();
 
   va_start (vl, fmt);
   (void) vformat(stream, fmt, vl);
@@ -251,10 +251,10 @@ obj_t *uw_throwf(obj_t *sym, obj_t *fmt, ...)
   abort();
 }
 
-obj_t *uw_errorf(obj_t *fmt, ...)
+val uw_errorf(val fmt, ...)
 {
   va_list vl;
-  obj_t *stream = make_string_output_stream();
+  val stream = make_string_output_stream();
 
   va_start (vl, fmt);
   (void) vformat(stream, fmt, vl);
@@ -264,10 +264,10 @@ obj_t *uw_errorf(obj_t *fmt, ...)
   abort();
 }
 
-obj_t *type_mismatch(obj_t *fmt, ...)
+val type_mismatch(val fmt, ...)
 {
   va_list vl;
-  obj_t *stream = make_string_output_stream();
+  val stream = make_string_output_stream();
 
   va_start (vl, fmt);
   (void) vformat(stream, fmt, vl);
@@ -277,11 +277,11 @@ obj_t *type_mismatch(obj_t *fmt, ...)
   abort();
 }
 
-obj_t *uw_register_subtype(obj_t *sub, obj_t *sup)
+val uw_register_subtype(val sub, val sup)
 {
-  obj_t *t_entry = assoc(exception_subtypes, t);
-  obj_t *sub_entry = assoc(exception_subtypes, sub);
-  obj_t *sup_entry = assoc(exception_subtypes, sup);
+  val t_entry = assoc(exception_subtypes, t);
+  val sub_entry = assoc(exception_subtypes, sub);
+  val sup_entry = assoc(exception_subtypes, sup);
 
   assert (t_entry != 0);
 
@@ -335,7 +335,7 @@ void uw_continue(uw_frame_t *current, uw_frame_t *cont)
 
 void uw_init(void)
 {
-  protect(&toplevel_env.ev.func_bindings, &exception_subtypes, (obj_t **) 0);
+  protect(&toplevel_env.ev.func_bindings, &exception_subtypes, (val *) 0);
   exception_subtypes = cons(cons(t, nil), exception_subtypes);
   uw_register_subtype(type_error, error);
   uw_register_subtype(internal_err, error);

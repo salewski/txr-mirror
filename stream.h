@@ -24,23 +24,23 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-extern obj_t *std_input, *std_output, *std_error;
+extern val std_input, std_output, std_error;
 
-obj_t *make_stdio_stream(FILE *, obj_t *descr, obj_t *input, obj_t *output);
-obj_t *make_pipe_stream(FILE *, obj_t *descr, obj_t *input, obj_t *output);
-obj_t *make_string_input_stream(obj_t *);
-obj_t *make_string_byte_input_stream(obj_t *);
-obj_t *make_string_output_stream(void);
-obj_t *get_string_from_stream(obj_t *);
-obj_t *make_dir_stream(DIR *);
-obj_t *close_stream(obj_t *stream, obj_t *throw_on_error);
-obj_t *get_line(obj_t *);
-obj_t *get_char(obj_t *);
-obj_t *get_byte(obj_t *);
-obj_t *vformat(obj_t *stream, obj_t *string, va_list);
-obj_t *format(obj_t *stream, obj_t *string, ...);
-obj_t *put_string(obj_t *stream, obj_t *string);
-obj_t *put_line(obj_t *stream, obj_t *string);
-obj_t *put_char(obj_t *stream, obj_t *ch);
+val make_stdio_stream(FILE *, val descr, val input, val output);
+val make_pipe_stream(FILE *, val descr, val input, val output);
+val make_string_input_stream(val );
+val make_string_byte_input_stream(val );
+val make_string_output_stream(void);
+val get_string_from_stream(val );
+val make_dir_stream(DIR *);
+val close_stream(val stream, val throw_on_error);
+val get_line(val);
+val get_char(val);
+val get_byte(val);
+val vformat(val stream, val string, va_list);
+val format(val stream, val string, ...);
+val put_string(val stream, val string);
+val put_line(val stream, val string);
+val put_char(val stream, val ch);
 
 void stream_init(void);

@@ -47,45 +47,47 @@ typedef enum functype
 
 typedef union obj obj_t;
 
+typedef obj_t *val;
+
 struct any {
   type_t type;
   void *dummy[2];
-  obj_t *next; /* GC free list */
+  val next; /* GC free list */
 };
 
 struct cons {
   type_t type;
-  obj_t *car, *cdr;
+  val car, cdr;
 };
 
 struct string {
   type_t type;
   wchar_t *str;
-  obj_t *len;
+  val len;
 };
 
 struct sym {
   type_t type;
-  obj_t *name;
-  obj_t *val;
+  val name;
+  val val;
 };
 
 struct func {
   type_t type;
   functype_t functype;
-  obj_t *env;
+  val env;
   union {
-    obj_t *interp_fun;
-    obj_t *(*f0)(obj_t *);
-    obj_t *(*f1)(obj_t *, obj_t *);
-    obj_t *(*f2)(obj_t *, obj_t *, obj_t *);
-    obj_t *(*f3)(obj_t *, obj_t *, obj_t *, obj_t *);
-    obj_t *(*f4)(obj_t *, obj_t *, obj_t *, obj_t *, obj_t *);
-    obj_t *(*n0)(void);
-    obj_t *(*n1)(obj_t *);
-    obj_t *(*n2)(obj_t *, obj_t *);
-    obj_t *(*n3)(obj_t *, obj_t *, obj_t *);
-    obj_t *(*n4)(obj_t *, obj_t *, obj_t *, obj_t *);
+    val interp_fun;
+    val (*f0)(val);
+    val (*f1)(val, val);
+    val (*f2)(val, val, val);
+    val (*f3)(val, val, val, val);
+    val (*f4)(val, val, val, val, val);
+    val (*n0)(void);
+    val (*n1)(val);
+    val (*n2)(val, val);
+    val (*n3)(val, val, val);
+    val (*n4)(val, val, val, val);
   } f;
 };
 
@@ -96,7 +98,7 @@ struct vec {
   /* vec points two elements down */
   /* vec[-2] is allocated size */
   /* vec[-1] is fill pointer */
-  obj_t **vec;
+  val *vec;
 };
 
 /*
@@ -109,8 +111,8 @@ struct vec {
 
 struct lazy_cons {
   type_t type;
-  obj_t *car, *cdr;
-  obj_t *func; /* when nil, car and cdr are valid */
+  val car, cdr;
+  val func; /* when nil, car and cdr are valid */
 };
 
 /*
@@ -119,24 +121,24 @@ struct lazy_cons {
  */
 struct lazy_string {
   type_t type;
-  obj_t *prefix;        /* actual string part */
-  obj_t *list;          /* remaining list */
-  obj_t *opts;          /* ( limit . sepstring ) */
+  val prefix;           /* actual string part */
+  val list;             /* remaining list */
+  val opts;             /* ( limit . sepstring ) */
 };
 
 struct cobj {
   type_t type;
   void *handle;
   struct cobj_ops *ops;
-  obj_t *cls;
+  val cls;
 };
 
 struct cobj_ops {
-  obj_t *(*equal)(obj_t *self, obj_t *other);
-  void (*print)(obj_t *self, obj_t *stream);
-  void (*destroy)(obj_t *self);
-  void (*mark)(obj_t *self);
-  long (*hash)(obj_t *self);
+  val (*equal)(val self, val other);
+  void (*print)(val self, val stream);
+  void (*destroy)(val self);
+  void (*mark)(val self);
+  long (*hash)(val self);
 };
 
 union obj {
@@ -151,28 +153,28 @@ union obj {
   struct cobj co;
 };
 
-inline long tag(obj_t *obj) { return ((long) obj) & TAG_MASK; }
-inline int is_ptr(obj_t *obj) { return obj && tag(obj) == TAG_PTR; }
-inline int is_num(obj_t *obj) { return tag(obj) == TAG_NUM; }
-inline int is_chr(obj_t *obj) { return tag(obj) == TAG_CHR; }
-inline int is_lit(obj_t *obj) { return tag(obj) == TAG_LIT; }
+inline long tag(val obj) { return ((long) obj) & TAG_MASK; }
+inline int is_ptr(val obj) { return obj && tag(obj) == TAG_PTR; }
+inline int is_num(val obj) { return tag(obj) == TAG_NUM; }
+inline int is_chr(val obj) { return tag(obj) == TAG_CHR; }
+inline int is_lit(val obj) { return tag(obj) == TAG_LIT; }
 
-inline type_t type(obj_t *obj)
+inline type_t type(val obj)
 { 
  return tag(obj) ? (type_t) tag(obj) : obj->t.type;
 }
 
-inline obj_t *auto_str(const wchar_t *str)
+inline val auto_str(const wchar_t *str)
 {
-  return (obj_t *) ((long) (str) | TAG_LIT);
+  return (val) ((long) (str) | TAG_LIT);
 }
 
-inline obj_t *static_str(const wchar_t *str)
+inline val static_str(const wchar_t *str)
 {
-  return (obj_t *) ((long) (str) | TAG_LIT);
+  return (val) ((long) (str) | TAG_LIT);
 }
 
-inline wchar_t *litptr(obj_t *obj)
+inline wchar_t *litptr(val obj)
 {
  return (wchar_t *) ((long) obj & ~TAG_MASK);
 }
@@ -180,172 +182,168 @@ inline wchar_t *litptr(obj_t *obj)
 #define lit_noex(strlit) ((obj_t *) ((long) (L ## strlit) | TAG_LIT))
 #define lit(strlit) lit_noex(strlit)
 
-extern obj_t *interned_syms;
+extern val interned_syms;
 
-extern obj_t *t, *cons_t, *str_t, *chr_t, *num_t, *sym_t, *fun_t, *vec_t;
-extern obj_t *stream_t, *hash_t, *lcons_t, *lstr_t, *cobj_t;
-extern obj_t *var, *regex, *set, *cset, *wild, *oneplus;
-extern obj_t *zeroplus, *optional, *compound, *or, *quasi;
-extern obj_t *skip, *trailer, *block, *next, *freeform, *fail, *accept;
-extern obj_t *all, *some, *none, *maybe, *cases, *collect, *until, *coll;
-extern obj_t *define, *output, *single, *frst, *lst, *empty, *repeat, *rep;
-extern obj_t *flattn, *forget, *local, *mrge, *bind, *cat, *args;
-extern obj_t *try, *catch, *finally, *nothrow, *throw, *defex;
-extern obj_t *error, *type_error, *internal_err, *numeric_err, *range_err;
-extern obj_t *query_error, *file_error, *process_error;
+extern val t, cons_t, str_t, chr_t, num_t, sym_t, fun_t, vec_t;
+extern val stream_t, hash_t, lcons_t, lstr_t, cobj_t;
+extern val var, regex, set, cset, wild, oneplus;
+extern val zeroplus, optional, compound, or, quasi;
+extern val skip, trailer, block, next, freeform, fail, accept;
+extern val all, some, none, maybe, cases, collect, until, coll;
+extern val define, output, single, frst, lst, empty, repeat, rep;
+extern val flattn, forget, local, mrge, bind, cat, args;
+extern val try, catch, finally, nothrow, throw, defex;
+extern val error, type_error, internal_err, numeric_err, range_err;
+extern val query_error, file_error, process_error;
 
-extern obj_t *zero, *one, *two, *negone, *maxint, *minint;
-extern obj_t *null_string;
-extern obj_t *null_list; /* (nil) */
+extern val zero, one, two, negone, maxint, minint;
+extern val null_string;
+extern val null_list; /* (nil) */
 
-extern obj_t *identity_f;
-extern obj_t *equal_f;
+extern val identity_f;
+extern val equal_f;
 
 extern const wchar_t *progname;
-extern obj_t *prog_string;
+extern val prog_string;
 
 extern void *(*oom_realloc)(void *, size_t);
 
-obj_t *identity(obj_t *obj);
-obj_t *typeof(obj_t *obj);
-obj_t *type_check(obj_t *obj, int);
-obj_t *type_check2(obj_t *obj, int, int);
-obj_t *type_check3(obj_t *obj, int, int, int);
-obj_t *car(obj_t *cons);
-obj_t *cdr(obj_t *cons);
-obj_t **car_l(obj_t *cons);
-obj_t **cdr_l(obj_t *cons);
-obj_t *first(obj_t *cons);
-obj_t *rest(obj_t *cons);
-obj_t *second(obj_t *cons);
-obj_t *third(obj_t *cons);
-obj_t *fourth(obj_t *cons);
-obj_t *fifth(obj_t *cons);
-obj_t *sixth(obj_t *cons);
-obj_t **tail(obj_t *cons);
-obj_t *pop(obj_t **plist);
-obj_t *push(obj_t *val, obj_t **plist);
-obj_t *copy_list(obj_t *list);
-obj_t *nreverse(obj_t *in);
-obj_t *reverse(obj_t *in);
-obj_t *append2(obj_t *list1, obj_t *list2);
-obj_t *nappend2(obj_t *list1, obj_t *list2);
-obj_t *flatten(obj_t *list);
-obj_t *memq(obj_t *obj, obj_t *list);
-obj_t *tree_find(obj_t *obj, obj_t *tree);
-obj_t *some_satisfy(obj_t *list, obj_t *pred, obj_t *key);
-obj_t *all_satisfy(obj_t *list, obj_t *pred, obj_t *key);
-obj_t *none_satisfy(obj_t *list, obj_t *pred, obj_t *key);
-long c_num(obj_t *num);
-obj_t *nump(obj_t *num);
-obj_t *equal(obj_t *left, obj_t *right);
+val identity(val obj);
+val typeof(val obj);
+val type_check(val obj, int);
+val type_check2(val obj, int, int);
+val type_check3(val obj, int, int, int);
+val car(val cons);
+val cdr(val cons);
+val *car_l(val cons);
+val *cdr_l(val cons);
+val first(val cons);
+val rest(val cons);
+val second(val cons);
+val third(val cons);
+val fourth(val cons);
+val fifth(val cons);
+val sixth(val cons);
+val *tail(val cons);
+val pop(val *plist);
+val push(val v, val *plist);
+val copy_list(val list);
+val nreverse(val in);
+val reverse(val in);
+val append2(val list1, val list2);
+val nappend2(val list1, val list2);
+val flatten(val list);
+val memq(val obj, val list);
+val tree_find(val obj, val tree);
+val some_satisfy(val list, val pred, val key);
+val all_satisfy(val list, val pred, val key);
+val none_satisfy(val list, val pred, val key);
+long c_num(val num);
+val nump(val num);
+val equal(val left, val right);
 unsigned char *chk_malloc(size_t size);
 unsigned char *chk_realloc(void *, size_t size);
 wchar_t *chk_strdup(const wchar_t *str);
-obj_t *cons(obj_t *car, obj_t *cdr);
-obj_t *list(obj_t *first, ...); /* terminated by nao */
-obj_t *consp(obj_t *obj);
-obj_t *nullp(obj_t *obj);
-obj_t *atom(obj_t *obj);
-obj_t *listp(obj_t *obj);
-obj_t *proper_listp(obj_t *obj);
-obj_t *length(obj_t *list);
-obj_t *num(long val);
-long c_num(obj_t *num);
-obj_t *plus(obj_t *anum, obj_t *bnum);
-obj_t *minus(obj_t *anum, obj_t *bnum);
-obj_t *neg(obj_t *num);
-obj_t *zerop(obj_t *num);
-obj_t *gt(obj_t *anum, obj_t *bnum);
-obj_t *lt(obj_t *anum, obj_t *bnum);
-obj_t *ge(obj_t *anum, obj_t *bnum);
-obj_t *le(obj_t *anum, obj_t *bnum);
-obj_t *numeq(obj_t *anum, obj_t *bnum);
-obj_t *max2(obj_t *anum, obj_t *bnum);
-obj_t *min2(obj_t *anum, obj_t *bnum);
-obj_t *string_own(wchar_t *str);
-obj_t *string(const wchar_t *str);
-obj_t *string_utf8(const char *str);
-obj_t *mkstring(obj_t *len, obj_t *ch);
-obj_t *mkustring(obj_t *len); /* must initialize immediately with init_str! */
-obj_t *init_str(obj_t *str, const wchar_t *);
-obj_t *copy_str(obj_t *str);
-obj_t *stringp(obj_t *str);
-obj_t *lazy_stringp(obj_t *str);
-obj_t *length_str(obj_t *str);
-const wchar_t *c_str(obj_t *str);
-obj_t *search_str(obj_t *haystack, obj_t *needle, obj_t *start_num,
-                  obj_t *from_end);
-obj_t *search_str_tree(obj_t *haystack, obj_t *tree, obj_t *start_num,
-                       obj_t *from_end);
-obj_t *sub_str(obj_t *str_in, obj_t *from_num, obj_t *to_num);
-obj_t *cat_str(obj_t *list, obj_t *sep);
-obj_t *split_str(obj_t *str, obj_t *sep);
-obj_t *trim_str(obj_t *str);
-obj_t *string_lt(obj_t *astr, obj_t *bstr);
-obj_t *chr(wchar_t ch);
-obj_t *chrp(obj_t *chr);
-wchar_t c_chr(obj_t *chr);
-obj_t *chr_str(obj_t *str, obj_t *index);
-obj_t *chr_str_set(obj_t *str, obj_t *index, obj_t *chr);
-obj_t *sym_name(obj_t *sym);
-obj_t *make_sym(obj_t *name);
-obj_t *intern(obj_t *str);
-obj_t *symbolp(obj_t *sym);
-obj_t *symbol_name(obj_t *sym);
-obj_t *func_f0(obj_t *, obj_t *(*fun)(obj_t *));
-obj_t *func_f1(obj_t *, obj_t *(*fun)(obj_t *, obj_t *));
-obj_t *func_f2(obj_t *, obj_t *(*fun)(obj_t *, obj_t *, obj_t *));
-obj_t *func_f3(obj_t *, obj_t *(*fun)(obj_t *, obj_t *, obj_t *, obj_t *));
-obj_t *func_f4(obj_t *, obj_t *(*fun)(obj_t *, obj_t *, obj_t *, obj_t *,
-               obj_t *));
-obj_t *func_n0(obj_t *(*fun)(void));
-obj_t *func_n1(obj_t *(*fun)(obj_t *));
-obj_t *func_n2(obj_t *(*fun)(obj_t *, obj_t *));
-obj_t *func_n3(obj_t *(*fun)(obj_t *, obj_t *, obj_t *));
-obj_t *func_n4(obj_t *(*fun)(obj_t *, obj_t *, obj_t *, obj_t *));
-obj_t *apply(obj_t *fun, obj_t *arglist);
-obj_t *funcall(obj_t *fun);
-obj_t *funcall1(obj_t *fun, obj_t *arg);
-obj_t *funcall2(obj_t *fun, obj_t *arg1, obj_t *arg2);
-obj_t *reduce_left(obj_t *fun, obj_t *list, obj_t *init, obj_t *key);
-obj_t *bind2(obj_t *fun2, obj_t *arg);
-obj_t *bind2other(obj_t *fun2, obj_t *arg2);
-obj_t *chain(obj_t *fun1_list);
-obj_t *vector(obj_t *alloc);
-obj_t *vec_get_fill(obj_t *vec);
-obj_t *vec_set_fill(obj_t *vec, obj_t *fill);
-obj_t **vecref_l(obj_t *vec, obj_t *ind);
-obj_t *vec_push(obj_t *vec, obj_t *item);
-obj_t *lazy_stream_cons(obj_t *stream);
-obj_t *lazy_str(obj_t *list, obj_t *term, obj_t *limit);
-obj_t *lazy_str_force_upto(obj_t *lstr, obj_t *index);
-obj_t *lazy_str_force(obj_t *lstr);
-obj_t *lazy_str_get_trailing_list(obj_t *lstr, obj_t *index);
-obj_t *length_str_gt(obj_t *str, obj_t *len);
-obj_t *length_str_ge(obj_t *str, obj_t *len);
-obj_t *length_str_lt(obj_t *str, obj_t *len);
-obj_t *length_str_le(obj_t *str, obj_t *len);
-obj_t *cobj(void *handle, obj_t *cls_sym, struct cobj_ops *ops);
-void cobj_print_op(obj_t *, obj_t *); /* Default function for struct cobj_ops */
-obj_t *assoc(obj_t *list, obj_t *key);
-obj_t *acons_new(obj_t *list, obj_t *key, obj_t *value);
-obj_t **acons_new_l(obj_t **list, obj_t *key);
-obj_t *alist_remove(obj_t *list, obj_t *keys);
-obj_t *alist_remove1(obj_t *list, obj_t *key);
-obj_t *copy_cons(obj_t *cons);
-obj_t *copy_alist(obj_t *list);
-obj_t *mapcar(obj_t *fun, obj_t *list);
-obj_t *mappend(obj_t *fun, obj_t *list);
-obj_t *sort(obj_t *list, obj_t *lessfun, obj_t *keyfun);
+val cons(val car, val cdr);
+val list(val first, ...); /* terminated by nao */
+val consp(val obj);
+val nullp(val obj);
+val atom(val obj);
+val listp(val obj);
+val proper_listp(val obj);
+val length(val list);
+val num(long val);
+long c_num(val num);
+val plus(val anum, val bnum);
+val minus(val anum, val bnum);
+val neg(val num);
+val zerop(val num);
+val gt(val anum, val bnum);
+val lt(val anum, val bnum);
+val ge(val anum, val bnum);
+val le(val anum, val bnum);
+val numeq(val anum, val bnum);
+val max2(val anum, val bnum);
+val min2(val anum, val bnum);
+val string_own(wchar_t *str);
+val string(const wchar_t *str);
+val string_utf8(const char *str);
+val mkstring(val len, val ch);
+val mkustring(val len); /* must initialize immediately with init_str! */
+val init_str(val str, const wchar_t *);
+val copy_str(val str);
+val stringp(val str);
+val lazy_stringp(val str);
+val length_str(val str);
+const wchar_t *c_str(val str);
+val search_str(val haystack, val needle, val start_num, val from_end);
+val search_str_tree(val haystack, val tree, val start_num, val from_end);
+val sub_str(val str_in, val from_num, val to_num);
+val cat_str(val list, val sep);
+val split_str(val str, val sep);
+val trim_str(val str);
+val string_lt(val astr, val bstr);
+val chr(wchar_t ch);
+val chrp(val chr);
+wchar_t c_chr(val chr);
+val chr_str(val str, val index);
+val chr_str_set(val str, val index, val chr);
+val sym_name(val sym);
+val make_sym(val name);
+val intern(val str);
+val symbolp(val sym);
+val symbol_name(val sym);
+val func_f0(val, val (*fun)(val));
+val func_f1(val, val (*fun)(val, val));
+val func_f2(val, val (*fun)(val, val, val));
+val func_f3(val, val (*fun)(val, val, val, val));
+val func_f4(val, val (*fun)(val, val, val, val, val));
+val func_n0(val (*fun)(void));
+val func_n1(val (*fun)(val));
+val func_n2(val (*fun)(val, val));
+val func_n3(val (*fun)(val, val, val));
+val func_n4(val (*fun)(val, val, val, val));
+val apply(val fun, val arglist);
+val funcall(val fun);
+val funcall1(val fun, val arg);
+val funcall2(val fun, val arg1, val arg2);
+val reduce_left(val fun, val list, val init, val key);
+val bind2(val fun2, val arg);
+val bind2other(val fun2, val arg2);
+val chain(val fun1_list);
+val vector(val alloc);
+val vec_get_fill(val vec);
+val vec_set_fill(val vec, val fill);
+val *vecref_l(val vec, val ind);
+val vec_push(val vec, val item);
+val lazy_stream_cons(val stream);
+val lazy_str(val list, val term, val limit);
+val lazy_str_force_upto(val lstr, val index);
+val lazy_str_force(val lstr);
+val lazy_str_get_trailing_list(val lstr, val index);
+val length_str_gt(val str, val len);
+val length_str_ge(val str, val len);
+val length_str_lt(val str, val len);
+val length_str_le(val str, val len);
+val cobj(void *handle, val cls_sym, struct cobj_ops *ops);
+void cobj_print_op(val, val); /* Default function for struct cobj_ops */
+val assoc(val list, val key);
+val acons_new(val list, val key, val value);
+val *acons_new_l(val *list, val key);
+val alist_remove(val list, val keys);
+val alist_remove1(val list, val key);
+val copy_cons(val cons);
+val copy_alist(val list);
+val mapcar(val fun, val list);
+val mappend(val fun, val list);
+val sort(val list, val lessfun, val keyfun);
 
-void obj_print(obj_t *obj, obj_t *stream);
-void obj_pprint(obj_t *obj, obj_t *stream);
+void obj_print(val obj, val stream);
+void obj_pprint(val obj, val stream);
 void init(const wchar_t *progname, void *(*oom_realloc)(void *, size_t),
-          obj_t **stack_bottom);
-void dump(obj_t *obj, obj_t *stream);
-obj_t *snarf(obj_t *in);
-obj_t *match(obj_t *spec, obj_t *data);
+          val *stack_bottom);
+void dump(val obj, val stream);
+val match(val spec, val data);
 
 #define nil ((obj_t *) 0)
 

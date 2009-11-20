@@ -24,11 +24,11 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-obj_t *hash_obj(obj_t *);
-obj_t *make_hash(obj_t *weak_keys, obj_t *weak_vals);
-obj_t **gethash_l(obj_t *hash, obj_t *key);
-obj_t *gethash(obj_t *hash, obj_t *key);
-obj_t *remhash(obj_t *hash, obj_t *key);
+val hash_obj(val);
+val make_hash(val weak_keys, val weak_vals);
+val *gethash_l(val hash, val key);
+val gethash(val hash, val key);
+val remhash(val hash, val key);
 void hash_process_weak(void);
 
 void hash_init(void);
