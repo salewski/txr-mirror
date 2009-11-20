@@ -48,54 +48,54 @@ typedef struct heap {
 } heap_t;
 
 int opt_gc_debug;
-static obj_t **gc_stack_bottom;
+static val *gc_stack_bottom;
 
-static obj_t **prot_stack[PROT_STACK_SIZE];
-static obj_t ***prot_stack_limit = prot_stack + PROT_STACK_SIZE;
-static obj_t ***top = prot_stack;
+static val *prot_stack[PROT_STACK_SIZE];
+static val **prot_stack_limit = prot_stack + PROT_STACK_SIZE;
+static val **top = prot_stack;
 
-static obj_t *free_list, **free_tail = &free_list;
+static val free_list, *free_tail = &free_list;
 static heap_t *heap_list;
 
 int gc_enabled = 1;
 
-obj_t *prot1(obj_t **loc)
+val prot1(val *loc)
 {
   assert (top < prot_stack_limit);
   *top++ = loc;
   return nil; /* for use in macros */
 }
 
-void rel1(obj_t **loc)
+void rel1(val *loc)
 {
   /* protect and release calls must nest. */
   if (*--top != loc)
     abort();
 }
 
-void protect(obj_t **first, ...)
+void protect(val *first, ...)
 {
-  obj_t **next = first;
+  val *next = first;
   va_list vl;
   va_start (vl, first);
 
   while (next) {
     prot1(next);
-    next = va_arg(vl, obj_t **);
+    next = va_arg(vl, val *);
   }
 
   va_end (vl);
 }
 
-void release(obj_t **last, ...)
+void release(val *last, ...)
 {
-  obj_t **next = last;
+  val *next = last;
   va_list vl;
   va_start (vl, last);
 
   while (next) {
     rel1(next);
-    next = va_arg(vl, obj_t **);
+    next = va_arg(vl, val *);
   }
 
   va_end (vl);
@@ -120,7 +120,7 @@ static void more()
   heap_list = heap;
 }
 
-obj_t *make_obj(void)
+val make_obj(void)
 {
   int try;
 
@@ -129,7 +129,7 @@ obj_t *make_obj(void)
 
   for (try = 0; try < 3; try++) {
     if (free_list) {
-      obj_t *ret = free_list;
+      val ret = free_list;
       free_list = free_list->t.next;
       return ret;
     }
@@ -145,7 +145,7 @@ obj_t *make_obj(void)
   return 0;
 }
 
-static void finalize(obj_t *obj)
+static void finalize(val obj)
 {
   switch (obj->t.type) {
   case CONS:
@@ -180,7 +180,7 @@ static void finalize(obj_t *obj)
   assert (0 && "corrupt type field");
 }
 
-static void mark_obj(obj_t *obj)
+static void mark_obj(val obj)
 {
   type_t t;
 
@@ -224,8 +224,8 @@ tail_call:
     return;
   case VEC:
     {
-      obj_t *alloc_size = obj->v.vec[-2];
-      obj_t *fill_ptr = obj->v.vec[-1];
+      val alloc_size = obj->v.vec[-2];
+      val fill_ptr = obj->v.vec[-1];
       long i, fp = c_num(fill_ptr);
 
       mark_obj(alloc_size);
@@ -252,7 +252,7 @@ tail_call:
   assert (0 && "corrupt type field");
 }
 
-static int in_heap(obj_t *ptr)
+static int in_heap(val ptr)
 {
   heap_t *heap;
 
@@ -265,16 +265,16 @@ static int in_heap(obj_t *ptr)
   return 0;
 }
 
-static void mark_mem_region(obj_t **low, obj_t **high)
+static void mark_mem_region(val *low, val *high)
 {
   if (low > high) {
-    obj_t **tmp = high;
+    val *tmp = high;
     high = low;
     low = tmp;
   }
 
   while (low < high) {
-    obj_t *maybe_obj = *low;
+    val maybe_obj = *low;
     if (in_heap(maybe_obj)) {
       type_t t = maybe_obj->t.type;
       if ((t & FREE) == 0)
@@ -286,8 +286,8 @@ static void mark_mem_region(obj_t **low, obj_t **high)
 
 static void mark(void)
 {
-  obj_t *gc_stack_top;
-  obj_t ***rootloc;
+  val gc_stack_top;
+  val **rootloc;
 
   /*
    * First, scan the officially registered locations.
@@ -369,17 +369,17 @@ int gc_state(int enabled)
   return old;
 }
 
-void gc_init(obj_t **stack_bottom)
+void gc_init(val *stack_bottom)
 {
   gc_stack_bottom = stack_bottom;
 }
 
-void gc_mark(obj_t *obj)
+void gc_mark(val obj)
 {
   mark_obj(obj);
 }
 
-int gc_is_reachable(obj_t *obj)
+int gc_is_reachable(val obj)
 {
   type_t t;
 
@@ -399,7 +399,7 @@ void unmark(void)
   heap_t *heap;
 
   for (heap = heap_list; heap != 0; heap = heap->next) {
-    obj_t *block, *end;
+    val block, end;
     for (block = heap->block, end = heap->block + HEAP_SIZE;
          block < end;
          block++)

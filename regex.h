@@ -153,7 +153,7 @@ typedef struct nfa_machine {
   nfa_t nfa;
 } nfa_machine_t;
 
-nfa_t nfa_compile_regex(obj_t *regex);
+nfa_t nfa_compile_regex(val regex);
 void nfa_free(nfa_t);
 long nfa_run(nfa_t nfa, const wchar_t *str);
 void nfa_machine_reset(nfa_machine_t *);
@@ -161,9 +161,8 @@ void nfa_machine_init(nfa_machine_t *, nfa_t);
 void nfa_machine_cleanup(nfa_machine_t *);
 nfam_result_t nfa_machine_feed(nfa_machine_t *, wchar_t ch);
 long nfa_machine_match_span(nfa_machine_t *);
-obj_t *regex_compile(obj_t *regex_sexp);
-obj_t *regexp(obj_t *);
-nfa_t *regex_nfa(obj_t *);
-obj_t *search_regex(obj_t *haystack, obj_t *needle_regex, obj_t *start_num,
-                    obj_t *from_end);
-obj_t *match_regex(obj_t *str, obj_t *regex, obj_t *pos);
+val regex_compile(val regex_sexp);
+val regexp(val);
+nfa_t *regex_nfa(val);
+val search_regex(val haystack, val needle_regex, val start_num, val from_end);
+val match_regex(val str, val regex, val pos);

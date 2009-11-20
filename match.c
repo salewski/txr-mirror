@@ -45,7 +45,7 @@
 
 int output_produced;
 
-static void debugf(obj_t *fmt, ...)
+static void debugf(val fmt, ...)
 {
   if (opt_loglevel >= 2) {
     va_list vl;
@@ -57,7 +57,7 @@ static void debugf(obj_t *fmt, ...)
   }
 }
 
-static void debuglf(obj_t *line, obj_t *fmt, ...)
+static void debuglf(val line, val fmt, ...)
 {
   if (opt_loglevel >= 2) {
     va_list vl;
@@ -70,10 +70,10 @@ static void debuglf(obj_t *line, obj_t *fmt, ...)
   }
 }
 
-static void sem_error(obj_t *line, obj_t *fmt, ...)
+static void sem_error(val line, val fmt, ...)
 {
   va_list vl;
-  obj_t *stream = make_string_output_stream();
+  val stream = make_string_output_stream();
 
   va_start (vl, fmt);
   if (line)
@@ -85,10 +85,10 @@ static void sem_error(obj_t *line, obj_t *fmt, ...)
   abort();
 }
 
-static void file_err(obj_t *line, obj_t *fmt, ...)
+static void file_err(val line, val fmt, ...)
 {
   va_list vl;
-  obj_t *stream = make_string_output_stream();
+  val stream = make_string_output_stream();
 
   va_start (vl, fmt);
   if (line)
@@ -125,8 +125,8 @@ void dump_byte_string(const char *str)
 }
 
 
-void dump_var(obj_t *var, char *pfx1, size_t len1,
-              char *pfx2, size_t len2, obj_t *value, int level)
+void dump_var(val var, char *pfx1, size_t len1,
+              char *pfx2, size_t len2, val value, int level)
 {
   if (len1 >= 112 || len2 >= 112)
     internal_error("too much depth in bindings");
@@ -146,7 +146,7 @@ void dump_var(obj_t *var, char *pfx1, size_t len1,
     }
     put_char(std_output, chr('\n'));
   } else {
-    obj_t *iter;
+    val iter;
     int i;
     size_t add1 = 0, add2 = 0;
 
@@ -164,7 +164,7 @@ void dump_var(obj_t *var, char *pfx1, size_t len1,
   }
 }
 
-void dump_bindings(obj_t *bindings)
+void dump_bindings(val bindings)
 {
   if (opt_loglevel >= 2) {
     put_line(std_error, lit("raw_bindings:"));
@@ -173,17 +173,17 @@ void dump_bindings(obj_t *bindings)
 
   while (bindings) {
     char pfx1[128], pfx2[128];
-    obj_t *var = car(car(bindings));
-    obj_t *value = cdr(car(bindings));
+    val var = car(car(bindings));
+    val value = cdr(car(bindings));
     *pfx1 = 0; *pfx2 = 0;
     dump_var(var, pfx1, 0, pfx2, 0, value, 0);
     bindings = cdr(bindings);
   }
 }
 
-obj_t *depth(obj_t *obj)
+val depth(val obj)
 {
-  obj_t *dep = zero;
+  val dep = zero;
 
   if (obj == nil)
     return one;
@@ -199,10 +199,10 @@ obj_t *depth(obj_t *obj)
   return plus(dep, one);
 }
 
-obj_t *weird_merge(obj_t *left, obj_t *right)
+val weird_merge(val left, val right)
 {
-  obj_t *left_depth = depth(left);
-  obj_t *right_depth = depth(right);
+  val left_depth = depth(left);
+  val right_depth = depth(right);
 
   while (lt(left_depth, right_depth) || zerop(left_depth)) {
     left = cons(left, nil);
@@ -217,7 +217,7 @@ obj_t *weird_merge(obj_t *left, obj_t *right)
   return append2(left, right);
 }
 
-obj_t *map_leaf_lists(obj_t *func, obj_t *list)
+val map_leaf_lists(val func, val list)
 {
   if (atom(list))
     return list;
@@ -226,13 +226,13 @@ obj_t *map_leaf_lists(obj_t *func, obj_t *list)
   return mapcar(bind2(func_n2(map_leaf_lists), func), list);
 }
 
-obj_t *dest_bind(obj_t *bindings, obj_t *pattern, obj_t *value)
+val dest_bind(val bindings, val pattern, val value)
 {
   if (nullp(pattern))
     return bindings;
 
   if (symbolp(pattern)) {
-    obj_t *existing = assoc(bindings, pattern);
+    val existing = assoc(bindings, pattern);
     if (existing) {
       if (tree_find(value, cdr(existing)))
         return bindings;
@@ -245,7 +245,7 @@ obj_t *dest_bind(obj_t *bindings, obj_t *pattern, obj_t *value)
   }
 
   if (consp(pattern)) {
-    obj_t *piter = pattern, *viter = value;
+    val piter = pattern, viter = value;
 
     while (consp(piter) && consp(viter))
     {
@@ -266,9 +266,9 @@ obj_t *dest_bind(obj_t *bindings, obj_t *pattern, obj_t *value)
   return bindings;
 }
 
-obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
-                  obj_t *pos, obj_t *spec_lineno, obj_t *data_lineno,
-                  obj_t *file)
+val match_line(val bindings, val specline, val dataline,
+               val pos, val spec_lineno, val data_lineno,
+               val file)
 {
 #define LOG_MISMATCH(KIND)                                              \
   debuglf(spec_lineno, lit(KIND " mismatch, position ~a (~a:~a)"), pos, \
@@ -286,7 +286,7 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
               minus(EXTENT, pos), lit("^"), nao)
 
   for (;;) {
-    obj_t *elem;
+    val elem;
 
     if (specline == nil)
       break;
@@ -296,13 +296,13 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
     switch (elem ? type(elem) : 0) {
     case CONS: /* directive */
       {
-        obj_t *directive = first(elem);
+        val directive = first(elem);
 
         if (directive == var) {
-          obj_t *sym = second(elem);
-          obj_t *pat = third(elem);
-          obj_t *modifier = fourth(elem);
-          obj_t *pair = assoc(bindings, sym); /* var exists already? */
+          val sym = second(elem);
+          val pat = third(elem);
+          val modifier = fourth(elem);
+          val pair = assoc(bindings, sym); /* var exists already? */
 
           if (pair) {
             /* If the variable already has a binding, we replace
@@ -313,7 +313,7 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
             if (pat) {
               specline = cons(cdr(pair), cons(pat, rest(specline)));
             } else if (nump(modifier)) {
-              obj_t *past = plus(pos, modifier);
+              val past = plus(pos, modifier);
 
               if (length_str_lt(dataline, past) || lt(past, pos))
               {
@@ -337,7 +337,7 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
             continue;
           } else if (pat == nil) { /* match to end of line or with regex */
             if (consp(modifier)) {
-              obj_t *past = match_regex(dataline, car(modifier), pos);
+              val past = match_regex(dataline, car(modifier), pos);
               if (nullp(past)) {
                 LOG_MISMATCH("var positive regex");
                 return nil;
@@ -346,7 +346,7 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
               bindings = acons_new(bindings, sym, sub_str(dataline, pos, past));
               pos = past;
             } else if (nump(modifier)) {
-              obj_t *past = plus(pos, modifier);
+              val past = plus(pos, modifier);
               if (length_str_lt(dataline, past) || lt(past, pos))
               {
                 LOG_MISMATCH("count based var");
@@ -360,7 +360,7 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
               pos = length_str(dataline);
             }
           } else if (type(pat) == STR) {
-            obj_t *find = search_str(dataline, pat, pos, modifier);
+            val find = search_str(dataline, pat, pos, modifier);
             if (!find) {
               LOG_MISMATCH("var delimiting string");
               return nil;
@@ -369,9 +369,9 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
             bindings = acons_new(bindings, sym, sub_str(dataline, pos, find));
             pos = plus(find, length_str(pat));
           } else if (consp(pat) && typeof(first(pat)) == regex) {
-            obj_t *find = search_regex(dataline, first(pat), pos, modifier);
-            obj_t *fpos = car(find);
-            obj_t *flen = cdr(find);
+            val find = search_regex(dataline, first(pat), pos, modifier);
+            val fpos = car(find);
+            val flen = cdr(find);
             if (!find) {
               LOG_MISMATCH("var delimiting regex");
               return nil;
@@ -381,9 +381,9 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
             pos = plus(fpos, flen);
           } else if (consp(pat) && first(pat) == var) {
             /* Unbound var followed by var: the following one must be bound. */
-            obj_t *second_sym = second(pat);
-            obj_t *next_pat = third(pat);
-            obj_t *pair = assoc(bindings, second_sym); /* var exists already? */
+            val second_sym = second(pat);
+            val next_pat = third(pat);
+            val pair = assoc(bindings, second_sym); /* var exists already? */
 
             if (!pair)
               sem_error(spec_lineno, lit("consecutive unbound variables"), nao);
@@ -391,7 +391,7 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
             /* Re-generate a new spec with an edited version of
                the element we just processed, and repeat. */
             {
-              obj_t *new_elem = list(var, sym, cdr(pair), modifier, nao);
+              val new_elem = list(var, sym, cdr(pair), modifier, nao);
 
               if (next_pat)
                  specline = cons(new_elem, cons(next_pat, rest(specline)));
@@ -413,7 +413,7 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
                       lit("variable followed by invalid element"), nao);
           }
         } else if (typeof(directive) == regex) {
-          obj_t *past = match_regex(dataline, directive, pos);
+          val past = match_regex(dataline, directive, pos);
           if (nullp(past)) {
             LOG_MISMATCH("regex");
             return nil;
@@ -421,10 +421,10 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
           LOG_MATCH("regex", past);
           pos = past;
         } else if (directive == coll) {
-          obj_t *coll_specline = second(elem);
-          obj_t *until_specline = third(elem);
-          obj_t *bindings_coll = nil;
-          obj_t *iter;
+          val coll_specline = second(elem);
+          val until_specline = third(elem);
+          val bindings_coll = nil;
+          val iter;
 
           for (;;) {
             cons_bind (new_bindings, new_pos,
@@ -451,8 +451,8 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
               for (iter = new_bindings; iter && iter != bindings;
                    iter = cdr(iter))
               {
-                obj_t *binding = car(iter);
-                obj_t *existing = assoc(bindings_coll, car(binding));
+                val binding = car(iter);
+                val existing = assoc(bindings_coll, car(binding));
 
                 bindings_coll = acons_new(bindings_coll, car(binding),
                                           cons(cdr(binding), cdr(existing)));
@@ -475,13 +475,13 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
             debuglf(spec_lineno, lit("nothing was collected"), nao);
 
           for (iter = bindings_coll; iter; iter = cdr(iter)) {
-            obj_t *pair = car(iter);
-            obj_t *rev = cons(car(pair), nreverse(cdr(pair)));
+            val pair = car(iter);
+            val rev = cons(car(pair), nreverse(cdr(pair)));
             bindings = cons(rev, bindings);
           }
         } else if (consp(directive) || stringp(directive)) {
           cons_bind (find, len, search_str_tree(dataline, elem, pos, nil));
-          obj_t *newpos;
+          val newpos;
 
           if (find == nil || !equal(find, pos)) {
             LOG_MISMATCH("string tree");
@@ -498,8 +498,8 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
       break;
     case STR:
       {
-        obj_t *find = search_str(dataline, elem, pos, nil);
-        obj_t *newpos;
+        val find = search_str(dataline, elem, pos, nil);
+        val newpos;
         if (find == nil || !equal(find, pos)) {
           LOG_MISMATCH("string");
           return nil;
@@ -519,15 +519,15 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
   return cons(bindings, pos);
 }
 
-obj_t *format_field(obj_t *string_or_list, obj_t *spec)
+val format_field(val string_or_list, val spec)
 {
   if (!stringp(string_or_list))
     return string_or_list;
 
   {
-    obj_t *right = lt(spec, zero);
-    obj_t *width = if3(lt(spec, zero), neg(spec), spec);
-    obj_t *diff = minus(width, length_str(string_or_list));
+    val right = lt(spec, zero);
+    val width = if3(lt(spec, zero), neg(spec), spec);
+    val diff = minus(width, length_str(string_or_list));
 
     if (le(diff, zero))
       return string_or_list;
@@ -536,28 +536,28 @@ obj_t *format_field(obj_t *string_or_list, obj_t *spec)
       return string_or_list;
 
     {
-      obj_t *padding = mkstring(diff, chr(' '));
+      val padding = mkstring(diff, chr(' '));
 
       return if3(right,
-                   cat_str(list(padding, string_or_list, nao), nil),
-                   cat_str(list(string_or_list, padding, nao), nil));
+                 cat_str(list(padding, string_or_list, nao), nil),
+                 cat_str(list(string_or_list, padding, nao), nil));
     }
   }
 }
 
-obj_t *subst_vars(obj_t *spec, obj_t *bindings)
+val subst_vars(val spec, val bindings)
 {
   list_collect_decl(out, iter);
 
   while (spec) {
-    obj_t *elem = first(spec);
+    val elem = first(spec);
 
     if (consp(elem)) {
       if (first(elem) == var) {
-        obj_t *sym = second(elem);
-        obj_t *pat = third(elem);
-        obj_t *modifier = fourth(elem);
-        obj_t *pair = assoc(bindings, sym);
+        val sym = second(elem);
+        val pat = third(elem);
+        val modifier = fourth(elem);
+        val pair = assoc(bindings, sym);
 
         if (pair) {
           if (pat)
@@ -569,12 +569,12 @@ obj_t *subst_vars(obj_t *spec, obj_t *bindings)
           continue;
         }
       } else if (first(elem) == quasi) {
-        obj_t *nested = subst_vars(rest(elem), bindings);
+        val nested = subst_vars(rest(elem), bindings);
         list_collect_append(iter, nested);
         spec = cdr(spec);
         continue;
       } else {
-        obj_t *nested = subst_vars(elem, bindings);
+        val nested = subst_vars(elem, bindings);
         list_collect_append(iter, nested);
         spec = cdr(spec);
         continue;
@@ -588,7 +588,7 @@ obj_t *subst_vars(obj_t *spec, obj_t *bindings)
   return out;
 }
 
-obj_t *eval_form(obj_t *form, obj_t *bindings)
+val eval_form(val form, val bindings)
 {
   if (!form)
     return cons(t, form);
@@ -600,7 +600,7 @@ obj_t *eval_form(obj_t *form, obj_t *bindings)
     } else if (regexp(car(form))) {
       return cons(t, form);
     } else {
-      obj_t *subforms = mapcar(bind2other(func_n2(eval_form), bindings), form);
+      val subforms = mapcar(bind2other(func_n2(eval_form), bindings), form);
 
       if (all_satisfy(subforms, identity_f, nil))
         return cons(t, mapcar(func_n1(cdr), subforms));
@@ -619,7 +619,7 @@ typedef struct fpip {
   enum { fpip_fclose, fpip_pclose, fpip_closedir } close;
 } fpip_t;
 
-fpip_t complex_open(obj_t *name, obj_t *output)
+fpip_t complex_open(val name, val output)
 {
   fpip_t ret = { 0, 0 };
 
@@ -677,7 +677,7 @@ void complex_close(fpip_t fp)
   internal_error("bad input source type code");
 }
 
-obj_t *complex_snarf(fpip_t fp, obj_t *name)
+val complex_snarf(fpip_t fp, val name)
 {
   switch (fp.close) {
   case fpip_fclose:
@@ -691,7 +691,7 @@ obj_t *complex_snarf(fpip_t fp, obj_t *name)
   internal_error("bad input source type");
 }
 
-obj_t *complex_stream(fpip_t fp, obj_t *name)
+val complex_stream(fpip_t fp, val name)
 {
   switch (fp.close) {
   case fpip_fclose:
@@ -706,7 +706,7 @@ obj_t *complex_stream(fpip_t fp, obj_t *name)
 }
 
 
-obj_t *robust_length(obj_t *obj)
+val robust_length(val obj)
 {
   if (obj == nil)
     return zero;
@@ -715,21 +715,21 @@ obj_t *robust_length(obj_t *obj)
   return length(obj);
 }
 
-obj_t *bind_car(obj_t *bind_cons)
+val bind_car(val bind_cons)
 {
   return if3(consp(cdr(bind_cons)),
                cons(car(bind_cons), car(cdr(bind_cons))),
                bind_cons);
 }
 
-obj_t *bind_cdr(obj_t *bind_cons)
+val bind_cdr(val bind_cons)
 {
   return if3(consp(cdr(bind_cons)),
                cons(car(bind_cons), cdr(cdr(bind_cons))),
                bind_cons);
 }
 
-obj_t *extract_vars(obj_t *output_spec)
+val extract_vars(val output_spec)
 {
   list_collect_decl (vars, tai);
 
@@ -745,10 +745,10 @@ obj_t *extract_vars(obj_t *output_spec)
   return vars;
 }
 
-obj_t *extract_bindings(obj_t *bindings, obj_t *output_spec)
+val extract_bindings(val bindings, val output_spec)
 {
   list_collect_decl (bindings_out, tail);
-  obj_t *var_list = extract_vars(output_spec);
+  val var_list = extract_vars(output_spec);
 
   for (; bindings; bindings = cdr(bindings))
     if (memq(car(car(bindings)), var_list))
@@ -757,47 +757,47 @@ obj_t *extract_bindings(obj_t *bindings, obj_t *output_spec)
   return bindings_out;
 }
 
-void do_output_line(obj_t *bindings, obj_t *specline,
-                    obj_t *spec_lineno, obj_t *out)
+void do_output_line(val bindings, val specline,
+                    val spec_lineno, val out)
 {
   for (; specline; specline = rest(specline)) {
-    obj_t *elem = first(specline);
+    val elem = first(specline);
 
     switch (elem ? type(elem) : 0) {
     case CONS:
       {
-        obj_t *directive = first(elem);
+        val directive = first(elem);
 
         if (directive == var) {
-          obj_t *str = cat_str(subst_vars(cons(elem, nil), bindings), nil);
+          val str = cat_str(subst_vars(cons(elem, nil), bindings), nil);
           if (str == nil)
             sem_error(spec_lineno, lit("bad substitution: ~a"),
                       second(elem), nao);
           put_string(out, str);
         } else if (directive == rep) {
-          obj_t *main_clauses = second(elem);
-          obj_t *single_clauses = third(elem);
-          obj_t *first_clauses = fourth(elem);
-          obj_t *last_clauses = fifth(elem);
-          obj_t *empty_clauses = sixth(elem);
-          obj_t *bind_cp = extract_bindings(bindings, elem);
-          obj_t *max_depth = reduce_left(func_n2(max2),
-                                         bind_cp, zero,
-                                         chain(list(func_n1(cdr),
-                                                    func_n1(robust_length),
-                                                    nao)));
+          val main_clauses = second(elem);
+          val single_clauses = third(elem);
+          val first_clauses = fourth(elem);
+          val last_clauses = fifth(elem);
+          val empty_clauses = sixth(elem);
+          val bind_cp = extract_bindings(bindings, elem);
+          val max_depth = reduce_left(func_n2(max2),
+                                      bind_cp, zero,
+                                      chain(list(func_n1(cdr),
+                                                 func_n1(robust_length),
+                                                 nao)));
 
           if (equal(max_depth, zero) && empty_clauses) {
             do_output_line(bindings, empty_clauses, spec_lineno, out);
           } else if (equal(max_depth, one) && single_clauses) {
-            obj_t *bind_a = mapcar(func_n1(bind_car), bind_cp);
+            val bind_a = mapcar(func_n1(bind_car), bind_cp);
             do_output_line(bind_a, single_clauses, spec_lineno, out);
           } else if (!zerop(max_depth)) {
             long i;
 
             for (i = 0; i < c_num(max_depth); i++) {
-              obj_t *bind_a = mapcar(func_n1(bind_car), bind_cp);
-              obj_t *bind_d = mapcar(func_n1(bind_cdr), bind_cp);
+              val bind_a = mapcar(func_n1(bind_car), bind_cp);
+              val bind_d = mapcar(func_n1(bind_cdr), bind_cp);
 
               if (i == 0 && first_clauses) {
                 do_output_line(bind_a, first_clauses, spec_lineno, out);
@@ -828,42 +828,42 @@ void do_output_line(obj_t *bindings, obj_t *specline,
   }
 }
 
-void do_output(obj_t *bindings, obj_t *specs, obj_t *out)
+void do_output(val bindings, val specs, val out)
 {
   if (equal(specs, null_list))
     return;
 
   for (; specs; specs = cdr(specs)) {
     cons_bind (spec_lineno, specline, first(specs));
-    obj_t *first_elem = first(specline);
+    val first_elem = first(specline);
 
     if (consp(first_elem)) {
-      obj_t *sym = first(first_elem);
+      val sym = first(first_elem);
 
       if (sym == repeat) {
-        obj_t *main_clauses = second(first_elem);
-        obj_t *single_clauses = third(first_elem);
-        obj_t *first_clauses = fourth(first_elem);
-        obj_t *last_clauses = fifth(first_elem);
-        obj_t *empty_clauses = sixth(first_elem);
-        obj_t *bind_cp = extract_bindings(bindings, first_elem);
-        obj_t *max_depth = reduce_left(func_n2(max2),
-                                       bind_cp, zero,
-                                       chain(list(func_n1(cdr),
-                                                  func_n1(robust_length),
-                                                  nao)));
+        val main_clauses = second(first_elem);
+        val single_clauses = third(first_elem);
+        val first_clauses = fourth(first_elem);
+        val last_clauses = fifth(first_elem);
+        val empty_clauses = sixth(first_elem);
+        val bind_cp = extract_bindings(bindings, first_elem);
+        val max_depth = reduce_left(func_n2(max2),
+                                    bind_cp, zero,
+                                    chain(list(func_n1(cdr),
+                                               func_n1(robust_length),
+                                               nao)));
 
         if (equal(max_depth, zero) && empty_clauses) {
           do_output(bind_cp, empty_clauses, out);
         } else if (equal(max_depth, one) && single_clauses) {
-          obj_t *bind_a = mapcar(func_n1(bind_car), bind_cp);
+          val bind_a = mapcar(func_n1(bind_car), bind_cp);
           do_output(bind_a, single_clauses, out);
         } else if (!zerop(max_depth)) {
           long i;
 
           for (i = 0; i < c_num(max_depth); i++) {
-            obj_t *bind_a = mapcar(func_n1(bind_car), bind_cp);
-            obj_t *bind_d = mapcar(func_n1(bind_cdr), bind_cp);
+            val bind_a = mapcar(func_n1(bind_car), bind_cp);
+            val bind_d = mapcar(func_n1(bind_cdr), bind_cp);
 
             if (i == 0 && first_clauses) {
               do_output(bind_a, first_clauses, out);
@@ -885,11 +885,11 @@ void do_output(obj_t *bindings, obj_t *specs, obj_t *out)
   }
 }
 
-obj_t *match_files(obj_t *spec, obj_t *files,
-                   obj_t *bindings, obj_t *first_file_parsed,
-                   obj_t *data_linenum)
+val match_files(val spec, val files,
+                val bindings, val first_file_parsed,
+                val data_linenum)
 {
-  obj_t *data = nil;
+  val data = nil;
   long data_lineno = 0;
 
   if (listp(first_file_parsed)) {
@@ -897,10 +897,10 @@ obj_t *match_files(obj_t *spec, obj_t *files,
     data_lineno = c_num(data_linenum);
     first_file_parsed = nil;
   } else if (files) {
-    obj_t *source_spec = first(files);
-    obj_t *name = consp(source_spec) ? cdr(source_spec) : source_spec;
+    val source_spec = first(files);
+    val name = consp(source_spec) ? cdr(source_spec) : source_spec;
     fpip_t fp = (errno = 0, complex_open(name, nil));
-    obj_t *first_spec_item = second(first(spec));
+    val first_spec_item = second(first(spec));
 
     if (consp(first_spec_item) && eq(first(first_spec_item), next)) {
       debugf(lit("not opening source ~a "
@@ -931,16 +931,16 @@ obj_t *match_files(obj_t *spec, obj_t *files,
   for (; spec;  spec = rest(spec), data = rest(data), data_lineno++)
 repeat_spec_same_data:
   {
-    obj_t *specline = rest(first(spec));
-    obj_t *dataline = first(data);
-    obj_t *spec_linenum = first(first(spec));
-    obj_t *first_spec = first(specline);
+    val specline = rest(first(spec));
+    val dataline = first(data);
+    val spec_linenum = first(first(spec));
+    val first_spec = first(specline);
 
     if (consp(first_spec)) {
-      obj_t *sym = first(first_spec);
+      val sym = first(first_spec);
 
       if (sym == skip) {
-        obj_t *max = first(rest(first_spec));
+        val max = first(rest(first_spec));
         long cmax = nump(max) ? c_num(max) : 0;
         long reps = 0;
 
@@ -997,8 +997,8 @@ repeat_spec_same_data:
           return nil;
         }
       } else if (sym == freeform) {
-        obj_t *args = rest(first_spec);
-        obj_t *vals = mapcar(func_n1(cdr),
+        val args = rest(first_spec);
+        val vals = mapcar(func_n1(cdr),
                              mapcar(bind2other(func_n2(eval_form),
                                                 bindings), args));
 
@@ -1006,12 +1006,12 @@ repeat_spec_same_data:
           sem_error(spec_linenum,
                     lit("freeform must be followed by a query line"), nao);
         } else {
-          obj_t *limit = or2(if2(nump(first(vals)), first(vals)),
-                             if2(nump(second(vals)), second(vals)));
-          obj_t *term = or2(if2(stringp(first(vals)), first(vals)),
-                            if2(stringp(second(vals)), second(vals)));
-          obj_t *ff_specline = rest(first(spec));
-          obj_t *ff_dataline = lazy_str(data, term, limit);
+          val limit = or2(if2(nump(first(vals)), first(vals)),
+                          if2(nump(second(vals)), second(vals)));
+          val term = or2(if2(stringp(first(vals)), first(vals)),
+                         if2(stringp(second(vals)), second(vals)));
+          val ff_specline = rest(first(spec));
+          val ff_dataline = lazy_str(data, term, limit);
 
           cons_bind (new_bindings, success,
                      match_line(bindings, ff_specline, ff_dataline, zero,
@@ -1033,7 +1033,7 @@ repeat_spec_same_data:
 
         goto repeat_spec_same_data;
       } else if (sym == block) {
-        obj_t *name = first(rest(first_spec));
+        val name = first(rest(first_spec));
         if (rest(specline))
           sem_error(spec_linenum,
                     lit("unexpected material after block directive"), nao);
@@ -1046,7 +1046,7 @@ repeat_spec_same_data:
           return result;
         }
       } else if (sym == fail || sym == accept) {
-        obj_t *target = first(rest(first_spec));
+        val target = first(rest(first_spec));
 
         if (rest(specline))
           sem_error(spec_linenum, lit("unexpected material after ~a"), sym, nao);
@@ -1072,15 +1072,15 @@ repeat_spec_same_data:
           break;
 
         if (rest(first_spec)) {
-          obj_t *source = rest(first_spec);
+          val source = rest(first_spec);
 
           if (eq(first(source), nothrow))
             push(nil, &source);
           else if (eq(first(source), args)) {
-            obj_t *input_name = string(L"args");
+            val input_name = string(L"args");
             cons_bind (new_bindings, success,
-                match_files(spec, cons(input_name, files),
-                  bindings, files, one));
+                       match_files(spec, cons(input_name, files),
+                                   bindings, files, one));
             if (success)
               return cons(new_bindings,
                   if3(data, cons(data, num(data_lineno)), t));
@@ -1088,10 +1088,10 @@ repeat_spec_same_data:
           }
 
           {
-            obj_t *val = eval_form(first(source), bindings);
-            obj_t *name = cdr(val);
+            val value = eval_form(first(source), bindings);
+            val name = cdr(value);
 
-            if (!val)
+            if (!value)
               sem_error(spec_linenum, lit("next: unbound variable in form ~a"),
                         first(source), nao);
 
@@ -1118,8 +1118,8 @@ repeat_spec_same_data:
             }
           }
         } else if (rest(specline)) {
-          obj_t *sub = subst_vars(rest(specline), bindings);
-          obj_t *str = cat_str(sub, nil);
+          val sub = subst_vars(rest(specline), bindings);
+          val str = cat_str(sub, nil);
           if (str == nil) {
             sem_error(spec_linenum, lit("bad substitution in next file spec"),
                       nao);
@@ -1147,16 +1147,16 @@ repeat_spec_same_data:
       } else if (sym == some || sym == all || sym == none || sym == maybe ||
                  sym == cases)
       {
-        obj_t *specs;
-        obj_t *all_match = t;
-        obj_t *some_match = nil;
-        obj_t *max_line = zero;
-        obj_t *max_data = nil;
+        val specs;
+        val all_match = t;
+        val some_match = nil;
+        val max_line = zero;
+        val max_data = nil;
 
         for (specs = rest(first_spec); specs != nil; specs = rest(specs))
         {
-          obj_t *nested_spec = first(specs);
-          obj_t *data_linenum = num(data_lineno);
+          val nested_spec = first(specs);
+          val data_linenum = num(data_lineno);
 
           cons_bind (new_bindings, success,
                      match_files(nested_spec, files, bindings,
@@ -1211,10 +1211,10 @@ repeat_spec_same_data:
 
         goto repeat_spec_same_data;
       } else if (sym == collect) {
-        obj_t *coll_spec = second(first_spec);
-        obj_t *until_spec = third(first_spec);
-        obj_t *bindings_coll = nil;
-        obj_t *iter;
+        val coll_spec = second(first_spec);
+        val until_spec = third(first_spec);
+        val bindings_coll = nil;
+        val iter;
 
         uw_block_begin(nil, result);
 
@@ -1245,8 +1245,8 @@ repeat_spec_same_data:
             for (iter = new_bindings; iter && iter != bindings;
                 iter = cdr(iter))
             {
-              obj_t *binding = car(iter);
-              obj_t *existing = assoc(bindings_coll, car(binding));
+              val binding = car(iter);
+              val existing = assoc(bindings_coll, car(binding));
 
               bindings_coll = acons_new(bindings_coll, car(binding),
                                         cons(cdr(binding), cdr(existing)));
@@ -1291,8 +1291,8 @@ repeat_spec_same_data:
           debuglf(spec_linenum, lit("nothing was collected"), nao);
 
         for (iter = bindings_coll; iter; iter = cdr(iter)) {
-          obj_t *pair = car(iter);
-          obj_t *rev = cons(car(pair), nreverse(cdr(pair)));
+          val pair = car(iter);
+          val rev = cons(car(pair), nreverse(cdr(pair)));
           bindings = cons(rev, bindings);
         }
 
@@ -1301,16 +1301,16 @@ repeat_spec_same_data:
 
         goto repeat_spec_same_data;
       } else if (sym == flattn) {
-        obj_t *iter;
+        val iter;
 
         for (iter = rest(first_spec); iter; iter = rest(iter)) {
-          obj_t *sym = first(iter);
+          val sym = first(iter);
 
           if (!symbolp(sym)) {
             sem_error(spec_linenum, lit("non-symbol in flatten directive"),
                       nao);
           } else {
-            obj_t *existing = assoc(bindings, sym);
+            val existing = assoc(bindings, sym);
 
             if (existing)
               *cdr_l(existing) = flatten(cdr(existing));
@@ -1329,18 +1329,18 @@ repeat_spec_same_data:
 
         goto repeat_spec_same_data;
       } else if (sym == mrge) {
-        obj_t *target = first(rest(first_spec));
-        obj_t *args = rest(rest(first_spec));
-        obj_t *merged = nil;
+        val target = first(rest(first_spec));
+        val args = rest(rest(first_spec));
+        val merged = nil;
 
         if (!target || !symbolp(target))
           sem_error(spec_linenum, lit("bad merge directive"), nao);
 
         for (; args; args = rest(args)) {
-          obj_t *other_sym = first(args);
+          val other_sym = first(args);
 
           if (other_sym) {
-            obj_t *other_lookup = assoc(bindings, other_sym);
+            val other_lookup = assoc(bindings, other_sym);
 
             if (!symbolp(other_sym))
               sem_error(spec_linenum, lit("non-symbol in merge directive"),
@@ -1363,10 +1363,10 @@ repeat_spec_same_data:
 
         goto repeat_spec_same_data;
       } else if (sym == bind) {
-        obj_t *args = rest(first_spec);
-        obj_t *pattern = first(args);
-        obj_t *form = second(args);
-        obj_t *val = eval_form(form, bindings);
+        val args = rest(first_spec);
+        val pattern = first(args);
+        val form = second(args);
+        val val = eval_form(form, bindings);
 
         if (!val)
           sem_error(spec_linenum, lit("bind: unbound variable on right side"),
@@ -1382,19 +1382,19 @@ repeat_spec_same_data:
 
         goto repeat_spec_same_data;
       } else if (sym == cat) {
-        obj_t *iter;
+        val iter;
 
         for (iter = rest(first_spec); iter; iter = rest(iter)) {
-          obj_t *sym = first(iter);
+          val sym = first(iter);
 
           if (!symbolp(sym)) {
             sem_error(spec_linenum, lit("non-symbol in cat directive"), nao);
           } else {
-            obj_t *existing = assoc(bindings, sym);
-            obj_t *sep = nil;
+            val existing = assoc(bindings, sym);
+            val sep = nil;
 
             if (rest(specline)) {
-              obj_t *sub = subst_vars(rest(specline), bindings);
+              val sub = subst_vars(rest(specline), bindings);
               sep = cat_str(sub, nil);
             }
 
@@ -1408,11 +1408,11 @@ repeat_spec_same_data:
 
         goto repeat_spec_same_data;
       } else if (sym == output) {
-        obj_t *specs = second(first_spec);
-        obj_t *old_style_dest = third(first_spec);
-        obj_t *new_style_dest = fourth(first_spec);
-        obj_t *nt = nil;
-        obj_t *dest;
+        val specs = second(first_spec);
+        val old_style_dest = third(first_spec);
+        val new_style_dest = fourth(first_spec);
+        val nt = nil;
+        val dest;
         fpip_t fp;
 
         if (old_style_dest) {
@@ -1422,8 +1422,8 @@ repeat_spec_same_data:
             push(nil, &new_style_dest);
 
           {
-            obj_t *form = first(new_style_dest);
-            obj_t *val = eval_form(form, bindings);
+            val form = first(new_style_dest);
+            val val = eval_form(form, bindings);
 
             if (!val)
               sem_error(spec_linenum,
@@ -1450,7 +1450,7 @@ repeat_spec_same_data:
             file_err(nil, lit("could not open ~a"), dest, nao);
           }
         } else {
-          obj_t *stream = complex_stream(fp, dest);
+          val stream = complex_stream(fp, dest);
           do_output(bindings, specs, stream);
           close_stream(stream, t);
         }
@@ -1460,10 +1460,10 @@ repeat_spec_same_data:
 
         goto repeat_spec_same_data;
       } else if (sym == define) {
-        obj_t *args = second(first_spec);
-        obj_t *body = third(first_spec);
-        obj_t *name = first(args);
-        obj_t *params = second(args);
+        val args = second(first_spec);
+        val body = third(first_spec);
+        val name = first(args);
+        val params = second(args);
 
         if (rest(specline))
           sem_error(spec_linenum,
@@ -1476,10 +1476,10 @@ repeat_spec_same_data:
 
         goto repeat_spec_same_data;
       } else if (sym == try) {
-        obj_t *catch_syms = second(first_spec);
-        obj_t *try_clause = third(first_spec);
-        obj_t *catch_fin = fourth(first_spec);
-        obj_t *finally_clause = nil;
+        val catch_syms = second(first_spec);
+        val try_clause = third(first_spec);
+        val catch_fin = fourth(first_spec);
+        val finally_clause = nil;
 
         {
           uw_block_begin(nil, result);
@@ -1493,31 +1493,31 @@ repeat_spec_same_data:
 
           uw_catch(exsym, exvals) {
             {
-              obj_t *iter;
+              val iter;
 
               for (iter = catch_fin; iter; iter = cdr(iter)) {
-                obj_t *clause = car(iter);
-                obj_t *type = first(second(clause));
-                obj_t *params = second(second(clause));
-                obj_t *body = third(clause);
-                obj_t *vals = if3(listp(exvals),
-                                  exvals,
-                                  cons(cons(t, exvals), nil));
+                val clause = car(iter);
+                val type = first(second(clause));
+                val params = second(second(clause));
+                val body = third(clause);
+                val vals = if3(listp(exvals),
+                               exvals,
+                               cons(cons(t, exvals), nil));
 
                 if (first(clause) == catch) {
                   if (uw_exception_subtype_p(exsym, type)) {
-                    obj_t *all_bind = t;
-                    obj_t *piter, *viter;
+                    val all_bind = t;
+                    val piter, viter;
 
                     for (piter = params, viter = vals;
                          piter && viter;
                          piter = cdr(piter), viter = cdr(viter))
                     {
-                      obj_t *param = car(piter);
-                      obj_t *val = car(viter);
+                      val param = car(piter);
+                      val value = car(viter);
 
-                      if (val) {
-                        bindings = dest_bind(bindings, param, cdr(val));
+                      if (value) {
+                        bindings = dest_bind(bindings, param, cdr(value));
 
                         if (bindings == t) {
                           all_bind = nil;
@@ -1552,7 +1552,7 @@ repeat_spec_same_data:
           }
 
           uw_unwind {
-            obj_t *iter;
+            val iter;
 
             /* result may be t, from catch above. */
             if (consp(result)) {
@@ -1571,7 +1571,7 @@ repeat_spec_same_data:
 
             if (!finally_clause) {
               for (iter = catch_fin; iter; iter = cdr(iter)) {
-                obj_t *clause = car(iter);
+                val clause = car(iter);
                 if (first(clause) == finally) {
                   finally_clause = third(clause);
                   break;
@@ -1608,7 +1608,7 @@ repeat_spec_same_data:
           goto repeat_spec_same_data;
         }
       } else if (sym == defex) {
-        obj_t *types = rest(first_spec);
+        val types = rest(first_spec);
         if (!all_satisfy(types, func_n1(symbolp), nil))
           sem_error(spec_linenum, lit("defex arguments must all be symbols"),
                     nao);
@@ -1617,26 +1617,26 @@ repeat_spec_same_data:
           break;
         goto repeat_spec_same_data;
       } else if (sym == throw) {
-        obj_t *type = second(first_spec);
-        obj_t *args = rest(rest(first_spec));
+        val type = second(first_spec);
+        val args = rest(rest(first_spec));
         if (!symbolp(type))
           sem_error(spec_linenum, lit("throw: ~a is not a type symbol"),
                     first(first_spec), nao);
         {
-          obj_t *values = mapcar(bind2other(func_n2(eval_form), bindings),
+          val values = mapcar(bind2other(func_n2(eval_form), bindings),
                                  args);
           uw_throw(type, values);
         }
       } else {
-        obj_t *func = uw_get_func(sym);
+        val func = uw_get_func(sym);
 
         if (func) {
-          obj_t *args = rest(first_spec);
-          obj_t *params = car(func);
-          obj_t *ub_p_a_pairs = nil;
-          obj_t *body = cdr(func);
-          obj_t *piter, *aiter;
-          obj_t *bindings_cp = copy_alist(bindings);
+          val args = rest(first_spec);
+          val params = car(func);
+          val ub_p_a_pairs = nil;
+          val body = cdr(func);
+          val piter, aiter;
+          val bindings_cp = copy_alist(bindings);
 
           if (!equal(length(args), length(params)))
             sem_error(spec_linenum, lit("function ~a takes ~a argument(s)"),
@@ -1645,11 +1645,11 @@ repeat_spec_same_data:
           for (piter = params, aiter = args; piter;
                piter = cdr(piter), aiter = cdr(aiter))
           {
-            obj_t *param = car(piter);
-            obj_t *arg = car(aiter);
+            val param = car(piter);
+            val arg = car(aiter);
 
             if (arg && symbolp(arg)) {
-              obj_t *val = eval_form(arg, bindings);
+              val val = eval_form(arg, bindings);
               if (val) {
                 bindings_cp = acons_new(bindings_cp,
                                         param,
@@ -1659,7 +1659,7 @@ repeat_spec_same_data:
                 ub_p_a_pairs = cons(cons(param, arg), ub_p_a_pairs);
               }
             } else {
-              obj_t *val = eval_form(arg, bindings);
+              val val = eval_form(arg, bindings);
               if (!val)
                 sem_error(spec_linenum,
                           lit("unbound variable in function argument form"),
@@ -1689,7 +1689,7 @@ repeat_spec_same_data:
                 cons_bind (param, arg, car(piter));
 
                 if (symbolp(arg)) {
-                  obj_t *newbind = assoc(new_bindings, param);
+                  val newbind = assoc(new_bindings, param);
                   if (newbind) {
                     bindings = dest_bind(bindings, arg, cdr(newbind));
                     if (bindings == t) {
@@ -1749,7 +1749,7 @@ repeat_spec_same_data:
   return cons(bindings, if3(data, cons(data, num(data_lineno)), t));
 }
 
-int extract(obj_t *spec, obj_t *files, obj_t *predefined_bindings)
+int extract(val spec, val files, val predefined_bindings)
 {
   cons_bind (bindings, success, match_files(spec, files, predefined_bindings,
                                             t, nil));

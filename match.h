@@ -24,4 +24,4 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-int extract(obj_t *spec, obj_t *filenames, obj_t *bindings);
+int extract(val spec, val filenames, val bindings);

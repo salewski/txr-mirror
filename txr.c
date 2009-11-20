@@ -45,7 +45,7 @@
 const wchar_t *version = L"024";
 const wchar_t *progname = L"txr";
 const wchar_t *spec_file = L"stdin";
-obj_t *spec_file_str;
+val spec_file_str;
 
 /*
  * Can implement an emergency allocator here from a fixed storage
@@ -61,7 +61,7 @@ void *oom_realloc_handler(void *old, size_t size)
 
 void help(void)
 {
-  obj_t *text = lit(
+  val text = lit(
 "\n"
 "txr version ~a\n"
 "\n"
@@ -117,18 +117,18 @@ void hint(void)
          prog_string, nao);
 }
 
-obj_t *remove_hash_bang_line(obj_t *spec)
+val remove_hash_bang_line(val spec)
 {
   if (!consp(spec))
     return spec;
 
   {
-    obj_t *shbang = string(L"#!");
-    obj_t *firstline = first(spec);
-    obj_t *items = rest(firstline);
+    val shbang = string(L"#!");
+    val firstline = first(spec);
+    val items = rest(firstline);
 
     if (stringp(first(items))) {
-      obj_t *twochars = sub_str(first(items), zero, two);
+      val twochars = sub_str(first(items), zero, two);
       if (equal(twochars, shbang))
         return rest(spec);
     }
@@ -141,7 +141,7 @@ static int txr_main(int argc, char **argv);
 
 int main(int argc, char **argv)
 {
-  obj_t *stack_bottom = nil;
+  val stack_bottom = nil;
   progname = argv[0] ? utf8_dup_from(argv[0]) : progname;
   init(progname, oom_realloc_handler, &stack_bottom);
   return txr_main(argc, argv);
@@ -149,9 +149,9 @@ int main(int argc, char **argv)
 
 static int txr_main(int argc, char **argv)
 {
-  obj_t *specstring = nil;
-  obj_t *spec = nil;
-  obj_t *bindings = nil;
+  val specstring = nil;
+  val spec = nil;
+  val bindings = nil;
   int match_loglevel = opt_loglevel;
 
   prot1(&spec_file_str);
@@ -181,31 +181,31 @@ static int txr_main(int argc, char **argv)
       char *has_comma = (equals != 0) ? strchr(equals, ',') : 0;
 
       if (has_comma) {
-        char *val = equals + 1;
-        obj_t *list = nil;
+        char *pval = equals + 1;
+        val list = nil;
 
         *equals = 0;
 
         for (;;) {
-          size_t piece = strcspn(val, ",");
-          char comma_p = val[piece];
+          size_t piece = strcspn(pval, ",");
+          char comma_p = pval[piece];
 
-          val[piece] = 0;
+          pval[piece] = 0;
 
-          list = cons(string_utf8(val), list);
+          list = cons(string_utf8(pval), list);
 
           if (!comma_p)
             break;
 
-          val += piece + 1;
+          pval += piece + 1;
         }
 
         list = nreverse(list);
         bindings = cons(cons(intern(string_utf8(var)), list), bindings);
       } else if (equals) {
-        char *val = equals + 1;
+        char *pval = equals + 1;
         *equals = 0;
-        bindings = cons(cons(intern(string_utf8(var)), string_utf8(val)), bindings);
+        bindings = cons(cons(intern(string_utf8(var)), string_utf8(pval)), bindings);
       } else {
         bindings = cons(cons(intern(string_utf8(var)), null_string), bindings);
       }
@@ -226,7 +226,7 @@ static int txr_main(int argc, char **argv)
     }
 
     if (!strcmp(*argv, "-a") || !strcmp(*argv, "-c") || !strcmp(*argv, "-f")) {
-      long val;
+      long optval;
       char *errp;
       char opt = (*argv)[1];
 
@@ -241,7 +241,7 @@ static int txr_main(int argc, char **argv)
 
       switch (opt) {
       case 'a':
-        val = strtol(*argv, &errp, 10);
+        optval = strtol(*argv, &errp, 10);
         if (*errp != 0) {
           format(std_error, lit("~a: option -~a needs numeric argument, "
                                 "not ~a\n"), prog_string, chr(opt),
@@ -249,7 +249,7 @@ static int txr_main(int argc, char **argv)
           return EXIT_FAILURE;
         }
 
-        opt_arraydims = val;
+        opt_arraydims = optval;
         break;
       case 'c':
         specstring = string_utf8(*argv);
@@ -333,7 +333,7 @@ static int txr_main(int argc, char **argv)
 
     if (strcmp(*argv, "-") != 0) {
       FILE *in = fopen(*argv, "r");
-      obj_t *name = string_utf8(*argv);
+      val name = string_utf8(*argv);
       if (in == 0)
         uw_throwf(file_error, lit("unable to open ~a"), name, nao);
       yyin_stream = make_stdio_stream(in, name, t, nil);
