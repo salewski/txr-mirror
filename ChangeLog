@@ -1,5 +1,13 @@
 2009-11-20  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* match.c (dest_bind): Extended to handle more general forms
+	by using eval_form rather than direct symbol binding lookups.
+	False positive return fixed.
+	(match_line): Fixed merge to use eval_from
+	rather than direct symbol binding.
+
+2009-11-20  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* lib.c (flatten): Semantics change. The flatten function
 	should not map nil -> (nil), but nil -> nil.
 

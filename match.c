@@ -242,9 +242,7 @@ val dest_bind(val bindings, val pattern, val value)
       return t;
     }
     return cons(cons(pattern, value), bindings);
-  }
-
-  if (consp(pattern)) {
+  } else if (consp(pattern)) {
     val piter = pattern, viter = value;
 
     while (consp(piter) && consp(viter))
@@ -261,9 +259,11 @@ val dest_bind(val bindings, val pattern, val value)
       if (bindings == t)
         return t;
     }
+  } else if (tree_find(value, pattern)) {
+    return bindings;
   }
 
-  return bindings;
+  return t;
 }
 
 val match_line(val bindings, val specline, val dataline,
@@ -1337,22 +1337,19 @@ repeat_spec_same_data:
           sem_error(spec_linenum, lit("bad merge directive"), nao);
 
         for (; args; args = rest(args)) {
-          val other_sym = first(args);
+          val arg = first(args);
 
-          if (other_sym) {
-            val other_lookup = assoc(bindings, other_sym);
+          if (arg) {
+            val arg_eval = eval_form(arg, bindings);
 
-            if (!symbolp(other_sym))
-              sem_error(spec_linenum, lit("non-symbol in merge directive"),
-                        nao);
-            else if (!other_lookup)
-              sem_error(spec_linenum, lit("merge: nonexistent symbol ~a"),
-                        other_sym, nao);
+            if (!arg_eval)
+              sem_error(spec_linenum, lit("merge: unbound variable in form ~a"),
+                        arg, nao);
 
             if (merged)
-              merged = weird_merge(merged, cdr(other_lookup));
+              merged = weird_merge(merged, cdr(arg_eval));
             else
-              merged = cdr(other_lookup);
+              merged = cdr(arg_eval);
           }
         }
 
