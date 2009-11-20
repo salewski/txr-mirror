@@ -201,11 +201,13 @@ define_clause : DEFINE exprs ')' newl
               | DEFINE ')' newl
                 clauses_opt
                 END newl        { $$ = list(define, nil, $4, nao); }
-              | DEFINE error    { yybadtoken(yychar, "list expression"); }
+              | DEFINE error    { $$ = nil;
+                                  yybadtoken(yychar, "list expression"); }
               | DEFINE exprs ')' newl
-                error           { yybadtoken(yychar, "define"); }
+                error           { $$ = nil; yybadtoken(yychar, "define"); }
               | DEFINE ')' newl
-                error           { yybadtoken(yychar, "define"); }
+                error           { $$ = nil;
+                                  yybadtoken(yychar, "define"); }
               ;
 
 try_clause : TRY newl
@@ -242,11 +244,14 @@ catch_clauses_opt : CATCH ')' newl
                                                     nil); }
                   |                     { $$ = nil; }
                   | CATCH ')' newl
-                    error               { yybadtoken(yychar, "try clause"); }
+                    error               { $$ = nil;
+                                          yybadtoken(yychar, "try clause"); }
                   | CATCH exprs ')' newl
-                    error               { yybadtoken(yychar, "try clause"); }
+                    error               { $$ = nil;
+                                          yybadtoken(yychar, "try clause"); }
                   | FINALLY newl
-                    error               { yybadtoken(yychar, "try clause"); }
+                    error               { $$ = nil;
+                                          yybadtoken(yychar, "try clause"); }
                   ;
 
 
@@ -261,9 +266,11 @@ output_clause : OUTPUT ')' o_elems '\n'
                 END newl        { $$ = list(output, $5, nil, $2, nao); }
               | OUTPUT exprs ')' o_elems '\n'
                 out_clauses
-                END newl        { yyerror("invalid combination of old and "
+                END newl        { $$ = nil;
+                                  yyerror("invalid combination of old and "
                                           "new syntax in output directive"); }
-              | OUTPUT error    { yybadtoken(yychar, "list expression"); }
+              | OUTPUT error    { $$ = nil;
+                                  yybadtoken(yychar, "list expression"); }
               | OUTPUT ')' o_elems '\n'
                 error           { $$ = nil;
                                   yybadtoken(yychar, "output clause"); }
@@ -394,9 +401,11 @@ var : IDENT                     { $$ = list(var, intern(string_own($1)),
                                             nil, $1, nao); }
     | var_op '{' IDENT '}' elem { $$ = list(var, intern(string_own($3)),
                                             $5, $1, nao); }
-    | var_op '{' IDENT regex '}'        { yyerror("longest match "
+    | var_op '{' IDENT regex '}'        { $$ = nil;
+                                          yyerror("longest match "
                                                   "not useable with regex"); }
-    | var_op '{' IDENT NUMBER '}'       { yyerror("longest match "
+    | var_op '{' IDENT NUMBER '}'       { $$ = nil;
+                                          yyerror("longest match "
                                                   "not useable with "
                                                   "fixed width match"); }
     | IDENT error               { $$ = nil;
@@ -488,10 +497,12 @@ newl : '\n'
 
 strlit : '"' '"'                { $$ = null_string; }
        | '"' litchars '"'       { $$ = lit_char_helper($2); }
-       | '"' error              { yybadtoken(yychar, "string literal"); }
+       | '"' error              { $$ = nil;
+                                  yybadtoken(yychar, "string literal"); }
        ;
 
-chrlit : '\'' '\''              { yyerror("empty character literal"); }
+chrlit : '\'' '\''              { $$ = nil;
+                                  yyerror("empty character literal"); }
                                 { $$ = nil; }
        | '\'' litchars '\''     { $$ = car($2);
                                   if (cdr($2))
