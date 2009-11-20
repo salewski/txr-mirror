@@ -1,5 +1,10 @@
 2009-11-20  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* parser.y (grammar): Fix error actions that do not assign
+	a value to $$.
+
+2009-11-20  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* match.c (dest_bind): Extended to handle more general forms
 	by using eval_form rather than direct symbol binding lookups.
 	False positive return fixed.
