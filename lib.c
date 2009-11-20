@@ -397,6 +397,9 @@ val none_satisfy(val list, val pred, val key)
 
 val flatten(val list)
 {
+  if (list == nil)
+    return nil;
+
   if (atom(list))
     return cons(list, nil);
 

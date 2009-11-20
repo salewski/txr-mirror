@@ -1,5 +1,10 @@
 2009-11-20  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* lib.c (flatten): Semantics change. The flatten function
+	should not map nil -> (nil), but nil -> nil.
+
+2009-11-20  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Changing ``obj_t *'' occurences to a ``val'' typedef. (Ideally,
 	we wouldn't have to declare object variables at all, so why
 	use an obtuse syntax to do so?)
