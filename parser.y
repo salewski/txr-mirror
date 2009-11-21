@@ -53,7 +53,7 @@ static val parsed_spec;
   long num;
 }
 
-%token <lexeme> TEXT IDENT ALL SOME NONE MAYBE CASES AND OR END COLLECT
+%token <lexeme> TEXT IDENT KEYWORD ALL SOME NONE MAYBE CASES AND OR END COLLECT
 %token <lexeme> UNTIL COLL OUTPUT REPEAT REP SINGLE FIRST LAST EMPTY DEFINE
 %token <lexeme> TRY CATCH FINALLY
 %token <num> NUMBER
@@ -380,26 +380,26 @@ rep_parts_opt : SINGLE o_elems_opt2
 /* This sucks, but factoring '*' into a nonterminal
  * that generates an empty phrase causes reduce/reduce conflicts.
  */
-var : IDENT                     { $$ = list(var, intern(string_own($1)),
+var : IDENT                     { $$ = list(var, intern(string_own($1), nil),
                                             nao); }
-    | IDENT elem                { $$ = list(var, intern(string_own($1)),
+    | IDENT elem                { $$ = list(var, intern(string_own($1), nil),
                                             $2, nao); }
-    | '{' IDENT '}'             { $$ = list(var, intern(string_own($2)),
+    | '{' IDENT '}'             { $$ = list(var, intern(string_own($2), nil),
                                             nao); }
-    | '{' IDENT '}' elem        { $$ = list(var, intern(string_own($2)),
+    | '{' IDENT '}' elem        { $$ = list(var, intern(string_own($2), nil),
                                             $4, nao); }
-    | '{' IDENT regex '}'       { $$ = list(var, intern(string_own($2)),
+    | '{' IDENT regex '}'       { $$ = list(var, intern(string_own($2), nil),
                                             nil, cons(regex_compile($3), $3),
                                             nao); }
-    | '{' IDENT NUMBER '}'      { $$ = list(var, intern(string_own($2)),
+    | '{' IDENT NUMBER '}'      { $$ = list(var, intern(string_own($2), nil),
                                             nil, num($3), nao); }
-    | var_op IDENT              { $$ = list(var, intern(string_own($2)),
+    | var_op IDENT              { $$ = list(var, intern(string_own($2), nil),
                                             nil, $1, nao); }
-    | var_op IDENT elem         { $$ = list(var, intern(string_own($2)),
+    | var_op IDENT elem         { $$ = list(var, intern(string_own($2), nil),
                                             $3, $1, nao); }
-    | var_op '{' IDENT '}'      { $$ = list(var, intern(string_own($3)),
+    | var_op '{' IDENT '}'      { $$ = list(var, intern(string_own($3), nil),
                                             nil, $1, nao); }
-    | var_op '{' IDENT '}' elem { $$ = list(var, intern(string_own($3)),
+    | var_op '{' IDENT '}' elem { $$ = list(var, intern(string_own($3), nil),
                                             $5, $1, nao); }
     | var_op '{' IDENT regex '}'        { $$ = nil;
                                           yyerror("longest match "
@@ -428,7 +428,9 @@ exprs : expr                    { $$ = cons($1, nil); }
       | expr '.' expr           { $$ = cons($1, $3); }
       ;
 
-expr : IDENT                    { $$ = intern(string_own($1)); }
+expr : IDENT                    { $$ = intern(string_own($1), nil); }
+     | KEYWORD                  { $$ = intern(string_own($1),
+                                              keyword_package); }
      | NUMBER                   { $$ = num($1); }
      | list                     { $$ = $1; }
      | regex                    { $$ = cons(regex_compile($1), $1); }

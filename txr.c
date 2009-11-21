@@ -201,13 +201,15 @@ static int txr_main(int argc, char **argv)
         }
 
         list = nreverse(list);
-        bindings = cons(cons(intern(string_utf8(var)), list), bindings);
+        bindings = cons(cons(intern(string_utf8(var), nil), list), bindings);
       } else if (equals) {
         char *pval = equals + 1;
         *equals = 0;
-        bindings = cons(cons(intern(string_utf8(var)), string_utf8(pval)), bindings);
+        bindings = cons(cons(intern(string_utf8(var), nil),
+                             string_utf8(pval)), bindings);
       } else {
-        bindings = cons(cons(intern(string_utf8(var)), null_string), bindings);
+        bindings = cons(cons(intern(string_utf8(var), nil),
+                             null_string), bindings);
       }
 
       argc--, argv++;

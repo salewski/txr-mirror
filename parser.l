@@ -91,6 +91,7 @@ void yybadtoken(int tok, const char *context)
   switch (tok) {
   case TEXT:    problem = lit("text"); break;
   case IDENT:   problem = lit("identifier"); break;
+  case KEYWORD: problem = lit("keyword"); break;
   case ALL:     problem = lit("\"all\""); break;
   case SOME:    problem = lit("\"some\""); break;
   case NONE:    problem = lit("\"none\""); break;
@@ -166,7 +167,7 @@ static wchar_t num_esc(char *num)
 
 %option stack
 
-TOK     [a-zA-Z_][a-zA-Z0-9_]*|[+-]?[0-9]+
+TOK     :?[a-zA-Z_][a-zA-Z0-9_]*|[+-]?[0-9]+
 ID_END  [^a-zA-Z0-9_]
 NUM_END [^0-9]
 WS      [\t ]*
@@ -192,13 +193,19 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                           long val;
                           char *errp;
 
-                          errno = 0;
-
-                          val = strtol(yytext, &errp, 10);
 
                           if (yy_top_state() == INITIAL
                               || yy_top_state() == QSILIT)
                             yy_pop_state();
+
+                          if (yytext[0] == ':') {
+                            yylval.lexeme = utf8_dup_from(yytext + 1);
+                            return KEYWORD;
+                          }
+
+                          errno = 0;
+
+                          val = strtol(yytext, &errp, 10);
 
                           if (*errp != 0) {
                             /* not a number */
