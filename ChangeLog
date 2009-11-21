@@ -1,3 +1,83 @@
+2009-11-21  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Introducing symbol packages. Internal symbols are now in
+	a system package instead of being hacked with the $ prefix.
+	Keyword symbols are provided. In the matcher, evaluation
+	is tightened up. Keywords, nil and t are not bindeable, and
+	errors are thrown if attempts are made to bind them.
+	Destructuring in dest_bind is strict in the number of items.
+	String streams are exploited to print bindings to objects
+	that are not strings or characters. Numerous bugfixes.
+
+	* lib.h (enum type, type_t): new member: PKG.
+	(struct stym): New member: package.
+	(struct package): New type.
+	(union obj, obj_t): New member pk.
+	(interned_syms): Declaration removed.
+	(keyword_package, pkg_t): Declared.
+	(intern, acons_new_l): Declarations updated.
+	(find_package, symbol_package, keywordp): Declared.
+
+	* lib.c (interned_syms): Definition removed.
+	(packages, pkg_t, system_package, keyword_package, user_package): New
+	global variables.
+	(code2type, equal, obj_pprint): Handle PKG case.
+	(symbol_package, make_package, find_package, keywordp): New functions.
+	(make_sym): Initialize package field of symbol.
+	(intern): Takes package argument. Rewritten using packages,
+	which use hash tables to store symbols.
+	(acons_new_l): Takes extra pointer argument to return an extra
+	value.
+	(obj_init): Updated to handle packages. The orders of some
+	initializations have to change. The way nil is added as a symbol is
+	quite different, and a special hack for the symbol t is used.
+	Most symbols go into the user_package, but symbols that were
+	previously namespaced with $ go to the system package.
+	(obj_print): SYM cases now considers the packge of a symbol.
+	Symbols in the user package are printed as before.
+	Symbols with no package are printed using #: notation;
+	keywords with : notation; and all others with their package prefix.
+	PKG case is handled.
+
+	* gc.c (finalize): Handle PKG case.
+	(mark_obj): For SYM, mark the new package member. Handle PKG case.
+
+	* hash.h (gethash_l): Declaration updated.
+
+	* hash.c (ll_hash): Handle PKG case.
+	(gethash_l): Extra argument added to distinguish new addition
+	from existing find.
+
+	* match.c (dump_var): Dumps any object now by printing to
+	a string with a string stream.
+	(bindable): New function.
+	(dest_bind): Tightened up to distinguish bindable symbols
+	from non-bindable. Symbols that stand for themselves, including nil,
+	can only match themselves. Destructuring matches have to
+	match in the number of elements: dot notation can be used
+	to match superfluous elements.
+	(eval_form): Tightened up to recognize bindable symbols.
+	(match_files): Various directives honor non-bindable symbols (cat,
+	merge, flatten).
+
+	* parser.l (yybadtoken): Handle KEYWORD case.
+	(grammar): TOK can start with : . Returned as KEYWORD terminal,
+	with a lexeme that no longer has the : character.
+
+	* parser.y (KEYWORD): New nonterminal.
+	(grammar): Calls to intern given extra parameter.
+	In the expr rule, KEYWORD turned into symbol in keyword package.
+
+	* regex.c (regexp): Bugfix: dereferencing non pointer.
+
+	* stream.c (vformat): Bugfixes in state machine: handling
+	of prefix digits; printing of numbers in ~s. 
+
+	* txr.c (txr_main): Intern calls updated.
+
+	* txr.1: Updated with information about nil, t and keywords.
+	More details about destructuring matching in bind.
+
 2009-11-20  Kaz Kylheku  <kkylheku@gmail.com>
 
 	* unwind.c (uw_throw): If streams are not initialized,

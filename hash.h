@@ -26,7 +26,7 @@
 
 val hash_obj(val);
 val make_hash(val weak_keys, val weak_vals);
-val *gethash_l(val hash, val key);
+val *gethash_l(val hash, val key, val *new_p);
 val gethash(val hash, val key);
 val remhash(val hash, val key);
 void hash_process_weak(void);

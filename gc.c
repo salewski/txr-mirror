@@ -160,6 +160,7 @@ static void finalize(val obj)
   case NUM:
   case LIT:
   case SYM:
+  case PKG:
   case FUN:
     return;
   case VEC:
@@ -216,7 +217,11 @@ tail_call:
     return;
   case SYM:
     mark_obj(obj->s.name);
-    mark_obj_tail(obj->s.val);
+    mark_obj(obj->s.val);
+    mark_obj_tail(obj->s.package);
+  case PKG:
+    mark_obj(obj->pk.name);
+    mark_obj_tail(obj->pk.symhash);
   case FUN:
     mark_obj(obj->f.env);
     if (obj->f.functype == FINTERP)

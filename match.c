@@ -131,21 +131,8 @@ void dump_var(val var, char *pfx1, size_t len1,
   if (len1 >= 112 || len2 >= 112)
     internal_error("too much depth in bindings");
 
-  if (stringp(value) || chrp(value)) {
-    put_string(std_output, var);
-    dump_byte_string(pfx1);
-    dump_byte_string(pfx2);
-    put_char(std_output, chr('='));
-    if (stringp(value)) {
-      dump_shell_string(c_str(value));
-    } else {
-      wchar_t mini[2];
-      mini[0] = c_chr(value);
-      mini[1] = 0;
-      dump_shell_string(mini);
-    }
-    put_char(std_output, chr('\n'));
-  } else {
+
+  if (listp(value)) {
     val iter;
     int i;
     size_t add1 = 0, add2 = 0;
@@ -161,6 +148,19 @@ void dump_var(val var, char *pfx1, size_t len1,
 
       dump_var(var, pfx1, len1 + add1, pfx2, len2 + add2, car(iter), level + 1);
     }
+  } else {
+    val ss = make_string_output_stream();
+    val str;
+
+    obj_pprint(value, ss);
+    str = get_string_from_stream(ss);
+
+    put_string(std_output, var);
+    dump_byte_string(pfx1);
+    dump_byte_string(pfx2);
+    put_char(std_output, chr('='));
+    dump_shell_string(c_str(str));
+    put_char(std_output, chr('\n'));
   }
 }
 
@@ -226,22 +226,28 @@ val map_leaf_lists(val func, val list)
   return mapcar(bind2(func_n2(map_leaf_lists), func), list);
 }
 
+val bindable(val obj)
+{
+  return (obj && symbolp(obj) && obj != t && !keywordp(obj)) ? t : nil;
+}
+
 val dest_bind(val bindings, val pattern, val value)
 {
-  if (nullp(pattern))
-    return bindings;
-
   if (symbolp(pattern)) {
-    val existing = assoc(bindings, pattern);
-    if (existing) {
-      if (tree_find(value, cdr(existing)))
-        return bindings;
-      if (tree_find(cdr(existing), value))
-        return bindings;
-      debugf(lit("bind variable mismatch: ~a"), pattern, nao);
-      return t;
+    if (bindable(pattern)) {
+      val existing = assoc(bindings, pattern);
+      if (existing) {
+        if (tree_find(value, cdr(existing)))
+          return bindings;
+        if (tree_find(cdr(existing), value))
+          return bindings;
+        debugf(lit("bind variable mismatch: ~a"), pattern, nao);
+        return t;
+      }
+      return cons(cons(pattern, value), bindings);
+    } else {
+      return equal(pattern, value) ? bindings : t;
     }
-    return cons(cons(pattern, value), bindings);
   } else if (consp(pattern)) {
     val piter = pattern, viter = value;
 
@@ -254,10 +260,12 @@ val dest_bind(val bindings, val pattern, val value)
       viter = cdr(viter);
     } while (consp(piter) && consp(viter));
 
-    if (symbolp(piter)) {
+    if (bindable(piter)) {
       bindings = dest_bind(bindings, piter, viter);
       if (bindings == t)
         return t;
+    } else {
+      return equal(piter, viter) ? bindings : t;
     }
     return bindings;
   } else if (tree_find(value, pattern)) {
@@ -591,11 +599,11 @@ val subst_vars(val spec, val bindings)
 
 val eval_form(val form, val bindings)
 {
-  if (!form)
+  if (!form) {
     return cons(t, form);
-  else if (symbolp(form))
+  } else if (bindable(form)) {
     return assoc(bindings, form);
-  else if (consp(form)) {
+  } else if (consp(form)) {
     if (car(form) == quasi) {
       return cons(t, cat_str(subst_vars(rest(form), bindings), nil));
     } else if (regexp(car(form))) {
@@ -1307,9 +1315,9 @@ repeat_spec_same_data:
         for (iter = rest(first_spec); iter; iter = rest(iter)) {
           val sym = first(iter);
 
-          if (!symbolp(sym)) {
-            sem_error(spec_linenum, lit("non-symbol in flatten directive"),
-                      nao);
+          if (!bindable(sym)) {
+            sem_error(spec_linenum,
+                      lit("flatten: ~s is not a bindable symbol"), sym, nao);
           } else {
             val existing = assoc(bindings, sym);
 
@@ -1334,8 +1342,9 @@ repeat_spec_same_data:
         val args = rest(rest(first_spec));
         val merged = nil;
 
-        if (!target || !symbolp(target))
-          sem_error(spec_linenum, lit("bad merge directive"), nao);
+        if (!bindable(target))
+          sem_error(spec_linenum, lit("~a: ~s is not a bindable symbol"),
+                    sym, target, nao);
 
         for (; args; args = rest(args)) {
           val arg = first(args);
@@ -1344,8 +1353,8 @@ repeat_spec_same_data:
             val arg_eval = eval_form(arg, bindings);
 
             if (!arg_eval)
-              sem_error(spec_linenum, lit("merge: unbound variable in form ~a"),
-                        arg, nao);
+              sem_error(spec_linenum, lit("~a: unbound variable in form ~s"),
+                        sym, arg, nao);
 
             if (merged)
               merged = weird_merge(merged, cdr(arg_eval));
@@ -1385,8 +1394,9 @@ repeat_spec_same_data:
         for (iter = rest(first_spec); iter; iter = rest(iter)) {
           val sym = first(iter);
 
-          if (!symbolp(sym)) {
-            sem_error(spec_linenum, lit("non-symbol in cat directive"), nao);
+          if (!bindable(sym)) {
+            sem_error(spec_linenum,
+                      lit("cat: ~s is not a bindable symbol"), sym, nao);
           } else {
             val existing = assoc(bindings, sym);
             val sep = nil;

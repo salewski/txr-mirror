@@ -775,7 +775,12 @@ val vformat(val stream, val fmtstr, va_list vl)
             } else {
               width = digits;
             }
-            state = (ch == ',') ? vf_precision : vf_spec;
+            if (ch == ',') {
+              state = vf_precision;
+            } else {
+              state = vf_spec;
+              --fmt;
+            }
             continue;
           case vf_precision:
             precision = digits;
@@ -827,7 +832,7 @@ val vformat(val stream, val fmtstr, va_list vl)
           if (nump(obj)) {
             value = c_num(obj);
             sprintf(num_buf, "%ld", value);
-            if (vformat_num(stream, num_buf, 0, 0, 0, 0))
+            if (!vformat_num(stream, num_buf, 0, 0, 0, 0))
               return nil;
             continue;
           }

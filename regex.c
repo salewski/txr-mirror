@@ -1061,7 +1061,8 @@ val regex_compile(val regex_sexp)
 
 val regexp(val obj)
 {
-  return (obj->co.type == COBJ && obj->co.cls == regex) ? t : nil;
+  return (is_ptr(obj) && obj->co.type == COBJ && obj->co.cls == regex)
+         ? t : nil;
 }
 
 nfa_t *regex_nfa(val reg)

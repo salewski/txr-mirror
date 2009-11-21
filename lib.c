@@ -44,9 +44,11 @@
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
-val interned_syms;
+val packages;
 
-val null, t, cons_t, str_t, chr_t, num_t, sym_t, fun_t, vec_t;
+val system_package, keyword_package, user_package;
+
+val null, t, cons_t, str_t, chr_t, num_t, sym_t, pkg_t, fun_t, vec_t;
 val stream_t, hash_t, lcons_t, lstr_t, cobj_t;
 val var, regex, set, cset, wild, oneplus;
 val zeroplus, optional, compound, or, quasi;
@@ -93,6 +95,7 @@ static val code2type(int code)
   case CHR: return chr_t;
   case NUM: return num_t;
   case SYM: return sym_t;
+  case PKG: return pkg_t;
   case FUN: return fun_t;
   case VEC: return vec_t;
   case LCONS: return lcons_t;
@@ -461,6 +464,7 @@ val equal(val left, val right)
     }
     return nil;
   case SYM:
+  case PKG:
     return right == left ? t : nil;
   case FUN:
     if (type(right) == FUN &&
@@ -1058,26 +1062,76 @@ val symbol_name(val sym)
   return sym ? sym->s.name : nil_string;
 }
 
+val symbol_package(val sym)
+{
+  if (sym == nil)
+    return user_package;
+  type_check(sym, SYM);
+  return sym->s.package;
+}
+
 val make_sym(val name)
 {
   val obj = make_obj();
   obj->s.type = SYM;
   obj->s.name = name;
+  obj->s.package = nil;
   obj->s.val = nil;
   return obj;
 }
 
-val intern(val str)
+val make_package(val name)
 {
-  val *place = gethash_l(interned_syms, str);
-  if (*place)
+  if (find_package(name))
+    uw_throwf(error, lit("make_package: ~a exists already"), name, nao);
+
+  val obj = make_obj();
+  obj->pk.type = PKG;
+  obj->pk.name = name;
+  obj->pk.symhash = make_hash(nil, nil);
+
+  push(cons(name, obj), &packages);
+  return obj;
+}
+
+val find_package(val name)
+{
+  return cdr(assoc(packages, name));
+}
+
+val intern(val str, val package)
+{
+  val new_p;
+
+  if (nullp(package)) {
+    package = user_package;
+  } else if (stringp(package)) {
+    package = find_package(str);
+    if (!package)
+      uw_throwf(error, lit("make_package: ~a exists already"), str, nao);
+  }
+
+  type_check (package, PKG);
+
+  val *place = gethash_l(package->pk.symhash, str, &new_p);
+
+  if (!new_p) {
     return *place;
-  return *place = make_sym(str);
+  } else {
+    val newsym = make_sym(str);
+    newsym->s.package = package;
+    return *place = newsym;
+  }
 }
 
 val symbolp(val sym)
 {
   return (sym == nil || (is_ptr(sym) && sym->s.type == SYM)) ? t : nil;
+}
+
+val keywordp(val sym)
+{
+  return (symbolp(sym) && symbol_package(sym) == keyword_package) ? t : nil;
 }
 
 val func_f0(val env, val (*fun)(val))
@@ -1594,15 +1648,19 @@ val acons_new(val list, val key, val value)
   }
 }
 
-val *acons_new_l(val *list, val key)
+val *acons_new_l(val *list, val key, val *new_p)
 {
   val existing = assoc(*list, key);
 
   if (existing) {
+    if (new_p)
+      *new_p = nil;
     return cdr_l(existing);
   } else {
     val new = cons(key, nil);
     *list = cons(new, *list);
+    if (new_p)
+      *new_p = t;
     return cdr_l(new);
   }
 }
@@ -1746,7 +1804,8 @@ static void obj_init(void)
    * symbols.
    */
 
-  protect(&interned_syms, &zero, &one,
+  protect(&packages, &system_package, &keyword_package,
+          &user_package, &zero, &one,
           &two, &negone, &maxint, &minint,
           &null_string, &nil_string,
           &null_list, &equal_f,
@@ -1764,79 +1823,88 @@ static void obj_init(void)
   maxint = num(NUM_MAX);
   minint = num(NUM_MIN);
 
-  interned_syms = make_hash(nil, nil);
+  system_package = make_package(lit("sys"));
+  keyword_package = make_package(lit("keyword"));
+  user_package = make_package(lit("usr"));
 
-  *gethash_l(interned_syms, nil_string) = nil;
+  /* nil can't be interned because it's not a SYM object;
+     it works as a symbol because the nil case is handled by
+     symbol-manipulating function. */
+  *gethash_l(user_package->pk.symhash, nil_string, 0) = nil;
 
-  null = intern(lit("null"));
-  t = intern(lit("t"));
-  cons_t = intern(lit("cons"));
-  str_t = intern(lit("str"));
-  chr_t = intern(lit("chr"));
-  num_t = intern(lit("num"));
-  sym_t = intern(lit("sym"));
-  fun_t = intern(lit("fun"));
-  vec_t = intern(lit("vec"));
-  stream_t = intern(lit("stream"));
-  hash_t = intern(lit("hash"));
-  lcons_t = intern(lit("lcons"));
-  lstr_t = intern(lit("lstr"));
-  cobj_t = intern(lit("cobj"));
-  var = intern(lit("$var"));
-  regex = intern(lit("$regex"));
-  set = intern(lit("set"));
-  cset = intern(lit("cset"));
-  wild = intern(lit("wild"));
-  oneplus = intern(lit("1+"));
-  zeroplus = intern(lit("0+"));
-  optional = intern(lit("?"));
-  compound = intern(lit("compound"));
-  or = intern(lit("or"));
-  quasi = intern(lit("$quasi"));
-  skip = intern(lit("skip"));
-  trailer = intern(lit("trailer"));
-  block = intern(lit("block"));
-  next = intern(lit("next"));
-  freeform = intern(lit("freeform"));
-  fail = intern(lit("fail"));
-  accept = intern(lit("accept"));
-  all = intern(lit("all"));
-  some = intern(lit("some"));
-  none = intern(lit("none"));
-  maybe = intern(lit("maybe"));
-  cases = intern(lit("cases"));
-  collect = intern(lit("collect"));
-  until = intern(lit("until"));
-  coll = intern(lit("coll"));
-  define = intern(lit("define"));
-  output = intern(lit("output"));
-  single = intern(lit("single"));
-  frst = intern(lit("first"));
-  lst = intern(lit("last"));
-  empty = intern(lit("empty"));
-  repeat = intern(lit("repeat"));
-  rep = intern(lit("rep"));
-  flattn = intern(lit("flatten"));
-  forget = intern(lit("forget"));
-  local = intern(lit("local"));
-  mrge = intern(lit("merge"));
-  bind = intern(lit("bind"));
-  cat = intern(lit("cat"));
-  args = intern(lit("args"));
-  try = intern(lit("try"));
-  catch = intern(lit("catch"));
-  finally = intern(lit("finally"));
-  nothrow = intern(lit("nothrow"));
-  throw = intern(lit("throw"));
-  defex = intern(lit("defex"));
-  error = intern(lit("error"));
-  type_error = intern(lit("type_error"));
-  internal_err = intern(lit("internal_error"));
-  numeric_err = intern(lit("numeric_error"));
-  range_err = intern(lit("range_error"));
-  query_error = intern(lit("query_error"));
-  file_error = intern(lit("file_error"));
-  process_error = intern(lit("process_error"));
+  /* t can't be interned, because gethash_l needs t in order to do its job. */
+  t = *gethash_l(user_package->pk.symhash, lit("t"), 0) = make_sym(lit("t"));
+  t->s.package = user_package;
+
+  null = intern(lit("null"), user_package);
+  cons_t = intern(lit("cons"), user_package);
+  str_t = intern(lit("str"), user_package);
+  chr_t = intern(lit("chr"), user_package);
+  num_t = intern(lit("num"), user_package);
+  sym_t = intern(lit("sym"), user_package);
+  pkg_t = intern(lit("pkg"), user_package);
+  fun_t = intern(lit("fun"), user_package);
+  vec_t = intern(lit("vec"), user_package);
+  stream_t = intern(lit("stream"), user_package);
+  hash_t = intern(lit("hash"), user_package);
+  lcons_t = intern(lit("lcons"), user_package);
+  lstr_t = intern(lit("lstr"), user_package);
+  cobj_t = intern(lit("cobj"), user_package);
+  var = intern(lit("var"), system_package);
+  regex = intern(lit("regex"), system_package);
+  set = intern(lit("set"), user_package);
+  cset = intern(lit("cset"), user_package);
+  wild = intern(lit("wild"), user_package);
+  oneplus = intern(lit("1+"), user_package);
+  zeroplus = intern(lit("0+"), user_package);
+  optional = intern(lit("?"), user_package);
+  compound = intern(lit("compound"), user_package);
+  or = intern(lit("or"), user_package);
+  quasi = intern(lit("quasi"), system_package);
+  skip = intern(lit("skip"), user_package);
+  trailer = intern(lit("trailer"), user_package);
+  block = intern(lit("block"), user_package);
+  next = intern(lit("next"), user_package);
+  freeform = intern(lit("freeform"), user_package);
+  fail = intern(lit("fail"), user_package);
+  accept = intern(lit("accept"), user_package);
+  all = intern(lit("all"), user_package);
+  some = intern(lit("some"), user_package);
+  none = intern(lit("none"), user_package);
+  maybe = intern(lit("maybe"), user_package);
+  cases = intern(lit("cases"), user_package);
+  collect = intern(lit("collect"), user_package);
+  until = intern(lit("until"), user_package);
+  coll = intern(lit("coll"), user_package);
+  define = intern(lit("define"), user_package);
+  output = intern(lit("output"), user_package);
+  single = intern(lit("single"), user_package);
+  frst = intern(lit("first"), user_package);
+  lst = intern(lit("last"), user_package);
+  empty = intern(lit("empty"), user_package);
+  repeat = intern(lit("repeat"), user_package);
+  rep = intern(lit("rep"), user_package);
+  flattn = intern(lit("flatten"), user_package);
+  forget = intern(lit("forget"), user_package);
+  local = intern(lit("local"), user_package);
+  mrge = intern(lit("merge"), user_package);
+  bind = intern(lit("bind"), user_package);
+  cat = intern(lit("cat"), user_package);
+  args = intern(lit("args"), user_package);
+  try = intern(lit("try"), user_package);
+  catch = intern(lit("catch"), user_package);
+  finally = intern(lit("finally"), user_package);
+  nothrow = intern(lit("nothrow"), user_package);
+  throw = intern(lit("throw"), user_package);
+  defex = intern(lit("defex"), user_package);
+  error = intern(lit("error"), user_package);
+  type_error = intern(lit("type_error"), user_package);
+  internal_err = intern(lit("internal_error"), user_package);
+  numeric_err = intern(lit("numeric_error"), user_package);
+  range_err = intern(lit("range_error"), user_package);
+  query_error = intern(lit("query_error"), user_package);
+  file_error = intern(lit("file_error"), user_package);
+  process_error = intern(lit("process_error"), user_package);
 
   equal_f = func_f2(nil, equal_tramp);
   identity_f = func_f1(nil, identity_tramp);
@@ -1926,7 +1994,17 @@ void obj_print(val obj, val out)
     format(out, lit("~s"), obj, nao);
     return;
   case SYM:
+    if (obj->s.package != user_package) {
+      if (!obj->s.package)
+        put_char(out, chr('#'));
+      else if (obj->s.package != keyword_package)
+        put_string(out, obj->s.package->pk.name);
+      put_char(out, chr(':'));
+    }
     put_string(out, symbol_name(obj));
+    return;
+  case PKG:
+    format(out, lit("#<package: ~s>"), obj->pk.name, nao);
     return;
   case FUN:
     format(out, lit("#<function: f~a>"), num(obj->f.functype), nao);
@@ -1994,6 +2072,9 @@ void obj_pprint(val obj, val out)
     return;
   case SYM:
     put_string(out, symbol_name(obj));
+    return;
+  case PKG:
+    format(out, lit("#<package: ~s>"), obj->pk.name, nao);
     return;
   case FUN:
     format(out, lit("#<function: f~a>"), num(obj->f.functype), nao);

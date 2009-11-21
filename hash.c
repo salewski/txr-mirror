@@ -93,6 +93,7 @@ static long ll_hash(val obj)
   case NUM:
     return c_num(obj) & NUM_MAX;
   case SYM:
+  case PKG:
     return ((long) obj) & NUM_MAX;
   case FUN:
     return ((long) obj->f.f.interp_fun + ll_hash(obj->f.env)) & NUM_MAX;
@@ -238,12 +239,12 @@ val make_hash(val weak_keys, val weak_vals)
   return hash;
 }
 
-val *gethash_l(val hash, val key)
+val *gethash_l(val hash, val key, val *new_p)
 {
   struct hash *h = (struct hash *) hash->co.handle;
   val *pchain = vecref_l(h->table, num(ll_hash(key) % h->modulus));
   val old = *pchain;
-  val *place = acons_new_l(pchain, key);
+  val *place = acons_new_l(pchain, key, new_p);
   if (old != *pchain && ++h->count > 2 * h->modulus)
     hash_grow(h);
   return place;

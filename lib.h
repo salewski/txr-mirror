@@ -35,7 +35,7 @@
 
 typedef enum type {
   NUM = TAG_NUM, CHR = TAG_CHR, LIT = TAG_LIT, CONS,
-  STR, SYM, FUN, VEC, LCONS, LSTR, COBJ
+  STR, SYM, PKG, FUN, VEC, LCONS, LSTR, COBJ
 } type_t;
 
 typedef enum functype
@@ -69,7 +69,14 @@ struct string {
 struct sym {
   type_t type;
   val name;
+  val package;
   val val;
+};
+
+struct package {
+  type_t type;
+  val name;
+  val symhash;
 };
 
 struct func {
@@ -146,6 +153,7 @@ union obj {
   struct cons c;
   struct string st;
   struct sym s;
+  struct package pk;
   struct func f;
   struct vec v;
   struct lazy_cons lc;
@@ -182,9 +190,8 @@ inline wchar_t *litptr(val obj)
 #define lit_noex(strlit) ((obj_t *) ((long) (L ## strlit) | TAG_LIT))
 #define lit(strlit) lit_noex(strlit)
 
-extern val interned_syms;
-
-extern val t, cons_t, str_t, chr_t, num_t, sym_t, fun_t, vec_t;
+extern val keyword_package;
+extern val t, cons_t, str_t, chr_t, num_t, sym_t, pkg_t, fun_t, vec_t;
 extern val stream_t, hash_t, lcons_t, lstr_t, cobj_t;
 extern val var, regex, set, cset, wild, oneplus;
 extern val zeroplus, optional, compound, or, quasi;
@@ -290,9 +297,12 @@ val chr_str(val str, val index);
 val chr_str_set(val str, val index, val chr);
 val sym_name(val sym);
 val make_sym(val name);
-val intern(val str);
+val find_package(val name);
+val intern(val str, val package);
 val symbolp(val sym);
 val symbol_name(val sym);
+val symbol_package(val sym);
+val keywordp(val sym);
 val func_f0(val, val (*fun)(val));
 val func_f1(val, val (*fun)(val, val));
 val func_f2(val, val (*fun)(val, val, val));
@@ -329,7 +339,7 @@ val cobj(void *handle, val cls_sym, struct cobj_ops *ops);
 void cobj_print_op(val, val); /* Default function for struct cobj_ops */
 val assoc(val list, val key);
 val acons_new(val list, val key, val value);
-val *acons_new_l(val *list, val key);
+val *acons_new_l(val *list, val key, val *new_p);
 val alist_remove(val list, val keys);
 val alist_remove1(val list, val key);
 val copy_cons(val cons);

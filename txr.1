@@ -508,6 +508,19 @@ If the variable is followed by a regular expression directive,
 the extent is determined by finding the closest match for the
 regular expression. (See Regular Expressions section below).
 
+.SS Special Symbols
+
+Just like in the programming language Lisp, the names nil and t cannot be used
+as variables. They always represent themselves, and have many uses, internal to
+the program as well as externally visible. The nil symbol stands for the empty
+list object, an object which marks the end of a list, and boolean false. It is
+synonymous with the syntax () which may be used interchangeably with nil in
+most constructs.
+
+Names whose names begin with the : character are keyword symbols.  These also
+may not be used as variables either and stand for themselves. Keywords are
+useful for labeling information and situations. 
+
 .SS Consecutive Variables
 
 If an unbound variable is followed by another unbound variable, the
@@ -1518,7 +1531,9 @@ instance
 
 will bind the string "ab\tc" (the letter a, b, a tab character, and c)
 to the variable A if A is unbound. If A is bound, this will fail unless
-A already contains an identical string.
+A already contains an identical string. However, the right hand side of
+cannot be an unbound variable, nor a complex expression that contains unbound
+variables.
 
 The left hand side of a bind can be a nested list pattern containing variables.
 The last item of a list at any nesting level can be preceded by a dot, which
@@ -1535,6 +1550,15 @@ binds H to "how", N to "now", B to "brown" and C to "cow".
 
 The dot notation may be used at any nesting level. it must be preceded and
 followed by a symbol: the forms (.) (. X) and (X .) are invalid.
+
+The number of items in a left pattern match must match the number of items in
+the corresponding right side object. So the pattern () only matches
+an empty list. The notation () and nil means exactly the same thing.
+
+The symbols nil, t and keyword symbols may be used on either side.
+They represent themselves.  For example @(bind :foo :bar) fails,
+but @(bind :foo :foo) succeeds since the two sides denote the same
+keyword symbol object.
 
 .SH BLOCKS
 
