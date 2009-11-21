@@ -259,6 +259,7 @@ val dest_bind(val bindings, val pattern, val value)
       if (bindings == t)
         return t;
     }
+    return bindings;
   } else if (tree_find(value, pattern)) {
     return bindings;
   }

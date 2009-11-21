@@ -36,6 +36,7 @@
 #include <wchar.h>
 #include "lib.h"
 #include "gc.h"
+#include "hash.h"
 #include "unwind.h"
 #include "stream.h"
 #include "utf8.h"
@@ -1068,16 +1069,10 @@ val make_sym(val name)
 
 val intern(val str)
 {
-  val iter;
-
-  for (iter = interned_syms; iter != nil; iter = cdr(iter)) {
-    val sym = car(iter);
-    if (equal(symbol_name(sym), str))
-      return sym;
-  }
-
-  interned_syms = cons(make_sym(str), interned_syms);
-  return car(interned_syms);
+  val *place = gethash_l(interned_syms, str);
+  if (*place)
+    return *place;
+  return *place = make_sym(str);
 }
 
 val symbolp(val sym)
@@ -1759,6 +1754,19 @@ static void obj_init(void)
           (val *) 0);
 
   nil_string = lit("nil");
+  null_string = lit("");
+  null_list = cons(nil, nil);
+
+  zero = num(0);
+  one  = num(1);
+  two = num(2);
+  negone = num(-1);
+  maxint = num(NUM_MAX);
+  minint = num(NUM_MIN);
+
+  interned_syms = make_hash(nil, nil);
+
+  *gethash_l(interned_syms, nil_string) = nil;
 
   null = intern(lit("null"));
   t = intern(lit("t"));
@@ -1829,19 +1837,6 @@ static void obj_init(void)
   query_error = intern(lit("query_error"));
   file_error = intern(lit("file_error"));
   process_error = intern(lit("process_error"));
-
-  interned_syms = cons(nil, interned_syms);
-
-  zero = num(0);
-  one  = num(1);
-  two = num(2);
-  negone = num(-1);
-  maxint = num(NUM_MAX);
-  minint = num(NUM_MIN);
-
-  null_string = lit("");
-
-  null_list = cons(nil, nil);
 
   equal_f = func_f2(nil, equal_tramp);
   identity_f = func_f1(nil, identity_tramp);

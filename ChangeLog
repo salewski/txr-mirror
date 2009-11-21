@@ -1,5 +1,25 @@
 2009-11-20  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* unwind.c (uw_throw): If streams are not initialized,
+	we have an unhandled exception too early in initialization.
+	Use C stream to print an error message and abort.
+	Using the nil stream variable will just cause a recursion bomb.
+
+2009-11-20  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* lib.c (intern): Symbol interning to hash tables.
+	(obj_init): interned_syms must be created as a hash
+	table. Rearranged the order of some initializations so
+	the vector code called by hash works.
+
+2009-11-20  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* lib.c (dest_bind): Fix breakage from two commits ago;
+	was falling through to unsuccessful return in the
+	consp case.
+
+2009-11-20  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* parser.y (grammar): Fix error actions that do not assign
 	a value to $$.
 

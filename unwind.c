@@ -215,6 +215,11 @@ val uw_throw(val sym, val exception)
   }
 
   if (ex == 0) {
+    if (std_error == 0) {
+      fprintf(stderr, "unhandled exception in early initialization\n");
+      abort();
+    }
+
     if (opt_loglevel >= 1) {
       val s = stringp(exception);
       format(std_error, lit("~a: unhandled exception of type ~a:\n"),
