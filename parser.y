@@ -30,6 +30,7 @@
 #include <assert.h>
 #include <limits.h>
 #include <dirent.h>
+#include "config.h"
 #include "lib.h"
 #include "regex.h"
 #include "utf8.h"
@@ -50,7 +51,7 @@ static val parsed_spec;
   wchar_t *lexeme;
   union obj *obj;
   wchar_t chr;
-  long num;
+  cnum num;
 }
 
 %token <lexeme> TEXT IDENT KEYWORD ALL SOME NONE MAYBE CASES AND OR END COLLECT

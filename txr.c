@@ -33,6 +33,7 @@
 #include <setjmp.h>
 #include <stdarg.h>
 #include <wchar.h>
+#include "config.h"
 #include "lib.h"
 #include "stream.h"
 #include "gc.h"

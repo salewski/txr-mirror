@@ -104,10 +104,12 @@ mandir=${mandir-'$(prefix)/share/man'}
 cross=${cross-}
 compiler_prefix=${compiler_prefix-}
 cc=${cc-'$(cross)$(compiler_prefix)gcc'}
+intptr=
 tool_prefix=${tool_prefix-}
 lex=${lex-'$(cross)$(tool_prefix)flex'}
 lexlib=${lexlib--lfl}
 yacc=${yacc-'$(cross)$(tool_prefix)yacc'}
+nm=${nm-'$(cross)$(tool_prefix)nm'}
 opt_flags=${opt_flags--O2}
 lang_flags=${lang_flags--ansi -std=c89 -D_POSIX_C_SOURCE=2}
 diag_flags=${diag_flags--Wall}
@@ -208,6 +210,12 @@ cc [$cc]
   compiling C sources to object files, and for linking object files to
   executables. This becomes the CC variable in the Makefile.
 
+intptr [$intptr]
+
+  Specifies the name of the C integer type wide enough such that a pointer
+  value can be converted to it. If this is blank, the configure script
+  will try to auto detect it.
+
 tool_prefix [$tool_prefix]
 
   Specifies a prefix to be added to tool commands other than the
@@ -225,6 +233,10 @@ lexlib [$lexlib]
 yacc [$yacc]
 
   Specifies the program to use for compiling yacc scanners to C.
+
+nm [$nm]
+
+  Specifies the nm program for dumping symbols from an object file.
 
 opt_flags [$opt_flags]
 
@@ -403,20 +415,9 @@ else
 fi
 
 #
-# Save configuration in config.log
-#
-cat > config.log <<!
-
-Configured on $(date) using
-
-   $cmdline
-
-!
-
-#
 # Finally, we generate config.make
 #
-printf "generating config.make\n"
+printf "generating config.make ...\n"
 
 cat > config.make <<!
 # absolute path to source code directory
@@ -454,6 +455,7 @@ CC := $cc
 LEX := $lex
 LEXLIB := $lexlib
 YACC := $yacc
+NM := $nm
 
 OPT_FLAGS := $opt_flags
 LANG_FLAGS := $lang_flags
@@ -465,9 +467,137 @@ TXR_DBG_OPTS := $txr_dbg_opts
 !
 
 #
+# Start config.h header
+#
+> config.h
+
+#
+# Check C compiler sanity
+#
+printf "Checking whether your C compiler can make a simple executable ... "
+
+cat > conftest.c <<!
+#include <stdio.h>
+int main(void)
+{
+  printf("Hello, world!\n");
+  return 0;
+}
+!
+
+if ! make conftest > /dev/null 2>&1 || ! [ -x conftest ] ; then
+  printf "failed\n"
+  exit 1
+fi
+
+rm -f conftest
+printf "okay\n"
+
+#
+# Check what kind of C type we have for integers wider than long,
+# if any.
+#
+printf "Checking what C type we have for integers wider than \"long\" ... "
+
+for try_type in int64 __int64 "long long" ; do
+  cat > conftest.c <<!
+$try_type value;
+!
+  rm -f conftest.o
+  if make conftest.o > /dev/null 2>&1 ; then
+    longlong=$try_type
+    break
+  fi
+done
+
+if [ -n "$longlong" ] ; then
+  printf '"%s"\n' "$longlong"
+  printf "#define HAVE_LONGLONG_T 1\n" >> config.h
+  printf "typedef $longlong longlong_t;\n" >> config.h
+else
+  printf "none\n"
+fi
+
+printf "Checking what C integer type can hold a pointer ... "
+
+if [ -z "$intptr" ] ; then
+  cat > conftest.c <<!
+#include "config.h"
+char sizeof_ptr[sizeof (char *)];
+char sizeof_short[sizeof (short)];
+char sizeof_int[sizeof (int)];
+char sizeof_long[sizeof (long)];
+#ifdef HAVE_LONGLONG_T
+char sizeof_longlong_t[sizeof (longlong_t)];
+#endif
+!
+  rm -f conftest.o conftest.syms
+
+  if ! make conftest.syms > /dev/null 2>&1 ; then
+    echo "failed"
+    exit 1;
+  fi
+
+  sizeof_ptr=0
+  sizeof_short=0
+  sizeof_int=0
+  sizeof_long=0
+  sizeof_longlong_t=0
+
+  while read symbol type offset size ; do
+    eval "size=$(( 0$size + 0 ))"
+    eval $(printf "%s=%d\n" "$symbol" "$size")
+  done < conftest.syms
+
+  rm -f conftest.syms conftest.o
+
+  if [ $sizeof_ptr -eq 0 ] ; then
+    printf "failed\n"
+    exit 1;
+  fi
+
+  if [ $sizeof_ptr -eq $sizeof_short ] ; then
+    intptr="short"
+  elif [ $sizeof_ptr -eq $sizeof_int ] ; then
+    intptr="int"
+  elif [ $sizeof_ptr -eq $sizeof_long ] ; then
+    intptr="long"
+  elif [ $sizeof_ptr -eq $sizeof_long_long_t ] ; then
+    intptr="longlong_t"
+  fi
+
+  if [ -z "$intptr" ] ; then
+    printf "failed\n"
+    exit 1;
+  fi
+fi
+
+printf '"%s"\n' "$intptr"
+printf "typedef $intptr int_ptr_t;\n" >> config.h
+intptr_max=$(( (1 << ( sizeof_ptr * 8  - 1 )) - 1 ))
+printf "#define INT_PTR_MAX %d\n" $intptr_max >> config.h
+printf "#define INT_PTR_MIN -%d\n" $intptr_max >> config.h
+
+#
+# Clean up
+#
+rm -f conftest conftest.c conftest.o conftest.syms
+
+#
+# Save configuration in config.log
+#
+cat > config.log <<!
+
+Configured on $(date) using
+
+   $cmdline
+
+!
+#
 # Parting message#
 #
 cat <<!
+
 Configuration seems to have been successful. The next
 step is one of these two.
 

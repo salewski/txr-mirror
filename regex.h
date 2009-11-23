@@ -145,22 +145,22 @@ typedef enum nfam_result {
 } nfam_result_t;
 
 typedef struct nfa_machine {
-  long last_accept_pos;
+  cnum last_accept_pos;
   unsigned visited;
   nfa_state_t **move, **clos, **stack;
   int nmove, nclos;
-  long count;
+  cnum count;
   nfa_t nfa;
 } nfa_machine_t;
 
 nfa_t nfa_compile_regex(val regex);
 void nfa_free(nfa_t);
-long nfa_run(nfa_t nfa, const wchar_t *str);
+cnum nfa_run(nfa_t nfa, const wchar_t *str);
 void nfa_machine_reset(nfa_machine_t *);
 void nfa_machine_init(nfa_machine_t *, nfa_t);
 void nfa_machine_cleanup(nfa_machine_t *);
 nfam_result_t nfa_machine_feed(nfa_machine_t *, wchar_t ch);
-long nfa_machine_match_span(nfa_machine_t *);
+cnum nfa_machine_match_span(nfa_machine_t *);
 val regex_compile(val regex_sexp);
 val regexp(val);
 nfa_t *regex_nfa(val);

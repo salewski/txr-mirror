@@ -30,6 +30,7 @@
 #include <setjmp.h>
 #include <dirent.h>
 #include <stdarg.h>
+#include "config.h"
 #include "lib.h"
 #include "gc.h"
 #include "stream.h"

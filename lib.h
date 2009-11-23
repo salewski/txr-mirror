@@ -30,8 +30,10 @@
 #define TAG_NUM 1
 #define TAG_CHR 2
 #define TAG_LIT 3
-#define NUM_MAX (LONG_MAX/4)
-#define NUM_MIN (LONG_MIN/4)
+#define NUM_MAX (INT_PTR_MAX/4)
+#define NUM_MIN (INT_PTR_MIN/4)
+
+typedef int_ptr_t cnum;
 
 typedef enum type {
   NUM = TAG_NUM, CHR = TAG_CHR, LIT = TAG_LIT, CONS,
@@ -145,7 +147,7 @@ struct cobj_ops {
   void (*print)(val self, val stream);
   void (*destroy)(val self);
   void (*mark)(val self);
-  long (*hash)(val self);
+  cnum (*hash)(val self);
 };
 
 union obj {
@@ -161,7 +163,7 @@ union obj {
   struct cobj co;
 };
 
-inline long tag(val obj) { return ((long) obj) & TAG_MASK; }
+inline cnum tag(val obj) { return ((cnum) obj) & TAG_MASK; }
 inline int is_ptr(val obj) { return obj && tag(obj) == TAG_PTR; }
 inline int is_num(val obj) { return tag(obj) == TAG_NUM; }
 inline int is_chr(val obj) { return tag(obj) == TAG_CHR; }
@@ -174,20 +176,20 @@ inline type_t type(val obj)
 
 inline val auto_str(const wchar_t *str)
 {
-  return (val) ((long) (str) | TAG_LIT);
+  return (val) ((cnum) (str) | TAG_LIT);
 }
 
 inline val static_str(const wchar_t *str)
 {
-  return (val) ((long) (str) | TAG_LIT);
+  return (val) ((cnum) (str) | TAG_LIT);
 }
 
 inline wchar_t *litptr(val obj)
 {
- return (wchar_t *) ((long) obj & ~TAG_MASK);
+ return (wchar_t *) ((cnum) obj & ~TAG_MASK);
 }
 
-#define lit_noex(strlit) ((obj_t *) ((long) (L ## strlit) | TAG_LIT))
+#define lit_noex(strlit) ((obj_t *) ((cnum) (L ## strlit) | TAG_LIT))
 #define lit(strlit) lit_noex(strlit)
 
 extern val keyword_package;
@@ -245,7 +247,7 @@ val tree_find(val obj, val tree);
 val some_satisfy(val list, val pred, val key);
 val all_satisfy(val list, val pred, val key);
 val none_satisfy(val list, val pred, val key);
-long c_num(val num);
+cnum c_num(val num);
 val nump(val num);
 val equal(val left, val right);
 unsigned char *chk_malloc(size_t size);
@@ -259,8 +261,8 @@ val atom(val obj);
 val listp(val obj);
 val proper_listp(val obj);
 val length(val list);
-val num(long val);
-long c_num(val num);
+val num(cnum val);
+cnum c_num(val num);
 val plus(val anum, val bnum);
 val minus(val anum, val bnum);
 val neg(val num);

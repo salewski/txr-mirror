@@ -32,6 +32,7 @@
 #include <assert.h>
 #include <setjmp.h>
 #include <limits.h>
+#include "config.h"
 #include "lib.h"
 #include "gc.h"
 #include "unwind.h"
@@ -48,8 +49,8 @@ struct hash {
   hash_flags_t flags;
   struct hash *next;
   val table;
-  long modulus;
-  long count;
+  cnum modulus;
+  cnum count;
 };
 
 /*
@@ -76,7 +77,7 @@ static long hash_c_str(const wchar_t *str)
   return h;
 }
 
-static long ll_hash(val obj)
+static cnum ll_hash(val obj)
 {
   if (obj == nil)
     return NUM_MAX;
@@ -94,14 +95,14 @@ static long ll_hash(val obj)
     return c_num(obj) & NUM_MAX;
   case SYM:
   case PKG:
-    return ((long) obj) & NUM_MAX;
+    return ((cnum) obj) & NUM_MAX;
   case FUN:
-    return ((long) obj->f.f.interp_fun + ll_hash(obj->f.env)) & NUM_MAX;
+    return ((cnum) obj->f.f.interp_fun + ll_hash(obj->f.env)) & NUM_MAX;
   case VEC:
     {
       val fill = obj->v.vec[vec_fill];
-      long i, h = ll_hash(obj->v.vec[vec_fill]);
-      long len = c_num(fill);
+      cnum i, h = ll_hash(obj->v.vec[vec_fill]);
+      cnum len = c_num(fill);
 
       for (i = 0; i < len; i++)
         h = (h + ll_hash(obj->v.vec[i])) & NUM_MAX;
@@ -116,7 +117,7 @@ static long ll_hash(val obj)
   case COBJ:
     if (obj->co.ops->hash)
       return obj->co.ops->hash(obj);
-    return ((long) obj) & NUM_MAX;
+    return ((cnum) obj) & NUM_MAX;
   }
 
   internal_error("unhandled case in equal function");
@@ -140,7 +141,7 @@ void hash_destroy(val hash)
 void hash_mark(val hash)
 {
   struct hash *h = (struct hash *) hash->co.handle;
-  long i;
+  cnum i;
 
   switch (h->flags) {
   case hash_weak_none:
@@ -195,8 +196,8 @@ static struct cobj_ops hash_ops = {
 
 void hash_grow(struct hash *h)
 {
-  long i;
-  long new_modulus = 2 * h->modulus;
+  cnum i;
+  cnum new_modulus = 2 * h->modulus;
   val new_table = vector(num(new_modulus));
 
   bug_unless (new_modulus > h->modulus);
@@ -276,7 +277,7 @@ val remhash(val hash, val key)
 void hash_process_weak(void)
 {
   struct hash *h;
-  long i;
+  cnum i;
 
   for (h = reachable_weak_hashes; h != 0; h = h->next) {
     switch (h->flags) {

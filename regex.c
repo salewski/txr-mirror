@@ -32,6 +32,7 @@
 #include <dirent.h>
 #include <setjmp.h>
 #include <dirent.h>
+#include "config.h"
 #include "lib.h"
 #include "unwind.h"
 #include "regex.h"
@@ -912,7 +913,7 @@ int nfa_move(nfa_state_t **in, int nin, nfa_state_t **out, wchar_t ch)
  * determines the match length (defaulting to zero
  * if no acceptance states were encountered).
  */
-long nfa_run(nfa_t nfa, const wchar_t *str)
+cnum nfa_run(nfa_t nfa, const wchar_t *str)
 {
   const wchar_t *last_accept_pos = 0, *ptr = str;
   unsigned visited = nfa.start->a.visited + 1;
@@ -953,7 +954,7 @@ long nfa_run(nfa_t nfa, const wchar_t *str)
   return last_accept_pos ? last_accept_pos - str : -1;
 }
 
-long nfa_machine_match_span(nfa_machine_t *nfam)
+cnum nfa_machine_match_span(nfa_machine_t *nfam)
 {
   return nfam->last_accept_pos;
 }
@@ -1080,12 +1081,12 @@ val search_regex(val haystack, val needle_regex, val start,
     return nil;
   } else {
     if (from_end) {
-      long i;
-      long s = c_num(start);
+      cnum i;
+      cnum s = c_num(start);
       const wchar_t *h = c_str(haystack);
 
       for (i = c_num(length_str(haystack)) - 1; i >= s; i--) {
-        long span = nfa_run(*pnfa, h + i);
+        cnum span = nfa_run(*pnfa, h + i);
         if (span >= 0)
           return cons(num(i), num(span));
       }
