@@ -34,8 +34,9 @@
 #include <errno.h>
 #include <dirent.h>
 #include <wchar.h>
-#include "y.tab.h"
+#include "config.h"
 #include "lib.h"
+#include "y.tab.h"
 #include "gc.h"
 #include "stream.h"
 #include "utf8.h"
@@ -58,7 +59,7 @@
 
 val yyin_stream;
 
-long lineno = 1;
+cnum lineno = 1;
 int opt_loglevel = 1;   /* 0 - quiet; 1 - normal; 2 - verbose */
 int opt_nobindings = 0;
 int opt_arraydims = 1;
@@ -190,7 +191,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 %%
 
 <SPECIAL,NESTED>{TOK}   {
-                          long val;
+                          cnum val;
                           char *errp;
 
 
@@ -215,6 +216,9 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
                           if ((val == LONG_MAX || val == LONG_MIN)
                               && errno == ERANGE)
+                            yyerror("numeric overflow in token");
+
+                          if (val < NUM_MIN || val > NUM_MAX)
                             yyerror("numeric overflow in token");
 
                           yylval.num = val;

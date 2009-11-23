@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <wchar.h>
+#include "config.h"
 #include "lib.h"
 #include "utf8.h"
 

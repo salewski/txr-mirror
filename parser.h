@@ -25,7 +25,7 @@
  */
 
 #include <stdio.h>
-extern long lineno;
+extern cnum lineno;
 extern int errors;
 extern val yyin_stream;
 extern const wchar_t *spec_file;

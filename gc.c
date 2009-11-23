@@ -31,6 +31,7 @@
 #include <setjmp.h>
 #include <dirent.h>
 #include <wchar.h>
+#include "config.h"
 #include "lib.h"
 #include "stream.h"
 #include "hash.h"
@@ -231,7 +232,7 @@ tail_call:
     {
       val alloc_size = obj->v.vec[-2];
       val fill_ptr = obj->v.vec[-1];
-      long i, fp = c_num(fill_ptr);
+      cnum i, fp = c_num(fill_ptr);
 
       mark_obj(alloc_size);
       mark_obj(fill_ptr);

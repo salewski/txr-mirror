@@ -148,7 +148,7 @@ noreturn val type_mismatch(val, ...);
 
 #define internal_error(STR)             \
   do {                                  \
-    extern obj_t *num(long);            \
+    extern obj_t *num(cnum);            \
     uw_throwf(internal_err,             \
               lit("~a:~a ~a"),          \
               lit(__FILE__),            \

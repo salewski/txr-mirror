@@ -34,6 +34,7 @@
 #include <dirent.h>
 #include <setjmp.h>
 #include <wchar.h>
+#include "config.h"
 #include "lib.h"
 #include "gc.h"
 #include "hash.h"
@@ -410,7 +411,7 @@ val flatten(val list)
   return mappend(func_f1(nil, flatten_helper), list);
 }
 
-long c_num(val num);
+cnum c_num(val num);
 
 val equal(val left, val right)
 {
@@ -489,7 +490,7 @@ val equal(val left, val right)
     return nil;
   case VEC:
     if (type(right) == VEC) {
-      long i, fill;
+      cnum i, fill;
       if (!equal(left->v.vec[vec_fill], right->v.vec[vec_fill]))
         return nil;
       fill = c_num(left->v.vec[vec_fill]);
@@ -620,7 +621,7 @@ val proper_listp(val obj)
 
 val length(val list)
 {
-  long len = 0;
+  cnum len = 0;
   while (consp(list)) {
     len++;
     list = cdr(list);
@@ -628,17 +629,17 @@ val length(val list)
   return num(len);
 }
 
-val num(long n)
+val num(cnum n)
 {
   numeric_assert (n >= NUM_MIN && n <= NUM_MAX);
   return (val) ((n << TAG_SHIFT) | TAG_NUM);
 }
 
-long c_num(val num)
+cnum c_num(val num)
 {
   if (!is_num(num))
     type_mismatch(lit("~s is not a number"), num, nao);
-  return ((long) num) >> TAG_SHIFT;
+  return ((cnum) num) >> TAG_SHIFT;
 }
 
 val nump(val num)
@@ -648,8 +649,8 @@ val nump(val num)
 
 val plus(val anum, val bnum)
 {
-  long a = c_num(anum);
-  long b = c_num(bnum);
+  cnum a = c_num(anum);
+  cnum b = c_num(bnum);
 
   numeric_assert (a <= 0 || b <= 0 || NUM_MAX - b >= a);
   numeric_assert (a >= 0 || b >= 0 || NUM_MIN - b >= a);
@@ -659,8 +660,8 @@ val plus(val anum, val bnum)
 
 val minus(val anum, val bnum)
 {
-  long a = c_num(anum);
-  long b = c_num(bnum);
+  cnum a = c_num(anum);
+  cnum b = c_num(bnum);
 
   numeric_assert (b != NUM_MIN || NUM_MIN == -NUM_MAX);
   numeric_assert (a <= 0 || -b <= 0 || NUM_MAX + b >= a);
@@ -671,7 +672,7 @@ val minus(val anum, val bnum)
 
 val neg(val anum)
 {
-  long n = c_num(anum);
+  cnum n = c_num(anum);
   return num(-n);
 }
 
@@ -838,8 +839,8 @@ val search_str(val haystack, val needle, val start_num, val from_end)
     return nil;
   } else {
     val h_is_lazy = lazy_stringp(haystack);
-    long start = c_num(start_num);
-    long good = -1, pos = -1;
+    cnum start = c_num(start_num);
+    cnum good = -1, pos = -1;
     const wchar_t *n = c_str(needle), *h;
 
     if (!h_is_lazy) {
@@ -915,10 +916,10 @@ val sub_str(val str_in, val from, val to)
 
 val cat_str(val list, val sep)
 {
-  long total = 0;
+  cnum total = 0;
   val iter;
   wchar_t *str, *ptr;
-  long len_sep = sep ? c_num(length_str(sep)) : 0;
+  cnum len_sep = sep ? c_num(length_str(sep)) : 0;
 
   for (iter = list; iter != nil; iter = cdr(iter)) {
     val item = car(iter);
@@ -943,7 +944,7 @@ val cat_str(val list, val sep)
 
   for (ptr = str, iter = list; iter != nil; iter = cdr(iter)) {
     val item = car(iter);
-    long len;
+    cnum len;
     if (!item)
       continue;
     if (stringp(item)) {
@@ -1364,7 +1365,7 @@ val chain(val fun1_list)
 
 val vector(val alloc)
 {
-  long alloc_plus = c_num(alloc) + 2;
+  cnum alloc_plus = c_num(alloc) + 2;
   val vec = make_obj();
   val *v = (val *) chk_malloc(alloc_plus * sizeof *v);
   vec->v.type = VEC;
@@ -1385,14 +1386,14 @@ val vec_set_fill(val vec, val fill)
   type_check(vec, VEC);
 
   {
-    long new_fill = c_num(fill);
-    long old_fill = c_num(vec->v.vec[vec_fill]);
-    long old_alloc = c_num(vec->v.vec[vec_alloc]);
-    long fill_delta = new_fill - old_fill;
-    long alloc_delta = new_fill - old_alloc;
+    cnum new_fill = c_num(fill);
+    cnum old_fill = c_num(vec->v.vec[vec_fill]);
+    cnum old_alloc = c_num(vec->v.vec[vec_alloc]);
+    cnum fill_delta = new_fill - old_fill;
+    cnum alloc_delta = new_fill - old_alloc;
 
     if (alloc_delta > 0) {
-      long new_alloc = max(new_fill, 2*old_alloc);
+      cnum new_alloc = max(new_fill, 2*old_alloc);
       val *newvec = (val *) chk_realloc(vec->v.vec - 2,
                                         (new_alloc + 2)*sizeof *newvec);
       vec->v.vec = newvec + 2;
@@ -1400,7 +1401,7 @@ val vec_set_fill(val vec, val fill)
     }
 
     if (fill_delta > 0) {
-      long i;
+      cnum i;
       for (i = old_fill; i < new_fill; i++)
         vec->v.vec[i] = nil;
     }
@@ -2011,7 +2012,7 @@ void obj_print(val obj, val out)
     return;
   case VEC:
     {
-      long i, fill = c_num(obj->v.vec[vec_fill]);
+      cnum i, fill = c_num(obj->v.vec[vec_fill]);
       put_string(out, lit("#("));
       for (i = 0; i < fill; i++) {
         obj_print(obj->v.vec[i], out);
@@ -2081,7 +2082,7 @@ void obj_pprint(val obj, val out)
     return;
   case VEC:
     {
-      long i, fill = c_num(obj->v.vec[vec_fill]);
+      cnum i, fill = c_num(obj->v.vec[vec_fill]);
       put_string(out, lit("#("));
       for (i = 0; i < fill; i++) {
         obj_pprint(obj->v.vec[i], out);

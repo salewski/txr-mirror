@@ -33,6 +33,7 @@
 #include <setjmp.h>
 #include <stdarg.h>
 #include <wchar.h>
+#include "config.h"
 #include "lib.h"
 #include "gc.h"
 #include "unwind.h"
@@ -633,7 +634,7 @@ fpip_t complex_open(val name, val output)
   fpip_t ret = { 0, 0 };
 
   const wchar_t *namestr = c_str(name);
-  long len = c_num(length_str(name));
+  cnum len = c_num(length_str(name));
 
   if (len == 0)
     return ret;
@@ -802,7 +803,7 @@ void do_output_line(val bindings, val specline,
             val bind_a = mapcar(func_n1(bind_car), bind_cp);
             do_output_line(bind_a, single_clauses, spec_lineno, out);
           } else if (!zerop(max_depth)) {
-            long i;
+            cnum i;
 
             for (i = 0; i < c_num(max_depth); i++) {
               val bind_a = mapcar(func_n1(bind_car), bind_cp);
@@ -868,7 +869,7 @@ void do_output(val bindings, val specs, val out)
           val bind_a = mapcar(func_n1(bind_car), bind_cp);
           do_output(bind_a, single_clauses, out);
         } else if (!zerop(max_depth)) {
-          long i;
+          cnum i;
 
           for (i = 0; i < c_num(max_depth); i++) {
             val bind_a = mapcar(func_n1(bind_car), bind_cp);
@@ -899,7 +900,7 @@ val match_files(val spec, val files,
                 val data_linenum)
 {
   val data = nil;
-  long data_lineno = 0;
+  cnum data_lineno = 0;
 
   if (listp(first_file_parsed)) {
     data = first_file_parsed;
@@ -950,8 +951,8 @@ repeat_spec_same_data:
 
       if (sym == skip) {
         val max = first(rest(first_spec));
-        long cmax = nump(max) ? c_num(max) : 0;
-        long reps = 0;
+        cnum cmax = nump(max) ? c_num(max) : 0;
+        cnum reps = 0;
 
         if (rest(specline))
           sem_error(spec_linenum,
@@ -1265,7 +1266,7 @@ repeat_spec_same_data:
           if (success) {
             if (consp(success)) {
               cons_bind (new_data, new_line, success);
-              long new_lineno = c_num(new_line);
+              cnum new_lineno = c_num(new_line);
 
               bug_unless (new_lineno >= data_lineno);
 

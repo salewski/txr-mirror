@@ -59,7 +59,7 @@ clean:
 
 .PHONY: distclean
 distclean: clean
-	rm -f config.make config.log
+	rm -f config.h config.make config.log
 
 .PHONY: depend
 depend:
@@ -101,3 +101,17 @@ install: $(PROG)
 config.make:
 	@echo "config.make missing: you didn't run ./configure"
 	@exit 1
+
+#
+# Special targets used by ./configure
+#
+
+conftest: conftest.c
+	$(CC) -o $@ $^
+
+conftest.o: CFLAGS := $(LANG_FLAGS) 
+
+conftest.o: conftest.c
+
+conftest.syms: conftest.o
+	$(NM) -t o -P $^ > $@

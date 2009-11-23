@@ -1,3 +1,73 @@
+2009-11-23  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Improving portability. It is no longer assumed that pointers
+	can be converted to a type long and vice versa. The configure
+	script tries to detect the appropriate type to use. Also,
+	some run-time checking is performed in the streams module
+	to detect which conversions specifier strings to use for
+	printing numbers.
+
+	* Makefile (conftest, conftest.o, conftest.syms): New targets.
+	Used by the configure script. 
+
+	* configure (intptr, nm): New configuration variables.
+	Generating config.make is no longer the last step; compiler tests are
+	performed after config.make is set up, so that rules in the Makefile
+	can be used for doing the compiling. (This is the cleanest way to do
+	it, since the paths to the tools may contain Make variable expansion
+	syntax).  New steps are added to try to detect whether the compiler has
+	a wider integer type than the c89 long, and which of the available
+	types (including, potentially, the extra wide type) is suitable for
+	holding a pointer. Results are generated into a header config.h.
+
+	* dep.mk: Regenerated.
+
+	* lib.h (NUM_MAX, NUM_MIN): Now derived from INT_PTR_MAX and
+	INT_PTR_MIN macros, which come from config.h.
+	(cnum): New typedef name.
+	(cobj ops, tag, auto_str, static_str, litptr, lit_noex):
+	Changed long to cnum.
+	(num, c_num): Declaration updated.
+
+	* lib.c (equal, length, num, c_num, plus, minus, neg, search_str,
+	cat_str, vector, vec_set_fill, obj_print, obj_pprint): Changed
+	long to cnum.
+
+	* gc.c (mark_obj): Changed long to cnum.
+
+	* hash.c (stuct hash, ll_hash, hash_mark, hash_grow,
+	hash_process_weak): Changed long to cnum.
+
+	* match.c (complex_open, do_output_line, do_output, match_files):
+	Changed long to cnum.
+
+	* parser.h (lineno): Declaration updated.
+
+	* parser.l (lineno): Redefined as cnum.
+	(grammar): Changed long to cnum.
+
+	* parser.y (%union/yystype): num member changed to cnum.
+	of config.h added.
+
+	* regex.c (nfa_run, nfa_machine_match_span, search_regex):
+	Changed long to cnum.
+
+	* regex.h (struct nfa_machine): Members last_accept_pos and count
+	changed to cnum.
+	(nfa_run, nfa_machine_match_span): Declarations updated.
+
+	* stream.c (struct fmt): New type.
+	(fmt_tab): New static array.
+	(num_fmt): New static pointer.
+	(detect_format_string): New function.
+	(vformat): Changed long to cnum. Formatting of numbers uses
+	num_fmt.
+	(stream_init): Call detect_format_string.
+
+	* txr.c, unwind.c, utf8.c: include config.h.
+
+	* unwind.h (internal_error): Local declaration of num updated.
+
 2009-11-21  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Introducing symbol packages. Internal symbols are now in

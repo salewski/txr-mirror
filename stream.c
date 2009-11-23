@@ -35,6 +35,7 @@
 #include <wchar.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include "config.h"
 #include "lib.h"
 #include "gc.h"
 #include "unwind.h"
@@ -612,6 +613,44 @@ val get_byte(val stream)
   }
 }
 
+struct fmt {
+  size_t minsize;
+  const char *dec;
+  const char *oct;
+  const char *hex;
+  const char *HEX;
+};
+
+static struct fmt fmt_tab[] = {
+  { sizeof(short),"%hd",   "%ho",   "%hx",   "%hX"   },
+  { sizeof(int),  "%d",    "%o",    "%x",    "%X"    },
+  { sizeof(long), "%ld",   "%lo",   "%lx",   "%llX"  },
+  { sizeof(cnum), "%lld",  "%llo",  "%llx",  "%llX"  },
+  { sizeof(cnum), "%Ld",   "%Lo",   "%Lx",   "%llX"  },
+  { sizeof(cnum), "%qd",   "%qo",   "%qx",   "%qX",  },
+  { sizeof(cnum), "%I64d", "%I64o", "%I64x", "%I64X" }, 
+  { 0,            0,       0,       0,       0       }
+};
+
+static struct fmt *num_fmt;
+
+static void detect_format_string(void)
+{
+  struct fmt *f;
+  char buf[64];
+  cnum num = 1234;
+
+  for (f = fmt_tab; f->minsize != 0; f++) {
+    memset(buf, 0, sizeof buf);
+    if (f->minsize != sizeof num)
+      continue;
+    if (sprintf(buf, f->dec, num) == 4 && strcmp(buf, "1234") == 0) {
+      num_fmt = f;
+      break;
+    }
+  }
+}
+
 static val vformat_num(val stream, const char *str,
                        int width, int left, int pad, int precision)
 {
@@ -681,7 +720,7 @@ val vformat(val stream, val fmtstr, va_list vl)
     } state = vf_init, saved_state = vf_init;
     int width = 0, precision = 0, digits = 0;
     int left = 0, zeropad = 0;
-    long value;
+    cnum value;
     void *ptr;
     char num_buf[64];
 
@@ -798,17 +837,17 @@ val vformat(val stream, val fmtstr, va_list vl)
         case 'x':
           obj = va_arg(vl, val);
           value = c_num(obj);
-          sprintf(num_buf, "%lx", value);
+          sprintf(num_buf, num_fmt->hex, value);
           goto output_num;
         case 'X':
           obj = va_arg(vl, val);
           value = c_num(obj);
-          sprintf(num_buf, "%lX", value);
+          sprintf(num_buf, num_fmt->HEX, value);
           goto output_num;
         case 'o':
           obj = va_arg(vl, val);
           value = c_num(obj);
-          sprintf(num_buf, "%lo", value);
+          sprintf(num_buf, num_fmt->oct, value);
           goto output_num;
         case 'a':
           obj = va_arg(vl, val);
@@ -816,7 +855,7 @@ val vformat(val stream, val fmtstr, va_list vl)
             goto premature;
           if (nump(obj)) {
             value = c_num(obj);
-            sprintf(num_buf, "%ld", value);
+            sprintf(num_buf, num_fmt->dec, value);
             goto output_num;
           } else if (stringp(obj)) {
             if (!vformat_str(stream, obj, width, left, precision))
@@ -831,7 +870,7 @@ val vformat(val stream, val fmtstr, va_list vl)
             goto premature;
           if (nump(obj)) {
             value = c_num(obj);
-            sprintf(num_buf, "%ld", value);
+            sprintf(num_buf, num_fmt->dec, value);
             if (!vformat_num(stream, num_buf, 0, 0, 0, 0))
               return nil;
             continue;
@@ -841,7 +880,8 @@ val vformat(val stream, val fmtstr, va_list vl)
         case 'p':
           ptr = va_arg(vl, void *);
           value = (int) ptr;
-          sprintf(num_buf, "0x%lx", value);
+          strcpy(num_buf, "0x");
+          sprintf(num_buf + 2, num_fmt->hex, value);
           goto output_num;
         default:
           abort();
@@ -920,4 +960,5 @@ void stream_init(void)
   std_input = make_stdio_stream(stdin, string(L"stdin"), t, nil);
   std_output = make_stdio_stream(stdout, string(L"stdout"), nil, t);
   std_error = make_stdio_stream(stderr, string(L"stderr"), nil, t);
+  detect_format_string();
 }
