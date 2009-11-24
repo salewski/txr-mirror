@@ -879,7 +879,7 @@ val vformat(val stream, val fmtstr, va_list vl)
           continue;
         case 'p':
           ptr = va_arg(vl, void *);
-          value = (int) ptr;
+          value = (cnum) ptr;
           strcpy(num_buf, "0x");
           sprintf(num_buf + 2, num_fmt->hex, value);
           goto output_num;

@@ -1015,7 +1015,7 @@ val string_lt(val astr, val bstr)
 
 val chr(wchar_t ch)
 {
-  return (val) ((ch << TAG_SHIFT) | TAG_CHR);
+  return (val) (((cnum) ch << TAG_SHIFT) | TAG_CHR);
 }
 
 val chrp(val chr)
@@ -1027,7 +1027,7 @@ wchar_t c_chr(val chr)
 {
   if (!is_chr(chr))
     type_mismatch(lit("~s is not a character"), chr, nao);
-  return ((wchar_t) chr) >> TAG_SHIFT;
+  return (wchar_t) ((cnum) chr >> TAG_SHIFT);
 }
 
 val chr_str(val str, val index)
