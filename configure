@@ -579,9 +579,9 @@ fi
 
 printf '"%s"\n' "$intptr"
 printf "typedef $intptr int_ptr_t;\n" >> config.h
-intptr_max=$(( (1 << ( sizeof_ptr * 8  - 1 )) - 1 ))
-printf "#define INT_PTR_MAX %d\n" $intptr_max >> config.h
-printf "#define INT_PTR_MIN -%d\n" $intptr_max >> config.h
+intptr_max_expr="((((($intptr) 1 << $((sizeof_ptr * 8 - 2))) - 1) << 1) + 1)"
+printf "#define INT_PTR_MAX %s\n" "$intptr_max_expr" >> config.h
+printf "#define INT_PTR_MIN (-INT_PTR_MAX)\n" >> config.h
 
 #
 # Clean up

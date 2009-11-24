@@ -1,5 +1,12 @@
 2009-11-23  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* configure: Don't rely on higher precision arithmetic from the build
+	machine's shell. POSIX requires shell arithmetic to be only signed
+	long. We can't compute the INT_PTR_MAX constant in the shell, but
+	rather generate a constant C expression to compute it.
+
+2009-11-23  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Reporting of compile errors during configuration for easier
 	configure debugging.
 
