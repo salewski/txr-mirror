@@ -110,7 +110,7 @@ conftest: conftest.c
 	$(CC) $(CFLAGS) -o $@ $^
 
 conftest.o: conftest.c
-	$(CC) -c -o $@ $^
+	$(CC) $(CFLAGS) -c -o $@ $^
 
 conftest.syms: conftest.o
 	$(NM) -t o -P $^ > $@
