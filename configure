@@ -82,7 +82,7 @@ while [ $# -gt 0 ] ; do
 
   if ! printf $var | grep -q -E '^[A-Za-z_][A-Za-z0-9_]*$' ; then
     printf "$0: '$var' isn't a proper configuration variable name\n"
-    exit 1;
+    exit 1
   fi
 
   eval "$var='$val'"
@@ -485,8 +485,10 @@ int main(void)
 }
 !
 
-if ! make conftest > /dev/null 2>&1 || ! [ -x conftest ] ; then
-  printf "failed\n"
+if ! make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+  printf "failed\n\n"
+  printf "Errors from compilation: \n\n"
+  cat conftest.err
   exit 1
 fi
 
@@ -504,7 +506,7 @@ for try_type in int64 __int64 "long long" ; do
 $try_type value;
 !
   rm -f conftest.o
-  if make conftest.o > /dev/null 2>&1 ; then
+  if make conftest.o > conftest.err 2>&1 ; then
     longlong=$try_type
     break
   fi
@@ -533,9 +535,12 @@ char sizeof_longlong_t[sizeof (longlong_t)];
 !
   rm -f conftest.o conftest.syms
 
-  if ! make conftest.syms > /dev/null 2>&1 ; then
-    echo "failed"
-    exit 1;
+  if ! make conftest.syms > conftest.err 2>&1 ; then
+    printf "failed\n\n"
+
+    printf "Errors from compilation: \n\n"
+    cat conftest.err
+    exit 1
   fi
 
   sizeof_ptr=0
@@ -553,7 +558,7 @@ char sizeof_longlong_t[sizeof (longlong_t)];
 
   if [ $sizeof_ptr -eq 0 ] ; then
     printf "failed\n"
-    exit 1;
+    exit 1
   fi
 
   if [ $sizeof_ptr -eq $sizeof_short ] ; then
@@ -568,7 +573,7 @@ char sizeof_longlong_t[sizeof (longlong_t)];
 
   if [ -z "$intptr" ] ; then
     printf "failed\n"
-    exit 1;
+    exit 1
   fi
 fi
 
@@ -581,7 +586,7 @@ printf "#define INT_PTR_MIN -%d\n" $intptr_max >> config.h
 #
 # Clean up
 #
-rm -f conftest conftest.c conftest.o conftest.syms
+rm -f conftest conftest.c conftest.o conftest.err conftest.syms
 
 #
 # Save configuration in config.log
@@ -594,12 +599,16 @@ Configured on $(date) using
 
 !
 #
-# Parting message#
+# Parting message
 #
 cat <<!
 
-Configuration seems to have been successful. The next
-step is one of these two.
+The configuration seems to have been successful. That doesn't mean it's
+correct.  Please check the above output for any problems, and verify that the
+contents of the generated files config.make and config.h are sane for the
+target platform.
+
+The next step is one of these two.
 
 Method 1: if you have permissions to the installation directories:
    make install

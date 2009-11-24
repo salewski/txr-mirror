@@ -1,5 +1,19 @@
 2009-11-23  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Reporting of compile errors during configuration for easier
+	configure debugging.
+
+	* Makefile (conftest): Pass all of the CFLAGS when building
+	conftest. This way bad compiler options are caught
+	right in the basic compiler sanity test.
+
+	* configure: Compiler jobs are redirected to temporary error
+	file conftest.err which is dumped if there is a failure.
+	Parting text is improved: the user should not blindly
+	trust the success of the configuration but check its sanity.
+
+2009-11-23  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* configure: Bugfix in parsing configuration variables
 	which contain the = character.
 
