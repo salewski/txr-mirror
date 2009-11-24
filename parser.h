@@ -33,4 +33,4 @@ extern val spec_file_str;
 int yyparse(void);
 val get_spec(void);
 void yyerrorf(val s, ...);
-void yybadtoken(int tok, const char *context);
+void yybadtoken(int tok, val context);

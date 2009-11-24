@@ -85,7 +85,7 @@ static val parsed_spec;
 spec : clauses                  { parsed_spec = $1; }
      | /* empty */              { parsed_spec = nil; }
      | error                    { parsed_spec = nil;
-                                  yybadtoken(yychar, 0); }
+                                  yybadtoken(yychar, nil); }
      ;
 
 clauses : clause                { $$ = cons($1, nil); }
@@ -114,7 +114,7 @@ clause : all_clause             { $$ = list(num(lineno - 1), $1, nao); }
 all_clause : ALL newl clause_parts      { $$ = cons(all_s, $3); }
            | ALL newl error             { $$ = nil;
                                           yybadtoken(yychar,
-                                                     "all clause"); }
+                                                     lit("all clause")); }
            | ALL newl END newl          { $$ = nil;
                                           yyerror("empty all clause"); }
 
@@ -123,7 +123,7 @@ all_clause : ALL newl clause_parts      { $$ = cons(all_s, $3); }
 some_clause : SOME newl clause_parts    { $$ = cons(some_s, $3); }
             | SOME newl error           { $$ = nil;
                                           yybadtoken(yychar,
-                                                     "some clause"); }
+                                                     lit("some clause")); }
             | SOME newl END newl       { $$ = nil;
                                           yyerror("empty some clause"); }
             ;
@@ -131,7 +131,7 @@ some_clause : SOME newl clause_parts    { $$ = cons(some_s, $3); }
 none_clause : NONE newl clause_parts    { $$ = cons(none_s, $3); }
             | NONE newl error           { $$ = nil;
                                           yybadtoken(yychar,
-                                                     "none clause"); }
+                                                     lit("none clause")); }
             | NONE newl END newl        { $$ = nil;
                                           yyerror("empty none clause"); }
             ;
@@ -139,7 +139,7 @@ none_clause : NONE newl clause_parts    { $$ = cons(none_s, $3); }
 maybe_clause : MAYBE newl clause_parts  { $$ = cons(maybe_s, $3); }
              | MAYBE newl error         { $$ = nil;
                                           yybadtoken(yychar,
-                                                     "maybe clause"); }
+                                                     lit("maybe clause")); }
              | MAYBE newl END newl      { $$ = nil;
                                           yyerror("empty maybe clause"); }
              ;
@@ -147,7 +147,7 @@ maybe_clause : MAYBE newl clause_parts  { $$ = cons(maybe_s, $3); }
 cases_clause : CASES newl clause_parts  { $$ = cons(cases_s, $3); }
              | CASES newl error         { $$ = nil;
                                           yybadtoken(yychar,
-                                                     "cases clause"); }
+                                                     lit("cases clause")); }
              | CASES newl END newl      { $$ = nil;
                                           yyerror("empty cases clause"); }
              ;
@@ -162,7 +162,7 @@ collect_clause : COLLECT newl clauses END newl  { $$ = list(collect_s,
                                             yyerror("empty collect");
                                           else
                                             yybadtoken(yychar,
-                                                       "collect clause"); }
+                                                       lit("collect clause")); }
                ;
 
 clause_parts : clauses additional_parts { $$ = cons($1, $2); }
@@ -194,7 +194,7 @@ elem : TEXT                     { $$ = string_own($1); }
      | COLL elems
        UNTIL elems END          { $$ = list(coll_s, $2, $4, nao); }
      | COLL error               { $$ = nil;
-                                  yybadtoken(yychar, "coll clause"); }
+                                  yybadtoken(yychar, lit("coll clause")); }
      ;
 
 define_clause : DEFINE exprs ')' newl
@@ -204,12 +204,12 @@ define_clause : DEFINE exprs ')' newl
                 clauses_opt
                 END newl        { $$ = list(define_s, nil, $4, nao); }
               | DEFINE error    { $$ = nil;
-                                  yybadtoken(yychar, "list expression"); }
+                                  yybadtoken(yychar, lit("list expression")); }
               | DEFINE exprs ')' newl
-                error           { $$ = nil; yybadtoken(yychar, "define"); }
+                error           { $$ = nil; yybadtoken(yychar, lit("define")); }
               | DEFINE ')' newl
                 error           { $$ = nil;
-                                  yybadtoken(yychar, "define"); }
+                                  yybadtoken(yychar, lit("define")); }
               ;
 
 try_clause : TRY newl
@@ -225,11 +225,11 @@ try_clause : TRY newl
                                       yychar == FINALLY)
                                     yyerror("empty try clause");
                                   else
-                                    yybadtoken(yychar, "try clause"); }
+                                    yybadtoken(yychar, lit("try clause")); }
            | TRY newl
              clauses
              error              { $$ = nil;
-                                  yybadtoken(yychar, "try clause"); }
+                                  yybadtoken(yychar, lit("try clause")); }
            ;
 
 catch_clauses_opt : CATCH ')' newl
@@ -247,13 +247,16 @@ catch_clauses_opt : CATCH ')' newl
                   |                     { $$ = nil; }
                   | CATCH ')' newl
                     error               { $$ = nil;
-                                          yybadtoken(yychar, "try clause"); }
+                                          yybadtoken(yychar,
+                                                     lit("try clause")); }
                   | CATCH exprs ')' newl
                     error               { $$ = nil;
-                                          yybadtoken(yychar, "try clause"); }
+                                          yybadtoken(yychar,
+                                                     lit("try clause")); }
                   | FINALLY newl
                     error               { $$ = nil;
-                                          yybadtoken(yychar, "try clause"); }
+                                          yybadtoken(yychar,
+                                                     lit("try clause")); }
                   ;
 
 
@@ -272,19 +275,19 @@ output_clause : OUTPUT ')' o_elems '\n'
                                   yyerror("invalid combination of old and "
                                           "new syntax in output directive"); }
               | OUTPUT error    { $$ = nil;
-                                  yybadtoken(yychar, "list expression"); }
+                                  yybadtoken(yychar, lit("list expression")); }
               | OUTPUT ')' o_elems '\n'
                 error           { $$ = nil;
-                                  yybadtoken(yychar, "output clause"); }
+                                  yybadtoken(yychar, lit("output clause")); }
               | OUTPUT ')' newl
                 error           { $$ = nil;
-                                  yybadtoken(yychar, "output clause"); }
+                                  yybadtoken(yychar, lit("output clause")); }
               | OUTPUT exprs ')' o_elems '\n'
                 error           { $$ = nil;
-                                  yybadtoken(yychar, "output clause"); }
+                                  yybadtoken(yychar, lit("output clause")); }
               | OUTPUT exprs ')' newl
                 error           { $$ = nil;
-                                  yybadtoken(yychar, "output clause"); }
+                                  yybadtoken(yychar, lit("output clause")); }
               ;
 
 out_clauses : out_clause                { $$ = cons($1, nil); }
@@ -320,7 +323,7 @@ repeat_clause : REPEAT newl
                 END newl                { $$ = repeat_rep_helper(repeat_s, $3, $4); }
               | REPEAT newl
                 error           { $$ = nil;
-                                  yybadtoken(yychar, "repeat clause"); }
+                                  yybadtoken(yychar, lit("repeat clause")); }
               ;
 
 repeat_parts_opt : SINGLE newl
@@ -364,7 +367,8 @@ o_elem : TEXT                   { $$ = string_own($1); }
 
 rep_elem : REP o_elems
            rep_parts_opt END    { $$ = repeat_rep_helper(rep_s, $2, $3); }
-         | REP error            { $$ = nil; yybadtoken(yychar, "rep clause"); }
+         | REP error            { $$ = nil;
+                                  yybadtoken(yychar, lit("rep clause")); }
          ;
 
 rep_parts_opt : SINGLE o_elems_opt2
@@ -411,9 +415,9 @@ var : IDENT                     { $$ = list(var_s, intern(string_own($1), nil),
                                                   "not useable with "
                                                   "fixed width match"); }
     | IDENT error               { $$ = nil;
-                                  yybadtoken(yychar, "variable spec"); }
+                                  yybadtoken(yychar, lit("variable spec")); }
     | var_op error              { $$ = nil;
-                                  yybadtoken(yychar, "variable spec"); }
+                                  yybadtoken(yychar, lit("variable spec")); }
     ;
 
 var_op : '*'                    { $$ = t; }
@@ -422,7 +426,7 @@ var_op : '*'                    { $$ = t; }
 list : '(' exprs ')'            { $$ = $2; }
      | '(' ')'                  { $$ = nil; }
      | '(' error                { $$ = nil;
-                                  yybadtoken(yychar, "list expression"); }
+                                  yybadtoken(yychar, lit("list expression")); }
      ;
 
 exprs : expr                    { $$ = cons($1, nil); }
@@ -444,7 +448,7 @@ expr : IDENT                    { $$ = intern(string_own($1), nil); }
 regex : '/' regexpr '/'         { $$ = $2; }
       | '/' '/'                 { $$ = nil; }
       | '/' error               { $$ = nil;
-                                  yybadtoken(yychar, "regex"); }
+                                  yybadtoken(yychar, lit("regex")); }
       ;
 
 regexpr : regbranch                     { $$ = $1; }
@@ -468,9 +472,11 @@ regterm : '[' regclass ']'      { $$ = cons(set_s, $2); }
         | REGCHAR               { $$ = chr($1); }
         | '(' regexpr ')'       { $$ = cons(compound_s, $2); }
         | '(' error             { $$ = nil;
-                                  yybadtoken(yychar, "regex subexpression"); }
+                                  yybadtoken(yychar,
+                                             lit("regex subexpression")); }
         | '[' error             { $$ = nil;
-                                  yybadtoken(yychar, "regex character class"); }
+                                  yybadtoken(yychar,
+                                            lit("regex character class")); }
         ;
 
 regclass : regclassterm                 { $$ = cons($1, nil); }
@@ -502,7 +508,7 @@ newl : '\n'
 strlit : '"' '"'                { $$ = null_string; }
        | '"' litchars '"'       { $$ = lit_char_helper($2); }
        | '"' error              { $$ = nil;
-                                  yybadtoken(yychar, "string literal"); }
+                                  yybadtoken(yychar, lit("string literal")); }
        ;
 
 chrlit : '\'' '\''              { $$ = nil;
@@ -513,13 +519,14 @@ chrlit : '\'' '\''              { $$ = nil;
                                     yyerror("multiple characters in "
                                             "character literal"); }
        | '\'' error             { $$ = nil;
-                                  yybadtoken(yychar, "character literal"); }
+                                  yybadtoken(yychar,
+                                             lit("character literal")); }
        ;
 
 quasilit : '`' '`'              { $$ = null_string; }
          | '`' quasi_items '`'  { $$ = cons(quasi_s, $2); }
          | '`' error            { $$ = nil;
-                                  yybadtoken(yychar, "string literal"); }
+                                  yybadtoken(yychar, lit("string literal")); }
          ;
 
 quasi_items : quasi_item                { $$ = cons($1, nil); }
