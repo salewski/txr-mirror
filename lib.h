@@ -163,28 +163,28 @@ union obj {
   struct cobj co;
 };
 
-inline cnum tag(val obj) { return ((cnum) obj) & TAG_MASK; }
-inline int is_ptr(val obj) { return obj && tag(obj) == TAG_PTR; }
-inline int is_num(val obj) { return tag(obj) == TAG_NUM; }
-inline int is_chr(val obj) { return tag(obj) == TAG_CHR; }
-inline int is_lit(val obj) { return tag(obj) == TAG_LIT; }
+INLINE cnum tag(val obj) { return ((cnum) obj) & TAG_MASK; }
+INLINE int is_ptr(val obj) { return obj && tag(obj) == TAG_PTR; }
+INLINE int is_num(val obj) { return tag(obj) == TAG_NUM; }
+INLINE int is_chr(val obj) { return tag(obj) == TAG_CHR; }
+INLINE int is_lit(val obj) { return tag(obj) == TAG_LIT; }
 
-inline type_t type(val obj)
+INLINE type_t type(val obj)
 { 
  return tag(obj) ? (type_t) tag(obj) : obj->t.type;
 }
 
-inline val auto_str(const wchar_t *str)
+INLINE val auto_str(const wchar_t *str)
 {
   return (val) ((cnum) (str) | TAG_LIT);
 }
 
-inline val static_str(const wchar_t *str)
+INLINE val static_str(const wchar_t *str)
 {
   return (val) ((cnum) (str) | TAG_LIT);
 }
 
-inline wchar_t *litptr(val obj)
+INLINE wchar_t *litptr(val obj)
 {
  return (wchar_t *) ((cnum) obj & ~TAG_MASK);
 }

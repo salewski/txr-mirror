@@ -29,7 +29,7 @@
 -include config.make
 
 CFLAGS := -I. -I$(top_srcdir) $(LANG_FLAGS) $(DIAG_FLAGS) \
-          $(OPT_FLAGS) $(INLINE_FLAGS) $(DBG_FLAGS) $(PLATFORM_FLAGS)
+          $(OPT_FLAGS) $(DBG_FLAGS) $(PLATFORM_FLAGS)
 CFLAGS := $(filter-out $(REMOVE_FLAGS),$(CFLAGS))
 
 OBJS := txr.o lex.yy.o y.tab.o match.o lib.o regex.o gc.o unwind.o stream.o
@@ -110,8 +110,8 @@ config.make config.h:
 conftest: conftest.c
 	$(CC) $(CFLAGS) -o $@ $^
 
-conftest.o: conftest.c
-	$(CC) $(CFLAGS) -c -o $@ $^
+conftest2: conftest1.c conftest2.c
+	$(CC) $(CFLAGS) -o $@ $^
 
 conftest.syms: conftest.o
 	$(NM) -t o -P $^ > $@
