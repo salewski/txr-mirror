@@ -115,6 +115,8 @@ lang_flags=${lang_flags--ansi -std=c89 -D_POSIX_C_SOURCE=2}
 diag_flags=${diag_flags--Wall}
 debug_flags=${debug_flags--g}
 inline_flags=${inline_flags--Dinline=\"static __inline\"}
+platform_flags=${platform_flags-}
+remove_flags=${remove_flags-}
 lex_dbg_flags=${lex_dbg_flags-}
 txr_dbg_opts=${txr_dbg_opts---gc-debug}
 #
@@ -262,6 +264,17 @@ inline_flags [$inline_flags]
 
   Specifies flag for defining a macro that expands to a suitable
   compiler-specific inline specifier.
+
+platform_flags [$platform_flags]
+
+  Specify additional compiler flags for anything else, such as CPU tuning,
+  target ABI selection, code generation options, et cetera.
+
+remove_flags [$remove_flags]
+
+  This is a negative otpion. Any flags mentioned in this variable
+  will be removed from any of the other compiler flags options above.
+  The flags may contain GNU Make patterns.
 
 lex_dbg_flags [$lex_dbg_flags]
 
@@ -462,6 +475,8 @@ LANG_FLAGS := $lang_flags
 DIAG_FLAGS := $diag_flags
 DBG_FLAGS := $debug_flags
 INLINE_FLAGS := $inline_flags
+PLATFORM_FLAGS := $platform_flags
+REMOVE_FLAGS := $remove_flags
 LEX_DBG_FLAGS := $lex_dbg_flags
 TXR_DBG_OPTS := $txr_dbg_opts
 !

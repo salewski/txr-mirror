@@ -1,5 +1,11 @@
 2009-11-23  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* configure (platform_flags, remove_flags): New config variables.
+
+	* Makefile (CFLAGS): Take into account new flags.
+
+2009-11-23  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Follow up on 64 bit compilation warnings.
 
 	* lib.c (chr, chrp): Do not convert directly between wchar_t and
