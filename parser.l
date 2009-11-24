@@ -85,7 +85,7 @@ void yyerrorf(val fmt, ...)
   errors++;
 }
 
-void yybadtoken(int tok, const char *context)
+void yybadtoken(int tok, val context)
 {
   val problem = nil;
 

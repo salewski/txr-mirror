@@ -1,5 +1,21 @@
 2009-11-24  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Fixed broken yyerrorf. It was still taking char *, and passing
+	that as an object to vformat, resulting in #<garbage: ...>
+	output.
+
+	* parser.h (yybadtoken): Declaration updated.
+
+	* parser.l (yybadtoken): Redefined to take val argument.
+	The tok stays as int; this is closely coupled to yacc,
+	so why bother with num().
+
+	* parser.y (grammar): Fix occurences of yybadtoken to pass
+	proper literal objects using the lit macro, or nil in
+	the one case when there is no context.
+
+2009-11-24  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Renaming global variables that denote symbols, such that they
 	have a _s suffix.
 
