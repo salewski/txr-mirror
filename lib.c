@@ -50,7 +50,6 @@ val packages;
 val system_package, keyword_package, user_package;
 
 val null, t, cons_s, str_s, chr_s, num_s, sym_s, pkg_s, fun_s, vec_s;
-val t, cons_s, str_s, chr_s, num_s, sym_s, pkg_s, fun_s, vec_s;
 val stream_s, hash_s, lcons_s, lstr_s, cobj_s;
 val var_s, regex_s, set_s, cset_s, wild_s, oneplus_s;
 val zeroplus_s, optional_s, compound_s, or_s, quasi_s;
@@ -532,17 +531,17 @@ static val equal_tramp(val env, val left, val right)
 
 unsigned char *chk_malloc(size_t size)
 {
-  unsigned char *ptr = malloc(size);
+  unsigned char *ptr = (unsigned char *) malloc(size);
   if (size && ptr == 0)
-    ptr = oom_realloc(0, size);
+    ptr = (unsigned char *) oom_realloc(0, size);
   return ptr;
 }
 
 unsigned char *chk_realloc(void *old, size_t size)
 {
-  unsigned char *newptr = realloc(old, size);
+  unsigned char *newptr = (unsigned char *) realloc(old, size);
   if (size != 0 && newptr == 0)
-    newptr = oom_realloc(old, size);
+    newptr = (unsigned char *) oom_realloc(old, size);
   return newptr;
 }
 
@@ -581,6 +580,8 @@ val list(val first, ...)
         internal_error("runaway arguments in list function");
       next = va_arg(vl, val);
     } while (next != nao);
+
+    va_end (vl);
 
     while (ptr > array)
       list = cons(*--ptr, list);
@@ -1003,10 +1004,10 @@ val trim_str(val str)
     return null_string;
   } else {
     size_t len = end - start;
-    wchar_t *new = (wchar_t *) chk_malloc((len + 1) * sizeof *new);
-    wmemcpy(new, start, len);
-    new[len] = 0;
-    return string_own(new);
+    wchar_t *buf = (wchar_t *) chk_malloc((len + 1) * sizeof *buf);
+    wmemcpy(buf, start, len);
+    buf[len] = 0;
+    return string_own(buf);
   }
 }
 
@@ -1080,7 +1081,7 @@ val make_sym(val name)
   obj->s.type = SYM;
   obj->s.name = name;
   obj->s.package = nil;
-  obj->s.val = nil;
+  obj->s.value = nil;
   return obj;
 }
 
@@ -1661,11 +1662,11 @@ val *acons_new_l(val *list, val key, val *new_p)
       *new_p = nil;
     return cdr_l(existing);
   } else {
-    val new = cons(key, nil);
-    *list = cons(new, *list);
+    val nc = cons(key, nil);
+    *list = cons(nc, *list);
     if (new_p)
       *new_p = t;
-    return cdr_l(new);
+    return cdr_l(nc);
   }
 }
 

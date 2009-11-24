@@ -622,10 +622,12 @@ val eval_form(val form, val bindings)
   return cons(t, form);
 }
 
+enum fpip_close { fpip_fclose, fpip_pclose, fpip_closedir };
+
 typedef struct fpip {
   FILE *f;
   DIR *d;
-  enum { fpip_fclose, fpip_pclose, fpip_closedir } close;
+  enum fpip_close close;
 } fpip_t;
 
 fpip_t complex_open(val name, val output)

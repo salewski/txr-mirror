@@ -111,7 +111,7 @@ static void more()
 
   while (block < end) {
     block->t.next = free_list;
-    block->t.type = FREE;
+    block->t.type = (type_t) FREE;
     free_list = block++;
   }
 
@@ -123,12 +123,12 @@ static void more()
 
 val make_obj(void)
 {
-  int try;
+  int tries;
 
   if (opt_gc_debug)
     gc();
 
-  for (try = 0; try < 3; try++) {
+  for (tries = 0; tries < 3; tries++) {
     if (free_list) {
       val ret = free_list;
       free_list = free_list->t.next;
@@ -137,7 +137,7 @@ val make_obj(void)
 
     free_tail = &free_list;
 
-    switch (try) {
+    switch (tries) {
     case 0: gc(); break;
     case 1: more(); break;
     }
@@ -204,7 +204,7 @@ tail_call:
   if ((t & FREE) != 0)
     abort();
 
-  obj->t.type |= REACHABLE;
+  obj->t.type = (type_t) (obj->t.type | REACHABLE);
 
   switch (t) {
   case CONS:
@@ -218,7 +218,7 @@ tail_call:
     return;
   case SYM:
     mark_obj(obj->s.name);
-    mark_obj(obj->s.val);
+    mark_obj(obj->s.value);
     mark_obj_tail(obj->s.package);
   case PKG:
     mark_obj(obj->pk.name);
@@ -322,7 +322,7 @@ static void sweep(void)
         abort();
 
       if (block->t.type & REACHABLE) {
-        block->t.type &= ~REACHABLE;
+        block->t.type = (type_t) (block->t.type & ~REACHABLE);
         continue;
       }
 
@@ -335,7 +335,7 @@ static void sweep(void)
         put_char(std_error, chr('\n'));
       }
       finalize(block);
-      block->t.type |= FREE;
+      block->t.type = (type_t) (block->t.type | FREE);
       /* If debugging is turned on, we want to catch instances
          where a reachable object is wrongly freed. This is difficult
          to do if the object is recycled soon after.
@@ -410,7 +410,7 @@ void unmark(void)
          block < end;
          block++)
     {
-      block->t.type &= ~(FREE | REACHABLE);
+      block->t.type = (type_t) (block->t.type & ~(FREE | REACHABLE));
     }
   }
 }

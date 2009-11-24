@@ -60,7 +60,7 @@ static int L0_full(cset_L0_t *L0)
 {
   int i;
 
-  for (i = 0; i < CHAR_SET_SIZE; i++)
+  for (i = 0; i < (int) CHAR_SET_SIZE; i++)
     if ((*L0)[i] != ((bitcell_t) -1))
       return 0;
   return 1;
@@ -130,7 +130,7 @@ void L1_fill_range(cset_L1_t *L1, wchar_t ch0, wchar_t ch1)
       continue;
 
     if (L0 == 0) {
-      static const cset_L0_t blank;
+      static cset_L0_t blank;
       L0 = (*L1)[i1] = (cset_L0_t *) chk_malloc(sizeof *L0);
       memcpy(L0, &blank, sizeof *L0);
     }
@@ -209,7 +209,7 @@ void L2_fill_range(cset_L2_t *L2, wchar_t ch0, wchar_t ch1)
       continue;
 
     if (L1 == 0) {
-      static const cset_L1_t blank;
+      static cset_L1_t blank;
       L1 = (*L2)[i2] = (cset_L1_t *) chk_malloc(sizeof *L1);
       memcpy(L1, &blank, sizeof *L1);
     }
@@ -279,7 +279,7 @@ void L3_fill_range(cset_L3_t *L3, wchar_t ch0, wchar_t ch1)
       continue;
 
     if (L2 == 0) {
-      static const cset_L2_t blank;
+      static cset_L2_t blank;
       L2 = (*L3)[i3] = (cset_L2_t *) chk_malloc(sizeof *L2);
       memcpy(L2, &blank, sizeof *L2);
     }
@@ -320,7 +320,7 @@ void L3_free(cset_L3_t *L3)
 
 char_set_t *char_set_create(chset_type_t type, wchar_t base)
 {
-  static const char_set_t blank;
+  static char_set_t blank;
   char_set_t *cs = (char_set_t *) chk_malloc(sizeof *cs);
   *cs = blank;
   cs->any.type = type;
@@ -351,7 +351,7 @@ void char_set_destroy(char_set_t *set)
 
 void char_set_compl(char_set_t *set)
 {
-  set->any.compl = 1;
+  set->any.comp = 1;
 }
 
 void char_set_add(char_set_t *set, wchar_t ch)
@@ -429,7 +429,7 @@ int char_set_contains(char_set_t *set, wchar_t ch)
     break;
   }
 
-  return set->any.compl ? !result : result;
+  return set->any.comp ? !result : result;
 }
 
 nfa_state_t *nfa_state_accept(void)
@@ -551,7 +551,7 @@ nfa_t nfa_combine(nfa_t pred, nfa_t succ)
   return ret;
 }
 
-nfa_t nfa_compile_set(val args, int compl)
+nfa_t nfa_compile_set(val args, int comp)
 {
   val iter;
   wchar_t min = WCHAR_MAX;
@@ -617,7 +617,7 @@ nfa_t nfa_compile_set(val args, int compl)
       }
     }
 
-    if (compl)
+    if (comp)
       char_set_compl(set);
     return ret;
   }

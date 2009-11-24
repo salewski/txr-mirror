@@ -72,7 +72,7 @@ struct sym {
   type_t type;
   val name;
   val package;
-  val val;
+  val value;
 };
 
 struct package {
@@ -193,7 +193,7 @@ inline wchar_t *litptr(val obj)
 #define lit(strlit) lit_noex(strlit)
 
 extern val keyword_package;
-extern val t, cons_s, str_s, chr_s, num_s, sym_s, pkg_s, fun_s, vec_s;
+extern val null, t, cons_s, str_s, chr_s, num_s, sym_s, pkg_s, fun_s, vec_s;
 extern val stream_s, hash_s, lcons_s, lstr_s, cobj_s;
 extern val var_s, regex_s, set_s, cset_s, wild_s, oneplus_s;
 extern val zeroplus_s, optional_s, compound_s, or_s, quasi_s;

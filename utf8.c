@@ -80,8 +80,8 @@ size_t utf8_from_uc(wchar_t *wdst, const unsigned char *src)
     case utf8_more3:
       if (ch >= 0x80 && ch < 0xc0) {
         wch <<= 6;
-        wch |= (ch & 0x3f);
-        if (--state == utf8_init) {
+        state = (enum utf8_state) (state - 1);
+        if (state == utf8_init) {
           if (wdst)
             *wdst++ = wch;
           nchar++;
@@ -261,7 +261,8 @@ wint_t utf8_decode(utf8_decoder_t *ud, int (*get)(void *ctx), void *ctx)
       if (ch >= 0x80 && ch < 0xc0) {
         ud->wch <<= 6;
         ud->wch |= (ch & 0x3f);
-        if (--ud->state == utf8_init) {
+        ud->state = (enum utf8_state) (ud->state - 1);
+        if (ud->state == utf8_init) {
           ud->back = ud->tail;
           return ud->wch;
         }
