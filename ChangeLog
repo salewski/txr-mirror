@@ -1,5 +1,40 @@
 2009-11-24  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Changes to make the code portable to C++ compilers, which
+	can be taken advantage of for better diagnostics.
+
+	* gc.c (more, mark_obj, sweep, unmark): Obey stricter C++ rules
+	with regard to enumerations. 
+	(make_obj): Avoid using C++ keyword "try".
+
+	* lib.c: Removed duplicate definitions of objects, found by C++.
+	(chk_malloc, chk_realloc): Casts needed when converting from void *.
+	(list): Discovered and fixed lack of va_end.
+	(trim_str, acons_new_l): Avoid use of C++ keyword "new".
+	(make_sym): Follow rename of struct member.
+
+	* lib.h (struct sym): Renamed val member to value.
+	(null): Added missing declaration.
+
+	* match.c (enum fpip_close, struct fpip): Moved and named enum out of
+	struct.
+
+	* regex.c (L0_full): Cast added in signed/unsigned comparison.
+	(L1_fill_range, L2_fill_range, L3_fill_range, char_set_create):
+	Don't mark static blank structures const; then they need initializers
+	in C++.
+	(char_set_compl, char-set_destroy, char_set_contains, nfa_compile_set):
+	Avoid using the C++ keyword "compl".
+
+	* regex.h (struct any_char_set, struct small_char_set, struct
+	displaced_char_set, struct large_char_set, struct xlarge_char_set):
+	Renamed compl member to comp.
+
+	* utf8.c (utf8_from_uc, ut8_decode): Obey stricter C++ rules
+	with regard to enumerations.
+
+2009-11-24  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Fixed broken yyerrorf. It was still taking char *, and passing
 	that as an object to vformat, resulting in #<garbage: ...>
 	output.
