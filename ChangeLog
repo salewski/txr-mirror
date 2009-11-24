@@ -1,5 +1,10 @@
 2009-11-23  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* Makefile (conftest.o): revert change that took CFLAGS from
+	this target.
+
+2009-11-23  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* configure: Don't rely on higher precision arithmetic from the build
 	machine's shell. POSIX requires shell arithmetic to be only signed
 	long. We can't compute the INT_PTR_MAX constant in the shell, but
