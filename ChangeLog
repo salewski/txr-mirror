@@ -1,5 +1,16 @@
 2009-11-23  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Follow up on 64 bit compilation warnings.
+
+	* lib.c (chr, chrp): Do not convert directly between wchar_t and
+	the pointer type; go through cnum intermediate value.
+
+	* stream.c (vformat): Fix bad cast from pointer to int; this was
+	missed in the conversion to cnum because it should have been a
+	cast to long originally.
+
+2009-11-23  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* Makefile (conftest.o): revert change that took CFLAGS from
 	this target.
 
