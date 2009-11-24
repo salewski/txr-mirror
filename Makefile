@@ -107,9 +107,10 @@ config.make:
 #
 
 conftest: conftest.c
-	$(CC) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^
 
 conftest.o: conftest.c
+	$(CC) $(CFLAGS) -o $@ $^
 
 conftest.syms: conftest.o
 	$(NM) -t o -P $^ > $@
