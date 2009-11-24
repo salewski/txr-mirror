@@ -103,18 +103,19 @@ datadir=${datadir-'$(prefix)/share/txr'}
 mandir=${mandir-'$(prefix)/share/man'}
 cross=${cross-}
 compiler_prefix=${compiler_prefix-}
-cc=${cc-'$(cross)$(compiler_prefix)gcc'}
-intptr=
+ccname=${ccname-gcc}
+cc=${cc-'$(cross)$(compiler_prefix)$(ccname)'}
+intptr=${intptr-}
 tool_prefix=${tool_prefix-}
 lex=${lex-'$(cross)$(tool_prefix)flex'}
 lexlib=${lexlib--lfl}
 yacc=${yacc-'$(cross)$(tool_prefix)yacc'}
 nm=${nm-'$(cross)$(tool_prefix)nm'}
 opt_flags=${opt_flags--O2}
-lang_flags=${lang_flags--ansi -std=c89 -D_POSIX_C_SOURCE=2}
+lang_flags=${lang_flags--ansi -D_POSIX_C_SOURCE=2}
 diag_flags=${diag_flags--Wall}
 debug_flags=${debug_flags--g}
-inline_flags=${inline_flags--Dinline=\"static __inline\"}
+inline=${inline-}
 platform_flags=${platform_flags-}
 remove_flags=${remove_flags-}
 lex_dbg_flags=${lex_dbg_flags-}
@@ -206,6 +207,11 @@ compiler_prefix [$compiler_prefix]
   "bin/mips-linux-" then the compiler command, unless otherwise
   specified, will be "/cross/toolchain/bin/mips-linux-gcc".
 
+ccname [$ccname]
+
+  Specifies just the name of the compiler front-end program, without the path.
+  The following variable, cc, specifies the full name.
+
 cc [$cc]
 
   Specifies the name of the toolchain front-end driver command to use for
@@ -217,6 +223,15 @@ intptr [$intptr]
   Specifies the name of the C integer type wide enough such that a pointer
   value can be converted to it. If this is blank, the configure script
   will try to auto detect it.
+
+inline [$inline]
+
+  Specifies the syntax for defining an inline function, in such
+  a way that the function definition can be included into multiple
+  translation units without clashes.
+
+  If blank, an attempt is made to auto-detect this which
+  falls back on "static".
 
 tool_prefix [$tool_prefix]
 
@@ -259,11 +274,6 @@ debug_flags [$debug_flags]
 
   Specifies flags for requesting that debugging information be
   retained in the compile and link.
-
-inline_flags [$inline_flags]
-
-  Specifies flag for defining a macro that expands to a suitable
-  compiler-specific inline specifier.
 
 platform_flags [$platform_flags]
 
@@ -458,6 +468,9 @@ mandir := $mandir
 # cross compiler toolchain root directory
 cross := $cross
 
+# compiler name
+ccname = $ccname
+
 # prefix for compiler command
 compiler_prefix := $compiler_prefix
 
@@ -474,7 +487,6 @@ OPT_FLAGS := $opt_flags
 LANG_FLAGS := $lang_flags
 DIAG_FLAGS := $diag_flags
 DBG_FLAGS := $debug_flags
-INLINE_FLAGS := $inline_flags
 PLATFORM_FLAGS := $platform_flags
 REMOVE_FLAGS := $remove_flags
 LEX_DBG_FLAGS := $lex_dbg_flags
@@ -598,10 +610,46 @@ intptr_max_expr="((((($intptr) 1 << $((sizeof_ptr * 8 - 2))) - 1) << 1) + 1)"
 printf "#define INT_PTR_MAX %s\n" "$intptr_max_expr" >> config.h
 printf "#define INT_PTR_MIN (-INT_PTR_MAX)\n" >> config.h
 
+printf "Checking how to declare inline functions ... "
+
+if [ -z "$inline" ] ; then
+  for inline in \
+    "inline" "static inline" "extern inline" \
+    "__inline__" "static __inline__" "extern __inline__" \
+    "static"
+  do
+    cat > conftest1.c <<!
+$inline int func(void)
+{
+  return 0;
+}
+
+int main(void)
+{
+  return func();
+}
+!
+    cat > conftest2.c <<!
+$inline int func(void)
+{
+  return 0;
+}
+!
+    if ! make conftest2 > conftest.err 2>&1 ; then
+	continue
+    fi
+    break
+  done
+fi
+
+printf '"%s"\n' "$inline"
+printf "#define INLINE $inline\n" >> config.h
+
 #
 # Clean up
 #
 rm -f conftest conftest.c conftest.o conftest.err conftest.syms
+rm -f conftest1.o conftest2.o conftest2
 
 #
 # Save configuration in config.log
