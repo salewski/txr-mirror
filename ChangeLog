@@ -1,3 +1,66 @@
+2009-11-24  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Renaming global variables that denote symbols, such that they
+	have a _s suffix.
+
+	* lib.c (cons_t, str_t, chr_t, num_t, sym_t, pkg_t, fun_t, vec_t,
+	stream_t, hash_t, lcons_t, lstr_t, cobj_t var, regex, set, cset, wild,
+	oneplus zeroplus, optional, compound, or, quasi skip, trailer, block,
+	next, freeform, fail, accept all, some, none, maybe, cases, collect,
+	until, coll define, output, single, frst, lst, empty, repeat, rep
+	flattn, forget, local, mrge, bind, cat, args try, catch, finally,
+	nothrow, throw, defex error, type_error, internal_err, numeric_err,
+	range_err query_error, file_error, process_error): Symbol globals
+	renamed to cons_s, str_s, chr_s, num_s, sym_s, pkg_s, fun_s, vec_s, t,
+	cons_s, str_s, chr_s, num_s, sym_s, pkg_s, fun_s, vec_s, stream_s,
+	hash_s, lcons_s, lstr_s, cobj_s, var_s, regex_s, set_s, cset_s, wild_s,
+	oneplus_s, zeroplus_s, optional_s, compound_s, or_s, quasi_s, skip_s,
+	trailer_s, block_s, next_s, freeform_s, fail_s, accept_s, all_s,
+	some_s, none_s, maybe_s, cases_s, collect_s, until_s, coll_s, define_s,
+	output_s, single_s, first_s, last_s, empty_s, repeat_s, rep_s,
+	flattn_s, forget_s, local_s, merge_s, bind_s, cat_s, args_s, try_s,
+	catch_s, finally_s, nothrow_s, throw_s, defex_s, error_s, type_error_s,
+	internal_error_s, numeric_error_s, range_error_s, query_error_s,
+	file_error_s, process_error_s,
+	(code2type, typeof, make_package, intern, obj_init): Symbols
+	references follow rename.
+
+	* lib.h (cons_t, str_t, chr_t, num_t, sym_t, pkg_t, fun_t, vec_t,
+	stream_t, hash_t, lcons_t, lstr_t, cobj_t var, regex, set, cset, wild,
+	oneplus zeroplus, optional, compound, or, quasi skip, trailer, block,
+	next, freeform, fail, accept all, some, none, maybe, cases, collect,
+	until, coll define, output, single, frst, lst, empty, repeat, rep
+	flattn, forget, local, mrge, bind, cat, args try, catch, finally,
+	nothrow, throw, defex error, type_error, internal_err, numeric_err,
+	range_err query_error, file_error, process_error): Declarations
+	updated.
+
+	* hash.c (make_hash): Symbol references follow rename.
+
+	* match.c (sem_error, file_err, dump_var, match_line, subst_vars,
+	eval_form, complex_stream, extract_vars, do_output_line, do_output,
+	match_files): Likewise.
+
+	* parser.y (grammar, repeat_rep_helper, define_transform): Likewise.
+
+	* regex.c (nfa_compile_set, nf_compile_regex, regex_compile,
+	regexp, regex_nfa): Likewise.
+
+	* stream.c (stdio_maybe_read_error, stdio_maybe_write_error,
+	stdio_close, pipe_close, make_stdio_stream, make_pipe_stream,
+	make_string_input_stream, make_string_byte_input_stream,
+	make_string_output_stream, get_string_from_stream, make_dir_stream,
+	close_stream, get_line, get_char, get_byte, vformat, format,
+	put_string, put_char): Likewise.
+
+	* txr.c (txr_main): Likewise.
+
+	* unwind.c (uw_throw,  uw_errorf, type_mismatch, uw_register_subtype,
+	uw_init): Likewise.
+
+	* unwind.h (internal_error, numeric_assert, range_bug_unless);
+	Likewise.
+
 2009-11-23  Kaz Kylheku  <kkylheku@gmail.com>
 
 	* configure (platform_flags, remove_flags): New config variables.

@@ -565,7 +565,7 @@ nfa_t nfa_compile_set(val args, int compl)
       val from = car(item);
       val to = cdr(item);
 
-      assert (typeof(from) == chr_t && typeof(to) == chr_t);
+      assert (typeof(from) == chr_s && typeof(to) == chr_s);
 
       if (c_chr(from) < min)
         min = c_chr(from);
@@ -576,7 +576,7 @@ nfa_t nfa_compile_set(val args, int compl)
         min = c_chr(to);
       if (c_chr(to) > max)
         max = c_chr(to);
-    } else if (typeof(item) == chr_t) {
+    } else if (typeof(item) == chr_s) {
       if (c_chr(item) < min)
         min = c_chr(item);
       if (c_chr(item) > max)
@@ -608,9 +608,9 @@ nfa_t nfa_compile_set(val args, int compl)
         val from = car(item);
         val to = cdr(item);
 
-        assert (typeof(from) == chr_t && typeof(to) == chr_t);
+        assert (typeof(from) == chr_s && typeof(to) == chr_s);
         char_set_add_range(set, c_chr(from), c_chr(to));
-      } else if (typeof(item) == chr_t) {
+      } else if (typeof(item) == chr_s) {
         char_set_add(set, c_chr(item));
       } else {
         assert(0 && "bad regex set");
@@ -639,11 +639,11 @@ nfa_t nfa_compile_regex(val items)
     val item = first(items), others = rest(items);
     nfa_t nfa;
 
-    if (typeof(item) == chr_t) {
+    if (typeof(item) == chr_s) {
       nfa_state_t *acc = nfa_state_accept();
       nfa_state_t *s = nfa_state_single(acc, c_chr(item));
       nfa = nfa_make(s, acc);
-    } else if (item == wild) {
+    } else if (item == wild_s) {
       nfa_state_t *acc = nfa_state_accept();
       nfa_state_t *s = nfa_state_wild(acc);
       nfa = nfa_make(s, acc);
@@ -651,13 +651,13 @@ nfa_t nfa_compile_regex(val items)
       val sym = first(item);
       val args = rest(item);
 
-      if (sym == set) {
+      if (sym == set_s) {
         nfa = nfa_compile_set(args, 0);
-      } else if (sym == cset) {
+      } else if (sym == cset_s) {
         nfa = nfa_compile_set(args, 1);
-      } else if (sym == compound) {
+      } else if (sym == compound_s) {
         nfa = nfa_compile_regex(args);
-      } else if (sym == zeroplus) {
+      } else if (sym == zeroplus_s) {
         nfa_t nfa_args = nfa_compile_regex(args);
         nfa_state_t *acc = nfa_state_accept();
         /* New start state has empty transitions going through
@@ -668,7 +668,7 @@ nfa_t nfa_compile_regex(val items)
            an empty transition to the new acceptance state. */
         nfa_state_empty_convert(nfa_args.accept, nfa_args.start, acc);
         nfa = nfa_make(s, acc);
-      } else if (sym == oneplus) {
+      } else if (sym == oneplus_s) {
         /* One-plus case differs from zero-plus in that the new start state
            does not have an empty transition to the acceptance state.
            So the inner NFA must be traversed once. */
@@ -677,7 +677,7 @@ nfa_t nfa_compile_regex(val items)
         nfa_state_t *s = nfa_state_empty(nfa_args.start, 0); /* <-- diff */
         nfa_state_empty_convert(nfa_args.accept, nfa_args.start, acc);
         nfa = nfa_make(s, acc);
-      } else if (sym == optional) {
+      } else if (sym == optional_s) {
         /* In this case, we can keep the acceptance state of the inner
            NFA as the acceptance state of the new NFA. We simply add
            a new start state which can short-circuit to it via an empty
@@ -685,7 +685,7 @@ nfa_t nfa_compile_regex(val items)
         nfa_t nfa_args = nfa_compile_regex(args);
         nfa_state_t *s = nfa_state_empty(nfa_args.start, nfa_args.accept);
         nfa = nfa_make(s, nfa_args.accept);
-      } else if (sym == or) {
+      } else if (sym == or_s) {
         /* Simple: make a new start and acceptance state, which form
            the ends of a spindle that goes through two branches. */
         nfa_t nfa_first = nfa_compile_regex(first(args));
@@ -1057,18 +1057,18 @@ val regex_compile(val regex_sexp)
 {
   nfa_t *pnfa = (nfa_t *) chk_malloc(sizeof *pnfa);
   *pnfa = nfa_compile_regex(regex_sexp);
-  return cobj(pnfa, regex, &regex_obj_ops);
+  return cobj(pnfa, regex_s, &regex_obj_ops);
 }
 
 val regexp(val obj)
 {
-  return (is_ptr(obj) && obj->co.type == COBJ && obj->co.cls == regex)
+  return (is_ptr(obj) && obj->co.type == COBJ && obj->co.cls == regex_s)
          ? t : nil;
 }
 
 nfa_t *regex_nfa(val reg)
 {
-  assert (reg->co.type == COBJ && reg->co.cls == regex);
+  assert (reg->co.type == COBJ && reg->co.cls == regex_s);
   return (nfa_t *) reg->co.handle;
 }
 

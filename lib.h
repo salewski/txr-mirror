@@ -193,17 +193,19 @@ inline wchar_t *litptr(val obj)
 #define lit(strlit) lit_noex(strlit)
 
 extern val keyword_package;
-extern val t, cons_t, str_t, chr_t, num_t, sym_t, pkg_t, fun_t, vec_t;
-extern val stream_t, hash_t, lcons_t, lstr_t, cobj_t;
-extern val var, regex, set, cset, wild, oneplus;
-extern val zeroplus, optional, compound, or, quasi;
-extern val skip, trailer, block, next, freeform, fail, accept;
-extern val all, some, none, maybe, cases, collect, until, coll;
-extern val define, output, single, frst, lst, empty, repeat, rep;
-extern val flattn, forget, local, mrge, bind, cat, args;
-extern val try, catch, finally, nothrow, throw, defex;
-extern val error, type_error, internal_err, numeric_err, range_err;
-extern val query_error, file_error, process_error;
+extern val t, cons_s, str_s, chr_s, num_s, sym_s, pkg_s, fun_s, vec_s;
+extern val stream_s, hash_s, lcons_s, lstr_s, cobj_s;
+extern val var_s, regex_s, set_s, cset_s, wild_s, oneplus_s;
+extern val zeroplus_s, optional_s, compound_s, or_s, quasi_s;
+extern val skip_s, trailer_s, block_s, next_s, freeform_s, fail_s, accept_s;
+extern val all_s, some_s, none_s, maybe_s, cases_s, collect_s, until_s, coll_s;
+extern val define_s, output_s, single_s, first_s, last_s, empty_s;
+extern val repeat_s, rep_s, flattn_s, forget_s;
+extern val local_s, merge_s, bind_s, cat_s, args_s;
+extern val try_s, catch_s, finally_s, nothrow_s, throw_s, defex_s;
+extern val error_s, type_error_s, internal_error_s;
+extern val numeric_error_s, range_error_s;
+extern val query_error_s, file_error_s, process_error_s;
 
 extern val zero, one, two, negone, maxint, minint;
 extern val null_string;

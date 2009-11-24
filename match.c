@@ -82,7 +82,7 @@ static void sem_error(val line, val fmt, ...)
   (void) vformat(stream, fmt, vl);
   va_end (vl);
 
-  uw_throw(query_error, get_string_from_stream(stream));
+  uw_throw(query_error_s, get_string_from_stream(stream));
   abort();
 }
 
@@ -97,7 +97,7 @@ static void file_err(val line, val fmt, ...)
   (void) vformat(stream, fmt, vl);
   va_end (vl);
 
-  uw_throw(file_error, get_string_from_stream(stream));
+  uw_throw(file_error_s, get_string_from_stream(stream));
   abort();
 }
 
@@ -131,7 +131,6 @@ void dump_var(val var, char *pfx1, size_t len1,
 {
   if (len1 >= 112 || len2 >= 112)
     internal_error("too much depth in bindings");
-
 
   if (listp(value)) {
     val iter;
@@ -308,7 +307,7 @@ val match_line(val bindings, val specline, val dataline,
       {
         val directive = first(elem);
 
-        if (directive == var) {
+        if (directive == var_s) {
           val sym = second(elem);
           val pat = third(elem);
           val modifier = fourth(elem);
@@ -378,7 +377,7 @@ val match_line(val bindings, val specline, val dataline,
             LOG_MATCH("var delimiting string", find);
             bindings = acons_new(bindings, sym, sub_str(dataline, pos, find));
             pos = plus(find, length_str(pat));
-          } else if (consp(pat) && typeof(first(pat)) == regex) {
+          } else if (consp(pat) && typeof(first(pat)) == regex_s) {
             val find = search_regex(dataline, first(pat), pos, modifier);
             val fpos = car(find);
             val flen = cdr(find);
@@ -389,7 +388,7 @@ val match_line(val bindings, val specline, val dataline,
             LOG_MATCH("var delimiting regex", fpos);
             bindings = acons_new(bindings, sym, sub_str(dataline, pos, fpos));
             pos = plus(fpos, flen);
-          } else if (consp(pat) && first(pat) == var) {
+          } else if (consp(pat) && first(pat) == var_s) {
             /* Unbound var followed by var: the following one must be bound. */
             val second_sym = second(pat);
             val next_pat = third(pat);
@@ -401,7 +400,7 @@ val match_line(val bindings, val specline, val dataline,
             /* Re-generate a new spec with an edited version of
                the element we just processed, and repeat. */
             {
-              val new_elem = list(var, sym, cdr(pair), modifier, nao);
+              val new_elem = list(var_s, sym, cdr(pair), modifier, nao);
 
               if (next_pat)
                  specline = cons(new_elem, cons(next_pat, rest(specline)));
@@ -422,7 +421,7 @@ val match_line(val bindings, val specline, val dataline,
             sem_error(spec_lineno,
                       lit("variable followed by invalid element"), nao);
           }
-        } else if (typeof(directive) == regex) {
+        } else if (typeof(directive) == regex_s) {
           val past = match_regex(dataline, directive, pos);
           if (nullp(past)) {
             LOG_MISMATCH("regex");
@@ -430,7 +429,7 @@ val match_line(val bindings, val specline, val dataline,
           }
           LOG_MATCH("regex", past);
           pos = past;
-        } else if (directive == coll) {
+        } else if (directive == coll_s) {
           val coll_specline = second(elem);
           val until_specline = third(elem);
           val bindings_coll = nil;
@@ -563,7 +562,7 @@ val subst_vars(val spec, val bindings)
     val elem = first(spec);
 
     if (consp(elem)) {
-      if (first(elem) == var) {
+      if (first(elem) == var_s) {
         val sym = second(elem);
         val pat = third(elem);
         val modifier = fourth(elem);
@@ -578,7 +577,7 @@ val subst_vars(val spec, val bindings)
             spec = cons(cdr(pair), rest(spec));
           continue;
         }
-      } else if (first(elem) == quasi) {
+      } else if (first(elem) == quasi_s) {
         val nested = subst_vars(rest(elem), bindings);
         list_collect_append(iter, nested);
         spec = cdr(spec);
@@ -605,7 +604,7 @@ val eval_form(val form, val bindings)
   } else if (bindable(form)) {
     return assoc(bindings, form);
   } else if (consp(form)) {
-    if (car(form) == quasi) {
+    if (car(form) == quasi_s) {
       return cons(t, cat_str(subst_vars(rest(form), bindings), nil));
     } else if (regexp(car(form))) {
       return cons(t, form);
@@ -709,7 +708,7 @@ val complex_stream(fpip_t fp, val name)
   case fpip_pclose:
     return make_pipe_stream(fp.f, name, t, nil);
   case fpip_closedir:
-    uw_throwf(query_error, lit("cannot output to directory: ~a"), name, nao);
+    uw_throwf(query_error_s, lit("cannot output to directory: ~a"), name, nao);
   }
 
   internal_error("bad input source type");
@@ -744,7 +743,7 @@ val extract_vars(val output_spec)
   list_collect_decl (vars, tai);
 
   if (consp(output_spec)) {
-    if (first(output_spec) == var) {
+    if (first(output_spec) == var_s) {
       list_collect (tai, second(output_spec));
     } else {
       for (; output_spec; output_spec = cdr(output_spec))
@@ -778,13 +777,13 @@ void do_output_line(val bindings, val specline,
       {
         val directive = first(elem);
 
-        if (directive == var) {
+        if (directive == var_s) {
           val str = cat_str(subst_vars(cons(elem, nil), bindings), nil);
           if (str == nil)
             sem_error(spec_lineno, lit("bad substitution: ~a"),
                       second(elem), nao);
           put_string(out, str);
-        } else if (directive == rep) {
+        } else if (directive == rep_s) {
           val main_clauses = second(elem);
           val single_clauses = third(elem);
           val first_clauses = fourth(elem);
@@ -850,7 +849,7 @@ void do_output(val bindings, val specs, val out)
     if (consp(first_elem)) {
       val sym = first(first_elem);
 
-      if (sym == repeat) {
+      if (sym == repeat_s) {
         val main_clauses = second(first_elem);
         val single_clauses = third(first_elem);
         val first_clauses = fourth(first_elem);
@@ -912,14 +911,14 @@ val match_files(val spec, val files,
     fpip_t fp = (errno = 0, complex_open(name, nil));
     val first_spec_item = second(first(spec));
 
-    if (consp(first_spec_item) && eq(first(first_spec_item), next)) {
+    if (consp(first_spec_item) && eq(first(first_spec_item), next_s)) {
       debugf(lit("not opening source ~a "
                  "since query starts with next directive"), name, nao);
     } else {
       debugf(lit("opening data source ~a"), name, nao);
 
       if (complex_open_failed(fp)) {
-        if (consp(source_spec) && car(source_spec) == nothrow) {
+        if (consp(source_spec) && car(source_spec) == nothrow_s) {
           debugf(lit("could not open ~a: "
                      "treating as failed match due to nothrow"), name, nao);
           return nil;
@@ -949,7 +948,7 @@ repeat_spec_same_data:
     if (consp(first_spec)) {
       val sym = first(first_spec);
 
-      if (sym == skip) {
+      if (sym == skip_s) {
         val max = first(rest(first_spec));
         cnum cmax = nump(max) ? c_num(max) : 0;
         cnum reps = 0;
@@ -989,7 +988,7 @@ repeat_spec_same_data:
 
         debuglf(spec_linenum, lit("skip failed"), nao);
         return nil;
-      } else if (sym == trailer) {
+      } else if (sym == trailer_s) {
         if (rest(specline))
           sem_error(spec_linenum,
                     lit("unexpected material after trailer directive"), nao);
@@ -1006,7 +1005,7 @@ repeat_spec_same_data:
             return cons(new_bindings, cons(data, num(data_lineno)));
           return nil;
         }
-      } else if (sym == freeform) {
+      } else if (sym == freeform_s) {
         val args = rest(first_spec);
         val vals = mapcar(func_n1(cdr),
                              mapcar(bind2other(func_n2(eval_form),
@@ -1042,7 +1041,7 @@ repeat_spec_same_data:
           break;
 
         goto repeat_spec_same_data;
-      } else if (sym == block) {
+      } else if (sym == block_s) {
         val name = first(rest(first_spec));
         if (rest(specline))
           sem_error(spec_linenum,
@@ -1055,14 +1054,14 @@ repeat_spec_same_data:
           uw_block_end;
           return result;
         }
-      } else if (sym == fail || sym == accept) {
+      } else if (sym == fail_s || sym == accept_s) {
         val target = first(rest(first_spec));
 
         if (rest(specline))
           sem_error(spec_linenum, lit("unexpected material after ~a"), sym, nao);
 
         uw_block_return(target,
-                        if2(sym == accept,
+                        if2(sym == accept_s,
                             cons(bindings,
                                  if3(data, cons(data, num(data_lineno)), t))));
         /* TODO: uw_block_return could just throw this */
@@ -1073,7 +1072,7 @@ repeat_spec_same_data:
           sem_error(spec_linenum, lit("%~a: no anonymous block in scope"),
                     sym, nao);
         return nil;
-      } else if (sym == next) {
+      } else if (sym == next_s) {
         if (rest(first_spec) && rest(specline))
           sem_error(spec_linenum, lit("invalid combination of old "
                                       "and new next syntax"), nao);
@@ -1084,9 +1083,9 @@ repeat_spec_same_data:
         if (rest(first_spec)) {
           val source = rest(first_spec);
 
-          if (eq(first(source), nothrow))
+          if (eq(first(source), nothrow_s))
             push(nil, &source);
-          else if (eq(first(source), args)) {
+          else if (eq(first(source), args_s)) {
             val input_name = string(L"args");
             cons_bind (new_bindings, success,
                        match_files(spec, cons(input_name, files),
@@ -1105,16 +1104,16 @@ repeat_spec_same_data:
               sem_error(spec_linenum, lit("next: unbound variable in form ~a"),
                         first(source), nao);
 
-            if (eq(second(source), nothrow)) {
+            if (eq(second(source), nothrow_s)) {
               if (name) {
-                files = cons(cons(nothrow, name), files);
+                files = cons(cons(nothrow_s, name), files);
               } else {
                 files = rest(files);
                 if (!files) {
                   debuglf(spec_linenum, lit("next: out of arguments"), nao);
                   return nil;
                 }
-                files = cons(cons(nothrow, first(files)), rest(files));
+                files = cons(cons(nothrow_s, first(files)), rest(files));
               }
             } else {
               if (name) {
@@ -1123,7 +1122,7 @@ repeat_spec_same_data:
                 files = rest(files);
                 if (!files)
                   sem_error(spec_linenum, lit("next: out of arguments"), nao);
-                files = cons(cons(nothrow, first(files)), rest(files));
+                files = cons(cons(nothrow_s, first(files)), rest(files));
               }
             }
           }
@@ -1135,7 +1134,7 @@ repeat_spec_same_data:
                       nao);
             continue;
           }
-          files = cons(cons(nothrow, str), files);
+          files = cons(cons(nothrow_s, str), files);
         } else {
           files = rest(files);
           if (!files)
@@ -1154,8 +1153,8 @@ repeat_spec_same_data:
                         if3(data, cons(data, num(data_lineno)), t));
           return nil;
         }
-      } else if (sym == some || sym == all || sym == none || sym == maybe ||
-                 sym == cases)
+      } else if (sym == some_s || sym == all_s || sym == none_s ||
+                 sym == maybe_s || sym == cases_s)
       {
         val specs;
         val all_match = t;
@@ -1185,24 +1184,24 @@ repeat_spec_same_data:
                 max_data = new_data;
               }
             }
-            if (sym == cases)
+            if (sym == cases_s)
               break;
           } else {
             all_match = nil;
           }
         }
 
-        if (sym == all && !all_match) {
+        if (sym == all_s && !all_match) {
           debuglf(spec_linenum, lit("all: some clauses didn't match"), nao);
           return nil;
         }
 
-        if ((sym == some || sym == cases) && !some_match) {
+        if ((sym == some_s || sym == cases_s) && !some_match) {
           debuglf(spec_linenum, lit("some/cases: no clauses matched"), nao);
           return nil;
         }
 
-        if (sym == none && some_match) {
+        if (sym == none_s && some_match) {
           debuglf(spec_linenum, lit("none: some clauses matched"), nao);
           return nil;
         }
@@ -1220,7 +1219,7 @@ repeat_spec_same_data:
           break;
 
         goto repeat_spec_same_data;
-      } else if (sym == collect) {
+      } else if (sym == collect_s) {
         val coll_spec = second(first_spec);
         val until_spec = third(first_spec);
         val bindings_coll = nil;
@@ -1310,7 +1309,7 @@ repeat_spec_same_data:
           break;
 
         goto repeat_spec_same_data;
-      } else if (sym == flattn) {
+      } else if (sym == flattn_s) {
         val iter;
 
         for (iter = rest(first_spec); iter; iter = rest(iter)) {
@@ -1331,14 +1330,14 @@ repeat_spec_same_data:
           break;
 
         goto repeat_spec_same_data;
-      } else if (sym == forget || sym == local) {
+      } else if (sym == forget_s || sym == local_s) {
         bindings = alist_remove(bindings, rest(first_spec));
 
         if ((spec = rest(spec)) == nil)
           break;
 
         goto repeat_spec_same_data;
-      } else if (sym == mrge) {
+      } else if (sym == merge_s) {
         val target = first(rest(first_spec));
         val args = rest(rest(first_spec));
         val merged = nil;
@@ -1370,7 +1369,7 @@ repeat_spec_same_data:
           break;
 
         goto repeat_spec_same_data;
-      } else if (sym == bind) {
+      } else if (sym == bind_s) {
         val args = rest(first_spec);
         val pattern = first(args);
         val form = second(args);
@@ -1389,7 +1388,7 @@ repeat_spec_same_data:
           break;
 
         goto repeat_spec_same_data;
-      } else if (sym == cat) {
+      } else if (sym == cat_s) {
         val iter;
 
         for (iter = rest(first_spec); iter; iter = rest(iter)) {
@@ -1416,7 +1415,7 @@ repeat_spec_same_data:
           break;
 
         goto repeat_spec_same_data;
-      } else if (sym == output) {
+      } else if (sym == output_s) {
         val specs = second(first_spec);
         val old_style_dest = third(first_spec);
         val new_style_dest = fourth(first_spec);
@@ -1427,7 +1426,7 @@ repeat_spec_same_data:
         if (old_style_dest) {
           dest = cat_str(subst_vars(old_style_dest, bindings), nil);
         } else {
-          if (eq(first(new_style_dest), nothrow))
+          if (eq(first(new_style_dest), nothrow_s))
             push(nil, &new_style_dest);
 
           {
@@ -1438,7 +1437,7 @@ repeat_spec_same_data:
               sem_error(spec_linenum,
                         lit("output: unbound variable in form ~a"), form, nao);
 
-            nt = eq(second(new_style_dest), nothrow);
+            nt = eq(second(new_style_dest), nothrow_s);
             dest = or2(cdr(val), string(L"-"));
           }
         }
@@ -1468,7 +1467,7 @@ repeat_spec_same_data:
           break;
 
         goto repeat_spec_same_data;
-      } else if (sym == define) {
+      } else if (sym == define_s) {
         val args = second(first_spec);
         val body = third(first_spec);
         val name = first(args);
@@ -1484,7 +1483,7 @@ repeat_spec_same_data:
           break;
 
         goto repeat_spec_same_data;
-      } else if (sym == try) {
+      } else if (sym == try_s) {
         val catch_syms = second(first_spec);
         val try_clause = third(first_spec);
         val catch_fin = fourth(first_spec);
@@ -1513,7 +1512,7 @@ repeat_spec_same_data:
                                exvals,
                                cons(cons(t, exvals), nil));
 
-                if (first(clause) == catch) {
+                if (first(clause) == catch_s) {
                   if (uw_exception_subtype_p(exsym, type)) {
                     val all_bind = t;
                     val piter, viter;
@@ -1552,7 +1551,7 @@ repeat_spec_same_data:
                     }
                     break;
                   }
-                } else if (car(clause) == finally) {
+                } else if (car(clause) == finally_s) {
                   finally_clause = body;
                 }
               }
@@ -1581,7 +1580,7 @@ repeat_spec_same_data:
             if (!finally_clause) {
               for (iter = catch_fin; iter; iter = cdr(iter)) {
                 val clause = car(iter);
-                if (first(clause) == finally) {
+                if (first(clause) == finally_s) {
                   finally_clause = third(clause);
                   break;
                 }
@@ -1616,7 +1615,7 @@ repeat_spec_same_data:
 
           goto repeat_spec_same_data;
         }
-      } else if (sym == defex) {
+      } else if (sym == defex_s) {
         val types = rest(first_spec);
         if (!all_satisfy(types, func_n1(symbolp), nil))
           sem_error(spec_linenum, lit("defex arguments must all be symbols"),
@@ -1625,7 +1624,7 @@ repeat_spec_same_data:
         if ((spec = rest(spec)) == nil)
           break;
         goto repeat_spec_same_data;
-      } else if (sym == throw) {
+      } else if (sym == throw_s) {
         val type = second(first_spec);
         val args = rest(rest(first_spec));
         if (!symbolp(type))

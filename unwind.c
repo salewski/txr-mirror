@@ -228,8 +228,8 @@ val uw_throw(val sym, val exception)
       format(std_error, s ? lit("~a: ~a\n") : lit("~a: ~s\n"),
              prog_string, exception, nao);
     }
-    if (uw_exception_subtype_p(sym, query_error) ||
-        uw_exception_subtype_p(sym, file_error)) {
+    if (uw_exception_subtype_p(sym, query_error_s) ||
+        uw_exception_subtype_p(sym, file_error_s)) {
       if (!output_produced)
         put_line(std_output, lit("false"));
       exit(EXIT_FAILURE);
@@ -266,7 +266,7 @@ val uw_errorf(val fmt, ...)
   (void) vformat(stream, fmt, vl);
   va_end (vl);
 
-  uw_throw(error, get_string_from_stream(stream));
+  uw_throw(error_s, get_string_from_stream(stream));
   abort();
 }
 
@@ -279,7 +279,7 @@ val type_mismatch(val fmt, ...)
   (void) vformat(stream, fmt, vl);
   va_end (vl);
 
-  uw_throw(type_error, get_string_from_stream(stream));
+  uw_throw(type_error_s, get_string_from_stream(stream));
   abort();
 }
 
@@ -297,21 +297,23 @@ val uw_register_subtype(val sub, val sup)
   if (sub == t) {
     if (sup == t)
       return sup;
-    uw_throwf(type_error, lit("cannot define ~a as an exception subtype of ~a"),
+    uw_throwf(type_error_s,
+              lit("cannot define ~a as an exception subtype of ~a"),
               sub, sup, nao);
   }
 
   if (sup == nil) {
-    uw_throwf(type_error, lit("cannot define ~a as an exception subtype of ~a"),
+    uw_throwf(type_error_s,
+              lit("cannot define ~a as an exception subtype of ~a"),
               sub, sup, nao);
   }
 
   if (uw_exception_subtype_p(sub, sup))
-    uw_throwf(type_error, lit("~a is already an exception subtype of ~a"),
+    uw_throwf(type_error_s, lit("~a is already an exception subtype of ~a"),
               sub, sup, nao);
 
   if (uw_exception_subtype_p(sup, sub))
-    uw_throwf(type_error, lit("~a is already an exception supertype of ~a"),
+    uw_throwf(type_error_s, lit("~a is already an exception supertype of ~a"),
               sub, sup, nao);
 
   /* If sup symbol not registered, then we make it
@@ -343,11 +345,11 @@ void uw_init(void)
 {
   protect(&toplevel_env.ev.func_bindings, &exception_subtypes, (val *) 0);
   exception_subtypes = cons(cons(t, nil), exception_subtypes);
-  uw_register_subtype(type_error, error);
-  uw_register_subtype(internal_err, error);
-  uw_register_subtype(numeric_err, error);
-  uw_register_subtype(range_err, error);
-  uw_register_subtype(query_error, error);
-  uw_register_subtype(file_error, error);
-  uw_register_subtype(process_error, error);
+  uw_register_subtype(type_error_s, error_s);
+  uw_register_subtype(internal_error_s, error_s);
+  uw_register_subtype(numeric_error_s, error_s);
+  uw_register_subtype(range_error_s, error_s);
+  uw_register_subtype(query_error_s, error_s);
+  uw_register_subtype(file_error_s, error_s);
+  uw_register_subtype(process_error_s, error_s);
 }

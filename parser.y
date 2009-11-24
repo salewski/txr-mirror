@@ -111,7 +111,7 @@ clause : all_clause             { $$ = list(num(lineno - 1), $1, nao); }
                                   yyerror("repeat outside of output"); }
        ;
 
-all_clause : ALL newl clause_parts      { $$ = cons(all, $3); }
+all_clause : ALL newl clause_parts      { $$ = cons(all_s, $3); }
            | ALL newl error             { $$ = nil;
                                           yybadtoken(yychar,
                                                      "all clause"); }
@@ -120,7 +120,7 @@ all_clause : ALL newl clause_parts      { $$ = cons(all, $3); }
 
            ;
 
-some_clause : SOME newl clause_parts    { $$ = cons(some, $3); }
+some_clause : SOME newl clause_parts    { $$ = cons(some_s, $3); }
             | SOME newl error           { $$ = nil;
                                           yybadtoken(yychar,
                                                      "some clause"); }
@@ -128,7 +128,7 @@ some_clause : SOME newl clause_parts    { $$ = cons(some, $3); }
                                           yyerror("empty some clause"); }
             ;
 
-none_clause : NONE newl clause_parts    { $$ = cons(none, $3); }
+none_clause : NONE newl clause_parts    { $$ = cons(none_s, $3); }
             | NONE newl error           { $$ = nil;
                                           yybadtoken(yychar,
                                                      "none clause"); }
@@ -136,7 +136,7 @@ none_clause : NONE newl clause_parts    { $$ = cons(none, $3); }
                                           yyerror("empty none clause"); }
             ;
 
-maybe_clause : MAYBE newl clause_parts  { $$ = cons(maybe, $3); }
+maybe_clause : MAYBE newl clause_parts  { $$ = cons(maybe_s, $3); }
              | MAYBE newl error         { $$ = nil;
                                           yybadtoken(yychar,
                                                      "maybe clause"); }
@@ -144,7 +144,7 @@ maybe_clause : MAYBE newl clause_parts  { $$ = cons(maybe, $3); }
                                           yyerror("empty maybe clause"); }
              ;
 
-cases_clause : CASES newl clause_parts  { $$ = cons(cases, $3); }
+cases_clause : CASES newl clause_parts  { $$ = cons(cases_s, $3); }
              | CASES newl error         { $$ = nil;
                                           yybadtoken(yychar,
                                                      "cases clause"); }
@@ -152,9 +152,10 @@ cases_clause : CASES newl clause_parts  { $$ = cons(cases, $3); }
                                           yyerror("empty cases clause"); }
              ;
 
-collect_clause : COLLECT newl clauses END newl  { $$ = list(collect, $3, nao); }
+collect_clause : COLLECT newl clauses END newl  { $$ = list(collect_s,
+                                                            $3, nao); }
                | COLLECT newl clauses
-                 UNTIL newl clauses END newl    { $$ = list(collect, $3,
+                 UNTIL newl clauses END newl    { $$ = list(collect_s, $3,
                                                             $6, nao); }
                | COLLECT newl error     { $$ = nil;
                                           if (yychar == UNTIL || yychar == END)
@@ -189,19 +190,19 @@ elem : TEXT                     { $$ = string_own($1); }
      | var                      { $$ = $1; }
      | list                     { $$ = $1; }
      | regex                    { $$ = cons(regex_compile($1), $1); }
-     | COLL elems END           { $$ = list(coll, $2, nao); }
+     | COLL elems END           { $$ = list(coll_s, $2, nao); }
      | COLL elems
-       UNTIL elems END          { $$ = list(coll, $2, $4, nao); }
+       UNTIL elems END          { $$ = list(coll_s, $2, $4, nao); }
      | COLL error               { $$ = nil;
                                   yybadtoken(yychar, "coll clause"); }
      ;
 
 define_clause : DEFINE exprs ')' newl
                 clauses_opt
-                END newl        { $$ = list(define, $2, $5, nao); }
+                END newl        { $$ = list(define_s, $2, $5, nao); }
               | DEFINE ')' newl
                 clauses_opt
-                END newl        { $$ = list(define, nil, $4, nao); }
+                END newl        { $$ = list(define_s, nil, $4, nao); }
               | DEFINE error    { $$ = nil;
                                   yybadtoken(yychar, "list expression"); }
               | DEFINE exprs ')' newl
@@ -214,7 +215,7 @@ define_clause : DEFINE exprs ')' newl
 try_clause : TRY newl
              clauses
              catch_clauses_opt
-             END newl           { $$ = list(try,
+             END newl           { $$ = list(try_s,
                                             flatten(mapcar(func_n1(second),
                                                            $4)),
                                             $3, $4, nao); }
@@ -233,14 +234,14 @@ try_clause : TRY newl
 
 catch_clauses_opt : CATCH ')' newl
                     clauses_opt
-                    catch_clauses_opt   { $$ = cons(list(catch, cons(t, nil),
+                    catch_clauses_opt   { $$ = cons(list(catch_s, cons(t, nil),
                                                          $4, nao), $5); }
                   | CATCH exprs ')' newl
                     clauses_opt
-                    catch_clauses_opt   { $$ = cons(list(catch, $2, $5, nao),
+                    catch_clauses_opt   { $$ = cons(list(catch_s, $2, $5, nao),
                                                     $6); }
                   | FINALLY newl
-                    clauses_opt         { $$ = cons(list(finally, nil,
+                    clauses_opt         { $$ = cons(list(finally_s, nil,
                                                          $3, nao),
                                                     nil); }
                   |                     { $$ = nil; }
@@ -258,13 +259,13 @@ catch_clauses_opt : CATCH ')' newl
 
 output_clause : OUTPUT ')' o_elems '\n'
                 out_clauses
-                END newl        { $$ = list(output, $5, $3, nao); }
+                END newl        { $$ = list(output_s, $5, $3, nao); }
               | OUTPUT ')' newl
                 out_clauses
-                END newl        { $$ = list(output, $4, nao); }
+                END newl        { $$ = list(output_s, $4, nao); }
               | OUTPUT exprs ')' newl
                 out_clauses
-                END newl        { $$ = list(output, $5, nil, $2, nao); }
+                END newl        { $$ = list(output_s, $5, nil, $2, nao); }
               | OUTPUT exprs ')' o_elems '\n'
                 out_clauses
                 END newl        { $$ = nil;
@@ -316,7 +317,7 @@ out_clause : repeat_clause              { $$ = list(num(lineno - 1), $1, nao); }
 repeat_clause : REPEAT newl
                 out_clauses
                 repeat_parts_opt
-                END newl                { $$ = repeat_rep_helper(repeat, $3, $4); }
+                END newl                { $$ = repeat_rep_helper(repeat_s, $3, $4); }
               | REPEAT newl
                 error           { $$ = nil;
                                   yybadtoken(yychar, "repeat clause"); }
@@ -324,16 +325,16 @@ repeat_clause : REPEAT newl
 
 repeat_parts_opt : SINGLE newl
                    out_clauses_opt
-                   repeat_parts_opt     { $$ = cons(cons(single, $3), $4); }
+                   repeat_parts_opt     { $$ = cons(cons(single_s, $3), $4); }
                  | FIRST newl
                    out_clauses_opt
-                   repeat_parts_opt     { $$ = cons(cons(frst, $3), $4); }
+                   repeat_parts_opt     { $$ = cons(cons(first_s, $3), $4); }
                  | LAST newl
                    out_clauses_opt
-                   repeat_parts_opt     { $$ = cons(cons(lst, $3), $4); }
+                   repeat_parts_opt     { $$ = cons(cons(last_s, $3), $4); }
                  | EMPTY newl
                    out_clauses_opt
-                   repeat_parts_opt     { $$ = cons(cons(empty, $3), $4); }
+                   repeat_parts_opt     { $$ = cons(cons(empty_s, $3), $4); }
                  | /* empty */          { $$ = nil; }
                  ;
 
@@ -362,18 +363,18 @@ o_elem : TEXT                   { $$ = string_own($1); }
        ;
 
 rep_elem : REP o_elems
-           rep_parts_opt END    { $$ = repeat_rep_helper(rep, $2, $3); }
+           rep_parts_opt END    { $$ = repeat_rep_helper(rep_s, $2, $3); }
          | REP error            { $$ = nil; yybadtoken(yychar, "rep clause"); }
          ;
 
 rep_parts_opt : SINGLE o_elems_opt2
-                rep_parts_opt           { $$ = cons(cons(single, $2), $3); }
+                rep_parts_opt           { $$ = cons(cons(single_s, $2), $3); }
               | FIRST o_elems_opt2
-                rep_parts_opt           { $$ = cons(cons(frst, $2), $3); }
+                rep_parts_opt           { $$ = cons(cons(first_s, $2), $3); }
               | LAST o_elems_opt2
-                rep_parts_opt           { $$ = cons(cons(lst, $2), $3); }
+                rep_parts_opt           { $$ = cons(cons(last_s, $2), $3); }
               | EMPTY o_elems_opt2
-                rep_parts_opt           { $$ = cons(cons(empty, $2), $3); }
+                rep_parts_opt           { $$ = cons(cons(empty_s, $2), $3); }
               | /* empty */             { $$ = nil; }
               ;
 
@@ -381,26 +382,26 @@ rep_parts_opt : SINGLE o_elems_opt2
 /* This sucks, but factoring '*' into a nonterminal
  * that generates an empty phrase causes reduce/reduce conflicts.
  */
-var : IDENT                     { $$ = list(var, intern(string_own($1), nil),
+var : IDENT                     { $$ = list(var_s, intern(string_own($1), nil),
                                             nao); }
-    | IDENT elem                { $$ = list(var, intern(string_own($1), nil),
+    | IDENT elem                { $$ = list(var_s, intern(string_own($1), nil),
                                             $2, nao); }
-    | '{' IDENT '}'             { $$ = list(var, intern(string_own($2), nil),
+    | '{' IDENT '}'             { $$ = list(var_s, intern(string_own($2), nil),
                                             nao); }
-    | '{' IDENT '}' elem        { $$ = list(var, intern(string_own($2), nil),
+    | '{' IDENT '}' elem        { $$ = list(var_s, intern(string_own($2), nil),
                                             $4, nao); }
-    | '{' IDENT regex '}'       { $$ = list(var, intern(string_own($2), nil),
+    | '{' IDENT regex '}'       { $$ = list(var_s, intern(string_own($2), nil),
                                             nil, cons(regex_compile($3), $3),
                                             nao); }
-    | '{' IDENT NUMBER '}'      { $$ = list(var, intern(string_own($2), nil),
+    | '{' IDENT NUMBER '}'      { $$ = list(var_s, intern(string_own($2), nil),
                                             nil, num($3), nao); }
-    | var_op IDENT              { $$ = list(var, intern(string_own($2), nil),
+    | var_op IDENT              { $$ = list(var_s, intern(string_own($2), nil),
                                             nil, $1, nao); }
-    | var_op IDENT elem         { $$ = list(var, intern(string_own($2), nil),
+    | var_op IDENT elem         { $$ = list(var_s, intern(string_own($2), nil),
                                             $3, $1, nao); }
-    | var_op '{' IDENT '}'      { $$ = list(var, intern(string_own($3), nil),
+    | var_op '{' IDENT '}'      { $$ = list(var_s, intern(string_own($3), nil),
                                             nil, $1, nao); }
-    | var_op '{' IDENT '}' elem { $$ = list(var, intern(string_own($3), nil),
+    | var_op '{' IDENT '}' elem { $$ = list(var_s, intern(string_own($3), nil),
                                             $5, $1, nao); }
     | var_op '{' IDENT regex '}'        { $$ = nil;
                                           yyerror("longest match "
@@ -447,7 +448,7 @@ regex : '/' regexpr '/'         { $$ = $2; }
       ;
 
 regexpr : regbranch                     { $$ = $1; }
-        | regbranch '|' regbranch       { $$ = list(list(or, $1,
+        | regbranch '|' regbranch       { $$ = list(list(or_s, $1,
                                                          $3, nao), nao); }
         ;
 
@@ -455,17 +456,17 @@ regbranch : regterm             { $$ = cons($1, nil); }
           | regterm regbranch   { $$ = cons($1, $2); }
           ;
 
-regterm : '[' regclass ']'      { $$ = cons(set, $2); }
-        | '[' '^' regclass ']'  { $$ = cons(cset, $3); }
-        | '.'                   { $$ = wild; }
+regterm : '[' regclass ']'      { $$ = cons(set_s, $2); }
+        | '[' '^' regclass ']'  { $$ = cons(cset_s, $3); }
+        | '.'                   { $$ = wild_s; }
         | '^'                   { $$ = chr('^'); }
         | ']'                   { $$ = chr(']'); }
         | '-'                   { $$ = chr('-'); }
-        | regterm '*'           { $$ = list(zeroplus, $1, nao); }
-        | regterm '+'           { $$ = list(oneplus, $1, nao); }
-        | regterm '?'           { $$ = list(optional, $1, nao); }
+        | regterm '*'           { $$ = list(zeroplus_s, $1, nao); }
+        | regterm '+'           { $$ = list(oneplus_s, $1, nao); }
+        | regterm '?'           { $$ = list(optional_s, $1, nao); }
         | REGCHAR               { $$ = chr($1); }
-        | '(' regexpr ')'       { $$ = cons(compound, $2); }
+        | '(' regexpr ')'       { $$ = cons(compound_s, $2); }
         | '(' error             { $$ = nil;
                                   yybadtoken(yychar, "regex subexpression"); }
         | '[' error             { $$ = nil;
@@ -516,7 +517,7 @@ chrlit : '\'' '\''              { $$ = nil;
        ;
 
 quasilit : '`' '`'              { $$ = null_string; }
-         | '`' quasi_items '`'  { $$ = cons(quasi, $2); }
+         | '`' quasi_items '`'  { $$ = cons(quasi_s, $2); }
          | '`' error            { $$ = nil;
                                   yybadtoken(yychar, "string literal"); }
          ;
@@ -551,13 +552,13 @@ val repeat_rep_helper(val sym, val main, val parts)
     val sym = car(part);
     val clauses = cdr(part);
 
-    if (sym == single)
+    if (sym == single_s)
       single_parts = nappend2(single_parts, clauses);
-    else if (sym == frst)
+    else if (sym == first_s)
       first_parts = nappend2(first_parts, clauses);
-    else if (sym == lst)
+    else if (sym == last_s)
       last_parts = nappend2(last_parts, clauses);
-    else if (sym == empty)
+    else if (sym == empty_s)
       empty_parts = nappend2(empty_parts, clauses);
     else
       abort();
@@ -575,7 +576,7 @@ val define_transform(val define_form)
   if (define_form == nil)
     return nil;
 
-  assert (sym == define);
+  assert (sym == define_s);
 
   if (args == nil) {
     yyerror("define requires arguments");
