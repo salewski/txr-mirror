@@ -1,5 +1,11 @@
 2009-11-23  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* Makefile (CFLAGS): Added -I. so current directory is first
+	in the include search path. This is needed for finding
+	generated header files, when building in a separate directory.
+
+2009-11-23  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* lib.c (chk_malloc, chk_realloc): Fix diagnosable conversion,
 	caught by gcc 4.1.1.
 
