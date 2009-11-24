@@ -109,8 +109,6 @@ config.make:
 conftest: conftest.c
 	$(CC) -o $@ $^
 
-conftest.o: CFLAGS := $(LANG_FLAGS) 
-
 conftest.o: conftest.c
 
 conftest.syms: conftest.o

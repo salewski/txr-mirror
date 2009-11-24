@@ -1,5 +1,14 @@
 2009-11-23  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* configure: Bugfix in parsing configuration variables
+	which contain the = character.
+
+	* Makefile (conftest.o): Pass full CFLAGS to configuration test
+	builds. If some flags don't work with the compiler, this should
+	be caught.
+
+2009-11-23  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* Makefile (CFLAGS): Added -I. so current directory is first
 	in the include search path. This is needed for finding
 	generated header files, when building in a separate directory.
