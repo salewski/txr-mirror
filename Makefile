@@ -29,7 +29,8 @@
 -include config.make
 
 CFLAGS := -I. -I$(top_srcdir) $(LANG_FLAGS) $(DIAG_FLAGS) \
-          $(OPT_FLAGS) $(INLINE_FLAGS) $(DBG_FLAGS)
+          $(OPT_FLAGS) $(INLINE_FLAGS) $(DBG_FLAGS) $(PLATFORM_FLAGS)
+CFLAGS := $(filter-out $(REMOVE_FLAGS),$(CFLAGS))
 
 OBJS := txr.o lex.yy.o y.tab.o match.o lib.o regex.o gc.o unwind.o stream.o
 OBJS += hash.o utf8.o
@@ -98,8 +99,8 @@ install: $(PROG)
 	cp txr $(install_prefix)$(bindir)
 	cp $(top_srcdir)/txr.1 $(install_prefix)$(mandir)/man1
 
-config.make:
-	@echo "config.make missing: you didn't run ./configure"
+config.make config.h:
+	@echo "$@ missing: you didn't run ./configure"
 	@exit 1
 
 #
