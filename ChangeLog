@@ -1,5 +1,14 @@
 2009-11-23  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* configure (cross): Print out value of $cross in --help.
+
+	* depend.txr: Add "config.h" to list of headers that are not
+	prefixed with $(top_srcdir).
+
+	* dep.mk: Regenerated.
+
+2009-11-23  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Improving portability. It is no longer assumed that pointers
 	can be converted to a type long and vice versa. The configure
 	script tries to detect the appropriate type to use. Also,

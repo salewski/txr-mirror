@@ -187,7 +187,7 @@ mandir [$mandir]
 
   Specifies the directory where to install man pages.
 
-cross
+cross [$cross]
 
   Specifies the root of a cross-compiling toolchain.
   This becomes the \$(cross) variable in the Makefile, and by default

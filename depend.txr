@@ -5,7 +5,7 @@
 @(collect)
 #include "@hdr"
 @(cases)
-@(bind hdr ("y.tab.h"))
+@(bind hdr ("y.tab.h" "config.h"))
 @(bind header hdr)
 @(or)
 @(bind header `$(top_srcdir)/@hdr`)
