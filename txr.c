@@ -323,7 +323,7 @@ static int txr_main(int argc, char **argv)
     if (wcscmp(c_str(spec_file_str), L"-") != 0) {
       FILE *in = w_fopen(c_str(spec_file_str), L"r");
       if (in == 0)
-        uw_throwf(file_error, lit("unable to open ~a"), spec_file_str, nao);
+        uw_throwf(file_error_s, lit("unable to open ~a"), spec_file_str, nao);
       yyin_stream = make_stdio_stream(in, spec_file_str, t, nil);
     } else {
       spec_file = L"stdin";
@@ -338,7 +338,7 @@ static int txr_main(int argc, char **argv)
       FILE *in = fopen(*argv, "r");
       val name = string_utf8(*argv);
       if (in == 0)
-        uw_throwf(file_error, lit("unable to open ~a"), name, nao);
+        uw_throwf(file_error_s, lit("unable to open ~a"), name, nao);
       yyin_stream = make_stdio_stream(in, name, t, nil);
       spec_file = utf8_dup_from(*argv);
     } else {

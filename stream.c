@@ -93,10 +93,10 @@ static val stdio_maybe_read_error(val stream)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
   if (h->f == 0)
-    uw_throwf(file_error, lit("error reading ~a: file closed"), stream, nao);
+    uw_throwf(file_error_s, lit("error reading ~a: file closed"), stream, nao);
   if (ferror(h->f)) {
     clearerr(h->f);
-    uw_throwf(file_error, lit("error reading ~a: ~a/~s"),
+    uw_throwf(file_error_s, lit("error reading ~a: ~a/~s"),
               stream, num(errno), string_utf8(strerror(errno)), nao);
   }
   return nil;
@@ -106,9 +106,9 @@ static val stdio_maybe_write_error(val stream)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
   if (h->f == 0)
-    uw_throwf(file_error, lit("error reading ~a: file closed"), stream, nao);
+    uw_throwf(file_error_s, lit("error reading ~a: file closed"), stream, nao);
   clearerr(h->f);
-  uw_throwf(file_error, lit("error writing ~a: ~a/~s"),
+  uw_throwf(file_error_s, lit("error writing ~a: ~a/~s"),
             stream, num(errno), string_utf8(strerror(errno)), nao);
 }
 
@@ -217,7 +217,7 @@ static val stdio_close(val stream, val throw_on_error)
     int result = fclose(h->f);
     h->f = 0;
     if (result == EOF && throw_on_error) {
-      uw_throwf(file_error, lit("error closing ~a: ~a/~s"),
+      uw_throwf(file_error_s, lit("error closing ~a: ~a/~s"),
                 stream, num(errno), string_utf8(strerror(errno)), nao);
     }
     return result != EOF ? t : nil;
@@ -249,24 +249,24 @@ static val pipe_close(val stream, val throw_on_error)
 
     if (status != 0 && throw_on_error) {
       if (status < 0) {
-        uw_throwf(process_error,
+        uw_throwf(process_error_s,
                   lit("unable to obtain status of command ~a: ~a/~s"),
                   stream, num(errno), string_utf8(strerror(errno)), nao);
       } else if (WIFEXITED(status)) {
         int exitstatus = WEXITSTATUS(status);
-        uw_throwf(process_error, lit("pipe ~a terminated with status ~a"),
+        uw_throwf(process_error_s, lit("pipe ~a terminated with status ~a"),
                   stream, num(exitstatus), nao);
       } else if (WIFSIGNALED(status)) {
         int termsig = WTERMSIG(status);
-        uw_throwf(process_error, lit("pipe ~a terminated by signal ~a"),
+        uw_throwf(process_error_s, lit("pipe ~a terminated by signal ~a"),
                   stream, num(termsig), nao);
 
       } else if (WIFSTOPPED(status) || WIFCONTINUED(status)) {
-        uw_throwf(process_error,
+        uw_throwf(process_error_s,
                   lit("processes of closed pipe ~a still running"),
                   stream, nao);
       } else {
-        uw_throwf(file_error, lit("strange status in when closing pipe ~a"),
+        uw_throwf(file_error_s, lit("strange status in when closing pipe ~a"),
                   stream, nao);
       }
     }
@@ -486,7 +486,7 @@ static struct strm_ops dir_ops = {
 val make_stdio_stream(FILE *f, val descr, val input, val output)
 {
   struct stdio_handle *h = (struct stdio_handle *) chk_malloc(sizeof *h);
-  val stream = cobj((void *) h, stream_t, &stdio_ops.cobj_ops);
+  val stream = cobj((void *) h, stream_s, &stdio_ops.cobj_ops);
   h->f = f;
   h->descr = descr;
   utf8_decoder_init(&h->ud);
@@ -496,7 +496,7 @@ val make_stdio_stream(FILE *f, val descr, val input, val output)
 val make_pipe_stream(FILE *f, val descr, val input, val output)
 {
   struct stdio_handle *h = (struct stdio_handle *) chk_malloc(sizeof *h);
-  val stream = cobj((void *) h, stream_t, &pipe_ops.cobj_ops);
+  val stream = cobj((void *) h, stream_s, &pipe_ops.cobj_ops);
   h->f = f;
   h->descr = descr;
   utf8_decoder_init(&h->ud);
@@ -505,7 +505,7 @@ val make_pipe_stream(FILE *f, val descr, val input, val output)
 
 val make_string_input_stream(val string)
 {
-  return cobj((void *) cons(string, zero), stream_t, &string_in_ops.cobj_ops);
+  return cobj((void *) cons(string, zero), stream_s, &string_in_ops.cobj_ops);
 }
 
 val make_string_byte_input_stream(val string)
@@ -518,7 +518,7 @@ val make_string_byte_input_stream(val string)
     bi->buf = utf8;
     bi->size = strlen((char *) utf8);
     bi->index = 0;
-    return cobj(bi, stream_t, &byte_in_ops.cobj_ops);
+    return cobj(bi, stream_s, &byte_in_ops.cobj_ops);
   }
 }
 
@@ -529,13 +529,13 @@ val make_string_output_stream(void)
   so->buf = (wchar_t *) chk_malloc(so->size * sizeof so->buf);
   so->fill = 0;
   so->buf[0] = 0;
-  return cobj((void *) so, stream_t, &string_out_ops.cobj_ops);
+  return cobj((void *) so, stream_s, &string_out_ops.cobj_ops);
 }
 
 val get_string_from_stream(val stream)
 {
   type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_t,
+  type_assert (stream->co.cls == stream_s,
                (lit("~a is not a stream"), stream, nao));
 
   if (stream->co.ops == &string_out_ops.cobj_ops) {
@@ -562,13 +562,13 @@ val get_string_from_stream(val stream)
 
 val make_dir_stream(DIR *dir)
 {
-  return cobj((void *) dir, stream_t, &dir_ops.cobj_ops);
+  return cobj((void *) dir, stream_s, &dir_ops.cobj_ops);
 }
 
 val close_stream(val stream, val throw_on_error)
 {
   type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_t, (lit("~a is not a stream"),
+  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
                                             stream, nao));
 
   {
@@ -580,7 +580,7 @@ val close_stream(val stream, val throw_on_error)
 val get_line(val stream)
 {
   type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_t, (lit("~a is not a stream"),
+  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
                                             stream, nao));
 
   {
@@ -592,7 +592,7 @@ val get_line(val stream)
 val get_char(val stream)
 {
   type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_t, (lit("~a is not a stream"),
+  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
                                             stream, nao));
 
   {
@@ -604,7 +604,7 @@ val get_char(val stream)
 val get_byte(val stream)
 {
   type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_t, (lit("~a is not a stream"),
+  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
                                             stream, nao));
 
   {
@@ -710,7 +710,7 @@ val vformat_str(val stream, val str, int width, int left,
 val vformat(val stream, val fmtstr, va_list vl)
 {
   type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_t, (lit("~a is not a stream"),
+  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
                                             stream, nao));
 
   {
@@ -912,7 +912,7 @@ toobig:
 val format(val stream, val str, ...)
 {
   type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_t, (lit("~a is not a stream"),
+  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
                                              stream, nao));
 
   {
@@ -928,7 +928,7 @@ val format(val stream, val str, ...)
 val put_string(val stream, val string)
 {
   type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_t, (lit("~a is not a stream"),
+  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
                                             stream, nao));
 
   {
@@ -940,7 +940,7 @@ val put_string(val stream, val string)
 val put_char(val stream, val ch)
 {
   type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_t, (lit("~a is not a stream"),
+  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
                                             stream, nao));
 
   {

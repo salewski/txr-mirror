@@ -49,17 +49,20 @@ val packages;
 
 val system_package, keyword_package, user_package;
 
-val null, t, cons_t, str_t, chr_t, num_t, sym_t, pkg_t, fun_t, vec_t;
-val stream_t, hash_t, lcons_t, lstr_t, cobj_t;
-val var, regex, set, cset, wild, oneplus;
-val zeroplus, optional, compound, or, quasi;
-val skip, trailer, block, next, freeform, fail, accept;
-val all, some, none, maybe, cases, collect, until, coll;
-val define, output, single, frst, lst, empty, repeat, rep;
-val flattn, forget, local, mrge, bind, cat, args;
-val try, catch, finally, nothrow, throw, defex;
-val error, type_error, internal_err, numeric_err, range_err;
-val query_error, file_error, process_error;
+val null, t, cons_s, str_s, chr_s, num_s, sym_s, pkg_s, fun_s, vec_s;
+val t, cons_s, str_s, chr_s, num_s, sym_s, pkg_s, fun_s, vec_s;
+val stream_s, hash_s, lcons_s, lstr_s, cobj_s;
+val var_s, regex_s, set_s, cset_s, wild_s, oneplus_s;
+val zeroplus_s, optional_s, compound_s, or_s, quasi_s;
+val skip_s, trailer_s, block_s, next_s, freeform_s, fail_s, accept_s;
+val all_s, some_s, none_s, maybe_s, cases_s, collect_s, until_s, coll_s;
+val define_s, output_s, single_s, first_s, last_s, empty_s;
+val repeat_s, rep_s, flattn_s, forget_s;
+val local_s, merge_s, bind_s, cat_s, args_s;
+val try_s, catch_s, finally_s, nothrow_s, throw_s, defex_s;
+val error_s, type_error_s, internal_error_s;
+val numeric_error_s, range_error_s;
+val query_error_s, file_error_s, process_error_s;
 
 val zero, one, two, negone, maxint, minint;
 val null_string;
@@ -90,18 +93,18 @@ static val equal_tramp(val env, val , val );
 static val code2type(int code)
 {
   switch ((type_t) code) {
-  case CONS: return cons_t;
-  case STR: return str_t;
-  case LIT: return str_t;
-  case CHR: return chr_t;
-  case NUM: return num_t;
-  case SYM: return sym_t;
-  case PKG: return pkg_t;
-  case FUN: return fun_t;
-  case VEC: return vec_t;
-  case LCONS: return lcons_t;
-  case LSTR: return lstr_t;
-  case COBJ: return cobj_t;
+  case CONS: return cons_s;
+  case STR: return str_s;
+  case LIT: return str_s;
+  case CHR: return chr_s;
+  case NUM: return num_s;
+  case SYM: return sym_s;
+  case PKG: return pkg_s;
+  case FUN: return fun_s;
+  case VEC: return vec_s;
+  case LCONS: return lcons_s;
+  case LSTR: return lstr_s;
+  case COBJ: return cobj_s;
   }
   return nil;
 }
@@ -110,9 +113,9 @@ val typeof(val obj)
 {
   switch (tag(obj)) {
   case TAG_NUM:
-    return num_t;
+    return num_s;
   case TAG_CHR:
-    return chr_t;
+    return chr_s;
   case TAG_PTR:
     if (obj == nil) {
       return null;
@@ -1084,7 +1087,7 @@ val make_sym(val name)
 val make_package(val name)
 {
   if (find_package(name))
-    uw_throwf(error, lit("make_package: ~a exists already"), name, nao);
+    uw_throwf(error_s, lit("make_package: ~a exists already"), name, nao);
 
   val obj = make_obj();
   obj->pk.type = PKG;
@@ -1109,7 +1112,7 @@ val intern(val str, val package)
   } else if (stringp(package)) {
     package = find_package(str);
     if (!package)
-      uw_throwf(error, lit("make_package: ~a exists already"), str, nao);
+      uw_throwf(error_s, lit("make_package: ~a exists already"), str, nao);
   }
 
   type_check (package, PKG);
@@ -1838,74 +1841,74 @@ static void obj_init(void)
   t->s.package = user_package;
 
   null = intern(lit("null"), user_package);
-  cons_t = intern(lit("cons"), user_package);
-  str_t = intern(lit("str"), user_package);
-  chr_t = intern(lit("chr"), user_package);
-  num_t = intern(lit("num"), user_package);
-  sym_t = intern(lit("sym"), user_package);
-  pkg_t = intern(lit("pkg"), user_package);
-  fun_t = intern(lit("fun"), user_package);
-  vec_t = intern(lit("vec"), user_package);
-  stream_t = intern(lit("stream"), user_package);
-  hash_t = intern(lit("hash"), user_package);
-  lcons_t = intern(lit("lcons"), user_package);
-  lstr_t = intern(lit("lstr"), user_package);
-  cobj_t = intern(lit("cobj"), user_package);
-  var = intern(lit("var"), system_package);
-  regex = intern(lit("regex"), system_package);
-  set = intern(lit("set"), user_package);
-  cset = intern(lit("cset"), user_package);
-  wild = intern(lit("wild"), user_package);
-  oneplus = intern(lit("1+"), user_package);
-  zeroplus = intern(lit("0+"), user_package);
-  optional = intern(lit("?"), user_package);
-  compound = intern(lit("compound"), user_package);
-  or = intern(lit("or"), user_package);
-  quasi = intern(lit("quasi"), system_package);
-  skip = intern(lit("skip"), user_package);
-  trailer = intern(lit("trailer"), user_package);
-  block = intern(lit("block"), user_package);
-  next = intern(lit("next"), user_package);
-  freeform = intern(lit("freeform"), user_package);
-  fail = intern(lit("fail"), user_package);
-  accept = intern(lit("accept"), user_package);
-  all = intern(lit("all"), user_package);
-  some = intern(lit("some"), user_package);
-  none = intern(lit("none"), user_package);
-  maybe = intern(lit("maybe"), user_package);
-  cases = intern(lit("cases"), user_package);
-  collect = intern(lit("collect"), user_package);
-  until = intern(lit("until"), user_package);
-  coll = intern(lit("coll"), user_package);
-  define = intern(lit("define"), user_package);
-  output = intern(lit("output"), user_package);
-  single = intern(lit("single"), user_package);
-  frst = intern(lit("first"), user_package);
-  lst = intern(lit("last"), user_package);
-  empty = intern(lit("empty"), user_package);
-  repeat = intern(lit("repeat"), user_package);
-  rep = intern(lit("rep"), user_package);
-  flattn = intern(lit("flatten"), user_package);
-  forget = intern(lit("forget"), user_package);
-  local = intern(lit("local"), user_package);
-  mrge = intern(lit("merge"), user_package);
-  bind = intern(lit("bind"), user_package);
-  cat = intern(lit("cat"), user_package);
-  args = intern(lit("args"), user_package);
-  try = intern(lit("try"), user_package);
-  catch = intern(lit("catch"), user_package);
-  finally = intern(lit("finally"), user_package);
-  nothrow = intern(lit("nothrow"), user_package);
-  throw = intern(lit("throw"), user_package);
-  defex = intern(lit("defex"), user_package);
-  error = intern(lit("error"), user_package);
-  type_error = intern(lit("type_error"), user_package);
-  internal_err = intern(lit("internal_error"), user_package);
-  numeric_err = intern(lit("numeric_error"), user_package);
-  range_err = intern(lit("range_error"), user_package);
-  query_error = intern(lit("query_error"), user_package);
-  file_error = intern(lit("file_error"), user_package);
-  process_error = intern(lit("process_error"), user_package);
+  cons_s = intern(lit("cons"), user_package);
+  str_s = intern(lit("str"), user_package);
+  chr_s = intern(lit("chr"), user_package);
+  num_s = intern(lit("num"), user_package);
+  sym_s = intern(lit("sym"), user_package);
+  pkg_s = intern(lit("pkg"), user_package);
+  fun_s = intern(lit("fun"), user_package);
+  vec_s = intern(lit("vec"), user_package);
+  stream_s = intern(lit("stream"), user_package);
+  hash_s = intern(lit("hash"), user_package);
+  lcons_s = intern(lit("lcons"), user_package);
+  lstr_s = intern(lit("lstr"), user_package);
+  cobj_s = intern(lit("cobj"), user_package);
+  var_s = intern(lit("var"), system_package);
+  regex_s = intern(lit("regex"), system_package);
+  set_s = intern(lit("set"), user_package);
+  cset_s = intern(lit("cset"), user_package);
+  wild_s = intern(lit("wild"), user_package);
+  oneplus_s = intern(lit("1+"), user_package);
+  zeroplus_s = intern(lit("0+"), user_package);
+  optional_s = intern(lit("?"), user_package);
+  compound_s = intern(lit("compound"), user_package);
+  or_s = intern(lit("or"), user_package);
+  quasi_s = intern(lit("quasi"), system_package);
+  skip_s = intern(lit("skip"), user_package);
+  trailer_s = intern(lit("trailer"), user_package);
+  block_s = intern(lit("block"), user_package);
+  next_s = intern(lit("next"), user_package);
+  freeform_s = intern(lit("freeform"), user_package);
+  fail_s = intern(lit("fail"), user_package);
+  accept_s = intern(lit("accept"), user_package);
+  all_s = intern(lit("all"), user_package);
+  some_s = intern(lit("some"), user_package);
+  none_s = intern(lit("none"), user_package);
+  maybe_s = intern(lit("maybe"), user_package);
+  cases_s = intern(lit("cases"), user_package);
+  collect_s = intern(lit("collect"), user_package);
+  until_s = intern(lit("until"), user_package);
+  coll_s = intern(lit("coll"), user_package);
+  define_s = intern(lit("define"), user_package);
+  output_s = intern(lit("output"), user_package);
+  single_s = intern(lit("single"), user_package);
+  first_s = intern(lit("first"), user_package);
+  last_s = intern(lit("last"), user_package);
+  empty_s = intern(lit("empty"), user_package);
+  repeat_s = intern(lit("repeat"), user_package);
+  rep_s = intern(lit("rep"), user_package);
+  flattn_s = intern(lit("flatten"), user_package);
+  forget_s = intern(lit("forget"), user_package);
+  local_s = intern(lit("local"), user_package);
+  merge_s = intern(lit("merge"), user_package);
+  bind_s = intern(lit("bind"), user_package);
+  cat_s = intern(lit("cat"), user_package);
+  args_s = intern(lit("args"), user_package);
+  try_s = intern(lit("try"), user_package);
+  catch_s = intern(lit("catch"), user_package);
+  finally_s = intern(lit("finally"), user_package);
+  nothrow_s = intern(lit("nothrow"), user_package);
+  throw_s = intern(lit("throw"), user_package);
+  defex_s = intern(lit("defex"), user_package);
+  error_s = intern(lit("error"), user_package);
+  type_error_s = intern(lit("type_error"), user_package);
+  internal_error_s = intern(lit("internal_error"), user_package);
+  numeric_error_s = intern(lit("numeric_error"), user_package);
+  range_error_s = intern(lit("range_error"), user_package);
+  query_error_s = intern(lit("query_error"), user_package);
+  file_error_s = intern(lit("file_error"), user_package);
+  process_error_s = intern(lit("process_error"), user_package);
 
   equal_f = func_f2(nil, equal_tramp);
   identity_f = func_f1(nil, identity_tramp);

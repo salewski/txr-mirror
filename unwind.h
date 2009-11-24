@@ -149,7 +149,7 @@ noreturn val type_mismatch(val, ...);
 #define internal_error(STR)             \
   do {                                  \
     extern obj_t *num(cnum);            \
-    uw_throwf(internal_err,             \
+    uw_throwf(internal_error_s,         \
               lit("~a:~a ~a"),          \
               lit(__FILE__),            \
               num(__LINE__), lit(STR),  \
@@ -167,13 +167,13 @@ noreturn val type_mismatch(val, ...);
 
 #define numeric_assert(EXPR)            \
   if (!(EXPR))                          \
-   uw_throwf(numeric_err,               \
+   uw_throwf(numeric_error_s,           \
              lit("assertion " #EXPR     \
                  "failed"), nao)
 
 #define range_bug_unless(EXPR)          \
   if (!(EXPR))                          \
-   uw_throwf(range_err,                 \
+   uw_throwf(range_error_s,             \
              lit("assertion " #EXPR     \
                  "failed"), nao)
 
