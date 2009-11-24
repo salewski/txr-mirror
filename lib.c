@@ -529,7 +529,7 @@ static val equal_tramp(val env, val left, val right)
 
 unsigned char *chk_malloc(size_t size)
 {
-  char *ptr = malloc(size);
+  unsigned char *ptr = malloc(size);
   if (size && ptr == 0)
     ptr = oom_realloc(0, size);
   return ptr;
@@ -537,7 +537,7 @@ unsigned char *chk_malloc(size_t size)
 
 unsigned char *chk_realloc(void *old, size_t size)
 {
-  char *newptr = realloc(old, size);
+  unsigned char *newptr = realloc(old, size);
   if (size != 0 && newptr == 0)
     newptr = oom_realloc(old, size);
   return newptr;
