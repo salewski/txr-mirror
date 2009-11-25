@@ -52,6 +52,9 @@ typedef struct heap {
 } heap_t;
 
 int opt_gc_debug;
+#ifdef HAVE_VALGRIND
+int opt_vg_debug;
+#endif
 static val *gc_stack_bottom;
 
 static val *prot_stack[PROT_STACK_SIZE];
@@ -122,6 +125,11 @@ static void more()
 
   heap->next = heap_list;
   heap_list = heap;
+
+#ifdef HAVE_VALGRIND
+  if (opt_vg_debug)
+    VALGRIND_MAKE_MEM_NOACCESS(&heap->block, sizeof heap->block);
+#endif
 }
 
 val make_obj(void)
@@ -134,7 +142,15 @@ val make_obj(void)
   for (tries = 0; tries < 3; tries++) {
     if (free_list) {
       val ret = free_list;
+#ifdef HAVE_VALGRIND
+      if (opt_vg_debug)
+        VALGRIND_MAKE_MEM_DEFINED(free_list, sizeof *free_list);
+#endif
       free_list = free_list->t.next;
+#ifdef HAVE_VALGRIND
+      if (opt_vg_debug)
+        VALGRIND_MAKE_MEM_UNDEFINED(ret, sizeof *ret);
+#endif
       return ret;
     }
 
@@ -155,10 +171,8 @@ static void finalize(val obj)
   case CONS:
     return;
   case STR:
-    if (!opt_gc_debug) {
-      free(obj->st.str);
-      obj->st.str = 0;
-    }
+    free(obj->st.str);
+    obj->st.str = 0;
     return;
   case CHR:
   case NUM:
@@ -168,10 +182,8 @@ static void finalize(val obj)
   case FUN:
     return;
   case VEC:
-    if (!opt_gc_debug) {
-      free(obj->v.vec-2);
-      obj->v.vec = 0;
-    }
+    free(obj->v.vec-2);
+    obj->v.vec = 0;
     return;
   case LCONS:
   case LSTR:
@@ -314,7 +326,12 @@ static void mark(void)
 static void sweep(void)
 {
   heap_t *heap;
-  int dbg = opt_gc_debug;
+  int gc_dbg = opt_gc_debug;
+#ifdef HAVE_VALGRIND
+  int vg_dbg = opt_vg_debug;
+#else
+  int vg_dbg = 0;
+#endif
 
   for (heap = heap_list; heap != 0; heap = heap->next) {
     obj_t *block, *end;
@@ -333,7 +350,7 @@ static void sweep(void)
       if (block->t.type & FREE)
         continue;
 
-      if (0 && dbg) {
+      if (0 && gc_dbg) {
         format(std_error, lit("~a: finalizing: "), progname, nao);
         obj_print(block, std_error);
         put_char(std_error, chr('\n'));
@@ -347,9 +364,20 @@ static void sweep(void)
          rather than LIFO, which increases our chances that the
          code which is still using the object will trip on
          the freed object before it is recycled. */
-      if (dbg) {
+      if (gc_dbg || vg_dbg) {
+#ifdef HAVE_VALGRIND
+        if (vg_dbg && free_tail != &free_list)
+          VALGRIND_MAKE_MEM_DEFINED(free_tail, sizeof *free_tail);
+#endif
         *free_tail = block;
         block->t.next = nil;
+#ifdef HAVE_VALGRIND
+        if (vg_dbg) {
+          if (free_tail != &free_list)
+            VALGRIND_MAKE_MEM_NOACCESS(free_tail, sizeof *free_tail);
+          VALGRIND_MAKE_MEM_NOACCESS(block, sizeof *block);
+        }
+#endif
         free_tail = &block->t.next;
       } else {
         block->t.next = free_list;
