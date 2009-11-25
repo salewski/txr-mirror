@@ -235,6 +235,7 @@ val make_hash(val weak_keys, val weak_vals)
 
   h->flags = (hash_flags_t) flags;
   h->modulus = c_num(mod);
+  h->count = 0;
   h->table = table;
 
   return hash;

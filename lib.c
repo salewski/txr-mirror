@@ -761,8 +761,10 @@ val mkstring(val len, val ch)
 
 val mkustring(val len)
 {
-  wchar_t *str = (wchar_t *) chk_malloc((c_num(len) + 1) * sizeof *str);
+  cnum l = c_num(len);
+  wchar_t *str = (wchar_t *) chk_malloc((l + 1) * sizeof *str);
   val s = string_own(str);
+  str[l] = 0;
   s->st.len = len;
   return s;
 }
