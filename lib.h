@@ -170,8 +170,8 @@ INLINE int is_chr(val obj) { return tag(obj) == TAG_CHR; }
 INLINE int is_lit(val obj) { return tag(obj) == TAG_LIT; }
 
 INLINE type_t type(val obj)
-{ 
- return tag(obj) ? (type_t) tag(obj) : obj->t.type;
+{
+  return tag(obj) ? (type_t) tag(obj) : obj->t.type;
 }
 
 INLINE val auto_str(const wchar_t *str)
