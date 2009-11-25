@@ -920,7 +920,7 @@ val match_files(val spec, val files,
       debugf(lit("opening data source ~a"), name, nao);
 
       if (complex_open_failed(fp)) {
-        if (consp(source_spec) && car(source_spec) == nothrow_s) {
+        if (consp(source_spec) && car(source_spec) == nothrow_k) {
           debugf(lit("could not open ~a: "
                      "treating as failed match due to nothrow"), name, nao);
           return nil;
@@ -1085,9 +1085,9 @@ repeat_spec_same_data:
         if (rest(first_spec)) {
           val source = rest(first_spec);
 
-          if (eq(first(source), nothrow_s))
+          if (eq(first(source), nothrow_k))
             push(nil, &source);
-          else if (eq(first(source), args_s)) {
+          else if (eq(first(source), args_k)) {
             val input_name = string(L"args");
             cons_bind (new_bindings, success,
                        match_files(spec, cons(input_name, files),
@@ -1106,16 +1106,16 @@ repeat_spec_same_data:
               sem_error(spec_linenum, lit("next: unbound variable in form ~a"),
                         first(source), nao);
 
-            if (eq(second(source), nothrow_s)) {
+            if (eq(second(source), nothrow_k)) {
               if (name) {
-                files = cons(cons(nothrow_s, name), files);
+                files = cons(cons(nothrow_k, name), files);
               } else {
                 files = rest(files);
                 if (!files) {
                   debuglf(spec_linenum, lit("next: out of arguments"), nao);
                   return nil;
                 }
-                files = cons(cons(nothrow_s, first(files)), rest(files));
+                files = cons(cons(nothrow_k, first(files)), rest(files));
               }
             } else {
               if (name) {
@@ -1124,7 +1124,7 @@ repeat_spec_same_data:
                 files = rest(files);
                 if (!files)
                   sem_error(spec_linenum, lit("next: out of arguments"), nao);
-                files = cons(cons(nothrow_s, first(files)), rest(files));
+                files = cons(cons(nothrow_k, first(files)), rest(files));
               }
             }
           }
@@ -1136,7 +1136,7 @@ repeat_spec_same_data:
                       nao);
             continue;
           }
-          files = cons(cons(nothrow_s, str), files);
+          files = cons(cons(nothrow_k, str), files);
         } else {
           files = rest(files);
           if (!files)
@@ -1311,7 +1311,7 @@ repeat_spec_same_data:
           break;
 
         goto repeat_spec_same_data;
-      } else if (sym == flattn_s) {
+      } else if (sym == flatten_s) {
         val iter;
 
         for (iter = rest(first_spec); iter; iter = rest(iter)) {
@@ -1428,7 +1428,7 @@ repeat_spec_same_data:
         if (old_style_dest) {
           dest = cat_str(subst_vars(old_style_dest, bindings), nil);
         } else {
-          if (eq(first(new_style_dest), nothrow_s))
+          if (eq(first(new_style_dest), nothrow_k))
             push(nil, &new_style_dest);
 
           {
@@ -1439,7 +1439,7 @@ repeat_spec_same_data:
               sem_error(spec_linenum,
                         lit("output: unbound variable in form ~a"), form, nao);
 
-            nt = eq(second(new_style_dest), nothrow_s);
+            nt = eq(second(new_style_dest), nothrow_k);
             dest = or2(cdr(val), string(L"-"));
           }
         }

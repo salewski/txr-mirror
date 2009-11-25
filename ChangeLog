@@ -1,5 +1,21 @@
 2009-11-24  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Switching to keyword symbols for :args and :nothrow.
+
+	* lib.c (args_s, nothrow_s): Renamed to args_k and nothrow_k.
+	(flattn_s): Renamed to flatten_s.
+	(obj_init): args_k and nothrow_k interned in keyword package.
+
+	* lib.h (args_s, nothrow_s, flattn_s): Declarations updated.
+
+	* match.c (match_files): Follow name changes.
+
+	* tests/004/query1.txr: Changed nothrow to :nothrow.
+
+	* txr.1: Documentation updated.
+
+2009-11-24  Kaz Kylheku  <kkylheku@gmail.com>
+
 	/Now/ this can be released as 025.
 
 	utf8.c (utf8_from_uc): Fix bug introduced several commits ago (porting
