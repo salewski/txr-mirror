@@ -30,6 +30,8 @@
 #include <assert.h>
 #include <limits.h>
 #include <dirent.h>
+#include <stddef.h>
+#include <wchar.h>
 #include "config.h"
 #include "lib.h"
 #include "regex.h"
