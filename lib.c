@@ -56,12 +56,14 @@ val zeroplus_s, optional_s, compound_s, or_s, quasi_s;
 val skip_s, trailer_s, block_s, next_s, freeform_s, fail_s, accept_s;
 val all_s, some_s, none_s, maybe_s, cases_s, collect_s, until_s, coll_s;
 val define_s, output_s, single_s, first_s, last_s, empty_s;
-val repeat_s, rep_s, flattn_s, forget_s;
-val local_s, merge_s, bind_s, cat_s, args_s;
-val try_s, catch_s, finally_s, nothrow_s, throw_s, defex_s;
+val repeat_s, rep_s, flatten_s, forget_s;
+val local_s, merge_s, bind_s, cat_s;
+val try_s, catch_s, finally_s, throw_s, defex_s;
 val error_s, type_error_s, internal_error_s;
 val numeric_error_s, range_error_s;
 val query_error_s, file_error_s, process_error_s;
+
+val nothrow_k, args_k;
 
 val zero, one, two, negone, maxint, minint;
 val null_string;
@@ -1889,17 +1891,15 @@ static void obj_init(void)
   empty_s = intern(lit("empty"), user_package);
   repeat_s = intern(lit("repeat"), user_package);
   rep_s = intern(lit("rep"), user_package);
-  flattn_s = intern(lit("flatten"), user_package);
+  flatten_s = intern(lit("flatten"), user_package);
   forget_s = intern(lit("forget"), user_package);
   local_s = intern(lit("local"), user_package);
   merge_s = intern(lit("merge"), user_package);
   bind_s = intern(lit("bind"), user_package);
   cat_s = intern(lit("cat"), user_package);
-  args_s = intern(lit("args"), user_package);
   try_s = intern(lit("try"), user_package);
   catch_s = intern(lit("catch"), user_package);
   finally_s = intern(lit("finally"), user_package);
-  nothrow_s = intern(lit("nothrow"), user_package);
   throw_s = intern(lit("throw"), user_package);
   defex_s = intern(lit("defex"), user_package);
   error_s = intern(lit("error"), user_package);
@@ -1910,6 +1910,9 @@ static void obj_init(void)
   query_error_s = intern(lit("query_error"), user_package);
   file_error_s = intern(lit("file_error"), user_package);
   process_error_s = intern(lit("process_error"), user_package);
+
+  args_k = intern(lit("args"), keyword_package);
+  nothrow_k = intern(lit("nothrow"), keyword_package);
 
   equal_f = func_f2(nil, equal_tramp);
   identity_f = func_f1(nil, identity_tramp);

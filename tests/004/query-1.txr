@@ -1,5 +1,5 @@
 #!./txr
-@(next args)
+@(next :args)
 @#
 @# Define option_error exception, subtyped from error
 @#

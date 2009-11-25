@@ -897,8 +897,8 @@ with, or without arguments:
 
   @(next)
   @(next SOURCE)
-  @(next SOURCE nothrow)
-  @(next args)
+  @(next SOURCE :nothrow)
+  @(next :args)
 
 The lone @(next) without arguments switches to the next file in the
 argument list which was passed to the
@@ -919,16 +919,16 @@ If the input source cannot be opened for whatever reason,
 .B txr
 throws an exception (see EXCEPTIONS below). An unhandled exception will
 terminate the program.  Often, such a drastic measure is inconvenient;
-if @(next) is invoked with the nothrow keyword, then if the input
+if @(next) is invoked with the :nothrow keyword, then if the input
 source cannot be opened, the situation is treated as a simple
 match failure.
 
-The variant @(next args) means that the remaining command line arguments are to
+The variant @(next :args) means that the remaining command line arguments are to
 be treated as a data source. For this purpose, each argument is considered to
 be a line of text. If an argument is currently being processed as an input
 source, that argument is included. Note that if the first entry in the argument
 list does not name an input source, then the query should begin with
-@(next args) or some other form of next directive, to prevent an attempt to
+@(next :args) or some other form of next directive, to prevent an attempt to
 open the input source named by that argument. If the very first directive of a query is any variant of the next directive, then
 .B txr
 avoids opening the first input source, but it does open the input source for
@@ -941,7 +941,7 @@ example:
   @(next)/path/to/@foo.txt
 
 The trailing material specifies gives the input source.
-The nothrow behavior is implicit in this form. The syntax will
+The :nothrow behavior is implicit in this form. The syntax will
 disappear in some future version of
 .B txr
 .
@@ -2104,7 +2104,7 @@ usual printing of the variable bindings or the word false.
 
 The syntax of the @(output) directive is:
 
-  @(output [ DESTINATION ] [ nothrow ])
+  @(output [ DESTINATION ] [ :nothrow ])
   .
   . one or more output directives or lines
   .
@@ -2127,7 +2127,7 @@ In the second obsolescent form, the material to the right of @(output)
 is query text which may contain variables.
 
 The new syntax throws an exception if the output destination
-cannot be opened, unless the nothrow keyword is present, in which
+cannot be opened, unless the :nothrow keyword is present, in which
 case the situation is treated as a match failure.  The old syntax throws an
 exception.
 
