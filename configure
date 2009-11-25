@@ -686,8 +686,8 @@ fi
 #
 # Clean up
 #
-rm -f conftest conftest.c conftest.o conftest.err conftest.syms
-rm -f conftest1.o conftest2.o conftest2
+rm -f conftest conftest.[co] conftest.{err,syms}
+rm -f conftest2 conftest[12].[oc]
 
 #
 # Save configuration in config.log
