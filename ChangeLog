@@ -1,5 +1,59 @@
 2009-11-24  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Version 025
+
+	External changes:
+
+	Flattening an empty list produces an empty list, not (()),
+	which is a list containing an empty list.
+
+	Tightened up semantics of bind, merge and other forms.
+	Fixed false positives in binding.
+
+	More bugfixes in the parser leading to garbage error messages.
+	(Still no regression test cases for error cases, oops).
+
+	Fixed crash in regexp function.
+
+	Symbol packages added. Keyword symbols (symbols in keyword package)
+	introduced.
+
+	Clarified semantics that t, nil and keywords evaluate to themselves.
+
+	Fixed bugs in the system for building in a separate directory.
+
+	Configuration script now tests the compiler for sanity, and runs
+	compiler-based tests to detects which integer type to use for casting
+	an obj_t * value to a number, and what specifiers to use for
+	inline functions.
+
+	Internal changes:
+	
+	Macros replaced with inline functions.
+
+	Uses of obj_t * replaced with val typedef everywhere.
+
+	Exceptions occuring during early initialization no longer
+	lead to an infinite recursion due to streams not working.
+
+	The long type is no longer used, but a configured typedef.
+
+	Configure script now spits out a "config.h" header that is
+	widely included.
+
+	Symbol globals renamed to _s naming scheme.
+
+	Code made portable to C++. A new configure flag --ccname make it easier
+	to switch compilers.
+
+	* txr.c (version): Bumped to 025.
+
+	* txr.1: Bumped version to 025.
+
+	* configure: Bumped txr_ver to 025.
+
+2009-11-24  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Auto-detect what specifiers to use for inline functions.
 	Allow compiler command to be set independently of full path
 	for easier compiler switching.
