@@ -120,6 +120,8 @@ platform_flags=${platform_flags-}
 remove_flags=${remove_flags-}
 lex_dbg_flags=${lex_dbg_flags-}
 txr_dbg_opts=${txr_dbg_opts---gc-debug}
+valgrind=${valgrind-}
+
 #
 # If --help was given (or --help=<nonempty> or help=<nonempty>) then
 # print help and exit. The termination status is failed, to indicate
@@ -295,6 +297,13 @@ txr_dbg_opts [$txr_dbg_opts]
 
   Specifies debug flags to pass to the txr program during the execution
   of "make tests".
+
+valgrind [$valgrind]
+
+  Use --valgrind to to build txr with valgrind integration.
+  Valgrind integration means that when the program is running under valgrind,
+  it advises valgrind about stack memory locations accessed by the garbage
+  collector, to suppress diagnostics about uninitialized accesses.
 !
   exit 1
 fi
@@ -635,15 +644,44 @@ $inline int func(void)
   return 0;
 }
 !
-    if ! make conftest2 > conftest.err 2>&1 ; then
-	continue
-    fi
-    break
-  done
+	if ! make conftest2 > conftest.err 2>&1 ; then
+	  continue
+	fi
+	break
+    done
+  fi
+
+  printf '"%s"\n' "$inline"
+  printf "#define INLINE $inline\n" >> config.h
+
+  if [ -n "$valgrind" ] ; then
+    printf "Checking valgrind API availability ... "
+
+    cat > conftest.c <<!
+  #include <valgrind/memcheck.h>
+
+  #ifdef VALGRIND_DO_CLIENT_REQUEST
+
+  int main(void)
+  {
+    return 0;
+  }
+
+  #else
+  syntax error
+  #endif
+!
+  if ! make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+    printf "failed\n\n"
+    printf "Errors from compilation: \n\n"
+    cat conftest.err
+    exit 1
+  fi
+
+  printf "okay\n"
+  printf "#define HAVE_VALGRIND\n" >> config.h
 fi
 
-printf '"%s"\n' "$inline"
-printf "#define INLINE $inline\n" >> config.h
 
 #
 # Clean up
