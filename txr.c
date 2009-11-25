@@ -270,6 +270,17 @@ static int txr_main(int argc, char **argv)
       opt_gc_debug = 1;
       argv++, argc--;
       continue;
+    } else if (!strcmp(*argv, "--vg-debug")) {
+#ifdef HAVE_VALGRIND
+      opt_vg_debug = 1;
+      argv++, argc--;
+      continue;
+#else
+      format(std_error,
+             lit("~a: option ~a requires Valgrind support compiled in\n"),
+             prog_string, string_utf8(*argv), nao);
+      return EXIT_FAILURE;
+#endif
     }
 
     {

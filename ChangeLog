@@ -1,5 +1,30 @@
 2009-11-25  Kaz Kylheku  <kkylheku@gmail.com>
 
+	More Valgrind support. New option --vg-debug which turns on
+	Valgrind protection of free blocks. This works independently
+	of --gc-debug.
+
+	* gc.c (opt_vg_debug): New conditionally defined global variable.
+	(more): Mark entire heap of free blocks inaccessible, if
+	vg debugging is enabled.
+	(make_obj): If vg debugging enabled, mark returned block as accessible,
+	but undefined, and take care to grant self temporary access while
+	manipulating the free list.
+	(finalize): Removed old debugging logic of not freeing strings
+	and vectors during gc debug. If the null pointers are ever a problem
+	during debugging, they can be checked inside obj_print, and
+	turned into #<garbage ...> notation.
+	(sweep): Switch to FIFO free block recycling if vg debugging is
+	enabled, just like when gc debugging is enabled.
+	Mark freed blocks as inaccessible, careful to grant self
+	temporary access while manipulating the free list.
+
+	* txr.c (txr_main): Parse the --vg-debug option.
+
+	* txr.h (opt_vg_debug): Conditionally declared.
+
+2009-11-25  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Fix a build breakage that may happen on some platforms.
 	The parser.y file includes "utf8.h", which uses the the type wint_t.
 	It also includes "lib.h" which uses "wchar_t". But it fails

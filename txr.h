@@ -28,6 +28,9 @@ extern int opt_loglevel;
 extern int opt_nobindings;
 extern int opt_arraydims;
 extern int opt_gc_debug;
+#ifdef HAVE_VALGRIND
+extern int opt_vg_debug;
+#endif
 extern const wchar_t *version;
 extern const wchar_t *progname;
 extern int output_produced;
