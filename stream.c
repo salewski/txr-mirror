@@ -628,7 +628,7 @@ static struct fmt fmt_tab[] = {
   { sizeof(cnum), "%lld",  "%llo",  "%llx",  "%llX"  },
   { sizeof(cnum), "%Ld",   "%Lo",   "%Lx",   "%llX"  },
   { sizeof(cnum), "%qd",   "%qo",   "%qx",   "%qX",  },
-  { sizeof(cnum), "%I64d", "%I64o", "%I64x", "%I64X" }, 
+  { sizeof(cnum), "%I64d", "%I64o", "%I64x", "%I64X" },
   { 0,            0,       0,       0,       0       }
 };
 
