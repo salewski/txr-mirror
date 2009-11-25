@@ -1,5 +1,17 @@
 2009-11-25  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Fix a build breakage that may happen on some platforms.
+	The parser.y file includes "utf8.h", which uses the the type wint_t.
+	It also includes "lib.h" which uses "wchar_t". But it fails
+	to include any headers which define these types.
+	The generated y.tab.c picks up wchar_t by the Bison-inserted
+	inclusion of <stdlib.h>, so that's how we got that. But wint_t does not
+	come from any of the headers---if they are standard-conforming.
+
+	* parser.y: Add inclusion of <stddef.h> and <wchar.h>.
+
+2009-11-25  Kaz Kylheku  <kkylheku@gmail.com>
+
 	More valgrind integration. Vector objects keep displaced pointers
 	to vector data; they point to element 0 which is actually the third
 	element of the vector. If an object is only referenced by interior
