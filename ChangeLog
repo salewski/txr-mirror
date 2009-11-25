@@ -1,5 +1,12 @@
 2009-11-24  Kaz Kylheku  <kkylheku@gmail.com>
 
+	/Now/ this can be released as 025.
+
+	utf8.c (utf8_from_uc): Fix bug introduced several commits ago (porting
+	to C++). Caught by regression test suite. Found using git bisect.
+
+2009-11-24  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Version 025
 
 	External changes:

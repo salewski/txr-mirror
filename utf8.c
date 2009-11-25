@@ -80,6 +80,7 @@ size_t utf8_from_uc(wchar_t *wdst, const unsigned char *src)
     case utf8_more3:
       if (ch >= 0x80 && ch < 0xc0) {
         wch <<= 6;
+        wch |= (ch & 0x3f);
         state = (enum utf8_state) (state - 1);
         if (state == utf8_init) {
           if (wdst)
