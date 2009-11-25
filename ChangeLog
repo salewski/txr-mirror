@@ -1,3 +1,21 @@
+2009-11-25  Kaz Kylheku  <kkylheku@gmail.com>
+
+	First stab at Valgrind integration. First goal: eliminate false
+	positives when gc is accessing uninitialized parts of the stack.
+
+	* configure (valgrind): New variable. Defaults to false (do not
+	build valgrind support). New check for whether the valgrind API
+	is actually avilable if --valgrind is selected.
+	(HAVE_VALGRIND): Conditionally added to config.h.
+
+	* gc.c: Conditionally include valgrind memcheck.h header.
+	(mark_mem_region): After pulling out a value from the stack,
+	mark that copy as defined memory using VALGRIND_MAKE_MEM_DEFINED.
+	(mark): Removed check for a registered root variable pointer
+	being null; this cannot happen, unless someone registers a
+	null pointer, or the stack is trashed. The comment about a
+	possible null was misleading.
+
 2009-11-24  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Fix uninitialized memory locations.

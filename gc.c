@@ -32,6 +32,9 @@
 #include <dirent.h>
 #include <wchar.h>
 #include "config.h"
+#ifdef HAVE_VALGRIND
+#include <valgrind/memcheck.h>
+#endif
 #include "lib.h"
 #include "stream.h"
 #include "hash.h"
@@ -281,6 +284,9 @@ static void mark_mem_region(val *low, val *high)
 
   while (low < high) {
     val maybe_obj = *low;
+#ifdef HAVE_VALGRIND
+    VALGRIND_MAKE_MEM_DEFINED(&maybe_obj, sizeof maybe_obj);
+#endif
     if (in_heap(maybe_obj)) {
       type_t t = maybe_obj->t.type;
       if ((t & FREE) == 0)
@@ -299,10 +305,8 @@ static void mark(void)
    * First, scan the officially registered locations.
    */
 
-  for (rootloc = prot_stack; rootloc != top; rootloc++) {
-    if (*rootloc) /* stack may have nulls */
-      mark_obj(**rootloc);
-  }
+  for (rootloc = prot_stack; rootloc != top; rootloc++)
+    mark_obj(**rootloc);
 
   mark_mem_region(&gc_stack_top, gc_stack_bottom);
 }
