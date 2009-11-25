@@ -1,5 +1,17 @@
 2009-11-24  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Fix uninitialized memory locations.
+
+	* hash.c (make_hash): Uninitialized h->count member.
+
+	* lib.c (mkustring): Preallocated string buffer to have its
+	null terminator byte initialized, because the caller
+	does not do so (e.g. see lit_har_helper in parser.y).
+	The calling module is responsible for initializing all API-accessible
+	parts of the string, but the null belongs to the string implementation.
+
+2009-11-24  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Switching to keyword symbols for :args and :nothrow.
 
 	* lib.c (args_s, nothrow_s): Renamed to args_k and nothrow_k.
