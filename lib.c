@@ -1378,6 +1378,9 @@ val vector(val alloc)
   val *v = (val *) chk_malloc(alloc_plus * sizeof *v);
   vec->v.type = VEC;
   vec->v.vec = v + 2;
+#ifdef HAVE_VALGRIND
+  vec->v.vec_true_start = v;
+#endif
   v[0] = alloc;
   v[1] = zero;
   return vec;
@@ -1406,6 +1409,9 @@ val vec_set_fill(val vec, val fill)
                                         (new_alloc + 2)*sizeof *newvec);
       vec->v.vec = newvec + 2;
       vec->v.vec[vec_alloc] = num(new_alloc);
+#ifdef HAVE_VALGRIND
+      vec->v.vec_true_start = newvec;
+#endif
     }
 
     if (fill_delta > 0) {

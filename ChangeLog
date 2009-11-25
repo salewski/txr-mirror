@@ -1,5 +1,18 @@
 2009-11-25  Kaz Kylheku  <kkylheku@gmail.com>
 
+	More valgrind integration. Vector objects keep displaced pointers
+	to vector data; they point to element 0 which is actually the third
+	element of the vector. If an object is only referenced by interior
+	pointers, Valgrind reports it as possibly leaked. This change
+	conditionally adds a pointer to the true start of the vector,
+	if Valgrind support is enabled.
+
+	* lib.h (struct vec): vec_true_start, new member.
+
+	* lib.c (vector, vec_set_fill):  Maintain vec_true_start.
+
+2009-11-25  Kaz Kylheku  <kkylheku@gmail.com>
+
 	First stab at Valgrind integration. First goal: eliminate false
 	positives when gc is accessing uninitialized parts of the stack.
 
