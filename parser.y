@@ -30,7 +30,7 @@
 #include <assert.h>
 #include <limits.h>
 #include <dirent.h>
-#include <stddef.h>
+#include <stdlib.h>
 #include <wchar.h>
 #include "config.h"
 #include "lib.h"
@@ -515,7 +515,6 @@ strlit : '"' '"'                { $$ = null_string; }
 
 chrlit : '\'' '\''              { $$ = nil;
                                   yyerror("empty character literal"); }
-                                { $$ = nil; }
        | '\'' litchars '\''     { $$ = car($2);
                                   if (cdr($2))
                                     yyerror("multiple characters in "
