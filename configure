@@ -730,6 +730,10 @@ else
     exit 1
     ;;
   * )
+    if ! command -v "$yaccpath" > /dev/null ; then
+      printf "not found\n\n"
+      exit 1
+    fi
     printf "given\n"
     ;;
   esac
