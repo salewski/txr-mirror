@@ -301,14 +301,16 @@ static void mark_mem_region(val *low, val *high)
 #endif
     if (in_heap(maybe_obj)) {
 #ifdef HAVE_VALGRIND
-      VALGRIND_MAKE_MEM_DEFINED(maybe_obj, sizeof *maybe_obj);
+      if (opt_vg_debug)
+        VALGRIND_MAKE_MEM_DEFINED(maybe_obj, sizeof *maybe_obj);
 #endif
       type_t t = maybe_obj->t.type;
       if ((t & FREE) == 0) {
         mark_obj(maybe_obj);
       } else {
 #ifdef HAVE_VALGRIND
-        VALGRIND_MAKE_MEM_NOACCESS(maybe_obj, sizeof *maybe_obj);
+        if (opt_vg_debug)
+          VALGRIND_MAKE_MEM_NOACCESS(maybe_obj, sizeof *maybe_obj);
 #endif
       }
     }
