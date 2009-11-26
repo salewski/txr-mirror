@@ -1,3 +1,19 @@
+2009-11-26  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Not all systems have a yacc alias for the yacc program. 
+	txr is known to work with two yacc implementations: GNU Bison
+	and Berkeley yacc. Let's add some auto-detection for yacc.
+
+	* Makefile: use "include" rather than "-include" for
+	including config.make, so that make fails if the file does
+	not exist.
+	(conftest.yacc): New target. Just outputs the value of the
+	variable expansion of $(YACC).
+
+	* configure (yaccname): New variable.
+	(gen_config_make): New function.
+	Steps added to test for existence of various yaccs.
+
 2009-11-25  Kaz Kylheku  <kkylheku@gmail.com>
 
 	* gc.c (mark_mem_region): Bugfix: do not mess with the valgrind

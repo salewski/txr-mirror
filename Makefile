@@ -26,7 +26,7 @@
 # Test data in the tests/ directory is in the public domain,
 # unless it contains notices to the contrary.
 
--include config.make
+include config.make
 
 CFLAGS := -I. -I$(top_srcdir) $(LANG_FLAGS) $(DIAG_FLAGS) \
           $(OPT_FLAGS) $(DBG_FLAGS) $(PLATFORM_FLAGS)
@@ -115,3 +115,7 @@ conftest2: conftest1.c conftest2.c
 
 conftest.syms: conftest.o
 	$(NM) -t o -P $^ > $@
+
+.PHONY: conftest.yacc
+conftest.yacc:
+	@echo $(YACC)
