@@ -1,5 +1,24 @@
 2009-11-25  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Refinements to Valgrind support.
+
+	* gc.c (mark_mem_region): If a pointer from the stack is valid
+	for the heap, it may point to a free object, which is marked
+	in accessible. We must grant the garbage collector access
+	to the object. If the object is free, close off access.
+	This is not 100% correct, because if the object is accessible
+	but undefined, then we end up flipping it to defined.
+	(sweep): Before sweeping each heap, mark the entire block as defined.
+	This is necessary because sweep accesses blocks, which may be free,
+	and thus inaccessible. Then, during the sweep, any block
+	which is already free must be marked inaccessible again.
+	This means that the remaining blocks that are reachable become defined.
+	Here that is okay, because gc has marked all those blocks. If any
+	of them had uninitialized members, that would have been caught
+	by valgrind during the marking phase, if not sooner.
+
+2009-11-25  Kaz Kylheku  <kkylheku@gmail.com>
+
 	More Valgrind support. New option --vg-debug which turns on
 	Valgrind protection of free blocks. This works independently
 	of --gc-debug.

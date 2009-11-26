@@ -300,9 +300,17 @@ static void mark_mem_region(val *low, val *high)
     VALGRIND_MAKE_MEM_DEFINED(&maybe_obj, sizeof maybe_obj);
 #endif
     if (in_heap(maybe_obj)) {
+#ifdef HAVE_VALGRIND
+      VALGRIND_MAKE_MEM_DEFINED(maybe_obj, sizeof *maybe_obj);
+#endif
       type_t t = maybe_obj->t.type;
-      if ((t & FREE) == 0)
+      if ((t & FREE) == 0) {
         mark_obj(maybe_obj);
+      } else {
+#ifdef HAVE_VALGRIND
+        VALGRIND_MAKE_MEM_NOACCESS(maybe_obj, sizeof *maybe_obj);
+#endif
+      }
     }
     low++;
   }
@@ -335,6 +343,12 @@ static void sweep(void)
 
   for (heap = heap_list; heap != 0; heap = heap->next) {
     obj_t *block, *end;
+
+#ifdef HAVE_VALGRIND
+    if (vg_dbg)
+        VALGRIND_MAKE_MEM_DEFINED(&heap->block, sizeof heap->block);
+#endif
+
     for (block = heap->block, end = heap->block + HEAP_SIZE;
          block < end;
          block++)
@@ -347,8 +361,13 @@ static void sweep(void)
         continue;
       }
 
-      if (block->t.type & FREE)
+      if (block->t.type & FREE) {
+#ifdef HAVE_VALGRIND
+        if (vg_dbg)
+            VALGRIND_MAKE_MEM_NOACCESS(block, sizeof *block);
+#endif
         continue;
+      }
 
       if (0 && gc_dbg) {
         format(std_error, lit("~a: finalizing: "), progname, nao);
