@@ -1,5 +1,29 @@
 2009-11-26  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Version 026.
+
+	Fixed wchar_t build problem in parser.y.
+
+	Improved configure script to auto-detect yacc program.
+	Txr works with either Berkeley yacc (byacc) or Bison.
+
+	Fixed some two uninitialized memory bugs.
+
+	Valgrind API is now used to integrate GC memory manager
+	with valgrind.
+
+	The symbols nothrow and args in the next directive
+	are now keyword symbols, written :nothrow and
+	:args.  (Breaks backward compatibility; sorry!)
+
+	* txr.c (version): Bumped to 026.
+
+	* txr.1: Bumped version to 026.
+
+	* configure: Bumped txr_ver to 026.
+
+2009-11-26  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Not all systems have a yacc alias for the yacc program. 
 	txr is known to work with two yacc implementations: GNU Bison
 	and Berkeley yacc. Let's add some auto-detection for yacc.
