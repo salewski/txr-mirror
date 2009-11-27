@@ -137,7 +137,7 @@ cat <<!
 usage: $0 { variable=value }*
 
 The configure script prepares txr program for compilation and installation.
-To configure a program means to establish the values of Makefile variables
+To configure a program means to establish the values of make variables
 which influence how the software is built, where it is installed.
 These variables can also influence what features are present in the
 software, and can determine various defaults for those behaviors which are
@@ -169,7 +169,7 @@ on the command line.
 
 After running $0, check that the config.make contents are sane.
 
-The following variables are supported.  Note that Makefile variable syntax may
+The following variables are supported.  Note that make variable syntax may
 be used in paths. Default values are shown in [square brackets].
 
 prefix [$prefix]
@@ -180,8 +180,9 @@ prefix [$prefix]
 install_prefix [$install_prefix]
 
   Specifies an extra path prefix that will be prepended to all paths during
-  installation. This allows the software to be installed in a temporary
-  directory for packaging.
+  installation, which allows the software to be installed in a temporary
+  directory for packaging. This variable becomes the \$(DESTDIR)
+  variable in the config.make makefile.
 
 bindir [$bindir]
 
@@ -198,8 +199,8 @@ mandir [$mandir]
 cross [$cross]
 
   Specifies the root of a cross-compiling toolchain.
-  This becomes the \$(cross) variable in the Makefile, and by default
-  will be added as a prefix to all of the toolchain commands.
+  This becomes the \$(cross) variable in the config.make makefile, and by
+  default will be added as a prefix to all of the toolchain commands.
   It should include the trailing slash, unless the \$compiler_prefix
   and \$tool_prefix variables take care of this by providing a leading slash.
 
@@ -221,7 +222,7 @@ cc [$cc]
 
   Specifies the name of the toolchain front-end driver command to use for
   compiling C sources to object files, and for linking object files to
-  executables. This becomes the CC variable in the Makefile.
+  executables. This becomes the CC variable in config.make.
 
 intptr [$intptr]
 
@@ -474,7 +475,7 @@ prefix := $prefix
 # application may be temporarily installed
 # for creating pre-compiled packages,
 # e.g. for an operating system distro.
-install_prefix := $install_prefix
+DESTDIR := $install_prefix
 
 # executable directory
 bindir := $bindir

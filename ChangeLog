@@ -1,3 +1,18 @@
+2009-11-27  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Switching to DESTDIR convention for install.
+	Make install step does some things more correctly now,
+	without relying on the install program.
+
+	* configure: Help text doesn't refer to ``Makefile variables''
+	but ``make variables'', or ``variables in config.make''.
+	The install_prefix variable becomes DESTDIR now in
+	config.make.
+
+	* Make (INSTALL): New rule body macro. 
+	(install): Uses of mkdir -p and cp switched to a call
+	to the INSTALL macro.
+
 2009-11-26  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Version 026.

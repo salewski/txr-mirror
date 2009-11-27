@@ -91,13 +91,24 @@ tests/002/%: TXR_SCRIPT_ON_CMDLINE := y
 %.expected: %.txr
 	$(PROG) $(TXR_OPTS) $^ $(TXR_ARGS) > $@
 
+#
+# Installation macro.
+#
+# $1 - chmod perms
+# $2 - source file
+# $3 - dest directory
+#
+define INSTALL
+	mkdir -p $(3)
+	cp -f $(2) $(3)
+	chmod $(1) $(3)/$(notdir $(2))
+	touch -r $(2) $(3)/$(notdir $(2))
+endef
+
 .PHONY: install
 install: $(PROG)
-	mkdir -p $(install_prefix)$(bindir)
-	mkdir -p $(install_prefix)$(datadir)
-	mkdir -p $(install_prefix)$(mandir)/man1
-	cp txr $(install_prefix)$(bindir)
-	cp $(top_srcdir)/txr.1 $(install_prefix)$(mandir)/man1
+	$(call INSTALL,0755,txr,$(DESTDIR)$(bindir))
+	$(call INSTALL,0444,$(top_srcdir)/txr.1,$(DESTDIR)$(mandir)/man1)
 
 config.make config.h:
 	@echo "$@ missing: you didn't run ./configure"
