@@ -50,6 +50,10 @@ lex.yy.c: parser.l
 y.tab.c y.tab.h: parser.y
 	if $(YACC) -v -d $< ; then true ; else rm $@ ; false ; fi
 
+# Suppress useless sccs id array and unused label warning in byacc otuput.
+# Bison-generated parser also tests for this lint define.
+y.tab.o: CFLAGS += -Dlint
+
 .PHONY: rebuild
 rebuild: clean $(PROG)
 
