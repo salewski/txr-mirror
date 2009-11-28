@@ -334,7 +334,7 @@ if [ $txr_ver ] ; then
 else
   banner_text=" Configuring txr (unknown version) "
 fi
-banner_box=$(printf "%.*s\n" ${#banner_text} \
+banner_box=$(printf "%.${#banner_text}s\n" \
 		    "-------------------------------------------")
 printf "+%s+\n|%s|\n+%s+\n" $banner_box "$banner_text" $banner_box
 
