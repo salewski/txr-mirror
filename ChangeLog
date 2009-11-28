@@ -1,3 +1,7 @@
+2009-11-28  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* configure: Workaround in banner code for coreutils printf %.*s bug.
+
 2009-11-27  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Switching to DESTDIR convention for install.
