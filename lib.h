@@ -306,6 +306,7 @@ val chr_str(val str, val index);
 val chr_str_set(val str, val index, val chr);
 val sym_name(val sym);
 val make_sym(val name);
+val make_package(val name);
 val find_package(val name);
 val intern(val str, val package);
 val symbolp(val sym);
@@ -355,6 +356,7 @@ val copy_cons(val cons);
 val copy_alist(val list);
 val mapcar(val fun, val list);
 val mappend(val fun, val list);
+val merge(val list1, val list2, val lessfun, val keyfun);
 val sort(val list, val lessfun, val keyfun);
 
 void obj_print(val obj, val stream);
@@ -362,6 +364,7 @@ void obj_pprint(val obj, val stream);
 void init(const wchar_t *progname, void *(*oom_realloc)(void *, size_t),
           val *stack_bottom);
 void dump(val obj, val stream);
+void d(val obj);
 val match(val spec, val data);
 
 #define nil ((obj_t *) 0)

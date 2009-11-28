@@ -53,14 +53,14 @@ val spec_file_str;
  * pool, which sets an OOM flag. Program can check flag
  * and gracefully terminate instead of aborting like this.
  */
-void *oom_realloc_handler(void *old, size_t size)
+static void *oom_realloc_handler(void *old, size_t size)
 {
   format(std_error, lit("~a: out of memory\n"), prog_string, nao);
   put_line(std_error, lit("false"));
   abort();
 }
 
-void help(void)
+static void help(void)
 {
   val text = lit(
 "\n"
@@ -112,13 +112,13 @@ void help(void)
   format(std_output, text, auto_str(version), prog_string, nao);
 }
 
-void hint(void)
+static void hint(void)
 {
   format(std_error, lit("~a: incorrect arguments: try --help\n"),
          prog_string, nao);
 }
 
-val remove_hash_bang_line(val spec)
+static val remove_hash_bang_line(val spec)
 {
   if (!consp(spec))
     return spec;

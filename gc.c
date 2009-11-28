@@ -108,7 +108,7 @@ void release(val *last, ...)
   va_end (vl);
 }
 
-static void more()
+static void more(void)
 {
   heap_t *heap = (heap_t *) chk_malloc(sizeof *heap);
   obj_t *block = heap->block, *end = heap->block + HEAP_SIZE;

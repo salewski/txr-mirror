@@ -344,7 +344,7 @@ val nappend2(val list1, val list2)
   return list1;
 }
 
-val flatten_helper(val env, val item)
+static val flatten_helper(val env, val item)
 {
   return flatten(item);
 }
@@ -1337,7 +1337,7 @@ val reduce_left(val fun, val list, val init, val key)
   return init;
 }
 
-val do_bind2(val fcons, val arg2)
+static val do_bind2(val fcons, val arg2)
 {
   return funcall2(car(fcons), cdr(fcons), arg2);
 }
@@ -1347,7 +1347,7 @@ val bind2(val fun2, val arg)
   return func_f1(cons(fun2, arg), do_bind2);
 }
 
-val do_bind2other(val fcons, val arg1)
+static val do_bind2other(val fcons, val arg1)
 {
   return funcall2(car(fcons), arg1, cdr(fcons));
 }

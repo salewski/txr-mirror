@@ -70,20 +70,20 @@ struct stdio_handle {
   struct utf8_decoder ud;
 };
 
-void stdio_stream_print(val stream, val out)
+static void stdio_stream_print(val stream, val out)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
   format(out, lit("#<~s ~s>"), stream->co.cls, h->descr, nao);
 }
 
-void stdio_stream_destroy(val stream)
+static void stdio_stream_destroy(val stream)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
   common_destroy(stream);
   free(h);
 }
 
-void stdio_stream_mark(val stream)
+static void stdio_stream_mark(val stream)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
   gc_mark(h->descr);
@@ -189,7 +189,7 @@ static val stdio_get_line(val stream)
   }
 }
 
-val stdio_get_char(val stream)
+static val stdio_get_char(val stream)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
   if (h->f) {
@@ -199,7 +199,7 @@ val stdio_get_char(val stream)
   return stdio_maybe_read_error(stream);
 }
 
-val stdio_get_byte(val stream)
+static val stdio_get_byte(val stream)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
   if (h->f) {
@@ -290,7 +290,7 @@ static struct strm_ops pipe_ops = {
   pipe_close
 };
 
-void string_in_stream_mark(val stream)
+static void string_in_stream_mark(val stream)
 {
   val stuff = (val) stream->co.handle;
   gc_mark(stuff);
@@ -681,8 +681,8 @@ static val vformat_num(val stream, const char *str,
   return t;
 }
 
-val vformat_str(val stream, val str, int width, int left,
-                   int precision)
+static val vformat_str(val stream, val str, int width, int left,
+                       int precision)
 {
   const wchar_t *cstr = c_str(str);
   int len = c_num(length_str(str));

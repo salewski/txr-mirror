@@ -102,7 +102,7 @@ static void file_err(val line, val fmt, ...)
 }
 
 
-void dump_shell_string(const wchar_t *str)
+static void dump_shell_string(const wchar_t *str)
 {
   int ch;
 
@@ -119,14 +119,14 @@ void dump_shell_string(const wchar_t *str)
   put_char(std_output, chr('"'));
 }
 
-void dump_byte_string(const char *str)
+static void dump_byte_string(const char *str)
 {
   while (*str)
     put_char(std_output, chr(*str++));
 }
 
 
-void dump_var(val var, char *pfx1, size_t len1,
+static void dump_var(val var, char *pfx1, size_t len1,
               char *pfx2, size_t len2, val value, int level)
 {
   if (len1 >= 112 || len2 >= 112)
@@ -164,7 +164,7 @@ void dump_var(val var, char *pfx1, size_t len1,
   }
 }
 
-void dump_bindings(val bindings)
+static void dump_bindings(val bindings)
 {
   if (opt_loglevel >= 2) {
     put_line(std_error, lit("raw_bindings:"));
@@ -181,7 +181,7 @@ void dump_bindings(val bindings)
   }
 }
 
-val depth(val obj)
+static val depth(val obj)
 {
   val dep = zero;
 
@@ -199,7 +199,7 @@ val depth(val obj)
   return plus(dep, one);
 }
 
-val weird_merge(val left, val right)
+static val weird_merge(val left, val right)
 {
   val left_depth = depth(left);
   val right_depth = depth(right);
@@ -217,21 +217,12 @@ val weird_merge(val left, val right)
   return append2(left, right);
 }
 
-val map_leaf_lists(val func, val list)
-{
-  if (atom(list))
-    return list;
-  if (none_satisfy(list, func_n1(listp), nil))
-    return funcall1(func, list);
-  return mapcar(bind2(func_n2(map_leaf_lists), func), list);
-}
-
-val bindable(val obj)
+static val bindable(val obj)
 {
   return (obj && symbolp(obj) && obj != t && !keywordp(obj)) ? t : nil;
 }
 
-val dest_bind(val bindings, val pattern, val value)
+static val dest_bind(val bindings, val pattern, val value)
 {
   if (symbolp(pattern)) {
     if (bindable(pattern)) {
@@ -275,9 +266,9 @@ val dest_bind(val bindings, val pattern, val value)
   return t;
 }
 
-val match_line(val bindings, val specline, val dataline,
-               val pos, val spec_lineno, val data_lineno,
-               val file)
+static val match_line(val bindings, val specline, val dataline,
+                      val pos, val spec_lineno, val data_lineno,
+                      val file)
 {
 #define LOG_MISMATCH(KIND)                                              \
   debuglf(spec_lineno, lit(KIND " mismatch, position ~a (~a:~a)"), pos, \
@@ -528,7 +519,7 @@ val match_line(val bindings, val specline, val dataline,
   return cons(bindings, pos);
 }
 
-val format_field(val string_or_list, val spec)
+static val format_field(val string_or_list, val spec)
 {
   if (!stringp(string_or_list))
     return string_or_list;
@@ -554,7 +545,7 @@ val format_field(val string_or_list, val spec)
   }
 }
 
-val subst_vars(val spec, val bindings)
+static val subst_vars(val spec, val bindings)
 {
   list_collect_decl(out, iter);
 
@@ -597,7 +588,7 @@ val subst_vars(val spec, val bindings)
   return out;
 }
 
-val eval_form(val form, val bindings)
+static val eval_form(val form, val bindings)
 {
   if (!form) {
     return cons(t, form);
@@ -630,7 +621,7 @@ typedef struct fpip {
   enum fpip_close close;
 } fpip_t;
 
-fpip_t complex_open(val name, val output)
+static fpip_t complex_open(val name, val output)
 {
   fpip_t ret = { 0, 0 };
 
@@ -663,32 +654,12 @@ fpip_t complex_open(val name, val output)
   return ret;
 }
 
-int complex_open_failed(fpip_t fp)
+static int complex_open_failed(fpip_t fp)
 {
   return fp.f == 0 && fp.d == 0;
 }
 
-void complex_close(fpip_t fp)
-{
-  if (fp.f == 0)
-    return;
-  switch (fp.close) {
-  case fpip_fclose:
-    if (fp.f != stdin && fp.f != stdout)
-      fclose(fp.f);
-    return;
-  case fpip_pclose:
-    pclose(fp.f);
-    return;
-  case fpip_closedir:
-    closedir(fp.d);
-    return;
-  }
-
-  internal_error("bad input source type code");
-}
-
-val complex_snarf(fpip_t fp, val name)
+static val complex_snarf(fpip_t fp, val name)
 {
   switch (fp.close) {
   case fpip_fclose:
@@ -702,7 +673,7 @@ val complex_snarf(fpip_t fp, val name)
   internal_error("bad input source type");
 }
 
-val complex_stream(fpip_t fp, val name)
+static val complex_stream(fpip_t fp, val name)
 {
   switch (fp.close) {
   case fpip_fclose:
@@ -717,7 +688,7 @@ val complex_stream(fpip_t fp, val name)
 }
 
 
-val robust_length(val obj)
+static val robust_length(val obj)
 {
   if (obj == nil)
     return zero;
@@ -726,21 +697,21 @@ val robust_length(val obj)
   return length(obj);
 }
 
-val bind_car(val bind_cons)
+static val bind_car(val bind_cons)
 {
   return if3(consp(cdr(bind_cons)),
                cons(car(bind_cons), car(cdr(bind_cons))),
                bind_cons);
 }
 
-val bind_cdr(val bind_cons)
+static val bind_cdr(val bind_cons)
 {
   return if3(consp(cdr(bind_cons)),
                cons(car(bind_cons), cdr(cdr(bind_cons))),
                bind_cons);
 }
 
-val extract_vars(val output_spec)
+static val extract_vars(val output_spec)
 {
   list_collect_decl (vars, tai);
 
@@ -756,7 +727,7 @@ val extract_vars(val output_spec)
   return vars;
 }
 
-val extract_bindings(val bindings, val output_spec)
+static val extract_bindings(val bindings, val output_spec)
 {
   list_collect_decl (bindings_out, tail);
   val var_list = extract_vars(output_spec);
@@ -768,8 +739,8 @@ val extract_bindings(val bindings, val output_spec)
   return bindings_out;
 }
 
-void do_output_line(val bindings, val specline,
-                    val spec_lineno, val out)
+static void do_output_line(val bindings, val specline,
+                           val spec_lineno, val out)
 {
   for (; specline; specline = rest(specline)) {
     val elem = first(specline);
@@ -839,7 +810,7 @@ void do_output_line(val bindings, val specline,
   }
 }
 
-void do_output(val bindings, val specs, val out)
+static void do_output(val bindings, val specs, val out)
 {
   if (equal(specs, null_list))
     return;
@@ -896,9 +867,9 @@ void do_output(val bindings, val specs, val out)
   }
 }
 
-val match_files(val spec, val files,
-                val bindings, val first_file_parsed,
-                val data_linenum)
+static val match_files(val spec, val files,
+                       val bindings, val first_file_parsed,
+                       val data_linenum)
 {
   val data = nil;
   cnum data_lineno = 0;
