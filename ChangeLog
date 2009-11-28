@@ -1,5 +1,12 @@
 2009-11-28  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* Makefile (CFLAGS): add -Dlint to CFLAGS when compiling y.tab.o.
+	This suppresses some warnings from a byacc-generated parser,
+	and gets rid of a useless static sccsid array. May help with
+	Bison-generated parser also.
+
+2009-11-28  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* parser.l: Use flex options to suppress generation of the
 	unused functons yyunput and yyinput, thus getting rid of
 	some compiler diagnostics.
