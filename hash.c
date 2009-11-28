@@ -128,17 +128,17 @@ val hash_obj(val obj)
   return num(ll_hash(obj));
 }
 
-val hash_equal(val self, val other)
+static val hash_equal(val self, val other)
 {
   return self == other ? t : nil;
 }
 
-void hash_destroy(val hash)
+static void hash_destroy(val hash)
 {
   free(hash->co.handle);
 }
 
-void hash_mark(val hash)
+static void hash_mark(val hash)
 {
   struct hash *h = (struct hash *) hash->co.handle;
   cnum i;
@@ -194,7 +194,7 @@ static struct cobj_ops hash_ops = {
   0
 };
 
-void hash_grow(struct hash *h)
+static void hash_grow(struct hash *h)
 {
   cnum i;
   cnum new_modulus = 2 * h->modulus;

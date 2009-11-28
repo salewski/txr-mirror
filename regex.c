@@ -37,7 +37,10 @@
 #include "unwind.h"
 #include "regex.h"
 
-#define NFA_SET_SIZE 512
+typedef unsigned int bitcell_t;
+
+#define BITCELL_ALL1 UINT_MAX
+#define CHAR_SET_SIZE (256 / (sizeof (bitcell_t) * CHAR_BIT))
 
 #define CHAR_SET_INDEX(CH) ((CH) / (sizeof (bitcell_t) * CHAR_BIT))
 #define CHAR_SET_BIT(CH) ((CH) % (sizeof (bitcell_t) * CHAR_BIT))
@@ -56,6 +59,102 @@
 #define CHAR_SET_L0_LO(CH) ((CH) & (~(wchar_t) 0xFF))
 #define CHAR_SET_L0_HI(CH) ((CH) | ((wchar_t) 0xFF))
 
+typedef enum {
+  CHSET_SMALL, CHSET_DISPLACED, CHSET_LARGE, CHSET_XLARGE
+} chset_type_t;
+
+typedef bitcell_t cset_L0_t[CHAR_SET_SIZE];
+typedef cset_L0_t *cset_L1_t[16];
+typedef cset_L1_t *cset_L2_t[16];
+typedef cset_L2_t *cset_L3_t[17];
+
+struct any_char_set {
+  unsigned type : 3;
+  unsigned comp : 1;
+};
+
+struct small_char_set {
+  unsigned type : 3;
+  unsigned comp : 1;
+  cset_L0_t bitcell;
+};
+
+struct displaced_char_set {
+  unsigned type : 3;
+  unsigned comp : 1;
+  cset_L0_t bitcell;
+  wchar_t base;
+};
+
+
+struct large_char_set {
+  unsigned type : 3;
+  unsigned comp : 1;
+  cset_L2_t dir;
+};
+
+struct xlarge_char_set {
+  unsigned type : 3;
+  unsigned comp : 1;
+  cset_L3_t dir;
+};
+
+typedef union char_set {
+  struct any_char_set any;
+  struct small_char_set s;
+  struct displaced_char_set d;
+  struct large_char_set l;
+  struct xlarge_char_set xl;
+} char_set_t;
+
+#define NFA_SET_SIZE 512
+
+typedef enum {
+  nfa_accept, nfa_empty, nfa_wild, nfa_single, nfa_set
+} nfa_kind_t;
+
+struct nfa_state_accept {
+  nfa_kind_t kind;
+  unsigned visited;
+};
+
+struct nfa_state_empty {
+  nfa_kind_t kind;
+  unsigned visited;
+  nfa_state_t *trans0;
+  nfa_state_t *trans1;
+};
+
+struct nfa_state_single {
+  nfa_kind_t kind;
+  unsigned visited;
+  nfa_state_t *trans;
+  wchar_t ch;
+};
+
+struct nfa_state_set {
+  nfa_kind_t kind;
+  unsigned visited;
+  nfa_state_t *trans;
+  char_set_t *set;
+};
+
+union nfa_state {
+  struct nfa_state_accept a;
+  struct nfa_state_empty e;
+  struct nfa_state_single o;
+  struct nfa_state_set s;
+};
+
+struct nfa_machine {
+  cnum last_accept_pos;
+  unsigned visited;
+  nfa_state_t **move, **clos, **stack;
+  int nmove, nclos;
+  cnum count;
+  nfa_t nfa;
+};
+
 static int L0_full(cset_L0_t *L0)
 {
   int i;
@@ -66,7 +165,7 @@ static int L0_full(cset_L0_t *L0)
   return 1;
 }
 
-void L0_fill_range(cset_L0_t *L0, wchar_t ch0, wchar_t ch1)
+static void L0_fill_range(cset_L0_t *L0, wchar_t ch0, wchar_t ch1)
 {
   int i;
   int bt0 = CHAR_SET_BIT(ch0);
@@ -86,12 +185,12 @@ void L0_fill_range(cset_L0_t *L0, wchar_t ch0, wchar_t ch1)
   }
 }
 
-int L0_contains(cset_L0_t *L0, wchar_t ch)
+static int L0_contains(cset_L0_t *L0, wchar_t ch)
 {
   return ((*L0)[CHAR_SET_INDEX(ch)] & (1 << CHAR_SET_BIT(ch))) != 0;
 }
 
-int L1_full(cset_L1_t *L1)
+static int L1_full(cset_L1_t *L1)
 {
   int i;
   for (i = 0; i < 16; i++)
@@ -100,7 +199,7 @@ int L1_full(cset_L1_t *L1)
   return 1;
 }
 
-void L1_fill_range(cset_L1_t *L1, wchar_t ch0, wchar_t ch1)
+static void L1_fill_range(cset_L1_t *L1, wchar_t ch0, wchar_t ch1)
 {
   int i1, i10, i11;
 
@@ -144,7 +243,7 @@ void L1_fill_range(cset_L1_t *L1, wchar_t ch0, wchar_t ch1)
   }
 }
 
-int L1_contains(cset_L1_t *L1, wchar_t ch)
+static int L1_contains(cset_L1_t *L1, wchar_t ch)
 {
   int i1 = CHAR_SET_L1(ch);
   cset_L0_t *L0 = (*L1)[i1];
@@ -158,7 +257,7 @@ int L1_contains(cset_L1_t *L1, wchar_t ch)
 }
 
 
-void L1_free(cset_L1_t *L1)
+static void L1_free(cset_L1_t *L1)
 {
   int i1;
 
@@ -170,7 +269,7 @@ void L1_free(cset_L1_t *L1)
       free((*L1)[i1]);
 }
 
-int L2_full(cset_L2_t *L2)
+static int L2_full(cset_L2_t *L2)
 {
   int i;
   for (i = 0; i < 16; i++)
@@ -179,7 +278,7 @@ int L2_full(cset_L2_t *L2)
   return 1;
 }
 
-void L2_fill_range(cset_L2_t *L2, wchar_t ch0, wchar_t ch1)
+static void L2_fill_range(cset_L2_t *L2, wchar_t ch0, wchar_t ch1)
 {
   int i2, i20, i21;
 
@@ -223,7 +322,7 @@ void L2_fill_range(cset_L2_t *L2, wchar_t ch0, wchar_t ch1)
   }
 }
 
-int L2_contains(cset_L2_t *L2, wchar_t ch)
+static int L2_contains(cset_L2_t *L2, wchar_t ch)
 {
   int i2 = CHAR_SET_L2(ch);
   cset_L1_t *L1 = (*L2)[i2];
@@ -236,7 +335,7 @@ int L2_contains(cset_L2_t *L2, wchar_t ch)
     return L1_contains(L1, ch);
 }
 
-void L2_free(cset_L2_t *L2)
+static void L2_free(cset_L2_t *L2)
 {
   int i2;
 
@@ -249,7 +348,7 @@ void L2_free(cset_L2_t *L2)
   }
 }
 
-void L3_fill_range(cset_L3_t *L3, wchar_t ch0, wchar_t ch1)
+static void L3_fill_range(cset_L3_t *L3, wchar_t ch0, wchar_t ch1)
 {
   int i3, i30, i31;
 
@@ -292,7 +391,7 @@ void L3_fill_range(cset_L3_t *L3, wchar_t ch0, wchar_t ch1)
   }
 }
 
-int L3_contains(cset_L3_t *L3, wchar_t ch)
+static int L3_contains(cset_L3_t *L3, wchar_t ch)
 {
   int i3 = CHAR_SET_L3(ch);
   cset_L2_t *L2 = (*L3)[i3];
@@ -305,7 +404,7 @@ int L3_contains(cset_L3_t *L3, wchar_t ch)
     return L2_contains(L2, ch);
 }
 
-void L3_free(cset_L3_t *L3)
+static void L3_free(cset_L3_t *L3)
 {
   int i3;
 
@@ -318,7 +417,7 @@ void L3_free(cset_L3_t *L3)
   }
 }
 
-char_set_t *char_set_create(chset_type_t type, wchar_t base)
+static char_set_t *char_set_create(chset_type_t type, wchar_t base)
 {
   static char_set_t blank;
   char_set_t *cs = (char_set_t *) chk_malloc(sizeof *cs);
@@ -331,7 +430,7 @@ char_set_t *char_set_create(chset_type_t type, wchar_t base)
   return cs;
 }
 
-void char_set_destroy(char_set_t *set)
+static void char_set_destroy(char_set_t *set)
 {
   switch (set->any.type) {
   case CHSET_DISPLACED:
@@ -349,12 +448,12 @@ void char_set_destroy(char_set_t *set)
   }
 }
 
-void char_set_compl(char_set_t *set)
+static void char_set_compl(char_set_t *set)
 {
   set->any.comp = 1;
 }
 
-void char_set_add(char_set_t *set, wchar_t ch)
+static void char_set_add(char_set_t *set, wchar_t ch)
 {
   switch (set->any.type) {
   case CHSET_DISPLACED:
@@ -376,7 +475,7 @@ void char_set_add(char_set_t *set, wchar_t ch)
   }
 }
 
-void char_set_add_range(char_set_t *set, wchar_t ch0, wchar_t ch1)
+static void char_set_add_range(char_set_t *set, wchar_t ch0, wchar_t ch1)
 {
   if (ch0 >= ch1)
     return;
@@ -402,7 +501,7 @@ void char_set_add_range(char_set_t *set, wchar_t ch0, wchar_t ch1)
   }
 }
 
-int char_set_contains(char_set_t *set, wchar_t ch)
+static int char_set_contains(char_set_t *set, wchar_t ch)
 {
   int result = 0;
 
@@ -432,7 +531,7 @@ int char_set_contains(char_set_t *set, wchar_t ch)
   return set->any.comp ? !result : result;
 }
 
-nfa_state_t *nfa_state_accept(void)
+static nfa_state_t *nfa_state_accept(void)
 {
   nfa_state_t *st = (nfa_state_t *) chk_malloc(sizeof *st);
   st->a.kind = nfa_accept;
@@ -440,7 +539,7 @@ nfa_state_t *nfa_state_accept(void)
   return st;
 }
 
-nfa_state_t *nfa_state_empty(nfa_state_t *t0, nfa_state_t *t1)
+static nfa_state_t *nfa_state_empty(nfa_state_t *t0, nfa_state_t *t1)
 {
   nfa_state_t *st = (nfa_state_t *) chk_malloc(sizeof *st);
   st->e.kind = nfa_empty;
@@ -450,7 +549,7 @@ nfa_state_t *nfa_state_empty(nfa_state_t *t0, nfa_state_t *t1)
   return st;
 }
 
-nfa_state_t *nfa_state_single(nfa_state_t *t, wchar_t ch)
+static nfa_state_t *nfa_state_single(nfa_state_t *t, wchar_t ch)
 {
   nfa_state_t *st = (nfa_state_t *) chk_malloc(sizeof *st);
   st->o.kind = nfa_single;
@@ -460,7 +559,7 @@ nfa_state_t *nfa_state_single(nfa_state_t *t, wchar_t ch)
   return st;
 }
 
-nfa_state_t *nfa_state_wild(nfa_state_t *t)
+static nfa_state_t *nfa_state_wild(nfa_state_t *t)
 {
   nfa_state_t *st = (nfa_state_t *) chk_malloc(sizeof *st);
   st->o.kind = nfa_wild;
@@ -470,19 +569,19 @@ nfa_state_t *nfa_state_wild(nfa_state_t *t)
   return st;
 }
 
-void nfa_state_free(nfa_state_t *st)
+static void nfa_state_free(nfa_state_t *st)
 {
   if (st->a.kind == nfa_set)
     char_set_destroy(st->s.set);
   free(st);
 }
 
-void nfa_state_shallow_free(nfa_state_t *st)
+static void nfa_state_shallow_free(nfa_state_t *st)
 {
   free(st);
 }
 
-nfa_state_t *nfa_state_set(nfa_state_t *t, char_set_t *cs)
+static nfa_state_t *nfa_state_set(nfa_state_t *t, char_set_t *cs)
 {
   nfa_state_t *st = (nfa_state_t *) chk_malloc(sizeof *st);
   st->s.kind = nfa_set;
@@ -500,7 +599,8 @@ nfa_state_t *nfa_state_set(nfa_state_t *t, char_set_t *cs)
  * either back to itself, or to a new state in the
  * surrounding new NFA.
  */
-void nfa_state_empty_convert(nfa_state_t *acc, nfa_state_t *t0, nfa_state_t *t1)
+static void nfa_state_empty_convert(nfa_state_t *acc, nfa_state_t *t0,
+                                    nfa_state_t *t1)
 {
   assert (acc->a.kind == nfa_accept);
   acc->e.kind = nfa_empty;
@@ -522,13 +622,13 @@ void nfa_state_empty_convert(nfa_state_t *acc, nfa_state_t *t0, nfa_state_t *t1)
  * existing start state, and allocate a new start
  * state in front of it.
  */
-void nfa_state_merge(nfa_state_t *acc, nfa_state_t *st)
+static void nfa_state_merge(nfa_state_t *acc, nfa_state_t *st)
 {
   assert (acc->a.kind == nfa_accept);
   *acc = *st;
 }
 
-nfa_t nfa_make(nfa_state_t *s, nfa_state_t *acc)
+static nfa_t nfa_make(nfa_state_t *s, nfa_state_t *acc)
 {
   nfa_t ret;
   ret.start = s;
@@ -541,7 +641,7 @@ nfa_t nfa_make(nfa_state_t *s, nfa_state_t *acc)
  * The acceptance state of the predecessor is merged with the start state of
  * the successor.
  */
-nfa_t nfa_combine(nfa_t pred, nfa_t succ)
+static nfa_t nfa_combine(nfa_t pred, nfa_t succ)
 {
   nfa_t ret;
   ret.start = pred.start;
@@ -551,7 +651,7 @@ nfa_t nfa_combine(nfa_t pred, nfa_t succ)
   return ret;
 }
 
-nfa_t nfa_compile_set(val args, int comp)
+static nfa_t nfa_compile_set(val args, int comp)
 {
   val iter;
   wchar_t min = WCHAR_MAX;
@@ -717,7 +817,7 @@ nfa_t nfa_compile_regex(val items)
   }
 }
 
-int nfa_all_states(nfa_state_t **inout, int num, unsigned visited)
+static int nfa_all_states(nfa_state_t **inout, int num, unsigned visited)
 {
   int i;
 
@@ -795,8 +895,8 @@ void nfa_free(nfa_t nfa)
  * states which are reachable from that set with empty (epsilon) transitions.
  * (Transitions that don't do not consume and match an input character).
  */
-int nfa_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
-                nfa_state_t **out, unsigned visited, int *accept)
+static int nfa_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
+                       nfa_state_t **out, unsigned visited, int *accept)
 {
   int i, nout = 0;
   int stackp = 0;
@@ -855,7 +955,7 @@ int nfa_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
  * set is the set of states which are reachable from the set of
  * input states on the consumpion of the input character given by ch.
  */
-int nfa_move(nfa_state_t **in, int nin, nfa_state_t **out, wchar_t ch)
+static int nfa_move(nfa_state_t **in, int nin, nfa_state_t **out, wchar_t ch)
 {
   int i, nmove;
 

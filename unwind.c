@@ -41,7 +41,7 @@ static uw_frame_t *uw_stack;
 static uw_frame_t *uw_exit_point;
 static uw_frame_t toplevel_env;
 
-static void uw_unwind_to_exit_point()
+static void uw_unwind_to_exit_point(void)
 {
   assert (uw_exit_point);
 

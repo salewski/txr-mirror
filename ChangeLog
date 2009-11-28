@@ -1,5 +1,73 @@
 2009-11-28  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Code cleanup. All private functions static. Private stuff
+	in regex module not exposed in header. Etc.
+
+	* configure (diag_flags): Add -Wmissing-prototypes and
+	-Wstrict-prototypes.
+
+	* gc.c (more): Turn into prototyped definition with (void).
+
+	* gc.h (unmark): Declared.
+
+	* hash.c (hash_equal, hash_destroy, hash_mark, hash_grow): Private
+	functions defined static.
+
+	* lib.c (flatten_helper, do_bind2, do_bind2other): Likewise.
+
+	* lib.h (make_package, merge, d): Declared.
+
+	* match.c (dump_shell_string, dump_byte_string, dump_var,
+	dump_bindings, depth, weird_merge, bindable, dest_bind, match_line,
+	format_field, subst_vars, eval_form, complex_open, complex_snarf,
+	complex_stream, robust_length, bind_car, bind_cdr, extract_vars,
+	extract_bindings, do_output_line, do_output, match_files): Private
+	functions defined static.
+	(map_leaf_lists, complex_close): Unused functions removed.
+	
+	* parser.h (yyerror): Declared.
+
+	* regex.c (bitcell_t, BITCELL_ALL1, CHAR_SET_SIZE,
+	chset_type_t, cset_L0_t, cset_L1_t, cset_L2_t, cset_L3_t,
+	struct any_char_set, struct small_char_set, struct displaced_char_set,
+	struct large_char_set, struct xlarge_char_set, union char_set,
+	nfa_kind_t, struct nfa_state_accept, struct nfa_state_empty,
+	struct nfa_state_single, struct nfa_state_set, struct nfa_state,
+	struct nfa_machine): Definitions moved here from regex.h file.
+	(L0_fill_range, L0_contains, L1_full, L1_fill_range, L1_contains,
+	L1_free, L2_full, L2_fill_range, L2_contains, L2_free, L3_fill_range,
+	L3_contains, L3_free, char_set_create, char_set_destroy,
+	char_set_compl, char_set_add, char_set_add_range, char_set_contains,
+	nfa_state_accept, nfa_state_empty, nfa_state_single, nfa_state_wild,
+	nfa_state_free, nfa_state_shallow_free, nfa_state_set,
+	nfa_state_empty_convert, nfa_state_merge, nfa_make, nfa_combine,
+	nfa_compile_set, nfa_all-states, nfa_closure, nfa_move): Private
+	functions defined static.
+
+	* regex.h (bitcell_t, BITCELL_ALL1, CHAR_SET_SIZE,
+	chset_type_t, cset_L0_t, cset_L1_t, cset_L2_t, cset_L3_t,
+	struct any_char_set, struct small_char_set, struct displaced_char_set,
+	struct large_char_set, struct xlarge_char_set, union char_set,
+	nfa_kind_t, struct nfa_state_accept, struct nfa_state_empty,
+	struct nfa_state_single, struct nfa_state_set, struct nfa_state,
+	struct nfa_machine): Definitions removed.
+	(char_set_created, char_set_destroy, char_set_compl, char_set_add,
+	char_set_add_range, char_set_contains nfa_state_accept,
+	nfa_state_empty, nfa_state_single, nfa_state_wild, nfa_state_set,
+	nfa_state_free, nfa_state_shallow_free, nfa_state_merge): Extern
+	declarations removed.
+
+	* stream.c (stdio_stream_print, stdio_stream_destroy,
+	stdio_stream_mark, stdio_get_char, stdio_get_byte,
+	string_in_stream_mark, vformat_str): Private functions defined static.
+
+	* txr.c (oom_realloc_handler, help, hint,
+	remove_hash_bang_line): Likewise.
+
+	* unwind.c (uw_unwind_to_exit_point): Likewise.
+
+2009-11-28  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* configure: Workaround in banner code for coreutils printf %.*s bug.
 
 2009-11-27  Kaz Kylheku  <kkylheku@gmail.com>

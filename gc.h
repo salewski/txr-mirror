@@ -33,3 +33,4 @@ void gc(void);
 int gc_state(int);
 void gc_mark(val);
 int gc_is_reachable(val);
+void unmark(void);

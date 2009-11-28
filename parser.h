@@ -32,5 +32,6 @@ extern const wchar_t *spec_file;
 extern val spec_file_str;
 int yyparse(void);
 val get_spec(void);
+void yyerror(const char *s);
 void yyerrorf(val s, ...);
 void yybadtoken(int tok, val context);
