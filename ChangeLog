@@ -1,5 +1,11 @@
 2009-11-28  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* parser.l: Use flex options to suppress generation of the
+	unused functons yyunput and yyinput, thus getting rid of
+	some compiler diagnostics.
+
+2009-11-28  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Code cleanup. All private functions static. Private stuff
 	in regex module not exposed in header. Etc.
 

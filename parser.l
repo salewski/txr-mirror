@@ -167,6 +167,8 @@ static wchar_t num_esc(char *num)
 %}
 
 %option stack
+%option nounput
+%option noinput
 
 TOK     :?[a-zA-Z_][a-zA-Z0-9_]*|[+-]?[0-9]+
 ID_END  [^a-zA-Z0-9_]
