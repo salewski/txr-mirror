@@ -32,6 +32,10 @@ CFLAGS := -I. -I$(top_srcdir) $(LANG_FLAGS) $(DIAG_FLAGS) \
           $(OPT_FLAGS) $(DBG_FLAGS) $(PLATFORM_FLAGS)
 CFLAGS := $(filter-out $(REMOVE_FLAGS),$(CFLAGS))
 
+ifeq ($(patsubst %g++,y,$(CC)),y)
+CFLAGS := $(filter-out -Wmissing-prototypes -Wstrict-prototypes,$(CFLAGS))
+endif
+
 OBJS := txr.o lex.yy.o y.tab.o match.o lib.o regex.o gc.o unwind.o stream.o
 OBJS += hash.o utf8.o
 
