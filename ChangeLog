@@ -1,5 +1,15 @@
 2009-12-02  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* Makefile (tests): Don't depend on the executable. Otherwise,
+	during make install-tests, if it doesn't exist in the
+	install directory, a gcc compile command gets deposited
+	into the run.sh generated script.
+	(install-tests): Fixes to make this work when using
+	a separate build directory. Split the cpio -p job
+	into a cpio -i piping into cpio -o.
+
+2009-12-02  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* Makefile (install-tests): New target. Provides a way to make the
 	test cases part of the installation, and a generated script to run the
 	commands on the installation host.
