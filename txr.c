@@ -43,7 +43,7 @@
 #include "utf8.h"
 #include "txr.h"
 
-const wchar_t *version = L"026";
+const wchar_t *version = L"027";
 const wchar_t *progname = L"txr";
 const wchar_t *spec_file = L"stdin";
 val spec_file_str;
