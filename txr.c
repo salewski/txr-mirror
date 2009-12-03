@@ -138,7 +138,7 @@ static val remove_hash_bang_line(val spec)
   }
 }
 
-static int txr_main(int argc, char **argv);
+int txr_main(int argc, char **argv);
 
 int main(int argc, char **argv)
 {
@@ -148,7 +148,7 @@ int main(int argc, char **argv)
   return txr_main(argc, argv);
 }
 
-static int txr_main(int argc, char **argv)
+int txr_main(int argc, char **argv)
 {
   val specstring = nil;
   val spec = nil;
