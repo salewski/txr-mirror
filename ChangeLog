@@ -1,3 +1,17 @@
+2009-12-02  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Fix annoyances with dependency generation, such as picking up local
+	files that are not in the project.
+
+	* Makefile (depend): Rule passes object file names as arguments
+	to depend.txr script.
+
+	* depend.txr: Changed to take names of object files from command line,
+	rather than scanning the directory for all .c files. Switched
+	to new style next directives, using quasiliterals.
+
+	* dep.mk: Regenerated.
+
 2009-11-28  Kaz Kylheku  <kkylheku@gmail.com>
 
 	* Makefile (CFLAGS): If the compiler matches the pattern %g++,

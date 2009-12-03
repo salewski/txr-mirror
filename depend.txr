@@ -1,7 +1,7 @@
-@(next)$.
+@(next :args)
 @(collect)
-@file.c
-@(next)@file.c
+@file.o
+@(next `@file.c`)
 @(collect)
 #include "@hdr"
 @(cases)
