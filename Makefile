@@ -118,6 +118,18 @@ install: $(PROG)
 	$(call INSTALL,0755,txr,$(DESTDIR)$(bindir))
 	$(call INSTALL,0444,$(top_srcdir)/txr.1,$(DESTDIR)$(mandir)/man1)
 
+#
+# Install the tests as well as the script to run them
+# 
+install-tests:
+	cd $(top_srcdir) ; find tests -name '*.out' -prune -o -print | cpio -pd $(DESTDIR)$(datadir) 
+	( echo "#!/bin/sh" ; \
+	  echo "set -ex" ; \
+	  echo "cd $(datadir)" ; \
+	  make -s -n tests top_srcdir=. PROG=$(bindir)/txr ) \
+	  > run.sh
+	$(call INSTALL,0755,run.sh,$(DESTDIR)$(datadir)/tests)
+
 config.make config.h:
 	@echo "$@ missing: you didn't run ./configure"
 	@exit 1
