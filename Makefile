@@ -78,7 +78,7 @@ TESTS := $(patsubst $(top_srcdir)/%.txr,./%.ok,\
                     $(shell find $(top_srcdir)/tests -name '*.txr' | sort))
 
 .PHONY: tests
-tests: $(PROG) $(TESTS)
+tests: $(TESTS)
 	@echo "** tests passed!"
 
 tests/001/%: TXR_ARGS := $(top_srcdir)/tests/001/data
@@ -122,12 +122,15 @@ install: $(PROG)
 # Install the tests as well as the script to run them
 # 
 install-tests:
-	cd $(top_srcdir) ; find tests -name '*.out' -prune -o -print | cpio -pd $(DESTDIR)$(datadir) 
-	( echo "#!/bin/sh" ; \
-	  echo "set -ex" ; \
-	  echo "cd $(datadir)" ; \
-	  make -s -n tests top_srcdir=. PROG=$(bindir)/txr ) \
-	  > run.sh
+	mkdir -p $(DESTDIR)$(datadir)
+	(cd $(top_srcdir) ; \
+	 find tests -name '*.out' -prune -o -print | cpio -co) \
+	| (cd $(DESTDIR)$(datadir) ; cpio -idu)
+	(echo "#!/bin/sh" ; \
+	 echo "set -ex" ; \
+	 echo "cd $(datadir)" ; \
+	 make -s -n tests top_srcdir=. PROG=$(bindir)/txr) \
+	 > run.sh
 	$(call INSTALL,0755,run.sh,$(DESTDIR)$(datadir)/tests)
 
 config.make config.h:
