@@ -1,5 +1,12 @@
 2009-12-03  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* Makefile (CFLAGS): Better test for g++, when removing
+	warning options not appropriate for g++. Sometimes
+	g++ may be called something that dosn't end in g++,
+	like g++4.
+
+2009-12-03  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Fix for failing test suite on MIPS machine, due to
 	gc failing to mark a local variable in txr_main.
 
