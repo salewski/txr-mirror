@@ -32,7 +32,7 @@ CFLAGS := -I. -I$(top_srcdir) $(LANG_FLAGS) $(DIAG_FLAGS) \
           $(OPT_FLAGS) $(DBG_FLAGS) $(PLATFORM_FLAGS)
 CFLAGS := $(filter-out $(REMOVE_FLAGS),$(CFLAGS))
 
-ifeq ($(patsubst %g++,y,$(CC)),y)
+ifneq ($(subst g++,@,$(notdir $(CC))),$(notdir $(CC)))
 CFLAGS := $(filter-out -Wmissing-prototypes -Wstrict-prototypes,$(CFLAGS))
 endif
 
