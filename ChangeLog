@@ -1,3 +1,15 @@
+2009-12-03  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Fix for failing test suite on MIPS machine, due to
+	gc failing to mark a local variable in txr_main.
+
+	* txr.c (txr_main): Changed from internal linkage to external.
+	This prevents gcc -O2 from inlining txr_main into main.
+	We need separate stack frames for main and txr_main,
+	in order to be sure that when walking to the bottom of
+	stack pointer, we visit all locals in main. This is the
+	whole reason why there is a separate txr_main.
+ 
 2009-12-02  Kaz Kylheku  <kkylheku@gmail.com>
 
 	* Makefile (tests): Don't depend on the executable. Otherwise,
