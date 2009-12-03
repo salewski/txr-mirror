@@ -42,8 +42,6 @@
 #include "utf8.h"
 #include "parser.h"
 
-#define YY_NO_UNPUT
-
 #define YY_INPUT(buf, result, max_size)           \
   do {                                            \
     val c = nil;                                  \
