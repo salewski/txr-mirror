@@ -1,5 +1,13 @@
 2009-12-03  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* gc.c (heap_min_bound, heap_max_bound): New static globals.
+	(more): Update heap_min_bound and heap_max_bound.
+	(in_heap): Do early rejection tests on the pointer. If it's
+	not aligned, or it's completely outside of the bounding
+	box of the heap area, short circuit to false.
+
+2009-12-03  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Version 027.
 
 	Code cleanup.
