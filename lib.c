@@ -75,8 +75,7 @@ val equal_f;
 
 val prog_string;
 
-void *(*oom_realloc)(void *, size_t);
-
+mem_t *(*oom_realloc)(mem_t *, size_t);
 
 val identity(val obj)
 {
@@ -531,19 +530,19 @@ static val equal_tramp(val env, val left, val right)
   return equal(left, right);
 }
 
-unsigned char *chk_malloc(size_t size)
+mem_t *chk_malloc(size_t size)
 {
-  unsigned char *ptr = (unsigned char *) malloc(size);
+  mem_t *ptr = (mem_t *) malloc(size);
   if (size && ptr == 0)
-    ptr = (unsigned char *) oom_realloc(0, size);
+    ptr = (mem_t *) oom_realloc(0, size);
   return ptr;
 }
 
-unsigned char *chk_realloc(void *old, size_t size)
+mem_t *chk_realloc(mem_t *old, size_t size)
 {
-  unsigned char *newptr = (unsigned char *) realloc(old, size);
+  mem_t *newptr = (mem_t *) realloc(old, size);
   if (size != 0 && newptr == 0)
-    newptr = (unsigned char *) oom_realloc(old, size);
+    newptr = oom_realloc(old, size);
   return newptr;
 }
 
@@ -1405,8 +1404,8 @@ val vec_set_fill(val vec, val fill)
 
     if (alloc_delta > 0) {
       cnum new_alloc = max(new_fill, 2*old_alloc);
-      val *newvec = (val *) chk_realloc(vec->v.vec - 2,
-                                        (new_alloc + 2)*sizeof *newvec);
+      val *newvec = (val *) chk_realloc((mem_t *) (vec->v.vec - 2),
+                                        (new_alloc + 2) * sizeof *newvec);
       vec->v.vec = newvec + 2;
       vec->v.vec[vec_alloc] = num(new_alloc);
 #ifdef HAVE_VALGRIND
@@ -1622,7 +1621,7 @@ val lazy_str_get_trailing_list(val lstr, val index)
   }
 }
 
-val cobj(void *handle, val cls_sym, struct cobj_ops *ops)
+val cobj(mem_t *handle, val cls_sym, struct cobj_ops *ops)
 {
   val obj = make_obj();
   obj->co.type = COBJ;
@@ -2119,7 +2118,7 @@ void obj_pprint(val obj, val out)
   format(out, lit("#<garbage: ~p>"), (void *) obj, nao);
 }
 
-void init(const wchar_t *pn, void *(*oom)(void *, size_t),
+void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),
           val *stack_bottom)
 {
   int gc_save;

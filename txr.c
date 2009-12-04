@@ -53,7 +53,7 @@ val spec_file_str;
  * pool, which sets an OOM flag. Program can check flag
  * and gracefully terminate instead of aborting like this.
  */
-static void *oom_realloc_handler(void *old, size_t size)
+static mem_t *oom_realloc_handler(mem_t *old, size_t size)
 {
   format(std_error, lit("~a: out of memory\n"), prog_string, nao);
   put_line(std_error, lit("false"));

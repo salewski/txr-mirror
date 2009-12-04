@@ -1157,7 +1157,7 @@ val regex_compile(val regex_sexp)
 {
   nfa_t *pnfa = (nfa_t *) chk_malloc(sizeof *pnfa);
   *pnfa = nfa_compile_regex(regex_sexp);
-  return cobj(pnfa, regex_s, &regex_obj_ops);
+  return cobj((mem_t *) pnfa, regex_s, &regex_obj_ops);
 }
 
 val regexp(val obj)
