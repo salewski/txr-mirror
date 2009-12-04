@@ -63,6 +63,7 @@ static val **top = prot_stack;
 
 static val free_list, *free_tail = &free_list;
 static heap_t *heap_list;
+static val heap_min_bound, heap_max_bound;
 
 int gc_enabled = 1;
 
@@ -114,6 +115,12 @@ static void more(void)
   obj_t *block = heap->block, *end = heap->block + HEAP_SIZE;
 
   assert (free_list == 0);
+
+  if (end > heap_max_bound)
+    heap_max_bound = end;
+
+  if (block < heap_min_bound)
+    heap_min_bound = block;
 
   while (block < end) {
     block->t.next = free_list;
@@ -276,6 +283,12 @@ tail_call:
 static int in_heap(val ptr)
 {
   heap_t *heap;
+
+  if (!is_ptr(ptr))
+    return 0;
+
+  if (ptr < heap_min_bound || ptr >= heap_max_bound)
+    return 0;
 
   for (heap = heap_list; heap != 0; heap = heap->next) {
     if (ptr >= heap->block && ptr < heap->block + HEAP_SIZE)
