@@ -159,7 +159,7 @@ static wchar_t *snarf_line(struct stdio_handle *h)
 
     if (fill >= size) {
       size_t newsize = size ? size * 2 : min_size;
-      buf = (wchar_t *) chk_realloc(buf, newsize * sizeof *buf);
+      buf = (wchar_t *) chk_realloc((mem_t *) buf, newsize * sizeof *buf);
       size = newsize;
     }
 
@@ -171,7 +171,7 @@ static wchar_t *snarf_line(struct stdio_handle *h)
   }
 
   if (buf)
-    buf = (wchar_t *) chk_realloc(buf, fill * sizeof *buf);
+    buf = (wchar_t *) chk_realloc((mem_t *) buf, fill * sizeof *buf);
 
   return buf;
 }
@@ -410,7 +410,8 @@ static val string_out_put_string(val stream, val str)
     }
 
     if (so->size != old_size)
-      so->buf = (wchar_t *) chk_realloc(so->buf, so->size * sizeof *so->buf);
+      so->buf = (wchar_t *) chk_realloc((mem_t *) so->buf,
+                                        so->size * sizeof *so->buf);
     wmemcpy(so->buf + so->fill, s, len + 1);
     so->fill += len;
     return t;
@@ -486,7 +487,7 @@ static struct strm_ops dir_ops = {
 val make_stdio_stream(FILE *f, val descr, val input, val output)
 {
   struct stdio_handle *h = (struct stdio_handle *) chk_malloc(sizeof *h);
-  val stream = cobj((void *) h, stream_s, &stdio_ops.cobj_ops);
+  val stream = cobj((mem_t *) h, stream_s, &stdio_ops.cobj_ops);
   h->f = f;
   h->descr = descr;
   utf8_decoder_init(&h->ud);
@@ -496,7 +497,7 @@ val make_stdio_stream(FILE *f, val descr, val input, val output)
 val make_pipe_stream(FILE *f, val descr, val input, val output)
 {
   struct stdio_handle *h = (struct stdio_handle *) chk_malloc(sizeof *h);
-  val stream = cobj((void *) h, stream_s, &pipe_ops.cobj_ops);
+  val stream = cobj((mem_t *) h, stream_s, &pipe_ops.cobj_ops);
   h->f = f;
   h->descr = descr;
   utf8_decoder_init(&h->ud);
@@ -505,7 +506,7 @@ val make_pipe_stream(FILE *f, val descr, val input, val output)
 
 val make_string_input_stream(val string)
 {
-  return cobj((void *) cons(string, zero), stream_s, &string_in_ops.cobj_ops);
+  return cobj((mem_t *) cons(string, zero), stream_s, &string_in_ops.cobj_ops);
 }
 
 val make_string_byte_input_stream(val string)
@@ -518,7 +519,7 @@ val make_string_byte_input_stream(val string)
     bi->buf = utf8;
     bi->size = strlen((char *) utf8);
     bi->index = 0;
-    return cobj(bi, stream_s, &byte_in_ops.cobj_ops);
+    return cobj((mem_t *) bi, stream_s, &byte_in_ops.cobj_ops);
   }
 }
 
@@ -529,7 +530,7 @@ val make_string_output_stream(void)
   so->buf = (wchar_t *) chk_malloc(so->size * sizeof so->buf);
   so->fill = 0;
   so->buf[0] = 0;
-  return cobj((void *) so, stream_s, &string_out_ops.cobj_ops);
+  return cobj((mem_t *) so, stream_s, &string_out_ops.cobj_ops);
 }
 
 val get_string_from_stream(val stream)
@@ -547,7 +548,7 @@ val get_string_from_stream(val stream)
     if (!so)
       return out;
 
-    so->buf = (wchar_t *) chk_realloc(so->buf,
+    so->buf = (wchar_t *) chk_realloc((mem_t *) so->buf,
                                       (so->fill + 1) * sizeof *so->buf);
     out = string_own(so->buf);
     free(so);
@@ -562,7 +563,7 @@ val get_string_from_stream(val stream)
 
 val make_dir_stream(DIR *dir)
 {
-  return cobj((void *) dir, stream_s, &dir_ops.cobj_ops);
+  return cobj((mem_t *) dir, stream_s, &dir_ops.cobj_ops);
 }
 
 val close_stream(val stream, val throw_on_error)

@@ -51,6 +51,8 @@ typedef union obj obj_t;
 
 typedef obj_t *val;
 
+typedef unsigned char mem_t;
+
 struct any {
   type_t type;
   void *dummy[2];
@@ -140,7 +142,7 @@ struct lazy_string {
 
 struct cobj {
   type_t type;
-  void *handle;
+  mem_t *handle;
   struct cobj_ops *ops;
   val cls;
 };
@@ -222,7 +224,7 @@ extern val equal_f;
 extern const wchar_t *progname;
 extern val prog_string;
 
-extern void *(*oom_realloc)(void *, size_t);
+extern mem_t *(*oom_realloc)(mem_t *, size_t);
 
 val identity(val obj);
 val typeof(val obj);
@@ -257,8 +259,8 @@ val none_satisfy(val list, val pred, val key);
 cnum c_num(val num);
 val nump(val num);
 val equal(val left, val right);
-unsigned char *chk_malloc(size_t size);
-unsigned char *chk_realloc(void *, size_t size);
+mem_t *chk_malloc(size_t size);
+mem_t *chk_realloc(mem_t *, size_t size);
 wchar_t *chk_strdup(const wchar_t *str);
 val cons(val car, val cdr);
 val list(val first, ...); /* terminated by nao */
@@ -345,7 +347,7 @@ val length_str_gt(val str, val len);
 val length_str_ge(val str, val len);
 val length_str_lt(val str, val len);
 val length_str_le(val str, val len);
-val cobj(void *handle, val cls_sym, struct cobj_ops *ops);
+val cobj(mem_t *handle, val cls_sym, struct cobj_ops *ops);
 void cobj_print_op(val, val); /* Default function for struct cobj_ops */
 val assoc(val list, val key);
 val acons_new(val list, val key, val value);
@@ -361,7 +363,7 @@ val sort(val list, val lessfun, val keyfun);
 
 void obj_print(val obj, val stream);
 void obj_pprint(val obj, val stream);
-void init(const wchar_t *progname, void *(*oom_realloc)(void *, size_t),
+void init(const wchar_t *progname, mem_t *(*oom_realloc)(mem_t *, size_t),
           val *stack_bottom);
 void dump(val obj, val stream);
 void d(val obj);

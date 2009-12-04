@@ -1,3 +1,27 @@
+2009-12-04  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Eliminate the void * disease. Generic pointers are of mem_t *
+	from now on, which is compatible with unsigned char *.
+	No implicit conversion to or from this type, in C or C++.
+
+	* hash.c (make_hash): Convert void * to mem_t *.
+
+	* lib.c (oom_realloc, chk_malloc, chk_realloc, vec_set_fill,
+	cobj, init): Convert to using mem_t *.
+
+	* lib.h (mem_t): New typedef.
+	(struct cobj): Convert void * to mem_t *.
+	(oom_realloc, chk_malloc, chk_realloc, init): Declarations updated.
+
+	* regex.c (regex_compile): Convert void * to mem_t *.
+
+	* stream.c (snarf_line, string_out_put_string, make_stdio_stream,
+	make_pipe_stream, make_string_input_stream,
+	make_string_byte_input_stream, make_string_output_stream,
+	get_string_from_stream): Convert void * to mem_t *.
+
+	* txr.c (oom_realloc_handler): Convert void * to mem_t *.
+
 2009-12-03  Kaz Kylheku  <kkylheku@gmail.com>
 
 	* gc.c (heap_min_bound, heap_max_bound): New static globals.

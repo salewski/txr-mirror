@@ -229,7 +229,7 @@ val make_hash(val weak_keys, val weak_vals)
   struct hash *h = (struct hash *) chk_malloc(sizeof *h);
   val mod = num(256);
   val table = vector(mod);
-  val hash = cobj((void *) h, hash_s, &hash_ops);
+  val hash = cobj((mem_t *) h, hash_s, &hash_ops);
 
   vec_set_fill(table, mod);
 
