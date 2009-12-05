@@ -184,7 +184,7 @@ char *utf8_dup_to(const wchar_t *wstr)
   return str;
 }
 
-int utf8_encode(wchar_t wch, int (*put)(int ch, void *ctx), void *ctx)
+int utf8_encode(wchar_t wch, int (*put)(int ch, mem_t *ctx), mem_t *ctx)
 {
   if (wch < 0x80) {
     return put(wch, ctx);
@@ -212,7 +212,7 @@ void utf8_decoder_init(utf8_decoder_t *ud)
   ud->head = ud->tail = ud->back = 0;
 }
 
-wint_t utf8_decode(utf8_decoder_t *ud, int (*get)(void *ctx), void *ctx)
+wint_t utf8_decode(utf8_decoder_t *ud, int (*get)(mem_t *ctx), mem_t *ctx)
 {
   for (;;) {
     int ch;
