@@ -112,12 +112,12 @@ static val stdio_maybe_write_error(val stream)
             stream, num(errno), string_utf8(strerror(errno)), nao);
 }
 
-static int stdio_put_char_callback(int ch, void *f)
+static int stdio_put_char_callback(int ch, mem_t *f)
 {
   return putc(ch, (FILE *) f) != EOF;
 }
 
-static int stdio_get_char_callback(void *f)
+static int stdio_get_char_callback(mem_t *f)
 {
   return getc((FILE *) f);
 }
@@ -129,7 +129,7 @@ static val stdio_put_string(val stream, val str)
   if (h->f != 0) {
     const wchar_t *s = c_str(str);
     while (*s) {
-      if (!utf8_encode(*s++, stdio_put_char_callback, h->f))
+      if (!utf8_encode(*s++, stdio_put_char_callback, (mem_t *) h->f))
         return stdio_maybe_write_error(stream);
     }
     return t;
@@ -140,7 +140,7 @@ static val stdio_put_string(val stream, val str)
 static val stdio_put_char(val stream, val ch)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
-  return h->f != 0 && utf8_encode(c_chr(ch), stdio_put_char_callback, h->f)
+  return h->f != 0 && utf8_encode(c_chr(ch), stdio_put_char_callback, (mem_t *) h->f)
          ? t : stdio_maybe_write_error(stream);
 }
 
@@ -152,7 +152,7 @@ static wchar_t *snarf_line(struct stdio_handle *h)
   wchar_t *buf = 0;
 
   for (;;) {
-    wint_t ch = utf8_decode(&h->ud, stdio_get_char_callback, h->f);
+    wint_t ch = utf8_decode(&h->ud, stdio_get_char_callback, (mem_t *) h->f);
 
     if (ch == WEOF && buf == 0)
       break;
@@ -193,7 +193,7 @@ static val stdio_get_char(val stream)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
   if (h->f) {
-    wint_t ch = utf8_decode(&h->ud, stdio_get_char_callback, h->f);
+    wint_t ch = utf8_decode(&h->ud, stdio_get_char_callback, (mem_t *) h->f);
     return (ch != WEOF) ? chr(ch) : stdio_maybe_read_error(stream);
   }
   return stdio_maybe_read_error(stream);

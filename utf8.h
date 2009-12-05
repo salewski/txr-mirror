@@ -42,9 +42,9 @@ typedef struct utf8_decoder {
   int buf[8];
 } utf8_decoder_t;
 
-int utf8_encode(wchar_t, int (*put)(int ch, void *ctx), void *ctx);
+int utf8_encode(wchar_t, int (*put)(int ch, mem_t *ctx), mem_t *ctx);
 void utf8_decoder_init(utf8_decoder_t *);
-wint_t utf8_decode(utf8_decoder_t *,int (*get)(void *ctx), void *ctx);
+wint_t utf8_decode(utf8_decoder_t *,int (*get)(mem_t *ctx), mem_t *ctx);
 
 FILE *w_fopen(const wchar_t *, const wchar_t *);
 FILE *w_popen(const wchar_t *, const wchar_t *);

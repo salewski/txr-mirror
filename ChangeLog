@@ -1,3 +1,15 @@
+2009-12-05  Kaz Kylheku  <kkylheku@gmail.com>
+
+	More void * to mem_t * conversion.
+
+	* stream.c (stdio_put_char_callback, stdio_get_char_callback,
+	stdio_put_string, stdio_put_char, stdio_snarf_line, stdio_get_char):
+	Convert void * to mem_t *.
+
+	* utf8.c (utf8_encode, utf8_decode): Convert void * to mem_t *.
+
+	* utf8.h (utf8_encode, utf8_decode): Update declarations.
+
 2009-12-04  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Eliminate the void * disease. Generic pointers are of mem_t *
