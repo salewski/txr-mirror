@@ -54,11 +54,6 @@ struct strm_ops {
   val (*close)(val, val);
 };
 
-static val common_equal(val self, val other)
-{
-  return self == other ? t : nil;
-}
-
 static void common_destroy(val obj)
 {
   (void) close_stream(obj, nil);
@@ -226,11 +221,11 @@ static val stdio_close(val stream, val throw_on_error)
 }
 
 static struct strm_ops stdio_ops = {
-  { common_equal,
+  { cobj_equal_op,
     stdio_stream_print,
     stdio_stream_destroy,
     stdio_stream_mark,
-    0 },
+    cobj_hash_op },
   stdio_put_string,
   stdio_put_char,
   stdio_get_line,
@@ -277,11 +272,11 @@ static val pipe_close(val stream, val throw_on_error)
 }
 
 static struct strm_ops pipe_ops = {
-  { common_equal,
+  { cobj_equal_op,
     stdio_stream_print,
     stdio_stream_destroy,
     stdio_stream_mark,
-    0 },
+    cobj_hash_op },
   stdio_put_string,
   stdio_put_char,
   stdio_get_line,
@@ -327,11 +322,11 @@ static val string_in_get_char(val stream)
 }
 
 static struct strm_ops string_in_ops = {
-  { common_equal,
+  { cobj_equal_op,
     cobj_print_op,
-    0,
+    cobj_destroy_op,
     string_in_stream_mark,
-    0 },
+    cobj_hash_op },
   0,
   0,
   string_in_get_line,
@@ -356,11 +351,11 @@ static val byte_in_get_byte(val stream)
 }
 
 static struct strm_ops byte_in_ops = {
-  { common_equal,
+  { cobj_equal_op,
     cobj_print_op,
-    0,
-    0,
-    0 },
+    cobj_destroy_op,
+    cobj_mark_op,
+    cobj_hash_op },
   0,
   0,
   0,
@@ -427,11 +422,11 @@ static val string_out_put_char(val stream, val ch)
 }
 
 static struct strm_ops string_out_ops = {
-  { common_equal,
+  { cobj_equal_op,
     cobj_print_op,
     string_out_stream_destroy,
-    0,
-    0 },
+    cobj_mark_op,
+    cobj_hash_op },
   string_out_put_string,
   string_out_put_char,
   0,
@@ -470,11 +465,11 @@ static val dir_close(val stream, val throw_on_error)
 }
 
 static struct strm_ops dir_ops = {
-  { common_equal,
+  { cobj_equal_op,
     cobj_print_op,
     common_destroy,
-    0,
-    0 },
+    cobj_mark_op,
+    cobj_hash_op },
   0,
   0,
   dir_get_line,

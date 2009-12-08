@@ -155,6 +155,13 @@ struct cobj_ops {
   cnum (*hash)(val self);
 };
 
+/* Default operations for above structure. */
+val cobj_equal_op(val, val);
+void cobj_print_op(val, val);
+void cobj_destroy_op(val);
+void cobj_mark_op(val);
+cnum cobj_hash_op(val);
+
 union obj {
   struct any t;
   struct cons c;
@@ -197,7 +204,7 @@ INLINE wchar_t *litptr(val obj)
 #define lit_noex(strlit) ((obj_t *) ((cnum) (L ## strlit) | TAG_LIT))
 #define lit(strlit) lit_noex(strlit)
 
-extern val keyword_package;
+extern val keyword_package, system_package, user_package;
 extern val null, t, cons_s, str_s, chr_s, num_s, sym_s, pkg_s, fun_s, vec_s;
 extern val stream_s, hash_s, lcons_s, lstr_s, cobj_s;
 extern val var_s, regex_s, set_s, cset_s, wild_s, oneplus_s;
@@ -231,6 +238,7 @@ val typeof(val obj);
 val type_check(val obj, int);
 val type_check2(val obj, int, int);
 val type_check3(val obj, int, int, int);
+val class_check(val cobj, val class_sym);
 val car(val cons);
 val cdr(val cons);
 val *car_l(val cons);
@@ -348,7 +356,6 @@ val length_str_ge(val str, val len);
 val length_str_lt(val str, val len);
 val length_str_le(val str, val len);
 val cobj(mem_t *handle, val cls_sym, struct cobj_ops *ops);
-void cobj_print_op(val, val); /* Default function for struct cobj_ops */
 val assoc(val list, val key);
 val acons_new(val list, val key, val value);
 val *acons_new_l(val *list, val key, val *new_p);

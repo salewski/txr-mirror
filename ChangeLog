@@ -1,3 +1,37 @@
+2009-12-08  Kaz Kylheku  <kkylheku@gmail.com>
+
+	All COBJ operations have default implementations now;
+	no null pointer check over struct cobj_ops operations.
+
+	New typechecking function for COBJ objects.
+
+	* gc.c (finalize): Assume function pointer destroy
+	is not null.
+	(cobj_destroy_op): New function.
+	(mark_obj): Assume function pointer mark is not null.
+	(cobj_mark_op): New function.
+
+	* hash.c (ll_hash): Assume function pointer hash
+	is not null.
+	(cobj_hash_op): New function.
+	(hash_equal): Function removed.
+	(hash_ops): Replaced hash_equal with cobj_equal_op.
+
+	* lib.c (class_check, cobj_equal_op): New functions.
+
+	* lib.h (cobj_equal_op, cobj_destroy_op, cobj_mark_op,
+	cobj_hash_op): Declarations added.
+	(system_package, user_package, class_check): Declaration added.
+
+	* regex.c (regex_equal): Function removed.
+	(regex_obj_ops): regex_equal replaced with cobj_equal_op.
+
+	* stream.c (common_equal): Function removed.
+	(stdio_ops, pipe_ops, string_in_ops, byte_in_ops,
+	string_out_ops, dir_ops): common_equal replaced
+	with cobj_equal_op, and all previously null
+	function pointers populated with default functions.
+
 2009-12-05  Kaz Kylheku  <kkylheku@gmail.com>
 
 	More void * to mem_t * conversion.

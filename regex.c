@@ -1136,11 +1136,6 @@ nfam_result_t nfa_machine_feed(nfa_machine_t *nfam, wchar_t ch)
   return NFAM_INCOMPLETE;
 }
 
-static val regex_equal(val self, val other)
-{
-  return self == other ? t : nil; /* eq equality only */
-}
-
 static void regex_destroy(val regex)
 {
   nfa_t *pnfa = (nfa_t *) regex->co.handle;
@@ -1150,7 +1145,11 @@ static void regex_destroy(val regex)
 }
 
 static struct cobj_ops regex_obj_ops = {
-  regex_equal, cobj_print_op, regex_destroy, 0, 0
+  cobj_equal_op,
+  cobj_print_op,
+  regex_destroy,
+  cobj_mark_op,
+  cobj_hash_op
 };
 
 val regex_compile(val regex_sexp)

@@ -196,12 +196,15 @@ static void finalize(val obj)
   case LSTR:
     return;
   case COBJ:
-    if (obj->co.ops->destroy)
-      obj->co.ops->destroy(obj);
+    obj->co.ops->destroy(obj);
     return;
   }
 
   assert (0 && "corrupt type field");
+}
+
+void cobj_destroy_op(val obj)
+{
 }
 
 static void mark_obj(val obj)
@@ -272,12 +275,15 @@ tail_call:
     mark_obj(obj->ls.opts);
     mark_obj_tail(obj->ls.list);
   case COBJ:
-    if (obj->co.ops->mark)
-      obj->co.ops->mark(obj);
+    obj->co.ops->mark(obj);
     mark_obj_tail(obj->co.cls);
   }
 
   assert (0 && "corrupt type field");
+}
+
+void cobj_mark_op(val obj)
+{
 }
 
 static int in_heap(val ptr)

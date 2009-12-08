@@ -156,6 +156,14 @@ val type_check3(val obj, int t1, int t2, int t3)
   return t;
 }
 
+val class_check(val cobj, val class_sym)
+{
+  type_check (cobj, COBJ);
+  type_assert (cobj->co.cls == class_sym, (lit("~a is not a cobj of class ~a"),
+                                           cobj, class_sym));
+  return t;
+}
+
 val car(val cons)
 {
   if (cons == nil)
@@ -522,6 +530,11 @@ val equal(val left, val right)
   }
 
   internal_error("unhandled case in equal function");
+}
+
+val cobj_equal_op(val left, val right)
+{
+  return eq(left, right);
 }
 
 static val equal_tramp(val env, val left, val right)
