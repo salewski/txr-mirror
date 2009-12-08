@@ -115,22 +115,20 @@ static cnum ll_hash(val obj)
     lazy_str_force(obj);
     return ll_hash(obj->ls.prefix);
   case COBJ:
-    if (obj->co.ops->hash)
-      return obj->co.ops->hash(obj);
-    return ((cnum) obj) & NUM_MAX;
+    return obj->co.ops->hash(obj);
   }
 
   internal_error("unhandled case in equal function");
 }
 
+cnum cobj_hash_op(val obj)
+{
+  return ((cnum) obj) & NUM_MAX;
+}
+
 val hash_obj(val obj)
 {
   return num(ll_hash(obj));
-}
-
-static val hash_equal(val self, val other)
-{
-  return self == other ? t : nil;
 }
 
 static void hash_destroy(val hash)
@@ -187,11 +185,11 @@ static void hash_mark(val hash)
 }
 
 static struct cobj_ops hash_ops = {
-  hash_equal,
+  cobj_equal_op,
   cobj_print_op,
   hash_destroy,
   hash_mark,
-  0
+  cobj_hash_op
 };
 
 static void hash_grow(struct hash *h)
