@@ -1,3 +1,13 @@
+2009-12-09  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* hash.c (sethash): New function.
+
+	* hash.h (sethash): Declared.
+
+	* lib.c (cobj_handle): New function.
+
+	* lib.h (cobj_handle): Declared.
+
 2009-12-08  Kaz Kylheku  <kkylheku@gmail.com>
 
 	All COBJ operations have default implementations now;

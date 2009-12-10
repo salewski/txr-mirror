@@ -258,6 +258,13 @@ val gethash(val hash, val key)
   return cdr(found);
 }
 
+val sethash(val hash, val key, val value)
+{
+  val new_p;
+  *gethash_l(hash, key, &new_p) = value;
+  return new_p;
+}
+
 val remhash(val hash, val key)
 {
   struct hash *h = (struct hash *) hash->co.handle;

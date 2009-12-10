@@ -1644,6 +1644,12 @@ val cobj(mem_t *handle, val cls_sym, struct cobj_ops *ops)
   return obj;
 }
 
+mem_t *cobj_handle(val cobj, val cls_sym)
+{
+  class_check(cobj, cls_sym);
+  return cobj->co.handle;
+}
+
 void cobj_print_op(val obj, val out)
 {
   put_string(out, lit("#<"));
