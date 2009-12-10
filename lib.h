@@ -356,6 +356,7 @@ val length_str_ge(val str, val len);
 val length_str_lt(val str, val len);
 val length_str_le(val str, val len);
 val cobj(mem_t *handle, val cls_sym, struct cobj_ops *ops);
+mem_t *cobj_handle(val cobj, val cls_sym);
 val assoc(val list, val key);
 val acons_new(val list, val key, val value);
 val *acons_new_l(val *list, val key, val *new_p);
