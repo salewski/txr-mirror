@@ -1,5 +1,9 @@
 2009-12-09  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* parser.l (YYINPUT): Fix signed/unsigned comparison.
+
+2009-12-09  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* hash.c (sethash): New function.
 
 	* hash.h (sethash): Declared.
