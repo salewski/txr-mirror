@@ -45,8 +45,9 @@
 #define YY_INPUT(buf, result, max_size)           \
   do {                                            \
     val c = nil;                                  \
-    int n, ch = '*';                              \
-    for (n = 0; n < max_size &&                   \
+    size_t n;                                     \
+    int ch = '*';                                 \
+    for (n = 0; n < (size_t) max_size &&          \
                 (c = get_byte(yyin_stream)) &&    \
                 (ch = c_num(c)) != '\n'; ++n)     \
       buf[n] = (char) ch;                         \
