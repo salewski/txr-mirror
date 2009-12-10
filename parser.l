@@ -47,7 +47,7 @@
     val c = nil;                                  \
     size_t n;                                     \
     int ch = '*';                                 \
-    for (n = 0; n < (size_t) max_size &&          \
+    for (n = 0; n < max_size &&                   \
                 (c = get_byte(yyin_stream)) &&    \
                 (ch = c_num(c)) != '\n'; ++n)     \
       buf[n] = (char) ch;                         \
