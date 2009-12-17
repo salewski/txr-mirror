@@ -1103,16 +1103,17 @@ val make_sym(val name)
 
 val make_package(val name)
 {
-  if (find_package(name))
+  if (find_package(name)) {
     uw_throwf(error_s, lit("make_package: ~a exists already"), name, nao);
+  } else {
+    val obj = make_obj();
+    obj->pk.type = PKG;
+    obj->pk.name = name;
+    obj->pk.symhash = make_hash(nil, nil);
 
-  val obj = make_obj();
-  obj->pk.type = PKG;
-  obj->pk.name = name;
-  obj->pk.symhash = make_hash(nil, nil);
-
-  push(cons(name, obj), &packages);
-  return obj;
+    push(cons(name, obj), &packages);
+    return obj;
+  }
 }
 
 val find_package(val name)
@@ -1123,6 +1124,7 @@ val find_package(val name)
 val intern(val str, val package)
 {
   val new_p;
+  val *place;
 
   if (nullp(package)) {
     package = user_package;
@@ -1134,7 +1136,7 @@ val intern(val str, val package)
 
   type_check (package, PKG);
 
-  val *place = gethash_l(package->pk.symhash, str, &new_p);
+  place = gethash_l(package->pk.symhash, str, &new_p);
 
   if (!new_p) {
     return *place;
