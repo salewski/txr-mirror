@@ -48,6 +48,15 @@
 	
 	* txr.1: Documented new regex operators.
 
+2009-12-17  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* lib.c (make_package, find_package): Eliminate declaration
+	in the middle of statement block.
+
+	* lib.h (TAG_MASK): Becomes type cnum rather than long.
+	(nao): Based off 1 rather than -1 to avoid left shift of
+	negative number.
+
 2009-12-09  Kaz Kylheku  <kkylheku@gmail.com>
 
 	* parser.l (YYINPUT): Fix signed/unsigned comparison.
