@@ -1,3 +1,53 @@
+2010-01-05  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Implemented the regular expression ~ and & operators.
+	This turns out to be easy to do in NFA land.
+	The complement of an NFA has exactly the same number
+	and configuration of states and transitions, except
+	that the states have an inverted meaning; and furthermore,
+	failed character transitions are routed to an extra
+	state (which in this impelmentation is permanently
+	allocated and shared by all regexes). The regex &
+	is implemented trivially using DeMorgan's.
+
+	Also, bugfix: regular expressions like A|B|C are allowed
+	now by the syntax, rather than constituting syntax error.
+	Previously, this would have been entered as (A|B)|C.
+
+	* lib.c (comp_s, and_s): New symbol globals.
+	(obj_init): New symbols interned.
+
+	* lib.h (comp_s, and_s): Declared.
+
+	* parser.l (grammar): Provide new ~ and & tokens in REGEX state.
+
+	* parser.y (regexpr): Constituents of '|' are regexprs,
+	rather than regbranches (see bugfix note above).
+	The '&' operator is added.
+	(regterm): The '~' operator is added.
+
+	* regex.c (struct any_char_set, struct small_char_set, struct
+	displaced_char_set): refs field added.
+	(nfa_kind_t): New enum members nfa_super_accept,
+	nfa_reject, nfa_compl_empty, nfa_compl_wild,
+	nfa_compl_single, nfa_compl_set.
+	(nfa_super_accept_state): New static structure.
+	(nfa_is_accept_state): New inline function.
+	(char_set_create): Initialize reference count to 1.
+	(char_set_destroy): Decrement refcount, free if zero.
+	(char_set_clone): New function.
+	(nfa_state_empty_convert, nfa_state_merge): Handle nfa_reject state,
+	the complement of nfa_accept.
+	(nfa_compl_state, nfa_compl): New functions.
+	(nfa_compile_regex): Handle new operators.
+	(nfa_all_states, nfa_closure): Handle new state types.
+	(nfa_move): Handle new types according to special rules:
+	the new complemented states that have character transitions have a next
+	move to the super-accept state if they do not match the input
+	character.
+	
+	* txr.1: Documented new regex operators.
+
 2009-12-09  Kaz Kylheku  <kkylheku@gmail.com>
 
 	* parser.l (YYINPUT): Fix signed/unsigned comparison.

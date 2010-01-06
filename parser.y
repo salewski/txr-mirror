@@ -79,7 +79,8 @@ static val parsed_spec;
 %nonassoc '{' '}' '[' ']' '(' ')'
 %right IDENT TEXT NUMBER
 %left '|' '/'
-%right '*' '?' '+'
+%left '&'
+%right '~' '*' '?' '+'
 %right '^' '.' '\\' REGCHAR LITCHAR
 
 %%
@@ -454,7 +455,9 @@ regex : '/' regexpr '/'         { $$ = $2; }
       ;
 
 regexpr : regbranch                     { $$ = $1; }
-        | regbranch '|' regbranch       { $$ = list(list(or_s, $1,
+        | regexpr '|' regexpr           { $$ = list(list(or_s, $1,
+                                                         $3, nao), nao); }
+        | regexpr '&' regexpr           { $$ = list(list(and_s, $1,
                                                          $3, nao), nao); }
         ;
 
@@ -471,6 +474,7 @@ regterm : '[' regclass ']'      { $$ = cons(set_s, $2); }
         | regterm '*'           { $$ = list(zeroplus_s, $1, nao); }
         | regterm '+'           { $$ = list(oneplus_s, $1, nao); }
         | regterm '?'           { $$ = list(optional_s, $1, nao); }
+        | '~' regterm           { $$ = list(compl_s, $2, nao); }
         | REGCHAR               { $$ = chr($1); }
         | '(' regexpr ')'       { $$ = cons(compound_s, $2); }
         | '(' error             { $$ = nil;

@@ -444,10 +444,10 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                   yyerror("newline in regex");
                 }
 
-<REGEX>[.*?+^]  {
-                  yylval.chr = yytext[0];
-                  return yytext[0];
-                }
+<REGEX>[.*?+^~&]        {
+                          yylval.chr = yytext[0];
+                          return yytext[0];
+                        }
 
 
 <REGEX>[\[\]\-] {
