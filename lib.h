@@ -24,16 +24,16 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+typedef int_ptr_t cnum;
+
 #define TAG_SHIFT 2
-#define TAG_MASK ((1L << TAG_SHIFT) - 1)
+#define TAG_MASK (((cnum) 1 << TAG_SHIFT) - 1)
 #define TAG_PTR 0
 #define TAG_NUM 1
 #define TAG_CHR 2
 #define TAG_LIT 3
 #define NUM_MAX (INT_PTR_MAX/4)
 #define NUM_MIN (INT_PTR_MIN/4)
-
-typedef int_ptr_t cnum;
 
 typedef enum type {
   NUM = TAG_NUM, CHR = TAG_CHR, LIT = TAG_LIT, CONS,
@@ -379,7 +379,7 @@ val match(val spec, val data);
 
 #define nil ((obj_t *) 0)
 
-#define nao ((obj_t *) (-1 << TAG_SHIFT)) /* "not an object" sentinel value. */
+#define nao ((obj_t *) (1 << TAG_SHIFT)) /* "not an object" sentinel value. */
 
 #define eq(a, b) ((a) == (b) ? t : nil)
 
