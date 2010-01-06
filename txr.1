@@ -643,17 +643,21 @@ If RE is a regular expression, then so is (RE).
 The contents of parentheses denote one regular expression unit, so that for
 instance in (RE)*, the * operator applies to the entire parenthesized group.
 .IP (RE)?
-optionally matches the preceding regular expression (RE).
+optionally match the preceding regular expression (RE).
 .IP (RE)+
-matches the preceding expression one or more times.
+match the preceding expression one or more times.
 .IP (RE)*
-matches the preceding expression zero or more times.
+match the preceding expression zero or more times.
+.IP ~(RE)
+match the complement of the preceding expression; i.e. match
+those texts that (RE) does not match.
 .IP (RE1)(RE2)
 Two consecutive regular expressions denote catenation:
 the left expression must match, and then the right.
-
 .IP (RE1)|(RE2)
-matches either the expression RE1 or RE2.
+match either the expression RE1 or RE2.
+.IP (RE1)&(RE2)
+match both the expression RE1 and RE2 simultaneously.
 
 .PP
 Any of the special characters, including the delimiting /,  can be escaped with
@@ -674,14 +678,34 @@ The postfix operators ?, + and * have the second highest precedence, and
 associate left to right, so that in A+?*, the * applies to A+?, and the ?
 applies to A+.
 
-Catenation is on the next lower precedence rung, so that AB? means "match A,
-and then optionally B" not "match A and B, as one optional unit".  The latter
-must be written (AB)?  using parentheses to override precedence.
+The unary complement operator has the next lower precedence, so
+that ~A* means the ~(A*): "match the all text that is not matched by zero
+or more repetitions of A", not "match zero or more times the text
+not matched by A".
+
+Catenation is on the next lower precedence rung, so that AB? means A(B?), or
+"match A, and then optionally B", not "match A and B, as one optional
+unit".  The latter must be written (AB)?  using parentheses to override
+precedence.
+
+The precedence of conjunction (&) is lower than catenation, but not as low as
+that of disjunction, thus AB
 
 The disjunction operator | has the lowest precedence, lower than catenation.
-Thus abc|def means "match abc, or match def". The meaning "match ab,
-then c or d, then ef" must be expressed as ab(c|d)ef, or using
-a character class: ab[cd]ef.
+Thus ABC|DEF means "match ABC, or match DEF". The meaning "match AB,
+then C or D, then EF" must be expressed as AB(C|D)EF, or using
+a character class: AB[CD]EF.
+
+The regular expression
+
+  ABC*&~DEF+|Z
+
+Is parsed as if it were grouped with parentheses like this:
+
+  ((AB(C*))&(~(DE(F+))))|Z
+
+The main constituent is the | operator, whose left side is an & expression,
+et cetera.
 
 In
 .b txr,

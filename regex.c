@@ -71,17 +71,20 @@ typedef cset_L2_t *cset_L3_t[17];
 struct any_char_set {
   unsigned type : 3;
   unsigned comp : 1;
+  unsigned refs : 12;
 };
 
 struct small_char_set {
   unsigned type : 3;
   unsigned comp : 1;
+  unsigned refs : 12;
   cset_L0_t bitcell;
 };
 
 struct displaced_char_set {
   unsigned type : 3;
   unsigned comp : 1;
+  unsigned refs : 12;
   cset_L0_t bitcell;
   wchar_t base;
 };
@@ -90,12 +93,14 @@ struct displaced_char_set {
 struct large_char_set {
   unsigned type : 3;
   unsigned comp : 1;
+  unsigned refs : 12;
   cset_L2_t dir;
 };
 
 struct xlarge_char_set {
   unsigned type : 3;
   unsigned comp : 1;
+  unsigned refs : 12;
   cset_L3_t dir;
 };
 
@@ -109,15 +114,38 @@ typedef union char_set {
 
 #define NFA_SET_SIZE 512
 
+/*
+ * NFA node types, where each node represents a state, plus up to
+ * either two epsilon-transitions, or a single transition for a character, *
+ * character class or wild (match any character). The types starting
+ * with nfa_reject are involved in special representations needed
+ * for complement NFA's; these only occur if a regex contains the
+ * complement operator.
+ */
+
 typedef enum {
-  nfa_accept, nfa_empty, nfa_wild, nfa_single, nfa_set
+  nfa_accept, nfa_empty, nfa_wild,
+  nfa_single, nfa_set, nfa_super_accept,
+  nfa_reject, nfa_compl_empty, nfa_compl_wild,
+  nfa_compl_single, nfa_compl_set
 } nfa_kind_t;
 
+/*
+ * Node used for types nfa_accept, nfa_reject, nfa_super_accept.
+ *
+ * NOTE: nfa_super_accept is globally instantiated; there is
+ * only one node of this type in the system. Transitions to it
+ * are implicit. Its visit flag is never used, so there is no
+ * reentrancy issue.
+ */
 struct nfa_state_accept {
   nfa_kind_t kind;
   unsigned visited;
 };
 
+/*
+ * Node used for nfa_empty, nfa_compl_empty.
+ */
 struct nfa_state_empty {
   nfa_kind_t kind;
   unsigned visited;
@@ -125,13 +153,20 @@ struct nfa_state_empty {
   nfa_state_t *trans1;
 };
 
+/*
+ * Node used for nfa_single, nfa_wild,
+ * nfa_compl_single, nfa_compl_wild.
+ */
 struct nfa_state_single {
   nfa_kind_t kind;
   unsigned visited;
   nfa_state_t *trans;
-  wchar_t ch;
+  wchar_t ch;        /* set to 0 if nfa_state_wild or nfa_compl_wild. */
 };
 
+/*
+ * Node used for nfa_set, nfa_compl_set.
+ */
 struct nfa_state_set {
   nfa_kind_t kind;
   unsigned visited;
@@ -154,6 +189,23 @@ struct nfa_machine {
   cnum count;
   nfa_t nfa;
 };
+
+static nfa_state_t nfa_super_accept_state = { { nfa_super_accept } };
+
+INLINE int nfa_is_accept_state(nfa_state_t *state)
+{
+  switch (state->a.kind) {
+  case nfa_accept:
+  case nfa_super_accept:
+  case nfa_compl_empty:
+  case nfa_compl_wild:
+  case nfa_compl_single:
+  case nfa_compl_set:
+    return 1;
+  default:
+    return 0;
+  }
+}
 
 static int L0_full(cset_L0_t *L0)
 {
@@ -423,6 +475,7 @@ static char_set_t *char_set_create(chset_type_t type, wchar_t base)
   char_set_t *cs = (char_set_t *) chk_malloc(sizeof *cs);
   *cs = blank;
   cs->any.type = type;
+  cs->any.refs = 1;
 
   if (type == CHSET_DISPLACED)
     cs->d.base = base;
@@ -432,20 +485,28 @@ static char_set_t *char_set_create(chset_type_t type, wchar_t base)
 
 static void char_set_destroy(char_set_t *set)
 {
-  switch (set->any.type) {
-  case CHSET_DISPLACED:
-  case CHSET_SMALL:
-    free(set);
-    break;
-  case CHSET_LARGE:
-    L2_free(&set->l.dir);
-    free(set);
-    break;
-  case CHSET_XLARGE:
-    L3_free(&set->xl.dir);
-    free(set);
-    break;
+  if (--set->any.refs == 0) {
+    switch (set->any.type) {
+    case CHSET_DISPLACED:
+    case CHSET_SMALL:
+      free(set);
+      break;
+    case CHSET_LARGE:
+      L2_free(&set->l.dir);
+      free(set);
+      break;
+    case CHSET_XLARGE:
+      L3_free(&set->xl.dir);
+      free(set);
+      break;
+    }
   }
+}
+
+static char_set_t *char_set_clone(char_set_t *set)
+{
+  set->any.refs++;
+  return set;
 }
 
 static void char_set_compl(char_set_t *set)
@@ -602,7 +663,7 @@ static nfa_state_t *nfa_state_set(nfa_state_t *t, char_set_t *cs)
 static void nfa_state_empty_convert(nfa_state_t *acc, nfa_state_t *t0,
                                     nfa_state_t *t1)
 {
-  assert (acc->a.kind == nfa_accept);
+  assert (acc->a.kind == nfa_accept || acc->a.kind == nfa_reject);
   acc->e.kind = nfa_empty;
   acc->e.trans0 = t0;
   acc->e.trans1 = t1;
@@ -624,7 +685,7 @@ static void nfa_state_empty_convert(nfa_state_t *acc, nfa_state_t *t0,
  */
 static void nfa_state_merge(nfa_state_t *acc, nfa_state_t *st)
 {
-  assert (acc->a.kind == nfa_accept);
+  assert (acc->a.kind == nfa_accept || acc->a.kind == nfa_reject);
   *acc = *st;
 }
 
@@ -723,6 +784,136 @@ static nfa_t nfa_compile_set(val args, int comp)
   }
 }
 
+static nfa_state_t *nfa_compl_state(nfa_state_t *in)
+{
+  nfa_state_t *st = (nfa_state_t *) chk_malloc(sizeof *st);
+
+  st->a.visited = 0;
+
+  switch (in->a.kind) {
+  case nfa_accept:
+    st->a.kind = nfa_reject;
+    break;
+  case nfa_empty:
+    st->a.kind = nfa_compl_empty;
+    st->e.trans0 = 0;
+    st->e.trans1 = 0;
+    break;
+  case nfa_wild:
+    st->a.kind = nfa_compl_wild;
+    st->o.trans = 0;
+    st->o.ch = 0;
+    break;
+  case nfa_single:
+    st->a.kind = nfa_compl_single;
+    st->o.trans = 0;
+    st->o.ch = in->o.ch;
+    break;
+  case nfa_set:
+    st->a.kind = nfa_compl_set;
+    st->s.trans = 0;
+    st->s.set = char_set_clone(in->s.set);
+    break;
+  case nfa_super_accept:
+    internal_error("NFA super accept state explicitly reachable in graph");
+  case nfa_reject:
+    st->a.kind = nfa_accept;
+    break;
+  case nfa_compl_empty:
+    st->a.kind = nfa_empty;
+    st->e.trans0 = 0;
+    st->e.trans1 = 0;
+    break;
+  case nfa_compl_wild:
+    st->a.kind = nfa_wild;
+    st->o.trans = 0;
+    st->o.ch = 0;
+    break;
+  case nfa_compl_single:
+    st->a.kind = nfa_single;
+    st->o.trans = 0;
+    st->o.ch = in->o.ch;
+    break;
+  case nfa_compl_set:
+    st->a.kind = nfa_set;
+    st->s.trans = 0;
+    st->s.set = char_set_clone(in->s.set);
+    break;
+  }
+
+  return st;
+}
+
+static nfa_t nfa_compl(nfa_t in)
+{
+  nfa_state_t **stack = (nfa_state_t **) chk_malloc(NFA_SET_SIZE*sizeof *stack);
+  nfa_state_t **temp = (nfa_state_t **) chk_malloc(NFA_SET_SIZE*sizeof *temp);
+  unsigned visited = ++in.start->a.visited;
+  int i, num = 2;
+
+  stack[0] = in.start;
+  stack[1] = in.accept;
+
+  temp[0] = nfa_compl_state(stack[0]);
+  temp[1] = nfa_compl_state(stack[1]);
+
+  for (i = 0; i < num; i++) {
+    nfa_state_t *s = stack[i];
+    nfa_state_t *t = temp[i];
+
+    if (num >= NFA_SET_SIZE)
+      internal_error("NFA set size exceeded");
+
+    switch (s->a.kind) {
+    case nfa_accept:
+    case nfa_reject:
+      break;
+    case nfa_empty:
+    case nfa_compl_empty:
+      {
+        nfa_state_t *e0 = s->e.trans0;
+        nfa_state_t *e1 = s->e.trans1;
+
+        if (e0 && e0->a.visited != visited) {
+          e0->a.visited = visited;
+          temp[num] = t->e.trans0 = nfa_compl_state(e0);
+          stack[num++] = e0;
+        }
+        if (e1 && e1->a.visited != visited) {
+          e1->a.visited = visited;
+          temp[num] = t->e.trans1 = nfa_compl_state(e1);
+          stack[num++] = e1;
+        }
+      }
+      break;
+    case nfa_wild:
+    case nfa_single:
+    case nfa_set:
+    case nfa_compl_wild:
+    case nfa_compl_single:
+    case nfa_compl_set:
+      if (s->o.trans->a.visited != visited) {
+        s->o.trans->a.visited = visited;
+        temp[num] = t->o.trans = nfa_compl_state(s->o.trans);
+        stack[num++] = s->o.trans;
+      }
+      break;
+    case nfa_super_accept:
+      internal_error("NFA super accept state explicitly reachable in graph");
+    }
+  }
+
+  if (num > NFA_SET_SIZE)
+    internal_error("NFA set size exceeded");
+
+  {
+    nfa_t ret = { temp[0], temp[1] };
+    free(temp);
+    free(stack);
+    return ret;
+  }
+}
+
 /*
  * Input is the items from a regex form,
  * not including the regex symbol.
@@ -785,6 +976,9 @@ nfa_t nfa_compile_regex(val items)
         nfa_t nfa_args = nfa_compile_regex(args);
         nfa_state_t *s = nfa_state_empty(nfa_args.start, nfa_args.accept);
         nfa = nfa_make(s, nfa_args.accept);
+      } else if (sym == compl_s) {
+        nfa_t nfa_args = nfa_compile_regex(args);
+        nfa = nfa_compl(nfa_args);
       } else if (sym == or_s) {
         /* Simple: make a new start and acceptance state, which form
            the ends of a spindle that goes through two branches. */
@@ -798,6 +992,19 @@ nfa_t nfa_compile_regex(val items)
         nfa_state_empty_convert(nfa_first.accept, acc, 0);
         nfa_state_empty_convert(nfa_second.accept, acc, 0);
         nfa = nfa_make(s, acc);
+      } else if (sym == and_s) {
+        /* We compile regex and using the De Morgan's equality:
+           R1&R2 == ~(~R1|~R2).
+           We could do this by transforming the source code,
+           and recursing into compiler, but instead, the approach taken
+           is NFA manipulation closely based on the or_s case above. */
+        nfa_t nfa_first = nfa_compl(nfa_compile_regex(first(args)));
+        nfa_t nfa_second = nfa_compl(nfa_compile_regex(second(args)));
+        nfa_state_t *acc = nfa_state_accept();
+        nfa_state_t *s = nfa_state_empty(nfa_first.start, nfa_second.start);
+        nfa_state_empty_convert(nfa_first.accept, acc, 0);
+        nfa_state_empty_convert(nfa_second.accept, acc, 0);
+        nfa = nfa_compl(nfa_make(s, acc));
       } else {
         assert (0 && "internal error: bad operator in regex");
       }
@@ -817,45 +1024,52 @@ nfa_t nfa_compile_regex(val items)
   }
 }
 
-static int nfa_all_states(nfa_state_t **inout, int num, unsigned visited)
+static int nfa_all_states(nfa_state_t **stack, int num, unsigned visited)
 {
   int i;
 
   for (i = 0; i < num; i++)
-    inout[i]->a.visited = visited;
+    stack[i]->a.visited = visited;
 
   for (i = 0; i < num; i++) {
-    nfa_state_t *s = inout[i];
+    nfa_state_t *s = stack[i];
 
     if (num >= NFA_SET_SIZE)
       internal_error("NFA set size exceeded");
 
     switch (s->a.kind) {
     case nfa_accept:
+    case nfa_reject:
       break;
     case nfa_empty:
+    case nfa_compl_empty:
       {
         nfa_state_t *e0 = s->e.trans0;
         nfa_state_t *e1 = s->e.trans1;
 
         if (e0 && e0->a.visited != visited) {
           e0->a.visited = visited;
-          inout[num++] = e0;
+          stack[num++] = e0;
         }
         if (e1 && e1->a.visited != visited) {
           e1->a.visited = visited;
-          inout[num++] = e1;
+          stack[num++] = e1;
         }
       }
       break;
     case nfa_wild:
     case nfa_single:
     case nfa_set:
+    case nfa_compl_wild:
+    case nfa_compl_single:
+    case nfa_compl_set:
       if (s->o.trans->a.visited != visited) {
         s->o.trans->a.visited = visited;
-        inout[num++] = s->o.trans;
+        stack[num++] = s->o.trans;
       }
       break;
+    case nfa_super_accept:
+      internal_error("NFA super accept state explicitly reachable in graph");
     }
   }
 
@@ -873,7 +1087,7 @@ void nfa_free(nfa_t nfa)
   all[0] = nfa.start;
   all[1] = nfa.accept;
 
-  nstates = nfa_all_states(all, 2, nfa.start->a.visited);
+  nstates = nfa_all_states(all, 2, nfa.start->a.visited + 1);
 
   for (i = 0; i < nstates; i++)
     nfa_state_free(all[i]);
@@ -906,10 +1120,15 @@ static int nfa_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
   for (i = 0; i < nin; i++) {
     if (stackp >= NFA_SET_SIZE)
       internal_error("NFA set size exceeded");
-    in[i]->a.visited = visited;
+    /* We do not mark the super accept state visited,
+       and we will never visit it by following e-transitions,
+       because all transitions into the super-accept state
+       are character-consuming. */
+    if (in[i] != &nfa_super_accept_state)
+       in[i]->a.visited = visited;
     stack[stackp++] = in[i];
     out[nout++] = in[i];
-    if (in[i]->a.kind == nfa_accept)
+    if (nfa_is_accept_state(in[i]))
       *accept = 1;
   }
 
@@ -919,10 +1138,13 @@ static int nfa_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
     if (nout >= NFA_SET_SIZE)
       internal_error("NFA set size exceeded");
 
-    /* Only states of type nfa_empty are interesting.
-       Each such state at most two epsilon transitions. */
-
-    if (top->a.kind == nfa_empty) {
+    /* Only states of type nfa_empty or its complement are interesting.
+       Each such state at most two epsilon transitions.
+       Note above comment that epsilon transitions never lead
+       to the special super accept state; i.e. e0 and e1
+       are never the super accept state and so we can write to their
+       their visited field. */
+    if (top->a.kind == nfa_empty || top->a.kind == nfa_compl_empty) {
       nfa_state_t *e0 = top->e.trans0;
       nfa_state_t *e1 = top->e.trans1;
 
@@ -930,7 +1152,7 @@ static int nfa_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
         e0->a.visited = visited;
         stack[stackp++] = e0;
         out[nout++] = e0;
-        if (e0->a.kind == nfa_accept)
+        if (nfa_is_accept_state(e0))
           *accept = 1;
       }
 
@@ -938,7 +1160,7 @@ static int nfa_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
         e1->a.visited = visited;
         stack[stackp++] = e1;
         out[nout++] = e1;
-        if (e1->a.kind == nfa_accept)
+        if (nfa_is_accept_state(e1))
           *accept = 1;
       }
     }
@@ -958,22 +1180,41 @@ static int nfa_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
 static int nfa_move(nfa_state_t **in, int nin, nfa_state_t **out, wchar_t ch)
 {
   int i, nmove;
+  int super_added = 0;
 
   for (nmove = 0, i = 0; i < nin; i++) {
     nfa_state_t *s = in[i];
 
     switch (s->a.kind) {
     case nfa_wild:
+    case nfa_compl_wild:
       /* Unconditional match; don't have to look at ch. */
       break;
     case nfa_single:
       if (s->o.ch == ch) /* Character match. */
         break;
       continue; /* no match */
+    case nfa_compl_single:
+      if (s->o.ch == ch) /* Character match. */
+        break;
+      goto add_super; /* no match means we can move to super accept state */
     case nfa_set:
       if (char_set_contains(s->s.set, ch)) /* Set match. */
         break;
       continue; /* no match */
+    case nfa_compl_set:
+      if (char_set_contains(s->s.set, ch)) /* Set match. */
+        break;
+      goto add_super;
+    case nfa_super_accept:
+      /* super always transitions to itself, for any character. */
+    add_super:
+      if (!super_added) {
+        super_added = 1;
+        if (nmove >= NFA_SET_SIZE)
+          internal_error("NFA set size exceeded");
+        out[nmove++] = &nfa_super_accept_state;
+      }
     default:
       /* Epsilon-transition and acceptance states have no character moves. */
       continue;
