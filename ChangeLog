@@ -1,5 +1,23 @@
 2010-01-06  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Remove incorrect implementation of extended
+	regex operations (complement, intersection).
+	The syntax extensions documentation are retained.
+
+	* regex.c (struct any_char_set, struct small_char_set, struct
+	displaced_char_set): refs field removed.
+	(nfa_kind_t): Removed enum members nfa_super_accept,
+	nfa_reject, nfa_compl_empty, nfa_compl_wild,
+	nfa_compl_single, nfa_compl_set.
+	(nfa_super_accept_state, nfa_is_accept_state): Removed.
+	(char_set_create, char_set_destroy): Reverted.
+	(char_set_clone): Removed.
+	(nfa_state_empty_convert, nfa_state_merge): Reverted.
+	(nfa_compl_state, nfa_compl): Removed.
+	(nfa_compile_regex, nfa_all_states, nfa_closure, nfa_move): Reverted.
+
+2010-01-06  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Some fine tuning in regex grammar.
 
 	* parser.y (regex): Empty regex handled by
