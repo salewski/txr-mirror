@@ -449,7 +449,6 @@ expr : IDENT                    { $$ = intern(string_own($1), nil); }
      ;
 
 regex : '/' regexpr '/'         { $$ = $2; }
-      | '/' '/'                 { $$ = nil; }
       | '/' error               { $$ = nil;
                                   yybadtoken(yychar, lit("regex")); }
       ;
@@ -459,10 +458,12 @@ regexpr : regbranch                     { $$ = $1; }
                                                          $3, nao), nao); }
         | regexpr '&' regexpr           { $$ = list(list(and_s, $1,
                                                          $3, nao), nao); }
+        | /* empty */                   { $$ = nil; }
         ;
 
 regbranch : regterm             { $$ = cons($1, nil); }
           | regterm regbranch   { $$ = cons($1, $2); }
+          | '~' regbranch       { $$ = cons(cons(compl_s, $2), nil); }
           ;
 
 regterm : '[' regclass ']'      { $$ = cons(set_s, $2); }
@@ -474,7 +475,6 @@ regterm : '[' regclass ']'      { $$ = cons(set_s, $2); }
         | regterm '*'           { $$ = list(zeroplus_s, $1, nao); }
         | regterm '+'           { $$ = list(oneplus_s, $1, nao); }
         | regterm '?'           { $$ = list(optional_s, $1, nao); }
-        | '~' regterm           { $$ = list(compl_s, $2, nao); }
         | REGCHAR               { $$ = chr($1); }
         | '(' regexpr ')'       { $$ = cons(compound_s, $2); }
         | '(' error             { $$ = nil;
