@@ -368,7 +368,7 @@ static val match_line(val bindings, val specline, val dataline,
             LOG_MATCH("var delimiting string", find);
             bindings = acons_new(bindings, sym, sub_str(dataline, pos, find));
             pos = plus(find, length_str(pat));
-          } else if (consp(pat) && typeof(first(pat)) == regex_s) {
+          } else if (consp(pat) && regexp(first(pat))) {
             val find = search_regex(dataline, first(pat), pos, modifier);
             val fpos = car(find);
             val flen = cdr(find);
@@ -412,7 +412,7 @@ static val match_line(val bindings, val specline, val dataline,
             sem_error(spec_lineno,
                       lit("variable followed by invalid element"), nao);
           }
-        } else if (typeof(directive) == regex_s) {
+        } else if (regexp(directive)) {
           val past = match_regex(dataline, directive, pos);
           if (nullp(past)) {
             LOG_MISMATCH("regex");

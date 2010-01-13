@@ -1,3 +1,56 @@
+2010-01-13  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Impelement derivative-based regular expressions.
+
+	* lib.c (chset_s, compiled_regex_s): New symbol globals.
+	(obj_init): New symbols interned.
+
+	* lib.h (chest_s, compiled_regex_s): Declared.
+
+	* match.c (match_line, match_files): Use regexp predicate
+	function instead of typeof for detecting regex.
+
+	* parser.y (regexpr, regbranch, regterm): Minor syntactic refactoring.
+
+	* regex.h (union nfa_state, nfa_state_t, struct nfa, enum nfam_result,
+	nfa_machine_t, nfa_compile_regex, nfa_free, nfa_run,
+	nfa_machine_reset, nfa_machine_init, nfa_machine_cleanup,
+	nfa_machine_feed, nfa_machine_match_span, regex_nfa): Declarations
+	for internal material removed from header, some moved into regex.c.
+
+	* regex.c: Includes txr.h now to get declaration of new option global.
+	(union nfa_state, nfa_state_t, struct nfa,
+	nfa_compile_regex, nfa_free, nfa_run, regex_nfa): Declarations
+	moved from regex.h.
+	(enum nfam_result, nfa_machine_reset, nfa_machine_init,
+	nfa_machine_cleanup, nfa_machine_feed, nfa_machine_match_span):
+	Renamed from nfam_* and nfa_machine_* to regm_* and regex_machine_*.
+	Functions made static. Regex machine is now polymorphic: the
+	machine is instantiated based on whether the regex is NFA or
+	derivative type, and the behavior of the functions is type dependent.
+	(nfa_machine_t): Renamed to regex_machine_t, now typedef name for union
+	regex_machine.
+	(struct dv_machine, union regex_machine): New types.
+	(struct nfa_machine): New member is_nfa. A few members rearranged,
+	so that union common members are at the start of the structure.
+	(opt_derivative_regex): New global added.
+	(char_set_compile, char_set_cobj_destroy): New function.
+	(char_set_cobj_ops): New static structure.
+	(nfa_compile_set): Refactored to use char_set_compile; made static.
+	(nfa_compile_list): New function.
+	(nfa_compile_regex): Refactored to follow new syntax from parser.y;
+	made static.
+	(nfa_free, nfa_run, regex_nfa): Made static.
+	(dv_compile_regex, reg_nullable_list, reg_nullable,
+	reg_derivative_list, reg_derivative, dv_run): New functions.
+	(regex_compile): Can compile either kind of regex now.
+	(search_regex, match_regex): Decoupled from dependency on NFA
+	implementation.
+
+	* txr.h (opt_derivative_regex): Declared.
+
+	* dep.mk: Regenerated.
+
 2010-01-06  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Remove incorrect implementation of extended
