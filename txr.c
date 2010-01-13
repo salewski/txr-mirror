@@ -281,6 +281,10 @@ int txr_main(int argc, char **argv)
              prog_string, string_utf8(*argv), nao);
       return EXIT_FAILURE;
 #endif
+    } else if (!strcmp(*argv, "--dv-regex")) {
+      opt_derivative_regex = 1;
+      argv++, argc--;
+      continue;
     }
 
     {

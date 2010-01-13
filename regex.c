@@ -183,7 +183,7 @@ union regex_machine {
   struct dv_machine d;
 };
 
-int opt_derivative_regex = 1;
+int opt_derivative_regex = 0;
 
 static int L0_full(cset_L0_t *L0)
 {
@@ -1336,9 +1336,37 @@ static cnum dv_run(val regex, const wchar_t *str)
   return last_accept_pos ? last_accept_pos - str : -1;
 }
 
+static val regex_requires_dv(val exp)
+{
+  if (atom(exp)) {
+    return nil;
+  } else {
+    val sym = first(exp);
+    val args = rest(exp);
+
+    if (sym == set_s || sym == cset_s) {
+      return nil;
+    } else if (sym == compound_s) {
+      return some_satisfy(args, func_n1(regex_requires_dv), nil);
+    } else if (sym == zeroplus_s || sym == oneplus_s ||
+               sym == optional_s) {
+      return regex_requires_dv(first(args));
+    } else if (sym == compl_s) {
+      return t;
+    } else if (sym == or_s) {
+      return if2(regex_requires_dv(first(args)) || 
+                 regex_requires_dv(second(args)), t);
+    } else if (sym == and_s) {
+      return t;
+    } else {
+      internal_error("bad operator in regex");
+    }
+  }
+}
+
 val regex_compile(val regex_sexp)
 {
-  if (opt_derivative_regex) {
+  if (opt_derivative_regex || regex_requires_dv(regex_sexp)) {
     return cons(compiled_regex_s, cons(dv_compile_regex(regex_sexp), nil));
   } else {
     nfa_t *pnfa = (nfa_t *) chk_malloc(sizeof *pnfa);

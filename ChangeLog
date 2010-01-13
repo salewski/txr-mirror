@@ -1,5 +1,22 @@
 2010-01-13  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Dynamically determine which regex implementation to use:
+	NFA or derivatives. The default behavior is NFA, with
+	derivatives used if the regular expression contains
+	uses of complement or intersection. The --dv-regex
+	option forces derivatives always.
+
+	* regex.c (opt_derivative_regex): Default value is 0 now.
+	(regex_requires_dv): New function.
+	(regex_compile): If regex_requires_dv function reports
+	true, or if the opt_derivative_regex flag is true,
+	treat the regex with the derivative-based implementation.
+
+	* txr.c (txr_main): Implemented --dv-regex option
+	to set the opt_derivative_regex flag.
+
+2010-01-13  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* lib.h (c_num): Remove redundant declaration.
 
 2010-01-13  Kaz Kylheku  <kkylheku@gmail.com>
