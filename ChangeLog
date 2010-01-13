@@ -1,5 +1,9 @@
 2010-01-13  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* lib.h (c_num): Remove redundant declaration.
+
+2010-01-13  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Impelement derivative-based regular expressions.
 
 	* lib.c (chset_s, compiled_regex_s): New symbol globals.
