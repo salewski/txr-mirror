@@ -36,6 +36,20 @@
 #include "lib.h"
 #include "unwind.h"
 #include "regex.h"
+#include "txr.h"
+
+typedef union nfa_state nfa_state_t;
+
+typedef struct nfa {
+  nfa_state_t *start;
+  nfa_state_t *accept;
+} nfa_t;
+
+typedef enum regm_result {
+  REGM_INCOMPLETE, REGM_FAIL, REGM_MATCH
+} regm_result_t;
+
+typedef union regex_machine regex_machine_t;
 
 typedef unsigned int bitcell_t;
 
@@ -147,13 +161,29 @@ union nfa_state {
 };
 
 struct nfa_machine {
-  cnum last_accept_pos;
+  int is_nfa;           /* common member */
+  cnum last_accept_pos; /* common member */
+  cnum count;           /* common member */
   unsigned visited;
   nfa_state_t **move, **clos, **stack;
   int nmove, nclos;
-  cnum count;
   nfa_t nfa;
 };
+
+struct dv_machine {
+  int is_nfa;           /* common member */
+  cnum last_accept_pos; /* common member */
+  cnum count;           /* common member */
+  val deriv;
+  val regex;
+};
+
+union regex_machine {
+  struct nfa_machine n;
+  struct dv_machine d;
+};
+
+int opt_derivative_regex = 1;
 
 static int L0_full(cset_L0_t *L0)
 {
@@ -531,6 +561,91 @@ static int char_set_contains(char_set_t *set, wchar_t ch)
   return set->any.comp ? !result : result;
 }
 
+static char_set_t *char_set_compile(val args, val comp)
+{
+  val iter;
+  wchar_t min = WCHAR_MAX;
+  wchar_t max = 0;
+  chset_type_t cst;
+
+  for (iter = args; iter; iter = rest(iter)) {
+    val item = first(iter);
+
+    if (consp(item)) {
+      val from = car(item);
+      val to = cdr(item);
+
+      assert (typeof(from) == chr_s && typeof(to) == chr_s);
+
+      if (c_chr(from) < min)
+        min = c_chr(from);
+      if (c_chr(from) > max)
+        max = c_chr(from);
+
+      if (c_chr(to) < min)
+        min = c_chr(to);
+      if (c_chr(to) > max)
+        max = c_chr(to);
+    } else if (typeof(item) == chr_s) {
+      if (c_chr(item) < min)
+        min = c_chr(item);
+      if (c_chr(item) > max)
+        max = c_chr(item);
+    } else {
+      assert(0 && "bad regex set");
+    }
+  }
+
+  if (max < 0x100)
+    cst = CHSET_SMALL;
+  else if (max - min < 0x100)
+    cst = CHSET_DISPLACED;
+  else if (max < 0x10000)
+    cst = CHSET_LARGE;
+  else
+    cst = CHSET_XLARGE;
+
+  {
+    char_set_t *set = char_set_create(cst, min);
+
+    for (iter = args; iter; iter = rest(iter)) {
+      val item = first(iter);
+
+      if (consp(item)) {
+        val from = car(item);
+        val to = cdr(item);
+
+        assert (typeof(from) == chr_s && typeof(to) == chr_s);
+        char_set_add_range(set, c_chr(from), c_chr(to));
+      } else if (typeof(item) == chr_s) {
+        char_set_add(set, c_chr(item));
+      } else {
+        assert(0 && "bad regex set");
+      }
+    }
+
+    if (comp)
+      char_set_compl(set);
+
+    return set;
+  }
+}
+
+static void char_set_cobj_destroy(val chset)
+{
+  char_set_t *set = (char_set_t *) chset->co.handle;
+  char_set_destroy(set);
+  chset->co.handle = 0;
+}
+
+static struct cobj_ops char_set_obj_ops = {
+  cobj_equal_op,
+  cobj_print_op,
+  char_set_cobj_destroy,
+  cobj_mark_op,
+  cobj_hash_op
+};
+
 static nfa_state_t *nfa_state_accept(void)
 {
   nfa_state_t *st = (nfa_state_t *) chk_malloc(sizeof *st);
@@ -651,75 +766,30 @@ static nfa_t nfa_combine(nfa_t pred, nfa_t succ)
   return ret;
 }
 
-static nfa_t nfa_compile_set(val args, int comp)
+static nfa_t nfa_compile_set(val args, val comp)
 {
-  val iter;
-  wchar_t min = WCHAR_MAX;
-  wchar_t max = 0;
-  chset_type_t cst;
+  char_set_t *set = char_set_compile(args, comp);
+  nfa_state_t *acc = nfa_state_accept();
+  nfa_state_t *s = nfa_state_set(acc, set);
+  return nfa_make(s, acc);
+}
 
-  for (iter = args; iter; iter = rest(iter)) {
-    val item = first(iter);
+static nfa_t nfa_compile_regex(val regex);
 
-    if (consp(item)) {
-      val from = car(item);
-      val to = cdr(item);
+/*
+ * Helper to nfa_compile_regex for compiling the argument list of
+ * a compound regex.
+ */
 
-      assert (typeof(from) == chr_s && typeof(to) == chr_s);
+static nfa_t nfa_compile_list(val exp_list)
+{
+  nfa_t nfa_first = nfa_compile_regex(first(exp_list));
 
-      if (c_chr(from) < min)
-        min = c_chr(from);
-      if (c_chr(from) > max)
-        max = c_chr(from);
-
-      if (c_chr(to) < min)
-        min = c_chr(to);
-      if (c_chr(to) > max)
-        max = c_chr(to);
-    } else if (typeof(item) == chr_s) {
-      if (c_chr(item) < min)
-        min = c_chr(item);
-      if (c_chr(item) > max)
-        max = c_chr(item);
-    } else {
-      assert(0 && "bad regex set");
-    }
-  }
-
-  if (max < 0x100)
-    cst = CHSET_SMALL;
-  else if (max - min < 0x100)
-    cst = CHSET_DISPLACED;
-  else if (max < 0x10000)
-    cst = CHSET_LARGE;
-  else
-    cst = CHSET_XLARGE;
-
-  {
-    char_set_t *set = char_set_create(cst, min);
-    nfa_state_t *acc = nfa_state_accept();
-    nfa_state_t *s = nfa_state_set(acc, set);
-    nfa_t ret = nfa_make(s, acc);
-
-    for (iter = args; iter; iter = rest(iter)) {
-      val item = first(iter);
-
-      if (consp(item)) {
-        val from = car(item);
-        val to = cdr(item);
-
-        assert (typeof(from) == chr_s && typeof(to) == chr_s);
-        char_set_add_range(set, c_chr(from), c_chr(to));
-      } else if (typeof(item) == chr_s) {
-        char_set_add(set, c_chr(item));
-      } else {
-        assert(0 && "bad regex set");
-      }
-    }
-
-    if (comp)
-      char_set_compl(set);
-    return ret;
+  if (rest(exp_list)) {
+    nfa_t nfa_rest = nfa_compile_list(rest(exp_list));
+    return nfa_combine(nfa_first, nfa_rest);
+  } else {
+    return nfa_first;
   }
 }
 
@@ -728,92 +798,73 @@ static nfa_t nfa_compile_set(val args, int comp)
  * not including the regex symbol.
  * I.e.  (rest '(regex ...)) not '(regex ...).
  */
-nfa_t nfa_compile_regex(val items)
+static nfa_t nfa_compile_regex(val exp)
 {
-  if (nullp(items)) {
+  if (nullp(exp)) {
     nfa_state_t *acc = nfa_state_accept();
     nfa_state_t *s = nfa_state_empty(acc, 0);
-    nfa_t nfa = nfa_make(s, acc);
-    return nfa;
+    return nfa_make(s, acc);
+  } else if (typeof(exp) == chr_s) {
+    nfa_state_t *acc = nfa_state_accept();
+    nfa_state_t *s = nfa_state_single(acc, c_chr(exp));
+    return nfa_make(s, acc);
+  } else if (exp == wild_s) {
+    nfa_state_t *acc = nfa_state_accept();
+    nfa_state_t *s = nfa_state_wild(acc);
+    return nfa_make(s, acc);
   } else {
-    val item = first(items), others = rest(items);
-    nfa_t nfa;
+    val sym = first(exp), args = rest(exp);
 
-    if (typeof(item) == chr_s) {
+    if (sym == set_s) {
+      return nfa_compile_set(args, nil);
+    } else if (sym == cset_s) {
+      return nfa_compile_set(args, t);
+    } else if (sym == compound_s) {
+      return nfa_compile_list(args);
+    } else if (sym == zeroplus_s) {
+      nfa_t nfa_arg = nfa_compile_regex(first(args));
       nfa_state_t *acc = nfa_state_accept();
-      nfa_state_t *s = nfa_state_single(acc, c_chr(item));
-      nfa = nfa_make(s, acc);
-    } else if (item == wild_s) {
+      /* New start state has empty transitions going through
+         the inner NFA, or skipping it right to the new acceptance state. */
+      nfa_state_t *s = nfa_state_empty(nfa_arg.start, acc);
+      /* Convert acceptance state of inner NFA to one which has
+         an empty transition back to the start state, and
+         an empty transition to the new acceptance state. */
+      nfa_state_empty_convert(nfa_arg.accept, nfa_arg.start, acc);
+      return nfa_make(s, acc);
+    } else if (sym == oneplus_s) {
+      /* One-plus case differs from zero-plus in that the new start state
+         does not have an empty transition to the acceptance state.
+         So the inner NFA must be traversed once. */
+      nfa_t nfa_arg = nfa_compile_regex(first(args));
       nfa_state_t *acc = nfa_state_accept();
-      nfa_state_t *s = nfa_state_wild(acc);
-      nfa = nfa_make(s, acc);
-    } else if (consp(item)) {
-      val sym = first(item);
-      val args = rest(item);
-
-      if (sym == set_s) {
-        nfa = nfa_compile_set(args, 0);
-      } else if (sym == cset_s) {
-        nfa = nfa_compile_set(args, 1);
-      } else if (sym == compound_s) {
-        nfa = nfa_compile_regex(args);
-      } else if (sym == zeroplus_s) {
-        nfa_t nfa_args = nfa_compile_regex(args);
-        nfa_state_t *acc = nfa_state_accept();
-        /* New start state has empty transitions going through
-           the inner NFA, or skipping it right to the new acceptance state. */
-        nfa_state_t *s = nfa_state_empty(nfa_args.start, acc);
-        /* Convert acceptance state of inner NFA to one which has
-           an empty transition back to the start state, and
-           an empty transition to the new acceptance state. */
-        nfa_state_empty_convert(nfa_args.accept, nfa_args.start, acc);
-        nfa = nfa_make(s, acc);
-      } else if (sym == oneplus_s) {
-        /* One-plus case differs from zero-plus in that the new start state
-           does not have an empty transition to the acceptance state.
-           So the inner NFA must be traversed once. */
-        nfa_t nfa_args = nfa_compile_regex(args);
-        nfa_state_t *acc = nfa_state_accept();
-        nfa_state_t *s = nfa_state_empty(nfa_args.start, 0); /* <-- diff */
-        nfa_state_empty_convert(nfa_args.accept, nfa_args.start, acc);
-        nfa = nfa_make(s, acc);
-      } else if (sym == optional_s) {
-        /* In this case, we can keep the acceptance state of the inner
-           NFA as the acceptance state of the new NFA. We simply add
-           a new start state which can short-circuit to it via an empty
-           transition.  */
-        nfa_t nfa_args = nfa_compile_regex(args);
-        nfa_state_t *s = nfa_state_empty(nfa_args.start, nfa_args.accept);
-        nfa = nfa_make(s, nfa_args.accept);
-      } else if (sym == or_s) {
-        /* Simple: make a new start and acceptance state, which form
-           the ends of a spindle that goes through two branches. */
-        nfa_t nfa_first = nfa_compile_regex(first(args));
-        nfa_t nfa_second = nfa_compile_regex(second(args));
-        nfa_state_t *acc = nfa_state_accept();
-        /* New state s has empty transitions into each inner NFA. */
-        nfa_state_t *s = nfa_state_empty(nfa_first.start, nfa_second.start);
-        /* Acceptance state of each inner NFA converted to empty
-           transition to new combined acceptance state. */
-        nfa_state_empty_convert(nfa_first.accept, acc, 0);
-        nfa_state_empty_convert(nfa_second.accept, acc, 0);
-        nfa = nfa_make(s, acc);
-      } else {
-        assert (0 && "internal error: bad operator in regex");
-      }
+      nfa_state_t *s = nfa_state_empty(nfa_arg.start, 0); /* <-- diff */
+      nfa_state_empty_convert(nfa_arg.accept, nfa_arg.start, acc);
+      return nfa_make(s, acc);
+    } else if (sym == optional_s) {
+      /* In this case, we can keep the acceptance state of the inner
+         NFA as the acceptance state of the new NFA. We simply add
+         a new start state which can short-circuit to it via an empty
+         transition.  */
+      nfa_t nfa_arg = nfa_compile_regex(first(args));
+      nfa_state_t *s = nfa_state_empty(nfa_arg.start, nfa_arg.accept);
+      return nfa_make(s, nfa_arg.accept);
+    } else if (sym == or_s) {
+      /* Simple: make a new start and acceptance state, which form
+         the ends of a spindle that goes through two branches. */
+      nfa_t nfa_first = nfa_compile_regex(first(args));
+      nfa_t nfa_second = nfa_compile_regex(second(args));
+      nfa_state_t *acc = nfa_state_accept();
+      /* New state s has empty transitions into each inner NFA. */
+      nfa_state_t *s = nfa_state_empty(nfa_first.start, nfa_second.start);
+      /* Acceptance state of each inner NFA converted to empty
+         transition to new combined acceptance state. */
+      nfa_state_empty_convert(nfa_first.accept, acc, 0);
+      nfa_state_empty_convert(nfa_second.accept, acc, 0);
+      return nfa_make(s, acc);
     } else {
-        assert (0 && "internal error: bad regex item");
+      internal_error("bad operator in regex");
     }
-
-    /* We made an NFA for the first item, but others follow.
-       Compile the others to an NFA recursively, then
-       stick it with this NFA. */
-    if (others) {
-      nfa_t nfa_others = nfa_compile_regex(others);
-      nfa = nfa_combine(nfa, nfa_others);
-    }
-
-    return nfa;
   }
 }
 
@@ -865,7 +916,7 @@ static int nfa_all_states(nfa_state_t **inout, int num, unsigned visited)
   return num;
 }
 
-void nfa_free(nfa_t nfa)
+static void nfa_free(nfa_t nfa)
 {
   nfa_state_t **all = (nfa_state_t **) chk_malloc(NFA_SET_SIZE * sizeof *all);
   int nstates, i;
@@ -1013,7 +1064,7 @@ static int nfa_move(nfa_state_t **in, int nin, nfa_state_t **out, wchar_t ch)
  * determines the match length (defaulting to zero
  * if no acceptance states were encountered).
  */
-cnum nfa_run(nfa_t nfa, const wchar_t *str)
+static cnum nfa_run(nfa_t nfa, const wchar_t *str)
 {
   const wchar_t *last_accept_pos = 0, *ptr = str;
   unsigned visited = nfa.start->a.visited + 1;
@@ -1054,86 +1105,9 @@ cnum nfa_run(nfa_t nfa, const wchar_t *str)
   return last_accept_pos ? last_accept_pos - str : -1;
 }
 
-cnum nfa_machine_match_span(nfa_machine_t *nfam)
+static cnum regex_machine_match_span(regex_machine_t *regm)
 {
-  return nfam->last_accept_pos;
-}
-
-/*
- * NFA machine: represents the logic of the nfa_run function as state machine
- * object which can be fed one character at a time.
- */
-
-void nfa_machine_reset(nfa_machine_t *nfam)
-{
-  int accept = 0;
-
-  nfam->last_accept_pos = -1;
-  nfam->visited = nfam->nfa.start->a.visited + 1;
-  nfam->nmove = 1;
-  nfam->count = 0;
-
-  nfam->move[0] = nfam->nfa.start;
-
-  nfam->nclos = nfa_closure(nfam->stack, nfam->move, nfam->nmove,
-                            nfam->clos, nfam->visited++, &accept);
-
-  if (accept)
-    nfam->last_accept_pos = nfam->count;
-}
-
-void nfa_machine_init(nfa_machine_t *nfam, nfa_t nfa)
-{
-  nfam->nfa = nfa;
-  nfam->move = (nfa_state_t **) chk_malloc(NFA_SET_SIZE * sizeof *nfam->move);
-  nfam->clos = (nfa_state_t **) chk_malloc(NFA_SET_SIZE * sizeof *nfam->clos);
-  nfam->stack = (nfa_state_t **) chk_malloc(NFA_SET_SIZE * sizeof *nfam->stack);
-  nfa_machine_reset(nfam);
-}
-
-void nfa_machine_cleanup(nfa_machine_t *nfam)
-{
-  free(nfam->stack);
-  free(nfam->clos);
-  free(nfam->move);
-  nfam->stack = 0;
-  nfam->clos = 0;
-  nfam->move = 0;
-  nfam->nfa.start = 0;
-  nfam->nfa.accept = 0;
-}
-
-nfam_result_t nfa_machine_feed(nfa_machine_t *nfam, wchar_t ch)
-{
-  int accept = 0;
-
-  if (ch != 0) {
-    nfam->count++;
-
-    nfam->nmove = nfa_move(nfam->clos, nfam->nclos, nfam->move, ch);
-    nfam->nclos = nfa_closure(nfam->stack, nfam->move, nfam->nmove, nfam->clos,
-                              nfam->visited++, &accept);
-
-    if (accept)
-      nfam->last_accept_pos = nfam->count;
-  }
-
-  nfam->nfa.start->a.visited = nfam->visited;
-
-  if (ch && nfam->nclos != 0) {
-    if (accept)
-       return NFAM_MATCH;
-    return NFAM_INCOMPLETE;
-  }
-
-  /* Reached if the null character is
-     consumed, or NFA hit a transition dead end. */
-
-  if (nfam->last_accept_pos == nfam->count)
-    return NFAM_MATCH;
-  if (nfam->last_accept_pos == -1)
-    return NFAM_FAIL;
-  return NFAM_INCOMPLETE;
+  return regm->n.last_accept_pos;
 }
 
 static void regex_destroy(val regex)
@@ -1152,30 +1126,366 @@ static struct cobj_ops regex_obj_ops = {
   cobj_hash_op
 };
 
+/*
+ * ``Compile'' raw regular expression to a form that is
+ * easier to simulate by the derivative method.  
+ * The only thing we currently do here is replace character set regexps with
+ * character set objects.
+ */
+static val dv_compile_regex(val exp)
+{
+  if (atom(exp)) {
+    return exp;
+  } else {
+    val sym = first(exp);
+    val args = rest(exp);
+
+    if (sym == set_s || sym == cset_s) {
+      char_set_t *set = char_set_compile(args, eq(sym, cset_s));
+      return cobj((mem_t *) set, chset_s, &char_set_obj_ops);
+    } else if (sym == compound_s) {
+      list_collect_decl (out, iter);
+      list_collect (iter, compound_s);
+      for (; args; args = cdr(args))
+        list_collect (iter, dv_compile_regex(first(args)));
+      return out;
+    } else if (sym == zeroplus_s || sym == oneplus_s ||
+               sym == optional_s || sym == compl_s) {
+      return cons(sym, cons(dv_compile_regex(first(args)), nil));
+    } else if (sym == or_s || sym == and_s) {
+      val xfirst = dv_compile_regex(first(args));
+      val xsecond = dv_compile_regex(second(args));
+      return cons(sym, cons(xfirst, cons(xsecond, nil)));
+    } else {
+      internal_error("bad operator in regex");
+    }
+  }
+}
+
+static val reg_nullable(val);
+
+/*
+ * Helper to reg_nullable for recursing over
+ * contents of a compound expression.
+ */
+static val reg_nullable_list(val exp_list)
+{
+  if (rest(exp_list)) {
+    return if2(reg_nullable(first(exp_list)) && 
+               reg_nullable_list(rest(exp_list)),
+               t);
+  } else {
+    return reg_nullable(first(exp_list));
+  }
+}
+
+/*
+ * Determine whether the given regular expression is nullable: that is
+ * to say, can the regular expression match the empty string?
+ */
+static val reg_nullable(val exp)
+{
+  if (exp == nil) {
+    return t;
+  } else if (atom(exp)) {
+    return nil;
+  } else {
+    val sym = first(exp), args = rest(exp);
+
+    if (sym == set_s || sym == cset_s) {
+      return nil;
+    } else if (sym == compound_s) {
+      return reg_nullable_list(args);
+    } else if (sym == oneplus_s || sym == compiled_regex_s) {
+      return reg_nullable(first(args));
+    } else if (sym == zeroplus_s || sym == optional_s) {
+      return t;
+    } else if (sym == compl_s) {
+      return if3(reg_nullable(first(args)), nil, t);
+    } else if (sym == or_s) {
+      return if2((reg_nullable(first(args)) || reg_nullable(second(args))), t);
+    } else if (sym == and_s) {
+      return if2((reg_nullable(first(args)) && reg_nullable(second(args))), t);
+    } else {
+      internal_error("bad operator in regex");
+    }
+  }
+}
+
+static val reg_derivative(val, val);
+
+static val reg_derivative_list(val exp_list, val ch)
+{
+  if (rest(exp_list)) {
+    if (reg_nullable(first(exp_list))) {
+      return list(or_s, cons(compound_s, 
+                             cons(reg_derivative(first(exp_list), ch),
+                                  rest(exp_list))),
+                        reg_derivative_list(rest(exp_list), ch),
+                        nao);
+    } else {
+      val d_first = reg_derivative(first(exp_list), ch);
+
+      if (d_first == t)
+        return t;
+      else if (d_first == nil)
+        return cons(compound_s, rest(exp_list));
+      else
+        return cons(compound_s, 
+                    cons(reg_derivative(d_first, ch), rest(exp_list)));
+    }
+  } else {
+    return reg_derivative(first(exp_list), ch);
+  }
+}
+
+/*
+ * Determine derivative of regex with respect to character.
+ */
+static val reg_derivative(val exp, val ch)
+{
+  if (exp == nil || exp == t) {
+    return t;
+  } else if (chrp(exp)) {
+    return if3(eq(exp, ch), nil, t);
+  } else if (typeof(exp) == chset_s) {
+    char_set_t *set = (char_set_t *) exp->co.handle;
+    return if3(char_set_contains(set, c_chr(ch)), nil, t);
+  } else if (exp == wild_s) {
+    return nil;
+  } else {
+    val sym = first(exp);
+    val args = rest(exp);
+
+    if (sym == set_s || sym == cset_s) {
+      internal_error("uncompiled regex passed to reg_derivative");
+    } else if (sym == compiled_regex_s) {
+      return reg_derivative(first(args), ch);
+    } else if (sym == compound_s) {
+      return reg_derivative_list(args, ch);
+    } else if (sym == optional_s) {
+      return reg_derivative(first(args), ch);
+    } else if (sym == oneplus_s || sym == zeroplus_s) {
+      val arg = first(args);
+      val d_arg = reg_derivative(arg, ch);
+      if (d_arg == t)
+        return t;
+      if (d_arg == nil)
+        return cons(zeroplus_s, cons(arg, nil));
+      return cons(compound_s, cons(d_arg,
+                                   cons(cons(zeroplus_s,
+                                             cons(arg, nil)), nil)));
+    } else if (sym == compl_s) {
+      return cons(sym, cons(reg_derivative(first(args), ch), nil));
+    } else if (sym == or_s) {
+      val d_arg1 = reg_derivative(first(args), ch);
+      val d_arg2 = nil;
+
+      if (d_arg1 == nil)
+        return nil;
+
+      d_arg2 = reg_derivative(second(args), ch);
+
+      if (d_arg2 == nil)
+        return nil;
+
+      if (d_arg1 == t)
+        return d_arg2;
+
+      if (d_arg2 == t)
+        return d_arg1;
+
+      return cons(or_s, cons(d_arg1, cons(d_arg2, nil)));
+    } else if (sym == and_s) {
+      val d_arg1 = reg_derivative(first(args), ch);
+      val d_arg2 = nil;
+
+      if (d_arg1 == t)
+        return t;
+
+      d_arg2 = reg_derivative(second(args), ch);
+
+      if (d_arg2 == t)
+        return t;
+
+      return cons(and_s, cons(d_arg1, cons(d_arg2, nil)));
+    } else {
+      internal_error("bad operator in regex");
+    }
+  }
+}
+
+static cnum dv_run(val regex, const wchar_t *str)
+{
+  const wchar_t *last_accept_pos = 0, *ptr = str;
+
+  for (; *ptr != 0; ptr++) {
+    wchar_t ch = *ptr;
+    val nullable = reg_nullable(regex);
+    val deriv = reg_derivative(regex, chr(ch));
+
+    if (nullable)
+      last_accept_pos = ptr;
+
+    if (deriv == t)
+      return last_accept_pos ? last_accept_pos - str : -1;
+  }
+
+  if (reg_nullable(regex))
+    return ptr - str;
+  return last_accept_pos ? last_accept_pos - str : -1;
+}
+
 val regex_compile(val regex_sexp)
 {
-  nfa_t *pnfa = (nfa_t *) chk_malloc(sizeof *pnfa);
-  *pnfa = nfa_compile_regex(regex_sexp);
-  return cobj((mem_t *) pnfa, regex_s, &regex_obj_ops);
+  if (opt_derivative_regex) {
+    return cons(compiled_regex_s, cons(dv_compile_regex(regex_sexp), nil));
+  } else {
+    nfa_t *pnfa = (nfa_t *) chk_malloc(sizeof *pnfa);
+    *pnfa = nfa_compile_regex(regex_sexp);
+    return cobj((mem_t *) pnfa, regex_s, &regex_obj_ops);
+  }
 }
 
 val regexp(val obj)
 {
+  if (consp(obj))
+    return if2(eq(car(obj), compiled_regex_s), t);
+
   return (is_ptr(obj) && obj->co.type == COBJ && obj->co.cls == regex_s)
          ? t : nil;
 }
 
-nfa_t *regex_nfa(val reg)
+static nfa_t *regex_nfa(val reg)
 {
   assert (reg->co.type == COBJ && reg->co.cls == regex_s);
   return (nfa_t *) reg->co.handle;
 }
 
+static cnum regex_run(val compiled_regex, const wchar_t *str)
+{
+  if (consp(compiled_regex))
+    return dv_run(compiled_regex, str);
+  return nfa_run(*regex_nfa(compiled_regex), str);
+}
+
+/*
+ * Regex machine: represents the logic of the regex_run function as state
+ * machine object which can be fed one character at a time.
+ */
+
+static void regex_machine_reset(regex_machine_t *regm)
+{
+  int accept = 0;
+
+  regm->n.last_accept_pos = -1;
+  regm->n.count = 0;
+
+  if (regm->n.is_nfa) {
+    regm->n.visited = regm->n.nfa.start->a.visited + 1;
+    regm->n.nmove = 1;
+
+    regm->n.move[0] = regm->n.nfa.start;
+
+    regm->n.nclos = nfa_closure(regm->n.stack, regm->n.move, regm->n.nmove,
+                                regm->n.clos, regm->n.visited++, &accept);
+  } else {
+    regm->d.deriv = regm->d.regex;
+    accept = (reg_nullable(regm->d.regex) != nil);
+  }
+
+  if (accept)
+    regm->n.last_accept_pos = regm->n.count;
+}
+
+static void regex_machine_init(regex_machine_t *regm, val regex)
+{
+  if (consp(regex)) {
+    regm->n.is_nfa = 0;
+    regm->d.regex = regex;
+  } else {
+    regm->n.is_nfa = 1;
+    regm->n.nfa = *regex_nfa(regex);
+    regm->n.move = (nfa_state_t **)
+                     chk_malloc(NFA_SET_SIZE * sizeof *regm->n.move);
+    regm->n.clos = (nfa_state_t **)
+                     chk_malloc(NFA_SET_SIZE * sizeof *regm->n.clos);
+    regm->n.stack = (nfa_state_t **)
+                      chk_malloc(NFA_SET_SIZE * sizeof *regm->n.stack);
+  }
+
+  regex_machine_reset(regm);
+}
+
+static void regex_machine_cleanup(regex_machine_t *regm)
+{
+  if (regm->n.is_nfa) {
+    free(regm->n.stack);
+    free(regm->n.clos);
+    free(regm->n.move);
+    regm->n.stack = 0;
+    regm->n.clos = 0;
+    regm->n.move = 0;
+    regm->n.nfa.start = 0;
+    regm->n.nfa.accept = 0;
+  }
+}
+
+static regm_result_t regex_machine_feed(regex_machine_t *regm, wchar_t ch)
+{
+  int accept = 0;
+
+  if (regm->n.is_nfa) {
+    if (ch != 0) {
+      regm->n.count++;
+
+      regm->n.nmove = nfa_move(regm->n.clos, regm->n.nclos, regm->n.move, ch);
+      regm->n.nclos = nfa_closure(regm->n.stack, regm->n.move,
+                                  regm->n.nmove, regm->n.clos,
+                                  regm->n.visited++, &accept);
+
+      if (accept)
+        regm->n.last_accept_pos = regm->n.count;
+    }
+
+    regm->n.nfa.start->a.visited = regm->n.visited;
+
+    if (ch && regm->n.nclos != 0) {
+      if (accept)
+         return REGM_MATCH;
+      return REGM_INCOMPLETE;
+    }
+  } else {
+    val accept = nil;
+
+    if (ch != 0) {
+      regm->d.count++;
+      regm->d.deriv = reg_derivative(regm->d.deriv, chr(ch));
+      if ((accept = reg_nullable(regm->d.deriv)))
+        regm->d.last_accept_pos = regm->d.count;
+    }
+
+    if (ch && regm->d.deriv != t) {
+      if (accept)
+         return REGM_MATCH;
+      return REGM_INCOMPLETE;
+    }
+  }
+
+  /* Reached if the null character is
+     consumed, or NFA/derivation hit a transition dead end. */
+
+  if (regm->n.last_accept_pos == regm->n.count)
+    return REGM_MATCH;
+  if (regm->n.last_accept_pos == -1)
+    return REGM_FAIL;
+  return REGM_INCOMPLETE;
+}
+
+
 val search_regex(val haystack, val needle_regex, val start,
                  val from_end)
 {
-  nfa_t *pnfa = regex_nfa(needle_regex);
-
   if (length_str_lt(haystack, start)) {
     return nil;
   } else {
@@ -1185,38 +1495,38 @@ val search_regex(val haystack, val needle_regex, val start,
       const wchar_t *h = c_str(haystack);
 
       for (i = c_num(length_str(haystack)) - 1; i >= s; i--) {
-        cnum span = nfa_run(*pnfa, h + i);
+        cnum span = regex_run(needle_regex, h + i);
         if (span >= 0)
           return cons(num(i), num(span));
       }
     } else {
-      nfa_machine_t nfam;
+      regex_machine_t regm;
       val i, pos = start, retval;
-      nfam_result_t last_res = NFAM_INCOMPLETE;
+      regm_result_t last_res = REGM_INCOMPLETE;
 
-      nfa_machine_init(&nfam, *pnfa);
+      regex_machine_init(&regm, needle_regex);
 
 again:
       for (i = pos; length_str_gt(haystack, i); i = plus(i, one)) {
-        last_res = nfa_machine_feed(&nfam, c_chr(chr_str(haystack, i)));
+        last_res = regex_machine_feed(&regm, c_chr(chr_str(haystack, i)));
 
-        if (last_res == NFAM_FAIL) {
-          nfa_machine_reset(&nfam);
+        if (last_res == REGM_FAIL) {
+          regex_machine_reset(&regm);
           pos = plus(pos, one);
           goto again;
         }
       }
 
-      last_res = nfa_machine_feed(&nfam, 0);
+      last_res = regex_machine_feed(&regm, 0);
 
       switch (last_res) {
-      case NFAM_INCOMPLETE:
-      case NFAM_MATCH:
-        retval = cons(pos, num(nfa_machine_match_span(&nfam)));
-        nfa_machine_cleanup(&nfam);
+      case REGM_INCOMPLETE:
+      case REGM_MATCH:
+        retval = cons(pos, num(regex_machine_match_span(&regm)));
+        regex_machine_cleanup(&regm);
         return retval;
-      case NFAM_FAIL:
-        nfa_machine_cleanup(&nfam);
+      case REGM_FAIL:
+        regex_machine_cleanup(&regm);
         return nil;
       }
     }
@@ -1227,29 +1537,28 @@ again:
 
 val match_regex(val str, val reg, val pos)
 {
-  nfa_machine_t nfam;
+  regex_machine_t regm;
   val i, retval;
-  nfam_result_t last_res = NFAM_INCOMPLETE;
-  nfa_t *pnfa = regex_nfa(reg);
+  regm_result_t last_res = REGM_INCOMPLETE;
 
-  nfa_machine_init(&nfam, *pnfa);
+  regex_machine_init(&regm, reg);
 
   for (i = pos; length_str_gt(str, i); i = plus(i, one)) {
-    last_res = nfa_machine_feed(&nfam, c_chr(chr_str(str, i)));
-    if (last_res == NFAM_FAIL)
+    last_res = regex_machine_feed(&regm, c_chr(chr_str(str, i)));
+    if (last_res == REGM_FAIL)
       break;
   }
 
-  last_res = nfa_machine_feed(&nfam, 0);
+  last_res = regex_machine_feed(&regm, 0);
 
   switch (last_res) {
-  case NFAM_INCOMPLETE:
-  case NFAM_MATCH:
-    retval = plus(pos, num(nfa_machine_match_span(&nfam)));
-    nfa_machine_cleanup(&nfam);
+  case REGM_INCOMPLETE:
+  case REGM_MATCH:
+    retval = plus(pos, num(regex_machine_match_span(&regm)));
+    regex_machine_cleanup(&regm);
     return retval;
-  case NFAM_FAIL:
-    nfa_machine_cleanup(&nfam);
+  case REGM_FAIL:
+    regex_machine_cleanup(&regm);
     return nil;
   }
 

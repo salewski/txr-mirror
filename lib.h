@@ -207,7 +207,8 @@ INLINE wchar_t *litptr(val obj)
 extern val keyword_package, system_package, user_package;
 extern val null, t, cons_s, str_s, chr_s, num_s, sym_s, pkg_s, fun_s, vec_s;
 extern val stream_s, hash_s, lcons_s, lstr_s, cobj_s;
-extern val var_s, regex_s, set_s, cset_s, wild_s, oneplus_s;
+extern val var_s, regex_s, chset_s, set_s, cset_s, wild_s, oneplus_s;
+extern val compiled_regex_s;
 extern val zeroplus_s, optional_s, compl_s, compound_s, or_s, and_s, quasi_s;
 extern val skip_s, trailer_s, block_s, next_s, freeform_s, fail_s, accept_s;
 extern val all_s, some_s, none_s, maybe_s, cases_s, collect_s, until_s, coll_s;
