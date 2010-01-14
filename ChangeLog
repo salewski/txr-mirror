@@ -1,5 +1,10 @@
 2010-01-13  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* parser.y (precedence): bugfix: character classes like this [^*]
+	being treated as a non-complemented set of two characters.
+
+2010-01-13  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Dynamically determine which regex implementation to use:
 	NFA or derivatives. The default behavior is NFA, with
 	derivatives used if the regular expression contains
