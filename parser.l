@@ -187,7 +187,7 @@ UANY    {ASC}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 UANYN   {ASCN}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
-%x      SPECIAL NESTED REGEX REGCLASS STRLIT CHRLIT QSILIT
+%x      SPECIAL NESTED REGEX STRLIT CHRLIT QSILIT
 
 %%
 
@@ -420,10 +420,6 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                         }
 
 <REGEX>[/]      {
-                  yy_pop_state();
-                  if (yy_top_state() == INITIAL
-                      || yy_top_state() == QSILIT)
-                    yy_pop_state();
                   yylval.chr = '/';
                   return '/';
                 }
@@ -567,3 +563,11 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                         }
 
 %%
+
+void end_of_regex(void)
+{
+  yy_pop_state();
+  if (yy_top_state() == INITIAL
+      || yy_top_state() == QSILIT)
+    yy_pop_state();
+}

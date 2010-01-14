@@ -449,9 +449,10 @@ expr : IDENT                    { $$ = intern(string_own($1), nil); }
      | quasilit                 { $$ = $1; }
      ;
 
-regex : '/' regexpr '/'         { $$ = $2; }
+regex : '/' regexpr '/'         { $$ = $2; end_of_regex(); }
       | '/' error               { $$ = nil;
-                                  yybadtoken(yychar, lit("regex")); }
+                                  yybadtoken(yychar, lit("regex"));
+                                  end_of_regex(); }
       ;
 
 regexpr : regbranch                     { $$ = if3(cdr($1), 
@@ -504,6 +505,7 @@ regchar : '?'                   { $$ = '?'; }
         | ')'                   { $$ = ')'; }
         | '^'                   { $$ = '^'; }
         | '|'                   { $$ = '|'; }
+        | '/'                   { $$ = '/'; }
         | REGCHAR               { $$ = $1; }
         ;
 
