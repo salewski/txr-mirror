@@ -1279,15 +1279,7 @@ static val reg_derivative(val exp, val ch)
       return cons(sym, cons(reg_derivative(first(args), ch), nil));
     } else if (sym == or_s) {
       val d_arg1 = reg_derivative(first(args), ch);
-      val d_arg2 = nil;
-
-      if (d_arg1 == nil)
-        return nil;
-
-      d_arg2 = reg_derivative(second(args), ch);
-
-      if (d_arg2 == nil)
-        return nil;
+      val d_arg2 = reg_derivative(second(args), ch);
 
       if (d_arg1 == t)
         return d_arg2;
