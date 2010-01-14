@@ -1,3 +1,8 @@
+2010-01-14  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* regex.c (reg_derivative): Bugfix: remove invalid
+	algebraic reductions in the derivative for the operator.
+
 2010-01-13  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Bugfix: allow unescaped / to be used in regex character classes.
