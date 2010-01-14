@@ -1,5 +1,27 @@
 2010-01-13  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Bugfix: allow unescaped / to be used in regex character classes.
+
+	To do this, we no longer make the lexer look for the terminating
+	slash which ends the regex syntax. This is driven by the parser,
+	which calls a special function in the lexer to indicate that
+	the regex parsing is done.
+
+	* parser.h (end_of_regex): New function declared.
+
+	* parser.l (REGCLASS): Unused start condition removed.
+	(grammar): A slash character in the REGEX start condition is now simply
+	returned as an operator token; no popping of the state stack takes
+	place. The scanner stays in REGEX mode.
+	(end_of_regex): New function.
+
+	* parser.y (regex): Call end_of_regex when a regex is successfully
+	scanned through to terminating slash, or if a syntax error occurs.
+	(regchar): Can derive a / terminal now, thus including it in a
+	regex character class.
+
+2010-01-13  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* parser.y (precedence): bugfix: character classes like this [^*]
 	being treated as a non-complemented set of two characters.
 
