@@ -421,7 +421,7 @@ encounters an invalid bytes in the UTF-8 input, what happens depends on the
 context in which this occurs. In a query, comments are read without regard
 for encoding, so invalid encoding bytes are not detected. A comment is
 simply a sequence of bytes terminated by a newline.  Invalid
-encoding bytes in signficant query text are diagnosed as syntax errors.
+encoding bytes in significant query text are diagnosed as syntax errors.
 When the scanner is faced with input that isn't a valid multibyte character, it
 issues an error message, skips one byte, and resumes scanning.
 
@@ -647,17 +647,23 @@ optionally match the preceding regular expression (RE).
 .IP (RE)+
 match the preceding expression one or more times.
 .IP (RE)*
-match the preceding expression zero or more times.
+match the preceding expression zero or more times. This operator
+is sometimes called the "Kleene operator".
 .IP ~(RE)
 match the complement of the preceding expression; i.e. match
-those texts that (RE) does not match.
+those texts that (RE) does not match. This operator is called complement,
+or logical not.
 .IP (RE1)(RE2)
 Two consecutive regular expressions denote catenation:
 the left expression must match, and then the right.
 .IP (RE1)|(RE2)
-match either the expression RE1 or RE2.
+match either the expression RE1 or RE2. This operator is called union,
+logical or, or disjunction.
 .IP (RE1)&(RE2)
-match both the expression RE1 and RE2 simultaneously.
+match both the expression RE1 and RE2 simultaneously; i.e. the
+matching text must be one of the texts which are in the intersection of the set
+of texts matched by RE1 and the set matched by RE2. This operator is called
+intersection, logical and, or conjunction.
 
 .PP
 Any of the special characters, including the delimiting /,  can be escaped with
@@ -688,10 +694,10 @@ Catenation is on the next lower precedence rung, so that AB? means A(B?), or
 unit".  The latter must be written (AB)?  using parentheses to override
 precedence.
 
-The precedence of conjunction (&) is lower than catenation, but not as low as
-that of disjunction, thus AB
+The precedence of intersection (&) is lower than that of catenation, but not as
+low as that of union, thus AB
 
-The disjunction operator | has the lowest precedence, lower than catenation.
+The union operator (|) has the lowest precedence, lower than catenation.
 Thus ABC|DEF means "match ABC, or match DEF". The meaning "match AB,
 then C or D, then EF" must be expressed as AB(C|D)EF, or using
 a character class: AB[CD]EF.
@@ -708,7 +714,7 @@ The main constituent is the | operator, whose left side is an & expression,
 et cetera.
 
 In
-.b txr,
+.B txr,
 regular expression matches do not span multiple lines. There is no way
 to match a newline character since it's simply not internally represented in
 the data.
@@ -746,6 +752,111 @@ Thus, a search takes place for the rightmost position where the
 regular expression matches. The regular expression matches anywhere,
 including the empty string after the last character, which is
 the rightmost place. Thus variable A fetches the entire line.
+
+.SS Notes on Exotic Regular Expressions
+
+Users familiar with regular expressions may not be familiar with the complement
+and intersection operators, which are often absent from text processing tools
+that support regular expressions.  
+
+Regexp intersection is not essential; it may be obtained from complement and
+union as follows, since DeMorgan's law applies to regular expression algebra:
+(R1)&(R2) = ~(~(R1)|~(R2)). (The complement of the union of the complements of
+R1 and R2 constitutes the intersection. This law works because the regular
+expression operators denote set operations in a straightforward way. A regular
+expression denotes a set of strings (a potentially infinite one) in a condensed
+way. The union of two regular expressions R1 | R2 denotes the union of the set
+of texts denoted by R1 and that denoted by R2. Similarly R1 & R2 denotes a set
+intersection, and ~R denotes a set complement. Thus algebraic laws
+that apply to set operations apply to regular expressions. It's useful to keep
+in mind this relationship between regular expressions and sets in understanding
+intersection and complement.
+
+Given a finite set of strings, like the set { "abc", "def" }, which corresponds
+to the regular expression (abc|def), the complement is set which contains an
+infinite number of strings: it consists of all possible strings except "abc"
+and "def". It includes the empty string, all strings of length 1, all strings
+of length 2, all strings of length 3 other than "abc" and "def", all strings of
+length 4, etc.  This means that a "harmless looking" expression like
+~(abc|def) can actually match arbitrarily long inputs.
+
+How about matching only three-character-long strings other than "abc" or "def"?
+To express this, regex intersection can be used: these strings are the
+intersection of the set of all three-character strings, and the set of all
+strings which are not "abc" or "def". The straightforward set-based reasoning
+leads us to this: ...&~(abc|def).   This A&~B idiom is also called set
+difference, sometimes notated with a minus sign: A-B (which is not
+supported in 
+.B txr
+regular expression syntax).  Elements which are in the set A, but not B, are
+those elements which are in the intersection of A with the complement of B.
+This is similar to the arithmetic rule A - B = A + -B: subtraction is
+equivalent to addition of the additive inverse. Set difference is a useful
+tool: it enables us to write a positive match which captures a more general set
+than what is intended (but one whose regular expression is far simpler
+than a positive match for the exact set we want), then we can intersect
+intersect this over-generalized set with the complemented set of
+another regular expression which matches the particulars that we wish excluded.
+
+It is important to understand that any regular expression which uses the
+complement or intersection operator can be replaced by an expression which
+matches the same texts without using these operators. But such equivalent
+expressions are often much more complicated, cumbersome, and difficult to
+develop, debug and understand.  Such equivalent expressions do not actually
+. B express 
+the concept of what they match; they merely capture the equivalent set.
+The use of complement and intersection can lead to natural expressions.
+
+For instance, using complement, we can write a straightforward regular
+expression which matches C language comments. A C language
+comment is the digraph /*, followed by any string which does not contain the
+Examples of valid comments are /**/, /* abc */ or /***/. But C
+comments do not nest (cannot contain comments), so that 
+/* /* nested */ */ actually consists of the comment /* /* nested */,
+which is followed by the trailing junk */.
+Our simple characterization of interior part of a C comment as a string
+which does not contain the terminating digraph makes use of the
+complement, and can be expressed using the complemented regular expression like
+this: (~.*[*][/].*).  That is to say, strings which contain */ are matched by
+the expression .*[*][/].*: zero or more arbitrary characters, followed by
+*/, followed by zero or more arbitrary characters. Therefore, the complement of this expression matches all other strings: those which do not contain */.
+These strings up the inside of a C comment between the /* and */.
+
+The equivalent simple regex is much more complicated.
+Without complement, we must somehow write a positive match for all strings such
+that we avoid matching */. Obviously, sequences of characters other than *
+are included: [^*]*.   Occurrences of * are also allowed, but only if followed
+by something other than a slash, so let's include this via union:
+([^*]|[*][^/])*. Alas, already, we have a bug in this expression. The
+subexpression [*][^/] can match "**", since a * is not a /.  If the next
+character in the input is /, we missed a comment close.  To fix the problem we
+revise to this: ([^*]|[*][^*/])* (the interior of a C language comment is a any
+mixture of zero or more non-asterisks, or digraphs consisting of an asterisk
+followed by something other than a slash or another asterisk).  Oops, now we
+have a problem again. What if two asterisks occur in a comment?  They are not
+matched by [^*], and they are not matched by [*][^*/]. Actually, our regex must
+not simply match asterisk-non-asterisk digraphs, but rather sequences of one or
+more asterisks followed by a non-asterisk: ([^*]|[*]*[^*/])*.  This is still
+not right, because, for instance, it fails to match the interior of a comment
+which is terminated by asterisks, including the simple test cases where
+the comment interior is nothing but asterisks.  We have no provision in our
+expression for this case; the expression requires all runs of asterisks to be
+followed by something which is not a slash or asterisk. The way to fix this is
+to add on a subexpression which optionally matches a run of zero or more
+interior asterisks before the comment close: ([^*]|[*]*[^*/])*[*]*.   Thus the
+semi-final regular expression is: [/][*]([^*]|[*]*[^*/])*[*]*[*][/]. (A C
+comment is an interior string enclosed in /* */, where this interior part
+consists of a mixture of non-asterisk characters, as well as runs of asterisk
+characters which are terminated by a character other than a slash, except
+for possibly one rightmost run of asterisks which extends to the end of the
+interior, touching the comment close. Phew!) One final simplification is
+possible: the tail part [*]*[*][/]  can be reduced to [*]+[/] such that the
+final run of asterisks is regarded as part of an extended comment terminator
+which consists of one or more asterisks followed by a slash.  Clearly, working
+without regular expression complement is not impossible, but difficult and
+error-prone.  Complemented matches without complement may require regex
+experience combined with cunning, perseverance and possibly multiple cycles of
+trial-and-error involving numerous test cases.
 
 .SS Directives
 

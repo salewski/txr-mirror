@@ -1,5 +1,12 @@
 2010-01-14  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* txr.1: Fix accidental .b, which should have been .B.
+	Revised description of regex operators. Added section
+	on intersection and complement, which may not be familiar
+	to regex users.
+
+2010-01-14  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* regex.c (reg_derivative): Bugfix: remove invalid
 	algebraic reductions in the derivative for the operator.
 
