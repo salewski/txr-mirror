@@ -78,10 +78,11 @@ static val parsed_spec;
 %nonassoc OUTPUT REPEAT REP FIRST LAST EMPTY DEFINE
 %nonassoc '{' '}' '[' ']' '(' ')'
 %right IDENT TEXT NUMBER
+%left '^'
 %left '|' '/'
 %left '&'
 %right '~' '*' '?' '+'
-%right '^' '.' '\\' REGCHAR LITCHAR
+%right '.' '\\' REGCHAR LITCHAR
 
 %%
 
