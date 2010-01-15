@@ -1232,7 +1232,7 @@ static val reg_derivative_list(val exp_list, val ch)
         return cons(compound_s, rest(exp_list));
       else
         return cons(compound_s, 
-                    cons(reg_derivative(d_first, ch), rest(exp_list)));
+                    cons(d_first, rest(exp_list)));
     }
   } else {
     return reg_derivative(first(exp_list), ch);
