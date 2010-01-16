@@ -1156,6 +1156,25 @@ static val dv_compile_regex(val exp)
       val xfirst = dv_compile_regex(first(args));
       val xsecond = dv_compile_regex(second(args));
       return cons(sym, cons(xfirst, cons(xsecond, nil)));
+    } else if (sym == nongreedy_s) {
+      val xfirst = dv_compile_regex(first(args));
+      val xsecond = dv_compile_regex(second(args));
+      val zplus = cons(zeroplus_s, cons(xfirst, nil));
+
+      if (xsecond == nil) {
+        return zplus;
+      } else {
+        val any = list(zeroplus_s, wild_s, nao);
+
+        return list(compound_s, 
+                    list(and_s, 
+                         zplus,
+                         list(compl_s, 
+                              list(compound_s, any, xsecond, any, nao), 
+                              nao), 
+                         nao),
+                    xsecond, nao);
+      }
     } else {
       internal_error("bad operator in regex");
     }
@@ -1348,7 +1367,7 @@ static val regex_requires_dv(val exp)
     } else if (sym == or_s) {
       return if2(regex_requires_dv(first(args)) || 
                  regex_requires_dv(second(args)), t);
-    } else if (sym == and_s) {
+    } else if (sym == and_s || sym == nongreedy_s) {
       return t;
     } else {
       internal_error("bad operator in regex");

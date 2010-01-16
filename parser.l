@@ -440,7 +440,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                   yyerror("newline in regex");
                 }
 
-<REGEX>[.*?+^~&]        {
+<REGEX>[.*?+^~&%]       {
                           yylval.chr = yytext[0];
                           return yytext[0];
                         }

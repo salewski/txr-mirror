@@ -1,5 +1,29 @@
 2010-01-15  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Implemented non-greedy operator.
+
+	* lib.c (nongreedy_s): New symbol globals.
+	(obj_init): New symbol interned.
+
+	* lib.h (nongreedy_s): Declared.
+
+	* parser.l (grammar): Support % as a regex operator.
+
+	* parser.y (grammar): Define '%' nonterminal,
+	on th esame precedence level as '*'.
+	(regterm): Add the % expression as a term.
+	(regchar): Recognize % as ordinary character in a character
+	class. Also, bugfix: recognize & and ~ similarly.
+
+	* regex.c (dv_compile_regex): Implement % as a syntactic sugar
+	via an algebraic transformation to a more complex expression.
+	(regex_requires_dv): A regex containing the % operator requires
+	derivatives.
+
+	* txr.1: Documented %; moved exotic regex notes to end of document.
+
+2010-01-15  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* regex.c (reg_derivative_list): Bugfix: wrong algebra,
 	taking a double derivative of the first item.
 
