@@ -637,7 +637,10 @@ A ] or - can be used within a character class, but must be escaped
 with a backslash. Two backslashes code for one backslash. So
 for instance [\e[\e-] means match a [ or - character, [^^] means match
 any character other than ^, and [\e^\e\e] means match either a ^ or a
-backslash.
+backslash. Regex operators such as *, + and & appearing in a character
+class represent ordinary characters. The characters -, ] and ^ occuring outside
+of a character class are ordinary. Unescaped / characters can appear
+within a character class.
 .IP empty
 An empty string is a regular expression. It matches the set of texts
 consisting of the empty string; i.e. it matches no characters. The empty
