@@ -2883,12 +2883,12 @@ in mind this relationship between regular expressions and sets in understanding
 intersection and complement.
 
 Given a finite set of strings, like the set { "abc", "def" }, which corresponds
-to the regular expression (abc|def), the complement is set which contains an
-infinite number of strings: it consists of all possible strings except "abc"
+to the regular expression (abc|def), the complement is the set which contains
+an infinite number of strings: it consists of all possible strings except "abc"
 and "def". It includes the empty string, all strings of length 1, all strings
 of length 2, all strings of length 3 other than "abc" and "def", all strings of
-length 4, etc.  This means that a "harmless looking" expression like
-~(abc|def) can actually match arbitrarily long inputs.
+length 4, etc.  This means that a "harmless looking" expression like ~(abc|def)
+can actually match arbitrarily long inputs.
 
 .SS Set Difference
 
