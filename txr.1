@@ -648,37 +648,37 @@ and can also be used as a subexpression term for some operators.  The
 expression a| means (a|): match either a, or nothing.  It's not possible to
 pass the empty regex to some operators; for instance (*)  is a syntax error,
 not the * operator with an empty string on the left.
-.IP (RE)
-If RE is a regular expression, then so is (RE).
+.IP (R)
+If R is a regular expression, then so is (R).
 The contents of parentheses denote one regular expression unit, so that for
 instance in (RE)*, the * operator applies to the entire parenthesized group.
 The syntax () is valid and equivalent to the empty regular expression.
-.IP (RE)?
-optionally match the preceding regular expression (RE).
-.IP (RE)+
-match the preceding expression one or more times, as many times as possible.
-.IP (RE)*
-match the preceding expression zero or more times, as many times
- as possible. This operator is sometimes called the "Kleene operator".
-.IP (RE1)%(RE2)
-match RE1 zero or more times, but not as many times as possible: stop the
-match at the first point where RE2 matches, even if repetitions of RE1 can
-continue matching. This is called the non-greedy operator. RE2 may be
-an empty regular expression, in which case this is equivalent to (RE1)*.
-.IP ~(RE)
-match the complement of the following expression; i.e. match
-those texts that (RE) does not match. This operator is called complement,
+.IP R?
+optionally match the preceding regular expression R.
+.IP R+
+match the preceding expression R one or more times, as many times as possible.
+.IP R*
+match the expression R zero or more times, as many times as possible. This
+operator is sometimes called the "Kleene operator" or "Kleene star".
+.IP R1%R2
+match R1 zero or more times, but not as many times as possible: stop the
+match at the first point where R2 matches, even if repetitions of R1 can
+continue matching. This is called the non-greedy operator. R2 may be
+an empty regular expression, in which case this is equivalent to R1*.
+.IP ~R
+match the complement of the following expression R; i.e. match
+those texts that R does not match. This operator is called complement,
 or logical not.
-.IP (RE1)(RE2)
+.IP R1R2
 Two consecutive regular expressions denote catenation:
 the left expression must match, and then the right.
-.IP (RE1)|(RE2)
-match either the expression RE1 or RE2. This operator is called union,
+.IP R1|R2
+match either the expression R1 or R2. This operator is called union,
 logical or, or disjunction.
-.IP (RE1)&(RE2)
-match both the expression RE1 and RE2 simultaneously; i.e. the
+.IP R1&R2
+match both the expression R1 and R2 simultaneously; i.e. the
 matching text must be one of the texts which are in the intersection of the set
-of texts matched by RE1 and the set matched by RE2. This operator is called
+of texts matched by R1 and the set matched by R2. This operator is called
 intersection, logical and, or conjunction.
 
 .PP
