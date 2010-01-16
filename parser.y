@@ -80,8 +80,8 @@ static val parsed_spec;
 %right IDENT TEXT NUMBER
 %left '^'
 %left '|' '/'
-%left '&'
-%right '~' '*' '?' '+'
+%left '&' 
+%right '~' '*' '?' '+' '%'
 %right '.' '\\' REGCHAR LITCHAR
 
 %%
@@ -477,6 +477,7 @@ regterm : '[' regclass ']'      { $$ = cons(set_s, $2); }
         | regterm '*'           { $$ = list(zeroplus_s, $1, nao); }
         | regterm '+'           { $$ = list(oneplus_s, $1, nao); }
         | regterm '?'           { $$ = list(optional_s, $1, nao); }
+        | regterm '%' regexpr   { $$ = list(nongreedy_s, $1, $3, nao); }
         | REGCHAR               { $$ = chr($1); }
         | '(' regexpr ')'       { $$ = $2; }
         | '(' error             { $$ = nil;
@@ -505,6 +506,9 @@ regchar : '?'                   { $$ = '?'; }
         | ')'                   { $$ = ')'; }
         | '^'                   { $$ = '^'; }
         | '|'                   { $$ = '|'; }
+        | '~'                   { $$ = '~'; }
+        | '&'                   { $$ = '&'; }
+        | '%'                   { $$ = '%'; }
         | '/'                   { $$ = '/'; }
         | REGCHAR               { $$ = $1; }
         ;

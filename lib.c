@@ -52,7 +52,7 @@ val system_package, keyword_package, user_package;
 val null, t, cons_s, str_s, chr_s, num_s, sym_s, pkg_s, fun_s, vec_s;
 val stream_s, hash_s, lcons_s, lstr_s, cobj_s;
 val var_s, regex_s, chset_s, set_s, cset_s, wild_s, oneplus_s;
-val compiled_regex_s;
+val nongreedy_s, compiled_regex_s;
 val zeroplus_s, optional_s, compl_s, compound_s, or_s, and_s, quasi_s;
 val skip_s, trailer_s, block_s, next_s, freeform_s, fail_s, accept_s;
 val all_s, some_s, none_s, maybe_s, cases_s, collect_s, until_s, coll_s;
@@ -1888,6 +1888,7 @@ static void obj_init(void)
   cobj_s = intern(lit("cobj"), user_package);
   var_s = intern(lit("var"), system_package);
   regex_s = intern(lit("regex"), system_package);
+  nongreedy_s = intern(lit("nongreedy"), system_package);
   compiled_regex_s = intern(lit("compiled-regex"), system_package);
   chset_s = intern(lit("chset"), system_package);
   set_s = intern(lit("set"), user_package);
