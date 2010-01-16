@@ -133,6 +133,12 @@ install-tests:
 	 > run.sh
 	$(call INSTALL,0755,run.sh,$(DESTDIR)$(datadir)/tests)
 
+#
+# Generate web page from man page
+# 
+txr-manpage.html: txr.1 genman.txr
+	man2html $< | $(PROG) genman.txr - > $@
+
 config.make config.h:
 	@echo "$@ missing: you didn't run ./configure"
 	@exit 1

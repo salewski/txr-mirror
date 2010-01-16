@@ -1,5 +1,14 @@
 2010-01-15  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Automate the maintenance of the HTML-ized man page.
+
+	* Makefile (txr-manpage.html): New target, generated from txr.1
+	man page.
+
+	* genman.txr: New txr query to transform the output of man2html.
+
+2010-01-15  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Implemented non-greedy operator.
 
 	* lib.c (nongreedy_s): New symbol globals.
