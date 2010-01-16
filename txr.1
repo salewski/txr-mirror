@@ -644,10 +644,11 @@ consisting of the empty string; i.e. it matches no characters. The empty
 string can appear alone as a full regular expression (for instance the
 .B txr
 syntax @// with nothing between the slashes)
-and can also be used as a subexpression term for some operators.  The
-expression a| means (a|): match either a, or nothing.  It's not possible to
-pass the empty regex to some operators; for instance (*)  is a syntax error,
-not the * operator with an empty string on the left.
+and can also be passed as a subexpression to operators, though this
+may require the use of parentheses to make the empty regex explicit.  For
+example, the expression a| means: match either a, or nothing.  The forms
+* and (*)  are syntax errors; the correct way to match the empty expression
+zero or more times is the syntax ()*.
 .IP (R)
 If R is a regular expression, then so is (R).
 The contents of parentheses denote one regular expression unit, so that for
