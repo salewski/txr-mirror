@@ -2934,6 +2934,7 @@ some sense, the concept associated with that power.
 For instance, using complement, we can write a straightforward regular
 expression which matches C language comments. A C language
 comment is the digraph /*, followed by any string which does not contain the
+closing sequence */, followed by that closing sequence.
 Examples of valid comments are /**/, /* abc */ or /***/. But C
 comments do not nest (cannot contain comments), so that 
 /* /* nested */ */ actually consists of the comment /* /* nested */,
