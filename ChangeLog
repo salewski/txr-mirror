@@ -1,5 +1,10 @@
 2010-01-15  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* genman.txr, txr.1: Encode version differently; extract
+	from text during HTML conversion.
+
+2010-01-15  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Automate the maintenance of the HTML-ized man page.
 
 	* Makefile (txr-manpage.html): New target, generated from txr.1

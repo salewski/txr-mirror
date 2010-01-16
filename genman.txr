@@ -1,4 +1,3 @@
-@(bind VERSION "023")
 Content-type: text/html
 @(skip 15)
 <H1>txr</H1>
@@ -6,8 +5,9 @@ Content-type: text/html
 @(collect)
 @PREAMBLE
 @(until)
-txr - text extractor
+txr - text extractor @/.*/
 @(end)
+txr - text extractor (version @VERSION)
 @(collect)
 @BODY
 @(until)
