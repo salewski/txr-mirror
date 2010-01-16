@@ -1,5 +1,9 @@
 2010-01-15  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* txr.1: Get rid of parens from regex operator descriptions.
+
+2010-01-15  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* genman.txr, txr.1: Encode version differently; extract
 	from text during HTML conversion.
 
