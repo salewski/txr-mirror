@@ -662,13 +662,19 @@ optionally match the preceding regular expression R.
 .IP R+
 match the preceding expression R one or more times, as many times as possible.
 .IP R*
-match the expression R zero or more times, as many times as possible. This
-operator is sometimes called the "Kleene operator" or "Kleene star".
+match the expression R zero or more times. This
+operator is sometimes called the "Kleene star", or "Kleene closure".
+The Kleene closure favors a longest match. Roughly speaking, if there are two
+or more ways in which R1*R2 can match, that that match occurs in which
+R1* matches the longest possible text.
 .IP R1%R2
-match R1 zero or more times, but not as many times as possible: stop the
-match at the first point where R2 matches, even if repetitions of R1 can
-continue matching. This is called the non-greedy operator. R2 may be
-an empty regular expression, in which case this is equivalent to R1*.
+match R1 zero or more times, then match R2. If this match can occur in
+more than one way, then it occurs such that R1 is matched the fewest
+number of times; which is opposite from the behavior of R1*R2.
+In other words, repetitions of R1 terminate at the earliest
+point in the text where a match for R2 occurs.  Favoring shorter matches, % is
+termed a non-greedy operator.  Note that R2 may be an empty regular expression,
+which is a special case that is equivalent to R1*.
 .IP ~R
 match the complement of the following expression R; i.e. match
 those texts that R does not match. This operator is called complement,

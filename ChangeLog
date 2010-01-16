@@ -3,6 +3,7 @@
 	* txr.1: Get rid of parens from regex operator descriptions.
 	Correct wrong text: all operators can take an empty regex.
 	Clarify escaping rules within a character class.
+	Describe Kleene and non-greedy behavior more accurately.
 
 2010-01-15  Kaz Kylheku  <kkylheku@gmail.com>
 
