@@ -2912,22 +2912,21 @@ another regular expression which matches the particulars that we wish excluded.
 
 .SS Expressivity versus Power
 
-It is important to understand that any regular expression which uses the
-complement or intersection operator can be replaced by an expression which
-matches the same texts without using these operators. This is a departure
-from set operations, which are distinctly less powerful without the complement
-operator: we cannot express the complement of a formula which combines
-sets if we do not have the set complement operator.
-
-But, though they exist, such equivalent regular expressions are often much more
-complicated, cumbersome, and difficult to develop, debug and understand.  Such
-equivalent expressions do not actually 
-. B express 
-the concept of what they match; they merely capture the equivalent set (they
-have the theoretical matching power).
-The use of complement and intersection can lead to natural expressions, which
-not only demonstrate the power to carry out an operation, but also express, in
-some sense, the concept associated with that power.
+It turns out that regular expressions which do not make use of the
+complement or intersection operators are just as powerful as expressions
+that do. That is to say, with or without these operators, regular expressions
+can match the same sets of strings (all regular languages).  This means that
+for a given regular expression which uses intersection and complement, it is
+possible to find a regular expression which doesn't use these operators, yet
+matches the same set of strings.  But, though they exist, such equivalent
+regular expressions are often much more complicated, which makes them difficult
+to design.  Such expressions do not necessarily
+. B express
+what it is they match; they merely capture the equivalent set. They
+perform a job, without making it obvious what it is they do.  The use of
+complement and intersection leads to natural ways of expressing many kinds of
+matching sets, which not only demonstrate the power to carry out an operation,
+but also easily express the concept.
 
 .SS Example: Matching C Language Comments.
 
@@ -2947,67 +2946,90 @@ the expression .*[*][/].*: zero or more arbitrary characters, followed by
 */, followed by zero or more arbitrary characters. Therefore, the complement of this expression matches all other strings: those which do not contain */.
 These strings up the inside of a C comment between the /* and */.
 
-The equivalent simple regex is much more complicated.
+The equivalent simple regex is quite a bit more complicated.
 Without complement, we must somehow write a positive match for all strings such
 that we avoid matching */. Obviously, sequences of characters other than *
 are included: [^*]*.   Occurrences of * are also allowed, but only if followed
 by something other than a slash, so let's include this via union:
-([^*]|[*][^/])*. Alas, already, we have a bug in this expression. The
+
+  ([^*]|[*][^/])*. 
+
+Alas, already, we have a bug in this expression. The
 subexpression [*][^/] can match "**", since a * is not a /.  If the next
 character in the input is /, we missed a comment close.  To fix the problem we
-revise to this: ([^*]|[*][^*/])* (the interior of a C language comment is a any
+revise to this: 
+
+  ([^*]|[*][^*/])* 
+  
+(The interior of a C language comment is a any
 mixture of zero or more non-asterisks, or digraphs consisting of an asterisk
 followed by something other than a slash or another asterisk).  Oops, now we
 have a problem again. What if two asterisks occur in a comment?  They are not
 matched by [^*], and they are not matched by [*][^*/]. Actually, our regex must
 not simply match asterisk-non-asterisk digraphs, but rather sequences of one or
-more asterisks followed by a non-asterisk: ([^*]|[*]*[^*/])*.  This is still
-not right, because, for instance, it fails to match the interior of a comment
-which is terminated by asterisks, including the simple test cases where
-the comment interior is nothing but asterisks.  We have no provision in our
-expression for this case; the expression requires all runs of asterisks to be
-followed by something which is not a slash or asterisk. The way to fix this is
-to add on a subexpression which optionally matches a run of zero or more
-interior asterisks before the comment close: ([^*]|[*]*[^*/])*[*]*.   Thus the
-semi-final regular expression is: [/][*]([^*]|[*]*[^*/])*[*]*[*][/]. (A C
-comment is an interior string enclosed in /* */, where this interior part
+more asterisks followed by a non-asterisk: 
+
+  ([^*]|[*]*[^*/])*
+  
+This is still not right, because, for instance, it fails to match the interior
+of a comment which is terminated by asterisks, including the simple test cases
+where the comment interior is nothing but asterisks.  We have no provision in
+our expression for this case; the expression requires all runs of asterisks to
+be followed by something which is not a slash or asterisk. The way to fix this
+is to add on a subexpression which optionally matches a run of zero or more
+interior asterisks before the comment close: 
+
+  ([^*]|[*]*[^*/])*[*]*
+  
+Thus our the semi-final regular expression is
+
+  [/][*]([^*]|[*]*[^*/])*[*]*[*][/]
+  
+(A C comment is an interior string enclosed in /* */, where this interior part
 consists of a mixture of non-asterisk characters, as well as runs of asterisk
-characters which are terminated by a character other than a slash, except
-for possibly one rightmost run of asterisks which extends to the end of the
+characters which are terminated by a character other than a slash, except for
+possibly one rightmost run of asterisks which extends to the end of the
 interior, touching the comment close. Phew!) One final simplification is
 possible: the tail part [*]*[*][/]  can be reduced to [*]+[/] such that the
 final run of asterisks is regarded as part of an extended comment terminator
-which consists of one or more asterisks followed by a slash.  Clearly, working
-without regular expression complement is not impossible, but difficult and
-error-prone.  Complemented matches without complement may require regex
-experience combined with cunning, perseverance and possibly multiple cycles of
-trial-and-error involving numerous test cases.
+which consists of one or more asterisks followed by a slash.   The regular
+expression works, but it's cryptic; to someone who has not developed it, it
+isn't obvious what it is intended to match.  Working out complemented matching
+without complement support from the language is not impossible, but it may be
+difficult and error-prone, possibly requiring multiple iterations of
+trial-and-error development involving numerous test cases, resulting in an
+expression that doesn't have a straightforward relationship to the original
+idea.
 
 .SS The Non-Greedy Operator
 
 The non-greedy operator % is actually defined in terms of a set difference,
-based on intersection and complement. The uninteresting case (R%) where the
-right operand is empty reduces to (R*): if there is no trailing context, the
-non-greedy operator matches R as far as possible, possibly to the end of the
-input, exactly like the greedy Kleene.  The interesting case (R%T) is defined
-as a "syntactic sugar" for the equivalent expression ((R*)&(~.*T.*))T   which
-means: match the longest string which is matched by R*, but which does
-not contain T; then, match T.  This is a useful and expressive notation. With
-it, we can write the regular expression for matching C language comments simply
-like this: [/][*].%[*][/] (match the opening sequence /*, then match a sequence
-of zero or more characters non-greedily, and then the closing sequence */.
-Non-greediness is expressive, but it may be deceptively simple.
-The non-greedy operator looks as if it works "magically" by itself; "somehow"
-this .% "knows" only to consume enough characters so that it doesn't swallow an
-occurrence of the trailing context. Care must be taken that the trailing context is really the desired one. For instance, take the expression .%abc. 
-If you intend the trailing context to be merely a, you must be careful to write
-(.%a)bc. Otherwise the trailing context is abc, and this means that
-the .% match will consume the longest string that does not contain "abc",
-when in fact what was intended was to consume the longest string that
-does not contain a.   For single-character trailing contexts, it may be a
-good idea to use a complemented character class instead. That is to say,
-rather than (.%a)bc, how about [^a]*bc. The set of strings which don't contain
-the character a is adequately expressed by [^a]*.
+which is in turn based on intersection and complement. The uninteresting case
+(R%) where the right operand is empty reduces to (R*): if there is no trailing
+context, the non-greedy operator matches R as far as possible, possibly to the
+end of the input, exactly like the greedy Kleene.  The interesting case (R%T)
+is defined as a "syntactic sugar" for the equivalent expression
+((R*)&(~.*T.*))T   which means: match the longest string which is matched by
+R*, but which does not contain T; then, match T.  This is a useful and
+expressive notation. With it, we can write the regular expression for matching
+C language comments simply like this: [/][*].%[*][/] (match the opening
+sequence /*, then match a sequence of zero or more characters non-greedily, and
+then the closing sequence */.  With the non-greedy operator, we don't have to
+think about the interior of the comment as set of strings which excludes */.
+Though the non-greedy operator appears expressive, its apparent
+simplicity may be deceptive.  It looks as if it works "magically"
+by itself; "somehow" this .% "knows" only to consume enough characters so that
+it doesn't swallow an occurrence of the trailing context. Care must be taken
+that the trailing context passed to the operator really is the correct text
+that should be excluded by the non-greedy match. For instance, take the
+expression .%abc.  If you intend the trailing context to be merely a, you must
+be careful to write (.%a)bc. Otherwise the trailing context is abc, and this
+means that the .% match will consume the longest string that does not contain
+"abc", when in fact what was intended was to consume the longest string that
+does not contain a.   For single-character trailing contexts, it may be a good
+idea to use a complemented character class instead. That is to say, rather than
+(.%a)bc, how about [^a]*bc. The set of strings which don't contain the
+character a is adequately expressed by [^a]*.
 
 .SH NOTES ON FALSE
 
