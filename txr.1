@@ -730,9 +730,9 @@ precedence to these operators.
 
 The, % operator has a special syntactic behavior: with respect to its
 left operand, it has a similar precedence to the ?, + and * operators.
-However, it has a lower Prudence. The expression abc*%d*ef means
-ab((c*)%(d*ef)). The left argument of % is c*, but the right is
-the entire expression d*ef.
+However, it has a lower precedence facing right. The expression abc*%d*ef
+means ab((c*)%(d*ef)). The left argument of % is c*, but the right is the
+entire expression d*ef.
 
 The unary complement operator has the next lower precedence, so
 that ~A* means the ~(A*): "match the all text that is not matched by zero
