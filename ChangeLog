@@ -1,3 +1,23 @@
+2010-01-16  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Version 028.
+
+	Code cleanup.
+
+	New additional regex implementation using regex derivatives,
+	providing new operators: regex complement, intersection,
+	non-greedy match.
+
+	Regex syntax bugfixes.
+
+	* txr.c (version): Bumped to 027.
+
+	* txr.1: Bumped version to 027.
+
+	* configure: Bumped txr_ver to 027.
+
+	* match.c (dest_bind): Remove spurious syntax.
+
 2010-01-15  Kaz Kylheku  <kkylheku@gmail.com>
 
 	* txr.1: Get rid of parens from regex operator descriptions.

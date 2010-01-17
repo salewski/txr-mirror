@@ -249,7 +249,7 @@ static val dest_bind(val bindings, val pattern, val value)
         return t;
       piter = cdr(piter);
       viter = cdr(viter);
-    } while (consp(piter) && consp(viter));
+    }
 
     if (bindable(piter)) {
       bindings = dest_bind(bindings, piter, viter);
