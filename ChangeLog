@@ -1,3 +1,8 @@
+2010-01-17  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* parser.y (regterm, regclass): Relocate handling
+	of empty [] into regterm, via empty derivation.
+
 2010-01-16  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Regex syntactic tweaks: support the [] syntax

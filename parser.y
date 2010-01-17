@@ -469,9 +469,8 @@ regbranch : regterm             { $$ = cons($1, nil); }
           ;
 
 regterm : '[' regclass ']'      { $$ = cons(set_s, $2); }
-        | '[' ']'               { $$ = cons(set_s, nil); }
-        | '[' '^' regclass ']'  { $$ = cons(cset_s, $3); }
-        | '[' '^' ']'           { $$ = wild_s; }
+        | '[' '^' regclass ']'  { $$ = if3(nullp($3), wild_s,
+                                                      cons(cset_s, $3)); }
         | '.'                   { $$ = wild_s; }
         | '^'                   { $$ = chr('^'); }
         | ']'                   { $$ = chr(']'); }
@@ -492,6 +491,7 @@ regterm : '[' regclass ']'      { $$ = cons(set_s, $2); }
 
 regclass : regclassterm                 { $$ = cons($1, nil); }
          | regclassterm regclass        { $$ = cons($1, $2); }
+         | /* empty */                  { $$ = nil; }
          ;
 
 regclassterm : regrange         { $$ = $1; }
