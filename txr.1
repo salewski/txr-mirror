@@ -769,9 +769,11 @@ et cetera.
 
 In
 .B txr,
-regular expression matches do not span multiple lines. There is no way
-to match a newline character since it's simply not internally represented in
-the data.
+regular expression matches do not span multiple lines. The regex language has
+no feature for multi-line matching. However, the @(freeform) directive
+allows the remaining portion of the input to be treated as one big
+sequence of, in which line terminators appear as explicit
+characters. Regular expressions may freely match through this sequence.
 
 It's possible for a regular expression to match an empty string.
 For instance, if the next input character is z, facing a
@@ -801,7 +803,7 @@ Similarly, in the second example, the /a?/ regular expression faces
 a "z", and thus yields an empty string which is bound to A. Variable
 @B consumes the entire line.
 
-The third example request the longest match for the variable binding.
+The third example requests the longest match for the variable binding.
 Thus, a search takes place for the rightmost position where the
 regular expression matches. The regular expression matches anywhere,
 including the empty string after the last character, which is
