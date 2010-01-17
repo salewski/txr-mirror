@@ -626,10 +626,11 @@ where RE is regular expression syntax.
 contains an original implementation of regular expressions, which
 supports the following syntax:
 .IP .
-matches any character.
+(period) is a "wildcard" that matches any character.
 .IP []
 Character class: matches a single character, from the set specified by
-the class. Supports basic regexp character class syntax; no POSIX
+special syntax written between the square brackets.
+Supports basic regexp character class syntax; no POSIX
 notation like [:digit:]. The class [a-zA-Z] means match an uppercase
 or lowercase letter; the class [0-9a-f] means match a digit or
 a lowercase letter, the class [^0-9] means match a non-digit, et cetera.
@@ -640,11 +641,13 @@ any character other than ^, and [\e^\e\e] means match either a ^ or a
 backslash. Regex operators such as *, + and & appearing in a character
 class represent ordinary characters. The characters -, ] and ^ occuring outside
 of a character class are ordinary. Unescaped / characters can appear
-within a character class.
+within a character class. The empty character class [] matches
+no character at all, and its complement [^] matches any character,
+and is treated as a synonym for the . (period) wildcard operator.
 .IP empty
-An empty string is a regular expression. It matches the set of texts
-consisting of the empty string; i.e. it matches no characters. The empty
-string can appear alone as a full regular expression (for instance the
+An empty string is a regular expression. It represents the set of strings
+consisting of the empty string; i.e. it matches just the empty string. The
+empty regex can appear alone as a full regular expression (for instance the
 .B txr
 syntax @// with nothing between the slashes)
 and can also be passed as a subexpression to operators, though this
@@ -652,6 +655,20 @@ may require the use of parentheses to make the empty regex explicit.  For
 example, the expression a| means: match either a, or nothing.  The forms
 * and (*)  are syntax errors; the correct way to match the empty expression
 zero or more times is the syntax ()*.
+.IP nomatch
+The nomatch regular expression represents the
+empty set: it matches no strings at all, not even the empty string.
+There is no dedicated syntax for nomatch in the regex language, so there
+is no way to write it directly. However, the empty character class [] is
+equivalent to nomatch, and may be considered to be a notation for it. Other
+representations of nomatch are possible: for instance, the
+regex ~.* which is the complement of the regex that denotes the set of all
+possible strings, and thus denotes the empty set. A nomatch has uses;
+for instance, it can be used to temporarily "comment out" regular
+expressions. The regex ([]abc|xyz) is equivalent to (xyz),
+since the []abc branch cannot match anything; however, using
+[] to "block" a subexpression allows you to leave it in place,
+then enable it later by removing the "block".
 .IP (R)
 If R is a regular expression, then so is (R).
 The contents of parentheses denote one regular expression unit, so that for

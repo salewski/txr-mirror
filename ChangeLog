@@ -1,5 +1,15 @@
 2010-01-16  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Regex syntactic tweaks: support the [] syntax
+	to match no character and [^] as its complement,
+	being synonymous with the wildcard dot.
+
+	* parser.y (regterm): Added new productions.
+
+	* txr.1: Documented.
+
+2010-01-16  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Version 028.
 
 	Code cleanup.

@@ -469,7 +469,9 @@ regbranch : regterm             { $$ = cons($1, nil); }
           ;
 
 regterm : '[' regclass ']'      { $$ = cons(set_s, $2); }
+        | '[' ']'               { $$ = cons(set_s, nil); }
         | '[' '^' regclass ']'  { $$ = cons(cset_s, $3); }
+        | '[' '^' ']'           { $$ = wild_s; }
         | '.'                   { $$ = wild_s; }
         | '^'                   { $$ = chr('^'); }
         | ']'                   { $$ = chr(']'); }
