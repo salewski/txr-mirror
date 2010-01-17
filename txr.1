@@ -2959,8 +2959,8 @@ subexpression [*][^/] can match "**", since a * is not a /.  If the next
 character in the input is /, we missed a comment close.  To fix the problem we
 revise to this: 
 
-  ([^*]|[*][^*/])* 
-  
+  ([^*]|[*][^*/])*
+
 (The interior of a C language comment is a any
 mixture of zero or more non-asterisks, or digraphs consisting of an asterisk
 followed by something other than a slash or another asterisk).  Oops, now we
@@ -2970,7 +2970,7 @@ not simply match asterisk-non-asterisk digraphs, but rather sequences of one or
 more asterisks followed by a non-asterisk: 
 
   ([^*]|[*]*[^*/])*
-  
+
 This is still not right, because, for instance, it fails to match the interior
 of a comment which is terminated by asterisks, including the simple test cases
 where the comment interior is nothing but asterisks.  We have no provision in
@@ -2980,11 +2980,11 @@ is to add on a subexpression which optionally matches a run of zero or more
 interior asterisks before the comment close: 
 
   ([^*]|[*]*[^*/])*[*]*
-  
+
 Thus our the semi-final regular expression is
 
   [/][*]([^*]|[*]*[^*/])*[*]*[*][/]
-  
+
 (A C comment is an interior string enclosed in /* */, where this interior part
 consists of a mixture of non-asterisk characters, as well as runs of asterisk
 characters which are terminated by a character other than a slash, except for
