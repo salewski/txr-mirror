@@ -7,7 +7,7 @@ Content-type: text/html
 @(until)
 txr - text extractor @/.*/
 @(end)
-txr - text extractor (version @VERSION)
+txr - text extractor @VERSION
 @(collect)
 @BODY
 @(until)
@@ -62,7 +62,7 @@ This document was created by
 <FONT FACE="courier">
 <HEAD><TITLE>Manpage for txr @VERSION</TITLE>
 </HEAD><BODY>
-<H2>Manpage for <A HREF="#lbAB">Txr</a> version @VERSION</H2>
+<H2>Manpage for <A HREF="#lbAB">Txr </a>@VERSION</H2>
 <H2>@MNAME @DAY, @YEAR</H2>
 @(repeat)
 @TOC
