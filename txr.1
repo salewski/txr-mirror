@@ -689,9 +689,9 @@ match R1 zero or more times, then match R2. If this match can occur in
 more than one way, then it occurs such that R1 is matched the fewest
 number of times; which is opposite from the behavior of R1*R2.
 In other words, repetitions of R1 terminate at the earliest
-point in the text where a match for R2 occurs.  Favoring shorter matches, % is
-termed a non-greedy operator.  Note that R2 may be an empty regular expression,
-which is a special case that is equivalent to R1*.
+point in the text where a non-empty match for R2 occurs.  Favoring shorter
+matches, % is termed a non-greedy operator.  If R2 matches the empty
+string, then R1%R2 is equivalent to R1*.
 .IP ~R
 match the complement of the following expression R; i.e. match
 those texts that R does not match. This operator is called complement,
@@ -3028,15 +3028,15 @@ which is in turn based on intersection and complement. The uninteresting case
 context, the non-greedy operator matches R as far as possible, possibly to the
 end of the input, exactly like the greedy Kleene.  The interesting case (R%T)
 is defined as a "syntactic sugar" for the equivalent expression
-((R*)&(~.*T.*))T   which means: match the longest string which is matched by
-R*, but which does not contain T; then, match T.  This is a useful and
-expressive notation. With it, we can write the regular expression for matching
-C language comments simply like this: [/][*].%[*][/] (match the opening
-sequence /*, then match a sequence of zero or more characters non-greedily, and
-then the closing sequence */.  With the non-greedy operator, we don't have to
-think about the interior of the comment as set of strings which excludes */.
-Though the non-greedy operator appears expressive, its apparent
-simplicity may be deceptive.  It looks as if it works "magically"
+((R*)&(~.*(T&.+).*))T   which means: match the longest string which is matched
+by R*, but which does not contain a non-empty match for T; then, match T.  This
+is a useful and expressive notation. With it, we can write the regular
+expression for matching C language comments simply like this: [/][*].%[*][/]
+(match the opening sequence /*, then match a sequence of zero or more
+characters non-greedily, and then the closing sequence */.  With the non-greedy
+operator, we don't have to think about the interior of the comment as set of
+strings which excludes */.  Though the non-greedy operator appears expressive,
+its apparent simplicity may be deceptive.  It looks as if it works "magically"
 by itself; "somehow" this .% "knows" only to consume enough characters so that
 it doesn't swallow an occurrence of the trailing context. Care must be taken
 that the trailing context passed to the operator really is the correct text
@@ -3045,13 +3045,12 @@ expression .%abc.  If you intend the trailing context to be merely a, you must
 be careful to write (.%a)bc. Otherwise the trailing context is abc, and this
 means that the .% match will consume the longest string that does not contain
 "abc", when in fact what was intended was to consume the longest string that
-does not contain a. The change in behavior of the % operator upon modifying the 
+does not contain a. The change in behavior of the % operator upon modifying the
 trailing context is not as intuitive as that of the * operator, because the
-trailing context is deeply involved in its logic.  For
-single-character trailing contexts, it may be a good idea to use a complemented
-character class instead. That is to say, rather than (.%a)bc, consider
-[^a]*bc. The set of strings which don't contain the character a is adequately
-expressed by [^a]*.
+trailing context is deeply involved in its logic.  For single-character
+trailing contexts, it may be a good idea to use a complemented character class
+instead. That is to say, rather than (.%a)bc, consider [^a]*bc. The set of
+strings which don't contain the character a is adequately expressed by [^a]*.
 
 .SH NOTES ON FALSE
 

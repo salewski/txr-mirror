@@ -1,3 +1,18 @@
+2010-01-18  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Adjust semantics of non-greedy operator R%S, to avoid the broken
+	case whereby R%S matches nothing at all when S is not empty
+	but equivalent to empty, or more generally when S is nullable.
+	A much nicer definition is ``the intersection of R* and
+	the set of all strings that do not contain a non-empty substring
+	that matches S, followed by S''.
+
+	* regex.c (dv_compile_regex): Adjust syntactic sugar for the %
+	operator, taking advantage of the reg_nullable function to keep the
+	simpler syntactic sugar for cases where S is not nullable.
+
+	* txr.1: Document accordingly.
+
 2010-01-17  Kaz Kylheku  <kkylheku@gmail.com>
 
 	* parser.y (regterm, regclass): Relocate handling
