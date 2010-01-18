@@ -1126,6 +1126,8 @@ static struct cobj_ops regex_obj_ops = {
   cobj_hash_op
 };
 
+static val reg_nullable(val);
+
 /*
  * ``Compile'' raw regular expression to a form that is
  * easier to simulate by the derivative method.  
@@ -1165,12 +1167,18 @@ static val dv_compile_regex(val exp)
         return zplus;
       } else {
         val any = list(zeroplus_s, wild_s, nao);
+        val notempty = list(oneplus_s, wild_s, nao);
 
         return list(compound_s, 
                     list(and_s, 
                          zplus,
                          list(compl_s, 
-                              list(compound_s, any, xsecond, any, nao), 
+                              list(compound_s, 
+                                   any, 
+                                   if3(reg_nullable(xsecond),
+                                       list(and_s, xsecond, notempty, nao),
+                                       xsecond),
+                                   any, nao), 
                               nao), 
                          nao),
                     xsecond, nao);
@@ -1180,8 +1188,6 @@ static val dv_compile_regex(val exp)
     }
   }
 }
-
-static val reg_nullable(val);
 
 /*
  * Helper to reg_nullable for recursing over
