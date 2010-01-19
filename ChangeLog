@@ -1,5 +1,19 @@
 2010-01-19  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Version 030
+
+	Fixed grammar conflicts.
+
+	R1~R2 syntax supported in regexes.
+
+	* txr.c (version): Bumped to 030.
+
+	* txr.1: Set version to 030.
+
+	* configure: Bumped txr_ver to 030.
+
+2010-01-19  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* parser.y (regex): Getting rid of empty '/' '/' production
 	again.
 	(regexpr): Re-introducing empty production; this time using
