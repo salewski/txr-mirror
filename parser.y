@@ -490,7 +490,7 @@ regterm : regterm '*'           { $$ = list(zeroplus_s, $1, nao); }
         | REGCHAR               { $$ = chr($1); }
         | '(' regexpr ')'       { $$ = $2; }
         | '(' error             { $$ = nil;
-                                     yybadtoken(yychar,
+                                  yybadtoken(yychar,
                                              lit("regex subexpression")); }
         ;
 
