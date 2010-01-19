@@ -1,5 +1,16 @@
 2010-01-19  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* parser.y (regex): Getting rid of empty '/' '/' production
+	again.
+	(regexpr): Re-introducing empty production; this time using
+	%prec LOW trick to give this interpretation the lowest
+	possible precedence. Thus expressions like /&/ work again.
+	(regbranch): New production to allow R1~R2 to be valid.
+
+	* txr.1: Documented.
+
+2010-01-19  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* parser.l (grammar): The ^ character is no longer considered
 	a special regex token, just a regular character.
 

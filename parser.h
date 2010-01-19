@@ -36,3 +36,4 @@ void yyerror(const char *s);
 void yyerrorf(val s, ...);
 void yybadtoken(int tok, val context);
 void end_of_regex(void);
+int yylex(void);
