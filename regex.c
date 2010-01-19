@@ -1243,11 +1243,26 @@ static val reg_derivative_list(val exp_list, val ch)
 {
   if (rest(exp_list)) {
     if (reg_nullable(first(exp_list))) {
-      return list(or_s, cons(compound_s, 
-                             cons(reg_derivative(first(exp_list), ch),
-                                  rest(exp_list))),
-                        reg_derivative_list(rest(exp_list), ch),
-                        nao);
+      val d_first = reg_derivative(first(exp_list), ch);
+      val d_rest = reg_derivative_list(rest(exp_list), ch);
+
+      if (d_rest == t && d_first == t)
+        return t;
+
+      if (d_rest == t)
+        return if3(d_first == nil,
+                   cons(compound_s, rest(exp_list)),
+                   cons(compound_s, cons(d_first, rest(exp_list))));
+
+      if (d_first == t)
+        return d_rest;
+
+      return list(or_s, 
+                  if3(d_first == nil,
+                      cons(compound_s, rest(exp_list)),
+                      cons(compound_s, cons(d_first, rest(exp_list)))),
+                  d_rest,
+                  nao);
     } else {
       val d_first = reg_derivative(first(exp_list), ch);
 
@@ -1290,7 +1305,7 @@ static val reg_derivative(val exp, val ch)
       return reg_derivative_list(args, ch);
     } else if (sym == optional_s) {
       return reg_derivative(first(args), ch);
-    } else if (sym == oneplus_s || sym == zeroplus_s) {
+    } else if (sym == oneplus_s) {
       val arg = first(args);
       val d_arg = reg_derivative(arg, ch);
       if (d_arg == t)
@@ -1300,6 +1315,14 @@ static val reg_derivative(val exp, val ch)
       return cons(compound_s, cons(d_arg,
                                    cons(cons(zeroplus_s,
                                              cons(arg, nil)), nil)));
+    } else if (sym == zeroplus_s) {
+      val arg = first(args);
+      val d_arg = reg_derivative(arg, ch);
+      if (d_arg == t)
+        return t;
+      if (d_arg == nil)
+        return exp;
+      return cons(compound_s, cons(d_arg, cons(exp, nil)));
     } else if (sym == compl_s) {
       return cons(sym, cons(reg_derivative(first(args), ch), nil));
     } else if (sym == or_s) {
