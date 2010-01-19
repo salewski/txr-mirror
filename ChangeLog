@@ -1,5 +1,21 @@
 2010-01-18  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Version 029
+
+	Performance optimizations of derivative-based regexes.
+
+	New syntax: [] and [^].
+
+	Saner semantics for % operator.
+
+	* txr.c (version): Bumped to 029.
+
+	* txr.1: Set version to 029.
+
+	* configure: Bumped txr_ver to 029.
+
+2010-01-18  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* regex.c (reg_derivative_list, reg_derivative): Recognition
 	of cases to reduce consing. In reg_derivative_list, we avoid
 	consing the full or expression if either branch is t, and
@@ -50,11 +66,11 @@
 
 	Regex syntax bugfixes.
 
-	* txr.c (version): Bumped to 027.
+	* txr.c (version): Bumped to 028.
 
-	* txr.1: Bumped version to 027.
+	* txr.1: Bumped version to 028.
 
-	* configure: Bumped txr_ver to 027.
+	* configure: Bumped txr_ver to 028.
 
 	* match.c (dest_bind): Remove spurious syntax.
 
