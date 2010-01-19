@@ -695,7 +695,7 @@ string, then R1%R2 is equivalent to R1*.
 .IP ~R
 match the complement of the following expression R; i.e. match
 those texts that R does not match. This operator is called complement,
-or logical not.
+or logical not. The form R1~R2 is permitted and means R1(~R2)
 .IP R1R2
 Two consecutive regular expressions denote catenation:
 the left expression must match, and then the right.
@@ -735,9 +735,8 @@ means ab((c*)%(d*ef)). The left argument of % is c*, but the right is the
 entire expression d*ef.
 
 The unary complement operator has the next lower precedence, so
-that ~A* means the ~(A*): "match the all text that is not matched by zero
-or more repetitions of A", not "match zero or more times the text
-not matched by A".
+that ~AB means ~(AB) not (~A)B.   AB~CD means (AB)~(CD) where
+the (CD) is complemented, and catenated to (AB).
 
 Catenation is on the next lower precedence rung, so that AB? means A(B?), or
 "match A, and then optionally B", not "match A and B, as one optional

@@ -451,7 +451,6 @@ expr : IDENT                    { $$ = intern(string_own($1), nil); }
      ;
 
 regex : '/' regexpr '/'         { $$ = $2; end_of_regex(); }
-      | '/' '/'                 { $$ = nil; end_of_regex(); }
       | '/' error               { $$ = nil;
                                   yybadtoken(yychar, lit("regex"));
                                   end_of_regex(); }
@@ -463,10 +462,12 @@ regexpr : regbranch                     { $$ = if3(cdr($1),
         | regexpr '|' regexpr           { $$ = list(or_s, $1, $3, nao); }
         | regexpr '&' regexpr           { $$ = list(and_s, $1, $3, nao); }
         | '~' regexpr                   { $$ = list(compl_s, $2, nao); }
+        | /* empty */ %prec LOW         { $$ = nil; }
         ;
 
 regbranch : regterm %prec LOW   { $$ = cons($1, nil); }
           | regterm regbranch   { $$ = cons($1, $2); }
+          | regterm '~' regexpr { $$ = list($1, list(compl_s, $3, nao), nao); }
           ;
 
 regterm : regterm '*'           { $$ = list(zeroplus_s, $1, nao); }
