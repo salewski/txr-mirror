@@ -1,5 +1,15 @@
 2010-01-18  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* regex.c (reg_derivative_list, reg_derivative): Recognition
+	of cases to reduce consing. In reg_derivative_list, we avoid
+	consing the full or expression if either branch is t, and
+	also save a cons when the first element has a null derivative.
+	In reg_derivative the oneplus and zeroplus cases are split,
+	since zeroplus can re-use the input expression, when it's
+	just a one-character match, deriving nil.
+
+2010-01-18  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Adjust semantics of non-greedy operator R%S, to avoid the broken
 	case whereby R%S matches nothing at all when S is not empty
 	but equivalent to empty, or more generally when S is nullable.
