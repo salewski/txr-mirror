@@ -74,11 +74,12 @@ static val parsed_spec;
 %type <obj> regterm regclass regclassterm regrange
 %type <obj> strlit chrlit quasilit quasi_items quasi_item litchars
 %type <chr> regchar
+%nonassoc LOW /* used for precedence assertion */
 %nonassoc ALL SOME NONE MAYBE CASES AND OR END COLLECT UNTIL COLL
 %nonassoc OUTPUT REPEAT REP FIRST LAST EMPTY DEFINE
 %nonassoc '{' '}' '[' ']' '(' ')'
 %right IDENT TEXT NUMBER
-%left '^'
+%left '-'
 %left '|' '/'
 %left '&' 
 %right '~' '*' '?' '+' '%'
@@ -450,6 +451,7 @@ expr : IDENT                    { $$ = intern(string_own($1), nil); }
      ;
 
 regex : '/' regexpr '/'         { $$ = $2; end_of_regex(); }
+      | '/' '/'                 { $$ = nil; end_of_regex(); }
       | '/' error               { $$ = nil;
                                   yybadtoken(yychar, lit("regex"));
                                   end_of_regex(); }
@@ -461,37 +463,39 @@ regexpr : regbranch                     { $$ = if3(cdr($1),
         | regexpr '|' regexpr           { $$ = list(or_s, $1, $3, nao); }
         | regexpr '&' regexpr           { $$ = list(and_s, $1, $3, nao); }
         | '~' regexpr                   { $$ = list(compl_s, $2, nao); }
-        | /* empty */                   { $$ = nil; }
         ;
 
-regbranch : regterm             { $$ = cons($1, nil); }
+regbranch : regterm %prec LOW   { $$ = cons($1, nil); }
           | regterm regbranch   { $$ = cons($1, $2); }
           ;
 
-regterm : '[' regclass ']'      { $$ = cons(set_s, $2); }
-        | '[' '^' regclass ']'  { $$ = if3(nullp($3), wild_s,
-                                                      cons(cset_s, $3)); }
-        | '.'                   { $$ = wild_s; }
-        | '^'                   { $$ = chr('^'); }
-        | ']'                   { $$ = chr(']'); }
-        | '-'                   { $$ = chr('-'); }
-        | regterm '*'           { $$ = list(zeroplus_s, $1, nao); }
+regterm : regterm '*'           { $$ = list(zeroplus_s, $1, nao); }
         | regterm '+'           { $$ = list(oneplus_s, $1, nao); }
         | regterm '?'           { $$ = list(optional_s, $1, nao); }
         | regterm '%' regexpr   { $$ = list(nongreedy_s, $1, $3, nao); }
-        | REGCHAR               { $$ = chr($1); }
-        | '(' regexpr ')'       { $$ = $2; }
-        | '(' error             { $$ = nil;
-                                  yybadtoken(yychar,
-                                             lit("regex subexpression")); }
+        | '[' regclass ']'      { if (first($2) == chr('^'))
+                                  { if (rest($2))
+                                      $$ = cons(cset_s, rest($2));
+                                    else
+                                      $$ = wild_s; }
+                                  else
+                                    $$ = cons(set_s, $2); }
+        | '[' ']'               { $$ = cons(set_s, nil); }
         | '[' error             { $$ = nil;
                                   yybadtoken(yychar,
                                             lit("regex character class")); }
+        | '.'                   { $$ = wild_s; }
+        | ']'                   { $$ = chr(']'); }
+        | '-'                   { $$ = chr('-'); }
+        | REGCHAR               { $$ = chr($1); }
+        | '(' regexpr ')'       { $$ = $2; }
+        | '(' error             { $$ = nil;
+                                     yybadtoken(yychar,
+                                             lit("regex subexpression")); }
         ;
 
 regclass : regclassterm                 { $$ = cons($1, nil); }
          | regclassterm regclass        { $$ = cons($1, $2); }
-         | /* empty */                  { $$ = nil; }
          ;
 
 regclassterm : regrange         { $$ = $1; }
@@ -506,7 +510,6 @@ regchar : '?'                   { $$ = '?'; }
         | '+'                   { $$ = '+'; }
         | '('                   { $$ = '('; }
         | ')'                   { $$ = ')'; }
-        | '^'                   { $$ = '^'; }
         | '|'                   { $$ = '|'; }
         | '~'                   { $$ = '~'; }
         | '&'                   { $$ = '&'; }

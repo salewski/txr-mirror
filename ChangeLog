@@ -1,3 +1,19 @@
+2010-01-19  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* parser.l (grammar): The ^ character is no longer considered
+	a special regex token, just a regular character.
+
+	* parser.y (LOW): New phony terminal symbol, used as place holder
+	for lowest precedence.
+	(grammar): Fixed numerous conflicts in regex section by refactoring.
+	The regex nonterminal no longer has an empty derivation.
+	A regex character class no longer has an empty derivation; this is
+	handled by special rules. Ambiguity around ^ is resolved; this is
+	parsed as a regular character and specially recognized.
+	Ambiguity between catenation of terms and postfix operators
+	resolved in favor of shift by giving catenation low
+	precedence using %prec LOW.
+
 2010-01-18  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Version 029
