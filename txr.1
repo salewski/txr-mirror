@@ -633,19 +633,21 @@ special syntax written between the square brackets.
 Supports basic regexp character class syntax; no POSIX
 notation like [:digit:]. The class [a-zA-Z] means match an uppercase
 or lowercase letter; the class [0-9a-f] means match a digit or
-a lowercase letter, the class [^0-9] means match a non-digit, et cetera.
+a lowercase letter; the class [^0-9] means match a non-digit, et cetera.
 A ] or - can be used within a character class, but must be escaped
-with a backslash. Two backslashes code for one backslash. So
-for instance [\e[\e-] means match a [ or - character, [^^] means match
-any character other than ^, and [\e^\e\e] means match either a ^ or a
-backslash. Regex operators such as *, + and & appearing in a character
-class represent ordinary characters. The characters -, ] and ^ occurring outside
-of a character class are ordinary. Unescaped / characters can appear
-within a character class. The empty character class [] matches
-no character at all, and its complement [^] matches any character,
-and is treated as a synonym for the . (period) wildcard operator.
+with a backslash. A ^ in the first position denotes a complemented
+class, unless it is escaped by backslash. In any other position, it denotes
+itself.  Two backslashes code for one backslash. So for instance
+[\e[\e-] means match a [ or - character, [^^] means match any character other
+than ^, and [\e^\e\e] means match either a ^ or a backslash. Regex operators
+such as *, + and & appearing in a character class represent ordinary
+characters. The characters -, ] and ^ occurring outside of a character class
+are ordinary. Unescaped / characters can appear within a character class. The
+empty character class [] matches no character at all, and its complement [^]
+matches any character, and is treated as a synonym for the . (period) wildcard
+operator.
 .IP empty
-An empty string is a regular expression. It represents the set of strings
+An empty expression is a regular expression. It represents the set of strings
 consisting of the empty string; i.e. it matches just the empty string. The
 empty regex can appear alone as a full regular expression (for instance the
 .B txr
@@ -653,22 +655,20 @@ syntax @// with nothing between the slashes)
 and can also be passed as a subexpression to operators, though this
 may require the use of parentheses to make the empty regex explicit.  For
 example, the expression a| means: match either a, or nothing.  The forms
-* and (*)  are syntax errors; the correct way to match the empty expression
-zero or more times is the syntax ()*.
+* and (*)  are syntax errors; though not useful, the correct way to match the
+empty expression zero or more times is the syntax ()*.
 .IP nomatch
 The nomatch regular expression represents the
 empty set: it matches no strings at all, not even the empty string.
-There is no dedicated syntax for nomatch in the regex language, so there
-is no way to write it directly. However, the empty character class [] is
-equivalent to nomatch, and may be considered to be a notation for it. Other
-representations of nomatch are possible: for instance, the
-regex ~.* which is the complement of the regex that denotes the set of all
-possible strings, and thus denotes the empty set. A nomatch has uses;
-for instance, it can be used to temporarily "comment out" regular
-expressions. The regex ([]abc|xyz) is equivalent to (xyz),
-since the []abc branch cannot match anything; however, using
-[] to "block" a subexpression allows you to leave it in place,
-then enable it later by removing the "block".
+There is no dedicated syntax to directly express nomatch in the regex language.
+However, the empty character class [] is equivalent to nomatch, and may be
+considered to be a notation for it. Other representations of nomatch are
+possible: for instance, the regex ~.* which is the complement of the regex that
+denotes the set of all possible strings, and thus denotes the empty set. A
+nomatch has uses; for instance, it can be used to temporarily "comment out"
+regular expressions. The regex ([]abc|xyz) is equivalent to (xyz), since the
+[]abc branch cannot match anything. Using [] to "block" a subexpression allows
+you to leave it in place, then enable it later by removing the "block".
 .IP (R)
 If R is a regular expression, then so is (R).
 The contents of parentheses denote one regular expression unit, so that for
@@ -676,32 +676,38 @@ instance in (RE)*, the * operator applies to the entire parenthesized group.
 The syntax () is valid and equivalent to the empty regular expression.
 .IP R?
 optionally match the preceding regular expression R.
-.IP R+
-match the preceding expression R one or more times, as many times as possible.
 .IP R*
 match the expression R zero or more times. This
 operator is sometimes called the "Kleene star", or "Kleene closure".
-The Kleene closure favors a longest match. Roughly speaking, if there are two
+The Kleene closure favors the longest match. Roughly speaking, if there are two
 or more ways in which R1*R2 can match, that that match occurs in which
 R1* matches the longest possible text.
+.IP R+
+match the preceding expression R one or more times.
+Like R*, this favors the longest possible match: R+ is equivalent to RR*.
 .IP R1%R2
 match R1 zero or more times, then match R2. If this match can occur in
 more than one way, then it occurs such that R1 is matched the fewest
-number of times; which is opposite from the behavior of R1*R2.
-In other words, repetitions of R1 terminate at the earliest
-point in the text where a non-empty match for R2 occurs.  Favoring shorter
-matches, % is termed a non-greedy operator.  If R2 matches the empty
-string, then R1%R2 is equivalent to R1*.
+number of times, which is opposite from the behavior of R1*R2.
+Repetitions of R1 terminate at the earliest
+point in the text where a non-empty match for R2 occurs. Because
+it favors shorter matches, % is termed a non-greedy operator.  If R2 is the
+empty expression, or equivalent to it, then R1%R2 reduces to R1*.  So for
+instance (R%) is equivalent to (R*), since the missing right operand is
+interpreted as the empty regex. Note that whereas the expression
+(R1*R2) is equivalent to (R1*)R2, the expression (R1%R2) is 
+.B not
+equivalent to (R1%)R2.
 .IP ~R
-match the complement of the following expression R; i.e. match
+match the opposite of the following expression R; i.e. match exactly
 those texts that R does not match. This operator is called complement,
-or logical not. The form R1~R2 is permitted and means R1(~R2)
+or logical not.
 .IP R1R2
 Two consecutive regular expressions denote catenation:
 the left expression must match, and then the right.
 .IP R1|R2
-match either the expression R1 or R2. This operator is called union,
-logical or, or disjunction.
+match either the expression R1 or R2. This operator is known by
+a number of names: union, logical or, disjunction, branch, or alternative.
 .IP R1&R2
 match both the expression R1 and R2 simultaneously; i.e. the
 matching text must be one of the texts which are in the intersection of the set
@@ -721,50 +727,25 @@ Any escaped character which does not fall into the above escaping conventions,
 or any unescaped character which is not a regular expression operator, denotes
 one-position match of that character itself.
 
-Character classes and parentheses have the highest precedence.
+Precedence table, highest to lowest:
+.TS
+tab(!);
+l l l.
+operators!class!associativity
+(R) []!primary!
+R? R+ R* R%...!postfix!left-to-right
+R1R2!catenation!left-to-right
+~R ...%R!unary!right-to-left
+R1&R2!intersection!left-to-right
+R1|R2!union!left-to-right
+.TE
 
-The postfix operators ?, +, * have the second highest precedence, and
-associate left to right, so that in A+?*, the * applies to A+?, and the ?
-applies to A+.  With respect to the left operand, % has a similar
-precedence to these operators.
-
-The, % operator has a special syntactic behavior: with respect to its
-left operand, it has a similar precedence to the ?, + and * operators.
-However, it has a lower precedence facing right. The expression abc*%d*ef
-means ab((c*)%(d*ef)). The left argument of % is c*, but the right is the
-entire expression d*ef.
-
-The unary complement operator has the next lower precedence, so
-that ~AB means ~(AB) not (~A)B.   AB~CD means (AB)~(CD) where
-the (CD) is complemented, and catenated to (AB).
-
-Catenation is on the next lower precedence rung, so that AB? means A(B?), or
-"match A, and then optionally B", not "match A and B, as one optional
-unit".  The latter must be written (AB)?  using parentheses to override
-precedence.
-
-The % operator has the next lower precedence with regard to its right
-operand. Thus abc%~def&xyz means (ab(c%def))&xyz.
-
-The precedence of intersection (&) is lower than that of catenation or the
-right operand , but not as low as that of union, thus AB&CD|EF&GH
-means (AB&CD)|(EF&GH)
-
-The union operator (|) has the lowest precedence, lower than catenation.
-Thus ABC|DEF means "match ABC, or match DEF". The meaning "match AB,
-then C or D, then EF" must be expressed as AB(C|D)EF, or using
-a character class: AB[CD]EF.
-
-The regular expression
-
-  ABC*&~DEF+|Z
-
-Is parsed as if it were grouped with parentheses like this:
-
-  ((AB(C*))&(~(DE(F+))))|Z
-
-The main constituent is the | operator, whose left side is an & expression,
-et cetera.
+The % operator is like a postfix operator with respect to its left
+operand, but like a unary operator with respect to its right operand.
+Thus a~b%c~d  is a(~(b%(c(~d)))), demonstrating right-to-left associativity,
+where all of b% may be regarded as a unary operator being applied to c~d. 
+Similarly, a?*+%b  means (((a?)*)+)%b, where the trailing %b behaves
+like a postfix operator.
 
 In
 .B txr,
