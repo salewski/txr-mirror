@@ -1663,12 +1663,9 @@ associated with a block (is not "in scope"). A block which is not contained in
 any subquery extends to the end of the overall query.  Blocks are never
 terminated by @(end).
 
-The implicit anonymous blocks introduced by @(skip) has the same scope
-as the @(skip): it extends over all of the material which follows the skip, to the end of the containing subquery.
-
-The scope of the implicit anonymous block introduced by @(collect) spans only
-that collect coincides with the scope of that collect: from the @(collect)
-to its matching @(end).
+The implicit anonymous block introduced by @(skip) has the same scope
+as the @(skip): they extends over all of the material which follows the skip,
+to the end of the containing subquery.
 
 .SS Block Nesting
 
