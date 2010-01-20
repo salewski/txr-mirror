@@ -751,9 +751,9 @@ In
 .B txr,
 regular expression matches do not span multiple lines. The regex language has
 no feature for multi-line matching. However, the @(freeform) directive
-allows the remaining portion of the input to be treated as one big
-sequence of, in which line terminators appear as explicit
-characters. Regular expressions may freely match through this sequence.
+allows the remaining portion of the input to be treated as one string
+in which line terminators appear as explicit characters. Regular expressions
+may freely match through this sequence.
 
 It's possible for a regular expression to match an empty string.
 For instance, if the next input character is z, facing a
