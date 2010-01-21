@@ -1996,17 +1996,13 @@ that the corresponding argument "wordlist" has no binding. The binding
 is thus transferred to the "wordlist" variable.  After that, the
 bindings produced by the function are thrown away. The only enduring
 effects are:
-
 .IP -
 the function matched and consumed some input; and
-
 .IP -
 the function succeeded; and
-
 .IP -
 the wordlist variable now has a binding.
 .PP
-
 Another way to understand the parameter behavior is that function
 parameters behave like proxies which represent their arguments.  If an argument
 is an established value, such as a character string or bound variable, the
