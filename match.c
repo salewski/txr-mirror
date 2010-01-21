@@ -874,6 +874,8 @@ static val match_files(val spec, val files,
   val data = nil;
   cnum data_lineno = 0;
 
+  gc_hint(data);
+
   if (listp(first_file_parsed)) {
     data = first_file_parsed;
     data_lineno = c_num(data_linenum);

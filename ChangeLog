@@ -1,5 +1,19 @@
 2010-01-21  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Fix for unbounded memory growth problem reproduced with GCC 4.4.1
+	on 32 bit x86 Fedora. This happens because the lazy list variable
+	``data'' in the match_files function is optimized to a register,
+	but a stale value of that variable persists in the backing storage.
+
+	* gc.h (gc_hint): New macro.
+	(gc_hint_func): Declared.
+
+	* gc.c (gc_hint_func): New function.
+
+	* match.c (match_files): Use gc_hint on the data lazy list.
+
+2010-01-21  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* match.c (match_files): Reduce scope, and bogus use of, dataline
 	variable.
 
