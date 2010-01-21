@@ -1585,13 +1585,16 @@ The next simplest bind binds one variable to another:
 
 Here, if A is unbound, it takes on the same value as B. If A is bound, it has
 to match B, or the bind fails. Matching means that either
-
-- A and B are the same text
-- A is text, B is a list, and A occurs within B.
-- vice versa: B is text, A is a list, and B occurs within A.
-- A and B are lists and are either identical, or one is
-  found as substructure within the other.
-
+.IP - 
+A and B are the same text
+.IP -
+A is text, B is a list, and A occurs within B.
+.IP -
+vice versa: B is text, A is a list, and B occurs within A.
+.IP -
+A and B are lists and are either identical, or one is
+found as substructure within the other.
+.PP
 The right hand side does not have to be a variable. It may be some other
 object, like a string, quasiliteral, regexp, or list of strings, et cetera. For
 instance
