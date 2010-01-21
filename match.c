@@ -914,7 +914,6 @@ static val match_files(val spec, val files,
 repeat_spec_same_data:
   {
     val specline = rest(first(spec));
-    val dataline = first(data);
     val spec_linenum = first(first(spec));
     val first_spec = first(specline);
 
@@ -936,7 +935,7 @@ repeat_spec_same_data:
         {
           uw_block_begin(nil, result);
 
-          while (dataline && (!max || reps++ < cmax)) {
+          while (data && (!max || reps++ < cmax)) {
             result = match_files(spec, files, bindings,
                                  data, num(data_lineno));
 
@@ -950,7 +949,6 @@ repeat_spec_same_data:
                     num(data_lineno), nao);
             data = rest(data);
             data_lineno++;
-            dataline = first(data);
           }
 
           uw_block_end;
@@ -1706,10 +1704,8 @@ repeat_spec_same_data:
       }
     }
 
-    if (dataline == nil)
-      return nil;
-
     {
+      val dataline = first(data);
       cons_bind (new_bindings, success,
                  match_line(bindings, specline, dataline, zero,
                             spec_linenum, num(data_lineno), first(files)));
