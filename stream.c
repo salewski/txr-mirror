@@ -651,7 +651,7 @@ static val vformat_num(val stream, const char *str,
                        int width, int left, int pad, int precision)
 {
   int len = strlen(str);
-  int truewidth = (width < precision) ? width : precision;
+  int truewidth = (width > precision) ? width : precision;
   int slack = (len < truewidth) ? truewidth - len : 0;
   int padlen = (len < precision) ? precision - len : 0;
   int i;

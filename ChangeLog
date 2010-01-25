@@ -1,3 +1,7 @@
+2010-01-24  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* stream.c (vformat_num): Fix bad width calculation.
+
 2010-01-21  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Fix for unbounded memory growth problem reproduced with GCC 4.4.1
