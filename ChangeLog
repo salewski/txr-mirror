@@ -1,5 +1,13 @@
 2010-01-24  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* match.c (match_files): Workaround for GC issue
+	discovered on Red Hat EL 4 with gcc 3.4.3.
+	In the collect loop, set car(success) to nil.
+	Somehow the generated code hangs on to the last
+	matching position for a regex, preventing GC.
+
+2010-01-24  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* stream.c (vformat_num): Fix bad width calculation.
 
 2010-01-21  Kaz Kylheku  <kkylheku@gmail.com>
