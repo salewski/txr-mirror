@@ -1,5 +1,19 @@
 2010-01-25  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Version 031
+
+	Addresses some spurious object retention problems related to the GC's
+	conservative scan of the stack.
+
+	* txr.c (version): Bumped to 031.
+
+	* txr.1: Set version to 031.
+
+	* configure: Bumped txr_ver to 031.
+
+
+2010-01-25  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* match.c (match_files): Workaround for GC issue
 	discovered on Red Hat EL 4 with gcc 3.4.3.
 	In the collect loop, set car(success) to nil.
