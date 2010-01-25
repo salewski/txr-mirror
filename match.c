@@ -1252,12 +1252,11 @@ repeat_spec_same_data:
 
               data = new_data;
               data_lineno = new_lineno;
+              *car_l(success) = nil;
             } else {
               debuglf(spec_linenum, lit("collect consumed entire file"), nao);
               data = nil;
             }
-
-            *car_l(success) = nil;
           } else {
             data = rest(data);
             data_lineno++;
