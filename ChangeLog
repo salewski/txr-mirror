@@ -1,3 +1,21 @@
+2010-01-26  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Optimization in derivative-based regex engine.
+	Exponential memory consumption behavior was observed when
+	matching the input aaaaaa....
+	against the regex a?a?a?a?....aaaa....
+	The fix is to eliminate common subexpressions
+	from the derivative for the or operator.
+
+	* lib.c (memqual, mapcon): New functions
+
+	* lib.h (memqual, mapcon): Declared.
+
+	* regex.c (flatten_or, unflatten_or,
+	unique_first, reduce_or): New functions.
+	(reg_derivative): Apply reduce_or
+	to the constructed disjunction.
+
 2010-01-25  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Version 032
