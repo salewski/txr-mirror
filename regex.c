@@ -1129,10 +1129,10 @@ static struct cobj_ops regex_obj_ops = {
 static val reg_nullable(val);
 
 /*
- * ``Compile'' raw regular expression to a form that is
- * easier to simulate by the derivative method.  
- * The only thing we currently do here is replace character set regexps with
- * character set objects.
+ * ``Compile'' raw regular expression to a form that is easier to simulate by
+ * the derivative method.  Here we currently replace character set regexps with
+ * character set objects, and also transform the nongreedy syntax into the more
+ * complex expression it represents.
  */
 static val dv_compile_regex(val exp)
 {
