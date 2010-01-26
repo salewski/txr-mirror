@@ -364,6 +364,13 @@ val memq(val obj, val list)
   return list;
 }
 
+val memqual(val obj, val list)
+{
+  while (list && !equal(car(list), obj))
+    list = cdr(list);
+  return list;
+}
+
 val tree_find(val obj, val tree)
 {
   if (equal(obj, tree))
@@ -1745,6 +1752,16 @@ val mapcar(val fun, val list)
 
   for (; list; list = cdr(list))
     list_collect (iter, funcall1(fun, car(list)));
+
+  return out;
+}
+
+val mapcon(val fun, val list)
+{
+  list_collect_decl (out, iter);
+
+  for (; list; list = cdr(list))
+    list_collect_nconc (iter, funcall1(fun, list));
 
   return out;
 }

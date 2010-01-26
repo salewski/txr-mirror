@@ -1237,6 +1237,59 @@ static val reg_nullable(val exp)
   }
 }
 
+static val flatten_or(val or_expr)
+{
+  if (atom(or_expr) || car(or_expr) != or_s) {
+    return cons(or_expr, nil);
+  } else {
+    val left = second(or_expr);
+    val right = third(or_expr);
+    return nappend2(flatten_or(left), flatten_or(right));
+  }
+}
+
+static val unflatten_or(val exlist)
+{
+  val f = first(exlist);
+  val r = rest(exlist);
+  
+  if (r) {
+    return cons(or_s, cons(f, cons(unflatten_or(r), nil)));
+  } else {
+    return f;
+  }
+}
+
+static val unique_first(val exlist)
+{
+  val f = first(exlist);
+  val r = rest(exlist);
+  
+  if (!memqual(f, r))
+    return cons(first(exlist), nil);
+  return nil;
+}
+
+static val reduce_or(val or_expr)
+{
+  val left = second(or_expr);
+  val right = third(or_expr);
+
+  /*
+   * Do optimization only if this is an or of two or expressions.
+   */
+
+  if (consp(left) && first(left) == or_s &&
+      consp(right) && first(right) == or_s)
+  {
+    val exlist = flatten_or(or_expr);
+    val repeats_removed = mapcon(func_n1(unique_first), exlist);
+    return unflatten_or(repeats_removed);
+  } else {
+    return or_expr;
+  }
+}
+
 static val reg_derivative(val, val);
 
 static val reg_derivative_list(val exp_list, val ch)
@@ -1335,7 +1388,7 @@ static val reg_derivative(val exp, val ch)
       if (d_arg2 == t)
         return d_arg1;
 
-      return cons(or_s, cons(d_arg1, cons(d_arg2, nil)));
+      return reduce_or(cons(or_s, cons(d_arg1, cons(d_arg2, nil))));
     } else if (sym == and_s) {
       val d_arg1 = reg_derivative(first(args), ch);
       val d_arg2 = nil;
