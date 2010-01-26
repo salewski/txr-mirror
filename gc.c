@@ -43,8 +43,6 @@
 
 #define PROT_STACK_SIZE         1024
 #define HEAP_SIZE               16384
-#define REACHABLE               0x100
-#define FREE                    0x200
 
 typedef struct heap {
   struct heap *next;

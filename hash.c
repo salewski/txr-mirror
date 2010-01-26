@@ -159,7 +159,7 @@ static void hash_mark(val hash)
         gc_mark(cdr(entry));
       }
     }
-    reachable_weak_hashes->next = h;
+    h->next = reachable_weak_hashes;
     reachable_weak_hashes = h;
     break;
   case hash_weak_vals:
@@ -175,7 +175,7 @@ static void hash_mark(val hash)
         gc_mark(car(entry));
       }
     }
-    reachable_weak_hashes->next = h;
+    h->next = reachable_weak_hashes;
     reachable_weak_hashes = h;
     break;
   case hash_weak_both:
@@ -299,7 +299,10 @@ void hash_process_weak(void)
         val *iter;
 
         for (iter = pchain; *iter != nil; ) {
-          val entry = car(*iter);
+          val entry;
+          (*iter)->t.type &= ~REACHABLE;
+          entry = car(*iter);
+          entry->t.type &= ~REACHABLE;
           if (!gc_is_reachable(car(entry)))
             *iter = cdr(*iter);
           else
@@ -318,7 +321,10 @@ void hash_process_weak(void)
         val *iter;
 
         for (iter = pchain; *iter != nil; ) {
-          val entry = car(*iter);
+          val entry;
+          (*iter)->t.type &= ~REACHABLE;
+          entry = car(*iter);
+          entry->t.type &= ~REACHABLE;
           if (!gc_is_reachable(cdr(entry)))
             *iter = cdr(*iter);
           else
@@ -337,7 +343,10 @@ void hash_process_weak(void)
         val *iter;
 
         for (iter = pchain; *iter != nil; ) {
-          val entry = car(*iter);
+          val entry;
+          (*iter)->t.type &= ~REACHABLE;
+          entry = car(*iter);
+          entry->t.type &= ~REACHABLE;
           if (!gc_is_reachable(car(entry)) || !gc_is_reachable(cdr(entry)))
             *iter = cdr(*iter);
           else
