@@ -36,3 +36,5 @@ int gc_is_reachable(val);
 void unmark(void);
 void gc_hint_func(val *);
 #define gc_hint(var) gc_hint_func(&var)
+#define REACHABLE 0x100
+#define FREE      0x200
