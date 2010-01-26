@@ -1707,6 +1707,7 @@ repeat_spec_same_data:
       }
     }
 
+    if (data)
     {
       val dataline = first(data);
       cons_bind (new_bindings, success,
