@@ -286,6 +286,13 @@ void hash_process_weak(void)
   cnum i;
 
   for (h = reachable_weak_hashes; h != 0; h = h->next) {
+    /* The table of a weak hash was spuriously reached by conservative GC;
+       it's a waste of time doing weak processing, since all keys and
+       values have been transitively marked as reachable; and so we
+       won't find anything to remove. */
+    if (gc_is_reachable(h->table))
+      continue;
+
     switch (h->flags) {
     case hash_weak_none:
       /* what is this doing here */
@@ -298,12 +305,9 @@ void hash_process_weak(void)
         val *pchain = vecref_l(h->table, ind);
         val *iter;
 
-        for (iter = pchain; *iter != nil; ) {
-          val entry;
-          (*iter)->t.type &= ~REACHABLE;
-          entry = car(*iter);
-          entry->t.type &= ~REACHABLE;
-          if (!gc_is_reachable(car(entry)))
+        for (iter = pchain; !gc_is_reachable(*iter); ) {
+          val entry = car(*iter);
+          if (!gc_is_reachable(entry) && !gc_is_reachable(car(entry)))
             *iter = cdr(*iter);
           else
             iter = cdr_l(*iter);
@@ -320,12 +324,9 @@ void hash_process_weak(void)
         val *pchain = vecref_l(h->table, ind);
         val *iter;
 
-        for (iter = pchain; *iter != nil; ) {
-          val entry;
-          (*iter)->t.type &= ~REACHABLE;
-          entry = car(*iter);
-          entry->t.type &= ~REACHABLE;
-          if (!gc_is_reachable(cdr(entry)))
+        for (iter = pchain; !gc_is_reachable(*iter); ) {
+          val entry = car(*iter);
+          if (!gc_is_reachable(entry) && !gc_is_reachable(car(entry)))
             *iter = cdr(*iter);
           else
             iter = cdr_l(*iter);
@@ -342,12 +343,10 @@ void hash_process_weak(void)
         val *pchain = vecref_l(h->table, ind);
         val *iter;
 
-        for (iter = pchain; *iter != nil; ) {
-          val entry;
-          (*iter)->t.type &= ~REACHABLE;
-          entry = car(*iter);
-          entry->t.type &= ~REACHABLE;
-          if (!gc_is_reachable(car(entry)) || !gc_is_reachable(cdr(entry)))
+        for (iter = pchain; !gc_is_reachable(*iter); ) {
+          val entry = car(*iter);
+          if (!gc_is_reachable(entry) &&
+              (!gc_is_reachable(car(entry)) || !gc_is_reachable(cdr(entry))))
             *iter = cdr(*iter);
           else
             iter = cdr_l(*iter);
