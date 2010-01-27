@@ -1,5 +1,12 @@
 2010-01-26  Kaz Kylheku  <kkylheku@gmail.com>
 
+	hash.c (hash_process_weak): There is no point in fixing up
+	the type codes of spuriously reached nodes; reached objects
+	will not be removed by weak processing and so it's better
+	to just detect those situations and short-circuit.
+
+2010-01-26  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Optimization in derivative-based regex engine.
 	Exponential memory consumption behavior was observed when
 	matching the input aaaaaa....
