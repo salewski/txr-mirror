@@ -25,6 +25,20 @@
 
 2010-01-25  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Fixing weak hash tables.
+
+	* gc.c, gc.h (REACHABLE, FREE): Moved to header.
+
+	* hash.c (hash_mark): Fix broken list push code.
+	(has_process_weak): Defend against conservative
+	garbage collector. We cannot trust that the
+	conses which make up the chain backbone
+	and hash entry pairs are unmarked, because the
+	hash vectors might be reached through
+	spurious references.
+
+2010-01-25  Kaz Kylheku  <kkylheku@gmail.com>
+
 	Version 032
 
 	Fix showstopper stupidity.
@@ -50,7 +64,6 @@
 	* txr.1: Set version to 031.
 
 	* configure: Bumped txr_ver to 031.
-
 
 2010-01-25  Kaz Kylheku  <kkylheku@gmail.com>
 
