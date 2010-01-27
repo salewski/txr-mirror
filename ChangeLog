@@ -1,5 +1,18 @@
 2010-01-26  Kaz Kylheku  <kkylheku@gmail.com>
 
+	Version 033
+
+	Addressed exponential memory behaviors
+	in derivative-based regex matching.
+
+	* txr.c (version): Bumped to 033.
+
+	* txr.1: Set version to 033.
+
+	* configure: Bumped txr_ver to 033.
+
+2010-01-26  Kaz Kylheku  <kkylheku@gmail.com>
+
 	hash.c (hash_process_weak): There is no point in fixing up
 	the type codes of spuriously reached nodes; reached objects
 	will not be removed by weak processing and so it's better
