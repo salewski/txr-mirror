@@ -791,7 +791,7 @@ val mkustring(val len)
 
 val init_str(val str, const wchar_t *data)
 {
-  wmemcpy(str->st.str, data, c_num(str->st.len) + 1);
+  wmemcpy(str->st.str, data, c_num(str->st.len));
   return str;
 }
 

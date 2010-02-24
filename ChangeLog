@@ -1,3 +1,10 @@
+2010-02-24  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* lib.c (init_str): Bugfix: copy only len characters, not len + 1, so
+	that we don't clobber the null terminator in the target string, or try
+	read past the end of the source data.  This affects the @(freeform)
+	directive.
+
 2010-01-26  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Version 033
