@@ -882,7 +882,7 @@ val search_str(val haystack, val needle, val start_num, val from_end)
           pos = f - h;
         else
           pos = -1;
-      } while (pos != -1 && (good = pos) != -1 && from_end && h[++start]);
+      } while (pos != -1 && (good = pos) != -1 && from_end && h[start++]);
     } else {
       size_t ln = c_num(length_str(needle));
 
@@ -892,7 +892,7 @@ val search_str(val haystack, val needle, val start_num, val from_end)
 
         if (!wcsncmp(h + start, n, ln))
           good = start;
-      } while (h[++start] && (from_end || good == -1));
+      } while (h[start++] && (from_end || good == -1));
     }
     return (good == -1) ? nil : num(good);
   }

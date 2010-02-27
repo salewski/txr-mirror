@@ -1,5 +1,11 @@
 2010-02-27  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* lib.c (search_str): Bugfix for empty haystack case: checks for end
+	of string must use postincrement on the index, otherwise the access
+	goes past the null terminator.
+
+2010-02-27  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* match.c (match_lines): Bugfix in freeform directive.
 	If the virtual line is partially matched, the remainder of
 	the line is folded back into list form. In this case, the
