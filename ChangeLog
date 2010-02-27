@@ -1,5 +1,16 @@
 2010-02-27  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* match.c (match_lines): Bugfix in freeform directive.
+	If the virtual line is partially matched, the remainder of
+	the line is folded back into list form. In this case, the
+	data line number must be incremented. Otherwise the calling
+	context may conclude that no progress was made, and
+	skip a line of input. I.e. the unmatched part of the input
+	is a new line, even if there had originally
+	been no line break at that point.
+
+2010-02-27  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* lib.h (split_str_sep): Declared.
 
 	* lib.c (split_str_sep): New function. 
