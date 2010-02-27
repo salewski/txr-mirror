@@ -1,3 +1,14 @@
+2010-02-27  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* lib.h (split_str_sep): Declared.
+
+	* lib.c (split_str_sep): New function. 
+	(split_str): Semantics changed; the second argument
+	is not a set of separator characters (like in split_str_sep)
+	but rather a separator string. Fixed bug: if the input
+	string is empty, the output list is empty. This caused
+	infinite looping behavior in @(freeform).
+
 2010-02-24  Kaz Kylheku  <kkylheku@gmail.com>
 
 	* lib.c (init_str): Bugfix: copy only len characters, not len + 1, so
