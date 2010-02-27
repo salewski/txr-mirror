@@ -1004,8 +1004,10 @@ repeat_spec_same_data:
             return nil;
           }
 
-          if (nump(success))
+          if (nump(success)) {
             data = lazy_str_get_trailing_list(ff_dataline, success);
+            data_lineno++;
+          }
 
           bindings = new_bindings;
         }
