@@ -1,5 +1,10 @@
 2010-02-27  Kaz Kylheku  <kkylheku@gmail.com>
 
+	* lib.c (length_str_gt, length_str_ge, length_str_lt, length_str_le):
+	Added missing support for literal string type.
+
+2010-02-27  Kaz Kylheku  <kkylheku@gmail.com>
+
 	* lib.c (search_str): Bugfix for empty haystack case: checks for end
 	of string must use postincrement on the index, otherwise the access
 	goes past the null terminator.

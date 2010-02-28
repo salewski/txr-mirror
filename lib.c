@@ -1587,61 +1587,89 @@ val lazy_str_force_upto(val lstr, val index)
 
 val length_str_gt(val str, val len)
 {
-  type_check2 (str, STR, LSTR);
+  if (is_lit(str)) {
+    const wchar_t *cstr = c_str(str);
+    size_t clen = c_num(len);
+    const wchar_t *nult = wmemchr(cstr, 0, clen + 1);
+    return nult == 0 ? t : nil;
+  } else {
+    type_check2 (str, STR, LSTR);
 
-  switch (str->t.type) {
-  case STR:
-    return gt(length_str(str), len);
-  case LSTR:
-    lazy_str_force_upto(str, len);
-    return gt(length_str(str->ls.prefix), len);
-  default:
-    internal_error("unexpected type value");
+    switch (str->t.type) {
+    case STR:
+      return gt(length_str(str), len);
+    case LSTR:
+      lazy_str_force_upto(str, len);
+      return gt(length_str(str->ls.prefix), len);
+    default:
+      internal_error("unexpected type value");
+    }
   }
 }
 
 val length_str_ge(val str, val len)
 {
-  type_check2 (str, STR, LSTR);
+  if (is_lit(str)) {
+    const wchar_t *cstr = c_str(str);
+    size_t clen = c_num(len);
+    const wchar_t *nult = wmemchr(cstr, 0, clen);
+    return nult == 0 ? t : nil;
+  } else {
+    type_check2 (str, STR, LSTR);
 
-  switch (str->t.type) {
-  case STR:
-    return ge(length_str(str), len);
-  case LSTR:
-    lazy_str_force_upto(str, len);
-    return ge(length_str(str->ls.prefix), len);
-  default:
-    internal_error("unexpected type value");
+    switch (str->t.type) {
+    case STR:
+      return ge(length_str(str), len);
+    case LSTR:
+      lazy_str_force_upto(str, len);
+      return ge(length_str(str->ls.prefix), len);
+    default:
+      internal_error("unexpected type value");
+    }
   }
 }
 
 val length_str_lt(val str, val len)
 {
-  type_check2 (str, STR, LSTR);
+  if (is_lit(str)) {
+    const wchar_t *cstr = c_str(str);
+    size_t clen = c_num(len);
+    const wchar_t *nult = wmemchr(cstr, 0, clen);
+    return nult != 0 ? t : nil;
+  } else {
+    type_check2 (str, STR, LSTR);
 
-  switch (str->t.type) {
-  case STR:
-    return lt(length_str(str), len);
-  case LSTR:
-    lazy_str_force_upto(str, len);
-    return lt(length_str(str->ls.prefix), len);
-  default:
-    internal_error("unexpected type value");
+    switch (str->t.type) {
+    case STR:
+      return lt(length_str(str), len);
+    case LSTR:
+      lazy_str_force_upto(str, len);
+      return lt(length_str(str->ls.prefix), len);
+    default:
+      internal_error("unexpected type value");
+    }
   }
 }
 
 val length_str_le(val str, val len)
 {
-  type_check2 (str, STR, LSTR);
+  if (is_lit(str)) {
+    const wchar_t *cstr = c_str(str);
+    size_t clen = c_num(len);
+    const wchar_t *nult = wmemchr(cstr, 0, clen + 1);
+    return nult != 0 ? t : nil;
+  } else {
+    type_check2 (str, STR, LSTR);
 
-  switch (str->t.type) {
-  case STR:
-    return le(length_str(str), len);
-  case LSTR:
-    lazy_str_force_upto(str, len);
-    return le(length_str(str->ls.prefix), len);
-  default:
-    internal_error("unexpected type value");
+    switch (str->t.type) {
+    case STR:
+      return le(length_str(str), len);
+    case LSTR:
+      lazy_str_force_upto(str, len);
+      return le(length_str(str->ls.prefix), len);
+    default:
+      internal_error("unexpected type value");
+    }
   }
 }
 
