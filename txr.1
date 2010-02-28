@@ -1126,7 +1126,7 @@ iteration, only consumes the lines matched prior to @(trailer).
 The freeform directive provides a useful alternative to
 .B txr's
 line-oriented matching discipline. The freeform directive treats all remaining
-input from the current input source as one big line. The directive which
+input from the current input source as one big line. The query line which
 immediately follows freeform is applied to that line.
 
 The syntax variations are:
@@ -1155,6 +1155,57 @@ of memory.
 If a string argument is given, it specifies a custom line terminator. The
 default terminator is "\en". The terminator does not have to be one character
 long.
+
+Freeform does not convert the entire remainder of the input into one big line
+all at once, but does so in a dynamic, lazy fashion, which takes place as the
+data is accessed. So at any time, only some prefix of the data exists as a flat
+line in which newlines are replaced by the terminator string, and the remainder
+of the data still remains as a list of lines.
+
+After the subquery is applied to the virtual line, the unmatched remainder
+of that line is broken up into multiple lines again, by looking for and
+removing all occurences of the terminator string within the flattened portion.
+
+Care must be taken if the terminator is other than the default "\en". All
+occurences of the terminator string are treated as line terminators in
+the flattened portion of the data, so extra line breaks may be introduced.
+Likewise, in the yet unflattened portion, no breaking takes place, even if
+the text contains occurences of the terminator string. The extent of data which
+is flattened, and the amount of it which remains, depends entirely on the
+query line underneath @(flatten).
+
+In the following example, lines of data are flattened using $ as the line
+terminator.
+
+  Query:        @(freeform "$")
+                @a$@b:
+                @c
+                @d
+
+  Data:         1
+                2:3
+                4
+
+  Output:       a="1"
+                b="2"
+                c="3"
+                d="4"
+
+The data is turned into the virtual line 1$2:3$4$.  The @a$@b: subquery matches
+the 1$2: portion, binding a to 1, and b to 2.  The remaining portion 3$4$ is
+then split into separate lines again according to the line terminator $:
+
+                3
+                4
+
+Thus the remainder of the query
+
+                @c
+                @d
+                
+faces these lines, binding c to 3 and d to 4. Note that since the data
+does not contain dollar signs, there is no ambiguity; the meaning may be
+understood in terms of the entire data being flattened and split again.
 
 In the following example, freeform is used to solve a tokenizing problem.  The
 Unix password file has fields separated by colons. Some fields may be empty.
