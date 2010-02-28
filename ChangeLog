@@ -1,3 +1,15 @@
+2010-01-26  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Version 034
+
+	Patched up broken @(freeform) directive.
+
+	* txr.c (version): Bumped to 034.
+
+	* txr.1: Set version to 034.
+
+	* configure: Bumped txr_ver to 034.
+
 2010-02-28  Kaz Kylheku  <kkylheku@gmail.com>
 
 	New testcases for freeform.
