@@ -1,0 +1,5 @@
+@(collect)
+@first @second @third
+@(freeform)
+@(coll)@{val /[0-9]+/}@(until)@\n@\n@(end)
+@(end)
