@@ -1,0 +1,3 @@
+@(freeform 5 " ")
+@(coll)@{a /./}@(until)1 2 @(end)
+@b

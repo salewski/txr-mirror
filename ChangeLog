@@ -1,12 +1,16 @@
 2010-02-28  Kaz Kylheku  <kkylheku@gmail.com>
 
-	New testcase for freeform.
+	New testcases for freeform.
 
 	* tests/006/data: New UTF-8 file.
 
 	* tests/006/freeform-1.txr: Likewise.
 
 	* tests/006/freeform-1.expected: Likewise.
+
+	* tests/006/freeform-2.txr: Likewise.
+
+	* tests/006/freeform-2.expected: Likewise.
 
 	* Makefile (TXR_ARGS): New target-specific assignment to set
 	data for test case set 006.
