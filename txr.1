@@ -204,10 +204,10 @@ file.
 .PP
 .B txr
 begins by reading the query. The entire query is scanned, internalized
-and then begins executing.  No file is opened until the query calls for a match
-for material from that file, but once opened, a file is always read in its
-entirety and stored in memory. A query may complete (successfully or not)
-before opening some or all of the files.
+and then begins executing, if it is free of syntax errors.  The reading of
+data, on the other hand, is lazy.  A file isn't opened until the query demands
+material from that file, and then the contents are read on demand, not all at
+once.
 
 If no files arguments are specified on the command line, it is up to the
 query to open a file, pipe or standard input via the @(next) directive

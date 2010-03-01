@@ -1,4 +1,9 @@
-2010-01-26  Kaz Kylheku  <kkylheku@gmail.com>
+2010-03-01  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* txr.1: Fix inaccuracies: files are not read into memory all at
+	once, and a query doesn't execute if it had errors.
+
+2010-02-28  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Version 034
 
