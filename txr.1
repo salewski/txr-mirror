@@ -319,8 +319,8 @@ the middle of a line, other than following a variable, must match exactly at
 the current position, where the previous match left off. Moreover, if the text
 is the last element in the line, its match is anchored to the end of the line.
 
-The semantics of text matching next to a variable is discussed in the following
-section.
+Text which follows a variable has special semantics, discusssed in the
+section Variables below.
 
 A query may not leave unmatched material in a line which is covered by the
 query.  However, a query may leave unmatched lines.
@@ -432,6 +432,29 @@ to the starting byte of the ill-formed multibyte character, and decodes just
 that byte, by mapping it to the Unicode character range U+DC00 through U+DCFF.
 The decoding resumes at the following character, expecting that byte to be the
 start of another multibyte character.
+
+.SS Regular Expression Directives
+
+In place of a piece of text (see section Text above), a regular expression
+directive may be used, which has the following syntax:
+
+  @/RE/
+
+where the RE part enclosed in slashes represents regular expression
+syntax (described in the section Regular Expressions below).
+
+Whereas literal text simply represents itself, regular expression denotes a
+(potentially infinite) set of texts.  The regular expression directive
+matches the longest piece of text (possibly empty) which belongs to the set
+denoted by the regular expression. The match is anchored to the current
+position; thus if the directive is the first element of a line, the match is
+anchored to the start of a line. If the directive is the last element of a
+line, it is anchored to the end of the line also: the regular expression must
+match the text from the current position to the end of the line.
+
+Like text which follows a variable, a regular expression directive which
+follows a variable has special semantics, discussed in the section Variables
+below.
 
 .SS Variables
 
@@ -588,7 +611,7 @@ bound to material which is
 .B skipped
 in order to match the trailing material). In the /RE/ form, the match
 extends over all characters from the current position which match
-the regular expression RE.
+the regular expression RE. (see Regular Expressions section below).
 
 In the NUMBER form, the match processes a field of text which
 consists of the specified number of characters, which must be nonnegative
@@ -607,21 +630,9 @@ variable.
 
 .SS Regular Expressions
 
-Like text, a regular expression (regexp) must match text in the data.  A regexp
-which occurs at the beginning of a line matches the beginning of a line.  A
-regexp which occurs elsewhere, other than following a variable, must match
-exactly starting at the current position, where the previous match left off. A
-regexp which occurs at the end of a line must match from the current position
-to the end of the line.
-
-The semantics of a regular expression which follow variables is
-discussed in the preceding section Variables.
-
-A regular expression, as a standalone directive, looks like this:
-
-  @/RE/
-
-where RE is regular expression syntax.
+Regular expressions are a language for specifying sets of character strings.
+Through the use of pattern matching elements, regular expression is
+able to denote an infinite set of texts.
 .B txr
 contains an original implementation of regular expressions, which
 supports the following syntax:
