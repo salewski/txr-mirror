@@ -1,3 +1,13 @@
+2010-10-03  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* lib.h (lazy_string): Fix incorrect comment.
+
+	* lib.c (split_str, split_str_set): It is necessary to protect input
+	parameters against GC, because we cache their internal pointers,
+	after which we no longer refer to the objects themselves. Moreover,
+	we perform object allocation, and then keep using the internal
+	pointers.
+
 2010-09-30  Kaz Kylheku  <kkylheku@gmail.com>
 
 	* txr.1: Fix formatting problem.
