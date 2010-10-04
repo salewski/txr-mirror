@@ -999,6 +999,9 @@ val split_str(val str, val sep)
   const wchar_t *csep = c_str(sep);
   size_t len_sep = c_num(length_str(sep));
 
+  prot1(&str);
+  prot1(&sep);
+
   list_collect_decl (out, iter);
 
   for (; *cstr != 0; cstr += len_sep) {
@@ -1010,6 +1013,9 @@ val split_str(val str, val sep)
     cstr += span;
   }
 
+  rel1(&sep);
+  rel1(&str);
+
   return out;
 }
 
@@ -1019,6 +1025,9 @@ val split_str_set(val str, val set)
   const wchar_t *cset = c_str(set);
   list_collect_decl (out, iter);
 
+  prot1(&str);
+  prot1(&set);
+
   for (; *cstr != 0; cstr++) {
     size_t span = wcscspn(cstr, cset);
     val piece = mkustring(num(span));
@@ -1026,6 +1035,9 @@ val split_str_set(val str, val set)
     list_collect (iter, piece);
     cstr += span;
   }
+
+  rel1(&set);
+  rel1(&str);
 
   return out;
 }

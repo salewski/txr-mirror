@@ -137,7 +137,7 @@ struct lazy_string {
   type_t type;
   val prefix;           /* actual string part */
   val list;             /* remaining list */
-  val opts;             /* ( limit . sepstring ) */
+  val opts;             /* ( separator . limit ) */
 };
 
 struct cobj {
