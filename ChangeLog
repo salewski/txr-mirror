@@ -1,3 +1,9 @@
+2010-10-04  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* match.c (match_files): Bugfix. A (sub)query that runs out of data
+	lines to match must fail. Extra data lines relative to the spec
+	are tolerated; extra spec lines unmet by data aren't.
+
 2010-10-03  Kaz Kylheku  <kkylheku@gmail.com>
 
 	* lib.h (lazy_string): Fix incorrect comment.

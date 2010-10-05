@@ -1726,6 +1726,9 @@ repeat_spec_same_data:
         return nil;
 
       bindings = new_bindings;
+    } else {
+      debuglf(spec_linenum, lit("spec ran out of data"), nao);
+      return nil;
     }
   }
 
