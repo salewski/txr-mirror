@@ -49,7 +49,7 @@ This document was created by
 @  (bind MNAME "Sep")
 @(or)
 @  (bind MONTH "10")
-@  (bind MNAME "Octn")
+@  (bind MNAME "Oct")
 @(or)
 @  (bind MONTH "11")
 @  (bind MNAME "Nov")
