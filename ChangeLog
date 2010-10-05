@@ -1,3 +1,23 @@
+2010-10-05  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Version 035
+
+	Fixes garbage-collection-related problem affecting @(freeform)
+	that was revealed by "make tests" on x86-64 system, gcc 4.3.2.
+
+	Fixes show-stopper stupidity, again: a query that matches 
+	the end of data terminates successfully rather than failing.  This
+	is because version 032 did not properly address the breakage
+	introduced in the 2010-01-21 change to match.c involving the dataline
+	variable. The "fix" only prevented the program from aborting in that
+	situation.
+
+	* txr.c (version): Bumped to 034.
+
+	* txr.1: Set version to 034.
+
+	* configure: Bumped txr_ver to 034.
+
 2010-10-04  Kaz Kylheku  <kkylheku@gmail.com>
 
 	* match.c (match_files): Bugfix. A (sub)query that runs out of data
