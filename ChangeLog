@@ -12,11 +12,11 @@
 	variable. The "fix" only prevented the program from aborting in that
 	situation.
 
-	* txr.c (version): Bumped to 034.
+	* txr.c (version): Bumped to 035.
 
-	* txr.1: Set version to 034.
+	* txr.1: Set version to 035.
 
-	* configure: Bumped txr_ver to 034.
+	* configure: Bumped txr_ver to 035.
 
 2010-10-04  Kaz Kylheku  <kkylheku@gmail.com>
 
