@@ -1,0 +1,516 @@
+                              Txr Internals Guide
+                        Kaz Kylheku <kkylheku@gmail.com>
+
+
+0  Overview
+
+This is an internals guide to someone who wants to understand, and possibly
+change or extend the txr program. The purpose is to give explanations,
+provide rationale and make coding recommendations.
+
+
+1  Coding Practice
+
+1.1  Language
+
+Txr is written in a language that consists of the common dialect between C90 and C++98.
+The code can be built with either the GNU C compiler or the GNU C++ compiler.
+Use is made of some POSIX.2 functions, which are requested by means of -D_POSIX_2_SOURCE.
+Also, the <wchar.h> header is used, which was introduced by a 1995 addendum
+to the C language, so it may be said that the actual C dialect is C95.
+
+In coding new features or fixing bugs, care must be taken to preserve this. Code must
+continue to compile as C and C++, and not increase the portability requirements.
+
+C++ compilation can be arranged using ./configure --ccname=g++ (for instance).
+
+Note that txr is not written takes some nonportable liberties with the
+language, such as encoding bit fields into pointers, and treating automatic
+storage as a flat stack which can be treated as an array that can be walked by
+a garbage collector looking for references to objects. There are assumptions
+about the alignment of objects too.
+
+1.2  Program File Structure
+
+The txr code has a simple flat structure: a collection of .c files
+(and also a .l flex file and a .y yacc file) and headers.
+The txr project follows the include header style that every C source file
+includes all needed headers, in the proper order. Headers do not include other
+headers. 
+
+The generation of the dependency makefile dep.mk depends on this; the
+depend.txr script does not scan headers for inclusion of other headers.  If
+this stylistic decision is ever changed, the dependency generation will have to
+be updated.
+
+
+1.3  Style
+
+Tab characters are avoided in txr source files. The indentation is two characters.
+Formatting is similar to K&R, though the yacc grammar files use a Lispy formatting.
+Expression or statement elements which are syntactically parallel, but
+on separate lines, must be horizontally aligned with each other:
+
+  if (function(argument1,
+               argument))
+
+father than:
+
+  if (function(argument1,
+      argument))
+
+The opening brace of a function goes on a separate line.  if/else braces
+``cuddle'' into the previous line, except when the condition spans multiple
+lines:
+
+  if (multi +
+      line +
+      condition)
+  {
+    /* brace doesn't cuddle */
+  } else {
+
+  }
+
+switch cases indent with the switch:
+
+  switch (x)
+  {
+  case ...
+    ...
+    break;
+  }
+
+switches handle all enumeration members; default cases have a break
+even if they are last in the block. The following style is permitted
+
+  if (...) {
+    ...
+  } else switch (...) {
+  case ...
+
+  }
+
+Forward and backward goto are permitted, unless it is /glaringly/
+obvious that the code can be written better without it.
+
+
+1.3 Error Handling
+
+Multiple return points from functions are encouraged. Txr has a garbage
+collector, so there is usually no need to branch to a common cleanup just for
+the sake of freeing memory.
+
+Txr also has exceptions; code that must free some resource other than
+garbage collected memory if a failure occurs, must be exception safe.
+
+Exceptions should be used for both internal errors and environmental
+situations. The internal_error macro is preferred to calling abort.
+
+
+1.4 I/O
+
+Use of the C streams and printf must be avoided. Txr has its own
+streams and its own formatter function called format. Printing to
+a dynamic string is supported. There are three global streams:
+std_output, std_input and std_error. These streams don't do everything
+that standard I/O streams can do, such as binary I/O, but
+their capabilities can be extended.
+
+
+1.5 Regression
+
+All changes must be verified not to break the test cases. This is done by
+running ``make tests''. Running ``make tests'' is not possible if the code is
+being cross-compiled; in that case run ``make install-tests'' after ``make
+install''. This will add the test cases and a shell script to run them to the
+installation. The cases can then be installed and run on the cross target.
+
+
+2. Dynamic Types
+
+The txr code is organized around a dynamic typing paradigm implemented in C.
+Values are represented by the C type val, which is a typedef name for
+a pointer to obj_t, i.e obj_t *.
+
+
+2.1 Two Kinds of Values
+
+A value of type val falls into two kinds: heaped and immediate.
+
+An heaped val points to an obj_t object, which is a union of a number
+of structure types, discriminated by a type field.
+
+An immediate val actually contains the value inside the pointer, and does not
+point to anything.
+
+
+2.1 Pointer Bitfield
+
+Immediate and heaped values are distinguished by a two-bit field in the least
+signficant bits of the pointer. If the two bits are 00 (i.e. the pointer is
+four-byte-aligned) then the value is a pointer to a heaped object, unless
+it is the null pointer. The null pointer is understood to be the object
+nil.  The is_ptr(v) macro evaluates true for a value v which is not nil,
+and which points to a heap object (at least according to its bit field;
+is_ptr does not validate the pointer).
+
+The codes 01 10 and 11 indicate immediate values: values of type NUM, CHR and
+LIT, respectively. That is to say, if the tag bits are 01, then then remaining
+upper bits of the pointer constitute a signed integer. The range of this
+integer is NUM_MIN to NUM_MAX, defined in lib.h.  The code 10 is for
+characters: the remaining bits of the pointer encode a wchar_t value. The bits
+11 indicate that the object is a pointer to an encapsulated C string (of
+wide characters), which is most often a literal. See the subsection 
+Encapsulated C Strings below.  Only C strings whose first character is suitably
+aligned can be represented as LIT objects. The address of the first character
+of the string is formed by masking out the 11 code, leaving a pointer which is
+four-byte aligned.
+
+
+2.2 Heap Objects
+
+Heap types are an union of various structures: union obj. The obj_t name is a
+typedef.  All of the structures are no larger than four pointer-sized words,
+including the type tag, and it should be kept that way.  Heaps are managed as
+arrays of this union obj.  If any one of the union members is made larger than
+four words, then the heap size will increase.
+
+Though the type tag is defined by a enumeration, for memory management 
+purposes, the type field is overloaded with additional bitmasked values.
+The FREE flag in a type field marks an object on the free list.
+The REACHABLE flag is the marking bit used during garbage collection.
+
+
+2.3 The COBJ type
+
+The COBJ type is a mechanism whereby a ``native'' C type can be integrated into
+the dynamic type system. Under the COBJ model, the heap allocated object of
+type COBJ serves as a handle which points to a separately allocated C object,
+which can be an arbitrary structure. The relationship between the dynamic world
+and this object is managed through a registered table of operations. The module
+managing that object must provide functions for dealing with garbage
+collection, printing, equality and hashing.  The garbage collector hooks allow
+the object's module to be notified when the associated COBJ handle becomes
+unreachable. The associated C object may contain references to dynamic objects
+(i.e. members of type val).  In that case, it must provide the mark function,
+which, when invoked, must traverse the object's members of type and recursively
+invoke mark_obj on all of them.
+
+
+
+
+2.4 Strings
+
+All string manipulation should be done using the dynamic object system.
+The object system provides three kinds of strings: encapsulated
+C strings, regular strings and lazy strings (type tags LIT, STR and LSTR,
+respectively).
+
+2.4.1 Encapsulated C Strings
+
+The design of the dynamic type system recognizes that programs contain literals
+and static strings, and that sometimes transient strings are are used which
+have temporary lifetimes. Therefore, a special provision is made in the val
+type to be able to represent C strings directly, without having to create
+dynamically allocated copies in heap storage. These C strings represented as
+values of type val are referred to in this document as encapsulated C strings.
+A C string whose address is aligned on a four-byte boundary, or more strictly,
+is converted to an encapsulated C string by masking the bits 11 into the least
+significant two bit positions of its pointer, and then manipulated as a value
+of type val (pointer to obj_t).
+
+Enapsulated C strings can be transparently used wherever the other kinds of
+strings can be used, so the benefit is immense, for the small cost of a bit
+operation.
+
+Most often, this feature is used for literals, and the lit macro is provided
+for this situation. The macro call lit("abc") produces a value of type val
+which represents the wide string L"abc".
+
+However, C strings other than literals can be encapsulated as values also. The
+most obvious candidates are static strings which are arrays, rather than
+literals, and stack-allocated strings, which C programs often use as
+efficient temporary buffers for character manipulation. Two functions are
+provided for converting these kinds of strings to encapsulated strings: the
+functions static_str and auto_str. They do the same thing: simply take the
+wchar_t * pointer and convert it to a obj_t * pointer with the bits 11 in the
+tag field (thus requiring that the C string pointer be aligned such
+that these bits are originally 00).  Two different functions which do the same
+thing are provided, because it is generally much safer to convert a static
+string to a val (due to its indefinite lifetime) than an automatic string
+(which becomes indeterminate when the enclosing block terminates).  Care should
+be taken to only ever use auto_str to wrap a stack-allocated string as a val,
+so that such usage can be found in the program bys searching for occurences of
+``auto_str''. Secondly, care should be taken to ensure that values produced by
+auto_str do not try to escape beyond the lifetime of the enclosing block.  If
+they are passed to functions those functions must not retain the value in any
+persistent place.  For instance if an object is constructed which contains an
+automatic string, that object must not be used beyond the lifetime of that
+string.  Note that it is okay if garbage objects contain auto_str values, which
+refer to strings that no longer exist, because the garbage collector will
+recognize these pointers by their type tag and not use them.
+
+
+3  Garbage Collection
+
+Txr has a fairly simple mark-and-sweep garbage collector. The collector marks
+objects by performing a depth-first-search over the graph formed by
+inter-object references, starting at certain root values.  Objects which are
+not marked are identified during the sweep phase, which is a linear scan
+through the object heaps, and placed on the free list.
+
+During the marking phase, the bit value 0x100 (denoted by the symbolic constant
+REACHABLE) is used to mark reachable objects. This flag is reset during
+the sweep phase, but the flag 0x200 (the value of the symbolic constant FREE)
+is added to the type field of objects on the free list. This FREE flag has
+the effect of ``poisoning'' free objects: if an object is prematurely
+reclaimed (indicating a bug in the garbage collection system), uses
+of that object will see a bad type tag, so that there is a good chance
+the program will throw an exception due to a failed type check.
+
+3.1  Root Pointers
+
+The marking phase of the garbage collector looks in two places for root
+pointers: by scanning the entire call stack, and by looking at a registered
+list of global variables.
+
+Scanning the stack means that the garbage collector is conservative: it could
+encounter values which look like valid object references, but are actually only
+accidentally so due to having the right bit pattern. When this happens,
+objects that should be considered garbage will remain live.
+
+Global root pointers are registered individually using the prot1 function,
+or many at once using the protect function. Care must be taken to properly
+null-terminate the variable argument list to protect. It does not use the
+nao convention, but rather (val *) 0.
+
+The garbage collector takes care to also scan the machine registers.  This is
+currently done using a broadly portable approach, namely recording the machine
+state into the stack with the setjmp macro.
+
+
+3.2  GC-safe Code
+
+Since garbage collection is being used in code processed by a compiler which
+knows nothing about garbage collection, it is important to obey certain rules
+so that the code is gc-safe. Code which is not gc-safe is susceptible
+to two potential serious problems: the premature garbage collection of an
+object, and accesses, in the garbage allocator, to uninitialized parts of an
+object.
+
+The rules for gc-safe code are not difficult in txr, due to the immense
+simplification that the garbage collector scans the stack and registers.  If a
+value is in an automatic local variable, or if the code is working with the
+value as the result of an expression, function return, or passing it as a
+function parameter, that value is visible to the gc and protected.  Thus, the
+rules only have to be followed in lower-level code which is close to the
+allocator. Normal application code does not have to follow any special rules.
+
+The garbage collector is called implicitly by code which calles make_obj to
+pull a raw object from the garbage collector's free list.
+
+3.2.1 Rule One: Full Initialization
+
+  A function which calls make_obj must not be hanging on to any 
+  references to a partially initialized object. 
+
+Any partially initialized object may be visited by the garbage collector during
+the call to make_obj. A partially initialized object may have a type code which
+still indicates that it is free. If the garbage collector encounters an object
+on the stack which is free, it will simply skip that object. This means that
+the sweep phase may then return that object to the free list. If a free object
+is encountered during transitive marking, the garbage collector will abort.
+
+In other words, if the program allocates an object from the free list, but then
+accidentally invokes the garbage collector prior to completing the
+initialization of that object, the object may be reclaimed back to the
+free list and the program is then working with a freed object; or
+the program may even abort.
+
+If the program initializes only the type field of the object from make_obj,
+but not the other fields that may contain a value of type val, and then invokes
+the garbage collector, the garbage collector will treat that object as visible,
+and then try to mark the val-typed fields of that object, thereby using
+uninitialized memory.
+
+The full initialization rule is therefore that after make_obj is called, the
+object must be fully initialized before doing any other operation that may
+allocate gc memory. Fully initialized means that the type field is initialized,
+as well as any other field that is visited during garbage collection.
+
+3.2.2 Rule Two: Make it Reachable
+
+  A function which constructs an object must place it in live, reachable
+  storage before attempting to construct another object.
+
+The garbage allocator does not scan all of memory for root pointers, only the
+stack and registered globals. So for instance, if the only reference to an
+object is inside a dynamically allocated structure, and that structure is not
+visible to the allocator, then if gc is invoked, that object will be reclaimed.
+So the following pattern is incorrect.
+
+  {
+    some_struct_type *t = (some_struct_type *) chk_malloc(sizeof *t);
+    t->value = cons(foo, bar);
+    return cobj((mem_t *) t, some_type_symbol, &some_type_ops);
+  }
+
+There are three allocations in the code. The allocation of the structure
+assigned to pointer t, the allocation of the cons cell stored in t->value, and
+the allocation of the COBJ.  The issue is that the object t is not known to the
+allocator.  It is a ``native'' C type, which the garbage collector will not
+traverse.  The garbage allocator can see the pointer t, because it scans the
+stack and registers, but that object means nothing to the garbage collector,
+and so the collector cannot find and mark the t->value member.
+
+Of course, the operations structure ``some_type_ops'' presumably contains a
+mark function which knows how to traverse this object and find values inside
+it. But that does not come into play until this object is registered with a
+COBJ, which does not happen until the last line in the above block
+where the cobj function is called. After the cobj call, the t pointer
+is hooked into the COBJ object, and visible to the garbage collector.
+
+So the object allocated by cons(foo, bar) is put into a structure which is
+yet invisible to the allocator, and that reference is the only live reference
+which the program has to that cons cell. Consequently, the subsequent call to
+the allocator, hidden inside the cobj function, may trigger gc, and cause this
+cons cell to be reclaimed into the free list!
+
+The following adjustment does not fix the problem:
+
+  {
+    val c = cons(foo, bar);
+    some_struct_type *t = (some_struct_type *) chk_malloc(sizeof *t);
+    t->value = c; /* still wrong */
+    return cobj((mem_t *) t, some_type_symbol, &some_type_ops);
+  }
+
+Even though the cons cell is now also held in a local variable, as well as in
+the structure, it is still not necessarily visible to the garbage collector.
+The problem is that after the ``t->value = c'' assignment, the variable c is no
+longer live. Variable liveness is a concept from dataflow analysis, which
+is a process implemented in optimizing compilers. A variable is live at some
+point in the code if the value stored in it has a next use: another code can be
+reached from that point which uses the value.  The variable c has no next use
+after the t->value = c assignment. There is only one execution path from that
+point in the code, and that path leads to the termination of the block, which
+destroys c. Essentially, the t->value struture member is the sink for the
+data flow which carries the cons cell: The data flow emanates from the call
+cons(foo, bar), and terminates in t->value.
+
+There are several right ways to fix this:
+
+  {
+    val co;
+    some_struct_type *t = (some_struct_type *) chk_malloc(sizeof *t);
+    t->value = nil;
+    co = cobj((mem_t *) t, some_type_symbol, &some_type_ops);
+    t->value = cons(foo, bar);
+    return co;
+  }
+
+The above properly initializes the structure, and then associate it with the
+COBJ. This makes the structure visible to the garabge collector (through the co
+variable, which is live at the point where the cobj function is called, due
+to having a next use in the return statement!) Now we can safely stash a newly allocated
+cons cell into that structure, allowing that structure to hold the one and only
+reference to that object.
+
+Another approach, which avoids two-step initialization of the structure:
+
+  {
+    val c = cons(foo, bar);
+    some_struct_type *t = (some_struct_type *) chk_malloc(sizeof *t);
+    co = cobj((mem_t *) t, some_type_symbol, &some_type_ops);
+    t->value = c;
+    return co;
+  }
+
+In this situation, the variable c maintains a live, gc-visible reference to the
+cons across the cobj allocation. The variable c is live at the point of the
+cobj call because it has a next use: its value is used in the subsequent
+assignment to t->value.  We don't initialize the structure because even if
+the cobj function triggers gc, the gc cannot yet see that structure and
+so there is no danger. After cobj returns, the first thing we do is
+initialize the structure (obeying the first rule of gc-safe code). 
+Just after cobj returns, the structure is uninitialized and visible to the
+garbage collector, but there is nothing that will trigger gc prior to
+the initialization.
+
+Note that this premature collection problem also affects functions which simply
+take an existing object and put it into a structure, where it is not obvious
+that an object may have been allocated which is not visible to gc,
+
+  /* Looks harmless: allocate structure, stick the argument object
+     into it and make a COBJ! */
+
+  val make_foo(val member)
+  {
+    foo *f = (foo *) chk_malloc(sizeof *foo);
+    f->mem = member; /* Oops, member is no longer live. */
+    return cobj((mem_t *) f, ...);
+  }
+
+The problem is that the caller which invokes foo might not maintain any live
+reference to the argument object either, and so the f->mem = member might
+be the one and only sink for the data flow carrying that object; i.e.
+the one and only reference to that object in the entire program.
+One way that can happen is that the object is just a temporary that is
+allocated in the function call itself:
+
+  make_foo(string("abc")); /* oops! */
+
+The make_foo function can be correct like this:
+
+  val make_foo(val member)
+  {
+    cobj co;
+    foo *f = (foo *) chk_malloc(sizeof *foo);
+    co = cobj((mem_t *) f, ...);
+    f->mem = member;
+    return co;
+  }
+
+
+3.3 Weak Reference Support
+
+COBJ objects can support weak pointers, but there is no fully encapsulated
+interface for this; to be more specific, adding a new module of objects that
+have weak references, it is necessary to to add a function call code into the
+garbage collection functino.  
+
+Modules with weak references should closely follow the pattern used by the hash
+module.  Hash tables are implemented using COBJ, and provide weak key and value
+support thanks to cooperation with the gc module.
+
+Weak references work as follows. During gc marking, the COBJ module
+must maintain a list of all objects of its kind which are marked
+(or at least just that subset of them which contains weak references).
+It must refrain from marking the weak references contained in these
+objects, but rather leave them unmarked.
+
+After the initial marking phase, gc will call a global function in each module
+that manages objects with weak references. (Currently there is only one such
+function: hash_process_weak; a similar function must be writen
+for a new module and added).
+
+This function must process and clear the weak list gathered during the
+initial marking. Each weak reference in each object on this weak
+marked list must be inspected to see whether it refers to an object which is
+still reachable. Weak references which point to values which have not been
+reached (do not have the REACHABLE bit) must be lapsed according to the
+object's rules for lapsing weak references. For instance, a hash table with
+weak keys will delete a key/value pair if the key reference lapses.  A weak
+pointer container object might convert a lapsed weak reference to the value
+nil.
+
+Weak objects can defer marking certain other non-weak objects.  For instance
+the hash module, during marking, does not mark the vector object that serves as
+the hash chain table (at least not for weak hashes), and neither does it mark
+the conses which make up the hash chains emanating from that vector. This
+marking is completed in hash_process_weak. After the lapsed entries are removed
+(their conses are spliced out of the chains), then the vector is marked, which
+transitively causes the chain conses to be marked. The conses that were removed
+due to the lapsing of weak keys thus stay unmarked and are reclaimed during
+the sweep phase of the gc, which soon follows.
