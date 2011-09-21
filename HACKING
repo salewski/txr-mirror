@@ -366,7 +366,7 @@ and so the collector cannot find and mark the t->value member.
 
 Of course, the operations structure ``some_type_ops'' presumably contains a
 mark function which knows how to traverse this object and find values inside
-it. But that does not come into play until this object is registered with a
+it. But that does not come into play until this object is registered as a
 COBJ, which does not happen until the last line in the above block
 where the cobj function is called. After the cobj call, the t pointer
 is hooked into the COBJ object, and visible to the garbage collector.
@@ -411,7 +411,7 @@ There are several right ways to fix this:
   }
 
 The above properly initializes the structure, and then associate it with the
-COBJ. This makes the structure visible to the garabge collector (through the co
+COBJ. This makes the structure visible to the garbage collector (through the co
 variable, which is live at the point where the cobj function is called, due
 to having a next use in the return statement!) Now we can safely stash a newly allocated
 cons cell into that structure, allowing that structure to hold the one and only
