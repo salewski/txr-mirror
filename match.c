@@ -924,8 +924,9 @@ repeat_spec_same_data:
 
       if (sym == skip_s) {
         val max = first(rest(first_spec));
+        val min = second(rest(first_spec));
         cnum cmax = nump(max) ? c_num(max) : 0;
-        cnum reps = 0;
+        cnum cmin = nump(min) ? c_num(min) : 0;
 
         if (rest(specline))
           sem_error(spec_linenum,
@@ -935,9 +936,22 @@ repeat_spec_same_data:
           break;
 
         {
+          cnum reps_max = 0, reps_min = 0;
+          cnum old_lineno = data_lineno;
           uw_block_begin(nil, result);
 
-          while (data && (!max || reps++ < cmax)) {
+          while (data && min && reps_min++ < cmin) {
+            data = rest(data);
+            data_lineno++;
+          }
+
+          if (min) {
+            debuglf(spec_linenum, lit("skipped ~a lines to ~a:~a"),
+                    num(data_lineno - old_lineno), first(files),
+                    num(data_lineno), nao);
+          }
+
+          while (data && (!max || reps_max++ < cmax)) {
             result = match_files(spec, files, bindings,
                                  data, num(data_lineno));
 
