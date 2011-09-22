@@ -1102,6 +1102,28 @@ be written instead:
   end @BEG_SYMBOL
   @(end)
 
+If the symbol nil is used in place of a number, it means to scan
+an unlimited range of lines; thus, @(skip nil) is equivalent to @(skip).
+
+There may be a second numeric argument. This specifies a minimum
+number of lines to skip before looking for a match. For instance,
+skip 15 lines and then search indefinitely for "begin ...":
+
+  @(skip nil 15)
+  begin @BEG_SYMBOL
+
+The two arguments may be used together. For instance, the following
+matches if, and only if, the 15th line of input starts with "begin ":
+
+  @(skip 1 15)
+  begin @BEG_SYMBOL
+
+Essentially, @(skip 1 <n>) means "hard skip by <n>" lines, then
+match the query without scanning.  @(skip 1 0) is the same as @(skip 1), which
+is a noop, because it means: "the remainder of the query must match starting on
+the very next line", or, more briefly, "skip exactly zero lines", which is the
+behavior if the skip directive is omitted altogether.
+
 .SS The Trailer Directive
 
 The trailer directive introduces a trailing portion of a query or subquery

@@ -1,3 +1,12 @@
+2011-09-22  Kaz Kylheku  <kaz@kylheku.com>
+
+	Useful second argument in skip directive for skipping
+	a minimum number of lines.
+
+	* match.c (match_files): New behavior in skip_s case.
+
+	* txr.1: Documented.
+
 2010-10-05  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Version 035
