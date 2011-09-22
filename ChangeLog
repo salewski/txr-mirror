@@ -1,5 +1,17 @@
 2011-09-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 036
+
+	Extension to @(skip).
+
+	* txr.c (version): Bumped to 036.
+
+	* txr.1: Set version to 036.
+
+	* configure: Bumped txr_ver to 036.
+
+2011-09-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	Useful second argument in skip directive for skipping
 	a minimum number of lines.
 
