@@ -1065,37 +1065,45 @@ repeat_spec_same_data:
         if (rest(first_spec) && rest(specline))
           sem_error(spec_linenum, lit("invalid combination of old "
                                       "and new next syntax"), nao);
+        if (rest(specline)) {
+          sem_error(spec_linenum, lit("obsolete next syntax: trailing material"), nao);
+        }
 
         if ((spec = rest(spec)) == nil)
           break;
 
         if (rest(first_spec)) {
           val source = rest(first_spec);
+          val keyword = first(source);
+          val arg = keyword;
 
-          if (eq(first(source), nothrow_k))
-            push(nil, &source);
-          else if (eq(first(source), args_k)) {
-            val input_name = string(L"args");
-            cons_bind (new_bindings, success,
-                       match_files(spec, cons(input_name, files),
-                                   bindings, files, one));
-            if (success)
-              return cons(new_bindings,
-                  if3(data, cons(data, num(data_lineno)), t));
-            return nil;
+          if (keywordp(keyword)) {
+            if (eq(keyword, nothrow_k)) {
+              sem_error(spec_linenum, lit("misplaced :nothrow"), nao);
+            } else if (eq(keyword, args_k)) {
+              val input_name = string(L"args");
+              cons_bind (new_bindings, success,
+                         match_files(spec, cons(input_name, files),
+                                     bindings, files, one));
+              if (success)
+                return cons(new_bindings,
+                    if3(data, cons(data, num(data_lineno)), t));
+              return nil;
+            }
+            arg = second(source);
           }
 
           {
-            val value = eval_form(first(source), bindings);
-            val name = cdr(value);
+            val eval = eval_form(arg, bindings);
+            val str = cdr(eval);
 
-            if (!value)
+            if (!eval)
               sem_error(spec_linenum, lit("next: unbound variable in form ~a"),
                         first(source), nao);
 
             if (eq(second(source), nothrow_k)) {
-              if (name) {
-                files = cons(cons(nothrow_k, name), files);
+              if (str) {
+                files = cons(cons(nothrow_k, str), files);
               } else {
                 files = rest(files);
                 if (!files) {
@@ -1105,8 +1113,8 @@ repeat_spec_same_data:
                 files = cons(cons(nothrow_k, first(files)), rest(files));
               }
             } else {
-              if (name) {
-                files = cons(name, files);
+              if (str) {
+                files = cons(str, files);
               } else {
                 files = rest(files);
                 if (!files)
@@ -1115,15 +1123,6 @@ repeat_spec_same_data:
               }
             }
           }
-        } else if (rest(specline)) {
-          val sub = subst_vars(rest(specline), bindings);
-          val str = cat_str(sub, nil);
-          if (str == nil) {
-            sem_error(spec_linenum, lit("bad substitution in next file spec"),
-                      nao);
-            continue;
-          }
-          files = cons(cons(nothrow_k, str), files);
         } else {
           files = rest(files);
           if (!files)

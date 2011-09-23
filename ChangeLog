@@ -1,4 +1,9 @@
-2011-09-21  Kaz Kylheku  <kaz@kylheku.com>
+2011-09-23  Kaz Kylheku  <kaz@kylheku.com>
+
+	* match.c (match_files): Some cleanup in preparation of new
+	features. Support for obsolescent @(next) syntax is gone.
+
+2011-09-23  Kaz Kylheku  <kaz@kylheku.com>
 
 	Semantics tweak: short circuiting behavior for @(all) and @(none).
 
