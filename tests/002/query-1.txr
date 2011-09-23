@@ -2,10 +2,10 @@
 @# This file is in the public domain.
 @# It was authored by Kaz Kylheku <kkylheku@gmail.com> in 2009
 @#
-@(next)!ls @TESTDIR/proc | sort -n
+@(next `!ls @TESTDIR/proc | sort -n`)
 @(collect)
 @{process /[0-9]+/}
-@  (next)@TESTDIR/proc/@process/status
+@  (next `@TESTDIR/proc/@process/status` :nothrow)
 Name:	@name
 State:	@state (@state_desc)
 SleepAVG:	@sleep_avg%
@@ -23,7 +23,7 @@ Gid:	@gid	@/.*/
 @  (end)
 @  (bind thread thr)
 @  (some)
-@    (next)@TESTDIR/etc/passwd
+@    (next `@TESTDIR/etc/passwd`)
 @    (skip)
 @user:@pw:@uid:@/.*/
 @  (and)
