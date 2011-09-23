@@ -1,5 +1,12 @@
 2011-09-23  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c, parser.y: Support for old output syntax removed.
+	Leading :nothrow with trailing material is an error now.
+
+	* txr.1: Updated. Made note of errors in pipes being asynchronous.
+
+2011-09-23  Kaz Kylheku  <kaz@kylheku.com>
+
 	* tests/002/query-1.txr: Old next syntax rewritten to new.
 
 2011-09-23  Kaz Kylheku  <kaz@kylheku.com>

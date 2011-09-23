@@ -267,13 +267,14 @@ catch_clauses_opt : CATCH ')' newl
 
 output_clause : OUTPUT ')' o_elems '\n'
                 out_clauses
-                END newl        { $$ = list(output_s, $5, $3, nao); }
+                END newl        { $$ = nil;
+                                  yyerror("obsolete output syntax: trailing material"); }
               | OUTPUT ')' newl
                 out_clauses
                 END newl        { $$ = list(output_s, $4, nao); }
               | OUTPUT exprs ')' newl
                 out_clauses
-                END newl        { $$ = list(output_s, $5, nil, $2, nao); }
+                END newl        { $$ = list(output_s, $5, $2, nao); }
               | OUTPUT exprs ')' o_elems '\n'
                 out_clauses
                 END newl        { $$ = nil;

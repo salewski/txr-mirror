@@ -2280,26 +2280,20 @@ The syntax of the @(output) directive is:
   .
   @(end)
 
-An obsolescent syntax is also supported:
-
-  @(output)...optional destination...
-  .
-  . one or more output directives or lines
-  .
-  @(end)
-
 The optional destination is a filename, the special name, - which
 redirects to standard output, or a shell command preceded by the ! symbol.
 In the first form, the destination may be specified as a variable
 which holds text, a string literal or a quasiliteral
 
-In the second obsolescent form, the material to the right of @(output)
-is query text which may contain variables.
-
-The new syntax throws an exception if the output destination
+The syntax throws an exception if the output destination
 cannot be opened, unless the :nothrow keyword is present, in which
 case the situation is treated as a match failure.  The old syntax throws an
 exception.
+
+Note that since command pipes are processes that report errors
+asynchronously, a failing command will not throw an immediate exception that
+can be suppressed with :nothrow.   This is for synchronous errors, like
+trying to open a destination file, but not having permissions, etc.
 
 .SS Output Text
 
