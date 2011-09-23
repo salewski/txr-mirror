@@ -1173,9 +1173,11 @@ repeat_spec_same_data:
                 max_data = new_data;
               }
             }
-            if (sym == cases_s)
+            if (sym == cases_s || sym == none_s)
               break;
           } else {
+            if (sym == all_s)
+              break;
             all_match = nil;
           }
         }

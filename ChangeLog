@@ -1,3 +1,11 @@
+2011-09-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	Semantics tweak: short circuiting behavior for @(all) and @(none).
+
+	* match.c (match_files): Added a couple of break statements.
+
+	* txr.1: Updated.
+
 2011-09-22  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 036
