@@ -1408,29 +1408,25 @@ repeat_spec_same_data:
         goto repeat_spec_same_data;
       } else if (sym == output_s) {
         val specs = second(first_spec);
-        val old_style_dest = third(first_spec);
-        val new_style_dest = fourth(first_spec);
-        val nt = nil;
+        val dest_spec = third(first_spec);
+        val nothrow = nil;
         val dest;
         fpip_t fp;
 
-        if (old_style_dest) {
-          dest = cat_str(subst_vars(old_style_dest, bindings), nil);
+        if (eq(first(dest_spec), nothrow_k)) {
+          if (rest(dest_spec))
+            sem_error(spec_linenum, lit("material after :nothrow in output"), nao);
+          dest = string(L"-");
         } else {
-          if (eq(first(new_style_dest), nothrow_k))
-            push(nil, &new_style_dest);
+          val form = first(dest_spec);
+          val val = eval_form(form, bindings);
 
-          {
-            val form = first(new_style_dest);
-            val val = eval_form(form, bindings);
+          if (!val)
+            sem_error(spec_linenum,
+                      lit("output: unbound variable in form ~a"), form, nao);
 
-            if (!val)
-              sem_error(spec_linenum,
-                        lit("output: unbound variable in form ~a"), form, nao);
-
-            nt = eq(second(new_style_dest), nothrow_k);
-            dest = or2(cdr(val), string(L"-"));
-          }
+          nothrow = eq(second(dest_spec), nothrow_k);
+          dest = or2(cdr(val), string(L"-"));
         }
 
         fp = (errno = 0, complex_open(dest, t));
@@ -1438,7 +1434,7 @@ repeat_spec_same_data:
         debugf(lit("opening data sink ~a"), dest, nao);
 
         if (complex_open_failed(fp)) {
-          if (nt) {
+          if (nothrow) {
             debugf(lit("could not open ~a: "
                        "treating as failed match due to nothrow"), dest, nao);
             return nil;
