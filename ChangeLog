@@ -1,7 +1,5 @@
 2011-09-23  Kaz Kylheku  <kaz@kylheku.com>
 
-	Copyright year update.
-
 	* LICENSE, Makefile, configure, gc.c, gc.h, hash.c, hash.h, lib.c,
 	lib.h, match.c, match.h, parser.h, parser.l, parser.y, regex.c,
 	regex.h, stream.c, stream.h, txr.1, txr.c, txr.h, unwind.c, unwind.h,
