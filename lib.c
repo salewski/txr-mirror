@@ -66,7 +66,6 @@ val query_error_s, file_error_s, process_error_s;
 
 val nothrow_k, args_k;
 
-val zero, one, two, negone, maxint, minint;
 val null_string;
 val nil_string;
 val null_list;
@@ -1427,13 +1426,14 @@ val vector(val alloc)
   cnum alloc_plus = c_num(alloc) + 2;
   val vec = make_obj();
   val *v = (val *) chk_malloc(alloc_plus * sizeof *v);
-  vec->v.type = VEC;
-  vec->v.vec = v + 2;
 #ifdef HAVE_VALGRIND
   vec->v.vec_true_start = v;
 #endif
-  v[0] = alloc;
-  v[1] = zero;
+  v += 2;
+  vec->v.type = VEC;
+  vec->v.vec = v;
+  v[vec_alloc] = alloc;
+  v[vec_fill] = zero;
   return vec;
 }
 
@@ -1915,9 +1915,7 @@ static void obj_init(void)
    */
 
   protect(&packages, &system_package, &keyword_package,
-          &user_package, &zero, &one,
-          &two, &negone, &maxint, &minint,
-          &null_string, &nil_string,
+          &user_package, &null_string, &nil_string,
           &null_list, &equal_f,
           &identity_f, &prog_string,
           (val *) 0);
@@ -1925,13 +1923,6 @@ static void obj_init(void)
   nil_string = lit("nil");
   null_string = lit("");
   null_list = cons(nil, nil);
-
-  zero = num(0);
-  one  = num(1);
-  two = num(2);
-  negone = num(-1);
-  maxint = num(NUM_MAX);
-  minint = num(NUM_MIN);
 
   system_package = make_package(lit("sys"));
   keyword_package = make_package(lit("keyword"));
