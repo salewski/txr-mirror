@@ -222,7 +222,6 @@ extern val query_error_s, file_error_s, process_error_s;
 
 extern val nothrow_k, args_k;
 
-extern val zero, one, two, negone, maxint, minint;
 extern val null_string;
 extern val null_list; /* (nil) */
 
@@ -428,3 +427,11 @@ val match(val spec, val data);
   obj_t *c_o_n_s ## CAR ## CDR = CONS;          \
   obj_t *CAR = car(c_o_n_s ## CAR ## CDR);      \
   obj_t *CDR = cdr(c_o_n_s ## CAR ## CDR)
+
+#define num_fast(n) ((val) ((n << TAG_SHIFT) | TAG_NUM))
+#define zero num_fast(0)
+#define one num_fast(1)
+#define two num_fast(2)
+#define negone num_fast(-1)
+#define maxint num_fast(NUM_MAX)
+#define minint num_fast(NUM_MIN)
