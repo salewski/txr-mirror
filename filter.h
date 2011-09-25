@@ -25,7 +25,7 @@
  */
 
 extern val filters;
-extern val filter_k, to_html_k;
+extern val filter_k, to_html_k, from_html_k;
 
 val trie_lookup_begin(val trie);
 val trie_value_at(val node);

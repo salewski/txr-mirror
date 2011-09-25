@@ -1,5 +1,14 @@
 2011-09-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	Filtering from HTML implemented.
+
+	* filter.c (from_html_k): New variable.
+	(to_html_table): New static array.
+	(filter_init): Intern new symbol. Instantiate new filter
+	and store in filters hash.
+
+2011-09-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	Filtering feature for variable substitution in output.
 
 	* filter.c, filter.h: New files.
