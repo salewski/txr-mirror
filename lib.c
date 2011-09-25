@@ -41,6 +41,7 @@
 #include "unwind.h"
 #include "stream.h"
 #include "utf8.h"
+#include "filter.h"
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
@@ -654,6 +655,17 @@ val length(val list)
   return num(len);
 }
 
+val getplist(val list, val key)
+{
+  for (; list; list = cdr(cdr(list))) {
+    val ind = first(list);
+    if (eq(ind, key))
+      return second(list);
+  }
+
+  return nil;
+}
+
 val num(cnum n)
 {
   numeric_assert (n >= NUM_MIN && n <= NUM_MAX);
@@ -747,6 +759,7 @@ val string_own(wchar_t *str)
   obj->st.type = STR;
   obj->st.str = str;
   obj->st.len = nil;
+  obj->st.alloc = nil;
   return obj;
 }
 
@@ -756,6 +769,7 @@ val string(const wchar_t *str)
   obj->st.type = STR;
   obj->st.str = (wchar_t *) chk_strdup(str);
   obj->st.len = nil;
+  obj->st.alloc = nil;
   return obj;
 }
 
@@ -765,6 +779,7 @@ val string_utf8(const char *str)
   obj->st.type = STR;
   obj->st.str = utf8_dup_from(str);
   obj->st.len = nil;
+  obj->st.alloc = nil;
   return obj;
 }
 
@@ -775,6 +790,7 @@ val mkstring(val len, val ch)
   val s = string_own(str);
   wmemset(str, c_chr(ch), nchar);
   s->st.len = len;
+  s->st.alloc = plus(len, one);
   return s;
 }
 
@@ -785,6 +801,7 @@ val mkustring(val len)
   val s = string_own(str);
   str[l] = 0;
   s->st.len = len;
+  s->st.alloc = plus(len, one);
   return s;
 }
 
@@ -797,6 +814,52 @@ val init_str(val str, const wchar_t *data)
 val copy_str(val str)
 {
   return string(c_str(str));
+}
+
+val string_extend(val str, val tail)
+{
+  type_check(str, STR);
+  {
+    cnum len = c_num(length_str(str));
+    cnum alloc = c_num(str->st.alloc);
+    val needed;
+    val room = zero;
+
+    if (stringp(tail))
+      needed = length_str(tail);
+    else if (chrp(tail))
+      needed = one;
+    else
+      uw_throwf(error_s, lit("string_extend: tail ~s bad type"), str, nao);
+
+    room = num(alloc - len - 1);
+
+    while (gt(needed, room) && alloc < NUM_MAX) {
+      if (alloc > NUM_MAX / 2) {
+        alloc = NUM_MAX;
+      } else {
+        alloc *= 2;
+      }
+      room = num(alloc - len - 1);
+    }
+
+    if (gt(needed, room))
+      uw_throwf(error_s, lit("string_extend: overflow"), nao);
+
+    str->st.str = (wchar_t *) chk_realloc((mem_t *) str->st.str,
+                                          alloc * sizeof *str->st.str);
+    str->st.alloc = num(alloc);
+    str->st.len = plus(str->st.len, needed);
+
+    if (stringp(tail)) {
+      wmemcpy(str->st.str + len, c_str(tail), c_num(needed) + 1);
+    } else {
+      str->st.str[len] = c_chr(tail);
+      str->st.str[len + 1] = 0;
+    }
+  }
+
+  return str;
 }
 
 val stringp(val str)
@@ -834,8 +897,10 @@ val length_str(val str)
       return length_str(str->ls.prefix);
     }
 
-    if (!str->st.len)
+    if (!str->st.len) {
       str->st.len = num(wcslen(str->st.str));
+      str->st.alloc = plus(str->st.len, one);
+    }
     return str->st.len;
   }
 }
@@ -1711,6 +1776,16 @@ val cobj(mem_t *handle, val cls_sym, struct cobj_ops *ops)
   return obj;
 }
 
+val cobjp(val obj)
+{
+  if (!obj) {
+    return nil;
+  } else {
+    type_t ty = type(obj);
+    return (ty == COBJ) ? t : nil;
+  }
+}
+
 mem_t *cobj_handle(val cobj, val cls_sym)
 {
   class_check(cobj, cls_sym);
@@ -2222,6 +2297,7 @@ void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),
   obj_init();
   uw_init();
   stream_init();
+  filter_init();
 
   gc_state(gc_save);
 }

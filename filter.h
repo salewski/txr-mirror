@@ -24,16 +24,13 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-val hash_obj(val);
-val make_hash(val weak_keys, val weak_vals);
-val *gethash_l(val hash, val key, val *new_p);
-val gethash(val hash, val key);
-val gethash_f(val hash, val key, val *found);
-val sethash(val hash, val key, val value);
-val remhash(val hash, val key);
-val get_hash_userdata(val hash);
-val set_hash_userdata(val hash, val data);
-val hashp(val obj);
-void hash_process_weak(void);
+extern val filters;
+extern val filter_k, to_html_k;
 
-void hash_init(void);
+val trie_lookup_begin(val trie);
+val trie_value_at(val node);
+val trie_lookup_feed_char(val node, val ch);
+val get_filter_trie(val sym);
+val filter_string(val trie, val str);
+
+void filter_init(void);

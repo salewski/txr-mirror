@@ -234,7 +234,8 @@ tail_call:
     mark_obj(obj->c.car);
     mark_obj_tail(obj->c.cdr);
   case STR:
-    mark_obj_tail(obj->st.len);
+    mark_obj(obj->st.len);
+    mark_obj_tail(obj->st.alloc);
   case CHR:
   case NUM:
   case LIT:

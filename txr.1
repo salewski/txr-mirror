@@ -2274,7 +2274,7 @@ usual printing of the variable bindings or the word false.
 
 The syntax of the @(output) directive is:
 
-  @(output [ DESTINATION ] [ :nothrow ])
+  @(output [ DESTINATION ] [ :nothrow ] [ { keyword value } * ])
   .
   . one or more output directives or lines
   .
@@ -2294,6 +2294,12 @@ Note that since command pipes are processes that report errors
 asynchronously, a failing command will not throw an immediate exception that
 can be suppressed with :nothrow.   This is for synchronous errors, like
 trying to open a destination file, but not having permissions, etc.
+
+The keyword value list is used for passing additional options.
+Currently, the only keyword supported is the :filter keyword.
+This specifies a filter to be applied to the variable substitutions occuring
+within the output clause.
+
 
 .SS Output Text
 
@@ -2317,6 +2323,9 @@ width of twenty.  If the text is longer than the field, then it overflows the
 field. If the text is shorter than the field, then it is left-adjusted within
 that field, if the width is specified as a positive number, and right-adjusted
 if the width is specified as negative.
+
+An output variable may specify a filter which overrides any filter established
+for the output clause. The syntax for this is @(NAME :filter <filtername>}.
 
 .SS The Repeat Directive
 
@@ -2464,6 +2473,32 @@ If the list L has one or more items, then they are produced with
 spaces each one, except the last which has no space.
 If the list has exactly one item, then the @(last) applies to it
 instead of the main clause: it is produced with no trailing space.
+
+.SS Output Filtering
+
+Often it is necessary to transform the output to preserve its meaning
+under the convention of a given data format. For instance, if a piece of
+text contains the characters < or >, then if that text is being
+substituted into HTML, these should be replaced by &lt; and &gt;.
+This is what filtering is for.  Filtering is applied to the contents of output
+variables, not to any template text.
+.B txr
+implements named filters. Currently, the only built-in filter available is
+called :to_html and user-defined filters are not possible.
+
+To escape HTML characters in all variable substitutions occuring in
+an output clause, specify :filter :to_html in the directive:
+
+  @(output :filter :to_html)
+  ...
+  @(end)
+
+To filter an individual variable, add the syntax to the variable spec:
+
+  @(output)
+  @{x :filter :to_html}
+  @(end)
+
 
 .SH EXCEPTIONS
 

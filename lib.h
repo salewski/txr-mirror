@@ -68,6 +68,7 @@ struct string {
   type_t type;
   wchar_t *str;
   val len;
+  val alloc;
 };
 
 struct sym {
@@ -201,6 +202,11 @@ INLINE wchar_t *litptr(val obj)
  return (wchar_t *) ((cnum) obj & ~TAG_MASK);
 }
 
+INLINE val num_fast(cnum n)
+{
+  return (val) ((n << TAG_SHIFT) | TAG_NUM);
+}
+
 #define lit_noex(strlit) ((obj_t *) ((cnum) (L ## strlit) | TAG_LIT))
 #define lit(strlit) lit_noex(strlit)
 
@@ -277,6 +283,7 @@ val atom(val obj);
 val listp(val obj);
 val proper_listp(val obj);
 val length(val list);
+val getplist(val list, val key);
 val num(cnum val);
 cnum c_num(val num);
 val nump(val num);
@@ -298,6 +305,7 @@ val mkstring(val len, val ch);
 val mkustring(val len); /* must initialize immediately with init_str! */
 val init_str(val str, const wchar_t *);
 val copy_str(val str);
+val string_extend(val str, val tail);
 val stringp(val str);
 val lazy_stringp(val str);
 val length_str(val str);
@@ -357,6 +365,7 @@ val length_str_ge(val str, val len);
 val length_str_lt(val str, val len);
 val length_str_le(val str, val len);
 val cobj(mem_t *handle, val cls_sym, struct cobj_ops *ops);
+val cobjp(val obj);
 mem_t *cobj_handle(val cobj, val cls_sym);
 val assoc(val list, val key);
 val acons_new(val list, val key, val value);
@@ -428,7 +437,6 @@ val match(val spec, val data);
   obj_t *CAR = car(c_o_n_s ## CAR ## CDR);      \
   obj_t *CDR = cdr(c_o_n_s ## CAR ## CDR)
 
-#define num_fast(n) ((val) ((n << TAG_SHIFT) | TAG_NUM))
 #define zero num_fast(0)
 #define one num_fast(1)
 #define two num_fast(2)
