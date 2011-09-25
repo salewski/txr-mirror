@@ -2483,8 +2483,8 @@ substituted into HTML, these should be replaced by &lt; and &gt;.
 This is what filtering is for.  Filtering is applied to the contents of output
 variables, not to any template text.
 .B txr
-implements named filters. Currently, the only built-in filter available is
-called :to_html and user-defined filters are not possible.
+implements named filters. Currently, the only built-in filters available are
+:to_html and :from_html. User-defined filters are not possible.
 
 To escape HTML characters in all variable substitutions occuring in
 an output clause, specify :filter :to_html in the directive:
