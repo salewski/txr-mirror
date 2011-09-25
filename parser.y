@@ -194,7 +194,8 @@ elems : elem                    { $$ = cons($1, nil); }
 elem : TEXT                     { $$ = string_own($1); }
      | var                      { $$ = $1; }
      | list                     { $$ = $1; }
-     | regex                    { $$ = cons(regex_compile($1), $1); }
+     | regex                    { $$ = cons(regex_compile(rest($1)),
+                                            rest($1)); }
      | COLL elems END           { $$ = list(coll_s, $2, nao); }
      | COLL elems
        UNTIL elems END          { $$ = list(coll_s, $2, $4, nao); }
@@ -400,11 +401,8 @@ var : IDENT                     { $$ = list(var_s, intern(string_own($1), nil),
                                             nao); }
     | '{' IDENT '}' elem        { $$ = list(var_s, intern(string_own($2), nil),
                                             $4, nao); }
-    | '{' IDENT regex '}'       { $$ = list(var_s, intern(string_own($2), nil),
-                                            nil, cons(regex_compile($3), $3),
-                                            nao); }
-    | '{' IDENT NUMBER '}'      { $$ = list(var_s, intern(string_own($2), nil),
-                                            nil, num($3), nao); }
+    | '{' IDENT exprs '}'       { $$ = list(var_s, intern(string_own($2), nil),
+                                            nil, $3, nao); }
     | var_op IDENT              { $$ = list(var_s, intern(string_own($2), nil),
                                             nil, $1, nao); }
     | var_op IDENT elem         { $$ = list(var_s, intern(string_own($2), nil),
@@ -445,13 +443,14 @@ expr : IDENT                    { $$ = intern(string_own($1), nil); }
                                               keyword_package); }
      | NUMBER                   { $$ = num($1); }
      | list                     { $$ = $1; }
-     | regex                    { $$ = cons(regex_compile($1), $1); }
+     | regex                    { $$ = cons(regex_compile(rest($1)),
+                                            rest($1)); }
      | chrlit                   { $$ = $1; }
      | strlit                   { $$ = $1; }
      | quasilit                 { $$ = $1; }
      ;
 
-regex : '/' regexpr '/'         { $$ = $2; end_of_regex(); }
+regex : '/' regexpr '/'         { $$ = cons(regex_s, $2); end_of_regex(); }
       | '/' error               { $$ = nil;
                                   yybadtoken(yychar, lit("regex"));
                                   end_of_regex(); }

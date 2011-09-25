@@ -1,3 +1,53 @@
+2011-09-25  Kaz Kylheku  <kaz@kylheku.com>
+
+	Filtering feature for variable substitution in output.
+
+	* filter.c, filter.h: New files.
+
+	* Makefile (OBJS): filter.o added.
+
+	* gc.c (mark_obj): Mark new alloc field of string objets.
+
+	* hash.c (struct hash): New member, userdata.
+	(hash_mark): Mark new userdata member of hash.
+	(make_hash): Initialize userdata.
+	(get_hash_userdata, set_hash_userdata, hashp): New functions.
+
+	* hash.h (get_hash_userdata, set_hash_userdata, hashp): New functions
+	declared.
+
+	* lib.c (getplist, string_extend, cobjp): New functions.
+	(string_own, string, string_utf8): Initialize new alloc field to nil.
+	(mkstring, mkustring): Initialize new alloc field to actual size.
+	(length_str): When length is computed and cached, also compute
+	and cache alloc.
+	(init): Call filter_init.
+
+	* lib.h (string string): New member, alloc.
+	(num_fast): Macro converted to inline function.
+	(getplist, string_extend, cobjp): New functions declared.
+
+	* match.c (match_line): Follows change of modifier s-exp syntax.
+	(format_field): New parameter, filter.
+	New modifier syntax parsed. Filter retrieved, and applied.
+	(subst_vars): New parameter, filter. Filter is either applied
+	in this function or passed to format_field, as needed.
+	(eval_form): Pass nil to new parameter of subst_vars.
+	(do_output_line): New parameter, filter. Passed down to subst_vars.
+	(do_output): New parameter, filter. Passed down to do_output_line.
+	(match_files): Pass nil filter to subst_vars in cat directive.
+	Output directive refactored to parse keywords, extract the
+	filter and pass down to do_output.
+
+	* parser.y (regex): Generate (sys:regex regex syntax ...)
+	instead of (regex syntax ...).
+	(elem, expr): Updated w.r.t. regex syntax change.
+	(var): Cases '{' IDENT regex '}' and '{' IDENT NUMBER '}'
+	are removed. new syntax '{' IDENT exprs '}' to handle these
+	more generally and allow for keywords.
+
+	* txr.1: Updated.
+
 2011-09-23  Kaz Kylheku  <kaz@kylheku.com>
 
 	Numeric constants become real constants.

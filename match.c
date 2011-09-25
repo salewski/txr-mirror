@@ -42,6 +42,7 @@
 #include "parser.h"
 #include "txr.h"
 #include "utf8.h"
+#include "filter.h"
 #include "match.h"
 
 int output_produced;
@@ -336,6 +337,13 @@ static val match_line(val bindings, val specline, val dataline,
             }
             continue;
           } else if (pat == nil) { /* match to end of line or with regex */
+            if (gt(length(modifier), one)) {
+              sem_error(spec_lineno, lit("multiple modifiers on variable ~s"),
+                        sym, nao);
+            }
+
+            modifier = car(modifier);
+
             if (consp(modifier)) {
               val past = match_regex(dataline, car(modifier), pos);
               if (nullp(past)) {
@@ -519,14 +527,45 @@ static val match_line(val bindings, val specline, val dataline,
   return cons(bindings, pos);
 }
 
-static val format_field(val string_or_list, val spec)
+static val format_field(val string_or_list, val modifier, val filter)
 {
+  val n = zero;
+  val plist = nil;
+
   if (!stringp(string_or_list))
     return string_or_list;
 
+  for (; modifier; pop(&modifier)) {
+    val item = first(modifier);
+    if (nump(item))
+      n = item;
+    if (regexp(item))
+      uw_throw(query_error_s, lit("format_field: regex modifier in output"));
+    if (keywordp(item)) {
+      plist = modifier;
+      break;
+    }
+  }
+
   {
-    val right = lt(spec, zero);
-    val width = if3(lt(spec, zero), neg(spec), spec);
+    val filter_sym = getplist(plist, filter_k);
+
+    if (filter_sym) {
+      filter = get_filter_trie(filter_sym);
+
+      if (!filter) {
+        uw_throwf(query_error_s, lit("format_field: filter ~s not known"),
+                  filter_sym, nao);
+      }
+
+      string_or_list = filter_string(filter, cat_str(list(string_or_list, nao),
+                                                     nil));
+    }
+  }
+
+  {
+    val right = lt(n, zero);
+    val width = if3(lt(n, zero), neg(n), n);
     val diff = minus(width, length_str(string_or_list));
 
     if (le(diff, zero))
@@ -545,7 +584,7 @@ static val format_field(val string_or_list, val spec)
   }
 }
 
-static val subst_vars(val spec, val bindings)
+static val subst_vars(val spec, val bindings, val filter)
 {
   list_collect_decl(out, iter);
 
@@ -556,25 +595,25 @@ static val subst_vars(val spec, val bindings)
       if (first(elem) == var_s) {
         val sym = second(elem);
         val pat = third(elem);
-        val modifier = fourth(elem);
+        val modifiers = fourth(elem);
         val pair = assoc(bindings, sym);
 
         if (pair) {
           if (pat)
-            spec = cons(cdr(pair), cons(pat, rest(spec)));
-          else if (nump(modifier))
-            spec = cons(format_field(cdr(pair), modifier), rest(spec));
+            spec = cons(filter_string(filter, cdr(pair)), cons(pat, rest(spec)));
+          else if (modifiers)
+            spec = cons(format_field(cdr(pair), modifiers, filter), rest(spec));
           else
-            spec = cons(cdr(pair), rest(spec));
+            spec = cons(filter_string(filter, cdr(pair)), rest(spec));
           continue;
         }
       } else if (first(elem) == quasi_s) {
-        val nested = subst_vars(rest(elem), bindings);
+        val nested = subst_vars(rest(elem), bindings, filter);
         list_collect_append(iter, nested);
         spec = cdr(spec);
         continue;
       } else {
-        val nested = subst_vars(elem, bindings);
+        val nested = subst_vars(elem, bindings, filter);
         list_collect_append(iter, nested);
         spec = cdr(spec);
         continue;
@@ -596,7 +635,7 @@ static val eval_form(val form, val bindings)
     return assoc(bindings, form);
   } else if (consp(form)) {
     if (car(form) == quasi_s) {
-      return cons(t, cat_str(subst_vars(rest(form), bindings), nil));
+      return cons(t, cat_str(subst_vars(rest(form), bindings, nil), nil));
     } else if (regexp(car(form))) {
       return cons(t, form);
     } else {
@@ -740,7 +779,7 @@ static val extract_bindings(val bindings, val output_spec)
 }
 
 static void do_output_line(val bindings, val specline,
-                           val spec_lineno, val out)
+                           val spec_lineno, val filter, val out)
 {
   for (; specline; specline = rest(specline)) {
     val elem = first(specline);
@@ -751,7 +790,8 @@ static void do_output_line(val bindings, val specline,
         val directive = first(elem);
 
         if (directive == var_s) {
-          val str = cat_str(subst_vars(cons(elem, nil), bindings), nil);
+          val str = cat_str(subst_vars(cons(elem, nil),
+                                       bindings, filter), nil);
           if (str == nil)
             sem_error(spec_lineno, lit("bad substitution: ~a"),
                       second(elem), nao);
@@ -770,10 +810,10 @@ static void do_output_line(val bindings, val specline,
                                                  nao)));
 
           if (equal(max_depth, zero) && empty_clauses) {
-            do_output_line(bindings, empty_clauses, spec_lineno, out);
+            do_output_line(bindings, empty_clauses, spec_lineno, filter, out);
           } else if (equal(max_depth, one) && single_clauses) {
             val bind_a = mapcar(func_n1(bind_car), bind_cp);
-            do_output_line(bind_a, single_clauses, spec_lineno, out);
+            do_output_line(bind_a, single_clauses, spec_lineno, filter, out);
           } else if (!zerop(max_depth)) {
             cnum i;
 
@@ -782,11 +822,11 @@ static void do_output_line(val bindings, val specline,
               val bind_d = mapcar(func_n1(bind_cdr), bind_cp);
 
               if (i == 0 && first_clauses) {
-                do_output_line(bind_a, first_clauses, spec_lineno, out);
+                do_output_line(bind_a, first_clauses, spec_lineno, filter, out);
               } else if (i == c_num(max_depth) - 1 && last_clauses) {
-                do_output_line(bind_a, last_clauses, spec_lineno, out);
+                do_output_line(bind_a, last_clauses, spec_lineno, filter, out);
               } else {
-                do_output_line(bind_a, main_clauses, spec_lineno, out);
+                do_output_line(bind_a, main_clauses, spec_lineno, filter, out);
               }
 
               bind_cp = bind_d;
@@ -810,7 +850,7 @@ static void do_output_line(val bindings, val specline,
   }
 }
 
-static void do_output(val bindings, val specs, val out)
+static void do_output(val bindings, val specs, val filter, val out)
 {
   if (equal(specs, null_list))
     return;
@@ -836,10 +876,10 @@ static void do_output(val bindings, val specs, val out)
                                                nao)));
 
         if (equal(max_depth, zero) && empty_clauses) {
-          do_output(bind_cp, empty_clauses, out);
+          do_output(bind_cp, empty_clauses, filter, out);
         } else if (equal(max_depth, one) && single_clauses) {
           val bind_a = mapcar(func_n1(bind_car), bind_cp);
-          do_output(bind_a, single_clauses, out);
+          do_output(bind_a, single_clauses, filter, out);
         } else if (!zerop(max_depth)) {
           cnum i;
 
@@ -848,11 +888,11 @@ static void do_output(val bindings, val specs, val out)
             val bind_d = mapcar(func_n1(bind_cdr), bind_cp);
 
             if (i == 0 && first_clauses) {
-              do_output(bind_a, first_clauses, out);
+              do_output(bind_a, first_clauses, filter, out);
             } else if (i == c_num(max_depth) - 1 && last_clauses) {
-              do_output(bind_a, last_clauses, out);
+              do_output(bind_a, last_clauses, filter, out);
             } else {
-              do_output(bind_a, main_clauses, out);
+              do_output(bind_a, main_clauses, filter, out);
             }
 
             bind_cp = bind_d;
@@ -862,7 +902,7 @@ static void do_output(val bindings, val specs, val out)
       }
     }
 
-    do_output_line(bindings, specline, spec_lineno, out);
+    do_output_line(bindings, specline, spec_lineno, filter, out);
     put_char(out, chr('\n'));
   }
 }
@@ -1393,7 +1433,7 @@ repeat_spec_same_data:
             val sep = nil;
 
             if (rest(specline)) {
-              val sub = subst_vars(rest(specline), bindings);
+              val sub = subst_vars(rest(specline), bindings, nil);
               sep = cat_str(sub, nil);
             }
 
@@ -1410,14 +1450,14 @@ repeat_spec_same_data:
         val specs = second(first_spec);
         val dest_spec = third(first_spec);
         val nothrow = nil;
-        val dest;
+        val dest = lit("-");
+        val filter = nil;
         fpip_t fp;
 
         if (eq(first(dest_spec), nothrow_k)) {
           if (rest(dest_spec))
             sem_error(spec_linenum, lit("material after :nothrow in output"), nao);
-          dest = string(L"-");
-        } else {
+        } else if (!keywordp(first(dest_spec))) {
           val form = first(dest_spec);
           val val = eval_form(form, bindings);
 
@@ -1425,8 +1465,24 @@ repeat_spec_same_data:
             sem_error(spec_linenum,
                       lit("output: unbound variable in form ~a"), form, nao);
 
-          nothrow = eq(second(dest_spec), nothrow_k);
-          dest = or2(cdr(val), string(L"-"));
+          dest = or2(cdr(val), dest);
+          pop(&dest_spec);
+        }
+
+        if (eq(first(dest_spec), nothrow_k)) {
+          nothrow = t;
+          pop(&dest_spec);
+        }
+
+        if (keywordp(first(dest_spec))) {
+          val filter_sym = getplist(dest_spec, filter_k);
+
+          if (filter_sym) {
+            filter = get_filter_trie(filter_sym);
+
+            if (!filter)
+              sem_error(spec_linenum, lit("unknown filter ~s"), filter_sym, nao);
+          }
         }
 
         fp = (errno = 0, complex_open(dest, t));
@@ -1446,7 +1502,7 @@ repeat_spec_same_data:
           }
         } else {
           val stream = complex_stream(fp, dest);
-          do_output(bindings, specs, stream);
+          do_output(bindings, specs, filter, stream);
           close_stream(stream, t);
         }
 

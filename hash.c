@@ -51,6 +51,7 @@ struct hash {
   val table;
   cnum modulus;
   cnum count;
+  val userdata;
 };
 
 /*
@@ -140,6 +141,8 @@ static void hash_mark(val hash)
 {
   struct hash *h = (struct hash *) hash->co.handle;
   cnum i;
+
+  gc_mark(h->userdata);
 
   switch (h->flags) {
   case hash_weak_none:
@@ -235,6 +238,7 @@ val make_hash(val weak_keys, val weak_vals)
   h->modulus = c_num(mod);
   h->count = 0;
   h->table = table;
+  h->userdata = nil;
 
   return hash;
 }
@@ -258,6 +262,14 @@ val gethash(val hash, val key)
   return cdr(found);
 }
 
+val gethash_f(val hash, val key, val *found)
+{
+  struct hash *h = (struct hash *) hash->co.handle;
+  val chain = *vecref_l(h->table, num(ll_hash(key) % h->modulus));
+  *found = assoc(chain, key);
+  return cdr(*found);
+}
+
 val sethash(val hash, val key, val value)
 {
   val new_p;
@@ -273,6 +285,25 @@ val remhash(val hash, val key)
   h->count--;
   bug_unless (h->count >= 0);
   return nil;
+}
+
+val get_hash_userdata(val hash)
+{
+  struct hash *h = (struct hash *) hash->co.handle;
+  return h->userdata;
+}
+
+val set_hash_userdata(val hash, val data)
+{
+  struct hash *h = (struct hash *) hash->co.handle;
+  val olddata = h->userdata;
+  h->userdata = data;
+  return olddata;
+}
+
+val hashp(val obj)
+{
+  return typeof(obj) == hash_s ? t : nil;
 }
 
 /*
