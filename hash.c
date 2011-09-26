@@ -54,6 +54,12 @@ struct hash {
   val userdata;
 };
 
+struct hash_iter {
+  val hash;
+  cnum chain;
+  val cons;
+};
+
 /*
  * Dynamic list built up during gc.
  */
@@ -132,11 +138,6 @@ val hash_obj(val obj)
   return num(ll_hash(obj));
 }
 
-static void hash_destroy(val hash)
-{
-  free(hash->co.handle);
-}
-
 static void hash_mark(val hash)
 {
   struct hash *h = (struct hash *) hash->co.handle;
@@ -190,7 +191,7 @@ static void hash_mark(val hash)
 static struct cobj_ops hash_ops = {
   cobj_equal_op,
   cobj_print_op,
-  hash_destroy,
+  cobj_destroy_free_op,
   hash_mark,
   cobj_hash_op
 };
@@ -287,6 +288,12 @@ val remhash(val hash, val key)
   return nil;
 }
 
+val hash_count(val hash)
+{
+  struct hash *h = (struct hash *) hash->co.handle;
+  return num(h->count);
+}
+
 val get_hash_userdata(val hash)
 {
   struct hash *h = (struct hash *) hash->co.handle;
@@ -304,6 +311,47 @@ val set_hash_userdata(val hash, val data)
 val hashp(val obj)
 {
   return typeof(obj) == hash_s ? t : nil;
+}
+
+static void hash_iter_mark(val hash_iter)
+{
+  struct hash_iter *hi = (struct hash_iter *) hash_iter->co.handle;
+  gc_mark(hi->hash);
+  gc_mark(hi->cons);
+}
+
+static struct cobj_ops hash_iter_ops = {
+  cobj_equal_op,
+  cobj_print_op,
+  cobj_destroy_free_op,
+  hash_iter_mark,
+  cobj_hash_op
+};
+
+val hash_begin(val hash)
+{
+  struct hash_iter *hi = (struct hash_iter *) chk_malloc(sizeof *hi);
+  hi->hash = hash;
+  hi->chain = -1;
+  hi->cons = nil;
+  return cobj((mem_t *) hi, hash_iter_s, &hash_iter_ops);
+}
+
+val hash_next(val *iter)
+{
+  struct hash_iter *hi = (struct hash_iter *) (*iter)->co.handle;
+  val hash = hi->hash;
+  struct hash *h = (struct hash *) hash->co.handle;
+  if (hi->cons)
+    hi->cons = cdr(hi->cons);
+  while (nullp(hi->cons)) {
+    if (++hi->chain >= h->modulus) {
+      *iter = nil;
+      return nil;
+    }
+    hi->cons = vecref(h->table, num(hi->chain));
+  }
+  return car(hi->cons);
 }
 
 /*

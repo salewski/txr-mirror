@@ -324,7 +324,7 @@ static val string_in_get_char(val stream)
 static struct strm_ops string_in_ops = {
   { cobj_equal_op,
     cobj_print_op,
-    cobj_destroy_op,
+    cobj_destroy_stub_op,
     string_in_stream_mark,
     cobj_hash_op },
   0,
@@ -353,7 +353,7 @@ static val byte_in_get_byte(val stream)
 static struct strm_ops byte_in_ops = {
   { cobj_equal_op,
     cobj_print_op,
-    cobj_destroy_op,
+    cobj_destroy_stub_op,
     cobj_mark_op,
     cobj_hash_op },
   0,

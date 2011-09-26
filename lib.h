@@ -159,7 +159,8 @@ struct cobj_ops {
 /* Default operations for above structure. */
 val cobj_equal_op(val, val);
 void cobj_print_op(val, val);
-void cobj_destroy_op(val);
+void cobj_destroy_stub_op(val);
+void cobj_destroy_free_op(val);
 void cobj_mark_op(val);
 cnum cobj_hash_op(val);
 
@@ -212,7 +213,7 @@ INLINE val num_fast(cnum n)
 
 extern val keyword_package, system_package, user_package;
 extern val null, t, cons_s, str_s, chr_s, num_s, sym_s, pkg_s, fun_s, vec_s;
-extern val stream_s, hash_s, lcons_s, lstr_s, cobj_s;
+extern val stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s;
 extern val var_s, regex_s, chset_s, set_s, cset_s, wild_s, oneplus_s;
 extern val nongreedy_s, compiled_regex_s;
 extern val zeroplus_s, optional_s, compl_s, compound_s, or_s, and_s, quasi_s;
@@ -353,6 +354,7 @@ val chain(val fun1_list);
 val vector(val alloc);
 val vec_get_fill(val vec);
 val vec_set_fill(val vec, val fill);
+val vecref(val vec, val ind);
 val *vecref_l(val vec, val ind);
 val vec_push(val vec, val item);
 val lazy_stream_cons(val stream);

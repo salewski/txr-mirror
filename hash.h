@@ -31,9 +31,12 @@ val gethash(val hash, val key);
 val gethash_f(val hash, val key, val *found);
 val sethash(val hash, val key, val value);
 val remhash(val hash, val key);
+val hash_count(val hash);
 val get_hash_userdata(val hash);
 val set_hash_userdata(val hash, val data);
 val hashp(val obj);
+val hash_begin(val hash);
+val hash_next(val *iter);
 void hash_process_weak(void);
 
 void hash_init(void);

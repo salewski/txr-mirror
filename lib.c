@@ -51,7 +51,7 @@ val packages;
 val system_package, keyword_package, user_package;
 
 val null, t, cons_s, str_s, chr_s, num_s, sym_s, pkg_s, fun_s, vec_s;
-val stream_s, hash_s, lcons_s, lstr_s, cobj_s;
+val stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s;
 val var_s, regex_s, chset_s, set_s, cset_s, wild_s, oneplus_s;
 val nongreedy_s, compiled_regex_s;
 val zeroplus_s, optional_s, compl_s, compound_s, or_s, and_s, quasi_s;
@@ -117,6 +117,8 @@ val typeof(val obj)
     return num_s;
   case TAG_CHR:
     return chr_s;
+  case TAG_LIT:
+    return str_s;
   case TAG_PTR:
     if (obj == nil) {
       return null;
@@ -1542,6 +1544,12 @@ val vec_set_fill(val vec, val fill)
   return vec;
 }
 
+val vecref(val vec, val ind)
+{
+  type_check(vec, VEC);
+  range_bug_unless (c_num(ind) < c_num(vec->v.vec[vec_fill]));
+  return vec->v.vec[c_num(ind)];
+}
 
 val *vecref_l(val vec, val ind)
 {
@@ -2023,6 +2031,7 @@ static void obj_init(void)
   vec_s = intern(lit("vec"), user_package);
   stream_s = intern(lit("stream"), user_package);
   hash_s = intern(lit("hash"), user_package);
+  hash_iter_s = intern(lit("hash-iter"), user_package);
   lcons_s = intern(lit("lcons"), user_package);
   lstr_s = intern(lit("lstr"), user_package);
   cobj_s = intern(lit("cobj"), user_package);
