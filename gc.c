@@ -201,8 +201,13 @@ static void finalize(val obj)
   assert (0 && "corrupt type field");
 }
 
-void cobj_destroy_op(val obj)
+void cobj_destroy_stub_op(val obj)
 {
+}
+
+void cobj_destroy_free_op(val obj)
+{
+  free(obj->co.handle);
 }
 
 static void mark_obj(val obj)

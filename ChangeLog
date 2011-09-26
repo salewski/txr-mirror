@@ -1,3 +1,33 @@
+2011-09-26  Kaz Kylheku  <kaz@kylheku.com>
+
+	Trie compression. Hash table iteration.
+	Bugfix in typeof.
+
+	* filter.c (trie_compress): New function.
+	(trie_value_at, trie_lookup_feed_char, filter_string): Handle cons cell
+	nodes in trie.
+	(build_filter): Call trie_compress.
+
+	* gc.c (cobj_destroy_op): Function renamed to cobj_destroy_stub_op
+	since it doesn't do anything.
+	(cobj_destroy_free_op): New function.
+	* hash.c (struct hash_iter): New type.
+	(hash_destroy): Function removed.
+	(hash_ops): Reference to hash_destroy replaced with
+	cobj_destroy_free_op.
+	(hash_count, hash_iter_mark, hash_begin, hash_next): New functions.
+	(hash_iter_ops): New static structure.
+	* hash.h (hash_count, hash_begin, hash_next): New functions declared.
+	* lib.c (hash_iter_s): New symbol variable.
+	(typeof): Bugfix: TAG_LIT type tag not handled.
+	(vecref): New function.
+	(obj_init): Initialize hash_iter_s.
+	* lib.h (cobj_destroy_op): Declaration renamed.
+	(cobj_destroy_free_op, vecref): New functions declared.
+	(hash_iter_s): New variable declared.
+	* stream.c (string_in_ops, byte_in_ops): cobj_destroy_op
+	renamed to cobj_destroy_stub_op.
+
 2011-09-25  Kaz Kylheku  <kaz@kylheku.com>
 
 	Filtering from HTML implemented.

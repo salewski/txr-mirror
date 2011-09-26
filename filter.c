@@ -54,6 +54,44 @@ static val trie_add(val trie, val key, val value)
   return node;
 }
 
+/* 
+ * Reduce the storage requirement for a the trie, by applying
+ * these rules:
+ *
+ * 1. All leaf-level nodes (i.e. empty hash tables) are replaced by
+ *    just the node value (hash user data).
+ * 2. All hash tables with a single transition (i.e. hash tables
+ *    containing one element) and which have no node value
+ *    are replaced by a cons cell, whose CAR is the transition
+ *    character, and whose CDR is the transition.
+ */
+
+static void trie_compress(val *ptrie)
+{
+  val trie = *ptrie;
+
+  if (hashp(trie)) {
+    val count = hash_count(trie);
+    val value = get_hash_userdata(trie);
+
+    if (zerop(count)) {
+      *ptrie = value;
+    } else if (eq(count, one) && nullp(value)) {
+      val iter = hash_begin(trie);
+      val cell = hash_next(&iter);
+      *ptrie = cons(car(cell), cdr(cell));
+      trie_compress(cdr_l(*ptrie));
+    } else {
+      val cell, iter = hash_begin(trie);
+
+      for (cell = hash_next(&iter); iter; cell = hash_next(&iter))
+        trie_compress(cdr_l(cell));
+    }
+  } else if (consp(trie)) {
+    trie_compress(cdr_l(trie));
+  } 
+}
+
 val trie_lookup_begin(val trie)
 {
   return trie;
@@ -61,12 +99,20 @@ val trie_lookup_begin(val trie)
 
 val trie_value_at(val node)
 {
-  return get_hash_userdata(node);
+  if (hashp(node))
+    return get_hash_userdata(node);
+  if (consp(node))
+    return nil;
+  return node;
 }
 
 val trie_lookup_feed_char(val node, val ch)
 {
-  return gethash(node, ch);
+  if (hashp(node))
+    return gethash(node, ch);
+  if (consp(node) && eq(ch,car(node)))
+    return cdr(node);
+  return nil;
 }
 
 val get_filter_trie(val sym)
@@ -86,6 +132,7 @@ static val build_filter(struct filter_pair *pair)
   for (i = 0; pair[i].key; i++)
     trie_add(trie, static_str(pair[i].key), static_str(pair[i].value));
 
+  trie_compress(&trie);
   return trie;
 }
 
@@ -133,9 +180,9 @@ val filter_string(val filter, val str)
 {
   val type = typeof(filter);
 
-  if (type == null)
+  if (eq(type, null))
     return str;
-  if (type == hash_s)
+  if (eq(type, hash_s) || eq(type, cons_s))
     return trie_filter_string(filter, str);
   else if (type == fun_s)
     return funcall1(filter, str);
