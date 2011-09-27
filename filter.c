@@ -26,6 +26,8 @@
 
 #include <stddef.h>
 #include <setjmp.h>
+#include <wctype.h>
+#include <wchar.h>
 #include "config.h"
 #include "lib.h"
 #include "hash.h"
@@ -103,6 +105,8 @@ val trie_value_at(val node)
     return get_hash_userdata(node);
   if (consp(node))
     return nil;
+  if (functionp(node))
+    return nil;
   return node;
 }
 
@@ -110,6 +114,8 @@ val trie_lookup_feed_char(val node, val ch)
 {
   if (hashp(node))
     return gethash(node, ch);
+  if (functionp(node))
+    return funcall1(node, ch);
   if (consp(node) && eq(ch,car(node)))
     return cdr(node);
   return nil;
@@ -124,7 +130,7 @@ struct filter_pair {
   wchar_t *key, *value;
 };
 
-static val build_filter(struct filter_pair *pair)
+static val build_filter(struct filter_pair *pair, val compress_p)
 {
   int i;
   val trie = make_trie();
@@ -132,7 +138,8 @@ static val build_filter(struct filter_pair *pair)
   for (i = 0; pair[i].key; i++)
     trie_add(trie, static_str(pair[i].key), static_str(pair[i].value));
 
-  trie_compress(&trie);
+  if (compress_p)
+    trie_compress(&trie);
   return trie;
 }
 
@@ -474,6 +481,36 @@ static struct filter_pair from_html_table[] = {
   { 0,             0 }
 };
 
+static val html_hex_continue(val hexlist, val ch)
+{
+  static wchar_t *hexdigs = L"0123456789ABCDEF";
+
+  if (iswxdigit(c_chr(ch))) {
+    return func_f1(cons(ch, hexlist), html_hex_continue);
+  } if (eq(ch, chr(';'))) {
+    wchar_t out[2] = { 0 };
+    val iter;
+
+    for (iter = nreverse(hexlist); iter; iter = cdr(iter)) {
+      val hexch = car(iter);
+      int val = wcschr(hexdigs, towupper(c_chr(hexch))) - hexdigs;
+      out[0] <<= 4;
+      out[0] |= val;
+    }
+
+    return string(out);
+  } else {
+    return nil;
+  }
+}
+
+static val html_hex_handler(val ch)
+{
+  if (!iswxdigit(c_chr(ch)))
+    return nil;
+  return func_f1(cons(ch, nil), html_hex_continue);
+}
+
 val filters;
 val filter_k, to_html_k, from_html_k;
 
@@ -483,6 +520,11 @@ void filter_init(void)
   filter_k = intern(lit("filter"), keyword_package);
   to_html_k = intern(lit("to_html"), keyword_package);
   from_html_k = intern(lit("from_html"), keyword_package);
-  sethash(filters, to_html_k, build_filter(to_html_table));
-  sethash(filters, from_html_k, build_filter(from_html_table));
+  sethash(filters, to_html_k, build_filter(to_html_table, t));
+  {
+    val trie = build_filter(from_html_table, nil);
+    trie_add(trie, lit("&#x"), func_n1(html_hex_handler));
+    trie_compress(&trie);
+    sethash(filters, from_html_k, trie);
+  }
 }

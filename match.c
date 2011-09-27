@@ -557,10 +557,11 @@ static val format_field(val string_or_list, val modifier, val filter)
         uw_throwf(query_error_s, lit("format_field: filter ~s not known"),
                   filter_sym, nao);
       }
+    }
 
+    if (filter)
       string_or_list = filter_string(filter, cat_str(list(string_or_list, nao),
                                                      nil));
-    }
   }
 
   {
