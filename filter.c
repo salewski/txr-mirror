@@ -136,6 +136,20 @@ static val build_filter(struct filter_pair *pair)
   return trie;
 }
 
+static val build_filter_from_list(val list)
+{
+  val trie = make_trie();
+  val iter;
+
+  for (iter = list; iter; iter = cdr(iter)) {
+    val pair = car(iter);
+    trie_add(trie, first(pair), second(pair));
+  }
+
+  trie_compress(&trie);
+  return trie;
+}
+
 static val trie_filter_string(val filter, val str)
 {
   val len = length_str(str);
@@ -188,6 +202,11 @@ val filter_string(val filter, val str)
     return funcall1(filter, str);
   return str;
   uw_throwf(error_s, lit("filter_string: invalid filter ~a"), filter, nao);
+}
+
+val register_filter(val sym, val table)
+{
+  return sethash(filters, sym, build_filter_from_list(table));
 }
 
 static struct filter_pair to_html_table[] = {

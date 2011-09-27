@@ -222,7 +222,7 @@ extern val all_s, some_s, none_s, maybe_s, cases_s, collect_s, until_s, coll_s;
 extern val define_s, output_s, single_s, first_s, last_s, empty_s;
 extern val repeat_s, rep_s, flatten_s, forget_s;
 extern val local_s, merge_s, bind_s, cat_s;
-extern val try_s, catch_s, finally_s, throw_s, defex_s;
+extern val try_s, catch_s, finally_s, throw_s, defex_s, deffilter_s;
 extern val error_s, type_error_s, internal_error_s;
 extern val numeric_error_s, range_error_s;
 extern val query_error_s, file_error_s, process_error_s;
@@ -350,7 +350,8 @@ val funcall2(val fun, val arg1, val arg2);
 val reduce_left(val fun, val list, val init, val key);
 val bind2(val fun2, val arg);
 val bind2other(val fun2, val arg2);
-val chain(val fun1_list);
+val chain(val first_fun, ...);
+val and(val first_fun, ...);
 val vector(val alloc);
 val vec_get_fill(val vec);
 val vec_set_fill(val vec, val fill);
@@ -392,9 +393,9 @@ val match(val spec, val data);
 
 #define nil ((obj_t *) 0)
 
-#define nao ((obj_t *) (1 << TAG_SHIFT)) /* "not an object" sentinel value. */
+INLINE val eq(val a, val b) { return ((a) == (b) ? t : nil); }
 
-#define eq(a, b) ((a) == (b) ? t : nil)
+#define nao ((obj_t *) (1 << TAG_SHIFT)) /* "not an object" sentinel value. */
 
 #define if2(a, b) ((a) ? (b) : nil)
 
