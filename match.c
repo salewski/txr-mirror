@@ -1707,6 +1707,14 @@ repeat_spec_same_data:
         if ((spec = rest(spec)) == nil)
           break;
         goto repeat_spec_same_data;
+      } else if (sym == eof_s) {
+        if (data) {
+          debugf(lit("eof failed to match at ~a"), num(data_lineno), nao);
+          return nil;
+        }
+        if ((spec = rest(spec)) == nil)
+          break;
+        goto repeat_spec_same_data;
       } else {
         val func = uw_get_func(sym);
 

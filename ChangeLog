@@ -1,3 +1,15 @@
+2011-09-27  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (eof_s): New symbol variable.
+	(obj_init): New variable initialized.
+
+	* lib.h (eof_s): Declared.
+
+	* match.c (match_files): New @(eof) directive explicitly
+	matches end of data.
+
+	* txr.1: Updated.
+
 2011-09-26  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 037
