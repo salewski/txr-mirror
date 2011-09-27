@@ -1136,11 +1136,6 @@ val string_lt(val astr, val bstr)
   return cmp == -1 ? t : nil;
 }
 
-val chr(wchar_t ch)
-{
-  return (val) (((cnum) ch << TAG_SHIFT) | TAG_CHR);
-}
-
 val chrp(val chr)
 {
   return (is_chr(chr)) ? t : nil;
@@ -1358,6 +1353,15 @@ val func_n4(val (*fun)(val, val, val, val))
   return obj;
 }
 
+val functionp(val obj)
+{
+  if (!obj) {
+    return nil;
+  } else {
+    type_t ty = type(obj);
+    return (ty == FUN) ? t : nil;
+  }
+}
 
 val apply(val fun, val arglist)
 {

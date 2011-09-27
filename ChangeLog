@@ -6,9 +6,8 @@
 
 	Obsolete forms of @(next) and @(output) syntax are gone.
 
-	New filtering feature for substitutions in output.
-	Filtering to and from HTML built in, plus user-defined
-	filtering with deffilter.
+	New filtering feature for substitutions in output.  Filtering to and
+	from HTML built in, plus user-defined filtering with deffilter.
 
 	Bugfixes: wrong error message in throw; lack of support for escaping
 	backslashes in literals and regexes.
@@ -18,6 +17,26 @@
 	* txr.1: Set version to 037 and bumped date.
 
 	* configure: Bumped txr_ver to 037.
+
+2011-09-26  Kaz Kylheku  <kaz@kylheku.com>
+
+	Support &#xNNNN; hex escapes in html.  Bugfix in field formatting.
+	chr function inlined.
+
+	* filter.c (trie_value_at, trie_lookup_feed_char): Handle function
+	case.
+	(build_filter): New parameter, compress_p.
+	(html_hex_continue, html_hex_handler): New functions.
+	(filter_init): Add a function-based node to the from_html trie.
+
+	* lib.c (chr): Function removed.
+	(functionp) New function.
+
+	* lib.h (chr): Declaration replaced with inline function.
+	(functionp): Declared.
+
+	* match.c (format_field): Bugfix: failed to apply filter
+	that came in as an argument.
 
 2011-09-26  Kaz Kylheku  <kaz@kylheku.com>
 

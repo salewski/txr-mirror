@@ -208,6 +208,11 @@ INLINE val num_fast(cnum n)
   return (val) ((n << TAG_SHIFT) | TAG_NUM);
 }
 
+INLINE val chr(wchar_t ch)
+{
+  return (val) (((cnum) ch << TAG_SHIFT) | TAG_CHR);
+}
+
 #define lit_noex(strlit) ((obj_t *) ((cnum) (L ## strlit) | TAG_LIT))
 #define lit(strlit) lit_noex(strlit)
 
@@ -319,7 +324,6 @@ val split_str(val str, val sep);
 val split_str_set(val str, val set);
 val trim_str(val str);
 val string_lt(val astr, val bstr);
-val chr(wchar_t ch);
 val chrp(val chr);
 wchar_t c_chr(val chr);
 val chr_str(val str, val index);
@@ -343,6 +347,7 @@ val func_n1(val (*fun)(val));
 val func_n2(val (*fun)(val, val));
 val func_n3(val (*fun)(val, val, val));
 val func_n4(val (*fun)(val, val, val, val));
+val functionp(val);
 val apply(val fun, val arglist);
 val funcall(val fun);
 val funcall1(val fun, val arg);
