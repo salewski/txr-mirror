@@ -20,6 +20,17 @@
 
 2011-09-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	Support &#NNNN; decimal escapes also.
+
+	* filter.c (html_hex_continue): Bail with nil if no digits
+	are collected. The &#x; syntax is not translated to anything.
+	(html_dec_continue): New function.
+	(html_hex_handler): Function renamed to html_numeric_handler.
+	(filter_init): Change function-based trie node over to
+	html_numeric_handler.
+
+2011-09-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	Support &#xNNNN; hex escapes in html.  Bugfix in field formatting.
 	chr function inlined.
 

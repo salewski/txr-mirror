@@ -491,6 +491,9 @@ static val html_hex_continue(val hexlist, val ch)
     wchar_t out[2] = { 0 };
     val iter;
 
+    if (nullp(hexlist))
+      return nil;
+
     for (iter = nreverse(hexlist); iter; iter = cdr(iter)) {
       val hexch = car(iter);
       int val = wcschr(hexdigs, towupper(c_chr(hexch))) - hexdigs;
@@ -504,11 +507,34 @@ static val html_hex_continue(val hexlist, val ch)
   }
 }
 
-static val html_hex_handler(val ch)
+static val html_dec_continue(val declist, val ch)
 {
-  if (!iswxdigit(c_chr(ch)))
+  if (iswdigit(c_chr(ch))) {
+    return func_f1(cons(ch, declist), html_dec_continue);
+  } if (eq(ch, chr(';'))) {
+    wchar_t out[2] = { 0 };
+    val iter;
+
+    for (iter = nreverse(declist); iter; iter = cdr(iter)) {
+      val decch = car(iter);
+      int val = c_chr(decch) - '0';
+      out[0] *= 10;
+      out[0] += val;
+    }
+
+    return string(out);
+  } else {
     return nil;
-  return func_f1(cons(ch, nil), html_hex_continue);
+  }
+}
+
+static val html_numeric_handler(val ch)
+{
+  if (eq(ch, chr('x')))
+    return func_f1(nil, html_hex_continue);
+  if (!iswdigit(c_chr(ch)))
+    return nil;
+  return func_f1(cons(ch, nil), html_dec_continue);
 }
 
 val filters;
@@ -523,7 +549,7 @@ void filter_init(void)
   sethash(filters, to_html_k, build_filter(to_html_table, t));
   {
     val trie = build_filter(from_html_table, nil);
-    trie_add(trie, lit("&#x"), func_n1(html_hex_handler));
+    trie_add(trie, lit("&#"), func_n1(html_numeric_handler));
     trie_compress(&trie);
     sethash(filters, from_html_k, trie);
   }
