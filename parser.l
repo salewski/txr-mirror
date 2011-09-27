@@ -34,12 +34,14 @@
 #include <errno.h>
 #include <dirent.h>
 #include <wchar.h>
+#include <setjmp.h>
 #include "config.h"
 #include "lib.h"
 #include "y.tab.h"
 #include "gc.h"
 #include "stream.h"
 #include "utf8.h"
+#include "unwind.h"
 #include "parser.h"
 
 #define YY_INPUT(buf, result, max_size)           \
@@ -145,9 +147,11 @@ static wchar_t char_esc(int letter)
   case '"': return L'"';
   case '\'': return L'\'';
   case '`': return L'`';
+  case '/': return L'/';
+  case '\\': return L'\\';
   }
 
-  abort();
+  internal_error("unhandled escape character");
 }
 
 static wchar_t num_esc(char *num)
@@ -425,10 +429,10 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                 }
 
 
-<REGEX>[\\][abtnvfre]   {
-                          yylval.chr = char_esc(yytext[1]);
-                          return REGCHAR;
-                        }
+<REGEX>[\\][abtnvfre\\]         {
+                                  yylval.chr = char_esc(yytext[1]);
+                                  return REGCHAR;
+                                }
 
 <REGEX>[\\](x{HEX}+|{OCT}+)     {
                                   yylval.chr = num_esc(yytext + 1);
@@ -516,7 +520,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                   return yytext[0];
                 }
 
-<STRLIT,CHRLIT,QSILIT>[\\][abtnvfre"`'] {
+<STRLIT,CHRLIT,QSILIT>[\\][abtnvfre"`'\\] {
                                           yylval.chr = char_esc(yytext[1]);
                                           return LITCHAR;
                                         }
