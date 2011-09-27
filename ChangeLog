@@ -1,5 +1,26 @@
 2011-09-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 037
+
+	Short-circuiting behavior for @(all) and @(none).
+
+	Obsolete forms of @(next) and @(output) syntax are gone.
+
+	New filtering feature for substitutions in output.
+	Filtering to and from HTML built in, plus user-defined
+	filtering with deffilter.
+
+	Bugfixes: wrong error message in throw; lack of support for escaping
+	backslashes in literals and regexes.
+
+	* txr.c (version): Bumped to 037.
+
+	* txr.1: Set version to 037 and bumped date.
+
+	* configure: Bumped txr_ver to 037.
+
+2011-09-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	Bugfixes: Consistent escaping in various literals. Double
 	backslash codes for single backslash. Output clause can be empty.
 
