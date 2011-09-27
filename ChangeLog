@@ -1,5 +1,16 @@
 2011-09-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	Bugfixes: Consistent escaping in various literals. Double
+	backslash codes for single backslash. Output clause can be empty.
+
+	* parser.l (char_esc): Backslash handled.
+	Use internal_error rather than abort.
+	(REGCHAR, LITCHAR): Backslash added to lexical syntax.
+
+	* parser.y (output_clause): Allow empty output clause.
+
+2011-09-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	New feature: @(deffilter)
 
 	Bugfix in @(throw) when non-symbol is thrown: exception message
