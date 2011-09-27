@@ -60,7 +60,7 @@ val all_s, some_s, none_s, maybe_s, cases_s, collect_s, until_s, coll_s;
 val define_s, output_s, single_s, first_s, last_s, empty_s;
 val repeat_s, rep_s, flatten_s, forget_s;
 val local_s, merge_s, bind_s, cat_s;
-val try_s, catch_s, finally_s, throw_s, defex_s;
+val try_s, catch_s, finally_s, throw_s, defex_s, deffilter_s;
 val error_s, type_error_s, internal_error_s;
 val numeric_error_s, range_error_s;
 val query_error_s, file_error_s, process_error_s;
@@ -1483,9 +1483,51 @@ static val do_chain(val fun1_list, val arg)
   return arg;
 }
 
-val chain(val fun1_list)
+val chain(val first_fun, ...)
 {
-  return func_f1(fun1_list, do_chain);
+  va_list vl;
+  list_collect_decl (out, iter);
+
+  if (first_fun != nao) {
+    val next_fun;
+    va_start (vl, first_fun);
+    list_collect (iter, first_fun);
+
+    while ((next_fun = va_arg(vl, val)) != nao)
+      list_collect (iter, next_fun);
+
+    va_end (vl);
+  }
+
+  return func_f1(out, do_chain);
+}
+
+static val do_and(val fun1_list, val arg)
+{
+  for (; fun1_list; fun1_list = cdr(fun1_list))
+    if (nullp(funcall1(car(fun1_list), arg)))
+      return nil;
+
+  return t;
+}
+
+val and(val first_fun, ...)
+{
+  va_list vl;
+  list_collect_decl (out, iter);
+
+  if (first_fun != nao) {
+    val next_fun;
+    va_start (vl, first_fun);
+    list_collect (iter, first_fun);
+
+    while ((next_fun = va_arg(vl, val)) != nao)
+      list_collect (iter, next_fun);
+
+    va_end (vl);
+  }
+
+  return func_f1(out, do_and);
 }
 
 val vector(val alloc)
@@ -2085,6 +2127,7 @@ static void obj_init(void)
   finally_s = intern(lit("finally"), user_package);
   throw_s = intern(lit("throw"), user_package);
   defex_s = intern(lit("defex"), user_package);
+  deffilter_s = intern(lit("deffilter"), user_package);
   error_s = intern(lit("error"), user_package);
   type_error_s = intern(lit("type_error"), user_package);
   internal_error_s = intern(lit("internal_error"), user_package);

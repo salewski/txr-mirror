@@ -805,9 +805,9 @@ static void do_output_line(val bindings, val specline,
           val bind_cp = extract_bindings(bindings, elem);
           val max_depth = reduce_left(func_n2(max2),
                                       bind_cp, zero,
-                                      chain(list(func_n1(cdr),
-                                                 func_n1(robust_length),
-                                                 nao)));
+                                      chain(func_n1(cdr),
+                                            func_n1(robust_length),
+                                            nao));
 
           if (equal(max_depth, zero) && empty_clauses) {
             do_output_line(bindings, empty_clauses, spec_lineno, filter, out);
@@ -871,9 +871,9 @@ static void do_output(val bindings, val specs, val filter, val out)
         val bind_cp = extract_bindings(bindings, first_elem);
         val max_depth = reduce_left(func_n2(max2),
                                     bind_cp, zero,
-                                    chain(list(func_n1(cdr),
-                                               func_n1(robust_length),
-                                               nao)));
+                                    chain(func_n1(cdr),
+                                          func_n1(robust_length),
+                                          nao));
 
         if (equal(max_depth, zero) && empty_clauses) {
           do_output(bind_cp, empty_clauses, filter, out);
@@ -1672,12 +1672,40 @@ repeat_spec_same_data:
         val args = rest(rest(first_spec));
         if (!symbolp(type))
           sem_error(spec_linenum, lit("throw: ~a is not a type symbol"),
-                    first(first_spec), nao);
+                    type, nao);
         {
           val values = mapcar(bind2other(func_n2(eval_form), bindings),
                                  args);
           uw_throw(type, values);
         }
+      } else if (sym == deffilter_s) {
+        val sym = second(first_spec);
+        val table = rest(rest(first_spec));
+
+        if (!symbolp(sym))
+          sem_error(spec_linenum, lit("deffilter: ~a is not a symbol"),
+                    first(first_spec), nao);
+
+        if (!all_satisfy(table, and(func_n1(listp), 
+                                    chain(func_n1(length),
+                                          bind2(func_n2(eq), two),
+                                          nao),
+                                    chain(func_n1(first),
+                                          func_n1(stringp), 
+                                          nao),
+                                    chain(func_n1(second),
+                                          func_n1(stringp), 
+                                          nao), 
+                                    nao),
+                                 nil))
+          sem_error(spec_linenum, 
+                    lit("deffilter arguments must be string pairs"),
+                    nao);
+        register_filter(sym, table);
+        /* TODO: warn about replaced filter. */
+        if ((spec = rest(spec)) == nil)
+          break;
+        goto repeat_spec_same_data;
       } else {
         val func = uw_get_func(sym);
 

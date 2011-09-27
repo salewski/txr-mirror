@@ -973,6 +973,13 @@ A directive understood within an @(output) section, for repeating multi-line
 text, with successive substitutions pulled from lists. A version @(rept)
 produces repeated text within one line.
 
+.IP @(deffilter)
+This directive is used for defining named filters, which are useful
+for filtering variable substitutions in output blocks. Filters are useful
+when data must be translated between different representations that
+have different special characters or other syntax, requiring escaping
+or similar treatment.
+
 .PP
 
 .SS The Next Directive
@@ -2484,7 +2491,8 @@ This is what filtering is for.  Filtering is applied to the contents of output
 variables, not to any template text.
 .B txr
 implements named filters. Currently, the only built-in filters available are
-:to_html and :from_html. User-defined filters are not possible.
+:to_html and :from_html. User-defined filters are possible, however.
+See notes on the deffilter directive below.
 
 To escape HTML characters in all variable substitutions occuring in
 an output clause, specify :filter :to_html in the directive:
@@ -2498,6 +2506,73 @@ To filter an individual variable, add the syntax to the variable spec:
   @(output)
   @{x :filter :to_html}
   @(end)
+
+.SS The Deffilter Directive
+
+The deffilter directive allows a query to define a custom filter, which
+can then be used in @(output) clauses to transform substituted data.
+
+This directive's syntax is illustrated in this example:
+
+  Query:        @(deffilter rot13 
+                   ("a" "n")
+                   ("b" "o")
+                   ("c" "p")
+                   ("d" "q")
+                   ("e" "r")
+                   ("f" "s")
+                   ("g" "t")
+                   ("h" "u")
+                   ("i" "v")
+                   ("j" "w")
+                   ("k" "x")
+                   ("l" "y")
+                   ("m" "z")
+                   ("n" "a")
+                   ("o" "b")
+                   ("p" "c")
+                   ("q" "d")
+                   ("r" "e")
+                   ("s" "f")
+                   ("t" "g")
+                   ("u" "h")
+                   ("v" "i")
+                   ("w" "j")
+                   ("x" "k")
+                   ("y" "l")
+                   ("z" "m"))
+                @(collect)
+                @line
+                @(end)
+                @(output :filter rot13)
+                @(repeat)
+                @line
+                @(end)
+                @(end)
+
+  Input:        hey there!
+
+  Output:       url gurer!
+
+
+The deffilter symbol must be followed by the name of the filter to be defined,
+followed by pairs of strings. Each pair specifies a piece of text to be
+filtered from the left hand side to the right hand side.  
+
+Filtering works using a longest match algorithm. The input is scanned from left
+to right, and the longest piece of text is identified at every character
+position which matches a string on the left hand side, and that text is
+replaced with the right hand string. 
+
+If none of the strings matches at a given character position, then that
+character is passed through untranslated, and the scan continues at the next
+character in the input.
+
+If a filter definition accidentally
+contains two or more repetitions of the same left hand string with different
+right hand translations, the later ones take precedence. No warning is issued.
+
+
 
 
 .SH EXCEPTIONS

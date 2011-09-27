@@ -1,5 +1,33 @@
 2011-09-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	New feature: @(deffilter)
+
+	Bugfix in @(throw) when non-symbol is thrown: exception message
+	referred to the symbol throw rather than the erroneous object.
+
+	* filter.c (build_filter_from_list, register_filter): New functions.
+
+	* filter.h (register_filter): New function declared.
+
+	* lib.c (deffilter_s): New variable defined.
+	(chain): Function changed from single list argument to variable
+	argument list to reduce the complexity of use.
+	(do_and, and): New functions.
+	(obj_init): deffilter_s initializatio added.
+
+	* lib.h (deffilter_s, and): New declarations.
+	(chain): Declaration updated to new function signature.
+	(eq): Changed from macro to inline function.
+
+	* match.c (do_output_line): Simplified expression involving chain.
+	(do_output): Likewise.
+	(match_files): Bugfix in error handling of throw.
+	Implementation of deffilter.
+
+	* txr.1: Documented deffilter.
+
+2011-09-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	Trie compression. Hash table iteration.
 	Bugfix in typeof.
 
