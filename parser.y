@@ -271,6 +271,8 @@ output_clause : OUTPUT ')' o_elems '\n'
                 END newl        { $$ = nil;
                                   yyerror("obsolete output syntax: trailing material"); }
               | OUTPUT ')' newl
+                END newl        { $$ = list(output_s, nao); }
+              | OUTPUT ')' newl
                 out_clauses
                 END newl        { $$ = list(output_s, $4, nao); }
               | OUTPUT exprs ')' newl
