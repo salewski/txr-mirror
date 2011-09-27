@@ -227,7 +227,7 @@ extern val all_s, some_s, none_s, maybe_s, cases_s, collect_s, until_s, coll_s;
 extern val define_s, output_s, single_s, first_s, last_s, empty_s;
 extern val repeat_s, rep_s, flatten_s, forget_s;
 extern val local_s, merge_s, bind_s, cat_s;
-extern val try_s, catch_s, finally_s, throw_s, defex_s, deffilter_s;
+extern val try_s, catch_s, finally_s, throw_s, defex_s, deffilter_s, eof_s;
 extern val error_s, type_error_s, internal_error_s;
 extern val numeric_error_s, range_error_s;
 extern val query_error_s, file_error_s, process_error_s;

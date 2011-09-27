@@ -60,7 +60,7 @@ val all_s, some_s, none_s, maybe_s, cases_s, collect_s, until_s, coll_s;
 val define_s, output_s, single_s, first_s, last_s, empty_s;
 val repeat_s, rep_s, flatten_s, forget_s;
 val local_s, merge_s, bind_s, cat_s;
-val try_s, catch_s, finally_s, throw_s, defex_s, deffilter_s;
+val try_s, catch_s, finally_s, throw_s, defex_s, deffilter_s, eof_s;
 val error_s, type_error_s, internal_error_s;
 val numeric_error_s, range_error_s;
 val query_error_s, file_error_s, process_error_s;
@@ -2132,6 +2132,7 @@ static void obj_init(void)
   throw_s = intern(lit("throw"), user_package);
   defex_s = intern(lit("defex"), user_package);
   deffilter_s = intern(lit("deffilter"), user_package);
+  eof_s = intern(lit("eof"), user_package);
   error_s = intern(lit("error"), user_package);
   type_error_s = intern(lit("type_error"), user_package);
   internal_error_s = intern(lit("internal_error"), user_package);
