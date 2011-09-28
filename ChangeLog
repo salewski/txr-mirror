@@ -1,5 +1,13 @@
 2011-09-27  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (match_files): Another bugfix to skip.
+	If a hard skip tries to go beyond EOF, then the query
+	must fail. However, a skip to exactly EOF is fine.
+	I.e. data can hit nil at the same time as the right
+	number of skip iterations is performed.
+
+2011-09-27  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (match_files): Bugfix in skip directive.
 	We should try the match at least once even if there is no data
 	after a hard skip, so that the query has an opportunity
