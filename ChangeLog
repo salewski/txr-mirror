@@ -1,5 +1,18 @@
 2011-09-27  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (match_files): Bugfix in skip directive.
+	We should try the match at least once even if there is no data
+	after a hard skip, so that the query has an opportunity
+	to do an explicit match for no data, as with @(endp).
+	This commit makes possible queries like:
+	@fourth_line_from_bottom
+	@(skip 1 3)
+	@(eof)
+	This query depends on @(skip 1 3) not failing when
+	it runs out of data, because @(eof) checks for htis.
+
+2011-09-27  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (eof_s): New symbol variable.
 	(obj_init): New variable initialized.
 
