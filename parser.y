@@ -42,6 +42,7 @@ int yylex(void);
 void yyerror(const char *);
 
 val repeat_rep_helper(val sym, val main, val parts);
+val o_elems_transform(val output_form);
 val define_transform(val define_form);
 val lit_char_helper(val litchars);
 
@@ -357,11 +358,12 @@ out_clauses_opt : out_clauses   { $$ = $1; }
 o_line : o_elems_opt '\n'       { $$ = $1; }
        ;
 
-o_elems_opt : o_elems           { $$ = cons(num(lineno - 1), $1); }
+o_elems_opt : o_elems           { $$ = cons(num(lineno - 1),
+                                            o_elems_transform($1)); }
             |                   { $$ = nil; }
             ;
 
-o_elems_opt2 : o_elems          { $$ = $1; }
+o_elems_opt2 : o_elems          { $$ = o_elems_transform($1); }
              |                  { $$ = null_list; }
              ;
 
@@ -405,6 +407,8 @@ var : IDENT                     { $$ = list(var_s, intern(string_own($1), nil),
                                             $4, nao); }
     | '{' IDENT exprs '}'       { $$ = list(var_s, intern(string_own($2), nil),
                                             nil, $3, nao); }
+    | '{' IDENT exprs '}' elem  { $$ = list(var_s, intern(string_own($2), nil),
+                                            $5, $3, nao); }
     | var_op IDENT              { $$ = list(var_s, intern(string_own($2), nil),
                                             nil, $1, nao); }
     | var_op IDENT elem         { $$ = list(var_s, intern(string_own($2), nil),
@@ -544,7 +548,7 @@ chrlit : '\'' '\''              { $$ = nil;
        ;
 
 quasilit : '`' '`'              { $$ = null_string; }
-         | '`' quasi_items '`'  { $$ = cons(quasi_s, $2); }
+         | '`' quasi_items '`'  { $$ = cons(quasi_s, o_elems_transform($2)); }
          | '`' error            { $$ = nil;
                                   yybadtoken(yychar, lit("string literal")); }
          ;
@@ -593,6 +597,30 @@ val repeat_rep_helper(val sym, val main, val parts)
 
   return list(sym, main, single_parts, first_parts,
               last_parts, empty_parts, nao);
+}
+
+val o_elems_transform(val o_elems)
+{
+  list_collect_decl(o_elems_out, ptail);
+  val iter;
+
+  for (iter = o_elems; iter; iter = cdr(iter)) {
+    val elem = car(iter);
+
+    while (consp(elem) && first(elem) == var_s) {
+      val sym = second(elem);
+      val pat = third(elem);
+      val modifiers = fourth(elem);
+
+      list_collect(ptail, list(first(elem), sym, nil, modifiers, nao));
+      elem = pat;
+    }
+
+    if (elem)
+      list_collect(ptail, elem);
+  }
+  
+  return o_elems_out;
 }
 
 val define_transform(val define_form)
