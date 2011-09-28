@@ -1,5 +1,11 @@
 2011-09-27  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.y ('{', '}'): Nope, still not right.
+	These must have exactly the same precedence as
+	IDENT for this to work right, of course.
+
+2011-09-27  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.y ('{', '}'): Bugfix: precedence of these
 	terminals was causing @foo@foo to be parsed differently
 	from @foo@{foo}. We need consecutive variables to be

@@ -78,8 +78,7 @@ static val parsed_spec;
 %nonassoc ALL SOME NONE MAYBE CASES AND OR END COLLECT UNTIL COLL
 %nonassoc OUTPUT REPEAT REP FIRST LAST EMPTY DEFINE
 %nonassoc '[' ']' '(' ')'
-%right IDENT TEXT NUMBER
-%nonassoc '{' '}'
+%right IDENT TEXT NUMBER '{' '}'
 %left '-'
 %left '|' '/'
 %left '&' 
