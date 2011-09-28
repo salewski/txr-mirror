@@ -992,7 +992,7 @@ repeat_spec_same_data:
                     num(data_lineno), nao);
           }
 
-          while (data && (!max || reps_max++ < cmax)) {
+          while (!max || reps_max++ < cmax) {
             result = match_files(spec, files, bindings,
                                  data, num(data_lineno));
 
@@ -1006,6 +1006,9 @@ repeat_spec_same_data:
                     num(data_lineno), nao);
             data = rest(data);
             data_lineno++;
+
+            if (!data)
+              break;
           }
 
           uw_block_end;
