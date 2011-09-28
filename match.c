@@ -978,24 +978,24 @@ repeat_spec_same_data:
 
         {
           cnum reps_max = 0, reps_min = 0;
-          cnum old_lineno = data_lineno;
           uw_block_begin(nil, result);
 
-          while (data && min && reps_min++ < cmin) {
+          while (data && min && reps_min < cmin) {
             data = rest(data);
             data_lineno++;
+            reps_min++;
           }
 
           if (min) {
             if (reps_min != cmin) {
-              debuglf(spec_linenum, lit("skipped ~a/~a lines to ~a:~a"),
-                      num(data_lineno - old_lineno), num(cmin),
+              debuglf(spec_linenum, lit("skipped only ~a/~a lines to ~a:~a"),
+                      num(reps_min), num(cmin),
                       first(files), num(data_lineno), nao);
               uw_block_return(nil, nil);
             }
 
             debuglf(spec_linenum, lit("skipped ~a lines to ~a:~a"),
-                    num(data_lineno - old_lineno), first(files),
+                    num(reps_min), first(files),
                     num(data_lineno), nao);
           }
 
@@ -1009,13 +1009,13 @@ repeat_spec_same_data:
               break;
             }
 
+            if (!data)
+              break;
+
             debuglf(spec_linenum, lit("skip didn't match ~a:~a"), first(files),
                     num(data_lineno), nao);
             data = rest(data);
             data_lineno++;
-
-            if (!data)
-              break;
           }
 
           uw_block_end;

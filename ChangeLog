@@ -1,5 +1,19 @@
 2011-09-27  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (match_files): One more fix to this, argh.
+	The test for !data should be done after matching,
+	before incrementing to the next line. Then it is a true
+	bottom of the loop test. This commit allows
+	@(skip)
+	@first_line
+	@(skip nil 3)
+	@(eof)
+	to correctly match the first line of the input, not
+	the fourth one from the bottom, since the
+	second skip has an unbounded range.
+
+2011-09-27  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (match_files): Another bugfix to skip.
 	If a hard skip tries to go beyond EOF, then the query
 	must fail. However, a skip to exactly EOF is fine.
