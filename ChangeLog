@@ -1,3 +1,22 @@
+2011-09-28  Kaz Kylheku  <kaz@kylheku.com>
+
+	* match.c (match_line): Logic restructured to allow for
+	regex variables which also have nested variables.
+	Previously this code was assuming that the cases were
+	mutually exclusive, and the parser happened to work that way.
+	Also, added support for a "double var" match which occurs
+	when an unbound variable is followed by a regex variable.
+	This case should be allowed because it makes sense.
+	It's similar to a variable followed by a regex, except
+	that the regex is also a variable binding.
+
+	* parser.y (o_elems_transform): New function.
+	(o_elems_opt, o_elems_opt2, quasilit): Transform o_elems with new
+	function. This is needed because subst_vars doesn't
+	deal with the nested var syntax for consecutive variables.
+	(var): New syntax case '{' IDENT exprs '}' elem. This
+	allows consecutive variables to be nested in all cases.
+
 2011-09-27  Kaz Kylheku  <kaz@kylheku.com>
 
 	* parser.y ('{', '}'): Nope, still not right.

@@ -305,6 +305,13 @@ static val match_line(val bindings, val specline, val dataline,
           val modifier = fourth(elem);
           val pair = assoc(bindings, sym); /* var exists already? */
 
+          if (gt(length(modifier), one)) {
+            sem_error(spec_lineno, lit("multiple modifiers on variable ~s"),
+                      sym, nao);
+          }
+
+          modifier = car(modifier);
+
           if (pair) {
             /* If the variable already has a binding, we replace
                it with its value, and treat it as a string match.
@@ -336,37 +343,41 @@ static val match_line(val bindings, val specline, val dataline,
               specline = cons(cdr(pair), rest(specline));
             }
             continue;
-          } else if (pat == nil) { /* match to end of line or with regex */
-            if (gt(length(modifier), one)) {
-              sem_error(spec_lineno, lit("multiple modifiers on variable ~s"),
-                        sym, nao);
+          } else if (consp(modifier)) { /* regex variable */
+            val past = match_regex(dataline, car(modifier), pos);
+            if (nullp(past)) {
+              LOG_MISMATCH("var positive regex");
+              return nil;
             }
-
-            modifier = car(modifier);
-
-            if (consp(modifier)) {
-              val past = match_regex(dataline, car(modifier), pos);
-              if (nullp(past)) {
-                LOG_MISMATCH("var positive regex");
-                return nil;
-              }
-              LOG_MATCH("var positive regex", past);
-              bindings = acons_new(bindings, sym, sub_str(dataline, pos, past));
-              pos = past;
-            } else if (nump(modifier)) {
-              val past = plus(pos, modifier);
-              if (length_str_lt(dataline, past) || lt(past, pos))
-              {
-                LOG_MISMATCH("count based var");
-                return nil;
-              }
-              LOG_MATCH("count based var", past);
-              bindings = acons_new(bindings, sym, trim_str(sub_str(dataline, pos, past)));
-              pos = past;
-            } else {
-              bindings = acons_new(bindings, sym, sub_str(dataline, pos, nil));
-              pos = length_str(dataline);
+            LOG_MATCH("var positive regex", past);
+            bindings = acons_new(bindings, sym, sub_str(dataline, pos, past));
+            pos = past;
+            /* This may have another variable attached */
+            if (pat) {
+              specline = cons(pat, rest(specline));
+              continue;
             }
+          } else if (nump(modifier)) { /* fixed field */
+            val past = plus(pos, modifier);
+            if (length_str_lt(dataline, past) || lt(past, pos))
+            {
+              LOG_MISMATCH("count based var");
+              return nil;
+            }
+            LOG_MATCH("count based var", past);
+            bindings = acons_new(bindings, sym, trim_str(sub_str(dataline, pos, past)));
+            pos = past;
+            /* This may have another variable attached */
+            if (pat) {
+              specline = cons(pat, rest(specline));
+              continue;
+            }
+          } else if (modifier) {
+            sem_error(spec_lineno, lit("invalid modifier ~s on variable ~s"),
+                      modifier, sym, nao);
+          } else if (pat == nil) { /* no modifier, no elem -> to end of line */
+            bindings = acons_new(bindings, sym, sub_str(dataline, pos, nil));
+            pos = length_str(dataline);
           } else if (type(pat) == STR) {
             val find = search_str(dataline, pat, pos, modifier);
             if (!find) {
@@ -388,26 +399,55 @@ static val match_line(val bindings, val specline, val dataline,
             bindings = acons_new(bindings, sym, sub_str(dataline, pos, fpos));
             pos = plus(fpos, flen);
           } else if (consp(pat) && first(pat) == var_s) {
-            /* Unbound var followed by var: the following one must be bound. */
+            /* Unbound var followed by var: the following one must either
+               be bound, or must specify a regex. */
             val second_sym = second(pat);
             val next_pat = third(pat);
+            val next_modifier = fourth(pat);
             val pair = assoc(bindings, second_sym); /* var exists already? */
 
-            if (!pair)
-              sem_error(spec_lineno, lit("consecutive unbound variables"), nao);
+            if (gt(length(next_modifier), one)) {
+              sem_error(spec_lineno, lit("multiple modifiers on variable ~s"),
+                        second_sym, nao);
+            }
 
+            next_modifier = car(next_modifier);
+
+            if (!pair && consp(next_modifier)) {
+              val find = search_regex(dataline, first(next_modifier), pos, modifier);
+              val fpos = car(find);
+              val flen = cdr(find);
+
+              if (!find) {
+                LOG_MISMATCH("double var regex");
+                return nil;
+              }
+
+              /* Text from here to start of regex match goes to this
+                 variable. */
+              bindings = acons_new(bindings, sym, sub_str(dataline, pos, fpos));
+              /* Text from start of regex match to end goes to the
+                 second variable */
+              bindings = acons_new(bindings, second_sym, sub_str(dataline, fpos, plus(fpos, flen)));
+              LOG_MATCH("double var regex (first var)", fpos);
+              pos = fpos;
+              LOG_MATCH("double var regex (second var)", plus(fpos, flen));
+              pos = plus(fpos, flen);
+              specline = cons(next_pat, rest(specline));
+              continue;
+            } else if (!pair) {
+              sem_error(spec_lineno, lit("consecutive unbound variables"), nao);
+            } else {
             /* Re-generate a new spec with an edited version of
                the element we just processed, and repeat. */
-            {
               val new_elem = list(var_s, sym, cdr(pair), modifier, nao);
 
               if (next_pat)
                  specline = cons(new_elem, cons(next_pat, rest(specline)));
               else
                  specline = cons(new_elem, rest(specline));
+              continue;
             }
-
-            continue;
           } else if (consp(pat) && (consp(first(pat)) || stringp(first(pat)))) {
             cons_bind (find, len, search_str(dataline, pat, pos, modifier));
             if (!find) {
@@ -608,6 +648,7 @@ static val subst_vars(val spec, val bindings, val filter)
             spec = cons(filter_string(filter, cdr(pair)), rest(spec));
           continue;
         }
+        /* TODO: handle unbound variable */
       } else if (first(elem) == quasi_s) {
         val nested = subst_vars(rest(elem), bindings, filter);
         list_collect_append(iter, nested);
