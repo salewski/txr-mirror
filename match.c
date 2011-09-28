@@ -433,8 +433,10 @@ static val match_line(val bindings, val specline, val dataline,
               pos = fpos;
               LOG_MATCH("double var regex (second var)", plus(fpos, flen));
               pos = plus(fpos, flen);
-              specline = cons(next_pat, rest(specline));
-              continue;
+              if (next_pat) {
+                specline = cons(next_pat, rest(specline));
+                continue;
+              }
             } else if (!pair) {
               sem_error(spec_lineno, lit("consecutive unbound variables"), nao);
             } else {
