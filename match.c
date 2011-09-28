@@ -987,6 +987,13 @@ repeat_spec_same_data:
           }
 
           if (min) {
+            if (reps_min != cmin) {
+              debuglf(spec_linenum, lit("skipped ~a/~a lines to ~a:~a"),
+                      num(data_lineno - old_lineno), num(cmin),
+                      first(files), num(data_lineno), nao);
+              uw_block_return(nil, nil);
+            }
+
             debuglf(spec_linenum, lit("skipped ~a lines to ~a:~a"),
                     num(data_lineno - old_lineno), first(files),
                     num(data_lineno), nao);
