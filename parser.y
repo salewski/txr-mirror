@@ -77,8 +77,9 @@ static val parsed_spec;
 %nonassoc LOW /* used for precedence assertion */
 %nonassoc ALL SOME NONE MAYBE CASES AND OR END COLLECT UNTIL COLL
 %nonassoc OUTPUT REPEAT REP FIRST LAST EMPTY DEFINE
-%nonassoc '{' '}' '[' ']' '(' ')'
+%nonassoc '[' ']' '(' ')'
 %right IDENT TEXT NUMBER
+%nonassoc '{' '}'
 %left '-'
 %left '|' '/'
 %left '&' 

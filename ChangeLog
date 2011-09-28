@@ -1,5 +1,13 @@
 2011-09-27  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.y ('{', '}'): Bugfix: precedence of these
+	terminals was causing @foo@foo to be parsed differently
+	from @foo@{foo}. We need consecutive variables to be
+	specially folded in the syntax under a single var_s
+	node.
+
+2011-09-27  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (match_files): One more fix to this, argh.
 	The test for !data should be done after matching,
 	before incrementing to the next line. Then it is a true
