@@ -1,5 +1,10 @@
 2011-09-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (match_line): Bugfix in double var. Do not
+	prepend the next_pat to the specline if it is nil.
+
+2011-09-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (match_line): Logic restructured to allow for
 	regex variables which also have nested variables.
 	Previously this code was assuming that the cases were
