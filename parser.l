@@ -275,8 +275,8 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                                   return COLLECT;
                                 }
 
-<SPECIAL>\({WS}coll{WS}\)       {
-                                  yy_pop_state();
+<SPECIAL>\({WS}coll/{ID_END}    {
+                                  yy_push_state(NESTED);
                                   return COLL;
                                 }
 
