@@ -24,4 +24,5 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+void match_init(void);
 int extract(val spec, val filenames, val bindings);

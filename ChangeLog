@@ -1,5 +1,23 @@
 2011-09-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (mingap_k, maxgap_k, gap_k, times_k, lines_k): New
+	symbol variables.
+	(match_lines): Keyword arguments in collect implemented.
+	(match_init): New function.
+
+	* match.h (match_init): Declared.
+
+	* parser.l (COLLECT): Lexical syntax changed for COLLECT to
+	allow for argument material.
+
+	* parser.y (%union): obj renamed to val.
+	(exprs_opt): New nonterminal.
+	(collect_clause): Rewritten for arguments.
+
+	* txr.c (main): Call to match_init introduced.
+
+2011-09-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (match_line): Bugfix in double var. Do not
 	prepend the next_pat to the specline if it is nil.
 

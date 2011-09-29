@@ -52,7 +52,7 @@ static val parsed_spec;
 
 %union {
   wchar_t *lexeme;
-  union obj *obj;
+  union obj *val;
   wchar_t chr;
   cnum num;
 }
@@ -63,17 +63,17 @@ static val parsed_spec;
 %token <num> NUMBER
 %token <chr> REGCHAR LITCHAR
 
-%type <obj> spec clauses clauses_opt clause
-%type <obj> all_clause some_clause none_clause maybe_clause
-%type <obj> cases_clause collect_clause clause_parts additional_parts
-%type <obj> output_clause define_clause try_clause catch_clauses_opt
-%type <obj> line elems_opt elems elem var var_op
-%type <obj> list exprs expr out_clauses out_clauses_opt out_clause
-%type <obj> repeat_clause repeat_parts_opt o_line
-%type <obj> o_elems_opt o_elems_opt2 o_elems o_elem rep_elem rep_parts_opt
-%type <obj> regex regexpr regbranch
-%type <obj> regterm regclass regclassterm regrange
-%type <obj> strlit chrlit quasilit quasi_items quasi_item litchars
+%type <val> spec clauses clauses_opt clause
+%type <val> all_clause some_clause none_clause maybe_clause
+%type <val> cases_clause collect_clause clause_parts additional_parts
+%type <val> output_clause define_clause try_clause catch_clauses_opt
+%type <val> line elems_opt elems elem var var_op
+%type <val> list exprs exprs_opt expr out_clauses out_clauses_opt out_clause
+%type <val> repeat_clause repeat_parts_opt o_line
+%type <val> o_elems_opt o_elems_opt2 o_elems o_elem rep_elem rep_parts_opt
+%type <val> regex regexpr regbranch
+%type <val> regterm regclass regclassterm regrange
+%type <val> strlit chrlit quasilit quasi_items quasi_item litchars
 %type <chr> regchar
 %nonassoc LOW /* used for precedence assertion */
 %nonassoc ALL SOME NONE MAYBE CASES AND OR END COLLECT UNTIL COLL
@@ -158,12 +158,16 @@ cases_clause : CASES newl clause_parts  { $$ = cons(cases_s, $3); }
                                           yyerror("empty cases clause"); }
              ;
 
-collect_clause : COLLECT newl clauses END newl  { $$ = list(collect_s,
-                                                            $3, nao); }
-               | COLLECT newl clauses
-                 UNTIL newl clauses END newl    { $$ = list(collect_s, $3,
-                                                            $6, nao); }
-               | COLLECT newl error     { $$ = nil;
+collect_clause : COLLECT exprs_opt ')' newl
+                 clauses END newl                { $$ = list(collect_s,
+                                                             $5, nil, $2,
+                                                             nao); }
+               | COLLECT exprs_opt ')'
+                 newl clauses
+                 UNTIL newl clauses END newl    { $$ = list(collect_s, $5,
+                                                            $8, $2, nao); }
+               | COLLECT exprs_opt ')'
+                 newl error             { $$ = nil;
                                           if (yychar == UNTIL || yychar == END)
                                             yyerror("empty collect");
                                           else
@@ -444,6 +448,10 @@ exprs : expr                    { $$ = cons($1, nil); }
       | expr '.' expr           { $$ = cons($1, $3); }
       ;
 
+exprs_opt : exprs               { $$ = $1; }
+          | /* empty */         { $$ = nil; }
+          ;
+
 expr : IDENT                    { $$ = intern(string_own($1), nil); }
      | KEYWORD                  { $$ = intern(string_own($1),
                                               keyword_package); }
@@ -685,4 +693,3 @@ val get_spec(void)
 {
   return parsed_spec;
 }
-

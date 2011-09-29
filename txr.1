@@ -1493,6 +1493,44 @@ established in the main clause. This is true even in the terminating
 case when the until clause matches, and the bindings of the main clause
 are discarded.
 
+.SS Collect Keyword Parameters
+
+By default, collect searches the rest of the input indefinitely,
+or until the @(until) clause matches. It skips arbitrary amounts of
+nonmatching material before the first match, and between matches.
+
+Within the @(collect) syntax, it is possible to specify some useful keyword
+parameters for additional control of the behavior. For instance
+
+  @(collect :maxgap 5)
+
+means that the collect will terminate if it does not find a match within five
+lines of the starting position, or if more than five lines are skipped since
+any successful match. A :maxgap of 0 means that the collected regions must be
+adjacent. For instance:
+
+  @(collect :maxgap 0)
+  M @a
+  @(end)
+
+means: from here, collect consecutive lines of the form "M ...". This will not
+search for the first such line, nor will it skip lines which do not match this
+form.
+
+Other keywords are :mingap, and :gap.  The :mingap keyword specifies a minimum
+gap between matches, but has no effect on the distance to the first match. The
+:gap keyword specifies  :mingap and :maxgap  at the same time, and can only be
+used if these other two are not used. Thus:
+
+ @(collect :gap 1)
+ @a
+ @(end)
+
+means collect every other line starting with the current line. Two other
+keywords are :lines and :times. The :lines parameter specifies the upper bound
+on how many lines should be scanned by the collect, and :times specifies the
+upper bound on how many times the collect can match.
+
 .SS The Coll Directive
 
 The coll directive is a kind of miniature version of the collect directive.
