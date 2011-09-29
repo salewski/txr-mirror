@@ -47,7 +47,7 @@
 
 int output_produced;
 
-val mingap_k, maxgap_k, gap_k, times_k, lines_k;
+val mingap_k, maxgap_k, gap_k, times_k, lines_k, chars_k;
 
 static void debugf(val fmt, ...)
 {
@@ -475,53 +475,84 @@ static val match_line(val bindings, val specline, val dataline,
         } else if (directive == coll_s) {
           val coll_specline = second(elem);
           val until_specline = third(elem);
+          val args = fourth(elem);
           val bindings_coll = nil;
+          val max = getplist(args, maxgap_k);
+          val min = getplist(args, mingap_k);
+          val gap = getplist(args, gap_k);
+          val times = getplist(args, times_k);
+          val chars = getplist(args, chars_k);
+          cnum cmax = nump(gap) ? c_num(gap) : (nump(max) ? c_num(max) : 0);
+          cnum cmin = nump(gap) ? c_num(gap) : (nump(min) ? c_num(min) : 0);
+          cnum mincounter = cmin, maxcounter = 0;
+          cnum timescounter = 0, charscounter = 0;
+          cnum ctimes = nump(times) ? c_num(times) : 0;
+          cnum cchars = nump(chars) ? c_num(chars) : 0;
           val iter;
 
-          for (;;) {
-            cons_bind (new_bindings, new_pos,
-                       match_line(bindings, coll_specline, dataline, pos,
-                                  spec_lineno, data_lineno, file));
+          if ((times && ctimes == 0) || (chars && cchars == 0))
+            break;
 
-            if (until_specline) {
-              cons_bind (until_bindings, until_pos,
-                         match_line(bindings, until_specline, dataline, pos,
+          for (;;) {
+            if ((gap || min) && mincounter < cmin)
+              goto next_coll;
+
+            if (chars && charscounter++ >= cchars)
+              break;
+
+            {
+              cons_bind (new_bindings, new_pos,
+                         match_line(bindings, coll_specline, dataline, pos,
                                     spec_lineno, data_lineno, file));
 
-              if (until_pos) {
-                (void) until_bindings;
-                LOG_MATCH("until", until_pos);
-                break;
+              if (until_specline) {
+                cons_bind (until_bindings, until_pos,
+                           match_line(bindings, until_specline, dataline, pos,
+                                      spec_lineno, data_lineno, file));
+
+                if (until_pos) {
+                  (void) until_bindings;
+                  LOG_MATCH("until", until_pos);
+                  break;
+                } else {
+                  LOG_MISMATCH("until");
+                }
+              }
+
+              if (new_pos) {
+                LOG_MATCH("coll", new_pos);
+
+                for (iter = new_bindings; iter && iter != bindings;
+                     iter = cdr(iter))
+                {
+                  val binding = car(iter);
+                  val existing = assoc(bindings_coll, car(binding));
+
+                  bindings_coll = acons_new(bindings_coll, car(binding),
+                                            cons(cdr(binding), cdr(existing)));
+                }
+              }
+
+              if (new_pos && !equal(new_pos, pos)) {
+                pos = new_pos;
+                bug_unless (length_str_ge(dataline, pos));
+
+                if (times && ++timescounter >= ctimes)
+                  break;
+                mincounter = 0;
+                maxcounter = 0;
               } else {
-                LOG_MISMATCH("until");
+next_coll:
+                mincounter++;
+                if ((gap || max) && ++maxcounter > cmax)
+                  break;
+                pos = plus(pos, one);
               }
+
+              if (length_str_le(dataline, pos))
+                break;
             }
-
-            if (new_pos) {
-              LOG_MATCH("coll", new_pos);
-
-              for (iter = new_bindings; iter && iter != bindings;
-                   iter = cdr(iter))
-              {
-                val binding = car(iter);
-                val existing = assoc(bindings_coll, car(binding));
-
-                bindings_coll = acons_new(bindings_coll, car(binding),
-                                          cons(cdr(binding), cdr(existing)));
-              }
-            }
-
-            if (new_pos && !equal(new_pos, pos)) {
-              pos = new_pos;
-              bug_unless (length_str_ge(dataline, pos));
-            } else {
-              pos = plus(pos, one);
-            }
-
-            if (length_str_le(dataline, pos))
-              break;
           }
-
 
           if (!bindings_coll)
             debuglf(spec_lineno, lit("nothing was collected"), nao);
@@ -1960,4 +1991,5 @@ void match_init(void)
   gap_k = intern(lit("gap"), keyword_package);
   times_k = intern(lit("times"), keyword_package);
   lines_k = intern(lit("lines"), keyword_package);
+  chars_k = intern(lit("chars"), keyword_package);
 }

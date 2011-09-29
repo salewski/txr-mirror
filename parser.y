@@ -201,9 +201,9 @@ elem : TEXT                     { $$ = string_own($1); }
      | list                     { $$ = $1; }
      | regex                    { $$ = cons(regex_compile(rest($1)),
                                             rest($1)); }
-     | COLL elems END           { $$ = list(coll_s, $2, nao); }
-     | COLL elems
-       UNTIL elems END          { $$ = list(coll_s, $2, $4, nao); }
+     | COLL exprs_opt ')' elems END     { $$ = list(coll_s, $4, nil, $2, nao); }
+     | COLL exprs_opt ')' elems
+       UNTIL elems END          { $$ = list(coll_s, $4, $6, $2, nao); }
      | COLL error               { $$ = nil;
                                   yybadtoken(yychar, lit("coll clause")); }
      ;

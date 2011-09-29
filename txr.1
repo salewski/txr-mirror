@@ -1643,6 +1643,15 @@ Note that the @(end) is followed by a semicolon. That's because
 when the @(until) clause meets a match, the matching material
 is not consumed.
 
+.SS Coll Keyword Parameters
+
+The @(coll) directive takes most of the same parameters as @(collect).
+See the section Collect Keyword Parameters above.
+So for instance @(coll :gap 0) means that the collects must be
+consecutive, and @(coll :times 2) means that (at most) two matches
+will be collected.  The :lines keyword does not exist, but there is
+an analogous :chars keyword.
+
 .SS The Flatten Directive.
 
 The flatten directive can be used to convert variables to one dimensional

@@ -1,3 +1,16 @@
+2011-09-29  Kaz Kylheku  <kaz@kylheku.com>
+
+	* match.c (chars_k): New variable.
+	(match_line): Keyword arguments in coll implemented.
+	(match_init): chars_k variable initialized.
+
+	* parser.l (COLL): Lexical syntax changed to allow for
+	argument material.
+
+	* parser.y (elem): Coll syntax rewritten for arguments.
+
+	* txr.1: Updated.
+
 2011-09-28  Kaz Kylheku  <kaz@kylheku.com>
 
 	* match.c (mingap_k, maxgap_k, gap_k, times_k, lines_k): New
