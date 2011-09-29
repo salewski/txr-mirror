@@ -145,6 +145,7 @@ int main(int argc, char **argv)
   val stack_bottom = nil;
   progname = argv[0] ? utf8_dup_from(argv[0]) : progname;
   init(progname, oom_realloc_handler, &stack_bottom);
+  match_init();
   return txr_main(argc, argv);
 }
 

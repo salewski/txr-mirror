@@ -47,6 +47,8 @@
 
 int output_produced;
 
+val mingap_k, maxgap_k, gap_k, times_k, lines_k;
+
 static void debugf(val fmt, ...)
 {
   if (opt_loglevel >= 2) {
@@ -1306,71 +1308,110 @@ repeat_spec_same_data:
       } else if (sym == collect_s) {
         val coll_spec = second(first_spec);
         val until_spec = third(first_spec);
+        val args = fourth(first_spec);
         val bindings_coll = nil;
+        val max = getplist(args, maxgap_k);
+        val min = getplist(args, mingap_k);
+        val gap = getplist(args, gap_k);
+        val times = getplist(args, times_k);
+        val lines = getplist(args, lines_k);
+        cnum cmax = nump(gap) ? c_num(gap) : (nump(max) ? c_num(max) : 0);
+        cnum cmin = nump(gap) ? c_num(gap) : (nump(min) ? c_num(min) : 0);
+        cnum mincounter = cmin, maxcounter = 0;
+        cnum timescounter = 0, linescounter = 0;
+        cnum ctimes = nump(times) ? c_num(times) : 0;
+        cnum clines = nump(lines) ? c_num(lines) : 0;
         val iter;
+
+        if (gap && (max || min))
+          sem_error(spec_linenum, lit("collect: cannot mix :gap with :mingap or :maxgap"), nao);
+
+        if ((times && ctimes == 0) || (lines && clines == 0)) {
+          if ((spec = rest(spec)) == nil) 
+            break;
+
+          goto repeat_spec_same_data;
+        }
 
         uw_block_begin(nil, result);
 
         result = t;
 
         while (data) {
-          cons_bind (new_bindings, success,
-                     match_files(coll_spec, files, bindings,
-                                 data, num(data_lineno)));
+          if ((gap || min) && mincounter < cmin)
+            goto next_collect;
 
-          /* Until clause sees un-collated bindings from collect. */
-          if (until_spec)
+          if (lines && linescounter++ >= clines)
+            break;
+
           {
-            cons_bind (discarded_bindings, success,
-                       match_files(until_spec, files, new_bindings,
+            cons_bind (new_bindings, success,
+                       match_files(coll_spec, files, bindings,
                                    data, num(data_lineno)));
 
-            if (success) {
-              (void) discarded_bindings;
-              break;
-            }
-          }
-
-          if (success) {
-            debuglf(spec_linenum, lit("collect matched ~a:~a"),
-                    first(files), num(data_lineno), nao);
-
-            for (iter = new_bindings; iter && iter != bindings;
-                iter = cdr(iter))
+            /* Until clause sees un-collated bindings from collect. */
+            if (until_spec)
             {
-              val binding = car(iter);
-              val existing = assoc(bindings_coll, car(binding));
+              cons_bind (discarded_bindings, success,
+                         match_files(until_spec, files, new_bindings,
+                                     data, num(data_lineno)));
 
-              bindings_coll = acons_new(bindings_coll, car(binding),
-                                        cons(cdr(binding), cdr(existing)));
-            }
-          }
-
-          if (success) {
-            if (consp(success)) {
-              cons_bind (new_data, new_line, success);
-              cnum new_lineno = c_num(new_line);
-
-              bug_unless (new_lineno >= data_lineno);
-
-              if (new_lineno == data_lineno) {
-                new_data = cdr(new_data);
-                new_lineno++;
+              if (success) {
+                (void) discarded_bindings;
+                break;
               }
-
-              debuglf(spec_linenum, lit("collect advancing from line ~a to ~a"),
-                      num(data_lineno), num(new_lineno), nao);
-
-              data = new_data;
-              data_lineno = new_lineno;
-              *car_l(success) = nil;
-            } else {
-              debuglf(spec_linenum, lit("collect consumed entire file"), nao);
-              data = nil;
             }
-          } else {
-            data = rest(data);
-            data_lineno++;
+
+            if (success) {
+              debuglf(spec_linenum, lit("collect matched ~a:~a"),
+                      first(files), num(data_lineno), nao);
+
+              for (iter = new_bindings; iter && iter != bindings;
+                  iter = cdr(iter))
+              {
+                val binding = car(iter);
+                val existing = assoc(bindings_coll, car(binding));
+
+                bindings_coll = acons_new(bindings_coll, car(binding),
+                                          cons(cdr(binding), cdr(existing)));
+              }
+            }
+
+            if (success) {
+              if (consp(success)) {
+                cons_bind (new_data, new_line, success);
+                cnum new_lineno = c_num(new_line);
+
+                bug_unless (new_lineno >= data_lineno);
+
+                if (new_lineno == data_lineno) {
+                  new_data = cdr(new_data);
+                  new_lineno++;
+                }
+
+                debuglf(spec_linenum, lit("collect advancing from line ~a to ~a"),
+                        num(data_lineno), num(new_lineno), nao);
+
+                data = new_data;
+                data_lineno = new_lineno;
+                *car_l(success) = nil;
+
+                if (times && ++timescounter >= ctimes)
+                  break;
+              } else {
+                debuglf(spec_linenum, lit("collect consumed entire file"), nao);
+                data = nil;
+              }
+              mincounter = 0;
+              maxcounter = 0;
+            } else {
+  next_collect:
+              mincounter++;
+              if ((gap || max) && ++maxcounter > cmax)
+                break;
+              data_lineno++;
+              data = rest(data);
+            }
           }
         }
 
@@ -1910,4 +1951,13 @@ int extract(val spec, val files, val predefined_bindings)
   }
 
   return success ? 0 : EXIT_FAILURE;
+}
+
+void match_init(void)
+{
+  mingap_k = intern(lit("mingap"), keyword_package);
+  maxgap_k = intern(lit("maxgap"), keyword_package);
+  gap_k = intern(lit("gap"), keyword_package);
+  times_k = intern(lit("times"), keyword_package);
+  lines_k = intern(lit("lines"), keyword_package);
 }
