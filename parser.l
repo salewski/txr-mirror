@@ -136,6 +136,7 @@ void yybadtoken(int tok, val context)
 static wchar_t char_esc(int letter)
 {
   switch (letter) {
+  case ' ': return L' ';
   case 'a': return L'\a';
   case 'b': return L'\b';
   case 't': return L'\t';
@@ -357,7 +358,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                           return yytext[0];
                         }
 
-<SPECIAL,NESTED>[\t ]+  { /* Eat whitespace in directive */ }
+<SPECIAL,NESTED>{WS}    { /* Eat whitespace in directive */ }
 
 <SPECIAL,NESTED>\"      {
                           yy_push_state(STRLIT);
@@ -394,14 +395,19 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                           return '.';
                         }
 
-<SPECIAL>[\\][abtnvfre] {
-                          wchar_t lexeme[2];
-                          lexeme[0] = char_esc(yytext[1]);
-                          lexeme[1] = 0;
-                          yylval.lexeme = chk_strdup(lexeme);
-                          yy_pop_state();
-                          return TEXT;
-                        }
+<SPECIAL,NESTED>[\\]\n{WS}      {
+                                  yy_pop_state();
+                                  lineno++;
+                                }
+
+<SPECIAL>[\\][abtnvfre ] {
+                           wchar_t lexeme[2];
+                           lexeme[0] = char_esc(yytext[1]);
+                           lexeme[1] = 0;
+                           yylval.lexeme = chk_strdup(lexeme);
+                           yy_pop_state();
+                           return TEXT;
+                         }
 
 <SPECIAL>[\\](x{HEX}+|{OCT}+)   {
                                   wchar_t lexeme[2];
@@ -429,7 +435,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                 }
 
 
-<REGEX>[\\][abtnvfre\\]         {
+<REGEX>[\\][abtnvfre\\ ]        {
                                   yylval.chr = char_esc(yytext[1]);
                                   return REGCHAR;
                                 }
@@ -438,6 +444,10 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                                   yylval.chr = num_esc(yytext + 1);
                                   return REGCHAR;
                                 }
+
+<REGEX>{WS}[\\]\n{WS}   {
+                          lineno++;
+                        }
 
 <REGEX>\n       {
                   lineno++;
@@ -521,10 +531,14 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                 }
 
 <STRLIT,CHRLIT,QSILIT>[\\][abtnvfre"`'\\] {
-                                          yylval.chr = char_esc(yytext[1]);
-                                          return LITCHAR;
-                                        }
+                                            yylval.chr = char_esc(yytext[1]);
+                                            return LITCHAR;
+                                          }
 
+<STRLIT,QSILIT>{WS}[\\]\n{WS}   {
+                                  lineno++;
+                                }
+                                
 <STRLIT,CHRLIT>[\\](x{HEX}+|{OCT}+)     {
                                           yylval.chr = num_esc(yytext + 1);
                                           return LITCHAR;

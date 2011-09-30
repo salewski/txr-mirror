@@ -368,6 +368,27 @@ Control characters may be embedded directly in a query (with the exception of
 newline characters). An alternative to embedding is to use escape syntax.
 The following escapes are supported:
 
+.IP @\e<newline>
+A backslash immediately followed by a newline introduces a physical line
+break without breaking up the logical line. Material following this sequence
+continues to be interpreted as a continuation of the previous line, so
+that indentation can be introduced to show the continuation without appearing
+in the data.
+.IP @\e<space>
+A backslash followed by a space encodes a space. This is useful in line
+continuations when it is necessary for leading spaces to be preserved.
+For instance the two line sequence
+
+   abcd@\
+     @\  efg
+
+is equivalent to the line
+
+  abcd  efg
+
+The two spaces before the @\ in the second line are consumed. The
+spaces after are preserved.
+
 .IP @\ea
 Alert character (ASCII 7, BEL).
 .IP @\eb
@@ -444,6 +465,17 @@ directive may be used, which has the following syntax:
 
 where the RE part enclosed in slashes represents regular expression
 syntax (described in the section Regular Expressions below).
+
+Long regular expressions can be broken into multiple lines using a
+backslash-newline sequence.  Whitespace before the sequence or after the
+sequence is not significant, so the following two are equivalent:
+
+  @/reg \e
+    ular/
+
+  @/regular/
+
+There may not be whitespace between the backslash and newline.
 
 Whereas literal text simply represents itself, regular expression denotes a
 (potentially infinite) set of texts.  The regular expression directive
