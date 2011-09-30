@@ -580,16 +580,22 @@ useful for labeling information and situations.
 
 .SS Consecutive Variables
 
-If an unbound variable is followed by another unbound variable, the
-combination is a semantic error which will fail the query. A
-diagnostic message will be issued, unless operating in quiet mode via -q.
-The reason is that there is no way to bind two consecutive variables to
-an extent of text; this is an ambiguous situation, since there is no
-matching criterion for dividing the text between two variables.
-(In theory, a repetition of the same variable, like @FOO@FOO, could
-find a solution by dividing the match extent in half, which would work
-only in the case when it contains an even number of characters.
-This behavior seems to have dubious value).
+If an unbound variable specified a fixed-width match or a regular expression,
+then the issue of consecutive variables does not arise. Such a variable
+consumes text regardless of any context which follows it.
+
+However, what if an unbound variable with no modifier is followed by another
+variable? The behavior depends on the nature of the other variable.
+
+If the other variable also has no modifier, this is a semantic error which
+will cause the query to fail.  A diagnostic message will be issued, unless
+operating in quiet mode via -q.  The reason is that there is no way to bind two
+consecutive variables to an extent of text; this is an ambiguous situation,
+since there is no matching criterion for dividing the text between two
+variables.  (In theory, a repetition of the same variable, like @FOO@FOO, could
+find a solution by dividing the match extent in half, which would work only in
+the case when it contains an even number of characters.  This behavior seems to
+have dubious value).
 
 An unbound variable may be followed by one which is bound. The bound
 variable is replaced by the text which it denotes, and the logic proceeds
@@ -611,6 +617,14 @@ and so BAR is bound to "def".
 If an unbound variable is followed by a variable which is bound to a list, or
 nested list, then each character string in the list is tried in turn to produce
 a match. The first match is taken.
+
+An unbound variable may be followed by another unbound variable which specifies
+a regular expression match. This is a special case called a "double variable
+match".  What happens is that the text is searched using the regular
+expression.  If the search fails, than neither variable is bound: it is a
+matching failure.  If the search succeeds, than the first variable is bound to
+the text which is skipped by the regular expression search.  The second
+variable is bound to the text matched by the regular expression.
 
 .SS Longest Match
 

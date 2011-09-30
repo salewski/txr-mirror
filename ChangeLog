@@ -1,5 +1,10 @@
 2011-09-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Clarified consecutive variables and documented double
+	variable match.
+
+2011-09-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.l: Implemented backslash continuations in SPECIAL
 	state, regexes and string literals.
 
