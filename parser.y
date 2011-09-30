@@ -67,7 +67,8 @@ static val parsed_spec;
 %type <val> all_clause some_clause none_clause maybe_clause
 %type <val> cases_clause collect_clause clause_parts additional_parts
 %type <val> output_clause define_clause try_clause catch_clauses_opt
-%type <val> line elems_opt elems elem var var_op
+%type <val> line elems_opt elems clause_parts_h additional_parts_h
+%type <val> elem var var_op
 %type <val> list exprs exprs_opt expr out_clauses out_clauses_opt out_clause
 %type <val> repeat_clause repeat_parts_opt o_line
 %type <val> o_elems_opt o_elems_opt2 o_elems o_elem rep_elem rep_parts_opt
@@ -206,7 +207,25 @@ elem : TEXT                     { $$ = string_own($1); }
        UNTIL elems END          { $$ = list(coll_s, $4, $6, $2, nao); }
      | COLL error               { $$ = nil;
                                   yybadtoken(yychar, lit("coll clause")); }
+     | ALL clause_parts_h       { $$ = cons(all_s, cons(t, $2)); }
+     | ALL END                  { yyerror("empty all clause"); }
+     | SOME clause_parts_h      { $$ = cons(some_s, cons(t, $2)); }
+     | SOME END                 { yyerror("empty some clause"); }
+     | NONE clause_parts_h      { $$ = cons(none_s, cons(t, $2)); }
+     | NONE END                 { yyerror("empty none clause"); }
+     | MAYBE clause_parts_h     { $$ = cons(maybe_s, cons(t, $2)); }
+     | MAYBE END                { yyerror("empty maybe clause"); }
+     | CASES clause_parts_h     { $$ = cons(cases_s, cons(t, $2)); }
+     | CASES END                { yyerror("empty cases clause"); }
      ;
+
+clause_parts_h : elems additional_parts_h { $$ = cons($1, $2); }
+               ;
+
+additional_parts_h : END                                { $$ = nil; }
+                   | AND elems additional_parts_h       { $$ = cons($2, $3); }
+                   | OR elems additional_parts_h        { $$ = cons($2, $3); }
+                   ;
 
 define_clause : DEFINE exprs ')' newl
                 clauses_opt

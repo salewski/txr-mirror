@@ -562,6 +562,52 @@ next_coll:
             val rev = cons(car(pair), nreverse(cdr(pair)));
             bindings = cons(rev, bindings);
           }
+        } else if (directive == all_s || directive == some_s ||
+                   directive == none_s || directive == maybe_s ||
+                   directive == cases_s)
+        {
+          val specs;
+          val all_match = t;
+          val some_match = nil;
+          val max_pos = pos;
+
+          for (specs = rest(rest(elem)); specs != nil; specs = cdr(specs)) {
+            val nested_spec = first(specs);
+            cons_bind (new_bindings, new_pos,
+                       match_line(bindings, nested_spec, dataline, pos,
+                                  spec_lineno, data_lineno, file));
+            if (new_pos) {
+              bindings = new_bindings;
+              some_match = t;
+              if (gt(new_pos, max_pos))
+                max_pos = new_pos;
+              if (directive == cases_s || directive == none_s)
+                break;
+            } else {
+              all_match = nil;
+              if (directive == all_s)
+                break;
+            }
+          }
+
+          if (directive == all_s && !all_match) {
+            debuglf(spec_lineno, lit("all: some clauses didn't match"), nao);
+            return nil;
+          }
+
+          if ((directive == some_s || directive == cases_s) && !some_match) {
+            debuglf(spec_lineno, lit("some/cases: no clauses matched"), nao);
+            return nil;
+          }
+
+          if (directive == none_s && some_match) {
+            debuglf(spec_lineno, lit("none: some clauses matched"), nao);
+            return nil;
+          }
+
+          /* No check for maybe, since it always succeeds. */
+
+          pos = max_pos;
         } else if (consp(directive) || stringp(directive)) {
           cons_bind (find, len, search_str_tree(dataline, elem, pos, nil));
           val newpos;
@@ -1268,8 +1314,8 @@ repeat_spec_same_data:
                         if3(data, cons(data, num(data_lineno)), t));
           return nil;
         }
-      } else if (sym == some_s || sym == all_s || sym == none_s ||
-                 sym == maybe_s || sym == cases_s)
+      } else if ((sym == some_s || sym == all_s || sym == none_s ||
+                 sym == maybe_s || sym == cases_s) && second(first_spec) != t)
       {
         val specs;
         val all_match = t;
@@ -1302,9 +1348,9 @@ repeat_spec_same_data:
             if (sym == cases_s || sym == none_s)
               break;
           } else {
+            all_match = nil;
             if (sym == all_s)
               break;
-            all_match = nil;
           }
         }
 
