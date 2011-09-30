@@ -1,5 +1,16 @@
 2011-09-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (match_line): Implemented horizontal all, some,
+	none, maybe and cases directives.
+	(match_files): Recognize horizontal version of these directives
+	by the presence of the extra symbol t and do not process.
+	Also, bugfix in the all directive: not resetting the
+	all_match flag when short circuiting out.
+	* parser.y (clause_parts_h, additional_parts_h): New nonterminals.
+	(elem): New clauses added.
+
+2011-09-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (chars_k): New variable.
 	(match_line): Keyword arguments in coll implemented.
 	(match_init): chars_k variable initialized.
