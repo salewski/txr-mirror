@@ -1,15 +1,41 @@
                               Txr Internals Guide
-                        Kaz Kylheku <kkylheku@gmail.com>
+                         Kaz Kylheku <kaz@kylheku.com>
 
+CONTENTS:
 
-0  Overview
+0.  Overview
+1.  Coding Practice
+1.2  Program File Structure
+1.3  Style
+1.3  Error Handling
+1.4  I/O
+1.5  Regression
+2.  Dynamic Types
+2.1  Two Kinds of Values
+2.1  Pointer Bitfield
+2.2  Heap Objects
+2.3  The COBJ type
+2.4  Strings
+2.4.1  Encapsulated C Strings
+3.  Garbage Collection
+3.1  Root Pointers
+3.2  GC-safe Code
+3.2.1  Rule One: Full Initialization
+3.2.2  Rule Two: Make it Reachable
+3.3  Weak Reference Support
+4.  Debugging
+4.2.  Debugging the Yacc-generated Parser
+4.3.  Debugging GC Issues
+4.4.  Valgrind: Your Friend
+
+0. Overview
 
 This is an internals guide to someone who wants to understand, and possibly
 change or extend the txr program. The purpose is to give explanations,
 provide rationale and make coding recommendations.
 
 
-1  Coding Practice
+1. Coding Practice
 
 1.1  Language
 
@@ -252,7 +278,7 @@ refer to strings that no longer exist, because the garbage collector will
 recognize these pointers by their type tag and not use them.
 
 
-3  Garbage Collection
+3. Garbage Collection
 
 Txr has a fairly simple mark-and-sweep garbage collector. The collector marks
 objects by performing a depth-first-search over the graph formed by
@@ -514,3 +540,183 @@ marking is completed in hash_process_weak. After the lapsed entries are removed
 transitively causes the chain conses to be marked. The conses that were removed
 due to the lapsing of weak keys thus stay unmarked and are reclaimed during
 the sweep phase of the gc, which soon follows.
+
+
+4. Debugging
+
+4.1. Using gdb
+
+Debugging txr is mostly easy thanks to the dynamic types. The function d()
+is provided which makes it easy to print an object.
+
+Most of the Lisp-like functions in txr can be invoked from the debugger.
+You can construct objects, inspect values with complex expressions etc.
+
+If the problem you're debugging can be reproduced in an unoptimized build,
+then use that. It's much better because values are not optimized out.
+Simply run
+
+ ./configure opt_flags=
+
+then "make clean" and "make".
+
+If the program catches an exception and terminates cleanly, then
+place a breapoint on the function "uw_throw" to catch this in the debugger.
+
+Sample debug session:
+
+      $ gdb ./txr
+      GNU gdb (GDB) Fedora (6.8.50.20090302-23.fc11)
+      Copyright (C) 2009 Free Software Foundation, Inc.
+      License GPLv3+: GNU GPL version 3 or later
+      <http://gnu.org/licenses/gpl.html>
+      This is free software: you are free to change and redistribute it.
+      There is NO WARRANTY, to the extent permitted by law.  Type "show
+      copying" and "show warranty" for details.
+      This GDB was configured as "i586-redhat-linux-gnu".
+      For bug reporting instructions, please see:
+      <http://www.gnu.org/software/gdb/bugs/>...
+      (gdb) b match_line
+      Breakpoint 1 at 0x80503a2: file match.c, line 295.
+      (gdb) r -c '@a' -
+      Starting program: /home/kaz/txr/txr -c '@a' -
+      hello
+
+      Breakpoint 1, match_line (bindings=0x0, specline=0xb7fd163c, 
+          dataline=0xb7fd15bc, pos=0x1, spec_lineno=0x5, data_lineno=0x5, 
+          file=0xb7fd15fc) at match.c:295
+      295         if (specline == nil)
+      (gdb) p d(specline)
+      ((sys:var a))
+      $1 = void
+      (gdb) p d(car(specline))
+      (sys:var a)
+      $2 = void
+      (gdb) p d(dataline)
+      "hello"
+      $3 = void
+      (gdb) n
+      298         elem = first(specline);
+      (gdb) n
+      300         switch (elem ? type(elem) : 0) {
+      (gdb) p d(elem)
+      (sys:var a)
+      $4 = void
+      (gdb) n
+      303             val directive = first(elem);
+      (gdb) n
+      305             if (directive == var_s) {
+      (gdb) n
+      306               val sym = second(elem);
+      (gdb) n
+      307               val pat = third(elem);
+      (gdb) p d(sym)
+      a
+      $5 = void
+      (gdb) n
+      308               val modifier = fourth(elem);
+      (gdb) n
+      309               val pair = assoc(bindings, sym); /* var exists alr...
+      */
+      (gdb) p d(bindings)
+      nil
+      $6 = void
+      (gdb) n
+      311               if (gt(length(modifier), one)) {
+      (gdb) p d(length(modifier))
+      0
+      $7 = void
+      (gdb) p d(one)
+      No symbol "one" in current context.
+      (gdb) n
+      316               modifier = car(modifier);
+      (gdb) n
+      318               if (pair) {
+      (gdb) n
+      349               } else if (consp(modifier)) { /* regex variable */
+      (gdb) n
+      363               } else if (nump(modifier)) { /* fixed field */
+      (gdb) n
+      378               } else if (modifier) {
+      (gdb) n
+      381               } else if (pat == nil) { /* no modifier, no elem 
+      (gdb) n
+      382                 bindings = acons_new(bindings, sym, sub_str(data...
+      (gdb) n
+      383                 pos = length_str(dataline);
+      (gdb) p d(bindings)
+      ((a . "hello"))
+      $8 = void
+      (gdb) n
+      628           break;
+      (gdb) p d(pos)
+      5
+      $9 = void
+      (gdb) n
+      646         specline = cdr(specline);
+      (gdb) n
+      647       }
+      (gdb) n
+
+      Breakpoint 1, match_line (bindings=0xb7fd154c, specline=0x0, 
+          dataline=0xb7fd15bc, pos=0x15, spec_lineno=0x5, data_lineno=0x5, 
+          file=0xb7fd15fc) at match.c:295
+      295         if (specline == nil)
+      (gdb) n
+      649       return cons(bindings, pos);
+      (gdb) n
+      650     }
+      (gdb) n
+      match_files (spec=0xb7fd161c, files=0xb7fd15dc, bindings=0x0, 
+          first_file_parsed=0xb7feaebc, data_linenum=0x0) at match.c:1995
+      1995          if (nump(success) && c_num(success) < c_num(length_st ...
+      (gdb) quit
+
+
+4.2. Debugging the Yacc-generated Parser
+
+To debug the parser, which should be rare, you have to edit the makefiles
+(config.make is a good place) to pass the -t option to yacc to build an
+instrumented parser. To force a regeneration of the parser, remove y.tab.c and
+run make.  To see the debug trace, you must also set the yydebug variable.
+Instead of modifying the program, another way is to just set a breakpoint on
+main in gdb and do a "set yydebug=1".
+
+The file y.output is useful; it summarizes the LALR(1) state machine generated
+by the parser.
+
+
+4.3. Debugging GC Issues
+
+Use the --gc-debug option of txr to run it in a mode in which it eagerly
+reclaims garbage after nearly every operation. This slows it down, but makes it
+more likely to catch invalid uses of garbage. It works even better with
+Valgrind integration.
+
+There are other GC issues that are hard to catch, like spurious retention.
+This is when the code generated by the C compiler hangs on to an object
+which, in the source code semantics, should be garbage. It can happen,
+for example, when a variable has gone out of scope, but the stack location
+where that variable was last stored has not been overwritten.
+
+Spurious retention can also happen if a bit pattern is generated which looks
+ike a reference to an object, by chance. We share this problem with
+garbage collectors like Boehm. Luckily, unlike Boehm, we do not have this
+problem over dynamic objects, because we do not scan dynamic memory. All
+dynamic objects are registred with the garbage collector and are precisely
+traced. What isn't precisely traced is the call stack and machine context.
+
+
+4.4. Valgrind: Your Friend
+
+To get the most out running txr under valgrind, build it with valgrind support.
+Of course, you have to have the valgrind development stuff installed (so
+the valgrind.h header file is visible), not only the valgrind executables. 
+Do a 
+
+  ./configure --valgrind
+
+then rebuild. If this is enabled, txr uses the Valgrind API to inform valgrind
+about the state of allocated or unallocated areas on the garbage collected
+heap. Valgrind will be able to trap uses of objects which are marked
+as garbage.
