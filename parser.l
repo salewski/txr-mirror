@@ -99,6 +99,7 @@ void yybadtoken(int tok, val context)
   case NONE:    problem = lit("\"none\""); break;
   case MAYBE:   problem = lit("\"maybe\""); break;
   case CASES:   problem = lit("\"cases\""); break;
+  case CHOOSE:  problem = lit("\"choose\""); break;
   case AND:     problem = lit("\"and\""); break;
   case OR:      problem = lit("\"or\""); break;
   case END:     problem = lit("\"end\""); break;
@@ -255,6 +256,12 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                                   yy_pop_state();
                                   return CASES;
                                 }
+
+<SPECIAL>\({WS}choose/{ID_END}  {
+                                  yy_push_state(NESTED);
+                                  return CHOOSE;
+                                }
+
 
 <SPECIAL>\({WS}and{WS}\)        {
                                   yy_pop_state();
