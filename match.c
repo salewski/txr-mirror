@@ -375,7 +375,7 @@ static val match_line(val bindings, val specline, val dataline,
               specline = cons(pat, rest(specline));
               continue;
             }
-          } else if (modifier) {
+          } else if (modifier && modifier != t) {
             sem_error(spec_lineno, lit("invalid modifier ~s on variable ~s"),
                       modifier, sym, nao);
           } else if (pat == nil) { /* no modifier, no elem -> to end of line */

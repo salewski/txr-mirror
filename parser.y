@@ -473,7 +473,7 @@ var : IDENT                     { $$ = list(var_s, intern(string_own($1), nil),
                                   yybadtoken(yychar, lit("variable spec")); }
     ;
 
-var_op : '*'                    { $$ = t; }
+var_op : '*'                    { $$ = list(t, nao); }
        ;
 
 list : '(' exprs ')'            { $$ = $2; }
