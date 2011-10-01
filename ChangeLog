@@ -1,5 +1,14 @@
 2011-10-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	Regression bug fix: longest match variables broken by
+	2011-09-28 commit which introduced the double var match.
+
+	* match.c (match_line): Handle case where modifier is t.
+
+	* parser.y (var_op): Produce modifir as (t) rather than t.
+
+2011-10-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: Documented choose and horizontal mode for paralle
 	constructs.
 
