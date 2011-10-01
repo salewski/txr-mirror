@@ -893,10 +893,12 @@ There is no \e@ escape.
 
 Some directives are involved in structuring the overall syntax of the query.
 
-There are syntactic constraints that depend on the directive.  For instance the
-@(next) directive can take argument material, which is everything that follows
-on the same line, until the end of the line.  But @(skip) does not take
-argument material.  Most directives must be the first item of a line.
+There are syntactic constraints that depend on the directive. Some directives
+are "vertical only". They must occur on a line by themselves. If they are
+involved in additional syntax, it is line-oriented.  Others work horizontally.
+They can occur anywhere in a line, and if they are involved in syntax, it hs
+character-oriented.  Some work in both modes, with slightly different
+semantics.
 
 A summary of the available directives follows:
 
@@ -950,6 +952,10 @@ to the later clauses.
 Multiple clauses are applied to the same input. Evaluation stops on the
 first successful clause.
 
+.IP @(choose)
+Multiple clauses are applied to the same input. The one whose effect persists
+is the one which maximizes or minimizes the length of a particular variable.
+
 .IP @(define\ NAME\ (\ ARGUMENTS\ ...))
 Introduces a function. Functions are discussed in the FUNCTIONS section below.
 
@@ -972,7 +978,7 @@ Equivalent to @(and). Choice is stylistic.
 
 .IP @(end)
 Required terminator for @(some), @(all), @(none), @(maybe), @(cases),
-@(collect), @(output), and @(repeat).
+@(collect), @(coll), @(output), and @(repeat).
 
 .IP @(fail)
 Terminate the processing of a block, as if it were a failed match.
@@ -1321,11 +1327,20 @@ Example:
   @(coll)@{token /[^:]*/}:@(end)
   @(end)
 
-.SS The Some, All, None, Maybe and Cases directives
+.SS The Some, All, None, Maybe, Cases and Choose directives
 
 These directives, called the parallel directives, combine multiple subqueries,
 which are applied at the same input position, rather than to consecutive input.
-The syntax of the parallel directives follows this example:
+
+They come in vertical (line mode) and horizontal (character mode) flavors.
+
+In horizontal mode, the current position is understood to be a character
+position in the line being processed. The clauses advance this character
+position by moving it to the right.  In vertical mode, the current position is
+understood to be a line of text within the stream. A clause advances the
+position by some whole number of lines.
+
+The syntax of these parallel directives follows this example:
 
   @(some)
   subquery1
@@ -1344,12 +1359,29 @@ The syntax of the parallel directives follows this example:
   .
   @(end)
 
-The @(some), @(all), @(none), @(maybe) or @(cases) directive must appear as the
-only element in a query line. It must be followed by at least one subquery
-clause, and terminated by @(end). If there are two or more subqueries, these
-additional clauses are indicated by @(and) or @(or), which are interchangeable.
-The separator and terminator directives also must appear as the only element in
-a query line.
+And in horizontal mode:
+
+  @(some)subquery1...@(and)subquery2...@(and)subquery3...@(end)
+
+Long horizontal lines can be broken up with line continuations, allowing the
+above example to be written like this, which is considered a single logical
+line:
+
+  @(some)@\
+     subquery1...@\
+  @(and)@\
+     subquery2...@\
+  @(and)@\
+     subquery3...@\
+  @(end)
+
+The @(some), @(all), @(none), @(maybe), @(cases) or @(choose) must be followed
+by at least one subquery clause, and be terminated by @(end). If there are two
+or more subqueries, these additional clauses are indicated by @(and) or @(or),
+which are interchangeable.  The separator and terminator directives also must
+appear as the only element in a query line.
+
+The choose directive requires keyword arguments. See below.
 
 The syntax supports arbitrary nesting. For example:
 
@@ -1412,10 +1444,17 @@ collected from that clause are retained. Any remaining clauses
 after that one are not processed. If no clause matches, the
 directive fails, and produces no bindings.
 
-For all of the parallel directives other than @(none), the query advances
-the input position by the greatest number of lines that match
-in any of the successfully matching subclauses that are evaluated.
-The @(none) directive does not advance the input position.
+.IP @(choose { :longest <var> | :shortest <var> })
+Each of the clauses is matched at the current position in order. In this
+construct, bindings established an earlier clause are not visible to later
+clauses.  Although any or all of the clauses can potentially match, the clause
+which succeeds is the one which maximizes or minimizes the length of the
+text bound to the specified variable. The other clauses have no effect.
+
+For all of the parallel directives other than @(none) and @(choose), the query
+advances the input position by the greatest number of lines that match in any
+of the successfully matching subclauses that are evaluated.  The @(none)
+directive does not advance the input position.
 
 For instance if there are two subclauses, and one of them matches three lines,
 but the other one matches five lines, then the overall clause is considered to

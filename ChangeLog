@@ -1,5 +1,10 @@
 2011-10-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Documented choose and horizontal mode for paralle
+	constructs.
+
+2011-10-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	New directive: choose.
 
 	* match.c (choose_s, longest_k, shortest_k): New variables.
