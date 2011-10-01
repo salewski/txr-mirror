@@ -36,6 +36,7 @@
 #include "lib.h"
 #include "regex.h"
 #include "utf8.h"
+#include "match.h"
 #include "parser.h"
 
 int yylex(void);
@@ -57,7 +58,8 @@ static val parsed_spec;
   cnum num;
 }
 
-%token <lexeme> TEXT IDENT KEYWORD ALL SOME NONE MAYBE CASES AND OR END COLLECT
+%token <lexeme> TEXT IDENT KEYWORD ALL SOME NONE MAYBE CASES CHOOSE
+%token <lexeme> AND OR END COLLECT
 %token <lexeme> UNTIL COLL OUTPUT REPEAT REP SINGLE FIRST LAST EMPTY DEFINE
 %token <lexeme> TRY CATCH FINALLY
 %token <num> NUMBER
@@ -65,7 +67,8 @@ static val parsed_spec;
 
 %type <val> spec clauses clauses_opt clause
 %type <val> all_clause some_clause none_clause maybe_clause
-%type <val> cases_clause collect_clause clause_parts additional_parts
+%type <val> cases_clause choose_clause collect_clause
+%type <val> clause_parts additional_parts
 %type <val> output_clause define_clause try_clause catch_clauses_opt
 %type <val> line elems_opt elems clause_parts_h additional_parts_h
 %type <val> elem var var_op
@@ -77,7 +80,7 @@ static val parsed_spec;
 %type <val> strlit chrlit quasilit quasi_items quasi_item litchars
 %type <chr> regchar
 %nonassoc LOW /* used for precedence assertion */
-%nonassoc ALL SOME NONE MAYBE CASES AND OR END COLLECT UNTIL COLL
+%nonassoc ALL SOME NONE MAYBE CASES CHOOSE AND OR END COLLECT UNTIL COLL
 %nonassoc OUTPUT REPEAT REP FIRST LAST EMPTY DEFINE
 %nonassoc '[' ']' '(' ')'
 %right IDENT TEXT NUMBER '{' '}'
@@ -108,6 +111,7 @@ clause : all_clause             { $$ = list(num(lineno - 1), $1, nao); }
        | none_clause            { $$ = list(num(lineno - 1), $1, nao); }
        | maybe_clause           { $$ = list(num(lineno - 1), $1, nao); }
        | cases_clause           { $$ = list(num(lineno - 1), $1, nao); }
+       | choose_clause          { $$ = list(num(lineno - 1), $1, nao); }
        | collect_clause         { $$ = list(num(lineno - 1), $1, nao); }
        | define_clause          { $$ = list(num(lineno - 1),
                                             define_transform($1), nao); }
@@ -118,7 +122,7 @@ clause : all_clause             { $$ = list(num(lineno - 1), $1, nao); }
                                   yyerror("repeat outside of output"); }
        ;
 
-all_clause : ALL newl clause_parts      { $$ = cons(all_s, $3); }
+all_clause : ALL newl clause_parts      { $$ = list(all_s, $3); }
            | ALL newl error             { $$ = nil;
                                           yybadtoken(yychar,
                                                      lit("all clause")); }
@@ -127,7 +131,7 @@ all_clause : ALL newl clause_parts      { $$ = cons(all_s, $3); }
 
            ;
 
-some_clause : SOME newl clause_parts    { $$ = cons(some_s, $3); }
+some_clause : SOME newl clause_parts    { $$ = list(some_s, $3); }
             | SOME newl error           { $$ = nil;
                                           yybadtoken(yychar,
                                                      lit("some clause")); }
@@ -135,7 +139,7 @@ some_clause : SOME newl clause_parts    { $$ = cons(some_s, $3); }
                                           yyerror("empty some clause"); }
             ;
 
-none_clause : NONE newl clause_parts    { $$ = cons(none_s, $3); }
+none_clause : NONE newl clause_parts    { $$ = list(none_s, $3); }
             | NONE newl error           { $$ = nil;
                                           yybadtoken(yychar,
                                                      lit("none clause")); }
@@ -143,7 +147,7 @@ none_clause : NONE newl clause_parts    { $$ = cons(none_s, $3); }
                                           yyerror("empty none clause"); }
             ;
 
-maybe_clause : MAYBE newl clause_parts  { $$ = cons(maybe_s, $3); }
+maybe_clause : MAYBE newl clause_parts  { $$ = list(maybe_s, $3); }
              | MAYBE newl error         { $$ = nil;
                                           yybadtoken(yychar,
                                                      lit("maybe clause")); }
@@ -151,13 +155,24 @@ maybe_clause : MAYBE newl clause_parts  { $$ = cons(maybe_s, $3); }
                                           yyerror("empty maybe clause"); }
              ;
 
-cases_clause : CASES newl clause_parts  { $$ = cons(cases_s, $3); }
+cases_clause : CASES newl clause_parts  { $$ = list(cases_s, $3); }
              | CASES newl error         { $$ = nil;
                                           yybadtoken(yychar,
                                                      lit("cases clause")); }
              | CASES newl END newl      { $$ = nil;
                                           yyerror("empty cases clause"); }
              ;
+
+choose_clause : CHOOSE exprs_opt ')'
+                newl clause_parts       { $$ = list(choose_s, $5, $2); }
+              | CHOOSE exprs_opt ')'
+                newl error              { $$ = nil;
+                                          yybadtoken(yychar,
+                                                     lit("choose clause")); }
+              | CHOOSE exprs_opt ')'
+                newl END newl           { $$ = nil;
+                                          yyerror("empty choose clause"); }
+              ;
 
 collect_clause : COLLECT exprs_opt ')' newl
                  clauses END newl                { $$ = list(collect_s,
@@ -207,16 +222,19 @@ elem : TEXT                     { $$ = string_own($1); }
        UNTIL elems END          { $$ = list(coll_s, $4, $6, $2, nao); }
      | COLL error               { $$ = nil;
                                   yybadtoken(yychar, lit("coll clause")); }
-     | ALL clause_parts_h       { $$ = cons(all_s, cons(t, $2)); }
+     | ALL clause_parts_h       { $$ = list(all_s, t, $2); }
      | ALL END                  { yyerror("empty all clause"); }
-     | SOME clause_parts_h      { $$ = cons(some_s, cons(t, $2)); }
+     | SOME clause_parts_h      { $$ = list(some_s, t, $2); }
      | SOME END                 { yyerror("empty some clause"); }
-     | NONE clause_parts_h      { $$ = cons(none_s, cons(t, $2)); }
+     | NONE clause_parts_h      { $$ = list(none_s, t, $2); }
      | NONE END                 { yyerror("empty none clause"); }
-     | MAYBE clause_parts_h     { $$ = cons(maybe_s, cons(t, $2)); }
+     | MAYBE clause_parts_h     { $$ = list(maybe_s, t, $2); }
      | MAYBE END                { yyerror("empty maybe clause"); }
-     | CASES clause_parts_h     { $$ = cons(cases_s, cons(t, $2)); }
+     | CASES clause_parts_h     { $$ = list(cases_s, t, $2); }
      | CASES END                { yyerror("empty cases clause"); }
+     | CHOOSE exprs_opt ')'
+       clause_parts_h           { $$ = list(choose_s, t, $4, $2); }
+     | CHOOSE exprs_opt ')' END { yyerror("empty cases clause"); }
      ;
 
 clause_parts_h : elems additional_parts_h { $$ = cons($1, $2); }
@@ -339,6 +357,8 @@ out_clause : repeat_clause              { $$ = list(num(lineno - 1), $1, nao); }
                                           yyerror("match clause in output"); }
            | cases_clause               { $$ = nil;
                                           yyerror("match clause in output"); }
+           | choose_clause              { $$ = nil;
+                                          yyerror("choose clause in output"); }
            | collect_clause             { $$ = nil;
                                           yyerror("match clause in output"); }
            | define_clause              { $$ = nil;

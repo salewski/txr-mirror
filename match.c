@@ -48,6 +48,7 @@
 int output_produced;
 
 val mingap_k, maxgap_k, gap_k, times_k, lines_k, chars_k;
+val choose_s, longest_k, shortest_k;
 
 static void debugf(val fmt, ...)
 {
@@ -564,25 +565,54 @@ next_coll:
           }
         } else if (directive == all_s || directive == some_s ||
                    directive == none_s || directive == maybe_s ||
-                   directive == cases_s)
+                   directive == cases_s || directive == choose_s)
         {
-          val specs;
+          val specs = third(elem);
+          val plist = fourth(elem);
           val all_match = t;
           val some_match = nil;
           val max_pos = pos;
+          val choose_shortest = getplist(plist, shortest_k);
+          val choose_longest = getplist(plist, longest_k);
+          val choose_sym = or2(choose_longest, choose_shortest);
+          val choose_bindings = bindings, choose_pos = pos;
+          val choose_minmax = choose_longest ? num(-1) : num(NUM_MAX);
+          val iter;
 
-          for (specs = rest(rest(elem)); specs != nil; specs = cdr(specs)) {
-            val nested_spec = first(specs);
+          if (choose_longest && choose_shortest)
+            sem_error(spec_lineno, lit("choose: both :shortest and :longest specified"), nao);
+
+          if (directive == choose_s && !choose_sym)
+            sem_error(spec_lineno, lit("choose: criterion not specified"), nao);
+          for (iter = specs; iter != nil; iter = cdr(iter)) {
+            val nested_spec = first(iter);
             cons_bind (new_bindings, new_pos,
                        match_line(bindings, nested_spec, dataline, pos,
                                   spec_lineno, data_lineno, file));
             if (new_pos) {
-              bindings = new_bindings;
               some_match = t;
               if (gt(new_pos, max_pos))
                 max_pos = new_pos;
               if (directive == cases_s || directive == none_s)
                 break;
+              if (directive == choose_s) {
+                val binding = choose_sym ? assoc(new_bindings, choose_sym) : nil;
+                val value = cdr(binding);
+
+                if (value) {
+                  val len = length_str(value);
+
+                  if ((choose_longest && gt(len, choose_minmax)) ||
+                      (choose_shortest && lt(len, choose_minmax)))
+                  {
+                    choose_minmax = len;
+                    choose_bindings = new_bindings;
+                    choose_pos = new_pos;
+                  }
+                }
+              } else {
+                bindings = new_bindings;
+              }
             } else {
               all_match = nil;
               if (directive == all_s)
@@ -607,7 +637,12 @@ next_coll:
 
           /* No check for maybe, since it always succeeds. */
 
-          pos = max_pos;
+          if (directive == choose_s) {
+            bindings = choose_bindings;
+            pos = choose_pos;
+          } else {
+            pos = max_pos;
+          }
         } else if (consp(directive) || stringp(directive)) {
           cons_bind (find, len, search_str_tree(dataline, elem, pos, nil));
           val newpos;
@@ -1315,17 +1350,31 @@ repeat_spec_same_data:
           return nil;
         }
       } else if ((sym == some_s || sym == all_s || sym == none_s ||
-                 sym == maybe_s || sym == cases_s) && second(first_spec) != t)
+                  sym == maybe_s || sym == cases_s || sym == choose_s) && 
+                 second(first_spec) != t)
       {
-        val specs;
         val all_match = t;
         val some_match = nil;
         val max_line = zero;
         val max_data = nil;
+        val specs = second(first_spec);
+        val plist = third(first_spec);
+        val choose_shortest = getplist(plist, shortest_k);
+        val choose_longest = getplist(plist, longest_k);
+        val choose_sym = or2(choose_longest, choose_shortest);
+        val choose_bindings = bindings, choose_line = zero, choose_data = nil;
+        val choose_minmax = choose_longest ? num(-1) : num(NUM_MAX);
+        val iter;
 
-        for (specs = rest(first_spec); specs != nil; specs = rest(specs))
+        if (choose_longest && choose_shortest)
+          sem_error(spec_linenum, lit("choose: both :shortest and :longest specified"), nao);
+
+        if (sym == choose_s && !choose_sym)
+          sem_error(spec_linenum, lit("choose: criterion not specified"), nao);
+
+        for (iter = specs; iter != nil; iter = rest(iter))
         {
-          val nested_spec = first(specs);
+          val nested_spec = first(iter);
           val data_linenum = num(data_lineno);
 
           cons_bind (new_bindings, success,
@@ -1333,8 +1382,35 @@ repeat_spec_same_data:
                                  data, data_linenum));
 
           if (success) {
-            bindings = new_bindings;
             some_match = t;
+
+            if (sym == choose_s) {
+              val binding = choose_sym ? assoc(new_bindings, choose_sym) : nil;
+              val value = cdr(binding);
+
+              if (value) {
+                val len = length_str(value);
+
+                if ((choose_longest && gt(len, choose_minmax)) ||
+                    (choose_shortest && lt(len, choose_minmax)))
+                {
+                  choose_minmax = len;
+                  choose_bindings = new_bindings;
+
+                  if (success == t) {
+                    choose_data = t;
+                  } else {
+                    cons_bind (new_data, new_line, success);
+                    choose_data = new_data;
+                    choose_line = new_line;
+                  }
+                }
+              }
+            } else {
+              /* choose does not propagate bindings between clauses! */
+              bindings = new_bindings;
+            }
+
 
             if (success == t) {
               max_data = t;
@@ -1371,7 +1447,15 @@ repeat_spec_same_data:
 
         /* No check for maybe, since it always succeeds. */
 
-        if (consp(max_data)) {
+        if (choose_sym) {
+          if (consp(choose_data)) {
+            data_lineno = c_num(choose_line);
+            data = choose_data;
+          } else if (choose_data == t) {
+            data = nil;
+          }
+          bindings = choose_bindings;
+        } else if (consp(max_data)) {
           data_lineno = c_num(max_line);
           data = max_data;
         } else if (max_data == t) {
@@ -2038,4 +2122,7 @@ void match_init(void)
   times_k = intern(lit("times"), keyword_package);
   lines_k = intern(lit("lines"), keyword_package);
   chars_k = intern(lit("chars"), keyword_package);
+  choose_s = intern(lit("choose"), user_package);
+  longest_k = intern(lit("longest"), keyword_package);
+  shortest_k = intern(lit("shortest"), keyword_package);
 }

@@ -26,3 +26,4 @@
 
 void match_init(void);
 int extract(val spec, val filenames, val bindings);
+extern val choose_s;

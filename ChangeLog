@@ -1,3 +1,27 @@
+2011-10-01  Kaz Kylheku  <kaz@kylheku.com>
+
+	New directive: choose.
+
+	* match.c (choose_s, longest_k, shortest_k): New variables.
+	(match_line, match_files): Introduced choose directive.
+	(match_init): Initialize new variables.
+
+	* match.h (choose_s): Declared.
+
+	* parser.l (yybadtoken): Handle CHOOSE.
+	(CHOOSE): Clause added for returning this token.
+
+	* parser.y: Added #include "match.h".
+	(CHOOSE): New token symbol.
+	(choose_clause): New nonterminal symbol.
+	(clause): choose_clause added.
+	(all_clause, some_clause, none_clause,  maybe_clause,
+	cases_clause): Abstract syntax tree tweaked.
+	(choose_clause): New syntax.
+	(elem): Abstract syntax trees tweaked for many clauses.
+	New CHOOSE clauses.
+	(out_clause): New error case for choose_clause.
+
 2011-09-30  Kaz Kylheku  <kaz@kylheku.com>
 
 	* HACKING: Updated with debugging hints.
