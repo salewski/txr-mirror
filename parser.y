@@ -122,7 +122,7 @@ clause : all_clause             { $$ = list(num(lineno - 1), $1, nao); }
                                   yyerror("repeat outside of output"); }
        ;
 
-all_clause : ALL newl clause_parts      { $$ = list(all_s, $3); }
+all_clause : ALL newl clause_parts      { $$ = list(all_s, $3, nao); }
            | ALL newl error             { $$ = nil;
                                           yybadtoken(yychar,
                                                      lit("all clause")); }
@@ -131,7 +131,7 @@ all_clause : ALL newl clause_parts      { $$ = list(all_s, $3); }
 
            ;
 
-some_clause : SOME newl clause_parts    { $$ = list(some_s, $3); }
+some_clause : SOME newl clause_parts    { $$ = list(some_s, $3, nao); }
             | SOME newl error           { $$ = nil;
                                           yybadtoken(yychar,
                                                      lit("some clause")); }
@@ -139,7 +139,7 @@ some_clause : SOME newl clause_parts    { $$ = list(some_s, $3); }
                                           yyerror("empty some clause"); }
             ;
 
-none_clause : NONE newl clause_parts    { $$ = list(none_s, $3); }
+none_clause : NONE newl clause_parts    { $$ = list(none_s, $3, nao); }
             | NONE newl error           { $$ = nil;
                                           yybadtoken(yychar,
                                                      lit("none clause")); }
@@ -147,7 +147,7 @@ none_clause : NONE newl clause_parts    { $$ = list(none_s, $3); }
                                           yyerror("empty none clause"); }
             ;
 
-maybe_clause : MAYBE newl clause_parts  { $$ = list(maybe_s, $3); }
+maybe_clause : MAYBE newl clause_parts  { $$ = list(maybe_s, $3, nao); }
              | MAYBE newl error         { $$ = nil;
                                           yybadtoken(yychar,
                                                      lit("maybe clause")); }
@@ -155,7 +155,7 @@ maybe_clause : MAYBE newl clause_parts  { $$ = list(maybe_s, $3); }
                                           yyerror("empty maybe clause"); }
              ;
 
-cases_clause : CASES newl clause_parts  { $$ = list(cases_s, $3); }
+cases_clause : CASES newl clause_parts  { $$ = list(cases_s, $3, nao); }
              | CASES newl error         { $$ = nil;
                                           yybadtoken(yychar,
                                                      lit("cases clause")); }
@@ -164,7 +164,7 @@ cases_clause : CASES newl clause_parts  { $$ = list(cases_s, $3); }
              ;
 
 choose_clause : CHOOSE exprs_opt ')'
-                newl clause_parts       { $$ = list(choose_s, $5, $2); }
+                newl clause_parts       { $$ = list(choose_s, $5, $2, nao); }
               | CHOOSE exprs_opt ')'
                 newl error              { $$ = nil;
                                           yybadtoken(yychar,
@@ -222,18 +222,18 @@ elem : TEXT                     { $$ = string_own($1); }
        UNTIL elems END          { $$ = list(coll_s, $4, $6, $2, nao); }
      | COLL error               { $$ = nil;
                                   yybadtoken(yychar, lit("coll clause")); }
-     | ALL clause_parts_h       { $$ = list(all_s, t, $2); }
+     | ALL clause_parts_h       { $$ = list(all_s, t, $2, nao); }
      | ALL END                  { yyerror("empty all clause"); }
-     | SOME clause_parts_h      { $$ = list(some_s, t, $2); }
+     | SOME clause_parts_h      { $$ = list(some_s, t, $2, nao); }
      | SOME END                 { yyerror("empty some clause"); }
-     | NONE clause_parts_h      { $$ = list(none_s, t, $2); }
+     | NONE clause_parts_h      { $$ = list(none_s, t, $2, nao); }
      | NONE END                 { yyerror("empty none clause"); }
-     | MAYBE clause_parts_h     { $$ = list(maybe_s, t, $2); }
+     | MAYBE clause_parts_h     { $$ = list(maybe_s, t, $2, nao); }
      | MAYBE END                { yyerror("empty maybe clause"); }
-     | CASES clause_parts_h     { $$ = list(cases_s, t, $2); }
+     | CASES clause_parts_h     { $$ = list(cases_s, t, $2, nao); }
      | CASES END                { yyerror("empty cases clause"); }
      | CHOOSE exprs_opt ')'
-       clause_parts_h           { $$ = list(choose_s, t, $4, $2); }
+       clause_parts_h           { $$ = list(choose_s, t, $4, $2, nao); }
      | CHOOSE exprs_opt ')' END { yyerror("empty cases clause"); }
      ;
 
