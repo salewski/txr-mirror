@@ -1,5 +1,38 @@
 2011-10-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 038
+
+	New eof directive.
+
+	Fixes in skip directive to work very well with eof.
+
+	Consecutive variable matching semantics improved; concept of double
+	variable match introduced for unbound variable followed by
+	regex variable.
+
+	Directives collect and coll have keyword arguments for more control
+	over their behavior.
+
+	Paralle directives (all, some, none, ...) are available in
+	horizontal mode.
+
+	New choose directive for selecting one of numerous alternatives
+
+	GC bugfix in new filtering code.
+
+	The code has an issue compling with GNU C++ instead of C,
+	which is something that is supported by this project.
+	Not a release-blocking issue. Not easy to fix without
+	restructuring some code.
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+2011-10-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	Maintaining C++ compiling (except for two issues that will
 	need another commit).
 
