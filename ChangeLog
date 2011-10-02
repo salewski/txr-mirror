@@ -1,5 +1,16 @@
 2011-10-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	New test case, covering exception handling across nested
+	function invocations.
+
+	* Makefile (TEST): Test targets marked as .PHONY, because they are.
+
+	* tests/007/except-1.expected: New file.
+	* tests/007/except-1.out: New file.
+	* tests/007/except-1.txr: New file.
+
+2011-10-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.y (all_clause, some_clause, none_clause, maybe_clause,
 	cases_clause, choose_clause, elem): Regression bug fix: bad list calls
 	in parser, lacking nao terminator.

@@ -77,7 +77,7 @@ depend:
 TESTS := $(patsubst $(top_srcdir)/%.txr,./%.ok,\
                     $(shell find $(top_srcdir)/tests -name '*.txr' | sort))
 
-.PHONY: tests
+.PHONY: tests $(TEST)
 tests: $(TESTS)
 	@echo "** tests passed!"
 
