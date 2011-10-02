@@ -542,6 +542,8 @@ val filter_k, to_html_k, from_html_k;
 
 void filter_init(void)
 {
+  protect(&filters, (val *) 0);
+
   filters = make_hash(nil, nil);
   filter_k = intern(lit("filter"), keyword_package);
   to_html_k = intern(lit("to_html"), keyword_package);

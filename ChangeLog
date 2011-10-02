@@ -1,5 +1,11 @@
 2011-10-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	* filter.c (filters, filter_init): Serious gc bug fixed: neglected to
+	inform the garbage collector about the filters global variable.
+	Ouch!
+
+2011-10-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	New test case under tests/008.
 
 	* Makefile: Made previous TXR_ARGS for 008 specific
