@@ -445,6 +445,14 @@ INLINE val eq(val a, val b) { return ((a) == (b) ? t : nil); }
   obj_t *CAR = car(c_o_n_s ## CAR ## CDR);      \
   obj_t *CDR = cdr(c_o_n_s ## CAR ## CDR)
 
+#define cons_set(CAR, CDR, CONS)                \
+  do {                                          \
+     obj_t *c_o_n_s ## CAR ## CDR = CONS;       \
+     CAR = car(c_o_n_s ## CAR ## CDR);          \
+     CDR = cdr(c_o_n_s ## CAR ## CDR);          \
+  } while (0)
+
+
 #define zero num_fast(0)
 #define one num_fast(1)
 #define two num_fast(2)

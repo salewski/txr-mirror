@@ -1,3 +1,16 @@
+2011-10-02  Kaz Kylheku  <kaz@kylheku.com>
+
+	Compiles as C++ again.
+
+	* lib.h (cons_set): New macro.
+
+	* match.c (match_line, match_files): In collect clause handlers,
+	move variable declarations above goto, and initialize with
+	cons_set, instead of declaring and initializing with cons_bind.
+	This eliminates the stupid C++ error that goto skips a variable
+	initialization (which happens even when it can be trivially
+	proven that the has no next use at the goto site!)
+
 2011-10-01  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 038

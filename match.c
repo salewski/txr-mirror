@@ -495,6 +495,8 @@ static val match_line(val bindings, val specline, val dataline,
             break;
 
           for (;;) {
+            val new_bindings = nil, new_pos = nil;
+
             if ((gap || min) && mincounter < cmin)
               goto next_coll;
 
@@ -502,9 +504,9 @@ static val match_line(val bindings, val specline, val dataline,
               break;
 
             {
-              cons_bind (new_bindings, new_pos,
-                         match_line(bindings, coll_specline, dataline, pos,
-                                    spec_lineno, data_lineno, file));
+              cons_set (new_bindings, new_pos,
+                        match_line(bindings, coll_specline, dataline, pos,
+                                   spec_lineno, data_lineno, file));
 
               if (until_specline) {
                 cons_bind (until_bindings, until_pos,
@@ -1499,6 +1501,8 @@ repeat_spec_same_data:
         result = t;
 
         while (data) {
+          val new_bindings = nil, success = nil;
+
           if ((gap || min) && mincounter < cmin)
             goto next_collect;
 
@@ -1506,9 +1510,9 @@ repeat_spec_same_data:
             break;
 
           {
-            cons_bind (new_bindings, success,
-                       match_files(coll_spec, files, bindings,
-                                   data, num(data_lineno)));
+            cons_set (new_bindings, success,
+                      match_files(coll_spec, files, bindings,
+                                  data, num(data_lineno)));
 
             /* Until clause sees un-collated bindings from collect. */
             if (until_spec)
