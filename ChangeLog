@@ -13,7 +13,7 @@
 	Directives collect and coll have keyword arguments for more control
 	over their behavior.
 
-	Paralle directives (all, some, none, ...) are available in
+	Parallel directives (all, some, none, ...) are available in
 	horizontal mode.
 
 	New choose directive for selecting one of numerous alternatives
