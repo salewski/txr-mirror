@@ -356,7 +356,7 @@ val reduce_left(val fun, val list, val init, val key);
 val bind2(val fun2, val arg);
 val bind2other(val fun2, val arg2);
 val chain(val first_fun, ...);
-val and(val first_fun, ...);
+val andf(val first_fun, ...);
 val vector(val alloc);
 val vec_get_fill(val vec);
 val vec_set_fill(val vec, val fill);

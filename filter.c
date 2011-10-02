@@ -33,6 +33,7 @@
 #include "hash.h"
 #include "unwind.h"
 #include "filter.h"
+#include "gc.h"
 
 static val make_trie(void)
 {
@@ -127,7 +128,7 @@ val get_filter_trie(val sym)
 }
 
 struct filter_pair {
-  wchar_t *key, *value;
+  const wchar_t *key, *value;
 };
 
 static val build_filter(struct filter_pair *pair, val compress_p)
@@ -483,7 +484,7 @@ static struct filter_pair from_html_table[] = {
 
 static val html_hex_continue(val hexlist, val ch)
 {
-  static wchar_t *hexdigs = L"0123456789ABCDEF";
+  static const wchar_t *hexdigs = L"0123456789ABCDEF";
 
   if (iswxdigit(c_chr(ch))) {
     return func_f1(cons(ch, hexlist), html_hex_continue);

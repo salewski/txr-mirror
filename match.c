@@ -1942,18 +1942,18 @@ repeat_spec_same_data:
           sem_error(spec_linenum, lit("deffilter: ~a is not a symbol"),
                     first(first_spec), nao);
 
-        if (!all_satisfy(table, and(func_n1(listp), 
-                                    chain(func_n1(length),
-                                          bind2(func_n2(eq), two),
-                                          nao),
-                                    chain(func_n1(first),
-                                          func_n1(stringp), 
-                                          nao),
-                                    chain(func_n1(second),
-                                          func_n1(stringp), 
-                                          nao), 
-                                    nao),
-                                 nil))
+        if (!all_satisfy(table, andf(func_n1(listp), 
+                                     chain(func_n1(length),
+                                           bind2(func_n2(eq), two),
+                                           nao),
+                                     chain(func_n1(first),
+                                           func_n1(stringp), 
+                                           nao),
+                                     chain(func_n1(second),
+                                           func_n1(stringp), 
+                                           nao), 
+                                     nao),
+                                  nil))
           sem_error(spec_linenum, 
                     lit("deffilter arguments must be string pairs"),
                     nao);

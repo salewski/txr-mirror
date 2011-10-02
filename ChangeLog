@@ -1,5 +1,22 @@
 2011-10-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	Maintaining C++ compiling (except for two issues that will
+	need another commit).
+
+	* filter.c: Include "gc.h" for prototype of protect.
+	(struct filter_pair): Use const wchar_t *, so we can assign
+	literals.
+	(html_hex_continue): Ditto.
+
+	* lib.c (and): Function renamed to andf, since and is a C++
+	operator.
+
+	* lib.h (and): Declaration renamed.
+
+	* match.c (match_files): Use of and updated to andf.
+
+2011-10-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	HACKING: Clarified that --vg-debug is also needed to turn on on
 	the Valgrind support at run-time, in addition to building it in.
 
