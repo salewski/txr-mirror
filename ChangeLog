@@ -1,5 +1,15 @@
 2011-10-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	New test case, covering some filtering from HTML/XML.
+
+	* Makefile: Defined TXR_ARGS for new test case.
+
+	* tests/008/students.expected: New file.
+	* tests/008/students.txr: New file.
+	* tests/008/students.xml: New file.
+
+2011-10-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	* filter.c (filters, filter_init): Serious gc bug fixed: neglected to
 	inform the garbage collector about the filters global variable.
 	Ouch!
