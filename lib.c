@@ -1515,7 +1515,7 @@ static val do_and(val fun1_list, val arg)
   return t;
 }
 
-val and(val first_fun, ...)
+val andf(val first_fun, ...)
 {
   va_list vl;
   list_collect_decl (out, iter);
