@@ -1,5 +1,19 @@
 2011-10-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	New test case under tests/008.
+
+	* Makefile: Made previous TXR_ARGS for 008 specific
+	to tokenizing test case, and introduced separate TXR_ARGS
+	for this test case.
+
+	* tests/008/configfile: New file.
+
+	* tests/008/configfile.expected: New file.
+
+	* tests/008/configfile.txr: New file.
+
+2011-10-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	Tokenizing test case, exercising for @(coll :gap 0)
 	and horizontal @(choose :shortest ...).
 

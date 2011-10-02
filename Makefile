@@ -86,7 +86,8 @@ tests/002/%: TXR_OPTS := -DTESTDIR=$(top_srcdir)/tests/002
 tests/004/%: TXR_ARGS := -a 123 -b -c
 tests/005/%: TXR_ARGS := $(top_srcdir)/tests/005/data
 tests/006/%: TXR_ARGS := $(top_srcdir)/tests/006/data
-tests/008/%: TXR_ARGS := $(top_srcdir)/tests/008/data
+tests/008/tokenize.ok: TXR_ARGS := $(top_srcdir)/tests/008/data
+tests/008/configfile.ok: TXR_ARGS := $(top_srcdir)/tests/008/configfile
 
 tests/002/%: TXR_SCRIPT_ON_CMDLINE := y
 
