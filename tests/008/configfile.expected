@@ -1,0 +1,4 @@
+FULLNAME = Foo Barber;
+FAVOURITEFRUIT = banana;
+NEEDSPEELING = true;
+OTHERFAMILY = { Rhu Barber, Harry Barber };
