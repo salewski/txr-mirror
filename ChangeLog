@@ -1,5 +1,16 @@
 2011-10-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	Tokenizing test case, exercising for @(coll :gap 0)
+	and horizontal @(choose :shortest ...).
+
+	* Makefile: Defined TXR_ARGS for tests/008 directory.
+
+	* tests/008/data: New file.
+	* tests/008/tokenize.expected: New file.
+	* tests/008/tokenize.txr: New file.
+
+2011-10-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	New test case, covering exception handling across nested
 	function invocations.
 
