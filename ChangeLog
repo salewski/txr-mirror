@@ -1,5 +1,10 @@
 2011-10-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	HACKING: Clarified that --vg-debug is also needed to turn on on
+	the Valgrind support at run-time, in addition to building it in.
+
+2011-10-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	New test case, covering some filtering from HTML/XML.
 
 	* Makefile: Defined TXR_ARGS for new test case.

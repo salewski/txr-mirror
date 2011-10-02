@@ -718,5 +718,7 @@ Do a
 
 then rebuild. If this is enabled, txr uses the Valgrind API to inform valgrind
 about the state of allocated or unallocated areas on the garbage collected
-heap. Valgrind will be able to trap uses of objects which are marked
-as garbage.
+heap, if it is run with the --vg-debug option. Valgrind will be able to trap
+uses of objects which are marked as garbage. Using --gc-debug together
+with --vg-debug while running txr under valgrind is a pretty good way to catch
+gc-related errors.
