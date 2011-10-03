@@ -645,6 +645,17 @@ next_coll:
           } else {
             pos = max_pos;
           }
+        } else if (directive == trailer_s) {
+          cons_bind (new_bindings, new_pos,
+                     match_line(bindings, rest(specline), dataline, pos,
+                                spec_lineno, data_lineno, file));
+          (void) new_bindings;
+          if (!new_pos) {
+            LOG_MISMATCH("trailer");
+            return nil;
+          }
+          LOG_MATCH("trailer", new_pos);
+          return cons(bindings, pos);
         } else if (consp(directive) || stringp(directive)) {
           cons_bind (find, len, search_str_tree(dataline, elem, pos, nil));
           val newpos;
@@ -1185,11 +1196,7 @@ repeat_spec_same_data:
 
         debuglf(spec_linenum, lit("skip failed"), nao);
         return nil;
-      } else if (sym == trailer_s) {
-        if (rest(specline))
-          sem_error(spec_linenum,
-                    lit("unexpected material after trailer directive"), nao);
-
+      } else if (sym == trailer_s && !rest(specline)) {
         if ((spec = rest(spec)) == nil)
           break;
 
