@@ -420,7 +420,9 @@ o_elem : TEXT                   { $$ = string_own($1); }
        ;
 
 rep_elem : REP o_elems
-           rep_parts_opt END    { $$ = repeat_rep_helper(rep_s, $2, $3); }
+           rep_parts_opt END    { $$ = repeat_rep_helper(rep_s, 
+                                                         o_elems_transform($2),
+                                                         $3); }
          | REP error            { $$ = nil;
                                   yybadtoken(yychar, lit("rep clause")); }
          ;

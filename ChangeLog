@@ -1,5 +1,11 @@
 2011-10-02  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.y (rep_elem): Bugfix: forgotten o_elems_transform on
+	syntax tree of o_elems constituent, leading to problems with
+	consecutive variables in a @(rep).
+
+2011-10-02  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (match_line): Handle trailer_s directive.
 	(match_files): Remove check against trailer_s not having trailing
 	material. If it doesn't, it's a vertical directive processed here,
