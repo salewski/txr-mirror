@@ -1,3 +1,24 @@
+2011-10-03  Kaz Kylheku  <kaz@kylheku.com>
+
+	Implemented new last clause for collect and coll.
+	Bugfix in cases inside coll: was not collecting bindings.
+	Bugfix for until inside coll: was not seeing bindings
+	from main clause.
+
+	* lib.c (ldiff): New function.
+
+	* lib.h (ldiff): Declared.
+
+	* match.c (match_line): Implemented last clause. Fixed cases
+	handling by moving misplaced termination check.
+	(match_files): Implemented last clause.
+
+	* parser.y (until_last): New nonterminal symbol.
+	(collect_clause): Refactored syntax to support until and last.
+	(elem): Likewise.
+
+	* txr.1: Updated.
+
 2011-10-02  Kaz Kylheku  <kaz@kylheku.com>
 
 	* parser.y (rep_elem): Bugfix: forgotten o_elems_transform on

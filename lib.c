@@ -354,6 +354,18 @@ val nappend2(val list1, val list2)
   return list1;
 }
 
+val ldiff(val list1, val list2)
+{
+  list_collect_decl (out, tail);
+
+  while (list1 && list1 != list2) {
+    list_collect (tail, car(list1));
+    list1 = cdr(list1);
+  }
+
+  return out;
+}
+
 static val flatten_helper(val env, val item)
 {
   return flatten(item);
