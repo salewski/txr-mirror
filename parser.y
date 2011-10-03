@@ -67,7 +67,7 @@ static val parsed_spec;
 
 %type <val> spec clauses clauses_opt clause
 %type <val> all_clause some_clause none_clause maybe_clause
-%type <val> cases_clause choose_clause collect_clause
+%type <val> cases_clause choose_clause collect_clause until_last
 %type <val> clause_parts additional_parts
 %type <val> output_clause define_clause try_clause catch_clauses_opt
 %type <val> line elems_opt elems clause_parts_h additional_parts_h
@@ -179,17 +179,23 @@ collect_clause : COLLECT exprs_opt ')' newl
                                                              $5, nil, $2,
                                                              nao); }
                | COLLECT exprs_opt ')'
-                 newl clauses
-                 UNTIL newl clauses END newl    { $$ = list(collect_s, $5,
-                                                            $8, $2, nao); }
+                 newl clauses until_last
+                 newl clauses END newl    { $$ = list(collect_s, $5,
+                                                      cons($6, $8), $2, nao); }
                | COLLECT exprs_opt ')'
                  newl error             { $$ = nil;
-                                          if (yychar == UNTIL || yychar == END)
+                                          if (yychar == UNTIL ||
+                                              yychar == END ||
+                                              yychar == LAST)
                                             yyerror("empty collect");
                                           else
                                             yybadtoken(yychar,
                                                        lit("collect clause")); }
                ;
+
+until_last : UNTIL { $$ = until_s; }
+           | LAST  { $$ = last_s; } 
+           ;
 
 clause_parts : clauses additional_parts { $$ = cons($1, $2); }
              ;
@@ -219,7 +225,8 @@ elem : TEXT                     { $$ = string_own($1); }
                                             rest($1)); }
      | COLL exprs_opt ')' elems END     { $$ = list(coll_s, $4, nil, $2, nao); }
      | COLL exprs_opt ')' elems
-       UNTIL elems END          { $$ = list(coll_s, $4, $6, $2, nao); }
+       until_last elems END     { $$ = list(coll_s, $4, cons($5, $6), 
+                                            $2, nao); }
      | COLL error               { $$ = nil;
                                   yybadtoken(yychar, lit("coll clause")); }
      | ALL clause_parts_h       { $$ = list(all_s, t, $2, nao); }

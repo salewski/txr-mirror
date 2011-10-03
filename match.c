@@ -475,9 +475,10 @@ static val match_line(val bindings, val specline, val dataline,
           pos = past;
         } else if (directive == coll_s) {
           val coll_specline = second(elem);
-          val until_specline = third(elem);
+          val until_last_specline = third(elem);
           val args = fourth(elem);
           val bindings_coll = nil;
+          val last_bindings = nil;
           val max = getplist(args, maxgap_k);
           val min = getplist(args, mingap_k);
           val gap = getplist(args, gap_k);
@@ -508,17 +509,22 @@ static val match_line(val bindings, val specline, val dataline,
                         match_line(bindings, coll_specline, dataline, pos,
                                    spec_lineno, data_lineno, file));
 
-              if (until_specline) {
-                cons_bind (until_bindings, until_pos,
-                           match_line(bindings, until_specline, dataline, pos,
+              if (until_last_specline) {
+                cons_bind (sym, spec, until_last_specline);
+                cons_bind (until_last_bindings, until_pos,
+                           match_line(new_bindings, spec, 
+                                      dataline, pos,
                                       spec_lineno, data_lineno, file));
 
                 if (until_pos) {
-                  (void) until_bindings;
-                  LOG_MATCH("until", until_pos);
+                  LOG_MATCH("until/last", until_pos);
+                  if (sym == last_s) {
+                    last_bindings = ldiff(until_last_bindings, new_bindings);
+                    pos = until_pos;
+                  }
                   break;
                 } else {
-                  LOG_MISMATCH("until");
+                  LOG_MISMATCH("until/last");
                 }
               }
 
@@ -563,7 +569,7 @@ next_coll:
           for (iter = bindings_coll; iter; iter = cdr(iter)) {
             val pair = car(iter);
             val rev = cons(car(pair), nreverse(cdr(pair)));
-            bindings = cons(rev, bindings);
+            bindings = nappend2(last_bindings, cons(rev, bindings));
           }
         } else if (directive == all_s || directive == some_s ||
                    directive == none_s || directive == maybe_s ||
@@ -595,8 +601,6 @@ next_coll:
               some_match = t;
               if (gt(new_pos, max_pos))
                 max_pos = new_pos;
-              if (directive == cases_s || directive == none_s)
-                break;
               if (directive == choose_s) {
                 val binding = choose_sym ? assoc(new_bindings, choose_sym) : nil;
                 val value = cdr(binding);
@@ -615,6 +619,8 @@ next_coll:
               } else {
                 bindings = new_bindings;
               }
+              if (directive == cases_s || directive == none_s)
+                break;
             } else {
               all_match = nil;
               if (directive == all_s)
@@ -1477,9 +1483,10 @@ repeat_spec_same_data:
         goto repeat_spec_same_data;
       } else if (sym == collect_s) {
         val coll_spec = second(first_spec);
-        val until_spec = third(first_spec);
+        val until_last_spec = third(first_spec);
         val args = fourth(first_spec);
         val bindings_coll = nil;
+        val last_bindings = nil;
         val max = getplist(args, maxgap_k);
         val min = getplist(args, mingap_k);
         val gap = getplist(args, gap_k);
@@ -1521,15 +1528,29 @@ repeat_spec_same_data:
                       match_files(coll_spec, files, bindings,
                                   data, num(data_lineno)));
 
-            /* Until clause sees un-collated bindings from collect. */
-            if (until_spec)
+            /* Until/last clause sees un-collated bindings from collect. */
+            if (until_last_spec)
             {
-              cons_bind (discarded_bindings, success,
-                         match_files(until_spec, files, new_bindings,
+              cons_bind (sym, spec, until_last_spec);
+              cons_bind (until_last_bindings, success,
+                         match_files(spec, files, new_bindings,
                                      data, num(data_lineno)));
 
               if (success) {
-                (void) discarded_bindings;
+                debuglf(spec_linenum, lit("until/last matched ~a:~a"),
+                        first(files), num(data_lineno), nao);
+                /* Until discards bindings and position, last keeps them. */
+                if (sym == last_s) {
+                  last_bindings = ldiff(until_last_bindings, new_bindings);
+
+                  if (success == t) {
+                    data = t;
+                  } else {
+                    cons_bind (new_data, new_line, success);
+                    data = new_data;
+                    data_lineno = c_num(new_line);
+                  }
+                }
                 break;
               }
             }
@@ -1602,6 +1623,8 @@ repeat_spec_same_data:
           val rev = cons(car(pair), nreverse(cdr(pair)));
           bindings = cons(rev, bindings);
         }
+
+        bindings = nappend2(last_bindings, bindings);
 
         if ((spec = rest(spec)) == nil)
           break;

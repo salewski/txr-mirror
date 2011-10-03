@@ -1469,7 +1469,7 @@ The syntax of the collect directive is:
   ... lines of subquery
   @(end)
 
-or with an until clause:
+or with an until or last clause:
 
   @(collect)
   ... lines of subquery: main clause
@@ -1477,6 +1477,11 @@ or with an until clause:
   ... lines of subquery: until clause
   @(end)
 
+  @(collect)
+  ... lines of subquery: main clause
+  @(last)
+  ... lines of subquery: last clause
+  @(end)
 
 The subquery is matched repeatedly, starting at the current line.
 If it fails to match, it is tried starting at the subsequent line.
@@ -1485,18 +1490,25 @@ entire extent of matched data, if there is one. Thus, the collected regions do
 not overlap.
 
 The collect as a whole always succeeds, even if the subquery does not match at
-any position, and even if the until clause does not match. That is to say, a
-query will never fail for the reason that a collect didn't collect anything.
+any position, and even if the until/last clause does not match. That is to say,
+a query will never fail for the reason that a collect didn't collect anything.
 
-If no until clause is specified, the collect is unbounded. It consumes the entire data file. If any query material follows such the collect clause, it will
-fail if it tries to match anything in the current file; but of course, it
+If no until/last clause is specified, the collect is unbounded. It consumes the
+entire data file. If any query material follows such the collect clause, it
+will fail if it tries to match anything in the current file; but of course, it
 is possible to continue matching in another file by means of @(next).
 
-If an until clause is specified, the collection stops when that clause matches
-at the current position. When an until clause matches at a position,
-no bindings are collected at that position, even if the main clause
-matches at that position also. Moreover, the position is not advanced.
-The remainder of the query begins matching at that position.
+If an until/last clause is specified, the collection stops when that clause
+matches at the current position. 
+
+If it is an until clause, no bindings are collected at that position, even if
+the main clause matches at that position also. Moreover, the position is not
+advanced.  The remainder of the query begins matching at that position.  
+
+If it is a last clause matches, the behavior is different. Any bindings
+captured by the main clause thrown away, just like with the until clause.
+However, the bindings in the last clause itself survive, and the position
+is advanced to skip over that material.
 
 Example:
 
@@ -1504,7 +1516,9 @@ Example:
                 @a
                 @(until)
                 42
+                @b
                 @(end)
+                @c
 
   Data:         1
                 2
@@ -1516,8 +1530,22 @@ Example:
   Output:       a[0]="1"
                 a[1]="2"
                 a[2]="3"
+                c="42"
 
-The line 42 is not collected, even though it matches @a.
+The line 42 is not collected, even though it matches @a. Furthermore,
+the until does not advance the position, so variable c takes 42.
+
+If the @(until) is changed to @(last) the output will be different:
+
+  Output:       a[0]="1"
+                a[1]="2"
+                a[2]="3"
+                b=5
+                c=6
+
+The 42 is not collected into the a list, just like before. But now
+the binding captured by @b emerges. Furthermore, the position advances
+so variable now takes 6.
 
 The binding variables within the clause of a collect are treated specially.
 The multiple matches for each variable are collected into lists,
@@ -1646,6 +1674,8 @@ follows the last character of the match, if such a position exists.
 If not bounded by an until clause, it will exhaust the entire line.  If the
 until clause matches, then the collection stops at that position,
 and any bindings from that iteration are discarded.
+Like collect, coll also supports a last clause, which propagates varaible
+bindings and advances the position.
 
 Coll clauses nest, and variables bound within a coll are available to within
 the rest of the coll clause, including the until clause, and appear as single
@@ -1727,6 +1757,17 @@ Semicolon or not, the items are collected properly.
 Note that the @(end) is followed by a semicolon. That's because
 when the @(until) clause meets a match, the matching material
 is not consumed.
+
+Instead of regular expression hacks, this problem can be nicely
+solved with cases:
+
+  pattern:      @(coll)@(cases)@a @(or)@a@(end)@(end)
+  data:         1 2 3 4 5
+  result:       a[0]="1"
+                a[1]="2"
+                a[2]="3"
+                a[3]="4"
+                a[4]="5"
 
 .SS Coll Keyword Parameters
 
