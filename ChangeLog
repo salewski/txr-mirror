@@ -1,5 +1,12 @@
 2011-10-02  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (match_line): Handle trailer_s directive.
+	(match_files): Remove check against trailer_s not having trailing
+	material. If it doesn't, it's a vertical directive processed here,
+	otherwise leave it alone so match_line processed it.
+
+2011-10-02  Kaz Kylheku  <kaz@kylheku.com>
+
 	Compiles as C++ again.
 
 	* lib.h (cons_set): New macro.
