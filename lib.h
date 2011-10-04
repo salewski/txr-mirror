@@ -237,8 +237,7 @@ extern val nothrow_k, args_k;
 extern val null_string;
 extern val null_list; /* (nil) */
 
-extern val identity_f;
-extern val equal_f;
+extern val identity_f, equal_f, eq_f, car_f;
 
 extern const wchar_t *progname;
 extern val prog_string;
@@ -381,6 +380,8 @@ val acons_new(val list, val key, val value);
 val *acons_new_l(val *list, val key, val *new_p);
 val alist_remove(val list, val keys);
 val alist_remove1(val list, val key);
+val alist_nremove(val list, val keys);
+val alist_nremove1(val list, val key);
 val copy_cons(val cons);
 val copy_alist(val list);
 val mapcar(val fun, val list);
@@ -388,6 +389,8 @@ val mapcon(val fun, val list);
 val mappend(val fun, val list);
 val merge(val list1, val list2, val lessfun, val keyfun);
 val sort(val list, val lessfun, val keyfun);
+val find(val list, val key, val testfun, val keyfun);
+val set_diff(val list1, val list2, val testfun, val keyfun);
 
 void obj_print(val obj, val stream);
 void obj_pprint(val obj, val stream);

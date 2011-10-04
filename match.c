@@ -519,7 +519,8 @@ static val match_line(val bindings, val specline, val dataline,
                 if (until_pos) {
                   LOG_MATCH("until/last", until_pos);
                   if (sym == last_s) {
-                    last_bindings = ldiff(until_last_bindings, new_bindings);
+                    last_bindings = set_diff(until_last_bindings,
+                                             new_bindings, eq_f, car_f);
                     pos = until_pos;
                   }
                   break;
@@ -529,10 +530,11 @@ static val match_line(val bindings, val specline, val dataline,
               }
 
               if (new_pos) {
+                val strictly_new_bindings = set_diff(new_bindings,
+                                                     bindings, eq_f, car_f);
                 LOG_MATCH("coll", new_pos);
 
-                for (iter = new_bindings; iter && iter != bindings;
-                     iter = cdr(iter))
+                for (iter = strictly_new_bindings; iter; iter = cdr(iter))
                 {
                   val binding = car(iter);
                   val existing = assoc(bindings_coll, car(binding));
@@ -1541,8 +1543,8 @@ repeat_spec_same_data:
                         first(files), num(data_lineno), nao);
                 /* Until discards bindings and position, last keeps them. */
                 if (sym == last_s) {
-                  last_bindings = ldiff(until_last_bindings, new_bindings);
-
+                  last_bindings = set_diff(until_last_bindings,
+                                           new_bindings, eq_f, car_f);
                   if (success == t) {
                     data = t;
                   } else {
@@ -1556,11 +1558,13 @@ repeat_spec_same_data:
             }
 
             if (success) {
+              val strictly_new_bindings = set_diff(new_bindings,
+                                                   bindings, eq_f, car_f);
+
               debuglf(spec_linenum, lit("collect matched ~a:~a"),
                       first(files), num(data_lineno), nao);
 
-              for (iter = new_bindings; iter && iter != bindings;
-                  iter = cdr(iter))
+              for (iter = strictly_new_bindings; iter; iter = cdr(iter))
               {
                 val binding = car(iter);
                 val existing = assoc(bindings_coll, car(binding));
