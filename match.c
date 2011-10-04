@@ -353,7 +353,7 @@ static val match_line(val bindings, val specline, val dataline,
               return nil;
             }
             LOG_MATCH("var positive regex", past);
-            bindings = acons_new(bindings, sym, sub_str(dataline, pos, past));
+            bindings = acons(bindings, sym, sub_str(dataline, pos, past));
             pos = past;
             /* This may have another variable attached */
             if (pat) {
@@ -368,7 +368,7 @@ static val match_line(val bindings, val specline, val dataline,
               return nil;
             }
             LOG_MATCH("count based var", past);
-            bindings = acons_new(bindings, sym, trim_str(sub_str(dataline, pos, past)));
+            bindings = acons(bindings, sym, trim_str(sub_str(dataline, pos, past)));
             pos = past;
             /* This may have another variable attached */
             if (pat) {
@@ -379,7 +379,7 @@ static val match_line(val bindings, val specline, val dataline,
             sem_error(spec_lineno, lit("invalid modifier ~s on variable ~s"),
                       modifier, sym, nao);
           } else if (pat == nil) { /* no modifier, no elem -> to end of line */
-            bindings = acons_new(bindings, sym, sub_str(dataline, pos, nil));
+            bindings = acons(bindings, sym, sub_str(dataline, pos, nil));
             pos = length_str(dataline);
           } else if (type(pat) == STR) {
             val find = search_str(dataline, pat, pos, modifier);
@@ -388,7 +388,7 @@ static val match_line(val bindings, val specline, val dataline,
               return nil;
             }
             LOG_MATCH("var delimiting string", find);
-            bindings = acons_new(bindings, sym, sub_str(dataline, pos, find));
+            bindings = acons(bindings, sym, sub_str(dataline, pos, find));
             pos = plus(find, length_str(pat));
           } else if (consp(pat) && regexp(first(pat))) {
             val find = search_regex(dataline, first(pat), pos, modifier);
@@ -399,7 +399,7 @@ static val match_line(val bindings, val specline, val dataline,
               return nil;
             }
             LOG_MATCH("var delimiting regex", fpos);
-            bindings = acons_new(bindings, sym, sub_str(dataline, pos, fpos));
+            bindings = acons(bindings, sym, sub_str(dataline, pos, fpos));
             pos = plus(fpos, flen);
           } else if (consp(pat) && first(pat) == var_s) {
             /* Unbound var followed by var: the following one must either
@@ -428,10 +428,10 @@ static val match_line(val bindings, val specline, val dataline,
 
               /* Text from here to start of regex match goes to this
                  variable. */
-              bindings = acons_new(bindings, sym, sub_str(dataline, pos, fpos));
+              bindings = acons(bindings, sym, sub_str(dataline, pos, fpos));
               /* Text from start of regex match to end goes to the
                  second variable */
-              bindings = acons_new(bindings, second_sym, sub_str(dataline, fpos, plus(fpos, flen)));
+              bindings = acons(bindings, second_sym, sub_str(dataline, fpos, plus(fpos, flen)));
               LOG_MATCH("double var regex (first var)", fpos);
               pos = fpos;
               LOG_MATCH("double var regex (second var)", plus(fpos, flen));
@@ -459,7 +459,7 @@ static val match_line(val bindings, val specline, val dataline,
               LOG_MISMATCH("string");
               return nil;
             }
-            bindings = acons_new(bindings, sym, sub_str(dataline, pos, find));
+            bindings = acons(bindings, sym, sub_str(dataline, pos, find));
             pos = plus(find, len);
           } else {
             sem_error(spec_lineno,
@@ -520,7 +520,7 @@ static val match_line(val bindings, val specline, val dataline,
                   LOG_MATCH("until/last", until_pos);
                   if (sym == last_s) {
                     last_bindings = set_diff(until_last_bindings,
-                                             new_bindings, eq_f, car_f);
+                                             new_bindings, eq_f, nil);
                     pos = until_pos;
                   }
                   break;
@@ -531,7 +531,7 @@ static val match_line(val bindings, val specline, val dataline,
 
               if (new_pos) {
                 val strictly_new_bindings = set_diff(new_bindings,
-                                                     bindings, eq_f, car_f);
+                                                     bindings, eq_f, nil);
                 LOG_MATCH("coll", new_pos);
 
                 for (iter = strictly_new_bindings; iter; iter = cdr(iter))
@@ -1544,7 +1544,7 @@ repeat_spec_same_data:
                 /* Until discards bindings and position, last keeps them. */
                 if (sym == last_s) {
                   last_bindings = set_diff(until_last_bindings,
-                                           new_bindings, eq_f, car_f);
+                                           new_bindings, eq_f, nil);
                   if (success == t) {
                     data = t;
                   } else {
@@ -1559,7 +1559,7 @@ repeat_spec_same_data:
 
             if (success) {
               val strictly_new_bindings = set_diff(new_bindings,
-                                                   bindings, eq_f, car_f);
+                                                   bindings, eq_f, nil);
 
               debuglf(spec_linenum, lit("collect matched ~a:~a"),
                       first(files), num(data_lineno), nao);
