@@ -1832,6 +1832,30 @@ Example (with flatten):
                 a[3]="4"
                 a[4]="5"
 
+.SS The Merge Directive
+
+The merge directive provides a way of combining two or more variables
+in a somewhat complicated but very useful way. 
+
+To understand what merge does we first have to define a property called depth.
+The depth of an atom such as a string is defined as 1. The depth of an empty
+list is 0. The depth of a nonempty list is one plus the depth of its deepest
+element. So for instance "foo" has depth 1, ("foo") has depth 2, and ("foo"
+("bar")) has depth three.
+
+We can now define the binary (two argument) merge operation as follows.  (merge
+A B) first normalizes the values A and B such that they have normal depth.
+1. A value which has depth zero is put into a one element list. 
+2. If either value has a smaller depth than the other, it is wrapped
+in a list as many times as needed to give it equal depth.
+Finally, the values are appended together.
+
+Merge takes more than two arguments. These are merged by a left reduction. The
+leftmost two values are merged, and then this result is merged with the third
+value, and so on.
+
+Merge is useful for combining the results from collects at different
+levels of nesting such that elements are at the appropriate depth.
 
 .SS The Cat Directive
 
