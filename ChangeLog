@@ -1,5 +1,12 @@
 2011-10-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	* LICENSE, Makefile, configure, filter.c, filter.h, gc.c, gc.h, hash.c,
+	hash.h, lib.c, lib.h, match.c, match.h, parser.h, parser.l, parser.y,
+	regex.c, regex.h, stream.c, stream.h, txr.1, txr.c, txr.h, unwind.c,
+	unwind.h, utf8.c, utf8.h: Updated e-mail address.
+
+2011-10-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (match_line, match_files): Another correction to how bindings
 	are handled in collect/coll. New bindings from the main clause and
 	last clause must override old bindings. This is done by some

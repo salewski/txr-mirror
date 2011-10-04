@@ -1,5 +1,5 @@
 /* Copyright 2011
- * Kaz Kylheku <kkylheku@gmail.com>
+ * Kaz Kylheku <kaz@kylheku.com>
  * Vancouver, Canada
  * All rights reserved.
  *
