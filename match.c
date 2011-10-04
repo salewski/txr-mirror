@@ -571,7 +571,12 @@ next_coll:
           for (iter = bindings_coll; iter; iter = cdr(iter)) {
             val pair = car(iter);
             val rev = cons(car(pair), nreverse(cdr(pair)));
-            bindings = nappend2(last_bindings, cons(rev, bindings));
+            bindings = cons(rev, bindings);
+          }
+
+          if (last_bindings) {
+            bindings = set_diff(bindings, last_bindings, eq_f, car_f);
+            bindings = nappend2(last_bindings, bindings);
           }
         } else if (directive == all_s || directive == some_s ||
                    directive == none_s || directive == maybe_s ||
@@ -1622,13 +1627,18 @@ repeat_spec_same_data:
         if (!bindings_coll)
           debuglf(spec_linenum, lit("nothing was collected"), nao);
 
+        bindings = set_diff(bindings, bindings_coll, eq_f, car_f);
+
         for (iter = bindings_coll; iter; iter = cdr(iter)) {
           val pair = car(iter);
           val rev = cons(car(pair), nreverse(cdr(pair)));
           bindings = cons(rev, bindings);
         }
 
-        bindings = nappend2(last_bindings, bindings);
+        if (last_bindings) {
+          bindings = set_diff(bindings, last_bindings, eq_f, car_f);
+          bindings = nappend2(last_bindings, bindings);
+        }
 
         if ((spec = rest(spec)) == nil)
           break;

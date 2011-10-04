@@ -1,5 +1,19 @@
 2011-10-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (match_line, match_files): Another correction to how bindings
+	are handled in collect/coll. New bindings from the main clause and
+	last clause must override old bindings. This is done by some
+	additional set difference operations based on symbol identity.
+	Otherwise it is possible to end up with multiple bindings for the
+	same symbol, which is untidy. If the collect clause scrubs a variable
+	with forget and re-binds it, then combining that environment 
+	with the previous bindings will create a duplicate.
+	Also, fixed a serious bug with the bindings from the last clause;
+	the append was wrongly put into the loop that processes the collected
+	lists.
+
+2011-10-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (acons): New function.
 	(set_diff): Optimize common case: list1 and list2
 	are the same, or list2 is substructure of list1.
