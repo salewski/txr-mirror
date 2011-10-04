@@ -1,5 +1,9 @@
 2011-10-03  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Starte dodcumenting the forgotten merge directive.
+
+2011-10-03  Kaz Kylheku  <kaz@kylheku.com>
+
 	Implemented new last clause for collect and coll.
 	Bugfix in cases inside coll: was not collecting bindings.
 	Bugfix for until inside coll: was not seeing bindings
