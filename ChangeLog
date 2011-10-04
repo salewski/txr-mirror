@@ -1,3 +1,36 @@
+2011-10-04  Kaz Kylheku  <kaz@kylheku.com>
+
+	Bugfixes to the semantics of binding environments, which
+	were broken in the face of deletions (local, forget).
+	For some stupid reason, I had written a destructive routine for
+	removing elements from an association list, and used it
+	as the basis for the local and forget directives.
+
+	* lib.c (eq_f, car_f): New variables.
+	(identity_tramp, equal_tramp): Obsolete functions removed.
+	(apply): Broken function disabled at run time.
+	(funcall, funcall1, funcall2): Throw meaningful error instead
+	of aborting.
+	(alist_remove_test): New static function.
+	(alist_remove, alist_remove1): Rewritten to be functional
+	rather than destructive.
+	(alist_nremove, alist_nremove1): Destructive functions,
+	using previous implementations of alist and alist_nremove.
+	(do_sort): Recurses directly rather than via sort. That was
+	probably why this helper was introduced!
+	(find, set_diff): New functions.
+	(obj_init): gc-protect new variables eq_f and car_f, and initialize
+	them. Initializations for equal_f and identity_f changed to
+	use equal and identity directly, without the obsolete wrappers.
+
+	* lib.h (eq_f, car_f, alist_nremove, alist_nremove1,
+	find, set_diff): Declared.
+
+	* match.c (match_line): Use set_diff to determine what bindings
+	are new, rather than ldiff and ldiff-like logic which break when
+	the new bindings do not share structure with the old.
+	(match_files): Likewise.
+
 2011-10-03  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.1: Starte dodcumenting the forgotten merge directive.

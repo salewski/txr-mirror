@@ -71,8 +71,7 @@ val null_string;
 val nil_string;
 val null_list;
 
-val identity_f;
-val equal_f;
+val identity_f, equal_f, eq_f, car_f;
 
 val prog_string;
 
@@ -82,14 +81,6 @@ val identity(val obj)
 {
   return obj;
 }
-
-static val identity_tramp(val env, val obj)
-{
-  (void) env;
-  return identity(obj);
-}
-
-static val equal_tramp(val env, val , val );
 
 static val code2type(int code)
 {
@@ -557,12 +548,6 @@ val equal(val left, val right)
 val cobj_equal_op(val left, val right)
 {
   return eq(left, right);
-}
-
-static val equal_tramp(val env, val left, val right)
-{
-  (void) env;
-  return equal(left, right);
 }
 
 mem_t *chk_malloc(size_t size)
@@ -1379,6 +1364,8 @@ val apply(val fun, val arglist)
 {
   val arg[4], *p = arg;
 
+  internal_error("apply is broken crap: fix before using");
+
   type_check (fun, FUN);
 
   type_assert (listp(arglist),
@@ -1427,7 +1414,7 @@ val funcall(val fun)
   case N0:
     return fun->f.f.n0();
   default:
-    abort();
+    uw_throwf(error_s, lit("funcall: wrong number of arguments"));
   }
 }
 
@@ -1441,7 +1428,7 @@ val funcall1(val fun, val arg)
   case N1:
     return fun->f.f.n1(arg);
   default:
-    abort();
+    uw_throwf(error_s, lit("funcall1: wrong number of arguments"));
   }
 }
 
@@ -1455,7 +1442,7 @@ val funcall2(val fun, val arg1, val arg2)
   case N2:
     return fun->f.f.n2(arg1, arg2);
   default:
-    abort();
+    uw_throwf(error_s, lit("funcall2: wrong number of arguments"));
   }
 }
 
@@ -1906,7 +1893,22 @@ val *acons_new_l(val *list, val key, val *new_p)
   }
 }
 
+static val alist_remove_test(val item, val key)
+{
+  return eq(car(item), key);
+}
+
 val alist_remove(val list, val keys)
+{
+  return set_diff(list, keys, func_n2(alist_remove_test), nil);
+}
+
+val alist_remove1(val list, val key)
+{
+  return alist_remove(list, cons(key, nil));
+}
+
+val alist_nremove(val list, val keys)
 {
   val *plist = &list;
 
@@ -1920,7 +1922,7 @@ val alist_remove(val list, val keys)
   return list;
 }
 
-val alist_remove1(val list, val key)
+val alist_nremove1(val list, val key)
 {
   val *plist = &list;
 
@@ -2033,8 +2035,8 @@ static val do_sort(val list, val lessfun, val keyfun)
     list2 = cdr(bisect);
     *cdr_l(bisect) = nil;
 
-    return merge(sort(list, lessfun, keyfun),
-                 sort(list2, lessfun, keyfun),
+    return merge(do_sort(list, lessfun, keyfun),
+                 do_sort(list2, lessfun, keyfun),
                  lessfun, keyfun);
   }
 }
@@ -2047,6 +2049,40 @@ val sort(val list, val lessfun, val keyfun)
   return do_sort(list, lessfun, keyfun);
 }
 
+val find(val list, val key, val testfun, val keyfun)
+{
+  for (; list; list = cdr(list)) {
+    val item = car(list);
+    val list_key = funcall1(keyfun, item);
+
+    if (funcall2(testfun, key, list_key))
+      return item;
+  }
+
+  return nil;
+}
+
+val set_diff(val list1, val list2, val testfun, val keyfun)
+{
+  list_collect_decl (out, ptail);
+
+  if (!keyfun)
+    keyfun = identity_f;
+
+  if (!testfun)
+    testfun = equal_f;
+
+  for (; list1; list1 = cdr(list1)) {
+    val item = car(list1);
+    val list1_key = funcall1(keyfun, item);
+
+    if (!find(list2, list1_key, testfun, keyfun))
+      list_collect (ptail, item);
+  }
+
+  return out;
+}
+
 static void obj_init(void)
 {
   /*
@@ -2057,7 +2093,7 @@ static void obj_init(void)
 
   protect(&packages, &system_package, &keyword_package,
           &user_package, &null_string, &nil_string,
-          &null_list, &equal_f,
+          &null_list, &equal_f, &eq_f, &car_f,
           &identity_f, &prog_string,
           (val *) 0);
 
@@ -2157,8 +2193,10 @@ static void obj_init(void)
   args_k = intern(lit("args"), keyword_package);
   nothrow_k = intern(lit("nothrow"), keyword_package);
 
-  equal_f = func_f2(nil, equal_tramp);
-  identity_f = func_f1(nil, identity_tramp);
+  equal_f = func_n2(equal);
+  eq_f = func_n2(eq);
+  identity_f = func_n1(identity);
+  car_f = func_n1(car);
   prog_string = string(progname);
 }
 
