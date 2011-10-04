@@ -376,6 +376,7 @@ val cobj(mem_t *handle, val cls_sym, struct cobj_ops *ops);
 val cobjp(val obj);
 mem_t *cobj_handle(val cobj, val cls_sym);
 val assoc(val list, val key);
+val acons(val list, val car, val cdr);
 val acons_new(val list, val key, val value);
 val *acons_new_l(val *list, val key, val *new_p);
 val alist_remove(val list, val keys);

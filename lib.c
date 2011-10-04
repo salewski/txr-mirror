@@ -1864,6 +1864,11 @@ val assoc(val list, val key)
   return nil;
 }
 
+val acons(val list, val car, val cdr)
+{
+  return cons(cons(car, cdr), list);
+}
+
 val acons_new(val list, val key, val value)
 {
   val existing = assoc(list, key);
@@ -2073,11 +2078,17 @@ val set_diff(val list1, val list2, val testfun, val keyfun)
     testfun = equal_f;
 
   for (; list1; list1 = cdr(list1)) {
-    val item = car(list1);
-    val list1_key = funcall1(keyfun, item);
+    /* optimization: list2 is a tail of list1, and so we
+       are done, unless the application has a weird test function. */
+    if (list1 == list2) {
+      break;
+    } else {
+      val item = car(list1);
+      val list1_key = funcall1(keyfun, item);
 
-    if (!find(list2, list1_key, testfun, keyfun))
-      list_collect (ptail, item);
+      if (!find(list2, list1_key, testfun, keyfun))
+        list_collect (ptail, item);
+    }
   }
 
   return out;
