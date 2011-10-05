@@ -1,3 +1,9 @@
+2011-10-05  Kaz Kylheku  <kaz@kylheku.com>
+
+	* match.c (match_files): In function calls, the deletion of
+	the unbound variable from the argument list can be done
+	with a destructive operation since that list is a copy.
+
 2011-10-04  Kaz Kylheku  <kaz@kylheku.com>
 
 	* LICENSE, Makefile, configure, filter.c, filter.h, gc.c, gc.h, hash.c,
