@@ -2046,7 +2046,7 @@ repeat_spec_same_data:
                                         param,
                                         cdr(val));
               } else {
-                bindings_cp = alist_remove1(bindings_cp, param);
+                bindings_cp = alist_nremove1(bindings_cp, param);
                 ub_p_a_pairs = cons(cons(param, arg), ub_p_a_pairs);
               }
             } else {
