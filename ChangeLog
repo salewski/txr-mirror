@@ -1,3 +1,26 @@
+2011-10-06  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (funcall3, curry_123_2): New functions.
+	(do_curry_123_2): New static function.
+
+	* lib.h (funcall3, curry_123_2): Declared.
+
+	* match.c (subst_vars): Bugfix: throw error on unbound variable instead
+	of ignoring the situation. This bug caused unbound variables in
+	quasiliterals to be silently ignored.
+	(eval_form): Function changed to three argument form, so that
+	it takes a line number for reporting errors. Restructured to catch
+	the new unbound variable exception from subst_vars, and re-throw
+	it with a line number. Also, throws exception now instead of returning
+	nil if itself it detets an unbound variable. Uses of eval_form
+	no longer have to test the return value for nil, but just assume
+	it worked.
+	(match_lines): Currying calls to eval form updated to use
+	curry_123_2. Test of eval return value eliminated. In function
+	calls, eval isn't used for reducing symbol arguments to values,
+	because it now throws in the unbound case, and it's not worth
+	setting up a catch for this. Instead, assoc is used directly.
+
 2011-10-05  Kaz Kylheku  <kaz@kylheku.com>
 
 	* match.c (match_files): In function calls, the deletion of

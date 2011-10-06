@@ -790,7 +790,8 @@ static val subst_vars(val spec, val bindings, val filter)
             spec = cons(filter_string(filter, cdr(pair)), rest(spec));
           continue;
         }
-        /* TODO: handle unbound variable */
+        uw_throwf(query_error_s, lit("unbound variable ~a"),
+                                 sym, nao);
       } else if (first(elem) == quasi_s) {
         val nested = subst_vars(rest(elem), bindings, filter);
         list_collect_append(iter, nested);
@@ -811,29 +812,44 @@ static val subst_vars(val spec, val bindings, val filter)
   return out;
 }
 
-static val eval_form(val form, val bindings)
+static val eval_form(val lineno, val form, val bindings)
 {
-  if (!form) {
-    return cons(t, form);
-  } else if (bindable(form)) {
-    return assoc(bindings, form);
-  } else if (consp(form)) {
-    if (car(form) == quasi_s) {
-      return cons(t, cat_str(subst_vars(rest(form), bindings, nil), nil));
-    } else if (regexp(car(form))) {
-      return cons(t, form);
+  val ret = nil;
+
+  uw_catch_begin (cons(query_error_s, nil), exc_sym, exc);
+  {
+    if (!form) {
+      ret = cons(t, form);
+    } else if (bindable(form)) {
+      ret = assoc(bindings, form);
+    } else if (consp(form)) {
+      if (car(form) == quasi_s) {
+        ret = cons(t, cat_str(subst_vars(rest(form), bindings, nil), nil));
+      } else if (regexp(car(form))) {
+        ret = cons(t, form);
+      } else {
+        val subforms = mapcar(curry_123_2(func_n3(eval_form), 
+                                          lineno, bindings), form);
+
+        if (all_satisfy(subforms, identity_f, nil))
+          ret = cons(t, mapcar(func_n1(cdr), subforms));
+      }
+    } else if (stringp(form)) {
+      ret = cons(t, form);
     } else {
-      val subforms = mapcar(bind2other(func_n2(eval_form), bindings), form);
-
-      if (all_satisfy(subforms, identity_f, nil))
-        return cons(t, mapcar(func_n1(cdr), subforms));
-      return nil;
+      ret = cons(t, form);
     }
-  } if (stringp(form)) {
-    return cons(t, form);
-  }
 
-  return cons(t, form);
+    uw_catch (exc_sym, exc) {
+      sem_error(lineno, lit("~a"), exc, nao);
+    }
+  }
+  uw_catch_end;
+
+  if (!ret)
+    sem_error(lineno, lit("unbound variable in form ~s"), form, nao);
+
+  return ret;
 }
 
 enum fpip_close { fpip_fclose, fpip_pclose, fpip_closedir };
@@ -1225,8 +1241,8 @@ repeat_spec_same_data:
       } else if (sym == freeform_s) {
         val args = rest(first_spec);
         val vals = mapcar(func_n1(cdr),
-                             mapcar(bind2other(func_n2(eval_form),
-                                                bindings), args));
+                             mapcar(curry_123_2(func_n3(eval_form),
+                                                spec_linenum, bindings), args));
 
         if ((spec = rest(spec)) == nil) {
           sem_error(spec_linenum,
@@ -1324,12 +1340,8 @@ repeat_spec_same_data:
           }
 
           {
-            val eval = eval_form(arg, bindings);
+            val eval = eval_form(spec_linenum, arg, bindings);
             val str = cdr(eval);
-
-            if (!eval)
-              sem_error(spec_linenum, lit("next: unbound variable in form ~a"),
-                        first(source), nao);
 
             if (eq(second(source), nothrow_k)) {
               if (str) {
@@ -1685,11 +1697,7 @@ repeat_spec_same_data:
           val arg = first(args);
 
           if (arg) {
-            val arg_eval = eval_form(arg, bindings);
-
-            if (!arg_eval)
-              sem_error(spec_linenum, lit("~a: unbound variable in form ~s"),
-                        sym, arg, nao);
+            val arg_eval = eval_form(spec_linenum, arg, bindings);
 
             if (merged)
               merged = weird_merge(merged, cdr(arg_eval));
@@ -1708,11 +1716,7 @@ repeat_spec_same_data:
         val args = rest(first_spec);
         val pattern = first(args);
         val form = second(args);
-        val val = eval_form(form, bindings);
-
-        if (!val)
-          sem_error(spec_linenum, lit("bind: unbound variable on right side"),
-                    nao);
+        val val = eval_form(spec_linenum, form, bindings);
 
         bindings = dest_bind(bindings, pattern, cdr(val));
 
@@ -1763,12 +1767,7 @@ repeat_spec_same_data:
             sem_error(spec_linenum, lit("material after :nothrow in output"), nao);
         } else if (!keywordp(first(dest_spec))) {
           val form = first(dest_spec);
-          val val = eval_form(form, bindings);
-
-          if (!val)
-            sem_error(spec_linenum,
-                      lit("output: unbound variable in form ~a"), form, nao);
-
+          val val = eval_form(spec_linenum, form, bindings);
           dest = or2(cdr(val), dest);
           pop(&dest_spec);
         }
@@ -1978,8 +1977,8 @@ repeat_spec_same_data:
           sem_error(spec_linenum, lit("throw: ~a is not a type symbol"),
                     type, nao);
         {
-          val values = mapcar(bind2other(func_n2(eval_form), bindings),
-                                 args);
+          val values = mapcar(curry_123_2(func_n3(eval_form), 
+                                          spec_linenum, bindings), args);
           uw_throw(type, values);
         }
       } else if (sym == deffilter_s) {
@@ -2039,8 +2038,8 @@ repeat_spec_same_data:
             val param = car(piter);
             val arg = car(aiter);
 
-            if (arg && symbolp(arg)) {
-              val val = eval_form(arg, bindings);
+            if (arg && bindable(arg)) {
+              val val = assoc(bindings, arg);
               if (val) {
                 bindings_cp = acons_new(bindings_cp,
                                         param,
@@ -2050,11 +2049,7 @@ repeat_spec_same_data:
                 ub_p_a_pairs = cons(cons(param, arg), ub_p_a_pairs);
               }
             } else {
-              val val = eval_form(arg, bindings);
-              if (!val)
-                sem_error(spec_linenum,
-                          lit("unbound variable in function argument form"),
-                          nao);
+              val val = eval_form(spec_linenum, arg, bindings);
               bindings_cp = acons_new(bindings_cp, param, cdr(val));
             }
           }
