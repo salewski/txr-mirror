@@ -1,5 +1,17 @@
 2011-10-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	Renaming the currying combinators according to new scheme.
+
+	* lib.c (bind2): Function renamed to curry_12_2.
+	(bind2other): Function renamed to curry_12_1.
+	(do_bind_2, do_bind2other): Helpers renamed likewise.
+	(tree_find): Follows rename of bind2.
+
+	* match.c (match_files): deffilter code follows bind2 rename
+	to curry_12_2.
+
+2011-10-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (funcall3, curry_123_2): New functions.
 	(do_curry_123_2): New static function.
 

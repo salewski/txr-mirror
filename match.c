@@ -1991,7 +1991,7 @@ repeat_spec_same_data:
 
         if (!all_satisfy(table, andf(func_n1(listp), 
                                      chain(func_n1(length),
-                                           bind2(func_n2(eq), two),
+                                           curry_12_2(func_n2(eq), two),
                                            nao),
                                      chain(func_n1(first),
                                            func_n1(stringp), 
