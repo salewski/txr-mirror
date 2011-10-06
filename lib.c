@@ -1446,6 +1446,21 @@ val funcall2(val fun, val arg1, val arg2)
   }
 }
 
+val funcall3(val fun, val arg1, val arg2, val arg3)
+{
+  type_check(fun, FUN);
+
+  switch (fun->f.functype) {
+  case F3:
+    return fun->f.f.f3(fun->f.env, arg1, arg2, arg3);
+  case N3:
+    return fun->f.f.n3(arg1, arg2, arg3);
+  default:
+    uw_throwf(error_s, lit("funcall3: wrong number of arguments"));
+  }
+}
+
+
 val reduce_left(val fun, val list, val init, val key)
 {
   if (!key)
@@ -1477,6 +1492,15 @@ val bind2other(val fun2, val arg2)
   return func_f1(cons(fun2, arg2), do_bind2other);
 }
 
+static val do_curry_123_2(val fcons, val arg2)
+{
+  return funcall3(car(fcons), car(cdr(fcons)), arg2, cdr(cdr(fcons)));
+}
+
+val curry_123_2(val fun3, val arg1, val arg3)
+{
+  return func_f1(cons(fun3, cons(arg1, arg3)), do_curry_123_2);
+}
 
 static val do_chain(val fun1_list, val arg)
 {
