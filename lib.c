@@ -381,7 +381,7 @@ val tree_find(val obj, val tree)
   if (equal(obj, tree))
     return t;
   else if (consp(tree))
-    return some_satisfy(tree, bind2(func_n2(tree_find), obj), nil);
+    return some_satisfy(tree, curry_12_2(func_n2(tree_find), obj), nil);
   return nil;
 }
 
@@ -1472,24 +1472,24 @@ val reduce_left(val fun, val list, val init, val key)
   return init;
 }
 
-static val do_bind2(val fcons, val arg2)
+static val do_curry_12_2(val fcons, val arg2)
 {
   return funcall2(car(fcons), cdr(fcons), arg2);
 }
 
-val bind2(val fun2, val arg)
+val curry_12_2(val fun2, val arg)
 {
-  return func_f1(cons(fun2, arg), do_bind2);
+  return func_f1(cons(fun2, arg), do_curry_12_2);
 }
 
-static val do_bind2other(val fcons, val arg1)
+static val do_curry_12_1(val fcons, val arg1)
 {
   return funcall2(car(fcons), arg1, cdr(fcons));
 }
 
-val bind2other(val fun2, val arg2)
+val curry_12_1(val fun2, val arg2)
 {
-  return func_f1(cons(fun2, arg2), do_bind2other);
+  return func_f1(cons(fun2, arg2), do_curry_12_1);
 }
 
 static val do_curry_123_2(val fcons, val arg2)

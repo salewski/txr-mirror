@@ -354,8 +354,11 @@ val funcall1(val fun, val arg);
 val funcall2(val fun, val arg1, val arg2);
 val funcall3(val fun, val arg1, val arg2, val arg3);
 val reduce_left(val fun, val list, val init, val key);
-val bind2(val fun2, val arg);
-val bind2other(val fun2, val arg2);
+/* The notation curry_12_2 means take some function f(arg1, arg2) and
+   fix a value for argument 1 to create a g(arg2).
+   Other variations follow by analogy. */
+val curry_12_2(val fun2, val arg);
+val curry_12_1(val fun2, val arg2);
 val curry_123_2(val fun3, val arg1, val arg3);
 val chain(val first_fun, ...);
 val andf(val first_fun, ...);
