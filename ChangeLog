@@ -1,5 +1,33 @@
 2011-10-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	Extending syntax to allow for @VAR and @(...) forms inside
+	nested lists. This is in anticipation of future features.
+
+	* lib.c (expr_s): New symbol variable.
+	(obj_init): expr_s initialized.
+
+	* lib.h (expr_s): Declared.
+
+	* match.c (dest_bind): Now takes linenum. Tests for the meta-syntax
+	denoted by the system symbols var_s and expr_s, and throws an
+	error.
+	(eval_form): Similar error checks added. Also, hack: do not add
+	file and line number to an exception which begins with a '('
+	character; just re-throw it. This suppresses duplicate line
+	number addition when this throw occurs across some nestings.
+	(match_files): Updated calls to dest_bind.
+
+	* parser.l (yybadtoken): Handle new token kind, METAVAR and METAPAR.
+	(grammar): Refactoring among patterns: TOK broken into
+	SYM and NUM, NTOK introduced, unused NUM_END removed.
+	Rule for @( producing METAPAR in nested state.
+
+	* parser.y (METAVAR, METAPAR): New tokens.
+	(meta_expr): New nonterminal.
+	(expr): meta_expr and META_VAR productions handled.
+
+2011-10-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	Renaming the currying combinators according to new scheme.
 
 	* lib.c (bind2): Function renamed to curry_12_2.

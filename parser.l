@@ -94,6 +94,7 @@ void yybadtoken(int tok, val context)
   case TEXT:    problem = lit("text"); break;
   case IDENT:   problem = lit("identifier"); break;
   case KEYWORD: problem = lit("keyword"); break;
+  case METAVAR: problem = lit("metavar"); break;
   case ALL:     problem = lit("\"all\""); break;
   case SOME:    problem = lit("\"some\""); break;
   case NONE:    problem = lit("\"none\""); break;
@@ -120,6 +121,7 @@ void yybadtoken(int tok, val context)
   case NUMBER:  problem = lit("\"number\""); break;
   case REGCHAR: problem = lit("regular expression character"); break;
   case LITCHAR: problem = lit("string literal character"); break;
+  case METAPAR: problem = lit("@("); break;
   }
 
   if (problem != 0)
@@ -175,9 +177,11 @@ static wchar_t num_esc(char *num)
 %option nounput
 %option noinput
 
-TOK     :?[a-zA-Z_][a-zA-Z0-9_]*|[+-]?[0-9]+
+SYM     [a-zA-Z_][a-zA-Z0-9_]*
+NUM     [+-]?[0-9]+
+TOK     :?{SYM}|{NUM}
+NTOK    [:@]?{SYM}|{NUM}
 ID_END  [^a-zA-Z0-9_]
-NUM_END [^0-9]
 WS      [\t ]*
 HEX     [0-9A-Fa-f]
 OCT     [0-7]
@@ -190,14 +194,15 @@ U3      [\xe0-\xef]
 U4      [\xf0-\xf4]
 
 UANY    {ASC}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
-UANYN   {ASCN}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
+UANYN   {ASCN}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U} 
 UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
 %x      SPECIAL NESTED REGEX STRLIT CHRLIT QSILIT
 
 %%
 
-<SPECIAL,NESTED>{TOK}   {
+<SPECIAL>{TOK}          |
+<NESTED>{NTOK}          {
                           cnum val;
                           char *errp;
 
@@ -206,9 +211,15 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                               || yy_top_state() == QSILIT)
                             yy_pop_state();
 
-                          if (yytext[0] == ':') {
+                          switch (yytext[0]) {
+                          case ':':
                             yylval.lexeme = utf8_dup_from(yytext + 1);
                             return KEYWORD;
+                          case '@':
+                            yylval.lexeme = utf8_dup_from(yytext + 1);
+                            return METAVAR;
+                          default:
+                            break;
                           }
 
                           errno = 0;
@@ -349,11 +360,16 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                                   return FINALLY;
                                 }
 
+<NESTED>@\(             |
 <SPECIAL,NESTED>\{|\(   {
                           yy_push_state(NESTED);
                           if (yy_top_state() == INITIAL
                               || yy_top_state() == QSILIT)
                             yy_pop_state();
+                          if (yytext[0] == '@') {
+                            yylval.chr = '(';
+                            return METAPAR;
+                          }
                           return yytext[0];
                         }
 
