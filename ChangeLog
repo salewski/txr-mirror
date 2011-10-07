@@ -1,3 +1,7 @@
+2011-10-07  Kaz Kylheku  <kaz@kylheku.com>
+
+	* txr.1: fxed wrong word.
+
 2011-10-06  Kaz Kylheku  <kaz@kylheku.com>
 
 	Extending syntax to allow for @VAR and @(...) forms inside
