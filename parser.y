@@ -58,12 +58,13 @@ static val parsed_spec;
   cnum num;
 }
 
-%token <lexeme> TEXT IDENT KEYWORD ALL SOME NONE MAYBE CASES CHOOSE
+%token <lexeme> TEXT IDENT KEYWORD METAVAR ALL SOME NONE MAYBE CASES CHOOSE
 %token <lexeme> AND OR END COLLECT
 %token <lexeme> UNTIL COLL OUTPUT REPEAT REP SINGLE FIRST LAST EMPTY DEFINE
 %token <lexeme> TRY CATCH FINALLY
 %token <num> NUMBER
 %token <chr> REGCHAR LITCHAR
+%token <chr> METAPAR
 
 %type <val> spec clauses clauses_opt clause
 %type <val> all_clause some_clause none_clause maybe_clause
@@ -71,7 +72,7 @@ static val parsed_spec;
 %type <val> clause_parts additional_parts
 %type <val> output_clause define_clause try_clause catch_clauses_opt
 %type <val> line elems_opt elems clause_parts_h additional_parts_h
-%type <val> elem var var_op
+%type <val> elem var var_op meta_expr
 %type <val> list exprs exprs_opt expr out_clauses out_clauses_opt out_clause
 %type <val> repeat_clause repeat_parts_opt o_line
 %type <val> o_elems_opt o_elems_opt2 o_elems o_elem rep_elem rep_parts_opt
@@ -491,6 +492,11 @@ list : '(' exprs ')'            { $$ = $2; }
                                   yybadtoken(yychar, lit("list expression")); }
      ;
 
+meta_expr : METAPAR exprs ')'   { $$ = cons(expr_s, $2); }
+          | METAPAR ')'         { $$ = cons(expr_s, nil); }
+          | METAPAR error       { $$ = nil;
+                                  yybadtoken(yychar, lit("meta expression")); }
+          ;
 exprs : expr                    { $$ = cons($1, nil); }
       | expr exprs              { $$ = cons($1, $2); }
       | expr '.' expr           { $$ = cons($1, $3); }
@@ -503,8 +509,11 @@ exprs_opt : exprs               { $$ = $1; }
 expr : IDENT                    { $$ = intern(string_own($1), nil); }
      | KEYWORD                  { $$ = intern(string_own($1),
                                               keyword_package); }
+     | METAVAR                  { $$ = list(var_s,
+                                            intern(string_own($1), nil), nao); }
      | NUMBER                   { $$ = num($1); }
      | list                     { $$ = $1; }
+     | meta_expr                { $$ = $1; }
      | regex                    { $$ = cons(regex_compile(rest($1)),
                                             rest($1)); }
      | chrlit                   { $$ = $1; }

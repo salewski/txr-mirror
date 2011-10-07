@@ -226,7 +226,7 @@ static val bindable(val obj)
   return (obj && symbolp(obj) && obj != t && !keywordp(obj)) ? t : nil;
 }
 
-static val dest_bind(val bindings, val pattern, val value)
+static val dest_bind(val linenum, val bindings, val pattern, val value)
 {
   if (symbolp(pattern)) {
     if (bindable(pattern)) {
@@ -246,9 +246,22 @@ static val dest_bind(val bindings, val pattern, val value)
   } else if (consp(pattern)) {
     val piter = pattern, viter = value;
 
+    if (first(pattern) == var_s) {
+      uw_throwf(query_error_s, 
+                lit("metavariable @~a syntax cannot be used here"),
+                second(pattern), nao);
+    }
+
+    if (first(pattern) == expr_s) {
+      uw_throwf(query_error_s, 
+                lit("the @~s syntax cannot be used here"),
+                rest(pattern), nao);
+    }
+
+
     while (consp(piter) && consp(viter))
     {
-      bindings = dest_bind(bindings, car(piter), car(viter));
+      bindings = dest_bind(linenum, bindings, car(piter), car(viter));
       if (bindings == t)
         return t;
       piter = cdr(piter);
@@ -256,7 +269,7 @@ static val dest_bind(val bindings, val pattern, val value)
     }
 
     if (bindable(piter)) {
-      bindings = dest_bind(bindings, piter, viter);
+      bindings = dest_bind(linenum, bindings, piter, viter);
       if (bindings == t)
         return t;
     } else {
@@ -823,10 +836,16 @@ static val eval_form(val lineno, val form, val bindings)
     } else if (bindable(form)) {
       ret = assoc(bindings, form);
     } else if (consp(form)) {
-      if (car(form) == quasi_s) {
+      if (first(form) == quasi_s) {
         ret = cons(t, cat_str(subst_vars(rest(form), bindings, nil), nil));
       } else if (regexp(car(form))) {
         ret = cons(t, form);
+      } else if (first(form) == var_s) {
+        sem_error(lineno, lit("metavariable @~a syntax cannot be used here"),
+                  second(form), nao);
+      } else if (first(form) == expr_s) {
+        sem_error(lineno, lit("the @~s syntax cannot be used here"),
+                  rest(form), nao);
       } else {
         val subforms = mapcar(curry_123_2(func_n3(eval_form), 
                                           lineno, bindings), form);
@@ -841,6 +860,12 @@ static val eval_form(val lineno, val form, val bindings)
     }
 
     uw_catch (exc_sym, exc) {
+      if (stringp(exc) && !equal(exc, lit("")) && 
+          chr_str(exc, zero) == chr('('))
+      {
+        uw_throw (exc_sym, exc);
+      }
+
       sem_error(lineno, lit("~a"), exc, nao);
     }
   }
@@ -1718,7 +1743,7 @@ repeat_spec_same_data:
         val form = second(args);
         val val = eval_form(spec_linenum, form, bindings);
 
-        bindings = dest_bind(bindings, pattern, cdr(val));
+        bindings = dest_bind(spec_linenum, bindings, pattern, cdr(val));
 
         if (bindings == t)
           return nil;
@@ -1871,7 +1896,8 @@ repeat_spec_same_data:
                       val value = car(viter);
 
                       if (value) {
-                        bindings = dest_bind(bindings, param, cdr(value));
+                        bindings = dest_bind(spec_linenum, bindings, 
+                                             param, cdr(value));
 
                         if (bindings == t) {
                           all_bind = nil;
@@ -2077,7 +2103,8 @@ repeat_spec_same_data:
                 if (symbolp(arg)) {
                   val newbind = assoc(new_bindings, param);
                   if (newbind) {
-                    bindings = dest_bind(bindings, arg, cdr(newbind));
+                    bindings = dest_bind(spec_linenum, bindings, 
+                                         arg, cdr(newbind));
                     if (bindings == t) {
                       debuglf(spec_linenum,
                               lit("binding mismatch on ~a "
