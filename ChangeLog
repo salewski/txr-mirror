@@ -1,5 +1,14 @@
 2011-10-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (greedy_k): New keyword symbol variable.
+	(match_line): Greedy skip implemented.
+	(match_files): Likewise.
+	(match_init): New keyword symbol variable initialized.
+
+	* txr.1: Updated.
+
+2011-10-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (eol_s): New symbol variable.
 	(obj_init): New variable initialized.
 

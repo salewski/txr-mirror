@@ -48,7 +48,7 @@
 int output_produced;
 
 val mingap_k, maxgap_k, gap_k, times_k, lines_k, chars_k;
-val choose_s, longest_k, shortest_k;
+val choose_s, longest_k, shortest_k, greedy_k;
 
 static void debugf(val fmt, ...)
 {
@@ -491,6 +491,8 @@ static val match_line(val bindings, val specline, val dataline,
           val min = third(elem);
           cnum cmax = nump(max) ? c_num(max) : 0;
           cnum cmin = nump(min) ? c_num(min) : 0;
+          val greedy = eq(max, greedy_k);
+          val last_good_result = nil, last_good_pos = nil;
 
           if (!rest(specline))
             break;
@@ -516,17 +518,27 @@ static val match_line(val bindings, val specline, val dataline,
                       num(reps_min), file, data_lineno, pos, nao);
             }
 
-            while (!max || reps_max++ < cmax) {
+            while (greedy || !max || reps_max++ < cmax) {
               val result = match_line(bindings, rest(specline), dataline, pos,
                                       spec_lineno, data_lineno, file);
 
               if (result) {
-                LOG_MATCH("skip", pos);
-                return result;
+                if (greedy) {
+                  last_good_result = result;
+                  last_good_pos = pos;
+                } else {
+                  LOG_MATCH("skip", pos);
+                  return result;
+                }
               }
 
-              if (length_str_le(dataline, pos)) 
+              if (length_str_le(dataline, pos))  {
+                if (last_good_result) {
+                  LOG_MATCH("greedy skip", last_good_pos);
+                  return last_good_result;
+                }
                 break;
+              }
 
               pos = plus(pos, one);
             }
@@ -1249,6 +1261,9 @@ repeat_spec_same_data:
         val min = second(args);
         cnum cmax = nump(max) ? c_num(max) : 0;
         cnum cmin = nump(min) ? c_num(min) : 0;
+        val greedy = eq(max, greedy_k);
+        val last_good_result = nil;
+        cnum last_good_line = 0;
 
         if ((spec = rest(spec)) == nil)
           break;
@@ -1276,14 +1291,22 @@ repeat_spec_same_data:
                     num(data_lineno), nao);
           }
 
-          while (!max || reps_max++ < cmax) {
+          while (greedy || !max || reps_max++ < cmax) {
             result = match_files(spec, files, bindings,
                                  data, num(data_lineno));
 
             if (result) {
-              debuglf(spec_linenum, lit("skip matched ~a:~a"), first(files),
-                      num(data_lineno), nao);
-              break;
+              if (greedy) {
+                last_good_result = result;
+                last_good_line = data_lineno;
+              } else {
+                debuglf(spec_linenum, lit("skip matched ~a:~a"), first(files),
+                        num(data_lineno), nao);
+                break;
+              }
+            } else {
+              debuglf(spec_linenum, lit("skip didn't match ~a:~a"),
+                      first(files), num(data_lineno), nao);
             }
 
             if (!data)
@@ -1291,6 +1314,7 @@ repeat_spec_same_data:
 
             debuglf(spec_linenum, lit("skip didn't match ~a:~a"), first(files),
                     num(data_lineno), nao);
+
             data = rest(data);
             data_lineno++;
           }
@@ -1299,6 +1323,11 @@ repeat_spec_same_data:
 
           if (result)
             return result;
+          if (last_good_result) {
+            debuglf(spec_linenum, lit("greedy skip matched ~a:~a"), 
+                    first(files), num(last_good_line), nao);
+            return last_good_result;
+          }
         }
 
         debuglf(spec_linenum, lit("skip failed"), nao);
@@ -2248,4 +2277,5 @@ void match_init(void)
   choose_s = intern(lit("choose"), user_package);
   longest_k = intern(lit("longest"), keyword_package);
   shortest_k = intern(lit("shortest"), keyword_package);
+  greedy_k = intern(lit("greedy"), keyword_package);
 }
