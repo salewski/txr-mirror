@@ -486,6 +486,54 @@ static val match_line(val bindings, val specline, val dataline,
           }
           LOG_MATCH("regex", past);
           pos = past;
+        } else if (directive == skip_s) {
+          val max = second(elem);
+          val min = third(elem);
+          cnum cmax = nump(max) ? c_num(max) : 0;
+          cnum cmin = nump(min) ? c_num(min) : 0;
+
+          if (!rest(specline))
+            break;
+
+          {
+            cnum reps_max = 0, reps_min = 0;
+
+            while (length_str_gt(dataline, pos) && min && reps_min < cmin) {
+              pos = plus(pos, one);
+              reps_min++;
+            }
+
+            if (min) {
+              if (reps_min != cmin) {
+                debuglf(spec_lineno,
+                        lit("skipped only ~a/~a chars to ~a:~a:~a"),
+                        num(reps_min), num(cmin),
+                        file, data_lineno, pos, nao);
+                return nil;
+              }
+
+              debuglf(spec_lineno, lit("skipped ~a chars to ~a:~a:~a"),
+                      num(reps_min), file, data_lineno, pos, nao);
+            }
+
+            while (!max || reps_max++ < cmax) {
+              val result = match_line(bindings, rest(specline), dataline, pos,
+                                      spec_lineno, data_lineno, file);
+
+              if (result) {
+                LOG_MATCH("skip", pos);
+                return result;
+              }
+
+              if (length_str_le(dataline, pos)) 
+                break;
+
+              pos = plus(pos, one);
+            }
+          }
+
+          LOG_MISMATCH("skip");
+          return nil;
         } else if (directive == coll_s) {
           val coll_specline = second(elem);
           val until_last_specline = third(elem);
@@ -682,6 +730,13 @@ next_coll:
           }
           LOG_MATCH("trailer", new_pos);
           return cons(bindings, pos);
+        } else if (directive == eol_s) {
+          if (length_str_le(dataline, pos)) {
+            LOG_MATCH("eol", pos);
+            return cons(bindings, t);
+          }
+          LOG_MISMATCH("eol");
+          return nil;
         } else if (consp(directive) || stringp(directive)) {
           cons_bind (find, len, search_str_tree(dataline, elem, pos, nil));
           val newpos;
@@ -1187,15 +1242,13 @@ repeat_spec_same_data:
     if (consp(first_spec)) {
       val sym = first(first_spec);
 
-      if (sym == skip_s) {
-        val max = first(rest(first_spec));
-        val min = second(rest(first_spec));
+
+      if (sym == skip_s && rest(specline) == nil) {
+        val args = rest(first_spec);
+        val max = first(args);
+        val min = second(args);
         cnum cmax = nump(max) ? c_num(max) : 0;
         cnum cmin = nump(min) ? c_num(min) : 0;
-
-        if (rest(specline))
-          sem_error(spec_linenum,
-                    lit("unexpected material after skip directive"), nao);
 
         if ((spec = rest(spec)) == nil)
           break;

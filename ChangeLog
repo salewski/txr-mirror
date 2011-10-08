@@ -1,5 +1,19 @@
 2011-10-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (eol_s): New symbol variable.
+	(obj_init): New variable initialized.
+
+	* lib.h (eol_s): Declared.
+
+	* match.c (match_line): Implemented horizontal skip as and
+	new eol directive.
+	(match_lines): Vertical skip defers to horizontal skip if
+	there is trailing material.
+
+	* txr.1: Updated.
+
+2011-10-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (flatten_helper): Function removed.
 	(flatten): Recurse directly, using func_n1.
 
