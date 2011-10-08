@@ -39,14 +39,16 @@ provide rationale and make coding recommendations.
 
 1.1  Language
 
-Txr is written in a language that consists of the common dialect between C90 and C++98.
-The code can be built with either the GNU C compiler or the GNU C++ compiler.
-Use is made of some POSIX.2 functions, which are requested by means of -D_POSIX_2_SOURCE.
-Also, the <wchar.h> header is used, which was introduced by a 1995 addendum
-to the C language, so it may be said that the actual C dialect is C95.
+Txr is written in a language that consists of the common dialect between C90
+and C++98.  The code can be built with either the GNU C compiler or the GNU C++
+compiler.  Use is made of some POSIX.2 functions, which are requested by means
+of -D_POSIX_2_SOURCE.  Also, the <wchar.h> header is used, which was introduced
+by a 1995 addendum to the C language, so it may be said that the actual C
+dialect is C95.
 
-In coding new features or fixing bugs, care must be taken to preserve this. Code must
-continue to compile as C and C++, and not increase the portability requirements.
+In coding new features or fixing bugs, care must be taken to preserve this.
+Code must continue to compile as C and C++, and not increase the portability
+requirements.
 
 C++ compilation can be arranged using ./configure --ccname=g++ (for instance).
 
