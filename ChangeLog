@@ -1,5 +1,14 @@
 2011-10-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (match_files): Fixed spectacular bug in function calling,
+	dating back to before October 2009 when txr was put into git.
+	Basically, unbound variables were not handled right after
+	the function return, due to the increment step being wrongly
+	written as ``piter = cdr(aiter)'' in the for loop that processes the
+	ub_p_a_pairs. Evil cut and paste!
+
+2011-10-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (greedy_k): New keyword symbol variable.
 	(match_line): Greedy skip implemented.
 	(match_files): Likewise.
