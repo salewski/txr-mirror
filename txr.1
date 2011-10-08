@@ -1540,14 +1540,15 @@ If it matches successfully, it is tried at the line following the
 entire extent of matched data, if there is one. Thus, the collected regions do
 not overlap.
 
-The collect as a whole always succeeds, even if the subquery does not match at
-any position, and even if the until/last clause does not match. That is to say,
-a query will never fail for the reason that a collect didn't collect anything.
+Unless certain keywords are specified, or unless the collect is explicitly
+failed with @(fail), it always succeeds, even if it collects nothing,
+and even if the until/last clause never finds a match.
 
-If no until/last clause is specified, the collect is unbounded. It consumes the
-entire data file. If any query material follows such the collect clause, it
-will fail if it tries to match anything in the current file; but of course, it
-is possible to continue matching in another file by means of @(next).
+If no until/last clause is specified, and the collect is not limited
+using parameters, the collect is unbounded. It consumes the entire data
+file. If any query material follows such the collect clause, it will fail if it
+tries to match anything in the current file; but of course, it is possible to
+continue matching in another file by means of @(next).
 
 If an until/last clause is specified, the collection stops when that clause
 matches at the current position. 
@@ -1690,10 +1691,15 @@ used if these other two are not used. Thus:
  @a
  @(end)
 
-means collect every other line starting with the current line. Two other
-keywords are :lines and :times. The :lines parameter specifies the upper bound
-on how many lines should be scanned by the collect, and :times specifies the
-upper bound on how many times the collect can match.
+means collect every other line starting with the current line. Several
+other supported keywords are :times, :mintimes, :maxtimes and lines.
+The shorthand :times N means the same thing as :mintimes N :maxtimes N.
+These specify how many matches should be collected. If there are fewer
+than mintimes matches, the collect fails. If maxtimes matches are collected,
+collect stops collecting immediately.
+
+Finally, the :lines parameter specifies the upper bound on how many lines
+should be scanned by the collect.
 
 .SS The Coll Directive
 
@@ -1825,7 +1831,7 @@ solved with cases:
 The @(coll) directive takes most of the same parameters as @(collect).
 See the section Collect Keyword Parameters above.
 So for instance @(coll :gap 0) means that the collects must be
-consecutive, and @(coll :times 2) means that (at most) two matches
+consecutive, and @(coll :maxtimes 2) means that at most two matches
 will be collected.  The :lines keyword does not exist, but there is
 an analogous :chars keyword.
 
