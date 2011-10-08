@@ -1152,8 +1152,8 @@ Skip and match the last character of the line:
 
   @(skip)@{last 1}@(eol)
 
-The skip directive has an optional numeric argument. The value of this
-argument limits the range of lines scanned for a match. Judicious use
+The skip directive has two optional arguments. If the first argument is a
+number, its value limits the range of lines scanned for a match. Judicious use
 of this feature can improve the performance of queries.
 
 Example: scan until "size: @SIZE" matches, which must happen within
@@ -1190,6 +1190,24 @@ be written instead:
 If the symbol nil is used in place of a number, it means to scan
 an unlimited range of lines; thus, @(skip nil) is equivalent to @(skip).
 
+If the symbol :greedy is used, it changes the semantics of the skip
+to longest match semantics, like the regular expression * operator.
+For instance, match the last three space-separated tokens of the line:
+
+  @(skip :greedy) @a @b @c
+
+Without :greedy, the variable @c will can match multiple tokens,
+and end up with spaces in it, because nothign follows @c and
+so it matches from any position which follows a space to the
+end of the line.  Also note the space in front of @a. Without this
+space, @a will get an empty string.
+
+A line oriented example of greedy skip: match the last line without
+using @eof:
+
+  @(skip :greedy)
+  @last_line
+
 There may be a second numeric argument. This specifies a minimum
 number of lines to skip before looking for a match. For instance,
 skip 15 lines and then search indefinitely for "begin ...":
@@ -1209,16 +1227,23 @@ is a noop, because it means: "the remainder of the query must match starting on
 the very next line", or, more briefly, "skip exactly zero lines", which is the
 behavior if the skip directive is omitted altogether.
 
-Here is a trick for grabbing the fourth line from the bottom of the input:
+Here is one trick for grabbing the fourth line from the bottom of the input:
 
   @(skip)
   @fourth_from_bottom
   @(skip 1 3)
   @(eof)
 
-Last three space-separated tokens of the line:
+Or using greedy skip:
 
-  @(skip)@a @b @c@(eol)
+  @(skip :greedy)
+  @fourth_from_bottom
+  @(skip 1 3)
+
+Nongreedy skip with the @(eof) has a slight advantage because the greedy skip
+will keep scanning even though it has found the correct match, then backtrack
+to the last good match once it runs out of data. The regular skip with explicit
+@(eof) will stop when the @(eof) matches.
 
 .SS The Trailer Directive
 
