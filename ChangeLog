@@ -1,5 +1,15 @@
 2011-10-08  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (mintimes_k, maxtimes_k): New keyword variables.
+	(match_line): Implemented :mintimes and :maxtimes, changing
+	the semantics of :times.
+	(match_files): Likewise.
+	(match_init): New keyword variables initialized.
+
+	* txr.1: Updated.
+
+2011-10-08  Kaz Kylheku  <kaz@kylheku.com>
+
 	* HACKING: Formatting.
 
 2011-10-07  Kaz Kylheku  <kaz@kylheku.com>
