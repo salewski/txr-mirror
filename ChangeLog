@@ -1,3 +1,7 @@
+2011-10-08  Kaz Kylheku  <kaz@kylheku.com>
+
+	* HACKING: Formatting.
+
 2011-10-07  Kaz Kylheku  <kaz@kylheku.com>
 
 	* match.c (match_files): Fixed spectacular bug in function calling,
