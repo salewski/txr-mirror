@@ -2178,7 +2178,7 @@ repeat_spec_same_data:
             {
               cons_bind (new_bindings, success, result);
 
-              for (piter = ub_p_a_pairs; piter; piter = cdr(aiter))
+              for (piter = ub_p_a_pairs; piter; piter = cdr(piter))
               {
                 cons_bind (param, arg, car(piter));
 
