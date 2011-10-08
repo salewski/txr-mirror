@@ -495,8 +495,10 @@ static val match_line(val bindings, val specline, val dataline,
           val greedy = eq(max, greedy_k);
           val last_good_result = nil, last_good_pos = nil;
 
-          if (!rest(specline))
-            break;
+          if (!rest(specline)) {
+            debuglf(lit("skip to end of line ~a:~a"), file, data_lineno);
+            return cons(bindings, t);
+          }
 
           {
             cnum reps_max = 0, reps_min = 0;

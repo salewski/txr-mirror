@@ -1,5 +1,11 @@
 2011-10-08  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (match_line): Skip directive bugfix. If skip is the
+	last item on the line, it must match the whole line by returning
+	success.
+
+2011-10-08  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (mintimes_k, maxtimes_k): New keyword variables.
 	(match_line): Implemented :mintimes and :maxtimes, changing
 	the semantics of :times.
