@@ -1,5 +1,11 @@
 2011-10-08  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Augment example of @/.*/ being used to skip to the
+	end of the line with @(skip) which is now better style,
+	since it avoids reaching for regexes.
+
+2011-10-08  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (match_line): Skip directive bugfix. If skip is the
 	last item on the line, it must match the whole line by returning
 	success.
