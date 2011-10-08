@@ -357,11 +357,6 @@ val ldiff(val list1, val list2)
   return out;
 }
 
-static val flatten_helper(val env, val item)
-{
-  return flatten(item);
-}
-
 val memq(val obj, val list)
 {
   while (list && car(list) != obj)
@@ -432,7 +427,7 @@ val flatten(val list)
   if (atom(list))
     return cons(list, nil);
 
-  return mappend(func_f1(nil, flatten_helper), list);
+  return mappend(func_n1(flatten), list);
 }
 
 cnum c_num(val num);

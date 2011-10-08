@@ -1,5 +1,10 @@
 2011-10-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (flatten_helper): Function removed.
+	(flatten): Recurse directly, using func_n1.
+
+2011-10-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: fxed wrong word.
 
 2011-10-06  Kaz Kylheku  <kaz@kylheku.com>
