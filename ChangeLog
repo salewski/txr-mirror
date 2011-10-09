@@ -1,5 +1,9 @@
 2011-10-08  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Removed references to obsolete @(next) variant.
+
+2011-10-08  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (vars_to_bindings): New function.
 	(match_line): keyword argument :vars implemented for coll.
 
