@@ -1095,26 +1095,13 @@ open the input source named by that argument. If the very first directive of a q
 avoids opening the first input source, but it does open the input source for
 any other directive, even one which does not consume any data.
 
-In the obsolescent second form, @(next) is followed by material on the same
-line, which may contain variables.  All of the variables must be bound. For
-example:
-
-  @(next)/path/to/@foo.txt
-
-The trailing material specifies gives the input source.
-The :nothrow behavior is implicit in this form. The syntax will
-disappear in some future version of
-.B txr
-.
-
-
 Note that "remainder of the query" refers to the subquery in which
 the next directive appears, not necessarily the entire query.
 
 For example, the following query looks for the line starting with "xyz"
 at the top of the file "foo.txt", within a some directive.
 After the @(end) which terminates the @(some), the "abc" is matched in the
-current file.
+previous file again.
 
   @(some)
   @(next "foo.txt")
@@ -1124,7 +1111,7 @@ current file.
 
 However, if the @(some) subquery successfully matched "xyz@suffix" within the
 file foo.text,  there is now a binding for the suffix variable, which
-is globally visible to the remainder of the entire query.
+is visible to the remainder of the entire query.
 
 The @(next) directive supports the file name conventions as the command
 line. The name - means standard input. Text which starts with a ! is
