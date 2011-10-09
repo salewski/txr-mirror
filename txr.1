@@ -1701,10 +1701,76 @@ other supported keywords are :times, :mintimes, :maxtimes and lines.
 The shorthand :times N means the same thing as :mintimes N :maxtimes N.
 These specify how many matches should be collected. If there are fewer
 than mintimes matches, the collect fails. If maxtimes matches are collected,
-collect stops collecting immediately.
+collect stops collecting immediately. Example:
 
-Finally, the :lines parameter specifies the upper bound on how many lines
-should be scanned by the collect.
+ @(collect :times 3)
+ @a @b
+ @(end)
+
+This will collect a match for "@a @b" exactly three times. If three
+matches are not found, it will fail.
+
+The :lines parameter specifies the upper bound on how many lines
+should be scanned by collect, measuring from the starting position.
+The extent of the collect body is not counted. Example:
+
+ @(collect :lines 2)
+ foo: @a
+ bar: @b
+ baz: @c
+ @(end)
+
+The above collect will look for a match only twice: at the current position,
+and one line down.
+
+There is one more keyword, :vars, discussed in the following section.
+
+.SS Specifying Variables in Collect
+
+Normally, any variable for which a new binding occurs in a collect is
+collected. A collect clause may be sloppy: it can neglect to collect some
+variables on some iterations, or bind some variables which behave like
+local temporaries, but end up collated into lists.
+
+The :vars keyword allows the query writer to tame the collect body.
+
+The argument to :vars is a list of variable specs. A variable spec is either a
+symbol, or a (<symbol> <expression>) pair, where the expression specifies a
+default value.
+
+When a :vars list is specified, it means that only the given variables can
+emerge from the successful collect. Any newly introduced bindings for other
+variables do not propagate.
+
+Furthermore, for any variable which is not specified with a default value, the
+collect body, whenever it matches successfully, must bind that variable. If it
+neglects to bind the variable, an exception of type query_error is thrown.
+
+For any variable which has a default value, if the collect body neglects to
+bind that variable, the behavior is as if the collect did bind that variable to that default value.
+
+The default values are expressions, and so can be quasiliterals.
+
+Example:
+
+  @(collect :vars (a b (c "foo")))
+  @a @c
+  @(end)
+
+Here, if the body "@a @c" matches, an error will be thrown because one of the
+mandatory variables is b, and the body neglects to produce a binding for b.
+
+Example:
+
+  @(collect :vars (a (c "foo")))
+  @a @b
+  @(end)
+
+Here, if "@a @b" matches, only a will be collected, but not b, because b is not
+in the variable list. Furthermore, because there is no binding for c in the
+body, a binding is created with the value "foo", exactly as if c matched
+such a piece of text.
+
 
 .SS The Coll Directive
 

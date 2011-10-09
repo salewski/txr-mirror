@@ -285,6 +285,30 @@ static val dest_bind(val linenum, val bindings, val pattern, val value)
   return t;
 }
 
+static val eval_form(val lineno, val form, val bindings);
+
+static val vars_to_bindings(val lineno, val vars, val bindings)
+{
+  val iter;
+  list_collect_decl (fixed_vars, tail);
+
+  if (!consp(vars)) 
+    sem_error(lineno, lit("not a valid variable list: ~a"), vars, nao);
+
+  for (iter = vars; iter; iter = cdr(iter)) {
+    val item = car(iter);
+    if (bindable(item)) {
+      list_collect (tail, cons(item, nil));
+    } else if (consp(item) && bindable(first(item))) {
+      list_collect (tail, cons(first(item), 
+                               cdr(eval_form(lineno, second(item), bindings))));
+    } else { 
+      sem_error(lineno, lit("not a variable spec: ~a"), item, nao);
+    }
+  }
+  return fixed_vars;
+}
+
 static val match_line(val bindings, val specline, val dataline,
                       val pos, val spec_lineno, val data_lineno,
                       val file)
@@ -563,6 +587,7 @@ static val match_line(val bindings, val specline, val dataline,
           val mintimes = getplist(args, mintimes_k);
           val maxtimes = getplist(args, maxtimes_k);
           val chars = getplist(args, chars_k);
+          val vars = getplist(args, vars_k);
           cnum cmax = nump(gap) ? c_num(gap) : (nump(max) ? c_num(max) : 0);
           cnum cmin = nump(gap) ? c_num(gap) : (nump(min) ? c_num(min) : 0);
           cnum mincounter = cmin, maxcounter = 0;
@@ -573,6 +598,8 @@ static val match_line(val bindings, val specline, val dataline,
           cnum cchars = nump(chars) ? c_num(chars) : 0;
           cnum timescounter = 0, charscounter = 0;
           val iter;
+
+          vars = vars_to_bindings(spec_lineno, vars, bindings);
 
           if (((times || maxtimes) && ctimax == 0) || (chars && cchars == 0))
             break;
@@ -616,13 +643,30 @@ static val match_line(val bindings, val specline, val dataline,
                                                      bindings, eq_f, nil);
                 LOG_MATCH("coll", new_pos);
 
+                for (iter = vars; iter; iter = cdr(iter)) {
+                  cons_bind (var, dfl, car(iter));
+                  val exists = assoc(new_bindings, var);
+
+                  if (!exists) {
+                    if (!dfl) 
+                      sem_error(spec_lineno, lit("coll failed to bind ~a"),
+                                var, nao);
+                    else
+                      strictly_new_bindings = acons(strictly_new_bindings, 
+                                                    var, dfl);
+                  }
+                }
+
                 for (iter = strictly_new_bindings; iter; iter = cdr(iter))
                 {
                   val binding = car(iter);
-                  val existing = assoc(bindings_coll, car(binding));
+                  val vars_binding = assoc(vars, car(binding));
 
-                  bindings_coll = acons_new(bindings_coll, car(binding),
-                                            cons(cdr(binding), cdr(existing)));
+                  if (!vars || vars_binding) {
+                    val existing = assoc(bindings_coll, car(binding));
+                    bindings_coll = acons_new(bindings_coll, car(binding),
+                                              cons(cdr(binding), cdr(existing)));
+                  }
                 }
               }
 
@@ -1654,23 +1698,7 @@ repeat_spec_same_data:
         if (gap && (max || min))
           sem_error(spec_linenum, lit("collect: cannot mix :gap with :mingap or :maxgap"), nao);
 
-        if (vars) {
-          list_collect_decl (fixed_vars, tail);
-
-          if (!consp(vars)) 
-            sem_error(spec_linenum, lit("collect: invalid argument to :vars"), nao);
-          for (iter = vars; iter; iter = cdr(iter)) {
-            val item = car(iter);
-            if (bindable(item)) {
-              list_collect (tail, cons(item, nil));
-            } else if (consp(item) && bindable(first(item))) {
-              list_collect (tail, cons(first(item), second(item)));
-            } else { 
-              sem_error(spec_linenum, lit("not a variable spec: ~a"), item, nao);
-            }
-          }
-          vars = fixed_vars;
-        }
+        vars = vars_to_bindings(spec_linenum, vars, bindings);
 
         if ((times && ctimes == 0) || (lines && clines == 0)) {
           if ((spec = rest(spec)) == nil) 
