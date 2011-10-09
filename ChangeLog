@@ -1,5 +1,12 @@
 2011-10-08  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (vars_to_bindings): New function.
+	(match_line): keyword argument :vars implemented for coll.
+
+	* txr.1: Documented :vars.
+
+2011-10-08  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (vars_k): New symbol variable.
 	(match_files): Implemented :vars in collect.
 	(match_init): New symbol variable initialized.
