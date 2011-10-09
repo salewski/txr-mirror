@@ -50,6 +50,7 @@ int output_produced;
 val mingap_k, maxgap_k, gap_k, mintimes_k, maxtimes_k, times_k;
 val lines_k, chars_k;
 val choose_s, longest_k, shortest_k, greedy_k;
+val vars_k;
 
 static void debugf(val fmt, ...)
 {
@@ -1637,6 +1638,7 @@ repeat_spec_same_data:
         val mintimes = getplist(args, mintimes_k);
         val maxtimes = getplist(args, maxtimes_k);
         val lines = getplist(args, lines_k);
+        val vars = getplist(args, vars_k);
         cnum cmax = nump(gap) ? c_num(gap) : (nump(max) ? c_num(max) : 0);
         cnum cmin = nump(gap) ? c_num(gap) : (nump(min) ? c_num(min) : 0);
         cnum mincounter = cmin, maxcounter = 0;
@@ -1651,6 +1653,24 @@ repeat_spec_same_data:
 
         if (gap && (max || min))
           sem_error(spec_linenum, lit("collect: cannot mix :gap with :mingap or :maxgap"), nao);
+
+        if (vars) {
+          list_collect_decl (fixed_vars, tail);
+
+          if (!consp(vars)) 
+            sem_error(spec_linenum, lit("collect: invalid argument to :vars"), nao);
+          for (iter = vars; iter; iter = cdr(iter)) {
+            val item = car(iter);
+            if (bindable(item)) {
+              list_collect (tail, cons(item, nil));
+            } else if (consp(item) && bindable(first(item))) {
+              list_collect (tail, cons(first(item), second(item)));
+            } else { 
+              sem_error(spec_linenum, lit("not a variable spec: ~a"), item, nao);
+            }
+          }
+          vars = fixed_vars;
+        }
 
         if ((times && ctimes == 0) || (lines && clines == 0)) {
           if ((spec = rest(spec)) == nil) 
@@ -1711,13 +1731,31 @@ repeat_spec_same_data:
               debuglf(spec_linenum, lit("collect matched ~a:~a"),
                       first(files), num(data_lineno), nao);
 
+              for (iter = vars; iter; iter = cdr(iter)) {
+                cons_bind (var, dfl, car(iter));
+                val exists = assoc(new_bindings, var);
+
+                if (!exists) {
+                  if (!dfl) 
+                    sem_error(spec_linenum, lit("collect failed to bind ~a"),
+                              var, nao);
+                  else
+                    strictly_new_bindings = acons(strictly_new_bindings, 
+                                                  var, dfl);
+                }
+              }
+
               for (iter = strictly_new_bindings; iter; iter = cdr(iter))
               {
                 val binding = car(iter);
-                val existing = assoc(bindings_coll, car(binding));
+                val vars_binding = assoc(vars, car(binding));
 
-                bindings_coll = acons_new(bindings_coll, car(binding),
-                                          cons(cdr(binding), cdr(existing)));
+                if (!vars || vars_binding) {
+                  val existing = assoc(bindings_coll, car(binding));
+
+                  bindings_coll = acons_new(bindings_coll, car(binding),
+                                            cons(cdr(binding), cdr(existing)));
+                }
               }
             }
 
@@ -2311,4 +2349,5 @@ void match_init(void)
   longest_k = intern(lit("longest"), keyword_package);
   shortest_k = intern(lit("shortest"), keyword_package);
   greedy_k = intern(lit("greedy"), keyword_package);
+  vars_k = intern(lit("vars"), keyword_package);
 }

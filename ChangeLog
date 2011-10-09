@@ -1,5 +1,11 @@
 2011-10-08  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (vars_k): New symbol variable.
+	(match_files): Implemented :vars in collect.
+	(match_init): New symbol variable initialized.
+
+2011-10-08  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: Augment example of @/.*/ being used to skip to the
 	end of the line with @(skip) which is now better style,
 	since it avoids reaching for regexes.
