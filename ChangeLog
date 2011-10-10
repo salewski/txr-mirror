@@ -1,5 +1,57 @@
 2011-10-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 039
+
+	Ported to Cygwin.
+
+	Horizontal modes for @(trailer), @(skip).
+
+	New :greedy keyword in skip which can be given instead of max
+	distance to give it longest match semantics.
+
+	@(collect) and @(coll) support a new clause, @(last).
+
+	The :times keyword in @(collect) and @(coll) introduced in the
+	previous release has a different meaning. The keywords :mintimes
+	and :maxtimes are added, and :maxtimes behaves like :times
+	did previously.
+
+	There is a :vars keyword in @(collect) and @(coll) to have
+	some control over what bindings are collected, as well
+	as error checking for missing bindings and defaulting behavior.
+
+	New @(eol) directive for explicitly matching the end of
+	the input or end of a line.
+
+	New lexical syntax: @(...) and @abc is allowed within expressions.
+	This produces a special structural syntax with no assigned meaning yet.
+
+	Awful bug fixed in function calling: if a function was called with
+	multiple unbound variables, and bindings were produced for them,
+	only one variable was being propagated to the calling environment.
+
+	Bugfixes to binding environment handling in the face of
+	@(local)/@(forget) directive.
+
+	Fix for the issue of unbound variables being silently ignored
+	in some contexts, like quasiliterals. An exception is now thrown.
+
+	Bugfix for an issue with consecutive variables in output.
+
+	Bugfix for an issue with horizontal @(cases) not collecting
+	bindings.
+
+	Bugfix for an issue with @(until) inside @(coll) not seeing
+	bindings from main clause.
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+2011-10-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	One more swing at this with the axe.
 
 	* lib.h (wini, wref): New macros.
