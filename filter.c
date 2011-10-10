@@ -128,7 +128,7 @@ val get_filter_trie(val sym)
 }
 
 struct filter_pair {
-  const wchar_t *key, *value;
+  const wchli_t *key, *value;
 };
 
 static val build_filter(struct filter_pair *pair, val compress_p)

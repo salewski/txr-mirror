@@ -188,27 +188,29 @@ INLINE type_t type(val obj)
   return tag(obj) ? (type_t) tag(obj) : obj->t.type;
 }
 
+typedef struct wli wchli_t;
+
 #if LIT_ALIGN < 4
-#define wli(lit) (L ## "\0" lit)
+#define wli(lit) ((const wchli_t *) L ## "\0" lit)
 #else
-#define wli(lit) (L ## lit)
+#define wli(lit) ((const wchli_t *) L ## lit)
 #endif
 
-INLINE val auto_str(const wchar_t *str)
+INLINE val auto_str(const wchli_t *str)
 {
 #if LIT_ALIGN < 4
-  return (val) ((cnum) (str + 1) | TAG_LIT);
+  return (val) (((cnum) str + 1) | TAG_LIT);
 #else
-  return (val) ((cnum) (str) | TAG_LIT);
+  return (val) (((cnum) str) | TAG_LIT);
 #endif
 }
 
-INLINE val static_str(const wchar_t *str)
+INLINE val static_str(const wchli_t *str)
 {
 #if LIT_ALIGN < 4
-  return (val) ((cnum) (str + 1) | TAG_LIT);
+  return (val) (((cnum) str + 1) | TAG_LIT);
 #else
-  return (val) ((cnum) (str) | TAG_LIT);
+  return (val) (((cnum) str) | TAG_LIT);
 #endif
 }
 
