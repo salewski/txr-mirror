@@ -191,7 +191,7 @@ INLINE type_t type(val obj)
 typedef struct wli wchli_t;
 
 #if LIT_ALIGN < 4
-#define wli(lit) ((const wchli_t *) L ## "\0" lit)
+#define wli(lit) ((const wchli_t *) L"\0" L ## lit L"\0")
 #else
 #define wli(lit) ((const wchli_t *) L ## lit)
 #endif
@@ -235,7 +235,7 @@ INLINE val chr(wchar_t ch)
 }
 
 #if LIT_ALIGN < 4
-#define lit_noex(strlit) ((obj_t *) ((cnum) (L ## "\0" L ## strlit + 1) | TAG_LIT))
+#define lit_noex(strlit) ((obj_t *) ((cnum) (L"\0" L ## strlit L"\0" + 1) | TAG_LIT))
 #else
 #define lit_noex(strlit) ((obj_t *) ((cnum) (L ## strlit) | TAG_LIT))
 #endif

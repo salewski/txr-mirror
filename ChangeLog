@@ -1,5 +1,13 @@
 2011-10-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.h (wli, lit_noex): We need null characters on both ends
+	so that this hack is correct for null strings. When recovering
+	the wchar_t pointer from a null literal object, we wil increment
+	unconditionally, since it always points to a null character.
+	We end up skipping past null terminator #1, but safely landing on #2.
+
+2011-10-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	Following up to previous commit's TODO.
 
 	* filter.c (struct filter_par): wchar_t becomes wchli_t.
