@@ -17,6 +17,7 @@ CONTENTS:
 2.3  The COBJ type
 2.4  Strings
 2.4.1  Encapsulated C Strings
+2.4.2  Representation Hacks for 2 Byte wchar_t
 3.  Garbage Collection
 3.1  Root Pointers
 3.2  GC-safe Code
@@ -27,6 +28,7 @@ CONTENTS:
 4.2.  Debugging the Yacc-generated Parser
 4.3.  Debugging GC Issues
 4.4.  Valgrind: Your Friend
+
 
 0. Overview
 
@@ -235,7 +237,7 @@ The object system provides three kinds of strings: encapsulated
 C strings, regular strings and lazy strings (type tags LIT, STR and LSTR,
 respectively).
 
-2.4.1 Encapsulated C Strings
+2.4.2 Encapsulated C Strings
 
 The design of the dynamic type system recognizes that programs contain literals
 and static strings, and that sometimes transient strings are are used which
@@ -278,6 +280,62 @@ automatic string, that object must not be used beyond the lifetime of that
 string.  Note that it is okay if garbage objects contain auto_str values, which
 refer to strings that no longer exist, because the garbage collector will
 recognize these pointers by their type tag and not use them.
+
+2.4.1 Representation Hacks for 2 Byte wchar_t
+
+On some systems (notably Cygwin), the wide character type wchar_t is only
+two bytes wide, and the alignment of string literals and arrays is two
+byte. This creates a problem: we need a two-bit type tag in the pointer,
+but pointers have only one spare bit due to their strict alignment.
+
+It turns out that this is not a problem provided that we can ensure that no two
+distinct string objects share the same four byte word, and if we're willing to
+incur a small performance penalty to find the beginning of the string when we
+need it.
+
+On these systems, what we do is add a null character at the beginning of the
+string, and an extra one at the end: So the literal L"abc" is actually
+represented by L"\0" L"abc" L"\0".  We then take the pointer to the 'a'
+character as the string, which falls into one of two cases: it is either
+four-byte aligned (case 1), or it is two-byte aligned (case 2). Either way, it
+falls into some four byte cell, either at its base or at its third byte. When
+we add the tag bits 11 (TAG_LIT), we make this pointer point to the fourth byte
+(byte 3) of the four byte cell.  To recover the pointer, we remove the tag
+(replace it with bits 00), which leaves us pointing to the base of the
+four-byte cell. The string either starts there (case 1) or two bytes higher
+(case 2). The case is distinguished by looking at the pointed-at wchar_t. If it
+is the null character, then the pointer is incremented to the next character.
+
+The padding at the end of the string ensures that  this trick works for the
+null string, where the test for the null character always succeeds.
+
+The lit macro, which existed before this hack, takes care of doing this so most
+code doesn't know the difference.
+
+The new wli macro helps manage this representation when access is needed to C
+string literals which are assigned to wchar_t * variables, and also provides
+type safety by using a different pointer type for strings which have been
+treated with the padding.
+
+  const wchli_t *abc = wli("abc"); /* special type */
+
+  val abc_obj = static_str(abc); /* good: requires const wchlit_t * pointer */
+
+  val xyz_obj = static_str(L"xyz"); /* error */
+
+  val def_obj = static_str(lit("abc")); /* error */
+
+The wini and wref macros manage this representation when character arrays are
+used. The wini macro abstract away the initializer, so the programmer doesn't
+have to be aware of the extra null bytes:
+
+  wchar_t abc[] = wini("abc"); /* potentially six wchar_t units! */
+
+  wchar_t *ptr_a = wref(abc); /* pointer to "a" */
+
+  wref(abc)[1] = L'B'; /* overwite 'b' with 'B' */
+
+On a platform where this hack isn't needed, these w* macros are noops.
 
 
 3. Garbage Collection

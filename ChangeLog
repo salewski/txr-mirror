@@ -1,5 +1,9 @@
 2011-10-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	* HACKING: Documented portability hacks for narrow wchar_t.
+
+2011-10-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	Version 039
 
 	Ported to Cygwin.
