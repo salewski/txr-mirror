@@ -188,19 +188,38 @@ INLINE type_t type(val obj)
   return tag(obj) ? (type_t) tag(obj) : obj->t.type;
 }
 
+#if LIT_ALIGN < 4
+#define wli(lit) (L ## "\0" lit)
+#else
+#define wli(lit) (L ## lit)
+#endif
+
 INLINE val auto_str(const wchar_t *str)
 {
+#if LIT_ALIGN < 4
+  return (val) ((cnum) (str + 1) | TAG_LIT);
+#else
   return (val) ((cnum) (str) | TAG_LIT);
+#endif
 }
 
 INLINE val static_str(const wchar_t *str)
 {
+#if LIT_ALIGN < 4
+  return (val) ((cnum) (str + 1) | TAG_LIT);
+#else
   return (val) ((cnum) (str) | TAG_LIT);
+#endif
 }
 
 INLINE wchar_t *litptr(val obj)
 {
+#if LIT_ALIGN < 4
+ wchar_t *ret = (wchar_t *) ((cnum) obj & ~TAG_MASK);
+ return (*ret == 0) ? ret + 1 : ret;
+#else
  return (wchar_t *) ((cnum) obj & ~TAG_MASK);
+#endif
 }
 
 INLINE val num_fast(cnum n)
@@ -213,7 +232,12 @@ INLINE val chr(wchar_t ch)
   return (val) (((cnum) ch << TAG_SHIFT) | TAG_CHR);
 }
 
+#if LIT_ALIGN < 4
+#define lit_noex(strlit) ((obj_t *) ((cnum) (L ## "\0" L ## strlit + 1) | TAG_LIT))
+#else
 #define lit_noex(strlit) ((obj_t *) ((cnum) (L ## strlit) | TAG_LIT))
+#endif
+
 #define lit(strlit) lit_noex(strlit)
 
 extern val keyword_package, system_package, user_package;

@@ -415,9 +415,16 @@ static val string_out_put_string(val stream, val str)
 
 static val string_out_put_char(val stream, val ch)
 {
+#if LIT_ALIGN < 4
+  wchar_t mini[3];
+  mini[0] = 0;
+  mini[1] = c_chr(ch);
+  mini[2] = 0;
+#else
   wchar_t mini[2];
   mini[0] = c_chr(ch);
   mini[1] = 0;
+#endif
   return string_out_put_string(stream, auto_str(mini));
 }
 

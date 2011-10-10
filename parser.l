@@ -35,6 +35,7 @@
 #include <dirent.h>
 #include <wchar.h>
 #include <setjmp.h>
+#include <unistd.h>
 #include "config.h"
 #include "lib.h"
 #include "y.tab.h"

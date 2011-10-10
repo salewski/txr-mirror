@@ -1,5 +1,44 @@
 2011-10-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	Ported to Cygwin.
+
+	TODO: there should be some type safety with the new wli macro
+	so that if it is forgotten, there will be a diagnostic.
+
+	* configure (lit_align): New configuration variable
+	and configuration test. Generates LIT_ALIGN in config.h.
+	Fixed the integer-holds-pointer test for the different output
+	from the nm program on Cygwin. The arrays become common symbols
+	marked C which do not show an offset attribute, only size:
+	one less column.
+
+	* filter.c (to_html_table, from_html_table): wrap wide string
+	literals with the wli macro. This must be done from now on for
+	all literals and initializes of arrays that are going to be
+	directly converted to type tagged val-s.
+
+	* lib.h (wli): New macro.
+	(auto_str, static_str, litptr, lit_noex): Handle wide literals on
+	platforms where they are aligned to only two bytes, such that we don't
+	have two bits in the pointer. We can still add our 11 bit type tag, but
+	then when recovering the pointer to the data, we have may have
+	to fix up the pointer. 
+
+	* parser.l: Another portability issue here. Flex generates a scanner
+	which has #include <unistd.h> in the middle, after the source file's
+	own #includes which can introduce macros. On Cygwin, there is some
+	hygiene problem whereby our "noreturn" macro causes the <unistd.h>
+	header to generate bad syntax and fail to compile. Stupid Cygwin
+	and even stupider flex! The workaround is to include <unistd.h>
+	at the top in the flex source.
+
+	* stream.c (string_out_put_char): This is one more place where
+	the string literal handling hack spreads.
+
+	* txr.c (version): Wrap string in wli.
+
+2011-10-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	* dep.mk: Regenerated. Too easy to neglect this file.
 
 2011-10-09  Kaz Kylheku  <kaz@kylheku.com>

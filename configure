@@ -230,6 +230,15 @@ intptr [$intptr]
   value can be converted to it. If this is blank, the configure script
   will try to auto detect it.
 
+lit_align [$lit_align]
+
+  Specifies alignment for wide string literals.  This is guessed
+  from the size of the wchar_t type. If your wchar_t type is two byte wide, but
+  wide literals are aligned to four bytes, then you should specify this.  This
+  will eliminate some kludges in the program. There is no easy way to check
+  for this withut generating and running a C program, which is unfriendly
+  for cross-compiling!
+
 inline [$inline]
 
   Specifies the syntax for defining an inline function, in such
@@ -620,7 +629,15 @@ char sizeof_longlong_t[sizeof (longlong_t)];
 
   while read symbol type offset size ; do
     eval "size=$(( 0$size + 0 ))"
-    eval $(printf "%s=%d\n" "$symbol" "$size")
+    symbol=${symbol#_}
+    if [ $type == "C" ] ; then
+      size=$offset
+    fi
+    case "$symbol" in
+    sizeof* )
+      eval $(printf "%s=%d\n" "$symbol" "$size")
+      ;;
+    esac
   done < conftest.syms
 
   rm -f conftest.syms conftest.o
@@ -651,6 +668,68 @@ printf "typedef $intptr int_ptr_t;\n" >> config.h
 intptr_max_expr="((((($intptr) 1 << $((sizeof_ptr * 8 - 2))) - 1) << 1) + 1)"
 printf "#define INT_PTR_MAX %s\n" "$intptr_max_expr" >> config.h
 printf "#define INT_PTR_MIN (-INT_PTR_MAX)\n" >> config.h
+
+#
+# Alignment of wchar_t
+#
+# What we really want to know is the alignment of wide string literals
+# like L"wide literal".
+#
+# We make pessimistic assumption that the size of the wchar_t type is this
+# alignment.
+#
+# There is no easy way to get the information without running a compiled
+# program.
+#
+
+printf "Conservatively guessing the alignment of wide literals ... "
+
+if [ -z "$lit_align" ] ; then
+  cat > conftest.c <<!
+#include <wchar.h>
+char sizeof_wchar_t[sizeof (wchar_t)];
+!
+  rm -f conftest.o conftest.syms
+
+  if ! make conftest.syms > conftest.err 2>&1 ; then
+    printf "failed\n\n"
+
+    printf "Errors from compilation: \n\n"
+    cat conftest.err
+    exit 1
+  fi
+
+  sizeof_wchar_t=0
+
+  while read symbol type offset size ; do
+    eval "size=$(( 0$size + 0 ))"
+    symbol=${symbol#_}
+    if [ $type == "C" ] ; then
+      size=$offset
+    fi
+    case "$symbol" in
+    sizeof* )
+      eval $(printf "%s=%d\n" "$symbol" "$size")
+      ;;
+    esac
+  done < conftest.syms
+
+  rm -f conftest.syms conftest.o
+
+  if [ $sizeof_wchar_t -eq 0 ] ; then
+    printf "failed\n"
+    exit 1
+  fi
+
+  lit_align=$sizeof_wchar_t
+fi
+
+printf "%d\n" "$lit_align"
+printf "#define LIT_ALIGN %d\n" "$lit_align" >> config.h
+
+#
+# Inline functions
+# 
 
 printf "Checking how to declare inline functions ... "
 
@@ -686,6 +765,10 @@ fi
 
 printf '"%s"\n' "$inline"
 printf "#define INLINE $inline\n" >> config.h
+
+#
+# Valgrind
+#
 
 if [ -n "$valgrind" ] ; then
   printf "Checking valgrind API availability ... "
