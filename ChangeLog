@@ -1,5 +1,9 @@
 2011-10-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	* dep.mk: Regenerated. Too easy to neglect this file.
+
+2011-10-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (vars_to_bindings): Regression fix: recent commit
 	caused test failure. An empty list not treated as a valid collect
 	variable list.
