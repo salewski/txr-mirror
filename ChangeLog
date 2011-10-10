@@ -1,5 +1,29 @@
 2011-10-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	Following up to previous commit's TODO.
+
+	* filter.c (struct filter_par): wchar_t becomes wchli_t.
+
+	* lib.h (wchli_t): New type: an incomplete structure type,
+	so that a pointer to this type is incompatible with anything else.
+	(wli): Macro produces const wchli_t * pointer instead of
+	const wchar_t *.
+	(auto_str, static_str): Accept a const wchli_t * instead
+	of const wchar_t *, making it impossible to misuse these
+	functions by passing in a literal.
+
+	* stream.c (string_out_put_char): These type changes showed
+	this hack to have a bug. Confronted with the need to cast
+	from const wchar_t * to const wchli_t *, it's obvious that
+	the conversion has to be done properly with the + 1 in the
+	one platform case, but not the other.
+
+	* txr.c (version): Type changed to const wchli_t.
+
+	* txr.h (version): Declaration updated.
+
+2011-10-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	Ported to Cygwin.
 
 	TODO: there should be some type safety with the new wli macro

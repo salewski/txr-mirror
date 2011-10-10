@@ -420,12 +420,13 @@ static val string_out_put_char(val stream, val ch)
   mini[0] = 0;
   mini[1] = c_chr(ch);
   mini[2] = 0;
+  return string_out_put_string(stream, auto_str((const wchli_t *) (mini + 1)));
 #else
   wchar_t mini[2];
   mini[0] = c_chr(ch);
   mini[1] = 0;
+  return string_out_put_string(stream, auto_str((const wchli_t *) mini));
 #endif
-  return string_out_put_string(stream, auto_str(mini));
 }
 
 static struct strm_ops string_out_ops = {
