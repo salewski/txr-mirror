@@ -1,5 +1,11 @@
 2011-10-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (vars_to_bindings): Regression fix: recent commit
+	caused test failure. An empty list not treated as a valid collect
+	variable list.
+
+2011-10-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	* configure: Fixed indentation.
 
 2011-10-08  Kaz Kylheku  <kaz@kylheku.com>
