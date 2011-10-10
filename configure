@@ -677,32 +677,32 @@ $inline int func(void)
   return 0;
 }
 !
-	if ! make conftest2 > conftest.err 2>&1 ; then
-	  continue
-	fi
-	break
-    done
-  fi
+    if ! make conftest2 > conftest.err 2>&1 ; then
+	continue
+    fi
+    break
+  done
+fi
 
-  printf '"%s"\n' "$inline"
-  printf "#define INLINE $inline\n" >> config.h
+printf '"%s"\n' "$inline"
+printf "#define INLINE $inline\n" >> config.h
 
-  if [ -n "$valgrind" ] ; then
-    printf "Checking valgrind API availability ... "
+if [ -n "$valgrind" ] ; then
+  printf "Checking valgrind API availability ... "
 
-    cat > conftest.c <<!
-  #include <valgrind/memcheck.h>
+  cat > conftest.c <<!
+#include <valgrind/memcheck.h>
 
-  #ifdef VALGRIND_DO_CLIENT_REQUEST
+#ifdef VALGRIND_DO_CLIENT_REQUEST
 
-  int main(void)
-  {
-    return 0;
-  }
+int main(void)
+{
+  return 0;
+}
 
-  #else
-  syntax error
-  #endif
+#else
+syntax error
+#endif
 !
   if ! make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
     printf "failed\n\n"
