@@ -292,7 +292,7 @@ static val vars_to_bindings(val lineno, val vars, val bindings)
   val iter;
   list_collect_decl (fixed_vars, tail);
 
-  if (!consp(vars)) 
+  if (vars && !consp(vars)) 
     sem_error(lineno, lit("not a valid variable list: ~a"), vars, nao);
 
   for (iter = vars; iter; iter = cdr(iter)) {
