@@ -237,7 +237,7 @@ The object system provides three kinds of strings: encapsulated
 C strings, regular strings and lazy strings (type tags LIT, STR and LSTR,
 respectively).
 
-2.4.2 Encapsulated C Strings
+2.4.1 Encapsulated C Strings
 
 The design of the dynamic type system recognizes that programs contain literals
 and static strings, and that sometimes transient strings are are used which
@@ -281,7 +281,7 @@ string.  Note that it is okay if garbage objects contain auto_str values, which
 refer to strings that no longer exist, because the garbage collector will
 recognize these pointers by their type tag and not use them.
 
-2.4.1 Representation Hacks for 2 Byte wchar_t
+2.4.2 Representation Hacks for 2 Byte wchar_t
 
 On some systems (notably Cygwin), the wide character type wchar_t is only
 two bytes wide, and the alignment of string literals and arrays is two
