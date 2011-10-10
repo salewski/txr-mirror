@@ -28,9 +28,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <wchar.h>
+#include <setjmp.h>
 #include "config.h"
 #include "lib.h"
+#include "unwind.h"
 #include "utf8.h"
+
+#if WCHAR_MAX > 65535
+#define FULL_UNICODE
+#endif
+
+#ifndef FULL_UNICODE
+static void conversion_error(void)
+{
+  uw_throw(range_error_s, 
+	   lit("encountered utf-8 character that needs full unicode support"));
+}
+#endif
 
 size_t utf8_from_uc(wchar_t *wdst, const unsigned char *src)
 {
@@ -66,8 +80,12 @@ size_t utf8_from_uc(wchar_t *wdst, const unsigned char *src)
         state = utf8_more2;
         wch = (ch & 0xf);
       } else if (ch >= 0xf0 && ch < 0xf5) {
+#ifdef FULL_UNICODE
         state = utf8_more3;
         wch = (ch & 0x7);
+#else
+	conversion_error();
+#endif
       } else {
         if (wdst)
           *wdst++ = 0xdc00 | ch;
@@ -249,8 +267,12 @@ wint_t utf8_decode(utf8_decoder_t *ud, int (*get)(mem_t *ctx), mem_t *ctx)
         ud->state = utf8_more2;
         ud->wch = (ch & 0xf);
       } else if (ch >= 0xf0 && ch < 0xf5) {
+#ifdef FULL_UNICODE
         ud->state = utf8_more3;
         ud->wch = (ch & 0x7);
+#else
+	conversion_error();
+#endif
       } else {
         ud->back = ud->tail;
         return 0xdc00 | ch;
