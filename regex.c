@@ -38,6 +38,10 @@
 #include "regex.h"
 #include "txr.h"
 
+#if WCHAR_MAX > 65535
+#define FULL_UNICODE
+#endif
+
 typedef union nfa_state nfa_state_t;
 
 typedef struct nfa {
@@ -62,10 +66,14 @@ typedef unsigned int bitcell_t;
 #define CHAR_SET_L0(CH) ((CH) & 0xFF)
 #define CHAR_SET_L1(CH) (((CH) >> 8) & 0xF)
 #define CHAR_SET_L2(CH) (((CH) >> 12) & 0xF)
+#ifdef FULL_UNICODE
 #define CHAR_SET_L3(CH) (((CH) >> 16) & 0x1F)
+#endif
 
+#ifdef FULL_UNICODE
 #define CHAR_SET_L2_LO(CH) ((CH) & (~(wchar_t) 0xFFFF))
 #define CHAR_SET_L2_HI(CH) ((CH) | ((wchar_t) 0xFFFF))
+#endif
 
 #define CHAR_SET_L1_LO(CH) ((CH) & (~(wchar_t) 0xFFF))
 #define CHAR_SET_L1_HI(CH) ((CH) | ((wchar_t) 0xFFF))
@@ -74,13 +82,18 @@ typedef unsigned int bitcell_t;
 #define CHAR_SET_L0_HI(CH) ((CH) | ((wchar_t) 0xFF))
 
 typedef enum {
-  CHSET_SMALL, CHSET_DISPLACED, CHSET_LARGE, CHSET_XLARGE
+  CHSET_SMALL, CHSET_DISPLACED, CHSET_LARGE, 
+#ifdef FULL_UNICODE
+  CHSET_XLARGE
+#endif
 } chset_type_t;
 
 typedef bitcell_t cset_L0_t[CHAR_SET_SIZE];
 typedef cset_L0_t *cset_L1_t[16];
 typedef cset_L1_t *cset_L2_t[16];
+#ifdef FULL_UNICODE
 typedef cset_L2_t *cset_L3_t[17];
+#endif
 
 struct any_char_set {
   unsigned type : 3;
@@ -107,18 +120,22 @@ struct large_char_set {
   cset_L2_t dir;
 };
 
+#ifdef FULL_UNICODE
 struct xlarge_char_set {
   unsigned type : 3;
   unsigned comp : 1;
   cset_L3_t dir;
 };
+#endif
 
 typedef union char_set {
   struct any_char_set any;
   struct small_char_set s;
   struct displaced_char_set d;
   struct large_char_set l;
+#ifdef FULL_UNICODE
   struct xlarge_char_set xl;
+#endif
 } char_set_t;
 
 #define NFA_SET_SIZE 512
@@ -299,6 +316,7 @@ static void L1_free(cset_L1_t *L1)
       free((*L1)[i1]);
 }
 
+#ifdef FULL_UNICODE
 static int L2_full(cset_L2_t *L2)
 {
   int i;
@@ -307,6 +325,7 @@ static int L2_full(cset_L2_t *L2)
       return 0;
   return 1;
 }
+#endif
 
 static void L2_fill_range(cset_L2_t *L2, wchar_t ch0, wchar_t ch1)
 {
@@ -378,6 +397,8 @@ static void L2_free(cset_L2_t *L2)
   }
 }
 
+#ifdef FULL_UNICODE
+
 static void L3_fill_range(cset_L3_t *L3, wchar_t ch0, wchar_t ch1)
 {
   int i3, i30, i31;
@@ -421,6 +442,7 @@ static void L3_fill_range(cset_L3_t *L3, wchar_t ch0, wchar_t ch1)
   }
 }
 
+
 static int L3_contains(cset_L3_t *L3, wchar_t ch)
 {
   int i3 = CHAR_SET_L3(ch);
@@ -447,6 +469,8 @@ static void L3_free(cset_L3_t *L3)
   }
 }
 
+#endif
+
 static char_set_t *char_set_create(chset_type_t type, wchar_t base)
 {
   static char_set_t blank;
@@ -471,10 +495,12 @@ static void char_set_destroy(char_set_t *set)
     L2_free(&set->l.dir);
     free(set);
     break;
+#ifdef FULL_UNICODE
   case CHSET_XLARGE:
     L3_free(&set->xl.dir);
     free(set);
     break;
+#endif
   }
 }
 
@@ -498,10 +524,12 @@ static void char_set_add(char_set_t *set, wchar_t ch)
     assert (ch < 0x10000);
     L2_fill_range(&set->l.dir, ch, ch);
     break;
+#ifdef FULL_UNICODE
   case CHSET_XLARGE:
     assert (ch < 0x110000);
     L3_fill_range(&set->xl.dir, ch, ch);
     break;
+#endif
   }
 }
 
@@ -524,10 +552,12 @@ static void char_set_add_range(char_set_t *set, wchar_t ch0, wchar_t ch1)
     assert (ch1 < 0x10000);
     L2_fill_range(&set->l.dir, ch0, ch1);
     break;
+#ifdef FULL_UNICODE
   case CHSET_XLARGE:
     assert (ch1 < 0x110000);
     L3_fill_range(&set->xl.dir, ch0, ch1);
     break;
+#endif
   }
 }
 
@@ -551,11 +581,13 @@ static int char_set_contains(char_set_t *set, wchar_t ch)
       break;
     result = L2_contains(&set->l.dir, ch);
     break;
+#ifdef FULL_UNICODE
   case CHSET_XLARGE:
     if (ch >= 0x110000)
       break;
     result = L3_contains(&set->xl.dir, ch);
     break;
+#endif
   }
 
   return set->any.comp ? !result : result;
@@ -603,7 +635,12 @@ static char_set_t *char_set_compile(val args, val comp)
   else if (max < 0x10000)
     cst = CHSET_LARGE;
   else
+#ifdef FULL_UNICODE
     cst = CHSET_XLARGE;
+#else
+    cst = CHSET_LARGE;
+#endif
+
 
   {
     char_set_t *set = char_set_create(cst, min);
