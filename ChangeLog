@@ -1,5 +1,14 @@
 2011-10-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	One more swing at this with the axe.
+
+	* lib.h (wini, wref): New macros.
+
+	* stream.c (string_out_put_char): Rewritten with macros to eliminate
+	preprocessor #if test.
+
+2011-10-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.h (wli, lit_noex): We need null characters on both ends
 	so that this hack is correct for null strings. When recovering
 	the wchar_t pointer from a null literal object, we wil increment

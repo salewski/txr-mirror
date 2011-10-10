@@ -415,18 +415,9 @@ static val string_out_put_string(val stream, val str)
 
 static val string_out_put_char(val stream, val ch)
 {
-#if LIT_ALIGN < 4
-  wchar_t mini[3];
-  mini[0] = 0;
-  mini[1] = c_chr(ch);
-  mini[2] = 0;
-  return string_out_put_string(stream, auto_str((const wchli_t *) (mini + 1)));
-#else
-  wchar_t mini[2];
-  mini[0] = c_chr(ch);
-  mini[1] = 0;
-  return string_out_put_string(stream, auto_str((const wchli_t *) mini));
-#endif
+  wchar_t onech[] = wini(" ");
+  wref(onech)[0] = c_chr(ch);
+  return string_out_put_string(stream, auto_str((const wchli_t *) wref(onech)));
 }
 
 static struct strm_ops string_out_ops = {
