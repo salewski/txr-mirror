@@ -1669,7 +1669,7 @@ val lazy_stream_cons(val stream)
   }
 
   return make_lazycons(func_f1(cons(stream, cons(first, nil)),
-                       lazy_stream_func));
+                               lazy_stream_func));
 }
 
 val lazy_str(val lst, val term, val limit)
