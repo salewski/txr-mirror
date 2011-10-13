@@ -58,11 +58,14 @@ static val parsed_spec;
   cnum num;
 }
 
-%token <lexeme> TEXT IDENT KEYWORD METAVAR ALL SOME NONE MAYBE CASES CHOOSE
+%token <lexeme> SPACE TEXT IDENT KEYWORD METAVAR
+%token <lexeme> ALL SOME NONE MAYBE CASES CHOOSE
 %token <lexeme> AND OR END COLLECT
 %token <lexeme> UNTIL COLL OUTPUT REPEAT REP SINGLE FIRST LAST EMPTY DEFINE
 %token <lexeme> TRY CATCH FINALLY
+
 %token <num> NUMBER
+
 %token <chr> REGCHAR LITCHAR
 %token <chr> METAPAR
 
@@ -75,16 +78,17 @@ static val parsed_spec;
 %type <val> elem var var_op meta_expr
 %type <val> list exprs exprs_opt expr out_clauses out_clauses_opt out_clause
 %type <val> repeat_clause repeat_parts_opt o_line
-%type <val> o_elems_opt o_elems_opt2 o_elems o_elem rep_elem rep_parts_opt
+%type <val> o_elems_opt o_elems_opt2 o_elems o_elem o_var rep_elem rep_parts_opt
 %type <val> regex regexpr regbranch
 %type <val> regterm regclass regclassterm regrange
 %type <val> strlit chrlit quasilit quasi_items quasi_item litchars
 %type <chr> regchar
+
 %nonassoc LOW /* used for precedence assertion */
 %nonassoc ALL SOME NONE MAYBE CASES CHOOSE AND OR END COLLECT UNTIL COLL
 %nonassoc OUTPUT REPEAT REP FIRST LAST EMPTY DEFINE
 %nonassoc '[' ']' '(' ')'
-%right IDENT TEXT NUMBER '{' '}'
+%right IDENT SPACE TEXT NUMBER '{' '}'
 %left '-'
 %left '|' '/'
 %left '&' 
@@ -220,6 +224,15 @@ elems : elem                    { $$ = cons($1, nil); }
       ;
 
 elem : TEXT                     { $$ = string_own($1); }
+     | SPACE                    { if ($1[0] == ' ' && $1[1] == 0)
+                                  { val spaces = list(oneplus_s, 
+                                                      list(set_s, chr(' '),
+                                                           chr('\t'), nao),
+                                                      nao);
+                                    $$ = cons(regex_compile(spaces), spaces);
+                                    free($1); }
+                                  else
+                                  { $$ = string_own($1); }}
      | var                      { $$ = $1; }
      | list                     { $$ = $1; }
      | regex                    { $$ = cons(regex_compile(rest($1)),
@@ -423,7 +436,8 @@ o_elems : o_elem                { $$ = cons($1, nil); }
         ;
 
 o_elem : TEXT                   { $$ = string_own($1); }
-       | var                    { $$ = $1; }
+       | SPACE                  { $$ = string_own($1); }
+       | o_var                  { $$ = $1; }
        | rep_elem               { $$ = $1; }
        ;
 
@@ -482,6 +496,23 @@ var : IDENT                     { $$ = list(var_s, intern(string_own($1), nil),
     | var_op error              { $$ = nil;
                                   yybadtoken(yychar, lit("variable spec")); }
     ;
+
+o_var : IDENT                   { $$ = list(var_s, intern(string_own($1), nil),
+                                            nao); }
+      | IDENT o_elem            { $$ = list(var_s, intern(string_own($1), nil),
+                                            $2, nao); }
+      | '{' IDENT '}'           { $$ = list(var_s, intern(string_own($2), nil),
+                                              nao); }
+      | '{' IDENT '}' o_elem    { $$ = list(var_s, intern(string_own($2), nil),
+                                              $4, nao); }
+      | '{' IDENT exprs '}'     { $$ = list(var_s, intern(string_own($2), nil),
+                                              nil, $3, nao); }
+      | '{' IDENT exprs '}' o_elem      { $$ = list(var_s, 
+                                                    intern(string_own($2), nil),
+                                                    $5, $3, nao); }
+      | IDENT error               { $$ = nil;
+                                    yybadtoken(yychar, lit("variable spec")); }
+      ;
 
 var_op : '*'                    { $$ = list(t, nao); }
        ;
@@ -631,7 +662,6 @@ quasi_item : litchars           { $$ = lit_char_helper($1); }
 litchars : LITCHAR              { $$ = cons(chr($1), nil); }
          | LITCHAR litchars     { $$ = cons(chr($1), $2); }
          ;
-
 
 %%
 

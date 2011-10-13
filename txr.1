@@ -32,7 +32,7 @@ txr \- text extractor (version 039)
 is a query tool for extracting pieces of text buried in one or more text
 file based on pattern matching.  A
 .B txr
-query specifies a pattern which matches (a prefix of) entire file, or
+query specifies a pattern which matches (a prefix of) an entire file, or
 multiple files. The pattern is matched against the material in the files, and
 free variables occurring in the pattern are bound to the pieces of text
 occurring in the corresponding positions. If the overall match is
@@ -311,6 +311,31 @@ However, if the hash bang line can use the -f option:
 
 Now, the name of the script is passed as an argument to the -f option,
 and txr will look for more options after that.
+
+.SS Whitespace
+
+Outside of directives, whitespace is significant in TXR queries, and represents
+a pattern match for whitespace in the input.  An extent of text consisting of
+an undivided mixture of tabs and spaces is a whitespace token.  
+
+Whitespace tokens match a precisely identical piece of whitespace in the input,
+with one exception: a whitespace token consisting of precisely one space has a
+special meaning. It is equivalent to the regular expression @/[ \t]+/: match
+one or more tabs or spaces.
+
+Thus, the query line "a b" (one space) matches texts like "a b", "a   b", et
+cetera (arbitrary number of tabs and spaces between a and b).  However "a  b"
+(two spaces) matches only "a  b" (two spaces).
+
+For matching a single space, the syntax @\ can be used (backslash-escaped
+space).
+
+It is more often necessary to match multiple spaces, than to exactly
+match one space, so this rule simplifies many queries and adds inconvenience
+to only few.
+
+In output clauses, string and character literals and quasiliterals, a space
+token denotes a space.
 
 .SS Text
 

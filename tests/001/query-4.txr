@@ -1,0 +1,7 @@
+@#
+@# This file is in the public domain.
+@# It was authored by Kaz Kylheku <kaz@kylheku.com> in 2011
+@#
+@(collect)
+@UID @PID @PPID @C @STIME @TTY @TIME @CMD
+@(end)

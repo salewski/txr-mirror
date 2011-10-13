@@ -98,7 +98,7 @@ tests/002/%: TXR_SCRIPT_ON_CMDLINE := y
 	  $(PROG) $(TXR_DBG_OPTS) $(TXR_OPTS) -c "$$(cat $^)" \
 	    $(TXR_ARGS) > $(@:.ok=.out),\
 	  $(PROG) $(TXR_DBG_OPTS) $(TXR_OPTS) $^ $(TXR_ARGS) > $(@:.ok=.out))
-	diff $(^:.txr=.expected) $(@:.ok=.out)
+	diff -u $(^:.txr=.expected) $(@:.ok=.out)
 
 %.expected: %.txr
 	$(PROG) $(TXR_OPTS) $^ $(TXR_ARGS) > $@
