@@ -1,5 +1,15 @@
 2011-10-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.y (elem): Amending previous change. A single space
+	should only denote multiple spaces, not mixtures of spaces and
+	tabs. WE have to be careful with tabs because they can be
+	semantically different from spaces (e.g. file with tab delimited
+	fields which can be blank, empty or have leading or trailing spaces.)
+
+	* txr.1: Updated.
+
+2011-10-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	* Makefile (%.ok: %.txr): Use unified diff for showing
 	differences between expected and actual test output.
 
