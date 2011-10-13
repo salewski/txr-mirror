@@ -92,6 +92,7 @@ void yybadtoken(int tok, val context)
   val problem = nil;
 
   switch (tok) {
+  case SPACE:   problem = lit("space"); break;
   case TEXT:    problem = lit("text"); break;
   case IDENT:   problem = lit("identifier"); break;
   case KEYWORD: problem = lit("keyword"); break;
@@ -511,7 +512,12 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                             num((unsigned char) yytext[0]), nao);
                 }
 
-<INITIAL>({UONLY}|[^@\n])+        {
+<INITIAL>[ ]+   {
+                  yylval.lexeme = utf8_dup_from(yytext);
+                  return SPACE;
+                }
+
+<INITIAL>({UONLY}|[^@\n ])+       {
                                     yylval.lexeme = utf8_dup_from(yytext);
                                     return TEXT;
                                   }

@@ -1,3 +1,30 @@
+2011-10-13  Kaz Kylheku  <kaz@kylheku.com>
+
+	* Makefile (%.ok: %.txr): Use unified diff for showing
+	differences between expected and actual test output.
+
+	* parser.l (yybadtoken): Handle new terminal symbol, SPACE.
+	New rule for producing SPACE token out of an extent of
+	tabs and spaces.
+
+	* parser.y (SPACE): New terminal symbol.
+	(o_var): New nonterminal.  I noticed that the var rule was
+	being used for output elements, and the var rule refers to
+	elem rather than o_elem. A new o_var rule is a simplified
+	duplicate of var.
+	(elem): Handle SPACE token. Transform to regex if it is
+	a single space, otherwise to literal text.
+	(o_elem): Handle SPACE token in output.
+
+	* tests/001/query-2.txr: This query depends on matching
+	single spaces and so needs to use escapes.
+
+	* tests/001/query-4.txr, test/001/query-4.expected: New test
+	case, based on query-2.txr.  It produces the same output,
+	but is simpler thanks to the new semantics of space.
+
+	* txr.1: Documented.
+
 2011-10-12  Kaz Kylheku  <kaz@kylheku.com>
 
 	Bug #34538
