@@ -320,8 +320,8 @@ an undivided mixture of tabs and spaces is a whitespace token.
 
 Whitespace tokens match a precisely identical piece of whitespace in the input,
 with one exception: a whitespace token consisting of precisely one space has a
-special meaning. It is equivalent to the regular expression @/[ \t]+/: match
-one or more tabs or spaces.
+special meaning. It is equivalent to the regular expression @/[ ]+/: match
+an extent of one or more spaces (but not tabs!)
 
 Thus, the query line "a b" (one space) matches texts like "a b", "a   b", et
 cetera (arbitrary number of tabs and spaces between a and b).  However "a  b"

@@ -226,9 +226,7 @@ elems : elem                    { $$ = cons($1, nil); }
 elem : TEXT                     { $$ = string_own($1); }
      | SPACE                    { if ($1[0] == ' ' && $1[1] == 0)
                                   { val spaces = list(oneplus_s, 
-                                                      list(set_s, chr(' '),
-                                                           chr('\t'), nao),
-                                                      nao);
+                                                      chr(' '), nao);
                                     $$ = cons(regex_compile(spaces), spaces);
                                     free($1); }
                                   else
