@@ -1,3 +1,14 @@
+2011-10-12  Kaz Kylheku  <kaz@kylheku.com>
+
+	Bug #34538
+
+	* lib.h (wli): This macro now does the pointer displacement by 1.
+	(auto_str, static_str): #if/#else/#endif gone. These functions just
+	add the type tag. The + 1 logic was incorrect; it should have
+	been + sizeof(wchar_t). But even that was not right because other
+	code expects a wchli_t * to point to the first character,
+	such as the string_out_put_char function.
+
 2011-10-10  Kaz Kylheku  <kaz@kylheku.com>
 
 	Improved support for broken unicode.
