@@ -191,7 +191,7 @@ INLINE type_t type(val obj)
 typedef struct wli wchli_t;
 
 #if LIT_ALIGN < 4
-#define wli(lit) ((const wchli_t *) L"\0" L ## lit L"\0")
+#define wli(lit) ((const wchli_t *) (L"\0" L ## lit L"\0" + 1))
 #define wini(ini) L"\0" L ## ini L"\0"
 #define wref(arr) ((arr) + 1)
 #else
@@ -202,20 +202,12 @@ typedef struct wli wchli_t;
 
 INLINE val auto_str(const wchli_t *str)
 {
-#if LIT_ALIGN < 4
-  return (val) (((cnum) str + 1) | TAG_LIT);
-#else
   return (val) (((cnum) str) | TAG_LIT);
-#endif
 }
 
 INLINE val static_str(const wchli_t *str)
 {
-#if LIT_ALIGN < 4
-  return (val) (((cnum) str + 1) | TAG_LIT);
-#else
   return (val) (((cnum) str) | TAG_LIT);
-#endif
 }
 
 INLINE wchar_t *litptr(val obj)
