@@ -1,5 +1,30 @@
 2011-10-15  Kaz Kylheku  <kaz@kylheku.com>
 
+	Fixed broken GC on x86_64 (Ubuntu 11, gcc 4.5.2). 
+	The issues is that due to the aggressive function inlining
+	in the gc module, the mark_mem_region function is not real
+	subroutine. The address of its local variable &gc_stack_top
+	ended up excluding the machine context saved by setjmp in
+	the parent function. I.e. the buffer was not between the
+	computed stack top and bottom. Thus registers were not being
+	scanned for references to values. I added a little abstraction
+	to the machine context in the process of fixing this.
+
+	* gc.c (struct mach_context, mach_context_t): New type.
+	(save_context): New macro.
+	(mark): Takes two new arguments, pointer to the stack top and
+	machine context. It scans the machine context explicitly rather
+	than relying it to be on the stack, between the top and bottom.
+	This context is in fact only object within the garbage collector part
+	of the activation chain that we need to scan.
+	(gc): Use new abstraction to save machine context. Local variable
+	is used to derive the stack top here. The stack top is the top
+	of the stack above the activation frames in the garbage collector
+	itself. The gc has nothing on its stack that should be scanned,
+	except for the machine context, which is now handled explicitly.
+
+2011-10-15  Kaz Kylheku  <kaz@kylheku.com>
+
 	* configure: POSIX Portability. Use = instead of ==
 	in test expressions.  This was revealed by ubuntu's dash.
 
