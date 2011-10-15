@@ -1,3 +1,8 @@
+2011-10-15  Kaz Kylheku  <kaz@kylheku.com>
+
+	* configure: POSIX Portability. Use = instead of ==
+	in test expressions.  This was revealed by ubuntu's dash.
+
 2011-10-13  Kaz Kylheku  <kaz@kylheku.com>
 
 	* parser.y (elem): Amending previous change. A single space

@@ -630,7 +630,7 @@ char sizeof_longlong_t[sizeof (longlong_t)];
   while read symbol type offset size ; do
     eval "size=$(( 0$size + 0 ))"
     symbol=${symbol#_}
-    if [ $type == "C" ] ; then
+    if [ "$type" = "C" ] ; then
       size=$offset
     fi
     case "$symbol" in
@@ -704,7 +704,7 @@ char sizeof_wchar_t[sizeof (wchar_t)];
   while read symbol type offset size ; do
     eval "size=$(( 0$size + 0 ))"
     symbol=${symbol#_}
-    if [ $type == "C" ] ; then
+    if [ "$type" = "C" ] ; then
       size=$offset
     fi
     case "$symbol" in
