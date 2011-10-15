@@ -49,6 +49,12 @@ typedef struct heap {
   obj_t block[HEAP_SIZE];
 } heap_t;
 
+typedef struct mach_context {
+  jmp_buf buf;
+} mach_context_t;
+
+#define save_context(X) setjmp((X).buf)
+
 int opt_gc_debug;
 #ifdef HAVE_VALGRIND
 int opt_vg_debug;
@@ -341,19 +347,25 @@ static void mark_mem_region(val *low, val *high)
   }
 }
 
-static void mark(void)
+static void mark(mach_context_t *pmc, val *gc_stack_top)
 {
-  val gc_stack_top;
   val **rootloc;
 
   /*
    * First, scan the officially registered locations.
    */
-
   for (rootloc = prot_stack; rootloc != top; rootloc++)
     mark_obj(**rootloc);
 
-  mark_mem_region(&gc_stack_top, gc_stack_bottom);
+  /*
+   * Then the machine context
+   */
+  mark_mem_region((val *) pmc, (val *) (pmc + 1));
+
+  /*
+   * Finally, the stack.
+   */
+  mark_mem_region(gc_stack_top, gc_stack_bottom);
 }
 
 static void sweep(void)
@@ -433,11 +445,13 @@ static void sweep(void)
 
 void gc(void)
 {
+  val gc_stack_top = nil;
+
   if (gc_enabled) {
-    jmp_buf jmp;
-    setjmp(jmp);
+    mach_context_t mc;
+    save_context(mc);
     gc_enabled = 0;
-    mark();
+    mark(&mc, &gc_stack_top);
     hash_process_weak();
     sweep();
     gc_enabled = 1;
