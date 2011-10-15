@@ -1,5 +1,22 @@
 2011-10-15  Kaz Kylheku  <kaz@kylheku.com>
 
+	Task #11425. Refactoring match_files to make it easier to
+	break up into subfunctions. Arguments are packaged into a structure,
+	so that subfunctions won't have to all have big argument lists.
+
+	* match.c (h_directive_table, v_directive_table): New variables.
+	(match_files_ctx): New structure.
+	(mf_all, mf_args, mf_data, mf_spec, mf_spec_bindings): New functions.
+	(match_files): Takes only one argument now, the context
+	structure. data_lineno variable is a dynamic number.
+	Recursive calls to match_files are handled by creating contexts
+	as appropriate with the helper functions.
+	The old local variable data is now part of the context.
+	(syms_init, dir_tables_init): New functions.
+	(match_init): Just calls syms_init and dir_tables_init.
+
+2011-10-15  Kaz Kylheku  <kaz@kylheku.com>
+
 	Fixed broken GC on x86_64 (Ubuntu 11, gcc 4.5.2). 
 	The issues is that due to the aggressive function inlining
 	in the gc module, the mark_mem_region function is not real
