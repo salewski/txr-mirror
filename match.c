@@ -43,6 +43,7 @@
 #include "txr.h"
 #include "utf8.h"
 #include "filter.h"
+#include "hash.h"
 #include "match.h"
 
 int output_produced;
@@ -51,6 +52,8 @@ val mingap_k, maxgap_k, gap_k, mintimes_k, maxtimes_k, times_k;
 val lines_k, chars_k;
 val choose_s, longest_k, shortest_k, greedy_k;
 val vars_k;
+
+static val h_directive_table, v_directive_table;
 
 static void debugf(val fmt, ...)
 {
@@ -1261,24 +1264,65 @@ static void do_output(val bindings, val specs, val filter, val out)
   }
 }
 
-static val match_files(val spec, val files,
-                       val bindings, val first_file_parsed,
-                       val data_linenum)
+typedef struct {
+  val spec, files, bindings, data, data_lineno;
+} match_files_ctx;
+
+static match_files_ctx mf_all(val spec, val files, val bindings,
+                              val data, val data_lineno)
 {
-  val data = nil;
-  cnum data_lineno = 0;
+  match_files_ctx c = { spec, files, bindings, data, data_lineno };
+  return c;
+}
 
-  gc_hint(data);
+static match_files_ctx mf_args(match_files_ctx c)
+{
+  match_files_ctx nc = c;
+  nc.files = cons(string(L"args"), c.files);
+  nc.data = c.files;
+  nc.data_lineno = num(1);
+  return nc;
+}
 
-  if (listp(first_file_parsed)) {
-    data = first_file_parsed;
-    data_lineno = c_num(data_linenum);
-    first_file_parsed = nil;
-  } else if (files) {
-    val source_spec = first(files);
+static match_files_ctx mf_data(match_files_ctx c, val data, val data_lineno)
+{
+  match_files_ctx nc = c;
+  nc.data = data;
+  nc.data_lineno = data_lineno;
+  return nc;
+}
+
+static match_files_ctx mf_spec(match_files_ctx c, val spec)
+{
+  match_files_ctx nc = c;
+  nc.spec = spec;
+  return nc;
+}
+
+static match_files_ctx mf_spec_bindings(match_files_ctx c, val spec,
+                                        val bindings)
+{
+  match_files_ctx nc = c;
+  nc.spec = spec;
+  nc.bindings = bindings;
+  return nc;
+}
+
+
+
+static val match_files(match_files_ctx a);
+
+static val match_files(match_files_ctx c)
+{
+  gc_hint(c.data);
+
+  if (listp(c.data)) { /* recursive call with lazy list */
+    ; /* no specia initialization */
+  } else if (c.files) { /* c.data == t: toplevel call with file list */
+    val source_spec = first(c.files);
     val name = consp(source_spec) ? cdr(source_spec) : source_spec;
     fpip_t fp = (errno = 0, complex_open(name, nil));
-    val first_spec_item = second(first(spec));
+    val first_spec_item = second(first(c.spec));
 
     if (consp(first_spec_item) && eq(first(first_spec_item), next_s)) {
       debugf(lit("not opening source ~a "
@@ -1299,18 +1343,22 @@ static val match_files(val spec, val files,
         return nil;
       }
 
-      files = cons(name, cdr(files)); /* Get rid of cons and nothrow */
+      c.files = cons(name, cdr(c.files)); /* Get rid of cons and nothrow */
 
-      if ((data = complex_snarf(fp, name)) != nil)
-        data_lineno = 1;
+      if ((c.data = complex_snarf(fp, name)) != nil)
+        c.data_lineno = num(1);
     }
+  } else { /* toplevel call with no data or file list */
+    c.data = nil;
   }
 
-  for (; spec;  spec = rest(spec), data = rest(data), data_lineno++)
+  for (; c.spec; c.spec = rest(c.spec), 
+                 c.data = rest(c.data),
+                 c.data_lineno = plus(c.data_lineno, num(1)))
 repeat_spec_same_data:
   {
-    val specline = rest(first(spec));
-    val spec_linenum = first(first(spec));
+    val specline = rest(first(c.spec));
+    val spec_linenum = first(first(c.spec));
     val first_spec = first(specline);
 
     if (consp(first_spec)) {
@@ -1325,18 +1373,18 @@ repeat_spec_same_data:
         cnum cmin = nump(min) ? c_num(min) : 0;
         val greedy = eq(max, greedy_k);
         val last_good_result = nil;
-        cnum last_good_line = 0;
+        val last_good_line = num(0);
 
-        if ((spec = rest(spec)) == nil)
+        if ((c.spec = rest(c.spec)) == nil)
           break;
 
         {
           cnum reps_max = 0, reps_min = 0;
           uw_block_begin(nil, result);
 
-          while (data && min && reps_min < cmin) {
-            data = rest(data);
-            data_lineno++;
+          while (c.data && min && reps_min < cmin) {
+            c.data = rest(c.data);
+            c.data_lineno = plus(c.data_lineno, num(1));
             reps_min++;
           }
 
@@ -1344,41 +1392,40 @@ repeat_spec_same_data:
             if (reps_min != cmin) {
               debuglf(spec_linenum, lit("skipped only ~a/~a lines to ~a:~a"),
                       num(reps_min), num(cmin),
-                      first(files), num(data_lineno), nao);
+                      first(c.files), c.data_lineno, nao);
               uw_block_return(nil, nil);
             }
 
             debuglf(spec_linenum, lit("skipped ~a lines to ~a:~a"),
-                    num(reps_min), first(files),
-                    num(data_lineno), nao);
+                    num(reps_min), first(c.files),
+                    c.data_lineno, nao);
           }
 
           while (greedy || !max || reps_max++ < cmax) {
-            result = match_files(spec, files, bindings,
-                                 data, num(data_lineno));
+            result = match_files(c);
 
             if (result) {
               if (greedy) {
                 last_good_result = result;
-                last_good_line = data_lineno;
+                last_good_line = c.data_lineno;
               } else {
-                debuglf(spec_linenum, lit("skip matched ~a:~a"), first(files),
-                        num(data_lineno), nao);
+                debuglf(spec_linenum, lit("skip matched ~a:~a"), first(c.files),
+                        c.data_lineno, nao);
                 break;
               }
             } else {
               debuglf(spec_linenum, lit("skip didn't match ~a:~a"),
-                      first(files), num(data_lineno), nao);
+                      first(c.files), c.data_lineno, nao);
             }
 
-            if (!data)
+            if (!c.data)
               break;
 
-            debuglf(spec_linenum, lit("skip didn't match ~a:~a"), first(files),
-                    num(data_lineno), nao);
+            debuglf(spec_linenum, lit("skip didn't match ~a:~a"), first(c.files),
+                    c.data_lineno, nao);
 
-            data = rest(data);
-            data_lineno++;
+            c.data = rest(c.data);
+            c.data_lineno = plus(c.data_lineno, num(1));
           }
 
           uw_block_end;
@@ -1387,7 +1434,7 @@ repeat_spec_same_data:
             return result;
           if (last_good_result) {
             debuglf(spec_linenum, lit("greedy skip matched ~a:~a"), 
-                    first(files), num(last_good_line), nao);
+                    first(c.files), last_good_line, nao);
             return last_good_result;
           }
         }
@@ -1395,25 +1442,24 @@ repeat_spec_same_data:
         debuglf(spec_linenum, lit("skip failed"), nao);
         return nil;
       } else if (sym == trailer_s && !rest(specline)) {
-        if ((spec = rest(spec)) == nil)
+        if ((c.spec = rest(c.spec)) == nil)
           break;
 
         {
           cons_bind (new_bindings, success,
-                     match_files(spec, files, bindings,
-                                 data, num(data_lineno)));
+                     match_files(c));
 
           if (success)
-            return cons(new_bindings, cons(data, num(data_lineno)));
+            return cons(new_bindings, cons(c.data, c.data_lineno));
           return nil;
         }
       } else if (sym == freeform_s) {
         val args = rest(first_spec);
         val vals = mapcar(func_n1(cdr),
                              mapcar(curry_123_2(func_n3(eval_form),
-                                                spec_linenum, bindings), args));
+                                                spec_linenum, c.bindings), args));
 
-        if ((spec = rest(spec)) == nil) {
+        if ((c.spec = rest(c.spec)) == nil) {
           sem_error(spec_linenum,
                     lit("freeform must be followed by a query line"), nao);
         } else {
@@ -1421,12 +1467,12 @@ repeat_spec_same_data:
                           if2(nump(second(vals)), second(vals)));
           val term = or2(if2(stringp(first(vals)), first(vals)),
                          if2(stringp(second(vals)), second(vals)));
-          val ff_specline = rest(first(spec));
-          val ff_dataline = lazy_str(data, term, limit);
+          val ff_specline = rest(first(c.spec));
+          val ff_dataline = lazy_str(c.data, term, limit);
 
           cons_bind (new_bindings, success,
-                     match_line(bindings, ff_specline, ff_dataline, zero,
-                                spec_linenum, num(data_lineno), first(files)));
+                     match_line(c.bindings, ff_specline, ff_dataline, zero,
+                                spec_linenum, c.data_lineno, first(c.files)));
 
           if (!success) {
             debuglf(spec_linenum, lit("freeform match failure"), nao);
@@ -1434,14 +1480,14 @@ repeat_spec_same_data:
           }
 
           if (nump(success)) {
-            data = lazy_str_get_trailing_list(ff_dataline, success);
-            data_lineno++;
+            c.data = lazy_str_get_trailing_list(ff_dataline, success);
+            c.data_lineno = plus(c.data_lineno, num(1));
           }
 
-          bindings = new_bindings;
+          c.bindings = new_bindings;
         }
 
-        if ((spec = rest(spec)) == nil)
+        if ((c.spec = rest(c.spec)) == nil)
           break;
 
         goto repeat_spec_same_data;
@@ -1450,11 +1496,11 @@ repeat_spec_same_data:
         if (rest(specline))
           sem_error(spec_linenum,
                     lit("unexpected material after block directive"), nao);
-        if ((spec = rest(spec)) == nil)
+        if ((c.spec = rest(c.spec)) == nil)
           break;
         {
           uw_block_begin(name, result);
-          result = match_files(spec, files, bindings, data, num(data_lineno));
+          result = match_files(c);
           uw_block_end;
           return result;
         }
@@ -1466,8 +1512,8 @@ repeat_spec_same_data:
 
         uw_block_return(target,
                         if2(sym == accept_s,
-                            cons(bindings,
-                                 if3(data, cons(data, num(data_lineno)), t))));
+                            cons(c.bindings,
+                                 if3(c.data, cons(c.data, c.data_lineno), t))));
         /* TODO: uw_block_return could just throw this */
         if (target)
           sem_error(spec_linenum, lit("~a: no block named ~a in scope"),
@@ -1484,7 +1530,7 @@ repeat_spec_same_data:
           sem_error(spec_linenum, lit("obsolete next syntax: trailing material"), nao);
         }
 
-        if ((spec = rest(spec)) == nil)
+        if ((c.spec = rest(c.spec)) == nil)
           break;
 
         if (rest(first_spec)) {
@@ -1496,47 +1542,46 @@ repeat_spec_same_data:
             if (eq(keyword, nothrow_k)) {
               sem_error(spec_linenum, lit("misplaced :nothrow"), nao);
             } else if (eq(keyword, args_k)) {
-              val input_name = string(L"args");
               cons_bind (new_bindings, success,
-                         match_files(spec, cons(input_name, files),
-                                     bindings, files, one));
+                         match_files(mf_args(c)));
+
               if (success)
                 return cons(new_bindings,
-                    if3(data, cons(data, num(data_lineno)), t));
+                            if3(c.data, cons(c.data, c.data_lineno), t));
               return nil;
             }
             arg = second(source);
           }
 
           {
-            val eval = eval_form(spec_linenum, arg, bindings);
+            val eval = eval_form(spec_linenum, arg, c.bindings);
             val str = cdr(eval);
 
             if (eq(second(source), nothrow_k)) {
               if (str) {
-                files = cons(cons(nothrow_k, str), files);
+                c.files = cons(cons(nothrow_k, str), c.files);
               } else {
-                files = rest(files);
-                if (!files) {
+                c.files = rest(c.files);
+                if (!c.files) {
                   debuglf(spec_linenum, lit("next: out of arguments"), nao);
                   return nil;
                 }
-                files = cons(cons(nothrow_k, first(files)), rest(files));
+                c.files = cons(cons(nothrow_k, first(c.files)), rest(c.files));
               }
             } else {
               if (str) {
-                files = cons(str, files);
+                c.files = cons(str, c.files);
               } else {
-                files = rest(files);
-                if (!files)
+                c.files = rest(c.files);
+                if (!c.files)
                   sem_error(spec_linenum, lit("next: out of arguments"), nao);
-                files = cons(cons(nothrow_k, first(files)), rest(files));
+                c.files = cons(cons(nothrow_k, first(c.files)), rest(c.files));
               }
             }
           }
         } else {
-          files = rest(files);
-          if (!files)
+          c.files = rest(c.files);
+          if (!c.files)
             sem_error(spec_linenum, lit("next: out of arguments"), nao);
         }
 
@@ -1545,11 +1590,11 @@ repeat_spec_same_data:
            original file we we were called with. Hence, we can't
            make a straight tail call here. */
         {
-          cons_bind (new_bindings, success,
-                     match_files(spec, files, bindings, t, nil));
+          cons_bind (new_bindings, success, match_files(mf_data(c, t, nil)));
+
           if (success)
             return cons(new_bindings,
-                        if3(data, cons(data, num(data_lineno)), t));
+                        if3(c.data, cons(c.data, c.data_lineno), t));
           return nil;
         }
       } else if ((sym == some_s || sym == all_s || sym == none_s ||
@@ -1565,7 +1610,7 @@ repeat_spec_same_data:
         val choose_shortest = getplist(plist, shortest_k);
         val choose_longest = getplist(plist, longest_k);
         val choose_sym = or2(choose_longest, choose_shortest);
-        val choose_bindings = bindings, choose_line = zero, choose_data = nil;
+        val choose_bindings = c.bindings, choose_line = zero, choose_data = nil;
         val choose_minmax = choose_longest ? num(-1) : num(NUM_MAX);
         val iter;
 
@@ -1578,11 +1623,8 @@ repeat_spec_same_data:
         for (iter = specs; iter != nil; iter = rest(iter))
         {
           val nested_spec = first(iter);
-          val data_linenum = num(data_lineno);
-
-          cons_bind (new_bindings, success,
-                     match_files(nested_spec, files, bindings,
-                                 data, data_linenum));
+          cons_bind (new_bindings, success, 
+                     match_files(mf_spec(c, nested_spec)));
 
           if (success) {
             some_match = t;
@@ -1611,7 +1653,7 @@ repeat_spec_same_data:
               }
             } else {
               /* choose does not propagate bindings between clauses! */
-              bindings = new_bindings;
+              c.bindings = new_bindings;
             }
 
 
@@ -1652,20 +1694,20 @@ repeat_spec_same_data:
 
         if (choose_sym) {
           if (consp(choose_data)) {
-            data_lineno = c_num(choose_line);
-            data = choose_data;
+            c.data_lineno = choose_line;
+            c.data = choose_data;
           } else if (choose_data == t) {
-            data = nil;
+            c.data = nil;
           }
-          bindings = choose_bindings;
+          c.bindings = choose_bindings;
         } else if (consp(max_data)) {
-          data_lineno = c_num(max_line);
-          data = max_data;
+          c.data_lineno = max_line;
+          c.data = max_data;
         } else if (max_data == t) {
-          data = nil;
+          c.data = nil;
         }
 
-        if ((spec = rest(spec)) == nil)
+        if ((c.spec = rest(c.spec)) == nil)
           break;
 
         goto repeat_spec_same_data;
@@ -1698,10 +1740,10 @@ repeat_spec_same_data:
         if (gap && (max || min))
           sem_error(spec_linenum, lit("collect: cannot mix :gap with :mingap or :maxgap"), nao);
 
-        vars = vars_to_bindings(spec_linenum, vars, bindings);
+        vars = vars_to_bindings(spec_linenum, vars, c.bindings);
 
         if ((times && ctimes == 0) || (lines && clines == 0)) {
-          if ((spec = rest(spec)) == nil) 
+          if ((c.spec = rest(c.spec)) == nil) 
             break;
 
           goto repeat_spec_same_data;
@@ -1711,7 +1753,7 @@ repeat_spec_same_data:
 
         result = t;
 
-        while (data) {
+        while (c.data) {
           val new_bindings = nil, success = nil;
 
           if ((gap || min) && mincounter < cmin)
@@ -1722,30 +1764,28 @@ repeat_spec_same_data:
 
           {
             cons_set (new_bindings, success,
-                      match_files(coll_spec, files, bindings,
-                                  data, num(data_lineno)));
+                      match_files(mf_spec(c, coll_spec)));
 
             /* Until/last clause sees un-collated bindings from collect. */
             if (until_last_spec)
             {
-              cons_bind (sym, spec, until_last_spec);
+              cons_bind (sym, ul_spec, until_last_spec);
               cons_bind (until_last_bindings, success,
-                         match_files(spec, files, new_bindings,
-                                     data, num(data_lineno)));
+                         match_files(mf_spec(c, ul_spec)));
 
               if (success) {
                 debuglf(spec_linenum, lit("until/last matched ~a:~a"),
-                        first(files), num(data_lineno), nao);
+                        first(c.files), c.data_lineno, nao);
                 /* Until discards bindings and position, last keeps them. */
                 if (sym == last_s) {
                   last_bindings = set_diff(until_last_bindings,
                                            new_bindings, eq_f, nil);
                   if (success == t) {
-                    data = t;
+                    c.data = t;
                   } else {
                     cons_bind (new_data, new_line, success);
-                    data = new_data;
-                    data_lineno = c_num(new_line);
+                    c.data = new_data;
+                    c.data_lineno = new_line;
                   }
                 }
                 break;
@@ -1754,10 +1794,10 @@ repeat_spec_same_data:
 
             if (success) {
               val strictly_new_bindings = set_diff(new_bindings,
-                                                   bindings, eq_f, nil);
+                                                   c.bindings, eq_f, nil);
 
               debuglf(spec_linenum, lit("collect matched ~a:~a"),
-                      first(files), num(data_lineno), nao);
+                      first(c.files), c.data_lineno, nao);
 
               for (iter = vars; iter; iter = cdr(iter)) {
                 cons_bind (var, dfl, car(iter));
@@ -1790,24 +1830,23 @@ repeat_spec_same_data:
             if (success) {
               if (consp(success)) {
                 cons_bind (new_data, new_line, success);
-                cnum new_lineno = c_num(new_line);
 
-                bug_unless (new_lineno >= data_lineno);
+                bug_unless (ge(new_line, c.data_lineno));
 
-                if (new_lineno == data_lineno) {
+                if (new_line == c.data_lineno) {
                   new_data = cdr(new_data);
-                  new_lineno++;
+                  new_line = plus(new_line, num(1));
                 }
 
                 debuglf(spec_linenum, lit("collect advancing from line ~a to ~a"),
-                        num(data_lineno), num(new_lineno), nao);
+                        c.data_lineno, new_line, nao);
 
-                data = new_data;
-                data_lineno = new_lineno;
+                c.data = new_data;
+                c.data_lineno = new_line;
                 *car_l(success) = nil;
               } else {
                 debuglf(spec_linenum, lit("collect consumed entire file"), nao);
-                data = nil;
+                c.data = nil;
               }
               mincounter = 0;
               maxcounter = 0;
@@ -1821,8 +1860,8 @@ repeat_spec_same_data:
               mincounter++;
               if ((gap || max) && ++maxcounter > cmax)
                 break;
-              data_lineno++;
-              data = rest(data);
+              c.data_lineno = plus(c.data_lineno, num(1));
+              c.data = rest(c.data);
             }
           }
         }
@@ -1843,20 +1882,20 @@ repeat_spec_same_data:
         if (!bindings_coll)
           debuglf(spec_linenum, lit("nothing was collected"), nao);
 
-        bindings = set_diff(bindings, bindings_coll, eq_f, car_f);
+        c.bindings = set_diff(c.bindings, bindings_coll, eq_f, car_f);
 
         for (iter = bindings_coll; iter; iter = cdr(iter)) {
           val pair = car(iter);
           val rev = cons(car(pair), nreverse(cdr(pair)));
-          bindings = cons(rev, bindings);
+          c.bindings = cons(rev, c.bindings);
         }
 
         if (last_bindings) {
-          bindings = set_diff(bindings, last_bindings, eq_f, car_f);
-          bindings = nappend2(last_bindings, bindings);
+          c.bindings = set_diff(c.bindings, last_bindings, eq_f, car_f);
+          c.bindings = nappend2(last_bindings, c.bindings);
         }
 
-        if ((spec = rest(spec)) == nil)
+        if ((c.spec = rest(c.spec)) == nil)
           break;
 
         goto repeat_spec_same_data;
@@ -1870,21 +1909,21 @@ repeat_spec_same_data:
             sem_error(spec_linenum,
                       lit("flatten: ~s is not a bindable symbol"), sym, nao);
           } else {
-            val existing = assoc(bindings, sym);
+            val existing = assoc(c.bindings, sym);
 
             if (existing)
               *cdr_l(existing) = flatten(cdr(existing));
           }
         }
 
-        if ((spec = rest(spec)) == nil)
+        if ((c.spec = rest(c.spec)) == nil)
           break;
 
         goto repeat_spec_same_data;
       } else if (sym == forget_s || sym == local_s) {
-        bindings = alist_remove(bindings, rest(first_spec));
+        c.bindings = alist_remove(c.bindings, rest(first_spec));
 
-        if ((spec = rest(spec)) == nil)
+        if ((c.spec = rest(c.spec)) == nil)
           break;
 
         goto repeat_spec_same_data;
@@ -1901,7 +1940,7 @@ repeat_spec_same_data:
           val arg = first(args);
 
           if (arg) {
-            val arg_eval = eval_form(spec_linenum, arg, bindings);
+            val arg_eval = eval_form(spec_linenum, arg, c.bindings);
 
             if (merged)
               merged = weird_merge(merged, cdr(arg_eval));
@@ -1910,9 +1949,9 @@ repeat_spec_same_data:
           }
         }
 
-        bindings = acons_new(bindings, target, merged);
+        c.bindings = acons_new(c.bindings, target, merged);
 
-        if ((spec = rest(spec)) == nil)
+        if ((c.spec = rest(c.spec)) == nil)
           break;
 
         goto repeat_spec_same_data;
@@ -1920,14 +1959,14 @@ repeat_spec_same_data:
         val args = rest(first_spec);
         val pattern = first(args);
         val form = second(args);
-        val val = eval_form(spec_linenum, form, bindings);
+        val val = eval_form(spec_linenum, form, c.bindings);
 
-        bindings = dest_bind(spec_linenum, bindings, pattern, cdr(val));
+        c.bindings = dest_bind(spec_linenum, c.bindings, pattern, cdr(val));
 
-        if (bindings == t)
+        if (c.bindings == t)
           return nil;
 
-        if ((spec = rest(spec)) == nil)
+        if ((c.spec = rest(c.spec)) == nil)
           break;
 
         goto repeat_spec_same_data;
@@ -1941,11 +1980,11 @@ repeat_spec_same_data:
             sem_error(spec_linenum,
                       lit("cat: ~s is not a bindable symbol"), sym, nao);
           } else {
-            val existing = assoc(bindings, sym);
+            val existing = assoc(c.bindings, sym);
             val sep = nil;
 
             if (rest(specline)) {
-              val sub = subst_vars(rest(specline), bindings, nil);
+              val sub = subst_vars(rest(specline), c.bindings, nil);
               sep = cat_str(sub, nil);
             }
 
@@ -1954,7 +1993,7 @@ repeat_spec_same_data:
           }
         }
 
-        if ((spec = rest(spec)) == nil)
+        if ((c.spec = rest(c.spec)) == nil)
           break;
 
         goto repeat_spec_same_data;
@@ -1971,7 +2010,7 @@ repeat_spec_same_data:
             sem_error(spec_linenum, lit("material after :nothrow in output"), nao);
         } else if (!keywordp(first(dest_spec))) {
           val form = first(dest_spec);
-          val val = eval_form(spec_linenum, form, bindings);
+          val val = eval_form(spec_linenum, form, c.bindings);
           dest = or2(cdr(val), dest);
           pop(&dest_spec);
         }
@@ -2009,11 +2048,11 @@ repeat_spec_same_data:
           }
         } else {
           val stream = complex_stream(fp, dest);
-          do_output(bindings, specs, filter, stream);
+          do_output(c.bindings, specs, filter, stream);
           close_stream(stream, t);
         }
 
-        if ((spec = rest(spec)) == nil)
+        if ((c.spec = rest(c.spec)) == nil)
           break;
 
         goto repeat_spec_same_data;
@@ -2029,7 +2068,7 @@ repeat_spec_same_data:
 
         uw_set_func(name, cons(params, body));
 
-        if ((spec = rest(spec)) == nil)
+        if ((c.spec = rest(c.spec)) == nil)
           break;
 
         goto repeat_spec_same_data;
@@ -2043,11 +2082,8 @@ repeat_spec_same_data:
           uw_block_begin(nil, result);
           uw_catch_begin(catch_syms, exsym, exvals);
 
-          {
-            result = match_files(try_clause, files, bindings,
-                                 data, num(data_lineno));
-            uw_do_unwind;
-          }
+          result = match_files(mf_spec(c, try_clause));
+          uw_do_unwind;
 
           uw_catch(exsym, exvals) {
             {
@@ -2075,10 +2111,10 @@ repeat_spec_same_data:
                       val value = car(viter);
 
                       if (value) {
-                        bindings = dest_bind(spec_linenum, bindings, 
+                        c.bindings = dest_bind(spec_linenum, c.bindings, 
                                              param, cdr(value));
 
-                        if (bindings == t) {
+                        if (c.bindings == t) {
                           all_bind = nil;
                           break;
                         }
@@ -2087,16 +2123,15 @@ repeat_spec_same_data:
 
                     if (all_bind) {
                       cons_bind (new_bindings, success,
-                                 match_files(body, files, bindings,
-                                             data, num(data_lineno)));
+                                 match_files(mf_spec(c, body)));
                       if (success) {
-                        bindings = new_bindings;
+                        c.bindings = new_bindings;
                         result = t; /* catch succeeded, so try succeeds */
                         if (consp(success)) {
-                          data = car(success);
-                          data_lineno = c_num(cdr(success));
+                          c.data = car(success);
+                          c.data_lineno = cdr(success);
                         } else {
-                          data = nil;
+                          c.data = nil;
                         }
                       }
                     }
@@ -2120,12 +2155,12 @@ repeat_spec_same_data:
                  produced by the main clause. */
               cons_bind (new_bindings, success, result);
               if (consp(success)) {
-                data = car(success);
-                data_lineno = c_num(cdr(success));
+                c.data = car(success);
+                c.data_lineno = cdr(success);
               } else {
-                data = nil;
+                c.data = nil;
               }
-              bindings = new_bindings;
+              c.bindings = new_bindings;
             }
 
             if (!finally_clause) {
@@ -2140,16 +2175,16 @@ repeat_spec_same_data:
 
             if (finally_clause) {
               cons_bind (new_bindings, success,
-                         match_files(finally_clause, files, bindings,
-                                     data, num(data_lineno)));
+                         match_files(mf_spec(c, finally_clause)));
+
               if (success) {
-                bindings = new_bindings;
+                c.bindings = new_bindings;
                 result = t; /* finally succeeds, so try block succeeds */
                 if (consp(success)) {
-                  data = car(success);
-                  data_lineno = c_num(cdr(success));
+                  c.data = car(success);
+                  c.data_lineno = cdr(success);
                 } else {
-                  data = nil;
+                  c.data = nil;
                 }
               }
             }
@@ -2161,7 +2196,7 @@ repeat_spec_same_data:
           if (!result)
             return nil;
 
-          if ((spec = rest(spec)) == nil)
+          if ((c.spec = rest(c.spec)) == nil)
             break;
 
           goto repeat_spec_same_data;
@@ -2172,7 +2207,7 @@ repeat_spec_same_data:
           sem_error(spec_linenum, lit("defex arguments must all be symbols"),
                     nao);
         (void) reduce_left(func_n2(uw_register_subtype), types, nil, nil);
-        if ((spec = rest(spec)) == nil)
+        if ((c.spec = rest(c.spec)) == nil)
           break;
         goto repeat_spec_same_data;
       } else if (sym == throw_s) {
@@ -2183,7 +2218,7 @@ repeat_spec_same_data:
                     type, nao);
         {
           val values = mapcar(curry_123_2(func_n3(eval_form), 
-                                          spec_linenum, bindings), args);
+                                          spec_linenum, c.bindings), args);
           uw_throw(type, values);
         }
       } else if (sym == deffilter_s) {
@@ -2211,15 +2246,15 @@ repeat_spec_same_data:
                     nao);
         register_filter(sym, table);
         /* TODO: warn about replaced filter. */
-        if ((spec = rest(spec)) == nil)
+        if ((c.spec = rest(c.spec)) == nil)
           break;
         goto repeat_spec_same_data;
       } else if (sym == eof_s) {
-        if (data) {
-          debugf(lit("eof failed to match at ~a"), num(data_lineno), nao);
+        if (c.data) {
+          debugf(lit("eof failed to match at ~a"), c.data_lineno, nao);
           return nil;
         }
-        if ((spec = rest(spec)) == nil)
+        if ((c.spec = rest(c.spec)) == nil)
           break;
         goto repeat_spec_same_data;
       } else {
@@ -2231,7 +2266,7 @@ repeat_spec_same_data:
           val ub_p_a_pairs = nil;
           val body = cdr(func);
           val piter, aiter;
-          val bindings_cp = copy_alist(bindings);
+          val bindings_cp = copy_alist(c.bindings);
 
           if (!equal(length(args), length(params)))
             sem_error(spec_linenum, lit("function ~a takes ~a argument(s)"),
@@ -2244,7 +2279,7 @@ repeat_spec_same_data:
             val arg = car(aiter);
 
             if (arg && bindable(arg)) {
-              val val = assoc(bindings, arg);
+              val val = assoc(c.bindings, arg);
               if (val) {
                 bindings_cp = acons_new(bindings_cp,
                                         param,
@@ -2254,7 +2289,7 @@ repeat_spec_same_data:
                 ub_p_a_pairs = cons(cons(param, arg), ub_p_a_pairs);
               }
             } else {
-              val val = eval_form(spec_linenum, arg, bindings);
+              val val = eval_form(spec_linenum, arg, c.bindings);
               bindings_cp = acons_new(bindings_cp, param, cdr(val));
             }
           }
@@ -2262,8 +2297,7 @@ repeat_spec_same_data:
           {
             uw_block_begin(nil, result);
             uw_env_begin;
-            result = match_files(body, files, bindings_cp,
-                                 data, num(data_lineno));
+            result = match_files(mf_spec_bindings(c, body, bindings_cp));
             uw_env_end;
             uw_block_end;
 
@@ -2282,9 +2316,9 @@ repeat_spec_same_data:
                 if (symbolp(arg)) {
                   val newbind = assoc(new_bindings, param);
                   if (newbind) {
-                    bindings = dest_bind(spec_linenum, bindings, 
+                    c.bindings = dest_bind(spec_linenum, c.bindings, 
                                          arg, cdr(newbind));
-                    if (bindings == t) {
+                    if (c.bindings == t) {
                       debuglf(spec_linenum,
                               lit("binding mismatch on ~a "
                                   "when returning from ~a"), arg, sym, nao);
@@ -2298,18 +2332,18 @@ repeat_spec_same_data:
                 debuglf(spec_linenum,
                         lit("function matched; "
                             "advancing from line ~a to ~a"),
-                        num(data_lineno), cdr(success), nao);
-                data = car(success);
-                data_lineno = c_num(cdr(success));
+                        c.data_lineno, cdr(success), nao);
+                c.data = car(success);
+                c.data_lineno = cdr(success);
               } else {
                 debuglf(spec_linenum, lit("function consumed entire file"),
                         nao);
-                data = nil;
+                c.data = nil;
               }
             }
           }
 
-          if ((spec = rest(spec)) == nil)
+          if ((c.spec = rest(c.spec)) == nil)
             break;
 
           goto repeat_spec_same_data;
@@ -2317,12 +2351,12 @@ repeat_spec_same_data:
       }
     }
 
-    if (data)
+    if (c.data)
     {
-      val dataline = first(data);
+      val dataline = first(c.data);
       cons_bind (new_bindings, success,
-                 match_line(bindings, specline, dataline, zero,
-                            spec_linenum, num(data_lineno), first(files)));
+                 match_line(c.bindings, specline, dataline, zero,
+                            spec_linenum, c.data_lineno, first(c.files)));
 
       if (nump(success) && c_num(success) < c_num(length_str(dataline))) {
         debuglf(spec_linenum, lit("spec only matches line to position ~a: ~a"),
@@ -2333,20 +2367,21 @@ repeat_spec_same_data:
       if (!success)
         return nil;
 
-      bindings = new_bindings;
+      c.bindings = new_bindings;
     } else {
       debuglf(spec_linenum, lit("spec ran out of data"), nao);
       return nil;
     }
   }
 
-  return cons(bindings, if3(data, cons(data, num(data_lineno)), t));
+  return cons(c.bindings, if3(c.data, cons(c.data, c.data_lineno), t));
 }
 
 int extract(val spec, val files, val predefined_bindings)
 {
-  cons_bind (bindings, success, match_files(spec, files, predefined_bindings,
-                                            t, nil));
+  cons_bind (bindings, success, match_files(mf_all(spec, files, 
+                                                   predefined_bindings,
+                                                   t, nil)));
 
   if (!output_produced) {
     if (!opt_nobindings) {
@@ -2363,7 +2398,7 @@ int extract(val spec, val files, val predefined_bindings)
   return success ? 0 : EXIT_FAILURE;
 }
 
-void match_init(void)
+static void syms_init(void)
 {
   mingap_k = intern(lit("mingap"), keyword_package);
   maxgap_k = intern(lit("maxgap"), keyword_package);
@@ -2378,4 +2413,16 @@ void match_init(void)
   shortest_k = intern(lit("shortest"), keyword_package);
   greedy_k = intern(lit("greedy"), keyword_package);
   vars_k = intern(lit("vars"), keyword_package);
+}
+
+static void dir_tables_init(void)
+{
+  h_directive_table = make_hash(nil, nil);
+  v_directive_table = make_hash(nil, nil);
+}
+
+void match_init(void)
+{
+  syms_init();
+  dir_tables_init();
 }
