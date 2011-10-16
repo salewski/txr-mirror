@@ -1,5 +1,12 @@
 2011-10-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	* configure: reduced post-configure advice to just point
+	to the INSTALL guide.
+
+	* INSTALL: New file.
+
+2011-10-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	* filter.c (trie_filter_string): Fix warning about uninitialized
 	variable (not a bug, but compiler cannot prove that).
 

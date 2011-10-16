@@ -868,19 +868,16 @@ Configured on $(date) using
 cat <<!
 
 The configuration seems to have been successful. That doesn't mean it's
-correct.  Please check the above output for any problems, and verify that the
+correct!  Please check the above output for any problems, and verify that the
 contents of the generated files config.make and config.h are sane for the
 target platform.
 
-The next step is one of these two.
+The next step is to build the program with make.
 
-Method 1: if you have permissions to the installation directories:
-   make install
+If that is successful, please follow the INSTALL guide.
 
-Method 2: if you have to or want to be another user such as root to install:
-   make
-   su <userid>
-   (give password, if asked)
-   make install
+Usually, most users just need to "make tests" and "make install",
+possibly switching to superuser for "make install" if the prefix
+points to a privileged location like /usr/local/.
 
 !
