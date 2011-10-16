@@ -1,3 +1,8 @@
+2011-10-16  Kaz Kylheku  <kaz@kylheku.com>
+
+	* filter.c (trie_filter_string): Fix warning about uninitialized
+	variable (not a bug, but compiler cannot prove that).
+
 2011-10-15  Kaz Kylheku  <kaz@kylheku.com>
 
 	Task #11425. Refactoring match_files to make it easier to
