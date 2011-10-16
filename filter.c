@@ -167,7 +167,7 @@ static val trie_filter_string(val filter, val str)
   for (i = zero; lt(i, len); ) {
     val node = trie_lookup_begin(filter);
     val match = nil;
-    val subst;
+    val subst = nil;
     val j;
 
     for (j = i; lt(j, len); j = plus(j, one)) {
