@@ -1,0 +1,219 @@
+                             Txr Installation Guide
+                         Kaz Kylheku <kaz@kylheku.com>
+
+0. Overview
+
+Txr's configure and build system takes into account various deployment
+scenarios:
+
+- the common case where a user compiles a program on a machine to be
+  installed in some personal directory on that machine
+
+- the case where a superuser compiles a program on a machine to be
+  installed for everyone in /usr or /usr/local
+
+- the situation where the software is compiled on one machine,
+  in order to be installed at some intended path on another machine,
+  which may have a different architecture.
+
+In all scenarios, three things have to happen: successful build configuration,
+successful compilation, installation of the program, and successful execution
+of test cases.
+
+Txr supports cross compiling.  The location of the toolchain components can be
+specified. Furthermore, the script will try to compile some test programs to
+detect the features of the target platform, but it does not execute text
+programs, which is not possible when cross-compiling.  All tests are crafted to
+avoid requiring execution of code.
+
+
+1. Configuration
+
+Configuration is done using the configure script. The configure script need not
+be run in the source directory. The program can be built in a separate
+directory, for instance like this:
+
+  $ mkdir build-txr
+  $ cd build-dir
+  build-dir $ ../txr-039/configure
+
+If you're going to be making changes to txr, it's easier to build in the same
+directory, but to build txr for multiple architectures, or multiple kinds of
+builds at the same time (e.g. optimized or unoptimized) it's useful to follow
+the separate-directory approach.
+
+Run configure --help to see an explanation of what options are available and
+what are their default values. If you aren't cross-compiling, you probably
+don't have to do anything.
+
+If you're working on txr, you will likely at some point have to reconfigure the
+opt_flags to disable compiler optimization for easier debugging with a
+debugger.
+
+
+1.1.  Make Syntax in Config Variables
+
+You will find that the default values for some configuration variables contain
+unexpanded Make syntax such as $(prefix).  This is because these variables
+ultimately end up as make variables defined in config.make, and will be
+expanded at make time. Using variables like $(prefix) in the definitions of
+other variables creates a logical structure and configuration flexiblity. 
+Change the prefix, and the variables dependent on prefix change accordingly.
+By doing the expanding at make time rather than in the configure script,
+there is an additional flexibility in that you can override the variables
+when running make:
+
+  # was configured for /usr/local but we can switch it
+  # all variables whose values are based on $(prefix) will follow suit:
+  make prefix=/usr install
+
+
+1.1.  Cross-Compiling
+
+When a program is being cross-compiled using a toolchain, there are two
+important pieces of information needed. What is the path to the root directory
+of the toolchain? And what are the relative paths or prefixes from the
+toolchain to the compilers, and to the other tools?  These two may be
+different.
+
+In the txr configuration, the path to the toolchain can be set using
+the cross variable, which is blank by default.  The prefix of the compiler is
+given by the variable compiler_prefix, which also defaults to a blank value.
+The compiler name is given by ccname, whose default value is "gcc".
+
+The compiler, then is given by the cc variable, whose default value is
+"$(cross)$(compiler_prefix)$(ccname)" and which make will thus
+evaluate to "gcc".
+
+Suppose you have a toolchain for ARM Linux whose bin directory is
+/cross/arm-linux/bin/.  This could be used as the value of cross.
+
+Suppose the compiler under this directory is arm-linux-gcc. Thus
+for compiler_prefix you can use the string "arm-linux-"
+
+The cc variable "$(cross)$(compiler_prefix)$(ccname)" will then
+expand to "/cross/arm-linux/bin/arm-linux-gcc".
+
+But what about other cross tools, like nm? It's possible that these have a
+different prefix from the compiler. Therefore there is a separate variable
+for these called tool_prefix. If you're setting cross and compiler_prefix,
+you should also set tool_prefix.
+
+Mind the slashes. If cross doesn't have a trailing slash, then
+compiler_prefix and tool_prefix will have to have a leading slash.
+These variables are just catenated together.
+
+
+2. Prefix Selection
+
+One configure variable you may need to set is --prefix. What is a prefix?
+The prefix is the root directory of the software install, as ultimately seen on
+the target system. The default prefix for txr is /usr/local. If you're
+preparing txr for a Linux distribution as an official package, you probably
+want to pick the prefix /usr. If you're making a private installation,
+you use your home directory as the prefix. If your name is pat, then
+--prefix=/home/pat (if your operating system has a /home directory
+where user directories are located).  The program will then go into
+/home/pat/bin, man pages will go into /home/pat/share/man, etc.
+
+What the prefix is not: do not use the prefix to try to redirect txr to
+install into a temporary directory.  The prefix is not the same thing as
+the installation directory for the "make install" step! It is only
+the same thing in the simple case where you're installing txr to
+run on the same machine where it is built, and the DESTDIR variable is not
+used.
+
+When choosing the prefix, think only about where the program and its
+other materials like man pages will live on the system where it will run.
+Do not use the prefix variable to redirect the install to a temporary
+directory.
+
+If you're preparing a package for another system, the "make install"
+step will have to be redirected to some temporary directory.
+For that, there is the DESTDIR variable described later in this
+guide.
+
+
+3. Verifying the Configuration
+
+This is something for expert users. If you're building Txr on some
+exotic architecture on which nobody else is running it, you're on
+your own. The configure script may have made some wrong choices.
+The only way these will be identified is if someone who knows what
+he or she is doing will check over the config.make file, and
+especially the generated config.h header file. When in doubt,
+post these to the txr mailing list: <txr-users@nongnu.org>.
+
+
+4. Building
+
+This is an automated process: just run "make". Hopefully, everthing
+goes well and you end up with a "./txr" executable.
+
+
+5. Verifying and Installing
+
+Because of the garbage collection technique it uses, txr is a
+compiler-sensitive program. It's a very good idea to verify an installation of
+it by running the test suite---even if you're compiling it for a popular
+architecture on which other users are already running it successfully.
+Different revisions and installation of the compiler could make a difference.
+If the test suite fails, please go straight to the mailing list.
+If you're up to fixing the problem, read the HACKING guide.
+
+If you're building txr for the same machine, you can run the test suite
+using
+
+  $ make tests
+
+Then install it using
+
+  $ make install
+
+Of course to do this step, you may have to become superuser, depending
+on where the prefix is!
+
+However, if you built txr with a toolchain that is not for the
+system you are building on, you cannot run the test suite on the
+build machine. However, you can still run the tests on the target system.
+The txr makefile has a special target which captures the test suite execution
+steps into a script and packages up all the test materials:
+
+  $ make install-tests
+
+By default the tests are installed under the prefix in the
+$(prefix)/share/txr/tests directory.  The generated test script is
+called "run.sh". Here are the more-or-less exact steps to install
+txr with a test suite in a temporary directory:
+
+  $ mkdir install-dir
+  $ make DESTDIR=install-dir install install-tests
+
+Now you can package it up in some way, such as making a "tarball":
+
+  $ tar -C install-dir -czvf txr-package.tar.gz .
+
+A package created this way is intended to be extracted
+from the root directory of the target systems. The install-dir
+contains relative paths which correspond to absolute paths
+on the target. For instance install-dir/usr/local/bin/txr.
+By using -C install-dir, we tell tar to temporary switch to
+the root directory and package up the files from that vantage point,
+so the archive ends up with paths like ./usr/local/bin/txr.
+As you can see, that has to be extracted from the / directory:
+
+  on the target system
+  # cd /
+  # tar xzvf txr-package.tar.gz
+
+Now you can run the test suite on the target:
+
+  # /usr/local/share/txr/tests/run.sh
+
+Of course, the /usr/local is the default prefix: substitute
+the one you have picked, if it is different.
+
+Everything should pass, otherwise you have a broken port. Please
+report to the txr mailing list.
+
+Good luck!
