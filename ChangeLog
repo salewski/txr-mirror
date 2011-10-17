@@ -1,5 +1,16 @@
 2011-10-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	Quick and dirty port to MinGW.
+
+	* configure: Test for presence of <sys/wait.h> added.
+	Conditionally generates HAVE_SYS_WAIT variable in config.h.
+
+	* stream.c: Include <sys/wait.h> conditionally.
+	(pipe_close): Do not test ermination status with WIFEXITED, etc.
+	if there is no <sys/wait.h> header.
+
+2011-10-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	* configure: reduced post-configure advice to just point
 	to the INSTALL guide.
 
