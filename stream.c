@@ -34,8 +34,10 @@
 #include <errno.h>
 #include <wchar.h>
 #include <unistd.h>
-#include <sys/wait.h>
 #include "config.h"
+#if HAVE_SYS_WAIT
+#include <sys/wait.h>
+#endif
 #include "lib.h"
 #include "gc.h"
 #include "unwind.h"
@@ -247,6 +249,7 @@ static val pipe_close(val stream, val throw_on_error)
         uw_throwf(process_error_s,
                   lit("unable to obtain status of command ~a: ~a/~s"),
                   stream, num(errno), string_utf8(strerror(errno)), nao);
+#ifdef HAVE_SYS_WAIT
       } else if (WIFEXITED(status)) {
         int exitstatus = WEXITSTATUS(status);
         uw_throwf(process_error_s, lit("pipe ~a terminated with status ~a"),
@@ -263,6 +266,7 @@ static val pipe_close(val stream, val throw_on_error)
       } else {
         uw_throwf(file_error_s, lit("strange status in when closing pipe ~a"),
                   stream, nao);
+#endif
       }
     }
 

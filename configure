@@ -838,6 +838,27 @@ else
 fi
 
 #
+# sys/wait.h
+#
+
+printf "Checking whether we have <sys/wait.h> ... "
+
+cat > conftest.c <<!
+#include <sys/wait.h>
+
+int main(void)
+{
+  return 0;
+}
+!
+if ! make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+  printf "no\n"
+else
+  printf "yes\n"
+  printf "#define HAVE_SYS_WAIT 1\n" >> config.h
+fi
+
+#
 # Clean up
 #
 
