@@ -2,6 +2,14 @@
 
 	Task #11425
 
+	* match.c (v_block): New function.
+	(match_files): Block directive moved to function.
+	(dir_tables_init): v_block entered into table.
+
+2011-10-18  Kaz Kylheku  <kaz@kylheku.com>
+
+	Task #11425
+
 	* match.c (spec_bind): New macro.
 	(v_freeform): New function.
 	(match_files): Freeform logic moved to function.
