@@ -2,6 +2,15 @@
 
 	Task #11425
 
+	* match.c (spec_bind): New macro.
+	(v_freeform): New function.
+	(match_files): Freeform logic moved to function.
+	(dir_tables_init): v_freeform entered into table.
+
+2011-10-18  Kaz Kylheku  <kaz@kylheku.com>
+
+	Task #11425
+
 	* match.c (same_data_k): Symbol variable renamed to next_spec_k.
 	(v_skip): Restructured not to return next_spec_k when there
 	are no more specs, but rather thread directly to what match_file

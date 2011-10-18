@@ -1314,6 +1314,12 @@ static val match_files(match_files_ctx a);
 
 typedef val (*v_match_func)(match_files_ctx c, match_files_ctx *cout);
 
+#define spec_bind(specline_var, spec_linenum_var, first_spec_var, spec)  \
+  val s_p_ ## specline_var = first(spec);                                \
+  val specline_var = rest(s_p_ ## specline_var);                         \
+  val spec_linenum_var = first(s_p_ ## specline_var);                    \
+  val first_spec = first(specline_var)
+
 static val v_skip(match_files_ctx c, match_files_ctx *cout)
 {
   val specline = rest(first(c.spec));
@@ -1419,6 +1425,47 @@ static val v_trailer(match_files_ctx c, match_files_ctx *cout)
   }
 }
 
+static val v_freeform(match_files_ctx c, match_files_ctx *cout)
+{
+  spec_bind (specline, spec_linenum, first_spec, c.spec);
+
+  val args = rest(first_spec);
+  val vals = mapcar(func_n1(cdr),
+                       mapcar(curry_123_2(func_n3(eval_form),
+                                          spec_linenum, c.bindings), args));
+
+  if ((c.spec = rest(c.spec)) == nil) {
+    sem_error(spec_linenum,
+              lit("freeform must be followed by a query line"), nao);
+  } else {
+    val limit = or2(if2(nump(first(vals)), first(vals)),
+                    if2(nump(second(vals)), second(vals)));
+    val term = or2(if2(stringp(first(vals)), first(vals)),
+                   if2(stringp(second(vals)), second(vals)));
+    val ff_specline = rest(first(c.spec));
+    val ff_dataline = lazy_str(c.data, term, limit);
+
+    cons_bind (new_bindings, success,
+               match_line(c.bindings, ff_specline, ff_dataline, zero,
+                          spec_linenum, c.data_lineno, first(c.files)));
+
+    if (!success) {
+      debuglf(spec_linenum, lit("freeform match failure"), nao);
+      return nil;
+    }
+
+    if (nump(success)) {
+      c.data = lazy_str_get_trailing_list(ff_dataline, success);
+      c.data_lineno = plus(c.data_lineno, num(1));
+    }
+
+    c.bindings = new_bindings;
+  }
+
+  *cout = c;
+  return next_spec_k;
+}
+
 static val match_files(match_files_ctx c)
 {
   gc_hint(c.data);
@@ -1489,45 +1536,7 @@ repeat_spec_same_data:
         }
       }
 
-      if (sym == freeform_s) {
-        val args = rest(first_spec);
-        val vals = mapcar(func_n1(cdr),
-                             mapcar(curry_123_2(func_n3(eval_form),
-                                                spec_linenum, c.bindings), args));
-
-        if ((c.spec = rest(c.spec)) == nil) {
-          sem_error(spec_linenum,
-                    lit("freeform must be followed by a query line"), nao);
-        } else {
-          val limit = or2(if2(nump(first(vals)), first(vals)),
-                          if2(nump(second(vals)), second(vals)));
-          val term = or2(if2(stringp(first(vals)), first(vals)),
-                         if2(stringp(second(vals)), second(vals)));
-          val ff_specline = rest(first(c.spec));
-          val ff_dataline = lazy_str(c.data, term, limit);
-
-          cons_bind (new_bindings, success,
-                     match_line(c.bindings, ff_specline, ff_dataline, zero,
-                                spec_linenum, c.data_lineno, first(c.files)));
-
-          if (!success) {
-            debuglf(spec_linenum, lit("freeform match failure"), nao);
-            return nil;
-          }
-
-          if (nump(success)) {
-            c.data = lazy_str_get_trailing_list(ff_dataline, success);
-            c.data_lineno = plus(c.data_lineno, num(1));
-          }
-
-          c.bindings = new_bindings;
-        }
-
-        if ((c.spec = rest(c.spec)) == nil)
-          break;
-
-        goto repeat_spec_same_data;
-      } else if (sym == block_s) {
+      if (sym == block_s) {
         val name = first(rest(first_spec));
         if (rest(specline))
           sem_error(spec_linenum,
@@ -2462,6 +2471,7 @@ static void dir_tables_init(void)
 
   sethash(v_directive_table, skip_s, cptr((mem_t *) v_skip));
   sethash(v_directive_table, trailer_s, cptr((mem_t *) v_trailer));
+  sethash(v_directive_table, freeform_s, cptr((mem_t *) v_freeform));
 }
 
 void match_init(void)
