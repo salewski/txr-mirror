@@ -1466,6 +1466,28 @@ static val v_freeform(match_files_ctx c, match_files_ctx *cout)
   return next_spec_k;
 }
 
+static val v_block(match_files_ctx c, match_files_ctx *cout)
+{
+  spec_bind (specline, spec_linenum, first_spec, c.spec);
+
+  val name = first(rest(first_spec));
+
+  if (rest(specline))
+    sem_error(spec_linenum,
+              lit("unexpected material after block directive"), nao);
+
+  if (rest(c.spec))
+  {
+    uw_block_begin(name, result);
+    result = match_files(c);
+    uw_block_end;
+    return result;
+  }
+
+  *cout = c;
+  return next_spec_k;
+}
+
 static val match_files(match_files_ctx c)
 {
   gc_hint(c.data);
@@ -1532,21 +1554,6 @@ repeat_spec_same_data:
         } else if (result == decline_k) {
           /* go on to other processing below */
         } else {
-          return result;
-        }
-      }
-
-      if (sym == block_s) {
-        val name = first(rest(first_spec));
-        if (rest(specline))
-          sem_error(spec_linenum,
-                    lit("unexpected material after block directive"), nao);
-        if ((c.spec = rest(c.spec)) == nil)
-          break;
-        {
-          uw_block_begin(name, result);
-          result = match_files(c);
-          uw_block_end;
           return result;
         }
       } else if (sym == fail_s || sym == accept_s) {
@@ -2472,6 +2479,7 @@ static void dir_tables_init(void)
   sethash(v_directive_table, skip_s, cptr((mem_t *) v_skip));
   sethash(v_directive_table, trailer_s, cptr((mem_t *) v_trailer));
   sethash(v_directive_table, freeform_s, cptr((mem_t *) v_freeform));
+  sethash(v_directive_table, block_s, cptr((mem_t *) v_block));
 }
 
 void match_init(void)
