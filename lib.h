@@ -240,7 +240,7 @@ INLINE val chr(wchar_t ch)
 
 extern val keyword_package, system_package, user_package;
 extern val null, t, cons_s, str_s, chr_s, num_s, sym_s, pkg_s, fun_s, vec_s;
-extern val stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s;
+extern val stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s, cptr_s;
 extern val var_s, expr_s, regex_s, chset_s, set_s, cset_s, wild_s, oneplus_s;
 extern val nongreedy_s, compiled_regex_s;
 extern val zeroplus_s, optional_s, compl_s, compound_s, or_s, and_s, quasi_s;
@@ -403,6 +403,8 @@ val length_str_le(val str, val len);
 val cobj(mem_t *handle, val cls_sym, struct cobj_ops *ops);
 val cobjp(val obj);
 mem_t *cobj_handle(val cobj, val cls_sym);
+val cptr(mem_t *ptr);
+mem_t *cptr_get(val cptr);
 val assoc(val list, val key);
 val acons(val list, val car, val cdr);
 val acons_new(val list, val key, val value);

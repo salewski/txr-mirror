@@ -51,7 +51,7 @@ val packages;
 val system_package, keyword_package, user_package;
 
 val null, t, cons_s, str_s, chr_s, num_s, sym_s, pkg_s, fun_s, vec_s;
-val stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s;
+val stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s, cptr_s;
 val var_s, expr_s, regex_s, chset_s, set_s, cset_s, wild_s, oneplus_s;
 val nongreedy_s, compiled_regex_s;
 val zeroplus_s, optional_s, compl_s, compound_s, or_s, and_s, quasi_s;
@@ -1872,6 +1872,29 @@ void cobj_print_op(val obj, val out)
   format(out, lit(": ~p>"), obj->co.handle, nao);
 }
 
+static val cptr_equal_op(val left, val right)
+{
+  return (left->co.handle == right->co.handle) ? t : nil;
+}
+
+static struct cobj_ops cptr_ops = {
+  cptr_equal_op,
+  cobj_print_op,
+  cobj_destroy_stub_op,
+  cobj_mark_op,
+  cobj_hash_op
+};
+
+val cptr(mem_t *ptr)
+{
+  return cobj(ptr, cptr_s, &cptr_ops);
+}
+
+mem_t *cptr_get(val cptr)
+{
+  return cobj_handle(cptr, cptr_s);
+}
+
 val assoc(val list, val key)
 {
   while (list) {
@@ -2160,6 +2183,7 @@ static void obj_init(void)
   lcons_s = intern(lit("lcons"), user_package);
   lstr_s = intern(lit("lstr"), user_package);
   cobj_s = intern(lit("cobj"), user_package);
+  cptr_s = intern(lit("cptr"), user_package);
   var_s = intern(lit("var"), system_package);
   expr_s = intern(lit("expr"), system_package);
   regex_s = intern(lit("regex"), system_package);
