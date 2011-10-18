@@ -1,3 +1,28 @@
+2011-10-17  Kaz Kylheku  <kaz@kylheku.com>
+
+	Task #11425.
+
+	Vertical skip directive moved into function dispatched
+	via hash table. Test suite passes.
+
+	* lib.c (cptr_s): New symbol variable.
+	(cptr_equal_op): New static function.
+	(cptr_equal_op, cptr, cptr_get): New functions.
+	(cptr_ops): New static structure.
+	(obj_init): New variable initialized.
+
+	* lib.h (cptr_s, cptr, cptr_get): Declared.
+
+	* match.c (decline_k, same_data_k): New symbol variables.
+	(v_match_func): New typedef.
+	(v_skip): New function.
+	(match_files): Check symbol in v_directive_table and dispatch
+	the associated function if an entry exists.
+	Skip directive handling moved to v_skip function.
+	(syms_init): Initialize new symbol variables.
+	(dir_tables_init): Enter v_skip into v_directive_table under
+	skip_s symbol.
+
 2011-10-16  Kaz Kylheku  <kaz@kylheku.com>
 
 	Quick and dirty port to MinGW.

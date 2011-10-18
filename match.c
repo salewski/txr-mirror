@@ -48,6 +48,7 @@
 
 int output_produced;
 
+val decline_k, same_data_k;
 val mingap_k, maxgap_k, gap_k, mintimes_k, maxtimes_k, times_k;
 val lines_k, chars_k;
 val choose_s, longest_k, shortest_k, greedy_k;
@@ -1309,8 +1310,99 @@ static match_files_ctx mf_spec_bindings(match_files_ctx c, val spec,
 }
 
 
-
 static val match_files(match_files_ctx a);
+
+typedef val (*v_match_func)(match_files_ctx c, match_files_ctx *cout);
+
+static val v_skip(match_files_ctx c, match_files_ctx *cout)
+{
+  val specline = rest(first(c.spec));
+  val other_specs = rest(c.spec);
+
+  if (other_specs == nil) {
+    *cout = c;
+    return same_data_k;
+  }
+
+  if (rest(specline) == nil) {
+    val spec_linenum = first(first(c.spec));
+    val first_spec = first(specline);
+    val args = rest(first_spec);
+    val max = first(args);
+    val min = second(args);
+    cnum cmax = nump(max) ? c_num(max) : 0;
+    cnum cmin = nump(min) ? c_num(min) : 0;
+    val greedy = eq(max, greedy_k);
+    val last_good_result = nil;
+    val last_good_line = num(0);
+
+    {
+      cnum reps_max = 0, reps_min = 0;
+      uw_block_begin(nil, result);
+
+      while (c.data && min && reps_min < cmin) {
+        c.data = rest(c.data);
+        c.data_lineno = plus(c.data_lineno, num(1));
+        reps_min++;
+      }
+
+      if (min) {
+        if (reps_min != cmin) {
+          debuglf(spec_linenum, lit("skipped only ~a/~a lines to ~a:~a"),
+                  num(reps_min), num(cmin),
+                  first(c.files), c.data_lineno, nao);
+          uw_block_return(nil, nil);
+        }
+
+        debuglf(spec_linenum, lit("skipped ~a lines to ~a:~a"),
+                num(reps_min), first(c.files),
+                c.data_lineno, nao);
+      }
+
+      while (greedy || !max || reps_max++ < cmax) {
+        result = match_files(mf_spec(c, other_specs));
+
+        if (result) {
+          if (greedy) {
+            last_good_result = result;
+            last_good_line = c.data_lineno;
+          } else {
+            debuglf(spec_linenum, lit("skip matched ~a:~a"), first(c.files),
+                    c.data_lineno, nao);
+            break;
+          }
+        } else {
+          debuglf(spec_linenum, lit("skip didn't match ~a:~a"),
+                  first(c.files), c.data_lineno, nao);
+        }
+
+        if (!c.data)
+          break;
+
+        debuglf(spec_linenum, lit("skip didn't match ~a:~a"), first(c.files),
+                c.data_lineno, nao);
+
+        c.data = rest(c.data);
+        c.data_lineno = plus(c.data_lineno, num(1));
+      }
+
+      uw_block_end;
+
+      if (result)
+        return result;
+      if (last_good_result) {
+        debuglf(spec_linenum, lit("greedy skip matched ~a:~a"), 
+                first(c.files), last_good_line, nao);
+        return last_good_result;
+      }
+    }
+
+    debuglf(spec_linenum, lit("skip failed"), nao);
+    return nil;
+  }
+
+  return decline_k;
+}
 
 static val match_files(match_files_ctx c)
 {
@@ -1363,85 +1455,26 @@ repeat_spec_same_data:
 
     if (consp(first_spec)) {
       val sym = first(first_spec);
+      val entry = gethash(v_directive_table, sym);
 
+      if (entry) {
+        v_match_func vmf = (v_match_func) cptr_get(entry);
+        match_files_ctx nc;
+        val result = vmf(c, &nc);
 
-      if (sym == skip_s && rest(specline) == nil) {
-        val args = rest(first_spec);
-        val max = first(args);
-        val min = second(args);
-        cnum cmax = nump(max) ? c_num(max) : 0;
-        cnum cmin = nump(min) ? c_num(min) : 0;
-        val greedy = eq(max, greedy_k);
-        val last_good_result = nil;
-        val last_good_line = num(0);
-
-        if ((c.spec = rest(c.spec)) == nil)
-          break;
-
-        {
-          cnum reps_max = 0, reps_min = 0;
-          uw_block_begin(nil, result);
-
-          while (c.data && min && reps_min < cmin) {
-            c.data = rest(c.data);
-            c.data_lineno = plus(c.data_lineno, num(1));
-            reps_min++;
-          }
-
-          if (min) {
-            if (reps_min != cmin) {
-              debuglf(spec_linenum, lit("skipped only ~a/~a lines to ~a:~a"),
-                      num(reps_min), num(cmin),
-                      first(c.files), c.data_lineno, nao);
-              uw_block_return(nil, nil);
-            }
-
-            debuglf(spec_linenum, lit("skipped ~a lines to ~a:~a"),
-                    num(reps_min), first(c.files),
-                    c.data_lineno, nao);
-          }
-
-          while (greedy || !max || reps_max++ < cmax) {
-            result = match_files(c);
-
-            if (result) {
-              if (greedy) {
-                last_good_result = result;
-                last_good_line = c.data_lineno;
-              } else {
-                debuglf(spec_linenum, lit("skip matched ~a:~a"), first(c.files),
-                        c.data_lineno, nao);
-                break;
-              }
-            } else {
-              debuglf(spec_linenum, lit("skip didn't match ~a:~a"),
-                      first(c.files), c.data_lineno, nao);
-            }
-
-            if (!c.data)
-              break;
-
-            debuglf(spec_linenum, lit("skip didn't match ~a:~a"), first(c.files),
-                    c.data_lineno, nao);
-
-            c.data = rest(c.data);
-            c.data_lineno = plus(c.data_lineno, num(1));
-          }
-
-          uw_block_end;
-
-          if (result)
-            return result;
-          if (last_good_result) {
-            debuglf(spec_linenum, lit("greedy skip matched ~a:~a"), 
-                    first(c.files), last_good_line, nao);
-            return last_good_result;
-          }
+        if (result == same_data_k) {
+          c = nc;  
+          if ((c.spec = rest(c.spec)) == nil)
+            break;
+          goto repeat_spec_same_data;
+        } else if (result == decline_k) {
+          /* go on to other processing below */
+        } else {
+          return result;
         }
+      }
 
-        debuglf(spec_linenum, lit("skip failed"), nao);
-        return nil;
-      } else if (sym == trailer_s && !rest(specline)) {
+      if (sym == trailer_s && !rest(specline)) {
         if ((c.spec = rest(c.spec)) == nil)
           break;
 
@@ -2400,6 +2433,8 @@ int extract(val spec, val files, val predefined_bindings)
 
 static void syms_init(void)
 {
+  decline_k = intern(lit("decline"), keyword_package);
+  same_data_k = intern(lit("same_data"), keyword_package);
   mingap_k = intern(lit("mingap"), keyword_package);
   maxgap_k = intern(lit("maxgap"), keyword_package);
   gap_k = intern(lit("gap"), keyword_package);
@@ -2419,6 +2454,8 @@ static void dir_tables_init(void)
 {
   h_directive_table = make_hash(nil, nil);
   v_directive_table = make_hash(nil, nil);
+
+  sethash(v_directive_table, skip_s, cptr((mem_t *) v_skip));
 }
 
 void match_init(void)
