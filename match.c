@@ -48,7 +48,7 @@
 
 int output_produced;
 
-val decline_k, same_data_k;
+val decline_k, next_spec_k;
 val mingap_k, maxgap_k, gap_k, mintimes_k, maxtimes_k, times_k;
 val lines_k, chars_k;
 val choose_s, longest_k, shortest_k, greedy_k;
@@ -1317,14 +1317,16 @@ typedef val (*v_match_func)(match_files_ctx c, match_files_ctx *cout);
 static val v_skip(match_files_ctx c, match_files_ctx *cout)
 {
   val specline = rest(first(c.spec));
-  val other_specs = rest(c.spec);
 
-  if (other_specs == nil) {
-    *cout = c;
-    return same_data_k;
-  }
+  if (rest(specline))
+    return decline_k;
 
-  if (rest(specline) == nil) {
+  c.spec = rest(c.spec);
+
+  if (!c.spec)
+    return cons(c.bindings, cons(c.data, c.data_lineno));
+
+  {
     val spec_linenum = first(first(c.spec));
     val first_spec = first(specline);
     val args = rest(first_spec);
@@ -1360,7 +1362,7 @@ static val v_skip(match_files_ctx c, match_files_ctx *cout)
       }
 
       while (greedy || !max || reps_max++ < cmax) {
-        result = match_files(mf_spec(c, other_specs));
+        result = match_files(c);
 
         if (result) {
           if (greedy) {
@@ -1400,8 +1402,21 @@ static val v_skip(match_files_ctx c, match_files_ctx *cout)
     debuglf(spec_linenum, lit("skip failed"), nao);
     return nil;
   }
+}
 
-  return decline_k;
+static val v_trailer(match_files_ctx c, match_files_ctx *cout)
+{
+  if (rest(rest(first(c.spec))))
+    return decline_k;
+
+  c.spec = rest(c.spec);
+
+  if (!c.spec)  {
+    return cons(c.bindings, cons(c.data, c.data_lineno));
+  } else {
+    cons_bind (new_bindings, success, match_files(c));
+    return success ? cons(new_bindings, cons(c.data, c.data_lineno)) : nil;
+  }
 }
 
 static val match_files(match_files_ctx c)
@@ -1462,7 +1477,7 @@ repeat_spec_same_data:
         match_files_ctx nc;
         val result = vmf(c, &nc);
 
-        if (result == same_data_k) {
+        if (result == next_spec_k) {
           c = nc;  
           if ((c.spec = rest(c.spec)) == nil)
             break;
@@ -1474,19 +1489,7 @@ repeat_spec_same_data:
         }
       }
 
-      if (sym == trailer_s && !rest(specline)) {
-        if ((c.spec = rest(c.spec)) == nil)
-          break;
-
-        {
-          cons_bind (new_bindings, success,
-                     match_files(c));
-
-          if (success)
-            return cons(new_bindings, cons(c.data, c.data_lineno));
-          return nil;
-        }
-      } else if (sym == freeform_s) {
+      if (sym == freeform_s) {
         val args = rest(first_spec);
         val vals = mapcar(func_n1(cdr),
                              mapcar(curry_123_2(func_n3(eval_form),
@@ -2434,7 +2437,7 @@ int extract(val spec, val files, val predefined_bindings)
 static void syms_init(void)
 {
   decline_k = intern(lit("decline"), keyword_package);
-  same_data_k = intern(lit("same_data"), keyword_package);
+  next_spec_k = intern(lit("next-spec"), keyword_package);
   mingap_k = intern(lit("mingap"), keyword_package);
   maxgap_k = intern(lit("maxgap"), keyword_package);
   gap_k = intern(lit("gap"), keyword_package);
@@ -2455,7 +2458,10 @@ static void dir_tables_init(void)
   h_directive_table = make_hash(nil, nil);
   v_directive_table = make_hash(nil, nil);
 
+  protect(&h_directive_table, &v_directive_table, (val *) 0);
+
   sethash(v_directive_table, skip_s, cptr((mem_t *) v_skip));
+  sethash(v_directive_table, trailer_s, cptr((mem_t *) v_trailer));
 }
 
 void match_init(void)

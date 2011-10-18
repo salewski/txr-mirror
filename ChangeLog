@@ -1,6 +1,20 @@
+2011-10-18  Kaz Kylheku  <kaz@kylheku.com>
+
+	Task #11425
+
+	* match.c (same_data_k): Symbol variable renamed to next_spec_k.
+	(v_skip): Restructured not to return next_spec_k when there
+	are no more specs, but rather thread directly to what match_file
+	will do anyway, namely return the bindings and data position.
+	(v_trailer): New functions.
+	(match_files): Trailer logic moved to function.
+	(syms_init): Follows renaming of variable.
+	(dir_tables_init): GC bugfix: did not protect global hash
+	tables again, like in filter.c previously.
+
 2011-10-17  Kaz Kylheku  <kaz@kylheku.com>
 
-	Task #11425.
+	Task #11425
 
 	Vertical skip directive moved into function dispatched
 	via hash table. Test suite passes.
