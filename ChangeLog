@@ -1,5 +1,16 @@
 2011-10-19  Kaz Kylheku  <kaz@kylheku.com>
 
+	Task #11425
+
+	* match.c (v_accept_fail, v_next, v_parallel, v_collect,
+	v_flatten, v_forget_local, v_merge, v_bind, v_cat, v_output,
+	v_try, v_define, v_defex, v_throw, v_deffilter, v_eof):
+	New functions.
+	(match_files): Remaining directives moved to functions.
+	(dir_tables_init): New functions entered into hash table.
+
+2011-10-19  Kaz Kylheku  <kaz@kylheku.com>
+
 	* hash.c (ll_hash): Hashing of pointers should take into
 	account alignment, otherwise only values divisible by the
 	alignment occur. This patch takes into considerations that
