@@ -313,32 +313,59 @@ static val vars_to_bindings(val lineno, val vars, val bindings)
   return fixed_vars;
 }
 
-static val match_line(val bindings, val specline, val dataline,
-                      val pos, val spec_lineno, val data_lineno,
-                      val file)
+typedef struct {
+  val bindings, specline, dataline, pos, spec_lineno, data_lineno, file;
+} match_line_ctx;
+
+static match_line_ctx ml_all(val bindings, val specline, val dataline,
+                             val pos, val spec_lineno, val data_lineno,
+                             val file)
 {
+  match_line_ctx c = { bindings, specline, dataline, 
+                       pos, spec_lineno, data_lineno, file };
+  return c;
+}
+
+static match_line_ctx ml_specline(match_line_ctx c, val specline)
+{
+  match_line_ctx nc = c;
+  nc.specline = specline;
+  return nc;
+}
+
+static match_line_ctx ml_bindings_specline(match_line_ctx c, val bindings, val specline)
+{
+  match_line_ctx nc = c;
+  nc.bindings = bindings;
+  nc.specline = specline;
+  return nc;
+}
+
 #define LOG_MISMATCH(KIND)                                              \
-  debuglf(spec_lineno, lit(KIND " mismatch, position ~a (~a:~a)"), pos, \
-            file, data_lineno, nao);                                    \
-  debuglf(spec_lineno, lit("  ~a"), dataline, nao);                     \
-  if (c_num(pos) < 77)                                                  \
-    debuglf(spec_lineno, lit("  ~*~a^"), pos, lit(""), nao)
+  debuglf(c.spec_lineno, lit(KIND " mismatch, position ~a (~a:~a)"),    \
+          c.pos, c.file, c.data_lineno, nao);                           \
+  debuglf(c.spec_lineno, lit("  ~a"), c.dataline, nao);                 \
+  if (c_num(c.pos) < 77)                                                \
+    debuglf(c.spec_lineno, lit("  ~*~a^"), c.pos, lit(""), nao)
 
 #define LOG_MATCH(KIND, EXTENT)                                         \
-  debuglf(spec_lineno, lit(KIND " matched, position ~a-~a (~a:~a)"),    \
-            pos, EXTENT, file, data_lineno, nao);                       \
-  debuglf(spec_lineno, lit("  ~a"), dataline, nao);                     \
+  debuglf(c.spec_lineno, lit(KIND " matched, position ~a-~a (~a:~a)"),  \
+          c.pos, EXTENT, c.file, c.data_lineno, nao);                   \
+  debuglf(c.spec_lineno, lit("  ~a"), c.dataline, nao);                 \
   if (c_num(EXTENT) < 77)                                               \
-    debuglf(spec_lineno, lit("  ~*~a~-*~a^"), pos, lit(""),             \
-              minus(EXTENT, pos), lit("^"), nao)
+    debuglf(c.spec_lineno, lit("  ~*~a~-*~a^"), c.pos, lit(""),         \
+              minus(EXTENT, c.pos), lit("^"), nao)
 
+
+static val match_line(match_line_ctx c)
+{
   for (;;) {
     val elem;
 
-    if (specline == nil)
+    if (c.specline == nil)
       break;
 
-    elem = first(specline);
+    elem = first(c.specline);
 
     switch (elem ? type(elem) : 0) {
     case CONS: /* directive */
@@ -349,10 +376,10 @@ static val match_line(val bindings, val specline, val dataline,
           val sym = second(elem);
           val pat = third(elem);
           val modifier = fourth(elem);
-          val pair = assoc(bindings, sym); /* var exists already? */
+          val pair = assoc(c.bindings, sym); /* var exists already? */
 
           if (gt(length(modifier), one)) {
-            sem_error(spec_lineno, lit("multiple modifiers on variable ~s"),
+            sem_error(c.spec_lineno, lit("multiple modifiers on variable ~s"),
                       sym, nao);
           }
 
@@ -365,17 +392,17 @@ static val match_line(val bindings, val specline, val dataline,
                and it must be transformed into
                (<sym-substituted> <pat> ...) */
             if (pat) {
-              specline = cons(cdr(pair), cons(pat, rest(specline)));
+              c.specline = cons(cdr(pair), cons(pat, rest(c.specline)));
             } else if (nump(modifier)) {
-              val past = plus(pos, modifier);
+              val past = plus(c.pos, modifier);
 
-              if (length_str_lt(dataline, past) || lt(past, pos))
+              if (length_str_lt(c.dataline, past) || lt(past, c.pos))
               {
                 LOG_MISMATCH("fixed field size");
                 return nil;
               }
 
-              if (!tree_find(trim_str(sub_str(dataline, pos, past)),
+              if (!tree_find(trim_str(sub_str(c.dataline, c.pos, past)),
                              cdr(pair)))
               {
                 LOG_MISMATCH("fixed field contents");
@@ -383,58 +410,58 @@ static val match_line(val bindings, val specline, val dataline,
               }
 
               LOG_MATCH("fixed field", past);
-              pos = past;
-              specline = cdr(specline);
+              c.pos = past;
+              c.specline = cdr(c.specline);
             } else {
-              specline = cons(cdr(pair), rest(specline));
+              c.specline = cons(cdr(pair), rest(c.specline));
             }
             continue;
           } else if (consp(modifier)) { /* regex variable */
-            val past = match_regex(dataline, car(modifier), pos);
+            val past = match_regex(c.dataline, car(modifier), c.pos);
             if (nullp(past)) {
               LOG_MISMATCH("var positive regex");
               return nil;
             }
             LOG_MATCH("var positive regex", past);
-            bindings = acons(bindings, sym, sub_str(dataline, pos, past));
-            pos = past;
+            c.bindings = acons(c.bindings, sym, sub_str(c.dataline, c.pos, past));
+            c.pos = past;
             /* This may have another variable attached */
             if (pat) {
-              specline = cons(pat, rest(specline));
+              c.specline = cons(pat, rest(c.specline));
               continue;
             }
           } else if (nump(modifier)) { /* fixed field */
-            val past = plus(pos, modifier);
-            if (length_str_lt(dataline, past) || lt(past, pos))
+            val past = plus(c.pos, modifier);
+            if (length_str_lt(c.dataline, past) || lt(past, c.pos))
             {
               LOG_MISMATCH("count based var");
               return nil;
             }
             LOG_MATCH("count based var", past);
-            bindings = acons(bindings, sym, trim_str(sub_str(dataline, pos, past)));
-            pos = past;
+            c.bindings = acons(c.bindings, sym, trim_str(sub_str(c.dataline, c.pos, past)));
+            c.pos = past;
             /* This may have another variable attached */
             if (pat) {
-              specline = cons(pat, rest(specline));
+              c.specline = cons(pat, rest(c.specline));
               continue;
             }
           } else if (modifier && modifier != t) {
-            sem_error(spec_lineno, lit("invalid modifier ~s on variable ~s"),
+            sem_error(c.spec_lineno, lit("invalid modifier ~s on variable ~s"),
                       modifier, sym, nao);
           } else if (pat == nil) { /* no modifier, no elem -> to end of line */
-            bindings = acons(bindings, sym, sub_str(dataline, pos, nil));
-            pos = length_str(dataline);
+            c.bindings = acons(c.bindings, sym, sub_str(c.dataline, c.pos, nil));
+            c.pos = length_str(c.dataline);
           } else if (type(pat) == STR) {
-            val find = search_str(dataline, pat, pos, modifier);
+            val find = search_str(c.dataline, pat, c.pos, modifier);
             if (!find) {
               LOG_MISMATCH("var delimiting string");
               return nil;
             }
             LOG_MATCH("var delimiting string", find);
-            bindings = acons(bindings, sym, sub_str(dataline, pos, find));
-            pos = plus(find, length_str(pat));
+            c.bindings = acons(c.bindings, sym, sub_str(c.dataline, c.pos, find));
+            c.pos = plus(find, length_str(pat));
           } else if (consp(pat) && regexp(first(pat))) {
-            val find = search_regex(dataline, first(pat), pos, modifier);
+            val find = search_regex(c.dataline, first(pat), c.pos, modifier);
             val fpos = car(find);
             val flen = cdr(find);
             if (!find) {
@@ -442,25 +469,25 @@ static val match_line(val bindings, val specline, val dataline,
               return nil;
             }
             LOG_MATCH("var delimiting regex", fpos);
-            bindings = acons(bindings, sym, sub_str(dataline, pos, fpos));
-            pos = plus(fpos, flen);
+            c.bindings = acons(c.bindings, sym, sub_str(c.dataline, c.pos, fpos));
+            c.pos = plus(fpos, flen);
           } else if (consp(pat) && first(pat) == var_s) {
             /* Unbound var followed by var: the following one must either
                be bound, or must specify a regex. */
             val second_sym = second(pat);
             val next_pat = third(pat);
             val next_modifier = fourth(pat);
-            val pair = assoc(bindings, second_sym); /* var exists already? */
+            val pair = assoc(c.bindings, second_sym); /* var exists already? */
 
             if (gt(length(next_modifier), one)) {
-              sem_error(spec_lineno, lit("multiple modifiers on variable ~s"),
+              sem_error(c.spec_lineno, lit("multiple modifiers on variable ~s"),
                         second_sym, nao);
             }
 
             next_modifier = car(next_modifier);
 
             if (!pair && consp(next_modifier)) {
-              val find = search_regex(dataline, first(next_modifier), pos, modifier);
+              val find = search_regex(c.dataline, first(next_modifier), c.pos, modifier);
               val fpos = car(find);
               val flen = cdr(find);
 
@@ -471,51 +498,51 @@ static val match_line(val bindings, val specline, val dataline,
 
               /* Text from here to start of regex match goes to this
                  variable. */
-              bindings = acons(bindings, sym, sub_str(dataline, pos, fpos));
+              c.bindings = acons(c.bindings, sym, sub_str(c.dataline, c.pos, fpos));
               /* Text from start of regex match to end goes to the
                  second variable */
-              bindings = acons(bindings, second_sym, sub_str(dataline, fpos, plus(fpos, flen)));
+              c.bindings = acons(c.bindings, second_sym, sub_str(c.dataline, fpos, plus(fpos, flen)));
               LOG_MATCH("double var regex (first var)", fpos);
-              pos = fpos;
+              c.pos = fpos;
               LOG_MATCH("double var regex (second var)", plus(fpos, flen));
-              pos = plus(fpos, flen);
+              c.pos = plus(fpos, flen);
               if (next_pat) {
-                specline = cons(next_pat, rest(specline));
+                c.specline = cons(next_pat, rest(c.specline));
                 continue;
               }
             } else if (!pair) {
-              sem_error(spec_lineno, lit("consecutive unbound variables"), nao);
+              sem_error(c.spec_lineno, lit("consecutive unbound variables"), nao);
             } else {
             /* Re-generate a new spec with an edited version of
                the element we just processed, and repeat. */
               val new_elem = list(var_s, sym, cdr(pair), modifier, nao);
 
               if (next_pat)
-                 specline = cons(new_elem, cons(next_pat, rest(specline)));
+                 c.specline = cons(new_elem, cons(next_pat, rest(c.specline)));
               else
-                 specline = cons(new_elem, rest(specline));
+                 c.specline = cons(new_elem, rest(c.specline));
               continue;
             }
           } else if (consp(pat) && (consp(first(pat)) || stringp(first(pat)))) {
-            cons_bind (find, len, search_str(dataline, pat, pos, modifier));
+            cons_bind (find, len, search_str(c.dataline, pat, c.pos, modifier));
             if (!find) {
               LOG_MISMATCH("string");
               return nil;
             }
-            bindings = acons(bindings, sym, sub_str(dataline, pos, find));
-            pos = plus(find, len);
+            c.bindings = acons(c.bindings, sym, sub_str(c.dataline, c.pos, find));
+            c.pos = plus(find, len);
           } else {
-            sem_error(spec_lineno,
+            sem_error(c.spec_lineno,
                       lit("variable followed by invalid element"), nao);
           }
         } else if (regexp(directive)) {
-          val past = match_regex(dataline, directive, pos);
+          val past = match_regex(c.dataline, directive, c.pos);
           if (nullp(past)) {
             LOG_MISMATCH("regex");
             return nil;
           }
           LOG_MATCH("regex", past);
-          pos = past;
+          c.pos = past;
         } else if (directive == skip_s) {
           val max = second(elem);
           val min = third(elem);
@@ -524,47 +551,46 @@ static val match_line(val bindings, val specline, val dataline,
           val greedy = eq(max, greedy_k);
           val last_good_result = nil, last_good_pos = nil;
 
-          if (!rest(specline)) {
-            debuglf(lit("skip to end of line ~a:~a"), file, data_lineno);
-            return cons(bindings, t);
+          if (!rest(c.specline)) {
+            debuglf(lit("skip to end of line ~a:~a"), c.file, c.data_lineno);
+            return cons(c.bindings, t);
           }
 
           {
             cnum reps_max = 0, reps_min = 0;
 
-            while (length_str_gt(dataline, pos) && min && reps_min < cmin) {
-              pos = plus(pos, one);
+            while (length_str_gt(c.dataline, c.pos) && min && reps_min < cmin) {
+              c.pos = plus(c.pos, one);
               reps_min++;
             }
 
             if (min) {
               if (reps_min != cmin) {
-                debuglf(spec_lineno,
+                debuglf(c.spec_lineno,
                         lit("skipped only ~a/~a chars to ~a:~a:~a"),
                         num(reps_min), num(cmin),
-                        file, data_lineno, pos, nao);
+                        c.file, c.data_lineno, c.pos, nao);
                 return nil;
               }
 
-              debuglf(spec_lineno, lit("skipped ~a chars to ~a:~a:~a"),
-                      num(reps_min), file, data_lineno, pos, nao);
+              debuglf(c.spec_lineno, lit("skipped ~a chars to ~a:~a:~a"),
+                      num(reps_min), c.file, c.data_lineno, c.pos, nao);
             }
 
             while (greedy || !max || reps_max++ < cmax) {
-              val result = match_line(bindings, rest(specline), dataline, pos,
-                                      spec_lineno, data_lineno, file);
+              val result = match_line(ml_specline(c, rest(c.specline)));
 
               if (result) {
                 if (greedy) {
                   last_good_result = result;
-                  last_good_pos = pos;
+                  last_good_pos = c.pos;
                 } else {
-                  LOG_MATCH("skip", pos);
+                  LOG_MATCH("skip", c.pos);
                   return result;
                 }
               }
 
-              if (length_str_le(dataline, pos))  {
+              if (length_str_le(c.dataline, c.pos))  {
                 if (last_good_result) {
                   LOG_MATCH("greedy skip", last_good_pos);
                   return last_good_result;
@@ -572,7 +598,7 @@ static val match_line(val bindings, val specline, val dataline,
                 break;
               }
 
-              pos = plus(pos, one);
+              c.pos = plus(c.pos, one);
             }
           }
 
@@ -603,7 +629,7 @@ static val match_line(val bindings, val specline, val dataline,
           cnum timescounter = 0, charscounter = 0;
           val iter;
 
-          vars = vars_to_bindings(spec_lineno, vars, bindings);
+          vars = vars_to_bindings(c.spec_lineno, vars, c.bindings);
 
           if (((times || maxtimes) && ctimax == 0) || (chars && cchars == 0))
             break;
@@ -619,22 +645,19 @@ static val match_line(val bindings, val specline, val dataline,
 
             {
               cons_set (new_bindings, new_pos,
-                        match_line(bindings, coll_specline, dataline, pos,
-                                   spec_lineno, data_lineno, file));
+                        match_line(ml_specline(c, coll_specline)));
 
               if (until_last_specline) {
                 cons_bind (sym, spec, until_last_specline);
                 cons_bind (until_last_bindings, until_pos,
-                           match_line(new_bindings, spec, 
-                                      dataline, pos,
-                                      spec_lineno, data_lineno, file));
+                           match_line(ml_bindings_specline(c, new_bindings, spec)));
 
                 if (until_pos) {
                   LOG_MATCH("until/last", until_pos);
                   if (sym == last_s) {
                     last_bindings = set_diff(until_last_bindings,
                                              new_bindings, eq_f, nil);
-                    pos = until_pos;
+                    c.pos = until_pos;
                   }
                   break;
                 } else {
@@ -644,7 +667,7 @@ static val match_line(val bindings, val specline, val dataline,
 
               if (new_pos) {
                 val strictly_new_bindings = set_diff(new_bindings,
-                                                     bindings, eq_f, nil);
+                                                     c.bindings, eq_f, nil);
                 LOG_MATCH("coll", new_pos);
 
                 for (iter = vars; iter; iter = cdr(iter)) {
@@ -653,7 +676,7 @@ static val match_line(val bindings, val specline, val dataline,
 
                   if (!exists) {
                     if (!dfl) 
-                      sem_error(spec_lineno, lit("coll failed to bind ~a"),
+                      sem_error(c.spec_lineno, lit("coll failed to bind ~a"),
                                 var, nao);
                     else
                       strictly_new_bindings = acons(strictly_new_bindings, 
@@ -674,9 +697,9 @@ static val match_line(val bindings, val specline, val dataline,
                 }
               }
 
-              if (new_pos && !equal(new_pos, pos)) {
-                pos = new_pos;
-                bug_unless (length_str_ge(dataline, pos));
+              if (new_pos && !equal(new_pos, c.pos)) {
+                c.pos = new_pos;
+                bug_unless (length_str_ge(c.dataline, c.pos));
 
                 timescounter++;
 
@@ -690,32 +713,32 @@ next_coll:
                 mincounter++;
                 if ((gap || max) && ++maxcounter > cmax)
                   break;
-                pos = plus(pos, one);
+                c.pos = plus(c.pos, one);
               }
 
-              if (length_str_le(dataline, pos))
+              if (length_str_le(c.dataline, c.pos))
                 break;
             }
           }
 
           if ((times || mintimes) && timescounter < ctimin) {
-            debuglf(spec_lineno, lit("fewer than ~a iterations collected"),
+            debuglf(c.spec_lineno, lit("fewer than ~a iterations collected"),
                     num(ctimin), nao);
             return nil;
           }
 
           if (!bindings_coll)
-            debuglf(spec_lineno, lit("nothing was collected"), nao);
+            debuglf(c.spec_lineno, lit("nothing was collected"), nao);
 
           for (iter = bindings_coll; iter; iter = cdr(iter)) {
             val pair = car(iter);
             val rev = cons(car(pair), nreverse(cdr(pair)));
-            bindings = cons(rev, bindings);
+            c.bindings = cons(rev, c.bindings);
           }
 
           if (last_bindings) {
-            bindings = set_diff(bindings, last_bindings, eq_f, car_f);
-            bindings = nappend2(last_bindings, bindings);
+            c.bindings = set_diff(c.bindings, last_bindings, eq_f, car_f);
+            c.bindings = nappend2(last_bindings, c.bindings);
           }
         } else if (directive == all_s || directive == some_s ||
                    directive == none_s || directive == maybe_s ||
@@ -725,24 +748,24 @@ next_coll:
           val plist = fourth(elem);
           val all_match = t;
           val some_match = nil;
-          val max_pos = pos;
+          val max_pos = c.pos;
           val choose_shortest = getplist(plist, shortest_k);
           val choose_longest = getplist(plist, longest_k);
           val choose_sym = or2(choose_longest, choose_shortest);
-          val choose_bindings = bindings, choose_pos = pos;
+          val choose_bindings = c.bindings, choose_pos = c.pos;
           val choose_minmax = choose_longest ? num(-1) : num(NUM_MAX);
           val iter;
 
           if (choose_longest && choose_shortest)
-            sem_error(spec_lineno, lit("choose: both :shortest and :longest specified"), nao);
+            sem_error(c.spec_lineno, lit("choose: both :shortest and :longest specified"), nao);
 
           if (directive == choose_s && !choose_sym)
-            sem_error(spec_lineno, lit("choose: criterion not specified"), nao);
+            sem_error(c.spec_lineno, lit("choose: criterion not specified"), nao);
           for (iter = specs; iter != nil; iter = cdr(iter)) {
             val nested_spec = first(iter);
             cons_bind (new_bindings, new_pos,
-                       match_line(bindings, nested_spec, dataline, pos,
-                                  spec_lineno, data_lineno, file));
+                       match_line(ml_specline(c, nested_spec)));
+
             if (new_pos) {
               some_match = t;
               if (gt(new_pos, max_pos))
@@ -763,7 +786,7 @@ next_coll:
                   }
                 }
               } else {
-                bindings = new_bindings;
+                c.bindings = new_bindings;
               }
               if (directive == cases_s || directive == none_s)
                 break;
@@ -775,84 +798,84 @@ next_coll:
           }
 
           if (directive == all_s && !all_match) {
-            debuglf(spec_lineno, lit("all: some clauses didn't match"), nao);
+            debuglf(c.spec_lineno, lit("all: some clauses didn't match"), nao);
             return nil;
           }
 
           if ((directive == some_s || directive == cases_s) && !some_match) {
-            debuglf(spec_lineno, lit("some/cases: no clauses matched"), nao);
+            debuglf(c.spec_lineno, lit("some/cases: no clauses matched"), nao);
             return nil;
           }
 
           if (directive == none_s && some_match) {
-            debuglf(spec_lineno, lit("none: some clauses matched"), nao);
+            debuglf(c.spec_lineno, lit("none: some clauses matched"), nao);
             return nil;
           }
 
           /* No check for maybe, since it always succeeds. */
 
           if (directive == choose_s) {
-            bindings = choose_bindings;
-            pos = choose_pos;
+            c.bindings = choose_bindings;
+            c.pos = choose_pos;
           } else {
-            pos = max_pos;
+            c.pos = max_pos;
           }
         } else if (directive == trailer_s) {
           cons_bind (new_bindings, new_pos,
-                     match_line(bindings, rest(specline), dataline, pos,
-                                spec_lineno, data_lineno, file));
+                     match_line(ml_specline(c, rest(c.specline))));
+
           (void) new_bindings;
           if (!new_pos) {
             LOG_MISMATCH("trailer");
             return nil;
           }
           LOG_MATCH("trailer", new_pos);
-          return cons(bindings, pos);
+          return cons(c.bindings, c.pos);
         } else if (directive == eol_s) {
-          if (length_str_le(dataline, pos)) {
-            LOG_MATCH("eol", pos);
-            return cons(bindings, t);
+          if (length_str_le(c.dataline, c.pos)) {
+            LOG_MATCH("eol", c.pos);
+            return cons(c.bindings, t);
           }
           LOG_MISMATCH("eol");
           return nil;
         } else if (consp(directive) || stringp(directive)) {
-          cons_bind (find, len, search_str_tree(dataline, elem, pos, nil));
+          cons_bind (find, len, search_str_tree(c.dataline, elem, c.pos, nil));
           val newpos;
 
-          if (find == nil || !equal(find, pos)) {
+          if (find == nil || !equal(find, c.pos)) {
             LOG_MISMATCH("string tree");
             return nil;
           }
 
           newpos = plus(find, len);
           LOG_MATCH("string tree", newpos);
-          pos = newpos;
+          c.pos = newpos;
         } else {
-          sem_error(spec_lineno, lit("unknown directive: ~a"), directive, nao);
+          sem_error(c.spec_lineno, lit("unknown directive: ~a"), directive, nao);
         }
       }
       break;
     case STR:
       {
-        val find = search_str(dataline, elem, pos, nil);
+        val find = search_str(c.dataline, elem, c.pos, nil);
         val newpos;
-        if (find == nil || !equal(find, pos)) {
+        if (find == nil || !equal(find, c.pos)) {
           LOG_MISMATCH("string");
           return nil;
         }
         newpos = plus(find, length_str(elem));
         LOG_MATCH("string", newpos);
-        pos = newpos;
+        c.pos = newpos;
         break;
       }
     default:
-      sem_error(spec_lineno, lit("unsupported object in spec: ~s"), elem, nao);
+      sem_error(c.spec_lineno, lit("unsupported object in spec: ~s"), elem, nao);
     }
 
-    specline = cdr(specline);
+    c.specline = cdr(c.specline);
   }
 
-  return cons(bindings, pos);
+  return cons(c.bindings, c.pos);
 }
 
 static val format_field(val string_or_list, val modifier, val filter)
@@ -1446,8 +1469,8 @@ static val v_freeform(match_files_ctx c, match_files_ctx *cout)
     val ff_dataline = lazy_str(c.data, term, limit);
 
     cons_bind (new_bindings, success,
-               match_line(c.bindings, ff_specline, ff_dataline, zero,
-                          spec_linenum, c.data_lineno, first(c.files)));
+               match_line(ml_all(c.bindings, ff_specline, ff_dataline, zero,
+                                 spec_linenum, c.data_lineno, first(c.files))));
 
     if (!success) {
       debuglf(spec_linenum, lit("freeform match failure"), nao);
@@ -2449,8 +2472,8 @@ repeat_spec_same_data:
     {
       val dataline = first(c.data);
       cons_bind (new_bindings, success,
-                 match_line(c.bindings, specline, dataline, zero,
-                            spec_linenum, c.data_lineno, first(c.files)));
+                 match_line(ml_all(c.bindings, specline, dataline, zero,
+                                   spec_linenum, c.data_lineno, first(c.files))));
 
       if (nump(success) && c_num(success) < c_num(length_str(dataline))) {
         debuglf(spec_linenum, lit("spec only matches line to position ~a: ~a"),

@@ -2,6 +2,23 @@
 
 	Task #11425
 
+	Refactoring match_files to make it easier to break up into
+	subfunctions, similarly to what was done with match_files.
+
+	* match.c (match_line_ctx): New struct type.
+	(ml_all, ml_specline, ml_bindings_specline): New functions.
+	(LOG_MISMATCH, LOG_MATCH): Macros moved outside of function,
+	updated to refer to structure members rather than local
+	variables.
+	(match_line): Takes only one argument now.
+	All recursive calls updated.
+	(v_freeform): Call to match_line updated.
+	(match_files): Likewise.
+
+2011-10-19  Kaz Kylheku  <kaz@kylheku.com>
+
+	Task #11425
+
 	* match.c (v_accept_fail, v_next, v_parallel, v_collect,
 	v_flatten, v_forget_local, v_merge, v_bind, v_cat, v_output,
 	v_try, v_define, v_defex, v_throw, v_deffilter, v_eof):
