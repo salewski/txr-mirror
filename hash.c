@@ -102,7 +102,12 @@ static cnum ll_hash(val obj)
     return c_num(obj) & NUM_MAX;
   case SYM:
   case PKG:
-    return ((cnum) obj) & NUM_MAX;
+    switch (sizeof (mem_t *)) {
+    case 4:
+      return (((cnum) obj) & NUM_MAX) >> 4;
+    case 8: default:
+      return (((cnum) obj) & NUM_MAX) >> 5;
+    }
   case FUN:
     return ((cnum) obj->f.f.interp_fun + ll_hash(obj->f.env)) & NUM_MAX;
   case VEC:

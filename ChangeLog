@@ -1,3 +1,13 @@
+2011-10-19  Kaz Kylheku  <kaz@kylheku.com>
+
+	* hash.c (ll_hash): Hashing of pointers should take into
+	account alignment, otherwise only values divisible by the
+	alignment occur. This patch takes into considerations that
+	val values are pointers to object descriptors in a heap which
+	are four words wide, and so most likely aligned to 16 byte
+	boundaries (32 bit systems) or 32 byte boundaries (64 bit).
+	We need to shift.
+
 2011-10-18  Kaz Kylheku  <kaz@kylheku.com>
 
 	Task #11425
