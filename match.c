@@ -48,7 +48,7 @@
 
 int output_produced;
 
-val decline_k, next_spec_k;
+val decline_k, next_spec_k, repeat_spec_k;
 val mingap_k, maxgap_k, gap_k, mintimes_k, maxtimes_k, times_k;
 val lines_k, chars_k;
 val choose_s, longest_k, shortest_k, greedy_k;
@@ -341,6 +341,10 @@ static match_line_ctx ml_bindings_specline(match_line_ctx c, val bindings, val s
   return nc;
 }
 
+static val match_line(match_line_ctx c);
+
+typedef val (*h_match_func)(match_line_ctx c, match_line_ctx *cout);
+
 #define LOG_MISMATCH(KIND)                                              \
   debuglf(c.spec_lineno, lit(KIND " mismatch, position ~a (~a:~a)"),    \
           c.pos, c.file, c.data_lineno, nao);                           \
@@ -356,6 +360,501 @@ static match_line_ctx ml_bindings_specline(match_line_ctx c, val bindings, val s
     debuglf(c.spec_lineno, lit("  ~*~a~-*~a^"), c.pos, lit(""),         \
               minus(EXTENT, c.pos), lit("^"), nao)
 
+#define elem_bind(elem_var, directive_var, specline)    \
+  val elem_var = first(specline);                       \
+  val directive_var = first(elem_var)
+
+static val h_var(match_line_ctx c, match_line_ctx *cout)
+{
+  val elem = first(c.specline);
+  val sym = second(elem);
+  val pat = third(elem);
+  val modifier = fourth(elem);
+  val pair = assoc(c.bindings, sym); /* var exists already? */
+
+  if (gt(length(modifier), one)) {
+    sem_error(c.spec_lineno, lit("multiple modifiers on variable ~s"),
+              sym, nao);
+  }
+
+  modifier = car(modifier);
+
+  if (pair) {
+    /* If the variable already has a binding, we replace
+       it with its value, and treat it as a string match.
+       The spec looks like ((var <sym> <pat>) ...)
+       and it must be transformed into
+       (<sym-substituted> <pat> ...) */
+    if (pat) {
+      c.specline = cons(cdr(pair), cons(pat, rest(c.specline)));
+    } else if (nump(modifier)) {
+      val past = plus(c.pos, modifier);
+
+      if (length_str_lt(c.dataline, past) || lt(past, c.pos))
+      {
+        LOG_MISMATCH("fixed field size");
+        return nil;
+      }
+
+      if (!tree_find(trim_str(sub_str(c.dataline, c.pos, past)),
+                     cdr(pair)))
+      {
+        LOG_MISMATCH("fixed field contents");
+        return nil;
+      }
+
+      LOG_MATCH("fixed field", past);
+      c.pos = past;
+      c.specline = cdr(c.specline);
+    } else {
+      c.specline = cons(cdr(pair), rest(c.specline));
+    }
+    goto repeat;
+  } else if (consp(modifier)) { /* regex variable */
+    val past = match_regex(c.dataline, car(modifier), c.pos);
+    if (nullp(past)) {
+      LOG_MISMATCH("var positive regex");
+      return nil;
+    }
+    LOG_MATCH("var positive regex", past);
+    c.bindings = acons(c.bindings, sym, sub_str(c.dataline, c.pos, past));
+    c.pos = past;
+    /* This may have another variable attached */
+    if (pat) {
+      c.specline = cons(pat, rest(c.specline));
+      goto repeat;
+    }
+  } else if (nump(modifier)) { /* fixed field */
+    val past = plus(c.pos, modifier);
+    if (length_str_lt(c.dataline, past) || lt(past, c.pos))
+    {
+      LOG_MISMATCH("count based var");
+      return nil;
+    }
+    LOG_MATCH("count based var", past);
+    c.bindings = acons(c.bindings, sym, trim_str(sub_str(c.dataline, c.pos, past)));
+    c.pos = past;
+    /* This may have another variable attached */
+    if (pat) {
+      c.specline = cons(pat, rest(c.specline));
+      goto repeat;
+    }
+  } else if (modifier && modifier != t) {
+    sem_error(c.spec_lineno, lit("invalid modifier ~s on variable ~s"),
+              modifier, sym, nao);
+  } else if (pat == nil) { /* no modifier, no elem -> to end of line */
+    c.bindings = acons(c.bindings, sym, sub_str(c.dataline, c.pos, nil));
+    c.pos = length_str(c.dataline);
+  } else if (type(pat) == STR) {
+    val find = search_str(c.dataline, pat, c.pos, modifier);
+    if (!find) {
+      LOG_MISMATCH("var delimiting string");
+      return nil;
+    }
+    LOG_MATCH("var delimiting string", find);
+    c.bindings = acons(c.bindings, sym, sub_str(c.dataline, c.pos, find));
+    c.pos = plus(find, length_str(pat));
+  } else if (consp(pat) && regexp(first(pat))) {
+    val find = search_regex(c.dataline, first(pat), c.pos, modifier);
+    val fpos = car(find);
+    val flen = cdr(find);
+    if (!find) {
+      LOG_MISMATCH("var delimiting regex");
+      return nil;
+    }
+    LOG_MATCH("var delimiting regex", fpos);
+    c.bindings = acons(c.bindings, sym, sub_str(c.dataline, c.pos, fpos));
+    c.pos = plus(fpos, flen);
+  } else if (consp(pat) && first(pat) == var_s) {
+    /* Unbound var followed by var: the following one must either
+       be bound, or must specify a regex. */
+    val second_sym = second(pat);
+    val next_pat = third(pat);
+    val next_modifier = fourth(pat);
+    val pair = assoc(c.bindings, second_sym); /* var exists already? */
+
+    if (gt(length(next_modifier), one)) {
+      sem_error(c.spec_lineno, lit("multiple modifiers on variable ~s"),
+                second_sym, nao);
+    }
+
+    next_modifier = car(next_modifier);
+
+    if (!pair && consp(next_modifier)) {
+      val find = search_regex(c.dataline, first(next_modifier), c.pos, modifier);
+      val fpos = car(find);
+      val flen = cdr(find);
+
+      if (!find) {
+        LOG_MISMATCH("double var regex");
+        return nil;
+      }
+
+      /* Text from here to start of regex match goes to this
+         variable. */
+      c.bindings = acons(c.bindings, sym, sub_str(c.dataline, c.pos, fpos));
+      /* Text from start of regex match to end goes to the
+         second variable */
+      c.bindings = acons(c.bindings, second_sym, sub_str(c.dataline, fpos, plus(fpos, flen)));
+      LOG_MATCH("double var regex (first var)", fpos);
+      c.pos = fpos;
+      LOG_MATCH("double var regex (second var)", plus(fpos, flen));
+      c.pos = plus(fpos, flen);
+      if (next_pat) {
+        c.specline = cons(next_pat, rest(c.specline));
+        goto repeat;
+      }
+    } else if (!pair) {
+      sem_error(c.spec_lineno, lit("consecutive unbound variables"), nao);
+    } else {
+    /* Re-generate a new spec with an edited version of
+       the element we just processed, and repeat. */
+      val new_elem = list(var_s, sym, cdr(pair), modifier, nao);
+
+      if (next_pat)
+         c.specline = cons(new_elem, cons(next_pat, rest(c.specline)));
+      else
+         c.specline = cons(new_elem, rest(c.specline));
+      goto repeat;
+    }
+  } else if (consp(pat) && (consp(first(pat)) || stringp(first(pat)))) {
+    cons_bind (find, len, search_str(c.dataline, pat, c.pos, modifier));
+    if (!find) {
+      LOG_MISMATCH("string");
+      return nil;
+    }
+    c.bindings = acons(c.bindings, sym, sub_str(c.dataline, c.pos, find));
+    c.pos = plus(find, len);
+  } else {
+    sem_error(c.spec_lineno,
+              lit("variable followed by invalid element"), nao);
+  }
+
+  *cout = c;
+  return next_spec_k;
+
+repeat:
+  *cout = c;
+  return repeat_spec_k;
+}
+
+static val h_skip(match_line_ctx c, match_line_ctx *cout)
+{
+  val elem = first(c.specline);
+  val max = second(elem);
+  val min = third(elem);
+  cnum cmax = nump(max) ? c_num(max) : 0;
+  cnum cmin = nump(min) ? c_num(min) : 0;
+  val greedy = eq(max, greedy_k);
+  val last_good_result = nil, last_good_pos = nil;
+
+  if (!rest(c.specline)) {
+    debuglf(lit("skip to end of line ~a:~a"), c.file, c.data_lineno);
+    return cons(c.bindings, t);
+  }
+
+  {
+    cnum reps_max = 0, reps_min = 0;
+
+    while (length_str_gt(c.dataline, c.pos) && min && reps_min < cmin) {
+      c.pos = plus(c.pos, one);
+      reps_min++;
+    }
+
+    if (min) {
+      if (reps_min != cmin) {
+        debuglf(c.spec_lineno,
+                lit("skipped only ~a/~a chars to ~a:~a:~a"),
+                num(reps_min), num(cmin),
+                c.file, c.data_lineno, c.pos, nao);
+        return nil;
+      }
+
+      debuglf(c.spec_lineno, lit("skipped ~a chars to ~a:~a:~a"),
+              num(reps_min), c.file, c.data_lineno, c.pos, nao);
+    }
+
+    while (greedy || !max || reps_max++ < cmax) {
+      val result = match_line(ml_specline(c, rest(c.specline)));
+
+      if (result) {
+        if (greedy) {
+          last_good_result = result;
+          last_good_pos = c.pos;
+        } else {
+          LOG_MATCH("skip", c.pos);
+          return result;
+        }
+      }
+
+      if (length_str_le(c.dataline, c.pos))  {
+        if (last_good_result) {
+          LOG_MATCH("greedy skip", last_good_pos);
+          return last_good_result;
+        }
+        break;
+      }
+
+      c.pos = plus(c.pos, one);
+    }
+  }
+
+  LOG_MISMATCH("skip");
+  return nil;
+}
+
+static val h_coll(match_line_ctx c, match_line_ctx *cout)
+{
+  val elem = first(c.specline);
+  val coll_specline = second(elem);
+  val until_last_specline = third(elem);
+  val args = fourth(elem);
+  val bindings_coll = nil;
+  val last_bindings = nil;
+  val max = getplist(args, maxgap_k);
+  val min = getplist(args, mingap_k);
+  val gap = getplist(args, gap_k);
+  val times = getplist(args, times_k);
+  val mintimes = getplist(args, mintimes_k);
+  val maxtimes = getplist(args, maxtimes_k);
+  val chars = getplist(args, chars_k);
+  val vars = getplist(args, vars_k);
+  cnum cmax = nump(gap) ? c_num(gap) : (nump(max) ? c_num(max) : 0);
+  cnum cmin = nump(gap) ? c_num(gap) : (nump(min) ? c_num(min) : 0);
+  cnum mincounter = cmin, maxcounter = 0;
+  cnum ctimax = nump(times) ? c_num(times) 
+                            : (nump(maxtimes) ? c_num(maxtimes) : 0);
+  cnum ctimin = nump(times) ? c_num(times) 
+                            : (nump(mintimes) ? c_num(mintimes) : 0);
+  cnum cchars = nump(chars) ? c_num(chars) : 0;
+  cnum timescounter = 0, charscounter = 0;
+  val iter;
+
+  vars = vars_to_bindings(c.spec_lineno, vars, c.bindings);
+
+  if (((times || maxtimes) && ctimax == 0) || (chars && cchars == 0)) {
+    *cout = c;
+    return next_spec_k;
+  }
+
+  for (;;) {
+    val new_bindings = nil, new_pos = nil;
+
+    if ((gap || min) && mincounter < cmin)
+      goto next_coll;
+
+    if (chars && charscounter++ >= cchars)
+      break;
+
+    {
+      cons_set (new_bindings, new_pos,
+                match_line(ml_specline(c, coll_specline)));
+
+      if (until_last_specline) {
+        cons_bind (sym, spec, until_last_specline);
+        cons_bind (until_last_bindings, until_pos,
+                   match_line(ml_bindings_specline(c, new_bindings, spec)));
+
+        if (until_pos) {
+          LOG_MATCH("until/last", until_pos);
+          if (sym == last_s) {
+            last_bindings = set_diff(until_last_bindings,
+                                     new_bindings, eq_f, nil);
+            c.pos = until_pos;
+          }
+          break;
+        } else {
+          LOG_MISMATCH("until/last");
+        }
+      }
+
+      if (new_pos) {
+        val strictly_new_bindings = set_diff(new_bindings,
+                                             c.bindings, eq_f, nil);
+        LOG_MATCH("coll", new_pos);
+
+        for (iter = vars; iter; iter = cdr(iter)) {
+          cons_bind (var, dfl, car(iter));
+          val exists = assoc(new_bindings, var);
+
+          if (!exists) {
+            if (!dfl) 
+              sem_error(c.spec_lineno, lit("coll failed to bind ~a"),
+                        var, nao);
+            else
+              strictly_new_bindings = acons(strictly_new_bindings, 
+                                            var, dfl);
+          }
+        }
+
+        for (iter = strictly_new_bindings; iter; iter = cdr(iter))
+        {
+          val binding = car(iter);
+          val vars_binding = assoc(vars, car(binding));
+
+          if (!vars || vars_binding) {
+            val existing = assoc(bindings_coll, car(binding));
+            bindings_coll = acons_new(bindings_coll, car(binding),
+                                      cons(cdr(binding), cdr(existing)));
+          }
+        }
+      }
+
+      if (new_pos && !equal(new_pos, c.pos)) {
+        c.pos = new_pos;
+        bug_unless (length_str_ge(c.dataline, c.pos));
+
+        timescounter++;
+
+        if ((times || maxtimes) && timescounter >= ctimax)
+          break;
+
+        mincounter = 0;
+        maxcounter = 0;
+      } else {
+next_coll:
+        mincounter++;
+        if ((gap || max) && ++maxcounter > cmax)
+          break;
+        c.pos = plus(c.pos, one);
+      }
+
+      if (length_str_le(c.dataline, c.pos))
+        break;
+    }
+  }
+
+  if ((times || mintimes) && timescounter < ctimin) {
+    debuglf(c.spec_lineno, lit("fewer than ~a iterations collected"),
+            num(ctimin), nao);
+    return nil;
+  }
+
+  if (!bindings_coll)
+    debuglf(c.spec_lineno, lit("nothing was collected"), nao);
+
+  for (iter = bindings_coll; iter; iter = cdr(iter)) {
+    val pair = car(iter);
+    val rev = cons(car(pair), nreverse(cdr(pair)));
+    c.bindings = cons(rev, c.bindings);
+  }
+
+  if (last_bindings) {
+    c.bindings = set_diff(c.bindings, last_bindings, eq_f, car_f);
+    c.bindings = nappend2(last_bindings, c.bindings);
+  }
+
+  *cout = c;
+  return next_spec_k;
+}
+
+static val h_parallel(match_line_ctx c, match_line_ctx *cout)
+{
+  elem_bind(elem, directive, c.specline);
+  val specs = third(elem);
+  val plist = fourth(elem);
+  val all_match = t;
+  val some_match = nil;
+  val max_pos = c.pos;
+  val choose_shortest = getplist(plist, shortest_k);
+  val choose_longest = getplist(plist, longest_k);
+  val choose_sym = or2(choose_longest, choose_shortest);
+  val choose_bindings = c.bindings, choose_pos = c.pos;
+  val choose_minmax = choose_longest ? num(-1) : num(NUM_MAX);
+  val iter;
+
+  if (choose_longest && choose_shortest)
+    sem_error(c.spec_lineno, lit("choose: both :shortest and :longest specified"), nao);
+
+  if (directive == choose_s && !choose_sym)
+    sem_error(c.spec_lineno, lit("choose: criterion not specified"), nao);
+  for (iter = specs; iter != nil; iter = cdr(iter)) {
+    val nested_spec = first(iter);
+    cons_bind (new_bindings, new_pos,
+               match_line(ml_specline(c, nested_spec)));
+
+    if (new_pos) {
+      some_match = t;
+      if (gt(new_pos, max_pos))
+        max_pos = new_pos;
+      if (directive == choose_s) {
+        val binding = choose_sym ? assoc(new_bindings, choose_sym) : nil;
+        val value = cdr(binding);
+
+        if (value) {
+          val len = length_str(value);
+
+          if ((choose_longest && gt(len, choose_minmax)) ||
+              (choose_shortest && lt(len, choose_minmax)))
+          {
+            choose_minmax = len;
+            choose_bindings = new_bindings;
+            choose_pos = new_pos;
+          }
+        }
+      } else {
+        c.bindings = new_bindings;
+      }
+      if (directive == cases_s || directive == none_s)
+        break;
+    } else {
+      all_match = nil;
+      if (directive == all_s)
+        break;
+    }
+  }
+
+  if (directive == all_s && !all_match) {
+    debuglf(c.spec_lineno, lit("all: some clauses didn't match"), nao);
+    return nil;
+  }
+
+  if ((directive == some_s || directive == cases_s) && !some_match) {
+    debuglf(c.spec_lineno, lit("some/cases: no clauses matched"), nao);
+    return nil;
+  }
+
+  if (directive == none_s && some_match) {
+    debuglf(c.spec_lineno, lit("none: some clauses matched"), nao);
+    return nil;
+  }
+
+  /* No check for maybe, since it always succeeds. */
+
+  if (directive == choose_s) {
+    c.bindings = choose_bindings;
+    c.pos = choose_pos;
+  } else {
+    c.pos = max_pos;
+  }
+
+  *cout = c;
+  return next_spec_k;
+}
+
+static val h_trailer(match_line_ctx c, match_line_ctx *cout)
+{
+  val result = match_line(ml_specline(c, rest(c.specline)));
+  val new_pos = cdr(result);
+
+  if (!new_pos) {
+    LOG_MISMATCH("trailer");
+    return nil;
+  }
+
+  LOG_MATCH("trailer", new_pos);
+  return cons(c.bindings, c.pos);
+}
+
+static val h_eol(match_line_ctx c, match_line_ctx *cout)
+{
+  if (length_str_le(c.dataline, c.pos)) {
+    LOG_MATCH("eol", c.pos);
+    return cons(c.bindings, t);
+  }
+  LOG_MISMATCH("eol");
+  return nil;
+}
 
 static val match_line(match_line_ctx c)
 {
@@ -371,169 +870,21 @@ static val match_line(match_line_ctx c)
     case CONS: /* directive */
       {
         val directive = first(elem);
+        val entry = gethash(h_directive_table, directive);
 
-        if (directive == var_s) {
-          val sym = second(elem);
-          val pat = third(elem);
-          val modifier = fourth(elem);
-          val pair = assoc(c.bindings, sym); /* var exists already? */
+        if (entry) {
+          h_match_func hmf = (h_match_func) cptr_get(entry);
+          match_line_ctx nc;
+          val result = hmf(c, &nc);
 
-          if (gt(length(modifier), one)) {
-            sem_error(c.spec_lineno, lit("multiple modifiers on variable ~s"),
-                      sym, nao);
-          }
-
-          modifier = car(modifier);
-
-          if (pair) {
-            /* If the variable already has a binding, we replace
-               it with its value, and treat it as a string match.
-               The spec looks like ((var <sym> <pat>) ...)
-               and it must be transformed into
-               (<sym-substituted> <pat> ...) */
-            if (pat) {
-              c.specline = cons(cdr(pair), cons(pat, rest(c.specline)));
-            } else if (nump(modifier)) {
-              val past = plus(c.pos, modifier);
-
-              if (length_str_lt(c.dataline, past) || lt(past, c.pos))
-              {
-                LOG_MISMATCH("fixed field size");
-                return nil;
-              }
-
-              if (!tree_find(trim_str(sub_str(c.dataline, c.pos, past)),
-                             cdr(pair)))
-              {
-                LOG_MISMATCH("fixed field contents");
-                return nil;
-              }
-
-              LOG_MATCH("fixed field", past);
-              c.pos = past;
-              c.specline = cdr(c.specline);
-            } else {
-              c.specline = cons(cdr(pair), rest(c.specline));
-            }
+          if (result == next_spec_k) {
+            c = nc;
+            break;
+          } else if (result == repeat_spec_k) {
+            c = nc;
             continue;
-          } else if (consp(modifier)) { /* regex variable */
-            val past = match_regex(c.dataline, car(modifier), c.pos);
-            if (nullp(past)) {
-              LOG_MISMATCH("var positive regex");
-              return nil;
-            }
-            LOG_MATCH("var positive regex", past);
-            c.bindings = acons(c.bindings, sym, sub_str(c.dataline, c.pos, past));
-            c.pos = past;
-            /* This may have another variable attached */
-            if (pat) {
-              c.specline = cons(pat, rest(c.specline));
-              continue;
-            }
-          } else if (nump(modifier)) { /* fixed field */
-            val past = plus(c.pos, modifier);
-            if (length_str_lt(c.dataline, past) || lt(past, c.pos))
-            {
-              LOG_MISMATCH("count based var");
-              return nil;
-            }
-            LOG_MATCH("count based var", past);
-            c.bindings = acons(c.bindings, sym, trim_str(sub_str(c.dataline, c.pos, past)));
-            c.pos = past;
-            /* This may have another variable attached */
-            if (pat) {
-              c.specline = cons(pat, rest(c.specline));
-              continue;
-            }
-          } else if (modifier && modifier != t) {
-            sem_error(c.spec_lineno, lit("invalid modifier ~s on variable ~s"),
-                      modifier, sym, nao);
-          } else if (pat == nil) { /* no modifier, no elem -> to end of line */
-            c.bindings = acons(c.bindings, sym, sub_str(c.dataline, c.pos, nil));
-            c.pos = length_str(c.dataline);
-          } else if (type(pat) == STR) {
-            val find = search_str(c.dataline, pat, c.pos, modifier);
-            if (!find) {
-              LOG_MISMATCH("var delimiting string");
-              return nil;
-            }
-            LOG_MATCH("var delimiting string", find);
-            c.bindings = acons(c.bindings, sym, sub_str(c.dataline, c.pos, find));
-            c.pos = plus(find, length_str(pat));
-          } else if (consp(pat) && regexp(first(pat))) {
-            val find = search_regex(c.dataline, first(pat), c.pos, modifier);
-            val fpos = car(find);
-            val flen = cdr(find);
-            if (!find) {
-              LOG_MISMATCH("var delimiting regex");
-              return nil;
-            }
-            LOG_MATCH("var delimiting regex", fpos);
-            c.bindings = acons(c.bindings, sym, sub_str(c.dataline, c.pos, fpos));
-            c.pos = plus(fpos, flen);
-          } else if (consp(pat) && first(pat) == var_s) {
-            /* Unbound var followed by var: the following one must either
-               be bound, or must specify a regex. */
-            val second_sym = second(pat);
-            val next_pat = third(pat);
-            val next_modifier = fourth(pat);
-            val pair = assoc(c.bindings, second_sym); /* var exists already? */
-
-            if (gt(length(next_modifier), one)) {
-              sem_error(c.spec_lineno, lit("multiple modifiers on variable ~s"),
-                        second_sym, nao);
-            }
-
-            next_modifier = car(next_modifier);
-
-            if (!pair && consp(next_modifier)) {
-              val find = search_regex(c.dataline, first(next_modifier), c.pos, modifier);
-              val fpos = car(find);
-              val flen = cdr(find);
-
-              if (!find) {
-                LOG_MISMATCH("double var regex");
-                return nil;
-              }
-
-              /* Text from here to start of regex match goes to this
-                 variable. */
-              c.bindings = acons(c.bindings, sym, sub_str(c.dataline, c.pos, fpos));
-              /* Text from start of regex match to end goes to the
-                 second variable */
-              c.bindings = acons(c.bindings, second_sym, sub_str(c.dataline, fpos, plus(fpos, flen)));
-              LOG_MATCH("double var regex (first var)", fpos);
-              c.pos = fpos;
-              LOG_MATCH("double var regex (second var)", plus(fpos, flen));
-              c.pos = plus(fpos, flen);
-              if (next_pat) {
-                c.specline = cons(next_pat, rest(c.specline));
-                continue;
-              }
-            } else if (!pair) {
-              sem_error(c.spec_lineno, lit("consecutive unbound variables"), nao);
-            } else {
-            /* Re-generate a new spec with an edited version of
-               the element we just processed, and repeat. */
-              val new_elem = list(var_s, sym, cdr(pair), modifier, nao);
-
-              if (next_pat)
-                 c.specline = cons(new_elem, cons(next_pat, rest(c.specline)));
-              else
-                 c.specline = cons(new_elem, rest(c.specline));
-              continue;
-            }
-          } else if (consp(pat) && (consp(first(pat)) || stringp(first(pat)))) {
-            cons_bind (find, len, search_str(c.dataline, pat, c.pos, modifier));
-            if (!find) {
-              LOG_MISMATCH("string");
-              return nil;
-            }
-            c.bindings = acons(c.bindings, sym, sub_str(c.dataline, c.pos, find));
-            c.pos = plus(find, len);
           } else {
-            sem_error(c.spec_lineno,
-                      lit("variable followed by invalid element"), nao);
+            return result;
           }
         } else if (regexp(directive)) {
           val past = match_regex(c.dataline, directive, c.pos);
@@ -543,301 +894,6 @@ static val match_line(match_line_ctx c)
           }
           LOG_MATCH("regex", past);
           c.pos = past;
-        } else if (directive == skip_s) {
-          val max = second(elem);
-          val min = third(elem);
-          cnum cmax = nump(max) ? c_num(max) : 0;
-          cnum cmin = nump(min) ? c_num(min) : 0;
-          val greedy = eq(max, greedy_k);
-          val last_good_result = nil, last_good_pos = nil;
-
-          if (!rest(c.specline)) {
-            debuglf(lit("skip to end of line ~a:~a"), c.file, c.data_lineno);
-            return cons(c.bindings, t);
-          }
-
-          {
-            cnum reps_max = 0, reps_min = 0;
-
-            while (length_str_gt(c.dataline, c.pos) && min && reps_min < cmin) {
-              c.pos = plus(c.pos, one);
-              reps_min++;
-            }
-
-            if (min) {
-              if (reps_min != cmin) {
-                debuglf(c.spec_lineno,
-                        lit("skipped only ~a/~a chars to ~a:~a:~a"),
-                        num(reps_min), num(cmin),
-                        c.file, c.data_lineno, c.pos, nao);
-                return nil;
-              }
-
-              debuglf(c.spec_lineno, lit("skipped ~a chars to ~a:~a:~a"),
-                      num(reps_min), c.file, c.data_lineno, c.pos, nao);
-            }
-
-            while (greedy || !max || reps_max++ < cmax) {
-              val result = match_line(ml_specline(c, rest(c.specline)));
-
-              if (result) {
-                if (greedy) {
-                  last_good_result = result;
-                  last_good_pos = c.pos;
-                } else {
-                  LOG_MATCH("skip", c.pos);
-                  return result;
-                }
-              }
-
-              if (length_str_le(c.dataline, c.pos))  {
-                if (last_good_result) {
-                  LOG_MATCH("greedy skip", last_good_pos);
-                  return last_good_result;
-                }
-                break;
-              }
-
-              c.pos = plus(c.pos, one);
-            }
-          }
-
-          LOG_MISMATCH("skip");
-          return nil;
-        } else if (directive == coll_s) {
-          val coll_specline = second(elem);
-          val until_last_specline = third(elem);
-          val args = fourth(elem);
-          val bindings_coll = nil;
-          val last_bindings = nil;
-          val max = getplist(args, maxgap_k);
-          val min = getplist(args, mingap_k);
-          val gap = getplist(args, gap_k);
-          val times = getplist(args, times_k);
-          val mintimes = getplist(args, mintimes_k);
-          val maxtimes = getplist(args, maxtimes_k);
-          val chars = getplist(args, chars_k);
-          val vars = getplist(args, vars_k);
-          cnum cmax = nump(gap) ? c_num(gap) : (nump(max) ? c_num(max) : 0);
-          cnum cmin = nump(gap) ? c_num(gap) : (nump(min) ? c_num(min) : 0);
-          cnum mincounter = cmin, maxcounter = 0;
-          cnum ctimax = nump(times) ? c_num(times) 
-                                    : (nump(maxtimes) ? c_num(maxtimes) : 0);
-          cnum ctimin = nump(times) ? c_num(times) 
-                                    : (nump(mintimes) ? c_num(mintimes) : 0);
-          cnum cchars = nump(chars) ? c_num(chars) : 0;
-          cnum timescounter = 0, charscounter = 0;
-          val iter;
-
-          vars = vars_to_bindings(c.spec_lineno, vars, c.bindings);
-
-          if (((times || maxtimes) && ctimax == 0) || (chars && cchars == 0))
-            break;
-
-          for (;;) {
-            val new_bindings = nil, new_pos = nil;
-
-            if ((gap || min) && mincounter < cmin)
-              goto next_coll;
-
-            if (chars && charscounter++ >= cchars)
-              break;
-
-            {
-              cons_set (new_bindings, new_pos,
-                        match_line(ml_specline(c, coll_specline)));
-
-              if (until_last_specline) {
-                cons_bind (sym, spec, until_last_specline);
-                cons_bind (until_last_bindings, until_pos,
-                           match_line(ml_bindings_specline(c, new_bindings, spec)));
-
-                if (until_pos) {
-                  LOG_MATCH("until/last", until_pos);
-                  if (sym == last_s) {
-                    last_bindings = set_diff(until_last_bindings,
-                                             new_bindings, eq_f, nil);
-                    c.pos = until_pos;
-                  }
-                  break;
-                } else {
-                  LOG_MISMATCH("until/last");
-                }
-              }
-
-              if (new_pos) {
-                val strictly_new_bindings = set_diff(new_bindings,
-                                                     c.bindings, eq_f, nil);
-                LOG_MATCH("coll", new_pos);
-
-                for (iter = vars; iter; iter = cdr(iter)) {
-                  cons_bind (var, dfl, car(iter));
-                  val exists = assoc(new_bindings, var);
-
-                  if (!exists) {
-                    if (!dfl) 
-                      sem_error(c.spec_lineno, lit("coll failed to bind ~a"),
-                                var, nao);
-                    else
-                      strictly_new_bindings = acons(strictly_new_bindings, 
-                                                    var, dfl);
-                  }
-                }
-
-                for (iter = strictly_new_bindings; iter; iter = cdr(iter))
-                {
-                  val binding = car(iter);
-                  val vars_binding = assoc(vars, car(binding));
-
-                  if (!vars || vars_binding) {
-                    val existing = assoc(bindings_coll, car(binding));
-                    bindings_coll = acons_new(bindings_coll, car(binding),
-                                              cons(cdr(binding), cdr(existing)));
-                  }
-                }
-              }
-
-              if (new_pos && !equal(new_pos, c.pos)) {
-                c.pos = new_pos;
-                bug_unless (length_str_ge(c.dataline, c.pos));
-
-                timescounter++;
-
-                if ((times || maxtimes) && timescounter >= ctimax)
-                  break;
-
-                mincounter = 0;
-                maxcounter = 0;
-              } else {
-next_coll:
-                mincounter++;
-                if ((gap || max) && ++maxcounter > cmax)
-                  break;
-                c.pos = plus(c.pos, one);
-              }
-
-              if (length_str_le(c.dataline, c.pos))
-                break;
-            }
-          }
-
-          if ((times || mintimes) && timescounter < ctimin) {
-            debuglf(c.spec_lineno, lit("fewer than ~a iterations collected"),
-                    num(ctimin), nao);
-            return nil;
-          }
-
-          if (!bindings_coll)
-            debuglf(c.spec_lineno, lit("nothing was collected"), nao);
-
-          for (iter = bindings_coll; iter; iter = cdr(iter)) {
-            val pair = car(iter);
-            val rev = cons(car(pair), nreverse(cdr(pair)));
-            c.bindings = cons(rev, c.bindings);
-          }
-
-          if (last_bindings) {
-            c.bindings = set_diff(c.bindings, last_bindings, eq_f, car_f);
-            c.bindings = nappend2(last_bindings, c.bindings);
-          }
-        } else if (directive == all_s || directive == some_s ||
-                   directive == none_s || directive == maybe_s ||
-                   directive == cases_s || directive == choose_s)
-        {
-          val specs = third(elem);
-          val plist = fourth(elem);
-          val all_match = t;
-          val some_match = nil;
-          val max_pos = c.pos;
-          val choose_shortest = getplist(plist, shortest_k);
-          val choose_longest = getplist(plist, longest_k);
-          val choose_sym = or2(choose_longest, choose_shortest);
-          val choose_bindings = c.bindings, choose_pos = c.pos;
-          val choose_minmax = choose_longest ? num(-1) : num(NUM_MAX);
-          val iter;
-
-          if (choose_longest && choose_shortest)
-            sem_error(c.spec_lineno, lit("choose: both :shortest and :longest specified"), nao);
-
-          if (directive == choose_s && !choose_sym)
-            sem_error(c.spec_lineno, lit("choose: criterion not specified"), nao);
-          for (iter = specs; iter != nil; iter = cdr(iter)) {
-            val nested_spec = first(iter);
-            cons_bind (new_bindings, new_pos,
-                       match_line(ml_specline(c, nested_spec)));
-
-            if (new_pos) {
-              some_match = t;
-              if (gt(new_pos, max_pos))
-                max_pos = new_pos;
-              if (directive == choose_s) {
-                val binding = choose_sym ? assoc(new_bindings, choose_sym) : nil;
-                val value = cdr(binding);
-
-                if (value) {
-                  val len = length_str(value);
-
-                  if ((choose_longest && gt(len, choose_minmax)) ||
-                      (choose_shortest && lt(len, choose_minmax)))
-                  {
-                    choose_minmax = len;
-                    choose_bindings = new_bindings;
-                    choose_pos = new_pos;
-                  }
-                }
-              } else {
-                c.bindings = new_bindings;
-              }
-              if (directive == cases_s || directive == none_s)
-                break;
-            } else {
-              all_match = nil;
-              if (directive == all_s)
-                break;
-            }
-          }
-
-          if (directive == all_s && !all_match) {
-            debuglf(c.spec_lineno, lit("all: some clauses didn't match"), nao);
-            return nil;
-          }
-
-          if ((directive == some_s || directive == cases_s) && !some_match) {
-            debuglf(c.spec_lineno, lit("some/cases: no clauses matched"), nao);
-            return nil;
-          }
-
-          if (directive == none_s && some_match) {
-            debuglf(c.spec_lineno, lit("none: some clauses matched"), nao);
-            return nil;
-          }
-
-          /* No check for maybe, since it always succeeds. */
-
-          if (directive == choose_s) {
-            c.bindings = choose_bindings;
-            c.pos = choose_pos;
-          } else {
-            c.pos = max_pos;
-          }
-        } else if (directive == trailer_s) {
-          cons_bind (new_bindings, new_pos,
-                     match_line(ml_specline(c, rest(c.specline))));
-
-          (void) new_bindings;
-          if (!new_pos) {
-            LOG_MISMATCH("trailer");
-            return nil;
-          }
-          LOG_MATCH("trailer", new_pos);
-          return cons(c.bindings, c.pos);
-        } else if (directive == eol_s) {
-          if (length_str_le(c.dataline, c.pos)) {
-            LOG_MATCH("eol", c.pos);
-            return cons(c.bindings, t);
-          }
-          LOG_MISMATCH("eol");
-          return nil;
         } else if (consp(directive) || stringp(directive)) {
           cons_bind (find, len, search_str_tree(c.dataline, elem, c.pos, nil));
           val newpos;
@@ -1331,7 +1387,6 @@ static match_files_ctx mf_spec_bindings(match_files_ctx c, val spec,
   nc.bindings = bindings;
   return nc;
 }
-
 
 static val match_files(match_files_ctx a);
 
@@ -2519,6 +2574,7 @@ static void syms_init(void)
 {
   decline_k = intern(lit("decline"), keyword_package);
   next_spec_k = intern(lit("next-spec"), keyword_package);
+  repeat_spec_k = intern(lit("repeat-spec"), keyword_package);
   mingap_k = intern(lit("mingap"), keyword_package);
   maxgap_k = intern(lit("maxgap"), keyword_package);
   gap_k = intern(lit("gap"), keyword_package);
@@ -2568,6 +2624,17 @@ static void dir_tables_init(void)
   sethash(v_directive_table, throw_s, cptr((mem_t *) v_throw));
   sethash(v_directive_table, deffilter_s, cptr((mem_t *) v_deffilter));
   sethash(v_directive_table, eof_s, cptr((mem_t *) v_eof));
+
+  sethash(h_directive_table, var_s, cptr((mem_t *) h_var));
+  sethash(h_directive_table, skip_s, cptr((mem_t *) h_skip));
+  sethash(h_directive_table, coll_s, cptr((mem_t *) h_coll));
+  sethash(h_directive_table, all_s, cptr((mem_t *) h_parallel));
+  sethash(h_directive_table, none_s, cptr((mem_t *) h_parallel));
+  sethash(h_directive_table, maybe_s, cptr((mem_t *) h_parallel));
+  sethash(h_directive_table, cases_s, cptr((mem_t *) h_parallel));
+  sethash(h_directive_table, choose_s, cptr((mem_t *) h_parallel));
+  sethash(h_directive_table, trailer_s, cptr((mem_t *) h_trailer));
+  sethash(h_directive_table, eol_s, cptr((mem_t *) h_eol));
 }
 
 void match_init(void)
