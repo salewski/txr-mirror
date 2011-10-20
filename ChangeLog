@@ -2,6 +2,18 @@
 
 	Task #11425
 
+	* match.c (repeat_spec_k): New symbol variable
+	(h_match_func): New typedef.
+	(elem_bind): New macro.
+	(h_var, h_skip, h_coll, h_parallel, h_trailer, h_eol): New functions.
+	(match_line): Remaining directives moved to functions.
+	(syms_init): New symbol variable initialized.
+	(dir_tables_init): New functions entered into hash table.
+
+2011-10-19  Kaz Kylheku  <kaz@kylheku.com>
+
+	Task #11425
+
 	Refactoring match_files to make it easier to break up into
 	subfunctions, similarly to what was done with match_files.
 
