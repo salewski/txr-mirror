@@ -1,5 +1,31 @@
 2011-10-19  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 040
+
+	Single unescaped space  behaves like @/ +/ reges.
+
+	Ported to native Windows via MinGW.
+
+	Bugfixes for Cygwin and more robust handling of
+	errors arising from Windows not having proper
+	Unicode support (16 bit wide characters only).
+
+	Nasty GC bug fixed for all platforms, exposed by gcc 4.5.2, x86_64. 
+
+	[Internal] The huge functions match_line and match_files have been
+	broken up into functions dispatched by hash table lookup on directive
+	symbols.
+
+	[Internal] Hashing of some objects improved.
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+2011-10-19  Kaz Kylheku  <kaz@kylheku.com>
+
 	Task #11425
 
 	* match.c (repeat_spec_k): New symbol variable
