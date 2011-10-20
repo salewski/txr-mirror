@@ -2,7 +2,7 @@
 
 	Version 040
 
-	Single unescaped space  behaves like @/ +/ reges.
+	Single unescaped space  behaves like @/ +/ regex.
 
 	Ported to native Windows via MinGW.
 
