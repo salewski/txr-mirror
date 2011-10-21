@@ -552,7 +552,7 @@ val get_string_from_stream(val stream)
     free(so);
     return out;
   } else if (stream->co.ops == &string_in_ops.cobj_ops) {
-    val pair = (val ) stream->co.handle;
+    val pair = (val) stream->co.handle;
     return pair ? car(pair) : nil;
   } else {
     abort(); /* not a string input or output stream */
