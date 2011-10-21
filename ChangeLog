@@ -1,3 +1,18 @@
+2011-10-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (proper_plist_to_alist, improper_plist_to_alist): New
+	functions.
+
+	* lib.h (proper_plist_to_alist, improper_plist_to_alist): New
+	functions declared.
+
+	* match.c (append_k): New keyword symbol variable.
+	(complex_open): New append argument.
+	(v_output): Streamlined parsing of keywords.
+	Support :append keyword.
+
+	* txr.1: Output directive's keyword documentation revised.
+
 2011-10-20  Kaz Kylheku  <kaz@kylheku.com>
 
 	Bug #34609
