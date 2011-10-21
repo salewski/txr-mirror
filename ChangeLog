@@ -1,5 +1,33 @@
 2011-10-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	New features. Strling list output streams in stream
+	library, allow output to be captured as a list of strings
+	representing lines (in contrast to string streams which capture
+	a single string).
+
+	The output directive can output to a variable,
+	and next can scan over a variable.
+
+	* lib.c (span_str, compl_span_str, break_str): New functions.
+
+	* lib.h (span_str, compl_span_str, break_str): New functions declared.
+
+	* match.c (into_k, var_k): New keyword variables.
+	(mf_file_data): New static function.
+	(v_next): Refactored argument handling. Added support for :var
+	keyword.
+	(v_output): Added support for :into keyword.
+
+	* stream.c (strlist_mark, strlist_out_put_string,
+	strlist_out_put_char): New static functions.
+	(strlist_out_ops): New static struct.
+	(make_strlist_output_stream, get_list_from_stream): New functions.
+
+	* stream.h (make_strlist_output_stream, get_list_from_stream): New
+	functions declared.
+
+2011-10-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (proper_plist_to_alist, improper_plist_to_alist): New
 	functions.
 

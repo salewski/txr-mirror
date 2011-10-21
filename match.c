@@ -53,7 +53,7 @@ val mingap_k, maxgap_k, gap_k, mintimes_k, maxtimes_k, times_k;
 val lines_k, chars_k;
 val choose_s, longest_k, shortest_k, greedy_k;
 val vars_k;
-val append_k;
+val append_k, into_k, var_k;
 
 static val h_directive_table, v_directive_table;
 
@@ -1388,6 +1388,16 @@ static match_files_ctx mf_spec_bindings(match_files_ctx c, val spec,
   return nc;
 }
 
+static match_files_ctx mf_file_data(match_files_ctx c, val file,
+                                    val data, val data_lineno)
+{
+  match_files_ctx nc = c;
+  nc.files = cons(file, c.files);
+  nc.data = data;
+  nc.data_lineno = data_lineno;
+  return nc;
+}
+
 static val match_files(match_files_ctx a);
 
 typedef val (*v_match_func)(match_files_ctx c, match_files_ctx *cout);
@@ -1604,30 +1614,60 @@ static val v_next(match_files_ctx c, match_files_ctx *cout)
     return cons(c.bindings, cons(c.data, c.data_lineno));
 
   if (rest(first_spec)) {
-    val source = rest(first_spec);
-    val keyword = first(source);
-    val arg = keyword;
+    val args = rest(first_spec);
+    val source = first(args);
 
-    if (keywordp(keyword)) {
-      if (eq(keyword, nothrow_k)) {
-        sem_error(spec_linenum, lit("misplaced :nothrow"), nao);
-      } else if (eq(keyword, args_k)) {
-        cons_bind (new_bindings, success,
-                   match_files(mf_args(c)));
+    if (source == args_k) {
+      if (rest(args))
+        sem_error(spec_linenum, lit("(next :args) takes no additional arguments"), nao);
+      cons_bind (new_bindings, success,
+                 match_files(mf_args(c)));
 
-        if (success)
-          return cons(new_bindings,
-                      if3(c.data, cons(c.data, c.data_lineno), t));
-        return nil;
-      }
-      arg = second(source);
+      if (success)
+        return cons(new_bindings,
+                    if3(c.data, cons(c.data, c.data_lineno), t));
+      return nil;
+    }
+    
+    if (keywordp(first(args))) {
+      source = nil;
+    } else {
+      pop(&args);
     }
 
+    if (args && !keywordp(first(args)))
+      sem_error(spec_linenum, lit("next: keyword argument expected, not ~s"), first(args), nao);
+
     {
-      val eval = eval_form(spec_linenum, arg, c.bindings);
+      val alist = improper_plist_to_alist(args, list(nothrow_k, nao));
+      val from_var = cdr(assoc(alist, var_k));
+      val nothrow = cdr(assoc(alist, nothrow_k));
+      val eval = eval_form(spec_linenum, source, c.bindings);
       val str = cdr(eval);
 
-      if (eq(second(source), nothrow_k)) {
+      if (!from_var && !source)
+        sem_error(spec_linenum, lit("next: source required before keyword arguments"), nao);
+
+      if (from_var) {
+        val existing = assoc(c.bindings, from_var);
+
+        if (!symbolp(from_var)) 
+          sem_error(spec_linenum, lit(":var requires a variable, not ~s"), from_var, nao);
+
+        if (!existing)
+          sem_error(spec_linenum, lit(":var specifies unbound variable ~s"), from_var, nao);
+
+        {
+          cons_bind (new_bindings, success,
+                     match_files(mf_file_data(c, lit("var"),
+                                 flatten(cdr(existing)), num(1))));
+
+          if (success)
+            return cons(new_bindings,
+                        if3(c.data, cons(c.data, c.data_lineno), t));
+          return nil;
+        }
+      } else if (nothrow) {
         if (str) {
           c.files = cons(cons(nothrow_k, str), c.files);
         } else {
@@ -2122,6 +2162,37 @@ static val v_output(match_files_ctx c, match_files_ctx *cout)
     }
   }
 
+  {
+    val into_var = cdr(assoc(alist, into_k));
+
+    if (into_var) {
+      val stream = make_strlist_output_stream();
+
+      if (!symbolp(into_var)) 
+        sem_error(spec_linenum, lit(":into requires a variable, not ~s"), into_var, nao);
+
+      debugf(lit("opening string list stream"), nao);
+      do_output(c.bindings, specs, filter, stream);
+
+      {
+        val existing = assoc(c.bindings, into_var);
+        val list_out = get_list_from_stream(stream);
+
+        if (existing) {
+          if (append) {
+            *cdr_l(existing) = append2(cdr(existing), list_out);
+          } else {
+            *cdr_l(existing) = list_out;
+          }
+        } else {
+          c.bindings = acons(c.bindings, into_var, list_out);
+        }
+      }
+      *cout = c;
+      return next_spec_k;
+    }
+  }
+
   fp = (errno = 0, complex_open(dest, t, append));
 
   debugf(lit("opening data sink ~a"), dest, nao);
@@ -2591,6 +2662,8 @@ static void syms_init(void)
   greedy_k = intern(lit("greedy"), keyword_package);
   vars_k = intern(lit("vars"), keyword_package);
   append_k = intern(lit("append"), keyword_package);
+  into_k = intern(lit("into"), keyword_package);
+  var_k = intern(lit("var"), keyword_package);
 }
 
 static void dir_tables_init(void)

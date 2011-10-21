@@ -438,6 +438,96 @@ static struct strm_ops string_out_ops = {
   0,
 };
 
+static void strlist_mark(val stream)
+{
+  val stuff = (val) stream->co.handle;
+  gc_mark(stuff);
+}
+
+static val strlist_out_put_string(val stream, val str)
+{
+  val cell = (val) stream->co.handle;
+  cons_bind (lines, strstream, cell);
+
+  for (;;) {
+    val length = length_str(str);
+    val span_to_newline = compl_span_str(str, lit("\n"));
+
+    if (zerop(length))
+      break;
+
+    put_string(strstream, sub_str(str, nil, span_to_newline));
+
+    if (equal(span_to_newline, length))
+      break;
+
+    str = sub_str(str, plus(span_to_newline, num(1)), nil);
+    push(get_string_from_stream(strstream), &lines);
+    strstream = make_string_output_stream();
+  }
+
+  *car_l(cell) = lines;
+  *cdr_l(cell) = strstream;
+
+  return t;
+}
+
+static val strlist_out_put_char(val stream, val ch)
+{
+  val cell = (val) stream->co.handle;
+  cons_bind (lines, strstream, cell);
+
+  if (ch == chr('\n')) {
+    push(get_string_from_stream(strstream), &lines);
+    strstream = make_string_output_stream();
+  } else {
+    put_char(strstream, ch);
+  }
+
+  *car_l(cell) = lines;
+  *cdr_l(cell) = strstream;
+
+  return t;
+}
+
+static struct strm_ops strlist_out_ops = {
+  { cobj_equal_op,
+    cobj_print_op,
+    cobj_destroy_stub_op,
+    strlist_mark,
+    cobj_hash_op },
+  strlist_out_put_string,
+  strlist_out_put_char,
+  0,
+  0,
+  0,
+  0,
+};
+
+val make_strlist_output_stream(void)
+{
+  return cobj((mem_t *) cons(nil, make_string_output_stream()), 
+              stream_s, &strlist_out_ops.cobj_ops);
+}
+
+val get_list_from_stream(val stream)
+{
+  type_check (stream, COBJ);
+  type_assert (stream->co.cls == stream_s,
+               (lit("~a is not a stream"), stream, nao));
+
+  if (stream->co.ops == &strlist_out_ops.cobj_ops) {
+    val cell = (val) stream->co.handle;
+    cons_bind (lines, strstream, cell);
+    val stray = get_string_from_stream(strstream);
+    if (!zerop(length_str(stray)))
+      push(stray, &lines);
+    return nreverse(lines);
+  }
+
+  type_mismatch(lit("~s is not a string list stream"), stream);
+}
+
 static val dir_get_line(val stream)
 {
   DIR *handle = (DIR *) stream->co.handle;

@@ -1199,6 +1199,32 @@ val chr_str_set(val str, val index, val chr)
   return chr;
 }
 
+val span_str(val str, val set)
+{
+  const wchar_t *cstr = c_str(str);
+  const wchar_t *cset = c_str(set);
+  size_t span = wcsspn(cstr, cset);
+  return num(span);
+}
+
+val compl_span_str(val str, val set)
+{
+  const wchar_t *cstr = c_str(str);
+  const wchar_t *cset = c_str(set);
+  size_t span = wcscspn(cstr, cset);
+  return num(span);
+}
+
+val break_str(val str, val set)
+{
+  const wchar_t *cstr = c_str(str);
+  const wchar_t *cset = c_str(set);
+  const wchar_t *brk = wcspbrk(cstr, cset);
+  if (!brk)
+    return nil;
+  return num(brk - cstr);
+}
+
 val symbol_name(val sym)
 {
   if (sym)
