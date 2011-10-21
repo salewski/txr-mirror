@@ -1,5 +1,13 @@
 2011-10-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (v_output): When appending output to a variable,
+	flatten the previous contents so we can append to a single
+	string, or to deeply nested list, etc.
+
+	* txr.1: Documented these new extensions to next and output.
+
+2011-10-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	New features. Strling list output streams in stream
 	library, allow output to be captured as a list of strings
 	representing lines (in contrast to string streams which capture

@@ -2180,7 +2180,7 @@ static val v_output(match_files_ctx c, match_files_ctx *cout)
 
         if (existing) {
           if (append) {
-            *cdr_l(existing) = append2(cdr(existing), list_out);
+            *cdr_l(existing) = append2(flatten(cdr(existing)), list_out);
           } else {
             *cdr_l(existing) = list_out;
           }
