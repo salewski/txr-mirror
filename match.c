@@ -1554,7 +1554,7 @@ static val v_block(match_files_ctx c, match_files_ctx *cout)
     sem_error(spec_linenum,
               lit("unexpected material after block directive"), nao);
 
-  if (rest(c.spec))
+  if ((c.spec = rest(c.spec)) != nil)
   {
     uw_block_begin(name, result);
     result = match_files(c);

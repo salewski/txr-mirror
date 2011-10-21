@@ -1,3 +1,11 @@
+2011-10-20  Kaz Kylheku  <kaz@kylheku.com>
+
+	Bug #34609
+
+	* match.c (v_block): Regression induced by rabid refactoring. Block
+	must apply remaining directives to data, excluding itself, otherwise
+	runaway recursion takes the place of correct behavior.
+
 2011-10-19  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 040
