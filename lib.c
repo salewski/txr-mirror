@@ -661,6 +661,38 @@ val getplist(val list, val key)
   return nil;
 }
 
+val proper_plist_to_alist(val list)
+{
+  list_collect_decl (out, tail);
+
+  for (; list; list = cdr(cdr(list))) {
+    val ind = first(list);
+    val prop = second(list);
+    list_collect (tail, cons(ind, prop));
+  }
+
+  return out;
+}
+
+val improper_plist_to_alist(val list, val boolean_keys)
+{
+  list_collect_decl (out, tail);
+
+  for (; list; list = cdr(list)) {
+    val ind = first(list);
+
+    if (memqual(ind, boolean_keys)) {
+      list_collect (tail, cons(ind, t));
+    } else {
+      val prop = second(list);
+      list_collect (tail, cons(ind, prop));
+      list = cdr(list);
+    }
+  }
+
+  return out;
+}
+
 val num(cnum n)
 {
   numeric_assert (n >= NUM_MIN && n <= NUM_MAX);

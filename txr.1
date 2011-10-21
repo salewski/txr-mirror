@@ -2622,7 +2622,7 @@ usual printing of the variable bindings or the word false.
 
 The syntax of the @(output) directive is:
 
-  @(output [ DESTINATION ] [ :nothrow ] [ { keyword value } * ])
+  @(output [ DESTINATION ] { bool-keyword | keyword value }* )
   .
   . one or more output directives or lines
   .
@@ -2633,21 +2633,34 @@ redirects to standard output, or a shell command preceded by the ! symbol.
 In the first form, the destination may be specified as a variable
 which holds text, a string literal or a quasiliteral
 
-The syntax throws an exception if the output destination
+The keyword list consists of a mixture of boolean keywords which
+do not have an argument, or keywords with arguments.
+
+The following boolean keywords are supported:
+
+.IP :nothrow
+
+The output directive throws an exception if the output destination
 cannot be opened, unless the :nothrow keyword is present, in which
-case the situation is treated as a match failure.  The old syntax throws an
-exception.
+case the situation is treated as a match failure.  
 
 Note that since command pipes are processes that report errors
 asynchronously, a failing command will not throw an immediate exception that
 can be suppressed with :nothrow.   This is for synchronous errors, like
 trying to open a destination file, but not having permissions, etc.
 
-The keyword value list is used for passing additional options.
-Currently, the only keyword supported is the :filter keyword.
-This specifies a filter to be applied to the variable substitutions occuring
-within the output clause.
+.IP :append
 
+This keyword is meaningful for files, specifying append mode: the output is to
+be added to the end of the file rather than overwriting the file.
+
+The following value keywords are supported:
+
+.IP :filter
+
+The argument is a symbol, which specifies a filter to be applied to the
+variable substitutions occuring within the output clause.
+See the later sections Output Filtering below, and The Deffilter Directive.
 
 .SS Output Text
 

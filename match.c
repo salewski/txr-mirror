@@ -53,6 +53,7 @@ val mingap_k, maxgap_k, gap_k, mintimes_k, maxtimes_k, times_k;
 val lines_k, chars_k;
 val choose_s, longest_k, shortest_k, greedy_k;
 val vars_k;
+val append_k;
 
 static val h_directive_table, v_directive_table;
 
@@ -1097,10 +1098,9 @@ typedef struct fpip {
   enum fpip_close close;
 } fpip_t;
 
-static fpip_t complex_open(val name, val output)
+static fpip_t complex_open(val name, val output, val append)
 {
   fpip_t ret = { 0, 0 };
-
   const wchar_t *namestr = c_str(name);
   cnum len = c_num(length_str(name));
 
@@ -1124,7 +1124,7 @@ static fpip_t complex_open(val name, val output)
     free(name);
   } else {
     ret.close = fpip_fclose;
-    ret.f = w_fopen(namestr, output ? L"w" : L"r");
+    ret.f = w_fopen(namestr, output ? append ? L"a" : L"w" : L"r");
   }
 
   return ret;
@@ -2090,8 +2090,10 @@ static val v_output(match_files_ctx c, match_files_ctx *cout)
   val specs = second(first_spec);
   val dest_spec = third(first_spec);
   val nothrow = nil;
+  val append = nil;
   val dest = lit("-");
   val filter = nil;
+  val alist;
   fpip_t fp;
 
   if (eq(first(dest_spec), nothrow_k)) {
@@ -2104,13 +2106,13 @@ static val v_output(match_files_ctx c, match_files_ctx *cout)
     pop(&dest_spec);
   }
 
-  if (eq(first(dest_spec), nothrow_k)) {
-    nothrow = t;
-    pop(&dest_spec);
-  }
+  alist = improper_plist_to_alist(dest_spec, list(nothrow_k, append_k, nao));
 
-  if (keywordp(first(dest_spec))) {
-    val filter_sym = getplist(dest_spec, filter_k);
+  nothrow = cdr(assoc(alist, nothrow_k));
+  append = cdr(assoc(alist, append_k));
+
+  {
+    val filter_sym = cdr(assoc(alist, filter_k));
 
     if (filter_sym) {
       filter = get_filter_trie(filter_sym);
@@ -2120,7 +2122,7 @@ static val v_output(match_files_ctx c, match_files_ctx *cout)
     }
   }
 
-  fp = (errno = 0, complex_open(dest, t));
+  fp = (errno = 0, complex_open(dest, t, append));
 
   debugf(lit("opening data sink ~a"), dest, nao);
 
@@ -2372,7 +2374,7 @@ static val match_files(match_files_ctx c)
   } else if (c.files) { /* c.data == t: toplevel call with file list */
     val source_spec = first(c.files);
     val name = consp(source_spec) ? cdr(source_spec) : source_spec;
-    fpip_t fp = (errno = 0, complex_open(name, nil));
+    fpip_t fp = (errno = 0, complex_open(name, nil, nil));
     val first_spec_item = second(first(c.spec));
 
     if (consp(first_spec_item) && eq(first(first_spec_item), next_s)) {
@@ -2588,6 +2590,7 @@ static void syms_init(void)
   shortest_k = intern(lit("shortest"), keyword_package);
   greedy_k = intern(lit("greedy"), keyword_package);
   vars_k = intern(lit("vars"), keyword_package);
+  append_k = intern(lit("append"), keyword_package);
 }
 
 static void dir_tables_init(void)
