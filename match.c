@@ -233,6 +233,37 @@ static val bindable(val obj)
   return (obj && symbolp(obj) && obj != t && !keywordp(obj)) ? t : nil;
 }
 
+static val dest_set(val linenum, val bindings, val pattern, val value)
+{
+  if (symbolp(pattern)) {
+    val existing = assoc(bindings, pattern);
+    if (!bindable(pattern))
+      sem_error(linenum, lit("~s cannot be used as a variable"), pattern, nao);
+    if (!existing)
+      sem_error(linenum, lit("cannot set unbound variable ~s"), pattern, nao);
+    *cdr_l(existing) = value;
+  } else if (consp(pattern)) {
+    if (first(pattern) == var_s) {
+      uw_throwf(query_error_s, 
+                lit("metavariable @~a syntax cannot be used here"),
+                second(pattern), nao);
+    }
+
+    if (first(pattern) == expr_s) {
+      uw_throwf(query_error_s, 
+                lit("the @~s syntax cannot be used here"),
+                rest(pattern), nao);
+    }
+    dest_set(linenum, bindings, car(pattern), car(value));
+    if (cdr(pattern))
+      dest_set(linenum, bindings, cdr(pattern), cdr(value));
+  } else {
+    sem_error(linenum, lit("cannot set ~s: not a variable"), pattern, nao);
+  }
+
+  return nil;
+}
+
 static val dest_bind(val linenum, val bindings, val pattern, val value)
 {
   if (symbolp(pattern)) {
@@ -2095,6 +2126,20 @@ static val v_bind(match_files_ctx c, match_files_ctx *cout)
   return next_spec_k;
 }
 
+static val v_set(match_files_ctx c, match_files_ctx *cout)
+{
+  spec_bind (specline, spec_linenum, first_spec, c.spec);
+  val args = rest(first_spec);
+  val pattern = first(args);
+  val form = second(args);
+  val val = eval_form(spec_linenum, form, c.bindings);
+
+  dest_set(spec_linenum, c.bindings, pattern, cdr(val));
+
+  *cout = c;
+  return next_spec_k;
+}
+
 static val v_cat(match_files_ctx c, match_files_ctx *cout)
 {
   spec_bind (specline, spec_linenum, first_spec, c.spec);
@@ -2692,6 +2737,7 @@ static void dir_tables_init(void)
   sethash(v_directive_table, local_s, cptr((mem_t *) v_forget_local));
   sethash(v_directive_table, merge_s, cptr((mem_t *) v_merge));
   sethash(v_directive_table, bind_s, cptr((mem_t *) v_bind));
+  sethash(v_directive_table, set_s, cptr((mem_t *) v_set));
   sethash(v_directive_table, cat_s, cptr((mem_t *) v_cat));
   sethash(v_directive_table, output_s, cptr((mem_t *) v_output));
   sethash(v_directive_table, define_s, cptr((mem_t *) v_define));

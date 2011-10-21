@@ -1053,6 +1053,11 @@ Binds one or more variables against another variable using a structural
 pattern. A limited form of unification takes place which can cause a match to
 fail.
 
+.IP @(set)
+Destructively assigns one or more existing variables using a structural
+pattern, using syntax similar to bind. Assignment to unbound
+variables triggers an error.
+
 .IP @(output)
 A directive which encloses an output clause in the query. An output section
 does not match text, but produces text. The directives above are not
@@ -2090,6 +2095,40 @@ The symbols nil, t and keyword symbols may be used on either side.
 They represent themselves.  For example @(bind :foo :bar) fails,
 but @(bind :foo :foo) succeeds since the two sides denote the same
 keyword symbol object.
+
+
+.SS The Set Directive
+
+The @(set) directive resembles bind, but is not a pattern match. It overwrites
+the previous values of variables with new values from the right hand side.
+Each variable that is assigned must have an existing binding.
+
+Examples follow.
+
+Store the value of A back into A, achieving nothing:
+
+  @(set A A)
+
+Exchange the values of A and B:
+
+  @(set (A B) (B A))
+
+Store a string into A:
+
+  @(set A "text")
+
+Store a list into A:
+
+  @(set A ("line1" "line2"))
+
+Destructuring assignment. D assumed to contain the list 
+
+  @(bind D ("A" ("B1" "B2") "C1" "C2"))
+  @(bind (A B C) (() () ()))
+  @(set (A B . C) D)
+
+A ends up with "A", B ends up with ("B1" "B2") and C gets ("C1" and "C2").
+
 
 .SH BLOCKS
 
