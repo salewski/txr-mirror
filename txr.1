@@ -941,7 +941,7 @@ Explicitly match the end of line. Fails if the the current position is not the
 end of a line. Also Fails if no data remains (there is no current line).
 
 .IP @(next)
-Continue matching in another file.
+Continue matching in another file or other data source.
 
 .IP @(block)
 The remaining query is treated as an anonymous or named block.
@@ -1060,8 +1060,8 @@ understood in an output clause.
 
 .IP @(repeat)
 A directive understood within an @(output) section, for repeating multi-line
-text, with successive substitutions pulled from lists. A version @(rept)
-produces repeated text within one line.
+text, with successive substitutions pulled from lists. The directive @(rep)
+produces iteration over lists horizontally within one line.
 
 .IP @(deffilter)
 This directive is used for defining named filters, which are useful
@@ -1085,6 +1085,7 @@ with, or without arguments:
   @(next SOURCE)
   @(next SOURCE :nothrow)
   @(next :args)
+  @(next :var SYMBOL)
 
 The lone @(next) without arguments switches to the next file in the
 argument list which was passed to the
@@ -1119,6 +1120,11 @@ open the input source named by that argument. If the very first directive of a q
 .B txr
 avoids opening the first input source, but it does open the input source for
 any other directive, even one which does not consume any data.
+
+The variant @(next :var SYMBOL) treats a the variable named by SYMBOL
+as a source of text. The contents of the variable are flattened to a list as if
+by the @(flatten) directive (but without modifying the variable).
+The resulting list is treated as if it were the lines of a text file.
 
 Note that "remainder of the query" refers to the subquery in which
 the next directive appears, not necessarily the entire query.
@@ -2661,6 +2667,16 @@ The following value keywords are supported:
 The argument is a symbol, which specifies a filter to be applied to the
 variable substitutions occuring within the output clause.
 See the later sections Output Filtering below, and The Deffilter Directive.
+
+.IP :into
+
+The argument of :into is a symbol which denotes a variable.
+The output will go into that variable.  If the variable is unbound,
+it will be created. Otherwise, its contents are overwritten
+unless the :append keyword is used. If :append is used, then
+the new content will be appened to the previous content of
+the variable, after flattening the content to a list,
+as if by the @(flatten) directive.
 
 .SS Output Text
 
