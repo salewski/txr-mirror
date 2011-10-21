@@ -1,5 +1,15 @@
 2011-10-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	Implementing @(set) directive for assigning to variables
+	destructively.
+
+	* match.c (dest_set, v_set): New static functions.
+	(dir_tables_init): Add v_set to vertical directives hash table.
+
+	* txr.1: Documented.
+
+2011-10-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (v_output): When appending output to a variable,
 	flatten the previous contents so we can append to a single
 	string, or to deeply nested list, etc.
