@@ -2047,14 +2047,19 @@ Example:
 
 .SS The Bind Directive
 
+The syntax of the @(bind) directive is:
+
+  @(bind pattern form { keyword value }*)
+
+
 The @(bind) directive is a kind of pattern match, which matches one or more
-variables on the left hand side to the value of a variable on the right hand
-side.  The right hand side variable must have a binding, or else the directive
-fails. Any variables on the left hand side which are unbound receive a matching
-piece of the right hand side value. Any variables on the left which are already
-bound must match their corresponding value, or the bind fails. Any variables
-which are already bound and which do match their corresponding value remain
-unchanged (the match can be inexact).
+variables on in the left hand side pattern to the value of a variable on the
+right hand side.  The right hand side variable must have a binding, or else the
+directive fails. Any variables on the left hand side which are unbound receive
+a matching piece of the right hand side value. Any variables on the left which
+are already bound must match their corresponding value, or the bind fails. Any
+variables which are already bound and which do match their corresponding value
+remain unchanged (the match can be inexact).
 
 The simplest bind is of one variable against itself, for instance bind A
 against A:
@@ -2117,6 +2122,27 @@ They represent themselves.  For example @(bind :foo :bar) fails,
 but @(bind :foo :foo) succeeds since the two sides denote the same
 keyword symbol object.
 
+.SS Keyword in The Bind Directive
+
+The Bind directive accepts the :filter keyword parameter. This specifies a
+filter for performing a more loose match between the left and right hand side
+objects. In the absence of a filter specification, text is compared verbatim,
+in a case-insensitive manner. If a filter is specified, it is applied to the
+left and right hand side. This has no effect if the left side is an unbound
+variable: no filtering takes place in the stablishment of a binding. It is for
+comparison purposes only.
+
+Example: suppose A contains "abc" and B contains "ABC". The following directive will fail:
+
+  @(bind A B)
+
+However, the following will succeed:
+
+  @(bind A B :filter :upcase)
+
+Bind will see that A and B have bindings already, and so compare their
+contents. Since the :upcase filter is specified, both their contents will be
+reduced through it for the purposes of the comparison, rendering them equal.
 
 .SS The Set Directive
 
@@ -2920,12 +2946,28 @@ substituted into HTML, these should be replaced by &lt; and &gt;.
 This is what filtering is for.  Filtering is applied to the contents of output
 variables, not to any template text.
 .B txr
-implements named filters. Currently, the only built-in filters available are
-:to_html and :from_html. User-defined filters are possible, however.
-See notes on the deffilter directive below.
+implements named filters.  Built-in filters are named by keywords,
+given below. User-defined filters are possible, however.  See notes on the
+deffilter directive below.
 
-To escape HTML characters in all variable substitutions occuring in
-an output clause, specify :filter :to_html in the directive:
+Built-in filters:
+
+.IP :to_html
+Filter text to HTML, representing special characters using HTML
+ampersand sequences. For instance '>' is replaced by '&gt;'.
+
+.IP :from_html
+Filter text with HTML codes into text in which the codes are replaced by the
+corresponding characters. For instance '&gt;' is replaced by '>'.
+
+.IP :upcase
+Convert the 26 lower case letters of the English alphabet to upper case.
+
+.IP :downcase
+Convert the 26 upper case letters of the English alphabet to lower case.
+
+Example: to escape HTML characters in all variable substitutions occuring in an
+output clause, specify :filter :to_html in the directive:
 
   @(output :filter :to_html)
   ...

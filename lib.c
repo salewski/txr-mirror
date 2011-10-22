@@ -372,12 +372,13 @@ val memqual(val obj, val list)
   return list;
 }
 
-val tree_find(val obj, val tree)
+val tree_find(val obj, val tree, val testfun)
 {
-  if (equal(obj, tree))
+  if (funcall2(testfun, obj, tree))
     return t;
   else if (consp(tree))
-    return some_satisfy(tree, curry_12_2(func_n2(tree_find), obj), nil);
+    return some_satisfy(tree, curry_123_2(func_n3(tree_find), 
+                                          obj, testfun), nil);
   return nil;
 }
 
@@ -841,6 +842,32 @@ val init_str(val str, const wchar_t *data)
 val copy_str(val str)
 {
   return string(c_str(str));
+}
+
+val upcase_str(val str)
+{
+  val len = length_str(str);
+  wchar_t *dst = (wchar_t *) chk_malloc((c_num(len) + 1) * sizeof *dst);
+  const wchar_t *src = c_str(str);
+  val out = string_own(dst);
+
+  while ((*dst++ = towupper(*src++)))
+    ;
+
+  return out;
+}
+
+val downcase_str(val str)
+{
+  val len = length_str(str);
+  wchar_t *dst = (wchar_t *) chk_malloc((c_num(len) + 1) * sizeof *dst);
+  const wchar_t *src = c_str(str);
+  val out = string_own(dst);
+
+  while ((*dst++ = towlower(*src++)))
+    ;
+
+  return out;
 }
 
 val string_extend(val str, val tail)
@@ -1554,6 +1581,16 @@ static val do_curry_123_2(val fcons, val arg2)
 val curry_123_2(val fun3, val arg1, val arg3)
 {
   return func_f1(cons(fun3, cons(arg1, arg3)), do_curry_123_2);
+}
+
+static val do_curry_123_23(val fcons, val arg2, val arg3)
+{
+  return funcall3(car(fcons), cdr(fcons), arg2, arg3);
+}
+
+val curry_123_23(val fun3, val arg1)
+{
+  return func_f2(cons(fun3, arg1), do_curry_123_23);
 }
 
 static val do_chain(val fun1_list, val arg)
