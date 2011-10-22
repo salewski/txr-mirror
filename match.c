@@ -1919,7 +1919,7 @@ static val v_collect(match_files_ctx c, match_files_ctx *cout)
       {
         cons_bind (sym, ul_spec, until_last_spec);
         cons_bind (until_last_bindings, success,
-                   match_files(mf_spec(c, ul_spec)));
+                   match_files(mf_spec_bindings(c, ul_spec, new_bindings)));
 
         if (success) {
           debuglf(spec_linenum, lit("until/last matched ~a:~a"),

@@ -1,5 +1,11 @@
 2011-10-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (v_collect): Regression bugfix. Make it work like the comment
+	says: until/last clause has visibility to uncollated bindings from
+	collect.
+
+2011-10-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	Implementing @(set) directive for assigning to variables
 	destructively.
 
