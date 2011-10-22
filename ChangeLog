@@ -1,8 +1,7 @@
 2011-10-21  Kaz Kylheku  <kaz@kylheku.com>
 
-	* match.c (v_collect): Regression bugfix. Make it work like the comment
-	says: until/last clause has visibility to uncollated bindings from
-	collect.
+	* match.c (v_collect, v_coll): Establish empty list bindings
+	for all :vars in the event that the collect turns up nothing.
 
 	* txr.1: Document behavior.
 
