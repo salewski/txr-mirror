@@ -2144,6 +2144,8 @@ Bind will see that A and B have bindings already, and so compare their
 contents. Since the :upcase filter is specified, both their contents will be
 reduced through it for the purposes of the comparison, rendering them equal.
 
+Of course, compound filters are supported like (:from_html :upcase).
+
 .SS The Set Directive
 
 The @(set) directive resembles bind, but is not a pattern match. It overwrites
@@ -2750,8 +2752,11 @@ The following value keywords are supported:
 
 .IP :filter
 
-The argument is a symbol, which specifies a filter to be applied to the
-variable substitutions occuring within the output clause.
+The argument can be a symbol, which specifies a filter to be applied to
+the variable substitutions occuring within the output clause.
+The argument can also be a list of filter symbols, which specifies
+that multiple filters are to be applied, in left to right order.
+
 See the later sections Output Filtering below, and The Deffilter Directive.
 
 .IP :into
@@ -2788,7 +2793,9 @@ that field, if the width is specified as a positive number, and right-adjusted
 if the width is specified as negative.
 
 An output variable may specify a filter which overrides any filter established
-for the output clause. The syntax for this is @(NAME :filter <filtername>}.
+for the output clause. The syntax for this is @(NAME :filter <filterspec>}.
+The filter specification syntax is the same as in the output clause.
+See Output Filtering below.
 
 .SS The Repeat Directive
 
@@ -2978,6 +2985,21 @@ To filter an individual variable, add the syntax to the variable spec:
   @(output)
   @{x :filter :to_html}
   @(end)
+
+Multiple filters can be applied at the same time. For instance:
+
+  @(output)
+  @{x :filter (:upcase :to_html)}
+  @(end)
+
+This will fold the contents of x to upper case, and then encode any special
+characters into HTML. Beware of combinations that do not make sense.
+For instance, suppose the original text is HTML, containing codes
+like '&quot;'. The compound filter (:upcase :from_html) will not work
+because '&quot;' will turn to '&QUOT;' which no longer be recognized
+by the :from_html filter, because the entity names in HTML codes
+are case-sensitive.
+
 
 .SS The Deffilter Directive
 

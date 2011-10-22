@@ -1,5 +1,20 @@
 2011-10-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	* filter.c (get_filter_trie): Function renamed to get_filter. A filter
+	is not necessarily a trie.
+	(string_filter, compound_filter): New functions.
+	(get_filter): Recognize a compound filters and return a function
+	which implements it.
+
+	* filter.h (get_filter_trie): Declaration renamed.
+
+	* match.c (format_field, v_bind, v_output): Follow get_filter_trie
+	rename. Error message text updated.
+
+	* txr.1: Describe compound filters.
+
+2011-10-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	Task #11474
 
 	* filter.c (filter_equal): New function.
