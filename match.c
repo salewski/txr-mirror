@@ -1002,10 +1002,10 @@ static val format_field(val string_or_list, val modifier, val filter)
     val filter_sym = getplist(plist, filter_k);
 
     if (filter_sym) {
-      filter = get_filter_trie(filter_sym);
+      filter = get_filter(filter_sym);
 
       if (!filter) {
-        uw_throwf(query_error_s, lit("format_field: filter ~s not known"),
+        uw_throwf(query_error_s, lit("format_field: ~s specifies unknown filter"),
                   filter_sym, nao);
       }
     }
@@ -2144,10 +2144,10 @@ static val v_bind(match_files_ctx c, match_files_ctx *cout)
   val filter_sym = getplist(keywords, filter_k);
 
   if (filter_sym) {
-    val filter = get_filter_trie(filter_sym);
+    val filter = get_filter(filter_sym);
 
     if (!filter) {
-      uw_throwf(query_error_s, lit("bind: filter ~s not known"),
+      uw_throwf(query_error_s, lit("bind: ~s specifies unknown filter"),
                 filter_sym, nao);
     }
 
@@ -2239,10 +2239,10 @@ static val v_output(match_files_ctx c, match_files_ctx *cout)
     val filter_sym = cdr(assoc(alist, filter_k));
 
     if (filter_sym) {
-      filter = get_filter_trie(filter_sym);
+      filter = get_filter(filter_sym);
 
       if (!filter)
-        sem_error(spec_linenum, lit("unknown filter ~s"), filter_sym, nao);
+        sem_error(spec_linenum, lit("~s specifies unknown filter"), filter_sym, nao);
     }
   }
 

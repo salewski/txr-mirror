@@ -122,9 +122,28 @@ val trie_lookup_feed_char(val node, val ch)
   return nil;
 }
 
-val get_filter_trie(val sym)
+static val string_filter(val str, val filter)
 {
-  return gethash(filters, sym);
+  return filter_string(filter, str);
+}
+
+static val compound_filter(val filter_list, val string)
+{
+  return reduce_left(func_n2(string_filter), filter_list, string, nil);
+}
+
+val get_filter(val spec)
+{
+  if (consp(spec)) {
+    val filter_list = mapcar(curry_12_2(func_n2(gethash), filters), spec);
+
+    if (memqual(nil, filter_list))
+      return nil;
+
+    return curry_12_2(func_n2(compound_filter), filter_list);
+  }
+
+  return gethash(filters, spec);
 }
 
 struct filter_pair {
