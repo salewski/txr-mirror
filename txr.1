@@ -1753,9 +1753,11 @@ There is one more keyword, :vars, discussed in the following section.
 Normally, any variable for which a new binding occurs in a collect is
 collected. A collect clause may be sloppy: it can neglect to collect some
 variables on some iterations, or bind some variables which behave like
-local temporaries, but end up collated into lists.
+local temporaries, but end up collated into lists. Another issue is that
+the collect clause might not match anything at all, and then none of
+the variables are bound.
 
-The :vars keyword allows the query writer to tame the collect body.
+The :vars keyword allows the query writer to add discipline the collect body.
 
 The argument to :vars is a list of variable specs. A variable spec is either a
 symbol, or a (<symbol> <expression>) pair, where the expression specifies a
@@ -1769,10 +1771,16 @@ Furthermore, for any variable which is not specified with a default value, the
 collect body, whenever it matches successfully, must bind that variable. If it
 neglects to bind the variable, an exception of type query_error is thrown.
 
-For any variable which has a default value, if the collect body neglects to
-bind that variable, the behavior is as if the collect did bind that variable to that default value.
+For any variable which does have a default value, if the collect body neglects
+to bind that variable, the behavior is as if the collect did bind that variable
+to that default value.
 
 The default values are expressions, and so can be quasiliterals.
+
+Lastly, if in the event that the collect does not match anything, the variables
+specified in vars (whether or not they have a default value) are all bound to
+empty lists. (These bindings are established after the processing of the
+until/last clause, if present.)
 
 Example:
 
@@ -1794,6 +1802,19 @@ in the variable list. Furthermore, because there is no binding for c in the
 body, a binding is created with the value "foo", exactly as if c matched
 such a piece of text.
 
+In the following example, the assumption is that THIS NEVER MATCHES
+is not found anywhere in the input but the line THIS DOES MATCH is
+found and has a successor which is bound to a. Because the body did not
+match, the :vars a and b should be bound to empty lists. But a is bound
+by the last clause to some text, so this takes precedence. Only b is bound to a
+an empty list.
+
+  @(collect :vars (a b)
+  THIS NEVER MATCHES
+  @(last)
+  THIS DOES MATCH
+  @a
+  @(end)
 
 .SS The Coll Directive
 

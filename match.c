@@ -776,6 +776,17 @@ next_coll:
     c.bindings = nappend2(last_bindings, c.bindings);
   }
 
+  /* If nothing was collected, but vars were specified,
+     then bind empty lists for the vars. */
+  if (!bindings_coll && vars) {
+    for (iter = vars; iter; iter = cdr(iter)) {
+      val sym = car(car(iter));
+      val exists = assoc(c.bindings, sym);
+      if (!exists)
+        c.bindings = acons(c.bindings, sym, nil);
+    }
+  }
+
   *cout = c;
   return next_spec_k;
 }
@@ -2041,6 +2052,17 @@ next_collect:
   if (last_bindings) {
     c.bindings = set_diff(c.bindings, last_bindings, eq_f, car_f);
     c.bindings = nappend2(last_bindings, c.bindings);
+  }
+
+  /* If nothing was collected, but vars were specified,
+     then bind empty lists for the vars. */
+  if (!bindings_coll && vars) {
+    for (iter = vars; iter; iter = cdr(iter)) {
+      val sym = car(car(iter));
+      val exists = assoc(c.bindings, sym);
+      if (!exists)
+        c.bindings = acons(c.bindings, sym, nil);
+    }
   }
 
   *cout = c;
