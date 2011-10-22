@@ -1,3 +1,29 @@
+2011-10-22  Kaz Kylheku  <kaz@kylheku.com>
+
+	Task #11474
+
+	* filter.c (filter_equal): New function.
+	(upcase_k, downcase_k): New keyword variables.
+	(filter_init): New keyword variables initialized,
+	and new upcase and downcase filters registered.
+
+	* filter.h (filter_equal): Declared.
+
+	* lib.c (tree_find): Takes new argument, the equality test function.
+	(upcase_str, downcase_str): New functions.
+	(do_curry_123_23): New static function.
+	(curry_123_23): New function.
+
+	* lib.h (tree_find): Declaration updated.
+	(upcase_str, downcase_str, curry_123_23): Declared.
+
+	* match.c (dest_bind): Updated to take equality function.
+	Uses it and passes it down to tree_find.
+	(v_bind): Filter feature implemented.
+	(h_var, v_try): Add equal_f to dest_bind argument list.
+
+	* txr.1: Updated to describe new filters and bind arguments.
+
 2011-10-21  Kaz Kylheku  <kaz@kylheku.com>
 
 	* match.c (v_collect, v_coll): Establish empty list bindings

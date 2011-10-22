@@ -264,22 +264,23 @@ static val dest_set(val linenum, val bindings, val pattern, val value)
   return nil;
 }
 
-static val dest_bind(val linenum, val bindings, val pattern, val value)
+static val dest_bind(val linenum, val bindings, val pattern,
+                     val value, val testfun)
 {
   if (symbolp(pattern)) {
     if (bindable(pattern)) {
       val existing = assoc(bindings, pattern);
       if (existing) {
-        if (tree_find(value, cdr(existing)))
+        if (tree_find(value, cdr(existing), testfun))
           return bindings;
-        if (tree_find(cdr(existing), value))
+        if (tree_find(cdr(existing), value, testfun))
           return bindings;
         debugf(lit("bind variable mismatch: ~a"), pattern, nao);
         return t;
       }
       return cons(cons(pattern, value), bindings);
     } else {
-      return equal(pattern, value) ? bindings : t;
+      return funcall2(testfun, pattern, value) ? bindings : t;
     }
   } else if (consp(pattern)) {
     val piter = pattern, viter = value;
@@ -299,7 +300,7 @@ static val dest_bind(val linenum, val bindings, val pattern, val value)
 
     while (consp(piter) && consp(viter))
     {
-      bindings = dest_bind(linenum, bindings, car(piter), car(viter));
+      bindings = dest_bind(linenum, bindings, car(piter), car(viter), testfun);
       if (bindings == t)
         return t;
       piter = cdr(piter);
@@ -307,14 +308,14 @@ static val dest_bind(val linenum, val bindings, val pattern, val value)
     }
 
     if (bindable(piter)) {
-      bindings = dest_bind(linenum, bindings, piter, viter);
+      bindings = dest_bind(linenum, bindings, piter, viter, testfun);
       if (bindings == t)
         return t;
     } else {
-      return equal(piter, viter) ? bindings : t;
+      return funcall2(testfun, piter, viter) ? bindings : t;
     }
     return bindings;
-  } else if (tree_find(value, pattern)) {
+  } else if (tree_find(value, pattern, testfun)) {
     return bindings;
   }
 
@@ -429,7 +430,7 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
       }
 
       if (!tree_find(trim_str(sub_str(c.dataline, c.pos, past)),
-                     cdr(pair)))
+                     cdr(pair), equal_f))
       {
         LOG_MISMATCH("fixed field contents");
         return nil;
@@ -2137,9 +2138,25 @@ static val v_bind(match_files_ctx c, match_files_ctx *cout)
   val args = rest(first_spec);
   val pattern = first(args);
   val form = second(args);
-  val val = eval_form(spec_linenum, form, c.bindings);
+  val keywords = rest(rest(args));
+  val value = eval_form(spec_linenum, form, c.bindings);
+  val testfun = equal_f;
+  val filter_sym = getplist(keywords, filter_k);
 
-  c.bindings = dest_bind(spec_linenum, c.bindings, pattern, cdr(val));
+  if (filter_sym) {
+    val filter = get_filter_trie(filter_sym);
+
+    if (!filter) {
+      uw_throwf(query_error_s, lit("bind: filter ~s not known"),
+                filter_sym, nao);
+    }
+
+    testfun = curry_123_23(func_n3(filter_equal), filter);
+  }
+  
+
+  c.bindings = dest_bind(spec_linenum, c.bindings, pattern,
+                         cdr(value), testfun);
 
   if (c.bindings == t)
     return nil;
@@ -2327,7 +2344,7 @@ static val v_try(match_files_ctx c, match_files_ctx *cout)
 
                 if (value) {
                   c.bindings = dest_bind(spec_linenum, c.bindings, 
-                                       param, cdr(value));
+                                         param, cdr(value), equal_f);
 
                   if (c.bindings == t) {
                     all_bind = nil;
@@ -2629,7 +2646,7 @@ repeat_spec_same_data:
                   val newbind = assoc(new_bindings, param);
                   if (newbind) {
                     c.bindings = dest_bind(spec_linenum, c.bindings, 
-                                         arg, cdr(newbind));
+                                           arg, cdr(newbind), equal_f);
                     if (c.bindings == t) {
                       debuglf(spec_linenum,
                               lit("binding mismatch on ~a "

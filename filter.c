@@ -212,6 +212,13 @@ val filter_string(val filter, val str)
   uw_throwf(error_s, lit("filter_string: invalid filter ~a"), filter, nao);
 }
 
+val filter_equal(val filter, val left, val right)
+{
+  if (stringp(left) && stringp(right))
+    return equal(filter_string(filter, left), filter_string(filter, right));
+  return equal(left, right);
+}
+
 val register_filter(val sym, val table)
 {
   return sethash(filters, sym, build_filter_from_list(table));
@@ -540,6 +547,7 @@ static val html_numeric_handler(val ch)
 
 val filters;
 val filter_k, to_html_k, from_html_k;
+val upcase_k, downcase_k;
 
 void filter_init(void)
 {
@@ -549,6 +557,8 @@ void filter_init(void)
   filter_k = intern(lit("filter"), keyword_package);
   to_html_k = intern(lit("to_html"), keyword_package);
   from_html_k = intern(lit("from_html"), keyword_package);
+  upcase_k = intern(lit("upcase"), keyword_package);
+  downcase_k = intern(lit("downcase"), keyword_package);
   sethash(filters, to_html_k, build_filter(to_html_table, t));
   {
     val trie = build_filter(from_html_table, nil);
@@ -556,4 +566,6 @@ void filter_init(void)
     trie_compress(&trie);
     sethash(filters, from_html_k, trie);
   }
+  sethash(filters, upcase_k, func_n1(upcase_str));
+  sethash(filters, downcase_k, func_n1(downcase_str));
 }
