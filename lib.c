@@ -1541,6 +1541,22 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
   }
 }
 
+val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
+{
+  type_check(fun, FUN);
+
+  switch (fun->f.functype) {
+  case F4:
+    return fun->f.f.f4(fun->f.env, arg1, arg2, arg3, arg4);
+  case N4:
+    return fun->f.f.n4(arg1, arg2, arg3, arg4);
+  default:
+    uw_throwf(error_s, lit("funcall4: wrong number of arguments"));
+  }
+}
+
+
+
 
 val reduce_left(val fun, val list, val init, val key)
 {
@@ -1591,6 +1607,16 @@ static val do_curry_123_23(val fcons, val arg2, val arg3)
 val curry_123_23(val fun3, val arg1)
 {
   return func_f2(cons(fun3, arg1), do_curry_123_23);
+}
+
+static val do_curry_1234_34(val fcons, val arg3, val arg4)
+{
+  return funcall4(car(fcons), car(cdr(fcons)), cdr(cdr(fcons)), arg3, arg4);
+}
+
+val curry_1234_34(val fun4, val arg1, val arg2)
+{
+  return func_f2(cons(fun4, cons(arg1, arg2)), do_curry_1234_34);
 }
 
 static val do_chain(val fun1_list, val arg)
@@ -1646,6 +1672,16 @@ val andf(val first_fun, ...)
   }
 
   return func_f1(out, do_and);
+}
+
+static val do_swap_12_21(val fun, val left, val right)
+{
+  return funcall2(fun, right, left);
+}
+
+val swap_12_21(val fun)
+{
+  return func_f2(fun, do_swap_12_21);
 }
 
 val vector(val alloc)

@@ -1,5 +1,31 @@
 2011-10-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	Task #11474
+
+	* filter.c (filter_equal): Takes two filters instead of one.
+	(lfilt_k, rfilt_k): New keyword variables.
+	(filter_init): New keyword variables initialized.
+
+	* filter.h (filter_equal): Declaration updated.
+	(lfilt_k, rfilt_k): Declared.
+
+	* lib.c (funcall4): New function.
+	(do_curry_1234_34): New static function.
+	(curry_1234_34): New function.
+	(do_swap_12_21): New static function.
+	(swap_12_21): New function.
+
+	* lib.h (funcall4, curry_1234_34, swap_12_21): Declared.
+
+	* match.c (dest_bind): Swap use the function argument swapping
+	combinator when calling tree find such that the value
+	being searched is on the left and pattern material is on the right.
+	(v_bind): Implemented :lfilt and :rfilt.
+
+	* txr.1: Documented :lfilt and :rfilt.
+
+2011-10-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* filter.c (get_filter_trie): Function renamed to get_filter. A filter
 	is not necessarily a trie.
 	(string_filter, compound_filter): New functions.

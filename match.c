@@ -271,7 +271,7 @@ static val dest_bind(val linenum, val bindings, val pattern,
     if (bindable(pattern)) {
       val existing = assoc(bindings, pattern);
       if (existing) {
-        if (tree_find(value, cdr(existing), testfun))
+        if (tree_find(value, cdr(existing), swap_12_21(testfun)))
           return bindings;
         if (tree_find(cdr(existing), value, testfun))
           return bindings;
@@ -315,7 +315,7 @@ static val dest_bind(val linenum, val bindings, val pattern,
       return funcall2(testfun, piter, viter) ? bindings : t;
     }
     return bindings;
-  } else if (tree_find(value, pattern, testfun)) {
+  } else if (tree_find(value, pattern, swap_12_21(testfun))) {
     return bindings;
   }
 
@@ -2141,17 +2141,37 @@ static val v_bind(match_files_ctx c, match_files_ctx *cout)
   val keywords = rest(rest(args));
   val value = eval_form(spec_linenum, form, c.bindings);
   val testfun = equal_f;
-  val filter_sym = getplist(keywords, filter_k);
+  val filter_spec = getplist(keywords, filter_k);
+  val lfilt_spec = getplist(keywords, lfilt_k);
+  val rfilt_spec = getplist(keywords, rfilt_k);
 
-  if (filter_sym) {
-    val filter = get_filter(filter_sym);
+  if (filter_spec && (rfilt_spec || lfilt_spec))
+    uw_throwf(query_error_s, lit("bind: cannot use :filter with :lfilt or :rfilt"), nao);
+
+  if (filter_spec) {
+    val filter = get_filter(filter_spec);
 
     if (!filter) {
       uw_throwf(query_error_s, lit("bind: ~s specifies unknown filter"),
-                filter_sym, nao);
+                filter_spec, nao);
     }
 
-    testfun = curry_123_23(func_n3(filter_equal), filter);
+    testfun = curry_1234_34(func_n4(filter_equal), filter, filter);
+  } else if (rfilt_spec || lfilt_spec) {
+    val rfilt = if3(rfilt_spec, get_filter(rfilt_spec), identity_f);
+    val lfilt = if3(lfilt_spec, get_filter(lfilt_spec), identity_f);
+
+    if (!rfilt) {
+      uw_throwf(query_error_s, lit("bind: ~s specifies unknown filter"),
+                rfilt_spec, nao);
+    }
+
+    if (!lfilt) {
+      uw_throwf(query_error_s, lit("bind: ~s specifies unknown filter"),
+                lfilt_spec, nao);
+    }
+
+    testfun = curry_1234_34(func_n4(filter_equal), lfilt, rfilt);
   }
   
 

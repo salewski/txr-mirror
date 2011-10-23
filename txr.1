@@ -2049,8 +2049,7 @@ Example:
 
 The syntax of the @(bind) directive is:
 
-  @(bind pattern form { keyword value }*)
-
+  @(bind pattern expression { keyword value }*)
 
 The @(bind) directive is a kind of pattern match, which matches one or more
 variables on in the left hand side pattern to the value of a variable on the
@@ -2124,27 +2123,47 @@ keyword symbol object.
 
 .SS Keyword in The Bind Directive
 
-The Bind directive accepts the :filter keyword parameter. This specifies a
-filter for performing a more loose match between the left and right hand side
-objects. In the absence of a filter specification, text is compared verbatim,
-in a case-insensitive manner. If a filter is specified, it is applied to the
-left and right hand side. This has no effect if the left side is an unbound
-variable: no filtering takes place in the stablishment of a binding. It is for
-comparison purposes only.
+The Bind directive accepts these keywords
 
-Example: suppose A contains "abc" and B contains "ABC". The following directive will fail:
+.IP :lfilt
+The argument to :lfilt is a filter specification. When the left side pattern
+contains a binding which is therefore matched against its counterpart from the
+right side expression, the left side is filtered through the filter specified
+by :lfilt for the purposes of the comparison. For example:
 
-  @(bind A B)
+  @(bind "a" "A" :lfilt :upcase)
 
-However, the following will succeed:
+produces a match, since the left side is the same as the right after
+filtering through the :upcase filter.
 
-  @(bind A B :filter :upcase)
+.IP :rfilt
+The argument to :rfilt is a filter specification. The specified filter is
+applied to the right hand side material prior to matching it against
+the left side. The filter is not applied if the left side is a variable
+with no binding. It is only applied to determine a match. Binding takes
+place the unmodified right hand side object.
 
-Bind will see that A and B have bindings already, and so compare their
-contents. Since the :upcase filter is specified, both their contents will be
-reduced through it for the purposes of the comparison, rendering them equal.
+Example, the following produces a match:
 
-Of course, compound filters are supported like (:from_html :upcase).
+  @(bind "A" "a" :rfilt :upcase)
+
+
+.IP :filter
+This keyword is a shorthand to specify both filters to the same value.
+So for instance :filter :upcase is equivalent to :lfilt :upcase :rfilt :upcase.
+
+Of course, compound filters like (:from_html :upcase) are supported with
+all these keywords. The filters apply across arbitrary patterns and nested data.
+
+Example:
+
+  @(bind (a b c) ("A" "B" "C"))
+  @(bind (a b c) (("z" "a") "b" "c") :rfilt :upcase)
+
+Here, the first bind establishes the values for a, b and c, and the second bind
+succeeds, because the value of a matches the second element of the list ("z"
+"a") if it is upcased, and likewise b matches "b" and c matches "c" if these
+are upcased.
 
 .SS The Set Directive
 
