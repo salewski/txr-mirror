@@ -383,6 +383,7 @@ val funcall(val fun);
 val funcall1(val fun, val arg);
 val funcall2(val fun, val arg1, val arg2);
 val funcall3(val fun, val arg1, val arg2, val arg3);
+val funcall4(val fun, val arg1, val arg2, val arg3, val arg4);
 val reduce_left(val fun, val list, val init, val key);
 /* The notation curry_12_2 means take some function f(arg1, arg2) and
    fix a value for argument 1 to create a g(arg2).
@@ -391,8 +392,10 @@ val curry_12_2(val fun2, val arg);
 val curry_12_1(val fun2, val arg2);
 val curry_123_2(val fun3, val arg1, val arg3);
 val curry_123_23(val fun3, val arg1);
+val curry_1234_34(val fun3, val arg1, val arg2);
 val chain(val first_fun, ...);
 val andf(val first_fun, ...);
+val swap_12_21(val fun);
 val vector(val alloc);
 val vec_get_fill(val vec);
 val vec_set_fill(val vec, val fill);
