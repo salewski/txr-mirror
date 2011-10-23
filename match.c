@@ -582,7 +582,8 @@ static val h_skip(match_line_ctx c, match_line_ctx *cout)
   val last_good_result = nil, last_good_pos = nil;
 
   if (!rest(c.specline)) {
-    debuglf(lit("skip to end of line ~a:~a"), c.file, c.data_lineno);
+    debuglf(c.spec_lineno, 
+            lit("skip to end of line ~a:~a"), c.file, c.data_lineno, nao);
     return cons(c.bindings, t);
   }
 

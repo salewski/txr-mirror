@@ -1,3 +1,7 @@
+2011-10-23  Kaz Kylheku  <kaz@kylheku.com>
+
+	* match.c (h_skip): Bugfix: bad agument list in debugf call.
+
 2011-10-22  Kaz Kylheku  <kaz@kylheku.com>
 
 	Task #11474
