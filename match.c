@@ -53,7 +53,7 @@ val mingap_k, maxgap_k, gap_k, mintimes_k, maxtimes_k, times_k;
 val lines_k, chars_k;
 val choose_s, longest_k, shortest_k, greedy_k;
 val vars_k;
-val append_k, into_k, var_k;
+val append_k, into_k, var_k, list_k, string_k;
 
 static val h_directive_table, v_directive_table;
 
@@ -1685,12 +1685,20 @@ static val v_next(match_files_ctx c, match_files_ctx *cout)
     {
       val alist = improper_plist_to_alist(args, list(nothrow_k, nao));
       val from_var = cdr(assoc(alist, var_k));
+      val list_expr = cdr(assoc(alist, list_k));
+      val string_expr = cdr(assoc(alist, string_k));
       val nothrow = cdr(assoc(alist, nothrow_k));
       val eval = eval_form(spec_linenum, source, c.bindings);
       val str = cdr(eval);
 
-      if (!from_var && !source)
+      if (!from_var && !source && !string_expr && !list_expr)
         sem_error(spec_linenum, lit("next: source required before keyword arguments"), nao);
+
+      if ((from_var && string_expr) || (string_expr && list_expr) ||
+          (from_var && list_expr))
+      {
+        sem_error(spec_linenum, lit("next: only one of :var, :list or :string can be specified"), nao);
+      }
 
       if (from_var) {
         val existing = assoc(c.bindings, from_var);
@@ -1705,6 +1713,31 @@ static val v_next(match_files_ctx c, match_files_ctx *cout)
           cons_bind (new_bindings, success,
                      match_files(mf_file_data(c, lit("var"),
                                  flatten(cdr(existing)), num(1))));
+
+          if (success)
+            return cons(new_bindings,
+                        if3(c.data, cons(c.data, c.data_lineno), t));
+          return nil;
+        }
+      } else if (list_expr) {
+        val list_val = cdr(eval_form(spec_linenum, list_expr, c.bindings));
+        cons_bind (new_bindings, success,
+                   match_files(mf_file_data(c, lit("var"),
+                               flatten(list_val), num(1))));
+
+        if (success)
+          return cons(new_bindings,
+                      if3(c.data, cons(c.data, c.data_lineno), t));
+        return nil;
+      } else if (string_expr) {
+        val str_val = cdr(eval_form(spec_linenum, string_expr, c.bindings));
+        if (!stringp(str_val))
+          sem_error(spec_linenum, lit(":string arg ~s evaluated to non-string ~s"), string_expr, str_val, nao);
+
+        {
+          cons_bind (new_bindings, success,
+                     match_files(mf_file_data(c, lit("var"),
+                                 split_str(str_val, lit("\n")), num(1))));
 
           if (success)
             return cons(new_bindings,
@@ -2769,6 +2802,8 @@ static void syms_init(void)
   append_k = intern(lit("append"), keyword_package);
   into_k = intern(lit("into"), keyword_package);
   var_k = intern(lit("var"), keyword_package);
+  list_k = intern(lit("list"), keyword_package);
+  string_k = intern(lit("string"), keyword_package);
 }
 
 static void dir_tables_init(void)
