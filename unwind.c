@@ -38,6 +38,7 @@
 #include "unwind.h"
 
 static uw_frame_t *uw_stack;
+static uw_frame_t *uw_env_stack;
 static uw_frame_t *uw_exit_point;
 static uw_frame_t toplevel_env;
 
@@ -72,6 +73,10 @@ static void uw_unwind_to_exit_point(void)
       /* 1 means unwind only. */
       longjmp(uw_stack->ca.jb, 1);
       abort();
+    case UW_ENV:
+      /* Maintain consistency of unwind stack pointer */
+      uw_env_stack = uw_env_stack->ev.up_env;
+      break;
     default:
       break;
     }
@@ -111,35 +116,33 @@ void uw_push_block(uw_frame_t *fr, val tag)
 
 static uw_frame_t *uw_find_env(void)
 {
-  uw_frame_t *fr;
-
-  for (fr = uw_stack; fr != 0; fr = fr->uw.up) {
-    if (fr->uw.type == UW_ENV)
-      break;
-  }
-
-  return fr ? fr : &toplevel_env;
+  return uw_env_stack ? uw_env_stack : &toplevel_env;
 }
 
 void uw_push_env(uw_frame_t *fr)
 {
   uw_frame_t *prev_env = uw_find_env();
   fr->ev.type = UW_ENV;
-
-  if (prev_env) {
-    fr->ev.func_bindings = copy_alist(prev_env->ev.func_bindings);
-  } else {
-    fr->ev.func_bindings = nil;
-  }
-
+  fr->ev.up_env = prev_env;
+  fr->ev.func_bindings = nil;
   fr->ev.up = uw_stack;
   uw_stack = fr;
+  uw_env_stack = fr;
 }
 
 val uw_get_func(val sym)
 {
-  uw_frame_t *env = uw_find_env();
-  return cdr(assoc(env->ev.func_bindings, sym));
+  uw_frame_t *env;
+
+  for (env = uw_find_env(); env != 0; env = env->ev.up_env) {
+    if (env->ev.func_bindings) {
+      val found = assoc(env->ev.func_bindings, sym);
+      if (found)
+        return cdr(found);
+    }
+  }
+
+  return nil;
 }
 
 val uw_set_func(val sym, val value)
@@ -152,7 +155,11 @@ val uw_set_func(val sym, val value)
 void uw_pop_frame(uw_frame_t *fr)
 {
   assert (fr == uw_stack);
-  uw_stack = uw_stack->uw.up;
+  uw_stack = fr->uw.up;
+  if (fr->uw.type == UW_ENV) {
+    assert (fr == uw_env_stack);
+    uw_env_stack = fr->ev.up_env;
+  }
 }
 
 val uw_block_return(val tag, val result)

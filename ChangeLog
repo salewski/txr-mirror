@@ -1,3 +1,18 @@
+2011-10-24  Kaz Kylheku  <kaz@kylheku.com>
+
+	Turning attention to some plumbing.
+
+	* unwind.c (uw_env_stack): New static variable.
+	(uw_unwind_to_exit_point): Maintain correct uw_env_stack
+	during unwinding.
+	(uw_find_env): Just retrieve the env stack pointer; no search.
+	(uw_push_env): Store a pointer to the previous
+	environmental frame and just initialize the bindings to nil.
+	No need to cons up a copy of the bindings from the previous frame.
+	(uw_get_func): Perform a search through the environment stack.
+
+	* unwind.h (struct uw_dynamic_env): New member, up_env.
+
 2011-10-23  Kaz Kylheku  <kaz@kylheku.com>
 
 	* tests/007/except-1.txr: Use next :list instead

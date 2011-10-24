@@ -49,6 +49,7 @@ struct uw_block {
 struct uw_dynamic_env {
   uw_frame_t *up;
   uw_frtype_t type;
+  uw_frame_t *up_env;
   val func_bindings;
 };
 
