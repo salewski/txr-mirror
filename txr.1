@@ -1090,7 +1090,8 @@ with, or without arguments:
   @(next SOURCE)
   @(next SOURCE :nothrow)
   @(next :args)
-  @(next :var SYMBOL)
+  @(next :list EXPR)
+  @(next :string EXPR)
 
 The lone @(next) without arguments switches to the next file in the
 argument list which was passed to the
@@ -1126,10 +1127,16 @@ open the input source named by that argument. If the very first directive of a q
 avoids opening the first input source, but it does open the input source for
 any other directive, even one which does not consume any data.
 
-The variant @(next :var SYMBOL) treats a the variable named by SYMBOL
-as a source of text. The contents of the variable are flattened to a list as if
-by the @(flatten) directive (but without modifying the variable).
-The resulting list is treated as if it were the lines of a text file.
+The syntax @(next :list EXPR) treats the expression as a source of
+text. The value of the expression is flattened to a list in a way similar
+to the @(flatten) directive.  The resulting list is treated as if it were the
+lines of a text file: each element of the list is a line. If the lines
+happen contain embedded newline characters, they are a visible constituent
+of the line, and do not act as line separators.
+
+The syntax @(next :string EXPR) treats the expression as a source of
+text. The value of the expression must be a string. Newlines in the string are
+interpreted as line terminators.
 
 Note that "remainder of the query" refers to the subquery in which
 the next directive appears, not necessarily the entire query.
@@ -1142,8 +1149,7 @@ previous file again.
   @(some)
   @(next "foo.txt")
   xyz@suffix
-  @(end)
-  abc
+  @(end) abc
 
 However, if the @(some) subquery successfully matched "xyz@suffix" within the
 file foo.text,  there is now a binding for the suffix variable, which
