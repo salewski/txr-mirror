@@ -1,5 +1,11 @@
 2011-10-23  Kaz Kylheku  <kaz@kylheku.com>
 
+	* tests/007/except-1.txr: Use next :list instead
+	of piping from echo command. As a result, this test case should run on
+	MingW.
+
+2011-10-23  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (list_k, string_k): New keyword symbol variables.
 	(v_next): Implement :list and :string keywords.
 	(syms_init): New keyword variables initialized.
