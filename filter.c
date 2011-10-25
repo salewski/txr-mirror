@@ -36,6 +36,10 @@
 #include "filter.h"
 #include "gc.h"
 
+val filters;
+val filter_k, lfilt_k, rfilt_k, to_html_k, from_html_k;
+val upcase_k, downcase_k, fun_k;
+
 static val make_trie(void)
 {
   return make_hash(nil, nil);
@@ -142,7 +146,7 @@ static val function_filter(val functions, val string)
 val get_filter(val spec)
 {
   if (consp(spec)) {
-    if (car(spec) == fun_s) {
+    if (car(spec) == fun_k) {
       return curry_12_2(func_n2(function_filter), rest(spec));
     } else {
       val filter_list = mapcar(func_n1(get_filter), spec);
@@ -575,10 +579,6 @@ static val html_numeric_handler(val ch)
   return func_f1(cons(ch, nil), html_dec_continue);
 }
 
-val filters;
-val filter_k, lfilt_k, rfilt_k, to_html_k, from_html_k;
-val upcase_k, downcase_k;
-
 void filter_init(void)
 {
   protect(&filters, (val *) 0);
@@ -591,6 +591,7 @@ void filter_init(void)
   from_html_k = intern(lit("from_html"), keyword_package);
   upcase_k = intern(lit("upcase"), keyword_package);
   downcase_k = intern(lit("downcase"), keyword_package);
+  fun_k = intern(lit("fun"), keyword_package);
   sethash(filters, to_html_k, build_filter(to_html_table, t));
   {
     val trie = build_filter(from_html_table, nil);
