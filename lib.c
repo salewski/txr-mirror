@@ -1023,12 +1023,21 @@ val search_str_tree(val haystack, val tree, val start_num, val from_end)
     if (result)
       return cons(result, length_str(tree));
   } else if (consp(tree)) {
-    while (tree) {
+    val it = nil, minpos = nil, maxlen = nil;
+
+    for (; tree; tree = cdr(tree)) {
       val result = search_str_tree(haystack, car(tree), start_num, from_end);
-      if (result)
-        return result;
-      tree = cdr(tree);
+      if (result) {
+        cons_bind (pos, len, result);
+        if (!it || lt(pos, minpos) || (eq(pos, minpos) && gt(len, maxlen))) {
+          minpos = pos;
+          maxlen = len;
+          it = result;
+        }
+      }
     }
+
+    return it;
   }
 
   return nil;

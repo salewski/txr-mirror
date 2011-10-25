@@ -1,5 +1,14 @@
 2011-10-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	Bugs #34641, #34629.
+
+	* lib.c (search_str_tree): If multiple strings from the needle tree
+	matching within within the haystack string, then take the leftmost
+	match. If there are multiple matches at the same leftmost position,
+	take the longest one.
+
+2011-10-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	* filter.c (function_filter): New function.
 	(get_filter): Handle (fun ...) syntax.
 
