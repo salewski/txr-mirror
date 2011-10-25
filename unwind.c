@@ -125,6 +125,7 @@ void uw_push_env(uw_frame_t *fr)
   fr->ev.type = UW_ENV;
   fr->ev.up_env = prev_env;
   fr->ev.func_bindings = nil;
+  fr->ev.match_context = nil;
   fr->ev.up = uw_stack;
   uw_stack = fr;
   uw_env_stack = fr;
@@ -150,6 +151,19 @@ val uw_set_func(val sym, val value)
   uw_frame_t *env = uw_find_env();
   env->ev.func_bindings = acons_new(env->ev.func_bindings, sym, value);
   return value;
+}
+
+val uw_get_match_context(void)
+{
+  uw_frame_t *env = uw_find_env();
+  return env->ev.match_context;
+}
+
+val uw_set_match_context(val context)
+{
+  uw_frame_t *env = uw_find_env();
+  env->ev.match_context = context;
+  return context;
 }
 
 void uw_pop_frame(uw_frame_t *fr)

@@ -1073,7 +1073,8 @@ This directive is used for defining named filters, which are useful
 for filtering variable substitutions in output blocks. Filters are useful
 when data must be translated between different representations that
 have different special characters or other syntax, requiring escaping
-or similar treatment.
+or similar treatment. Note that it is also possible to use a function
+as a filter. See Function Filters below.
 
 .PP
 
@@ -2153,10 +2154,11 @@ Example, the following produces a match:
 
   @(bind "A" "a" :rfilt :upcase)
 
-
 .IP :filter
 This keyword is a shorthand to specify both filters to the same value.
 So for instance :filter :upcase is equivalent to :lfilt :upcase :rfilt :upcase.
+
+For a description of filters, see Output Filtering below.
 
 Of course, compound filters like (:from_html :upcase) are supported with
 all these keywords. The filters apply across arbitrary patterns and nested data.
@@ -3025,6 +3027,46 @@ because '&quot;' will turn to '&QUOT;' which no longer be recognized
 by the :from_html filter, because the entity names in HTML codes
 are case-sensitive.
 
+Instead of a filter name, the syntax (fun NAME) can be used. This
+denotes that the function called NAME is to be used as a filter.
+This is discussed in the next section Function Filters below.
+
+.SS Function Filters
+
+A function can be used as a filter. For this to be possible, the function must
+conform to certain rules:
+
+.IP 1.
+The function must take exactly two arguments. 
+
+.IP 2.
+When the function is called, the first argument will be bound to a string,
+and the second argument will be unbound. The function must produce a string
+value by binding it to the second argument.
+
+For instance, the following is a valid filter function:
+
+  @(define foo_to_bar (in out)
+  @  (next :string in)
+  @  (cases)
+  foo
+  @    (bind out "bar")
+  @  (or)
+  @    (bind out in)
+  @  (end)
+  @(end)
+
+This function binds the out parameter to "bar" if the in parameter
+is "foo", otherwise it binds the out parameter to a copy of the in parameter.
+This is a simple filter.
+
+To use the filter, use the syntax (fun foo_to_bar) in place of a filter name. 
+For instance in the bind directive:
+
+  @(bind "foo" "bar" :lfilt (fun foo_to_bar))
+
+The above should succeed since the left side is filtered from "foo"
+to "bar", so that there is a match.
 
 .SS The Deffilter Directive
 

@@ -51,6 +51,7 @@ struct uw_dynamic_env {
   uw_frtype_t type;
   uw_frame_t *up_env;
   val func_bindings;
+  val match_context;
 };
 
 struct uw_catch {
@@ -75,6 +76,8 @@ void uw_push_block(uw_frame_t *, val tag);
 void uw_push_env(uw_frame_t *);
 val uw_get_func(val sym);
 val uw_set_func(val sym, val value);
+val uw_get_match_context(void);
+val uw_set_match_context(val context);
 val uw_block_return(val tag, val result);
 void uw_push_catch(uw_frame_t *, val matches);
 noreturn val uw_throw(val sym, val exception);
