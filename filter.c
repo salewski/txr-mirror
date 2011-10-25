@@ -32,6 +32,7 @@
 #include "lib.h"
 #include "hash.h"
 #include "unwind.h"
+#include "match.h"
 #include "filter.h"
 #include "gc.h"
 
@@ -132,15 +133,25 @@ static val compound_filter(val filter_list, val string)
   return reduce_left(func_n2(string_filter), filter_list, string, nil);
 }
 
+static val function_filter(val functions, val string)
+{
+  return reduce_left(swap_12_21(func_n2(match_funcall)),
+                     functions, string, nil);
+}
+
 val get_filter(val spec)
 {
   if (consp(spec)) {
-    val filter_list = mapcar(curry_12_2(func_n2(gethash), filters), spec);
+    if (car(spec) == fun_s) {
+      return curry_12_2(func_n2(function_filter), rest(spec));
+    } else {
+      val filter_list = mapcar(func_n1(get_filter), spec);
 
-    if (memqual(nil, filter_list))
-      return nil;
+      if (memqual(nil, filter_list))
+	return nil;
 
-    return curry_12_2(func_n2(compound_filter), filter_list);
+      return curry_12_2(func_n2(compound_filter), filter_list);
+    }
   }
 
   return gethash(filters, spec);

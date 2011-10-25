@@ -2208,9 +2208,13 @@ static val v_bind(match_files_ctx c, match_files_ctx *cout)
     testfun = curry_1234_34(func_n4(filter_equal), lfilt, rfilt);
   }
   
+  uw_env_begin;
+  uw_set_match_context(cons(c.spec, c.bindings));
 
   c.bindings = dest_bind(spec_linenum, c.bindings, pattern,
                          cdr(value), testfun);
+
+  uw_env_end;
 
   if (c.bindings == t)
     return nil;
@@ -2310,7 +2314,10 @@ static val v_output(match_files_ctx c, match_files_ctx *cout)
         sem_error(spec_linenum, lit(":into requires a variable, not ~s"), into_var, nao);
 
       debugf(lit("opening string list stream"), nao);
+      uw_env_begin;
+      uw_set_match_context(cons(c.spec, c.bindings));
       do_output(c.bindings, specs, filter, stream);
+      uw_env_end;
 
       {
         val existing = assoc(c.bindings, into_var);
@@ -2348,7 +2355,10 @@ static val v_output(match_files_ctx c, match_files_ctx *cout)
     }
   } else {
     val stream = complex_stream(fp, dest);
+    uw_env_begin;
+    uw_set_match_context(cons(c.spec, c.bindings));
     do_output(c.bindings, specs, filter, stream);
+    uw_env_end;
     close_stream(stream, t);
   }
 
@@ -2574,6 +2584,102 @@ static val v_eof(match_files_ctx c, match_files_ctx *cout)
   return next_spec_k;
 }
 
+static val v_fun(match_files_ctx c, match_files_ctx *cout)
+{
+  spec_bind (specline, spec_linenum, first_spec, c.spec);
+  val sym = first(first_spec);
+  val func = uw_get_func(sym);
+
+  if (func) {
+    val args = rest(first_spec);
+    val params = car(func);
+    val ub_p_a_pairs = nil;
+    val body = cdr(func);
+    val piter, aiter;
+    val bindings_cp = copy_alist(c.bindings);
+
+    if (!equal(length(args), length(params)))
+      sem_error(spec_linenum, lit("function ~a takes ~a argument(s)"),
+                sym, length(params), nao);
+
+    for (piter = params, aiter = args; piter;
+         piter = cdr(piter), aiter = cdr(aiter))
+    {
+      val param = car(piter);
+      val arg = car(aiter);
+
+      if (arg && bindable(arg)) {
+        val val = assoc(c.bindings, arg);
+        if (val) {
+          bindings_cp = acons_new(bindings_cp,
+                                  param,
+                                  cdr(val));
+        } else {
+          bindings_cp = alist_nremove1(bindings_cp, param);
+          ub_p_a_pairs = cons(cons(param, arg), ub_p_a_pairs);
+        }
+      } else {
+        val val = eval_form(spec_linenum, arg, c.bindings);
+        bindings_cp = acons_new(bindings_cp, param, cdr(val));
+      }
+    }
+
+    {
+      uw_block_begin(nil, result);
+      uw_env_begin;
+      result = match_files(mf_spec_bindings(c, body, bindings_cp));
+      uw_env_end;
+      uw_block_end;
+
+      if (!result) {
+        debuglf(spec_linenum, lit("function failed"), nao);
+        return nil;
+      }
+
+      {
+        cons_bind (new_bindings, success, result);
+
+        for (piter = ub_p_a_pairs; piter; piter = cdr(piter))
+        {
+          cons_bind (param, arg, car(piter));
+
+          if (symbolp(arg)) {
+            val newbind = assoc(new_bindings, param);
+            if (newbind) {
+              c.bindings = dest_bind(spec_linenum, c.bindings, 
+                                     arg, cdr(newbind), equal_f);
+              if (c.bindings == t) {
+                debuglf(spec_linenum,
+                        lit("binding mismatch on ~a "
+                            "when returning from ~a"), arg, sym, nao);
+                return nil;
+              }
+            }
+          }
+        }
+
+        if (consp(success)) {
+          debuglf(spec_linenum,
+                  lit("function matched; "
+                      "advancing from line ~a to ~a"),
+                  c.data_lineno, cdr(success), nao);
+          c.data = car(success);
+          c.data_lineno = cdr(success);
+        } else {
+          debuglf(spec_linenum, lit("function consumed entire file"),
+                  nao);
+          c.data = nil;
+        }
+      }
+    }
+
+    *cout = c;
+    return next_spec_k;
+  }
+
+  return decline_k;
+}
+
 static val match_files(match_files_ctx c)
 {
   gc_hint(c.data);
@@ -2641,95 +2747,18 @@ repeat_spec_same_data:
           return result;
         }
       } else {
-        val func = uw_get_func(sym);
+        match_files_ctx nc;
+        val result = v_fun(c, &nc);
 
-        if (func) {
-          val args = rest(first_spec);
-          val params = car(func);
-          val ub_p_a_pairs = nil;
-          val body = cdr(func);
-          val piter, aiter;
-          val bindings_cp = copy_alist(c.bindings);
-
-          if (!equal(length(args), length(params)))
-            sem_error(spec_linenum, lit("function ~a takes ~a argument(s)"),
-                      sym, length(params), nao);
-
-          for (piter = params, aiter = args; piter;
-               piter = cdr(piter), aiter = cdr(aiter))
-          {
-            val param = car(piter);
-            val arg = car(aiter);
-
-            if (arg && bindable(arg)) {
-              val val = assoc(c.bindings, arg);
-              if (val) {
-                bindings_cp = acons_new(bindings_cp,
-                                        param,
-                                        cdr(val));
-              } else {
-                bindings_cp = alist_nremove1(bindings_cp, param);
-                ub_p_a_pairs = cons(cons(param, arg), ub_p_a_pairs);
-              }
-            } else {
-              val val = eval_form(spec_linenum, arg, c.bindings);
-              bindings_cp = acons_new(bindings_cp, param, cdr(val));
-            }
-          }
-
-          {
-            uw_block_begin(nil, result);
-            uw_env_begin;
-            result = match_files(mf_spec_bindings(c, body, bindings_cp));
-            uw_env_end;
-            uw_block_end;
-
-            if (!result) {
-              debuglf(spec_linenum, lit("function failed"), nao);
-              return nil;
-            }
-
-            {
-              cons_bind (new_bindings, success, result);
-
-              for (piter = ub_p_a_pairs; piter; piter = cdr(piter))
-              {
-                cons_bind (param, arg, car(piter));
-
-                if (symbolp(arg)) {
-                  val newbind = assoc(new_bindings, param);
-                  if (newbind) {
-                    c.bindings = dest_bind(spec_linenum, c.bindings, 
-                                           arg, cdr(newbind), equal_f);
-                    if (c.bindings == t) {
-                      debuglf(spec_linenum,
-                              lit("binding mismatch on ~a "
-                                  "when returning from ~a"), arg, sym, nao);
-                      return nil;
-                    }
-                  }
-                }
-              }
-
-              if (consp(success)) {
-                debuglf(spec_linenum,
-                        lit("function matched; "
-                            "advancing from line ~a to ~a"),
-                        c.data_lineno, cdr(success), nao);
-                c.data = car(success);
-                c.data_lineno = cdr(success);
-              } else {
-                debuglf(spec_linenum, lit("function consumed entire file"),
-                        nao);
-                c.data = nil;
-              }
-            }
-          }
-
+        if (result == next_spec_k) {
+          c = nc;  
           if ((c.spec = rest(c.spec)) == nil)
             break;
-
           goto repeat_spec_same_data;
+        } else if (result == decline_k) {
+          /* go on to other processing below */
+        } else {
+          return result;
         }
       }
     }
@@ -2758,6 +2787,36 @@ repeat_spec_same_data:
   }
 
   return cons(c.bindings, if3(c.data, cons(c.data, c.data_lineno), t));
+}
+
+val match_funcall(val name, val arg)
+{
+  cons_bind (in_spec, in_bindings, uw_get_match_context());
+  spec_bind (specline, spec_linenum, first_spec, in_spec);
+  val arg1_sym = make_sym(lit("arg1")), arg2_sym = make_sym(lit("arg2"));
+  val bindings = cons(cons(arg1_sym, arg), in_bindings);
+  val spec = cons(list(spec_linenum, 
+                       list(name, arg1_sym, arg2_sym, nao), nao), nil);
+  match_files_ctx nc;
+  (void) first_spec;
+
+  val ret = v_fun(mf_all(spec, nil, bindings, nil, num(0)), &nc);
+
+  if (ret == nil)
+    sem_error(spec_linenum, lit("filter: (~s ~s ~s) failed"), name,
+              arg, arg2_sym, nao);
+
+  if (ret == decline_k)
+    sem_error(spec_linenum, lit("filter: function ~s not found"), name, nao);
+
+  {
+    val out = assoc(nc.bindings, arg2_sym);
+    if (!out)
+      sem_error(spec_linenum,
+                lit("filter: (~s ~s ~s) did not bind ~s"), name,
+                arg, arg2_sym, arg2_sym, nao);
+    return cdr(out);
+  }
 }
 
 int extract(val spec, val files, val predefined_bindings)

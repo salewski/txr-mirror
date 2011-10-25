@@ -1,5 +1,28 @@
 2011-10-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	* filter.c (function_filter): New function.
+	(get_filter): Handle (fun ...) syntax.
+
+	* match.c (v_bind): Establish dynamic environment frame around
+	dest_bind, and stash the bindings there so filters can have access 
+	to the bindings.
+	(v_output): Likewise, around do_output calls.
+	(v_fun): New function.
+	(match_files): Function handling broken out into v_fun.
+	(match_funcall): New function.
+
+	* match.h (match_funcall): Declared.
+
+	* unwind.c (uw_push_env): Initialize match_context.
+	(uw_get_match_context, uw_set_match_context): New functions.
+
+	* unwind.h (struct uw_dynamic_env): New member, match_context.
+	(uw_get_match_context, uw_set_match_context): Declared.
+
+	* txr.1: Documented function filters.
+
+2011-10-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	Turning attention to some plumbing.
 
 	* unwind.c (uw_env_stack): New static variable.
