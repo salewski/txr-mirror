@@ -93,7 +93,7 @@ static val parsed_spec;
 %left '|' '/'
 %left '&' 
 %right '~' '*' '?' '+' '%'
-%right '.' '\\' REGCHAR LITCHAR
+%right '.' REGCHAR LITCHAR
 
 %%
 
