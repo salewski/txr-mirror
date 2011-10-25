@@ -1,3 +1,8 @@
+2011-10-25  Kaz Kylheku  <kaz@kylheku.com>
+
+	* match.c (v_bind): Use sem_error to throw errors with line number
+	info.
+
 2011-10-24  Kaz Kylheku  <kaz@kylheku.com>
 
 	Bugs #34641, #34629.
