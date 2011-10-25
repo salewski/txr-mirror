@@ -3060,13 +3060,20 @@ This function binds the out parameter to "bar" if the in parameter
 is "foo", otherwise it binds the out parameter to a copy of the in parameter.
 This is a simple filter.
 
-To use the filter, use the syntax (fun foo_to_bar) in place of a filter name. 
+To use the filter, use the syntax (:fun foo_to_bar) in place of a filter name. 
 For instance in the bind directive:
 
-  @(bind "foo" "bar" :lfilt (fun foo_to_bar))
+  @(bind "foo" "bar" :lfilt (:fun foo_to_bar))
 
 The above should succeed since the left side is filtered from "foo"
 to "bar", so that there is a match.
+
+Of course, function filters can be used in a chain:
+
+  @(output :filter (:downcase (:fun foo_to_bar) :upcase))
+  ...
+  @(end)
+
 
 .SS The Deffilter Directive
 
