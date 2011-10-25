@@ -55,6 +55,8 @@ val choose_s, longest_k, shortest_k, greedy_k;
 val vars_k;
 val append_k, into_k, var_k, list_k, string_k;
 
+val filter_s;
+
 static val h_directive_table, v_directive_table;
 
 static void debugf(val fmt, ...)
@@ -2570,6 +2572,38 @@ static val v_deffilter(match_files_ctx c, match_files_ctx *cout)
   return next_spec_k;
 }
 
+static val v_filter(match_files_ctx c, match_files_ctx *cout)
+{
+  spec_bind (specline, spec_linenum, first_spec, c.spec);
+  val filter_spec = second(first_spec);
+  val vars = rest(rest(first_spec));
+  val filter = get_filter(filter_spec);
+
+  if (!filter)
+    sem_error(spec_linenum, lit("~s specifies unknown filter"), filter_spec, nao);
+
+  uw_env_begin;
+  uw_set_match_context(cons(c.spec, c.bindings));
+
+  for (; vars; vars = cdr(vars)) {
+    val var = car(vars);
+    val existing = assoc(c.bindings, var);
+
+    if (!bindable(var))
+      sem_error(spec_linenum, lit("filter: ~a is not a variable name"), 
+                var, nao);
+
+    if (!existing)
+      sem_error(spec_linenum, lit("filter: variable ~a is unbound"), var, nao);
+
+    *cdr_l(existing) = filter_string(filter, cdr(existing));
+  }
+
+  uw_env_end;
+  *cout = c;
+  return next_spec_k;
+}
+
 static val v_eof(match_files_ctx c, match_files_ctx *cout)
 {
   if (c.data) {
@@ -2859,6 +2893,8 @@ static void syms_init(void)
   var_k = intern(lit("var"), keyword_package);
   list_k = intern(lit("list"), keyword_package);
   string_k = intern(lit("string"), keyword_package);
+
+  filter_s = intern(lit("filter"), user_package);
 }
 
 static void dir_tables_init(void)
@@ -2895,6 +2931,7 @@ static void dir_tables_init(void)
   sethash(v_directive_table, defex_s, cptr((mem_t *) v_defex));
   sethash(v_directive_table, throw_s, cptr((mem_t *) v_throw));
   sethash(v_directive_table, deffilter_s, cptr((mem_t *) v_deffilter));
+  sethash(v_directive_table, filter_s, cptr((mem_t *) v_filter));
   sethash(v_directive_table, eof_s, cptr((mem_t *) v_eof));
 
   sethash(h_directive_table, var_s, cptr((mem_t *) h_var));
