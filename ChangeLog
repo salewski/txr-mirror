@@ -1,5 +1,23 @@
 2011-10-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	Shorthand for filters which map multiple texts to a common
+	replacement text.
+
+	* filter.c (build_filter_from_list): Allow tuples to denote
+	multiple keys mapping to the same value.
+
+	* lib.c (do_curry_123_2, do_curry_123_1): New static functions.
+	(curry_123_2, curry_123_1): New functions.
+
+	* lib.h (curry_123_2, curry_123_1): New functions declared.
+
+	* match.c (v_deffilter): Allow tuples of strings rather than
+	just pairs.
+
+	* txr.1: Updated.
+
+2011-10-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.y: Remove mention of nonexistent terminal \\ 
 	from %right associativity clause.
 

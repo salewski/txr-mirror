@@ -3124,23 +3124,37 @@ This directive's syntax is illustrated in this example:
 
 
 The deffilter symbol must be followed by the name of the filter to be defined,
-followed by pairs of strings. Each pair specifies a piece of text to be
-filtered from the left hand side to the right hand side.  
+followed by tuples of strings. Each tuple specifies one or more texts
+which are mapped to a replacement text. For instance, the following specifies
+a telephone keypad mapping from upper case letters to digits.
+ 
+  @(deffilter alpha_to_phone ("E" "0") 
+                             ("J" "N" "Q" "1")
+                             ("R" "W" "X" "2")
+                             ("D" "S" "Y" "3")
+                             ("F" "T" "4")
+                             ("A" "M" "5")
+                             ("C" "I" "V" "6")
+                             ("B" "K" "U" "7")
+                             ("L" "O" "P" "8")
+                             ("G" "H" "Z" "9"))
 
 Filtering works using a longest match algorithm. The input is scanned from left
 to right, and the longest piece of text is identified at every character
 position which matches a string on the left hand side, and that text is
-replaced with the right hand string. 
+replaced with its associated replacement text. The scanning then continues
+at the first character after the matched text.
 
 If none of the strings matches at a given character position, then that
-character is passed through untranslated, and the scan continues at the next
-character in the input.
+character is passed through the filter untranslated, and the scan continues at
+the next character in the input.
 
-If a filter definition accidentally
-contains two or more repetitions of the same left hand string with different
-right hand translations, the later ones take precedence. No warning is issued.
+Filtering is not in-place but rather instantiates a new text, and so
+replacement text is not re-scanned for more replacements.
 
-
+If a filter definition accidentally contains two or more repetitions of the
+same left hand string with different right hand translations, the later ones
+take precedence. No warning is issued.
 
 
 .SH EXCEPTIONS

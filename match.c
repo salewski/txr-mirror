@@ -2555,18 +2555,14 @@ static val v_deffilter(match_files_ctx c, match_files_ctx *cout)
 
   if (!all_satisfy(table, andf(func_n1(listp), 
                                chain(func_n1(length),
-                                     curry_12_2(func_n2(eq), two),
-                                     nao),
-                               chain(func_n1(first),
-                                     func_n1(stringp), 
-                                     nao),
-                               chain(func_n1(second),
-                                     func_n1(stringp), 
-                                     nao), 
+                                     curry_12_1(func_n2(ge), two), nao),
+                               chain(func_n1(rest),
+                                     curry_123_1(func_n3(all_satisfy), 
+                                                 func_n1(stringp), nil), nao),
                                nao),
                             nil))
     sem_error(spec_linenum, 
-              lit("deffilter arguments must be string pairs"),
+              lit("deffilter arguments must be lists of at least two strings"),
               nao);
   register_filter(sym, table);
   /* TODO: warn about replaced filter. */
