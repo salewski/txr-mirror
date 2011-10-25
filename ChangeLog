@@ -1,5 +1,9 @@
 2011-10-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	dep.mk: Regenerated.
+
+2011-10-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	Shorthand for filters which map multiple texts to a common
 	replacement text.
 
