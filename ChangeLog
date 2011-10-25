@@ -1,5 +1,14 @@
 2011-10-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (filter_s): New symbol variable.
+	(v_filter): New function.
+	(syms_init): New symbol variable initialized.
+	(dir_tables_init): New function entered into table.
+
+	* txr.1: Documented new filter directive.
+
+2011-10-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	dep.mk: Regenerated.
 
 2011-10-25  Kaz Kylheku  <kaz@kylheku.com>

@@ -1076,6 +1076,10 @@ have different special characters or other syntax, requiring escaping
 or similar treatment. Note that it is also possible to use a function
 as a filter. See Function Filters below.
 
+.IP @(filter)
+The filder directive passes one or more variables through a given
+filter or chain or filters, updating them with the filtered values.
+
 .PP
 
 .SS The Next Directive
@@ -3155,6 +3159,20 @@ replacement text is not re-scanned for more replacements.
 If a filter definition accidentally contains two or more repetitions of the
 same left hand string with different right hand translations, the later ones
 take precedence. No warning is issued.
+
+
+.SS The Filter Directive
+
+The syntax of the filter directive is:
+
+  @(filter FILTER { VAR }+ }
+
+A filter is specified, followed by one or more variables whose values
+are filtered and stored back into each variable.
+
+Example: convert a, b, and c to upper case and HTML encode:
+
+  @(filter (:upcase :to_html) a b c)
 
 
 .SH EXCEPTIONS
