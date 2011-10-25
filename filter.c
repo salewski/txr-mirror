@@ -184,8 +184,8 @@ static val build_filter_from_list(val list)
   val iter;
 
   for (iter = list; iter; iter = cdr(iter)) {
-    val pair = car(iter);
-    trie_add(trie, first(pair), second(pair));
+    val tuple = reverse(car(iter));
+    mapcar(curry_123_2(func_n3(trie_add), trie, first(tuple)), rest(tuple));
   }
 
   trie_compress(&trie);

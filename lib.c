@@ -1598,6 +1598,16 @@ val curry_12_1(val fun2, val arg2)
   return func_f1(cons(fun2, arg2), do_curry_12_1);
 }
 
+static val do_curry_123_3(val fcons, val arg3)
+{
+  return funcall3(car(fcons), car(cdr(fcons)), cdr(cdr(fcons)), arg3);
+}
+
+val curry_123_3(val fun3, val arg1, val arg2)
+{
+  return func_f1(cons(fun3, cons(arg1, arg2)), do_curry_123_3);
+}
+
 static val do_curry_123_2(val fcons, val arg2)
 {
   return funcall3(car(fcons), car(cdr(fcons)), arg2, cdr(cdr(fcons)));
@@ -1606,6 +1616,16 @@ static val do_curry_123_2(val fcons, val arg2)
 val curry_123_2(val fun3, val arg1, val arg3)
 {
   return func_f1(cons(fun3, cons(arg1, arg3)), do_curry_123_2);
+}
+
+static val do_curry_123_1(val fcons, val arg1)
+{
+  return funcall3(car(fcons), arg1, car(cdr(fcons)), cdr(cdr(fcons)));
+}
+
+val curry_123_1(val fun3, val arg2, val arg3)
+{
+  return func_f1(cons(fun3, cons(arg2, arg3)), do_curry_123_1);
 }
 
 static val do_curry_123_23(val fcons, val arg2, val arg3)
