@@ -1,5 +1,10 @@
 2011-10-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.y: Remove mention of nonexistent terminal \\ 
+	from %right associativity clause.
+
+2011-10-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	* filter.c (fun_k): New keyword variable.
 	(function_filter): Use :fun keyword symbol instead of fun.
 	(filter_init): New keyword variable initialized.
