@@ -1,5 +1,13 @@
 2011-10-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* filter.c (fun_k): New keyword variable.
+	(function_filter): Use :fun keyword symbol instead of fun.
+	(filter_init): New keyword variable initialized.
+
+	* filter.h (upcase_k, downcase_k, fun_k): Declared.
+
+2011-10-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (v_bind): Use sem_error to throw errors with line number
 	info.
 
