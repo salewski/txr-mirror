@@ -2180,13 +2180,13 @@ static val v_bind(match_files_ctx c, match_files_ctx *cout)
   val rfilt_spec = getplist(keywords, rfilt_k);
 
   if (filter_spec && (rfilt_spec || lfilt_spec))
-    uw_throwf(query_error_s, lit("bind: cannot use :filter with :lfilt or :rfilt"), nao);
+    sem_error(spec_linenum, lit("bind: cannot use :filter with :lfilt or :rfilt"), nao);
 
   if (filter_spec) {
     val filter = get_filter(filter_spec);
 
     if (!filter) {
-      uw_throwf(query_error_s, lit("bind: ~s specifies unknown filter"),
+      sem_error(spec_linenum, lit("bind: ~s specifies unknown filter"),
                 filter_spec, nao);
     }
 
@@ -2196,12 +2196,12 @@ static val v_bind(match_files_ctx c, match_files_ctx *cout)
     val lfilt = if3(lfilt_spec, get_filter(lfilt_spec), identity_f);
 
     if (!rfilt) {
-      uw_throwf(query_error_s, lit("bind: ~s specifies unknown filter"),
+      sem_error(spec_linenum, lit("bind: ~s specifies unknown filter"),
                 rfilt_spec, nao);
     }
 
     if (!lfilt) {
-      uw_throwf(query_error_s, lit("bind: ~s specifies unknown filter"),
+      sem_error(spec_linenum, lit("bind: ~s specifies unknown filter"),
                 lfilt_spec, nao);
     }
 
