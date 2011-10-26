@@ -1,3 +1,11 @@
+2011-10-26  Kaz Kylheku  <kaz@kylheku.com>
+
+	Fixed lame @(cat) directive, without obsolescence phase.
+
+	* match.c (v_cat): Rewritten.
+
+	* txr.1: Documented.
+
 2011-10-25  Kaz Kylheku  <kaz@kylheku.com>
 
 	* configure: put in set -u to trap unbound variables, 

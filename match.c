@@ -2242,25 +2242,24 @@ static val v_set(match_files_ctx c, match_files_ctx *cout)
 static val v_cat(match_files_ctx c, match_files_ctx *cout)
 {
   spec_bind (specline, spec_linenum, first_spec, c.spec);
-  val iter;
+  val sym = second(first_spec);
+  val sep_form = third(first_spec);
 
-  for (iter = rest(first_spec); iter; iter = rest(iter)) {
-    val sym = first(iter);
+  if (rest(specline))
+    sem_error(spec_linenum, lit("cat: obsolete syntax"));
 
-    if (!bindable(sym)) {
-      sem_error(spec_linenum,
-                lit("cat: ~s is not a bindable symbol"), sym, nao);
+  if (!bindable(sym)) {
+    sem_error(spec_linenum,
+              lit("cat: ~s is not a bindable symbol"), sym, nao);
+  } else {
+    val existing = assoc(c.bindings, sym);
+    if (existing) {
+      val sep = if3(sep_form, 
+                    cdr(eval_form(spec_linenum, sep_form, c.bindings)),
+                    lit(" "));
+      *cdr_l(existing) = cat_str(flatten(cdr(existing)), sep);
     } else {
-      val existing = assoc(c.bindings, sym);
-      val sep = nil;
-
-      if (rest(specline)) {
-        val sub = subst_vars(rest(specline), c.bindings, nil);
-        sep = cat_str(sub, nil);
-      }
-
-      if (existing)
-        *cdr_l(existing) = cat_str(flatten(cdr(existing)), sep);
+      sem_error(spec_linenum, lit("cat: unbound variable ~s"), sym, nao);
     }
   }
 

@@ -2043,15 +2043,17 @@ levels of nesting such that elements are at the appropriate depth.
 .SS The Cat Directive
 
 The @(cat) directive converts a list variable into a single
-piece of text. Optionally, a separating piece of text can be inserted
-in between the elements. This piece is written to the right of
-the @(cat) directive, and spans to the end of the line. It may
-contain variable substitutions.
+piece of text. The syntax is:
+
+ @(cat VAR [ SEP ])
+
+The SEP argument specifies a separating piece of text. If no separator
+is specified, then a single space is used.
 
 Example:
 
   pattern:      @(coll)@{a /[^ ]+/}@(end)
-                @(cat a):
+                @(cat a ":")
   data:         1 2 3 4 5
   result:       a="1:2:3:4:5"
 
