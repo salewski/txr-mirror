@@ -40,6 +40,7 @@ val get_line(val);
 val get_char(val);
 val get_byte(val);
 val vformat(val stream, val string, va_list);
+val vformat_to_string(val string, va_list);
 val format(val stream, val string, ...);
 val put_string(val stream, val string);
 val put_line(val stream, val string);

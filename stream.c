@@ -998,8 +998,16 @@ toobig:
   internal_error("ridiculous precision or field width in format");
 }
 
+val vformat_to_string(val fmtstr, va_list vl)
+{
+  val stream = make_string_output_stream();
+  (void) vformat(stream, fmtstr, vl);
+  return get_string_from_stream(stream);
+}
+
 val format(val stream, val str, ...)
 {
+  val st = or2(stream, make_string_output_stream());
   type_check (stream, COBJ);
   type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
                                              stream, nao));
@@ -1008,9 +1016,9 @@ val format(val stream, val str, ...)
     va_list vl;
     val ret;
     va_start (vl, str);
-    ret = vformat(stream, str, vl);
+    ret = vformat(st, str, vl);
     va_end (vl);
-    return ret;
+    return (stream) ? ret : get_string_from_stream(st);
   }
 }
 
