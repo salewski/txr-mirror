@@ -2819,14 +2819,17 @@ repeat_spec_same_data:
   return cons(c.bindings, if3(c.data, cons(c.data, c.data_lineno), t));
 }
 
-val match_funcall(val name, val arg)
+val match_funcall(val name, val arg, val other_args)
 {
   cons_bind (in_spec, in_bindings, uw_get_match_context());
   spec_bind (specline, spec_linenum, first_spec, in_spec);
-  val arg1_sym = make_sym(lit("arg1")), arg2_sym = make_sym(lit("arg2"));
-  val bindings = cons(cons(arg1_sym, arg), in_bindings);
+  val in_arg_sym = make_sym(lit("in_arg"));
+  val out_arg_sym = make_sym(lit("out_arg"));
+  val bindings = cons(cons(in_arg_sym, arg), in_bindings);
   val spec = cons(list(spec_linenum, 
-                       list(name, arg1_sym, arg2_sym, nao), nao), nil);
+                       cons(name, 
+                            cons(in_arg_sym, cons(out_arg_sym, other_args))),
+                       nao), nil);
   match_files_ctx nc;
   (void) first_spec;
 
@@ -2834,17 +2837,17 @@ val match_funcall(val name, val arg)
 
   if (ret == nil)
     sem_error(spec_linenum, lit("filter: (~s ~s ~s) failed"), name,
-              arg, arg2_sym, nao);
+              arg, out_arg_sym, nao);
 
   if (ret == decline_k)
     sem_error(spec_linenum, lit("filter: function ~s not found"), name, nao);
 
   {
-    val out = assoc(nc.bindings, arg2_sym);
+    val out = assoc(nc.bindings, out_arg_sym);
     if (!out)
       sem_error(spec_linenum,
                 lit("filter: (~s ~s ~s) did not bind ~s"), name,
-                arg, arg2_sym, arg2_sym, nao);
+                arg, out_arg_sym, out_arg_sym, nao);
     return cdr(out);
   }
 }

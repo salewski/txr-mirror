@@ -25,6 +25,6 @@
  */
 
 void match_init(void);
-val match_funcall(val name, val arg);
+val match_funcall(val name, val arg, val other_args);
 int extract(val spec, val filenames, val bindings);
 extern val choose_s;
