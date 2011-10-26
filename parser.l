@@ -589,3 +589,8 @@ void end_of_regex(void)
       || yy_top_state() == QSILIT)
     yy_pop_state();
 }
+
+void parse_init(void)
+{
+  protect(&yyin_stream, &prepared_error_message, (val *) 0);
+}
