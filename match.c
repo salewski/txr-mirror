@@ -2246,7 +2246,7 @@ static val v_cat(match_files_ctx c, match_files_ctx *cout)
   val sep_form = third(first_spec);
 
   if (rest(specline))
-    sem_error(spec_linenum, lit("cat: obsolete syntax"));
+    sem_error(spec_linenum, lit("obsolete cat syntax: trailing material"), nao);
 
   if (!bindable(sym)) {
     sem_error(spec_linenum,

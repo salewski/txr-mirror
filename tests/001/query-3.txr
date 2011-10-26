@@ -6,7 +6,7 @@
 @(collect)
 @  (coll)@{TOKEN /[^ ]+/}@(end)
 @  (bind (UID PID PPID C STIME TTY TIME . CMD) TOKEN)
-@  (cat CMD) @#
+@  (cat CMD)
 @  (forget TOKEN)
 @(end)
 @(output)
