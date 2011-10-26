@@ -31,6 +31,8 @@
 # in the arguments, oops.
 #
 
+set -u
+
 cmdline=
 for arg in "$0" "$@" ; do
   [ -n "$cmdline" ] && cmdline="$cmdline "
@@ -96,6 +98,14 @@ done
 # This way they can be overridden more flexibly at make time.
 #
 
+#
+# non-config
+#
+help=${help-}
+
+#
+# config
+#
 prefix=${prefix-/usr/local}
 install_prefix=${install_prefix-}
 bindir=${datadir-'$(prefix)/bin'}
@@ -124,6 +134,7 @@ remove_flags=${remove_flags-}
 lex_dbg_flags=${lex_dbg_flags-}
 txr_dbg_opts=${txr_dbg_opts---gc-debug}
 valgrind=${valgrind-}
+lit_align=${lit_align-}
 
 #
 # If --help was given (or --help=<nonempty> or help=<nonempty>) then
