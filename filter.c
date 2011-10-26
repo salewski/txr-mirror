@@ -137,17 +137,11 @@ static val compound_filter(val filter_list, val string)
   return reduce_left(func_n2(string_filter), filter_list, string, nil);
 }
 
-static val function_filter(val functions, val string)
-{
-  return reduce_left(swap_12_21(func_n2(match_funcall)),
-                     functions, string, nil);
-}
-
 val get_filter(val spec)
 {
   if (consp(spec)) {
     if (car(spec) == fun_k) {
-      return curry_12_2(func_n2(function_filter), rest(spec));
+      return curry_123_2(func_n3(match_funcall), second(spec), rest(rest(spec)));
     } else {
       val filter_list = mapcar(func_n1(get_filter), spec);
 

@@ -3041,12 +3041,14 @@ A function can be used as a filter. For this to be possible, the function must
 conform to certain rules:
 
 .IP 1.
-The function must take exactly two arguments. 
+The function must take two special arguments, which may be followed
+by additional arguments.
 
 .IP 2.
 When the function is called, the first argument will be bound to a string,
-and the second argument will be unbound. The function must produce a string
-value by binding it to the second argument.
+and the second argument will be unbound. The function must produce a 
+value by binding it to the second argument. If the filter is to be used
+as the final filter in a chain, it must produce a string.
 
 For instance, the following is a valid filter function:
 
@@ -3078,6 +3080,45 @@ Of course, function filters can be used in a chain:
   ...
   @(end)
 
+Here is a split function which takes an extra argument.
+
+  @(define split (in out sep))
+  @  (next :list in)
+  @  (coll)@(maybe)@token@sep@(or)@token@(end)@(end)
+  @  (bind out token)
+  @(end)
+
+Furthermore, note that it produces a list rather than a string.
+This function separates the argument in into tokens according to the
+separator text sep.
+
+Here is another function, join, which catenates a list:
+
+  @(define join (in out sep))
+  @  (output :into out)
+  @  (rep)@in@sep@(last)@in@(end)
+  @  (end)
+  @(end)
+
+Now here is these two being used in a chain:
+
+  @(bind text "how,are,you")
+  @(output :filter (:fun split ",") (:fun join "-"))
+  @text
+  @(end)
+
+Output:
+
+  how-are-you
+
+When the filter invokes a function, it generates the first two arguments
+internally to pass in the input value and capture the output. The remaining
+arguments from the (:fun ...) construct are also passed to the function.
+Thus the "," and "-" are passed as the sep argument to split and join.
+
+Note that split puts out a list, which join accepts. So the overall filter
+chain operates on a string: a string goes into split, and a string comes out of
+join.
 
 .SS The Deffilter Directive
 
