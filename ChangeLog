@@ -1,5 +1,31 @@
 2011-10-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	Parse error handling improvements.
+
+	* parser.l (prepared_error_message): New static variable.
+	(yyerror): Emit and clear prepared error message.
+	(yyerrprepf): New static function.
+	(yybadtoken): Function moved into parser.y.
+	(grammar): For irrecoverable lexical errors, stash error message
+	with yyerrprepf and return the special error token ERRTOK to generate a
+	syntax error. I could find no other interface to the parser to make it
+	cleanly exit.
+
+	* parser.y (ERRTOK): New terminal symbol, does not appear anywhere
+	in the grammar.
+	(spec): Bail after 8 errors, recover to nearest newline, and
+	use yyerrok to clear error situation.
+	(YYEOF): Provided by Bison, conditionally defined for other yacc-s.
+	(yybadtoken): Function moved from parser.l.  Checks for the next
+	token being YYEMPTY or YYEOF, and also handles ERRTOK.
+
+	* stream.c (vformat_to_string): New function.
+	(format): If stream is nil, format to string and return it.
+
+	* stream.h (vformat_to_string): Declared.
+
+2011-10-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (v_cat): Bugfix: unterminated variable argument list.
 
 	* tests/001/query-3.txr: Updated to new cat syntax.

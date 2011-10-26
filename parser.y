@@ -63,6 +63,7 @@ static val parsed_spec;
 %token <lexeme> AND OR END COLLECT
 %token <lexeme> UNTIL COLL OUTPUT REPEAT REP SINGLE FIRST LAST EMPTY DEFINE
 %token <lexeme> TRY CATCH FINALLY
+%token <lexeme> ERRTOK
 
 %token <num> NUMBER
 
@@ -99,8 +100,12 @@ static val parsed_spec;
 
 spec : clauses                  { parsed_spec = $1; }
      | /* empty */              { parsed_spec = nil; }
-     | error                    { parsed_spec = nil;
+     | error '\n'                   { parsed_spec = nil;
+                                  if (errors >= 8)
+                                    YYABORT;
+                                  yyerrok;
                                   yybadtoken(yychar, nil); }
+
      ;
 
 clauses : clause                { $$ = cons($1, nil); }
@@ -778,3 +783,69 @@ val get_spec(void)
 {
   return parsed_spec;
 }
+
+#ifndef YYEOF
+#define YYEOF YYEMPTY
+#endif
+
+void yybadtoken(int tok, val context)
+{
+  val problem = nil;
+
+  switch (tok) {
+  case ERRTOK:
+    return;
+  case SPACE:   problem = lit("space"); break;
+  case TEXT:    problem = lit("text"); break;
+  case IDENT:   problem = lit("identifier"); break;
+  case KEYWORD: problem = lit("keyword"); break;
+  case METAVAR: problem = lit("metavar"); break;
+  case ALL:     problem = lit("\"all\""); break;
+  case SOME:    problem = lit("\"some\""); break;
+  case NONE:    problem = lit("\"none\""); break;
+  case MAYBE:   problem = lit("\"maybe\""); break;
+  case CASES:   problem = lit("\"cases\""); break;
+  case CHOOSE:  problem = lit("\"choose\""); break;
+  case AND:     problem = lit("\"and\""); break;
+  case OR:      problem = lit("\"or\""); break;
+  case END:     problem = lit("\"end\""); break;
+  case COLLECT: problem = lit("\"collect\""); break;
+  case UNTIL:   problem = lit("\"until\""); break;
+  case COLL:    problem = lit("\"coll\""); break;
+  case OUTPUT:  problem = lit("\"output\""); break;
+  case REPEAT:  problem = lit("\"repeat\""); break;
+  case REP:     problem = lit("\"rep\""); break;
+  case SINGLE:  problem = lit("\"single\""); break;
+  case FIRST:   problem = lit("\"first\""); break;
+  case LAST:    problem = lit("\"last\""); break;
+  case EMPTY:   problem = lit("\"empty\""); break;
+  case DEFINE:  problem = lit("\"define\""); break;
+  case TRY:     problem = lit("\"try\""); break;
+  case CATCH:   problem = lit("\"catch\""); break;
+  case FINALLY: problem = lit("\"finally\""); break;
+  case NUMBER:  problem = lit("\"number\""); break;
+  case REGCHAR: problem = lit("regular expression character"); break;
+  case LITCHAR: problem = lit("string literal character"); break;
+  case METAPAR: problem = lit("@("); break;
+  }
+
+  if (problem != 0)
+    if (context)
+      yyerrorf(lit("misplaced ~a in ~a"), problem, context, nao);
+    else
+      yyerrorf(lit("unexpected ~a"), problem, nao);
+  else
+    if (context)
+      if (tok == YYEOF || tok == YYEMPTY)
+        yyerrorf(lit("unterminated ~a"), context, nao);
+      else
+        yyerrorf(lit("misplaced ~s in ~a"), chr(tok), context, nao);
+    else
+      if (tok == YYEOF)
+        yyerrorf(lit("unexpected end of input"), nao);
+      else if (tok == YYEMPTY)
+        return;
+      else
+        yyerrorf(lit("unexpected ~s"), chr(tok), nao);
+}
+

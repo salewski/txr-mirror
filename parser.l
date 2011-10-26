@@ -68,9 +68,15 @@ int opt_arraydims = 1;
 
 int errors;
 
+static val prepared_error_message;
+
 void yyerror(const char *s)
 {
   yyerrorf(lit("~a"), string_utf8(s), nao);
+  if (prepared_error_message) {
+    yyerrorf(lit("~a"), prepared_error_message, nao);
+    prepared_error_message = nil;
+  }
 }
 
 void yyerrorf(val fmt, ...)
@@ -87,55 +93,14 @@ void yyerrorf(val fmt, ...)
   errors++;
 }
 
-void yybadtoken(int tok, val context)
+static void yyerrprepf(val fmt, ...)
 {
-  val problem = nil;
-
-  switch (tok) {
-  case SPACE:   problem = lit("space"); break;
-  case TEXT:    problem = lit("text"); break;
-  case IDENT:   problem = lit("identifier"); break;
-  case KEYWORD: problem = lit("keyword"); break;
-  case METAVAR: problem = lit("metavar"); break;
-  case ALL:     problem = lit("\"all\""); break;
-  case SOME:    problem = lit("\"some\""); break;
-  case NONE:    problem = lit("\"none\""); break;
-  case MAYBE:   problem = lit("\"maybe\""); break;
-  case CASES:   problem = lit("\"cases\""); break;
-  case CHOOSE:  problem = lit("\"choose\""); break;
-  case AND:     problem = lit("\"and\""); break;
-  case OR:      problem = lit("\"or\""); break;
-  case END:     problem = lit("\"end\""); break;
-  case COLLECT: problem = lit("\"collect\""); break;
-  case UNTIL:   problem = lit("\"until\""); break;
-  case COLL:    problem = lit("\"coll\""); break;
-  case OUTPUT:  problem = lit("\"output\""); break;
-  case REPEAT:  problem = lit("\"repeat\""); break;
-  case REP:     problem = lit("\"rep\""); break;
-  case SINGLE:  problem = lit("\"single\""); break;
-  case FIRST:   problem = lit("\"first\""); break;
-  case LAST:    problem = lit("\"last\""); break;
-  case EMPTY:   problem = lit("\"empty\""); break;
-  case DEFINE:  problem = lit("\"define\""); break;
-  case TRY:     problem = lit("\"try\""); break;
-  case CATCH:   problem = lit("\"catch\""); break;
-  case FINALLY: problem = lit("\"finally\""); break;
-  case NUMBER:  problem = lit("\"number\""); break;
-  case REGCHAR: problem = lit("regular expression character"); break;
-  case LITCHAR: problem = lit("string literal character"); break;
-  case METAPAR: problem = lit("@("); break;
+  if (opt_loglevel >= 1) {
+    va_list vl;
+    va_start (vl, fmt);
+    prepared_error_message = vformat_to_string(fmt, vl);
+    va_end (vl);
   }
-
-  if (problem != 0)
-    if (context)
-      yyerrorf(lit("misplaced ~a in ~a"), problem, context, nao);
-    else
-      yyerrorf(lit("unexpected ~a"), problem, nao);
-  else
-    if (context)
-      yyerrorf(lit("unterminated ~a"), context, nao);
-    else
-      yyerrorf(lit("unexpected end of input"), nao);
 }
 
 static wchar_t char_esc(int letter)
@@ -444,14 +409,16 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                                 }
 
 <SPECIAL,NESTED>{UANYN} {
-                          yyerrorf(lit("bad character in directive: '~a'"),
-                                   string_utf8(yytext), nao);
+                          yyerrprepf(lit("bad character in directive: '~a'"),
+                                     string_utf8(yytext), nao);
+                          return ERRTOK;
                         }
 
 <SPECIAL,NESTED>.       {
-                          yyerrorf(lit("non-UTF-8 byte in directive: "
-                                       "'\\x~02x'"),
+                          yyerrprepf(lit("non-UTF-8 byte in directive: "
+                                         "'\\x~02x'"),
                                    num((unsigned char) yytext[0]), nao);
+                          return ERRTOK;
                         }
 
 <REGEX>[/]      {
@@ -476,7 +443,8 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
 <REGEX>\n       {
                   lineno++;
-                  yyerror("newline in regex");
+                  yyerrprepf(lit("newline in regex"), nao);
+                  return ERRTOK;
                 }
 
 <REGEX>[.*?+~&%]        {
@@ -508,8 +476,9 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                 }
 
 <REGEX>.        {
-                   yyerrorf(lit("non-UTF-8 byte in regex: '\\x~02x'"),
-                            num((unsigned char) yytext[0]), nao);
+                   yyerrprepf(lit("non-UTF-8 byte in regex: '\\x~02x'"),
+                              num((unsigned char) yytext[0]), nao);
+                   return ERRTOK;
                 }
 
 <INITIAL>[ ]+   {
@@ -574,24 +543,24 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                                           return LITCHAR;
                                         }
 <STRLIT>\n              {
-                          yyerror("newline in string literal");
+                          yyerrprepf(lit("newline in string literal"), nao);
                           lineno++;
                           yylval.chr = yytext[0];
-                          return LITCHAR;
+                          return ERRTOK;
                         }
 
 <CHRLIT>\n              {
-                          yyerror("newline in character literal");
+                          yyerrprepf(lit("newline in character literal"), nao);
                           lineno++;
                           yylval.chr = yytext[0];
-                          return LITCHAR;
+                          return ERRTOK;
                         }
 
 <QSILIT>\n              {
-                          yyerror("newline in string quasiliteral");
+                          yyerrprepf(lit("newline in string quasiliteral"), nao);
                           lineno++;
                           yylval.chr = yytext[0];
-                          return LITCHAR;
+                          return ERRTOK;
                         }
 
 <QSILIT>@               {
@@ -606,8 +575,9 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                               }
 
 <STRLIT,CHRLIT,QSILIT>. {
-                           yyerrorf(lit("non-UTF-8 byte in regex: '\\x~02x'"),
-                                    num((unsigned char) yytext[0]), nao);
+                           yyerrprepf(lit("non-UTF-8 byte in regex: '\\x~02x'"),
+                                      num((unsigned char) yytext[0]), nao);
+                           return ERRTOK;
                         }
 
 %%
