@@ -146,6 +146,7 @@ int main(int argc, char **argv)
   progname = argv[0] ? utf8_dup_from(argv[0]) : progname;
   init(progname, oom_realloc_handler, &stack_bottom);
   match_init();
+  parse_init();
   return txr_main(argc, argv);
 }
 
@@ -159,7 +160,6 @@ int txr_main(int argc, char **argv)
   prot1(&spec_file_str);
 
   yyin_stream = std_input;
-  prot1(&yyin_stream);
 
   if (argc <= 1) {
     hint();
