@@ -1,5 +1,10 @@
 2011-10-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* configure: put in set -u to trap unbound variables, 
+	and fixed resulting errors that were found.
+
+2011-10-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (filter_s): New symbol variable.
 	(v_filter): New function.
 	(syms_init): New symbol variable initialized.
