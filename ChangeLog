@@ -1,5 +1,11 @@
 2011-10-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (v_cat): Bugfix: unterminated variable argument list.
+
+	* tests/001/query-3.txr: Updated to new cat syntax.
+
+2011-10-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	Fixed lame @(cat) directive, without obsolescence phase.
 
 	* match.c (v_cat): Rewritten.
