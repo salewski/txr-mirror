@@ -346,7 +346,16 @@ the middle of a line, other than following a variable, must match exactly at
 the current position, where the previous match left off. Moreover, if the text
 is the last element in the line, its match is anchored to the end of the line.
 
-Text which follows a variable has special semantics, discusssed in the
+An empty query line matches an empty line in the input. Note that an
+empty input stream does not contain any lines, and therefore is not matched
+by an empty line. An empty line in the input is represented by a newline
+character which is either the first character of the file, or follows
+a previous newline-terminated line.  
+
+Input streams which end without terminating their last line with a newline are
+tolerated, and are treated as if they had the terminator.
+
+Text which follows a variable has special semantics, discussed in the
 section Variables below.
 
 A query may not leave unmatched material in a line which is covered by the
@@ -512,9 +521,17 @@ Whereas literal text simply represents itself, regular expression denotes a
 matches the longest piece of text (possibly empty) which belongs to the set
 denoted by the regular expression. The match is anchored to the current
 position; thus if the directive is the first element of a line, the match is
-anchored to the start of a line. If the directive is the last element of a
-line, it is anchored to the end of the line also: the regular expression must
-match the text from the current position to the end of the line.
+anchored to the start of a line. If the regular expression directive is the
+last element of a line, it is anchored to the end of the line also: the regular
+expression must match the text from the current position to the end of the
+line.
+
+Even if the regular expression matches the empty string, the match will fail if
+the input is empty, or has run out of data. For instance suppose the third line
+of the query is the regular expression @/.*/, but the input is a file which has
+only two lines. This will fail: the data has line for the regular expression to
+match. A line containing no characters is not the same thing as the absence of
+a line, even though both abstractions imply an absence of characters.
 
 Like text which follows a variable, a regular expression directive which
 follows a variable has special semantics, discussed in the section Variables
@@ -594,6 +611,8 @@ text which is bound to FOO.
 If the variable is followed by a regular expression directive,
 the extent is determined by finding the closest match for the
 regular expression. (See Regular Expressions section below).
+
+To match successfully, 
 
 .SS Special Symbols
 
@@ -1141,15 +1160,39 @@ of the line, and do not act as line separators.
 
 The syntax @(next :string EXPR) treats the expression as a source of
 text. The value of the expression must be a string. Newlines in the string are
-interpreted as line terminators.
+interpreted as line terminators. 
 
-Note that "remainder of the query" refers to the subquery in which
-the next directive appears, not necessarily the entire query.
+A string which is not terminated by
+a newline is tolerated, so that:
 
-For example, the following query looks for the line starting with "xyz"
-at the top of the file "foo.txt", within a some directive.
-After the @(end) which terminates the @(some), the "abc" is matched in the
-previous file again.
+  @(next :string "abc")
+  @a
+
+binds a to "abc".  Likewise, this is also the case with input files and other
+streams whose last line is not terminated by a newline.
+
+However, watch out for empty strings, which are analogous to a correctly formed
+empty file which contains no lines:
+
+  @(next :string "")
+  @a
+
+This will not bind a to ""; it is a matching failure.  The behavior of :list is
+different. The query
+
+  @(next :list "")
+  @a
+
+binds a to "".  The reason is that under :list the string "" is flattened to
+the list ("") which is not an empty input stream, but a stream consisting of
+one empty line.
+
+Note that "remainder of the query" which is applied to the stream opened
+by @(next) refers to the subquery in which the next directive appears, not
+necessarily the entire query.  For example, the following query looks for the
+line starting with "xyz" at the top of the file "foo.txt", within a some
+directive.  After the @(end) which terminates the @(some), the "abc" is matched
+in the previous file again.
 
   @(some)
   @(next "foo.txt")
@@ -1158,7 +1201,8 @@ previous file again.
 
 However, if the @(some) subquery successfully matched "xyz@suffix" within the
 file foo.text,  there is now a binding for the suffix variable, which
-is visible to the remainder of the entire query.
+is visible to the remainder of the entire query. The variable bindings
+survive beyond the clause, but the data stream does not.
 
 The @(next) directive supports the file name conventions as the command
 line. The name - means standard input. Text which starts with a ! is
