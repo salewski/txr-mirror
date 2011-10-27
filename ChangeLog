@@ -1,3 +1,11 @@
+2011-10-27  Kaz Kylheku  <kaz@kylheku.com>
+
+	Bug #34657
+
+	* txr.1: Added explanations about the differences between
+	empty streams and empty lines, and to watch out when passing
+	empty strings to @(next :string ...).
+
 2011-10-26  Kaz Kylheku  <kaz@kylheku.com>
 
 	Bugfix: prepared_error_message variable needs to be gc-protected.
