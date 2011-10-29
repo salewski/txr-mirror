@@ -1,3 +1,9 @@
+2011-10-29  Kaz Kylheku  <kaz@kylheku.com>
+
+	* HACKING: Grammar fixes. Expanded on lazy strings a little bit.
+	Added something about mem_t *, and a few extra words here and there,
+	including a blurb about a Valgrind debugging caveat.
+
 2011-10-27  Kaz Kylheku  <kaz@kylheku.com>
 
 	Bug #34657

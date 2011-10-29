@@ -54,11 +54,11 @@ requirements.
 
 C++ compilation can be arranged using ./configure --ccname=g++ (for instance).
 
-Note that txr is not written takes some nonportable liberties with the
-language, such as encoding bit fields into pointers, and treating automatic
-storage as a flat stack which can be treated as an array that can be walked by
-a garbage collector looking for references to objects. There are assumptions
-about the alignment of objects too.
+Note that txr takes some nonportable liberties with the language, such as
+encoding bit fields into pointers, and treating automatic storage as a flat
+stack which can be treated as an array that can be walked by a garbage
+collector looking for references to objects. There are assumptions about the
+alignment of objects too.
 
 1.2  Program File Structure
 
@@ -76,10 +76,10 @@ be updated.
 
 1.3  Style
 
-Tab characters are avoided in txr source files. The indentation is two characters.
-Formatting is similar to K&R, though the yacc grammar files use a Lispy formatting.
-Expression or statement elements which are syntactically parallel, but
-on separate lines, must be horizontally aligned with each other:
+Tab characters are avoided in txr source files. The indentation is two
+characters.  Formatting is similar to K&R, though the yacc grammar files use a
+Lispy formatting.  Expression or statement elements which are syntactically
+parallel, but on separate lines, must be horizontally aligned with each other:
 
   if (function(argument1,
                argument))
@@ -124,6 +124,16 @@ even if they are last in the block. The following style is permitted
 Forward and backward goto are permitted, unless it is /glaringly/
 obvious that the code can be written better without it.
 
+Certain C programming conventions are avoided. For generic pointers to anything
+(needed in some low-level code) use the type mem_t *, not void *, and use casts
+on conversions to and from this pointer.
+
+The void * pointer, which came into C by way of C++, is braindamaged.  It
+allows C programs to subvert the type system without any cast operators or
+diagnostics. In C++ it's a little better because conversions from void *
+require a cast.  In this project, we want all hazardous pointer conversions to
+be marked in the code by casts, whose presence is demanded by compiler
+diagnostics.
 
 1.3 Error Handling
 
@@ -224,10 +234,9 @@ collection, printing, equality and hashing.  The garbage collector hooks allow
 the object's module to be notified when the associated COBJ handle becomes
 unreachable. The associated C object may contain references to dynamic objects
 (i.e. members of type val).  In that case, it must provide the mark function,
-which, when invoked, must traverse the object's members of type and recursively
-invoke mark_obj on all of them.
-
-
+which, when invoked, must traverse the object's members of this type and
+report to the garbage collector that they are reachable by invoking
+mark_obj on them.
 
 
 2.4 Strings
@@ -235,7 +244,15 @@ invoke mark_obj on all of them.
 All string manipulation should be done using the dynamic object system.
 The object system provides three kinds of strings: encapsulated
 C strings, regular strings and lazy strings (type tags LIT, STR and LSTR,
-respectively).
+respectively). Most code working with strings doesn't have to care about
+the difference between these. However, taking advantage of the performance
+capabilities of lazy strings requires some special coding (which is
+backward compatible with regular strings). For instance, if you want to
+know whether the length of a lazy string S is greater than 42, you don't want
+to do this: gt(length_str(S), num(42)). This will force an instantiation
+of the lazy string. There are functions for testing whether a string's length
+is greater, lesser, greater or equal and lesser or equal, to some number.
+
 
 2.4.1 Encapsulated C Strings
 
@@ -313,9 +330,9 @@ The lit macro, which existed before this hack, takes care of doing this so most
 code doesn't know the difference.
 
 The new wli macro helps manage this representation when access is needed to C
-string literals which are assigned to wchar_t * variables, and also provides
-type safety by using a different pointer type for strings which have been
-treated with the padding.
+string literals which are not used directly, but first assigned to variables,
+and also provides type safety by using a different pointer type for strings
+which have been treated with the padding.
 
   const wchli_t *abc = wli("abc"); /* special type */
 
@@ -326,10 +343,12 @@ treated with the padding.
   val def_obj = static_str(lit("abc")); /* error */
 
 The wini and wref macros manage this representation when character arrays are
-used. The wini macro abstract away the initializer, so the programmer doesn't
+used. The wini macro abstracts away the initializer, so the programmer doesn't
 have to be aware of the extra null bytes:
 
   wchar_t abc[] = wini("abc"); /* potentially six wchar_t units! */
+
+The wref macro hides the displacement of the first character:
 
   wchar_t *ptr_a = wref(abc); /* pointer to "a" */
 
@@ -365,6 +384,8 @@ Scanning the stack means that the garbage collector is conservative: it could
 encounter values which look like valid object references, but are actually only
 accidentally so due to having the right bit pattern. When this happens,
 objects that should be considered garbage will remain live.
+This is called "spurious retention", and can be a bad problem, but it's
+better than the opposite problem of premature deallocation.
 
 Global root pointers are registered individually using the prot1 function,
 or many at once using the protect function. Care must be taken to properly
@@ -394,7 +415,13 @@ rules only have to be followed in lower-level code which is close to the
 allocator. Normal application code does not have to follow any special rules.
 
 The garbage collector is called implicitly by code which calles make_obj to
-pull a raw object from the garbage collector's free list.
+pull a raw object from the garbage collector's free list. Code which does
+not allocate code will not be interrupted by the garbage collector.
+That's another helpful simplification, but it comes at the cost of not
+supporting multithreading. However, code that calls make_obj must be
+written with the assumption that make_obj may garbage collect on any call.
+
+Now, here come the rules.
 
 3.2.1 Rule One: Full Initialization
 
@@ -498,10 +525,10 @@ There are several right ways to fix this:
 
 The above properly initializes the structure, and then associate it with the
 COBJ. This makes the structure visible to the garbage collector (through the co
-variable, which is live at the point where the cobj function is called, due
-to having a next use in the return statement!) Now we can safely stash a newly allocated
-cons cell into that structure, allowing that structure to hold the one and only
-reference to that object.
+variable, which is live at the point where the cobj function is called, due to
+having a next use in the return statement!) Now we can safely stash a newly
+allocated cons cell into that structure, allowing that structure to hold the
+one and only reference to that object.
 
 Another approach, which avoids two-step initialization of the structure:
 
@@ -543,11 +570,11 @@ reference to the argument object either, and so the f->mem = member might
 be the one and only sink for the data flow carrying that object; i.e.
 the one and only reference to that object in the entire program.
 One way that can happen is that the object is just a temporary that is
-allocated in the function call itself:
+allocated in the function call expression itself:
 
   make_foo(string("abc")); /* oops! */
 
-The make_foo function can be correct like this:
+The make_foo function can be corrected like this:
 
   val make_foo(val member)
   {
@@ -564,13 +591,13 @@ The make_foo function can be correct like this:
 COBJ objects can support weak pointers, but there is no fully encapsulated
 interface for this; to be more specific, adding a new module of objects that
 have weak references, it is necessary to to add a function call code into the
-garbage collection functino.  
+garbage collection function.  
 
-Modules with weak references should closely follow the pattern used by the hash
-module.  Hash tables are implemented using COBJ, and provide weak key and value
-support thanks to cooperation with the gc module.
+Modules with weak references should closely follow the design pattern used by
+the hash module.  Hash tables are implemented using COBJ, and provide weak key
+and value support thanks to cooperation with the gc module.
 
-Weak references work as follows. During gc marking, the COBJ module
+Weak references work as follows. During gc marking, a given COBJ module
 must maintain a list of all objects of its kind which are marked
 (or at least just that subset of them which contains weak references).
 It must refrain from marking the weak references contained in these
@@ -777,8 +804,14 @@ Do a
   ./configure --valgrind
 
 then rebuild. If this is enabled, txr uses the Valgrind API to inform valgrind
-about the state of allocated or unallocated areas on the garbage collected
-heap, if it is run with the --vg-debug option. Valgrind will be able to trap
-uses of objects which are marked as garbage. Using --gc-debug together
-with --vg-debug while running txr under valgrind is a pretty good way to catch
-gc-related errors.
+about the state of allocated or unallocated areas on the garbage-collected
+heap, if it is additionally run with the --vg-debug option. Valgrind will be
+able to trap uses of objects which are marked as garbage. Using --gc-debug
+together with --vg-debug while running txr under valgrind is a pretty good way
+to catch gc-related errors. However, Valgrind will not precisely
+identify individual heap objects. If a freed object is misused, Valgrind will
+only be able to say something like that the pointer is 536 bytes into a large
+block allocated in the more function called from make_obj (i.e. a heap).
+Valgrind will not give you the call trace which led to that particular
+object being allocated, only the call stack which triggered the containing heap
+being allocated: an irrelevant piece of information that can confuse you!
