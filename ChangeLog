@@ -1,3 +1,21 @@
+2011-10-30  Kaz Kylheku  <kaz@kylheku.com>
+
+	Bug #34691
+
+	Changing the parameter passing convention for vertical directives.
+	They take one parameter which is a pointer, rather than a copy
+	of the structure. They do not have to perform a structure
+	assignment when returning next_spec_k.
+
+	* match.c (v_match_func): Typedef updated to new function
+	signature.
+	(v_skip, v_trailer, v_freeform, v_block, v_accept, v_accept, v_next,
+	v_parallel, v_collect, v_flatten, v_forget, v_forget, v_merge, v_bind,
+	v_set, v_cat, v_output, v_define, v_try, v_defex, v_throw, v_deffilter,
+	v_filter, v_eof, v_fun): Refactored.
+	(match_files): Updated dispatch logic to new style calls.
+	(match_funcall): Updated to new way of calling v_fun.
+
 2011-10-29  Kaz Kylheku  <kaz@kylheku.com>
 
 	* HACKING: Grammar fixes. Expanded on lazy strings a little bit.

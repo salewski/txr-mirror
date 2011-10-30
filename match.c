@@ -1446,7 +1446,7 @@ static match_files_ctx mf_file_data(match_files_ctx c, val file,
 
 static val match_files(match_files_ctx a);
 
-typedef val (*v_match_func)(match_files_ctx c, match_files_ctx *cout);
+typedef val (*v_match_func)(match_files_ctx *cout);
 
 #define spec_bind(specline_var, spec_linenum_var, first_spec_var, spec)  \
   val s_p_ ## specline_var = first(spec);                                \
@@ -1454,20 +1454,20 @@ typedef val (*v_match_func)(match_files_ctx c, match_files_ctx *cout);
   val spec_linenum_var = first(s_p_ ## specline_var);                    \
   val first_spec_var = first(specline_var)
 
-static val v_skip(match_files_ctx c, match_files_ctx *cout)
+static val v_skip(match_files_ctx *c)
 {
-  val specline = rest(first(c.spec));
+  val specline = rest(first(c->spec));
 
   if (rest(specline))
     return decline_k;
 
-  c.spec = rest(c.spec);
+  c->spec = rest(c->spec);
 
-  if (!c.spec)
-    return cons(c.bindings, cons(c.data, c.data_lineno));
+  if (!c->spec)
+    return cons(c->bindings, cons(c->data, c->data_lineno));
 
   {
-    val spec_linenum = first(first(c.spec));
+    val spec_linenum = first(first(c->spec));
     val first_spec = first(specline);
     val args = rest(first_spec);
     val max = first(args);
@@ -1482,9 +1482,9 @@ static val v_skip(match_files_ctx c, match_files_ctx *cout)
       cnum reps_max = 0, reps_min = 0;
       uw_block_begin(nil, result);
 
-      while (c.data && min && reps_min < cmin) {
-        c.data = rest(c.data);
-        c.data_lineno = plus(c.data_lineno, num(1));
+      while (c->data && min && reps_min < cmin) {
+        c->data = rest(c->data);
+        c->data_lineno = plus(c->data_lineno, num(1));
         reps_min++;
       }
 
@@ -1492,40 +1492,40 @@ static val v_skip(match_files_ctx c, match_files_ctx *cout)
         if (reps_min != cmin) {
           debuglf(spec_linenum, lit("skipped only ~a/~a lines to ~a:~a"),
                   num(reps_min), num(cmin),
-                  first(c.files), c.data_lineno, nao);
+                  first(c->files), c->data_lineno, nao);
           uw_block_return(nil, nil);
         }
 
         debuglf(spec_linenum, lit("skipped ~a lines to ~a:~a"),
-                num(reps_min), first(c.files),
-                c.data_lineno, nao);
+                num(reps_min), first(c->files),
+                c->data_lineno, nao);
       }
 
       while (greedy || !max || reps_max++ < cmax) {
-        result = match_files(c);
+        result = match_files(*c);
 
         if (result) {
           if (greedy) {
             last_good_result = result;
-            last_good_line = c.data_lineno;
+            last_good_line = c->data_lineno;
           } else {
-            debuglf(spec_linenum, lit("skip matched ~a:~a"), first(c.files),
-                    c.data_lineno, nao);
+            debuglf(spec_linenum, lit("skip matched ~a:~a"), first(c->files),
+                    c->data_lineno, nao);
             break;
           }
         } else {
           debuglf(spec_linenum, lit("skip didn't match ~a:~a"),
-                  first(c.files), c.data_lineno, nao);
+                  first(c->files), c->data_lineno, nao);
         }
 
-        if (!c.data)
+        if (!c->data)
           break;
 
-        debuglf(spec_linenum, lit("skip didn't match ~a:~a"), first(c.files),
-                c.data_lineno, nao);
+        debuglf(spec_linenum, lit("skip didn't match ~a:~a"), first(c->files),
+                c->data_lineno, nao);
 
-        c.data = rest(c.data);
-        c.data_lineno = plus(c.data_lineno, num(1));
+        c->data = rest(c->data);
+        c->data_lineno = plus(c->data_lineno, num(1));
       }
 
       uw_block_end;
@@ -1534,7 +1534,7 @@ static val v_skip(match_files_ctx c, match_files_ctx *cout)
         return result;
       if (last_good_result) {
         debuglf(spec_linenum, lit("greedy skip matched ~a:~a"), 
-                first(c.files), last_good_line, nao);
+                first(c->files), last_good_line, nao);
         return last_good_result;
       }
     }
@@ -1544,31 +1544,31 @@ static val v_skip(match_files_ctx c, match_files_ctx *cout)
   }
 }
 
-static val v_trailer(match_files_ctx c, match_files_ctx *cout)
+static val v_trailer(match_files_ctx *c)
 {
-  if (rest(rest(first(c.spec))))
+  if (rest(rest(first(c->spec))))
     return decline_k;
 
-  c.spec = rest(c.spec);
+  c->spec = rest(c->spec);
 
-  if (!c.spec)  {
-    return cons(c.bindings, cons(c.data, c.data_lineno));
+  if (!c->spec)  {
+    return cons(c->bindings, cons(c->data, c->data_lineno));
   } else {
-    cons_bind (new_bindings, success, match_files(c));
-    return success ? cons(new_bindings, cons(c.data, c.data_lineno)) : nil;
+    cons_bind (new_bindings, success, match_files(*c));
+    return success ? cons(new_bindings, cons(c->data, c->data_lineno)) : nil;
   }
 }
 
-static val v_freeform(match_files_ctx c, match_files_ctx *cout)
+static val v_freeform(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c.spec);
+  spec_bind (specline, spec_linenum, first_spec, c->spec);
 
   val args = rest(first_spec);
   val vals = mapcar(func_n1(cdr),
                        mapcar(curry_123_2(func_n3(eval_form),
-                                          spec_linenum, c.bindings), args));
+                                          spec_linenum, c->bindings), args));
 
-  if ((c.spec = rest(c.spec)) == nil) {
+  if ((c->spec = rest(c->spec)) == nil) {
     sem_error(spec_linenum,
               lit("freeform must be followed by a query line"), nao);
   } else {
@@ -1576,12 +1576,12 @@ static val v_freeform(match_files_ctx c, match_files_ctx *cout)
                     if2(nump(second(vals)), second(vals)));
     val term = or2(if2(stringp(first(vals)), first(vals)),
                    if2(stringp(second(vals)), second(vals)));
-    val ff_specline = rest(first(c.spec));
-    val ff_dataline = lazy_str(c.data, term, limit);
+    val ff_specline = rest(first(c->spec));
+    val ff_dataline = lazy_str(c->data, term, limit);
 
     cons_bind (new_bindings, success,
-               match_line(ml_all(c.bindings, ff_specline, ff_dataline, zero,
-                                 spec_linenum, c.data_lineno, first(c.files))));
+               match_line(ml_all(c->bindings, ff_specline, ff_dataline, zero,
+                                 spec_linenum, c->data_lineno, first(c->files))));
 
     if (!success) {
       debuglf(spec_linenum, lit("freeform match failure"), nao);
@@ -1589,20 +1589,19 @@ static val v_freeform(match_files_ctx c, match_files_ctx *cout)
     }
 
     if (nump(success)) {
-      c.data = lazy_str_get_trailing_list(ff_dataline, success);
-      c.data_lineno = plus(c.data_lineno, num(1));
+      c->data = lazy_str_get_trailing_list(ff_dataline, success);
+      c->data_lineno = plus(c->data_lineno, num(1));
     }
 
-    c.bindings = new_bindings;
+    c->bindings = new_bindings;
   }
 
-  *cout = c;
   return next_spec_k;
 }
 
-static val v_block(match_files_ctx c, match_files_ctx *cout)
+static val v_block(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c.spec);
+  spec_bind (specline, spec_linenum, first_spec, c->spec);
 
   val name = first(rest(first_spec));
 
@@ -1610,21 +1609,20 @@ static val v_block(match_files_ctx c, match_files_ctx *cout)
     sem_error(spec_linenum,
               lit("unexpected material after block directive"), nao);
 
-  if ((c.spec = rest(c.spec)) != nil)
+  if ((c->spec = rest(c->spec)) != nil)
   {
     uw_block_begin(name, result);
-    result = match_files(c);
+    result = match_files(*c);
     uw_block_end;
     return result;
   }
 
-  *cout = c;
   return next_spec_k;
 }
 
-static val v_accept_fail(match_files_ctx c, match_files_ctx *cout)
+static val v_accept_fail(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c.spec);
+  spec_bind (specline, spec_linenum, first_spec, c->spec);
   val sym = first(first_spec);
   val target = first(rest(first_spec));
 
@@ -1633,8 +1631,8 @@ static val v_accept_fail(match_files_ctx c, match_files_ctx *cout)
 
   uw_block_return(target,
                   if2(sym == accept_s,
-                      cons(c.bindings,
-                           if3(c.data, cons(c.data, c.data_lineno), t))));
+                      cons(c->bindings,
+                           if3(c->data, cons(c->data, c->data_lineno), t))));
   /* TODO: uw_block_return could just throw this */
   if (target)
     sem_error(spec_linenum, lit("~a: no block named ~a in scope"),
@@ -1645,9 +1643,9 @@ static val v_accept_fail(match_files_ctx c, match_files_ctx *cout)
   return nil;
 }
 
-static val v_next(match_files_ctx c, match_files_ctx *cout)
+static val v_next(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c.spec);
+  spec_bind (specline, spec_linenum, first_spec, c->spec);
   
   if (rest(first_spec) && rest(specline))
     sem_error(spec_linenum, lit("invalid combination of old "
@@ -1656,8 +1654,8 @@ static val v_next(match_files_ctx c, match_files_ctx *cout)
     sem_error(spec_linenum, lit("obsolete next syntax: trailing material"), nao);
   }
 
-  if ((c.spec = rest(c.spec)) == nil)
-    return cons(c.bindings, cons(c.data, c.data_lineno));
+  if ((c->spec = rest(c->spec)) == nil)
+    return cons(c->bindings, cons(c->data, c->data_lineno));
 
   if (rest(first_spec)) {
     val args = rest(first_spec);
@@ -1667,11 +1665,11 @@ static val v_next(match_files_ctx c, match_files_ctx *cout)
       if (rest(args))
         sem_error(spec_linenum, lit("(next :args) takes no additional arguments"), nao);
       cons_bind (new_bindings, success,
-                 match_files(mf_args(c)));
+                 match_files(mf_args(*c)));
 
       if (success)
         return cons(new_bindings,
-                    if3(c.data, cons(c.data, c.data_lineno), t));
+                    if3(c->data, cons(c->data, c->data_lineno), t));
       return nil;
     }
     
@@ -1690,7 +1688,7 @@ static val v_next(match_files_ctx c, match_files_ctx *cout)
       val list_expr = cdr(assoc(alist, list_k));
       val string_expr = cdr(assoc(alist, string_k));
       val nothrow = cdr(assoc(alist, nothrow_k));
-      val eval = eval_form(spec_linenum, source, c.bindings);
+      val eval = eval_form(spec_linenum, source, c->bindings);
       val str = cdr(eval);
 
       if (!from_var && !source && !string_expr && !list_expr)
@@ -1703,7 +1701,7 @@ static val v_next(match_files_ctx c, match_files_ctx *cout)
       }
 
       if (from_var) {
-        val existing = assoc(c.bindings, from_var);
+        val existing = assoc(c->bindings, from_var);
 
         if (!symbolp(from_var)) 
           sem_error(spec_linenum, lit(":var requires a variable, not ~s"), from_var, nao);
@@ -1713,64 +1711,64 @@ static val v_next(match_files_ctx c, match_files_ctx *cout)
 
         {
           cons_bind (new_bindings, success,
-                     match_files(mf_file_data(c, lit("var"),
+                     match_files(mf_file_data(*c, lit("var"),
                                  flatten(cdr(existing)), num(1))));
 
           if (success)
             return cons(new_bindings,
-                        if3(c.data, cons(c.data, c.data_lineno), t));
+                        if3(c->data, cons(c->data, c->data_lineno), t));
           return nil;
         }
       } else if (list_expr) {
-        val list_val = cdr(eval_form(spec_linenum, list_expr, c.bindings));
+        val list_val = cdr(eval_form(spec_linenum, list_expr, c->bindings));
         cons_bind (new_bindings, success,
-                   match_files(mf_file_data(c, lit("var"),
+                   match_files(mf_file_data(*c, lit("var"),
                                flatten(list_val), num(1))));
 
         if (success)
           return cons(new_bindings,
-                      if3(c.data, cons(c.data, c.data_lineno), t));
+                      if3(c->data, cons(c->data, c->data_lineno), t));
         return nil;
       } else if (string_expr) {
-        val str_val = cdr(eval_form(spec_linenum, string_expr, c.bindings));
+        val str_val = cdr(eval_form(spec_linenum, string_expr, c->bindings));
         if (!stringp(str_val))
           sem_error(spec_linenum, lit(":string arg ~s evaluated to non-string ~s"), string_expr, str_val, nao);
 
         {
           cons_bind (new_bindings, success,
-                     match_files(mf_file_data(c, lit("var"),
+                     match_files(mf_file_data(*c, lit("var"),
                                  split_str(str_val, lit("\n")), num(1))));
 
           if (success)
             return cons(new_bindings,
-                        if3(c.data, cons(c.data, c.data_lineno), t));
+                        if3(c->data, cons(c->data, c->data_lineno), t));
           return nil;
         }
       } else if (nothrow) {
         if (str) {
-          c.files = cons(cons(nothrow_k, str), c.files);
+          c->files = cons(cons(nothrow_k, str), c->files);
         } else {
-          c.files = rest(c.files);
-          if (!c.files) {
+          c->files = rest(c->files);
+          if (!c->files) {
             debuglf(spec_linenum, lit("next: out of arguments"), nao);
             return nil;
           }
-          c.files = cons(cons(nothrow_k, first(c.files)), rest(c.files));
+          c->files = cons(cons(nothrow_k, first(c->files)), rest(c->files));
         }
       } else {
         if (str) {
-          c.files = cons(str, c.files);
+          c->files = cons(str, c->files);
         } else {
-          c.files = rest(c.files);
-          if (!c.files)
+          c->files = rest(c->files);
+          if (!c->files)
             sem_error(spec_linenum, lit("next: out of arguments"), nao);
-          c.files = cons(cons(nothrow_k, first(c.files)), rest(c.files));
+          c->files = cons(cons(nothrow_k, first(c->files)), rest(c->files));
         }
       }
     }
   } else {
-    c.files = rest(c.files);
-    if (!c.files)
+    c->files = rest(c->files);
+    if (!c->files)
       sem_error(spec_linenum, lit("next: out of arguments"), nao);
   }
 
@@ -1779,18 +1777,18 @@ static val v_next(match_files_ctx c, match_files_ctx *cout)
      original file we we were called with. Hence, we can't
      make a straight tail call here. */
   {
-    cons_bind (new_bindings, success, match_files(mf_data(c, t, nil)));
+    cons_bind (new_bindings, success, match_files(mf_data(*c, t, nil)));
 
     if (success)
       return cons(new_bindings,
-                  if3(c.data, cons(c.data, c.data_lineno), t));
+                  if3(c->data, cons(c->data, c->data_lineno), t));
     return nil;
   }
 }
 
-static val v_parallel(match_files_ctx c, match_files_ctx *cout)
+static val v_parallel(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c.spec);
+  spec_bind (specline, spec_linenum, first_spec, c->spec);
 
   if (second(first_spec) == t) {
     return decline_k;
@@ -1805,7 +1803,7 @@ static val v_parallel(match_files_ctx c, match_files_ctx *cout)
     val choose_shortest = getplist(plist, shortest_k);
     val choose_longest = getplist(plist, longest_k);
     val choose_sym = or2(choose_longest, choose_shortest);
-    val choose_bindings = c.bindings, choose_line = zero, choose_data = nil;
+    val choose_bindings = c->bindings, choose_line = zero, choose_data = nil;
     val choose_minmax = choose_longest ? num(-1) : num(NUM_MAX);
     val iter;
 
@@ -1819,7 +1817,7 @@ static val v_parallel(match_files_ctx c, match_files_ctx *cout)
     {
       val nested_spec = first(iter);
       cons_bind (new_bindings, success, 
-                 match_files(mf_spec(c, nested_spec)));
+                 match_files(mf_spec(*c, nested_spec)));
 
       if (success) {
         some_match = t;
@@ -1848,7 +1846,7 @@ static val v_parallel(match_files_ctx c, match_files_ctx *cout)
           }
         } else {
           /* choose does not propagate bindings between clauses! */
-          c.bindings = new_bindings;
+          c->bindings = new_bindings;
         }
 
 
@@ -1889,27 +1887,26 @@ static val v_parallel(match_files_ctx c, match_files_ctx *cout)
 
     if (choose_sym) {
       if (consp(choose_data)) {
-        c.data_lineno = choose_line;
-        c.data = choose_data;
+        c->data_lineno = choose_line;
+        c->data = choose_data;
       } else if (choose_data == t) {
-        c.data = nil;
+        c->data = nil;
       }
-      c.bindings = choose_bindings;
+      c->bindings = choose_bindings;
     } else if (consp(max_data)) {
-      c.data_lineno = max_line;
-      c.data = max_data;
+      c->data_lineno = max_line;
+      c->data = max_data;
     } else if (max_data == t) {
-      c.data = nil;
+      c->data = nil;
     }
 
-    *cout = c;
     return next_spec_k;
   }
 }
 
-static val v_collect(match_files_ctx c, match_files_ctx *cout)
+static val v_collect(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c.spec);
+  spec_bind (specline, spec_linenum, first_spec, c->spec);
   val coll_spec = second(first_spec);
   val until_last_spec = third(first_spec);
   val args = fourth(first_spec);
@@ -1938,18 +1935,16 @@ static val v_collect(match_files_ctx c, match_files_ctx *cout)
   if (gap && (max || min))
     sem_error(spec_linenum, lit("collect: cannot mix :gap with :mingap or :maxgap"), nao);
 
-  vars = vars_to_bindings(spec_linenum, vars, c.bindings);
+  vars = vars_to_bindings(spec_linenum, vars, c->bindings);
 
-  if ((times && ctimes == 0) || (lines && clines == 0)) {
-    *cout = c;
+  if ((times && ctimes == 0) || (lines && clines == 0))
     return next_spec_k;
-  }
 
   uw_block_begin(nil, result);
 
   result = t;
 
-  while (c.data) {
+  while (c->data) {
     val new_bindings = nil, success = nil;
 
     if ((gap || min) && mincounter < cmin)
@@ -1960,28 +1955,28 @@ static val v_collect(match_files_ctx c, match_files_ctx *cout)
 
     {
       cons_set (new_bindings, success,
-                match_files(mf_spec(c, coll_spec)));
+                match_files(mf_spec(*c, coll_spec)));
 
       /* Until/last clause sees un-collated bindings from collect. */
       if (until_last_spec)
       {
         cons_bind (sym, ul_spec, until_last_spec);
         cons_bind (until_last_bindings, success,
-                   match_files(mf_spec_bindings(c, ul_spec, new_bindings)));
+                   match_files(mf_spec_bindings(*c, ul_spec, new_bindings)));
 
         if (success) {
           debuglf(spec_linenum, lit("until/last matched ~a:~a"),
-                  first(c.files), c.data_lineno, nao);
+                  first(c->files), c->data_lineno, nao);
           /* Until discards bindings and position, last keeps them. */
           if (sym == last_s) {
             last_bindings = set_diff(until_last_bindings,
                                      new_bindings, eq_f, nil);
             if (success == t) {
-              c.data = t;
+              c->data = t;
             } else {
               cons_bind (new_data, new_line, success);
-              c.data = new_data;
-              c.data_lineno = new_line;
+              c->data = new_data;
+              c->data_lineno = new_line;
             }
           }
           break;
@@ -1990,10 +1985,10 @@ static val v_collect(match_files_ctx c, match_files_ctx *cout)
 
       if (success) {
         val strictly_new_bindings = set_diff(new_bindings,
-                                             c.bindings, eq_f, nil);
+                                             c->bindings, eq_f, nil);
 
         debuglf(spec_linenum, lit("collect matched ~a:~a"),
-                first(c.files), c.data_lineno, nao);
+                first(c->files), c->data_lineno, nao);
 
         for (iter = vars; iter; iter = cdr(iter)) {
           cons_bind (var, dfl, car(iter));
@@ -2027,22 +2022,22 @@ static val v_collect(match_files_ctx c, match_files_ctx *cout)
         if (consp(success)) {
           cons_bind (new_data, new_line, success);
 
-          bug_unless (ge(new_line, c.data_lineno));
+          bug_unless (ge(new_line, c->data_lineno));
 
-          if (new_line == c.data_lineno) {
+          if (new_line == c->data_lineno) {
             new_data = cdr(new_data);
             new_line = plus(new_line, num(1));
           }
 
           debuglf(spec_linenum, lit("collect advancing from line ~a to ~a"),
-                  c.data_lineno, new_line, nao);
+                  c->data_lineno, new_line, nao);
 
-          c.data = new_data;
-          c.data_lineno = new_line;
+          c->data = new_data;
+          c->data_lineno = new_line;
           *car_l(success) = nil;
         } else {
           debuglf(spec_linenum, lit("collect consumed entire file"), nao);
-          c.data = nil;
+          c->data = nil;
         }
         mincounter = 0;
         maxcounter = 0;
@@ -2056,8 +2051,8 @@ next_collect:
         mincounter++;
         if ((gap || max) && ++maxcounter > cmax)
           break;
-        c.data_lineno = plus(c.data_lineno, num(1));
-        c.data = rest(c.data);
+        c->data_lineno = plus(c->data_lineno, num(1));
+        c->data = rest(c->data);
       }
     }
   }
@@ -2078,17 +2073,17 @@ next_collect:
   if (!bindings_coll)
     debuglf(spec_linenum, lit("nothing was collected"), nao);
 
-  c.bindings = set_diff(c.bindings, bindings_coll, eq_f, car_f);
+  c->bindings = set_diff(c->bindings, bindings_coll, eq_f, car_f);
 
   for (iter = bindings_coll; iter; iter = cdr(iter)) {
     val pair = car(iter);
     val rev = cons(car(pair), nreverse(cdr(pair)));
-    c.bindings = cons(rev, c.bindings);
+    c->bindings = cons(rev, c->bindings);
   }
 
   if (last_bindings) {
-    c.bindings = set_diff(c.bindings, last_bindings, eq_f, car_f);
-    c.bindings = nappend2(last_bindings, c.bindings);
+    c->bindings = set_diff(c->bindings, last_bindings, eq_f, car_f);
+    c->bindings = nappend2(last_bindings, c->bindings);
   }
 
   /* If nothing was collected, but vars were specified,
@@ -2096,19 +2091,18 @@ next_collect:
   if (!bindings_coll && vars) {
     for (iter = vars; iter; iter = cdr(iter)) {
       val sym = car(car(iter));
-      val exists = assoc(c.bindings, sym);
+      val exists = assoc(c->bindings, sym);
       if (!exists)
-        c.bindings = acons(c.bindings, sym, nil);
+        c->bindings = acons(c->bindings, sym, nil);
     }
   }
 
-  *cout = c;
   return next_spec_k;
 }
 
-static val v_flatten(match_files_ctx c, match_files_ctx *cout)
+static val v_flatten(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c.spec);
+  spec_bind (specline, spec_linenum, first_spec, c->spec);
   val iter;
 
   for (iter = rest(first_spec); iter; iter = rest(iter)) {
@@ -2118,29 +2112,27 @@ static val v_flatten(match_files_ctx c, match_files_ctx *cout)
       sem_error(spec_linenum,
                 lit("flatten: ~s is not a bindable symbol"), sym, nao);
     } else {
-      val existing = assoc(c.bindings, sym);
+      val existing = assoc(c->bindings, sym);
 
       if (existing)
         *cdr_l(existing) = flatten(cdr(existing));
     }
   }
 
-  *cout = c;
   return next_spec_k;
 }
 
-static val v_forget_local(match_files_ctx c, match_files_ctx *cout)
+static val v_forget_local(match_files_ctx *c)
 {
-  val specline = rest(first(c.spec));
+  val specline = rest(first(c->spec));
   val first_spec = first(specline);
-  c.bindings = alist_remove(c.bindings, rest(first_spec));
-  *cout = c;
+  c->bindings = alist_remove(c->bindings, rest(first_spec));
   return next_spec_k;
 }
 
-static val v_merge(match_files_ctx c, match_files_ctx *cout)
+static val v_merge(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c.spec);
+  spec_bind (specline, spec_linenum, first_spec, c->spec);
   val target = first(rest(first_spec));
   val args = rest(rest(first_spec));
   val merged = nil;
@@ -2153,7 +2145,7 @@ static val v_merge(match_files_ctx c, match_files_ctx *cout)
     val arg = first(args);
 
     if (arg) {
-      val arg_eval = eval_form(spec_linenum, arg, c.bindings);
+      val arg_eval = eval_form(spec_linenum, arg, c->bindings);
 
       if (merged)
         merged = weird_merge(merged, cdr(arg_eval));
@@ -2162,20 +2154,19 @@ static val v_merge(match_files_ctx c, match_files_ctx *cout)
     }
   }
 
-  c.bindings = acons_new(c.bindings, target, merged);
+  c->bindings = acons_new(c->bindings, target, merged);
 
-  *cout = c;
   return next_spec_k;
 }
 
-static val v_bind(match_files_ctx c, match_files_ctx *cout)
+static val v_bind(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c.spec);
+  spec_bind (specline, spec_linenum, first_spec, c->spec);
   val args = rest(first_spec);
   val pattern = first(args);
   val form = second(args);
   val keywords = rest(rest(args));
-  val value = eval_form(spec_linenum, form, c.bindings);
+  val value = eval_form(spec_linenum, form, c->bindings);
   val testfun = equal_f;
   val filter_spec = getplist(keywords, filter_k);
   val lfilt_spec = getplist(keywords, lfilt_k);
@@ -2211,37 +2202,35 @@ static val v_bind(match_files_ctx c, match_files_ctx *cout)
   }
   
   uw_env_begin;
-  uw_set_match_context(cons(c.spec, c.bindings));
+  uw_set_match_context(cons(c->spec, c->bindings));
 
-  c.bindings = dest_bind(spec_linenum, c.bindings, pattern,
+  c->bindings = dest_bind(spec_linenum, c->bindings, pattern,
                          cdr(value), testfun);
 
   uw_env_end;
 
-  if (c.bindings == t)
+  if (c->bindings == t)
     return nil;
 
-  *cout = c;
   return next_spec_k;
 }
 
-static val v_set(match_files_ctx c, match_files_ctx *cout)
+static val v_set(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c.spec);
+  spec_bind (specline, spec_linenum, first_spec, c->spec);
   val args = rest(first_spec);
   val pattern = first(args);
   val form = second(args);
-  val val = eval_form(spec_linenum, form, c.bindings);
+  val val = eval_form(spec_linenum, form, c->bindings);
 
-  dest_set(spec_linenum, c.bindings, pattern, cdr(val));
+  dest_set(spec_linenum, c->bindings, pattern, cdr(val));
 
-  *cout = c;
   return next_spec_k;
 }
 
-static val v_cat(match_files_ctx c, match_files_ctx *cout)
+static val v_cat(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c.spec);
+  spec_bind (specline, spec_linenum, first_spec, c->spec);
   val sym = second(first_spec);
   val sep_form = third(first_spec);
 
@@ -2252,10 +2241,10 @@ static val v_cat(match_files_ctx c, match_files_ctx *cout)
     sem_error(spec_linenum,
               lit("cat: ~s is not a bindable symbol"), sym, nao);
   } else {
-    val existing = assoc(c.bindings, sym);
+    val existing = assoc(c->bindings, sym);
     if (existing) {
       val sep = if3(sep_form, 
-                    cdr(eval_form(spec_linenum, sep_form, c.bindings)),
+                    cdr(eval_form(spec_linenum, sep_form, c->bindings)),
                     lit(" "));
       *cdr_l(existing) = cat_str(flatten(cdr(existing)), sep);
     } else {
@@ -2263,13 +2252,12 @@ static val v_cat(match_files_ctx c, match_files_ctx *cout)
     }
   }
 
-  *cout = c;
   return next_spec_k;
 }
 
-static val v_output(match_files_ctx c, match_files_ctx *cout)
+static val v_output(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c.spec);
+  spec_bind (specline, spec_linenum, first_spec, c->spec);
   val specs = second(first_spec);
   val dest_spec = third(first_spec);
   val nothrow = nil;
@@ -2284,7 +2272,7 @@ static val v_output(match_files_ctx c, match_files_ctx *cout)
       sem_error(spec_linenum, lit("material after :nothrow in output"), nao);
   } else if (!keywordp(first(dest_spec))) {
     val form = first(dest_spec);
-    val val = eval_form(spec_linenum, form, c.bindings);
+    val val = eval_form(spec_linenum, form, c->bindings);
     dest = or2(cdr(val), dest);
     pop(&dest_spec);
   }
@@ -2316,12 +2304,12 @@ static val v_output(match_files_ctx c, match_files_ctx *cout)
 
       debugf(lit("opening string list stream"), nao);
       uw_env_begin;
-      uw_set_match_context(cons(c.spec, c.bindings));
-      do_output(c.bindings, specs, filter, stream);
+      uw_set_match_context(cons(c->spec, c->bindings));
+      do_output(c->bindings, specs, filter, stream);
       uw_env_end;
 
       {
-        val existing = assoc(c.bindings, into_var);
+        val existing = assoc(c->bindings, into_var);
         val list_out = get_list_from_stream(stream);
 
         if (existing) {
@@ -2331,10 +2319,9 @@ static val v_output(match_files_ctx c, match_files_ctx *cout)
             *cdr_l(existing) = list_out;
           }
         } else {
-          c.bindings = acons(c.bindings, into_var, list_out);
+          c->bindings = acons(c->bindings, into_var, list_out);
         }
       }
-      *cout = c;
       return next_spec_k;
     }
   }
@@ -2357,19 +2344,18 @@ static val v_output(match_files_ctx c, match_files_ctx *cout)
   } else {
     val stream = complex_stream(fp, dest);
     uw_env_begin;
-    uw_set_match_context(cons(c.spec, c.bindings));
-    do_output(c.bindings, specs, filter, stream);
+    uw_set_match_context(cons(c->spec, c->bindings));
+    do_output(c->bindings, specs, filter, stream);
     uw_env_end;
     close_stream(stream, t);
   }
 
-  *cout = c;
   return next_spec_k;
 }
 
-static val v_try(match_files_ctx c, match_files_ctx *cout)
+static val v_try(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c.spec);
+  spec_bind (specline, spec_linenum, first_spec, c->spec);
   val catch_syms = second(first_spec);
   val try_clause = third(first_spec);
   val catch_fin = fourth(first_spec);
@@ -2379,7 +2365,7 @@ static val v_try(match_files_ctx c, match_files_ctx *cout)
     uw_block_begin(nil, result);
     uw_catch_begin(catch_syms, exsym, exvals);
 
-    result = match_files(mf_spec(c, try_clause));
+    result = match_files(mf_spec(*c, try_clause));
     uw_do_unwind;
 
     uw_catch(exsym, exvals) {
@@ -2408,10 +2394,10 @@ static val v_try(match_files_ctx c, match_files_ctx *cout)
                 val value = car(viter);
 
                 if (value) {
-                  c.bindings = dest_bind(spec_linenum, c.bindings, 
+                  c->bindings = dest_bind(spec_linenum, c->bindings, 
                                          param, cdr(value), equal_f);
 
-                  if (c.bindings == t) {
+                  if (c->bindings == t) {
                     all_bind = nil;
                     break;
                   }
@@ -2420,15 +2406,15 @@ static val v_try(match_files_ctx c, match_files_ctx *cout)
 
               if (all_bind) {
                 cons_bind (new_bindings, success,
-                           match_files(mf_spec(c, body)));
+                           match_files(mf_spec(*c, body)));
                 if (success) {
-                  c.bindings = new_bindings;
+                  c->bindings = new_bindings;
                   result = t; /* catch succeeded, so try succeeds */
                   if (consp(success)) {
-                    c.data = car(success);
-                    c.data_lineno = cdr(success);
+                    c->data = car(success);
+                    c->data_lineno = cdr(success);
                   } else {
-                    c.data = nil;
+                    c->data = nil;
                   }
                 }
               }
@@ -2452,12 +2438,12 @@ static val v_try(match_files_ctx c, match_files_ctx *cout)
            produced by the main clause. */
         cons_bind (new_bindings, success, result);
         if (consp(success)) {
-          c.data = car(success);
-          c.data_lineno = cdr(success);
+          c->data = car(success);
+          c->data_lineno = cdr(success);
         } else {
-          c.data = nil;
+          c->data = nil;
         }
-        c.bindings = new_bindings;
+        c->bindings = new_bindings;
       }
 
       if (!finally_clause) {
@@ -2472,16 +2458,16 @@ static val v_try(match_files_ctx c, match_files_ctx *cout)
 
       if (finally_clause) {
         cons_bind (new_bindings, success,
-                   match_files(mf_spec(c, finally_clause)));
+                   match_files(mf_spec(*c, finally_clause)));
 
         if (success) {
-          c.bindings = new_bindings;
+          c->bindings = new_bindings;
           result = t; /* finally succeeds, so try block succeeds */
           if (consp(success)) {
-            c.data = car(success);
-            c.data_lineno = cdr(success);
+            c->data = car(success);
+            c->data_lineno = cdr(success);
           } else {
-            c.data = nil;
+            c->data = nil;
           }
         }
       }
@@ -2493,14 +2479,13 @@ static val v_try(match_files_ctx c, match_files_ctx *cout)
     if (!result)
       return nil;
 
-    *cout = c;
     return next_spec_k;
   }
 }
 
-static val v_define(match_files_ctx c, match_files_ctx *cout)
+static val v_define(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c.spec);
+  spec_bind (specline, spec_linenum, first_spec, c->spec);
   val args = second(first_spec);
   val body = third(first_spec);
   val name = first(args);
@@ -2512,26 +2497,24 @@ static val v_define(match_files_ctx c, match_files_ctx *cout)
 
   uw_set_func(name, cons(params, body));
 
-  *cout = c;
   return next_spec_k;
 }
 
-static val v_defex(match_files_ctx c, match_files_ctx *cout)
+static val v_defex(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c.spec);
+  spec_bind (specline, spec_linenum, first_spec, c->spec);
   val types = rest(first_spec);
   if (!all_satisfy(types, func_n1(symbolp), nil))
     sem_error(spec_linenum, lit("defex arguments must all be symbols"),
               nao);
   (void) reduce_left(func_n2(uw_register_subtype), types, nil, nil);
 
-  *cout = c;
   return next_spec_k;
 }
 
-static val v_throw(match_files_ctx c, match_files_ctx *cout)
+static val v_throw(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c.spec);
+  spec_bind (specline, spec_linenum, first_spec, c->spec);
   val type = second(first_spec);
   val args = rest(rest(first_spec));
   if (!symbolp(type))
@@ -2539,14 +2522,14 @@ static val v_throw(match_files_ctx c, match_files_ctx *cout)
               type, nao);
   {
     val values = mapcar(curry_123_2(func_n3(eval_form), 
-                                    spec_linenum, c.bindings), args);
+                                    spec_linenum, c->bindings), args);
     uw_throw(type, values);
   }
 }
 
-static val v_deffilter(match_files_ctx c, match_files_ctx *cout)
+static val v_deffilter(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c.spec);
+  spec_bind (specline, spec_linenum, first_spec, c->spec);
   val sym = second(first_spec);
   val table = rest(rest(first_spec));
 
@@ -2567,13 +2550,12 @@ static val v_deffilter(match_files_ctx c, match_files_ctx *cout)
               nao);
   register_filter(sym, table);
   /* TODO: warn about replaced filter. */
-  *cout = c;
   return next_spec_k;
 }
 
-static val v_filter(match_files_ctx c, match_files_ctx *cout)
+static val v_filter(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c.spec);
+  spec_bind (specline, spec_linenum, first_spec, c->spec);
   val filter_spec = second(first_spec);
   val vars = rest(rest(first_spec));
   val filter = get_filter(filter_spec);
@@ -2582,11 +2564,11 @@ static val v_filter(match_files_ctx c, match_files_ctx *cout)
     sem_error(spec_linenum, lit("~s specifies unknown filter"), filter_spec, nao);
 
   uw_env_begin;
-  uw_set_match_context(cons(c.spec, c.bindings));
+  uw_set_match_context(cons(c->spec, c->bindings));
 
   for (; vars; vars = cdr(vars)) {
     val var = car(vars);
-    val existing = assoc(c.bindings, var);
+    val existing = assoc(c->bindings, var);
 
     if (!bindable(var))
       sem_error(spec_linenum, lit("filter: ~a is not a variable name"), 
@@ -2599,23 +2581,21 @@ static val v_filter(match_files_ctx c, match_files_ctx *cout)
   }
 
   uw_env_end;
-  *cout = c;
   return next_spec_k;
 }
 
-static val v_eof(match_files_ctx c, match_files_ctx *cout)
+static val v_eof(match_files_ctx *c)
 {
-  if (c.data) {
-    debugf(lit("eof failed to match at ~a"), c.data_lineno, nao);
+  if (c->data) {
+    debugf(lit("eof failed to match at ~a"), c->data_lineno, nao);
     return nil;
   }
-  *cout = c;
   return next_spec_k;
 }
 
-static val v_fun(match_files_ctx c, match_files_ctx *cout)
+static val v_fun(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c.spec);
+  spec_bind (specline, spec_linenum, first_spec, c->spec);
   val sym = first(first_spec);
   val func = uw_get_func(sym);
 
@@ -2625,7 +2605,7 @@ static val v_fun(match_files_ctx c, match_files_ctx *cout)
     val ub_p_a_pairs = nil;
     val body = cdr(func);
     val piter, aiter;
-    val bindings_cp = copy_alist(c.bindings);
+    val bindings_cp = copy_alist(c->bindings);
 
     if (!equal(length(args), length(params)))
       sem_error(spec_linenum, lit("function ~a takes ~a argument(s)"),
@@ -2638,7 +2618,7 @@ static val v_fun(match_files_ctx c, match_files_ctx *cout)
       val arg = car(aiter);
 
       if (arg && bindable(arg)) {
-        val val = assoc(c.bindings, arg);
+        val val = assoc(c->bindings, arg);
         if (val) {
           bindings_cp = acons_new(bindings_cp,
                                   param,
@@ -2648,7 +2628,7 @@ static val v_fun(match_files_ctx c, match_files_ctx *cout)
           ub_p_a_pairs = cons(cons(param, arg), ub_p_a_pairs);
         }
       } else {
-        val val = eval_form(spec_linenum, arg, c.bindings);
+        val val = eval_form(spec_linenum, arg, c->bindings);
         bindings_cp = acons_new(bindings_cp, param, cdr(val));
       }
     }
@@ -2656,7 +2636,7 @@ static val v_fun(match_files_ctx c, match_files_ctx *cout)
     {
       uw_block_begin(nil, result);
       uw_env_begin;
-      result = match_files(mf_spec_bindings(c, body, bindings_cp));
+      result = match_files(mf_spec_bindings(*c, body, bindings_cp));
       uw_env_end;
       uw_block_end;
 
@@ -2675,9 +2655,9 @@ static val v_fun(match_files_ctx c, match_files_ctx *cout)
           if (symbolp(arg)) {
             val newbind = assoc(new_bindings, param);
             if (newbind) {
-              c.bindings = dest_bind(spec_linenum, c.bindings, 
+              c->bindings = dest_bind(spec_linenum, c->bindings, 
                                      arg, cdr(newbind), equal_f);
-              if (c.bindings == t) {
+              if (c->bindings == t) {
                 debuglf(spec_linenum,
                         lit("binding mismatch on ~a "
                             "when returning from ~a"), arg, sym, nao);
@@ -2691,18 +2671,17 @@ static val v_fun(match_files_ctx c, match_files_ctx *cout)
           debuglf(spec_linenum,
                   lit("function matched; "
                       "advancing from line ~a to ~a"),
-                  c.data_lineno, cdr(success), nao);
-          c.data = car(success);
-          c.data_lineno = cdr(success);
+                  c->data_lineno, cdr(success), nao);
+          c->data = car(success);
+          c->data_lineno = cdr(success);
         } else {
           debuglf(spec_linenum, lit("function consumed entire file"),
                   nao);
-          c.data = nil;
+          c->data = nil;
         }
       }
     }
 
-    *cout = c;
     return next_spec_k;
   }
 
@@ -2762,11 +2741,9 @@ repeat_spec_same_data:
 
       if (entry) {
         v_match_func vmf = (v_match_func) cptr_get(entry);
-        match_files_ctx nc;
-        val result = vmf(c, &nc);
+        val result = vmf(&c);
 
         if (result == next_spec_k) {
-          c = nc;  
           if ((c.spec = rest(c.spec)) == nil)
             break;
           goto repeat_spec_same_data;
@@ -2776,11 +2753,9 @@ repeat_spec_same_data:
           return result;
         }
       } else {
-        match_files_ctx nc;
-        val result = v_fun(c, &nc);
+        val result = v_fun(&c);
 
         if (result == next_spec_k) {
-          c = nc;  
           if ((c.spec = rest(c.spec)) == nil)
             break;
           goto repeat_spec_same_data;
@@ -2829,10 +2804,10 @@ val match_funcall(val name, val arg, val other_args)
                        cons(name, 
                             cons(in_arg_sym, cons(out_arg_sym, other_args))),
                        nao), nil);
-  match_files_ctx nc;
+  match_files_ctx c = mf_all(spec, nil, bindings, nil, num(0));
   (void) first_spec;
 
-  val ret = v_fun(mf_all(spec, nil, bindings, nil, num(0)), &nc);
+  val ret = v_fun(&c);
 
   if (ret == nil)
     sem_error(spec_linenum, lit("filter: (~s ~s ~s) failed"), name,
@@ -2842,7 +2817,7 @@ val match_funcall(val name, val arg, val other_args)
     sem_error(spec_linenum, lit("filter: function ~s not found"), name, nao);
 
   {
-    val out = assoc(nc.bindings, out_arg_sym);
+    val out = assoc(c.bindings, out_arg_sym);
     if (!out)
       sem_error(spec_linenum,
                 lit("filter: (~s ~s ~s) did not bind ~s"), name,
