@@ -32,6 +32,7 @@
 #include <dirent.h>
 #include <setjmp.h>
 #include <dirent.h>
+#include <limits.h>
 #include "config.h"
 #include "lib.h"
 #include "unwind.h"
