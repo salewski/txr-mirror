@@ -1,5 +1,50 @@
 2011-10-30  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 041
+
+	Bugfixes:
+
+	Runaway recursion in @(block) directive, introduced in 040.
+
+	Fixed bug in matching list variable against text, at the same
+	time clarifying semantics to longest-match.
+
+	Fixed potential excessive memory use caused by refactoring in 040.
+
+	Features:
+
+	New :append keyword in @(output) to append instead of overwriting.
+
+	Variable contents can be treated as input sources using :string
+	and :list keywords in @(next). Variables can be treated as output
+	destinations using :into keyword in @(output).
+
+	New @(set) directive for destructive assignment to a variable.
+
+	New filters: :upcase and :downcase.
+
+	@(bind) can now compare left and right objects through filters.
+
+	Filters can now be chained into compound filters.
+
+	Pattern matching functions can be used as filters.
+
+	Shorthand notation in @(deffilter) when multiple strings map to the
+	same replacement string.
+
+	@(cat) directive changes syntax.
+
+	Error handling improvements in parser: no more reams and reams of
+	errors.
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+2011-10-30  Kaz Kylheku  <kaz@kylheku.com>
+
 	We don't include headers in headers in this project.
 
 	* parser.h: Do not include <stdio.h>

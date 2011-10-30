@@ -343,7 +343,7 @@ fi
 #
 
 
-txr_ver=040
+txr_ver=041
 
 #
 # The all important banner.
