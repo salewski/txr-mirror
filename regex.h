@@ -24,8 +24,6 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#include <limits.h>
-
 val regex_compile(val regex_sexp);
 val regexp(val);
 val search_regex(val haystack, val needle_regex, val start_num, val from_end);

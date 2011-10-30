@@ -24,7 +24,6 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#include <stdio.h>
 extern cnum lineno;
 extern int errors;
 extern val yyin_stream;

@@ -1,5 +1,15 @@
 2011-10-30  Kaz Kylheku  <kaz@kylheku.com>
 
+	We don't include headers in headers in this project.
+
+	* parser.h: Do not include <stdio.h>
+
+	* regex.c: Include <limits.h>
+
+	* regex.h: Do not include <limits.h>
+
+2011-10-30  Kaz Kylheku  <kaz@kylheku.com>
+
 	Bug #34691
 
 	Changing the parameter passing convention for vertical directives.
