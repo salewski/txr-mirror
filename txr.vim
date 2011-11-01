@@ -2,6 +2,17 @@
 " Kaz Kylheku <kaz@kylheku.com>
 " 2011-11-01
 
+" INSTALL-HOWTO:
+"
+" 1. Create the directory .vim/syntax in your home directory and
+"    put this file there.
+" 2. In your .vimrc, add this command to associate *.txr files
+"    with the txr filetype.
+"    :au BufRead,BufNewFile *.txr set filetype=txr
+"
+" If you want syntax highlighting to be on automatically (for any language)
+" you need to add ":syntax on" in your .vimrc also. But you knew that already!
+
 syn case match
 syn spell toplevel
 
