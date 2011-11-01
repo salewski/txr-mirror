@@ -1,3 +1,11 @@
+@# This requires the man2html which was originally known as vh-man2html
+@# and is now part of manutils.
+@# See here: http://primates.ximian.com/~flucifredi/man/
+@# It does not work with that other man2html written in Perl.
+@(deffilter month_name 
+  ("01" "Jan") ("02" "Feb") ("03" "Mar") ("04" "Apr")
+  ("05" "May") ("06" "Jun") ("07" "Jul") ("08" "Aug")
+  ("09" "Sep") ("10" "Oct") ("11" "Nov") ("12" "Dec"))
 Content-type: text/html
 @(skip 15)
 <H1>txr</H1>
@@ -20,50 +28,13 @@ txr - text extractor @VERSION
 @(until)
 This document was created by
 @(end)
-@(maybe)
-@  (bind MONTH "01")
-@  (bind MNAME "Jan")
-@(or)
-@  (bind MONTH "02")
-@  (bind MNAME "Feb")
-@(or)
-@  (bind MONTH "03")
-@  (bind MNAME "Mar")
-@(or)
-@  (bind MONTH "04")
-@  (bind MNAME "Apr")
-@(or)
-@  (bind MONTH "05")
-@  (bind MNAME "May")
-@(or)
-@  (bind MONTH "06")
-@  (bind MNAME "Jun")
-@(or)
-@  (bind MONTH "07")
-@  (bind MNAME "Jul")
-@(or)
-@  (bind MONTH "08")
-@  (bind MNAME "Aug")
-@(or)
-@  (bind MONTH "09")
-@  (bind MNAME "Sep")
-@(or)
-@  (bind MONTH "10")
-@  (bind MNAME "Oct")
-@(or)
-@  (bind MONTH "11")
-@  (bind MNAME "Nov")
-@(or)
-@  (bind MONTH "12")
-@  (bind MNAME "Dec")
-@(end)
 @(output)
 <HTML>
 <FONT FACE="courier">
 <HEAD><TITLE>Manpage for txr @VERSION</TITLE>
 </HEAD><BODY>
 <H2>Manpage for <A HREF="#lbAB">Txr </a>@VERSION</H2>
-<H2>@MNAME @DAY, @YEAR</H2>
+<H2>@{MONTH :filter month_name} @DAY, @YEAR</H2>
 @(repeat)
 @TOC
 @(end)

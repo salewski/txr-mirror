@@ -1,5 +1,10 @@
 2011-11-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	* genman.txr: Use filter for mapping month digits to names.
+	Added comment about where to find the right man2html.
+
+2011-11-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.vim: Added installation instructions.
 
 2011-11-01  Kaz Kylheku  <kaz@kylheku.com>
