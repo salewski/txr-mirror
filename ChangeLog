@@ -1,5 +1,9 @@
 2011-11-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.vim: Added installation instructions.
+
+2011-11-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	Syntax highlighting for Vim.
 
 	* txr.vim: New file.
