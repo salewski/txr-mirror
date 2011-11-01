@@ -1,3 +1,9 @@
+2011-11-01  Kaz Kylheku  <kaz@kylheku.com>
+
+	Syntax highlighting for Vim.
+
+	* txr.vim: New file.
+
 2011-10-30  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 041
