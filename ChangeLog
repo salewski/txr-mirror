@@ -1,3 +1,7 @@
+2011-11-02  Kaz Kylheku  <kaz@kylheku.com>
+
+	* txr.vim: Added missing keywords.
+
 2011-11-01  Kaz Kylheku  <kaz@kylheku.com>
 
 	* genman.txr: Use filter for mapping month digits to names.
