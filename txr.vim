@@ -38,9 +38,11 @@ syn match txr_num "[+-]\?[0-9]\+" contained
 
 syn region txr_bracevar matchgroup=Delimiter start="@[ \t]*[*]\?{" matchgroup=Delimiter end="}" contains=txr_ident,txr_num,txr_string,txr_list,txr_regex
 
-syn region txr_directive matchgroup=Delimiter start="@[ \t]*("  skip="|.\{-}|" matchgroup=Delimiter end=")" contains=txr_keyword,txr_string,txr_list,txr_quasilit,txr_num,txr_ident,txr_regex,txr_string
+syn region txr_directive matchgroup=Delimiter start="@[ \t]*("  skip="|.\{-}|" matchgroup=Delimiter end=")" contains=txr_keyword,txr_string,txr_list,txr_meta,txr_quasilit,txr_num,txr_ident,txr_regex,txr_string,txr_variable
 
-syn region txr_list contained matchgroup=Delimiter start="("  skip="|.\{-}|" matchgroup=Delimiter end=")" contains=txr_string,txr_regex,txr_ident,txr_num
+syn region txr_list contained matchgroup=Delimiter start="("  skip="|.\{-}|" matchgroup=Delimiter end=")" contains=txr_string,txr_regex,txr_ident,txr_num,txr_variable,txr_meta,txr_list
+
+syn region txr_meta contained matchgroup=Delimiter start="@("  skip="|.\{-}|" matchgroup=Delimiter end=")" contains=txr_string,txr_regex,txr_ident,txr_num,txr_variable
 
 syn region txr_string contained oneline start=+"+ skip=+\\\\\|\\"+ end=+"+
 syn region txr_quasilit contained oneline start=+`+ skip=+\\\\\|\\`+ end=+`+ contains=txr_directive,txr_variable,txr_bracevar
