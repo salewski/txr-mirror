@@ -36,16 +36,17 @@ syn match txr_variable "@[ \t]*[*]\?[A-Za-z_][A-Za-z0-9_]*"
 syn match txr_ident ":\?[A-Za-z_][A-Za-z0-9_]*" contained
 syn match txr_num "[+-]\?[0-9]\+" contained
 
-syn region txr_bracevar matchgroup=Delimiter start="@[ \t]*[*]\?{" matchgroup=Delimiter end="}" contains=txr_ident,txr_num,txr_string,txr_list,txr_regex
+syn region txr_bracevar matchgroup=Delimiter start="@[ \t]*[*]\?{" matchgroup=Delimiter end="}" contains=txr_ident,txr_num,txr_string,txr_list,txr_regex,txr_quasilit,txr_chr
 
-syn region txr_directive matchgroup=Delimiter start="@[ \t]*(" matchgroup=Delimiter end=")" contains=txr_keyword,txr_string,txr_list,txr_meta,txr_quasilit,txr_num,txr_ident,txr_regex,txr_string,txr_variable
+syn region txr_directive matchgroup=Delimiter start="@[ \t]*(" matchgroup=Delimiter end=")" contains=txr_keyword,txr_string,txr_list,txr_meta,txr_quasilit,txr_num,txr_ident,txr_regex,txr_string,txr_variable,txr_chr
 
-syn region txr_list contained matchgroup=Delimiter start="(" matchgroup=Delimiter end=")" contains=txr_string,txr_regex,txr_ident,txr_num,txr_variable,txr_meta,txr_list
+syn region txr_list contained matchgroup=Delimiter start="(" matchgroup=Delimiter end=")" contains=txr_string,txr_regex,txr_ident,txr_num,txr_variable,txr_meta,txr_list,txr_quasilit,txr_chr
 
-syn region txr_meta contained matchgroup=Delimiter start="@(" matchgroup=Delimiter end=")" contains=txr_string,txr_regex,txr_ident,txr_num,txr_variable
+syn region txr_meta contained matchgroup=Delimiter start="@(" matchgroup=Delimiter end=")" contains=txr_string,txr_regex,txr_ident,txr_num,txr_variable,txr_quasilit,txr_chr
 
 syn region txr_string contained oneline start=+"+ skip=+\\\\\|\\"+ end=+"+
 syn region txr_quasilit contained oneline start=+`+ skip=+\\\\\|\\`+ end=+`+ contains=txr_directive,txr_variable,txr_bracevar
+syn region txr_chr contained oneline start=+'+ skip=+\\\\\|\\'+ end=+'+ contains=txr_directive,txr_variable,txr_bracevar
 syn region txr_regex contained oneline start=+/+ skip=+\\\\\|\\/+ end=+/+
 syn region txr_regdir oneline start=+@/+ skip=+\\\\\|\\/+ end=+/+
 
@@ -55,6 +56,7 @@ hi def link txr_contin Comment
 hi def link txr_char String
 hi def link txr_keyword Keyword
 hi def link txr_string String
+hi def link txr_chr String
 hi def link txr_quasilit String
 hi def link txr_regex String
 hi def link txr_regdir String
