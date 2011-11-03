@@ -1,5 +1,5 @@
 <Students>
-@(collect)
+@(collect :vars (NAME GENDER YEAR MONTH DAY (PET_TYPE "none") (PET_NAME "")))
 @  (cases)
   <Student Name="@NAME" Gender="@GENDER" DateOfBirth="@YEAR-@MONTH-@DAY"@(skip)
 @  (or)
@@ -7,9 +7,6 @@
 @  (end)
 @  (maybe)
     <Pet Type="@PET_TYPE" Name="@PET_NAME" />
-@  (or)
-@  (bind PET_TYPE "none")
-@  (bind PET_NAME "")
 @  (end)
 @(until)
 </Students>
