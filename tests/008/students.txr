@@ -1,9 +1,9 @@
 <Students>
 @(collect)
 @  (cases)
-  <Student Name="@NAME" Gender="@GENDER"@/ +/DateOfBirth="@YEAR-@MONTH-@DAY"@/.*/
+  <Student Name="@NAME" Gender="@GENDER" DateOfBirth="@YEAR-@MONTH-@DAY"@(skip)
 @  (or)
-  <Student DateOfBirth="@YEAR-@MONTH-@DAY" Gender="@GENDER" Name="@NAME"@/.*/
+  <Student DateOfBirth="@YEAR-@MONTH-@DAY" Gender="@GENDER" Name="@NAME"@(skip)
 @  (end)
 @  (maybe)
     <Pet Type="@PET_TYPE" Name="@PET_NAME" />
