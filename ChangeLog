@@ -1,3 +1,7 @@
+2011-11-04  Kaz Kylheku  <kaz@kylheku.com>
+
+	* txr.c (help): Change year from 2009 to 2011.
+
 2011-11-03  Kaz Kylheku  <kaz@kylheku.com>
 
 	* tests/008/students.txr: Use disciplined collect with :vars.
