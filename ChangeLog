@@ -1,5 +1,11 @@
 2011-11-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	* hash.c (ll_hash): Added a break in the case that handles
+	pointer hashing of identity-equal objects. Without this, if the
+	pointer size is not 4 or 8, we fall through to the next case.
+
+2011-11-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.c (help): Change year from 2009 to 2011.
 
 2011-11-03  Kaz Kylheku  <kaz@kylheku.com>

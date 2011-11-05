@@ -108,6 +108,7 @@ static cnum ll_hash(val obj)
     case 8: default:
       return (((cnum) obj) & NUM_MAX) >> 5;
     }
+    break;
   case FUN:
     return ((cnum) obj->f.f.interp_fun + ll_hash(obj->f.env)) & NUM_MAX;
   case VEC:
