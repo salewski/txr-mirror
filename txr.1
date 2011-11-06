@@ -1114,6 +1114,7 @@ with, or without arguments:
   @(next SOURCE)
   @(next SOURCE :nothrow)
   @(next :args)
+  @(next :env)
   @(next :list EXPR)
   @(next :string EXPR)
 
@@ -1150,6 +1151,11 @@ open the input source named by that argument. If the very first directive of a q
 .B txr
 avoids opening the first input source, but it does open the input source for
 any other directive, even one which does not consume any data.
+
+The variant @(next :env) means that the list of process enviornment variables
+is treated as a source of data. It looks like a text file stream
+consisting of lines of the form "name=value".  If this feature is not available
+on a given platform, an exception is thrown.
 
 The syntax @(next :list EXPR) treats the expression as a source of
 text. The value of the expression is flattened to a list in a way similar

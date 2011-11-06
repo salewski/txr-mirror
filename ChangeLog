@@ -1,3 +1,19 @@
+2011-11-05  Kaz Kylheku  <kaz@kylheku.com>
+
+	Task #11442. Access to environment variables.
+
+	* lib.c (env_list): New static variable.
+	(env): New function.
+	(match): Declaration of nonexistent function removed.
+	(obj_init): New variable gc-protected.
+
+	* lib.h (env): Declared.
+
+	* match.c (env_k): New symbol variable.
+	(v_next): Implemented :env.
+
+	* txr.1: @(next :env) described.
+
 2011-11-04  Kaz Kylheku  <kaz@kylheku.com>
 
 	* hash.c (ll_hash): Added a break in the case that handles

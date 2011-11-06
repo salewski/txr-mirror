@@ -53,7 +53,7 @@ val mingap_k, maxgap_k, gap_k, mintimes_k, maxtimes_k, times_k;
 val lines_k, chars_k;
 val choose_s, longest_k, shortest_k, greedy_k;
 val vars_k;
-val append_k, into_k, var_k, list_k, string_k;
+val append_k, into_k, var_k, list_k, string_k, env_k;
 
 val filter_s;
 
@@ -1662,15 +1662,31 @@ static val v_next(match_files_ctx *c)
     val source = first(args);
 
     if (source == args_k) {
-      if (rest(args))
+      if (rest(args)) {
         sem_error(spec_linenum, lit("(next :args) takes no additional arguments"), nao);
-      cons_bind (new_bindings, success,
-                 match_files(mf_args(*c)));
+      } else {
+        cons_bind (new_bindings, success,
+                   match_files(mf_args(*c)));
 
-      if (success)
-        return cons(new_bindings,
-                    if3(c->data, cons(c->data, c->data_lineno), t));
-      return nil;
+        if (success)
+          return cons(new_bindings,
+                      if3(c->data, cons(c->data, c->data_lineno), t));
+        return nil;
+      }
+    }
+
+    if (source == env_k) {
+      if (rest(args)) {
+        sem_error(spec_linenum, lit("(next :env) takes no additional arguments"), nao);
+      } else {
+        cons_bind (new_bindings, success,
+                   match_files(mf_data(*c, env(), num(1))));
+
+        if (success)
+          return cons(new_bindings,
+                      if3(c->data, cons(c->data, c->data_lineno), t));
+        return nil;
+      }
     }
     
     if (keywordp(first(args))) {
@@ -2870,6 +2886,7 @@ static void syms_init(void)
   var_k = intern(lit("var"), keyword_package);
   list_k = intern(lit("list"), keyword_package);
   string_k = intern(lit("string"), keyword_package);
+  env_k = intern(lit("env"), keyword_package);
 
   filter_s = intern(lit("filter"), user_package);
 }

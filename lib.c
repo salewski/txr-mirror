@@ -76,6 +76,8 @@ val identity_f, equal_f, eq_f, car_f;
 
 val prog_string;
 
+static val env_list;
+
 mem_t *(*oom_realloc)(mem_t *, size_t);
 
 val identity(val obj)
@@ -2297,6 +2299,23 @@ val set_diff(val list1, val list2, val testfun, val keyfun)
   return out;
 }
 
+val env(void)
+{
+  extern char **environ;
+  char **iter;
+
+  if (env_list) {
+    return env_list;
+  } else {
+    list_collect_decl (out, ptail);
+
+    for (iter = environ; *iter != 0; iter++)
+      list_collect (ptail, string_utf8(*iter));
+
+    return env_list = out;
+  }
+}
+
 static void obj_init(void)
 {
   /*
@@ -2308,7 +2327,7 @@ static void obj_init(void)
   protect(&packages, &system_package, &keyword_package,
           &user_package, &null_string, &nil_string,
           &null_list, &equal_f, &eq_f, &car_f,
-          &identity_f, &prog_string,
+          &identity_f, &prog_string, &env_list,
           (val *) 0);
 
   nil_string = lit("nil");
