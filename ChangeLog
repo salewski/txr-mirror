@@ -1,5 +1,13 @@
 2011-11-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	* configure: Bugfixes. Before the compiler tests, we must
+	remove the conftest executable, to make sure that the next test will
+	try to re-make it. The configure runs fast enough that the new
+	conftest.c does not always have a timestamp which is newer than
+	previous conftest executable.
+
+2011-11-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	Task #11442. Make work on MingW.
 
 	* configure: Test for environ and GetEnvironmentStrings.
