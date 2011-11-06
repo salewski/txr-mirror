@@ -1,5 +1,10 @@
 2011-11-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (dir_tables_init): Bugfix: horizontal @(some)
+	directive not included in dispatch table.
+
+2011-11-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	* configure: Bugfixes. Before the compiler tests, we must
 	remove the conftest executable, to make sure that the next test will
 	try to re-make it. The configure runs fast enough that the new

@@ -2931,6 +2931,7 @@ static void dir_tables_init(void)
   sethash(h_directive_table, var_s, cptr((mem_t *) h_var));
   sethash(h_directive_table, skip_s, cptr((mem_t *) h_skip));
   sethash(h_directive_table, coll_s, cptr((mem_t *) h_coll));
+  sethash(h_directive_table, some_s, cptr((mem_t *) h_parallel));
   sethash(h_directive_table, all_s, cptr((mem_t *) h_parallel));
   sethash(h_directive_table, none_s, cptr((mem_t *) h_parallel));
   sethash(h_directive_table, maybe_s, cptr((mem_t *) h_parallel));
