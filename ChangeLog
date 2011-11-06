@@ -1,5 +1,14 @@
 2011-11-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	Task #11442. Make work on MingW.
+
+	* configure: Test for environ and GetEnvironmentStrings.
+
+	* lib.c: Conditionally include <windows.h>.
+	(env): Implemented for POSIX and Windows with #ifdefs.
+
+2011-11-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	Task #11442. Access to environment variables.
 
 	* lib.c (env_list): New static variable.

@@ -35,6 +35,9 @@
 #include <setjmp.h>
 #include <wchar.h>
 #include "config.h"
+#ifdef HAVE_GETENVIRONMENTSTRINGS
+#include <windows.h>
+#endif
 #include "lib.h"
 #include "gc.h"
 #include "hash.h"
@@ -2301,18 +2304,28 @@ val set_diff(val list1, val list2, val testfun, val keyfun)
 
 val env(void)
 {
-  extern char **environ;
-  char **iter;
-
   if (env_list) {
     return env_list;
   } else {
     list_collect_decl (out, ptail);
+#if HAVE_ENVIRON
+    extern char **environ;
+    char **iter = environ;
 
-    for (iter = environ; *iter != 0; iter++)
+    for (; *iter != 0; iter++)
       list_collect (ptail, string_utf8(*iter));
 
     return env_list = out;
+#elif HAVE_GETENVIRONMENTSTRINGS
+    wchar_t *env = GetEnvironmentStringsW();
+
+    for (; *env; env += wcslen(env) + 1)
+      list_collect (ptail, string(env));
+
+    return env_list = out;
+#else
+    uw_throwf(error_s, lit("string_extend: overflow"), nao);
+#endif
   }
 }
 
