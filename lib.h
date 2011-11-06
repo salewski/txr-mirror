@@ -435,6 +435,7 @@ val merge(val list1, val list2, val lessfun, val keyfun);
 val sort(val list, val lessfun, val keyfun);
 val find(val list, val key, val testfun, val keyfun);
 val set_diff(val list1, val list2, val testfun, val keyfun);
+val env(void);
 
 void obj_print(val obj, val stream);
 void obj_pprint(val obj, val stream);
@@ -442,7 +443,6 @@ void init(const wchar_t *progname, mem_t *(*oom_realloc)(mem_t *, size_t),
           val *stack_bottom);
 void dump(val obj, val stream);
 void d(val obj);
-val match(val spec, val data);
 
 #define nil ((obj_t *) 0)
 
