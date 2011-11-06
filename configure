@@ -574,6 +574,7 @@ int main(void)
 }
 !
 
+rm -f conftest
 if ! make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
   printf "failed\n\n"
   printf "Errors from compilation: \n\n"
@@ -767,6 +768,7 @@ $inline int func(void)
   return 0;
 }
 !
+    rm -f conftest2
     if ! make conftest2 > conftest.err 2>&1 ; then
 	continue
     fi
@@ -798,6 +800,7 @@ int main(void)
 syntax error
 #endif
 !
+  rm -rf conftest
   if ! make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
     printf "failed\n\n"
     printf "Errors from compilation: \n\n"
@@ -816,6 +819,7 @@ fi
 printf "Checking for yacc program ... "
 
 if [ -z "$yacc_given" -a -z "$yaccname_given" ] ; then
+  rm -f conftest.yacc
   for yaccname in "yacc" "byacc" "bison -y" "" ; do
     yaccpath=$(make yaccname="$yaccname" conftest.yacc)
     if command -v $yaccpath > /dev/null ; then
@@ -862,6 +866,7 @@ int main(void)
   return 0;
 }
 !
+rm -f conftest
 if ! make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
   printf "no\n"
 else
@@ -883,6 +888,7 @@ int main(void)
   return 0;
 }
 !
+rm -f conftest
 if ! make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
   printf "no\n"
 else
@@ -905,6 +911,7 @@ int main(void)
   return 0;
 }
 !
+rm -f conftest
 if ! make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
   printf "no\n"
 else
