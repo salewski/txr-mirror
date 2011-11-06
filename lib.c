@@ -2319,13 +2319,19 @@ val env(void)
     return env_list = out;
 #elif HAVE_GETENVIRONMENTSTRINGS
     wchar_t *env = GetEnvironmentStringsW();
+    wchar_t *iter = env;
 
-    for (; *env; env += wcslen(env) + 1)
-      list_collect (ptail, string(env));
+    if (iter == 0)
+      uw_throwf(error_s, lit("out of memory"), nao);
+
+    for (; *iter; iter += wcslen(iter) + 1)
+      list_collect (ptail, string(iter));
+
+    FreeEnvironmentStringsW(env);
 
     return env_list = out;
 #else
-    uw_throwf(error_s, lit("string_extend: overflow"), nao);
+    uw_throwf(error_s, lit("environment strings not available"), nao);
 #endif
   }
 }

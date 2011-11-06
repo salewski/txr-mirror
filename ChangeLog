@@ -1,5 +1,11 @@
 2011-11-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (env): Fixed inappropriate cut-and-pasted error messages.
+	Check for failure of GetEnvironmentStringsW, and call
+	FreeEnvironmentStringsW is called.
+
+2011-11-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (dir_tables_init): Bugfix: horizontal @(some)
 	directive not included in dispatch table.
 
