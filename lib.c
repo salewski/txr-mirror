@@ -36,6 +36,7 @@
 #include <wchar.h>
 #include "config.h"
 #ifdef HAVE_GETENVIRONMENTSTRINGS
+#define NOMINMAX
 #include <windows.h>
 #endif
 #include "lib.h"
