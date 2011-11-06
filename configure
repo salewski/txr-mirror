@@ -870,6 +870,49 @@ else
 fi
 
 #
+# environ
+#
+
+printf "Checking whether we have environ ... "
+
+cat > conftest.c <<!
+int main(void)
+{
+  extern char **environ;
+  puts(environ[0]);
+  return 0;
+}
+!
+if ! make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+  printf "no\n"
+else
+  printf "yes\n"
+  printf "#define HAVE_ENVIRON 1\n" >> config.h
+fi
+
+#
+# GetEnvironmentStrings
+#
+
+printf "Checking whether we have GetEnvironmentStrings ... "
+
+cat > conftest.c <<!
+#include <windows.h>
+
+int main(void)
+{
+  WCHAR *ptr = GetEnvironmentStringsW();
+  return 0;
+}
+!
+if ! make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+  printf "no\n"
+else
+  printf "yes\n"
+  printf "#define HAVE_GETENVIRONMENTSTRINGS 1\n" >> config.h
+fi
+
+#
 # Clean up
 #
 
