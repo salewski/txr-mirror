@@ -1,5 +1,19 @@
 2011-11-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	Task #11581 & bugfix.
+
+	* match.c (noval_s): New symbol variable.
+	(vars_to_bindings): Use a default value of noval_s to indicate a
+	required variable, rather than nil, which would not allow
+	an optional variable with a default value of nil.
+	(h_coll, v_collect): Check default value against noval_s, rather than nil.
+	(v_gather): Support :vars keyword.
+	(syms_init): Initialize new symbol variable.
+
+	* txr.1: Documented gather's :vars parameter.
+
+2011-11-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	Task #11581
 
 	* match.c (gather_s): New keyword variable.

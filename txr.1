@@ -1619,7 +1619,7 @@ which all have to match somewhere in the data, but in any order.
 For further convenience, the lines of the first clause of the gather directive
 are implicitly treated as separate clauses.
 
-The syntax follow this pattern
+The syntax follows this pattern
 
   @(gather)
   one-line-query1
@@ -1644,7 +1644,8 @@ The syntax follow this pattern
   .
   @(end)
 
-Of course the multi-line clauses are optional.  
+Of course the multi-line clauses are optional.   The gather directive takes
+keyword parameters, see below.
 
 How gather works is that the text is searched for matches for the single line
 and multi-line queries. The clauses are applied in the order in which they appear.
@@ -1665,6 +1666,35 @@ order:
   HOME=@HOME
   SHELL=@SHELL
   @(end)
+
+.SS Gather Keyword Parameters
+
+The gather diretive accepts the keyword parameter :vars. The argument to vars is a list
+of required and optional variables.  Optional variables are denoted by the
+specification of a default value. Example:
+
+  @(gather :vars (a b c (d "foo")))
+  ...
+  @(end)
+
+Here, a, b, c and e are required variables, and d is optional.  Variable e is
+required because its default value is the empty list (), same as the symbol
+nil. 
+
+The presence of vars changes the behavior in three ways.
+
+Firstly, even if all the clauses in the gather match successfully and are
+eliminated, the directive will fail if the required variables do not have
+bindings. It doesn't matter whether the bindings are existing, or whether they
+are established by the gather.
+
+Secondly, if some of the clauses of the gather did not match, but all
+of the required variables have bindings, then the directive succeeds.
+Without the presence of :vars, it would fail in this situation.
+
+Thirdly, if the the gather succeeds (all required variables have bindings),
+then all of the optional variables which do not have bindings are given
+bindings to their default values.
 
 .SS The Collect Directive
 

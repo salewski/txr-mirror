@@ -58,6 +58,8 @@ val append_k, into_k, var_k, list_k, string_k, env_k;
 
 val filter_s;
 
+val noval_s;
+
 static val h_directive_table, v_directive_table;
 
 static void debugf(val fmt, ...)
@@ -338,7 +340,7 @@ static val vars_to_bindings(val lineno, val vars, val bindings)
   for (iter = vars; iter; iter = cdr(iter)) {
     val item = car(iter);
     if (bindable(item)) {
-      list_collect (tail, cons(item, nil));
+      list_collect (tail, cons(item, noval_s));
     } else if (consp(item) && bindable(first(item))) {
       list_collect (tail, cons(first(item), 
                                cdr(eval_form(lineno, second(item), bindings))));
@@ -715,7 +717,7 @@ static val h_coll(match_line_ctx c, match_line_ctx *cout)
           val exists = assoc(new_bindings, var);
 
           if (!exists) {
-            if (!dfl) 
+            if (dfl == noval_s)
               sem_error(c.spec_lineno, lit("coll failed to bind ~a"),
                         var, nao);
             else
@@ -1925,6 +1927,8 @@ static val v_gather(match_files_ctx *c)
 {
   spec_bind (specline, spec_linenum, first_spec, c->spec);
   val specs = copy_list(second(first_spec));
+  val args = third(first_spec);
+  val vars = vars_to_bindings(spec_linenum, getplist(args, vars_k), c->bindings);
 
   while (specs && c->data) {
     list_collect_decl (new_specs, ptail);
@@ -1969,6 +1973,25 @@ static val v_gather(match_files_ctx *c)
       c->data = rest(c->data);
       debuglf(spec_linenum, lit("gather advancing by one line to ~a"), c->data_lineno, nao);
     }
+  }
+
+  if (vars) {
+    val iter;
+
+    for (iter = vars; iter != nil; iter = cdr(iter)) {
+      cons_bind (var, dfl_val, car(iter));
+      if (!assoc(c->bindings, var)) {
+        if (dfl_val == noval_s) {
+          debuglf(spec_linenum, lit("gather failed to match some required vars"), nao);
+          return nil;
+        } else {
+          c->bindings = acons(c->bindings, var, dfl_val);
+        }
+      }
+    }
+
+    debuglf(spec_linenum, lit("gather matched all required vars"), nao);
+    return next_spec_k;
   }
 
   if (specs) {
@@ -2071,7 +2094,7 @@ static val v_collect(match_files_ctx *c)
           val exists = assoc(new_bindings, var);
 
           if (!exists) {
-            if (!dfl) 
+            if (dfl == noval_s) 
               sem_error(spec_linenum, lit("collect failed to bind ~a"),
                         var, nao);
             else
@@ -2950,6 +2973,7 @@ static void syms_init(void)
   env_k = intern(lit("env"), keyword_package);
 
   filter_s = intern(lit("filter"), user_package);
+  noval_s = intern(lit("noval"), system_package);
 }
 
 static void dir_tables_init(void)
