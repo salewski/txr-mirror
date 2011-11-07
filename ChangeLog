@@ -1,5 +1,9 @@
 2011-11-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.vim: Make sure whitespace is recognized after @.
+
+2011-11-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	Task #11581 & bugfix.
 
 	* match.c (noval_s): New symbol variable.

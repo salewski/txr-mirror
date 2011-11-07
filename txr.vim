@@ -25,8 +25,8 @@ syn keyword txr_keyword contained define try catch finally throw
 syn keyword txr_keyword contained defex throw deffilter filter eof eol
 
 syn match txr_at "@[ \t]*@"
-syn match txr_comment "@#.*"
-syn match txr_contin "@\\$"
+syn match txr_comment "@[ \t]*#.*"
+syn match txr_contin "@[ \t]*\\$"
 syn match txr_hashbang "^#!.*"
 syn match txr_char "@[ \t]*\\."
 syn match txr_char "@[ \t]*\\x[0-9A-Fa-f]\+"
@@ -42,13 +42,13 @@ syn region txr_directive matchgroup=Delimiter start="@[ \t]*(" matchgroup=Delimi
 
 syn region txr_list contained matchgroup=Delimiter start="(" matchgroup=Delimiter end=")" contains=txr_string,txr_regex,txr_ident,txr_num,txr_variable,txr_meta,txr_list,txr_quasilit,txr_chr
 
-syn region txr_meta contained matchgroup=Delimiter start="@(" matchgroup=Delimiter end=")" contains=txr_string,txr_regex,txr_ident,txr_num,txr_variable,txr_quasilit,txr_chr
+syn region txr_meta contained matchgroup=Delimiter start="@[ \t]*(" matchgroup=Delimiter end=")" contains=txr_string,txr_regex,txr_ident,txr_num,txr_variable,txr_quasilit,txr_chr
 
 syn region txr_string contained oneline start=+"+ skip=+\\\\\|\\"+ end=+"+
 syn region txr_quasilit contained oneline start=+`+ skip=+\\\\\|\\`+ end=+`+ contains=txr_directive,txr_variable,txr_bracevar
 syn region txr_chr contained oneline start=+'+ skip=+\\\\\|\\'+ end=+'+ contains=txr_directive,txr_variable,txr_bracevar
 syn region txr_regex contained oneline start=+/+ skip=+\\\\\|\\/+ end=+/+
-syn region txr_regdir oneline start=+@/+ skip=+\\\\\|\\/+ end=+/+
+syn region txr_regdir oneline start=+@[ \t]*/+ skip=+\\\\\|\\/+ end=+/+
 
 hi def link txr_comment Comment
 hi def link txr_hashbang Comment
