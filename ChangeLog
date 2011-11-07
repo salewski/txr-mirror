@@ -1,3 +1,22 @@
+2011-11-06  Kaz Kylheku  <kaz@kylheku.com>
+
+	Task #11581
+
+	* match.c (gather_s): New keyword variable.
+	(v_gather): New function.
+	(syms_init): gather_s initialized.
+	(dir_tables_init): v_gather entered into table.
+
+	* match.h (gather_s): Declared.
+
+	* parser.l: GATHER token scanning added.
+
+	* parser.y: GATHER token added. gather_clause nonterminal added.
+
+	* txr.1: New directive documented.
+
+	* txr.vim: gather keyword introduced.
+
 2011-11-05  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (env): Fixed inappropriate cut-and-pasted error messages.

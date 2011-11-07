@@ -59,7 +59,7 @@ static val parsed_spec;
 }
 
 %token <lexeme> SPACE TEXT IDENT KEYWORD METAVAR
-%token <lexeme> ALL SOME NONE MAYBE CASES CHOOSE
+%token <lexeme> ALL SOME NONE MAYBE CASES CHOOSE GATHER
 %token <lexeme> AND OR END COLLECT
 %token <lexeme> UNTIL COLL OUTPUT REPEAT REP SINGLE FIRST LAST EMPTY DEFINE
 %token <lexeme> TRY CATCH FINALLY
@@ -72,7 +72,7 @@ static val parsed_spec;
 
 %type <val> spec clauses clauses_opt clause
 %type <val> all_clause some_clause none_clause maybe_clause
-%type <val> cases_clause choose_clause collect_clause until_last
+%type <val> cases_clause choose_clause gather_clause collect_clause until_last
 %type <val> clause_parts additional_parts
 %type <val> output_clause define_clause try_clause catch_clauses_opt
 %type <val> line elems_opt elems clause_parts_h additional_parts_h
@@ -123,6 +123,7 @@ clause : all_clause             { $$ = list(num(lineno - 1), $1, nao); }
        | cases_clause           { $$ = list(num(lineno - 1), $1, nao); }
        | choose_clause          { $$ = list(num(lineno - 1), $1, nao); }
        | collect_clause         { $$ = list(num(lineno - 1), $1, nao); }
+       | gather_clause          { $$ = list(num(lineno - 1), $1, nao); }
        | define_clause          { $$ = list(num(lineno - 1),
                                             define_transform($1), nao); }
        | try_clause             { $$ = list(num(lineno - 1), $1, nao); }
@@ -183,6 +184,21 @@ choose_clause : CHOOSE exprs_opt ')'
                 newl END newl           { $$ = nil;
                                           yyerror("empty choose clause"); }
               ;
+
+gather_clause : GATHER exprs_opt ')'
+                newl clause_parts       { $$ = list(gather_s, 
+                                                    append2(mapcar(curry_12_1(func_n2(cons), nil),
+                                                                   first($5)), rest($5)),
+                                                    $2, nao); }
+              | GATHER exprs_opt ')'
+                newl error              { $$ = nil;
+                                          yybadtoken(yychar,
+                                                     lit("gather clause")); }
+              | GATHER exprs_opt ')'
+                newl END newl           { $$ = nil;
+                                          yyerror("empty gather clause"); }
+              ;
+
 
 collect_clause : COLLECT exprs_opt ')' newl
                  clauses END newl                { $$ = list(collect_s,
