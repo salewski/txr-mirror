@@ -51,7 +51,8 @@ int output_produced;
 val decline_k, next_spec_k, repeat_spec_k;
 val mingap_k, maxgap_k, gap_k, mintimes_k, maxtimes_k, times_k;
 val lines_k, chars_k;
-val choose_s, longest_k, shortest_k, greedy_k;
+val choose_s, gather_s;
+val longest_k, shortest_k, greedy_k;
 val vars_k;
 val append_k, into_k, var_k, list_k, string_k, env_k;
 
@@ -1920,6 +1921,65 @@ static val v_parallel(match_files_ctx *c)
   }
 }
 
+static val v_gather(match_files_ctx *c)
+{
+  spec_bind (specline, spec_linenum, first_spec, c->spec);
+  val specs = copy_list(second(first_spec));
+
+  while (specs && c->data) {
+    list_collect_decl (new_specs, ptail);
+    val max_line = zero;
+    val max_data = nil;
+    val iter, next;
+
+    for (iter = specs, next = cdr(iter); iter != nil; iter = next, next = cdr(iter)) {
+      val nested_spec = first(iter);
+      cons_bind (new_bindings, success, 
+                 match_files(mf_spec(*c, nested_spec)));
+
+      if (!success) {
+        *cdr_l(iter) = nil;
+        list_collect_nconc(ptail, iter);
+      } else if (success == t) {
+        c->bindings = new_bindings;
+        max_data = t;
+      } else if (consp(success) && max_data != t) {
+        c->bindings = new_bindings;
+        cons_bind (new_data, new_line, success);
+        if (gt(new_line, max_line)) {
+          max_line = new_line;
+          max_data = new_data;
+        }
+      }
+    }
+
+    list_collect_terminate (ptail, nil);
+    specs = new_specs;
+
+    if (consp(max_data)) {
+      debuglf(spec_linenum, lit("gather advancing from line ~a to ~a"),
+              c->data_lineno, max_line, nao);
+      c->data_lineno = max_line;
+      c->data = max_data;
+    } else if (max_data == t) {
+      debuglf(spec_linenum, lit("gather consumed entire file"), nao);
+      c->data = nil;
+    } else {
+      c->data_lineno = plus(c->data_lineno, num(1));
+      c->data = rest(c->data);
+      debuglf(spec_linenum, lit("gather advancing by one line to ~a"), c->data_lineno, nao);
+    }
+  }
+
+  if (specs) {
+    debuglf(spec_linenum, lit("gather failed to match some specs:"), nao);
+    debuglf(spec_linenum, lit("~s"), specs, nao);
+    return nil;
+  }
+
+  return next_spec_k;
+}
+
 static val v_collect(match_files_ctx *c)
 {
   spec_bind (specline, spec_linenum, first_spec, c->spec);
@@ -2877,6 +2937,7 @@ static void syms_init(void)
   lines_k = intern(lit("lines"), keyword_package);
   chars_k = intern(lit("chars"), keyword_package);
   choose_s = intern(lit("choose"), user_package);
+  gather_s = intern(lit("gather"), user_package);
   longest_k = intern(lit("longest"), keyword_package);
   shortest_k = intern(lit("shortest"), keyword_package);
   greedy_k = intern(lit("greedy"), keyword_package);
@@ -2911,6 +2972,7 @@ static void dir_tables_init(void)
   sethash(v_directive_table, maybe_s, cptr((mem_t *) v_parallel));
   sethash(v_directive_table, cases_s, cptr((mem_t *) v_parallel));
   sethash(v_directive_table, choose_s, cptr((mem_t *) v_parallel));
+  sethash(v_directive_table, gather_s, cptr((mem_t *) v_gather));
   sethash(v_directive_table, collect_s, cptr((mem_t *) v_collect));
   sethash(v_directive_table, flatten_s, cptr((mem_t *) v_flatten));
   sethash(v_directive_table, forget_s, cptr((mem_t *) v_forget_local));

@@ -240,6 +240,10 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                                   return CHOOSE;
                                 }
 
+<SPECIAL>\({WS}gather/{ID_END}  {
+                                  yy_push_state(NESTED);
+                                  return GATHER;
+                                }
 
 <SPECIAL>\({WS}and{WS}\)        {
                                   yy_pop_state();

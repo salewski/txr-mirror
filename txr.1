@@ -1012,6 +1012,11 @@ is the one which maximizes or minimizes the length of a particular variable.
 .IP @(define\ NAME\ (\ ARGUMENTS\ ...))
 Introduces a function. Functions are discussed in the FUNCTIONS section below.
 
+.IP @(gather)
+Searches text for matches for multiple clauses which may occur in arbitrary
+order. For convenience, lines of the first clause are treated as separate
+clauses.
+
 .IP @(collect)
 Search the data for multiple matches of a clause. Collect the
 bindings in the clause into lists, which are output as array variables.
@@ -1600,6 +1605,66 @@ For instance if there are two subclauses, and one of them matches three lines,
 but the other one matches five lines, then the overall clause is considered to
 have made a five line match at its position. If more directives follow, they
 begin matching five lines down from that position.
+
+.SS The Gather Directive
+
+Sometimes text is structured as items that can appear in an arbitrary order.
+When multiple matches need to be extracted, there is a combinatorial explosion
+of possible orders, making it impractical to write pattern matches for all
+the possible orders.
+
+The gather directive is for these situations. It specifies multiple clauses
+which all have to match somewhere in the data, but in any order.
+
+For further convenience, the lines of the first clause of the gather directive
+are implicitly treated as separate clauses.
+
+The syntax follow this pattern
+
+  @(gather)
+  one-line-query1
+  one-line-query2
+  .
+  .
+  .
+  one-line-queryN
+  @(and)
+  multi
+  line
+  query1
+  .
+  .
+  .
+  @(and)
+  multi
+  line
+  query2
+  .
+  .
+  .
+  @(end)
+
+Of course the multi-line clauses are optional.  
+
+How gather works is that the text is searched for matches for the single line
+and multi-line queries. The clauses are applied in the order in which they appear.
+Whenever one of the clauses matches, any bindings it produces are retained and
+it is removed from further consideration. Multiple clauses can match at the
+same text position.  The position advances by the longest match from among the
+clauses which matched.  If no clauses match, the position advances by one line.
+The search stops when all clauses are eliminated, and then the cumulative
+bindings are produced.  If the data runs out, but unmatched clauses remain, the
+directive fails.
+
+Example: extract several environment variables, which do not appear in a particular
+order:
+
+  @(next :env)
+  @(gather)
+  USER=@USER
+  HOME=@HOME
+  SHELL=@SHELL
+  @(end)
 
 .SS The Collect Directive
 
