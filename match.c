@@ -946,7 +946,7 @@ static val h_fun(match_line_ctx c, match_line_ctx *cout)
       uw_block_end;
 
       if (!result) {
-        debuglf(c.spec_lineno, lit("function failed"), nao);
+        debuglf(c.spec_lineno, lit("function (~s ~s) failed"), sym, args, nao);
         return nil;
       }
 
@@ -2868,7 +2868,7 @@ static val v_fun(match_files_ctx *c)
       uw_block_end;
 
       if (!result) {
-        debuglf(spec_linenum, lit("function failed"), nao);
+        debuglf(spec_linenum, lit("function (~s ~s) failed"), sym, args, nao);
         return nil;
       }
 
