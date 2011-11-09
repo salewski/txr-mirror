@@ -1,5 +1,10 @@
 2011-11-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (h_fun, v_fun): Slightly more informative tracing from failed
+	function calls.
+
+2011-11-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.vim: Missing coll keyword added.
 
 2011-11-08  Kaz Kylheku  <kaz@kylheku.com>
