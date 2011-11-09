@@ -896,6 +896,94 @@ static val h_trailer(match_line_ctx c, match_line_ctx *cout)
   return cons(c.bindings, c.pos);
 }
 
+static val h_fun(match_line_ctx c, match_line_ctx *cout)
+{
+  val elem = first(c.specline);
+  val sym = first(elem);
+  val func = cdr(uw_get_func(sym));
+
+  if (func) {
+    val args = rest(elem);
+    val params = car(func);
+    val ub_p_a_pairs = nil;
+    val body = cdr(func);
+    val piter, aiter;
+    val bindings_cp = copy_alist(c.bindings);
+
+    if (!equal(length(args), length(params)))
+      sem_error(c.spec_lineno, lit("function ~a takes ~a argument(s)"),
+                sym, length(params), nao);
+
+    for (piter = params, aiter = args; piter;
+         piter = cdr(piter), aiter = cdr(aiter))
+    {
+      val param = car(piter);
+      val arg = car(aiter);
+
+      if (arg && bindable(arg)) {
+        val val = assoc(c.bindings, arg);
+        if (val) {
+          bindings_cp = acons_new(bindings_cp,
+                                  param,
+                                  cdr(val));
+        } else {
+          bindings_cp = alist_nremove1(bindings_cp, param);
+          ub_p_a_pairs = cons(cons(param, arg), ub_p_a_pairs);
+        }
+      } else {
+        val val = eval_form(c.spec_lineno, arg, c.bindings);
+        bindings_cp = acons_new(bindings_cp, param, cdr(val));
+      }
+    }
+
+    {
+      uw_block_begin(nil, result);
+      uw_env_begin;
+
+      result = match_line(ml_bindings_specline(c, bindings_cp, body));
+
+      uw_env_end;
+      uw_block_end;
+
+      if (!result) {
+        debuglf(c.spec_lineno, lit("function failed"), nao);
+        return nil;
+      }
+
+      {
+        cons_bind (new_bindings, success, result);
+
+        for (piter = ub_p_a_pairs; piter; piter = cdr(piter))
+        {
+          cons_bind (param, arg, car(piter));
+
+          if (symbolp(arg)) {
+            val newbind = assoc(new_bindings, param);
+            if (newbind) {
+              c.bindings = dest_bind(c.spec_lineno, c.bindings, 
+                                     arg, cdr(newbind), equal_f);
+              if (c.bindings == t) {
+                debuglf(c.spec_lineno,
+                        lit("binding mismatch on ~a "
+                            "when returning from ~a"), arg, sym, nao);
+                return nil;
+              }
+            }
+          }
+        }
+
+        if (nump(success))
+          c.pos = success;
+      }
+    }
+
+    *cout = c;
+    return next_spec_k;
+  }
+
+  return decline_k;
+}
+
 static val h_eol(match_line_ctx c, match_line_ctx *cout)
 {
   if (length_str_le(c.dataline, c.pos)) {
@@ -920,23 +1008,8 @@ static val match_line(match_line_ctx c)
     case CONS: /* directive */
       {
         val directive = first(elem);
-        val entry = gethash(h_directive_table, directive);
 
-        if (entry) {
-          h_match_func hmf = (h_match_func) cptr_get(entry);
-          match_line_ctx nc;
-          val result = hmf(c, &nc);
-
-          if (result == next_spec_k) {
-            c = nc;
-            break;
-          } else if (result == repeat_spec_k) {
-            c = nc;
-            continue;
-          } else {
-            return result;
-          }
-        } else if (regexp(directive)) {
+        if (regexp(directive)) {
           val past = match_regex(c.dataline, directive, c.pos);
           if (nullp(past)) {
             LOG_MISMATCH("regex");
@@ -957,7 +1030,37 @@ static val match_line(match_line_ctx c)
           LOG_MATCH("string tree", newpos);
           c.pos = newpos;
         } else {
-          sem_error(c.spec_lineno, lit("unknown directive: ~a"), directive, nao);
+          val entry = gethash(h_directive_table, directive);
+          if (entry) {
+            h_match_func hmf = (h_match_func) cptr_get(entry);
+            match_line_ctx nc;
+            val result = hmf(c, &nc);
+
+            if (result == next_spec_k) {
+              c = nc;
+              break;
+            } else if (result == repeat_spec_k) {
+              c = nc;
+              continue;
+            } else {
+              return result;
+            }
+          } else {
+            match_line_ctx nc;
+            val result = h_fun(c, &nc);
+
+            if (result == next_spec_k) {
+              c = nc;
+              break;
+            } else if (result == repeat_spec_k) {
+              c = nc;
+              continue;
+            } else if (result == decline_k) {
+              sem_error(c.spec_lineno, lit("unknown directive: ~a"), directive, nao);
+            } else {
+              return result;
+            }
+          }
         }
       }
       break;
@@ -2582,21 +2685,46 @@ static val v_try(match_files_ctx *c)
   }
 }
 
+static val h_define(match_line_ctx c, match_line_ctx *cout)
+{
+  val elem = first(c.specline);
+  val body = third(elem);
+  val args = fourth(elem);
+  val name = first(args);
+  val params = second(args);
+  val existing = uw_get_func(name);
+  uw_set_func(name, cons(car(existing), cons(params, body)));
+  *cout = c;
+  return next_spec_k;
+}
+
 static val v_define(match_files_ctx *c)
 {
   spec_bind (specline, spec_linenum, first_spec, c->spec);
-  val args = second(first_spec);
-  val body = third(first_spec);
-  val name = first(args);
-  val params = second(args);
 
   if (rest(specline))
     sem_error(spec_linenum,
               lit("unexpected material after define"), nao);
 
-  uw_set_func(name, cons(params, body));
+  if (second(first_spec) == t) {
+    val elem = first(specline);
+    val body = third(elem);
+    val args = fourth(elem);
+    val name = first(args);
+    val params = second(args);
+    val existing = uw_get_func(name);
+    uw_set_func(name, cons(car(existing), cons(params, body)));
+    return next_spec_k;
+  } else {
+    val args = second(first_spec);
+    val body = third(first_spec);
+    val name = first(args);
+    val params = second(args);
+    val existing = uw_get_func(name);
 
-  return next_spec_k;
+    uw_set_func(name, cons(cons(params, body), cdr(existing)));
+    return next_spec_k;
+  }
 }
 
 static val v_defex(match_files_ctx *c)
@@ -2696,7 +2824,7 @@ static val v_fun(match_files_ctx *c)
 {
   spec_bind (specline, spec_linenum, first_spec, c->spec);
   val sym = first(first_spec);
-  val func = uw_get_func(sym);
+  val func = car(uw_get_func(sym));
 
   if (func) {
     val args = rest(first_spec);
@@ -3024,6 +3152,7 @@ static void dir_tables_init(void)
   sethash(h_directive_table, cases_s, cptr((mem_t *) h_parallel));
   sethash(h_directive_table, choose_s, cptr((mem_t *) h_parallel));
   sethash(h_directive_table, trailer_s, cptr((mem_t *) h_trailer));
+  sethash(h_directive_table, define_s, cptr((mem_t *) h_define));
   sethash(h_directive_table, eol_s, cptr((mem_t *) h_eol));
 }
 
