@@ -1,3 +1,19 @@
+2011-11-08  Kaz Kylheku  <kaz@kylheku.com>
+
+	Task #11431. First cut at horizontal match functions.
+
+	* match.c (h_fun): New function.
+	(match_line): Rearranged not to do hash lookup if the directive is a
+	regex or list.  If hash lookup fails, try it as a horizontal function.
+	(h_define): New function. Handles horizontal function syntax embedded
+	in line.
+	(v_define): Handle the horizontal function syntax occuring
+	on a line by itself.  The function info is now stored as a cons cell
+	whose car is the vertical function and cdr the horizontal one.
+	(v_fun): Adjust to new function storage convention.
+	(dir_tables_init): h_define entered in table.
+	* parser.y: Added syntax for horizontal define.
+
 2011-11-06  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.vim: Make sure whitespace is recognized after @.

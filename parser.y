@@ -63,7 +63,7 @@ static val parsed_spec;
 %token <lexeme> AND OR END COLLECT
 %token <lexeme> UNTIL COLL OUTPUT REPEAT REP SINGLE FIRST LAST EMPTY DEFINE
 %token <lexeme> TRY CATCH FINALLY
-%token <lexeme> ERRTOK
+%token <lexeme> ERRTOK /* deliberately not used in grammar */
 
 %token <num> NUMBER
 
@@ -275,6 +275,7 @@ elem : TEXT                     { $$ = string_own($1); }
      | CHOOSE exprs_opt ')'
        clause_parts_h           { $$ = list(choose_s, t, $4, $2, nao); }
      | CHOOSE exprs_opt ')' END { yyerror("empty cases clause"); }
+     | DEFINE exprs ')' elems END       { $$ = list(define_s, t, $4, $2, nao); }
      ;
 
 clause_parts_h : elems additional_parts_h { $$ = cons($1, $2); }
