@@ -1,3 +1,7 @@
+2011-11-09  Kaz Kylheku  <kaz@kylheku.com>
+
+	* txr.vim: Missing coll keyword added.
+
 2011-11-08  Kaz Kylheku  <kaz@kylheku.com>
 
 	Task #11431. First cut at horizontal match functions.
