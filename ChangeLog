@@ -1,5 +1,9 @@
 2011-11-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.l: Fixed wrong error message.
+
+2011-11-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (v_fun): Bugfix: if there is material after
 	the function call, decline it; it is a horizontal context.
 

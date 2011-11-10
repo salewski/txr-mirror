@@ -579,7 +579,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                               }
 
 <STRLIT,CHRLIT,QSILIT>. {
-                           yyerrprepf(lit("non-UTF-8 byte in regex: '\\x~02x'"),
+                           yyerrprepf(lit("non-UTF-8 byte in literal: '\\x~02x'"),
                                       num((unsigned char) yytext[0]), nao);
                            return ERRTOK;
                         }
