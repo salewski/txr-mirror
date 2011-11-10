@@ -1,5 +1,9 @@
 2011-11-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Documented horizontal function definitions and calls
+
+2011-11-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	Task #11583
 
 	@(bind) in horizontal mode.

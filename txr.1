@@ -2749,22 +2749,45 @@ unbound at that point.
 
 .SS Definition Syntax
 
-A function definition begins with a @(define ...) directive which must be the
-only element in its line. The define must be followed by a symbol, which is the
-name of the function being defined. After the symbol, there is a parenthesized
-optional argument list. If there is no such list, or if the list is specified
-as () or the symbol "nil" then the function has no parameters. Examples of
-valid define syntax are:
+Function definition syntax comes in two flavors: vertical and horizontal.
+Horizontal definitions actually come in two forms the distinction
+between which is hardly noticeable, and the need for which is
+made clear below.
+
+A function definition begins with a @(define ...) directive. For vertical
+functions, this is the only element in a line.
+
+The define symbol must be followed by a symbol, which is the name of the
+function being defined. After the symbol, there is a parenthesized optional
+argument list. If there is no such list, or if the list is specified as () or
+the symbol "nil" then the function has no parameters. Examples of valid define
+syntax are:
 
   @(define foo)
   @(define bar ())
   @(define match (a b c))
 
-The define directive may be followed directly by the @(end) directive,
-also on a line by itself, in which case the function has an empty body.
-Or it may be followed by one or more query lines and then @(end).
-What is between a @(define ...) and its matching @(end) constitutes the
-function body.
+If the define directive is followed by material to the right, then
+it it defines a horizontal function:
+
+  @(define match_x)x@(end)
+
+If the define material is followed by material below, then it
+is a vertical function:
+
+  @(define match_x)
+  x
+  @(end)
+
+The difference between the two is that a horizontal function matches
+characters within a line, whereas a vertical function matches lines
+within a stream. The former match_x matches the character x, advancing
+to the next character position.  The latter match_x matches a line consisting
+of the character x, advancing to the next line.
+
+Material between @(define) and @(end) is the function body.  The define
+directive may be followed directly by the @(end) directive, in which case the
+function has an empty body.
 
 Functions may be nested within function bodies. Such local functions have
 dynamic scope. They are visible in the function body in which they are defined,
@@ -2772,18 +2795,39 @@ and in any functions invoked from that body.
 
 The body of a function is an anonymous block. (See BLOCKS above).
 
-The following trivial function b produces no bindings and has a body which
-simply matches the line "begin".
+.SS Two Forms of The Horizontal Function
 
- @(define b)
- begin
- @(end)
+If a horizontal function is defined as the only element of a line,
+it may not be followed by additional material. The following
+construct is erroneous:
 
-Thus the call:
+  @(define horiz (x))@foo:@bar@(end)lalala
 
- @(b)
+This kind of definition is actually considered to be in the vertical context,
+and like other directives that have special effects and that do not match
+anything, it does not consume a line of input. If the above syntax were
+allowed, it would mean that the line would not only define a function but also
+match "lalala".  This would, in turn, would mean that the @(define) is
+actually in horizontal mode, and so it matches a span of zero characters within
+a line (which means that is would require a line of input to match: a nasty
+thing for a non-matching directive to do!) 
 
-matches an input line "begin".
+A horizontal function can be defined in an actual horizontal context. This
+occurs if its is in a line where it is preceded by other material.
+For instance:
+
+  X@(define fun)...@(end)Y
+
+This is a query line which must match the text XY. It also defines the function
+fun. The main use of this form is for nested horizontal functions:
+
+  @(define fun)@(define local_fun)...@(end)@(end)
+
+.SS Vertical-Horizontal Overloading
+
+A function of the same name may be defined as both vertical and horizontal.
+Both functions are available at the same time. Which one is used by
+a call is resolved by context. See the section Vertical Versus Horizontal Calls below.
 
 .SS Call Syntax
 
@@ -2794,18 +2838,18 @@ literals, quasiliterals ore regular expressions.
 
 Example:
 
- Query:         @(define pair (a b))
-                @a @b
-                @(end)
-                @(pair first second)
-                @(pair "ice" cream)
-
- Data:          one two
-                ice milk
-
- Output:        first="one"
-                second="two"
-                cream="milk"
+  Query:         @(define pair (a b))
+                 @a @b
+                 @(end)
+                 @(pair first second)
+                 @(pair "ice" cream)
+ 
+  Data:          one two
+                 ice milk
+ 
+  Output:        first="one"
+                 second="two"
+                 cream="milk"
 
 The first call to the function takes the line "one two". The parameter "a"
 takes "one" and parameter b takes "two". These are rebound to the arguments
@@ -2821,14 +2865,58 @@ which, in the body of the function, bind a value, and which are all derived
 from the same argument symbol must bind to the same value. This is settled when
 the function terminates, not while it is matching. Example:
 
- Query:         @(define pair (a b))
-                @a @b
-                @(end)
-                @(pair same same)
+  Query:         @(define pair (a b))
+                 @a @b
+                 @(end)
+                 @(pair same same)
+ 
+  Data:          one two
 
- Data:          one two
+  Output:        [query fails, prints "false"]
 
- Output:        [query fails, prints "false"]
+
+.SS Vertical Versus Horizontal Calls
+
+A function call which is the only element of the query line in
+which it occurs is ambiguous. It can go either to a vertical
+function or to the horizontal one. If both are defined, then
+it goes to the vertical one.
+
+Example:
+
+ Query:          @(define which (x))@(bind x "horizontal")@(end)
+                 @(define which (x))
+                 @(bind x "vertical")
+                 @(end)
+                 @(which fun)
+
+ Output:         fun="vertical"
+
+Not only does this call go to the vertical function, but
+it is in a vertical context.
+
+Example:
+
+ Query:          @(define which (x))@(bind x "horizontal")@(end)
+                 @(which fun)
+
+ Data:           ABC
+
+ Output:         false
+
+The query failed. Why? Because @(which fun) is in horizontal mode,
+which means that it matches a line. What line does it match?
+It matches the empty line. The reason is that the the call
+@(which fun) contains only a @(bind ...) which doesn't match any
+characters. In the following example, an empty line is supplied:
+
+ Query:          @(define which (x))@(bind x "horizontal")@(end)
+                 @(which fun)
+
+ Data:           <empty line>
+
+ Output:         fun="horizontal"
+
 
 .SS Nested Functions
 
