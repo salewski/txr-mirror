@@ -2807,7 +2807,7 @@ This kind of definition is actually considered to be in the vertical context,
 and like other directives that have special effects and that do not match
 anything, it does not consume a line of input. If the above syntax were
 allowed, it would mean that the line would not only define a function but also
-match "lalala".  This would, in turn, would mean that the @(define) is
+match "lalala".  This would, in turn, would mean that the @(define)...@(end) is
 actually in horizontal mode, and so it matches a span of zero characters within
 a line (which means that is would require a line of input to match: a nasty
 thing for a non-matching directive to do!) 
