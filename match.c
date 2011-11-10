@@ -1550,6 +1550,12 @@ static match_files_ctx mf_file_data(match_files_ctx c, val file,
   return nc;
 }
 
+static match_files_ctx mf_from_ml(match_line_ctx ml)
+{
+  return mf_all(cons(cons(ml.spec_lineno, ml.specline), nil),
+                nil, ml.bindings, nil, num(0));
+}
+
 static val match_files(match_files_ctx a);
 
 typedef val (*v_match_func)(match_files_ctx *cout);
@@ -2417,6 +2423,18 @@ static val v_bind(match_files_ctx *c)
   return next_spec_k;
 }
 
+static val h_bind(match_line_ctx c, match_line_ctx *cout)
+{
+  val ret;
+  match_files_ctx mf = mf_from_ml(c);
+  ret = v_bind(&mf);
+  if (ret == next_spec_k) {
+    c.bindings = mf.bindings;
+    *cout = c;
+  }
+  return ret;
+}
+
 static val v_set(match_files_ctx *c)
 {
   spec_bind (specline, spec_linenum, first_spec, c->spec);
@@ -3145,6 +3163,7 @@ static void dir_tables_init(void)
   sethash(h_directive_table, var_s, cptr((mem_t *) h_var));
   sethash(h_directive_table, skip_s, cptr((mem_t *) h_skip));
   sethash(h_directive_table, coll_s, cptr((mem_t *) h_coll));
+  sethash(h_directive_table, bind_s, cptr((mem_t *) h_bind));
   sethash(h_directive_table, some_s, cptr((mem_t *) h_parallel));
   sethash(h_directive_table, all_s, cptr((mem_t *) h_parallel));
   sethash(h_directive_table, none_s, cptr((mem_t *) h_parallel));
