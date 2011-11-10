@@ -1,3 +1,11 @@
+2011-11-10  Kaz Kylheku  <kaz@kylheku.com>
+
+	* match.c (v_fun): Bugfix: if there is material after
+	the function call, decline it; it is a horizontal context.
+
+	* txr.1: Discussion and examples of calls that are
+	in a horizontal context.
+
 2011-11-09  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.1: Documented horizontal function definitions and calls

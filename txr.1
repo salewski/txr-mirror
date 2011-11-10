@@ -2884,39 +2884,64 @@ it goes to the vertical one.
 
 Example:
 
- Query:          @(define which (x))@(bind x "horizontal")@(end)
-                 @(define which (x))
-                 @(bind x "vertical")
-                 @(end)
-                 @(which fun)
+  Query:          @(define which (x))@(bind x "horizontal")@(end)
+                  @(define which (x))
+                  @(bind x "vertical")
+                  @(end)
+                  @(which fun)
 
- Output:         fun="vertical"
+  Output:         fun="vertical"
 
 Not only does this call go to the vertical function, but
 it is in a vertical context.
 
+If only a horizontal function is defined, then that is the one which is called,
+even if the call is the only element in the line. This takes place in a
+horizontal character-matching context, which requires a line of input which can
+be traversed:
+
 Example:
 
- Query:          @(define which (x))@(bind x "horizontal")@(end)
-                 @(which fun)
+  Query:          @(define which (x))@(bind x "horizontal")@(end)
+                  @(which fun)
 
- Data:           ABC
+  Data:           ABC
 
- Output:         false
+  Output:         false
 
-The query failed. Why? Because @(which fun) is in horizontal mode,
-which means that it matches a line. What line does it match?
-It matches the empty line. The reason is that the the call
-@(which fun) contains only a @(bind ...) which doesn't match any
-characters. In the following example, an empty line is supplied:
+The query failed. Why? Because since @(which fun) is in horizontal mode,
+it matches characters in a line. Since the function body consists
+of @(bind ...) which doesn't match any characters, the function
+call requires an empty line to match. The line ABC is not empty,
+and so there is a matching failure. The following
+example corrects this:
 
- Query:          @(define which (x))@(bind x "horizontal")@(end)
-                 @(which fun)
+Example:
 
- Data:           <empty line>
+  Query:          @(define which (x))@(bind x "horizontal")@(end)
+                  @(which fun)
 
- Output:         fun="horizontal"
+  Data:           <empty line>
 
+  Output:         fun="horizontal"
+
+A call made in a clearly horizontal context will ignore
+the vertical definition, if any, and require the horizontal function.
+In the next example, the call is followed by trailing material,
+placing it in a horizontal context. Leading material will
+do the same thing:
+
+Example:
+
+  Query:          @(define which (x))@(bind x "horizontal")@(end)
+                  @(define which (x))
+                  @(bind x "vertical")
+                  @(end)
+                  @(which fun)B
+
+  Data:           B
+
+  Output:         fun="horizontal"
 
 .SS Nested Functions
 
