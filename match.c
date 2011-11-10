@@ -2423,16 +2423,25 @@ static val v_bind(match_files_ctx *c)
   return next_spec_k;
 }
 
-static val h_bind(match_line_ctx c, match_line_ctx *cout)
+static val hv_trampoline(match_line_ctx c, match_line_ctx *cout)
 {
   val ret;
   match_files_ctx mf = mf_from_ml(c);
-  ret = v_bind(&mf);
-  if (ret == next_spec_k) {
-    c.bindings = mf.bindings;
-    *cout = c;
+  val sym = first(first(c.specline));
+  val entry = gethash(v_directive_table, sym);
+
+  if (!entry)
+    internal_error("hv_trampoline: missing dispatch table entry");
+
+  {
+    v_match_func vmf = (v_match_func) cptr_get(entry);
+    ret = vmf(&mf);
+    if (ret == next_spec_k) {
+      c.bindings = mf.bindings;
+      *cout = c;
+    }
+    return ret;
   }
-  return ret;
 }
 
 static val v_set(match_files_ctx *c)
@@ -3163,7 +3172,7 @@ static void dir_tables_init(void)
   sethash(h_directive_table, var_s, cptr((mem_t *) h_var));
   sethash(h_directive_table, skip_s, cptr((mem_t *) h_skip));
   sethash(h_directive_table, coll_s, cptr((mem_t *) h_coll));
-  sethash(h_directive_table, bind_s, cptr((mem_t *) h_bind));
+  sethash(h_directive_table, bind_s, cptr((mem_t *) hv_trampoline));
   sethash(h_directive_table, some_s, cptr((mem_t *) h_parallel));
   sethash(h_directive_table, all_s, cptr((mem_t *) h_parallel));
   sethash(h_directive_table, none_s, cptr((mem_t *) h_parallel));
