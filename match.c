@@ -2844,7 +2844,7 @@ static val v_fun(match_files_ctx *c)
   val sym = first(first_spec);
   val func = car(uw_get_func(sym));
 
-  if (func) {
+  if (func && !rest(specline)) {
     val args = rest(first_spec);
     val params = car(func);
     val ub_p_a_pairs = nil;
