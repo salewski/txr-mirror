@@ -1,5 +1,14 @@
 2011-11-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	Task #11583
+
+	@(bind) in horizontal mode.
+
+	* match.c (mf_from_ml, h_bind): New functions.
+	(dir_tables_init): h_bind entered into table.
+
+2011-11-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (h_fun, v_fun): Slightly more informative tracing from failed
 	function calls.
 
