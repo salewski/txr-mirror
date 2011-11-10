@@ -1,5 +1,16 @@
 2011-11-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	Task #11583
+
+	More generic approach.
+
+	* match.c (h_bind): Function removed.
+	(hv_trampoline): New function.
+	(dir_tables_init): hv_trampoline installed in
+	h_directive_table instead of h_bind.
+
+2011-11-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.l: Fixed wrong error message.
 
 2011-11-10  Kaz Kylheku  <kaz@kylheku.com>
