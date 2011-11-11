@@ -286,7 +286,12 @@ int txr_main(int argc, char **argv)
       opt_derivative_regex = 1;
       argv++, argc--;
       continue;
+    } else if (!strcmp(*argv, "--lisp-bindings")) {
+      opt_lisp_bindings = 1;
+      argv++, argc--;
+      continue;
     }
+
 
     {
       char *popt;
@@ -300,6 +305,9 @@ int txr_main(int argc, char **argv)
           break;
         case 'b':
           opt_nobindings = 1;
+          break;
+        case 'l':
+          opt_lisp_bindings = 1;
           break;
         case 'a':
         case 'c':

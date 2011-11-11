@@ -47,6 +47,9 @@
 #include "match.h"
 
 int output_produced;
+int opt_nobindings = 0;
+int opt_lisp_bindings = 0;
+int opt_arraydims = 1;
 
 val decline_k, next_spec_k, repeat_spec_k;
 val mingap_k, maxgap_k, gap_k, mintimes_k, maxtimes_k, times_k;
@@ -182,18 +185,20 @@ static void dump_var(val var, char *pfx1, size_t len1,
 
 static void dump_bindings(val bindings)
 {
-  if (opt_loglevel >= 2) {
-    put_line(std_error, lit("raw_bindings:"));
-    dump(bindings, std_error);
-  }
-
-  while (bindings) {
-    char pfx1[128], pfx2[128];
-    val var = car(car(bindings));
-    val value = cdr(car(bindings));
-    *pfx1 = 0; *pfx2 = 0;
-    dump_var(var, pfx1, 0, pfx2, 0, value, 0);
-    bindings = cdr(bindings);
+  if (opt_lisp_bindings) {
+    val iter;
+    for (iter = bindings; iter; iter = cdr(iter)) {
+      dump(car(iter), std_output);
+    }
+  } else {
+    while (bindings) {
+      char pfx1[128], pfx2[128];
+      val var = car(car(bindings));
+      val value = cdr(car(bindings));
+      *pfx1 = 0; *pfx2 = 0;
+      dump_var(var, pfx1, 0, pfx2, 0, value, 0);
+      bindings = cdr(bindings);
+    }
   }
 }
 
@@ -2462,9 +2467,6 @@ static val v_cat(match_files_ctx *c)
   spec_bind (specline, spec_linenum, first_spec, c->spec);
   val sym = second(first_spec);
   val sep_form = third(first_spec);
-
-  if (rest(specline))
-    sem_error(spec_linenum, lit("obsolete cat syntax: trailing material"), nao);
 
   if (!bindable(sym)) {
     sem_error(spec_linenum,
