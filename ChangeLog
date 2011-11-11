@@ -1,5 +1,17 @@
 2011-11-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	Bug #34799: errors in horizontal functions
+	reported to caller line number.
+
+	* match.c (ml_bindings_specline): Extended with extra argument
+	(h_coll): Pass nil for new argument of ml_bindings_specline.
+	(h_fun): Extract line number from stored function.
+	Pass line number to ml_bindings_specline.
+	(h_define, v_define): Store function as a cons cell containing
+	the line number and body.
+
+2011-11-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: Document -l/--lisp-bindings.
 
 2011-11-10  Kaz Kylheku  <kaz@kylheku.com>

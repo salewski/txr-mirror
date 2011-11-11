@@ -376,11 +376,13 @@ static match_line_ctx ml_specline(match_line_ctx c, val specline)
   return nc;
 }
 
-static match_line_ctx ml_bindings_specline(match_line_ctx c, val bindings, val specline)
+static match_line_ctx ml_bindings_specline(match_line_ctx c, val bindings, val specline, val lineno)
 {
   match_line_ctx nc = c;
   nc.bindings = bindings;
   nc.specline = specline;
+  if (lineno)
+    nc.spec_lineno = lineno;
   return nc;
 }
 
@@ -697,7 +699,7 @@ static val h_coll(match_line_ctx c, match_line_ctx *cout)
       if (until_last_specline) {
         cons_bind (sym, spec, until_last_specline);
         cons_bind (until_last_bindings, until_pos,
-                   match_line(ml_bindings_specline(c, new_bindings, spec)));
+                   match_line(ml_bindings_specline(c, new_bindings, spec, nil)));
 
         if (until_pos) {
           LOG_MATCH("until/last", until_pos);
@@ -911,7 +913,8 @@ static val h_fun(match_line_ctx c, match_line_ctx *cout)
     val args = rest(elem);
     val params = car(func);
     val ub_p_a_pairs = nil;
-    val body = cdr(func);
+    val body = cdr(cdr(func));
+    val lineno = car(cdr(func));
     val piter, aiter;
     val bindings_cp = copy_alist(c.bindings);
 
@@ -945,7 +948,7 @@ static val h_fun(match_line_ctx c, match_line_ctx *cout)
       uw_block_begin(nil, result);
       uw_env_begin;
 
-      result = match_line(ml_bindings_specline(c, bindings_cp, body));
+      result = match_line(ml_bindings_specline(c, bindings_cp, body, lineno));
 
       uw_env_end;
       uw_block_end;
@@ -2722,7 +2725,7 @@ static val h_define(match_line_ctx c, match_line_ctx *cout)
   val name = first(args);
   val params = second(args);
   val existing = uw_get_func(name);
-  uw_set_func(name, cons(car(existing), cons(params, body)));
+  uw_set_func(name, cons(car(existing), cons(params, cons(c.spec_lineno, body))));
   *cout = c;
   return next_spec_k;
 }
@@ -2742,7 +2745,7 @@ static val v_define(match_files_ctx *c)
     val name = first(args);
     val params = second(args);
     val existing = uw_get_func(name);
-    uw_set_func(name, cons(car(existing), cons(params, body)));
+    uw_set_func(name, cons(car(existing), cons(params, cons(spec_linenum, body))));
     return next_spec_k;
   } else {
     val args = second(first_spec);
