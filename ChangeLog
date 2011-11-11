@@ -2,6 +2,15 @@
 
 	Task #11583
 
+	* match.c (dir_tables_init): Mapping flatten_s, forget_s,
+	local_s, merge_s, set_s, cat_s and filter_s to hv_trampoline
+	function, thereby making all these directives work in
+	horizontal contexts in one fell swoop.
+
+2011-11-10  Kaz Kylheku  <kaz@kylheku.com>
+
+	Task #11583
+
 	More generic approach.
 
 	* match.c (h_bind): Function removed.
