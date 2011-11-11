@@ -1,5 +1,23 @@
 2011-11-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (opt_nobindings, opt_arraydims): Global
+	variables moved from parser.l.
+	(opt_lisp_bindings): New variable.
+	(dump_bindings): Dump Lisp syntax bindings
+	on standard output if opt_lisp_bindings is set.
+	(v_cat): Do not complain about trailing material;
+	this is not compatible with horizontal cat.
+
+	* parser.l (opt_nobindings, opt_arraydims): Moved
+	to match.c.
+
+	* txr.c (txr_main): New options, --lisp-bindings
+	and the equivalent -l.
+
+	* txr.h: opt_lisp_bindings declared.
+
+2011-11-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	Task #11583
 
 	* match.c (dir_tables_init): Mapping flatten_s, forget_s,

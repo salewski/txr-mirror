@@ -63,8 +63,6 @@ val yyin_stream;
 
 cnum lineno = 1;
 int opt_loglevel = 1;   /* 0 - quiet; 1 - normal; 2 - verbose */
-int opt_nobindings = 0;
-int opt_arraydims = 1;
 
 int errors;
 
