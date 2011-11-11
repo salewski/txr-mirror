@@ -1,5 +1,9 @@
 2011-11-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Document -l/--lisp-bindings.
+
+2011-11-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (opt_nobindings, opt_arraydims): Global
 	variables moved from parser.l.
 	(opt_lisp_bindings): New variable.
