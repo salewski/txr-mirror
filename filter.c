@@ -42,7 +42,7 @@ val upcase_k, downcase_k, fun_k;
 
 static val make_trie(void)
 {
-  return make_hash(nil, nil);
+  return make_hash(nil, nil, nil);
 }
 
 static val trie_add(val trie, val key, val value)
@@ -54,7 +54,7 @@ static val trie_add(val trie, val key, val value)
     val newnode_p;
     val *loc = gethash_l(node, ch, &newnode_p);
     if (newnode_p)
-      *loc = make_hash(nil, nil);
+      *loc = make_hash(nil, nil, nil);
     node = *loc;
   }
 
@@ -577,7 +577,7 @@ void filter_init(void)
 {
   protect(&filters, (val *) 0);
 
-  filters = make_hash(nil, nil);
+  filters = make_hash(nil, nil, nil);
   filter_k = intern(lit("filter"), keyword_package);
   lfilt_k = intern(lit("lfilt"), keyword_package);
   rfilt_k = intern(lit("rfilt"), keyword_package);

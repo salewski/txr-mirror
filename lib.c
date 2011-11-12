@@ -76,7 +76,7 @@ val null_string;
 val nil_string;
 val null_list;
 
-val identity_f, equal_f, eq_f, car_f;
+val identity_f, equal_f, eql_f, eq_f, car_f;
 
 val prog_string;
 
@@ -439,6 +439,14 @@ val flatten(val list)
 }
 
 cnum c_num(val num);
+
+val eql(val left, val right)
+{
+  /* eql is same as eq for now, but when we get bignums,
+     eql will compare different bignum objects which are
+     the same number as equal. */
+  return eq(left, right);
+}
 
 val equal(val left, val right)
 {
@@ -1300,7 +1308,7 @@ val make_package(val name)
     val obj = make_obj();
     obj->pk.type = PKG;
     obj->pk.name = name;
-    obj->pk.symhash = make_hash(nil, nil);
+    obj->pk.symhash = make_hash(nil, nil, lit("t")); /* don't have t yet! */
 
     push(cons(name, obj), &packages);
     return obj;
@@ -2073,6 +2081,18 @@ val assoc(val list, val key)
   return nil;
 }
 
+val assq(val list, val key)
+{
+  while (list) {
+    val elem = car(list);
+    if (eql(car(elem), key))
+      return elem;
+    list = cdr(list);
+  }
+
+  return nil;
+}
+
 val acons(val list, val car, val cdr)
 {
   return cons(cons(car, cdr), list);
@@ -2106,6 +2126,36 @@ val *acons_new_l(val *list, val key, val *new_p)
     return cdr_l(nc);
   }
 }
+
+val aconsq_new(val list, val key, val value)
+{
+  val existing = assq(list, key);
+
+  if (existing) {
+    *cdr_l(existing) = value;
+    return list;
+  } else {
+    return cons(cons(key, value), list);
+  }
+}
+
+val *aconsq_new_l(val *list, val key, val *new_p)
+{
+  val existing = assq(*list, key);
+
+  if (existing) {
+    if (new_p)
+      *new_p = nil;
+    return cdr_l(existing);
+  } else {
+    val nc = cons(key, nil);
+    *list = cons(nc, *list);
+    if (new_p)
+      *new_p = t;
+    return cdr_l(nc);
+  }
+}
+
 
 static val alist_remove_test(val item, val key)
 {
@@ -2346,7 +2396,7 @@ static void obj_init(void)
 
   protect(&packages, &system_package, &keyword_package,
           &user_package, &null_string, &nil_string,
-          &null_list, &equal_f, &eq_f, &car_f,
+          &null_list, &equal_f, &eq_f, &eql_f, &car_f,
           &identity_f, &prog_string, &env_list,
           (val *) 0);
 
@@ -2451,6 +2501,7 @@ static void obj_init(void)
 
   equal_f = func_n2(equal);
   eq_f = func_n2(eq);
+  eql_f = func_n2(eql);
   identity_f = func_n1(identity);
   car_f = func_n1(car);
   prog_string = string(progname);

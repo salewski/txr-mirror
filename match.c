@@ -3138,8 +3138,8 @@ static void syms_init(void)
 
 static void dir_tables_init(void)
 {
-  h_directive_table = make_hash(nil, nil);
-  v_directive_table = make_hash(nil, nil);
+  h_directive_table = make_hash(nil, nil, nil);
+  v_directive_table = make_hash(nil, nil, nil);
 
   protect(&h_directive_table, &v_directive_table, (val *) 0);
 
