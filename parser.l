@@ -43,6 +43,7 @@
 #include "stream.h"
 #include "utf8.h"
 #include "unwind.h"
+#include "hash.h"
 #include "parser.h"
 
 #define YY_INPUT(buf, result, max_size)           \
@@ -65,6 +66,9 @@ cnum lineno = 1;
 int opt_loglevel = 1;   /* 0 - quiet; 1 - normal; 2 - verbose */
 
 int errors;
+
+val form_to_ln_hash;
+val ln_to_forms_hash;
 
 static val prepared_error_message;
 
@@ -210,122 +214,146 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
 <SPECIAL>\({WS}all{WS}\)        {
                                   yy_pop_state();
+                                  yylval.lineno = lineno;
                                   return ALL;
                                 }
 
 <SPECIAL>\({WS}some{WS}\)       {
                                   yy_pop_state();
+                                  yylval.lineno = lineno;
                                   return SOME;
                                 }
 
 <SPECIAL>\({WS}none{WS}\)       {
                                   yy_pop_state();
+                                  yylval.lineno = lineno;
                                   return NONE;
                                 }
 
 <SPECIAL>\({WS}maybe{WS}\)      {
                                   yy_pop_state();
+                                  yylval.lineno = lineno;
                                   return MAYBE;
                                 }
 
 <SPECIAL>\({WS}cases{WS}\)      {
                                   yy_pop_state();
+                                  yylval.lineno = lineno;
                                   return CASES;
                                 }
 
 <SPECIAL>\({WS}choose/{ID_END}  {
                                   yy_push_state(NESTED);
+                                  yylval.lineno = lineno;
                                   return CHOOSE;
                                 }
 
 <SPECIAL>\({WS}gather/{ID_END}  {
                                   yy_push_state(NESTED);
+                                  yylval.lineno = lineno;
                                   return GATHER;
                                 }
 
 <SPECIAL>\({WS}and{WS}\)        {
                                   yy_pop_state();
+                                  yylval.lineno = lineno;
                                   return AND;
                                 }
 
 <SPECIAL>\({WS}or{WS}\)         {
                                   yy_pop_state();
+                                  yylval.lineno = lineno;
                                   return OR;
                                 }
 
 <SPECIAL>\({WS}end{WS}\)        {
                                   yy_pop_state();
+                                  yylval.lineno = lineno;
                                   return END;
                                 }
 
 <SPECIAL>\({WS}collect/{ID_END} {
                                   yy_push_state(NESTED);
+                                  yylval.lineno = lineno;
                                   return COLLECT;
                                 }
 
 <SPECIAL>\({WS}coll/{ID_END}    {
                                   yy_push_state(NESTED);
+                                  yylval.lineno = lineno;
                                   return COLL;
                                 }
 
 <SPECIAL>\({WS}until{WS}\)      {
                                   yy_pop_state();
+                                  yylval.lineno = lineno;
                                   return UNTIL;
                                 }
 
 <SPECIAL>\({WS}output/{ID_END}  {
                                   yy_push_state(NESTED);
+                                  yylval.lineno = lineno;
                                   return OUTPUT;
                                 }
 
 <SPECIAL>\({WS}repeat{WS}\)     {
                                   yy_pop_state();
+                                  yylval.lineno = lineno;
                                   return REPEAT;
                                 }
 
 
 <SPECIAL>\({WS}rep{WS}\)        {
                                   yy_pop_state();
+                                  yylval.lineno = lineno;
                                   return REP;
                                 }
 
 <SPECIAL>\({WS}single{WS}\)     {
                                   yy_pop_state();
+                                  yylval.lineno = lineno;
                                   return SINGLE;
                                 }
 
 <SPECIAL>\({WS}first{WS}\)      {
                                   yy_pop_state();
+                                  yylval.lineno = lineno;
                                   return FIRST;
                                 }
 
 <SPECIAL>\({WS}last{WS}\)       {
                                   yy_pop_state();
+                                  yylval.lineno = lineno;
                                   return LAST;
                                 }
 
 <SPECIAL>\({WS}empty{WS}\)      {
                                   yy_pop_state();
+                                  yylval.lineno = lineno;
                                   return EMPTY;
                                 }
 
 <SPECIAL>\({WS}define/{ID_END}  {
                                   yy_push_state(NESTED);
+                                  yylval.lineno = lineno;
                                   return DEFINE;
                                 }
 
 <SPECIAL>\({WS}try{WS}\)        {
                                   yy_pop_state();
+                                  yylval.lineno = lineno;
                                   return TRY;
                                 }
 
 <SPECIAL>\({WS}catch/{ID_END}   {
                                   yy_push_state(NESTED);
+                                  yylval.lineno = lineno;
                                   return CATCH;
                                 }
 
 <SPECIAL>\({WS}finally{WS}\)    {
                                   yy_pop_state();
+                                  yylval.lineno = lineno;
                                   return FINALLY;
                                 }
 
@@ -339,6 +367,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                             yylval.chr = '(';
                             return METAPAR;
                           }
+                          yylval.lineno = lineno;
                           return yytext[0];
                         }
 
@@ -594,5 +623,9 @@ void end_of_regex(void)
 
 void parse_init(void)
 {
-  protect(&yyin_stream, &prepared_error_message, (val *) 0);
+  protect(&yyin_stream, &prepared_error_message,
+          &form_to_ln_hash, &ln_to_forms_hash, (val *) 0);
+
+  form_to_ln_hash = make_hash(t, nil, nil);
+  ln_to_forms_hash = make_hash(nil, t, nil);
 }

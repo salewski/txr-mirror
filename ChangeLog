@@ -1,3 +1,61 @@
+2011-11-12  Kaz Kylheku  <kaz@kylheku.com>
+
+	Infrastructure for storing line number information
+	outside of the code, in hash tables.
+
+	* filter.c (make_trie, trie_add): Update to three-argument
+	make_hash.
+
+	* hash.c (struct hash): New members, hash_fun, assoc_fun
+	acons_new_l_fun.
+	(ll_hash): Renamed to equal_hash.
+	(eql_hash): New static function.
+	(cobj_hash_op): Follows ll_hash rename.
+	(hash_grow): Use new function indirection to call hashing function.
+	(make_hash): New argument to specify type of hashing. Initialize new
+	members of struct hash.
+	(gethash_l, gethash, remhash): Use function indirection for hashing and
+	chain search and update.
+	(pushhash): New function.
+
+	* hash.h (make_hash): Declaration updated with new parameter.
+	(pushhash): Declared.
+
+	* lib.c (eql_f): New global variable.
+	(eql, assq, aconsq_new, aconsq_new_l): New functions.
+	(make_package): Updated to new three-argument make_hash.
+	(obj_init): gc-protect and initialize new variable eql_f.
+
+	* lib.h (eql, assq, aconsq_new, aconsq_new_l): Declared.
+
+	* match.c (dir_tables_init): Updated to there-argument make_hash.
+
+	* parser.h (form_to_ln_hash, ln_to_forms_hash): Global variables
+	declared.
+
+	* parser.l (form_to_ln_hash, ln_to_forms_hash): New global variables.
+	(grammar): Set yylval.lineno for tokens that are classified to
+	that type in parser.y.
+	(parse_init): Initialize and gc-protect new global variables.
+
+	* parser.y (rl): New static helper function.
+	(%union): New member, lineno.
+	(ALL, SOME, NONE, MAYBE, CASES, CHOOSE, GATHER,
+	AND, OR, END, COLLECT, UNTIL, COLL, OUTPUT, REPEAT,
+	REP, SINGLE, FIRST, LAST, EMPTY, DEFINE,
+	TRY, CATCH, FINALLY, ERRTOK, '('): Reclassified as lineno type.
+	In the grammar, these keywords can thus provide a stable line number
+	from the lexer.
+	(grammar): Numerous rules updated to add constructs to the
+	line number hash tables via the rl helper.
+
+	* dep.mk: Updated.
+
+	* Makefile (depend): Use the installed, stable txr in the
+	system path to update dependencies rather than locally built ./txr, to
+	prevent the problem that txr is broken because out out-of-date
+	dependencies, and thus cannot regenerate dependencies.
+
 2011-11-10  Kaz Kylheku  <kaz@kylheku.com>
 
 	Bug #34799: errors in horizontal functions

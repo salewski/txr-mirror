@@ -25,11 +25,12 @@
  */
 
 val hash_obj(val);
-val make_hash(val weak_keys, val weak_vals);
+val make_hash(val weak_keys, val weak_vals, val equal_based);
 val *gethash_l(val hash, val key, val *new_p);
 val gethash(val hash, val key);
 val gethash_f(val hash, val key, val *found);
 val sethash(val hash, val key, val value);
+val pushhash(val hash, val key, val value);
 val remhash(val hash, val key);
 val hash_count(val hash);
 val get_hash_userdata(val hash);

@@ -72,7 +72,7 @@ distclean: clean
 
 .PHONY: depend
 depend:
-	$(PROG) $(top_srcdir)/depend.txr $(OBJS) > $(top_srcdir)/dep.mk
+	txr $(top_srcdir)/depend.txr $(OBJS) > $(top_srcdir)/dep.mk
 
 TESTS := $(patsubst $(top_srcdir)/%.txr,./%.ok,\
                     $(shell find $(top_srcdir)/tests -name '*.txr' | sort))

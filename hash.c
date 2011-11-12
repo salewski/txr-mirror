@@ -52,6 +52,9 @@ struct hash {
   cnum modulus;
   cnum count;
   val userdata;
+  cnum (*hash_fun)(val);
+  val (*assoc_fun)(val list, val key);
+  val *(*acons_new_l_fun)(val *list, val key, val *new_p);
 };
 
 struct hash_iter {
@@ -84,7 +87,7 @@ static long hash_c_str(const wchar_t *str)
   return h;
 }
 
-static cnum ll_hash(val obj)
+static cnum equal_hash(val obj)
 {
   if (obj == nil)
     return NUM_MAX;
@@ -93,7 +96,7 @@ static cnum ll_hash(val obj)
   case LIT:
     return hash_c_str(litptr(obj));
   case CONS:
-    return (ll_hash(obj->c.car) + ll_hash(obj->c.cdr)) & NUM_MAX;
+    return (equal_hash(obj->c.car) + equal_hash(obj->c.cdr)) & NUM_MAX;
   case STR:
     return hash_c_str(obj->st.str);
   case CHR:
@@ -110,28 +113,38 @@ static cnum ll_hash(val obj)
     }
     break;
   case FUN:
-    return ((cnum) obj->f.f.interp_fun + ll_hash(obj->f.env)) & NUM_MAX;
+    return ((cnum) obj->f.f.interp_fun + equal_hash(obj->f.env)) & NUM_MAX;
   case VEC:
     {
       val fill = obj->v.vec[vec_fill];
-      cnum i, h = ll_hash(obj->v.vec[vec_fill]);
+      cnum i, h = equal_hash(obj->v.vec[vec_fill]);
       cnum len = c_num(fill);
 
       for (i = 0; i < len; i++)
-        h = (h + ll_hash(obj->v.vec[i])) & NUM_MAX;
+        h = (h + equal_hash(obj->v.vec[i])) & NUM_MAX;
 
       return h;
     }
   case LCONS:
-    return (ll_hash(car(obj)) + ll_hash(cdr(obj))) & NUM_MAX;
+    return (equal_hash(car(obj)) + equal_hash(cdr(obj))) & NUM_MAX;
   case LSTR:
     lazy_str_force(obj);
-    return ll_hash(obj->ls.prefix);
+    return equal_hash(obj->ls.prefix);
   case COBJ:
     return obj->co.ops->hash(obj);
   }
 
   internal_error("unhandled case in equal function");
+}
+
+static cnum eql_hash(val obj)
+{
+    switch (sizeof (mem_t *)) {
+    case 4:
+      return (((cnum) obj) & NUM_MAX) >> 4;
+    case 8: default:
+      return (((cnum) obj) & NUM_MAX) >> 5;
+    }
 }
 
 cnum cobj_hash_op(val obj)
@@ -141,7 +154,7 @@ cnum cobj_hash_op(val obj)
 
 val hash_obj(val obj)
 {
-  return num(ll_hash(obj));
+  return num(equal_hash(obj));
 }
 
 static void hash_mark(val hash)
@@ -219,8 +232,7 @@ static void hash_grow(struct hash *h)
       val entry = car(conses);
       val next = cdr(conses);
       val key = car(entry);
-      val *pchain = vecref_l(new_table,
-                                num(ll_hash(key) % new_modulus));
+      val *pchain = vecref_l(new_table, num(h->hash_fun(key) % new_modulus));
       *cdr_l(conses) = *pchain;
       *pchain = conses;
       conses = next;
@@ -231,7 +243,7 @@ static void hash_grow(struct hash *h)
   h->table = new_table;
 }
 
-val make_hash(val weak_keys, val weak_vals)
+val make_hash(val weak_keys, val weak_vals, val equal_based)
 {
   int flags = ((weak_vals != nil) << 1) | (weak_keys != nil);
   struct hash *h = (struct hash *) chk_malloc(sizeof *h);
@@ -247,15 +259,19 @@ val make_hash(val weak_keys, val weak_vals)
   h->table = table;
   h->userdata = nil;
 
+  h->hash_fun = equal_based ? equal_hash : eql_hash;
+  h->assoc_fun = equal_based ? assoc : assq;
+  h->acons_new_l_fun = equal_based ? acons_new_l : aconsq_new_l;
+
   return hash;
 }
 
 val *gethash_l(val hash, val key, val *new_p)
 {
   struct hash *h = (struct hash *) hash->co.handle;
-  val *pchain = vecref_l(h->table, num(ll_hash(key) % h->modulus));
+  val *pchain = vecref_l(h->table, num(h->hash_fun(key) % h->modulus));
   val old = *pchain;
-  val *place = acons_new_l(pchain, key, new_p);
+  val *place = h->acons_new_l_fun(pchain, key, new_p);
   if (old != *pchain && ++h->count > 2 * h->modulus)
     hash_grow(h);
   return place;
@@ -264,16 +280,16 @@ val *gethash_l(val hash, val key, val *new_p)
 val gethash(val hash, val key)
 {
   struct hash *h = (struct hash *) hash->co.handle;
-  val chain = *vecref_l(h->table, num(ll_hash(key) % h->modulus));
-  val found = assoc(chain, key);
+  val chain = *vecref_l(h->table, num(h->hash_fun(key) % h->modulus));
+  val found = h->assoc_fun(chain, key);
   return cdr(found);
 }
 
 val gethash_f(val hash, val key, val *found)
 {
   struct hash *h = (struct hash *) hash->co.handle;
-  val chain = *vecref_l(h->table, num(ll_hash(key) % h->modulus));
-  *found = assoc(chain, key);
+  val chain = *vecref_l(h->table, num(h->hash_fun(key) % h->modulus));
+  *found = h->assoc_fun(chain, key);
   return cdr(*found);
 }
 
@@ -284,10 +300,17 @@ val sethash(val hash, val key, val value)
   return new_p;
 }
 
+val pushhash(val hash, val key, val value)
+{
+  val new_p;
+  push(value, gethash_l(hash, key, &new_p));
+  return new_p;
+}
+
 val remhash(val hash, val key)
 {
   struct hash *h = (struct hash *) hash->co.handle;
-  val *pchain = vecref_l(h->table, num(ll_hash(key) % h->modulus));
+  val *pchain = vecref_l(h->table, num(h->hash_fun(key) % h->modulus));
   *pchain = alist_remove1(*pchain, key);
   h->count--;
   bug_unless (h->count >= 0);
