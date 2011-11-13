@@ -1,5 +1,11 @@
 2011-11-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c: Removed <assert.h>
+
+	* txr.c: Likewise.
+
+2011-11-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	Bug #34813
 
 	* match.c (v_freeform): Fail if the data is null,
