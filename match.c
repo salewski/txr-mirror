@@ -65,18 +65,6 @@ val noval_s;
 
 static val h_directive_table, v_directive_table;
 
-static void debugf(val fmt, ...)
-{
-  if (opt_loglevel >= 2) {
-    va_list vl;
-    va_start (vl, fmt);
-    format(std_error, lit("~a: "), prog_string, nao);
-    vformat(std_error, fmt, vl);
-    put_char(std_error, chr('\n'));
-    va_end (vl);
-  }
-}
-
 static void debuglf(val form, val fmt, ...)
 {
   if (opt_loglevel >= 2) {
@@ -285,7 +273,7 @@ static val dest_bind(val spec, val bindings, val pattern,
           return bindings;
         if (tree_find(cdr(existing), value, testfun))
           return bindings;
-        debugf(lit("bind variable mismatch: ~a"), pattern, nao);
+        debuglf(spec, lit("bind variable mismatch: ~a"), pattern, nao);
         return t;
       }
       return cons(cons(pattern, value), bindings);
@@ -296,15 +284,11 @@ static val dest_bind(val spec, val bindings, val pattern,
     val piter = pattern, viter = value;
 
     if (first(pattern) == var_s) {
-      uw_throwf(query_error_s, 
-                lit("metavariable @~a syntax cannot be used here"),
-                second(pattern), nao);
+      sem_error(spec, lit("metavariable @~a syntax cannot be used here"), second(pattern), nao);
     }
 
     if (first(pattern) == expr_s) {
-      uw_throwf(query_error_s, 
-                lit("the @~s syntax cannot be used here"),
-                rest(pattern), nao);
+      sem_error(spec, lit("the @~s syntax cannot be used here"), rest(pattern), nao);
     }
 
 
@@ -2529,7 +2513,7 @@ static val v_output(match_files_ctx *c)
       if (!symbolp(into_var)) 
         sem_error(specline, lit(":into requires a variable, not ~s"), into_var, nao);
 
-      debugf(lit("opening string list stream"), nao);
+      debuglf(specline, lit("opening string list stream"), nao);
       uw_env_begin;
       uw_set_match_context(cons(c->spec, c->bindings));
       do_output(c->bindings, specs, filter, stream);
@@ -2555,18 +2539,18 @@ static val v_output(match_files_ctx *c)
 
   fp = (errno = 0, complex_open(dest, t, append));
 
-  debugf(lit("opening data sink ~a"), dest, nao);
+  debuglf(specline, lit("opening data sink ~a"), dest, nao);
 
   if (complex_open_failed(fp)) {
     if (nothrow) {
-      debugf(lit("could not open ~a: "
-                 "treating as failed match due to nothrow"), dest, nao);
+      debuglf(specline, lit("could not open ~a: "
+                            "treating as failed match due to nothrow"), dest, nao);
       return nil;
     } else if (errno != 0) {
-      file_err(nil, lit("could not open ~a (error ~a/~a)"), dest,
+      file_err(specline, lit("could not open ~a (error ~a/~a)"), dest,
                num(errno), string_utf8(strerror(errno)), nao);
     } else {
-      file_err(nil, lit("could not open ~a"), dest, nao);
+      file_err(specline, lit("could not open ~a"), dest, nao);
     }
   } else {
     val stream = complex_stream(fp, dest);
@@ -2838,7 +2822,7 @@ static val v_filter(match_files_ctx *c)
 static val v_eof(match_files_ctx *c)
 {
   if (c->data) {
-    debugf(lit("eof failed to match at ~a"), c->data_lineno, nao);
+    debuglf(c->spec, lit("eof failed to match at ~a"), c->data_lineno, nao);
     return nil;
   }
   return next_spec_k;
@@ -2952,21 +2936,22 @@ static val match_files(match_files_ctx c)
     val first_spec_item = first(first(c.spec));
 
     if (consp(first_spec_item) && eq(first(first_spec_item), next_s)) {
-      debugf(lit("not opening source ~a "
-                 "since query starts with next directive"), name, nao);
+      debuglf(first_spec_item, lit("not opening source ~a "
+                                   "since query starts with next directive"), name, nao);
     } else {
-      debugf(lit("opening data source ~a"), name, nao);
+      val spec = first(c.spec);
+      debuglf(spec, lit("opening data source ~a"), name, nao);
 
       if (complex_open_failed(fp)) {
         if (consp(source_spec) && car(source_spec) == nothrow_k) {
-          debugf(lit("could not open ~a: "
-                     "treating as failed match due to nothrow"), name, nao);
+          debuglf(spec, lit("could not open ~a: "
+                            "treating as failed match due to nothrow"), name, nao);
           return nil;
         } else if (errno != 0)
-          file_err(nil, lit("could not open ~a (error ~a/~a)"), name,
+          file_err(spec, lit("could not open ~a (error ~a/~a)"), name,
                    num(errno), string_utf8(strerror(errno)), nao);
         else
-          file_err(nil, lit("could not open ~a"), name, nao);
+          file_err(spec, lit("could not open ~a"), name, nao);
         return nil;
       }
 

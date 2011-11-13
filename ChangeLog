@@ -1,5 +1,15 @@
 2011-11-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	Improved line number reporting in errors and debug traces.
+
+	* match.c (debugf): Function removed.
+	(dest_bind, v_output, v_eof): Use debuglf instead of
+	debugf, and sem_error instead of uw_throwf.
+	(match_files): Likewise, and file_err is called
+	with form.
+
+2011-11-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	Eliminate line numbers from the abstract syntax
 	tree representation of the TXR query.
 
