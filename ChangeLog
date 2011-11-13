@@ -1,3 +1,11 @@
+2011-11-13  Kaz Kylheku  <kaz@kylheku.com>
+
+	Bug #34813
+
+	* match.c (v_freeform): Fail if the data is null,
+	to avoid a false positive match as an empty line, followed by the type
+	error of incrementing a nonexistent data line number.
+
 2011-11-12  Kaz Kylheku  <kaz@kylheku.com>
 
 	* parser.y: Correctly record line number info for regex.
