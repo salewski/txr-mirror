@@ -279,7 +279,7 @@ elem : TEXT                     { $$ = rl(string_own($1), num(lineno)); }
      | list                     { $$ = $1; }
      | regex                    { $$ = cons(regex_compile(rest($1)),
                                             rest($1));
-                                  rl($1, num(lineno)); }
+                                  rl($$, num(lineno)); }
      | COLL exprs_opt ')' elems END     { $$ = list(coll_s, $4, nil, $2, nao);
                                           rl($$, num($1)); }
      | COLL exprs_opt ')' elems

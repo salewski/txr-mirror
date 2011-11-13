@@ -1,5 +1,9 @@
 2011-11-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.y: Correctly record line number info for regex.
+
+2011-11-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	Improved line number reporting in errors and debug traces.
 
 	* match.c (debugf): Function removed.
