@@ -621,6 +621,11 @@ void end_of_regex(void)
     yy_pop_state();
 }
 
+val source_loc(val form)
+{
+  return gethash(form_to_ln_hash, form);
+}
+
 void parse_init(void)
 {
   protect(&yyin_stream, &prepared_error_message,

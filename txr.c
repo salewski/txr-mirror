@@ -126,10 +126,9 @@ static val remove_hash_bang_line(val spec)
   {
     val shbang = string(L"#!");
     val firstline = first(spec);
-    val items = rest(firstline);
 
-    if (stringp(first(items))) {
-      val twochars = sub_str(first(items), zero, two);
+    if (stringp(first(firstline))) {
+      val twochars = sub_str(first(firstline), zero, two);
       if (equal(twochars, shbang))
         return rest(spec);
     }

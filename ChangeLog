@@ -1,5 +1,63 @@
 2011-11-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	Eliminate line numbers from the abstract syntax
+	tree representation of the TXR query.
+
+	* match.c (debuglf, sem_error, file_err, eval_form): Line number argument replaced
+	with the form to which the situation pertains. Location information is
+	pulled from the hash table entry associated with the form.
+	(dest_set, dest_bind, eval_form, vars_to_bindings): Context argument
+	renamed since it isn't a line number.
+	(struct match_line_ctx): spec_lineno member removed.
+	(ml_all, ml_bindings_specline): lineno parameter removed.
+	(LOG_MISMATCH, LOG_MATCH, h_var, h_skip, h_coll, h_parallel,
+	match_line): Pass elem to debuglf instead of line number.
+	as context.
+	(h_trailer, h_eol): define elem for LOG_MISMATCH and LOG_MATCH macros.
+	(h_fun): Pass elem variable to debuglf instead of line number.
+	Body stored as a simple cons cell once again (no line number).
+	(do_output_line): Line number parameter removed. Pass specline to
+	sem_error instead of line number.
+	(do_output): Adjusted for one less parameter in do_output_line.
+	(mf_from_ml): Pass one less parameter to ml_all. Conversion of
+	specline to spec is just a wrapping into a nested list,
+	with no line number.
+	(spec_bind): Linenumber variable parameter removed from macro.
+	Definition simplified.
+	(v_skip): Pass specline to debuglf instead of spec_linenum,
+	which is no longer computed.
+	(v_trailer): Use new definition of specline. Pass first_spec
+	to sem_error instead of spec_linenum.
+	Computation of ff_specline no longer has to skip line number.
+	(v_freeform, v_block, v_accept_fail, v_next, v_parallel, v_gather,
+	v_collect, v_merge, v_bind, hv_trampoline, v_cat, v_output,
+	v_try, v_defex, v_throw, v_deffilter, v_filter, match_funcall): Use new
+	definition of specline.  Pass first_spec to sem_error instead of
+	spec_linenum.  (v_forget_local): Specline computed differently since
+	there is no linenumber to skip.
+	(h_define): Back to implified representation of function with
+	no extra cell for line number.
+	(v_define, v_fun): Pass first_spec to sem_error instead of
+	spec_linenum. Back to implified representation of function with no
+	extra cell for line number.
+	(match_files): first_spec_item computed differently.
+	Pass first_spec to sem_error instead of spec_linenum.
+
+	* parser.h (source_loc): Declared.
+
+	* parser.l (source_loc): New function.
+
+	* parser.y:x (grammar): Removed line numbers from abstract sytnax
+	tree. A few more places needed the annotation of forms with location
+	info, and a couple of cases of the need to propagate the info was
+	identified. Use extra cons cell as output of until_last to propagate
+	the line number from the symbol to the use.
+
+	* txr.c (remove_hash_bang_line): No longer has to look past
+	line number.
+
+2011-11-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	Infrastructure for storing line number information
 	outside of the code, in hash tables.
 

@@ -77,27 +77,27 @@ static void debugf(val fmt, ...)
   }
 }
 
-static void debuglf(val line, val fmt, ...)
+static void debuglf(val form, val fmt, ...)
 {
   if (opt_loglevel >= 2) {
     va_list vl;
     va_start (vl, fmt);
     format(std_error, lit("~a: (~a:~a) "), prog_string,
-           spec_file_str, line, nao);
+           spec_file_str, source_loc(form), nao);
     vformat(std_error, fmt, vl);
     put_char(std_error, chr('\n'));
     va_end (vl);
   }
 }
 
-static void sem_error(val line, val fmt, ...)
+static void sem_error(val form, val fmt, ...)
 {
   va_list vl;
   val stream = make_string_output_stream();
 
   va_start (vl, fmt);
-  if (line)
-    format(stream, lit("(~a:~a) "), spec_file_str, line, nao);
+  if (form)
+    format(stream, lit("(~a:~a) "), spec_file_str, source_loc(form), nao);
   (void) vformat(stream, fmt, vl);
   va_end (vl);
 
@@ -105,14 +105,14 @@ static void sem_error(val line, val fmt, ...)
   abort();
 }
 
-static void file_err(val line, val fmt, ...)
+static void file_err(val form, val fmt, ...)
 {
   va_list vl;
   val stream = make_string_output_stream();
 
   va_start (vl, fmt);
-  if (line)
-    format(stream, lit("(~a:~a) "), spec_file_str, line, nao);
+  if (form)
+    format(stream, lit("(~a:~a) "), spec_file_str, source_loc(form), nao);
   (void) vformat(stream, fmt, vl);
   va_end (vl);
 
@@ -243,14 +243,14 @@ static val bindable(val obj)
   return (obj && symbolp(obj) && obj != t && !keywordp(obj)) ? t : nil;
 }
 
-static val dest_set(val linenum, val bindings, val pattern, val value)
+static val dest_set(val spec, val bindings, val pattern, val value)
 {
   if (symbolp(pattern)) {
     val existing = assoc(bindings, pattern);
     if (!bindable(pattern))
-      sem_error(linenum, lit("~s cannot be used as a variable"), pattern, nao);
+      sem_error(spec, lit("~s cannot be used as a variable"), pattern, nao);
     if (!existing)
-      sem_error(linenum, lit("cannot set unbound variable ~s"), pattern, nao);
+      sem_error(spec, lit("cannot set unbound variable ~s"), pattern, nao);
     *cdr_l(existing) = value;
   } else if (consp(pattern)) {
     if (first(pattern) == var_s) {
@@ -264,17 +264,17 @@ static val dest_set(val linenum, val bindings, val pattern, val value)
                 lit("the @~s syntax cannot be used here"),
                 rest(pattern), nao);
     }
-    dest_set(linenum, bindings, car(pattern), car(value));
+    dest_set(spec, bindings, car(pattern), car(value));
     if (cdr(pattern))
-      dest_set(linenum, bindings, cdr(pattern), cdr(value));
+      dest_set(spec, bindings, cdr(pattern), cdr(value));
   } else {
-    sem_error(linenum, lit("cannot set ~s: not a variable"), pattern, nao);
+    sem_error(spec, lit("cannot set ~s: not a variable"), pattern, nao);
   }
 
   return nil;
 }
 
-static val dest_bind(val linenum, val bindings, val pattern,
+static val dest_bind(val spec, val bindings, val pattern,
                      val value, val testfun)
 {
   if (symbolp(pattern)) {
@@ -310,7 +310,7 @@ static val dest_bind(val linenum, val bindings, val pattern,
 
     while (consp(piter) && consp(viter))
     {
-      bindings = dest_bind(linenum, bindings, car(piter), car(viter), testfun);
+      bindings = dest_bind(spec, bindings, car(piter), car(viter), testfun);
       if (bindings == t)
         return t;
       piter = cdr(piter);
@@ -318,7 +318,7 @@ static val dest_bind(val linenum, val bindings, val pattern,
     }
 
     if (bindable(piter)) {
-      bindings = dest_bind(linenum, bindings, piter, viter, testfun);
+      bindings = dest_bind(spec, bindings, piter, viter, testfun);
       if (bindings == t)
         return t;
     } else {
@@ -332,15 +332,15 @@ static val dest_bind(val linenum, val bindings, val pattern,
   return t;
 }
 
-static val eval_form(val lineno, val form, val bindings);
+static val eval_form(val spec, val form, val bindings);
 
-static val vars_to_bindings(val lineno, val vars, val bindings)
+static val vars_to_bindings(val spec, val vars, val bindings)
 {
   val iter;
   list_collect_decl (fixed_vars, tail);
 
   if (vars && !consp(vars)) 
-    sem_error(lineno, lit("not a valid variable list: ~a"), vars, nao);
+    sem_error(spec, lit("not a valid variable list: ~a"), vars, nao);
 
   for (iter = vars; iter; iter = cdr(iter)) {
     val item = car(iter);
@@ -348,24 +348,23 @@ static val vars_to_bindings(val lineno, val vars, val bindings)
       list_collect (tail, cons(item, noval_s));
     } else if (consp(item) && bindable(first(item))) {
       list_collect (tail, cons(first(item), 
-                               cdr(eval_form(lineno, second(item), bindings))));
+                               cdr(eval_form(spec, second(item), bindings))));
     } else { 
-      sem_error(lineno, lit("not a variable spec: ~a"), item, nao);
+      sem_error(spec, lit("not a variable spec: ~a"), item, nao);
     }
   }
   return fixed_vars;
 }
 
 typedef struct {
-  val bindings, specline, dataline, pos, spec_lineno, data_lineno, file;
+  val bindings, specline, dataline, pos, data_lineno, file;
 } match_line_ctx;
 
 static match_line_ctx ml_all(val bindings, val specline, val dataline,
-                             val pos, val spec_lineno, val data_lineno,
-                             val file)
+                             val pos, val data_lineno, val file)
 {
   match_line_ctx c = { bindings, specline, dataline, 
-                       pos, spec_lineno, data_lineno, file };
+                       pos, data_lineno, file };
   return c;
 }
 
@@ -376,13 +375,12 @@ static match_line_ctx ml_specline(match_line_ctx c, val specline)
   return nc;
 }
 
-static match_line_ctx ml_bindings_specline(match_line_ctx c, val bindings, val specline, val lineno)
+static match_line_ctx ml_bindings_specline(match_line_ctx c, val bindings,
+                                           val specline)
 {
   match_line_ctx nc = c;
   nc.bindings = bindings;
   nc.specline = specline;
-  if (lineno)
-    nc.spec_lineno = lineno;
   return nc;
 }
 
@@ -391,18 +389,18 @@ static val match_line(match_line_ctx c);
 typedef val (*h_match_func)(match_line_ctx c, match_line_ctx *cout);
 
 #define LOG_MISMATCH(KIND)                                              \
-  debuglf(c.spec_lineno, lit(KIND " mismatch, position ~a (~a:~a)"),    \
+  debuglf(elem, lit(KIND " mismatch, position ~a (~a:~a)"),             \
           c.pos, c.file, c.data_lineno, nao);                           \
-  debuglf(c.spec_lineno, lit("  ~a"), c.dataline, nao);                 \
+  debuglf(elem, lit("  ~a"), c.dataline, nao);                          \
   if (c_num(c.pos) < 77)                                                \
-    debuglf(c.spec_lineno, lit("  ~*~a^"), c.pos, lit(""), nao)
+    debuglf(elem, lit("  ~*~a^"), c.pos, lit(""), nao)
 
 #define LOG_MATCH(KIND, EXTENT)                                         \
-  debuglf(c.spec_lineno, lit(KIND " matched, position ~a-~a (~a:~a)"),  \
+  debuglf(elem, lit(KIND " matched, position ~a-~a (~a:~a)"),           \
           c.pos, EXTENT, c.file, c.data_lineno, nao);                   \
-  debuglf(c.spec_lineno, lit("  ~a"), c.dataline, nao);                 \
+  debuglf(elem, lit("  ~a"), c.dataline, nao);                          \
   if (c_num(EXTENT) < 77)                                               \
-    debuglf(c.spec_lineno, lit("  ~*~a~-*~a^"), c.pos, lit(""),         \
+    debuglf(elem, lit("  ~*~a~-*~a^"), c.pos, lit(""),                  \
               minus(EXTENT, c.pos), lit("^"), nao)
 
 #define elem_bind(elem_var, directive_var, specline)    \
@@ -418,7 +416,7 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
   val pair = assoc(c.bindings, sym); /* var exists already? */
 
   if (gt(length(modifier), one)) {
-    sem_error(c.spec_lineno, lit("multiple modifiers on variable ~s"),
+    sem_error(elem, lit("multiple modifiers on variable ~s"),
               sym, nao);
   }
 
@@ -432,6 +430,7 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
        (<sym-substituted> <pat> ...) */
     if (pat) {
       c.specline = cons(cdr(pair), cons(pat, rest(c.specline)));
+      /* TODO: propagate line number info */
     } else if (nump(modifier)) {
       val past = plus(c.pos, modifier);
 
@@ -485,7 +484,7 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
       goto repeat;
     }
   } else if (modifier && modifier != t) {
-    sem_error(c.spec_lineno, lit("invalid modifier ~s on variable ~s"),
+    sem_error(elem, lit("invalid modifier ~s on variable ~s"),
               modifier, sym, nao);
   } else if (pat == nil) { /* no modifier, no elem -> to end of line */
     c.bindings = acons(c.bindings, sym, sub_str(c.dataline, c.pos, nil));
@@ -519,7 +518,7 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
     val pair = assoc(c.bindings, second_sym); /* var exists already? */
 
     if (gt(length(next_modifier), one)) {
-      sem_error(c.spec_lineno, lit("multiple modifiers on variable ~s"),
+      sem_error(elem, lit("multiple modifiers on variable ~s"),
                 second_sym, nao);
     }
 
@@ -550,7 +549,7 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
         goto repeat;
       }
     } else if (!pair) {
-      sem_error(c.spec_lineno, lit("consecutive unbound variables"), nao);
+      sem_error(elem, lit("consecutive unbound variables"), nao);
     } else {
     /* Re-generate a new spec with an edited version of
        the element we just processed, and repeat. */
@@ -571,8 +570,7 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
     c.bindings = acons(c.bindings, sym, sub_str(c.dataline, c.pos, find));
     c.pos = plus(find, len);
   } else {
-    sem_error(c.spec_lineno,
-              lit("variable followed by invalid element"), nao);
+    sem_error(elem, lit("variable followed by invalid element"), nao);
   }
 
   *cout = c;
@@ -594,7 +592,7 @@ static val h_skip(match_line_ctx c, match_line_ctx *cout)
   val last_good_result = nil, last_good_pos = nil;
 
   if (!rest(c.specline)) {
-    debuglf(c.spec_lineno, 
+    debuglf(elem, 
             lit("skip to end of line ~a:~a"), c.file, c.data_lineno, nao);
     return cons(c.bindings, t);
   }
@@ -609,14 +607,14 @@ static val h_skip(match_line_ctx c, match_line_ctx *cout)
 
     if (min) {
       if (reps_min != cmin) {
-        debuglf(c.spec_lineno,
+        debuglf(elem,
                 lit("skipped only ~a/~a chars to ~a:~a:~a"),
                 num(reps_min), num(cmin),
                 c.file, c.data_lineno, c.pos, nao);
         return nil;
       }
 
-      debuglf(c.spec_lineno, lit("skipped ~a chars to ~a:~a:~a"),
+      debuglf(elem, lit("skipped ~a chars to ~a:~a:~a"),
               num(reps_min), c.file, c.data_lineno, c.pos, nao);
     }
 
@@ -676,7 +674,7 @@ static val h_coll(match_line_ctx c, match_line_ctx *cout)
   cnum timescounter = 0, charscounter = 0;
   val iter;
 
-  vars = vars_to_bindings(c.spec_lineno, vars, c.bindings);
+  vars = vars_to_bindings(elem, vars, c.bindings);
 
   if (((times || maxtimes) && ctimax == 0) || (chars && cchars == 0)) {
     *cout = c;
@@ -699,7 +697,7 @@ static val h_coll(match_line_ctx c, match_line_ctx *cout)
       if (until_last_specline) {
         cons_bind (sym, spec, until_last_specline);
         cons_bind (until_last_bindings, until_pos,
-                   match_line(ml_bindings_specline(c, new_bindings, spec, nil)));
+                   match_line(ml_bindings_specline(c, new_bindings, spec)));
 
         if (until_pos) {
           LOG_MATCH("until/last", until_pos);
@@ -725,7 +723,7 @@ static val h_coll(match_line_ctx c, match_line_ctx *cout)
 
           if (!exists) {
             if (dfl == noval_s)
-              sem_error(c.spec_lineno, lit("coll failed to bind ~a"),
+              sem_error(elem, lit("coll failed to bind ~a"),
                         var, nao);
             else
               strictly_new_bindings = acons(strictly_new_bindings, 
@@ -771,13 +769,13 @@ next_coll:
   }
 
   if ((times || mintimes) && timescounter < ctimin) {
-    debuglf(c.spec_lineno, lit("fewer than ~a iterations collected"),
+    debuglf(elem, lit("fewer than ~a iterations collected"),
             num(ctimin), nao);
     return nil;
   }
 
   if (!bindings_coll)
-    debuglf(c.spec_lineno, lit("nothing was collected"), nao);
+    debuglf(elem, lit("nothing was collected"), nao);
 
   for (iter = bindings_coll; iter; iter = cdr(iter)) {
     val pair = car(iter);
@@ -821,10 +819,10 @@ static val h_parallel(match_line_ctx c, match_line_ctx *cout)
   val iter;
 
   if (choose_longest && choose_shortest)
-    sem_error(c.spec_lineno, lit("choose: both :shortest and :longest specified"), nao);
+    sem_error(elem, lit("choose: both :shortest and :longest specified"), nao);
 
   if (directive == choose_s && !choose_sym)
-    sem_error(c.spec_lineno, lit("choose: criterion not specified"), nao);
+    sem_error(elem, lit("choose: criterion not specified"), nao);
   for (iter = specs; iter != nil; iter = cdr(iter)) {
     val nested_spec = first(iter);
     cons_bind (new_bindings, new_pos,
@@ -862,17 +860,17 @@ static val h_parallel(match_line_ctx c, match_line_ctx *cout)
   }
 
   if (directive == all_s && !all_match) {
-    debuglf(c.spec_lineno, lit("all: some clauses didn't match"), nao);
+    debuglf(elem, lit("all: some clauses didn't match"), nao);
     return nil;
   }
 
   if ((directive == some_s || directive == cases_s) && !some_match) {
-    debuglf(c.spec_lineno, lit("some/cases: no clauses matched"), nao);
+    debuglf(elem, lit("some/cases: no clauses matched"), nao);
     return nil;
   }
 
   if (directive == none_s && some_match) {
-    debuglf(c.spec_lineno, lit("none: some clauses matched"), nao);
+    debuglf(elem, lit("none: some clauses matched"), nao);
     return nil;
   }
 
@@ -893,6 +891,7 @@ static val h_trailer(match_line_ctx c, match_line_ctx *cout)
 {
   val result = match_line(ml_specline(c, rest(c.specline)));
   val new_pos = cdr(result);
+  val elem = first(c.specline);
 
   if (!new_pos) {
     LOG_MISMATCH("trailer");
@@ -913,13 +912,12 @@ static val h_fun(match_line_ctx c, match_line_ctx *cout)
     val args = rest(elem);
     val params = car(func);
     val ub_p_a_pairs = nil;
-    val body = cdr(cdr(func));
-    val lineno = car(cdr(func));
+    val body = cdr(func);
     val piter, aiter;
     val bindings_cp = copy_alist(c.bindings);
 
     if (!equal(length(args), length(params)))
-      sem_error(c.spec_lineno, lit("function ~a takes ~a argument(s)"),
+      sem_error(elem, lit("function ~a takes ~a argument(s)"),
                 sym, length(params), nao);
 
     for (piter = params, aiter = args; piter;
@@ -939,7 +937,7 @@ static val h_fun(match_line_ctx c, match_line_ctx *cout)
           ub_p_a_pairs = cons(cons(param, arg), ub_p_a_pairs);
         }
       } else {
-        val val = eval_form(c.spec_lineno, arg, c.bindings);
+        val val = eval_form(elem, arg, c.bindings);
         bindings_cp = acons_new(bindings_cp, param, cdr(val));
       }
     }
@@ -948,13 +946,13 @@ static val h_fun(match_line_ctx c, match_line_ctx *cout)
       uw_block_begin(nil, result);
       uw_env_begin;
 
-      result = match_line(ml_bindings_specline(c, bindings_cp, body, lineno));
+      result = match_line(ml_bindings_specline(c, bindings_cp, body));
 
       uw_env_end;
       uw_block_end;
 
       if (!result) {
-        debuglf(c.spec_lineno, lit("function (~s ~s) failed"), sym, args, nao);
+        debuglf(elem, lit("function (~s ~s) failed"), sym, args, nao);
         return nil;
       }
 
@@ -968,10 +966,10 @@ static val h_fun(match_line_ctx c, match_line_ctx *cout)
           if (symbolp(arg)) {
             val newbind = assoc(new_bindings, param);
             if (newbind) {
-              c.bindings = dest_bind(c.spec_lineno, c.bindings, 
+              c.bindings = dest_bind(elem, c.bindings, 
                                      arg, cdr(newbind), equal_f);
               if (c.bindings == t) {
-                debuglf(c.spec_lineno,
+                debuglf(elem,
                         lit("binding mismatch on ~a "
                             "when returning from ~a"), arg, sym, nao);
                 return nil;
@@ -994,6 +992,8 @@ static val h_fun(match_line_ctx c, match_line_ctx *cout)
 
 static val h_eol(match_line_ctx c, match_line_ctx *cout)
 {
+  val elem = first(c.specline);
+
   if (length_str_le(c.dataline, c.pos)) {
     LOG_MATCH("eol", c.pos);
     return cons(c.bindings, t);
@@ -1064,7 +1064,7 @@ static val match_line(match_line_ctx c)
               c = nc;
               continue;
             } else if (result == decline_k) {
-              sem_error(c.spec_lineno, lit("unknown directive: ~a"), directive, nao);
+              sem_error(elem, lit("unknown directive: ~a"), directive, nao);
             } else {
               return result;
             }
@@ -1086,7 +1086,7 @@ static val match_line(match_line_ctx c)
         break;
       }
     default:
-      sem_error(c.spec_lineno, lit("unsupported object in spec: ~s"), elem, nao);
+      sem_error(elem, lit("unsupported object in spec: ~s"), elem, nao);
     }
 
     c.specline = cdr(c.specline);
@@ -1198,7 +1198,7 @@ static val subst_vars(val spec, val bindings, val filter)
   return out;
 }
 
-static val eval_form(val lineno, val form, val bindings)
+static val eval_form(val spec, val form, val bindings)
 {
   val ret = nil;
 
@@ -1214,14 +1214,14 @@ static val eval_form(val lineno, val form, val bindings)
       } else if (regexp(car(form))) {
         ret = cons(t, form);
       } else if (first(form) == var_s) {
-        sem_error(lineno, lit("metavariable @~a syntax cannot be used here"),
+        sem_error(spec, lit("metavariable @~a syntax cannot be used here"),
                   second(form), nao);
       } else if (first(form) == expr_s) {
-        sem_error(lineno, lit("the @~s syntax cannot be used here"),
+        sem_error(spec, lit("the @~s syntax cannot be used here"),
                   rest(form), nao);
       } else {
         val subforms = mapcar(curry_123_2(func_n3(eval_form), 
-                                          lineno, bindings), form);
+                                          spec, bindings), form);
 
         if (all_satisfy(subforms, identity_f, nil))
           ret = cons(t, mapcar(func_n1(cdr), subforms));
@@ -1239,13 +1239,13 @@ static val eval_form(val lineno, val form, val bindings)
         uw_throw (exc_sym, exc);
       }
 
-      sem_error(lineno, lit("~a"), exc, nao);
+      sem_error(spec, lit("~a"), exc, nao);
     }
   }
   uw_catch_end;
 
   if (!ret)
-    sem_error(lineno, lit("unbound variable in form ~s"), form, nao);
+    sem_error(spec, lit("unbound variable in form ~s"), form, nao);
 
   return ret;
 }
@@ -1375,8 +1375,7 @@ static val extract_bindings(val bindings, val output_spec)
   return bindings_out;
 }
 
-static void do_output_line(val bindings, val specline,
-                           val spec_lineno, val filter, val out)
+static void do_output_line(val bindings, val specline, val filter, val out)
 {
   for (; specline; specline = rest(specline)) {
     val elem = first(specline);
@@ -1390,7 +1389,7 @@ static void do_output_line(val bindings, val specline,
           val str = cat_str(subst_vars(cons(elem, nil),
                                        bindings, filter), nil);
           if (str == nil)
-            sem_error(spec_lineno, lit("bad substitution: ~a"),
+            sem_error(specline, lit("bad substitution: ~a"),
                       second(elem), nao);
           put_string(out, str);
         } else if (directive == rep_s) {
@@ -1407,10 +1406,10 @@ static void do_output_line(val bindings, val specline,
                                             nao));
 
           if (equal(max_depth, zero) && empty_clauses) {
-            do_output_line(bindings, empty_clauses, spec_lineno, filter, out);
+            do_output_line(bindings, empty_clauses, filter, out);
           } else if (equal(max_depth, one) && single_clauses) {
             val bind_a = mapcar(func_n1(bind_car), bind_cp);
-            do_output_line(bind_a, single_clauses, spec_lineno, filter, out);
+            do_output_line(bind_a, single_clauses, filter, out);
           } else if (!zerop(max_depth)) {
             cnum i;
 
@@ -1419,11 +1418,11 @@ static void do_output_line(val bindings, val specline,
               val bind_d = mapcar(func_n1(bind_cdr), bind_cp);
 
               if (i == 0 && first_clauses) {
-                do_output_line(bind_a, first_clauses, spec_lineno, filter, out);
+                do_output_line(bind_a, first_clauses, filter, out);
               } else if (i == c_num(max_depth) - 1 && last_clauses) {
-                do_output_line(bind_a, last_clauses, spec_lineno, filter, out);
+                do_output_line(bind_a, last_clauses, filter, out);
               } else {
-                do_output_line(bind_a, main_clauses, spec_lineno, filter, out);
+                do_output_line(bind_a, main_clauses, filter, out);
               }
 
               bind_cp = bind_d;
@@ -1431,7 +1430,7 @@ static void do_output_line(val bindings, val specline,
           }
 
         } else {
-          sem_error(spec_lineno, lit("unknown directive: ~a"), directive, nao);
+          sem_error(specline, lit("unknown directive: ~a"), directive, nao);
         }
       }
       break;
@@ -1441,7 +1440,7 @@ static void do_output_line(val bindings, val specline,
     case 0:
       break;
     default:
-      sem_error(spec_lineno,
+      sem_error(specline,
                 lit("unsupported object in output spec: ~s"), elem, nao);
     }
   }
@@ -1453,7 +1452,7 @@ static void do_output(val bindings, val specs, val filter, val out)
     return;
 
   for (; specs; specs = cdr(specs)) {
-    cons_bind (spec_lineno, specline, first(specs));
+    val specline = first(specs);
     val first_elem = first(specline);
 
     if (consp(first_elem)) {
@@ -1499,7 +1498,7 @@ static void do_output(val bindings, val specs, val filter, val out)
       }
     }
 
-    do_output_line(bindings, specline, spec_lineno, filter, out);
+    do_output_line(bindings, specline, filter, out);
     put_char(out, chr('\n'));
   }
 }
@@ -1560,19 +1559,16 @@ static match_files_ctx mf_file_data(match_files_ctx c, val file,
 
 static match_files_ctx mf_from_ml(match_line_ctx ml)
 {
-  return mf_all(cons(cons(ml.spec_lineno, ml.specline), nil),
-                nil, ml.bindings, nil, num(0));
+  return mf_all(cons(ml.specline, nil), nil, ml.bindings, nil, num(0));
 }
 
 static val match_files(match_files_ctx a);
 
 typedef val (*v_match_func)(match_files_ctx *cout);
 
-#define spec_bind(specline_var, spec_linenum_var, first_spec_var, spec)  \
-  val s_p_ ## specline_var = first(spec);                                \
-  val specline_var = rest(s_p_ ## specline_var);                         \
-  val spec_linenum_var = first(s_p_ ## specline_var);                    \
-  val first_spec_var = first(specline_var)
+#define spec_bind(specline, first_spec, spec)           \
+  val specline = first(spec);                           \
+  val first_spec = first(specline);
 
 static val v_skip(match_files_ctx *c)
 {
@@ -1587,7 +1583,6 @@ static val v_skip(match_files_ctx *c)
     return cons(c->bindings, cons(c->data, c->data_lineno));
 
   {
-    val spec_linenum = first(first(c->spec));
     val first_spec = first(specline);
     val args = rest(first_spec);
     val max = first(args);
@@ -1610,13 +1605,13 @@ static val v_skip(match_files_ctx *c)
 
       if (min) {
         if (reps_min != cmin) {
-          debuglf(spec_linenum, lit("skipped only ~a/~a lines to ~a:~a"),
+          debuglf(specline, lit("skipped only ~a/~a lines to ~a:~a"),
                   num(reps_min), num(cmin),
                   first(c->files), c->data_lineno, nao);
           uw_block_return(nil, nil);
         }
 
-        debuglf(spec_linenum, lit("skipped ~a lines to ~a:~a"),
+        debuglf(specline, lit("skipped ~a lines to ~a:~a"),
                 num(reps_min), first(c->files),
                 c->data_lineno, nao);
       }
@@ -1629,19 +1624,19 @@ static val v_skip(match_files_ctx *c)
             last_good_result = result;
             last_good_line = c->data_lineno;
           } else {
-            debuglf(spec_linenum, lit("skip matched ~a:~a"), first(c->files),
+            debuglf(specline, lit("skip matched ~a:~a"), first(c->files),
                     c->data_lineno, nao);
             break;
           }
         } else {
-          debuglf(spec_linenum, lit("skip didn't match ~a:~a"),
+          debuglf(specline, lit("skip didn't match ~a:~a"),
                   first(c->files), c->data_lineno, nao);
         }
 
         if (!c->data)
           break;
 
-        debuglf(spec_linenum, lit("skip didn't match ~a:~a"), first(c->files),
+        debuglf(specline, lit("skip didn't match ~a:~a"), first(c->files),
                 c->data_lineno, nao);
 
         c->data = rest(c->data);
@@ -1653,13 +1648,13 @@ static val v_skip(match_files_ctx *c)
       if (result)
         return result;
       if (last_good_result) {
-        debuglf(spec_linenum, lit("greedy skip matched ~a:~a"), 
+        debuglf(specline, lit("greedy skip matched ~a:~a"), 
                 first(c->files), last_good_line, nao);
         return last_good_result;
       }
     }
 
-    debuglf(spec_linenum, lit("skip failed"), nao);
+    debuglf(specline, lit("skip failed"), nao);
     return nil;
   }
 }
@@ -1681,30 +1676,30 @@ static val v_trailer(match_files_ctx *c)
 
 static val v_freeform(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c->spec);
+  spec_bind (specline, first_spec, c->spec);
 
   val args = rest(first_spec);
   val vals = mapcar(func_n1(cdr),
                        mapcar(curry_123_2(func_n3(eval_form),
-                                          spec_linenum, c->bindings), args));
+                                          first_spec, c->bindings), args));
 
   if ((c->spec = rest(c->spec)) == nil) {
-    sem_error(spec_linenum,
+    sem_error(first_spec,
               lit("freeform must be followed by a query line"), nao);
   } else {
     val limit = or2(if2(nump(first(vals)), first(vals)),
                     if2(nump(second(vals)), second(vals)));
     val term = or2(if2(stringp(first(vals)), first(vals)),
                    if2(stringp(second(vals)), second(vals)));
-    val ff_specline = rest(first(c->spec));
+    val ff_specline = first(c->spec);
     val ff_dataline = lazy_str(c->data, term, limit);
 
     cons_bind (new_bindings, success,
                match_line(ml_all(c->bindings, ff_specline, ff_dataline, zero,
-                                 spec_linenum, c->data_lineno, first(c->files))));
+                                 c->data_lineno, first(c->files))));
 
     if (!success) {
-      debuglf(spec_linenum, lit("freeform match failure"), nao);
+      debuglf(specline, lit("freeform match failure"), nao);
       return nil;
     }
 
@@ -1721,13 +1716,12 @@ static val v_freeform(match_files_ctx *c)
 
 static val v_block(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c->spec);
+  spec_bind (specline, first_spec, c->spec);
 
   val name = first(rest(first_spec));
 
   if (rest(specline))
-    sem_error(spec_linenum,
-              lit("unexpected material after block directive"), nao);
+    sem_error(specline, lit("unexpected material after block directive"), nao);
 
   if ((c->spec = rest(c->spec)) != nil)
   {
@@ -1742,12 +1736,12 @@ static val v_block(match_files_ctx *c)
 
 static val v_accept_fail(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c->spec);
+  spec_bind (specline, first_spec, c->spec);
   val sym = first(first_spec);
   val target = first(rest(first_spec));
 
   if (rest(specline))
-    sem_error(spec_linenum, lit("unexpected material after ~a"), sym, nao);
+    sem_error(specline, lit("unexpected material after ~a"), sym, nao);
 
   uw_block_return(target,
                   if2(sym == accept_s,
@@ -1755,23 +1749,23 @@ static val v_accept_fail(match_files_ctx *c)
                            if3(c->data, cons(c->data, c->data_lineno), t))));
   /* TODO: uw_block_return could just throw this */
   if (target)
-    sem_error(spec_linenum, lit("~a: no block named ~a in scope"),
+    sem_error(specline, lit("~a: no block named ~a in scope"),
               sym, target, nao);
   else
-    sem_error(spec_linenum, lit("%~a: no anonymous block in scope"),
+    sem_error(specline, lit("%~a: no anonymous block in scope"),
               sym, nao);
   return nil;
 }
 
 static val v_next(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c->spec);
+  spec_bind (specline, first_spec, c->spec);
   
   if (rest(first_spec) && rest(specline))
-    sem_error(spec_linenum, lit("invalid combination of old "
+    sem_error(specline, lit("invalid combination of old "
                                 "and new next syntax"), nao);
   if (rest(specline)) {
-    sem_error(spec_linenum, lit("obsolete next syntax: trailing material"), nao);
+    sem_error(specline, lit("obsolete next syntax: trailing material"), nao);
   }
 
   if ((c->spec = rest(c->spec)) == nil)
@@ -1783,7 +1777,7 @@ static val v_next(match_files_ctx *c)
 
     if (source == args_k) {
       if (rest(args)) {
-        sem_error(spec_linenum, lit("(next :args) takes no additional arguments"), nao);
+        sem_error(specline, lit("(next :args) takes no additional arguments"), nao);
       } else {
         cons_bind (new_bindings, success,
                    match_files(mf_args(*c)));
@@ -1797,7 +1791,7 @@ static val v_next(match_files_ctx *c)
 
     if (source == env_k) {
       if (rest(args)) {
-        sem_error(spec_linenum, lit("(next :env) takes no additional arguments"), nao);
+        sem_error(specline, lit("(next :env) takes no additional arguments"), nao);
       } else {
         cons_bind (new_bindings, success,
                    match_files(mf_data(*c, env(), num(1))));
@@ -1816,7 +1810,7 @@ static val v_next(match_files_ctx *c)
     }
 
     if (args && !keywordp(first(args)))
-      sem_error(spec_linenum, lit("next: keyword argument expected, not ~s"), first(args), nao);
+      sem_error(specline, lit("next: keyword argument expected, not ~s"), first(args), nao);
 
     {
       val alist = improper_plist_to_alist(args, list(nothrow_k, nao));
@@ -1824,26 +1818,26 @@ static val v_next(match_files_ctx *c)
       val list_expr = cdr(assoc(alist, list_k));
       val string_expr = cdr(assoc(alist, string_k));
       val nothrow = cdr(assoc(alist, nothrow_k));
-      val eval = eval_form(spec_linenum, source, c->bindings);
+      val eval = eval_form(specline, source, c->bindings);
       val str = cdr(eval);
 
       if (!from_var && !source && !string_expr && !list_expr)
-        sem_error(spec_linenum, lit("next: source required before keyword arguments"), nao);
+        sem_error(specline, lit("next: source required before keyword arguments"), nao);
 
       if ((from_var && string_expr) || (string_expr && list_expr) ||
           (from_var && list_expr))
       {
-        sem_error(spec_linenum, lit("next: only one of :var, :list or :string can be specified"), nao);
+        sem_error(specline, lit("next: only one of :var, :list or :string can be specified"), nao);
       }
 
       if (from_var) {
         val existing = assoc(c->bindings, from_var);
 
         if (!symbolp(from_var)) 
-          sem_error(spec_linenum, lit(":var requires a variable, not ~s"), from_var, nao);
+          sem_error(specline, lit(":var requires a variable, not ~s"), from_var, nao);
 
         if (!existing)
-          sem_error(spec_linenum, lit(":var specifies unbound variable ~s"), from_var, nao);
+          sem_error(specline, lit(":var specifies unbound variable ~s"), from_var, nao);
 
         {
           cons_bind (new_bindings, success,
@@ -1856,7 +1850,7 @@ static val v_next(match_files_ctx *c)
           return nil;
         }
       } else if (list_expr) {
-        val list_val = cdr(eval_form(spec_linenum, list_expr, c->bindings));
+        val list_val = cdr(eval_form(specline, list_expr, c->bindings));
         cons_bind (new_bindings, success,
                    match_files(mf_file_data(*c, lit("var"),
                                flatten(list_val), num(1))));
@@ -1866,9 +1860,9 @@ static val v_next(match_files_ctx *c)
                       if3(c->data, cons(c->data, c->data_lineno), t));
         return nil;
       } else if (string_expr) {
-        val str_val = cdr(eval_form(spec_linenum, string_expr, c->bindings));
+        val str_val = cdr(eval_form(specline, string_expr, c->bindings));
         if (!stringp(str_val))
-          sem_error(spec_linenum, lit(":string arg ~s evaluated to non-string ~s"), string_expr, str_val, nao);
+          sem_error(specline, lit(":string arg ~s evaluated to non-string ~s"), string_expr, str_val, nao);
 
         {
           cons_bind (new_bindings, success,
@@ -1886,7 +1880,7 @@ static val v_next(match_files_ctx *c)
         } else {
           c->files = rest(c->files);
           if (!c->files) {
-            debuglf(spec_linenum, lit("next: out of arguments"), nao);
+            debuglf(specline, lit("next: out of arguments"), nao);
             return nil;
           }
           c->files = cons(cons(nothrow_k, first(c->files)), rest(c->files));
@@ -1897,7 +1891,7 @@ static val v_next(match_files_ctx *c)
         } else {
           c->files = rest(c->files);
           if (!c->files)
-            sem_error(spec_linenum, lit("next: out of arguments"), nao);
+            sem_error(specline, lit("next: out of arguments"), nao);
           c->files = cons(cons(nothrow_k, first(c->files)), rest(c->files));
         }
       }
@@ -1905,7 +1899,7 @@ static val v_next(match_files_ctx *c)
   } else {
     c->files = rest(c->files);
     if (!c->files)
-      sem_error(spec_linenum, lit("next: out of arguments"), nao);
+      sem_error(specline, lit("next: out of arguments"), nao);
   }
 
   /* We recursively process the file list, but the new
@@ -1924,7 +1918,7 @@ static val v_next(match_files_ctx *c)
 
 static val v_parallel(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c->spec);
+  spec_bind (specline, first_spec, c->spec);
 
   if (second(first_spec) == t) {
     return decline_k;
@@ -1944,10 +1938,10 @@ static val v_parallel(match_files_ctx *c)
     val iter;
 
     if (choose_longest && choose_shortest)
-      sem_error(spec_linenum, lit("choose: both :shortest and :longest specified"), nao);
+      sem_error(specline, lit("choose: both :shortest and :longest specified"), nao);
 
     if (sym == choose_s && !choose_sym)
-      sem_error(spec_linenum, lit("choose: criterion not specified"), nao);
+      sem_error(specline, lit("choose: criterion not specified"), nao);
 
     for (iter = specs; iter != nil; iter = rest(iter))
     {
@@ -2005,17 +1999,17 @@ static val v_parallel(match_files_ctx *c)
     }
 
     if (sym == all_s && !all_match) {
-      debuglf(spec_linenum, lit("all: some clauses didn't match"), nao);
+      debuglf(specline, lit("all: some clauses didn't match"), nao);
       return nil;
     }
 
     if ((sym == some_s || sym == cases_s) && !some_match) {
-      debuglf(spec_linenum, lit("some/cases: no clauses matched"), nao);
+      debuglf(specline, lit("some/cases: no clauses matched"), nao);
       return nil;
     }
 
     if (sym == none_s && some_match) {
-      debuglf(spec_linenum, lit("none: some clauses matched"), nao);
+      debuglf(specline, lit("none: some clauses matched"), nao);
       return nil;
     }
 
@@ -2042,10 +2036,10 @@ static val v_parallel(match_files_ctx *c)
 
 static val v_gather(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c->spec);
+  spec_bind (specline, first_spec, c->spec);
   val specs = copy_list(second(first_spec));
   val args = third(first_spec);
-  val vars = vars_to_bindings(spec_linenum, getplist(args, vars_k), c->bindings);
+  val vars = vars_to_bindings(specline, getplist(args, vars_k), c->bindings);
 
   while (specs && c->data) {
     list_collect_decl (new_specs, ptail);
@@ -2078,17 +2072,17 @@ static val v_gather(match_files_ctx *c)
     specs = new_specs;
 
     if (consp(max_data)) {
-      debuglf(spec_linenum, lit("gather advancing from line ~a to ~a"),
+      debuglf(specline, lit("gather advancing from line ~a to ~a"),
               c->data_lineno, max_line, nao);
       c->data_lineno = max_line;
       c->data = max_data;
     } else if (max_data == t) {
-      debuglf(spec_linenum, lit("gather consumed entire file"), nao);
+      debuglf(specline, lit("gather consumed entire file"), nao);
       c->data = nil;
     } else {
       c->data_lineno = plus(c->data_lineno, num(1));
       c->data = rest(c->data);
-      debuglf(spec_linenum, lit("gather advancing by one line to ~a"), c->data_lineno, nao);
+      debuglf(specline, lit("gather advancing by one line to ~a"), c->data_lineno, nao);
     }
   }
 
@@ -2099,7 +2093,7 @@ static val v_gather(match_files_ctx *c)
       cons_bind (var, dfl_val, car(iter));
       if (!assoc(c->bindings, var)) {
         if (dfl_val == noval_s) {
-          debuglf(spec_linenum, lit("gather failed to match some required vars"), nao);
+          debuglf(specline, lit("gather failed to match some required vars"), nao);
           return nil;
         } else {
           c->bindings = acons(c->bindings, var, dfl_val);
@@ -2107,13 +2101,13 @@ static val v_gather(match_files_ctx *c)
       }
     }
 
-    debuglf(spec_linenum, lit("gather matched all required vars"), nao);
+    debuglf(specline, lit("gather matched all required vars"), nao);
     return next_spec_k;
   }
 
   if (specs) {
-    debuglf(spec_linenum, lit("gather failed to match some specs:"), nao);
-    debuglf(spec_linenum, lit("~s"), specs, nao);
+    debuglf(specline, lit("gather failed to match some specs:"), nao);
+    debuglf(specline, lit("~s"), specs, nao);
     return nil;
   }
 
@@ -2122,7 +2116,7 @@ static val v_gather(match_files_ctx *c)
 
 static val v_collect(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c->spec);
+  spec_bind (specline, first_spec, c->spec);
   val coll_spec = second(first_spec);
   val until_last_spec = third(first_spec);
   val args = fourth(first_spec);
@@ -2149,9 +2143,9 @@ static val v_collect(match_files_ctx *c)
   val iter;
 
   if (gap && (max || min))
-    sem_error(spec_linenum, lit("collect: cannot mix :gap with :mingap or :maxgap"), nao);
+    sem_error(specline, lit("collect: cannot mix :gap with :mingap or :maxgap"), nao);
 
-  vars = vars_to_bindings(spec_linenum, vars, c->bindings);
+  vars = vars_to_bindings(specline, vars, c->bindings);
 
   if ((times && ctimes == 0) || (lines && clines == 0))
     return next_spec_k;
@@ -2181,7 +2175,7 @@ static val v_collect(match_files_ctx *c)
                    match_files(mf_spec_bindings(*c, ul_spec, new_bindings)));
 
         if (success) {
-          debuglf(spec_linenum, lit("until/last matched ~a:~a"),
+          debuglf(specline, lit("until/last matched ~a:~a"),
                   first(c->files), c->data_lineno, nao);
           /* Until discards bindings and position, last keeps them. */
           if (sym == last_s) {
@@ -2203,7 +2197,7 @@ static val v_collect(match_files_ctx *c)
         val strictly_new_bindings = set_diff(new_bindings,
                                              c->bindings, eq_f, nil);
 
-        debuglf(spec_linenum, lit("collect matched ~a:~a"),
+        debuglf(specline, lit("collect matched ~a:~a"),
                 first(c->files), c->data_lineno, nao);
 
         for (iter = vars; iter; iter = cdr(iter)) {
@@ -2212,7 +2206,7 @@ static val v_collect(match_files_ctx *c)
 
           if (!exists) {
             if (dfl == noval_s) 
-              sem_error(spec_linenum, lit("collect failed to bind ~a"),
+              sem_error(specline, lit("collect failed to bind ~a"),
                         var, nao);
             else
               strictly_new_bindings = acons(strictly_new_bindings, 
@@ -2245,14 +2239,14 @@ static val v_collect(match_files_ctx *c)
             new_line = plus(new_line, num(1));
           }
 
-          debuglf(spec_linenum, lit("collect advancing from line ~a to ~a"),
+          debuglf(specline, lit("collect advancing from line ~a to ~a"),
                   c->data_lineno, new_line, nao);
 
           c->data = new_data;
           c->data_lineno = new_line;
           *car_l(success) = nil;
         } else {
-          debuglf(spec_linenum, lit("collect consumed entire file"), nao);
+          debuglf(specline, lit("collect consumed entire file"), nao);
           c->data = nil;
         }
         mincounter = 0;
@@ -2276,18 +2270,18 @@ next_collect:
   uw_block_end;
 
   if (!result) {
-    debuglf(spec_linenum, lit("collect explicitly failed"), nao);
+    debuglf(specline, lit("collect explicitly failed"), nao);
     return nil;
   }
 
   if ((times || mintimes) && timescounter < ctimin) {
-    debuglf(spec_linenum, lit("fewer than ~a iterations collected"),
+    debuglf(specline, lit("fewer than ~a iterations collected"),
             num(ctimin), nao);
     return nil;
   }
 
   if (!bindings_coll)
-    debuglf(spec_linenum, lit("nothing was collected"), nao);
+    debuglf(specline, lit("nothing was collected"), nao);
 
   c->bindings = set_diff(c->bindings, bindings_coll, eq_f, car_f);
 
@@ -2318,14 +2312,14 @@ next_collect:
 
 static val v_flatten(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c->spec);
+  spec_bind (specline, first_spec, c->spec);
   val iter;
 
   for (iter = rest(first_spec); iter; iter = rest(iter)) {
     val sym = first(iter);
 
     if (!bindable(sym)) {
-      sem_error(spec_linenum,
+      sem_error(specline,
                 lit("flatten: ~s is not a bindable symbol"), sym, nao);
     } else {
       val existing = assoc(c->bindings, sym);
@@ -2340,7 +2334,7 @@ static val v_flatten(match_files_ctx *c)
 
 static val v_forget_local(match_files_ctx *c)
 {
-  val specline = rest(first(c->spec));
+  val specline = first(c->spec);
   val first_spec = first(specline);
   c->bindings = alist_remove(c->bindings, rest(first_spec));
   return next_spec_k;
@@ -2348,20 +2342,20 @@ static val v_forget_local(match_files_ctx *c)
 
 static val v_merge(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c->spec);
+  spec_bind (specline, first_spec, c->spec);
   val target = first(rest(first_spec));
   val args = rest(rest(first_spec));
   val merged = nil;
 
   if (!bindable(target))
-    sem_error(spec_linenum, lit("merge: ~s is not a bindable symbol"),
+    sem_error(specline, lit("merge: ~s is not a bindable symbol"),
               target, nao);
 
   for (; args; args = rest(args)) {
     val arg = first(args);
 
     if (arg) {
-      val arg_eval = eval_form(spec_linenum, arg, c->bindings);
+      val arg_eval = eval_form(specline, arg, c->bindings);
 
       if (merged)
         merged = weird_merge(merged, cdr(arg_eval));
@@ -2377,25 +2371,25 @@ static val v_merge(match_files_ctx *c)
 
 static val v_bind(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c->spec);
+  spec_bind (specline, first_spec, c->spec);
   val args = rest(first_spec);
   val pattern = first(args);
   val form = second(args);
   val keywords = rest(rest(args));
-  val value = eval_form(spec_linenum, form, c->bindings);
+  val value = eval_form(specline, form, c->bindings);
   val testfun = equal_f;
   val filter_spec = getplist(keywords, filter_k);
   val lfilt_spec = getplist(keywords, lfilt_k);
   val rfilt_spec = getplist(keywords, rfilt_k);
 
   if (filter_spec && (rfilt_spec || lfilt_spec))
-    sem_error(spec_linenum, lit("bind: cannot use :filter with :lfilt or :rfilt"), nao);
+    sem_error(specline, lit("bind: cannot use :filter with :lfilt or :rfilt"), nao);
 
   if (filter_spec) {
     val filter = get_filter(filter_spec);
 
     if (!filter) {
-      sem_error(spec_linenum, lit("bind: ~s specifies unknown filter"),
+      sem_error(specline, lit("bind: ~s specifies unknown filter"),
                 filter_spec, nao);
     }
 
@@ -2405,12 +2399,12 @@ static val v_bind(match_files_ctx *c)
     val lfilt = if3(lfilt_spec, get_filter(lfilt_spec), identity_f);
 
     if (!rfilt) {
-      sem_error(spec_linenum, lit("bind: ~s specifies unknown filter"),
+      sem_error(specline, lit("bind: ~s specifies unknown filter"),
                 rfilt_spec, nao);
     }
 
     if (!lfilt) {
-      sem_error(spec_linenum, lit("bind: ~s specifies unknown filter"),
+      sem_error(specline, lit("bind: ~s specifies unknown filter"),
                 lfilt_spec, nao);
     }
 
@@ -2420,7 +2414,7 @@ static val v_bind(match_files_ctx *c)
   uw_env_begin;
   uw_set_match_context(cons(c->spec, c->bindings));
 
-  c->bindings = dest_bind(spec_linenum, c->bindings, pattern,
+  c->bindings = dest_bind(specline, c->bindings, pattern,
                          cdr(value), testfun);
 
   uw_env_end;
@@ -2454,35 +2448,34 @@ static val hv_trampoline(match_line_ctx c, match_line_ctx *cout)
 
 static val v_set(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c->spec);
+  spec_bind (specline, first_spec, c->spec);
   val args = rest(first_spec);
   val pattern = first(args);
   val form = second(args);
-  val val = eval_form(spec_linenum, form, c->bindings);
+  val val = eval_form(specline, form, c->bindings);
 
-  dest_set(spec_linenum, c->bindings, pattern, cdr(val));
+  dest_set(specline, c->bindings, pattern, cdr(val));
 
   return next_spec_k;
 }
 
 static val v_cat(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c->spec);
+  spec_bind (specline, first_spec, c->spec);
   val sym = second(first_spec);
   val sep_form = third(first_spec);
 
   if (!bindable(sym)) {
-    sem_error(spec_linenum,
-              lit("cat: ~s is not a bindable symbol"), sym, nao);
+    sem_error(specline, lit("cat: ~s is not a bindable symbol"), sym, nao);
   } else {
     val existing = assoc(c->bindings, sym);
     if (existing) {
       val sep = if3(sep_form, 
-                    cdr(eval_form(spec_linenum, sep_form, c->bindings)),
+                    cdr(eval_form(specline, sep_form, c->bindings)),
                     lit(" "));
       *cdr_l(existing) = cat_str(flatten(cdr(existing)), sep);
     } else {
-      sem_error(spec_linenum, lit("cat: unbound variable ~s"), sym, nao);
+      sem_error(specline, lit("cat: unbound variable ~s"), sym, nao);
     }
   }
 
@@ -2491,7 +2484,7 @@ static val v_cat(match_files_ctx *c)
 
 static val v_output(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c->spec);
+  spec_bind (specline, first_spec, c->spec);
   val specs = second(first_spec);
   val dest_spec = third(first_spec);
   val nothrow = nil;
@@ -2503,10 +2496,10 @@ static val v_output(match_files_ctx *c)
 
   if (eq(first(dest_spec), nothrow_k)) {
     if (rest(dest_spec))
-      sem_error(spec_linenum, lit("material after :nothrow in output"), nao);
+      sem_error(specline, lit("material after :nothrow in output"), nao);
   } else if (!keywordp(first(dest_spec))) {
     val form = first(dest_spec);
-    val val = eval_form(spec_linenum, form, c->bindings);
+    val val = eval_form(specline, form, c->bindings);
     dest = or2(cdr(val), dest);
     pop(&dest_spec);
   }
@@ -2523,7 +2516,7 @@ static val v_output(match_files_ctx *c)
       filter = get_filter(filter_sym);
 
       if (!filter)
-        sem_error(spec_linenum, lit("~s specifies unknown filter"), filter_sym, nao);
+        sem_error(specline, lit("~s specifies unknown filter"), filter_sym, nao);
     }
   }
 
@@ -2534,7 +2527,7 @@ static val v_output(match_files_ctx *c)
       val stream = make_strlist_output_stream();
 
       if (!symbolp(into_var)) 
-        sem_error(spec_linenum, lit(":into requires a variable, not ~s"), into_var, nao);
+        sem_error(specline, lit(":into requires a variable, not ~s"), into_var, nao);
 
       debugf(lit("opening string list stream"), nao);
       uw_env_begin;
@@ -2589,7 +2582,7 @@ static val v_output(match_files_ctx *c)
 
 static val v_try(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c->spec);
+  spec_bind (specline, first_spec, c->spec);
   val catch_syms = second(first_spec);
   val try_clause = third(first_spec);
   val catch_fin = fourth(first_spec);
@@ -2628,7 +2621,7 @@ static val v_try(match_files_ctx *c)
                 val value = car(viter);
 
                 if (value) {
-                  c->bindings = dest_bind(spec_linenum, c->bindings, 
+                  c->bindings = dest_bind(specline, c->bindings, 
                                          param, cdr(value), equal_f);
 
                   if (c->bindings == t) {
@@ -2725,18 +2718,17 @@ static val h_define(match_line_ctx c, match_line_ctx *cout)
   val name = first(args);
   val params = second(args);
   val existing = uw_get_func(name);
-  uw_set_func(name, cons(car(existing), cons(params, cons(c.spec_lineno, body))));
+  uw_set_func(name, cons(car(existing), cons(params, body)));
   *cout = c;
   return next_spec_k;
 }
 
 static val v_define(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c->spec);
+  spec_bind (specline, first_spec, c->spec);
 
   if (rest(specline))
-    sem_error(spec_linenum,
-              lit("unexpected material after define"), nao);
+    sem_error(specline, lit("unexpected material after define"), nao);
 
   if (second(first_spec) == t) {
     val elem = first(specline);
@@ -2745,7 +2737,7 @@ static val v_define(match_files_ctx *c)
     val name = first(args);
     val params = second(args);
     val existing = uw_get_func(name);
-    uw_set_func(name, cons(car(existing), cons(params, cons(spec_linenum, body))));
+    uw_set_func(name, cons(car(existing), cons(params, body)));
     return next_spec_k;
   } else {
     val args = second(first_spec);
@@ -2761,10 +2753,10 @@ static val v_define(match_files_ctx *c)
 
 static val v_defex(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c->spec);
+  spec_bind (specline, first_spec, c->spec);
   val types = rest(first_spec);
   if (!all_satisfy(types, func_n1(symbolp), nil))
-    sem_error(spec_linenum, lit("defex arguments must all be symbols"),
+    sem_error(specline, lit("defex arguments must all be symbols"),
               nao);
   (void) reduce_left(func_n2(uw_register_subtype), types, nil, nil);
 
@@ -2773,27 +2765,27 @@ static val v_defex(match_files_ctx *c)
 
 static val v_throw(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c->spec);
+  spec_bind (specline, first_spec, c->spec);
   val type = second(first_spec);
   val args = rest(rest(first_spec));
   if (!symbolp(type))
-    sem_error(spec_linenum, lit("throw: ~a is not a type symbol"),
+    sem_error(specline, lit("throw: ~a is not a type symbol"),
               type, nao);
   {
     val values = mapcar(curry_123_2(func_n3(eval_form), 
-                                    spec_linenum, c->bindings), args);
+                                    specline, c->bindings), args);
     uw_throw(type, values);
   }
 }
 
 static val v_deffilter(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c->spec);
+  spec_bind (specline, first_spec, c->spec);
   val sym = second(first_spec);
   val table = rest(rest(first_spec));
 
   if (!symbolp(sym))
-    sem_error(spec_linenum, lit("deffilter: ~a is not a symbol"),
+    sem_error(specline, lit("deffilter: ~a is not a symbol"),
               first(first_spec), nao);
 
   if (!all_satisfy(table, andf(func_n1(listp), 
@@ -2804,7 +2796,7 @@ static val v_deffilter(match_files_ctx *c)
                                                  func_n1(stringp), nil), nao),
                                nao),
                             nil))
-    sem_error(spec_linenum, 
+    sem_error(specline, 
               lit("deffilter arguments must be lists of at least two strings"),
               nao);
   register_filter(sym, table);
@@ -2814,13 +2806,13 @@ static val v_deffilter(match_files_ctx *c)
 
 static val v_filter(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c->spec);
+  spec_bind (specline, first_spec, c->spec);
   val filter_spec = second(first_spec);
   val vars = rest(rest(first_spec));
   val filter = get_filter(filter_spec);
 
   if (!filter)
-    sem_error(spec_linenum, lit("~s specifies unknown filter"), filter_spec, nao);
+    sem_error(specline, lit("~s specifies unknown filter"), filter_spec, nao);
 
   uw_env_begin;
   uw_set_match_context(cons(c->spec, c->bindings));
@@ -2830,11 +2822,11 @@ static val v_filter(match_files_ctx *c)
     val existing = assoc(c->bindings, var);
 
     if (!bindable(var))
-      sem_error(spec_linenum, lit("filter: ~a is not a variable name"), 
+      sem_error(specline, lit("filter: ~a is not a variable name"), 
                 var, nao);
 
     if (!existing)
-      sem_error(spec_linenum, lit("filter: variable ~a is unbound"), var, nao);
+      sem_error(specline, lit("filter: variable ~a is unbound"), var, nao);
 
     *cdr_l(existing) = filter_string(filter, cdr(existing));
   }
@@ -2854,7 +2846,7 @@ static val v_eof(match_files_ctx *c)
 
 static val v_fun(match_files_ctx *c)
 {
-  spec_bind (specline, spec_linenum, first_spec, c->spec);
+  spec_bind (specline, first_spec, c->spec);
   val sym = first(first_spec);
   val func = car(uw_get_func(sym));
 
@@ -2867,7 +2859,7 @@ static val v_fun(match_files_ctx *c)
     val bindings_cp = copy_alist(c->bindings);
 
     if (!equal(length(args), length(params)))
-      sem_error(spec_linenum, lit("function ~a takes ~a argument(s)"),
+      sem_error(specline, lit("function ~a takes ~a argument(s)"),
                 sym, length(params), nao);
 
     for (piter = params, aiter = args; piter;
@@ -2887,7 +2879,7 @@ static val v_fun(match_files_ctx *c)
           ub_p_a_pairs = cons(cons(param, arg), ub_p_a_pairs);
         }
       } else {
-        val val = eval_form(spec_linenum, arg, c->bindings);
+        val val = eval_form(specline, arg, c->bindings);
         bindings_cp = acons_new(bindings_cp, param, cdr(val));
       }
     }
@@ -2900,7 +2892,7 @@ static val v_fun(match_files_ctx *c)
       uw_block_end;
 
       if (!result) {
-        debuglf(spec_linenum, lit("function (~s ~s) failed"), sym, args, nao);
+        debuglf(specline, lit("function (~s ~s) failed"), sym, args, nao);
         return nil;
       }
 
@@ -2914,10 +2906,10 @@ static val v_fun(match_files_ctx *c)
           if (symbolp(arg)) {
             val newbind = assoc(new_bindings, param);
             if (newbind) {
-              c->bindings = dest_bind(spec_linenum, c->bindings, 
+              c->bindings = dest_bind(specline, c->bindings, 
                                      arg, cdr(newbind), equal_f);
               if (c->bindings == t) {
-                debuglf(spec_linenum,
+                debuglf(specline,
                         lit("binding mismatch on ~a "
                             "when returning from ~a"), arg, sym, nao);
                 return nil;
@@ -2927,14 +2919,14 @@ static val v_fun(match_files_ctx *c)
         }
 
         if (consp(success)) {
-          debuglf(spec_linenum,
+          debuglf(specline,
                   lit("function matched; "
                       "advancing from line ~a to ~a"),
                   c->data_lineno, cdr(success), nao);
           c->data = car(success);
           c->data_lineno = cdr(success);
         } else {
-          debuglf(spec_linenum, lit("function consumed entire file"),
+          debuglf(specline, lit("function consumed entire file"),
                   nao);
           c->data = nil;
         }
@@ -2957,7 +2949,7 @@ static val match_files(match_files_ctx c)
     val source_spec = first(c.files);
     val name = consp(source_spec) ? cdr(source_spec) : source_spec;
     fpip_t fp = (errno = 0, complex_open(name, nil, nil));
-    val first_spec_item = second(first(c.spec));
+    val first_spec_item = first(first(c.spec));
 
     if (consp(first_spec_item) && eq(first(first_spec_item), next_s)) {
       debugf(lit("not opening source ~a "
@@ -2992,7 +2984,7 @@ static val match_files(match_files_ctx c)
                  c.data_lineno = plus(c.data_lineno, num(1)))
 repeat_spec_same_data:
   {
-    spec_bind (specline, spec_linenum, first_spec, c.spec);
+    spec_bind (specline, first_spec, c.spec);
 
     if (consp(first_spec)) {
       val sym = first(first_spec);
@@ -3031,10 +3023,10 @@ repeat_spec_same_data:
       val dataline = first(c.data);
       cons_bind (new_bindings, success,
                  match_line(ml_all(c.bindings, specline, dataline, zero,
-                                   spec_linenum, c.data_lineno, first(c.files))));
+                                   c.data_lineno, first(c.files))));
 
       if (nump(success) && c_num(success) < c_num(length_str(dataline))) {
-        debuglf(spec_linenum, lit("spec only matches line to position ~a: ~a"),
+        debuglf(specline, lit("spec only matches line to position ~a: ~a"),
                 success, dataline, nao);
         return nil;
       }
@@ -3044,7 +3036,7 @@ repeat_spec_same_data:
 
       c.bindings = new_bindings;
     } else {
-      debuglf(spec_linenum, lit("spec ran out of data"), nao);
+      debuglf(specline, lit("spec ran out of data"), nao);
       return nil;
     }
   }
@@ -3055,11 +3047,11 @@ repeat_spec_same_data:
 val match_funcall(val name, val arg, val other_args)
 {
   cons_bind (in_spec, in_bindings, uw_get_match_context());
-  spec_bind (specline, spec_linenum, first_spec, in_spec);
+  spec_bind (specline, first_spec, in_spec);
   val in_arg_sym = make_sym(lit("in_arg"));
   val out_arg_sym = make_sym(lit("out_arg"));
   val bindings = cons(cons(in_arg_sym, arg), in_bindings);
-  val spec = cons(list(spec_linenum, 
+  val spec = cons(list(specline, 
                        cons(name, 
                             cons(in_arg_sym, cons(out_arg_sym, other_args))),
                        nao), nil);
@@ -3069,16 +3061,16 @@ val match_funcall(val name, val arg, val other_args)
   val ret = v_fun(&c);
 
   if (ret == nil)
-    sem_error(spec_linenum, lit("filter: (~s ~s ~s) failed"), name,
+    sem_error(specline, lit("filter: (~s ~s ~s) failed"), name,
               arg, out_arg_sym, nao);
 
   if (ret == decline_k)
-    sem_error(spec_linenum, lit("filter: function ~s not found"), name, nao);
+    sem_error(specline, lit("filter: function ~s not found"), name, nao);
 
   {
     val out = assoc(c.bindings, out_arg_sym);
     if (!out)
-      sem_error(spec_linenum,
+      sem_error(specline,
                 lit("filter: (~s ~s ~s) did not bind ~s"), name,
                 arg, out_arg_sym, out_arg_sym, nao);
     return cdr(out);

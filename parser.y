@@ -126,18 +126,17 @@ clauses_opt : clauses           { $$ = $1; }
             | /* empty */       { $$ = nil; }
             ;
 
-clause : all_clause             { $$ = list(num(lineno - 1), $1, nao); }
-       | some_clause            { $$ = list(num(lineno - 1), $1, nao); }
-       | none_clause            { $$ = list(num(lineno - 1), $1, nao); }
-       | maybe_clause           { $$ = list(num(lineno - 1), $1, nao); }
-       | cases_clause           { $$ = list(num(lineno - 1), $1, nao); }
-       | choose_clause          { $$ = list(num(lineno - 1), $1, nao); }
-       | collect_clause         { $$ = list(num(lineno - 1), $1, nao); }
-       | gather_clause          { $$ = list(num(lineno - 1), $1, nao); }
-       | define_clause          { $$ = list(num(lineno - 1),
-                                            define_transform($1), nao); }
-       | try_clause             { $$ = list(num(lineno - 1), $1, nao); }
-       | output_clause          { $$ = list(num(lineno - 1), $1, nao); }
+clause : all_clause             { $$ = list($1, nao); }
+       | some_clause            { $$ = list($1, nao); }
+       | none_clause            { $$ = list($1, nao); }
+       | maybe_clause           { $$ = list($1, nao); }
+       | cases_clause           { $$ = list($1, nao); }
+       | choose_clause          { $$ = list($1, nao); }
+       | collect_clause         { $$ = list($1, nao); }
+       | gather_clause          { $$ = list($1, nao); }
+       | define_clause          { $$ = list(define_transform($1), nao); }
+       | try_clause             { $$ = list($1, nao); }
+       | output_clause          { $$ = list($1, nao); }
        | line                   { $$ = $1; }
        | repeat_clause          { $$ = nil;
                                   yyerror("repeat outside of output"); }
@@ -225,8 +224,10 @@ collect_clause : COLLECT exprs_opt ')' newl
                | COLLECT exprs_opt ')'
                  newl clauses until_last
                  newl clauses END newl    { $$ = list(collect_s, $5,
-                                                      cons($6, $8), $2, nao);
-                                            rl($$, num($1)); }
+                                                      cons(car($6), $8),
+                                                      $2, nao);
+                                            rl($$, num($1)); 
+                                            rl($8, cdr($6)); }
                | COLLECT exprs_opt ')'
                  newl error             { $$ = nil;
                                           if (yychar == UNTIL ||
@@ -238,8 +239,8 @@ collect_clause : COLLECT exprs_opt ')' newl
                                                        lit("collect clause")); }
                ;
 
-until_last : UNTIL { $$ = until_s; }
-           | LAST  { $$ = last_s; } 
+until_last : UNTIL { $$ = cons(num($1), until_s); }
+           | LAST  { $$ = cons(num($1), last_s); } 
            ;
 
 clause_parts : clauses additional_parts { $$ = cons($1, $2); }
@@ -253,12 +254,14 @@ additional_parts : END newl                             { $$ = nil; }
 line : elems_opt '\n'           { $$ = $1; }
      ;
 
-elems_opt : elems               { $$ = cons(num(lineno - 1), $1); }
+elems_opt : elems               { $$ = $1; }
           |                     { $$ = nil; }
           ;
 
-elems : elem                    { $$ = cons($1, nil); }
-      | elem elems              { $$ = cons($1, $2); }
+elems : elem                    { $$ = cons($1, nil); 
+                                  rl($$, source_loc($1)); }
+      | elem elems              { $$ = cons($1, $2);
+                                  rl($$, source_loc($1)); }
       | rep_elem                { $$ = nil;
                                   yyerror("rep outside of output"); }
       ;
@@ -280,9 +283,10 @@ elem : TEXT                     { $$ = rl(string_own($1), num(lineno)); }
      | COLL exprs_opt ')' elems END     { $$ = list(coll_s, $4, nil, $2, nao);
                                           rl($$, num($1)); }
      | COLL exprs_opt ')' elems
-       until_last elems END     { $$ = list(coll_s, $4, cons($5, $6), 
+       until_last elems END     { $$ = list(coll_s, $4, cons(car($5), $6), 
                                             $2, nao);
-                                  rl($$, num($1)); }
+                                  rl($$, num($1));
+                                  rl($6, cdr($5)); }
      | COLL error               { $$ = nil;
                                   yybadtoken(yychar, lit("coll clause")); }
      | ALL clause_parts_h       { $$ = rl(list(all_s, t, $2, nao), num($1)); }
@@ -419,7 +423,7 @@ out_clauses : out_clause                { $$ = cons($1, nil); }
             | out_clause out_clauses    { $$ = cons($1, $2);  }
             ;
 
-out_clause : repeat_clause              { $$ = list(num(lineno - 1), $1, nao); }
+out_clause : repeat_clause              { $$ = cons($1, nil); }
            | o_line                     { $$ = $1; }
            | all_clause                 { $$ = nil;
                                           yyerror("match clause in output"); }
@@ -480,8 +484,7 @@ out_clauses_opt : out_clauses   { $$ = $1; }
 o_line : o_elems_opt '\n'       { $$ = $1; }
        ;
 
-o_elems_opt : o_elems           { $$ = cons(num(lineno - 1),
-                                            o_elems_transform($1)); }
+o_elems_opt : o_elems           { $$ = o_elems_transform($1); }
             |                   { $$ = nil; }
             ;
 
