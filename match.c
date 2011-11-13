@@ -1670,6 +1670,9 @@ static val v_freeform(match_files_ctx *c)
   if ((c->spec = rest(c->spec)) == nil) {
     sem_error(first_spec,
               lit("freeform must be followed by a query line"), nao);
+  } else if (!c->data) {
+    debuglf(specline, lit("freeform match failure: no data"), nao);
+    return nil;
   } else {
     val limit = or2(if2(nump(first(vals)), first(vals)),
                     if2(nump(second(vals)), second(vals)));
