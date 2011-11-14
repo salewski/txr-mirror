@@ -1,5 +1,16 @@
 2011-11-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	Fix regression in earlier commit:
+
+	"Eliminate line numbers from the abstract syntax
+	 tree representation of the TXR query."
+
+	* match.c (match_funcall): Remove spurious object being
+	added to the front of a form where a line number used
+	to be.
+
+2011-11-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c: Removed <assert.h>
 
 	* txr.c: Likewise.
