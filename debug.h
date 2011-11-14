@@ -24,27 +24,29 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-extern val std_input, std_output, std_error;
+extern int opt_debugger;
 
-val make_stdio_stream(FILE *, val descr, val input, val output);
-val make_pipe_stream(FILE *, val descr, val input, val output);
-val make_string_input_stream(val);
-val make_string_byte_input_stream(val);
-val make_string_output_stream(void);
-val get_string_from_stream(val);
-val make_strlist_output_stream(void);
-val get_list_from_stream(val);
-val make_dir_stream(DIR *);
-val close_stream(val stream, val throw_on_error);
-val get_line(val);
-val get_char(val);
-val get_byte(val);
-val vformat(val stream, val string, va_list);
-val vformat_to_string(val string, va_list);
-val format(val stream, val string, ...);
-val put_string(val stream, val string);
-val put_line(val stream, val string);
-val put_char(val stream, val ch);
-val flush_stream(val stream);
+val debug(val form, val bindings, val data, val line, val chr);
 
-void stream_init(void);
+INLINE val debug_check(val form, val bindings, val data, val line, val chr)
+{
+  return (opt_debugger) ? debug(form, bindings, data, line, chr) : nil;
+}
+
+void debug_init(void);
+
+#define debug_begin(FUNC, ARGS, UBP,    \
+                    BINDINGS, DATA,     \
+                    LINE, CHR)          \
+  do {                                  \
+    uw_frame_t db_env;                  \
+    if (opt_debugger)                   \
+      uw_push_debug(&db_env, FUNC, ARGS,\
+                    UBP, BINDINGS, DATA,\
+                    LINE, CHR);         \
+    (void) 0
+
+#define debug_end                       \
+    if (opt_debugger)                   \
+      uw_pop_frame(&db_env);            \
+  } while (0)

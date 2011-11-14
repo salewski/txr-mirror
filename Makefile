@@ -37,7 +37,7 @@ CFLAGS := $(filter-out -Wmissing-prototypes -Wstrict-prototypes,$(CFLAGS))
 endif
 
 OBJS := txr.o lex.yy.o y.tab.o match.o lib.o regex.o gc.o unwind.o stream.o
-OBJS += hash.o utf8.o filter.o
+OBJS += hash.o utf8.o filter.o debug.o
 
 PROG := ./txr
 

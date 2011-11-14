@@ -31,7 +31,7 @@
 #endif
 
 typedef union uw_frame uw_frame_t;
-typedef enum uw_frtype { UW_BLOCK, UW_ENV, UW_CATCH } uw_frtype_t;
+typedef enum uw_frtype { UW_BLOCK, UW_ENV, UW_CATCH, UW_DBG } uw_frtype_t;
 
 struct uw_common {
   uw_frame_t *up;
@@ -65,11 +65,24 @@ struct uw_catch {
   jmp_buf jb;
 };
 
+struct uw_debug {
+  uw_frame_t *up;
+  uw_frtype_t type;
+  val func;
+  val args;
+  val ub_p_a_pairs;
+  val bindings;
+  val data;
+  val line;
+  val chr;
+};
+
 union uw_frame {
   struct uw_common uw;
   struct uw_block bl;
   struct uw_dynamic_env ev;
   struct uw_catch ca;
+  struct uw_debug db;
 };
 
 void uw_push_block(uw_frame_t *, val tag);
@@ -86,7 +99,11 @@ noreturn val uw_errorf(val fmt, ...);
 val uw_register_subtype(val sub, val super);
 val uw_exception_subtype_p(val sub, val sup);
 void uw_continue(uw_frame_t *curr, uw_frame_t *target);
+void uw_push_debug(uw_frame_t *, val func, val args,
+                   val ub_p_a_pairs, val bindings, val data,
+                   val line, val chr);
 void uw_pop_frame(uw_frame_t *);
+uw_frame_t *uw_current_frame(void);
 void uw_init(void);
 
 noreturn val type_mismatch(val, ...);
