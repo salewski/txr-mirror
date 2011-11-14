@@ -1,3 +1,25 @@
+2011-11-14  Kaz Kylheku  <kaz@kylheku.com>
+
+	Bugfix: horizontal directives were being treated as vertical,
+	and the trailing material silently ignored.
+	For instance @(bind a 1)@(bind b 2). This was going to v_bind,
+	v_bind does not check for the trailing material and doe snot
+	call decline_s. The result was that b was not bound.
+	Correct behavior is to process these binds in match_line.
+
+	* match.c (match_line): Check if a directive IS found in the vertical
+	table, and if so report a different error message. The fallback
+	case is that there is no such function or directive.
+	(v_next): Do not check for obsolete syntax any more. This case
+	will not occur any more due to the following changes.
+	(match_files): Do not defer opening the file if the data starts
+	with an incorrectly written next directive.
+	Do not look up and process a vertical directive or function
+	call if it is followed by more material in the same line.
+	Thus vertical directives can longer receive trailing material.
+	This fixes the bug of horizontal directives being treated as
+	vertical
+
 2011-11-13  Kaz Kylheku  <kaz@kylheku.com>
 
 	* debug.c (debug): Eliminated duplicate code.

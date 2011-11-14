@@ -1052,7 +1052,12 @@ static val match_line(match_line_ctx c)
               c = nc;
               continue;
             } else if (result == decline_k) {
-              sem_error(elem, lit("unknown directive: ~a"), directive, nao);
+              if (gethash(v_directive_table, directive))
+                sem_error(elem, lit("~a only exists as a vertical directive"),
+                          directive, nao);
+              else
+                sem_error(elem, lit("no such function or directive: ~a"),
+                          directive, nao);
             } else {
               return result;
             }
@@ -1752,13 +1757,6 @@ static val v_next(match_files_ctx *c)
 {
   spec_bind (specline, first_spec, c->spec);
   
-  if (rest(first_spec) && rest(specline))
-    sem_error(specline, lit("invalid combination of old "
-                                "and new next syntax"), nao);
-  if (rest(specline)) {
-    sem_error(specline, lit("obsolete next syntax: trailing material"), nao);
-  }
-
   if ((c->spec = rest(c->spec)) == nil)
     return cons(c->bindings, cons(c->data, c->data_lineno));
 
@@ -2945,10 +2943,10 @@ static val match_files(match_files_ctx c)
     val source_spec = first(c.files);
     val name = consp(source_spec) ? cdr(source_spec) : source_spec;
     fpip_t fp = (errno = 0, complex_open(name, nil, nil));
-    val first_spec_item = first(first(c.spec));
+    spec_bind (specline, first_spec, c.spec);
 
-    if (consp(first_spec_item) && eq(first(first_spec_item), next_s)) {
-      debuglf(first_spec_item, lit("not opening source ~a "
+    if (consp(first_spec) && eq(first(first_spec), next_s) && !rest(specline)) {
+      debuglf(first_spec, lit("not opening source ~a "
                                    "since query starts with next directive"), name, nao);
     } else {
       val spec = first(c.spec);
@@ -2983,7 +2981,7 @@ repeat_spec_same_data:
   {
     spec_bind (specline, first_spec, c.spec);
 
-    if (consp(first_spec)) {
+    if (consp(first_spec) && !rest(specline)) {
       val sym = first(first_spec);
       val entry = gethash(v_directive_table, sym);
 
