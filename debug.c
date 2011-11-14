@@ -30,14 +30,28 @@ val debug(val form, val bindings, val data, val line, val chr)
   if (!step_mode && !memqual(lineno, breakpoints)) {
     return nil;
   } else {
-    format(std_output, lit("stopped at line ~a\n"), lineno, nao);
-    format(std_output, lit("form: ~s\n"), form, nao);
-    format(std_output, lit("data (~s):\n~s\n"), line, data, nao);
-    if (chr)
-       format(std_output, lit("(character ~s)\n"), chr, nao);
+    val print_form = t;
+    val print_data = t;
 
     for (;;) {
       val input, command;
+
+      if (print_form) {
+        format(std_output, lit("stopped at line ~a\n"), lineno, nao);
+        format(std_output, lit("form: ~s\n"), form, nao);
+      }
+
+      if (print_data) {
+        if (data && chr) {
+          val prefix = sub_str(data, zero, chr);
+          val suffix = sub_str(data, chr, nil);
+
+          format(std_output, lit("data (~s:~s):\n~s . ~s\n"),
+                 line, chr, prefix, suffix, nao);
+        } else {
+          format(std_output, lit("data (~s):\n~s\n"), line, data, nao);
+        }
+      }
 
       format(std_output, lit("txr> "), nao);
       flush_stream(std_output);
@@ -58,14 +72,9 @@ val debug(val form, val bindings, val data, val line, val chr)
       } else if (equal(command, lit("v"))) {
         format(std_output, lit("bindings: ~s\n"), bindings, nao);
       } else if (equal(command, lit("f"))) {
-        format(std_output, lit("stopped at line ~a\n"), lineno, nao);
-        format(std_output, lit("form: ~s\n"), form, nao);
+        print_form = t;
       } else if (equal(command, lit("d"))) {
-        if (data) {
-          format(std_output, lit("data (~s):\n~s\n"), line, data, nao);
-          if (chr)
-             format(std_output, lit("(character ~s)\n"), chr, nao);
-        }
+        print_data = t;
       } else if (equal(command, lit("b")) || equal(command, lit("d"))) {
         if (!rest(input)) {
           format(std_output, lit("b needs argument\n"), nao);

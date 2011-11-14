@@ -1,5 +1,10 @@
 2011-11-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	* debug.c (debug): Eliminated duplicate code.
+	Implemented better way of printing character context.
+
+2011-11-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	Adding a debugger. This is an experimental prototype.
 
 	* Makefile (OBJS): New object file debug.o.
