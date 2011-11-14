@@ -3038,8 +3038,7 @@ val match_funcall(val name, val arg, val other_args)
   val in_arg_sym = make_sym(lit("in_arg"));
   val out_arg_sym = make_sym(lit("out_arg"));
   val bindings = cons(cons(in_arg_sym, arg), in_bindings);
-  val spec = cons(list(specline, 
-                       cons(name, 
+  val spec = cons(list(cons(name, 
                             cons(in_arg_sym, cons(out_arg_sym, other_args))),
                        nao), nil);
   match_files_ctx c = mf_all(spec, nil, bindings, nil, num(0));
