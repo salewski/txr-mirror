@@ -43,6 +43,7 @@
 #include "utf8.h"
 #include "filter.h"
 #include "hash.h"
+#include "debug.h"
 #include "match.h"
 
 int output_produced;
@@ -928,9 +929,11 @@ static val h_fun(match_line_ctx c, match_line_ctx *cout)
     {
       uw_block_begin(nil, result);
       uw_env_begin;
+      debug_begin(sym, args, ub_p_a_pairs, c.bindings, c.dataline, c.data_lineno, c.pos);
 
       result = match_line(ml_bindings_specline(c, bindings_cp, body));
 
+      debug_end;
       uw_env_end;
       uw_block_end;
 
@@ -994,6 +997,8 @@ static val match_line(match_line_ctx c)
       break;
 
     elem = first(c.specline);
+
+    debug_check(elem, c.bindings, c.dataline, c.data_lineno, c.pos);
 
     switch (elem ? type(elem) : 0) {
     case CONS: /* directive */
@@ -2844,6 +2849,8 @@ static val v_fun(match_files_ctx *c)
     val piter, aiter;
     val bindings_cp = copy_alist(c->bindings);
 
+    debug_check(specline, c->bindings, if2(consp(c->data), car(c->data)), c->data_lineno, nil);
+
     if (!equal(length(args), length(params)))
       sem_error(specline, lit("function ~a takes ~a argument(s)"),
                 sym, length(params), nao);
@@ -2873,7 +2880,10 @@ static val v_fun(match_files_ctx *c)
     {
       uw_block_begin(nil, result);
       uw_env_begin;
+      debug_begin(sym, args, ub_p_a_pairs, c->bindings, if2(consp(c->data), car(c->data)),
+                  c->data_lineno, nil);
       result = match_files(mf_spec_bindings(*c, body, bindings_cp));
+      debug_end;
       uw_env_end;
       uw_block_end;
 
@@ -2979,7 +2989,11 @@ repeat_spec_same_data:
 
       if (entry) {
         v_match_func vmf = (v_match_func) cptr_get(entry);
-        val result = vmf(&c);
+        val result;
+
+        debug_check(first_spec, c.bindings, if2(consp(c.data), car(c.data)), c.data_lineno, nil);
+
+        result = vmf(&c);
 
         if (result == next_spec_k) {
           if ((c.spec = rest(c.spec)) == nil)

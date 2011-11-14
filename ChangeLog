@@ -1,5 +1,44 @@
 2011-11-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	Adding a debugger. This is an experimental prototype.
+
+	* Makefile (OBJS): New object file debug.o.
+
+	* dep.mk: Updated.
+
+	* match.c (h_fun): Use debug_begin and debug_end macros
+	to set up a debug frame for backtracing.
+	(match_line, match_files): Call debug_check to give debugger a chance
+	to instrument call.
+	(v_fun): Use debug_begin and debug_end macros to set up a debug frame
+	for backtracing. Call debug_check to give debugger a chance to
+	instrument call.
+
+	* stream.c (struct strm_ops): New function pointer, flush.
+	(stdio_maybe_write_error): Wrong word in error message corrected.
+	(stdio_flush): New static function.
+	(stdio_ops, pipe_ops): New function entered into tables.
+	(flush_stream): New function.
+
+	* stream.h (flush_stream): Declared.
+
+	* txr.c (help): New options documented.
+	(main): call to debug_init added. New debug options parsed and
+	opt_debugger set accordingly.
+
+	* unwind.c (uw_push_debug, uw_current_frame): New function.
+
+	* unwind.h (uw_frtype): New enumeration member UW_DBG.
+	(struct uw_debug): New frame variant.
+	(union uw_frame): New member, db.
+	(uw_push_debug, uw_current_frame): Declared,
+
+	* debug.c: New file.
+
+	* debug.h: New file.
+
+2011-11-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	Fix regression in earlier commit:
 
 	"Eliminate line numbers from the abstract syntax

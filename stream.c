@@ -54,6 +54,7 @@ struct strm_ops {
   val (*get_char)(val);
   val (*get_byte)(val);
   val (*close)(val, val);
+  val (*flush)(val);
 };
 
 static void common_destroy(val obj)
@@ -103,7 +104,7 @@ static val stdio_maybe_write_error(val stream)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
   if (h->f == 0)
-    uw_throwf(file_error_s, lit("error reading ~a: file closed"), stream, nao);
+    uw_throwf(file_error_s, lit("error writing ~a: file closed"), stream, nao);
   clearerr(h->f);
   uw_throwf(file_error_s, lit("error writing ~a: ~a/~s"),
             stream, num(errno), string_utf8(strerror(errno)), nao);
@@ -139,6 +140,14 @@ static val stdio_put_char(val stream, val ch)
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
   return h->f != 0 && utf8_encode(c_chr(ch), stdio_put_char_callback, (mem_t *) h->f)
          ? t : stdio_maybe_write_error(stream);
+}
+
+static val stdio_flush(val stream)
+{
+  struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
+  if (fflush(h->f))
+    stdio_maybe_write_error(stream);
+  return t;
 }
 
 static wchar_t *snarf_line(struct stdio_handle *h)
@@ -233,7 +242,8 @@ static struct strm_ops stdio_ops = {
   stdio_get_line,
   stdio_get_char,
   stdio_get_byte,
-  stdio_close
+  stdio_close,
+  stdio_flush
 };
 
 static val pipe_close(val stream, val throw_on_error)
@@ -286,7 +296,8 @@ static struct strm_ops pipe_ops = {
   stdio_get_line,
   stdio_get_char,
   stdio_get_byte,
-  pipe_close
+  pipe_close,
+  stdio_flush,
 };
 
 static void string_in_stream_mark(val stream)
@@ -1049,6 +1060,18 @@ val put_char(val stream, val ch)
 val put_line(val stream, val string)
 {
   return (put_string(stream, string), put_char(stream, chr('\n')));
+}
+
+val flush_stream(val stream)
+{
+  type_check (stream, COBJ);
+  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
+                                            stream, nao));
+
+  {
+    struct strm_ops *ops = (struct strm_ops *) stream->co.ops;
+    return ops->flush ? ops->flush(stream) : t;
+  }
 }
 
 void stream_init(void)

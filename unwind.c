@@ -166,6 +166,22 @@ val uw_set_match_context(val context)
   return context;
 }
 
+void uw_push_debug(uw_frame_t *fr, val func, val args,
+                   val ub_p_a_pairs, val bindings, val data,
+                   val line, val chr)
+{
+  fr->db.type = UW_DBG;
+  fr->db.func = func;
+  fr->db.args = args;
+  fr->db.ub_p_a_pairs = args;
+  fr->db.bindings = bindings;
+  fr->db.data = data;
+  fr->db.line = line;
+  fr->db.chr = chr;
+  fr->db.up = uw_stack;
+  uw_stack = fr;
+}
+
 void uw_pop_frame(uw_frame_t *fr)
 {
   assert (fr == uw_stack);
@@ -174,6 +190,11 @@ void uw_pop_frame(uw_frame_t *fr)
     assert (fr == uw_env_stack);
     uw_env_stack = fr->ev.up_env;
   }
+}
+
+uw_frame_t *uw_current_frame(void)
+{
+  return uw_stack;
 }
 
 val uw_block_return(val tag, val result)

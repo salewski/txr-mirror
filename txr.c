@@ -40,6 +40,7 @@
 #include "parser.h"
 #include "match.h"
 #include "utf8.h"
+#include "debug.h"
 #include "txr.h"
 
 const wchli_t *version = wli("041");
@@ -91,6 +92,8 @@ static void help(void)
 "-q                     Quiet: don't report errors during query matching.\n"
 "-v                     Verbose: extra logging from matcher.\n"
 "-b                     Don't dump list of bindings.\n"
+"-l                     If dumping bindings, use a Lisp format.\n"
+"-d                     Debugger mode.\n"
 "-a num                 Generate array variables up to num-dimensions.\n"
 "                       Default is 1. Additional dimensions are fudged\n"
 "                       by generating numeric suffixes\n"
@@ -103,6 +106,8 @@ static void help(void)
 "                       to the utility.\n"
 "--help                 You already know!\n"
 "--version              Display program version\n"
+"--lisp-bindings        Synonym for -l\n"
+"--debugger             Synonym for -d\n"
 "\n"
 "Options that take no argument can be combined. The -q and -v options\n"
 "are mutually exclusive; the right-most one dominates.\n"
@@ -145,6 +150,7 @@ int main(int argc, char **argv)
   init(progname, oom_realloc_handler, &stack_bottom);
   match_init();
   parse_init();
+  debug_init();
   return txr_main(argc, argv);
 }
 
@@ -288,6 +294,10 @@ int txr_main(int argc, char **argv)
       opt_lisp_bindings = 1;
       argv++, argc--;
       continue;
+    } else if (!strcmp(*argv, "--debugger")) {
+      opt_debugger = 1;
+      argv++, argc--;
+      continue;
     }
 
 
@@ -306,6 +316,9 @@ int txr_main(int argc, char **argv)
           break;
         case 'l':
           opt_lisp_bindings = 1;
+          break;
+        case 'd':
+          opt_debugger = 1;
           break;
         case 'a':
         case 'c':
