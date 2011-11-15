@@ -920,7 +920,7 @@ directives are:
 
   @(  a (b (c d) (e  ) ))
 
-  @("apple" 'b' 3)
+  @("apple" #\eb #\espace 3)
 
   @(a /[a-z]*/ b)
 
@@ -929,10 +929,17 @@ directives are:
 A symbol is lexically the same thing as a variable and the same rules
 apply. Tokens that look like numbers are treated as numbers.
 
-String and character literals are delimited by double and single quotes,
-respectively, and may not span multiple lines. Character literals must contain
-exactly one character. Character and numeric escapes may be used within
-literals to escape the quotes, and to denote control characters.
+Character literals are introduced by the #\ syntax, which is either
+followed by a character name, the letter x followed by hex digits,
+or a single character. Valid character names are: nul, alarm, backspace, tab,
+linefeed, newline, vtab, page, return, esc, space. This convention
+for character literals is similar to that of the Scheme language.
+
+String literals are delimited by double respectively, and may not span multiple
+lines. A double quote within a string literal is encoded using \e"
+and a backslash is encoded as \e\e. Backslash escapes like \en and \et
+are recognized, as are hexadecimal escapes like \exFF and octal
+escapes like \e123.
 
 Quasiliterals are similar to string literals, except that they may
 contain variable references denoted by the usual @ syntax. The quasiliteral

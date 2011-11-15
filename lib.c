@@ -2565,25 +2565,24 @@ void obj_print(val obj, val out)
     {
       wchar_t ch = c_chr(obj);
 
-      put_char(out, chr('\''));
+      put_string(out, lit("#\\"));
       switch (ch) {
-      case '\a': put_string(out, lit("\\a")); break;
-      case '\b': put_string(out, lit("\\b")); break;
-      case '\t': put_string(out, lit("\\t")); break;
-      case '\n': put_string(out, lit("\\n")); break;
-      case '\v': put_string(out, lit("\\v")); break;
-      case '\f': put_string(out, lit("\\f")); break;
-      case '\r': put_string(out, lit("\\r")); break;
-      case '"': put_string(out, lit("\\\"")); break;
-      case '\\': put_string(out, lit("\\\\")); break;
-      case 27: put_string(out, lit("\\e")); break;
+      case '\0': put_string(out, lit("nul")); break;
+      case '\a': put_string(out, lit("alarm")); break;
+      case '\b': put_string(out, lit("backspace")); break;
+      case '\t': put_string(out, lit("tab")); break;
+      case '\n': put_string(out, lit("newline")); break;
+      case '\v': put_string(out, lit("vtab")); break;
+      case '\f': put_string(out, lit("page")); break;
+      case '\r': put_string(out, lit("return")); break;
+      case 27: put_string(out, lit("esc")); break;
+      case ' ': put_string(out, lit("space")); break;
       default:
         if (iswprint(ch))
           put_char(out, chr(ch));
         else
-          format(out, lit("\\~03o"), num(ch), nao);
+          format(out, lit("x~x"), num(ch), nao);
       }
-      put_char(out, chr('\''));
     }
     return;
   case NUM:

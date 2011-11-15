@@ -43,20 +43,14 @@
 int yylex(void);
 void yyerror(const char *);
 
-val repeat_rep_helper(val sym, val main, val parts);
-val o_elems_transform(val output_form);
-val define_transform(val define_form);
-val lit_char_helper(val litchars);
+static val repeat_rep_helper(val sym, val main, val parts);
+static val o_elems_transform(val output_form);
+static val define_transform(val define_form);
+static val lit_char_helper(val litchars);
+static val rl(val form, val lineno);
+static wchar_t char_from_name(wchar_t *name);
 
 static val parsed_spec;
-
-static val rl(val form, val lineno)
-{
-  sethash(form_to_ln_hash, form, lineno);
-  pushhash(ln_to_forms_hash, lineno, form);
-  return form;
-}
-
 
 %}
 
@@ -73,6 +67,7 @@ static val rl(val form, val lineno)
 %token <lineno> UNTIL COLL OUTPUT REPEAT REP SINGLE FIRST LAST EMPTY DEFINE
 %token <lineno> TRY CATCH FINALLY
 %token <lineno> ERRTOK /* deliberately not used in grammar */
+%token <lineno> HASH_BACKSLASH
 
 %token <num> NUMBER
 
@@ -110,7 +105,7 @@ static val rl(val form, val lineno)
 
 spec : clauses                  { parsed_spec = $1; }
      | /* empty */              { parsed_spec = nil; }
-     | error '\n'                   { parsed_spec = nil;
+     | error '\n'               { parsed_spec = nil;
                                   if (errors >= 8)
                                     YYABORT;
                                   yyerrok;
@@ -699,13 +694,16 @@ strlit : '"' '"'                { $$ = null_string; }
                                   yybadtoken(yychar, lit("string literal")); }
        ;
 
-chrlit : '\'' '\''              { $$ = nil;
-                                  yyerror("empty character literal"); }
-       | '\'' litchars '\''     { $$ = car($2);
-                                  if (cdr($2))
-                                    yyerror("multiple characters in "
-                                            "character literal"); }
-       | '\'' error             { $$ = nil;
+chrlit : HASH_BACKSLASH IDENT   { wchar_t ch = char_from_name($2);
+                                  val str = string_own($2);
+                                  end_of_char();
+                                  if (ch == L'!')
+                                  { yyerrorf(lit("unknown character name: ~a"),
+                                             str, nao); }
+                                  $$ = chr(ch); }
+       | HASH_BACKSLASH LITCHAR { $$ = chr($2);
+                                  end_of_char(); }
+       | HASH_BACKSLASH error   { $$ = nil;
                                   yybadtoken(yychar,
                                              lit("character literal")); }
        ;
@@ -733,7 +731,7 @@ litchars : LITCHAR              { $$ = cons(chr($1), nil); }
 
 %%
 
-val repeat_rep_helper(val sym, val main, val parts)
+static val repeat_rep_helper(val sym, val main, val parts)
 {
   val single_parts = nil;
   val first_parts = nil;
@@ -762,7 +760,7 @@ val repeat_rep_helper(val sym, val main, val parts)
               last_parts, empty_parts, nao);
 }
 
-val o_elems_transform(val o_elems)
+static val o_elems_transform(val o_elems)
 {
   list_collect_decl(o_elems_out, ptail);
   val iter;
@@ -786,7 +784,7 @@ val o_elems_transform(val o_elems)
   return o_elems_out;
 }
 
-val define_transform(val define_form)
+static val define_transform(val define_form)
 {
   val sym = first(define_form);
   val args = second(define_form);
@@ -825,7 +823,7 @@ val define_transform(val define_form)
   return define_form;
 }
 
-val lit_char_helper(val litchars)
+static val lit_char_helper(val litchars)
 {
   val ret = nil;
 
@@ -842,6 +840,42 @@ val lit_char_helper(val litchars)
     ret = nil;
   }
   return ret;
+}
+
+static val rl(val form, val lineno)
+{
+  sethash(form_to_ln_hash, form, lineno);
+  pushhash(ln_to_forms_hash, lineno, form);
+  return form;
+}
+
+static wchar_t char_from_name(wchar_t *name)
+{
+  static struct {
+    wchar_t *name;
+    wchar_t ch;
+  } map[] = {
+    { L"nul", 0 },
+    { L"alarm", L'\a' },
+    { L"backspace", L'\b' },
+    { L"tab", L'\t' },
+    { L"linefeed", L'\n' },
+    { L"newline", L'\n' },
+    { L"vtab", L'\v' },
+    { L"page", L'\f' },
+    { L"return", L'\r' },
+    { L"esc", 27 },
+    { L"space", L' ' },
+    { 0, 0 },
+  };
+  int i;
+
+  for (i = 0; map[i].name; i++) {
+    if (wcscmp(map[i].name, name) == 0)
+      return map[i].ch;
+  }
+
+  return L'!'; /* code meaning not found */
 }
 
 val get_spec(void)
