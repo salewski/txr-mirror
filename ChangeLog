@@ -1,3 +1,32 @@
+2011-11-15  Kaz Kylheku  <kaz@kylheku.com>
+
+	Changing read syntax for character literals, because we are going to
+	need the single quote in the Lisp way for suppressing evaluation,
+	eventually.
+
+	I'm going with a Scheme-compatible syntax for character literals.
+	It has a richer repertoire of standard character names than Common
+	Lisp, and has a x convention for coding characters in hex.
+
+	* lib.c (obj_print): Print characters in a Scheme-like way.
+
+	* parser.h (end_of_char): New function declared.
+
+	* parser.l (grammar): Implement rules for #\ syntax, with
+	involving new HASH_BACKSLASH token.
+	(end_of_regex): Enhancement: added check that end_of_regex is
+	called in correct state, like the one in end_of_char.
+	(end_of_char): New function.
+
+	* parser.y (repeat_rep_helper, o_elems_transform, define_transform,
+	lit_char_helper): Functions changed to static.
+	(rl): Function moved down, past the grammar section.
+	(HASH_BACKSLASH): New terminal symbol.
+	(chrlit): Grammar redesigned.
+	(char_from_name): New function.
+
+	* txr.1: Character syntax documented.
+
 2011-11-14  Kaz Kylheku  <kaz@kylheku.com>
 
 	Bugfix: horizontal directives were being treated as vertical,

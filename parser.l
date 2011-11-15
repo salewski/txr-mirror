@@ -386,9 +386,9 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                           return '"';
                         }
 
-<SPECIAL,NESTED>\'      {
+<SPECIAL,NESTED>#\\     {
                           yy_push_state(CHRLIT);
-                          return '\'';
+                          return HASH_BACKSLASH;
                         }
 
 <SPECIAL,NESTED>`       {
@@ -550,29 +550,30 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                   return yytext[0];
                 }
 
-<CHRLIT>\'      {
-                  yy_pop_state();
-                  return yytext[0];
-                }
-
 <QSILIT>`       {
                   yy_pop_state();
                   return yytext[0];
                 }
 
-<STRLIT,CHRLIT,QSILIT>[\\][abtnvfre"`'\\] {
-                                            yylval.chr = char_esc(yytext[1]);
-                                            return LITCHAR;
-                                          }
+<STRLIT,QSILIT>[\\][abtnvfre"`'\\]      {
+                                          yylval.chr = char_esc(yytext[1]);
+                                          return LITCHAR;
+                                        }
 
 <STRLIT,QSILIT>{WS}[\\]\n{WS}   {
                                   lineno++;
                                 }
                                 
-<STRLIT,CHRLIT>[\\](x{HEX}+|{OCT}+)     {
-                                          yylval.chr = num_esc(yytext + 1);
-                                          return LITCHAR;
-                                        }
+<CHRLIT>(x{HEX}+|o{OCT}+) {
+                            yylval.chr = num_esc(yytext);
+                            return LITCHAR;
+                          }
+
+<CHRLIT>{SYM}           {
+                          yylval.lexeme = utf8_dup_from(yytext);
+                          return IDENT;
+                        }
+
 <STRLIT>\n              {
                           yyerrprepf(lit("newline in string literal"), nao);
                           lineno++;
@@ -615,10 +616,21 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
 void end_of_regex(void)
 {
+  if (YYSTATE != REGEX)
+    internal_error("end_of_regex called in wrong scanner state");
+
   yy_pop_state();
   if (yy_top_state() == INITIAL
       || yy_top_state() == QSILIT)
     yy_pop_state();
+}
+
+void end_of_char(void)
+{
+  if (YYSTATE != CHRLIT)
+    internal_error("end_of_char called in wrong scanner state");
+
+  yy_pop_state();
 }
 
 val source_loc(val form)
