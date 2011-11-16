@@ -41,3 +41,8 @@ void end_of_char(void);
 int yylex(void);
 void parse_init(void);
 val source_loc(val form);
+val rl(val form, val lineno);
+INLINE val rlcp(val to, val from)
+{
+  return rl(to, source_loc(from));
+}

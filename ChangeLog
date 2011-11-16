@@ -1,5 +1,23 @@
 2011-11-15  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (h_var): when manipulating specline, propagate the
+	source locatio info.
+	(v_skip): Don't use specline for trace messages, because
+	it may be nil. Use the skip spec.
+
+	* parser.h (rl): Declared.
+	(rlcp): New inline function.
+
+	* parser.y (rl): Static declaration removed. Function becomes
+	extern.
+	(clause): Propagate location info from clause to clause list
+	backbone.
+	(collect_clause, COLL): Bugfix: car/cdr mixup in location info.
+	(elem): Use rlcp function to abbreviate code.
+	(o_elems_opt, o_elems_opt2, o_elem): Set location info.
+
+2011-11-15  Kaz Kylheku  <kaz@kylheku.com>
+
 	Changing read syntax for character literals, because we are going to
 	need the single quote in the Lisp way for suppressing evaluation,
 	eventually.
