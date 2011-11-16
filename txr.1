@@ -579,22 +579,34 @@ If a variable occurs at the start of a line, it matches some text
 at the start of the line. If it occurs at the end of a line, it matches
 everything from the current position to the end of the line.
 
-The extent of the matched text (the text bound to the variable) is determined
-by looking at what follows the variable.  A variable may be followed by a piece
-of text, a regular expression directive, a function call, a directive, another
-variable, or nothing (i.e.  occurs at the end of a line).
+.SS Negative Match
 
-If the variable is followed by nothing, the
-match extends from the current position in the data, to the end of the line.
-Example:
+If a variable is one of the plain forms @NAME, @{NAME},  @*NAME or @*{NAME},
+then this is a "negative match".  The extent of the matched text (the text
+bound to the variable) is determined by looking at what follows the variable,
+and ranges from the current position to some position where the following
+material finds a match. This is why this is called a "negative match": the
+spanned text which ends up bound to the variable is that in which the match for
+the trailing material did not occur.
+
+A variable may be followed by a piece of text, a regular expression directive,
+a function call, a directive, another variable, or nothing (i.e.  occurs at the
+end of a line).
+
+.SS Variable Followed by Nothing
+
+If the variable is followed by nothing, the negative match extends from the
+current position in the data, to the end of the line.  Example:
 
   pattern:      "a b c @FOO"
   data:         "a b c defghijk"
   result:       FOO="defghijk"
 
+.SS Variable Followed by Text
+
 If the variable is followed by text (all non-directive material extending to
 the end of the line, or to the start of another directive), then the extent of
-the match is determined by searching for the first occurrence of that text
+the negative match is determined by searching for the first occurrence of that text
 within the line, starting at the current position. The variable matches
 everything between the current position and the matching position (not
 including the matching position). Any whitespace which follows the
@@ -612,23 +624,12 @@ is " e f". This is found within the data "c d e f" at position 3
 (counting from 0).  So positions 0-2 ("c d") constitute the matching
 text which is bound to FOO.
 
-If the variable is followed by a regular expression directive or a function
-call, the extent is determined by finding the closest match for the regular
-expression or function call. (See Regular Expressions section below, and
-FUNCTIONS.)
+.SS Variable Followed by a Regular Expression, Function Call or Directive
 
-.SS Special Symbols
-
-Just like in the programming language Lisp, the names nil and t cannot be used
-as variables. They always represent themselves, and have many uses, internal to
-the program as well as externally visible. The nil symbol stands for the empty
-list object, an object which marks the end of a list, and boolean false. It is
-synonymous with the syntax () which may be used interchangeably with nil in
-most constructs.
-
-Names whose names begin with the : character are keyword symbols.  These also
-may not be used as variables either and stand for themselves. Keywords are
-useful for labeling information and situations. 
+If the variable is followed by a regular expression, function
+call, or a directive, the extent is determined by scanning the text
+for the first position where a match occurs for the regular expression, call or
+directive. (See Regular Expressions section below, and FUNCTIONS.)
 
 .SS Consecutive Variables
 
@@ -678,11 +679,42 @@ matching failure.  If the search succeeds, than the first variable is bound to
 the text which is skipped by the regular expression search.  The second
 variable is bound to the text matched by the regular expression.
 
+.SS Consecutive Variables Via Directive
+
+Two variables can be de-facto consecutive in a manner shown in the
+following example:
+
+  @var1@(all)@var2@(end)
+
+The @(all) directive does nothing other than assert that all clauses must
+match. It has only one clause, @var2. So this is equivalent to just @var1@var2,
+except that if both variables are unbound, no semantic error is identified in
+this situation. The situation is handled as a variable followed by a directive.
+Of course @var2 matches any position current position, and so @var1 ends up
+with nothing.
+
+Example 1: b matches at position 0 and a gets nothing:
+
+  pattern:      "@a@(all)@b@(end)"
+  data:         "abc"
+  result:       a=""
+                b="abc"
+
+Example 2: *a specifies longest match (see Longest Match below), and so a gets
+everything:
+
+  pattern:      "@*a@(all)@b@(end)"
+  data:         "abc"
+  result:       a="abc"
+                b=""
+
+
+
 .SS Longest Match
 
-The closest-match behavior for text and regular expressions can be
-overridden to longest match behavior. A special syntax is provided
-for this: an asterisk between the @ and the variable, e.g:
+The closest-match behavior for the negative match can be overridden to longest
+match behavior. A special syntax is provided for this: an asterisk between the
+@ and the variable, e.g:
 
   pattern:      "a @*{FOO}cd"
   data:         "a b cdcdcdcd"
@@ -699,15 +731,16 @@ covers only the "b ", stopping at the first "cd" occurrence.
 
 .SS Positive Match
 
-The syntax variants
+There are syntax variants of variable syntax which have an embedded expression
+enclosed with the variable in braces:
 
  @{NAME /RE/}
  @{NAME (FUN [ARGS ...])}
  @{NAME NUMBER}
 
-specify a variable binding that is driven by a positive match derived
+These specify a variable binding that is driven by a positive match derived
 from a regular expression, function or character count, rather than from
-trailing material (which may be regarded as a "negative" match, since the
+trailing material (which is regarded as a "negative" match, since the
 variable is bound to material which is
 .B skipped
 in order to match the trailing material). In the /RE/ form, the match
@@ -727,8 +760,6 @@ empty string.  The text which is actually matched by this construct
 is all text within the specified field, but excluding leading and
 trailing whitespace. If the field contains only spaces, then an empty
 string is extracted.
-
-A number is made up of digits, optionally preceded by a + or - sign.
 
 This syntax is processed without consideration of what other
 syntax follows.  A positive match may be directly followed by an unbound
@@ -935,17 +966,38 @@ directives are:
 A symbol is lexically the same thing as a variable and the same rules
 apply. Tokens that look like numbers are treated as numbers.
 
+.SS Special Symbols
+
+Just like in the programming language Lisp, the names nil and t cannot be used
+as variables. They always represent themselves, and have many uses, internal to
+the program as well as externally visible. The nil symbol stands for the empty
+list object, an object which marks the end of a list, and boolean false. It is
+synonymous with the syntax () which may be used interchangeably with nil in
+most constructs.
+
+.SS Keyword Symbols
+
+Names whose names begin with the : character are keyword symbols.  These also
+may not be used as variables either and stand for themselves. Keywords are
+useful for labeling information and situations. 
+
+.SS Character Literals
+
 Character literals are introduced by the #\ syntax, which is either
 followed by a character name, the letter x followed by hex digits,
 or a single character. Valid character names are: nul, alarm, backspace, tab,
 linefeed, newline, vtab, page, return, esc, space. This convention
 for character literals is similar to that of the Scheme language.
 
+.SS String Literals
+
 String literals are delimited by double respectively, and may not span multiple
 lines. A double quote within a string literal is encoded using \e"
 and a backslash is encoded as \e\e. Backslash escapes like \en and \et
 are recognized, as are hexadecimal escapes like \exFF and octal
 escapes like \e123.
+
+.SS String Quasiliterals
 
 Quasiliterals are similar to string literals, except that they may
 contain variable references denoted by the usual @ syntax. The quasiliteral
@@ -956,14 +1008,42 @@ the quasiliteral `one@a and two @{b}s` represents the string
 itself, and two consecutive @ characters code for a literal @.
 There is no \e@ escape.
 
-Some directives are involved in structuring the overall syntax of the query.
+.SS Numbers
 
-There are syntactic constraints that depend on the directive. Some directives
-are "vertical only". They must occur on a line by themselves. If they are
-involved in additional syntax, it is line-oriented.  Others work horizontally.
-They can occur anywhere in a line, and if they are involved in syntax, it hs
-character-oriented.  Some work in both modes, with slightly different
-semantics.
+A number is made up of digits 0 through 9, optionally preceded by a + or -
+sign.
+
+.SS Directives-driven Syntax
+
+Some directives not only denote an expression, but are also involved in
+surrounding syntax. For instance, the directive
+
+  @(collect)
+
+not only denotes an expression, but it also introduces a syntactic phrase which
+requires a matching @(end) directive. So in other words, @(collect) is not only
+an expression, but serves as a kind of token in a higher level phrase structure
+grammar.
+
+Usually if a directive occurs alone in a line, not preceded or followed
+by other material, it is involved in a "vertical" (or line oriented)
+syntax.
+
+If a directive is embedded in a line (has preceding or trailing material) then
+it is in a horizontal syntactic and semantic context (character-oriented).
+
+There is an exceptions. The a definition of a horizontal function
+looks like this:
+
+  @(define name (arg))body material@(end)
+
+Yet, this is considered one vertical item, which means that it does not match
+a line of data. (This is necessary because all horizontal syntax matches
+something within a line of data.)
+
+Many directives have a horizontal and vertical syntax, with different but
+closely related semantics. A few are still "vertical only", and some are
+horizontal only but in future releases, these exceptions will be minimized.
 
 A summary of the available directives follows:
 

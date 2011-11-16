@@ -1,5 +1,22 @@
 2011-11-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	Allow directives after variable to be a kind of negative match.
+
+	* match.c (search_form): bugfix: return correct match extent.
+
+	* parser.y: Adjusting associativity and precedence of directives, IDENT,
+	and grouping tokens once again. This is so that a var followed by
+	a directive will turn into one elem, rather than the var being
+	reduced to an elem first.
+
+	* txr.1: Revised documentation to mroe clearly define the concept
+	of a negative match, broken into subsections. Some sections
+	belonging to syntax were moved to an appropriate location.
+	Subsections added to description of form syntax.
+	Explanation of directive-driven syntax.
+
+2011-11-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	Variable matches can span over function calls.
 	Function calls following variables have searching semantics.
 

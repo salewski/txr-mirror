@@ -418,7 +418,7 @@ static val search_form(match_line_ctx *c, val needle_form, val from_end)
                  match_line(ml_specline_pos(*c, spec, pos)));
       if (new_pos) {
         c->bindings = new_bindings;
-        return cons(pos, new_pos);
+        return cons(pos, minus(new_pos, pos));
       }
     }
 
