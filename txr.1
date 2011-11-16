@@ -555,6 +555,7 @@ ways:
   @*NAME
   @*{NAME}
   @{NAME /RE/}
+  @{NAME (FUN [ ARGS ... ])}
   @{NAME NUMBER}
 
 The forms with an * indicate a long match, see Longest Match below.
@@ -580,8 +581,8 @@ everything from the current position to the end of the line.
 
 The extent of the matched text (the text bound to the variable) is determined
 by looking at what follows the variable.  A variable may be followed by a piece
-of text, a regular expression directive, another variable, or nothing (i.e.
-occurs at the end of a line).
+of text, a regular expression directive, a function call, a directive, another
+variable, or nothing (i.e.  occurs at the end of a line).
 
 If the variable is followed by nothing, the
 match extends from the current position in the data, to the end of the line.
@@ -611,11 +612,10 @@ is " e f". This is found within the data "c d e f" at position 3
 (counting from 0).  So positions 0-2 ("c d") constitute the matching
 text which is bound to FOO.
 
-If the variable is followed by a regular expression directive,
-the extent is determined by finding the closest match for the
-regular expression. (See Regular Expressions section below).
-
-To match successfully, 
+If the variable is followed by a regular expression directive or a function
+call, the extent is determined by finding the closest match for the regular
+expression or function call. (See Regular Expressions section below, and
+FUNCTIONS.)
 
 .SS Special Symbols
 
@@ -702,16 +702,22 @@ covers only the "b ", stopping at the first "cd" occurrence.
 The syntax variants
 
  @{NAME /RE/}
+ @{NAME (FUN [ARGS ...])}
  @{NAME NUMBER}
 
 specify a variable binding that is driven by a positive match derived
-from a regular expression or character count, rather than from trailing
-material (which may be regarded as a "negative" match, since the variable is
-bound to material which is
+from a regular expression, function or character count, rather than from
+trailing material (which may be regarded as a "negative" match, since the
+variable is bound to material which is
 .B skipped
 in order to match the trailing material). In the /RE/ form, the match
 extends over all characters from the current position which match
 the regular expression RE. (see Regular Expressions section below).
+In the (FUN [ARGS ...]) form, the match extends over characters which
+are matched by the call to the function, if the call
+succeeds. Thus @{x (y z w)} is just like @(y z w), except that the region of
+text skipped over by @(y z w) is also bound to the variable x.
+See FUNCTIONS below.
 
 In the NUMBER form, the match processes a field of text which
 consists of the specified number of characters, which must be nonnegative

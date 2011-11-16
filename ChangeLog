@@ -1,3 +1,16 @@
+2011-11-16  Kaz Kylheku  <kaz@kylheku.com>
+
+	Variable matches can span over function calls.
+	Function calls following variables have searching semantics.
+
+	* match.c (ml_specline_pos, search_form): New static functions.
+	(h_var): Handle functions and regexes in a common way.
+
+	* parser.y: Adjusted precedence of IDENT and ( so that
+	@var@(func) are parsed into a single var element.
+
+	* txr.1: Documented.
+
 2011-11-15  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.vim: Update for new character constant syntax.
