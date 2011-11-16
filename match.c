@@ -359,6 +359,15 @@ static match_line_ctx ml_specline(match_line_ctx c, val specline)
   return nc;
 }
 
+static match_line_ctx ml_specline_pos(match_line_ctx c, val specline, val pos)
+{
+  match_line_ctx nc = c;
+  nc.specline = specline;
+  nc.pos = pos;
+  return nc;
+}
+
+
 static match_line_ctx ml_bindings_specline(match_line_ctx c, val bindings,
                                            val specline)
 {
@@ -391,20 +400,45 @@ typedef val (*h_match_func)(match_line_ctx c, match_line_ctx *cout);
   val elem_var = first(specline);                       \
   val directive_var = first(elem_var)
 
+static val search_form(match_line_ctx *c, val needle_form, val from_end)
+{
+  if (regexp(first(needle_form))) {
+    return search_regex(c->dataline, first(needle_form), c->pos, from_end);
+  } else {
+    val spec = cons(needle_form, nil);
+    val pos = from_end ? length_str(c->dataline) : c->pos;
+    val step = from_end ? num(-1) : num(1);
+
+    rlcp(spec, needle_form);
+
+    for (; (from_end && ge(pos, c->pos)) || length_str_gt(c->dataline, pos);
+         pos = plus(pos, step))
+    {
+      cons_bind (new_bindings, new_pos,
+                 match_line(ml_specline_pos(*c, spec, pos)));
+      if (new_pos) {
+        c->bindings = new_bindings;
+        return cons(pos, new_pos);
+      }
+    }
+
+    return nil;
+  }
+}
+
 static val h_var(match_line_ctx c, match_line_ctx *cout)
 {
   val elem = first(c.specline);
   val sym = second(elem);
   val pat = third(elem);
-  val modifier = fourth(elem);
+  val modifiers = fourth(elem);
+  val modifier = first(modifiers);
   val pair = assoc(c.bindings, sym); /* var exists already? */
 
-  if (gt(length(modifier), one)) {
+  if (gt(length(modifiers), one)) {
     sem_error(elem, lit("multiple modifiers on variable ~s"),
               sym, nao);
   }
-
-  modifier = car(modifier);
 
   if (pair) {
     /* If the variable already has a binding, we replace
@@ -441,15 +475,18 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
       rl(car(c.specline), loc);
     }
     goto repeat;
-  } else if (consp(modifier)) { /* regex variable */
-    val past = match_regex(c.dataline, car(modifier), c.pos);
-    if (nullp(past)) {
-      LOG_MISMATCH("var positive regex");
+  } else if (consp(modifier)) { /* var bound over text matched by form */
+    cons_bind (new_bindings, new_pos,
+               match_line(ml_specline(c, modifiers)));
+
+    if (!new_pos) {
+      LOG_MISMATCH("var spanning form");
       return nil;
     }
-    LOG_MATCH("var positive regex", past);
-    c.bindings = acons(c.bindings, sym, sub_str(c.dataline, c.pos, past));
-    c.pos = past;
+
+    LOG_MATCH("var spanning form", new_pos);
+    c.bindings = acons(new_bindings, sym, sub_str(c.dataline, c.pos, new_pos));
+    c.pos = new_pos;
     /* This may have another variable attached */
     if (pat) {
       val loc = source_loc(c.specline);
@@ -487,34 +524,33 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
     LOG_MATCH("var delimiting string", find);
     c.bindings = acons(c.bindings, sym, sub_str(c.dataline, c.pos, find));
     c.pos = plus(find, length_str(pat));
-  } else if (consp(pat) && regexp(first(pat))) {
-    val find = search_regex(c.dataline, first(pat), c.pos, modifier);
+  } else if (consp(pat) && first(pat) != var_s) {
+    val find = search_form(&c, pat, modifier);
     val fpos = car(find);
     val flen = cdr(find);
     if (!find) {
-      LOG_MISMATCH("var delimiting regex");
+      LOG_MISMATCH("var delimiting form");
       return nil;
     }
-    LOG_MATCH("var delimiting regex", fpos);
+    LOG_MATCH("var delimiting form", fpos);
     c.bindings = acons(c.bindings, sym, sub_str(c.dataline, c.pos, fpos));
     c.pos = plus(fpos, flen);
-  } else if (consp(pat) && first(pat) == var_s) {
+  } else if (consp(pat)) {
     /* Unbound var followed by var: the following one must either
        be bound, or must specify a regex. */
     val second_sym = second(pat);
     val next_pat = third(pat);
-    val next_modifier = fourth(pat);
+    val next_modifiers = fourth(pat);
+    val next_modifier = first(fourth(pat));
     val pair = assoc(c.bindings, second_sym); /* var exists already? */
 
-    if (gt(length(next_modifier), one)) {
+    if (gt(length(next_modifiers), one)) {
       sem_error(elem, lit("multiple modifiers on variable ~s"),
                 second_sym, nao);
     }
 
-    next_modifier = car(next_modifier);
-
     if (!pair && consp(next_modifier)) {
-      val find = search_regex(c.dataline, first(next_modifier), c.pos, modifier);
+      val find = search_form(&c, next_modifier, modifier);
       val fpos = car(find);
       val flen = cdr(find);
 
