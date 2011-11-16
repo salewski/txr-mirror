@@ -32,6 +32,8 @@ syn match txr_char "@[ \t]*\\."
 syn match txr_char "@[ \t]*\\x[0-9A-Fa-f]\+"
 syn match txr_char "@[ \t]*\\[0-9]\+"
 syn match txr_variable "@[ \t]*[*]\?[A-Za-z_][A-Za-z0-9_]*"
+syn match txr_chr "#\\x[A-Fa-f0-9]+"
+syn match txr_chr "#\\[a-zA-Z_][a-zA-Z0-9_]*"
 
 syn match txr_ident ":\?[A-Za-z_][A-Za-z0-9_]*" contained
 syn match txr_num "[+-]\?[0-9]\+" contained
@@ -46,7 +48,6 @@ syn region txr_meta contained matchgroup=Delimiter start="@[ \t]*(" matchgroup=D
 
 syn region txr_string contained oneline start=+"+ skip=+\\\\\|\\"+ end=+"+
 syn region txr_quasilit contained oneline start=+`+ skip=+\\\\\|\\`+ end=+`+ contains=txr_directive,txr_variable,txr_bracevar
-syn region txr_chr contained oneline start=+'+ skip=+\\\\\|\\'+ end=+'+ contains=txr_directive,txr_variable,txr_bracevar
 syn region txr_regex contained oneline start=+/+ skip=+\\\\\|\\/+ end=+/+
 syn region txr_regdir oneline start=+@[ \t]*/+ skip=+\\\\\|\\/+ end=+/+
 

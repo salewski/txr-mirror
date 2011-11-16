@@ -1,5 +1,9 @@
 2011-11-15  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.vim: Update for new character constant syntax.
+
+2011-11-15  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (h_var): when manipulating specline, propagate the
 	source locatio info.
 	(v_skip): Don't use specline for trace messages, because
