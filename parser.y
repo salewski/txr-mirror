@@ -47,7 +47,6 @@ static val repeat_rep_helper(val sym, val main, val parts);
 static val o_elems_transform(val output_form);
 static val define_transform(val define_form);
 static val lit_char_helper(val litchars);
-static val rl(val form, val lineno);
 static wchar_t char_from_name(wchar_t *name);
 
 static val parsed_spec;
@@ -121,17 +120,19 @@ clauses_opt : clauses           { $$ = $1; }
             | /* empty */       { $$ = nil; }
             ;
 
-clause : all_clause             { $$ = list($1, nao); }
-       | some_clause            { $$ = list($1, nao); }
-       | none_clause            { $$ = list($1, nao); }
-       | maybe_clause           { $$ = list($1, nao); }
-       | cases_clause           { $$ = list($1, nao); }
-       | choose_clause          { $$ = list($1, nao); }
-       | collect_clause         { $$ = list($1, nao); }
-       | gather_clause          { $$ = list($1, nao); }
-       | define_clause          { $$ = list(define_transform($1), nao); }
-       | try_clause             { $$ = list($1, nao); }
-       | output_clause          { $$ = list($1, nao); }
+clause : all_clause             { $$ = list($1, nao); rlcp($$, $1); }
+       | some_clause            { $$ = list($1, nao); rlcp($$, $1); }
+       | none_clause            { $$ = list($1, nao); rlcp($$, $1); }
+       | maybe_clause           { $$ = list($1, nao); rlcp($$, $1); }
+       | cases_clause           { $$ = list($1, nao); rlcp($$, $1); }
+       | choose_clause          { $$ = list($1, nao); rlcp($$, $1); }
+       | collect_clause         { $$ = list($1, nao); rlcp($$, $1); }
+       | gather_clause          { $$ = list($1, nao); rlcp($$, $1); }
+       | define_clause          { $$ = list(define_transform($1), nao);
+                                  rlcp(car($$), $1);
+                                  rlcp($$, $1); }
+       | try_clause             { $$ = list($1, nao); rlcp($$, $1); }
+       | output_clause          { $$ = list($1, nao); rlcp($$, $1); }
        | line                   { $$ = $1; }
        | repeat_clause          { $$ = nil;
                                   yyerror("repeat outside of output"); }
@@ -219,10 +220,10 @@ collect_clause : COLLECT exprs_opt ')' newl
                | COLLECT exprs_opt ')'
                  newl clauses until_last
                  newl clauses END newl    { $$ = list(collect_s, $5,
-                                                      cons(car($6), $8),
+                                                      cons(cdr($6), $8),
                                                       $2, nao);
                                             rl($$, num($1)); 
-                                            rl($8, cdr($6)); }
+                                            rl($8, car($6)); }
                | COLLECT exprs_opt ')'
                  newl error             { $$ = nil;
                                           if (yychar == UNTIL ||
@@ -254,9 +255,9 @@ elems_opt : elems               { $$ = $1; }
           ;
 
 elems : elem                    { $$ = cons($1, nil); 
-                                  rl($$, source_loc($1)); }
+                                  rlcp($$, $1); }
       | elem elems              { $$ = cons($1, $2);
-                                  rl($$, source_loc($1)); }
+                                  rlcp($$, $1); }
       | rep_elem                { $$ = nil;
                                   yyerror("rep outside of output"); }
       ;
@@ -278,10 +279,10 @@ elem : TEXT                     { $$ = rl(string_own($1), num(lineno)); }
      | COLL exprs_opt ')' elems END     { $$ = list(coll_s, $4, nil, $2, nao);
                                           rl($$, num($1)); }
      | COLL exprs_opt ')' elems
-       until_last elems END     { $$ = list(coll_s, $4, cons(car($5), $6), 
+       until_last elems END     { $$ = list(coll_s, $4, cons(cdr($5), $6), 
                                             $2, nao);
                                   rl($$, num($1));
-                                  rl($6, cdr($5)); }
+                                  rl($6, car($5)); }
      | COLL error               { $$ = nil;
                                   yybadtoken(yychar, lit("coll clause")); }
      | ALL clause_parts_h       { $$ = rl(list(all_s, t, $2, nao), num($1)); }
@@ -479,11 +480,13 @@ out_clauses_opt : out_clauses   { $$ = $1; }
 o_line : o_elems_opt '\n'       { $$ = $1; }
        ;
 
-o_elems_opt : o_elems           { $$ = o_elems_transform($1); }
+o_elems_opt : o_elems           { $$ = o_elems_transform($1);
+                                  rl($$, num(lineno)); }
             |                   { $$ = nil; }
             ;
 
-o_elems_opt2 : o_elems          { $$ = o_elems_transform($1); }
+o_elems_opt2 : o_elems          { $$ = o_elems_transform($1);
+                                  rl($$, num(lineno)); }
              |                  { $$ = null_list; }
              ;
 
@@ -491,8 +494,10 @@ o_elems : o_elem                { $$ = cons($1, nil); }
         | o_elem o_elems        { $$ = cons($1, $2); }
         ;
 
-o_elem : TEXT                   { $$ = string_own($1); }
-       | SPACE                  { $$ = string_own($1); }
+o_elem : TEXT                   { $$ = string_own($1);
+                                  rl($$, num(lineno)); }
+       | SPACE                  { $$ = string_own($1);
+                                  rl($$, num(lineno)); }
        | o_var                  { $$ = $1; }
        | rep_elem               { $$ = $1; }
        ;
@@ -842,7 +847,7 @@ static val lit_char_helper(val litchars)
   return ret;
 }
 
-static val rl(val form, val lineno)
+val rl(val form, val lineno)
 {
   sethash(form_to_ln_hash, form, lineno);
   pushhash(ln_to_forms_hash, lineno, form);

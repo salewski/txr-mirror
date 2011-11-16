@@ -413,8 +413,9 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
        and it must be transformed into
        (<sym-substituted> <pat> ...) */
     if (pat) {
+      val loc = source_loc(c.specline);
       c.specline = cons(cdr(pair), cons(pat, rest(c.specline)));
-      /* TODO: propagate line number info */
+      rl(car(c.specline), loc);
     } else if (nump(modifier)) {
       val past = plus(c.pos, modifier);
 
@@ -435,7 +436,9 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
       c.pos = past;
       c.specline = cdr(c.specline);
     } else {
+      val loc = source_loc(c.specline);
       c.specline = cons(cdr(pair), rest(c.specline));
+      rl(car(c.specline), loc);
     }
     goto repeat;
   } else if (consp(modifier)) { /* regex variable */
@@ -449,7 +452,9 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
     c.pos = past;
     /* This may have another variable attached */
     if (pat) {
+      val loc = source_loc(c.specline);
       c.specline = cons(pat, rest(c.specline));
+      rl(car(c.specline), loc);
       goto repeat;
     }
   } else if (nump(modifier)) { /* fixed field */
@@ -529,7 +534,9 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
       LOG_MATCH("double var regex (second var)", plus(fpos, flen));
       c.pos = plus(fpos, flen);
       if (next_pat) {
+        val loc = source_loc(c.specline);
         c.specline = cons(next_pat, rest(c.specline));
+        rl(car(c.specline), loc);
         goto repeat;
       }
     } else if (!pair) {
@@ -1576,6 +1583,7 @@ static val v_skip(match_files_ctx *c)
     return cons(c->bindings, cons(c->data, c->data_lineno));
 
   {
+    val skipspec = first(first(c->spec));
     val first_spec = first(specline);
     val args = rest(first_spec);
     val max = first(args);
@@ -1598,13 +1606,13 @@ static val v_skip(match_files_ctx *c)
 
       if (min) {
         if (reps_min != cmin) {
-          debuglf(specline, lit("skipped only ~a/~a lines to ~a:~a"),
+          debuglf(skipspec, lit("skipped only ~a/~a lines to ~a:~a"),
                   num(reps_min), num(cmin),
                   first(c->files), c->data_lineno, nao);
           uw_block_return(nil, nil);
         }
 
-        debuglf(specline, lit("skipped ~a lines to ~a:~a"),
+        debuglf(skipspec, lit("skipped ~a lines to ~a:~a"),
                 num(reps_min), first(c->files),
                 c->data_lineno, nao);
       }
@@ -1617,19 +1625,19 @@ static val v_skip(match_files_ctx *c)
             last_good_result = result;
             last_good_line = c->data_lineno;
           } else {
-            debuglf(specline, lit("skip matched ~a:~a"), first(c->files),
+            debuglf(skipspec, lit("skip matched ~a:~a"), first(c->files),
                     c->data_lineno, nao);
             break;
           }
         } else {
-          debuglf(specline, lit("skip didn't match ~a:~a"),
+          debuglf(skipspec, lit("skip didn't match ~a:~a"),
                   first(c->files), c->data_lineno, nao);
         }
 
         if (!c->data)
           break;
 
-        debuglf(specline, lit("skip didn't match ~a:~a"), first(c->files),
+        debuglf(skipspec, lit("skip didn't match ~a:~a"), first(c->files),
                 c->data_lineno, nao);
 
         c->data = rest(c->data);
@@ -1641,13 +1649,13 @@ static val v_skip(match_files_ctx *c)
       if (result)
         return result;
       if (last_good_result) {
-        debuglf(specline, lit("greedy skip matched ~a:~a"), 
+        debuglf(skipspec, lit("greedy skip matched ~a:~a"), 
                 first(c->files), last_good_line, nao);
         return last_good_result;
       }
     }
 
-    debuglf(specline, lit("skip failed"), nao);
+    debuglf(skipspec, lit("skip failed"), nao);
     return nil;
   }
 }
