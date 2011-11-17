@@ -1,5 +1,20 @@
 2011-11-17  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (h_fun, v_fun): Bugfix! copy_list should be used for copying
+	the bindings, not copy_alist. Otherwise functions cannot destructively
+	update a binding, which is useless. We want a function not to
+	manipulate the binding list, but to be able to manipulate the
+	contents of bindings.
+	(match_files_ctx): Declaration moved ahead of match_line.
+	(v_fun): Forward declaration added.
+	(match_line): Allow vertical functions to be called from
+	a horizontal context, in a limited way.
+
+	* txr.1: Mention the possibility of a call from a horizontal
+	context falling back on a vertical function.
+
+2011-11-17  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.y: Bugfix: precedence of { } must be low, close to that of
 	IDENT, otherwise @{var}@(foo) doesn't parse.
 

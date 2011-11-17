@@ -3021,8 +3021,13 @@ Example:
 
   Output:         fun="horizontal"
 
-A call made in a clearly horizontal context will ignore
-the vertical definition, if any, and require the horizontal function.
+A call made in a clearly horizontal context will prefer the
+horizontal function, and only fall back on the vertical one
+if the horizontal one doesn't exist. (In this fall-back case,
+the vertical function is called with empty data; it is useful
+for calling vertical functions which process arguments and
+produce values.)
+
 In the next example, the call is followed by trailing material,
 placing it in a horizontal context. Leading material will
 do the same thing:

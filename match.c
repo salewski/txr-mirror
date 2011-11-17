@@ -941,7 +941,7 @@ static val h_fun(match_line_ctx c, match_line_ctx *cout)
     val ub_p_a_pairs = nil;
     val body = cdr(func);
     val piter, aiter;
-    val bindings_cp = copy_alist(c.bindings);
+    val bindings_cp = copy_list(c.bindings);
 
     if (!equal(length(args), length(params)))
       sem_error(elem, lit("function ~a takes ~a argument(s)"),
@@ -1031,6 +1031,15 @@ static val h_eol(match_line_ctx c, match_line_ctx *cout)
   return nil;
 }
 
+typedef struct {
+  val spec, files, bindings, data, data_lineno;
+} match_files_ctx;
+
+static match_files_ctx mf_all(val spec, val files, val bindings,
+                              val data, val data_lineno);
+
+static val v_fun(match_files_ctx *c);
+
 static val match_line(match_line_ctx c)
 {
   for (;;) {
@@ -1095,12 +1104,26 @@ static val match_line(match_line_ctx c)
               c = nc;
               continue;
             } else if (result == decline_k) {
-              if (gethash(v_directive_table, directive))
-                sem_error(elem, lit("~a only exists as a vertical directive"),
-                          directive, nao);
-              else
-                sem_error(elem, lit("no such function or directive: ~a"),
-                          directive, nao);
+              val spec = rlcp(cons(cons(elem, nil), nil), elem);
+              match_files_ctx vc = mf_all(spec, nil, c.bindings, nil, num(0));
+              val vresult = v_fun(&vc);
+
+              if (vresult == next_spec_k) {
+                c.bindings = vc.bindings;
+                break;
+              } else if (vresult == repeat_spec_k) {
+                c.bindings = vc.bindings;
+                continue;
+              } else if (vresult == decline_k) {
+                if (gethash(v_directive_table, directive))
+                  sem_error(elem, lit("~a only exists as a vertical directive"),
+                            directive, nao);
+                else
+                  sem_error(elem, lit("no such function or directive: ~a"),
+                            directive, nao);
+              } else {
+                return vresult;
+              }
             } else {
               return result;
             }
@@ -1538,10 +1561,6 @@ static void do_output(val bindings, val specs, val filter, val out)
     put_char(out, chr('\n'));
   }
 }
-
-typedef struct {
-  val spec, files, bindings, data, data_lineno;
-} match_files_ctx;
 
 static match_files_ctx mf_all(val spec, val files, val bindings,
                               val data, val data_lineno)
@@ -2889,7 +2908,7 @@ static val v_fun(match_files_ctx *c)
     val ub_p_a_pairs = nil;
     val body = cdr(func);
     val piter, aiter;
-    val bindings_cp = copy_alist(c->bindings);
+    val bindings_cp = copy_list(c->bindings);
 
     debug_check(specline, c->bindings, if2(consp(c->data), car(c->data)), c->data_lineno, nil);
 
