@@ -1,3 +1,8 @@
+2011-11-17  Kaz Kylheku  <kaz@kylheku.com>
+
+	* parser.y: Bugfix: precedence of { } must be low, close to that of
+	IDENT, otherwise @{var}@(foo) doesn't parse.
+
 2011-11-16  Kaz Kylheku  <kaz@kylheku.com>
 
 	Allow directives after variable to be a kind of negative match.
