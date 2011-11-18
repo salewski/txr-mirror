@@ -1,3 +1,22 @@
+2011-11-18  Kaz Kylheku  <kaz@kylheku.com>
+
+	Added a JSON parsing test case. This flushed out a bug which crashed
+	the garbage collector (uninitialized fields in function objects).
+
+	* Makefile: Defined TXR_ARGS and TXR_OPTS for new test case.
+
+	* hash.c (hash_begin): Construction of cobj modified to obey
+	the correct procedure described in HACKING.
+
+	* lib.c (func_n3, func_n4): These functions neglected to initialize
+	the env member of the function structure.
+
+	* tests/009/json.expected: New file.
+
+	* tests/009/json.txr: New file.
+
+	* tests/009/webapp.json: New file.
+
 2011-11-17  Kaz Kylheku  <kaz@kylheku.com>
 
 	Task #11598.
