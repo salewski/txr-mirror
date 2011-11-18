@@ -218,8 +218,8 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                                   return ALL;
                                 }
 
-<SPECIAL>\({WS}some{WS}\)       {
-                                  yy_pop_state();
+<SPECIAL>\({WS}some/{ID_END}    {
+                                  yy_push_state(NESTED);
                                   yylval.lineno = lineno;
                                   return SOME;
                                 }

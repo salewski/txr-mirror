@@ -150,12 +150,16 @@ all_clause : ALL newl clause_parts      { $$ = list(all_s, $3, nao);
 
            ;
 
-some_clause : SOME newl clause_parts    { $$ = list(some_s, $3, nao);
+some_clause : SOME exprs_opt ')'
+              newl clause_parts         { $$ = list(some_s, $5, $2, nao);
                                           rl($$, num($1)); }
-            | SOME newl error           { $$ = nil;
+            | SOME exprs_opt ')'
+              newl error           
+                                        { $$ = nil;
                                           yybadtoken(yychar,
                                                      lit("some clause")); }
-            | SOME newl END newl       { $$ = nil;
+            | SOME exprs_opt ')'
+              newl END newl             { $$ = nil;
                                           yyerror("empty some clause"); }
             ;
 
@@ -289,8 +293,9 @@ elem : TEXT                     { $$ = rl(string_own($1), num(lineno)); }
                                   yybadtoken(yychar, lit("coll clause")); }
      | ALL clause_parts_h       { $$ = rl(list(all_s, t, $2, nao), num($1)); }
      | ALL END                  { yyerror("empty all clause"); }
-     | SOME clause_parts_h      { $$ = rl(list(some_s, t, $2, nao), num($1)); }
-     | SOME END                 { yyerror("empty some clause"); }
+     | SOME exprs_opt ')'
+       clause_parts_h           { $$ = rl(list(some_s, t, $4, $2, nao), num($1)); }
+     | SOME exprs_opt ')' END   { yyerror("empty some clause"); }
      | NONE clause_parts_h      { $$ = rl(list(none_s, t, $2, nao), num($1)); }
      | NONE END                 { yyerror("empty none clause"); }
      | MAYBE clause_parts_h     { $$ = rl(list(maybe_s, t, $2, nao), num($1)); }

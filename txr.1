@@ -1657,12 +1657,46 @@ evaluated. Bindings extracted by a successful clause are visible the clauses
 which follow, and if the directive succeeds, all of the combined bindings
 emerge.
 
-.IP @(some)
+.IP @(some [ :resolve (vars ...) ])
 Each of the clauses is matched at the current position. If any of the clauses
 succeed, the directive succeeds, retaining the bindings accumulated by the
 successully matching clauses.  Evaluation does not stop on the first successful
 clause. Bindings extracted by a successful clause are visible to the clauses
 which follow.
+
+The :resolve parameter is for situations when the @(some) directive has
+multiple clauses that need to bind some common variables to different
+values: for instance, output parameters in functions. Resolve takes
+a list of variable name symbols as an argument.  This is called the
+resolve set. If the clauses of @(some) bind variables in the resolve
+set, those bindings are not visible to later clauses.  However, those
+bindings do emerge out of the @(some) directive as a whole.
+This creates a conflict: what if two or more clauses introduce
+non-matching bindings for a variable in the resolve set?
+This is why it is called the resolve set: conflicts for variables in the
+resolve set are automatically resolved in favor of later directives.
+
+Example:
+
+  @(some :resolve (x))
+  @  (bind a "a")
+  @  (bind x "x1")
+  @(or)
+  @  (bind b "b")
+  @  (bind x "x2")
+  @(end)
+
+Here, the two clauses both introduce a binding for x.  Without the :resolve
+parameter, this would mean that the second clause fails, because x comes in
+with the value "x1", which does not bind with "x2".  But because x is placed
+into the resolve set, the second clause does not see the "x1" binding. Both
+clauses establish their bindings independently creating a conflict over x.
+The conflict is resolved in favor of the second clause, and so the bindings
+which emerge from the directive are:
+
+  a="a"
+  b="b"
+  x="x2"
 
 .IP @(none)
 Each of the clauses is matched at the current position. The
@@ -1685,7 +1719,7 @@ collected from that clause are retained. Any remaining clauses
 after that one are not processed. If no clause matches, the
 directive fails, and produces no bindings.
 
-.IP @(choose { :longest <var> | :shortest <var> })
+.IP @(choose [ :longest <var> | :shortest <var> ])
 Each of the clauses is matched at the current position in order. In this
 construct, bindings established an earlier clause are not visible to later
 clauses.  Although any or all of the clauses can potentially match, the clause

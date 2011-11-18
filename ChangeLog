@@ -1,5 +1,20 @@
 2011-11-17  Kaz Kylheku  <kaz@kylheku.com>
 
+	Task #11598.
+
+	* match.c (resolve_k): New keyword symbol variable.
+	(h_parallel, v_parallel): Implement :resolve keyword in @(some)
+	directive.
+	(syms_init): New symbol variable initialized.
+
+	* parser.l: Allow (some) to have argument material.
+
+	* parser.y (some_clause, elem): SOME syntax adjusted.
+
+	* txr.1: Documented new :resolve keyword in @(some).
+
+2011-11-17  Kaz Kylheku  <kaz@kylheku.com>
+
 	Adding quote and unquote read syntax to list forms, resembling
 	Lisp. The difference is that splice is spelled ,* because @
 	already means something, and that there is only one quote operator.
