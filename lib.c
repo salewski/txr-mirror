@@ -1442,6 +1442,7 @@ val func_n3(val (*fun)(val, val, val))
   val obj = make_obj();
   obj->f.type = FUN;
   obj->f.functype = N3;
+  obj->f.env = nil;
   obj->f.f.n3 = fun;
   return obj;
 }
@@ -1451,6 +1452,7 @@ val func_n4(val (*fun)(val, val, val, val))
   val obj = make_obj();
   obj->f.type = FUN;
   obj->f.functype = N4;
+  obj->f.env = nil;
   obj->f.f.n4 = fun;
   return obj;
 }
