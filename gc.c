@@ -331,7 +331,7 @@ static void mark_mem_region(val *low, val *high)
     if (in_heap(maybe_obj)) {
 #ifdef HAVE_VALGRIND
       if (opt_vg_debug)
-        VALGRIND_MAKE_MEM_DEFINED(maybe_obj, sizeof *maybe_obj);
+        VALGRIND_MAKE_MEM_DEFINED(&maybe_obj->t.type, sizeof maybe_obj->t.type);
 #endif
       type_t t = maybe_obj->t.type;
       if ((t & FREE) == 0) {
