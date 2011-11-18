@@ -371,6 +371,16 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                           return yytext[0];
                         }
 
+<SPECIAL,NESTED>,[*]    {
+                          yylval.chr = '*';
+                          return SPLICE;
+                        }
+
+<SPECIAL,NESTED>[,']    {
+                          yylval.chr = yytext[0];
+                          return yytext[0];
+                        }
+
 <SPECIAL,NESTED>\}|\)   {
                           yy_pop_state();
                           if (yy_top_state() == INITIAL
