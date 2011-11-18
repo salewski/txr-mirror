@@ -56,7 +56,7 @@ val mingap_k, maxgap_k, gap_k, mintimes_k, maxtimes_k, times_k;
 val lines_k, chars_k;
 val choose_s, gather_s;
 val longest_k, shortest_k, greedy_k;
-val vars_k;
+val vars_k, resolve_k;
 val append_k, into_k, var_k, list_k, string_k, env_k;
 
 val filter_s;
@@ -843,6 +843,9 @@ static val h_parallel(match_line_ctx c, match_line_ctx *cout)
   val choose_sym = or2(choose_longest, choose_shortest);
   val choose_bindings = c.bindings, choose_pos = c.pos;
   val choose_minmax = choose_longest ? num(-1) : num(NUM_MAX);
+  val resolve = getplist(plist, resolve_k);
+  val resolve_ub_vars = nil;
+  val resolve_bindings = nil;
   val iter;
 
   if (choose_longest && choose_shortest)
@@ -850,6 +853,16 @@ static val h_parallel(match_line_ctx c, match_line_ctx *cout)
 
   if (directive == choose_s && !choose_sym)
     sem_error(elem, lit("choose: criterion not specified"), nao);
+
+
+  if (resolve) {
+    for (iter = resolve; iter; iter = cdr(iter)) {
+      val var = car(iter);
+      if (!assoc(c.bindings, var))
+        push(var, &resolve_ub_vars);
+    }
+  }
+
   for (iter = specs; iter != nil; iter = cdr(iter)) {
     val nested_spec = first(iter);
     cons_bind (new_bindings, new_pos,
@@ -857,8 +870,23 @@ static val h_parallel(match_line_ctx c, match_line_ctx *cout)
 
     if (new_pos) {
       some_match = t;
+
+      if (resolve_ub_vars) {
+        val uiter;
+        for (uiter = resolve_ub_vars; uiter; uiter = cdr(uiter)) {
+          val ubvar = car(uiter);
+          val exists = assoc(new_bindings, ubvar);
+
+          if (exists)
+            resolve_bindings = acons_new(resolve_bindings, ubvar, cdr(exists));
+        }
+
+        new_bindings = alist_remove(new_bindings, resolve_ub_vars);
+      }
+
       if (gt(new_pos, max_pos))
         max_pos = new_pos;
+
       if (directive == choose_s) {
         val binding = choose_sym ? assoc(new_bindings, choose_sym) : nil;
         val value = cdr(binding);
@@ -902,6 +930,10 @@ static val h_parallel(match_line_ctx c, match_line_ctx *cout)
   }
 
   /* No check for maybe, since it always succeeds. */
+
+ 
+  if (resolve_bindings)
+    c.bindings = nappend2(resolve_bindings, c.bindings);
 
   if (directive == choose_s) {
     c.bindings = choose_bindings;
@@ -1987,6 +2019,9 @@ static val v_parallel(match_files_ctx *c)
     val choose_sym = or2(choose_longest, choose_shortest);
     val choose_bindings = c->bindings, choose_line = zero, choose_data = nil;
     val choose_minmax = choose_longest ? num(-1) : num(NUM_MAX);
+    val resolve = getplist(plist, resolve_k);
+    val resolve_ub_vars = nil;
+    val resolve_bindings = nil;
     val iter;
 
     if (choose_longest && choose_shortest)
@@ -1994,6 +2029,14 @@ static val v_parallel(match_files_ctx *c)
 
     if (sym == choose_s && !choose_sym)
       sem_error(specline, lit("choose: criterion not specified"), nao);
+
+    if (resolve) {
+      for (iter = resolve; iter; iter = cdr(iter)) {
+        val var = car(iter);
+        if (!assoc(c->bindings, var))
+          push(var, &resolve_ub_vars);
+      }
+    }
 
     for (iter = specs; iter != nil; iter = rest(iter))
     {
@@ -2003,6 +2046,19 @@ static val v_parallel(match_files_ctx *c)
 
       if (success) {
         some_match = t;
+
+        if (resolve_ub_vars) {
+          val uiter;
+          for (uiter = resolve_ub_vars; uiter; uiter = cdr(uiter)) {
+            val ubvar = car(uiter);
+            val exists = assoc(new_bindings, ubvar);
+
+            if (exists)
+              resolve_bindings = acons_new(resolve_bindings, ubvar, cdr(exists));
+          }
+
+          new_bindings = alist_remove(new_bindings, resolve_ub_vars);
+        }
 
         if (sym == choose_s) {
           val binding = choose_sym ? assoc(new_bindings, choose_sym) : nil;
@@ -2066,6 +2122,9 @@ static val v_parallel(match_files_ctx *c)
     }
 
     /* No check for maybe, since it always succeeds. */
+
+    if (resolve_bindings)
+      c->bindings = nappend2(resolve_bindings, c->bindings);
 
     if (choose_sym) {
       if (consp(choose_data)) {
@@ -3178,6 +3237,7 @@ static void syms_init(void)
   shortest_k = intern(lit("shortest"), keyword_package);
   greedy_k = intern(lit("greedy"), keyword_package);
   vars_k = intern(lit("vars"), keyword_package);
+  resolve_k = intern(lit("resolve"), keyword_package);
   append_k = intern(lit("append"), keyword_package);
   into_k = intern(lit("into"), keyword_package);
   var_k = intern(lit("var"), keyword_package);
