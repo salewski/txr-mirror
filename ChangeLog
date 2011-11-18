@@ -1,5 +1,18 @@
 2011-11-18  Kaz Kylheku  <kaz@kylheku.com>
 
+	* gc.c (mark_mem_region): Use the Valgrind API only to mark
+	the type field as accessible, not the whole object that
+	we are checking. Marking the whole object accessible hides
+	uninitialized field bugs!
+
+	* lib.c: And found a bug already: lazy_str was not completely
+	initializing all of the object fields (ls.prefix, ls.list)
+	before invoking memory allocating operations, making it
+	possible for the garbage collector to encounter uninitialized
+	object areas.
+
+2011-11-18  Kaz Kylheku  <kaz@kylheku.com>
+
 	Added a JSON parsing test case. This flushed out a bug which crashed
 	the garbage collector (uninitialized fields in function objects).
 

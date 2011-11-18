@@ -1853,7 +1853,9 @@ val lazy_str(val lst, val term, val limit)
 {
   val obj = make_obj();
   obj->ls.type = LSTR;
-  obj->ls.opts = nil; /* Must init before calling something that can gc! */
+
+  /* Must init before calling something that can gc! */
+  obj->ls.opts = obj->ls.list = obj->ls.prefix = nil;
 
   term = or2(term, string(L"\n"));
 
