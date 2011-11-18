@@ -71,7 +71,7 @@ static val parsed_spec;
 %token <num> NUMBER
 
 %token <chr> REGCHAR LITCHAR
-%token <chr> METAPAR
+%token <chr> METAPAR SPLICE
 
 %type <val> spec clauses clauses_opt clause
 %type <val> all_clause some_clause none_clause maybe_clause
@@ -96,7 +96,7 @@ static val parsed_spec;
 %right OUTPUT REPEAT REP FIRST LAST EMPTY DEFINE
 %right SPACE TEXT NUMBER
 %nonassoc '[' ']' '(' ')'
-%left '-'
+%left '-' ',' '\'' SPLICE
 %left '|' '/'
 %left '&' 
 %right '~' '*' '?' '+' '%'
@@ -587,6 +587,9 @@ var_op : '*'                    { $$ = list(t, nao); }
 
 list : '(' exprs ')'            { $$ = rl($2, num($1)); }
      | '(' ')'                  { $$ = nil; }
+     | ',' expr                 { $$ = rlcp(list(unquote_s, $2, nao), $2); }
+     | '\'' expr                { $$ = rlcp(list(qquote_s, $2, nao), $2); }
+     | SPLICE expr              { $$ = rlcp(list(splice_s, $2, nao), $2); }
      | '(' error                { $$ = nil;
                                   yybadtoken(yychar, lit("list expression")); }
      ;

@@ -1,5 +1,22 @@
 2011-11-17  Kaz Kylheku  <kaz@kylheku.com>
 
+	Adding quote and unquote read syntax to list forms, resembling
+	Lisp. The difference is that splice is spelled ,* because @
+	already means something, and that there is only one quote operator.
+	None of this does anything; it is only syntax.
+
+	* lib.c (quote_s, qquote_s, unquote_s, splice_s): New variables.
+	(obj_init): New variables initialized.
+
+	* lib.h (quote_s, qquote_s, unquote_s, splice_s): Declared.
+
+	* parser.l: Added recognition rules.
+
+	* parser.y (SPLICE): New symbolic token.
+	(list): Added new syntax for quote and splicing.
+
+2011-11-17  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (h_fun, v_fun): Bugfix! copy_list should be used for copying
 	the bindings, not copy_alist. Otherwise functions cannot destructively
 	update a binding, which is useless. We want a function not to
