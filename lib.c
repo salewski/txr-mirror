@@ -77,7 +77,7 @@ val null_string;
 val nil_string;
 val null_list;
 
-val identity_f, equal_f, eql_f, eq_f, car_f;
+val identity_f, equal_f, eql_f, eq_f, car_f, cdr_f;
 
 val prog_string;
 
@@ -1535,7 +1535,7 @@ val funcall1(val fun, val arg)
   case N1:
     return fun->f.f.n1(arg);
   default:
-    uw_throwf(error_s, lit("funcall1: wrong number of arguments"));
+    uw_throw(error_s, lit("funcall1: wrong number of arguments"));
   }
 }
 
@@ -1549,7 +1549,7 @@ val funcall2(val fun, val arg1, val arg2)
   case N2:
     return fun->f.f.n2(arg1, arg2);
   default:
-    uw_throwf(error_s, lit("funcall2: wrong number of arguments"));
+    uw_throw(error_s, lit("funcall2: wrong number of arguments"));
   }
 }
 
@@ -1563,7 +1563,7 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
   case N3:
     return fun->f.f.n3(arg1, arg2, arg3);
   default:
-    uw_throwf(error_s, lit("funcall3: wrong number of arguments"));
+    uw_throw(error_s, lit("funcall3: wrong number of arguments"));
   }
 }
 
@@ -1577,7 +1577,7 @@ val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
   case N4:
     return fun->f.f.n4(arg1, arg2, arg3, arg4);
   default:
-    uw_throwf(error_s, lit("funcall4: wrong number of arguments"));
+    uw_throw(error_s, lit("funcall4: wrong number of arguments"));
   }
 }
 
@@ -1728,6 +1728,34 @@ static val do_swap_12_21(val fun, val left, val right)
 val swap_12_21(val fun)
 {
   return func_f2(fun, do_swap_12_21);
+}
+
+static val do_or(val fun1_list, val arg)
+{
+  for (; fun1_list; fun1_list = cdr(fun1_list))
+    if (funcall1(car(fun1_list), arg))
+      return t;
+
+  return nil;
+}
+
+val orf(val first_fun, ...)
+{
+  va_list vl;
+  list_collect_decl (out, iter);
+
+  if (first_fun != nao) {
+    val next_fun;
+    va_start (vl, first_fun);
+    list_collect (iter, first_fun);
+
+    while ((next_fun = va_arg(vl, val)) != nao)
+      list_collect (iter, next_fun);
+
+    va_end (vl);
+  }
+
+  return func_f1(out, do_or);
 }
 
 val vector(val alloc)
@@ -2401,7 +2429,7 @@ static void obj_init(void)
 
   protect(&packages, &system_package, &keyword_package,
           &user_package, &null_string, &nil_string,
-          &null_list, &equal_f, &eq_f, &eql_f, &car_f,
+          &null_list, &equal_f, &eq_f, &eql_f, &car_f, &cdr_f,
           &identity_f, &prog_string, &env_list,
           (val *) 0);
 
@@ -2513,6 +2541,7 @@ static void obj_init(void)
   eql_f = func_n2(eql);
   identity_f = func_n1(identity);
   car_f = func_n1(car);
+  cdr_f = func_n1(cdr);
   prog_string = string(progname);
 }
 
