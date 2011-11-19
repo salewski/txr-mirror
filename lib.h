@@ -261,7 +261,7 @@ extern val nothrow_k, args_k;
 extern val null_string;
 extern val null_list; /* (nil) */
 
-extern val identity_f, equal_f, eq_f, car_f;
+extern val identity_f, equal_f, eq_f, car_f, cdr_f;
 
 extern const wchar_t *progname;
 extern val prog_string;
@@ -399,6 +399,7 @@ val curry_123_23(val fun3, val arg1);
 val curry_1234_34(val fun3, val arg1, val arg2);
 val chain(val first_fun, ...);
 val andf(val first_fun, ...);
+val orf(val first_fun, ...);
 val swap_12_21(val fun);
 val vector(val alloc);
 val vec_get_fill(val vec);

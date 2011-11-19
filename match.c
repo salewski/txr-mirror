@@ -2899,18 +2899,37 @@ static val v_deffilter(match_files_ctx *c)
     sem_error(specline, lit("deffilter: ~a is not a symbol"),
               first(first_spec), nao);
 
-  if (!all_satisfy(table, andf(func_n1(listp), 
-                               chain(func_n1(length),
-                                     curry_12_1(func_n2(ge), two), nao),
-                               chain(func_n1(rest),
-                                     curry_123_1(func_n3(all_satisfy), 
-                                                 func_n1(stringp), nil), nao),
-                               nao),
-                            nil))
+  if (!all_satisfy(table, func_n1(listp), nil))
+    sem_error(specline, 
+              lit("deffilter arguments must be lists"),
+              nao);
+
+  {
+    val table_evaled = mapcar(curry_12_2(func_n2(mapcar), 
+                                         chain(curry_123_2(func_n3(eval_form),
+                                                           specline, c->bindings),
+                                              cdr_f,
+                                              nao)),
+                              table);
+
+    if (!all_satisfy(table_evaled, andf(func_n1(listp), 
+                                        chain(func_n1(length),
+                                              curry_12_1(func_n2(ge), two), nao),
+                                        chain(func_n1(rest),
+                                              curry_123_1(func_n3(all_satisfy), 
+                                                          func_n1(stringp), 
+                                                          nil),
+                                              nao), 
+                                        nao),
+                                   nil))
     sem_error(specline, 
               lit("deffilter arguments must be lists of at least two strings"),
               nao);
-  register_filter(sym, table);
+
+    register_filter(sym, table_evaled);
+  }
+
+
   /* TODO: warn about replaced filter. */
   return next_spec_k;
 }

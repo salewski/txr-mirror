@@ -3564,9 +3564,10 @@ This directive's syntax is illustrated in this example:
 
 
 The deffilter symbol must be followed by the name of the filter to be defined,
-followed by tuples of strings. Each tuple specifies one or more texts
-which are mapped to a replacement text. For instance, the following specifies
-a telephone keypad mapping from upper case letters to digits.
+followed by tuples of forms which evaluate to strings. Each tuple specifies one
+or more texts which are mapped to a replacement text. For instance, the
+following specifies a telephone keypad mapping from upper case letters to
+digits.  Quasiliterals may be used.
  
   @(deffilter alpha_to_phone ("E" "0") 
                              ("J" "N" "Q" "1")
@@ -3578,6 +3579,8 @@ a telephone keypad mapping from upper case letters to digits.
                              ("B" "K" "U" "7")
                              ("L" "O" "P" "8")
                              ("G" "H" "Z" "9"))
+
+  @(deffilter foo (`@a` `@b`) ("c" `->@d`))
 
 Filtering works using a longest match algorithm. The input is scanned from left
 to right, and the longest piece of text is identified at every character

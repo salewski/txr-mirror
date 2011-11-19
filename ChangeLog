@@ -1,5 +1,23 @@
 2011-11-19  Kaz Kylheku  <kaz@kylheku.com>
 
+	deffilter grows in power: it can take quasistrings.
+
+	* lib.c (cdr_f): New global variable.
+	(funcall1, funcall2, funcall3, funcall4): Fix unterminated
+	arguments in uw_throwf call by using uw_throw instead.
+	(do_or): New static function.
+	(orf): New function.
+	(obj_init): gc_protect and initialize cdr_f.
+
+	* lib.h (cdr_f, orf): Declared.
+
+	* match.c (v_deffilter): Treat the table as forms to be evaluated which
+	must reduce to strings, rather than literal strings.
+
+	* txr.1: Documented.
+
+2011-11-19  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.y (yybadtoken): Use ~a to print bad character rather than #\
 	notation.
 
