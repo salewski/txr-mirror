@@ -90,8 +90,7 @@ static val parsed_spec;
 %type <lineno> '('
 
 %nonassoc LOW /* used for precedence assertion */
-%right IDENT
-%nonassoc '{' '}'
+%right IDENT '{' '}'
 %right ALL SOME NONE MAYBE CASES CHOOSE AND OR END COLLECT UNTIL COLL
 %right OUTPUT REPEAT REP FIRST LAST EMPTY DEFINE
 %right SPACE TEXT NUMBER

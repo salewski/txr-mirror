@@ -1,5 +1,12 @@
 2011-11-18  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.y: Regression IDENT, '{' and '}'
+	must be on the same precedence level and right
+	associative. Without this consective braced
+	variables don't work, etc.
+
+2011-11-18  Kaz Kylheku  <kaz@kylheku.com>
+
 	* gc.c (mark_mem_region): Use the Valgrind API only to mark
 	the type field as accessible, not the whole object that
 	we are checking. Marking the whole object accessible hides
