@@ -952,7 +952,7 @@ void yybadtoken(int tok, val context)
       if (tok == YYEOF || tok == YYEMPTY)
         yyerrorf(lit("unterminated ~a"), context, nao);
       else
-        yyerrorf(lit("misplaced ~s in ~a"), chr(tok), context, nao);
+        yyerrorf(lit("misplaced character ~a in ~a"), chr(tok), context, nao);
     else
       if (tok == YYEOF)
         yyerrorf(lit("unexpected end of input"), nao);

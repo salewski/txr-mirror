@@ -1,3 +1,8 @@
+2011-11-19  Kaz Kylheku  <kaz@kylheku.com>
+
+	* parser.y (yybadtoken): Use ~a to print bad character rather than #\
+	notation.
+
 2011-11-18  Kaz Kylheku  <kaz@kylheku.com>
 
 	* parser.y: Regression IDENT, '{' and '}'
