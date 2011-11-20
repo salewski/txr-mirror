@@ -1,5 +1,14 @@
 2011-11-19  Kaz Kylheku  <kaz@kylheku.com>
 
+	Bug #34866
+
+	* match.c (h_skip): Bugfix. Return the length of the line if
+	the skip is to the end of line, not the value t.
+
+	* txr.1: Clarify that @var@(skip)text is useless.
+
+2011-11-19  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (v_deffilter): Even better. Just evaluate
 	the arguments individually. Now @(deffilter a b ..)
 	is possible where these evaluate to suitable

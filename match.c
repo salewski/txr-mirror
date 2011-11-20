@@ -621,7 +621,7 @@ static val h_skip(match_line_ctx c, match_line_ctx *cout)
   if (!rest(c.specline)) {
     debuglf(elem, 
             lit("skip to end of line ~a:~a"), c.file, c.data_lineno, nao);
-    return cons(c.bindings, t);
+    return cons(c.bindings, length_str(c.dataline));
   }
 
   {
