@@ -591,7 +591,7 @@ the trailing material did not occur.
 
 A variable may be followed by a piece of text, a regular expression directive,
 a function call, a directive, another variable, or nothing (i.e.  occurs at the
-end of a line).
+end of a line). These cases are discussed in detail below.
 
 .SS Variable Followed by Nothing
 
@@ -630,6 +630,12 @@ If the variable is followed by a regular expression, function
 call, or a directive, the extent is determined by scanning the text
 for the first position where a match occurs for the regular expression, call or
 directive. (See Regular Expressions section below, and FUNCTIONS.)
+
+Note that the given variable and the function or directive are considered
+in isolation. This means, for instance, that @var@(skip)text is a degenerate
+form. The @(skip) will be processed alone, without regard for the trailing
+text and so consume the input to the end of the line. The right way to
+express the most probable intent of this is @{var}text.
 
 .SS Consecutive Variables
 
