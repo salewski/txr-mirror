@@ -5,6 +5,8 @@
 	* parser.y (repeat_clause, rep_elem): Allow empty body.
 	(yybadtoken): Handle unexpected newline with different message.
 
+	* RELNOTES: Updated.
+
 2011-11-20  Kaz Kylheku  <kaz@kylheku.com>
 
 	Relaxing :vars in collect/coll a little bit.
