@@ -1,3 +1,18 @@
+2011-11-20  Kaz Kylheku  <kaz@kylheku.com>
+
+	Relaxing :vars in collect/coll a little bit.
+
+	* match.c (h_coll, v_collect): Only throw an error about
+	missing required variables if the collect iteration collected some new
+	variables.  This allows strict collects with :vars to have
+	some cases which explicitly match and skip unwanted material,
+	without binding variables.  Also, print all missing variables in the
+	diagnostic.
+
+	* txr.1: Mention this special exception.
+
+	* RELNOTES: Updated.
+
 2011-11-19  Kaz Kylheku  <kaz@kylheku.com>
 
 	* Makefile (tests/008/soundex.ok): New test case.

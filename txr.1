@@ -2062,6 +2062,8 @@ variables do not propagate.
 Furthermore, for any variable which is not specified with a default value, the
 collect body, whenever it matches successfully, must bind that variable. If it
 neglects to bind the variable, an exception of type query_error is thrown.
+(If a collect body matches successfully, but produces no new bindings, then
+this error is suppressed.)
 
 For any variable which does have a default value, if the collect body neglects
 to bind that variable, the behavior is as if the collect did bind that variable
