@@ -1,5 +1,14 @@
 2011-11-19  Kaz Kylheku  <kaz@kylheku.com>
 
+	* Makefile (tests/008/soundex.ok): New test case.
+	(TXR_ARGS): Specified for new test case.
+
+	* tests/008/soundex.expected: New file.
+
+	* tests/008/soundex.txr: New file.
+
+2011-11-19  Kaz Kylheku  <kaz@kylheku.com>
+
 	* RELNOTES: New file.
 
 2011-11-19  Kaz Kylheku  <kaz@kylheku.com>
