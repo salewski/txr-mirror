@@ -1,5 +1,9 @@
 2011-11-19  Kaz Kylheku  <kaz@kylheku.com>
 
+	* RELNOTES: New file.
+
+2011-11-19  Kaz Kylheku  <kaz@kylheku.com>
+
 	Bug #34866
 
 	* match.c (h_skip): Bugfix. Return the length of the line if
