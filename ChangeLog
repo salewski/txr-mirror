@@ -1,5 +1,14 @@
 2011-11-19  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (v_deffilter): Even better. Just evaluate
+	the arguments individually. Now @(deffilter a b ..)
+	is possible where these evaluate to suitable
+	lists of strings.
+
+	* txr.1: Documented.
+
+2011-11-19  Kaz Kylheku  <kaz@kylheku.com>
+
 	deffilter grows in power: it can take quasistrings.
 
 	* lib.c (cdr_f): New global variable.
