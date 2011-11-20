@@ -740,8 +740,10 @@ static val h_coll(match_line_ctx c, match_line_ctx *cout)
       }
 
       if (new_pos) {
+        list_collect_decl (missing, ptail);
         val strictly_new_bindings = set_diff(new_bindings,
                                              c.bindings, eq_f, nil);
+        val have_new = strictly_new_bindings;
         LOG_MATCH("coll", new_pos);
 
         for (iter = vars; iter; iter = cdr(iter)) {
@@ -750,13 +752,16 @@ static val h_coll(match_line_ctx c, match_line_ctx *cout)
 
           if (!exists) {
             if (dfl == noval_s)
-              sem_error(elem, lit("coll failed to bind ~a"),
-                        var, nao);
+              list_collect (ptail, var);
             else
               strictly_new_bindings = acons(strictly_new_bindings, 
                                             var, dfl);
           }
         }
+
+        if (have_new && missing)
+          sem_error(elem, lit("collect failed to bind ~a"),
+                    missing, nao);
 
         for (iter = strictly_new_bindings; iter; iter = cdr(iter))
         {
@@ -2305,8 +2310,10 @@ static val v_collect(match_files_ctx *c)
       }
 
       if (success) {
+        list_collect_decl (missing, ptail);
         val strictly_new_bindings = set_diff(new_bindings,
                                              c->bindings, eq_f, nil);
+        val have_new = strictly_new_bindings;
 
         debuglf(specline, lit("collect matched ~a:~a"),
                 first(c->files), c->data_lineno, nao);
@@ -2317,13 +2324,16 @@ static val v_collect(match_files_ctx *c)
 
           if (!exists) {
             if (dfl == noval_s) 
-              sem_error(specline, lit("collect failed to bind ~a"),
-                        var, nao);
+              list_collect (ptail, var);
             else
               strictly_new_bindings = acons(strictly_new_bindings, 
                                             var, dfl);
           }
         }
+
+        if (have_new && missing)
+          sem_error(specline, lit("collect failed to bind ~a"),
+                    missing, nao);
 
         for (iter = strictly_new_bindings; iter; iter = cdr(iter))
         {

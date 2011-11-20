@@ -38,6 +38,11 @@ Version 042
   - Stability fix: several long-time uninitialized variable bugs found,
     and some faulty object initialization orders.
 
+  - :vars in @(collect)/@(coll) does not fire an exception about missing
+    required variables if no variable bindings are produced at all,
+    allowing strict collects to have explicit matches for unwanted material
+    without triggering this nuisance error.
+
   Internal
 
   - New infrastructure for matching location info to source forms.
