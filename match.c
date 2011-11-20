@@ -2899,18 +2899,8 @@ static val v_deffilter(match_files_ctx *c)
     sem_error(specline, lit("deffilter: ~a is not a symbol"),
               first(first_spec), nao);
 
-  if (!all_satisfy(table, func_n1(listp), nil))
-    sem_error(specline, 
-              lit("deffilter arguments must be lists"),
-              nao);
-
   {
-    val table_evaled = mapcar(curry_12_2(func_n2(mapcar), 
-                                         chain(curry_123_2(func_n3(eval_form),
-                                                           specline, c->bindings),
-                                              cdr_f,
-                                              nao)),
-                              table);
+    val table_evaled = cdr(eval_form(specline, table, c->bindings));
 
     if (!all_satisfy(table_evaled, andf(func_n1(listp), 
                                         chain(func_n1(length),
