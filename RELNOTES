@@ -1,0 +1,58 @@
+Version 042
+
+  Features
+
+  - Access to environment via @(next :env)
+  - New @(gather) directive for matching out-of-order material.
+
+  - Horizontal functions:
+    - TXR can now parse grammars.
+    - Variable syntax allows capture of text spanned by function calls:
+      e.g. @{var (func x y)}: text spanned by (func x y) goes into var.
+
+  - Horizontal modes for numerous directives such as @(bind), @(local), ...
+
+  - Lisp-style bindings output.
+
+  - Interactive breakpoint/step debugger added.
+    This is an experimental prototype, but already quite useful.
+
+  - Directives following a variable match have searching semantics now,
+    as do function calls. @a@(foo) will scan for a match for @(foo),
+    and the text skipped over is captured by a.
+
+  - New :resolve keyword in @(some) directive allowing conflicting
+    variable bindings to be set in separate clauses and resolved.
+
+  - deffilter is more powerful: arguments are evaluated so filters can
+    be computed by the query.
+
+  Bugs
+
+  - Horizontal @(some) directive hooked in.
+
+  - @(freeform) with no data fails to match instead of throwing strange error.
+
+  - Setting non-local variables from a function works now.
+
+  - Stability fix: several long-time uninitialized variable bugs found,
+    and some faulty object initialization orders.
+
+  Internal
+
+  - New infrastructure for matching location info to source forms.
+    Location info (currently just the line number) is associated with
+    source forms via a weak hash table.
+
+  - Character literals are now Lispy (hash-backslash syntax), based on Scheme.
+
+  - Added quote, unquote and splicing syntax similar to Lisp. Not used
+    for anything yet.
+
+  - Improved Valgrind integration: more accurate, timely detection of
+    uninitialized fields in heap objects.
+
+  Misc.
+
+  - A TXR syntax highlighting file for the Vim editor exists
+    now. See the txr.vim file.
