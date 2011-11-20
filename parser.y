@@ -451,7 +451,7 @@ out_clause : repeat_clause              { $$ = cons($1, nil); }
            ;
 
 repeat_clause : REPEAT newl
-                out_clauses
+                out_clauses_opt
                 repeat_parts_opt
                 END newl                { $$ = repeat_rep_helper(repeat_s, $3, $4);
                                           rl($$, num($1)); }
@@ -508,7 +508,7 @@ o_elem : TEXT                   { $$ = string_own($1);
        | rep_elem               { $$ = $1; }
        ;
 
-rep_elem : REP o_elems
+rep_elem : REP o_elems_opt
            rep_parts_opt END    { $$ = repeat_rep_helper(rep_s, 
                                                          o_elems_transform($2),
                                                          $3);
@@ -951,6 +951,8 @@ void yybadtoken(int tok, val context)
     if (context)
       if (tok == YYEOF || tok == YYEMPTY)
         yyerrorf(lit("unterminated ~a"), context, nao);
+      else if (tok == '\n')
+        yyerrorf(lit("newline in ~a"), context, nao);
       else
         yyerrorf(lit("misplaced character ~a in ~a"), chr(tok), context, nao);
     else
