@@ -1,5 +1,12 @@
 2011-11-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	Bug #34630
+
+	* parser.y (repeat_clause, rep_elem): Allow empty body.
+	(yybadtoken): Handle unexpected newline with different message.
+
+2011-11-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	Relaxing :vars in collect/coll a little bit.
 
 	* match.c (h_coll, v_collect): Only throw an error about
