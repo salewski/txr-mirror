@@ -43,6 +43,8 @@ Version 042
     allowing strict collects to have explicit matches for unwanted material
     without triggering this nuisance error.
 
+  - @(repeat)/@(rep) allow empty body.
+
   Internal
 
   - New infrastructure for matching location info to source forms.
