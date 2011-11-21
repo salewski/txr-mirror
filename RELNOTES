@@ -1,4 +1,7 @@
-Version 042
+				    TXR 042
+				   2011-11-??
+
+
 
   Features
 
@@ -63,3 +66,46 @@ Version 042
 
   - A TXR syntax highlighting file for the Vim editor exists
     now. See the txr.vim file.
+
+
+
+
+				    TXR 041
+				   2011-10-30
+
+
+  Features
+
+  - New :append keyword in @(output) to append instead of overwriting.
+
+  - Variable contents can be treated as input sources using :string
+    and :list keywords in @(next). Variables can be treated as output
+    destinations using :into keyword in @(output).
+
+  - New @(set) directive for destructive assignment to a variable.
+
+  - New filters: :upcase and :downcase.
+
+  - @(bind) can now compare left and right objects through filters.
+
+  - Filters can now be chained into compound filters.
+
+  - Pattern matching functions can be used as filters.
+
+  - Shorthand notation in @(deffilter) when multiple strings map to the
+    same replacement string.
+
+  - @(cat) directive changes syntax.
+
+  - Error handling improvements in parser: no more reams and reams of
+    errors.
+
+
+  Bugs
+
+  - Runaway recursion in @(block) directive, introduced in 040.
+
+  - Fixed bug in matching list variable against text, at the same
+    time clarifying semantics to longest-match.
+
+  - Fixed potential excessive memory use caused by refactoring in 040.
