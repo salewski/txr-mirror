@@ -1,5 +1,15 @@
 2011-11-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 042
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+2011-11-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.y (char_from_name): const on wchar_t *.
 
 2011-11-20  Kaz Kylheku  <kaz@kylheku.com>
