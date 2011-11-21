@@ -866,8 +866,8 @@ val rl(val form, val lineno)
 static wchar_t char_from_name(wchar_t *name)
 {
   static struct {
-    wchar_t *name;
-    wchar_t ch;
+    const wchar_t *name;
+    const wchar_t ch;
   } map[] = {
     { L"nul", 0 },
     { L"alarm", L'\a' },
