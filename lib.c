@@ -733,7 +733,7 @@ val plus(val anum, val bnum)
   cnum b = c_num(bnum);
 
   numeric_assert (a <= 0 || b <= 0 || NUM_MAX - b >= a);
-  numeric_assert (a >= 0 || b >= 0 || NUM_MIN - b >= a);
+  numeric_assert (a >= 0 || b >= 0 || NUM_MIN - b <= a);
 
   return num(a + b);
 }
@@ -745,7 +745,7 @@ val minus(val anum, val bnum)
 
   numeric_assert (b != NUM_MIN || NUM_MIN == -NUM_MAX);
   numeric_assert (a <= 0 || -b <= 0 || NUM_MAX + b >= a);
-  numeric_assert (a >= 0 || -b >= 0 || NUM_MIN + b >= a);
+  numeric_assert (a >= 0 || -b >= 0 || NUM_MIN + b <= a);
 
   return num(a - b);
 }

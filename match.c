@@ -426,7 +426,8 @@ static val search_form(match_line_ctx *c, val needle_form, val from_end)
 
     rlcp(spec, needle_form);
 
-    for (; (from_end && ge(pos, c->pos)) || length_str_ge(c->dataline, pos);
+    for (; (from_end && ge(pos, c->pos)) || 
+           (!from_end && length_str_ge(c->dataline, pos));
          pos = plus(pos, step))
     {
       cons_bind (new_bindings, new_pos,

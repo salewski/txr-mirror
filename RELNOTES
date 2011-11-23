@@ -12,6 +12,11 @@
     - thus @foo bar behaves properly once again; it is not treated
       as foo followed by the regex / +/, ignoring the text bar.
 
+  - Infinite looping bug in negative match with longest-match semantics.
+
+  - Bug in the overflow detection in the lib.c plus and minus function.
+
+
 
                                (current release)
                                     TXR 042
