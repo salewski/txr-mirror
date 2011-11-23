@@ -411,7 +411,7 @@ static val search_form(match_line_ctx *c, val needle_form, val from_end)
 
     rlcp(spec, needle_form);
 
-    for (; (from_end && ge(pos, c->pos)) || length_str_gt(c->dataline, pos);
+    for (; (from_end && ge(pos, c->pos)) || length_str_ge(c->dataline, pos);
          pos = plus(pos, step))
     {
       cons_bind (new_bindings, new_pos,
@@ -1062,7 +1062,7 @@ static val h_eol(match_line_ctx c, match_line_ctx *cout)
 
   if (length_str_le(c.dataline, c.pos)) {
     LOG_MATCH("eol", c.pos);
-    return cons(c.bindings, t);
+    return cons(c.bindings, c.pos);
   }
   LOG_MISMATCH("eol");
   return nil;

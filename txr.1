@@ -637,6 +637,23 @@ form. The @(skip) will be processed alone, without regard for the trailing
 text and so consume the input to the end of the line. The right way to
 express the most probable intent of this is @{var}text.
 
+Another degenerate case is @var@(bind ...), or in general, a variable
+followed by some directive not used for matching text. Watch out for
+the following pitfall:
+
+ @a @b@(bind have_ab "y")
+
+The intent here is that the variable b captures everything after the space to
+the end of the line, and then the variable have_ab is set to "y". But since
+@(bind) always succeeds, b captures an empty string, and then the whole line
+fails if there is any material after the space. The right way to do this is:
+
+ @a @b@(eol)@(bind have_ab "y")
+
+That is to say, match an explicit @(eol) after the variable. This will
+search for the end of the lne and capture the spanning text into b, as
+intended.  The bind then happens afterward.
+
 .SS Consecutive Variables
 
 If an unbound variable specified a fixed-width match or a regular expression,
