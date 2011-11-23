@@ -1,5 +1,12 @@
 2011-11-23  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.c (remove_hash_bang_line): Recognize multiple
+	syntax possibilities. A hash bang could be buried in a (text ...)
+	compound, or it could just be a string (thanks to the text form
+	optimization).
+
+2011-11-23  Kaz Kylheku  <kaz@kylheku.com>
+
 	Optimization: if all the elements of (text ...) are
 	strings, then replace the (text ...) by the catenation
 	of those strings.
