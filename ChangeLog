@@ -1,5 +1,9 @@
 2011-11-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	* configure: Fix environ test case for C++.
+
+2011-11-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (search_form): Bugfix: we must search to one character
 	position after the end of the line, otherwise we can never match
 	@(eol).
