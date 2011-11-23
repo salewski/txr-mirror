@@ -1,14 +1,21 @@
-				(future release)
-				    TXR 043
-				   201?-??-??
+                                (future release)
+                                    TXR 043
+                                   201?-??-??
 
   Bugs
 
   - Buggy @(eol) directive fixed.
 
-			       (current release)
-				    TXR 042
-				   2011-11-20
+  - Semantics change for text and regular expressions in "negative match":
+    - a variable is considered to be followed by a run of text which
+      consists of any mixture of regexes and literal text
+    - thus @foo bar behaves properly once again; it is not treated
+      as foo followed by the regex / +/, ignoring the text bar.
+
+
+                               (current release)
+                                    TXR 042
+                                   2011-11-20
 
 
 
@@ -79,8 +86,8 @@
 
 
 
-				    TXR 041
-				   2011-10-30
+                                    TXR 041
+                                   2011-10-30
 
 
   Features

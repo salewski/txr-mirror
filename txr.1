@@ -604,13 +604,21 @@ current position in the data, to the end of the line.  Example:
 
 .SS Variable Followed by Text
 
-If the variable is followed by text (all non-directive material extending to
-the end of the line, or to the start of another directive), then the extent of
-the negative match is determined by searching for the first occurrence of that text
-within the line, starting at the current position. The variable matches
-everything between the current position and the matching position (not
-including the matching position). Any whitespace which follows the
-variable (and is not enclosed inside braces that surround the variable
+For the purposes of determining the negative match, text is defined as a
+sequence of literal text and regular expressions, not divided by a directive.
+So for instance in this example:
+
+  @a:@/foo/bcd e@(maybe)f@(end)
+
+the variable @a is considered to be followed by ":@/foo/bcd e".
+
+If a variable is followed by text, then the extent of the negative match is
+determined by searching for the first occurrence of that text within the line,
+starting at the current position. 
+
+The variable matches everything between the current position and the matching
+position (not including the matching position). Any whitespace which follows
+the variable (and is not enclosed inside braces that surround the variable
 name) is part of the text. For example:
 
   pattern:      "a b @FOO e f"
@@ -624,12 +632,12 @@ is " e f". This is found within the data "c d e f" at position 3
 (counting from 0).  So positions 0-2 ("c d") constitute the matching
 text which is bound to FOO.
 
-.SS Variable Followed by a Regular Expression, Function Call or Directive
+.SS Variable Followed by a Function Call or Directive
 
-If the variable is followed by a regular expression, function
-call, or a directive, the extent is determined by scanning the text
-for the first position where a match occurs for the regular expression, call or
-directive. (See Regular Expressions section below, and FUNCTIONS.)
+If the variable is followed by a function call, or a directive, the extent is
+determined by scanning the text for the first position where a match occurs for
+the regular expression, call or directive. (For a description of functions,
+see FUNCTIONS.)
 
 Note that the given variable and the function or directive are considered
 in isolation. This means, for instance, that @var@(skip)text is a degenerate
@@ -695,12 +703,18 @@ nested list, then each character string in the list is tried in turn to produce
 a match. The first match is taken.
 
 An unbound variable may be followed by another unbound variable which specifies
-a regular expression match. This is a special case called a "double variable
-match".  What happens is that the text is searched using the regular
-expression.  If the search fails, than neither variable is bound: it is a
-matching failure.  If the search succeeds, than the first variable is bound to
-the text which is skipped by the regular expression search.  The second
-variable is bound to the text matched by the regular expression.
+a regular expression or function call match. This is a special case called a
+"double variable match".  What happens is that the text is searched using the
+regular expression or function.  If the search fails, than neither variable is
+bound: it is a matching failure.  If the search succeeds, than the first
+variable is bound to the text which is skipped by the search.  The second
+variable is bound to the text matched by the regular expression or function.
+Examples:
+
+  pattern:      "@foo@{bar /abc/}"
+  data:         "xyz@#abc"
+  result:       foo="xyz@#", BAR="abc"
+
 
 .SS Consecutive Variables Via Directive
 
