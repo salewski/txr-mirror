@@ -54,7 +54,7 @@ int opt_arraydims = 1;
 val decline_k, next_spec_k, repeat_spec_k;
 val mingap_k, maxgap_k, gap_k, mintimes_k, maxtimes_k, times_k;
 val lines_k, chars_k;
-val choose_s, gather_s;
+val text_s, choose_s, gather_s;
 val longest_k, shortest_k, greedy_k;
 val vars_k, resolve_k;
 val append_k, into_k, var_k, list_k, string_k, env_k;
@@ -399,6 +399,21 @@ typedef val (*h_match_func)(match_line_ctx c, match_line_ctx *cout);
 #define elem_bind(elem_var, directive_var, specline)    \
   val elem_var = first(specline);                       \
   val directive_var = first(elem_var)
+
+static val h_text(match_line_ctx c, match_line_ctx *cout)
+{
+  val elem = first(c.specline);
+  val texts = rest(elem);
+  val new_pos = cdr(match_line(ml_specline(c, texts)));
+
+  if (new_pos) {
+    c.pos = new_pos;
+    *cout = c;
+    return next_spec_k;
+  }
+
+  return nil;
+}
 
 static val search_form(match_line_ctx *c, val needle_form, val from_end)
 {
@@ -3250,6 +3265,7 @@ static void syms_init(void)
   times_k = intern(lit("times"), keyword_package);
   lines_k = intern(lit("lines"), keyword_package);
   chars_k = intern(lit("chars"), keyword_package);
+  text_s = intern(lit("text"), user_package);
   choose_s = intern(lit("choose"), user_package);
   gather_s = intern(lit("gather"), user_package);
   longest_k = intern(lit("longest"), keyword_package);
@@ -3306,6 +3322,7 @@ static void dir_tables_init(void)
   sethash(v_directive_table, filter_s, cptr((mem_t *) v_filter));
   sethash(v_directive_table, eof_s, cptr((mem_t *) v_eof));
 
+  sethash(h_directive_table, text_s, cptr((mem_t *) h_text));
   sethash(h_directive_table, var_s, cptr((mem_t *) h_var));
   sethash(h_directive_table, skip_s, cptr((mem_t *) h_skip));
   sethash(h_directive_table, coll_s, cptr((mem_t *) h_coll));

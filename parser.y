@@ -79,7 +79,7 @@ static val parsed_spec;
 %type <val> clause_parts additional_parts
 %type <val> output_clause define_clause try_clause catch_clauses_opt
 %type <val> line elems_opt elems clause_parts_h additional_parts_h
-%type <val> elem var var_op meta_expr
+%type <val> text texts elem var var_op meta_expr
 %type <val> list exprs exprs_opt expr out_clauses out_clauses_opt out_clause
 %type <val> repeat_clause repeat_parts_opt o_line
 %type <val> o_elems_opt o_elems_opt2 o_elems o_elem o_var rep_elem rep_parts_opt
@@ -267,7 +267,8 @@ elems : elem                    { $$ = cons($1, nil);
                                   yyerror("rep outside of output"); }
       ;
 
-elem : TEXT                     { $$ = rl(string_own($1), num(lineno)); }
+
+text : TEXT                     { $$ = rl(string_own($1), num(lineno)); }
      | SPACE                    { if ($1[0] == ' ' && $1[1] == 0)
                                   { val spaces = list(oneplus_s, 
                                                       chr(' '), nao);
@@ -276,11 +277,18 @@ elem : TEXT                     { $$ = rl(string_own($1), num(lineno)); }
                                     free($1); }
                                   else
                                   { $$ = rl(string_own($1), num(lineno)); }}
-     | var                      { $$ = rl($1, num(lineno)); }
-     | list                     { $$ = $1; }
      | regex                    { $$ = cons(regex_compile(rest($1)),
                                             rest($1));
                                   rl($$, num(lineno)); }
+     ;
+
+texts : text %prec LOW          { $$ = rl(cons($1, nil), $1); }
+      | text texts              { $$ = rl(cons($1, $2), $2); }
+      ;
+
+elem : texts                    { $$ = rl(cons(text_s, $1), $1); }
+     | var                      { $$ = rl($1, num(lineno)); }
+     | list                     { $$ = $1; }
      | COLL exprs_opt ')' elems END     { $$ = list(coll_s, $4, nil, $2, nao);
                                           rl($$, num($1)); }
      | COLL exprs_opt ')' elems

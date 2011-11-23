@@ -1,3 +1,35 @@
+2011-11-23  Kaz Kylheku  <kaz@kylheku.com>
+
+	Semantics change. If a variable is followed by a mixture
+	of text and regular expressions, that whole mixture is
+	considered to follow the variable and used for matching.
+
+	The earlier semantics change whereby a single unescaped
+	space denotes the regular expression / +/ broke the
+	simple case   @a word.   It caused the @a to be followed
+	not by the text " word"  but by just the regular expression
+	element.
+
+	With this change @a word means that a is followed by 
+	the regex / +/ and "word".
+
+	* match.c (text_s): New symbol variable.
+	(h_text): New function.
+	(syms_init): Initialize new symbol variable.
+	(dir_tables_init): Hook h_text into horizontal directives table.
+
+	* match.h (text_s): Declared.
+
+	* parser.y (text, texts): New nonterminals.
+	(elem): TEXT, SPACE and regex are now handled under texts
+	grammar production. All texts are run together and produce
+	an item which looks like (text items ...).
+
+	* txr.1, RELNOTES: Updated.
+
+	* txr.c (remove_hash_bang_line): Updated to find #! buried
+	in (text ...) syntax.
+
 2011-11-22  Kaz Kylheku  <kaz@kylheku.com>
 
 	* configure: Fix environ test case for C++.
