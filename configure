@@ -881,6 +881,8 @@ fi
 printf "Checking whether we have environ ... "
 
 cat > conftest.c <<!
+#include <stdio.h>
+
 int main(void)
 {
   extern char **environ;
