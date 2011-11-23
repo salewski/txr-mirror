@@ -1,3 +1,15 @@
+2011-11-20  Kaz Kylheku  <kaz@kylheku.com>
+
+	Version 043
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOES: Updated.
+
 2011-11-23  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.c (remove_hash_bang_line): Recognize multiple
