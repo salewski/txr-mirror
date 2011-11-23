@@ -1,3 +1,14 @@
+2011-11-22  Kaz Kylheku  <kaz@kylheku.com>
+
+	* match.c (search_form): Bugfix: we must search to one character
+	position after the end of the line, otherwise we can never match
+	@(eol).
+	(h_eol): Bugfix: do not return t, but the line length.
+
+	* txr.1: Warn users about @var@(bind ...) pitfall.
+
+	* RELNOTES: Updated.
+
 2011-11-20  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 042
