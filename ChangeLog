@@ -1,5 +1,14 @@
 2011-11-23  Kaz Kylheku  <kaz@kylheku.com>
 
+	Optimization: if all the elements of (text ...) are
+	strings, then replace the (text ...) by the catenation
+	of those strings.
+
+	* parser.y (optimize_text): New function.
+	(elem): Use optimize_text.
+
+2011-11-23  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (plus, minus): Fixed wrong assertion which would incorrectly
 	fire for inputs that do not overflow.
 

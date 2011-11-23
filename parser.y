@@ -47,6 +47,7 @@ static val repeat_rep_helper(val sym, val main, val parts);
 static val o_elems_transform(val output_form);
 static val define_transform(val define_form);
 static val lit_char_helper(val litchars);
+static val optimize_text(val text_form);
 static wchar_t char_from_name(wchar_t *name);
 
 static val parsed_spec;
@@ -286,7 +287,8 @@ texts : text %prec LOW          { $$ = rl(cons($1, nil), $1); }
       | text texts              { $$ = rl(cons($1, $2), $2); }
       ;
 
-elem : texts                    { $$ = rl(cons(text_s, $1), $1); }
+elem : texts                    { $$ = rl(cons(text_s, $1), $1);
+                                  $$ = optimize_text($$); }
      | var                      { $$ = rl($1, num(lineno)); }
      | list                     { $$ = $1; }
      | COLL exprs_opt ')' elems END     { $$ = list(coll_s, $4, nil, $2, nao);
@@ -862,6 +864,13 @@ static val lit_char_helper(val litchars)
     ret = nil;
   }
   return ret;
+}
+
+static val optimize_text(val text_form)
+{
+  if (all_satisfy(rest(text_form), func_n1(stringp), nil))
+    return cat_str(rest(text_form), lit(""));
+  return text_form;
 }
 
 val rl(val form, val lineno)
