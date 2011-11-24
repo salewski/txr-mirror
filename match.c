@@ -3212,6 +3212,7 @@ val match_funcall(val name, val arg, val other_args)
                        nao), nil);
   match_files_ctx c = mf_all(spec, nil, bindings, nil, num(0));
   (void) first_spec;
+  rlcp(car(spec), specline);
 
   val ret = v_fun(&c);
 
