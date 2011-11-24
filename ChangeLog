@@ -1,5 +1,10 @@
 2011-11-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (match_funcall): Set source location info for
+	generated function call.
+
+2011-11-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.y (texts, elem): Fixed incorrect use of rl rather
 	than rlcp.  Added forgotten rlcp on result of optimize_text.
 
