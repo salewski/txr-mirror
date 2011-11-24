@@ -1,3 +1,12 @@
+                                    TXR 044
+                                   201?-??-??
+
+  Bugs
+
+  - Fixed regression in source location tracking (line numbers
+    shown in debugger and trace output).
+
+
                                     TXR 043
                                    2011-11-23
 
