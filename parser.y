@@ -283,12 +283,12 @@ text : TEXT                     { $$ = rl(string_own($1), num(lineno)); }
                                   rl($$, num(lineno)); }
      ;
 
-texts : text %prec LOW          { $$ = rl(cons($1, nil), $1); }
-      | text texts              { $$ = rl(cons($1, $2), $2); }
+texts : text %prec LOW          { $$ = rlcp(cons($1, nil), $1); }
+      | text texts              { $$ = rlcp(cons($1, $2), $2); }
       ;
 
-elem : texts                    { $$ = rl(cons(text_s, $1), $1);
-                                  $$ = optimize_text($$); }
+elem : texts                    { $$ = rlcp(cons(text_s, $1), $1);
+                                  $$ = rlcp(optimize_text($$), $$); }
      | var                      { $$ = rl($1, num(lineno)); }
      | list                     { $$ = $1; }
      | COLL exprs_opt ')' elems END     { $$ = list(coll_s, $4, nil, $2, nao);
