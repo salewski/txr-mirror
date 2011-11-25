@@ -677,6 +677,20 @@ val getplist(val list, val key)
   return nil;
 }
 
+val getplist_f(val list, val key, val *found)
+{
+  for (; list; list = cdr(cdr(list))) {
+    val ind = first(list);
+    if (eq(ind, key)) {
+      *found = t;
+      return second(list);
+    }
+  }
+
+  *found = nil;
+  return nil;
+}
+
 val proper_plist_to_alist(val list)
 {
   list_collect_decl (out, tail);

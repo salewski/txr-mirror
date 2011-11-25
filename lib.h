@@ -315,6 +315,7 @@ val listp(val obj);
 val proper_listp(val obj);
 val length(val list);
 val getplist(val list, val key);
+val getplist_f(val list, val key, val *found);
 val proper_plist_to_alist(val list);
 val improper_plist_to_alist(val list, val boolean_keys);
 val num(cnum val);
