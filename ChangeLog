@@ -1,5 +1,20 @@
 2011-11-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (getplist_f): New function.
+
+	* lib.h (getplist_f): Declared.
+
+	* match.c (v_collect, h_coll): Use getplist_f to distinguish
+	the case that :vars is explicitly specified as (). In this
+	case, no bindings escape from the collect.
+
+	* tests/008/soundex.txr: This test case broke due to using
+	:vars () and yet counting on the variable to exist.
+
+	* RELNOTES: Updated.
+
+2011-11-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (match_funcall): Set source location info for
 	generated function call.
 

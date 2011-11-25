@@ -56,7 +56,7 @@
 @###
 @# process arguments and list soundex codes
 @###
-@(collect :vars ())
+@(collect :vars (input))
 @input
 @  (output :filter (:fun soundex))
 @input
