@@ -705,7 +705,8 @@ static val h_coll(match_line_ctx c, match_line_ctx *cout)
   val mintimes = getplist(args, mintimes_k);
   val maxtimes = getplist(args, maxtimes_k);
   val chars = getplist(args, chars_k);
-  val vars = getplist(args, vars_k);
+  val have_vars;
+  val vars = getplist_f(args, vars_k, &have_vars);
   cnum cmax = nump(gap) ? c_num(gap) : (nump(max) ? c_num(max) : 0);
   cnum cmin = nump(gap) ? c_num(gap) : (nump(min) ? c_num(min) : 0);
   cnum mincounter = cmin, maxcounter = 0;
@@ -784,7 +785,7 @@ static val h_coll(match_line_ctx c, match_line_ctx *cout)
           val binding = car(iter);
           val vars_binding = assoc(vars, car(binding));
 
-          if (!vars || vars_binding) {
+          if (!have_vars || vars_binding) {
             val existing = assoc(bindings_coll, car(binding));
             bindings_coll = acons_new(bindings_coll, car(binding),
                                       cons(cdr(binding), cdr(existing)));
