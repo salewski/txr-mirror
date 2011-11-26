@@ -44,6 +44,7 @@
 #include "filter.h"
 #include "hash.h"
 #include "debug.h"
+#include "eval.h"
 #include "match.h"
 
 int output_produced;
@@ -224,11 +225,6 @@ static val weird_merge(val left, val right)
   }
 
   return append2(left, right);
-}
-
-static val bindable(val obj)
-{
-  return (obj && symbolp(obj) && obj != t && !keywordp(obj)) ? t : nil;
 }
 
 static val dest_set(val spec, val bindings, val pattern, val value)
@@ -501,7 +497,7 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
     }
 
     LOG_MATCH("var spanning form", new_pos);
-    c.bindings = acons(new_bindings, sym, sub_str(c.dataline, c.pos, new_pos));
+    c.bindings = acons(sym, sub_str(c.dataline, c.pos, new_pos), new_bindings);
     c.pos = new_pos;
     /* This may have another variable attached */
     if (pat) {
@@ -518,7 +514,7 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
       return nil;
     }
     LOG_MATCH("count based var", past);
-    c.bindings = acons(c.bindings, sym, trim_str(sub_str(c.dataline, c.pos, past)));
+    c.bindings = acons(sym, trim_str(sub_str(c.dataline, c.pos, past)), c.bindings);
     c.pos = past;
     /* This may have another variable attached */
     if (pat) {
@@ -529,7 +525,7 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
     sem_error(elem, lit("invalid modifier ~s on variable ~s"),
               modifier, sym, nao);
   } else if (pat == nil) { /* no modifier, no elem -> to end of line */
-    c.bindings = acons(c.bindings, sym, sub_str(c.dataline, c.pos, nil));
+    c.bindings = acons(sym, sub_str(c.dataline, c.pos, nil), c.bindings);
     c.pos = length_str(c.dataline);
   } else if (type(pat) == STR) {
     val find = search_str(c.dataline, pat, c.pos, modifier);
@@ -538,7 +534,7 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
       return nil;
     }
     LOG_MATCH("var delimiting string", find);
-    c.bindings = acons(c.bindings, sym, sub_str(c.dataline, c.pos, find));
+    c.bindings = acons(sym, sub_str(c.dataline, c.pos, find), c.bindings);
     c.pos = plus(find, length_str(pat));
   } else if (consp(pat) && first(pat) != var_s) {
     val find = search_form(&c, pat, modifier);
@@ -549,7 +545,7 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
       return nil;
     }
     LOG_MATCH("var delimiting form", fpos);
-    c.bindings = acons(c.bindings, sym, sub_str(c.dataline, c.pos, fpos));
+    c.bindings = acons(sym, sub_str(c.dataline, c.pos, fpos), c.bindings);
     c.pos = plus(fpos, flen);
   } else if (consp(pat)) {
     /* Unbound var followed by var: the following one must either
@@ -577,10 +573,10 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
 
       /* Text from here to start of regex match goes to this
          variable. */
-      c.bindings = acons(c.bindings, sym, sub_str(c.dataline, c.pos, fpos));
+      c.bindings = acons(sym, sub_str(c.dataline, c.pos, fpos), c.bindings);
       /* Text from start of regex match to end goes to the
          second variable */
-      c.bindings = acons(c.bindings, second_sym, sub_str(c.dataline, fpos, plus(fpos, flen)));
+      c.bindings = acons(second_sym, sub_str(c.dataline, fpos, plus(fpos, flen)), c.bindings);
       LOG_MATCH("double var regex (first var)", fpos);
       c.pos = fpos;
       LOG_MATCH("double var regex (second var)", plus(fpos, flen));
@@ -610,7 +606,7 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
       LOG_MISMATCH("string");
       return nil;
     }
-    c.bindings = acons(c.bindings, sym, sub_str(c.dataline, c.pos, find));
+    c.bindings = acons(sym, sub_str(c.dataline, c.pos, find), c.bindings);
     c.pos = plus(find, len);
   } else {
     sem_error(elem, lit("variable followed by invalid element"), nao);
@@ -771,8 +767,7 @@ static val h_coll(match_line_ctx c, match_line_ctx *cout)
             if (dfl == noval_s)
               list_collect (ptail, var);
             else
-              strictly_new_bindings = acons(strictly_new_bindings, 
-                                            var, dfl);
+              strictly_new_bindings = acons(var, dfl, strictly_new_bindings);
           }
         }
 
@@ -787,8 +782,9 @@ static val h_coll(match_line_ctx c, match_line_ctx *cout)
 
           if (!have_vars || vars_binding) {
             val existing = assoc(bindings_coll, car(binding));
-            bindings_coll = acons_new(bindings_coll, car(binding),
-                                      cons(cdr(binding), cdr(existing)));
+            bindings_coll = acons_new(car(binding), 
+                                      cons(cdr(binding), cdr(existing)),
+                                      bindings_coll);
           }
         }
       }
@@ -844,7 +840,7 @@ next_coll:
       val sym = car(car(iter));
       val exists = assoc(c.bindings, sym);
       if (!exists)
-        c.bindings = acons(c.bindings, sym, nil);
+        c.bindings = acons(sym, nil, c.bindings);
     }
   }
 
@@ -900,7 +896,7 @@ static val h_parallel(match_line_ctx c, match_line_ctx *cout)
           val exists = assoc(new_bindings, ubvar);
 
           if (exists)
-            resolve_bindings = acons_new(resolve_bindings, ubvar, cdr(exists));
+            resolve_bindings = acons_new(ubvar, cdr(exists), resolve_bindings);
         }
 
         new_bindings = alist_remove(new_bindings, resolve_ub_vars);
@@ -1010,16 +1006,14 @@ static val h_fun(match_line_ctx c, match_line_ctx *cout)
       if (arg && bindable(arg)) {
         val val = assoc(c.bindings, arg);
         if (val) {
-          bindings_cp = acons_new(bindings_cp,
-                                  param,
-                                  cdr(val));
+          bindings_cp = acons_new(param, cdr(val), bindings_cp);
         } else {
           bindings_cp = alist_nremove1(bindings_cp, param);
           ub_p_a_pairs = cons(cons(param, arg), ub_p_a_pairs);
         }
       } else {
         val val = eval_form(elem, arg, c.bindings);
-        bindings_cp = acons_new(bindings_cp, param, cdr(val));
+        bindings_cp = acons_new(param, cdr(val), bindings_cp);
       }
     }
 
@@ -1281,12 +1275,17 @@ static val subst_vars(val spec, val bindings, val filter)
         val pair = assoc(bindings, sym);
 
         if (pair) {
+          val str = cdr(pair);
+
+          if (!stringp(str) && !listp(str))
+            str = format(nil, lit("~a"), str, nao);
+
           if (pat)
-            spec = cons(filter_string(filter, cdr(pair)), cons(pat, rest(spec)));
+            spec = cons(filter_string(filter, str), cons(pat, rest(spec)));
           else if (modifiers)
-            spec = cons(format_field(cdr(pair), modifiers, filter), rest(spec));
+            spec = cons(format_field(str, modifiers, filter), rest(spec));
           else
-            spec = cons(filter_string(filter, cdr(pair)), rest(spec));
+            spec = cons(filter_string(filter, str), rest(spec));
           continue;
         }
         uw_throwf(query_error_s, lit("unbound variable ~a"),
@@ -1330,8 +1329,7 @@ static val eval_form(val spec, val form, val bindings)
         sem_error(spec, lit("metavariable @~a syntax cannot be used here"),
                   second(form), nao);
       } else if (first(form) == expr_s) {
-        sem_error(spec, lit("the @~s syntax cannot be used here"),
-                  rest(form), nao);
+        ret = cons(t, eval(rest(form), make_env(bindings, nil, nil), form));
       } else {
         val subforms = mapcar(curry_123_2(func_n3(eval_form), 
                                           spec, bindings), form);
@@ -2076,7 +2074,7 @@ static val v_parallel(match_files_ctx *c)
             val exists = assoc(new_bindings, ubvar);
 
             if (exists)
-              resolve_bindings = acons_new(resolve_bindings, ubvar, cdr(exists));
+              resolve_bindings = acons_new(ubvar, cdr(exists), resolve_bindings);
           }
 
           new_bindings = alist_remove(new_bindings, resolve_ub_vars);
@@ -2229,7 +2227,7 @@ static val v_gather(match_files_ctx *c)
           debuglf(specline, lit("gather failed to match some required vars"), nao);
           return nil;
         } else {
-          c->bindings = acons(c->bindings, var, dfl_val);
+          c->bindings = acons(var, dfl_val, c->bindings);
         }
       }
     }
@@ -2344,8 +2342,7 @@ static val v_collect(match_files_ctx *c)
             if (dfl == noval_s) 
               list_collect (ptail, var);
             else
-              strictly_new_bindings = acons(strictly_new_bindings, 
-                                            var, dfl);
+              strictly_new_bindings = acons(var, dfl, strictly_new_bindings);
           }
         }
 
@@ -2361,8 +2358,7 @@ static val v_collect(match_files_ctx *c)
           if (!have_vars || vars_binding) {
             val existing = assoc(bindings_coll, car(binding));
 
-            bindings_coll = acons_new(bindings_coll, car(binding),
-                                      cons(cdr(binding), cdr(existing)));
+            bindings_coll = acons_new(car(binding), cons(cdr(binding), cdr(existing)), bindings_coll);
           }
         }
       }
@@ -2442,7 +2438,7 @@ next_collect:
       val sym = car(car(iter));
       val exists = assoc(c->bindings, sym);
       if (!exists)
-        c->bindings = acons(c->bindings, sym, nil);
+        c->bindings = acons(sym, nil, c->bindings);
     }
   }
 
@@ -2503,7 +2499,7 @@ static val v_merge(match_files_ctx *c)
     }
   }
 
-  c->bindings = acons_new(c->bindings, target, merged);
+  c->bindings = acons_new(target, merged, c->bindings);
 
   return next_spec_k;
 }
@@ -2685,7 +2681,7 @@ static val v_output(match_files_ctx *c)
             *cdr_l(existing) = list_out;
           }
         } else {
-          c->bindings = acons(c->bindings, into_var, list_out);
+          c->bindings = acons(into_var, list_out, c->bindings);
         }
       }
       return next_spec_k;
@@ -3021,16 +3017,14 @@ static val v_fun(match_files_ctx *c)
       if (arg && bindable(arg)) {
         val val = assoc(c->bindings, arg);
         if (val) {
-          bindings_cp = acons_new(bindings_cp,
-                                  param,
-                                  cdr(val));
+          bindings_cp = acons_new(param, cdr(val), bindings_cp);
         } else {
           bindings_cp = alist_nremove1(bindings_cp, param);
           ub_p_a_pairs = cons(cons(param, arg), ub_p_a_pairs);
         }
       } else {
         val val = eval_form(specline, arg, c->bindings);
-        bindings_cp = acons_new(bindings_cp, param, cdr(val));
+        bindings_cp = acons_new(param, cdr(val), bindings_cp);
       }
     }
 
@@ -3090,6 +3084,23 @@ static val v_fun(match_files_ctx *c)
   }
 
   return decline_k;
+}
+
+static val v_do(match_files_ctx *c)
+{
+  spec_bind (specline, first_spec, c->spec);
+  val args = rest(first_spec);
+  (void) eval_progn(args, make_env(c->bindings, nil, nil), specline);
+  return next_spec_k;
+}
+
+static val h_do(match_line_ctx c, match_line_ctx *cout)
+{
+  val elem = first(c.specline);
+  val args = rest(elem);
+  (void) eval_progn(args, make_env(c.bindings, nil, nil), elem);
+  *cout = c;
+  return next_spec_k;
 }
 
 static val match_files(match_files_ctx c)
@@ -3325,6 +3336,8 @@ static void dir_tables_init(void)
   sethash(v_directive_table, deffilter_s, cptr((mem_t *) v_deffilter));
   sethash(v_directive_table, filter_s, cptr((mem_t *) v_filter));
   sethash(v_directive_table, eof_s, cptr((mem_t *) v_eof));
+  sethash(v_directive_table, intern(lit("do"), user_package), 
+          cptr((mem_t *) v_do));
 
   sethash(h_directive_table, text_s, cptr((mem_t *) h_text));
   sethash(h_directive_table, var_s, cptr((mem_t *) h_var));
@@ -3347,6 +3360,8 @@ static void dir_tables_init(void)
   sethash(h_directive_table, trailer_s, cptr((mem_t *) h_trailer));
   sethash(h_directive_table, define_s, cptr((mem_t *) h_define));
   sethash(h_directive_table, eol_s, cptr((mem_t *) h_eol));
+  sethash(h_directive_table, intern(lit("do"), user_package), 
+          cptr((mem_t *) h_do));
 }
 
 void match_init(void)

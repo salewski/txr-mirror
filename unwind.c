@@ -149,7 +149,7 @@ val uw_get_func(val sym)
 val uw_set_func(val sym, val value)
 {
   uw_frame_t *env = uw_find_env();
-  env->ev.func_bindings = acons_new(env->ev.func_bindings, sym, value);
+  env->ev.func_bindings = acons_new(sym, value, env->ev.func_bindings);
   return value;
 }
 

@@ -46,6 +46,7 @@
 #include "stream.h"
 #include "utf8.h"
 #include "filter.h"
+#include "eval.h"
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
@@ -56,6 +57,7 @@ val system_package, keyword_package, user_package;
 
 val null, t, cons_s, str_s, chr_s, num_s, sym_s, pkg_s, fun_s, vec_s;
 val stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s, cptr_s;
+val env_s;
 val var_s, expr_s, regex_s, chset_s, set_s, cset_s, wild_s, oneplus_s;
 val nongreedy_s, compiled_regex_s;
 val quote_s, qquote_s, unquote_s, splice_s;
@@ -105,6 +107,7 @@ static val code2type(int code)
   case LCONS: return lcons_s;
   case LSTR: return lstr_s;
   case COBJ: return cobj_s;
+  case ENV: return env_s;
   }
   return nil;
 }
@@ -502,6 +505,7 @@ val equal(val left, val right)
     return nil;
   case SYM:
   case PKG:
+  case ENV:
     return right == left ? t : nil;
   case FUN:
     if (type(right) == FUN &&
@@ -752,6 +756,11 @@ val plus(val anum, val bnum)
   return num(a + b);
 }
 
+val plusv(val nlist)
+{
+  return reduce_left(func_n2(plus), nlist, num(0), nil);
+}
+
 val minus(val anum, val bnum)
 {
   cnum a = c_num(anum);
@@ -768,6 +777,76 @@ val neg(val anum)
 {
   cnum n = c_num(anum);
   return num(-n);
+}
+
+val minusv(val minuend, val nlist)
+{
+  if (nlist)
+    return reduce_left(func_n2(minus), nlist, minuend, nil);
+  return neg(minuend);
+}
+
+val mul(val anum, val bnum)
+{
+  cnum a = c_num(anum);
+  cnum b = c_num(bnum);
+
+#ifdef HAVE_LONGLONG_T
+  if (sizeof (longlong_t) >= 2 * sizeof (cnum)) {
+    longlong_t product = a * b;
+    numeric_assert (product >= NUM_MIN && product <= NUM_MAX);
+    return num(product);
+  } else
+#endif
+  {
+    if (a > 0){
+      if (b > 0) {
+        numeric_assert (a <= (NUM_MAX / b));
+      } else {
+        numeric_assert (b >= (NUM_MIN / a));
+      }
+    } else {
+      if (b > 0) {
+        numeric_assert (a >= (NUM_MIN / b));
+      } else {
+        numeric_assert ((a == 0) || (b >= (NUM_MIN / a)));
+      }
+    }
+     
+    return num(a * b);
+  }
+}
+
+val mulv(val nlist)
+{
+  return reduce_left(func_n2(mul), nlist, num(1), nil);
+}
+
+val trunc(val anum, val bnum)
+{
+  cnum a = c_num(anum);
+  cnum b = c_num(bnum);
+
+  numeric_assert (b != 0);
+
+  {
+    cnum result = a / b;
+    numeric_assert (result <= NUM_MAX);
+    return num(result);
+  } 
+}
+
+val mod(val anum, val bnum)
+{
+  cnum a = c_num(anum);
+  cnum b = c_num(bnum);
+
+  numeric_assert (b != 0);
+
+  {
+    cnum result = a % b;
+    return num(result);
+  } 
 }
 
 val zerop(val num)
@@ -795,6 +874,62 @@ val le(val anum, val bnum)
   return c_num(anum) <= c_num(bnum) ? t : nil;
 }
 
+val gtv(val first, val rest)
+{
+  val iter;
+
+  for (iter = rest; iter; iter = cdr(iter)) {
+    val elem = car(iter);
+    if (!gt(first, elem))
+      return nil;
+    first = elem;
+  }
+
+  return t;
+}
+
+val ltv(val first, val rest)
+{
+  val iter;
+
+  for (iter = rest; iter; iter = cdr(iter)) {
+    val elem = car(iter);
+    if (!lt(first, elem))
+      return nil;
+    first = elem;
+  }
+
+  return t;
+}
+
+val gev(val first, val rest)
+{
+  val iter;
+
+  for (iter = rest; iter; iter = cdr(iter)) {
+    val elem = car(iter);
+    if (!ge(first, elem))
+      return nil;
+    first = elem;
+  }
+
+  return t;
+}
+
+val lev(val first, val rest)
+{
+  val iter;
+
+  for (iter = rest; iter; iter = cdr(iter)) {
+    val elem = car(iter);
+    if (!le(first, elem))
+      return nil;
+    first = elem;
+  }
+
+  return t;
+}
+
 val numeq(val anum, val bnum)
 {
   return c_num(anum) == c_num(bnum) ? t : nil;
@@ -808,6 +943,16 @@ val max2(val anum, val bnum)
 val min2(val anum, val bnum)
 {
   return c_num(anum) < c_num(bnum) ? anum : bnum;
+}
+
+val maxv(val first, val rest)
+{
+  return reduce_left(func_n2(max2), rest, first, nil);
+}
+
+val minv(val first, val rest)
+{
+  return reduce_left(func_n2(min2), rest, first, nil);
 }
 
 val string_own(wchar_t *str)
@@ -1226,6 +1371,16 @@ val string_lt(val astr, val bstr)
   return cmp == -1 ? t : nil;
 }
 
+val int_str(val str, val base)
+{
+  const wchar_t *wcs = c_str(str);
+  cnum b = c_num(base);
+  /* TODO: detect if we have wcstoll */
+  long val = wcstol(wcs, 0, b);
+  numeric_assert (val >= NUM_MIN && val <= NUM_MAX);
+  return num(val);
+}
+
 val chrp(val chr)
 {
   return (is_chr(chr)) ? t : nil;
@@ -1361,6 +1516,20 @@ val intern(val str, val package)
   }
 }
 
+static val rehome_sym(val sym, val package)
+{
+  if (!sym)
+    return nil;
+  type_check (package, PKG);
+  type_check (sym, SYM);
+
+  if (sym->s.package)
+    remhash(sym->s.package->pk.symhash, symbol_name(sym));
+  sym->s.package = package;
+  sethash(package->pk.symhash, symbol_name(sym), sym);
+  return sym;
+}
+
 val symbolp(val sym)
 {
   return (sym == nil || (is_ptr(sym) && sym->s.type == SYM)) ? t : nil;
@@ -1378,6 +1547,8 @@ val func_f0(val env, val (*fun)(val))
   obj->f.functype = F0;
   obj->f.env = env;
   obj->f.f.f0 = fun;
+  obj->f.variadic = 0;
+  obj->f.minparam = 0;
   return obj;
 }
 
@@ -1388,6 +1559,8 @@ val func_f1(val env, val (*fun)(val, val))
   obj->f.functype = F1;
   obj->f.env = env;
   obj->f.f.f1 = fun;
+  obj->f.variadic = 0;
+  obj->f.minparam = 1;
   return obj;
 }
 
@@ -1398,6 +1571,8 @@ val func_f2(val env, val (*fun)(val, val, val))
   obj->f.functype = F2;
   obj->f.env = env;
   obj->f.f.f2 = fun;
+  obj->f.variadic = 0;
+  obj->f.minparam = 2;
   return obj;
 }
 
@@ -1408,6 +1583,8 @@ val func_f3(val env, val (*fun)(val, val, val, val))
   obj->f.functype = F3;
   obj->f.env = env;
   obj->f.f.f3 = fun;
+  obj->f.variadic = 0;
+  obj->f.minparam = 3;
   return obj;
 }
 
@@ -1418,6 +1595,8 @@ val func_f4(val env, val (*fun)(val, val, val, val, val))
   obj->f.functype = F4;
   obj->f.env = env;
   obj->f.f.f4 = fun;
+  obj->f.variadic = 0;
+  obj->f.minparam = 4;
   return obj;
 }
 
@@ -1428,6 +1607,8 @@ val func_n0(val (*fun)(void))
   obj->f.functype = N0;
   obj->f.env = nil;
   obj->f.f.n0 = fun;
+  obj->f.variadic = 0;
+  obj->f.minparam = 0;
   return obj;
 }
 
@@ -1438,6 +1619,8 @@ val func_n1(val (*fun)(val))
   obj->f.functype = N1;
   obj->f.env = nil;
   obj->f.f.n1 = fun;
+  obj->f.variadic = 0;
+  obj->f.minparam = 1;
   return obj;
 }
 
@@ -1448,6 +1631,8 @@ val func_n2(val (*fun)(val, val))
   obj->f.functype = N2;
   obj->f.env = nil;
   obj->f.f.n2 = fun;
+  obj->f.variadic = 0;
+  obj->f.minparam = 2;
   return obj;
 }
 
@@ -1458,6 +1643,8 @@ val func_n3(val (*fun)(val, val, val))
   obj->f.functype = N3;
   obj->f.env = nil;
   obj->f.f.n3 = fun;
+  obj->f.variadic = 0;
+  obj->f.minparam = 3;
   return obj;
 }
 
@@ -1468,6 +1655,140 @@ val func_n4(val (*fun)(val, val, val, val))
   obj->f.functype = N4;
   obj->f.env = nil;
   obj->f.f.n4 = fun;
+  obj->f.variadic = 0;
+  obj->f.minparam = 4;
+  return obj;
+}
+
+val func_f0v(val env, val (*fun)(val, val))
+{
+  val obj = make_obj();
+  obj->f.type = FUN;
+  obj->f.functype = F0;
+  obj->f.env = env;
+  obj->f.f.f0v = fun;
+  obj->f.variadic = 1;
+  obj->f.minparam = 0;
+  return obj;
+}
+
+val func_f1v(val env, val (*fun)(val env, val, val rest))
+{
+  val obj = make_obj();
+  obj->f.type = FUN;
+  obj->f.functype = F1;
+  obj->f.env = env;
+  obj->f.f.f1v = fun;
+  obj->f.variadic = 1;
+  obj->f.minparam = 1;
+  return obj;
+}
+
+val func_f2v(val env, val (*fun)(val env, val, val, val rest))
+{
+  val obj = make_obj();
+  obj->f.type = FUN;
+  obj->f.functype = F2;
+  obj->f.env = env;
+  obj->f.f.f2v = fun;
+  obj->f.variadic = 1;
+  obj->f.minparam = 2;
+  return obj;
+}
+
+val func_f3v(val env, val (*fun)(val env, val, val, val, val rest))
+{
+  val obj = make_obj();
+  obj->f.type = FUN;
+  obj->f.functype = F3;
+  obj->f.env = env;
+  obj->f.f.f3v = fun;
+  obj->f.variadic = 1;
+  obj->f.minparam = 3;
+  return obj;
+}
+
+val func_f4v(val env, val (*fun)(val env, val, val, val, val, val rest))
+{
+  val obj = make_obj();
+  obj->f.type = FUN;
+  obj->f.functype = F4;
+  obj->f.env = env;
+  obj->f.f.f4v = fun;
+  obj->f.variadic = 1;
+  obj->f.minparam = 4;
+  return obj;
+}
+
+val func_n0v(val (*fun)(val rest))
+{
+  val obj = make_obj();
+  obj->f.type = FUN;
+  obj->f.functype = N0;
+  obj->f.env = nil;
+  obj->f.f.n0v = fun;
+  obj->f.variadic = 1;
+  obj->f.minparam = 0;
+  return obj;
+}
+
+val func_n1v(val (*fun)(val, val rest))
+{
+  val obj = make_obj();
+  obj->f.type = FUN;
+  obj->f.functype = N1;
+  obj->f.env = nil;
+  obj->f.f.n1v = fun;
+  obj->f.variadic = 1;
+  obj->f.minparam = 1;
+  return obj;
+}
+
+val func_n2v(val (*fun)(val, val, val rest))
+{
+  val obj = make_obj();
+  obj->f.type = FUN;
+  obj->f.functype = N2;
+  obj->f.env = nil;
+  obj->f.f.n2v = fun;
+  obj->f.variadic = 1;
+  obj->f.minparam = 2;
+  return obj;
+}
+
+val func_n3v(val (*fun)(val, val, val, val rest))
+{
+  val obj = make_obj();
+  obj->f.type = FUN;
+  obj->f.functype = N3;
+  obj->f.env = nil;
+  obj->f.f.n3v = fun;
+  obj->f.variadic = 1;
+  obj->f.minparam = 3;
+  return obj;
+}
+
+val func_n4v(val (*fun)(val, val, val, val, val rest))
+{
+  val obj = make_obj();
+  obj->f.type = FUN;
+  obj->f.functype = N4;
+  obj->f.env = nil;
+  obj->f.f.n4v = fun;
+  obj->f.variadic = 1;
+  obj->f.minparam = 4;
+  return obj;
+}
+
+val func_interp(val env, val form)
+{
+  val obj = make_obj();
+  obj->f.type = FUN;
+  obj->f.functype = FINTERP;
+  obj->f.env = env;
+  obj->f.f.interp_fun = form;
+  obj->f.variadic = 1;
+  obj->f.minparam = 0;
   return obj;
 }
 
@@ -1481,121 +1802,188 @@ val functionp(val obj)
   }
 }
 
-val apply(val fun, val arglist)
-{
-  val arg[4], *p = arg;
-
-  internal_error("apply is broken crap: fix before using");
-
-  type_check (fun, FUN);
-
-  type_assert (listp(arglist),
-               (lit("apply arglist ~s is not a list"), arglist, nao));
-
-  *p++ = car(arglist); arglist = cdr(arglist);
-  *p++ = car(arglist); arglist = cdr(arglist);
-  *p++ = car(arglist); arglist = cdr(arglist);
-  *p++ = car(arglist); arglist = cdr(arglist);
-
-  switch (fun->f.functype) {
-  case F0:
-    return fun->f.f.f0(fun);
-  case F1:
-    return fun->f.f.f1(fun, arg[0]);
-  case F2:
-    return fun->f.f.f2(fun, arg[0], arg[1]);
-  case F3:
-    return fun->f.f.f3(fun, arg[0], arg[1], arg[2]);
-  case F4:
-    return fun->f.f.f4(fun, arg[0], arg[1], arg[2], arg[3]);
-  case N0:
-    return fun->f.f.n0();
-  case N1:
-    return fun->f.f.n1(arg[0]);
-  case N2:
-    return fun->f.f.n2(arg[0], arg[1]);
-  case N3:
-    return fun->f.f.n3(arg[0], arg[1], arg[2]);
-  case N4:
-    return fun->f.f.n4(arg[0], arg[1], arg[2], arg[3]);
-  case FINTERP:
-    internal_error("unsupported function type");
-  }
-
-  internal_error("corrupt function type field");
-}
-
 val funcall(val fun)
 {
   type_check(fun, FUN);
 
-  switch (fun->f.functype) {
-  case F0:
-    return fun->f.f.f0(fun->f.env);
-  case N0:
-    return fun->f.f.n0();
-  default:
-    uw_throwf(error_s, lit("funcall: wrong number of arguments"));
+  if (fun->f.variadic) {
+    switch (fun->f.functype) {
+    case FINTERP:
+      return interp_fun(fun->f.env, fun->f.f.interp_fun, nil);
+    case F0:
+      return fun->f.f.f0v(fun->f.env, nil);
+    case N0:
+      return fun->f.f.n0v(nil);
+    default:
+      break;
+    }
+  } else {
+    switch (fun->f.functype) {
+    case F0:
+      return fun->f.f.f0(fun->f.env);
+    case N0:
+      return fun->f.f.n0();
+    default:
+      break;
+    }
   }
+  uw_throwf(error_s, lit("funcall: wrong number of arguments"));
 }
 
 val funcall1(val fun, val arg)
 {
   type_check(fun, FUN);
 
-  switch (fun->f.functype) {
-  case F1:
-    return fun->f.f.f1(fun->f.env, arg);
-  case N1:
-    return fun->f.f.n1(arg);
-  default:
-    uw_throw(error_s, lit("funcall1: wrong number of arguments"));
+  if (fun->f.variadic) {
+    switch (fun->f.functype) {
+    case FINTERP:
+      return interp_fun(fun->f.env, fun->f.f.interp_fun, cons(arg, nil));
+    case F0:
+      return fun->f.f.f0v(fun->f.env, cons(arg, nil));
+    case N0:
+      return fun->f.f.n0v(cons(arg, nil));
+    case F1:
+      return fun->f.f.f1v(fun->f.env, arg, nil);
+    case N1:
+      return fun->f.f.n1v(arg, nil);
+    default:
+      break;
+    }
+  } else {
+    switch (fun->f.functype) {
+    case F1:
+      return fun->f.f.f1(fun->f.env, arg);
+    case N1:
+      return fun->f.f.n1(arg);
+    default:
+      break;
+    }
   }
+  uw_throw(error_s, lit("funcall1: wrong number of arguments"));
 }
 
 val funcall2(val fun, val arg1, val arg2)
 {
   type_check(fun, FUN);
 
-  switch (fun->f.functype) {
-  case F2:
-    return fun->f.f.f2(fun->f.env, arg1, arg2);
-  case N2:
-    return fun->f.f.n2(arg1, arg2);
-  default:
-    uw_throw(error_s, lit("funcall2: wrong number of arguments"));
+  if (fun->f.variadic) {
+    switch (fun->f.functype) {
+    case FINTERP:
+      return interp_fun(fun->f.env, fun->f.f.interp_fun,
+                        cons(arg1, cons(arg2, nil)));
+    case F0:
+      return fun->f.f.f0v(fun->f.env, cons(arg1, cons(arg2, nil)));
+    case N0:
+      return fun->f.f.n0v(cons(arg1, cons(arg2, nil)));
+    case F1:
+      return fun->f.f.f1v(fun->f.env, arg1, cons(arg2, nil));
+    case N1:
+      return fun->f.f.n1v(arg1, cons(arg2, nil));
+    case F2:
+      return fun->f.f.f2v(fun->f.env, arg1, arg2, nil);
+    case N2:
+      return fun->f.f.n2v(arg1, arg2, nil);
+    default:
+      break;
+    }
+  } else {
+    switch (fun->f.functype) {
+    case F2:
+      return fun->f.f.f2(fun->f.env, arg1, arg2);
+    case N2:
+      return fun->f.f.n2(arg1, arg2);
+    default:
+      break;
+    }
   }
+  uw_throw(error_s, lit("funcall2: wrong number of arguments"));
 }
 
 val funcall3(val fun, val arg1, val arg2, val arg3)
 {
   type_check(fun, FUN);
 
-  switch (fun->f.functype) {
-  case F3:
-    return fun->f.f.f3(fun->f.env, arg1, arg2, arg3);
-  case N3:
-    return fun->f.f.n3(arg1, arg2, arg3);
-  default:
-    uw_throw(error_s, lit("funcall3: wrong number of arguments"));
+  if (fun->f.variadic) {
+    switch (fun->f.functype) {
+    case FINTERP:
+      return interp_fun(fun->f.env, fun->f.f.interp_fun,
+                        cons(arg1, cons(arg2, cons(arg3, nil))));
+    case F0:
+      return fun->f.f.f0v(fun->f.env, cons(arg1, cons(arg2, cons(arg3, nil))));
+    case N0:
+      return fun->f.f.n0v(cons(arg1, cons(arg2, cons(arg3, nil))));
+    case F1:
+      return fun->f.f.f1v(fun->f.env, arg1, cons(arg2, cons(arg3, nil)));
+    case N1:
+      return fun->f.f.n1v(arg1, cons(arg2, cons(arg3, nil)));
+    case F2:
+      return fun->f.f.f2v(fun->f.env, arg1, arg2, cons(arg3, nil));
+    case N2:
+      return fun->f.f.n2v(arg1, arg2, cons(arg3, nil));
+    case F3:
+      return fun->f.f.f3v(fun->f.env, arg1, arg2, arg3, nil);
+    case N3:
+      return fun->f.f.n3v(arg1, arg2, arg3, nil);
+    default:
+      break;
+    }
+  } else {
+    switch (fun->f.functype) {
+    case F3:
+      return fun->f.f.f3(fun->f.env, arg1, arg2, arg3);
+    case N3:
+      return fun->f.f.n3(arg1, arg2, arg3);
+    default:
+      break;
+    }
   }
+  uw_throw(error_s, lit("funcall3: wrong number of arguments"));
 }
 
 val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
 {
   type_check(fun, FUN);
 
-  switch (fun->f.functype) {
-  case F4:
-    return fun->f.f.f4(fun->f.env, arg1, arg2, arg3, arg4);
-  case N4:
-    return fun->f.f.n4(arg1, arg2, arg3, arg4);
-  default:
-    uw_throw(error_s, lit("funcall4: wrong number of arguments"));
+  if (fun->f.variadic) {
+    switch (fun->f.functype) {
+    case FINTERP:
+      return interp_fun(fun->f.env, fun->f.f.interp_fun,
+                        cons(arg1, cons(arg2, cons(arg3, cons(arg4, nil)))));
+    case F0:
+      return fun->f.f.f0v(fun->f.env, cons(arg1, cons(arg2, cons(arg3, cons(arg4, nil)))));
+    case N0:
+      return fun->f.f.n0v(cons(arg1, cons(arg2, cons(arg3, cons(arg4, nil)))));
+    case F1:
+      return fun->f.f.f1v(fun->f.env, arg1, cons(arg2, cons(arg3, cons(arg4, nil))));
+    case N1:
+      return fun->f.f.n1v(arg1, cons(arg2, cons(arg3, cons(arg4, nil))));
+    case F2:
+      return fun->f.f.f2v(fun->f.env, arg1, arg2, cons(arg3, cons(arg4, nil)));
+    case N2:
+      return fun->f.f.n2v(arg1, arg2, cons(arg3, cons(arg4, nil)));
+    case F3:
+      return fun->f.f.f3v(fun->f.env, arg1, arg2, arg3, cons(arg4, nil));
+    case N3:
+      return fun->f.f.n3v(arg1, arg2, arg3, cons(arg4, nil));
+    case F4:
+      return fun->f.f.f4v(fun->f.env, arg1, arg2, arg3, arg4, nil);
+    case N4:
+      return fun->f.f.n4v(arg1, arg2, arg3, arg4, nil);
+    default:
+      break;
+    }
+  } else {
+    switch (fun->f.functype) {
+    case F4:
+      return fun->f.f.f4(fun->f.env, arg1, arg2, arg3, arg4);
+    case N4:
+      return fun->f.f.n4(arg1, arg2, arg3, arg4);
+    default:
+      break;
+    }
   }
+  uw_throw(error_s, lit("funcall4: wrong number of arguments"));
 }
-
-
 
 
 val reduce_left(val fun, val list, val init, val key)
@@ -2140,12 +2528,12 @@ val assq(val list, val key)
   return nil;
 }
 
-val acons(val list, val car, val cdr)
+val acons(val car, val cdr, val list)
 {
   return cons(cons(car, cdr), list);
 }
 
-val acons_new(val list, val key, val value)
+val acons_new(val key, val value, val list)
 {
   val existing = assoc(list, key);
 
@@ -2157,7 +2545,7 @@ val acons_new(val list, val key, val value)
   }
 }
 
-val *acons_new_l(val *list, val key, val *new_p)
+val *acons_new_l(val key, val *new_p, val *list)
 {
   val existing = assoc(*list, key);
 
@@ -2174,7 +2562,7 @@ val *acons_new_l(val *list, val key, val *new_p)
   }
 }
 
-val aconsq_new(val list, val key, val value)
+val aconsq_new(val key, val value, val list)
 {
   val existing = assq(list, key);
 
@@ -2186,7 +2574,7 @@ val aconsq_new(val list, val key, val value)
   }
 }
 
-val *aconsq_new_l(val *list, val key, val *new_p)
+val *aconsq_new_l(val key, val *new_p, val *list)
 {
   val existing = assq(*list, key);
 
@@ -2451,9 +2839,12 @@ static void obj_init(void)
   null_string = lit("");
   null_list = cons(nil, nil);
 
+  hash_s = make_sym(lit("hash"));
   system_package = make_package(lit("sys"));
   keyword_package = make_package(lit("keyword"));
   user_package = make_package(lit("usr"));
+
+  rehome_sym(hash_s, user_package);
 
   /* nil can't be interned because it's not a SYM object;
      it works as a symbol because the nil case is handled by
@@ -2480,6 +2871,7 @@ static void obj_init(void)
   lstr_s = intern(lit("lstr"), user_package);
   cobj_s = intern(lit("cobj"), user_package);
   cptr_s = intern(lit("cptr"), user_package);
+  env_s = intern(lit("env"), user_package);
   var_s = intern(lit("var"), system_package);
   expr_s = intern(lit("expr"), system_package);
   regex_s = intern(lit("regex"), system_package);
@@ -2654,7 +3046,7 @@ void obj_print(val obj, val out)
     format(out, lit("#<package: ~s>"), obj->pk.name, nao);
     return;
   case FUN:
-    format(out, lit("#<function: f~a>"), num(obj->f.functype), nao);
+    format(out, lit("#<function: type ~a>"), num(obj->f.functype), nao);
     return;
   case VEC:
     {
@@ -2674,6 +3066,9 @@ void obj_print(val obj, val out)
     return;
   case COBJ:
     obj->co.ops->print(obj, out);
+    return;
+  case ENV:
+    format(out, lit("#<environment: ~p>"), (void *) obj, nao);
     return;
   }
 
@@ -2724,7 +3119,7 @@ void obj_pprint(val obj, val out)
     format(out, lit("#<package: ~s>"), obj->pk.name, nao);
     return;
   case FUN:
-    format(out, lit("#<function: f~a>"), num(obj->f.functype), nao);
+    format(out, lit("#<function: type ~a>"), num(obj->f.functype), nao);
     return;
   case VEC:
     {
@@ -2745,6 +3140,9 @@ void obj_pprint(val obj, val out)
   case COBJ:
     obj->co.ops->print(obj, out);
     return;
+  case ENV:
+    format(out, lit("#<environment: ~p>"), (void *) obj, nao);
+    return;
   }
 
   format(out, lit("#<garbage: ~p>"), (void *) obj, nao);
@@ -2761,6 +3159,7 @@ void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),
   gc_init(stack_bottom);
   obj_init();
   uw_init();
+  eval_init();
   stream_init();
   filter_init();
 

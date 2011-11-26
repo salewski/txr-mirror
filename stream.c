@@ -1019,9 +1019,8 @@ val vformat_to_string(val fmtstr, va_list vl)
 val format(val stream, val str, ...)
 {
   val st = or2(stream, make_string_output_stream());
-  type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
-                                             stream, nao));
+  type_check (st, COBJ);
+  type_assert (st->co.cls == stream_s, (lit("~a is not a stream"), st, nao));
 
   {
     va_list vl;

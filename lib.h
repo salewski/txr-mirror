@@ -37,7 +37,7 @@ typedef int_ptr_t cnum;
 
 typedef enum type {
   NUM = TAG_NUM, CHR = TAG_CHR, LIT = TAG_LIT, CONS,
-  STR, SYM, PKG, FUN, VEC, LCONS, LSTR, COBJ
+  STR, SYM, PKG, FUN, VEC, LCONS, LSTR, COBJ, ENV
 } type_t;
 
 typedef enum functype
@@ -86,7 +86,9 @@ struct package {
 
 struct func {
   type_t type;
-  functype_t functype;
+  unsigned minparam : 15;
+  unsigned variadic : 1;
+  functype_t functype : 16;
   val env;
   union {
     val interp_fun;
@@ -100,6 +102,16 @@ struct func {
     val (*n2)(val, val);
     val (*n3)(val, val, val);
     val (*n4)(val, val, val, val);
+    val (*f0v)(val, val);
+    val (*f1v)(val, val, val);
+    val (*f2v)(val, val, val, val);
+    val (*f3v)(val, val, val, val, val);
+    val (*f4v)(val, val, val, val, val, val);
+    val (*n0v)(val);
+    val (*n1v)(val, val);
+    val (*n2v)(val, val, val);
+    val (*n3v)(val, val, val, val);
+    val (*n4v)(val, val, val, val, val);
   } f;
 };
 
@@ -164,6 +176,13 @@ void cobj_destroy_free_op(val);
 void cobj_mark_op(val);
 cnum cobj_hash_op(val);
 
+struct env {
+  type_t type;
+  val vbindings;
+  val fbindings;
+  val up_env;
+};
+
 union obj {
   struct any t;
   struct cons c;
@@ -175,6 +194,7 @@ union obj {
   struct lazy_cons lc;
   struct lazy_string ls;
   struct cobj co;
+  struct env e;
 };
 
 INLINE cnum tag(val obj) { return ((cnum) obj) & TAG_MASK; }
@@ -241,6 +261,7 @@ INLINE val chr(wchar_t ch)
 extern val keyword_package, system_package, user_package;
 extern val null, t, cons_s, str_s, chr_s, num_s, sym_s, pkg_s, fun_s, vec_s;
 extern val stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s, cptr_s;
+extern val env_s;
 extern val var_s, expr_s, regex_s, chset_s, set_s, cset_s, wild_s, oneplus_s;
 extern val nongreedy_s, compiled_regex_s;
 extern val quote_s, qquote_s, unquote_s, splice_s;
@@ -322,16 +343,28 @@ val num(cnum val);
 cnum c_num(val num);
 val nump(val num);
 val plus(val anum, val bnum);
+val plusv(val nlist);
 val minus(val anum, val bnum);
+val minusv(val minuend, val nlist);
 val neg(val num);
+val mul(val anum, val bnum);
+val mulv(val nlist);
+val trunc(val anum, val bnum);
+val mod(val anum, val bnum);
 val zerop(val num);
 val gt(val anum, val bnum);
 val lt(val anum, val bnum);
 val ge(val anum, val bnum);
 val le(val anum, val bnum);
+val gtv(val first, val rest);
+val ltv(val first, val rest);
+val gev(val first, val rest);
+val lev(val first, val rest);
 val numeq(val anum, val bnum);
 val max2(val anum, val bnum);
 val min2(val anum, val bnum);
+val maxv(val first, val rest);
+val minv(val first, val rest);
 val string_own(wchar_t *str);
 val string(const wchar_t *str);
 val string_utf8(const char *str);
@@ -354,6 +387,7 @@ val split_str(val str, val sep);
 val split_str_set(val str, val set);
 val trim_str(val str);
 val string_lt(val astr, val bstr);
+val int_str(val str, val base);
 val chrp(val chr);
 wchar_t c_chr(val chr);
 val chr_str(val str, val index);
@@ -370,18 +404,28 @@ val symbolp(val sym);
 val symbol_name(val sym);
 val symbol_package(val sym);
 val keywordp(val sym);
-val func_f0(val, val (*fun)(val));
-val func_f1(val, val (*fun)(val, val));
-val func_f2(val, val (*fun)(val, val, val));
-val func_f3(val, val (*fun)(val, val, val, val));
-val func_f4(val, val (*fun)(val, val, val, val, val));
+val func_f0(val, val (*fun)(val env));
+val func_f1(val, val (*fun)(val env, val));
+val func_f2(val, val (*fun)(val env, val, val));
+val func_f3(val, val (*fun)(val env, val, val, val));
+val func_f4(val, val (*fun)(val env, val, val, val, val));
 val func_n0(val (*fun)(void));
 val func_n1(val (*fun)(val));
 val func_n2(val (*fun)(val, val));
 val func_n3(val (*fun)(val, val, val));
 val func_n4(val (*fun)(val, val, val, val));
+val func_f0v(val, val (*fun)(val env, val rest));
+val func_f1v(val, val (*fun)(val env, val, val rest));
+val func_f2v(val, val (*fun)(val env, val, val, val rest));
+val func_f3v(val, val (*fun)(val env, val, val, val, val rest));
+val func_f4v(val, val (*fun)(val env, val, val, val, val, val rest));
+val func_n0v(val (*fun)(val rest));
+val func_n1v(val (*fun)(val, val rest));
+val func_n2v(val (*fun)(val, val, val rest));
+val func_n3v(val (*fun)(val, val, val, val rest));
+val func_n4v(val (*fun)(val, val, val, val, val rest));
+val func_interp(val env, val form);
 val functionp(val);
-val apply(val fun, val arglist);
 val funcall(val fun);
 val funcall1(val fun, val arg);
 val funcall2(val fun, val arg1, val arg2);
@@ -424,11 +468,11 @@ val cptr(mem_t *ptr);
 mem_t *cptr_get(val cptr);
 val assoc(val list, val key);
 val assq(val list, val key);
-val acons(val list, val car, val cdr);
-val acons_new(val list, val key, val value);
-val *acons_new_l(val *list, val key, val *new_p);
-val aconsq_new(val list, val key, val value);
-val *aconsq_new_l(val *list, val key, val *new_p);
+val acons(val car, val cdr, val list);
+val acons_new(val key, val value, val list);
+val *acons_new_l(val key, val *new_p, val *list);
+val aconsq_new(val key, val value, val list);
+val *aconsq_new_l(val key, val *new_p, val *list);
 val alist_remove(val list, val keys);
 val alist_remove1(val list, val key);
 val alist_nremove(val list, val keys);
