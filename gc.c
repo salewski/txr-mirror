@@ -39,6 +39,7 @@
 #include "stream.h"
 #include "hash.h"
 #include "txr.h"
+#include "eval.h"
 #include "gc.h"
 
 #define PROT_STACK_SIZE         1024
@@ -202,6 +203,8 @@ static void finalize(val obj)
   case COBJ:
     obj->co.ops->destroy(obj);
     return;
+  case ENV:
+    return;
   }
 
   assert (0 && "corrupt type field");
@@ -287,6 +290,10 @@ tail_call:
   case COBJ:
     obj->co.ops->mark(obj);
     mark_obj_tail(obj->co.cls);
+  case ENV:
+    mark_obj(obj->e.vbindings);
+    mark_obj(obj->e.fbindings);
+    mark_obj_tail(obj->e.up_env);
   }
 
   assert (0 && "corrupt type field");

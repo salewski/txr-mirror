@@ -190,11 +190,11 @@ noreturn val type_mismatch(val, ...);
   if (!(EXPR))                          \
    uw_throwf(numeric_error_s,           \
              lit("assertion " #EXPR     \
-                 "failed"), nao)
+                 " failed"), nao)
 
 #define range_bug_unless(EXPR)          \
   if (!(EXPR))                          \
    uw_throwf(range_error_s,             \
              lit("assertion " #EXPR     \
-                 "failed"), nao)
+                 " failed"), nao)
 

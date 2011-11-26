@@ -11,3 +11,4 @@ hash.o: config.h $(top_srcdir)/lib.h $(top_srcdir)/gc.h $(top_srcdir)/unwind.h $
 utf8.o: config.h $(top_srcdir)/lib.h $(top_srcdir)/unwind.h $(top_srcdir)/utf8.h
 filter.o: config.h $(top_srcdir)/lib.h $(top_srcdir)/hash.h $(top_srcdir)/unwind.h $(top_srcdir)/match.h $(top_srcdir)/filter.h $(top_srcdir)/gc.h
 debug.o: config.h $(top_srcdir)/lib.h $(top_srcdir)/debug.h $(top_srcdir)/gc.h $(top_srcdir)/unwind.h $(top_srcdir)/stream.h $(top_srcdir)/parser.h
+eval.o: $(top_srcdir)/lib.h config.h $(top_srcdir)/lib.h $(top_srcdir)/gc.h $(top_srcdir)/unwind.h

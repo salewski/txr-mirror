@@ -146,10 +146,11 @@ static wchar_t num_esc(char *num)
 %option nounput
 %option noinput
 
-SYM     [a-zA-Z_][a-zA-Z0-9_]*
-NUM     [+-]?[0-9]+
-TOK     :?{SYM}|{NUM}
-NTOK    [:@]?{SYM}|{NUM}
+SYM     [a-zA-Z0-9_]+
+NSCHR   [a-zA-Z0-9!$%&*+\-<=>?\\^_~]
+NSYM    {NSCHR}({NSCHR}|#)*
+TOK     :?{SYM}
+NTOK    [:@]?{NSYM}
 ID_END  [^a-zA-Z0-9_]
 WS      [\t ]*
 HEX     [0-9A-Fa-f]
@@ -360,9 +361,6 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 <NESTED>@\(             |
 <SPECIAL,NESTED>\{|\(   {
                           yy_push_state(NESTED);
-                          if (yy_top_state() == INITIAL
-                              || yy_top_state() == QSILIT)
-                            yy_pop_state();
                           if (yytext[0] == '@') {
                             yylval.chr = '(';
                             return METAPAR;

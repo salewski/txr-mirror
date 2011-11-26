@@ -1,3 +1,93 @@
+2011-11-26  Kaz Kylheku  <kaz@kylheku.com>
+
+	Task #11436
+
+	Lisp interpreter added.
+
+	* gc.c (finalize, mark_obj): Handle ENV objects.
+
+	* hash.c (struct hash): acons_new_l_fun function
+	pointer order of arguments change.
+	(equal_hash): Handle ENV.
+	(make_hash, gethash_l): Use cobj_handle for
+	type safety. Follow change in acons_new_l.
+	(gethash, gethash_f, remhash, hash_count,
+	hash_get_userdata, hash_set_userdata, hash_next): Use cobj_handle.
+	(gethash_n): New function.
+
+	* hash.h (gethash_n): Declared.
+
+	* lib.c (env_s): New symbol variable.
+	(code2type, equal): Handle ENV.  (plusv, minusv, mul, mulv, trunc, mod,
+	gtv, ltv, gev, lev, maxv, minv, int_str): New functions.
+	(rehome_sym): New static function.
+	(func_f0, func_f1, func_f2, func_f3, func_f4, func_n0, func_n1,
+	func_n2, func_n3, func_n4): Initialize new fields of struct func.
+	(func_f0v, func_f1v, func_f2v, func_f3v, func_f4v,
+	func_n0v, func_n1v, func_n2v, func_n3v, func_n4v,
+	func_interp): New functions.
+	(apply): Function removed: sanely re-implemented in new eval.c file.
+	(funcall, funcall1, funcall2, funcall3, funcall4): Handle
+	variadic and interpreted functions.
+	(acons, acons_new, acons_new_l, aconsq_new, aconsq_new_l): Reordered
+	arguments for compatibility with Common Lisp acons.
+	(obj_init): Special hack to prepare hash_s symbol, which is
+	needed for type checking inside the hash table funtions invoked
+	by make_package, at a time when the symbol is not yet interned.
+	Initialize new env_s variable.
+	(obj_print, obj_pprint): Handle ENV. Fix confusing rendering of
+	of function type.
+	(init): Call new function eval_init.
+
+	* lib.h (enum type): New enumeration member ENV.
+	(struct func): functype member changed to bitfield.
+	New bitfied members minparam and variadic.
+	New members in f union: f0v, f1v, f2v, f3v,
+	f4v, n0v, n1v, n2v, n3v, n4v.
+	(struct env): New type.
+	(union obj): New member e of type struct env.
+	(env_s): Variable declared.
+	(plusv, minusv, mul, mulv, trunc, mod, gtv, ltv, gev, lev, maxv, minv,
+	int_str): New functions declared.
+	(func_f0v, func_f1v, func_f2v, func_f3v, func_f4v,
+	func_n0v, func_n1v, func_n2v, func_n3v, func_n4v,
+	func_interp): Likewise.
+	(apply): Declaration removed, and re-introduced in eval.h.
+	(acons, acons_new, acons_new_l, aconsq_new, aconsq_new_l): Declarations
+	updated to new argument order.
+
+	* match.c (bindable): static function moved to eval.c, where
+	it becomes external.
+	(h_var, h_coll, h_parallel, h_fun, v_parallel, v_gather,
+	v_collect, v_merge, v_fun): Follows argument order change in
+	acons functions.
+	(subst_vars): Print atoms other than strings.
+	(eval_form): Support @(...) syntax for evaluating Lisp forms.
+	(v_do, h_do): New functions.
+	(dir_tables_init): Insert v_do and h_do into tables.
+
+	* parser.l: Token syntax for numbers and symbols merged.
+	Symbols in a nested context can consist of various additional
+	characters.  Useless code removed from action for '('/METAPAR.
+
+	* stream.c (format): Bugfix in type checking, in the
+	case that the stream argument is nil and defaults to a string stream.
+
+	* txr.vim: Updated for new token syntax. Fixed uses of
+	unescaped + operator.
+
+	* unwind.c (uw_set_func)
+	* unwind.h (numeric_assert, range_bug_unless): Missing
+	whitespace in message added.
+
+	* Makefile (OBJS): eval.o added.
+
+	* dep.mk: Updated.
+
+	* eval.c: New file.
+
+	* eval.h: New file.
+
 2011-11-24  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (getplist_f): New function.
