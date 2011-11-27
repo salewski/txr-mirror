@@ -1,5 +1,10 @@
 2011-11-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.y (expr): Set source location info on elements.
+	(strlit): Set location info. 
+
+2011-11-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (subst_vars): Handle expr_s, so that
 	Lisp expressions can be interpolated into quasiliterals.
 	(extract_vars): Avoid recursing into expressions marked

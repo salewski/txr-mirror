@@ -623,17 +623,21 @@ exprs_opt : exprs               { $$ = $1; }
           | /* empty */         { $$ = nil; }
           ;
 
-expr : IDENT                    { $$ = intern(string_own($1), nil); }
-     | KEYWORD                  { $$ = intern(string_own($1),
-                                              keyword_package); }
+expr : IDENT                    { $$ = rl(intern(string_own($1), nil), 
+                                          num(lineno)); }
+     | KEYWORD                  { $$ = rl(intern(string_own($1),
+                                                 keyword_package),
+                                          num(lineno)); }
      | METAVAR                  { $$ = list(var_s,
-                                            intern(string_own($1), nil), nao); }
+                                            intern(string_own($1), nil), nao);
+                                  rl($$, num(lineno)); }
      | NUMBER                   { $$ = num($1); }
      | list                     { $$ = $1; }
      | meta_expr                { $$ = $1; }
      | regex                    { $$ = cons(regex_compile(rest($1)),
-                                            rest($1)); }
-     | chrlit                   { $$ = $1; }
+                                            rest($1));
+                                  rlcp($$, $1); }
+     | chrlit                   { $$ = rl($1, num(lineno)); }
      | strlit                   { $$ = $1; }
      | quasilit                 { $$ = $1; }
      ;
@@ -714,7 +718,8 @@ newl : '\n'
      ;
 
 strlit : '"' '"'                { $$ = null_string; }
-       | '"' litchars '"'       { $$ = lit_char_helper($2); }
+       | '"' litchars '"'       { $$ = lit_char_helper($2);
+                                  rl($$, num(lineno)); }
        | '"' error              { $$ = nil;
                                   yybadtoken(yychar, lit("string literal")); }
        ;
