@@ -515,6 +515,7 @@ o_elem : TEXT                   { $$ = string_own($1);
        | SPACE                  { $$ = string_own($1);
                                   rl($$, num(lineno)); }
        | o_var                  { $$ = $1; }
+       | list                   { $$ = rlcp(cons(expr_s, $1), $1); }
        | rep_elem               { $$ = $1; }
        ;
 
@@ -746,7 +747,7 @@ quasi_items : quasi_item                { $$ = cons($1, nil); }
 quasi_item : litchars           { $$ = lit_char_helper($1); }
            | TEXT               { $$ = string_own($1); }
            | var                { $$ = $1; }
-           | list               { $$ = $1; }
+           | list               { $$ = rlcp(cons(expr_s, $1), $1); }
            ;
 
 litchars : LITCHAR              { $$ = cons(chr($1), nil); }

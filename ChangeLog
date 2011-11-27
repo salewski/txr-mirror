@@ -1,5 +1,17 @@
 2011-11-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (subst_vars): Handle expr_s, so that
+	Lisp expressions can be interpolated into quasiliterals.
+	(extract_vars): Avoid recursing into expressions marked
+	with expr_s.
+	(do_output_line): Handle expr_s so that Lisp expressions
+	can be interpolated into output.
+
+	* parser.y (o_elem, quasi_items): Handle list expressions,
+	annotated with expr_s.
+
+2011-11-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	Task #11436
 
 	Lisp interpreter added.
