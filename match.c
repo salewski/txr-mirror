@@ -1268,7 +1268,9 @@ static val subst_vars(val spec, val bindings, val filter)
     val elem = first(spec);
 
     if (consp(elem)) {
-      if (first(elem) == var_s) {
+      val sym = first(elem);
+
+      if (sym == var_s) {
         val sym = second(elem);
         val pat = third(elem);
         val modifiers = fourth(elem);
@@ -1290,10 +1292,14 @@ static val subst_vars(val spec, val bindings, val filter)
         }
         uw_throwf(query_error_s, lit("unbound variable ~a"),
                                  sym, nao);
-      } else if (first(elem) == quasi_s) {
+      } else if (sym == quasi_s) {
         val nested = subst_vars(rest(elem), bindings, filter);
         list_collect_append(iter, nested);
         spec = cdr(spec);
+        continue;
+      } else if (sym == expr_s) {
+        val result = eval(rest(elem), make_env(bindings, nil, nil), elem);
+        spec = cons(format(nil, lit("~a"), result, nao), rest(spec));
         continue;
       } else {
         val nested = subst_vars(elem, bindings, filter);
@@ -1463,9 +1469,10 @@ static val extract_vars(val output_spec)
   list_collect_decl (vars, tai);
 
   if (consp(output_spec)) {
-    if (first(output_spec) == var_s) {
+    val sym = first(output_spec);
+    if (sym == var_s) {
       list_collect (tai, second(output_spec));
-    } else {
+    } else if (sym != expr_s) {
       for (; output_spec; output_spec = cdr(output_spec))
         list_collect_nconc(tai, extract_vars(car(output_spec)));
     }
@@ -1540,8 +1547,9 @@ static void do_output_line(val bindings, val specline, val filter, val out)
             }
           }
 
-        } else {
-          sem_error(specline, lit("unknown directive: ~a"), directive, nao);
+        } else if (directive == expr_s) {
+          format(out, lit("~a"), 
+                 eval(rest(elem), make_env(bindings, nil, nil), elem), nao);
         }
       }
       break;
