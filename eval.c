@@ -51,7 +51,7 @@ val op_table;
 val eval_error_s;
 val let_s, lambda_s, call_s, cond_s, if_s, and_s, or_s, defvar_s, defun_s;
 val inc_s, dec_s, push_s, pop_s, gethash_s;
-val list_s, append_s;
+val list_s, append_s, apply_s;
 
 val make_env(val vbindings, val fbindings, val up_env)
 {
@@ -160,7 +160,14 @@ val apply(val fun, val arglist, val ctx_form)
 {
   val arg[32], *p = arg;
   int variadic, minparam, nargs;
- 
+
+  if (symbolp(fun)) {
+    val binding = gethash(top_fb, fun);
+    if (!binding)
+      eval_error(ctx_form, lit("~s: no such function ~s"), car(ctx_form), fun, nao);
+    fun = cdr(binding);
+  }
+
   type_check (fun, FUN);
 
   type_assert (listp(arglist),
@@ -176,7 +183,8 @@ val apply(val fun, val arglist, val ctx_form)
     nargs = p - arg;
 
     if (nargs != minparam)
-      eval_error(ctx_form, lit("apply: wrong number of arguments"), nao);
+      eval_error(ctx_form, lit("~s: wrong number of arguments"),
+                 car(ctx_form), nao);
 
     switch (fun->f.functype) {
     case F0:
@@ -240,6 +248,11 @@ val apply(val fun, val arglist, val ctx_form)
   internal_error("corrupt function type field");
 }
 
+static val apply_intrinsic(val fun, val args)
+{
+  return apply(fun, args, cons(apply_s, nil));
+}
+
 static val eval_args(val form, val env, val ctx_form)
 {
   list_collect_decl (values, ptail);
@@ -253,8 +266,7 @@ val interp_fun(val env, val fun, val args)
   val def = cdr(fun);
   val params = car(def);
   val body = cdr(def);
-  val ev_args = eval_args(args, env, args);
-  val fun_env = bind_args(env, params, ev_args, fun);
+  val fun_env = bind_args(env, params, args, fun);
   return eval_progn(body, fun_env, body);
 }
 
@@ -371,18 +383,18 @@ static val op_call(val form, val env)
   val args = rest(form);
   val func_form = first(args);
   val func = eval(func_form, env, form);
+  return apply(func, eval_args(rest(args), env, form), form);
+}
 
-  if (functionp(func)) {
-    return apply(func, eval_args(rest(args), env, form), form);
-  } else if (symbolp(func)) {
-    val binding = gethash(top_vb, func);
-    if (binding)
-      return apply(cdr(binding), eval_args(rest(args), env, form), form);
-    eval_error(form, lit("call: no such function ~s"), form, nao);
-  } else {
-    eval_error(form, lit("call: ~s is not a funcallable object"), form, nao);
-  }
-  abort();
+static val op_fun(val form, val env)
+{
+  val name = second(form);
+  val fbinding = lookup_fun(env, name);
+
+  if (!fbinding)
+    eval_error(form, lit("no function exists named ~s"), name, nao);
+
+  return cdr(fbinding);
 }
 
 static val op_cond(val form, val env)
@@ -681,7 +693,7 @@ val expand(val form)
       if (place == place_ex && inc == inc_x)
         return form;
       return rlcp(cons(sym, cons(place, cons(inc_x, nil))), form);
-    } else if (sym == quote_s) {
+    } else if (sym == quote_s || sym == fun_s) {
       return form;
     } else if (sym == qquote_s) {
       return expand_qquote(second(form));
@@ -697,6 +709,57 @@ val expand(val form)
     abort();
   }
 }
+
+static val mapcarv(val fun, val list_of_lists)
+{
+  if (!cdr(list_of_lists)) {
+    return mapcar(fun, car(list_of_lists));
+  } else {
+    val lofl = copy_list(list_of_lists);
+    list_collect_decl (out, otail);
+
+    for (;;) {
+      val iter;
+      list_collect_decl (args, atail);
+
+      for (iter = lofl; iter; iter = cdr(iter)) {
+        val list = car(iter);
+        if (!list)
+          return out;
+        list_collect(atail, car(list));
+        *car_l(iter) = cdr(list);
+      }
+
+      list_collect(otail, apply(fun, args, nil));
+    }
+  }
+}
+
+static val mappendv(val fun, val list_of_lists)
+{
+  if (!cdr(list_of_lists)) {
+    return mappend(fun, car(list_of_lists));
+  } else {
+    val lofl = copy_list(list_of_lists);
+    list_collect_decl (out, otail);
+
+    for (;;) {
+      val iter;
+      list_collect_decl (args, atail);
+
+      for (iter = lofl; iter; iter = cdr(iter)) {
+        val list = car(iter);
+        if (!list)
+          return out;
+        list_collect(atail, car(list));
+        *car_l(iter) = cdr(list);
+      }
+
+      list_collect_append (otail, apply(fun, args, nil));
+    }
+  }
+}
+
 
 static void reg_fun(val sym, val fun)
 {
@@ -726,11 +789,13 @@ void eval_init(void)
   gethash_s = intern(lit("gethash"), user_package);
   list_s = intern(lit("list"), user_package);
   append_s = intern(lit("append"), user_package);
+  apply_s = intern(lit("apply"), user_package);
 
   sethash(op_table, quote_s, cptr((mem_t *) op_quote));
   sethash(op_table, let_s, cptr((mem_t *) op_let));
   sethash(op_table, lambda_s, cptr((mem_t *) op_lambda));
   sethash(op_table, call_s, cptr((mem_t *) op_call));
+  sethash(op_table, fun_s, cptr((mem_t *) op_fun));
   sethash(op_table, cond_s, cptr((mem_t *) op_cond));
   sethash(op_table, if_s, cptr((mem_t *) op_if));
   sethash(op_table, and_s, cptr((mem_t *) op_and));
@@ -757,6 +822,10 @@ void eval_init(void)
   reg_fun(intern(lit("listp"), user_package), func_n1(listp));
   reg_fun(intern(lit("proper-listp"), user_package), func_n1(proper_listp));
   reg_fun(intern(lit("length"), user_package), func_n1(length));
+
+  reg_fun(intern(lit("mapcar"), user_package), func_n1v(mapcarv));
+  reg_fun(intern(lit("mappend"), user_package), func_n1v(mappendv));
+  reg_fun(apply_s, func_n2(apply_intrinsic));
 
   reg_fun(intern(lit("+"), user_package), func_n0v(plusv));
   reg_fun(intern(lit("-"), user_package), func_n1v(minusv));
