@@ -45,13 +45,13 @@
 
 typedef val (*opfun_t)(val, val);
 
-val eval_error_s;
-
-val inc_s, dec_s, push_s, pop_s;
-val gethash_s;
-
 val top_vb, top_fb;
 val op_table;
+
+val eval_error_s;
+val let_s, lambda_s, call_s, cond_s, if_s, and_s, or_s, defvar_s, defun_s;
+val inc_s, dec_s, push_s, pop_s, gethash_s;
+val list_s, append_s;
 
 val make_env(val vbindings, val fbindings, val up_env)
 {
@@ -153,7 +153,7 @@ static val bind_args(val env, val params, val args, val ctx_form)
     eval_error(ctx_form, lit("~s: too many arguments"), car(ctx_form), nao);
   }
 
-  return make_env(new_bindings, 0, env);
+  return make_env(new_bindings, nil, env);
 }
 
 val apply(val fun, val arglist, val ctx_form)
@@ -258,6 +258,12 @@ val interp_fun(val env, val fun, val args)
   return eval_progn(body, fun_env, body);
 }
 
+static val eval_intrinsic(val form, val env)
+{
+  expand(form);
+  return eval(form, or2(env, make_env(nil, nil, env)), form);
+}
+
 val eval(val form, val env, val ctx_form)
 {
   type_check(env, ENV);
@@ -320,6 +326,11 @@ val eval_progn(val forms, val env, val ctx_form)
   return retval;
 }
 
+static val op_quote(val form, val env)
+{
+  return second(form);
+}
+
 static val op_let(val form, val env)
 {
   val args = rest(form);
@@ -347,7 +358,7 @@ static val op_let(val form, val env)
     list_collect (ptail, cons(var, val));
   }
 
-  return eval_progn(body, make_env(new_bindings, 0, env), form);
+  return eval_progn(body, make_env(new_bindings, nil, env), form);
 }
 
 static val op_lambda(val form, val env)
@@ -508,6 +519,185 @@ static val op_modplace(val form, val env)
   internal_error("unrecognized operator");
 }
 
+static val expand_forms(val form)
+{
+  if (atom(form)) {
+    return form;
+  } else {
+    val f = car(form);
+    val r = cdr(form);
+    val ex_f = expand(f);
+    val ex_r = expand_forms(r);
+
+    if (ex_f == f && ex_r == r)
+      return form;
+    return rlcp(cons(ex_f, ex_r), form);
+  }
+}
+
+static val expand_cond_pairs(val form)
+{
+  if (atom(form)) {
+    return form;
+  } else {
+    val pair = first(form);
+    val others = rest(form);
+    val pair_ex = expand_forms(pair);
+    val others_ex = expand_cond_pairs(others);
+
+    if (pair_ex == pair && others_ex == others)
+      return form;
+    return rlcp(cons(pair_ex, others_ex), form);
+  }
+}
+
+static val expand_place(val place)
+{
+  if (atom(place)) {
+    return place;
+  } else {
+    val sym = first(place);
+    if (sym == gethash_s) {
+      val hash = second(place);
+      val key = third(place);
+      val dfl_val = fourth(place);
+      val hash_ex = expand(hash);
+      val key_ex = expand(key);
+      val dfl_val_ex = expand(dfl_val);
+
+      if (hash == hash_ex && key == key_ex && dfl_val == dfl_val_ex)
+        return place;
+
+      return rlcp(cons(sym, cons(hash_ex, cons(key_ex, 
+                                               cons(dfl_val_ex, nil)))), 
+                  place);
+    } else {
+      eval_error(place, lit("unrecognized place: ~s"), place, nao);
+    }
+    abort();
+  }
+}
+
+static val expand_qquote(val qquoted_form)
+{
+  if (nullp(qquoted_form)) {
+    return nil;
+  } if (atom(qquoted_form)) {
+    return rlcp(cons(quote_s, cons(qquoted_form, nil)), qquoted_form);
+  } else {
+    val sym = car(qquoted_form);
+
+    if (sym == splice_s) {
+      eval_error(qquoted_form, lit("',*~s syntax is invalid"),
+                 second(qquoted_form), nao);
+    } else if (sym == unquote_s) {
+      return expand(second(qquoted_form));
+    } else {
+      val f = car(qquoted_form);
+      val r = cdr(qquoted_form);
+      val f_ex;
+      val r_ex = expand_qquote(r);
+
+      if (consp(f)) {
+        val qsym = car(f);
+        if (qsym == splice_s) {
+          f_ex = expand(second(f));
+        } else if (qsym == unquote_s) {
+          f_ex = cons(list_s, cons(expand(second(f)), nil));
+        } else if (qsym == quote_s) {
+          f_ex = cons(quote_s, cons(cons(second(f), nil), nil));
+        } else if (qsym == qquote_s) {
+          f_ex = cons(list_s, cons(expand_qquote(expand_qquote(second(f))), nil));
+        } else {
+          f_ex = cons(list_s, cons(expand_qquote(f), nil));
+        }
+      } else {
+        f_ex = cons(list_s, cons(expand_qquote(f), nil));
+      }
+
+      if (atom(r_ex)) {
+        return rlcp(cons(append_s, cons(f_ex, r_ex)), qquoted_form);
+      } else {
+        if (car(r_ex) == append_s)
+          r_ex = cdr(r_ex);
+        return rlcp(cons(append_s, cons(f_ex, r_ex)), qquoted_form);
+      }
+    }
+  }
+  return num(42);
+}
+
+
+val expand(val form)
+{
+  if (atom(form)) {
+    return form;
+  } else {
+    val sym = car(form);
+
+    if (sym == let_s || sym == lambda_s) {
+      val body = rest(rest(form));
+      val args = second(form);
+      val body_ex = expand_forms(body);
+      if (body == body_ex)
+        return form;
+      return rlcp(cons(sym, cons(args, body_ex)), form);
+    } else if (sym == call_s || sym == if_s || sym == and_s || sym == or_s) {
+      val body = rest(form);
+      val body_ex = expand_forms(body);
+      if (body == body_ex)
+        return form;
+      return rlcp(cons(sym, body_ex), form);
+    } else if (sym == cond_s) {
+      val pairs = rest(form);
+      val pairs_ex = expand_cond_pairs(pairs);
+
+      if (pairs == pairs_ex)
+        return form;
+      return rlcp(cons(cond_s, pairs_ex), form);
+    } else if (sym == defvar_s) {
+      val name = second(form);
+      val init = third(form);
+      val init_ex = expand(init);
+
+      if (init == init_ex)
+        return form;
+      return rlcp(cons(sym, cons(name, cons(init_ex, nil))), form);
+    } else if (sym == defun_s) {
+      val name = second(form);
+      val args = third(form);
+      val body = rest(rest(rest(form)));
+      val body_ex = expand_forms(body);
+
+      if (body == body_ex)
+        return form;
+      return rlcp(cons(sym, cons(name, cons(args, body_ex))), form);
+    } else if (sym == inc_s || sym == dec_s || sym == push_s || sym == pop_s) {
+      val place = second(form);
+      val inc = third(form);
+      val place_ex = expand_place(place);
+      val inc_x = expand(inc);
+
+      if (place == place_ex && inc == inc_x)
+        return form;
+      return rlcp(cons(sym, cons(place, cons(inc_x, nil))), form);
+    } else if (sym == quote_s) {
+      return form;
+    } else if (sym == qquote_s) {
+      return expand_qquote(second(form));
+    } else{
+      /* funtion call */
+      val args = rest(form);
+      val args_ex = expand_forms(args);
+
+      if (args == args_ex)
+        return form;
+      return rlcp(cons(sym, args_ex), form);
+    }
+    abort();
+  }
+}
+
 static void reg_fun(val sym, val fun)
 {
   sethash(top_fb, sym, cons(sym, fun));
@@ -520,22 +710,33 @@ void eval_init(void)
   top_vb = make_hash(t, nil, nil);
   op_table = make_hash(nil, nil, nil);
 
+  let_s = intern(lit("let"), user_package);
+  lambda_s = intern(lit("lambda"), user_package);
+  call_s = intern(lit("call"), user_package);
+  cond_s = intern(lit("cond"), user_package);
+  if_s = intern(lit("if"), user_package);
+  and_s = intern(lit("and"), user_package);
+  or_s = intern(lit("or"), user_package);
+  defvar_s = intern(lit("defvar"), user_package);
+  defun_s = intern(lit("defun"), user_package);
   inc_s = intern(lit("inc"), user_package);
   dec_s = intern(lit("dec"), user_package);
   push_s = intern(lit("push"), user_package);
   pop_s = intern(lit("pop"), user_package);
   gethash_s = intern(lit("gethash"), user_package);
+  list_s = intern(lit("list"), user_package);
+  append_s = intern(lit("append"), user_package);
 
-  sethash(op_table, intern(lit("let"), user_package), cptr((mem_t *) op_let));
-  sethash(op_table, intern(lit("lambda"), user_package), cptr((mem_t *) op_lambda));
-  sethash(op_table, intern(lit("call"), user_package), cptr((mem_t *) op_call));
-  sethash(op_table, intern(lit("cond"), user_package), cptr((mem_t *) op_cond));
-  sethash(op_table, intern(lit("if"), user_package), cptr((mem_t *) op_if));
-  sethash(op_table, intern(lit("and"), user_package), cptr((mem_t *) op_and));
-  sethash(op_table, intern(lit("or"), user_package), cptr((mem_t *) op_or));
-  sethash(op_table, intern(lit("defvar"), user_package), cptr((mem_t *) op_defvar));
-  sethash(op_table, intern(lit("defun"), user_package), cptr((mem_t *) op_defun));
-
+  sethash(op_table, quote_s, cptr((mem_t *) op_quote));
+  sethash(op_table, let_s, cptr((mem_t *) op_let));
+  sethash(op_table, lambda_s, cptr((mem_t *) op_lambda));
+  sethash(op_table, call_s, cptr((mem_t *) op_call));
+  sethash(op_table, cond_s, cptr((mem_t *) op_cond));
+  sethash(op_table, if_s, cptr((mem_t *) op_if));
+  sethash(op_table, and_s, cptr((mem_t *) op_and));
+  sethash(op_table, or_s, cptr((mem_t *) op_or));
+  sethash(op_table, defvar_s, cptr((mem_t *) op_defvar));
+  sethash(op_table, defun_s, cptr((mem_t *) op_defun));
   sethash(op_table, inc_s, cptr((mem_t *) op_modplace));
   sethash(op_table, dec_s, cptr((mem_t *) op_modplace));
   sethash(op_table, set_s, cptr((mem_t *) op_modplace));
@@ -547,6 +748,8 @@ void eval_init(void)
   reg_fun(intern(lit("cdr"), user_package), func_n1(car));
   reg_fun(intern(lit("first"), user_package), func_n1(car));
   reg_fun(intern(lit("rest"), user_package), func_n1(cdr));
+  reg_fun(append_s, func_n0v(appendv));
+  reg_fun(list_s, func_n0v(identity));
 
   reg_fun(intern(lit("atom"), user_package), func_n1(atom));
   reg_fun(intern(lit("null"), user_package), func_n1(nullp));
@@ -574,7 +777,7 @@ void eval_init(void)
   reg_fun(intern(lit("match-regex"), user_package), func_n3(match_regex));
 
   reg_fun(intern(lit("make-hash"), user_package), func_n3(make_hash));
-  reg_fun(intern(lit("gethash"), user_package), func_n3(gethash_n));
+  reg_fun(gethash_s, func_n3(gethash_n));
   reg_fun(intern(lit("sethash"), user_package), func_n3(sethash));
   reg_fun(intern(lit("pushhash"), user_package), func_n3(pushhash));
   reg_fun(intern(lit("remhash"), user_package), func_n2(remhash));
@@ -583,6 +786,8 @@ void eval_init(void)
           func_n1(get_hash_userdata));
   reg_fun(intern(lit("set-hash-userdata"), user_package),
           func_n2(set_hash_userdata));
+
+  reg_fun(intern(lit("eval"), user_package), func_n2(eval_intrinsic));
 
   eval_error_s = intern(lit("eval-error"), user_package);
   uw_register_subtype(eval_error_s, error_s);

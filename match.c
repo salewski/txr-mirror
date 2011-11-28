@@ -55,7 +55,7 @@ int opt_arraydims = 1;
 val decline_k, next_spec_k, repeat_spec_k;
 val mingap_k, maxgap_k, gap_k, mintimes_k, maxtimes_k, times_k;
 val lines_k, chars_k;
-val text_s, choose_s, gather_s;
+val text_s, choose_s, gather_s, do_s;
 val longest_k, shortest_k, greedy_k;
 val vars_k, resolve_k;
 val append_k, into_k, var_k, list_k, string_k, env_k;
@@ -3291,6 +3291,7 @@ static void syms_init(void)
   text_s = intern(lit("text"), user_package);
   choose_s = intern(lit("choose"), user_package);
   gather_s = intern(lit("gather"), user_package);
+  do_s = intern(lit("do"), user_package);
   longest_k = intern(lit("longest"), keyword_package);
   shortest_k = intern(lit("shortest"), keyword_package);
   greedy_k = intern(lit("greedy"), keyword_package);
@@ -3344,8 +3345,7 @@ static void dir_tables_init(void)
   sethash(v_directive_table, deffilter_s, cptr((mem_t *) v_deffilter));
   sethash(v_directive_table, filter_s, cptr((mem_t *) v_filter));
   sethash(v_directive_table, eof_s, cptr((mem_t *) v_eof));
-  sethash(v_directive_table, intern(lit("do"), user_package), 
-          cptr((mem_t *) v_do));
+  sethash(v_directive_table, do_s, cptr((mem_t *) v_do));
 
   sethash(h_directive_table, text_s, cptr((mem_t *) h_text));
   sethash(h_directive_table, var_s, cptr((mem_t *) h_var));
@@ -3368,8 +3368,7 @@ static void dir_tables_init(void)
   sethash(h_directive_table, trailer_s, cptr((mem_t *) h_trailer));
   sethash(h_directive_table, define_s, cptr((mem_t *) h_define));
   sethash(h_directive_table, eol_s, cptr((mem_t *) h_eol));
-  sethash(h_directive_table, intern(lit("do"), user_package), 
-          cptr((mem_t *) h_do));
+  sethash(h_directive_table, do_s, cptr((mem_t *) h_do));
 }
 
 void match_init(void)

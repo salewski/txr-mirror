@@ -342,6 +342,25 @@ val append2(val list1, val list2)
   return out;
 }
 
+val appendv(val lists)
+{
+  list_collect_decl (out, ptail);
+
+  for (; lists; lists = cdr(lists)) {
+    val item = car(lists);
+    if (consp(item)) {
+      list_collect_append(ptail, car(lists));
+    } else {
+      if (cdr(lists))
+        uw_throwf(error_s, lit("append: ~s is not a list"), item, nao);
+      list_collect_terminate(ptail, item);
+      return out;
+    }
+  }
+
+  return out;
+}
+
 val nappend2(val list1, val list2)
 {
   val temp, iter;
@@ -2877,10 +2896,10 @@ static void obj_init(void)
   regex_s = intern(lit("regex"), system_package);
   nongreedy_s = intern(lit("nongreedy"), system_package);
   compiled_regex_s = intern(lit("compiled-regex"), system_package);
-  quote_s = intern(lit("quote"), user_package);
-  qquote_s = intern(lit("qquote"), user_package);
-  unquote_s = intern(lit("unquote"), user_package);
-  splice_s = intern(lit("splice"), user_package);
+  quote_s = intern(lit("quote"), system_package);
+  qquote_s = intern(lit("qquote"), system_package);
+  unquote_s = intern(lit("unquote"), system_package);
+  splice_s = intern(lit("splice"), system_package);
   chset_s = intern(lit("chset"), system_package);
   set_s = intern(lit("set"), user_package);
   cset_s = intern(lit("cset"), user_package);
@@ -2962,18 +2981,31 @@ void obj_print(val obj, val out)
   case CONS:
   case LCONS:
     {
-      val iter;
-      put_char(out, chr('('));
-      for (iter = obj; consp(iter); iter = cdr(iter)) {
-        obj_print(car(iter), out);
-        if (nullp(cdr(iter))) {
-          put_char(out, chr(')'));
-        } else if (consp(cdr(iter))) {
-          put_char(out, chr(' '));
-        } else {
-          put_string(out, lit(" . "));
-          obj_print(cdr(iter), out);
-          put_char(out, chr(')'));
+      val sym = car(obj);
+
+      if (sym == quote_s || sym == qquote_s) {
+        put_char(out, chr('\''));
+        obj_print(second(obj), out);
+      } else if (sym == unquote_s) {
+        put_char(out, chr(','));
+        obj_print(second(obj), out);
+      } else if (sym == splice_s) {
+        put_string(out, lit(",*"));
+        obj_print(second(obj), out);
+      } else {
+        val iter;
+        put_char(out, chr('('));
+        for (iter = obj; consp(iter); iter = cdr(iter)) {
+          obj_print(car(iter), out);
+          if (nullp(cdr(iter))) {
+            put_char(out, chr(')'));
+          } else if (consp(cdr(iter))) {
+            put_char(out, chr(' '));
+          } else {
+            put_string(out, lit(" . "));
+            obj_print(cdr(iter), out);
+            put_char(out, chr(')'));
+          }
         }
       }
     }
@@ -3086,18 +3118,31 @@ void obj_pprint(val obj, val out)
   case CONS:
   case LCONS:
     {
-      val iter;
-      put_char(out, chr('('));
-      for (iter = obj; consp(iter); iter = cdr(iter)) {
-        obj_pprint(car(iter), out);
-        if (nullp(cdr(iter))) {
-          put_char(out, chr(')'));
-        } else if (consp(cdr(iter))) {
-          put_char(out, chr(' '));
-        } else {
-          put_string(out, lit(" . "));
-          obj_pprint(cdr(iter), out);
-          put_char(out, chr(')'));
+      val sym = car(obj);
+
+      if (sym == quote_s || sym == qquote_s) {
+        put_char(out, chr('\''));
+        obj_pprint(second(obj), out);
+      } else if (sym == unquote_s) {
+        put_char(out, chr(','));
+        obj_pprint(second(obj), out);
+      } else if (sym == splice_s) {
+        put_string(out, lit(",*"));
+        obj_pprint(second(obj), out);
+      } else {
+        val iter;
+        put_char(out, chr('('));
+        for (iter = obj; consp(iter); iter = cdr(iter)) {
+          obj_pprint(car(iter), out);
+          if (nullp(cdr(iter))) {
+            put_char(out, chr(')'));
+          } else if (consp(cdr(iter))) {
+            put_char(out, chr(' '));
+          } else {
+            put_string(out, lit(" . "));
+            obj_pprint(cdr(iter), out);
+            put_char(out, chr(')'));
+          }
         }
       }
     }
