@@ -1,5 +1,24 @@
 2011-11-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	mapcar, mappend and apply functions.
+	fun operator.
+
+	* eval.c (apply_s): New symbol variable.
+	(apply): Handle functions specified as symbols. Use symbol from context
+	form in error reporting.
+	(apply_intrinsic): New function.
+	(interp_fun): Bugfix: removed evaluation of arguments, since
+	arguments are already evaluated.
+	(op_call): Simplified by not having to handle symbols,
+	since apply does.
+	(op_fun): New function.
+	(expand): Handle special form fun.
+	(mapcarv, mappendv): New functions.
+	(eval_init): Initialize apply_s. Register op_fun function
+	in op_table. Register mapcar, mappend and apply functions.
+
+2011-11-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	Added evaluation support for quote and quasiquote with unquotes.
 	New functions list, append and eval.  Code walking framework for
 	expanding quasiquotes.  quotes right now.
