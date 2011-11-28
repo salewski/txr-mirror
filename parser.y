@@ -38,6 +38,7 @@
 #include "utf8.h"
 #include "match.h"
 #include "hash.h"
+#include "eval.h"
 #include "parser.h"
 
 int yylex(void);
@@ -48,6 +49,7 @@ static val o_elems_transform(val output_form);
 static val define_transform(val define_form);
 static val lit_char_helper(val litchars);
 static val optimize_text(val text_form);
+static val choose_quote(val quoted_form);
 static wchar_t char_from_name(wchar_t *name);
 
 static val parsed_spec;
@@ -290,7 +292,15 @@ texts : text %prec LOW          { $$ = rlcp(cons($1, nil), $1); }
 elem : texts                    { $$ = rlcp(cons(text_s, $1), $1);
                                   $$ = rlcp(optimize_text($$), $$); }
      | var                      { $$ = rl($1, num(lineno)); }
-     | list                     { $$ = $1; }
+     | list                     { if (first($1) == do_s)
+                                  { val form = second($1);
+                                    val form_ex = expand(form);
+
+                                    if (form == form_ex)
+                                      $$ = $1;
+                                    else
+                                      $$ = rlcp(cons(do_s, cons(form_ex, nil)),
+                                                $1); }}
      | COLL exprs_opt ')' elems END     { $$ = list(coll_s, $4, nil, $2, nao);
                                           rl($$, num($1)); }
      | COLL exprs_opt ')' elems
@@ -515,7 +525,7 @@ o_elem : TEXT                   { $$ = string_own($1);
        | SPACE                  { $$ = string_own($1);
                                   rl($$, num(lineno)); }
        | o_var                  { $$ = $1; }
-       | list                   { $$ = rlcp(cons(expr_s, $1), $1); }
+       | list                   { $$ = rlcp(cons(expr_s, expand($1)), $1); }
        | rep_elem               { $$ = $1; }
        ;
 
@@ -603,14 +613,15 @@ var_op : '*'                    { $$ = list(t, nao); }
 list : '(' exprs ')'            { $$ = rl($2, num($1)); }
      | '(' ')'                  { $$ = nil; }
      | ',' expr                 { $$ = rlcp(list(unquote_s, $2, nao), $2); }
-     | '\'' expr                { $$ = rlcp(list(qquote_s, $2, nao), $2); }
+     | '\'' expr                { $$ = rlcp(list(choose_quote($2),
+                                            $2, nao), $2); }
      | SPLICE expr              { $$ = rlcp(list(splice_s, $2, nao), $2); }
      | '(' error                { $$ = nil;
                                   yybadtoken(yychar, lit("list expression")); }
      ;
 
-meta_expr : METAPAR exprs ')'   { $$ = cons(expr_s, $2); }
-          | METAPAR ')'         { $$ = cons(expr_s, nil); }
+meta_expr : METAPAR exprs ')'   { $$ = rlcp(cons(expr_s, expand($2)), $2); }
+          | METAPAR ')'         { $$ = rl(cons(expr_s, nil), num(lineno)); }
           | METAPAR error       { $$ = nil;
                                   yybadtoken(yychar, lit("meta expression")); }
           ;
@@ -752,7 +763,7 @@ quasi_items : quasi_item                { $$ = cons($1, nil); }
 quasi_item : litchars           { $$ = lit_char_helper($1); }
            | TEXT               { $$ = string_own($1); }
            | var                { $$ = $1; }
-           | list               { $$ = rlcp(cons(expr_s, $1), $1); }
+           | list               { $$ = rlcp(cons(expr_s, expand($1)), $1); }
            ;
 
 litchars : LITCHAR              { $$ = cons(chr($1), nil); }
@@ -877,6 +888,25 @@ static val optimize_text(val text_form)
   if (all_satisfy(rest(text_form), func_n1(stringp), nil))
     return cat_str(rest(text_form), lit(""));
   return text_form;
+}
+
+static val unquotes_occur(val quoted_form)
+{
+  if (atom(quoted_form)) {
+    return nil;
+  } else {
+    val sym = car(quoted_form);
+    if (sym == unquote_s || sym == splice_s)
+      return t;
+    if (sym == quote_s)
+      return nil;
+    return or2(unquotes_occur(sym), unquotes_occur(cdr(quoted_form)));
+  }
+}
+
+static val choose_quote(val quoted_form)
+{
+  return unquotes_occur(quoted_form) ? qquote_s : quote_s;
 }
 
 val rl(val form, val lineno)

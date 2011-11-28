@@ -33,6 +33,7 @@ val interp_fun(val env, val fun, val args);
 val apply(val fun, val arglist, val ctx_form);
 val eval_progn(val forms, val env, val ctx_form);
 val eval(val form, val env, val ctx_form);
+val expand(val form);
 val bindable(val obj);
 
 void eval_init(void);

@@ -1,3 +1,42 @@
+2011-11-28  Kaz Kylheku  <kaz@kylheku.com>
+
+	Added evaluation support for quote and quasiquote with unquotes.
+	New functions list, append and eval.  Code walking framework for
+	expanding quasiquotes.  quotes right now.
+
+	* eval.c (let_s, lambda_s, call_s, cond_s, if_s, and_s, or_s
+	defvar_s, defun_s, list_s, append_s): New symbol variables.
+	(eval_intrinsic, op_quote, expand_forms, expand_cond_pairs,
+	expand_place, expand_qquote): New static functions.
+	(expand): New external function.
+	(eval_init): Initialize new symbol variables. Use newly defined symbol
+	variables to register functions. Also, new functions: quote, append,
+	list and eval.
+
+	* eval.h (expand): Declared.
+
+	* lib.c (appendv): New function.
+	(obj_init): quote and splice operator symbols moved into system
+	package.
+	(obj_print, obj_pprint): Support for printing quotes and splices.
+
+	* lib.h (appendv): Declared.
+
+	* match.c (do_s): New symbol variable.
+	(syms_init): New variable initialized.
+	(dir_tales_init): New variable used instead of intern.
+
+	* match.h (do_s): Declared.
+
+	* parser.y (elem): @(do) form recognized and its argument passed
+	through the new expander.
+	(o_elem, quasi_item): Pass list through expander.
+	(list): Use choose_quote to decide whether to put
+	regular quote or quasiquote on quoted list.
+	(meta_expr): Fixed abstract syntax so the expression is a single
+	argument of the sys:expr, rather than multiple arguments.
+	(unquotes_occur, choose_quote): New static function.
+
 2011-11-26  Kaz Kylheku  <kaz@kylheku.com>
 
 	* parser.y (expr): Set source location info on elements.
