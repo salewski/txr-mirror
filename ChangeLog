@@ -1,5 +1,11 @@
 2011-11-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): More functions.
+
+	* txr.vim: More highlighting.
+
+2011-11-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	Adding streams functions to Lisp evaluator.
 
 	* eval.c (op_let): Bugfix: was not evaluating var init forms.
