@@ -832,6 +832,26 @@ void eval_init(void)
   reg_fun(intern(lit("mappend"), user_package), func_n1v(mappendv));
   reg_fun(apply_s, func_n2(apply_intrinsic));
 
+  reg_fun(intern(lit("second"), user_package), func_n1(second));
+  reg_fun(intern(lit("third"), user_package), func_n1(third));
+  reg_fun(intern(lit("fourth"), user_package), func_n1(fourth));
+  reg_fun(intern(lit("fifth"), user_package), func_n1(fifth));
+  reg_fun(intern(lit("sixth"), user_package), func_n1(sixth));
+  reg_fun(intern(lit("copy-list"), user_package), func_n1(copy_list));
+  reg_fun(intern(lit("nreverse"), user_package), func_n1(nreverse));
+  reg_fun(intern(lit("reverse"), user_package), func_n1(reverse));
+  reg_fun(intern(lit("ldiff"), user_package), func_n2(ldiff));
+  reg_fun(intern(lit("flatten"), user_package), func_n1(flatten));
+  reg_fun(intern(lit("memq"), user_package), func_n2(memq));
+  reg_fun(intern(lit("memqual"), user_package), func_n2(memqual));
+  reg_fun(intern(lit("tree-find"), user_package), func_n3(tree_find));
+  reg_fun(intern(lit("some"), user_package), func_n3(some_satisfy));
+  reg_fun(intern(lit("all"), user_package), func_n3(all_satisfy));
+  reg_fun(intern(lit("none"), user_package), func_n3(none_satisfy));
+  reg_fun(intern(lit("eq"), user_package), func_n2(eq));
+  reg_fun(intern(lit("eql"), user_package), func_n2(eql));
+  reg_fun(intern(lit("equal"), user_package), func_n2(equal));
+
   reg_fun(intern(lit("+"), user_package), func_n0v(plusv));
   reg_fun(intern(lit("-"), user_package), func_n1v(minusv));
   reg_fun(intern(lit("*"), user_package), func_n0v(mulv));

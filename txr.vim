@@ -30,6 +30,11 @@ syn keyword txl_keyword contained let lambda call cond if and or defvar defun
 syn keyword txl_keyword contained inc dec push pop gethash list append apply
 syn keyword txl_keyword contained cons list atom null consp listp proper-listp
 syn keyword txl_keyword contained length mapcar mappend apply
+
+syn keyword txl_keyword second third fourth fifth sixth copy-list nreversei
+syn keyword txl_keyword reverse ldiff flatten memq memqual
+syn keyword txl_keyword tree-find some all none eq eql equal 
+
 syn keyword txl_keyword contained + - * trunc mod numberp > < >= <= max min
 syn keyword txl_keyword contained int-str
 
