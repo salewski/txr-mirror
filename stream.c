@@ -1018,7 +1018,9 @@ val vformat_to_string(val fmtstr, va_list vl)
 
 val format(val stream, val str, ...)
 {
-  val st = or2(stream, make_string_output_stream());
+  val st = if3(stream == t,
+               std_output,
+               or2(stream, make_string_output_stream()));
   type_check (st, COBJ);
   type_assert (st->co.cls == stream_s, (lit("~a is not a stream"), st, nao));
 
@@ -1030,6 +1032,53 @@ val format(val stream, val str, ...)
     va_end (vl);
     return (stream) ? ret : get_string_from_stream(st);
   }
+}
+
+val formatv(val stream, val string, val args)
+{
+  val arg[32], *p = arg;
+
+  for (; args && p - arg < 32; args = cdr(args), p++)
+    *p = car(args);
+
+  switch (p - arg) {
+  case  0: return format(stream, string,  nao);
+  case  1: return format(stream, string, arg[0], nao);
+  case  2: return format(stream, string, arg[0], arg[1], nao);
+  case  3: return format(stream, string, arg[0], arg[1], arg[2], nao);
+  case  4: return format(stream, string, arg[0], arg[1], arg[2], arg[3], nao);
+  case  5: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], nao);
+  case  6: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], nao);
+  case  7: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], nao);
+  case  8: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], nao);
+  case  9: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], nao);
+  case 10: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], nao);
+  case 11: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], nao);
+  case 12: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], nao);
+  case 13: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], nao);
+  case 14: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], nao);
+  case 15: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], nao);
+  case 16: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], nao);
+  case 17: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], nao);
+  case 18: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], nao);
+  case 19: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], arg[18], nao);
+  case 20: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], arg[18], arg[19], nao);
+  case 21: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], arg[18], arg[19], arg[20], nao);
+  case 22: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], arg[18], arg[19], arg[20], arg[21], nao);
+  case 23: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], arg[18], arg[19], arg[20], arg[21], arg[22], nao);
+  case 24: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], arg[18], arg[19], arg[20], arg[21], arg[22], arg[23], nao);
+  case 25: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], arg[18], arg[19], arg[20], arg[21], arg[22], arg[23], arg[24], nao);
+  case 26: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], arg[18], arg[19], arg[20], arg[21], arg[22], arg[23], arg[24], arg[25], nao);
+  case 27: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], arg[18], arg[19], arg[20], arg[21], arg[22], arg[23], arg[24], arg[25], arg[26], nao);
+  case 28: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], arg[18], arg[19], arg[20], arg[21], arg[22], arg[23], arg[24], arg[25], arg[26], arg[27], nao);
+  case 29: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], arg[18], arg[19], arg[20], arg[21], arg[22], arg[23], arg[24], arg[25], arg[26], arg[27], arg[28], nao);
+  case 30: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], arg[18], arg[19], arg[20], arg[21], arg[22], arg[23], arg[24], arg[25], arg[26], arg[27], arg[28], arg[29], nao);
+  case 31: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], arg[18], arg[19], arg[20], arg[21], arg[22], arg[23], arg[24], arg[25], arg[26], arg[27], arg[28], arg[29], arg[30], nao);
+  case 32: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], arg[18], arg[19], arg[20], arg[21], arg[22], arg[23], arg[24], arg[25], arg[26], arg[27], arg[28], arg[29], arg[30], arg[31], nao);
+  }
+
+  uw_throwf(file_error_s, lit("too many arguments to format"), nao);
+  abort();
 }
 
 val put_string(val stream, val string)
@@ -1071,6 +1120,67 @@ val flush_stream(val stream)
     struct strm_ops *ops = (struct strm_ops *) stream->co.ops;
     return ops->flush ? ops->flush(stream) : t;
   }
+}
+
+static DIR *w_opendir(const wchar_t *wname)
+{
+  char *name = (char *) utf8_dup_to(wname);
+  DIR *d = opendir(name);
+  free(name);
+  return d;
+}
+
+val open_directory(val path)
+{
+  DIR *d = w_opendir(c_str(path));
+
+  if (!d)
+    uw_throwf(file_error_s, lit("error opening directory ~a: ~a/~s"),
+              path, num(errno), string_utf8(strerror(errno)), nao);
+
+  return make_dir_stream(d);
+}
+
+val open_file(val path, val mode_str)
+{
+  FILE *f = w_fopen(c_str(path), c_str(mode_str));
+  val input = nil, output = nil;
+
+  if (!f)
+    uw_throwf(file_error_s, lit("error opening ~a: ~a/~s"),
+              path, num(errno), string_utf8(strerror(errno)), nao);
+
+  if (break_str(mode_str, lit("w")))
+    output = t;
+  if (break_str(mode_str, lit("a")))
+    output = t;
+  if (break_str(mode_str, lit("r")))
+    input = t;
+  if (break_str(mode_str, lit("+")))
+    input = output = t;
+
+  return make_stdio_stream(f, path, input, output);
+}
+
+val open_pipe(val path, val mode_str)
+{
+  FILE *f = w_popen(c_str(path), c_str(mode_str));
+  val input = nil, output = nil;
+
+  if (!f)
+    uw_throwf(file_error_s, lit("error opening pipe ~a: ~a/~s"),
+              path, num(errno), string_utf8(strerror(errno)), nao);
+
+  if (break_str(mode_str, lit("w")))
+    output = t;
+  if (break_str(mode_str, lit("a")))
+    output = t;
+  if (break_str(mode_str, lit("r")))
+    input = t;
+  if (break_str(mode_str, lit("+")))
+    input = output = t;
+
+  return make_pipe_stream(f, path, input, output);
 }
 
 void stream_init(void)

@@ -42,9 +42,13 @@ val get_byte(val);
 val vformat(val stream, val string, va_list);
 val vformat_to_string(val string, va_list);
 val format(val stream, val string, ...);
+val formatv(val stream, val string, val args);
 val put_string(val stream, val string);
 val put_line(val stream, val string);
 val put_char(val stream, val ch);
 val flush_stream(val stream);
+val open_directory(val path);
+val open_file(val path, val mode_str);
+val open_pipe(val path, val mode_str);
 
 void stream_init(void);

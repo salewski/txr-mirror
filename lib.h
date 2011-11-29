@@ -489,8 +489,8 @@ val find(val list, val key, val testfun, val keyfun);
 val set_diff(val list1, val list2, val testfun, val keyfun);
 val env(void);
 
-void obj_print(val obj, val stream);
-void obj_pprint(val obj, val stream);
+val obj_print(val obj, val stream);
+val obj_pprint(val obj, val stream);
 void init(const wchar_t *progname, mem_t *(*oom_realloc)(mem_t *, size_t),
           val *stack_bottom);
 void dump(val obj, val stream);

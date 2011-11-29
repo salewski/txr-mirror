@@ -2970,11 +2970,11 @@ static void obj_init(void)
   prog_string = string(progname);
 }
 
-void obj_print(val obj, val out)
+val obj_print(val obj, val out)
 {
   if (obj == nil) {
     put_string(out, lit("nil"));
-    return;
+    return obj;
   }
 
   switch (type(obj)) {
@@ -3009,7 +3009,7 @@ void obj_print(val obj, val out)
         }
       }
     }
-    return;
+    return obj;
   case LIT:
   case STR:
     {
@@ -3036,7 +3036,7 @@ void obj_print(val obj, val out)
       }
       put_char(out, chr('"'));
     }
-    return;
+    return obj;
   case CHR:
     {
       wchar_t ch = c_chr(obj);
@@ -3060,10 +3060,10 @@ void obj_print(val obj, val out)
           format(out, lit("x~x"), num(ch), nao);
       }
     }
-    return;
+    return obj;
   case NUM:
     format(out, lit("~s"), obj, nao);
-    return;
+    return obj;
   case SYM:
     if (obj->s.package != user_package) {
       if (!obj->s.package)
@@ -3073,13 +3073,13 @@ void obj_print(val obj, val out)
       put_char(out, chr(':'));
     }
     put_string(out, symbol_name(obj));
-    return;
+    return obj;
   case PKG:
     format(out, lit("#<package: ~s>"), obj->pk.name, nao);
-    return;
+    return obj;
   case FUN:
     format(out, lit("#<function: type ~a>"), num(obj->f.functype), nao);
-    return;
+    return obj;
   case VEC:
     {
       cnum i, fill = c_num(obj->v.vec[vec_fill]);
@@ -3091,27 +3091,28 @@ void obj_print(val obj, val out)
       }
       put_char(out, chr(')'));
     }
-    return;
+    return obj;
   case LSTR:
     obj_print(obj->ls.prefix, out);
     put_string(out, lit("#<... lazy string>"));
-    return;
+    return obj;
   case COBJ:
     obj->co.ops->print(obj, out);
-    return;
+    return obj;
   case ENV:
     format(out, lit("#<environment: ~p>"), (void *) obj, nao);
-    return;
+    return obj;
   }
 
   format(out, lit("#<garbage: ~p>"), (void *) obj, nao);
+  return obj;
 }
 
-void obj_pprint(val obj, val out)
+val obj_pprint(val obj, val out)
 {
   if (obj == nil) {
     put_string(out, lit("nil"));
-    return;
+    return obj;
   }
 
   switch (type(obj)) {
@@ -3146,26 +3147,26 @@ void obj_pprint(val obj, val out)
         }
       }
     }
-    return;
+    return obj;
   case LIT:
   case STR:
     put_string(out, obj);
-    return;
+    return obj;
   case CHR:
     put_char(out, obj);
-    return;
+    return obj;
   case NUM:
     format(out, lit("~s"), obj, nao);
-    return;
+    return obj;
   case SYM:
     put_string(out, symbol_name(obj));
-    return;
+    return obj;
   case PKG:
     format(out, lit("#<package: ~s>"), obj->pk.name, nao);
-    return;
+    return obj;
   case FUN:
     format(out, lit("#<function: type ~a>"), num(obj->f.functype), nao);
-    return;
+    return obj;
   case VEC:
     {
       cnum i, fill = c_num(obj->v.vec[vec_fill]);
@@ -3177,20 +3178,21 @@ void obj_pprint(val obj, val out)
       }
       put_char(out, chr(')'));
     }
-    return;
+    return obj;
   case LSTR:
     obj_pprint(obj->ls.prefix, out);
     put_string(out, lit("..."));
-    return;
+    return obj;
   case COBJ:
     obj->co.ops->print(obj, out);
-    return;
+    return obj;
   case ENV:
     format(out, lit("#<environment: ~p>"), (void *) obj, nao);
-    return;
+    return obj;
   }
 
   format(out, lit("#<garbage: ~p>"), (void *) obj, nao);
+  return obj;
 }
 
 void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),
@@ -3204,8 +3206,8 @@ void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),
   gc_init(stack_bottom);
   obj_init();
   uw_init();
-  eval_init();
   stream_init();
+  eval_init();
   filter_init();
 
   gc_state(gc_save);
