@@ -359,7 +359,7 @@ static val op_let(val form, val env)
       if (!consp(cdr(item))) 
         eval_error(form, lit("let: invalid syntax: ~s"), item, nao);
       var = first(item);
-      val = second(item);
+      val = eval(second(item), env, form);
     }
 
     if (symbolp(var)) {
@@ -766,6 +766,11 @@ static void reg_fun(val sym, val fun)
   sethash(top_fb, sym, cons(sym, fun));
 }
 
+static void reg_var(val sym, val obj)
+{
+  sethash(top_vb, sym, cons(sym, obj));
+}
+
 void eval_init(void)
 {
   protect(&top_vb, &top_fb, &op_table, (val *) 0);
@@ -857,6 +862,30 @@ void eval_init(void)
           func_n2(set_hash_userdata));
 
   reg_fun(intern(lit("eval"), user_package), func_n2(eval_intrinsic));
+
+  reg_var(intern(lit("*stdout*"), user_package), std_output);
+  reg_var(intern(lit("*stdin*"), user_package), std_input);
+  reg_var(intern(lit("*stderr*"), user_package), std_error);
+  reg_fun(intern(lit("format"), user_package), func_n2v(formatv));
+  reg_fun(intern(lit("print"), user_package), func_n2(obj_print));
+  reg_fun(intern(lit("pprint"), user_package), func_n2(obj_pprint));
+  reg_fun(intern(lit("make-string-input-stream"), user_package), func_n1(make_string_input_stream));
+  reg_fun(intern(lit("make-string-byte-input-stream"), user_package), func_n1(make_string_byte_input_stream));
+  reg_fun(intern(lit("make-string-output-stream"), user_package), func_n0(make_string_output_stream));
+  reg_fun(intern(lit("get-string-from-stream"), user_package), func_n1(get_string_from_stream));
+  reg_fun(intern(lit("make-strlist-output-stream"), user_package), func_n0(make_strlist_output_stream));
+  reg_fun(intern(lit("get-list-from-stream"), user_package), func_n1(get_list_from_stream));
+  reg_fun(intern(lit("close-stream"), user_package), func_n2(close_stream));
+  reg_fun(intern(lit("get-line"), user_package), func_n1(get_line));
+  reg_fun(intern(lit("get-char"), user_package), func_n1(get_char));
+  reg_fun(intern(lit("get-byte"), user_package), func_n1(get_byte));
+  reg_fun(intern(lit("put-string"), user_package), func_n2(put_string));
+  reg_fun(intern(lit("put-line"), user_package), func_n2(put_line));
+  reg_fun(intern(lit("put-char"), user_package), func_n2(put_char));
+  reg_fun(intern(lit("flush-stream"), user_package), func_n1(flush_stream));
+  reg_fun(intern(lit("open-directory"), user_package), func_n1(open_directory));
+  reg_fun(intern(lit("open-file"), user_package), func_n2(open_file));
+  reg_fun(intern(lit("open-pipe"), user_package), func_n2(open_pipe));
 
   eval_error_s = intern(lit("eval-error"), user_package);
   uw_register_subtype(eval_error_s, error_s);

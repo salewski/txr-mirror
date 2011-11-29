@@ -1,5 +1,34 @@
 2011-11-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	Adding streams functions to Lisp evaluator.
+
+	* eval.c (op_let): Bugfix: was not evaluating var init forms.
+	(reg_var): New static function.
+	(eval_init): Registered numerous stream functions and the
+	three standard streams.
+
+	* lib.c (obj_print, obj_pprint): Modified to return a value.
+	(init): eval_init called after stream_init, because eval
+	needs the three standrad streams prepared.
+
+	* lib.h (obj_print, obj_pprint): Declarations updated.
+
+	* stream.c (format): Support t as a shorthand for standard output.
+	(formatv, open_directory, open_file, open_pipe): New functions.
+	(w_opendir): New static function.
+
+	* stream.h (formatv, open_directory, open_file, open_pipe):
+	Declared.
+
+	* txr.vim: set iskeyword such that keyword can contain special
+	characters. Set b:current_syntax to "lisp".
+	(txl_keyword): New keyword category populated with TXR Lisp keywords
+	defined as separate category.
+	(txr_list): Contains txl_keyword.
+	(txr_meta): Contains txl_keyword and txr_list.
+
+2011-11-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	mapcar, mappend and apply functions.
 	fun operator.
 
