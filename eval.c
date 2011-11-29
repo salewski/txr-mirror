@@ -49,8 +49,10 @@ val top_vb, top_fb;
 val op_table;
 
 val eval_error_s;
-val let_s, lambda_s, call_s, cond_s, if_s, and_s, or_s, defvar_s, defun_s;
+val let_s, let_star_s, lambda_s, call_s;
+val cond_s, if_s, and_s, or_s, defvar_s, defun_s;
 val inc_s, dec_s, push_s, pop_s, gethash_s;
+val for_s, for_star_s;
 val list_s, append_s, apply_s;
 
 val make_env(val vbindings, val fbindings, val up_env)
@@ -75,6 +77,12 @@ val env_vbind(val env, val sym, val obj)
   type_check(env, ENV);
   env->e.vbindings = acons_new(sym, obj, env->e.vbindings);
   return sym;
+}
+
+static void env_replace_vbind(val env, val bindings)
+{
+  type_check(env, ENV);
+  env->e.vbindings = bindings;
 }
 
 static val eval_error(val form, val fmt, ...)
@@ -343,13 +351,11 @@ static val op_quote(val form, val env)
   return second(form);
 }
 
-static val op_let(val form, val env)
+static val bindings_helper(val vars, val env, val sequential, val ctx_form)
 {
-  val args = rest(form);
-  val vars = first(args);
-  val body = rest(args);
   val iter;
   list_collect_decl (new_bindings, ptail);
+  val nenv = if3(sequential, make_env(nil, nil, env), env);
 
   for (iter = vars; iter; iter = cdr(iter)) {
     val item = car(iter);
@@ -357,19 +363,33 @@ static val op_let(val form, val env)
 
     if (consp(item)) {
       if (!consp(cdr(item))) 
-        eval_error(form, lit("let: invalid syntax: ~s"), item, nao);
+        eval_error(ctx_form, lit("let: invalid syntax: ~s"),
+                   car(ctx_form), item, nao);
       var = first(item);
-      val = eval(second(item), env, form);
+      val = eval(second(item), nenv, ctx_form);
     }
 
     if (symbolp(var)) {
       if (!bindable(var))
-        eval_error(form, lit("let: ~s is not a bindable sybol"), var, nao);
+        eval_error(ctx_form, lit("let: ~s is not a bindable sybol"),
+                   car(ctx_form), var, nao);
     }
 
     list_collect (ptail, cons(var, val));
-  }
 
+    if (sequential)
+      env_replace_vbind(nenv, new_bindings);
+  }
+  return new_bindings;
+}
+
+static val op_let(val form, val env)
+{
+  val let = first(form);
+  val args = rest(form);
+  val vars = first(args);
+  val body = rest(args);
+  val new_bindings = bindings_helper(vars, env, eq(let, let_star_s), form);
   return eval_progn(body, make_env(new_bindings, nil, env), form);
 }
 
@@ -531,6 +551,22 @@ static val op_modplace(val form, val env)
   internal_error("unrecognized operator");
 }
 
+static val op_for(val form, val env)
+{
+  val forsym = first(form);
+  val vars = second(form);
+  val cond = third(form);
+  val incs = fourth(form);
+  val forms = rest(rest(rest(rest(form))));
+  val new_bindings = bindings_helper(vars, env, eq(forsym, for_star_s), form);
+  val new_env = make_env(new_bindings, nil, env);
+
+  for (; eval(car(cond), new_env, form); eval_progn(incs, new_env, form))
+    eval_progn(forms, new_env, form);
+
+  return eval_progn(rest(cond), new_env, form);
+}
+
 static val expand_forms(val form)
 {
   if (atom(form)) {
@@ -639,6 +675,22 @@ static val expand_qquote(val qquoted_form)
   return num(42);
 }
 
+static val expand_vars(val vars)
+{
+  if (atom(vars)) {
+    return vars;
+  } else {
+    cons_bind (var, init, car(vars));
+    val rest_vars = rest(vars);
+    val init_ex = expand(init);
+    val rest_vars_ex = expand_vars(rest_vars);
+
+    if (init == init_ex && rest_vars == rest_vars_ex)
+      return vars;
+
+    return cons(cons(var, init_ex), rest_vars_ex);
+  }
+}
 
 val expand(val form)
 {
@@ -647,13 +699,14 @@ val expand(val form)
   } else {
     val sym = car(form);
 
-    if (sym == let_s || sym == lambda_s) {
+    if (sym == let_s || sym == let_star_s || sym == lambda_s) {
       val body = rest(rest(form));
-      val args = second(form);
+      val vars = second(form);
       val body_ex = expand_forms(body);
-      if (body == body_ex)
+      val vars_ex = expand_vars(vars);
+      if (body == body_ex && vars == vars_ex)
         return form;
-      return rlcp(cons(sym, cons(args, body_ex)), form);
+      return rlcp(cons(sym, cons(vars_ex, body_ex)), form);
     } else if (sym == call_s || sym == if_s || sym == and_s || sym == or_s) {
       val body = rest(form);
       val body_ex = expand_forms(body);
@@ -697,6 +750,20 @@ val expand(val form)
       return form;
     } else if (sym == qquote_s) {
       return expand_qquote(second(form));
+    } else if (sym == for_s || sym == for_star_s) {
+      val vars = second(form);
+      val cond = third(form);
+      val incs = fourth(form);
+      val forms = rest(rest(rest(rest(form))));
+      val vars_ex = expand_vars(vars);
+      val cond_ex = expand_forms(cond);
+      val incs_ex = expand_forms(incs);
+      val forms_ex = expand_forms(forms);
+
+      if (vars == vars_ex && cond == cond_ex && 
+          incs == incs_ex && forms == forms_ex)
+        return form;
+      return cons(sym, cons(vars_ex, cons(cond_ex, cons(incs_ex, forms_ex))));
     } else{
       /* funtion call */
       val args = rest(form);
@@ -779,6 +846,7 @@ void eval_init(void)
   op_table = make_hash(nil, nil, nil);
 
   let_s = intern(lit("let"), user_package);
+  let_star_s = intern(lit("let*"), user_package);
   lambda_s = intern(lit("lambda"), user_package);
   call_s = intern(lit("call"), user_package);
   cond_s = intern(lit("cond"), user_package);
@@ -791,6 +859,8 @@ void eval_init(void)
   dec_s = intern(lit("dec"), user_package);
   push_s = intern(lit("push"), user_package);
   pop_s = intern(lit("pop"), user_package);
+  for_s = intern(lit("for"), user_package);
+  for_star_s = intern(lit("for*"), user_package);
   gethash_s = intern(lit("gethash"), user_package);
   list_s = intern(lit("list"), user_package);
   append_s = intern(lit("append"), user_package);
@@ -798,6 +868,7 @@ void eval_init(void)
 
   sethash(op_table, quote_s, cptr((mem_t *) op_quote));
   sethash(op_table, let_s, cptr((mem_t *) op_let));
+  sethash(op_table, let_star_s, cptr((mem_t *) op_let));
   sethash(op_table, lambda_s, cptr((mem_t *) op_lambda));
   sethash(op_table, call_s, cptr((mem_t *) op_call));
   sethash(op_table, fun_s, cptr((mem_t *) op_fun));
@@ -812,6 +883,8 @@ void eval_init(void)
   sethash(op_table, set_s, cptr((mem_t *) op_modplace));
   sethash(op_table, push_s, cptr((mem_t *) op_modplace));
   sethash(op_table, pop_s, cptr((mem_t *) op_modplace));
+  sethash(op_table, for_s, cptr((mem_t *) op_for));
+  sethash(op_table, for_star_s, cptr((mem_t *) op_for));
 
   reg_fun(cons_s, func_n2(cons));
   reg_fun(intern(lit("car"), user_package), func_n1(car));
