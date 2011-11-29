@@ -1,5 +1,19 @@
 2011-11-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (let_star_s, for_s, for_star_s): New symbols.
+	(env_replace_vbind, bindings_helper): New static functions.
+	(op_let): Refactored to allow for let* form. Code for setting
+	up bindings moved into bindings helper, shared by for loop.
+	(op_for, expand_vars): New static functions.
+	(expand): Bugfix: let case was neglecting to walk the var
+	initialization forms. This is done via expand_vars now.
+	let_star_s added to this case to handle let* and let at
+	the same time. New case added for for and for*.
+	(eval_init): let_star_s, for_s, and for_star_s initialized,
+	and entered into op_table.
+
+2011-11-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): More functions.
 
 	* txr.vim: More highlighting.
