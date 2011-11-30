@@ -135,6 +135,7 @@ lex_dbg_flags=${lex_dbg_flags-}
 txr_dbg_opts=${txr_dbg_opts---gc-debug}
 valgrind=${valgrind-}
 lit_align=${lit_align-}
+extra_debugging=${extra_debugging-}
 
 #
 # If --help was given (or --help=<nonempty> or help=<nonempty>) then
@@ -334,6 +335,11 @@ valgrind [$valgrind]
   Valgrind integration means that when the program is running under valgrind,
   it advises valgrind about stack memory locations accessed by the garbage
   collector, to suppress diagnostics about uninitialized accesses.
+
+extra_debugging [$extra_debugging]
+
+  Use --extra_debugging to configure some additional debugging features,
+  which incur a run-time penalty.
 !
   exit 1
 fi
@@ -919,6 +925,15 @@ if ! make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
 else
   printf "yes\n"
   printf "#define HAVE_GETENVIRONMENTSTRINGS 1\n" >> config.h
+fi
+
+#
+# Extra debugging.
+#
+
+if [ -n "$extra_debugging" ] ; then
+  printf "Configuring extra debugging, as requested ...\n"
+  printf "#define EXTRA_DEBUGGING 1\n" >> config.h
 fi
 
 #

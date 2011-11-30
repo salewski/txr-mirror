@@ -3228,3 +3228,13 @@ void d(val obj)
 {
   dump(obj, std_output);
 }
+
+/*
+ * Function for software breakpoints.
+ * Debugging routines call here when a breakpoint
+ * is requested. For this to work, set a breakpoint
+ * on this function.
+ */
+void breakpt(void)
+{
+}

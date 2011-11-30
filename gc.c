@@ -72,6 +72,10 @@ static val heap_min_bound, heap_max_bound;
 
 int gc_enabled = 1;
 
+#if EXTRA_DEBUGGING
+static val break_obj;
+#endif
+
 val prot1(val *loc)
 {
   assert (top < prot_stack_limit);
@@ -242,6 +246,11 @@ tail_call:
     abort();
 
   obj->t.type = (type_t) (obj->t.type | REACHABLE);
+
+#if EXTRA_DEBUGGING
+  if (obj == break_obj)
+    breakpt();
+#endif
 
   switch (t) {
   case CONS:
@@ -510,6 +519,15 @@ void unmark(void)
       block->t.type = (type_t) (block->t.type & ~(FREE | REACHABLE));
     }
   }
+}
+
+void dheap(heap_t *heap, int start, int end);
+
+void dheap(heap_t *heap, int start, int end)
+{
+  int i;
+  for (i = start; i < end; i++)
+    format(std_output, lit("(~a ~s)\n"), num(i), &heap->block[i], nao);
 }
 
 /*

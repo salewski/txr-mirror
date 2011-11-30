@@ -495,6 +495,7 @@ void init(const wchar_t *progname, mem_t *(*oom_realloc)(mem_t *, size_t),
           val *stack_bottom);
 void dump(val obj, val stream);
 void d(val obj);
+void breakpt(void);
 
 #define nil ((obj_t *) 0)
 
