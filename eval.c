@@ -368,6 +368,8 @@ static val bindings_helper(val vars, val env, val sequential, val ctx_form)
                    car(ctx_form), item, nao);
       var = first(item);
       val = eval(second(item), nenv, ctx_form);
+    } else {
+      var = item;
     }
 
     if (symbolp(var)) {

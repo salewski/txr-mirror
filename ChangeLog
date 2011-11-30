@@ -1,5 +1,9 @@
 2011-11-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (bindings_helper): Fix uninitialized variable.
+
+2011-11-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (dohash_s): New symbol variable.
 	(op_dohash): New static function
 	(expand): New case for dohash_s.
