@@ -1,5 +1,14 @@
 2011-11-30  Kaz Kylheku  <kaz@kylheku.com>
 
+	* hash.c (hash_process_weak): Fix regression caused by a mistake
+	in the the 2010-01-26 commit, prior to release 033. When processing a
+	table with weak values, this function was mistakenly testing the keys
+	rather than values for for reachability. I noticed this when a test
+	case that should run in constant memory showed unwarranted accumulation
+	of memory.
+
+2011-11-30  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (op_modplace): Bugfix: conflation of new value and
 	increment value. Separate new value and increment value, and check
 	number of arguments.
