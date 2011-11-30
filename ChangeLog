@@ -1,5 +1,19 @@
 2011-11-30  Kaz Kylheku  <kaz@kylheku.com>
 
+	* configure (extra_debugging): New variable. EXTRA_DEBUGGING
+	conditionally generated in config.h.
+
+	* gc.c (break_obj): New static variable.
+	(mark_obj): Debugging feature: if the object is the one stored in
+	break_obj and not yet reached, then call breakpt.
+	(deheap): New debugging function for viewing regions of the heaps.
+
+	* lib.c (breakpt): New function.
+
+	* lib.h (breakpt): Declared.
+
+2011-11-30  Kaz Kylheku  <kaz@kylheku.com>
+
 	* hash.c (hash_process_weak): Fix regression caused by a mistake
 	in the the 2010-01-26 commit, prior to release 033. When processing a
 	table with weak values, this function was mistakenly testing the keys
