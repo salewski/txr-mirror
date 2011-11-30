@@ -1,5 +1,10 @@
 2011-11-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (expand_vars): Bugfix: was not handling vars
+	of the form var, only (var initform).
+
+2011-11-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	Support assignment to (car ...) and (cdr ...).
 
 	* eval.c (car_s, cdr_s): New symbol variables.
