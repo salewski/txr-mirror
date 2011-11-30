@@ -693,6 +693,12 @@ static val expand_vars(val vars)
 {
   if (atom(vars)) {
     return vars;
+  } else if (symbolp(car(vars))) {
+    val rest_vars = rest(vars);
+    val rest_vars_ex = expand_vars(rest_vars);
+    if (rest_vars == rest_vars_ex)
+      return vars;
+    return cons(car(vars), rest_vars_ex);
   } else {
     cons_bind (var, init, car(vars));
     val rest_vars = rest(vars);
