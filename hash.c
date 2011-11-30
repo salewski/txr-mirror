@@ -455,7 +455,7 @@ void hash_process_weak(void)
 
         for (iter = pchain; !gc_is_reachable(*iter); ) {
           val entry = car(*iter);
-          if (!gc_is_reachable(entry) && !gc_is_reachable(car(entry)))
+          if (!gc_is_reachable(entry) && !gc_is_reachable(cdr(entry)))
             *iter = cdr(*iter);
           else
             iter = cdr_l(*iter);
