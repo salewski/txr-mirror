@@ -30,7 +30,6 @@ extern val yyin_stream;
 extern const wchar_t *spec_file;
 extern val spec_file_str;
 extern val form_to_ln_hash;
-extern val ln_to_forms_hash;
 int yyparse(void);
 val get_spec(void);
 void yyerror(const char *s);

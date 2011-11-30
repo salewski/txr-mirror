@@ -1,5 +1,19 @@
 2011-11-30  Kaz Kylheku  <kaz@kylheku.com>
 
+	Removing useless hash table.
+
+	* parser.h (ln_to_forms_hash): Declaration removed.
+
+	* parser.l (ln_to_forms_hash): Variable removed.
+	(parse_init): Initialization and protection of ln_to_forms_hash
+	removed.
+
+	* parser.y (rl): Update of ln_to_forms_hash removed.
+
+	* txr.1:
+
+2011-11-30  Kaz Kylheku  <kaz@kylheku.com>
+
 	* configure (extra_debugging): New variable. EXTRA_DEBUGGING
 	conditionally generated in config.h.
 

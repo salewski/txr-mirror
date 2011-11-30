@@ -68,7 +68,6 @@ int opt_loglevel = 1;   /* 0 - quiet; 1 - normal; 2 - verbose */
 int errors;
 
 val form_to_ln_hash;
-val ln_to_forms_hash;
 
 static val prepared_error_message;
 
@@ -649,8 +648,7 @@ val source_loc(val form)
 void parse_init(void)
 {
   protect(&yyin_stream, &prepared_error_message,
-          &form_to_ln_hash, &ln_to_forms_hash, (val *) 0);
+          &form_to_ln_hash, (val *) 0);
 
   form_to_ln_hash = make_hash(t, nil, nil);
-  ln_to_forms_hash = make_hash(nil, t, nil);
 }
