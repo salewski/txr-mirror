@@ -26,8 +26,9 @@ syn keyword txr_keyword contained repeat rep first last single empty
 syn keyword txr_keyword contained define try catch finally throw
 syn keyword txr_keyword contained defex throw deffilter filter eof eol
 
-syn keyword txl_keyword contained let lambda call cond if and or defvar defun
-syn keyword txl_keyword contained inc dec push pop gethash list append apply
+syn keyword txl_keyword contained let let* lambda call cond if and or 
+syn keyword txl_keyword contained defvar defun set inc dec push
+syn keyword txl_keyword contained pop gethash for for* dohash list append apply
 syn keyword txl_keyword contained cons list atom null consp listp proper-listp
 syn keyword txl_keyword contained length mapcar mappend apply
 
