@@ -53,7 +53,7 @@ val eval_error_s;
 val let_s, let_star_s, lambda_s, call_s;
 val cond_s, if_s, and_s, or_s, defvar_s, defun_s;
 val inc_s, dec_s, push_s, pop_s, gethash_s, car_s, cdr_s;
-val for_s, for_star_s;
+val for_s, for_star_s, dohash_s;
 val list_s, append_s, apply_s;
 
 val make_env(val vbindings, val fbindings, val up_env)
@@ -575,6 +575,30 @@ static val op_for(val form, val env)
   return eval_progn(rest(cond), new_env, form);
 }
 
+static val op_dohash(val form, val env)
+{
+  val spec = second(form);
+  val keysym = first(spec);
+  val valsym = second(spec);
+  val hashform = third(spec);
+  val resform = fourth(spec);
+  val body = rest(rest(form));
+  val iter = hash_begin(eval(hashform, env, hashform));
+  val keyvar = cons(keysym, nil);
+  val valvar = cons(valsym, nil);
+  val new_env = make_env(cons(keyvar, cons(valvar, nil)), nil, env);
+  val cell;
+
+  while ((cell = hash_next(&iter)) != nil) {
+    *cdr_l(keyvar) = car(cell);
+    *cdr_l(valvar) = cdr(cell);
+    eval_progn(body, new_env, form);
+  }
+
+  return eval(resform, new_env, form);
+}
+
+
 static val expand_forms(val form)
 {
   if (atom(form)) {
@@ -786,9 +810,25 @@ val expand(val form)
       return rlcp(cons(sym, 
                        cons(vars_ex, 
                             cons(cond_ex, cons(incs_ex, forms_ex)))), form);
+    } else if (sym == dohash_s) {
+      val spec = second(form);
+      val keysym = first(spec);
+      val valsym = second(spec);
+      val hashform = third(spec);
+      val resform = fourth(spec);
+      val body = rest(rest(form));
+      val hashform_ex = expand(hashform);
+      val resform_ex = expand(resform);
+      val body_ex = expand_forms(body);
+     
+      if (hashform == hashform_ex && resform == resform_ex && body == body_ex)
+        return form;
+      return cons(sym, cons(cons(keysym, 
+                                 cons(valsym, cons(hashform_ex, nil))),
+                            body_ex));
     } else if (sym == do_s) {
       val forms = rest(form);
-      val forms_ex = expand(forms);
+      val forms_ex = expand_forms(forms);
 
       if (forms == forms_ex)
         return form;
@@ -890,6 +930,7 @@ void eval_init(void)
   pop_s = intern(lit("pop"), user_package);
   for_s = intern(lit("for"), user_package);
   for_star_s = intern(lit("for*"), user_package);
+  dohash_s = intern(lit("dohash"), user_package);
   gethash_s = intern(lit("gethash"), user_package);
   car_s = intern(lit("car"), user_package);
   cdr_s = intern(lit("cdr"), user_package);
@@ -918,6 +959,7 @@ void eval_init(void)
   sethash(op_table, pop_s, cptr((mem_t *) op_modplace));
   sethash(op_table, for_s, cptr((mem_t *) op_for));
   sethash(op_table, for_star_s, cptr((mem_t *) op_for));
+  sethash(op_table, dohash_s, cptr((mem_t *) op_dohash));
 
   reg_fun(cons_s, func_n2(cons));
   reg_fun(car_s, func_n1(car));

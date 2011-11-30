@@ -1,5 +1,13 @@
 2011-11-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (dohash_s): New symbol variable.
+	(op_dohash): New static function
+	(expand): New case for dohash_s.
+	Bugfix for do_s: expand was used rather than expand_forms.
+	(eval_init): dohash_s initialized and entered into op_table.
+
+2011-11-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): hashp and maphash functions registered.
 
 	* hash.c (maphash): New function.
