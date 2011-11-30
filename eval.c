@@ -986,6 +986,8 @@ void eval_init(void)
           func_n1(get_hash_userdata));
   reg_fun(intern(lit("set-hash-userdata"), user_package),
           func_n2(set_hash_userdata));
+  reg_fun(intern(lit("hashp"), user_package), func_n1(hashp));
+  reg_fun(intern(lit("maphash"), user_package), func_n2(maphash));
 
   reg_fun(intern(lit("eval"), user_package), func_n2(eval_intrinsic));
 
