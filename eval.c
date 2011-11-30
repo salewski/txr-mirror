@@ -41,6 +41,7 @@
 #include "parser.h"
 #include "hash.h"
 #include "debug.h"
+#include "match.h"
 #include "eval.h"
 
 typedef val (*opfun_t)(val, val);
@@ -51,7 +52,7 @@ val op_table;
 val eval_error_s;
 val let_s, let_star_s, lambda_s, call_s;
 val cond_s, if_s, and_s, or_s, defvar_s, defun_s;
-val inc_s, dec_s, push_s, pop_s, gethash_s;
+val inc_s, dec_s, push_s, pop_s, gethash_s, car_s, cdr_s;
 val for_s, for_star_s;
 val list_s, append_s, apply_s;
 
@@ -518,13 +519,20 @@ static val op_modplace(val form, val env)
       eval_error(form, lit("unbound variable ~s"), place, nao);
     loc = cdr_l(binding);
   } else if (consp(place)) {
-    if (first(place) == gethash_s) {
+    val sym = car(place);
+    if (sym == gethash_s) {
       val hash = eval(second(place), env, form);
       val key = eval(third(place), env, form);
       val new_p;
       loc = gethash_l(hash, key, &new_p);
       if (new_p)
         *loc = eval(fourth(place), env, form);
+    } else if (sym == car_s) {
+      val cons = eval(second(place), env, form);
+      loc = car_l(cons);
+    } else if (sym == car_s) {
+      val cons = eval(second(place), env, form);
+      loc = cdr_l(cons);
     } else {
       eval_error(form, lit("~a: ~s is not a recognized place form"),
                  op, place, nao);
@@ -619,6 +627,12 @@ static val expand_place(val place)
       return rlcp(cons(sym, cons(hash_ex, cons(key_ex, 
                                                cons(dfl_val_ex, nil)))), 
                   place);
+    } else if (sym == car_s || sym == cdr_s) {
+      val cell = second(place);
+      val cell_ex = expand(cell);
+      if (cell == cell_ex)
+        return place;
+      return cons(sym, cons(cell_ex, nil));
     } else {
       eval_error(place, lit("unrecognized place: ~s"), place, nao);
     }
@@ -672,7 +686,7 @@ static val expand_qquote(val qquoted_form)
       }
     }
   }
-  return num(42);
+  abort();
 }
 
 static val expand_vars(val vars)
@@ -763,8 +777,17 @@ val expand(val form)
       if (vars == vars_ex && cond == cond_ex && 
           incs == incs_ex && forms == forms_ex)
         return form;
-      return cons(sym, cons(vars_ex, cons(cond_ex, cons(incs_ex, forms_ex))));
-    } else{
+      return rlcp(cons(sym, 
+                       cons(vars_ex, 
+                            cons(cond_ex, cons(incs_ex, forms_ex)))), form);
+    } else if (sym == do_s) {
+      val forms = rest(form);
+      val forms_ex = expand(forms);
+
+      if (forms == forms_ex)
+        return form;
+      return rlcp(cons(sym, forms_ex), form);
+    } else {
       /* funtion call */
       val args = rest(form);
       val args_ex = expand_forms(args);
@@ -862,6 +885,10 @@ void eval_init(void)
   for_s = intern(lit("for"), user_package);
   for_star_s = intern(lit("for*"), user_package);
   gethash_s = intern(lit("gethash"), user_package);
+  car_s = intern(lit("car"), user_package);
+  cdr_s = intern(lit("cdr"), user_package);
+  car_s = intern(lit("car"), user_package);
+  cdr_s = intern(lit("cdr"), user_package);
   list_s = intern(lit("list"), user_package);
   append_s = intern(lit("append"), user_package);
   apply_s = intern(lit("apply"), user_package);
@@ -887,8 +914,8 @@ void eval_init(void)
   sethash(op_table, for_star_s, cptr((mem_t *) op_for));
 
   reg_fun(cons_s, func_n2(cons));
-  reg_fun(intern(lit("car"), user_package), func_n1(car));
-  reg_fun(intern(lit("cdr"), user_package), func_n1(car));
+  reg_fun(car_s, func_n1(car));
+  reg_fun(cdr_s, func_n1(car));
   reg_fun(intern(lit("first"), user_package), func_n1(car));
   reg_fun(intern(lit("rest"), user_package), func_n1(cdr));
   reg_fun(append_s, func_n0v(appendv));

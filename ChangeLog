@@ -1,3 +1,19 @@
+2011-11-29  Kaz Kylheku  <kaz@kylheku.com>
+
+	Support assignment to (car ...) and (cdr ...).
+
+	* eval.c (car_s, cdr_s): New symbol variables.
+	(op_modplace): Cases for car and cdr added.
+	(expand_place): Likewise. Calls abort should the
+	cases fall through rather than returning 42.
+	(expand): Bugfix: for and for* case not propagating
+	source location info. Bugfix: expansion for do added.
+	(eval_init): car_s and cdr_s initialized and used
+	in place of previous intern calls.
+
+	* parser.y (elem): Removed wrong logic for expanding the
+	do form. It was expanding only the first argument.
+
 2011-11-28  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (let_star_s, for_s, for_star_s): New symbols.

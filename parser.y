@@ -293,14 +293,9 @@ elem : texts                    { $$ = rlcp(cons(text_s, $1), $1);
                                   $$ = rlcp(optimize_text($$), $$); }
      | var                      { $$ = rl($1, num(lineno)); }
      | list                     { if (first($1) == do_s)
-                                  { val form = second($1);
-                                    val form_ex = expand(form);
-
-                                    if (form == form_ex)
-                                      $$ = $1;
-                                    else
-                                      $$ = rlcp(cons(do_s, cons(form_ex, nil)),
-                                                $1); }}
+                                    $$ = expand($1);
+                                  else
+                                    $$ = $1; }
      | COLL exprs_opt ')' elems END     { $$ = list(coll_s, $4, nil, $2, nao);
                                           rl($$, num($1)); }
      | COLL exprs_opt ')' elems
