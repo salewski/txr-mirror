@@ -506,7 +506,7 @@ INLINE val eq(val a, val b) { return ((a) == (b) ? t : nil); }
 
 #define if3(a, b, c) ((a) ? (b) : (c))
 
-#define or2(a, b) ((a) ? (a) : (b))
+INLINE val or2(val a, val b) { return a ? a : b; }
 
 #define or3(a, b, c) or2(a, or2(b, c))
 

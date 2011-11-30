@@ -1,5 +1,14 @@
 2011-11-30  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (op_modplace): Bugfix: conflation of new value and
+	increment value. Separate new value and increment value, and check
+	number of arguments.
+
+	* lib.h (or2): Turned into inline function due to multiple
+	argument evaluation.
+
+2011-11-30  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.vim: New operators added.
 
 2011-11-29  Kaz Kylheku  <kaz@kylheku.com>

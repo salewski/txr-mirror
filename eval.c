@@ -509,7 +509,8 @@ static val op_modplace(val form, val env)
 {
   val op = first(form);
   val place = second(form);
-  val inc = or2(eval(third(form), env, form), num(1));
+  val third_arg_p = rest(rest(form));
+  val newval = if3(car(third_arg_p), eval(third(form), env, form), nil);
   val *loc = 0;
   val binding = nil;
 
@@ -547,14 +548,22 @@ static val op_modplace(val form, val env)
     eval_error(form, lit("~a: place ~s doesn't exist"), op, place, nao);
 
   if (op == set_s) {
-    return *loc = inc;
+    if (!third_arg_p)
+      eval_error(form, lit("~a: missing argument"), op, place, nao);
+    return *loc = newval;
   } else if (op == inc_s) {
+    val inc = or2(newval, num(1));
     return *loc = plus(*loc, inc);
   } else if (op == dec_s) {
+    val inc = or2(newval, num(1));
     return *loc = plus(*loc, inc);
   } else if (op == push_s) {
-    return push(inc, loc);
+    if (!third_arg_p)
+      eval_error(form, lit("~a: missing argument"), op, place, nao);
+    return push(newval, loc);
   } else if (op == pop_s) {
+    if (third_arg_p)
+      eval_error(form, lit("~a: superfluous argument"), op, place, nao);
     return pop(loc);
   }
 
