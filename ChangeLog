@@ -1,3 +1,7 @@
+2011-11-30  Kaz Kylheku  <kaz@kylheku.com>
+
+	* txr.vim: New operators added.
+
 2011-11-29  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (bindings_helper): Fix uninitialized variable.
