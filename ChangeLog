@@ -1,5 +1,13 @@
 2011-11-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): hashp and maphash functions registered.
+
+	* hash.c (maphash): New function.
+
+	* hash.h (maphash): Declared.
+
+2011-11-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (expand_vars): Bugfix: was not handling vars
 	of the form var, only (var initform).
 

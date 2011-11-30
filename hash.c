@@ -395,6 +395,15 @@ val hash_next(val *iter)
   return car(hi->cons);
 }
 
+val maphash(val fun, val hash)
+{
+  val iter = hash_begin(hash);
+  val cell;
+  while ((cell = hash_next(&iter)) != nil)
+    funcall2(fun, car(cell), cdr(cell));
+  return nil;
+}
+
 /*
  * Called from garbage collector. Hash module must process all weak tables
  * that were visited during the marking phase, maintained in the list

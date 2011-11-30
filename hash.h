@@ -37,6 +37,7 @@ val hash_count(val hash);
 val get_hash_userdata(val hash);
 val set_hash_userdata(val hash, val data);
 val hashp(val obj);
+val maphash(val func, val hash);
 val hash_begin(val hash);
 val hash_next(val *iter);
 
