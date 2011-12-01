@@ -281,6 +281,7 @@ val interp_fun(val env, val fun, val args)
 
 static val eval_intrinsic(val form, val env)
 {
+  uses_or2;
   expand(form);
   return eval(form, or2(env, make_env(nil, nil, env)), form);
 }
@@ -507,6 +508,7 @@ static val op_defun(val form, val env)
 
 static val op_modplace(val form, val env)
 {
+  uses_or2;
   val op = first(form);
   val place = second(form);
   val third_arg_p = rest(rest(form));

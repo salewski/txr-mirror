@@ -1,5 +1,26 @@
 2011-11-30  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.h (or2): Restore macro version of or2, because we need
+	the sequencing! Making it an inline function broke the tests.
+	But we can't have multiple evaluation either, so it's going to use
+	a temporary lexical variable.
+	(uses_or2): Macro which declares the lexical variable needed by or2.
+
+	* debug.c (debug): add uses_or2.
+
+	* eval.c (eval_intrinsic, op_modplace): Likewise.
+
+	* lib.c (lazy_str, lazy_str_force_upto, lazy_str_get_trailing_list):
+	Likewise.
+
+	* match.c (h_parallel, v_freeform, v_parallel, v_output): Likewise.
+
+	* parser.y (unquotes_occur): Likewise.
+
+	* stream.c (format): Likewise.
+
+2011-11-30  Kaz Kylheku  <kaz@kylheku.com>
+
 	Removing useless hash table.
 
 	* parser.h (ln_to_forms_hash): Declaration removed.

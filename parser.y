@@ -887,6 +887,8 @@ static val optimize_text(val text_form)
 
 static val unquotes_occur(val quoted_form)
 {
+  uses_or2;
+
   if (atom(quoted_form)) {
     return nil;
   } else {

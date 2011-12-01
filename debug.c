@@ -34,6 +34,7 @@ val debug(val form, val bindings, val data, val line, val chr)
     val print_data = t;
 
     for (;;) {
+      uses_or2;
       val input, command;
 
       if (print_form) {
