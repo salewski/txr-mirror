@@ -1699,7 +1699,7 @@ typedef val (*v_match_func)(match_files_ctx *cout);
 
 static val v_skip(match_files_ctx *c)
 {
-  val specline = rest(first(c->spec));
+  spec_bind (specline, first_spec, c->spec);
 
   if (rest(specline))
     return decline_k;
@@ -1711,7 +1711,6 @@ static val v_skip(match_files_ctx *c)
 
   {
     val skipspec = first(first(c->spec));
-    val first_spec = first(specline);
     val args = rest(first_spec);
     val max = first(args);
     val min = second(args);

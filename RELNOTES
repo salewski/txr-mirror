@@ -14,6 +14,9 @@
   - Regression in source location tracking (line numbers
     shown in debugger and trace output).
 
+  - Regression in vertical skip directive caused it to ignore
+    its arguments.
+
   - Fixed :vars () in collect/coll not working as intended.
     This should prevent any bindings from being collected, and
     allows iteration with collect without accumulating memory.

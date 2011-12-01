@@ -1,5 +1,12 @@
 2011-12-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (v_skip): Bugfix: Nov 12 commit caused regression:
+	skip min/max arguments not working!
+
+	* RELNOTES: Updated.
+
+2011-12-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	Dropping the silly cons return value from txeval.
 	Two interfaces are provided to the function. One throws
 	on unbound variable, the other which evaluates them to the
