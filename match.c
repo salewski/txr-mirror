@@ -312,7 +312,7 @@ static val dest_bind(val spec, val bindings, val pattern,
   return t;
 }
 
-static val eval_form(val spec, val form, val bindings);
+static val txeval(val spec, val form, val bindings);
 
 static val vars_to_bindings(val spec, val vars, val bindings)
 {
@@ -328,7 +328,7 @@ static val vars_to_bindings(val spec, val vars, val bindings)
       list_collect (tail, cons(item, noval_s));
     } else if (consp(item) && bindable(first(item))) {
       list_collect (tail, cons(first(item), 
-                               cdr(eval_form(spec, second(item), bindings))));
+                               cdr(txeval(spec, second(item), bindings))));
     } else { 
       sem_error(spec, lit("not a variable spec: ~a"), item, nao);
     }
@@ -1013,7 +1013,7 @@ static val h_fun(match_line_ctx c, match_line_ctx *cout)
           ub_p_a_pairs = cons(cons(param, arg), ub_p_a_pairs);
         }
       } else {
-        val val = eval_form(elem, arg, c.bindings);
+        val val = txeval(elem, arg, c.bindings);
         bindings_cp = acons_new(param, cdr(val), bindings_cp);
       }
     }
@@ -1317,7 +1317,7 @@ static val subst_vars(val spec, val bindings, val filter)
   return out;
 }
 
-static val eval_form(val spec, val form, val bindings)
+static val txeval(val spec, val form, val bindings)
 {
   val ret = nil;
 
@@ -1338,7 +1338,7 @@ static val eval_form(val spec, val form, val bindings)
       } else if (first(form) == expr_s) {
         ret = cons(t, eval(rest(form), make_env(bindings, nil, nil), form));
       } else {
-        val subforms = mapcar(curry_123_2(func_n3(eval_form), 
+        val subforms = mapcar(curry_123_2(func_n3(txeval), 
                                           spec, bindings), form);
 
         if (all_satisfy(subforms, identity_f, nil))
@@ -1797,7 +1797,7 @@ static val v_freeform(match_files_ctx *c)
 
   val args = rest(first_spec);
   val vals = mapcar(func_n1(cdr),
-                       mapcar(curry_123_2(func_n3(eval_form),
+                       mapcar(curry_123_2(func_n3(txeval),
                                           first_spec, c->bindings), args));
 
   if ((c->spec = rest(c->spec)) == nil) {
@@ -1932,7 +1932,7 @@ static val v_next(match_files_ctx *c)
       val list_expr = cdr(assoc(alist, list_k));
       val string_expr = cdr(assoc(alist, string_k));
       val nothrow = cdr(assoc(alist, nothrow_k));
-      val eval = eval_form(specline, source, c->bindings);
+      val eval = txeval(specline, source, c->bindings);
       val str = cdr(eval);
 
       if (!from_var && !source && !string_expr && !list_expr)
@@ -1964,7 +1964,7 @@ static val v_next(match_files_ctx *c)
           return nil;
         }
       } else if (list_expr) {
-        val list_val = cdr(eval_form(specline, list_expr, c->bindings));
+        val list_val = cdr(txeval(specline, list_expr, c->bindings));
         cons_bind (new_bindings, success,
                    match_files(mf_file_data(*c, lit("var"),
                                flatten(list_val), num(1))));
@@ -1974,7 +1974,7 @@ static val v_next(match_files_ctx *c)
                       if3(c->data, cons(c->data, c->data_lineno), t));
         return nil;
       } else if (string_expr) {
-        val str_val = cdr(eval_form(specline, string_expr, c->bindings));
+        val str_val = cdr(txeval(specline, string_expr, c->bindings));
         if (!stringp(str_val))
           sem_error(specline, lit(":string arg ~s evaluated to non-string ~s"), string_expr, str_val, nao);
 
@@ -2501,7 +2501,7 @@ static val v_merge(match_files_ctx *c)
     val arg = first(args);
 
     if (arg) {
-      val arg_eval = eval_form(specline, arg, c->bindings);
+      val arg_eval = txeval(specline, arg, c->bindings);
 
       if (merged)
         merged = weird_merge(merged, cdr(arg_eval));
@@ -2522,7 +2522,7 @@ static val v_bind(match_files_ctx *c)
   val pattern = first(args);
   val form = second(args);
   val keywords = rest(rest(args));
-  val value = eval_form(specline, form, c->bindings);
+  val value = txeval(specline, form, c->bindings);
   val testfun = equal_f;
   val filter_spec = getplist(keywords, filter_k);
   val lfilt_spec = getplist(keywords, lfilt_k);
@@ -2598,7 +2598,7 @@ static val v_set(match_files_ctx *c)
   val args = rest(first_spec);
   val pattern = first(args);
   val form = second(args);
-  val val = eval_form(specline, form, c->bindings);
+  val val = txeval(specline, form, c->bindings);
 
   dest_set(specline, c->bindings, pattern, cdr(val));
 
@@ -2617,7 +2617,7 @@ static val v_cat(match_files_ctx *c)
     val existing = assoc(c->bindings, sym);
     if (existing) {
       val sep = if3(sep_form, 
-                    cdr(eval_form(specline, sep_form, c->bindings)),
+                    cdr(txeval(specline, sep_form, c->bindings)),
                     lit(" "));
       *cdr_l(existing) = cat_str(flatten(cdr(existing)), sep);
     } else {
@@ -2646,7 +2646,7 @@ static val v_output(match_files_ctx *c)
   } else if (!keywordp(first(dest_spec))) {
     uses_or2;
     val form = first(dest_spec);
-    val val = eval_form(specline, form, c->bindings);
+    val val = txeval(specline, form, c->bindings);
     dest = or2(cdr(val), dest);
     pop(&dest_spec);
   }
@@ -2919,7 +2919,7 @@ static val v_throw(match_files_ctx *c)
     sem_error(specline, lit("throw: ~a is not a type symbol"),
               type, nao);
   {
-    val values = mapcar(curry_123_2(func_n3(eval_form), 
+    val values = mapcar(curry_123_2(func_n3(txeval), 
                                     specline, c->bindings), args);
     uw_throw(type, values);
   }
@@ -2936,7 +2936,7 @@ static val v_deffilter(match_files_ctx *c)
               first(first_spec), nao);
 
   {
-    val table_evaled = cdr(eval_form(specline, table, c->bindings));
+    val table_evaled = cdr(txeval(specline, table, c->bindings));
 
     if (!all_satisfy(table_evaled, andf(func_n1(listp), 
                                         chain(func_n1(length),
@@ -3035,7 +3035,7 @@ static val v_fun(match_files_ctx *c)
           ub_p_a_pairs = cons(cons(param, arg), ub_p_a_pairs);
         }
       } else {
-        val val = eval_form(specline, arg, c->bindings);
+        val val = txeval(specline, arg, c->bindings);
         bindings_cp = acons_new(param, cdr(val), bindings_cp);
       }
     }

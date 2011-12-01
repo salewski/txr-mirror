@@ -1,3 +1,10 @@
+2011-12-01  Kaz Kylheku  <kaz@kylheku.com>
+
+	* match.c (eval_form): Function renamed to txeval so its is
+	not confused with the Lisp evaluation functions.
+	(vars_to_bindings, h_fun, v_freeform, v_next, v_merge, v_bind, v_set,
+	v_cat, v_output, v_throw, v_deffilter, v_fun): Updated.
+
 2011-11-30  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.h (or2): Restore macro version of or2, because we need
