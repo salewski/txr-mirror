@@ -1,14 +1,24 @@
                                     TXR 044
                                    201?-??-??
 
+
+  Features
+
+  - Lisp interpreter added.
+
+  - Relaxed rules for what constitutes symbol names.
+
+
   Bugs
 
-  - Fixed regression in source location tracking (line numbers
+  - Regression in source location tracking (line numbers
     shown in debugger and trace output).
 
   - Fixed :vars () in collect/coll not working as intended.
     This should prevent any bindings from being collected, and
     allows iteration with collect without accumulating memory.
+
+  - Two-year-old bug in weak hash tables.
 
 
                                     TXR 043
