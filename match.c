@@ -850,6 +850,7 @@ next_coll:
 
 static val h_parallel(match_line_ctx c, match_line_ctx *cout)
 {
+  uses_or2;
   elem_bind(elem, directive, c.specline);
   val specs = third(elem);
   val plist = fourth(elem);
@@ -1806,6 +1807,7 @@ static val v_freeform(match_files_ctx *c)
     debuglf(specline, lit("freeform match failure: no data"), nao);
     return nil;
   } else {
+    uses_or2;
     val limit = or2(if2(nump(first(vals)), first(vals)),
                     if2(nump(second(vals)), second(vals)));
     val term = or2(if2(stringp(first(vals)), first(vals)),
@@ -2035,6 +2037,7 @@ static val v_parallel(match_files_ctx *c)
   if (second(first_spec) == t) {
     return decline_k;
   } else {
+    uses_or2;
     val sym = first(first_spec);
     val all_match = t;
     val some_match = nil;
@@ -2641,6 +2644,7 @@ static val v_output(match_files_ctx *c)
     if (rest(dest_spec))
       sem_error(specline, lit("material after :nothrow in output"), nao);
   } else if (!keywordp(first(dest_spec))) {
+    uses_or2;
     val form = first(dest_spec);
     val val = eval_form(specline, form, c->bindings);
     dest = or2(cdr(val), dest);

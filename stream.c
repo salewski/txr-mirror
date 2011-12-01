@@ -1018,6 +1018,7 @@ val vformat_to_string(val fmtstr, va_list vl)
 
 val format(val stream, val str, ...)
 {
+  uses_or2;
   val st = if3(stream == t,
                std_output,
                or2(stream, make_string_output_stream()));

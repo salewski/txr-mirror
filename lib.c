@@ -2300,6 +2300,7 @@ val lazy_stream_cons(val stream)
 
 val lazy_str(val lst, val term, val limit)
 {
+  uses_or2;
   val obj = make_obj();
   obj->ls.type = LSTR;
 
@@ -2344,6 +2345,7 @@ val lazy_str_force(val lstr)
 
 val lazy_str_force_upto(val lstr, val index)
 {
+  uses_or2;
   val lim;
   type_check(lstr, LSTR);
   lim = cdr(lstr->ls.opts);
@@ -2460,6 +2462,7 @@ val lazy_str_get_trailing_list(val lstr, val index)
     lazy_str_force_upto(lstr, index);
 
   {
+    uses_or2;
     val split_suffix = split_str(sub_str(lstr->ls.prefix, index, nil),
                                     or2(car(lstr->ls.opts), string(L"\n")));
 
