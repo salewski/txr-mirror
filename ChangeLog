@@ -1,5 +1,23 @@
 2011-12-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	Dropping the silly cons return value from txeval.
+	Two interfaces are provided to the function. One throws
+	on unbound variable, the other which evaluates them to the
+	symbol noval_s (used in exception handling).
+
+	* match.c (do_txeval): New static function.
+	(txeval): Functionality moved to do_txeval.
+	(txeval_allow_ub): New static function.
+	(vars_to_bindings, h_fun, v_freeform, v_next, v_merge, v_bind, v_set,
+	v_cat, v_output, v_deffilter, v_fun): No need to
+	use cdr to get the value from txeval.
+	(v_throw): Use txeval_ub_allowed, since unbound variables
+	are allowed in throw.
+	(v_try): Detect unbound arguments by checking for noval_s rather than
+	nil. No need to use cdr.
+
+2011-12-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (eval_form): Function renamed to txeval so its is
 	not confused with the Lisp evaluation functions.
 	(vars_to_bindings, h_fun, v_freeform, v_next, v_merge, v_bind, v_set,
