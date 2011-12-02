@@ -607,10 +607,16 @@ var_op : '*'                    { $$ = list(t, nao); }
 
 list : '(' exprs ')'            { $$ = rl($2, num($1)); }
      | '(' ')'                  { $$ = nil; }
-     | ',' expr                 { $$ = rlcp(list(unquote_s, $2, nao), $2); }
+     | ',' expr                 { val expr = $2;
+                                  if (consp(expr) && first(expr) == qquote_s)
+                                    expr = cons(quote_s, rest(expr));
+                                  $$ = rlcp(list(unquote_s, expr, nao), $2); }
      | '\'' expr                { $$ = rlcp(list(choose_quote($2),
                                             $2, nao), $2); }
-     | SPLICE expr              { $$ = rlcp(list(splice_s, $2, nao), $2); }
+     | SPLICE expr              { val expr = $2;
+                                  if (consp(expr) && first(expr) == qquote_s)
+                                    expr = cons(quote_s, rest(expr));
+                                  $$ = rlcp(list(splice_s, expr, nao), $2); }
      | '(' error                { $$ = nil;
                                   yybadtoken(yychar, lit("list expression")); }
      ;
