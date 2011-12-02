@@ -1,5 +1,16 @@
 2011-12-02  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.y (list): unquote and splice actions look inside the
+	argument form. If an unquote or splice are applied to a quoted
+	form, its quote becomes a regular quote.
+	This behavior is necessary to make ,',form work in nested
+	quotes, otherwise the ' is a quasiquote which captures
+	the comma in ,form, reducing ,',form to ,form.
+
+	* txr.1: Documented this special behavior.
+
+2011-12-02  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (expand_qquote): Bugfix: removed bogus recognition
 	and processing of regular quote form. This broke nested
 	backquote processing, and quasiquote forms containing
