@@ -1,5 +1,10 @@
 2011-12-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Started Lisp documentation. Updated description of
+	symbol syntax.
+
+2011-12-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (int_str): Return nil rather than 0 if no digits are extracted
 	at all.
 

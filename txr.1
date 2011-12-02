@@ -50,6 +50,8 @@ query language supports a number of directives, for matching text using regular
 expressions, for continuing a match in another file, for searching through a
 file for the place where an entire sub-query matches, for collecting lists, and
 for combining sub-queries using logical conjunction, disjunction and negation.
+Furethermore, embedded within TXR is a powerful Lisp dialect, described
+in the section TXR LISP far below.
 
 When
 .B txr
@@ -562,15 +564,23 @@ The forms with an * indicate a long match, see Longest Match below.
 The last two forms with the embedded regexp /RE/ or number have special
 semantics, see Positive Match below.
 
-The name itself may consist of any combination of one or more letters, numbers,
-and underscores, and must begin with a letter or underscore.  Case is
+When the @NAME form is used, the name itself may consist of any combination of
+one or more letters, numbers, and underscores. It may not look like a number,
+so that for instance 123 is not a valid name, but 12A is valid.  Case is
 sensitive, so that @FOO is different from @foo, which is different from @Foo.
+
 The braces around a name can be used when material which follows would
-otherwise be interpreted as being part of the name. For instance @FOO_bar
-introduces the name "FOO_bar", whereas @{FOO}_bar means the variable named
-"FOO" followed by the text "_bar".   There may be whitespace between the @ and
-the name, or opening brace. Whitespace is also allowed in the interior of the
-braces. It is not significant.
+otherwise be interpreted as being part of the name. When a name is enclosed in braces, the following additional characters may be used as part of the name:
+
+ ! $ % & * + - < = > ? \e ^ _ ~
+
+The rule holds that a name cannot look like a number so +123 is not a name,
+but these are valid names: a->b, *xyz*, foo-bar.
+
+The syntax @FOO_bar introduces the name "FOO_bar", whereas @{FOO}_bar means the
+variable named "FOO" followed by the text "_bar".   There may be whitespace
+between the @ and the name, or opening brace. Whitespace is also allowed in the
+interior of the braces. It is not significant.
 
 If a variable has no prior binding, then it specifies a match. The
 match is determined from some current position in the data: the
@@ -1000,8 +1010,10 @@ directives are:
 
   @(_ `@file.txt`)
 
-A symbol is lexically the same thing as a variable and the same rules
-apply. Tokens that look like numbers are treated as numbers.
+A symbol is lexically the same thing as a variable name (the type enclosed
+in braces in the @{NAME} syntax) and the same rules apply: it can consist
+of all the same characters, and must not look like a number. Tokens that look
+like numbers are treated as numbers.
 
 .SS Special Symbols
 
@@ -4149,7 +4161,381 @@ definitions are in error:
   @(defex x y)
   @(defex y x)@# error: circularity; y is already a supertype of x.
 
-.SH NOTES ON EXOTIC REGULAR EXPRESSIONS
+.SH TXR LISP
+
+The TXR language contains an embedded Lisp dialect called TXR Lisp.
+
+This language is exposed in TXR in two ways.
+
+Firstly, in any situation that calls for an expression, a Lisp compound
+expression can be used, if it is preceded by the @ symbol. The Lisp expression
+is evaluated and its value  becomes the value of that expression.
+Thus, TXR directives are embedded in literal text using @, and Lisp expressions
+are embedded in directives using @ also. 
+
+Secondly, the @(do) directive can be used for evaluating one or more Lisp
+forms, such that their value is thrown away. This is useful for evaluating some
+Lisp code for the sake of its side effect, such as defining a variable,
+updating a hash table, et cetera.
+
+Examples:
+
+Bind variable a to the integer 2:
+
+  @(bind a @(+ 2 2))
+
+Define several Lisp functions using @(do):
+
+@(do 
+  (defun add (x y) (+ x y))
+
+  (defun occurs (item list)
+    (cond ((null list) nil)
+          ((atom list) (eql item list))
+          (t (or (eq (first list) item)
+                 (occurs item (rest list)))))))
+
+.SS Overview
+
+TXR Lisp is a small and simple dialect, like Scheme, but much more similar to
+Common Lisp than Scheme. It has separate value and function binding namespaces,
+like Common Lisp, and represents boolean true and false with the symbols t and
+nil (but note the case sensitivity of identifiers denoting symbols!)
+Furthermore, the symbol nil is also the empty list, which terminates nonempty
+lists.
+
+Function and variable Bindings are dynamically scoped in TXR Lisp. However,
+closures do capture variables.
+.SS Additional Syntax
+
+Most of the TXR Lisp syntax is introduced in the previous sections of the
+manual. There is some additional syntax that is useful in Lisp.
+
+.SS Quoting/Unquoting
+
+.IP 'form
+
+The quote character in front of a form is used for suppressing evaluation,
+which is useful for forms that evaluate to something other than themselves.
+For instance if '(+ 2 2) is evaluated, the value is the three-element list
+(+ 2 2), wheras if (+ 2 2) is evaluated, the value is 4. Similarly, the
+value of 'a is the symbol a itself, whereas the value of a is the value
+of the variable a.
+
+Note that TXR Lisp does not have a distinct quote and backquote syntax.
+There is only one quote, which supports unquoting.
+
+.IP ,form
+
+Thes comma character is used within a quoted list to denote an unquote.  Wheras
+the quote suppresses evaluation, the comma introduces an exception: an element
+of a form which is evaluated. For example, the value of 
+'(a b c ,(+ 2 2) (+ 2 2)) is the list (a b c 4 (+ 2 2)).  Everything
+in the quote stands for itself, except for the ,(+ 2 2) which is evaluated.
+
+.IP ,*form
+
+The comma-star operator is used within a quoted list to denote a splicing unquote.
+Wheras the quote suppresses evaluation, the comma introduces an exception: 
+the form which follows ,* must evaluate to a list. That list is spliced into
+the quoted list. For example: '(a b c ,*(list (+ 3 3) (+ 4 4) d) evaluates
+to (a b c 6 8 d).  The expression (list (+ 3 3) (+ 4 4)) is evaluated
+to produce the list (6 8), and this list is spliced into the quoted template.
+.PP
+
+.SS Nested Quotes
+
+Quotes can be nested.  What if it is necessary to unquote something in the
+nested list? The following will not work in TXR Lisp like it does in
+Common Lisp or Scheme: '(1 2 3 '(4 5 6 ,(+ 1 2))).  This is because the quote
+is also "active" as a quasiquote, and so the ,(+ 1 2) belongs to the inner
+quote, which protects it from evaluation. To get the (+ 1 2) value "through"
+to the inner quote, the unquote syntax must also be nested using multiple
+commas, like this: '(1 2 3 '(4 5 6 ,',(+ 1 2))). The leftmost comma goes
+with the innermost quote.  The quote between the commas protects the (+ 1 2)
+from repeated evaluations: the two unquotes call for two evaluations, but
+we only want (+ 1 2) to be evaluated once.
+
+.SS Lisp Operators
+
+When the first element of a compound expression is an operator symbol,
+the interpretation of the meaning of that form is under the complete control
+of that operator. The following sections list all of the operators available
+in TXR Lisp.
+
+.SS Operators let and let*
+
+.TP
+Syntax:
+(let ({<sym> | (<sym> <init-form>)}*) {<body-form>}*)
+(let* ({<sym> | (<sym> <init-form>)}*) {<body-form>}*)
+
+.TP
+Description:
+
+The let and let* operators introduce a new scope with variables and
+evaluate forms in that scope. The operator symbol, either let or let*,
+is followed by a list which can contain any mixture of variable
+name symbols, or (<sym> <init-form>) pairs.  A symbol
+denotes the name of variable to be instantiated and initialized
+to the value nil.  A symbol specified with an init-form denotes
+a variable which is intialized from the value of the init-form.
+
+The symbols t and nil may not be used as variables, and neither
+can be keyword symbols: symbols denoted by a leading colon.
+
+The difference between let and let* is that in let*, later init-forms
+have visibility over the variables established by earlier variables
+in the same let* construct. In plain let, the variables are not
+visible to any of the init-forms.
+
+When the variables are established, then the body forms
+are evaluated in order. The value of the last form becomes the
+return value of the let. 
+
+If the forms are omitted, then the return value nil is produced.
+
+The variable list may be empty.
+
+
+.TP
+Examples:
+
+(let ((a 1) (b 2)) (list a b)) -> (1 2)
+
+(let* ((a 1) (b (+ a 1))) (list a b (+ a b))) -> (1 2 3)
+
+(let ()) -> nil
+
+(let (:a nil)) -> error, :a and nil can't be used as variables
+
+.SS Operator lambda
+
+.TP
+Syntax:
+(lambda ({<sym>}* [. <sym>]) {<body-form>}*)
+
+.TP
+Description:
+
+The lambda operator produces a value which is a function.  Like in most other
+Lisps, functions are objects in TXR Lisp.  They can be passed to functions as
+arguments, returned from functions, aggregated into lists, stored in variables,
+et cetera.
+
+The first argument of lambda is the list of parameters for the function.   It
+may be empty, and it may also be an improper list (dot notation) where the
+terminating atom is a symbol other than nil.
+
+The second and subsequent arguments are the forms making up the function body.
+The body may be empty.
+
+When a function is called, the parameters are instantiated as variables that
+are visible to the body forms. The variables are initialized from the values of
+the argument expressions appearing in the function call.
+
+The dotted notation can be used to write a function that accepts
+a variable number of arguments.
+
+Functions created by lambda capture the surrounding variable bindings.
+
+
+.TP
+Examples:
+
+Counting function. This function, which takes no arguments, captures the
+variable "counter". Whenever this object is called, it increments the counter
+by 1 and returns the incremented value.
+
+(let ((counter 0))
+  (lambda () (inc counter)))
+
+Function that takes two or more arguments. The third and subsequent arguments
+are aggregated into a list passed as the single parameter z:
+
+(lambda (x y . z) (list 'my-arguments-are x y z))
+
+.SS Operator call
+
+.TP
+Syntax:
+(call <function-form> {<argument-form>}*)
+
+.TP
+Description:
+
+The call operator invokes a function. <function-form> must evaluate
+to a function. Each <argument-form> is evaluated in left to right
+order and the resulting values are passed to the function as arguments.
+The return value of the (call ...) expression is that of the function
+applied to those arguments.
+
+The <function-form> may be any Lisp form that produces a function
+as its value: a symbol denoting a variable in which a function is stored,
+a lambda expression, a function call which returns a function,
+or (fun ...) expression.
+
+.TP
+Examples:
+
+Apply arguments 1 2 to a lambda which adds them to produce 3:
+
+(call (lambda (a b) (+ a b)) 1 2) -> 3
+
+Useless use of call on a named function; equivalent to (list 1 2):
+
+(call (fun list) 1 2) -> (1 2)
+
+.SS Operator fun
+
+.TP
+Syntax:
+(fun <function-name>)
+
+.TP
+Description:
+The fun operator retrieves the function object corresponding to a named
+function.
+. The <function-name> is a symbol denoting a named function: a built in
+function, or one defined by defun.
+
+.TP
+Dialect Note:
+A lambda expression is not a function name in TXR Lisp. The 
+syntax (fun (lambda ...)) is invalid.
+
+.SS Operator cond
+
+.SS Operator if
+
+.SS Operator and
+
+.SS Operator or
+
+.SS Operator defun
+
+.SS Operators inc, dec, set, push and pop
+
+.SS Operators for and for*
+
+.SS Operator dohash
+
+.SS Lisp Functions and Variables
+
+When the first element of a compound form is a symbol denoting a function,
+the evaluation takes place as follows. The remaining forms, if any, denote
+the arguments to the function. They are evaluated in left to right order
+to produce the argument values, and passed to the function.
+An exception is thrown if there are not enough arguments, or too many.
+
+Programs can define named functions with the defun operator
+
+The following are Lisp functions and variables built-in to TXR.
+
+.SS Function cons
+
+.SS Functions car and first
+
+.SS Functions cdr and rest
+
+.SS Functions second, third, fourth, fifth and sixth
+
+.SS Function append
+
+.SS Function list
+
+.SS Function atom
+
+.SS Function consp
+
+.SS Functions listp and proper-listp
+
+.SS Function length
+
+.SS Function mapcar
+
+.SS Function mappend
+
+.SS Function apply
+
+.SS Function copy-list
+
+.SS Functions reverse, nreverse
+
+.SS Function ldfiff
+
+.SS Function flatten
+
+.SS Functions memq and memqual
+
+.SS Function tree-find
+
+.SS Function some, all and none
+
+.SS Functions eq, eql and equal
+
+.SS Arithmetic functions +, -, *, trunc, mod
+
+.SS Function numberp
+
+.SS Relational functions >, <, >= and <=
+
+.SS Functions max and min
+
+.SS Function int-str
+
+.SS Functions search-regex and match-regex
+
+.SS Function make-hash
+
+.SS Function sethash
+
+.SS Function pushhash
+
+.SS Function remhash
+
+.SS Function hash-count
+
+.SS Function get-hash-userdata
+
+.SS Function set-hash-userdata
+
+.SS Function hashp
+
+.SS Function maphash
+
+.SS Function eval
+
+.SS Variables *stdout*, *stdin* and *stderr*
+
+.SS Function format
+
+.SS Functions print, pprint
+
+.SS Function make-string-input-stream
+
+.SS Function make-string-byte-input-stream
+
+.SS Function get-string-from-stream
+
+.SS Function make-strlist-output-stream
+
+.SS Function get-list-from-stream
+
+.SS Function close-stream
+
+.SS Functions get-line, get-char and get-byte
+
+.SS Functions put-string, put-line, put-char
+
+.SS Function flush-stream
+
+.SS Function open-directory
+
+.SS Functions open-file, open-pipe
+
+
+.SH APPENDIX A: NOTES ON EXOTIC REGULAR EXPRESSIONS
 
 Users familiar with regular expressions may not be familiar with the complement
 and intersection operators, which are often absent from text processing tools
@@ -4322,7 +4708,7 @@ trailing contexts, it may be a good idea to use a complemented character class
 instead. That is to say, rather than (.%a)bc, consider [^a]*bc. The set of
 strings which don't contain the character a is adequately expressed by [^a]*.
 
-.SH NOTES ON FALSE
+.SH APPENDIX B: NOTES ON FALSE
 
 The reason for printing the word
 .IR false
