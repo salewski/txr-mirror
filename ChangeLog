@@ -1,3 +1,10 @@
+2011-12-02  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (expand_qquote): Bugfix: removed bogus recognition
+	and processing of regular quote form. This broke nested
+	backquote processing, and quasiquote forms containing
+	non-quasi-quotes like like '(a 'b ,c).
+
 2011-11-20  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 044

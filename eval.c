@@ -703,8 +703,6 @@ static val expand_qquote(val qquoted_form)
           f_ex = expand(second(f));
         } else if (qsym == unquote_s) {
           f_ex = cons(list_s, cons(expand(second(f)), nil));
-        } else if (qsym == quote_s) {
-          f_ex = cons(quote_s, cons(cons(second(f), nil), nil));
         } else if (qsym == qquote_s) {
           f_ex = cons(list_s, cons(expand_qquote(expand_qquote(second(f))), nil));
         } else {
