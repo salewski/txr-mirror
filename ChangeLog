@@ -1,5 +1,10 @@
 2011-12-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (int_str): Return nil rather than 0 if no digits are extracted
+	at all.
+
+2011-12-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (h_skip, h_coll, v_skip, v_collect): Evaluate the arguments.
 	(do_txeval): Optimization: short-circuit out if the expression is nil,
 	without establishing the exception handler.
