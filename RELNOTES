@@ -1,5 +1,5 @@
                                     TXR 044
-                                   201?-??-??
+                                   2012-12-01
 
 
   Features
@@ -22,6 +22,8 @@
     allows iteration with collect without accumulating memory.
 
   - Two-year-old bug in weak hash tables.
+
+
 
 
                                     TXR 043

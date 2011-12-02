@@ -1,3 +1,15 @@
+2011-11-20  Kaz Kylheku  <kaz@kylheku.com>
+
+	Version 044
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES: Updated.
+
 2011-12-01  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.1: Started Lisp documentation. Updated description of
@@ -409,7 +421,7 @@
 
 	* configure (txr_ver): Bumped.
 
-	* RELNOES: Updated.
+	* RELNOTES: Updated.
 
 2011-11-23  Kaz Kylheku  <kaz@kylheku.com>
 
