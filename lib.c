@@ -1393,9 +1393,12 @@ val string_lt(val astr, val bstr)
 val int_str(val str, val base)
 {
   const wchar_t *wcs = c_str(str);
+  wchar_t *ptr;
   cnum b = c_num(base);
   /* TODO: detect if we have wcstoll */
-  long val = wcstol(wcs, 0, b);
+  long val = wcstol(wcs, &ptr, b);
+  if (val == 0 && ptr == wcs)
+    return nil;
   numeric_assert (val >= NUM_MIN && val <= NUM_MAX);
   return num(val);
 }
