@@ -1,5 +1,11 @@
 2011-12-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (h_skip, h_coll, v_skip, v_collect): Evaluate the arguments.
+	(do_txeval): Optimization: short-circuit out if the expression is nil,
+	without establishing the exception handler.
+
+2011-12-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (v_skip): Bugfix: Nov 12 commit caused regression:
 	skip min/max arguments not working!
 

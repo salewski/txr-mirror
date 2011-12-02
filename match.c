@@ -623,8 +623,8 @@ repeat:
 static val h_skip(match_line_ctx c, match_line_ctx *cout)
 {
   val elem = first(c.specline);
-  val max = second(elem);
-  val min = third(elem);
+  val max = txeval(elem, second(elem), c.bindings);
+  val min = txeval(elem, third(elem), c.bindings);
   cnum cmax = nump(max) ? c_num(max) : 0;
   cnum cmin = nump(min) ? c_num(min) : 0;
   val greedy = eq(max, greedy_k);
@@ -694,13 +694,13 @@ static val h_coll(match_line_ctx c, match_line_ctx *cout)
   val args = fourth(elem);
   val bindings_coll = nil;
   val last_bindings = nil;
-  val max = getplist(args, maxgap_k);
-  val min = getplist(args, mingap_k);
-  val gap = getplist(args, gap_k);
-  val times = getplist(args, times_k);
-  val mintimes = getplist(args, mintimes_k);
-  val maxtimes = getplist(args, maxtimes_k);
-  val chars = getplist(args, chars_k);
+  val max = txeval(elem, getplist(args, maxgap_k), c.bindings);
+  val min = txeval(elem, getplist(args, mingap_k), c.bindings);
+  val gap = txeval(elem, getplist(args, gap_k), c.bindings);
+  val times = txeval(elem, getplist(args, times_k), c.bindings);
+  val mintimes = txeval(elem, getplist(args, mintimes_k), c.bindings);
+  val maxtimes = txeval(elem, getplist(args, maxtimes_k), c.bindings);
+  val chars = txeval(elem, getplist(args, chars_k), c.bindings);
   val have_vars;
   val vars = getplist_f(args, vars_k, &have_vars);
   cnum cmax = nump(gap) ? c_num(gap) : (nump(max) ? c_num(max) : 0);
@@ -1321,6 +1321,9 @@ static val do_txeval(val spec, val form, val bindings, val allow_unbound)
 {
   val ret = nil;
 
+  if (!form)
+    return nil;
+
   uw_catch_begin (cons(query_error_s, nil), exc_sym, exc);
   {
     if (!form) {
@@ -1712,8 +1715,8 @@ static val v_skip(match_files_ctx *c)
   {
     val skipspec = first(first(c->spec));
     val args = rest(first_spec);
-    val max = first(args);
-    val min = second(args);
+    val max = txeval(skipspec, first(args), c->bindings);
+    val min = txeval(skipspec, second(args), c->bindings);
     cnum cmax = nump(max) ? c_num(max) : 0;
     cnum cmin = nump(min) ? c_num(min) : 0;
     val greedy = eq(max, greedy_k);
@@ -2272,13 +2275,13 @@ static val v_collect(match_files_ctx *c)
   val args = fourth(first_spec);
   val bindings_coll = nil;
   val last_bindings = nil;
-  val max = getplist(args, maxgap_k);
-  val min = getplist(args, mingap_k);
-  val gap = getplist(args, gap_k);
-  val times = getplist(args, times_k);
-  val mintimes = getplist(args, mintimes_k);
-  val maxtimes = getplist(args, maxtimes_k);
-  val lines = getplist(args, lines_k);
+  val max = txeval(specline, getplist(args, maxgap_k), c->bindings);
+  val min = txeval(specline, getplist(args, mingap_k), c->bindings);
+  val gap = txeval(specline, getplist(args, gap_k), c->bindings);
+  val times = txeval(specline, getplist(args, times_k), c->bindings);
+  val mintimes = txeval(specline, getplist(args, mintimes_k), c->bindings);
+  val maxtimes = txeval(specline, getplist(args, maxtimes_k), c->bindings);
+  val lines = txeval(specline, getplist(args, lines_k), c->bindings);
   val have_vars;
   val vars = getplist_f(args, vars_k, &have_vars);
   cnum cmax = nump(gap) ? c_num(gap) : (nump(max) ? c_num(max) : 0);
