@@ -1024,7 +1024,6 @@ void eval_init(void)
   reg_fun(intern(lit("<="), user_package), func_n1v(lev));
   reg_fun(intern(lit("max"), user_package), func_n1v(maxv));
   reg_fun(intern(lit("min"), user_package), func_n1v(minv));
-  reg_fun(intern(lit("int-str"), user_package), func_n2(int_str));
 
   reg_fun(intern(lit("search-regex"), user_package), func_n4(search_regex));
   reg_fun(intern(lit("match-regex"), user_package), func_n3(match_regex));
@@ -1079,6 +1078,30 @@ void eval_init(void)
   reg_fun(intern(lit("symbol-name"), user_package), func_n1(symbol_name));
   reg_fun(intern(lit("symbol-package"), user_package), func_n1(symbol_package));
   reg_fun(intern(lit("keywordp"), user_package), func_n1(keywordp));
+
+  reg_fun(intern(lit("mkstring"), user_package), func_n2(mkstring));
+  reg_fun(intern(lit("copy-str"), user_package), func_n1(copy_str));
+  reg_fun(intern(lit("upcase-str"), user_package), func_n1(upcase_str));
+  reg_fun(intern(lit("downcase-str"), user_package), func_n1(downcase_str));
+  reg_fun(intern(lit("string-extend"), user_package), func_n2(string_extend));
+  reg_fun(intern(lit("stringp"), user_package), func_n1(stringp));
+  reg_fun(intern(lit("lazy-stringp"), user_package), func_n1(lazy_stringp));
+  reg_fun(intern(lit("length-str"), user_package), func_n1(length_str));
+  reg_fun(intern(lit("search-str"), user_package), func_n4(search_str));
+  reg_fun(intern(lit("search-str-tree"), user_package), func_n4(search_str_tree));
+  reg_fun(intern(lit("sub-str"), user_package), func_n3(sub_str));
+  reg_fun(intern(lit("cat-str"), user_package), func_n2(cat_str));
+  reg_fun(intern(lit("split-str"), user_package), func_n2(split_str));
+  reg_fun(intern(lit("split-str-set"), user_package), func_n2(split_str_set));
+  reg_fun(intern(lit("trim-str"), user_package), func_n1(trim_str));
+  reg_fun(intern(lit("string-lt"), user_package), func_n2(string_lt));
+  reg_fun(intern(lit("int-str"), user_package), func_n2(int_str));
+  reg_fun(intern(lit("chrp"), user_package), func_n1(chrp));
+  reg_fun(intern(lit("chr-str"), user_package), func_n2(chr_str));
+  reg_fun(intern(lit("chr-str-set"), user_package), func_n3(chr_str_set));
+  reg_fun(intern(lit("span-str"), user_package), func_n2(span_str));
+  reg_fun(intern(lit("compl-span-str"), user_package), func_n2(compl_span_str));
+  reg_fun(intern(lit("break-str"), user_package), func_n2(break_str));
 
   eval_error_s = intern(lit("eval-error"), user_package);
   uw_register_subtype(eval_error_s, error_s);
