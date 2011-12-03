@@ -396,7 +396,6 @@ val chr_str_set(val str, val index, val chr);
 val span_str(val str, val set);
 val compl_span_str(val str, val set);
 val break_str(val str, val set);
-val sym_name(val sym);
 val make_sym(val name);
 val make_package(val name);
 val find_package(val name);

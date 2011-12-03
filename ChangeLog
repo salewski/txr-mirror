@@ -1,5 +1,12 @@
 2011-12-02  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c: Symbol related intrinsic functions and variables made
+	available:
+
+	* lib.h (sym_name): Dangling declaration removed.
+
+2011-12-02  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.y (list): unquote and splice actions look inside the
 	argument form. If an unquote or splice are applied to a quoted
 	form, its quote becomes a regular quote.
