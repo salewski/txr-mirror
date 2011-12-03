@@ -1068,6 +1068,18 @@ void eval_init(void)
   reg_fun(intern(lit("open-file"), user_package), func_n2(open_file));
   reg_fun(intern(lit("open-pipe"), user_package), func_n2(open_pipe));
 
+  reg_var(intern(lit("*user-package*"), user_package), user_package);
+  reg_var(intern(lit("*keyword-package*"), user_package), keyword_package);
+  reg_var(intern(lit("*system-package*"), user_package), system_package);
+  reg_fun(intern(lit("make-sym"), user_package), func_n1(make_sym));
+  reg_fun(intern(lit("make-package"), user_package), func_n1(make_package));
+  reg_fun(intern(lit("find-package"), user_package), func_n1(find_package));
+  reg_fun(intern(lit("intern"), user_package), func_n2(intern));
+  reg_fun(intern(lit("symbolp"), user_package), func_n1(symbolp));
+  reg_fun(intern(lit("symbol-name"), user_package), func_n1(symbol_name));
+  reg_fun(intern(lit("symbol-package"), user_package), func_n1(symbol_package));
+  reg_fun(intern(lit("keywordp"), user_package), func_n1(keywordp));
+
   eval_error_s = intern(lit("eval-error"), user_package);
   uw_register_subtype(eval_error_s, error_s);
 }
