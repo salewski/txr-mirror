@@ -1,5 +1,9 @@
 2011-12-02  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Added stub sections for new functions.
+
+2011-12-02  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c: Symbol related intrinsic functions and variables made
 	available:
 
