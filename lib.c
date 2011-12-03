@@ -1324,13 +1324,18 @@ val split_str(val str, val sep)
 
   list_collect_decl (out, iter);
 
-  for (; *cstr != 0; cstr += len_sep) {
+  for (;;) {
     const wchar_t *psep = wcsstr(cstr, csep);
     size_t span = (psep != 0) ? psep - cstr : wcslen(cstr);
     val piece = mkustring(num(span));
     init_str(piece, cstr);
     list_collect (iter, piece);
     cstr += span;
+    if (psep != 0) {
+      cstr += len_sep;
+      continue;
+    }
+    break;
   }
 
   rel1(&sep);
@@ -1348,12 +1353,17 @@ val split_str_set(val str, val set)
   prot1(&str);
   prot1(&set);
 
-  for (; *cstr != 0; cstr++) {
+  for (;;) {
     size_t span = wcscspn(cstr, cset);
     val piece = mkustring(num(span));
     init_str(piece, cstr);
     list_collect (iter, piece);
     cstr += span;
+    if (*cstr) {
+      cstr++;
+      continue;
+    }
+    break;
   }
 
   rel1(&set);
