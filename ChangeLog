@@ -1,5 +1,20 @@
 2011-12-03  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (uw_protect_s, return_s, return_from_s): New symbol
+	variables.
+	(op_unwind_protect, op_block, op_return, op_return_from): 
+	New static functions.
+	(expand): Removed case for call, if, and, and or. These operators
+	evaluate all their arguments, so the code walker can treat them
+	as a function calls.
+	Added case for block and return-from.
+	(eval_init): New symbols interned.  New operator functions
+	registered in op_table.
+
+	* txr.1: Blank sections added.
+
+2011-12-03  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (split_str, split_str_set): Bugfix: access beyond the end of
 	the input string.
 

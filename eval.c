@@ -53,7 +53,7 @@ val eval_error_s;
 val let_s, let_star_s, lambda_s, call_s;
 val cond_s, if_s, and_s, or_s, defvar_s, defun_s;
 val inc_s, dec_s, push_s, pop_s, gethash_s, car_s, cdr_s;
-val for_s, for_star_s, dohash_s;
+val for_s, for_star_s, dohash_s, uw_protect_s, return_s, return_from_s;
 val list_s, append_s, apply_s;
 
 val make_env(val vbindings, val fbindings, val up_env)
@@ -611,6 +611,54 @@ static val op_dohash(val form, val env)
   return eval(resform, new_env, form);
 }
 
+static val op_unwind_protect(val form, val env)
+{
+  val prot_form = second(form);
+  val cleanup_forms = rest(rest(form));
+  val result;
+
+  uw_catch_begin(nil, exsym, exvals);
+
+  result = eval(prot_form, env, prot_form);
+
+  uw_do_unwind;
+
+  uw_catch (exsym, exvals);
+
+  uw_unwind
+    eval_progn(cleanup_forms, env, cleanup_forms);
+
+  uw_catch_end;
+
+  return result;
+}
+
+static val op_block(val form, val env)
+{
+  val sym = second(form);
+  val body = rest(rest(form));
+
+  uw_block_begin (sym, result);
+  result = eval_progn(body, env, form);
+  uw_block_end;
+
+  return result;
+}
+
+static val op_return(val form, val env)
+{
+  val retval = eval(second(form), env, form);
+  uw_block_return(nil, retval);
+  abort();
+}
+
+static val op_return_from(val form, val env)
+{
+  val name = second(form);
+  val retval = eval(third(form), env, form);
+  uw_block_return(name, retval);
+  abort();
+}
 
 static val expand_forms(val form)
 {
@@ -762,12 +810,13 @@ val expand(val form)
       if (body == body_ex && vars == vars_ex)
         return form;
       return rlcp(cons(sym, cons(vars_ex, body_ex)), form);
-    } else if (sym == call_s || sym == if_s || sym == and_s || sym == or_s) {
-      val body = rest(form);
+    } else if (sym == block_s || sym == return_from_s) {
+      val name = second(form);
+      val body = rest(rest(form));
       val body_ex = expand_forms(body);
       if (body == body_ex)
         return form;
-      return rlcp(cons(sym, body_ex), form);
+      return rlcp(cons(sym, cons(name, body_ex)), form);
     } else if (sym == cond_s) {
       val pairs = rest(form);
       val pairs_ex = expand_cond_pairs(pairs);
@@ -846,6 +895,7 @@ val expand(val form)
       return rlcp(cons(sym, forms_ex), form);
     } else {
       /* funtion call */
+      /* also handles: call, if, and, or, unwind-protect, return */
       val args = rest(form);
       val args_ex = expand_forms(args);
 
@@ -907,7 +957,6 @@ static val mappendv(val fun, val list_of_lists)
   }
 }
 
-
 static void reg_fun(val sym, val fun)
 {
   sethash(top_fb, sym, cons(sym, fun));
@@ -942,6 +991,9 @@ void eval_init(void)
   for_s = intern(lit("for"), user_package);
   for_star_s = intern(lit("for*"), user_package);
   dohash_s = intern(lit("dohash"), user_package);
+  uw_protect_s = intern(lit("unwind-protect"), user_package);
+  return_s = intern(lit("return"), user_package);
+  return_from_s = intern(lit("return-from"), user_package);
   gethash_s = intern(lit("gethash"), user_package);
   car_s = intern(lit("car"), user_package);
   cdr_s = intern(lit("cdr"), user_package);
@@ -971,6 +1023,10 @@ void eval_init(void)
   sethash(op_table, for_s, cptr((mem_t *) op_for));
   sethash(op_table, for_star_s, cptr((mem_t *) op_for));
   sethash(op_table, dohash_s, cptr((mem_t *) op_dohash));
+  sethash(op_table, uw_protect_s, cptr((mem_t *) op_unwind_protect));
+  sethash(op_table, block_s, cptr((mem_t *) op_block));
+  sethash(op_table, return_s, cptr((mem_t *) op_return));
+  sethash(op_table, return_from_s, cptr((mem_t *) op_return_from));
 
   reg_fun(cons_s, func_n2(cons));
   reg_fun(car_s, func_n1(car));
