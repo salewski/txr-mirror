@@ -1,5 +1,10 @@
 2011-12-03  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (split_str, split_str_set): Bugfix: access beyond the end of
+	the input string.
+
+2011-12-03  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): String and character functions
 	exposed as intrinsics.
 
