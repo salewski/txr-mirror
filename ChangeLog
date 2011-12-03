@@ -1,3 +1,10 @@
+2011-12-03  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): String and character functions
+	exposed as intrinsics.
+
+	* txr.1: Blank sections created.
+
 2011-12-02  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.1: Added stub sections for new functions.
