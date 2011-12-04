@@ -209,6 +209,31 @@ val cdr(val cons)
   }
 }
 
+val rplaca(val cons, val new_car)
+{
+  switch (type(cons)) {
+  case CONS:
+    return cons->c.car = new_car;
+  case LCONS:
+    return cons->lc.car = new_car;
+  default:
+    type_mismatch(lit("~s is not a cons"), cons, nao);
+  }
+}
+
+
+val rplacd(val cons, val new_car)
+{
+  switch (type(cons)) {
+  case CONS:
+    return cons->c.cdr = new_car;
+  case LCONS:
+    return cons->lc.cdr = new_car;
+  default:
+    type_mismatch(lit("~s is not a cons"), cons, nao);
+  }
+}
+
 val *car_l(val cons)
 {
   switch (type(cons)) {
@@ -617,6 +642,21 @@ val cons(val car, val cdr)
   obj->c.car = car;
   obj->c.cdr = cdr;
   return obj;
+}
+
+val make_lazy_cons(val func)
+{
+  val obj = make_obj();
+  obj->lc.type = LCONS;
+  obj->lc.car = obj->lc.cdr = nil;
+  obj->lc.func = func;
+  return obj;
+}
+
+val lcons_fun(val lcons)
+{
+  type_check(lcons, LCONS);
+  return lcons->lc.func;
 }
 
 val list(val first, ...)
@@ -2270,15 +2310,6 @@ val vec_push(val vec, val item)
   return fill;
 }
 
-static val make_lazycons(val func)
-{
-  val obj = make_obj();
-  obj->lc.type = LCONS;
-  obj->lc.car = obj->lc.cdr = nil;
-  obj->lc.func = func;
-  return obj;
-}
-
 static val lazy_stream_func(val env, val lcons)
 {
   val stream = car(env);
@@ -2286,7 +2317,7 @@ static val lazy_stream_func(val env, val lcons)
   val ahead = get_line(stream);
 
   lcons->lc.car = next;
-  lcons->lc.cdr = if2(ahead, make_lazycons(lcons->lc.func));
+  lcons->lc.cdr = if2(ahead, make_lazy_cons(lcons->lc.func));
   lcons->lc.func = nil;
 
   if (!next || !ahead)
@@ -2307,8 +2338,8 @@ val lazy_stream_cons(val stream)
     return nil;
   }
 
-  return make_lazycons(func_f1(cons(stream, cons(first, nil)),
-                               lazy_stream_func));
+  return make_lazy_cons(func_f1(cons(stream, cons(first, nil)),
+                                lazy_stream_func));
 }
 
 val lazy_str(val lst, val term, val limit)

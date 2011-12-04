@@ -297,6 +297,8 @@ val type_check3(val obj, int, int, int);
 val class_check(val cobj, val class_sym);
 val car(val cons);
 val cdr(val cons);
+val rplaca(val cons, val new_car);
+val rplacd(val cons, val new_car);
 val *car_l(val cons);
 val *cdr_l(val cons);
 val first(val cons);
@@ -329,6 +331,8 @@ mem_t *chk_malloc(size_t size);
 mem_t *chk_realloc(mem_t *, size_t size);
 wchar_t *chk_strdup(const wchar_t *str);
 val cons(val car, val cdr);
+val make_lazy_cons(val func);
+val lcons_fun(val lcons);
 val list(val first, ...); /* terminated by nao */
 val consp(val obj);
 val nullp(val obj);

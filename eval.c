@@ -1029,8 +1029,12 @@ void eval_init(void)
   sethash(op_table, return_from_s, cptr((mem_t *) op_return_from));
 
   reg_fun(cons_s, func_n2(cons));
+  reg_fun(intern(lit("make-lazy-cons"), user_package), func_n1(make_lazy_cons));
+  reg_fun(intern(lit("lcons-fun"), user_package), func_n1(lcons_fun));
   reg_fun(car_s, func_n1(car));
   reg_fun(cdr_s, func_n1(car));
+  reg_fun(intern(lit("rplaca"), user_package), func_n2(rplaca));
+  reg_fun(intern(lit("rplacd"), user_package), func_n2(rplacd));
   reg_fun(intern(lit("first"), user_package), func_n1(car));
   reg_fun(intern(lit("rest"), user_package), func_n1(cdr));
   reg_fun(append_s, func_n0v(appendv));
