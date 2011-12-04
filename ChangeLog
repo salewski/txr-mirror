@@ -1,5 +1,22 @@
 2011-12-03  Kaz Kylheku  <kaz@kylheku.com>
 
+	Expose lazy lists in TXR Lisp.
+
+	* eval.c (eval_init): New intrinsic functions.
+
+	* lib.c (rplaca, rplacd, lcons_fun): New functions.
+	(make_lazycons): Renamed to make_lazy_cons, relocated
+	and turned into external function.
+	(lazy_stream_func, lazy_stream_cons): Follow rename
+	of make_lazycons.
+
+	* lib.h (rplaca, rplacd, make_lazy_cons, lcons_fun): 
+	Declared.
+
+	* txr.1: Stub sections created.
+
+2011-12-03  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (uw_protect_s, return_s, return_from_s): New symbol
 	variables.
 	(op_unwind_protect, op_block, op_return, op_return_from): 
