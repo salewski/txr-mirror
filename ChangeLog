@@ -1,5 +1,14 @@
 2011-12-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.y (force_regular_quotes): Function removed.
+	(list): Prior commit reversed.
+
+	* txr.1: Prior commit reversed.
+
+	* RELNOTES: No semantics clarification in quasiquote; bugfixes only.
+
+2011-12-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (op_qquote_error, op_unquote_error): New static functions.
 	(expand_qquote): Bugfix: missing case added to handle directly quoted
 	quasiquote.

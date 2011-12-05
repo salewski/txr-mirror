@@ -50,7 +50,6 @@ static val define_transform(val define_form);
 static val lit_char_helper(val litchars);
 static val optimize_text(val text_form);
 static val choose_quote(val quoted_form);
-static val force_regular_quotes(val form);
 static wchar_t char_from_name(wchar_t *name);
 
 static val parsed_spec;
@@ -608,14 +607,16 @@ var_op : '*'                    { $$ = list(t, nao); }
 
 list : '(' exprs ')'            { $$ = rl($2, num($1)); }
      | '(' ')'                  { $$ = nil; }
-     | ',' expr                 { $$ = rlcp(list(unquote_s, 
-                                                 force_regular_quotes($2), nao),
-                                            $2); }
+     | ',' expr                 { val expr = $2;
+                                  if (consp(expr) && first(expr) == qquote_s)
+                                    expr = cons(quote_s, rest(expr));
+                                  $$ = rlcp(list(unquote_s, expr, nao), $2); }
      | '\'' expr                { $$ = rlcp(list(choose_quote($2),
                                             $2, nao), $2); }
-     | SPLICE expr              { $$ = rlcp(list(splice_s, 
-                                                 force_regular_quotes($2), nao),
-                                            $2); }
+     | SPLICE expr              { val expr = $2;
+                                  if (consp(expr) && first(expr) == qquote_s)
+                                    expr = cons(quote_s, rest(expr));
+                                  $$ = rlcp(list(splice_s, expr, nao), $2); }
      | '(' error                { $$ = nil;
                                   yybadtoken(yychar, lit("list expression")); }
      ;
@@ -909,29 +910,6 @@ static val unquotes_occur(val quoted_form)
 static val choose_quote(val quoted_form)
 {
   return unquotes_occur(quoted_form) ? qquote_s : quote_s;
-}
-
-static val force_regular_quotes(val form)
-{
-  if (atom(form)) {
-    return form;
-  } else {
-    val sym = car(form);
-    val body = cdr(form);
-
-    if (sym == qquote_s) {
-      return rlcp(cons(quote_s, force_regular_quotes(body)), form);
-    } if (sym == unquote_s || sym == splice_s) {
-      return form;
-    } else {
-      val car_sub = force_regular_quotes(sym);
-      val cdr_sub = force_regular_quotes(body);
-
-      if (car_sub == sym && cdr_sub == body)
-        return form;
-      return rlcp(cons(car_sub, cdr_sub), form);
-    }
-  }
 }
 
 val rl(val form, val lineno)

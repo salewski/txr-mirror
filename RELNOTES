@@ -6,11 +6,12 @@
   - New functions exposed in Lisp interpreter: strings, characters,
     symbols and lazy lists.
 
-  - Quasiquote semantics clarified.
-
   Bugs
 
   - Flaws in some string-splitting functions identified and fixed.
+
+  - Bugs in quasiquote.
+
 
 
 

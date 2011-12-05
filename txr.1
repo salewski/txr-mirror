@@ -4223,16 +4223,11 @@ value of 'a is the symbol a itself, whereas the value of a is the value
 of the variable a.
 
 Note that TXR Lisp does not have a distinct quote and backquote syntax.
-There is only one quote, which supports unquoting. The quote behaves
-either like a quasiquote or a regular quote according to these rules:
+There is only one quote, which supports unquoting.
 
-1. A quoted form which contains no unquotes or splices is an ordinary quote.
+A quoted form which contains no unquotes codifies an ordinary quote.
 
-2. Quotes occuring within forms that are unquoted or spliced are ordinary
-quotes, not quasiquotes.
-
-3. Quotes which contain unquotes and splices and are not within unquotes
-or splices are quasiquotes.
+A quoted form which contains unquotes expresses a quasiquote.
 
 .IP ,form
 
@@ -4244,12 +4239,33 @@ in the quote stands for itself, except for the ,(+ 2 2) which is evaluated.
 
 .IP ,*form
 
-The comma-star operator is used within a quoted list to denote a splicing
-unquote.  Wheras the quote suppresses evaluation, the comma introduces an
-exception: the form which follows ,* must evaluate to a list. That list is
-spliced into the quoted list. For example: '(a b c ,*(list (+ 3 3) (+ 4 4) d)
-evaluates to (a b c 6 8 d).  The expression (list (+ 3 3) (+ 4 4)) is evaluated
+The comma-star operator is used within a quoted list to denote a splicing unquote.
+Wheras the quote suppresses evaluation, the comma introduces an exception: 
+the form which follows ,* must evaluate to a list. That list is spliced into
+the quoted list. For example: '(a b c ,*(list (+ 3 3) (+ 4 4) d) evaluates
+to (a b c 6 8 d).  The expression (list (+ 3 3) (+ 4 4)) is evaluated
 to produce the list (6 8), and this list is spliced into the quoted template.
+
+.IP ,'form
+
+The comma-quote combination has a special meaning: the quote always
+behaves as a regular quote and not a quasiquote, even if form contains
+unquotes. Therefore, it does not "capture" these unquotes: they cannot
+"belong" to this quote.  The comma and quote "cancel out", so the only effect
+of comma-quote is to add one level of unquoting.  So for instance, whereas  in
+'(a b c '(,d)), the subsitution of d belongs to the inner quote (it is unquoted
+by the leftmost comma which belongs to the innermost quote) by contrast,
+in '(a b c '(,',d)) the d is now one comma removed from the leftmost comma and
+thus the substitution of d belongs to the outer quote. 
+In other dialects of Lisp, this would be written `(a b c `(,',d)), making it
+explicit which kind of quote is being specified. TXR Lisp works out which
+kind of quote to use internally.
+
+.IP ,*'form
+
+The comma-splice form is analogous to comma-quote (see above).  Like in the
+,' combination, in the ,*' combination, the quote behaves as a regular quote
+and not a quasiquote.
 
 .PP
 
@@ -4263,8 +4279,8 @@ quote, which protects it from evaluation. To get the (+ 1 2) value "through"
 to the inner quote, the unquote syntax must also be nested using multiple
 commas, like this: '(1 2 3 '(4 5 6 ,',(+ 1 2))). The leftmost comma goes
 with the innermost quote.  The quote between the commas protects the (+ 1 2)
-from repeated evaluations. According to rule 2 above, it is a regular
-quote, and so it does not capture the following comma.
+from repeated evaluations: the two unquotes call for two evaluations, but
+we only want (+ 1 2) to be evaluated once.
 
 .SS Lisp Operators
 
