@@ -1,5 +1,17 @@
 2011-12-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 045
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES: Updated.
+
+2011-12-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (op_cond): Fixed behavior for singleton clauses.
 	(eval_init): Use existing function objects car_f, cdr_f,
 	eq_f, eql_f and equal_f. Added identity to function table.
@@ -105,7 +117,7 @@
 	backquote processing, and quasiquote forms containing
 	non-quasi-quotes like like '(a 'b ,c).
 
-2011-11-20  Kaz Kylheku  <kaz@kylheku.com>
+2011-12-02  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 044
 
