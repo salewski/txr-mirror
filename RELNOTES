@@ -12,6 +12,8 @@
 
   - Bugs in quasiquote.
 
+  - Handling of singleton clauses in cond operator.
+
 
 
 

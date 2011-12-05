@@ -4289,12 +4289,39 @@ the interpretation of the meaning of that form is under the complete control
 of that operator. The following sections list all of the operators available
 in TXR Lisp.
 
+In these sections Syntax is indicated using these conventions:
+
+.TP
+<word> 
+
+A symbol in angle brackets denotes some syntactic unit: it
+may be a symbol or compound form. The syntactic unit is explained
+in the Description section.
+
+.TP
+{syntax}*  <word>*
+
+This indicates a repetition of zero or more of the given
+syntax enclosed in the braces or syntactic unit.
+
+.TP
+[syntax]  [<word>]
+
+Square brackets indicate optional syntax.
+
+.TP
+alternative1 | alternative2 | ... | alternativeN
+
+Multiple syntactic variations allowed in one place are
+indicated as bar-separated items.
+
 .SS Operators let and let*
 
 .TP
 Syntax:
-(let ({<sym> | (<sym> <init-form>)}*) {<body-form>}*)
-(let* ({<sym> | (<sym> <init-form>)}*) {<body-form>}*)
+(let ({<sym> | (<sym> <init-form>)}*) <body-form>*)
+
+(let* ({<sym> | (<sym> <init-form>)}*) <body-form>*)
 
 .TP
 Description:
@@ -4339,7 +4366,7 @@ Examples:
 
 .TP
 Syntax:
-(lambda ({<sym>}* [. <sym>]) {<body-form>}*)
+(lambda ({<sym>}*[. <sym>]) {<body-form>}*)
 
 .TP
 Description:
@@ -4432,15 +4459,195 @@ syntax (fun (lambda ...)) is invalid.
 
 .SS Operator cond
 
+.TP
+Syntax:
+(cond {(<test> {form}*)}*)
+
+.TP
+Description:
+
+The cond operator provides a multi-branching conditional evaluation of
+forms. Enclosed in the cond form are groups of forms expressed as lists.
+Each group must be a list of at least one form.
+
+The forms are processed from left to right as follows: the first form,
+<test>, in each group is evaluated. If it evaluates true, then the remaining
+forms in that group, if any, are also evaluated. Processing then terminates and
+the result of the last form in the group is taken as the result of cond.
+If <test> is the only form in the group, then result of <test> is taken
+as the result of cond.
+
+If the first form of a group yields nil, then processing continues with the
+next group, if any. If all form groups yield nil, then the cond form yields
+nil.  This holds in the case that the syntax is empty: (cond) yields nil.
+
 .SS Operator if
+
+.TP
+Syntax:
+(if <cond> <t-form> [<e-form>])
+
+.TP
+Description:
+
+The if operator provides a simple two-way-selective evaluation control.
+The <cond> form is evaluated. If it yields true then <t-form> is
+evaluated, and that form's return value becomes the return value of the if.
+If <cond> yields false, then <e-form> is evaluated and its return value
+is taken to be that of if. If <e-form> is omitted, then the behavior is
+as if <e-form> were specified as nil.
 
 .SS Operator and
 
+.TP
+Syntax:
+(and {<form>}*)
+
+.TP
+Description:
+
+The and operator provides three functionalities in one.  It computes the
+logical "and" function over several forms.  It controls evaluation (a.k.a.
+"short-circuiting").  It also allows the convenient substitution of an
+arbitrary true value in the true case.
+
+The and operator evaluates as follows. First, a return value is
+established and initialized to the value t.  The forms, if any, are
+evaluated from left to right.  The return value is overwritten with
+the result of each form. Evaluation stops when all forms are exhausted,
+or when any of them yields nil. When evaluation stops, the operator yields
+the return value.
+
+.TP
+Examples:
+
+(and) -> t
+
+(and (> 10 5) (stringp "foo")) -> t
+
+(and 1 2 3) -> 3
+
 .SS Operator or
+
+.TP
+Syntax:
+(or {<form>}*)
+
+.TP
+Description:
+
+The and operator provides three functionalities in one.  It computes the
+logical "and" function over several forms.  It controls evaluation (a.k.a.
+"short-circuiting").  The behavior of or also provides for a simplified
+selection of the first non-nil value from a sequence of forms.
+
+The or operator evaluates as follows.  First, a rturn value is
+established and initialized to the value nil. The forms, if any,
+are evaluated from left to right. The return value is overwritten
+with the result of each form. Evaluation stops when all forms are
+exhausted, or when a form yields a true value. When evaluation stops, the
+operator yields the return value.
+
+.TP
+Examples:
+
+(or) -> nil
+
+(or 1 2) -> 1
+
+(or nil 2) -> 2
+
+(or (> 10 20) (stringp "foo")) -> t
 
 .SS Operator defun
 
+.TP
+Syntax:
+(defun <name> ({<param> [. <rest-param>]}*) {<body-form>}*)
+
+Description:
+
+The defun operator introduces a new function in the global function namespace.
+
 .SS Operators inc, dec, set, push and pop
+
+.TP
+Syntax:
+(inc <place> [<delta>])
+
+(dec <place> [<delta>])
+
+(set <place> <new-value>)
+
+(push <item> <place>)
+
+(pop <item> <place>)
+
+.TP
+Description:
+
+These destructive operators update the value of a place. A place is a storage
+location which is denoted by a form. Place forms are identical to value
+accessing forms. That is to say, any form recognized as a place by these
+operators can be evaluated by itself to retrieve the value of the storage
+location. However, the converse is false: not all forms which access storage
+location are recognized as places.
+
+With are exceptions noted below, it is an error if a place does not exist.
+For instance, a variable being assigned must exist.
+
+Literal objects which are directly specified in the source code are
+considered part of the program body. Modifying parts of these objects
+therefore gives rise to self-modifying code. The behavior of self-modifying
+code is not specified.
+
+The inc and dec update the place by adding or subtracting, respectively, a
+displacement to or from that number. If the <delta> expression is
+specified, then it is evaluated and its value is used as the increment.
+Otherwise, a default increment of 1 is used. The prior value of the place
+and the delta must be suitable operands for the + and - functions.
+(inc x) is equivalent to (set x (+ 1 x)), except that expression x
+is evaluated only once to determine the storage location. The inc
+and dec operators return the new value that was stored.
+
+The set operator overwrites the previous value of a place with a new value,
+and also returns that value.
+
+The push and pop operators operate on a place which holds a list.  The push
+operator updates the list by replacing it with a new list which has a new item
+at the front, followed by the previous list. The item is returned.
+The pop operator performs the reverse operation: it removes the first item
+from the list and returns it. (push y x) is similar to
+
+  (let ((temp y)) (set x (cons temp x)) temp)
+
+except that x is evaluated only once to determine the storage place, and no
+such temporary variable is visible to the program.  Similarly, (pop x) is much
+like
+
+  (let ((temp (car x))) (set x (cdr x)) temp)
+  
+except that x is evaluated only once, and no such temporary variale
+is visible to the program.
+
+Currently, these forms are recognized as places:
+
+  <symbol>
+
+  (car <cons>)
+
+  (cdr <cons>)
+
+  (gethash <hash> <key> <default-value>)
+
+A <symbol> place denotes a variable. If the variable does not exist, it is an
+error. The (car <form>) and (cdr <form>) places denote the corresponding slots
+of a cons cell. The <cons> form must be an expression which evaluates to a
+cons. The gethash place denotes a value stored in a hash table.
+The form <hash> must evaluate to a hash table. If the place does not exist
+in the hash table under the given key, then the destructive operation
+will create it. In that case, the <default-value> form is evaluated to
+determine the initial value of the place. Otherwise it is ignored.
 
 .SS Operators for and for*
 

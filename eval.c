@@ -439,9 +439,11 @@ static val op_cond(val form, val env)
   val iter = rest(form);
 
   for (; iter; iter = cdr(iter)) {
-    val pair = car(iter);
-    if (eval(first(pair), env, form))
-      return eval_progn(rest(pair), env, pair);
+    val group = car(iter);
+    val restgroup = rest(group);
+    val firstval = eval(first(group), env, group);
+    if (firstval)
+      return if3(restgroup, eval_progn(rest(group), env, group), firstval);
   }
 
   return nil;
@@ -1050,14 +1052,15 @@ void eval_init(void)
   reg_fun(cons_s, func_n2(cons));
   reg_fun(intern(lit("make-lazy-cons"), user_package), func_n1(make_lazy_cons));
   reg_fun(intern(lit("lcons-fun"), user_package), func_n1(lcons_fun));
-  reg_fun(car_s, func_n1(car));
-  reg_fun(cdr_s, func_n1(car));
+  reg_fun(car_s, car_f);
+  reg_fun(cdr_s, cdr_f);
   reg_fun(intern(lit("rplaca"), user_package), func_n2(rplaca));
   reg_fun(intern(lit("rplacd"), user_package), func_n2(rplacd));
   reg_fun(intern(lit("first"), user_package), func_n1(car));
   reg_fun(intern(lit("rest"), user_package), func_n1(cdr));
   reg_fun(append_s, func_n0v(appendv));
   reg_fun(list_s, func_n0v(identity));
+  reg_fun(intern(lit("identity"), user_package), identity_f);
 
   reg_fun(intern(lit("atom"), user_package), func_n1(atom));
   reg_fun(intern(lit("null"), user_package), func_n1(nullp));
@@ -1086,9 +1089,9 @@ void eval_init(void)
   reg_fun(intern(lit("some"), user_package), func_n3(some_satisfy));
   reg_fun(intern(lit("all"), user_package), func_n3(all_satisfy));
   reg_fun(intern(lit("none"), user_package), func_n3(none_satisfy));
-  reg_fun(intern(lit("eq"), user_package), func_n2(eq));
-  reg_fun(intern(lit("eql"), user_package), func_n2(eql));
-  reg_fun(intern(lit("equal"), user_package), func_n2(equal));
+  reg_fun(intern(lit("eq"), user_package), eq_f);
+  reg_fun(intern(lit("eql"), user_package), eql_f);
+  reg_fun(intern(lit("equal"), user_package), equal_f);
 
   reg_fun(intern(lit("+"), user_package), func_n0v(plusv));
   reg_fun(intern(lit("-"), user_package), func_n1v(minusv));
