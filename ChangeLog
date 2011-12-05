@@ -1,3 +1,14 @@
+2011-12-05  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (op_cond): Fixed behavior for singleton clauses.
+	(eval_init): Use existing function objects car_f, cdr_f,
+	eq_f, eql_f and equal_f. Added identity to function table.
+
+	* lib.h (eql_f): Missing declaration added.
+
+	* txr.1: Documented cond, and, if, or, defun, inc, dec,
+	set, push and pop.
+
 2011-12-04  Kaz Kylheku  <kaz@kylheku.com>
 
 	* parser.y (force_regular_quotes): Function removed.

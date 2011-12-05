@@ -282,7 +282,7 @@ extern val nothrow_k, args_k;
 extern val null_string;
 extern val null_list; /* (nil) */
 
-extern val identity_f, equal_f, eq_f, car_f, cdr_f;
+extern val identity_f, equal_f, eql_f, eq_f, car_f, cdr_f;
 
 extern const wchar_t *progname;
 extern val prog_string;
