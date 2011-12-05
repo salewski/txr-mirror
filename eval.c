@@ -353,6 +353,19 @@ static val op_quote(val form, val env)
   return second(form);
 }
 
+static val op_qquote_error(val form, val env)
+{
+  eval_error(form, lit("unexpanded quasiquote encountered"), nao);
+  return second(form);
+}
+
+static val op_unquote_error(val form, val env)
+{
+  eval_error(form, lit("unquote/splice without matching quote"), nao);
+  return second(form);
+}
+
+
 static val bindings_helper(val vars, val env, val sequential, val ctx_form)
 {
   val iter;
@@ -739,6 +752,9 @@ static val expand_qquote(val qquoted_form)
                  second(qquoted_form), nao);
     } else if (sym == unquote_s) {
       return expand(second(qquoted_form));
+    } else if (sym == qquote_s) {
+      return rlcp(expand_qquote(expand_qquote(second(qquoted_form))), 
+                  qquoted_form);
     } else {
       val f = car(qquoted_form);
       val r = cdr(qquoted_form);
@@ -1004,6 +1020,9 @@ void eval_init(void)
   apply_s = intern(lit("apply"), user_package);
 
   sethash(op_table, quote_s, cptr((mem_t *) op_quote));
+  sethash(op_table, qquote_s, cptr((mem_t *) op_qquote_error));
+  sethash(op_table, unquote_s, cptr((mem_t *) op_unquote_error));
+  sethash(op_table, splice_s, cptr((mem_t *) op_unquote_error));
   sethash(op_table, let_s, cptr((mem_t *) op_let));
   sethash(op_table, let_star_s, cptr((mem_t *) op_let));
   sethash(op_table, lambda_s, cptr((mem_t *) op_lambda));

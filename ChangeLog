@@ -1,3 +1,17 @@
+2011-12-04  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (op_qquote_error, op_unquote_error): New static functions.
+	(expand_qquote): Bugfix: missing case added to handle directly quoted
+	quasiquote.
+	(eval_init): Error-catching pseudo-operators registered in
+	op_table.
+
+	* parser.y (force_regular_quotes): New function.
+	(list): Quotes within unquotes and splices are regular.
+
+	* txr.1: Clarified new rules. Removed description of ,'form and ,*'form
+	special syntax.
+
 2011-12-03  Kaz Kylheku  <kaz@kylheku.com>
 
 	Expose lazy lists in TXR Lisp.
