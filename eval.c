@@ -630,7 +630,7 @@ static val op_unwind_protect(val form, val env)
 {
   val prot_form = second(form);
   val cleanup_forms = rest(rest(form));
-  val result;
+  val result = nil;
 
   uw_catch_begin(nil, exsym, exvals);
 
@@ -1061,13 +1061,14 @@ void eval_init(void)
   reg_fun(append_s, func_n0v(appendv));
   reg_fun(list_s, func_n0v(identity));
   reg_fun(intern(lit("identity"), user_package), identity_f);
+  reg_fun(intern(lit("typeof"), user_package), func_n1(typeof));
 
   reg_fun(intern(lit("atom"), user_package), func_n1(atom));
   reg_fun(intern(lit("null"), user_package), func_n1(nullp));
   reg_fun(intern(lit("consp"), user_package), func_n1(consp));
   reg_fun(intern(lit("listp"), user_package), func_n1(listp));
   reg_fun(intern(lit("proper-listp"), user_package), func_n1(proper_listp));
-  reg_fun(intern(lit("length"), user_package), func_n1(length));
+  reg_fun(intern(lit("length-list"), user_package), func_n1(length_list));
 
   reg_fun(intern(lit("mapcar"), user_package), func_n1v(mapcarv));
   reg_fun(intern(lit("mappend"), user_package), func_n1v(mappendv));
@@ -1184,6 +1185,16 @@ void eval_init(void)
   reg_fun(intern(lit("span-str"), user_package), func_n2(span_str));
   reg_fun(intern(lit("compl-span-str"), user_package), func_n2(compl_span_str));
   reg_fun(intern(lit("break-str"), user_package), func_n2(break_str));
+
+  reg_fun(intern(lit("vector"), user_package), func_n1(vector));
+  reg_fun(intern(lit("vec-get-fill"), user_package), func_n1(vec_get_fill));
+  reg_fun(intern(lit("vec-set-fill"), user_package), func_n2(vec_set_fill));
+  reg_fun(intern(lit("vecref"), user_package), func_n2(vecref));
+  reg_fun(intern(lit("vec-push"), user_package), func_n2(vec_push));
+  reg_fun(intern(lit("length-vec"), user_package), func_n1(length_vec));
+  reg_fun(intern(lit("size-vec"), user_package), func_n1(size_vec));
+  reg_fun(intern(lit("vector-list"), user_package), func_n1(vector_list));
+  reg_fun(intern(lit("length"), user_package), func_n1(length));
 
   eval_error_s = intern(lit("eval-error"), user_package);
   uw_register_subtype(eval_error_s, error_s);
