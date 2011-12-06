@@ -1,5 +1,15 @@
 2011-12-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (find_char): New function.
+	(string_in_get_line): Following up TODO. Fixed broken
+	function. Now get_line on a string stream properly returns characters
+	up to and not including the next newlne character, and also consumes
+	the newline character. Other cases are handled properly, also:
+	the stream being at EOF already, or at the last line not being
+	newline-terminated.
+
+2011-12-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (op_unwind_protect): Fixed uninitialized variable
 	warning.
 	(eval_init): New functions registered: typeof and vector functions,
