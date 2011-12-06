@@ -1,3 +1,8 @@
+2011-12-06  Kaz Kylheku  <kaz@kylheku.com>
+
+	* configure: Forgot to treat octal number in the processing
+	of conftest.syms. Removed useless eval.
+
 2011-12-05  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 045
