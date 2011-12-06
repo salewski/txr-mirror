@@ -306,16 +306,31 @@ static void string_in_stream_mark(val stream)
   gc_mark(stuff);
 }
 
+static val find_char(val string, val start, val ch)
+{
+  const wchar_t *str = c_str(string);
+  cnum pos = c_num(start);
+  cnum len = c_num(length_str(string));
+  wchar_t c = c_chr(ch);
+
+  for (; pos < len; pos++) {
+    if (str[pos] == c)
+      return num(pos);
+  }
+
+  return nil;
+}
+
 static val string_in_get_line(val stream)
 {
   val pair = (val) stream->co.handle;
   val string = car(pair);
   val pos = cdr(pair);
 
-  /* TODO: broken, should only scan to newline */
   if (lt(pos, length_str(string))) {
-    val result = sub_str(string, pos, nil);
-    *cdr_l(pair) = length_str(string);
+    val nlpos = find_char(string, pos, chr('\n'));
+    val result = sub_str(string, pos, nlpos);
+    *cdr_l(pair) = nlpos ? plus(nlpos, one) : length_str(string);
     return result;
   }
 
