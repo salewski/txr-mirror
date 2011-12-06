@@ -1,5 +1,38 @@
 2011-12-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (op_unwind_protect): Fixed uninitialized variable
+	warning.
+	(eval_init): New functions registered: typeof and vector functions,
+	as well as length_list.
+
+	* lib.c (length): Function renamed to length_list, because it is
+	list specific.
+	(length_vec, size_vec, vector_list): New functions.
+	(length): New function, generic over lists, vectors and strings.
+
+	* lib.h (length_list, length_vec, size_vec, vector_list): Declared. 
+
+	* match.c (h_var, h_fun, robust_length, v_deffilter, v_fun): Use
+	length_list instead of length.
+
+	* parser.l: Introduced # token.
+
+	* parser.y (vector): New nonterminal.
+	(expr): vector is a kind of expr.
+	(chrlist): Bugfix: single-character syntax was not working;
+	for instance #\x to denote the charcter x.
+	(lit_char_helper): Use length_list instead of length.
+
+	* stream.c (string_in_get_line): Bugfix: this was using
+	the wrong length function: length was being applied to a string.
+	The genericity of length makes that correct now, but changing
+	to length_str anyway.
+
+	* txr.1: Blank sections created for functions. Vector syntax
+	documented.
+
+2011-12-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	* configure: Forgot to treat octal number in the processing
 	of conftest.syms. Removed useless eval.
 

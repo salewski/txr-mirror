@@ -4269,6 +4269,13 @@ and not a quasiquote.
 
 .PP
 
+.SS Vectors
+
+.IP #(...)
+
+A hash token followed by a list denotes a vector. For example #(1 2 a)
+is a three-element vector containing the numbers 1 and 2, and the symbol a.
+
 .SS Nested Quotes
 
 Quotes can be nested.  What if it is necessary to unquote something in the
@@ -4671,6 +4678,10 @@ Programs can define named functions with the defun operator
 
 The following are Lisp functions and variables built-in to TXR.
 
+.SS Function identity
+
+.SS Function typeof
+
 .SS Function cons
 
 .SS Functions car and first
@@ -4695,7 +4706,7 @@ The following are Lisp functions and variables built-in to TXR.
 
 .SS Functions listp and proper-listp
 
-.SS Function length
+.SS Function length-list
 
 .SS Function mapcar
 
@@ -4840,6 +4851,24 @@ The following are Lisp functions and variables built-in to TXR.
 .SS Function compl-span-str
 
 .SS Function break-str
+
+.SS Function vector
+
+.SS Function vec-get-fill
+
+.SS Function vec-set-fill
+
+.SS Function vecref
+
+.SS Function vec-push
+
+.SS Function length-vec
+
+.SS Function size-vec
+
+.SS Function vector-list
+
+.SS Function length
 
 
 .SH APPENDIX A: NOTES ON EXOTIC REGULAR EXPRESSIONS

@@ -313,7 +313,7 @@ static val string_in_get_line(val stream)
   val pos = cdr(pair);
 
   /* TODO: broken, should only scan to newline */
-  if (lt(pos, length(string))) {
+  if (lt(pos, length_str(string))) {
     val result = sub_str(string, pos, nil);
     *cdr_l(pair) = length_str(string);
     return result;

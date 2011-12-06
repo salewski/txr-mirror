@@ -719,7 +719,7 @@ val proper_listp(val obj)
   return (obj == nil) ? t : nil;
 }
 
-val length(val list)
+val length_list(val list)
 {
   cnum len = 0;
   while (consp(list)) {
@@ -2310,6 +2310,31 @@ val vec_push(val vec, val item)
   return fill;
 }
 
+val length_vec(val vec)
+{
+  type_check(vec, VEC);
+  return vec->v.vec[vec_fill];
+}
+
+val size_vec(val vec)
+{
+  type_check(vec, VEC);
+  return vec->v.vec[vec_alloc];
+}
+
+val vector_list(val list)
+{
+  val vec = vector(num(2));
+ 
+  if (!listp(list))
+    uw_throwf(error_s, lit("vector_list: list expected, not ~s"), list, nao);
+
+  for (; consp(list); list = cdr(list))
+    vec_push(vec, car(list));
+
+  return vec;
+}
+
 static val lazy_stream_func(val env, val lcons)
 {
   val stream = car(env);
@@ -2852,6 +2877,24 @@ val set_diff(val list1, val list2, val testfun, val keyfun)
   }
 
   return out;
+}
+
+val length(val seq)
+{
+  if (seq == nil)
+    return num(0);
+  else switch (type(seq)) {
+  case CONS:
+  case LCONS:
+    return length_list(seq);
+  case LIT:
+  case STR:
+    return length_str(seq);
+  case VEC:
+    return length_vec(seq);
+  default:
+    type_mismatch(lit("~s is not a sequence"), cons, nao);
+  }
 }
 
 val env(void)

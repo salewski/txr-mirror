@@ -403,6 +403,10 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                           return '`';
                         }
 
+<NESTED>#               {
+                          return '#';
+                        }
+
 <SPECIAL>@              {
                           yy_pop_state();
                           yylval.lexeme = chk_strdup(L"@");

@@ -447,7 +447,7 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
   val modifier = first(modifiers);
   val pair = assoc(c.bindings, sym); /* var exists already? */
 
-  if (gt(length(modifiers), one)) {
+  if (gt(length_list(modifiers), one)) {
     sem_error(elem, lit("multiple modifiers on variable ~s"),
               sym, nao);
   }
@@ -556,7 +556,7 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
     val next_modifier = first(fourth(pat));
     val pair = assoc(c.bindings, second_sym); /* var exists already? */
 
-    if (gt(length(next_modifiers), one)) {
+    if (gt(length_list(next_modifiers), one)) {
       sem_error(elem, lit("multiple modifiers on variable ~s"),
                 second_sym, nao);
     }
@@ -994,9 +994,9 @@ static val h_fun(match_line_ctx c, match_line_ctx *cout)
     val piter, aiter;
     val bindings_cp = copy_list(c.bindings);
 
-    if (!equal(length(args), length(params)))
+    if (!equal(length(args), length_list(params)))
       sem_error(elem, lit("function ~a takes ~a argument(s)"),
-                sym, length(params), nao);
+                sym, length_list(params), nao);
 
     for (piter = params, aiter = args; piter;
          piter = cdr(piter), aiter = cdr(aiter))
@@ -1462,7 +1462,7 @@ static val robust_length(val obj)
     return zero;
   if (atom(obj))
     return negone;
-  return length(obj);
+  return length_list(obj);
 }
 
 static val bind_car(val bind_cons)
@@ -2948,7 +2948,7 @@ static val v_deffilter(match_files_ctx *c)
     val table_evaled = txeval(specline, table, c->bindings);
 
     if (!all_satisfy(table_evaled, andf(func_n1(listp), 
-                                        chain(func_n1(length),
+                                        chain(func_n1(length_list),
                                               curry_12_1(func_n2(ge), two), nao),
                                         chain(func_n1(rest),
                                               curry_123_1(func_n3(all_satisfy), 
@@ -3025,9 +3025,9 @@ static val v_fun(match_files_ctx *c)
 
     debug_check(specline, c->bindings, if2(consp(c->data), car(c->data)), c->data_lineno, nil);
 
-    if (!equal(length(args), length(params)))
+    if (!equal(length_list(args), length_list(params)))
       sem_error(specline, lit("function ~a takes ~a argument(s)"),
-                sym, length(params), nao);
+                sym, length_list(params), nao);
 
     for (piter = params, aiter = args; piter;
          piter = cdr(piter), aiter = cdr(aiter))

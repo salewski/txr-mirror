@@ -82,7 +82,7 @@ static val parsed_spec;
 %type <val> clause_parts additional_parts
 %type <val> output_clause define_clause try_clause catch_clauses_opt
 %type <val> line elems_opt elems clause_parts_h additional_parts_h
-%type <val> text texts elem var var_op meta_expr
+%type <val> text texts elem var var_op meta_expr vector
 %type <val> list exprs exprs_opt expr out_clauses out_clauses_opt out_clause
 %type <val> repeat_clause repeat_parts_opt o_line
 %type <val> o_elems_opt o_elems_opt2 o_elems o_elem o_var rep_elem rep_parts_opt
@@ -605,6 +605,9 @@ o_var : IDENT                   { $$ = list(var_s, intern(string_own($1), nil),
 var_op : '*'                    { $$ = list(t, nao); }
        ;
 
+vector : '#' list               { $$ = rlcp(vector_list($2), $2); }
+       ;
+
 list : '(' exprs ')'            { $$ = rl($2, num($1)); }
      | '(' ')'                  { $$ = nil; }
      | ',' expr                 { val expr = $2;
@@ -645,6 +648,7 @@ expr : IDENT                    { $$ = rl(intern(string_own($1), nil),
                                   rl($$, num(lineno)); }
      | NUMBER                   { $$ = num($1); }
      | list                     { $$ = $1; }
+     | vector                   { $$ = $1; }
      | meta_expr                { $$ = $1; }
      | regex                    { $$ = cons(regex_compile(rest($1)),
                                             rest($1));
@@ -736,15 +740,17 @@ strlit : '"' '"'                { $$ = null_string; }
                                   yybadtoken(yychar, lit("string literal")); }
        ;
 
-chrlit : HASH_BACKSLASH IDENT   { wchar_t ch = char_from_name($2);
+chrlit : HASH_BACKSLASH IDENT   { wchar_t ch;
                                   val str = string_own($2);
+                                  if ($2[1] == 0)
+                                  { ch = $2[0]; }
+                                  else
+                                  { ch = char_from_name($2);
+                                    if (ch == L'!')
+                                    { yyerrorf(lit("unknown character name: ~a"),
+                                               str, nao); }}
                                   end_of_char();
-                                  if (ch == L'!')
-                                  { yyerrorf(lit("unknown character name: ~a"),
-                                             str, nao); }
                                   $$ = chr(ch); }
-       | HASH_BACKSLASH LITCHAR { $$ = chr($2);
-                                  end_of_char(); }
        | HASH_BACKSLASH error   { $$ = nil;
                                   yybadtoken(yychar,
                                              lit("character literal")); }
@@ -870,7 +876,7 @@ static val lit_char_helper(val litchars)
   val ret = nil;
 
   if (litchars) {
-    val len = length(litchars), iter, ix;
+    val len = length_list(litchars), iter, ix;
     ret = mkustring(len);
     for (iter = litchars, ix = zero;
         iter;
