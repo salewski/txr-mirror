@@ -53,7 +53,7 @@ struct hash {
   cnum count;
   val userdata;
   cnum (*hash_fun)(val);
-  val (*assoc_fun)(val list, val key);
+  val (*assoc_fun)(val key, val list);
   val *(*acons_new_l_fun)(val key, val *new_p, val *list);
 };
 
@@ -282,7 +282,7 @@ val gethash(val hash, val key)
 {
   struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
   val chain = *vecref_l(h->table, num(h->hash_fun(key) % h->modulus));
-  val found = h->assoc_fun(chain, key);
+  val found = h->assoc_fun(key, chain);
   return cdr(found);
 }
 
@@ -290,7 +290,7 @@ val gethash_f(val hash, val key, val *found)
 {
   struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
   val chain = *vecref_l(h->table, num(h->hash_fun(key) % h->modulus));
-  *found = h->assoc_fun(chain, key);
+  *found = h->assoc_fun(key, chain);
   return cdr(*found);
 }
 
@@ -298,7 +298,7 @@ val gethash_n(val hash, val key, val notfound_val)
 {
   struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
   val chain = *vecref_l(h->table, num(h->hash_fun(key) % h->modulus));
-  val existing = h->assoc_fun(chain, key);
+  val existing = h->assoc_fun(key, chain);
   return if3(existing, cdr(existing), notfound_val);
 }
 
