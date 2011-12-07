@@ -4322,6 +4322,22 @@ alternative1 | alternative2 | ... | alternativeN
 Multiple syntactic variations allowed in one place are
 indicated as bar-separated items.
 
+.SS Operator progn
+
+.TP
+Syntax:
+(progn <form>*)
+
+.TP
+Description
+
+The progn operator evaluates forms in order, and returns the value
+of the last form. The return value of (progn) is nil.
+
+Various other operators such as let also arrange for the evaluation
+of a body of forms, the value of the last of which is returned.
+These operators are said to feature an "implicit progn".
+
 .SS Operators let and let*
 
 .TP
