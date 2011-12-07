@@ -1,5 +1,9 @@
 2011-12-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Blank sections created for character functions.
+
+2011-12-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): New functions registered as intrinsics.
 
 	* lib.c (chr_toupper, chr_tolower): New functions.
