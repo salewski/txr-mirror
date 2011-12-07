@@ -1,3 +1,11 @@
+2011-12-07  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (progn_s): New symbol variable.
+	(op_progn): New static function.
+	(eval_init): Initialize new variable, register progn operator.
+
+	* txr.1: progn documented.
+
 2011-12-06  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 046

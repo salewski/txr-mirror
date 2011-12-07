@@ -50,7 +50,7 @@ val top_vb, top_fb;
 val op_table;
 
 val eval_error_s;
-val let_s, let_star_s, lambda_s, call_s;
+val progn_s, let_s, let_star_s, lambda_s, call_s;
 val cond_s, if_s, and_s, or_s, defvar_s, defun_s;
 val inc_s, dec_s, push_s, pop_s, gethash_s, car_s, cdr_s;
 val for_s, for_star_s, dohash_s, uw_protect_s, return_s, return_from_s;
@@ -398,6 +398,11 @@ static val bindings_helper(val vars, val env, val sequential, val ctx_form)
       env_replace_vbind(nenv, new_bindings);
   }
   return new_bindings;
+}
+
+static val op_progn(val form, val env)
+{
+  return eval_progn(rest(form), env, form);
 }
 
 static val op_let(val form, val env)
@@ -992,6 +997,7 @@ void eval_init(void)
   top_vb = make_hash(t, nil, nil);
   op_table = make_hash(nil, nil, nil);
 
+  progn_s = intern(lit("progn"), user_package);
   let_s = intern(lit("let"), user_package);
   let_star_s = intern(lit("let*"), user_package);
   lambda_s = intern(lit("lambda"), user_package);
@@ -1025,6 +1031,7 @@ void eval_init(void)
   sethash(op_table, qquote_s, cptr((mem_t *) op_qquote_error));
   sethash(op_table, unquote_s, cptr((mem_t *) op_unquote_error));
   sethash(op_table, splice_s, cptr((mem_t *) op_unquote_error));
+  sethash(op_table, progn_s, cptr((mem_t *) op_progn));
   sethash(op_table, let_s, cptr((mem_t *) op_let));
   sethash(op_table, let_star_s, cptr((mem_t *) op_let));
   sethash(op_table, lambda_s, cptr((mem_t *) op_lambda));
