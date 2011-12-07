@@ -395,6 +395,18 @@ val string_lt(val astr, val bstr);
 val int_str(val str, val base);
 val chrp(val chr);
 wchar_t c_chr(val chr);
+val chr_isalnum(val ch);
+val chr_isalpha(val ch);
+val chr_isascii(val ch);
+val chr_iscntrl(val ch);
+val chr_isdigit(val ch);
+val chr_isgraph(val ch);
+val chr_islower(val ch);
+val chr_isprint(val ch);
+val chr_ispunct(val ch);
+val chr_isspace(val ch);
+val chr_isupper(val ch);
+val chr_isxdigit(val ch);
 val chr_str(val str, val index);
 val chr_str_set(val str, val index, val chr);
 val span_str(val str, val set);
@@ -521,6 +533,8 @@ INLINE val eq(val a, val b) { return ((a) == (b) ? t : nil); }
 #define or3(a, b, c) or2(a, or2(b, c))
 
 #define or4(a, b, c, d) or2(a, or3(b, c, d))
+
+#define c_true(c_cond) ((c_cond) ? t : nil)
 
 #define list_collect_decl(OUT, PTAIL)           \
   obj_t *OUT = nil, **PTAIL = &OUT

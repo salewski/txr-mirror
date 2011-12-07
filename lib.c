@@ -794,9 +794,12 @@ val num(cnum n)
 
 cnum c_num(val num)
 {
-  if (!is_num(num))
+  switch (tag(num)) {
+  case TAG_CHR: case TAG_NUM:
+    return ((cnum) num) >> TAG_SHIFT;
+  default:
     type_mismatch(lit("~s is not a number"), num, nao);
-  return ((cnum) num) >> TAG_SHIFT;
+  }
 }
 
 val nump(val num)
@@ -1463,6 +1466,66 @@ wchar_t c_chr(val chr)
   if (!is_chr(chr))
     type_mismatch(lit("~s is not a character"), chr, nao);
   return (wchar_t) ((cnum) chr >> TAG_SHIFT);
+}
+
+val chr_isalnum(val ch)
+{
+  return c_true(iswalnum(c_chr(ch)));
+}
+
+val chr_isalpha(val ch)
+{
+  return c_true(iswalpha(c_chr(ch)));
+}
+
+val chr_isascii(val ch)
+{
+  return c_true(c_chr(ch) >= 0 && c_chr(ch) < 128);
+}
+
+val chr_iscntrl(val ch)
+{
+  return c_true(iswcntrl(c_chr(ch)));
+}
+
+val chr_isdigit(val ch)
+{
+  return c_true(iswdigit(c_chr(ch)));
+}
+
+val chr_isgraph(val ch)
+{
+  return c_true(iswgraph(c_chr(ch)));
+}
+
+val chr_islower(val ch)
+{
+  return c_true(iswlower(c_chr(ch)));
+}
+
+val chr_isprint(val ch)
+{
+  return c_true(iswprint(c_chr(ch)));
+}
+
+val chr_ispunct(val ch)
+{
+  return c_true(iswpunct(c_chr(ch)));
+}
+
+val chr_isspace(val ch)
+{
+  return c_true(iswspace(c_chr(ch)));
+}
+
+val chr_isupper(val ch)
+{
+  return c_true(iswupper(c_chr(ch)));
+}
+
+val chr_isxdigit(val ch)
+{
+  return c_true(iswxdigit(c_chr(ch)));
 }
 
 val chr_str(val str, val index)
