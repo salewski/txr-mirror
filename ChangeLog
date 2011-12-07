@@ -1,5 +1,17 @@
 2011-12-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 046
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES: Updated.
+
+2011-12-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (find_char): New function.
 	(string_in_get_line): Following up TODO. Fixed broken
 	function. Now get_line on a string stream properly returns characters
