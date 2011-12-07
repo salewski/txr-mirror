@@ -1528,6 +1528,16 @@ val chr_isxdigit(val ch)
   return c_true(iswxdigit(c_chr(ch)));
 }
 
+val chr_toupper(val ch)
+{
+  return chr(towupper(c_chr(ch)));
+}
+
+val chr_tolower(val ch)
+{
+  return chr(towlower(c_chr(ch)));
+}
+
 val chr_str(val str, val index)
 {
   bug_unless (length_str_gt(str, index));

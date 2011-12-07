@@ -407,6 +407,8 @@ val chr_ispunct(val ch);
 val chr_isspace(val ch);
 val chr_isupper(val ch);
 val chr_isxdigit(val ch);
+val chr_toupper(val ch);
+val chr_tolower(val ch);
 val chr_str(val str, val index);
 val chr_str_set(val str, val index, val chr);
 val span_str(val str, val set);
