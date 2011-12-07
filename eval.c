@@ -918,7 +918,7 @@ val expand(val form)
       return rlcp(cons(sym, forms_ex), form);
     } else {
       /* funtion call */
-      /* also handles: call, if, and, or, unwind-protect, return */
+      /* also handles: progn, call, if, and, or, unwind-protect, return */
       val args = rest(form);
       val args_ex = expand_forms(args);
 
