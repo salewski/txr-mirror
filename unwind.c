@@ -137,7 +137,7 @@ val uw_get_func(val sym)
 
   for (env = uw_find_env(); env != 0; env = env->ev.up_env) {
     if (env->ev.func_bindings) {
-      val found = assoc(env->ev.func_bindings, sym);
+      val found = assoc(sym, env->ev.func_bindings);
       if (found)
         return cdr(found);
     }
@@ -233,7 +233,7 @@ val uw_exception_subtype_p(val sub, val sup)
   if (sub == nil || sup == t || sub == sup) {
     return t;
   } else {
-    val entry = assoc(exception_subtypes, sub);
+    val entry = assoc(sub, exception_subtypes);
     return memq(sup, entry) ? t : nil;
   }
 }
@@ -327,9 +327,9 @@ val type_mismatch(val fmt, ...)
 
 val uw_register_subtype(val sub, val sup)
 {
-  val t_entry = assoc(exception_subtypes, t);
-  val sub_entry = assoc(exception_subtypes, sub);
-  val sup_entry = assoc(exception_subtypes, sup);
+  val t_entry = assoc(t, exception_subtypes);
+  val sub_entry = assoc(sub, exception_subtypes);
+  val sup_entry = assoc(sup, exception_subtypes);
 
   assert (t_entry != 0);
 

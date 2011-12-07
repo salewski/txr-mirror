@@ -1632,7 +1632,7 @@ val make_package(val name)
 
 val find_package(val name)
 {
-  return cdr(assoc(packages, name));
+  return cdr(assoc(name, packages));
 }
 
 val intern(val str, val package)
@@ -2668,7 +2668,7 @@ mem_t *cptr_get(val cptr)
   return cobj_handle(cptr, cptr_s);
 }
 
-val assoc(val list, val key)
+val assoc(val key, val list)
 {
   while (list) {
     val elem = car(list);
@@ -2680,7 +2680,7 @@ val assoc(val list, val key)
   return nil;
 }
 
-val assq(val list, val key)
+val assq(val key, val list)
 {
   while (list) {
     val elem = car(list);
@@ -2699,7 +2699,7 @@ val acons(val car, val cdr, val list)
 
 val acons_new(val key, val value, val list)
 {
-  val existing = assoc(list, key);
+  val existing = assoc(key, list);
 
   if (existing) {
     *cdr_l(existing) = value;
@@ -2711,7 +2711,7 @@ val acons_new(val key, val value, val list)
 
 val *acons_new_l(val key, val *new_p, val *list)
 {
-  val existing = assoc(*list, key);
+  val existing = assoc(key, *list);
 
   if (existing) {
     if (new_p)
@@ -2728,7 +2728,7 @@ val *acons_new_l(val key, val *new_p, val *list)
 
 val aconsq_new(val key, val value, val list)
 {
-  val existing = assq(list, key);
+  val existing = assq(key, list);
 
   if (existing) {
     *cdr_l(existing) = value;
@@ -2740,7 +2740,7 @@ val aconsq_new(val key, val value, val list)
 
 val *aconsq_new_l(val key, val *new_p, val *list)
 {
-  val existing = assq(*list, key);
+  val existing = assq(key, *list);
 
   if (existing) {
     if (new_p)

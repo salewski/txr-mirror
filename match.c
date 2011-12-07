@@ -230,7 +230,7 @@ static val weird_merge(val left, val right)
 static val dest_set(val spec, val bindings, val pattern, val value)
 {
   if (symbolp(pattern)) {
-    val existing = assoc(bindings, pattern);
+    val existing = assoc(pattern, bindings);
     if (!bindable(pattern))
       sem_error(spec, lit("~s cannot be used as a variable"), pattern, nao);
     if (!existing)
@@ -263,7 +263,7 @@ static val dest_bind(val spec, val bindings, val pattern,
 {
   if (symbolp(pattern)) {
     if (bindable(pattern)) {
-      val existing = assoc(bindings, pattern);
+      val existing = assoc(pattern, bindings);
       if (existing) {
         if (tree_find(value, cdr(existing), swap_12_21(testfun)))
           return bindings;
@@ -445,7 +445,7 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
   val pat = third(elem);
   val modifiers = fourth(elem);
   val modifier = first(modifiers);
-  val pair = assoc(c.bindings, sym); /* var exists already? */
+  val pair = assoc(sym, c.bindings); /* var exists already? */
 
   if (gt(length_list(modifiers), one)) {
     sem_error(elem, lit("multiple modifiers on variable ~s"),
@@ -554,7 +554,7 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
     val next_pat = third(pat);
     val next_modifiers = fourth(pat);
     val next_modifier = first(fourth(pat));
-    val pair = assoc(c.bindings, second_sym); /* var exists already? */
+    val pair = assoc(second_sym, c.bindings); /* var exists already? */
 
     if (gt(length_list(next_modifiers), one)) {
       sem_error(elem, lit("multiple modifiers on variable ~s"),
@@ -761,7 +761,7 @@ static val h_coll(match_line_ctx c, match_line_ctx *cout)
 
         for (iter = vars; iter; iter = cdr(iter)) {
           cons_bind (var, dfl, car(iter));
-          val exists = assoc(new_bindings, var);
+          val exists = assoc(var, new_bindings);
 
           if (!exists) {
             if (dfl == noval_s)
@@ -778,10 +778,10 @@ static val h_coll(match_line_ctx c, match_line_ctx *cout)
         for (iter = strictly_new_bindings; iter; iter = cdr(iter))
         {
           val binding = car(iter);
-          val vars_binding = assoc(vars, car(binding));
+          val vars_binding = assoc(car(binding), vars);
 
           if (!have_vars || vars_binding) {
-            val existing = assoc(bindings_coll, car(binding));
+            val existing = assoc(car(binding), bindings_coll);
             bindings_coll = acons_new(car(binding), 
                                       cons(cdr(binding), cdr(existing)),
                                       bindings_coll);
@@ -838,7 +838,7 @@ next_coll:
   if (!bindings_coll && vars) {
     for (iter = vars; iter; iter = cdr(iter)) {
       val sym = car(car(iter));
-      val exists = assoc(c.bindings, sym);
+      val exists = assoc(sym, c.bindings);
       if (!exists)
         c.bindings = acons(sym, nil, c.bindings);
     }
@@ -877,7 +877,7 @@ static val h_parallel(match_line_ctx c, match_line_ctx *cout)
   if (resolve) {
     for (iter = resolve; iter; iter = cdr(iter)) {
       val var = car(iter);
-      if (!assoc(c.bindings, var))
+      if (!assoc(var, c.bindings))
         push(var, &resolve_ub_vars);
     }
   }
@@ -894,7 +894,7 @@ static val h_parallel(match_line_ctx c, match_line_ctx *cout)
         val uiter;
         for (uiter = resolve_ub_vars; uiter; uiter = cdr(uiter)) {
           val ubvar = car(uiter);
-          val exists = assoc(new_bindings, ubvar);
+          val exists = assoc(ubvar, new_bindings);
 
           if (exists)
             resolve_bindings = acons_new(ubvar, cdr(exists), resolve_bindings);
@@ -907,7 +907,7 @@ static val h_parallel(match_line_ctx c, match_line_ctx *cout)
         max_pos = new_pos;
 
       if (directive == choose_s) {
-        val binding = choose_sym ? assoc(new_bindings, choose_sym) : nil;
+        val binding = choose_sym ? assoc(choose_sym, new_bindings) : nil;
         val value = cdr(binding);
 
         if (value) {
@@ -1005,7 +1005,7 @@ static val h_fun(match_line_ctx c, match_line_ctx *cout)
       val arg = car(aiter);
 
       if (arg && bindable(arg)) {
-        val val = assoc(c.bindings, arg);
+        val val = assoc(arg, c.bindings);
         if (val) {
           bindings_cp = acons_new(param, cdr(val), bindings_cp);
         } else {
@@ -1042,7 +1042,7 @@ static val h_fun(match_line_ctx c, match_line_ctx *cout)
           cons_bind (param, arg, car(piter));
 
           if (symbolp(arg)) {
-            val newbind = assoc(new_bindings, param);
+            val newbind = assoc(param, new_bindings);
             if (newbind) {
               c.bindings = dest_bind(elem, c.bindings, 
                                      arg, cdr(newbind), equal_f);
@@ -1275,7 +1275,7 @@ static val subst_vars(val spec, val bindings, val filter)
         val sym = second(elem);
         val pat = third(elem);
         val modifiers = fourth(elem);
-        val pair = assoc(bindings, sym);
+        val pair = assoc(sym, bindings);
 
         if (pair) {
           val str = cdr(pair);
@@ -1329,7 +1329,7 @@ static val do_txeval(val spec, val form, val bindings, val allow_unbound)
     if (!form) {
       ret = form;
     } else if (bindable(form)) {
-      val binding = assoc(bindings, form);
+      val binding = assoc(form, bindings);
       if (!binding) {
         if (allow_unbound)
           ret = noval_s;
@@ -1940,10 +1940,10 @@ static val v_next(match_files_ctx *c)
 
     {
       val alist = improper_plist_to_alist(args, list(nothrow_k, nao));
-      val from_var = cdr(assoc(alist, var_k));
-      val list_expr = cdr(assoc(alist, list_k));
-      val string_expr = cdr(assoc(alist, string_k));
-      val nothrow = cdr(assoc(alist, nothrow_k));
+      val from_var = cdr(assoc(var_k, alist));
+      val list_expr = cdr(assoc(list_k, alist));
+      val string_expr = cdr(assoc(string_k, alist));
+      val nothrow = cdr(assoc(nothrow_k, alist));
       val str = txeval(specline, source, c->bindings);
 
       if (!from_var && !source && !string_expr && !list_expr)
@@ -1956,7 +1956,7 @@ static val v_next(match_files_ctx *c)
       }
 
       if (from_var) {
-        val existing = assoc(c->bindings, from_var);
+        val existing = assoc(from_var, c->bindings);
 
         if (!symbolp(from_var)) 
           sem_error(specline, lit(":var requires a variable, not ~s"), from_var, nao);
@@ -2075,7 +2075,7 @@ static val v_parallel(match_files_ctx *c)
     if (resolve) {
       for (iter = resolve; iter; iter = cdr(iter)) {
         val var = car(iter);
-        if (!assoc(c->bindings, var))
+        if (!assoc(var, c->bindings))
           push(var, &resolve_ub_vars);
       }
     }
@@ -2093,7 +2093,7 @@ static val v_parallel(match_files_ctx *c)
           val uiter;
           for (uiter = resolve_ub_vars; uiter; uiter = cdr(uiter)) {
             val ubvar = car(uiter);
-            val exists = assoc(new_bindings, ubvar);
+            val exists = assoc(ubvar, new_bindings);
 
             if (exists)
               resolve_bindings = acons_new(ubvar, cdr(exists), resolve_bindings);
@@ -2103,7 +2103,7 @@ static val v_parallel(match_files_ctx *c)
         }
 
         if (sym == choose_s) {
-          val binding = choose_sym ? assoc(new_bindings, choose_sym) : nil;
+          val binding = choose_sym ? assoc(choose_sym, new_bindings) : nil;
           val value = cdr(binding);
 
           if (value) {
@@ -2244,7 +2244,7 @@ static val v_gather(match_files_ctx *c)
 
     for (iter = vars; iter != nil; iter = cdr(iter)) {
       cons_bind (var, dfl_val, car(iter));
-      if (!assoc(c->bindings, var)) {
+      if (!assoc(var, c->bindings)) {
         if (dfl_val == noval_s) {
           debuglf(specline, lit("gather failed to match some required vars"), nao);
           return nil;
@@ -2358,7 +2358,7 @@ static val v_collect(match_files_ctx *c)
 
         for (iter = vars; iter; iter = cdr(iter)) {
           cons_bind (var, dfl, car(iter));
-          val exists = assoc(new_bindings, var);
+          val exists = assoc(var, new_bindings);
 
           if (!exists) {
             if (dfl == noval_s) 
@@ -2375,10 +2375,10 @@ static val v_collect(match_files_ctx *c)
         for (iter = strictly_new_bindings; iter; iter = cdr(iter))
         {
           val binding = car(iter);
-          val vars_binding = assoc(vars, car(binding));
+          val vars_binding = assoc(car(binding), vars);
 
           if (!have_vars || vars_binding) {
-            val existing = assoc(bindings_coll, car(binding));
+            val existing = assoc(car(binding), bindings_coll);
 
             bindings_coll = acons_new(car(binding), cons(cdr(binding), cdr(existing)), bindings_coll);
           }
@@ -2458,7 +2458,7 @@ next_collect:
   if (!bindings_coll && vars) {
     for (iter = vars; iter; iter = cdr(iter)) {
       val sym = car(car(iter));
-      val exists = assoc(c->bindings, sym);
+      val exists = assoc(sym, c->bindings);
       if (!exists)
         c->bindings = acons(sym, nil, c->bindings);
     }
@@ -2479,7 +2479,7 @@ static val v_flatten(match_files_ctx *c)
       sem_error(specline,
                 lit("flatten: ~s is not a bindable symbol"), sym, nao);
     } else {
-      val existing = assoc(c->bindings, sym);
+      val existing = assoc(sym, c->bindings);
 
       if (existing)
         *cdr_l(existing) = flatten(cdr(existing));
@@ -2624,7 +2624,7 @@ static val v_cat(match_files_ctx *c)
   if (!bindable(sym)) {
     sem_error(specline, lit("cat: ~s is not a bindable symbol"), sym, nao);
   } else {
-    val existing = assoc(c->bindings, sym);
+    val existing = assoc(sym, c->bindings);
     if (existing) {
       val sep = if3(sep_form, txeval(specline, sep_form, c->bindings),
                     lit(" "));
@@ -2662,11 +2662,11 @@ static val v_output(match_files_ctx *c)
 
   alist = improper_plist_to_alist(dest_spec, list(nothrow_k, append_k, nao));
 
-  nothrow = cdr(assoc(alist, nothrow_k));
-  append = cdr(assoc(alist, append_k));
+  nothrow = cdr(assoc(nothrow_k, alist));
+  append = cdr(assoc(append_k, alist));
 
   {
-    val filter_sym = cdr(assoc(alist, filter_k));
+    val filter_sym = cdr(assoc(filter_k, alist));
 
     if (filter_sym) {
       filter = get_filter(filter_sym);
@@ -2677,7 +2677,7 @@ static val v_output(match_files_ctx *c)
   }
 
   {
-    val into_var = cdr(assoc(alist, into_k));
+    val into_var = cdr(assoc(into_k, alist));
 
     if (into_var) {
       val stream = make_strlist_output_stream();
@@ -2692,7 +2692,7 @@ static val v_output(match_files_ctx *c)
       uw_env_end;
 
       {
-        val existing = assoc(c->bindings, into_var);
+        val existing = assoc(into_var, c->bindings);
         val list_out = get_list_from_stream(stream);
 
         if (existing) {
@@ -2984,7 +2984,7 @@ static val v_filter(match_files_ctx *c)
 
   for (; vars; vars = cdr(vars)) {
     val var = car(vars);
-    val existing = assoc(c->bindings, var);
+    val existing = assoc(var, c->bindings);
 
     if (!bindable(var))
       sem_error(specline, lit("filter: ~a is not a variable name"), 
@@ -3036,7 +3036,7 @@ static val v_fun(match_files_ctx *c)
       val arg = car(aiter);
 
       if (arg && bindable(arg)) {
-        val val = assoc(c->bindings, arg);
+        val val = assoc(arg, c->bindings);
         if (val) {
           bindings_cp = acons_new(param, cdr(val), bindings_cp);
         } else {
@@ -3072,7 +3072,7 @@ static val v_fun(match_files_ctx *c)
           cons_bind (param, arg, car(piter));
 
           if (symbolp(arg)) {
-            val newbind = assoc(new_bindings, param);
+            val newbind = assoc(param, new_bindings);
             if (newbind) {
               c->bindings = dest_bind(specline, c->bindings, 
                                      arg, cdr(newbind), equal_f);
@@ -3258,7 +3258,7 @@ val match_funcall(val name, val arg, val other_args)
     sem_error(specline, lit("filter: function ~s not found"), name, nao);
 
   {
-    val out = assoc(c.bindings, out_arg_sym);
+    val out = assoc(out_arg_sym, c.bindings);
     if (!out)
       sem_error(specline,
                 lit("filter: (~s ~s ~s) did not bind ~s"), name,

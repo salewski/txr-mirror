@@ -109,7 +109,7 @@ val lookup_var(val env, val sym)
     type_check(env, ENV);
 
     {
-      val binding = assoc(env->e.vbindings, sym);
+      val binding = assoc(sym, env->e.vbindings);
       if (binding)
         return binding;
       return lookup_var(env->e.up_env, sym);
@@ -125,7 +125,7 @@ val lookup_fun(val env, val sym)
     type_check(env, ENV);
 
     {
-      val binding = assoc(env->e.fbindings, sym);
+      val binding = assoc(sym, env->e.fbindings);
       if (binding)
         return binding;
       return lookup_fun(env->e.up_env, sym);
@@ -1215,6 +1215,21 @@ void eval_init(void)
   reg_fun(intern(lit("length-vec"), user_package), func_n1(length_vec));
   reg_fun(intern(lit("size-vec"), user_package), func_n1(size_vec));
   reg_fun(intern(lit("vector-list"), user_package), func_n1(vector_list));
+
+  reg_fun(intern(lit("assoc"), user_package), func_n2(assoc));
+  reg_fun(intern(lit("assq"), user_package), func_n2(assq));
+  reg_fun(intern(lit("acons"), user_package), func_n3(acons));
+  reg_fun(intern(lit("acons-new"), user_package), func_n3(acons_new));
+  reg_fun(intern(lit("aconsq-new"), user_package), func_n3(aconsq_new));
+  reg_fun(intern(lit("alist-remove"), user_package), func_n1v(alist_remove));
+  reg_fun(intern(lit("alist-nremove"), user_package), func_n1v(alist_nremove));
+  reg_fun(intern(lit("copy-cons"), user_package), func_n1(copy_cons));
+  reg_fun(intern(lit("copy-alist"), user_package), func_n1(copy_alist));
+  reg_fun(intern(lit("merge"), user_package), func_n4(merge));
+  reg_fun(intern(lit("sort"), user_package), func_n3(sort));
+  reg_fun(intern(lit("find"), user_package), func_n4(find));
+  reg_fun(intern(lit("set-diff"), user_package), func_n4(set_diff));
+
   reg_fun(intern(lit("length"), user_package), func_n1(length));
 
   eval_error_s = intern(lit("eval-error"), user_package);

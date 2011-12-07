@@ -1,5 +1,29 @@
 2011-12-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (lookup_var, lookup_fun): Reversing assoc arguments.
+	(eval_init): New intrinsics.
+
+	* hash.c (struct_hash): assoc_fun parameters reversed.
+	(gethash, gethash_f, gethash_n): Likewise.
+
+	* lib.c (assoc, assq): Reversing parameters.
+	(find_package, acons_new, acons_new_l, aconsq_new): Reversing
+	arguments to assoc adn assq.
+
+	* lib.h (assoc, assq): Declarations updated.
+
+	* match.c (dest_set, dest_bind, h_var, h_coll, h_parallel, h_fun,
+	subst_vars, do_txeval, v_next, v_parallel, v_gather, v_collect,
+	v_flatten, v_cat, v_output, v_filter, f_fun, match_funcall):
+	Reversing arguments to assoc.
+
+	* unwind.c (uw_get_func, uw_exception_subtype_p, uw_register_subtype):
+	Reversing arguments to assoc.
+
+	* txr.1: Blank sections created for new functions.
+
+2011-12-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: Blank sections created for character functions.
 
 2011-12-07  Kaz Kylheku  <kaz@kylheku.com>
