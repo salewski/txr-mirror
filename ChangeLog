@@ -1,5 +1,20 @@
 2011-12-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): New character functions registered.
+
+	* lib.c (c_num): Generalized to convert characters to numbers also.
+	This allows functions like gt and lt to work with characters.
+	(chr_isalnum, chr_isalpha, chr_isascii, chr_iscntrl, chr_isdigit,
+	chr_isgraph, chr_islower, chr_isprint, chr_ispunct, chr_isspace,
+	chr_isupper, chr_isxdigit): New functions added.
+
+	* lib.h: (chr_isalnum, chr_isalpha, chr_isascii, chr_iscntrl,
+	* chr_isdigit, chr_isgraph, chr_islower, chr_isprint, chr_ispunct,
+	* chr_isspace, chr_isupper, chr_isxdigit): New functions declared.
+	(c_true): New macro.
+
+2011-12-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (progn_s): New symbol variable.
 	(op_progn): New static function.
 	(eval_init): Initialize new variable, register progn operator.
