@@ -585,6 +585,11 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                           return IDENT;
                         }
 
+<CHRLIT>[^ \t\n]        {
+                          yylval.lexeme = utf8_dup_from(yytext);
+                          return IDENT; /* hack */
+                        }
+
 <STRLIT>\n              {
                           yyerrprepf(lit("newline in string literal"), nao);
                           lineno++;
