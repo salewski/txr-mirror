@@ -1,5 +1,9 @@
 2011-12-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.vim: Updated with all operators and functions.
+
+2011-12-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: flip operator documented. Bad syntax for pop fixed.
 	Blank section for list-vector function added.
 
