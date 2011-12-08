@@ -1,5 +1,10 @@
 2011-12-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: flip operator documented. Bad syntax for pop fixed.
+	Blank section for list-vector function added.
+
+2011-12-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (op_modplace): If the operator is push, then reverse
 	the arguments. We want (push item list) for compatibility with CL.
 	(expand): Bugfix: some of the cases were constructing new
