@@ -4592,7 +4592,7 @@ Description:
 
 The defun operator introduces a new function in the global function namespace.
 
-.SS Operators inc, dec, set, push and pop
+.SS Operators inc, dec, set, push, pop and flip
 
 .TP
 Syntax:
@@ -4604,7 +4604,9 @@ Syntax:
 
 (push <item> <place>)
 
-(pop <item> <place>)
+(pop <place>)
+
+(flip <place>)
 
 .TP
 Description:
@@ -4650,8 +4652,12 @@ like
 
   (let ((temp (car x))) (set x (cdr x)) temp)
  
-except that x is evaluated only once, and no such temporary variale
+except that x is evaluated only once, and no such temporary variable
 is visible to the program.
+
+The flip operator toggles a place between true and false. If the place
+contains a value other than nil, then its value is replaced with nil.
+If it contains nil, it is replaced with t.
 
 Currently, these forms are recognized as places:
 
@@ -4911,6 +4917,8 @@ The following are Lisp functions and variables built-in to TXR.
 .SS Function size-vec
 
 .SS Function vector-list
+
+.SS Function list-vector
 
 .SS Function assoc
 
