@@ -24,7 +24,7 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-val do_s;
+extern val do_s;
 void match_init(void);
 val match_funcall(val name, val arg, val other_args);
 int extract(val spec, val filenames, val bindings);

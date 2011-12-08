@@ -51,7 +51,7 @@ val op_table;
 
 val eval_error_s;
 val progn_s, let_s, let_star_s, lambda_s, call_s;
-val cond_s, if_s, and_s, or_s, defvar_s, defun_s;
+val cond_s, if_s, defvar_s, defun_s;
 val inc_s, dec_s, push_s, pop_s, flip_s, gethash_s, car_s, cdr_s, vecref_s;
 val for_s, for_star_s, dohash_s, uw_protect_s, return_s, return_from_s;
 val list_s, append_s, apply_s;
@@ -1055,8 +1055,6 @@ void eval_init(void)
   call_s = intern(lit("call"), user_package);
   cond_s = intern(lit("cond"), user_package);
   if_s = intern(lit("if"), user_package);
-  and_s = intern(lit("and"), user_package);
-  or_s = intern(lit("or"), user_package);
   defvar_s = intern(lit("defvar"), user_package);
   defun_s = intern(lit("defun"), user_package);
   inc_s = intern(lit("inc"), user_package);
