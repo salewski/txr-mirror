@@ -24,44 +24,46 @@ syn keyword txr_keyword contained maybe cases choose gather collect coll until l
 syn keyword txr_keyword contained flatten forget local merge bind set cat output
 syn keyword txr_keyword contained repeat rep first last single empty
 syn keyword txr_keyword contained define try catch finally throw
-syn keyword txr_keyword contained defex throw deffilter filter eof eol
+syn keyword txr_keyword contained defex throw deffilter filter eof eol do
 
-syn keyword txl_keyword contained let let* lambda call cond if and or 
-syn keyword txl_keyword contained defvar defun set inc dec push
-syn keyword txl_keyword contained pop gethash for for* dohash list append apply
-syn keyword txl_keyword contained cons list atom null consp listp proper-listp
-syn keyword txl_keyword contained length mapcar mappend apply
+syn keyword txl_keyword contained progn let syn let* lambda call fun 
+syn keyword txl_keyword contained cond if and or
+syn keyword txl_keyword contained defvar defun inc dec set push pop flip
+syn keyword txl_keyword contained for for* dohash unwind-protect block
+syn keyword txl_keyword contained return return-from
 
-syn keyword txl_keyword second third fourth fifth sixth copy-list nreversei
-syn keyword txl_keyword reverse ldiff flatten memq memqual
-syn keyword txl_keyword tree-find some all none eq eql equal 
-
-syn keyword txl_keyword contained + - * trunc mod numberp > < >= <= max min
-syn keyword txl_keyword contained int-str
-
-syn keyword txl_keyword contained search-regex match-regex
-
+syn keyword txl_keyword contained cons make-lazy-cons lcons-fun car cdr
+syn keyword txl_keyword contained rplaca rplacd first rest append list
+syn keyword txl_keyword contained identity typeof atom null consp listp
+syn keyword txl_keyword contained proper-listp length-list mapcar mappend apply
+syn keyword txl_keyword contained second third fourth fifth sixth copy-list nreverse
+syn keyword txl_keyword contained reverse ldiff flatten memq memqual tree-find some
+syn keyword txl_keyword contained all none eq eql equal + - * trunc mod numberp >
+syn keyword txl_keyword contained < >= <= max min search-regex match-regex
 syn keyword txl_keyword contained make-hash gethash sethash pushhash remhash
-syn keyword txl_keyword contained hash-count get-hash-userdata 
-syn keyword txl_keyword contained set-hash-userdata 
-
-syn keyword txl_keyword contained eval
-
-syn keyword txl_keyword contained *stdout* *stdin* *stderr*
-syn keyword txl_keyword contained format print pprint
-syn keyword txl_keyword contained make-string-input-stream
-syn keyword txl_keyword contained make-string-byte-input-stream
-syn keyword txl_keyword contained make-string-output-stream
-syn keyword txl_keyword contained get-string-from-stream
-syn keyword txl_keyword contained make-strlist-output-stream
-syn keyword txl_keyword contained get-list-from-stream
-syn keyword txl_keyword contained close-stream
-syn keyword txl_keyword contained get-line get-char get-byte
-syn keyword txl_keyword contained put-string put-line put-char
-syn keyword txl_keyword contained flush-stream open-directory
-syn keyword txl_keyword contained open-file open-pipe
-
-set lispwords=let open-file
+syn keyword txl_keyword contained hash-count hashp maphash eval *stdout* *stdin*
+syn keyword txl_keyword contained *stderr* format print pprint make-string-input-stream
+syn keyword txl_keyword contained make-string-byte-input-stream make-string-output-stream
+syn keyword txl_keyword contained get-string-from-stream make-strlist-output-stream
+syn keyword txl_keyword contained get-list-from-stream close-stream
+syn keyword txl_keyword contained get-line get-char get-byte put-string put-line
+syn keyword txl_keyword contained put-char flush-stream open-directory open-file
+syn keyword txl_keyword contained open-pipe *user-package* *keyword-package* *system-package*
+syn keyword txl_keyword contained make-sym make-package find-package
+syn keyword txl_keyword contained intern symbolp symbol-name symbol-package keywordp
+syn keyword txl_keyword contained mkstring copy-str upcase-str downcase-str string-extend
+syn keyword txl_keyword contained stringp lazy-stringp length-str search-str search-str-tree
+syn keyword txl_keyword contained sub-str cat-str split-str split-str-set trim-str
+syn keyword txl_keyword contained string-lt int-str chrp chr-isalnum chr-isalpha
+syn keyword txl_keyword contained chr-isascii chr-iscntrl chr-isdigit chr-isgraph
+syn keyword txl_keyword contained chr-islower chr-isprint chr-ispunct chr-isspace chr-isupper
+syn keyword txl_keyword contained chr-isxdigit chr-toupper chr-tolower chr-str
+syn keyword txl_keyword contained chr-str-set span-str compl-span-str break-str
+syn keyword txl_keyword contained vector vec-get-fill vec-set-fill vecref
+syn keyword txl_keyword contained vec-push length-vec size-vec vector-list
+syn keyword txl_keyword contained list-vector assoc assq acons acons-new
+syn keyword txl_keyword contained aconsq-new alist-remove alist-nremove copy-cons
+syn keyword txl_keyword contained copy-alist merge sort find set-diff length
 
 syn match txr_comment "@[ \t]*#.*"
 syn match txr_contin "@[ \t]*\\$"
