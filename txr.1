@@ -4326,6 +4326,7 @@ indicated as bar-separated items.
 
 .TP
 Syntax:
+
 (progn <form>*)
 
 .TP
@@ -4342,6 +4343,7 @@ These operators are said to feature an "implicit progn".
 
 .TP
 Syntax:
+
 (let ({<sym> | (<sym> <init-form>)}*) <body-form>*)
 
 (let* ({<sym> | (<sym> <init-form>)}*) <body-form>*)
@@ -4389,6 +4391,7 @@ Examples:
 
 .TP
 Syntax:
+
 (lambda ({<sym>}*[. <sym>]) {<body-form>}*)
 
 .TP
@@ -4435,6 +4438,7 @@ are aggregated into a list passed as the single parameter z:
 
 .TP
 Syntax:
+
 (call <function-form> {<argument-form>}*)
 
 .TP
@@ -4466,6 +4470,7 @@ Useless use of call on a named function; equivalent to (list 1 2):
 
 .TP
 Syntax:
+
 (fun <function-name>)
 
 .TP
@@ -4484,6 +4489,7 @@ syntax (fun (lambda ...)) is invalid.
 
 .TP
 Syntax:
+
 (cond {(<test> {form}*)}*)
 
 .TP
@@ -4508,6 +4514,7 @@ nil.  This holds in the case that the syntax is empty: (cond) yields nil.
 
 .TP
 Syntax:
+
 (if <cond> <t-form> [<e-form>])
 
 .TP
@@ -4524,6 +4531,7 @@ as if <e-form> were specified as nil.
 
 .TP
 Syntax:
+
 (and {<form>}*)
 
 .TP
@@ -4554,6 +4562,7 @@ Examples:
 
 .TP
 Syntax:
+
 (or {<form>}*)
 
 .TP
@@ -4586,16 +4595,25 @@ Examples:
 
 .TP
 Syntax:
-(defun <name> ({<param> [. <rest-param>]}*) {<body-form>}*)
+
+(defun <name> ({<param> [. <rest-param>]}*) <body-form>*)
 
 Description:
 
 The defun operator introduces a new function in the global function namespace.
+The function is similar to a lambda, except that <body-form>-s are surrounded
+by a named block called nil. The name of this block is the same as the name of
+the function, making it possible to terminate the function and return a
+value using (return-from <name> <value>). For more information, see the
+definition of the block operator.
+
+A function may call itself by name, allowing for recursion.
 
 .SS Operators inc, dec, set, push, pop and flip
 
 .TP
 Syntax:
+
 (inc <place> [<delta>])
 
 (dec <place> [<delta>])
@@ -4679,6 +4697,43 @@ will create it. In that case, the <default-value> form is evaluated to
 determine the initial value of the place. Otherwise it is ignored.
 
 .SS Operators for and for*
+
+.TP
+Syntax:
+
+({for | for*} ({<sym> | (<sym> <init-form>)}*) 
+              (<test-form> <result-form>*) 
+              (<inc-form>*)
+  <body-form>*)
+
+.TP
+Description:
+
+The for and for* operators combine variable binding with loop iteration.
+The first argument is a list of variables with optional initializers,
+exactly the same as in the let and let* operators. Furthermore, the
+difference between for and for* is like that between let and let* with
+regard to this list of variables. 
+The for operators execute these steps:
+
+1. Establish bindings for the specified variables similarly to let
+and let*. The variable bindings are visible over the <test-form>, each
+<result-form>, each <inc-form> and each <body-form>.
+
+2. Establish an anonymous block over the remaining forms, allowing
+the return operator to be used to terminate the loop.
+
+3. Evaluate <test-form>. If <test-form> yields nil, then each
+<result-form> is evaluated, and the vale of the last of these forms
+is is the result value of the for loop. If there are no such forms
+then the return value is nil.
+
+4. Otherwise, if <test-form> yields non-nil, then each <body-form>
+is evaluated in turn. Then, each <inc-form> is evaluated in turn
+and processing resumes at step 2.
+
+Furthermore, the for operators establish an anonymous block,
+allowing the return operator to be used to terminate at any point.
 
 .SS Operator dohash
 
