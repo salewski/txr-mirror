@@ -1,5 +1,14 @@
 2011-12-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (op_defun): Transform a function body by inserting
+	a named block around it, thereby imitating a Common Lisp feature.
+	(op_for): Establish an anonymous block around the loop body,
+	test form and increment forms.
+
+	* txr.1: Documented named block in defun. Documented for and for *.
+
+2011-12-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.vim: Updated with all operators and functions.
 
 2011-12-07  Kaz Kylheku  <kaz@kylheku.com>

@@ -514,6 +514,9 @@ static val op_defun(val form, val env)
   val args = rest(form);
   val name = first(args);
   val params = second(args);
+  val body = rest(rest(args));
+  val block = cons(block_s, cons(name, body));
+  val fun = cons(name, cons(params, cons(block, nil)));
 
   if (!bindable(name))
     eval_error(form, lit("defun: ~s is not a bindable sybol"), name, nao);
@@ -521,8 +524,9 @@ static val op_defun(val form, val env)
   if (!all_satisfy(params, func_n1(bindable), nil))
     eval_error(form, lit("defun: arguments must be bindable symbols"), nao);
 
+  
   /* defun captures lexical environment, so env is passed */
-  sethash(top_fb, name, cons(name, func_interp(env, args)));
+  sethash(top_fb, name, cons(name, func_interp(env, fun)));
   return name;
 }
 
@@ -617,10 +621,16 @@ static val op_for(val form, val env)
   val new_bindings = bindings_helper(vars, env, eq(forsym, for_star_s), form);
   val new_env = make_env(new_bindings, nil, env);
 
+  uw_block_begin (nil, result);
+
   for (; eval(car(cond), new_env, form); eval_progn(incs, new_env, form))
     eval_progn(forms, new_env, form);
 
-  return eval_progn(rest(cond), new_env, form);
+  result = eval_progn(rest(cond), new_env, form);
+
+  uw_block_end;
+
+  return result;
 }
 
 static val op_dohash(val form, val env)
