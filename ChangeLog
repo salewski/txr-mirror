@@ -1,5 +1,13 @@
 2011-12-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (op_modplace): If the operator is push, then reverse
+	the arguments. We want (push item list) for compatibility with CL.
+	(expand): Bugfix: some of the cases were constructing new
+	forms using unexpanded pieces from the original form.
+	Added separate case for push, which handles the reversed arguments.
+
+2011-12-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* debug.c (debug): Fix regression: repeat last command by hitting
 	Enter stopped working.  This was broken by recent bugfixes in the
 	string splitting functions, which introduced a semantics change.
