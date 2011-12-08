@@ -52,7 +52,7 @@ val op_table;
 val eval_error_s;
 val progn_s, let_s, let_star_s, lambda_s, call_s;
 val cond_s, if_s, and_s, or_s, defvar_s, defun_s;
-val inc_s, dec_s, push_s, pop_s, gethash_s, car_s, cdr_s;
+val inc_s, dec_s, push_s, pop_s, flip_s, gethash_s, car_s, cdr_s, vecref_s;
 val for_s, for_star_s, dohash_s, uw_protect_s, return_s, return_from_s;
 val list_s, append_s, apply_s;
 
@@ -544,6 +544,7 @@ static val op_modplace(val form, val env)
       eval_error(form, lit("unbound variable ~s"), place, nao);
     loc = cdr_l(binding);
   } else if (consp(place)) {
+    /* TODO: dispatch these with hash table. */
     val sym = car(place);
     if (sym == gethash_s) {
       val hash = eval(second(place), env, form);
@@ -558,6 +559,10 @@ static val op_modplace(val form, val env)
     } else if (sym == car_s) {
       val cons = eval(second(place), env, form);
       loc = cdr_l(cons);
+    } else if (sym == vecref_s) {
+      val vec = eval(second(place), env, form);
+      val ind = eval(third(place), env, form);
+      loc = vecref_l(vec, ind);
     } else {
       eval_error(form, lit("~a: ~s is not a recognized place form"),
                  op, place, nao);
@@ -578,7 +583,7 @@ static val op_modplace(val form, val env)
     return *loc = plus(*loc, inc);
   } else if (op == dec_s) {
     val inc = or2(newval, num(1));
-    return *loc = plus(*loc, inc);
+    return *loc = minus(*loc, inc);
   } else if (op == push_s) {
     if (!third_arg_p)
       eval_error(form, lit("~a: missing argument"), op, place, nao);
@@ -587,9 +592,11 @@ static val op_modplace(val form, val env)
     if (third_arg_p)
       eval_error(form, lit("~a: superfluous argument"), op, place, nao);
     return pop(loc);
+  } else if (op == flip_s) {
+    return *loc = nullp(*loc);
   }
 
-  internal_error("unrecognized operator");
+  internal_error("unhandled place modifier");
 }
 
 static val op_for(val form, val env)
@@ -738,6 +745,15 @@ static val expand_place(val place)
       if (cell == cell_ex)
         return place;
       return cons(sym, cons(cell_ex, nil));
+    } else if (sym == vecref_s) {
+      val vec = second(place);
+      val vec_ex = expand(vec);
+      val ind = third(place);
+      val ind_ex = expand(ind);
+
+      if (vec == vec_ex && ind == ind_ex)
+        return place;
+      return rlcp(cons(sym, cons(vec_ex, cons(ind_ex, nil))), place);
     } else {
       eval_error(place, lit("unrecognized place: ~s"), place, nao);
     }
@@ -864,7 +880,7 @@ val expand(val form)
       if (body == body_ex)
         return form;
       return rlcp(cons(sym, cons(name, cons(args, body_ex))), form);
-    } else if (sym == inc_s || sym == dec_s || sym == push_s || sym == pop_s) {
+    } else if (sym == inc_s || sym == dec_s || sym == push_s) {
       val place = second(form);
       val inc = third(form);
       val place_ex = expand_place(place);
@@ -872,7 +888,15 @@ val expand(val form)
 
       if (place == place_ex && inc == inc_x)
         return form;
+      if (inc == nil)
+        return rlcp(cons(sym, cons(place, nil)), form);
       return rlcp(cons(sym, cons(place, cons(inc_x, nil))), form);
+    } else if (sym == pop_s || sym == flip_s) {
+      val place = second(form);
+      val place_ex = expand_place(place);
+      if (place == place_ex)
+        return form;
+      return rlcp(cons(sym, cons(place, nil)), form);
     } else if (sym == quote_s || sym == fun_s) {
       return form;
     } else if (sym == qquote_s) {
@@ -1012,6 +1036,7 @@ void eval_init(void)
   dec_s = intern(lit("dec"), user_package);
   push_s = intern(lit("push"), user_package);
   pop_s = intern(lit("pop"), user_package);
+  flip_s = intern(lit("flip"), user_package);
   for_s = intern(lit("for"), user_package);
   for_star_s = intern(lit("for*"), user_package);
   dohash_s = intern(lit("dohash"), user_package);
@@ -1021,8 +1046,7 @@ void eval_init(void)
   gethash_s = intern(lit("gethash"), user_package);
   car_s = intern(lit("car"), user_package);
   cdr_s = intern(lit("cdr"), user_package);
-  car_s = intern(lit("car"), user_package);
-  cdr_s = intern(lit("cdr"), user_package);
+  vecref_s = intern(lit("vecref"), user_package);
   list_s = intern(lit("list"), user_package);
   append_s = intern(lit("append"), user_package);
   apply_s = intern(lit("apply"), user_package);
@@ -1048,6 +1072,7 @@ void eval_init(void)
   sethash(op_table, set_s, cptr((mem_t *) op_modplace));
   sethash(op_table, push_s, cptr((mem_t *) op_modplace));
   sethash(op_table, pop_s, cptr((mem_t *) op_modplace));
+  sethash(op_table, flip_s, cptr((mem_t *) op_modplace));
   sethash(op_table, for_s, cptr((mem_t *) op_for));
   sethash(op_table, for_star_s, cptr((mem_t *) op_for));
   sethash(op_table, dohash_s, cptr((mem_t *) op_dohash));
@@ -1210,11 +1235,12 @@ void eval_init(void)
   reg_fun(intern(lit("vector"), user_package), func_n1(vector));
   reg_fun(intern(lit("vec-get-fill"), user_package), func_n1(vec_get_fill));
   reg_fun(intern(lit("vec-set-fill"), user_package), func_n2(vec_set_fill));
-  reg_fun(intern(lit("vecref"), user_package), func_n2(vecref));
+  reg_fun(vecref_s, func_n2(vecref));
   reg_fun(intern(lit("vec-push"), user_package), func_n2(vec_push));
   reg_fun(intern(lit("length-vec"), user_package), func_n1(length_vec));
   reg_fun(intern(lit("size-vec"), user_package), func_n1(size_vec));
   reg_fun(intern(lit("vector-list"), user_package), func_n1(vector_list));
+  reg_fun(intern(lit("list-vector"), user_package), func_n1(list_vector));
 
   reg_fun(intern(lit("assoc"), user_package), func_n2(assoc));
   reg_fun(intern(lit("assq"), user_package), func_n2(assq));

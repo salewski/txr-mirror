@@ -1,5 +1,30 @@
 2011-12-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	* debug.c (debug): Fix regression: repeat last command by hitting
+	Enter stopped working.  This was broken by recent bugfixes in the
+	string splitting functions, which introduced a semantics change.
+
+	* eval.c (flip_s, vecref_s): New symbol variables.
+	(op_modplace): New places (vecref ...) and (flip ...). Bugfix: dec
+	operator was incrementing.
+	(expand_place): Handle vecref and flip. Bugfix: pop has no
+	third argument and so is now handled by the same case as flip.
+	Bugfix: if a modify form has no third argument, then do not
+	resynthesize it with a nil third argument.
+	(eval_init): Initialize new symbol variables.
+	Register new flip operator. Register new list_vectory function
+	as intrinsic.
+
+	* lib.c (rplacd): When modifying the cdr field of a lazy cons,
+	then lapse the lazy function to nil! This is needed by user-defined
+	lazy conses, and it makes sense to do it this way rather than
+	put in some explicit interface.
+	(list_vector): New function.
+
+	* lib.h (list_vector): Declared.
+
+2011-12-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (lookup_var, lookup_fun): Reversing assoc arguments.
 	(eval_init): New intrinsics.
 
