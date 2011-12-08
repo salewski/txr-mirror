@@ -34,7 +34,6 @@ val debug(val form, val bindings, val data, val line, val chr)
     val print_data = t;
 
     for (;;) {
-      uses_or2;
       val input, command;
 
       if (print_form) {
@@ -58,7 +57,8 @@ val debug(val form, val bindings, val data, val line, val chr)
       flush_stream(std_output);
 
       input = split_str_set(get_line(std_input), lit("\t "));
-      command = or2(first(input), last_command);
+      command = if3(equal(first(input), null_string), 
+                    last_command, first(input));
       last_command = command;
 
       if (equal(command, lit("?")) || equal(command, lit("help"))) {

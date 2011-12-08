@@ -473,6 +473,7 @@ val vec_push(val vec, val item);
 val length_vec(val vec);
 val size_vec(val vec);
 val vector_list(val list);
+val list_vector(val vector);
 val lazy_stream_cons(val stream);
 val lazy_str(val list, val term, val limit);
 val lazy_str_force_upto(val lstr, val index);

@@ -222,13 +222,14 @@ val rplaca(val cons, val new_car)
 }
 
 
-val rplacd(val cons, val new_car)
+val rplacd(val cons, val new_cdr)
 {
   switch (type(cons)) {
   case CONS:
-    return cons->c.cdr = new_car;
+    return cons->c.cdr = new_cdr;
   case LCONS:
-    return cons->lc.cdr = new_car;
+    cons->lc.func = nil;
+    return cons->lc.cdr = new_cdr;
   default:
     type_mismatch(lit("~s is not a cons"), cons, nao);
   }
@@ -2406,6 +2407,21 @@ val vector_list(val list)
     vec_push(vec, car(list));
 
   return vec;
+}
+
+val list_vector(val vec)
+{
+  list_collect_decl (list, ptail);
+  int i, len;
+
+  type_check(vec, VEC);
+
+  len = c_num(vec->v.vec[vec_fill]);
+
+  for (i = 0; i < len; i++)
+    list_collect(ptail, vec->v.vec[i]);
+
+  return list;
 }
 
 static val lazy_stream_func(val env, val lcons)
