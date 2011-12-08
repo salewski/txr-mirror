@@ -532,9 +532,19 @@ static val op_modplace(val form, val env)
   val op = first(form);
   val place = second(form);
   val third_arg_p = rest(rest(form));
-  val newval = if3(car(third_arg_p), eval(third(form), env, form), nil);
+  val newval = if3(car(third_arg_p), third(form), nil);
   val *loc = 0;
   val binding = nil;
+
+  if (op == push_s) {
+    val tmp = place;
+    if (!third_arg_p)
+      eval_error(form, lit("~a: missing argument"), op, place, nao);
+    place = third(form);
+    newval = tmp;
+  }
+
+  newval = eval(newval, env, form);
 
   if (symbolp(place)) {
     if (!bindable(place))
@@ -585,8 +595,6 @@ static val op_modplace(val form, val env)
     val inc = or2(newval, num(1));
     return *loc = minus(*loc, inc);
   } else if (op == push_s) {
-    if (!third_arg_p)
-      eval_error(form, lit("~a: missing argument"), op, place, nao);
     return push(newval, loc);
   } else if (op == pop_s) {
     if (third_arg_p)
@@ -880,23 +888,32 @@ val expand(val form)
       if (body == body_ex)
         return form;
       return rlcp(cons(sym, cons(name, cons(args, body_ex))), form);
-    } else if (sym == inc_s || sym == dec_s || sym == push_s) {
+    } else if (sym == inc_s || sym == dec_s) {
       val place = second(form);
       val inc = third(form);
       val place_ex = expand_place(place);
-      val inc_x = expand(inc);
+      val inc_ex = expand(inc);
 
-      if (place == place_ex && inc == inc_x)
+      if (place == place_ex && inc == inc_ex)
         return form;
       if (inc == nil)
-        return rlcp(cons(sym, cons(place, nil)), form);
-      return rlcp(cons(sym, cons(place, cons(inc_x, nil))), form);
+        return rlcp(cons(sym, cons(place_ex, nil)), form);
+      return rlcp(cons(sym, cons(place_ex, cons(inc_ex, nil))), form);
+    } else if (sym == push_s) {
+      val inc = second(form);
+      val inc_ex = expand(inc);
+      val place = third(form);
+      val place_ex = expand_place(place);
+
+      if (place == place_ex && inc == inc_ex)
+        return form;
+      return rlcp(cons(sym, cons(inc_ex, cons(place_ex, nil))), form);
     } else if (sym == pop_s || sym == flip_s) {
       val place = second(form);
       val place_ex = expand_place(place);
       if (place == place_ex)
         return form;
-      return rlcp(cons(sym, cons(place, nil)), form);
+      return rlcp(cons(sym, cons(place_ex, nil)), form);
     } else if (sym == quote_s || sym == fun_s) {
       return form;
     } else if (sym == qquote_s) {
