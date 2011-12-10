@@ -30,14 +30,23 @@ include config.make
 
 CFLAGS := -I. -I$(top_srcdir) $(LANG_FLAGS) $(DIAG_FLAGS) \
           $(OPT_FLAGS) $(DBG_FLAGS) $(PLATFORM_FLAGS)
+CFLAGS += -I$(top_srcdir)/mpi-$(mpi_version)
 CFLAGS := $(filter-out $(REMOVE_FLAGS),$(CFLAGS))
 
 ifneq ($(subst g++,@,$(notdir $(CC))),$(notdir $(CC)))
 CFLAGS := $(filter-out -Wmissing-prototypes -Wstrict-prototypes,$(CFLAGS))
 endif
 
+# TXR objects
 OBJS := txr.o lex.yy.o y.tab.o match.o lib.o regex.o gc.o unwind.o stream.o
-OBJS += hash.o utf8.o filter.o debug.o eval.o
+OBJS += arith.o hash.o utf8.o filter.o debug.o eval.o
+
+# MPI objects
+MPI_OBJ_BASE=mpi.o mplogic.o
+
+MPI_OBJS := $(addprefix mpi-$(mpi_version)/,$(MPI_OBJ_BASE))
+
+OBJS += $(MPI_OBJS)
 
 PROG := ./txr
 
@@ -57,6 +66,9 @@ y.tab.c y.tab.h: parser.y
 # Suppress useless sccs id array and unused label warning in byacc otuput.
 # Bison-generated parser also tests for this lint define.
 y.tab.o: CFLAGS += -Dlint
+
+$(MPI_OBJS): CFLAGS += -DXMALLOC=chk_malloc -DXREALLOC=chk_realloc
+$(MPI_OBJS): CFLAGS += -DXCALLOC=chk_calloc -DXFREE=free
 
 .PHONY: rebuild
 rebuild: clean $(PROG)

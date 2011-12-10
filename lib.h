@@ -24,6 +24,8 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+#include "mpi.h"
+
 typedef int_ptr_t cnum;
 
 #define TAG_SHIFT 2
@@ -37,7 +39,8 @@ typedef int_ptr_t cnum;
 
 typedef enum type {
   NUM = TAG_NUM, CHR = TAG_CHR, LIT = TAG_LIT, CONS,
-  STR, SYM, PKG, FUN, VEC, LCONS, LSTR, COBJ, ENV
+  STR, SYM, PKG, FUN, VEC, LCONS, LSTR, COBJ, ENV,
+  BGNUM
 } type_t;
 
 typedef enum functype
@@ -183,6 +186,11 @@ struct env {
   val up_env;
 };
 
+struct bignum {
+  type_t type;
+  mp_int mp;
+};
+
 union obj {
   struct any t;
   struct cons c;
@@ -195,6 +203,7 @@ union obj {
   struct lazy_string ls;
   struct cobj co;
   struct env e;
+  struct bignum bn;
 };
 
 INLINE cnum tag(val obj) { return ((cnum) obj) & TAG_MASK; }
@@ -245,6 +254,11 @@ INLINE val num_fast(cnum n)
   return (val) ((n << TAG_SHIFT) | TAG_NUM);
 }
 
+INLINE mp_int *mp(val bign)
+{
+  return &bign->bn.mp;
+}
+
 INLINE val chr(wchar_t ch)
 {
   return (val) (((cnum) ch << TAG_SHIFT) | TAG_CHR);
@@ -259,9 +273,9 @@ INLINE val chr(wchar_t ch)
 #define lit(strlit) lit_noex(strlit)
 
 extern val keyword_package, system_package, user_package;
-extern val null, t, cons_s, str_s, chr_s, num_s, sym_s, pkg_s, fun_s, vec_s;
+extern val null, t, cons_s, str_s, chr_s, fixnum_s, sym_s, pkg_s, fun_s, vec_s;
 extern val stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s, cptr_s;
-extern val env_s;
+extern val env_s, bignum_s;
 extern val var_s, expr_s, regex_s, chset_s, set_s, cset_s, wild_s, oneplus_s;
 extern val nongreedy_s, compiled_regex_s;
 extern val quote_s, qquote_s, unquote_s, splice_s;
@@ -328,6 +342,7 @@ val none_satisfy(val list, val pred, val key);
 val eql(val left, val right);
 val equal(val left, val right);
 mem_t *chk_malloc(size_t size);
+mem_t *chk_calloc(size_t n, size_t size);
 mem_t *chk_realloc(mem_t *, size_t size);
 wchar_t *chk_strdup(const wchar_t *str);
 val cons(val car, val cdr);
@@ -346,7 +361,8 @@ val proper_plist_to_alist(val list);
 val improper_plist_to_alist(val list, val boolean_keys);
 val num(cnum val);
 cnum c_num(val num);
-val nump(val num);
+val fixnump(val num);
+val bignump(val num);
 val plus(val anum, val bnum);
 val plusv(val nlist);
 val minus(val anum, val bnum);

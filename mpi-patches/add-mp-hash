@@ -1,0 +1,48 @@
+Index: mpi-1.8.6/mpi.c
+===================================================================
+--- mpi-1.8.6.orig/mpi.c	2011-12-09 14:10:41.000000000 -0800
++++ mpi-1.8.6/mpi.c	2011-12-09 14:26:02.000000000 -0800
+@@ -1960,6 +1960,30 @@
+ 
+ /* }}} */
+ 
++unsigned long mp_hash(mp_int *a)
++{
++  unsigned long hash = 0;
++  int ix;
++  for (ix = 0; ix < USED(a); ix++) {
++    mp_digit d = DIGIT(a, ix);
++#if SIZEOF_LONG < MP_DIGIT_SIZE
++    int j;
++    for (j = 0; j < MP_DIGIT_SIZE / SIZEOF_LONG; j++) {
++	hash ^= d;
++	d >> (SIZEOF_LONG * CHAR_BIT);
++    }
++#elif SIZEOF_LONG == MP_DIGIT_SIZE
++    hash ^= d;
++#else
++    hash <<= MP_DIGIT_BITS;
++    hash ^= d;
++#endif
++  }
++  if (SIGN(a) == MP_NEG)
++    hash = (hash << 16 | hash >> (SIZEOF_LONG * CHAR_BIT - 16));
++  return hash;
++}
++
+ /*------------------------------------------------------------------------*/
+ /* {{{ Number theoretic functions */
+ 
+Index: mpi-1.8.6/mpi.h
+===================================================================
+--- mpi-1.8.6.orig/mpi.h	2011-12-09 14:10:41.000000000 -0800
++++ mpi-1.8.6/mpi.h	2011-12-09 14:10:41.000000000 -0800
+@@ -165,6 +165,8 @@
+ int    mp_isodd(mp_int *a);
+ int    mp_iseven(mp_int *a);
+ 
++unsigned long mp_hash(mp_int *a);
++
+ /*------------------------------------------------------------------------*/
+ /* Number theoretic                                                       */
+ 

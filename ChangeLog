@@ -1,3 +1,103 @@
+2011-12-09  Kaz Kylheku  <kaz@kylheku.com>
+
+	Bignum support, here we go!
+
+	Bignums, based on Michael Fromberger's MPI library, are integrated
+	into the input syntax, stream output, equality testing, the garbage
+	collector, and hashing.
+	
+	The plus operation handles transitions between fixnums and bignums.
+	Other operations are still fixnum only.
+
+	* Makefile (CFLAGS): Add mpi directory to include file search.
+	(OBJS): Include new arith.o module and all of MPI_OBJS.
+	(MPI_OBJS, MPI_OBJS_BASE): New variables.
+
+	* configure (mpi_version, have_quilt, have_patch): New variables.
+	Script detects whether patch and quilt are available. Unpacks
+	mpi library, applies patches. Detects 128 bit integer type.
+	Records more information in config.h about the sizes of types.
+
+	* dep.mk: Updated.
+
+	* depend.txr: Make work with paths that have directory components.
+
+	* eval.c (eval_init): Rename of nump to fixnump.
+
+	* gc.c (finalize, mark_obj): Handle BGNUM case.
+
+	* hash.c: (hash_c_str): Changed to return unsigned long
+	instead of long.
+	(equal_hash): Handle BGNUM case.
+	(eql_hash): Handle bignums with equal-hash, but other
+	objects as eq.
+
+	* lib.c (num_s): Variable renamed to fixnum_s.
+	(bignum_s): New symbol variable.
+	(code2type): Follow rename of num_s. Handle BGNUM case.
+	(typeof): Follow rename of num_s.
+	(eql): Handle bignums using equal, and other types using eq.
+	(equal): Handle BGNUM case.
+	(chk_calloc): New function.
+	(c_num): Wording change in error message: is not a fixnum.
+	(nump): Renamed to fixnump.
+	(bignump): New function.
+	(plus): Function removed, reimplemented in arith.c.
+	(int_str): Handle integers which are too large for wcstol
+	using bignum conversion. Base 0 is no longer passed to
+	wcstol but converted to 10 because the special semantics
+	for 0 would be inconsistent for bignums.
+	(obj_init): Follow rename of num_s. Initialize bignum_s.
+	(obj_print, obj_pprint): Handle BGNUM.
+	(init): Call arith_init.
+
+	* lib.h: Includes "mpi.h", as an exception to the project rule against
+	headers including headers.
+	(enum type): New enumeration member, BGNUM.
+	(struct bignum): New struct type.
+	(union obj): New member bn.
+	(mp): New inline function.
+	(num_s): Redeclared as fixnum_s.
+	(bignum_s, chk_calloc, bignump): Declared.
+	(nump): Redeclared as fixnump.
+
+	* match.c (h_var, h_line, h_skip, h_coll, h_fun, format_field, v_skip,
+	v_freeform, v_collect, v_match_files): Follow nump to fixnump rename.
+
+	* parser.l (NUM): New token type. Split up the parsing of identifiers
+	and numbers once again. But since every number is also lexically also
+	lexically an identifier, we put the action first. The action for
+	making numbers handles bignums. It produces object numbers, not
+	C numbers (change in yystype union).
+
+	* parser.y (%union): num changes type from cnum to val.
+
+	* stream.c (vformat): Handle bignums in numeric conversions.
+
+	* arith.c: New file.
+
+	* arith.h: New file.
+
+	* mpi-1.8.6.tar.gz: New file.
+
+	* mpi-patches/add-mp-hash: New file.
+
+	* mpi-patches/add-mp-set-intptr: New file.
+
+	* mpi-patches/add-mpi-toradix-with-case: New file.
+
+	* mpi-patches/config-types: New file.
+
+	* mpi-patches/export-mp-eq: New file.
+
+	* mpi-patches/fix-mult-bug: New file.
+
+	* mpi-patches/fix-warnings: New file.
+
+	* mpi-patches/series: New file.
+
+	* mpi-patches/use-txr-allocator: New file.
+
 2011-12-08  Kaz Kylheku  <kaz@kylheku.com>
 
 	C++ maintenance.

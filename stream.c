@@ -837,11 +837,11 @@ val vformat(val stream, val fmtstr, va_list vl)
     int left = 0, zeropad = 0;
     cnum value;
     void *ptr;
-    char num_buf[64];
 
     for (;;) {
       val obj;
       wchar_t ch = *fmt++;
+      char num_buf[64], *pnum = num_buf;
 
       switch (state) {
       case vf_init:
@@ -951,24 +951,45 @@ val vformat(val stream, val fmtstr, va_list vl)
         switch (ch) {
         case 'x':
           obj = va_arg(vl, val);
-          value = c_num(obj);
-          sprintf(num_buf, num_fmt->hex, value);
+          if (bignump(obj)) {
+            int nchars = mp_radix_size(mp(obj), 16); 
+            if (nchars >= (int) sizeof (num_buf))
+              pnum = (char *) chk_malloc(nchars + 1);
+            mp_toradix_case(mp(obj), (unsigned char *) pnum, 16, 1);
+          } else {
+            value = c_num(obj);
+            sprintf(num_buf, num_fmt->hex, value);
+          }
           goto output_num;
         case 'X':
           obj = va_arg(vl, val);
-          value = c_num(obj);
-          sprintf(num_buf, num_fmt->HEX, value);
+          if (bignump(obj)) {
+            int nchars = mp_radix_size(mp(obj), 16); 
+            if (nchars >= (int) sizeof (num_buf))
+              pnum = (char *) chk_malloc(nchars + 1);
+            mp_toradix_case(mp(obj), (unsigned char *) pnum, 16, 0);
+          } else {
+            value = c_num(obj);
+            sprintf(num_buf, num_fmt->HEX, value);
+          }
           goto output_num;
         case 'o':
           obj = va_arg(vl, val);
-          value = c_num(obj);
-          sprintf(num_buf, num_fmt->oct, value);
+          if (bignump(obj)) {
+            int nchars = mp_radix_size(mp(obj), 8); 
+            if (nchars >= (int) sizeof (num_buf))
+              pnum = (char *) chk_malloc(nchars + 1);
+            mp_toradix(mp(obj), (unsigned char *) pnum, 8);
+          } else {
+            value = c_num(obj);
+            sprintf(num_buf, num_fmt->oct, value);
+          }
           goto output_num;
         case 'a':
           obj = va_arg(vl, val);
           if (obj == nao)
             goto premature;
-          if (nump(obj)) {
+          if (fixnump(obj)) {
             value = c_num(obj);
             sprintf(num_buf, num_fmt->dec, value);
             goto output_num;
@@ -976,6 +997,12 @@ val vformat(val stream, val fmtstr, va_list vl)
             if (!vformat_str(stream, obj, width, left, precision))
               return nil;
             continue;
+          } else if (bignump(obj)) {
+            int nchars = mp_radix_size(mp(obj), 10); 
+            if (nchars >= (int) sizeof (num_buf))
+              pnum = (char *) chk_malloc(nchars + 1);
+            mp_toradix(mp(obj), (unsigned char *) pnum, 10);
+            goto output_num;
           }
           obj_pprint(obj, stream);
           continue;
@@ -983,10 +1010,22 @@ val vformat(val stream, val fmtstr, va_list vl)
           obj = va_arg(vl, val);
           if (obj == nao)
             goto premature;
-          if (nump(obj)) {
+          if (fixnump(obj)) {
             value = c_num(obj);
             sprintf(num_buf, num_fmt->dec, value);
             if (!vformat_num(stream, num_buf, 0, 0, 0, 0))
+              return nil;
+            continue;
+          } else if (bignump(obj)) {
+            int nchars = mp_radix_size(mp(obj), 10); 
+            val res;
+            if (nchars >= (int) sizeof (num_buf))
+              pnum = (char *) chk_malloc(nchars + 1);
+            mp_toradix(mp(obj), (unsigned char *) pnum, 10);
+            res = vformat_num(stream, pnum, 0, 0, 0, 0);
+            if (pnum != num_buf)
+              free(pnum);
+            if (!res)
               return nil;
             continue;
           }
@@ -1001,11 +1040,16 @@ val vformat(val stream, val fmtstr, va_list vl)
         default:
           abort();
         output_num:
-          if (!vformat_num(stream, num_buf, width, left,
-                           precision ? 0 : zeropad,
-                           precision ? precision : 1))
-            return nil;
-          continue;
+          {
+            val res = vformat_num(stream, pnum, width, left,
+                                  precision ? 0 : zeropad,
+                                  precision ? precision : 1);
+            if (pnum != num_buf)
+              free(pnum);
+            if (!res)
+              return nil;
+            continue;
+          }
         }
         continue;
       }

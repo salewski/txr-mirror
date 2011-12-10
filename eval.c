@@ -1156,7 +1156,7 @@ void eval_init(void)
   reg_fun(intern(lit("*"), user_package), func_n0v(mulv));
   reg_fun(intern(lit("trunc"), user_package), func_n2(trunc));
   reg_fun(intern(lit("mod"), user_package), func_n2(mod));
-  reg_fun(intern(lit("numberp"), user_package), func_n1(nump));
+  reg_fun(intern(lit("fixnump"), user_package), func_n1(fixnump));
 
   reg_fun(intern(lit(">"), user_package), func_n1v(gtv));
   reg_fun(intern(lit("<"), user_package), func_n1v(ltv));
