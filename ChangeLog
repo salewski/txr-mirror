@@ -1,5 +1,17 @@
 2011-12-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	Build and pass test suite on Cygwin.
+
+	* configure (longlong, ulonglong, superlong, usuperlong): Initialize
+	these variables so that if the detection tests fail, the script
+	does not access unbound variables.
+	Avoid adding junk like .bss.* into config.h.
+
+	* mpi-patches/config-types: Fixed wrong use of nonexistent
+	SIZEOF_LONG_T.
+
+2011-12-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	(Applies to previous commit.)
 
 	* mpi-patches/config-types: Added missing definitions
