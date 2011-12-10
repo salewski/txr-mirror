@@ -1,5 +1,10 @@
 2011-12-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (plusv): Recognize cases to eliminate a wasteful plus call
+	with an initial element of zero.
+
+2011-12-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c: File is now generated using TXR.
 	(NOOP): New macro.
 	(plus): Use NOOP macro.

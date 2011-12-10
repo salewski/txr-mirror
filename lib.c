@@ -834,7 +834,11 @@ val bignump(val num)
 
 val plusv(val nlist)
 {
-  return reduce_left(func_n2(plus), nlist, num(0), nil);
+  if (!nlist)
+    return num(0);
+  else if (!cdr(nlist))
+    return car(nlist);
+  return reduce_left(func_n2(plus), cdr(nlist), car(nlist), nil);
 }
 
 val minusv(val minuend, val nlist)
