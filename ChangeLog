@@ -1,5 +1,15 @@
 2011-12-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): New functions added as intrinsics.
+
+	* hash.c (hash_eql, hash_equal): New external functions.
+
+	* hash.h (hash_eql, hash_equal): Declared.
+
+	* txr.1: Sections added.
+
+2011-12-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	* mpi-patches/add-mp-hash: Rewrote mp_hash to only hash enough
 	low-order bit material from the bignum to fill an unsigned long.
 	We don't need to walk the entire bignum. If the low order

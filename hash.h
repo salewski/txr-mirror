@@ -40,6 +40,8 @@ val hashp(val obj);
 val maphash(val func, val hash);
 val hash_begin(val hash);
 val hash_next(val *iter);
+val hash_eql(val obj);
+val hash_equal(val obj);
 
 void hash_process_weak(void);
 

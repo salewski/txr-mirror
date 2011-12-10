@@ -408,6 +408,16 @@ val maphash(val fun, val hash)
   return nil;
 }
 
+val hash_eql(val obj)
+{
+  return num(eql_hash(obj) % NUM_MAX);
+}
+
+val hash_equal(val obj)
+{
+  return num(equal_hash(obj) % NUM_MAX);
+}
+
 /*
  * Called from garbage collector. Hash module must process all weak tables
  * that were visited during the marking phase, maintained in the list
