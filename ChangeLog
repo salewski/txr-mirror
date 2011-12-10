@@ -1,5 +1,12 @@
 2011-12-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	(Applies to previous commit.)
+
+	* mpi-patches/config-types: Added missing definitions
+	of MP_DIGIT_SIZE in two cases.
+
+2011-12-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	Bignum support, here we go!
 
 	Bignums, based on Michael Fromberger's MPI library, are integrated
