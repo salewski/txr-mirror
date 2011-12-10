@@ -1,5 +1,19 @@
 2011-12-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	* mpi-patches/add-mp-hash: Rewrote mp_hash to only hash enough
+	low-order bit material from the bignum to fill an unsigned long.
+	We don't need to walk the entire bignum. If the low order
+	digit of the bignum is at least as large as an unsigned long,
+	we just take that as the hash, otherwise we take enough of the
+	digits to fill an unsigned long. For negative numbers, we just
+	invert the bits of the hash.
+
+	* mpi-patches/add-mpi-toradix-with-case: Refreshed.
+
+	* mpi-patches/fix-mult-bug: Refreshed.
+
+2011-12-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (mulv): Recognize cases to eliminate a wasteful mul call
 	with an initial element of 1.
 
