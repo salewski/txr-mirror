@@ -1062,7 +1062,7 @@ apply_patches()
   while read patch patchlevel ; do
     case patch in
     '#' ) continue ;;
-    * ) patch ${patchlevel:--p0} < $patch ;;
+    * ) patch ${patchlevel:--p1} < patches/$patch ;;
     esac
   done < patches/series
 }
