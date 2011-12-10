@@ -603,6 +603,8 @@ printf "okay\n"
 #
 printf "Checking what C type we have for integers wider than \"long\" ... "
 
+longlong=
+
 for try_type in int64 __int64 "long long" ; do
   cat > conftest.c <<!
 $try_type value;
@@ -623,6 +625,8 @@ else
 fi
 
 printf "Checking what C type we have for unsigned integers wider than \"long\" ... "
+
+ulonglong=
 
 for try_type in uint64 __uint64 "unsigned long long" ; do
   cat > conftest.c <<!
@@ -645,6 +649,8 @@ fi
 
 printf "Checking what C type we have for integers wider than \"long long\" ... "
 
+superlong=
+
 for try_type in int128 int128_t __int128 __int128_t ; do
   cat > conftest.c <<!
 $try_type value;
@@ -665,6 +671,8 @@ else
 fi
 
 printf "Checking what C type we have for u. integers wider than \"long long\" ... "
+
+usuperlong=
 
 for try_type in uint128 uint128_t __uint128 __uint128_t ; do
   cat > conftest.c <<!
@@ -727,10 +735,9 @@ char SIZEOF_SUPERLONG_T[sizeof (superlong_t)];
     case "$symbol" in
     SIZEOF* )
       eval $(printf "%s=%d\n" "$symbol" "$size")
+      printf "#define %s %s\n" "$symbol" "$size" >> config.h
       ;;
     esac
-    # retain all useful information!
-    printf "#define %s %s\n" "$symbol" "$size" >> config.h
   done < conftest.syms
 
   rm -f conftest.syms conftest.o
