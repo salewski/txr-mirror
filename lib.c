@@ -881,7 +881,11 @@ val mul(val anum, val bnum)
 
 val mulv(val nlist)
 {
-  return reduce_left(func_n2(mul), nlist, num(1), nil);
+  if (!nlist)
+    return num(1);
+  else if (!cdr(nlist))
+    return car(nlist);
+  return reduce_left(func_n2(mul), cdr(nlist), car(nlist), nil);
 }
 
 val trunc(val anum, val bnum)
