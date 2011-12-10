@@ -837,24 +837,6 @@ val plusv(val nlist)
   return reduce_left(func_n2(plus), nlist, num(0), nil);
 }
 
-val minus(val anum, val bnum)
-{
-  cnum a = c_num(anum);
-  cnum b = c_num(bnum);
-
-  numeric_assert (b != NUM_MIN || NUM_MIN == -NUM_MAX);
-  numeric_assert (a <= 0 || -b <= 0 || NUM_MAX + b >= a);
-  numeric_assert (a >= 0 || -b >= 0 || NUM_MIN + b <= a);
-
-  return num(a - b);
-}
-
-val neg(val anum)
-{
-  cnum n = c_num(anum);
-  return num(-n);
-}
-
 val minusv(val minuend, val nlist)
 {
   if (nlist)

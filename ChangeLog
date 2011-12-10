@@ -1,3 +1,15 @@
+2011-12-10  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c: File is now generated using TXR.
+	(NOOP): New macro.
+	(plus): Use NOOP macro.
+	(minus, neg): Function moved here from lib.c and rewritten
+	for bignum support.
+
+	* lib.c (minus, neg): Functions removed.
+
+	* arith.txr: New file.
+
 2011-12-09  Kaz Kylheku  <kaz@kylheku.com>
 
 	* configure: Fix patching without quilt.
