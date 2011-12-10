@@ -146,6 +146,7 @@ static wchar_t num_esc(char *num)
 %option noinput
 
 SYM     [a-zA-Z0-9_]+
+NUM     [+\-]?[0-9]+
 NSCHR   [a-zA-Z0-9!$%&*+\-<=>?\\^_~]
 NSYM    {NSCHR}({NSCHR}|#)*
 TOK     :?{SYM}
@@ -170,12 +171,19 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
 %%
 
+<SPECIAL,NESTED>{NUM}   {
+                          val str = string_own(utf8_dup_from(yytext));
+
+                          if (yy_top_state() == INITIAL
+                              || yy_top_state() == QSILIT)
+                            yy_pop_state();
+
+                          yylval.num = int_str(str, num(10));
+                          return NUMBER;
+                        }
+
 <SPECIAL>{TOK}          |
 <NESTED>{NTOK}          {
-                          cnum val;
-                          char *errp;
-
-
                           if (yy_top_state() == INITIAL
                               || yy_top_state() == QSILIT)
                             yy_pop_state();
@@ -188,28 +196,9 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                             yylval.lexeme = utf8_dup_from(yytext + 1);
                             return METAVAR;
                           default:
-                            break;
-                          }
-
-                          errno = 0;
-
-                          val = strtol(yytext, &errp, 10);
-
-                          if (*errp != 0) {
-                            /* not a number */
                             yylval.lexeme = utf8_dup_from(yytext);
                             return IDENT;
                           }
-
-                          if ((val == LONG_MAX || val == LONG_MIN)
-                              && errno == ERANGE)
-                            yyerror("numeric overflow in token");
-
-                          if (val < NUM_MIN || val > NUM_MAX)
-                            yyerror("numeric overflow in token");
-
-                          yylval.num = val;
-                          return NUMBER;
                         }
 
 <SPECIAL>\({WS}all{WS}\)        {

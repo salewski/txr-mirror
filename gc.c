@@ -209,6 +209,9 @@ static void finalize(val obj)
     return;
   case ENV:
     return;
+  case BGNUM:
+    mp_clear(mp(obj));
+    return;
   }
 
   assert (0 && "corrupt type field");
@@ -262,6 +265,7 @@ tail_call:
   case CHR:
   case NUM:
   case LIT:
+  case BGNUM:
     return;
   case SYM:
     mark_obj(obj->s.name);

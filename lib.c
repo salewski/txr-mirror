@@ -33,6 +33,7 @@
 #include <stdarg.h>
 #include <dirent.h>
 #include <setjmp.h>
+#include <errno.h>
 #include <wchar.h>
 #include "config.h"
 #ifdef HAVE_GETENVIRONMENTSTRINGS
@@ -41,6 +42,7 @@
 #endif
 #include "lib.h"
 #include "gc.h"
+#include "arith.h"
 #include "hash.h"
 #include "unwind.h"
 #include "stream.h"
@@ -55,9 +57,9 @@ val packages;
 
 val system_package, keyword_package, user_package;
 
-val null, t, cons_s, str_s, chr_s, num_s, sym_s, pkg_s, fun_s, vec_s;
+val null, t, cons_s, str_s, chr_s, fixnum_s, sym_s, pkg_s, fun_s, vec_s;
 val stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s, cptr_s;
-val env_s;
+val env_s, bignum_s;
 val var_s, expr_s, regex_s, chset_s, set_s, cset_s, wild_s, oneplus_s;
 val nongreedy_s, compiled_regex_s;
 val quote_s, qquote_s, unquote_s, splice_s;
@@ -99,7 +101,7 @@ static val code2type(int code)
   case STR: return str_s;
   case LIT: return str_s;
   case CHR: return chr_s;
-  case NUM: return num_s;
+  case NUM: return fixnum_s;
   case SYM: return sym_s;
   case PKG: return pkg_s;
   case FUN: return fun_s;
@@ -108,6 +110,7 @@ static val code2type(int code)
   case LSTR: return lstr_s;
   case COBJ: return cobj_s;
   case ENV: return env_s;
+  case BGNUM: return bignum_s;
   }
   return nil;
 }
@@ -116,7 +119,7 @@ val typeof(val obj)
 {
   switch (tag(obj)) {
   case TAG_NUM:
-    return num_s;
+    return fixnum_s;
   case TAG_CHR:
     return chr_s;
   case TAG_LIT:
@@ -494,6 +497,8 @@ val eql(val left, val right)
   /* eql is same as eq for now, but when we get bignums,
      eql will compare different bignum objects which are
      the same number as equal. */
+  if (is_ptr(left) && type(left) == BGNUM)
+    return equal(left, right);
   return eq(left, right);
 }
 
@@ -597,6 +602,10 @@ val equal(val left, val right)
       break;
     }
     return nil;
+  case BGNUM:
+    if (type(right) == BGNUM && mp_cmp(mp(left), mp(right)) == MP_EQ)
+      return t;
+    return nil;
   case COBJ:
     if (type(right) == COBJ)
       return left->co.ops->equal(left, right);
@@ -616,6 +625,16 @@ mem_t *chk_malloc(size_t size)
   mem_t *ptr = (mem_t *) malloc(size);
   if (size && ptr == 0)
     ptr = (mem_t *) oom_realloc(0, size);
+  return ptr;
+}
+
+mem_t *chk_calloc(size_t n, size_t size)
+{
+  mem_t *ptr = (mem_t *) calloc(n, size);
+  if (size && ptr == 0) {
+    ptr = (mem_t *) oom_realloc(0, size);
+    memset(ptr, 0, n * size);
+  }
   return ptr;
 }
 
@@ -799,24 +818,18 @@ cnum c_num(val num)
   case TAG_CHR: case TAG_NUM:
     return ((cnum) num) >> TAG_SHIFT;
   default:
-    type_mismatch(lit("~s is not a number"), num, nao);
+    type_mismatch(lit("~s is not a fixnum"), num, nao);
   }
 }
 
-val nump(val num)
+val fixnump(val num)
 {
   return (is_num(num)) ? t : nil;
 }
 
-val plus(val anum, val bnum)
+val bignump(val num)
 {
-  cnum a = c_num(anum);
-  cnum b = c_num(bnum);
-
-  numeric_assert (a <= 0 || b <= 0 || NUM_MAX - b >= a);
-  numeric_assert (a >= 0 || b >= 0 || NUM_MIN - b <= a);
-
-  return num(a + b);
+  return (is_ptr(num) && type(num) == BGNUM) ? t : nil;
 }
 
 val plusv(val nlist)
@@ -1449,12 +1462,27 @@ val int_str(val str, val base)
   const wchar_t *wcs = c_str(str);
   wchar_t *ptr;
   cnum b = c_num(base);
+
   /* TODO: detect if we have wcstoll */
-  long val = wcstol(wcs, &ptr, b);
-  if (val == 0 && ptr == wcs)
+  long value = wcstol(wcs, &ptr, b ? b : 10);
+  if (value == 0 && ptr == wcs)
     return nil;
-  numeric_assert (val >= NUM_MIN && val <= NUM_MAX);
-  return num(val);
+  if (((value == LONG_MAX || value == LONG_MIN) && errno == ERANGE) ||
+      (value < NUM_MIN || value > NUM_MAX))
+  {
+    val bignum = make_bignum();
+    unsigned char *ucs = utf8_dup_to_uc(wcs);
+    mp_err err = mp_read_radix(mp(bignum), ucs, b);
+
+    free(ucs); /* TODO: make wchar_t version of mp_read_radix. */
+
+    if (err != MP_OKAY)
+      return nil;
+
+    return bignum;
+  }
+
+  return num(value);
 }
 
 val chrp(val chr)
@@ -3057,7 +3085,7 @@ static void obj_init(void)
   cons_s = intern(lit("cons"), user_package);
   str_s = intern(lit("str"), user_package);
   chr_s = intern(lit("chr"), user_package);
-  num_s = intern(lit("num"), user_package);
+  fixnum_s = intern(lit("fixnum"), user_package);
   sym_s = intern(lit("sym"), user_package);
   pkg_s = intern(lit("pkg"), user_package);
   fun_s = intern(lit("fun"), user_package);
@@ -3070,6 +3098,7 @@ static void obj_init(void)
   cobj_s = intern(lit("cobj"), user_package);
   cptr_s = intern(lit("cptr"), user_package);
   env_s = intern(lit("env"), user_package);
+  bignum_s = intern(lit("bignum"), user_package);
   var_s = intern(lit("var"), system_package);
   expr_s = intern(lit("expr"), system_package);
   regex_s = intern(lit("regex"), system_package);
@@ -3241,6 +3270,7 @@ val obj_print(val obj, val out)
     }
     return obj;
   case NUM:
+  case BGNUM:
     format(out, lit("~s"), obj, nao);
     return obj;
   case SYM:
@@ -3335,6 +3365,7 @@ val obj_pprint(val obj, val out)
     put_char(out, obj);
     return obj;
   case NUM:
+  case BGNUM:
     format(out, lit("~s"), obj, nao);
     return obj;
   case SYM:
@@ -3384,6 +3415,7 @@ void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),
   oom_realloc = oom;
   gc_init(stack_bottom);
   obj_init();
+  arith_init();
   uw_init();
   stream_init();
   eval_init();

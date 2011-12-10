@@ -136,6 +136,9 @@ txr_dbg_opts=${txr_dbg_opts---gc-debug}
 valgrind=${valgrind-}
 lit_align=${lit_align-}
 extra_debugging=${extra_debugging-}
+mpi_version=1.8.6
+have_quilt=
+have_patch=
 
 #
 # If --help was given (or --help=<nonempty> or help=<nonempty>) then
@@ -476,10 +479,10 @@ case "$top_srcdir" in
 esac
 
 if [ "$source_dir" != "." ] ; then
-  printf "symlinking Makefile -> $source_dir/Makefile\n"
+  printf "Symlinking Makefile -> $source_dir/Makefile\n"
   ln -sf "$source_dir/Makefile" .
 else
-  printf "warning: its recommended to build in a separate directory\n"
+  printf "Warning: its recommended to build in a separate directory\n"
 fi
 
 gen_config_make()
@@ -527,6 +530,9 @@ compiler_prefix := $compiler_prefix
 # prefix for non-compiler toolchain commands
 tool_prefix := $tool_prefix
 
+# MPI version
+mpi_version := $mpi_version
+
 CC := $cc
 LEX := $lex
 LEXLIB := $lexlib
@@ -548,7 +554,7 @@ TXR_DBG_OPTS := $txr_dbg_opts
 # Before doing some other tests, we need a config.make
 #
 
-printf "generating config.make ... "
+printf "Generating config.make ... "
 gen_config_make
 printf "\n"
 
@@ -616,17 +622,83 @@ else
   printf "none\n"
 fi
 
+printf "Checking what C type we have for unsigned integers wider than \"long\" ... "
+
+for try_type in uint64 __uint64 "unsigned long long" ; do
+  cat > conftest.c <<!
+$try_type value;
+!
+  rm -f conftest.o
+  if make conftest.o > conftest.err 2>&1 ; then
+    ulonglong=$try_type
+    break
+  fi
+done
+
+if [ -n "$ulonglong" ] ; then
+  printf '"%s"\n' "$ulonglong"
+  printf "#define HAVE_ULONGLONG_T 1\n" >> config.h
+  printf "typedef $ulonglong ulonglong_t;\n" >> config.h
+else
+  printf "none\n"
+fi
+
+printf "Checking what C type we have for integers wider than \"long long\" ... "
+
+for try_type in int128 int128_t __int128 __int128_t ; do
+  cat > conftest.c <<!
+$try_type value;
+!
+  rm -f conftest.o
+  if make conftest.o > conftest.err 2>&1 ; then
+    superlong=$try_type
+    break
+  fi
+done
+
+if [ -n "$superlong" ] ; then
+  printf '"%s"\n' "$superlong"
+  printf "#define HAVE_SUPERLONG_T 1\n" >> config.h
+  printf "typedef $superlong superlong_t;\n" >> config.h
+else
+  printf "none\n"
+fi
+
+printf "Checking what C type we have for u. integers wider than \"long long\" ... "
+
+for try_type in uint128 uint128_t __uint128 __uint128_t ; do
+  cat > conftest.c <<!
+$try_type value;
+!
+  rm -f conftest.o
+  if make conftest.o > conftest.err 2>&1 ; then
+    usuperlong=$try_type
+    break
+  fi
+done
+
+if [ -n "$usuperlong" ] ; then
+  printf '"%s"\n' "$usuperlong"
+  printf "#define HAVE_USUPERLONG_T 1\n" >> config.h
+  printf "typedef $usuperlong usuperlong_t;\n" >> config.h
+else
+  printf "none\n"
+fi
+
 printf "Checking what C integer type can hold a pointer ... "
 
 if [ -z "$intptr" ] ; then
   cat > conftest.c <<!
 #include "config.h"
-char sizeof_ptr[sizeof (char *)];
-char sizeof_short[sizeof (short)];
-char sizeof_int[sizeof (int)];
-char sizeof_long[sizeof (long)];
+char SIZEOF_PTR[sizeof (char *)];
+char SIZEOF_SHORT[sizeof (short)];
+char SIZEOF_INT[sizeof (int)];
+char SIZEOF_LONG[sizeof (long)];
 #ifdef HAVE_LONGLONG_T
-char sizeof_longlong_t[sizeof (longlong_t)];
+char SIZEOF_LONGLONG_T[sizeof (longlong_t)];
+#endif
+#ifdef HAVE_SUPERLONG_T
+char SIZEOF_SUPERLONG_T[sizeof (superlong_t)];
 #endif
 !
   rm -f conftest.o conftest.syms
@@ -639,11 +711,12 @@ char sizeof_longlong_t[sizeof (longlong_t)];
     exit 1
   fi
 
-  sizeof_ptr=0
-  sizeof_short=0
-  sizeof_int=0
-  sizeof_long=0
-  sizeof_longlong_t=0
+  SIZEOF_PTR=0
+  SIZEOF_SHORT=0
+  SIZEOF_INT=0
+  SIZEOF_LONG=0
+  SIZEOF_LONGLONG_T=0
+  SIZEOF_SUPERLONG_T=0
 
   while read symbol type offset size ; do
     size=$(( 0$size + 0 ))
@@ -652,26 +725,28 @@ char sizeof_longlong_t[sizeof (longlong_t)];
       size=$(( 0$offset + 0 ))
     fi
     case "$symbol" in
-    sizeof* )
+    SIZEOF* )
       eval $(printf "%s=%d\n" "$symbol" "$size")
       ;;
     esac
+    # retain all useful information!
+    printf "#define %s %s\n" "$symbol" "$size" >> config.h
   done < conftest.syms
 
   rm -f conftest.syms conftest.o
 
-  if [ $sizeof_ptr -eq 0 ] ; then
+  if [ $SIZEOF_PTR -eq 0 ] ; then
     printf "failed\n"
     exit 1
   fi
 
-  if [ $sizeof_ptr -eq $sizeof_short ] ; then
+  if [ $SIZEOF_PTR -eq $SIZEOF_SHORT ] ; then
     intptr="short"
-  elif [ $sizeof_ptr -eq $sizeof_int ] ; then
+  elif [ $SIZEOF_PTR -eq $SIZEOF_INT ] ; then
     intptr="int"
-  elif [ $sizeof_ptr -eq $sizeof_long ] ; then
+  elif [ $SIZEOF_PTR -eq $SIZEOF_LONG ] ; then
     intptr="long"
-  elif [ $sizeof_ptr -eq $sizeof_long_long_t ] ; then
+  elif [ $SIZEOF_PTR -eq $SIZEOF_LONG_LONG_T ] ; then
     intptr="longlong_t"
   fi
 
@@ -683,7 +758,7 @@ fi
 
 printf '"%s"\n' "$intptr"
 printf "typedef $intptr int_ptr_t;\n" >> config.h
-intptr_max_expr="((((($intptr) 1 << $((sizeof_ptr * 8 - 2))) - 1) << 1) + 1)"
+intptr_max_expr="((((($intptr) 1 << $((SIZEOF_PTR * 8 - 2))) - 1) << 1) + 1)"
 printf "#define INT_PTR_MAX %s\n" "$intptr_max_expr" >> config.h
 printf "#define INT_PTR_MIN (-INT_PTR_MAX)\n" >> config.h
 
@@ -944,10 +1019,76 @@ rm -f conftest conftest.[co] conftest.{err,syms}
 rm -f conftest2 conftest[12].[oc]
 
 #
+# What do we have for patch management.
+#
+
+printf "Checking for quilt ... "
+
+if ! quilt --version > /dev/null 2>&1 ; then
+  printf "not found\n"
+else
+  printf "found\n"
+  have_quilt=y
+fi
+
+printf "Checking for patch ... "
+
+if ! patch --version > /dev/null 2>&1 ; then
+  printf "not found\n"
+  printf "\npatch tool required!\n\n"
+  exit 1
+else
+  printf "found\n"
+  have_patch=y
+fi
+
+#
+# Function to apply patches.
+#
+apply_patches()
+{
+  if ! [ -e patches/series ] ; then
+    echo "no patches"
+    return 0
+  fi
+
+  while read patch patchlevel ; do
+    case patch in
+    '#' ) continue ;;
+    * ) patch ${patchlevel:--p0} < $patch ;;
+    esac
+  done < patches/series
+}
+
+#
+# Try to extract MPI if not already.
+#
+
+printf "Extracting MPI ... "
+
+if [ -e $top_srcdir/mpi-${mpi_version} ] ; then
+  printf "already extracted\n"
+else
+  tar -C $top_srcdir -xzf $top_srcdir/mpi-${mpi_version}.tar.gz
+  printf "\n"
+  printf "Symlinking MPI patches ...\n"
+  ln -sf ../mpi-patches \
+    $top_srcdir/mpi-${mpi_version}/patches
+  printf "Applying MPI patches ...\n"
+  if [ -n "$have_quilt" ] ; then
+    ( cd $top_srcdir/mpi-${mpi_version}/patches ;
+      if [ -e series ] ; then quilt push -a ; else echo "no patches" ; fi )
+  else
+    ( cd $top_srcdir/mpi-${mpi_version} ;
+      apply_patches )
+  fi
+fi
+
+#
 # Regenerate config.make
 #
 
-printf "regenerating config.make ... "
+printf "Regenerating config.make ... "
 gen_config_make
 printf "\n"
 

@@ -75,7 +75,7 @@ static struct hash *reachable_weak_hashes;
  * We don't reduce the final result modulo a small prime, but leave it
  * as it is; let the hashing routines do their own reduction.
  */
-static long hash_c_str(const wchar_t *str)
+static unsigned long hash_c_str(const wchar_t *str)
 {
   unsigned long h = 0;
   while (*str) {
@@ -131,6 +131,8 @@ static cnum equal_hash(val obj)
   case LSTR:
     lazy_str_force(obj);
     return equal_hash(obj->ls.prefix);
+  case BGNUM:
+    return mp_hash(mp(obj));
   case COBJ:
     return obj->co.ops->hash(obj);
   }
@@ -140,12 +142,14 @@ static cnum equal_hash(val obj)
 
 static cnum eql_hash(val obj)
 {
-    switch (sizeof (mem_t *)) {
-    case 4:
-      return (((cnum) obj) & NUM_MAX) >> 4;
-    case 8: default:
-      return (((cnum) obj) & NUM_MAX) >> 5;
-    }
+  if (bignump(obj))
+    return mp_hash(mp(obj));
+  switch (sizeof (mem_t *)) {
+  case 4:
+    return (((cnum) obj) & NUM_MAX) >> 4;
+  case 8: default:
+    return (((cnum) obj) & NUM_MAX) >> 5;
+  }
 }
 
 cnum cobj_hash_op(val obj)

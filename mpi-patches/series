@@ -1,0 +1,8 @@
+config-types
+fix-warnings
+use-txr-allocator
+add-mp-set-intptr
+export-mp-eq
+add-mp-hash
+add-mpi-toradix-with-case
+fix-mult-bug

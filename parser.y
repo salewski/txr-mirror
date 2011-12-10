@@ -60,7 +60,8 @@ static val parsed_spec;
   wchar_t *lexeme;
   union obj *val;
   wchar_t chr;
-  cnum num, lineno;
+  union obj *num;
+  cnum lineno;
 }
 
 %token <lexeme> SPACE TEXT IDENT KEYWORD METAVAR
@@ -71,7 +72,7 @@ static val parsed_spec;
 %token <lineno> ERRTOK /* deliberately not used in grammar */
 %token <lineno> HASH_BACKSLASH
 
-%token <num> NUMBER
+%token <val> NUMBER
 
 %token <chr> REGCHAR LITCHAR
 %token <chr> METAPAR SPLICE
@@ -646,7 +647,7 @@ expr : IDENT                    { $$ = rl(intern(string_own($1), nil),
      | METAVAR                  { $$ = list(var_s,
                                             intern(string_own($1), nil), nao);
                                   rl($$, num(lineno)); }
-     | NUMBER                   { $$ = num($1); }
+     | NUMBER                   { $$ = $1; }
      | list                     { $$ = $1; }
      | vector                   { $$ = $1; }
      | meta_expr                { $$ = $1; }

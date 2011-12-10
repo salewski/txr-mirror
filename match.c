@@ -462,7 +462,7 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
       val loc = source_loc(c.specline);
       c.specline = cons(cdr(pair), cons(pat, rest(c.specline)));
       rl(car(c.specline), loc);
-    } else if (nump(modifier)) {
+    } else if (fixnump(modifier)) {
       val past = plus(c.pos, modifier);
 
       if (length_str_lt(c.dataline, past) || lt(past, c.pos))
@@ -506,7 +506,7 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
       rl(car(c.specline), loc);
       goto repeat;
     }
-  } else if (nump(modifier)) { /* fixed field */
+  } else if (fixnump(modifier)) { /* fixed field */
     val past = plus(c.pos, modifier);
     if (length_str_lt(c.dataline, past) || lt(past, c.pos))
     {
@@ -625,8 +625,8 @@ static val h_skip(match_line_ctx c, match_line_ctx *cout)
   val elem = first(c.specline);
   val max = txeval(elem, second(elem), c.bindings);
   val min = txeval(elem, third(elem), c.bindings);
-  cnum cmax = nump(max) ? c_num(max) : 0;
-  cnum cmin = nump(min) ? c_num(min) : 0;
+  cnum cmax = fixnump(max) ? c_num(max) : 0;
+  cnum cmin = fixnump(min) ? c_num(min) : 0;
   val greedy = eq(max, greedy_k);
   val last_good_result = nil, last_good_pos = nil;
 
@@ -703,14 +703,14 @@ static val h_coll(match_line_ctx c, match_line_ctx *cout)
   val chars = txeval(elem, getplist(args, chars_k), c.bindings);
   val have_vars;
   val vars = getplist_f(args, vars_k, &have_vars);
-  cnum cmax = nump(gap) ? c_num(gap) : (nump(max) ? c_num(max) : 0);
-  cnum cmin = nump(gap) ? c_num(gap) : (nump(min) ? c_num(min) : 0);
+  cnum cmax = fixnump(gap) ? c_num(gap) : (fixnump(max) ? c_num(max) : 0);
+  cnum cmin = fixnump(gap) ? c_num(gap) : (fixnump(min) ? c_num(min) : 0);
   cnum mincounter = cmin, maxcounter = 0;
-  cnum ctimax = nump(times) ? c_num(times) 
-                            : (nump(maxtimes) ? c_num(maxtimes) : 0);
-  cnum ctimin = nump(times) ? c_num(times) 
-                            : (nump(mintimes) ? c_num(mintimes) : 0);
-  cnum cchars = nump(chars) ? c_num(chars) : 0;
+  cnum ctimax = fixnump(times) ? c_num(times) 
+                               : (fixnump(maxtimes) ? c_num(maxtimes) : 0);
+  cnum ctimin = fixnump(times) ? c_num(times) 
+                               : (fixnump(mintimes) ? c_num(mintimes) : 0);
+  cnum cchars = fixnump(chars) ? c_num(chars) : 0;
   cnum timescounter = 0, charscounter = 0;
   val iter;
 
@@ -1056,7 +1056,7 @@ static val h_fun(match_line_ctx c, match_line_ctx *cout)
           }
         }
 
-        if (nump(success))
+        if (fixnump(success))
           c.pos = success;
       }
     }
@@ -1213,7 +1213,7 @@ static val format_field(val string_or_list, val modifier, val filter)
 
   for (; modifier; pop(&modifier)) {
     val item = first(modifier);
-    if (nump(item))
+    if (fixnump(item))
       n = item;
     if (regexp(item))
       uw_throw(query_error_s, lit("format_field: regex modifier in output"));
@@ -1717,8 +1717,8 @@ static val v_skip(match_files_ctx *c)
     val args = rest(first_spec);
     val max = txeval(skipspec, first(args), c->bindings);
     val min = txeval(skipspec, second(args), c->bindings);
-    cnum cmax = nump(max) ? c_num(max) : 0;
-    cnum cmin = nump(min) ? c_num(min) : 0;
+    cnum cmax = fixnump(max) ? c_num(max) : 0;
+    cnum cmin = fixnump(min) ? c_num(min) : 0;
     val greedy = eq(max, greedy_k);
     val last_good_result = nil;
     val last_good_line = num(0);
@@ -1820,8 +1820,8 @@ static val v_freeform(match_files_ctx *c)
     return nil;
   } else {
     uses_or2;
-    val limit = or2(if2(nump(first(vals)), first(vals)),
-                    if2(nump(second(vals)), second(vals)));
+    val limit = or2(if2(fixnump(first(vals)), first(vals)),
+                    if2(fixnump(second(vals)), second(vals)));
     val term = or2(if2(stringp(first(vals)), first(vals)),
                    if2(stringp(second(vals)), second(vals)));
     val ff_specline = first(c->spec);
@@ -1836,7 +1836,7 @@ static val v_freeform(match_files_ctx *c)
       return nil;
     }
 
-    if (nump(success)) {
+    if (fixnump(success)) {
       c->data = lazy_str_get_trailing_list(ff_dataline, success);
       c->data_lineno = plus(c->data_lineno, num(1));
     }
@@ -2284,16 +2284,16 @@ static val v_collect(match_files_ctx *c)
   val lines = txeval(specline, getplist(args, lines_k), c->bindings);
   val have_vars;
   val vars = getplist_f(args, vars_k, &have_vars);
-  cnum cmax = nump(gap) ? c_num(gap) : (nump(max) ? c_num(max) : 0);
-  cnum cmin = nump(gap) ? c_num(gap) : (nump(min) ? c_num(min) : 0);
+  cnum cmax = fixnump(gap) ? c_num(gap) : (fixnump(max) ? c_num(max) : 0);
+  cnum cmin = fixnump(gap) ? c_num(gap) : (fixnump(min) ? c_num(min) : 0);
   cnum mincounter = cmin, maxcounter = 0;
-  cnum ctimax = nump(times) ? c_num(times) 
-                            : (nump(maxtimes) ? c_num(maxtimes) : 0);
-  cnum ctimin = nump(times) ? c_num(times) 
-                            : (nump(mintimes) ? c_num(mintimes) : 0);
+  cnum ctimax = fixnump(times) ? c_num(times) 
+                               : (fixnump(maxtimes) ? c_num(maxtimes) : 0);
+  cnum ctimin = fixnump(times) ? c_num(times) 
+                               : (fixnump(mintimes) ? c_num(mintimes) : 0);
   cnum timescounter = 0, linescounter = 0;
-  cnum ctimes = nump(times) ? c_num(times) : 0;
-  cnum clines = nump(lines) ? c_num(lines) : 0;
+  cnum ctimes = fixnump(times) ? c_num(times) : 0;
+  cnum clines = fixnump(lines) ? c_num(lines) : 0;
   val iter;
 
   if (gap && (max || min))
@@ -3215,7 +3215,7 @@ repeat_spec_same_data:
                  match_line(ml_all(c.bindings, specline, dataline, zero,
                                    c.data_lineno, first(c.files))));
 
-      if (nump(success) && c_num(success) < c_num(length_str(dataline))) {
+      if (fixnump(success) && c_num(success) < c_num(length_str(dataline))) {
         debuglf(specline, lit("spec only matches line to position ~a: ~a"),
                 success, dataline, nao);
         return nil;
