@@ -1,5 +1,11 @@
 2011-12-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	Removing this crutch; it's not that useful.
+
+	* arith.txr: File removed.
+
+2011-12-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c: Regenerated.
 
 	* arith.txr (normalize): Bugfix: was not turning +/- NUM_MAX bignums
