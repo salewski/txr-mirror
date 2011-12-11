@@ -65,6 +65,7 @@ syn keyword txl_keyword contained list-vector assoc assq acons acons-new
 syn keyword txl_keyword contained aconsq-new alist-remove alist-nremove copy-cons
 syn keyword txl_keyword contained copy-alist merge sort find set-diff length
 
+syn match txr_atat "@[ \t]*@"
 syn match txr_comment "@[ \t]*#.*"
 syn match txr_contin "@[ \t]*\\$"
 syn match txr_hashbang "^#!.*"
@@ -91,6 +92,7 @@ syn region txr_quasilit contained oneline start=+`+ skip=+\\\\\|\\`+ end=+`+ con
 syn region txr_regex contained oneline start=+/+ skip=+\\\\\|\\/+ end=+/+
 syn region txr_regdir oneline start=+@[ \t]*/+ skip=+\\\\\|\\/+ end=+/+
 
+hi def link txr_atat String
 hi def link txr_comment Comment
 hi def link txr_hashbang Comment
 hi def link txr_contin Comment
