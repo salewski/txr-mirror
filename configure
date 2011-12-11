@@ -769,6 +769,18 @@ intptr_max_expr="((((($intptr) 1 << $((SIZEOF_PTR * 8 - 2))) - 1) << 1) + 1)"
 printf "#define INT_PTR_MAX %s\n" "$intptr_max_expr" >> config.h
 printf "#define INT_PTR_MIN (-INT_PTR_MAX)\n" >> config.h
 
+if [ -n "$longlong" ] && [ $SIZEOF_LONGLONG_T -eq $(( 2 * $SIZEOF_PTR )) ] 
+then
+  printf "#define HAVE_DOUBLE_INTPTR_T 1\n" >> config.h
+  printf "typedef longlong_t double_intptr_t;\n" >> config.h
+elif [ -n "$superlong" ] && [ $SIZEOF_SUPERLONG_T -eq $(( 2 * $SIZEOF_PTR )) ]
+then
+  printf "#define HAVE_DOUBLE_INTPTR_T 1\n" >> config.h
+  printf "typedef superlong_t double_intptr_t;\n" >> config.h
+fi
+
+#if HAVE_LONGLONG_T && 
+
 #
 # Alignment of wchar_t
 #
