@@ -1,5 +1,13 @@
 2011-12-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	* mpi-patches/mpi-set-mpi-word: Bugfix and refresh.
+
+	* mpi-patches/mpi-set-double-intptr: New file.
+
+	* mpi-patches/series (mpi-set-double-intptr): Patch added.
+
+2011-12-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	* configure: add to config.h the type double_intptr_t, which
 	is twice the size of intptr_t. It may not be available, so
 	there is a HAVE_ macro to detect it.

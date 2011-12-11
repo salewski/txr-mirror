@@ -7,3 +7,4 @@ add-mp-hash
 add-mpi-toradix-with-case
 fix-mult-bug
 mpi-set-mpi-word
+mpi-set-double-intptr
