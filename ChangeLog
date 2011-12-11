@@ -2,6 +2,13 @@
 
 	* arith.c: Regenerated.
 
+	* arith.txr (highest_bit): Missing #else added, fixing
+	SIZEOF_PTR == 4 case.
+
+2011-12-11  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c: Regenerated.
+
 	* arith.txr (highest_bit): Oops, half the logic for
 	the 64 bit case was missing due to to a cut and paste mistake.
 
