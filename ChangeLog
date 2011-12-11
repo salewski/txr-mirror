@@ -2,6 +2,13 @@
 
 	* arith.c: Regenerated.
 
+	* arith.txr (highest_bit): Oops, half the logic for
+	the 64 bit case was missing due to to a cut and paste mistake.
+
+2011-12-11  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c: Regenerated.
+
 	* arith.txr (highest_bit): New function.
 	(mul): Use highest_bit instead of shift based algorithm.
 
