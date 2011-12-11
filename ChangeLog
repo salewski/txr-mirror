@@ -1,5 +1,10 @@
 2011-12-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.vim (txr_atat): New match. The @@ sequence is recognized
+	properly and highlighted.
+
+2011-12-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	Bignum support in mult function.
 
 	* arith.c: Regenerated.
