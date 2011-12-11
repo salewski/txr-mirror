@@ -74,16 +74,12 @@ static val bignum_dbl_ipt(double_intptr_t di)
 
 static val normalize(val bignum)
 {
-  switch (mp_cmp_mag(mp(bignum), &NUM_MAX_MP)) {
-  case MP_EQ:
-  case MP_GT:
+  if (mp_cmp_mag(mp(bignum), &NUM_MAX_MP) == MP_GT) {
     return bignum;
-  default:
-    {
-      cnum fixnum;
-      mp_get_intptr(mp(bignum), &fixnum);
-      return num(fixnum);
-    }
+  } else {
+    cnum fixnum;
+    mp_get_intptr(mp(bignum), &fixnum);
+    return num(fixnum);
   }
 }
 

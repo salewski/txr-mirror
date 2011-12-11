@@ -2,6 +2,13 @@
 
 	* arith.c: Regenerated.
 
+	* arith.txr (normalize): Bugfix: was not turning +/- NUM_MAX bignums
+	into fixnums.
+
+2011-12-11  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c: Regenerated.
+
 	* arith.txr (highest_bit): Missing #else added, fixing
 	SIZEOF_PTR == 4 case.
 
