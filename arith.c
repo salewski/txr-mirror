@@ -47,6 +47,7 @@
 #define TAG_PAIR(A, B) ((A) << TAG_SHIFT | (B))
 #define NOOP(A, B)
 #define CNUM_BIT ((int) sizeof (cnum) * CHAR_BIT)
+#define ABS(A) ((A) < 0 ? -(A) : (A))
 
 static mp_int NUM_MAX_MP;
 
@@ -278,8 +279,12 @@ val plus(val anum, val bnum)
       type_check(bnum, BGNUM);
       n = make_bignum();
       if (sizeof (int_ptr_t) <= sizeof (mp_digit))  {
-        mp_add_d(mp(bnum), c_num(anum), mp(n));
-        NOOP(mp(n), mp(n));
+        cnum a = c_num(anum);
+        cnum ap = ABS(a);
+        if (a > 0)
+          mp_add_d(mp(bnum), ap, mp(n));
+        else
+          mp_sub_d(mp(bnum), ap, mp(n));
       } else {
         mp_int tmp;
         mp_init(&tmp);
@@ -294,7 +299,12 @@ val plus(val anum, val bnum)
       type_check(anum, BGNUM);
       n = make_bignum();
       if (sizeof (int_ptr_t) <= sizeof (mp_digit))  {
-        mp_add_d(mp(anum), c_num(bnum), mp(n));
+        cnum b = c_num(bnum);
+        cnum bp = ABS(b);
+        if (b > 0)
+          mp_add_d(mp(anum), bp, mp(n));
+        else
+          mp_sub_d(mp(bnum), bp, mp(n));
       } else {
         mp_int tmp;
         mp_init(&tmp);
@@ -339,7 +349,12 @@ val minus(val anum, val bnum)
       type_check(bnum, BGNUM);
       n = make_bignum();
       if (sizeof (int_ptr_t) <= sizeof (mp_digit))  {
-        mp_sub_d(mp(bnum), c_num(anum), mp(n));
+        cnum a = c_num(anum);
+        cnum ap = ABS(a);
+        if (ap > 0)
+          mp_sub_d(mp(bnum), ap, mp(n));
+        else
+          mp_add_d(mp(bnum), ap, mp(n));
         mp_neg(mp(n), mp(n));
       } else {
         mp_int tmp;
@@ -355,7 +370,12 @@ val minus(val anum, val bnum)
       type_check(anum, BGNUM);
       n = make_bignum();
       if (sizeof (int_ptr_t) <= sizeof (mp_digit))  {
-        mp_sub_d(mp(anum), c_num(bnum), mp(n));
+        cnum b = c_num(bnum);
+        cnum bp = ABS(b);
+        if (b > 0)
+          mp_sub_d(mp(anum), bp, mp(n));
+        else
+          mp_add_d(mp(anum), bp, mp(n));
       } else {
         mp_int tmp;
         mp_init(&tmp);
@@ -406,8 +426,8 @@ val mul(val anum, val bnum)
         return bignum_dbl_ipt(product);
       return num(product);
 #else
-      cnum ap = (a < 0) ? -a : a;
-      cnum bp = (b < 0) ? -b : b;
+      cnum ap = ABS(a);
+      cnum bp = ABS(b);
       if (highest_bit(ap) + highest_bit(bp) < CNUM_BIT - 1) {
         cnum product = a * b;
         if (product >= NUM_MIN && product <= NUM_MAX)
@@ -431,7 +451,11 @@ val mul(val anum, val bnum)
       type_check(bnum, BGNUM);
       n = make_bignum();
       if (sizeof (int_ptr_t) <= sizeof (mp_digit)) {
-        mp_mul_d(mp(bnum), c_num(anum), mp(n));
+        cnum a = c_num(anum);
+        cnum ap = ABS(a);
+        mp_mul_d(mp(bnum), ap, mp(n));
+        if (ap < 0)
+          mp_neg(mp(n), mp(n));
       } else {
         mp_int tmp;
         mp_init(&tmp);
@@ -443,10 +467,14 @@ val mul(val anum, val bnum)
   case TAG_PAIR(TAG_PTR, TAG_NUM):
     {
       val n;
-      type_check(bnum, BGNUM);
+      type_check(anum, BGNUM);
       n = make_bignum();
       if (sizeof (int_ptr_t) <= sizeof (mp_digit)) {
-        mp_mul_d(mp(anum), c_num(bnum), mp(n));
+        cnum b = c_num(bnum);
+        cnum bp = ABS(b);
+        mp_mul_d(mp(anum), bp, mp(n));
+        if (b < 0)
+          mp_neg(mp(n), mp(n));
       } else {
         mp_int tmp;
         mp_init(&tmp);
