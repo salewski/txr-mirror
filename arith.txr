@@ -258,6 +258,7 @@ int highest_bit(int_ptr_t n)
       }
     }
   }
+#else
 #error fixme: only 4 or 8 byte pointers supported
 #endif
   /* notreached */
