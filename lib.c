@@ -848,37 +848,6 @@ val minusv(val minuend, val nlist)
   return neg(minuend);
 }
 
-val mul(val anum, val bnum)
-{
-  cnum a = c_num(anum);
-  cnum b = c_num(bnum);
-
-#ifdef HAVE_LONGLONG_T
-  if (sizeof (longlong_t) >= 2 * sizeof (cnum)) {
-    longlong_t product = a * b;
-    numeric_assert (product >= NUM_MIN && product <= NUM_MAX);
-    return num(product);
-  } else
-#endif
-  {
-    if (a > 0){
-      if (b > 0) {
-        numeric_assert (a <= (NUM_MAX / b));
-      } else {
-        numeric_assert (b >= (NUM_MIN / a));
-      }
-    } else {
-      if (b > 0) {
-        numeric_assert (a >= (NUM_MIN / b));
-      } else {
-        numeric_assert ((a == 0) || (b >= (NUM_MIN / a)));
-      }
-    }
-     
-    return num(a * b);
-  }
-}
-
 val mulv(val nlist)
 {
   if (!nlist)

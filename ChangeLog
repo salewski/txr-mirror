@@ -1,5 +1,29 @@
 2011-12-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	Bignum support in mult function.
+
+	* arith.c: Regenerated.
+
+	* arith.txr (CNUM_BIT): New constant.
+	(bignum, bignum_dbl_ipt): New static functions.
+	(@{add-fname}): Use bignum function.
+	(mul): New functions, rewrite of mul from lib.c.
+
+	* lib.c (mul): Function removed.
+
+	* mpi-patches/add-mp-set-intptr (mp_set_intptr): Revised patch.
+	Local variable v should be int_ptr_t not unsigned long.
+	Also, the mp_set interface doesn't set the sign; it's an unsigned
+	interface. We must do that ourselves.
+
+	* mpi-patches/fix-mult-bug: The main multiplication function is
+	also broken in the same way, requiring the cast.
+
+	* mpi-patches/mpi-set-double-intptr: Fixed use of wrong type for
+	local variable v.
+
+2011-12-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	* mpi-patches/mpi-set-mpi-word: Bugfix and refresh.
 
 	* mpi-patches/mpi-set-double-intptr: New file.
