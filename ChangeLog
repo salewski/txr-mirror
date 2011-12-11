@@ -1,3 +1,10 @@
+2011-12-11  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c: Regenerated.
+
+	* arith.txr (highest_bit): New function.
+	(mul): Use highest_bit instead of shift based algorithm.
+
 2011-12-10  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.vim (txr_atat): New match. The @@ sequence is recognized

@@ -92,6 +92,124 @@ static val normalize(val bignum)
   }
 }
 
+int highest_bit(int_ptr_t n)
+{
+#if SIZEOF_PTR == 8
+  if (n & 0x7FFFFFFF00000000) {
+    if (n & 0x7FFF000000000000) {
+      if (n & 0x7F00000000000000) {
+        if (n & 0x7000000000000000) {
+          if (n & 0x4000000000000000)
+            return 63;
+          else
+            return (n & 0x2000000000000000) ? 62 : 61;
+        } else {
+          if (n & 0x0C00000000000000)
+            return (n & 0x0800000000000000) ? 60 : 59;
+          else
+            return (n & 0x0200000000000000) ? 58 : 57;
+        }
+      } else {
+        if (n & 0x00F0000000000000) {
+          if (n & 0x00C0000000000000)
+            return (n & 0x0080000000000000) ? 56 : 55;
+          else
+            return (n & 0x0020000000000000) ? 54 : 53;
+        } else {
+          if (n & 0x000C000000000000)
+            return (n & 0x0008000000000000) ? 52 : 51;
+          else
+            return (n & 0x0002000000000000) ? 50 : 49;
+        }
+      }
+    } else {
+      if (n & 0x0000FF0000000000) {
+        if (n & 0x0000F00000000000) {
+          if (n & 0x0000C00000000000)
+            return (n & 0x0000800000000000) ? 48 : 47;
+          else
+            return (n & 0x0000200000000000) ? 46 : 45;
+        } else {
+          if (n & 0x00000C0000000000)
+            return (n & 0x0000080000000000) ? 44 : 43;
+          else
+            return (n & 0x0000020000000000) ? 42 : 41;
+        }
+      } else {
+        if (n & 0x000000F000000000) {
+          if (n & 0x000000C000000000)
+            return (n & 0x0000008000000000) ? 40 : 39;
+          else
+            return (n & 0x0000002000000000) ? 38 : 37;
+        } else {
+          if (n & 0x0000000C00000000)
+            return (n & 0x0000000800000000) ? 36 : 35;
+          else
+            return (n & 0x0000000200000000) ? 34 : 33;
+        }
+      }
+    }
+  } 
+#elif SIZEOF_PTR == 4
+  if (n & 0x7FFF0000) {
+    if (n & 0x7F000000) {
+      if (n & 0x70000000) {
+        if (n & 0x40000000)
+          return 31;
+        else
+          return (n & 0x20000000) ? 30 : 29;
+      } else {
+        if (n & 0x0C000000)
+          return (n & 0x08000000) ? 28 : 27;
+        else
+          return (n & 0x02000000) ? 26 : 25;
+      }
+    } else {
+      if (n & 0x00F00000) {
+        if (n & 0x00C00000)
+          return (n & 0x00800000) ? 24 : 23;
+        else
+          return (n & 0x00200000) ? 22 : 21;
+      } else {
+        if (n & 0x000C0000)
+          return (n & 0x00080000) ? 20 : 19;
+        else
+          return (n & 0x00020000) ? 18 : 17;
+      }
+    }
+  } else {
+    if (n & 0x0000FF00) {
+      if (n & 0x0000F000) {
+        if (n & 0x0000C000)
+          return (n & 0x00008000) ? 16 : 15;
+        else
+          return (n & 0x00002000) ? 14 : 13;
+      } else {
+        if (n & 0x00000C00)
+          return (n & 0x00000800) ? 12 : 11;
+        else
+          return (n & 0x00000200) ? 10 : 9;
+      }
+    } else {
+      if (n & 0x000000F0) {
+        if (n & 0x000000C0)
+          return (n & 0x00000080) ? 8 : 7;
+        else
+          return (n & 0x00000020) ? 6 : 5;
+      } else {
+        if (n & 0x0000000C)
+          return (n & 0x00000008) ? 4 : 3;
+        else
+          return (n & 0x00000002) ? 2 : (n ? 1 : 0);
+      }
+    }
+  }
+#error fixme: only 4 or 8 byte pointers supported
+#endif
+  /* notreached */
+  abort();
+}
+
 @(repeat)
 val @{add-fname}(val anum, val bnum)
 {
@@ -185,19 +303,7 @@ val mul(val anum, val bnum)
 #else
       cnum ap = (a < 0) ? -a : a;
       cnum bp = (b < 0) ? -b : b;
-      int bit = CNUM_BIT - 3, amaxbit = 0, bmaxbit = 0;
-      cnum mask = (cnum) 1 << (CNUM_BIT - 4);
-      for (; mask && (ap || bp); mask >>= 1, bit--) {
-        if ((ap & mask)) {
-          amaxbit = bit;
-          ap = 0;
-        }
-        if ((bp & mask)) {
-          bmaxbit = bit;
-          bp = 0;
-        }
-      }
-      if (amaxbit + bmaxbit < CNUM_BIT - 1) {
+      if (highest_bit(ap) + highest_bit(bp) < CNUM_BIT - 1) {
         cnum product = a * b;
         if (product >= NUM_MIN && product <= NUM_MAX)
           return num(a * b);
