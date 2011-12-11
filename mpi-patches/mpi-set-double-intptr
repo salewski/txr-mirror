@@ -1,7 +1,7 @@
 Index: mpi-1.8.6/mpi.c
 ===================================================================
---- mpi-1.8.6.orig/mpi.c	2011-12-10 18:21:53.000000000 -0800
-+++ mpi-1.8.6/mpi.c	2011-12-10 18:24:07.000000000 -0800
+--- mpi-1.8.6.orig/mpi.c	2011-12-10 19:13:25.000000000 -0800
++++ mpi-1.8.6/mpi.c	2011-12-10 19:16:43.000000000 -0800
 @@ -573,6 +573,36 @@
    return MP_OKAY;
  }
@@ -10,7 +10,7 @@ Index: mpi-1.8.6/mpi.c
 +mp_err mp_set_double_intptr(mp_int *mp, double_intptr_t z)
 +{
 +  int            ix, shift;
-+  unsigned long  v = z > 0 ? z : -z;
++  double_intptr_t v = z > 0 ? z : -z;
 +  const int      nd = (sizeof v + sizeof (mp_digit) - 1) / sizeof (mp_digit);
 +
 +  ARGCHK(mp != NULL, MP_BADARG);
@@ -41,8 +41,8 @@ Index: mpi-1.8.6/mpi.c
    USED(mp) = 2;
 Index: mpi-1.8.6/mpi.h
 ===================================================================
---- mpi-1.8.6.orig/mpi.h	2011-12-10 18:21:53.000000000 -0800
-+++ mpi-1.8.6/mpi.h	2011-12-10 18:22:56.000000000 -0800
+--- mpi-1.8.6.orig/mpi.h	2011-12-10 19:13:25.000000000 -0800
++++ mpi-1.8.6/mpi.h	2011-12-10 19:14:04.000000000 -0800
 @@ -100,6 +100,9 @@
  mp_err mp_set_int(mp_int *mp, long z);
  mp_err mp_set_intptr(mp_int *mp, int_ptr_t z);
