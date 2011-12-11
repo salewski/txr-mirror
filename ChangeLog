@@ -1,5 +1,13 @@
 2011-12-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (ABS): New macro.
+	(plus, minus): Bugfix: must not pass signed values to mp_add_d and
+	mp_sub_d functions.
+	(mul): Must not pass signed value to mp_mul_d.  Also, fixed type check
+	on wrong argument in the (TAG_PTR, TAG_NUM) case.
+
+2011-12-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	Removing this crutch; it's not that useful.
 
 	* arith.txr: File removed.
