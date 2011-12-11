@@ -290,18 +290,18 @@ val plus(val anum, val bnum)
     }
   case TAG_PAIR(TAG_PTR, TAG_NUM):
     {
-        val n;
-        type_check(anum, BGNUM);
-        n = make_bignum();
-        if (sizeof (int_ptr_t) <= sizeof (mp_digit))  {
-          mp_add_d(mp(anum), c_num(bnum), mp(n));
-        } else {
-          mp_int tmp;
-          mp_init(&tmp);
-          mp_set_intptr(&tmp, c_num(bnum));
-          mp_add(mp(anum), &tmp, mp(n));
-        }
-        return normalize(n);
+      val n;
+      type_check(anum, BGNUM);
+      n = make_bignum();
+      if (sizeof (int_ptr_t) <= sizeof (mp_digit))  {
+        mp_add_d(mp(anum), c_num(bnum), mp(n));
+      } else {
+        mp_int tmp;
+        mp_init(&tmp);
+        mp_set_intptr(&tmp, c_num(bnum));
+        mp_add(mp(anum), &tmp, mp(n));
+      }
+      return normalize(n);
     }
   case TAG_PAIR(TAG_PTR, TAG_PTR):
     {
@@ -351,18 +351,18 @@ val minus(val anum, val bnum)
     }
   case TAG_PAIR(TAG_PTR, TAG_NUM):
     {
-        val n;
-        type_check(anum, BGNUM);
-        n = make_bignum();
-        if (sizeof (int_ptr_t) <= sizeof (mp_digit))  {
-          mp_sub_d(mp(anum), c_num(bnum), mp(n));
-        } else {
-          mp_int tmp;
-          mp_init(&tmp);
-          mp_set_intptr(&tmp, c_num(bnum));
-          mp_sub(mp(anum), &tmp, mp(n));
-        }
-        return normalize(n);
+      val n;
+      type_check(anum, BGNUM);
+      n = make_bignum();
+      if (sizeof (int_ptr_t) <= sizeof (mp_digit))  {
+        mp_sub_d(mp(anum), c_num(bnum), mp(n));
+      } else {
+        mp_int tmp;
+        mp_init(&tmp);
+        mp_set_intptr(&tmp, c_num(bnum));
+        mp_sub(mp(anum), &tmp, mp(n));
+      }
+      return normalize(n);
     }
   case TAG_PAIR(TAG_PTR, TAG_PTR):
     {
