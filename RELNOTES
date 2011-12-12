@@ -1,3 +1,38 @@
+                                    TXR 047
+                                   2012-12-12
+
+
+  Features
+
+  - Transparent bignum arithmetic: when operations on machine word (fixnum)
+    integers overflow, multi-precision (bignum) integers are produced.
+
+  - TXR Lisp:
+
+    - New operators: progn, flip.
+    - Vector functions added, and vecref is an assignment place.
+    - Character manipulation functions.
+    - Association list functions.
+    - Implicit anonymous block around forms for loop.
+    - Implicit named block around forms for loop.
+    - Nump renamed to fixnump.
+    - Push arguments reversed: (push obj list).
+
+  - Syntax highlighting definition update for all new operators.
+
+  Bugs
+  
+  - Another bugfix to character literals, allowing non-alphanumeric
+    constants like #\$.
+
+  - Fix in rplacd to make lazy list programming feasible.
+
+  - Reversed assoc and assq arguments throughout codebase.
+
+  - Debugger: repeating last command by pressing Enter works again.
+
+
+
                                     TXR 046
                                    2012-12-06
 
