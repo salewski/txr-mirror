@@ -1,5 +1,11 @@
 2011-12-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (plus, mul): Plugged mpi_int memory leaks.
+	(trunc): Plugged memory leaks. Straightened out semantics
+	with negative modulus. (Residue comes out negative).
+
+2011-12-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (trunc): Error messages prefixed with trunc:.
 	(mod): New function, reimplementation of removed mod from lib.c.
 

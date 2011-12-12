@@ -290,6 +290,7 @@ val plus(val anum, val bnum)
         mp_init(&tmp);
         mp_set_intptr(&tmp, c_num(anum));
         mp_add(mp(bnum), &tmp, mp(n));
+        mp_clear(&tmp);
       }
       return normalize(n);
     }
@@ -310,6 +311,7 @@ val plus(val anum, val bnum)
         mp_init(&tmp);
         mp_set_intptr(&tmp, c_num(bnum));
         mp_add(mp(anum), &tmp, mp(n));
+        mp_clear(&tmp);
       }
       return normalize(n);
     }
@@ -361,6 +363,7 @@ val minus(val anum, val bnum)
         mp_init(&tmp);
         mp_set_intptr(&tmp, c_num(anum));
         mp_sub(mp(bnum), &tmp, mp(n));
+        mp_clear(&tmp);
       }
       return normalize(n);
     }
@@ -381,6 +384,7 @@ val minus(val anum, val bnum)
         mp_init(&tmp);
         mp_set_intptr(&tmp, c_num(bnum));
         mp_sub(mp(anum), &tmp, mp(n));
+        mp_clear(&tmp);
       }
       return normalize(n);
     }
@@ -461,6 +465,7 @@ val mul(val anum, val bnum)
         mp_init(&tmp);
         mp_set_intptr(&tmp, c_num(anum));
         mp_mul(mp(bnum), &tmp, mp(n));
+        mp_clear(&tmp);
       }
       return n;
     }
@@ -480,6 +485,7 @@ val mul(val anum, val bnum)
         mp_init(&tmp);
         mp_set_intptr(&tmp, c_num(bnum));
         mp_mul(mp(anum), &tmp, mp(n));
+        mp_clear(&tmp);
       }
       return n;
     }
@@ -538,8 +544,11 @@ val trunc(val anum, val bnum)
         mp_int tmp;
         mp_init(&tmp);
         mp_set_intptr(&tmp, c_num(bnum));
-        if (mp_div(mp(anum), &tmp, mp(n), 0) != MP_OKAY)
+        if (mp_div(mp(anum), &tmp, mp(n), 0) != MP_OKAY) {
+          mp_clear(&tmp);
           uw_throw(numeric_error_s, lit("trunc: division by zero"));
+        }
+        mp_clear(&tmp);
       }
       return normalize(n);
     }
@@ -572,30 +581,80 @@ val mod(val anum, val bnum)
       if (b == 0)
         uw_throw(numeric_error_s, lit("mod: division by zero"));
 
+      if (b < 0)
       {
+        cnum m = -a % -b;
+        return num(- (m < 0 ? m - b : m));
+      } else {
         cnum m = a % b;
-        return num(m < 0 ? m + ABS(b) : m);
+        return num(m < 0 ? m + b : m);
       }
     }
   case TAG_PAIR(TAG_NUM, TAG_PTR):
-    type_check(bnum, BGNUM);
-    return zero;
+    {
+      val n;
+      mp_int tmpa;
+      mp_err err;
+      type_check(bnum, BGNUM);
+      n = make_bignum();
+      mp_init(&tmpa);
+      if (mp_cmp_z(mp(bnum)) == MP_LT) {
+        mp_int tmpb;
+        mp_init(&tmpb);
+        mp_neg(mp(bnum), &tmpb);
+        mp_set_intptr(&tmpa, -c_num(anum));
+        err = mp_mod(&tmpa, &tmpb, mp(n));
+        mp_clear(&tmpb);
+        mp_neg(mp(n), mp(n));
+      } else {
+        mp_set_intptr(&tmpa, c_num(anum));
+        err = mp_mod(&tmpa, mp(bnum), mp(n));
+      }
+      mp_clear(&tmpa);
+      if (err != MP_OKAY)
+        uw_throw(numeric_error_s, lit("mod: division by zero"));
+      return normalize(n);
+    }
   case TAG_PAIR(TAG_PTR, TAG_NUM):
     {
       type_check(anum, BGNUM);
       if (sizeof (int_ptr_t) <= sizeof (mp_digit)) {
         cnum b = c_num(bnum);
-        cnum bp = ABS(b);
         mp_digit n;
-        if (mp_mod_d(mp(anum), bp, &n) != MP_OKAY)
+        mp_err err;
+        if (b < 0) {
+          mp_int tmpa;
+          mp_init(&tmpa);
+          mp_neg(mp(anum), &tmpa);
+          err = mp_mod_d(&tmpa, -b, &n);
+          mp_clear(&tmpa);
+          n = -n;
+        } else {
+          err = mp_mod_d(mp(anum), b, &n);
+        }
+        if (err != MP_OKAY)
           uw_throw(numeric_error_s, lit("mod: division by zero"));
         return num(n);
       } else {
         val n = make_bignum();
-        mp_int tmp;
-        mp_init(&tmp);
-        mp_set_intptr(&tmp, c_num(bnum));
-        if (mp_mod(mp(anum), &tmp, mp(n)) != MP_OKAY)
+        mp_int tmpb;
+        mp_err err;
+        cnum b = c_num(bnum);
+        mp_init(&tmpb);
+        if (b < 0) {
+          mp_int tmpa;
+          mp_init(&tmpa);
+          mp_neg(mp(anum), &tmpa);
+          mp_set_intptr(&tmpb, -b);
+          err = mp_mod(&tmpa, &tmpb, mp(n));
+          mp_clear(&tmpa);
+          mp_neg(mp(n), mp(n));
+        } else {
+          mp_set_intptr(&tmpb, b);
+          err = mp_mod(mp(anum), &tmpb, mp(n));
+        }
+        mp_clear(&tmpb);
+        if (err != MP_OKAY)
           uw_throw(numeric_error_s, lit("mod: division by zero"));
         return normalize(n);
       }
@@ -606,8 +665,23 @@ val mod(val anum, val bnum)
       type_check(anum, BGNUM);
       type_check(bnum, BGNUM);
       n = make_bignum();
-      if (mp_mod(mp(anum), mp(bnum), mp(n)) != MP_OKAY)
+      if (mp_cmp_z(mp(bnum)) == MP_LT) {
+        mp_int tmpa, tmpb;
+        mp_err err;
+        mp_init(&tmpa);
+        mp_init(&tmpb);
+        mp_neg(mp(anum), &tmpa);
+        mp_neg(mp(bnum), &tmpb);
+        err = mp_mod(&tmpa, &tmpb, mp(n));
+        if (err != MP_OKAY)
           uw_throw(numeric_error_s, lit("mod: division by zero"));
+        mp_clear(&tmpa);
+        mp_clear(&tmpb);
+        mp_neg(mp(n), mp(n));
+      } else {
+        if (mp_mod(mp(anum), mp(bnum), mp(n)) != MP_OKAY)
+            uw_throw(numeric_error_s, lit("mod: division by zero"));
+      }
       return normalize(n);
     }
   }
