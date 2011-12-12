@@ -857,20 +857,6 @@ val mulv(val nlist)
   return reduce_left(func_n2(mul), cdr(nlist), car(nlist), nil);
 }
 
-val trunc(val anum, val bnum)
-{
-  cnum a = c_num(anum);
-  cnum b = c_num(bnum);
-
-  numeric_assert (b != 0);
-
-  {
-    cnum result = a / b;
-    numeric_assert (result <= NUM_MAX);
-    return num(result);
-  } 
-}
-
 val mod(val anum, val bnum)
 {
   cnum a = c_num(anum);
