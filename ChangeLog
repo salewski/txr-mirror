@@ -1,3 +1,16 @@
+2011-12-12  Kaz Kylheku  <kaz@kylheku.com>
+
+	* mpi-patches/fix-mult-bug: One more flaw discovered in
+	s_mp_mul_d and added to patch. This one caused malloc corruption and
+	crashes, because the incorrect arithmetic causes the function
+	to think that the multiplication will not be needing another
+	digit, but then there is a carry out which does spill into
+	a new digit.
+
+	* mpi-patches/series: Arg! Somehow the patch fix-bad-shift
+	went missing from the series file, even though the patch
+	itself is in the GIT repository.
+
 2011-12-06  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 047
