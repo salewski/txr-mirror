@@ -381,7 +381,6 @@ val gtv(val first, val rest);
 val ltv(val first, val rest);
 val gev(val first, val rest);
 val lev(val first, val rest);
-val numeq(val anum, val bnum);
 val max2(val anum, val bnum);
 val min2(val anum, val bnum);
 val maxv(val first, val rest);

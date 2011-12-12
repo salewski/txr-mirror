@@ -1,5 +1,21 @@
 2011-12-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (zerop, gt, lt, ge, le): Functions from lib.c reimplemented
+	with bignum support.
+
+	* eval.c (eval_init): Added bignump and zerop as intrinsic function.
+	Renamed numberp to fixnump.
+
+	* lib.c (zerop, gt, lt, ge, le): Functions removed.
+	(numeq): Unused function removed.
+
+	* lib.h (numeq): Declaration removed.
+
+	* txr.1: Sections for zerop and bignump created. Changed reference
+	to numberp to fixnump.
+
+2011-12-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (plus, mul): Plugged mpi_int memory leaks.
 	(trunc): Plugged memory leaks. Straightened out semantics
 	with negative modulus. (Residue comes out negative).

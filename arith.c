@@ -689,6 +689,118 @@ val mod(val anum, val bnum)
   abort();
 }
 
+val zerop(val num)
+{
+  if (num == zero)
+    return t;
+
+  if (!fixnump(num) && !bignump(num))
+    uw_throwf(error_s, lit("zerof: ~s is not a number"), num, nao);
+  return nil;
+}
+
+val gt(val anum, val bnum)
+{
+  int tag_a = tag(anum);
+  int tag_b = tag(bnum);
+
+  switch (TAG_PAIR(tag_a, tag_b)) {
+  case TAG_PAIR(TAG_NUM, TAG_NUM):
+    return c_num(anum) > c_num(bnum) ? t : nil;
+  case TAG_PAIR(TAG_NUM, TAG_PTR):
+    type_check(bnum, BGNUM);
+    return mp_cmp_z(mp(bnum)) == MP_LT ? t : nil;
+  case TAG_PAIR(TAG_PTR, TAG_NUM):
+    type_check(anum, BGNUM);
+    return mp_cmp_z(mp(anum)) == MP_GT ? t : nil;
+  case TAG_PAIR(TAG_PTR, TAG_PTR):
+    type_check(anum, BGNUM);
+    return mp_cmp(mp(anum), mp(bnum)) == MP_GT ? t : nil;
+  }
+
+  uw_throwf(error_s, lit("gt: invalid operands ~s ~s"), anum, bnum, nao);
+  abort();
+}
+
+val lt(val anum, val bnum)
+{
+  int tag_a = tag(anum);
+  int tag_b = tag(bnum);
+
+  switch (TAG_PAIR(tag_a, tag_b)) {
+  case TAG_PAIR(TAG_NUM, TAG_NUM):
+    return c_num(anum) < c_num(bnum) ? t : nil;
+  case TAG_PAIR(TAG_NUM, TAG_PTR):
+    type_check(bnum, BGNUM);
+    return mp_cmp_z(mp(bnum)) == MP_GT ? t : nil;
+  case TAG_PAIR(TAG_PTR, TAG_NUM):
+    type_check(anum, BGNUM);
+    return mp_cmp_z(mp(anum)) == MP_LT ? t : nil;
+  case TAG_PAIR(TAG_PTR, TAG_PTR):
+    type_check(anum, BGNUM);
+    return mp_cmp(mp(anum), mp(bnum)) == MP_LT ? t : nil;
+  }
+
+  uw_throwf(error_s, lit("lt: invalid operands ~s ~s"), anum, bnum, nao);
+  abort();
+}
+
+val ge(val anum, val bnum)
+{
+  int tag_a = tag(anum);
+  int tag_b = tag(bnum);
+
+  switch (TAG_PAIR(tag_a, tag_b)) {
+  case TAG_PAIR(TAG_NUM, TAG_NUM):
+    return c_num(anum) >= c_num(bnum) ? t : nil;
+  case TAG_PAIR(TAG_NUM, TAG_PTR):
+    type_check(bnum, BGNUM);
+    return mp_cmp_z(mp(bnum)) == MP_LT ? t : nil;
+  case TAG_PAIR(TAG_PTR, TAG_NUM):
+    type_check(anum, BGNUM);
+    return mp_cmp_z(mp(anum)) == MP_GT ? t : nil;
+  case TAG_PAIR(TAG_PTR, TAG_PTR):
+    type_check(anum, BGNUM);
+    switch (mp_cmp(mp(anum), mp(bnum))) {
+    case MP_GT: case MP_EQ:
+      return t;
+    default:
+      return nil;
+    }
+  }
+
+  uw_throwf(error_s, lit("ge: invalid operands ~s ~s"), anum, bnum, nao);
+  abort();
+}
+
+val le(val anum, val bnum)
+{
+  int tag_a = tag(anum);
+  int tag_b = tag(bnum);
+
+  switch (TAG_PAIR(tag_a, tag_b)) {
+  case TAG_PAIR(TAG_NUM, TAG_NUM):
+    return c_num(anum) <= c_num(bnum) ? t : nil;
+  case TAG_PAIR(TAG_NUM, TAG_PTR):
+    type_check(bnum, BGNUM);
+    return mp_cmp_z(mp(bnum)) == MP_GT ? t : nil;
+  case TAG_PAIR(TAG_PTR, TAG_NUM):
+    type_check(anum, BGNUM);
+    return mp_cmp_z(mp(anum)) == MP_LT ? t : nil;
+  case TAG_PAIR(TAG_PTR, TAG_PTR):
+    type_check(anum, BGNUM);
+    switch (mp_cmp(mp(anum), mp(bnum))) {
+    case MP_LT: case MP_EQ:
+      return t;
+    default:
+      return nil;
+    }
+  }
+
+  uw_throwf(error_s, lit("lt: invalid operands ~s ~s"), anum, bnum, nao);
+  abort();
+}
+
 void arith_init(void)
 {
   mp_init(&NUM_MAX_MP);
