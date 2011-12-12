@@ -497,6 +497,67 @@ val mul(val anum, val bnum)
   abort();
 }
 
+val trunc(val anum, val bnum)
+{
+  int tag_a = tag(anum);
+  int tag_b = tag(bnum);
+
+  switch (TAG_PAIR(tag_a, tag_b)) {
+  case TAG_PAIR(TAG_NUM, TAG_NUM):
+    {
+      cnum a = c_num(anum);
+      cnum b = c_num(bnum);
+      cnum ap = ABS(a);
+      cnum bp = ABS(b);
+      int neg = ((a < 0 && b > 0) || (a > 0 && b < 0));
+
+      if (b == 0)
+        uw_throw(numeric_error_s, lit("division by zero"));
+
+      {
+        cnum quot = ap / bp;
+        return num(neg ? -quot : quot);
+      }
+    }
+  case TAG_PAIR(TAG_NUM, TAG_PTR):
+    type_check(bnum, BGNUM);
+    return zero;
+  case TAG_PAIR(TAG_PTR, TAG_NUM):
+    {
+      val n;
+      type_check(anum, BGNUM);
+      n = make_bignum();
+      if (sizeof (int_ptr_t) <= sizeof (mp_digit)) {
+        cnum b = c_num(bnum);
+        cnum bp = ABS(b);
+        if (mp_div_d(mp(anum), bp, mp(n), 0) != MP_OKAY)
+          uw_throw(numeric_error_s, lit("division by zero"));
+        if (b < 0)
+          mp_neg(mp(n), mp(n));
+      } else {
+        mp_int tmp;
+        mp_init(&tmp);
+        mp_set_intptr(&tmp, c_num(bnum));
+        if (mp_div(mp(anum), &tmp, mp(n), 0) != MP_OKAY)
+          uw_throw(numeric_error_s, lit("division by zero"));
+      }
+      return normalize(n);
+    }
+  case TAG_PAIR(TAG_PTR, TAG_PTR):
+    {
+      val n;
+      type_check(anum, BGNUM);
+      type_check(bnum, BGNUM);
+      n = make_bignum();
+      if (mp_div(mp(anum), mp(bnum), mp(n), 0) != MP_OKAY)
+          uw_throw(numeric_error_s, lit("division by zero"));
+      return normalize(n);
+    }
+  }
+  uw_throwf(error_s, lit("trunc: invalid operands ~s ~s"), anum, bnum, nao);
+  abort();
+}
+
 void arith_init(void)
 {
   mp_init(&NUM_MAX_MP);

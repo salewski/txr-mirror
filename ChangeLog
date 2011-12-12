@@ -1,5 +1,17 @@
 2011-12-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	Bignum division implemented. More portability bugs found in MPI:
+	code like 1 << n, where n exceeds the width of the type int.
+
+	* arith.c (trunc): New function, reimplementation of removed
+	trunc from lib.c.
+
+	* lib.c (trunc): Removed.
+
+	* mpi-patches/fix-bad-shifts: New file.
+
+2011-12-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (ABS): New macro.
 	(plus, minus): Bugfix: must not pass signed values to mp_add_d and
 	mp_sub_d functions.
