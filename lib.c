@@ -857,31 +857,6 @@ val mulv(val nlist)
   return reduce_left(func_n2(mul), cdr(nlist), car(nlist), nil);
 }
 
-val zerop(val num)
-{
-  return c_num(num) == 0 ? t : nil;
-}
-
-val gt(val anum, val bnum)
-{
-  return c_num(anum) > c_num(bnum) ? t : nil;
-}
-
-val lt(val anum, val bnum)
-{
-  return c_num(anum) < c_num(bnum) ? t : nil;
-}
-
-val ge(val anum, val bnum)
-{
-  return c_num(anum) >= c_num(bnum) ? t : nil;
-}
-
-val le(val anum, val bnum)
-{
-  return c_num(anum) <= c_num(bnum) ? t : nil;
-}
-
 val gtv(val first, val rest)
 {
   val iter;
@@ -938,19 +913,14 @@ val lev(val first, val rest)
   return t;
 }
 
-val numeq(val anum, val bnum)
-{
-  return c_num(anum) == c_num(bnum) ? t : nil;
-}
-
 val max2(val anum, val bnum)
 {
-  return c_num(anum) > c_num(bnum) ? anum : bnum;
+  return if3(gt(anum, bnum), anum, bnum);
 }
 
 val min2(val anum, val bnum)
 {
-  return c_num(anum) < c_num(bnum) ? anum : bnum;
+  return if3(lt(anum, bnum), anum, bnum);
 }
 
 val maxv(val first, val rest)
