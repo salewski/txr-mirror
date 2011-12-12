@@ -1,3 +1,15 @@
+2011-12-06  Kaz Kylheku  <kaz@kylheku.com>
+
+	Version 047
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES: Updated.
+
 2011-12-11  Kaz Kylheku  <kaz@kylheku.com>
 
 	* arith.c (zerop, gt, lt, ge, le): Functions from lib.c reimplemented

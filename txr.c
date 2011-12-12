@@ -43,7 +43,7 @@
 #include "debug.h"
 #include "txr.h"
 
-const wchli_t *version = wli("046");
+const wchli_t *version = wli("047");
 const wchar_t *progname = L"txr";
 const wchar_t *spec_file = L"stdin";
 val spec_file_str;
