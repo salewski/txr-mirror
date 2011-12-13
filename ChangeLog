@@ -1,5 +1,15 @@
 2011-12-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	* mpi-patches/bit-search-optimizations (s_highest_bit): Added static
+	storage class specifier.
+
+	* mpi-patches/fix-mult-bug (s_mp_sqr): More braindamage found in MPI.
+	This function performs additions and multiplication mp_digit,
+	expecting a mp_word precision result without casting. This function
+	is needed for exponentiation.
+
+2011-12-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	Git rid of some some loops in MPI where it is searching for
 	the highest bit, replacing them with an adapation of the
 	bit searching function used in arith.c.
