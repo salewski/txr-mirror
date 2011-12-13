@@ -851,7 +851,7 @@ val minusv(val minuend, val nlist)
 val mulv(val nlist)
 {
   if (!nlist)
-    return num(1);
+    return one;
   else if (!cdr(nlist))
     return car(nlist);
   return reduce_left(func_n2(mul), cdr(nlist), car(nlist), nil);
@@ -931,6 +931,11 @@ val maxv(val first, val rest)
 val minv(val first, val rest)
 {
   return reduce_left(func_n2(min2), rest, first, nil);
+}
+
+val exptv(val nlist)
+{
+  return reduce_right(func_n2(expt), nlist, one, nil);
 }
 
 val string_own(wchar_t *str)
@@ -2071,6 +2076,18 @@ val reduce_left(val fun, val list, val init, val key)
     init = funcall2(fun, init, funcall1(key, car(list)));
 
   return init;
+}
+
+val reduce_right(val fun, val list, val init, val key)
+{
+  if (!key)
+    key = identity_f;
+
+  if (nullp(list))
+    return init;
+  return funcall2(fun, funcall1(key, car(list)),
+                       if3(cdr(list), reduce_right(fun, cdr(list), init, key),
+                                      init));
 }
 
 static val do_curry_12_2(val fcons, val arg2)
