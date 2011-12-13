@@ -71,16 +71,21 @@ $(MPI_OBJS): CFLAGS += -DXMALLOC=chk_malloc -DXREALLOC=chk_realloc
 $(MPI_OBJS): CFLAGS += -DXCALLOC=chk_calloc -DXFREE=free
 
 .PHONY: rebuild
-rebuild: clean $(PROG)
+rebuild: clean repatch $(PROG)
 
 .PHONY: clean
 clean:
 	rm -f $(PROG) $(OBJS) \
 	  y.tab.c lex.yy.c y.tab.h y.output $(TESTS:.ok=.out)
 
+.PHONY: repatch
+repatch:
+	cd $(top_srcdir)/mpi-$(mpi_version); quilt pop -af
+	cd $(top_srcdir)/mpi-$(mpi_version); quilt push -a
+
 .PHONY: distclean
 distclean: clean
-	rm -f config.h config.make config.log
+	rm -f config.h config.make config.log $(top_srcdir)/mpi-$(mpi_version)
 
 .PHONY: depend
 depend:
