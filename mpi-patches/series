@@ -10,3 +10,4 @@ mpi-set-mpi-word
 mpi-set-double-intptr
 fix-bad-shifts
 bit-search-optimizations
+shrink-mpi-int
