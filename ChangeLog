@@ -1,5 +1,19 @@
 2011-12-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (expt): New function.
+
+	* eval.c (eval_init): Registering new intrinsic functions,
+	reduce-left, reduce-right and expt.
+
+	* lib.c (minusv): Return one instead of num(1).
+	(exptv, reduce_right): New functions.
+
+	* lib.h (expt, exptv, reduce_right): Declared.
+
+	* txr.1: Blank sections for new functions.
+
+2011-12-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	* mpi-patches/fix-mult-bug: One more flaw discovered in
 	s_mp_mul_d and added to patch. This one caused malloc corruption and
 	crashes, because the incorrect arithmetic causes the function

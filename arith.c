@@ -801,6 +801,95 @@ val le(val anum, val bnum)
   abort();
 }
 
+val expt(val anum, val bnum)
+{
+  int tag_a = tag(anum);
+  int tag_b = tag(bnum);
+
+  switch (TAG_PAIR(tag_a, tag_b)) {
+  case TAG_PAIR(TAG_NUM, TAG_NUM):
+    {
+      cnum a = c_num(anum);
+      cnum b = c_num(bnum);
+      mp_int tmpa;
+      val n;
+      if (b < 0)
+        uw_throw(error_s, lit("expt: negative exponent"));
+      if (bnum == zero)
+        return one;
+      if (bnum == one)
+        return anum;
+      n = make_bignum();
+      mp_init(&tmpa);
+      mp_set_intptr(&tmpa, a);
+      if (sizeof (int_ptr_t) <= sizeof (mp_digit)) {
+        mp_expt_d(&tmpa, b, mp(n));
+      } else {
+        mp_int tmpb;
+        mp_init(&tmpb);
+        mp_set_intptr(&tmpb, b);
+        mp_expt(&tmpa, &tmpb, mp(n));
+        mp_clear(&tmpb);
+      }
+      mp_clear(&tmpa);
+      return normalize(n);
+    }
+  case TAG_PAIR(TAG_NUM, TAG_PTR):
+    {
+      cnum a = c_num(anum);
+      mp_int tmpa;
+      val n;
+      type_check(bnum, BGNUM);
+      if (mp_cmp_z(mp(bnum)) == MP_LT)
+        uw_throw(error_s, lit("expt: negative exponent"));
+      n = make_bignum();
+      mp_init(&tmpa);
+      mp_set_intptr(&tmpa, a);
+      mp_expt(&tmpa, mp(bnum), mp(n));
+      mp_clear(&tmpa);
+      return normalize(n);
+    }
+  case TAG_PAIR(TAG_PTR, TAG_NUM):
+    {
+      cnum b = c_num(bnum);
+      val n;
+      type_check(anum, BGNUM);
+      if (b < 0)
+        uw_throw(error_s, lit("expt: negative exponent"));
+      if (bnum == zero)
+        return one;
+      if (bnum == one)
+        return anum;
+      n = make_bignum();
+      if (sizeof (int_ptr_t) <= sizeof (mp_digit)) {
+        mp_expt_d(mp(bnum), b, mp(n));
+      } else {
+        mp_int tmpb;
+        mp_init(&tmpb);
+        mp_set_intptr(&tmpb, b);
+        mp_expt(mp(anum), &tmpb, mp(n));
+        mp_clear(&tmpb);
+      }
+      return normalize(n);
+    }
+  case TAG_PAIR(TAG_PTR, TAG_PTR):
+    {
+      val n;
+      type_check(anum, BGNUM);
+      type_check(bnum, BGNUM);
+      if (mp_cmp_z(mp(bnum)) == MP_LT)
+        uw_throw(error_s, lit("expt: negative exponent"));
+      n = make_bignum();
+      mp_expt(mp(anum), mp(bnum), mp(n));
+      normalize(n);
+      return n;
+    }
+  }
+
+  uw_throwf(error_s, lit("expt: invalid operands ~s ~s"), anum, bnum, nao);
+  abort();
+}
+
 void arith_init(void)
 {
   mp_init(&NUM_MAX_MP);

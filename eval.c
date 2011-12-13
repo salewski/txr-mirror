@@ -1130,6 +1130,8 @@ void eval_init(void)
   reg_fun(intern(lit("mapcar"), user_package), func_n1v(mapcarv));
   reg_fun(intern(lit("mappend"), user_package), func_n1v(mappendv));
   reg_fun(apply_s, func_n2(apply_intrinsic));
+  reg_fun(intern(lit("reduce-left"), user_package), func_n4(reduce_left));
+  reg_fun(intern(lit("reduce-right"), user_package), func_n4(reduce_right));
 
   reg_fun(intern(lit("second"), user_package), func_n1(second));
   reg_fun(intern(lit("third"), user_package), func_n1(third));
@@ -1156,6 +1158,7 @@ void eval_init(void)
   reg_fun(intern(lit("*"), user_package), func_n0v(mulv));
   reg_fun(intern(lit("trunc"), user_package), func_n2(trunc));
   reg_fun(intern(lit("mod"), user_package), func_n2(mod));
+  reg_fun(intern(lit("expt"), user_package), func_n0v(exptv));
   reg_fun(intern(lit("fixnump"), user_package), func_n1(fixnump));
   reg_fun(intern(lit("bignump"), user_package), func_n1(bignump));
 

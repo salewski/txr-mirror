@@ -385,6 +385,8 @@ val max2(val anum, val bnum);
 val min2(val anum, val bnum);
 val maxv(val first, val rest);
 val minv(val first, val rest);
+val expt(val base, val exp);
+val exptv(val nlist);
 val string_own(wchar_t *str);
 val string(const wchar_t *str);
 val string_utf8(const char *str);
@@ -465,6 +467,7 @@ val funcall2(val fun, val arg1, val arg2);
 val funcall3(val fun, val arg1, val arg2, val arg3);
 val funcall4(val fun, val arg1, val arg2, val arg3, val arg4);
 val reduce_left(val fun, val list, val init, val key);
+val reduce_right(val fun, val list, val init, val key);
 /* The notation curry_12_2 means take some function f(arg1, arg2) and
    fix a value for argument 1 to create a g(arg2).
    Other variations follow by analogy. */
