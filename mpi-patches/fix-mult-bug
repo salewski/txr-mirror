@@ -1,7 +1,7 @@
 Index: mpi-1.8.6/mpi.c
 ===================================================================
 --- mpi-1.8.6.orig/mpi.c	2011-12-10 19:43:20.000000000 -0800
-+++ mpi-1.8.6/mpi.c	2011-12-12 14:31:12.000000000 -0800
++++ mpi-1.8.6/mpi.c	2011-12-12 21:55:28.000000000 -0800
 @@ -3255,7 +3255,7 @@
      unless absolutely necessary.
     */
@@ -29,3 +29,30 @@ Index: mpi-1.8.6/mpi.c
        *pt = ACCUM(w);
        k = CARRYOUT(w);
      }
+@@ -3562,7 +3562,7 @@
+     if(*pa1 == 0)
+       continue;
+ 
+-    w = DIGIT(&tmp, ix + ix) + (*pa1 * *pa1);
++    w = DIGIT(&tmp, ix + ix) + (*pa1 * (mp_word) *pa1);
+ 
+     pbt[ix + ix] = ACCUM(w);
+     k = CARRYOUT(w);
+@@ -3584,7 +3584,7 @@
+       pt = pbt + ix + jx;
+ 
+       /* Compute the multiplicative step */
+-      w = *pa1 * *pa2;
++      w = *pa1 * (mp_word) *pa2;
+ 
+       /* If w is more than half MP_WORD_MAX, the doubling will
+ 	 overflow, and we need to record a carry out into the next
+@@ -3628,7 +3628,7 @@
+      */
+     kx = 1;
+     while(k) {
+-      k = pbt[ix + jx + kx] + 1;
++      k = (mp_word) pbt[ix + jx + kx] + 1;
+       pbt[ix + jx + kx] = ACCUM(k);
+       k = CARRYOUT(k);
+       ++kx;
