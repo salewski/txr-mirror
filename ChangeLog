@@ -1,3 +1,12 @@
+2011-12-13  Kaz Kylheku  <kaz@kylheku.com>
+
+	Patch to shrink mpi-int to three words on 32 bit platforms,
+	so that obj_t stays four pointers wide.
+
+	* mpi-patches/series: New patch added.
+
+	* mpi-patches/shrink-mpi-int: New file.
+
 2011-12-12  Kaz Kylheku  <kaz@kylheku.com>
 
 	* mpi-patches/bit-search-optimizations (s_highest_bit): Added static
