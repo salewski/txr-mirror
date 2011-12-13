@@ -9,3 +9,4 @@ fix-mult-bug
 mpi-set-mpi-word
 mpi-set-double-intptr
 fix-bad-shifts
+bit-search-optimizations

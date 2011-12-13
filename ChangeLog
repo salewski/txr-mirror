@@ -1,5 +1,15 @@
 2011-12-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	Git rid of some some loops in MPI where it is searching for
+	the highest bit, replacing them with an adapation of the
+	bit searching function used in arith.c.
+
+	* mpi-patches/series: Patch added.
+
+	* mpi-patches/bit-search-optimizations: New file.
+
+2011-12-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (expt): New function.
 
 	* eval.c (eval_init): Registering new intrinsic functions,
