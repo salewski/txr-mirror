@@ -862,7 +862,7 @@ val expt(val anum, val bnum)
         return anum;
       n = make_bignum();
       if (sizeof (int_ptr_t) <= sizeof (mp_digit)) {
-        mp_expt_d(mp(bnum), b, mp(n));
+        mp_expt_d(mp(anum), b, mp(n));
       } else {
         mp_int tmpb;
         mp_init(&tmpb);
