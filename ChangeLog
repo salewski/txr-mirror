@@ -1,5 +1,9 @@
 2011-12-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (expt): Fix broken bignum x fixnum combination.
+
+2011-12-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	* Makefile (repatch): New phony target.
 	(distclean): Remove mpi directory.
 
