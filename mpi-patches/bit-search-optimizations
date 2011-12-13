@@ -1,0 +1,300 @@
+Index: mpi-1.8.6/mpi.c
+===================================================================
+--- mpi-1.8.6.orig/mpi.c	2011-12-12 21:08:44.000000000 -0800
++++ mpi-1.8.6/mpi.c	2011-12-12 21:34:32.000000000 -0800
+@@ -2908,6 +2908,218 @@
+ 
+ /* }}} */
+ 
++int s_highest_bit(mp_digit n)
++{
++#if MP_DIGIT_SIZE == 8
++  if (n & 0x7FFFFFFF00000000) {
++    if (n & 0x7FFF000000000000) {
++      if (n & 0x7F00000000000000) {
++        if (n & 0x7000000000000000) {
++          if (n & 0x4000000000000000)
++            return 63;
++          else
++            return (n & 0x2000000000000000) ? 62 : 61;
++        } else {
++          if (n & 0x0C00000000000000)
++            return (n & 0x0800000000000000) ? 60 : 59;
++          else
++            return (n & 0x0200000000000000) ? 58 : 57;
++        }
++      } else {
++        if (n & 0x00F0000000000000) {
++          if (n & 0x00C0000000000000)
++            return (n & 0x0080000000000000) ? 56 : 55;
++          else
++            return (n & 0x0020000000000000) ? 54 : 53;
++        } else {
++          if (n & 0x000C000000000000)
++            return (n & 0x0008000000000000) ? 52 : 51;
++          else
++            return (n & 0x0002000000000000) ? 50 : 49;
++        }
++      }
++    } else {
++      if (n & 0x0000FF0000000000) {
++        if (n & 0x0000F00000000000) {
++          if (n & 0x0000C00000000000)
++            return (n & 0x0000800000000000) ? 48 : 47;
++          else
++            return (n & 0x0000200000000000) ? 46 : 45;
++        } else {
++          if (n & 0x00000C0000000000)
++            return (n & 0x0000080000000000) ? 44 : 43;
++          else
++            return (n & 0x0000020000000000) ? 42 : 41;
++        }
++      } else {
++        if (n & 0x000000F000000000) {
++          if (n & 0x000000C000000000)
++            return (n & 0x0000008000000000) ? 40 : 39;
++          else
++            return (n & 0x0000002000000000) ? 38 : 37;
++        } else {
++          if (n & 0x0000000C00000000)
++            return (n & 0x0000000800000000) ? 36 : 35;
++          else
++            return (n & 0x0000000200000000) ? 34 : 33;
++        }
++      }
++    }
++  } else {
++    if (n & 0x00000000FFFF0000) {
++      if (n & 0x00000000FF000000) {
++        if (n & 0x00000000F0000000) {
++          if (n & 0x00000000C0000000)
++            return (n & 0x0000000080000000) ? 32 : 31;
++          else
++            return (n & 0x0000000020000000) ? 30 : 29;
++        } else {
++          if (n & 0x000000000C000000)
++            return (n & 0x0000000008000000) ? 28 : 27;
++          else
++            return (n & 0x0000000002000000) ? 26 : 25;
++        }
++      } else {
++        if (n & 0x0000000000F00000) {
++          if (n & 0x0000000000C00000)
++            return (n & 0x0000000000800000) ? 24 : 23;
++          else
++            return (n & 0x0000000000200000) ? 22 : 21;
++        } else {
++          if (n & 0x00000000000C0000)
++            return (n & 0x0000000000080000) ? 20 : 19;
++          else
++            return (n & 0x0000000000020000) ? 18 : 17;
++        }
++      }
++    } else {
++      if (n & 0x000000000000FF00) {
++        if (n & 0x000000000000F000) {
++          if (n & 0x000000000000C000)
++            return (n & 0x0000000000008000) ? 16 : 15;
++          else
++            return (n & 0x0000000000002000) ? 14 : 13;
++        } else {
++          if (n & 0x0000000000000C00)
++            return (n & 0x0000000000000800) ? 12 : 11;
++          else
++            return (n & 0x0000000000000200) ? 10 : 9;
++        }
++      } else {
++        if (n & 0x00000000000000F0) {
++          if (n & 0x00000000000000C0)
++            return (n & 0x0000000000000080) ? 8 : 7;
++          else
++            return (n & 0x0000000000000020) ? 6 : 5;
++        } else {
++          if (n & 0x000000000000000C)
++            return (n & 0x0000000000000008) ? 4 : 3;
++          else
++            return (n & 0x0000000000000002) ? 2 : (n ? 1 : 0);
++        }
++      }
++    }
++  }
++#elif MP_DIGIT_SIZE == 4
++  if (n & 0x7FFF0000) {
++    if (n & 0x7F000000) {
++      if (n & 0x70000000) {
++        if (n & 0x40000000)
++          return 31;
++        else
++          return (n & 0x20000000) ? 30 : 29;
++      } else {
++        if (n & 0x0C000000)
++          return (n & 0x08000000) ? 28 : 27;
++        else
++          return (n & 0x02000000) ? 26 : 25;
++      }
++    } else {
++      if (n & 0x00F00000) {
++        if (n & 0x00C00000)
++          return (n & 0x00800000) ? 24 : 23;
++        else
++          return (n & 0x00200000) ? 22 : 21;
++      } else {
++        if (n & 0x000C0000)
++          return (n & 0x00080000) ? 20 : 19;
++        else
++          return (n & 0x00020000) ? 18 : 17;
++      }
++    }
++  } else {
++    if (n & 0x0000FF00) {
++      if (n & 0x0000F000) {
++        if (n & 0x0000C000)
++          return (n & 0x00008000) ? 16 : 15;
++        else
++          return (n & 0x00002000) ? 14 : 13;
++      } else {
++        if (n & 0x00000C00)
++          return (n & 0x00000800) ? 12 : 11;
++        else
++          return (n & 0x00000200) ? 10 : 9;
++      }
++    } else {
++      if (n & 0x000000F0) {
++        if (n & 0x000000C0)
++          return (n & 0x00000080) ? 8 : 7;
++        else
++          return (n & 0x00000020) ? 6 : 5;
++      } else {
++        if (n & 0x0000000C)
++          return (n & 0x00000008) ? 4 : 3;
++        else
++          return (n & 0x00000002) ? 2 : (n ? 1 : 0);
++      }
++    }
++  }
++#elif MP_DIGIT_SIZE == 2
++  if (n & 0xFF00) {
++    if (n & 0xF000) {
++	if (n & 0xC000)
++	  return (n & 0x8000) ? 16 : 15;
++	else
++	  return (n & 0x2000) ? 14 : 13;
++    } else {
++	if (n & 0x0C00)
++	  return (n & 0x0800) ? 12 : 11;
++	else
++	  return (n & 0x0200) ? 10 : 9;
++    }
++  } else {
++    if (n & 0x00F0) {
++	if (n & 0x00C0)
++	  return (n & 0x0080) ? 8 : 7;
++	else
++	  return (n & 0x0020) ? 6 : 5;
++    } else {
++	if (n & 0x000C)
++	  return (n & 0x0008) ? 4 : 3;
++	else
++	  return (n & 0x0002) ? 2 : (n ? 1 : 0);
++    }
++  }
++#elif MP_DIGIT_SIZE == 1
++  if (n & 0xF0) {
++    if (n & 0xC0)
++	return (n & 0x80) ? 8 : 7;
++    else
++	return (n & 0x20) ? 6 : 5;
++  } else {
++    if (n & 0x0C)
++	return (n & 0x08) ? 4 : 3;
++    else
++	return (n & 0x02) ? 2 : (n ? 1 : 0);
++  }
++#else
++#error fixme: unsupported MP_DIGIT_SIZE
++#endif
++  /* notreached */
++  abort();
++}
++
++
+ /* {{{ s_mp_exch(a, b) */
+ 
+ /* Exchange the data for a and b; (b, a) = (a, b)                         */
+@@ -3185,10 +3397,9 @@
+   mp_digit  t, d = 0;
+ 
+   t = DIGIT(b, USED(b) - 1);
+-  while(t < (RADIX / 2)) {
+-    t <<= 1;
+-    ++d;
+-  }
++
++  d = MP_DIGIT_BIT - s_highest_bit(t);
++  t <<= d;
+     
+   if(d != 0) {
+     s_mp_mul_2d(a, d);
+@@ -3971,27 +4182,23 @@
+ 
+   d = DIGIT(v, uv - 1); /* most significant digit of v */
+ 
+-  while(d && ((d & 1) == 0)) {
+-    d >>= 1;
+-    ++extra;
+-  }
+-
+-  if(d == 1) {
+-    ix = uv - 2;
+-    dp = DIGITS(v) + ix;
++  /* quick test */
++  if ((d & (d - 1)) != 0)
++    return -1; /* not a power of two */
+ 
+-    while(ix >= 0) {
+-      if(*dp)
+-	return -1; /* not a power of two */
++  extra = s_highest_bit(d) - 1;
+ 
+-      --dp; --ix;
+-    }
++  ix = uv - 2;
++  dp = DIGITS(v) + ix;
+ 
+-    return ((uv - 1) * DIGIT_BIT) + extra;
+-  } 
++  while(ix >= 0) {
++    if(*dp)
++    return -1; /* not a power of two */
+ 
+-  return -1;
++    --dp; --ix;
++  }
+ 
++  return ((uv - 1) * DIGIT_BIT) + extra;
+ } /* end s_mp_ispow2() */
+ 
+ /* }}} */
+@@ -4000,17 +4207,12 @@
+ 
+ int      s_mp_ispow2d(mp_digit d)
+ {
+-  int   pow = 0;
+-
+-  while((d & 1) == 0) {
+-    ++pow; d >>= 1;
+-  }
+-
+-  if(d == 1)
+-    return pow;
+-
+-  return -1;
++  /* quick test */
++  if ((d & (d - 1)) != 0)
++    return -1; /* not a power of two */
+ 
++  /* If d == 0, s_highest_bit returns 0, thus we return -1. */
++  return s_highest_bit(d) - 1;
+ } /* end s_mp_ispow2d() */
+ 
+ /* }}} */
