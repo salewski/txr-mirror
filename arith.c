@@ -711,6 +711,36 @@ val zerop(val num)
   return nil;
 }
 
+val evenp(val num)
+{
+  switch (tag(num)) {
+  case TAG_NUM:
+    return (c_num(num) % 2 == 0) ? t : nil;
+  case TAG_PTR:
+    if (num->t.type == BGNUM)
+      return mp_iseven(mp(num)) ? t : nil;
+    /* fallthrough */
+  default:
+    uw_throwf(error_s, lit("evenp: ~s is not a number"), num, nao);
+    return nil;
+  }
+}
+
+val oddp(val num)
+{
+  switch (tag(num)) {
+  case TAG_NUM:
+    return (c_num(num) % 2 != 0) ? t : nil;
+  case TAG_PTR:
+    if (num->t.type == BGNUM)
+      return mp_isodd(mp(num)) ? t : nil;
+    /* fallthrough */
+  default:
+    uw_throwf(error_s, lit("oddp: ~s is not a number"), num, nao);
+    return nil;
+  }
+}
+
 val gt(val anum, val bnum)
 {
   int tag_a = tag(anum);

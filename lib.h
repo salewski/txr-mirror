@@ -375,6 +375,8 @@ val mulv(val nlist);
 val trunc(val anum, val bnum);
 val mod(val anum, val bnum);
 val zerop(val num);
+val evenp(val num);
+val oddp(val num);
 val gt(val anum, val bnum);
 val lt(val anum, val bnum);
 val ge(val anum, val bnum);
