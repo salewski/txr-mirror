@@ -647,13 +647,19 @@ static val op_dohash(val form, val env)
   val new_env = make_env(cons(keyvar, cons(valvar, nil)), nil, env);
   val cell;
 
+  uw_block_begin (nil, result);
+
   while ((cell = hash_next(&iter)) != nil) {
     *cdr_l(keyvar) = car(cell);
     *cdr_l(valvar) = cdr(cell);
     eval_progn(body, new_env, form);
   }
 
-  return eval(resform, new_env, form);
+  result = eval(resform, new_env, form);
+
+  uw_block_end;
+
+  return result;
 }
 
 static val op_unwind_protect(val form, val env)
