@@ -65,6 +65,9 @@ syn keyword txl_keyword contained list-vector assoc assq acons acons-new
 syn keyword txl_keyword contained aconsq-new alist-remove alist-nremove copy-cons
 syn keyword txl_keyword contained copy-alist merge sort find set-diff length
 
+syn match txr_hash "#" contained
+syn match txr_quote "[,']" contained
+
 syn match txr_atat "@[ \t]*@"
 syn match txr_comment "@[ \t]*#.*"
 syn match txr_contin "@[ \t]*\\$"
@@ -81,11 +84,11 @@ syn match txr_num "[+-]\?[0-9]\+" contained
 
 syn region txr_bracevar matchgroup=Delimiter start="@[ \t]*[*]\?{" matchgroup=Delimiter end="}" contains=txr_num,txr_ident,xr_string,txr_list,txr_regex,txr_quasilit,txr_chr
 
-syn region txr_directive matchgroup=Delimiter start="@[ \t]*(" matchgroup=Delimiter end=")" contains=txr_keyword,txr_string,txr_list,txr_meta,txr_quasilit,txr_num,txr_ident,txr_regex,txr_string,txr_variable,txr_chr
+syn region txr_directive matchgroup=Delimiter start="@[ \t]*(" matchgroup=Delimiter end=")" contains=txr_keyword,txr_string,txr_list,txr_meta,txr_quasilit,txr_num,txr_ident,txr_regex,txr_string,txr_variable,txr_chr,txr_hash
 
-syn region txr_list contained matchgroup=Delimiter start="(" matchgroup=Delimiter end=")" contains=txl_keyword,txr_string,txr_regex,txr_num,txr_ident,txr_variable,txr_meta,txr_list,txr_quasilit,txr_chr
+syn region txr_list contained matchgroup=Delimiter start="(" matchgroup=Delimiter end=")" contains=txl_keyword,txr_string,txr_regex,txr_num,txr_ident,txr_variable,txr_meta,txr_list,txr_quasilit,txr_chr,txr_hash,txr_quote
 
-syn region txr_meta contained matchgroup=Delimiter start="@[ \t]*(" matchgroup=Delimiter end=")" contains=txl_keyword,txr_string,txr_list,txr_regex,txr_num,txr_ident,txr_variable,txr_quasilit,txr_chrb
+syn region txr_meta contained matchgroup=Delimiter start="@[ \t]*(" matchgroup=Delimiter end=")" contains=txl_keyword,txr_string,txr_list,txr_regex,txr_num,txr_ident,txr_variable,txr_quasilit,txr_chrb,txr_hash,txr_quote
 
 syn region txr_string contained oneline start=+"+ skip=+\\\\\|\\"+ end=+"+
 syn region txr_quasilit contained oneline start=+`+ skip=+\\\\\|\\`+ end=+`+ contains=txr_directive,txr_variable,txr_bracevar
@@ -108,5 +111,7 @@ hi def link txr_variable Identifier
 hi def link txr_bracevar Identifier
 hi def link txr_ident Identifier
 hi def link txr_num Number
+hi def link txr_hash String
+hi def link txr_quote String
 
 let b:current_syntax = "lisp"
