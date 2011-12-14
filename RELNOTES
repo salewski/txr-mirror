@@ -1,3 +1,25 @@
+                                    TXR 048
+                                   2012-12-13
+
+
+  Features
+
+  - New functions: expt, exptmod, sqrt, numberp, evenp, oddp, abs, gcd
+    reduce-left, reduce-right.
+
+  - Replaced horribly slow square root in MPI with a less horribly slow one.
+
+  Bugs
+
+  - Fixed numerous instances, in the MPI library, of coding broken
+    for mpi_digit wider than 16 bits, leading to incorrect results and
+    crashes.
+
+  - Fixed mpi_int for 32 bit platforms so that obj_t stays 4 pointers wide.
+    (The sign becomes a 1 bit wide bitfield).
+
+
+
                                     TXR 047
                                    2012-12-12
 

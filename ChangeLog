@@ -1,5 +1,17 @@
 2011-12-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 048
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES: Updated.
+
+2011-12-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (exptmod, gcd): New functions.
 
 	* eval.c (eval_init): New functions registered as intrisics.
