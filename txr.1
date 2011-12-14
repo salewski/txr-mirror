@@ -4687,14 +4687,23 @@ Currently, these forms are recognized as places:
 
   (gethash <hash> <key> <default-value>)
 
+  (vecref <vector> <index>)
+
 A <symbol> place denotes a variable. If the variable does not exist, it is an
-error. The (car <form>) and (cdr <form>) places denote the corresponding slots
+error. 
+
+The (car <form>) and (cdr <form>) places denote the corresponding slots
 of a cons cell. The <cons> form must be an expression which evaluates to a
-cons. The gethash place denotes a value stored in a hash table.
+cons. 
+
+The gethash place denotes a value stored in a hash table.
 The form <hash> must evaluate to a hash table. If the place does not exist
 in the hash table under the given key, then the destructive operation
 will create it. In that case, the <default-value> form is evaluated to
 determine the initial value of the place. Otherwise it is ignored.
+
+The vecref place denotes a vector element, allowing vector elements
+to be treated as assignment places.
 
 .SS Operators for and for*
 
@@ -4737,11 +4746,153 @@ allowing the return operator to be used to terminate at any point.
 
 .SS Operator dohash
 
+.TP
+Syntax:
+
+(dohash (<key-var> <value-var> <hash-form> [<result-form>])
+  <body-form>*)
+
+.TP
+Description:
+
+The dohash operator iterates over a hash table. The <hash-form> expression must
+evaluate to an object of hash table type. The <key-var> and <value-var>
+arguents must be symbols suitable for use as variable names.
+Bindings are established for these variables over the scope of the
+<body-form>-s and the optional result form.
+
+For each element in the hash table, the <key-var> and <value-var>
+variables are set to the key and value of that entry, respectively,
+and each <body-form>, if there are any, is evaluated.
+
+When all of the entries of the table are thus processed, the <result-form> is
+evaluated, and its return value becomes the return value of the dohash form. If
+there is no <result-form>, the return value is nil.
+
+The <result-form> and <body-form>-s are in the scope of an implicit anonymous
+block, which means that it is possible to terminate the execution of
+dohash early using (return) or (return <value>).
+
 .SS Operator unwind-protect
+
+.TP
+Syntax:
+
+(unwind-protect <protected-form> <cleanup-form>*)
+
+.TP
+Description:
+
+The unwind-protect operator evaluates <protected-form> in such a way that no
+matter how the execution of <protected-form> terminates, the <cleanup-form>-s
+will be executed.
+
+The cleanup forms, however, are not protected. If a cleanup form terminates via
+some non-local jump, the subsequent cleanup forms are not evaluated.
+
+Cleanup forms themselves can "hijack" a non-local control transfer such
+as an exception. If a cleanup form is evaluated during the processing of
+a dynamic control transfer such as an exception, and that cleanup form
+initiats its own dynamic control transfer, the original control transfer
+is aborted and replaced with the new one.
+
+.TP
+Example:
+
+ (block foo
+   (unwind-protect
+     (progn (return-from foo 42)
+            (format t "not reached!\en"))
+     (format t "cleanup!\n")))
+
+In this example, the protected progn form terminates by returning from
+block foo. Therefore the form does not complete and so the
+output "not reached!" is not produced. However, the cleanup form
+excecutes, producing the output "cleanup!".
+
 
 .SS Operator block
 
+.TP
+Syntax:
+
+(block <name> <body-form>*}
+
+.TP
+Description:
+
+The block operator introduces a named block around the execution of
+some forms. The <name> argument must be a symbol. Since a block name is not
+a variable binding, keyword symbols are permitted, and so are the symbols
+t and nil.   A block named by the symbol nil is slighlty special: it is
+understood to be an anonymous block.
+
+Blocks in TXR Lisp have dynamic scope. This means that the following
+situation is allowed:
+
+  (defun func () (return-from foo 42))
+  (block foo (func))
+
+The function can return from the foo block even though the foo block
+does not lexically surround foo.
+
+Thus blocks in TXR Lisp provide dynamic non-local returns, as well
+as returns out of lexical nesting.
+
+.TP
+Dialect Note:
+
+In Common Lisp, blocks are lexical. A separate mechanism consisting of
+catch and throw operators performs non-local transfer based on symbols.
+The TXR Lisp example:
+
+  (defun func () (return-from foo 42))
+  (block foo (func))
+
+is not allowed in Common Lisp, but can be transliterated to:
+
+  (defun func () (throw 'foo 42))
+  (catch 'foo (func))
+
+Note that foo is quoted in CL. This underscores the dynamic nature of
+the construct. THROW itself is a function and not an operator.
+
 .SS Operators return, return-from
+
+.TP
+Syntax:
+
+(return [<value>])
+
+(return-from <name> [<value>])
+
+.TP
+Description:
+
+The return operator must be dynamically enclosed within an anonymous
+block (a block named by the symbol nil). It immediately terminates the
+evaluation of the innermost anonyous block which encloses it, causing
+it to return the specified value. If the value is omitted, the anonymous
+block returns nil.
+
+The return-from operator must be dynamically enclosed within a named block
+whose name matches the <name> argument. It immediately terminates the
+evaluation of the innermost such block, causing it to return the specified
+value. If the value is omitted, that block returns nil.
+
+.TP
+Example:
+
+  (block foo
+    (let ((a "abc\n")
+          (b "def\n"))
+      (pprint a *stdout*)
+      (return-from foo 42)
+      (pprint b *stdout*)))
+
+Here, the output produced is "abc". The value of b is not printed
+because the return-from terminates block foo, and so the second pprint
+form is not evaluated.
 
 .SS Lisp Functions and Variables
 
@@ -4797,7 +4948,7 @@ The following are Lisp functions and variables built-in to TXR.
 
 .SS Functions reverse, nreverse
 
-.SS Function ldfiff
+.SS Function ldiff
 
 .SS Function flatten
 
