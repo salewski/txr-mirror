@@ -183,8 +183,7 @@ val car(val cons)
     if (cons->lc.func == nil) {
       return cons->lc.car;
     } else {
-      if (!funcall1(cons->lc.func, cons))
-        return nil;
+      funcall1(cons->lc.func, cons);
       return cons->lc.car;
     }
   default:
@@ -203,8 +202,7 @@ val cdr(val cons)
     if (cons->lc.func == nil) {
       return cons->lc.cdr;
     } else {
-      if (!funcall1(cons->lc.func, cons))
-        return nil;
+      funcall1(cons->lc.func, cons);
       return cons->lc.cdr;
     }
   default:

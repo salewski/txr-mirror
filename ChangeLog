@@ -1,5 +1,14 @@
 2011-12-14  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (car, cdr): Semantics fix for lazy conses.
+	Ignore the return value of the lazy cons function: do not
+	return nil if the function returns nil.
+	This useless behavior was a source of inconvenience in lazy
+	cons programming, requiring the lazy function to return
+	non-nil in addition to installing the car and cdr fields.
+
+2011-12-14  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (abso): broken for fixnums.
 
 2011-12-14  Kaz Kylheku  <kaz@kylheku.com>
