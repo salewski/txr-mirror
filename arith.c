@@ -324,8 +324,32 @@ val plus(val anum, val bnum)
       mp_add(mp(anum), mp(bnum), mp(n));
       return normalize(n);
     }
+  case TAG_PAIR(TAG_CHR, TAG_NUM):
+    {
+      wchar_t a = c_chr(anum);
+      cnum b = c_num(bnum);
+      cnum sum = a + b;
+
+      if (sum < 0 || sum > 0x10FFFF)
+        goto char_range;
+      return chr(sum);
+    }
+  case TAG_PAIR(TAG_NUM, TAG_CHR):
+    {
+      cnum a = c_chr(anum);
+      wchar_t b = c_num(bnum);
+      cnum sum = a + b;
+
+      if (sum < 0 || sum > 0x10FFFF)
+        goto char_range;
+      return chr(sum);
+    }
   }
   uw_throwf(error_s, lit("plus: invalid operands ~s ~s"), anum, bnum, nao);
+char_range:
+  uw_throwf(numeric_error_s, 
+            lit("plus: sum of ~s ~s is out of character range"),
+            anum, bnum, nao);
   abort();
 }
 
@@ -396,6 +420,18 @@ val minus(val anum, val bnum)
       n = make_bignum();
       mp_sub(mp(anum), mp(bnum), mp(n));
       return normalize(n);
+    }
+  case TAG_PAIR(TAG_CHR, TAG_NUM):
+    {
+      wchar_t a = c_chr(anum);
+      cnum b = c_num(bnum);
+      cnum sum = a - b;
+
+      if (sum < 0 || sum > 0x10FFFF)
+        uw_throwf(numeric_error_s, 
+                  lit("minus: sum of ~s ~s is out of character range"),
+                  anum, bnum, nao);
+      return chr(sum);
     }
   }
   uw_throwf(error_s, lit("minus: invalid operands ~s ~s"), anum, bnum, nao);
@@ -748,11 +784,16 @@ val gt(val anum, val bnum)
 
   switch (TAG_PAIR(tag_a, tag_b)) {
   case TAG_PAIR(TAG_NUM, TAG_NUM):
+  case TAG_PAIR(TAG_CHR, TAG_CHR):
+  case TAG_PAIR(TAG_NUM, TAG_CHR):
+  case TAG_PAIR(TAG_CHR, TAG_NUM):
     return c_num(anum) > c_num(bnum) ? t : nil;
   case TAG_PAIR(TAG_NUM, TAG_PTR):
+  case TAG_PAIR(TAG_CHR, TAG_PTR):
     type_check(bnum, BGNUM);
     return mp_cmp_z(mp(bnum)) == MP_LT ? t : nil;
   case TAG_PAIR(TAG_PTR, TAG_NUM):
+  case TAG_PAIR(TAG_PTR, TAG_CHR):
     type_check(anum, BGNUM);
     return mp_cmp_z(mp(anum)) == MP_GT ? t : nil;
   case TAG_PAIR(TAG_PTR, TAG_PTR):
@@ -771,11 +812,16 @@ val lt(val anum, val bnum)
 
   switch (TAG_PAIR(tag_a, tag_b)) {
   case TAG_PAIR(TAG_NUM, TAG_NUM):
+  case TAG_PAIR(TAG_CHR, TAG_CHR):
+  case TAG_PAIR(TAG_NUM, TAG_CHR):
+  case TAG_PAIR(TAG_CHR, TAG_NUM):
     return c_num(anum) < c_num(bnum) ? t : nil;
   case TAG_PAIR(TAG_NUM, TAG_PTR):
+  case TAG_PAIR(TAG_CHR, TAG_PTR):
     type_check(bnum, BGNUM);
     return mp_cmp_z(mp(bnum)) == MP_GT ? t : nil;
   case TAG_PAIR(TAG_PTR, TAG_NUM):
+  case TAG_PAIR(TAG_PTR, TAG_CHR):
     type_check(anum, BGNUM);
     return mp_cmp_z(mp(anum)) == MP_LT ? t : nil;
   case TAG_PAIR(TAG_PTR, TAG_PTR):
@@ -794,11 +840,16 @@ val ge(val anum, val bnum)
 
   switch (TAG_PAIR(tag_a, tag_b)) {
   case TAG_PAIR(TAG_NUM, TAG_NUM):
+  case TAG_PAIR(TAG_CHR, TAG_CHR):
+  case TAG_PAIR(TAG_NUM, TAG_CHR):
+  case TAG_PAIR(TAG_CHR, TAG_NUM):
     return c_num(anum) >= c_num(bnum) ? t : nil;
   case TAG_PAIR(TAG_NUM, TAG_PTR):
+  case TAG_PAIR(TAG_CHR, TAG_PTR):
     type_check(bnum, BGNUM);
     return mp_cmp_z(mp(bnum)) == MP_LT ? t : nil;
   case TAG_PAIR(TAG_PTR, TAG_NUM):
+  case TAG_PAIR(TAG_PTR, TAG_CHR):
     type_check(anum, BGNUM);
     return mp_cmp_z(mp(anum)) == MP_GT ? t : nil;
   case TAG_PAIR(TAG_PTR, TAG_PTR):
@@ -822,11 +873,16 @@ val le(val anum, val bnum)
 
   switch (TAG_PAIR(tag_a, tag_b)) {
   case TAG_PAIR(TAG_NUM, TAG_NUM):
+  case TAG_PAIR(TAG_CHR, TAG_CHR):
+  case TAG_PAIR(TAG_NUM, TAG_CHR):
+  case TAG_PAIR(TAG_CHR, TAG_NUM):
     return c_num(anum) <= c_num(bnum) ? t : nil;
   case TAG_PAIR(TAG_NUM, TAG_PTR):
+  case TAG_PAIR(TAG_CHR, TAG_PTR):
     type_check(bnum, BGNUM);
     return mp_cmp_z(mp(bnum)) == MP_GT ? t : nil;
   case TAG_PAIR(TAG_PTR, TAG_NUM):
+  case TAG_PAIR(TAG_PTR, TAG_CHR):
     type_check(anum, BGNUM);
     return mp_cmp_z(mp(anum)) == MP_LT ? t : nil;
   case TAG_PAIR(TAG_PTR, TAG_PTR):

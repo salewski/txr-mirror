@@ -1265,6 +1265,8 @@ void eval_init(void)
   reg_fun(intern(lit("chr-isxdigit"), user_package), func_n1(chr_isxdigit));
   reg_fun(intern(lit("chr-toupper"), user_package), func_n1(chr_toupper));
   reg_fun(intern(lit("chr-tolower"), user_package), func_n1(chr_tolower));
+  reg_fun(intern(lit("num-chr"), user_package), func_n1(num_chr));
+  reg_fun(intern(lit("chr-num"), user_package), func_n1(chr_num));
   reg_fun(intern(lit("chr-str"), user_package), func_n2(chr_str));
   reg_fun(intern(lit("chr-str-set"), user_package), func_n3(chr_str_set));
   reg_fun(intern(lit("span-str"), user_package), func_n2(span_str));

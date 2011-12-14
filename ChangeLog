@@ -1,3 +1,15 @@
+2011-12-14  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c (plus, minus, gt, lt, ge, le): Handle character operands.
+
+	* eval.c (eval_init): New functions interned.
+
+	* lib.c (num_chr, chr_num): New functions.
+
+	* lib.h (num_chr, chr_num): Declared.
+
+	* txr.1: Documentation stubs.
+
 2011-12-13  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 048

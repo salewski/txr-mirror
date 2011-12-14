@@ -1488,6 +1488,20 @@ val chr_tolower(val ch)
   return chr(towlower(c_chr(ch)));
 }
 
+val num_chr(val ch)
+{
+  return num_fast(c_chr(ch));
+}
+
+val chr_num(val num)
+{
+  cnum n = c_num(num);
+  if (n < 0 || n > 0x10FFFF)
+    uw_throwf(numeric_error_s,
+              lit("chr-num: ~s is out of character range"), num, nao);
+  return chr(n);
+}
+
 val chr_str(val str, val index)
 {
   bug_unless (length_str_gt(str, index));
