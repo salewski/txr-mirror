@@ -1,5 +1,9 @@
 2011-12-14  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (minus): Allow difference between characters.
+
+2011-12-14  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (plus, minus, gt, lt, ge, le): Handle character operands.
 
 	* eval.c (eval_init): New functions interned.

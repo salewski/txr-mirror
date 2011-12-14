@@ -360,6 +360,7 @@ val minus(val anum, val bnum)
 
   switch (TAG_PAIR(tag_a, tag_b)) {
   case TAG_PAIR(TAG_NUM, TAG_NUM): 
+  case TAG_PAIR(TAG_CHR, TAG_CHR): 
     {
       cnum a = c_num(anum);
       cnum b = c_num(bnum);
