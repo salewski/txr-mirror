@@ -9,18 +9,21 @@
 Content-type: text/html
 @(skip 15)
 <H1>txr</H1>
-@/.*Updated:/ @YEAR-@MONTH-@DAY<BR><A HREF="#index">Index</A>
+@(skip)Updated: @YEAR-@MONTH-@DAY<BR><A HREF="#index">Index</A>
 @(collect)
 @PREAMBLE
 @(until)
-txr - text extractor @/.*/
+txr - text extractor @(skip)
 @(end)
+@(all)
 txr - text extractor @VERSION
-@(collect)
+@  (and)
+@  (collect)
 @BODY
-@(until)
+@  (until)
 <HR>
 <A NAME="index">&nbsp;</A><H2>Index</H2>
+@  (end)
 @(end)
 <HR>
 @(collect)
