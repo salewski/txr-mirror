@@ -459,7 +459,7 @@ val abso(val anum)
     return n;
   } else {
     cnum n = c_num(anum);
-    return num(n < 0 ? n : n);
+    return num(n < 0 ? -n : n);
   }
 }
 
