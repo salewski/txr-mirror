@@ -84,7 +84,7 @@ static val normalize(val bignum)
   }
 }
 
-int highest_bit(int_ptr_t n)
+static int highest_bit(int_ptr_t n)
 {
 #if SIZEOF_PTR == 8
   if (n & 0x7FFFFFFF00000000) {
@@ -411,6 +411,18 @@ val neg(val anum)
   } else {
     cnum n = c_num(anum);
     return num(-n);
+  }
+}
+
+val abso(val anum)
+{
+  if (bignump(anum)) {
+    val n = make_bignum();
+    mp_abs(mp(anum), mp(n));
+    return n;
+  } else {
+    cnum n = c_num(anum);
+    return num(n < 0 ? n : n);
   }
 }
 
@@ -888,6 +900,36 @@ val expt(val anum, val bnum)
 
   uw_throwf(error_s, lit("expt: invalid operands ~s ~s"), anum, bnum, nao);
   abort();
+}
+
+static int_ptr_t isqrt_fixnum(int_ptr_t a)
+{
+  int_ptr_t mask = (int_ptr_t) 1 << (highest_bit(a) / 2);
+  int_ptr_t root = 0;
+
+  for (; mask != 0; mask >>= 1) {
+    int_ptr_t next_guess = root | mask;
+    if (next_guess * next_guess <= a)
+      root = next_guess;
+  }
+
+  return root;
+}
+
+val isqrt(val anum)
+{
+  if (fixnump(anum)) {
+    cnum a = c_num(anum);
+    if (a < 0)
+      uw_throw(error_s, lit("sqrt: negative operand"));
+    return num_fast(isqrt_fixnum(c_num(anum)));
+  } else if (bignump(anum)) {
+    val n = make_bignum();
+    if (mp_sqrt(mp(anum), mp(n)) != MP_OKAY)
+      uw_throw(error_s, lit("sqrt: negative operand"));
+    return normalize(n);
+  }
+  uw_throwf(error_s, lit("sqrt: invalid operand ~s"), anum, nao);
 }
 
 void arith_init(void)

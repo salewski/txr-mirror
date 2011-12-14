@@ -832,6 +832,20 @@ val bignump(val num)
   return (is_ptr(num) && type(num) == BGNUM) ? t : nil;
 }
 
+val numberp(val num)
+{
+  switch (tag(num)) {
+  case TAG_NUM:
+    return t;
+  case TAG_PTR:
+    if (num->t.type == BGNUM)
+      return t;
+    /* fallthrough */
+  default:
+    return nil;
+  }
+}
+
 val plusv(val nlist)
 {
   if (!nlist)

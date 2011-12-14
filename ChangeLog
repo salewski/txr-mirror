@@ -1,5 +1,23 @@
 2011-12-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (highest_bit): Linkage changed to static.
+	(abso, isqrt): New functions.
+	(isqrt_fixnum): New static function.
+
+	* eval.c (eval_init): Registered abs, sqrt and numberp instrinsics.
+
+	* lib.c (numberp): New function.
+
+	* lib.h (numberp, abso, isqrt): Declared.
+
+	* mpi-patches/series: New patch added.
+
+	* mpi-patches/faster-square-root: New patch added.
+
+	* txr.1: Documentation stubs for new functions.
+
+2011-12-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (expt): Fix broken bignum x fixnum combination.
 
 2011-12-13  Kaz Kylheku  <kaz@kylheku.com>
