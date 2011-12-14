@@ -1,5 +1,9 @@
 2011-12-14  Kaz Kylheku  <kaz@kylheku.com>
 
+	* genman.txr: Fix empty NAME section.
+
+2011-12-14  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (minus): Allow difference between characters.
 
 2011-12-14  Kaz Kylheku  <kaz@kylheku.com>
