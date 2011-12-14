@@ -433,6 +433,8 @@ val chr_isupper(val ch);
 val chr_isxdigit(val ch);
 val chr_toupper(val ch);
 val chr_tolower(val ch);
+val num_chr(val ch);
+val chr_num(val num);
 val chr_str(val str, val index);
 val chr_str_set(val str, val index, val chr);
 val span_str(val str, val set);
