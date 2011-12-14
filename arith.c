@@ -932,6 +932,34 @@ val expt(val anum, val bnum)
   abort();
 }
 
+val exptmod(val base, val exp, val mod)
+{
+  val n;
+
+  if (!numberp(base) || !numberp(exp) || !numberp(mod))
+    goto inval;
+
+  if (fixnump(base))
+    base = bignum(c_num(base));
+
+  if (fixnump(exp))
+    exp = bignum(c_num(exp));
+
+  if (fixnump(mod))
+    mod = bignum(c_num(mod));
+
+  n = make_bignum();
+
+  if (mp_exptmod(mp(base), mp(exp), mp(mod), mp(n)) != MP_OKAY)
+    goto inval;
+
+  return n;
+inval:
+  uw_throwf(error_s, lit("exptmod: invalid operands ~s ~s ~s"),
+            base, exp, mod, nao);
+  abort();
+}
+
 static int_ptr_t isqrt_fixnum(int_ptr_t a)
 {
   int_ptr_t mask = (int_ptr_t) 1 << (highest_bit(a) / 2);
@@ -960,6 +988,31 @@ val isqrt(val anum)
     return normalize(n);
   }
   uw_throwf(error_s, lit("sqrt: invalid operand ~s"), anum, nao);
+}
+
+val gcd(val anum, val bnum)
+{
+  val n;
+
+  if (!numberp(anum) || !numberp(bnum))
+    goto inval;
+
+  if (fixnump(anum))
+    anum = bignum(c_num(anum));
+
+  if (fixnump(bnum))
+    bnum = bignum(c_num(bnum));
+
+  n = make_bignum();
+
+  if (mp_gcd(mp(anum), mp(bnum), mp(n)) != MP_OKAY)
+    goto inval;
+
+  return n;
+inval:
+  uw_throwf(error_s, lit("gcd: invalid operands ~s ~s ~s"),
+            anum, bnum, nao);
+  abort();
 }
 
 void arith_init(void)
