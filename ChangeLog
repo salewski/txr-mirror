@@ -1,5 +1,14 @@
 2011-12-14  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (car, cdr): Set the lazy cons function to nil
+	after calling it.
+	(rplacd): Do not set the lazy cons function to nil
+	in.
+
+	* txr.1: Documented a bunch of functions.
+
+2011-12-14  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Removed registration for vec_get_fil.
 	Renamed vec_set_fill to vec-set-length.
 

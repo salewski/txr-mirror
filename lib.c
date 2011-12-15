@@ -184,6 +184,7 @@ val car(val cons)
       return cons->lc.car;
     } else {
       funcall1(cons->lc.func, cons);
+      cons->lc.func = nil;
       return cons->lc.car;
     }
   default:
@@ -203,6 +204,7 @@ val cdr(val cons)
       return cons->lc.cdr;
     } else {
       funcall1(cons->lc.func, cons);
+      cons->lc.func = nil;
       return cons->lc.cdr;
     }
   default:
@@ -229,7 +231,6 @@ val rplacd(val cons, val new_cdr)
   case CONS:
     return cons->c.cdr = new_cdr;
   case LCONS:
-    cons->lc.func = nil;
     return cons->lc.cdr = new_cdr;
   default:
     type_mismatch(lit("~s is not a cons"), cons, nao);

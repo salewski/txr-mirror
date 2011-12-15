@@ -4908,17 +4908,217 @@ The following are Lisp functions and variables built-in to TXR.
 
 .SS Function identity
 
+.TP
+Syntax:
+
+(identity <value>)
+
+.TP
+Description:
+
+The identity function returns its argument.
+
+
 .SS Function typeof
+
+.TP
+Syntax:
+
+(typeof <value>)
+
+.TP
+Description
+
+The typeof function returns a symbol representing the type of the value.
+
+.RS
+
+The core types are identified by the following symbols.
+.IP cons
+
+A cons cell.
+
+.IP str
+
+String.
+
+.IP lit
+
+A literal string embedded in the TXR executable image.
+
+.IP chr
+
+Character.
+
+.IP fixnum
+
+Fixnum integer. An integer that fits into the value word, not having to
+be heap allocated.
+
+.IP sym
+
+Symbol.
+
+.IP pkg
+
+Symbol package.
+
+.IP fun
+
+Function.
+
+.IP vec
+
+Vector.
+
+.IP lcons
+
+Lazy cons.
+
+.IP lstr
+
+Lazy string.
+
+.IP env
+
+Function/variable binding environment.
+
+.IP bignum
+
+A bignum integer: arbitrary precision integer that is heap-allocated.
+
+.PP
+There are additional kinds of objects, such as streams.
 
 .SS Function cons
 
+.TP
+Syntax:
+
+(cons <car-value> <cdr-value>)
+
+.TP
+
+Description:
+
+The cons function allocates, intializes and returns a single cons cell.
+A cons has two fields called "car" and "cdr", which are accessed by
+functions of the same name, or by the functions "first" and "rest",
+which are alternative spellings.
+
+Lists are made up of conses. A (proper) list is either the symbol nil
+denoting an empty list, or a cons cell which holds the first item of
+the list in its "car", and the list of the remaining items in "cdr".
+(cons 1 nil) allocates a one element list denoted (1). The "cdr"
+is nil, so there are no additional items.
+
+A cons cell with a "cdr" other than nil is printed with the dotted
+pair notation. For example (cons 1 2) yields (1 . 2). 
+The notation (1 . nil) is valid as input into the machine,
+but is printed as (1). 
+
+A list terminated by an atom other than nil is called an improper
+list, and the dot notation is extended to cover improper lists.
+For instance (1 2 . 3) is an improper list of two elements,
+terminated by 3, and can be constructed using (cons 1 (cons 2 3)).
+Another notation for this list is (1 . (2 . 3))
+The list (1 2) is (1 . (2 . nil)).
+
 .SS Functions car and first
+
+.TP
+Syntax:
+
+(car <cons-or-nil>)
+(first <cons-or-nil>)
+
+.TP
+Description:
+
+The functions car and first are synonyms. They retrieve the "car"
+field of a cons cell. (car (cons 1 2)) yields 1.
+
+For programming convenience, (car nil) is allowed, and returns nil,
+even though nil isn't a cons and doesn't have a "car" field.
 
 .SS Functions cdr and rest
 
+.TP
+Syntax:
+
+(cdr <cons-or-nil>)
+(rest <cons-or-nil>)
+
+.TP
+Description:
+
+The functions cdr and rest are synonyms. They retrieve the "cdr"
+field of a cons cell. (cdr (cons 1 2)) yields 2.
+
+For programming convenience, (cdr nil) is allowed, and returns nil,
+even though nil isn't a cons and doesn't have a "cdr" field.
+
+.TP
+Example:
+
+Walk every element of the list (1 2 3):
+
+  (for ((i '(1 2 3))) (i) ((set i (cdr i)))
+    (print (car i) *stdout*)
+    (print #\newline *stdout*))
+
+The variable i marches over the cons cells which make up the "backbone"
+of the list. The elements are retrieved using the car function.
+Advancing to the next cell is achieved using (cdr i). If i is the
+last cell in a (proper) list, (cdr i) yields nil. The guard
+expression i fails and the loop terminates.
+
 .SS Functions rplaca and rplacd
 
+.TP
+Syntax:
+
+(rplaca <cons> <new-car-value>)
+(rplacd <cons> <new-cdr-value>)
+
+.TP
+Description:
+
+The rplaca and rplacd functions assign new values into the "car"
+and "cdr" fields of a cons cell.  Note that (rplaca x y)
+is the same as the more generic (set (car x) y), and likewise
+(rplacd x y) can be written as (set (cdr x) y).
+
+It is an error if <cons> is not a cons or lazy cons. In particular,
+whereas (car nil) is correct, (rplaca nil ...) is erroneous.
+
 .SS Functions second, third, fourth, fifth and sixth
+
+.TP
+Syntax:
+
+(first <list>)
+(second <list>)
+(third <list>)
+(fourth <list>)
+(fifth <list>)
+(sixth <list>)
+
+.TP
+Description:
+
+These functions access the elements of a proper list by position.
+
+If the list is shorter than implied, these functions return nil.
+
+.TP
+Examples:
+
+  (third '(1 2)) -> nil
+
+  (second '(1 2)) -> 2
+
+  (third '(1 2 . 3)) -> **error**
 
 .SS Function append
 
