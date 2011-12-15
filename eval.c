@@ -1280,8 +1280,7 @@ void eval_init(void)
   reg_fun(intern(lit("break-str"), user_package), func_n2(break_str));
 
   reg_fun(intern(lit("vector"), user_package), func_n1(vector));
-  reg_fun(intern(lit("vec-get-fill"), user_package), func_n1(vec_get_fill));
-  reg_fun(intern(lit("vec-set-fill"), user_package), func_n2(vec_set_fill));
+  reg_fun(intern(lit("vec-set-length"), user_package), func_n2(vec_set_length));
   reg_fun(vecref_s, func_n2(vecref));
   reg_fun(intern(lit("vec-push"), user_package), func_n2(vec_push));
   reg_fun(intern(lit("length-vec"), user_package), func_n1(length_vec));

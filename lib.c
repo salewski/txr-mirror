@@ -578,11 +578,11 @@ val equal(val left, val right)
     return nil;
   case VEC:
     if (type(right) == VEC) {
-      cnum i, fill;
-      if (!equal(left->v.vec[vec_fill], right->v.vec[vec_fill]))
+      cnum i, length;
+      if (!equal(left->v.vec[vec_length], right->v.vec[vec_length]))
         return nil;
-      fill = c_num(left->v.vec[vec_fill]);
-      for (i = 0; i < fill; i++) {
+      length = c_num(left->v.vec[vec_length]);
+      for (i = 0; i < length; i++) {
         if (!equal(left->v.vec[i], right->v.vec[i]))
           return nil;
       }
@@ -2279,9 +2279,10 @@ val orf(val first_fun, ...)
   return func_f1(out, do_or);
 }
 
-val vector(val alloc)
+val vector(val length)
 {
-  cnum alloc_plus = c_num(alloc) + 2;
+  int i;
+  cnum alloc_plus = c_num(length) + 2;
   val vec = make_obj();
   val *v = (val *) chk_malloc(alloc_plus * sizeof *v);
 #ifdef HAVE_VALGRIND
@@ -2290,30 +2291,26 @@ val vector(val alloc)
   v += 2;
   vec->v.type = VEC;
   vec->v.vec = v;
-  v[vec_alloc] = alloc;
-  v[vec_fill] = zero;
+  v[vec_alloc] = length;
+  v[vec_length] = length;
+  for (i = 0; i < alloc_plus - 2; i++)
+    vec->v.vec[i] = nil;
   return vec;
 }
 
-val vec_get_fill(val vec)
-{
-  type_check(vec, VEC);
-  return vec->v.vec[vec_fill];
-}
-
-val vec_set_fill(val vec, val fill)
+val vec_set_length(val vec, val length)
 {
   type_check(vec, VEC);
 
   {
-    cnum new_fill = c_num(fill);
-    cnum old_fill = c_num(vec->v.vec[vec_fill]);
+    cnum new_length = c_num(length);
+    cnum old_length = c_num(vec->v.vec[vec_length]);
     cnum old_alloc = c_num(vec->v.vec[vec_alloc]);
-    cnum fill_delta = new_fill - old_fill;
-    cnum alloc_delta = new_fill - old_alloc;
+    cnum length_delta = new_length - old_length;
+    cnum alloc_delta = new_length - old_alloc;
 
     if (alloc_delta > 0) {
-      cnum new_alloc = max(new_fill, 2*old_alloc);
+      cnum new_alloc = max(new_length, 2*old_alloc);
       val *newvec = (val *) chk_realloc((mem_t *) (vec->v.vec - 2),
                                         (new_alloc + 2) * sizeof *newvec);
       vec->v.vec = newvec + 2;
@@ -2323,13 +2320,13 @@ val vec_set_fill(val vec, val fill)
 #endif
     }
 
-    if (fill_delta > 0) {
+    if (length_delta > 0) {
       cnum i;
-      for (i = old_fill; i < new_fill; i++)
+      for (i = old_length; i < new_length; i++)
         vec->v.vec[i] = nil;
     }
 
-    vec->v.vec[vec_fill] = fill;
+    vec->v.vec[vec_length] = length;
   }
 
   return vec;
@@ -2338,29 +2335,29 @@ val vec_set_fill(val vec, val fill)
 val vecref(val vec, val ind)
 {
   type_check(vec, VEC);
-  range_bug_unless (c_num(ind) < c_num(vec->v.vec[vec_fill]));
+  range_bug_unless (c_num(ind) < c_num(vec->v.vec[vec_length]));
   return vec->v.vec[c_num(ind)];
 }
 
 val *vecref_l(val vec, val ind)
 {
   type_check(vec, VEC);
-  range_bug_unless (c_num(ind) < c_num(vec->v.vec[vec_fill]));
+  range_bug_unless (c_num(ind) < c_num(vec->v.vec[vec_length]));
   return vec->v.vec + c_num(ind);
 }
 
 val vec_push(val vec, val item)
 {
-  val fill = vec_get_fill(vec);
-  vec_set_fill(vec, plus(fill, one));
-  *vecref_l(vec, fill) = item;
-  return fill;
+  val length = length_vec(vec);
+  vec_set_length(vec, plus(length, one));
+  *vecref_l(vec, length) = item;
+  return length;
 }
 
 val length_vec(val vec)
 {
   type_check(vec, VEC);
-  return vec->v.vec[vec_fill];
+  return vec->v.vec[vec_length];
 }
 
 val size_vec(val vec)
@@ -2371,7 +2368,7 @@ val size_vec(val vec)
 
 val vector_list(val list)
 {
-  val vec = vector(num(2));
+  val vec = vector(0);
  
   if (!listp(list))
     uw_throwf(error_s, lit("vector_list: list expected, not ~s"), list, nao);
@@ -2389,7 +2386,7 @@ val list_vector(val vec)
 
   type_check(vec, VEC);
 
-  len = c_num(vec->v.vec[vec_fill]);
+  len = c_num(vec->v.vec[vec_length]);
 
   for (i = 0; i < len; i++)
     list_collect(ptail, vec->v.vec[i]);
@@ -3236,11 +3233,11 @@ val obj_print(val obj, val out)
     return obj;
   case VEC:
     {
-      cnum i, fill = c_num(obj->v.vec[vec_fill]);
+      cnum i, length = c_num(obj->v.vec[vec_length]);
       put_string(out, lit("#("));
-      for (i = 0; i < fill; i++) {
+      for (i = 0; i < length; i++) {
         obj_print(obj->v.vec[i], out);
-        if (i < fill - 1)
+        if (i < length - 1)
           put_char(out, chr(' '));
       }
       put_char(out, chr(')'));
@@ -3324,11 +3321,11 @@ val obj_pprint(val obj, val out)
     return obj;
   case VEC:
     {
-      cnum i, fill = c_num(obj->v.vec[vec_fill]);
+      cnum i, length = c_num(obj->v.vec[vec_length]);
       put_string(out, lit("#("));
-      for (i = 0; i < fill; i++) {
+      for (i = 0; i < length; i++) {
         obj_pprint(obj->v.vec[i], out);
-        if (i < fill - 1)
+        if (i < length - 1)
           put_char(out, chr(' '));
       }
       put_char(out, chr(')'));

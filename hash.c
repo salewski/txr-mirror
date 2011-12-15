@@ -117,9 +117,9 @@ static cnum equal_hash(val obj)
     return ((cnum) obj->f.f.interp_fun + equal_hash(obj->f.env)) & NUM_MAX;
   case VEC:
     {
-      val fill = obj->v.vec[vec_fill];
-      cnum i, h = equal_hash(obj->v.vec[vec_fill]);
-      cnum len = c_num(fill);
+      val length = obj->v.vec[vec_length];
+      cnum i, h = equal_hash(obj->v.vec[vec_length]);
+      cnum len = c_num(length);
 
       for (i = 0; i < len; i++)
         h = (h + equal_hash(obj->v.vec[i])) & NUM_MAX;
@@ -228,8 +228,6 @@ static void hash_grow(struct hash *h)
 
   bug_unless (new_modulus > h->modulus);
 
-  vec_set_fill(new_table, num(new_modulus));
-
   for (i = 0; i < h->modulus; i++) {
     val conses = *vecref_l(h->table, num(i));
 
@@ -255,8 +253,6 @@ val make_hash(val weak_keys, val weak_vals, val equal_based)
   val mod = num(256);
   val table = vector(mod);
   val hash = cobj((mem_t *) h, hash_s, &hash_ops);
-
-  vec_set_fill(table, mod);
 
   h->flags = (hash_flags_t) flags;
   h->modulus = c_num(mod);
