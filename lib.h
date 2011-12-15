@@ -118,7 +118,7 @@ struct func {
   } f;
 };
 
-enum vecindex { vec_alloc = -2, vec_fill = -1 };
+enum vecindex { vec_alloc = -2, vec_length = -1 };
 
 struct vec {
   type_t type;
@@ -491,9 +491,8 @@ val chain(val first_fun, ...);
 val andf(val first_fun, ...);
 val orf(val first_fun, ...);
 val swap_12_21(val fun);
-val vector(val alloc);
-val vec_get_fill(val vec);
-val vec_set_fill(val vec, val fill);
+val vector(val length);
+val vec_set_length(val vec, val fill);
 val vecref(val vec, val ind);
 val *vecref_l(val vec, val ind);
 val vec_push(val vec, val item);

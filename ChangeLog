@@ -1,5 +1,30 @@
 2011-12-14  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Removed registration for vec_get_fil.
+	Renamed vec_set_fill to vec-set-length.
+
+	* hash.c (equal_hash): vec_fill to vec_length name change.
+	(hash_grow, make_hash): No need to call vec_set_length.
+
+	* lib.c (equal, vecref, vec_push, length_vec, list_vector,
+	obj_print, obj_pprint): vec_fill to vec_length name change.
+	(vector): Argument now represents actual length, not just allocated
+	size.
+	(vec_get_fill): Function removed; did exactly the same thing
+	as length_vec.
+	(vec_set_fill): Function renamed to vec_set_length.
+	(vector_list): Allocate a 0 length vector initially.
+
+	* lib.h (enum vecindex): member changes name from vec_fill
+	to vec_length.
+	(vector): Parameter name changed.
+	(vec_set_fill): Redeclared.
+	(vec_get_fill): Declaration removed.
+
+	* txr.1: Doc stubs updated.
+
+2011-12-14  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (car, cdr): Semantics fix for lazy conses.
 	Ignore the return value of the lazy cons function: do not
 	return nil if the function returns nil.
