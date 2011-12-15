@@ -1128,6 +1128,7 @@ void eval_init(void)
 
   reg_fun(intern(lit("atom"), user_package), func_n1(atom));
   reg_fun(intern(lit("null"), user_package), func_n1(nullp));
+  reg_fun(intern(lit("not"), user_package), func_n1(nullp));
   reg_fun(intern(lit("consp"), user_package), func_n1(consp));
   reg_fun(intern(lit("listp"), user_package), func_n1(listp));
   reg_fun(intern(lit("proper-listp"), user_package), func_n1(proper_listp));

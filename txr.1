@@ -5138,25 +5138,335 @@ Examples:
 
 .SS Function append
 
+.TP
+Syntax:
+
+(append [<list>* <cdr>])
+
+.TP
+Description:
+
+The append function creates a new list which is a catenation of the
+list arguments. All arguments are optional, such that (append) produces
+the empty list.
+
+If a single argument is specified, then append simply returns the value of that
+argument. It may be any kind of object.
+
+If N arguments are specified, where N > 1, then the first N-1 arguments must be
+proper lists. Copies of these lists are catenated together. The last argument,
+argument N, may be any kind of object. It is installed into the cdr field of
+the last cons cell of the resulting list.  Thus, if argument N is also a list, it
+is catenated onto the resulting list, but without being copied. Argument N may
+be an atom other than nil; in that case append produces an improper list.
+
+.TP
+Examples:
+
+;; An atom is returned.
+(append 3) -> 3
+
+;; A list is also just returned: no copying takes place.
+;; The eq function can verify that the same object emerges
+;; from append that went in.
+(let ((list '(1 2 3))) 
+  (eq (append list) list)) -> t
+
+(append '(1 2 3) '(4 5 6) 7) -> '(1 2 3 4 5 6 . 7))
+
+;; the (4 5 6) tail of the resulting list is the original
+;; (4 5 6) object, shared with that list.
+
+(append '(1 2 3) '(4 5 6)) -> '(1 2 3 4 5 6)
+
+(append nil) -> nil
+
+;; (1 2 3) is copied: it is not the last argument
+(append '(1 2 3) nil) -> (1 2 3)
+
+;; empty lists disappear
+(append nil '(1 2 3) nil '(4 5 6)) -> (1 2 3 4 5 6)
+(append nil nil nil) -> nil
+
+;; atoms and improper lists other than in the last position
+;; are erroneous
+(append '(a . b) 3 '(1 2 3)) -> **error**
+
 .SS Function list
+
+.TP
+Syntax:
+
+(list <value>*)
+
+.TP
+Description:
+
+The list function creates a new list, whose elements are the
+argument values.
+
+.TP
+Examples:
+
+(list) -> nil
+(list 1) -> (1)
+(list 'a 'b) -> (a b)
 
 .SS Function atom
 
+.TP
+Syntax:
+(atom <value>)
+
+.TP
+Description:
+
+The atom function tests whether a value is an atom. It returns t if this is the
+case, nil otherwise.  All values which are not cons cells are atoms.
+
+(atom x) is equivalent to (not (consp x)).
+
+.TP
+Examples:
+
+(atom 3) -> t
+(atom (cons 1 2)) -> nil
+(atom "abc") -> t
+(atom '(3)) -> nil
+
+.SS Functions null and not
+
+.TP
+Syntax:
+(null <value>)
+(not <value>)
+
+.TP
+Description:
+
+The null and not functions are synonyms.  They tests whether a value is the
+object nil. They returns t if this is the case, nil otherwise.
+
+.TP
+Examples:
+
+(null '()) -> t
+(null nil) -> t
+(null ()) -> t
+
+(if (null x) (format t "x is nil!"))
+
+(let ((list '(b c d)))
+  (if (not (memq 'a list))
+    (format t "list ~s does not contain the symbol a\en")))
+
 .SS Function consp
+
+.TP
+Syntax:
+(consp <value>)
+
+.TP
+Description:
+
+The atom function tests whether a value is a cons. It returns t if this is the
+case, nil otherwise.
+
+(consp x) is equivalent to (not (atom x)).
+
+Non-empty lists test positive under consp because a list is represented
+as a reference to the first cons in a chain of one or more conses.
+
+.TP
+Examples:
+
+(consp 3) -> nil
+(consp (cons 1 2)) -> t
+(consp "abc") -> nil
+(consp '(3)) -> t
+
 
 .SS Function make_lazy_cons
 
-.SS Function lcons_fun
+.TP
+Syntax:
+
+(make-lazy-cons <function>)
+
+.TP
+Description:
+
+The function make-lazy-cons makes a special kind of cons cell called a lazy
+cons, or lcons.  Lazy conses are useful for implementing lazy lists.
+
+Lazy lists are lists which are not allocated all at once. Rather,
+their elements materialize when they are accessed, like
+magic stepping stones appearing under one's feet out of thin air.
+
+A lazy cons has "car" and "cdr" fields like a regular cons, and those
+fields are initialized to nil when the lazy cons is created. A lazy cons also
+has an update function, the one which is provided as an argument to
+make-lazy-cons.
+
+When either the car and cdr fields of a cons are accessed for the first time,
+the function is automatically invoked first. That function has the opportunity
+to initialize the car and cdr fields. Once the function is called, it is removed
+from the lazy cons: the lazy cons no longer has an update function.
+
+To continue a lazy list, the function can make another call to make-lazy-cons
+and install the resulting cons as the cdr of the lazy cons.
+
+.TP
+Example:
+
+;;; lazy list of integers between min and max
+(defun integer-range (min max)
+  (let ((counter min))
+    ;; min is greater than max; just return empty list,
+    ;; otherwise return a lazy list
+    (if (> min max)
+      nil
+      (make-lazy-cons (lambda (lcons)
+                        ;; install next number into car
+                        (rplaca lcons counter)
+                        ;; now deal wit cdr field
+                        (cond
+                           ;; max reached, terminate list with nil!
+                          ((eql counter max) 
+                           (rplacd lcons nil))
+                          ;; max not reached: increment counter
+                          ;; and extend with another lazy cons
+                          (t
+                           (inc counter)
+                           (rplacd lcons (make-lazy-cons 
+                                          (lcons-fun lcons))))))))))
+
+.SS Function lcons-fun
+
+.TP
+Syntax:
+
+(lcons-fun <lazy-cons>)
+
+.TP
+Description:
+
+The lcons-fun function retrieves the update function of a lazy cons.
+Once a lazy cons has been accessed, it no longer has an update function
+and lcons-fun returns nil.  While the update function of a lazy cons is
+executing, it is still accessible. This allows the update function
+to retrieve a reference to itself and propagate itself into
+another lazy cons (as in the example under make-lazy-cons).
 
 .SS Functions listp and proper-listp
 
+.TP
+Syntax:
+
+(listp <value>)
+(proper-listp <value>)
+
+.TP
+Description:
+
+The listp and proper-listp functions test, respectively, whether
+the specified value is a list, or a proper list, and return
+t or nil accordingly.
+
+The listp test is weaker, and executes without having to traverse
+the object. (listp x) is equivalent to (or (null x) (consp x)).
+The empty list is a list, and a cons cell is a list.
+
+The proper-listp function returns t only for proper lists.  A proper list is
+either nil, or a cons whose cdr is a proper list. proper-listp traverses the
+list, and its execution will not terminate if the list is circular.
+
 .SS Function length-list
 
-.SS Function mapcar
+.TP
+Syntax:
 
-.SS Function mappend
+(length-list <list>)
+
+.TP
+The length-list function returns the length of a proper or improper
+list. The length of a list is the number of conses in that list.
+
+.SS Functions mapcar and mappend
+
+.TP
+Syntax:
+
+(mapcar <function> <list> <list>*)
+(mappend <function> <list> <list>*)
+
+.TP
+When given three arguments, the mapcar function processes applies a function to
+the elements of a list and returns a list of the resulting values.
+Essentially, the list is filtered through the function.
+
+When additional lists are given as arguments, this filtering behavior is
+generalized in the following way: mapcar traverses the lists in parallel,
+taking a value from each list as an argument to the function. If there
+are two lists, the function is called with two arguments and so forth.
+The process is limited by the length of the shortest list.
+The return values of the function are collected into a new list which is
+returned.
+
+The mappend function works like mapcar, with the following difference.
+Rather than accumulating the values returned by the function into a list,
+mappend expects the items returned by the function to be lists which
+are catenated with append, and the resulting list is returned.
+That is to say, (mappend f a b c) is equivalent to
+(apply (fun append) (mapcar f a b c)). 
+
+
+.TP
+Examples:
+
+;; multiply every element by two
+(mapcar (lambda (item) (* 2 item)) '(1 2 3)) -> (4 6 8)
+
+;; "zipper" two lists together
+(mapcar (lambda (le ri) (list le ri)) '(1 2 3) '(a b c)) '((1 a) (2 b) (3 c)))
+
+;; like append, mappend allows a lone atom or a trailing atom:
+(mappend (fun identity) 3) -> (3)
+(mappend (fun identity) '((1) 2)) -> (1 . 2)
+
+;; take just the even numbers
+(mappend (lambda (item) (if (evenp x) (list x))) '(1 2 3 4 5))
+-> (2 4)
+
 
 .SS Function apply
+
+.TP
+Syntax:
+
+(apply <function> <arglist>)
+
+.TP
+Description:
+
+The apply function treats a list of values as individual arguments that
+are passed to the specified function, which is called, and its return
+value becomes the return value of apply.
+
+.TP
+Examples:
+
+;; '(1 2 3) becomes arguments to list, thus (list 1 2 3).
+(apply (fun list) '(1 2 3)) -> (1 2 3)
+
+.TP
+Dialect note:
+
+TXR Lisp apply does not take additional arguments before the list. 
+In Common Lisp we can write (apply #'list 1 2 (list 3 4 5)) which
+yields (1 2 3 4 5). In TXR Lisp, this usage can be simulated using
+(apply (fun list) (list 1 2 (list 3 4 5))) or
+(apply (fun list) '(,1 ,2 ,*(list 3 4 5))) .
 
 .SS Functions reduce-left and reduce-right
 

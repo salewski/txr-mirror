@@ -319,14 +319,14 @@ val push(val value, val *plist)
 
 val copy_list(val list)
 {
-  list_collect_decl (out, tail);
+  list_collect_decl (out, ptail);
 
   while (consp(list)) {
-    list_collect(tail, car(list));
+    list_collect(ptail, car(list));
     list = cdr(list);
   }
 
-  list_collect_terminate(tail, list);
+  list_collect_append(ptail, list);
 
   return out;
 }
@@ -359,14 +359,11 @@ val reverse(val in)
 
 val append2(val list1, val list2)
 {
-  list_collect_decl (out, tail);
+  list_collect_decl (out, ptail);
 
-  while (list1) {
-    list_collect(tail, car(list1));
-    list1 = cdr(list1);
-  }
+  list_collect_append (ptail, list1);
+  list_collect_append (ptail, list2);
 
-  list_collect_terminate(tail, list2);
   return out;
 }
 
@@ -376,14 +373,9 @@ val appendv(val lists)
 
   for (; lists; lists = cdr(lists)) {
     val item = car(lists);
-    if (consp(item)) {
-      list_collect_append(ptail, car(lists));
-    } else {
-      if (cdr(lists))
-        uw_throwf(error_s, lit("append: ~s is not a list"), item, nao);
-      list_collect_terminate(ptail, item);
-      return out;
-    }
+    if (listp(*ptail))
+      uw_throwf(error_s, lit("append: ~s is not a list"), *ptail, nao);
+    list_collect_append(ptail, item);
   }
 
   return out;
@@ -391,16 +383,12 @@ val appendv(val lists)
 
 val nappend2(val list1, val list2)
 {
-  val temp, iter;
+  list_collect_decl (out, ptail);
 
-  if (list1 == nil)
-    return list2;
+  list_collect_nconc (ptail, list1);
+  list_collect_nconc (ptail, list2);
 
-  for (iter = list1; (temp = cdr(iter)) != nil; iter = temp)
-    ; /* empty */
-
-  *cdr_l(iter) = list2;
-  return list1;
+  return out;
 }
 
 val ldiff(val list1, val list2)
