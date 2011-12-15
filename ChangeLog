@@ -1,5 +1,17 @@
 2011-12-14  Kaz Kylheku  <kaz@kylheku.com>
 
+	@# comments are becoming obsolescent. @# comments
+	can now be used. Within nested forms,
+	Lisp-compatible ; comments are suported.
+
+	* parser.l: Support @# and ; comments.
+
+	* txr.1: Documentation updated.
+
+	* txr.vim: Updated.
+
+2011-12-14  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (car, cdr): Set the lazy cons function to nil
 	after calling it.
 	(rplacd): Do not set the lazy cons function to nil
