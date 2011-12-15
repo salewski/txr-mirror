@@ -1,3 +1,31 @@
+2011-12-15  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): not added as synonym for null.
+
+	* lib.c (copy_list): Use list_collect_append rather than
+	list_collect_terminate.
+	(append2, appendv): Simplified using new list_collect_append.
+	(nappend2): Simplified using new list_collect_nconc.
+
+	* lib.h (list_collect): Added check for accidental usage
+	of list_collect after list_append, since PTAIL has different
+	semantics.
+	(list_collect_nconc, list_collect_append):  Semantics fixed so that
+	append collecting works more like the Common Lisp append function,
+	allowing trailing atoms or a lone atom. The meaning of PTAIL is
+	changed, however.  Now PTAIL actually tracks the head of the most
+	recently appended segment. Each append operation has to first
+	traverse the previously added piece to get to the end.
+
+	(list_collect_terminate): Macro removed.
+
+	* match.c (v_gather): Removed useless use of list_collect_terminate.
+
+	* parser.y: Some headers added that are needed by list_collect.
+
+	* txr.1: Documented append, list, atom, null, not, consp, make-lazy-cons,
+	lcons-fun, listp, proper-listp, length-list,  mapcar, mappend, and apply.
+
 2011-12-14  Kaz Kylheku  <kaz@kylheku.com>
 
 	@# comments are becoming obsolescent. @# comments

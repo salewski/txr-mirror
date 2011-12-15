@@ -570,28 +570,28 @@ INLINE val eq(val a, val b) { return ((a) == (b) ? t : nil); }
 
 #define list_collect(PTAIL, OBJ)                \
   do {                                          \
+    if (*PTAIL)                                 \
+      internal_error("mixed collect style");    \
     *PTAIL = cons(OBJ, nil);                    \
     PTAIL = cdr_l(*PTAIL);                      \
   } while(0)
 
 #define list_collect_nconc(PTAIL, OBJ)          \
   do {                                          \
-    obj_t *o_b_j = (OBJ);                       \
-    *PTAIL = o_b_j;                             \
-    if (o_b_j)                                  \
-      PTAIL = tail(o_b_j);                      \
+    if (*PTAIL) {                               \
+      PTAIL = tail(*PTAIL);                     \
+    }                                           \
+    *PTAIL = OBJ;                               \
   } while (0)
 
 #define list_collect_append(PTAIL, OBJ)         \
   do {                                          \
-    obj_t *o_b_j = copy_list(OBJ);              \
-    *PTAIL = o_b_j;                             \
-    if (o_b_j)                                  \
-      PTAIL = tail(o_b_j);                      \
+    if (*PTAIL) {                               \
+      *PTAIL = copy_list(*PTAIL);               \
+      PTAIL = tail(*PTAIL);                     \
+    }                                           \
+    *PTAIL = OBJ;                               \
   } while (0)
-
-#define list_collect_terminate(PTAIL, OBJ)      \
-  do *PTAIL = (OBJ); while(0)
 
 #define cons_bind(CAR, CDR, CONS)               \
   obj_t *c_o_n_s ## CAR ## CDR = CONS;          \

@@ -31,9 +31,11 @@
 #include <limits.h>
 #include <dirent.h>
 #include <stdlib.h>
+#include <setjmp.h>
 #include <wchar.h>
 #include "config.h"
 #include "lib.h"
+#include "unwind.h"
 #include "regex.h"
 #include "utf8.h"
 #include "match.h"

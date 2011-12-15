@@ -2221,7 +2221,6 @@ static val v_gather(match_files_ctx *c)
       }
     }
 
-    list_collect_terminate (ptail, nil);
     specs = new_specs;
 
     if (consp(max_data)) {
