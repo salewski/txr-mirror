@@ -439,6 +439,9 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                                   return TEXT;
                                 }
 
+<SPECIAL,NESTED>[;].*   {
+                          /* comment */
+                        }
 <SPECIAL,NESTED>{UANYN} {
                           yyerrprepf(lit("bad character in directive: '~a'"),
                                      string_utf8(yytext), nao);
@@ -536,14 +539,14 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                   yy_push_state(SPECIAL);
                 }
 
-<INITIAL>^@#.*\n        {
+<INITIAL>^@[#;].*\n     {
                           /* eat whole line comment */
                           lineno++;
                         }
 
-<INITIAL>@#.*   {
-                   /* comment to end of line */
-                }
+<INITIAL>@[#;].*        {
+                          /* comment to end of line */
+                        }
 
 <STRLIT>\"      {
                   yy_pop_state();

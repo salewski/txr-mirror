@@ -69,7 +69,7 @@ syn match txr_hash "#" contained
 syn match txr_quote "[,']" contained
 
 syn match txr_atat "@[ \t]*@"
-syn match txr_comment "@[ \t]*#.*"
+syn match txr_comment "@[ \t]*[#;].*"
 syn match txr_contin "@[ \t]*\\$"
 syn match txr_hashbang "^#!.*"
 syn match txr_char "@[ \t]*\\."
@@ -78,17 +78,18 @@ syn match txr_char "@[ \t]*\\[0-9]\+"
 syn match txr_variable "@[ \t]*[*]\?[A-Za-z_][A-Za-z0-9_]*"
 syn match txr_chr "#\\x[A-Fa-f0-9]\+"
 syn match txr_chr "#\\[a-zA-Z_][a-zA-Z0-9_]*"
+syn match txr_ncomment ";.*" contained
 
 syn match txr_ident "[a-zA-Z0-9!$%&*+\-<=>?\\^_~]\+" contained
 syn match txr_num "[+-]\?[0-9]\+" contained
 
 syn region txr_bracevar matchgroup=Delimiter start="@[ \t]*[*]\?{" matchgroup=Delimiter end="}" contains=txr_num,txr_ident,xr_string,txr_list,txr_regex,txr_quasilit,txr_chr
 
-syn region txr_directive matchgroup=Delimiter start="@[ \t]*(" matchgroup=Delimiter end=")" contains=txr_keyword,txr_string,txr_list,txr_meta,txr_quasilit,txr_num,txr_ident,txr_regex,txr_string,txr_variable,txr_chr,txr_hash
+syn region txr_directive matchgroup=Delimiter start="@[ \t]*(" matchgroup=Delimiter end=")" contains=txr_keyword,txr_string,txr_list,txr_meta,txr_quasilit,txr_num,txr_ident,txr_regex,txr_string,txr_variable,txr_chr,txr_hash,txr_ncomment
 
-syn region txr_list contained matchgroup=Delimiter start="(" matchgroup=Delimiter end=")" contains=txl_keyword,txr_string,txr_regex,txr_num,txr_ident,txr_variable,txr_meta,txr_list,txr_quasilit,txr_chr,txr_hash,txr_quote
+syn region txr_list contained matchgroup=Delimiter start="(" matchgroup=Delimiter end=")" contains=txl_keyword,txr_string,txr_regex,txr_num,txr_ident,txr_variable,txr_meta,txr_list,txr_quasilit,txr_chr,txr_hash,txr_quote,txr_ncomment
 
-syn region txr_meta contained matchgroup=Delimiter start="@[ \t]*(" matchgroup=Delimiter end=")" contains=txl_keyword,txr_string,txr_list,txr_regex,txr_num,txr_ident,txr_variable,txr_quasilit,txr_chrb,txr_hash,txr_quote
+syn region txr_meta contained matchgroup=Delimiter start="@[ \t]*(" matchgroup=Delimiter end=")" contains=txl_keyword,txr_string,txr_list,txr_regex,txr_num,txr_ident,txr_variable,txr_quasilit,txr_chrb,txr_hash,txr_quote,txr_ncomment
 
 syn region txr_string contained oneline start=+"+ skip=+\\\\\|\\"+ end=+"+
 syn region txr_quasilit contained oneline start=+`+ skip=+\\\\\|\\`+ end=+`+ contains=txr_directive,txr_variable,txr_bracevar
@@ -97,6 +98,7 @@ syn region txr_regdir oneline start=+@[ \t]*/+ skip=+\\\\\|\\/+ end=+/+
 
 hi def link txr_atat String
 hi def link txr_comment Comment
+hi def link txr_ncomment Comment
 hi def link txr_hashbang Comment
 hi def link txr_contin Comment
 hi def link txr_char String

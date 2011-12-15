@@ -170,9 +170,9 @@ Example:
   a=1
   b=2
 
-The @# comment syntax can be used for better formatting:
+The @; comment syntax can be used for better formatting:
 
-  txr -c "@#
+  txr -c "@;
   @a
   @b"
 
@@ -258,15 +258,15 @@ or more @(output) directive directed to standard output.
 
 .SS Comments
 
-A query may contain comments which are delimited by the sequence @# and
-extend to the end of the line. No whitespace can occur between the @ and #.
+A query may contain comments which are delimited by the sequence @; and
+extend to the end of the line. No whitespace can occur between the @ and ;.
 A comment which begins on a line swallows that entire line, as well as the
 newline which terminates it. In essence, the entire comment disappears.
 If the comment follows some material in a line, then it does not consume
 the newline. Thus, the following two queries are equivalent:
 
- 1.  @a@# comment: match whole line against variable @a
-     @# this comment disappears entirely
+ 1.  @a@; comment: match whole line against variable @a
+     @; this comment disappears entirely
      @b
 
  2.  @a
@@ -276,6 +276,10 @@ The comment after the @a does not consume the newline, but the
 comment which follows does. Without this intuitive behavior,
 line comment would give rise to empty lines that must match empty
 lines in the data, leading to spurious mismatches.
+
+Instead of the ; character, the # character can be used. This is
+an obsolescent feature.
+
 
 .SS Hash Bang Support
 
@@ -1061,6 +1065,18 @@ There is no \e@ escape.
 
 A number is made up of digits 0 through 9, optionally preceded by a + or -
 sign.
+
+.SS Comments
+
+Comments of the form @; were already covered. Inside directives,
+comments are introduced just by a ; character.
+
+Example:
+
+  @(foo  ; this is a comment
+    bar) ; this is another comment 
+
+This is equivalent to @(foo bar).
 
 .SS Directives-driven Syntax
 
