@@ -1,5 +1,10 @@
 2011-12-15  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (appendv): bugfix: wrong way test.
+	(vector_list): Wrong zero used, resulting in vector(nil) being called.
+
+2011-12-15  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): not added as synonym for null.
 
 	* lib.c (copy_list): Use list_collect_append rather than
