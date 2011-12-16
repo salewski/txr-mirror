@@ -373,7 +373,7 @@ val appendv(val lists)
 
   for (; lists; lists = cdr(lists)) {
     val item = car(lists);
-    if (listp(*ptail))
+    if (!listp(*ptail))
       uw_throwf(error_s, lit("append: ~s is not a list"), *ptail, nao);
     list_collect_append(ptail, item);
   }
@@ -2357,7 +2357,7 @@ val size_vec(val vec)
 
 val vector_list(val list)
 {
-  val vec = vector(0);
+  val vec = vector(zero);
  
   if (!listp(list))
     uw_throwf(error_s, lit("vector_list: list expected, not ~s"), list, nao);
