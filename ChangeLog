@@ -1,3 +1,7 @@
+2011-12-16  Kaz Kylheku  <kaz@kylheku.com>
+
+	* txr.vim: iskeyword updated.
+
 2011-12-15  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (appendv): bugfix: wrong way test.

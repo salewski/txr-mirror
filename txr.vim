@@ -1,6 +1,5 @@
 " VIM Syntax file for txr
 " Kaz Kylheku <kaz@kylheku.com>
-" 2011-11-01
 
 " INSTALL-HOWTO:
 "
@@ -16,7 +15,7 @@
 syn case match
 syn spell toplevel
 
-setlocal iskeyword=a-z,+,-,*,<,>,=
+setlocal iskeyword=a-z,A-Z,48-57,!,$,&,*,+,-,<,=,>,?,\\,_,~,^
 
 syn keyword txr_keyword contained skip trailer freeform block accept fail
 syn keyword txr_keyword contained next some all none and or
