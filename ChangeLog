@@ -1,5 +1,10 @@
 2011-12-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (expand_vars): Bugfix: use expand_forms rather than
+	expand on a list of forms.
+
+2011-12-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.vim: iskeyword updated.
 
 2011-12-15  Kaz Kylheku  <kaz@kylheku.com>
