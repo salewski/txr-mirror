@@ -848,7 +848,7 @@ static val expand_vars(val vars)
   } else {
     cons_bind (var, init, car(vars));
     val rest_vars = rest(vars);
-    val init_ex = expand(init);
+    val init_ex = expand_forms(init);
     val rest_vars_ex = expand_vars(rest_vars);
 
     if (init == init_ex && rest_vars == rest_vars_ex)
