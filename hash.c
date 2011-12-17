@@ -100,17 +100,17 @@ static cnum equal_hash(val obj)
   case STR:
     return hash_c_str(obj->st.str);
   case CHR:
-    return c_chr(obj) + NUM_MAX / 2;
+    return c_chr(obj);
   case NUM:
-    return c_num(obj) & NUM_MAX;
+    return c_num(obj);
   case SYM:
   case PKG:
   case ENV:
     switch (sizeof (mem_t *)) {
     case 4:
-      return (((cnum) obj) & NUM_MAX) >> 4;
+      return ((cnum) obj) >> 4;
     case 8: default:
-      return (((cnum) obj) & NUM_MAX) >> 5;
+      return ((cnum) obj) >> 5;
     }
     break;
   case FUN:
@@ -142,14 +142,32 @@ static cnum equal_hash(val obj)
 
 static cnum eql_hash(val obj)
 {
-  if (bignump(obj))
-    return mp_hash(mp(obj));
-  switch (sizeof (mem_t *)) {
-  case 4:
-    return (((cnum) obj) & NUM_MAX) >> 4;
-  case 8: default:
-    return (((cnum) obj) & NUM_MAX) >> 5;
+  switch (tag(obj)) {
+  case TAG_PTR:
+    if (!obj)
+      return NUM_MAX;
+    if (obj->t.type == BGNUM)
+      return mp_hash(mp(obj));
+    switch (sizeof (mem_t *)) {
+    case 4:
+      return ((cnum) obj) >> 4;
+    case 8: default:
+      return ((cnum) obj) >> 5;
+    }
+  case TAG_CHR:
+    return c_chr(obj);
+  case TAG_NUM:
+    return c_num(obj);
+  case TAG_LIT:
+    switch (sizeof (mem_t *)) {
+    case 4:
+      return ((cnum) obj) >> 2;
+    case 8: default:
+      return ((cnum) obj) >> 3;
+    }
   }
+  /* notreached */
+  abort();
 }
 
 cnum cobj_hash_op(val obj)

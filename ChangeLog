@@ -1,5 +1,13 @@
 2011-12-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	* hash.c (equal_hash): Eliminating displacement from character
+	hashes. Simplifying some code.
+	(eql_hash): Handle fixnums, characters and literals specially,
+	rather than hashing all value types the same way. The shift
+	applicable for object pointers causes adjacent integers to clash.
+
+2011-12-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (expand_vars): Bugfix: use expand_forms rather than
 	expand on a list of forms.
 
