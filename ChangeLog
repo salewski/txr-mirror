@@ -1,3 +1,21 @@
+2011-12-18  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (bindings_helper): Fix format arguments.
+	(eval_init): Registered new functions: symbol-function,
+	func-get-form, func-get-env, functionp, interp-fun-p.
+
+	* lib.c (nappend2, getplist_f, improper_plist_to_alist):
+	tail variable renamed to avoid clash in macro.
+	(func_get_form, func_get_env, interp_fun_p): New functions.
+
+	* lib.h (func_get_form, func_get_env, interp_fun_p): Declared.
+	(list_collect): Fix macro not to throw error, but handle the case.
+
+	* match.c (vars_to_bindings, extract_bindings): tail variable
+	renamed to avoid clash in macro.
+
+	* txr.1: Documentation stubs.
+
 2011-12-16  Kaz Kylheku  <kaz@kylheku.com>
 
 	* hash.c (equal_hash): Eliminating displacement from character

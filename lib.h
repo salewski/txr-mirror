@@ -469,7 +469,10 @@ val func_n2v(val (*fun)(val, val, val rest));
 val func_n3v(val (*fun)(val, val, val, val rest));
 val func_n4v(val (*fun)(val, val, val, val, val rest));
 val func_interp(val env, val form);
+val func_get_form(val fun);
+val func_get_env(val fun);
 val functionp(val);
+val interp_fun_p(val);
 val funcall(val fun);
 val funcall1(val fun, val arg);
 val funcall2(val fun, val arg1, val arg2);
@@ -571,7 +574,7 @@ INLINE val eq(val a, val b) { return ((a) == (b) ? t : nil); }
 #define list_collect(PTAIL, OBJ)                \
   do {                                          \
     if (*PTAIL)                                 \
-      internal_error("mixed collect style");    \
+      PTAIL = tail(*PTAIL);                     \
     *PTAIL = cons(OBJ, nil);                    \
     PTAIL = cdr_l(*PTAIL);                      \
   } while(0)
