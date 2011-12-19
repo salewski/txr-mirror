@@ -711,6 +711,67 @@ static val op_return_from(val form, val env)
   abort();
 }
 
+static val subst_vars(val forms, val env)
+{
+  list_collect_decl(out, iter);
+
+  while (forms) {
+    val form = first(forms);
+
+    if (consp(form)) {
+      val sym = first(form);
+
+      if (sym == var_s) {
+        val sym = second(form);
+        val pat = third(form);
+        val modifiers = fourth(form);
+        val pair = lookup_var(env, sym);
+
+        if (pair) {
+          val str = cdr(pair);
+
+          if (!stringp(str) && !listp(str))
+            str = format(nil, lit("~a"), str, nao);
+
+          if (pat)
+            forms = cons(str, cons(pat, rest(forms)));
+          else if (modifiers)
+            forms = cons(format_field(str, modifiers, nil), rest(forms));
+          else
+            forms = cons(str, rest(forms));
+          continue;
+        }
+        uw_throwf(query_error_s, lit("unbound variable ~a"),
+                                 sym, nao);
+      } else if (sym == quasi_s) {
+        val nested = subst_vars(rest(form), env);
+        list_collect_append(iter, nested);
+        forms = cdr(forms);
+        continue;
+      } else if (sym == expr_s) {
+        val result = eval(rest(form), env, form);
+        forms = cons(format(nil, lit("~a"), result, nao), rest(forms));
+        continue;
+      } else {
+        val nested = subst_vars(form, env);
+        list_collect_append(iter, nested);
+        forms = cdr(forms);
+        continue;
+      }
+    }
+
+    list_collect(iter, form);
+    forms = cdr(forms);
+  }
+
+  return out;
+}
+
+static val op_quasi_lit(val form, val env)
+{
+  return cat_str(subst_vars(rest(form), env), nil);
+}
+
 static val expand_forms(val form)
 {
   if (atom(form)) {
@@ -858,6 +919,33 @@ static val expand_vars(val vars)
   }
 }
 
+static val expand_quasi(val quasi_forms)
+{
+  if (nullp(quasi_forms)) {
+    return nil;
+  } else {
+    val form = first(quasi_forms);
+    val form_ex = form;
+
+    if (atom(form)) {
+      form_ex = form;
+    } else {
+      val sym = car(form);
+      if (sym == expr_s) {
+        val expr_ex = expand(rest(form));
+
+        if (expr_ex != rest(form))
+          form_ex = cons(sym, expr_ex);
+
+      } 
+    }
+
+    if (form != form_ex)
+      return cons(form_ex, expand_quasi(rest(quasi_forms)));
+    return quasi_forms;
+  }
+}
+
 val expand(val form)
 {
   if (atom(form)) {
@@ -973,6 +1061,12 @@ val expand(val form)
       if (forms == forms_ex)
         return form;
       return rlcp(cons(sym, forms_ex), form);
+    } else if (sym == quasi_s) {
+      val quasi = rest(form);
+      val quasi_ex = expand_quasi(quasi);
+      if (quasi == quasi_ex)
+        return form;
+      return rlcp(cons(sym, quasi_ex), form);
     } else {
       /* funtion call */
       /* also handles: progn, call, if, and, or, unwind-protect, return */
@@ -1116,6 +1210,7 @@ void eval_init(void)
   sethash(op_table, block_s, cptr((mem_t *) op_block));
   sethash(op_table, return_s, cptr((mem_t *) op_return));
   sethash(op_table, return_from_s, cptr((mem_t *) op_return_from));
+  sethash(op_table, quasi_s, cptr((mem_t *) op_quasi_lit));
 
   reg_fun(cons_s, func_n2(cons));
   reg_fun(intern(lit("make-lazy-cons"), user_package), func_n1(make_lazy_cons));

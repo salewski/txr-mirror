@@ -1203,7 +1203,7 @@ static val match_line(match_line_ctx c)
   return cons(c.bindings, c.pos);
 }
 
-static val format_field(val string_or_list, val modifier, val filter)
+val format_field(val string_or_list, val modifier, val filter)
 {
   val n = zero;
   val plist = nil;
