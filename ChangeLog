@@ -1,3 +1,14 @@
+2011-12-19  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (subst_vars, op_quasi_list, expand_quasi): New static
+	functions.
+	(expand): New case for quasiliterals.
+	(eval_init): Register quasi literal as special operator.
+
+	* match.c (format_field): Linkage changed to external.
+
+	* match.h (format_field): Declared. Declarations rearranged.
+
 2011-12-18  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (bindings_helper): Fix format arguments.
