@@ -1,3 +1,51 @@
+                                    TXR 049
+                                   2012-12-19
+
+
+  Features
+
+  - New functions for converting between characters and integers.
+
+  - Some arithmetic and relational operations are generic over characters in a
+    way that makes sense.
+
+  - dohash establishes anonymous block.
+
+  - Improvements in Vim syntax highlighting file.
+
+  - Lazy cons semantics cleaned up making lazy list programming easier.
+
+  - Some API renaming and restructuring in the area of vectors.
+
+  - Semicolon comments supported in Lisp code and @; comments in the pattern
+    matching language. @# becoming obsolescent.
+
+  - Not function, synonym for null.
+  
+  - Some progress in TXR Lisp documentation.
+
+  - Hashing functions improved for fixnums, literals and characters.
+
+  - API for introspecting over interpreted functions added, in anticipation
+    of doing some compiler work.
+
+  - Quasiliteral strings supported in TXR Lisp.
+
+  Bugs
+
+  - Broken abs function fixed for bignums.
+
+  - mappend semantics clarified and fixed: behaves like append for
+    improper lists and atoms.
+ 
+  - Bugfix in code walker for let/let* forms, which resulted in quasiquotes
+    not being expanded.
+
+  - Fixed incorrect format arguments in some error messages, resulting
+    in aborts in some error cases, instead of the intended diagnostics.
+
+
+
                                     TXR 048
                                    2012-12-13
 
