@@ -378,7 +378,7 @@ static val bindings_helper(val vars, val env, val sequential, val ctx_form)
 
     if (consp(item)) {
       if (!consp(cdr(item))) 
-        eval_error(ctx_form, lit("let: invalid syntax: ~s"),
+        eval_error(ctx_form, lit("~s: invalid syntax: ~s"),
                    car(ctx_form), item, nao);
       var = first(item);
       val = eval(second(item), nenv, ctx_form);
@@ -388,7 +388,7 @@ static val bindings_helper(val vars, val env, val sequential, val ctx_form)
 
     if (symbolp(var)) {
       if (!bindable(var))
-        eval_error(ctx_form, lit("let: ~s is not a bindable sybol"),
+        eval_error(ctx_form, lit("~s: ~s is not a bindable sybol"),
                    car(ctx_form), var, nao);
     }
 
@@ -1037,6 +1037,11 @@ static val mappendv(val fun, val list_of_lists)
   }
 }
 
+static val symbol_function(val sym)
+{
+  return lookup_fun(nil, sym);
+}
+
 static void reg_fun(val sym, val fun)
 {
   sethash(top_fb, sym, cons(sym, fun));
@@ -1304,6 +1309,12 @@ void eval_init(void)
   reg_fun(intern(lit("set-diff"), user_package), func_n4(set_diff));
 
   reg_fun(intern(lit("length"), user_package), func_n1(length));
+
+  reg_fun(intern(lit("symbol-function"), user_package), func_n1(symbol_function));
+  reg_fun(intern(lit("func-get-form"), user_package), func_n1(func_get_form));
+  reg_fun(intern(lit("func-get-env"), user_package), func_n1(func_get_env));
+  reg_fun(intern(lit("functionp"), user_package), func_n1(functionp));
+  reg_fun(intern(lit("interp-fun-p"), user_package), func_n1(interp_fun_p));
 
   eval_error_s = intern(lit("eval-error"), user_package);
   uw_register_subtype(eval_error_s, error_s);

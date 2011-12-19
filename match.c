@@ -317,7 +317,7 @@ static val txeval(val spec, val form, val bindings);
 static val vars_to_bindings(val spec, val vars, val bindings)
 {
   val iter;
-  list_collect_decl (fixed_vars, tail);
+  list_collect_decl (fixed_vars, ptail);
 
   if (vars && !consp(vars)) 
     sem_error(spec, lit("not a valid variable list: ~a"), vars, nao);
@@ -325,10 +325,10 @@ static val vars_to_bindings(val spec, val vars, val bindings)
   for (iter = vars; iter; iter = cdr(iter)) {
     val item = car(iter);
     if (bindable(item)) {
-      list_collect (tail, cons(item, noval_s));
+      list_collect (ptail, cons(item, noval_s));
     } else if (consp(item) && bindable(first(item))) {
-      list_collect (tail, cons(first(item), 
-                               txeval(spec, second(item), bindings)));
+      list_collect (ptail, cons(first(item), 
+                                txeval(spec, second(item), bindings)));
     } else { 
       sem_error(spec, lit("not a variable spec: ~a"), item, nao);
     }
@@ -1498,12 +1498,12 @@ static val extract_vars(val output_spec)
 
 static val extract_bindings(val bindings, val output_spec)
 {
-  list_collect_decl (bindings_out, tail);
+  list_collect_decl (bindings_out, ptail);
   val var_list = extract_vars(output_spec);
 
   for (; bindings; bindings = cdr(bindings))
     if (memq(car(car(bindings)), var_list))
-      list_collect(tail, car(bindings));
+      list_collect(ptail, car(bindings));
 
   return bindings_out;
 }

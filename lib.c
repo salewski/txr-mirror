@@ -393,10 +393,10 @@ val nappend2(val list1, val list2)
 
 val ldiff(val list1, val list2)
 {
-  list_collect_decl (out, tail);
+  list_collect_decl (out, ptail);
 
   while (list1 && list1 != list2) {
-    list_collect (tail, car(list1));
+    list_collect (ptail, car(list1));
     list1 = cdr(list1);
   }
 
@@ -763,12 +763,12 @@ val getplist_f(val list, val key, val *found)
 
 val proper_plist_to_alist(val list)
 {
-  list_collect_decl (out, tail);
+  list_collect_decl (out, ptail);
 
   for (; list; list = cdr(cdr(list))) {
     val ind = first(list);
     val prop = second(list);
-    list_collect (tail, cons(ind, prop));
+    list_collect (ptail, cons(ind, prop));
   }
 
   return out;
@@ -776,16 +776,16 @@ val proper_plist_to_alist(val list)
 
 val improper_plist_to_alist(val list, val boolean_keys)
 {
-  list_collect_decl (out, tail);
+  list_collect_decl (out, ptail);
 
   for (; list; list = cdr(list)) {
     val ind = first(list);
 
     if (memqual(ind, boolean_keys)) {
-      list_collect (tail, cons(ind, t));
+      list_collect (ptail, cons(ind, t));
     } else {
       val prop = second(list);
-      list_collect (tail, cons(ind, prop));
+      list_collect (ptail, cons(ind, prop));
       list = cdr(list);
     }
   }
@@ -1888,6 +1888,21 @@ val func_interp(val env, val form)
   return obj;
 }
 
+val func_get_form(val fun)
+{
+  type_check(fun, FUN);
+  if (fun->f.functype != FINTERP)
+    uw_throwf(error_s, lit("func_get_form: ~a is not an interpreted function"),
+              fun, nao);
+  return fun->f.f.interp_fun;
+}
+
+val func_get_env(val fun)
+{
+  type_check(fun, FUN);
+  return fun->f.env;
+}
+
 val functionp(val obj)
 {
   if (!obj) {
@@ -1896,6 +1911,11 @@ val functionp(val obj)
     type_t ty = type(obj);
     return (ty == FUN) ? t : nil;
   }
+}
+
+val interp_fun_p(val obj)
+{
+  return (functionp(obj) && obj->f.functype == FINTERP) ? t : nil;
 }
 
 val funcall(val fun)
