@@ -2403,6 +2403,56 @@ val list_vector(val vec)
   return list;
 }
 
+val copy_vec(val vec_in)
+{
+  val length = length_vec(vec_in);
+  cnum alloc_plus = c_num(length) + 2;
+  val vec = make_obj();
+  val *v = (val *) chk_malloc(alloc_plus * sizeof *v);
+#ifdef HAVE_VALGRIND
+  vec->v.vec_true_start = v;
+#endif
+  v += 2;
+  vec->v.type = VEC;
+  vec->v.vec = v;
+  v[vec_alloc] = length;
+  v[vec_length] = length;
+  memcpy(vec->v.vec, vec_in->v.vec, (alloc_plus - 2) * sizeof *vec->v.vec);
+  return vec;
+}
+
+val sub_vec(val vec_in, val from, val to)
+{
+  val len = length_vec(vec_in);
+
+  if (from == nil || lt(from, zero))
+    from = zero;
+  if (to == nil)
+    to = length_vec(vec_in);
+  else if (lt(to, zero))
+    to = zero;
+  from = min2(from, len);
+  to = min2(to, len);
+
+  if (ge(from, to)) {
+    return vector(zero);
+  } else {
+    cnum cfrom = c_num(from);
+    size_t nelem = c_num(to) - cfrom;
+    val vec = make_obj();
+    val *v = (val *) chk_malloc((nelem + 2) * sizeof *v);
+#ifdef HAVE_VALGRIND
+    vec->v.vec_true_start = v;
+#endif
+    v += 2;
+    vec->v.type = VEC;
+    vec->v.vec = v;
+    v[vec_length] = v[vec_alloc] = num(nelem);
+    memcpy(vec->v.vec, vec_in->v.vec + cfrom, nelem * sizeof *vec->v.vec);
+    return vec;
+  }
+}
+
 static val lazy_stream_func(val env, val lcons)
 {
   val stream = car(env);
