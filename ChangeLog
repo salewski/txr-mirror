@@ -1,3 +1,13 @@
+2011-12-20  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): New functions registered as intrinsics.
+
+	* lib.c (copy_vec, sub_vec): New functions.
+
+	* lib.h (copy_vec, sub_vec): Declared.
+
+	* txr.1: Stub sections created.
+
 2011-12-19  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 049
