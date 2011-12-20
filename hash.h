@@ -24,7 +24,6 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-val hash_obj(val);
 val make_hash(val weak_keys, val weak_vals, val equal_based);
 val *gethash_l(val hash, val key, val *new_p);
 val gethash(val hash, val key);

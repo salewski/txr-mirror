@@ -94,23 +94,23 @@ static cnum equal_hash(val obj)
 
   switch (type(obj)) {
   case LIT:
-    return hash_c_str(litptr(obj));
+    return hash_c_str(litptr(obj)) & NUM_MAX;
   case CONS:
     return (equal_hash(obj->c.car) + equal_hash(obj->c.cdr)) & NUM_MAX;
   case STR:
-    return hash_c_str(obj->st.str);
+    return hash_c_str(obj->st.str) & NUM_MAX;
   case CHR:
-    return c_chr(obj);
+    return c_chr(obj) & NUM_MAX;
   case NUM:
-    return c_num(obj);
+    return c_num(obj) & NUM_MAX;
   case SYM:
   case PKG:
   case ENV:
     switch (sizeof (mem_t *)) {
     case 4:
-      return ((cnum) obj) >> 4;
+      return (((cnum) obj) >> 4) & NUM_MAX;
     case 8: default:
-      return ((cnum) obj) >> 5;
+      return (((cnum) obj) >> 5) & NUM_MAX;
     }
     break;
   case FUN:
@@ -132,9 +132,9 @@ static cnum equal_hash(val obj)
     lazy_str_force(obj);
     return equal_hash(obj->ls.prefix);
   case BGNUM:
-    return mp_hash(mp(obj));
+    return mp_hash(mp(obj)) & NUM_MAX;
   case COBJ:
-    return obj->co.ops->hash(obj);
+    return obj->co.ops->hash(obj) & NUM_MAX;
   }
 
   internal_error("unhandled case in equal function");
@@ -147,23 +147,23 @@ static cnum eql_hash(val obj)
     if (!obj)
       return NUM_MAX;
     if (obj->t.type == BGNUM)
-      return mp_hash(mp(obj));
+      return mp_hash(mp(obj)) & NUM_MAX;
     switch (sizeof (mem_t *)) {
     case 4:
-      return ((cnum) obj) >> 4;
+      return (((cnum) obj) >> 4) & NUM_MAX;
     case 8: default:
-      return ((cnum) obj) >> 5;
+      return (((cnum) obj) >> 5) & NUM_MAX;
     }
   case TAG_CHR:
-    return c_chr(obj);
+    return c_chr(obj) & NUM_MAX;
   case TAG_NUM:
-    return c_num(obj);
+    return c_num(obj) & NUM_MAX;
   case TAG_LIT:
     switch (sizeof (mem_t *)) {
     case 4:
-      return ((cnum) obj) >> 2;
+      return (((cnum) obj) >> 2) & NUM_MAX;
     case 8: default:
-      return ((cnum) obj) >> 3;
+      return (((cnum) obj) >> 3) & NUM_MAX;
     }
   }
   /* notreached */
@@ -172,12 +172,14 @@ static cnum eql_hash(val obj)
 
 cnum cobj_hash_op(val obj)
 {
-  return ((cnum) obj) & NUM_MAX;
-}
-
-val hash_obj(val obj)
-{
-  return num(equal_hash(obj));
+  switch (sizeof (mem_t *)) {
+  case 4:
+    return (((cnum) obj) >> 4) & NUM_MAX;
+  case 8: default:
+    return (((cnum) obj) >> 5) & NUM_MAX;
+  }
+  /* notreached */
+  abort();
 }
 
 static void hash_mark(val hash)
@@ -424,12 +426,12 @@ val maphash(val fun, val hash)
 
 val hash_eql(val obj)
 {
-  return num(eql_hash(obj) % NUM_MAX);
+  return num(eql_hash(obj));
 }
 
 val hash_equal(val obj)
 {
-  return num(equal_hash(obj) % NUM_MAX);
+  return num(equal_hash(obj));
 }
 
 /*

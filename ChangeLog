@@ -1,5 +1,20 @@
 2011-12-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	Critical regression. Hash lookup was crashing on some platforms
+	due to negative hashing values being reduced modulo table size
+	to a negative array index.
+
+	* hash.c (equal_hash, eql_hash): Ensure
+	that value returned is in the range [0,NUM_MAX].
+	(hash_obj): Unused function removed.
+	(cobj_hash_op): Use hashing similar to eql hash for
+	other kinds of references.
+	(hash_eql, hash_equal): Removed bogus % NUM_MAX reduction.
+
+	* hash.h (hash_obj): Declaration removed.
+
+2011-12-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): New functions registered as intrinsics.
 
 	* lib.c (copy_vec, sub_vec): New functions.
