@@ -43,6 +43,7 @@
 #include "lib.h"
 #include "gc.h"
 #include "arith.h"
+#include "rand.h"
 #include "hash.h"
 #include "unwind.h"
 #include "stream.h"
@@ -3447,6 +3448,7 @@ void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),
   gc_init(stack_bottom);
   obj_init();
   arith_init();
+  rand_init();
   uw_init();
   stream_init();
   eval_init();

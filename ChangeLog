@@ -1,5 +1,19 @@
 2011-12-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	* Makefile (OBJS): new object file, rand.o.
+
+	* eval.c: Includes rand.h header.
+	(eval_init): New variable and functions from rand module registered.
+
+	* lib.c: Includes rand.h header.
+	(init): Call rand_init.
+
+	* rand.c: New file.
+
+	* rand.h: New file.
+
+2011-12-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	Bug #35139
 
 	Better fix.
