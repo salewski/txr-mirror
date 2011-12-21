@@ -155,11 +155,17 @@ noreturn val type_mismatch(val, ...);
       break;                            \
     case 2:                             \
       EXCVAR = uw_catch.ca.exception;   \
-      SYMVAR = uw_catch.ca.sym;
+      SYMVAR = uw_catch.ca.sym;         \
+      /* prevent looping */             \
+      uw_catch.ca.matches = nil;
 
 #define uw_unwind                       \
+    /* suppress unused label warning */ \
+    goto uw_unwind_label;               \
     uw_unwind_label:                    \
-    case 1:
+    case 1:                             \
+      /* prevent looping */             \
+      uw_catch.ca.visible = 0;
 
 #define uw_catch_end                    \
       break;                            \

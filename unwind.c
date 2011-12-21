@@ -65,11 +65,6 @@ static void uw_unwind_to_exit_point(void)
       uw_stack->ca.sym = nil;
       uw_stack->ca.exception = nil;
       uw_stack->ca.cont = uw_exit_point;
-      /* This catch frame is no longer
-         visible. If the unwind section
-         throws something, it cannot
-         be caught in the same frame. */
-      uw_stack->ca.visible = 0;
       /* 1 means unwind only. */
       longjmp(uw_stack->ca.jb, 1);
       abort();
@@ -94,10 +89,6 @@ static void uw_unwind_to_exit_point(void)
   case UW_ENV: /* env frame cannot be exit point */
     abort();
   case UW_CATCH:
-    /* Catch frame is no longer visible.
-       If a catch or unwind throw something,
-       it cannot go back to the same catch. */
-    uw_stack->ca.visible = 0;
     /* 2 means actual catch, not just unwind */
     longjmp(uw_stack->ca.jb, 2);
   default:

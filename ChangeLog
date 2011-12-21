@@ -1,5 +1,21 @@
 2011-12-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	Bug #35137
+
+	* unwind.c (uw_unwind_to_exit_point): When jumping to a catch frame,
+	do not mark it invisible.
+
+	* unwind.h (uw_catch): Flip the matches to nil so that this catch
+	frame can no longer be identified as an unwind point by uw_throw,
+	and thus will not be re-entered for the purposes of handling
+	an exception. It remains visible for the purposes of running the
+	clean up code.
+	(uw_unwind): Prior to executing cleanup forms, flip the visibility
+	to 0. This means that the frame will no longer be re-entered
+	for any reason.
+
+2011-12-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	Streamlining exception handling macros a little bit.
 
 	* eval.c (op_unwind_protect): Use uw_simple_catch_begin,
