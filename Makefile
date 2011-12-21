@@ -85,7 +85,8 @@ repatch:
 
 .PHONY: distclean
 distclean: clean
-	rm -f config.h config.make config.log $(top_srcdir)/mpi-$(mpi_version)
+	rm -f config.h config.make config.log
+	rm -rf $(top_srcdir)/mpi-$(mpi_version)
 
 .PHONY: depend
 depend:
