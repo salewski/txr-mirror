@@ -1,5 +1,13 @@
 2011-12-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	Test case for bug #35137
+
+	* tests/007/except-2.expected: New file.
+
+	* tests/007/except-2.txr: New file.
+
+2011-12-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): New function registered.
 
 	* lib.c (cat_vec): New function.
