@@ -2453,6 +2453,36 @@ val sub_vec(val vec_in, val from, val to)
   }
 }
 
+val cat_vec(val list)
+{
+  cnum total = 0;
+  val iter;
+  val vec, *v;
+
+  for (iter = list; iter != nil; iter = cdr(iter))
+    total += c_num(length_vec(car(iter)));
+
+  vec = make_obj();
+  v = (val *) chk_malloc((total + 2) * sizeof *v);
+
+#ifdef HAVE_VALGRIND
+  vec->v.vec_true_start = v;
+#endif
+  v += 2;
+  vec->v.type = VEC;
+  vec->v.vec = v;
+  v[vec_length] = v[vec_alloc] = num(total);
+
+  for (iter = list; iter != nil; iter = cdr(iter)) {
+    val item = car(iter);
+    cnum len = c_num(item->v.vec[vec_length]);
+    memcpy(v, item->v.vec, len * sizeof *v);
+    v += len;
+  }
+
+  return vec;
+}
+
 static val lazy_stream_func(val env, val lcons)
 {
   val stream = car(env);

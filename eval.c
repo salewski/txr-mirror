@@ -1387,6 +1387,7 @@ void eval_init(void)
   reg_fun(intern(lit("list-vector"), user_package), func_n1(list_vector));
   reg_fun(intern(lit("copy-vec"), user_package), func_n1(copy_vec));
   reg_fun(intern(lit("sub-vec"), user_package), func_n3(sub_vec));
+  reg_fun(intern(lit("cat-vec"), user_package), func_n1(cat_vec));
 
   reg_fun(intern(lit("assoc"), user_package), func_n2(assoc));
   reg_fun(intern(lit("assq"), user_package), func_n2(assq));

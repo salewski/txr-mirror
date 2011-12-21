@@ -505,6 +505,7 @@ val vector_list(val list);
 val list_vector(val vector);
 val copy_vec(val vec);
 val sub_vec(val vec_in, val from, val to);
+val cat_vec(val list);
 val lazy_stream_cons(val stream);
 val lazy_str(val list, val term, val limit);
 val lazy_str_force_upto(val lstr, val index);

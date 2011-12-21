@@ -1,5 +1,15 @@
 2011-12-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): New function registered.
+
+	* lib.c (cat_vec): New function.
+
+	* lib.h (cat_vec): Declared.
+
+	* txr.1: Documentation stub.
+
+2011-12-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	Bug #35137
 
 	* unwind.c (uw_unwind_to_exit_point): When jumping to a catch frame,
