@@ -2,6 +2,15 @@
 
 	Bug #35139
 
+	Better fix.
+
+	* parser.y (YYEOF): If YYEOF is not defined, define it as zero.
+	(yybadtoken): Undo previous changes: do not test for zero.
+
+2011-12-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	Bug #35139
+
 	* parser.y (yybadtoken): The current token (yychar) is 0 on byacc
 	rather than YYEOF or YYEMPTY, so we have to handle that.
 

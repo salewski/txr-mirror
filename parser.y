@@ -962,7 +962,7 @@ val get_spec(void)
 }
 
 #ifndef YYEOF
-#define YYEOF YYEMPTY
+#define YYEOF 0
 #endif
 
 void yybadtoken(int tok, val context)
@@ -1013,7 +1013,7 @@ void yybadtoken(int tok, val context)
       yyerrorf(lit("unexpected ~a"), problem, nao);
   else
     if (context) /* Byacc sets yychar to 0 */
-      if (tok == YYEOF || tok == YYEMPTY || tok == 0)
+      if (tok == YYEOF || tok == YYEMPTY)
         yyerrorf(lit("unterminated ~a"), context, nao);
       else if (tok == '\n')
         yyerrorf(lit("newline in ~a"), context, nao);
@@ -1022,7 +1022,7 @@ void yybadtoken(int tok, val context)
     else
       if (tok == YYEOF)
         yyerrorf(lit("unexpected end of input"), nao);
-      else if (tok == YYEMPTY || tok == 0)
+      else if (tok == YYEMPTY)
         return;
       else
         yyerrorf(lit("unexpected ~s"), chr(tok), nao);
