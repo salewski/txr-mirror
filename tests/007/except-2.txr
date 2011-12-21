@@ -1,0 +1,19 @@
+@(try)
+@(try)
+@(bind a "b")
+@(throw e "a")
+@(catch e (x))
+@(output)
+caught @x
+@(end)
+@(throw e "b")
+@(finally)
+@(output)
+cleanup
+@(end)
+@(end)
+@(catch e (x))
+@(output)
+caught @x
+@(end)
+@(end)
