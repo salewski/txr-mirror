@@ -1,5 +1,29 @@
 2011-12-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	Streamlining exception handling macros a little bit.
+
+	* eval.c (op_unwind_protect): Use uw_simple_catch_begin,
+	and remove the uw_catch (exsym, exvals) clause. Put
+	explicit braces around the unwind code even though it
+	is only one statement.
+
+	* match.c (do_txeval): Got rid of empty uw_unwind clause.
+	This is not needed any longer.
+	(v_try): Got rid of explicit uw_do_unwind calls. 
+
+	* unwind.h (uw_simple_catch_begin): New macro.
+	(uw_do_unwind): Macro removed.
+	(uw_catch): Added goto uw_unwind_label at the front.
+	This way if the previous clause falls through,
+	control goes to the unwind logic.
+	(uw_unwind): Got rid of initial break. Previous
+	clause should fall through to unwind logic,
+	whether it is the main clause, or one of the catches.
+	(uw_catch_end): Default case aborts, because
+	we don't expect this.
+
+2011-12-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	Critical regression. Hash lookup was crashing on some platforms
 	due to negative hashing values being reduced modulo table size
 	to a negative array index.

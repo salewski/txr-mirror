@@ -668,16 +668,13 @@ static val op_unwind_protect(val form, val env)
   val cleanup_forms = rest(rest(form));
   val result = nil;
 
-  uw_catch_begin(nil, exsym, exvals);
+  uw_simple_catch_begin;
 
   result = eval(prot_form, env, prot_form);
 
-  uw_do_unwind;
-
-  uw_catch (exsym, exvals);
-
-  uw_unwind
+  uw_unwind {
     eval_progn(cleanup_forms, env, cleanup_forms);
+  }
 
   uw_catch_end;
 
