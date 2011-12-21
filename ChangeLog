@@ -1,5 +1,15 @@
 2011-12-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (normalize): Linkage changed to extern.
+
+	* arith.h (normalize): Declared.
+
+	* rand.c (random): Bugfix: normalize the bignum before returning it.
+
+	* txr.1: Doc stubs for PRNG functionality.
+
+2011-12-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	* rand.c: Added comment about source of algorithm.
 
 2011-12-21  Kaz Kylheku  <kaz@kylheku.com>

@@ -192,7 +192,7 @@ val random(val state, val modulus)
     err = mp_mod(om, m, om);
     if (err != MP_OKAY)
       goto invalid;
-    return out;
+    return normalize(out);
   } else if (fixnump(modulus)) {
     cnum m = c_num(modulus);
     if (m <= 0)

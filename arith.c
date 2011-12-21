@@ -73,7 +73,7 @@ static val bignum_dbl_ipt(double_intptr_t di)
   return n;
 }
 
-static val normalize(val bignum)
+val normalize(val bignum)
 {
   if (mp_cmp_mag(mp(bignum), &NUM_MAX_MP) == MP_GT) {
     return bignum;
