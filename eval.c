@@ -42,6 +42,7 @@
 #include "hash.h"
 #include "debug.h"
 #include "match.h"
+#include "rand.h"
 #include "eval.h"
 
 typedef val (*opfun_t)(val, val);
@@ -1410,6 +1411,12 @@ void eval_init(void)
   reg_fun(intern(lit("func-get-env"), user_package), func_n1(func_get_env));
   reg_fun(intern(lit("functionp"), user_package), func_n1(functionp));
   reg_fun(intern(lit("interp-fun-p"), user_package), func_n1(interp_fun_p));
+
+  reg_var(intern(lit("*random-state*"), user_package), random_state);
+  reg_fun(intern(lit("make-random-state"), user_package), func_n1(make_random_state));
+  reg_fun(intern(lit("random-state-p"), user_package), func_n1(random_state_p));
+  reg_fun(intern(lit("random-fixnum"), user_package), func_n1(random_fixnum));
+  reg_fun(intern(lit("random"), user_package), func_n2(random));
 
   eval_error_s = intern(lit("eval-error"), user_package);
   uw_register_subtype(eval_error_s, error_s);

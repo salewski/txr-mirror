@@ -39,7 +39,7 @@ endif
 
 # TXR objects
 OBJS := txr.o lex.yy.o y.tab.o match.o lib.o regex.o gc.o unwind.o stream.o
-OBJS += arith.o hash.o utf8.o filter.o debug.o eval.o
+OBJS += arith.o hash.o utf8.o filter.o debug.o eval.o rand.o
 
 # MPI objects
 MPI_OBJ_BASE=mpi.o mplogic.o
