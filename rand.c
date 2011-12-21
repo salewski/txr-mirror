@@ -166,15 +166,24 @@ val random(val state, val modulus)
     int digits = USED(m);
     int bits = digits * MP_DIGIT_BIT;
     int bits_needed = bits + 32;
-    int digits_needed = (bits_needed + MP_DIGIT_BIT - 1) / MP_DIGIT_BIT;
+    int rands_needed = (bits_needed + 32 - 1) / 32;
     val out = make_bignum();
     mp_int *om = mp(out);
     int i, err;
 
-    for (i = 0; i < digits_needed; i++) {
+    for (i = 0; i < rands_needed; i++) {
+      rand32_t rnd = rand32(r);
+#if MP_DIGIT_SIZE >= 4
       if (i > 0)
         mp_mul_2d(om, 32, om);
-      mp_add_d(om, rand32(r), om);
+      mp_add_d(om, rnd, om);
+#else
+      if (i > 0)
+        mp_mul_2d(om, 16, om);
+      mp_add_d(om, rnd & 0xFFFF, om);
+      mp_mul_2d(om, 16, om);
+      mp_add_d(om, rnd >> 16, om);
+#endif
     }
     err = mp_mod(om, m, om);
     if (err != MP_OKAY)

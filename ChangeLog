@@ -1,5 +1,10 @@
 2011-12-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	* rand.c (random): Bugfix: not building up sufficiently large bignums.
+	Work properly when mp_digit is smaller than 32 bits.
+
+2011-12-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	* Makefile (OBJS): new object file, rand.o.
 
 	* eval.c: Includes rand.h header.
