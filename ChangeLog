@@ -1,5 +1,12 @@
 2011-12-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	Bug #35139
+
+	* parser.y (yybadtoken): The current token (yychar) is 0 on byacc
+	rather than YYEOF or YYEMPTY, so we have to handle that.
+
+2011-12-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	* Makefile (distclean): use rm -rf on mpi directory.
 
 2011-12-20  Kaz Kylheku  <kaz@kylheku.com>
