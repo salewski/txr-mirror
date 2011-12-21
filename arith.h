@@ -25,4 +25,5 @@
  */
 
 val make_bignum(void);
+val normalize(val bignum);
 void arith_init(void);
