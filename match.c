@@ -1366,6 +1366,8 @@ static val do_txeval(val spec, val form, val bindings, val allow_unbound)
 
       sem_error(spec, lit("~a"), exc, nao);
     }
+
+    uw_unwind { }
   }
   uw_catch_end;
 
@@ -2748,7 +2750,6 @@ static val v_try(match_files_ctx *c)
     uw_catch_begin(catch_syms, exsym, exvals);
 
     result = match_files(mf_spec(*c, try_clause));
-    uw_do_unwind;
 
     uw_catch(exsym, exvals) {
       {
@@ -2807,7 +2808,6 @@ static val v_try(match_files_ctx *c)
           }
         }
       }
-      uw_do_unwind;
     }
 
     uw_unwind {

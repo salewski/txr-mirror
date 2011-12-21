@@ -133,6 +133,13 @@ noreturn val type_mismatch(val, ...);
     uw_pop_frame(&uw_env);              \
   } while (0)
 
+#define uw_simple_catch_begin           \
+  do {                                  \
+    uw_frame_t uw_catch;                \
+    uw_push_catch(&uw_catch, nil);      \
+    switch (setjmp(uw_catch.ca.jb)) {   \
+    case 0:
+
 #define uw_catch_begin(MATCHES, SYMVAR, \
                        EXCVAR)          \
   obj_t *SYMVAR = nil;                  \
@@ -143,23 +150,21 @@ noreturn val type_mismatch(val, ...);
     switch (setjmp(uw_catch.ca.jb)) {   \
     case 0:
 
-#define uw_do_unwind                    \
-      goto uw_unwind_label
-
 #define uw_catch(SYMVAR, EXCVAR)        \
+    goto uw_unwind_label;               \
       break;                            \
     case 2:                             \
       EXCVAR = uw_catch.ca.exception;   \
       SYMVAR = uw_catch.ca.sym;
 
 #define uw_unwind                       \
-      break;                            \
     uw_unwind_label:                    \
     case 1:
 
 #define uw_catch_end                    \
-    default:                            \
       break;                            \
+    default:                            \
+      abort();                          \
     }                                   \
     if (uw_catch.ca.cont)               \
       uw_continue(&uw_catch,            \
