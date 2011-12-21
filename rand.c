@@ -49,6 +49,10 @@ typedef unsigned int rand32_t;
 typedef unsigned long rand32_t;
 #endif
 
+/*
+ * The algorithm here is WELL 512.
+ * (Francois Panneton, Pierre L'Ecuyer.)
+ */
 struct random_state {
   rand32_t state[16];
   int cur;
