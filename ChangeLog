@@ -1,3 +1,7 @@
+2011-12-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	* Makefile (distclean): use rm -rf on mpi directory.
+
 2011-12-20  Kaz Kylheku  <kaz@kylheku.com>
 
 	Test case for bug #35137
