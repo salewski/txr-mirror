@@ -77,6 +77,7 @@ syn match txr_char "@[ \t]*\\[0-9]\+"
 syn match txr_variable "@[ \t]*[*]\?[A-Za-z_][A-Za-z0-9_]*"
 syn match txr_chr "#\\x[A-Fa-f0-9]\+"
 syn match txr_chr "#\\[a-zA-Z_][a-zA-Z0-9_]*"
+syn match txr_chr "#\\[^ \t\n]"
 syn match txr_ncomment ";.*" contained
 
 syn match txr_ident "[a-zA-Z0-9!$%&*+\-<=>?\\^_~]\+" contained
