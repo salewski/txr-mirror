@@ -1,5 +1,9 @@
 2011-12-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.vim: Fixed to char literal syntax.
+
+2011-12-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (normalize): Linkage changed to extern.
 
 	* arith.h (normalize): Declared.
