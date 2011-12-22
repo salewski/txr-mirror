@@ -350,7 +350,6 @@ char_range:
   uw_throwf(numeric_error_s, 
             lit("plus: sum of ~s ~s is out of character range"),
             anum, bnum, nao);
-  abort();
 }
 
 val minus(val anum, val bnum)
@@ -436,7 +435,6 @@ val minus(val anum, val bnum)
     }
   }
   uw_throwf(error_s, lit("minus: invalid operands ~s ~s"), anum, bnum, nao);
-  abort();
 }
 
 val neg(val anum)
@@ -549,7 +547,6 @@ val mul(val anum, val bnum)
     }
   }
   uw_throwf(error_s, lit("mul: invalid operands ~s ~s"), anum, bnum, nao);
-  abort();
 }
 
 val trunc(val anum, val bnum)
@@ -567,7 +564,7 @@ val trunc(val anum, val bnum)
       int neg = ((a < 0 && b > 0) || (a > 0 && b < 0));
 
       if (b == 0)
-        uw_throw(numeric_error_s, lit("trunc: division by zero"));
+        goto divzero;
 
       {
         cnum quot = ap / bp;
@@ -586,18 +583,18 @@ val trunc(val anum, val bnum)
         cnum b = c_num(bnum);
         cnum bp = ABS(b);
         if (mp_div_d(mp(anum), bp, mp(n), 0) != MP_OKAY)
-          uw_throw(numeric_error_s, lit("trunc: division by zero"));
+          goto divzero;
         if (b < 0)
           mp_neg(mp(n), mp(n));
       } else {
+        int err;
         mp_int tmp;
         mp_init(&tmp);
         mp_set_intptr(&tmp, c_num(bnum));
-        if (mp_div(mp(anum), &tmp, mp(n), 0) != MP_OKAY) {
-          mp_clear(&tmp);
-          uw_throw(numeric_error_s, lit("trunc: division by zero"));
-        }
+        err = mp_div(mp(anum), &tmp, mp(n), 0);
         mp_clear(&tmp);
+        if (err != MP_OKAY)
+          goto divzero;
       }
       return normalize(n);
     }
@@ -608,12 +605,13 @@ val trunc(val anum, val bnum)
       type_check(bnum, BGNUM);
       n = make_bignum();
       if (mp_div(mp(anum), mp(bnum), mp(n), 0) != MP_OKAY)
-          uw_throw(numeric_error_s, lit("trunc: division by zero"));
+        goto divzero;
       return normalize(n);
     }
   }
   uw_throwf(error_s, lit("trunc: invalid operands ~s ~s"), anum, bnum, nao);
-  abort();
+divzero:
+  uw_throw(numeric_error_s, lit("trunc: division by zero"));
 }
 
 val mod(val anum, val bnum)
@@ -628,7 +626,7 @@ val mod(val anum, val bnum)
       cnum b = c_num(bnum);
 
       if (b == 0)
-        uw_throw(numeric_error_s, lit("mod: division by zero"));
+        goto divzero;
 
       if (b < 0)
       {
@@ -661,7 +659,7 @@ val mod(val anum, val bnum)
       }
       mp_clear(&tmpa);
       if (err != MP_OKAY)
-        uw_throw(numeric_error_s, lit("mod: division by zero"));
+        goto divzero;
       return normalize(n);
     }
   case TAG_PAIR(TAG_PTR, TAG_NUM):
@@ -682,7 +680,7 @@ val mod(val anum, val bnum)
           err = mp_mod_d(mp(anum), b, &n);
         }
         if (err != MP_OKAY)
-          uw_throw(numeric_error_s, lit("mod: division by zero"));
+          goto divzero;
         return num(n);
       } else {
         val n = make_bignum();
@@ -704,7 +702,7 @@ val mod(val anum, val bnum)
         }
         mp_clear(&tmpb);
         if (err != MP_OKAY)
-          uw_throw(numeric_error_s, lit("mod: division by zero"));
+          goto divzero;
         return normalize(n);
       }
     }
@@ -722,20 +720,21 @@ val mod(val anum, val bnum)
         mp_neg(mp(anum), &tmpa);
         mp_neg(mp(bnum), &tmpb);
         err = mp_mod(&tmpa, &tmpb, mp(n));
-        if (err != MP_OKAY)
-          uw_throw(numeric_error_s, lit("mod: division by zero"));
         mp_clear(&tmpa);
         mp_clear(&tmpb);
+        if (err != MP_OKAY)
+          goto divzero;
         mp_neg(mp(n), mp(n));
       } else {
         if (mp_mod(mp(anum), mp(bnum), mp(n)) != MP_OKAY)
-            uw_throw(numeric_error_s, lit("mod: division by zero"));
+          goto divzero;
       }
       return normalize(n);
     }
   }
   uw_throwf(error_s, lit("mod: invalid operands ~s ~s"), anum, bnum, nao);
-  abort();
+divzero:
+  uw_throw(numeric_error_s, lit("mod: division by zero"));
 }
 
 val zerop(val num)
@@ -803,7 +802,6 @@ val gt(val anum, val bnum)
   }
 
   uw_throwf(error_s, lit("gt: invalid operands ~s ~s"), anum, bnum, nao);
-  abort();
 }
 
 val lt(val anum, val bnum)
@@ -831,7 +829,6 @@ val lt(val anum, val bnum)
   }
 
   uw_throwf(error_s, lit("lt: invalid operands ~s ~s"), anum, bnum, nao);
-  abort();
 }
 
 val ge(val anum, val bnum)
@@ -864,7 +861,6 @@ val ge(val anum, val bnum)
   }
 
   uw_throwf(error_s, lit("ge: invalid operands ~s ~s"), anum, bnum, nao);
-  abort();
 }
 
 val le(val anum, val bnum)
@@ -897,7 +893,6 @@ val le(val anum, val bnum)
   }
 
   uw_throwf(error_s, lit("lt: invalid operands ~s ~s"), anum, bnum, nao);
-  abort();
 }
 
 val expt(val anum, val bnum)
@@ -913,7 +908,7 @@ val expt(val anum, val bnum)
       mp_int tmpa;
       val n;
       if (b < 0)
-        uw_throw(error_s, lit("expt: negative exponent"));
+        goto negexp;
       if (bnum == zero)
         return one;
       if (bnum == one)
@@ -940,7 +935,7 @@ val expt(val anum, val bnum)
       val n;
       type_check(bnum, BGNUM);
       if (mp_cmp_z(mp(bnum)) == MP_LT)
-        uw_throw(error_s, lit("expt: negative exponent"));
+        goto negexp;
       n = make_bignum();
       mp_init(&tmpa);
       mp_set_intptr(&tmpa, a);
@@ -954,7 +949,7 @@ val expt(val anum, val bnum)
       val n;
       type_check(anum, BGNUM);
       if (b < 0)
-        uw_throw(error_s, lit("expt: negative exponent"));
+        goto negexp;
       if (bnum == zero)
         return one;
       if (bnum == one)
@@ -977,7 +972,7 @@ val expt(val anum, val bnum)
       type_check(anum, BGNUM);
       type_check(bnum, BGNUM);
       if (mp_cmp_z(mp(bnum)) == MP_LT)
-        uw_throw(error_s, lit("expt: negative exponent"));
+        goto negexp;
       n = make_bignum();
       mp_expt(mp(anum), mp(bnum), mp(n));
       normalize(n);
@@ -986,7 +981,8 @@ val expt(val anum, val bnum)
   }
 
   uw_throwf(error_s, lit("expt: invalid operands ~s ~s"), anum, bnum, nao);
-  abort();
+negexp:
+  uw_throw(error_s, lit("expt: negative exponent"));
 }
 
 val exptmod(val base, val exp, val mod)
@@ -1014,7 +1010,6 @@ val exptmod(val base, val exp, val mod)
 inval:
   uw_throwf(error_s, lit("exptmod: invalid operands ~s ~s ~s"),
             base, exp, mod, nao);
-  abort();
 }
 
 static int_ptr_t isqrt_fixnum(int_ptr_t a)
@@ -1036,15 +1031,17 @@ val isqrt(val anum)
   if (fixnump(anum)) {
     cnum a = c_num(anum);
     if (a < 0)
-      uw_throw(error_s, lit("sqrt: negative operand"));
+      goto negop;
     return num_fast(isqrt_fixnum(c_num(anum)));
   } else if (bignump(anum)) {
     val n = make_bignum();
     if (mp_sqrt(mp(anum), mp(n)) != MP_OKAY)
-      uw_throw(error_s, lit("sqrt: negative operand"));
+      goto negop;
     return normalize(n);
   }
   uw_throwf(error_s, lit("sqrt: invalid operand ~s"), anum, nao);
+negop:
+  uw_throw(error_s, lit("sqrt: negative operand"));
 }
 
 val gcd(val anum, val bnum)
@@ -1069,7 +1066,6 @@ val gcd(val anum, val bnum)
 inval:
   uw_throwf(error_s, lit("gcd: invalid operands ~s ~s ~s"),
             anum, bnum, nao);
-  abort();
 }
 
 void arith_init(void)

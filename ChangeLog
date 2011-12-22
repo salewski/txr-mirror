@@ -1,3 +1,16 @@
+2011-12-22  Kaz Kylheku  <kaz@kylheku.com>
+
+	Bug #35136 and cleanup.
+
+	* arith.c (plus, minus, mul, gt, ge, lt, le, exptmod, gcd): Remove
+	trailing abort; we already marked uw_throwf as noreturn. This hack
+	should not be needed in functions where the last statement is a throw.
+	(trunc, expt): Repeated error case handled in one place. Temp variable
+	used to avoid two calls to mp_clear. Call to abort removed.
+	(mod): Repeated error handed in one place. Plugged memory leak
+	by moving throw past mp_clear calls. Call to abort removed.
+	(isqrt): Repeated error case handed in one place.
+
 2011-12-21  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.vim: Fixed to char literal syntax.
