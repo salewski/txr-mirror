@@ -1,5 +1,13 @@
 2011-12-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (vformat): If width is specified for ~s or ~a, and
+	the object is not a string or number, then print it to a string
+	and treat it as a string, adjusting it within the field.
+	Also, do not simply abort on an unknown format directive
+	but throw a proper exception.
+
+2011-12-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (vformat): Left-adjusted field is now  specified
 	using < rather than '-'. The +, space and leading 0 are
 	specified on the precision, not the width.
