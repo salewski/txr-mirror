@@ -1503,9 +1503,14 @@ static val extract_bindings(val bindings, val output_spec)
   list_collect_decl (bindings_out, ptail);
   val var_list = extract_vars(output_spec);
 
-  for (; bindings; bindings = cdr(bindings))
-    if (memq(car(car(bindings)), var_list))
-      list_collect(ptail, car(bindings));
+  for (; bindings; bindings = cdr(bindings)) {
+    val binding = car(bindings);
+    val sym = car(binding);
+    if (assoc(sym, bindings_out))
+      continue;
+    if (memq(sym, var_list))
+      list_collect(ptail, binding);
+  }
 
   return bindings_out;
 }
@@ -1541,15 +1546,15 @@ static void do_output_line(val bindings, val specline, val filter, val out)
                                             nao));
 
           if (equal(max_depth, zero) && empty_clauses) {
-            do_output_line(bindings, empty_clauses, filter, out);
+            do_output_line(nappend2(bind_cp, bindings), empty_clauses, filter, out);
           } else if (equal(max_depth, one) && single_clauses) {
-            val bind_a = mapcar(func_n1(bind_car), bind_cp);
+            val bind_a = nappend2(mapcar(func_n1(bind_car), bind_cp), bindings);
             do_output_line(bind_a, single_clauses, filter, out);
           } else if (!zerop(max_depth)) {
             cnum i;
 
             for (i = 0; i < c_num(max_depth); i++) {
-              val bind_a = mapcar(func_n1(bind_car), bind_cp);
+              val bind_a = nappend2(mapcar(func_n1(bind_car), bind_cp), bindings);
               val bind_d = mapcar(func_n1(bind_cdr), bind_cp);
 
               if (i == 0 && first_clauses) {
@@ -1608,15 +1613,15 @@ static void do_output(val bindings, val specs, val filter, val out)
                                           nao));
 
         if (equal(max_depth, zero) && empty_clauses) {
-          do_output(bind_cp, empty_clauses, filter, out);
+          do_output(nappend2(bind_cp, bindings), empty_clauses, filter, out);
         } else if (equal(max_depth, one) && single_clauses) {
-          val bind_a = mapcar(func_n1(bind_car), bind_cp);
+          val bind_a = nappend2(mapcar(func_n1(bind_car), bind_cp), bindings);
           do_output(bind_a, single_clauses, filter, out);
         } else if (!zerop(max_depth)) {
           cnum i;
 
           for (i = 0; i < c_num(max_depth); i++) {
-            val bind_a = mapcar(func_n1(bind_car), bind_cp);
+            val bind_a = nappend2(mapcar(func_n1(bind_car), bind_cp), bindings);
             val bind_d = mapcar(func_n1(bind_cdr), bind_cp);
 
             if (i == 0 && first_clauses) {

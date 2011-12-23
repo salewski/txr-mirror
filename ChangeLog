@@ -1,5 +1,17 @@
 2011-12-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	Bug #35010
+
+	* match.c (extract_bindings): Make sure there are no duplicate
+	variables among the extracted bindings. This is needed because
+	of the other changes.
+	(do_output_line, do_output): In handling the rep/repeat directives,
+	append the original bindings to the extracted set bindings for the
+	variables which just occur in the clause, so that Lisp code can see all
+	of the variables.
+
+2011-12-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (vformat): If width is specified for ~s or ~a, and
 	the object is not a string or number, then print it to a string
 	and treat it as a string, adjusting it within the field.
