@@ -1004,7 +1004,7 @@ val vformat(val stream, val fmtstr, va_list vl)
             sprintf(num_buf, num_fmt->oct, value);
           }
           goto output_num;
-        case 'a':
+        case 'a': case 's':
           obj = va_arg(vl, val);
           if (obj == nao)
             goto premature;
@@ -1023,38 +1023,15 @@ val vformat(val stream, val fmtstr, va_list vl)
             mp_toradix(mp(obj), (unsigned char *) pnum, 10);
             goto output_num;
           }
-          obj_pprint(obj, stream);
-          continue;
-        case 's':
-          obj = va_arg(vl, val);
-          if (obj == nao)
-            goto premature;
-          if (fixnump(obj)) {
-            value = c_num(obj);
-            sprintf(num_buf, num_fmt->dec, value);
-            if (!vformat_num(stream, num_buf, 0, 0, 0, 0, 0))
-              return nil;
-            continue;
-          } else if (bignump(obj)) {
-            int nchars = mp_radix_size(mp(obj), 10); 
-            val res;
-            if (nchars >= (int) sizeof (num_buf))
-              pnum = (char *) chk_malloc(nchars + 1);
-            mp_toradix(mp(obj), (unsigned char *) pnum, 10);
-            res = vformat_num(stream, pnum, 0, 0, 0, 0, 0);
-            if (pnum != num_buf)
-              free(pnum);
-            if (!res)
-              return nil;
-            continue;
-          }
-          obj_print(obj, stream);
+          if (ch == 'a')
+            obj_pprint(obj, stream);
+          else
+            obj_print(obj, stream);
           continue;
         case 'p':
           ptr = va_arg(vl, void *);
           value = (cnum) ptr;
-          strcpy(num_buf, "0x");
-          sprintf(num_buf + 2, num_fmt->hex, value);
+          sprintf(num_buf, num_fmt->hex, value);
           goto output_num;
         default:
           abort();
@@ -1075,7 +1052,6 @@ val vformat(val stream, val fmtstr, va_list vl)
       break;
     }
   }
-
 
   if (va_arg(vl, val) != nao)
     internal_error("unterminated format argument list");
