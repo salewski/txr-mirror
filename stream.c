@@ -882,21 +882,13 @@ val vformat(val stream, val fmtstr, va_list vl)
           put_char(stream, chr('~'));
           state = vf_init;
           continue;
-        case '-':
+        case '<':
           left = 1;
-          continue;
-        case '+': case ' ':
-          sign = ch;
           continue;
         case ',':
           state = vf_precision;
           continue;
-        case '0':
-          saved_state = state;
-          state = vf_digits;
-          zeropad = 1;
-          continue;
-        case '1': case '2': case '3': case '4': case '5':
+        case '0': case '1': case '2': case '3': case '4': case '5':
         case '6': case '7': case '8': case '9':
           saved_state = state;
           state = vf_digits;
@@ -915,11 +907,17 @@ val vformat(val stream, val fmtstr, va_list vl)
         break;
       case vf_precision:
         switch (ch) {
-        case '0': case '1': case '2': case '3': case '4': case '5':
+        case '0':
+          zeropad = 1;
+          /* fallthrough */
+        case '1': case '2': case '3': case '4': case '5':
         case '6': case '7': case '8': case '9':
           saved_state = state;
           state = vf_digits;
           digits = ch - '0';
+          continue;
+        case '+': case ' ':
+          sign = ch;
           continue;
         case '*':
           obj = va_arg(vl, val);

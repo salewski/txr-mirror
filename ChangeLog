@@ -1,5 +1,11 @@
 2011-12-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (vformat): Left-adjusted field is now  specified
+	using < rather than '-'. The +, space and leading 0 are
+	specified on the precision, not the width.
+
+2011-12-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* rand.c (random): Fix for 64 bit fixnums: stick two random numbers
 	together. Otherwise for fixnum moduli, we get only a 32 bit number no
 	matter what the modulus is.
