@@ -197,7 +197,11 @@ val random(val state, val modulus)
     cnum m = c_num(modulus);
     if (m <= 0)
       goto invalid;
+#if SIZEOF_PTR >= 8
+    return num(((((cnum) rand32(r) & 0x7FFFFFFF) << 32) | rand32(r)) % m);
+#else
     return num(rand32(r) % m);
+#endif
   } 
 invalid:
   uw_throwf(numeric_error_s, lit("random: invalid modulus ~s"),
