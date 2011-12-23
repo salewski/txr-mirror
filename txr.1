@@ -5470,6 +5470,56 @@ yields (1 2 3 4 5). In TXR Lisp, this usage can be simulated using
 
 .SS Functions reduce-left and reduce-right
 
+.TP
+Syntax:
+
+(reduce-left <binary-function> <list> <init-value> <key-function>)
+(reduce-right <binary-function> <list> <init-value> <key-function>)
+
+.TP
+Description:
+
+The reduce-left and reduce-right functions reduce lists of operands
+specified in <list> to a single value by the repeated application of a
+<binary-functions>.
+
+Otherwise, <init-value> begins either a left-associative reduction
+under reduce-left, or a right-associative reduction under reduce-right.
+
+First, both functions initialize an internal accumulator with <init-value>.
+
+Under reduce-left, the list is processed left to right. If elements
+remain to be processed, the <binary-function> is repeatedly called with two
+arguments: the accumulator and the next element from the list. After each call,
+the return value of the function replaces the accumulator. When no more items
+remain, the accumulator is returned.
+
+Under reduce-right, the list is processed right to left. If elements
+remain to be processed, the <binary-function> is repeatedly called with two
+arguments: the next element from the list and the accumulator. After each call,
+the return value of the function replaces the accumulator. When no more items
+remain, the accumulator is returned.
+
+The <key-function> specifies how each element from the <list> is converted
+to an argument to <binary-function>. The value nil is equivalent to 
+(fun identity), which means that each list element is taken as the value itself.
+
+
+.TP
+Examples:
+
+;;; list is empty, so 1 is just returned:
+(reduce-left (fun +) () 1 nil)  ->  1  
+
+;;; computes (- (- (- 0 1) 2) 3) 
+(reduce-left (fun -) '(1 2 3) 0 nil) -> -6
+
+;;; computes (- 1 (- 2 (- 3 0)))
+(reduce-right (fun -) '(1 2 3) 0 nil) -> 2
+
+;;; computes (* 1 2 3)
+(reduce-left (fun *) '((1) (2) (3)) 1 (fun first)) -> 6
+
 .SS Function copy-list
 
 .SS Functions reverse, nreverse
