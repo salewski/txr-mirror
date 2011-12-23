@@ -1,3 +1,59 @@
+                                     TXR 50
+                                   2012-12-23
+
+
+  Features
+  
+  - Dropped silly leading 0 from version number. :)
+
+  - New vector functions: copy-vec, sub-vec, cat-vec.
+
+  - New API for pseudo-random-number generation, complete with
+    independent random state objects that can be seeded and copied.
+
+  - Vim syntax highlighting definition improvements.
+
+  - In the format function, left-adjustment is specified using <
+    rathr than the - character. (However a negative width specified
+    as an argument using * still means left adjust.)  The leading
+    zero for zero padding as well as the sign character (space or +)
+    are specified in the precision field, not the width field.
+
+  - More complete documentation.
+
+  - Slight return value convention change in some and all functions.
+
+  - Added memql function.
+
+  Bugs
+
+  - Critical flaw in hashing fixed that could crash on some platforms.
+
+  - Exception handling fix: if a catch clause performs a
+    non-local exit, the finally clause is still executed.
+
+  - "make distclean" fixed.
+
+  - Fix for differences in syntax error diagnosis between Byacc and Bison.
+
+  - Fixed a memory leak in a division-by-zero case in the bignum mod
+    function.
+
+  - Fixed a terrible bug in one of the MPI patches affecting the correctness
+    of various operations on numbers having a 1 in the most significant
+    bit position of the most significant digit word.
+
+  - Fixes in format function. All objects obey field width and left/right
+    alignment. Numeric precision, zero padding and optional sign all works.
+
+  - Lisp code evaluated in @(repeat)/@(rep) clauses can now see all variables,
+    not just the ones subject to the repeat. (But whether or not a repeat
+    executes, or which clauses, is still independent of what variables
+    are accessed by the embedded Lisp, taking into account only the variables
+    directly embedded in the clause.)
+
+
+
                                     TXR 049
                                    2012-12-19
 
