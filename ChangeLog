@@ -88,6 +88,13 @@
 
 2011-12-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	* mpi-patches/bit-search-optimizations (s_highest_bit):
+	It will take days to completely wipe the egg off my face.
+	I forgot to fix this code for unsigned integers before
+	pasting it into MPI.
+
+2011-12-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (normalize): Linkage changed to extern.
 
 	* arith.h (normalize): Declared.
