@@ -1,5 +1,9 @@
 2011-12-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Documented copy-list, reverse, nreverse, ldiff and flatten.
+
+2011-12-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: Documented reduce-left and reduce-right.
 
 2011-12-22  Kaz Kylheku  <kaz@kylheku.com>
