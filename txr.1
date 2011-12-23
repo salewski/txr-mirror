@@ -5522,11 +5522,114 @@ Examples:
 
 .SS Function copy-list
 
+.TP
+Syntax:
+
+(copy-list <list>)
+
+.TP
+Description:
+
+The copy-list function which returns a list similar <list>, but with
+a newly allocated cons cell structure.
+
+If <list> is an atom, it is simply returned.
+
+Otherwise, <list> is a cons cell, and copy-list returns
+(cons (car <list>) (copy-list (cdr <list>))) except that recursion
+is not used.
+
+.TP
+Dialect Note:
+
+Common Lisp does not allow the argument to be an atom, except
+for the empty list nil.
+
 .SS Functions reverse, nreverse
+
+.TP
+Syntax:
+
+(reverse <list>)
+(nreverse <list>)
+
+.TP
+Description:
+
+The functions reverse and nreverse produce an object which contains
+the same items as proper list <list>, but in reverse order.
+If <list> is nil, then both functions return nil.
+
+The reverse function is non-destructive: it creates a new list.
+
+The nreverse function creates the structure of the reversed list out of the
+cons cells of the input list, thereby destructively altering it (if it contains
+more than one element). How nreverse uses the material from the original list
+is unspecified. It may rearrange the cons cells into a reverse order, or it may
+keep the structure intact, but transfer the "car" values among cons cells into
+reverse order.  Other approaches are possible.
 
 .SS Function ldiff
 
+.TP
+Syntax:
+
+(ldiff <list> <sublist>)
+
+.TP
+Description:
+
+The values <list> and <sublist> are proper lists.
+
+The ldiff function determines whether <sublist> is a structural suffix of
+<list> (meaning that it actually is a suffix, and is not merely equal to one).
+
+This is true if <list> and <sublist> are the same object, or else,
+recursively, if <sublist> is a suffix of (cdr <list>).
+
+The object nil is the sublist of every list, including itself.
+
+The ldiff function returns a new list consisting of the elements of
+the prefix of <list> which come before the <sublist> suffix. The elements
+are in the same order as in <list>.  If <sublist> is not a suffix of <list>,
+then a copy of <list> is returned.
+
+.TP
+Examples:
+
+;;; unspecified: the compiler could make '(2 3) a suffix of '(1 2 3),
+;;; or they could be separate objects.
+(ldiff '(1 2 3) '(2 3)) -> either (1) or (1 2 3)
+
+;; b is the (1 2) suffix of a, so the ldiff is (1)
+(let ((a '(1 2 3)) (b (cdr a)))
+  (ldiff a b))
+-> (1)
+
 .SS Function flatten
+
+.TP
+Syntax:
+
+(flatten <list>)
+
+.TP
+Description:
+
+The flatten function produces a list whose elements are all of the non-nil
+atoms contained in the structure of <list>.
+
+.TP
+Examples:
+
+(flatten '(1 2 () (3 4))) -> (1 2 3 4)
+
+;; precisely equivalent to previous example! nil is the same thing as ()
+(flatten '(1 2 nil (3 4))) -> (1 2 3 4)
+
+(flatten nil) -> nil
+
+(flatten '(((()) ()))) -> nil
 
 .SS Functions memq and memqual
 
