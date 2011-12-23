@@ -767,22 +767,37 @@ static void detect_format_string(void)
 }
 
 static val vformat_num(val stream, const char *str,
-                       int width, int left, int pad, int precision)
+                       int width, int left, int zeropad, 
+                       int precision, int sign)
 {
-  int len = strlen(str);
-  int truewidth = (width > precision) ? width : precision;
-  int slack = (len < truewidth) ? truewidth - len : 0;
-  int padlen = (len < precision) ? precision - len : 0;
+  int sign_char = (str[0] == '-' || str[0] == '+') ? str[0] : 0;
+  int digit_len = strlen(str) - (sign_char != 0);
+  int padlen = precision > digit_len ? precision - digit_len : 0;
+  int total_len = digit_len + padlen + (sign_char || sign); 
+  int slack = (total_len < width) ? width - total_len : 0;
   int i;
 
   if (!left)
     for (i = 0; i < slack; i++)
-      if (!put_char(stream, pad ? chr('0') : chr(' ')))
+      if (!put_char(stream, chr(' ')))
         return nil;
 
-  for (i = 0; i < padlen; i++)
-    if (!put_char(stream, pad ? chr('0') : chr(' ')))
-      return nil;
+  if (!zeropad)
+    for (i = 0; i < padlen; i++)
+      if (!put_char(stream, chr(' ')))
+        return nil;
+
+  if (sign_char) {
+    put_char(stream, chr(sign_char));
+    str++;
+  } else if (sign) {
+    put_char(stream, chr(sign));
+  }
+
+  if (zeropad)
+    for (i = 0; i < padlen; i++)
+      if (!put_char(stream, chr('0')))
+        return nil;
 
   while (*str)
     if (!put_char(stream, chr(*str++)))
@@ -834,7 +849,7 @@ val vformat(val stream, val fmtstr, va_list vl)
       vf_init, vf_width, vf_digits, vf_precision, vf_spec
     } state = vf_init, saved_state = vf_init;
     int width = 0, precision = 0, digits = 0;
-    int left = 0, zeropad = 0;
+    int left = 0, sign = 0, zeropad = 0;
     cnum value;
     void *ptr;
 
@@ -865,9 +880,13 @@ val vformat(val stream, val fmtstr, va_list vl)
         switch (ch) {
         case '~':
           put_char(stream, chr('~'));
+          state = vf_init;
           continue;
         case '-':
           left = 1;
+          continue;
+        case '+': case ' ':
+          sign = ch;
           continue;
         case ',':
           state = vf_precision;
@@ -1013,7 +1032,7 @@ val vformat(val stream, val fmtstr, va_list vl)
           if (fixnump(obj)) {
             value = c_num(obj);
             sprintf(num_buf, num_fmt->dec, value);
-            if (!vformat_num(stream, num_buf, 0, 0, 0, 0))
+            if (!vformat_num(stream, num_buf, 0, 0, 0, 0, 0))
               return nil;
             continue;
           } else if (bignump(obj)) {
@@ -1022,7 +1041,7 @@ val vformat(val stream, val fmtstr, va_list vl)
             if (nchars >= (int) sizeof (num_buf))
               pnum = (char *) chk_malloc(nchars + 1);
             mp_toradix(mp(obj), (unsigned char *) pnum, 10);
-            res = vformat_num(stream, pnum, 0, 0, 0, 0);
+            res = vformat_num(stream, pnum, 0, 0, 0, 0, 0);
             if (pnum != num_buf)
               free(pnum);
             if (!res)
@@ -1042,8 +1061,7 @@ val vformat(val stream, val fmtstr, va_list vl)
         output_num:
           {
             val res = vformat_num(stream, pnum, width, left,
-                                  precision ? 0 : zeropad,
-                                  precision ? precision : 1);
+                                  zeropad, precision, sign);
             if (pnum != num_buf)
               free(pnum);
             if (!res)

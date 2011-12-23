@@ -1,5 +1,18 @@
 2011-12-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	Bug #35026
+
+	* stream.c (format_num): New argument: sign character.
+	Rewrote to handle precision, width, zero padding and
+	leading sign similarly to printf.
+	(vformat): New syntax accepted: a space or + before
+	the width specifies that a positive sign is to be
+	explicitly written as a space or + character.
+	Pass one more argument to vormat_num calls.
+	Bugfix: go back to vf_init state after processing ~~.
+
+2011-12-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	Bug #35136 and cleanup.
 
 	* arith.c (plus, minus, mul, gt, ge, lt, le, exptmod, gcd): Remove
