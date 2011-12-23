@@ -1020,6 +1020,11 @@ val vformat(val stream, val fmtstr, va_list vl)
               pnum = (char *) chk_malloc(nchars + 1);
             mp_toradix(mp(obj), (unsigned char *) pnum, 10);
             goto output_num;
+          } else if (width != 0) {
+            val str = format(nil, ch == 'a' ? lit("~a") : lit("~s"), obj, nao);
+            if (!vformat_str(stream, str, width, left, precision))
+              return nil;
+            continue;
           }
           if (ch == 'a')
             obj_pprint(obj, stream);
@@ -1032,7 +1037,8 @@ val vformat(val stream, val fmtstr, va_list vl)
           sprintf(num_buf, num_fmt->hex, value);
           goto output_num;
         default:
-          abort();
+          uw_throwf(error_s, lit("unknown format directive character ~s\n"), 
+                    chr(ch), nao);
         output_num:
           {
             val res = vformat_num(stream, pnum, width, left,
