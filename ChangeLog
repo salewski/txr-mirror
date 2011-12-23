@@ -1,5 +1,17 @@
 2011-12-23  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 50
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES: Updated.
+
+2011-12-23  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (memql): New function.
 	(some_satisfy): Return the first non-nil result, rather than t.
 	(all_satisfy): Return the value of the last item, if all items
