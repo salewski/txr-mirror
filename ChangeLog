@@ -1,5 +1,11 @@
 2011-12-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (vformat): Combine ~a and ~s cases, so numbers and
+	strings are printed the same way under ~s and ~a.  The only difference
+	is printing other kinds of objects.
+
+2011-12-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	Bug #35026
 
 	* stream.c (format_num): New argument: sign character.
