@@ -5631,13 +5631,148 @@ Examples:
 
 (flatten '(((()) ()))) -> nil
 
-.SS Functions memq and memqual
+.SS Functions memq, memql and memqual
+
+.TP
+Syntax:
+
+(memq <object> <list>)
+(memql <object> <list>)
+(memqual <object> <list>)
+
+.TP
+Description:
+
+The memq, memql and memqual functions search the <list> for a member
+which is, respectively, eq, eql or equal to <object>. (See the eq, eql and
+equal functions below.)
+
+If no such element found, nil is returned.
+
+Otherwise, that tail of the list is returned whose first element
+is the matching object.
 
 .SS Function tree-find
 
+.TP Syntax:
+(tree-find <obj> <tree> <test-function>)
+
+.TP Description:
+
+The tree-find function searches <tree> for an occurence of <obj>.  Tree can be
+any atom, or a cons. If <tree> it is a cons, it is understood to be a proper
+list whose elements are also trees.
+
+The equivalence test is performed by <test-function> which must take two
+arguments, and has conventions similar to eq, eql or equal.
+
+tree-find works as follows.  If <tree> is equivalent to <obj> under
+<test-function>, then t is returned to announce a successful finding.
+If this test fails, and <tree> is an atom, nil is returned immediately to
+indicate that the find failed.  Otherwise, <tree> is taken to be a proper list,
+and tree-find is recursively applied to each element of the list in turn, using
+the same <obj> and <test-function> arguments, stopping at the first element
+which returns non-nil.  
+
 .SS Function some, all and none
 
+.TP Syntax:
+
+(some <list> <predicate-fun> <key-fun>)
+(all <list> <predicate-fun> <key-fun>)
+(none <list> <predicate-fun> <key-fun>)
+
+.TP Description
+
+The some, all and none functions apply a predicate test over a list of
+elements.  The elements of <list> are reduced to values using <key-fun>, which
+is a one-argument function. If <key-fun> is specified as nil, then (fun
+identity) is substituted, and thus the values of the list are taken as they
+are.
+
+These functions have short-circuiting semantics and return conventions similar
+to the and and or operators.
+
+The some function applies <predicate-fun> to successive values
+produced by retrieving elements of <list> and processing them through
+<key-fun>. If the list is empty, it returns nil. Otherwise it returns the
+first non-nil return value returned by a call to <predicate-fun> and
+stops evaluating more elements. If <predicate-fun> returns nil for all
+elements, it returns nil.
+
+The all function applies <predicate-fun> to successive values
+produced by retrieving elements of <list> and processing them through
+<key-fun>. If the list is empty, it returns t. Otherwise, if
+<predicate-fun> yields nil for any value,  the all function immediately
+returns without invoking <predicate-fun> on any more elements.
+If all the elements are processed, then the all function returns
+the value which <predicate-fun> yielded for the last element.
+
+The none function applies <predicate-fun> to successive values
+produced by retrieving elements of <list> and processing them through
+<key-fun>. If the list is empty, it returns t. Otherwise, if
+<predicate-fun> yields  non-nil for any value, the none function
+immediately returns nil. If <predicate-fun> yields nil for all
+values, the none function returns t.
+
+.TP
+Examples:
+
+;; some of the integers are odd
+(some (fun oddp) '(2 4 6 9) nil) -> t
+
+;; none of the integers are even
+(none (fun evenp) '(1 3 4 7) nil) -> t
+
 .SS Functions eq, eql and equal
+
+.TP
+Syntax:
+
+(eq <left-obj> <right-obj>)
+(eql <left-obj> <right-obj>)
+(equal <left-obj> <right-obj>)
+
+.TP
+Description:
+
+The principal equality test functions eq, eql and equal test whether
+two objects are equivalent, using different criteria. They return t
+if the objects are equivalent, and nil otherwise.
+
+The eq function uses the strictest equivalence test, called implementation
+equality.  The eq function returns t if, and only if, <left-obj> and
+<right-obj> are actually the same object. The eq test is is implemented
+by comparing the raw bit pattern of the value, whether or not it is
+an immediate value or a pointer to a heaped object, including its type
+tags.  Consequently, two objects of different type are never equal, two
+character values are eq if they are the same character, and two fixnum integers
+are eq if they have the same value.  All other objects kinds are actually
+represented as pointers, and are eq if they point to the same object in memory.
+So two bignum integers might not be eq even if they have the same numeric
+value, two lists might not be eq even if all their corresponding elements are
+eq, two strings might not be eq even if they hold identical text, etc.
+
+The eql function is slightly less strict than eq. The difference between
+eql and eq is that if <left-obj> and <right-obj> are bignums which have
+the same numeric value, eql returns t, even if they are different objects.
+For all other objects, eql behaves like eq.
+
+The equal function is less strict than eql. In general, it recurses into some
+kinds of aggregate objects to perform a structural equivalence.  If <left-obj>
+and <right-obj> are eql then they are also equal.  If the two objects are both
+cons cells, then they are equal if their "car" fields are equal and their "cdr"
+fields are equal.  If two objects are vectors, they are equal if they have the
+same length, and their corresponding elements are equal.  If two objects are
+strings, they are equal if they are textually identical.  If two objects are
+functions, they are equal if they have equal environments, and if they have
+equal functions. Two compiled functions are the same if they are the same
+function. Two interpreted functions are equal if their list structure is equal.
+
+For some aggregate objects, there is no special semantics.  Two hashes,
+symbols, packages, or streams are equal if they are the same hash.
+
+Certain object types have a custom equal function.
 
 .SS Arithmetic functions +, -, *, trunc, mod, expt, sqrt
 

@@ -411,6 +411,13 @@ val memq(val obj, val list)
   return list;
 }
 
+val memql(val obj, val list)
+{
+  while (list && !eql(car(list), obj))
+    list = cdr(list);
+  return list;
+}
+
 val memqual(val obj, val list)
 {
   while (list && !equal(car(list), obj))
@@ -434,8 +441,9 @@ val some_satisfy(val list, val pred, val key)
     key = identity_f;
 
   for (; list; list = cdr(list)) {
-    if (funcall1(pred, funcall1(key, car(list))))
-      return t;
+    val item;
+    if ((item = funcall1(pred, funcall1(key, car(list)))) != nil)
+      return item;
   }
 
   return nil;
@@ -443,15 +451,17 @@ val some_satisfy(val list, val pred, val key)
 
 val all_satisfy(val list, val pred, val key)
 {
+  val item = t;
+
   if (!key)
     key = identity_f;
 
   for (; list; list = cdr(list)) {
-    if (!funcall1(pred, funcall1(key, car(list))))
+    if ((item = funcall1(pred, funcall1(key, car(list)))) == nil)
       return nil;
   }
 
-  return t;
+  return item;
 }
 
 val none_satisfy(val list, val pred, val key)

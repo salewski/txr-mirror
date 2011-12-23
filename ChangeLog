@@ -1,3 +1,15 @@
+2011-12-23  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (memql): New function.
+	(some_satisfy): Return the first non-nil result, rather than t.
+	(all_satisfy): Return the value of the last item, if all items
+	are processed.
+
+	* lib.h (memql): Declared.
+
+	* txr.1: Documented memq, memql, memqual, tree-find, some,
+	all, none, eq, eql and equal.
+
 2011-12-22  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.1: Documented copy-list, reverse, nreverse, ldiff and flatten.

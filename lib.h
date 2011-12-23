@@ -334,6 +334,7 @@ val appendv(val lists);
 val ldiff(val list1, val list2);
 val flatten(val list);
 val memq(val obj, val list);
+val memql(val obj, val list);
 val memqual(val obj, val list);
 val tree_find(val obj, val tree, val testfun);
 val some_satisfy(val list, val pred, val key);
