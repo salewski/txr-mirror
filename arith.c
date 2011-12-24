@@ -84,7 +84,7 @@ val normalize(val bignum)
   }
 }
 
-static int highest_bit(int_ptr_t n)
+int highest_bit(int_ptr_t n)
 {
 #if SIZEOF_PTR == 8
   if (n & 0x7FFFFFFF00000000) {
