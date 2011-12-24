@@ -1,5 +1,12 @@
 2011-12-23  Kaz Kylheku  <kaz@kylheku.com>
 
+	* rand.c (rand32): Moved.
+	(make_random_state): After initializing, retrieve eight
+	random numbers to clear pathological initial behavior
+	leading to duplicate values.
+
+2011-12-23  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (highest_bit): Changing to external linkage.
 
 	* arith.h (highest_bit): Declared.
