@@ -1,5 +1,15 @@
 2011-12-23  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (highest_bit): Changing to external linkage.
+
+	* arith.h (highest_bit): Declared.
+
+	* rand.c (random): Rewrote using different algorithm which
+	ensures even distribution, and avoids doing a bignum mod
+	operation.
+
+2011-12-23  Kaz Kylheku  <kaz@kylheku.com>
+
 	Version 50
 
 	* txr.c (version): Bumped.

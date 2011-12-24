@@ -25,5 +25,6 @@
  */
 
 val make_bignum(void);
+int highest_bit(int_ptr_t n);
 val normalize(val bignum);
 void arith_init(void);
