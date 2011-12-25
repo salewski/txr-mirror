@@ -488,6 +488,62 @@ val flatten(val list)
   return mappend(func_n1(flatten), list);
 }
 
+/*
+ * Return the embedded list whose car is the non-nil atom in the given nested
+ * list, updating the escape stack in the process. If no such atom is found in
+ * the list, try to retreate up the stack to find it in the surrounding
+ * structure, finally returning nil if nothing is found.
+ */
+static val lazy_flatten_scan(val list, val *escape)
+{
+  for (;;) { 
+    if (list) {
+      val a = car(list);
+      if (nullp(a)) {
+        list = cdr(list);
+      } else if (atom(a)) {
+        return list;
+      } else do {
+        push(cdr(list), escape);
+        list = a;
+        a = car(list);
+      } while (consp(a));
+      return list;
+    } else if (*escape) {
+      list = pop(escape);
+    } else {
+      return nil;
+    }
+  }
+}
+
+static val lazy_flatten_func(val env, val lcons)
+{
+  cons_bind (list, escape, env);
+  val atom = car(list);
+  val next = lazy_flatten_scan(cdr(list), &escape);
+
+  rplaca(lcons, atom);
+  rplaca(env, next);
+  rplacd(env, escape);
+
+  if (next)
+    rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+
+  return nil;
+}
+
+val lazy_flatten(val list)
+{
+  val escape = nil;
+  val next = lazy_flatten_scan(list, &escape);
+
+  if (!next)
+    return nil;
+
+  return make_lazy_cons(func_f1(cons(next, escape), lazy_flatten_func));
+}
+
 cnum c_num(val num);
 
 val eql(val left, val right)

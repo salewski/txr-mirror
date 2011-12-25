@@ -5606,7 +5606,7 @@ Examples:
   (ldiff a b))
 -> (1)
 
-.SS Function flatten
+.SS Functions flatten, lazy-flatten
 
 .TP
 Syntax:
@@ -5617,7 +5617,11 @@ Syntax:
 Description:
 
 The flatten function produces a list whose elements are all of the non-nil
-atoms contained in the structure of <list>.
+atoms contained in the structure of <list>. The lazy-flatten function
+works like flatten except that flatten creates and returns a complete
+flattened list, whereas lazy-flatten produces a lazy list which is
+instantiated on demand. This is particularly useful when the input
+structure is itself lazy.
 
 .TP
 Examples:
