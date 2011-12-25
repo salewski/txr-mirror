@@ -1,3 +1,18 @@
+2011-12-25  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): New function interned.
+
+	* lib.c:x (lazy_flatten_scan, lazy_flatten_func): New static functions.
+	(lazy_flatten): New function.
+			
+	* lib.h (lazy_flatten): Declared.
+
+	* match.c (v_next): Use lazy_flatten instead of flatten for
+	processing a :list source. This means that @(next :list ...)
+	can be used to process infinite lazy lists.
+
+	* txr.1: Documented lazy-flatten.
+
 2011-12-23  Kaz Kylheku  <kaz@kylheku.com>
 
 	* rand.c (rand32): Moved.

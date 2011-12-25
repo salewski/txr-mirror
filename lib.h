@@ -333,6 +333,7 @@ val nappend2(val list1, val list2);
 val appendv(val lists);
 val ldiff(val list1, val list2);
 val flatten(val list);
+val lazy_flatten(val list);
 val memq(val obj, val list);
 val memql(val obj, val list);
 val memqual(val obj, val list);

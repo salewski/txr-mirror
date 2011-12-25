@@ -1974,7 +1974,7 @@ static val v_next(match_files_ctx *c)
         {
           cons_bind (new_bindings, success,
                      match_files(mf_file_data(*c, lit("var"),
-                                 flatten(cdr(existing)), num(1))));
+                                 lazy_flatten(cdr(existing)), num(1))));
 
           if (success)
             return cons(new_bindings,
