@@ -1985,7 +1985,7 @@ static val v_next(match_files_ctx *c)
         val list_val = txeval(specline, list_expr, c->bindings);
         cons_bind (new_bindings, success,
                    match_files(mf_file_data(*c, lit("var"),
-                               flatten(list_val), num(1))));
+                               lazy_flatten(list_val), num(1))));
 
         if (success)
           return cons(new_bindings,

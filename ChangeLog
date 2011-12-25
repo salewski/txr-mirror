@@ -1,5 +1,11 @@
 2011-12-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (v_next): Change flatten to lazy_flatten in the
+	correct place. In the previous commit I did it in the code that handles
+	the obsolescent :var syntax.
+
+2011-12-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): New function interned.
 
 	* lib.c:x (lazy_flatten_scan, lazy_flatten_func): New static functions.
