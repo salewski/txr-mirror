@@ -1,5 +1,9 @@
 2011-12-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Formatting fixes.
+
+2011-12-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	* dep.mk: Overdue update.
 
 2011-12-25  Kaz Kylheku  <kaz@kylheku.com>

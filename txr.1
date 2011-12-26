@@ -4360,9 +4360,10 @@ These operators are said to feature an "implicit progn".
 .TP
 Syntax:
 
+.nf
 (let ({<sym> | (<sym> <init-form>)}*) <body-form>*)
-
 (let* ({<sym> | (<sym> <init-form>)}*) <body-form>*)
+.fi
 
 .TP
 Description:
@@ -4395,13 +4396,12 @@ The variable list may be empty.
 .TP
 Examples:
 
+.nf
 (let ((a 1) (b 2)) (list a b)) -> (1 2)
-
 (let* ((a 1) (b (+ a 1))) (list a b (+ a b))) -> (1 2 3)
-
 (let ()) -> nil
-
 (let (:a nil)) -> error, :a and nil can't be used as variables
+.fi
 
 .SS Operator lambda
 
@@ -4442,13 +4442,17 @@ Counting function. This function, which takes no arguments, captures the
 variable "counter". Whenever this object is called, it increments the counter
 by 1 and returns the incremented value.
 
+.nf
 (let ((counter 0))
   (lambda () (inc counter)))
+.fi
 
 Function that takes two or more arguments. The third and subsequent arguments
 are aggregated into a list passed as the single parameter z:
 
+.nf
 (lambda (x y . z) (list 'my-arguments-are x y z))
+.fi
 
 .SS Operator call
 
@@ -4568,11 +4572,11 @@ the return value.
 .TP
 Examples:
 
+.nf
 (and) -> t
-
 (and (> 10 5) (stringp "foo")) -> t
-
 (and 1 2 3) -> 3
+.fi
 
 .SS Operator or
 
@@ -4599,13 +4603,12 @@ operator yields the return value.
 .TP
 Examples:
 
+.nf
 (or) -> nil
-
 (or 1 2) -> 1
-
 (or nil 2) -> 2
-
 (or (> 10 20) (stringp "foo")) -> t
+.fi
 
 .SS Operator defun
 
@@ -4630,17 +4633,14 @@ A function may call itself by name, allowing for recursion.
 .TP
 Syntax:
 
+.nf
 (inc <place> [<delta>])
-
 (dec <place> [<delta>])
-
 (set <place> <new-value>)
-
 (push <item> <place>)
-
 (pop <place>)
-
 (flip <place>)
+.fi
 
 .TP
 Description:
@@ -4726,10 +4726,12 @@ to be treated as assignment places.
 .TP
 Syntax:
 
+.nf
 ({for | for*} ({<sym> | (<sym> <init-form>)}*) 
               (<test-form> <result-form>*) 
               (<inc-form>*)
   <body-form>*)
+.fi
 
 .TP
 Description:
@@ -4765,8 +4767,10 @@ allowing the return operator to be used to terminate at any point.
 .TP
 Syntax:
 
+.nf
 (dohash (<key-var> <value-var> <hash-form> [<result-form>])
   <body-form>*)
+.fi
 
 .TP
 Description:
@@ -4815,11 +4819,13 @@ is aborted and replaced with the new one.
 .TP
 Example:
 
- (block foo
-   (unwind-protect
-     (progn (return-from foo 42)
-            (format t "not reached!\en"))
-     (format t "cleanup!\n")))
+.nf
+  (block foo
+    (unwind-protect
+      (progn (return-from foo 42)
+             (format t "not reached!\en"))
+      (format t "cleanup!\n")))
+.fi
 
 In this example, the protected progn form terminates by returning from
 block foo. Therefore the form does not complete and so the
@@ -4878,9 +4884,10 @@ the construct. THROW itself is a function and not an operator.
 .TP
 Syntax:
 
+.nf
 (return [<value>])
-
 (return-from <name> [<value>])
+.fi
 
 .TP
 Description:
@@ -4899,12 +4906,14 @@ value. If the value is omitted, that block returns nil.
 .TP
 Example:
 
+.nf
   (block foo
     (let ((a "abc\n")
           (b "def\n"))
       (pprint a *stdout*)
       (return-from foo 42)
       (pprint b *stdout*)))
+.fi
 
 Here, the output produced is "abc". The value of b is not printed
 because the return-from terminates block foo, and so the second pprint
@@ -5045,8 +5054,10 @@ The list (1 2) is (1 . (2 . nil)).
 .TP
 Syntax:
 
+.nf
 (car <cons-or-nil>)
 (first <cons-or-nil>)
+.fi
 
 .TP
 Description:
@@ -5062,8 +5073,10 @@ even though nil isn't a cons and doesn't have a "car" field.
 .TP
 Syntax:
 
+.nf
 (cdr <cons-or-nil>)
 (rest <cons-or-nil>)
+.fi
 
 .TP
 Description:
@@ -5079,9 +5092,11 @@ Example:
 
 Walk every element of the list (1 2 3):
 
+.nf
   (for ((i '(1 2 3))) (i) ((set i (cdr i)))
     (print (car i) *stdout*)
     (print #\newline *stdout*))
+.fi
 
 The variable i marches over the cons cells which make up the "backbone"
 of the list. The elements are retrieved using the car function.
@@ -5094,8 +5109,10 @@ expression i fails and the loop terminates.
 .TP
 Syntax:
 
+.nf
 (rplaca <cons> <new-car-value>)
 (rplacd <cons> <new-cdr-value>)
+.fi
 
 .TP
 Description:
@@ -5113,12 +5130,14 @@ whereas (car nil) is correct, (rplaca nil ...) is erroneous.
 .TP
 Syntax:
 
+.nf
 (first <list>)
 (second <list>)
 (third <list>)
 (fourth <list>)
 (fifth <list>)
 (sixth <list>)
+.fi
 
 .TP
 Description:
@@ -5130,11 +5149,11 @@ If the list is shorter than implied, these functions return nil.
 .TP
 Examples:
 
-  (third '(1 2)) -> nil
-
-  (second '(1 2)) -> 2
-
-  (third '(1 2 . 3)) -> **error**
+.nf
+(third '(1 2)) -> nil
+(second '(1 2)) -> 2
+(third '(1 2 . 3)) -> **error**
+.fi
 
 .SS Function append
 
@@ -5163,6 +5182,7 @@ be an atom other than nil; in that case append produces an improper list.
 .TP
 Examples:
 
+.nf
 ;; An atom is returned.
 (append 3) -> 3
 
@@ -5191,6 +5211,7 @@ Examples:
 ;; atoms and improper lists other than in the last position
 ;; are erroneous
 (append '(a . b) 3 '(1 2 3)) -> **error**
+.fi
 
 .SS Function list
 
@@ -5208,9 +5229,11 @@ argument values.
 .TP
 Examples:
 
+.nf
 (list) -> nil
 (list 1) -> (1)
 (list 'a 'b) -> (a b)
+.fi
 
 .SS Function atom
 
@@ -5229,17 +5252,22 @@ case, nil otherwise.  All values which are not cons cells are atoms.
 .TP
 Examples:
 
+.nf
 (atom 3) -> t
 (atom (cons 1 2)) -> nil
 (atom "abc") -> t
 (atom '(3)) -> nil
+.fi
 
 .SS Functions null and not
 
 .TP
 Syntax:
+
+.nf
 (null <value>)
 (not <value>)
+.fi
 
 .TP
 Description:
@@ -5250,6 +5278,7 @@ object nil. They returns t if this is the case, nil otherwise.
 .TP
 Examples:
 
+.nf
 (null '()) -> t
 (null nil) -> t
 (null ()) -> t
@@ -5259,11 +5288,13 @@ Examples:
 (let ((list '(b c d)))
   (if (not (memq 'a list))
     (format t "list ~s does not contain the symbol a\en")))
+.fi
 
 .SS Function consp
 
 .TP
 Syntax:
+
 (consp <value>)
 
 .TP
@@ -5280,11 +5311,12 @@ as a reference to the first cons in a chain of one or more conses.
 .TP
 Examples:
 
+.nf
 (consp 3) -> nil
 (consp (cons 1 2)) -> t
 (consp "abc") -> nil
 (consp '(3)) -> t
-
+.fi
 
 .SS Function make_lazy_cons
 
@@ -5319,6 +5351,7 @@ and install the resulting cons as the cdr of the lazy cons.
 .TP
 Example:
 
+.nf
 ;;; lazy list of integers between min and max
 (defun integer-range (min max)
   (let ((counter min))
@@ -5340,6 +5373,7 @@ Example:
                            (inc counter)
                            (rplacd lcons (make-lazy-cons 
                                           (lcons-fun lcons))))))))))
+.fi
 
 .SS Function lcons-fun
 
@@ -5363,8 +5397,10 @@ another lazy cons (as in the example under make-lazy-cons).
 .TP
 Syntax:
 
+.nf
 (listp <value>)
 (proper-listp <value>)
+.fi
 
 .TP
 Description:
@@ -5397,8 +5433,10 @@ list. The length of a list is the number of conses in that list.
 .TP
 Syntax:
 
+.nf
 (mapcar <function> <list> <list>*)
 (mappend <function> <list> <list>*)
+.fi
 
 .TP
 When given three arguments, the mapcar function processes applies a function to
@@ -5424,6 +5462,7 @@ That is to say, (mappend f a b c) is equivalent to
 .TP
 Examples:
 
+.nf
 ;; multiply every element by two
 (mapcar (lambda (item) (* 2 item)) '(1 2 3)) -> (4 6 8)
 
@@ -5437,7 +5476,7 @@ Examples:
 ;; take just the even numbers
 (mappend (lambda (item) (if (evenp x) (list x))) '(1 2 3 4 5))
 -> (2 4)
-
+.nf
 
 .SS Function apply
 
@@ -5456,8 +5495,10 @@ value becomes the return value of apply.
 .TP
 Examples:
 
+.nf
 ;; '(1 2 3) becomes arguments to list, thus (list 1 2 3).
 (apply (fun list) '(1 2 3)) -> (1 2 3)
+.fi
 
 .TP
 Dialect note:
@@ -5473,8 +5514,10 @@ yields (1 2 3 4 5). In TXR Lisp, this usage can be simulated using
 .TP
 Syntax:
 
+.nf
 (reduce-left <binary-function> <list> <init-value> <key-function>)
 (reduce-right <binary-function> <list> <init-value> <key-function>)
+.fi
 
 .TP
 Description:
@@ -5508,6 +5551,7 @@ to an argument to <binary-function>. The value nil is equivalent to
 .TP
 Examples:
 
+.nf
 ;;; list is empty, so 1 is just returned:
 (reduce-left (fun +) () 1 nil)  ->  1  
 
@@ -5519,6 +5563,7 @@ Examples:
 
 ;;; computes (* 1 2 3)
 (reduce-left (fun *) '((1) (2) (3)) 1 (fun first)) -> 6
+.fi
 
 .SS Function copy-list
 
@@ -5550,8 +5595,10 @@ for the empty list nil.
 .TP
 Syntax:
 
+.nf
 (reverse <list>)
 (nreverse <list>)
+.fi
 
 .TP
 Description:
@@ -5597,6 +5644,7 @@ then a copy of <list> is returned.
 .TP
 Examples:
 
+.nf
 ;;; unspecified: the compiler could make '(2 3) a suffix of '(1 2 3),
 ;;; or they could be separate objects.
 (ldiff '(1 2 3) '(2 3)) -> either (1) or (1 2 3)
@@ -5605,6 +5653,7 @@ Examples:
 (let ((a '(1 2 3)) (b (cdr a)))
   (ldiff a b))
 -> (1)
+.fi
 
 .SS Functions flatten, lazy-flatten
 
@@ -5626,6 +5675,7 @@ structure is itself lazy.
 .TP
 Examples:
 
+.nf
 (flatten '(1 2 () (3 4))) -> (1 2 3 4)
 
 ;; precisely equivalent to previous example! nil is the same thing as ()
@@ -5634,15 +5684,18 @@ Examples:
 (flatten nil) -> nil
 
 (flatten '(((()) ()))) -> nil
+.fi
 
 .SS Functions memq, memql and memqual
 
 .TP
 Syntax:
 
+.nf
 (memq <object> <list>)
 (memql <object> <list>)
 (memqual <object> <list>)
+.fi
 
 .TP
 Description:
@@ -5658,10 +5711,13 @@ is the matching object.
 
 .SS Function tree-find
 
-.TP Syntax:
+.TP
+Syntax:
+
 (tree-find <obj> <tree> <test-function>)
 
-.TP Description:
+.TP
+Description:
 
 The tree-find function searches <tree> for an occurence of <obj>.  Tree can be
 any atom, or a cons. If <tree> it is a cons, it is understood to be a proper
@@ -5680,13 +5736,17 @@ which returns non-nil.
 
 .SS Function some, all and none
 
-.TP Syntax:
+.TP
+Syntax:
 
+.nf
 (some <list> <predicate-fun> <key-fun>)
 (all <list> <predicate-fun> <key-fun>)
 (none <list> <predicate-fun> <key-fun>)
+.fi
 
-.TP Description
+.TP
+Description
 
 The some, all and none functions apply a predicate test over a list of
 elements.  The elements of <list> are reduced to values using <key-fun>, which
@@ -5722,20 +5782,24 @@ values, the none function returns t.
 .TP
 Examples:
 
+.nf
 ;; some of the integers are odd
 (some (fun oddp) '(2 4 6 9) nil) -> t
 
 ;; none of the integers are even
 (none (fun evenp) '(1 3 4 7) nil) -> t
+.fi
 
 .SS Functions eq, eql and equal
 
 .TP
 Syntax:
 
+.nf
 (eq <left-obj> <right-obj>)
 (eql <left-obj> <right-obj>)
 (equal <left-obj> <right-obj>)
+.fi
 
 .TP
 Description:
