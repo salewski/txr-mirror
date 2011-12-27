@@ -1,19 +1,17 @@
 Index: mpi-1.8.6/mpi.h
 ===================================================================
---- mpi-1.8.6.orig/mpi.h	2011-12-13 09:35:31.000000000 -0800
-+++ mpi-1.8.6/mpi.h	2011-12-13 09:40:01.000000000 -0800
+--- mpi-1.8.6.orig/mpi.h	2011-12-27 14:01:24.628295000 -0800
++++ mpi-1.8.6/mpi.h	2011-12-27 14:46:02.227842000 -0800
 @@ -72,8 +72,13 @@
  #define MAX_RADIX         64
  
  typedef struct {
--  mp_sign       sign;    /* sign of this quantity      */
--  mp_size       alloc;   /* how many digits allocated  */
 +#if SIZEOF_INT >= SIZEOF_PTR
-+  unsigned int  sign : 1;                  /* sign of this quantity      */
-+  unsigned int  alloc : sizeof(int) - 1;   /* how many digits allocated  */
++  unsigned int  sign : 1;
++  unsigned int  alloc : sizeof(int)*CHAR_BIT - 1;
 +#else
-+  mp_sign       sign;
-+  mp_size       alloc;
+   mp_sign       sign;    /* sign of this quantity      */
+   mp_size       alloc;   /* how many digits allocated  */
 +#endif
    mp_size       used;    /* how many digits used       */
    mp_digit     *dp;      /* the digits themselves      */

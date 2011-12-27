@@ -1,5 +1,11 @@
 2011-12-27  Kaz Kylheku  <kaz@kylheku.com>
 
+	* mpi-patches/shrink-mpi-int (mpi_int): Fixed terrible bug in this
+	patch, resulting in an insufficient bit field width for representing
+	the allocation size of the MPI integer on 32 bit platforms.
+
+2011-12-27  Kaz Kylheku  <kaz@kylheku.com>
+
 	* rand.c (make_state): Use ANSI C syntax for prototyped function of no
 	arguments. This snuck through due to working with a C++ compiler.
 	(random): Fixed unused variable warning that happens on 32-bit-pointer
