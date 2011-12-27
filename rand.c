@@ -69,7 +69,7 @@ static struct cobj_ops random_state_ops = {
   cobj_hash_op 
 };
 
-static val make_state()
+static val make_state(void)
 {
   struct random_state *r = (struct random_state *) chk_malloc(sizeof *r);
   return cobj((mem_t *) r, random_state_s, &random_state_ops);
@@ -218,7 +218,6 @@ val random(val state, val modulus)
       goto invalid;
     for (;;) {
       cnum out = 0;
-      int i;
 
 #if SIZEOF_PTR >= 8
       for (i = 0; i < rands_needed; i++) {
