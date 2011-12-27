@@ -1,3 +1,10 @@
+2011-12-27  Kaz Kylheku  <kaz@kylheku.com>
+
+	* rand.c (make_state): Use ANSI C syntax for prototyped function of no
+	arguments. This snuck through due to working with a C++ compiler.
+	(random): Fixed unused variable warning that happens on 32-bit-pointer
+	platforms.
+	
 2011-12-25  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.1: Formatting fixes.
