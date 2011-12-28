@@ -389,7 +389,7 @@ typedef val (*h_match_func)(match_line_ctx c, match_line_ctx *cout);
           c.pos, EXTENT, c.file, c.data_lineno, nao);                   \
   debuglf(elem, lit("  ~a"), c.dataline, nao);                          \
   if (c_num(EXTENT) < 77)                                               \
-    debuglf(elem, lit("  ~*~a~-*~a^"), c.pos, lit(""),                  \
+    debuglf(elem, lit("  ~*~a~<*~a^"), c.pos, lit(""),                  \
               minus(EXTENT, c.pos), lit("^"), nao)
 
 #define elem_bind(elem_var, directive_var, specline)    \
