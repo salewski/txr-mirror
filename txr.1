@@ -21,60 +21,47 @@
 .\"IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
 .\"WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
-.TH "txr" 1 2011-12-23 "Utility Commands" "Txr Text Extractor" "Kaz Kylheku"
+.TH "TXR" 1 2011-12-23 "Utility Commands" "Txr Text Extractor" "Kaz Kylheku"
 .SH NAME
 txr \- text extractor (version 50)
 .SH SYNOPSIS
 .B txr [ options ] query-file { data-file }*
 .sp
 .SH DESCRIPTION
-.B txr
-is a query tool for extracting pieces of text buried in one or more text
-file based on pattern matching.  A
-.B txr
-query specifies a pattern which matches (a prefix of) an entire file, or
-multiple files. The pattern is matched against the material in the files, and
-free variables occurring in the pattern are bound to the pieces of text
-occurring in the corresponding positions. If the overall match is
-successful, then
-.B txr
+.B TXR
+is a language oriented toward extracting text from files or streams
+using multi-line, recursive pattern matching.  A
+.B TXR
+script is called a query, and it specifies a pattern which matches (a prefix
+of) an entire file, or multiple files.  Patterns can consists of large
+chunks of multi-line freeform text, which is matched literally
+against material in the input sources. Free variables occurring in the pattern
+(denoted by the @ symbol) are bound to the pieces of text occurring in the
+corresponding positions. If the overall match is successful, then
+.B TXR
 can do one of two things: it can report the list of variables which were bound,
 in the form of a set of variable assignments which can be evaluated by the
 .B eval
 command of the POSIX shell language, or generate a custom report according
-to special directives in the query.
+to special directives in the query. Patterns can be arbitrarily complex,
+and can be broken down into named pattern functions, which may be mutually
+recursive. TXR patterns can work horizontally (characters within a line)
+or vertically (spanning multiple lines). Multiple lines can be treated
+as a single line.
+
 
 In addition to embedded variables which implicitly match text, the
-.B txr
+.B TXR
 query language supports a number of directives, for matching text using regular
 expressions, for continuing a match in another file, for searching through a
 file for the place where an entire sub-query matches, for collecting lists, and
-for combining sub-queries using logical conjunction, disjunction and negation.
-Furethermore, embedded within TXR is a powerful Lisp dialect, described
-in the section TXR LISP far below.
+for combining sub-queries using logical conjunction, disjunction and negation,
+and numerous others.  
 
-When
-.B txr
-finds a match for a variable and binds it, if that variable occurs again
-later in the query, the variable's text is substituted, forcing a match for
-that exact text. Thus txr supports a rudimentary form of backreferencing
-unification, if you will. For example, the query
-
-  @FOO=@FOO
-
-will match material from the start of the line until the first equal sign,
-and bind it to the variable
-.IR FOO.
-Then, the material which follows the equal sign to the end of the line must
-match the contents bound to FOO. Hence the line "abc=abc" will match, but
-"abc=xyz" will fail to match.
-
-Generally, the scope of a variable's binding
-extends from its first successful match where the binding is established, to
-the end of the query. Unsuccessful subqueries have no effect on the
-bindings.  Even if a failed subquery is partially successful, all of its
-bindings are thrown away.  Some directives treat the bindings emanating
-from their subqueries in special ways.
+Furthermore, embedded within TXR is a powerful Lisp dialect, described in the
+section TXR LISP far below. TXR Lisp supports functional and imperative
+programming, and provides data types such as symbols, strings, vectors, hash
+tables with weak reference support, and arbitrary-precision (bignum integers).
 
 .SH ARGUMENTS AND OPTIONS
 
@@ -149,7 +136,7 @@ Specifies the query in the form of a command line argument. If this option is
 used, the query-file argument is omitted. The first non-option argument,
 if there is one, now specifies the first input source rather than a query.
 Unlike queries read from a file, (non-empty) queries specified as arguments
-using -c do not have to properly end in a newline. Internally, txr
+using -c do not have to properly end in a newline. Internally, TXR
 adds the missing newline before parsing the query. Thus -c "@a"
 is a valid query which matches a line.
 
@@ -209,7 +196,7 @@ a shell command which is to be run as a coprocess, and its output read like a
 file.
 
 .PP
-.B txr
+.B TXR
 begins by reading the query. The entire query is scanned, internalized
 and then begins executing, if it is free of syntax errors.  The reading of
 data, on the other hand, is lazy.  A file isn't opened until the query demands
@@ -222,22 +209,22 @@ prior to attempting to make a match. If a query attempts to match text,
 but has run out of files to process, the match fails.
 
 .SH STATUS AND ERROR REPORTING
-.B txr
+.B TXR
 sends errors and verbose logs to the standard error device.  The following paragraphs apply when
-.B txr
+.B TXR
 is run without enabling verbose mode. If verbose mode is enabled, then
-.B txr
+.B TXR
 issues diagnostics on the standard error device even in situations which are
 not erroneous.
 
 If the command line arguments are incorrect, or the query has a malformed
 syntax, or fails to match,
-.B txr
+.B TXR
 issues an error diagnostic and terminates with a failed status.
 
 If the query is accepted, but fails to execute, either due to a
 semantic error or due to a mismatch against the data,
-.B txr
+.B TXR
 terminates with a failed status, it also prints the word
 .IR false
 on standard output. (See NOTES ON FALSE below).  Printing of false
@@ -245,7 +232,7 @@ is suppressed if the query executed one or more @(output) directive
 directed to standard output.
 
 If the query is well-formed, and matches, then
-.B txr
+.B TXR
 issues no diagnostics on standard error (except in the case of verbose
 reporting enabled by -v).  If no variables were bound in the query, then
 nothing is printed on standard output.  If the query has matched one or more
@@ -285,7 +272,7 @@ an obsolescent feature.
 
 If the first line of a query begins with the characters #!,
 that entire line is deleted from the query. This allows
-for txr queries to be turned into standalone executable programs in the POSIX
+for TXR queries to be turned into standalone executable programs in the POSIX
 environment.
 
 Shell example: create a simple executable program called "twoline.txr" and
@@ -319,7 +306,7 @@ However, if the hash bang line can use the -f option:
   #!/usr/bin/txr -f
 
 Now, the name of the script is passed as an argument to the -f option,
-and txr will look for more options after that.
+and TXR will look for more options after that.
 
 .SS Whitespace
 
@@ -469,7 +456,7 @@ directive and in @(output).
 
 .SS International Characters
 
-.B txr
+.B TXR
 represents text internally using wide characters, which are used to represent
 Unicode code points. The query language, as well as all data sources, are
 assumed to be in the UTF-8 encoding.  In the query language, extended
@@ -477,17 +464,17 @@ characters can be used directly in comments, literal text, string literals,
 quasiliterals and regular expressions.  Extended characters can also be
 expressed indirectly using hexadecimal or octal escapes.
 On some platforms, wide characters may be restricted to 16 bits, so that
-.B txr
+.B TXR
 can only work with characters in the BMP (Basic Multilingual Plane)
 subset of Unicode.
 
-.B txr
+.B TXR
 does not use the localization features of the system library;
 its handling of extended characters is not affected by environment variables
 like LANG and L_CTYPE. The program reads and writes only the UTF-8 encoding.
 
 If
-.B txr
+.B TXR
 encounters an invalid bytes in the UTF-8 input, what happens depends on the
 context in which this occurs. In a query, comments are read without regard
 for encoding, so invalid encoding bytes are not detected. A comment is
@@ -821,7 +808,7 @@ variable.
 Regular expressions are a language for specifying sets of character strings.
 Through the use of pattern matching elements, regular expression is
 able to denote an infinite set of texts.
-.B txr
+.B TXR
 contains an original implementation of regular expressions, which
 supports the following syntax:
 .IP .
@@ -849,7 +836,7 @@ operator.
 An empty expression is a regular expression. It represents the set of strings
 consisting of the empty string; i.e. it matches just the empty string. The
 empty regex can appear alone as a full regular expression (for instance the
-.B txr
+.B TXR
 syntax @// with nothing between the slashes)
 and can also be passed as a subexpression to operators, though this
 may require the use of parentheses to make the empty regex explicit.  For
@@ -947,7 +934,7 @@ Similarly, a?*+%b  means (((a?)*)+)%b, where the trailing %b behaves
 like a postfix operator.
 
 In
-.B txr,
+.B TXR,
 regular expression matches do not span multiple lines. The regex language has
 no feature for multi-line matching. However, the @(freeform) directive
 allows the remaining portion of the input to be treated as one string
@@ -1286,7 +1273,7 @@ with, or without arguments:
 
 The lone @(next) without arguments switches to the next file in the
 argument list which was passed to the
-.B txr
+.B TXR
 utility. If SOURCE is given, it must be text-valued expression which denotes an
 input source; it may be a string literal, quasiliteral or a variable.
 For instance, if variable A contains the text "data", then
@@ -1300,7 +1287,7 @@ means switch to the file called "data", and
 means to switch to the file "data.txt".
 
 If the input source cannot be opened for whatever reason,
-.B txr
+.B TXR
 throws an exception (see EXCEPTIONS below). An unhandled exception will
 terminate the program.  Often, such a drastic measure is inconvenient;
 if @(next) is invoked with the :nothrow keyword, then if the input
@@ -1314,7 +1301,7 @@ source, that argument is included. Note that if the first entry in the argument
 list does not name an input source, then the query should begin with
 @(next :args) or some other form of next directive, to prevent an attempt to
 open the input source named by that argument. If the very first directive of a query is any variant of the next directive, then
-.B txr
+.B TXR
 avoids opening the first input source, but it does open the input source for
 any other directive, even one which does not consume any data.
 
@@ -1535,7 +1522,7 @@ iteration, only consumes the lines matched prior to @(trailer).
 .SS The Freeform Directive
 
 The freeform directive provides a useful alternative to
-.B txr's
+.B TXR's
 line-oriented matching discipline. The freeform directive treats all remaining
 input from the current input source as one big line. The query line which
 immediately follows freeform is applied to that line.
@@ -2831,31 +2818,31 @@ to the @second variable.
 
 .SS Introduction
 
-.B txr
+.B TXR
 functions allow a query to be structured to avoid repetition.
 On a theoretical note, because
-.B txr
-functions support recursion, functions enable txr to match some
+.B TXR
+functions support recursion, functions enable TXR to match some
 kinds of patterns which exhibit self-embedding, or nesting,
 and thus cannot be matched by a regular language.
 
 Functions in
-.B txr
+.B TXR
 are not exactly like functions in mathematics or functional languages, and are
 not like procedures in imperative programming languages. They are not exactly
 like macros either. What it means for a
-.B txr
+.B TXR
 function to take arguments and produce a result is different from
 the conventional notion of a function.
 
 A
-.B txr
+.B TXR
 function may have one or more parameters. When such a function is invoked, an
 argument must be specified for each parameter.  However, a special behavior is
 at play here. Namely, some or all of the argument expressions may be unbound
 variables.  In that case, the corresponding parameters behave like unbound
 variables also.  Thus
-.B txr
+.B TXR
 function calls can transmit the "unbound" state from argument to parameter.
 
 It should be mentioned that functions have access to all bindings that are
@@ -2863,7 +2850,7 @@ visible in the caller; functions may refer to variables which are not
 mentioned in their parameter list.
 
 With regard to returning,
-.B txr
+.B TXR
 functions are also unconventional. If the function fails, then the function
 call is considered to have failed. The function call behaves like a kind of
 match; if the function fails, then the call is like a failed match.
@@ -3192,7 +3179,7 @@ local definition.  When @(which) is called directly from the top level, its
 .SS Introduction
 
 A
-.B txr
+.B TXR
 query may perform custom output. Output is performed by @(output) clauses,
 which may be embedded anywhere in the query, or placed at the end.  Output
 occurs as a side effect of producing a part of a query which contains an
@@ -3201,7 +3188,7 @@ fails to find a match. Thus output can be useful for debugging.
 An output clause specifies that its output goes to a file, pipe, or (by
 default) standard output. If any output clause is executed whose destination is
 standard output,
-.B txr
+.B TXR
 makes a note of this, and later, just prior to termination, suppresses the
 usual printing of the variable bindings or the word false.
 
@@ -3445,7 +3432,7 @@ text contains the characters < or >, then if that text is being
 substituted into HTML, these should be replaced by &lt; and &gt;.
 This is what filtering is for.  Filtering is applied to the contents of output
 variables, not to any template text.
-.B txr
+.B TXR
 implements named filters.  Built-in filters are named by keywords,
 given below. User-defined filters are possible, however.  See notes on the
 deffilter directive below.
@@ -3693,13 +3680,13 @@ Example: convert a, b, and c to upper case and HTML encode:
 .SS Introduction
 
 The exceptions mechanism in
-.B txr
+.B TXR
 is another disciplined form of non-local transfer, in addition to the blocks
 mechanism (see BLOCKS above).  Like blocks, exceptions provide a construct
 which serves as the target for a dynamic exit.  Both blocks and exceptions
 can be used to bail out of deep nesting when some condition occurs.
 However, exceptions provide more complexity. Exceptions are useful for
-error handling, and txr in fact maps certain error situations to exception
+error handling, and TXR in fact maps certain error situations to exception
 control transfers. However, exceptions are not inherently an error-handling
 mechanism; they are a structured dynamic control transfer mechanism, one
 of whose applications is error handling.
@@ -4165,7 +4152,7 @@ type has the type t as its immediate supertype.  But in the second directive,
 ape appears again, and is assigned the primate supertype, while retaining
 gorilla as a subtype.  This situation could instead be diagnosed as an
 error, forcing the programmer to reorder the statements, but instead
-txr obliges. However, there are limitations.  It is an error to define a
+TXR obliges. However, there are limitations.  It is an error to define a
 subtype-supertype relationship between two types if they are already connected
 by such a relationship, directly or transitively. So the following
 definitions are in error:
@@ -6036,7 +6023,7 @@ strings which are not "abc" or "def". The straightforward set-based reasoning
 leads us to this: ...&~(abc|def).   This A&~B idiom is also called set
 difference, sometimes notated with a minus sign: A-B (which is not
 supported in 
-.B txr
+.B TXR
 regular expression syntax).  Elements which are in the set A, but not B, are
 those elements which are in the intersection of A with the complement of B.
 This is similar to the arithmetic rule A - B = A + -B: subtraction is
@@ -6177,7 +6164,7 @@ The reason for printing the word
 on standard output when
 a query doesn't match, in addition to returning a failed termination
 status, is that the output of
-.B txr
+.B TXR
 may be collected by a shell script, by the application of eval to command
 substitution syntax. Printing
 .IR false

@@ -1,5 +1,10 @@
 2011-12-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Capitalize TXR where it makes sense.
+	Introductory text rewritten.
+
+2011-12-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (LOG_MATCH): Use < in format directive instead of -.
 
 	* rand.c (random): Add back missing declaration.
