@@ -218,8 +218,9 @@ val random(val state, val modulus)
       goto invalid;
     for (;;) {
       cnum out = 0;
-
 #if SIZEOF_PTR >= 8
+      int i;
+
       for (i = 0; i < rands_needed; i++) {
         rand32_t rnd = rand32(r);
         out <<= 32;
