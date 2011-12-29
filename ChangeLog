@@ -1,5 +1,9 @@
 2011-12-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	* genman.txr: Updated for recent man page changes.
+
+2011-12-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	Version 51
 
 	* txr.c (version): Bumped.
