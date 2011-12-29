@@ -3903,19 +3903,24 @@ exceptions which are a subtype of any one of those exception types.
 If a try block has more than one catch clause which can match a given
 exception, the first one will be invoked.
 
-The exception protection of a try block does not extend over the
-catch clauses.  Once a catch clause is being executed, if it throws
-an exception, that exception will not re-enter any catch within the
-same try block, even if it matches one.
-
-Catches are processed prior to finally.
-
 When a catch is invoked, it is of course understood that the main clause did
 not terminate normally, and so the main clause could not have produced any
 bindings.
 
+Catches are processed prior to finally.
+
+If a catch clause itself throws an exception, that exception cannot
+be caught by that same clause or its siblings in the same try block.
+The catches of that block are no longer visible at that point.
+Nevertheless, the catch clauses are still protected by the finally block.
+If a catch clause throws, the finally block is still processed.
+
+If a finally block throws an exception, then it is simply aborted;
+the remaining directives in that block are not processed.
+
 So the success or failure of the try block depends on the behavior of the catch
-clause or the finally, if there is one. If either of them succeed, then the try block is considered a successful match.
+clause or the finally, if there is one. If either of them succeed, then the try
+block is considered a successful match.
 
 Example:
 
