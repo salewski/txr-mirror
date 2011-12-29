@@ -1,3 +1,30 @@
+                                     TXR 51
+                                   2012-12-28
+
+
+  Features
+  
+  - Better algorithm in the random function for generating evenly-distributed
+    pseudo-random numbers of arbitrary precision.
+
+  - PRNG startup behavior improved.
+
+  - New lazy-flatten function for flattening lists lazily. Used within
+    @(next :list ...) implementation, making it possible to scan through
+    Lisp-generated lazy lists.
+
+  Bugs
+
+  - Fixed showstopper bug introduced in a patch for the MPI library,
+    affecting 32 bit platforms.
+
+  - Fixed bug in Lisp expression interpolation in quasiliterals.
+
+  - Fixed fatal exception being thrown in verbose mode, by one of
+    the formatted print statements.
+
+
+
                                      TXR 50
                                    2012-12-23
 
