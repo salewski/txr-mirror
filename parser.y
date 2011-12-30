@@ -69,8 +69,8 @@ static val parsed_spec;
 %token <lexeme> SPACE TEXT IDENT KEYWORD METAVAR
 %token <lineno> ALL SOME NONE MAYBE CASES CHOOSE GATHER
 %token <lineno> AND OR END COLLECT
-%token <lineno> UNTIL COLL OUTPUT REPEAT REP SINGLE FIRST LAST EMPTY DEFINE
-%token <lineno> TRY CATCH FINALLY
+%token <lineno> UNTIL COLL OUTPUT REPEAT REP SINGLE FIRST LAST EMPTY 
+%token <lineno> MOD MODLAST DEFINE TRY CATCH FINALLY
 %token <lineno> ERRTOK /* deliberately not used in grammar */
 %token <lineno> HASH_BACKSLASH
 
@@ -494,6 +494,18 @@ repeat_parts_opt : SINGLE newl
                    out_clauses_opt
                    repeat_parts_opt     { $$ = cons(cons(empty_s, $3), $4);
                                           rl($$, num($1)); }
+                 | MOD exprs_opt ')'
+                   newl
+                   out_clauses_opt
+                   repeat_parts_opt     { $$ = cons(cons(mod_s, 
+                                                         cons($2, $5)), $6);
+                                          rl($$, num($1)); }
+                 | MODLAST exprs_opt ')'
+                   newl
+                   out_clauses_opt
+                   repeat_parts_opt     { $$ = cons(cons(modlast_s,
+                                                         cons($2, $5)), $6);
+                                          rl($$, num($1)); }
                  | /* empty */          { $$ = nil; }
                  ;
 
@@ -547,6 +559,16 @@ rep_parts_opt : SINGLE o_elems_opt2
                                           rl($$, num($1)); }
               | EMPTY o_elems_opt2
                 rep_parts_opt           { $$ = cons(cons(empty_s, $2), $3);
+                                          rl($$, num($1)); }
+              | MOD exprs_opt ')'
+                o_elems_opt2
+                rep_parts_opt           { $$ = cons(cons(mod_s, 
+                                                         cons($2, $4)), $5);
+                                          rl($$, num($1)); }
+              | MODLAST exprs_opt ')'
+                o_elems_opt2
+                rep_parts_opt           { $$ = cons(cons(modlast_s, 
+                                                         cons($2, $4)), $5);
                                           rl($$, num($1)); }
               | /* empty */             { $$ = nil; }
               ;
@@ -788,6 +810,8 @@ static val repeat_rep_helper(val sym, val main, val parts)
   val first_parts = nil;
   val last_parts = nil;
   val empty_parts = nil;
+  val mod_parts = nil;
+  val modlast_parts = nil;
   val iter;
 
   for (iter = parts; iter != nil; iter = cdr(iter)) {
@@ -803,12 +827,17 @@ static val repeat_rep_helper(val sym, val main, val parts)
       last_parts = nappend2(last_parts, clauses);
     else if (sym == empty_s)
       empty_parts = nappend2(empty_parts, clauses);
+    else if (sym == mod_s)
+      mod_parts = cons(clauses, mod_parts);
+    else if (sym == modlast_s)
+      modlast_parts = cons(clauses, modlast_parts);
     else
       abort();
   }
 
   return list(sym, main, single_parts, first_parts,
-              last_parts, empty_parts, nao);
+              last_parts, empty_parts,
+              nreverse(mod_parts), nreverse(modlast_parts), nao);
 }
 
 static val o_elems_transform(val o_elems)

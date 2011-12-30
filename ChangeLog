@@ -1,5 +1,29 @@
 2011-12-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	New functionality: mod and modlast directives in repeat and rep.
+
+	* eval.c (eval_init): Use new symbol variable mod_s instead
+	of calling intern.
+
+	* match.c (mod_s, modlast_s): Symbol variables defined.
+	(do_output_line): mod and modlast directives implemented under rep.
+	(do_output): likewise under repeat.
+	(syms_init): Initialize new symbol variables.
+
+	* match.h (mod_s, modlast_s): Declared.
+
+	* parser.l (MOD, MODLAST): Parse new token types.
+
+	* parser.y (MOD, MODLAST): New tokens.
+	(repeat_parts_opt, rep_parts_opt): New syntax.
+	(repeat_rep_helper): Handle mod and modlast syntax.
+
+	* txr.1: Updated.
+
+	* txr.vim: Updated.
+
+2011-12-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.y (repeat_rep_helper): Bugfix. Circular lists
 	were being created here when clauses of the same kind appear multiple
 	times. The problem is that append2 no longer copies the second list,

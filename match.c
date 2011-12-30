@@ -55,7 +55,7 @@ int opt_arraydims = 1;
 val decline_k, next_spec_k, repeat_spec_k;
 val mingap_k, maxgap_k, gap_k, mintimes_k, maxtimes_k, times_k;
 val lines_k, chars_k;
-val text_s, choose_s, gather_s, do_s;
+val text_s, choose_s, gather_s, do_s, mod_s, modlast_s;
 val longest_k, shortest_k, greedy_k;
 val vars_k, resolve_k;
 val append_k, into_k, var_k, list_k, string_k, env_k;
@@ -1533,11 +1533,14 @@ static void do_output_line(val bindings, val specline, val filter, val out)
                       second(elem), nao);
           put_string(out, str);
         } else if (directive == rep_s) {
-          val main_clauses = second(elem);
-          val single_clauses = third(elem);
-          val first_clauses = fourth(elem);
-          val last_clauses = fifth(elem);
-          val empty_clauses = sixth(elem);
+          val clauses = cdr(elem);
+          val main_clauses = pop(&clauses);
+          val single_clauses = pop(&clauses);
+          val first_clauses = pop(&clauses);
+          val last_clauses = pop(&clauses);
+          val empty_clauses = pop(&clauses);
+          val mod_clauses = pop(&clauses);
+          val modlast_clauses = pop(&clauses);
           val bind_cp = extract_bindings(bindings, elem);
           val max_depth = reduce_left(func_n2(max2),
                                       bind_cp, zero,
@@ -1559,8 +1562,49 @@ static void do_output_line(val bindings, val specline, val filter, val out)
 
               if (i == 0 && first_clauses) {
                 do_output_line(bind_a, first_clauses, filter, out);
-              } else if (i == c_num(max_depth) - 1 && last_clauses) {
-                do_output_line(bind_a, last_clauses, filter, out);
+              } else if (i == c_num(max_depth) - 1 &&
+                         (last_clauses || modlast_clauses)) {
+                if (modlast_clauses) {
+                  val iter;
+                  list_collect_decl (active_mods, ptail);
+
+                  for (iter = modlast_clauses; iter != nil; iter = cdr(iter)) {
+                    val clause = car(iter);
+                    val args = first(clause);
+                    val n = txeval(args, first(args), bind_a);
+                    val m = txeval(args, second(args), bind_a);
+
+                    if (eql(mod(num_fast(i), m), n))
+                      list_collect_append (ptail, rest(clause));
+                  }
+
+                  if (active_mods)
+                    do_output_line(bind_a, active_mods, filter, out);
+                  else if (last_clauses)
+                    do_output_line(bind_a, last_clauses, filter, out);
+                  else
+                    goto mod_fallback;
+                } else {
+                  do_output_line(bind_a, last_clauses, filter, out);
+                }
+              } else if (mod_clauses) mod_fallback: {
+                val iter;
+                list_collect_decl (active_mods, ptail);
+
+                for (iter = mod_clauses; iter != nil; iter = cdr(iter)) {
+                  val clause = car(iter);
+                  val args = first(clause);
+                  val n = txeval(args, first(args), bind_a);
+                  val m = txeval(args, second(args), bind_a);
+
+                  if (eql(mod(num_fast(i), m), n))
+                    list_collect_append (ptail, rest(clause));
+                }
+
+                if (active_mods)
+                  do_output_line(bind_a, active_mods, filter, out);
+                else
+                  do_output_line(bind_a, main_clauses, filter, out);
               } else {
                 do_output_line(bind_a, main_clauses, filter, out);
               }
@@ -1600,11 +1644,14 @@ static void do_output(val bindings, val specs, val filter, val out)
       val sym = first(first_elem);
 
       if (sym == repeat_s) {
-        val main_clauses = second(first_elem);
-        val single_clauses = third(first_elem);
-        val first_clauses = fourth(first_elem);
-        val last_clauses = fifth(first_elem);
-        val empty_clauses = sixth(first_elem);
+        val clauses = cdr(first_elem);
+        val main_clauses = pop(&clauses);
+        val single_clauses = pop(&clauses);
+        val first_clauses = pop(&clauses);
+        val last_clauses = pop(&clauses);
+        val empty_clauses = pop(&clauses);
+        val mod_clauses = pop(&clauses);
+        val modlast_clauses = pop(&clauses);
         val bind_cp = extract_bindings(bindings, first_elem);
         val max_depth = reduce_left(func_n2(max2),
                                     bind_cp, zero,
@@ -1626,8 +1673,50 @@ static void do_output(val bindings, val specs, val filter, val out)
 
             if (i == 0 && first_clauses) {
               do_output(bind_a, first_clauses, filter, out);
-            } else if (i == c_num(max_depth) - 1 && last_clauses) {
-              do_output(bind_a, last_clauses, filter, out);
+            } else if (i == c_num(max_depth) - 1 && 
+                       (last_clauses || modlast_clauses))
+            {
+              if (modlast_clauses) {
+                val iter;
+                list_collect_decl (active_mods, ptail);
+
+                for (iter = modlast_clauses; iter != nil; iter = cdr(iter)) {
+                  val clause = car(iter);
+                  val args = first(clause);
+                  val n = txeval(args, first(args), bind_a);
+                  val m = txeval(args, second(args), bind_a);
+
+                  if (eql(mod(num_fast(i), m), n))
+                    list_collect_append (ptail, rest(clause));
+                }
+
+                if (active_mods)
+                  do_output(bind_a, active_mods, filter, out);
+                else if (last_clauses)
+                  do_output(bind_a, last_clauses, filter, out);
+                else
+                  goto mod_fallback;
+              } else {
+                do_output(bind_a, last_clauses, filter, out);
+              }
+            } else if (mod_clauses) mod_fallback: {
+              val iter;
+              list_collect_decl (active_mods, ptail);
+
+              for (iter = mod_clauses; iter != nil; iter = cdr(iter)) {
+                val clause = car(iter);
+                val args = first(clause);
+                val n = txeval(args, first(args), bind_a);
+                val m = txeval(args, second(args), bind_a);
+
+                if (eql(mod(num_fast(i), m), n))
+                  list_collect_append (ptail, rest(clause));
+              }
+
+              if (active_mods)
+                do_output(bind_a, active_mods, filter, out);
+              else
+                do_output(bind_a, main_clauses, filter, out);
             } else {
               do_output(bind_a, main_clauses, filter, out);
             }
@@ -3323,6 +3412,9 @@ static void syms_init(void)
 
   filter_s = intern(lit("filter"), user_package);
   noval_s = intern(lit("noval"), system_package);
+
+  mod_s = intern(lit("mod"), system_package);
+  modlast_s = intern(lit("modlast"), system_package);
 }
 
 static void dir_tables_init(void)

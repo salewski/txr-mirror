@@ -322,6 +322,18 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                                   return EMPTY;
                                 }
 
+<SPECIAL>\({WS}mod/{ID_END}     {
+                                  yy_push_state(NESTED);
+                                  yylval.lineno = lineno;
+                                  return MOD;
+                                }
+
+<SPECIAL>\({WS}modlast/{ID_END} {
+                                  yy_push_state(NESTED);
+                                  yylval.lineno = lineno;
+                                  return MODLAST;
+                                }
+
 <SPECIAL>\({WS}define/{ID_END}  {
                                   yy_push_state(NESTED);
                                   yylval.lineno = lineno;

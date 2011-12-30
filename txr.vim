@@ -21,7 +21,7 @@ syn keyword txr_keyword contained skip trailer freeform block accept fail
 syn keyword txr_keyword contained next some all none and or
 syn keyword txr_keyword contained maybe cases choose gather collect coll until last end
 syn keyword txr_keyword contained flatten forget local merge bind set cat output
-syn keyword txr_keyword contained repeat rep first last single empty
+syn keyword txr_keyword contained repeat rep first last single empty mod modlast
 syn keyword txr_keyword contained define try catch finally throw
 syn keyword txr_keyword contained defex throw deffilter filter eof eol do
 
