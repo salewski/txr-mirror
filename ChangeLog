@@ -1,6 +1,7 @@
 2011-12-29  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.1: Useless sentence under reduce-left and reduce-right removed.
+	Missing Description headings added.
 
 2011-12-28  Kaz Kylheku  <kaz@kylheku.com>
 
