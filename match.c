@@ -58,7 +58,7 @@ val lines_k, chars_k;
 val text_s, choose_s, gather_s, do_s, mod_s, modlast_s;
 val longest_k, shortest_k, greedy_k;
 val vars_k, resolve_k;
-val append_k, into_k, var_k, list_k, string_k, env_k;
+val append_k, into_k, var_k, list_k, string_k, env_k, counter_k;
 
 val filter_s;
 
@@ -1534,6 +1534,7 @@ static void do_output_line(val bindings, val specline, val filter, val out)
           put_string(out, str);
         } else if (directive == rep_s) {
           val clauses = cdr(elem);
+          val args = pop(&clauses);
           val main_clauses = pop(&clauses);
           val single_clauses = pop(&clauses);
           val first_clauses = pop(&clauses);
@@ -1541,6 +1542,7 @@ static void do_output_line(val bindings, val specline, val filter, val out)
           val empty_clauses = pop(&clauses);
           val mod_clauses = pop(&clauses);
           val modlast_clauses = pop(&clauses);
+          val counter = getplist(args, counter_k);
           val bind_cp = extract_bindings(bindings, elem);
           val max_depth = reduce_left(func_n2(max2),
                                       bind_cp, zero,
@@ -1548,17 +1550,29 @@ static void do_output_line(val bindings, val specline, val filter, val out)
                                             func_n1(robust_length),
                                             nao));
 
+          if (counter && !bindable(counter)) 
+            sem_error(elem, lit(":counter requires a bindable symbol, not ~s"),
+                      counter, nao);
+
           if (equal(max_depth, zero) && empty_clauses) {
             do_output_line(nappend2(bind_cp, bindings), empty_clauses, filter, out);
           } else if (equal(max_depth, one) && single_clauses) {
             val bind_a = nappend2(mapcar(func_n1(bind_car), bind_cp), bindings);
             do_output_line(bind_a, single_clauses, filter, out);
           } else if (!zerop(max_depth)) {
+            val counter_var = if2(counter, cons(counter, nil));
+            val counter_bind = if2(counter, cons(counter_var, nil));
             cnum i;
 
             for (i = 0; i < c_num(max_depth); i++) {
               val bind_a = nappend2(mapcar(func_n1(bind_car), bind_cp), bindings);
               val bind_d = mapcar(func_n1(bind_cdr), bind_cp);
+
+              if (counter) {
+                rplacd(counter_var, num_fast(i));
+                rplacd(counter_bind, bind_a);
+                bind_a = counter_bind;
+              }
 
               if (i == 0 && first_clauses) {
                 do_output_line(bind_a, first_clauses, filter, out);
@@ -1645,6 +1659,7 @@ static void do_output(val bindings, val specs, val filter, val out)
 
       if (sym == repeat_s) {
         val clauses = cdr(first_elem);
+        val args = pop(&clauses);
         val main_clauses = pop(&clauses);
         val single_clauses = pop(&clauses);
         val first_clauses = pop(&clauses);
@@ -1652,6 +1667,7 @@ static void do_output(val bindings, val specs, val filter, val out)
         val empty_clauses = pop(&clauses);
         val mod_clauses = pop(&clauses);
         val modlast_clauses = pop(&clauses);
+        val counter = getplist(args, counter_k);
         val bind_cp = extract_bindings(bindings, first_elem);
         val max_depth = reduce_left(func_n2(max2),
                                     bind_cp, zero,
@@ -1665,11 +1681,19 @@ static void do_output(val bindings, val specs, val filter, val out)
           val bind_a = nappend2(mapcar(func_n1(bind_car), bind_cp), bindings);
           do_output(bind_a, single_clauses, filter, out);
         } else if (!zerop(max_depth)) {
+          val counter_var = if2(counter, cons(counter, nil));
+          val counter_bind = if2(counter, cons(counter_var, nil));
           cnum i;
 
           for (i = 0; i < c_num(max_depth); i++) {
             val bind_a = nappend2(mapcar(func_n1(bind_car), bind_cp), bindings);
             val bind_d = mapcar(func_n1(bind_cdr), bind_cp);
+
+            if (counter) {
+              rplacd(counter_var, num_fast(i));
+              rplacd(counter_bind, bind_a);
+              bind_a = counter_bind;
+            }
 
             if (i == 0 && first_clauses) {
               do_output(bind_a, first_clauses, filter, out);
@@ -3413,8 +3437,9 @@ static void syms_init(void)
   filter_s = intern(lit("filter"), user_package);
   noval_s = intern(lit("noval"), system_package);
 
-  mod_s = intern(lit("mod"), system_package);
-  modlast_s = intern(lit("modlast"), system_package);
+  mod_s = intern(lit("mod"), user_package);
+  modlast_s = intern(lit("modlast"), user_package);
+  counter_k = intern(lit("counter"), keyword_package);
 }
 
 static void dir_tables_init(void)

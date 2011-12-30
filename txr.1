@@ -3295,8 +3295,10 @@ like this:
   @(end)
 
 Repeat has four types of special clauses, any of which may be
-specified with empty contents, or omitted entirely. They are explained
+specified with empty contents, or omitted entirely. They are described
 below.
+
+Repeat takes arguments, also described below.
 
 All of the material in the main clause and optional clauses
 is examined for the presence of variables.  If none of the variables
@@ -3380,6 +3382,14 @@ are satisfied. If not then @(modlast) clauses are considered, and if there
 are none, or none of them activate, then @(last) is considered. If none
 of those clauses are present or apply, then the repetition is processed
 using the main clause.
+
+Repeat supports an optional keyword argument:
+
+  @(repeat [:counter <symbol>])
+
+This designates a symbol which will behave as an integer variable over the
+scope of the clauses inside the repeat. The variable provides access to the
+reptition count, starting at zero, incrementing with each repetition.
 
 .SS Nested Repeats
 

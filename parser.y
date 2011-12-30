@@ -46,7 +46,7 @@
 int yylex(void);
 void yyerror(const char *);
 
-static val repeat_rep_helper(val sym, val main, val parts);
+static val repeat_rep_helper(val sym, val args, val main, val parts);
 static val o_elems_transform(val output_form);
 static val define_transform(val define_form);
 static val lit_char_helper(val litchars);
@@ -468,10 +468,11 @@ out_clause : repeat_clause              { $$ = cons($1, nil); }
                                           yyerror("match clause in output"); }
            ;
 
-repeat_clause : REPEAT newl
+repeat_clause : REPEAT exprs_opt ')' newl
                 out_clauses_opt
                 repeat_parts_opt
-                END newl                { $$ = repeat_rep_helper(repeat_s, $3, $4);
+                END newl                { $$ = repeat_rep_helper(repeat_s, 
+                                                                 $2, $5, $6);
                                           rl($$, num($1)); }
               | REPEAT newl
                 error           { $$ = nil;
@@ -539,10 +540,11 @@ o_elem : TEXT                   { $$ = string_own($1);
        | rep_elem               { $$ = $1; }
        ;
 
-rep_elem : REP o_elems_opt
+rep_elem : REP exprs_opt ')' o_elems_opt
            rep_parts_opt END    { $$ = repeat_rep_helper(rep_s, 
-                                                         o_elems_transform($2),
-                                                         $3);
+                                                         $2,
+                                                         o_elems_transform($4),
+                                                         $5);
                                   rl($$, num($1)); }
          | REP error            { $$ = nil;
                                   yybadtoken(yychar, lit("rep clause")); }
@@ -804,7 +806,7 @@ litchars : LITCHAR              { $$ = cons(chr($1), nil); }
 
 %%
 
-static val repeat_rep_helper(val sym, val main, val parts)
+static val repeat_rep_helper(val sym, val args, val main, val parts)
 {
   val single_parts = nil;
   val first_parts = nil;
@@ -835,7 +837,7 @@ static val repeat_rep_helper(val sym, val main, val parts)
       abort();
   }
 
-  return list(sym, main, single_parts, first_parts,
+  return list(sym, args, main, single_parts, first_parts,
               last_parts, empty_parts,
               nreverse(mod_parts), nreverse(modlast_parts), nao);
 }
@@ -1029,7 +1031,7 @@ void yybadtoken(int tok, val context)
   case TRY:     problem = lit("\"try\""); break;
   case CATCH:   problem = lit("\"catch\""); break;
   case FINALLY: problem = lit("\"finally\""); break;
-  case NUMBER:  problem = lit("\"number\""); break;
+  case NUMBER:  problem = lit("number"); break;
   case REGCHAR: problem = lit("regular expression character"); break;
   case LITCHAR: problem = lit("string literal character"); break;
   case METAPAR: problem = lit("@("); break;

@@ -285,15 +285,15 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                                   return OUTPUT;
                                 }
 
-<SPECIAL>\({WS}repeat{WS}\)     {
-                                  yy_pop_state();
+<SPECIAL>\({WS}repeat/{ID_END}  {
+                                  yy_push_state(NESTED);
                                   yylval.lineno = lineno;
                                   return REPEAT;
                                 }
 
 
-<SPECIAL>\({WS}rep{WS}\)        {
-                                  yy_pop_state();
+<SPECIAL>\({WS}rep/{ID_END}     {
+                                  yy_push_state(NESTED);
                                   yylval.lineno = lineno;
                                   return REP;
                                 }

@@ -1,3 +1,24 @@
+2011-12-30  Kaz Kylheku  <kaz@kylheku.com>
+
+	* match.c (counter_k): New keyword symbol variable.
+	(do_output_line): Process new :counter argument of rep.
+	(do_output): Ditto, for repeat.
+	(syms_init): Intern new keyword symbol.
+
+	* match.h (counter_k): Declared.
+
+	* parser.l (REPEAT, REP): Lexical syntax changed to
+	allow arguments.
+
+	* parser.y (repeat_rep_helper): Takes extra argument, representing
+	the repeat/rep args. This is inserted into the second position
+	of the output list.
+	(repeat_clause, rep_elem): Extract repeat/rep arguments and
+	pass to repeat_rep_helper.
+	(yybadtoken): Do not put quotes around the word "number".
+
+	* txr.1: Updated.
+
 2011-12-29  Kaz Kylheku  <kaz@kylheku.com>
 
 	New functionality: mod and modlast directives in repeat and rep.

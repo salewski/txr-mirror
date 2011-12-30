@@ -24,7 +24,7 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-extern val text_s, choose_s, gather_s, do_s, mod_s, modlast_s;
+extern val text_s, choose_s, gather_s, do_s, mod_s, modlast_s, counter_k;
 val format_field(val string_or_list, val modifier, val filter);
 val match_funcall(val name, val arg, val other_args);
 int extract(val spec, val filenames, val bindings);
