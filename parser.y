@@ -793,7 +793,7 @@ static val repeat_rep_helper(val sym, val main, val parts)
   for (iter = parts; iter != nil; iter = cdr(iter)) {
     val part = car(iter);
     val sym = car(part);
-    val clauses = cdr(part);
+    val clauses = copy_list(cdr(part));
 
     if (sym == single_s)
       single_parts = nappend2(single_parts, clauses);

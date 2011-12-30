@@ -1,5 +1,12 @@
 2011-12-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.y (repeat_rep_helper): Bugfix. Circular lists
+	were being created here when clauses of the same kind appear multiple
+	times. The problem is that append2 no longer copies the second list,
+	which the code was relying on it to do.
+
+2011-12-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: Useless sentence under reduce-left and reduce-right removed.
 	Missing Description headings added.
 
