@@ -298,6 +298,8 @@ extern val null_list; /* (nil) */
 
 extern val identity_f, equal_f, eql_f, eq_f, car_f, cdr_f;
 
+extern val gensym_counter;
+
 extern const wchar_t *progname;
 extern val prog_string;
 
@@ -443,6 +445,7 @@ val span_str(val str, val set);
 val compl_span_str(val str, val set);
 val break_str(val str, val set);
 val make_sym(val name);
+val gensymv(val args);
 val make_package(val name);
 val find_package(val name);
 val intern(val str, val package);
