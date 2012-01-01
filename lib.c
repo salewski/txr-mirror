@@ -84,6 +84,8 @@ val null_list;
 
 val identity_f, equal_f, eql_f, eq_f, car_f, cdr_f;
 
+val gensym_counter;
+
 val prog_string;
 
 static val env_list;
@@ -1631,6 +1633,15 @@ val make_sym(val name)
   obj->s.package = nil;
   obj->s.value = nil;
   return obj;
+}
+
+val gensymv(val args)
+{
+  uses_or2;
+  gensym_counter = plus(gensym_counter, one);
+  val prefix = or2(car(args), lit("g"));
+  val name = format(nil, lit("~a~,04a"), prefix, gensym_counter, nao);
+  return make_sym(name);
 }
 
 val make_package(val name)
@@ -3273,6 +3284,7 @@ static void obj_init(void)
   identity_f = func_n1(identity);
   car_f = func_n1(car);
   cdr_f = func_n1(cdr);
+  gensym_counter = zero;
   prog_string = string(progname);
 }
 

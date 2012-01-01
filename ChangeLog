@@ -1,3 +1,13 @@
+2012-01-01  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): New gensym function registered.
+
+	* lib.c (gensym_counter): New variable.
+	(gensymv): New function.
+	(obj_init): Initialize gensym_counter.
+
+	* lib.h (gensym_counter, gensymv): Declared.
+
 2011-12-30  Kaz Kylheku  <kaz@kylheku.com>
 
 	* match.c (counter_k): New keyword symbol variable.
