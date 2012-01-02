@@ -1,5 +1,21 @@
 2012-01-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	Make C globals in TXR Lisp properly assignable, so that for instance
+	assigning *stdout*, it really overwrites the underlying C variable.
+
+	* eval.c (lookup_var): Handle new kind of toplevel binding.
+	If the hash value is a cptr, it points to a val storage location.
+	(lookup_val_l): New function.
+	(op_modplace): Get location of variable using lookup_val_l
+	rather than assuming there is a cons-based binding.
+	(reg_var): Argument changed to val * pointer.
+	Register the variable as a cptr referencing the location.
+	(eval_init): reg_var calls pass address of each global.
+
+	* eval.h (lookup_var_l): Declared.
+
+2012-01-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): New gensym function registered.
 
 	* lib.c (gensym_counter): New variable.

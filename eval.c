@@ -105,7 +105,10 @@ static val eval_error(val form, val fmt, ...)
 val lookup_var(val env, val sym)
 {
   if (nullp(env)) {
-    return gethash(top_vb, sym);
+    val bind = gethash(top_vb, sym);
+    if (cobjp(bind))
+      return *(val *) cptr_get(bind);
+    return bind;
   } else  {
     type_check(env, ENV);
 
@@ -114,6 +117,27 @@ val lookup_var(val env, val sym)
       if (binding)
         return binding;
       return lookup_var(env->e.up_env, sym);
+    }
+  }
+}
+
+val *lookup_var_l(val env, val sym)
+{
+  if (nullp(env)) {
+    val bind = gethash(top_vb, sym);
+    if (cobjp(bind))
+      return (val *) cptr_get(bind);
+    if (bind)
+      return cdr_l(bind);
+    return 0;
+  } else  {
+    type_check(env, ENV);
+
+    {
+      val binding = assoc(sym, env->e.vbindings);
+      if (binding)
+        return cdr_l(binding);
+      return lookup_var_l(env->e.up_env, sym);
     }
   }
 }
@@ -539,7 +563,6 @@ static val op_modplace(val form, val env)
   val third_arg_p = rest(rest(form));
   val newval = if3(car(third_arg_p), third(form), nil);
   val *loc = 0;
-  val binding = nil;
 
   if (op == push_s) {
     val tmp = place;
@@ -554,10 +577,9 @@ static val op_modplace(val form, val env)
   if (symbolp(place)) {
     if (!bindable(place))
       eval_error(form, lit("~a: ~s is not a bindable sybol"), op, place, nao);
-    binding = lookup_var(env, place);
-    if (!binding)
+    loc = lookup_var_l(env, place);
+    if (!loc)
       eval_error(form, lit("unbound variable ~s"), place, nao);
-    loc = cdr_l(binding);
   } else if (consp(place)) {
     /* TODO: dispatch these with hash table. */
     val sym = car(place);
@@ -1139,9 +1161,9 @@ static void reg_fun(val sym, val fun)
   sethash(top_fb, sym, cons(sym, fun));
 }
 
-static void reg_var(val sym, val obj)
+static void reg_var(val sym, val *obj)
 {
-  sethash(top_vb, sym, cons(sym, obj));
+  sethash(top_vb, sym, cptr((mem_t *) obj));
 }
 
 void eval_init(void)
@@ -1303,9 +1325,9 @@ void eval_init(void)
 
   reg_fun(intern(lit("eval"), user_package), func_n2(eval_intrinsic));
 
-  reg_var(intern(lit("*stdout*"), user_package), std_output);
-  reg_var(intern(lit("*stdin*"), user_package), std_input);
-  reg_var(intern(lit("*stderr*"), user_package), std_error);
+  reg_var(intern(lit("*stdout*"), user_package), &std_output);
+  reg_var(intern(lit("*stdin*"), user_package), &std_input);
+  reg_var(intern(lit("*stderr*"), user_package), &std_error);
   reg_fun(intern(lit("format"), user_package), func_n2v(formatv));
   reg_fun(intern(lit("print"), user_package), func_n2(obj_print));
   reg_fun(intern(lit("pprint"), user_package), func_n2(obj_pprint));
@@ -1327,9 +1349,9 @@ void eval_init(void)
   reg_fun(intern(lit("open-file"), user_package), func_n2(open_file));
   reg_fun(intern(lit("open-pipe"), user_package), func_n2(open_pipe));
 
-  reg_var(intern(lit("*user-package*"), user_package), user_package);
-  reg_var(intern(lit("*keyword-package*"), user_package), keyword_package);
-  reg_var(intern(lit("*system-package*"), user_package), system_package);
+  reg_var(intern(lit("*user-package*"), user_package), &user_package);
+  reg_var(intern(lit("*keyword-package*"), user_package), &keyword_package);
+  reg_var(intern(lit("*system-package*"), user_package), &system_package);
   reg_fun(intern(lit("make-sym"), user_package), func_n1(make_sym));
   reg_fun(intern(lit("gensym"), user_package), func_n0v(gensymv));
   reg_fun(intern(lit("make-package"), user_package), func_n1(make_package));
@@ -1414,7 +1436,7 @@ void eval_init(void)
   reg_fun(intern(lit("functionp"), user_package), func_n1(functionp));
   reg_fun(intern(lit("interp-fun-p"), user_package), func_n1(interp_fun_p));
 
-  reg_var(intern(lit("*random-state*"), user_package), random_state);
+  reg_var(intern(lit("*random-state*"), user_package), &random_state);
   reg_fun(intern(lit("make-random-state"), user_package), func_n1(make_random_state));
   reg_fun(intern(lit("random-state-p"), user_package), func_n1(random_state_p));
   reg_fun(intern(lit("random-fixnum"), user_package), func_n1(random_fixnum));
