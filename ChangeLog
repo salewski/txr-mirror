@@ -1,3 +1,9 @@
+2012-01-02  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): Fix regression introduced in
+	2011-12-29 commit. We can't use mod_s, because the module
+	which sets up that variable is not yet initialized.
+
 2012-01-01  Kaz Kylheku  <kaz@kylheku.com>
 
 	Make C globals in TXR Lisp properly assignable, so that for instance
