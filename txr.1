@@ -1829,6 +1829,14 @@ The syntax follows this pattern
 Of course the multi-line clauses are optional.   The gather directive takes
 keyword parameters, see below.
 
+Similarly to @(collect), @(gather) has an optional until/last clause:
+
+  @(gather)
+  ...
+  @(until)
+  ...
+  @(end)
+
 How gather works is that the text is searched for matches for the single line
 and multi-line queries. The clauses are applied in the order in which they appear.
 Whenever one of the clauses matches, any bindings it produces are retained and
@@ -1848,6 +1856,14 @@ order:
   HOME=@HOME
   SHELL=@SHELL
   @(end)
+
+If the until or last clause is present and a match occurs, then the matches
+from the other clauses are discarded and the gather terminates. The difference
+between until and last is that any bindings bindings established in last are
+retained, and the input position is advanced past the matched material.
+The until/last clause has visibility to bindings established in the
+previous clauses in that same iteration, even though those bindings
+end up thrown away.
 
 .SS Gather Keyword Parameters
 

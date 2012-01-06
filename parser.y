@@ -82,7 +82,7 @@ static val parsed_spec;
 %type <val> spec clauses clauses_opt clause
 %type <val> all_clause some_clause none_clause maybe_clause
 %type <val> cases_clause choose_clause gather_clause collect_clause until_last
-%type <val> clause_parts additional_parts
+%type <val> clause_parts additional_parts gather_parts additional_gather_parts
 %type <val> output_clause define_clause try_clause catch_clauses_opt
 %type <val> line elems_opt elems clause_parts_h additional_parts_h
 %type <val> text texts elem var var_op meta_expr vector
@@ -208,11 +208,23 @@ choose_clause : CHOOSE exprs_opt ')'
               ;
 
 gather_clause : GATHER exprs_opt ')'
-                newl clause_parts       { $$ = list(gather_s, 
+                newl gather_parts
+                END newl                { $$ = list(gather_s, 
                                                     append2(mapcar(curry_12_1(func_n2(cons), nil),
                                                                    first($5)), rest($5)),
                                                     $2, nao); 
                                           rl($$, num($1)); }
+
+              | GATHER exprs_opt ')' 
+                newl gather_parts
+                until_last newl 
+                clauses
+                END newl                { $$ = list(gather_s, 
+                                                    append2(mapcar(curry_12_1(func_n2(cons), nil),
+                                                                   first($5)), rest($5)),
+                                                    $2, cons(cdr($6), $8), nao); 
+                                          rl($$, num($1)); }
+
               | GATHER exprs_opt ')'
                 newl error              { $$ = nil;
                                           yybadtoken(yychar,
@@ -222,6 +234,13 @@ gather_clause : GATHER exprs_opt ')'
                                           yyerror("empty gather clause"); }
               ;
 
+gather_parts : clauses additional_gather_parts  { $$ = cons($1, $2); }
+             ;
+
+additional_gather_parts : AND newl clauses additional_gather_parts      { $$ = cons($3, $4); }
+                        | OR newl clauses additional_parts              { $$ = cons($3, $4); }
+                        | /* empty */                                   { $$ = nil; }
+                        ;
 
 collect_clause : COLLECT exprs_opt ')' newl
                  clauses END newl                { $$ = list(collect_s,

@@ -2312,6 +2312,7 @@ static val v_gather(match_files_ctx *c)
   spec_bind (specline, first_spec, c->spec);
   val specs = copy_list(second(first_spec));
   val args = third(first_spec);
+  val until_last = fourth(first_spec);
   val vars = vars_to_bindings(specline, getplist(args, vars_k), c->bindings);
 
   while (specs && c->data) {
@@ -2319,6 +2320,7 @@ static val v_gather(match_files_ctx *c)
     val max_line = zero;
     val max_data = nil;
     val iter, next;
+    val orig_bindings = c->bindings;
 
     for (iter = specs, next = cdr(iter); iter != nil; iter = next, next = cdr(iter)) {
       val nested_spec = first(iter);
@@ -2338,6 +2340,32 @@ static val v_gather(match_files_ctx *c)
           max_line = new_line;
           max_data = new_data;
         }
+      }
+    }
+
+    if (until_last)
+    {
+      cons_bind (sym, ul_spec, until_last);
+      cons_bind (until_last_bindings, success,
+                 match_files(mf_spec(*c, ul_spec)));
+
+      if (success) {
+        debuglf(specline, lit("until/last matched ~a:~a"),
+                first(c->files), c->data_lineno, nao);
+        /* Until discards bindings and position, last keeps them. */
+        if (sym == last_s) {
+          val last_bindings = set_diff(until_last_bindings, c->bindings, eq_f, nil);
+          c->bindings = nappend2(last_bindings, orig_bindings);
+
+          if (success == t) {
+            c->data = t;
+          } else {
+            cons_bind (new_data, new_line, success);
+            c->data = new_data;
+            c->data_lineno = new_line;
+          }
+        }
+        break;
       }
     }
 
