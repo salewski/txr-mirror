@@ -1,3 +1,12 @@
+2012-01-06  Kaz Kylheku  <kaz@kylheku.com>
+
+	* match.c (v_gather): Implemented until/last clause.
+
+	* parser.y (gather_parts, additional_gather_parts): New nonterminals.
+	(gather_clause): Syntax refactored for until/last clause.
+
+	* txr.1: Updated.
+
 2012-01-02  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): Fix regression introduced in
