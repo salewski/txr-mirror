@@ -1129,6 +1129,10 @@ Treat the remainder of the input as one big string, and apply the following
 query line to that string. The newline characters (or custom separators) appear
 explicitly in that string.
 
+.IP @(fuzz)
+The fuzz directive, inspired by the patch utility, specifies a partial
+match for some lines.
+
 .IP @(some)
 Multiple clauses are each applied to the same input. Succeeds if at least one
 of the clauses matches the input. The bindings established by earlier
@@ -1619,6 +1623,25 @@ Example:
   @(freeform 1 ":")
   @(coll)@{token /[^:]*/}:@(end)
   @(end)
+
+.SS The Fuzz Directive
+
+The fuzz directive allows for an imperfect match spanning a set number of
+lines. It takes two arguments, both expressions that should evaluate
+to integers:
+
+  @(fuzz m n)
+  ...
+
+This expresses that over the next n query lines, the matching strictness
+is relaxed a little bit. Only m out of those n lines have to match.
+Afterward, the rest of the query follows normal, strict processing.
+
+In the degenerate situation that there are fewer than n query lines following
+the fuzz directive, then m of them must succeed nevertheless. (If there
+are fewer than m, then this is impossible.)
+
+.B TXR's
 
 .SS The Some, All, None, Maybe, Cases and Choose directives
 

@@ -1,5 +1,14 @@
 2012-01-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (fuzz_s): New symbol variable.
+	(v_fuzz): New static function.
+	(syms_init): fuzz_s initialized.
+	(dir_tables_init): v_fuzz entered into v_directive_table.
+
+	* txr.1: Documented @(fuzz).
+
+2012-01-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (v_gather): Implemented until/last clause.
 
 	* parser.y (gather_parts, additional_gather_parts): New nonterminals.

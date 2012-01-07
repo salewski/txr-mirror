@@ -55,7 +55,7 @@ int opt_arraydims = 1;
 val decline_k, next_spec_k, repeat_spec_k;
 val mingap_k, maxgap_k, gap_k, mintimes_k, maxtimes_k, times_k;
 val lines_k, chars_k;
-val text_s, choose_s, gather_s, do_s, mod_s, modlast_s;
+val text_s, choose_s, gather_s, do_s, mod_s, modlast_s, fuzz_s;
 val longest_k, shortest_k, greedy_k;
 val vars_k, resolve_k;
 val append_k, into_k, var_k, list_k, string_k, env_k, counter_k;
@@ -1909,6 +1909,67 @@ static val v_skip(match_files_ctx *c)
   }
 }
 
+static val v_fuzz(match_files_ctx *c)
+{
+  spec_bind (specline, first_spec, c->spec);
+
+  if (rest(specline))
+    return decline_k;
+
+  c->spec = rest(c->spec);
+
+  if (!c->spec)
+    return cons(c->bindings, cons(c->data, c->data_lineno));
+
+  {
+    val fuzz_spec = first(first(c->spec));
+    val args = rest(first_spec);
+    val m = txeval(fuzz_spec, first(args), c->bindings);
+    val n = txeval(fuzz_spec, second(args), c->bindings);
+    cnum cm = fixnump(m) ? c_num(m) : 0;
+    cnum cn = fixnump(n) ? c_num(n) : 0;
+
+    {
+      cnum reps, good;
+  
+      for (reps = 0, good = 0; reps < cn; reps++) {
+        match_files_ctx fuzz_ctx = mf_spec(*c, cons(first(c->spec), nil));
+        val result = match_files(fuzz_ctx);
+
+        if (result) {
+          debuglf(fuzz_spec, lit("fuzz matched ~a:~a"), first(c->files),
+                  c->data_lineno, nao);
+          good++;
+        } else {
+          debuglf(fuzz_spec, lit("fuzz didn't match ~a:~a"),
+                  first(c->files), c->data_lineno, nao);
+        }
+
+        if (!c->data)
+          break;
+        c->data = rest(c->data);
+        c->data_lineno = plus(c->data_lineno, num(1));
+        c->spec = rest(c->spec);
+        if (!c->spec) {
+          if (good >= cm)
+            break;
+          debuglf(fuzz_spec, lit("fuzz failed ~a:~a"), first(c->files),
+                  c->data_lineno, nao);
+          return nil;
+        }
+      }
+
+      if (reps == cn && good < cm) {
+        debuglf(fuzz_spec, lit("fuzz failed ~a:~a"), first(c->files),
+                c->data_lineno, nao);
+        return nil;
+      }
+
+      return match_files(*c);
+    }
+  }
+}
+
 static val v_trailer(match_files_ctx *c)
 {
   if (rest(rest(first(c->spec))))
@@ -3467,6 +3528,7 @@ static void syms_init(void)
 
   mod_s = intern(lit("mod"), user_package);
   modlast_s = intern(lit("modlast"), user_package);
+  fuzz_s = intern(lit("fuzz"), user_package);
   counter_k = intern(lit("counter"), keyword_package);
 }
 
@@ -3478,6 +3540,7 @@ static void dir_tables_init(void)
   protect(&h_directive_table, &v_directive_table, (val *) 0);
 
   sethash(v_directive_table, skip_s, cptr((mem_t *) v_skip));
+  sethash(v_directive_table, fuzz_s, cptr((mem_t *) v_fuzz));
   sethash(v_directive_table, trailer_s, cptr((mem_t *) v_trailer));
   sethash(v_directive_table, freeform_s, cptr((mem_t *) v_freeform));
   sethash(v_directive_table, block_s, cptr((mem_t *) v_block));
