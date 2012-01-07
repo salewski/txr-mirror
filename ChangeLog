@@ -1,3 +1,15 @@
+2012-01-07  Kaz Kylheku  <kaz@kylheku.com>
+
+	Version 52
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES: Updated. Wrong December dates fixed.
+
 2012-01-06  Kaz Kylheku  <kaz@kylheku.com>
 
 	* match.c (fuzz_s): New symbol variable.
