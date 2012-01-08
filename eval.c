@@ -1272,6 +1272,7 @@ void eval_init(void)
   reg_fun(intern(lit("flatten"), user_package), func_n1(flatten));
   reg_fun(intern(lit("lazy-flatten"), user_package), func_n1(lazy_flatten));
   reg_fun(intern(lit("memq"), user_package), func_n2(memq));
+  reg_fun(intern(lit("memql"), user_package), func_n2(memql));
   reg_fun(intern(lit("memqual"), user_package), func_n2(memqual));
   reg_fun(intern(lit("tree-find"), user_package), func_n3(tree_find));
   reg_fun(intern(lit("some"), user_package), func_n3(some_satisfy));
