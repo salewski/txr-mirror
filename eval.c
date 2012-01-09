@@ -744,7 +744,7 @@ static val subst_vars(val forms, val env)
       if (sym == var_s) {
         val sym = second(form);
         val pat = third(form);
-        val modifiers = eval_args(fourth(form), env, form);
+        val modifiers = fourth(form);
         val pair = lookup_var(env, sym);
 
         if (pair) {
@@ -756,7 +756,9 @@ static val subst_vars(val forms, val env)
           if (pat)
             forms = cons(str, cons(pat, rest(forms)));
           else if (modifiers)
-            forms = cons(format_field(str, modifiers, nil), rest(forms));
+            forms = cons(format_field(str, modifiers, nil, 
+                                      curry_123_1(func_n3(eval), env, form)),
+                         rest(forms));
           else
             forms = cons(str, rest(forms));
           continue;
