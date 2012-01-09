@@ -744,7 +744,7 @@ static val subst_vars(val forms, val env)
       if (sym == var_s) {
         val sym = second(form);
         val pat = third(form);
-        val modifiers = fourth(form);
+        val modifiers = eval_args(fourth(form), env, form);
         val pair = lookup_var(env, sym);
 
         if (pair) {
