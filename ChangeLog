@@ -1,3 +1,11 @@
+2012-01-09  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (subst_vars): Evaluate the
+	modifiers, so expressions can be used.
+
+	* match.c (subst_vars): Likewise,
+	but using txeval.
+
 2012-01-07  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 52

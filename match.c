@@ -1277,6 +1277,10 @@ static val subst_vars(val spec, val bindings, val filter)
         val modifiers = fourth(elem);
         val pair = assoc(sym, bindings);
 
+        if (modifiers)
+          modifiers = mapcar(curry_123_2(func_n3(txeval), spec, bindings), 
+                             modifiers);
+
         if (pair) {
           val str = cdr(pair);
 
