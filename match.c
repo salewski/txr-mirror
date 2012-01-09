@@ -1203,7 +1203,7 @@ static val match_line(match_line_ctx c)
   return cons(c.bindings, c.pos);
 }
 
-val format_field(val string_or_list, val modifier, val filter)
+val format_field(val string_or_list, val modifier, val filter, val eval_fun)
 {
   val n = zero;
   val plist = nil;
@@ -1213,13 +1213,20 @@ val format_field(val string_or_list, val modifier, val filter)
 
   for (; modifier; pop(&modifier)) {
     val item = first(modifier);
-    if (fixnump(item))
-      n = item;
     if (regexp(item))
       uw_throw(query_error_s, lit("format_field: regex modifier in output"));
     if (keywordp(item)) {
       plist = modifier;
       break;
+    }
+
+    {
+      val v = funcall1(eval_fun, item);
+      if (fixnump(v))
+        n = v;
+      else
+        uw_throwf(query_error_s, lit("format_field: bad modifier object: ~s"),
+                  item, nao);
     }
   }
 
@@ -1277,10 +1284,6 @@ static val subst_vars(val spec, val bindings, val filter)
         val modifiers = fourth(elem);
         val pair = assoc(sym, bindings);
 
-        if (modifiers)
-          modifiers = mapcar(curry_123_2(func_n3(txeval), spec, bindings), 
-                             modifiers);
-
         if (pair) {
           val str = cdr(pair);
 
@@ -1290,7 +1293,9 @@ static val subst_vars(val spec, val bindings, val filter)
           if (pat)
             spec = cons(filter_string(filter, str), cons(pat, rest(spec)));
           else if (modifiers)
-            spec = cons(format_field(str, modifiers, filter), rest(spec));
+            spec = cons(format_field(str, modifiers, filter,
+                                     curry_123_2(func_n3(txeval), spec, bindings)),
+                        rest(spec));
           else
             spec = cons(filter_string(filter, str), rest(spec));
           continue;

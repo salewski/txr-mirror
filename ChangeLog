@@ -1,5 +1,21 @@
 2012-01-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	Non-broken way to achieve intent of previous commit.
+
+	* eval.c (subst_vars): Do not evaluate modifiers
+	as an argument list locally. Pass form-evaluating
+	function to format_field.
+
+	* match.c (format_field): Modified to accept new argument,
+	a one-argument function for reducing a form to a value.
+	Error checking for invalid modifiers made stricter.
+	(subst_vars): Do not evaluate modifiers as an argument
+	list. Pass form-evaluating function to format_field.
+
+	* match.h (format_field): Declaration updated.
+
+2012-01-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (subst_vars): Evaluate the
 	modifiers, so expressions can be used.
 
