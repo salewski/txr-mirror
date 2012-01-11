@@ -1,5 +1,10 @@
 2012-01-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (generate): Bugfix: do not call gen_fun before
+	testing while_pred.
+
+2012-01-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (tostring, tostringp): New static functions.
 	(eval_init): New functions registered.
 

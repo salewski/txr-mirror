@@ -1314,10 +1314,10 @@ static val generate_func(val env, val lcons)
 
 static val generate(val while_pred, val gen_fun)
 {
-  val first_item = funcall(gen_fun);
   if (!funcall(while_pred)) {
     return nil;
   } else {
+    val first_item = funcall(gen_fun);
     val lc = make_lazy_cons(func_f1(cons(while_pred, gen_fun), generate_func));
     rplaca(lc, first_item);
     return lc;
