@@ -296,7 +296,7 @@ extern val nothrow_k, args_k;
 extern val null_string;
 extern val null_list; /* (nil) */
 
-extern val identity_f, equal_f, eql_f, eq_f, car_f, cdr_f;
+extern val identity_f, equal_f, eql_f, eq_f, car_f, cdr_f, null_f;
 
 extern val gensym_counter;
 
@@ -325,6 +325,7 @@ val fourth(val cons);
 val fifth(val cons);
 val sixth(val cons);
 val *tail(val cons);
+val *ltail(val *cons);
 val pop(val *plist);
 val push(val v, val *plist);
 val copy_list(val list);
@@ -333,6 +334,7 @@ val reverse(val in);
 val append2(val list1, val list2);
 val nappend2(val list1, val list2);
 val appendv(val lists);
+val lazy_appendv(val lists);
 val ldiff(val list1, val list2);
 val flatten(val list);
 val lazy_flatten(val list);

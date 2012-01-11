@@ -4394,18 +4394,22 @@ alternative1 | alternative2 | ... | alternativeN
 Multiple syntactic variations allowed in one place are
 indicated as bar-separated items.
 
-.SS Operator progn
+.SS Operators progn and prog1
 
 .TP
 Syntax:
 
   (progn <form>*)
+  (prog1 <form>*)
 
 .TP
 Description
 
 The progn operator evaluates forms in order, and returns the value
 of the last form. The return value of (progn) is nil.
+
+The prog1 operator evaluates forms in order, and returns the value
+of the first form. The return value of (prog1) is nil.
 
 Various other operators such as let also arrange for the evaluation
 of a body of forms, the value of the last of which is returned.
@@ -4951,6 +4955,99 @@ Here, the output produced is "abc". The value of b is not printed
 because the return-from terminates block foo, and so the second pprint
 form is not evaluated.
 
+.SS Operator delay
+
+.TP
+Syntax:
+
+  (delay <expression>)
+
+.TP
+Description:
+
+The delay operator arranges for the delayed (or "lazy") evaluation of
+<expression>. This means that the expression is not evaluated immediately.
+Rather, the delay expression produces a promise object.
+
+The promise object can later be passed to the force function (described
+later in this document). The force function will trigger the evaluation
+of the expression and retrieve the value.
+
+The expression is evaluated in the original scope, no mater where
+the force takes place.
+
+The expression is evaluated at most once, by the first call to force.
+Additional calls to force only retrieve a cached value.
+
+.TP
+Example:
+
+  @(do
+    ;; list is popped only once: the value is computed
+    ;; just once when force is called on a given promise
+    ;; for the first time.
+
+    (defun get-it (promise)
+      (format t "*list* is ~s\en" *list*)
+      (format t "item is ~s\en" (force promise))
+      (format t "item is ~s\en" (force promise))
+      (format t "*list* is ~s\en" *list*))
+
+
+    (defvar *list* '(1 2 3))
+
+    (get-it (delay (pop *list*))))
+
+  Output:
+
+  *list* is (1 2 3)
+  item is 1
+  item is 1
+  *list* is (2 3)
+
+.SS Operator gen
+
+.TP
+Syntax:
+
+  (gen <while-expression> <produce-item-expression>)
+
+.TP
+Description:
+
+The gen operator produces a lazy list, in a manner similar to the generate
+function. Whereas the generate function (documented later in this manual)
+takes functional arguments, the gen operator takes two expressions, which is
+often more convenient.
+
+The return value of gen is a lazy list. When the lazy list is accessed, for
+instance with the functions car and cdr, it produces items on demand. Prior to
+producing each item, the <while-expression> is evaluated, in its original
+lexical scope.  If the expression yields true, then <produce-item-expression>
+is evaluated, and its return value is incorporated as the next item of the lazy
+list. If the expression yields false, then the lazy list immediately
+terminates.
+
+The gen operator itself immediately evaluates <while-expression> before
+producing the lazy list. If the expression yields false, then the operator
+returns the empty list nil. Otherwise, it instantiates the lazy list and
+invokes the <produce-item-expression> to force the first item.
+
+.TP
+
+Example:
+
+  @(do
+    ;; Make a lazy list of integers up to 1000
+    ;; access and print the first three.
+    (let* ((counter 0)
+           (list (gen (< counter 1000) (inc counter))))
+      (format t "~s ~s ~s\en" (pop list) (pop list) (pop list))))
+
+  Output:
+  1 2 3
+
+
 .SS Lisp Functions and Variables
 
 When the first element of a compound form is a symbol denoting a function,
@@ -5434,13 +5531,15 @@ Description:
 The length-list function returns the length of a proper or improper
 list. The length of a list is the number of conses in that list.
 
-.SS Functions mapcar and mappend
+.SS Functions mapcar, mappend, mapcar* and mappend*
 
 .TP
 Syntax:
 
   (mapcar <function> <list> <list>*)
   (mappend <function> <list> <list>*)
+  (mapcar* <function> <list> <list>*)
+  (mappend* <function> <list> <list>*)
 
 .TP
 Description:
@@ -5464,6 +5563,27 @@ are catenated with append, and the resulting list is returned.
 That is to say, (mappend f a b c) is equivalent to
 (apply (fun append) (mapcar f a b c)). 
 
+The mapcar* and mappend* functions work like mapcar and mappend, respectively.
+However, they return lazy lists rather than generating the entire
+output list prior to returning.
+
+.TP
+Caveats:
+
+Like mappend, mappend* must "consume" empty lists. For instance,
+if the function being mapped put out a sequence of nil values,
+then the result must be the empty list nil, because
+(append nil nil nil nil ...) is nil.
+
+Suppose that mappend* is used on inputs which are infinite lazy
+lists, such that the function returns nil values indefinitely.
+For instance:
+
+  ;; Danger: infinite loop!!!
+  (mappend* (fun identity) (repeat '(nil))) 
+
+The mappend* function is caught in a loop trying to consume
+and squash an infinite stream of nil values.
 
 .TP
 Examples:
@@ -5646,21 +5766,21 @@ Examples:
     (ldiff a b))
   -> (1)
 
-.SS Functions flatten, lazy-flatten
+.SS Functions flatten, flatten*
 
 .TP
 Syntax:
 
   (flatten <list>)
-  (lazy-flatten <list>)
+  (flatten* <list>)
 
 .TP
 Description:
 
 The flatten function produces a list whose elements are all of the non-nil
-atoms contained in the structure of <list>. The lazy-flatten function
+atoms contained in the structure of <list>. The flatten* function
 works like flatten except that flatten creates and returns a complete
-flattened list, whereas lazy-flatten produces a lazy list which is
+flattened list, whereas flatten* produces a lazy list which is
 instantiated on demand. This is particularly useful when the input
 structure is itself lazy.
 
@@ -6053,6 +6173,14 @@ Certain object types have a custom equal function.
 .SS Function random-state-p
 
 .SS Functions random-fixnum and random
+
+.SS Function force
+
+.SS Function range
+
+.SS Function generate
+
+.SS Function repeat
 
 .SH APPENDIX A: NOTES ON EXOTIC REGULAR EXPRESSIONS
 

@@ -51,11 +51,12 @@ val top_vb, top_fb;
 val op_table;
 
 val eval_error_s;
-val progn_s, let_s, let_star_s, lambda_s, call_s;
+val progn_s, prog1_s, let_s, let_star_s, lambda_s, call_s;
 val cond_s, if_s, defvar_s, defun_s;
 val inc_s, dec_s, push_s, pop_s, flip_s, gethash_s, car_s, cdr_s, vecref_s;
 val for_s, for_star_s, dohash_s, uw_protect_s, return_s, return_from_s;
-val list_s, append_s, apply_s;
+val list_s, append_s, apply_s, gen_s, generate_s;
+val delay_s, promise_s;
 
 val make_env(val vbindings, val fbindings, val up_env)
 {
@@ -373,6 +374,21 @@ val eval_progn(val forms, val env, val ctx_form)
   return retval;
 }
 
+static val eval_prog1(val forms, val env, val ctx_form)
+{
+  val retval = nil;
+
+  if (forms) {
+    retval = eval(car(forms), env, ctx_form);
+    forms = cdr(forms);
+  }
+
+  for (; forms; forms = cdr(forms))
+    eval(car(forms), env, ctx_form);
+
+  return retval;
+}
+
 static val op_quote(val form, val env)
 {
   return second(form);
@@ -428,6 +444,11 @@ static val bindings_helper(val vars, val env, val sequential, val ctx_form)
 static val op_progn(val form, val env)
 {
   return eval_progn(rest(form), env, form);
+}
+
+static val op_prog1(val form, val env)
+{
+  return eval_prog1(rest(form), env, form);
 }
 
 static val op_let(val form, val env)
@@ -968,6 +989,20 @@ static val expand_quasi(val quasi_forms)
   }
 }
 
+static val expand_gen(val args)
+{
+  return list(generate_s,
+              list(lambda_s, nil, first(args), nao),
+              list(lambda_s, nil, second(args), nao), nao);
+}
+
+static val expand_delay(val args)
+{
+  return list(cons_s,
+              cons(quote_s, cons(promise_s, nil)),
+              cons(lambda_s, cons(nil, args)), nao);
+}
+
 val expand(val form)
 {
   if (atom(form)) {
@@ -1089,9 +1124,14 @@ val expand(val form)
       if (quasi == quasi_ex)
         return form;
       return rlcp(cons(sym, quasi_ex), form);
+    } else if (sym == gen_s) {
+      return expand(expand_gen(rest(form)));
+    } else if (sym == delay_s) {
+      return expand(expand_delay(rest(form)));
     } else {
-      /* funtion call */
-      /* also handles: progn, call, if, and, or, unwind-protect, return */
+      /* funtion call
+         also handles: progn, prog1, call, if, and, or, 
+         unwind-protect, return  */
       val args = rest(form);
       val args_ex = expand_forms(args);
 
@@ -1153,9 +1193,174 @@ static val mappendv(val fun, val list_of_lists)
   }
 }
 
+static val lazy_mapcar_func(val env, val lcons)
+{
+  cons_bind (fun, list, env);
+
+  rplaca(lcons, funcall1(fun, car(list)));
+  rplacd(env, cdr(list));
+
+  if (cdr(list))
+    rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+  else
+    rplacd(lcons, nil);
+  return nil;
+}
+
+static val lazy_mapcar(val fun, val list)
+{
+  if (!list)
+    return nil;
+  return make_lazy_cons(func_f1(cons(fun, list), lazy_mapcar_func));
+}
+
+static val lazy_mapcarv_func(val env, val lcons)
+{
+  cons_bind (fun, lofl, env);
+  val args = mapcar(car_f, lofl);
+  val next = mapcar(cdr_f, lofl);
+
+  rplaca(lcons, apply(fun, args, nil));
+  rplacd(env, next);
+
+  if (all_satisfy(next, identity_f, identity_f))
+    rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+  else
+    rplacd(lcons, nil);
+  return nil;
+}
+
+static val lazy_mapcarv(val fun, val list_of_lists)
+{
+  if (!cdr(list_of_lists)) {
+    return lazy_mapcar(fun, car(list_of_lists));
+  } else if (some_satisfy(list_of_lists, null_f, identity_f)) {
+    return nil;
+  } else {
+    val lofl = copy_list(list_of_lists);
+    return make_lazy_cons(func_f1(cons(fun, lofl), lazy_mapcarv_func));
+  }
+}
+
+static val lazy_mappendv(val fun, val list_of_lists)
+{
+  return lazy_appendv(lazy_mapcarv(fun, list_of_lists));
+}
+
 static val symbol_function(val sym)
 {
   return lookup_fun(nil, sym);
+}
+
+static val rangev_func(val env, val lcons)
+{
+  cons_bind (from, to_step, env);
+  cons_bind (to, step, to_step);
+
+  rplaca(lcons, from);
+
+  if (equal(from, to)) {
+    rplacd(lcons, nil);
+    return nil;
+  }
+
+  if (functionp(step))
+    rplaca(env, funcall1(step, from));
+  else
+    rplaca(env, plus(from, step));
+  rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+  return nil;
+}
+
+static val rangev(val args)
+{
+  uses_or2;
+  val from = or2(first(args), zero);
+  val to = second(args);
+  val step = or2(third(args), one);
+  val env = cons(from, cons(to, step));
+
+  return make_lazy_cons(func_f1(env, rangev_func));
+}
+
+static val generate_func(val env, val lcons)
+{
+  cons_bind (while_pred, gen_fun, env);
+
+  if (!funcall(while_pred)) {
+    rplacd(lcons, nil);
+  } else {
+    val next_item = funcall(gen_fun);
+    val lcons_next = make_lazy_cons(lcons_fun(lcons));
+    rplacd(lcons, lcons_next);
+    rplaca(lcons_next, next_item);
+  }
+  return nil;
+}
+
+static val generate(val while_pred, val gen_fun)
+{
+  val first_item = funcall(gen_fun);
+  if (!funcall(while_pred)) {
+    return nil;
+  } else {
+    val lc = make_lazy_cons(func_f1(cons(while_pred, gen_fun), generate_func));
+    rplaca(lc, first_item);
+    return lc;
+  }
+}
+
+static val repeat_infinite_func(val env, val lcons)
+{
+  if (!car(env))
+    rplaca(env, cdr(env));
+  rplaca(lcons, pop(car_l(env)));
+  rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+  return nil;
+}
+
+static val repeat_times_func(val env, val lcons)
+{
+  cons_bind (stack, list_count, env);
+  cons_bind (list, count, list_count);
+
+  if (!stack) {
+    rplaca(env, list);
+    rplacd(list_count, count = minus(count, one));
+  }
+
+  rplaca(lcons, pop(car_l(env)));
+
+  if (!car(env) && count == one) {
+    rplacd(lcons, nil);
+    return nil;
+  }
+
+  rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+  return nil;
+}
+
+static val repeatv(val list, val rest)
+{
+  if (!list)
+    return nil;
+  if (rest) {
+    val count = car(rest);
+    if (count == zero)
+      return nil;
+    return make_lazy_cons(func_f1(cons(list, cons(list, count)), 
+                                  repeat_times_func));
+  }
+  return make_lazy_cons(func_f1(cons(list, list), repeat_infinite_func));
+}
+
+static val force(val promise)
+{
+  if (car(promise) != promise_s)
+    return cdr(promise);
+
+  rplaca(promise, nil);
+  return rplacd(promise, funcall(cdr(promise)));
 }
 
 static void reg_fun(val sym, val fun)
@@ -1176,6 +1381,7 @@ void eval_init(void)
   op_table = make_hash(nil, nil, nil);
 
   progn_s = intern(lit("progn"), user_package);
+  prog1_s = intern(lit("prog1"), user_package);
   let_s = intern(lit("let"), user_package);
   let_star_s = intern(lit("let*"), user_package);
   lambda_s = intern(lit("lambda"), user_package);
@@ -1202,12 +1408,17 @@ void eval_init(void)
   list_s = intern(lit("list"), user_package);
   append_s = intern(lit("append"), user_package);
   apply_s = intern(lit("apply"), user_package);
+  gen_s = intern(lit("gen"), user_package);
+  generate_s = intern(lit("generate"), user_package);
+  delay_s = intern(lit("delay"), user_package);
+  promise_s = intern(lit("promise"), system_package);
 
   sethash(op_table, quote_s, cptr((mem_t *) op_quote));
   sethash(op_table, qquote_s, cptr((mem_t *) op_qquote_error));
   sethash(op_table, unquote_s, cptr((mem_t *) op_unquote_error));
   sethash(op_table, splice_s, cptr((mem_t *) op_unquote_error));
   sethash(op_table, progn_s, cptr((mem_t *) op_progn));
+  sethash(op_table, prog1_s, cptr((mem_t *) op_prog1));
   sethash(op_table, let_s, cptr((mem_t *) op_let));
   sethash(op_table, let_star_s, cptr((mem_t *) op_let));
   sethash(op_table, lambda_s, cptr((mem_t *) op_lambda));
@@ -1257,7 +1468,9 @@ void eval_init(void)
   reg_fun(intern(lit("length-list"), user_package), func_n1(length_list));
 
   reg_fun(intern(lit("mapcar"), user_package), func_n1v(mapcarv));
+  reg_fun(intern(lit("mapcar*"), user_package), func_n1v(lazy_mapcarv));
   reg_fun(intern(lit("mappend"), user_package), func_n1v(mappendv));
+  reg_fun(intern(lit("mappend*"), user_package), func_n1v(lazy_mappendv));
   reg_fun(apply_s, func_n2(apply_intrinsic));
   reg_fun(intern(lit("reduce-left"), user_package), func_n4(reduce_left));
   reg_fun(intern(lit("reduce-right"), user_package), func_n4(reduce_right));
@@ -1272,7 +1485,7 @@ void eval_init(void)
   reg_fun(intern(lit("reverse"), user_package), func_n1(reverse));
   reg_fun(intern(lit("ldiff"), user_package), func_n2(ldiff));
   reg_fun(intern(lit("flatten"), user_package), func_n1(flatten));
-  reg_fun(intern(lit("lazy-flatten"), user_package), func_n1(lazy_flatten));
+  reg_fun(intern(lit("flatten*"), user_package), func_n1(lazy_flatten));
   reg_fun(intern(lit("memq"), user_package), func_n2(memq));
   reg_fun(intern(lit("memql"), user_package), func_n2(memql));
   reg_fun(intern(lit("memqual"), user_package), func_n2(memqual));
@@ -1444,6 +1657,11 @@ void eval_init(void)
   reg_fun(intern(lit("random-state-p"), user_package), func_n1(random_state_p));
   reg_fun(intern(lit("random-fixnum"), user_package), func_n1(random_fixnum));
   reg_fun(intern(lit("random"), user_package), func_n2(random));
+
+  reg_fun(intern(lit("range"), user_package), func_n0v(rangev));
+  reg_fun(generate_s, func_n2(generate));
+  reg_fun(intern(lit("repeat"), user_package), func_n1v(repeatv));
+  reg_fun(intern(lit("force"), user_package), func_n1(force));
 
   eval_error_s = intern(lit("eval-error"), user_package);
   uw_register_subtype(eval_error_s, error_s);

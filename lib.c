@@ -82,7 +82,7 @@ val null_string;
 val nil_string;
 val null_list;
 
-val identity_f, equal_f, eql_f, eq_f, car_f, cdr_f;
+val identity_f, equal_f, eql_f, eq_f, car_f, cdr_f, null_f;
 
 val gensym_counter;
 
@@ -308,6 +308,13 @@ val *tail(val cons)
   return cdr_l(cons);
 }
 
+val *ltail(val *cons)
+{
+  while (cdr(*cons))
+    cons = cdr_l(*cons);
+  return cons;
+}
+
 val pop(val *plist)
 {
   val ret = car(*plist);
@@ -392,6 +399,56 @@ val nappend2(val list1, val list2)
   list_collect_nconc (ptail, list2);
 
   return out;
+}
+
+static val lazy_appendv_func(val env, val lcons)
+{
+  cons_bind (last, lists, env);
+  val nonempty = nil;
+
+  while (lists) {
+    nonempty = pop(&lists);
+    if (nonempty)
+      break;
+  }
+
+  rplaca(lcons, last);
+
+  if (atom(nonempty)) {
+    rplacd(lcons, nonempty);
+    return nil;
+  }
+
+  rplacd(env, lists);
+
+  {
+    val *ptail = ltail(&nonempty);
+    rplaca(env, car(*ptail));
+    *ptail = make_lazy_cons(lcons_fun(lcons));
+    rplacd(lcons, nonempty);
+  }
+  return nil;
+}
+
+val lazy_appendv(val lists)
+{
+  val nonempty = nil;
+
+  while (lists) {
+    nonempty = pop(&lists);
+    if (nonempty)
+      break;
+  }
+
+  if (atom(nonempty))
+    return nonempty;
+
+  {
+    val *ptail = ltail(&nonempty);
+    *ptail = make_lazy_cons(func_f1(cons(car(*ptail), lists),
+                                    lazy_appendv_func));
+    return nonempty;
+  }
 }
 
 val ldiff(val list1, val list2)
@@ -3166,7 +3223,7 @@ static void obj_init(void)
 
   protect(&packages, &system_package, &keyword_package,
           &user_package, &null_string, &nil_string,
-          &null_list, &equal_f, &eq_f, &eql_f, &car_f, &cdr_f,
+          &null_list, &equal_f, &eq_f, &eql_f, &car_f, &cdr_f, &null_f,
           &identity_f, &prog_string, &env_list,
           (val *) 0);
 
@@ -3284,6 +3341,7 @@ static void obj_init(void)
   identity_f = func_n1(identity);
   car_f = func_n1(car);
   cdr_f = func_n1(cdr);
+  null_f = func_n1(nullp);
   gensym_counter = zero;
   prog_string = string(progname);
 }

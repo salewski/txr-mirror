@@ -1,3 +1,29 @@
+2012-01-10  Kaz Kylheku  <kaz@kylheku.com>
+
+	Spat of new features having to do with lazy processing.
+
+	* eval.c (prog1_s, gen_s, generate_s, delay_s, promise_s): New symbol
+	variables.
+	(eval_prog1, op_prog1, expand_gen, expand_delay): New static functions.
+	(expand): Handle gen and delay.
+	(lazy_mapcar_func, lazy_mapcar, lazy_mapcarv_func, lazy_mapcarv,
+	lazy_mappendv): New static functions.
+	(rangev_func, rangev, generate_func, generate, repeat_infinite_func,
+	repeat_times_func, repeatv, force): New static functions.
+	(eval_init): New operators and functions interned.
+	lazy-flatten renamed to flatten*.
+
+	* lib.c (null_f): New global variable.
+	(ltail, lazy_appendv): New functions.
+	(lazy_appendv_func): New static function.
+	(obj_init): null_f protected and initialized.
+
+	* lib.h (null_f, ltail, lazy_appendv): Declared.
+
+	* txr.1: Documented.
+
+	* txr.vim: Updated.
+
 2012-01-09  Kaz Kylheku  <kaz@kylheku.com>
 
 	Non-broken way to achieve intent of previous commit.
