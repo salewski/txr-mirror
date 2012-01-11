@@ -30,6 +30,7 @@ syn keyword txl_keyword contained cond if and or
 syn keyword txl_keyword contained defvar defun inc dec set push pop flip
 syn keyword txl_keyword contained for for* dohash unwind-protect block
 syn keyword txl_keyword contained return return-from gen delay
+syn keyword txl_keyword contained each each* collect-each collect-each*
 
 syn keyword txl_keyword contained cons make-lazy-cons lcons-fun car cdr
 syn keyword txl_keyword contained rplaca rplacd first rest append list
