@@ -4872,6 +4872,65 @@ block foo. Therefore the form does not complete and so the
 output "not reached!" is not produced. However, the cleanup form
 excecutes, producing the output "cleanup!".
 
+.SS Operators each, each*, collect-each and collect-each*
+
+.TP
+Syntax:
+
+  (each ({(<sym> <init-form>)}*) <body-form>*)
+  (each* ({(<sym> <init-form>)}*) <body-form>*)
+  (collect-each ({(<sym> <init-form>)}*) <body-form>*)
+  (collect-each* ({(<sym> <init-form>)}*) <body-form>*)
+
+.TP
+Description:
+
+These operator establish a loop for iterating over the elements of one or more
+lists. Each <init-form> must evaluate to a list. The lists are then iterated in
+parallel over repeated evaluations of the <body-form>-s, which each <sym>
+variable being assigned to successive elements of its list. The shortest list
+determines the number of iterations, so if any of the <init-form>-s evaluate to
+an empty list, the body is not executed.
+
+The body forms are enclosed in an anonymous block, allowing the return
+operator to terminate the looop prematurely and optionally specify
+the return value.
+
+The collect-each and collect-each* variants are like each and each*,
+except that for each iteration, the resulting value of the body is collected
+into a list. When the iteration terminates, the return value is this
+collection.
+
+The alternate forms denoted by the adorned symbols each* and collect-each*
+variants differ from each and collect-each in the following way. The plain
+forms evaluate the <init-form>-s in an environment in which none of the <sym>
+variables are yet visible. By contrast, the alternate forms evaluate each
+<init-form> in an environment in which bindings for the previous <sym>
+variables are visible.  In this phase of evaluation, <sym> variables are
+list-valued: one by one they are each bound to the list object emanating from
+their corresponding <init-form>. Just before the first loop iteration, however,
+the <sym> variables are assigned the first item from each of their lists.
+
+.TP
+Examples:
+
+ ;; print numbers from 1 to 10 and whether they are even or odd
+ (each* ((n (range 1 10)) 
+         (even (collect-each ((n m)) (evenp m)))) ;; n is a list here
+   (format t "~s is ~s\n" n (if even "even" "odd"))) ;; n is an item here
+
+ Output:
+
+ 1 is odd
+ 2 is even
+ 3 is odd
+ 4 is even
+ 5 is odd
+ 6 is even
+ 7 is odd
+ 8 is even
+ 9 is odd
+ 10 is even
 
 .SS Operator block
 

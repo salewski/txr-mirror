@@ -1,5 +1,17 @@
 2012-01-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (each_s, each_star_s, collect_each_s, collect_each_star_s):
+	New symbol variables.
+	(op_each): New static function.
+	(expand): Handle the four new operators.
+	(eval_init): Intern new symbols, register new operators.
+
+	* txr.1: Documented each, each*, collect-each and collect-each*.
+
+	* txr.vim: Updated.
+
+2012-01-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): list_str registered.
 
 	* lib.c (list_str): New function.
