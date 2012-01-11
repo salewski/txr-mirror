@@ -1463,6 +1463,15 @@ val split_str_set(val str, val set)
   return out;
 }
 
+val list_str(val str)
+{
+  const wchar_t *cstr = c_str(str);
+  list_collect_decl (out, iter);
+  while (*cstr)
+    list_collect(iter, chr(*cstr++));
+  return out;
+}
+
 val trim_str(val str)
 {
   const wchar_t *start = c_str(str);

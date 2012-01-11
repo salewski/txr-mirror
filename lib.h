@@ -420,6 +420,7 @@ val sub_str(val str_in, val from_num, val to_num);
 val cat_str(val list, val sep);
 val split_str(val str, val sep);
 val split_str_set(val str, val set);
+val list_str(val str);
 val trim_str(val str);
 val string_lt(val astr, val bstr);
 val int_str(val str, val base);

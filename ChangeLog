@@ -1,3 +1,15 @@
+2012-01-11  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): list_str registered.
+
+	* lib.c (list_str): New function.
+
+	* lib.h (list_str): Declared.
+
+	* txr.1: Doc stub section created.
+
+	* txr.vim: Updated.
+
 2012-01-10  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (generate): Bugfix: do not call gen_fun before

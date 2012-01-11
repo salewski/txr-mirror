@@ -1608,6 +1608,7 @@ void eval_init(void)
   reg_fun(intern(lit("cat-str"), user_package), func_n2(cat_str));
   reg_fun(intern(lit("split-str"), user_package), func_n2(split_str));
   reg_fun(intern(lit("split-str-set"), user_package), func_n2(split_str_set));
+  reg_fun(intern(lit("list-str"), user_package), func_n1(list_str));
   reg_fun(intern(lit("trim-str"), user_package), func_n1(trim_str));
   reg_fun(intern(lit("string-lt"), user_package), func_n2(string_lt));
   reg_fun(intern(lit("int-str"), user_package), func_n2(int_str));
