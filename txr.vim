@@ -47,7 +47,8 @@ syn keyword txl_keyword contained < >= <= max min search-regex match-regex
 syn keyword txl_keyword contained make-hash gethash sethash pushhash remhash
 syn keyword txl_keyword contained hash-count get-hash-userdata set-hash-userdata hashp maphash 
 syn keyword txl_keyword contained hash-eql hash-equal eval *stdout* *stdin*
-syn keyword txl_keyword contained *stderr* format print pprint make-string-input-stream
+syn keyword txl_keyword contained *stderr* format print pprint tostring tostringp
+syn keyword txl_keyword contained make-string-input-stream
 syn keyword txl_keyword contained make-string-byte-input-stream make-string-output-stream
 syn keyword txl_keyword contained get-string-from-stream make-strlist-output-stream
 syn keyword txl_keyword contained get-list-from-stream close-stream

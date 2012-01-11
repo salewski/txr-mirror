@@ -1247,6 +1247,20 @@ static val lazy_mappendv(val fun, val list_of_lists)
   return lazy_appendv(lazy_mapcarv(fun, list_of_lists));
 }
 
+static val tostring(val obj)
+{
+  val ss = make_string_output_stream();
+  obj_print(obj, ss);
+  return get_string_from_stream(ss);
+}
+
+static val tostringp(val obj)
+{
+  val ss = make_string_output_stream();
+  obj_pprint(obj, ss);
+  return get_string_from_stream(ss);
+}
+
 static val symbol_function(val sym)
 {
   return lookup_fun(nil, sym);
@@ -1547,6 +1561,8 @@ void eval_init(void)
   reg_fun(intern(lit("format"), user_package), func_n2v(formatv));
   reg_fun(intern(lit("print"), user_package), func_n2(obj_print));
   reg_fun(intern(lit("pprint"), user_package), func_n2(obj_pprint));
+  reg_fun(intern(lit("tostring"), user_package), func_n1(tostring));
+  reg_fun(intern(lit("tostringp"), user_package), func_n1(tostringp));
   reg_fun(intern(lit("make-string-input-stream"), user_package), func_n1(make_string_input_stream));
   reg_fun(intern(lit("make-string-byte-input-stream"), user_package), func_n1(make_string_byte_input_stream));
   reg_fun(intern(lit("make-string-output-stream"), user_package), func_n0(make_string_output_stream));
