@@ -1,5 +1,14 @@
 2012-01-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (tostring, tostringp): New static functions.
+	(eval_init): New functions registered.
+
+	* txr.1: Stub sections created.
+
+	* txr.vim: Updated.
+
+2012-01-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	Spat of new features having to do with lazy processing.
 
 	* eval.c (prog1_s, gen_s, generate_s, delay_s, promise_s): New symbol
