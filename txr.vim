@@ -25,16 +25,17 @@ syn keyword txr_keyword contained repeat rep first last single empty mod modlast
 syn keyword txr_keyword contained define try catch finally throw
 syn keyword txr_keyword contained defex throw deffilter filter eof eol do
 
-syn keyword txl_keyword contained progn let syn let* lambda call fun 
+syn keyword txl_keyword contained progn prog1 let syn let* lambda call fun 
 syn keyword txl_keyword contained cond if and or
 syn keyword txl_keyword contained defvar defun inc dec set push pop flip
 syn keyword txl_keyword contained for for* dohash unwind-protect block
-syn keyword txl_keyword contained return return-from
+syn keyword txl_keyword contained return return-from gen delay
 
 syn keyword txl_keyword contained cons make-lazy-cons lcons-fun car cdr
 syn keyword txl_keyword contained rplaca rplacd first rest append list
 syn keyword txl_keyword contained identity typeof atom null not consp listp
 syn keyword txl_keyword contained proper-listp length-list mapcar mappend apply
+syn keyword txl_keyword contained mapcar* mappend*
 syn keyword txl_keyword contained reduce-left reduce-right
 syn keyword txl_keyword contained second third fourth fifth sixth copy-list nreverse
 syn keyword txl_keyword contained reverse ldiff flatten lazy-flatten
@@ -75,6 +76,8 @@ syn keyword txl_keyword contained symbol-function func-get-form func-get-env
 syn keyword txl_keyword contained functionp interp-fun-p *random-state*
 syn keyword txl_keyword contained make-random-state random-state-p
 syn keyword txl_keyword contained random-fixnum random
+
+syn keyword txl_keyword contained range generate repeat force
 
 syn match txr_hash "#" contained
 syn match txr_quote "[,']" contained
