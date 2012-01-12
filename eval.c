@@ -1443,7 +1443,8 @@ static void reg_fun(val sym, val fun)
 
 static void c_var_mark(val obj)
 {
-  struct c_var *cv = (struct c_var *) cptr_get(obj);
+  struct c_var *cv = (struct c_var *) obj->co.handle;
+  cv->bind->c.cdr = *cv->loc; /* synchronize shadow binding with variable */
   gc_mark(cv->bind);
   /* we don't mark *loc since it should be a gc-protected C global! */
 }

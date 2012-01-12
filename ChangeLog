@@ -1,5 +1,14 @@
 2012-01-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	Before releasing 53, there is this.
+
+	* eval.c (c_var_mark): Bugfix: we cannot use cptr_get from
+	within the garbage collector because of its type check.
+	Bugfix: synchronize the shadow binding with the variable's
+	current contents so we don't hang on to a stale object.
+
+2012-01-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	Version 53
 
 	* txr.c (version): Bumped.
