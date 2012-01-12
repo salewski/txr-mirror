@@ -352,7 +352,7 @@ fi
 #
 
 
-txr_ver=51
+txr_ver=53
 
 #
 # The all important banner.
