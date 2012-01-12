@@ -1,3 +1,27 @@
+                                     TXR 53
+                                   2011-01-11
+
+
+  Features
+
+  - In variable substitutions in output and quasiliterals, the field
+    width expression is now evaluated.
+
+  - TXR Lisp:
+
+    - New operators and functions for generating lazy lists more conveniently. 
+    - lazy mapcar and mappend: return lazy list.
+    - delay and force operators.
+    - parallel iteration/collection over lists.
+    - list-str function for splitting string into list of characters.
+
+  Bugs
+
+  - Fixed global buitin variables, broken in 52. Properly implemented
+    intended fix.
+
+
+
                                      TXR 52
                                    2011-01-07
 
