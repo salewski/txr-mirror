@@ -1,5 +1,18 @@
 2012-01-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	TXR Lisp regression in C global variables.
+
+	* eval.c (struct c_var): New struct type.
+	(lookup_var, lookup_var_l): cptr type bindings now point to a struct
+	c_var, which has to be handled properly here.
+	(c_var_mark): New static function.
+	(c_var_ops): New static struct.
+	(reg_var): Register variables using struct c_var to provide
+	a pointer to the location and a cached cons that can be
+	returned as a binding.
+
+2012-01-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (each_s, each_star_s, collect_each_s, collect_each_star_s):
 	New symbol variables.
 	(op_each): New static function.
