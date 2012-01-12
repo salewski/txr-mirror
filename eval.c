@@ -47,6 +47,11 @@
 
 typedef val (*opfun_t)(val, val);
 
+struct c_var {
+  val *loc;
+  val bind;
+};
+
 val top_vb, top_fb;
 val op_table;
 
@@ -109,8 +114,11 @@ val lookup_var(val env, val sym)
 {
   if (nullp(env)) {
     val bind = gethash(top_vb, sym);
-    if (cobjp(bind))
-      return *(val *) cptr_get(bind);
+    if (cobjp(bind)) {
+      struct c_var *cv = (struct c_var *) cptr_get(bind);
+      cv->bind->c.cdr = *cv->loc;
+      return cv->bind;
+    }
     return bind;
   } else  {
     type_check(env, ENV);
@@ -128,8 +136,10 @@ val *lookup_var_l(val env, val sym)
 {
   if (nullp(env)) {
     val bind = gethash(top_vb, sym);
-    if (cobjp(bind))
-      return (val *) cptr_get(bind);
+    if (cobjp(bind)) {
+      struct c_var *cv = (struct c_var *) cptr_get(bind);
+      return cv->loc;
+    }
     if (bind)
       return cdr_l(bind);
     return 0;
@@ -1431,9 +1441,27 @@ static void reg_fun(val sym, val fun)
   sethash(top_fb, sym, cons(sym, fun));
 }
 
-static void reg_var(val sym, val *obj)
+static void c_var_mark(val obj)
 {
-  sethash(top_vb, sym, cptr((mem_t *) obj));
+  struct c_var *cv = (struct c_var *) cptr_get(obj);
+  gc_mark(cv->bind);
+  /* we don't mark *loc since it should be a gc-protected C global! */
+}
+
+static struct cobj_ops c_var_ops = {
+  cobj_equal_op,
+  cobj_print_op,
+  cobj_destroy_free_op,
+  c_var_mark,
+  cobj_hash_op
+};
+
+static void reg_var(val sym, val *loc)
+{
+  struct c_var *cv = (struct c_var *) chk_malloc(sizeof *cv);
+  cv->loc = loc;
+  cv->bind = cons(sym, *loc);
+  sethash(top_vb, sym, cobj((mem_t *) cv, cptr_s, &c_var_ops));
 }
 
 void eval_init(void)
