@@ -1555,6 +1555,7 @@ void eval_init(void)
   reg_fun(intern(lit("first"), user_package), func_n1(car));
   reg_fun(intern(lit("rest"), user_package), func_n1(cdr));
   reg_fun(append_s, func_n0v(appendv));
+  reg_fun(intern(lit("append*"), user_package), func_n0v(lazy_appendv));
   reg_fun(list_s, func_n0v(identity));
   reg_fun(intern(lit("identity"), user_package), identity_f);
   reg_fun(intern(lit("typeof"), user_package), func_n1(typeof));
