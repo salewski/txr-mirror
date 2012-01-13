@@ -5331,12 +5331,13 @@ Examples:
   (second '(1 2)) -> 2
   (third '(1 2 . 3)) -> **error**
 
-.SS Function append
+.SS Functions append and append*
 
 .TP
 Syntax:
 
-(append [<list>* <cdr>])
+(append [<list>* <last-arg>])
+(append* [<list>* <last-arg>])
 
 .TP
 Description:
@@ -5349,11 +5350,18 @@ If a single argument is specified, then append simply returns the value of that
 argument. It may be any kind of object.
 
 If N arguments are specified, where N > 1, then the first N-1 arguments must be
-proper lists. Copies of these lists are catenated together. The last argument,
-argument N, may be any kind of object. It is installed into the cdr field of
-the last cons cell of the resulting list.  Thus, if argument N is also a list, it
-is catenated onto the resulting list, but without being copied. Argument N may
-be an atom other than nil; in that case append produces an improper list.
+proper lists. Copies of these lists are catenated together. The last argument
+N, shown in the above syntax as <last-arg>, may be any kind of object. It is
+installed into the cdr field of the last cons cell of the resulting list.
+Thus, if argument N is also a list, it is catenated onto the resulting list,
+but without being copied. Argument N may be an atom other than nil; in that
+case append produces an improper list.
+
+The append* function works like append, but returns a lazy list which produces
+the catenation of the lists on demand.  If some of the arguments are
+themselves lazy lists which are infinite, then append* can return immediately,
+whereas append will get caught in an infinite loop trying to produce a
+catenation and eventually exhaust available memory.
 
 .TP
 Examples:
