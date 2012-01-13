@@ -5492,7 +5492,7 @@ Examples:
   (consp "abc") -> nil
   (consp '(3)) -> t
 
-.SS Function make_lazy_cons
+.SS Function make-lazy-cons
 
 .TP
 Syntax:
@@ -5640,7 +5640,7 @@ output list prior to returning.
 Caveats:
 
 Like mappend, mappend* must "consume" empty lists. For instance,
-if the function being mapped put out a sequence of nil values,
+if the function being mapped puts out a sequence of nil values,
 then the result must be the empty list nil, because
 (append nil nil nil nil ...) is nil.
 
