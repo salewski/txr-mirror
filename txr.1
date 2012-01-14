@@ -1260,12 +1260,11 @@ filter or chain or filters, updating them with the filtered values.
 
 .SS The Next Directive
 
-The next directive comes in two forms, one of which is obsolescent
-syntax.  The directive indicates that the remainder of the query
-is to be applied to a new input source.
+The next directive indicates that the remainder of the query is to be applied
+to a new input source.
 
-In the first form, it can occur by itself as the only element in a query line,
-with, or without arguments:
+It can only occur by itself as the only element in a query line,
+and takes various arguments, according to these possiblities:
 
   @(next)
   @(next SOURCE)
@@ -1278,7 +1277,11 @@ with, or without arguments:
 The lone @(next) without arguments switches to the next file in the
 argument list which was passed to the
 .B TXR
-utility. If SOURCE is given, it must be text-valued expression which denotes an
+utility. However, "switch to the next file" means in a pattern matching
+way, not in an imperative way. It is possible for the pattern matching
+logic to implicitly backtrack to the previous file.
+
+If SOURCE is given, it must be text-valued expression which denotes an
 input source; it may be a string literal, quasiliteral or a variable.
 For instance, if variable A contains the text "data", then
 
@@ -1302,14 +1305,14 @@ The variant @(next :args) means that the remaining command line arguments are to
 be treated as a data source. For this purpose, each argument is considered to
 be a line of text. If an argument is currently being processed as an input
 source, that argument is included. Note that if the first entry in the argument
-list does not name an input source, then the query should begin with
+list is not intended to name an input source, then the query should begin with
 @(next :args) or some other form of next directive, to prevent an attempt to
 open the input source named by that argument. If the very first directive of a query is any variant of the next directive, then
 .B TXR
 avoids opening the first input source, but it does open the input source for
 any other directive, even one which does not consume any data.
 
-The variant @(next :env) means that the list of process enviornment variables
+The variant @(next :env) means that the list of process environment variables
 is treated as a source of data. It looks like a text file stream
 consisting of lines of the form "name=value".  If this feature is not available
 on a given platform, an exception is thrown.
