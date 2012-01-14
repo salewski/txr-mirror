@@ -1077,14 +1077,14 @@ requires a matching @(end) directive. So in other words, @(collect) is not only
 an expression, but serves as a kind of token in a higher level phrase structure
 grammar.
 
-Usually if a directive occurs alone in a line, not preceded or followed
-by other material, it is involved in a "vertical" (or line oriented)
-syntax.
+Usually if this type of "syntactic directive" occurs alone in a line, not
+preceded or followed by other material, it is involved in a "vertical" (or line
+oriented) syntax.
 
-If a directive is embedded in a line (has preceding or trailing material) then
-it is in a horizontal syntactic and semantic context (character-oriented).
+If such a directive is embedded in a line (has preceding or trailing material)
+then it is in a horizontal syntactic and semantic context (character-oriented).
 
-There is an exceptions. The a definition of a horizontal function
+There is an exception: the a definition of a horizontal function
 looks like this:
 
   @(define name (arg))body material@(end)
