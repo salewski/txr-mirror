@@ -1944,7 +1944,8 @@ The subquery is matched repeatedly, starting at the current line.
 If it fails to match, it is tried starting at the subsequent line.
 If it matches successfully, it is tried at the line following the
 entire extent of matched data, if there is one. Thus, the collected regions do
-not overlap.
+not overlap. (Overlapping behavior can be obtained: see the
+@(trailer) directive).
 
 Unless certain keywords are specified, or unless the collect is explicitly
 failed with @(fail), it always succeeds, even if it collects nothing,
@@ -1964,7 +1965,7 @@ the main clause matches at that position also. Moreover, the position is not
 advanced.  The remainder of the query begins matching at that position.  
 
 If it is a last clause matches, the behavior is different. Any bindings
-captured by the main clause thrown away, just like with the until clause.
+captured by the main clause are thrown away, just like with the until clause.
 However, the bindings in the last clause itself survive, and the position
 is advanced to skip over that material.
 
@@ -2130,9 +2131,9 @@ There is one more keyword, :vars, discussed in the following section.
 
 Normally, any variable for which a new binding occurs in a collect is
 collected. A collect clause may be sloppy: it can neglect to collect some
-variables on some iterations, or bind some variables which behave like
-local temporaries, but end up collated into lists. Another issue is that
-the collect clause might not match anything at all, and then none of
+variables on some iterations, or bind some variables which are intended
+to behave like local temporaries, but end up collated into lists. Another issue
+is that the collect clause might not match anything at all, and then none of
 the variables are bound.
 
 The :vars keyword allows the query writer to add discipline the collect body.
@@ -2189,7 +2190,7 @@ match, the :vars a and b should be bound to empty lists. But a is bound
 by the last clause to some text, so this takes precedence. Only b is bound to a
 an empty list.
 
-  @(collect :vars (a b)
+  @(collect :vars (a b))
   THIS NEVER MATCHES
   @(last)
   THIS DOES MATCH
@@ -2396,7 +2397,7 @@ element. So for instance "foo" has depth 1, ("foo") has depth 2, and ("foo"
 ("bar")) has depth three.
 
 We can now define the binary (two argument) merge operation as follows.  (merge
-A B) first normalizes the values A and B such that they have normal depth.
+A B) first normalizes the values A and B such that they have equal depth.
 1. A value which has depth zero is put into a one element list. 
 2. If either value has a smaller depth than the other, it is wrapped
 in a list as many times as needed to give it equal depth.
@@ -2974,7 +2975,7 @@ unbound at that point.
 .SS Definition Syntax
 
 Function definition syntax comes in two flavors: vertical and horizontal.
-Horizontal definitions actually come in two forms the distinction
+Horizontal definitions actually come in two forms, the distinction
 between which is hardly noticeable, and the need for which is
 made clear below.
 
@@ -2991,13 +2992,13 @@ syntax are:
   @(define bar ())
   @(define match (a b c))
 
-If the define directive is followed by material to the right, then
-it it defines a horizontal function:
+If the define directive is followed by more material on the same line, then it
+it defines a horizontal function:
 
   @(define match_x)x@(end)
 
-If the define material is followed by material below, then it
-is a vertical function:
+If the define is the sole element in a line, then it
+is a vertical function, and the function definition continues below:
 
   @(define match_x)
   x
