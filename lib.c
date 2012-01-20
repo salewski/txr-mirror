@@ -246,7 +246,10 @@ val *car_l(val cons)
   case CONS:
     return &cons->c.car;
   case LCONS:
-    funcall1(cons->lc.func, cons);
+    if (cons->lc.func) {
+      funcall1(cons->lc.func, cons);
+      cons->lc.func = nil;
+    }
     return &cons->lc.car;
   default:
     type_mismatch(lit("~s is not a cons"), cons, nao);
@@ -259,7 +262,10 @@ val *cdr_l(val cons)
   case CONS:
     return &cons->c.cdr;
   case LCONS:
-    funcall1(cons->lc.func, cons);
+    if (cons->lc.func) {
+      funcall1(cons->lc.func, cons);
+      cons->lc.func = nil;
+    }
     return &cons->lc.cdr;
   default:
     type_mismatch(lit("~s is not a cons"), cons, nao);
