@@ -1,3 +1,8 @@
+2012-01-19  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (car_l, cdr_l): Bugfix: do not call the lazy cons
+	force function if it is already nil, and set it to nil afterward.
+
 2012-01-12  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): Make lazy_appendv function
