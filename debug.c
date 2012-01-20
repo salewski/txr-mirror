@@ -17,14 +17,36 @@
 int opt_debugger;
 static int step_mode;
 val breakpoints;
-val last_command;
+val last_command = lit("");
 
 static void help(void)
 {
 }
 
+static void show_bindings(val env, val stream)
+{
+  val level = zero;
+  put_string(stream, lit("bindings:\n"));
+
+  for (;; level = plus(level, one)) {
+    if (nullp(env))
+      break;
+    else if (consp(env)) {
+      format(stream, lit("~s: ~s\n"), level, env, nao);
+      break;
+    } else if (type(env) == ENV) {
+      format(stream, lit("~s: ~s\n"), level, env->e.vbindings, nao);
+      env = env->e.up_env;
+    } else {
+      format(stream, lit("invalid environment object: ~s\n"), env, nao);
+      break;
+    }
+  }
+}
+
 val debug(val form, val bindings, val data, val line, val chr)
 {
+  uses_or2;
   val lineno = source_loc(form);
 
   if (!step_mode && !memqual(lineno, breakpoints)) {
@@ -39,6 +61,7 @@ val debug(val form, val bindings, val data, val line, val chr)
       if (print_form) {
         format(std_output, lit("stopped at line ~a\n"), lineno, nao);
         format(std_output, lit("form: ~s\n"), form, nao);
+        print_form = nil;
       }
 
       if (print_data) {
@@ -51,18 +74,21 @@ val debug(val form, val bindings, val data, val line, val chr)
         } else {
           format(std_output, lit("data (~s):\n~s\n"), line, data, nao);
         }
+        print_data = nil;
       }
 
       format(std_output, lit("txr> "), nao);
       flush_stream(std_output);
 
-      input = split_str_set(get_line(std_input), lit("\t "));
+      input = split_str_set(or2(get_line(std_input), lit("q")), lit("\t "));
       command = if3(equal(first(input), null_string), 
                     last_command, first(input));
       last_command = command;
 
       if (equal(command, lit("?")) || equal(command, lit("help"))) {
         help();
+        continue;
+      } else if (equal(command, null_string)) {
         continue;
       } else if (equal(command, lit("c"))) {
         step_mode = 0;
@@ -71,7 +97,7 @@ val debug(val form, val bindings, val data, val line, val chr)
         step_mode = 1;
         return nil;
       } else if (equal(command, lit("v"))) {
-        format(std_output, lit("bindings: ~s\n"), bindings, nao);
+        show_bindings(bindings, std_output);
       } else if (equal(command, lit("f"))) {
         print_form = t;
       } else if (equal(command, lit("d"))) {

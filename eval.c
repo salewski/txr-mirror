@@ -327,7 +327,7 @@ static val eval_intrinsic(val form, val env)
 val eval(val form, val env, val ctx_form)
 {
   type_check(env, ENV);
-  debug_check(consp(form) ? form : ctx_form, env->e.vbindings, nil, nil, nil);
+  debug_check(consp(form) ? form : ctx_form, env, nil, nil, nil);
 
   if (nullp(form)) {
     return nil;
