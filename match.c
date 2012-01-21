@@ -3229,8 +3229,6 @@ static val v_eof(match_files_ctx *c)
 
 static val v_fun(match_files_ctx *c)
 {
-  debug_enter;
-
   spec_bind (specline, first_spec, c->spec);
   val sym = first(first_spec);
   val func = car(uw_get_func(sym));
@@ -3242,8 +3240,6 @@ static val v_fun(match_files_ctx *c)
     val body = cdr(func);
     val piter, aiter;
     val bindings_cp = copy_list(c->bindings);
-
-    debug_check(specline, c->bindings, if2(consp(c->data), car(c->data)), c->data_lineno, nil);
 
     if (!equal(length_list(args), length_list(params)))
       sem_error(specline, lit("function ~a takes ~a argument(s)"),
@@ -3281,7 +3277,7 @@ static val v_fun(match_files_ctx *c)
 
       if (!result) {
         debuglf(specline, lit("function (~s ~s) failed"), sym, args, nao);
-        debug_return (nil);
+        return nil;
       }
 
       {
@@ -3300,7 +3296,7 @@ static val v_fun(match_files_ctx *c)
                 debuglf(specline,
                         lit("binding mismatch on ~a "
                             "when returning from ~a"), arg, sym, nao);
-                debug_return (nil);
+                return nil;
               }
             }
           }
@@ -3321,12 +3317,10 @@ static val v_fun(match_files_ctx *c)
       }
     }
 
-    debug_return (next_spec_k);
+    return next_spec_k;
   }
 
-  debug_return (decline_k);
-
-  debug_leave;
+  return decline_k;
 }
 
 static val v_do(match_files_ctx *c)
@@ -3396,6 +3390,8 @@ repeat_spec_same_data:
   {
     spec_bind (specline, first_spec, c.spec);
 
+    debug_check(first_spec, c.bindings, if2(consp(c.data), car(c.data)), c.data_lineno, nil);
+
     if (consp(first_spec) && !rest(specline)) {
       val sym = first(first_spec);
       val entry = gethash(v_directive_table, sym);
@@ -3403,8 +3399,6 @@ repeat_spec_same_data:
       if (entry) {
         v_match_func vmf = (v_match_func) cptr_get(entry);
         val result;
-
-        debug_check(first_spec, c.bindings, if2(consp(c.data), car(c.data)), c.data_lineno, nil);
 
         result = vmf(&c);
 
@@ -3435,6 +3429,7 @@ repeat_spec_same_data:
     if (c.data)
     {
       val dataline = first(c.data);
+
       cons_bind (new_bindings, success,
                  match_line(ml_all(c.bindings, specline, dataline, zero,
                                    c.data_lineno, first(c.files))));

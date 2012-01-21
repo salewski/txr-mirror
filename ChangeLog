@@ -1,5 +1,13 @@
 2012-01-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (v_fun): Removing all debugging instrumentation.
+	(match_files): Moving debug_check out of directive case so
+	it covers all forms handled by loop. All this makes the n
+	command in the debugger work better: not skip over
+	function calls or horizontal material.
+
+2012-01-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	Improved debugging. Debug nesting depth counter maintained
 	and used for next/step/finish stepping.
 
