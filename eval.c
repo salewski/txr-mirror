@@ -326,18 +326,20 @@ static val eval_intrinsic(val form, val env)
 
 val eval(val form, val env, val ctx_form)
 {
+  debug_enter;
+
   type_check(env, ENV);
   debug_check(consp(form) ? form : ctx_form, env, nil, nil, nil);
 
   if (nullp(form)) {
-    return nil;
+    debug_return (nil);
   } else if (symbolp(form)) {
     if (!bindable(form)) {
-      return form;
+      debug_return (form);
     } else {
       val binding = lookup_var(env, form);
       if (binding)
-        return cdr(binding);
+        debug_return (cdr(binding));
       eval_error(ctx_form, lit("unbound variable ~s"), form, nao);
       abort();
     }
@@ -345,15 +347,15 @@ val eval(val form, val env, val ctx_form)
     val oper = car(form);
 
     if (regexp(oper))
-      return oper;
+      debug_return (oper);
 
     {
       val fbinding = lookup_fun(env, oper);
 
       if (fbinding) {
-        return apply(cdr(fbinding), 
-                     eval_args(rest(form), env, form),
-                     form);
+        debug_return (apply(cdr(fbinding), 
+                      eval_args(rest(form), env, form),
+                      form));
       } else {
         val entry = gethash(op_table, oper);
 
@@ -362,13 +364,15 @@ val eval(val form, val env, val ctx_form)
           abort();
         } else { 
           opfun_t fp = (opfun_t) cptr_get(entry);
-          return fp(form, env);
+          debug_return (fp(form, env));
         }
       }
     }
   } else {
-    return form;
+    debug_return (form);
   }
+
+  debug_leave;
 }
 
 val bindable(val obj)

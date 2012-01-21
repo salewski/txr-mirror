@@ -1091,6 +1091,8 @@ static val v_fun(match_files_ctx *c);
 
 static val match_line(match_line_ctx c)
 {
+  debug_enter;
+
   for (;;) {
     val elem;
 
@@ -1110,7 +1112,7 @@ static val match_line(match_line_ctx c)
           val past = match_regex(c.dataline, directive, c.pos);
           if (nullp(past)) {
             LOG_MISMATCH("regex");
-            return nil;
+            debug_return (nil);
           }
           LOG_MATCH("regex", past);
           c.pos = past;
@@ -1120,7 +1122,7 @@ static val match_line(match_line_ctx c)
 
           if (find == nil || !equal(find, c.pos)) {
             LOG_MISMATCH("string tree");
-            return nil;
+            debug_return (nil);
           }
 
           newpos = plus(find, len);
@@ -1140,7 +1142,7 @@ static val match_line(match_line_ctx c)
               c = nc;
               continue;
             } else {
-              return result;
+              debug_return (result);
             }
           } else {
             match_line_ctx nc;
@@ -1171,10 +1173,10 @@ static val match_line(match_line_ctx c)
                   sem_error(elem, lit("no such function or directive: ~a"),
                             directive, nao);
               } else {
-                return vresult;
+                debug_return (vresult);
               }
             } else {
-              return result;
+              debug_return (result);
             }
           }
         }
@@ -1186,7 +1188,7 @@ static val match_line(match_line_ctx c)
         val newpos;
         if (find == nil || !equal(find, c.pos)) {
           LOG_MISMATCH("string");
-          return nil;
+          debug_return (nil);
         }
         newpos = plus(find, length_str(elem));
         LOG_MATCH("string", newpos);
@@ -1200,7 +1202,8 @@ static val match_line(match_line_ctx c)
     c.specline = cdr(c.specline);
   }
 
-  return cons(c.bindings, c.pos);
+  debug_return (cons(c.bindings, c.pos));
+  debug_leave;
 }
 
 val format_field(val string_or_list, val modifier, val filter, val eval_fun)
@@ -3226,6 +3229,8 @@ static val v_eof(match_files_ctx *c)
 
 static val v_fun(match_files_ctx *c)
 {
+  debug_enter;
+
   spec_bind (specline, first_spec, c->spec);
   val sym = first(first_spec);
   val func = car(uw_get_func(sym));
@@ -3276,7 +3281,7 @@ static val v_fun(match_files_ctx *c)
 
       if (!result) {
         debuglf(specline, lit("function (~s ~s) failed"), sym, args, nao);
-        return nil;
+        debug_return (nil);
       }
 
       {
@@ -3295,7 +3300,7 @@ static val v_fun(match_files_ctx *c)
                 debuglf(specline,
                         lit("binding mismatch on ~a "
                             "when returning from ~a"), arg, sym, nao);
-                return nil;
+                debug_return (nil);
               }
             }
           }
@@ -3316,10 +3321,12 @@ static val v_fun(match_files_ctx *c)
       }
     }
 
-    return next_spec_k;
+    debug_return (next_spec_k);
   }
 
-  return decline_k;
+  debug_return (decline_k);
+
+  debug_leave;
 }
 
 static val v_do(match_files_ctx *c)
@@ -3341,6 +3348,8 @@ static val h_do(match_line_ctx c, match_line_ctx *cout)
 
 static val match_files(match_files_ctx c)
 {
+  debug_enter;
+
   gc_hint(c.data);
 
   if (listp(c.data)) { /* recursive call with lazy list */
@@ -3362,13 +3371,13 @@ static val match_files(match_files_ctx c)
         if (consp(source_spec) && car(source_spec) == nothrow_k) {
           debuglf(spec, lit("could not open ~a: "
                             "treating as failed match due to nothrow"), name, nao);
-          return nil;
+          debug_return (nil);
         } else if (errno != 0)
           file_err(spec, lit("could not open ~a (error ~a/~a)"), name,
                    num(errno), string_utf8(strerror(errno)), nao);
         else
           file_err(spec, lit("could not open ~a"), name, nao);
-        return nil;
+        debug_return (nil);
       }
 
       c.files = cons(name, cdr(c.files)); /* Get rid of cons and nothrow */
@@ -3406,7 +3415,7 @@ repeat_spec_same_data:
         } else if (result == decline_k) {
           /* go on to other processing below */
         } else {
-          return result;
+          debug_return (result);
         }
       } else {
         val result = v_fun(&c);
@@ -3418,7 +3427,7 @@ repeat_spec_same_data:
         } else if (result == decline_k) {
           /* go on to other processing below */
         } else {
-          return result;
+          debug_return (result);
         }
       }
     }
@@ -3433,20 +3442,22 @@ repeat_spec_same_data:
       if (fixnump(success) && c_num(success) < c_num(length_str(dataline))) {
         debuglf(specline, lit("spec only matches line to position ~a: ~a"),
                 success, dataline, nao);
-        return nil;
+        debug_return (nil);
       }
 
       if (!success)
-        return nil;
+        debug_return (nil);
 
       c.bindings = new_bindings;
     } else {
       debuglf(specline, lit("spec ran out of data"), nao);
-      return nil;
+      debug_return (nil);
     }
   }
 
-  return cons(c.bindings, if3(c.data, cons(c.data, c.data_lineno), t));
+  debug_return (cons(c.bindings, if3(c.data, cons(c.data, c.data_lineno), t)));
+
+  debug_leave;
 }
 
 val match_funcall(val name, val arg, val other_args)

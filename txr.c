@@ -304,7 +304,14 @@ int txr_main(int argc, char **argv)
       argv++, argc--;
       continue;
     } else if (!strcmp(*argv, "--debugger")) {
+#if CONFIG_DEBUG_SUPPORT
       opt_debugger = 1;
+#else
+      format(std_error,
+             lit("~a: option ~a requires debug support compiled in\n"),
+             prog_string, string_utf8(*argv), nao);
+      return EXIT_FAILURE;
+#endif
       argv++, argc--;
       continue;
     }
@@ -327,13 +334,20 @@ int txr_main(int argc, char **argv)
           opt_lisp_bindings = 1;
           break;
         case 'd':
+#if CONFIG_DEBUG_SUPPORT
           opt_debugger = 1;
+#else
+          format(std_error,
+                 lit("~a: option ~a requires debug support compiled in\n"),
+                 prog_string, chr(*popt), nao);
+          return EXIT_FAILURE;
+#endif
           break;
         case 'a':
         case 'c':
         case 'D':
           format(std_error, lit("~a: option -~a does not clump\n"),
-                   prog_string, chr(*popt), nao);
+                 prog_string, chr(*popt), nao);
           return EXIT_FAILURE;
         case '-':
           format(std_error, lit("~a: unrecognized long option: --~a\n"),

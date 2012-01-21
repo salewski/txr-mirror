@@ -25,8 +25,31 @@
  */
 
 extern int opt_debugger;
+extern int debug_depth;
+extern val debug_block_s;
 
 val debug(val form, val bindings, val data, val line, val chr);
+
+#ifdef CONFIG_DEBUG_SUPPORT
+
+#define debug_enter                                     \
+  {                                                     \
+    int debug_depth_save = debug_depth++;               \
+    uw_block_begin(debug_block_s, debug_result);        \
+    uw_simple_catch_begin {
+
+#define debug_leave                                     \
+    }                                                   \
+    uw_unwind {                                         \
+      debug_depth = debug_depth_save;                   \
+    }                                                   \
+    uw_catch_end;                                       \
+    uw_block_end;                                       \
+    return debug_result;                                \
+  }
+
+#define debug_return(VAL)                               \
+  uw_block_return(debug_block_s, VAL)
 
 INLINE val debug_check(val form, val bindings, val data, val line, val chr)
 {
@@ -40,13 +63,43 @@ void debug_init(void);
                     LINE, CHR)          \
   do {                                  \
     uw_frame_t db_env;                  \
-    if (opt_debugger)                   \
+    if (opt_debugger) {                 \
       uw_push_debug(&db_env, FUNC, ARGS,\
                     UBP, BINDINGS, DATA,\
                     LINE, CHR);         \
+    }                                   \
     (void) 0
 
 #define debug_end                       \
-    if (opt_debugger)                   \
+    if (opt_debugger) {                 \
       uw_pop_frame(&db_env);            \
+    }                                   \
   } while (0)
+
+#else
+
+#define debug_enter {
+
+#define debug_leave }
+
+#define debug_return(VAL) return VAL
+
+INLINE val debug_check(val form, val bindings, val data, val line, val chr)
+{
+  return nil;
+}
+
+#define debug_begin(FUNC, ARGS, UBP,    \
+                    BINDINGS, DATA,     \
+                    LINE, CHR)          \
+  do {                                  \
+    (void) 0
+
+#define debug_end                       \
+  } while (0)
+
+INLINE void debug_init(void)
+{
+}
+
+#endif

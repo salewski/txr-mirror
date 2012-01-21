@@ -1,3 +1,42 @@
+2012-01-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	Improved debugging. Debug nesting depth counter maintained
+	and used for next/step/finish stepping.
+
+	* Makefile (OBJS): debug.o moved to OBJS-y or OBJS-.
+	(OBJS-y, OBJS-): New variables.
+	$(PROG): Depends on OBJS-y also.
+	clean: clean $(OBJS-y).
+	depend: include $(OBJS-y) in dependency generation.
+
+	* configure: Underscores and dashes are interchangeable in
+	configure variables.
+	(yaccname_given, yacc_given): Default value is y, not yes.
+	(debug_support): New config variable.
+	(CONFIG_DEBUG_SUPPORT): New config.h symbol.
+
+	* debug.c (debug_depth): New global variable.
+	(debug_block_s): New symbol variable.
+	(next_depth): New static variable.
+	(debug): Renamed some commands. Introduced separate next, step
+	and finish.
+	(debug_init): debug_block_s initialized.
+
+	* debug.h (debug_depth, debug_block_s): Declared.
+	(debug_enter, debug_leave, debug_return): New macros.
+	(debug_check, debug_init): Conditionally defined based on
+	if this is a debug build.
+
+	* dep.mk: Regenerated.
+
+	* eval.c (eval): Instrumented with debug_enter, debug_leave,
+	debug_return.
+
+	* match.c (match_line, v_fun, match_files): Likewise.
+
+	* txr.c (txr_main): Bail if -d or --debug used in build
+	that lacks debug support.
+
 2012-01-19  Kaz Kylheku  <kaz@kylheku.com>
 
 	* debug.c (last_command): Initialize to empty string rather

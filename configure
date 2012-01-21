@@ -51,8 +51,8 @@ done
 #
 while [ $# -gt 0 ] ; do
   case $1 in
-  --no-* )
-    var=${1#--no-}
+  --no-* | --no_* )
+    var=${1#--no?}
     val=
     ;;
   --*=* )
@@ -82,7 +82,9 @@ while [ $# -gt 0 ] ; do
     exit 1
   esac
 
-  if ! printf $var | grep -q -E '^[A-Za-z_][A-Za-z0-9_]*$' ; then
+  var=$(echo "$var" | tr - _)
+
+  if ! echo $var | grep -q -E '^[A-Za-z_][A-Za-z0-9_]*$' ; then
     printf "$0: '$var' isn't a proper configuration variable name\n"
     exit 1
   fi
@@ -119,9 +121,9 @@ intptr=${intptr-}
 tool_prefix=${tool_prefix-}
 lex=${lex-'$(cross)$(tool_prefix)flex'}
 lexlib=${lexlib--lfl}
-yaccname_given=${yaccname+yes}
+yaccname_given=${yaccname+y}
 yaccname=${yaccname-}
-yacc_given=${yacc+yes}
+yacc_given=${yacc+y}
 yacc=${yacc-'$(cross)$(tool_prefix)$(yaccname)'}
 nm=${nm-'$(cross)$(tool_prefix)nm'}
 opt_flags=${opt_flags--O2}
@@ -136,6 +138,7 @@ txr_dbg_opts=${txr_dbg_opts---gc-debug}
 valgrind=${valgrind-}
 lit_align=${lit_align-}
 extra_debugging=${extra_debugging-}
+debug_support=${debug_support-y}
 mpi_version=1.8.6
 have_quilt=
 have_patch=
@@ -186,6 +189,8 @@ After running $0, check that the config.make contents are sane.
 
 The following variables are supported.  Note that make variable syntax may
 be used in paths. Default values are shown in [square brackets].
+
+Variables are case-sensitive, but underscores and dashes are interchangeable.
 
 prefix [$prefix]
 
@@ -529,6 +534,9 @@ compiler_prefix := $compiler_prefix
 
 # prefix for non-compiler toolchain commands
 tool_prefix := $tool_prefix
+
+# do we compile in debug support?
+debug_support := $debug_support
 
 # MPI version
 mpi_version := $mpi_version
@@ -1101,6 +1109,14 @@ else
     ( cd $top_srcdir/mpi-${mpi_version} ;
       apply_patches )
   fi
+fi
+
+#
+# Some final blurbs into config.h
+#
+
+if [ -n "$debug_support" ] ; then
+  printf "#define CONFIG_DEBUG_SUPPORT 1\n" >> config.h
 fi
 
 #
