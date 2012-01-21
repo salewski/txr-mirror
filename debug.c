@@ -22,8 +22,16 @@ static int next_depth = -1;
 val breakpoints;
 val last_command = lit("");
 
-static void help(void)
+static void help(val stream)
 {
+  put_string(stream,
+             lit("commands:\n"
+                 "? - help                               s - step into form\n"
+                 "h - help                               n - step over form\n"
+                 "c - continue                           f - finish form\n"
+                 "v - show variable binding environment  s - show current form\n"
+                 "b - set breakpoint by line number      i - show current data\n"
+                 "d - delete breakpoint                  l - list breakpoints\n"));
 }
 
 static void show_bindings(val env, val stream)
@@ -91,8 +99,8 @@ val debug(val form, val bindings, val data, val line, val chr)
                     last_command, first(input));
       last_command = command;
 
-      if (equal(command, lit("?")) || equal(command, lit("help"))) {
-        help();
+      if (equal(command, lit("?")) || equal(command, lit("h"))) {
+        help(std_output);
         continue;
       } else if (equal(command, null_string)) {
         continue;
@@ -113,9 +121,9 @@ val debug(val form, val bindings, val data, val line, val chr)
         return nil;
       } else if (equal(command, lit("v"))) {
         show_bindings(bindings, std_output);
-      } else if (equal(command, lit("i"))) {
+      } else if (equal(command, lit("s"))) {
         print_form = t;
-      } else if (equal(command, lit("d"))) {
+      } else if (equal(command, lit("i"))) {
         print_data = t;
       } else if (equal(command, lit("b")) || equal(command, lit("d"))) {
         if (!rest(input)) {
