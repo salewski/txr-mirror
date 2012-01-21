@@ -1,5 +1,11 @@
 2012-01-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	* debug.c (last_command): Do not initialize with lit();
+	this is not a constant expression in C.
+	(debug): Handle the situation here.
+
+2012-01-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	* debug.c (help): Filled in.
 	(debug): Some commands changed due to duplicates.
 

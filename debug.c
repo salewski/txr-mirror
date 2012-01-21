@@ -20,7 +20,7 @@ val debug_block_s;
 static int step_mode;
 static int next_depth = -1;
 val breakpoints;
-val last_command = lit("");
+val last_command;
 
 static void help(val stream)
 {
@@ -96,7 +96,7 @@ val debug(val form, val bindings, val data, val line, val chr)
 
       input = split_str_set(or2(get_line(std_input), lit("q")), lit("\t "));
       command = if3(equal(first(input), null_string), 
-                    last_command, first(input));
+                    or2(last_command, lit("")), first(input));
       last_command = command;
 
       if (equal(command, lit("?")) || equal(command, lit("h"))) {
