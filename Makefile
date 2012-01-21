@@ -39,7 +39,8 @@ endif
 
 # TXR objects
 OBJS := txr.o lex.yy.o y.tab.o match.o lib.o regex.o gc.o unwind.o stream.o
-OBJS += arith.o hash.o utf8.o filter.o debug.o eval.o rand.o
+OBJS += arith.o hash.o utf8.o filter.o eval.o rand.o
+OBJS-$(debug_support) := debug.o
 
 # MPI objects
 MPI_OBJ_BASE=mpi.o mplogic.o
@@ -50,7 +51,7 @@ OBJS += $(MPI_OBJS)
 
 PROG := ./txr
 
-$(PROG): $(OBJS)
+$(PROG): $(OBJS) $(OBJS-y)
 	$(CC) $(CFLAGS) -o $@ $^ $(LEXLIB)
 
 VPATH := $(top_srcdir)
@@ -75,7 +76,7 @@ rebuild: clean repatch $(PROG)
 
 .PHONY: clean
 clean:
-	rm -f $(PROG) $(OBJS) \
+	rm -f $(PROG) $(OBJS) $(OBJS-y) \
 	  y.tab.c lex.yy.c y.tab.h y.output $(TESTS:.ok=.out)
 
 .PHONY: repatch
@@ -90,7 +91,7 @@ distclean: clean
 
 .PHONY: depend
 depend:
-	txr $(top_srcdir)/depend.txr $(OBJS) > $(top_srcdir)/dep.mk
+	txr $(top_srcdir)/depend.txr $(OBJS) $(OBJS-y) > $(top_srcdir)/dep.mk
 
 TESTS := $(patsubst $(top_srcdir)/%.txr,./%.ok,\
                     $(shell find $(top_srcdir)/tests -name '*.txr' | sort))

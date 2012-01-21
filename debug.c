@@ -15,7 +15,10 @@
 #include "parser.h"
 
 int opt_debugger;
+int debug_depth;
+val debug_block_s;
 static int step_mode;
+static int next_depth = -1;
 val breakpoints;
 val last_command = lit("");
 
@@ -49,7 +52,9 @@ val debug(val form, val bindings, val data, val line, val chr)
   uses_or2;
   val lineno = source_loc(form);
 
-  if (!step_mode && !memqual(lineno, breakpoints)) {
+  if (!step_mode && !memqual(lineno, breakpoints) 
+      && (debug_depth > next_depth))
+  {
     return nil;
   } else {
     val print_form = t;
@@ -61,6 +66,7 @@ val debug(val form, val bindings, val data, val line, val chr)
       if (print_form) {
         format(std_output, lit("stopped at line ~a\n"), lineno, nao);
         format(std_output, lit("form: ~s\n"), form, nao);
+        format(std_output, lit("depth: ~s\n"), num(debug_depth), nao);
         print_form = nil;
       }
 
@@ -92,13 +98,22 @@ val debug(val form, val bindings, val data, val line, val chr)
         continue;
       } else if (equal(command, lit("c"))) {
         step_mode = 0;
+        next_depth = -1;
+        return nil;
+      } else if (equal(command, lit("s"))) {
+        step_mode = 1;
         return nil;
       } else if (equal(command, lit("n"))) {
-        step_mode = 1;
+        step_mode = 0;
+        next_depth = debug_depth;
+        return nil;
+      } else if (equal(command, lit("f"))) {
+        step_mode = 0;
+        next_depth = debug_depth - 1;
         return nil;
       } else if (equal(command, lit("v"))) {
         show_bindings(bindings, std_output);
-      } else if (equal(command, lit("f"))) {
+      } else if (equal(command, lit("i"))) {
         print_form = t;
       } else if (equal(command, lit("d"))) {
         print_data = t;
@@ -139,4 +154,5 @@ void debug_init(void)
 {
   step_mode = 1;
   protect(&breakpoints, &last_command, (val *) 0);
+  debug_block_s = intern(lit("debug-block"), system_package);
 }
