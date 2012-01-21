@@ -1,5 +1,10 @@
 2012-01-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	* debug.c (help): Filled in.
+	(debug): Some commands changed due to duplicates.
+
+2012-01-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (v_fun): Removing all debugging instrumentation.
 	(match_files): Moving debug_check out of directive case so
 	it covers all forms handled by loop. All this makes the n
