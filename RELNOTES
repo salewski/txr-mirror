@@ -1,3 +1,23 @@
+                                     TXR 54
+                                   2011-01-21
+
+
+  Features
+
+  - Improved debugger: 
+    - step into
+    - step over
+    - finish
+    - backtrace for pattern and TXR Lisp functions.
+    - dump more complete environment. 
+
+  - Debugging support can be disabled at compile time: configure
+    with --no-debug-support.
+
+  - New lazy append function (append*).
+
+
+
                                      TXR 53
                                    2011-01-11
 
