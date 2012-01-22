@@ -1,5 +1,17 @@
 2012-01-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 54
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES: Updated.
+
+2012-01-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	* debug.c (help): Added missing help for w command.
 	(debug): In backtrace, show the renaming pairs for unbound
 	variables (up_p_a_pairs) if they are present.
