@@ -31,7 +31,8 @@ static void help(val stream)
                  "c - continue                           f - finish form\n"
                  "v - show variable binding environment  s - show current form\n"
                  "b - set breakpoint by line number      i - show current data\n"
-                 "d - delete breakpoint                  l - list breakpoints\n"));
+                 "d - delete breakpoint                  w - backtrace\n"
+                 "l - list breakpoints\n"));
 }
 
 static void show_bindings(val env, val stream)
@@ -143,7 +144,12 @@ val debug(val form, val bindings, val data, val line, val chr)
 
           for (iter = uw_current_frame(); iter != 0; iter = iter->uw.up) {
             if (iter->uw.type == UW_DBG) {
-              format(std_output, lit("(~s ~s)\n"), iter->db.func, iter->db.args, nao);
+              if (iter->db.ub_p_a_pairs)
+                format(std_output, lit("(~s ~s ~s)\n"), iter->db.func,
+                       iter->db.args, iter->db.ub_p_a_pairs, nao);
+              else
+                format(std_output, lit("(~s ~s)\n"), iter->db.func,
+                       iter->db.args, nao);
             }
           }
         }

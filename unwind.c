@@ -158,14 +158,14 @@ val uw_set_match_context(val context)
 }
 
 void uw_push_debug(uw_frame_t *fr, val func, val args,
-                   val ub_p_a_pairs, val bindings, val data,
+                   val ub_p_a_pairs, val env, val data,
                    val line, val chr)
 {
   fr->db.type = UW_DBG;
   fr->db.func = func;
   fr->db.args = args;
-  fr->db.ub_p_a_pairs = args;
-  fr->db.bindings = bindings;
+  fr->db.ub_p_a_pairs = ub_p_a_pairs;
+  fr->db.env = env;
   fr->db.data = data;
   fr->db.line = line;
   fr->db.chr = chr;

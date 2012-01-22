@@ -30,7 +30,7 @@ extern val debug_block_s;
 
 val debug(val form, val bindings, val data, val line, val chr);
 
-#ifdef CONFIG_DEBUG_SUPPORT
+#if CONFIG_DEBUG_SUPPORT
 
 #define debug_enter                                     \
   {                                                     \
@@ -58,7 +58,7 @@ INLINE val debug_check(val form, val bindings, val data, val line, val chr)
 
 void debug_init(void);
 
-#define debug_begin(FUNC, ARGS, UBP,    \
+#define debug_frame(FUNC, ARGS, UBP,    \
                     BINDINGS, DATA,     \
                     LINE, CHR)          \
   do {                                  \
@@ -89,7 +89,7 @@ INLINE val debug_check(val form, val bindings, val data, val line, val chr)
   return nil;
 }
 
-#define debug_begin(FUNC, ARGS, UBP,    \
+#define debug_frame(FUNC, ARGS, UBP,    \
                     BINDINGS, DATA,     \
                     LINE, CHR)          \
   do {                                  \

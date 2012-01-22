@@ -1021,7 +1021,7 @@ static val h_fun(match_line_ctx c, match_line_ctx *cout)
     {
       uw_block_begin(nil, result);
       uw_env_begin;
-      debug_begin(sym, args, ub_p_a_pairs, c.bindings, c.dataline, c.data_lineno, c.pos);
+      debug_frame(sym, bindings_cp, ub_p_a_pairs, c.bindings, c.dataline, c.data_lineno, c.pos);
 
       result = match_line(ml_bindings_specline(c, bindings_cp, body));
 
@@ -3268,7 +3268,7 @@ static val v_fun(match_files_ctx *c)
     {
       uw_block_begin(nil, result);
       uw_env_begin;
-      debug_begin(sym, args, ub_p_a_pairs, c->bindings, if2(consp(c->data), car(c->data)),
+      debug_frame(sym, bindings_cp, ub_p_a_pairs, c->bindings, if2(consp(c->data), car(c->data)),
                   c->data_lineno, nil);
       result = match_files(mf_spec_bindings(*c, body, bindings_cp));
       debug_end;

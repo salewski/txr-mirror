@@ -353,9 +353,10 @@ val eval(val form, val env, val ctx_form)
       val fbinding = lookup_fun(env, oper);
 
       if (fbinding) {
-        debug_return (apply(cdr(fbinding), 
-                      eval_args(rest(form), env, form),
-                      form));
+        val args = eval_args(rest(form), env, form);
+        debug_frame(oper, args, nil, env, nil, nil, nil);
+        debug_return (apply(cdr(fbinding), args, form));
+        debug_end;
       } else {
         val entry = gethash(op_table, oper);
 

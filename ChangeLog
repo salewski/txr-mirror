@@ -1,5 +1,26 @@
 2012-01-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	* debug.c (help): Added missing help for w command.
+	(debug): In backtrace, show the renaming pairs for unbound
+	variables (up_p_a_pairs) if they are present.
+
+	* debug.h (debug_begin): Renamed to debug_frame.
+
+	* eval.c (eval): Wrap debug_begin/debug_end around function dispatch,
+	so TXR Lisp functions are included in backtraces.
+
+	* match.c (h_fun): Follow rename of debug_begin to debug_frame.
+	Pass in evaluated args, not the original ones.
+	(v_fun): Likewise.
+
+	* unwind.c (uw_push_debug): bindings argument renamed to env.
+	Bugfix: args argument was being assigned to ub_p_a_pairs.
+
+	* unwind.h (struct uw_debug): Member bindings renamed to env.
+	(uw_push_debug): Declaration updated.
+
+2012-01-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	* debug.c (last_command): Do not initialize with lit();
 	this is not a constant expression in C.
 	(debug): Handle the situation here.
