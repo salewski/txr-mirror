@@ -1,3 +1,34 @@
+2012-01-25  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (dwim_s): New symbol variable.
+	(dwim_loc, op_dwim): New static functions.
+	(op_modplace): Support assignment to dwim forms
+	with the help of dwim_loc.
+	(expand_place): Handle dwim places.
+	(eval_init): Initialize dwim_s. Register dwim operator
+	in op_table.
+
+	* eval.h (dwim_s): Declared.
+
+	* lib.c (chr_str, chr_str_set): Allow negative indices to index
+	backwards from end of string.
+	(vecref, vecref_l): Allow negative indices to index from
+	rear of array.
+	(obj_print, obj_pprint): Render (dwim ...) forms as [...].
+
+	* parser.l: Peoduce new METABKT token type for @[,
+	and '[', ']' tokens.
+
+	* parser.y (METABKT): New token. %type declaration for '['.
+	(list): Support square-bracket style of list, translated
+	into dwim form.
+	(meta_expr): Support @[...] variant.
+	(yybadtoken): Handle METABKT in switch.
+
+	* txr.1: Documented [...] syntax and dwim operator.
+
+	* txr.vim: Updated.
+
 2012-01-21  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 54

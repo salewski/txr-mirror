@@ -358,12 +358,12 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                                   return FINALLY;
                                 }
 
-<NESTED>@\(             |
-<SPECIAL,NESTED>\{|\(   {
+<NESTED>@[\(\[]         |
+<SPECIAL,NESTED>[{(\[]  {
                           yy_push_state(NESTED);
                           if (yytext[0] == '@') {
-                            yylval.chr = '(';
-                            return METAPAR;
+                            yylval.chr = yytext[1];
+                            return yytext[1] == '(' ? METAPAR : METABKT;
                           }
                           yylval.lineno = lineno;
                           return yytext[0];
@@ -379,7 +379,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                           return yytext[0];
                         }
 
-<SPECIAL,NESTED>\}|\)   {
+<SPECIAL,NESTED>[})\]]  {
                           yy_pop_state();
                           if (yy_top_state() == INITIAL
                               || yy_top_state() == QSILIT)

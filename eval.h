@@ -24,6 +24,8 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+extern val dwim_s;
+
 val make_env(val fbindings, val vbindings, val up_env);
 val env_fbind(val env, val sym, val fun);
 val env_vbind(val env, val sym, val obj);

@@ -56,7 +56,7 @@ val top_vb, top_fb;
 val op_table;
 
 val eval_error_s;
-val progn_s, prog1_s, let_s, let_star_s, lambda_s, call_s;
+val dwim_s, progn_s, prog1_s, let_s, let_star_s, lambda_s, call_s;
 val cond_s, if_s, defvar_s, defun_s;
 val inc_s, dec_s, push_s, pop_s, flip_s, gethash_s, car_s, cdr_s, vecref_s;
 val for_s, for_star_s, each_s, each_star_s, collect_each_s, collect_each_star_s;
@@ -637,6 +637,67 @@ static val op_defun(val form, val env)
   return name;
 }
 
+static val *dwim_loc(val form, val env)
+{
+  val obj = eval(second(form), env, form);
+  val args = eval_args(rest(rest(form)), env, form);
+
+  if (!obj)
+    eval_error(form, lit("[~s ]: cannot assign nil"), obj, nao);
+
+  switch (type(obj)) {
+  case LIT:
+  case STR:
+  case LSTR:
+    eval_error(form, lit("[~s ...]: string element assignment not implemented!"),
+               obj, nao);
+  case SYM:
+  case FUN:
+    eval_error(form, lit("[~s ...]: assigning through function not implemented!"),
+               obj, nao);
+  case VEC:
+    if (rest(args))
+      eval_error(form, lit("[~s ...]: vector indexing needs one arg"),
+                 obj, nao);
+    return vecref_l(obj, first(args));
+  case CONS:
+  case LCONS:
+    if (rest(args))
+      eval_error(form, lit("[~s ...]: list indexing needs one arg"),
+                 obj, nao);
+    {
+      val index = first(args);
+      val cell = obj;
+      if (!bignump(index) && !fixnump(index))
+        eval_error(form, lit("[~s ~s]: index must be integer"),
+                   cell, index, nao);
+      for (; gt(index, zero); index = minus(index, one))
+        cell = cdr(cell);
+      if (lt(index, zero) || !cell)
+        eval_error(form, lit("[~s ~s]: cannot assign nonexistent location"),
+                   cell, first(args), nao);
+      return car_l(cell);
+    }
+  case COBJ:
+    {
+      if (hashp(obj)) {
+        val new_p, *loc;
+        if (length(args) != two)
+          eval_error(form, lit("[~s ...]: hash indexing needs two args"),
+                     obj, nao);
+        loc = gethash_l(obj, first(args), &new_p);
+        if (new_p)
+          *loc = second(args);
+        return loc;
+      }
+    }
+  default:
+    eval_error(form, lit("object ~s not supported by [] notation"), obj, nao);
+  }
+
+  return 0;
+}
+
 static val op_modplace(val form, val env)
 {
   uses_or2;
@@ -665,7 +726,9 @@ static val op_modplace(val form, val env)
   } else if (consp(place)) {
     /* TODO: dispatch these with hash table. */
     val sym = car(place);
-    if (sym == gethash_s) {
+    if (sym == dwim_s) {
+      loc = dwim_loc(place, env);
+    } else if (sym == gethash_s) {
       val hash = eval(second(place), env, form);
       val key = eval(third(place), env, form);
       val new_p;
@@ -675,7 +738,7 @@ static val op_modplace(val form, val env)
     } else if (sym == car_s) {
       val cons = eval(second(place), env, form);
       loc = car_l(cons);
-    } else if (sym == car_s) {
+    } else if (sym == cdr_s) {
       val cons = eval(second(place), env, form);
       loc = cdr_l(cons);
     } else if (sym == vecref_s) {
@@ -813,6 +876,72 @@ static val op_return_from(val form, val env)
   abort();
 }
 
+static val op_dwim(val form, val env)
+{
+  val obj = eval(second(form), env, form);
+  val args = eval_args(rest(rest(form)), env, form);
+
+  if (!obj)
+    return nil;
+
+  switch (type(obj)) {
+  case LIT:
+  case STR:
+  case LSTR:
+    if (rest(args))
+      eval_error(form, lit("[~s ...]: string indexing needs one arg"),
+                 obj, nao);
+    return chr_str(obj, first(args));
+  case SYM:
+    {
+      val fbinding = lookup_fun(env, obj);
+
+      if (!fbinding)
+        eval_error(form, lit("[~s ...]: no function exists named ~s"),
+                   obj, obj, nao);
+
+      return apply(cdr(fbinding), args, form);
+    }
+  case FUN:
+    return apply(obj, args, form);
+  case VEC:
+    if (rest(args))
+      eval_error(form, lit("[~s ...]: vector indexing needs one arg"),
+                 obj, nao);
+    return vecref(obj, first(args));
+  case CONS:
+  case LCONS:
+    if (rest(args))
+      eval_error(form, lit("[~s ...]: list indexing needs one arg"),
+                 obj, nao);
+    {
+      val index = first(args);
+      if (!bignump(index) && !fixnump(index))
+        eval_error(form, lit("[~s ~s]: index must be integer"),
+                   obj, index, nao);
+      if (lt(index, zero))
+        return nil;
+      for (; gt(index, zero); index = minus(index, one))
+        obj = cdr(obj);
+      return car(obj);
+    }
+  case COBJ:
+    {
+      if (hashp(obj)) {
+        if (length(args) != two)
+          eval_error(form, lit("[~s ...]: hash indexing needs two args"),
+                     obj, nao);
+        return gethash_n(obj, first(args), second(args));
+      }
+    }
+    /* fallthrough */
+  default:
+    eval_error(form, lit("object ~s not supported by [] notation"), obj, nao);
+  }
+
+  return nil;
+}
+
 static val subst_vars(val forms, val env)
 {
   list_collect_decl(out, iter);
@@ -914,7 +1043,15 @@ static val expand_place(val place)
     return place;
   } else {
     val sym = first(place);
-    if (sym == gethash_s) {
+    if (sym == dwim_s) {
+      val args = rest(place);
+      val args_ex = expand_forms(args);
+
+      if (args == args_ex)
+        return place;
+
+      return rlcp(cons(sym, args_ex), place);
+    } if (sym == gethash_s) {
       val hash = second(place);
       val key = third(place);
       val dfl_val = fourth(place);
@@ -1195,7 +1332,7 @@ val expand(val form)
     } else {
       /* funtion call
          also handles: progn, prog1, call, if, and, or, 
-         unwind-protect, return  */
+         unwind-protect, return, dwim  */
       val args = rest(form);
       val args_ex = expand_forms(args);
 
@@ -1477,6 +1614,7 @@ void eval_init(void)
   top_vb = make_hash(t, nil, nil);
   op_table = make_hash(nil, nil, nil);
 
+  dwim_s = intern(lit("dwim"), user_package);
   progn_s = intern(lit("progn"), user_package);
   prog1_s = intern(lit("prog1"), user_package);
   let_s = intern(lit("let"), user_package);
@@ -1548,6 +1686,7 @@ void eval_init(void)
   sethash(op_table, block_s, cptr((mem_t *) op_block));
   sethash(op_table, return_s, cptr((mem_t *) op_return));
   sethash(op_table, return_from_s, cptr((mem_t *) op_return_from));
+  sethash(op_table, dwim_s, cptr((mem_t *) op_dwim));
   sethash(op_table, quasi_s, cptr((mem_t *) op_quasi_lit));
 
   reg_fun(cons_s, func_n2(cons));
