@@ -4273,10 +4273,10 @@ Define several Lisp functions using @(do):
 
 TXR Lisp is a small and simple dialect, like Scheme, but much more similar to
 Common Lisp than Scheme. It has separate value and function binding namespaces,
-like Common Lisp, and represents boolean true and false with the symbols t and
-nil (but note the case sensitivity of identifiers denoting symbols!)
-Furthermore, the symbol nil is also the empty list, which terminates nonempty
-lists.
+like Common Lisp (and thus is a Lisp-2 type dialect), and represents boolean
+true and false with the symbols t and nil (but note the case sensitivity of
+identifiers denoting symbols!) Furthermore, the symbol nil is also the empty
+list, which terminates nonempty lists.
 
 Function and variable Bindings are dynamically scoped in TXR Lisp. However,
 closures do capture variables.
@@ -4362,6 +4362,21 @@ commas, like this: '(1 2 3 '(4 5 6 ,',(+ 1 2))). The leftmost comma goes
 with the innermost quote.  The quote between the commas protects the (+ 1 2)
 from repeated evaluations: the two unquotes call for two evaluations, but
 we only want (+ 1 2) to be evaluated once.
+
+.SS The DWIM Brackets
+
+.IP [...]
+
+TXR Lisp has a square bracket notation. The syntax [...] is a shorthand
+way of writing (dwim ...).  The [] syntax is useful for situations
+where the expressive style of a Lisp-1 dialect is useful.
+
+For instance if foo is a variable which holds a function object, then [foo 3]
+can be used to call it, instead of (call foo 3).  If foo is a vector, then
+[foo 3] retrieves the fourth element, like (vecref foo 3). Indexing over lists,
+strings and hash tables is possible, and the notation is assignable.
+
+More details are given in the documentation for the dwim operator.
 
 .SS Lisp Operators
 
@@ -4753,6 +4768,11 @@ Currently, these forms are recognized as places:
 
   (vecref <vector> <index>)
 
+  (dwim <obj> ...)
+  
+  [<obj> ...]  ;; equivalent to (dwim <obj> ...)
+
+
 A <symbol> place denotes a variable. If the variable does not exist, it is an
 error. 
 
@@ -4768,6 +4788,86 @@ determine the initial value of the place. Otherwise it is ignored.
 
 The vecref place denotes a vector element, allowing vector elements
 to be treated as assignment places.
+
+The dwim/[] place denotes a vector element, list element, or hash table,
+depending on the type of obj. 
+
+.SS Operator dwim
+
+.TP
+Syntax:
+
+  (dwim <argument>*)
+
+  [<argument>*]
+
+.TP
+Description:
+
+The dwim operator's name is an acronym: DWIM may be taken to mean
+"Do What I Mean", or alternatively, "Dispatch, in a Way that is
+Intelligent and Meaningful".
+
+The notation [...] is a shorthand equivalent to (dwim ...) and is the preferred
+way for writing dwim expressions.
+
+The dwim operator takes a variable number of arguments, which are
+all evaluated in the same way. How many are required depends on the type of
+object to which the first argument expression evaluates: of the first argument.
+The possibilities are:
+
+.IP [<function> <argument>*]
+Call the given the function object to the given arguments.
+
+.IP [<symbol> <argument>*]
+If the first expression evaluates to a symbol, that symbol
+is resolved in the function namespace, and then
+the resulting function, if found, is called with the
+given arguments.
+
+.IP [<list> <index>]
+Retrieve the specified element from the specified list. Index zero
+refers to the first element. Indexed list access does not throw exceptions.
+Negative indices yield nil, and indices beyond the end of a list
+yield nil. (However assignment to a nonexistent list element throws.)
+
+.IP [<vector> <index>]
+Retrieve the specified element of a vector. This is equivalent to
+(vecref <vector> <index>).
+
+.IP [<string> <index>]
+Retrieve the specified element of a string. This is equivalent to
+(chr-str <string> <index>).
+
+.IP [<hash-table> <key> <default-value>]
+Retrieve a value from the hash table corresponding to <key>,
+or <default-value> if there is no such entry.
+
+The list, vector and hash table forms of dwim denote places
+that can be assigned.
+
+.TP
+Notes:
+
+The dwim operator allows for a Lisp-1 flavor of programming in TXR Lisp,
+which is normally Lisp-2, with some useful extensions.
+
+A Lisp-1 dialect is one in which an expression like (a b) treats both a and b
+as expressions with the same evaluation rules.  Thus in a Lisp-1, named
+functions do not exist as such: they are just variable bindings.
+In a Lisp-1 (car 1 2) means that there is a variable called car,
+which holds a function. In a Lisp-2 (car 1 2) means that there is
+a function called car, and so (car car car) is possible, because
+there can be also a variable called car.
+
+The Lisp-1 design has certain disadvantages, which are avoided in TXR Lisp by
+confining the Lisp-1 expressivity inside the [...] notation.  When round
+parentheses are used, the normal Lisp-2 rules apply. A "best of both worlds"
+situation is achieved.
+
+Lisp-1 dialects can provide useful extensions by giving a meaning
+to objects other than functions in the first position of a form,
+and the dwim/[...] syntax does exactly this.
 
 .SS Operators for and for*
 

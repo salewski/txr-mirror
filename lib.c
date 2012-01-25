@@ -1630,27 +1630,41 @@ val chr_num(val num)
   return chr(n);
 }
 
-val chr_str(val str, val index)
+val chr_str(val str, val ind)
 {
-  bug_unless (length_str_gt(str, index));
+  cnum index = c_num(ind);
+
+  if (index < 0) {
+    ind = plus(length_str(str), ind);
+    index = c_num(ind);
+  }
+
+  bug_unless (index >= 0 && length_str_gt(str, ind));
 
   if (lazy_stringp(str)) {
-    lazy_str_force_upto(str, index);
-    return chr(c_str(str->ls.prefix)[c_num(index)]);
+    lazy_str_force_upto(str, ind);
+    return chr(c_str(str->ls.prefix)[index]);
   } else {
-    return chr(c_str(str)[c_num(index)]);
+    return chr(c_str(str)[index]);
   }
 }
 
-val chr_str_set(val str, val index, val chr)
+val chr_str_set(val str, val ind, val chr)
 {
-  bug_unless (length_str_gt(str, index));
+  cnum index = c_num(ind);
+
+  if (index < 0) {
+    ind = plus(length_str(str), ind);
+    index = c_num(ind);
+  }
+
+  bug_unless (index >= 0 && length_str_gt(str, ind));
 
   if (lazy_stringp(str)) {
-    lazy_str_force_upto(str, index);
-    str->ls.prefix->st.str[c_num(index)] = c_chr(chr);
+    lazy_str_force_upto(str, ind);
+    str->ls.prefix->st.str[index] = c_chr(chr);
   } else {
-    str->st.str[c_num(index)] = c_chr(chr);
+    str->st.str[index] = c_chr(chr);
   }
 
   return chr;
@@ -2493,16 +2507,20 @@ val vec_set_length(val vec, val length)
 
 val vecref(val vec, val ind)
 {
-  type_check(vec, VEC);
-  range_bug_unless (c_num(ind) < c_num(vec->v.vec[vec_length]));
-  return vec->v.vec[c_num(ind)];
+  cnum index = c_num(ind);
+  cnum len = c_num(length_vec(vec));
+  if (index < 0)
+    index = len + index;
+  range_bug_unless (index >= 0 && index < len);
+  return vec->v.vec[index];
 }
 
 val *vecref_l(val vec, val ind)
 {
-  type_check(vec, VEC);
-  range_bug_unless (c_num(ind) < c_num(vec->v.vec[vec_length]));
-  return vec->v.vec + c_num(ind);
+  cnum index = c_num(ind);
+  cnum len = c_num(length_vec(vec));
+  range_bug_unless (index >= 0 && index < len);
+  return vec->v.vec + index;
 }
 
 val vec_push(val vec, val item)
@@ -3385,17 +3403,25 @@ val obj_print(val obj, val out)
         obj_print(second(obj), out);
       } else {
         val iter;
-        put_char(out, chr('('));
+        val closepar = chr(')');
+        if (sym == dwim_s && consp(cdr(obj))) {
+          put_char(out, chr('['));
+          obj = cdr(obj);
+          closepar = chr(']');
+        } else {
+          put_char(out, chr('('));
+        }
+
         for (iter = obj; consp(iter); iter = cdr(iter)) {
           obj_print(car(iter), out);
           if (nullp(cdr(iter))) {
-            put_char(out, chr(')'));
+            put_char(out, closepar);
           } else if (consp(cdr(iter))) {
             put_char(out, chr(' '));
           } else {
             put_string(out, lit(" . "));
             obj_print(cdr(iter), out);
-            put_char(out, chr(')'));
+            put_char(out, closepar);
           }
         }
       }
@@ -3524,17 +3550,25 @@ val obj_pprint(val obj, val out)
         obj_pprint(second(obj), out);
       } else {
         val iter;
-        put_char(out, chr('('));
+        val closepar = chr(')');
+        if (sym == dwim_s && consp(cdr(obj))) {
+          put_char(out, chr('['));
+          obj = cdr(obj);
+          closepar = chr(']');
+        } else {
+          put_char(out, chr('('));
+        }
+
         for (iter = obj; consp(iter); iter = cdr(iter)) {
           obj_pprint(car(iter), out);
           if (nullp(cdr(iter))) {
-            put_char(out, chr(')'));
+            put_char(out, closepar);
           } else if (consp(cdr(iter))) {
             put_char(out, chr(' '));
           } else {
             put_string(out, lit(" . "));
             obj_pprint(cdr(iter), out);
-            put_char(out, chr(')'));
+            put_char(out, closepar);
           }
         }
       }

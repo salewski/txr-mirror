@@ -77,7 +77,7 @@ static val parsed_spec;
 %token <val> NUMBER
 
 %token <chr> REGCHAR LITCHAR
-%token <chr> METAPAR SPLICE
+%token <chr> METAPAR METABKT SPLICE
 
 %type <val> spec clauses clauses_opt clause
 %type <val> all_clause some_clause none_clause maybe_clause
@@ -93,7 +93,7 @@ static val parsed_spec;
 %type <val> regterm regclass regclassterm regrange
 %type <val> strlit chrlit quasilit quasi_items quasi_item litchars
 %type <chr> regchar
-%type <lineno> '('
+%type <lineno> '(' '['
 
 %nonassoc LOW /* used for precedence assertion */
 %right IDENT '{' '}'
@@ -656,6 +656,8 @@ vector : '#' list               { $$ = rlcp(vector_list($2), $2); }
 
 list : '(' exprs ')'            { $$ = rl($2, num($1)); }
      | '(' ')'                  { $$ = nil; }
+     | '[' exprs ']'            { $$ = rl(cons(dwim_s, $2), num($1)); }
+     | '[' ']'                  { $$ = rl(cons(dwim_s, nil), num($1)); }
      | ',' expr                 { val expr = $2;
                                   if (consp(expr) && first(expr) == qquote_s)
                                     expr = cons(quote_s, rest(expr));
@@ -668,10 +670,17 @@ list : '(' exprs ')'            { $$ = rl($2, num($1)); }
                                   $$ = rlcp(list(splice_s, expr, nao), $2); }
      | '(' error                { $$ = nil;
                                   yybadtoken(yychar, lit("list expression")); }
+     | '[' error                { $$ = nil;
+                                  yybadtoken(yychar, lit("DWIM expression")); }
      ;
 
 meta_expr : METAPAR exprs ')'   { $$ = rlcp(cons(expr_s, expand($2)), $2); }
+          | METABKT exprs ']'   { $$ = rlcp(cons(expr_s, 
+                                                 cons(dwim_s,
+                                                      expand($2))), $2); }
           | METAPAR ')'         { $$ = rl(cons(expr_s, nil), num(lineno)); }
+          | METABKT ']'         { $$ = rl(cons(expr_s, cons(dwim_s, nil)),
+                                               num(lineno)); }
           | METAPAR error       { $$ = nil;
                                   yybadtoken(yychar, lit("meta expression")); }
           ;
@@ -1054,6 +1063,7 @@ void yybadtoken(int tok, val context)
   case REGCHAR: problem = lit("regular expression character"); break;
   case LITCHAR: problem = lit("string literal character"); break;
   case METAPAR: problem = lit("@("); break;
+  case METABKT: problem = lit("@["); break;
   }
 
   if (problem != 0)
