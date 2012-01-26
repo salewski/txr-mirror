@@ -663,14 +663,11 @@ static val *dwim_loc(val form, val env, val op, val newval)
       val index = first(args);
 
       if (consp(index)) {
-        val from = eval(car(index), env, form);
-        val to = eval(cdr(index), env, form);
-
         if (op != set_s) 
           eval_error(form, lit("[~s ~s]: slice takes only simple assignments"),
                      obj, index, nao);
 
-        replace_vec(obj, from, to, newval);
+        replace_vec(obj, car(index), cdr(index), newval);
         return 0;
       } else {
         return vecref_l(obj, first(args));
@@ -685,15 +682,8 @@ static val *dwim_loc(val form, val env, val op, val newval)
       val index = first(args);
       val cell = obj;
       if (bignump(index) || fixnump(index)) {
-        for (; gt(index, zero); index = minus(index, one))
-          cell = cdr(cell);
-        if (lt(index, zero) || !cell)
-          eval_error(form, lit("[~s ~s]: cannot assign nonexistent location"),
-                     cell, first(args), nao);
-        return car_l(cell);
+        return listref_l(obj, index);
       } else if (consp(index)) {
-        val from = eval(car(index), env, form);
-        val to = eval(cdr(index), env, form);
         val newlist;
         val tempform;
 
@@ -701,7 +691,7 @@ static val *dwim_loc(val form, val env, val op, val newval)
           eval_error(form, lit("[~s ~s]: slice takes only simple assignments"),
                      cell, index, nao);
 
-        newlist = replace_list(obj, from, to, newval);
+        newlist = replace_list(obj, car(index), cdr(index), newval);
         tempform = list(op, second(form), 
                         cons(quote_s, cons(newlist, nil)), nao);
         eval(tempform, env, form);
@@ -947,9 +937,7 @@ static val op_dwim(val form, val env)
       val index = first(args);
 
       if (consp(index)) {
-        val from = eval(car(index), env, form);
-        val to = eval(cdr(index), env, form);
-        return sub_vec(obj, from, to);
+        return sub_vec(obj, car(index), cdr(index));
       } else {
         return vecref(obj, first(args));
       }
@@ -966,15 +954,9 @@ static val op_dwim(val form, val env)
                    obj, index, nao);
 
       if (consp(index)) {
-        val from = eval(car(index), env, form);
-        val to = eval(cdr(index), env, form);
-        return sub_list(obj, from, to);
+        return sub_list(obj, car(index), cdr(index));
       } else {
-        if (lt(index, zero))
-          return nil;
-        for (; gt(index, zero); index = minus(index, one))
-          obj = cdr(obj);
-        return car(obj);
+        return listref(obj, first(args));
       }
     }
   case COBJ:
@@ -1498,20 +1480,6 @@ static val lazy_mapcarv(val fun, val list_of_lists)
 static val lazy_mappendv(val fun, val list_of_lists)
 {
   return lazy_appendv(lazy_mapcarv(fun, list_of_lists));
-}
-
-static val tostring(val obj)
-{
-  val ss = make_string_output_stream();
-  obj_print(obj, ss);
-  return get_string_from_stream(ss);
-}
-
-static val tostringp(val obj)
-{
-  val ss = make_string_output_stream();
-  obj_pprint(obj, ss);
-  return get_string_from_stream(ss);
 }
 
 static val symbol_function(val sym)

@@ -324,6 +324,8 @@ val third(val cons);
 val fourth(val cons);
 val fifth(val cons);
 val sixth(val cons);
+val listref(val list, val ind);
+val *listref_l(val list, val ind);
 val *tail(val cons);
 val *ltail(val *cons);
 val pop(val *plist);
@@ -554,9 +556,11 @@ val find(val list, val key, val testfun, val keyfun);
 val set_diff(val list1, val list2, val testfun, val keyfun);
 val length(val seq);
 val env(void);
-
 val obj_print(val obj, val stream);
 val obj_pprint(val obj, val stream);
+val tostring(val obj);
+val tostringp(val obj);
+
 void init(const wchar_t *progname, mem_t *(*oom_realloc)(mem_t *, size_t),
           val *stack_bottom);
 void dump(val obj, val stream);
