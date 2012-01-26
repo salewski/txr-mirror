@@ -1273,8 +1273,7 @@ val format_field(val obj, val modifier, val filter, val eval_fun)
     }
 
     if (filter)
-      str = filter_string(filter, cat_str(list(str, nao),
-                                                     nil));
+      str = filter_string(filter, str);
   }
 
   {
@@ -1321,13 +1320,21 @@ static val subst_vars(val spec, val bindings, val filter)
             str = format(nil, lit("~a"), str, nao);
 
           if (pat)
-            spec = cons(filter_string(filter, str), cons(pat, rest(spec)));
-          else if (modifiers)
+            spec = cons(pat, rest(spec));
+
+          if (modifiers) {
             spec = cons(format_field(str, modifiers, filter,
                                      curry_123_2(func_n3(txeval), spec, bindings)),
                         rest(spec));
-          else
+          } else {
+            if (listp(str))
+              str = cat_str(mapcar(func_n1(tostringp), str), lit(" "));
+            else
+              str = if3(stringp(str), str, tostringp(str));
+
             spec = cons(filter_string(filter, str), rest(spec));
+          }
+
           continue;
         }
         uw_throwf(query_error_s, lit("unbound variable ~a"),
