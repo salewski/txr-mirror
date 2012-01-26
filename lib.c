@@ -1502,7 +1502,8 @@ val cat_str(val list, val sep)
         total += len_sep;
       continue;
     }
-    return nil;
+    uw_throwf(error_s, lit("cat_str: ~s is not a character or string"),
+              item, nao);
   }
 
   str = (wchar_t *) chk_malloc((total + 1) * sizeof *str);
