@@ -4363,6 +4363,18 @@ with the innermost quote.  The quote between the commas protects the (+ 1 2)
 from repeated evaluations: the two unquotes call for two evaluations, but
 we only want (+ 1 2) to be evaluated once.
 
+.SS The .. notation
+
+In TXR Lisp, there is a special "dotdot" notation consiting of a pair of dots.
+This can be written between successive atoms or compound expressions, and is a
+shorthand for cons.
+
+That is to say, A .. B translates to (cons A B), and so for instance
+(a b .. (c d) e .. f . g) means (a (cons b (c d)) (cons e f) . g).
+
+This is a syntactic sugar in certain situations in which a cons
+is used to represent a pair of numbers or other objects.
+
 .SS The DWIM Brackets
 
 .IP [...]
@@ -5519,6 +5531,10 @@ Examples:
   (list 1) -> (1)
   (list 'a 'b) -> (a b)
 
+.SS Function sub-list
+
+.SS Function replace-list
+
 .SS Function atom
 
 .TP
@@ -6281,6 +6297,8 @@ Certain object types have a custom equal function.
 
 .SS Function vector
 
+.SS Function vectorp
+
 .SS Function vec-set-length
 
 .SS Function vecref
@@ -6298,6 +6316,8 @@ Certain object types have a custom equal function.
 .SS Function copy-vec
 
 .SS Function sub-vec
+
+.SS Function replace-vec
 
 .SS Function cat-vec
 

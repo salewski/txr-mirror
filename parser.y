@@ -72,7 +72,7 @@ static val parsed_spec;
 %token <lineno> UNTIL COLL OUTPUT REPEAT REP SINGLE FIRST LAST EMPTY 
 %token <lineno> MOD MODLAST DEFINE TRY CATCH FINALLY
 %token <lineno> ERRTOK /* deliberately not used in grammar */
-%token <lineno> HASH_BACKSLASH
+%token <lineno> HASH_BACKSLASH DOTDOT
 
 %token <val> NUMBER
 
@@ -106,6 +106,7 @@ static val parsed_spec;
 %left '&' 
 %right '~' '*' '?' '+' '%'
 %right '.' REGCHAR LITCHAR
+%right DOTDOT
 
 %%
 
@@ -711,6 +712,7 @@ expr : IDENT                    { $$ = rl(intern(string_own($1), nil),
      | chrlit                   { $$ = rl($1, num(lineno)); }
      | strlit                   { $$ = $1; }
      | quasilit                 { $$ = $1; }
+     | expr DOTDOT expr         { $$ = list(cons_s, $1, $3, nao); }
      ;
 
 regex : '/' regexpr '/'         { $$ = cons(regex_s, $2); end_of_regex();
@@ -1064,6 +1066,7 @@ void yybadtoken(int tok, val context)
   case LITCHAR: problem = lit("string literal character"); break;
   case METAPAR: problem = lit("@("); break;
   case METABKT: problem = lit("@["); break;
+  case DOTDOT: problem = lit(".."); break;
   }
 
   if (problem != 0)
