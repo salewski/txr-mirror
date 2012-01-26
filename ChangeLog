@@ -1,5 +1,14 @@
 2012-01-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (zerop): Misspelling in error message.
+
+	* lib.c (sub_list, replace_list, sub_vec, replace_vec):
+	Allow the value t to specify one element past the end, so that t t
+	refers to zero-length sequence just past the end of the array or list.
+	Also, fixed out of bounds memmoves in replace_vec.
+
+2012-01-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): New functions registered.
 
 	* lib.c (sub_list, replace_list, vectorp): New functions.

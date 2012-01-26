@@ -416,19 +416,23 @@ val sub_list(val list, val from, val to)
 
   if (from == nil)
     from = zero;
+  else if (from == t)
+    from = nil;
   else if (lt(from, zero))
-    from = plus(from, len ? len : len = length(list));
+    from = plus(from, len = length(list));
 
-  if (to && lt(to, zero))
-    to = plus(to, len ? len : len = length(list));
+  if (to == t)
+    to = nil;
+  else if (to && lt(to, zero))
+    to = plus(to, if3(len, len, len = length(list)));
 
-  if (to && gt(from, to)) {
+  if (to && from && gt(from, to)) {
     return nil;
   } else if (!to || (len && ge(to, len)))  {
     val iter, i;
 
     for (i = zero, iter = list; iter; iter = cdr(iter), i = plus(i, one)) {
-      if (ge(i, from))
+      if (from && ge(i, from))
         break;
     }
     return iter;
@@ -439,7 +443,7 @@ val sub_list(val list, val from, val to)
     for (i = zero, iter = list; iter; iter = cdr(iter), i = plus(i, one)) {
       if (ge(i, to))
         break;
-      if (ge(i, from))
+      if (from && ge(i, from))
         list_collect(ptail, car(iter));
     }
 
@@ -456,21 +460,25 @@ val replace_list(val list, val from, val to, val items)
 
   if (from == nil)
     from = zero;
+  else if (from == t)
+    from = nil;
   else if (lt(from, zero))
     from = plus(from, len ? len : len = length(list));
 
+  if (to == t)
+    to = nil;
   if (to && lt(to, zero))
     to = plus(to, len ? len : len = length(list));
 
   if (!to || (len && ge(to, len)))  {
-    if (zerop(from)) {
+    if (from && zerop(from)) {
       return (listp(items)) ? items : list_vector(items);
     } else {
       val iter, i;
       list_collect_decl (out, ptail);
 
       for (i = zero, iter = list; iter; iter = cdr(iter), i = plus(i, one)) {
-        if (ge(i, from))
+        if (from && ge(i, from))
           break;
         list_collect (ptail, car(iter));
       }
@@ -485,7 +493,7 @@ val replace_list(val list, val from, val to, val items)
     for (i = zero, iter = list; iter; iter = cdr(iter), i = plus(i, one)) {
       if (ge(i, to))
         break;
-      if (lt(i, from))
+      if (from && lt(i, from))
         list_collect(ptail, car(iter));
     }
 
@@ -2689,11 +2697,13 @@ val sub_vec(val vec_in, val from, val to)
 
   if (from == nil)
     from = zero;
+  else if (from == t)
+    from = len;
   else if (lt(from, zero))
     from = plus(from, len);
 
-  if (to == nil)
-    to = length_vec(vec_in);
+  if (to == nil || to == t)
+    to = len;
   else if (lt(to, zero))
     to = plus(to, len);
 
@@ -2727,11 +2737,13 @@ val replace_vec(val vec_in, val from, val to, val items)
 
   if (from == nil)
     from = zero;
+  else if (from == t)
+    from = len;
   else if (lt(from, zero))
     from = plus(from, len);
 
-  if (to == nil)
-    to = length_vec(vec_in);
+  if (to == nil || to == t)
+    to = len;
   else if (lt(to, zero))
     to = plus(to, len);
 
@@ -2747,7 +2759,7 @@ val replace_vec(val vec_in, val from, val to, val items)
 
     memmove(vec_in->v.vec + t - c_num(len_diff), 
             vec_in->v.vec + t,
-            l * sizeof vec_in->v.vec);
+            (l - t) * sizeof vec_in->v.vec);
 
     vec_in->v.vec[vec_length] = minus(len, len_diff);
     to = plus(from, len_it);
@@ -2760,7 +2772,7 @@ val replace_vec(val vec_in, val from, val to, val items)
 
     memmove(vec_in->v.vec + t + c_num(len_diff), 
             vec_in->v.vec + t,
-            l * sizeof vec_in->v.vec);
+            (l - t) * sizeof vec_in->v.vec);
     to = plus(from, len_it);
   }
   

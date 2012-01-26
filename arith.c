@@ -743,7 +743,7 @@ val zerop(val num)
     return t;
 
   if (!fixnump(num) && !bignump(num))
-    uw_throwf(error_s, lit("zerof: ~s is not a number"), num, nao);
+    uw_throwf(error_s, lit("zerop: ~s is not a number"), num, nao);
   return nil;
 }
 
