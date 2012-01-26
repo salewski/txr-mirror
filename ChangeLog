@@ -1,5 +1,9 @@
 2012-01-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: More discussion of ranges.
+
+2012-01-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (format_field): Removed useless use of cat_str (no longer
 	needed because str is already a string). The purpose was to reduce
 	character to strings.
