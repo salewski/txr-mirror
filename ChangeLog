@@ -1,5 +1,16 @@
 2012-01-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (dwim_loc): Handles full responsibility for assigning
+	to list and array ranges.
+	(op_modplace): Pass extra arguments to dwim_loc so it can
+	do the job for ranges. If dwim_loc returns 0, it means
+	that it did everything.
+	(op_dwim): Support list and array ranges.
+
+	* txr.1: Documented.
+
+2012-01-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (zerop): Misspelling in error message.
 
 	* lib.c (sub_list, replace_list, sub_vec, replace_vec):
