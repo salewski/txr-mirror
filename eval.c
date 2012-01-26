@@ -637,7 +637,7 @@ static val op_defun(val form, val env)
   return name;
 }
 
-static val *dwim_loc(val form, val env)
+static val *dwim_loc(val form, val env, val op, val newval)
 {
   val obj = eval(second(form), env, form);
   val args = eval_args(rest(rest(form)), env, form);
@@ -659,7 +659,23 @@ static val *dwim_loc(val form, val env)
     if (rest(args))
       eval_error(form, lit("[~s ...]: vector indexing needs one arg"),
                  obj, nao);
-    return vecref_l(obj, first(args));
+    {
+      val index = first(args);
+
+      if (consp(index)) {
+        val from = eval(car(index), env, form);
+        val to = eval(cdr(index), env, form);
+
+        if (op != set_s) 
+          eval_error(form, lit("[~s ~s]: slice takes only simple assignments"),
+                     obj, index, nao);
+
+        replace_vec(obj, from, to, newval);
+        return 0;
+      } else {
+        return vecref_l(obj, first(args));
+      }
+    }
   case CONS:
   case LCONS:
     if (rest(args))
@@ -668,15 +684,32 @@ static val *dwim_loc(val form, val env)
     {
       val index = first(args);
       val cell = obj;
-      if (!bignump(index) && !fixnump(index))
-        eval_error(form, lit("[~s ~s]: index must be integer"),
+      if (bignump(index) || fixnump(index)) {
+        for (; gt(index, zero); index = minus(index, one))
+          cell = cdr(cell);
+        if (lt(index, zero) || !cell)
+          eval_error(form, lit("[~s ~s]: cannot assign nonexistent location"),
+                     cell, first(args), nao);
+        return car_l(cell);
+      } else if (consp(index)) {
+        val from = eval(car(index), env, form);
+        val to = eval(cdr(index), env, form);
+        val newlist;
+        val tempform;
+
+        if (op != set_s) 
+          eval_error(form, lit("[~s ~s]: slice takes only simple assignments"),
+                     cell, index, nao);
+
+        newlist = replace_list(obj, from, to, newval);
+        tempform = list(op, second(form), 
+                        cons(quote_s, cons(newlist, nil)), nao);
+        eval(tempform, env, form);
+        return 0;
+      } else {
+        eval_error(form, lit("[~s ~s]: index must be integer, or pair"),
                    cell, index, nao);
-      for (; gt(index, zero); index = minus(index, one))
-        cell = cdr(cell);
-      if (lt(index, zero) || !cell)
-        eval_error(form, lit("[~s ~s]: cannot assign nonexistent location"),
-                   cell, first(args), nao);
-      return car_l(cell);
+      }
     }
   case COBJ:
     {
@@ -727,7 +760,9 @@ static val op_modplace(val form, val env)
     /* TODO: dispatch these with hash table. */
     val sym = car(place);
     if (sym == dwim_s) {
-      loc = dwim_loc(place, env);
+      loc = dwim_loc(place, env, op, newval);
+      if (loc == 0)
+        return newval;
     } else if (sym == gethash_s) {
       val hash = eval(second(place), env, form);
       val key = eval(third(place), env, form);
@@ -908,7 +943,17 @@ static val op_dwim(val form, val env)
     if (rest(args))
       eval_error(form, lit("[~s ...]: vector indexing needs one arg"),
                  obj, nao);
-    return vecref(obj, first(args));
+    {
+      val index = first(args);
+
+      if (consp(index)) {
+        val from = eval(car(index), env, form);
+        val to = eval(cdr(index), env, form);
+        return sub_vec(obj, from, to);
+      } else {
+        return vecref(obj, first(args));
+      }
+    }
   case CONS:
   case LCONS:
     if (rest(args))
@@ -916,14 +961,21 @@ static val op_dwim(val form, val env)
                  obj, nao);
     {
       val index = first(args);
-      if (!bignump(index) && !fixnump(index))
-        eval_error(form, lit("[~s ~s]: index must be integer"),
+      if (!bignump(index) && !fixnump(index) && !consp(index))
+        eval_error(form, lit("[~s ~s]: index must be integer or pair"),
                    obj, index, nao);
-      if (lt(index, zero))
-        return nil;
-      for (; gt(index, zero); index = minus(index, one))
-        obj = cdr(obj);
-      return car(obj);
+
+      if (consp(index)) {
+        val from = eval(car(index), env, form);
+        val to = eval(cdr(index), env, form);
+        return sub_list(obj, from, to);
+      } else {
+        if (lt(index, zero))
+          return nil;
+        for (; gt(index, zero); index = minus(index, one))
+          obj = cdr(obj);
+        return car(obj);
+      }
     }
   case COBJ:
     {

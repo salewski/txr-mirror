@@ -4372,8 +4372,10 @@ shorthand for cons.
 That is to say, A .. B translates to (cons A B), and so for instance
 (a b .. (c d) e .. f . g) means (a (cons b (c d)) (cons e f) . g).
 
-This is a syntactic sugar in certain situations in which a cons
-is used to represent a pair of numbers or other objects.
+This is a syntactic sugar useful in certain situations in which a cons is used
+to represent a pair of numbers or other objects. For instance, if L
+is a list, then [L 1 .. 3] computes a sublist of L consisting of
+elements 1 through 2 (counting from zero).
 
 .SS The DWIM Brackets
 
@@ -4843,9 +4845,21 @@ refers to the first element. Indexed list access does not throw exceptions.
 Negative indices yield nil, and indices beyond the end of a list
 yield nil. (However assignment to a nonexistent list element throws.)
 
+.IP [<list> <from-index>..<to-below-index>]
+Retrieve the specified range of elements, exactly as if
+using (sub-list <list> <from-index> <to-below-index>).
+The range of elements is specified in the car and cdr fields of a cons cell,
+for which the .. (dotdot) syntactic sugar is useful.
+
 .IP [<vector> <index>]
 Retrieve the specified element of a vector. This is equivalent to
 (vecref <vector> <index>).
+
+.IP [<vector> <from-index>..<to-below-index>]
+Retrieve the specified range of elements, exactly as if
+using (sub-vec <list> <from-index> <to-below-index>).
+The range of elements is specified in the car and cdr fields of a cons cell,
+for which the .. (dotdot) syntactic sugar is useful.
 
 .IP [<string> <index>]
 Retrieve the specified element of a string. This is equivalent to
@@ -4857,6 +4871,12 @@ or <default-value> if there is no such entry.
 
 The list, vector and hash table forms of dwim denote places
 that can be assigned.
+
+The list and vector range forms can be assigned only using the set operator,
+not using the others like push and inc.  Assigning to a vector range modifies
+the vector object; it is implemented using replace-vec.  Assigning to a list
+range updates the form which contains the list, so the expression denoting the
+list must be an assignable place.
 
 .TP
 Notes:
