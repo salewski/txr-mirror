@@ -26,17 +26,17 @@ syn keyword txr_keyword contained define try catch finally throw
 syn keyword txr_keyword contained defex throw deffilter filter eof eol do
 
 syn keyword txl_keyword contained progn prog1 let syn let* lambda call fun 
-syn keyword txl_keyword contained cond if and or
+syn keyword txl_keyword contained cond if and or dwim
 syn keyword txl_keyword contained defvar defun inc dec set push pop flip
 syn keyword txl_keyword contained for for* dohash unwind-protect block
 syn keyword txl_keyword contained return return-from gen delay
 syn keyword txl_keyword contained each each* collect-each collect-each*
 
 syn keyword txl_keyword contained cons make-lazy-cons lcons-fun car cdr
-syn keyword txl_keyword contained rplaca rplacd first rest append list
+syn keyword txl_keyword contained rplaca rplacd first rest append append* list
 syn keyword txl_keyword contained identity typeof atom null not consp listp
 syn keyword txl_keyword contained proper-listp length-list mapcar mappend apply
-syn keyword txl_keyword contained mapcar* mappend*
+syn keyword txl_keyword contained mapcar* mappend* sub-list replace-list
 syn keyword txl_keyword contained reduce-left reduce-right
 syn keyword txl_keyword contained second third fourth fifth sixth copy-list nreverse
 syn keyword txl_keyword contained reverse ldiff flatten lazy-flatten
@@ -71,7 +71,7 @@ syn keyword txl_keyword contained chr-str-set span-str compl-span-str break-str
 syn keyword txl_keyword contained vector vec-set-length vecref
 syn keyword txl_keyword contained vec-push length-vec size-vec vector-list
 syn keyword txl_keyword contained list-vector copy-vec sub-vec cat-vec
-syn keyword txl_keyword contained assoc assq acons acons-new
+syn keyword txl_keyword contained replace-vec assoc assq acons acons-new
 syn keyword txl_keyword contained aconsq-new alist-remove alist-nremove copy-cons
 syn keyword txl_keyword contained copy-alist merge sort find set-diff length
 

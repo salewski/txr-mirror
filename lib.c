@@ -407,6 +407,95 @@ val nappend2(val list1, val list2)
   return out;
 }
 
+val sub_list(val list, val from, val to)
+{
+  val len = nil;
+
+  if (!list)
+    return nil;
+
+  if (from == nil)
+    from = zero;
+  else if (lt(from, zero))
+    from = plus(from, len ? len : len = length(list));
+
+  if (to && lt(to, zero))
+    to = plus(to, len ? len : len = length(list));
+
+  if (to && gt(from, to)) {
+    return nil;
+  } else if (!to || (len && ge(to, len)))  {
+    val iter, i;
+
+    for (i = zero, iter = list; iter; iter = cdr(iter), i = plus(i, one)) {
+      if (ge(i, from))
+        break;
+    }
+    return iter;
+  } else {
+    val iter, i;
+    list_collect_decl (out, ptail);
+
+    for (i = zero, iter = list; iter; iter = cdr(iter), i = plus(i, one)) {
+      if (ge(i, to))
+        break;
+      if (ge(i, from))
+        list_collect(ptail, car(iter));
+    }
+
+    return out;
+  }
+}
+
+val replace_list(val list, val from, val to, val items)
+{
+  val len = nil;
+
+  if (!list)
+    return items;
+
+  if (from == nil)
+    from = zero;
+  else if (lt(from, zero))
+    from = plus(from, len ? len : len = length(list));
+
+  if (to && lt(to, zero))
+    to = plus(to, len ? len : len = length(list));
+
+  if (!to || (len && ge(to, len)))  {
+    if (zerop(from)) {
+      return (listp(items)) ? items : list_vector(items);
+    } else {
+      val iter, i;
+      list_collect_decl (out, ptail);
+
+      for (i = zero, iter = list; iter; iter = cdr(iter), i = plus(i, one)) {
+        if (ge(i, from))
+          break;
+        list_collect (ptail, car(iter));
+      }
+
+      list_collect_nconc(ptail, listp(items) ? items : list_vector(items));
+      return out;
+    }
+  } else {
+    val iter, i;
+    list_collect_decl (out, ptail);
+
+    for (i = zero, iter = list; iter; iter = cdr(iter), i = plus(i, one)) {
+      if (ge(i, to))
+        break;
+      if (lt(i, from))
+        list_collect(ptail, car(iter));
+    }
+
+    list_collect_nconc(ptail, append2(listp(items) ? items 
+                                                   : list_vector(items),
+                                      iter));
+    return out;
+  }
+}
+
 static val lazy_appendv_func(val env, val lcons)
 {
   cons_bind (last, lists, env);
@@ -2471,6 +2560,11 @@ val vector(val length)
   return vec;
 }
 
+val vectorp(val vec)
+{
+  return (is_ptr(vec) && type(vec) == VEC) ? t : nil;
+}
+
 val vec_set_length(val vec, val length)
 {
   type_check(vec, VEC);
@@ -2593,14 +2687,18 @@ val sub_vec(val vec_in, val from, val to)
 {
   val len = length_vec(vec_in);
 
-  if (from == nil || lt(from, zero))
+  if (from == nil)
     from = zero;
+  else if (lt(from, zero))
+    from = plus(from, len);
+
   if (to == nil)
     to = length_vec(vec_in);
   else if (lt(to, zero))
-    to = zero;
-  from = min2(from, len);
-  to = min2(to, len);
+    to = plus(to, len);
+
+  from = max2(zero, min2(from, len));
+  to = max2(zero, min2(to, len));
 
   if (ge(from, to)) {
     return vector(zero);
@@ -2619,6 +2717,67 @@ val sub_vec(val vec_in, val from, val to)
     memcpy(vec->v.vec, vec_in->v.vec + cfrom, nelem * sizeof *vec->v.vec);
     return vec;
   }
+}
+
+val replace_vec(val vec_in, val from, val to, val items)
+{
+  val len = length_vec(vec_in);
+  val len_it = length(items);
+  val len_rep;
+
+  if (from == nil)
+    from = zero;
+  else if (lt(from, zero))
+    from = plus(from, len);
+
+  if (to == nil)
+    to = length_vec(vec_in);
+  else if (lt(to, zero))
+    to = plus(to, len);
+
+  from = max2(zero, min2(from, len));
+  to = max2(zero, min2(to, len));
+
+  len_rep = minus(to, from);
+
+  if (gt(len_rep, len_it)) {
+    val len_diff = minus(len_rep, len_it);
+    cnum t = c_num(to);
+    cnum l = c_num(len);
+
+    memmove(vec_in->v.vec + t - c_num(len_diff), 
+            vec_in->v.vec + t,
+            l * sizeof vec_in->v.vec);
+
+    vec_in->v.vec[vec_length] = minus(len, len_diff);
+    to = plus(from, len_it);
+  } else if (lt(len_rep, len_it)) {
+    val len_diff = minus(len_it, len_rep);
+    cnum t = c_num(to);
+    cnum l = c_num(len);
+
+    vec_set_length(vec_in, plus(len, len_diff));
+
+    memmove(vec_in->v.vec + t + c_num(len_diff), 
+            vec_in->v.vec + t,
+            l * sizeof vec_in->v.vec);
+    to = plus(from, len_it);
+  }
+  
+  if (zerop(len_it))
+    return vec_in;
+  if (vectorp(items)) {
+    memcpy(vec_in->v.vec + c_num(from), items->v.vec, 
+           sizeof *vec_in->v.vec * c_num(len_it));
+  } else {
+    val iter;
+    cnum f = c_num(from);
+    cnum t = c_num(to);
+
+    for (iter = items; iter && f != t; iter = cdr(iter), f++)
+      vec_in->v.vec[f] = car(iter);
+  }
+  return vec_in;
 }
 
 val cat_vec(val list)

@@ -1698,6 +1698,8 @@ void eval_init(void)
   reg_fun(intern(lit("rplacd"), user_package), func_n2(rplacd));
   reg_fun(intern(lit("first"), user_package), func_n1(car));
   reg_fun(intern(lit("rest"), user_package), func_n1(cdr));
+  reg_fun(intern(lit("sub-list"), user_package), func_n3(sub_list));
+  reg_fun(intern(lit("replace-list"), user_package), func_n4(replace_list));
   reg_fun(append_s, func_n0v(appendv));
   reg_fun(intern(lit("append*"), user_package), func_n0v(lazy_appendv));
   reg_fun(list_s, func_n0v(identity));
@@ -1867,6 +1869,7 @@ void eval_init(void)
   reg_fun(intern(lit("break-str"), user_package), func_n2(break_str));
 
   reg_fun(intern(lit("vector"), user_package), func_n1(vector));
+  reg_fun(intern(lit("vectorp"), user_package), func_n1(vectorp));
   reg_fun(intern(lit("vec-set-length"), user_package), func_n2(vec_set_length));
   reg_fun(vecref_s, func_n2(vecref));
   reg_fun(intern(lit("vec-push"), user_package), func_n2(vec_push));
@@ -1876,6 +1879,7 @@ void eval_init(void)
   reg_fun(intern(lit("list-vector"), user_package), func_n1(list_vector));
   reg_fun(intern(lit("copy-vec"), user_package), func_n1(copy_vec));
   reg_fun(intern(lit("sub-vec"), user_package), func_n3(sub_vec));
+  reg_fun(intern(lit("replace-vec"), user_package), func_n4(replace_vec));
   reg_fun(intern(lit("cat-vec"), user_package), func_n1(cat_vec));
 
   reg_fun(intern(lit("assoc"), user_package), func_n2(assoc));
