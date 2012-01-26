@@ -307,6 +307,29 @@ val sixth(val cons)
   return car(cdr(cdr(cdr(cdr(cdr(cons))))));
 }
 
+val listref(val list, val ind)
+{
+  if (lt(ind, zero))
+    return nil;
+  for (; gt(ind, zero); ind = minus(ind, one))
+    list = cdr(list);
+  return car(list);
+}
+
+val *listref_l(val list, val ind)
+{
+  val olist = list;
+  val oind = ind;
+
+  for (; gt(ind, zero) && list; ind = minus(ind, one))
+    list = cdr(list);
+  if (consp(list))
+    return car_l(list);
+
+  uw_throwf(error_s, lit("~s has no assignable location at ~s"),
+            olist, oind,  nao);
+}
+
 val *tail(val cons)
 {
   while (cdr(cons))
@@ -3791,6 +3814,20 @@ val obj_pprint(val obj, val out)
 
   format(out, lit("#<garbage: ~p>"), (void *) obj, nao);
   return obj;
+}
+
+val tostring(val obj)
+{
+  val ss = make_string_output_stream();
+  obj_print(obj, ss);
+  return get_string_from_stream(ss);
+}
+
+val tostringp(val obj)
+{
+  val ss = make_string_output_stream();
+  obj_pprint(obj, ss);
+  return get_string_from_stream(ss);
 }
 
 void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),

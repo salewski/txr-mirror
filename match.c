@@ -1206,32 +1206,59 @@ static val match_line(match_line_ctx c)
   debug_leave;
 }
 
-val format_field(val string_or_list, val modifier, val filter, val eval_fun)
+val format_field(val obj, val modifier, val filter, val eval_fun)
 {
-  val n = zero;
+  val n = zero, sep = lit(" ");
   val plist = nil;
-
-  if (!stringp(string_or_list))
-    return string_or_list;
+  val str;
 
   for (; modifier; pop(&modifier)) {
     val item = first(modifier);
-    if (regexp(item))
+    if (regexp(item)) {
       uw_throw(query_error_s, lit("format_field: regex modifier in output"));
-    if (keywordp(item)) {
+    } else if (keywordp(item)) {
       plist = modifier;
       break;
-    }
+    } else if (consp(item)) {
+      if (car(item) == dwim_s) {
+        val arg_expr = second(item);
 
-    {
+        if (consp(arg_expr) && car(arg_expr) == cons_s) {
+          val from = funcall1(eval_fun, second(arg_expr));
+          val to = funcall1(eval_fun, third(arg_expr));
+
+          obj = if3((vectorp(obj)), 
+                     sub_vec(obj, from, to),
+                     sub_list(obj, from, to));
+        } else {
+           val arg = funcall1(eval_fun, arg_expr);
+           if (bignump(arg) || fixnump(arg)) {
+             if (vectorp(obj))
+               obj = vecref(obj, arg);
+             else
+               obj = listref(obj, arg);
+           } else {
+             uw_throwf(query_error_s, lit("format_field: bad index: ~s"),
+                       arg, nao);
+           }
+        }
+      }
+    } else {
       val v = funcall1(eval_fun, item);
       if (fixnump(v))
         n = v;
+      else if (stringp(v))
+        sep = v;
       else
         uw_throwf(query_error_s, lit("format_field: bad modifier object: ~s"),
                   item, nao);
     }
   }
+
+  if (listp(obj))
+    str = cat_str(mapcar(func_n1(tostringp), obj), sep);
+  else
+    str = if3(stringp(obj), obj, tostringp(obj));
 
   {
     val filter_sym = getplist(plist, filter_k);
@@ -1246,27 +1273,27 @@ val format_field(val string_or_list, val modifier, val filter, val eval_fun)
     }
 
     if (filter)
-      string_or_list = filter_string(filter, cat_str(list(string_or_list, nao),
+      str = filter_string(filter, cat_str(list(str, nao),
                                                      nil));
   }
 
   {
     val right = lt(n, zero);
     val width = if3(lt(n, zero), neg(n), n);
-    val diff = minus(width, length_str(string_or_list));
+    val diff = minus(width, length_str(str));
 
     if (le(diff, zero))
-      return string_or_list;
+      return str;
 
-    if (ge(length_str(string_or_list), width))
-      return string_or_list;
+    if (ge(length_str(str), width))
+      return str;
 
     {
       val padding = mkstring(diff, chr(' '));
 
       return if3(right,
-                 cat_str(list(padding, string_or_list, nao), nil),
-                 cat_str(list(string_or_list, padding, nao), nil));
+                 cat_str(list(padding, str, nao), nil),
+                 cat_str(list(str, padding, nao), nil));
     }
   }
 }

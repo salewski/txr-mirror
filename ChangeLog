@@ -1,3 +1,21 @@
+2012-01-26  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (dwim_loc, dwim_op): Eliminated redundant re-evaluation
+	of range arguments. They are already evaluated since the cons
+	expression is evaluates as part of the dwim arglist.
+	Replaced some open code with function calls to the new listref
+	and listref_l functions.
+	(tostring, tostringp): made extern and moved to lib.c.
+
+	* lib.c (listref, listref_l): New functions.
+	(tostring, tostringp): moved here from eval.c.
+
+	* lib.h (listref, listref_l, tostring, tostringp): Declared.
+
+	* match.c (format_field): Handle index and range references.
+
+	* txr.1: Documented new output variable syntax.
+
 2012-01-25  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (dwim_loc): Handles full responsibility for assigning

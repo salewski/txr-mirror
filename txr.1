@@ -1046,7 +1046,10 @@ into the literal template. If a is bound to "apple" and b to "banana",
 the quasiliteral `one@a and two @{b}s` represents the string
 "one apple and two bananas". A backquote escaped by a backslash represents
 itself, and two consecutive @ characters code for a literal @.
-There is no \e@ escape.
+There is no \e@ escape.  Quasiliterals support the full output variable
+syntax. Expressions within variables substitutions follow the evaluation rules
+of TXR Lisp when the quasiliteral occurs in TXR Lisp, and the rules of
+the TXR pattern language when the quasiliteral occurs in the pattern language.
 
 .SS Numbers
 
@@ -3317,6 +3320,39 @@ An output variable may specify a filter which overrides any filter established
 for the output clause. The syntax for this is @(NAME :filter <filterspec>}.
 The filter specification syntax is the same as in the output clause.
 See Output Filtering below.
+
+Additional syntax is supported in output variables that is does not appear
+in pattern matching variables.
+
+A square bracket index notation may be used to extract elements from a variable
+which is a list, or to extract ranges. Elements are indexed from zero. This
+notation is only available in brace-enclosed syntax, and looks like this:
+
+.IP
+@{NAME[expr]) 
+
+Extract the element at the position given by expr.
+
+.IP
+@{NAME[expr1..expr2]) 
+
+Extract a list of elements from the position given by expr1, up to
+one position less than the position given by expr2.
+The elements from the range are catenated together to form a single string,
+with a separator character in  between. The default character is a space.
+An alternate character may be given as a string argument.
+
+.TP
+Example:
+
+  @(bind a ("a" "b" "c" "d"))
+  @(output)
+  @{a[1..3] "," 10}
+  @(end)
+
+The above produces the text "b,c" in a field 10 spaces wide. The [1..3]
+argument extracts a range of a; the "," argument specifies an alternate
+separator string, and 10 specifies the field width.
 
 .SS The Repeat Directive
 
