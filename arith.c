@@ -348,7 +348,7 @@ val plus(val anum, val bnum)
   uw_throwf(error_s, lit("plus: invalid operands ~s ~s"), anum, bnum, nao);
 char_range:
   uw_throwf(numeric_error_s, 
-            lit("plus: sum of ~s ~s is out of character range"),
+            lit("plus: sum of ~s and ~s is out of character range"),
             anum, bnum, nao);
 }
 
@@ -429,7 +429,7 @@ val minus(val anum, val bnum)
 
       if (sum < 0 || sum > 0x10FFFF)
         uw_throwf(numeric_error_s, 
-                  lit("minus: sum of ~s ~s is out of character range"),
+                  lit("minus: difference of ~s and ~s is out of character range"),
                   anum, bnum, nao);
       return chr(sum);
     }

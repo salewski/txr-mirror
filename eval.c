@@ -637,7 +637,7 @@ static val op_defun(val form, val env)
   return name;
 }
 
-static val *dwim_loc(val form, val env, val op, val newval)
+static val *dwim_loc(val form, val env, val op, val newval, val *retval)
 {
   val obj = eval(second(form), env, form);
   val args = eval_args(rest(rest(form)), env, form);
@@ -649,8 +649,38 @@ static val *dwim_loc(val form, val env, val op, val newval)
   case LIT:
   case STR:
   case LSTR:
-    eval_error(form, lit("[~s ...]: string element assignment not implemented!"),
-               obj, nao);
+    if (rest(args))
+      eval_error(form, lit("[~s ...]: string indexing needs one arg"),
+                 obj, nao);
+    {
+      val index = first(args);
+
+      if (consp(index)) {
+        if (op != set_s) 
+          eval_error(form, lit("[~s ~s]: ranges takes only set assignments"),
+                     obj, index, nao);
+
+        replace_str(obj, car(index), cdr(index), newval);
+        *retval = newval;
+        return 0;
+      } else {
+        uses_or2;
+        if (op == set_s) {
+          chr_str_set(obj, index, newval);
+        } else if (op == inc_s) {
+          newval = plus(chr_str(obj, index), or2(newval, one));
+          chr_str_set(obj, index, newval);
+        } else if (op == dec_s) {
+          newval = minus(chr_str(obj, index), or2(newval, one));
+          chr_str_set(obj, index, newval);
+        } else {
+          eval_error(form, lit("[~s ~s]: only set, inc and dec can be used "
+                               "for string indices"), obj, index, nao);
+        }
+        *retval = newval;
+        return 0;
+      }
+    }
   case SYM:
   case FUN:
     eval_error(form, lit("[~s ...]: assigning through function not implemented!"),
@@ -664,10 +694,11 @@ static val *dwim_loc(val form, val env, val op, val newval)
 
       if (consp(index)) {
         if (op != set_s) 
-          eval_error(form, lit("[~s ~s]: slice takes only simple assignments"),
+          eval_error(form, lit("[~s ~s]: ranges take only set assignments"),
                      obj, index, nao);
 
         replace_vec(obj, car(index), cdr(index), newval);
+        *retval = newval;
         return 0;
       } else {
         return vecref_l(obj, first(args));
@@ -688,13 +719,14 @@ static val *dwim_loc(val form, val env, val op, val newval)
         val tempform;
 
         if (op != set_s) 
-          eval_error(form, lit("[~s ~s]: slice takes only simple assignments"),
+          eval_error(form, lit("[~s ~s]: ranges take only simple assignments"),
                      cell, index, nao);
 
         newlist = replace_list(obj, car(index), cdr(index), newval);
         tempform = list(op, second(form), 
                         cons(quote_s, cons(newlist, nil)), nao);
         eval(tempform, env, form);
+        *retval = newval;
         return 0;
       } else {
         eval_error(form, lit("[~s ~s]: index must be integer, or pair"),
@@ -750,9 +782,10 @@ static val op_modplace(val form, val env)
     /* TODO: dispatch these with hash table. */
     val sym = car(place);
     if (sym == dwim_s) {
-      loc = dwim_loc(place, env, op, newval);
+      val ret;
+      loc = dwim_loc(place, env, op, newval, &ret);
       if (loc == 0)
-        return newval;
+        return ret;
     } else if (sym == gethash_s) {
       val hash = eval(second(place), env, form);
       val key = eval(third(place), env, form);
@@ -786,10 +819,10 @@ static val op_modplace(val form, val env)
       eval_error(form, lit("~a: missing argument"), op, place, nao);
     return *loc = newval;
   } else if (op == inc_s) {
-    val inc = or2(newval, num(1));
+    val inc = or2(newval, one);
     return *loc = plus(*loc, inc);
   } else if (op == dec_s) {
-    val inc = or2(newval, num(1));
+    val inc = or2(newval, one);
     return *loc = minus(*loc, inc);
   } else if (op == push_s) {
     return push(newval, loc);
@@ -916,7 +949,14 @@ static val op_dwim(val form, val env)
     if (rest(args))
       eval_error(form, lit("[~s ...]: string indexing needs one arg"),
                  obj, nao);
-    return chr_str(obj, first(args));
+    {
+      val index = first(args);
+      if (consp(index)) {
+        return sub_str(obj, car(index), cdr(index));
+      } else {
+        return chr_str(obj, first(args));
+      }
+    }
   case SYM:
     {
       val fbinding = lookup_fun(env, obj);
@@ -1858,6 +1898,7 @@ void eval_init(void)
   reg_fun(intern(lit("search-str"), user_package), func_n4(search_str));
   reg_fun(intern(lit("search-str-tree"), user_package), func_n4(search_str_tree));
   reg_fun(intern(lit("sub-str"), user_package), func_n3(sub_str));
+  reg_fun(intern(lit("replace-str"), user_package), func_n4(replace_str));
   reg_fun(intern(lit("cat-str"), user_package), func_n2(cat_str));
   reg_fun(intern(lit("split-str"), user_package), func_n2(split_str));
   reg_fun(intern(lit("split-str-set"), user_package), func_n2(split_str_set));
