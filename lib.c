@@ -310,7 +310,7 @@ val sixth(val cons)
 val listref(val list, val ind)
 {
   if (lt(ind, zero))
-    return nil;
+    ind = plus(ind, length_list(list));
   for (; gt(ind, zero); ind = minus(ind, one))
     list = cdr(list);
   return car(list);
@@ -320,6 +320,9 @@ val *listref_l(val list, val ind)
 {
   val olist = list;
   val oind = ind;
+
+  if (lt(ind, zero))
+    ind = plus(ind, length_list(list));
 
   for (; gt(ind, zero) && list; ind = minus(ind, one))
     list = cdr(list);

@@ -1,5 +1,10 @@
 2012-01-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (listref, listref_l): Negative indices must have semantics
+	consistent with vecref and ranges.
+
+2012-01-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (cat_str): Throw error if one of the list elements
 	is not a character or string instead of silently returning nil.
 
