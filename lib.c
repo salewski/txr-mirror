@@ -496,12 +496,12 @@ val replace_list(val list, val from, val to, val items)
   else if (from == t)
     from = nil;
   else if (lt(from, zero))
-    from = plus(from, len ? len : len = length(list));
+    from = plus(from, len ? len : (len = length(list)));
 
   if (to == t)
     to = nil;
   if (to && lt(to, zero))
-    to = plus(to, len ? len : len = length(list));
+    to = plus(to, len ? len : (len = length(list)));
 
   if (!to || (len && ge(to, len)))  {
     if (from && zerop(from)) {

@@ -12,6 +12,12 @@
 
 2012-01-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (op_modplace): Fix warning caught by gcc, but not g++.
+
+	* lib.c (replace_list): Fix code that is valid C++ but not C.
+
+2012-01-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (replace_list): Always convert the input items to a list,
 	even in the trivial case that an empty list is being replaced.
 	Allow a string to be the replacement (split into a list of
