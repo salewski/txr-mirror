@@ -1,5 +1,25 @@
 2012-01-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (plus, minus): Better wording in error messages.
+
+	* eval.c (dwim_loc): Assignments to string indices and ranges
+	supported. New arguments for this purpose.
+	(op_modplace): Use new dwim_loc interface for returned value.
+	(op_dwim): Support assignment to string ranges.
+	(eval_init): replace_str registered.
+
+	* lib.c (string_extend): If the argument is a number, let it
+	specify the amount by which to extend the string.
+	(replace_str): New function.
+
+	* lib.h (replace_str): Declared.
+
+	* txr.1: Updated.
+
+	* txr.vim: Updated.
+
+2012-01-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (listref, listref_l): Negative indices must have semantics
 	consistent with vecref and ranges.
 

@@ -4839,8 +4839,8 @@ determine the initial value of the place. Otherwise it is ignored.
 The vecref place denotes a vector element, allowing vector elements
 to be treated as assignment places.
 
-The dwim/[] place denotes a vector element, list element, or hash table,
-depending on the type of obj. 
+The dwim/[] place denotes a vector element, list element, string, or hash
+table, depending on the type of obj. 
 
 .SS Operator dwim
 
@@ -4903,29 +4903,32 @@ See the section on Range Indexing below.
 Retrieve the specified element of a string. This is equivalent to
 (chr-str <string> <index>).
 
+.IP [<string> <from-index>..<to-below-index>]
+Retrieve the specified range of characters from the string, exactly as if
+using (sub-str <string> <from-index> <to-below-index>).
+The range of elements is specified in the car and cdr fields of a cons cell,
+for which the .. (dotdot) syntactic sugar is useful.
+See the section on Indexing below.
+
 .IP [<hash-table> <key> <default-value>]
 Retrieve a value from the hash table corresponding to <key>,
 or <default-value> if there is no such entry.
 
-The list, vector and hash table forms of dwim denote places
-that can be assigned.
-
-The list and vector range forms can be assigned only using the set operator,
-not using the others like push and inc.  Assigning to a vector range modifies
-the vector object; it is implemented using replace-vec.  Assigning to a list
-range updates the form which contains the list, so the expression denoting the
-list must be an assignable place.
+The places denoted by the dwim operator can be assigned.  There are some
+restrictions. List, string and vector ranges can only be replaced with set. The
+other operators like push do not apply.  Characters in a string can only be
+assigned with set or incremented with inc and dec.
 
 .TP
 Range Indexing
 
-Array and list range indexing is based from zero. The first element element
-zero. Furthermore, the value -1 refers to the last element of the array or
+Vector and list range indexing is based from zero. The first element element
+zero. Furthermore, the value -1 refers to the last element of the vector or
 list, and -2 to the second last and so forth. So the range 1 .. -2 means
 "everything except for the first element and the last two".
 
-The symbol t represents the position one past the end of the array or
-list, so 0 .. t denotes the entire list or array, and the range t .. t
+The symbol t represents the position one past the end of the vector, string or
+list, so 0 .. t denotes the entire list or vector, and the range t .. t
 represents the empty range just beyond the last element.
 It is possible to assign to t .. t. For instance:
 
@@ -6316,6 +6319,8 @@ Certain object types have a custom equal function.
 .SS Function search-str-tree
 
 .SS Function sub-str
+
+.SS Function replace-str
 
 .SS Function cat-str
 

@@ -1296,6 +1296,8 @@ val string_extend(val str, val tail)
       needed = length_str(tail);
     else if (chrp(tail))
       needed = one;
+    else if (fixnump(tail))
+      needed = tail;
     else
       uw_throwf(error_s, lit("string_extend: tail ~s bad type"), str, nao);
 
@@ -1320,7 +1322,7 @@ val string_extend(val str, val tail)
 
     if (stringp(tail)) {
       wmemcpy(str->st.str + len, c_str(tail), c_num(needed) + 1);
-    } else {
+    } else if (chrp(tail)) {
       str->st.str[len] = c_chr(tail);
       str->st.str[len + 1] = 0;
     }
@@ -1481,6 +1483,77 @@ val sub_str(val str_in, val from, val to)
     return string_own(sub);
   }
 }
+
+val replace_str(val str_in, val from, val to, val items)
+{
+  val len = length_str(str_in);
+  val len_it = length(items);
+  val len_rep;
+
+  if (type(str_in) != STR)
+    uw_throwf(error_s, lit("replace_str: string ~s of type ~s not supported"),
+              str_in, typeof(str_in), nao);
+
+  if (from == nil)
+    from = zero;
+  else if (from == t)
+    from = len;
+  else if (lt(from, zero))
+    from = plus(from, len);
+
+  if (to == nil || to == t)
+    to = len;
+  else if (lt(to, zero))
+    to = plus(to, len);
+
+  from = max2(zero, min2(from, len));
+  to = max2(zero, min2(to, len));
+
+  len_rep = minus(to, from);
+
+  if (gt(len_rep, len_it)) {
+    val len_diff = minus(len_rep, len_it);
+    cnum t = c_num(to);
+    cnum l = c_num(len);
+
+    wmemmove(str_in->st.str + t - c_num(len_diff), 
+             str_in->st.str + t, (l - t) + 1);
+    str_in->st.len = minus(len, len_diff);
+    to = plus(from, len_it);
+  } else if (lt(len_rep, len_it)) {
+    val len_diff = minus(len_it, len_rep);
+    cnum t = c_num(to);
+    cnum l = c_num(len);
+
+    string_extend(str_in, plus(len, len_diff));
+    wmemmove(str_in->st.str + t + c_num(len_diff),
+             str_in->st.str + t, (l - t) + 1);
+    to = plus(from, len_it);
+  }
+  
+  if (zerop(len_it))
+    return str_in;
+  if (stringp(items)) {
+    wmemcpy(str_in->st.str + c_num(from), c_str(items), c_num(len_it));
+  } else {
+    val iter;
+    cnum f = c_num(from);
+    cnum t = c_num(to);
+
+    if (listp(items)) {
+      for (iter = items; iter && f != t; iter = cdr(iter), f++)
+        str_in->st.str[f] = c_chr(car(iter));
+    } else if (vectorp(items)) {
+      for (; f != t; f++)
+        str_in->st.str[f] = c_chr(vecref(items, num(f)));
+    } else {
+      uw_throwf(error_s, lit("replace_str: source object ~s not supported"),
+                items, nao);
+    }
+  }
+  return str_in;
+}
+
 
 val cat_str(val list, val sep)
 {
