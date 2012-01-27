@@ -169,9 +169,8 @@ val type_check3(val obj, int t1, int t2, int t3)
 
 val class_check(val cobj, val class_sym)
 {
-  type_check (cobj, COBJ);
-  type_assert (cobj->co.cls == class_sym, (lit("~a is not a cobj of class ~a"),
-                                           cobj, class_sym));
+  type_assert (cobj && cobj->t.type == COBJ && cobj->co.cls == class_sym, 
+               (lit("~a is not of type ~a"), cobj, class_sym, nao));
   return t;
 }
 

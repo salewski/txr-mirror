@@ -389,7 +389,10 @@ static struct cobj_ops hash_iter_ops = {
 val hash_begin(val hash)
 {
   val hi_obj;
-  struct hash_iter *hi = (struct hash_iter *) chk_malloc(sizeof *hi);
+  struct hash_iter *hi;
+  class_check (hash, hash_s);
+
+  hi = (struct hash_iter *) chk_malloc(sizeof *hi);
   hi->hash = nil;
   hi->chain = -1;
   hi->cons = nil;
