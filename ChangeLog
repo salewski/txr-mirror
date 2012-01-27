@@ -1,5 +1,11 @@
 2012-01-27  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (dwim_loc, op_dwim): Relax the requirement on hash
+	indexing arguments. The default value can be omitted,
+	defaulting to nil.
+
+2012-01-27  Kaz Kylheku  <kaz@kylheku.com>
+
 	* hash.c (hash_begin): Missing type check added, otherwise
 	passing in an object that is not a hash results in corruption
 	or crashing behavior.
