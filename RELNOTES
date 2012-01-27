@@ -1,3 +1,26 @@
+                                     TXR 55
+                                   2011-01-26
+
+
+  Features
+
+  - New square bracket syntax for Lisp-1 like invocation
+    and array-indexing over lists, vectors, strings and hashes.
+
+  - New a .. b pair syntactic sugar for (cons a b).
+    Works with array indexing brackets to extract ranges
+    (slices) from lists, vectors and strings.
+
+  - Indexed elements and slices are assignable.
+
+  - In the pattern language, variables in output templates (output variables)
+    can be indexed and sliced.
+  
+  - Output variables that hold lists are now interpolated with spaces
+    between, and this can be overridden with any separator string.
+
+
+
                                      TXR 54
                                    2011-01-21
 
