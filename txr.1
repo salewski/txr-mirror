@@ -4915,9 +4915,15 @@ Retrieve a value from the hash table corresponding to <key>,
 or <default-value> if there is no such entry.
 
 The places denoted by the dwim operator can be assigned.  There are some
-restrictions. List, string and vector ranges can only be replaced with set. The
-other operators like push do not apply.  Characters in a string can only be
-assigned with set or incremented with inc and dec.
+restrictions. List, string and vector ranges can only be replaced using
+the set operator. The other operators like push do not apply.  
+Characters in a string can only be assigned with set or incremented with inc
+and dec.
+
+The source of a range assignment can be a string, vector or list,
+regardless of whether the target is a string, vector or list.
+If the target is a string, the replacement sequence must be
+a string, or a list or vector of characters.
 
 .TP
 Range Indexing
