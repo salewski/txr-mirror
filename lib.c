@@ -481,6 +481,13 @@ val replace_list(val list, val from, val to, val items)
 {
   val len = nil;
 
+  if (vectorp(items))
+    items = list_vector(items);
+  else if (stringp(items))
+    items = list_str(items);
+  else if (!listp(items))
+    uw_throwf(error_s, lit("replace_list: cannot replace with ~s"), items, nao);
+
   if (!list)
     return items;
 
@@ -1539,13 +1546,14 @@ val replace_str(val str_in, val from, val to, val items)
     val iter;
     cnum f = c_num(from);
     cnum t = c_num(to);
+    cnum s;
 
     if (listp(items)) {
       for (iter = items; iter && f != t; iter = cdr(iter), f++)
         str_in->st.str[f] = c_chr(car(iter));
     } else if (vectorp(items)) {
-      for (; f != t; f++)
-        str_in->st.str[f] = c_chr(vecref(items, num(f)));
+      for (s = 0; f != t; f++, s++)
+        str_in->st.str[f] = c_chr(vecref(items, num(s)));
     } else {
       uw_throwf(error_s, lit("replace_str: source object ~s not supported"),
                 items, nao);
@@ -1618,18 +1626,22 @@ val split_str(val str, val sep)
 
   list_collect_decl (out, iter);
 
-  for (;;) {
-    const wchar_t *psep = wcsstr(cstr, csep);
-    size_t span = (psep != 0) ? psep - cstr : wcslen(cstr);
-    val piece = mkustring(num(span));
-    init_str(piece, cstr);
-    list_collect (iter, piece);
-    cstr += span;
-    if (psep != 0) {
-      cstr += len_sep;
-      continue;
+  if (len_sep == 0) {
+    return list_str(str);
+  } else {
+    for (;;) {
+      const wchar_t *psep = wcsstr(cstr, csep);
+      size_t span = (psep != 0) ? psep - cstr : wcslen(cstr);
+      val piece = mkustring(num(span));
+      init_str(piece, cstr);
+      list_collect (iter, piece);
+      cstr += span;
+      if (psep != 0) {
+        cstr += len_sep;
+        continue;
+      }
+      break;
     }
-    break;
   }
 
   rel1(&sep);
@@ -2881,6 +2893,14 @@ val replace_vec(val vec_in, val from, val to, val items)
   if (vectorp(items)) {
     memcpy(vec_in->v.vec + c_num(from), items->v.vec, 
            sizeof *vec_in->v.vec * c_num(len_it));
+  } else if (stringp(items)) {
+    cnum f = c_num(from);
+    cnum t = c_num(to);
+    cnum s;
+    const wchar_t *str = c_str(items);
+
+    for (s = 0; f != t; f++, s++)
+      vec_in->v.vec[f] = chr(str[s]);
   } else {
     val iter;
     cnum f = c_num(from);
