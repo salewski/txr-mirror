@@ -1,3 +1,12 @@
+2012-01-27  Kaz Kylheku  <kaz@kylheku.com>
+
+	* hash.c (hash_begin): Missing type check added, otherwise
+	passing in an object that is not a hash results in corruption
+	or crashing behavior.
+
+	* lib.c (class_check): Improved to a one-step check with a clear
+	message.
+
 2012-01-26  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 55
