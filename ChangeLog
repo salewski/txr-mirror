@@ -1,5 +1,17 @@
 2012-01-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (replace_list): Always convert the input items to a list,
+	even in the trivial case that an empty list is being replaced.
+	Allow a string to be the replacement (split into a list of
+	characters).
+	(replace_str): Bugfix in assignment from vector; wrong index
+	used over source vector.
+	(split_str): If the splitting set is empty, just split the
+	string into characters instead of getting into an infinite loop.
+	(replace_vec): Allow replacement source to be a string.
+
+2012-01-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (plus, minus): Better wording in error messages.
 
 	* eval.c (dwim_loc): Assignments to string indices and ranges
