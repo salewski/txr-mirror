@@ -782,7 +782,7 @@ static val op_modplace(val form, val env)
     /* TODO: dispatch these with hash table. */
     val sym = car(place);
     if (sym == dwim_s) {
-      val ret;
+      val ret = nil;
       loc = dwim_loc(place, env, op, newval, &ret);
       if (loc == 0)
         return ret;
