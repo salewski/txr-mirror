@@ -1,5 +1,9 @@
 2012-01-27  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.vim: Properly show @[...] inside quasiliteral.
+
+2012-01-27  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (dwim_loc, op_dwim): Relax the requirement on hash
 	indexing arguments. The default value can be omitted,
 	defaulting to nil.
