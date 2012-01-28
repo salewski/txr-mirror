@@ -1,5 +1,13 @@
 2012-01-27  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.l: Support hex and octal escapes in string and quasiliterals,
+	as the documentation says. Also support an optional trailing ;
+	delimiter in hex escapes.
+
+	* txr.1: Documented.
+
+2012-01-27  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.vim: Properly show @[...] inside quasiliteral.
 
 2012-01-27  Kaz Kylheku  <kaz@kylheku.com>

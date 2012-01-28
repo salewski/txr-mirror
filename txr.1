@@ -1034,8 +1034,13 @@ for character literals is similar to that of the Scheme language.
 String literals are delimited by double respectively, and may not span multiple
 lines. A double quote within a string literal is encoded using \e"
 and a backslash is encoded as \e\e. Backslash escapes like \en and \et
-are recognized, as are hexadecimal escapes like \exFF and octal
-escapes like \e123.
+are recognized, as are hexadecimal escapes like \exFF or \exxabc and octal
+escapes like \e123.  Ambiguity between a hex escape and subsequent
+text can be resolved by using trailing semicolon delimiter: "\exabc;d" is a
+string consisting of the character U+0ABC followed by "d". The semicolon
+delimiter disappears. To write a literal semicolon immediately after a hex
+escape, write two semicolons, the first of which will be interpreted as a
+delimiter. Thus, "\ex21;;" represents "!;".
 
 .SS String Quasiliterals
 

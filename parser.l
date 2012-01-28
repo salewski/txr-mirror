@@ -584,6 +584,11 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                                   lineno++;
                                 }
                                 
+<STRLIT,QSILIT>[\\](x{HEX}+;?|o{OCT}+)  {
+                                          yylval.chr = num_esc(yytext+1);
+                                          return LITCHAR;
+                                        }
+
 <CHRLIT>(x{HEX}+|o{OCT}+) {
                             yylval.chr = num_esc(yytext);
                             return LITCHAR;
