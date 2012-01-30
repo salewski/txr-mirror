@@ -1,3 +1,7 @@
+2012-01-29  Kaz Kylheku  <kaz@kylheku.com>
+
+	* txr.vim: More color categories. More accurate matching of @ elements.
+
 2012-01-27  Kaz Kylheku  <kaz@kylheku.com>
 
 	* parser.l: Support hex and octal escapes in string and quasiliterals,
