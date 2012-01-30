@@ -85,20 +85,24 @@ syn keyword txl_keyword contained range generate repeat force
 syn match txr_hash "#" contained
 syn match txr_quote "[,']" contained
 
+syn match txr_hashbang "^#!.*"
 syn match txr_atat "@[ \t]*@"
 syn match txr_comment "@[ \t]*[#;].*"
 syn match txr_contin "@[ \t]*\\$"
-syn match txr_hashbang "^#!.*"
 syn match txr_char "@[ \t]*\\."
-syn match txr_char "@[ \t]*\\x[0-9A-Fa-f]\+"
+syn match txr_char "@[ \t]*\\x[0-9a-fa-f]\+"
 syn match txr_char "@[ \t]*\\[0-9]\+"
-syn match txr_variable "@[ \t]*[*]\?[A-Za-z_][A-Za-z0-9_]*"
-syn match txr_chr "#\\x[A-Fa-f0-9]\+"
-syn match txr_chr "#\\[a-zA-Z_][a-zA-Z0-9_]*"
-syn match txr_chr "#\\[^ \t\na-zA-Z_]"
+syn match txr_variable "@[ \t]*[*]\?[ \t]*[A-Za-z_][A-Aa-z0-9_]*"
+syn match txr_regdir "@[ \t]*/\(\\/\|[^/]\)*/"
+syn match txr_error "@[\t ]*[*]\?[\t ]*[^\t A-Za-z*{(\\\[/@]"
+
+syn match txr_chr "#\\x[A-Fa-f0-9]\+" contained
+syn match txr_chr "#\\[^ \t\nA-Za-z0-9_]" contained
+syn match txr_chr "#\\[A-Za-z0-9_]\+" contained
+syn match txr_regex "/\(\\/\|[^/]\)*/" contained
 syn match txr_ncomment ";.*" contained
 
-syn match txr_ident "[a-zA-Z0-9!$%&*+\-<=>?\\^_~]\+" contained
+syn match txr_ident "[A-Za-z0-9!$%&*+\-<=>?\\^_~]\+" contained
 syn match txr_num "[+-]\?[0-9]\+" contained
 
 syn region txr_bracevar matchgroup=Delimiter start="@[ \t]*[*]\?{" matchgroup=Delimiter end="}" contains=txr_num,txr_ident,txr_string,txr_dwim,txr_list,txr_regex,txr_quasilit,txr_chr
@@ -115,17 +119,17 @@ syn region txr_metabkt contained matchgroup=Delimiter start="@[ \t]*\[" matchgro
 
 syn region txr_string contained oneline start=+"+ skip=+\\\\\|\\"+ end=+"+
 syn region txr_quasilit contained oneline start=+`+ skip=+\\\\\|\\`+ end=+`+ contains=txr_meta,txr_metabkt,txr_variable,txr_bracevar
-syn region txr_regex contained oneline start=+/+ skip=+\\\\\|\\/+ end=+/+
-syn region txr_regdir oneline start=+@[ \t]*/+ skip=+\\\\\|\\/+ end=+/+
 
-hi def link txr_atat String
+hi def link txr_at Special
+hi def link txr_atstar Special
+hi def link txr_atat Special
 hi def link txr_comment Comment
 hi def link txr_ncomment Comment
-hi def link txr_hashbang Comment
-hi def link txr_contin Comment
+hi def link txr_hashbang Preproc
+hi def link txr_contin Preproc
 hi def link txr_char String
 hi def link txr_keyword Keyword
-hi def link txl_keyword Keyword
+hi def link txl_keyword Type
 hi def link txr_string String
 hi def link txr_chr String
 hi def link txr_quasilit String
@@ -137,5 +141,6 @@ hi def link txr_ident Identifier
 hi def link txr_num Number
 hi def link txr_hash String
 hi def link txr_quote String
+hi def link txr_error Error
 
 let b:current_syntax = "lisp"
