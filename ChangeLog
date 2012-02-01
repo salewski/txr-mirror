@@ -1,3 +1,19 @@
+2012-02-01  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (lookup_sym_lisp1): New function.
+	(do_eval, do_eval_args): New static functions.
+	(eval, eval_args): Become wrappers for do_eval and do_eval_args,
+	respectively.
+	(eval_lisp1, eval_args_lisp1): New static functions.
+	(dwim_loc, op_dwim): Use eval_lisp1 and eval_args_lisp1 instead
+	of eval and eval_args.
+
+	* parser.y (meta_expr): Bugfix: expand the whole dwim expression,
+	rather than its arguments, which are not an expression.
+
+	* txr.1: Updated with notes that dwim really does Lisp-1 style
+	evaluation.
+
 2012-01-29  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.vim: More color categories. More accurate matching of @ elements.

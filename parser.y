@@ -677,8 +677,8 @@ list : '(' exprs ')'            { $$ = rl($2, num($1)); }
 
 meta_expr : METAPAR exprs ')'   { $$ = rlcp(cons(expr_s, expand($2)), $2); }
           | METABKT exprs ']'   { $$ = rlcp(cons(expr_s, 
-                                                 cons(dwim_s,
-                                                      expand($2))), $2); }
+                                                 expand(cons(dwim_s, $2))), 
+                                                 $2); }
           | METAPAR ')'         { $$ = rl(cons(expr_s, nil), num(lineno)); }
           | METABKT ']'         { $$ = rl(cons(expr_s, cons(dwim_s, nil)),
                                                num(lineno)); }

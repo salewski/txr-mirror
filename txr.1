@@ -4431,6 +4431,9 @@ can be used to call it, instead of (call foo 3).  If foo is a vector, then
 [foo 3] retrieves the fourth element, like (vecref foo 3). Indexing over lists,
 strings and hash tables is possible, and the notation is assignable.
 
+Furthermore, any arguments enclosed in [] which are symbols are treated
+according to a modified namespace lookup rule.
+
 More details are given in the documentation for the dwim operator.
 
 .SS Lisp Operators
@@ -4867,9 +4870,21 @@ The notation [...] is a shorthand equivalent to (dwim ...) and is the preferred
 way for writing dwim expressions.
 
 The dwim operator takes a variable number of arguments, which are
-all evaluated in the same way. How many are required depends on the type of
-object to which the first argument expression evaluates: of the first argument.
-The possibilities are:
+all evaluated in the same way: the first argument is not evaluated different
+from the remaining arguments. 
+
+Furthermore, the evaluation of symbols is done differently: all of the
+enclosing scopes are considered as if the function and variable namespaces are
+collapsed into a single namespace, in which variable names take precedence over 
+functions if there exist mutiple bindings. This allows functions to be
+referenced without the fun operator.
+
+All forms which are not symbols are evaluated using the normal evaluation rules.
+
+The first argument may not be an operator such as let, et cetera. 
+
+How many are required depends on the type of object to which the first argument
+expression evaluates: of the first argument.  The possibilities are:
 
 .IP [<function> <argument>*]
 Call the given the function object to the given arguments.
@@ -4919,6 +4934,8 @@ See the section on Indexing below.
 Retrieve a value from the hash table corresponding to <key>,
 or <default-value> if there is no such entry.
 
+The first argument may not be an operator such as let, only a function.
+
 The places denoted by the dwim operator can be assigned.  There are some
 restrictions. List, string and vector ranges can only be replaced using
 the set operator. The other operators like push do not apply.  
@@ -4957,21 +4974,40 @@ The dwim operator allows for a Lisp-1 flavor of programming in TXR Lisp,
 which is normally Lisp-2, with some useful extensions.
 
 A Lisp-1 dialect is one in which an expression like (a b) treats both a and b
-as expressions with the same evaluation rules.  Thus in a Lisp-1, named
-functions do not exist as such: they are just variable bindings.
-In a Lisp-1 (car 1 2) means that there is a variable called car,
-which holds a function. In a Lisp-2 (car 1 2) means that there is
-a function called car, and so (car car car) is possible, because
+as expressions with the same evaluation rules. The symbols a and b are looked
+up in a variable namespace. A function call occurs if the value of variable
+a is a function object.  Thus in a Lisp-1, named functions do not exist as
+such: they are just variable bindings.  In a Lisp-1 (car 1 2) means that there
+is a variable called car, which holds a function. In a Lisp-2 (car 1 2) means
+that there is a function called car, and so (car car car) is possible, because
 there can be also a variable called car.
 
 The Lisp-1 design has certain disadvantages, which are avoided in TXR Lisp by
-confining the Lisp-1 expressivity inside the [...] notation.  When round
-parentheses are used, the normal Lisp-2 rules apply. A "best of both worlds"
-situation is achieved.
+confining the Lisp-1 expressivity inside the [...] notation, in which operators
+are not allowed.  When round parentheses are used, the normal Lisp-2 rules
+apply. A "best of both worlds" situation is achieved. The square brackets
+are just as convenient as parentheses and at the same time visually distinct,
+making it clear that different rules apply.
 
-Lisp-1 dialects can provide useful extensions by giving a meaning
+The Lisp-1 is useful for functional programming, because it eliminates
+occurences of the call and fun operators.  For instance:
+
+  ;; regular notation
+
+  (funcall foo (fun second) '((1 a) (2 b)))
+
+  ;; [] notation
+
+  [foo second '((1 a) (2 b))]  ->   (a b)
+
+Lisp-1 dialects can also provide useful extensions by giving a meaning
 to objects other than functions in the first position of a form,
 and the dwim/[...] syntax does exactly this.
+However, unlike Lisp-1 dialects, the [] syntax does not allow operators.
+It
+.B is
+an operator: (dwim ...).
+
 
 .SS Operators for and for*
 
