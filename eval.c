@@ -171,6 +171,31 @@ val lookup_fun(val env, val sym)
   }
 }
 
+static val lookup_sym_lisp1(val env, val sym)
+{
+  uses_or2;
+
+  if (nullp(env)) {
+    val bind = gethash(top_vb, sym);
+    if (cobjp(bind)) {
+      struct c_var *cv = (struct c_var *) cptr_get(bind);
+      cv->bind->c.cdr = *cv->loc;
+      return cv->bind;
+    }
+    return or2(bind, gethash(top_fb, sym));
+  } else  {
+    type_check(env, ENV);
+
+    {
+      val binding = or2(assoc(sym, env->e.vbindings),
+                        assoc(sym, env->e.fbindings));
+      if (binding)
+        return binding;
+      return lookup_sym_lisp1(env->e.up_env, sym);
+    }
+  }
+}
+
 static val bind_args(val env, val params, val args, val ctx_form)
 {
   val new_bindings = nil;
@@ -300,11 +325,15 @@ static val apply_intrinsic(val fun, val args)
   return apply(fun, args, cons(apply_s, nil));
 }
 
-static val eval_args(val form, val env, val ctx_form)
+static val do_eval(val form, val env, val ctx_form,
+                   val (*lookup)(val env, val sym));
+
+static val do_eval_args(val form, val env, val ctx_form,
+                        val (*lookup)(val env, val sym))
 {
   list_collect_decl (values, ptail);
   for (; form; form = cdr(form))
-    list_collect(ptail, eval(car(form), env, ctx_form));
+    list_collect(ptail, do_eval(car(form), env, ctx_form, lookup));
   return values;
 }
 
@@ -324,7 +353,8 @@ static val eval_intrinsic(val form, val env)
   return eval(form, or2(env, make_env(nil, nil, env)), form);
 }
 
-val eval(val form, val env, val ctx_form)
+static val do_eval(val form, val env, val ctx_form,
+                   val (*lookup)(val env, val sym))
 {
   debug_enter;
 
@@ -337,7 +367,7 @@ val eval(val form, val env, val ctx_form)
     if (!bindable(form)) {
       debug_return (form);
     } else {
-      val binding = lookup_var(env, form);
+      val binding = lookup(env, form);
       if (binding)
         debug_return (cdr(binding));
       eval_error(ctx_form, lit("unbound variable ~s"), form, nao);
@@ -353,7 +383,7 @@ val eval(val form, val env, val ctx_form)
       val fbinding = lookup_fun(env, oper);
 
       if (fbinding) {
-        val args = eval_args(rest(form), env, form);
+        val args = do_eval_args(rest(form), env, form, lookup);
         debug_frame(oper, args, nil, env, nil, nil, nil);
         debug_return (apply(cdr(fbinding), args, form));
         debug_end;
@@ -374,6 +404,26 @@ val eval(val form, val env, val ctx_form)
   }
 
   debug_leave;
+}
+
+val eval(val form, val env, val ctx_form)
+{
+  return do_eval(form, env, ctx_form, &lookup_var);
+}
+
+static val eval_lisp1(val form, val env, val ctx_form)
+{
+  return do_eval(form, env, ctx_form, &lookup_sym_lisp1);
+}
+
+static val eval_args(val form, val env, val ctx_form)
+{
+  return do_eval_args(form, env, ctx_form, &lookup_var);
+}
+
+static val eval_args_lisp1(val form, val env, val ctx_form)
+{
+  return do_eval_args(form, env, ctx_form, &lookup_sym_lisp1);
 }
 
 val bindable(val obj)
@@ -639,8 +689,8 @@ static val op_defun(val form, val env)
 
 static val *dwim_loc(val form, val env, val op, val newval, val *retval)
 {
-  val obj = eval(second(form), env, form);
-  val args = eval_args(rest(rest(form)), env, form);
+  val obj = eval_lisp1(second(form), env, form);
+  val args = eval_args_lisp1(rest(rest(form)), env, form);
 
   if (!obj)
     eval_error(form, lit("[~s ]: cannot assign nil"), obj, nao);
@@ -936,8 +986,8 @@ static val op_return_from(val form, val env)
 
 static val op_dwim(val form, val env)
 {
-  val obj = eval(second(form), env, form);
-  val args = eval_args(rest(rest(form)), env, form);
+  val obj = eval_lisp1(second(form), env, form);
+  val args = eval_args_lisp1(rest(rest(form)), env, form);
 
   if (!obj)
     return nil;
