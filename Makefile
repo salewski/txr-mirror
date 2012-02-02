@@ -111,6 +111,7 @@ tests/008/students.ok: TXR_ARGS := $(top_srcdir)/tests/008/students.xml
 tests/008/soundex.ok: TXR_ARGS := soundex sowndex lloyd lee jackson robert
 tests/009/json.ok: TXR_ARGS := $(top_srcdir)/tests/009/webapp.json
 tests/009/json.ok: TXR_OPTS := -l
+tests/010/align-columns.ok: TXR_ARGS := $(top_srcdir)/tests/010/align-columns.dat
 
 tests/002/%: TXR_SCRIPT_ON_CMDLINE := y
 

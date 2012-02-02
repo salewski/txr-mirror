@@ -1,5 +1,17 @@
 2012-02-02  Kaz Kylheku  <kaz@kylheku.com>
 
+	This test case would have caught the prior regression.
+
+	* Makefile (TXR_ARGS): Defined for new test case.
+
+	* tests/010/align-columns.dat: New file.
+
+	* tests/010/align-columns.expected: New file.
+
+	* tests/010/align-columns.txr: New file.
+
+2012-02-02  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (format_field): Regression. Was not handling modifiers
 	which are compound expression (e.g. computed field widths).
 	This was broken by the first commit of 2012-01-26.
