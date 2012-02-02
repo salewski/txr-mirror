@@ -1219,29 +1219,27 @@ val format_field(val obj, val modifier, val filter, val eval_fun)
     } else if (keywordp(item)) {
       plist = modifier;
       break;
-    } else if (consp(item)) {
-      if (car(item) == dwim_s) {
-        val arg_expr = second(item);
+    } else if (consp(item) && car(item) == dwim_s) {
+      val arg_expr = second(item);
 
-        if (consp(arg_expr) && car(arg_expr) == cons_s) {
-          val from = funcall1(eval_fun, second(arg_expr));
-          val to = funcall1(eval_fun, third(arg_expr));
+      if (consp(arg_expr) && car(arg_expr) == cons_s) {
+        val from = funcall1(eval_fun, second(arg_expr));
+        val to = funcall1(eval_fun, third(arg_expr));
 
-          obj = if3((vectorp(obj)), 
-                     sub_vec(obj, from, to),
-                     sub_list(obj, from, to));
-        } else {
-           val arg = funcall1(eval_fun, arg_expr);
-           if (bignump(arg) || fixnump(arg)) {
-             if (vectorp(obj))
-               obj = vecref(obj, arg);
-             else
-               obj = listref(obj, arg);
-           } else {
-             uw_throwf(query_error_s, lit("format_field: bad index: ~s"),
-                       arg, nao);
-           }
-        }
+        obj = if3((vectorp(obj)), 
+                   sub_vec(obj, from, to),
+                   sub_list(obj, from, to));
+      } else {
+         val arg = funcall1(eval_fun, arg_expr);
+         if (bignump(arg) || fixnump(arg)) {
+           if (vectorp(obj))
+             obj = vecref(obj, arg);
+           else
+             obj = listref(obj, arg);
+         } else {
+           uw_throwf(query_error_s, lit("format_field: bad index: ~s"),
+                     arg, nao);
+         }
       }
     } else {
       val v = funcall1(eval_fun, item);
