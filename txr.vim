@@ -85,6 +85,8 @@ syn keyword txl_keyword contained range generate repeat force
 syn match txr_hash "#" contained
 syn match txr_quote "[,']" contained
 
+"syn match txr_error "@[\t ]*[*]\?[\t ]*[^\t A-Za-z*{(\\\[/@]"
+syn match txr_error "@[\t ]*[*]\?[\t ]*."
 syn match txr_hashbang "^#!.*"
 syn match txr_atat "@[ \t]*@"
 syn match txr_comment "@[ \t]*[#;].*"
@@ -94,7 +96,6 @@ syn match txr_char "@[ \t]*\\x[0-9a-fa-f]\+"
 syn match txr_char "@[ \t]*\\[0-9]\+"
 syn match txr_variable "@[ \t]*[*]\?[ \t]*[A-Za-z_][A-Aa-z0-9_]*"
 syn match txr_regdir "@[ \t]*/\(\\/\|[^/]\)*/"
-syn match txr_error "@[\t ]*[*]\?[\t ]*[^\t A-Za-z*{(\\\[/@]"
 
 syn match txr_chr "#\\x[A-Fa-f0-9]\+" contained
 syn match txr_chr "#\\[^ \t\nA-Za-z0-9_]" contained
