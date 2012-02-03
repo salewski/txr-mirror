@@ -1929,13 +1929,18 @@ val make_sym(val name)
   return obj;
 }
 
+val gensym(val prefix)
+{
+  gensym_counter = plus(gensym_counter, one);
+  val name = format(nil, lit("~a~,04a"), prefix, gensym_counter, nao);
+  return make_sym(name);
+}
+
 val gensymv(val args)
 {
   uses_or2;
-  gensym_counter = plus(gensym_counter, one);
   val prefix = or2(car(args), lit("g"));
-  val name = format(nil, lit("~a~,04a"), prefix, gensym_counter, nao);
-  return make_sym(name);
+  return gensym(prefix);
 }
 
 val make_package(val name)

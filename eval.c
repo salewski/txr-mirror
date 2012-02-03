@@ -62,8 +62,8 @@ val inc_s, dec_s, push_s, pop_s, flip_s, gethash_s, car_s, cdr_s, vecref_s;
 val for_s, for_star_s, each_s, each_star_s, collect_each_s, collect_each_star_s;
 val dohash_s;
 val uw_protect_s, return_s, return_from_s;
-val list_s, append_s, apply_s, gen_s, generate_s;
-val delay_s, promise_s;
+val list_s, append_s, apply_s, gen_s, generate_s, rest_s;
+val delay_s, promise_s, op_s;
 
 val make_env(val vbindings, val fbindings, val up_env)
 {
@@ -332,8 +332,10 @@ static val do_eval_args(val form, val env, val ctx_form,
                         val (*lookup)(val env, val sym))
 {
   list_collect_decl (values, ptail);
-  for (; form; form = cdr(form))
+  for (; consp(form); form = cdr(form))
     list_collect(ptail, do_eval(car(form), env, ctx_form, lookup));
+  if (form)
+    list_collect_append(ptail, do_eval(form, env, ctx_form, lookup));
   return values;
 }
 
@@ -1325,6 +1327,67 @@ static val expand_delay(val args)
               cons(lambda_s, cons(nil, args)), nao);
 }
 
+static val transform_op(val forms, val syms, val rg)
+{
+  if (atom(forms)) {
+    return cons(syms, forms);
+  } else {
+    val fi = first(forms);
+    val re = rest(forms);
+
+    if (consp(fi) && car(fi) == var_s && consp(cdr(fi))) {
+      val vararg = car(cdr(fi));
+
+      if (numberp(vararg)) {
+        val prefix = format(nil, lit("arg-~,02s-"), vararg, nao);
+        val newsyms = syms;
+        val new_p;
+        val *place = acons_new_l(vararg, &new_p, &newsyms);
+        val sym = if3(new_p, *place = gensym(prefix), *place);
+        cons_bind (outsyms, outforms, transform_op(re, newsyms, rg)); 
+        return cons(outsyms, rlcp(cons(sym, outforms), outforms));
+      } else if (eq(vararg, rest_s)) {
+        cons_bind (outsyms, outforms, transform_op(re, syms, rg)); 
+        return cons(outsyms, rlcp(cons(rg, outforms), outforms));
+      }
+    }
+
+    {
+      cons_bind (fisyms, fiform, transform_op(fi, syms, rg)); 
+      cons_bind (resyms, reforms, transform_op(re, fisyms, rg)); 
+      return cons(resyms, rlcp(cons(fiform, reforms), fiform));
+    }
+  }
+}
+
+static val expand_op(val body)
+{
+  val body_ex = expand_forms(body);
+  val rest_gensym = gensym(lit("rest-"));
+  cons_bind (syms, body_trans, transform_op(body_ex, nil, rest_gensym));
+  val ssyms = sort(syms, func_n2(lt), car_f);
+  val nums = mapcar(car_f, ssyms);
+  val max = if3(nums, maxv(car(nums), cdr(nums)), zero);
+  val min = if3(nums, minv(car(nums), cdr(nums)), zero);
+  val has_rest = tree_find(rest_gensym, body_trans, eq_f);
+
+  if (!eql(max, length(nums)) && !zerop(min))
+    eval_error(body, lit("op: missing numeric arguments"), nao);
+
+  rlcp(body_trans, body);
+
+  {
+    val dwim_body = rlcp(cons(dwim_s, 
+                              append2(body_trans, if3(has_rest, nil, 
+                                                                rest_gensym))),
+                         body_trans);
+
+    return cons(lambda_s,
+                cons(append2(mapcar(cdr_f, ssyms), rest_gensym),
+                     cons(dwim_body, nil)));
+  }
+}
+
 val expand(val form)
 {
   if (atom(form)) {
@@ -1453,6 +1516,8 @@ val expand(val form)
       return expand(expand_gen(rest(form)));
     } else if (sym == delay_s) {
       return expand(expand_delay(rest(form)));
+    } else if (sym == op_s) {
+      return expand_op(rest(form));
     } else {
       /* funtion call
          also handles: progn, prog1, call, if, and, or, 
@@ -1761,7 +1826,8 @@ void eval_init(void)
   generate_s = intern(lit("generate"), user_package);
   delay_s = intern(lit("delay"), user_package);
   promise_s = intern(lit("promise"), system_package);
-
+  op_s = intern(lit("op"), user_package);
+  rest_s = intern(lit("rest"), user_package);
   sethash(op_table, quote_s, cptr((mem_t *) op_quote));
   sethash(op_table, qquote_s, cptr((mem_t *) op_qquote_error));
   sethash(op_table, unquote_s, cptr((mem_t *) op_unquote_error));
@@ -1807,7 +1873,7 @@ void eval_init(void)
   reg_fun(intern(lit("rplaca"), user_package), func_n2(rplaca));
   reg_fun(intern(lit("rplacd"), user_package), func_n2(rplacd));
   reg_fun(intern(lit("first"), user_package), func_n1(car));
-  reg_fun(intern(lit("rest"), user_package), func_n1(cdr));
+  reg_fun(rest_s, func_n1(cdr));
   reg_fun(intern(lit("sub-list"), user_package), func_n3(sub_list));
   reg_fun(intern(lit("replace-list"), user_package), func_n4(replace_list));
   reg_fun(append_s, func_n0v(appendv));

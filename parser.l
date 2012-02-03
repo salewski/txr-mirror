@@ -150,6 +150,7 @@ NUM     [+\-]?[0-9]+
 NSCHR   [a-zA-Z0-9!$%&*+\-<=>?\\^_~]
 NSYM    {NSCHR}({NSCHR}|#)*
 TOK     :?{SYM}
+ATNUM   @{NUM}
 NTOK    [:@]?{NSYM}
 ID_END  [^a-zA-Z0-9_]
 WS      [\t ]*
@@ -180,6 +181,16 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
                           yylval.num = int_str(str, num(10));
                           return NUMBER;
+                        }
+
+<NESTED>{ATNUM}         {
+                          val str = string_own(utf8_dup_from(yytext + 1));
+
+                          if (yy_top_state() == INITIAL
+                              || yy_top_state() == QSILIT)
+                            yy_pop_state();
+                          yylval.num = int_str(str, num(10));
+                          return METANUM;
                         }
 
 <SPECIAL>{TOK}          |

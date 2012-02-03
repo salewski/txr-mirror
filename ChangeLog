@@ -1,3 +1,32 @@
+2012-02-03  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (rest_s, op_s): New variables.
+	(do_eval_args): Allow calls specified by improper lists
+	like (x y . z) where the z expression must evaluate to a list 
+	that turns into addition arguments to be applied.
+	(transform_op, expand_op): New static functions.
+	(expand): Call expand_op.
+	(eval_init): Initialize rest_s and op_s. Use rest_s
+	to register rest function.
+
+	* lib.c (gensym): New function based on gensymv.
+	(gensymv): Now calls gensym.
+
+	* lib.h (gensym): Declared.
+
+	* parser.l: Parse @ followed by digits as a new kind of token,
+	METANUM.
+
+	* parser.y (METANUM): New token.
+	(meta_expr, exprs): Missing rlcp's added.
+	(expr): METANUM variant introduced.
+	(yybadtoken): Handle METANUM.
+
+	* txr.1: Documented one-symbol argument list of lambda.
+	Documented op. Closed some unbalanced parentheses.
+
+	* txr.vim: Highlight op.
+
 2012-02-02  Kaz Kylheku  <kaz@kylheku.com>
 
 	* utf8.c (utf8_from_uc, utf8_decode): Use upper case for hex constants.
