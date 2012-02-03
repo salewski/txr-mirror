@@ -61,7 +61,7 @@ size_t utf8_from_uc(wchar_t *wdst, const unsigned char *src)
         break;
       src = backtrack;
       if (wdst)
-        *wdst++ = 0xdc00 | *src;
+        *wdst++ = 0xDC00 | *src;
       nchar++;
       state = utf8_init;
       continue;
@@ -73,15 +73,15 @@ size_t utf8_from_uc(wchar_t *wdst, const unsigned char *src)
         if (wdst)
           *wdst++ = ch;
         nchar++;
-      } else if (ch >= 0xc2 && ch <= 0xe0) {
+      } else if (ch >= 0xC2 && ch <= 0xE0) {
         state = utf8_more1;
-        wch = (ch & 0x1f);
+        wch = (ch & 0x1F);
 	wch_min = 0x80;
-      } else if (ch >= 0xe0 && ch <= 0xef) {
+      } else if (ch >= 0xE0 && ch <= 0xEF) {
         state = utf8_more2;
-        wch = (ch & 0xf);
+        wch = (ch & 0xF);
 	wch_min = 0x800;
-      } else if (ch >= 0xf0 && ch < 0xf5) {
+      } else if (ch >= 0xF0 && ch < 0xF5) {
 #ifdef FULL_UNICODE
         state = utf8_more3;
         wch = (ch & 0x7);
@@ -91,7 +91,7 @@ size_t utf8_from_uc(wchar_t *wdst, const unsigned char *src)
 #endif
       } else {
         if (wdst)
-          *wdst++ = 0xdc00 | ch;
+          *wdst++ = 0xDC00 | ch;
         nchar++;
       }
       backtrack = src;
@@ -99,15 +99,17 @@ size_t utf8_from_uc(wchar_t *wdst, const unsigned char *src)
     case utf8_more1:
     case utf8_more2:
     case utf8_more3:
-      if (ch >= 0x80 && ch < 0xc0) {
+      if (ch >= 0x80 && ch < 0xC0) {
         wch <<= 6;
-        wch |= (ch & 0x3f);
+        wch |= (ch & 0x3F);
         state = (enum utf8_state) (state - 1);
         if (state == utf8_init) {
-	  if (wch < wch_min) {
+	  if (wch < wch_min &&
+	      (wch <= 0xFFFF && (wch & 0xFF00) == 0xDC00))
+	  {
 	    src = backtrack;
 	    if (wdst)
-	      *wdst++ = 0xdc00 | *src;
+	      *wdst++ = 0xDC00 | *src;
 	  } else {
 	    if (wdst)
 	      *wdst++ = wch;
@@ -117,7 +119,7 @@ size_t utf8_from_uc(wchar_t *wdst, const unsigned char *src)
       } else {
         src = backtrack;
         if (wdst)
-          *wdst++ = 0xdc00 | *src;
+          *wdst++ = 0xDC00 | *src;
         nchar++;
         state = utf8_init;
       }
@@ -155,7 +157,7 @@ size_t utf8_to_uc(unsigned char *dst, const wchar_t *wsrc)
       if ((wch & 0xFF00) == 0xDC00) {
 	nbyte += 1;
 	if (dst)
-	  *dst++ = (wch & 0xff);
+	  *dst++ = (wch & 0xFF);
       } else {
 	nbyte += 3;
 	if (dst) {
@@ -267,7 +269,7 @@ wint_t utf8_decode(utf8_decoder_t *ud, int (*get)(mem_t *ctx), mem_t *ctx)
       if (ud->state == utf8_init) {
         return WEOF;
       } else {
-        wchar_t wch = 0xdc00 | ud->buf[ud->back];
+        wchar_t wch = 0xDC00 | ud->buf[ud->back];
         ud->tail = ud->back = (ud->back + 1) % 8;
         ud->state = utf8_init;
         return wch;
@@ -279,15 +281,15 @@ wint_t utf8_decode(utf8_decoder_t *ud, int (*get)(mem_t *ctx), mem_t *ctx)
       if (ch < 0x80) {
         ud->back = ud->tail;
         return ch;
-      } else if (ch >= 0xc0 && ch <= 0xe0) {
+      } else if (ch >= 0xC0 && ch <= 0xE0) {
         ud->state = utf8_more1;
-        ud->wch = (ch & 0x1f);
+        ud->wch = (ch & 0x1F);
 	ud->wch_min = 0x80;
-      } else if (ch >= 0xe0 && ch <= 0xef) {
+      } else if (ch >= 0xE0 && ch <= 0xEF) {
         ud->state = utf8_more2;
-        ud->wch = (ch & 0xf);
+        ud->wch = (ch & 0xF);
 	ud->wch_min = 0x800;
-      } else if (ch >= 0xf0 && ch < 0xf5) {
+      } else if (ch >= 0xF0 && ch < 0xF5) {
 #ifdef FULL_UNICODE
         ud->state = utf8_more3;
         ud->wch = (ch & 0x7);
@@ -297,19 +299,21 @@ wint_t utf8_decode(utf8_decoder_t *ud, int (*get)(mem_t *ctx), mem_t *ctx)
 #endif
       } else {
         ud->back = ud->tail;
-        return 0xdc00 | ch;
+        return 0xDC00 | ch;
       }
       break;
     case utf8_more1:
     case utf8_more2:
     case utf8_more3:
-      if (ch >= 0x80 && ch < 0xc0) {
+      if (ch >= 0x80 && ch < 0xC0) {
         ud->wch <<= 6;
-        ud->wch |= (ch & 0x3f);
+        ud->wch |= (ch & 0x3F);
         ud->state = (enum utf8_state) (ud->state - 1);
         if (ud->state == utf8_init) {
-	  if (ud->wch < ud->wch_min) {
-	    wchar_t wch = 0xdc00 | ud->buf[ud->back];
+	  if (ud->wch < ud->wch_min || 
+	      (ud->wch <= 0xFFFF && (ud->wch & 0xFF00) == 0xDC00))
+	  {
+	    wchar_t wch = 0xDC00 | ud->buf[ud->back];
 	    ud->tail = ud->back = (ud->back + 1) % 8;
 	    return wch;
 	  } else {
@@ -318,7 +322,7 @@ wint_t utf8_decode(utf8_decoder_t *ud, int (*get)(mem_t *ctx), mem_t *ctx)
 	  }
         }
       } else {
-        wchar_t wch = 0xdc00 | ud->buf[ud->back];
+        wchar_t wch = 0xDC00 | ud->buf[ud->back];
         ud->tail = ud->back = (ud->back + 1) % 8;
         ud->state = utf8_init;
         return wch;

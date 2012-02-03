@@ -1,5 +1,13 @@
 2012-02-02  Kaz Kylheku  <kaz@kylheku.com>
 
+	* utf8.c (utf8_from_uc, utf8_decode): Use upper case for hex constants.
+	If bytes decode to U+DCxx, treat this sequence as invalid. This
+	way we can't be fooled by an attacker into accepting some U+DCxx which
+	on output we will then convert to byte xx.
+	(utf8_to_uc): Use upper case for hex constants.
+
+2012-02-02  Kaz Kylheku  <kaz@kylheku.com>
+
 	* utf8.c (utf8_to_uc, utf8_encode): Do not encode surrogate code
 	points (U+DC00 to U+DCFF) as multi-byte UTF8 sequences.  We use
 	that range for invalid bytes on input, so on output the best thing
