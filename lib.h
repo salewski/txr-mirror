@@ -453,6 +453,7 @@ val span_str(val str, val set);
 val compl_span_str(val str, val set);
 val break_str(val str, val set);
 val make_sym(val name);
+val gensym(val prefix);
 val gensymv(val args);
 val make_package(val name);
 val find_package(val name);

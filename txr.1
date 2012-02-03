@@ -3612,7 +3612,7 @@ as the final filter in a chain, it must produce a string.
 
 For instance, the following is a valid filter function:
 
-  @(define foo_to_bar (in out)
+  @(define foo_to_bar (in out))
   @  (next :string in)
   @  (cases)
   foo
@@ -3776,7 +3776,7 @@ take precedence. No warning is issued.
 
 The syntax of the filter directive is:
 
-  @(filter FILTER { VAR }+ }
+  @(filter FILTER { VAR }+ )
 
 A filter is specified, followed by one or more variables whose values
 are filtered and stored back into each variable.
@@ -4361,7 +4361,7 @@ in the quote stands for itself, except for the ,(+ 2 2) which is evaluated.
 The comma-star operator is used within a quoted list to denote a splicing unquote.
 Wheras the quote suppresses evaluation, the comma introduces an exception: 
 the form which follows ,* must evaluate to a list. That list is spliced into
-the quoted list. For example: '(a b c ,*(list (+ 3 3) (+ 4 4) d) evaluates
+the quoted list. For example: '(a b c ,*(list (+ 3 3) (+ 4 4) d)) evaluates
 to (a b c 6 8 d).  The expression (list (+ 3 3) (+ 4 4)) is evaluated
 to produce the list (6 8), and this list is spliced into the quoted template.
 
@@ -4545,6 +4545,8 @@ Syntax:
 
   (lambda ({<sym>}*[. <sym>]) {<body-form>}*)
 
+  (lambda <sym> {<body-form>}*)
+
 .TP
 Description:
 
@@ -4555,7 +4557,7 @@ et cetera.
 
 The first argument of lambda is the list of parameters for the function.   It
 may be empty, and it may also be an improper list (dot notation) where the
-terminating atom is a symbol other than nil.
+terminating atom is a symbol other than nil. It can also be a single symbol.
 
 The second and subsequent arguments are the forms making up the function body.
 The body may be empty.
@@ -4565,7 +4567,8 @@ are visible to the body forms. The variables are initialized from the values of
 the argument expressions appearing in the function call.
 
 The dotted notation can be used to write a function that accepts
-a variable number of arguments.
+a variable number of arguments. To write a function that accepts
+variable arguments only, with no required arguments, use a single symbol.
 
 Functions created by lambda capture the surrounding variable bindings.
 
@@ -4584,6 +4587,75 @@ Function that takes two or more arguments. The third and subsequent arguments
 are aggregated into a list passed as the single parameter z:
 
   (lambda (x y . z) (list 'my-arguments-are x y z))
+
+Variadic funcion:
+
+  (lambda args (list 'my-list-of-arguments args))
+
+.SS Operator op
+
+.TP
+Syntax:
+
+  (op {<form>}+)
+
+.TP
+Description:
+
+Like the lambda operator, the op operator creates an anonymous function.
+The difference is that the arguments of the function are implicit, or
+optionally specified within the function body.
+
+Also, the arguments of op are implicitly turned into a DWIM expression,
+which means that argument evaluation follows Lisp-1 rules.  (See the dwim
+operator below).
+
+The argument forms are arbitrary expressions, within which a special
+convention is permitted:
+
+.IP @<num>
+
+A number preceded by a @ is a metanumber. This is a special syntax
+which denotes an argument. For instance @2 means that the second argument of
+the anonymous function is to be substituted in place of the @2. If @2 is used
+it means that @1 also has to appear somewhere, otherwise the op
+construct is erroneous.
+
+.IP @rest
+
+The meta-symbol @rest indicates that any trailing arguments to the
+function are to be inserted. If the @<num> syntax is not used anywhere,
+it means that the function only has trailing arguments. If @1 is used,
+it means that the second and subsequent arguments are trailing arguments.
+If @rest is not used anywhere, then the rest arguments are automatically
+applied to the op form. If @rest appears, then this is suppressed.
+
+The actions of form may be understood by these examples, which show
+how op is rewritten to lambda.  However, note that the real translator
+uses generated symbols for the arguments, which are not equal to any
+symbols in the program.
+
+  (op) -> invalid
+
+  ;; n-ary function that turns all its arguments into a list
+
+  (op +) -> (lambda rest [+ . rest])
+
+  (op @1 @2) -> (lambda (arg1 arg2 . rest) [arg1 arg2 . rest])
+
+  (op foo @1 (@2) (bar @3)) -> (lambda (arg1 arg2 arg3 . rest) 
+                                  [foo arg1 (arg2) (bar arg3) . rest])
+
+  (op foo @rest @1) -> (lambda (arg1 . rest) [foo rest arg1])
+
+.TP
+
+Examples:
+
+  ;; Take a list of pairs and produce a list in which those pairs
+  ;; are reversed.
+
+  (mapcar (op list @2 @1) '((1 2) (a b)))   ->   ((2 1) (b a))
 
 .SS Operator call
 

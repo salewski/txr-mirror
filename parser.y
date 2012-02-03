@@ -74,7 +74,7 @@ static val parsed_spec;
 %token <lineno> ERRTOK /* deliberately not used in grammar */
 %token <lineno> HASH_BACKSLASH DOTDOT
 
-%token <val> NUMBER
+%token <val> NUMBER METANUM
 
 %token <chr> REGCHAR LITCHAR
 %token <chr> METAPAR METABKT SPLICE
@@ -677,17 +677,19 @@ list : '(' exprs ')'            { $$ = rl($2, num($1)); }
 
 meta_expr : METAPAR exprs ')'   { $$ = rlcp(cons(expr_s, expand($2)), $2); }
           | METABKT exprs ']'   { $$ = rlcp(cons(expr_s, 
-                                                 expand(cons(dwim_s, $2))), 
-                                                 $2); }
+                                                 rlcp(expand(cons(dwim_s, $2)),
+                                                      $2)), 
+                                            $2); }
           | METAPAR ')'         { $$ = rl(cons(expr_s, nil), num(lineno)); }
-          | METABKT ']'         { $$ = rl(cons(expr_s, cons(dwim_s, nil)),
-                                               num(lineno)); }
+          | METABKT ']'         { $$ = rl(cons(expr_s, rl(cons(dwim_s, nil), 
+                                                          num(lineno))),
+                                          num(lineno)); }
           | METAPAR error       { $$ = nil;
                                   yybadtoken(yychar, lit("meta expression")); }
           ;
-exprs : expr                    { $$ = cons($1, nil); }
-      | expr exprs              { $$ = cons($1, $2); }
-      | expr '.' expr           { $$ = cons($1, $3); }
+exprs : expr                    { $$ = rlcp(cons($1, nil), $1); }
+      | expr exprs              { $$ = rlcp(cons($1, $2), $1); }
+      | expr '.' expr           { $$ = rlcp(cons($1, $3), $1); }
       ;
 
 exprs_opt : exprs               { $$ = $1; }
@@ -701,6 +703,8 @@ expr : IDENT                    { $$ = rl(intern(string_own($1), nil),
                                           num(lineno)); }
      | METAVAR                  { $$ = list(var_s,
                                             intern(string_own($1), nil), nao);
+                                  rl($$, num(lineno)); }
+     | METANUM                  { $$ = cons(var_s, cons($1, nil));
                                   rl($$, num(lineno)); }
      | NUMBER                   { $$ = $1; }
      | list                     { $$ = $1; }
@@ -1038,6 +1042,7 @@ void yybadtoken(int tok, val context)
   case IDENT:   problem = lit("identifier"); break;
   case KEYWORD: problem = lit("keyword"); break;
   case METAVAR: problem = lit("metavar"); break;
+  case METANUM: problem = lit("metanum"); break;
   case ALL:     problem = lit("\"all\""); break;
   case SOME:    problem = lit("\"some\""); break;
   case NONE:    problem = lit("\"none\""); break;
