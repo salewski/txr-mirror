@@ -1,5 +1,13 @@
 2012-02-02  Kaz Kylheku  <kaz@kylheku.com>
 
+	* utf8.c (utf8_to_uc, utf8_encode): Do not encode surrogate code
+	points (U+DC00 to U+DCFF) as multi-byte UTF8 sequences.  We use
+	that range for invalid bytes on input, so on output the best thing
+	to do is to reproduce the original bytes. E.g the code U+DCA0
+	will produce the byte A0.
+
+2012-02-02  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: UTF-8 handling clarified.
 
 2012-02-02  Kaz Kylheku  <kaz@kylheku.com>

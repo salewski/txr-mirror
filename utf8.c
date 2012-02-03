@@ -152,11 +152,17 @@ size_t utf8_to_uc(unsigned char *dst, const wchar_t *wsrc)
         *dst++ = 0x80 | (wch & 0x3F);
       }
     } else if (wch < 0x10000) {
-      nbyte += 3;
-      if (dst) {
-        *dst++ = 0xE0 | (wch >> 12);
-        *dst++ = 0x80 | ((wch >> 6) & 0x3F);
-        *dst++ = 0x80 | (wch & 0x3F);
+      if ((wch & 0xFF00) == 0xDC00) {
+	nbyte += 1;
+	if (dst)
+	  *dst++ = (wch & 0xff);
+      } else {
+	nbyte += 3;
+	if (dst) {
+	  *dst++ = 0xE0 | (wch >> 12);
+	  *dst++ = 0x80 | ((wch >> 6) & 0x3F);
+	  *dst++ = 0x80 | (wch & 0x3F);
+	}
       }
     } else if (wch < 0x110000) {
       nbyte += 4;
@@ -219,9 +225,13 @@ int utf8_encode(wchar_t wch, int (*put)(int ch, mem_t *ctx), mem_t *ctx)
     return put(0xC0 | (wch >> 6), ctx) &&
            put(0x80 | (wch & 0x3F), ctx);
   } else if (wch < 0x10000) {
-    return put(0xE0 | (wch >> 12), ctx) &&
-           put(0x80 | ((wch >> 6) & 0x3F), ctx) &&
-           put(0x80 | (wch & 0x3F), ctx);
+    if ((wch & 0xFF00) == 0xDC00) {
+      return put(wch & 0xFF, ctx);
+    } else {
+      return put(0xE0 | (wch >> 12), ctx) &&
+	     put(0x80 | ((wch >> 6) & 0x3F), ctx) &&
+	     put(0x80 | (wch & 0x3F), ctx);
+    }
   } else if (wch < 0x110000) {
     return put(0xF0 | (wch >> 18), ctx) &&
            put(0x80 | ((wch >> 12) & 0x3F), ctx) &&
