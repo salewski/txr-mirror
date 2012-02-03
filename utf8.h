@@ -37,7 +37,7 @@ enum utf8_state { utf8_init, utf8_more1, utf8_more2, utf8_more3 };
 
 typedef struct utf8_decoder {
   enum utf8_state state;
-  wchar_t wch;
+  wchar_t wch, wch_min;
   int head, tail, back;
   int buf[8];
 } utf8_decoder_t;

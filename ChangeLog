@@ -1,5 +1,17 @@
 2012-02-02  Kaz Kylheku  <kaz@kylheku.com>
 
+	* utf8.c (utf8_from_uc, utf8_decode): Impose a minium value on the
+	decoded character based on which UTF-8 case it is from.  This rejects
+	overlong forms.
+
+	* utf8.h (struct utf8_decoder): New member, wch_min.
+
+2012-02-02  Kaz Kylheku  <kaz@kylheku.com>
+
+	* txr.1: Document that TXR accepts UTF-8 overlong forms.
+
+2012-02-02  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.vim: Move error match before other cases and simplify.
 	Comment are colorized properly again.
 
