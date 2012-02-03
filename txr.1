@@ -477,19 +477,23 @@ If
 .B TXR
 encounters an invalid bytes in the UTF-8 input, what happens depends on the
 context in which this occurs. In a query, comments are read without regard
-for encoding, so invalid encoding bytes are not detected. A comment is
-simply a sequence of bytes terminated by a newline.  Invalid
-encoding bytes in significant query text are diagnosed as syntax errors.
-When the scanner is faced with input that isn't a valid multibyte character, it
-issues an error message, skips one byte, and resumes scanning.
+for encoding, so invalid encoding bytes in comments are not detected. A comment
+is simply a sequence of bytes terminated by a newline.  In lexical elements
+which represent text, such as string literals, invalid or unexpected encoding
+bytes are treated as syntax errors. The scanner issues an error message,
+then discards a byte and resumes scanning.  Certain sequences pass through the
+scanner without triggering an error, namely some UTF-8 overlong sequences.
+These are caught when when the lexeme is subject to UTF-8 decoding, and treated
+in the same manner as other UTF-8 data, described in the following paragraph.
 
-Invalid bytes in data are treated as follows: when an invalid byte is
+Invalid bytes in data are treated as follows. When an invalid byte is
 encountered in the middle of a multibyte character, or if the input
-ends in the middle of a multibyte character, the UTF-8 decoder returns
-to the starting byte of the ill-formed multibyte character, and decodes just
-that byte, by mapping it to the Unicode character range U+DC00 through U+DCFF.
-The decoding resumes at the following character, expecting that byte to be the
-start of another multibyte character.
+ends in the middle of a multibyte character, or if a character is extracted
+which is encoded as an overlong form, the UTF-8 decoder returns to the starting
+byte of the ill-formed multibyte character, and extracts just that byte,
+mapping it to the Unicode character range U+DC00 through U+DCFF.  The decoding
+resumes afresh at the following byte, expecting that byte to be the start
+of a UTF-8 code.
 
 .SS Regular Expression Directives
 
