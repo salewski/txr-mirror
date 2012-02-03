@@ -1,5 +1,9 @@
 2012-02-02  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: UTF-8 handling clarified.
+
+2012-02-02  Kaz Kylheku  <kaz@kylheku.com>
+
 	* utf8.c (utf8_from_uc, utf8_decode): Impose a minium value on the
 	decoded character based on which UTF-8 case it is from.  This rejects
 	overlong forms.
