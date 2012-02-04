@@ -104,8 +104,9 @@ size_t utf8_from_uc(wchar_t *wdst, const unsigned char *src)
         wch |= (ch & 0x3F);
         state = (enum utf8_state) (state - 1);
         if (state == utf8_init) {
-	  if (wch < wch_min &&
-	      (wch <= 0xFFFF && (wch & 0xFF00) == 0xDC00))
+	  if (wch < wch_min ||
+	      (wch <= 0xFFFF && (wch & 0xFF00) == 0xDC00) ||
+	      (wch > 0x10FFFF))
 	  {
 	    src = backtrack;
 	    if (wdst)
@@ -311,7 +312,8 @@ wint_t utf8_decode(utf8_decoder_t *ud, int (*get)(mem_t *ctx), mem_t *ctx)
         ud->state = (enum utf8_state) (ud->state - 1);
         if (ud->state == utf8_init) {
 	  if (ud->wch < ud->wch_min || 
-	      (ud->wch <= 0xFFFF && (ud->wch & 0xFF00) == 0xDC00))
+	      (ud->wch <= 0xFFFF && (ud->wch & 0xFF00) == 0xDC00) ||
+	      (ud->wch > 0x10FFFF))
 	  {
 	    wchar_t wch = 0xDC00 | ud->buf[ud->back];
 	    ud->tail = ud->back = (ud->back + 1) % 8;

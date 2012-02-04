@@ -1,3 +1,11 @@
+2012-02-04  Kaz Kylheku  <kaz@kylheku.com>
+
+	* utf8.c (utf8_from_uc): Bugfix: incorrect condition in character
+	range check (less than minimum *and* U+DCxx, rather than *or*).
+	Also, we must check for out of range characters. UTF-8 sequences
+	beginning with F4 can code beyond 0x10FFFF.
+	(utf8_decode): Check for characters beyond 0x10FFFF.
+
 2012-02-03  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (rest_s, op_s): New variables.
