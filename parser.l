@@ -494,7 +494,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                                   return REGCHAR;
                                 }
 
-<REGEX>[\\](x{HEX}+|{OCT}+)     {
+<REGEX>[\\](x{HEX}+|{OCT}+);?   {
                                   yylval.chr = num_esc(yytext + 1);
                                   return REGCHAR;
                                 }
@@ -595,7 +595,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                                   lineno++;
                                 }
                                 
-<STRLIT,QSILIT>[\\](x{HEX}+;?|o{OCT}+)  {
+<STRLIT,QSILIT>[\\](x{HEX}+|{OCT}+);?  {
                                           yylval.chr = num_esc(yytext+1);
                                           return LITCHAR;
                                         }
