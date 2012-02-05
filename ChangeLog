@@ -1,5 +1,15 @@
 2012-02-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.l: Allow semicolon terminator on hex and octal
+	escapes in a regex. Removed o escape character from octal
+	constants in strings and quasiliterals: no such thing is documented.
+	Octal constants can be semicolon-terminated like hex ones.
+
+	* txr.1: Documented semicolons after octal constants in
+	string literals and after hex and octal constants in regexes.
+
+2012-02-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	* utf8.c (utf8_from_uc, utf8_decode): Some cascaded if tests converted
 	to a switch on the upper nybble value. This also fixes an unfortunate
 	bug. The test for the two byte case was written as 
