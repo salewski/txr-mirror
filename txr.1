@@ -21,16 +21,18 @@
 .\"IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
 .\"WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
-.TH "TXR" 1 2012-01-26 "Utility Commands" "Txr Text Extractor" "Kaz Kylheku"
+.TH "TXR" 1 2012-02-05 "Utility Commands" "Txr Text Processing Language" "Kaz Kylheku"
 .SH NAME
-txr \- text extractor (version 55)
+txr \- text processing language (version 56)
 .SH SYNOPSIS
 .B txr [ options ] query-file { data-file }*
 .sp
 .SH DESCRIPTION
 .B TXR
-is a language oriented toward extracting text from files or streams
-using multi-line, recursive pattern matching.  A
+is a language oriented toward processing text from files or streams, using
+multiple programming paradigms.
+
+A
 .B TXR
 script is called a query, and it specifies a pattern which matches (a prefix
 of) an entire file, or multiple files.  Patterns can consists of large
@@ -58,10 +60,10 @@ file for the place where an entire sub-query matches, for collecting lists, and
 for combining sub-queries using logical conjunction, disjunction and negation,
 and numerous others.  
 
-Furthermore, embedded within TXR is a powerful Lisp dialect, described in the
-section TXR LISP far below. TXR Lisp supports functional and imperative
-programming, and provides data types such as symbols, strings, vectors, hash
-tables with weak reference support, and arbitrary-precision (bignum integers).
+Furthermore, embedded within TXR is a powerful Lisp dialect.  TXR Lisp supports
+functional and imperative programming, and provides data types such as symbols,
+strings, vectors, hash tables with weak reference support, lazy lists, and
+arbitrary-precision (bignum integers).
 
 .SH ARGUMENTS AND OPTIONS
 

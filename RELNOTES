@@ -1,3 +1,47 @@
+                                     TXR 56
+                                   2011-02-06
+
+
+  Features
+
+  - Hex and octal escapes work in strings and quasilterals now: the
+    documentation has stopped lying. 
+    - Escapes can be followed by a semicolon which terminates them and is
+      removed, which is useful if an escape is followed by characters
+      that would otherwise be interpreted as part of the escape.
+
+  - More color categories and more accurate syntax in Vim syntax
+    highlighting file. Highlights @[...] syntax properly inside quasiquote.
+
+  - The third argument (the default value if a key is not found) can be omitted
+    when indexing hashes with the [hash key] syntax. It defaults to nil.
+
+  - The dwim operator (and thus [] syntax) is even more Lisp-1 like. It
+    now has Lisp-1 namespace semantics for evaluating arguments
+    that are symbols.
+
+  - A new operator called "op" as been added. This allows simple lambda
+    functions to be written as partial evaluatios of functions, with implicit
+    arguments as well as numbered/rest arguments appearing in the body.
+
+
+  Bugs
+
+  - Fixed missing type check in hash module that allows bad code
+    to crash interpreter instead of getting an excepion.
+
+  - Fixed regression in TXR 55 which broke computed field widths in output
+    variables.
+
+  - Fixed incorrect UTF-8 decoding of some code points.
+
+  - Closed several security holes in UTF-8 decoder by recognizing all invalid
+    UTF-8 sequences, and mapping invalid bytes in such a way that any byte
+    sequence processed by the decoder into Unicode code points will be
+    recovered exactly when encoded back into UTF-8.
+
+
+
                                      TXR 55
                                    2011-01-26
 
