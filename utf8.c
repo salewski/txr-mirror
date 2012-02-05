@@ -69,30 +69,40 @@ size_t utf8_from_uc(wchar_t *wdst, const unsigned char *src)
 
     switch (state) {
     case utf8_init:
-      if (ch < 0x80) {
+      switch (ch >> 4) {
+      case 0x0: case 0x1: case 0x2: case 0x3:
+      case 0x4: case 0x5: case 0x6: case 0x7:
         if (wdst)
           *wdst++ = ch;
         nchar++;
-      } else if (ch >= 0xC2 && ch <= 0xE0) {
+	break;
+      case 0xC: case 0xD:
         state = utf8_more1;
         wch = (ch & 0x1F);
 	wch_min = 0x80;
-      } else if (ch >= 0xE0 && ch <= 0xEF) {
+	break;
+      case 0xE:
         state = utf8_more2;
         wch = (ch & 0xF);
 	wch_min = 0x800;
-      } else if (ch >= 0xF0 && ch < 0xF5) {
+	break;
+      case 0xF:
 #ifdef FULL_UNICODE
-        state = utf8_more3;
-        wch = (ch & 0x7);
-	wch_min = 0x10000;
+	if (ch < 0xF5) {
+	  state = utf8_more3;
+	  wch = (ch & 0x7);
+	  wch_min = 0x10000;
+	  break;
+	}
+	/* fallthrough */
 #else
 	conversion_error();
 #endif
-      } else {
+      default:
         if (wdst)
           *wdst++ = 0xDC00 | ch;
         nchar++;
+	break;
       }
       backtrack = src;
       break;
@@ -279,26 +289,34 @@ wint_t utf8_decode(utf8_decoder_t *ud, int (*get)(mem_t *ctx), mem_t *ctx)
 
     switch (ud->state) {
     case utf8_init:
-      if (ch < 0x80) {
+      switch (ch >> 4) {
+      case 0x0: case 0x1: case 0x2: case 0x3:
+      case 0x4: case 0x5: case 0x6: case 0x7:
         ud->back = ud->tail;
         return ch;
-      } else if (ch >= 0xC0 && ch <= 0xE0) {
+      case 0xC: case 0xD:
         ud->state = utf8_more1;
         ud->wch = (ch & 0x1F);
 	ud->wch_min = 0x80;
-      } else if (ch >= 0xE0 && ch <= 0xEF) {
+	break;
+      case 0xE:
         ud->state = utf8_more2;
         ud->wch = (ch & 0xF);
 	ud->wch_min = 0x800;
-      } else if (ch >= 0xF0 && ch < 0xF5) {
+	break;
+      case 0xF:
 #ifdef FULL_UNICODE
-        ud->state = utf8_more3;
-        ud->wch = (ch & 0x7);
-	ud->wch_min = 0x100000;
+	if (ch < 0xF5) {
+	  ud->state = utf8_more3;
+	  ud->wch = (ch & 0x7);
+	  ud->wch_min = 0x100000;
+	  break;
+	}
+	/* fallthrough */
 #else
 	conversion_error();
 #endif
-      } else {
+      default:
         ud->back = ud->tail;
         return 0xDC00 | ch;
       }
