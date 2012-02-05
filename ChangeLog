@@ -1,5 +1,13 @@
 2012-02-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	* genman.txr: Updated.
+
+	* txr.vim: Fixed mistakes in a few regex character classes,
+	causing upper case letters not to be recognized as part
+	of a variable name, and character hex constant.
+
+2012-02-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	Version 56
 
 	* txr.c (version): Bumped.
