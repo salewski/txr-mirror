@@ -1,5 +1,17 @@
 2012-02-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 56
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES: Updated.
+
+2012-02-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.l: Allow semicolon terminator on hex and octal
 	escapes in a regex. Removed o escape character from octal
 	constants in strings and quasiliterals: no such thing is documented.
