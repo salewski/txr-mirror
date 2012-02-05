@@ -92,9 +92,9 @@ syn match txr_atat "@[ \t]*@"
 syn match txr_comment "@[ \t]*[#;].*"
 syn match txr_contin "@[ \t]*\\$"
 syn match txr_char "@[ \t]*\\."
-syn match txr_char "@[ \t]*\\x[0-9a-fa-f]\+"
+syn match txr_char "@[ \t]*\\x[0-9A-Fa-f]\+"
 syn match txr_char "@[ \t]*\\[0-9]\+"
-syn match txr_variable "@[ \t]*[*]\?[ \t]*[A-Za-z_][A-Aa-z0-9_]*"
+syn match txr_variable "@[ \t]*[*]\?[ \t]*[A-Za-z_][A-Za-z0-9_]*"
 syn match txr_regdir "@[ \t]*/\(\\/\|[^/]\)*/"
 
 syn match txr_chr "#\\x[A-Fa-f0-9]\+" contained

@@ -13,10 +13,10 @@ Content-type: text/html
 @(collect)
 @PREAMBLE
 @(until)
-txr - text extractor @(skip)
+txr - text processing language @(skip)
 @(end)
 @(all)
-txr - text extractor @VERSION
+txr - text processing language @VERSION
 @  (and)
 @  (collect)
 @BODY
