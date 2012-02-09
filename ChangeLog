@@ -1,3 +1,11 @@
+2012-02-09  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (lazy_sub_str): New static function.
+	(sub_str): Bugfix: handle t values of from from and to, and negative
+	indices, just like sub_vec.  Special handling for lazy strings
+	introduced.  If to is the value t, then the a lazy string can be
+	produced.
+
 2012-02-05  Kaz Kylheku  <kaz@kylheku.com>
 
 	* genman.txr: Updated.
