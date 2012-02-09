@@ -1464,18 +1464,80 @@ val search_str_tree(val haystack, val tree, val start_num, val from_end)
   return nil;
 }
 
+static val lazy_sub_str(val lstr, val from, val to)
+{
+  val len = nil;
+  val len_pfx = length_str(lstr->ls.prefix);
+
+  if (from == nil) {
+    from = zero;
+  } else if (from == t) {
+    return null_string;
+  } else {
+    if (lt(from, zero)) {
+      from = plus(from, len = length_str(lstr));
+      from = max2(zero, from);
+    }
+
+    if (ge(from, len_pfx)) {
+      if (!lazy_str_force_upto(lstr, from))
+        return null_string;
+    }
+  }
+
+  if (to == nil || to == t) {
+    to = t;
+  } else {
+    if (lt(to, zero)) {
+      to = plus(from, len = length_str(lstr));
+      to = max(zero, to);
+    }
+
+    if (ge(to, len_pfx))
+      if (!lazy_str_force_upto(lstr, minus(to, one)))
+        to = t;
+  }
+
+  {
+    val pfxsub = sub_str(lstr->ls.prefix, from, to);
+     
+    if (to != t) {
+      return pfxsub;
+    } else {
+      val lsub = make_obj();
+      lsub->ls.type = LSTR;
+      lsub->ls.prefix = pfxsub;
+      lsub->ls.list = lstr->ls.list;
+      lsub->ls.opts = lstr->ls.opts;
+
+      return lsub;
+    }
+  }
+}
+
 val sub_str(val str_in, val from, val to)
 {
-  if (from == nil || lt(from, zero))
+  val len = nil;
+
+  if (lazy_stringp(str_in))
+    return lazy_sub_str(str_in, from, to);
+
+  len = length_str(str_in);
+
+  if (from == nil)
     from = zero;
-  if (to == nil)
-    to = length_str(str_in);
+  else if (from == t)
+    return null_string;
+  else if (lt(from, zero))
+    from = plus(from, len);
+
+  if (to == nil || to == t)
+    to = len;
   else if (lt(to, zero))
-    to = zero;
-  if (length_str_lt(str_in, from))
-    from = length_str(str_in);
-  if (length_str_lt(str_in, to))
-    to = length_str(str_in);
+    to = plus(to, len);
+
+  from = max2(zero, min2(from, len));
+  to = max2(zero, min2(to, len));
 
   if (ge(from, to)) {
     return null_string;
