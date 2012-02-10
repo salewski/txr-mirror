@@ -375,36 +375,35 @@ static match_line_ctx ml_bindings_specline(match_line_ctx c, val bindings,
 
 static val match_line(match_line_ctx c);
 
-typedef val (*h_match_func)(match_line_ctx c, match_line_ctx *cout);
+typedef val (*h_match_func)(match_line_ctx *c);
 
 #define LOG_MISMATCH(KIND)                                              \
   debuglf(elem, lit(KIND " mismatch, position ~a (~a:~a)"),             \
-          c.pos, c.file, c.data_lineno, nao);                           \
-  debuglf(elem, lit("  ~a"), c.dataline, nao);                          \
-  if (c_num(c.pos) < 77)                                                \
-    debuglf(elem, lit("  ~*~a^"), c.pos, lit(""), nao)
+          c->pos, c->file, c->data_lineno, nao);                        \
+  debuglf(elem, lit("  ~a"), c->dataline, nao);                         \
+  if (c_num(c->pos) < 77)                                               \
+    debuglf(elem, lit("  ~*~a^"), c->pos, lit(""), nao)
 
 #define LOG_MATCH(KIND, EXTENT)                                         \
   debuglf(elem, lit(KIND " matched, position ~a-~a (~a:~a)"),           \
-          c.pos, EXTENT, c.file, c.data_lineno, nao);                   \
-  debuglf(elem, lit("  ~a"), c.dataline, nao);                          \
+          c->pos, EXTENT, c->file, c->data_lineno, nao);                \
+  debuglf(elem, lit("  ~a"), c->dataline, nao);                         \
   if (c_num(EXTENT) < 77)                                               \
-    debuglf(elem, lit("  ~*~a~<*~a^"), c.pos, lit(""),                  \
-              minus(EXTENT, c.pos), lit("^"), nao)
+    debuglf(elem, lit("  ~*~a~<*~a^"), c->pos, lit(""),                 \
+              minus(EXTENT, c->pos), lit("^"), nao)
 
 #define elem_bind(elem_var, directive_var, specline)    \
   val elem_var = first(specline);                       \
   val directive_var = first(elem_var)
 
-static val h_text(match_line_ctx c, match_line_ctx *cout)
+static val h_text(match_line_ctx *c)
 {
-  val elem = first(c.specline);
+  val elem = first(c->specline);
   val texts = rest(elem);
-  val new_pos = cdr(match_line(ml_specline(c, texts)));
+  val new_pos = cdr(match_line(ml_specline(*c, texts)));
 
   if (new_pos) {
-    c.pos = new_pos;
-    *cout = c;
+    c->pos = new_pos;
     return next_spec_k;
   }
 
@@ -438,14 +437,14 @@ static val search_form(match_line_ctx *c, val needle_form, val from_end)
   }
 }
 
-static val h_var(match_line_ctx c, match_line_ctx *cout)
+static val h_var(match_line_ctx *c)
 {
-  val elem = first(c.specline);
+  val elem = first(c->specline);
   val sym = second(elem);
   val pat = third(elem);
   val modifiers = fourth(elem);
   val modifier = first(modifiers);
-  val pair = assoc(sym, c.bindings); /* var exists already? */
+  val pair = assoc(sym, c->bindings); /* var exists already? */
 
   if (gt(length_list(modifiers), one)) {
     sem_error(elem, lit("multiple modifiers on variable ~s"),
@@ -459,19 +458,19 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
        and it must be transformed into
        (<sym-substituted> <pat> ...) */
     if (pat) {
-      val loc = source_loc(c.specline);
-      c.specline = cons(cdr(pair), cons(pat, rest(c.specline)));
-      rl(car(c.specline), loc);
+      val loc = source_loc(c->specline);
+      c->specline = cons(cdr(pair), cons(pat, rest(c->specline)));
+      rl(car(c->specline), loc);
     } else if (fixnump(modifier)) {
-      val past = plus(c.pos, modifier);
+      val past = plus(c->pos, modifier);
 
-      if (length_str_lt(c.dataline, past) || lt(past, c.pos))
+      if (length_str_lt(c->dataline, past) || lt(past, c->pos))
       {
         LOG_MISMATCH("fixed field size");
         return nil;
       }
 
-      if (!tree_find(trim_str(sub_str(c.dataline, c.pos, past)),
+      if (!tree_find(trim_str(sub_str(c->dataline, c->pos, past)),
                      cdr(pair), equal_f))
       {
         LOG_MISMATCH("fixed field contents");
@@ -479,17 +478,17 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
       }
 
       LOG_MATCH("fixed field", past);
-      c.pos = past;
-      c.specline = cdr(c.specline);
+      c->pos = past;
+      c->specline = cdr(c->specline);
     } else {
-      val loc = source_loc(c.specline);
-      c.specline = cons(cdr(pair), rest(c.specline));
-      rl(car(c.specline), loc);
+      val loc = source_loc(c->specline);
+      c->specline = cons(cdr(pair), rest(c->specline));
+      rl(car(c->specline), loc);
     }
-    goto repeat;
+    return repeat_spec_k;
   } else if (consp(modifier)) { /* var bound over text matched by form */
     cons_bind (new_bindings, new_pos,
-               match_line(ml_specline(c, modifiers)));
+               match_line(ml_specline(*c, modifiers)));
 
     if (!new_pos) {
       LOG_MISMATCH("var spanning form");
@@ -497,47 +496,47 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
     }
 
     LOG_MATCH("var spanning form", new_pos);
-    c.bindings = acons(sym, sub_str(c.dataline, c.pos, new_pos), new_bindings);
-    c.pos = new_pos;
+    c->bindings = acons(sym, sub_str(c->dataline, c->pos, new_pos), new_bindings);
+    c->pos = new_pos;
     /* This may have another variable attached */
     if (pat) {
-      val loc = source_loc(c.specline);
-      c.specline = cons(pat, rest(c.specline));
-      rl(car(c.specline), loc);
-      goto repeat;
+      val loc = source_loc(c->specline);
+      c->specline = cons(pat, rest(c->specline));
+      rl(car(c->specline), loc);
+      return repeat_spec_k;
     }
   } else if (fixnump(modifier)) { /* fixed field */
-    val past = plus(c.pos, modifier);
-    if (length_str_lt(c.dataline, past) || lt(past, c.pos))
+    val past = plus(c->pos, modifier);
+    if (length_str_lt(c->dataline, past) || lt(past, c->pos))
     {
       LOG_MISMATCH("count based var");
       return nil;
     }
     LOG_MATCH("count based var", past);
-    c.bindings = acons(sym, trim_str(sub_str(c.dataline, c.pos, past)), c.bindings);
-    c.pos = past;
+    c->bindings = acons(sym, trim_str(sub_str(c->dataline, c->pos, past)), c->bindings);
+    c->pos = past;
     /* This may have another variable attached */
     if (pat) {
-      c.specline = cons(pat, rest(c.specline));
-      goto repeat;
+      c->specline = cons(pat, rest(c->specline));
+      return repeat_spec_k;
     }
   } else if (modifier && modifier != t) {
     sem_error(elem, lit("invalid modifier ~s on variable ~s"),
               modifier, sym, nao);
   } else if (pat == nil) { /* no modifier, no elem -> to end of line */
-    c.bindings = acons(sym, sub_str(c.dataline, c.pos, nil), c.bindings);
-    c.pos = length_str(c.dataline);
+    c->bindings = acons(sym, sub_str(c->dataline, c->pos, nil), c->bindings);
+    c->pos = length_str(c->dataline);
   } else if (type(pat) == STR) {
-    val find = search_str(c.dataline, pat, c.pos, modifier);
+    val find = search_str(c->dataline, pat, c->pos, modifier);
     if (!find) {
       LOG_MISMATCH("var delimiting string");
       return nil;
     }
     LOG_MATCH("var delimiting string", find);
-    c.bindings = acons(sym, sub_str(c.dataline, c.pos, find), c.bindings);
-    c.pos = plus(find, length_str(pat));
+    c->bindings = acons(sym, sub_str(c->dataline, c->pos, find), c->bindings);
+    c->pos = plus(find, length_str(pat));
   } else if (consp(pat) && first(pat) != var_s) {
-    val find = search_form(&c, pat, modifier);
+    val find = search_form(c, pat, modifier);
     val fpos = car(find);
     val flen = cdr(find);
     if (!find) {
@@ -545,8 +544,8 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
       return nil;
     }
     LOG_MATCH("var delimiting form", fpos);
-    c.bindings = acons(sym, sub_str(c.dataline, c.pos, fpos), c.bindings);
-    c.pos = plus(fpos, flen);
+    c->bindings = acons(sym, sub_str(c->dataline, c->pos, fpos), c->bindings);
+    c->pos = plus(fpos, flen);
   } else if (consp(pat)) {
     /* Unbound var followed by var: the following one must either
        be bound, or must specify a regex. */
@@ -554,7 +553,7 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
     val next_pat = third(pat);
     val next_modifiers = fourth(pat);
     val next_modifier = first(fourth(pat));
-    val pair = assoc(second_sym, c.bindings); /* var exists already? */
+    val pair = assoc(second_sym, c->bindings); /* var exists already? */
 
     if (gt(length_list(next_modifiers), one)) {
       sem_error(elem, lit("multiple modifiers on variable ~s"),
@@ -562,7 +561,7 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
     }
 
     if (!pair && consp(next_modifier)) {
-      val find = search_form(&c, next_modifier, modifier);
+      val find = search_form(c, next_modifier, modifier);
       val fpos = car(find);
       val flen = cdr(find);
 
@@ -573,19 +572,19 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
 
       /* Text from here to start of regex match goes to this
          variable. */
-      c.bindings = acons(sym, sub_str(c.dataline, c.pos, fpos), c.bindings);
+      c->bindings = acons(sym, sub_str(c->dataline, c->pos, fpos), c->bindings);
       /* Text from start of regex match to end goes to the
          second variable */
-      c.bindings = acons(second_sym, sub_str(c.dataline, fpos, plus(fpos, flen)), c.bindings);
+      c->bindings = acons(second_sym, sub_str(c->dataline, fpos, plus(fpos, flen)), c->bindings);
       LOG_MATCH("double var regex (first var)", fpos);
-      c.pos = fpos;
+      c->pos = fpos;
       LOG_MATCH("double var regex (second var)", plus(fpos, flen));
-      c.pos = plus(fpos, flen);
+      c->pos = plus(fpos, flen);
       if (next_pat) {
-        val loc = source_loc(c.specline);
-        c.specline = cons(next_pat, rest(c.specline));
-        rl(car(c.specline), loc);
-        goto repeat;
+        val loc = source_loc(c->specline);
+        c->specline = cons(next_pat, rest(c->specline));
+        rl(car(c->specline), loc);
+        return repeat_spec_k;
       }
     } else if (!pair) {
       sem_error(elem, lit("consecutive unbound variables"), nao);
@@ -595,52 +594,47 @@ static val h_var(match_line_ctx c, match_line_ctx *cout)
       val new_elem = list(var_s, sym, cdr(pair), modifier, nao);
 
       if (next_pat)
-         c.specline = cons(new_elem, cons(next_pat, rest(c.specline)));
+         c->specline = cons(new_elem, cons(next_pat, rest(c->specline)));
       else
-         c.specline = cons(new_elem, rest(c.specline));
-      goto repeat;
+         c->specline = cons(new_elem, rest(c->specline));
+      return repeat_spec_k;
     }
   } else if (consp(pat) && (consp(first(pat)) || stringp(first(pat)))) {
-    cons_bind (find, len, search_str(c.dataline, pat, c.pos, modifier));
+    cons_bind (find, len, search_str(c->dataline, pat, c->pos, modifier));
     if (!find) {
       LOG_MISMATCH("string");
       return nil;
     }
-    c.bindings = acons(sym, sub_str(c.dataline, c.pos, find), c.bindings);
-    c.pos = plus(find, len);
+    c->bindings = acons(sym, sub_str(c->dataline, c->pos, find), c->bindings);
+    c->pos = plus(find, len);
   } else {
     sem_error(elem, lit("variable followed by invalid element"), nao);
   }
 
-  *cout = c;
   return next_spec_k;
-
-repeat:
-  *cout = c;
-  return repeat_spec_k;
 }
 
-static val h_skip(match_line_ctx c, match_line_ctx *cout)
+static val h_skip(match_line_ctx *c)
 {
-  val elem = first(c.specline);
-  val max = txeval(elem, second(elem), c.bindings);
-  val min = txeval(elem, third(elem), c.bindings);
+  val elem = first(c->specline);
+  val max = txeval(elem, second(elem), c->bindings);
+  val min = txeval(elem, third(elem), c->bindings);
   cnum cmax = fixnump(max) ? c_num(max) : 0;
   cnum cmin = fixnump(min) ? c_num(min) : 0;
   val greedy = eq(max, greedy_k);
   val last_good_result = nil, last_good_pos = nil;
 
-  if (!rest(c.specline)) {
+  if (!rest(c->specline)) {
     debuglf(elem, 
-            lit("skip to end of line ~a:~a"), c.file, c.data_lineno, nao);
-    return cons(c.bindings, length_str(c.dataline));
+            lit("skip to end of line ~a:~a"), c->file, c->data_lineno, nao);
+    return cons(c->bindings, length_str(c->dataline));
   }
 
   {
     cnum reps_max = 0, reps_min = 0;
 
-    while (length_str_gt(c.dataline, c.pos) && min && reps_min < cmin) {
-      c.pos = plus(c.pos, one);
+    while (length_str_gt(c->dataline, c->pos) && min && reps_min < cmin) {
+      c->pos = plus(c->pos, one);
       reps_min++;
     }
 
@@ -649,28 +643,28 @@ static val h_skip(match_line_ctx c, match_line_ctx *cout)
         debuglf(elem,
                 lit("skipped only ~a/~a chars to ~a:~a:~a"),
                 num(reps_min), num(cmin),
-                c.file, c.data_lineno, c.pos, nao);
+                c->file, c->data_lineno, c->pos, nao);
         return nil;
       }
 
       debuglf(elem, lit("skipped ~a chars to ~a:~a:~a"),
-              num(reps_min), c.file, c.data_lineno, c.pos, nao);
+              num(reps_min), c->file, c->data_lineno, c->pos, nao);
     }
 
     while (greedy || !max || reps_max++ < cmax) {
-      val result = match_line(ml_specline(c, rest(c.specline)));
+      val result = match_line(ml_specline(*c, rest(c->specline)));
 
       if (result) {
         if (greedy) {
           last_good_result = result;
-          last_good_pos = c.pos;
+          last_good_pos = c->pos;
         } else {
-          LOG_MATCH("skip", c.pos);
+          LOG_MATCH("skip", c->pos);
           return result;
         }
       }
 
-      if (length_str_le(c.dataline, c.pos))  {
+      if (length_str_le(c->dataline, c->pos))  {
         if (last_good_result) {
           LOG_MATCH("greedy skip", last_good_pos);
           return last_good_result;
@@ -678,7 +672,7 @@ static val h_skip(match_line_ctx c, match_line_ctx *cout)
         break;
       }
 
-      c.pos = plus(c.pos, one);
+      c->pos = plus(c->pos, one);
     }
   }
 
@@ -686,21 +680,21 @@ static val h_skip(match_line_ctx c, match_line_ctx *cout)
   return nil;
 }
 
-static val h_coll(match_line_ctx c, match_line_ctx *cout)
+static val h_coll(match_line_ctx *c)
 {
-  val elem = first(c.specline);
+  val elem = first(c->specline);
   val coll_specline = second(elem);
   val until_last_specline = third(elem);
   val args = fourth(elem);
   val bindings_coll = nil;
   val last_bindings = nil;
-  val max = txeval(elem, getplist(args, maxgap_k), c.bindings);
-  val min = txeval(elem, getplist(args, mingap_k), c.bindings);
-  val gap = txeval(elem, getplist(args, gap_k), c.bindings);
-  val times = txeval(elem, getplist(args, times_k), c.bindings);
-  val mintimes = txeval(elem, getplist(args, mintimes_k), c.bindings);
-  val maxtimes = txeval(elem, getplist(args, maxtimes_k), c.bindings);
-  val chars = txeval(elem, getplist(args, chars_k), c.bindings);
+  val max = txeval(elem, getplist(args, maxgap_k), c->bindings);
+  val min = txeval(elem, getplist(args, mingap_k), c->bindings);
+  val gap = txeval(elem, getplist(args, gap_k), c->bindings);
+  val times = txeval(elem, getplist(args, times_k), c->bindings);
+  val mintimes = txeval(elem, getplist(args, mintimes_k), c->bindings);
+  val maxtimes = txeval(elem, getplist(args, maxtimes_k), c->bindings);
+  val chars = txeval(elem, getplist(args, chars_k), c->bindings);
   val have_vars;
   val vars = getplist_f(args, vars_k, &have_vars);
   cnum cmax = fixnump(gap) ? c_num(gap) : (fixnump(max) ? c_num(max) : 0);
@@ -714,12 +708,10 @@ static val h_coll(match_line_ctx c, match_line_ctx *cout)
   cnum timescounter = 0, charscounter = 0;
   val iter;
 
-  vars = vars_to_bindings(elem, vars, c.bindings);
+  vars = vars_to_bindings(elem, vars, c->bindings);
 
-  if (((times || maxtimes) && ctimax == 0) || (chars && cchars == 0)) {
-    *cout = c;
+  if (((times || maxtimes) && ctimax == 0) || (chars && cchars == 0))
     return next_spec_k;
-  }
 
   for (;;) {
     val new_bindings = nil, new_pos = nil;
@@ -732,19 +724,19 @@ static val h_coll(match_line_ctx c, match_line_ctx *cout)
 
     {
       cons_set (new_bindings, new_pos,
-                match_line(ml_specline(c, coll_specline)));
+                match_line(ml_specline(*c, coll_specline)));
 
       if (until_last_specline) {
         cons_bind (sym, spec, until_last_specline);
         cons_bind (until_last_bindings, until_pos,
-                   match_line(ml_bindings_specline(c, new_bindings, spec)));
+                   match_line(ml_bindings_specline(*c, new_bindings, spec)));
 
         if (until_pos) {
           LOG_MATCH("until/last", until_pos);
           if (sym == last_s) {
             last_bindings = set_diff(until_last_bindings,
                                      new_bindings, eq_f, nil);
-            c.pos = until_pos;
+            c->pos = until_pos;
           }
           break;
         } else {
@@ -755,7 +747,7 @@ static val h_coll(match_line_ctx c, match_line_ctx *cout)
       if (new_pos) {
         list_collect_decl (missing, ptail);
         val strictly_new_bindings = set_diff(new_bindings,
-                                             c.bindings, eq_f, nil);
+                                             c->bindings, eq_f, nil);
         val have_new = strictly_new_bindings;
         LOG_MATCH("coll", new_pos);
 
@@ -789,9 +781,9 @@ static val h_coll(match_line_ctx c, match_line_ctx *cout)
         }
       }
 
-      if (new_pos && !equal(new_pos, c.pos)) {
-        c.pos = new_pos;
-        bug_unless (length_str_ge(c.dataline, c.pos));
+      if (new_pos && !equal(new_pos, c->pos)) {
+        c->pos = new_pos;
+        bug_unless (length_str_ge(c->dataline, c->pos));
 
         timescounter++;
 
@@ -805,10 +797,10 @@ next_coll:
         mincounter++;
         if ((gap || max) && ++maxcounter > cmax)
           break;
-        c.pos = plus(c.pos, one);
+        c->pos = plus(c->pos, one);
       }
 
-      if (length_str_le(c.dataline, c.pos))
+      if (length_str_le(c->dataline, c->pos))
         break;
     }
   }
@@ -825,12 +817,12 @@ next_coll:
   for (iter = bindings_coll; iter; iter = cdr(iter)) {
     val pair = car(iter);
     val rev = cons(car(pair), nreverse(cdr(pair)));
-    c.bindings = cons(rev, c.bindings);
+    c->bindings = cons(rev, c->bindings);
   }
 
   if (last_bindings) {
-    c.bindings = set_diff(c.bindings, last_bindings, eq_f, car_f);
-    c.bindings = nappend2(last_bindings, c.bindings);
+    c->bindings = set_diff(c->bindings, last_bindings, eq_f, car_f);
+    c->bindings = nappend2(last_bindings, c->bindings);
   }
 
   /* If nothing was collected, but vars were specified,
@@ -838,29 +830,28 @@ next_coll:
   if (!bindings_coll && vars) {
     for (iter = vars; iter; iter = cdr(iter)) {
       val sym = car(car(iter));
-      val exists = assoc(sym, c.bindings);
+      val exists = assoc(sym, c->bindings);
       if (!exists)
-        c.bindings = acons(sym, nil, c.bindings);
+        c->bindings = acons(sym, nil, c->bindings);
     }
   }
 
-  *cout = c;
   return next_spec_k;
 }
 
-static val h_parallel(match_line_ctx c, match_line_ctx *cout)
+static val h_parallel(match_line_ctx *c)
 {
   uses_or2;
-  elem_bind(elem, directive, c.specline);
+  elem_bind(elem, directive, c->specline);
   val specs = third(elem);
   val plist = fourth(elem);
   val all_match = t;
   val some_match = nil;
-  val max_pos = c.pos;
+  val max_pos = c->pos;
   val choose_shortest = getplist(plist, shortest_k);
   val choose_longest = getplist(plist, longest_k);
   val choose_sym = or2(choose_longest, choose_shortest);
-  val choose_bindings = c.bindings, choose_pos = c.pos;
+  val choose_bindings = c->bindings, choose_pos = c->pos;
   val choose_minmax = choose_longest ? num(-1) : num(NUM_MAX);
   val resolve = getplist(plist, resolve_k);
   val resolve_ub_vars = nil;
@@ -877,7 +868,7 @@ static val h_parallel(match_line_ctx c, match_line_ctx *cout)
   if (resolve) {
     for (iter = resolve; iter; iter = cdr(iter)) {
       val var = car(iter);
-      if (!assoc(var, c.bindings))
+      if (!assoc(var, c->bindings))
         push(var, &resolve_ub_vars);
     }
   }
@@ -885,7 +876,7 @@ static val h_parallel(match_line_ctx c, match_line_ctx *cout)
   for (iter = specs; iter != nil; iter = cdr(iter)) {
     val nested_spec = first(iter);
     cons_bind (new_bindings, new_pos,
-               match_line(ml_specline(c, nested_spec)));
+               match_line(ml_specline(*c, nested_spec)));
 
     if (new_pos) {
       some_match = t;
@@ -922,7 +913,7 @@ static val h_parallel(match_line_ctx c, match_line_ctx *cout)
           }
         }
       } else {
-        c.bindings = new_bindings;
+        c->bindings = new_bindings;
       }
       if (directive == cases_s || directive == none_s)
         break;
@@ -952,24 +943,23 @@ static val h_parallel(match_line_ctx c, match_line_ctx *cout)
 
  
   if (resolve_bindings)
-    c.bindings = nappend2(resolve_bindings, c.bindings);
+    c->bindings = nappend2(resolve_bindings, c->bindings);
 
   if (directive == choose_s) {
-    c.bindings = choose_bindings;
-    c.pos = choose_pos;
+    c->bindings = choose_bindings;
+    c->pos = choose_pos;
   } else {
-    c.pos = max_pos;
+    c->pos = max_pos;
   }
 
-  *cout = c;
   return next_spec_k;
 }
 
-static val h_trailer(match_line_ctx c, match_line_ctx *cout)
+static val h_trailer(match_line_ctx *c)
 {
-  val result = match_line(ml_specline(c, rest(c.specline)));
+  val result = match_line(ml_specline(*c, rest(c->specline)));
   val new_pos = cdr(result);
-  val elem = first(c.specline);
+  val elem = first(c->specline);
 
   if (!new_pos) {
     LOG_MISMATCH("trailer");
@@ -977,12 +967,12 @@ static val h_trailer(match_line_ctx c, match_line_ctx *cout)
   }
 
   LOG_MATCH("trailer", new_pos);
-  return cons(c.bindings, c.pos);
+  return cons(c->bindings, c->pos);
 }
 
-static val h_fun(match_line_ctx c, match_line_ctx *cout)
+static val h_fun(match_line_ctx *c)
 {
-  val elem = first(c.specline);
+  val elem = first(c->specline);
   val sym = first(elem);
   val func = cdr(uw_get_func(sym));
 
@@ -992,7 +982,7 @@ static val h_fun(match_line_ctx c, match_line_ctx *cout)
     val ub_p_a_pairs = nil;
     val body = cdr(func);
     val piter, aiter;
-    val bindings_cp = copy_list(c.bindings);
+    val bindings_cp = copy_list(c->bindings);
 
     if (!equal(length(args), length_list(params)))
       sem_error(elem, lit("function ~a takes ~a argument(s)"),
@@ -1005,7 +995,7 @@ static val h_fun(match_line_ctx c, match_line_ctx *cout)
       val arg = car(aiter);
 
       if (arg && bindable(arg)) {
-        val val = assoc(arg, c.bindings);
+        val val = assoc(arg, c->bindings);
         if (val) {
           bindings_cp = acons_new(param, cdr(val), bindings_cp);
         } else {
@@ -1013,7 +1003,7 @@ static val h_fun(match_line_ctx c, match_line_ctx *cout)
           ub_p_a_pairs = cons(cons(param, arg), ub_p_a_pairs);
         }
       } else {
-        val val = txeval(elem, arg, c.bindings);
+        val val = txeval(elem, arg, c->bindings);
         bindings_cp = acons_new(param, val, bindings_cp);
       }
     }
@@ -1021,9 +1011,9 @@ static val h_fun(match_line_ctx c, match_line_ctx *cout)
     {
       uw_block_begin(nil, result);
       uw_env_begin;
-      debug_frame(sym, bindings_cp, ub_p_a_pairs, c.bindings, c.dataline, c.data_lineno, c.pos);
+      debug_frame(sym, bindings_cp, ub_p_a_pairs, c->bindings, c->dataline, c->data_lineno, c->pos);
 
-      result = match_line(ml_bindings_specline(c, bindings_cp, body));
+      result = match_line(ml_bindings_specline(*c, bindings_cp, body));
 
       debug_end;
       uw_env_end;
@@ -1044,9 +1034,9 @@ static val h_fun(match_line_ctx c, match_line_ctx *cout)
           if (symbolp(arg)) {
             val newbind = assoc(param, new_bindings);
             if (newbind) {
-              c.bindings = dest_bind(elem, c.bindings, 
-                                     arg, cdr(newbind), equal_f);
-              if (c.bindings == t) {
+              c->bindings = dest_bind(elem, c->bindings, 
+                                      arg, cdr(newbind), equal_f);
+              if (c->bindings == t) {
                 debuglf(elem,
                         lit("binding mismatch on ~a "
                             "when returning from ~a"), arg, sym, nao);
@@ -1057,24 +1047,23 @@ static val h_fun(match_line_ctx c, match_line_ctx *cout)
         }
 
         if (fixnump(success))
-          c.pos = success;
+          c->pos = success;
       }
     }
 
-    *cout = c;
     return next_spec_k;
   }
 
   return decline_k;
 }
 
-static val h_eol(match_line_ctx c, match_line_ctx *cout)
+static val h_eol(match_line_ctx *c)
 {
-  val elem = first(c.specline);
+  val elem = first(c->specline);
 
-  if (length_str_le(c.dataline, c.pos)) {
-    LOG_MATCH("eol", c.pos);
-    return cons(c.bindings, c.pos);
+  if (length_str_le(c->dataline, c->pos)) {
+    LOG_MATCH("eol", c->pos);
+    return cons(c->bindings, c->pos);
   }
   LOG_MISMATCH("eol");
   return nil;
@@ -1089,19 +1078,21 @@ static match_files_ctx mf_all(val spec, val files, val bindings,
 
 static val v_fun(match_files_ctx *c);
 
-static val match_line(match_line_ctx c)
+static val match_line(match_line_ctx cin)
 {
   debug_enter;
+
+  match_line_ctx *c = &cin;
 
   for (;;) {
     val elem;
 
-    if (c.specline == nil)
+    if (c->specline == nil)
       break;
 
-    elem = first(c.specline);
+    elem = first(c->specline);
 
-    debug_check(elem, c.bindings, c.dataline, c.data_lineno, c.pos);
+    debug_check(elem, c->bindings, c->dataline, c->data_lineno, c->pos);
 
     switch (elem ? type(elem) : 0) {
     case CONS: /* directive */
@@ -1109,61 +1100,55 @@ static val match_line(match_line_ctx c)
         val directive = first(elem);
 
         if (regexp(directive)) {
-          val past = match_regex(c.dataline, directive, c.pos);
+          val past = match_regex(c->dataline, directive, c->pos);
           if (nullp(past)) {
             LOG_MISMATCH("regex");
             debug_return (nil);
           }
           LOG_MATCH("regex", past);
-          c.pos = past;
+          c->pos = past;
         } else if (consp(directive) || stringp(directive)) {
-          cons_bind (find, len, search_str_tree(c.dataline, elem, c.pos, nil));
+          cons_bind (find, len, search_str_tree(c->dataline, elem, c->pos, nil));
           val newpos;
 
-          if (find == nil || !equal(find, c.pos)) {
+          if (find == nil || !equal(find, c->pos)) {
             LOG_MISMATCH("string tree");
             debug_return (nil);
           }
 
           newpos = plus(find, len);
           LOG_MATCH("string tree", newpos);
-          c.pos = newpos;
+          c->pos = newpos;
         } else {
           val entry = gethash(h_directive_table, directive);
           if (entry) {
             h_match_func hmf = (h_match_func) cptr_get(entry);
-            match_line_ctx nc;
-            val result = hmf(c, &nc);
+            val result = hmf(c);
 
             if (result == next_spec_k) {
-              c = nc;
               break;
             } else if (result == repeat_spec_k) {
-              c = nc;
               continue;
             } else {
               debug_return (result);
             }
           } else {
-            match_line_ctx nc;
-            val result = h_fun(c, &nc);
+            val result = h_fun(c);
 
             if (result == next_spec_k) {
-              c = nc;
               break;
             } else if (result == repeat_spec_k) {
-              c = nc;
               continue;
             } else if (result == decline_k) {
               val spec = rlcp(cons(cons(elem, nil), nil), elem);
-              match_files_ctx vc = mf_all(spec, nil, c.bindings, nil, num(0));
+              match_files_ctx vc = mf_all(spec, nil, c->bindings, nil, num(0));
               val vresult = v_fun(&vc);
 
               if (vresult == next_spec_k) {
-                c.bindings = vc.bindings;
+                c->bindings = vc.bindings;
                 break;
               } else if (vresult == repeat_spec_k) {
-                c.bindings = vc.bindings;
+                c->bindings = vc.bindings;
                 continue;
               } else if (vresult == decline_k) {
                 if (gethash(v_directive_table, directive))
@@ -1184,25 +1169,25 @@ static val match_line(match_line_ctx c)
       break;
     case STR:
       {
-        val find = search_str(c.dataline, elem, c.pos, nil);
+        val find = search_str(c->dataline, elem, c->pos, nil);
         val newpos;
-        if (find == nil || !equal(find, c.pos)) {
+        if (find == nil || !equal(find, c->pos)) {
           LOG_MISMATCH("string");
           debug_return (nil);
         }
         newpos = plus(find, length_str(elem));
         LOG_MATCH("string", newpos);
-        c.pos = newpos;
+        c->pos = newpos;
         break;
       }
     default:
       sem_error(elem, lit("unsupported object in spec: ~s"), elem, nao);
     }
 
-    c.specline = cdr(c.specline);
+    c->specline = cdr(c->specline);
   }
 
-  debug_return (cons(c.bindings, c.pos));
+  debug_return (cons(c->bindings, c->pos));
   debug_leave;
 }
 
@@ -2833,11 +2818,11 @@ static val v_bind(match_files_ctx *c)
   return next_spec_k;
 }
 
-static val hv_trampoline(match_line_ctx c, match_line_ctx *cout)
+static val hv_trampoline(match_line_ctx *c)
 {
   val ret;
-  match_files_ctx mf = mf_from_ml(c);
-  val sym = first(first(c.specline));
+  match_files_ctx mf = mf_from_ml(*c);
+  val sym = first(first(c->specline));
   val entry = gethash(v_directive_table, sym);
 
   if (!entry)
@@ -2846,10 +2831,8 @@ static val hv_trampoline(match_line_ctx c, match_line_ctx *cout)
   {
     v_match_func vmf = (v_match_func) cptr_get(entry);
     ret = vmf(&mf);
-    if (ret == next_spec_k) {
-      c.bindings = mf.bindings;
-      *cout = c;
-    }
+    if (ret == next_spec_k)
+      c->bindings = mf.bindings;
     return ret;
   }
 }
@@ -3116,16 +3099,15 @@ static val v_try(match_files_ctx *c)
   }
 }
 
-static val h_define(match_line_ctx c, match_line_ctx *cout)
+static val h_define(match_line_ctx *c)
 {
-  val elem = first(c.specline);
+  val elem = first(c->specline);
   val body = third(elem);
   val args = fourth(elem);
   val name = first(args);
   val params = second(args);
   val existing = uw_get_func(name);
   uw_set_func(name, cons(car(existing), cons(params, body)));
-  *cout = c;
   return next_spec_k;
 }
 
@@ -3363,12 +3345,11 @@ static val v_do(match_files_ctx *c)
   return next_spec_k;
 }
 
-static val h_do(match_line_ctx c, match_line_ctx *cout)
+static val h_do(match_line_ctx *c)
 {
-  val elem = first(c.specline);
+  val elem = first(c->specline);
   val args = rest(elem);
-  (void) eval_progn(args, make_env(c.bindings, nil, nil), elem);
-  *cout = c;
+  (void) eval_progn(args, make_env(c->bindings, nil, nil), elem);
   return next_spec_k;
 }
 
