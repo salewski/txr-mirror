@@ -1,5 +1,18 @@
 2012-02-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	Task #11486: preparatory refactoring.
+
+	* match.c (h_match_func): Changed to one-argument form.
+	(LOG_MISMATCH, LOG_MATCH): References to structure members
+	changed from member selection . to ->.
+	(h_text, h_var, h_skip, h_coll, h_parallel, h_trailer,
+	h_fun, hv_trampoline, h_define, h_do): Changed to one-argument form
+	that takes a pointer to the context.
+	(match_line): Local pointer named c used so that the
+	LOG_MISMATCH and LOG_MATCH macros can be used.
+
+2012-02-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (lazy_sub_str): New static function.
 	(sub_str): Bugfix: handle t values of from from and to, and negative
 	indices, just like sub_vec.  Special handling for lazy strings
