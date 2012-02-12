@@ -361,7 +361,7 @@ static val do_eval(val form, val env, val ctx_form,
   debug_enter;
 
   type_check(env, ENV);
-  debug_check(consp(form) ? form : ctx_form, env, nil, nil, nil);
+  debug_check(consp(form) ? form : ctx_form, env, nil, nil, nil, nil);
 
   if (nullp(form)) {
     debug_return (nil);

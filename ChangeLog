@@ -1,3 +1,20 @@
+2012-02-12  Kaz Kylheku  <kaz@kylheku.com>
+
+	Task #11486: continuation. Take into account base position
+	in debug reporting.
+
+	* debug.c (debug): New argument, base.
+
+	* debug.h (debug_check): New argument, base.
+	(debug): Declaration updated.
+
+	* eval.c (do_eval): Pass new argument of debug_check as nil.
+
+	* match.c (LOG_MISMATCH, LOG_MATCH): Take into account base
+	when displaying character position.
+	(do_match_line): Pass base position to debug_check.
+	(match_files): Pass nil as base to debug_check.
+
 2012-02-11  Kaz Kylheku  <kaz@kylheku.com>
 
 	Task #11486: continuation. Now able to @(skip) through

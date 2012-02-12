@@ -28,7 +28,7 @@ extern int opt_debugger;
 extern int debug_depth;
 extern val debug_block_s;
 
-val debug(val form, val bindings, val data, val line, val chr);
+val debug(val form, val bindings, val data, val line, val pos, val base);
 
 #if CONFIG_DEBUG_SUPPORT
 
@@ -51,9 +51,10 @@ val debug(val form, val bindings, val data, val line, val chr);
 #define debug_return(VAL)                               \
   uw_block_return(debug_block_s, VAL)
 
-INLINE val debug_check(val form, val bindings, val data, val line, val chr)
+INLINE val debug_check(val form, val bindings, val data, val line,
+                       val pos, val base)
 {
-  return (opt_debugger) ? debug(form, bindings, data, line, chr) : nil;
+  return (opt_debugger) ? debug(form, bindings, data, line, pos, base) : nil;
 }
 
 void debug_init(void);
