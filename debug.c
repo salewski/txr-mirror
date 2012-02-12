@@ -56,7 +56,7 @@ static void show_bindings(val env, val stream)
   }
 }
 
-val debug(val form, val bindings, val data, val line, val val pos, val base)
+val debug(val form, val bindings, val data, val line, val pos, val base)
 {
   uses_or2;
   val lineno = source_loc(form);
