@@ -1,5 +1,11 @@
 2012-02-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	Task #11486
+
+	* match.c (h_coll): Call consume_prefix in the loop.
+
+2012-02-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	Task #11486: continuation. Take into account base position
 	in debug reporting.
 

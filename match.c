@@ -821,6 +821,8 @@ next_coll:
       if (length_str_le(c->dataline, c->pos))
         break;
     }
+
+    consume_prefix(c);
   }
 
   if ((times || mintimes) && timescounter < ctimin) {
