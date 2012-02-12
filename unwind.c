@@ -26,6 +26,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 #include <setjmp.h>
 #include <dirent.h>
@@ -98,6 +99,7 @@ static void uw_unwind_to_exit_point(void)
 
 void uw_push_block(uw_frame_t *fr, val tag)
 {
+  memset(fr, 0, sizeof *fr);
   fr->bl.type = UW_BLOCK;
   fr->bl.tag = tag;
   fr->bl.result = nil;
@@ -113,6 +115,7 @@ static uw_frame_t *uw_find_env(void)
 void uw_push_env(uw_frame_t *fr)
 {
   uw_frame_t *prev_env = uw_find_env();
+  memset(fr, 0, sizeof *fr);
   fr->ev.type = UW_ENV;
   fr->ev.up_env = prev_env;
   fr->ev.func_bindings = nil;
@@ -161,6 +164,7 @@ void uw_push_debug(uw_frame_t *fr, val func, val args,
                    val ub_p_a_pairs, val env, val data,
                    val line, val chr)
 {
+  memset(fr, 0, sizeof *fr);
   fr->db.type = UW_DBG;
   fr->db.func = func;
   fr->db.args = args;
@@ -208,6 +212,7 @@ val uw_block_return(val tag, val result)
 
 void uw_push_catch(uw_frame_t *fr, val matches)
 {
+  memset(fr, 0, sizeof *fr);
   fr->ca.type = UW_CATCH;
   fr->ca.matches = matches;
   fr->ca.exception = nil;
