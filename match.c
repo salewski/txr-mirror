@@ -337,14 +337,14 @@ static val vars_to_bindings(val spec, val vars, val bindings)
 }
 
 typedef struct {
-  val bindings, specline, dataline, pos, data_lineno, file;
+  val bindings, specline, dataline, base, pos, data_lineno, file;
 } match_line_ctx;
 
 static match_line_ctx ml_all(val bindings, val specline, val dataline,
                              val pos, val data_lineno, val file)
 {
   match_line_ctx c = { bindings, specline, dataline, 
-                       pos, data_lineno, file };
+                       zero, pos, data_lineno, file };
   return c;
 }
 
@@ -373,6 +373,7 @@ static match_line_ctx ml_bindings_specline(match_line_ctx c, val bindings,
   return nc;
 }
 
+static val do_match_line(match_line_ctx *c);
 static val match_line(match_line_ctx c);
 
 typedef val (*h_match_func)(match_line_ctx *c);
@@ -410,6 +411,19 @@ static val h_text(match_line_ctx *c)
   return nil;
 }
 
+static void consume_prefix(match_line_ctx *c)
+{
+  const val shift_hiwater = num_fast(4000);
+  const val shift_amount = num_fast(3900);
+
+  if (gt(c->pos, shift_hiwater)) {
+    c->base = plus(c->base, shift_amount);
+    c->pos = minus(c->pos, shift_amount);
+    c->dataline = sub_str(c->dataline, shift_amount, t);
+  }
+}
+
+
 static val search_form(match_line_ctx *c, val needle_form, val from_end)
 {
   if (regexp(first(needle_form))) {
@@ -431,6 +445,8 @@ static val search_form(match_line_ctx *c, val needle_form, val from_end)
         c->bindings = new_bindings;
         return cons(pos, minus(new_pos, pos));
       }
+
+      consume_prefix(c);
     }
 
     return nil;
@@ -636,6 +652,7 @@ static val h_skip(match_line_ctx *c)
     while (length_str_gt(c->dataline, c->pos) && min && reps_min < cmin) {
       c->pos = plus(c->pos, one);
       reps_min++;
+      consume_prefix(c);
     }
 
     if (min) {
@@ -673,6 +690,7 @@ static val h_skip(match_line_ctx *c)
       }
 
       c->pos = plus(c->pos, one);
+      consume_prefix(c);
     }
   }
 
@@ -1078,17 +1096,17 @@ static match_files_ctx mf_all(val spec, val files, val bindings,
 
 static val v_fun(match_files_ctx *c);
 
-static val match_line(match_line_ctx cin)
+static val do_match_line(match_line_ctx *c)
 {
   debug_enter;
-
-  match_line_ctx *c = &cin;
 
   for (;;) {
     val elem;
 
     if (c->specline == nil)
       break;
+
+    consume_prefix(c);
 
     elem = first(c->specline);
 
@@ -1189,6 +1207,11 @@ static val match_line(match_line_ctx cin)
 
   debug_return (cons(c->bindings, c->pos));
   debug_leave;
+}
+
+static val match_line(match_line_ctx c)
+{
+  return do_match_line(&c);
 }
 
 val format_field(val obj, val modifier, val filter, val eval_fun)
@@ -2014,6 +2037,8 @@ static val v_trailer(match_files_ctx *c)
   }
 }
 
+void freeform_prepare(val vals, match_files_ctx *c, match_line_ctx *mlc);
+
 static val v_freeform(match_files_ctx *c)
 {
   spec_bind (specline, first_spec, c->spec);
@@ -2029,33 +2054,42 @@ static val v_freeform(match_files_ctx *c)
     debuglf(specline, lit("freeform match failure: no data"), nao);
     return nil;
   } else {
-    uses_or2;
-    val limit = or2(if2(fixnump(first(vals)), first(vals)),
-                    if2(fixnump(second(vals)), second(vals)));
-    val term = or2(if2(stringp(first(vals)), first(vals)),
-                   if2(stringp(second(vals)), second(vals)));
-    val ff_specline = first(c->spec);
-    val ff_dataline = lazy_str(c->data, term, limit);
+    match_line_ctx mlc;
+    freeform_prepare(vals, c, &mlc);
+    c->data = nil;
 
-    cons_bind (new_bindings, success,
-               match_line(ml_all(c->bindings, ff_specline, ff_dataline, zero,
-                                 c->data_lineno, first(c->files))));
+    {
+      cons_bind (new_bindings, success, do_match_line(&mlc));
 
-    if (!success) {
-      debuglf(specline, lit("freeform match failure"), nao);
-      return nil;
+      if (!success) {
+        debuglf(specline, lit("freeform match failure"), nao);
+        return nil;
+      }
+
+      if (fixnump(success)) {
+        c->data = lazy_str_get_trailing_list(mlc.dataline, success);
+        c->data_lineno = plus(c->data_lineno, one);
+      }
+
+      c->bindings = new_bindings;
     }
-
-    if (fixnump(success)) {
-      c->data = lazy_str_get_trailing_list(ff_dataline, success);
-      c->data_lineno = plus(c->data_lineno, num(1));
-    }
-
-    c->bindings = new_bindings;
   }
 
   return next_spec_k;
 }
+
+void freeform_prepare(val vals, match_files_ctx *c, match_line_ctx *mlc)
+{
+  uses_or2;
+  val first_spec = first(c->spec);
+  val limit = or2(if2(fixnump(first(vals)), first(vals)),
+                  if2(fixnump(second(vals)), second(vals)));
+  val term = or2(if2(stringp(first(vals)), first(vals)),
+                 if2(stringp(second(vals)), second(vals)));
+  val dataline = lazy_str(c->data, term, limit);
+  *mlc = ml_all(c->bindings, first_spec, dataline, zero, c->data_lineno, first(c->files));
+}
+
 
 static val v_block(match_files_ctx *c)
 {

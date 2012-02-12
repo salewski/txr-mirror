@@ -1,3 +1,24 @@
+2012-02-11  Kaz Kylheku  <kaz@kylheku.com>
+
+	Task #11486: continuation. Now able to @(skip) through
+	a large file horizontally under @(freeform) in constant memory.
+	Position reporting is incorrect.
+
+	* match.c (match_line_ctx): New member, base.
+	(ml_all): Initialize new member to zero.
+	(consume_prefix): New static function.
+	(do_match_line): New static function, contains implementation of
+	match_line. Calls consume_prefix.
+	(match_line): Becomes a wrapper for do_match_line.
+	(search_form, h_skip): Call consume_prefix.
+	(freeform_prepare): New function. External to avoid inlining.
+	(v_freeform): Uses do_match_line, to down context by reference,
+	and also refactored to avoid spurious retention of c->data.
+
+	* unwind.c (uw_push-block, uw_push_env, uw_push_debug,
+	uw_push_catch): Zero out the structure, otherwise the unused
+	fields can cause spurious retention.
+
 2012-02-09  Kaz Kylheku  <kaz@kylheku.com>
 
 	Task #11486: preparatory refactoring.
