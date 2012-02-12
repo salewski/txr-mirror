@@ -56,7 +56,7 @@ static void show_bindings(val env, val stream)
   }
 }
 
-val debug(val form, val bindings, val data, val line, val chr)
+val debug(val form, val bindings, val data, val line, val val pos, val base)
 {
   uses_or2;
   val lineno = source_loc(form);
@@ -80,12 +80,12 @@ val debug(val form, val bindings, val data, val line, val chr)
       }
 
       if (print_data) {
-        if (data && chr) {
-          val prefix = sub_str(data, zero, chr);
-          val suffix = sub_str(data, chr, nil);
+        if (data && pos) {
+          val prefix = sub_str(data, zero, pos);
+          val suffix = sub_str(data, pos, nil);
 
           format(std_output, lit("data (~s:~s):\n~s . ~s\n"),
-                 line, chr, prefix, suffix, nao);
+                 line, plus(pos, base), prefix, suffix, nao);
         } else {
           format(std_output, lit("data (~s):\n~s\n"), line, data, nao);
         }

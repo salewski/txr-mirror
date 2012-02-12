@@ -380,14 +380,14 @@ typedef val (*h_match_func)(match_line_ctx *c);
 
 #define LOG_MISMATCH(KIND)                                              \
   debuglf(elem, lit(KIND " mismatch, position ~a (~a:~a)"),             \
-          c->pos, c->file, c->data_lineno, nao);                        \
+          plus(c->pos, c->base), c->file, c->data_lineno, nao);         \
   debuglf(elem, lit("  ~a"), c->dataline, nao);                         \
   if (c_num(c->pos) < 77)                                               \
     debuglf(elem, lit("  ~*~a^"), c->pos, lit(""), nao)
 
 #define LOG_MATCH(KIND, EXTENT)                                         \
   debuglf(elem, lit(KIND " matched, position ~a-~a (~a:~a)"),           \
-          c->pos, EXTENT, c->file, c->data_lineno, nao);                \
+          plus(c->pos, c->base), EXTENT, c->file, c->data_lineno, nao); \
   debuglf(elem, lit("  ~a"), c->dataline, nao);                         \
   if (c_num(EXTENT) < 77)                                               \
     debuglf(elem, lit("  ~*~a~<*~a^"), c->pos, lit(""),                 \
@@ -1110,7 +1110,8 @@ static val do_match_line(match_line_ctx *c)
 
     elem = first(c->specline);
 
-    debug_check(elem, c->bindings, c->dataline, c->data_lineno, c->pos);
+    debug_check(elem, c->bindings, c->dataline, c->data_lineno,
+                c->pos, c->base);
 
     switch (elem ? type(elem) : 0) {
     case CONS: /* directive */
@@ -3437,7 +3438,8 @@ repeat_spec_same_data:
   {
     spec_bind (specline, first_spec, c.spec);
 
-    debug_check(first_spec, c.bindings, if2(consp(c.data), car(c.data)), c.data_lineno, nil);
+    debug_check(first_spec, c.bindings, if2(consp(c.data), car(c.data)), 
+                c.data_lineno, nil, nil);
 
     if (consp(first_spec) && !rest(specline)) {
       val sym = first(first_spec);
