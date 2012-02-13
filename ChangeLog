@@ -1,5 +1,23 @@
 2012-02-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (obj_print): Print control characters in string and
+	character literals as hex escapes, followed by semicolon if
+	necessary. Don't use iswprint function since it is locale-specific
+	and concludes that non-ASCII characters are unprintable.
+	Changed print syntax for lazy strings.
+	(obj_pprint): Changed print syntax for lazy strings.
+
+	* parser.l: Bugfix in hex/octal character constant.
+	num_esc(yytext) was called rather than num_esc(yytext+1).
+
+	* parser.y (chrlit): Bugfix: missing case for hex and octal
+	constants which are given by a LITCHAR token.
+
+	* stream.c (vformat): Bugfix: strings were being printed as if using ~a
+	even under ~s.
+
+2012-02-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	Task #11486
 
 	* match.c (h_coll): Call consume_prefix in the loop.

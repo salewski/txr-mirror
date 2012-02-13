@@ -812,6 +812,8 @@ chrlit : HASH_BACKSLASH IDENT   { wchar_t ch;
                                                str, nao); }}
                                   end_of_char();
                                   $$ = chr(ch); }
+       | HASH_BACKSLASH LITCHAR { $$ = chr($2);
+                                  end_of_char(); }
        | HASH_BACKSLASH error   { $$ = nil;
                                   yybadtoken(yychar,
                                              lit("character literal")); }
