@@ -1010,10 +1010,6 @@ val vformat(val stream, val fmtstr, va_list vl)
             value = c_num(obj);
             sprintf(num_buf, num_fmt->dec, value);
             goto output_num;
-          } else if (stringp(obj)) {
-            if (!vformat_str(stream, obj, width, left, precision))
-              return nil;
-            continue;
           } else if (bignump(obj)) {
             int nchars = mp_radix_size(mp(obj), 10); 
             if (nchars >= (int) sizeof (num_buf))

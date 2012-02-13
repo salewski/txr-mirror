@@ -3789,7 +3789,12 @@ val obj_print(val obj, val out)
     {
       const wchar_t *ptr;
       put_char(out, chr('"'));
+      int semi_flag = 0;
+
       for (ptr = c_str(obj); *ptr; ptr++) {
+        if (semi_flag && iswxdigit(*ptr))
+          put_char(out, chr(';'));
+        semi_flag = 0;
         switch (*ptr) {
         case '\a': put_string(out, lit("\\a")); break;
         case '\b': put_string(out, lit("\\b")); break;
@@ -3802,10 +3807,12 @@ val obj_print(val obj, val out)
         case '\\': put_string(out, lit("\\\\")); break;
         case 27: put_string(out, lit("\\e")); break;
         default:
-          if (iswprint(*ptr))
+          if (*ptr >= ' ') {
             put_char(out, chr(*ptr));
-          else
-            format(out, lit("\\~03o"), num(*ptr), nao);
+          } else {
+            format(out, lit("\\x~,02X"), num(*ptr), nao);
+            semi_flag = 1;
+          }
         }
       }
       put_char(out, chr('"'));
@@ -3828,10 +3835,10 @@ val obj_print(val obj, val out)
       case 27: put_string(out, lit("esc")); break;
       case ' ': put_string(out, lit("space")); break;
       default:
-        if (iswprint(ch))
+        if (ch >= ' ')
           put_char(out, chr(ch));
         else
-          format(out, lit("x~x"), num(ch), nao);
+          format(out, lit("x~,02x"), num(ch), nao);
       }
     }
     return obj;
@@ -3868,8 +3875,7 @@ val obj_print(val obj, val out)
     }
     return obj;
   case LSTR:
-    obj_print(obj->ls.prefix, out);
-    put_string(out, lit("#<... lazy string>"));
+    format(out, lit("#<lazy-string: ~s>"), obj->ls.prefix);
     return obj;
   case COBJ:
     obj->co.ops->print(obj, out);
@@ -3964,8 +3970,7 @@ val obj_pprint(val obj, val out)
     }
     return obj;
   case LSTR:
-    obj_pprint(obj->ls.prefix, out);
-    put_string(out, lit("..."));
+    format(out, lit("#<lazy-string: ~a>"), obj->ls.prefix);
     return obj;
   case COBJ:
     obj->co.ops->print(obj, out);

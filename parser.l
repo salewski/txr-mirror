@@ -601,7 +601,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                                         }
 
 <CHRLIT>(x{HEX}+|o{OCT}+) {
-                            yylval.chr = num_esc(yytext);
+                            yylval.chr = num_esc(yytext+1);
                             return LITCHAR;
                           }
 
