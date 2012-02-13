@@ -19,8 +19,9 @@ int debug_depth;
 val debug_block_s;
 static int step_mode;
 static int next_depth = -1;
-val breakpoints;
-val last_command;
+static val breakpoints;
+static val last_command;
+static int cols = 80;
 
 static void help(val stream)
 {
@@ -81,8 +82,17 @@ val debug(val form, val bindings, val data, val line, val pos, val base)
 
       if (print_data) {
         if (data && pos) {
-          val prefix = sub_str(data, zero, pos);
-          val suffix = sub_str(data, pos, nil);
+          val half = num((cols - 8) / 2);
+          val full = num((cols - 8));
+          val prefix, suffix;
+
+          if (lt(pos, half)) {
+            prefix = sub_str(data, zero, pos);
+            suffix = sub_str(data, pos, full);
+          } else {
+            prefix = sub_str(data, minus(pos, half), pos);
+            suffix = sub_str(data, pos, plus(pos, half));
+          }
 
           format(std_output, lit("data (~s:~s):\n~s . ~s\n"),
                  line, plus(pos, base), prefix, suffix, nao);
@@ -169,4 +179,11 @@ void debug_init(void)
   step_mode = 1;
   protect(&breakpoints, &last_command, (val *) 0);
   debug_block_s = intern(lit("debug-block"), system_package);
+  {
+    char *columns = getenv("COLUMNS");
+    if (columns)
+      cols = atoi(columns);
+    if (cols < 40)
+      cols = 40;
+  }
 }
