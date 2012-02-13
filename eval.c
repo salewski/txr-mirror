@@ -789,7 +789,7 @@ static val *dwim_loc(val form, val env, val op, val newval, val *retval)
     {
       if (hashp(obj)) {
         val new_p, *loc;
-        if (lt(length(args),two))
+        if (lt(length(args), one))
           eval_error(form, lit("[~s ...]: hash indexing needs at least one arg"),
                      obj, nao);
         loc = gethash_l(obj, first(args), &new_p);
@@ -1054,7 +1054,7 @@ static val op_dwim(val form, val env)
   case COBJ:
     {
       if (hashp(obj)) {
-        if (lt(length(args), two))
+        if (lt(length(args), one))
           eval_error(form, lit("[~s ...]: hash indexing needs at least one arg"),
                      obj, nao);
         return gethash_n(obj, first(args), second(args));

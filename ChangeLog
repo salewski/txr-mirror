@@ -1,3 +1,8 @@
+2012-02-13  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (dwim_loc, op_dwim): Bugfix: hash indexing requiring
+	at least two arguments, rather than at least one.
+
 2012-02-12  Kaz Kylheku  <kaz@kylheku.com>
 
 	* HACKING: Added note about register save areas, which can contribute
