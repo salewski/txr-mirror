@@ -1,5 +1,10 @@
 2012-02-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	* HACKING: Added note about register save areas, which can contribute
+	to spurious retention.
+
+2012-02-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	* debug.c (breakpoints, last_command): linkage changed to static.
 	(cols): New static variable.
 	(debug): Print context intelligently, fitting into the width of
