@@ -95,6 +95,7 @@ syn match txr_char "@[ \t]*\\."
 syn match txr_char "@[ \t]*\\x[0-9A-Fa-f]\+"
 syn match txr_char "@[ \t]*\\[0-9]\+"
 syn match txr_variable "@[ \t]*[*]\?[ \t]*[A-Za-z_][A-Za-z0-9_]*"
+syn match txr_metanum "@[0-9]\+"
 syn match txr_regdir "@[ \t]*/\(\\/\|[^/]\)*/"
 
 syn match txr_chr "#\\x[A-Fa-f0-9]\+" contained
@@ -110,16 +111,16 @@ syn region txr_bracevar matchgroup=Delimiter start="@[ \t]*[*]\?{" matchgroup=De
 
 syn region txr_directive matchgroup=Delimiter start="@[ \t]*(" matchgroup=Delimiter end=")" contains=txr_keyword,txr_string,txr_list,txr_dwim,txr_metabkt,txr_meta,txr_quasilit,txr_num,txr_ident,txr_regex,txr_string,txr_variable,txr_chr,txr_hash,txr_ncomment
 
-syn region txr_list contained matchgroup=Delimiter start="(" matchgroup=Delimiter end=")" contains=txl_keyword,txr_string,txr_regex,txr_num,txr_ident,txr_variable,txr_meta,txr_metabkt,txr_list,txr_dwim,txr_quasilit,txr_chr,txr_hash,txr_quote,txr_ncomment
+syn region txr_list contained matchgroup=Delimiter start="(" matchgroup=Delimiter end=")" contains=txl_keyword,txr_string,txr_regex,txr_num,txr_ident,txr_variable,txr_metanum,txr_meta,txr_metabkt,txr_list,txr_dwim,txr_quasilit,txr_chr,txr_hash,txr_quote,txr_ncomment
 
-syn region txr_dwim contained matchgroup=Delimiter start="\[" matchgroup=Delimiter end="\]" contains=txl_keyword,txr_string,txr_regex,txr_num,txr_ident,txr_variable,txr_meta,txr_metabkt,txr_list,txr_dwim,txr_dwim,txr_quasilit,txr_chr,txr_hash,txr_quote,txr_ncomment
+syn region txr_dwim contained matchgroup=Delimiter start="\[" matchgroup=Delimiter end="\]" contains=txl_keyword,txr_string,txr_regex,txr_num,txr_ident,txr_variable,txr_metanum,txr_meta,txr_metabkt,txr_list,txr_dwim,txr_dwim,txr_quasilit,txr_chr,txr_hash,txr_quote,txr_ncomment
 
-syn region txr_meta contained matchgroup=Delimiter start="@[ \t]*(" matchgroup=Delimiter end=")" contains=txl_keyword,txr_string,txr_list,txr_dwim,txr_regex,txr_num,txr_ident,txr_variable,txr_meta,txr_metabkt,txr_quasilit,txr_chrb,txr_hash,txr_quote,txr_ncomment
+syn region txr_meta contained matchgroup=Delimiter start="@[ \t]*(" matchgroup=Delimiter end=")" contains=txl_keyword,txr_string,txr_list,txr_dwim,txr_regex,txr_num,txr_ident,txr_variable,txr_metanum,txr_meta,txr_metabkt,txr_quasilit,txr_chrb,txr_hash,txr_quote,txr_ncomment
 
-syn region txr_metabkt contained matchgroup=Delimiter start="@[ \t]*\[" matchgroup=Delimiter end="\]" contains=txl_keyword,txr_string,txr_list,txr_dwim,txr_regex,txr_num,txr_ident,txr_variable,txr_meta,txr_metabkt,txr_quasilit,txr_chrb,txr_hash,txr_quote,txr_ncomment
+syn region txr_metabkt contained matchgroup=Delimiter start="@[ \t]*\[" matchgroup=Delimiter end="\]" contains=txl_keyword,txr_string,txr_list,txr_dwim,txr_regex,txr_num,txr_ident,txr_variable,txr_metanum,txr_meta,txr_metabkt,txr_quasilit,txr_chrb,txr_hash,txr_quote,txr_ncomment
 
 syn region txr_string contained oneline start=+"+ skip=+\\\\\|\\"+ end=+"+
-syn region txr_quasilit contained oneline start=+`+ skip=+\\\\\|\\`+ end=+`+ contains=txr_meta,txr_metabkt,txr_variable,txr_bracevar
+syn region txr_quasilit contained oneline start=+`+ skip=+\\\\\|\\`+ end=+`+ contains=txr_meta,txr_metabkt,txr_variable,txr_metanum,txr_bracevar
 
 hi def link txr_at Special
 hi def link txr_atstar Special
@@ -137,6 +138,7 @@ hi def link txr_quasilit String
 hi def link txr_regex String
 hi def link txr_regdir String
 hi def link txr_variable Identifier
+hi def link txr_metanum Identifier
 hi def link txr_bracevar Identifier
 hi def link txr_ident Identifier
 hi def link txr_num Number

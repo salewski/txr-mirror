@@ -833,6 +833,8 @@ quasi_items : quasi_item                { $$ = cons($1, nil); }
 quasi_item : litchars           { $$ = lit_char_helper($1); }
            | TEXT               { $$ = string_own($1); }
            | o_var              { $$ = $1; }
+           | METANUM            { $$ = cons(var_s, cons($1, nil));
+                                  rl($$, num(lineno)); }
            | list               { $$ = rlcp(cons(expr_s, expand($1)), $1); }
            ;
 

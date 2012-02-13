@@ -1,5 +1,18 @@
 2012-02-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (subst_vars): Handle lone symbols (not wrapped
+	in sys::var form) as variables. This allows interpretation of metanums
+	in quasiliterals, because these are replaced by variables in the
+	op expander.
+
+	* parser.l: Recognize METANUM in QSILIT state.
+
+	* parser.y (quasi_item): METANUM parsed in quasiliteral.
+
+	* txr.vim: Metanums highlighted properly.
+
+2012-02-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (dwim_loc, op_dwim): Bugfix: hash indexing requiring
 	at least two arguments, rather than at least one.
 
