@@ -1,5 +1,12 @@
 2012-02-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (lazy_flatten): Bugfix: function was assuming that
+	the input is a list, and not handling the case
+	atom -> (atom) like its non-lazy counterpart.
+	This broke @(next :list expr).
+
+2012-02-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (obj_print): Print control characters in string and
 	character literals as hex escapes, followed by semicolon if
 	necessary. Don't use iswprint function since it is locale-specific

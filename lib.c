@@ -729,13 +729,17 @@ static val lazy_flatten_func(val env, val lcons)
 
 val lazy_flatten(val list)
 {
-  val escape = nil;
-  val next = lazy_flatten_scan(list, &escape);
+  if (atom(list)) {
+    return cons(list, nil);
+  } else {
+    val escape = nil;
+    val next = lazy_flatten_scan(list, &escape);
 
-  if (!next)
-    return nil;
+    if (!next)
+      return nil;
 
-  return make_lazy_cons(func_f1(cons(next, escape), lazy_flatten_func));
+    return make_lazy_cons(func_f1(cons(next, escape), lazy_flatten_func));
+  }
 }
 
 cnum c_num(val num);
@@ -3875,7 +3879,7 @@ val obj_print(val obj, val out)
     }
     return obj;
   case LSTR:
-    format(out, lit("#<lazy-string: ~s>"), obj->ls.prefix);
+    format(out, lit("#<lazy-string: ~s>"), obj->ls.prefix, nao);
     return obj;
   case COBJ:
     obj->co.ops->print(obj, out);
@@ -3970,7 +3974,7 @@ val obj_pprint(val obj, val out)
     }
     return obj;
   case LSTR:
-    format(out, lit("#<lazy-string: ~a>"), obj->ls.prefix);
+    format(out, lit("#<lazy-string: ~a>"), obj->ls.prefix, nao);
     return obj;
   case COBJ:
     obj->co.ops->print(obj, out);
