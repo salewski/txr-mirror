@@ -1666,19 +1666,22 @@ static val rangev_func(val env, val lcons)
 {
   cons_bind (from, to_step, env);
   cons_bind (to, step, to_step);
+  val next = if3(functionp(step),
+                 funcall1(step, from),
+                 plus(step, from));
 
   rplaca(lcons, from);
 
-  if (equal(from, to)) {
+  if (eql(from, to) ||
+      (lt(from, to) && gt(next, to)) ||
+      (gt(from, to) && lt(next, to)))
+  {
     rplacd(lcons, nil);
     return nil;
   }
 
-  if (functionp(step))
-    rplaca(env, funcall1(step, from));
-  else
-    rplaca(env, plus(from, step));
   rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+  rplaca(env, next);
   return nil;
 }
 
