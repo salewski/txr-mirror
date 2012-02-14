@@ -1,3 +1,8 @@
+2012-02-14  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (rangev_func): Improved termination test. The sequence
+	not only if it achieves the endpoint, but if it crosses it.
+
 2012-02-13  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (dwim_loc): Allow assignment to the dwim place when it
