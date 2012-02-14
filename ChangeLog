@@ -1,5 +1,17 @@
 2012-02-14  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (rangev): If a descending range is specified,
+	but the step is omitted, the step should be negative one
+	rather than one.
+	(range_star_v_func, range_star_v): New static functions.
+	(eval_init): New function, range*, registered.
+
+	* txr.1: Stub section for range is also for range*.
+
+	* txr.vim: Recognize range* function.
+
+2012-02-14  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (rangev_func): Improved termination test. The sequence
 	not only if it achieves the endpoint, but if it crosses it.
 

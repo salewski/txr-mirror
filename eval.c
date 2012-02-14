@@ -1690,10 +1690,49 @@ static val rangev(val args)
   uses_or2;
   val from = or2(first(args), zero);
   val to = second(args);
-  val step = or2(third(args), one);
+  val step = or2(third(args), if3(le(from, to), one, negone));
   val env = cons(from, cons(to, step));
 
   return make_lazy_cons(func_f1(env, rangev_func));
+}
+
+static val range_star_v_func(val env, val lcons)
+{
+  cons_bind (from, to_step, env);
+  cons_bind (to, step, to_step);
+  val next = if3(functionp(step),
+                 funcall1(step, from),
+                 plus(step, from));
+
+  rplaca(lcons, from);
+
+  if (eql(next, to) ||
+      (lt(from, to) && gt(next, to)) ||
+      (gt(from, to) && lt(next, to)))
+  {
+    rplacd(lcons, nil);
+    return nil;
+  }
+
+  rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+  rplaca(env, next);
+  return nil;
+}
+
+static val range_star_v(val args)
+{
+  uses_or2;
+  val from = or2(first(args), zero);
+  val to = second(args);
+
+  if (eql(from, to)) {
+    return nil;
+  } else {
+    val step = or2(third(args), if3(le(from, to), one, negone));
+    val env = cons(from, cons(to, step));
+
+    return make_lazy_cons(func_f1(env, range_star_v_func));
+  }
 }
 
 static val generate_func(val env, val lcons)
@@ -2111,6 +2150,7 @@ void eval_init(void)
   reg_fun(intern(lit("random"), user_package), func_n2(random));
 
   reg_fun(intern(lit("range"), user_package), func_n0v(rangev));
+  reg_fun(intern(lit("range*"), user_package), func_n0v(range_star_v));
   reg_fun(generate_s, func_n2(generate));
   reg_fun(intern(lit("repeat"), user_package), func_n1v(repeatv));
   reg_fun(intern(lit("force"), user_package), func_n1(force));
