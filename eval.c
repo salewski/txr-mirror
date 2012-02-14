@@ -689,13 +689,19 @@ static val op_defun(val form, val env)
   return name;
 }
 
+static val op_modplace(val form, val env);
+
 static val *dwim_loc(val form, val env, val op, val newval, val *retval)
 {
   val obj = eval_lisp1(second(form), env, form);
   val args = eval_args_lisp1(rest(rest(form)), env, form);
 
-  if (!obj)
-    eval_error(form, lit("[~s ]: cannot assign nil"), obj, nao);
+  if (!obj) {
+    val tempform = list(op, second(form), 
+                        cons(quote_s, cons(newval, nil)), nao);
+    *retval = op_modplace(tempform, env);
+    return 0;
+  }
 
   switch (type(obj)) {
   case LIT:
@@ -777,7 +783,7 @@ static val *dwim_loc(val form, val env, val op, val newval, val *retval)
         newlist = replace_list(obj, car(index), cdr(index), newval);
         tempform = list(op, second(form), 
                         cons(quote_s, cons(newlist, nil)), nao);
-        eval(tempform, env, form);
+        op_modplace(tempform, env);
         *retval = newval;
         return 0;
       } else {

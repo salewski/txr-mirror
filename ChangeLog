@@ -1,5 +1,12 @@
 2012-02-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (dwim_loc): Allow assignment to the dwim place when it
+	evaluates to nil, by building a form targetting the place,
+	and recursing into op_modplace.  Also, optimization: don't use eval
+	on a form built from the operator; just go to op_modplace directly.
+
+2012-02-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	Version 57
 
 	* txr.c (version): Bumped.
