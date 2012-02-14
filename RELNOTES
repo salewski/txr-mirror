@@ -1,3 +1,39 @@
+                                     TXR 57
+                                   2011-02-14
+
+
+  Features
+
+  - Operations under the @(freeform) directive can now scan in constant memory,
+    allowing large files to be processed.  (Scanning a single regex still
+    requires the data to be all in memory: an experimental patch for this
+    exists.)
+
+  - Improved printing of character position context in debugger when lines are
+    long.
+
+  - Metanums (@1, etc) can be used in a quasiliteral, which is useful for
+    quasiliterals occuring inside the op notation.
+
+  Bugs
+
+  - lazy-flatten function did not handle atoms. This broke @(next :list expr)
+    also, for the case where expr evaluates to a string atom.
+
+  - In format, the ~s directive was found to be printing strings in the same
+    way as ~a.
+
+  - Hex and octal character constants did not work.
+
+  - Control characters in strings and characters are printed as hex now rather
+    than octal. A semicolon is added if the next character would be interpreted
+    as part of the escape.
+
+  - Hash indexing via the [] notation was still requiring the default value
+    argument.
+
+
+
                                      TXR 56
                                    2011-02-06
 
