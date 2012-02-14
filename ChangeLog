@@ -1,5 +1,11 @@
 2012-02-14  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (rangev_func, rangev, range_star_v_func,
+	range_star_v): Regression: handle the case where the range is
+	open-ended (to is nil).
+
+2012-02-14  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (rangev): If a descending range is specified,
 	but the step is omitted, the step should be negative one
 	rather than one.

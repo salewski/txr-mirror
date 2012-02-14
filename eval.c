@@ -1673,8 +1673,9 @@ static val rangev_func(val env, val lcons)
   rplaca(lcons, from);
 
   if (eql(from, to) ||
-      (lt(from, to) && gt(next, to)) ||
-      (gt(from, to) && lt(next, to)))
+      (to && 
+       ((lt(from, to) && gt(next, to)) ||
+        (gt(from, to) && lt(next, to)))))
   {
     rplacd(lcons, nil);
     return nil;
@@ -1690,7 +1691,7 @@ static val rangev(val args)
   uses_or2;
   val from = or2(first(args), zero);
   val to = second(args);
-  val step = or2(third(args), if3(le(from, to), one, negone));
+  val step = or2(third(args), if3(to && gt(from, to), negone, one));
   val env = cons(from, cons(to, step));
 
   return make_lazy_cons(func_f1(env, rangev_func));
@@ -1707,8 +1708,9 @@ static val range_star_v_func(val env, val lcons)
   rplaca(lcons, from);
 
   if (eql(next, to) ||
-      (lt(from, to) && gt(next, to)) ||
-      (gt(from, to) && lt(next, to)))
+      (to &&
+       ((lt(from, to) && gt(next, to)) ||
+        (gt(from, to) && lt(next, to)))))
   {
     rplacd(lcons, nil);
     return nil;
@@ -1728,7 +1730,7 @@ static val range_star_v(val args)
   if (eql(from, to)) {
     return nil;
   } else {
-    val step = or2(third(args), if3(le(from, to), one, negone));
+    val step = or2(third(args), if3(to && gt(from, to), negone, one));
     val env = cons(from, cons(to, step));
 
     return make_lazy_cons(func_f1(env, range_star_v_func));
