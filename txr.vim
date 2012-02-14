@@ -80,7 +80,7 @@ syn keyword txl_keyword contained functionp interp-fun-p *random-state*
 syn keyword txl_keyword contained make-random-state random-state-p
 syn keyword txl_keyword contained random-fixnum random
 
-syn keyword txl_keyword contained range generate repeat force
+syn keyword txl_keyword contained range range* generate repeat force
 
 syn match txr_hash "#" contained
 syn match txr_quote "[,']" contained
@@ -113,7 +113,7 @@ syn region txr_directive matchgroup=Delimiter start="@[ \t]*(" matchgroup=Delimi
 
 syn region txr_list contained matchgroup=Delimiter start="(" matchgroup=Delimiter end=")" contains=txl_keyword,txr_string,txr_regex,txr_num,txr_ident,txr_variable,txr_metanum,txr_meta,txr_metabkt,txr_list,txr_dwim,txr_quasilit,txr_chr,txr_hash,txr_quote,txr_ncomment
 
-syn region txr_dwim contained matchgroup=Delimiter start="\[" matchgroup=Delimiter end="\]" contains=txl_keyword,txr_string,txr_regex,txr_num,txr_ident,txr_variable,txr_metanum,txr_meta,txr_metabkt,txr_list,txr_dwim,txr_dwim,txr_quasilit,txr_chr,txr_hash,txr_quote,txr_ncomment
+ayn region txr_dwim contained matchgroup=Delimiter start="\[" matchgroup=Delimiter end="\]" contains=txl_keyword,txr_string,txr_regex,txr_num,txr_ident,txr_variable,txr_metanum,txr_meta,txr_metabkt,txr_list,txr_dwim,txr_dwim,txr_quasilit,txr_chr,txr_hash,txr_quote,txr_ncomment
 
 syn region txr_meta contained matchgroup=Delimiter start="@[ \t]*(" matchgroup=Delimiter end=")" contains=txl_keyword,txr_string,txr_list,txr_dwim,txr_regex,txr_num,txr_ident,txr_variable,txr_metanum,txr_meta,txr_metabkt,txr_quasilit,txr_chrb,txr_hash,txr_quote,txr_ncomment
 
