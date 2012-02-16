@@ -295,6 +295,14 @@ val uw_throwf(val sym, val fmt, ...)
   abort();
 }
 
+val uw_throwfv(val sym, val fmt, val args)
+{
+  val stream = make_string_output_stream();
+  (void) formatv(stream, fmt, args);
+  uw_throw(sym, get_string_from_stream(stream));
+  abort();
+}
+
 val uw_errorf(val fmt, ...)
 {
   va_list vl;
@@ -304,6 +312,14 @@ val uw_errorf(val fmt, ...)
   (void) vformat(stream, fmt, vl);
   va_end (vl);
 
+  uw_throw(error_s, get_string_from_stream(stream));
+  abort();
+}
+
+val uw_errorfv(val fmt, val args)
+{
+  val stream = make_string_output_stream();
+  (void) formatv(stream, fmt, args);
   uw_throw(error_s, get_string_from_stream(stream));
   abort();
 }
