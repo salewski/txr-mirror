@@ -1094,7 +1094,7 @@ static val op_catch(val form, val env)
 
       if (uw_exception_subtype_p(exsym, type)) {
         val params = second(clause);
-        val clause_env = bind_args(env, params, if3(consp(exvals),
+        val clause_env = bind_args(env, params, if3(listp(exvals),
                                                     exvals, cons(exvals, nil)),
                                    clause);
         result = eval_progn(rest(rest(clause)), clause_env, clause);
