@@ -5428,6 +5428,47 @@ Example:
   Output:
   1 2 3
 
+.SS Operator catch
+
+.TP
+Syntax:
+
+  (catch <try-expression>
+    {(<symbol> (<arg>*) <body-form>*)}*)
+
+.TP
+Description:
+
+The catch operator establishes an exception catching block around
+the <try-expression>. The <try-expression> is followed by zero or more
+catch clauses. Each catch clause consists of a symbol which denotes
+an exception type, an argument list, and zero or more body forms.
+
+If <try-expression> terminates normally, then the catch clauses
+are ignored. The catch itself terminates, and its return value is
+that of the <try-expression>.
+
+If <try-expression> throws an exception which is a subtype of one or more of
+the type symbols given in the exception clauses, then the first (leftmost) such
+clause becomes the exit point where the exception is handled.
+The exception is converted into arguments for the clause, and the clause
+body is executed. When the clause body terminates, the catch terminates,
+and the return value of the catch is that of the clause body.
+
+If <try-expression> throws an exception which is not a subtype of any of
+the symbols given in the clauses, then the search for an exit point for
+the exception continues through the enclosing forms. The catch clauses
+are not involved in the handling of that exception.
+
+When a clause catches an exception, the number of arguments in the catch must
+match the number of elements in the exception.  A catch argument list
+resembles a function or lambda argument list, and may be dotted.  For instance
+the clause (foo (a . b)) catches an exception subtyped from foo, with one or
+more elements. The first element binds to parameter a, and the rest, if any,
+bind to parameter b.  If there is only one element, b takes on the value nil.
+
+Also see: the unwind-protect operator, and the functions throw, throwf
+and error.
 
 .SS Lisp Functions and Variables
 
@@ -6584,6 +6625,8 @@ Certain object types have a custom equal function.
 .SS Function generate
 
 .SS Function repeat
+
+.SS Functions throw, throwf and error
 
 .SH APPENDIX A: NOTES ON EXOTIC REGULAR EXPRESSIONS
 

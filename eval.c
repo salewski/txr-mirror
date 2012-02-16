@@ -1074,6 +1074,42 @@ static val op_dwim(val form, val env)
   return nil;
 }
 
+static val op_catch(val form, val env)
+{
+  val catch_syms = second(form);
+  val try_form = third(form);
+  val result = nil;
+
+  uw_catch_begin (catch_syms, exsym, exvals);
+
+  result = eval(try_form, env, try_form);
+
+  uw_catch(exsym, exvals) {
+    val catches = rest(rest(rest(form)));
+    val iter;
+
+    for (iter = catches; iter; iter = cdr(iter)) {
+      val clause = car(iter);
+      val type = first(clause);
+
+      if (uw_exception_subtype_p(exsym, type)) {
+        val params = second(clause);
+        val clause_env = bind_args(env, params, if3(consp(exvals),
+                                                    exvals, cons(exvals, nil)),
+                                   clause);
+        result = eval_progn(rest(rest(clause)), clause_env, clause);
+        break;
+      }
+    }
+  }
+
+  uw_unwind;
+
+  uw_catch_end;
+
+  return result;
+}
+
 static val subst_vars(val forms, val env)
 {
   list_collect_decl(out, iter);
@@ -1408,6 +1444,34 @@ static val expand_op(val body)
   }
 }
 
+static val expand_catch_clause(val form)
+{
+  val sym = first(form);
+  val vars = second(form);
+  val body = rest(rest(form));
+  val vars_ex = expand_vars(vars);
+  val body_ex = expand_forms(body);
+  if (body == body_ex && vars == vars_ex)
+    return form;
+  return rlcp(cons(sym, cons(vars_ex, body_ex)), form);
+}
+
+static val expand_catch(val body)
+{
+  val try_form = first(body);
+  val catch_clauses = rest(body);
+  val catch_syms = mapcar(car_f, catch_clauses);
+  val try_form_ex = expand(try_form);
+  val catch_clauses_ex = rlcp(mapcar(func_n1(expand_catch_clause), 
+                                     catch_clauses),
+                              catch_clauses);
+
+  val expanded = cons(catch_s, 
+                      cons(catch_syms, 
+                           cons(try_form_ex, catch_clauses_ex)));
+  return rlcp(expanded, body);
+}
+
 val expand(val form)
 {
   if (atom(form)) {
@@ -1538,6 +1602,8 @@ val expand(val form)
       return expand(expand_delay(rest(form)));
     } else if (sym == op_s) {
       return expand_op(rest(form));
+    } else if (sym == catch_s) {
+      return expand_catch(rest(form));
     } else {
       /* funtion call
          also handles: progn, prog1, call, if, and, or, 
@@ -1928,6 +1994,7 @@ void eval_init(void)
   sethash(op_table, return_from_s, cptr((mem_t *) op_return_from));
   sethash(op_table, dwim_s, cptr((mem_t *) op_dwim));
   sethash(op_table, quasi_s, cptr((mem_t *) op_quasi_lit));
+  sethash(op_table, catch_s, cptr((mem_t *) op_catch));
 
   reg_fun(cons_s, func_n2(cons));
   reg_fun(intern(lit("make-lazy-cons"), user_package), func_n1(make_lazy_cons));
@@ -2156,6 +2223,10 @@ void eval_init(void)
   reg_fun(generate_s, func_n2(generate));
   reg_fun(intern(lit("repeat"), user_package), func_n1v(repeatv));
   reg_fun(intern(lit("force"), user_package), func_n1(force));
+
+  reg_fun(throw_s, func_n1v(uw_throw));
+  reg_fun(intern(lit("throwf"), user_package), func_n2v(uw_throwfv));
+  reg_fun(error_s, func_n1v(uw_errorfv));
 
   eval_error_s = intern(lit("eval-error"), user_package);
   uw_register_subtype(eval_error_s, error_s);

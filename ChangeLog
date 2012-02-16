@@ -1,3 +1,22 @@
+2012-02-16  Kaz Kylheku  <kaz@kylheku.com>
+
+	TXR Lisp gets exception handling.
+
+	* eval.c (op_catch, expand_catch_clause,
+	expand_catch): New static functions.
+	(expand): Handle catch operator.
+	(eval_init): Added catch operator to op_table,
+	and registered new functions throw, throwf and error.
+
+	* txr.1: Documented catch operator and created
+	stub section for throw, throwf and error.
+
+	* txr.vim: Updated.
+
+	* unwind.c (uw_throwfv, uw_errorfv): New functions.
+
+	* unwind.h (uw_throwfv, uw_errorfv): Declared.
+
 2012-02-14  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (rangev_func, rangev, range_star_v_func,
