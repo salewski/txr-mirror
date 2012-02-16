@@ -1,5 +1,15 @@
 2012-02-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (op_catch): Treat the nil exception object as an empty
+	list, and not the atom nil.
+
+	* match.c (v_try): Do not transform an atomic exception x into
+	the list ((t . x)). Just to (x). This (t . x) representation is
+	a vestige of from the time when the exception consisted of the
+	old-style return values from txeval.
+
+2012-02-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	TXR Lisp gets exception handling.
 
 	* eval.c (op_catch, expand_catch_clause,
