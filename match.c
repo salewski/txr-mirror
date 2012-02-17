@@ -3506,7 +3506,7 @@ repeat_spec_same_data:
   debug_leave;
 }
 
-val match_funcall(val name, val arg, val other_args)
+val match_filter(val name, val arg, val other_args)
 {
   cons_bind (in_spec, in_bindings, uw_get_match_context());
   spec_bind (specline, first_spec, in_spec);
