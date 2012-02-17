@@ -35,6 +35,7 @@ val get_string_from_stream(val);
 val make_strlist_output_stream(void);
 val get_list_from_stream(val);
 val make_dir_stream(DIR *);
+val streamp(val obj);
 val close_stream(val stream, val throw_on_error);
 val get_line(val);
 val get_char(val);

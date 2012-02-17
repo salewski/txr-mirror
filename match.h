@@ -27,5 +27,6 @@
 extern val text_s, choose_s, gather_s, do_s, mod_s, modlast_s, counter_k;
 val format_field(val string_or_list, val modifier, val filter, val eval_fun);
 val match_filter(val name, val arg, val other_args);
+val match_fun(val name, val args, val input, val files);
 int extract(val spec, val filenames, val bindings);
 void match_init(void);

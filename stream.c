@@ -680,6 +680,11 @@ val make_dir_stream(DIR *dir)
   return cobj((mem_t *) dir, stream_s, &dir_ops.cobj_ops);
 }
 
+val streamp(val obj)
+{
+  return typeof(obj) == stream_s ? t : nil;
+}
+
 val close_stream(val stream, val throw_on_error)
 {
   type_check (stream, COBJ);

@@ -3378,6 +3378,7 @@ static val v_do(match_files_ctx *c)
 {
   spec_bind (specline, first_spec, c->spec);
   val args = rest(first_spec);
+  uw_set_match_context(cons(c->spec, c->bindings));
   (void) eval_progn(args, make_env(c->bindings, nil, nil), specline);
   return next_spec_k;
 }
@@ -3537,6 +3538,26 @@ val match_filter(val name, val arg, val other_args)
                 arg, out_arg_sym, out_arg_sym, nao);
     return cdr(out);
   }
+}
+
+val match_fun(val name, val args, val input, val files)
+{
+  val spec = cons(cons(cons(name, args), nil), nil);
+  cons_bind (in_spec, in_bindings, uw_get_match_context());
+  val data = if3(streamp(input),
+                 lazy_stream_cons(input),
+                 input);
+  /* TODO: pass through source location context */
+  match_files_ctx c = mf_all(spec, files, in_bindings, data, num(0));
+  val ret = v_fun(&c);
+
+  if (ret == nil)
+    return nil;
+
+  if (ret == decline_k)
+    sem_error(nil, lit("match_fun: function ~s not found"), name, nao);
+
+  return cons(c.bindings, cons(c.data, c.data_lineno));
 }
 
 int extract(val spec, val files, val predefined_bindings)

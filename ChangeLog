@@ -1,5 +1,22 @@
 2012-02-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Register match-fun.
+
+	* match.c (v_do): Store match context.
+	(match_fun): New function.
+
+	* match.h (match_fun): Declared.
+
+	* stream.c (streamp): New function.
+
+	* stream.h (streamp): Declared.
+
+	* txr.1: Stub section for match-fun.
+
+	* txr.vim: Highlight match-fun.
+
+2012-02-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (match_funcall): Function renamed to match_filter.
 
 	* match.h (match_funcall): Declaration updated.

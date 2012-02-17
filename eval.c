@@ -2228,6 +2228,8 @@ void eval_init(void)
   reg_fun(intern(lit("throwf"), user_package), func_n2v(uw_throwfv));
   reg_fun(error_s, func_n1v(uw_errorfv));
 
+  reg_fun(intern(lit("match-fun"), user_package), func_n4(match_fun));
+
   eval_error_s = intern(lit("eval-error"), user_package);
   uw_register_subtype(eval_error_s, error_s);
 }

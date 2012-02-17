@@ -81,7 +81,7 @@ syn keyword txl_keyword contained make-random-state random-state-p
 syn keyword txl_keyword contained random-fixnum random
 
 syn keyword txl_keyword contained range range* generate repeat force
-syn keyword txl_keyword contained throw throwf error 
+syn keyword txl_keyword contained throw throwf error match-fun
 
 syn match txr_hash "#" contained
 syn match txr_quote "[,']" contained
