@@ -141,7 +141,7 @@ val get_filter(val spec)
 {
   if (consp(spec)) {
     if (car(spec) == fun_k) {
-      return curry_123_2(func_n3(match_funcall), second(spec), rest(rest(spec)));
+      return curry_123_2(func_n3(match_filter), second(spec), rest(rest(spec)));
     } else {
       val filter_list = mapcar(func_n1(get_filter), spec);
 

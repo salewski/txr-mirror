@@ -1,5 +1,13 @@
 2012-02-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (match_funcall): Function renamed to match_filter.
+
+	* match.h (match_funcall): Declaration updated.
+
+	* filter.c (get_filter): Updated.
+
+2012-02-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (op_catch): Treat the nil exception object as an empty
 	list, and not the atom nil.
 
