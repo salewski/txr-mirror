@@ -1,3 +1,9 @@
+2012-02-17  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (dwim_loc): 2012-02-13 fix didn't do it. 
+	Here is a simpler way. We can let nil be treated as a list with a
+	simple goto. This solves all cases.
+
 2012-02-16  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): Register match-fun.
