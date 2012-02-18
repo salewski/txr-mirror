@@ -45,6 +45,7 @@
 #include "utf8.h"
 
 val std_input, std_output, std_error;
+val output_produced;
 
 struct strm_ops {
   struct cobj_ops cobj_ops;
@@ -124,6 +125,9 @@ static val stdio_put_string(val stream, val str)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
 
+  if (h->f == stdout)
+    output_produced = t;
+
   if (h->f != 0) {
     const wchar_t *s = c_str(str);
     while (*s) {
@@ -138,6 +142,8 @@ static val stdio_put_string(val stream, val str)
 static val stdio_put_char(val stream, val ch)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
+  if (h->f == stdout)
+    output_produced = t;
   return h->f != 0 && utf8_encode(c_chr(ch), stdio_put_char_callback, (mem_t *) h->f)
          ? t : stdio_maybe_write_error(stream);
 }

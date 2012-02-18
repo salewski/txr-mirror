@@ -25,6 +25,7 @@
  */
 
 extern val std_input, std_output, std_error;
+extern val output_produced;
 
 val make_stdio_stream(FILE *, val descr, val input, val output);
 val make_pipe_stream(FILE *, val descr, val input, val output);
