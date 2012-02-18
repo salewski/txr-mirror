@@ -35,4 +35,3 @@ extern int opt_vg_debug;
 extern int opt_derivative_regex;
 extern const wchli_t *version;
 extern const wchar_t *progname;
-extern int output_produced;

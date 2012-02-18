@@ -1,5 +1,21 @@
 2012-02-17  Kaz Kylheku  <kaz@kylheku.com>
 
+	Reimplementation of how TXR decides whether to dump bindings
+	or not. This is now done right inside the standard output stream.
+
+	* match.c (output_produced): Variable removed.
+	(complex_open): Assignment to output_produced removed.
+
+	* stream.c (output_produced): New global variable.
+	(stdio_put_string, stdio_put_char): Set output_produced
+	to t if the target of the output is stdout.
+
+	* stream.h (output_produced): Declared.
+
+	* txr.h (output_produced): Declaration removed.
+
+2012-02-17  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (dwim_loc): 2012-02-13 fix didn't do it. 
 	Here is a simpler way. We can let nil be treated as a list with a
 	simple goto. This solves all cases.

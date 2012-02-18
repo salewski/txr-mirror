@@ -47,7 +47,6 @@
 #include "eval.h"
 #include "match.h"
 
-int output_produced;
 int opt_nobindings = 0;
 int opt_lisp_bindings = 0;
 int opt_arraydims = 1;
@@ -1459,7 +1458,6 @@ static fpip_t complex_open(val name, val output, val append)
   if (!wcscmp(namestr, L"-")) {
     ret.close = fpip_fclose;
     ret.f = output ? stdout : stdin;
-    output_produced = output ? 1 : 0;
   } else if (namestr[0] == '!') {
     ret.close = fpip_pclose;
     ret.f = w_popen(namestr+1, output ? L"w" : L"r");
