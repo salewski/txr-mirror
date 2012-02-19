@@ -3313,13 +3313,21 @@ verbatim to the destination file, device or command pipe.
 
 .SS Output Variables
 
-Variables occurring in an output clause do not match anything, but instead their
-contents are output. A variable being output must be a simple string, not a
-list. Lists may be output within @(repeat) or @(rep) clauses. A list variable
-must be wrapped in as many nestings of these clauses as it has dimensions.  For
-instance, a two-dimensional list may be mentioned in output if it is inside a
-@(rep) or @(repeat) clause which is itself wrapped inside another @(rep) or
-@(repeat) clause.
+Variables occurring in an output clause do not match anything, but instead
+their contents are output.
+
+A variable being output can be any object. If it is of a type other
+than a string, it will be converted to a string as if by the tostring
+function in TXR Lisp.
+
+A list is converted to a string in a special way: the elements are
+individually converted to a string and then they are catenated together.
+The default separator string is a single space: an alternate separation
+can be specified as an argument in the brace substitution syntax.
+
+Lists may be output within @(repeat) or @(rep) clauses. Each nesting of
+these constructs removes one level of nesting from the list variables
+that it contains.
 
 In an output clause, the @{NAME NUMBER} variable syntax generates fixed-width
 field, which contains the variable's text.  The absolute value of the
@@ -3339,23 +3347,30 @@ See Output Filtering below.
 Additional syntax is supported in output variables that is does not appear
 in pattern matching variables.
 
-A square bracket index notation may be used to extract elements from a variable
-which is a list, or to extract ranges. Elements are indexed from zero. This
-notation is only available in brace-enclosed syntax, and looks like this:
+A square bracket index notation may be used to extract elements or
+ranges from a variable, which works with strings, vectors and lists.  Elements
+are indexed from zero. This notation is only available in brace-enclosed
+syntax, and looks like this:
 
 .IP
-@{NAME[expr]) 
+@{NAME[expr]} 
 
 Extract the element at the position given by expr.
 
 .IP
-@{NAME[expr1..expr2]) 
+@{NAME[expr1..expr2]}
 
-Extract a list of elements from the position given by expr1, up to
+Extract a range of elements from the position given by expr1, up to
 one position less than the position given by expr2.
-The elements from the range are catenated together to form a single string,
-with a separator character in  between. The default character is a space.
-An alternate character may be given as a string argument.
+
+If the variable is a list, it is treated as a list substitution,
+exactly as if it were the value of an unsubscripted list variable.
+The elements of the list are converted to strings and catenated
+together wit ha separator string between them, the default one being
+a single space.
+
+An alternate character may be given as a string argument in the brace
+notation.
 
 .TP
 Example:
