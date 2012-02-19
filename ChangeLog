@@ -1,5 +1,21 @@
 2012-02-18  Kaz Kylheku  <kaz@kylheku.com>
 
+	Allow braced output variables to actually be arbitrary substitutions.
+
+	* eval.c (subst_vars): Treat the variable as an arbitrary
+	expression rather than just a symbol.
+
+	* match.c (subst_vars): Likewise.
+
+	* parser.y (o_var): Further simplification. The first item in
+	an output var is an expr and not an IDENT.
+
+	* txr.1: Updated.
+
+	* txr.vim: Likewise.
+
+2012-02-18  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.y (o_var): Remove productions from grammar by using exprs_opt.
 
 2012-02-17  Kaz Kylheku  <kaz@kylheku.com>

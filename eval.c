@@ -1118,29 +1118,23 @@ static val subst_vars(val forms, val env)
       val sym = first(form);
 
       if (sym == var_s) {
-        val sym = second(form);
+        val expr = second(form);
         val pat = third(form);
         val modifiers = fourth(form);
-        val pair = lookup_var(env, sym);
+        val str = eval(expr, env, form);
 
-        if (pair) {
-          val str = cdr(pair);
+        if (!stringp(str) && !listp(str))
+          str = format(nil, lit("~a"), str, nao);
 
-          if (!stringp(str) && !listp(str))
-            str = format(nil, lit("~a"), str, nao);
-
-          if (pat)
-            forms = cons(str, cons(pat, rest(forms)));
-          else if (modifiers)
-            forms = cons(format_field(str, modifiers, nil, 
-                                      curry_123_1(func_n3(eval), env, form)),
-                         rest(forms));
-          else
-            forms = cons(str, rest(forms));
-          continue;
-        }
-        uw_throwf(query_error_s, lit("unbound variable ~a"),
-                                 sym, nao);
+        if (pat)
+          forms = cons(str, cons(pat, rest(forms)));
+        else if (modifiers)
+          forms = cons(format_field(str, modifiers, nil, 
+                                    curry_123_1(func_n3(eval), env, form)),
+                       rest(forms));
+        else
+          forms = cons(str, rest(forms));
+        continue;
       } else if (sym == quasi_s) {
         val nested = subst_vars(rest(form), env);
         list_collect_append(iter, nested);
