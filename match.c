@@ -1535,7 +1535,10 @@ static val extract_vars(val output_spec)
   if (consp(output_spec)) {
     val sym = first(output_spec);
     if (sym == var_s) {
-      list_collect (tai, second(output_spec));
+      if (bindable(second(output_spec)))
+        list_collect (tai, second(output_spec));
+      else
+        list_collect_nconc (tai, extract_vars(second(output_spec)));
     } else if (sym != expr_s) {
       for (; output_spec; output_spec = cdr(output_spec))
         list_collect_nconc(tai, extract_vars(car(output_spec)));
