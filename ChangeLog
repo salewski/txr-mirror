@@ -1,3 +1,7 @@
+2012-02-18  Kaz Kylheku  <kaz@kylheku.com>
+
+	* parser.y (o_var): Remove productions from grammar by using exprs_opt.
+
 2012-02-17  Kaz Kylheku  <kaz@kylheku.com>
 
 	Reimplementation of how TXR decides whether to dump bindings
