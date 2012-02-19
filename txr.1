@@ -3334,6 +3334,8 @@ for the output clause. The syntax for this is @(NAME :filter <filterspec>}.
 The filter specification syntax is the same as in the output clause.
 See Output Filtering below.
 
+.SS Output Variables: Indexing
+
 Additional syntax is supported in output variables that is does not appear
 in pattern matching variables.
 
@@ -3366,6 +3368,21 @@ Example:
 The above produces the text "b,c" in a field 10 spaces wide. The [1..3]
 argument extracts a range of a; the "," argument specifies an alternate
 separator string, and 10 specifies the field width.
+
+.SS Output Substitutions
+
+The brace syntax has another syntactic and semantic extension. In place
+of the symbol, an expression may appear. The value of that expression
+is substituted.
+
+Example:
+
+ @(bind a "foo")
+ @(output)
+ @{`@a:` -10}
+
+Here, the quasiliteral expression `@a:` is evaluated, producing the string
+"foo:". This string is printed right-adjusted in a 10 character field.
 
 .SS The Repeat Directive
 

@@ -108,7 +108,7 @@ syn match txr_ncomment ";.*" contained
 syn match txr_ident "[A-Za-z0-9!$%&*+\-<=>?\\^_~]\+" contained
 syn match txr_num "[+-]\?[0-9]\+" contained
 
-syn region txr_bracevar matchgroup=Delimiter start="@[ \t]*[*]\?{" matchgroup=Delimiter end="}" contains=txr_num,txr_ident,txr_string,txr_dwim,txr_list,txr_regex,txr_quasilit,txr_chr
+syn region txr_bracevar matchgroup=Delimiter start="@[ \t]*[*]\?{" matchgroup=Delimiter end="}" contains=txr_num,txr_meta,txr_metabkt,txr_ident,txr_string,txr_dwim,txr_list,txr_regex,txr_quasilit,txr_chr
 
 syn region txr_directive matchgroup=Delimiter start="@[ \t]*(" matchgroup=Delimiter end=")" contains=txr_keyword,txr_string,txr_list,txr_dwim,txr_metabkt,txr_meta,txr_quasilit,txr_num,txr_ident,txr_regex,txr_string,txr_variable,txr_chr,txr_hash,txr_ncomment
 

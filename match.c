@@ -1316,37 +1316,31 @@ static val subst_vars(val spec, val bindings, val filter)
       val sym = first(elem);
 
       if (sym == var_s) {
-        val sym = second(elem);
+        val expr = second(elem);
         val pat = third(elem);
         val modifiers = fourth(elem);
-        val pair = assoc(sym, bindings);
+        val str = txeval(spec, expr, bindings);
 
-        if (pair) {
-          val str = cdr(pair);
+        if (!stringp(str) && !listp(str))
+          str = format(nil, lit("~a"), str, nao);
 
-          if (!stringp(str) && !listp(str))
-            str = format(nil, lit("~a"), str, nao);
+        if (pat)
+          spec = cons(pat, rest(spec));
 
-          if (pat)
-            spec = cons(pat, rest(spec));
+        if (modifiers) {
+          spec = cons(format_field(str, modifiers, filter,
+                                   curry_123_2(func_n3(txeval), spec, bindings)),
+                      rest(spec));
+        } else {
+          if (listp(str))
+            str = cat_str(mapcar(func_n1(tostringp), str), lit(" "));
+          else
+            str = if3(stringp(str), str, tostringp(str));
 
-          if (modifiers) {
-            spec = cons(format_field(str, modifiers, filter,
-                                     curry_123_2(func_n3(txeval), spec, bindings)),
-                        rest(spec));
-          } else {
-            if (listp(str))
-              str = cat_str(mapcar(func_n1(tostringp), str), lit(" "));
-            else
-              str = if3(stringp(str), str, tostringp(str));
-
-            spec = cons(filter_string(filter, str), rest(spec));
-          }
-
-          continue;
+          spec = cons(filter_string(filter, str), rest(spec));
         }
-        uw_throwf(query_error_s, lit("unbound variable ~a"),
-                                 sym, nao);
+
+        continue;
       } else if (sym == quasi_s) {
         val nested = subst_vars(rest(elem), bindings, filter);
         list_collect_append(iter, nested);
