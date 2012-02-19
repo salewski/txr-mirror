@@ -1,5 +1,11 @@
 2012-02-19  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Corrected misleading text in description of output
+	variables. Lists do not have to be wrapped in @(repeat)/@(rep).
+	Indexing notation works on strings and vectors.
+
+2012-02-19  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (sub, ref, replace): New functions.
 
 	* lib.h (sub, ref, replace): Declared.
