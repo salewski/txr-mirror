@@ -1,5 +1,12 @@
 2012-02-18  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (extract_vars): If a brace var is actually an
+	expression, then recurse into the expression to find
+	variables. This allows us to do things like @{`@x`} inside
+	a @(repeat) or @(rep).
+
+2012-02-18  Kaz Kylheku  <kaz@kylheku.com>
+
 	Allow braced output variables to actually be arbitrary substitutions.
 
 	* eval.c (subst_vars): Treat the variable as an arbitrary
