@@ -3570,7 +3570,62 @@ val length(val seq)
   case VEC:
     return length_vec(seq);
   default:
-    type_mismatch(lit("~s is not a sequence"), cons, nao);
+    type_mismatch(lit("length: ~s is not a sequence"), cons, nao);
+  }
+}
+
+val sub(val seq, val from, val to)
+{
+  if (seq == nil)
+    return nil;
+  else switch (type(seq)) {
+  case CONS:
+  case LCONS:
+    return sub_list(seq, from, to);
+  case LIT:
+  case STR:
+    return sub_str(seq, from, to);
+  case VEC:
+    return sub_vec(seq, from, to);
+  default:
+    type_mismatch(lit("sub: ~s is not a sequence"), cons, nao);
+  }
+}
+
+val ref(val seq, val ind)
+{
+  if (seq == nil)
+    return nil;
+  else switch (type(seq)) {
+  case CONS:
+  case LCONS:
+    return listref(seq, ind);
+  case LIT:
+  case STR:
+    return chr_str(seq, ind);
+  case VEC:
+    return vecref(seq, ind);
+  default:
+    type_mismatch(lit("ref: ~s is not a sequence"), cons, nao);
+  }
+}
+
+val replace(val seq, val from, val to, val items)
+{
+  if (seq == nil)
+    goto list;
+  switch (type(seq)) {
+  case CONS:
+  case LCONS:
+  list:
+    return replace_list(seq, from, to, items);
+  case LIT:
+  case STR:
+    return replace_str(seq, from, to, items);
+  case VEC:
+    return replace_vec(seq, from, to, items);
+  default:
+    type_mismatch(lit("replace: ~s is not a sequence"), cons, nao);
   }
 }
 

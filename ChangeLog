@@ -1,3 +1,15 @@
+2012-02-19  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (sub, ref, replace): New functions.
+
+	* lib.h (sub, ref, replace): Declared.
+
+	* match.c (format_field): Generic indexing using new functions.
+
+	* txr.1: Documentation stub.
+
+	* txr.vim: Highlighting for new functions.
+
 2012-02-18  Kaz Kylheku  <kaz@kylheku.com>
 
 	* match.c (extract_vars): If a brace var is actually an
