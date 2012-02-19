@@ -636,16 +636,12 @@ o_var : IDENT                   { $$ = list(var_s, intern(string_own($1), nil),
                                             nao); }
       | IDENT o_elem            { $$ = list(var_s, intern(string_own($1), nil),
                                             $2, nao); }
-      | '{' IDENT '}'           { $$ = list(var_s, intern(string_own($2), nil),
-                                              nao); }
-      | '{' IDENT '}' o_elem    { $$ = list(var_s, intern(string_own($2), nil),
-                                              $4, nao); }
-      | '{' IDENT exprs '}'     { $$ = list(var_s, intern(string_own($2), nil),
-                                              nil, $3, nao); }
-      | '{' IDENT exprs '}' o_elem      { $$ = list(var_s, 
-                                                    intern(string_own($2), nil),
-                                                    $5, $3, nao); }
-      | IDENT error               { $$ = nil;
+      | '{' IDENT exprs_opt '}' { $$ = list(var_s, intern(string_own($2), nil),
+                                            nil, $3, nao); }
+      | '{' IDENT exprs_opt '}' o_elem      
+                                { $$ = list(var_s, intern(string_own($2), nil),
+                                            $5, $3, nao); }
+      | IDENT error             { $$ = nil;
                                     yybadtoken(yychar, lit("variable spec")); }
       ;
 
