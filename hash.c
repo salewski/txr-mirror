@@ -342,9 +342,15 @@ val remhash(val hash, val key)
 {
   struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
   val *pchain = vecref_l(h->table, num(h->hash_fun(key) % h->modulus));
-  *pchain = alist_remove1(*pchain, key);
-  h->count--;
-  bug_unless (h->count >= 0);
+  val existing = h->assoc_fun(key, *pchain);
+
+  if (existing) {
+    val loc = memq(existing, *pchain);
+    *pchain = nappend2(ldiff(*pchain, loc), cdr(loc));
+    h->count--;
+    bug_unless (h->count >= 0);
+  }
+
   return nil;
 }
 
