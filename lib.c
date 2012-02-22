@@ -4204,6 +4204,7 @@ void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),
   stream_init();
   eval_init();
   filter_init();
+  hash_init();
 
   gc_state(gc_save);
 }
