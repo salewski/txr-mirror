@@ -56,7 +56,7 @@ val spec_file_str;
 static mem_t *oom_realloc_handler(mem_t *old, size_t size)
 {
   format(std_error, lit("~a: out of memory\n"), prog_string, nao);
-  put_line(std_error, lit("false"));
+  put_line(lit("false"), std_error);
   abort();
 }
 

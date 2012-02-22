@@ -30,4 +30,5 @@ val make_random_state(val seed);
 val random_state_p(val obj);
 val random_fixnum(val state);
 val random(val state, val modulus);
+val rand(val modulus, val state);
 void rand_init(void);

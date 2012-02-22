@@ -269,7 +269,7 @@ val uw_throw(val sym, val exception)
     if (uw_exception_subtype_p(sym, query_error_s) ||
         uw_exception_subtype_p(sym, file_error_s)) {
       if (!output_produced)
-        put_line(std_output, lit("false"));
+        put_line(lit("false"), std_output);
       exit(EXIT_FAILURE);
     }
     abort();

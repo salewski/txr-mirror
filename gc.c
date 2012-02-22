@@ -429,7 +429,7 @@ static void sweep(void)
       if (0 && gc_dbg) {
         format(std_error, lit("~a: finalizing: "), progname, nao);
         obj_print(block, std_error);
-        put_char(std_error, chr('\n'));
+        put_char(chr('\n'), std_error);
       }
       finalize(block);
       block->t.type = (type_t) (block->t.type | FREE);

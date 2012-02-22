@@ -76,7 +76,7 @@ val error_s, type_error_s, internal_error_s;
 val numeric_error_s, range_error_s;
 val query_error_s, file_error_s, process_error_s;
 
-val nothrow_k, args_k;
+val nothrow_k, args_k, colon_k;
 
 val null_string;
 val nil_string;
@@ -476,7 +476,7 @@ val sub_list(val list, val from, val to)
   }
 }
 
-val replace_list(val list, val from, val to, val items)
+val replace_list(val list, val items, val from, val to)
 {
   val len = nil;
 
@@ -621,7 +621,9 @@ val memqual(val obj, val list)
 
 val tree_find(val obj, val tree, val testfun)
 {
-  if (funcall2(testfun, obj, tree))
+  uses_or2;
+
+  if (funcall2(or2(testfun, equal_f), obj, tree))
     return t;
   else if (consp(tree))
     return some_satisfy(tree, curry_123_2(func_n3(tree_find), 
@@ -1556,7 +1558,7 @@ val sub_str(val str_in, val from, val to)
   }
 }
 
-val replace_str(val str_in, val from, val to, val items)
+val replace_str(val str_in, val items, val from, val to)
 {
   val len = length_str(str_in);
   val len_it = length(items);
@@ -1784,7 +1786,7 @@ val int_str(val str, val base)
 {
   const wchar_t *wcs = c_str(str);
   wchar_t *ptr;
-  cnum b = c_num(base);
+  cnum b = if3(base, c_num(base), 10);
 
   /* TODO: detect if we have wcstoll */
   long value = wcstol(wcs, &ptr, b ? b : 10);
@@ -2087,7 +2089,8 @@ val func_f0(val env, val (*fun)(val))
   obj->f.env = env;
   obj->f.f.f0 = fun;
   obj->f.variadic = 0;
-  obj->f.minparam = 0;
+  obj->f.fixparam = 0;
+  obj->f.optargs = 0;
   return obj;
 }
 
@@ -2099,7 +2102,8 @@ val func_f1(val env, val (*fun)(val, val))
   obj->f.env = env;
   obj->f.f.f1 = fun;
   obj->f.variadic = 0;
-  obj->f.minparam = 1;
+  obj->f.fixparam = 1;
+  obj->f.optargs = 0;
   return obj;
 }
 
@@ -2111,7 +2115,8 @@ val func_f2(val env, val (*fun)(val, val, val))
   obj->f.env = env;
   obj->f.f.f2 = fun;
   obj->f.variadic = 0;
-  obj->f.minparam = 2;
+  obj->f.fixparam = 2;
+  obj->f.optargs = 0;
   return obj;
 }
 
@@ -2123,7 +2128,8 @@ val func_f3(val env, val (*fun)(val, val, val, val))
   obj->f.env = env;
   obj->f.f.f3 = fun;
   obj->f.variadic = 0;
-  obj->f.minparam = 3;
+  obj->f.fixparam = 3;
+  obj->f.optargs = 0;
   return obj;
 }
 
@@ -2135,7 +2141,8 @@ val func_f4(val env, val (*fun)(val, val, val, val, val))
   obj->f.env = env;
   obj->f.f.f4 = fun;
   obj->f.variadic = 0;
-  obj->f.minparam = 4;
+  obj->f.fixparam = 4;
+  obj->f.optargs = 0;
   return obj;
 }
 
@@ -2147,7 +2154,8 @@ val func_n0(val (*fun)(void))
   obj->f.env = nil;
   obj->f.f.n0 = fun;
   obj->f.variadic = 0;
-  obj->f.minparam = 0;
+  obj->f.fixparam = 0;
+  obj->f.optargs = 0;
   return obj;
 }
 
@@ -2159,7 +2167,8 @@ val func_n1(val (*fun)(val))
   obj->f.env = nil;
   obj->f.f.n1 = fun;
   obj->f.variadic = 0;
-  obj->f.minparam = 1;
+  obj->f.fixparam = 1;
+  obj->f.optargs = 0;
   return obj;
 }
 
@@ -2171,7 +2180,8 @@ val func_n2(val (*fun)(val, val))
   obj->f.env = nil;
   obj->f.f.n2 = fun;
   obj->f.variadic = 0;
-  obj->f.minparam = 2;
+  obj->f.fixparam = 2;
+  obj->f.optargs = 0;
   return obj;
 }
 
@@ -2183,7 +2193,8 @@ val func_n3(val (*fun)(val, val, val))
   obj->f.env = nil;
   obj->f.f.n3 = fun;
   obj->f.variadic = 0;
-  obj->f.minparam = 3;
+  obj->f.fixparam = 3;
+  obj->f.optargs = 0;
   return obj;
 }
 
@@ -2195,7 +2206,8 @@ val func_n4(val (*fun)(val, val, val, val))
   obj->f.env = nil;
   obj->f.f.n4 = fun;
   obj->f.variadic = 0;
-  obj->f.minparam = 4;
+  obj->f.fixparam = 4;
+  obj->f.optargs = 0;
   return obj;
 }
 
@@ -2207,7 +2219,8 @@ val func_f0v(val env, val (*fun)(val, val))
   obj->f.env = env;
   obj->f.f.f0v = fun;
   obj->f.variadic = 1;
-  obj->f.minparam = 0;
+  obj->f.fixparam = 0;
+  obj->f.optargs = 0;
   return obj;
 }
 
@@ -2219,7 +2232,8 @@ val func_f1v(val env, val (*fun)(val env, val, val rest))
   obj->f.env = env;
   obj->f.f.f1v = fun;
   obj->f.variadic = 1;
-  obj->f.minparam = 1;
+  obj->f.fixparam = 1;
+  obj->f.optargs = 0;
   return obj;
 }
 
@@ -2231,7 +2245,8 @@ val func_f2v(val env, val (*fun)(val env, val, val, val rest))
   obj->f.env = env;
   obj->f.f.f2v = fun;
   obj->f.variadic = 1;
-  obj->f.minparam = 2;
+  obj->f.fixparam = 2;
+  obj->f.optargs = 0;
   return obj;
 }
 
@@ -2243,7 +2258,8 @@ val func_f3v(val env, val (*fun)(val env, val, val, val, val rest))
   obj->f.env = env;
   obj->f.f.f3v = fun;
   obj->f.variadic = 1;
-  obj->f.minparam = 3;
+  obj->f.fixparam = 3;
+  obj->f.optargs = 0;
   return obj;
 }
 
@@ -2255,7 +2271,8 @@ val func_f4v(val env, val (*fun)(val env, val, val, val, val, val rest))
   obj->f.env = env;
   obj->f.f.f4v = fun;
   obj->f.variadic = 1;
-  obj->f.minparam = 4;
+  obj->f.fixparam = 4;
+  obj->f.optargs = 0;
   return obj;
 }
 
@@ -2267,7 +2284,8 @@ val func_n0v(val (*fun)(val rest))
   obj->f.env = nil;
   obj->f.f.n0v = fun;
   obj->f.variadic = 1;
-  obj->f.minparam = 0;
+  obj->f.fixparam = 0;
+  obj->f.optargs = 0;
   return obj;
 }
 
@@ -2279,7 +2297,8 @@ val func_n1v(val (*fun)(val, val rest))
   obj->f.env = nil;
   obj->f.f.n1v = fun;
   obj->f.variadic = 1;
-  obj->f.minparam = 1;
+  obj->f.fixparam = 1;
+  obj->f.optargs = 0;
   return obj;
 }
 
@@ -2291,7 +2310,8 @@ val func_n2v(val (*fun)(val, val, val rest))
   obj->f.env = nil;
   obj->f.f.n2v = fun;
   obj->f.variadic = 1;
-  obj->f.minparam = 2;
+  obj->f.fixparam = 2;
+  obj->f.optargs = 0;
   return obj;
 }
 
@@ -2303,7 +2323,8 @@ val func_n3v(val (*fun)(val, val, val, val rest))
   obj->f.env = nil;
   obj->f.f.n3v = fun;
   obj->f.variadic = 1;
-  obj->f.minparam = 3;
+  obj->f.fixparam = 3;
+  obj->f.optargs = 0;
   return obj;
 }
 
@@ -2315,7 +2336,43 @@ val func_n4v(val (*fun)(val, val, val, val, val rest))
   obj->f.env = nil;
   obj->f.f.n4v = fun;
   obj->f.variadic = 1;
-  obj->f.minparam = 4;
+  obj->f.fixparam = 4;
+  obj->f.optargs = 0;
+  return obj;
+}
+
+val func_n0o(val (*fun)(void), int reqargs)
+{
+  val obj = func_n0(fun);
+  obj->f.optargs = 0 - reqargs;
+  return obj;
+}
+
+val func_n1o(val (*fun)(val), int reqargs)
+{
+  val obj = func_n1(fun);
+  obj->f.optargs = 1 - reqargs;
+  return obj;
+}
+
+val func_n2o(val (*fun)(val, val), int reqargs)
+{
+  val obj = func_n2(fun);
+  obj->f.optargs = 2 - reqargs;
+  return obj;
+}
+
+val func_n3o(val (*fun)(val, val, val), int reqargs)
+{
+  val obj = func_n3(fun);
+  obj->f.optargs = 3 - reqargs;
+  return obj;
+}
+
+val func_n4o(val (*fun)(val, val, val, val), int reqargs)
+{
+  val obj = func_n4(fun);
+  obj->f.optargs = 4 - reqargs;
   return obj;
 }
 
@@ -2327,7 +2384,8 @@ val func_interp(val env, val form)
   obj->f.env = env;
   obj->f.f.interp_fun = form;
   obj->f.variadic = 1;
-  obj->f.minparam = 0;
+  obj->f.fixparam = 0;
+  obj->f.optargs = 0;
   return obj;
 }
 
@@ -2911,7 +2969,7 @@ val sub_vec(val vec_in, val from, val to)
   }
 }
 
-val replace_vec(val vec_in, val from, val to, val items)
+val replace_vec(val vec_in, val items, val from, val to)
 {
   val len = length_vec(vec_in);
   val len_it = length(items);
@@ -3244,7 +3302,7 @@ mem_t *cobj_handle(val cobj, val cls_sym)
 
 void cobj_print_op(val obj, val out)
 {
-  put_string(out, lit("#<"));
+  put_string(lit("#<"), out);
   obj_print(obj->co.cls, out);
   format(out, lit(": ~p>"), obj->co.handle, nao);
 }
@@ -3518,11 +3576,13 @@ val sort(val list, val lessfun, val keyfun)
 
 val find(val list, val key, val testfun, val keyfun)
 {
+  uses_or2;
+
   for (; list; list = cdr(list)) {
     val item = car(list);
-    val list_key = funcall1(keyfun, item);
+    val list_key = funcall1(or2(keyfun, identity_f), item);
 
-    if (funcall2(testfun, key, list_key))
+    if (funcall2(or2(testfun, equal_f), key, list_key))
       return item;
   }
 
@@ -3610,7 +3670,7 @@ val ref(val seq, val ind)
   }
 }
 
-val replace(val seq, val from, val to, val items)
+val replace(val seq, val items, val from, val to)
 {
   if (seq == nil)
     goto list;
@@ -3618,12 +3678,12 @@ val replace(val seq, val from, val to, val items)
   case CONS:
   case LCONS:
   list:
-    return replace_list(seq, from, to, items);
+    return replace_list(seq, items, from, to);
   case LIT:
   case STR:
-    return replace_str(seq, from, to, items);
+    return replace_str(seq, items, from, to);
   case VEC:
-    return replace_vec(seq, from, to, items);
+    return replace_vec(seq, items, from, to);
   default:
     type_mismatch(lit("replace: ~s is not a sequence"), cons, nao);
   }
@@ -3783,6 +3843,7 @@ static void obj_init(void)
 
   args_k = intern(lit("args"), keyword_package);
   nothrow_k = intern(lit("nothrow"), keyword_package);
+  colon_k = intern(lit(""), keyword_package);
 
   equal_f = func_n2(equal);
   eq_f = func_n2(eq);
@@ -3797,8 +3858,11 @@ static void obj_init(void)
 
 val obj_print(val obj, val out)
 {
+  if (out == nil)
+    out = std_output;
+
   if (obj == nil) {
-    put_string(out, lit("nil"));
+    put_string(lit("nil"), out);
     return obj;
   }
 
@@ -3809,35 +3873,35 @@ val obj_print(val obj, val out)
       val sym = car(obj);
 
       if (sym == quote_s || sym == qquote_s) {
-        put_char(out, chr('\''));
+        put_char(chr('\''), out);
         obj_print(second(obj), out);
       } else if (sym == unquote_s) {
-        put_char(out, chr(','));
+        put_char(chr(','), out);
         obj_print(second(obj), out);
       } else if (sym == splice_s) {
-        put_string(out, lit(",*"));
+        put_string(lit(",*"), out);
         obj_print(second(obj), out);
       } else {
         val iter;
         val closepar = chr(')');
         if (sym == dwim_s && consp(cdr(obj))) {
-          put_char(out, chr('['));
+          put_char(chr('['), out);
           obj = cdr(obj);
           closepar = chr(']');
         } else {
-          put_char(out, chr('('));
+          put_char(chr('('), out);
         }
 
         for (iter = obj; consp(iter); iter = cdr(iter)) {
           obj_print(car(iter), out);
           if (nullp(cdr(iter))) {
-            put_char(out, closepar);
+            put_char(closepar, out);
           } else if (consp(cdr(iter))) {
-            put_char(out, chr(' '));
+            put_char(chr(' '), out);
           } else {
-            put_string(out, lit(" . "));
+            put_string(lit(" . "), out);
             obj_print(cdr(iter), out);
-            put_char(out, closepar);
+            put_char(closepar, out);
           }
         }
       }
@@ -3847,55 +3911,55 @@ val obj_print(val obj, val out)
   case STR:
     {
       const wchar_t *ptr;
-      put_char(out, chr('"'));
+      put_char(chr('"'), out);
       int semi_flag = 0;
 
       for (ptr = c_str(obj); *ptr; ptr++) {
         if (semi_flag && iswxdigit(*ptr))
-          put_char(out, chr(';'));
+          put_char(chr(';'), out);
         semi_flag = 0;
         switch (*ptr) {
-        case '\a': put_string(out, lit("\\a")); break;
-        case '\b': put_string(out, lit("\\b")); break;
-        case '\t': put_string(out, lit("\\t")); break;
-        case '\n': put_string(out, lit("\\n")); break;
-        case '\v': put_string(out, lit("\\v")); break;
-        case '\f': put_string(out, lit("\\f")); break;
-        case '\r': put_string(out, lit("\\r")); break;
-        case '"': put_string(out, lit("\\\"")); break;
-        case '\\': put_string(out, lit("\\\\")); break;
-        case 27: put_string(out, lit("\\e")); break;
+        case '\a': put_string(lit("\\a"), out); break;
+        case '\b': put_string(lit("\\b"), out); break;
+        case '\t': put_string(lit("\\t"), out); break;
+        case '\n': put_string(lit("\\n"), out); break;
+        case '\v': put_string(lit("\\v"), out); break;
+        case '\f': put_string(lit("\\f"), out); break;
+        case '\r': put_string(lit("\\r"), out); break;
+        case '"': put_string(lit("\\\""), out); break;
+        case '\\': put_string(lit("\\\\"), out); break;
+        case 27: put_string(lit("\\e"), out); break;
         default:
           if (*ptr >= ' ') {
-            put_char(out, chr(*ptr));
+            put_char(chr(*ptr), out);
           } else {
             format(out, lit("\\x~,02X"), num(*ptr), nao);
             semi_flag = 1;
           }
         }
       }
-      put_char(out, chr('"'));
+      put_char(chr('"'), out);
     }
     return obj;
   case CHR:
     {
       wchar_t ch = c_chr(obj);
 
-      put_string(out, lit("#\\"));
+      put_string(lit("#\\"), out);
       switch (ch) {
-      case '\0': put_string(out, lit("nul")); break;
-      case '\a': put_string(out, lit("alarm")); break;
-      case '\b': put_string(out, lit("backspace")); break;
-      case '\t': put_string(out, lit("tab")); break;
-      case '\n': put_string(out, lit("newline")); break;
-      case '\v': put_string(out, lit("vtab")); break;
-      case '\f': put_string(out, lit("page")); break;
-      case '\r': put_string(out, lit("return")); break;
-      case 27: put_string(out, lit("esc")); break;
-      case ' ': put_string(out, lit("space")); break;
+      case '\0': put_string(lit("nul"), out); break;
+      case '\a': put_string(lit("alarm"), out); break;
+      case '\b': put_string(lit("backspace"), out); break;
+      case '\t': put_string(lit("tab"), out); break;
+      case '\n': put_string(lit("newline"), out); break;
+      case '\v': put_string(lit("vtab"), out); break;
+      case '\f': put_string(lit("page"), out); break;
+      case '\r': put_string(lit("return"), out); break;
+      case 27: put_string(lit("esc"), out); break;
+      case ' ': put_string(lit("space"), out); break;
       default:
         if (ch >= ' ')
-          put_char(out, chr(ch));
+          put_char(chr(ch), out);
         else
           format(out, lit("x~,02x"), num(ch), nao);
       }
@@ -3908,12 +3972,12 @@ val obj_print(val obj, val out)
   case SYM:
     if (obj->s.package != user_package) {
       if (!obj->s.package)
-        put_char(out, chr('#'));
+        put_char(chr('#'), out);
       else if (obj->s.package != keyword_package)
-        put_string(out, obj->s.package->pk.name);
-      put_char(out, chr(':'));
+        put_string(obj->s.package->pk.name, out);
+      put_char(chr(':'), out);
     }
-    put_string(out, symbol_name(obj));
+    put_string(symbol_name(obj), out);
     return obj;
   case PKG:
     format(out, lit("#<package: ~s>"), obj->pk.name, nao);
@@ -3924,13 +3988,13 @@ val obj_print(val obj, val out)
   case VEC:
     {
       cnum i, length = c_num(obj->v.vec[vec_length]);
-      put_string(out, lit("#("));
+      put_string(lit("#("), out);
       for (i = 0; i < length; i++) {
         obj_print(obj->v.vec[i], out);
         if (i < length - 1)
-          put_char(out, chr(' '));
+          put_char(chr(' '), out);
       }
-      put_char(out, chr(')'));
+      put_char(chr(')'), out);
     }
     return obj;
   case LSTR:
@@ -3950,8 +4014,11 @@ val obj_print(val obj, val out)
 
 val obj_pprint(val obj, val out)
 {
+  if (out == nil)
+    out = std_output;
+
   if (obj == nil) {
-    put_string(out, lit("nil"));
+    put_string(lit("nil"), out);
     return obj;
   }
 
@@ -3962,35 +4029,35 @@ val obj_pprint(val obj, val out)
       val sym = car(obj);
 
       if (sym == quote_s || sym == qquote_s) {
-        put_char(out, chr('\''));
+        put_char(chr('\''), out);
         obj_pprint(second(obj), out);
       } else if (sym == unquote_s) {
-        put_char(out, chr(','));
+        put_char(chr(','), out);
         obj_pprint(second(obj), out);
       } else if (sym == splice_s) {
-        put_string(out, lit(",*"));
+        put_string(lit(",*"), out);
         obj_pprint(second(obj), out);
       } else {
         val iter;
         val closepar = chr(')');
         if (sym == dwim_s && consp(cdr(obj))) {
-          put_char(out, chr('['));
+          put_char(chr('['), out);
           obj = cdr(obj);
           closepar = chr(']');
         } else {
-          put_char(out, chr('('));
+          put_char(chr('('), out);
         }
 
         for (iter = obj; consp(iter); iter = cdr(iter)) {
           obj_pprint(car(iter), out);
           if (nullp(cdr(iter))) {
-            put_char(out, closepar);
+            put_char(closepar, out);
           } else if (consp(cdr(iter))) {
-            put_char(out, chr(' '));
+            put_char(chr(' '), out);
           } else {
-            put_string(out, lit(" . "));
+            put_string(lit(" . "), out);
             obj_pprint(cdr(iter), out);
-            put_char(out, closepar);
+            put_char(closepar, out);
           }
         }
       }
@@ -3998,17 +4065,17 @@ val obj_pprint(val obj, val out)
     return obj;
   case LIT:
   case STR:
-    put_string(out, obj);
+    put_string(obj, out);
     return obj;
   case CHR:
-    put_char(out, obj);
+    put_char(obj, out);
     return obj;
   case NUM:
   case BGNUM:
     format(out, lit("~s"), obj, nao);
     return obj;
   case SYM:
-    put_string(out, symbol_name(obj));
+    put_string(symbol_name(obj), out);
     return obj;
   case PKG:
     format(out, lit("#<package: ~s>"), obj->pk.name, nao);
@@ -4019,13 +4086,13 @@ val obj_pprint(val obj, val out)
   case VEC:
     {
       cnum i, length = c_num(obj->v.vec[vec_length]);
-      put_string(out, lit("#("));
+      put_string(lit("#("), out);
       for (i = 0; i < length; i++) {
         obj_pprint(obj->v.vec[i], out);
         if (i < length - 1)
-          put_char(out, chr(' '));
+          put_char(chr(' '), out);
       }
-      put_char(out, chr(')'));
+      put_char(chr(')'), out);
     }
     return obj;
   case LSTR:
@@ -4080,7 +4147,7 @@ void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),
 void dump(val obj, val out)
 {
   obj_print(obj, out);
-  put_char(out, chr('\n'));
+  put_char(chr('\n'), out);
 }
 
 /*

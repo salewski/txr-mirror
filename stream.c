@@ -488,7 +488,7 @@ static val strlist_out_put_string(val stream, val str)
     if (zerop(length))
       break;
 
-    put_string(strstream, sub_str(str, nil, span_to_newline));
+    put_string(sub_str(str, nil, span_to_newline), strstream);
 
     if (equal(span_to_newline, length))
       break;
@@ -513,7 +513,7 @@ static val strlist_out_put_char(val stream, val ch)
     push(get_string_from_stream(strstream), &lines);
     strstream = make_string_output_stream();
   } else {
-    put_char(strstream, ch);
+    put_char(ch, strstream);
   }
 
   *car_l(cell) = lines;
@@ -705,6 +705,9 @@ val close_stream(val stream, val throw_on_error)
 
 val get_line(val stream)
 {
+  if (!stream)
+    stream = std_input;
+
   type_check (stream, COBJ);
   type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
                                             stream, nao));
@@ -717,6 +720,9 @@ val get_line(val stream)
 
 val get_char(val stream)
 {
+  if (!stream)
+    stream = std_input;
+
   type_check (stream, COBJ);
   type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
                                             stream, nao));
@@ -729,6 +735,9 @@ val get_char(val stream)
 
 val get_byte(val stream)
 {
+  if (!stream)
+    stream = std_input;
+
   type_check (stream, COBJ);
   type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
                                             stream, nao));
@@ -790,33 +799,33 @@ static val vformat_num(val stream, const char *str,
 
   if (!left)
     for (i = 0; i < slack; i++)
-      if (!put_char(stream, chr(' ')))
+      if (!put_char(chr(' '), stream))
         return nil;
 
   if (!zeropad)
     for (i = 0; i < padlen; i++)
-      if (!put_char(stream, chr(' ')))
+      if (!put_char(chr(' '), stream))
         return nil;
 
   if (sign_char) {
-    put_char(stream, chr(sign_char));
+    put_char(chr(sign_char), stream);
     str++;
   } else if (sign) {
-    put_char(stream, chr(sign));
+    put_char(chr(sign), stream);
   }
 
   if (zeropad)
     for (i = 0; i < padlen; i++)
-      if (!put_char(stream, chr('0')))
+      if (!put_char(chr('0'), stream))
         return nil;
 
   while (*str)
-    if (!put_char(stream, chr(*str++)))
+    if (!put_char(chr(*str++), stream))
       return nil;
 
   if (left)
     for (i = 0; i < slack; i++)
-      if (!put_char(stream, chr(' ')))
+      if (!put_char(chr(' '), stream))
         return nil;
 
   return t;
@@ -833,16 +842,16 @@ static val vformat_str(val stream, val str, int width, int left,
 
   if (!left)
     for (i = 0; i < slack; i++)
-      if (!put_char(stream, chr(' ')))
+      if (!put_char(chr(' '), stream))
         return nil;
 
   for (i = 0; i < truelen; i++)
-    if (!put_char(stream, chr(cstr[i])))
+    if (!put_char(chr(cstr[i]), stream))
       return nil;
 
   if (left)
     for (i = 0; i < slack; i++)
-      if (!put_char(stream, chr(' ')))
+      if (!put_char(chr(' '), stream))
         return nil;
 
   return t;
@@ -883,14 +892,14 @@ val vformat(val stream, val fmtstr, va_list vl)
           digits = 0;
           continue;
         default:
-          put_char(stream, chr(ch));
+          put_char(chr(ch), stream);
           continue;
         }
         break;
       case vf_width:
         switch (ch) {
         case '~':
-          put_char(stream, chr('~'));
+          put_char(chr('~'), stream);
           state = vf_init;
           continue;
         case '<':
@@ -1146,8 +1155,11 @@ val formatv(val stream, val string, val args)
   abort();
 }
 
-val put_string(val stream, val string)
+val put_string(val string, val stream)
 {
+  if (!stream)
+    stream = std_output;
+
   type_check (stream, COBJ);
   type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
                                             stream, nao));
@@ -1158,8 +1170,11 @@ val put_string(val stream, val string)
   }
 }
 
-val put_char(val stream, val ch)
+val put_char(val ch, val stream)
 {
+  if (!stream)
+    stream = std_output;
+
   type_check (stream, COBJ);
   type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
                                             stream, nao));
@@ -1170,9 +1185,9 @@ val put_char(val stream, val ch)
   }
 }
 
-val put_line(val stream, val string)
+val put_line(val string, val stream)
 {
-  return (put_string(stream, string), put_char(stream, chr('\n')));
+  return (put_string(string, stream), put_char(chr('\n'), stream));
 }
 
 val flush_stream(val stream)

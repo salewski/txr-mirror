@@ -199,39 +199,64 @@ static val lookup_sym_lisp1(val env, val sym)
 static val bind_args(val env, val params, val args, val ctx_form)
 {
   val new_bindings = nil;
+  val optargs = nil;
 
   for (; args && consp(params); args = cdr(args), params = cdr(params)) {
-    val arg = car(args);
     val param = car(params);
+
+    if (param == colon_k) {
+      if (optargs)
+        goto twocol;
+      optargs = t;
+      params = cdr(params);
+      if (!consp(params))
+        break;
+      param = car(params);
+    }
 
     if (!bindable(param))
       eval_error(ctx_form, lit("~a: ~s is not a bindable sybol"),
                  car(ctx_form), param, nao);
 
-    new_bindings = acons(param, arg, new_bindings);
+    new_bindings = acons(param, car(args), new_bindings);
   }
 
   if (bindable(params)) {
-    val param = params;
-    if (!bindable(param)) {
-      eval_error(ctx_form, lit("~a: ~s is not a bindable sybol"),
-                 car(ctx_form), param, nao);
-    } else {
-      new_bindings = acons(param, args, new_bindings);
-    }
+    new_bindings = acons(params, args, new_bindings);
   } else if (consp(params)) {
-    eval_error(ctx_form, lit("~s: too few arguments"), car(ctx_form), nao);
+    if (car(params) == colon_k) {
+      if (optargs)
+        goto twocol;
+      optargs = t;
+      params = cdr(params);
+    }
+    if (!optargs)
+      eval_error(ctx_form, lit("~s: too few arguments"), car(ctx_form), nao);
+    while (consp(params)) {
+      if (car(params) == colon_k)
+        goto twocol;
+      new_bindings = acons(car(params), nil, new_bindings);
+      params = cdr(params);
+    }
+    if (bindable(params))
+      new_bindings = acons(params, args, new_bindings);
+  } else if (params) {
+    eval_error(ctx_form, lit("~a: ~s is not a bindable sybol"),
+               car(ctx_form), params, nao);
   } else if (args) {
     eval_error(ctx_form, lit("~s: too many arguments"), car(ctx_form), nao);
   }
 
   return make_env(new_bindings, nil, env);
+twocol:
+  eval_error(ctx_form, lit("~a: multiple colons in parameter list"),
+             car(ctx_form), nao);
 }
 
 val apply(val fun, val arglist, val ctx_form)
 {
   val arg[32], *p = arg;
-  int variadic, minparam, nargs;
+  int variadic, fixparam, reqargs, nargs;
 
   if (symbolp(fun)) {
     val binding = gethash(top_fb, fun);
@@ -246,7 +271,8 @@ val apply(val fun, val arglist, val ctx_form)
                (lit("apply arglist ~s is not a list"), arglist, nao));
 
   variadic = fun->f.variadic;
-  minparam = fun->f.minparam;
+  fixparam = fun->f.fixparam;
+  reqargs = fixparam - fun->f.optargs;
 
   if (!variadic) {
     for (; arglist; arglist = cdr(arglist))
@@ -254,9 +280,16 @@ val apply(val fun, val arglist, val ctx_form)
 
     nargs = p - arg;
 
-    if (nargs != minparam)
-      eval_error(ctx_form, lit("~s: wrong number of arguments"),
+    if (nargs < reqargs)
+      eval_error(ctx_form, lit("~s: missing required arguments"),
                  car(ctx_form), nao);
+    
+    if (nargs > fixparam)
+      eval_error(ctx_form, lit("~s: too many arguments"),
+                 car(ctx_form), nao);
+
+    for (; nargs < fixparam; nargs++)
+      *p++ = nil;
 
     switch (fun->f.functype) {
     case F0:
@@ -283,13 +316,17 @@ val apply(val fun, val arglist, val ctx_form)
       internal_error("unsupported function type");
     }
   } else {
-    for (; arglist && p - arg < minparam; arglist = cdr(arglist))
+    for (; arglist && p - arg < fixparam; arglist = cdr(arglist))
       *p++ = car(arglist);
 
     nargs = p - arg;
 
-    if (nargs < minparam)
-      eval_error(ctx_form, lit("apply: too few arguments"), nao);
+    if (nargs < reqargs)
+      eval_error(ctx_form, lit("~s: missing required arguments"),
+                 car(ctx_form), nao);
+
+    for (; nargs < fixparam; nargs++)
+      *p++ = nil;
 
     switch (fun->f.functype) {
     case FINTERP:
@@ -714,7 +751,7 @@ static val *dwim_loc(val form, val env, val op, val newval, val *retval)
           eval_error(form, lit("[~s ~s]: ranges takes only set assignments"),
                      obj, index, nao);
 
-        replace_str(obj, car(index), cdr(index), newval);
+        replace_str(obj, newval, car(index), cdr(index));
         *retval = newval;
         return 0;
       } else {
@@ -751,7 +788,7 @@ static val *dwim_loc(val form, val env, val op, val newval, val *retval)
           eval_error(form, lit("[~s ~s]: ranges take only set assignments"),
                      obj, index, nao);
 
-        replace_vec(obj, car(index), cdr(index), newval);
+        replace_vec(obj, newval, car(index), cdr(index));
         *retval = newval;
         return 0;
       } else {
@@ -777,7 +814,7 @@ static val *dwim_loc(val form, val env, val op, val newval, val *retval)
           eval_error(form, lit("[~s ~s]: ranges take only simple assignments"),
                      cell, index, nao);
 
-        newlist = replace_list(obj, car(index), cdr(index), newval);
+        newlist = replace_list(obj, newval, car(index), cdr(index));
         tempform = list(op, second(form), 
                         cons(quote_s, cons(newlist, nil)), nao);
         op_modplace(tempform, env);
@@ -1996,8 +2033,8 @@ void eval_init(void)
   reg_fun(intern(lit("rplacd"), user_package), func_n2(rplacd));
   reg_fun(intern(lit("first"), user_package), func_n1(car));
   reg_fun(rest_s, func_n1(cdr));
-  reg_fun(intern(lit("sub-list"), user_package), func_n3(sub_list));
-  reg_fun(intern(lit("replace-list"), user_package), func_n4(replace_list));
+  reg_fun(intern(lit("sub-list"), user_package), func_n3o(sub_list, 1));
+  reg_fun(intern(lit("replace-list"), user_package), func_n4o(replace_list, 2));
   reg_fun(append_s, func_n0v(appendv));
   reg_fun(intern(lit("append*"), user_package), func_n0v(lazy_appendv));
   reg_fun(list_s, func_n0v(identity));
@@ -2017,8 +2054,8 @@ void eval_init(void)
   reg_fun(intern(lit("mappend"), user_package), func_n1v(mappendv));
   reg_fun(intern(lit("mappend*"), user_package), func_n1v(lazy_mappendv));
   reg_fun(apply_s, func_n2(apply_intrinsic));
-  reg_fun(intern(lit("reduce-left"), user_package), func_n4(reduce_left));
-  reg_fun(intern(lit("reduce-right"), user_package), func_n4(reduce_right));
+  reg_fun(intern(lit("reduce-left"), user_package), func_n4o(reduce_left, 2));
+  reg_fun(intern(lit("reduce-right"), user_package), func_n4o(reduce_right, 2));
 
   reg_fun(intern(lit("second"), user_package), func_n1(second));
   reg_fun(intern(lit("third"), user_package), func_n1(third));
@@ -2034,10 +2071,10 @@ void eval_init(void)
   reg_fun(intern(lit("memq"), user_package), func_n2(memq));
   reg_fun(intern(lit("memql"), user_package), func_n2(memql));
   reg_fun(intern(lit("memqual"), user_package), func_n2(memqual));
-  reg_fun(intern(lit("tree-find"), user_package), func_n3(tree_find));
-  reg_fun(intern(lit("some"), user_package), func_n3(some_satisfy));
-  reg_fun(intern(lit("all"), user_package), func_n3(all_satisfy));
-  reg_fun(intern(lit("none"), user_package), func_n3(none_satisfy));
+  reg_fun(intern(lit("tree-find"), user_package), func_n3o(tree_find, 2));
+  reg_fun(intern(lit("some"), user_package), func_n3o(some_satisfy, 2));
+  reg_fun(intern(lit("all"), user_package), func_n3o(all_satisfy, 2));
+  reg_fun(intern(lit("none"), user_package), func_n3o(none_satisfy, 2));
   reg_fun(intern(lit("eq"), user_package), eq_f);
   reg_fun(intern(lit("eql"), user_package), eql_f);
   reg_fun(intern(lit("equal"), user_package), equal_f);
@@ -2066,10 +2103,11 @@ void eval_init(void)
   reg_fun(intern(lit("max"), user_package), func_n1v(maxv));
   reg_fun(intern(lit("min"), user_package), func_n1v(minv));
 
-  reg_fun(intern(lit("search-regex"), user_package), func_n4(search_regex));
-  reg_fun(intern(lit("match-regex"), user_package), func_n3(match_regex));
+  reg_fun(intern(lit("search-regex"), user_package), func_n4o(search_regex, 2));
+  reg_fun(intern(lit("match-regex"), user_package), func_n3o(match_regex, 2));
 
   reg_fun(intern(lit("make-hash"), user_package), func_n3(make_hash));
+  reg_fun(intern(lit("hash"), user_package), func_n0v(hashv));
   reg_fun(gethash_s, func_n3(gethash_n));
   reg_fun(intern(lit("sethash"), user_package), func_n3(sethash));
   reg_fun(intern(lit("pushhash"), user_package), func_n3(pushhash));
@@ -2084,14 +2122,14 @@ void eval_init(void)
   reg_fun(intern(lit("hash-eql"), user_package), func_n1(hash_eql));
   reg_fun(intern(lit("hash-equal"), user_package), func_n1(hash_equal));
 
-  reg_fun(intern(lit("eval"), user_package), func_n2(eval_intrinsic));
+  reg_fun(intern(lit("eval"), user_package), func_n2o(eval_intrinsic, 1));
 
   reg_var(intern(lit("*stdout*"), user_package), &std_output);
   reg_var(intern(lit("*stdin*"), user_package), &std_input);
   reg_var(intern(lit("*stderr*"), user_package), &std_error);
   reg_fun(intern(lit("format"), user_package), func_n2v(formatv));
-  reg_fun(intern(lit("print"), user_package), func_n2(obj_print));
-  reg_fun(intern(lit("pprint"), user_package), func_n2(obj_pprint));
+  reg_fun(intern(lit("print"), user_package), func_n2o(obj_print, 1));
+  reg_fun(intern(lit("pprint"), user_package), func_n2o(obj_pprint, 1));
   reg_fun(intern(lit("tostring"), user_package), func_n1(tostring));
   reg_fun(intern(lit("tostringp"), user_package), func_n1(tostringp));
   reg_fun(intern(lit("make-string-input-stream"), user_package), func_n1(make_string_input_stream));
@@ -2100,13 +2138,13 @@ void eval_init(void)
   reg_fun(intern(lit("get-string-from-stream"), user_package), func_n1(get_string_from_stream));
   reg_fun(intern(lit("make-strlist-output-stream"), user_package), func_n0(make_strlist_output_stream));
   reg_fun(intern(lit("get-list-from-stream"), user_package), func_n1(get_list_from_stream));
-  reg_fun(intern(lit("close-stream"), user_package), func_n2(close_stream));
-  reg_fun(intern(lit("get-line"), user_package), func_n1(get_line));
-  reg_fun(intern(lit("get-char"), user_package), func_n1(get_char));
-  reg_fun(intern(lit("get-byte"), user_package), func_n1(get_byte));
-  reg_fun(intern(lit("put-string"), user_package), func_n2(put_string));
-  reg_fun(intern(lit("put-line"), user_package), func_n2(put_line));
-  reg_fun(intern(lit("put-char"), user_package), func_n2(put_char));
+  reg_fun(intern(lit("close-stream"), user_package), func_n2o(close_stream, 1));
+  reg_fun(intern(lit("get-line"), user_package), func_n1o(get_line, 0));
+  reg_fun(intern(lit("get-char"), user_package), func_n1o(get_char, 0));
+  reg_fun(intern(lit("get-byte"), user_package), func_n1o(get_byte, 0));
+  reg_fun(intern(lit("put-string"), user_package), func_n2o(put_string, 1));
+  reg_fun(intern(lit("put-line"), user_package), func_n2o(put_line, 1));
+  reg_fun(intern(lit("put-char"), user_package), func_n2o(put_char, 1));
   reg_fun(intern(lit("flush-stream"), user_package), func_n1(flush_stream));
   reg_fun(intern(lit("open-directory"), user_package), func_n1(open_directory));
   reg_fun(intern(lit("open-file"), user_package), func_n2(open_file));
@@ -2119,7 +2157,7 @@ void eval_init(void)
   reg_fun(intern(lit("gensym"), user_package), func_n0v(gensymv));
   reg_fun(intern(lit("make-package"), user_package), func_n1(make_package));
   reg_fun(intern(lit("find-package"), user_package), func_n1(find_package));
-  reg_fun(intern(lit("intern"), user_package), func_n2(intern));
+  reg_fun(intern(lit("intern"), user_package), func_n2o(intern, 1));
   reg_fun(intern(lit("symbolp"), user_package), func_n1(symbolp));
   reg_fun(intern(lit("symbol-name"), user_package), func_n1(symbol_name));
   reg_fun(intern(lit("symbol-package"), user_package), func_n1(symbol_package));
@@ -2133,17 +2171,17 @@ void eval_init(void)
   reg_fun(intern(lit("stringp"), user_package), func_n1(stringp));
   reg_fun(intern(lit("lazy-stringp"), user_package), func_n1(lazy_stringp));
   reg_fun(intern(lit("length-str"), user_package), func_n1(length_str));
-  reg_fun(intern(lit("search-str"), user_package), func_n4(search_str));
-  reg_fun(intern(lit("search-str-tree"), user_package), func_n4(search_str_tree));
-  reg_fun(intern(lit("sub-str"), user_package), func_n3(sub_str));
-  reg_fun(intern(lit("replace-str"), user_package), func_n4(replace_str));
-  reg_fun(intern(lit("cat-str"), user_package), func_n2(cat_str));
+  reg_fun(intern(lit("search-str"), user_package), func_n4o(search_str, 2));
+  reg_fun(intern(lit("search-str-tree"), user_package), func_n4o(search_str_tree, 2));
+  reg_fun(intern(lit("sub-str"), user_package), func_n3o(sub_str, 1));
+  reg_fun(intern(lit("replace-str"), user_package), func_n4o(replace_str, 2));
+  reg_fun(intern(lit("cat-str"), user_package), func_n2o(cat_str, 1));
   reg_fun(intern(lit("split-str"), user_package), func_n2(split_str));
   reg_fun(intern(lit("split-str-set"), user_package), func_n2(split_str_set));
   reg_fun(intern(lit("list-str"), user_package), func_n1(list_str));
   reg_fun(intern(lit("trim-str"), user_package), func_n1(trim_str));
   reg_fun(intern(lit("string-lt"), user_package), func_n2(string_lt));
-  reg_fun(intern(lit("int-str"), user_package), func_n2(int_str));
+  reg_fun(intern(lit("int-str"), user_package), func_n2o(int_str, 1));
   reg_fun(intern(lit("chrp"), user_package), func_n1(chrp));
   reg_fun(intern(lit("chr-isalnum"), user_package), func_n1(chr_isalnum));
   reg_fun(intern(lit("chr-isalpha"), user_package), func_n1(chr_isalpha));
@@ -2177,8 +2215,8 @@ void eval_init(void)
   reg_fun(intern(lit("vector-list"), user_package), func_n1(vector_list));
   reg_fun(intern(lit("list-vector"), user_package), func_n1(list_vector));
   reg_fun(intern(lit("copy-vec"), user_package), func_n1(copy_vec));
-  reg_fun(intern(lit("sub-vec"), user_package), func_n3(sub_vec));
-  reg_fun(intern(lit("replace-vec"), user_package), func_n4(replace_vec));
+  reg_fun(intern(lit("sub-vec"), user_package), func_n3o(sub_vec, 1));
+  reg_fun(intern(lit("replace-vec"), user_package), func_n4o(replace_vec, 2));
   reg_fun(intern(lit("cat-vec"), user_package), func_n1(cat_vec));
 
   reg_fun(intern(lit("assoc"), user_package), func_n2(assoc));
@@ -2190,10 +2228,10 @@ void eval_init(void)
   reg_fun(intern(lit("alist-nremove"), user_package), func_n1v(alist_nremove));
   reg_fun(intern(lit("copy-cons"), user_package), func_n1(copy_cons));
   reg_fun(intern(lit("copy-alist"), user_package), func_n1(copy_alist));
-  reg_fun(intern(lit("merge"), user_package), func_n4(merge));
-  reg_fun(intern(lit("sort"), user_package), func_n3(sort));
-  reg_fun(intern(lit("find"), user_package), func_n4(find));
-  reg_fun(intern(lit("set-diff"), user_package), func_n4(set_diff));
+  reg_fun(intern(lit("merge"), user_package), func_n4o(merge, 2));
+  reg_fun(intern(lit("sort"), user_package), func_n3o(sort, 2));
+  reg_fun(intern(lit("find"), user_package), func_n4o(find, 2));
+  reg_fun(intern(lit("set-diff"), user_package), func_n4o(set_diff, 2));
 
   reg_fun(intern(lit("length"), user_package), func_n1(length));
 
@@ -2208,6 +2246,7 @@ void eval_init(void)
   reg_fun(intern(lit("random-state-p"), user_package), func_n1(random_state_p));
   reg_fun(intern(lit("random-fixnum"), user_package), func_n1(random_fixnum));
   reg_fun(intern(lit("random"), user_package), func_n2(random));
+  reg_fun(intern(lit("rand"), user_package), func_n2o(rand, 1));
 
   reg_fun(intern(lit("range"), user_package), func_n0v(rangev));
   reg_fun(intern(lit("range*"), user_package), func_n0v(range_star_v));

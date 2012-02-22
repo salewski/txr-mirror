@@ -241,6 +241,11 @@ invalid:
       modulus, nao);
 }
 
+val rand(val modulus, val state)
+{
+  return random(state, modulus);
+}
+
 void rand_init(void)
 {
   prot1(&random_state);

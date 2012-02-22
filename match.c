@@ -73,7 +73,7 @@ static void debuglf(val form, val fmt, ...)
     format(std_error, lit("~a: (~a:~a) "), prog_string,
            spec_file_str, source_loc(form), nao);
     vformat(std_error, fmt, vl);
-    put_char(std_error, chr('\n'));
+    put_char(chr('\n'), std_error);
     va_end (vl);
   }
 }
@@ -113,23 +113,23 @@ static void dump_shell_string(const wchar_t *str)
 {
   int ch;
 
-  put_char(std_output, chr('"'));
+  put_char(chr('"'), std_output);
   while ((ch = *str++) != 0) {
     switch (ch) {
     case '"': case '`': case '$': case '\\': case '\n':
-      put_char(std_output, chr('\\'));
+      put_char(chr('\\'), std_output);
       /* fallthrough */
     default:
-      put_char(std_output, chr(ch));
+      put_char(chr(ch), std_output);
     }
   }
-  put_char(std_output, chr('"'));
+  put_char(chr('"'), std_output);
 }
 
 static void dump_byte_string(const char *str)
 {
   while (*str)
-    put_char(std_output, chr(*str++));
+    put_char(chr(*str++), std_output);
 }
 
 
@@ -162,12 +162,12 @@ static void dump_var(val var, char *pfx1, size_t len1,
     obj_pprint(value, ss);
     str = get_string_from_stream(ss);
 
-    put_string(std_output, var);
+    put_string(var, std_output);
     dump_byte_string(pfx1);
     dump_byte_string(pfx2);
-    put_char(std_output, chr('='));
+    put_char(chr('='), std_output);
     dump_shell_string(c_str(str));
-    put_char(std_output, chr('\n'));
+    put_char(chr('\n'), std_output);
   }
 }
 
@@ -1576,7 +1576,7 @@ static void do_output_line(val bindings, val specline, val filter, val out)
           if (str == nil)
             sem_error(specline, lit("bad substitution: ~a"),
                       second(elem), nao);
-          put_string(out, str);
+          put_string(str, out);
         } else if (directive == rep_s) {
           val clauses = cdr(elem);
           val args = pop(&clauses);
@@ -1679,7 +1679,7 @@ static void do_output_line(val bindings, val specline, val filter, val out)
       }
       break;
     case STR:
-      put_string(out, elem);
+      put_string(elem, out);
       break;
     case 0:
       break;
@@ -1798,7 +1798,7 @@ static void do_output(val bindings, val specs, val filter, val out)
     }
 
     do_output_line(bindings, specline, filter, out);
-    put_char(out, chr('\n'));
+    put_char(chr('\n'), out);
   }
 }
 
@@ -3565,7 +3565,7 @@ int extract(val spec, val files, val predefined_bindings)
     }
 
     if (!success)
-      put_line(std_output, lit("false"));
+      put_line(lit("false"), std_output);
   }
 
   return success ? 0 : EXIT_FAILURE;

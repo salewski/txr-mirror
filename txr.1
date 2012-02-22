@@ -4606,6 +4606,11 @@ The dotted notation can be used to write a function that accepts
 a variable number of arguments. To write a function that accepts
 variable arguments only, with no required arguments, use a single symbol.
 
+The keyword symbol : can appear in the parameter list. It is not an argument,
+but a separator between required parameters and optional parameters.
+When the function is called, optional parameter for which arguments
+are not supplied take on the value nil.
+
 Functions created by lambda capture the surrounding variable bindings.
 
 
@@ -4627,6 +4632,11 @@ are aggregated into a list passed as the single parameter z:
 Variadic funcion:
 
   (lambda args (list 'my-list-of-arguments args))
+
+Optional arguments:
+
+  [(lambda (x : y) (list x y)) 1] -> (1 nil)
+  [(lambda (x : y) (list x y)) 1 2] -> (1 2)
 
 .SS Operator op
 
@@ -4855,11 +4865,13 @@ Syntax:
 Description:
 
 The defun operator introduces a new function in the global function namespace.
-The function is similar to a lambda, except that <body-form>-s are surrounded
-by a named block called nil. The name of this block is the same as the name of
-the function, making it possible to terminate the function and return a
-value using (return-from <name> <value>). For more information, see the
-definition of the block operator.
+The function is similar to a lambda, and has the same parameter syntax
+and semantics as the lambda operator.
+
+Unlike in lambda, the <body-form>-s of a defun are surrounded by a block.
+The name of this block is the same as the name of the function, making it
+possible to terminate the function and return a value using (return-from <name>
+<value>). For more information, see the definition of the block operator.
 
 A function may call itself by name, allowing for recursion.
 
@@ -6430,7 +6442,7 @@ Certain object types have a custom equal function.
 
 .SS Functions search-regex and match-regex
 
-.SS Function make-hash
+.SS Functions make-hash, hash
 
 .SS Function sethash
 

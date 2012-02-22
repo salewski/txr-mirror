@@ -1,3 +1,80 @@
+2012-02-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	Introducing optional arguments.
+
+	* debug.c (help, show_bindings): put_string arguments reversed.
+
+	* eval.c (bind_args): Support colon notation in interpreted
+	function lambda lists for optional arguments. Improved error checking.
+	(apply): Allow optional arguments to be left out.
+	(dwim_loc): Reversed arguments to replace_str, replace_vec,
+	replace_list.
+	(eval_init): Numerous intrinsics now have arguments that are optional.
+	New function rand introduced which reverses arguments relative to
+	random. New intrinsic function hash introduced for alternative
+	construction of hashes.
+
+	* gc.c (sweep): Reversed arguments to put_char.
+
+	* hash.c (weak_keys_k, weak_vals_k, equal_based_k): New keyword
+	symbol variables.
+	(hashv): New function.
+	(hash_init): Intern new symbols.
+
+	* hash.h (weak_keys_k, weak_vals_k, equal_based_k, hashv): Declared.
+
+	* lib.c (colon_k): New keyword symbol variable.
+	(replace_list, replace_str, replace_vec): Arguments rearranged.
+	(tree_find): testfun becomes optional argument.
+	(int_str): base becomes optional argument.
+	(func_f0, func_f1, func_f2, func_f3, func_f4, func_n0,
+	func_n1, func_n2, func_n3, func_n4,  func_f0v, func_f1v,
+	func_f2v, func_f3v, func_f4v, func_n0v, func_n1v,
+	func_n2v, func_n3v, func_n4v, func_interp): Initialize optargs to zero.
+	(func_n0o, func_n1o, func_n2o, func_n3o, func_n4o): New functions.
+	(cobj_print_op): Reversed arguments to put_string.
+	(find): testfun and keyfun become optional arguments.
+	(replace): Parameters rearranged and arguments rearranged in calls to
+	replace_list, replace_str and replace_vec.
+	(obj_init): colon_k initialized.
+	(obj_print, obj_pprint): Arguments reversed, and stream defaults
+	to std_output. Arguments reversed in calls to put_char and put_string.
+	(dump): Arguments reversed in call to put_char.
+
+	* lib.h (struct func): sizes of minparam, fixparam bitfields
+	adjusted. New bitfield optargs. New unnamed bitfield added so
+	the previous ones add up to 16 bits.
+	(colon_k): Declared.
+	(func_n0o, func_n1o, func_n2o, func_n3o, func_n4o): Declared.
+	(replace_list, replace_str, replace_vec, replace): Declarations updated.
+
+	* match.c (debuglf, dump_shell_string, dump_byte_string, dump_var,
+	do_output_line, extract): Reversed arguments to put_char and
+	put_string.
+
+	* parser.l (yyerrorf): Reversed arguments to put_char.
+	(grammar): Recognize : symbol in NESTED state. This is a keyword
+	symbol with the empty string as its name.
+
+	* rand.c (rand): New function.
+
+	* rand.h (rand): Declared.
+
+	* stream.c (strlist_out_put_string): Reversed arguments to put_string.
+	(strlist_out_put_char): Reversed arguments to put_char.
+	(get_line, get_char, get_byte): Stream defaults to std_input.
+	(vformat_num, vformat_str, vformat): Reversed arguments to put_char.
+	(put_string, put_char, put_line): Arguments reversed; stream defaults
+	to std_output.
+
+	* stream.h (put_string, put_line, put_char): Declarations updated.
+
+	* txr.c (oom_realloc_handler): Arguments to put_line reversed.
+
+	* unwind.c (uw_throw): Likewise.
+
+	* txr.1, txr.vim: Updated.
+
 2012-02-19  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.1: Corrected misleading text in description of output
