@@ -3578,7 +3578,7 @@ static void swap(val vec, val i, val j)
 static void quicksort(val vec, val lessfun, val keyfun, cnum from, cnum to)
 {
   if (to - from >= 2) {
-    cnum pivot = (to - from) / 2;
+    cnum pivot = to + (to - from) / 2;
     cnum i, j;
     val pval = ref(vec, num_fast(pivot));
     val pkval = funcall1(keyfun, pval);

@@ -1,5 +1,9 @@
 2012-02-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (quicksort): Incorrect pivot selection.
+
+2012-02-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (del_s): New symbol variable.
 	(eval_error): nostatic added to suppress a g++ warning.
 	(dwim_loc): Takes new value as the original unevaluated form so
