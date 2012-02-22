@@ -1,3 +1,20 @@
+2012-02-22  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): Intrinsic bindings for sub, ref, refset
+	and replace.
+
+	* lib.c (do_sort): Static function renamed to sort_list.
+	(swap, quicksort, sort_vec): New static functions.
+	(sort): Made generic over lists, vectors and strings.
+	(refset): New function.
+
+	* lib.h (sort): Declaration updated (parameter name change).
+	(refset): Declared.
+
+	* txr.1: Mention refset.
+
+	* txr.vim: Updated with refset.
+
 2012-02-21  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): Third argument of gethash becomes optional.
