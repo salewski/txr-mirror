@@ -1,5 +1,11 @@
 2012-02-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (init): Hash bugfix: added missing call to hash_init.
+	Previously this function did nothing, but now it interns
+	some important symbols.
+
+2012-02-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* hash.c (remhash): Rewrote buggy function.
 	It was decrementing the hash count without checking that
 	something was deleted from the chain. The deletion was done
