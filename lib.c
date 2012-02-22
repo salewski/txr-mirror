@@ -3530,7 +3530,7 @@ val merge(val list1, val list2, val lessfun, val keyfun)
   return out;
 }
 
-static val do_sort(val list, val lessfun, val keyfun)
+static val sort_list(val list, val lessfun, val keyfun)
 {
   if (list == nil)
     return nil;
@@ -3560,18 +3560,61 @@ static val do_sort(val list, val lessfun, val keyfun)
     list2 = cdr(bisect);
     *cdr_l(bisect) = nil;
 
-    return merge(do_sort(list, lessfun, keyfun),
-                 do_sort(list2, lessfun, keyfun),
+    return merge(sort_list(list, lessfun, keyfun),
+                 sort_list(list2, lessfun, keyfun),
                  lessfun, keyfun);
   }
 }
 
-val sort(val list, val lessfun, val keyfun)
+static void swap(val vec, val i, val j)
 {
+  if (i != j) {
+    val temp = ref(vec, i);
+    refset(vec, i, ref(vec, j));
+    refset(vec, j, temp);
+  }
+}
+
+static void quicksort(val vec, val lessfun, val keyfun, cnum from, cnum to)
+{
+  if (to - from >= 2) {
+    cnum pivot = (to - from) / 2;
+    cnum i, j;
+    val pval = ref(vec, num_fast(pivot));
+    val pkval = funcall1(keyfun, pval);
+
+    swap(vec, num_fast(pivot), num_fast(to - 1));
+
+    for (j = 0, i = 0; i < to; i++)
+      if (funcall2(lessfun, funcall1(keyfun, ref(vec, num_fast(i))), pkval))
+        swap(vec, num_fast(i), num_fast(j++));
+
+    swap(vec, num_fast(j), num_fast(to - 1));
+
+    quicksort(vec, lessfun, keyfun, from, j);
+    quicksort(vec, lessfun, keyfun, j + 1, to);
+  }
+}
+
+static void sort_vec(val vec, val lessfun, val keyfun)
+{
+  cnum len = c_num(length(vec));
+  quicksort(vec, lessfun, keyfun, 0, len);
+}
+
+val sort(val seq, val lessfun, val keyfun)
+{
+  if (!seq)
+    return nil;
+
   if (!keyfun)
     keyfun = identity_f;
 
-  return do_sort(list, lessfun, keyfun);
+  if (consp(seq))
+    return sort_list(seq, lessfun, keyfun);
+
+  sort_vec(seq, lessfun, keyfun);
+  return seq;
 }
 
 val find(val list, val key, val testfun, val keyfun)
@@ -3668,6 +3711,27 @@ val ref(val seq, val ind)
   default:
     type_mismatch(lit("ref: ~s is not a sequence"), cons, nao);
   }
+}
+
+val refset(val seq, val ind, val newval)
+{
+  if (seq == nil)
+    goto list;
+
+  else switch (type(seq)) {
+  case CONS:
+  case LCONS:
+  list:
+    return *listref_l(seq, ind) = newval;
+  case LIT:
+  case STR:
+    return chr_str_set(seq, ind, newval);
+  case VEC:
+    return *vecref_l(seq, ind) = newval;
+  default:
+    type_mismatch(lit("ref: ~s is not a sequence"), cons, nao);
+  }
+  return newval;
 }
 
 val replace(val seq, val items, val from, val to)

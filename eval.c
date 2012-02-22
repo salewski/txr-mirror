@@ -2235,6 +2235,11 @@ void eval_init(void)
 
   reg_fun(intern(lit("length"), user_package), func_n1(length));
 
+  reg_fun(intern(lit("sub"), user_package), func_n3o(sub, 1));
+  reg_fun(intern(lit("ref"), user_package), func_n2(ref));
+  reg_fun(intern(lit("refset"), user_package), func_n3(refset));
+  reg_fun(intern(lit("replace"), user_package), func_n4o(replace, 2));
+
   reg_fun(intern(lit("symbol-function"), user_package), func_n1(symbol_function));
   reg_fun(intern(lit("func-get-form"), user_package), func_n1(func_get_form));
   reg_fun(intern(lit("func-get-env"), user_package), func_n1(func_get_env));
