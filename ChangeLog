@@ -1,5 +1,25 @@
 2012-02-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (del_s): New symbol variable.
+	(eval_error): nostatic added to suppress a g++ warning.
+	(dwim_loc): Takes new value as the original unevaluated form so
+	it can control evaluation. Support for del operator added.
+	(op_modplace): Bugfixes: new value form was being unconditionally
+	evaluated and out of order w.r.t. other forms. Now there is
+	left to right order. The form is evaluated later, since for most
+	operators it is on the right, with the exception of push.
+	dwim places can now optionally control the evaluation of newform.
+	del operator supported in gethash case as a special case.
+	error case added for del: if it's not handled in gethash or
+	dwim_loc, it is an error.
+	(eval_init): del_s initialized, and del operator added to table.
+
+	* txr.vim: syntax highlighting for del.
+
+	* txr.1: Documented del.
+
+2012-02-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (init): Hash bugfix: added missing call to hash_init.
 	Previously this function did nothing, but now it interns
 	some important symbols.

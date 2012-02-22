@@ -58,7 +58,8 @@ val op_table;
 val eval_error_s;
 val dwim_s, progn_s, prog1_s, let_s, let_star_s, lambda_s, call_s;
 val cond_s, if_s, defvar_s, defun_s;
-val inc_s, dec_s, push_s, pop_s, flip_s, gethash_s, car_s, cdr_s, vecref_s;
+val inc_s, dec_s, push_s, pop_s, flip_s, gethash_s, car_s, cdr_s;
+val del_s, vecref_s;
 val for_s, for_star_s, each_s, each_star_s, collect_each_s, collect_each_star_s;
 val dohash_s;
 val uw_protect_s, return_s, return_from_s;
@@ -95,7 +96,7 @@ static void env_replace_vbind(val env, val bindings)
   env->e.vbindings = bindings;
 }
 
-static val eval_error(val form, val fmt, ...)
+noreturn static val eval_error(val form, val fmt, ...)
 {
   va_list vl;
   val stream = make_string_output_stream();
@@ -728,7 +729,7 @@ static val op_defun(val form, val env)
 
 static val op_modplace(val form, val env);
 
-static val *dwim_loc(val form, val env, val op, val newval, val *retval)
+static val *dwim_loc(val form, val env, val op, val newform, val *retval)
 {
   val obj = eval_lisp1(second(form), env, form);
   val args = eval_args_lisp1(rest(rest(form)), env, form);
@@ -747,28 +748,46 @@ static val *dwim_loc(val form, val env, val op, val newval, val *retval)
       val index = first(args);
 
       if (consp(index)) {
-        if (op != set_s) 
-          eval_error(form, lit("[~s ~s]: ranges takes only set assignments"),
+        if (op == set_s) {
+          val newval = eval(newform, env, form);
+          replace_str(obj, newval, car(index), cdr(index));
+          *retval = newval;
+        } else if (op == del_s) {
+          replace_str(obj, nil, car(index), cdr(index));
+          *retval = nil;
+        } else {
+          eval_error(form, lit("[~s ~s]: ranges allow only set and del operators"),
                      obj, index, nao);
+        }
 
-        replace_str(obj, newval, car(index), cdr(index));
-        *retval = newval;
         return 0;
       } else {
         uses_or2;
+
         if (op == set_s) {
-          chr_str_set(obj, index, newval);
+          val newval = eval(newform, env, form);
+          chr_str_set(obj, index, eval(newform, env, form));
+          *retval = newval;
         } else if (op == inc_s) {
-          newval = plus(chr_str(obj, index), or2(newval, one));
+          val newval = plus(chr_str(obj, index),
+                            or2(eval(newform, env, form), one));
           chr_str_set(obj, index, newval);
+          *retval = newval;
         } else if (op == dec_s) {
-          newval = minus(chr_str(obj, index), or2(newval, one));
+          val newval = minus(chr_str(obj, index),
+                             or2(eval(newform, env, form), one));
           chr_str_set(obj, index, newval);
+          *retval = newval;
+        } else if (op == del_s) {
+          if (lt(index, zero) || length_str_le(obj, index))
+            eval_error(form, lit("[~s ~s]: index out of bounds"),
+                                 obj, index, nao);
+          replace_str(obj, nil, index, plus(index, one));
+          *retval = nil;
         } else {
-          eval_error(form, lit("[~s ~s]: only set, inc and dec can be used "
-                               "for string indices"), obj, index, nao);
+          eval_error(form, lit("[~s ~s]: only set, inc, dec and del can be "
+                               "used for string indices"), obj, index, nao);
         }
-        *retval = newval;
         return 0;
       }
     }
@@ -784,12 +803,18 @@ static val *dwim_loc(val form, val env, val op, val newval, val *retval)
       val index = first(args);
 
       if (consp(index)) {
-        if (op != set_s) 
-          eval_error(form, lit("[~s ~s]: ranges take only set assignments"),
-                     obj, index, nao);
 
-        replace_vec(obj, newval, car(index), cdr(index));
-        *retval = newval;
+        if (op == set_s) {
+          val newval = eval(newform, env, form);
+          replace_vec(obj, newval, car(index), cdr(index));
+          *retval = newval;
+        } else if (op == del_s) {
+          replace_vec(obj, nil, car(index), cdr(index));
+          *retval = nil;
+        } else {
+          eval_error(form, lit("[~s ~s]: ranges allow only set and del operators"),
+                     obj, index, nao);
+        }
         return 0;
       } else {
         return vecref_l(obj, first(args));
@@ -810,15 +835,23 @@ static val *dwim_loc(val form, val env, val op, val newval, val *retval)
         val newlist;
         val tempform;
 
-        if (op != set_s) 
-          eval_error(form, lit("[~s ~s]: ranges take only simple assignments"),
-                     cell, index, nao);
-
-        newlist = replace_list(obj, newval, car(index), cdr(index));
-        tempform = list(op, second(form), 
-                        cons(quote_s, cons(newlist, nil)), nao);
-        op_modplace(tempform, env);
-        *retval = newval;
+        if (op == set_s) {
+          val newval = eval(newform, env, form);
+          newlist = replace_list(obj, newval, car(index), cdr(index));
+          tempform = list(op, second(form), 
+                          cons(quote_s, cons(newlist, nil)), nao);
+          op_modplace(tempform, env);
+          *retval = newval;
+        } else if (op == del_s) {
+          newlist = replace_list(obj, nil, car(index), cdr(index));
+          tempform = list(op, second(form), 
+                          cons(quote_s, cons(newlist, nil)), nao);
+          op_modplace(tempform, env);
+          *retval = nil;
+        } else {
+          eval_error(form, lit("[~s ~s]: ranges allow only set and del operators"),
+                     obj, index, nao);
+        }
         return 0;
       } else {
         eval_error(form, lit("[~s ~s]: index must be integer, or pair"),
@@ -832,6 +865,13 @@ static val *dwim_loc(val form, val env, val op, val newval, val *retval)
         if (lt(length(args), one))
           eval_error(form, lit("[~s ...]: hash indexing needs at least one arg"),
                      obj, nao);
+
+        if (op == del_s) {
+          *retval = gethash(obj, first(args));
+          remhash(obj, first(args));
+          return 0;
+        }
+
         loc = gethash_l(obj, first(args), &new_p);
         if (new_p)
           *loc = second(args);
@@ -851,7 +891,8 @@ static val op_modplace(val form, val env)
   val op = first(form);
   val place = second(form);
   val third_arg_p = rest(rest(form));
-  val newval = if3(car(third_arg_p), third(form), nil);
+  val newform = if3(car(third_arg_p), third(form), nil);
+  val newval;
   val *loc = 0;
 
   if (op == push_s) {
@@ -859,10 +900,9 @@ static val op_modplace(val form, val env)
     if (!third_arg_p)
       eval_error(form, lit("~a: missing argument"), op, place, nao);
     place = third(form);
-    newval = tmp;
+    newform = tmp;
+    newval = eval(newform, env, form);
   }
-
-  newval = eval(newval, env, form);
 
   if (symbolp(place)) {
     if (!bindable(place))
@@ -875,13 +915,18 @@ static val op_modplace(val form, val env)
     val sym = car(place);
     if (sym == dwim_s) {
       val ret = nil;
-      loc = dwim_loc(place, env, op, newval, &ret);
+      loc = dwim_loc(place, env, op, newform, &ret);
       if (loc == 0)
         return ret;
     } else if (sym == gethash_s) {
       val hash = eval(second(place), env, form);
       val key = eval(third(place), env, form);
       val new_p;
+      if (op == del_s) {
+        val ret = gethash(hash, key);
+        remhash(hash, key);
+        return ret;
+      }
       loc = gethash_l(hash, key, &new_p);
       if (new_p)
         *loc = eval(fourth(place), env, form);
@@ -909,12 +954,12 @@ static val op_modplace(val form, val env)
   if (op == set_s) {
     if (!third_arg_p)
       eval_error(form, lit("~a: missing argument"), op, place, nao);
-    return *loc = newval;
+    return *loc = eval(newform, env, form);
   } else if (op == inc_s) {
-    val inc = or2(newval, one);
+    val inc = or2(eval(newform, env, form), one);
     return *loc = plus(*loc, inc);
   } else if (op == dec_s) {
-    val inc = or2(newval, one);
+    val inc = or2(eval(newform, env, form), one);
     return *loc = minus(*loc, inc);
   } else if (op == push_s) {
     return push(newval, loc);
@@ -924,6 +969,8 @@ static val op_modplace(val form, val env)
     return pop(loc);
   } else if (op == flip_s) {
     return *loc = nullp(*loc);
+  } else if (op == del_s) {
+    eval_error(form, lit("~a: cannot delete ~a"), op, place, nao);
   }
 
   internal_error("unhandled place modifier");
@@ -1963,6 +2010,7 @@ void eval_init(void)
   push_s = intern(lit("push"), user_package);
   pop_s = intern(lit("pop"), user_package);
   flip_s = intern(lit("flip"), user_package);
+  del_s = intern(lit("del"), user_package);
   for_s = intern(lit("for"), user_package);
   for_star_s = intern(lit("for*"), user_package);
   each_s = intern(lit("each"), user_package);
@@ -2013,6 +2061,7 @@ void eval_init(void)
   sethash(op_table, push_s, cptr((mem_t *) op_modplace));
   sethash(op_table, pop_s, cptr((mem_t *) op_modplace));
   sethash(op_table, flip_s, cptr((mem_t *) op_modplace));
+  sethash(op_table, del_s, cptr((mem_t *) op_modplace));
   sethash(op_table, for_s, cptr((mem_t *) op_for));
   sethash(op_table, for_star_s, cptr((mem_t *) op_for));
   sethash(op_table, dohash_s, cptr((mem_t *) op_dohash));

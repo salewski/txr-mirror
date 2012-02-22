@@ -27,7 +27,7 @@ syn keyword txr_keyword contained defex throw deffilter filter eof eol do
 
 syn keyword txl_keyword contained progn prog1 let syn let* lambda call fun 
 syn keyword txl_keyword contained cond if and or dwim op catch
-syn keyword txl_keyword contained defvar defun inc dec set push pop flip
+syn keyword txl_keyword contained defvar defun inc dec set push pop flip del
 syn keyword txl_keyword contained for for* dohash unwind-protect block
 syn keyword txl_keyword contained return return-from gen delay
 syn keyword txl_keyword contained each each* collect-each collect-each*

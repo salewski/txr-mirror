@@ -4875,7 +4875,7 @@ possible to terminate the function and return a value using (return-from <name>
 
 A function may call itself by name, allowing for recursion.
 
-.SS Operators inc, dec, set, push, pop and flip
+.SS Operators inc, dec, set, push, pop, flip and del
 
 .TP
 Syntax:
@@ -4886,6 +4886,7 @@ Syntax:
   (push <item> <place>)
   (pop <place>)
   (flip <place>)
+  (del <place>)
 
 .TP
 Description:
@@ -4937,6 +4938,15 @@ is visible to the program.
 The flip operator toggles a place between true and false. If the place
 contains a value other than nil, then its value is replaced with nil.
 If it contains nil, it is replaced with t.
+
+The del operator does not modify the value of a place, but rather deletes the
+place itself. Index values and ranges of lists denoted using the dwim operator
+indexing notation can be subject to a deletion, as can hash table entries
+denoted using dwim or gethash. It is an error to try to delete other kinds of
+places such as simple variables. The del operator returns the value of the
+place that was deleted. Deleting from a sequence means removing the element or
+elements. Deleting a hash place means removing the corresponding entry from the
+hash table.
 
 Currently, these forms are recognized as places:
 
