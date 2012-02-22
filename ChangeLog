@@ -1,5 +1,9 @@
 2012-02-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Third argument of gethash becomes optional.
+
+2012-02-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	Introducing optional arguments.
 
 	* debug.c (help, show_bindings): put_string arguments reversed.
