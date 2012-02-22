@@ -1,5 +1,13 @@
 2012-02-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	* hash.c (remhash): Rewrote buggy function.
+	It was decrementing the hash count without checking that
+	something was deleted from the chain. The deletion was done
+	incorrectly, without regard for the kind of comparison fucntion
+	used by the hash table.
+
+2012-02-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Intrinsic bindings for sub, ref, refset
 	and replace.
 
