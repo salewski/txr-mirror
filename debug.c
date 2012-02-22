@@ -25,21 +25,21 @@ static int cols = 80;
 
 static void help(val stream)
 {
-  put_string(stream,
-             lit("commands:\n"
+  put_string(lit("commands:\n"
                  "? - help                               s - step into form\n"
                  "h - help                               n - step over form\n"
                  "c - continue                           f - finish form\n"
                  "v - show variable binding environment  s - show current form\n"
                  "b - set breakpoint by line number      i - show current data\n"
                  "d - delete breakpoint                  w - backtrace\n"
-                 "l - list breakpoints\n"));
+                 "l - list breakpoints\n"),
+             stream);
 }
 
 static void show_bindings(val env, val stream)
 {
   val level = zero;
-  put_string(stream, lit("bindings:\n"));
+  put_string(lit("bindings:\n"), stream);
 
   for (;; level = plus(level, one)) {
     if (nullp(env))

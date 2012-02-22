@@ -45,7 +45,7 @@ syn keyword txl_keyword contained all none eq eql equal + - * abs trunc mod
 syn keyword txl_keyword contained expt exptmod sqrt gcd fixnump bignump 
 syn keyword txl_keyword contained numberp zerop evenp oddp >
 syn keyword txl_keyword contained < >= <= max min search-regex match-regex
-syn keyword txl_keyword contained make-hash gethash sethash pushhash remhash
+syn keyword txl_keyword contained make-hash hash gethash sethash pushhash remhash
 syn keyword txl_keyword contained hash-count get-hash-userdata set-hash-userdata hashp maphash 
 syn keyword txl_keyword contained hash-eql hash-equal eval *stdout* *stdin*
 syn keyword txl_keyword contained *stderr* format print pprint tostring tostringp
@@ -79,7 +79,7 @@ syn keyword txl_keyword contained sub ref replace
 syn keyword txl_keyword contained symbol-function func-get-form func-get-env
 syn keyword txl_keyword contained functionp interp-fun-p *random-state*
 syn keyword txl_keyword contained make-random-state random-state-p
-syn keyword txl_keyword contained random-fixnum random
+syn keyword txl_keyword contained random-fixnum random rand
 
 syn keyword txl_keyword contained range range* generate repeat force
 syn keyword txl_keyword contained throw throwf error match-fun

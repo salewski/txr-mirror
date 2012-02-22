@@ -63,6 +63,8 @@ struct hash_iter {
   val cons;
 };
 
+val weak_keys_k, weak_vals_k, equal_based_k;
+
 /*
  * Dynamic list built up during gc.
  */
@@ -525,6 +527,17 @@ void hash_process_weak(void)
   reachable_weak_hashes = 0;
 }
 
+val hashv(val args)
+{
+  val wkeys = memq(weak_keys_k, args);
+  val wvals = memq(weak_vals_k, args);
+  val equal = memq(equal_based_k, args);
+  return make_hash(wkeys, wvals, equal);
+}
+
 void hash_init(void)
 {
+  weak_keys_k = intern(lit("weak-keys"), keyword_package);
+  weak_vals_k = intern(lit("weak-vals"), keyword_package);
+  equal_based_k = intern(lit("equal-based"), keyword_package);
 }

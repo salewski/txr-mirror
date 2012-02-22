@@ -88,7 +88,7 @@ void yyerrorf(val fmt, ...)
     format(std_error, lit("~a: (~a:~a): "), prog_string,
            spec_file_str, num(lineno), nao);
     vformat(std_error, fmt, vl);
-    put_char(std_error, chr('\n'));
+    put_char(chr('\n'), std_error);
     va_end (vl);
   }
   errors++;
@@ -210,6 +210,13 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                             yylval.lexeme = utf8_dup_from(yytext);
                             return IDENT;
                           }
+                        }
+<NESTED>:               {
+                          if (yy_top_state() == INITIAL
+                              || yy_top_state() == QSILIT)
+                            yy_pop_state();
+                          yylval.lexeme = utf8_dup_from("");
+                          return KEYWORD;
                         }
 
 <SPECIAL>\({WS}all{WS}\)        {

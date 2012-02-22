@@ -89,8 +89,10 @@ struct package {
 
 struct func {
   type_t type;
-  unsigned minparam : 15;
+  unsigned fixparam : 7; /* total non-variadic parameters */
+  unsigned optargs : 7;  /* fixparam - optargs = required args */
   unsigned variadic : 1;
+  unsigned : 1;
   functype_t functype : 16;
   val env;
   union {
@@ -291,7 +293,7 @@ extern val error_s, type_error_s, internal_error_s;
 extern val numeric_error_s, range_error_s;
 extern val query_error_s, file_error_s, process_error_s;
 
-extern val nothrow_k, args_k;
+extern val nothrow_k, args_k, colon_k;
 
 extern val null_string;
 extern val null_list; /* (nil) */
@@ -337,7 +339,7 @@ val append2(val list1, val list2);
 val nappend2(val list1, val list2);
 val appendv(val lists);
 val sub_list(val list, val from, val to);
-val replace_list(val list, val from, val to, val items);
+val replace_list(val list, val items, val from, val to);
 val lazy_appendv(val lists);
 val ldiff(val list1, val list2);
 val flatten(val list);
@@ -420,7 +422,7 @@ val length_str(val str);
 const wchar_t *c_str(val str);
 val search_str(val haystack, val needle, val start_num, val from_end);
 val search_str_tree(val haystack, val tree, val start_num, val from_end);
-val replace_str(val str_in, val from, val to, val items);
+val replace_str(val str_in, val items, val from, val to);
 val sub_str(val str_in, val from_num, val to_num);
 val cat_str(val list, val sep);
 val split_str(val str, val sep);
@@ -482,6 +484,11 @@ val func_n1v(val (*fun)(val, val rest));
 val func_n2v(val (*fun)(val, val, val rest));
 val func_n3v(val (*fun)(val, val, val, val rest));
 val func_n4v(val (*fun)(val, val, val, val, val rest));
+val func_n0o(val (*fun)(void), int reqargs);
+val func_n1o(val (*fun)(val), int reqargs);
+val func_n2o(val (*fun)(val, val), int reqargs);
+val func_n3o(val (*fun)(val, val, val), int reqargs);
+val func_n4o(val (*fun)(val, val, val, val), int reqargs);
 val func_interp(val env, val form);
 val func_get_form(val fun);
 val func_get_env(val fun);
@@ -520,7 +527,7 @@ val vector_list(val list);
 val list_vector(val vector);
 val copy_vec(val vec);
 val sub_vec(val vec_in, val from, val to);
-val replace_vec(val vec_in, val from, val to, val items);
+val replace_vec(val vec_in, val items, val from, val to);
 val cat_vec(val list);
 val lazy_stream_cons(val stream);
 val lazy_str(val list, val term, val limit);
@@ -559,7 +566,7 @@ val set_diff(val list1, val list2, val testfun, val keyfun);
 val length(val seq);
 val sub(val seq, val from, val to);
 val ref(val seq, val ind);
-val replace(val seq, val from, val to, val items);
+val replace(val seq, val items, val from, val to);
 val env(void);
 val obj_print(val obj, val stream);
 val obj_pprint(val obj, val stream);
