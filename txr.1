@@ -5101,6 +5101,14 @@ Either end of the range can also be specified as nil. If the start is specified
 as nil, it means zero. If the end is specified as nil, it means one element
 past the end. Thus nil .. nil spans all of the elements.
 
+The value zero has a "floating" behavior when used as the end of a range.
+If the start of the range is a negative value, and the end of the
+range is zero, the zero is interpreted as being the position past the
+end of the sequence, rather than the first element. For instance the range
+-1..0 means the same thing as -1..t or -1..nil. Zero at the start of a range
+always means the first element, so that 0..-1 refers to all the elements except
+for the last one.
+
 .TP
 Notes:
 

@@ -443,8 +443,11 @@ val sub_list(val list, val from, val to)
     from = zero;
   else if (from == t)
     from = nil;
-  else if (lt(from, zero))
+  else if (lt(from, zero)) {
     from = plus(from, len = length(list));
+    if (zerop(to))
+      to = nil;
+  }
 
   if (to == t)
     to = nil;
@@ -494,8 +497,11 @@ val replace_list(val list, val items, val from, val to)
     from = zero;
   else if (from == t)
     from = nil;
-  else if (lt(from, zero))
+  else if (lt(from, zero)) {
     from = plus(from, len ? len : (len = length(list)));
+    if (zerop(to))
+      to = len;
+  }
 
   if (to == t)
     to = nil;
@@ -1483,6 +1489,9 @@ static val lazy_sub_str(val lstr, val from, val to)
     if (lt(from, zero)) {
       from = plus(from, len = length_str(lstr));
       from = max2(zero, from);
+
+      if (zerop(to))
+        to = t;
     }
 
     if (ge(from, len_pfx)) {
@@ -1534,8 +1543,11 @@ val sub_str(val str_in, val from, val to)
     from = zero;
   else if (from == t)
     return null_string;
-  else if (lt(from, zero))
+  else if (lt(from, zero)) {
     from = plus(from, len);
+    if (zerop(to))
+      to = len;
+  }
 
   if (to == nil || to == t)
     to = len;
@@ -1572,8 +1584,11 @@ val replace_str(val str_in, val items, val from, val to)
     from = zero;
   else if (from == t)
     from = len;
-  else if (lt(from, zero))
+  else if (lt(from, zero)) {
     from = plus(from, len);
+    if (zerop(to))
+      to = len;
+  }
 
   if (to == nil || to == t)
     to = len;
@@ -2939,8 +2954,11 @@ val sub_vec(val vec_in, val from, val to)
     from = zero;
   else if (from == t)
     from = len;
-  else if (lt(from, zero))
+  else if (lt(from, zero)) {
     from = plus(from, len);
+    if (zerop(to))
+      to = len;
+  }
 
   if (to == nil || to == t)
     to = len;
@@ -2979,8 +2997,11 @@ val replace_vec(val vec_in, val items, val from, val to)
     from = zero;
   else if (from == t)
     from = len;
-  else if (lt(from, zero))
+  else if (lt(from, zero)) {
     from = plus(from, len);
+    if (zerop(to))
+      to = len;
+  }
 
   if (to == nil || to == t)
     to = len;
