@@ -1,5 +1,14 @@
 2012-02-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (dwim_loc): del operator's return value is the
+	deleted range of values. Missing del cases added for single
+	index cases.
+
+	* lib.c (quicksort): Fix pivot selection one more time.
+	(length): Fix bad argument in "not a sequence" error.
+
+2012-02-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (quicksort): Incorrect pivot selection.
 
 2012-02-22  Kaz Kylheku  <kaz@kylheku.com>
