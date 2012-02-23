@@ -1,5 +1,11 @@
 2012-02-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	* tests/010/seq.txr: New file.
+
+	* tests/010/seq.expected: New file.
+
+2012-02-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (sub_list, replace_list, lazy_sub_str, sub_str,
 	replace_str, sub_vec, replace_vec): Implementing floating zero
 	behavior. This is necessary so that the important case index .. (+
