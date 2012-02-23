@@ -753,8 +753,8 @@ static val *dwim_loc(val form, val env, val op, val newform, val *retval)
           replace_str(obj, newval, car(index), cdr(index));
           *retval = newval;
         } else if (op == del_s) {
+          *retval = sub_str(obj, car(index), cdr(index));
           replace_str(obj, nil, car(index), cdr(index));
-          *retval = nil;
         } else {
           eval_error(form, lit("[~s ~s]: ranges allow only set and del operators"),
                      obj, index, nao);
@@ -779,11 +779,8 @@ static val *dwim_loc(val form, val env, val op, val newform, val *retval)
           chr_str_set(obj, index, newval);
           *retval = newval;
         } else if (op == del_s) {
-          if (lt(index, zero) || length_str_le(obj, index))
-            eval_error(form, lit("[~s ~s]: index out of bounds"),
-                                 obj, index, nao);
+          *retval = chr_str(obj, index);
           replace_str(obj, nil, index, plus(index, one));
-          *retval = nil;
         } else {
           eval_error(form, lit("[~s ~s]: only set, inc, dec and del can be "
                                "used for string indices"), obj, index, nao);
@@ -809,15 +806,20 @@ static val *dwim_loc(val form, val env, val op, val newform, val *retval)
           replace_vec(obj, newval, car(index), cdr(index));
           *retval = newval;
         } else if (op == del_s) {
+          *retval = sub_vec(obj, car(index), cdr(index));
           replace_vec(obj, nil, car(index), cdr(index));
-          *retval = nil;
         } else {
           eval_error(form, lit("[~s ~s]: ranges allow only set and del operators"),
                      obj, index, nao);
         }
         return 0;
       } else {
-        return vecref_l(obj, first(args));
+        if (op == del_s) {
+          *retval = vecref(obj, index);
+          replace_vec(obj, nil, index, plus(index, one));
+          return 0;
+        }
+        return vecref_l(obj, index);
       }
     }
   case CONS:
@@ -830,6 +832,11 @@ static val *dwim_loc(val form, val env, val op, val newform, val *retval)
       val index = first(args);
       val cell = obj;
       if (bignump(index) || fixnump(index)) {
+        if (op == del_s) {
+          *retval = vecref(obj, index);
+          replace_list(obj, nil, index, plus(index, one));
+          return 0;
+        }
         return listref_l(obj, index);
       } else if (consp(index)) {
         val newlist;
@@ -843,11 +850,11 @@ static val *dwim_loc(val form, val env, val op, val newform, val *retval)
           op_modplace(tempform, env);
           *retval = newval;
         } else if (op == del_s) {
+          *retval = sub_list(obj, car(index), cdr(index));
           newlist = replace_list(obj, nil, car(index), cdr(index));
           tempform = list(op, second(form), 
                           cons(quote_s, cons(newlist, nil)), nao);
           op_modplace(tempform, env);
-          *retval = nil;
         } else {
           eval_error(form, lit("[~s ~s]: ranges allow only set and del operators"),
                      obj, index, nao);
