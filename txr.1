@@ -3479,14 +3479,14 @@ repetition.
 If the repeat produces no repetitions, then the body of this clause is output.
 If this clause is absent or empty, the repeat produces no output.
 
-.IP @(mod n m)
+.IP "@(mod n m)"
 The forms n and m are expressions that evaluate to integers. The value of
 m should be nonzero. The clause denoted this way is active if the repetition
 modulo m is equal to n. The first repetition is numbered zero.
 For instance the clause headed by @(mod 0 2) will be used on repetitions 
 0, 2, 4, 6, ...  and @(mod 1 2) will be used on repetitions 1, 3, 5, 7, ...
 
-.IP @(modlast n m)
+.IP "@(modlast n m)"
 The meaning of n and m is the same as in @(mod n m), but one more condition
 is imposed. This clause is used if the repetition modulo m is
 equal to n, and if it is the last repetition.
