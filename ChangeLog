@@ -1,5 +1,10 @@
 2012-02-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (h_var): Eliminated uses of rl function, in favor of
+	rlcp. Only the parser should use rl to establish location info.
+
+2012-02-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	First cut at @(load) directive. Incomplete: debug location info
 	needs to record file name, not only line number; absolute paths
 	not handled, etc.

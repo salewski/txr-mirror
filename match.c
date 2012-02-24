@@ -473,9 +473,7 @@ static val h_var(match_line_ctx *c)
        and it must be transformed into
        (<sym-substituted> <pat> ...) */
     if (pat) {
-      val loc = source_loc(c->specline);
-      c->specline = cons(cdr(pair), cons(pat, rest(c->specline)));
-      rl(car(c->specline), loc);
+      c->specline = rlcp(cons(cdr(pair), cons(pat, rest(c->specline))), c->specline);
     } else if (fixnump(modifier)) {
       val past = plus(c->pos, modifier);
 
@@ -496,9 +494,7 @@ static val h_var(match_line_ctx *c)
       c->pos = past;
       c->specline = cdr(c->specline);
     } else {
-      val loc = source_loc(c->specline);
-      c->specline = cons(cdr(pair), rest(c->specline));
-      rl(car(c->specline), loc);
+      c->specline = rlcp(cons(cdr(pair), rest(c->specline)), c->specline);
     }
     return repeat_spec_k;
   } else if (consp(modifier)) { /* var bound over text matched by form */
@@ -515,9 +511,7 @@ static val h_var(match_line_ctx *c)
     c->pos = new_pos;
     /* This may have another variable attached */
     if (pat) {
-      val loc = source_loc(c->specline);
-      c->specline = cons(pat, rest(c->specline));
-      rl(car(c->specline), loc);
+      c->specline = rlcp(cons(pat, rest(c->specline)), c->specline);
       return repeat_spec_k;
     }
   } else if (fixnump(modifier)) { /* fixed field */
@@ -596,9 +590,7 @@ static val h_var(match_line_ctx *c)
       LOG_MATCH("double var regex (second var)", plus(fpos, flen));
       c->pos = plus(fpos, flen);
       if (next_pat) {
-        val loc = source_loc(c->specline);
-        c->specline = cons(next_pat, rest(c->specline));
-        rl(car(c->specline), loc);
+        c->specline = rlcp(cons(next_pat, rest(c->specline)), c->specline);
         return repeat_spec_k;
       }
     } else if (!pair) {
