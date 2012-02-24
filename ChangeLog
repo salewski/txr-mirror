@@ -1,5 +1,11 @@
 2012-02-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (v_load): Sanity checking on target path.
+	Check if it is absolute and do not substitute parent
+	file's directory.
+
+2012-02-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (h_var): Eliminated uses of rl function, in favor of
 	rlcp. Only the parser should use rl to establish location info.
 

@@ -3375,10 +3375,18 @@ static val v_load(match_files_ctx *c)
   if (rest(specline))
     sem_error(specline, lit("unexpected material after load"), nao);
 
+  if (!stringp(target))
+    sem_error(specline, lit("load: path ~s is not a string"), target, nao);
+
+  if (equal(target, null_string))
+    sem_error(specline, lit("load: null string path given"), nao);
+
   {
-    val path = cat_str(nappend2(sub_list(split_str(parent, lit("/")),
+    val path = if3(chr_str(target, zero) == chr('/'),
+                   target,
+                   cat_str(nappend2(sub_list(split_str(parent, lit("/")),
                                          zero, negone),
-                                cons(target, nil)), lit("/"));
+                                cons(target, nil)), lit("/")));
     int gc = gc_state(0);
     parse_reset(path);
     yyparse();
