@@ -109,10 +109,10 @@ IR false
 for a failed query. The program still sets an appropriate
 termination status.
 
-.IP -l or --lisp-bindings
+.IP "-l or --lisp-bindings"
 Print the variable bindings in Lisp syntax instead of shell syntax.
 
-.IP -a num
+.IP "-a num"
 Specifies the maximum number of array dimensions to use for variables
 arising out of collect. The default is 1. Additional dimensions are
 expressed using numeric suffixes in the generated variable names.
@@ -133,7 +133,7 @@ reported as:
 The leftmost bracketed index is the most major index. That is to say,
 the dimension order is: NAME_m_m+1_..._n[1][2]...[m-1].
 
-.IP -c query
+.IP "-c query"
 Specifies the query in the form of a command line argument. If this option is
 used, the query-file argument is omitted. The first non-option argument,
 if there is one, now specifies the first input source rather than a query.
@@ -165,7 +165,7 @@ The @; comment syntax can be used for better formatting:
   @a
   @b"
 
-.IP -f query-file
+.IP "-f query-file"
 Specifies the file from which the query is to be read, instead of the
 query-file argument. This is useful in #! scripts. (See Hash Bang Support
 below).
@@ -1177,7 +1177,7 @@ first successful clause.
 Multiple clauses are applied to the same input. The one whose effect persists
 is the one which maximizes or minimizes the length of a particular variable.
 
-.IP @(define\ NAME\ (\ ARGUMENTS\ ...))
+.IP "@(define NAME ( ARGUMENTS ...))"
 Introduces a function. Functions are discussed in the FUNCTIONS section below.
 
 .IP @(gather)
@@ -1219,10 +1219,10 @@ has special semantics.  Blocks are discussed in the section BLOCKS below.
 Indicates the start of a try block, which is related to exception
 handling, discussed in the EXCEPTIONS section below.
 
-.IP @(catch),\ @(finally)
+.IP "@(catch), @(finally)"
 Special clauses within @(try). See EXCEPTIONS below.
 
-.IP @(defex),\ @(throw)
+.IP "@(defex), @(throw)"
 Define custom exception types; throw an exception.  See EXCEPTIONS below.
 
 .IP @(flatten)
@@ -2474,7 +2474,7 @@ The next simplest bind binds one variable to another:
 
 Here, if A is unbound, it takes on the same value as B. If A is bound, it has
 to match B, or the bind fails. Matching means that either
-.IP - 
+.IP -
 A and B are the same text
 .IP -
 A is text, B is a list, and A occurs within B.
@@ -2678,7 +2678,7 @@ normally. However, a block serves as a termination point for @(fail) and
 
 The precise meaning of these directives is:
 
-.IP @(fail\ NAME)
+.IP "@(fail NAME)"
 
 Immediately terminate the enclosing query block called NAME, as if that block failed to match anything. If more than one block by that name encloses
 the directive, the inner-most block is terminated. No bindings
@@ -2702,7 +2702,7 @@ collect normally does not fail, even if it matches and collects nothing!
 To prematurely terminate a collect by means of its anonymous block, without
 failing it, use @(accept).
 
-.IP @(accept\ NAME)
+.IP "@(accept NAME)"
 
 Immediately terminate the enclosing query block called NAME, as if that block
 successfully matched. If more than one block by that name encloses the
@@ -5019,51 +5019,51 @@ The first argument may not be an operator such as let, et cetera.
 How many are required depends on the type of object to which the first argument
 expression evaluates: of the first argument.  The possibilities are:
 
-.IP [<function> <argument>*]
+.IP "[<function> <argument>*]"
 Call the given the function object to the given arguments.
 
-.IP [<symbol> <argument>*]
+.IP "[<symbol> <argument>*]"
 If the first expression evaluates to a symbol, that symbol
 is resolved in the function namespace, and then
 the resulting function, if found, is called with the
 given arguments.
 
-.IP [<list> <index>]
+.IP "[<list> <index>]"
 Retrieve the specified element from the specified list. Index zero
 refers to the first element. Indexed list access does not throw exceptions.
 Negative indices yield nil, and indices beyond the end of a list
 yield nil. (However assignment to a nonexistent list element throws.)
 
-.IP [<list> <from-index>..<to-below-index>]
+.IP "[<list> <from-index>..<to-below-index>]"
 Retrieve the specified range of elements, exactly as if
 using (sub-list <list> <from-index> <to-below-index>).
 The range of elements is specified in the car and cdr fields of a cons cell,
 for which the .. (dotdot) syntactic sugar is useful.
 See the section on Indexing below.
 
-.IP [<vector> <index>]
+.IP "[<vector> <index>]"
 Retrieve the specified element of a vector. This is equivalent to
 (vecref <vector> <index>).
 
-.IP [<vector> <from-index>..<to-below-index>]
+.IP "[<vector> <from-index>..<to-below-index>]"
 Retrieve the specified range of elements, exactly as if
 using (sub-vec <list> <from-index> <to-below-index>).
 The range of elements is specified in the car and cdr fields of a cons cell,
 for which the .. (dotdot) syntactic sugar is useful.
 See the section on Range Indexing below.
 
-.IP [<string> <index>]
+.IP "[<string> <index>]"
 Retrieve the specified element of a string. This is equivalent to
 (chr-str <string> <index>).
 
-.IP [<string> <from-index>..<to-below-index>]
+.IP "[<string> <from-index>..<to-below-index>]"
 Retrieve the specified range of characters from the string, exactly as if
 using (sub-str <string> <from-index> <to-below-index>).
 The range of elements is specified in the car and cdr fields of a cons cell,
 for which the .. (dotdot) syntactic sugar is useful.
 See the section on Indexing below.
 
-.IP [<hash-table> <key> <default-value>]
+.IP "[<hash-table> <key> <default-value>]"
 Retrieve a value from the hash table corresponding to <key>,
 or <default-value> if there is no such entry.
 
