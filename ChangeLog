@@ -1,3 +1,28 @@
+2012-02-24  Kaz Kylheku  <kaz@kylheku.com>
+
+	First cut at @(load) directive. Incomplete: debug location info
+	needs to record file name, not only line number; absolute paths
+	not handled, etc.
+
+	* match.c (load_s): New symbol variable.
+	(v_load): New static function.
+	(syms_init): load_s initialized.
+	(dir_tables_init): Load directive registered.
+
+	* match.h (load_s): Declared.
+
+	* parser.h (parse_reset): New function declared.
+
+	* parser.l (spec_file_str): Global variable moved from txr.c.
+	(parse_reset): New function.
+
+	* parser.y (clause): Special handling for @(load ...) directive.
+	parent file path inserted into the syntax at parse time,
+	so when the load directive executes, it can load the file from
+	the same directory as the parent file.
+
+	* txr.c (spec_file_str): Global variable moved to parser.l.
+
 2012-02-22  Kaz Kylheku  <kaz@kylheku.com>
 
 	* tests/010/seq.txr: New file.

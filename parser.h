@@ -39,6 +39,7 @@ void end_of_regex(void);
 void end_of_char(void);
 int yylex(void);
 void parse_init(void);
+void parse_reset(val spec_file);
 val source_loc(val form);
 val rl(val form, val lineno);
 INLINE val rlcp(val to, val from)

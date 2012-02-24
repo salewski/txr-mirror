@@ -46,7 +46,6 @@
 const wchli_t *version = wli("57");
 const wchar_t *progname = L"txr";
 const wchar_t *spec_file = L"stdin";
-val spec_file_str;
 
 /*
  * Can implement an emergency allocator here from a fixed storage

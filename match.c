@@ -54,7 +54,7 @@ int opt_arraydims = 1;
 val decline_k, next_spec_k, repeat_spec_k;
 val mingap_k, maxgap_k, gap_k, mintimes_k, maxtimes_k, times_k;
 val lines_k, chars_k;
-val text_s, choose_s, gather_s, do_s, mod_s, modlast_s, fuzz_s;
+val text_s, choose_s, gather_s, do_s, mod_s, modlast_s, fuzz_s, load_s;
 val longest_k, shortest_k, greedy_k;
 val vars_k, resolve_k;
 val append_k, into_k, var_k, list_k, string_k, env_k, counter_k;
@@ -3373,6 +3373,31 @@ static val v_do(match_files_ctx *c)
   return next_spec_k;
 }
 
+static val v_load(match_files_ctx *c)
+{
+  spec_bind (specline, first_spec, c->spec);
+  val args = rest(first_spec);
+  val parent = first(args);
+  val target = txeval(specline, second(args), c->bindings);
+
+  if (rest(specline))
+    sem_error(specline, lit("unexpected material after load"), nao);
+
+  {
+    val path = cat_str(nappend2(sub_list(split_str(parent, lit("/")),
+                                         zero, negone),
+                                cons(target, nil)), lit("/"));
+    int gc = gc_state(0);
+    parse_reset(path);
+    yyparse();
+    gc_state(gc);
+    { 
+      val spec = get_spec();
+      return match_files(mf_spec(*c, spec));
+    }
+  }
+}
+
 static val h_do(match_line_ctx *c)
 {
   val elem = first(c->specline);
@@ -3588,6 +3613,7 @@ static void syms_init(void)
   choose_s = intern(lit("choose"), user_package);
   gather_s = intern(lit("gather"), user_package);
   do_s = intern(lit("do"), user_package);
+  load_s = intern(lit("load"), user_package);
   longest_k = intern(lit("longest"), keyword_package);
   shortest_k = intern(lit("shortest"), keyword_package);
   greedy_k = intern(lit("greedy"), keyword_package);
@@ -3648,6 +3674,7 @@ static void dir_tables_init(void)
   sethash(v_directive_table, filter_s, cptr((mem_t *) v_filter));
   sethash(v_directive_table, eof_s, cptr((mem_t *) v_eof));
   sethash(v_directive_table, do_s, cptr((mem_t *) v_do));
+  sethash(v_directive_table, load_s, cptr((mem_t *) v_load));
 
   sethash(h_directive_table, text_s, cptr((mem_t *) h_text));
   sethash(h_directive_table, var_s, cptr((mem_t *) h_var));

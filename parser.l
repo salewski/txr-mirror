@@ -66,6 +66,7 @@ cnum lineno = 1;
 int opt_loglevel = 1;   /* 0 - quiet; 1 - normal; 2 - verbose */
 
 int errors;
+val spec_file_str;
 
 val form_to_ln_hash;
 
@@ -692,4 +693,17 @@ void parse_init(void)
           &form_to_ln_hash, (val *) 0);
 
   form_to_ln_hash = make_hash(t, nil, nil);
+}
+
+void parse_reset(val spec_file)
+{
+  errors = 0;
+  lineno = 1;
+  spec_file_str = spec_file;
+  {
+    FILE *in = w_fopen(c_str(spec_file_str), L"r");
+    if (in == 0)
+      uw_throwf(file_error_s, lit("unable to open ~a"), spec_file_str, nao);
+    yyin_stream = make_stdio_stream(in, spec_file_str, t, nil);
+  }
 }
