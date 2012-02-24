@@ -1976,14 +1976,15 @@ continue matching in another file by means of @(next).
 If an until/last clause is specified, the collection stops when that clause
 matches at the current position. 
 
-If it is an until clause, no bindings are collected at that position, even if
-the main clause matches at that position also. Moreover, the position is not
-advanced.  The remainder of the query begins matching at that position.  
+If an until clause terminates collect, no bindings are collected at that
+position, even if the main clause matches at that position also. Moreover, the
+position is not advanced.  The remainder of the query begins matching at that
+position.  
 
-If it is a last clause matches, the behavior is different. Any bindings
+If a last clause terminates collect, the behavior is different. Any bindings
 captured by the main clause are thrown away, just like with the until clause.
-However, the bindings in the last clause itself survive, and the position
-is advanced to skip over that material.
+However, the bindings in the last clause itself survive, and the position is
+advanced to skip over that material.
 
 Example:
 
