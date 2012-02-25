@@ -241,7 +241,7 @@ invalid:
       modulus, nao);
 }
 
-val rand(val modulus, val state)
+val rnd(val modulus, val state)
 {
   return random(state, modulus);
 }

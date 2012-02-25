@@ -1,3 +1,65 @@
+                                     TXR 58
+                                   2011-02-25
+
+
+  Features
+
+  - Exception handling exposed in TXR Lisp.
+
+  - range* function similar to range, but for generating a range with the
+    endpoint excluded.
+
+  - TXR Lisp can invoke a function in the pattern language now using
+    the new match-fun function.
+
+  - Braced variable syntax in @(output) extended to support arbitrary
+    expressions in place of the variable name. The expressions are converted
+    to text and then treated the same way as a variable substitution.
+    Indexing is allowed, and field-formatting takes place.
+    Moreover, these expressions are code-walked by @(repeat) and @(rep) to look
+    for embedded variables.
+
+  - New TXR Lisp functions ref, refset, sub and replace.
+
+  - Indexing and range extraction in brace substitution in @(output) clauses is
+    now generic over lists, vectors and strings.
+
+  - Optional arguments introduced into TXR Lisp, in defun and lambdas,
+    with a simple syntax involving a colon. Numerous intrinsic functions
+    have been converted such that some previously required arguments
+    are now optional.
+
+  - Sort function that was previously for lists only is now generic over
+    vectors and strings.
+
+  - New del operator in TXR Lisp can delete elements of sequences or hashes
+    which are denoted using the bracket syntax.
+
+  - Range indexing has "floating zero" behavior now so that for
+    example [seq -2 0] means the "last two elements": when the start of
+    the range is negative, then a zero end is treated as length plus one.
+
+  - TXR programs can now be split into multiple modules, using the load
+    directive to load and run code.
+
+  Bugs
+  
+  - range function terminates lazy list when the sequence overshoots
+    the final value.
+
+  - Variable that holds nil is treated as a list in (set [var x..y] ...)
+    range assignment.
+
+  - Vestigial (t . obj) representation in exception handling code removed.
+
+  - TXR now does not not dump bindings if any output occured on a stream
+    connected to the C stdout stream. Previously, it suppressed printing
+    of bindings if @(output) was carried out on the *std-output* stream.
+
+  - Function remhash was found to be buggy and rewritten.
+
+
+
                                      TXR 57
                                    2011-02-14
 
