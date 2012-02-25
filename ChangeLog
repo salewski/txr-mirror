@@ -1,3 +1,12 @@
+2012-02-25  Kaz Kylheku  <kaz@kylheku.com>
+
+	* parser.y (clause): "Doh" moment. We don't need the special
+	transformation of the load syntax because the parent location
+	is already associated with the syntax.
+
+	* match.c (v_load): Pull out source location info from
+	the form itself.
+
 2012-02-24  Kaz Kylheku  <kaz@kylheku.com>
 
 	* debug.c (debug): Use new way of getting line number.

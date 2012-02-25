@@ -3366,10 +3366,11 @@ static val v_do(match_files_ctx *c)
 
 static val v_load(match_files_ctx *c)
 {
+  uses_or2;
   spec_bind (specline, first_spec, c->spec);
   val args = rest(first_spec);
-  val parent = first(args);
-  val target = txeval(specline, second(args), c->bindings);
+  val parent = or2(cdr(source_loc(specline)), null_string);
+  val target = txeval(specline, first(args), c->bindings);
 
   if (rest(specline))
     sem_error(specline, lit("unexpected material after load"), nao);
@@ -3385,7 +3386,7 @@ static val v_load(match_files_ctx *c)
                    target,
                    cat_str(nappend2(sub_list(split_str(parent, lit("/")),
                                          zero, negone),
-                                cons(target, nil)), lit("/")));
+                                    cons(target, nil)), lit("/")));
     int gc = gc_state(0);
     parse_reset(path);
     yyparse();
