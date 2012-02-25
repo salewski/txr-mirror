@@ -134,6 +134,8 @@ static wchar_t num_esc(char *num)
       yyerror("too many digits in hex character escape");
     return strtol(num + 1, 0, 16);
   } else {
+    if (num[0] == 'o')
+      num++;
     if (strlen(num) > 8)
       yyerror("too many digits in octal character escape");
     return strtol(num, 0, 8);
@@ -609,7 +611,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
                                         }
 
 <CHRLIT>(x{HEX}+|o{OCT}+) {
-                            yylval.chr = num_esc(yytext+1);
+                            yylval.chr = num_esc(yytext);
                             return LITCHAR;
                           }
 
