@@ -3837,6 +3837,11 @@ source file from which the @(load) form was read. If there was no such
 source file (for instance, the script was read from standard input),
 then it is resolved relative to the current working directory.
 
+If the file cannot be opened, then the .txr suffix is added and another
+attempt is made. Thus load expressions need not refer to the suffix.
+In the future, additional suffixes may be searched (compiled versions
+of a file).
+
 Loading is performed at evaluation time; it is not a source file inclusion
 mechanism.  A TXR script is read from beginning to end and parsed prior to
 being evaluated.

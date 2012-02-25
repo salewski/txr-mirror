@@ -687,6 +687,14 @@ val source_loc(val form)
   return gethash(form_to_ln_hash, form);
 }
 
+val source_loc_str(val form)
+{
+  cons_bind (line, file, gethash(form_to_ln_hash, form));
+  return if3(line,
+             format(nil, lit("~a:~a"), file, line, nao),
+             lit("source location n/a"));
+}
+
 void parse_init(void)
 {
   protect(&yyin_stream, &prepared_error_message,
@@ -702,8 +710,12 @@ void parse_reset(val spec_file)
   spec_file_str = spec_file;
   {
     FILE *in = w_fopen(c_str(spec_file_str), L"r");
-    if (in == 0)
-      uw_throwf(file_error_s, lit("unable to open ~a"), spec_file_str, nao);
+    if (in == 0) {
+      spec_file_str = cat_str(list(spec_file_str, lit("txr"), nao), lit("."));
+      in = w_fopen(c_str(spec_file_str), L"r");
+      if (in == 0)
+        uw_throwf(file_error_s, lit("unable to open ~a"), spec_file, nao);
+    }
     yyin_stream = make_stdio_stream(in, spec_file_str, t, nil);
   }
 }

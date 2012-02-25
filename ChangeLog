@@ -1,5 +1,14 @@
 2012-02-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.l (source_loc_str): Missing function re-written.
+	(Accidentally originally written in lex.yy.c file!)
+	(parse_reset): If file can't be opened, try adding .txr suffix
+	to it.
+
+	* txr.1: Suffix-handling behavior documented.
+
+2012-02-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.y (clause): "Doh" moment. We don't need the special
 	transformation of the load syntax because the parent location
 	is already associated with the syntax.
