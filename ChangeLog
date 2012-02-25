@@ -1,5 +1,24 @@
 2012-02-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 58
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES: Updated.
+
+	* eval.c (eval_init): Updated.
+
+	* rand.c (rand): Function renamed to rnd due to a clash with
+	standard C library (that does not show up when compiling as C++).
+
+	* rand.h (rand): Declaration renamed to rnd.
+
+2012-02-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.l (source_loc_str): Missing function re-written.
 	(Accidentally originally written in lex.yy.c file!)
 	(parse_reset): If file can't be opened, try adding .txr suffix
