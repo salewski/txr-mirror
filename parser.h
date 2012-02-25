@@ -41,6 +41,7 @@ int yylex(void);
 void parse_init(void);
 void parse_reset(val spec_file);
 val source_loc(val form);
+val source_loc_str(val form);
 val rl(val form, val lineno);
 INLINE val rlcp(val to, val from)
 {
