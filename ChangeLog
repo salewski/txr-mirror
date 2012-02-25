@@ -1,5 +1,13 @@
 2012-02-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.l (num_esc): Skip octal indicator 'o' if present.
+	This is needed for character constants.
+	(CHRLIT): Fix broken hex constants, being treated as octal.
+
+	* txr.1: Document octal character constants.
+
+2012-02-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	Version 58
 
 	* txr.c (version): Bumped.
