@@ -141,15 +141,7 @@ clause : all_clause             { $$ = list($1, nao); rlcp($$, $1); }
                                   rlcp($$, $1); }
        | try_clause             { $$ = list($1, nao); rlcp($$, $1); }
        | output_clause          { $$ = list($1, nao); rlcp($$, $1); }
-       | line                   { val elem = car($1);
-                            
-                                  if (consp(elem) && car(elem) == load_s)
-                                  { elem = rlcp(cons(load_s,
-                                                     cons(spec_file_str, 
-                                                          cdr(elem))), elem);
-                                    $$ = rlcp(cons(elem, cdr($1)), $1); }
-                                  else
-                                  { $$ = $1; } }
+       | line                   { $$ = $1; }
        | repeat_clause          { $$ = nil;
                                   yyerror("repeat outside of output"); }
        ;
