@@ -60,7 +60,7 @@ static void show_bindings(val env, val stream)
 val debug(val form, val bindings, val data, val line, val pos, val base)
 {
   uses_or2;
-  val lineno = source_loc(form);
+  val lineno = car(source_loc(form));
 
   if (!step_mode && !memqual(lineno, breakpoints) 
       && (debug_depth > next_depth))
@@ -74,7 +74,7 @@ val debug(val form, val bindings, val data, val line, val pos, val base)
       val input, command;
 
       if (print_form) {
-        format(std_output, lit("stopped at line ~a\n"), lineno, nao);
+        format(std_output, lit("stopped at ~a\n"), source_loc_str(form), nao);
         format(std_output, lit("form: ~s\n"), form, nao);
         format(std_output, lit("depth: ~s\n"), num(debug_depth), nao);
         print_form = nil;

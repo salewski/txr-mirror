@@ -995,7 +995,7 @@ static val choose_quote(val quoted_form)
 
 val rl(val form, val lineno)
 {
-  sethash(form_to_ln_hash, form, lineno);
+  sethash(form_to_ln_hash, form, cons(lineno, spec_file_str));
   return form;
 }
 

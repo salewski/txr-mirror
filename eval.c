@@ -103,7 +103,7 @@ noreturn static val eval_error(val form, val fmt, ...)
 
   va_start (vl, fmt);
   if (form)
-    format(stream, lit("(~a:~a) "), spec_file_str, source_loc(form), nao);
+    format(stream, lit("(~a) "), source_loc_str(form), nao);
   (void) vformat(stream, fmt, vl);
   va_end (vl);
 

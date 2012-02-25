@@ -1,5 +1,21 @@
 2012-02-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	* debug.c (debug): Use new way of getting line number.
+
+	* eval.c (eval_error): Use source_loc_str to get source location.
+
+	* match.c (debuglf, sem_err, file_err): Likewise.
+
+	* parser.h (source_loc_str): Declared.
+
+	* parser.l (parse_init): form_to_ln_hash must be equal based now.
+
+	* parser.y (rl): Store new form of read-time source location info.
+
+	* txr.1: Documented load.
+
+2012-02-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (v_load): Sanity checking on target path.
 	Check if it is absolute and do not substitute parent
 	file's directory.

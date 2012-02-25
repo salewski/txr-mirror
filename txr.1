@@ -1272,6 +1272,9 @@ as a filter. See Function Filters below.
 The filter directive passes one or more variables through a given
 filter or chain or filters, updating them with the filtered values.
 
+.IP @(load)
+The load directive loads another TXR file and interprets its contents.
+
 .PP
 
 .SS The Next Directive
@@ -3822,6 +3825,21 @@ Example: convert a, b, and c to upper case and HTML encode:
 
   @(filter (:upcase :to_html) a b c)
 
+.SS The Load Directive
+
+The syntx of the load directive is:
+
+  @(load EXPR)
+
+Where EXPR evaluates to a string giving the path of the file to load.
+Unless the path is absolute, it is interpreted relative to the directory of the
+source file from which the @(load) form was read. If there was no such
+source file (for instance, the script was read from standard input),
+then it is resolved relative to the current working directory.
+
+Loading is performed at evaluation time; it is not a source file inclusion
+mechanism.  A TXR script is read from beginning to end and parsed prior to
+being evaluated.
 
 .SH EXCEPTIONS
 
