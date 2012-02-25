@@ -2201,6 +2201,7 @@ void eval_init(void)
   reg_fun(intern(lit("put-string"), user_package), func_n2o(put_string, 1));
   reg_fun(intern(lit("put-line"), user_package), func_n2o(put_line, 1));
   reg_fun(intern(lit("put-char"), user_package), func_n2o(put_char, 1));
+  reg_fun(intern(lit("put-byte"), user_package), func_n2o(put_byte, 1));
   reg_fun(intern(lit("flush-stream"), user_package), func_n1(flush_stream));
   reg_fun(intern(lit("open-directory"), user_package), func_n1(open_directory));
   reg_fun(intern(lit("open-file"), user_package), func_n2(open_file));
