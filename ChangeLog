@@ -1,5 +1,17 @@
 2012-02-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): New put-byte function interned.
+
+	* stream.c (struct strm_ops): New member, put_byte.
+	(stdio_put_byte): New function.
+	(stdio_ops, pipe_ops, string_in_ops, byte_in_ops,
+	string_out_ops, strlist_out_ops, dir_ops): Updated.
+	(put_byte): New function.
+
+	* stream.h (put_byte): Declared.
+
+2012-02-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.l (num_esc): Skip octal indicator 'o' if present.
 	This is needed for character constants.
 	(CHRLIT): Fix broken hex constants, being treated as octal.

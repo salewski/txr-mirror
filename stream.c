@@ -51,6 +51,7 @@ struct strm_ops {
   struct cobj_ops cobj_ops;
   val (*put_string)(val, val);
   val (*put_char)(val, val);
+  val (*put_byte)(val, val);
   val (*get_line)(val);
   val (*get_char)(val);
   val (*get_byte)(val);
@@ -145,6 +146,22 @@ static val stdio_put_char(val stream, val ch)
   if (h->f == stdout)
     output_produced = t;
   return h->f != 0 && utf8_encode(c_chr(ch), stdio_put_char_callback, (mem_t *) h->f)
+         ? t : stdio_maybe_write_error(stream);
+}
+
+static val stdio_put_byte(val stream, val byte)
+{
+  cnum b = c_num(byte);
+  struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
+
+  if (h->f == stdout)
+    output_produced = t;
+
+  if (b < 0 || b > 255)
+    uw_throwf(file_error_s, lit("put-byte on ~a: byte value ~a out of range"),
+              stream, byte, nao);
+
+  return h->f != 0 && putc(b, (FILE *) h->f) != EOF
          ? t : stdio_maybe_write_error(stream);
 }
 
@@ -245,6 +262,7 @@ static struct strm_ops stdio_ops = {
     cobj_hash_op },
   stdio_put_string,
   stdio_put_char,
+  stdio_put_byte,
   stdio_get_line,
   stdio_get_char,
   stdio_get_byte,
@@ -299,6 +317,7 @@ static struct strm_ops pipe_ops = {
     cobj_hash_op },
   stdio_put_string,
   stdio_put_char,
+  stdio_put_byte,
   stdio_get_line,
   stdio_get_char,
   stdio_get_byte,
@@ -365,8 +384,10 @@ static struct strm_ops string_in_ops = {
     cobj_hash_op },
   0,
   0,
+  0,
   string_in_get_line,
   string_in_get_char,
+  0,
   0,
   0
 };
@@ -392,6 +413,7 @@ static struct strm_ops byte_in_ops = {
     cobj_destroy_stub_op,
     cobj_mark_op,
     cobj_hash_op },
+  0,
   0,
   0,
   0,
@@ -468,6 +490,7 @@ static struct strm_ops string_out_ops = {
   0,
   0,
   0,
+  0,
 };
 
 static void strlist_mark(val stream)
@@ -534,6 +557,7 @@ static struct strm_ops strlist_out_ops = {
   0,
   0,
   0,
+  0,
 };
 
 val make_strlist_output_stream(void)
@@ -595,6 +619,7 @@ static struct strm_ops dir_ops = {
     common_destroy,
     cobj_mark_op,
     cobj_hash_op },
+  0,
   0,
   0,
   dir_get_line,
@@ -1184,6 +1209,22 @@ val put_char(val ch, val stream)
     return ops->put_char ? ops->put_char(stream, ch) : nil;
   }
 }
+
+val put_byte(val byte, val stream)
+{
+  if (!stream)
+    stream = std_output;
+
+  type_check (stream, COBJ);
+  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
+                                            stream, nao));
+
+  {
+    struct strm_ops *ops = (struct strm_ops *) stream->co.ops;
+    return ops->put_char ? ops->put_byte(stream, byte) : nil;
+  }
+}
+
 
 val put_line(val string, val stream)
 {
