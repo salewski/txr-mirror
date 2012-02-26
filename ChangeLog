@@ -1,5 +1,15 @@
 2012-02-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	Bug #34652
+
+	* match.c (do_txeval): Establish a dynamic env frame around
+	evaluation of quasiliteral and around embedded TXR Lisp expression
+	(which may contain quasiliterals) and stick the bindings there
+	via set_match_context. This way if filte functions are invoked through
+	a quasiliteral, they can see bindings.
+
+2012-02-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): New put-byte function interned.
 
 	* stream.c (struct strm_ops): New member, put_byte.
