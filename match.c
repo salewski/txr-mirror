@@ -1374,14 +1374,20 @@ static val do_txeval(val spec, val form, val bindings, val allow_unbound)
       }
     } else if (consp(form)) {
       if (first(form) == quasi_s) {
+        uw_env_begin;
+        uw_set_match_context(cons(spec, bindings));
         ret = cat_str(subst_vars(rest(form), bindings, nil), nil);
+        uw_env_end;
       } else if (regexp(car(form))) {
         ret = form;
       } else if (first(form) == var_s) {
         sem_error(spec, lit("metavariable @~s syntax cannot be used here"),
                   second(form), nao);
       } else if (first(form) == expr_s) {
+        uw_env_begin;
+        uw_set_match_context(cons(spec, bindings));
         ret = eval(rest(form), make_env(bindings, nil, nil), form);
+        uw_env_end;
       } else {
         ret =  mapcar(curry_123_2(func_n3(txeval), spec, bindings), form);
       }
