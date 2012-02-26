@@ -150,10 +150,13 @@ static wchar_t num_esc(char *num)
 
 SYM     [a-zA-Z0-9_]+
 NUM     [+\-]?[0-9]+
-NSCHR   [a-zA-Z0-9!$%&*+\-<=>?\\^_~]
+BSCHR   [a-zA-Z0-9!$%&*+\-<=>?\\^_~]
+BSYM    {BSCHR}({BSCHR}|#)*
+NSCHR   [a-zA-Z0-9!$%&*+\-<=>?\\^_~/]
 NSYM    {NSCHR}({NSCHR}|#)*
 TOK     :?{SYM}
 ATNUM   @{NUM}
+BTOK    [:@]?{BSYM}
 NTOK    [:@]?{NSYM}
 ID_END  [^a-zA-Z0-9_]
 WS      [\t ]*
@@ -171,497 +174,520 @@ UANY    {ASC}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 UANYN   {ASCN}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U} 
 UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
-%x      SPECIAL NESTED REGEX STRLIT CHRLIT QSILIT
+%x      SPECIAL BRACED NESTED REGEX STRLIT CHRLIT QSILIT
 
 %%
 
-<SPECIAL,NESTED>{NUM}   {
-                          val str = string_own(utf8_dup_from(yytext));
+<SPECIAL,NESTED,BRACED>{NUM} {
+  val str = string_own(utf8_dup_from(yytext));
 
-                          if (yy_top_state() == INITIAL
-                              || yy_top_state() == QSILIT)
-                            yy_pop_state();
+  if (yy_top_state() == INITIAL
+      || yy_top_state() == QSILIT)
+    yy_pop_state();
 
-                          yylval.num = int_str(str, num(10));
-                          return NUMBER;
-                        }
+  yylval.num = int_str(str, num(10));
+  return NUMBER;
+}
 
-<NESTED,QSILIT>{ATNUM}  {
-                          val str = string_own(utf8_dup_from(yytext + 1));
+<NESTED,QSILIT>{ATNUM} {
+  val str = string_own(utf8_dup_from(yytext + 1));
 
-                          if (yy_top_state() == INITIAL
-                              || yy_top_state() == QSILIT)
-                            yy_pop_state();
-                          yylval.num = int_str(str, num(10));
-                          return METANUM;
-                        }
+  if (yy_top_state() == INITIAL
+      || yy_top_state() == QSILIT)
+    yy_pop_state();
+  yylval.num = int_str(str, num(10));
+  return METANUM;
+}
 
-<SPECIAL>{TOK}          |
-<NESTED>{NTOK}          {
-                          if (yy_top_state() == INITIAL
-                              || yy_top_state() == QSILIT)
-                            yy_pop_state();
+<SPECIAL>{TOK} |
+<BRACED>{BTOK} |
+<NESTED>{NTOK} {
+  if (yy_top_state() == INITIAL
+      || yy_top_state() == QSILIT)
+    yy_pop_state();
 
-                          switch (yytext[0]) {
-                          case ':':
-                            yylval.lexeme = utf8_dup_from(yytext + 1);
-                            return KEYWORD;
-                          case '@':
-                            yylval.lexeme = utf8_dup_from(yytext + 1);
-                            return METAVAR;
-                          default:
-                            yylval.lexeme = utf8_dup_from(yytext);
-                            return IDENT;
-                          }
-                        }
-<NESTED>:               {
-                          if (yy_top_state() == INITIAL
-                              || yy_top_state() == QSILIT)
-                            yy_pop_state();
-                          yylval.lexeme = utf8_dup_from("");
-                          return KEYWORD;
-                        }
+  switch (yytext[0]) {
+  case ':':
+    yylval.lexeme = utf8_dup_from(yytext + 1);
+    return KEYWORD;
+  case '@':
+    yylval.lexeme = utf8_dup_from(yytext + 1);
+    return METAVAR;
+  default:
+    yylval.lexeme = utf8_dup_from(yytext);
+    return IDENT;
+  }
+}
 
-<SPECIAL>\({WS}all{WS}\)        {
-                                  yy_pop_state();
-                                  yylval.lineno = lineno;
-                                  return ALL;
-                                }
+<BRACED,NESTED>: {
+  if (yy_top_state() == INITIAL
+      || yy_top_state() == QSILIT)
+    yy_pop_state();
+  yylval.lexeme = utf8_dup_from("");
+  return KEYWORD;
+}
 
-<SPECIAL>\({WS}some/{ID_END}    {
-                                  yy_push_state(NESTED);
-                                  yylval.lineno = lineno;
-                                  return SOME;
-                                }
+<SPECIAL>\({WS}all{WS}\) {
+  yy_pop_state();
+  yylval.lineno = lineno;
+  return ALL;
+}
 
-<SPECIAL>\({WS}none{WS}\)       {
-                                  yy_pop_state();
-                                  yylval.lineno = lineno;
-                                  return NONE;
-                                }
+<SPECIAL>\({WS}some/{ID_END} {
+  yy_push_state(NESTED);
+  yylval.lineno = lineno;
+  return SOME;
+}
 
-<SPECIAL>\({WS}maybe{WS}\)      {
-                                  yy_pop_state();
-                                  yylval.lineno = lineno;
-                                  return MAYBE;
-                                }
+<SPECIAL>\({WS}none{WS}\) {
+  yy_pop_state();
+  yylval.lineno = lineno;
+  return NONE;
+}
 
-<SPECIAL>\({WS}cases{WS}\)      {
-                                  yy_pop_state();
-                                  yylval.lineno = lineno;
-                                  return CASES;
-                                }
+<SPECIAL>\({WS}maybe{WS}\) {
+  yy_pop_state();
+  yylval.lineno = lineno;
+  return MAYBE;
+}
 
-<SPECIAL>\({WS}choose/{ID_END}  {
-                                  yy_push_state(NESTED);
-                                  yylval.lineno = lineno;
-                                  return CHOOSE;
-                                }
+<SPECIAL>\({WS}cases{WS}\) {
+  yy_pop_state();
+  yylval.lineno = lineno;
+  return CASES;
+}
 
-<SPECIAL>\({WS}gather/{ID_END}  {
-                                  yy_push_state(NESTED);
-                                  yylval.lineno = lineno;
-                                  return GATHER;
-                                }
+<SPECIAL>\({WS}choose/{ID_END} {
+  yy_push_state(NESTED);
+  yylval.lineno = lineno;
+  return CHOOSE;
+}
 
-<SPECIAL>\({WS}and{WS}\)        {
-                                  yy_pop_state();
-                                  yylval.lineno = lineno;
-                                  return AND;
-                                }
+<SPECIAL>\({WS}gather/{ID_END} {
+  yy_push_state(NESTED);
+  yylval.lineno = lineno;
+  return GATHER;
+}
 
-<SPECIAL>\({WS}or{WS}\)         {
-                                  yy_pop_state();
-                                  yylval.lineno = lineno;
-                                  return OR;
-                                }
+<SPECIAL>\({WS}and{WS}\) {
+  yy_pop_state();
+  yylval.lineno = lineno;
+  return AND;
+}
 
-<SPECIAL>\({WS}end{WS}\)        {
-                                  yy_pop_state();
-                                  yylval.lineno = lineno;
-                                  return END;
-                                }
+<SPECIAL>\({WS}or{WS}\) {
+  yy_pop_state();
+  yylval.lineno = lineno;
+  return OR;
+}
+
+<SPECIAL>\({WS}end{WS}\) {
+  yy_pop_state();
+  yylval.lineno = lineno;
+  return END;
+}
 
 <SPECIAL>\({WS}collect/{ID_END} {
-                                  yy_push_state(NESTED);
-                                  yylval.lineno = lineno;
-                                  return COLLECT;
-                                }
+  yy_push_state(NESTED);
+  yylval.lineno = lineno;
+  return COLLECT;
+}
 
-<SPECIAL>\({WS}coll/{ID_END}    {
-                                  yy_push_state(NESTED);
-                                  yylval.lineno = lineno;
-                                  return COLL;
-                                }
+<SPECIAL>\({WS}coll/{ID_END} {
+  yy_push_state(NESTED);
+  yylval.lineno = lineno;
+  return COLL;
+}
 
-<SPECIAL>\({WS}until{WS}\)      {
-                                  yy_pop_state();
-                                  yylval.lineno = lineno;
-                                  return UNTIL;
-                                }
+<SPECIAL>\({WS}until{WS}\) {
+  yy_pop_state();
+  yylval.lineno = lineno;
+  return UNTIL;
+}
 
 <SPECIAL>\({WS}output/{ID_END}  {
-                                  yy_push_state(NESTED);
-                                  yylval.lineno = lineno;
-                                  return OUTPUT;
-                                }
+  yy_push_state(NESTED);
+  yylval.lineno = lineno;
+  return OUTPUT;
+}
 
 <SPECIAL>\({WS}repeat/{ID_END}  {
-                                  yy_push_state(NESTED);
-                                  yylval.lineno = lineno;
-                                  return REPEAT;
-                                }
+  yy_push_state(NESTED);
+  yylval.lineno = lineno;
+  return REPEAT;
+}
 
 
-<SPECIAL>\({WS}rep/{ID_END}     {
-                                  yy_push_state(NESTED);
-                                  yylval.lineno = lineno;
-                                  return REP;
-                                }
+<SPECIAL>\({WS}rep/{ID_END} {
+  yy_push_state(NESTED);
+  yylval.lineno = lineno;
+  return REP;
+}
 
-<SPECIAL>\({WS}single{WS}\)     {
-                                  yy_pop_state();
-                                  yylval.lineno = lineno;
-                                  return SINGLE;
-                                }
+<SPECIAL>\({WS}single{WS}\) {
+  yy_pop_state();
+  yylval.lineno = lineno;
+  return SINGLE;
+}
 
-<SPECIAL>\({WS}first{WS}\)      {
-                                  yy_pop_state();
-                                  yylval.lineno = lineno;
-                                  return FIRST;
-                                }
+<SPECIAL>\({WS}first{WS}\) {
+  yy_pop_state();
+  yylval.lineno = lineno;
+  return FIRST;
+}
 
-<SPECIAL>\({WS}last{WS}\)       {
-                                  yy_pop_state();
-                                  yylval.lineno = lineno;
-                                  return LAST;
-                                }
+<SPECIAL>\({WS}last{WS}\) {
+  yy_pop_state();
+  yylval.lineno = lineno;
+  return LAST;
+}
 
-<SPECIAL>\({WS}empty{WS}\)      {
-                                  yy_pop_state();
-                                  yylval.lineno = lineno;
-                                  return EMPTY;
-                                }
+<SPECIAL>\({WS}empty{WS}\) {
+  yy_pop_state();
+  yylval.lineno = lineno;
+  return EMPTY;
+}
 
-<SPECIAL>\({WS}mod/{ID_END}     {
-                                  yy_push_state(NESTED);
-                                  yylval.lineno = lineno;
-                                  return MOD;
-                                }
+<SPECIAL>\({WS}mod/{ID_END} {
+  yy_push_state(NESTED);
+  yylval.lineno = lineno;
+  return MOD;
+}
 
 <SPECIAL>\({WS}modlast/{ID_END} {
-                                  yy_push_state(NESTED);
-                                  yylval.lineno = lineno;
-                                  return MODLAST;
-                                }
+  yy_push_state(NESTED);
+  yylval.lineno = lineno;
+  return MODLAST;
+}
 
-<SPECIAL>\({WS}define/{ID_END}  {
-                                  yy_push_state(NESTED);
-                                  yylval.lineno = lineno;
-                                  return DEFINE;
-                                }
+<SPECIAL>\({WS}define/{ID_END} {
+  yy_push_state(NESTED);
+  yylval.lineno = lineno;
+  return DEFINE;
+}
 
-<SPECIAL>\({WS}try{WS}\)        {
-                                  yy_pop_state();
-                                  yylval.lineno = lineno;
-                                  return TRY;
-                                }
+<SPECIAL>\({WS}try{WS}\) {
+  yy_pop_state();
+  yylval.lineno = lineno;
+  return TRY;
+}
 
-<SPECIAL>\({WS}catch/{ID_END}   {
-                                  yy_push_state(NESTED);
-                                  yylval.lineno = lineno;
-                                  return CATCH;
-                                }
+<SPECIAL>\({WS}catch/{ID_END} {
+  yy_push_state(NESTED);
+  yylval.lineno = lineno;
+  return CATCH;
+}
 
-<SPECIAL>\({WS}finally{WS}\)    {
-                                  yy_pop_state();
-                                  yylval.lineno = lineno;
-                                  return FINALLY;
-                                }
+<SPECIAL>\({WS}finally{WS}\) {
+  yy_pop_state();
+  yylval.lineno = lineno;
+  return FINALLY;
+}
 
-<NESTED>@[\(\[]         |
-<SPECIAL,NESTED>[{(\[]  {
-                          yy_push_state(NESTED);
-                          if (yytext[0] == '@') {
-                            yylval.chr = yytext[1];
-                            return yytext[1] == '(' ? METAPAR : METABKT;
-                          }
-                          yylval.lineno = lineno;
-                          return yytext[0];
-                        }
+<SPECIAL>[{] {
+  yy_push_state(BRACED);
+  yylval.lineno = lineno;
+  return yytext[0];
+}
 
-<SPECIAL,NESTED>,[*]    {
-                          yylval.chr = '*';
-                          return SPLICE;
-                        }
+<SPECIAL>[(\[] |
+<NESTED,BRACED>@?[(\[] {
+ yy_push_state(NESTED);
+ if (yytext[0] == '@') {
+   yylval.chr = yytext[1];
+   return yytext[1] == '(' ? METAPAR : METABKT;
+ }
+ yylval.lineno = lineno;
+ return yytext[0];
+}
 
-<SPECIAL,NESTED>[,']    {
-                          yylval.chr = yytext[0];
-                          return yytext[0];
-                        }
+<NESTED>,[*] {
+  yylval.chr = '*';
+  return SPLICE;
+}
 
-<SPECIAL,NESTED>[})\]]  {
-                          yy_pop_state();
-                          if (yy_top_state() == INITIAL
-                              || yy_top_state() == QSILIT)
-                            yy_pop_state();
-                          return yytext[0];
-                        }
+<NESTED>[,'] {
+  yylval.chr = yytext[0];
+  return yytext[0];
+}
 
-<SPECIAL,NESTED>{WS}    { /* Eat whitespace in directive */ }
+<BRACED>[}] {
+  yy_pop_state();
+  if (yy_top_state() == INITIAL
+      || yy_top_state() == QSILIT)
+    yy_pop_state();
+  return yytext[0];
+}
 
-<SPECIAL,NESTED>\"      {
-                          yy_push_state(STRLIT);
-                          return '"';
-                        }
+<SPECIAL,NESTED>[)\]] {
+  yy_pop_state();
+  if (yy_top_state() == INITIAL
+      || yy_top_state() == QSILIT)
+    yy_pop_state();
+  return yytext[0];
+}
 
-<SPECIAL,NESTED>#\\     {
-                          yy_push_state(CHRLIT);
-                          return HASH_BACKSLASH;
-                        }
+<SPECIAL,NESTED,BRACED>{WS} {
+  /* Eat whitespace in directive */
+}
 
-<SPECIAL,NESTED>`       {
-                          yy_push_state(QSILIT);
-                          return '`';
-                        }
+<SPECIAL,NESTED,BRACED>\" {
+  yy_push_state(STRLIT);
+  return '"';
+}
 
-<NESTED>#               {
-                          return '#';
-                        }
+<SPECIAL,NESTED,BRACED>#\\ {
+  yy_push_state(CHRLIT);
+  return HASH_BACKSLASH;
+}
 
-<NESTED>\.\.            {
-                          yylval.lineno = lineno;
-                          return DOTDOT;
-                        }
+<SPECIAL,NESTED,BRACED>#[/] {
+  yy_push_state(REGEX);
+  return HASH_SLASH;
+}
 
-<SPECIAL>@              {
-                          yy_pop_state();
-                          yylval.lexeme = chk_strdup(L"@");
-                          return TEXT;
-                        }
+<SPECIAL,NESTED,BRACED>` {
+  yy_push_state(QSILIT);
+  return '`';
+}
 
-<SPECIAL,NESTED>\n      {
-                          lineno++;
-                        }
+<NESTED,BRACED># {
+  return '#';
+}
 
-<SPECIAL,NESTED>[/]     {
-                          yy_push_state(REGEX);
-                          return '/';
-                        }
+<NESTED>\.\. {
+  yylval.lineno = lineno;
+  return DOTDOT;
+}
 
-<SPECIAL,NESTED>\.      {
-                          yylval.chr = '.';
-                          return '.';
-                        }
+<SPECIAL>@ {
+  yy_pop_state();
+  yylval.lexeme = chk_strdup(L"@");
+  return TEXT;
+}
 
-<SPECIAL,NESTED>[\\]\n{WS}      {
-                                  yy_pop_state();
-                                  lineno++;
-                                }
+<SPECIAL,NESTED,BRACED>\n {
+  lineno++;
+}
+
+<SPECIAL,BRACED>[/] {
+  yy_push_state(REGEX);
+  return '/';
+}
+
+<SPECIAL,NESTED>\. {
+  yylval.chr = '.';
+  return '.';
+}
+
+<SPECIAL,NESTED,BRACED>[\\]\n{WS} {
+  yy_pop_state();
+  lineno++;
+}
 
 <SPECIAL>[\\][abtnvfre ] {
-                           wchar_t lexeme[2];
-                           lexeme[0] = char_esc(yytext[1]);
-                           lexeme[1] = 0;
-                           yylval.lexeme = chk_strdup(lexeme);
-                           yy_pop_state();
-                           return TEXT;
-                         }
+  wchar_t lexeme[2];
+  lexeme[0] = char_esc(yytext[1]);
+  lexeme[1] = 0;
+  yylval.lexeme = chk_strdup(lexeme);
+  yy_pop_state();
+  return TEXT;
+}
 
-<SPECIAL>[\\](x{HEX}+|{OCT}+)   {
-                                  wchar_t lexeme[2];
-                                  lexeme[0] = num_esc(yytext + 1);
-                                  lexeme[1] = 0;
-                                  yylval.lexeme = chk_strdup(lexeme);
-                                  yy_pop_state();
-                                  return TEXT;
-                                }
+<SPECIAL>[\\](x{HEX}+|{OCT}+) {
+  wchar_t lexeme[2];
+  lexeme[0] = num_esc(yytext + 1);
+  lexeme[1] = 0;
+  yylval.lexeme = chk_strdup(lexeme);
+  yy_pop_state();
+  return TEXT;
+}
 
-<SPECIAL,NESTED>[;].*   {
-                          /* comment */
-                        }
-<SPECIAL,NESTED>{UANYN} {
-                          yyerrprepf(lit("bad character in directive: '~a'"),
-                                     string_utf8(yytext), nao);
-                          return ERRTOK;
-                        }
+<SPECIAL,NESTED,BRACED>[;].* {
+  /* comment */
+}
 
-<SPECIAL,NESTED>.       {
-                          yyerrprepf(lit("non-UTF-8 byte in directive: "
-                                         "'\\x~02x'"),
-                                   num((unsigned char) yytext[0]), nao);
-                          return ERRTOK;
-                        }
+<SPECIAL,NESTED,BRACED>{UANYN} {
+  yyerrprepf(lit("bad character in directive: '~a'"),
+             string_utf8(yytext), nao);
+  return ERRTOK;
+}
 
-<REGEX>[/]      {
-                  yylval.chr = '/';
-                  return '/';
-                }
+<SPECIAL,NESTED,BRACED>. {
+  yyerrprepf(lit("non-UTF-8 byte in directive: "
+                 "'\\x~02x'"),
+             num((unsigned char) yytext[0]), nao);
+  return ERRTOK;
+}
+
+<REGEX>[/] {
+  yylval.chr = '/';
+  return '/';
+}
 
 
-<REGEX>[\\][abtnvfre\\ ]        {
-                                  yylval.chr = char_esc(yytext[1]);
-                                  return REGCHAR;
-                                }
+<REGEX>[\\][abtnvfre\\ ] {
+  yylval.chr = char_esc(yytext[1]);
+  return REGCHAR;
+}
 
-<REGEX>[\\](x{HEX}+|{OCT}+);?   {
-                                  yylval.chr = num_esc(yytext + 1);
-                                  return REGCHAR;
-                                }
+<REGEX>[\\](x{HEX}+|{OCT}+);? {
+  yylval.chr = num_esc(yytext + 1);
+  return REGCHAR;
+}
 
-<REGEX>{WS}[\\]\n{WS}   {
-                          lineno++;
-                        }
+<REGEX>{WS}[\\]\n{WS} {
+  lineno++;
+}
 
-<REGEX>\n       {
-                  lineno++;
-                  yyerrprepf(lit("newline in regex"), nao);
-                  return ERRTOK;
-                }
+<REGEX>\n {
+  lineno++;
+  yyerrprepf(lit("newline in regex"), nao);
+  return ERRTOK;
+}
 
-<REGEX>[.*?+~&%]        {
-                          yylval.chr = yytext[0];
-                          return yytext[0];
-                        }
-
+<REGEX>[.*?+~&%] {
+  yylval.chr = yytext[0];
+  return yytext[0];
+}
 
 <REGEX>[\[\]\-] {
-                  yylval.chr = yytext[0];
-                  return yytext[0];
-                }
+  yylval.chr = yytext[0];
+  return yytext[0];
+}
 
-<REGEX>[()|]    {
-                  yylval.chr = yytext[0];
-                  return yytext[0];
-                }
+<REGEX>[()|] {
+  yylval.chr = yytext[0];
+  return yytext[0];
+}
 
-<REGEX>[\\].    {
-                  yylval.chr = yytext[1];
-                  return REGCHAR;
-                }
+<REGEX>[\\]. {
+  yylval.chr = yytext[1];
+  return REGCHAR;
+}
 
 <REGEX>{UANYN}  {
-                  wchar_t buf[8];
-                  utf8_from(buf, yytext);
-                  yylval.chr = buf[0];
-                  return REGCHAR;
-                }
+  wchar_t buf[8];
+  utf8_from(buf, yytext);
+  yylval.chr = buf[0];
+  return REGCHAR;
+}
 
-<REGEX>.        {
-                   yyerrprepf(lit("non-UTF-8 byte in regex: '\\x~02x'"),
-                              num((unsigned char) yytext[0]), nao);
-                   return ERRTOK;
-                }
+<REGEX>. {
+  yyerrprepf(lit("non-UTF-8 byte in regex: '\\x~02x'"),
+             num((unsigned char) yytext[0]), nao);
+  return ERRTOK;
+}
 
-<INITIAL>[ ]+   {
-                  yylval.lexeme = utf8_dup_from(yytext);
-                  return SPACE;
-                }
+<INITIAL>[ ]+ {
+  yylval.lexeme = utf8_dup_from(yytext);
+  return SPACE;
+}
 
-<INITIAL>({UONLY}|[^@\n ])+       {
-                                    yylval.lexeme = utf8_dup_from(yytext);
-                                    return TEXT;
-                                  }
+<INITIAL>({UONLY}|[^@\n ])+ {
+  yylval.lexeme = utf8_dup_from(yytext);
+  return TEXT;
+}
 
-<INITIAL>\n     {
-                  lineno++;
-                  return '\n';
-                }
+<INITIAL>\n {
+  lineno++;
+  return '\n';
+}
 
-<INITIAL>@{WS}\*        {
-                          yy_push_state(SPECIAL);
-                          return '*';
-                        }
+<INITIAL>@{WS}\* {
+  yy_push_state(SPECIAL);
+  return '*';
+}
 
-<INITIAL>@      {
-                  yy_push_state(SPECIAL);
-                }
+<INITIAL>@ {
+  yy_push_state(SPECIAL);
+}
 
-<INITIAL>^@[#;].*\n     {
-                          /* eat whole line comment */
-                          lineno++;
-                        }
+<INITIAL>^@[#;].*\n {
+  /* eat whole line comment */
+  lineno++;
+}
 
-<INITIAL>@[#;].*        {
-                          /* comment to end of line */
-                        }
+<INITIAL>@[#;].* {
+  /* comment to end of line */
+}
 
-<STRLIT>\"      {
-                  yy_pop_state();
-                  return yytext[0];
-                }
+<STRLIT>\" {
+  yy_pop_state();
+  return yytext[0];
+}
 
-<QSILIT>`       {
-                  yy_pop_state();
-                  return yytext[0];
-                }
+<QSILIT>` {
+  yy_pop_state();
+  return yytext[0];
+}
 
-<STRLIT,QSILIT>[\\][abtnvfre"`'\\]      {
-                                          yylval.chr = char_esc(yytext[1]);
-                                          return LITCHAR;
-                                        }
+<STRLIT,QSILIT>[\\][abtnvfre"`'\\] {
+  yylval.chr = char_esc(yytext[1]);
+  return LITCHAR;
+}
 
-<STRLIT,QSILIT>{WS}[\\]\n{WS}   {
-                                  lineno++;
-                                }
+<STRLIT,QSILIT>{WS}[\\]\n{WS} {
+  lineno++;
+}
                                 
 <STRLIT,QSILIT>[\\](x{HEX}+|{OCT}+);?  {
-                                          yylval.chr = num_esc(yytext+1);
-                                          return LITCHAR;
-                                        }
+  yylval.chr = num_esc(yytext+1);
+  return LITCHAR;
+}
 
 <CHRLIT>(x{HEX}+|o{OCT}+) {
-                            yylval.chr = num_esc(yytext);
-                            return LITCHAR;
-                          }
+  yylval.chr = num_esc(yytext);
+  return LITCHAR;
+}
 
-<CHRLIT>{SYM}           {
-                          yylval.lexeme = utf8_dup_from(yytext);
-                          return IDENT;
-                        }
+<CHRLIT>{SYM} {
+  yylval.lexeme = utf8_dup_from(yytext);
+  return IDENT;
+}
 
-<CHRLIT>[^ \t\n]        {
-                          yylval.lexeme = utf8_dup_from(yytext);
-                          return IDENT; /* hack */
-                        }
+<CHRLIT>[^ \t\n] {
+  yylval.lexeme = utf8_dup_from(yytext);
+  return IDENT; /* hack */
+}
 
-<STRLIT>\n              {
-                          yyerrprepf(lit("newline in string literal"), nao);
-                          lineno++;
-                          yylval.chr = yytext[0];
-                          return ERRTOK;
-                        }
+<STRLIT>\n {
+  yyerrprepf(lit("newline in string literal"), nao);
+  lineno++;
+  yylval.chr = yytext[0];
+  return ERRTOK;
+}
 
-<CHRLIT>\n              {
-                          yyerrprepf(lit("newline in character literal"), nao);
-                          lineno++;
-                          yylval.chr = yytext[0];
-                          return ERRTOK;
-                        }
+<CHRLIT>\n {
+  yyerrprepf(lit("newline in character literal"), nao);
+  lineno++;
+  yylval.chr = yytext[0];
+  return ERRTOK;
+}
 
-<QSILIT>\n              {
-                          yyerrprepf(lit("newline in string quasiliteral"), nao);
-                          lineno++;
-                          yylval.chr = yytext[0];
-                          return ERRTOK;
-                        }
+<QSILIT>\n {
+  yyerrprepf(lit("newline in string quasiliteral"), nao);
+  lineno++;
+  yylval.chr = yytext[0];
+  return ERRTOK;
+}
 
-<QSILIT>@               {
-                          yy_push_state(SPECIAL);
-                        }
+<QSILIT>@ {
+  yy_push_state(SPECIAL);
+}
 
 <STRLIT,CHRLIT,QSILIT>{UANYN} {
-                                wchar_t buf[8];
-                                utf8_from(buf, yytext);
-                                yylval.chr = buf[0];
-                                return LITCHAR;
-                              }
+  wchar_t buf[8];
+  utf8_from(buf, yytext);
+  yylval.chr = buf[0];
+  return LITCHAR;
+}
 
 <STRLIT,CHRLIT,QSILIT>. {
-                           yyerrprepf(lit("non-UTF-8 byte in literal: '\\x~02x'"),
-                                      num((unsigned char) yytext[0]), nao);
-                           return ERRTOK;
-                        }
+  yyerrprepf(lit("non-UTF-8 byte in literal: '\\x~02x'"),
+             num((unsigned char) yytext[0]), nao);
+  return ERRTOK;
+}
 
 %%
 
