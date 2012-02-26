@@ -1,5 +1,61 @@
 2012-02-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c: Updated copyright year.
+
+	* arith.h: Likewise.
+
+	* debug.c: Added copyright header.
+
+	* debug.h: Updated copyright year.
+
+	* eval.c: Likewise.
+
+	* eval.h: Likewise.
+
+	* filter.c: Likewise.
+
+	* filter.h: Likewise.
+
+	* gc.c: Likewise.
+
+	* gc.h: Likewise.
+
+	* hash.c: Likewise.
+
+	* hash.h: Likewise.
+
+	* lib.c: Likewise.
+
+	* lib.h: Likewise.
+
+	* match.c: Likewise.
+
+	* match.h: Likewise.
+
+	* parser.h: Likewise.
+
+	* regex.c: Likewise.
+
+	* regex.h: Likewise.
+
+	* stream.c: Likewise.
+
+	* stream.h: Likewise.
+
+	* txr.c: Likewise, and e-mail address.
+
+	* txr.h: Updated copyright year.
+
+	* unwind.c: Likewise.
+
+	* unwind.h: Likewise.
+
+	* utf8.c: Likewise.
+
+	* utf8.h: Likewise.
+
+2012-02-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	* tests/008/filtenv.expected: New file.
 
 	* tests/008/filtenv.txr: New file.
