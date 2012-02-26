@@ -1,5 +1,11 @@
 2012-02-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* tests/008/filtenv.expected: New file.
+
+	* tests/008/filtenv.txr: New file.
+
+2012-02-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	Bug #34652
 
 	* match.c (do_txeval): Establish a dynamic env frame around

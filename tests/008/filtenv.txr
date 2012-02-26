@@ -1,0 +1,5 @@
+@(bind a "x")
+@(define f (in out))
+@(bind out a)
+@(end)
+@(bind b `@{a :filter (:fun f)}`)
