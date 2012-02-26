@@ -72,7 +72,7 @@ static val parsed_spec;
 %token <lineno> UNTIL COLL OUTPUT REPEAT REP SINGLE FIRST LAST EMPTY 
 %token <lineno> MOD MODLAST DEFINE TRY CATCH FINALLY
 %token <lineno> ERRTOK /* deliberately not used in grammar */
-%token <lineno> HASH_BACKSLASH DOTDOT
+%token <lineno> HASH_BACKSLASH HASH_SLASH DOTDOT
 
 %token <val> NUMBER METANUM
 
@@ -85,11 +85,11 @@ static val parsed_spec;
 %type <val> clause_parts additional_parts gather_parts additional_gather_parts
 %type <val> output_clause define_clause try_clause catch_clauses_opt
 %type <val> line elems_opt elems clause_parts_h additional_parts_h
-%type <val> text texts elem var var_op meta_expr vector
+%type <val> text texts elem var var_op modifiers meta_expr vector
 %type <val> list exprs exprs_opt expr out_clauses out_clauses_opt out_clause
 %type <val> repeat_clause repeat_parts_opt o_line
 %type <val> o_elems_opt o_elems_opt2 o_elems o_elem o_var rep_elem rep_parts_opt
-%type <val> regex regexpr regbranch
+%type <val> regex lisp_regex regexpr regbranch
 %type <val> regterm regclass regclassterm regrange
 %type <val> strlit chrlit quasilit quasi_items quasi_item litchars
 %type <chr> regchar
@@ -607,9 +607,10 @@ var : IDENT                     { $$ = list(var_s, intern(string_own($1), nil),
                                             nao); }
     | '{' IDENT '}' elem        { $$ = list(var_s, intern(string_own($2), nil),
                                             $4, nao); }
-    | '{' IDENT exprs '}'       { $$ = list(var_s, intern(string_own($2), nil),
+    | '{' IDENT modifiers '}'   { $$ = list(var_s, intern(string_own($2), nil),
                                             nil, $3, nao); }
-    | '{' IDENT exprs '}' elem  { $$ = list(var_s, intern(string_own($2), nil),
+    | '{' IDENT modifiers '}' elem  
+                                { $$ = list(var_s, intern(string_own($2), nil),
                                             $5, $3, nao); }
     | var_op IDENT              { $$ = list(var_s, intern(string_own($2), nil),
                                             nil, $1, nao); }
@@ -632,6 +633,16 @@ var : IDENT                     { $$ = list(var_s, intern(string_own($1), nil),
                                   yybadtoken(yychar, lit("variable spec")); }
     ;
 
+var_op : '*'                    { $$ = list(t, nao); }
+       ;
+
+modifiers : NUMBER              { $$ = cons($1, nil); }
+          | regex               { $$ = cons(cons(regex_compile(rest($1)), 
+                                                 rest($1)), nil);
+                                  rlcp($$, $1); }
+          | list                { $$ = cons($1, nil); }
+          ;
+
 o_var : IDENT                   { $$ = list(var_s, intern(string_own($1), nil),
                                             nao); }
       | IDENT o_elem            { $$ = list(var_s, intern(string_own($1), nil),
@@ -643,9 +654,6 @@ o_var : IDENT                   { $$ = list(var_s, intern(string_own($1), nil),
       | IDENT error             { $$ = nil;
                                     yybadtoken(yychar, lit("variable spec")); }
       ;
-
-var_op : '*'                    { $$ = list(t, nao); }
-       ;
 
 vector : '#' list               { $$ = rlcp(vector_list($2), $2); }
        ;
@@ -705,7 +713,7 @@ expr : IDENT                    { $$ = rl(intern(string_own($1), nil),
      | list                     { $$ = $1; }
      | vector                   { $$ = $1; }
      | meta_expr                { $$ = $1; }
-     | regex                    { $$ = cons(regex_compile(rest($1)),
+     | lisp_regex               { $$ = cons(regex_compile(rest($1)),
                                             rest($1));
                                   rlcp($$, $1); }
      | chrlit                   { $$ = rl($1, num(lineno)); }
@@ -717,6 +725,14 @@ expr : IDENT                    { $$ = rl(intern(string_own($1), nil),
 regex : '/' regexpr '/'         { $$ = cons(regex_s, $2); end_of_regex();
                                   rl($$, num(lineno)); }
       | '/' error               { $$ = nil;
+                                  yybadtoken(yychar, lit("regex"));
+                                  end_of_regex(); }
+      ;
+
+lisp_regex : HASH_SLASH regexpr '/'    
+                                { $$ = cons(regex_s, $2); end_of_regex();
+                                  rl($$, num(lineno)); }
+      | HASH_SLASH error        { $$ = nil;
                                   yybadtoken(yychar, lit("regex"));
                                   end_of_regex(); }
       ;
@@ -1071,6 +1087,8 @@ void yybadtoken(int tok, val context)
   case METAPAR: problem = lit("@("); break;
   case METABKT: problem = lit("@["); break;
   case DOTDOT: problem = lit(".."); break;
+  case HASH_BACKSLASH: problem = lit("#\\"); break;
+  case HASH_SLASH:     problem = lit("#/"); break;
   }
 
   if (problem != 0)

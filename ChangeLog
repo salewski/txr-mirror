@@ -1,3 +1,27 @@
+2012-02-26  Kaz Kylheku  <kaz@kylheku.com>
+
+	Bug #35625
+
+	* parser.l (BSCHR, BSYM, BTOK): New lexical definitions.
+	(BRACED): New state.
+	(grammar): Refactored so that braced variables are now handled
+	in the BRACED state, allowing for lexical differences between
+	braced variables and Lisp. This allows us to have
+	the /regex/ syntax in braces, but /regex/ is just a symbol
+	in the Lisp. The new #/ token is recognized and returned
+	as HASH_SLASH. All rules reformatted to a more easily
+	maintainble convention.
+
+	* parser.y (HASH_SLASH): New token.
+	(modifiers, lisp_regex): New nonterminals.
+	(var): Grammar changed to use modifiers nonterminal instead of exprs.
+	(var_op): Rule moved closer to var.
+	(expr): Produces lisp_regex rather than regex.
+	(yybadtoken): Handle HASH_SLASH in the switch statement.
+	Bugfix: HASH_BACKSLASH was not handled.
+
+	* txr.1: Documented #/regex/ syntax.
+
 2012-02-25  Kaz Kylheku  <kaz@kylheku.com>
 
 	* arith.c: Updated copyright year.
