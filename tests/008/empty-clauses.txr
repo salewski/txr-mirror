@@ -1,0 +1,18 @@
+@(bind a ("a" "b"))
+@(output)
+@(repeat)
+@a
+@(first)
+
+@(end)
+@(repeat)
+@a
+@(first)
+@(end)
+@(repeat)
+@a
+@(first)
+f@a
+@(end)
+@(rep)@a@(first)@(end)
+@(end)

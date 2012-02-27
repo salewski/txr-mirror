@@ -88,7 +88,7 @@ static val parsed_spec;
 %type <val> text texts elem var var_op modifiers meta_expr vector
 %type <val> list exprs exprs_opt expr out_clauses out_clauses_opt out_clause
 %type <val> repeat_clause repeat_parts_opt o_line
-%type <val> o_elems_opt o_elems_opt2 o_elems o_elem o_var rep_elem rep_parts_opt
+%type <val> o_elems_opt o_elems o_elem o_var rep_elem rep_parts_opt
 %type <val> regex lisp_regex regexpr regbranch
 %type <val> regterm regclass regclassterm regrange
 %type <val> strlit chrlit quasilit quasi_items quasi_item litchars
@@ -532,7 +532,7 @@ repeat_parts_opt : SINGLE newl
 
 
 out_clauses_opt : out_clauses   { $$ = $1; }
-                | /* empty */   { $$ = null_list; }
+                | /* empty */   { $$ = nil; }
 
 o_line : o_elems_opt '\n'       { $$ = $1; }
        ;
@@ -541,11 +541,6 @@ o_elems_opt : o_elems           { $$ = o_elems_transform($1);
                                   rl($$, num(lineno)); }
             |                   { $$ = nil; }
             ;
-
-o_elems_opt2 : o_elems          { $$ = o_elems_transform($1);
-                                  rl($$, num(lineno)); }
-             |                  { $$ = null_list; }
-             ;
 
 o_elems : o_elem                { $$ = cons($1, nil); }
         | o_elem o_elems        { $$ = cons($1, $2); }
@@ -570,25 +565,25 @@ rep_elem : REP exprs_opt ')' o_elems_opt
                                   yybadtoken(yychar, lit("rep clause")); }
          ;
 
-rep_parts_opt : SINGLE o_elems_opt2
+rep_parts_opt : SINGLE o_elems_opt
                 rep_parts_opt           { $$ = cons(cons(single_s, $2), $3);
                                           rl($$, num($1)); }
-              | FIRST o_elems_opt2
+              | FIRST o_elems_opt
                 rep_parts_opt           { $$ = cons(cons(first_s, $2), $3);
                                           rl($$, num($1)); }
-              | LAST o_elems_opt2
+              | LAST o_elems_opt
                 rep_parts_opt           { $$ = cons(cons(last_s, $2), $3);
                                           rl($$, num($1)); }
-              | EMPTY o_elems_opt2
+              | EMPTY o_elems_opt
                 rep_parts_opt           { $$ = cons(cons(empty_s, $2), $3);
                                           rl($$, num($1)); }
               | MOD exprs_opt ')'
-                o_elems_opt2
+                o_elems_opt
                 rep_parts_opt           { $$ = cons(cons(mod_s, 
                                                          cons($2, $4)), $5);
                                           rl($$, num($1)); }
               | MODLAST exprs_opt ')'
-                o_elems_opt2
+                o_elems_opt
                 rep_parts_opt           { $$ = cons(cons(modlast_s, 
                                                          cons($2, $4)), $5);
                                           rl($$, num($1)); }
@@ -857,12 +852,13 @@ litchars : LITCHAR              { $$ = cons(chr($1), nil); }
 
 static val repeat_rep_helper(val sym, val args, val main, val parts)
 {
-  val single_parts = nil;
-  val first_parts = nil;
-  val last_parts = nil;
-  val empty_parts = nil;
-  val mod_parts = nil;
-  val modlast_parts = nil;
+  uses_or2;
+  val single_parts = nil, single_parts_p = nil;
+  val first_parts = nil, first_parts_p = nil;
+  val last_parts = nil, last_parts_p = nil;
+  val empty_parts = nil, empty_parts_p = nil;
+  val mod_parts = nil, mod_parts_p = nil;
+  val modlast_parts = nil, modlast_parts_p = nil;
   val iter;
 
   for (iter = parts; iter != nil; iter = cdr(iter)) {
@@ -870,25 +866,39 @@ static val repeat_rep_helper(val sym, val args, val main, val parts)
     val sym = car(part);
     val clauses = copy_list(cdr(part));
 
-    if (sym == single_s)
+    if (sym == single_s) {
       single_parts = nappend2(single_parts, clauses);
-    else if (sym == first_s)
+      single_parts_p = t;
+    } else if (sym == first_s) {
       first_parts = nappend2(first_parts, clauses);
-    else if (sym == last_s)
+      first_parts_p = t;
+    } else if (sym == last_s) {
       last_parts = nappend2(last_parts, clauses);
-    else if (sym == empty_s)
+      last_parts_p = t;
+    } else if (sym == empty_s) {
       empty_parts = nappend2(empty_parts, clauses);
-    else if (sym == mod_s)
+      empty_parts_p = t;
+    } else if (sym == mod_s) {
       mod_parts = cons(clauses, mod_parts);
-    else if (sym == modlast_s)
+      mod_parts_p = t;
+    } else if (sym == modlast_s) {
       modlast_parts = cons(clauses, modlast_parts);
-    else
+      modlast_parts_p = t;
+    } else {
       abort();
+    }
   }
 
+  single_parts = or2(single_parts, single_parts_p);
+  first_parts = or2(first_parts, first_parts_p);
+  last_parts = or2(last_parts, last_parts_p);
+  empty_parts = or2(empty_parts, empty_parts_p);
+  mod_parts = or2(nreverse(mod_parts), mod_parts_p);
+  modlast_parts = or2(nreverse(modlast_parts), modlast_parts_p);
+
   return list(sym, args, main, single_parts, first_parts,
-              last_parts, empty_parts,
-              nreverse(mod_parts), nreverse(modlast_parts), nao);
+              last_parts, empty_parts, nreverse(mod_parts),
+              nreverse(modlast_parts), nao);
 }
 
 static val o_elems_transform(val o_elems)

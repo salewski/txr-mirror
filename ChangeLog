@@ -1,5 +1,27 @@
 2012-02-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	Fixing long-time (pre-GIT) bug. The object (nil) was stupidly used to
+	represent empty optional output clauses, distinguishing them from
+	missing clauses. This creates an ambiguity, so that an @(output)
+	block which puts out a single empty line is treated as empty.
+	Present but empty clauses are now represented by t.
+
+	* match.c (do_output_line): Check for t and bail.
+	(do_output): Check for t instead of (nil) and bail.
+
+	* parser.y (o_elems_opt2): Nonterminal deleted.
+	(out_clauses_opt): Empty case generates nil.
+	(req_parts_opt): o_elems_opt2 replaced by o_elems_opt.
+	(repeat_rep_helper): Function now keeps track of which
+	clauses were specified. For those that were specified, but
+	empty, it substitutes t.
+
+	* tests/008/empty-clauses.expected: New file.
+
+	* tests/008/empty-clauses.txr: New file.
+
+2012-02-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	Bug #35625
 
 	* parser.l (BSCHR, BSYM, BTOK): New lexical definitions.

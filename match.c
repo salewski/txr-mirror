@@ -1559,6 +1559,9 @@ static val extract_bindings(val bindings, val output_spec)
 
 static void do_output_line(val bindings, val specline, val filter, val out)
 {
+  if (specline == t)
+    return;
+
   for (; specline; specline = rest(specline)) {
     val elem = first(specline);
 
@@ -1689,7 +1692,7 @@ static void do_output_line(val bindings, val specline, val filter, val out)
 
 static void do_output(val bindings, val specs, val filter, val out)
 {
-  if (equal(specs, null_list))
+  if (specs == t)
     return;
 
   for (; specs; specs = cdr(specs)) {
