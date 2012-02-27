@@ -102,9 +102,9 @@ val debug(val form, val bindings, val data, val line, val pos, val base)
       val input, command;
 
       if (print_form) {
-        format(std_output, lit("stopped at ~a\n"), source_loc_str(form), nao);
-        format(std_output, lit("form: ~s\n"), form, nao);
-        format(std_output, lit("depth: ~s\n"), num(debug_depth), nao);
+        format(std_debug, lit("stopped at ~a\n"), source_loc_str(form), nao);
+        format(std_debug, lit("form: ~s\n"), form, nao);
+        format(std_debug, lit("depth: ~s\n"), num(debug_depth), nao);
         print_form = nil;
       }
 
@@ -122,16 +122,16 @@ val debug(val form, val bindings, val data, val line, val pos, val base)
             suffix = sub_str(data, pos, plus(pos, half));
           }
 
-          format(std_output, lit("data (~s:~s):\n~s . ~s\n"),
+          format(std_debug, lit("data (~s:~s):\n~s . ~s\n"),
                  line, plus(pos, base), prefix, suffix, nao);
         } else {
-          format(std_output, lit("data (~s):\n~s\n"), line, data, nao);
+          format(std_debug, lit("data (~s):\n~s\n"), line, data, nao);
         }
         print_data = nil;
       }
 
-      format(std_output, lit("txr> "), nao);
-      flush_stream(std_output);
+      format(std_debug, lit("txr> "), nao);
+      flush_stream(std_debug);
 
       input = split_str_set(or2(get_line(std_input), lit("q")), lit("\t "));
       command = if3(equal(first(input), null_string), 
@@ -139,7 +139,7 @@ val debug(val form, val bindings, val data, val line, val pos, val base)
       last_command = command;
 
       if (equal(command, lit("?")) || equal(command, lit("h"))) {
-        help(std_output);
+        help(std_debug);
         continue;
       } else if (equal(command, null_string)) {
         continue;
@@ -159,14 +159,14 @@ val debug(val form, val bindings, val data, val line, val pos, val base)
         next_depth = debug_depth - 1;
         return nil;
       } else if (equal(command, lit("v"))) {
-        show_bindings(bindings, std_output);
+        show_bindings(bindings, std_debug);
       } else if (equal(command, lit("s"))) {
         print_form = t;
       } else if (equal(command, lit("i"))) {
         print_data = t;
       } else if (equal(command, lit("b")) || equal(command, lit("d"))) {
         if (!rest(input)) {
-          format(std_output, lit("b needs argument\n"), nao);
+          format(std_debug, lit("b needs argument\n"), nao);
           continue;
         } else {
           long n = wcstol(c_str(second(input)), NULL, 10);
@@ -174,19 +174,19 @@ val debug(val form, val bindings, val data, val line, val pos, val base)
             push(num(n), &breakpoints);
         }
       } else if (equal(command, lit("l"))) {
-        format(std_output, lit("breakpoints: ~s\n"), breakpoints, nao);
+        format(std_debug, lit("breakpoints: ~s\n"), breakpoints, nao);
       } else if (equal(command, lit("w"))) {
-        format(std_output, lit("backtrace:\n"), nao);
+        format(std_debug, lit("backtrace:\n"), nao);
         {
           uw_frame_t *iter;
 
           for (iter = uw_current_frame(); iter != 0; iter = iter->uw.up) {
             if (iter->uw.type == UW_DBG) {
               if (iter->db.ub_p_a_pairs)
-                format(std_output, lit("(~s ~s ~s)\n"), iter->db.func,
+                format(std_debug, lit("(~s ~s ~s)\n"), iter->db.func,
                        iter->db.args, iter->db.ub_p_a_pairs, nao);
               else
-                format(std_output, lit("(~s ~s)\n"), iter->db.func,
+                format(std_debug, lit("(~s ~s)\n"), iter->db.func,
                        iter->db.args, nao);
             }
           }
@@ -194,7 +194,7 @@ val debug(val form, val bindings, val data, val line, val pos, val base)
       } else if (equal(command, lit("q"))) {
         uw_throwf(query_error_s, lit("terminated via debugger"), nao);
       } else {
-        format(std_output, lit("unrecognized command: ~a\n"), command, nao);
+        format(std_debug, lit("unrecognized command: ~a\n"), command, nao);
       }
     }
 

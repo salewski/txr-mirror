@@ -44,7 +44,7 @@
 #include "stream.h"
 #include "utf8.h"
 
-val std_input, std_output, std_error;
+val std_input, std_output, std_debug, std_error;
 val output_produced;
 
 struct strm_ops {
@@ -126,11 +126,12 @@ static val stdio_put_string(val stream, val str)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
 
-  if (h->f == stdout)
+  if (stream != std_debug)
     output_produced = t;
 
   if (h->f != 0) {
     const wchar_t *s = c_str(str);
+
     while (*s) {
       if (!utf8_encode(*s++, stdio_put_char_callback, (mem_t *) h->f))
         return stdio_maybe_write_error(stream);
@@ -143,8 +144,10 @@ static val stdio_put_string(val stream, val str)
 static val stdio_put_char(val stream, val ch)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
-  if (h->f == stdout)
+
+  if (stream != std_debug)
     output_produced = t;
+
   return h->f != 0 && utf8_encode(c_chr(ch), stdio_put_char_callback, (mem_t *) h->f)
          ? t : stdio_maybe_write_error(stream);
 }
@@ -154,7 +157,7 @@ static val stdio_put_byte(val stream, val byte)
   cnum b = c_num(byte);
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
 
-  if (h->f == stdout)
+  if (stream != std_debug)
     output_produced = t;
 
   if (b < 0 || b > 255)
@@ -1306,9 +1309,10 @@ val open_pipe(val path, val mode_str)
 
 void stream_init(void)
 {
-  protect(&std_input, &std_output, &std_error, (val *) 0);
+  protect(&std_input, &std_output, &std_debug, &std_error, (val *) 0);
   std_input = make_stdio_stream(stdin, string(L"stdin"), t, nil);
   std_output = make_stdio_stream(stdout, string(L"stdout"), nil, t);
+  std_debug = make_stdio_stream(stdout, string(L"debug"), nil, t);
   std_error = make_stdio_stream(stderr, string(L"stderr"), nil, t);
   detect_format_string();
 }

@@ -1,5 +1,22 @@
 2012-02-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	Fix the issue properly, once and for all, of how to determine
+	that output has taken place and suppress the printing of bindings.
+
+	* debug.c (debug): std_output replaced with std_debug.
+
+	* eval.c (eval_init): Registered new *stddebug* variable.
+
+	* stream.c (std_debug): New variable.
+	(stdio_put_string): Check that stream is other than
+	std_debug, to determine that output has taken place.
+
+	* stream.h (std_debug): Declared.
+
+	* txr.1: Added *stddebug* to documentation stub heading.
+
+2012-02-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	Fixing long-time (pre-GIT) bug. The object (nil) was stupidly used to
 	represent empty optional output clauses, distinguishing them from
 	missing clauses. This creates an ambiguity, so that an @(output)
