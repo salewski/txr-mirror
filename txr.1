@@ -107,7 +107,15 @@ Suppresses the printing of variable bindings for a successful query, and the
 word .
 IR false
 for a failed query. The program still sets an appropriate
-termination status.
+termination status.  Bindings are implicitly suppressed if the TXR query
+performs an output operation on any file stream other than *stddebug*.
+(Internal streams like string streams do not count as output.)
+
+.IP -B
+Force the printing of variable bindings for a successful query, and the
+word .
+IR false
+for a failed query, even if the program produced output.
 
 .IP "-l or --lisp-bindings"
 Print the variable bindings in Lisp syntax instead of shell syntax.
