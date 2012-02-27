@@ -90,8 +90,11 @@ static void help(void)
 "-Dvar                  Predefine variable var, with empty string value.\n"
 "-q                     Quiet: don't report errors during query matching.\n"
 "-v                     Verbose: extra logging from matcher.\n"
-"-b                     Don't dump list of bindings.\n"
-"-l                     If dumping bindings, use a Lisp format.\n"
+"-b                     Don't dump list of bindings, or 'false'\n"
+"                       on unsuccessful termination.\n"
+"-B                     Force list of bindings to be dumped, or false\n"
+"                       if termination is unsuccessful.\n"
+"-l                     If dumping bindings, use TXR Lisp format.\n"
 "-d                     Debugger mode.\n"
 "-a num                 Generate array variables up to num-dimensions.\n"
 "                       Default is 1. Additional dimensions are fudged\n"
@@ -328,6 +331,9 @@ int txr_main(int argc, char **argv)
           break;
         case 'b':
           opt_nobindings = 1;
+          break;
+        case 'B':
+          opt_nobindings = -1;
           break;
         case 'l':
           opt_lisp_bindings = 1;

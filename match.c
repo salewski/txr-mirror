@@ -3590,12 +3590,10 @@ int extract(val spec, val files, val predefined_bindings)
                                                    predefined_bindings,
                                                    t, nil)));
 
-  if (!output_produced) {
-    if (!opt_nobindings) {
-      if (bindings) {
-        bindings = nreverse(bindings);
-        dump_bindings(bindings);
-      }
+  if ((!output_produced && opt_nobindings <= 0) || opt_nobindings < 0) {
+    if (bindings) {
+      bindings = nreverse(bindings);
+      dump_bindings(bindings);
     }
 
     if (!success)

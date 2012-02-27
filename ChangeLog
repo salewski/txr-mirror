@@ -1,3 +1,15 @@
+2012-02-27  Kaz Kylheku  <kaz@kylheku.com>
+
+	* match.c (extract): Check for negative value of opt_nobindings,
+	which forces the printing.
+
+	* txr.c (help): Under -b, mention that printing the  word false is
+	suppressed also. Added documentation for -B.
+	(main): Implemented -B option.
+
+	* txr.1: Documented -B option and added clarifying text under -b
+	option explaining the conditions under which bindings are printed.
+
 2012-02-26  Kaz Kylheku  <kaz@kylheku.com>
 
 	Fix the issue properly, once and for all, of how to determine
