@@ -2181,6 +2181,7 @@ void eval_init(void)
   reg_fun(intern(lit("eval"), user_package), func_n2o(eval_intrinsic, 1));
 
   reg_var(intern(lit("*stdout*"), user_package), &std_output);
+  reg_var(intern(lit("*stddebug*"), user_package), &std_debug);
   reg_var(intern(lit("*stdin*"), user_package), &std_input);
   reg_var(intern(lit("*stderr*"), user_package), &std_error);
   reg_fun(intern(lit("format"), user_package), func_n2v(formatv));

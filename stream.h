@@ -24,7 +24,7 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-extern val std_input, std_output, std_error;
+extern val std_input, std_output, std_debug, std_error;
 extern val output_produced;
 
 val make_stdio_stream(FILE *, val descr, val input, val output);
