@@ -1,3 +1,36 @@
+                                     TXR 59
+                                   2011-02-29
+
+
+  Features
+
+  - Implemented put-byte function on streams.
+
+  - Regex syntax in TXR Lisp changes from /re/ to #/re/, allowing
+    symbols containing slashes.
+
+  - New -B command line option forces TXR to dump the bindings even
+    if the program produced output.
+
+  - Revised and improved txr.vim syntax highlighting file for greater
+    lexical accuracy and superior flagging of errors.
+
+  Fixes
+
+  - Regression that broke [n..t] and [n..nil] sequence ranges.
+
+  - Broken hex-escaped character literals.
+
+  - Old bug from database: filter functions now see bindings in all
+    contexts in which they are invoked.
+
+  - Output clauses consisting of one empty line were being treated as empty.
+
+  - Implemented more sane rule for deciding when output has taken place
+    and suppress the printing fo bindings.
+
+
+
                                      TXR 58
                                    2011-02-25
 
