@@ -445,7 +445,7 @@ val sub_list(val list, val from, val to)
     from = nil;
   else if (lt(from, zero)) {
     from = plus(from, len = length(list));
-    if (zerop(to))
+    if (to == zero)
       to = nil;
   }
 
@@ -499,7 +499,7 @@ val replace_list(val list, val items, val from, val to)
     from = nil;
   else if (lt(from, zero)) {
     from = plus(from, len ? len : (len = length(list)));
-    if (zerop(to))
+    if (to == zero)
       to = len;
   }
 
@@ -1490,7 +1490,7 @@ static val lazy_sub_str(val lstr, val from, val to)
       from = plus(from, len = length_str(lstr));
       from = max2(zero, from);
 
-      if (zerop(to))
+      if (to == zero)
         to = t;
     }
 
@@ -1545,7 +1545,7 @@ val sub_str(val str_in, val from, val to)
     return null_string;
   else if (lt(from, zero)) {
     from = plus(from, len);
-    if (zerop(to))
+    if (to == zero)
       to = len;
   }
 
@@ -1586,7 +1586,7 @@ val replace_str(val str_in, val items, val from, val to)
     from = len;
   else if (lt(from, zero)) {
     from = plus(from, len);
-    if (zerop(to))
+    if (to == zero)
       to = len;
   }
 
@@ -2956,7 +2956,7 @@ val sub_vec(val vec_in, val from, val to)
     from = len;
   else if (lt(from, zero)) {
     from = plus(from, len);
-    if (zerop(to))
+    if (to == zero)
       to = len;
   }
 
@@ -2999,7 +2999,7 @@ val replace_vec(val vec_in, val items, val from, val to)
     from = len;
   else if (lt(from, zero)) {
     from = plus(from, len);
-    if (zerop(to))
+    if (to == zero)
       to = len;
   }
 
