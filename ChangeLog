@@ -1,5 +1,9 @@
 2012-02-27  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.vim: Recognize backslash-newline break in regexes.
+
+2012-02-27  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.vim: Substantially revised for better lexical accuracy
 	and highlighting of errors.
 

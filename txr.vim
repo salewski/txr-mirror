@@ -95,14 +95,14 @@ syn match txr_char "@[ \t]*\\x[0-9A-Fa-f]\+"
 syn match txr_char "@[ \t]*\\[0-9]\+"
 syn match txr_variable "@[ \t]*[*]\?[ \t]*[A-Za-z_][A-Za-z0-9_]*"
 syn match txr_metanum "@[0-9]\+"
-syn match txr_regdir "@[ \t]*/\(\\/\|[^/]\)*/"
+syn match txr_regdir "@[ \t]*/\(\\/\|[^/]\|\\\n\)*/"
 
 syn match txr_chr "#\\x[A-Fa-f0-9]\+" contained
 syn match txr_chr "#\\o[0-9]\+" contained
 syn match txr_chr "#\\[^ \t\nA-Za-z0-9_]" contained
 syn match txr_chr "#\\[A-Za-z0-9_]\+" contained
-syn match txr_regex "/\(\\/\|[^/]\)*/" contained
-syn match txl_regex "#/\(\\/\|[^/]\)*/" contained
+syn match txr_regex "/\(\\/\|[^/]\|\\\n\)*/" contained
+syn match txl_regex "#/\(\\/\|[^/]\|\\\n\)*/" contained
 syn match txr_ncomment ";.*" contained
 
 syn match txr_ident "[:@]\?[A-Za-z0-9!$%&*+\-<=>?\\^_~]\+" contained
