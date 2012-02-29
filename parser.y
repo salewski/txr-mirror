@@ -1017,6 +1017,12 @@ val rl(val form, val lineno)
   return form;
 }
 
+val rlset(val form, val info)
+{
+  sethash(form_to_ln_hash, form, info);
+  return form;
+}
+
 static wchar_t char_from_name(wchar_t *name)
 {
   static struct {

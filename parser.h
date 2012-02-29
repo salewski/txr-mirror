@@ -43,7 +43,8 @@ void parse_reset(val spec_file);
 val source_loc(val form);
 val source_loc_str(val form);
 val rl(val form, val lineno);
+val rlset(val form, val info);
 INLINE val rlcp(val to, val from)
 {
-  return rl(to, source_loc(from));
+  return rlset(to, source_loc(from));
 }
