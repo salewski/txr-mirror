@@ -411,13 +411,15 @@ static val h_text(match_line_ctx *c)
 
 static void consume_prefix(match_line_ctx *c)
 {
-  const val shift_hiwater = num_fast(4000);
-  const val shift_amount = num_fast(3900);
+  if (lazy_stringp(c->dataline)) {
+    const val shift_hiwater = num_fast(4000);
+    const val shift_amount = num_fast(3900);
 
-  if (gt(c->pos, shift_hiwater)) {
-    c->base = plus(c->base, shift_amount);
-    c->pos = minus(c->pos, shift_amount);
-    c->dataline = sub_str(c->dataline, shift_amount, t);
+    if (gt(c->pos, shift_hiwater)) {
+      c->base = plus(c->base, shift_amount);
+      c->pos = minus(c->pos, shift_amount);
+      c->dataline = sub_str(c->dataline, shift_amount, t);
+    }
   }
 }
 

@@ -1,5 +1,12 @@
 2012-02-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (consume_prefix): This memory optimization should only
+	be done for lazy strings, otherwise it just causes unnecessary
+	memory use by duplicating the line, and inefficiency via
+	thanks to allocator churn.
+
+2012-02-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (numberp): Fix bad type check: null pointer dereference when
 	object is nil.
 
