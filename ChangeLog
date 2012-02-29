@@ -1,5 +1,15 @@
 2012-02-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	Bugfix: rlcp function was incorrect for new way of storing
+	line number info.
+
+	* parser.h (rlset): Declared.
+	(rlcp): Use rlset.
+
+	* parser.y (rlset): New function.
+
+2012-02-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	* debug.c (help, debug): New g command for tweaking log level.
 
 2012-02-28  Kaz Kylheku  <kaz@kylheku.com>
