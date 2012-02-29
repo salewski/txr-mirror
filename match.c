@@ -1198,7 +1198,7 @@ static val do_match_line(match_line_ctx *c)
     c->specline = cdr(c->specline);
   }
 
-  debug_return (cons(c->bindings, c->pos));
+  debug_return (cons(c->bindings, plus(c->pos, c->base)));
   debug_leave;
 }
 
@@ -3510,7 +3510,7 @@ repeat_spec_same_data:
                  match_line(ml_all(c.bindings, specline, dataline, zero,
                                    c.data_lineno, first(c.files))));
 
-      if (fixnump(success) && c_num(success) < c_num(length_str(dataline))) {
+      if (numberp(success) && length_str_gt(dataline, success)) {
         debuglf(specline, lit("spec only matches line to position ~a: ~a"),
                 success, dataline, nao);
         debug_return (nil);
