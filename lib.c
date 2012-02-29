@@ -625,6 +625,51 @@ val memqual(val obj, val list)
   return list;
 }
 
+val remq(val obj, val list)
+{
+  list_collect_decl (out, ptail);
+  val lastmatch = cons(nil, list);
+
+  for (; list; list = cdr(list)) {
+    if (car(list) == obj) {
+      list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
+      lastmatch = list;
+    }
+  }
+  list_collect_nconc(ptail, cdr(lastmatch));
+  return out;
+}
+
+val remql(val obj, val list)
+{
+  list_collect_decl (out, ptail);
+  val lastmatch = cons(nil, list);
+
+  for (; list; list = cdr(list)) {
+    if (eql(car(list), obj)) {
+      list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
+      lastmatch = list;
+    }
+  }
+  list_collect_nconc(ptail, cdr(lastmatch));
+  return out;
+}
+
+val remqual(val obj, val list)
+{
+  list_collect_decl (out, ptail);
+  val lastmatch = cons(nil, list);
+
+  for (; list; list = cdr(list)) {
+    if (equal(car(list), obj)) {
+      list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
+      lastmatch = list;
+    }
+  }
+  list_collect_nconc(ptail, cdr(lastmatch));
+  return out;
+}
+
 val tree_find(val obj, val tree, val testfun)
 {
   uses_or2;

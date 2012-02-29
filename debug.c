@@ -109,9 +109,11 @@ val debug(val form, val bindings, val data, val line, val pos, val base)
       }
 
       if (print_data) {
+        int lim = cols * 8;
+
         if (data && pos) {
-          val half = num((cols - 8) / 2);
-          val full = num((cols - 8));
+          val half = num((lim - 8) / 2);
+          val full = num((lim - 8));
           val prefix, suffix;
 
           if (lt(pos, half)) {
@@ -124,6 +126,10 @@ val debug(val form, val bindings, val data, val line, val pos, val base)
 
           format(std_debug, lit("data (~s:~s):\n~s . ~s\n"),
                  line, plus(pos, base), prefix, suffix, nao);
+        } else if (data && length_str_ge(data, num(lim - 2))) {
+          format(std_debug, lit("data (~s):\n~s...~s\n"), line,
+                 sub_str(data, zero, num(lim/2 - 4)),
+                 sub_str(data, num(-(lim/2 - 3)), t), nao);
         } else {
           format(std_debug, lit("data (~s):\n~s\n"), line, data, nao);
         }
@@ -166,12 +172,14 @@ val debug(val form, val bindings, val data, val line, val pos, val base)
         print_data = t;
       } else if (equal(command, lit("b")) || equal(command, lit("d"))) {
         if (!rest(input)) {
-          format(std_debug, lit("b needs argument\n"), nao);
+          format(std_debug, lit("~s needs argument\n"), command, nao);
           continue;
         } else {
           long n = wcstol(c_str(second(input)), NULL, 10);
           if (equal(command, lit("b")))
             push(num(n), &breakpoints);
+          else
+            breakpoints = remql(num(n), breakpoints);
         }
       } else if (equal(command, lit("l"))) {
         format(std_debug, lit("breakpoints: ~s\n"), breakpoints, nao);

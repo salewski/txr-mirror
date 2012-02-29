@@ -1,3 +1,14 @@
+2012-02-28  Kaz Kylheku  <kaz@kylheku.com>
+
+	* debug.c: Missing d command implemented.
+	Condense the output to 8 times the screen width, for more context.
+	Condense the output in vertical mode (when the entire input line
+	is shown) not only character mode.
+
+	* lib.c (remq, remql, remqual): New functions.
+
+	* lib.h (remq, remql, remqual): Declared.
+
 2012-02-29  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 59
