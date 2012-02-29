@@ -1,5 +1,22 @@
 2012-02-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (do_match_line): Function takes new argument, "completely".
+	The check for completely matching a line is now done within
+	do_match_line.
+	(match_line): Pass nil to do_match_line, specifying that a prefix
+	match is okay.
+	(match_line_completely): New interface to do_match_line, which
+	requests a match to the end of the line.
+	(v_freeform): Pass nil to do_match_line: freeform needs 
+	incomplete match semantics.
+	(match_files): Use match_line_completely instead of match_line.
+	By doing it this way, we do not need to compute the length of
+	the original line and compare it to the absolute position.
+	This saves time and memory since computing the length of a lazy
+	string forces it.
+
+2012-02-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (consume_prefix): This memory optimization should only
 	be done for lazy strings, otherwise it just causes unnecessary
 	memory use by duplicating the line, and inefficiency via
