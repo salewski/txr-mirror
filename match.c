@@ -371,7 +371,7 @@ static match_line_ctx ml_bindings_specline(match_line_ctx c, val bindings,
   return nc;
 }
 
-static val do_match_line(match_line_ctx *c);
+static val do_match_line(match_line_ctx *c, val completely);
 static val match_line(match_line_ctx c);
 
 typedef val (*h_match_func)(match_line_ctx *c);
@@ -1090,7 +1090,7 @@ static match_files_ctx mf_all(val spec, val files, val bindings,
 
 static val v_fun(match_files_ctx *c);
 
-static val do_match_line(match_line_ctx *c)
+static val do_match_line(match_line_ctx *c, val completely)
 {
   debug_enter;
 
@@ -1200,14 +1200,26 @@ static val do_match_line(match_line_ctx *c)
     c->specline = cdr(c->specline);
   }
 
+  if (completely && length_str_gt(c->dataline, c->pos)) {
+    debuglf(c->specline, lit("spec only matches line to position ~a: ~a"),
+            plus(c->pos, c->base), c->dataline, nao);
+    debug_return (nil);
+  }
+
   debug_return (cons(c->bindings, plus(c->pos, c->base)));
   debug_leave;
 }
 
 static val match_line(match_line_ctx c)
 {
-  return do_match_line(&c);
+  return do_match_line(&c, nil);
 }
+
+static val match_line_completely(match_line_ctx c)
+{
+  return do_match_line(&c, t);
+}
+
 
 val format_field(val obj, val modifier, val filter, val eval_fun)
 {
@@ -2054,7 +2066,7 @@ static val v_freeform(match_files_ctx *c)
     c->data = nil;
 
     {
-      cons_bind (new_bindings, success, do_match_line(&mlc));
+      cons_bind (new_bindings, success, do_match_line(&mlc, nil));
 
       if (!success) {
         debuglf(specline, lit("freeform match failure"), nao);
@@ -3509,14 +3521,9 @@ repeat_spec_same_data:
       val dataline = first(c.data);
 
       cons_bind (new_bindings, success,
-                 match_line(ml_all(c.bindings, specline, dataline, zero,
-                                   c.data_lineno, first(c.files))));
-
-      if (numberp(success) && length_str_gt(dataline, success)) {
-        debuglf(specline, lit("spec only matches line to position ~a: ~a"),
-                success, dataline, nao);
-        debug_return (nil);
-      }
+                 match_line_completely(ml_all(c.bindings, specline,
+                                              dataline, zero,
+                                              c.data_lineno, first(c.files))));
 
       if (!success)
         debug_return (nil);
