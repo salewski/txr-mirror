@@ -1143,6 +1143,8 @@ val numberp(val num)
   case TAG_NUM:
     return t;
   case TAG_PTR:
+    if (num == nil)
+      return nil;
     if (num->t.type == BGNUM)
       return t;
     /* fallthrough */

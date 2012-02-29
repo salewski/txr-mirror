@@ -1,5 +1,16 @@
 2012-02-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (numberp): Fix bad type check: null pointer dereference when
+	object is nil.
+
+	* match.c (do_match_line): Bugfix for incorrect treatment of long
+	lines. Must return the absolute position from the start of the original
+	line (plus(c->pos, c->base)), rather than just c->pos, which only
+	measures from the start of a line that may have been chopped by
+	consume_prefix.
+
+2012-02-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	Bugfix: rlcp function was incorrect for new way of storing
 	line number info.
 
