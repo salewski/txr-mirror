@@ -41,6 +41,7 @@
 #include "unwind.h"
 #include "stream.h"
 #include "parser.h"
+#include "txr.h"
 
 int opt_debugger;
 int debug_depth;
@@ -60,7 +61,7 @@ static void help(val stream)
                  "v - show variable binding environment  s - show current form\n"
                  "b - set breakpoint by line number      i - show current data\n"
                  "d - delete breakpoint                  w - backtrace\n"
-                 "l - list breakpoints\n"),
+                 "l - list breakpoints                   g - set loglevel\n"),
              stream);
 }
 
@@ -170,16 +171,26 @@ val debug(val form, val bindings, val data, val line, val pos, val base)
         print_form = t;
       } else if (equal(command, lit("i"))) {
         print_data = t;
-      } else if (equal(command, lit("b")) || equal(command, lit("d"))) {
+      } else if (equal(command, lit("b")) || equal(command, lit("d")) ||
+                 equal(command, lit("g")))
+      {
         if (!rest(input)) {
           format(std_debug, lit("~s needs argument\n"), command, nao);
           continue;
         } else {
-          long n = wcstol(c_str(second(input)), NULL, 10);
+          val n = int_str(second(input), num(10));
+
+          if (!n) {
+            format(std_debug, lit("~s needs numeric argument\n"), command, nao);
+            continue;
+          }
+
           if (equal(command, lit("b")))
-            push(num(n), &breakpoints);
+            push(n, &breakpoints);
+          else if (equal(command, lit("d")))
+            breakpoints = remql(n, breakpoints);
           else
-            breakpoints = remql(num(n), breakpoints);
+            opt_loglevel = c_num(n);
         }
       } else if (equal(command, lit("l"))) {
         format(std_debug, lit("breakpoints: ~s\n"), breakpoints, nao);
