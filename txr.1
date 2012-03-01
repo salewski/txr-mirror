@@ -4441,11 +4441,11 @@ The comma-quote combination has a special meaning: the quote always
 behaves as a regular quote and not a quasiquote, even if form contains
 unquotes. Therefore, it does not "capture" these unquotes: they cannot
 "belong" to this quote.  The comma and quote "cancel out", so the only effect
-of comma-quote is to add one level of unquoting.  So for instance, whereas  in
-'(a b c '(,d)), the subsitution of d belongs to the inner quote (it is unquoted
-by the leftmost comma which belongs to the innermost quote) by contrast,
-in '(a b c '(,',d)) the d is now one comma removed from the leftmost comma and
-thus the substitution of d belongs to the outer quote. 
+of comma-quote is to add one level of unquoting.  So for instance, whereas 
+in '(a b c '(,d)), the subsitution of d belongs to the inner quote (it is
+unquoted by the leftmost comma which belongs to the innermost quote) by
+contrast, in '(a b c '(,',d)) the d is now one comma removed from the leftmost
+comma and thus the substitution of d belongs to the outer quote. 
 In other dialects of Lisp, this would be written `(a b c `(,',d)), making it
 explicit which kind of quote is being specified. TXR Lisp works out which
 kind of quote to use internally.
