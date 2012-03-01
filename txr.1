@@ -2533,9 +2533,9 @@ They represent themselves.  For example @(bind :foo :bar) fails,
 but @(bind :foo :foo) succeeds since the two sides denote the same
 keyword symbol object.
 
-.SS Keyword in The Bind Directive
+.SS Keywords in The Bind Directive
 
-The Bind directive accepts these keywords
+The Bind directive accepts these keywords:
 
 .IP :lfilt
 The argument to :lfilt is a filter specification. When the left side pattern
@@ -3244,6 +3244,27 @@ callee is invoked, it calls @(which), whose @(fun) call is routed to callee's
 local definition.  When @(which) is called directly from the top level, its
 @(fun) call goes to the toplevel definition.
 
+.SS The Load Directive
+
+The syntx of the load directive is:
+
+  @(load EXPR)
+
+Where EXPR evaluates to a string giving the path of the file to load.
+Unless the path is absolute, it is interpreted relative to the directory of the
+source file from which the @(load) form was read. If there was no such
+source file (for instance, the script was read from standard input),
+then it is resolved relative to the current working directory.
+
+If the file cannot be opened, then the .txr suffix is added and another
+attempt is made. Thus load expressions need not refer to the suffix.
+In the future, additional suffixes may be searched (compiled versions
+of a file).
+
+Loading is performed at evaluation time; it is not a source file inclusion
+mechanism.  A TXR script is read from beginning to end and parsed prior to
+being evaluated.
+
 .SH OUTPUT
 
 .SS Introduction
@@ -3833,27 +3854,6 @@ are filtered and stored back into each variable.
 Example: convert a, b, and c to upper case and HTML encode:
 
   @(filter (:upcase :to_html) a b c)
-
-.SS The Load Directive
-
-The syntx of the load directive is:
-
-  @(load EXPR)
-
-Where EXPR evaluates to a string giving the path of the file to load.
-Unless the path is absolute, it is interpreted relative to the directory of the
-source file from which the @(load) form was read. If there was no such
-source file (for instance, the script was read from standard input),
-then it is resolved relative to the current working directory.
-
-If the file cannot be opened, then the .txr suffix is added and another
-attempt is made. Thus load expressions need not refer to the suffix.
-In the future, additional suffixes may be searched (compiled versions
-of a file).
-
-Loading is performed at evaluation time; it is not a source file inclusion
-mechanism.  A TXR script is read from beginning to end and parsed prior to
-being evaluated.
 
 .SH EXCEPTIONS
 
