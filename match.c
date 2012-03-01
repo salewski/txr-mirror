@@ -1121,15 +1121,15 @@ static val do_match_line(match_line_ctx *c, val completely)
           LOG_MATCH("regex", past);
           c->pos = past;
         } else if (consp(directive) || stringp(directive)) {
-          cons_bind (find, len, search_str_tree(c->dataline, elem, c->pos, nil));
+          val len = match_str_tree(c->dataline, elem, c->pos);
           val newpos;
 
-          if (find == nil || !equal(find, c->pos)) {
+          if (!len) {
             LOG_MISMATCH("string tree");
             debug_return (nil);
           }
 
-          newpos = plus(find, len);
+          newpos = plus(c->pos, len);
           LOG_MATCH("string tree", newpos);
           c->pos = newpos;
         } else {
@@ -1182,13 +1182,12 @@ static val do_match_line(match_line_ctx *c, val completely)
       break;
     case STR:
       {
-        val find = search_str(c->dataline, elem, c->pos, nil);
         val newpos;
-        if (find == nil || !equal(find, c->pos)) {
+        if (!match_str(c->dataline, elem, c->pos)) {
           LOG_MISMATCH("string");
           debug_return (nil);
         }
-        newpos = plus(find, length_str(elem));
+        newpos = plus(c->pos, length_str(elem));
         LOG_MATCH("string", newpos);
         c->pos = newpos;
         break;

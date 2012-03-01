@@ -425,6 +425,8 @@ val length_str(val str);
 const wchar_t *c_str(val str);
 val search_str(val haystack, val needle, val start_num, val from_end);
 val search_str_tree(val haystack, val tree, val start_num, val from_end);
+val match_str(val bigstr, val str, val pos);
+val match_str_tree(val bigstr, val tree, val pos);
 val replace_str(val str_in, val items, val from, val to);
 val sub_str(val str_in, val from_num, val to_num);
 val cat_str(val list, val sep);
