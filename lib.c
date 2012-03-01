@@ -1523,6 +1523,41 @@ val search_str_tree(val haystack, val tree, val start_num, val from_end)
   return nil;
 }
 
+val match_str(val bigstr, val str, val pos)
+{
+  val i, p;
+
+  for (i = zero;
+       length_str_gt(bigstr, p = plus(pos, i)) && length_str_gt(str, i);
+       i = plus(i, one))
+  {
+    if (chr_str(bigstr, p) != chr_str(str, i))
+      return nil;
+  }
+
+  return length_str_le(str, i) ? t : nil;
+}
+
+val match_str_tree(val bigstr, val tree, val pos)
+{
+  if (stringp(tree)) {
+    if (match_str(bigstr, tree, pos))
+      return length_str(tree);
+  } else if (consp(tree)) {
+    val maxlen = nil;
+
+    for (; tree; tree = cdr(tree)) {
+      val result = match_str_tree(bigstr, car(tree), pos);
+      if (result && (!maxlen || gt(result, maxlen)))
+        maxlen = result;
+    }
+
+    return maxlen;
+  }
+
+  return nil;
+}
+
 static val lazy_sub_str(val lstr, val from, val to)
 {
   val len = nil;
