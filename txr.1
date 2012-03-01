@@ -4422,8 +4422,8 @@ A quoted form which contains unquotes expresses a quasiquote.
 
 Thes comma character is used within a quoted list to denote an unquote.  Wheras
 the quote suppresses evaluation, the comma introduces an exception: an element
-of a form which is evaluated. For example, the value of 
-'(a b c ,(+ 2 2) (+ 2 2)) is the list (a b c 4 (+ 2 2)).  Everything
+of a form which is evaluated. For example, the value of '(a b c ,(+ 2 2)
+(+ 2 2)) is the list (a b c 4 (+ 2 2)).  Everything
 in the quote stands for itself, except for the ,(+ 2 2) which is evaluated.
 
 .IP ,*form
