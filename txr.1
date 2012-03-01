@@ -4872,11 +4872,11 @@ Syntax:
 Description:
 
 The and operator provides three functionalities in one.  It computes the
-logical "and" function over several forms.  It controls evaluation (a.k.a.
+logical "or" function over several forms.  It controls evaluation (a.k.a.
 "short-circuiting").  The behavior of or also provides for a simplified
 selection of the first non-nil value from a sequence of forms.
 
-The or operator evaluates as follows.  First, a rturn value is
+The or operator evaluates as follows.  First, a return value is
 established and initialized to the value nil. The forms, if any,
 are evaluated from left to right. The return value is overwritten
 with the result of each form. Evaluation stops when all forms are
