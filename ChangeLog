@@ -1,5 +1,13 @@
 2012-03-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (search_form): search_form works with relative positions now,
+	but match_line returns absolute, and so needs to be offset by -c->base.
+	(h_trailer, h_fun): Bugfix: return the absolute position, rather than
+	relative c->pos. The return value of these functions becomes the return
+	value of do_match_line, so the semantics has to agree.
+
+2012-03-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (sem_error, file_err): Bugfix: pull text formatted source
 	location using source_loc_str rather than raw object using source_loc.
 
