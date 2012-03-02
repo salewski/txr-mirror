@@ -1286,6 +1286,8 @@ The load directive loads another TXR file and interprets its contents.
 
 .PP
 
+.SH INPUT SCANNING AND DATA MANIPULATION
+
 .SS The Next Directive
 
 The next directive indicates that the remainder of the query is to be applied
@@ -3243,6 +3245,8 @@ definition of "fun" which outputs "local fun!" before calling "which".  When
 callee is invoked, it calls @(which), whose @(fun) call is routed to callee's
 local definition.  When @(which) is called directly from the top level, its
 @(fun) call goes to the toplevel definition.
+
+.SH MODULARIZATION
 
 .SS The Load Directive
 
