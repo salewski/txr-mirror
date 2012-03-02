@@ -442,6 +442,7 @@ static val search_form(match_line_ctx *c, val needle_form, val from_end)
       cons_bind (new_bindings, new_pos,
                  match_line(ml_specline_pos(*c, spec, pos)));
       if (new_pos) {
+        new_pos = minus(new_pos, c->base);
         c->bindings = new_bindings;
         return cons(pos, minus(new_pos, pos));
       }
@@ -979,7 +980,7 @@ static val h_trailer(match_line_ctx *c)
   }
 
   LOG_MATCH("trailer", new_pos);
-  return cons(c->bindings, c->pos);
+  return cons(c->bindings, plus(c->pos, c->base));
 }
 
 static val h_fun(match_line_ctx *c)
@@ -1075,7 +1076,7 @@ static val h_eol(match_line_ctx *c)
 
   if (length_str_le(c->dataline, c->pos)) {
     LOG_MATCH("eol", c->pos);
-    return cons(c->bindings, c->pos);
+    return cons(c->bindings, plus(c->pos, c->base));
   }
   LOG_MISMATCH("eol");
   return nil;
