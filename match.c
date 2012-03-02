@@ -3413,6 +3413,10 @@ static val v_load(match_files_ctx *c)
     parse_reset(path);
     yyparse();
     gc_state(gc);
+
+    if (errors)
+      sem_error(specline, lit("load: errors encountered in ~s"), path, nao);
+
     { 
       val spec = get_spec();
       val result = match_files(mf_spec(*c, spec));

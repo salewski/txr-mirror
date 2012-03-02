@@ -2,6 +2,7 @@
 
 	* match.c (v_load): Fixed broken functionality. Failing to evaluate
 	directives following the load and consume input properly.
+	Check for errors during the parse and throw an exception.
 
 2012-03-01  Kaz Kylheku  <kaz@kylheku.com>
 
