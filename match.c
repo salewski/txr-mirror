@@ -3415,7 +3415,30 @@ static val v_load(match_files_ctx *c)
     gc_state(gc);
     { 
       val spec = get_spec();
-      return match_files(mf_spec(*c, spec));
+      val result = match_files(mf_spec(*c, spec));
+
+      if (!result) {
+        debuglf(specline, lit("load: ~s failed"), path, nao);
+        return nil;
+      } else {
+        cons_bind (new_bindings, success, result);
+
+        if (consp(success)) {
+          debuglf(specline,
+                  lit("load: ~s matched; "
+                      "advancing from line ~a to ~a"),
+                  path, c->data_lineno, cdr(success), nao);
+          c->data = car(success);
+          c->data_lineno = cdr(success);
+          c->bindings = new_bindings;
+        } else {
+          debuglf(specline, lit("load: ~s consumed entire file"), path,
+                  nao);
+          c->data = nil;
+        }
+
+        return next_spec_k;
+      }
     }
   }
 }
