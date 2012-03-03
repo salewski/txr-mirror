@@ -441,7 +441,9 @@ static val search_form(match_line_ctx *c, val needle_form, val from_end)
     {
       cons_bind (new_bindings, new_pos,
                  match_line(ml_specline_pos(*c, spec, pos)));
-      if (new_pos) {
+      if (new_pos == t) {
+        return cons(pos, t);
+      } else if (new_pos) {
         new_pos = minus(new_pos, c->base);
         c->bindings = new_bindings;
         return cons(pos, minus(new_pos, pos));
@@ -556,7 +558,7 @@ static val h_var(match_line_ctx *c)
     }
     LOG_MATCH("var delimiting form", fpos);
     c->bindings = acons(sym, sub_str(c->dataline, c->pos, fpos), c->bindings);
-    c->pos = plus(fpos, flen);
+    c->pos = if3(flen == t, t, plus(fpos, flen));
   } else if (consp(pat)) {
     /* Unbound var followed by var: the following one must either
        be bound, or must specify a regex. */
@@ -636,7 +638,7 @@ static val h_skip(match_line_ctx *c)
   if (!rest(c->specline)) {
     debuglf(elem, 
             lit("skip to end of line ~a:~a"), c->file, c->data_lineno, nao);
-    return cons(c->bindings, length_str(c->dataline));
+    return cons(c->bindings, t);
   }
 
   {
@@ -794,7 +796,7 @@ static val h_coll(match_line_ctx *c)
 
       if (new_pos && !equal(new_pos, c->pos)) {
         c->pos = new_pos;
-        bug_unless (length_str_ge(c->dataline, c->pos));
+        bug_unless (new_pos != t && length_str_ge(c->dataline, c->pos));
 
         timescounter++;
 
@@ -811,7 +813,7 @@ next_coll:
         c->pos = plus(c->pos, one);
       }
 
-      if (length_str_le(c->dataline, c->pos))
+      if (c->pos == t || length_str_le(c->dataline, c->pos))
         break;
     }
 
@@ -907,7 +909,7 @@ static val h_parallel(match_line_ctx *c)
         new_bindings = alist_remove(new_bindings, resolve_ub_vars);
       }
 
-      if (gt(new_pos, max_pos))
+      if (new_pos == t || gt(new_pos, max_pos))
         max_pos = new_pos;
 
       if (directive == choose_s) {
@@ -1059,8 +1061,7 @@ static val h_fun(match_line_ctx *c)
           }
         }
 
-        if (fixnump(success))
-          c->pos = success;
+        c->pos = success;
       }
     }
 
@@ -1100,6 +1101,9 @@ static val do_match_line(match_line_ctx *c, val completely)
 
     if (c->specline == nil)
       break;
+
+    if (c->pos == t)
+      c->pos = length_str(c->dataline);
 
     consume_prefix(c);
 
@@ -2044,7 +2048,7 @@ static val v_trailer(match_files_ctx *c)
   }
 }
 
-void freeform_prepare(val vals, match_files_ctx *c, match_line_ctx *mlc);
+val freeform_prepare(val vals, match_files_ctx *c, match_line_ctx *mlc);
 
 static val v_freeform(match_files_ctx *c)
 {
@@ -2062,7 +2066,7 @@ static val v_freeform(match_files_ctx *c)
     return nil;
   } else {
     match_line_ctx mlc;
-    freeform_prepare(vals, c, &mlc);
+    val lim = freeform_prepare(vals, c, &mlc);
     c->data = nil;
 
     {
@@ -2076,6 +2080,9 @@ static val v_freeform(match_files_ctx *c)
       if (fixnump(success)) {
         c->data = lazy_str_get_trailing_list(mlc.dataline, success);
         c->data_lineno = plus(c->data_lineno, one);
+      } else if (success == t && lim) {
+        c->data = lazy_str_get_trailing_list(mlc.dataline, length_str(mlc.dataline));
+        c->data_lineno = plus(c->data_lineno, one);
       }
 
       c->bindings = new_bindings;
@@ -2085,7 +2092,7 @@ static val v_freeform(match_files_ctx *c)
   return next_spec_k;
 }
 
-void freeform_prepare(val vals, match_files_ctx *c, match_line_ctx *mlc)
+val freeform_prepare(val vals, match_files_ctx *c, match_line_ctx *mlc)
 {
   uses_or2;
   val first_spec = first(c->spec);
@@ -2095,6 +2102,7 @@ void freeform_prepare(val vals, match_files_ctx *c, match_line_ctx *mlc)
                  if2(stringp(second(vals)), second(vals)));
   val dataline = lazy_str(c->data, term, limit);
   *mlc = ml_all(c->bindings, first_spec, dataline, zero, c->data_lineno, first(c->files));
+  return limit;
 }
 
 

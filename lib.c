@@ -1644,8 +1644,7 @@ val sub_str(val str_in, val from, val to)
   } else {
     size_t nchar = c_num(to) - c_num(from) + 1;
     wchar_t *sub = (wchar_t *) chk_malloc(nchar * sizeof (wchar_t));
-    const wchar_t *str = c_str(lazy_stringp(str_in)
-                               ? str_in->ls.prefix : str_in);
+    const wchar_t *str = c_str(str_in);
     wcsncpy(sub, str + c_num(from), nchar);
     sub[nchar-1] = 0;
     return string_own(sub);

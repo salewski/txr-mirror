@@ -1,3 +1,20 @@
+2012-03-03  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (sub_str): Removed second check for lazy string that
+	can't ever come out true.
+
+	* match.c (search_form, h_var, h_coll, h_parallel, h_fun): Handle
+	position t emanating from match_line, indicating match to end of line.
+	(h_skip): When skipping to the end of line (empty spec), just
+	return t as the position rather than the end of the line. This avoids
+	calculating the length of the line, which forces a lazy string.
+	(do_match_line): Near the beginning of the loop, if the position is t,
+	then substitute the length of the line.
+	(freeform_prepare): Return the freeform line limit value.
+	(v_freeform): Check for t coming out of match line and do the
+	conversion back to the trailing list in that case, but only if
+	the freeform was limited by number of lines.
+
 2012-03-01  Kaz Kylheku  <kaz@kylheku.com>
 
 	* match.c (search_form): search_form works with relative positions now,
