@@ -1,5 +1,19 @@
 2012-03-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 60
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES: Updated.
+
+	* txr.vim: Handle : symbol properly.
+
+2012-03-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (plus): Showstopper bug: plus(bignum, fixnum)
 	broken for fixnum <= 0. Bad pointer passed to MPI.
 
@@ -21,20 +35,6 @@
 	* mpi-patches/fix-bad-shifts: Likewise.
 
 	* mpi-patches/fix-mult-bug: Likewise.
-
-2012-03-04  Kaz Kylheku  <kaz@kylheku.com>
-
-	Version 60
-
-	* txr.c (version): Bumped.
-
-	* txr.1: Bumped version and set date.
-
-	* configure (txr_ver): Bumped.
-
-	* RELNOTES: Updated.
-
-	* txr.vim: Handle : symbol properly.
 
 2012-03-04  Kaz Kylheku  <kaz@kylheku.com>
 
