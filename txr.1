@@ -6355,6 +6355,24 @@ If no such element found, nil is returned.
 Otherwise, that tail of the list is returned whose first element
 is the matching object.
 
+.SS Functions remq, remql and remqual
+
+Syntax:
+
+  (remq <object> <list>)
+  (remql <object> <list>)
+  (remqual <object> <list>)
+
+.TP
+Description
+
+The remq, remql and remqual functions produce a new list based on <list>,
+removing the the items which are eq, eql or equal to <object>.
+
+The input <list> is unmodified, but the returned list may share substructure
+with it. If no items are removed, it is possible that the return value
+is <list> itself.
+
 .SS Function tree-find
 
 .TP

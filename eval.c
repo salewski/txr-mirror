@@ -2127,6 +2127,9 @@ void eval_init(void)
   reg_fun(intern(lit("memq"), user_package), func_n2(memq));
   reg_fun(intern(lit("memql"), user_package), func_n2(memql));
   reg_fun(intern(lit("memqual"), user_package), func_n2(memqual));
+  reg_fun(intern(lit("remq"), user_package), func_n2(remq));
+  reg_fun(intern(lit("remql"), user_package), func_n2(remql));
+  reg_fun(intern(lit("remqual"), user_package), func_n2(remqual));
   reg_fun(intern(lit("tree-find"), user_package), func_n3o(tree_find, 2));
   reg_fun(intern(lit("some"), user_package), func_n3o(some_satisfy, 2));
   reg_fun(intern(lit("all"), user_package), func_n3o(all_satisfy, 2));
