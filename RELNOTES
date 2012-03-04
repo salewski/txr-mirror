@@ -8,6 +8,8 @@
 
   - Memory use optimizations in @(freeform) horizontal scanning.
 
+  - Improved hashing function for bignums.
+
   Bugs
 
   - Fixed incorrect processing within long lines, caused by
