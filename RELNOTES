@@ -27,6 +27,8 @@
   - Fixed missing support for optional and trailing parameters
     in defun.
 
+  - Fixed showstopper bug in plus function.
+
 
 
                                      TXR 59
