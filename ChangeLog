@@ -1,5 +1,24 @@
 2012-03-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	* mpi-patches/add-mp-hash (mp_hash): Fixed use of uninitialized
+	variable on platforms where the MP digit is smaller than a long integer.
+	(Not anything TXR is known to run on). Changed algorithm to take the
+	first and last digit and add them together, rather than just taking the
+	last digit. The last digit will be zeros for numbers that contain 2 as a
+	factor with a large enough multiplicity.
+
+	* mpi-patches/add-mpi-toradix-with-case: Refreshed.
+
+	* mpi-patches/bit-search-optimizations: Likewise.
+
+	* mpi-patches/faster-square-root: Likewise.
+
+	* mpi-patches/fix-bad-shifts: Likewise.
+
+	* mpi-patches/fix-mult-bug: Likewise.
+
+2012-03-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	Version 60
 
 	* txr.c (version): Bumped.

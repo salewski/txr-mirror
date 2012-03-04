@@ -1,7 +1,7 @@
 Index: mpi-1.8.6/mpi.c
 ===================================================================
---- mpi-1.8.6.orig/mpi.c	2011-12-11 19:52:15.000000000 -0800
-+++ mpi-1.8.6/mpi.c	2011-12-11 19:53:09.000000000 -0800
+--- mpi-1.8.6.orig/mpi.c	2012-03-04 11:49:57.142719257 -0800
++++ mpi-1.8.6/mpi.c	2012-03-04 11:49:59.676143507 -0800
 @@ -764,7 +764,7 @@
    if((pow = s_mp_ispow2d(d)) >= 0) {
      mp_digit  mask;
@@ -11,7 +11,7 @@ Index: mpi-1.8.6/mpi.c
      rem = DIGIT(a, 0) & mask;
  
      if(q) {
-@@ -3068,7 +3068,7 @@
+@@ -3081,7 +3081,7 @@
      return;
  
    /* Flush all the bits above 2^d in its digit */
@@ -20,7 +20,7 @@ Index: mpi-1.8.6/mpi.c
    dp[ndig] &= dmask;
  
    /* Flush all digits above the one with 2^d in it */
-@@ -3101,7 +3101,7 @@
+@@ -3114,7 +3114,7 @@
    dp = DIGITS(mp); used = USED(mp);
    d %= DIGIT_BIT;
  
@@ -29,7 +29,7 @@ Index: mpi-1.8.6/mpi.c
  
    /* If the shift requires another digit, make sure we've got one to
       work with */
-@@ -3149,7 +3149,7 @@
+@@ -3162,7 +3162,7 @@
    s_mp_rshd(mp, d / DIGIT_BIT);
    d %= DIGIT_BIT;
  
@@ -38,7 +38,7 @@ Index: mpi-1.8.6/mpi.c
  
    save = 0;
    for(ix = USED(mp) - 1; ix >= 0; ix--) {
-@@ -3829,7 +3829,7 @@
+@@ -3842,7 +3842,7 @@
    if((res = s_mp_pad(a, dig + 1)) != MP_OKAY)
      return res;
    
