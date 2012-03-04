@@ -107,6 +107,7 @@ syn match txr_ncomment ";.*" contained
 
 syn match txr_ident "[:@]\?[A-Za-z0-9!$%&*+\-<=>?\\^_~]\+" contained
 syn match txl_ident "[:@]\?[A-Za-z0-9!$%&*+\-<=>?\\^_~/]\+" contained
+syn match txl_ident ":" contained
 syn match txr_num "[+-]\?[0-9]\+" contained
 
 syn match txr_unquote "," contained

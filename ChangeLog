@@ -1,3 +1,26 @@
+2012-03-04  Kaz Kylheku  <kaz@kylheku.com>
+
+	Version 60
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES: Updated.
+
+	* txr.vim: Handle : symbol properly.
+
+2012-03-04  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (op_defun): Bugfix: documentation says that defun supports
+	the same parameter list as lambda, and that is the intent. But
+	this was broken, since op_defun was expecting the parameter list
+	to be a proper list containing only bindable symbols, ruling out
+	the use of the consing dot for rest parameter as well as the colon
+	keyword symbol for optional parmeters.
+
 2012-03-03  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): Expose remq, remql and remqual.

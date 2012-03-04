@@ -714,13 +714,27 @@ static val op_defun(val form, val env)
   val body = rest(rest(args));
   val block = cons(block_s, cons(name, body));
   val fun = cons(name, cons(params, cons(block, nil)));
+  val iter;
+  val colon = nil;
 
   if (!bindable(name))
     eval_error(form, lit("defun: ~s is not a bindable sybol"), name, nao);
 
-  if (!all_satisfy(params, func_n1(bindable), nil))
-    eval_error(form, lit("defun: arguments must be bindable symbols"), nao);
+  for (iter = params; consp(iter); iter = cdr(iter)) {
+    val param = car(iter);
+    if (param == colon_k) {
+      if (colon)
+        eval_error(form, lit("defun: multiple colons in parameter list"), nao);
+      else
+          colon = t;
+      continue;
+    }
+    if (!bindable(param))
+      eval_error(form, lit("defun: parameter ~s is not a bindable symbol"), param, nao);
+  }
 
+  if (iter && !bindable(iter))
+    eval_error(form, lit("defun: dot parameter ~s is not a bindable symbol"), iter, nao);
   
   /* defun captures lexical environment, so env is passed */
   sethash(top_fb, name, cons(name, func_interp(env, fun)));

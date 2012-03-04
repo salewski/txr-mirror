@@ -1,3 +1,34 @@
+                                     TXR 60
+                                   2011-03-04
+
+
+  Features
+
+  - List element removing functions: remq, remql, remqual.
+
+  - Memory use optimizations in @(freeform) horizontal scanning.
+
+  Bugs
+
+  - Fixed incorrect processing within long lines, caused by
+    earlier optimizations in 57.
+
+  - Missing 'd' command for deleting a breakpoint implemented
+    in the debugger.
+
+  - numberp function no longer blows up on nil.
+
+  - Fixed broken @(load) directive: was not allowing directives
+    which follow it to be processed.
+
+  - Fixed incorrectly formatted line number information in
+    some exceptions.
+
+  - Fixed missing support for optional and trailing parameters
+    in defun.
+
+
+
                                      TXR 59
                                    2011-02-29
 
