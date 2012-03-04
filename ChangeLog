@@ -1,5 +1,10 @@
 2012-03-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (plus): Showstopper bug: plus(bignum, fixnum)
+	broken for fixnum <= 0. Bad pointer passed to MPI.
+
+2012-03-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	* mpi-patches/add-mp-hash (mp_hash): Fixed use of uninitialized
 	variable on platforms where the MP digit is smaller than a long integer.
 	(Not anything TXR is known to run on). Changed algorithm to take the
