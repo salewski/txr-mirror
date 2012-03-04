@@ -305,7 +305,7 @@ val plus(val anum, val bnum)
         if (b > 0)
           mp_add_d(mp(anum), bp, mp(n));
         else
-          mp_sub_d(mp(bnum), bp, mp(n));
+          mp_sub_d(mp(anum), bp, mp(n));
       } else {
         mp_int tmp;
         mp_init(&tmp);
