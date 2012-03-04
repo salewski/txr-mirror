@@ -1,5 +1,11 @@
 2012-03-03  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Expose remq, remql and remqual.
+
+	* txr.1: Documented.
+
+2012-03-03  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (sub_str): Removed second check for lazy string that
 	can't ever come out true.
 
