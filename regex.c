@@ -1723,3 +1723,31 @@ val match_regex(val str, val reg, val pos)
 
   return nil;
 }
+
+val regsub(val str, val regex, val repl)
+{
+  list_collect_decl (out, ptail);
+  val pos = zero;
+
+  do {
+    cons_bind (find, len, search_regex(str, regex, pos, nil));
+    if (!find) {
+      if (pos == zero)
+        return str;
+      list_collect(ptail, sub_str(str, pos, nil));
+      break;
+    }
+    list_collect(ptail, sub_str(str, pos, find));
+    list_collect(ptail, repl);
+    if (len == zero && eql(find, pos)) {
+      if (lt(pos, length_str(str))) {
+        list_collect(ptail, chr_str(str, pos));
+        pos = plus(pos, one);
+      }
+    } else {
+      pos = plus(find, len);
+    }
+  } while (lt(pos, length_str(str)));
+
+  return cat_str(out, nil);
+}
