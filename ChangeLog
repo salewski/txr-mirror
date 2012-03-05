@@ -1,5 +1,9 @@
 2012-03-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.vim: Update. Adding remq, remql, remqual, regsub, *stddebug*
+
+2012-03-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	Bug #35718. Workaround good enough to get some code working.
 
 	* eval.c (cons_find): New function.
