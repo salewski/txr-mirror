@@ -1512,6 +1512,19 @@ static val transform_op(val forms, val syms, val rg)
   }
 }
 
+static val cons_find(val obj, val structure, val test)
+{
+  uses_or2;
+
+  if (funcall2(test, obj, structure))
+    return structure;
+  if (atom(structure))
+    return nil;
+  return or2(cons_find(obj, car(structure), test),
+             cons_find(obj, cdr(structure), test));
+}
+
+
 static val expand_op(val body)
 {
   val body_ex = expand_forms(body);
@@ -1521,7 +1534,7 @@ static val expand_op(val body)
   val nums = mapcar(car_f, ssyms);
   val max = if3(nums, maxv(car(nums), cdr(nums)), zero);
   val min = if3(nums, minv(car(nums), cdr(nums)), zero);
-  val has_rest = tree_find(rest_gensym, body_trans, eq_f);
+  val has_rest = cons_find(rest_gensym, body_trans, eq_f);
 
   if (!eql(max, length(nums)) && !zerop(min))
     eval_error(body, lit("op: missing numeric arguments"), nao);

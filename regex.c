@@ -1724,7 +1724,7 @@ val match_regex(val str, val reg, val pos)
   return nil;
 }
 
-val regsub(val str, val regex, val repl)
+val regsub(val regex, val repl, val str)
 {
   list_collect_decl (out, ptail);
   val pos = zero;

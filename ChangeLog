@@ -1,5 +1,19 @@
 2012-03-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	Bug #35718. Workaround good enough to get some code working.
+
+	* eval.c (cons_find): New function.
+	(expand_op): Use cons_find rather than tree_find to look for
+	rest_gensym.
+
+	* regex.c (regsub): Rearranged arguments so that the string
+	is last. This is better for partial evaluaton via the op
+	operator.
+
+	* regex.h (regsub): Updated declaration.
+
+2012-03-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): New intrinsic function, regsub.
 
 	* regex.c (regsub): New function.
