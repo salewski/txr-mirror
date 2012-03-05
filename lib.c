@@ -50,6 +50,7 @@
 #include "utf8.h"
 #include "filter.h"
 #include "eval.h"
+#include "regex.h"
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
@@ -1780,37 +1781,59 @@ val cat_str(val list, val sep)
 
 val split_str(val str, val sep)
 {
-  const wchar_t *cstr = c_str(str);
-  const wchar_t *csep = c_str(sep);
-  size_t len_sep = c_num(length_str(sep));
+  if (regexp(sep)) {
+    list_collect_decl (out, iter);
+    val pos = zero;
 
-  prot1(&str);
-  prot1(&sep);
+    do {
+      cons_bind (new_pos, len, search_regex(str, sep, pos, 0));
 
-  list_collect_decl (out, iter);
+      if (eql(pos, new_pos) && len == zero)
+        new_pos = plus(new_pos, one);
 
-  if (len_sep == 0) {
-    return list_str(str);
-  } else {
-    for (;;) {
-      const wchar_t *psep = wcsstr(cstr, csep);
-      size_t span = (psep != 0) ? psep - cstr : wcslen(cstr);
-      val piece = mkustring(num(span));
-      init_str(piece, cstr);
-      list_collect (iter, piece);
-      cstr += span;
-      if (psep != 0) {
-        cstr += len_sep;
+      list_collect(iter, sub_str(str, pos, new_pos));
+      pos = new_pos;
+
+      if (len) {
+        pos = plus(pos, len);
         continue;
       }
       break;
+    } while (le(pos, length_str(str)));
+
+    return out;
+  } else {
+    size_t len_sep = c_num(length_str(sep));
+
+    if (len_sep == 0) {
+      return list_str(str);
+    } else {
+      const wchar_t *cstr = c_str(str);
+      const wchar_t *csep = c_str(sep);
+
+      prot1(&str);
+      prot1(&sep);
+
+      list_collect_decl (out, iter);
+
+      for (;;) {
+        const wchar_t *psep = wcsstr(cstr, csep);
+        size_t span = (psep != 0) ? psep - cstr : wcslen(cstr);
+        val piece = mkustring(num(span));
+        init_str(piece, cstr);
+        list_collect(iter, piece);
+        cstr += span;
+        if (psep != 0) {
+          cstr += len_sep;
+          continue;
+        }
+        break;
+      }
+      rel1(&sep);
+      rel1(&str);
+      return out;
     }
   }
-
-  rel1(&sep);
-  rel1(&str);
-
-  return out;
 }
 
 val split_str_set(val str, val set)
