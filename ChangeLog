@@ -1,5 +1,9 @@
 2012-03-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (split_str): Separator can be a regex now.
+
+2012-03-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	Version 60
 
 	* txr.c (version): Bumped.
