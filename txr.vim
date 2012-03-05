@@ -41,19 +41,20 @@ syn keyword txl_keyword contained reduce-left reduce-right
 syn keyword txl_keyword contained second third fourth fifth sixth copy-list nreverse
 syn keyword txl_keyword contained reverse ldiff flatten lazy-flatten
 syn keyword txl_keyword contained memq memql memqual tree-find some
+syn keyword txl_keyword contained remq remql remqual
 syn keyword txl_keyword contained all none eq eql equal + - * abs trunc mod 
 syn keyword txl_keyword contained expt exptmod sqrt gcd fixnump bignump 
 syn keyword txl_keyword contained numberp zerop evenp oddp >
-syn keyword txl_keyword contained < >= <= max min search-regex match-regex
+syn keyword txl_keyword contained < >= <= max min search-regex match-regex regsub
 syn keyword txl_keyword contained make-hash hash gethash sethash pushhash remhash
 syn keyword txl_keyword contained hash-count get-hash-userdata set-hash-userdata hashp maphash 
-syn keyword txl_keyword contained hash-eql hash-equal eval *stdout* *stdin*
+syn keyword txl_keyword contained hash-eql hash-equal eval *stdout* *stdin* *stddebug*
 syn keyword txl_keyword contained *stderr* format print pprint tostring tostringp
 syn keyword txl_keyword contained make-string-input-stream
 syn keyword txl_keyword contained make-string-byte-input-stream make-string-output-stream
 syn keyword txl_keyword contained get-string-from-stream make-strlist-output-stream
 syn keyword txl_keyword contained get-list-from-stream close-stream
-syn keyword txl_keyword contained get-line get-char get-byte put-string put-line
+syn keyword txl_keyword contained get-line get-char get-byte put-string put-line put-byte
 syn keyword txl_keyword contained put-char flush-stream open-directory open-file
 syn keyword txl_keyword contained open-pipe *user-package* *keyword-package* *system-package*
 syn keyword txl_keyword contained make-sym gensym *gensym-counter* make-package find-package
