@@ -401,6 +401,18 @@ struct byte_input {
   size_t index;
 };
 
+static void byte_in_stream_destroy(val stream)
+{
+  struct byte_input *bi = (struct byte_input *) stream->co.handle;
+
+  if (bi) {
+    free(bi->buf);
+    bi->buf = 0;
+    free(bi);
+    stream->co.handle = 0;
+  }
+}
+
 static val byte_in_get_byte(val stream)
 {
   struct byte_input *bi = (struct byte_input *) stream->co.handle;
@@ -413,7 +425,7 @@ static val byte_in_get_byte(val stream)
 static struct strm_ops byte_in_ops = {
   { cobj_equal_op,
     cobj_print_op,
-    cobj_destroy_stub_op,
+    byte_in_stream_destroy,
     cobj_mark_op,
     cobj_hash_op },
   0,
