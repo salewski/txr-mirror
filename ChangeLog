@@ -1,3 +1,10 @@
+2012-03-12  Kaz Kylheku  <kaz@kylheku.com>
+
+	Plugging memory leak.
+
+	* stream.c (byte_in_stream_destroy): New function.
+	(byte_in_ops): Use new function instead of noop stub.
+
 2012-03-04  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.vim: Update. Adding remq, remql, remqual, regsub, *stddebug*
