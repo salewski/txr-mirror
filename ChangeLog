@@ -1,3 +1,26 @@
+2012-03-13  Kaz Kylheku  <kaz@kylheku.com>
+
+	* stream.c (string_out_byte_flush): Bugfix. Do not loop inside this
+	function. This must not flush out more than one character out of this
+	small buffer, except when we are flushing out the last data.
+	The correct operation is predicated on the assumption that 
+	a complete character can be pulled out. That's why we move the
+	buffer to the front after consuming it, and do not automatically
+	flush until there are four bytes.
+	(string_out_put_string): We loop the call to string_out_byte_flush
+	here because when a request comes in to write a Unicode character,
+	we flush all the bytes, even if the tail of those bytes forms
+	an incomplete sequence that turns into U+DCxx codes.
+	(get_string_from_stream): Use the same loop termination test
+	as in string_out_put_string, for consistency. In that function
+	it is needed to prevent infinite looping in the case when
+	the string_out_put_string is being called from string_out_byte_flush
+	and is thus re-entering it.
+
+	* tests/010/strstream.expected: New file.
+
+	* tests/010/strstream.txr: New file.
+
 2012-03-12  Kaz Kylheku  <kaz@kylheku.com>
 
 	Implementing put_byte for string output stream.

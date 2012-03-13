@@ -468,7 +468,7 @@ static val string_out_byte_flush(struct string_output *so, val stream)
 {
   val result = nil;
 
-  while (so->tail < so->head) {
+  if (so->tail < so->head) {
     wint_t ch = utf8_decode(&so->ud, string_out_byte_callback, (mem_t *) so);
     int remaining = so->head - so->tail;
     if (remaining != 0)
@@ -480,7 +480,7 @@ static val string_out_byte_flush(struct string_output *so, val stream)
     result = string_out_put_char(stream, chr(ch));
     so->tail = 0;
   }
-  return nil;
+  return result;
 }
 
 static val string_out_put_string(val stream, val str)
@@ -490,7 +490,7 @@ static val string_out_put_string(val stream, val str)
   if (so == 0)
     return nil;
 
-  if (so->head != 0)
+  while (so->head != so->tail)
     string_out_byte_flush(so, stream);
 
   {
@@ -754,7 +754,7 @@ val get_string_from_stream(val stream)
     if (!so)
       return out;
 
-    if (so->head != 0)
+    while (so->head != so->tail)
       out = string_out_byte_flush(so, stream);
 
     stream->co.handle = 0;
