@@ -1,5 +1,33 @@
 2012-03-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	Implementing put_byte for string output stream.
+	This does the Right Thing with a mixture of bytes and characters.
+	Incomplete byte sequences.
+
+	* stream.c (struct strm_ops): Changing byte argument of put_byte
+	to int, since the put_byte API function can just pass down that
+	value after validating it.
+	(stdio_handle): Use available typedef.
+	(stdio_put_byte): Follow interface change in strm_ops.
+	Do not validate the range of a byte; the put_byte higher
+	level function does that now.
+	(struct string_output): New members: ud, byte_buf, head, tail.
+	(string_out_byte_callback, string_out_byte_flush): New static
+	functions.
+	(string_out_put_string): Flush any UTF-8 bytes in the byte buffer
+	before putting the string.
+	(string_out_put_byte): New static function, implementation for
+	put_byte on string output streams.
+	(string_out_ops): string_out_put_byte wired in.
+	(make_string_output_stream): Initialize new members of
+	of struct string_output.
+	(get_string_from_stream): Flush any UTF-8 bytes in the byte buffer
+	before retrieving the string.
+	(put_byte): Validate that the byte is in range. Pass byte
+	as C int down to the put_byte virtual.
+ 
+2012-03-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	Plugging memory leak.
 
 	* stream.c (byte_in_stream_destroy): New function.

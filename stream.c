@@ -51,7 +51,7 @@ struct strm_ops {
   struct cobj_ops cobj_ops;
   val (*put_string)(val, val);
   val (*put_char)(val, val);
-  val (*put_byte)(val, val);
+  val (*put_byte)(val, int);
   val (*get_line)(val);
   val (*get_char)(val);
   val (*get_byte)(val);
@@ -67,7 +67,7 @@ static void common_destroy(val obj)
 struct stdio_handle {
   FILE *f;
   val descr;
-  struct utf8_decoder ud;
+  utf8_decoder_t ud;
 };
 
 static void stdio_stream_print(val stream, val out)
@@ -152,17 +152,12 @@ static val stdio_put_char(val stream, val ch)
          ? t : stdio_maybe_write_error(stream);
 }
 
-static val stdio_put_byte(val stream, val byte)
+static val stdio_put_byte(val stream, int b)
 {
-  cnum b = c_num(byte);
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
 
   if (stream != std_debug)
     output_produced = t;
-
-  if (b < 0 || b > 255)
-    uw_throwf(file_error_s, lit("put-byte on ~a: byte value ~a out of range"),
-              stream, byte, nao);
 
   return h->f != 0 && putc(b, (FILE *) h->f) != EOF
          ? t : stdio_maybe_write_error(stream);
@@ -442,6 +437,9 @@ struct string_output {
   wchar_t *buf;
   size_t size;
   size_t fill;
+  utf8_decoder_t ud; 
+  unsigned char byte_buf[4];
+  int head, tail;
 };
 
 static void string_out_stream_destroy(val stream)
@@ -456,13 +454,46 @@ static void string_out_stream_destroy(val stream)
   }
 }
 
+static int string_out_byte_callback(mem_t *ctx)
+{
+  struct string_output *so = (struct string_output *) ctx;
+  if (so->tail >= so->head)
+    return EOF;
+  return so->byte_buf[so->tail++];
+}
+
+static val string_out_put_char(val stream, val ch);
+
+static val string_out_byte_flush(struct string_output *so, val stream)
+{
+  val result = nil;
+
+  while (so->tail < so->head) {
+    wint_t ch = utf8_decode(&so->ud, string_out_byte_callback, (mem_t *) so);
+    int remaining = so->head - so->tail;
+    if (remaining != 0)
+      memmove(so->byte_buf, so->byte_buf + so->tail, remaining);
+    so->head = so->tail = remaining;
+    utf8_decoder_init(&so->ud);
+    if (ch == WEOF)
+      internal_error("unexpected WEOF from utf8_decode");
+    result = string_out_put_char(stream, chr(ch));
+    so->tail = 0;
+  }
+  return nil;
+}
+
 static val string_out_put_string(val stream, val str)
 {
   struct string_output *so = (struct string_output *) stream->co.handle;
 
-  if (so == 0) {
+  if (so == 0)
     return nil;
-  } else {
+
+  if (so->head != 0)
+    string_out_byte_flush(so, stream);
+
+  {
     const wchar_t *s = c_str(str);
     size_t len = c_num(length_str(str));
     size_t old_size = so->size;
@@ -493,6 +524,21 @@ static val string_out_put_char(val stream, val ch)
   return string_out_put_string(stream, auto_str((const wchli_t *) wref(onech)));
 }
 
+static val string_out_put_byte(val stream, int ch)
+{
+  struct string_output *so = (struct string_output *) stream->co.handle;
+
+  if (so == 0)
+    return nil;
+
+  so->byte_buf[so->head++] = ch;
+
+  if (so->head >= (int) sizeof so->byte_buf)
+    return string_out_byte_flush(so, stream);
+
+  return t;
+}
+
 static struct strm_ops string_out_ops = {
   { cobj_equal_op,
     cobj_print_op,
@@ -501,7 +547,7 @@ static struct strm_ops string_out_ops = {
     cobj_hash_op },
   string_out_put_string,
   string_out_put_char,
-  0,
+  string_out_put_byte,
   0,
   0,
   0,
@@ -690,6 +736,8 @@ val make_string_output_stream(void)
   so->buf = (wchar_t *) chk_malloc(so->size * sizeof so->buf);
   so->fill = 0;
   so->buf[0] = 0;
+  utf8_decoder_init(&so->ud);
+  so->head = so->tail = 0;
   return cobj((mem_t *) so, stream_s, &string_out_ops.cobj_ops);
 }
 
@@ -703,10 +751,13 @@ val get_string_from_stream(val stream)
     struct string_output *so = (struct string_output *) stream->co.handle;
     val out = nil;
 
-    stream->co.handle = 0;
-
     if (!so)
       return out;
+
+    if (so->head != 0)
+      out = string_out_byte_flush(so, stream);
+
+    stream->co.handle = 0;
 
     so->buf = (wchar_t *) chk_realloc((mem_t *) so->buf,
                                       (so->fill + 1) * sizeof *so->buf);
@@ -1227,6 +1278,8 @@ val put_char(val ch, val stream)
 
 val put_byte(val byte, val stream)
 {
+  cnum b = c_num(byte);
+
   if (!stream)
     stream = std_output;
 
@@ -1234,9 +1287,13 @@ val put_byte(val byte, val stream)
   type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
                                             stream, nao));
 
+  if (b < 0 || b > 255)
+    uw_throwf(file_error_s, lit("put-byte on ~a: byte value ~a out of range"),
+              stream, byte, nao);
+
   {
     struct strm_ops *ops = (struct strm_ops *) stream->co.ops;
-    return ops->put_char ? ops->put_byte(stream, byte) : nil;
+    return ops->put_char ? ops->put_byte(stream, b) : nil;
   }
 }
 
