@@ -26,8 +26,11 @@
 
 #include <stddef.h>
 #include <setjmp.h>
+#include <string.h>
 #include <wctype.h>
 #include <wchar.h>
+#include <stdarg.h>
+#include <dirent.h>
 #include "config.h"
 #include "lib.h"
 #include "hash.h"
@@ -35,10 +38,12 @@
 #include "match.h"
 #include "filter.h"
 #include "gc.h"
+#include "stream.h"
 
 val filters;
 val filter_k, lfilt_k, rfilt_k, to_html_k, from_html_k;
 val upcase_k, downcase_k, fun_k;
+val tourl_k, fromurl_k;
 
 static val make_trie(void)
 {
@@ -573,6 +578,75 @@ static val html_numeric_handler(val ch)
   return func_f1(cons(ch, nil), html_dec_continue);
 }
 
+static int is_url_reserved(int ch)
+{
+  return (ch <= 0x20 || ch >= 0x7F || strchr(":/?#[]@!$&'()*+,;=%", ch) != 0);
+}
+
+val url_encode(val str)
+{
+  val in_byte = make_string_byte_input_stream(str);
+  val out = make_string_output_stream();
+  val ch;
+
+  while ((ch = get_byte(in_byte)) != nil) {
+    int c = c_num(ch);
+
+    if (is_url_reserved(c))
+      format(out, lit("%~1X~1X"), num_fast(c >> 4), num_fast(c & 0xf), nao);
+    else
+      put_char(chr_num(ch), out);
+  }
+
+  return get_string_from_stream(out);
+}
+
+static int digit_value(int digit)
+{
+  if (digit >= '0' && digit <= '9')
+	return digit - '0';
+  if (digit >= 'A' && digit <= 'F')
+	return digit - 'A' + 10;
+  if (digit >= 'a' && digit <= 'f')
+	return digit - 'a' + 10;
+  internal_error("bad digit");
+}
+
+val url_decode(val str)
+{
+  val in = make_string_input_stream(str);
+  val out = make_string_output_stream();
+
+  for (;;) {
+    val ch = get_char(in);
+
+    if (ch == chr('%')) {
+      val ch2 = get_char(in);
+      val ch3 = get_char(in);
+
+      if (ch2 && ch3 && chr_isxdigit(ch2) && chr_isxdigit(ch3)) {
+		int byte = digit_value(c_num(ch2)) << 4 | digit_value(c_num(ch3));
+		put_byte(num_fast(byte), out);
+      } else {
+		put_char(ch, out);
+		if (!ch2)
+		  break;
+		put_char(ch2, out);
+		if (!ch3)
+		  break;
+		put_char(ch3, out);
+      }
+	  continue;
+    }
+	if (!ch)
+	  break;
+
+	put_char(ch, out);
+  }
+
+  return get_string_from_stream(out);
+}
+
 void filter_init(void)
 {
   protect(&filters, (val *) 0);
@@ -586,6 +660,9 @@ void filter_init(void)
   upcase_k = intern(lit("upcase"), keyword_package);
   downcase_k = intern(lit("downcase"), keyword_package);
   fun_k = intern(lit("fun"), keyword_package);
+  tourl_k = intern(lit("tourl"), keyword_package);
+  fromurl_k = intern(lit("fromurl"), keyword_package);
+
   sethash(filters, to_html_k, build_filter(to_html_table, t));
   {
     val trie = build_filter(from_html_table, nil);
@@ -595,4 +672,6 @@ void filter_init(void)
   }
   sethash(filters, upcase_k, func_n1(upcase_str));
   sethash(filters, downcase_k, func_n1(downcase_str));
+  sethash(filters, tourl_k, func_n1(url_encode));
+  sethash(filters, fromurl_k, func_n1(url_decode));
 }

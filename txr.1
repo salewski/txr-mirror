@@ -3638,6 +3638,25 @@ Convert the 26 lower case letters of the English alphabet to upper case.
 .IP :downcase
 Convert the 26 upper case letters of the English alphabet to lower case.
 
+.IP :fromurl
+Decode URL-encoded (a.k.a. percent-encoded) text. Character triplets consisting
+of the % character followed by a pair of hexadecimal digits (case insensitive)
+are are converted to bytes having the value represented by the hexadecimal
+digits (most significant nybble first). Sequences of one or more such bytes are
+treated as UTF-8 data  and decoded to characters.
+
+.IP :tourl
+Convert to URL encoding according to RFC 3986. The text is first converted
+to UTF-8 bytes. The bytes are then converted back to text as follows.
+Bytes in the range 0 to 32, and 127 to 255 (note: including the ASCII DEL), 
+bytes whose values correspond to ASCII characters which are listed by RFC 3986 
+as being in the "reserved set", and the byte value corresponding to the
+ASCII % character are encoded as a three-character sequence consisting
+of the % character followed by two hexadecimal digits derived from the
+byte value (most significant nybble first, upper case). All other bytes
+are converted directly to characters of the same value without any such
+encoding.
+
 Example: to escape HTML characters in all variable substitutions occuring in an
 output clause, specify :filter :to_html in the directive:
 
@@ -6753,6 +6772,8 @@ Certain object types have a custom equal function.
 .SS Functions throw, throwf and error
 
 .SS Function match-fun
+
+.SS Functions url-encode and url-decode
 
 .SH APPENDIX A: NOTES ON EXOTIC REGULAR EXPRESSIONS
 
