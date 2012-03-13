@@ -1,0 +1,11 @@
+@(do 
+   (defun lazy-byte-stream (s)
+     (let (ch) (gen (set ch (get-byte s)) ch)))
+
+   (let* ((data "春が来た (Haru-ga Kita/Spring has Come)")
+          (in-byte (make-string-byte-input-stream data))
+          (out-byte (make-string-output-stream)))
+     (each ((b (lazy-byte-stream in-byte)))
+       (put-byte b out-byte))
+     (print (get-string-from-stream out-byte))
+     (pprint "\n")))
