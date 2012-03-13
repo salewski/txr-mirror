@@ -27,6 +27,7 @@
 extern val filters;
 extern val filter_k, lfilt_k, rfilt_k, to_html_k, from_html_k;
 extern val upcase_k, downcase_k, fun_k;
+extern val tourl_k, fromurl_k;
 
 val trie_lookup_begin(val trie);
 val trie_value_at(val node);
@@ -36,4 +37,8 @@ val filter_string(val trie, val str);
 val filter_equal(val lfilt, val rfilt, val left, val right);
 val register_filter(val sym, val table);
 
+val url_encode(val str);
+val url_decode(val str);
+
 void filter_init(void);
+

@@ -1,5 +1,23 @@
 2012-03-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	Implementing URL filtering.
+
+	* eval.c (eval_init): New intrinsic functions: url-encode, url-decode.
+
+	* filter.c (tourl_k, fromurl_k): New keyword variables.
+	(is_url_reserved, digit_value): New static functions.
+	(url_encode, url_decode): New functions.
+	(filter_init): Intialize new keyword variables and register
+	new :tourl and :fromurl filters.
+
+	* filter.h (tourl_k, fromurl_k, url_encode, url_decode): Declared.
+
+	* txr.1: Updated.
+
+	* txr.vim: Likewise.
+
+2012-03-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (string_out_byte_flush): Bugfix. Do not loop inside this
 	function. This must not flush out more than one character out of this
 	small buffer, except when we are flushing out the last data.

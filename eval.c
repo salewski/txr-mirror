@@ -43,6 +43,7 @@
 #include "debug.h"
 #include "match.h"
 #include "rand.h"
+#include "filter.h"
 #include "eval.h"
 
 typedef val (*opfun_t)(val, val);
@@ -2353,6 +2354,9 @@ void eval_init(void)
   reg_fun(error_s, func_n1v(uw_errorfv));
 
   reg_fun(intern(lit("match-fun"), user_package), func_n4(match_fun));
+
+  reg_fun(intern(lit("url-encode"), user_package), func_n1(url_encode));
+  reg_fun(intern(lit("url-decode"), user_package), func_n1(url_decode));
 
   eval_error_s = intern(lit("eval-error"), user_package);
   uw_register_subtype(eval_error_s, error_s);

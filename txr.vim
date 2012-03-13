@@ -45,7 +45,9 @@ syn keyword txl_keyword contained remq remql remqual
 syn keyword txl_keyword contained all none eq eql equal + - * abs trunc mod 
 syn keyword txl_keyword contained expt exptmod sqrt gcd fixnump bignump 
 syn keyword txl_keyword contained numberp zerop evenp oddp >
-syn keyword txl_keyword contained < >= <= max min search-regex match-regex regsub
+
+.SS Functions url-encode and url-decode
+
 syn keyword txl_keyword contained make-hash hash gethash sethash pushhash remhash
 syn keyword txl_keyword contained hash-count get-hash-userdata set-hash-userdata hashp maphash 
 syn keyword txl_keyword contained hash-eql hash-equal eval *stdout* *stdin* *stddebug*
@@ -83,7 +85,7 @@ syn keyword txl_keyword contained make-random-state random-state-p
 syn keyword txl_keyword contained random-fixnum random rand
 
 syn keyword txl_keyword contained range range* generate repeat force
-syn keyword txl_keyword contained throw throwf error match-fun
+syn keyword txl_keyword contained throw throwf error match-fun url-encode url-decode
 
 syn match txr_error "@[\t ]*[*]\?[\t ]*."
 syn match txr_nested_error "[^\t `]\+" contained
