@@ -126,7 +126,7 @@ static val stdio_put_string(val stream, val str)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
 
-  if (stream != std_debug)
+  if (stream != std_debug && stream != std_error)
     output_produced = t;
 
   if (h->f != 0) {
@@ -145,7 +145,7 @@ static val stdio_put_char(val stream, val ch)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
 
-  if (stream != std_debug)
+  if (stream != std_debug && stream != std_error)
     output_produced = t;
 
   return h->f != 0 && utf8_encode(c_chr(ch), stdio_put_char_callback, (mem_t *) h->f)
@@ -156,7 +156,7 @@ static val stdio_put_byte(val stream, int b)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
 
-  if (stream != std_debug)
+  if (stream != std_debug && stream != std_error)
     output_produced = t;
 
   return h->f != 0 && putc(b, (FILE *) h->f) != EOF
