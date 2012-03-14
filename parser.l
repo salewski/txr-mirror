@@ -153,12 +153,12 @@ NUM     [+\-]?[0-9]+
 BSCHR   [a-zA-Z0-9!$%&*+\-<=>?\\^_~]
 BSYM    {BSCHR}({BSCHR}|#)*
 NSCHR   [a-zA-Z0-9!$%&*+\-<=>?\\^_~/]
+ID_END  [^a-zA-Z0-9!$%&*+\-<=>?\\^_~/]
 NSYM    {NSCHR}({NSCHR}|#)*
 TOK     :?{SYM}
 ATNUM   @{NUM}
 BTOK    [:@]?{BSYM}
 NTOK    [:@]?{NSYM}
-ID_END  [^a-zA-Z0-9_]
 WS      [\t ]*
 HEX     [0-9A-Fa-f]
 OCT     [0-7]
