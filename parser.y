@@ -54,7 +54,6 @@ static val optimize_text(val text_form);
 static val unquotes_occur(val quoted_form);
 static val choose_quote(val quoted_form);
 static wchar_t char_from_name(wchar_t *name);
-static val hash_from_notation(val notation);
 
 static val parsed_spec;
 
@@ -669,11 +668,15 @@ o_var : IDENT                   { $$ = list(var_s, intern(string_own($1), nil),
                                     yybadtoken(yychar, lit("variable spec")); }
       ;
 
-vector : '#' list               { $$ = rlcp(vector_list($2), $2); }
+vector : '#' list               { if (unquotes_occur($2))
+                                    $$ = rlcp(cons(vector_lit_s,
+                                                   cons($2, nil)), $2);
+                                  else
+                                    $$ = rlcp(vector_list($2), $2); }
        ;
 
 hash : HASH_H list              { if (unquotes_occur($2))
-                                    $$ = rlcp(cons(hash_construct_s, $2),
+                                    $$ = rlcp(cons(hash_lit_s, $2),
                                               num($1));
                                   else
                                     $$ = rlcp(hash_construct(first($2),

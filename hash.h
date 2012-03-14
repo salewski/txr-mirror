@@ -25,7 +25,6 @@
  */
 
 extern val weak_keys_k, weak_vals_k, equal_based_k;
-extern val hash_construct_s;
 
 val make_hash(val weak_keys, val weak_vals, val equal_based);
 val *gethash_l(val hash, val key, val *new_p);

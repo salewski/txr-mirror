@@ -65,7 +65,6 @@ struct hash_iter {
 };
 
 val weak_keys_k, weak_vals_k, equal_based_k;
-val hash_construct_s;
 
 /*
  * Dynamic list built up during gc.
@@ -598,5 +597,4 @@ void hash_init(void)
   weak_keys_k = intern(lit("weak-keys"), keyword_package);
   weak_vals_k = intern(lit("weak-vals"), keyword_package);
   equal_based_k = intern(lit("equal-based"), keyword_package);
-  hash_construct_s = intern(lit("hash-construct"), user_package);
 }

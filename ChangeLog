@@ -1,5 +1,40 @@
 2012-03-14  Kaz Kylheku  <kaz@kylheku.com>
 
+	Support quasiquoting over vectors also, and a bugfix for hash
+	quasiquoting.  We cannot use the same symbol for the
+	literal form from the parser, and for the expanded form,
+	because this creates a confusion when there are multiple
+	nestings of quasiquote expansion.
+
+	* eval.c (vector_lit_s, vector_list_s, hash_lit_s): New symbol
+	variables.
+	(hash_construct_s): Relocated here from hash.c.
+	(expand_qquote): Part of bugfix: look for hash_lit_s
+	instead of has_construct_s. Translate to a hash_construct_s
+	form which is no longer recognizes as a hash literal.
+	Implementing recognition of a quasiquote vector literal,
+	handled similarly.
+	(eval_init): Initialize vector_lit_s, vector_list_s,
+	hash_list_s and hash_lit_s.
+	Use vector_list_s when registering vector_list function.
+
+	* eval.h (vector_lit_s, vector_list_s, hash_lit_s,
+	hash_constuct_s): Declared.
+
+	* hash.c (hash_construct_s): Variable removed
+	and relocated into eval.c.
+	(hash_init): Initialization of hash_construct_s removed.
+
+	* hash.h (hash_construct_s): Declaration removed.
+
+	* parser.y: (vector): Action updated to generate
+	a (vec-lit ...) form if the object contains unquotes,
+	otherwise generate a vector object.
+	(hash): Generate hash-lit form, not a
+	hash-construct form.
+
+2012-03-14  Kaz Kylheku  <kaz@kylheku.com>
+
 	Allow quasi-quoting over hash table literals,
 	to express dynamic hash table construction
 
