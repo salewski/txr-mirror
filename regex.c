@@ -1728,6 +1728,7 @@ val regsub(val regex, val repl, val str)
 {
   list_collect_decl (out, ptail);
   val pos = zero;
+  val isfunc = functionp(repl);
 
   do {
     cons_bind (find, len, search_regex(str, regex, pos, nil));
@@ -1738,7 +1739,9 @@ val regsub(val regex, val repl, val str)
       break;
     }
     list_collect(ptail, sub_str(str, pos, find));
-    list_collect(ptail, repl);
+    list_collect(ptail, if3(isfunc,
+                            funcall1(repl, sub_str(str, find, plus(find, len))),
+                            repl));
     if (len == zero && eql(find, pos)) {
       if (lt(pos, length_str(str))) {
         list_collect(ptail, chr_str(str, pos));
