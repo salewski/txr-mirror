@@ -66,6 +66,8 @@ val dohash_s;
 val uw_protect_s, return_s, return_from_s;
 val list_s, append_s, apply_s, gen_s, generate_s, rest_s;
 val delay_s, promise_s, op_s;
+val hash_lit_s, hash_construct_s;
+val vector_lit_s, vector_list_s;
 
 val make_env(val vbindings, val fbindings, val up_env)
 {
@@ -1383,10 +1385,13 @@ static val expand_qquote(val qquoted_form)
     } else if (sym == qquote_s) {
       return rlcp(expand_qquote(expand_qquote(second(qquoted_form))), 
                   qquoted_form);
-    } else if (sym == hash_construct_s) {
+    } else if (sym == hash_lit_s) {
       val args = expand_qquote(second(qquoted_form));
       val pairs = expand_qquote(rest(rest(qquoted_form)));
-      return rlcp(list(sym, args, pairs, nao), qquoted_form);
+      return rlcp(list(hash_construct_s, args, pairs, nao), qquoted_form);
+    } else if (sym == vector_lit_s) {
+      val args = expand_qquote(second(qquoted_form));
+      return rlcp(list(vector_list_s, args, nao), qquoted_form);
     } else {
       val f = car(qquoted_form);
       val r = cdr(qquoted_form);
@@ -2073,6 +2078,11 @@ void eval_init(void)
   promise_s = intern(lit("promise"), system_package);
   op_s = intern(lit("op"), user_package);
   rest_s = intern(lit("rest"), user_package);
+  hash_lit_s = intern(lit("hash-construct"), system_package);
+  hash_construct_s = intern(lit("hash-construct"), user_package);
+  vector_lit_s = intern(lit("vector-lit"), system_package);
+  vector_list_s = intern(lit("vector-list"), user_package);
+
   sethash(op_table, quote_s, cptr((mem_t *) op_quote));
   sethash(op_table, qquote_s, cptr((mem_t *) op_qquote_error));
   sethash(op_table, unquote_s, cptr((mem_t *) op_unquote_error));
@@ -2307,7 +2317,7 @@ void eval_init(void)
   reg_fun(intern(lit("vec-push"), user_package), func_n2(vec_push));
   reg_fun(intern(lit("length-vec"), user_package), func_n1(length_vec));
   reg_fun(intern(lit("size-vec"), user_package), func_n1(size_vec));
-  reg_fun(intern(lit("vector-list"), user_package), func_n1(vector_list));
+  reg_fun(vector_list_s, func_n1(vector_list));
   reg_fun(intern(lit("list-vector"), user_package), func_n1(list_vector));
   reg_fun(intern(lit("copy-vec"), user_package), func_n1(copy_vec));
   reg_fun(intern(lit("sub-vec"), user_package), func_n3o(sub_vec, 1));
