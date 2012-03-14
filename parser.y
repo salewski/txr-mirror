@@ -51,6 +51,7 @@ static val o_elems_transform(val output_form);
 static val define_transform(val define_form);
 static val lit_char_helper(val litchars);
 static val optimize_text(val text_form);
+static val unquotes_occur(val quoted_form);
 static val choose_quote(val quoted_form);
 static wchar_t char_from_name(wchar_t *name);
 static val hash_from_notation(val notation);
@@ -671,7 +672,13 @@ o_var : IDENT                   { $$ = list(var_s, intern(string_own($1), nil),
 vector : '#' list               { $$ = rlcp(vector_list($2), $2); }
        ;
 
-hash : HASH_H list              { $$ = rlcp(hash_from_notation($2), num($1)); }
+hash : HASH_H list              { if (unquotes_occur($2))
+                                    $$ = rlcp(cons(hash_construct_s, $2),
+                                              num($1));
+                                  else
+                                    $$ = rlcp(hash_construct(first($2),
+                                                             rest($2)),
+                                              num($1)); }
      ;
 
 list : '(' exprs ')'            { $$ = rl($2, num($1)); }
@@ -1074,19 +1081,6 @@ static wchar_t char_from_name(wchar_t *name)
   return L'!'; /* code meaning not found */
 }
 
-static val hash_from_notation(val notation)
-{
-  val hash = hashv(first(notation));
-  val iter = rest(notation);
-
-  for (; iter; iter = cdr(iter)) {
-    val entry = car(iter);
-    sethash(hash, first(entry), second(entry));
-  }
-
-  return hash;
-}
-
 val get_spec(void)
 {
   return parsed_spec;
@@ -1163,4 +1157,3 @@ void yybadtoken(int tok, val context)
       else
         yyerrorf(lit("unexpected ~s"), chr(tok), nao);
 }
-
