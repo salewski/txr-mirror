@@ -1,5 +1,12 @@
 2012-03-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.l (ID_END): Bugfix: ID_END was defined incorrectly
+	for the current way in which an identifier token is recognized.
+	As a result @(collect-ing) was being interpreted as @(collect -ing).
+	It should be the complement of NSCHR.
+
+2012-03-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	* regex.c (regsub): the replacement argument
 	can now be a function of one argument which maps
 	the original piece of text matched by the regex
