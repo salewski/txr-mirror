@@ -461,6 +461,11 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return '#';
 }
 
+<NESTED,BRACED>#H {
+  yylval.lineno = lineno;
+  return HASH_H;
+}
+
 <NESTED>\.\. {
   yylval.lineno = lineno;
   return DOTDOT;
