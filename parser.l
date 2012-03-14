@@ -257,6 +257,12 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return CASES;
 }
 
+<SPECIAL>\({WS}block/{ID_END} {
+  yy_push_state(NESTED);
+  yylval.lineno = lineno;
+  return BLOCK;
+}
+
 <SPECIAL>\({WS}choose/{ID_END} {
   yy_push_state(NESTED);
   yylval.lineno = lineno;
