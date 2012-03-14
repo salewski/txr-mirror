@@ -4476,6 +4476,7 @@ list, which terminates nonempty lists.
 
 Function and variable bindings are dynamically scoped in TXR Lisp. However,
 closures do capture variables.
+
 .SS Additional Syntax
 
 Much of the TXR Lisp syntax has been introduced in the previous sections of the
@@ -4542,10 +4543,21 @@ and not a quasiquote.
 
 .SS Vectors
 
-.IP #(...)
+.IP "#(...)"
 
 A hash token followed by a list denotes a vector. For example #(1 2 a)
 is a three-element vector containing the numbers 1 and 2, and the symbol a.
+
+.SS Hashes
+
+.IP "#H((<hash-argument>*) (<key> <value>)*)"
+
+The notation #H followed by a nested list syntax denotes a hash table literal.
+The first item in the syntax is a list of keywords. These are the same
+keywords as are used when calling the function hash to construct
+a hash table. Allowed keywords are: :equal-based, :weak-keys, :weak-values.
+An empty list can be specified as nil or (), which defaults to a
+hash table basd on the eq function, with no weak semantics.
 
 .SS Nested Quotes
 

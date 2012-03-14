@@ -53,6 +53,7 @@ static val lit_char_helper(val litchars);
 static val optimize_text(val text_form);
 static val choose_quote(val quoted_form);
 static wchar_t char_from_name(wchar_t *name);
+static val hash_from_notation(val notation);
 
 static val parsed_spec;
 
@@ -72,7 +73,7 @@ static val parsed_spec;
 %token <lineno> UNTIL COLL OUTPUT REPEAT REP SINGLE FIRST LAST EMPTY 
 %token <lineno> MOD MODLAST DEFINE TRY CATCH FINALLY
 %token <lineno> ERRTOK /* deliberately not used in grammar */
-%token <lineno> HASH_BACKSLASH HASH_SLASH DOTDOT
+%token <lineno> HASH_BACKSLASH HASH_SLASH DOTDOT HASH_H
 
 %token <val> NUMBER METANUM
 
@@ -85,7 +86,7 @@ static val parsed_spec;
 %type <val> clause_parts additional_parts gather_parts additional_gather_parts
 %type <val> output_clause define_clause try_clause catch_clauses_opt
 %type <val> line elems_opt elems clause_parts_h additional_parts_h
-%type <val> text texts elem var var_op modifiers meta_expr vector
+%type <val> text texts elem var var_op modifiers meta_expr vector hash
 %type <val> list exprs exprs_opt expr out_clauses out_clauses_opt out_clause
 %type <val> repeat_clause repeat_parts_opt o_line
 %type <val> o_elems_opt o_elems o_elem o_var rep_elem rep_parts_opt
@@ -670,6 +671,9 @@ o_var : IDENT                   { $$ = list(var_s, intern(string_own($1), nil),
 vector : '#' list               { $$ = rlcp(vector_list($2), $2); }
        ;
 
+hash : HASH_H list              { $$ = rlcp(hash_from_notation($2), num($1)); }
+     ;
+
 list : '(' exprs ')'            { $$ = rl($2, num($1)); }
      | '(' ')'                  { $$ = nil; }
      | '[' exprs ']'            { $$ = rl(cons(dwim_s, $2), num($1)); }
@@ -724,6 +728,7 @@ expr : IDENT                    { $$ = rl(intern(string_own($1), nil),
      | NUMBER                   { $$ = $1; }
      | list                     { $$ = $1; }
      | vector                   { $$ = $1; }
+     | hash                     { $$ = $1; }
      | meta_expr                { $$ = $1; }
      | lisp_regex               { $$ = cons(regex_compile(rest($1)),
                                             rest($1));
@@ -1067,6 +1072,19 @@ static wchar_t char_from_name(wchar_t *name)
   }
 
   return L'!'; /* code meaning not found */
+}
+
+static val hash_from_notation(val notation)
+{
+  val hash = hashv(first(notation));
+  val iter = rest(notation);
+
+  for (; iter; iter = cdr(iter)) {
+    val entry = car(iter);
+    sethash(hash, first(entry), second(entry));
+  }
+
+  return hash;
 }
 
 val get_spec(void)

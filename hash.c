@@ -36,6 +36,7 @@
 #include "lib.h"
 #include "gc.h"
 #include "unwind.h"
+#include "stream.h"
 #include "hash.h"
 
 typedef enum hash_flags {
@@ -184,6 +185,44 @@ cnum cobj_hash_op(val obj)
   abort();
 }
 
+static val print_key_val(val out, val key, val value)
+{
+  format(out, lit(" (~s ~s)"), key, value, nao);
+  return nil;
+}
+
+static void hash_print_op(val hash, val out)
+{
+  struct hash *h = (struct hash *) hash->co.handle;
+  int need_space = 0;
+
+  put_string(lit("#H(("), out);
+  if (h->hash_fun == equal_hash) {
+    obj_print(equal_based_k, out);
+    need_space = 1;
+  }
+  if (h->flags != hash_weak_none) {
+    if (need_space)
+      put_string(lit(" "), out);
+    switch (h->flags) {
+    case hash_weak_both:
+      obj_print(weak_keys_k, out);
+      /* fallthrough */
+    case hash_weak_vals:
+      obj_print(weak_vals_k, out);
+      break;
+    case hash_weak_keys:
+      obj_print(weak_keys_k, out);
+      break;
+    default:
+      break;
+    }
+  }
+  put_string(lit(")"), out);
+  maphash(curry_123_23(func_n3(print_key_val), out), hash);
+  put_string(lit(")"), out);
+}
+
 static void hash_mark(val hash)
 {
   struct hash *h = (struct hash *) hash->co.handle;
@@ -236,7 +275,7 @@ static void hash_mark(val hash)
 
 static struct cobj_ops hash_ops = {
   cobj_equal_op,
-  cobj_print_op,
+  hash_print_op,
   cobj_destroy_free_op,
   hash_mark,
   cobj_hash_op
