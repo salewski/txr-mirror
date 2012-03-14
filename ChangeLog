@@ -1,5 +1,12 @@
 2012-03-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	* regex.c (regsub): the replacement argument
+	can now be a function of one argument which maps
+	the original piece of text matched by the regex
+	to a replacement text.
+
+2012-03-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (stdio_put_string, stdio_put_char, stdio_put_byte): Do not
 	consider data sent to std_error to be output for the purposes of
 	the output_produced flag. Otherwise the program behavior changes
