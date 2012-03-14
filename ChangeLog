@@ -1,3 +1,24 @@
+2012-03-14  Kaz Kylheku  <kaz@kylheku.com>
+
+	Allow quasi-quoting over hash table literals,
+	to express dynamic hash table construction
+
+	* eval.c (expand_qquote): Recognize hash-construct
+	forms: expand the hash arguments and pairs separately,
+	then rewrite to a new hash-construct form.
+	(eval-init): hash-construct intrinsic function added.
+
+	* hash.c (hash_construct_s): New symbol variable.
+	(hash_construct): New function.
+	(hash_init): Initialize hash_construct_s.
+
+	* hash.h (hash_construct_s, hash_construct): Declared.
+
+	* parser.y (hash): Rule rewritten to emit either a literal
+	hash table object, or a hash-construct form, based on
+	whether quasiquote unquotes occur within the syntax.
+	(hash_from_notation): Function removed.
+
 2012-03-13  Kaz Kylheku  <kaz@kylheku.com>
 
 	Change: @(block) requires @(end) from now on.

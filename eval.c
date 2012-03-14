@@ -1383,6 +1383,10 @@ static val expand_qquote(val qquoted_form)
     } else if (sym == qquote_s) {
       return rlcp(expand_qquote(expand_qquote(second(qquoted_form))), 
                   qquoted_form);
+    } else if (sym == hash_construct_s) {
+      val args = expand_qquote(second(qquoted_form));
+      val pairs = expand_qquote(rest(rest(qquoted_form)));
+      return rlcp(list(sym, args, pairs, nao), qquoted_form);
     } else {
       val f = car(qquoted_form);
       val r = cdr(qquoted_form);
@@ -2196,6 +2200,7 @@ void eval_init(void)
 
   reg_fun(intern(lit("make-hash"), user_package), func_n3(make_hash));
   reg_fun(intern(lit("hash"), user_package), func_n0v(hashv));
+  reg_fun(intern(lit("hash-construct"), user_package), func_n2(hash_construct));
   reg_fun(gethash_s, func_n3o(gethash_n, 2));
   reg_fun(intern(lit("sethash"), user_package), func_n3(sethash));
   reg_fun(intern(lit("pushhash"), user_package), func_n3(pushhash));
