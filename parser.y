@@ -67,7 +67,7 @@ static val parsed_spec;
 }
 
 %token <lexeme> SPACE TEXT IDENT KEYWORD METAVAR
-%token <lineno> ALL SOME NONE MAYBE CASES CHOOSE GATHER
+%token <lineno> ALL SOME NONE MAYBE CASES BLOCK CHOOSE GATHER
 %token <lineno> AND OR END COLLECT
 %token <lineno> UNTIL COLL OUTPUT REPEAT REP SINGLE FIRST LAST EMPTY 
 %token <lineno> MOD MODLAST DEFINE TRY CATCH FINALLY
@@ -80,7 +80,7 @@ static val parsed_spec;
 %token <chr> METAPAR METABKT SPLICE
 
 %type <val> spec clauses clauses_opt clause
-%type <val> all_clause some_clause none_clause maybe_clause
+%type <val> all_clause some_clause none_clause maybe_clause block_clause
 %type <val> cases_clause choose_clause gather_clause collect_clause until_last
 %type <val> clause_parts additional_parts gather_parts additional_gather_parts
 %type <val> output_clause define_clause try_clause catch_clauses_opt
@@ -128,19 +128,20 @@ clauses_opt : clauses           { $$ = $1; }
             | /* empty */       { $$ = nil; }
             ;
 
-clause : all_clause             { $$ = list($1, nao); rlcp($$, $1); }
-       | some_clause            { $$ = list($1, nao); rlcp($$, $1); }
-       | none_clause            { $$ = list($1, nao); rlcp($$, $1); }
-       | maybe_clause           { $$ = list($1, nao); rlcp($$, $1); }
-       | cases_clause           { $$ = list($1, nao); rlcp($$, $1); }
-       | choose_clause          { $$ = list($1, nao); rlcp($$, $1); }
-       | collect_clause         { $$ = list($1, nao); rlcp($$, $1); }
-       | gather_clause          { $$ = list($1, nao); rlcp($$, $1); }
+clause : all_clause             { $$ = cons($1, nil); rlcp($$, $1); }
+       | some_clause            { $$ = cons($1, nil); rlcp($$, $1); }
+       | none_clause            { $$ = cons($1, nil); rlcp($$, $1); }
+       | maybe_clause           { $$ = cons($1, nil); rlcp($$, $1); }
+       | cases_clause           { $$ = cons($1, nil); rlcp($$, $1); }
+       | block_clause           { $$ = cons($1, nil); rlcp($$, $1); }
+       | choose_clause          { $$ = cons($1, nil); rlcp($$, $1); }
+       | collect_clause         { $$ = cons($1, nil); rlcp($$, $1); }
+       | gather_clause          { $$ = cons($1, nil); rlcp($$, $1); }
        | define_clause          { $$ = list(define_transform($1), nao);
                                   rlcp(car($$), $1);
                                   rlcp($$, $1); }
-       | try_clause             { $$ = list($1, nao); rlcp($$, $1); }
-       | output_clause          { $$ = list($1, nao); rlcp($$, $1); }
+       | try_clause             { $$ = cons($1, nil); rlcp($$, $1); }
+       | output_clause          { $$ = cons($1, nil); rlcp($$, $1); }
        | line                   { $$ = $1; }
        | repeat_clause          { $$ = nil;
                                   yyerror("repeat outside of output"); }
@@ -195,6 +196,22 @@ cases_clause : CASES newl clause_parts  { $$ = list(cases_s, $3, nao);
              | CASES newl END newl      { $$ = nil;
                                           yyerror("empty cases clause"); }
              ;
+
+block_clause  : BLOCK exprs_opt ')'
+                newl clauses_opt
+                END newl                { val name = first($2); 
+                                          if (gt(length($2), one))
+                                            yyerror("block: takes zero or no arguments");
+                                          if (name && !bindable(name))
+                                            yyerrorf(lit("block: ~s is not a bindable symbol"),
+                                                     name, nao);
+                                          $$ = list(block_s, name, $5, nao);
+                                          rl($$, num($1)); }
+              | BLOCK exprs_opt ')'
+                newl error              { $$ = nil;
+                                          yybadtoken(yychar,
+                                                     lit("block clause")); }
+              ;
 
 choose_clause : CHOOSE exprs_opt ')'
                 newl clause_parts       { $$ = list(choose_s, $5, $2, nao);

@@ -1,5 +1,25 @@
 2012-03-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	Change: @(block) requires @(end) from now on.
+	Blocks no longer extend to the end of the surrounding
+	scope.
+
+	* match.c (v_block): Rewrite for new syntax.
+
+	* parser.l (BLOCK): New token type handled.
+
+	* parser.y (BLOCK): New token.
+	(block_clause): New nonterminal grammar symbol.
+	(clause): Collateral fix: replaced a bunch of
+	list(X, nao) forms with cons(X, nil).
+	Introduced block_clause as a constituent of clause.
+
+	* txr.1: Revamped documentation of block, and
+	wrote about using blocks for reducing nested
+	skips and reducing backtracking in general.
+
+2012-03-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.l (ID_END): Bugfix: ID_END was defined incorrectly
 	for the current way in which an identifier token is recognized.
 	As a result @(collect-ing) was being interpreted as @(collect -ing).

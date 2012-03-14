@@ -2110,20 +2110,35 @@ static val v_block(match_files_ctx *c)
 {
   spec_bind (specline, first_spec, c->spec);
 
-  val name = first(rest(first_spec));
+  val args = rest(first_spec);
+  val name = first(args);
+  val spec = second(args);
 
   if (rest(specline))
     sem_error(specline, lit("unexpected material after block directive"), nao);
 
-  if ((c->spec = rest(c->spec)) != nil)
   {
     uw_block_begin(name, result);
-    result = match_files(*c);
+    result = match_files(mf_spec(*c, spec));
     uw_block_end;
-    return result;
-  }
 
-  return next_spec_k;
+    {
+      cons_bind (new_bindings, success, result);
+
+      if (!success) {
+        return nil;
+      } else if (success == t) {
+        c->data = nil;
+      } else {
+        cons_bind (new_data, new_line, success);
+        c->data = new_data;
+        c->data_lineno = new_line;
+      }
+
+      c->bindings = new_bindings;
+      return next_spec_k;
+    }
+  }
 }
 
 static val v_accept_fail(match_files_ctx *c)

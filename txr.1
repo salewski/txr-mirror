@@ -1136,8 +1136,9 @@ end of a line. Also Fails if no data remains (there is no current line).
 Continue matching in another file or other data source.
 
 .IP @(block)
-The remaining query is treated as an anonymous or named block.
-Blocks may be referenced by @(accept) and @(fail) directives.
+Groups to gether a sequence of directives into a logical name block,
+which can be explicitly terminated from within using
+the @(accept) and @(fail) directives.
 Blocks are discussed in the section BLOCKS below.
 
 .IP @(skip)
@@ -1523,6 +1524,65 @@ Nongreedy skip with the @(eof) has a slight advantage because the greedy skip
 will keep scanning even though it has found the correct match, then backtrack
 to the last good match once it runs out of data. The regular skip with explicit
 @(eof) will stop when the @(eof) matches.
+
+.SS Reducing Backtracking with Blocks
+
+Skip can consider considerable CPU time when multiple skips are nested.
+Consider:
+
+  @(skip)
+  A
+  @(skip)
+  B
+  @(skip)
+  C
+
+This is actually nesting: the second a third skips occur within the body of the
+first one, and thus this creates nested iteration. TXR is searching for the
+combination of skips which find match the pattern of lines A, B and C, with
+backtracking behavior. The outermost skip marches through the data until it
+finds A, followed by a pattern match for the second skip. The second skip
+iterates within to find B, followed by the third skip, and the third skip
+iterates to find C. If there is only one line A, and one B, then this is
+reasonably fast. But suppose there are many lines matching A and B,
+giving rise to a large number combinations of skips which match A and B, and
+yet no match for C, triggering backtracking. The nested stepping which tries
+the combinations of A and B can give rise to a considerable running time.
+
+One way to deal with the problem is to unravel the nesting with the help of
+blocks. For example:
+
+  @(block)
+  @  (skip)
+  A
+  @(end)
+  @(block)
+  @  (skip)
+  B
+  @(end)
+  @(skip)
+  C
+
+Now the scope of each skip is just the remainder of the block in which it
+occurs. The first skip finds A, and then the block ends. Control passes to the
+next block, and backtracking will take place to a block which completed (unless
+all these blocks are enclosed in some larger construct which backtracks,
+causing the blocks to be re-executed.
+
+Of course, this rewrite is not equivalent, and cannot be used for instance
+in backreferencing situations such as:
+
+  @;
+  @; Find some three lines which are the same.
+  @;
+  @(skip)
+  @line
+  @(skip)
+  @line
+  @(skip)
+  @line
+
+This example depends on the nested search-within-search semantics.
 
 .SS The Trailer Directive
 
@@ -2627,28 +2687,36 @@ to @(block nil).
 The @(skip) and @(collect) directives introduce implicit anonymous blocks,
 as do function bodies.
 
+Blocks are useful for terminating parts of a pattern matchin search
+prematurely, and escaping to a higher level. This makes blocks not only
+useful for simplifying the semantics of certain pattern matches,
+but also an optimization tool. 
+
+Judicious use of blocks and escapes can reduce or eliminate the amount
+backtracking that TXR performs.
+
 .SS Block Scope
 
 The names of blocks are in a distinct namespace from the variable binding
 space. So @(block foo) has no interaction with the variable @foo.
 
 A block extends from the @(block ...) directive which introduces it,
-to the end of the subquery in which that directive is contained. For instance:
+until the matching @(end), and may be empty.  For instance:
 
   @(some)
   abc
   @(block foo)
   xyz
   @(end)
+  @(end)
 
 Here, the block foo occurs in a @(some) clause, and so it extends to the @(end)
-which terminates that clause.  After that @(end), the name foo is not
-associated with a block (is not "in scope"). A block which is not contained in
-any subquery extends to the end of the overall query.  Blocks are never
-terminated by @(end).
+which terminates the block.  After that @(end), the name foo is not
+associated with a block (is not "in scope"). The second @(end) terminates
+the @(some) block. 
 
 The implicit anonymous block introduced by @(skip) has the same scope
-as the @(skip): they extends over all of the material which follows the skip,
+as the @(skip): it extends over all of the material which follows the skip,
 to the end of the containing subquery.
 
 .SS Block Nesting
@@ -2659,30 +2727,21 @@ which they are nested. For instance:
   @(block)
   @(block)
   ...
+  @(end)
+  @(end)
 
 is a nesting of two anonymous blocks, and
 
   @(block foo)
   @(block foo)
+  @(end)
+  @(end)
 
 is a nesting of two named blocks which happen to have the same name.
 When a nested block has the same name as an outer block, it creates
 a block scope in which the outer block is "shadowed"; that is to say,
 directives which refer to that block name within the nested block refer to the
 inner block, and not to the outer one.
-
-A more complicated example of nesting is:
-
-  @(skip)
-  abc
-  @(block)
-  @(some)
-  @(block foo)
-  @(end)
-
-Here, the @(skip) introduces an anonymous block. The explicit anonymous
-@(block) is nested within skip's anonymous block and shadows it.
-The foo block is nested within both of these.
 
 .SS Block Semantics
 
