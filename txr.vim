@@ -45,9 +45,6 @@ syn keyword txl_keyword contained remq remql remqual
 syn keyword txl_keyword contained all none eq eql equal + - * abs trunc mod 
 syn keyword txl_keyword contained expt exptmod sqrt gcd fixnump bignump 
 syn keyword txl_keyword contained numberp zerop evenp oddp >
-
-.SS Functions url-encode and url-decode
-
 syn keyword txl_keyword contained make-hash hash gethash sethash pushhash remhash
 syn keyword txl_keyword contained hash-count get-hash-userdata set-hash-userdata hashp maphash 
 syn keyword txl_keyword contained hash-eql hash-equal eval *stdout* *stdin* *stddebug*
