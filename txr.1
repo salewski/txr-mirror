@@ -4499,15 +4499,17 @@ There is only one quote, which supports unquoting.
 
 A quoted form which contains no unquotes codifies an ordinary quote.
 
-A quoted form which contains unquotes expresses a quasiquote.
+A quoted form which contains unquotes expresses a quasiquote. (This should not
+be confused with a string quasiliteral, although it is a related concept.)
 
 .IP ,form
 
 Thes comma character is used within a quoted list to denote an unquote.  Wheras
 the quote suppresses evaluation, the comma introduces an exception: an element
-of a form which is evaluated. For example, the value of '(a b c ,(+ 2 2)
+of a form which is evaluated. For example, list '(a b c ,(+ 2 2)
 (+ 2 2)) is the list (a b c 4 (+ 2 2)).  Everything
 in the quote stands for itself, except for the ,(+ 2 2) which is evaluated.
+The presence of ,(+ 2 2) in the quoted list turns it into a quasiquote.
 
 .IP ,*form
 
@@ -4540,6 +4542,47 @@ The comma-splice form is analogous to comma-quote (see above).  Like in the
 and not a quasiquote.
 
 .PP
+
+.IP Quasiquoting non-List Objects
+
+Quasiquoting is supported over hash table and vector literals (see Vectors
+and Hashes below).  A hash table or vector literal can be quoted, like any
+object, for instance:
+
+  '#(1 2 3) ; value is #(1 2 3)
+
+If unquotes occur in the vector, it is a quasivector.
+
+  (let ((a 42))
+    '#(1 ,a 3)) ; value is #(1 42 3)
+
+The vector in the following example is also a quasivector. It contains
+unquotes, and is though the quote is not directly applied to it,
+it is surrounded in a quote.
+
+  (let ((a 42))
+    '(a b c #(d ,a))) ; value is (a b c #(d 42))
+
+Hash table literals have two parts: the list of hash construction
+arguments and the key-value pairs. For instance:
+
+   #H((:equal-based) (a 1) (b 2))
+
+where (:equal-based) is the list of arguments and the pairs are (a 1) and (b
+2).  In quasiquoting, the arguments and pairs are treated as separate syntax;
+it is not one big list.  So the following is not a possible way
+to express the above hash:
+
+  ;; not supported: splicing across the entire syntax
+  (let ((hash-syntax '((:equal-based) (a 1) (b 2))))
+    '#H(,*hash-syntax))
+
+This is correct:
+
+  ;; not supported: splicing across the entire syntax
+  (let ((hash-args '(:equal-based))
+        (hash-contents '((a 1) (b 2))))
+    '#H(,hash-args ,*hash-contents))
 
 .SS Vectors
 
