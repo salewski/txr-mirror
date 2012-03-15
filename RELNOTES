@@ -1,3 +1,42 @@
+                                     TXR 61
+                                   2011-03-15
+
+
+  Features
+
+  - URL encoding and decoding functions added, and :tourl/:fromurl
+    filters implemented for output substitution.
+
+  - split-str function works with regex objects now.
+
+  - new regsub function for regex substitution in strings;
+    matched text can be filtered through a function.
+
+  - new *stddebug* stream used by debugger.
+
+  - put-byte works on string output streams, and does right
+    thing with mixtures of bytes (which are taken as UTF-8)
+    and characters written with put-char.
+
+  - Hash table literals implemented; hashes can now be notated
+    rather than constructed.
+
+  - Vectors can now be quasiquoted with unquote and splicing,
+    and so can the new hash table literals.
+
+  - @(block) syntax change: blocks do not extend to the end of
+    the surrounding scope but introduce their own, delimited
+    by @(end).
+
+  Fixes
+
+  - Fixed memory leak in string byte input stream.
+
+  - Fixed wrong parsing of tokens in cases like @(collect-foo)
+    where this was treated as @(collect -foo) rather than a single token.
+  
+
+
                                      TXR 60
                                    2011-03-04
 
