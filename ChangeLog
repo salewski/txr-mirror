@@ -1,3 +1,13 @@
+2012-03-15  Kaz Kylheku  <kaz@kylheku.com>
+
+	* tests/010/block.expected: New file.
+
+	* tests/010/block.txr: New file.
+
+	* tests/010/reghash.expected: New file.
+
+	* tests/010/reghash.txr: New file.
+
 2012-03-14  Kaz Kylheku  <kaz@kylheku.com>
 
 	* RELNOTES: Updated for upcoming 61.

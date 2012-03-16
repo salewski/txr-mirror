@@ -1,0 +1,5 @@
+@(bind result @(let ((table '#H((:equal-based) 
+                                ,(list "$dim" "length") ("$object" "plank")
+                                ("$value" "100") ("$units" "cm"))))
+                 (regsub #/$[a-z]+/ (op table)
+                         "The $dim of $object is $value $units")))
