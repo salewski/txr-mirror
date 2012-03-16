@@ -916,7 +916,7 @@ static val op_modplace(val form, val env)
   val place = second(form);
   val third_arg_p = rest(rest(form));
   val newform = if3(car(third_arg_p), third(form), nil);
-  val newval;
+  val newval = nil;
   val *loc = 0;
 
   if (op == push_s) {

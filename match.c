@@ -3626,7 +3626,7 @@ val match_filter(val name, val arg, val other_args)
 val match_fun(val name, val args, val input, val files)
 {
   val spec = cons(cons(cons(name, args), nil), nil);
-  cons_bind (in_spec, in_bindings, uw_get_match_context());
+  val in_bindings = cdr(uw_get_match_context());
   val data = if3(streamp(input),
                  lazy_stream_cons(input),
                  input);
