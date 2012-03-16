@@ -31,6 +31,7 @@
 #include <wchar.h>
 #include <stdarg.h>
 #include <dirent.h>
+#include <stdio.h>
 #include "config.h"
 #include "lib.h"
 #include "hash.h"

@@ -1,5 +1,28 @@
 2012-03-15  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 61
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+	* eval.c (op_modplace): Fix warning about uninitialized variable.
+	No bug.
+
+	* filter.c: gcc compilation regresion: missing <stdio.h> breaks inclusion
+	of "stream.h" header. Strangely, didn't show up when configured for
+	compiling with g++ on Ubuntu.
+
+	* match.c (match_filter): Fixed ununsed variable warning.
+
+	* txr.vim: Bunch of missing keywords added.
+
+	* dep.mk: Regenerated.
+
+2012-03-15  Kaz Kylheku  <kaz@kylheku.com>
+
 	* tests/010/block.expected: New file.
 
 	* tests/010/block.txr: New file.

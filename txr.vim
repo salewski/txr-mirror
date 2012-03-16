@@ -45,7 +45,9 @@ syn keyword txl_keyword contained remq remql remqual
 syn keyword txl_keyword contained all none eq eql equal + - * abs trunc mod 
 syn keyword txl_keyword contained expt exptmod sqrt gcd fixnump bignump 
 syn keyword txl_keyword contained numberp zerop evenp oddp >
-syn keyword txl_keyword contained make-hash hash gethash sethash pushhash remhash
+syn keyword txl_keyword contained zerop evenp oddp > < >= <= max min
+syn keyword txl_keyword contained search-regex match-regex regsub
+syn keyword txl_keyword contained make-hash hash hash-construct gethash sethash pushhash remhash
 syn keyword txl_keyword contained hash-count get-hash-userdata set-hash-userdata hashp maphash 
 syn keyword txl_keyword contained hash-eql hash-equal eval *stdout* *stdin* *stddebug*
 syn keyword txl_keyword contained *stderr* format print pprint tostring tostringp
