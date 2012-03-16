@@ -3710,7 +3710,7 @@ static void quicksort(val vec, val lessfun, val keyfun, cnum from, cnum to)
 
     swap(vec, num_fast(pivot), num_fast(to - 1));
 
-    for (j = 0, i = 0; i < to; i++)
+    for (j = from, i = from; i < to - 1; i++)
       if (funcall2(lessfun, funcall1(keyfun, ref(vec, num_fast(i))), pkval))
         swap(vec, num_fast(i), num_fast(j++));
 
