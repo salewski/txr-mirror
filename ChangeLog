@@ -1,3 +1,8 @@
+2012-03-16  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (quicksort): Bugfix: incorrect loop from 0 rather than from
+	leading to unbounded recursion.
+
 2012-03-15  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 61
