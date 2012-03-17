@@ -2227,6 +2227,11 @@ void eval_init(void)
 
   reg_fun(intern(lit("eval"), user_package), func_n2o(eval_intrinsic, 1));
 
+  reg_fun(intern(lit("chain"), user_package), func_n0v(chainv));
+  reg_fun(intern(lit("andf"), user_package), func_n0v(andv));
+  reg_fun(intern(lit("orf"), user_package), func_n0v(orv));
+  reg_fun(intern(lit("iff"), user_package), func_n3o(iff, 2));
+
   reg_var(intern(lit("*stdout*"), user_package), &std_output);
   reg_var(intern(lit("*stddebug*"), user_package), &std_debug);
   reg_var(intern(lit("*stdin*"), user_package), &std_input);

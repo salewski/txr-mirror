@@ -2842,10 +2842,15 @@ val chain(val first_fun, ...)
   return func_f1(out, do_chain);
 }
 
-static val do_and(val fun1_list, val arg)
+val chainv(val funlist)
+{
+  return func_f1(funlist, do_chain);
+}
+
+static val do_and(val fun1_list, val args)
 {
   for (; fun1_list; fun1_list = cdr(fun1_list))
-    if (nullp(funcall1(car(fun1_list), arg)))
+    if (nullp(apply(car(fun1_list), args, nil)))
       return nil;
 
   return t;
@@ -2867,7 +2872,12 @@ val andf(val first_fun, ...)
     va_end (vl);
   }
 
-  return func_f1(out, do_and);
+  return func_f0v(out, do_and);
+}
+
+val andv(val funlist)
+{
+  return func_f0v(funlist, do_and);
 }
 
 static val do_swap_12_21(val fun, val left, val right)
@@ -2880,10 +2890,10 @@ val swap_12_21(val fun)
   return func_f2(fun, do_swap_12_21);
 }
 
-static val do_or(val fun1_list, val arg)
+static val do_or(val fun1_list, val args)
 {
   for (; fun1_list; fun1_list = cdr(fun1_list))
-    if (funcall1(car(fun1_list), arg))
+    if (apply(car(fun1_list), args, nil))
       return t;
 
   return nil;
@@ -2905,7 +2915,27 @@ val orf(val first_fun, ...)
     va_end (vl);
   }
 
-  return func_f1(out, do_or);
+  return func_f0v(out, do_or);
+}
+
+val orv(val funlist)
+{
+  return func_f0v(funlist, do_or);
+}
+
+static val do_iff(val env, val args)
+{
+  cons_bind (condfun, choices, env);
+  cons_bind (thenfun, elsefun, choices);
+
+  return if3(apply(condfun, args, nil),
+             apply(thenfun, args, nil),
+             if2(elsefun, apply(elsefun, args, nil)));
+}
+
+val iff(val condfun, val elsefun, val thenfun)
+{
+  return func_f0v(cons(condfun, cons(elsefun, thenfun)), do_iff);
 }
 
 val vector(val length)
