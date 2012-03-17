@@ -523,10 +523,19 @@ static struct filter_pair from_html_table[] = {
   { 0,                  0 }
 };
 
+static int digit_value(int digit)
+{
+  if (digit >= '0' && digit <= '9')
+	return digit - '0';
+  if (digit >= 'A' && digit <= 'F')
+	return digit - 'A' + 10;
+  if (digit >= 'a' && digit <= 'f')
+	return digit - 'a' + 10;
+  internal_error("bad digit");
+}
+
 static val html_hex_continue(val hexlist, val ch)
 {
-  static const wchar_t *hexdigs = L"0123456789ABCDEF";
-
   if (iswxdigit(c_chr(ch))) {
     return func_f1(cons(ch, hexlist), html_hex_continue);
   } if (eq(ch, chr(';'))) {
@@ -538,7 +547,7 @@ static val html_hex_continue(val hexlist, val ch)
 
     for (iter = nreverse(hexlist); iter; iter = cdr(iter)) {
       val hexch = car(iter);
-      int val = wcschr(hexdigs, towupper(c_chr(hexch))) - hexdigs;
+      int val = digit_value(c_chr(hexch));
       out[0] <<= 4;
       out[0] |= val;
     }
@@ -600,17 +609,6 @@ val url_encode(val str)
   }
 
   return get_string_from_stream(out);
-}
-
-static int digit_value(int digit)
-{
-  if (digit >= '0' && digit <= '9')
-	return digit - '0';
-  if (digit >= 'A' && digit <= 'F')
-	return digit - 'A' + 10;
-  if (digit >= 'a' && digit <= 'f')
-	return digit - 'a' + 10;
-  internal_error("bad digit");
 }
 
 val url_decode(val str)
