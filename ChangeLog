@@ -1,3 +1,9 @@
+2012-03-17  Kaz Kylheku  <kaz@kylheku.com>
+
+	* filter.c (digit_value): static function moved.
+	(html_hex_continue): Use digit_value instead of hex digits string
+	literal.
+
 2012-03-16  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (do_chain): More useful behavior. The first
