@@ -1,5 +1,12 @@
 2012-03-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (do_chain): More useful behavior. The first
+	function, if any, is treated as variadic. Subsequent
+	functions are monadic.
+	(chain, chainv): Turn do_chain into variadic.
+
+2012-03-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): New intrinsic functions
 	chain, andf, orf, iff.
 

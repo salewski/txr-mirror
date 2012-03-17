@@ -2815,8 +2815,15 @@ val curry_1234_34(val fun4, val arg1, val arg2)
   return func_f2(cons(fun4, cons(arg1, arg2)), do_curry_1234_34);
 }
 
-static val do_chain(val fun1_list, val arg)
+static val do_chain(val fun1_list, val args)
 {
+  val arg = nil;
+
+  if (fun1_list) {
+    arg = apply(car(fun1_list), args, nil);
+    fun1_list = cdr(fun1_list);
+  }
+
   for (; fun1_list; fun1_list = cdr(fun1_list))
     arg = funcall1(car(fun1_list), arg);
 
@@ -2839,12 +2846,12 @@ val chain(val first_fun, ...)
     va_end (vl);
   }
 
-  return func_f1(out, do_chain);
+  return func_f0v(out, do_chain);
 }
 
 val chainv(val funlist)
 {
-  return func_f1(funlist, do_chain);
+  return func_f0v(funlist, do_chain);
 }
 
 static val do_and(val fun1_list, val args)
