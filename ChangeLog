@@ -1,5 +1,24 @@
 2012-03-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): New intrinsic functions
+	chain, andf, orf, iff.
+
+	* lib.c (chainv): New function.
+	(do_and, do_or): Generalized to handle functions of
+	any arguments via apply.
+	(andf, orf): Turn do_and and do_or into variadic function instead of a
+	monadic function.
+	(do_iff): New static function.
+	(andv, orv, iff): New functions.
+
+	* lib.h (chainv, andv, orv, iff): New functions declared.
+
+	* txr.1: Doc stubs created.
+
+	* txr.vim: Updated.
+
+2012-03-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (quicksort): Bugfix: incorrect loop from 0 rather than from
 	leading to unbounded recursion.
 
