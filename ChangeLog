@@ -1834,6 +1834,15 @@
 
 2012-03-18  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): lazy string related functions become intrinsics.
+
+	* lib.c (string_cmp): New function.
+
+	* lib.h (TYPE_SHIFT, TYPE_PAIR): New macros.
+	(string_cmp): Declared.
+ 
+2012-03-18  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): url_decode has two parameters now,
 	so we make the second one optional.
 

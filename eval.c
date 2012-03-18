@@ -2400,6 +2400,16 @@ void eval_init(void)
   reg_fun(intern(lit("compl-span-str"), user_package), func_n2(compl_span_str));
   reg_fun(intern(lit("break-str"), user_package), func_n2(break_str));
 
+  reg_fun(intern(lit("lazy-stream-cons"), user_package), func_n1(lazy_stream_cons));
+  reg_fun(intern(lit("lazy-str"), user_package), func_n3(lazy_str));
+  reg_fun(intern(lit("lazy-str-force-upto"), user_package), func_n2(lazy_str_force_upto));
+  reg_fun(intern(lit("lazy-str-force"), user_package), func_n1(lazy_str_force));
+  reg_fun(intern(lit("lazy-str-get-trailing-list"), user_package), func_n2(lazy_str_get_trailing_list));
+  reg_fun(intern(lit("length-str-gt"), user_package), func_n2(length_str_gt));
+  reg_fun(intern(lit("length-str-ge"), user_package), func_n2(length_str_ge));
+  reg_fun(intern(lit("length-str-lt"), user_package), func_n2(length_str_lt));
+  reg_fun(intern(lit("length-str-le"), user_package), func_n2(length_str_le));
+
   reg_fun(intern(lit("vector"), user_package), func_n1(vector));
   reg_fun(intern(lit("vectorp"), user_package), func_n1(vectorp));
   reg_fun(intern(lit("vec-set-length"), user_package), func_n2(vec_set_length));

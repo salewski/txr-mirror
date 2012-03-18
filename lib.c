@@ -2116,6 +2116,45 @@ val trim_str(val str)
   }
 }
 
+val string_cmp(val astr, val bstr)
+{
+   switch (TYPE_PAIR(tag(astr), tag(bstr))) {
+   case TYPE_PAIR(LIT, LIT):
+   case TYPE_PAIR(STR, STR):
+   case TYPE_PAIR(LIT, STR):
+   case TYPE_PAIR(STR, LIT):
+     return num_fast(wcscmp(c_str(astr), c_str(bstr)));
+   case TYPE_PAIR(LSTR, LIT):
+   case TYPE_PAIR(LSTR, STR):
+   case TYPE_PAIR(LIT, LSTR):
+   case TYPE_PAIR(STR, LSTR):
+   case TYPE_PAIR(LSTR, LSTR):
+     {
+       val i;
+       for (i = zero;
+            length_str_lt(astr, i) && length_str_lt(bstr, i);
+            i = plus(i, one))
+       {
+         val ach = chr_str(astr, i);
+         val bch = chr_str(bstr, i);
+
+         if (ach < bch)
+           return num_fast(-1);
+         else if (ach < bch)
+           return num_fast(1);
+       }
+       if (length_str_lt(bstr, i))
+         return num_fast(-1);
+       if (length_str_lt(astr, i))
+         return num_fast(1);
+       return zero;
+     }
+   default:
+     uw_throwf(error_s, lit("string-cmp: invalid operands ~s ~s"),
+               astr, bstr, nao);
+  }
+}
+
 val string_lt(val astr, val bstr)
 {
   return wcscmp(c_str(astr), c_str(bstr)) < 0 ? t : nil;

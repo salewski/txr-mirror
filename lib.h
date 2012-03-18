@@ -42,7 +42,7 @@ typedef int_ptr_t cnum;
 typedef enum type {
   NIL, NUM = TAG_NUM, CHR = TAG_CHR, LIT = TAG_LIT, CONS,
   STR, SYM, PKG, FUN, VEC, LCONS, LSTR, COBJ, ENV,
-  BGNUM, FLNUM
+  BGNUM, FLNUM /* If extending, check TYPE_SHIFT */
 } type_t;
 
 #define TYPE_SHIFT 4
@@ -504,6 +504,7 @@ val split_str_set(val str, val set);
 val tok_str(val str, val tok_regex);
 val list_str(val str);
 val trim_str(val str);
+val string_cmp(val astr, val bstr);
 val string_lt(val astr, val bstr);
 val int_str(val str, val base);
 val flo_str(val str);
