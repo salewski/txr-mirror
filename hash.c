@@ -92,10 +92,9 @@ static unsigned long hash_c_str(const wchar_t *str)
 
 static cnum equal_hash(val obj)
 {
-  if (obj == nil)
-    return NUM_MAX;
-
   switch (type(obj)) {
+  case NIL:
+    return NUM_MAX;
   case LIT:
     return hash_c_str(litptr(obj)) & NUM_MAX;
   case CONS:

@@ -751,9 +751,6 @@ static val *dwim_loc(val form, val env, val op, val newform, val *retval)
   val obj = eval_lisp1(second(form), env, form);
   val args = eval_args_lisp1(rest(rest(form)), env, form);
 
-  if (!obj)
-    goto list;
-
   switch (type(obj)) {
   case LIT:
   case STR:
@@ -839,9 +836,9 @@ static val *dwim_loc(val form, val env, val op, val newform, val *retval)
         return vecref_l(obj, index);
       }
     }
+  case NIL:
   case CONS:
   case LCONS:
-  list:
     if (rest(args))
       eval_error(form, lit("[~s ...]: list indexing needs one arg"),
                  obj, nao);
@@ -1102,10 +1099,9 @@ static val op_dwim(val form, val env)
   val obj = eval_lisp1(second(form), env, form);
   val args = eval_args_lisp1(rest(rest(form)), env, form);
 
-  if (!obj)
-    return nil;
-
   switch (type(obj)) {
+  case NIL:
+    return nil;
   case LIT:
   case STR:
   case LSTR:

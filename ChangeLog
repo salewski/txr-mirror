@@ -1,5 +1,33 @@
 2012-03-17  Kaz Kylheku  <kaz@kylheku.com>
 
+	Changing type function to not blow up on nil, which makes a lot of code
+	simpler. A pseudo type code is introduced called NIL with value 0.
+
+	* lib.h (enum type): New enumeration value, NIL.
+	(type): Function accepts object nil and maps it to code NIL.
+
+	* eval.c (dwim_loc, op_dwim): test for nil obj and goto hack is gone,
+	just handle NIL in the switch.
+
+	* gc.c (make_obj, mark): Handle new NIL type code in switch.
+
+	* hash.c (equal_hash): Handle NIL in the switch instead of nil test.
+
+	* lib.c (code2type): Map new NIL type code to null.
+	(typeof, typecheck): Code simplified.
+	(class_check, car): Move nil test into switch.
+	(eql, equal, consp, bignump, stringp, lazy_stringp,
+	symbolp, functionp, vectorp, cobjp): Simplified.
+	(length, sub, ref, refset, replace, obj_print, obj_pprint): Handle NIL
+	in switch instead of nil test.  goto hack removed from refset.
+
+	* match.c (do_match_line, do_output_line): switch condition simplified.
+
+	* regex.c (regexp): Simplified.
+	(regex_nfa): Assert condition simplified.
+
+2012-03-17  Kaz Kylheku  <kaz@kylheku.com>
+
 	* filter.c (digit_value): static function moved.
 	(html_hex_continue): Use digit_value instead of hex digits string
 	literal.

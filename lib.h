@@ -38,7 +38,7 @@ typedef int_ptr_t cnum;
 #define NUM_MIN (INT_PTR_MIN/4)
 
 typedef enum type {
-  NUM = TAG_NUM, CHR = TAG_CHR, LIT = TAG_LIT, CONS,
+  NIL, NUM = TAG_NUM, CHR = TAG_CHR, LIT = TAG_LIT, CONS,
   STR, SYM, PKG, FUN, VEC, LCONS, LSTR, COBJ, ENV,
   BGNUM
 } type_t;
@@ -216,7 +216,10 @@ INLINE int is_lit(val obj) { return tag(obj) == TAG_LIT; }
 
 INLINE type_t type(val obj)
 {
-  return tag(obj) ? (type_t) tag(obj) : obj->t.type;
+  return obj ? tag(obj) 
+               ? (type_t) tag(obj)
+               : obj->t.type
+             : NIL;
 }
 
 typedef struct wli wchli_t;
