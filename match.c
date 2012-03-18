@@ -1112,7 +1112,7 @@ static val do_match_line(match_line_ctx *c, val completely)
     debug_check(elem, c->bindings, c->dataline, c->data_lineno,
                 c->pos, c->base);
 
-    switch (elem ? type(elem) : 0) {
+    switch (type(elem)) {
     case CONS: /* directive */
       {
         val directive = first(elem);
@@ -1583,7 +1583,7 @@ static void do_output_line(val bindings, val specline, val filter, val out)
   for (; specline; specline = rest(specline)) {
     val elem = first(specline);
 
-    switch (elem ? type(elem) : 0) {
+    switch (type(elem)) {
     case CONS:
       {
         val directive = first(elem);

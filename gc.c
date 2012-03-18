@@ -184,6 +184,7 @@ val make_obj(void)
 static void finalize(val obj)
 {
   switch (obj->t.type) {
+  case NIL:
   case CONS:
     return;
   case STR:
@@ -256,17 +257,18 @@ tail_call:
 #endif
 
   switch (t) {
+  case NIL:
+  case CHR:
+  case NUM:
+  case LIT:
+  case BGNUM:
+    return;
   case CONS:
     mark_obj(obj->c.car);
     mark_obj_tail(obj->c.cdr);
   case STR:
     mark_obj(obj->st.len);
     mark_obj_tail(obj->st.alloc);
-  case CHR:
-  case NUM:
-  case LIT:
-  case BGNUM:
-    return;
   case SYM:
     mark_obj(obj->s.name);
     mark_obj(obj->s.value);

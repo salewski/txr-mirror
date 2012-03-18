@@ -101,6 +101,7 @@ val identity(val obj)
 static val code2type(int code)
 {
   switch ((type_t) code) {
+  case NIL: return null;
   case CONS: return cons_s;
   case STR: return str_s;
   case LIT: return str_s;
@@ -129,25 +130,27 @@ val typeof(val obj)
   case TAG_LIT:
     return str_s;
   case TAG_PTR:
-    if (obj == nil) {
-      return null;
-    } else if (obj->t.type == COBJ) {
-      return obj->co.cls;
-    } else {
-      val type = code2type(obj->t.type);
-      if (!type)
-        internal_error("corrupt type field");
-      return type;
+    {
+      int typecode = type(obj);
+
+      if (typecode == COBJ) {
+        return obj->co.cls;
+      } else {
+        val typesym = code2type(typecode);
+        if (!typesym)
+          internal_error("corrupt type field");
+        return typesym;
+      }
     }
   default:
     internal_error("invalid type tag");
   }
 }
 
-val type_check(val obj, int type)
+val type_check(val obj, int typecode)
 {
-  if (!is_ptr(obj) || obj->t.type != type)
-    type_mismatch(lit("~s is not of type ~s"), obj, code2type(type), nao);
+  if (type(obj) != typecode)
+    type_mismatch(lit("~s is not of type ~s"), obj, code2type(typecode), nao);
   return t;
 }
 
@@ -177,9 +180,9 @@ val class_check(val cobj, val class_sym)
 
 val car(val cons)
 {
-  if (cons == nil)
+  switch (type(cons)) {
+  case NIL:
     return nil;
-  else switch (type(cons)) {
   case CONS:
     return cons->c.car;
   case LCONS:
@@ -197,9 +200,9 @@ val car(val cons)
 
 val cdr(val cons)
 {
-  if (cons == nil)
+  switch (type(cons)) {
+  case NIL:
     return nil;
-  else switch (type(cons)) {
   case CONS:
     return cons->c.cdr;
   case LCONS:
@@ -803,24 +806,18 @@ val eql(val left, val right)
   /* eql is same as eq for now, but when we get bignums,
      eql will compare different bignum objects which are
      the same number as equal. */
-  if (is_ptr(left) && type(left) == BGNUM)
+  if (type(left) == BGNUM)
     return equal(left, right);
   return eq(left, right);
 }
 
 val equal(val left, val right)
 {
-  /* Bitwise equality is equality, period. */
   if (left == right)
     return t;
 
-  /* Objects are not bitwise equal. If either
-     is nil, then they are not equal,
-     since nil uses bitwise equality. */
-  if (left == nil || right == nil)
-    return nil;
-
   switch (type(left)) {
+  case NIL:
   case CHR:
   case NUM:
     return nil;
@@ -1014,12 +1011,8 @@ val list(val first, ...)
 
 val consp(val obj)
 {
-  if (!obj) {
-    return nil;
-  } else {
-    type_t ty = type(obj);
-    return (ty == CONS || ty == LCONS) ? t : nil;
-  }
+  type_t ty = type(obj);
+  return (ty == CONS || ty == LCONS) ? t : nil;
 }
 
 val nullp(val obj)
@@ -1135,7 +1128,7 @@ val fixnump(val num)
 
 val bignump(val num)
 {
-  return (is_ptr(num) && type(num) == BGNUM) ? t : nil;
+  return (type(num) == BGNUM) ? t : nil;
 }
 
 val numberp(val num)
@@ -1399,25 +1392,19 @@ val string_extend(val str, val tail)
 
 val stringp(val str)
 {
-  switch (tag(str)) {
-  case TAG_LIT:
+  switch (type(str)) {
+  case LIT: 
+  case STR: 
+  case LSTR:
     return t;
-  case TAG_PTR:
-    if (str == nil)
-      return nil;
-    switch (type(str)) {
-    case STR: case LSTR:
-      return t;
-    default:
-      break;
-    }
+  default:
+    return nil;
   }
-  return nil;
 }
 
 val lazy_stringp(val str)
 {
-  return (is_ptr(str) && (type(str) == LSTR)) ? t : nil;
+  return type(str) == LSTR ? t : nil;
 }
 
 val length_str(val str)
@@ -2192,7 +2179,13 @@ static val rehome_sym(val sym, val package)
 
 val symbolp(val sym)
 {
-  return (sym == nil || (is_ptr(sym) && sym->s.type == SYM)) ? t : nil;
+  switch (type(sym)) {
+  case NIL:
+  case SYM:
+    return t;
+  default:
+    return nil;
+  }
 }
 
 val keywordp(val sym)
@@ -2525,12 +2518,7 @@ val func_get_env(val fun)
 
 val functionp(val obj)
 {
-  if (!obj) {
-    return nil;
-  } else {
-    type_t ty = type(obj);
-    return (ty == FUN) ? t : nil;
-  }
+  return type(obj) == FUN ? t : nil;
 }
 
 val interp_fun_p(val obj)
@@ -2966,7 +2954,7 @@ val vector(val length)
 
 val vectorp(val vec)
 {
-  return (is_ptr(vec) && type(vec) == VEC) ? t : nil;
+  return type(vec) == VEC ? t : nil;
 }
 
 val vec_set_length(val vec, val length)
@@ -3448,12 +3436,7 @@ val cobj(mem_t *handle, val cls_sym, struct cobj_ops *ops)
 
 val cobjp(val obj)
 {
-  if (!obj) {
-    return nil;
-  } else {
-    type_t ty = type(obj);
-    return (ty == COBJ) ? t : nil;
-  }
+  return type(obj) == COBJ ? t : nil;
 }
 
 mem_t *cobj_handle(val cobj, val cls_sym)
@@ -3823,9 +3806,9 @@ val set_diff(val list1, val list2, val testfun, val keyfun)
 
 val length(val seq)
 {
-  if (seq == nil)
+  switch (type(seq)) {
+  case NIL:
     return num(0);
-  else switch (type(seq)) {
   case CONS:
   case LCONS:
     return length_list(seq);
@@ -3841,9 +3824,9 @@ val length(val seq)
 
 val sub(val seq, val from, val to)
 {
-  if (seq == nil)
+  switch (type(seq)) {
+  case NIL:
     return nil;
-  else switch (type(seq)) {
   case CONS:
   case LCONS:
     return sub_list(seq, from, to);
@@ -3859,9 +3842,9 @@ val sub(val seq, val from, val to)
 
 val ref(val seq, val ind)
 {
-  if (seq == nil)
+  switch (type(seq)) {
+  case NIL:
     return nil;
-  else switch (type(seq)) {
   case CONS:
   case LCONS:
     return listref(seq, ind);
@@ -3877,13 +3860,10 @@ val ref(val seq, val ind)
 
 val refset(val seq, val ind, val newval)
 {
-  if (seq == nil)
-    goto list;
-
-  else switch (type(seq)) {
+  switch (type(seq)) {
+  case NIL:
   case CONS:
   case LCONS:
-  list:
     return *listref_l(seq, ind) = newval;
   case LIT:
   case STR:
@@ -3898,12 +3878,10 @@ val refset(val seq, val ind, val newval)
 
 val replace(val seq, val items, val from, val to)
 {
-  if (seq == nil)
-    goto list;
   switch (type(seq)) {
+  case NIL:
   case CONS:
   case LCONS:
-  list:
     return replace_list(seq, items, from, to);
   case LIT:
   case STR:
@@ -4087,12 +4065,10 @@ val obj_print(val obj, val out)
   if (out == nil)
     out = std_output;
 
-  if (obj == nil) {
+  switch (type(obj)) {
+  case NIL:
     put_string(lit("nil"), out);
     return obj;
-  }
-
-  switch (type(obj)) {
   case CONS:
   case LCONS:
     {
@@ -4243,12 +4219,10 @@ val obj_pprint(val obj, val out)
   if (out == nil)
     out = std_output;
 
-  if (obj == nil) {
+  switch (type(obj)) {
+  case NIL:
     put_string(lit("nil"), out);
     return obj;
-  }
-
-  switch (type(obj)) {
   case CONS:
   case LCONS:
     {

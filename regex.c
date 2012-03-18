@@ -1511,13 +1511,12 @@ val regexp(val obj)
   if (consp(obj))
     return if2(eq(car(obj), compiled_regex_s), t);
 
-  return (is_ptr(obj) && obj->co.type == COBJ && obj->co.cls == regex_s)
-         ? t : nil;
+  return typeof(obj) == regex_s ? t : nil;
 }
 
 static nfa_t *regex_nfa(val reg)
 {
-  assert (reg->co.type == COBJ && reg->co.cls == regex_s);
+  assert (typeof(reg) == regex_s);
   return (nfa_t *) reg->co.handle;
 }
 
