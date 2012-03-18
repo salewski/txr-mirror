@@ -1,3 +1,22 @@
+2012-03-18  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): url_decode has two parameters now,
+	so we make the second one optional.
+
+	* filter.c (topercent_k, frompercent_k): New keyword
+	variables.
+	(url_encode, url_decode): Take a second parameter, space_plus.
+	This determines whether or not to apply the rule that
+	a space encodes as a + character.
+	(filter_init): Initialize new keyword variables, and register :topercent
+	and :frompercent filters.  Fix the previous registrations of :tourl and
+	:fromurl using currying.
+
+	* filter.h (urlencode, urldecode): Declarations updated.
+	(topercent_k, frompercent_k): Declared.
+
+	* txr.1: Documented.
+
 2012-03-17  Kaz Kylheku  <kaz@kylheku.com>
 
 	Changing type function to not blow up on nil, which makes a lot of code
