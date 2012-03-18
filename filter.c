@@ -44,7 +44,7 @@
 val filters;
 val filter_k, lfilt_k, rfilt_k, to_html_k, from_html_k;
 val upcase_k, downcase_k, fun_k;
-val tourl_k, fromurl_k;
+val topercent_k, frompercent_k, tourl_k, fromurl_k;
 
 static val make_trie(void)
 {
@@ -593,7 +593,7 @@ static int is_url_reserved(int ch)
   return (ch <= 0x20 || ch >= 0x7F || strchr(":/?#[]@!$&'()*+,;=%", ch) != 0);
 }
 
-val url_encode(val str)
+val url_encode(val str, val space_plus)
 {
   val in_byte = make_string_byte_input_stream(str);
   val out = make_string_output_stream();
@@ -602,7 +602,9 @@ val url_encode(val str)
   while ((ch = get_byte(in_byte)) != nil) {
     int c = c_num(ch);
 
-    if (is_url_reserved(c))
+	if (space_plus && c == ' ')
+	  put_char(chr('+'), out);
+	else if (is_url_reserved(c))
       format(out, lit("%~1X~1X"), num_fast(c >> 4), num_fast(c & 0xf), nao);
     else
       put_char(chr_num(ch), out);
@@ -611,7 +613,7 @@ val url_encode(val str)
   return get_string_from_stream(out);
 }
 
-val url_decode(val str)
+val url_decode(val str, val space_plus)
 {
   val in = make_string_input_stream(str);
   val out = make_string_output_stream();
@@ -637,6 +639,10 @@ val url_decode(val str)
       }
 	  continue;
     }
+	if (space_plus && ch == chr('+')) {
+	  put_char(chr(' '), out);
+	  continue;
+	}
 	if (!ch)
 	  break;
 
@@ -659,6 +665,8 @@ void filter_init(void)
   upcase_k = intern(lit("upcase"), keyword_package);
   downcase_k = intern(lit("downcase"), keyword_package);
   fun_k = intern(lit("fun"), keyword_package);
+  topercent_k = intern(lit("topercent"), keyword_package);
+  frompercent_k = intern(lit("frompercent"), keyword_package);
   tourl_k = intern(lit("tourl"), keyword_package);
   fromurl_k = intern(lit("fromurl"), keyword_package);
 
@@ -671,6 +679,8 @@ void filter_init(void)
   }
   sethash(filters, upcase_k, func_n1(upcase_str));
   sethash(filters, downcase_k, func_n1(downcase_str));
-  sethash(filters, tourl_k, func_n1(url_encode));
-  sethash(filters, fromurl_k, func_n1(url_decode));
+  sethash(filters, topercent_k, curry_12_1(func_n2(url_encode), nil));
+  sethash(filters, frompercent_k, curry_12_1(func_n2(url_decode), nil));
+  sethash(filters, tourl_k, curry_12_1(func_n2(url_encode), t));
+  sethash(filters, fromurl_k, curry_12_1(func_n2(url_decode), t));
 }

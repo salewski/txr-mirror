@@ -2371,8 +2371,8 @@ void eval_init(void)
 
   reg_fun(intern(lit("match-fun"), user_package), func_n4(match_fun));
 
-  reg_fun(intern(lit("url-encode"), user_package), func_n1(url_encode));
-  reg_fun(intern(lit("url-decode"), user_package), func_n1(url_decode));
+  reg_fun(intern(lit("url-encode"), user_package), func_n2o(url_encode, 1));
+  reg_fun(intern(lit("url-decode"), user_package), func_n2o(url_decode, 1));
 
   eval_error_s = intern(lit("eval-error"), user_package);
   uw_register_subtype(eval_error_s, error_s);
