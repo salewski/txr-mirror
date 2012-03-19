@@ -1,3 +1,43 @@
+2012-03-19  Kaz Kylheku  <kaz@kylheku.com>
+
+	* configure (uintptr): New variable. Indicates whether unsigned
+	version of intptr_t is available and should be generated in config.h
+	as uintptr_t.
+
+	* eval.c (eval_init): New intrinsic functions floatp,
+	integerp, flo-str.
+
+	* gc.c (finalize): Handle FLNUM case. Rearranged
+	cases so that all trivially returning cases are
+	together.
+	(mark): Handle FLNUM case.
+
+	* hash.c (hash_double): New function.
+	(equal_hash): Handle FLNUM via hash_double.
+	(eql_hash): Likewise.
+
+	* lib.c: <math.h> is included.
+	(float_s): New symbol variable.
+	(code2type, equal): Handle FLNUM case in switch.
+	(integerp): New function; does the same thing
+	as integerp before.
+	(numberp): Returns t for floats.
+	(flo, floatp, flo_str): New functions.
+	(obj_init): Initialize new float_s variable.
+	(obj_print, obj_pprint): Handle FLNUM case in switch.
+	Printing does not work yet; needs work in stream.c.
+
+	* lib.h (enum type): New enumeration FLNUM.
+	(struct flonum): New struct type.
+	(union obj): New member, fl.
+	(float_s, flo, floatp, integerp, flo_str): Declared.
+
+	* parser.l (FLO): New token pattern definition.
+	Scans to a NUMBER token.
+	Corrected uses of yylval.num to yylval.val.
+
+	* parser.y (%union): Removed num member from yystype.
+
 2012-03-18  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): url_decode has two parameters now,

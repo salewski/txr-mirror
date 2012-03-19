@@ -757,12 +757,16 @@ char SIZEOF_SUPERLONG_T[sizeof (superlong_t)];
 
   if [ $SIZEOF_PTR -eq $SIZEOF_SHORT ] ; then
     intptr="short"
+    uintptr=y
   elif [ $SIZEOF_PTR -eq $SIZEOF_INT ] ; then
     intptr="int"
+    uintptr=y
   elif [ $SIZEOF_PTR -eq $SIZEOF_LONG ] ; then
     intptr="long"
+    uintptr=y
   elif [ $SIZEOF_PTR -eq $SIZEOF_LONG_LONG_T ] ; then
     intptr="longlong_t"
+    uintptr=$ulonglong
   fi
 
   if [ -z "$intptr" ] ; then
@@ -773,6 +777,10 @@ fi
 
 printf '"%s"\n' "$intptr"
 printf "typedef $intptr int_ptr_t;\n" >> config.h
+if [ -n "$uintptr" ] ; then
+  printf "#define HAVE_UINTPTR_T 1\n" >> config.h
+  printf "typedef unsigned $intptr uint_ptr_t;\n" >> config.h
+fi
 intptr_max_expr="((((($intptr) 1 << $((SIZEOF_PTR * 8 - 2))) - 1) << 1) + 1)"
 printf "#define INT_PTR_MAX %s\n" "$intptr_max_expr" >> config.h
 printf "#define INT_PTR_MIN (-INT_PTR_MAX)\n" >> config.h

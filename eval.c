@@ -2188,6 +2188,8 @@ void eval_init(void)
   reg_fun(intern(lit("gcd"), user_package), func_n2(gcd));
   reg_fun(intern(lit("fixnump"), user_package), func_n1(fixnump));
   reg_fun(intern(lit("bignump"), user_package), func_n1(bignump));
+  reg_fun(intern(lit("floatp"), user_package), func_n1(floatp));
+  reg_fun(intern(lit("integerp"), user_package), func_n1(integerp));
   reg_fun(intern(lit("numberp"), user_package), func_n1(numberp));
 
   reg_fun(intern(lit("zerop"), user_package), func_n1(zerop));
@@ -2288,6 +2290,7 @@ void eval_init(void)
   reg_fun(intern(lit("trim-str"), user_package), func_n1(trim_str));
   reg_fun(intern(lit("string-lt"), user_package), func_n2(string_lt));
   reg_fun(intern(lit("int-str"), user_package), func_n2o(int_str, 1));
+  reg_fun(intern(lit("flo-str"), user_package), func_n1(flo_str));
   reg_fun(intern(lit("chrp"), user_package), func_n1(chrp));
   reg_fun(intern(lit("chr-isalnum"), user_package), func_n1(chr_isalnum));
   reg_fun(intern(lit("chr-isalpha"), user_package), func_n1(chr_isalpha));

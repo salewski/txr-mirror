@@ -35,6 +35,7 @@
 #include <setjmp.h>
 #include <errno.h>
 #include <wchar.h>
+#include <math.h>
 #include "config.h"
 #ifdef HAVE_GETENVIRONMENTSTRINGS
 #define NOMINMAX
@@ -61,7 +62,7 @@ val system_package, keyword_package, user_package;
 
 val null, t, cons_s, str_s, chr_s, fixnum_s, sym_s, pkg_s, fun_s, vec_s;
 val stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s, cptr_s;
-val env_s, bignum_s;
+val env_s, bignum_s, float_s;
 val var_s, expr_s, regex_s, chset_s, set_s, cset_s, wild_s, oneplus_s;
 val nongreedy_s, compiled_regex_s;
 val quote_s, qquote_s, unquote_s, splice_s;
@@ -116,6 +117,7 @@ static val code2type(int code)
   case COBJ: return cobj_s;
   case ENV: return env_s;
   case BGNUM: return bignum_s;
+  case FLNUM: return float_s;
   }
   return nil;
 }
@@ -909,6 +911,10 @@ val equal(val left, val right)
     if (type(right) == BGNUM && mp_cmp(mp(left), mp(right)) == MP_EQ)
       return t;
     return nil;
+  case FLNUM:
+    if (type(right) == FLNUM && left->fl.n == right->fl.n)
+      return t;
+    return nil;
   case COBJ:
     if (type(right) == COBJ)
       return left->co.ops->equal(left, right);
@@ -1121,6 +1127,14 @@ cnum c_num(val num)
   }
 }
 
+val flo(double n)
+{
+  val obj = make_obj();
+  obj->fl.type = FLNUM;
+  obj->fl.n = n;
+  return obj;
+}
+
 val fixnump(val num)
 {
   return (is_num(num)) ? t : nil;
@@ -1131,7 +1145,7 @@ val bignump(val num)
   return (type(num) == BGNUM) ? t : nil;
 }
 
-val numberp(val num)
+val integerp(val num)
 {
   switch (tag(num)) {
   case TAG_NUM:
@@ -1140,6 +1154,27 @@ val numberp(val num)
     if (num == nil)
       return nil;
     if (num->t.type == BGNUM)
+      return t;
+    /* fallthrough */
+  default:
+    return nil;
+  }
+}
+
+val floatp(val num)
+{
+  return (type(num) == FLNUM) ? t : nil;
+}
+
+val numberp(val num)
+{
+  switch (tag(num)) {
+  case TAG_NUM:
+    return t;
+  case TAG_PTR:
+    if (num == nil)
+      return nil;
+    if (num->t.type == BGNUM || num->t.type == FLNUM)
       return t;
     /* fallthrough */
   default:
@@ -1914,6 +1949,20 @@ val int_str(val str, val base)
   }
 
   return num(value);
+}
+
+val flo_str(val str)
+{
+  const wchar_t *wcs = c_str(str);
+  wchar_t *ptr;
+
+  /* TODO: detect if we have wcstod */
+  double value = wcstod(wcs, &ptr);
+  if (value == 0 && ptr == wcs)
+    return nil;
+  if ((value == HUGE_VAL || value == -HUGE_VAL) && errno == ERANGE)
+    return nil;
+  return flo(value);
 }
 
 val chrp(val chr)
@@ -3978,6 +4027,7 @@ static void obj_init(void)
   cptr_s = intern(lit("cptr"), user_package);
   env_s = intern(lit("env"), user_package);
   bignum_s = intern(lit("bignum"), user_package);
+  float_s = intern(lit("float"), user_package);
   var_s = intern(lit("var"), system_package);
   expr_s = intern(lit("expr"), system_package);
   regex_s = intern(lit("regex"), system_package);
@@ -4169,6 +4219,7 @@ val obj_print(val obj, val out)
     return obj;
   case NUM:
   case BGNUM:
+  case FLNUM:
     format(out, lit("~s"), obj, nao);
     return obj;
   case SYM:
@@ -4272,6 +4323,7 @@ val obj_pprint(val obj, val out)
     return obj;
   case NUM:
   case BGNUM:
+  case FLNUM:
     format(out, lit("~s"), obj, nao);
     return obj;
   case SYM:
