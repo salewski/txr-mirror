@@ -63,7 +63,6 @@ static val parsed_spec;
   wchar_t *lexeme;
   union obj *val;
   wchar_t chr;
-  union obj *num;
   cnum lineno;
 }
 

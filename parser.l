@@ -150,6 +150,7 @@ static wchar_t num_esc(char *num)
 
 SYM     [a-zA-Z0-9_]+
 NUM     [+\-]?[0-9]+
+FLO     [+\-]?[0-9]+([.][0-9]+)?([eE][+-]?[0-9]+)?
 BSCHR   [a-zA-Z0-9!$%&*+\-<=>?\\^_~]
 BSYM    {BSCHR}({BSCHR}|#)*
 NSCHR   [a-zA-Z0-9!$%&*+\-<=>?\\^_~/]
@@ -185,7 +186,18 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
       || yy_top_state() == QSILIT)
     yy_pop_state();
 
-  yylval.num = int_str(str, num(10));
+  yylval.val = int_str(str, num(10));
+  return NUMBER;
+}
+
+<SPECIAL,NESTED,BRACED>{FLO} {
+  val str = string_own(utf8_dup_from(yytext));
+
+  if (yy_top_state() == INITIAL
+      || yy_top_state() == QSILIT)
+    yy_pop_state();
+
+  yylval.val = flo_str(str);
   return NUMBER;
 }
 
@@ -195,7 +207,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   if (yy_top_state() == INITIAL
       || yy_top_state() == QSILIT)
     yy_pop_state();
-  yylval.num = int_str(str, num(10));
+  yylval.val = int_str(str, num(10));
   return METANUM;
 }
 
