@@ -1,5 +1,16 @@
 2012-03-19  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (vformat): num_buf increased to 256 because we
+	are now printing floating point numbers into it, letting
+	the C library handle precision which can generate many digits.
+	We cap the precision at at 128. New format specifiers ~e
+	and ~f implemented, which loosely correspond to those of printf.
+	The ~s and ~a directives handle floats similarly to ~g in
+	printf, except that they ensure that a decimal point is printed
+	for the non-exponential notation.
+
+2012-03-19  Kaz Kylheku  <kaz@kylheku.com>
+
 	* configure (uintptr): New variable. Indicates whether unsigned
 	version of intptr_t is available and should be generated in config.h
 	as uintptr_t.
