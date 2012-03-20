@@ -1,3 +1,8 @@
+2012-03-20  Kaz Kylheku  <kaz@kylheku.com>
+
+	* parser.l (FLO): Adjusted syntax of floating point numbers
+	to allow leading or trailing decimal.
+
 2012-03-19  Kaz Kylheku  <kaz@kylheku.com>
 
 	* stream.c (vformat): num_buf increased to 256 because we
