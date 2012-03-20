@@ -1135,6 +1135,12 @@ val flo(double n)
   return obj;
 }
 
+double c_flo(val num)
+{
+  type_check(num, FLNUM);
+  return num->fl.n;
+}
+
 val fixnump(val num)
 {
   return (is_num(num)) ? t : nil;

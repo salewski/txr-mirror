@@ -1,5 +1,22 @@
 2012-03-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (plus): Optimization: use num_fast when
+	result is in the fixnum range.
+	Implemented FLNUM cases, except for adding a FLNUM
+	to BGNUM.
+	(minus, mul): Use num_fast when the cnum value is in the fixnum range.
+	(int_flo): New function.
+
+	* eval.c (eval_init): Register int-flo intrinsic.
+
+	* lib.c (c_flo): New function.
+
+	* lib.h (TYPE_SHIFT, TYPE_PAIR): New macros, carried over
+	from the lazy strings branch.
+	(c_flo, int_flo): Declared.
+
+2012-03-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.l (FLO): Adjusted syntax of floating point numbers
 	to allow leading or trailing decimal.
 

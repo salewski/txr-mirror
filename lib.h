@@ -43,6 +43,9 @@ typedef enum type {
   BGNUM, FLNUM
 } type_t;
 
+#define TYPE_SHIFT 4
+#define TYPE_PAIR(A, B) ((A) << TYPE_SHIFT | (B))
+
 typedef enum functype
 {
    FINTERP,             /* Interpreted function. */
@@ -386,6 +389,7 @@ val improper_plist_to_alist(val list, val boolean_keys);
 val num(cnum val);
 val flo(double val);
 cnum c_num(val num);
+double c_flo(val num);
 val fixnump(val num);
 val bignump(val num);
 val floatp(val num);
@@ -449,6 +453,7 @@ val trim_str(val str);
 val string_lt(val astr, val bstr);
 val int_str(val str, val base);
 val flo_str(val str);
+val int_flo(val f);
 val chrp(val chr);
 wchar_t c_chr(val chr);
 val chr_isalnum(val ch);
