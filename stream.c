@@ -967,7 +967,7 @@ val vformat(val stream, val fmtstr, va_list vl)
     for (;;) {
       val obj;
       wchar_t ch = *fmt++;
-      char num_buf[64], *pnum = num_buf;
+      char num_buf[256], *pnum = num_buf;
 
       switch (state) {
       case vf_init:
@@ -1113,6 +1113,40 @@ val vformat(val stream, val fmtstr, va_list vl)
             sprintf(num_buf, num_fmt->oct, value);
           }
           goto output_num;
+        case 'f': case 'e':
+          obj = va_arg(vl, val);
+
+          if (obj == nao)
+            goto premature;
+
+          {
+            double n;
+
+            if (bignump(obj))
+              uw_throwf(error_s, lit("format: ~s: bignum to float "
+                                     "conversion unsupported\n"), obj, nao);
+
+            if (fixnump(obj))
+              n = (double) c_num(obj);
+            else if (floatp(obj))
+              n = obj->fl.n;
+            else
+              uw_throwf(error_s, lit("format: ~~~a conversion requires "
+                                     "numeric arg: ~s given\n"),
+                        chr(ch), obj, nao);
+
+            /* guard against num_buf overflow */
+            if (precision > 128)
+              uw_throwf(error_s, lit("excessive precision in format: ~s\n"),
+                        num(precision), nao);
+
+            if (ch == 'e')
+              sprintf(num_buf, "%.*e", precision, obj->fl.n);
+            else
+              sprintf(num_buf, "%.*f", precision, obj->fl.n);
+            precision = 0;
+            goto output_num;
+          }
         case 'a': case 's':
           obj = va_arg(vl, val);
           if (obj == nao)
@@ -1126,6 +1160,25 @@ val vformat(val stream, val fmtstr, va_list vl)
             if (nchars >= (int) sizeof (num_buf))
               pnum = (char *) chk_malloc(nchars + 1);
             mp_toradix(mp(obj), (unsigned char *) pnum, 10);
+            goto output_num;
+          } else if (floatp(obj)) {
+            sprintf(num_buf, "%g", obj->fl.n);
+
+            if (!precision) {
+              if (!strpbrk(num_buf, "e."))
+                strcat(num_buf, ".0");
+            } else {
+              /* guard against num_buf overflow */
+              if (precision > 128)
+                uw_throwf(error_s, lit("excessive precision in format: ~s\n"),
+                          num(precision), nao);
+
+              if (strchr(num_buf, 'e'))
+                sprintf(num_buf, "%.*e", precision, obj->fl.n);
+              else
+                sprintf(num_buf, "%.*f", precision, obj->fl.n);
+              precision = 0;
+            }
             goto output_num;
           } else if (width != 0) {
             val str = format(nil, ch == 'a' ? lit("~a") : lit("~s"), obj, nao);
