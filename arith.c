@@ -271,58 +271,92 @@ val plus(val anum, val bnum)
 
       if (sum < NUM_MIN || sum > NUM_MAX)
         return bignum(sum);
-      return num(sum);
+      return num_fast(sum);
     } 
   case TAG_PAIR(TAG_NUM, TAG_PTR):
-    {
-      val n;
-      type_check(bnum, BGNUM);
-      n = make_bignum();
-      if (sizeof (int_ptr_t) <= sizeof (mp_digit))  {
+    switch (type(bnum)) {
+    case BGNUM:
+      {
+        val n;
+        n = make_bignum();
+        if (sizeof (int_ptr_t) <= sizeof (mp_digit))  {
+          cnum a = c_num(anum);
+          cnum ap = ABS(a);
+          if (a > 0)
+            mp_add_d(mp(bnum), ap, mp(n));
+          else
+            mp_sub_d(mp(bnum), ap, mp(n));
+        } else {
+          mp_int tmp;
+          mp_init(&tmp);
+          mp_set_intptr(&tmp, c_num(anum));
+          mp_add(mp(bnum), &tmp, mp(n));
+          mp_clear(&tmp);
+        }
+        return normalize(n);
+      }
+    case FLNUM:
+      {
         cnum a = c_num(anum);
-        cnum ap = ABS(a);
-        if (a > 0)
-          mp_add_d(mp(bnum), ap, mp(n));
-        else
-          mp_sub_d(mp(bnum), ap, mp(n));
-      } else {
-        mp_int tmp;
-        mp_init(&tmp);
-        mp_set_intptr(&tmp, c_num(anum));
-        mp_add(mp(bnum), &tmp, mp(n));
-        mp_clear(&tmp);
+        return flo((double) a + c_flo(bnum));
       }
-      return normalize(n);
+    default:
+      break;
     }
+    break;
   case TAG_PAIR(TAG_PTR, TAG_NUM):
-    {
-      val n;
-      type_check(anum, BGNUM);
-      n = make_bignum();
-      if (sizeof (int_ptr_t) <= sizeof (mp_digit))  {
-        cnum b = c_num(bnum);
-        cnum bp = ABS(b);
-        if (b > 0)
-          mp_add_d(mp(anum), bp, mp(n));
-        else
-          mp_sub_d(mp(anum), bp, mp(n));
-      } else {
-        mp_int tmp;
-        mp_init(&tmp);
-        mp_set_intptr(&tmp, c_num(bnum));
-        mp_add(mp(anum), &tmp, mp(n));
-        mp_clear(&tmp);
+    switch (type(anum)) {
+    case BGNUM:
+      {
+        val n;
+        type_check(anum, BGNUM);
+        n = make_bignum();
+        if (sizeof (int_ptr_t) <= sizeof (mp_digit))  {
+          cnum b = c_num(bnum);
+          cnum bp = ABS(b);
+          if (b > 0)
+            mp_add_d(mp(anum), bp, mp(n));
+          else
+            mp_sub_d(mp(anum), bp, mp(n));
+        } else {
+          mp_int tmp;
+          mp_init(&tmp);
+          mp_set_intptr(&tmp, c_num(bnum));
+          mp_add(mp(anum), &tmp, mp(n));
+          mp_clear(&tmp);
+        }
+        return normalize(n);
       }
-      return normalize(n);
+    case FLNUM:
+      {
+        cnum b = c_num(bnum);
+        return flo((double) b + c_flo(anum));
+      }
+    default:
+      break;
     }
+    break;
   case TAG_PAIR(TAG_PTR, TAG_PTR):
-    {
-      val n;
-      type_check(anum, BGNUM);
-      type_check(bnum, BGNUM);
-      n = make_bignum();
-      mp_add(mp(anum), mp(bnum), mp(n));
-      return normalize(n);
+    switch (TYPE_PAIR(type(anum), type(bnum))) {
+    case TYPE_PAIR(BGNUM, BGNUM):
+      {
+        val n;
+        type_check(anum, BGNUM);
+        type_check(bnum, BGNUM);
+        n = make_bignum();
+        mp_add(mp(anum), mp(bnum), mp(n));
+        return normalize(n);
+      }
+    case TYPE_PAIR(FLNUM, FLNUM):
+      {
+        return flo(c_flo(anum) + c_flo(bnum));
+      }
+    case TYPE_PAIR(BGNUM, FLNUM):
+    case TYPE_PAIR(FLNUM, BGNUM):
+      uw_throwf(error_s, lit("plus: unimplemented bignum float combo ~s ~s"),
+                anum, bnum, nao);
+    default:
+      break;
     }
   case TAG_PAIR(TAG_CHR, TAG_NUM):
     {
@@ -367,7 +401,7 @@ val minus(val anum, val bnum)
 
       if (sum < NUM_MIN || sum > NUM_MAX)
         return bignum(sum);
-      return num(sum);
+      return num_fast(sum);
     } 
   case TAG_PAIR(TAG_NUM, TAG_PTR):
     {
@@ -475,15 +509,15 @@ val mul(val anum, val bnum)
       double_intptr_t product = a * (double_intptr_t) b;
       if (product < NUM_MIN || product > NUM_MAX)
         return bignum_dbl_ipt(product);
-      return num(product);
+      return num_fast(product);
 #else
       cnum ap = ABS(a);
       cnum bp = ABS(b);
       if (highest_bit(ap) + highest_bit(bp) < CNUM_BIT - 1) {
         cnum product = a * b;
         if (product >= NUM_MIN && product <= NUM_MAX)
-          return num(a * b);
-        return bignum(a * b);
+          return num_fast(product);
+        return bignum(product);
       } else {
         val n = make_bignum();
         mp_int tmpb;
@@ -1066,6 +1100,61 @@ val gcd(val anum, val bnum)
 inval:
   uw_throwf(error_s, lit("gcd: invalid operands ~s ~s ~s"),
             anum, bnum, nao);
+}
+
+/*
+ * TODO: replace this text-based hack!
+ */
+val int_flo(val f)
+{
+  double d = c_flo(f);
+
+  if (d >= INT_PTR_MAX && d <= INT_PTR_MIN) {
+    cnum n = d;
+    if (n < NUM_MIN || n > NUM_MAX)
+      return bignum(n);
+    return num_fast(n);
+  } else {
+    char text[128];
+    char mint[128] = "", mfrac[128] = "", *pint = mint;
+    int have_point, have_exp;
+    int exp = 0, fdigs;
+
+    sprintf(text, "%.64g", d);
+
+    have_exp = (strchr(text, 'e') != 0);
+    have_point = (strchr(text, '.') != 0);
+
+    if (have_exp && have_point)
+      sscanf(text, "%127[0-9].%127[0-9]e%d", mint, mfrac, &exp);
+    else if (have_exp)
+      sscanf(text, "%127[0-9]e%d", mint, &exp);
+    else if (have_point)
+      sscanf(text, "%127[0-9].%127[0-9]", mint, mfrac);
+    else
+      return int_str(string_utf8(text), nil);
+
+    if (have_exp && exp < 0)
+      return zero;
+
+    fdigs = have_point ? strlen(mfrac) : 0;
+
+    if (exp <= fdigs) {
+      fdigs = exp;
+      exp = 0;
+    } else {
+      exp -= fdigs;
+    }
+
+    {
+      char mintfrac[256];
+      val out;
+      val e10 = (exp == 0) ? one : expt(num_fast(10), num(exp));
+      sprintf(mintfrac, "%s%.*s", pint, fdigs, mfrac);
+      out = int_str(string_utf8(mintfrac), nil);
+      return mul(out, e10);
+    }
+  }
 }
 
 void arith_init(void)
