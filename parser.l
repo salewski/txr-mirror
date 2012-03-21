@@ -194,8 +194,18 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return NUMBER;
 }
 
-<SPECIAL,NESTED,BRACED>{FLODOT}/[^.] |
-<SPECIAL,NESTED,BRACED>{FLO}         {
+<SPECIAL,NESTED,BRACED>{FLO} {
+  val str = string_own(utf8_dup_from(yytext));
+
+  if (yy_top_state() == INITIAL
+      || yy_top_state() == QSILIT)
+    yy_pop_state();
+
+  yylval.val = flo_str(str);
+  return NUMBER;
+}
+
+<SPECIAL,NESTED,BRACED>{FLODOT}/[^.] {
   val str = string_own(utf8_dup_from(yytext));
 
   if (yy_top_state() == INITIAL
