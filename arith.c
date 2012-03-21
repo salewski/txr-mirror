@@ -1157,6 +1157,21 @@ val int_flo(val f)
   }
 }
 
+val flo_int(val i)
+{
+  if (fixnump(i))
+    return flo(c_num(i));
+
+  {
+    double d;
+    type_check(i, BGNUM);
+    if (mp_to_double(mp(i), &d) != MP_OKAY)
+      uw_throwf(error_s, lit("flo-int: bignum to float conversion failed"),
+                nao);
+    return flo(d);
+  }
+}
+
 void arith_init(void)
 {
   mp_init(&NUM_MAX_MP);

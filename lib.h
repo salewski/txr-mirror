@@ -454,6 +454,7 @@ val string_lt(val astr, val bstr);
 val int_str(val str, val base);
 val flo_str(val str);
 val int_flo(val f);
+val flo_int(val i);
 val chrp(val chr);
 wchar_t c_chr(val chr);
 val chr_isalnum(val ch);

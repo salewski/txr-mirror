@@ -1,5 +1,18 @@
 2012-03-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (flo_int): New function.
+
+	* eval.c (eval_init): flo-int registered as intrinsic.
+
+	* lib.h (flo_int): Declared.
+
+	* mpi-patches/series: Added mpi-to-double to patch stack.
+	(mp_to_double): New MPI function.
+
+	* mpi-patches/mpi-to-double: New file.
+
+2012-03-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (plus): Optimization: use num_fast when
 	result is in the fixnum range.
 	Implemented FLNUM cases, except for adding a FLNUM
