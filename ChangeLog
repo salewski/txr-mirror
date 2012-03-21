@@ -1,5 +1,9 @@
 2012-03-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (trunc): Floating support.
+
+2012-03-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (plus, minus, mul): Removing unnecessary type checks,
 	which are already implied by the switch case.
 
