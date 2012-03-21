@@ -1,5 +1,17 @@
 2012-03-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (divi): New function.
+
+	* eval.c (eval_init): divi registered as / intrinsic.
+
+	* lib.h (divi): Declared.
+
+	* txr.1: divi added to stub heading.
+
+	* txr.vim: / operator highlighted.
+
+2012-03-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (mod): Floating support.
 
 2012-03-21  Kaz Kylheku  <kaz@kylheku.com>

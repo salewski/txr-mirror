@@ -880,6 +880,44 @@ divzero:
   uw_throw(numeric_error_s, lit("mod: division by zero"));
 }
 
+val divi(val anum, val bnum)
+{
+  switch (type(anum)) {
+  case NUM:
+  case BGNUM:
+    anum = flo_int(anum);
+  case FLNUM:
+    break;
+  default:
+    goto type;
+  }
+
+  switch (type(bnum)) {
+  case NUM:
+  case BGNUM:
+    bnum = flo_int(bnum);
+  case FLNUM:
+    break;
+  default:
+    goto type;
+  }
+
+  {
+    double a = c_flo(anum);
+    double b = c_flo(bnum);
+
+    if (b == 0.0)
+      goto divzero;
+
+    return flo(a / b);
+  }
+
+divzero:
+  uw_throw(numeric_error_s, lit("divi: division by zero"));
+type:
+  uw_throwf(error_s, lit("divi: invalid operands ~s ~s"), anum, bnum, nao);
+}
+
 val zerop(val num)
 {
   if (num == zero)
