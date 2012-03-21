@@ -89,9 +89,10 @@ static void show_bindings(val env, val stream)
 val debug(val form, val bindings, val data, val line, val pos, val base)
 {
   uses_or2;
-  val lineno = car(source_loc(form));
+  val loc = source_loc(form);
+  cons_bind (lineno, file, loc);
 
-  if (!step_mode && !memqual(lineno, breakpoints) 
+  if (!step_mode && !memqual(loc, breakpoints) 
       && (debug_depth > next_depth))
   {
     return nil;
@@ -103,7 +104,8 @@ val debug(val form, val bindings, val data, val line, val pos, val base)
       val input, command;
 
       if (print_form) {
-        format(std_debug, lit("stopped at ~a\n"), source_loc_str(form), nao);
+        format(std_debug, lit("stopped at line ~a of ~a\n"),
+               lineno, file, nao);
         format(std_debug, lit("form: ~s\n"), form, nao);
         format(std_debug, lit("depth: ~s\n"), num(debug_depth), nao);
         print_form = nil;
@@ -175,22 +177,29 @@ val debug(val form, val bindings, val data, val line, val pos, val base)
                  equal(command, lit("g")))
       {
         if (!rest(input)) {
-          format(std_debug, lit("~s needs argument\n"), command, nao);
+          format(std_debug, lit("~s needs arguments\n"), command, nao);
           continue;
         } else {
           val n = int_str(second(input), num(10));
+          val l = cons(n, or2(third(input), file));
 
           if (!n) {
-            format(std_debug, lit("~s needs numeric argument\n"), command, nao);
+            format(std_debug, lit("~s needs <line> [ <file> ]\n"),
+                   command, nao);
             continue;
           }
 
-          if (equal(command, lit("b")))
-            push(n, &breakpoints);
-          else if (equal(command, lit("d")))
-            breakpoints = remql(n, breakpoints);
-          else
+          if (equal(command, lit("b"))) {
+            breakpoints = remqual(l, breakpoints);
+            push(l, &breakpoints);
+          } else if (equal(command, lit("d"))) {
+            val breakpoints_old = breakpoints;
+            breakpoints = remqual(l, breakpoints);
+            if (breakpoints == breakpoints_old)
+              format(std_debug, lit("no such breakpoint\n"));
+          } else {
             opt_loglevel = c_num(n);
+          }
         }
       } else if (equal(command, lit("l"))) {
         format(std_debug, lit("breakpoints: ~s\n"), breakpoints, nao);
