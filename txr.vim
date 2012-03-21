@@ -42,7 +42,7 @@ syn keyword txl_keyword contained second third fourth fifth sixth copy-list nrev
 syn keyword txl_keyword contained reverse ldiff flatten lazy-flatten
 syn keyword txl_keyword contained memq memql memqual tree-find some
 syn keyword txl_keyword contained remq remql remqual
-syn keyword txl_keyword contained all none eq eql equal + - * abs trunc mod 
+syn keyword txl_keyword contained all none eq eql equal + - * / abs trunc mod
 syn keyword txl_keyword contained expt exptmod sqrt gcd fixnump bignump 
 syn keyword txl_keyword contained integerp floatp
 syn keyword txl_keyword contained numberp zerop evenp oddp >

@@ -405,6 +405,7 @@ val mul(val anum, val bnum);
 val mulv(val nlist);
 val trunc(val anum, val bnum);
 val mod(val anum, val bnum);
+val divi(val anum, val bnum);
 val zerop(val num);
 val evenp(val num);
 val oddp(val num);
