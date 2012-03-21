@@ -44,6 +44,7 @@ syn keyword txl_keyword contained memq memql memqual tree-find some
 syn keyword txl_keyword contained remq remql remqual
 syn keyword txl_keyword contained all none eq eql equal + - * abs trunc mod 
 syn keyword txl_keyword contained expt exptmod sqrt gcd fixnump bignump 
+syn keyword txl_keyword contained integerp floatp
 syn keyword txl_keyword contained numberp zerop evenp oddp >
 syn keyword txl_keyword contained zerop evenp oddp > < >= <= max min
 syn keyword txl_keyword contained search-regex match-regex regsub
@@ -65,7 +66,8 @@ syn keyword txl_keyword contained mkstring copy-str upcase-str downcase-str stri
 syn keyword txl_keyword contained stringp lazy-stringp length-str search-str search-str-tree
 syn keyword txl_keyword contained sub-str cat-str split-str replace-str
 syn keyword txl_keyword contained split-str-set list-str trim-str
-syn keyword txl_keyword contained string-lt int-str chrp chr-isalnum chr-isalpha
+syn keyword txl_keyword contained string-lt int-str flo-str int-flo flo-int
+syn keyword txl_keyword contained chrp chr-isalnum chr-isalpha
 syn keyword txl_keyword contained chr-isascii chr-iscntrl chr-isdigit chr-isgraph
 syn keyword txl_keyword contained chr-islower chr-isprint chr-ispunct chr-isspace chr-isupper
 syn keyword txl_keyword contained chr-isxdigit chr-toupper chr-tolower chr-str
