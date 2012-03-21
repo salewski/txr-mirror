@@ -259,10 +259,8 @@ int highest_bit(int_ptr_t n)
 
 val plus(val anum, val bnum)
 {
-  int tag_a = tag(anum);
-  int tag_b = tag(bnum);
-
-  switch (TAG_PAIR(tag_a, tag_b)) {
+tail:
+  switch (TAG_PAIR(tag(anum), tag(bnum))) {
   case TAG_PAIR(TAG_NUM, TAG_NUM): 
     {
       cnum a = c_num(anum);
@@ -352,9 +350,11 @@ val plus(val anum, val bnum)
         return flo(c_flo(anum) + c_flo(bnum));
       }
     case TYPE_PAIR(BGNUM, FLNUM):
+      anum = flo_int(anum);
+      goto tail;
     case TYPE_PAIR(FLNUM, BGNUM):
-      uw_throwf(error_s, lit("plus: unimplemented bignum float combo ~s ~s"),
-                anum, bnum, nao);
+      bnum = flo_int(bnum);
+      goto tail;
     default:
       break;
     }
