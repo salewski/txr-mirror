@@ -1,3 +1,11 @@
+2012-03-20  Kaz Kylheku  <kaz@kylheku.com>
+
+	* debug.c (debug): Breakpointing now takes into account 
+	the module file name, not only the line number. Breakpoints work on
+	source locations rather than line numbers.  Boy, this was easy. 
+	Keep the breakpoint list free of duplicates. Issue a message
+	if a nonexistent breakpoint is asked to be deleted.
+
 2012-03-18  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): url_decode has two parameters now,
