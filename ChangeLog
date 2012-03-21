@@ -1,5 +1,12 @@
 2012-03-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	* Makefile: link in -lm, which is needed now on some systems.
+
+	* arith.c (plus, minus): Eliminated some unnecessary (double) casts.
+	(abso, mul): Floating support.
+
+2012-03-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (neg): Floating-point support.
 
 	* parser.l: FLO and FLODOT cases had to be reordered because
