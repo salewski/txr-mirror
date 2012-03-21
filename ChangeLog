@@ -1,5 +1,9 @@
 2012-03-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (mod): Floating support.
+
+2012-03-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (trunc): Floating support.
 
 2012-03-21  Kaz Kylheku  <kaz@kylheku.com>
