@@ -1122,18 +1122,21 @@ val vformat(val stream, val fmtstr, va_list vl)
           {
             double n;
 
-            if (bignump(obj))
-              uw_throwf(error_s, lit("format: ~s: bignum to float "
-                                     "conversion unsupported\n"), obj, nao);
-
-            if (fixnump(obj))
+            switch (type(obj)) {
+            case BGNUM:
+              obj = flo_int(obj);
+              /* fallthrough */
+            case FLNUM:
+              n = c_flo(obj);
+              break;
+            case NUM:
               n = (double) c_num(obj);
-            else if (floatp(obj))
-              n = obj->fl.n;
-            else
+              break;
+            default:
               uw_throwf(error_s, lit("format: ~~~a conversion requires "
                                      "numeric arg: ~s given\n"),
                         chr(ch), obj, nao);
+            }
 
             /* guard against num_buf overflow */
             if (precision > 128)
@@ -1141,9 +1144,9 @@ val vformat(val stream, val fmtstr, va_list vl)
                         num(precision), nao);
 
             if (ch == 'e')
-              sprintf(num_buf, "%.*e", precision, obj->fl.n);
+              sprintf(num_buf, "%.*e", precision, n);
             else
-              sprintf(num_buf, "%.*f", precision, obj->fl.n);
+              sprintf(num_buf, "%.*f", precision, n);
             precision = 0;
             goto output_num;
           }
@@ -1151,17 +1154,20 @@ val vformat(val stream, val fmtstr, va_list vl)
           obj = va_arg(vl, val);
           if (obj == nao)
             goto premature;
-          if (fixnump(obj)) {
+          switch (type(obj)) {
+          case NUM:
             value = c_num(obj);
             sprintf(num_buf, num_fmt->dec, value);
             goto output_num;
-          } else if (bignump(obj)) {
-            int nchars = mp_radix_size(mp(obj), 10); 
-            if (nchars >= (int) sizeof (num_buf))
-              pnum = (char *) chk_malloc(nchars + 1);
-            mp_toradix(mp(obj), (unsigned char *) pnum, 10);
+          case BGNUM:
+            {
+              int nchars = mp_radix_size(mp(obj), 10); 
+              if (nchars >= (int) sizeof (num_buf))
+                pnum = (char *) chk_malloc(nchars + 1);
+              mp_toradix(mp(obj), (unsigned char *) pnum, 10);
+            }
             goto output_num;
-          } else if (floatp(obj)) {
+          case FLNUM:
             sprintf(num_buf, "%g", obj->fl.n);
 
             if (!precision) {
@@ -1180,11 +1186,14 @@ val vformat(val stream, val fmtstr, va_list vl)
               precision = 0;
             }
             goto output_num;
-          } else if (width != 0) {
-            val str = format(nil, ch == 'a' ? lit("~a") : lit("~s"), obj, nao);
-            if (!vformat_str(stream, str, width, left, precision))
-              return nil;
-            continue;
+          default:
+            if (width != 0) {
+              val str = format(nil, ch == 'a' ? lit("~a") : lit("~s"),
+                               obj, nao);
+              if (!vformat_str(stream, str, width, left, precision))
+                return nil;
+              continue;
+            }
           }
           if (ch == 'a')
             obj_pprint(obj, stream);

@@ -1,5 +1,20 @@
 2012-03-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (neg): Floating-point support.
+
+	* parser.l: FLO and FLODOT cases had to be reordered because
+	the lex trailing context counts as part of the match length,
+	causing 3.0 to be matched as three characters with 0 as
+	the trailing context. The cases are split up to eliminate
+	a flex warning.
+
+	* stream.c (vformat): Support bignum in floating point
+	conversion. Bugfixes: floating point conversion was
+	accessing obj->fl.n instead of using n.
+	Changed some if/else ladders to switches.
+
+2012-03-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (plus): Minor code simplification.
 	(minus): Floating point support.
 

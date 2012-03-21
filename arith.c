@@ -490,13 +490,19 @@ tail:
 
 val neg(val anum)
 {
-  if (bignump(anum)) {
-    val n = make_bignum();
-    mp_neg(mp(anum), mp(n));
-    return n;
-  } else {
-    cnum n = c_num(anum);
-    return num(-n);
+  switch (type(anum)) {
+  case BGNUM:
+    {
+      val n = make_bignum();
+      mp_neg(mp(anum), mp(n));
+      return n;
+    }
+  case FLNUM:
+    return flo(-c_flo(anum));
+  case NUM:
+    return num(-c_num(anum));
+  default:
+    uw_throwf(error_s, lit("neg: ~s is not a number"), anum, nao);
   }
 }
 
