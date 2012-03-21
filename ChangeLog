@@ -1,5 +1,10 @@
 2012-03-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (plus): Completed implementation of bignum-float
+	and float-bignum cases.
+
+2012-03-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (vformat): Use larger num_buf buffer so we don't
 	overrun. IEEE double floats can go to e+-308.
 
