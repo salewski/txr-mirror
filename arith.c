@@ -305,7 +305,6 @@ tail:
     case BGNUM:
       {
         val n;
-        type_check(anum, BGNUM);
         n = make_bignum();
         if (sizeof (int_ptr_t) <= sizeof (mp_digit))  {
           cnum b = c_num(bnum);
@@ -334,8 +333,6 @@ tail:
     case TYPE_PAIR(BGNUM, BGNUM):
       {
         val n;
-        type_check(anum, BGNUM);
-        type_check(bnum, BGNUM);
         n = make_bignum();
         mp_add(mp(anum), mp(bnum), mp(n));
         return normalize(n);
@@ -456,8 +453,6 @@ tail:
     case TYPE_PAIR(BGNUM, BGNUM):
       {
         val n;
-        type_check(anum, BGNUM);
-        type_check(bnum, BGNUM);
         n = make_bignum();
         mp_sub(mp(anum), mp(bnum), mp(n));
         return normalize(n);
@@ -618,8 +613,6 @@ tail:
     case TYPE_PAIR(BGNUM, BGNUM):
       {
         val n;
-        type_check(anum, BGNUM);
-        type_check(bnum, BGNUM);
         n = make_bignum();
         mp_mul(mp(anum), mp(bnum), mp(n));
         return n;
