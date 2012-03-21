@@ -294,10 +294,7 @@ tail:
         return normalize(n);
       }
     case FLNUM:
-      {
-        cnum a = c_num(anum);
-        return flo((double) a + c_flo(bnum));
-      }
+      return flo((double) c_num(anum) + c_flo(bnum));
     default:
       break;
     }
@@ -326,10 +323,7 @@ tail:
         return normalize(n);
       }
     case FLNUM:
-      {
-        cnum b = c_num(bnum);
-        return flo((double) b + c_flo(anum));
-      }
+      return flo((double) c_num(bnum) + c_flo(anum));
     default:
       break;
     }
@@ -388,10 +382,8 @@ char_range:
 
 val minus(val anum, val bnum)
 {
-  int tag_a = tag(anum);
-  int tag_b = tag(bnum);
-
-  switch (TAG_PAIR(tag_a, tag_b)) {
+tail:
+  switch (TAG_PAIR(tag(anum), tag(bnum))) {
   case TAG_PAIR(TAG_NUM, TAG_NUM): 
   case TAG_PAIR(TAG_CHR, TAG_CHR): 
     {
@@ -404,56 +396,81 @@ val minus(val anum, val bnum)
       return num_fast(sum);
     } 
   case TAG_PAIR(TAG_NUM, TAG_PTR):
-    {
-      val n;
-      type_check(bnum, BGNUM);
-      n = make_bignum();
-      if (sizeof (int_ptr_t) <= sizeof (mp_digit))  {
-        cnum a = c_num(anum);
-        cnum ap = ABS(a);
-        if (ap > 0)
-          mp_sub_d(mp(bnum), ap, mp(n));
-        else
-          mp_add_d(mp(bnum), ap, mp(n));
-        mp_neg(mp(n), mp(n));
-      } else {
-        mp_int tmp;
-        mp_init(&tmp);
-        mp_set_intptr(&tmp, c_num(anum));
-        mp_sub(mp(bnum), &tmp, mp(n));
-        mp_clear(&tmp);
+    switch (type(bnum)) {
+    case BGNUM:
+      {
+        val n;
+        n = make_bignum();
+        if (sizeof (int_ptr_t) <= sizeof (mp_digit))  {
+          cnum a = c_num(anum);
+          cnum ap = ABS(a);
+          if (ap > 0)
+            mp_sub_d(mp(bnum), ap, mp(n));
+          else
+            mp_add_d(mp(bnum), ap, mp(n));
+          mp_neg(mp(n), mp(n));
+        } else {
+          mp_int tmp;
+          mp_init(&tmp);
+          mp_set_intptr(&tmp, c_num(anum));
+          mp_sub(mp(bnum), &tmp, mp(n));
+          mp_clear(&tmp);
+        }
+        return normalize(n);
       }
-      return normalize(n);
+    case FLNUM:
+      return flo((double) c_num(anum) - c_flo(bnum));
+    default:
+      break;
     }
   case TAG_PAIR(TAG_PTR, TAG_NUM):
-    {
-      val n;
-      type_check(anum, BGNUM);
-      n = make_bignum();
-      if (sizeof (int_ptr_t) <= sizeof (mp_digit))  {
-        cnum b = c_num(bnum);
-        cnum bp = ABS(b);
-        if (b > 0)
-          mp_sub_d(mp(anum), bp, mp(n));
-        else
-          mp_add_d(mp(anum), bp, mp(n));
-      } else {
-        mp_int tmp;
-        mp_init(&tmp);
-        mp_set_intptr(&tmp, c_num(bnum));
-        mp_sub(mp(anum), &tmp, mp(n));
-        mp_clear(&tmp);
+    switch (type(anum)) {
+    case BGNUM:
+      {
+        val n;
+        n = make_bignum();
+        if (sizeof (int_ptr_t) <= sizeof (mp_digit))  {
+          cnum b = c_num(bnum);
+          cnum bp = ABS(b);
+          if (b > 0)
+            mp_sub_d(mp(anum), bp, mp(n));
+          else
+            mp_add_d(mp(anum), bp, mp(n));
+        } else {
+          mp_int tmp;
+          mp_init(&tmp);
+          mp_set_intptr(&tmp, c_num(bnum));
+          mp_sub(mp(anum), &tmp, mp(n));
+          mp_clear(&tmp);
+        }
+        return normalize(n);
       }
-      return normalize(n);
+    case FLNUM:
+      return flo(c_flo(anum) - (double) c_num(bnum));
+    default:
+      break;
     }
   case TAG_PAIR(TAG_PTR, TAG_PTR):
-    {
-      val n;
-      type_check(anum, BGNUM);
-      type_check(bnum, BGNUM);
-      n = make_bignum();
-      mp_sub(mp(anum), mp(bnum), mp(n));
-      return normalize(n);
+    switch (TYPE_PAIR(type(anum), type(bnum))) {
+    case TYPE_PAIR(BGNUM, BGNUM):
+      {
+        val n;
+        type_check(anum, BGNUM);
+        type_check(bnum, BGNUM);
+        n = make_bignum();
+        mp_sub(mp(anum), mp(bnum), mp(n));
+        return normalize(n);
+      }
+    case TYPE_PAIR(FLNUM, FLNUM):
+      return flo(c_flo(anum) - c_flo(bnum));
+    case TYPE_PAIR(BGNUM, FLNUM):
+      anum = flo_int(anum);
+      goto tail;
+    case TYPE_PAIR(FLNUM, BGNUM):
+      bnum = flo_int(bnum);
+      goto tail;
+    default:
+      break;
     }
   case TAG_PAIR(TAG_CHR, TAG_NUM):
     {
