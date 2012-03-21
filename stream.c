@@ -967,7 +967,7 @@ val vformat(val stream, val fmtstr, va_list vl)
     for (;;) {
       val obj;
       wchar_t ch = *fmt++;
-      char num_buf[256], *pnum = num_buf;
+      char num_buf[512], *pnum = num_buf;
 
       switch (state) {
       case vf_init:
