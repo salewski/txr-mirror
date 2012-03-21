@@ -1,5 +1,10 @@
 2012-03-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (plus, minus, mul): Removing unnecessary type checks,
+	which are already implied by the switch case.
+
+2012-03-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: Doc stubs for new functions floatp, integerp,
 	float-str, int-flo and flo-int.
 
