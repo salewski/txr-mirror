@@ -634,10 +634,8 @@ tail:
 
 val trunc(val anum, val bnum)
 {
-  int tag_a = tag(anum);
-  int tag_b = tag(bnum);
-
-  switch (TAG_PAIR(tag_a, tag_b)) {
+tail:
+  switch (TAG_PAIR(tag(anum), tag(bnum))) {
   case TAG_PAIR(TAG_NUM, TAG_NUM):
     {
       cnum a = c_num(anum);
@@ -655,41 +653,82 @@ val trunc(val anum, val bnum)
       }
     }
   case TAG_PAIR(TAG_NUM, TAG_PTR):
-    type_check(bnum, BGNUM);
-    return zero;
-  case TAG_PAIR(TAG_PTR, TAG_NUM):
-    {
-      val n;
-      type_check(anum, BGNUM);
-      n = make_bignum();
-      if (sizeof (int_ptr_t) <= sizeof (mp_digit)) {
-        cnum b = c_num(bnum);
-        cnum bp = ABS(b);
-        if (mp_div_d(mp(anum), bp, mp(n), 0) != MP_OKAY)
+    switch (type(bnum)) {
+    case BGNUM:
+      return zero;
+    case FLNUM:
+      {
+        double x = c_num(anum), y = c_flo(bnum);
+        if (y == 0.0)
           goto divzero;
-        if (b < 0)
-          mp_neg(mp(n), mp(n));
-      } else {
-        int err;
-        mp_int tmp;
-        mp_init(&tmp);
-        mp_set_intptr(&tmp, c_num(bnum));
-        err = mp_div(mp(anum), &tmp, mp(n), 0);
-        mp_clear(&tmp);
-        if (err != MP_OKAY)
-          goto divzero;
+        else 
+          return flo((x - fmod(x, y))/y);
       }
-      return normalize(n);
+    default:
+      break;
     }
+    break;
+  case TAG_PAIR(TAG_PTR, TAG_NUM):
+    switch (type(anum)) {
+    case BGNUM:
+      {
+        val n;
+        n = make_bignum();
+        if (sizeof (int_ptr_t) <= sizeof (mp_digit)) {
+          cnum b = c_num(bnum);
+          cnum bp = ABS(b);
+          if (mp_div_d(mp(anum), bp, mp(n), 0) != MP_OKAY)
+            goto divzero;
+          if (b < 0)
+            mp_neg(mp(n), mp(n));
+        } else {
+          int err;
+          mp_int tmp;
+          mp_init(&tmp);
+          mp_set_intptr(&tmp, c_num(bnum));
+          err = mp_div(mp(anum), &tmp, mp(n), 0);
+          mp_clear(&tmp);
+          if (err != MP_OKAY)
+            goto divzero;
+        }
+        return normalize(n);
+      }
+    case FLNUM:
+      {
+        double x = c_flo(anum), y = c_num(bnum);
+        if (y == 0.0)
+          goto divzero;
+        else 
+          return flo((x - fmod(x, y))/y);
+      }
+    default:
+      break;
+    }
+    break;
   case TAG_PAIR(TAG_PTR, TAG_PTR):
-    {
-      val n;
-      type_check(anum, BGNUM);
-      type_check(bnum, BGNUM);
-      n = make_bignum();
-      if (mp_div(mp(anum), mp(bnum), mp(n), 0) != MP_OKAY)
-        goto divzero;
-      return normalize(n);
+    switch (TYPE_PAIR(type(anum), type (bnum))) {
+    case TYPE_PAIR(BGNUM, BGNUM):
+      {
+        val n;
+        n = make_bignum();
+        if (mp_div(mp(anum), mp(bnum), mp(n), 0) != MP_OKAY)
+          goto divzero;
+        return normalize(n);
+      }
+    case TYPE_PAIR(FLNUM, FLNUM):
+      {
+        double x = c_flo(anum), y = c_flo(bnum);
+        if (y == 0.0)
+          goto divzero;
+        else 
+          return flo((x - fmod(x, y))/y);
+      }
+    case TYPE_PAIR(BGNUM, FLNUM):
+      anum = flo_int(anum);
+      goto tail;
+    case TYPE_PAIR(FLNUM, BGNUM):
+      bnum = flo_int(bnum);
+      goto tail;
     }
   }
   uw_throwf(error_s, lit("trunc: invalid operands ~s ~s"), anum, bnum, nao);
