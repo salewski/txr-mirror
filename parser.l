@@ -149,8 +149,12 @@ static wchar_t num_esc(char *num)
 %option noinput
 
 SYM     [a-zA-Z0-9_]+
-NUM     [+\-]?[0-9]+
-FLO     [+\-]?([0-9]+[.]?[0-9]*|[0-9]*[.][0-9]+)([eE][+-]?[0-9]+)?
+SGN     [+\-]
+EXP     [eE][+\-]?[0-9]+
+DIG     [0-9]
+NUM     {SGN}?{DIG}+
+FLO     {SGN}?{DIG}*[.]({DIG}+{EXP}?|{EXP})
+FLODOT  {SGN}?{DIG}+[.]
 BSCHR   [a-zA-Z0-9!$%&*+\-<=>?\\^_~]
 BSYM    {BSCHR}({BSCHR}|#)*
 NSCHR   [a-zA-Z0-9!$%&*+\-<=>?\\^_~/]
@@ -190,7 +194,8 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return NUMBER;
 }
 
-<SPECIAL,NESTED,BRACED>{FLO} {
+<SPECIAL,NESTED,BRACED>{FLODOT}/[^.] |
+<SPECIAL,NESTED,BRACED>{FLO}         {
   val str = string_own(utf8_dup_from(yytext));
 
   if (yy_top_state() == INITIAL

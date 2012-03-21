@@ -1,5 +1,18 @@
 2012-03-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	Regression fix: 1..3 scans incorrectly into 1. .3 tokens.
+
+	* parser.l (SGN, EXP, DIG): New regex definitions.
+	(FLO): Do not recognize numbers of the form 123.
+	Decimal point must be followed either by exponent, or digits
+	(which may then be followed by an exponent).
+	(FLODOT): New token type, recognizes 123.
+	(grammar): Recognize FLODOT as a floating point number,
+	only if it not trailed by another dot, and
+	recognize FLO unconditionally.
+
+2012-03-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (plus): Completed implementation of bignum-float
 	and float-bignum cases.
 
