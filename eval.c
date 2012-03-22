@@ -2185,7 +2185,7 @@ void eval_init(void)
   reg_fun(intern(lit("/"), user_package), func_n2(divi));
   reg_fun(intern(lit("expt"), user_package), func_n0v(exptv));
   reg_fun(intern(lit("exptmod"), user_package), func_n3(exptmod));
-  reg_fun(intern(lit("sqrt"), user_package), func_n1(sqroot));
+  reg_fun(intern(lit("isqrt"), user_package), func_n1(isqrt));
   reg_fun(intern(lit("gcd"), user_package), func_n2(gcd));
   reg_fun(intern(lit("floor"), user_package), func_n1(floorf));
   reg_fun(intern(lit("ceil"), user_package), func_n1(ceili));
@@ -2193,6 +2193,7 @@ void eval_init(void)
   reg_fun(intern(lit("cos"), user_package), func_n1(cosi));
   reg_fun(intern(lit("atan"), user_package), func_n1(atang));
   reg_fun(intern(lit("log"), user_package), func_n1(loga));
+  reg_fun(intern(lit("sqrt"), user_package), func_n1(sqroot));
   reg_fun(intern(lit("fixnump"), user_package), func_n1(fixnump));
   reg_fun(intern(lit("bignump"), user_package), func_n1(bignump));
   reg_fun(intern(lit("floatp"), user_package), func_n1(floatp));
