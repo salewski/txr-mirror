@@ -1,5 +1,14 @@
 2012-03-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (int_flo): If sprintf produces something
+	that doesn't begin with a digit, it's most likely NaN or Inf.
+	We can turn that into an exception.
+
+	* stream.c (vformat): If sprintf produces a non-number,
+	turn it into the printed representation #<bad-float>.
+
+2012-03-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (to_float): New static function.
 	(divi): Uses to_float.
 	(zerop, gt, lt, ge, le, expt): Floating support.

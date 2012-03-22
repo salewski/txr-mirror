@@ -39,6 +39,7 @@
 #include <wchar.h>
 #include <limits.h>
 #include <math.h>
+#include <ctype.h>
 #include "config.h"
 #include "lib.h"
 #include "unwind.h"
@@ -1314,6 +1315,11 @@ val int_flo(val f)
     int exp = 0, fdigs;
 
     sprintf(text, "%.64g", d);
+
+    if (!isdigit(text[0]))
+      uw_throwf(error_s,
+                lit("int-flo: cannot convert #<bad-float> to integer"),
+                nao);
 
     have_exp = (strchr(text, 'e') != 0);
     have_point = (strchr(text, '.') != 0);
