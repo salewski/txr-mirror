@@ -880,42 +880,28 @@ divzero:
   uw_throw(numeric_error_s, lit("mod: division by zero"));
 }
 
+static val to_float(val func, val num)
+{
+  switch (type(num)) {
+  case NUM:
+  case BGNUM:
+    return flo_int(num);
+  case FLNUM:
+    return num;
+  default:
+    uw_throwf(error_s, lit("~s: invalid operand ~s"), func, num);
+  }
+}
+
 val divi(val anum, val bnum)
 {
-  switch (type(anum)) {
-  case NUM:
-  case BGNUM:
-    anum = flo_int(anum);
-  case FLNUM:
-    break;
-  default:
-    goto type;
-  }
+  double a = c_flo(to_float(lit("divi"), anum));
+  double b = c_flo(to_float(lit("divi"), bnum));
 
-  switch (type(bnum)) {
-  case NUM:
-  case BGNUM:
-    bnum = flo_int(bnum);
-  case FLNUM:
-    break;
-  default:
-    goto type;
-  }
+  if (b == 0.0)
+    uw_throw(numeric_error_s, lit("divi: division by zero"));
 
-  {
-    double a = c_flo(anum);
-    double b = c_flo(bnum);
-
-    if (b == 0.0)
-      goto divzero;
-
-    return flo(a / b);
-  }
-
-divzero:
-  uw_throw(numeric_error_s, lit("divi: division by zero"));
-type:
-  uw_throwf(error_s, lit("divi: invalid operands ~s ~s"), anum, bnum, nao);
+  return flo(a / b);
 }
 
 val zerop(val num)
@@ -923,63 +909,74 @@ val zerop(val num)
   if (num == zero)
     return t;
 
-  if (!fixnump(num) && !bignump(num))
+  switch (type(num)) {
+  case NUM:
+  case BGNUM:
+    return nil;
+  case FLNUM:
+    return if2(c_flo(num) == 0.0, t);
+  default:
     uw_throwf(error_s, lit("zerop: ~s is not a number"), num, nao);
-  return nil;
+  }
 }
 
 val evenp(val num)
 {
-  switch (tag(num)) {
-  case TAG_NUM:
+  switch (type(num)) {
+  case NUM:
     return (c_num(num) % 2 == 0) ? t : nil;
-  case TAG_PTR:
-    if (num->t.type == BGNUM)
-      return mp_iseven(mp(num)) ? t : nil;
-    /* fallthrough */
+  case BGNUM:
+    return mp_iseven(mp(num)) ? t : nil;
   default:
-    uw_throwf(error_s, lit("evenp: ~s is not a number"), num, nao);
+    uw_throwf(error_s, lit("evenp: ~s is not an integer"), num, nao);
     return nil;
   }
 }
 
 val oddp(val num)
 {
-  switch (tag(num)) {
-  case TAG_NUM:
+  switch (type(num)) {
+  case NUM:
     return (c_num(num) % 2 != 0) ? t : nil;
-  case TAG_PTR:
-    if (num->t.type == BGNUM)
-      return mp_isodd(mp(num)) ? t : nil;
-    /* fallthrough */
+  case BGNUM:
+    return mp_isodd(mp(num)) ? t : nil;
   default:
-    uw_throwf(error_s, lit("oddp: ~s is not a number"), num, nao);
+    uw_throwf(error_s, lit("oddp: ~s is not an integer"), num, nao);
     return nil;
   }
 }
 
 val gt(val anum, val bnum)
 {
-  int tag_a = tag(anum);
-  int tag_b = tag(bnum);
-
-  switch (TAG_PAIR(tag_a, tag_b)) {
-  case TAG_PAIR(TAG_NUM, TAG_NUM):
-  case TAG_PAIR(TAG_CHR, TAG_CHR):
-  case TAG_PAIR(TAG_NUM, TAG_CHR):
-  case TAG_PAIR(TAG_CHR, TAG_NUM):
+tail:
+  switch (TYPE_PAIR(type(anum), type(bnum))) {
+  case TYPE_PAIR(NUM, NUM):
+  case TYPE_PAIR(CHR, CHR):
+  case TYPE_PAIR(NUM, CHR):
+  case TYPE_PAIR(CHR, NUM):
     return c_num(anum) > c_num(bnum) ? t : nil;
-  case TAG_PAIR(TAG_NUM, TAG_PTR):
-  case TAG_PAIR(TAG_CHR, TAG_PTR):
-    type_check(bnum, BGNUM);
+  case TYPE_PAIR(NUM, BGNUM):
+  case TYPE_PAIR(CHR, BGNUM):
     return mp_cmp_z(mp(bnum)) == MP_LT ? t : nil;
-  case TAG_PAIR(TAG_PTR, TAG_NUM):
-  case TAG_PAIR(TAG_PTR, TAG_CHR):
-    type_check(anum, BGNUM);
+  case TYPE_PAIR(BGNUM, NUM):
+  case TYPE_PAIR(BGNUM, CHR):
     return mp_cmp_z(mp(anum)) == MP_GT ? t : nil;
-  case TAG_PAIR(TAG_PTR, TAG_PTR):
-    type_check(anum, BGNUM);
+  case TYPE_PAIR(BGNUM, BGNUM):
     return mp_cmp(mp(anum), mp(bnum)) == MP_GT ? t : nil;
+  case TYPE_PAIR(NUM, FLNUM):
+  case TYPE_PAIR(CHR, FLNUM):
+    return c_num(anum) > c_flo(bnum) ? t : nil;
+  case TYPE_PAIR(FLNUM, NUM):
+  case TYPE_PAIR(FLNUM, CHR):
+    return c_flo(anum) > c_num(bnum) ? t : nil;
+  case TYPE_PAIR(FLNUM, FLNUM):
+    return c_flo(anum) > c_flo(bnum) ? t : nil;
+  case TYPE_PAIR(FLNUM, BGNUM):
+    bnum = flo_int(bnum);
+    goto tail;
+  case TYPE_PAIR(BGNUM, FLNUM):
+    anum = flo_int(anum);
+    goto tail;
   }
 
   uw_throwf(error_s, lit("gt: invalid operands ~s ~s"), anum, bnum, nao);
@@ -987,26 +984,35 @@ val gt(val anum, val bnum)
 
 val lt(val anum, val bnum)
 {
-  int tag_a = tag(anum);
-  int tag_b = tag(bnum);
-
-  switch (TAG_PAIR(tag_a, tag_b)) {
-  case TAG_PAIR(TAG_NUM, TAG_NUM):
-  case TAG_PAIR(TAG_CHR, TAG_CHR):
-  case TAG_PAIR(TAG_NUM, TAG_CHR):
-  case TAG_PAIR(TAG_CHR, TAG_NUM):
+tail:
+  switch (TYPE_PAIR(type(anum), type(bnum))) {
+  case TYPE_PAIR(NUM, NUM):
+  case TYPE_PAIR(CHR, CHR):
+  case TYPE_PAIR(NUM, CHR):
+  case TYPE_PAIR(CHR, NUM):
     return c_num(anum) < c_num(bnum) ? t : nil;
-  case TAG_PAIR(TAG_NUM, TAG_PTR):
-  case TAG_PAIR(TAG_CHR, TAG_PTR):
-    type_check(bnum, BGNUM);
+  case TYPE_PAIR(NUM, BGNUM):
+  case TYPE_PAIR(CHR, BGNUM):
     return mp_cmp_z(mp(bnum)) == MP_GT ? t : nil;
-  case TAG_PAIR(TAG_PTR, TAG_NUM):
-  case TAG_PAIR(TAG_PTR, TAG_CHR):
-    type_check(anum, BGNUM);
+  case TYPE_PAIR(BGNUM, NUM):
+  case TYPE_PAIR(BGNUM, CHR):
     return mp_cmp_z(mp(anum)) == MP_LT ? t : nil;
-  case TAG_PAIR(TAG_PTR, TAG_PTR):
-    type_check(anum, BGNUM);
+  case TYPE_PAIR(BGNUM, BGNUM):
     return mp_cmp(mp(anum), mp(bnum)) == MP_LT ? t : nil;
+  case TYPE_PAIR(NUM, FLNUM):
+  case TYPE_PAIR(CHR, FLNUM):
+    return c_num(anum) < c_flo(bnum) ? t : nil;
+  case TYPE_PAIR(FLNUM, NUM):
+  case TYPE_PAIR(FLNUM, CHR):
+    return c_flo(anum) < c_num(bnum) ? t : nil;
+  case TYPE_PAIR(FLNUM, FLNUM):
+    return c_flo(anum) < c_flo(bnum) ? t : nil;
+  case TYPE_PAIR(FLNUM, BGNUM):
+    bnum = flo_int(bnum);
+    goto tail;
+  case TYPE_PAIR(BGNUM, FLNUM):
+    anum = flo_int(anum);
+    goto tail;
   }
 
   uw_throwf(error_s, lit("lt: invalid operands ~s ~s"), anum, bnum, nao);
@@ -1014,31 +1020,40 @@ val lt(val anum, val bnum)
 
 val ge(val anum, val bnum)
 {
-  int tag_a = tag(anum);
-  int tag_b = tag(bnum);
-
-  switch (TAG_PAIR(tag_a, tag_b)) {
-  case TAG_PAIR(TAG_NUM, TAG_NUM):
-  case TAG_PAIR(TAG_CHR, TAG_CHR):
-  case TAG_PAIR(TAG_NUM, TAG_CHR):
-  case TAG_PAIR(TAG_CHR, TAG_NUM):
+tail:
+  switch (TYPE_PAIR(type(anum), type(bnum))) {
+  case TYPE_PAIR(NUM, NUM):
+  case TYPE_PAIR(CHR, CHR):
+  case TYPE_PAIR(NUM, CHR):
+  case TYPE_PAIR(CHR, NUM):
     return c_num(anum) >= c_num(bnum) ? t : nil;
-  case TAG_PAIR(TAG_NUM, TAG_PTR):
-  case TAG_PAIR(TAG_CHR, TAG_PTR):
-    type_check(bnum, BGNUM);
+  case TYPE_PAIR(NUM, BGNUM):
+  case TYPE_PAIR(CHR, BGNUM):
     return mp_cmp_z(mp(bnum)) == MP_LT ? t : nil;
-  case TAG_PAIR(TAG_PTR, TAG_NUM):
-  case TAG_PAIR(TAG_PTR, TAG_CHR):
-    type_check(anum, BGNUM);
+  case TYPE_PAIR(BGNUM, NUM):
+  case TYPE_PAIR(BGNUM, CHR):
     return mp_cmp_z(mp(anum)) == MP_GT ? t : nil;
-  case TAG_PAIR(TAG_PTR, TAG_PTR):
-    type_check(anum, BGNUM);
+  case TYPE_PAIR(BGNUM, BGNUM):
     switch (mp_cmp(mp(anum), mp(bnum))) {
     case MP_GT: case MP_EQ:
       return t;
     default:
       return nil;
     }
+  case TYPE_PAIR(NUM, FLNUM):
+  case TYPE_PAIR(CHR, FLNUM):
+    return c_num(anum) >= c_flo(bnum) ? t : nil;
+  case TYPE_PAIR(FLNUM, NUM):
+  case TYPE_PAIR(FLNUM, CHR):
+    return c_flo(anum) >= c_num(bnum) ? t : nil;
+  case TYPE_PAIR(FLNUM, FLNUM):
+    return c_flo(anum) >= c_flo(bnum) ? t : nil;
+  case TYPE_PAIR(FLNUM, BGNUM):
+    bnum = flo_int(bnum);
+    goto tail;
+  case TYPE_PAIR(BGNUM, FLNUM):
+    anum = flo_int(anum);
+    goto tail;
   }
 
   uw_throwf(error_s, lit("ge: invalid operands ~s ~s"), anum, bnum, nao);
@@ -1046,31 +1061,40 @@ val ge(val anum, val bnum)
 
 val le(val anum, val bnum)
 {
-  int tag_a = tag(anum);
-  int tag_b = tag(bnum);
-
-  switch (TAG_PAIR(tag_a, tag_b)) {
-  case TAG_PAIR(TAG_NUM, TAG_NUM):
-  case TAG_PAIR(TAG_CHR, TAG_CHR):
-  case TAG_PAIR(TAG_NUM, TAG_CHR):
-  case TAG_PAIR(TAG_CHR, TAG_NUM):
+tail:
+  switch (TYPE_PAIR(type(anum), type(bnum))) {
+  case TYPE_PAIR(NUM, NUM):
+  case TYPE_PAIR(CHR, CHR):
+  case TYPE_PAIR(NUM, CHR):
+  case TYPE_PAIR(CHR, NUM):
     return c_num(anum) <= c_num(bnum) ? t : nil;
-  case TAG_PAIR(TAG_NUM, TAG_PTR):
-  case TAG_PAIR(TAG_CHR, TAG_PTR):
-    type_check(bnum, BGNUM);
+  case TYPE_PAIR(NUM, BGNUM):
+  case TYPE_PAIR(CHR, BGNUM):
     return mp_cmp_z(mp(bnum)) == MP_GT ? t : nil;
-  case TAG_PAIR(TAG_PTR, TAG_NUM):
-  case TAG_PAIR(TAG_PTR, TAG_CHR):
-    type_check(anum, BGNUM);
+  case TYPE_PAIR(BGNUM, NUM):
+  case TYPE_PAIR(BGNUM, CHR):
     return mp_cmp_z(mp(anum)) == MP_LT ? t : nil;
-  case TAG_PAIR(TAG_PTR, TAG_PTR):
-    type_check(anum, BGNUM);
+  case TYPE_PAIR(BGNUM, BGNUM):
     switch (mp_cmp(mp(anum), mp(bnum))) {
     case MP_LT: case MP_EQ:
       return t;
     default:
       return nil;
     }
+  case TYPE_PAIR(NUM, FLNUM):
+  case TYPE_PAIR(CHR, FLNUM):
+    return c_num(anum) <= c_flo(bnum) ? t : nil;
+  case TYPE_PAIR(FLNUM, NUM):
+  case TYPE_PAIR(FLNUM, CHR):
+    return c_flo(anum) <= c_num(bnum) ? t : nil;
+  case TYPE_PAIR(FLNUM, FLNUM):
+    return c_flo(anum) <= c_flo(bnum) ? t : nil;
+  case TYPE_PAIR(FLNUM, BGNUM):
+    bnum = flo_int(bnum);
+    goto tail;
+  case TYPE_PAIR(BGNUM, FLNUM):
+    anum = flo_int(anum);
+    goto tail;
   }
 
   uw_throwf(error_s, lit("lt: invalid operands ~s ~s"), anum, bnum, nao);
@@ -1078,11 +1102,9 @@ val le(val anum, val bnum)
 
 val expt(val anum, val bnum)
 {
-  int tag_a = tag(anum);
-  int tag_b = tag(bnum);
-
-  switch (TAG_PAIR(tag_a, tag_b)) {
-  case TAG_PAIR(TAG_NUM, TAG_NUM):
+tail:
+  switch (TYPE_PAIR(type(anum), type(bnum))) {
+  case TYPE_PAIR(NUM, NUM):
     {
       cnum a = c_num(anum);
       cnum b = c_num(bnum);
@@ -1109,12 +1131,11 @@ val expt(val anum, val bnum)
       mp_clear(&tmpa);
       return normalize(n);
     }
-  case TAG_PAIR(TAG_NUM, TAG_PTR):
+  case TYPE_PAIR(NUM, BGNUM):
     {
       cnum a = c_num(anum);
       mp_int tmpa;
       val n;
-      type_check(bnum, BGNUM);
       if (mp_cmp_z(mp(bnum)) == MP_LT)
         goto negexp;
       n = make_bignum();
@@ -1124,11 +1145,10 @@ val expt(val anum, val bnum)
       mp_clear(&tmpa);
       return normalize(n);
     }
-  case TAG_PAIR(TAG_PTR, TAG_NUM):
+  case TYPE_PAIR(BGNUM, NUM):
     {
       cnum b = c_num(bnum);
       val n;
-      type_check(anum, BGNUM);
       if (b < 0)
         goto negexp;
       if (bnum == zero)
@@ -1147,11 +1167,9 @@ val expt(val anum, val bnum)
       }
       return normalize(n);
     }
-  case TAG_PAIR(TAG_PTR, TAG_PTR):
+  case TYPE_PAIR(BGNUM, BGNUM):
     {
       val n;
-      type_check(anum, BGNUM);
-      type_check(bnum, BGNUM);
       if (mp_cmp_z(mp(bnum)) == MP_LT)
         goto negexp;
       n = make_bignum();
@@ -1159,6 +1177,19 @@ val expt(val anum, val bnum)
       normalize(n);
       return n;
     }
+  case TYPE_PAIR(NUM, FLNUM):
+    /* TODO: error checking */
+    return flo(pow(c_num(anum), c_flo(bnum)));
+  case TYPE_PAIR(FLNUM, NUM):
+    return flo(pow(c_flo(anum), c_num(bnum)));
+  case TYPE_PAIR(FLNUM, FLNUM):
+    return flo(pow(c_flo(anum), c_flo(bnum)));
+  case TYPE_PAIR(BGNUM, FLNUM):
+    anum = flo_int(anum);
+    goto tail;
+  case TYPE_PAIR(FLNUM, BGNUM):
+    bnum = flo_int(bnum);
+    goto tail;
   }
 
   uw_throwf(error_s, lit("expt: invalid operands ~s ~s"), anum, bnum, nao);
@@ -1170,7 +1201,7 @@ val exptmod(val base, val exp, val mod)
 {
   val n;
 
-  if (!numberp(base) || !numberp(exp) || !numberp(mod))
+  if (!integerp(base) || !integerp(exp) || !integerp(mod))
     goto inval;
 
   if (fixnump(base))
@@ -1189,11 +1220,11 @@ val exptmod(val base, val exp, val mod)
 
   return n;
 inval:
-  uw_throwf(error_s, lit("exptmod: invalid operands ~s ~s ~s"),
+  uw_throwf(error_s, lit("exptmod: non-integral operands ~s ~s ~s"),
             base, exp, mod, nao);
 }
 
-static int_ptr_t isqrt_fixnum(int_ptr_t a)
+static int_ptr_t sqroot_fixnum(int_ptr_t a)
 {
   int_ptr_t mask = (int_ptr_t) 1 << (highest_bit(a) / 2);
   int_ptr_t root = 0;
@@ -1207,19 +1238,34 @@ static int_ptr_t isqrt_fixnum(int_ptr_t a)
   return root;
 }
 
-val isqrt(val anum)
+val sqroot(val anum)
 {
-  if (fixnump(anum)) {
-    cnum a = c_num(anum);
-    if (a < 0)
-      goto negop;
-    return num_fast(isqrt_fixnum(c_num(anum)));
-  } else if (bignump(anum)) {
-    val n = make_bignum();
-    if (mp_sqrt(mp(anum), mp(n)) != MP_OKAY)
-      goto negop;
-    return normalize(n);
+  switch (type(anum)) {
+  case NUM:
+    {
+      cnum a = c_num(anum);
+      if (a < 0)
+        goto negop;
+      return num_fast(sqroot_fixnum(c_num(anum)));
+    }
+  case BGNUM:
+    {
+      val n = make_bignum();
+      if (mp_sqrt(mp(anum), mp(n)) != MP_OKAY)
+        goto negop;
+      return normalize(n);
+    }
+  case FLNUM:
+    {
+      double a = c_flo(anum);
+      if (a < 0)
+        goto negop;
+      return flo(sqrt(a));
+    }
+  default:
+    break;
   }
+
   uw_throwf(error_s, lit("sqrt: invalid operand ~s"), anum, nao);
 negop:
   uw_throw(error_s, lit("sqrt: negative operand"));
@@ -1229,7 +1275,7 @@ val gcd(val anum, val bnum)
 {
   val n;
 
-  if (!numberp(anum) || !numberp(bnum))
+  if (!integerp(anum) || !integerp(bnum))
     goto inval;
 
   if (fixnump(anum))
@@ -1245,7 +1291,7 @@ val gcd(val anum, val bnum)
 
   return n;
 inval:
-  uw_throwf(error_s, lit("gcd: invalid operands ~s ~s ~s"),
+  uw_throwf(error_s, lit("gcd: non-integral operands ~s ~s"),
             anum, bnum, nao);
 }
 

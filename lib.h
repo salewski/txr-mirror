@@ -424,7 +424,7 @@ val minv(val first, val rest);
 val expt(val base, val exp);
 val exptv(val nlist);
 val exptmod(val base, val exp, val mod);
-val isqrt(val anum);
+val sqroot(val anum);
 val gcd(val anum, val bnum);
 val string_own(wchar_t *str);
 val string(const wchar_t *str);
