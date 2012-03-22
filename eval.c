@@ -2185,7 +2185,7 @@ void eval_init(void)
   reg_fun(intern(lit("/"), user_package), func_n2(divi));
   reg_fun(intern(lit("expt"), user_package), func_n0v(exptv));
   reg_fun(intern(lit("exptmod"), user_package), func_n3(exptmod));
-  reg_fun(intern(lit("sqrt"), user_package), func_n1(isqrt));
+  reg_fun(intern(lit("sqrt"), user_package), func_n1(sqroot));
   reg_fun(intern(lit("gcd"), user_package), func_n2(gcd));
   reg_fun(intern(lit("fixnump"), user_package), func_n1(fixnump));
   reg_fun(intern(lit("bignump"), user_package), func_n1(bignump));
