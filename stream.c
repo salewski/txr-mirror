@@ -32,6 +32,7 @@
 #include <assert.h>
 #include <setjmp.h>
 #include <errno.h>
+#include <ctype.h>
 #include <wchar.h>
 #include <unistd.h>
 #include "config.h"
@@ -1147,6 +1148,12 @@ val vformat(val stream, val fmtstr, va_list vl)
               sprintf(num_buf, "%.*e", precision, n);
             else
               sprintf(num_buf, "%.*f", precision, n);
+            if (!isdigit(num_buf[0])) {
+              if (!vformat_str(stream, lit("#<bad-float>"),
+                               width, left, precision))
+                return nil;
+              continue;
+            }
             precision = 0;
             goto output_num;
           }
@@ -1169,6 +1176,13 @@ val vformat(val stream, val fmtstr, va_list vl)
             goto output_num;
           case FLNUM:
             sprintf(num_buf, "%g", obj->fl.n);
+
+            if (!isdigit(num_buf[0])) {
+              if (!vformat_str(stream, lit("#<bad-float>"),
+                               width, left, precision))
+                return nil;
+              continue;
+            }
 
             if (!precision) {
               if (!strpbrk(num_buf, "e."))
