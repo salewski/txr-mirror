@@ -1,5 +1,18 @@
 2012-03-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (floorf, ceili, sine, cosi, atang, loga): New functions.
+
+	* eval.c (eval_init): New intrinsic functions registered:
+	floor, ceil, sin, cons, atan, log.
+
+	* lib.h (floorf, ceili, sine, cosi, atang, loga): Declared.
+
+	* txr.1: Doc stub section for new functions.
+
+	* txr.vim: Highighting added.
+
+2012-03-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (int_flo): If sprintf produces something
 	that doesn't begin with a digit, it's most likely NaN or Inf.
 	We can turn that into an exception.

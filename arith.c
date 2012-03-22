@@ -1296,6 +1296,36 @@ inval:
             anum, bnum, nao);
 }
 
+val floorf(val num)
+{
+  return flo(floor(c_flo(to_float(lit("floor"), num))));
+}
+
+val ceili(val num)
+{
+  return flo(ceil(c_flo(to_float(lit("ceil"), num))));
+}
+
+val sine(val num)
+{
+  return flo(sin(c_flo(to_float(lit("sin"), num))));
+}
+
+val cosi(val num)
+{
+  return flo(cos(c_flo(to_float(lit("cos"), num))));
+}
+
+val atang(val num)
+{
+  return flo(atan(c_flo(to_float(lit("atan"), num))));
+}
+
+val loga(val num)
+{
+  return flo(log(c_flo(to_float(lit("log"), num))));
+}
+
 /*
  * TODO: replace this text-based hack!
  */
