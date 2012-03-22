@@ -35,6 +35,7 @@
 #include <ctype.h>
 #include <wchar.h>
 #include <unistd.h>
+#include <float.h>
 #include "config.h"
 #if HAVE_SYS_WAIT
 #include <sys/wait.h>
@@ -960,7 +961,7 @@ val vformat(val stream, val fmtstr, va_list vl)
     enum {
       vf_init, vf_width, vf_digits, vf_precision, vf_spec
     } state = vf_init, saved_state = vf_init;
-    int width = 0, precision = 0, digits = 0;
+    int width = 0, precision = 0, precision_p = 0, digits = 0;
     int left = 0, sign = 0, zeropad = 0;
     cnum value;
     void *ptr;
@@ -981,6 +982,7 @@ val vformat(val stream, val fmtstr, va_list vl)
           left = 0;
           zeropad = 0;
           precision = 0;
+          precision_p = 0;
           digits = 0;
           continue;
         default:
@@ -1035,6 +1037,7 @@ val vformat(val stream, val fmtstr, va_list vl)
           obj = va_arg(vl, val);
           width = c_num(obj);
           precision = vf_precision;
+          precision_p = 1;
           continue;
         default:
           state = vf_spec;
@@ -1067,6 +1070,7 @@ val vformat(val stream, val fmtstr, va_list vl)
             continue;
           case vf_precision:
             precision = digits;
+            precision_p = 1;
             state = vf_spec;
             --fmt;
             continue;
@@ -1139,6 +1143,9 @@ val vformat(val stream, val fmtstr, va_list vl)
                         chr(ch), obj, nao);
             }
 
+            if (!precision_p)
+              precision = 3;
+
             /* guard against num_buf overflow */
             if (precision > 128)
               uw_throwf(error_s, lit("excessive precision in format: ~s\n"),
@@ -1150,7 +1157,7 @@ val vformat(val stream, val fmtstr, va_list vl)
               sprintf(num_buf, "%.*f", precision, n);
             if (!isdigit(num_buf[0])) {
               if (!vformat_str(stream, lit("#<bad-float>"),
-                               width, left, precision))
+                               width, left, 0))
                 return nil;
               continue;
             }
@@ -1175,30 +1182,26 @@ val vformat(val stream, val fmtstr, va_list vl)
             }
             goto output_num;
           case FLNUM:
-            sprintf(num_buf, "%g", obj->fl.n);
+            if (!precision_p)
+              precision = DBL_DIG;
 
-            if (!isdigit(num_buf[0])) {
+            if (precision > 500)
+              uw_throwf(error_s, lit("excessive precision in format: ~s\n"),
+                        num(precision), nao);
+
+            sprintf(num_buf, "%.*g", precision, obj->fl.n);
+
+            if (ch == 's' && !precision_p && !strpbrk(num_buf, "e."))
+                strcat(num_buf, ".0");
+
+            if (!isdigit(num_buf[0]) && !isdigit(num_buf[1])) {
               if (!vformat_str(stream, lit("#<bad-float>"),
-                               width, left, precision))
+                               width, left, 0))
                 return nil;
               continue;
             }
 
-            if (!precision) {
-              if (!strpbrk(num_buf, "e."))
-                strcat(num_buf, ".0");
-            } else {
-              /* guard against num_buf overflow */
-              if (precision > 128)
-                uw_throwf(error_s, lit("excessive precision in format: ~s\n"),
-                          num(precision), nao);
-
-              if (strchr(num_buf, 'e'))
-                sprintf(num_buf, "%.*e", precision, obj->fl.n);
-              else
-                sprintf(num_buf, "%.*f", precision, obj->fl.n);
-              precision = 0;
-            }
+            precision = 0;
             goto output_num;
           default:
             if (width != 0) {

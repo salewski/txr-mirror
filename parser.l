@@ -153,7 +153,7 @@ SGN     [+\-]
 EXP     [eE][+\-]?[0-9]+
 DIG     [0-9]
 NUM     {SGN}?{DIG}+
-FLO     {SGN}?{DIG}*[.]({DIG}+{EXP}?|{EXP})
+FLO     {SGN}?({DIG}*[.]{DIG}+{EXP}?|{DIG}+[.]?{EXP})
 FLODOT  {SGN}?{DIG}+[.]
 BSCHR   [a-zA-Z0-9!$%&*+\-<=>?\\^_~]
 BSYM    {BSCHR}({BSCHR}|#)*
