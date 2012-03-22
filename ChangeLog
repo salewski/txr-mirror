@@ -1,5 +1,22 @@
 2012-03-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.l: Bugfix: was not allowing e-notation floats
+	with no decimal point like 1E1.
+
+	* stream.c: (vformat): Keep track of whether or not precision was
+	given in precision_p local variable.
+	When printing #<bad-float> pass a precision of 0
+	to vformat_str, not precision, since precision does not apply.
+	In ~f and ~e, if the precision was not given, default
+	it to 3.
+	Restructured float printing in ~a and ~s. It now just uses sprintf's %g
+	with a precision. If user does not specify precision, it defaults
+	to DBL_DIG to print the number with reasonable accuracy.
+	A .0 is added if it sprintf produces an integer, and the conversion
+	is ~s rather than ~a.
+
+2012-03-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	Fix sqrt confusion. There must be a separate isqrt
 	for the integer square root.
 
