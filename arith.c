@@ -1225,7 +1225,7 @@ inval:
             base, exp, mod, nao);
 }
 
-static int_ptr_t sqroot_fixnum(int_ptr_t a)
+static int_ptr_t isqrt_fixnum(int_ptr_t a)
 {
   int_ptr_t mask = (int_ptr_t) 1 << (highest_bit(a) / 2);
   int_ptr_t root = 0;
@@ -1239,7 +1239,7 @@ static int_ptr_t sqroot_fixnum(int_ptr_t a)
   return root;
 }
 
-val sqroot(val anum)
+val isqrt(val anum)
 {
   switch (type(anum)) {
   case NUM:
@@ -1247,7 +1247,7 @@ val sqroot(val anum)
       cnum a = c_num(anum);
       if (a < 0)
         goto negop;
-      return num_fast(sqroot_fixnum(c_num(anum)));
+      return num_fast(isqrt_fixnum(c_num(anum)));
     }
   case BGNUM:
     {
@@ -1256,20 +1256,13 @@ val sqroot(val anum)
         goto negop;
       return normalize(n);
     }
-  case FLNUM:
-    {
-      double a = c_flo(anum);
-      if (a < 0)
-        goto negop;
-      return flo(sqrt(a));
-    }
   default:
     break;
   }
 
-  uw_throwf(error_s, lit("sqrt: invalid operand ~s"), anum, nao);
+  uw_throwf(error_s, lit("isqrt: non-integer operand ~s"), anum, nao);
 negop:
-  uw_throw(error_s, lit("sqrt: negative operand"));
+  uw_throw(error_s, lit("isqrt: negative operand"));
 }
 
 val gcd(val anum, val bnum)
@@ -1324,6 +1317,11 @@ val atang(val num)
 val loga(val num)
 {
   return flo(log(c_flo(to_float(lit("log"), num))));
+}
+
+val sqroot(val num)
+{
+  return flo(sqrt(c_flo(to_float(lit("sqrt"), num))));
 }
 
 /*

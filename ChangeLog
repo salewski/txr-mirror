@@ -1,5 +1,23 @@
 2012-03-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	Fix sqrt confusion. There must be a separate isqrt
+	for the integer square root.
+
+	* arith.c (sqroot_fixnum): Renamed back to isqrt_fixnum.
+	(sqroot): Rewritten to handle only floating-point square root.
+	(isqrt): New function, based on previous sqroot,
+	handles only integers.
+
+	* eval.c (eval_init): New intrinsic, isqrt.
+
+	* lib.h (isqrt): New declaration.
+
+	* txr.1: Doc stubs.
+
+	* txr.vim: Highlighting for isqrt.
+
+2012-03-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (floorf, ceili, sine, cosi, atang, loga): New functions.
 
 	* eval.c (eval_init): New intrinsic functions registered:

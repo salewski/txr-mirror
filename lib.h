@@ -425,6 +425,7 @@ val expt(val base, val exp);
 val exptv(val nlist);
 val exptmod(val base, val exp, val mod);
 val sqroot(val anum);
+val isqrt(val anum);
 val gcd(val anum, val bnum);
 val floorf(val);
 val ceili(val);
