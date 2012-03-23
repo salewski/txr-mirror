@@ -1075,8 +1075,54 @@ the TXR pattern language when the quasiliteral occurs in the pattern language.
 
 .SS Numbers
 
-A number is made up of digits 0 through 9, optionally preceded by a + or -
-sign.
+TXR supports integers and floating-point numbers. 
+
+An integer constant is made up of digits 0 through 9, optionally preceded by a
++ or - sign.
+
+Examples:
+
+  123
+  -34
+  +0
+  -0
+  +234483527304983792384729384723234
+
+A floating-point constant is marked by the inclusion of a decimal point, the
+exponential "e notation", or both. It is an optional sign, followed
+by a mantissa consisting of digits, a decimal point, more digits, and then an
+optional exponential notation consisting of the letter "e" or "E", an optional
+"+" or "-" sign, and then digits indicating the exponent value.
+In the mantissa, the digits are not optional. At least one digit must either
+precede the decimal point or follow. That is to say, a decimal point by itself
+is not a floating-point constant.
+
+Examples:
+
+  .123
+  123.
+  1E-3
+  20E40
+  .9E1
+  9.E19
+  -.5
+  +3E+3
+
+Examples which are not floating-point constant tokens:
+
+  .       (consing dot)
+  123E    (the symbol 123E)
+  1.0E-   (floating point 1.0 followed by symbol E-)
+  .e      (consing dot followed by symbol e)
+
+In TXR there is a special "dotdot" token consisting of two consecutive periods.
+An integer constant followed immediately by dotdot is recognized as such; it is
+not treated as a floating constant followed by a dot. That is to say,
+123.. does not mean 123. . (floating point 123.0 value followed by dot token).
+It means 123 .. (integer 123 followed by .. token).
+
+Dialect note: unlike in Common Lisp, 123. is not an integer, but the same as
+123.0.
 
 .SS Comments
 
