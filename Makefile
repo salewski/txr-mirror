@@ -52,7 +52,7 @@ OBJS += $(MPI_OBJS)
 PROG := ./txr
 
 $(PROG): $(OBJS) $(OBJS-y)
-	$(CC) $(CFLAGS) -o $@ $^ $(LEXLIB)
+	$(CC) $(CFLAGS) -o $@ $^ -lm $(LEXLIB)
 
 VPATH := $(top_srcdir)
 

@@ -186,29 +186,27 @@ static void finalize(val obj)
   switch (obj->t.type) {
   case NIL:
   case CONS:
-    return;
-  case STR:
-    free(obj->st.str);
-    obj->st.str = 0;
-    return;
   case CHR:
   case NUM:
   case LIT:
   case SYM:
   case PKG:
   case FUN:
+  case LCONS:
+  case LSTR:
+  case ENV:
+  case FLNUM:
+    return;
+  case STR:
+    free(obj->st.str);
+    obj->st.str = 0;
     return;
   case VEC:
     free(obj->v.vec-2);
     obj->v.vec = 0;
     return;
-  case LCONS:
-  case LSTR:
-    return;
   case COBJ:
     obj->co.ops->destroy(obj);
-    return;
-  case ENV:
     return;
   case BGNUM:
     mp_clear(mp(obj));
@@ -262,6 +260,7 @@ tail_call:
   case NUM:
   case LIT:
   case BGNUM:
+  case FLNUM:
     return;
   case CONS:
     mark_obj(obj->c.car);

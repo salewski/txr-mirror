@@ -6641,15 +6641,21 @@ symbols, packages, or streams are equal if they are the same hash.
 
 Certain object types have a custom equal function.
 
-.SS Arithmetic functions +, -, *, trunc, mod, expt, sqrt
+.SS Arithmetic functions +, -, *
 
-.SS Arithmetic function exptmod
+.SS Arithmetic function /, trunc, mod
 
 .SS Arithmetic function gcd
 
 .SS Arithmetic function abs
 
-.SS Functions fixnump, bignump, numberp
+.SS Arithmetic functions floor, ceil, sin, cos, atan, log, exp
+
+.SS Arithmetic functions expt, sqrt, isqrt
+
+.SS Arithmetic function exptmod
+
+.SS Functions fixnump, bignump, integerp, floatp, numberp
 
 .SS Functions zerop, evenp, oddp
 
@@ -6771,7 +6777,9 @@ Certain object types have a custom equal function.
 
 .SS Function string-lt
 
-.SS Function int-str
+.SS Functions int-str and float-str
+
+.SS Functions int-flo and flo-int
 
 .SS Function chrp
 

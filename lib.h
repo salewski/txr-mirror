@@ -40,8 +40,11 @@ typedef int_ptr_t cnum;
 typedef enum type {
   NIL, NUM = TAG_NUM, CHR = TAG_CHR, LIT = TAG_LIT, CONS,
   STR, SYM, PKG, FUN, VEC, LCONS, LSTR, COBJ, ENV,
-  BGNUM
+  BGNUM, FLNUM
 } type_t;
+
+#define TYPE_SHIFT 4
+#define TYPE_PAIR(A, B) ((A) << TYPE_SHIFT | (B))
 
 typedef enum functype
 {
@@ -193,6 +196,11 @@ struct bignum {
   mp_int mp;
 };
 
+struct flonum {
+  type_t type;
+  double n;
+};
+
 union obj {
   struct any t;
   struct cons c;
@@ -206,6 +214,7 @@ union obj {
   struct cobj co;
   struct env e;
   struct bignum bn;
+  struct flonum fl;
 };
 
 INLINE cnum tag(val obj) { return ((cnum) obj) & TAG_MASK; }
@@ -280,7 +289,7 @@ INLINE val chr(wchar_t ch)
 extern val keyword_package, system_package, user_package;
 extern val null, t, cons_s, str_s, chr_s, fixnum_s, sym_s, pkg_s, fun_s, vec_s;
 extern val stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s, cptr_s;
-extern val env_s, bignum_s;
+extern val env_s, bignum_s, float_s;
 extern val var_s, expr_s, regex_s, chset_s, set_s, cset_s, wild_s, oneplus_s;
 extern val nongreedy_s, compiled_regex_s;
 extern val quote_s, qquote_s, unquote_s, splice_s;
@@ -378,9 +387,13 @@ val getplist_f(val list, val key, val *found);
 val proper_plist_to_alist(val list);
 val improper_plist_to_alist(val list, val boolean_keys);
 val num(cnum val);
+val flo(double val);
 cnum c_num(val num);
+double c_flo(val num);
 val fixnump(val num);
 val bignump(val num);
+val floatp(val num);
+val integerp(val num);
 val numberp(val num);
 val plus(val anum, val bnum);
 val plusv(val nlist);
@@ -392,6 +405,7 @@ val mul(val anum, val bnum);
 val mulv(val nlist);
 val trunc(val anum, val bnum);
 val mod(val anum, val bnum);
+val divi(val anum, val bnum);
 val zerop(val num);
 val evenp(val num);
 val oddp(val num);
@@ -410,8 +424,16 @@ val minv(val first, val rest);
 val expt(val base, val exp);
 val exptv(val nlist);
 val exptmod(val base, val exp, val mod);
+val sqroot(val anum);
 val isqrt(val anum);
 val gcd(val anum, val bnum);
+val floorf(val);
+val ceili(val);
+val sine(val);
+val cosi(val);
+val atang(val);
+val loga(val);
+val expo(val);
 val string_own(wchar_t *str);
 val string(const wchar_t *str);
 val string_utf8(const char *str);
@@ -439,6 +461,9 @@ val list_str(val str);
 val trim_str(val str);
 val string_lt(val astr, val bstr);
 val int_str(val str, val base);
+val flo_str(val str);
+val int_flo(val f);
+val flo_int(val i);
 val chrp(val chr);
 wchar_t c_chr(val chr);
 val chr_isalnum(val ch);

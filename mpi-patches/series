@@ -12,3 +12,4 @@ fix-bad-shifts
 bit-search-optimizations
 shrink-mpi-int
 faster-square-root
+mpi-to-double

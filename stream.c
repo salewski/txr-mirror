@@ -32,8 +32,10 @@
 #include <assert.h>
 #include <setjmp.h>
 #include <errno.h>
+#include <ctype.h>
 #include <wchar.h>
 #include <unistd.h>
+#include <float.h>
 #include "config.h"
 #if HAVE_SYS_WAIT
 #include <sys/wait.h>
@@ -959,7 +961,7 @@ val vformat(val stream, val fmtstr, va_list vl)
     enum {
       vf_init, vf_width, vf_digits, vf_precision, vf_spec
     } state = vf_init, saved_state = vf_init;
-    int width = 0, precision = 0, digits = 0;
+    int width = 0, precision = 0, precision_p = 0, digits = 0;
     int left = 0, sign = 0, zeropad = 0;
     cnum value;
     void *ptr;
@@ -967,7 +969,7 @@ val vformat(val stream, val fmtstr, va_list vl)
     for (;;) {
       val obj;
       wchar_t ch = *fmt++;
-      char num_buf[64], *pnum = num_buf;
+      char num_buf[512], *pnum = num_buf;
 
       switch (state) {
       case vf_init:
@@ -980,6 +982,7 @@ val vformat(val stream, val fmtstr, va_list vl)
           left = 0;
           zeropad = 0;
           precision = 0;
+          precision_p = 0;
           digits = 0;
           continue;
         default:
@@ -1034,6 +1037,7 @@ val vformat(val stream, val fmtstr, va_list vl)
           obj = va_arg(vl, val);
           width = c_num(obj);
           precision = vf_precision;
+          precision_p = 1;
           continue;
         default:
           state = vf_spec;
@@ -1066,6 +1070,7 @@ val vformat(val stream, val fmtstr, va_list vl)
             continue;
           case vf_precision:
             precision = digits;
+            precision_p = 1;
             state = vf_spec;
             --fmt;
             continue;
@@ -1113,25 +1118,99 @@ val vformat(val stream, val fmtstr, va_list vl)
             sprintf(num_buf, num_fmt->oct, value);
           }
           goto output_num;
+        case 'f': case 'e':
+          obj = va_arg(vl, val);
+
+          if (obj == nao)
+            goto premature;
+
+          {
+            double n;
+
+            switch (type(obj)) {
+            case BGNUM:
+              obj = flo_int(obj);
+              /* fallthrough */
+            case FLNUM:
+              n = c_flo(obj);
+              break;
+            case NUM:
+              n = (double) c_num(obj);
+              break;
+            default:
+              uw_throwf(error_s, lit("format: ~~~a conversion requires "
+                                     "numeric arg: ~s given\n"),
+                        chr(ch), obj, nao);
+            }
+
+            if (!precision_p)
+              precision = 3;
+
+            /* guard against num_buf overflow */
+            if (precision > 128)
+              uw_throwf(error_s, lit("excessive precision in format: ~s\n"),
+                        num(precision), nao);
+
+            if (ch == 'e')
+              sprintf(num_buf, "%.*e", precision, n);
+            else
+              sprintf(num_buf, "%.*f", precision, n);
+            if (!isdigit(num_buf[0])) {
+              if (!vformat_str(stream, lit("#<bad-float>"),
+                               width, left, 0))
+                return nil;
+              continue;
+            }
+            precision = 0;
+            goto output_num;
+          }
         case 'a': case 's':
           obj = va_arg(vl, val);
           if (obj == nao)
             goto premature;
-          if (fixnump(obj)) {
+          switch (type(obj)) {
+          case NUM:
             value = c_num(obj);
             sprintf(num_buf, num_fmt->dec, value);
             goto output_num;
-          } else if (bignump(obj)) {
-            int nchars = mp_radix_size(mp(obj), 10); 
-            if (nchars >= (int) sizeof (num_buf))
-              pnum = (char *) chk_malloc(nchars + 1);
-            mp_toradix(mp(obj), (unsigned char *) pnum, 10);
+          case BGNUM:
+            {
+              int nchars = mp_radix_size(mp(obj), 10); 
+              if (nchars >= (int) sizeof (num_buf))
+                pnum = (char *) chk_malloc(nchars + 1);
+              mp_toradix(mp(obj), (unsigned char *) pnum, 10);
+            }
             goto output_num;
-          } else if (width != 0) {
-            val str = format(nil, ch == 'a' ? lit("~a") : lit("~s"), obj, nao);
-            if (!vformat_str(stream, str, width, left, precision))
-              return nil;
-            continue;
+          case FLNUM:
+            if (!precision_p)
+              precision = DBL_DIG;
+
+            if (precision > 500)
+              uw_throwf(error_s, lit("excessive precision in format: ~s\n"),
+                        num(precision), nao);
+
+            sprintf(num_buf, "%.*g", precision, obj->fl.n);
+
+            if (ch == 's' && !precision_p && !strpbrk(num_buf, "e."))
+                strcat(num_buf, ".0");
+
+            if (!isdigit(num_buf[0]) && !isdigit(num_buf[1])) {
+              if (!vformat_str(stream, lit("#<bad-float>"),
+                               width, left, 0))
+                return nil;
+              continue;
+            }
+
+            precision = 0;
+            goto output_num;
+          default:
+            if (width != 0) {
+              val str = format(nil, ch == 'a' ? lit("~a") : lit("~s"),
+                               obj, nao);
+              if (!vformat_str(stream, str, width, left, precision))
+                return nil;
+              continue;
+            }
           }
           if (ch == 'a')
             obj_pprint(obj, stream);
