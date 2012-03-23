@@ -433,6 +433,7 @@ val sine(val);
 val cosi(val);
 val atang(val);
 val loga(val);
+val expo(val);
 val string_own(wchar_t *str);
 val string(const wchar_t *str);
 val string_utf8(const char *str);

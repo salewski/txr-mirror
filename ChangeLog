@@ -1,5 +1,17 @@
 2012-03-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (expo): New function.
+
+	* eval.c (eval_init): expo registered as intrinsic exp.
+
+	* lib.h (expo): Declared.
+
+	* txr.1: Added to stub heading.
+
+	* txr.vim: Highlighting for exp.
+
+2012-03-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (transform_op): use integerp instead of numberp.
 	Not all numbers are integers now, and that situation
 	requires an integer.
