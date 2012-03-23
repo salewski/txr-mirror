@@ -2193,6 +2193,7 @@ void eval_init(void)
   reg_fun(intern(lit("cos"), user_package), func_n1(cosi));
   reg_fun(intern(lit("atan"), user_package), func_n1(atang));
   reg_fun(intern(lit("log"), user_package), func_n1(loga));
+  reg_fun(intern(lit("exp"), user_package), func_n1(expo));
   reg_fun(intern(lit("sqrt"), user_package), func_n1(sqroot));
   reg_fun(intern(lit("fixnump"), user_package), func_n1(fixnump));
   reg_fun(intern(lit("bignump"), user_package), func_n1(bignump));
