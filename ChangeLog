@@ -1,3 +1,15 @@
+2012-03-23  Kaz Kylheku  <kaz@kylheku.com>
+
+	* Makefile (TXR_ARGS): Pass new file to tests/009/json.txr test.
+
+	* tests/009/json.expected: Updated.
+
+	* tests/009/json.txr: Updated source. Translates to a more native
+	representation with vectors and hash tables. Numbers go to
+	floating point instead of remaining as strings.
+
+	* tests/009/pass1.json: New file: a test case from json.org.
+
 2012-03-22  Kaz Kylheku  <kaz@kylheku.com>
 
 	* arith.c (expo): New function.
