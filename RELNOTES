@@ -1,3 +1,39 @@
+                                     TXR 62
+                                   2011-03-23
+
+
+  Features
+
+  - Floating-point support has been added. 
+    - TXR programs can specify floating-point constants. 
+    - Printing floting points is supported in the format function.
+      - New specifiers: ~f and ~e.
+    - Arithmetic on floating points, with implicit
+      conversion. 
+    - New / function which produces a floating-point result.
+    - New functions like sin, cos, exp, and log.
+    - Functions for converting between floating and integer,
+      and parsing a float from a string.
+
+  - New combinators for easier programming with higher order functions: chain,
+    andf, orf, iff.
+
+  - url_decode and url_encode functions take an optional parameter which
+    determines whether + is used as the code for space, distinguishing
+    URL encoding from percent encoding. Separate named filters are
+    introduced: :frompercent, :topercent distinct from :fromurl and :tourl.
+
+  Bugs
+
+  - Buggy quicksort routine repaired. This is a recently
+    added feature which allows vectors and strings to be sorted. 
+    List sorting, done by merge sort, is unaffected.
+
+  - Breakpoints can now be set by line number and file name, allowing
+    breakpoints in loaded modules, not just the main module.
+
+ 
+  
                                      TXR 61
                                    2011-03-15
 
