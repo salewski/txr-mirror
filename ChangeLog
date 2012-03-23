@@ -1,3 +1,264 @@
+2012-03-22  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c (expo): New function.
+
+	* eval.c (eval_init): expo registered as intrinsic exp.
+
+	* lib.h (expo): Declared.
+
+	* txr.1: Added to stub heading.
+
+	* txr.vim: Highlighting for exp.
+
+2012-03-22  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (transform_op): use integerp instead of numberp.
+	Not all numbers are integers now, and that situation
+	requires an integer.
+
+2012-03-22  Kaz Kylheku  <kaz@kylheku.com>
+
+	* parser.l: Bugfix: was not allowing e-notation floats
+	with no decimal point like 1E1.
+
+	* stream.c: (vformat): Keep track of whether or not precision was
+	given in precision_p local variable.
+	When printing #<bad-float> pass a precision of 0
+	to vformat_str, not precision, since precision does not apply.
+	In ~f and ~e, if the precision was not given, default
+	it to 3.
+	Restructured float printing in ~a and ~s. It now just uses sprintf's %g
+	with a precision. If user does not specify precision, it defaults
+	to DBL_DIG to print the number with reasonable accuracy.
+	A .0 is added if it sprintf produces an integer, and the conversion
+	is ~s rather than ~a.
+
+2012-03-22  Kaz Kylheku  <kaz@kylheku.com>
+
+	Fix sqrt confusion. There must be a separate isqrt
+	for the integer square root.
+
+	* arith.c (sqroot_fixnum): Renamed back to isqrt_fixnum.
+	(sqroot): Rewritten to handle only floating-point square root.
+	(isqrt): New function, based on previous sqroot,
+	handles only integers.
+
+	* eval.c (eval_init): New intrinsic, isqrt.
+
+	* lib.h (isqrt): New declaration.
+
+	* txr.1: Doc stubs.
+
+	* txr.vim: Highlighting for isqrt.
+
+2012-03-22  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c (floorf, ceili, sine, cosi, atang, loga): New functions.
+
+	* eval.c (eval_init): New intrinsic functions registered:
+	floor, ceil, sin, cons, atan, log.
+
+	* lib.h (floorf, ceili, sine, cosi, atang, loga): Declared.
+
+	* txr.1: Doc stub section for new functions.
+
+	* txr.vim: Highighting added.
+
+2012-03-22  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c (int_flo): If sprintf produces something
+	that doesn't begin with a digit, it's most likely NaN or Inf.
+	We can turn that into an exception.
+
+	* stream.c (vformat): If sprintf produces a non-number,
+	turn it into the printed representation #<bad-float>.
+
+2012-03-22  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c (to_float): New static function.
+	(divi): Uses to_float.
+	(zerop, gt, lt, ge, le, expt): Floating support.
+	(isqrt_fixnum): Static function renamed to sqroot_fixnum.
+	(isqrt): Renamed to sqroot. Floating support.
+	(evenp, oddp, exptmod, gcd): Work with integers, not floats.
+
+	* eval.c (eval_init): intrinsic registration of sqrt follows rename of
+	isqrt to sqroot.
+
+	* lib.h (isqrt): Declaration replaced.
+
+2012-03-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c (divi): New function.
+
+	* eval.c (eval_init): divi registered as / intrinsic.
+
+	* lib.h (divi): Declared.
+
+	* txr.1: divi added to stub heading.
+
+	* txr.vim: / operator highlighted.
+
+2012-03-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c (mod): Floating support.
+
+2012-03-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c (trunc): Floating support.
+
+2012-03-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c (plus, minus, mul): Removing unnecessary type checks,
+	which are already implied by the switch case.
+
+2012-03-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	* txr.1: Doc stubs for new functions floatp, integerp,
+	float-str, int-flo and flo-int.
+
+	* txr.vim: Highlighting for new functions.
+
+2012-03-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	* Makefile: link in -lm, which is needed now on some systems.
+
+	* arith.c (plus, minus): Eliminated some unnecessary (double) casts.
+	(abso, mul): Floating support.
+
+2012-03-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c (neg): Floating-point support.
+
+	* parser.l: FLO and FLODOT cases had to be reordered because
+	the lex trailing context counts as part of the match length,
+	causing 3.0 to be matched as three characters with 0 as
+	the trailing context. The cases are split up to eliminate
+	a flex warning.
+
+	* stream.c (vformat): Support bignum in floating point
+	conversion. Bugfixes: floating point conversion was
+	accessing obj->fl.n instead of using n.
+	Changed some if/else ladders to switches.
+
+2012-03-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c (plus): Minor code simplification.
+	(minus): Floating point support.
+
+	* mpi-patches/mpi-to-double (mp_to_double): Re-apply lost
+	bugfix: index incremented instead of decremented.
+	Didn't refresh patch last time, then did a make distclean.
+
+2012-03-20  Kaz Kylheku  <kaz@kylheku.com>
+
+	Regression fix: 1..3 scans incorrectly into 1. .3 tokens.
+
+	* parser.l (SGN, EXP, DIG): New regex definitions.
+	(FLO): Do not recognize numbers of the form 123.
+	Decimal point must be followed either by exponent, or digits
+	(which may then be followed by an exponent).
+	(FLODOT): New token type, recognizes 123.
+	(grammar): Recognize FLODOT as a floating point number,
+	only if it not trailed by another dot, and
+	recognize FLO unconditionally.
+
+2012-03-20  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c (plus): Completed implementation of bignum-float
+	and float-bignum cases.
+
+2012-03-20  Kaz Kylheku  <kaz@kylheku.com>
+
+	* stream.c (vformat): Use larger num_buf buffer so we don't
+	overrun. IEEE double floats can go to e+-308.
+
+2012-03-20  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c (flo_int): New function.
+
+	* eval.c (eval_init): flo-int registered as intrinsic.
+
+	* lib.h (flo_int): Declared.
+
+	* mpi-patches/series: Added mpi-to-double to patch stack.
+	(mp_to_double): New MPI function.
+
+	* mpi-patches/mpi-to-double: New file.
+
+2012-03-20  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c (plus): Optimization: use num_fast when
+	result is in the fixnum range.
+	Implemented FLNUM cases, except for adding a FLNUM
+	to BGNUM.
+	(minus, mul): Use num_fast when the cnum value is in the fixnum range.
+	(int_flo): New function.
+
+	* eval.c (eval_init): Register int-flo intrinsic.
+
+	* lib.c (c_flo): New function.
+
+	* lib.h (TYPE_SHIFT, TYPE_PAIR): New macros, carried over
+	from the lazy strings branch.
+	(c_flo, int_flo): Declared.
+
+2012-03-20  Kaz Kylheku  <kaz@kylheku.com>
+
+	* parser.l (FLO): Adjusted syntax of floating point numbers
+	to allow leading or trailing decimal.
+
+2012-03-19  Kaz Kylheku  <kaz@kylheku.com>
+
+	* stream.c (vformat): num_buf increased to 256 because we
+	are now printing floating point numbers into it, letting
+	the C library handle precision which can generate many digits.
+	We cap the precision at at 128. New format specifiers ~e
+	and ~f implemented, which loosely correspond to those of printf.
+	The ~s and ~a directives handle floats similarly to ~g in
+	printf, except that they ensure that a decimal point is printed
+	for the non-exponential notation.
+
+2012-03-19  Kaz Kylheku  <kaz@kylheku.com>
+
+	* configure (uintptr): New variable. Indicates whether unsigned
+	version of intptr_t is available and should be generated in config.h
+	as uintptr_t.
+
+	* eval.c (eval_init): New intrinsic functions floatp,
+	integerp, flo-str.
+
+	* gc.c (finalize): Handle FLNUM case. Rearranged
+	cases so that all trivially returning cases are
+	together.
+	(mark): Handle FLNUM case.
+
+	* hash.c (hash_double): New function.
+	(equal_hash): Handle FLNUM via hash_double.
+	(eql_hash): Likewise.
+
+	* lib.c: <math.h> is included.
+	(float_s): New symbol variable.
+	(code2type, equal): Handle FLNUM case in switch.
+	(integerp): New function; does the same thing
+	as integerp before.
+	(numberp): Returns t for floats.
+	(flo, floatp, flo_str): New functions.
+	(obj_init): Initialize new float_s variable.
+	(obj_print, obj_pprint): Handle FLNUM case in switch.
+	Printing does not work yet; needs work in stream.c.
+
+	* lib.h (enum type): New enumeration FLNUM.
+	(struct flonum): New struct type.
+	(union obj): New member, fl.
+	(float_s, flo, floatp, integerp, flo_str): Declared.
+
+	* parser.l (FLO): New token pattern definition.
+	Scans to a NUMBER token.
+	Corrected uses of yylval.num to yylval.val.
+
+	* parser.y (%union): Removed num member from yystype.
+
 2012-03-20  Kaz Kylheku  <kaz@kylheku.com>
 
 	* debug.c (debug): Breakpointing now takes into account 

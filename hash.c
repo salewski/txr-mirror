@@ -90,6 +90,24 @@ static unsigned long hash_c_str(const wchar_t *str)
   return h;
 }
 
+static cnum hash_double(double n)
+{
+#ifdef HAVE_UINTPTR_T
+  uint_ptr_t h = 0;
+#else
+  unsigned long h = 0;
+#endif
+
+  mem_t *p = (mem_t *) &n, *q = p + sizeof(double);
+
+  while (p < q) {
+    h = h << 8 | h >> (8 * sizeof h - 1);
+    h += *p++;
+  }
+
+  return h & NUM_MAX;
+}
+
 static cnum equal_hash(val obj)
 {
   switch (type(obj)) {
@@ -135,6 +153,8 @@ static cnum equal_hash(val obj)
     return equal_hash(obj->ls.prefix);
   case BGNUM:
     return mp_hash(mp(obj)) & NUM_MAX;
+  case FLNUM:
+    return hash_double(obj->fl.n);
   case COBJ:
     return obj->co.ops->hash(obj) & NUM_MAX;
   }
@@ -150,6 +170,8 @@ static cnum eql_hash(val obj)
       return NUM_MAX;
     if (obj->t.type == BGNUM)
       return mp_hash(mp(obj)) & NUM_MAX;
+    if (obj->t.type == FLNUM)
+      return hash_double(obj->fl.n);
     switch (sizeof (mem_t *)) {
     case 4:
       return (((cnum) obj) >> 4) & NUM_MAX;

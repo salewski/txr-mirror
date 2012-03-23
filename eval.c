@@ -1496,7 +1496,7 @@ static val transform_op(val forms, val syms, val rg)
     if (consp(fi) && car(fi) == var_s && consp(cdr(fi))) {
       val vararg = car(cdr(fi));
 
-      if (numberp(vararg)) {
+      if (integerp(vararg)) {
         val prefix = format(nil, lit("arg-~,02s-"), vararg, nao);
         val newsyms = syms;
         val new_p;
@@ -2182,12 +2182,23 @@ void eval_init(void)
   reg_fun(intern(lit("abs"), user_package), func_n1(abso));
   reg_fun(intern(lit("trunc"), user_package), func_n2(trunc));
   reg_fun(intern(lit("mod"), user_package), func_n2(mod));
+  reg_fun(intern(lit("/"), user_package), func_n2(divi));
   reg_fun(intern(lit("expt"), user_package), func_n0v(exptv));
   reg_fun(intern(lit("exptmod"), user_package), func_n3(exptmod));
-  reg_fun(intern(lit("sqrt"), user_package), func_n1(isqrt));
+  reg_fun(intern(lit("isqrt"), user_package), func_n1(isqrt));
   reg_fun(intern(lit("gcd"), user_package), func_n2(gcd));
+  reg_fun(intern(lit("floor"), user_package), func_n1(floorf));
+  reg_fun(intern(lit("ceil"), user_package), func_n1(ceili));
+  reg_fun(intern(lit("sin"), user_package), func_n1(sine));
+  reg_fun(intern(lit("cos"), user_package), func_n1(cosi));
+  reg_fun(intern(lit("atan"), user_package), func_n1(atang));
+  reg_fun(intern(lit("log"), user_package), func_n1(loga));
+  reg_fun(intern(lit("exp"), user_package), func_n1(expo));
+  reg_fun(intern(lit("sqrt"), user_package), func_n1(sqroot));
   reg_fun(intern(lit("fixnump"), user_package), func_n1(fixnump));
   reg_fun(intern(lit("bignump"), user_package), func_n1(bignump));
+  reg_fun(intern(lit("floatp"), user_package), func_n1(floatp));
+  reg_fun(intern(lit("integerp"), user_package), func_n1(integerp));
   reg_fun(intern(lit("numberp"), user_package), func_n1(numberp));
 
   reg_fun(intern(lit("zerop"), user_package), func_n1(zerop));
@@ -2288,6 +2299,9 @@ void eval_init(void)
   reg_fun(intern(lit("trim-str"), user_package), func_n1(trim_str));
   reg_fun(intern(lit("string-lt"), user_package), func_n2(string_lt));
   reg_fun(intern(lit("int-str"), user_package), func_n2o(int_str, 1));
+  reg_fun(intern(lit("flo-str"), user_package), func_n1(flo_str));
+  reg_fun(intern(lit("int-flo"), user_package), func_n1(int_flo));
+  reg_fun(intern(lit("flo-int"), user_package), func_n1(flo_int));
   reg_fun(intern(lit("chrp"), user_package), func_n1(chrp));
   reg_fun(intern(lit("chr-isalnum"), user_package), func_n1(chr_isalnum));
   reg_fun(intern(lit("chr-isalpha"), user_package), func_n1(chr_isalpha));
