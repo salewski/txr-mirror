@@ -1,12 +1,22 @@
+@;
+@; A JSON value is a string, number, associative object, keyword or array.
+@;
 @(define value (v))@\
   @(cases)@\
     @(string v)@(or)@(num v)@(or)@(object v)@(or)@\
     @(keyword v)@(or)@(array v)@\
   @(end)@\
 @(end)
+@;
+@; Pattern function for matching whitespace
+@;
 @(define ws)@/[\n\t ]*/@(end)
-@(define string (g))@\
-  @(local s hex)@\
+@;
+@; Pattern function for matching a JSON string, with all the
+@; escape sequences.
+@;
+@(define string (s))@\
+  @(local hex)@\
   @(ws)@\
   "@(coll :gap 0 :vars (s))@\
      @(cases)@\
@@ -27,18 +37,28 @@
   @(ws)@\
   @(cat s "")@\
   @(filter :from_html s)@\
-  @(bind g ("S" s))@\
 @(end)
-@(define num (v))@\
-  @(local n)@\
-  @(ws)@{n /-?[0-9]+((\.[0-9]+)?([Ee][+\-]?[0-9]+)?)?/}@(ws)@\
-  @(bind v ("N" n))@\
+@;
+@; Pattern function for recognizing a number.
+@;
+@(define num (n))@\
+  @(local tok)@\
+  @(ws)@{tok /-?[0-9]+((\.[0-9]+)?([Ee][+\-]?[0-9]+)?)?/}@(ws)@\
+  @(bind n @(flo-str tok))@\
 @(end)
-@(define keyword (v))@\
-  @(local k)@\
-  @(all)@(ws)@{k /true|false|null/}@(trailer)@/[^A-Za-z0-9_]/@(end)@(ws)@\
-  @(bind v ("K" k))@\
+@;
+@; Recognize the JSON keyword true, false and null, turning
+@; them into TXR Lisp keywords
+@;
+@(define keyword (k))@\
+  @(local tok)@\
+  @(all)@(ws)@{tok /true|false|null/}@(trailer)@/[^A-Za-z0-9_]/@(end)@(ws)@\
+  @(bind k @(intern tok *keyword-package*))@\
 @(end)
+@;
+@; Recognize an object: a collection of string/value pairs,
+@; turning them into an equal-based hash table
+@;
 @(define object (v))@\
   @(local p e pair)@\
   @(ws){@(ws)@(coll :gap 0 :vars (pair))@\
@@ -46,12 +66,28 @@
                 @(bind pair (p e))@\
                 @(until)}@\
              @(end)}@(ws)@\
-  @(bind v ("O" pair))@\
+  @(bind v @(progn '#H((:equal-based) ,*pair)))@\
 @(end)
+@;
+@; Recognize an array.
+@;
 @(define array (v))@\
   @(local e)@\
-  @(ws)[@(ws)@(coll :gap 0 :var (e))@(value e)@/,?/@(until)]@(end)]@(ws)@\
-  @(bind v ("A" e))@\
+  @(ws)[@(ws)@(coll :gap 0 :vars (e))@(value e)@/,?/@(until)]@(end)]@(ws)@\
+  @(bind v @(progn '#(,*e)))@\
 @(end)
+@;
+@; Now parse the input as a JSON object
+@;
+@(next :args)
+@(collect)
+@file
+@(next file)
 @(freeform)
-@(maybe)@(value v)@(end)@badsyntax
+@(maybe)@(value ast)@(end)@badsyntax
+@;
+@; Output resulting abstract syntax tree.
+@;
+@(do (format t "AST: ~s\n\n" ast)
+     (format t "Unmatched junk: ~s\n\n" badsyntax))
+@(end)
