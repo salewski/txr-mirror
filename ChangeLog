@@ -1,5 +1,11 @@
 2012-03-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (transform_op): use integerp instead of numberp.
+	Not all numbers are integers now, and that situation
+	requires an integer.
+
+2012-03-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.l: Bugfix: was not allowing e-notation floats
 	with no decimal point like 1E1.
 
