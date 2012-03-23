@@ -1496,7 +1496,7 @@ static val transform_op(val forms, val syms, val rg)
     if (consp(fi) && car(fi) == var_s && consp(cdr(fi))) {
       val vararg = car(cdr(fi));
 
-      if (numberp(vararg)) {
+      if (integerp(vararg)) {
         val prefix = format(nil, lit("arg-~,02s-"), vararg, nao);
         val newsyms = syms;
         val new_p;
