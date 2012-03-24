@@ -1,5 +1,19 @@
 2012-03-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	Performance improvement in the GC: keep at least one heap's worth
+	of free space, so programs close to exhausting a heap do not
+	waste cycles frequently calling the collector.
+
+	* gc.c (more): Do not assert that free_list is null; this will
+	not be the case any more.
+	(make_obj): Comment added regarding why we the free_tail variable
+	is fixed up.
+	(sweep): Now returns a count of the objects that are free.
+	(gc): If sweep reports that less than 75% of the objects are free
+	then let us add another heap.
+
+2012-03-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Register match-str and match-str-tree
 	intrinsics.
 
