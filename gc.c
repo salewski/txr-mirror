@@ -123,8 +123,6 @@ static void more(void)
   heap_t *heap = (heap_t *) chk_malloc(sizeof *heap);
   obj_t *block = heap->block, *end = heap->block + HEAP_SIZE;
 
-  assert (free_list == 0);
-
   if (end > heap_max_bound)
     heap_max_bound = end;
 
@@ -170,6 +168,8 @@ val make_obj(void)
       return ret;
     }
 
+    /* To save cycles, make_obj draws from the free list without
+       updating this, but before calling gc, it has to be. */
     free_tail = &free_list;
 
     switch (tries) {
@@ -389,10 +389,11 @@ static void mark(mach_context_t *pmc, val *gc_stack_top)
   mark_mem_region(gc_stack_top, gc_stack_bottom);
 }
 
-static void sweep(void)
+static int_ptr_t sweep(void)
 {
   heap_t *heap;
   int gc_dbg = opt_gc_debug;
+  int_ptr_t free_count = 0;
 #ifdef HAVE_VALGRIND
   int vg_dbg = opt_vg_debug;
 #else
@@ -424,6 +425,7 @@ static void sweep(void)
         if (vg_dbg)
             VALGRIND_MAKE_MEM_NOACCESS(block, sizeof *block);
 #endif
+        free_count++;
         continue;
       }
 
@@ -434,6 +436,7 @@ static void sweep(void)
       }
       finalize(block);
       block->t.type = (type_t) (block->t.type | FREE);
+      free_count++;
       /* If debugging is turned on, we want to catch instances
          where a reachable object is wrongly freed. This is difficult
          to do if the object is recycled soon after.
@@ -462,6 +465,7 @@ static void sweep(void)
       }
     }
   }
+  return free_count;
 }
 
 void gc(void)
@@ -474,7 +478,8 @@ void gc(void)
     gc_enabled = 0;
     mark(&mc, &gc_stack_top);
     hash_process_weak();
-    sweep();
+    if (sweep() < 3 * HEAP_SIZE / 4)
+      more();
     gc_enabled = 1;
   }
 }
