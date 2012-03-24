@@ -65,6 +65,7 @@ syn keyword txl_keyword contained make-sym gensym *gensym-counter* make-package 
 syn keyword txl_keyword contained intern symbolp symbol-name symbol-package keywordp
 syn keyword txl_keyword contained mkstring copy-str upcase-str downcase-str string-extend
 syn keyword txl_keyword contained stringp lazy-stringp length-str search-str search-str-tree
+syn keyword txl_keyword contained match-str match-str-tree
 syn keyword txl_keyword contained sub-str cat-str split-str replace-str
 syn keyword txl_keyword contained split-str-set list-str trim-str
 syn keyword txl_keyword contained string-lt int-str flo-str int-flo flo-int

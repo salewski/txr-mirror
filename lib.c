@@ -1560,6 +1560,9 @@ val match_str(val bigstr, val str, val pos)
 {
   val i, p;
 
+  if (pos == nil)
+    pos = zero;
+
   for (i = zero;
        length_str_gt(bigstr, p = plus(pos, i)) && length_str_gt(str, i);
        i = plus(i, one))
@@ -1573,6 +1576,9 @@ val match_str(val bigstr, val str, val pos)
 
 val match_str_tree(val bigstr, val tree, val pos)
 {
+  if (pos == nil)
+    pos = zero;
+
   if (stringp(tree)) {
     if (match_str(bigstr, tree, pos))
       return length_str(tree);

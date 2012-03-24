@@ -1,5 +1,16 @@
 2012-03-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Register match-str and match-str-tree
+	intrinsics.
+
+	* lib.c (match_str, match_str_tree): Default position to zero.
+
+	* txr.1: Doc stubs created.
+
+	* txr.vim: Highlighting for match-str and match-str-tree.
+
+2012-03-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	Bugfix: code like @(skip)@{var /partial/} where
 	the regular expression does not match all the way to
 	the end of the line was getting by the check for
