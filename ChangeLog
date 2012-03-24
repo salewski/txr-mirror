@@ -1,5 +1,22 @@
 2012-03-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	Bugfix: code like @(skip)@{var /partial/} where
+	the regular expression does not match all the way to
+	the end of the line was getting by the check for
+	a complete match.
+
+	* match.c (do_match_line): Loses the second parameter
+	named completely. The check whether the line was matched
+	completely is done higher up, in match_line_completely.
+	This is needed because do_match_line has some early
+	successful return cases which bypass the check.
+	(match_line): Remove second paramter in call to do_match_line.
+	(match_line_completely): Do the check here that the line
+	was matched completely. Nothing can get by this.
+	(v_freeform): Do notpass second nil argument to do_match_line.
+
+2012-03-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (search_str): If start_num is nil, default it to zero.
 	This is needed for this to work right as an optional argument.
 

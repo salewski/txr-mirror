@@ -371,7 +371,7 @@ static match_line_ctx ml_bindings_specline(match_line_ctx c, val bindings,
   return nc;
 }
 
-static val do_match_line(match_line_ctx *c, val completely);
+static val do_match_line(match_line_ctx *c);
 static val match_line(match_line_ctx c);
 
 typedef val (*h_match_func)(match_line_ctx *c);
@@ -1092,7 +1092,7 @@ static match_files_ctx mf_all(val spec, val files, val bindings,
 
 static val v_fun(match_files_ctx *c);
 
-static val do_match_line(match_line_ctx *c, val completely)
+static val do_match_line(match_line_ctx *c)
 {
   debug_enter;
 
@@ -1204,24 +1204,30 @@ static val do_match_line(match_line_ctx *c, val completely)
     c->specline = cdr(c->specline);
   }
 
-  if (completely && length_str_gt(c->dataline, c->pos)) {
-    debuglf(c->specline, lit("spec only matches line to position ~a: ~a"),
-            plus(c->pos, c->base), c->dataline, nao);
-    debug_return (nil);
-  }
-
   debug_return (cons(c->bindings, plus(c->pos, c->base)));
   debug_leave;
 }
 
 static val match_line(match_line_ctx c)
 {
-  return do_match_line(&c, nil);
+  return do_match_line(&c);
 }
 
 static val match_line_completely(match_line_ctx c)
 {
-  return do_match_line(&c, t);
+  val result = do_match_line(&c);
+
+  if (result) {
+    val new_pos = cdr(result);
+
+    if (new_pos != t && length_str_gt(c.dataline, minus(new_pos, c.base))) {
+      debuglf(c.specline, lit("spec only matches line to position ~a: ~a"),
+              new_pos, c.dataline, nao);
+      return nil;
+    }
+  }
+
+  return result;
 }
 
 
@@ -2070,7 +2076,7 @@ static val v_freeform(match_files_ctx *c)
     c->data = nil;
 
     {
-      cons_bind (new_bindings, success, do_match_line(&mlc, nil));
+      cons_bind (new_bindings, success, do_match_line(&mlc));
 
       if (!success) {
         debuglf(specline, lit("freeform match failure"), nao);
