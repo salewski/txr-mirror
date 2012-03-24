@@ -1490,6 +1490,10 @@ const wchar_t *c_str(val obj)
 
 val search_str(val haystack, val needle, val start_num, val from_end)
 {
+  uses_or2;
+
+  start_num = or2(start_num, zero);
+
   if (length_str_lt(haystack, start_num)) {
     return nil;
   } else {

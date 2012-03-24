@@ -1,3 +1,8 @@
+2012-03-24  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (search_str): If start_num is nil, default it to zero.
+	This is needed for this to work right as an optional argument.
+
 2012-03-23  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 62
