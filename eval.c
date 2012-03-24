@@ -2290,6 +2290,8 @@ void eval_init(void)
   reg_fun(intern(lit("length-str"), user_package), func_n1(length_str));
   reg_fun(intern(lit("search-str"), user_package), func_n4o(search_str, 2));
   reg_fun(intern(lit("search-str-tree"), user_package), func_n4o(search_str_tree, 2));
+  reg_fun(intern(lit("match-str"), user_package), func_n3o(match_str, 2));
+  reg_fun(intern(lit("match-str-tree"), user_package), func_n3o(match_str_tree, 2));
   reg_fun(intern(lit("sub-str"), user_package), func_n3o(sub_str, 1));
   reg_fun(intern(lit("replace-str"), user_package), func_n4o(replace_str, 2));
   reg_fun(intern(lit("cat-str"), user_package), func_n2o(cat_str, 1));
