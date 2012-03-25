@@ -1,5 +1,12 @@
 2012-03-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	Bug #35989
+
+	* match.c (syms_init): text_s must be in the system
+	package because it's not a user-visible operator.
+
+2012-03-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	Performance improvement in the GC: keep at least one heap's worth
 	of free space, so programs close to exhausting a heap do not
 	waste cycles frequently calling the collector.
