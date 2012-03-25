@@ -71,7 +71,7 @@ val skip_s, trailer_s, block_s, next_s, freeform_s, fail_s, accept_s;
 val all_s, some_s, none_s, maybe_s, cases_s, collect_s, until_s, coll_s;
 val define_s, output_s, single_s, first_s, last_s, empty_s;
 val repeat_s, rep_s, flatten_s, forget_s;
-val local_s, merge_s, bind_s, cat_s;
+val local_s, merge_s, bind_s, rebind_s, cat_s;
 val try_s, catch_s, finally_s, throw_s, defex_s, deffilter_s;
 val eof_s, eol_s;
 val error_s, type_error_s, internal_error_s;
@@ -4093,6 +4093,7 @@ static void obj_init(void)
   local_s = intern(lit("local"), user_package);
   merge_s = intern(lit("merge"), user_package);
   bind_s = intern(lit("bind"), user_package);
+  rebind_s = intern(lit("rebind"), user_package);
   cat_s = intern(lit("cat"), user_package);
   try_s = intern(lit("try"), user_package);
   catch_s = intern(lit("catch"), user_package);

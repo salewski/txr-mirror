@@ -2920,6 +2920,21 @@ static val v_set(match_files_ctx *c)
   return next_spec_k;
 }
 
+static val v_rebind(match_files_ctx *c)
+{
+  spec_bind (specline, first_spec, c->spec);
+  val args = rest(first_spec);
+  val pattern = first(args);
+  val form = second(args);
+  val val = txeval(specline, form, c->bindings);
+
+  c->bindings = alist_remove(c->bindings, args);
+  c->bindings = dest_bind(specline, c->bindings, 
+                          pattern, val, equal_f);
+
+  return next_spec_k;
+}
+
 static val v_cat(match_files_ctx *c)
 {
   spec_bind (specline, first_spec, c->spec);
@@ -3735,6 +3750,7 @@ static void dir_tables_init(void)
   sethash(v_directive_table, local_s, cptr((mem_t *) v_forget_local));
   sethash(v_directive_table, merge_s, cptr((mem_t *) v_merge));
   sethash(v_directive_table, bind_s, cptr((mem_t *) v_bind));
+  sethash(v_directive_table, rebind_s, cptr((mem_t *) v_rebind));
   sethash(v_directive_table, set_s, cptr((mem_t *) v_set));
   sethash(v_directive_table, cat_s, cptr((mem_t *) v_cat));
   sethash(v_directive_table, output_s, cptr((mem_t *) v_output));
@@ -3757,6 +3773,7 @@ static void dir_tables_init(void)
   sethash(h_directive_table, local_s, cptr((mem_t *) hv_trampoline));
   sethash(h_directive_table, merge_s, cptr((mem_t *) hv_trampoline));
   sethash(h_directive_table, bind_s, cptr((mem_t *) hv_trampoline));
+  sethash(h_directive_table, rebind_s, cptr((mem_t *) hv_trampoline));
   sethash(h_directive_table, set_s, cptr((mem_t *) hv_trampoline));
   sethash(h_directive_table, cat_s, cptr((mem_t *) hv_trampoline));
   sethash(h_directive_table, filter_s, cptr((mem_t *) hv_trampoline));

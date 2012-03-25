@@ -1297,14 +1297,19 @@ constituent strings, with an optional separator string between all of the
 values.
 
 .IP @(bind)
-Binds one or more variables against another variable using a structural
-pattern. A limited form of unification takes place which can cause a match to
-fail.
+Binds one or more variables against a value using a structural
+pattern match. A limited form of unification takes place which can cause a
+match to fail.
 
 .IP @(set)
 Destructively assigns one or more existing variables using a structural
 pattern, using syntax similar to bind. Assignment to unbound
 variables triggers an error.
+
+.IP @(rebind)
+Evaluates an expression in the current binding environment, and
+then creates new bindings for the variables in the structural pattern.
+Useful for temporarily overriding variable values in a scope.
 
 .IP @(output)
 A directive which encloses an output clause in the query. An output section
@@ -2718,6 +2723,35 @@ Destructuring assignment. D assumed to contain the list
 
 A ends up with "A", B ends up with ("B1" "B2") and C gets ("C1" and "C2").
 
+.SS The Rebind Directive
+
+The @(rebind) directive resembles @(set) but it is not an assignment.
+It combines the semanticss of @(local), @(bind) and @(set).
+The expression on the right hand side is evaluated in the current
+environment. Then the variables in the pattern on the left are introduced
+as new bindings, whose values come from the pattern.
+
+Rebind makes it easy to create temporary bindings based on existing
+bindings.
+
+  @(define pattern-function (arg))
+  @;; inside a pattern function:
+  @(rebind recursion-level @(+ recursion-level 1))
+  @;; ...
+  @(end)
+
+When the function terminates, the previous value of recursion-level
+is restored. The effect is like the following, but much easier
+to write and faster to execute:
+
+  @(define pattern-function (arg))
+  @;; inside a pattern function:
+  @(local temp)
+  @(set temp recursion-level)
+  @(local recursion-level)
+  @(set recursion-level @(+ temp 1))
+  @;; ...
+  @(end)
 
 .SH BLOCKS
 
