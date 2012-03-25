@@ -3681,7 +3681,7 @@ static void syms_init(void)
   times_k = intern(lit("times"), keyword_package);
   lines_k = intern(lit("lines"), keyword_package);
   chars_k = intern(lit("chars"), keyword_package);
-  text_s = intern(lit("text"), user_package);
+  text_s = intern(lit("text"), system_package);
   choose_s = intern(lit("choose"), user_package);
   gather_s = intern(lit("gather"), user_package);
   do_s = intern(lit("do"), user_package);
