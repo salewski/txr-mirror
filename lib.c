@@ -1981,6 +1981,14 @@ val flo_str(val str)
   return flo(value);
 }
 
+val num_str(val str)
+{
+  const wchar_t *wcs = c_str(str);
+  if (wcspbrk(wcs, L".eE"))
+    return flo_str(str);
+  return int_str(str, nil);
+}
+
 val chrp(val chr)
 {
   return (is_chr(chr)) ? t : nil;

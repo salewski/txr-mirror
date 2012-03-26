@@ -3761,7 +3761,11 @@ implements named filters.  Built-in filters are named by keywords,
 given below. User-defined filters are possible, however.  See notes on the
 deffilter directive below.
 
-Built-in filters:
+Instead of a filter name, the syntax (fun NAME) can be used. This
+denotes that the function called NAME is to be used as a filter.
+This is discussed in the next section Function Filters below.
+
+Built-in filters named by keywords:
 
 .IP :to_html
 Filter text to HTML, representing special characters using HTML
@@ -3806,7 +3810,30 @@ Encode to URL encoding, which is like percent encoding except that
 a space maps to + rather than %20. The + character, being in the
 reserved set, encodes to %2B.
 
-Example: to escape HTML characters in all variable substitutions occuring in an
+.PP :tonumber
+Converts strings to numbers. Strings that contain a period, e or E are
+converted to floating point as if by the function flo-str. Otherwise
+they are converted to integer as if using int-str with a radix of 10.
+Non-numeric junk results in the object nil.
+
+.PP :tointeger
+Converts strings to integers as if using int-str with a radix of 10.
+Non-numeric junk results in the object nil.
+
+.PP :tofloat
+Converts strings to floating-point values as if using the function flo-str.
+Non-numeric junk results in the object nil.
+
+.PP :hextoint
+Converts strings to integers as if using int-str with a radix of 16.
+Non-numeric junk results in the object nil.
+
+.PP
+
+.TP
+Examples
+
+To escape HTML characters in all variable substitutions occuring in an
 output clause, specify :filter :to_html in the directive:
 
   @(output :filter :to_html)
@@ -3833,9 +3860,11 @@ because '&quot;' will turn to '&QUOT;' which no longer be recognized
 by the :from_html filter, because the entity names in HTML codes
 are case-sensitive.
 
-Instead of a filter name, the syntax (fun NAME) can be used. This
-denotes that the function called NAME is to be used as a filter.
-This is discussed in the next section Function Filters below.
+Capture some numeric variables and convert to numbers:
+
+  @date @time @temperature @pressure
+  @(filter :tofloat temperature pressure)
+  @;; temperature and pressure can now be used in calculations
 
 .SS Function Filters
 

@@ -45,6 +45,7 @@ val filters;
 val filter_k, lfilt_k, rfilt_k, to_html_k, from_html_k;
 val upcase_k, downcase_k, fun_k;
 val topercent_k, frompercent_k, tourl_k, fromurl_k;
+val tonumber_k, tointeger_k, tofloat_k, hextoint_k;
 
 static val make_trie(void)
 {
@@ -669,6 +670,10 @@ void filter_init(void)
   frompercent_k = intern(lit("frompercent"), keyword_package);
   tourl_k = intern(lit("tourl"), keyword_package);
   fromurl_k = intern(lit("fromurl"), keyword_package);
+  tonumber_k = intern(lit("tonumber"), keyword_package);
+  tointeger_k = intern(lit("toinger"), keyword_package);
+  tofloat_k = intern(lit("tofloat"), keyword_package);
+  hextoint_k = intern(lit("hextoint"), keyword_package);
 
   sethash(filters, to_html_k, build_filter(to_html_table, t));
   {
@@ -683,4 +688,8 @@ void filter_init(void)
   sethash(filters, frompercent_k, curry_12_1(func_n2(url_decode), nil));
   sethash(filters, tourl_k, curry_12_1(func_n2(url_encode), t));
   sethash(filters, fromurl_k, curry_12_1(func_n2(url_decode), t));
+  sethash(filters, tonumber_k, func_n1(num_str));
+  sethash(filters, tointeger_k, curry_12_1(func_n2(int_str), nil));
+  sethash(filters, tofloat_k, func_n1(flo_str));
+  sethash(filters, hextoint_k, curry_12_1(func_n2(int_str), num_fast(16)));
 }
