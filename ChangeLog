@@ -1,3 +1,9 @@
+2012-03-26  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c (to_float): Fix unterminated argument list in throwf.
+
+	* lib.c (funcall): Likewise.
+
 2012-03-24  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (rebind_s): New symbol variable.
