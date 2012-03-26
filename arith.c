@@ -890,7 +890,7 @@ static val to_float(val func, val num)
   case FLNUM:
     return num;
   default:
-    uw_throwf(error_s, lit("~s: invalid operand ~s"), func, num);
+    uw_throwf(error_s, lit("~s: invalid operand ~s"), func, num, nao);
   }
 }
 

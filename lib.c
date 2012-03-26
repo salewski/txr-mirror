@@ -2616,7 +2616,7 @@ val funcall(val fun)
       break;
     }
   }
-  uw_throwf(error_s, lit("funcall: wrong number of arguments"));
+  uw_throw(error_s, lit("funcall: wrong number of arguments"));
 }
 
 val funcall1(val fun, val arg)
