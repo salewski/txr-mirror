@@ -1,5 +1,22 @@
 2012-03-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): New intrinsic num-str registered.
+
+	* filter.c (tonumber_k, tointeger_k, tofloat_k, hextoint_k):
+	New keyword variables.
+	(filter_init): New variables initialized; new filters registered.
+
+	* filter.h (tonumber_k, tointeger_k, tofloat_k, hextoint_k):
+	Declared.
+
+	* lib.c (num_str): New function.
+
+	* lib.h (num_str): Declared.
+
+	* txr.1: New filters documented.
+
+2012-03-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (to_float): Fix unterminated argument list in throwf.
 
 	* lib.c (funcall): Likewise.
