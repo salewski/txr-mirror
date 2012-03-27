@@ -1291,7 +1291,7 @@ val format_field(val obj, val modifier, val filter, val eval_fun)
     }
 
     if (filter)
-      str = filter_string(filter, str);
+      str = filter_string_tree(filter, str);
   }
 
   {
@@ -1347,7 +1347,7 @@ static val subst_vars(val spec, val bindings, val filter)
           else
             str = if3(stringp(str), str, tostringp(str));
 
-          spec = cons(filter_string(filter, str), rest(spec));
+          spec = cons(filter_string_tree(filter, str), rest(spec));
         }
 
         continue;
@@ -3312,7 +3312,7 @@ static val v_filter(match_files_ctx *c)
     if (!existing)
       sem_error(specline, lit("filter: variable ~a is unbound"), var, nao);
 
-    *cdr_l(existing) = filter_string(filter, cdr(existing));
+    *cdr_l(existing) = filter_string_tree(filter, cdr(existing));
   }
 
   uw_env_end;

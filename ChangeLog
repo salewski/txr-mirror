@@ -1,5 +1,24 @@
 2012-03-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	Filtering on lists and nested lists is hereby made to work.
+	For instance given @(bind a ("a" "b" "c")) it is now possible
+	to do @(filter :upcase a) whereby a promptly takes on the value
+	("A" "B" "C").
+
+	* filter.c (string_filter): Function renamed to string_tree_filter.
+	(compound_filter): Follows rename.
+	(filter_string): Function renamed to filter string tree.
+	Can filter tree of strings, or possibly other objects,
+	if the filter function allows.
+	(filter_equal): No special case test for objects that are strings.
+	Just put them through the filter.
+
+	* filter.h (filter_string): Declaration updated.
+
+	* match.c (format_field, subst_vars, v_filter): Follow rename.
+
+2012-03-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (v_output): Bugfix: we should flush the stream
 	after each @(output) block. Otherwise if output blocks
 	that go to standard output are interleaved with output blocks
