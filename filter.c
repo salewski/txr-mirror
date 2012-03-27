@@ -134,14 +134,14 @@ val trie_lookup_feed_char(val node, val ch)
   return nil;
 }
 
-static val string_filter(val str, val filter)
+static val string_tree_filter(val tree, val filter)
 {
-  return filter_string(filter, str);
+  return filter_string_tree(filter, tree);
 }
 
 static val compound_filter(val filter_list, val string)
 {
-  return reduce_left(func_n2(string_filter), filter_list, string, nil);
+  return reduce_left(func_n2(string_tree_filter), filter_list, string, nil);
 }
 
 val get_filter(val spec)
@@ -233,25 +233,33 @@ static val trie_filter_string(val filter, val str)
   return out;
 }
 
-val filter_string(val filter, val str)
+val filter_string_tree(val filter, val obj)
 {
-  val type = typeof(filter);
+  switch (type(obj)) {
+  case NIL: 
+	return nil;
+  case CONS:
+	return mapcar(curry_12_2(func_n2(filter_string_tree), filter), obj);
+  default:
+	{
+	  val type = typeof(filter);
 
-  if (eq(type, null))
-    return str;
-  if (eq(type, hash_s) || eq(type, cons_s))
-    return trie_filter_string(filter, str);
-  else if (type == fun_s)
-    return funcall1(filter, str);
-  return str;
-  uw_throwf(error_s, lit("filter_string: invalid filter ~a"), filter, nao);
+	  if (eq(type, null))
+		return obj;
+	  if (eq(type, hash_s) || eq(type, cons_s))
+		return trie_filter_string(filter, obj);
+	  else if (type == fun_s)
+		return funcall1(filter, obj);
+	  return obj;
+	  uw_throwf(error_s, lit("filter_string: invalid filter ~a"), filter, nao);
+	}
+  }
 }
 
 val filter_equal(val lfilt, val rfilt, val left, val right)
 {
-  if (stringp(left) && stringp(right))
-    return equal(filter_string(lfilt, left), filter_string(rfilt, right));
-  return equal(left, right);
+  return equal(filter_string_tree(lfilt, left),
+			   filter_string_tree(rfilt, right));
 }
 
 val register_filter(val sym, val table)

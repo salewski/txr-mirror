@@ -34,7 +34,7 @@ val trie_lookup_begin(val trie);
 val trie_value_at(val node);
 val trie_lookup_feed_char(val node, val ch);
 val get_filter(val sym);
-val filter_string(val trie, val str);
+val filter_string_tree(val trie, val str_tree);
 val filter_equal(val lfilt, val rfilt, val left, val right);
 val register_filter(val sym, val table);
 
