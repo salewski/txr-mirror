@@ -3009,6 +3009,7 @@ static val v_output(match_files_ctx *c)
       uw_env_begin;
       uw_set_match_context(cons(c->spec, c->bindings));
       do_output(c->bindings, specs, filter, stream);
+      flush_stream(stream);
       uw_env_end;
 
       {
@@ -3049,6 +3050,7 @@ static val v_output(match_files_ctx *c)
     uw_env_begin;
     uw_set_match_context(cons(c->spec, c->bindings));
     do_output(c->bindings, specs, filter, stream);
+    flush_stream(stream);
     uw_env_end;
     close_stream(stream, t);
   }

@@ -1,5 +1,13 @@
 2012-03-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (v_output): Bugfix: we should flush the stream
+	after each @(output) block. Otherwise if output blocks
+	that go to standard output are interleaved with output blocks
+	which pipe to some command which then goes to standard out,
+	the output won't be in the proper order.
+
+2012-03-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): New intrinsic num-str registered.
 
 	* filter.c (tonumber_k, tointeger_k, tofloat_k, hextoint_k):
