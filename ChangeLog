@@ -1,3 +1,11 @@
+2012-03-27  Kaz Kylheku  <kaz@kylheku.com>
+
+	* stream.c (vformat): Compensate for differences in printf
+	implementations with regard to printing floating point exponents.
+	by deleting any plus sign and leading zeros after the 'e'.
+
+	* tests/009/json.expected: Regenerated.
+
 2012-03-26  Kaz Kylheku  <kaz@kylheku.com>
 
 	Filtering on lists and nested lists is hereby made to work.
