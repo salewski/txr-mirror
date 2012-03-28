@@ -4276,7 +4276,11 @@ val obj_print(val obj, val out)
     }
     return obj;
   case LSTR:
-    format(out, lit("#<lazy-string: ~s>"), obj->ls.prefix, nao);
+    if (obj->ls.list)
+      format(out, lit("#<lazy-string: ~s (~s ...)>"), obj->ls.prefix,
+             obj->ls.list, nao);
+    else
+      obj_print(obj->ls.prefix, out);
     return obj;
   case COBJ:
     obj->co.ops->print(obj, out);
@@ -4373,7 +4377,11 @@ val obj_pprint(val obj, val out)
     }
     return obj;
   case LSTR:
-    format(out, lit("#<lazy-string: ~a>"), obj->ls.prefix, nao);
+    if (obj->ls.list)
+      format(out, lit("#<lazy-string: ~s (~s ...)>"), obj->ls.prefix,
+             obj->ls.list, nao);
+    else
+      obj_pprint(obj->ls.prefix, out);
     return obj;
   case COBJ:
     obj->co.ops->print(obj, out);
