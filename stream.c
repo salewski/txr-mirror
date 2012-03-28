@@ -1151,11 +1151,33 @@ val vformat(val stream, val fmtstr, va_list vl)
               uw_throwf(error_s, lit("excessive precision in format: ~s\n"),
                         num(precision), nao);
 
-            if (ch == 'e')
+            if (ch == 'e') {
               sprintf(num_buf, "%.*e", precision, n);
-            else
+              {
+                char *dec = strchr(num_buf, '.');
+                char *exp = strchr(dec ? dec : num_buf, 'e');
+
+                if (exp) {
+                  char *scan = ++exp;
+
+                  if (*scan == '-')
+                    *exp++ = *scan++;
+                  else if (*scan == '+')
+                    scan++;
+
+                  while (scan[0] == '0' && scan[1] == '0')
+                    scan++;
+
+                  while (*scan)
+                    *exp++ = *scan++;
+
+                  *exp = 0;
+                }
+              }
+            } else {
               sprintf(num_buf, "%.*f", precision, n);
-            if (!isdigit(num_buf[0])) {
+            }
+            if (!isdigit(num_buf[0]) && !isdigit(num_buf[1])) {
               if (!vformat_str(stream, lit("#<bad-float>"),
                                width, left, 0))
                 return nil;
@@ -1191,8 +1213,30 @@ val vformat(val stream, val fmtstr, va_list vl)
 
             sprintf(num_buf, "%.*g", precision, obj->fl.n);
 
-            if (ch == 's' && !precision_p && !strpbrk(num_buf, "e."))
-                strcat(num_buf, ".0");
+            {
+              char *dec = strchr(num_buf, '.');
+              char *exp = strchr(dec ? dec : num_buf, 'e');
+
+              if (exp) {
+                char *scan = ++exp;
+
+                if (*scan == '-')
+                  *exp++ = *scan++;
+                else if (*scan == '+')
+                  scan++;
+
+                while (*scan == 0)
+                  scan++;
+
+                while (*scan)
+                  *exp++ = *scan++;
+
+                *exp = 0;
+              }
+
+              if (ch == 's' && !precision_p && !dec && !exp)
+                  strcat(num_buf, ".0");
+            }
 
             if (!isdigit(num_buf[0]) && !isdigit(num_buf[1])) {
               if (!vformat_str(stream, lit("#<bad-float>"),
