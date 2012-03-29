@@ -2191,6 +2191,9 @@ void eval_init(void)
   reg_fun(intern(lit("ceil"), user_package), func_n1(ceili));
   reg_fun(intern(lit("sin"), user_package), func_n1(sine));
   reg_fun(intern(lit("cos"), user_package), func_n1(cosi));
+  reg_fun(intern(lit("tan"), user_package), func_n1(tang));
+  reg_fun(intern(lit("asin"), user_package), func_n1(asine));
+  reg_fun(intern(lit("acos"), user_package), func_n1(acosi));
   reg_fun(intern(lit("atan"), user_package), func_n1(atang));
   reg_fun(intern(lit("log"), user_package), func_n1(loga));
   reg_fun(intern(lit("exp"), user_package), func_n1(expo));

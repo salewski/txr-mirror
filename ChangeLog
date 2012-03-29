@@ -1,5 +1,21 @@
 2012-03-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (gcd): Allow zeros. Don't issue "non-integral"
+	exception if MPI fails.
+	(floorf, ceili): Map integer argument to itself.
+	(tang, asine, acosi): New functions.
+
+	* eval.c (eval_init): New intrinsics: tan, asin, acos.
+
+	* lib.h (tang, asine, acosi): Declared.
+
+	* txr.1: Documented gcd, abs, floor, ceil, sin, cos, tan
+	asin, acos, atan, log, and exp.
+
+	* txr.vim: Highlighting for tang, asine, acosi.
+
+2012-03-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (dmod): New static function.
 	(mod): Use dmod instead of fmod directly, to calculate
 	the correct semantics for combinations of
