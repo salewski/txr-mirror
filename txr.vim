@@ -68,7 +68,7 @@ syn keyword txl_keyword contained stringp lazy-stringp length-str search-str sea
 syn keyword txl_keyword contained match-str match-str-tree
 syn keyword txl_keyword contained sub-str cat-str split-str replace-str
 syn keyword txl_keyword contained split-str-set list-str trim-str
-syn keyword txl_keyword contained string-lt int-str flo-str int-flo flo-int
+syn keyword txl_keyword contained string-lt int-str flo-str num-str int-flo flo-int
 syn keyword txl_keyword contained chrp chr-isalnum chr-isalpha
 syn keyword txl_keyword contained chr-isascii chr-iscntrl chr-isdigit chr-isgraph
 syn keyword txl_keyword contained chr-islower chr-isprint chr-ispunct chr-isspace chr-isupper
