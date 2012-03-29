@@ -1,3 +1,9 @@
+2012-03-29  Kaz Kylheku  <kaz@kylheku.com>
+
+	* txr.1: num-str added to doc stub.
+
+	* txr.vim: num-str added.
+
 2012-03-28  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (obj_print, obj_pprint): Do not use the #<lazy-string ..>
