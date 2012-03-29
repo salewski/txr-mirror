@@ -1283,6 +1283,9 @@ val gcd(val anum, val bnum)
   if (!integerp(anum) || !integerp(bnum))
     goto inval;
 
+  if (zerop(anum))
+    return zero;
+
   if (fixnump(anum))
     anum = bignum(c_num(anum));
 
@@ -1292,21 +1295,28 @@ val gcd(val anum, val bnum)
   n = make_bignum();
 
   if (mp_gcd(mp(anum), mp(bnum), mp(n)) != MP_OKAY)
-    goto inval;
+    goto bad;
 
   return n;
 inval:
   uw_throwf(error_s, lit("gcd: non-integral operands ~s ~s"),
             anum, bnum, nao);
+bad:
+  uw_throwf(error_s, lit("gcd: operation failed on ~s ~s"),
+            anum, bnum, nao);
 }
 
 val floorf(val num)
 {
+  if (integerp(num))
+    return num;
   return flo(floor(c_flo(to_float(lit("floor"), num))));
 }
 
 val ceili(val num)
 {
+  if (integerp(num))
+    return num;
   return flo(ceil(c_flo(to_float(lit("ceil"), num))));
 }
 
@@ -1318,6 +1328,21 @@ val sine(val num)
 val cosi(val num)
 {
   return flo(cos(c_flo(to_float(lit("cos"), num))));
+}
+
+val tang(val num)
+{
+  return flo(tan(c_flo(to_float(lit("tan"), num))));
+}
+
+val asine(val num)
+{
+  return flo(asin(c_flo(to_float(lit("asin"), num))));
+}
+
+val acosi(val num)
+{
+  return flo(acos(c_flo(to_float(lit("acos"), num))));
 }
 
 val atang(val num)

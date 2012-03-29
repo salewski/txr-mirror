@@ -6854,9 +6854,100 @@ once, with a "remainder" of 0.25.
 
 .SS Arithmetic function gcd
 
+.TP
+Syntax:
+
+  (gcd <left> <right>)
+
+.TP
+Description:
+
+The gcd function computes the greatest common divisor: the largest positive
+integer which divides both arguments.
+
+Operands <left> and <right> must be integers, or else an exception is thrown.
+
+The value of (gcd 0 x) is 0 for all x, including 0.
+
+The value of (gcd x 123) is is (abs x) for all x.
+
+Negative operands are permitted; this operation effectivelly ignores sign, so
+that the value of (gcd x y) is the same as (gcd (abs x) (abs y)) for all
+x and y.
+
 .SS Arithmetic function abs
 
-.SS Arithmetic functions floor, ceil, sin, cos, atan, log, exp
+.TP
+Syntax:
+
+  (abs <number>)
+
+.TP
+Description:
+
+The abs function computes the absolute value of the given number. If the number
+is positive, it is returned. If the number is negative, its additive inverse is
+returned: a positive number of the same type with exactly the same magnitude.
+
+.SS Arithmetic functions floor, ceil
+
+.TP
+Syntax:
+
+  (floor <number>)
+  (ceil <number>)
+
+.TP
+Description:
+
+The floor function returns the highest integer which does not exceed
+the argument. The ceiling function returns the lowest integer which does
+not exceed the argument.
+
+If the argument is an integer, it is simply returned.
+
+If the argument is a float, then the value returned is a float.
+For instance (floor 1.1) returns 1.0.
+
+.SS Arithmetic functions sin, cos, tan, asin, acos, atan
+
+.TP
+Syntax:
+
+  (sin <radians>)
+  (cos <radians>)
+  (tan <radians>)
+  (atan <slope>)
+  (asin <num>)
+  (acos <num>)
+
+.TP
+Description:
+
+These trigonometric functions convert their argument to floating point and
+return a float result. The sin, cos and tan functions compute the sine and
+cosine and tangent of the argument. The argument represents an angle expressed
+in radians. The atan, acos and asin are their respective inverse functions.
+The argument to asin and acos must be in the range -1.0 to 1.0.
+
+.SS Arithmetic functions log, exp
+
+.TP
+Syntax:
+
+  (exp <number>)
+  (log <number>)
+
+.TP
+Description:
+
+The exp function calculates the value of the transcendental number e raised to
+the specified exponent.
+
+The log function calculates the base e logarithm of its argument, which must
+be a positive value.
+
+Integer arguments are converted to floats.
 
 .SS Arithmetic functions expt, sqrt, isqrt
 
