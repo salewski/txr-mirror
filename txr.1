@@ -6607,6 +6607,7 @@ is the matching object.
 
 .SS Functions remq, remql and remqual
 
+.TP
 Syntax:
 
   (remq <object> <list>)
@@ -6750,7 +6751,74 @@ symbols, packages, or streams are equal if they are the same hash.
 
 Certain object types have a custom equal function.
 
-.SS Arithmetic functions +, -, *
+.SS Arithmetic functions +, -
+
+.TP
+Syntax:
+
+  (+ <number>*)
+  (- <number> <number>*)
+  (* <number>*)
+
+.TP
+Description:
+
+The +, - and * functions perform addition, subtraction and multiplication,
+respectively.  Additionally, the - function performs additive inverse.
+
+The + function requires zero or more arguments. When called with no
+arguments, it produces 0 (the identity element for adddition), otherwise it
+produces the sum over all of the arguments.
+
+Similarly, the * function requires zero or more arguments. When called
+with no arguments, it produces 1 (the identity element for multiplication).
+Otherwise it produces of all the arguments.
+
+The semantics of - changes from subtraction to additive inverse
+when there is only one argument. The argument is treated as a subtrahend,
+against an implicit minuend of zero. When there are two or more
+argument, the first one is the minuend, and the remaining are subtrahends.
+
+When there are three or more operands, these operations are performed as if by
+binary operations, in a left-associative way. That is to say, (+ a b c) means
+(+ (+ a b) c). The sum of a b is computed first, and then this is added to c.
+Similarly (- a b c) means (- (- a b) c). First, b is subtracted from a, and
+then c is subtracted from that result.
+
+The arithmetic inverse is performed as if it were subtraction from integer 0.
+That is, (- x) means the same thing as (- 0 x).
+
+The operands of +, - and * can be characters, integers (fixnum and bignum), and
+floats, in nearly any combination.
+
+If two operands have different types, then one of them is converted to the
+type of the other, according to this ranking: character -> integer -> float.
+For instance if one operand is integer, and the other float, the integer
+is converted to a float.
+
+.TP
+Restrictions:
+
+Characters are not considered numbers, and participate in these operations in
+limited ways. Subtraction can be used to computed the displacement between the
+Unicode values of characters, and an integer displacement can be added to a
+character, or subtracted from a character.  For instance (- #\e9 #\e0) is 9.  
+The Unicode value of a character C can be found using (- C #\ex0): the
+displacement from the NUL character.
+
+Therefore:
+
+Two characters may not be added together.
+
+A character may not be subtracted from an integer (which also rules out
+the possibility of computing the additive inverse of a character).
+
+A character operand may not be opposite to a floating point operand
+in any operation.
+
+A character may not be an operand of multiplication.
+
+.SS Arithmetic function *
 
 .SS Arithmetic function /, trunc, mod
 
