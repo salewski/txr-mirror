@@ -6772,7 +6772,7 @@ produces the sum over all of the arguments.
 
 Similarly, the * function requires zero or more arguments. When called
 with no arguments, it produces 1 (the identity element for multiplication).
-Otherwise it produces of all the arguments.
+Otherwise it produces the product of all the arguments.
 
 The semantics of - changes from subtraction to additive inverse
 when there is only one argument. The argument is treated as a subtrahend,
@@ -6806,7 +6806,7 @@ character, or subtracted from a character.  For instance (- #\e9 #\e0) is 9.
 The Unicode value of a character C can be found using (- C #\ex0): the
 displacement from the NUL character.
 
-Therefore:
+The rules can be stated as a set of restrictions:
 
 Two characters may not be added together.
 
@@ -6818,9 +6818,39 @@ in any operation.
 
 A character may not be an operand of multiplication.
 
-.SS Arithmetic function *
+.SS Arithmetic functions /, trunc, mod
 
-.SS Arithmetic function /, trunc, mod
+.TP
+Syntax:
+
+  (/ <dividend> <divisor>)
+  (trunc <dividend> <divisor>)
+  (mod <dividend> <divisor>)
+
+Description:
+
+The arguments to these functions are numbers. Characters are not permitted.
+
+The / function performs floating-point division. Each operands is first
+converted to floating-point type, if necessary.
+
+The trunc function performs a division whose result is truncated to integer
+toward zero. If both operands are integers, then an integer division is
+performed and the result is an integer. If either operand is a floating point
+value,  a floating point division occurs, and the result is truncated toward
+zero to a floating-point integral value.
+
+The mod function performs a modulus operation. Firstly, the absolute value
+of the divisor is taken to be a modulus. Then a residue of the dividend
+with respect to the modulus is calculated. The residue's sign follows
+that of the sign of the divisor. That is, it is the smallest magnitude
+(closest to zero) residue of the dividend with respect to the absolute
+value of the divisor, having the same sign as the divisor.
+If the operands are integer, the result is an integer. If either operand
+is of type float, then the result is a float. The modulus operation is
+then generalized into the floating point domain. For instance the
+(mod 0.75 0.5) yields a residue of 0.25 because 0.5 "goes into" 0.75 only
+once, with a "remainder" of 0.25.
 
 .SS Arithmetic function gcd
 

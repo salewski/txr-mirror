@@ -737,6 +737,17 @@ divzero:
   uw_throw(numeric_error_s, lit("trunc: division by zero"));
 }
 
+static double dmod(double a, double b)
+{
+  if (b < 0.0) {
+    double m = fmod(-a, -b);
+    return - (m < 0.0 ? m - b : m);
+  } else {
+    double m = fmod(a, b);
+    return m < 0 ? m + b : m;
+  }
+}
+
 val mod(val anum, val bnum)
 {
 tail:
@@ -785,7 +796,7 @@ tail:
         return normalize(n);
       }
     case FLNUM:
-      return flo(fmod(c_num(anum), c_flo(bnum)));
+      return flo(dmod(c_num(anum), c_flo(bnum)));
     default:
       break;
     }
@@ -836,7 +847,7 @@ tail:
         }
       }
     case FLNUM:
-      return flo(fmod(c_flo(anum), c_num(bnum)));
+      return flo(dmod(c_flo(anum), c_num(bnum)));
     default:
       break;
     }
@@ -867,7 +878,7 @@ tail:
         return normalize(n);
       }
     case TYPE_PAIR(FLNUM, FLNUM):
-      return flo(fmod(c_flo(anum), c_flo(bnum)));
+      return flo(dmod(c_flo(anum), c_flo(bnum)));
     case TYPE_PAIR(BGNUM, FLNUM):
       anum = flo_int(anum);
       goto tail;
