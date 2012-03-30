@@ -1,3 +1,13 @@
+2012-03-30  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (num_str): Much more accurate test for deciding whether
+	to treat the number as floating or integer. We can't just look
+	for the presence of E, e or . because these coudl be part of
+	trailing junk for instance "123XYZE." should convert
+	to the integer 123, where "XYZE." is trailing junk.
+
+	* txr.1: Documented int-str, flo-str and num-str.
+
 2012-03-29  Kaz Kylheku  <kaz@kylheku.com>
 
 	* arith.c (numeq): Fix misplaced parenthesis.

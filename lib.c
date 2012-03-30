@@ -1998,9 +1998,12 @@ val flo_str(val str)
 val num_str(val str)
 {
   const wchar_t *wcs = c_str(str);
-  if (wcspbrk(wcs, L".eE"))
-    return flo_str(str);
-  return int_str(str, nil);
+  const wchar_t *nws = wcs + wcsspn(wcs, L"\f\n\r\t\v");
+  const wchar_t *dig = nws + wcsspn(wcs, L"+-");
+
+  if (wcsspn(dig, L"0123456789") == wcsspn(dig, L"0123456789eE."))
+    return int_str(str, nil);
+  return flo_str(str);
 }
 
 val chrp(val chr)

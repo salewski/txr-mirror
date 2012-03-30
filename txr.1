@@ -7112,6 +7112,47 @@ however, the original unconverted values are returned. For instance
 If three or more arguments are given, max and min are left-associative.
 Thus (max a b c) is (max (max a b) c).
 
+.SS Functions int-str, flo-str and num-str
+
+.TP
+Syntax:
+
+  (int-str <string> <radix>)
+  (flo-str <string>)
+  (num-str <string>)
+
+.TP
+Description:
+
+These functions extract numbers from a string. Leading whitespace, if
+any, is skipped. If no digits can be successfully extracted, then nil is
+returned.  Trailing material which does not contribute to the number
+is ignored.
+
+The int-str function converts a string of digits in the specified
+radix to an integer value. For radices above 10, letters of the alphabet
+are used for digits: A represent a digit whose value is 10, B represents 11 and
+so forth until Z.  For values of radix above 36, the returned value is
+unspecified. Upper and lower case letters are recognized.
+Any character which is not a digit of the specified radix is regarded
+as the start of trailing junk at which the extraction of the digits stops.
+
+The flo-str function converts a floating-point decimal notation to a nearby
+floating point value. The material which contributes to the value
+is the longest match for optional leading space, followed by a
+mantissa which consists of an optional sign followed by a mixture of at least
+one digit, and at most one decimal point, optionally followed by an exponent
+part denoted by the letter E or e, an optional sign and one or more optional
+exponent digits.
+
+The num-str function converts a decimal notation to either an integer as if by
+a radix 10 application of int-str, or to a floating point value as if by
+flo-str. The floating point interpretation is chosen if the possibly empty
+initial sequence of digits (following any whitespace and optional sign) is
+followed by a period, e or E.
+
+.SS Functions int-flo and flo-int
+
 .SS Functions search-regex and match-regex
 
 .SS Function regsub
@@ -7229,10 +7270,6 @@ Thus (max a b c) is (max (max a b) c).
 .SS Function trim-str
 
 .SS Function string-lt
-
-.SS Functions int-str, flo-str and num-str
-
-.SS Functions int-flo and flo-int
 
 .SS Function chrp
 
