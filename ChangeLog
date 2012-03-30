@@ -1,5 +1,9 @@
 2012-03-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (numeq): Fix misplaced parenthesis.
+
+2012-03-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (min2, max2): Semantics tweak. If the numbers are equal,
 	favor the left one.
 
