@@ -6792,9 +6792,9 @@ The operands of +, - and * can be characters, integers (fixnum and bignum), and
 floats, in nearly any combination.
 
 If two operands have different types, then one of them is converted to the
-type of the other, according to this ranking: character -> integer -> float.
-For instance if one operand is integer, and the other float, the integer
-is converted to a float.
+type of the one with the higher rank, according to this ranking:
+character < integer < float.  For instance if one operand is integer, and the
+other float, the integer is converted to a float.
 
 .TP
 Restrictions:
@@ -6951,13 +6951,139 @@ Integer arguments are converted to floats.
 
 .SS Arithmetic functions expt, sqrt, isqrt
 
+.TP
+Syntax:
+
+  (expt <base> <exponent>*)
+  (sqrt <number>)
+  (isqrt <integer>)
+
+.TP
+Description:
+
+The expt function raises a base to zero or more exponents. 
+(expt x) is equivalent to (expt x 1); and yields x for all x.
+For three or more arguments, the operation is left associative.
+That is to say, (expt x y z) is equivalent to (expt (expt x y) z) and
+so forth. Exponentiation is done pairwise using a binary operation.
+If both operands to this binary operation are integers, then the
+result is an integer. If either operand is a float, then the other
+operand is converted to a float, and a floating point exponentation
+is performed. Exponentation that would produce a complex number is
+not supported.
+
+The sqrt function produces a floating-point square root. The numeric
+oeprand is converted from integer to floating-point if necessary.
+Negative operands are not supported.
+
+The isqrt function computes an integer square root: a value which is the
+greatest integer that is no greater than the true square root of the input
+value. The input value must be an integer.
+
 .SS Arithmetic function exptmod
+
+.TP
+Syntax:
+
+  (exptmod <base> <exponent> <modulus>)
+
+.TP
+Description:
+
+The exptmod function performs modular exponentiation and accepts only integer
+arguments. Furthermore, the exponent must be a non-negative and the modulus
+must be positive.
+
+The return value is the base raised to the exponent, and reduced to the
+least positive residue modulo the modulus.
 
 .SS Functions fixnump, bignump, integerp, floatp, numberp
 
-.SS Functions zerop, evenp, oddp
+.TP
+Syntax:
 
-.SS Relational functions >, <, >= and <=
+  (fixnump <object>)
+  (bignump <object>)
+  (integerp <object>)
+  (floatp <object>)
+  (numberp <object>)
+
+.TP
+Description:
+
+These functions test the type of the object, returning true if it is an object
+of the implied type. The fixnump, bignump and floatp functions return true if
+the object is of the basic type fixnum, bignum or float.
+The function integerp returns true of the object is either a fixnum or
+a bignum. The function numberp returns true if the object is either
+a fixnum, bignum or float.
+
+.SS Function zerop
+
+.TP
+Syntax:
+
+  (zerop <number>)
+
+.TP
+Description:
+
+The zerop function tests a number for equivalence to zero. The argument must be
+a number. It returns t for the integer value 0,  and for the floating-point
+value 0.0. For other numbers, it returns nil.
+
+.SS Functions evenp, oddp
+
+.TP
+Syntax:
+
+  (evenp <integer>)
+  (oddp <integer>)
+
+.TP
+Description:
+
+The evenp and oddp functions require integer arguments. evenp returns
+t if the integer is even (divisible by two), otherwise it returns nil.
+oddp returns t if the integer is nto divisible by two (odd), otherwise
+it returns nil.
+
+.SS Relational functions >, <, >=, <= and =
+
+.TP
+Syntax:
+
+  (> <number> <number>*)
+  (< <number> <number>*)
+  (>= <number> <number>*)
+  (<= <number> <number>*)
+  (= <number> <number>*)
+
+.TP
+Description:
+
+The relational functions compare characters and numbers for numeric equality or
+inequality. The arguments must be one or more numbers or characters.
+
+If a just one argument is given, then these functions all return t.
+
+If two arguments are given, then, they are compared as follows.
+First, if the numbers do not have the same type, then the one
+which has the lower ranking type is converted to the type of
+the other, according to this ranking: character < integer < float.
+For instance if a character and integer is compared, the character
+is converted to integer. Then a straightforward numeric comparison
+is applied.
+
+Three or more arguments may be given, in which case the comparison proceeds
+pairwise from left to right. For instance in (< a b c), the comparison (< a b)
+is performed in isolation. If it yields false, then nil is returned, otherwise
+the comparison (< b c) is performed in isolation, and if that yields false, nil
+is returned, otherwise t is returned.  Note that it is possible for b to
+undergo two different conversions.  For instance in (< <float> <character>
+<integer>), the character will convert to a floating-point representation of
+its Unicode, and if that comparison suceeds, then in the second comparison, the
+character will convert to integer.
 
 .SS Functions max and min
 

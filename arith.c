@@ -1112,6 +1112,42 @@ tail:
   uw_throwf(error_s, lit("lt: invalid operands ~s ~s"), anum, bnum, nao);
 }
 
+val numeq(val anum, val bnum)
+{
+tail:
+  switch (TYPE_PAIR(type(anum), type(bnum))) {
+  case TYPE_PAIR(NUM, NUM):
+  case TYPE_PAIR(CHR, CHR):
+  case TYPE_PAIR(NUM, CHR):
+  case TYPE_PAIR(CHR, NUM):
+    return c_num(anum) == c_num(bnum) ? t : nil;
+  case TYPE_PAIR(NUM, BGNUM):
+  case TYPE_PAIR(CHR, BGNUM):
+    return mp_cmp_z(mp(bnum)) == MP_EQ ? t : nil;
+  case TYPE_PAIR(BGNUM, NUM):
+  case TYPE_PAIR(BGNUM, CHR):
+    return mp_cmp_z(mp(anum)) == MP_EQ ? t : nil;
+  case TYPE_PAIR(BGNUM, BGNUM):
+    return mp_cmp(mp(anum), mp(bnum) == MP_EQ) ? t : nil;
+  case TYPE_PAIR(NUM, FLNUM):
+  case TYPE_PAIR(CHR, FLNUM):
+    return c_num(anum) == c_flo(bnum) ? t : nil;
+  case TYPE_PAIR(FLNUM, NUM):
+  case TYPE_PAIR(FLNUM, CHR):
+    return c_flo(anum) == c_num(bnum) ? t : nil;
+  case TYPE_PAIR(FLNUM, FLNUM):
+    return c_flo(anum) == c_flo(bnum) ? t : nil;
+  case TYPE_PAIR(FLNUM, BGNUM):
+    bnum = flo_int(bnum);
+    goto tail;
+  case TYPE_PAIR(BGNUM, FLNUM):
+    anum = flo_int(anum);
+    goto tail;
+  }
+
+  uw_throwf(error_s, lit("=: invalid operands ~s ~s"), anum, bnum, nao);
+}
+
 val expt(val anum, val bnum)
 {
 tail:
@@ -1228,11 +1264,14 @@ val exptmod(val base, val exp, val mod)
   n = make_bignum();
 
   if (mp_exptmod(mp(base), mp(exp), mp(mod), mp(n)) != MP_OKAY)
-    goto inval;
+    goto bad;
 
-  return n;
+  return normalize(n);
 inval:
   uw_throwf(error_s, lit("exptmod: non-integral operands ~s ~s ~s"),
+            base, exp, mod, nao);
+bad:
+  uw_throwf(error_s, lit("exptmod: bad operands ~s ~s ~s"),
             base, exp, mod, nao);
 }
 

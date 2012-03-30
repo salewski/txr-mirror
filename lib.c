@@ -1269,6 +1269,20 @@ val lev(val first, val rest)
   return t;
 }
 
+val numeqv(val first, val rest)
+{
+  val iter;
+
+  for (iter = rest; iter; iter = cdr(iter)) {
+    val elem = car(iter);
+    if (!numeq(first, elem))
+      return nil;
+    first = elem;
+  }
+
+  return t;
+}
+
 val max2(val anum, val bnum)
 {
   return if3(gt(anum, bnum), anum, bnum);
