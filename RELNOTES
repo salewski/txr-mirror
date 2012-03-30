@@ -1,3 +1,46 @@
+                                     TXR 63
+                                   2011-03-30
+
+
+  Features
+
+  - Significant improvement in the performance of the garbage collector,
+    which can drastically cut the run-time of some programs.
+  - match-str and match-str-tree functions exposed.
+  - new @(rebind) directive provides for a one step dynamic shadowing
+    of a variable with a local variable, whose value can be derived from
+    the one being shadowed.
+  - filters now work on nested lists of strings, not just strings.
+  - floating point formatting now produces the same exponential notation
+    on different platforms, by post-filtering the sprintf output:
+    a leading + and leading zeros are removed: e+023 becomes e23.
+  - new functions: num-str, tan, asin, acos, =, 
+  - min and max return the left operand rather than the right one,
+    when two operands are equal.
+
+
+  Bugs
+
+  - search-str optional argument was not working when omitted.
+  - Fixed situations involving an incorrect behavior: partial horizontal
+    matches (not matching the full line) were succeeding.
+  - It was impossible to define a pattern function called @(text)
+    due to the use of the symbol text as an internal symbol, rather
+    than a symbol in the private system package.
+  - error checking code in funcall had an improperly terminated argument
+    list, causing an exception.
+  - @(output) blocks now flush their stream at the @(end), without
+    which output is not correctly interleaved between output produced
+    by external commands.
+  - fixed some misleading exception wordings in the numeric library.
+  - fixed sign semantics of floating-point mod to be like the integer mod.
+  - gcd function allows zeros.
+  - fixed broken exptmod: it was not normalizing bignum values that
+    fall into the fixnum range into fixnum objects, resulting in 
+    undersized bignums being returned.
+
+
+
                                      TXR 62
                                    2011-03-23
 
