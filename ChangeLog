@@ -1,5 +1,17 @@
 2012-03-30  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 63
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES: Updated.
+
+2012-03-30  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (num_str): Much more accurate test for deciding whether
 	to treat the number as floating or integer. We can't just look
 	for the presence of E, e or . because these coudl be part of
