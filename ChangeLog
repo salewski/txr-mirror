@@ -1,5 +1,23 @@
 2012-03-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (numeq): New function.
+	(exptmod): Bugfix: was no normalizing the bignum, ouch.
+	Also was reporting "non-integral operands" for other
+	errors.
+
+	* eval.c (eval_init): Registered = intrinsic function.
+
+	* lib.c (numeqv): New function.
+
+	* lib.h (numeq, numeqv): Declared.
+
+	* txr.1: Documented expt, sqrt, isqrt, exptmod, fixnump, bignump,
+	integerp, floatp, numberp, zerop, evenp, oddp, >, <, >=, <= and =.
+
+	* txr.vim: Highlight =
+
+2012-03-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (gcd): Allow zeros. Don't issue "non-integral"
 	exception if MPI fails.
 	(floorf, ceili): Map integer argument to itself.
