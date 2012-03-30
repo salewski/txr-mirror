@@ -1,5 +1,9 @@
 2012-03-30  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Documenting the debugger with an example session.
+
+2012-03-30  Kaz Kylheku  <kaz@kylheku.com>
+
 	Version 63
 
 	* txr.c (version): Bumped.
