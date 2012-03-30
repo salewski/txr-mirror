@@ -1285,12 +1285,12 @@ val numeqv(val first, val rest)
 
 val max2(val anum, val bnum)
 {
-  return if3(gt(anum, bnum), anum, bnum);
+  return if3(ge(anum, bnum), anum, bnum);
 }
 
 val min2(val anum, val bnum)
 {
-  return if3(lt(anum, bnum), anum, bnum);
+  return if3(le(anum, bnum), anum, bnum);
 }
 
 val maxv(val first, val rest)

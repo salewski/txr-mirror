@@ -1,5 +1,12 @@
 2012-03-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (min2, max2): Semantics tweak. If the numbers are equal,
+	favor the left one.
+
+	* txr.1: Documented min and max.
+
+2012-03-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (numeq): New function.
 	(exptmod): Bugfix: was no normalizing the bignum, ouch.
 	Also was reporting "non-integral operands" for other

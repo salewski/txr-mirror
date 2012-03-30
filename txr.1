@@ -7087,6 +7087,31 @@ character will convert to integer.
 
 .SS Functions max and min
 
+.TP
+Syntax:
+
+  (max <number> <number>*)
+  (min <number> <number>*)
+
+.TP
+Description:
+
+The max and min functions determine and return the highest or lowest
+value from among their arguments.
+
+The arguments must be numbers or characters.
+
+If only a single argument is given, that value is returned.
+
+If two arguments are given, then (max a b) is equivalent to (if (>= a b) a b),
+and (min a b) is equivalent to (if (<= a b) a b). If the operands do not
+have the same type, then one of them is converted to the type of the other;
+however, the original unconverted values are returned. For instance
+(max 4 3.0) yields the integer 4, not 4.0.
+
+If three or more arguments are given, max and min are left-associative.
+Thus (max a b c) is (max (max a b) c).
+
 .SS Functions search-regex and match-regex
 
 .SS Function regsub
