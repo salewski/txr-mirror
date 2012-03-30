@@ -1128,7 +1128,7 @@ tail:
   case TYPE_PAIR(BGNUM, CHR):
     return mp_cmp_z(mp(anum)) == MP_EQ ? t : nil;
   case TYPE_PAIR(BGNUM, BGNUM):
-    return mp_cmp(mp(anum), mp(bnum) == MP_EQ) ? t : nil;
+    return mp_cmp(mp(anum), mp(bnum)) == MP_EQ ? t : nil;
   case TYPE_PAIR(NUM, FLNUM):
   case TYPE_PAIR(CHR, FLNUM):
     return c_num(anum) == c_flo(bnum) ? t : nil;
