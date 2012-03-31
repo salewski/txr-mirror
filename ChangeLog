@@ -1,5 +1,10 @@
 2012-03-30  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Correction: backtracking does NOT take place into a block
+	which completed.
+
+2012-03-30  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: Documenting the debugger with an example session.
 
 2012-03-30  Kaz Kylheku  <kaz@kylheku.com>

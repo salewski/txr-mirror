@@ -1619,9 +1619,9 @@ blocks. For example:
 
 Now the scope of each skip is just the remainder of the block in which it
 occurs. The first skip finds A, and then the block ends. Control passes to the
-next block, and backtracking will take place to a block which completed (unless
-all these blocks are enclosed in some larger construct which backtracks,
-causing the blocks to be re-executed.
+next block, and backtracking will not take place to a block which completed
+(unless all these blocks are enclosed in some larger construct which
+backtracks, causing the blocks to be re-executed.
 
 Of course, this rewrite is not equivalent, and cannot be used for instance
 in backreferencing situations such as:
