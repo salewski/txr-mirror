@@ -572,6 +572,11 @@ The forms with an * indicate a long match, see Longest Match below.
 The last two forms with the embedded regexp /RE/ or number have special
 semantics, see Positive Match below.
 
+The identifier t cannot be used as a name; it is a reserved symbol which
+denotes the value true. An attempt to use the variable @t will result
+in an exception.  The symbol nil can be used as a variable name,
+but it has special semantics, described in a section below.
+
 When the @NAME form is used, the name itself may consist of any combination of
 one or more letters, numbers, and underscores. It may not look like a number,
 so that for instance 123 is not a valid name, but 12A is valid.  Case is
@@ -819,6 +824,13 @@ string is extracted.
 This syntax is processed without consideration of what other
 syntax follows.  A positive match may be directly followed by an unbound
 variable.
+
+.SS Symbol nil as a Variable
+
+If the symbol nil is used as a variable, it behaves like a variable which
+has no binding. Furthermore, no binding is created. @nil allows the
+variable matching syntax to be used to skip material, in ways different
+from and complementary to @(skip).
 
 .SS Regular Expressions
 
