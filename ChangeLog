@@ -1,5 +1,14 @@
 2012-03-30  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (h_var): Disallow the variable named by the symbol t
+	by throwing an exception. Allow nil, but wherever nil occurs,
+	do not produce a binding.
+
+	* txr.1: State the restrictions against using t in the section
+	on Variables and also describe the nil ignore feature.
+
+2012-03-30  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: Correction: backtracking does NOT take place into a block
 	which completed.
 
