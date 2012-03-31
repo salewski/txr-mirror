@@ -3040,6 +3040,36 @@ The second clause grabs four lines, which is the longest match.
 And so, the next line of input available for matching is 5, which goes
 to the @second variable.
 
+.SS Interaction between Trailer and Accept Directives
+
+If one of the clauses which follow a @(trailer) request a successful
+termination to an outer block via @(accept), then @(trailer) intercepts
+the transfer and adjusts the data extent to the position that it was given.
+
+Example:
+
+  Query:        @(block)
+                @(trailer)
+                @line1
+                @line2
+                @(accept)
+                @(end)
+                @line3
+
+  Data:         1
+                2
+                3
+
+  Output:       line1="1"
+                line2="2"
+                line3="1"
+
+The variable line3 is bound to 1 because although the @(accept) yields a data
+position which is advanced to the third line, this is intercepted by @(trailer)
+and adjusted back to the first line.
+
+Directives other than @(trailer) have no such special interaction with accept.
+
 .SH FUNCTIONS
 
 .SS Introduction

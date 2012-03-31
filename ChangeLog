@@ -1,3 +1,25 @@
+2012-03-31  Kaz Kylheku  <kaz@kylheku.com>
+
+	If one of the blocks which are subordinate to a @(trailer)
+	happen to request a successful termination by invoking @(accept)
+	the position must not advance into the trailer material.
+
+	* match.c (v_trailer): Added an unwind protect which
+	detects that an accept is taking place and adjusts the return value to
+	restrict the input position at the point given to trailer.
+	(accept_fail): Use uw_block_return_proto instead of uw_block_return
+	and pass the symbol as the protocol identifier.
+
+	* unwind.c (uw_current_exit_point): New function.
+	(uw_block_return): Function renamed to uw_block_return_proto;
+	takes new parameter which is stored in the block structure.
+
+	* unwind.h (struct uw_block): New member, protocol.
+	(uw_block_return): Becomes an inline wrapper for uw_block_return_proto.
+	(uw_block_return_proto, uw_current_exit_point): Declared.
+
+	* txr.1: Interaction between @(trailer) and @(accept) documented.
+
 2012-03-30  Kaz Kylheku  <kaz@kylheku.com>
 
 	* match.c (h_var): Disallow the variable named by the symbol t

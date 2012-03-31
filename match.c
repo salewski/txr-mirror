@@ -2060,11 +2060,33 @@ static val v_trailer(match_files_ctx *c)
 
   c->spec = rest(c->spec);
 
-  if (!c->spec)  {
-    return cons(c->bindings, cons(c->data, c->data_lineno));
-  } else {
-    cons_bind (new_bindings, success, match_files(*c));
-    return success ? cons(new_bindings, cons(c->data, c->data_lineno)) : nil;
+  {
+    val result = nil;
+
+    uw_simple_catch_begin;
+
+    if (!c->spec)  {
+      result = cons(c->bindings, cons(c->data, c->data_lineno));
+    } else {
+      cons_bind (new_bindings, success, match_files(*c));
+      result = if2(success, cons(new_bindings, cons(c->data, c->data_lineno)));
+    }
+
+    /*
+     * Intercept an block return initiated by accept, and rewrite
+     * the data extent part of the result. If we don't do this;
+     * then an accept can emanate out of the trailer block and cause
+     * the data position to advance into the matched material.
+     */
+    uw_unwind {
+      uw_frame_t *ex = uw_current_exit_point();
+      if (ex->uw.type == UW_BLOCK && ex->bl.protocol == accept_s)
+        rplacd(ex->bl.result, cons(c->data, c->data_lineno));
+    }
+
+    uw_catch_end;
+
+    return result;
   }
 }
 
@@ -2170,10 +2192,13 @@ static val v_accept_fail(match_files_ctx *c)
   if (rest(specline))
     sem_error(specline, lit("unexpected material after ~a"), sym, nao);
 
-  uw_block_return(target,
-                  if2(sym == accept_s,
-                      cons(c->bindings,
-                           if3(c->data, cons(c->data, c->data_lineno), t))));
+  uw_block_return_proto(target,
+                        if2(sym == accept_s,
+                            cons(c->bindings,
+                                 if3(c->data, cons(c->data, c->data_lineno),
+                                     t))),
+                        sym);
+
   /* TODO: uw_block_return could just throw this */
   if (target)
     sem_error(specline, lit("~a: no block named ~a in scope"),

@@ -43,6 +43,7 @@ struct uw_block {
   uw_frtype_t type;
   val tag;
   val result;
+  val protocol;
   jmp_buf jb;
 };
 
@@ -91,7 +92,11 @@ val uw_get_func(val sym);
 val uw_set_func(val sym, val value);
 val uw_get_match_context(void);
 val uw_set_match_context(val context);
-val uw_block_return(val tag, val result);
+val uw_block_return_proto(val tag, val result, val protocol);
+INLINE val uw_block_return(val tag, val result)
+{
+   return uw_block_return_proto(tag, result, nil);
+}
 void uw_push_catch(uw_frame_t *, val matches);
 noreturn val uw_throw(val sym, val exception);
 noreturn val uw_throwf(val sym, val fmt, ...);
@@ -106,6 +111,7 @@ void uw_push_debug(uw_frame_t *, val func, val args,
                    val line, val chr);
 void uw_pop_frame(uw_frame_t *);
 uw_frame_t *uw_current_frame(void);
+uw_frame_t *uw_current_exit_point(void);
 void uw_init(void);
 
 noreturn val type_mismatch(val, ...);

@@ -192,7 +192,12 @@ uw_frame_t *uw_current_frame(void)
   return uw_stack;
 }
 
-val uw_block_return(val tag, val result)
+uw_frame_t *uw_current_exit_point(void)
+{
+  return uw_exit_point;
+}
+
+val uw_block_return_proto(val tag, val result, val protocol)
 {
   uw_frame_t *ex;
 
@@ -205,6 +210,7 @@ val uw_block_return(val tag, val result)
     return nil;
 
   ex->bl.result = result;
+  ex->bl.protocol = protocol;
   uw_exit_point = ex;
   uw_unwind_to_exit_point();
   abort();
