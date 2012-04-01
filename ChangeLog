@@ -1,5 +1,13 @@
 2012-03-31  Kaz Kylheku  <kaz@kylheku.com>
 
+	* hash.c (last_equal_key, last_equal_hash): New static variables.
+	(equal_hash): Caching optimization implemented.
+	(eql_hash): Optimization extended to those objects that have
+	equal semantics.
+	(hash_process_weak): Clear the cached hash during gc.
+
+ 2012-03-31  Kaz Kylheku  <kaz@kylheku.com>
+
 	If one of the blocks which are subordinate to a @(trailer)
 	happen to request a successful termination by invoking @(accept)
 	the position must not advance into the trailer material.
