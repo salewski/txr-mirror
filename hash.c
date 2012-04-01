@@ -72,6 +72,13 @@ val weak_keys_k, weak_vals_k, equal_based_k;
 static struct hash *reachable_weak_hashes;
 
 /*
+ * Cache of equal hashing function
+ * These variables are deliberately not GC-protected.
+ */
+static val last_equal_key;
+static cnum last_equal_hash = NUM_MAX;
+
+/*
  * This is is an adaptation of hashpjw, from Compilers: Principles, Techniques
  * and Tools, Aho, Sethi, Ulman, 1988. P. 436.  The register is wider by
  * a few bits, and we bring down five overflow bits instead of four.
@@ -110,31 +117,38 @@ static cnum hash_double(double n)
 
 static cnum equal_hash(val obj)
 {
+  if (obj == last_equal_key)
+    return last_equal_hash;
+
+  last_equal_key = obj;
+
   switch (type(obj)) {
   case NIL:
-    return NUM_MAX;
+    return last_equal_hash = NUM_MAX;
   case LIT:
-    return hash_c_str(litptr(obj)) & NUM_MAX;
+    return last_equal_hash = hash_c_str(litptr(obj)) & NUM_MAX;
   case CONS:
-    return (equal_hash(obj->c.car) + equal_hash(obj->c.cdr)) & NUM_MAX;
+    return last_equal_hash = (equal_hash(obj->c.car) +
+                              equal_hash(obj->c.cdr)) & NUM_MAX;
   case STR:
-    return hash_c_str(obj->st.str) & NUM_MAX;
+    return last_equal_hash = hash_c_str(obj->st.str) & NUM_MAX;
   case CHR:
-    return c_chr(obj) & NUM_MAX;
+    return last_equal_hash = c_chr(obj) & NUM_MAX;
   case NUM:
-    return c_num(obj) & NUM_MAX;
+    return last_equal_hash = c_num(obj) & NUM_MAX;
   case SYM:
   case PKG:
   case ENV:
     switch (sizeof (mem_t *)) {
     case 4:
-      return (((cnum) obj) >> 4) & NUM_MAX;
+      return last_equal_hash = (((cnum) obj) >> 4) & NUM_MAX;
     case 8: default:
-      return (((cnum) obj) >> 5) & NUM_MAX;
+      return last_equal_hash = (((cnum) obj) >> 5) & NUM_MAX;
     }
     break;
   case FUN:
-    return ((cnum) obj->f.f.interp_fun + equal_hash(obj->f.env)) & NUM_MAX;
+    return last_equal_hash = ((cnum) obj->f.f.interp_fun +
+                              equal_hash(obj->f.env)) & NUM_MAX;
   case VEC:
     {
       val length = obj->v.vec[vec_length];
@@ -144,7 +158,7 @@ static cnum equal_hash(val obj)
       for (i = 0; i < len; i++)
         h = (h + equal_hash(obj->v.vec[i])) & NUM_MAX;
 
-      return h;
+      return last_equal_hash = h;
     }
   case LCONS:
     return (equal_hash(car(obj)) + equal_hash(cdr(obj))) & NUM_MAX;
@@ -152,11 +166,11 @@ static cnum equal_hash(val obj)
     lazy_str_force(obj);
     return equal_hash(obj->ls.prefix);
   case BGNUM:
-    return mp_hash(mp(obj)) & NUM_MAX;
+    return last_equal_hash = mp_hash(mp(obj)) & NUM_MAX;
   case FLNUM:
-    return hash_double(obj->fl.n);
+    return last_equal_hash = hash_double(obj->fl.n);
   case COBJ:
-    return obj->co.ops->hash(obj) & NUM_MAX;
+    return last_equal_hash = obj->co.ops->hash(obj) & NUM_MAX;
   }
 
   internal_error("unhandled case in equal function");
@@ -166,17 +180,24 @@ static cnum eql_hash(val obj)
 {
   switch (tag(obj)) {
   case TAG_PTR:
-    if (!obj)
+    switch (type(obj)) {
+    case NIL:
       return NUM_MAX;
-    if (obj->t.type == BGNUM)
-      return mp_hash(mp(obj)) & NUM_MAX;
-    if (obj->t.type == FLNUM)
-      return hash_double(obj->fl.n);
-    switch (sizeof (mem_t *)) {
-    case 4:
-      return (((cnum) obj) >> 4) & NUM_MAX;
-    case 8: default:
-      return (((cnum) obj) >> 5) & NUM_MAX;
+    case BGNUM:
+      if (obj == last_equal_key)
+        return last_equal_hash;
+      return last_equal_hash = mp_hash(mp(obj)) & NUM_MAX;
+    case FLNUM:
+      if (obj == last_equal_key)
+        return last_equal_hash;
+      return last_equal_hash = hash_double(obj->fl.n);
+    default:
+      switch (sizeof (mem_t *)) {
+      case 4:
+        return (((cnum) obj) >> 4) & NUM_MAX;
+      case 8: default:
+        return (((cnum) obj) >> 5) & NUM_MAX;
+      }
     }
   case TAG_CHR:
     return c_chr(obj) & NUM_MAX;
@@ -514,6 +535,12 @@ void hash_process_weak(void)
 {
   struct hash *h;
   cnum i;
+
+  /*
+   * First lapse the equal cache. We can do this unconditionally.
+   */
+  last_equal_key = nil;
+  last_equal_hash = NUM_MAX;
 
   for (h = reachable_weak_hashes; h != 0; h = h->next) {
     /* The table of a weak hash was spuriously reached by conservative GC;
