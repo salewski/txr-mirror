@@ -219,6 +219,7 @@ union obj {
 
 #define set(place, val) ((place) = (val))
 #define loc(place) (&(place))
+#define mut(obj)
 
 INLINE cnum tag(val obj) { return ((cnum) obj) & TAG_MASK; }
 INLINE int is_ptr(val obj) { return obj && tag(obj) == TAG_PTR; }
