@@ -224,9 +224,9 @@ val rplaca(val cons, val new_car)
 {
   switch (type(cons)) {
   case CONS:
-    return cons->c.car = new_car;
+    return set(cons->c.car, new_car);
   case LCONS:
-    return cons->lc.car = new_car;
+    return set(cons->lc.car, new_car);
   default:
     type_mismatch(lit("~s is not a cons"), cons, nao);
   }
@@ -237,9 +237,9 @@ val rplacd(val cons, val new_cdr)
 {
   switch (type(cons)) {
   case CONS:
-    return cons->c.cdr = new_cdr;
+    return set(cons->c.cdr, new_cdr);
   case LCONS:
-    return cons->lc.cdr = new_cdr;
+    return set(cons->lc.cdr, new_cdr);
   default:
     type_mismatch(lit("~s is not a cons"), cons, nao);
   }
@@ -249,13 +249,13 @@ val *car_l(val cons)
 {
   switch (type(cons)) {
   case CONS:
-    return &cons->c.car;
+    return loc(cons->c.car);
   case LCONS:
     if (cons->lc.func) {
       funcall1(cons->lc.func, cons);
       cons->lc.func = nil;
     }
-    return &cons->lc.car;
+    return loc(cons->lc.car);
   default:
     type_mismatch(lit("~s is not a cons"), cons, nao);
   }
@@ -265,13 +265,13 @@ val *cdr_l(val cons)
 {
   switch (type(cons)) {
   case CONS:
-    return &cons->c.cdr;
+    return loc(cons->c.cdr);
   case LCONS:
     if (cons->lc.func) {
       funcall1(cons->lc.func, cons);
       cons->lc.func = nil;
     }
-    return &cons->lc.cdr;
+    return loc(cons->lc.cdr);
   default:
     type_mismatch(lit("~s is not a cons"), cons, nao);
   }
@@ -1431,8 +1431,8 @@ val string_extend(val str, val tail)
 
     str->st.str = (wchar_t *) chk_realloc((mem_t *) str->st.str,
                                           alloc * sizeof *str->st.str);
-    str->st.alloc = num(alloc);
-    str->st.len = plus(str->st.len, needed);
+    set(str->st.alloc, num(alloc));
+    set(str->st.len, plus(str->st.len, needed));
 
     if (stringp(tail)) {
       wmemcpy(str->st.str + len, c_str(tail), c_num(needed) + 1);
@@ -1475,8 +1475,8 @@ val length_str(val str)
     }
 
     if (!str->st.len) {
-      str->st.len = num(wcslen(str->st.str));
-      str->st.alloc = plus(str->st.len, one);
+      set(str->st.len, num(wcslen(str->st.str)));
+      set(str->st.alloc, plus(str->st.len, one));
     }
     return str->st.len;
   }
@@ -1741,7 +1741,7 @@ val replace_str(val str_in, val items, val from, val to)
 
     wmemmove(str_in->st.str + t - c_num(len_diff), 
              str_in->st.str + t, (l - t) + 1);
-    str_in->st.len = minus(len, len_diff);
+    set(str_in->st.len, minus(len, len_diff));
     to = plus(from, len_it);
   } else if (lt(len_rep, len_it)) {
     val len_diff = minus(len_it, len_rep);
@@ -2262,7 +2262,7 @@ static val rehome_sym(val sym, val package)
 
   if (sym->s.package)
     remhash(sym->s.package->pk.symhash, symbol_name(sym));
-  sym->s.package = package;
+  set(sym->s.package, package);
   sethash(package->pk.symhash, symbol_name(sym), sym);
   return sym;
 }
@@ -3316,8 +3316,8 @@ static val lazy_stream_func(val env, val lcons)
   val next = cdr(env) ? pop(cdr_l(env)) : get_line(stream);
   val ahead = get_line(stream);
 
-  lcons->lc.car = next;
-  lcons->lc.cdr = if2(ahead, make_lazy_cons(lcons->lc.func));
+  set(lcons->lc.car, next);
+  set(lcons->lc.cdr, if2(ahead, make_lazy_cons(lcons->lc.func)));
   lcons->lc.func = nil;
 
   if (!next || !ahead)
@@ -3357,12 +3357,12 @@ val lazy_str(val lst, val term, val limit)
     obj->ls.prefix = null_string;
     obj->ls.list = nil;
   } else {
-    obj->ls.prefix = cat_str(list(first(lst), term, nao), nil);
-    obj->ls.list = rest(lst);
+    set(obj->ls.prefix, cat_str(list(first(lst), term, nao), nil));
+    set(obj->ls.list, rest(lst));
     limit = if2(limit, minus(limit, one));
   }
 
-  obj->ls.opts = cons(term, limit);
+  set(obj->ls.opts, cons(term, limit));
 
   return obj;
 }
@@ -3376,7 +3376,7 @@ val lazy_str_force(val lstr)
   while ((!lim || gt(lim, zero)) && lstr->ls.list) {
     val next = pop(&lstr->ls.list);
     val term = car(lstr->ls.opts);
-    lstr->ls.prefix = cat_str(list(lstr->ls.prefix, next, term, nao), nil);
+    set(lstr->ls.prefix, cat_str(list(lstr->ls.prefix, next, term, nao), nil));
     if (lim)
       lim = minus(lim, one);
   }
@@ -3399,7 +3399,7 @@ val lazy_str_force_upto(val lstr, val index)
   {
     val next = pop(&lstr->ls.list);
     val term = car(lstr->ls.opts);
-    lstr->ls.prefix = cat_str(list(lstr->ls.prefix, next, term, nao), nil);
+    set(lstr->ls.prefix, cat_str(list(lstr->ls.prefix, next, term, nao), nil));
     if (lim)
       lim = minus(lim, one);
   }
@@ -4048,7 +4048,7 @@ static void obj_init(void)
 
   /* t can't be interned, because gethash_l needs t in order to do its job. */
   t = *gethash_l(user_package->pk.symhash, lit("t"), 0) = make_sym(lit("t"));
-  t->s.package = user_package;
+  set(t->s.package, user_package);
 
   null = intern(lit("null"), user_package);
   cons_s = intern(lit("cons"), user_package);

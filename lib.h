@@ -217,6 +217,9 @@ union obj {
   struct flonum fl;
 };
 
+#define set(place, val) ((place) = (val))
+#define loc(place) (&(place))
+
 INLINE cnum tag(val obj) { return ((cnum) obj) & TAG_MASK; }
 INLINE int is_ptr(val obj) { return obj && tag(obj) == TAG_PTR; }
 INLINE int is_num(val obj) { return tag(obj) == TAG_NUM; }

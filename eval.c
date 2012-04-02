@@ -82,21 +82,21 @@ val make_env(val vbindings, val fbindings, val up_env)
 val env_fbind(val env, val sym, val fun)
 {
   type_check(env, ENV);
-  env->e.fbindings = acons_new(sym, fun, env->e.fbindings);
+  set(env->e.fbindings, acons_new(sym, fun, env->e.fbindings));
   return sym;
 }
 
 val env_vbind(val env, val sym, val obj)
 {
   type_check(env, ENV);
-  env->e.vbindings = acons_new(sym, obj, env->e.vbindings);
+  set(env->e.vbindings, acons_new(sym, obj, env->e.vbindings));
   return sym;
 }
 
 static void env_replace_vbind(val env, val bindings)
 {
   type_check(env, ENV);
-  env->e.vbindings = bindings;
+  set(env->e.vbindings, bindings);
 }
 
 noreturn static val eval_error(val form, val fmt, ...)
@@ -120,7 +120,7 @@ val lookup_var(val env, val sym)
     val bind = gethash(top_vb, sym);
     if (cobjp(bind)) {
       struct c_var *cv = (struct c_var *) cptr_get(bind);
-      cv->bind->c.cdr = *cv->loc;
+      set(cv->bind->c.cdr, *cv->loc);
       return cv->bind;
     }
     return bind;
@@ -183,7 +183,7 @@ static val lookup_sym_lisp1(val env, val sym)
     val bind = gethash(top_vb, sym);
     if (cobjp(bind)) {
       struct c_var *cv = (struct c_var *) cptr_get(bind);
-      cv->bind->c.cdr = *cv->loc;
+      set(cv->bind->c.cdr, *cv->loc);
       return cv->bind;
     }
     return or2(bind, gethash(top_fb, sym));

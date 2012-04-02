@@ -346,7 +346,7 @@ static void hash_grow(struct hash *h)
   }
 
   h->modulus = new_modulus;
-  h->table = new_table;
+  set(h->table, new_table);
 }
 
 val make_hash(val weak_keys, val weak_vals, val equal_based)
@@ -451,7 +451,7 @@ val set_hash_userdata(val hash, val data)
 {
   struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
   val olddata = h->userdata;
-  h->userdata = data;
+  set(h->userdata, data);
   return olddata;
 }
 
@@ -502,7 +502,7 @@ val hash_next(val *iter)
       *iter = nil;
       return nil;
     }
-    hi->cons = vecref(h->table, num(hi->chain));
+    set(hi->cons, vecref(h->table, num(hi->chain)));
   }
   return car(hi->cons);
 }

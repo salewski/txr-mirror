@@ -1,3 +1,29 @@
+2012-04-01  Kaz Kylheku  <kaz@kylheku.com>
+
+	Start of ground-work for ephemeral GC. We must add some abstraction
+	to places where we potentially assign a reference to a younger object
+	inside a field located in an older object (chronological
+	backreference) and also where we take the address of an object
+	field, making it possible that the user of the address will do so.
+
+	This patch does not take care of vectors.
+
+	No, this is not an April Fool's joke.
+
+	* eval.c (env_fbind, env_vbind, env_replace_vbind, lookup_var,
+	lookup_sym_lisp1): Use set macro instead of assignment.
+
+	* hash.c (hash_grow, set_hash_userdata, hash_next): 
+	Use set macro instead of assignment.
+
+	* lib.c (rplaca, rplacd, string_extend, length_str, replace_str,
+	rehome_sym, lazy_stream_func, lazy_str, lazy_str_force, 
+	lazy_str_force_upto, obj_init): Use set macro instead of assignment.
+
+	(car_l, cdr_l): Use loc instead of address-of operator.
+
+	* lib.h (set, loc): New macros.
+
 2012-03-31  Kaz Kylheku  <kaz@kylheku.com>
 
 	* hash.c (last_equal_key, last_equal_hash): New static variables.
