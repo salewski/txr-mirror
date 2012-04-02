@@ -1,3 +1,12 @@
+2012-04-02  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (vec_set_length): Use set instead of assignment.
+	(vecref_l): Use loc to lift address of cell.
+	(replace_vec): Use macro mut to indicate the object is being
+	mutated.
+
+	* lib.h (mut): New macro.
+
 2012-04-01  Kaz Kylheku  <kaz@kylheku.com>
 
 	Start of ground-work for ephemeral GC. We must add some abstraction

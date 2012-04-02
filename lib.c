@@ -3063,7 +3063,7 @@ val vec_set_length(val vec, val length)
       val *newvec = (val *) chk_realloc((mem_t *) (vec->v.vec - 2),
                                         (new_alloc + 2) * sizeof *newvec);
       vec->v.vec = newvec + 2;
-      vec->v.vec[vec_alloc] = num(new_alloc);
+      set(vec->v.vec[vec_alloc], num(new_alloc));
 #ifdef HAVE_VALGRIND
       vec->v.vec_true_start = newvec;
 #endif
@@ -3075,7 +3075,7 @@ val vec_set_length(val vec, val length)
         vec->v.vec[i] = nil;
     }
 
-    vec->v.vec[vec_length] = length;
+    set(vec->v.vec[vec_length], length);
   }
 
   return vec;
@@ -3096,7 +3096,7 @@ val *vecref_l(val vec, val ind)
   cnum index = c_num(ind);
   cnum len = c_num(length_vec(vec));
   range_bug_unless (index >= 0 && index < len);
-  return vec->v.vec + index;
+  return loc(vec->v.vec[index]);
 }
 
 val vec_push(val vec, val item)
@@ -3261,6 +3261,7 @@ val replace_vec(val vec_in, val items, val from, val to)
   if (vectorp(items)) {
     memcpy(vec_in->v.vec + c_num(from), items->v.vec, 
            sizeof *vec_in->v.vec * c_num(len_it));
+    mut(vec_in);
   } else if (stringp(items)) {
     cnum f = c_num(from);
     cnum t = c_num(to);
@@ -3276,6 +3277,7 @@ val replace_vec(val vec_in, val items, val from, val to)
 
     for (iter = items; iter && f != t; iter = cdr(iter), f++)
       vec_in->v.vec[f] = car(iter);
+    mut(vec_in);
   }
   return vec_in;
 }
