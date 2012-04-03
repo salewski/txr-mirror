@@ -249,13 +249,13 @@ val *car_l(val cons)
 {
   switch (type(cons)) {
   case CONS:
-    return loc(cons->c.car);
+    return &cons->c.car;
   case LCONS:
     if (cons->lc.func) {
       funcall1(cons->lc.func, cons);
       cons->lc.func = nil;
     }
-    return loc(cons->lc.car);
+    return &cons->lc.car;
   default:
     type_mismatch(lit("~s is not a cons"), cons, nao);
   }
@@ -265,13 +265,13 @@ val *cdr_l(val cons)
 {
   switch (type(cons)) {
   case CONS:
-    return loc(cons->c.cdr);
+    return &cons->c.cdr;
   case LCONS:
     if (cons->lc.func) {
       funcall1(cons->lc.func, cons);
       cons->lc.func = nil;
     }
-    return loc(cons->lc.cdr);
+    return &cons->lc.cdr;
   default:
     type_mismatch(lit("~s is not a cons"), cons, nao);
   }
@@ -361,7 +361,9 @@ val pop(val *plist)
 
 val push(val value, val *plist)
 {
-  return *plist = cons(value, *plist);
+  /* TODO: doing set here is suboptimal since
+     it is often used for just a local var. */
+  return set(*plist, cons(value, *plist));
 }
 
 val copy_list(val list)
@@ -2249,7 +2251,7 @@ val intern(val str, val package)
   } else {
     val newsym = make_sym(str);
     newsym->s.package = package;
-    return *place = newsym;
+    return set(*place, newsym);
   }
 }
 
@@ -3096,7 +3098,7 @@ val *vecref_l(val vec, val ind)
   cnum index = c_num(ind);
   cnum len = c_num(length_vec(vec));
   range_bug_unless (index >= 0 && index < len);
-  return loc(vec->v.vec[index]);
+  return vec->v.vec + index;
 }
 
 val vec_push(val vec, val item)
@@ -3618,7 +3620,7 @@ val *acons_new_l(val key, val *new_p, val *list)
     return cdr_l(existing);
   } else {
     val nc = cons(key, nil);
-    *list = cons(nc, *list);
+    set(*list, cons(nc, *list));
     if (new_p)
       *new_p = t;
     return cdr_l(nc);
@@ -3647,7 +3649,7 @@ val *aconsq_new_l(val key, val *new_p, val *list)
     return cdr_l(existing);
   } else {
     val nc = cons(key, nil);
-    *list = cons(nc, *list);
+    set(*list, cons(nc, *list));
     if (new_p)
       *new_p = t;
     return cdr_l(nc);

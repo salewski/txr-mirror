@@ -1,5 +1,57 @@
 2012-04-02  Kaz Kylheku  <kaz@kylheku.com>
 
+	* configure: Support a gen-gc configuration variable which
+	causes CONFIG_GEN_GC to be defined as 1 in config.h.
+
+	* eval.c (op_defvar, dwim_loc, op_modplace, transform_op): Handle
+	mutating assignments via set macro.
+	(op_dohash): Inform gc about mutated variables. TODO here.
+
+	* filter.c (trie_add, trie_compress): Handle mutating assignments
+	via set macro.
+
+	* gc.c (BACKPTR_VEC_SIZE, FULL_GC_INTERVAL): New preprocessor symbols.
+	(backptr, backptr_idx, partial_gc_count, full): New static variables.
+	(make_obj): Initialize generation to zero.
+	(gc): Added logic for deciding between full and partial gc.
+	(gc_set, gc_mutated): New functions.
+
+	* gc.h (gc_set, gc_mutated): Declared.
+
+	* hash.c (hash_mark): Changed useless use of vecref_l to vecref.
+	(gethash_f): Use set when assigning through *found since it
+	is a possible mutation.
+
+	* lib.c (car_l, cdr_l, vecref_l): Got rid of loc macro uses. Using the
+	value properly is going to be the caller's responsibility.
+	(push): push may be a mutation, so use set.
+	(intern): Uset set to mutate a hash entry.
+	(acons_new_l, aconsq_new_l): Use set when replacing *list.
+
+	* lib.h (PTR_BIT): New preprocessor symbol.
+	(obj_common): New macro for defining common object fields.
+	type_t is split into two bitfields, half a pointer wide,
+	allowing for generation to be represented.
+	(struct any, struct cons, struct string, struct sym, struct package,
+	struct func, struct vec, struct lazy_cons, struct cobj, struct env, 
+	struct bignum, struct flonum): Use obj_common macro to defined
+	common fields.
+	(loc): Macro removed.
+	(set, mut): Macros conditionally defined for real functionality.
+	(list_collect, list_collect_nconc, list_collect_append): Replace
+	mutating operations with set.
+
+	* match.c (dest_set, v_cat, v_output, v_filter): Replace
+	mutating operations with set.
+
+	* stream.c (string_in_get_line, string_in_get_char,
+	strlist_out_put_string, strlist_out_put_char): Replace mutating
+	operations with set.
+
+	* unwind.c (uw_register_subtype): Replace mutating operation with set.
+ 
+2012-04-02  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (vec_set_length): Use set instead of assignment.
 	(vecref_l): Use loc to lift address of cell.
 	(replace_vec): Use macro mut to indicate the object is being
