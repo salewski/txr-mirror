@@ -229,13 +229,14 @@ union obj {
 };
 
 #if CONFIG_GEN_GC
-#define set(place, val) ((place) = (val))
-#define mut(obj)
-#define mpush(val, place) (push(val, &(place)))
-#else
+val gc_set(val *, val);
 #define set(place, val) (gc_set(&(place), val))
 #define mut(obj) (gc_mutated(obj));
 #define mpush(val, place) (gc_push(val, &(place)))
+#else
+#define set(place, val) ((place) = (val))
+#define mut(obj)
+#define mpush(val, place) (push(val, &(place)))
 #endif
 
 INLINE cnum tag(val obj) { return ((cnum) obj) & TAG_MASK; }

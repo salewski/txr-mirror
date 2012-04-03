@@ -46,6 +46,7 @@
 #define HEAP_SIZE               16384
 #define BACKPTR_VEC_SIZE        4096
 #define FULL_GC_INTERVAL        10
+#define FRESHQ_SIZE             (2 * HEAP_SIZE)
 
 typedef struct heap {
   struct heap *next;
@@ -76,7 +77,9 @@ int gc_enabled = 1;
 
 #if CONFIG_GEN_GC
 static val backptr[BACKPTR_VEC_SIZE];
-static int backptr_idx;
+static int backptr_idx, backptr_oflow;
+static val freshq[FRESHQ_SIZE];
+static int freshq_head, freshq_tail;
 static int partial_gc_count;
 static int full;
 #endif
@@ -176,6 +179,14 @@ val make_obj(void)
 #endif
 #if CONFIG_GEN_GC
       ret->t.gen = 0;
+      freshq[freshq_head++] = ret;
+      if (freshq_head >= FRESHQ_SIZE)
+        freshq_head = 0;
+      if (freshq_head == freshq_tail) {
+        freshq[freshq_tail]->t.gen = 1;
+        if (++freshq_tail >= FRESHQ_SIZE)
+          freshq_tail = 0;
+      }
 #endif
       return ret;
     }
@@ -252,6 +263,9 @@ tail_call:
     return;
 
   t = obj->t.type;
+
+  if (!full && obj->t.gen != 0)
+    return;
 
   if ((t & REACHABLE) != 0)
     return;
@@ -364,7 +378,7 @@ static void mark_mem_region(val *low, val *high)
     if (in_heap(maybe_obj)) {
 #ifdef HAVE_VALGRIND
       if (opt_vg_debug)
-        VALGRIND_MAKE_MEM_DEFINED(&maybe_obj->t.type, sizeof maybe_obj->t.type);
+        VALGRIND_MAKE_MEM_DEFINED(maybe_obj, SIZEOF_PTR);
 #endif
       type_t t = maybe_obj->t.type;
       if ((t & FREE) == 0) {
@@ -390,6 +404,18 @@ static void mark(mach_context_t *pmc, val *gc_stack_top)
   for (rootloc = prot_stack; rootloc != top; rootloc++)
     mark_obj(**rootloc);
 
+#if CONFIG_GEN_GC
+  /*
+   * Mark the backpointers.
+   */
+  if (!full)
+  {
+    int i;
+    for (i = 0; i < backptr_idx; i++)
+      mark_obj(backptr[i]);
+  }
+#endif
+
   /*
    * Then the machine context
    */
@@ -401,82 +427,110 @@ static void mark(mach_context_t *pmc, val *gc_stack_top)
   mark_mem_region(gc_stack_top, gc_stack_bottom);
 }
 
-static int_ptr_t sweep(void)
+static int sweep_one(obj_t *block)
 {
-  heap_t *heap;
-  int gc_dbg = opt_gc_debug;
-  int_ptr_t free_count = 0;
 #ifdef HAVE_VALGRIND
-  int vg_dbg = opt_vg_debug;
+  const int vg_dbg = opt_vg_debug;
 #else
-  int vg_dbg = 0;
+  const int vg_dbg = 0;
 #endif
 
-  for (heap = heap_list; heap != 0; heap = heap->next) {
-    obj_t *block, *end;
+#if CONFIG_GEN_GC
+  if (!full && block->t.gen != 0)
+    abort();
+#endif
 
+  if ((block->t.type & (REACHABLE | FREE)) == (REACHABLE | FREE))
+    abort();
+
+  if (block->t.type & REACHABLE) {
+    block->t.type = (type_t) (block->t.type & ~REACHABLE);
+#if CONFIG_GEN_GC
+    block->t.gen = 1;
+#endif
+    return 0;
+  }
+
+  if (block->t.type & FREE) {
 #ifdef HAVE_VALGRIND
     if (vg_dbg)
-        VALGRIND_MAKE_MEM_DEFINED(&heap->block, sizeof heap->block);
+      VALGRIND_MAKE_MEM_NOACCESS(block, sizeof *block);
 #endif
+    return 1;
+  }
 
-    for (block = heap->block, end = heap->block + HEAP_SIZE;
-         block < end;
-         block++)
-    {
-      if ((block->t.type & (REACHABLE | FREE)) == (REACHABLE | FREE))
-        abort();
+  finalize(block);
+  block->t.type = (type_t) (block->t.type | FREE);
 
-      if (block->t.type & REACHABLE) {
-        block->t.type = (type_t) (block->t.type & ~REACHABLE);
-        continue;
-      }
-
-      if (block->t.type & FREE) {
+  /* If debugging is turned on, we want to catch instances
+     where a reachable object is wrongly freed. This is difficult
+     to do if the object is recycled soon after.
+     So when debugging is on, the free list is FIFO
+     rather than LIFO, which increases our chances that the
+     code which is still using the object will trip on
+     the freed object before it is recycled. */
+  if (vg_dbg || opt_gc_debug) {
 #ifdef HAVE_VALGRIND
-        if (vg_dbg)
-            VALGRIND_MAKE_MEM_NOACCESS(block, sizeof *block);
+    if (vg_dbg && free_tail != &free_list)
+      VALGRIND_MAKE_MEM_DEFINED(free_tail, sizeof *free_tail);
 #endif
-        free_count++;
-        continue;
-      }
+    *free_tail = block;
+    block->t.next = nil;
+#ifdef HAVE_VALGRIND
+    if (vg_dbg) {
+      if (free_tail != &free_list)
+        VALGRIND_MAKE_MEM_NOACCESS(free_tail, sizeof *free_tail);
+      VALGRIND_MAKE_MEM_NOACCESS(block, sizeof *block);
+    }
+#endif
+    free_tail = &block->t.next;
+  } else {
+    block->t.next = free_list;
+    free_list = block;
+  }
 
-      if (0 && gc_dbg) {
-        format(std_error, lit("~a: finalizing: "), progname, nao);
-        obj_print(block, std_error);
-        put_char(chr('\n'), std_error);
-      }
-      finalize(block);
-      block->t.type = (type_t) (block->t.type | FREE);
-      free_count++;
-      /* If debugging is turned on, we want to catch instances
-         where a reachable object is wrongly freed. This is difficult
-         to do if the object is recycled soon after.
-         So when debugging is on, the free list is FIFO
-         rather than LIFO, which increases our chances that the
-         code which is still using the object will trip on
-         the freed object before it is recycled. */
-      if (gc_dbg || vg_dbg) {
+  return 1;
+}
+
+static int_ptr_t sweep(void)
+{
+  int_ptr_t free_count = 0;
 #ifdef HAVE_VALGRIND
-        if (vg_dbg && free_tail != &free_list)
-          VALGRIND_MAKE_MEM_DEFINED(free_tail, sizeof *free_tail);
+  const int vg_dbg = opt_vg_debug;
 #endif
-        *free_tail = block;
-        block->t.next = nil;
+
+  if (full) {
+    heap_t *heap;
+
+    for (heap = heap_list; heap != 0; heap = heap->next) {
+      obj_t *block, *end;
+
 #ifdef HAVE_VALGRIND
-        if (vg_dbg) {
-          if (free_tail != &free_list)
-            VALGRIND_MAKE_MEM_NOACCESS(free_tail, sizeof *free_tail);
-          VALGRIND_MAKE_MEM_NOACCESS(block, sizeof *block);
-        }
+      if (vg_dbg)
+          VALGRIND_MAKE_MEM_DEFINED(&heap->block, sizeof heap->block);
 #endif
-        free_tail = &block->t.next;
-      } else {
-        block->t.next = free_list;
-        free_list = block;
+
+      for (block = heap->block, end = heap->block + HEAP_SIZE;
+           block < end;
+           block++)
+      {
+        free_count += sweep_one(block);
       }
     }
+  } else {
+    while (freshq_tail != freshq_head) {
+      obj_t *block = freshq[freshq_tail++];
+
+      /* No need to mark block defined via Valgrind API; everything
+         in the freshq is an allocated node! */
+
+      free_count += sweep_one(block);
+
+      if (freshq_tail >= FRESHQ_SIZE)
+        freshq_tail = 0;
+    }
   }
+
   return free_count;
 }
 
@@ -484,25 +538,31 @@ void gc(void)
 {
   val gc_stack_top = nil;
 
+  if (gc_enabled) {
 #if CONFIG_GEN_GC
-  if (backptr_idx && ++partial_gc_count == FULL_GC_INTERVAL) {
-    full = 1;
-    partial_gc_count = 0;
-    backptr_idx = 0;
-  } else {
-    full = 0;
-  }
+    if (backptr_idx && 
+        (++partial_gc_count == FULL_GC_INTERVAL || backptr_oflow))
+    {
+      full = 1;
+    } else {
+      full = 0;
+    }
 #endif
 
-  if (gc_enabled) {
     mach_context_t mc;
     save_context(mc);
     gc_enabled = 0;
     mark(&mc, &gc_stack_top);
     hash_process_weak();
-    if (sweep() < 3 * HEAP_SIZE / 4)
+    if ((sweep() < 3 * HEAP_SIZE / 4) && (full || !opt_gc_debug))
       more();
     gc_enabled = 1;
+#if CONFIG_GEN_GC
+    partial_gc_count = 0;
+    backptr_idx = 0;
+    backptr_oflow = 0;
+    freshq_head = freshq_tail = 0;
+#endif
   }
 }
 
@@ -530,6 +590,9 @@ int gc_is_reachable(val obj)
   if (!is_ptr(obj))
     return 1;
 
+  if (!full && obj->t.gen != 0)
+    return 1;
+
   t = obj->t.type;
 
   return (t & REACHABLE) != 0;
@@ -543,28 +606,32 @@ val gc_set(val *ptr, val val)
     goto out;
   if (val->t.gen != 0)
     goto out;
-
-  backptr[backptr_idx++] = val;
+  if (backptr_idx < BACKPTR_VEC_SIZE)
+    backptr[backptr_idx++] = val;
+  else if (gc_enabled)
+    gc();
+  else
+    backptr_oflow = 1;
 out:
   *ptr = val;
-
-  if (backptr_idx == BACKPTR_VEC_SIZE)
-    gc();
-
   return val;
 }
 
 void gc_mutated(val obj)
 {
-  backptr[backptr_idx++] = obj;
-  if (backptr_idx == BACKPTR_VEC_SIZE)
+  if (backptr_idx < BACKPTR_VEC_SIZE)
+    backptr[backptr_idx++] = obj;
+  else if (gc_enabled)
     gc();
+  else
+    backptr_oflow = 1;
 }
 
 val gc_push(val obj, val *plist)
 {
-  gc_mutated(obj);
-  return push(obj, plist);
+  val ret = push(obj, plist);
+  gc_mutated(*plist);
+  return ret;
 }
 
 #endif

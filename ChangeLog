@@ -1,5 +1,44 @@
 2012-04-03  Kaz Kylheku  <kaz@kylheku.com>
 
+	Generational GC showing signs of working. One test case in
+	test suite fails.
+
+	* gc.c (FRESHQ_SIZE): New preprocessor symbol.
+	(backptr_oflow, freshq, freshq_head, freshq_tail): New static
+	variables.
+	(make_obj): Place newly allocated generation 0 object into
+	freshq. If freshq becomes full, transfer oldest item into
+	generation 1.
+	(mark_obj): If doing only a partial gc, then do not mark
+	objects which are not generation 0.
+	(mark_mem_region): Valgrind support: cannot mark t.type field undefined
+	because it is a bitfield. Just mark the first SIZEOF_PTR bytes
+	of the object defined.
+	(mark): Under partial gc, mark the table of back pointers.
+	(sweep_one): New static function from the prior guts of sweep.
+	Reachable objects now get promoted to generation 1.
+	(sweep): Under partial gc, sweep just the freshq which identifies
+	the generation 0 objects, rather than the entire linked list of all the
+	heaps.
+	(gc): Trigger full gc also if the backptr list has overflowed
+	due to gc having been disabled.
+	Under generational gc, reset the static variables afterward:
+	clear the list of backpointers, and the freshq.
+	(gc_is_reachable): Under partial gc, report any mature object
+	as reachable.
+	(gc_set, gc_mutated): Handle backptr array overflow situation
+	when gc is disabled.
+	(gc_push): Bugfix: it is the newly pushed cons cell that has to be
+	marked as a root, not the value being pushed.
+
+	* hash.c (sethash): Use set macro for storing value.
+
+	* lib.h (set, mut, mpush): Fix wrong-way #if test for these macros.
+	The trivial versions were being defined uner CONFIG_GEN_GC and vice
+	versa!
+
+2012-04-03  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (op_modplace): push replaced with mpush (mutating push).
 
 	* gc.c (gc_push): New function.
