@@ -44,6 +44,8 @@
 
 #define PROT_STACK_SIZE         1024
 #define HEAP_SIZE               16384
+#define BACKPTR_VEC_SIZE        4096
+#define FULL_GC_INTERVAL        10
 
 typedef struct heap {
   struct heap *next;
@@ -71,6 +73,13 @@ static heap_t *heap_list;
 static val heap_min_bound, heap_max_bound;
 
 int gc_enabled = 1;
+
+#if CONFIG_GEN_GC
+static val backptr[BACKPTR_VEC_SIZE];
+static int backptr_idx;
+static int partial_gc_count;
+static int full;
+#endif
 
 #if EXTRA_DEBUGGING
 static val break_obj;
@@ -164,6 +173,9 @@ val make_obj(void)
 #ifdef HAVE_VALGRIND
       if (opt_vg_debug)
         VALGRIND_MAKE_MEM_UNDEFINED(ret, sizeof *ret);
+#endif
+#if CONFIG_GEN_GC
+      ret->t.gen = 0;
 #endif
       return ret;
     }
@@ -472,6 +484,16 @@ void gc(void)
 {
   val gc_stack_top = nil;
 
+#if CONFIG_GEN_GC
+  if (backptr_idx && ++partial_gc_count == FULL_GC_INTERVAL) {
+    full = 1;
+    partial_gc_count = 0;
+    backptr_idx = 0;
+  } else {
+    full = 0;
+  }
+#endif
+
   if (gc_enabled) {
     mach_context_t mc;
     save_context(mc);
@@ -512,6 +534,34 @@ int gc_is_reachable(val obj)
 
   return (t & REACHABLE) != 0;
 }
+
+#if CONFIG_GEN_GC
+
+val gc_set(val *ptr, val val)
+{
+  if (!is_ptr(val))
+    goto out;
+  if (val->t.gen != 0)
+    goto out;
+
+  backptr[backptr_idx++] = val;
+out:
+  *ptr = val;
+
+  if (backptr_idx == BACKPTR_VEC_SIZE)
+    gc();
+
+  return val;
+}
+
+void gc_mutated(val obj)
+{
+  backptr[backptr_idx++] = obj;
+  if (backptr_idx == BACKPTR_VEC_SIZE)
+    gc();
+}
+
+#endif
 
 /*
  * Useful functions for gdb'ing.

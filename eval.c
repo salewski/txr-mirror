@@ -701,7 +701,7 @@ static val op_defvar(val form, val env)
     val existing = gethash(top_vb, sym);
 
     if (existing)
-      *cdr_l(existing) = value;
+      set(*cdr_l(existing), value);
     else 
       sethash(top_vb, sym, cons(sym, value));
   }
@@ -895,7 +895,7 @@ static val *dwim_loc(val form, val env, val op, val newform, val *retval)
 
         loc = gethash_l(obj, first(args), &new_p);
         if (new_p)
-          *loc = second(args);
+          set(*loc, second(args));
         return loc;
       }
     }
@@ -950,7 +950,7 @@ static val op_modplace(val form, val env)
       }
       loc = gethash_l(hash, key, &new_p);
       if (new_p)
-        *loc = eval(fourth(place), env, form);
+        set(*loc, eval(fourth(place), env, form));
     } else if (sym == car_s) {
       val cons = eval(second(place), env, form);
       loc = car_l(cons);
@@ -975,13 +975,13 @@ static val op_modplace(val form, val env)
   if (op == set_s) {
     if (!third_arg_p)
       eval_error(form, lit("~a: missing argument"), op, place, nao);
-    return *loc = eval(newform, env, form);
+    return set(*loc, eval(newform, env, form));
   } else if (op == inc_s) {
     val inc = or2(eval(newform, env, form), one);
-    return *loc = plus(*loc, inc);
+    return set(*loc, plus(*loc, inc));
   } else if (op == dec_s) {
     val inc = or2(eval(newform, env, form), one);
-    return *loc = minus(*loc, inc);
+    return set(*loc,  minus(*loc, inc));
   } else if (op == push_s) {
     return push(newval, loc);
   } else if (op == pop_s) {
@@ -1034,6 +1034,16 @@ static val op_dohash(val form, val env)
   val cell;
 
   uw_block_begin (nil, result);
+
+  /*
+   * Avoid issuing set() operations in the loop;
+   * just tell GC that these variables are being mutated.
+   * TODO: This is not enough since gc can take place while we execute this
+   * loop. What we need is to conditionally re-establish this.
+   * GC needs to provide a way to let us know "has GC happened since ..."
+   */
+  mut(keyvar);
+  mut(valvar);
 
   while ((cell = hash_next(&iter)) != nil) {
     *cdr_l(keyvar) = car(cell);
@@ -1501,7 +1511,7 @@ static val transform_op(val forms, val syms, val rg)
         val newsyms = syms;
         val new_p;
         val *place = acons_new_l(vararg, &new_p, &newsyms);
-        val sym = if3(new_p, *place = gensym(prefix), *place);
+        val sym = if3(new_p, set(*place, gensym(prefix)), *place);
         cons_bind (outsyms, outforms, transform_op(re, newsyms, rg)); 
         return cons(outsyms, rlcp(cons(sym, outforms), outforms));
       } else if (eq(vararg, rest_s)) {

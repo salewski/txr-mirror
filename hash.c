@@ -282,10 +282,10 @@ static void hash_mark(val hash)
     /* Keys are weak: mark the values only. */
     for (i = 0; i < h->modulus; i++) {
       val ind = num(i);
-      val *pchain = vecref_l(h->table, ind);
+      val chain = vecref(h->table, ind);
       val iter;
 
-      for (iter = *pchain; iter != nil; iter = cdr(iter)) {
+      for (iter = chain; iter != nil; iter = cdr(iter)) {
         val entry = car(iter);
         gc_mark(cdr(entry));
       }
@@ -298,10 +298,10 @@ static void hash_mark(val hash)
 
     for (i = 0; i < h->modulus; i++) {
       val ind = num(i);
-      val *pchain = vecref_l(h->table, ind);
+      val chain = vecref(h->table, ind);
       val iter;
 
-      for (iter = *pchain; iter != nil; iter = cdr(iter)) {
+      for (iter = chain; iter != nil; iter = cdr(iter)) {
         val entry = car(iter);
         gc_mark(car(entry));
       }
@@ -393,7 +393,7 @@ val gethash_f(val hash, val key, val *found)
 {
   struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
   val chain = *vecref_l(h->table, num(h->hash_fun(key) % h->modulus));
-  *found = h->assoc_fun(key, chain);
+  set(*found, h->assoc_fun(key, chain));
   return cdr(*found);
 }
 

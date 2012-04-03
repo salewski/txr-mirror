@@ -139,6 +139,7 @@ valgrind=${valgrind-}
 lit_align=${lit_align-}
 extra_debugging=${extra_debugging-}
 debug_support=${debug_support-y}
+gen_gc=${gen_gc-y}
 mpi_version=1.8.6
 have_quilt=
 have_patch=
@@ -1123,9 +1124,8 @@ fi
 # Some final blurbs into config.h
 #
 
-if [ -n "$debug_support" ] ; then
-  printf "#define CONFIG_DEBUG_SUPPORT 1\n" >> config.h
-fi
+[ -n "$debug_support" ] && printf "#define CONFIG_DEBUG_SUPPORT 1\n" >> config.h
+[ -n "$gen_gc" ] && printf "#define CONFIG_GEN_GC 1\n" >> config.h
 
 #
 # Regenerate config.make

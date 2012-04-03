@@ -386,7 +386,7 @@ val uw_register_subtype(val sub, val sup)
   /* Make sub an immediate subtype of sup.
      If sub already registered, we just repoint it. */
   if (sub_entry) {
-    *cdr_l(sub_entry) = sup_entry;
+    set(*cdr_l(sub_entry), sup_entry);
   } else {
     sub_entry = cons(sub, sup_entry);
     exception_subtypes = cons(sub_entry, exception_subtypes);
