@@ -408,7 +408,7 @@ val gethash_n(val hash, val key, val notfound_val)
 val sethash(val hash, val key, val value)
 {
   val new_p;
-  *gethash_l(hash, key, &new_p) = value;
+  set(*gethash_l(hash, key, &new_p), value);
   return new_p;
 }
 
