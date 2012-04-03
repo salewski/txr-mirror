@@ -415,7 +415,7 @@ val sethash(val hash, val key, val value)
 val pushhash(val hash, val key, val value)
 {
   val new_p;
-  push(value, gethash_l(hash, key, &new_p));
+  mpush(value, *gethash_l(hash, key, &new_p));
   return new_p;
 }
 

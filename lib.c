@@ -361,9 +361,8 @@ val pop(val *plist)
 
 val push(val value, val *plist)
 {
-  /* TODO: doing set here is suboptimal since
-     it is often used for just a local var. */
-  return set(*plist, cons(value, *plist));
+  /* Unsafe for mutating object fields: use mpush macro. */
+  return *plist = cons(value, *plist);
 }
 
 val copy_list(val list)
@@ -759,7 +758,7 @@ static val lazy_flatten_scan(val list, val *escape)
       } else if (atom(a)) {
         return list;
       } else do {
-        push(cdr(list), escape);
+        push(cdr(list), escape); /* safe mutation: *escape is a local var */
         list = a;
         a = car(list);
       } while (consp(a));
@@ -3328,7 +3327,7 @@ static val lazy_stream_func(val env, val lcons)
     close_stream(stream, t);
 
   if (ahead)
-    push(ahead, cdr_l(env));
+    mpush(ahead, *cdr_l(env));
 
   return next;
 }

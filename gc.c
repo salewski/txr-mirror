@@ -561,6 +561,12 @@ void gc_mutated(val obj)
     gc();
 }
 
+val gc_push(val obj, val *plist)
+{
+  gc_mutated(obj);
+  return push(obj, plist);
+}
+
 #endif
 
 /*

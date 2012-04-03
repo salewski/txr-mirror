@@ -983,7 +983,7 @@ static val op_modplace(val form, val env)
     val inc = or2(eval(newform, env, form), one);
     return set(*loc,  minus(*loc, inc));
   } else if (op == push_s) {
-    return push(newval, loc);
+    return mpush(newval, *loc);
   } else if (op == pop_s) {
     if (third_arg_p)
       eval_error(form, lit("~a: superfluous argument"), op, place, nao);
