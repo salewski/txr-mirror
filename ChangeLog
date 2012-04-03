@@ -1,3 +1,20 @@
+2012-04-03  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (op_modplace): push replaced with mpush (mutating push).
+
+	* gc.c (gc_push): New function.
+
+	* gc.h (gc_push): Declared.
+
+	* hash.c (pushhash): Use mpush.
+
+	* lib.c (push): Reverted to unsafe operation. TODO comment replaced
+	with warning.
+	(lazy_flatten_scan): push occurence commented as safe.
+	(lazy_stream_func): Unsafe push replaced with mpush.
+
+	* lib.h (mpush): New macro.
+
 2012-04-02  Kaz Kylheku  <kaz@kylheku.com>
 
 	* configure: Support a gen-gc configuration variable which
