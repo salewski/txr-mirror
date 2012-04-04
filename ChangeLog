@@ -1,5 +1,22 @@
 2012-04-03  Kaz Kylheku  <kaz@kylheku.com>
 
+	Fix failing test case tests/006/freeform-1.txr.
+
+	* lib.c (lazy_str_force, lazy_str_force_upto): Use set macro
+	when assigning lim. This won't cause a problem unless lim is
+	in the bignum range, however.
+	(acons_new, aconsq_new): When overwriting the cdr value of
+	the existing entry, use set. This is the smoking gun;
+	these functions are used for manipulating bindings.
+	(sort): After sorting a list, we must mark it as having
+	been mutated. If a list contains only mature conses or only
+	fresh conses, there is no problem. But if it contains a mixture,
+	then sorting could reverse their relationship, causing mature
+	conses to backpoint to the fresh ones.
+	(obj_init): Use set when installing the t symbol into the user package.
+
+2012-04-03  Kaz Kylheku  <kaz@kylheku.com>
+
 	Generational GC showing signs of working. One test case in
 	test suite fails.
 
