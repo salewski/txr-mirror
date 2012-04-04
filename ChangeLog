@@ -1,5 +1,12 @@
 2012-04-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	* configure (gen_gc): Default to off.
+	Help section added for gen_gc variable.
+
+	* gc.c (gc): Some missing CONFIG_GEN_GC added.
+
+2012-04-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	Code cleanup.
 
 	* gc.c (backptr_oflow): Static variable removed.

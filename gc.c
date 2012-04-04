@@ -534,7 +534,9 @@ static int_ptr_t sweep(void)
 void gc(void)
 {
   val gc_stack_top = nil;
+#if CONFIG_GEN_GC
   int exhausted = (free_list == 0);
+#endif
 
   if (gc_enabled) {
     int swept;
@@ -552,10 +554,16 @@ void gc(void)
     mark(&mc, &gc_stack_top);
     hash_process_weak();
     swept = sweep();
+#if CONFIG_GEN_GC
     if (full_gc && swept < 3 * HEAP_SIZE / 4)
       more();
     else if (!full_gc && swept < HEAP_SIZE / 4 && exhausted)
       more();
+#else
+    if (swept < 3 * HEAP_SIZE / 4)
+      more();
+#endif
+
 #if CONFIG_GEN_GC
     backptr_idx = 0;
     freshobj_idx = 0;
