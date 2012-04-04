@@ -1,3 +1,35 @@
+2012-04-04  Kaz Kylheku  <kaz@kylheku.com>
+
+	Code cleanup.
+
+	* gc.c (backptr_oflow): Static variable removed.
+	(freshq_head, freshq_tail, partial_gc_count): Static variables removed.
+	(freshq): Array renamed to freshobj.
+	(full): Variable renamed to full_gc.
+	(freshobj_idx): New varaible.
+
+	(make_obj): Add newly born objects to freshobj array rather than
+	freshq. If freshobj array is full on entry to this function,
+	trigger gc to empty it. make_obj no longer updates the free_tail;
+	the gc routine takes care of restoring this invariant.
+	(mark_obj): Follows rename of full_gc. Some code was not wrapped
+	in #if CONFIG_GEN_GC.
+	(mark, sweep_one): Follow rename of full_gc.
+	(sweep): On entry, restore free_tail invariant in the empty
+	free_list case. Code which processes freshq from tail to head
+	replaced by simple array walk of freshobj. Code wrapped properly
+	in #if CONFIG_GEN_GC.
+	(gc): Logic for triggering full gc simplified.
+	Check added for situations when a partial gc is called when
+	the free list empties, and it doesn't liberate enough memory.
+	This prevents the situation of partial gc being called over and over
+	again by make_obj, squeezing less and less memory each time until
+	finally it returns 0 objects, and more() is called.
+	(gc_is_reachable): Follows rename of full_gc, and #if CONFIG_GEN_GC
+	added.
+	(gc_set, gc_mutated): Simplified. Check if the backptr array
+	is full and trigger gc if so to flush it, then just add to the array.
+
 2012-04-03  Kaz Kylheku  <kaz@kylheku.com>
 
 	Performance tweaking and fixes.
