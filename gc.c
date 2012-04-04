@@ -77,11 +77,10 @@ int gc_enabled = 1;
 
 #if CONFIG_GEN_GC
 static val backptr[BACKPTR_VEC_SIZE];
-static int backptr_idx, backptr_oflow;
-static val freshq[FRESHQ_SIZE];
-static int freshq_head, freshq_tail;
-static int partial_gc_count;
-static int full;
+static int backptr_idx;
+static val freshobj[FRESHQ_SIZE];
+static int freshobj_idx;
+static int full_gc;
 #endif
 
 #if EXTRA_DEBUGGING
@@ -162,8 +161,15 @@ val make_obj(void)
 {
   int tries;
 
+#if CONFIG_GEN_GC
+  if (opt_gc_debug || freshobj_idx >= FRESHQ_SIZE) {
+    gc();
+    assert (freshobj_idx < FRESHQ_SIZE);
+  }
+#else
   if (opt_gc_debug)
     gc();
+#endif
 
   for (tries = 0; tries < 3; tries++) {
     if (free_list) {
@@ -179,21 +185,10 @@ val make_obj(void)
 #endif
 #if CONFIG_GEN_GC
       ret->t.gen = 0;
-      freshq[freshq_head++] = ret;
-      if (freshq_head >= FRESHQ_SIZE)
-        freshq_head = 0;
-      if (freshq_head == freshq_tail) {
-        freshq[freshq_tail]->t.gen = 1;
-        if (++freshq_tail >= FRESHQ_SIZE)
-          freshq_tail = 0;
-      }
+      freshobj[freshobj_idx++] = ret;
 #endif
       return ret;
     }
-
-    /* To save cycles, make_obj draws from the free list without
-       updating this, but before calling gc, it has to be. */
-    free_tail = &free_list;
 
     switch (tries) {
     case 0: gc(); break;
@@ -264,8 +259,10 @@ tail_call:
 
   t = obj->t.type;
 
-  if (!full && obj->t.gen != 0)
+#if CONFIG_GEN_GC
+  if (!full_gc && obj->t.gen != 0)
     return;
+#endif
 
   if ((t & REACHABLE) != 0)
     return;
@@ -408,7 +405,7 @@ static void mark(mach_context_t *pmc, val *gc_stack_top)
   /*
    * Mark the backpointers.
    */
-  if (!full)
+  if (!full_gc)
   {
     int i;
     for (i = 0; i < backptr_idx; i++)
@@ -436,7 +433,7 @@ static int sweep_one(obj_t *block)
 #endif
 
 #if CONFIG_GEN_GC
-  if (!full && block->t.gen != 0)
+  if (!full_gc && block->t.gen != 0)
     abort();
 #endif
 
@@ -495,39 +492,39 @@ static int sweep_one(obj_t *block)
 static int_ptr_t sweep(void)
 {
   int_ptr_t free_count = 0;
+  heap_t *heap;
 #ifdef HAVE_VALGRIND
   const int vg_dbg = opt_vg_debug;
 #endif
 
-  if (full) {
-    heap_t *heap;
+  if (free_list == 0)
+    free_tail = &free_list;
 
-    for (heap = heap_list; heap != 0; heap = heap->next) {
-      obj_t *block, *end;
+#if CONFIG_GEN_GC
+  if (!full_gc) {
+    int i;
+    /* No need to mark block defined via Valgrind API; everything
+       in the freshobj is an allocated node! */
+    for (i = 0; i < freshobj_idx; i++)
+      free_count += sweep_one(freshobj[i]);
 
-#ifdef HAVE_VALGRIND
-      if (vg_dbg)
-          VALGRIND_MAKE_MEM_DEFINED(&heap->block, sizeof heap->block);
+    return free_count;
+  }
 #endif
 
-      for (block = heap->block, end = heap->block + HEAP_SIZE;
-           block < end;
-           block++)
-      {
-        free_count += sweep_one(block);
-      }
-    }
-  } else {
-    while (freshq_tail != freshq_head) {
-      obj_t *block = freshq[freshq_tail++];
+  for (heap = heap_list; heap != 0; heap = heap->next) {
+    obj_t *block, *end;
 
-      /* No need to mark block defined via Valgrind API; everything
-         in the freshq is an allocated node! */
+#ifdef HAVE_VALGRIND
+    if (vg_dbg)
+        VALGRIND_MAKE_MEM_DEFINED(&heap->block, sizeof heap->block);
+#endif
 
+    for (block = heap->block, end = heap->block + HEAP_SIZE;
+         block < end;
+         block++)
+    {
       free_count += sweep_one(block);
-
-      if (freshq_tail >= FRESHQ_SIZE)
-        freshq_tail = 0;
     }
   }
 
@@ -537,18 +534,15 @@ static int_ptr_t sweep(void)
 void gc(void)
 {
   val gc_stack_top = nil;
+  int exhausted = (free_list == 0);
 
   if (gc_enabled) {
-    int free_list_empty = free_list != nil;
-
+    int swept;
 #if CONFIG_GEN_GC
-    if (backptr_idx && 
-        (++partial_gc_count == FULL_GC_INTERVAL || backptr_oflow))
-    {
-      full = 1;
-      partial_gc_count = 0;
-    } else {
-      full = 0;
+    static int gc_counter;
+    if (++gc_counter >= FULL_GC_INTERVAL) {
+      full_gc = 1;
+      gc_counter = 0;
     }
 #endif
 
@@ -557,15 +551,17 @@ void gc(void)
     gc_enabled = 0;
     mark(&mc, &gc_stack_top);
     hash_process_weak();
-    if ((sweep() < 3 * HEAP_SIZE / 4) 
-        && full && free_list_empty)
+    swept = sweep();
+    if (full_gc && swept < 3 * HEAP_SIZE / 4)
       more();
-    gc_enabled = 1;
+    else if (!full_gc && swept < HEAP_SIZE / 4 && exhausted)
+      more();
 #if CONFIG_GEN_GC
     backptr_idx = 0;
-    backptr_oflow = 0;
-    freshq_head = freshq_tail = 0;
+    freshobj_idx = 0;
+    full_gc = 0;
 #endif
+    gc_enabled = 1;
   }
 }
 
@@ -593,8 +589,10 @@ int gc_is_reachable(val obj)
   if (!is_ptr(obj))
     return 1;
 
-  if (!full && obj->t.gen != 0)
+#if CONFIG_GEN_GC
+  if (!full_gc && obj->t.gen != 0)
     return 1;
+#endif
 
   t = obj->t.type;
 
@@ -609,12 +607,9 @@ val gc_set(val *ptr, val val)
     goto out;
   if (val->t.gen != 0)
     goto out;
-  if (backptr_idx < BACKPTR_VEC_SIZE)
-    backptr[backptr_idx++] = val;
-  else if (gc_enabled)
+  if (backptr_idx >= BACKPTR_VEC_SIZE)
     gc();
-  else
-    backptr_oflow = 1;
+  backptr[backptr_idx++] = val;
 out:
   *ptr = val;
   return val;
@@ -622,12 +617,9 @@ out:
 
 void gc_mutated(val obj)
 {
-  if (backptr_idx < BACKPTR_VEC_SIZE)
-    backptr[backptr_idx++] = obj;
-  else if (gc_enabled)
+  if (backptr_idx >= BACKPTR_VEC_SIZE)
     gc();
-  else
-    backptr_oflow = 1;
+  backptr[backptr_idx++] = obj;
 }
 
 val gc_push(val obj, val *plist)
