@@ -3385,7 +3385,7 @@ val lazy_str_force(val lstr)
   }
 
   if (lim)
-    *cdr_l(lstr->ls.opts) = lim;
+    set(*cdr_l(lstr->ls.opts), lim);
 
   return lstr->ls.prefix;
 }
@@ -3408,7 +3408,7 @@ val lazy_str_force_upto(val lstr, val index)
   }
 
   if (lim)
-    *cdr_l(lstr->ls.opts) = lim;
+    set(*cdr_l(lstr->ls.opts), lim);
   return lt(index, length_str(lstr->ls.prefix));
 }
 
@@ -3602,7 +3602,7 @@ val acons_new(val key, val value, val list)
   val existing = assoc(key, list);
 
   if (existing) {
-    *cdr_l(existing) = value;
+    set(*cdr_l(existing), value);
     return list;
   } else {
     return cons(cons(key, value), list);
@@ -3631,7 +3631,7 @@ val aconsq_new(val key, val value, val list)
   val existing = assq(key, list);
 
   if (existing) {
-    *cdr_l(existing) = value;
+    set(*cdr_l(existing), value);
     return list;
   } else {
     return cons(cons(key, value), list);
@@ -3848,8 +3848,14 @@ val sort(val seq, val lessfun, val keyfun)
   if (!keyfun)
     keyfun = identity_f;
 
-  if (consp(seq))
+  if (consp(seq)) {
+    /* The list could have a mixture of generation 0 and 1
+       objects. Sorting the list could reverse some of the
+       pointers between the generations resulting in a backpointer.
+       Thus we better inform the collector about this object. */
+    mut(seq);
     return sort_list(seq, lessfun, keyfun);
+  }
 
   sort_vec(seq, lessfun, keyfun);
   return seq;
@@ -4050,7 +4056,7 @@ static void obj_init(void)
   *gethash_l(user_package->pk.symhash, nil_string, 0) = nil;
 
   /* t can't be interned, because gethash_l needs t in order to do its job. */
-  t = *gethash_l(user_package->pk.symhash, lit("t"), 0) = make_sym(lit("t"));
+  t = set(*gethash_l(user_package->pk.symhash, lit("t"), 0), make_sym(lit("t")));
   set(t->s.package, user_package);
 
   null = intern(lit("null"), user_package);
