@@ -139,7 +139,7 @@ valgrind=${valgrind-}
 lit_align=${lit_align-}
 extra_debugging=${extra_debugging-}
 debug_support=${debug_support-y}
-gen_gc=${gen_gc-y}
+gen_gc=${gen_gc-}
 mpi_version=1.8.6
 have_quilt=
 have_patch=
@@ -349,6 +349,13 @@ extra_debugging [$extra_debugging]
 
   Use --extra_debugging to configure some additional debugging features,
   which incur a run-time penalty.
+
+gen_gc [$gen_gc]
+
+  Use --gen-gc to enable the experimental generational garbage collector.
+  This is currently disabled by default: a mark-and-sweep garbage collection
+  strategy is used which performs a full sweep.
+
 !
   exit 1
 fi
