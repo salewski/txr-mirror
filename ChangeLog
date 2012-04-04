@@ -1,5 +1,18 @@
 2012-04-03  Kaz Kylheku  <kaz@kylheku.com>
 
+	Performance tweaking and fixes.
+
+	* gc.c (BACKPTR_VEC_SIZE): Increase greatly, so that we don't
+	trigger gc due to overflow of the backptr array. This is not likely
+	to yield a lot of free objects except in a full GC.
+	(FULL_GC_INTERVAL): From 10 to 20.
+	(gc): Take a not of whether or not gc was entered with free_list
+	being exhausted or not. Call more() only if the free_list was
+	empty, and a full sweep was done.
+	Reset partial_gc_count only when a full gc is triggered.
+
+2012-04-03  Kaz Kylheku  <kaz@kylheku.com>
+
 	Fix failing test case tests/006/freeform-1.txr.
 
 	* lib.c (lazy_str_force, lazy_str_force_upto): Use set macro

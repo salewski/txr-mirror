@@ -44,8 +44,8 @@
 
 #define PROT_STACK_SIZE         1024
 #define HEAP_SIZE               16384
-#define BACKPTR_VEC_SIZE        4096
-#define FULL_GC_INTERVAL        10
+#define BACKPTR_VEC_SIZE        (2 * HEAP_SIZE)
+#define FULL_GC_INTERVAL        20
 #define FRESHQ_SIZE             (2 * HEAP_SIZE)
 
 typedef struct heap {
@@ -539,11 +539,14 @@ void gc(void)
   val gc_stack_top = nil;
 
   if (gc_enabled) {
+    int free_list_empty = free_list != nil;
+
 #if CONFIG_GEN_GC
     if (backptr_idx && 
         (++partial_gc_count == FULL_GC_INTERVAL || backptr_oflow))
     {
       full = 1;
+      partial_gc_count = 0;
     } else {
       full = 0;
     }
@@ -554,11 +557,11 @@ void gc(void)
     gc_enabled = 0;
     mark(&mc, &gc_stack_top);
     hash_process_weak();
-    if ((sweep() < 3 * HEAP_SIZE / 4) && (full || !opt_gc_debug))
+    if ((sweep() < 3 * HEAP_SIZE / 4) 
+        && full && free_list_empty)
       more();
     gc_enabled = 1;
 #if CONFIG_GEN_GC
-    partial_gc_count = 0;
     backptr_idx = 0;
     backptr_oflow = 0;
     freshq_head = freshq_tail = 0;
