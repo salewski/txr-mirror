@@ -82,21 +82,21 @@ val make_env(val vbindings, val fbindings, val up_env)
 val env_fbind(val env, val sym, val fun)
 {
   type_check(env, ENV);
-  env->e.fbindings = acons_new(sym, fun, env->e.fbindings);
+  set(env->e.fbindings, acons_new(sym, fun, env->e.fbindings));
   return sym;
 }
 
 val env_vbind(val env, val sym, val obj)
 {
   type_check(env, ENV);
-  env->e.vbindings = acons_new(sym, obj, env->e.vbindings);
+  set(env->e.vbindings, acons_new(sym, obj, env->e.vbindings));
   return sym;
 }
 
 static void env_replace_vbind(val env, val bindings)
 {
   type_check(env, ENV);
-  env->e.vbindings = bindings;
+  set(env->e.vbindings, bindings);
 }
 
 noreturn static val eval_error(val form, val fmt, ...)
@@ -120,7 +120,7 @@ val lookup_var(val env, val sym)
     val bind = gethash(top_vb, sym);
     if (cobjp(bind)) {
       struct c_var *cv = (struct c_var *) cptr_get(bind);
-      cv->bind->c.cdr = *cv->loc;
+      set(cv->bind->c.cdr, *cv->loc);
       return cv->bind;
     }
     return bind;
@@ -183,7 +183,7 @@ static val lookup_sym_lisp1(val env, val sym)
     val bind = gethash(top_vb, sym);
     if (cobjp(bind)) {
       struct c_var *cv = (struct c_var *) cptr_get(bind);
-      cv->bind->c.cdr = *cv->loc;
+      set(cv->bind->c.cdr, *cv->loc);
       return cv->bind;
     }
     return or2(bind, gethash(top_fb, sym));
@@ -701,7 +701,7 @@ static val op_defvar(val form, val env)
     val existing = gethash(top_vb, sym);
 
     if (existing)
-      *cdr_l(existing) = value;
+      set(*cdr_l(existing), value);
     else 
       sethash(top_vb, sym, cons(sym, value));
   }
@@ -895,7 +895,7 @@ static val *dwim_loc(val form, val env, val op, val newform, val *retval)
 
         loc = gethash_l(obj, first(args), &new_p);
         if (new_p)
-          *loc = second(args);
+          set(*loc, second(args));
         return loc;
       }
     }
@@ -950,7 +950,7 @@ static val op_modplace(val form, val env)
       }
       loc = gethash_l(hash, key, &new_p);
       if (new_p)
-        *loc = eval(fourth(place), env, form);
+        set(*loc, eval(fourth(place), env, form));
     } else if (sym == car_s) {
       val cons = eval(second(place), env, form);
       loc = car_l(cons);
@@ -975,15 +975,15 @@ static val op_modplace(val form, val env)
   if (op == set_s) {
     if (!third_arg_p)
       eval_error(form, lit("~a: missing argument"), op, place, nao);
-    return *loc = eval(newform, env, form);
+    return set(*loc, eval(newform, env, form));
   } else if (op == inc_s) {
     val inc = or2(eval(newform, env, form), one);
-    return *loc = plus(*loc, inc);
+    return set(*loc, plus(*loc, inc));
   } else if (op == dec_s) {
     val inc = or2(eval(newform, env, form), one);
-    return *loc = minus(*loc, inc);
+    return set(*loc,  minus(*loc, inc));
   } else if (op == push_s) {
-    return push(newval, loc);
+    return mpush(newval, *loc);
   } else if (op == pop_s) {
     if (third_arg_p)
       eval_error(form, lit("~a: superfluous argument"), op, place, nao);
@@ -1036,6 +1036,12 @@ static val op_dohash(val form, val env)
   uw_block_begin (nil, result);
 
   while ((cell = hash_next(&iter)) != nil) {
+    /* These assignments are gc-safe, because keyvar and valvar
+       are newer objects than existing entries in the hash,
+       unless the body mutates hash by inserting newer objects,
+       and also deleting them such that these variables end up
+       with the only reference. But in that case, those objects
+       will be noted in the GC's check list. */
     *cdr_l(keyvar) = car(cell);
     *cdr_l(valvar) = cdr(cell);
     eval_progn(body, new_env, form);
@@ -1501,7 +1507,7 @@ static val transform_op(val forms, val syms, val rg)
         val newsyms = syms;
         val new_p;
         val *place = acons_new_l(vararg, &new_p, &newsyms);
-        val sym = if3(new_p, *place = gensym(prefix), *place);
+        val sym = if3(new_p, set(*place, gensym(prefix)), *place);
         cons_bind (outsyms, outforms, transform_op(re, newsyms, rg)); 
         return cons(outsyms, rlcp(cons(sym, outforms), outforms));
       } else if (eq(vararg, rest_s)) {

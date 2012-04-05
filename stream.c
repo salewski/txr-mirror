@@ -355,7 +355,7 @@ static val string_in_get_line(val stream)
   if (lt(pos, length_str(string))) {
     val nlpos = find_char(string, pos, chr('\n'));
     val result = sub_str(string, pos, nlpos);
-    *cdr_l(pair) = nlpos ? plus(nlpos, one) : length_str(string);
+    set(*cdr_l(pair), nlpos ? plus(nlpos, one) : length_str(string));
     return result;
   }
 
@@ -369,7 +369,7 @@ static val string_in_get_char(val stream)
   val pos = cdr(pair);
 
   if (lt(pos, length_str(string))) {
-    *cdr_l(pair) = plus(pos, one);
+    set(*cdr_l(pair), plus(pos, one));
     return chr_str(string, pos);
   }
 
@@ -584,8 +584,8 @@ static val strlist_out_put_string(val stream, val str)
     strstream = make_string_output_stream();
   }
 
-  *car_l(cell) = lines;
-  *cdr_l(cell) = strstream;
+  set(*car_l(cell), lines);
+  set(*cdr_l(cell), strstream);
 
   return t;
 }
@@ -602,8 +602,8 @@ static val strlist_out_put_char(val stream, val ch)
     put_char(ch, strstream);
   }
 
-  *car_l(cell) = lines;
-  *cdr_l(cell) = strstream;
+  set(*car_l(cell), lines);
+  set(*cdr_l(cell), strstream);
 
   return t;
 }

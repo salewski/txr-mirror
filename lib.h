@@ -37,6 +37,8 @@ typedef int_ptr_t cnum;
 #define NUM_MAX (INT_PTR_MAX/4)
 #define NUM_MIN (INT_PTR_MIN/4)
 
+#define PTR_BIT (SIZEOF_PTR * CHAR_BIT)
+
 typedef enum type {
   NIL, NUM = TAG_NUM, CHR = TAG_CHR, LIT = TAG_LIT, CONS,
   STR, SYM, PKG, FUN, VEC, LCONS, LSTR, COBJ, ENV,
@@ -59,39 +61,48 @@ typedef obj_t *val;
 
 typedef unsigned char mem_t;
 
+#if CONFIG_GEN_GC
+#define obj_common \
+  type_t type : PTR_BIT/2; \
+  int gen : PTR_BIT/2
+#else
+#define obj_common \
+  type_t type
+#endif
+
 struct any {
-  type_t type;
+  obj_common;
   void *dummy[2];
   val next; /* GC free list */
 };
 
 struct cons {
-  type_t type;
+  obj_common;
   val car, cdr;
 };
 
 struct string {
-  type_t type;
+  obj_common;
   wchar_t *str;
   val len;
   val alloc;
 };
 
 struct sym {
-  type_t type;
+  obj_common;
   val name;
   val package;
   val value;
 };
 
 struct package {
-  type_t type;
+  obj_common;
   val name;
   val symhash;
 };
 
 struct func {
-  type_t type;
+  obj_common;
   unsigned fixparam : 7; /* total non-variadic parameters */
   unsigned optargs : 7;  /* fixparam - optargs = required args */
   unsigned variadic : 1;
@@ -126,7 +137,7 @@ struct func {
 enum vecindex { vec_alloc = -2, vec_length = -1 };
 
 struct vec {
-  type_t type;
+  obj_common;
   /* vec points two elements down */
   /* vec[-2] is allocated size */
   /* vec[-1] is fill pointer */
@@ -145,7 +156,7 @@ struct vec {
  */
 
 struct lazy_cons {
-  type_t type;
+  obj_common;
   val car, cdr;
   val func; /* when nil, car and cdr are valid */
 };
@@ -155,14 +166,14 @@ struct lazy_cons {
  * of a list of strings.
  */
 struct lazy_string {
-  type_t type;
+  obj_common;
   val prefix;           /* actual string part */
   val list;             /* remaining list */
   val opts;             /* ( separator . limit ) */
 };
 
 struct cobj {
-  type_t type;
+  obj_common;
   mem_t *handle;
   struct cobj_ops *ops;
   val cls;
@@ -185,19 +196,19 @@ void cobj_mark_op(val);
 cnum cobj_hash_op(val);
 
 struct env {
-  type_t type;
+  obj_common;
   val vbindings;
   val fbindings;
   val up_env;
 };
 
 struct bignum {
-  type_t type;
+  obj_common;
   mp_int mp;
 };
 
 struct flonum {
-  type_t type;
+  obj_common;
   double n;
 };
 
@@ -216,6 +227,17 @@ union obj {
   struct bignum bn;
   struct flonum fl;
 };
+
+#if CONFIG_GEN_GC
+val gc_set(val *, val);
+#define set(place, val) (gc_set(&(place), val))
+#define mut(obj) (gc_mutated(obj));
+#define mpush(val, place) (gc_push(val, &(place)))
+#else
+#define set(place, val) ((place) = (val))
+#define mut(obj) (obj)
+#define mpush(val, place) (push(val, &(place)))
+#endif
 
 INLINE cnum tag(val obj) { return ((cnum) obj) & TAG_MASK; }
 INLINE int is_ptr(val obj) { return obj && tag(obj) == TAG_PTR; }
@@ -371,6 +393,7 @@ val equal(val left, val right);
 mem_t *chk_malloc(size_t size);
 mem_t *chk_calloc(size_t n, size_t size);
 mem_t *chk_realloc(mem_t *, size_t size);
+int in_malloc_range(mem_t *);
 wchar_t *chk_strdup(const wchar_t *str);
 val cons(val car, val cdr);
 val make_lazy_cons(val func);
@@ -650,7 +673,7 @@ INLINE val eq(val a, val b) { return ((a) == (b) ? t : nil); }
   do {                                          \
     if (*PTAIL)                                 \
       PTAIL = tail(*PTAIL);                     \
-    *PTAIL = cons(OBJ, nil);                    \
+    set(*PTAIL, cons(OBJ, nil));                \
     PTAIL = cdr_l(*PTAIL);                      \
   } while(0)
 
@@ -659,16 +682,16 @@ INLINE val eq(val a, val b) { return ((a) == (b) ? t : nil); }
     if (*PTAIL) {                               \
       PTAIL = tail(*PTAIL);                     \
     }                                           \
-    *PTAIL = OBJ;                               \
+    set(*PTAIL, OBJ);                           \
   } while (0)
 
 #define list_collect_append(PTAIL, OBJ)         \
   do {                                          \
     if (*PTAIL) {                               \
-      *PTAIL = copy_list(*PTAIL);               \
+      set(*PTAIL, copy_list(*PTAIL));           \
       PTAIL = tail(*PTAIL);                     \
     }                                           \
-    *PTAIL = OBJ;                               \
+    set(*PTAIL, OBJ);                           \
   } while (0)
 
 #define cons_bind(CAR, CDR, CONS)               \

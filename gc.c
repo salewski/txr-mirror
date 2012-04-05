@@ -44,6 +44,9 @@
 
 #define PROT_STACK_SIZE         1024
 #define HEAP_SIZE               16384
+#define CHECKOBJ_VEC_SIZE       (2 * HEAP_SIZE)
+#define FULL_GC_INTERVAL        40
+#define FRESHOBJ_VEC_SIZE       (2 * HEAP_SIZE)
 
 typedef struct heap {
   struct heap *next;
@@ -71,6 +74,14 @@ static heap_t *heap_list;
 static val heap_min_bound, heap_max_bound;
 
 int gc_enabled = 1;
+
+#if CONFIG_GEN_GC
+static val checkobj[CHECKOBJ_VEC_SIZE];
+static int checkobj_idx;
+static val freshobj[FRESHOBJ_VEC_SIZE];
+static int freshobj_idx;
+static int full_gc;
+#endif
 
 #if EXTRA_DEBUGGING
 static val break_obj;
@@ -150,8 +161,15 @@ val make_obj(void)
 {
   int tries;
 
+#if CONFIG_GEN_GC
+  if (opt_gc_debug || freshobj_idx >= FRESHOBJ_VEC_SIZE) {
+    gc();
+    assert (freshobj_idx < FRESHOBJ_VEC_SIZE);
+  }
+#else
   if (opt_gc_debug)
     gc();
+#endif
 
   for (tries = 0; tries < 3; tries++) {
     if (free_list) {
@@ -165,12 +183,12 @@ val make_obj(void)
       if (opt_vg_debug)
         VALGRIND_MAKE_MEM_UNDEFINED(ret, sizeof *ret);
 #endif
+#if CONFIG_GEN_GC
+      ret->t.gen = 0;
+      freshobj[freshobj_idx++] = ret;
+#endif
       return ret;
     }
-
-    /* To save cycles, make_obj draws from the free list without
-       updating this, but before calling gc, it has to be. */
-    free_tail = &free_list;
 
     switch (tries) {
     case 0: gc(); break;
@@ -240,6 +258,11 @@ tail_call:
     return;
 
   t = obj->t.type;
+
+#if CONFIG_GEN_GC
+  if (!full_gc && obj->t.gen > 0)
+    return;
+#endif
 
   if ((t & REACHABLE) != 0)
     return;
@@ -352,7 +375,7 @@ static void mark_mem_region(val *low, val *high)
     if (in_heap(maybe_obj)) {
 #ifdef HAVE_VALGRIND
       if (opt_vg_debug)
-        VALGRIND_MAKE_MEM_DEFINED(&maybe_obj->t.type, sizeof maybe_obj->t.type);
+        VALGRIND_MAKE_MEM_DEFINED(maybe_obj, SIZEOF_PTR);
 #endif
       type_t t = maybe_obj->t.type;
       if ((t & FREE) == 0) {
@@ -378,6 +401,18 @@ static void mark(mach_context_t *pmc, val *gc_stack_top)
   for (rootloc = prot_stack; rootloc != top; rootloc++)
     mark_obj(**rootloc);
 
+#if CONFIG_GEN_GC
+  /*
+   * Mark the additional objects indicated for marking.
+   */
+  if (!full_gc)
+  {
+    int i;
+    for (i = 0; i < checkobj_idx; i++)
+      mark_obj(checkobj[i]);
+  }
+#endif
+
   /*
    * Then the machine context
    */
@@ -389,15 +424,92 @@ static void mark(mach_context_t *pmc, val *gc_stack_top)
   mark_mem_region(gc_stack_top, gc_stack_bottom);
 }
 
+static int sweep_one(obj_t *block)
+{
+#ifdef HAVE_VALGRIND
+  const int vg_dbg = opt_vg_debug;
+#else
+  const int vg_dbg = 0;
+#endif
+
+#if CONFIG_GEN_GC
+  if (!full_gc && block->t.gen > 0)
+    abort();
+#endif
+
+  if ((block->t.type & (REACHABLE | FREE)) == (REACHABLE | FREE))
+    abort();
+
+  if (block->t.type & REACHABLE) {
+    block->t.type = (type_t) (block->t.type & ~REACHABLE);
+#if CONFIG_GEN_GC
+    block->t.gen = 1;
+#endif
+    return 0;
+  }
+
+  if (block->t.type & FREE) {
+#ifdef HAVE_VALGRIND
+    if (vg_dbg)
+      VALGRIND_MAKE_MEM_NOACCESS(block, sizeof *block);
+#endif
+    return 1;
+  }
+
+  finalize(block);
+  block->t.type = (type_t) (block->t.type | FREE);
+
+  /* If debugging is turned on, we want to catch instances
+     where a reachable object is wrongly freed. This is difficult
+     to do if the object is recycled soon after.
+     So when debugging is on, the free list is FIFO
+     rather than LIFO, which increases our chances that the
+     code which is still using the object will trip on
+     the freed object before it is recycled. */
+  if (vg_dbg || opt_gc_debug) {
+#ifdef HAVE_VALGRIND
+    if (vg_dbg && free_tail != &free_list)
+      VALGRIND_MAKE_MEM_DEFINED(free_tail, sizeof *free_tail);
+#endif
+    *free_tail = block;
+    block->t.next = nil;
+#ifdef HAVE_VALGRIND
+    if (vg_dbg) {
+      if (free_tail != &free_list)
+        VALGRIND_MAKE_MEM_NOACCESS(free_tail, sizeof *free_tail);
+      VALGRIND_MAKE_MEM_NOACCESS(block, sizeof *block);
+    }
+#endif
+    free_tail = &block->t.next;
+  } else {
+    block->t.next = free_list;
+    free_list = block;
+  }
+
+  return 1;
+}
+
 static int_ptr_t sweep(void)
 {
-  heap_t *heap;
-  int gc_dbg = opt_gc_debug;
   int_ptr_t free_count = 0;
+  heap_t *heap;
 #ifdef HAVE_VALGRIND
-  int vg_dbg = opt_vg_debug;
-#else
-  int vg_dbg = 0;
+  const int vg_dbg = opt_vg_debug;
+#endif
+
+  if (free_list == 0)
+    free_tail = &free_list;
+
+#if CONFIG_GEN_GC
+  if (!full_gc) {
+    int i;
+    /* No need to mark block defined via Valgrind API; everything
+       in the freshobj is an allocated node! */
+    for (i = 0; i < freshobj_idx; i++)
+      free_count += sweep_one(freshobj[i]);
+
+    return free_count;
+  }
 #endif
 
   for (heap = heap_list; heap != 0; heap = heap->next) {
@@ -412,74 +524,55 @@ static int_ptr_t sweep(void)
          block < end;
          block++)
     {
-      if ((block->t.type & (REACHABLE | FREE)) == (REACHABLE | FREE))
-        abort();
-
-      if (block->t.type & REACHABLE) {
-        block->t.type = (type_t) (block->t.type & ~REACHABLE);
-        continue;
-      }
-
-      if (block->t.type & FREE) {
-#ifdef HAVE_VALGRIND
-        if (vg_dbg)
-            VALGRIND_MAKE_MEM_NOACCESS(block, sizeof *block);
-#endif
-        free_count++;
-        continue;
-      }
-
-      if (0 && gc_dbg) {
-        format(std_error, lit("~a: finalizing: "), progname, nao);
-        obj_print(block, std_error);
-        put_char(chr('\n'), std_error);
-      }
-      finalize(block);
-      block->t.type = (type_t) (block->t.type | FREE);
-      free_count++;
-      /* If debugging is turned on, we want to catch instances
-         where a reachable object is wrongly freed. This is difficult
-         to do if the object is recycled soon after.
-         So when debugging is on, the free list is FIFO
-         rather than LIFO, which increases our chances that the
-         code which is still using the object will trip on
-         the freed object before it is recycled. */
-      if (gc_dbg || vg_dbg) {
-#ifdef HAVE_VALGRIND
-        if (vg_dbg && free_tail != &free_list)
-          VALGRIND_MAKE_MEM_DEFINED(free_tail, sizeof *free_tail);
-#endif
-        *free_tail = block;
-        block->t.next = nil;
-#ifdef HAVE_VALGRIND
-        if (vg_dbg) {
-          if (free_tail != &free_list)
-            VALGRIND_MAKE_MEM_NOACCESS(free_tail, sizeof *free_tail);
-          VALGRIND_MAKE_MEM_NOACCESS(block, sizeof *block);
-        }
-#endif
-        free_tail = &block->t.next;
-      } else {
-        block->t.next = free_list;
-        free_list = block;
-      }
+      free_count += sweep_one(block);
     }
   }
+
   return free_count;
 }
 
 void gc(void)
 {
   val gc_stack_top = nil;
+#if CONFIG_GEN_GC
+  int exhausted = (free_list == 0);
+#endif
 
   if (gc_enabled) {
+    int swept;
+#if CONFIG_GEN_GC
+    static int gc_counter;
+    if (++gc_counter >= FULL_GC_INTERVAL) {
+      full_gc = 1;
+      gc_counter = 0;
+    }
+#endif
+
     mach_context_t mc;
     save_context(mc);
     gc_enabled = 0;
     mark(&mc, &gc_stack_top);
     hash_process_weak();
-    if (sweep() < 3 * HEAP_SIZE / 4)
+    swept = sweep();
+#if CONFIG_GEN_GC
+#if 0
+    printf("sweep: freed %d full_gc == %d exhausted == %d\n",
+           (int) swept, full_gc, exhausted);
+#endif
+    if (full_gc && swept < 3 * HEAP_SIZE / 4)
       more();
+    else if (!full_gc && swept < HEAP_SIZE / 4 && exhausted)
+      more();
+#else
+    if (swept < 3 * HEAP_SIZE / 4)
+      more();
+#endif
+
+#if CONFIG_GEN_GC
+    checkobj_idx = 0;
+    freshobj_idx = 0;
+    full_gc = 0;
+#endif
     gc_enabled = 1;
   }
 }
@@ -508,10 +601,44 @@ int gc_is_reachable(val obj)
   if (!is_ptr(obj))
     return 1;
 
+#if CONFIG_GEN_GC
+  if (!full_gc && obj->t.gen > 0)
+    return 1;
+#endif
+
   t = obj->t.type;
 
   return (t & REACHABLE) != 0;
 }
+
+#if CONFIG_GEN_GC
+
+val gc_set(val *ptr, val obj)
+{
+  if (in_malloc_range((mem_t *) ptr) && is_ptr(obj) && obj->t.gen == 0) {
+    if (checkobj_idx >= CHECKOBJ_VEC_SIZE)
+      gc();
+    obj->t.gen = -1;
+    checkobj[checkobj_idx++] = obj;
+  }
+  *ptr = obj;
+  return obj;
+}
+
+val gc_mutated(val obj)
+{
+  if (checkobj_idx >= CHECKOBJ_VEC_SIZE)
+    gc();
+  obj->t.gen = -1;
+  return checkobj[checkobj_idx++] = obj;
+}
+
+val gc_push(val obj, val *plist)
+{
+  return gc_set(plist, cons(obj, *plist));
+}
+
+#endif
 
 /*
  * Useful functions for gdb'ing.

@@ -224,9 +224,9 @@ val rplaca(val cons, val new_car)
 {
   switch (type(cons)) {
   case CONS:
-    return cons->c.car = new_car;
+    return set(cons->c.car, new_car);
   case LCONS:
-    return cons->lc.car = new_car;
+    return set(cons->lc.car, new_car);
   default:
     type_mismatch(lit("~s is not a cons"), cons, nao);
   }
@@ -237,9 +237,9 @@ val rplacd(val cons, val new_cdr)
 {
   switch (type(cons)) {
   case CONS:
-    return cons->c.cdr = new_cdr;
+    return set(cons->c.cdr, new_cdr);
   case LCONS:
-    return cons->lc.cdr = new_cdr;
+    return set(cons->lc.cdr, new_cdr);
   default:
     type_mismatch(lit("~s is not a cons"), cons, nao);
   }
@@ -361,6 +361,7 @@ val pop(val *plist)
 
 val push(val value, val *plist)
 {
+  /* Unsafe for mutating object fields: use mpush macro. */
   return *plist = cons(value, *plist);
 }
 
@@ -757,7 +758,7 @@ static val lazy_flatten_scan(val list, val *escape)
       } else if (atom(a)) {
         return list;
       } else do {
-        push(cdr(list), escape);
+        push(cdr(list), escape); /* safe mutation: *escape is a local var */
         list = a;
         a = car(list);
       } while (consp(a));
@@ -929,11 +930,17 @@ val cobj_equal_op(val left, val right)
   return eq(left, right);
 }
 
+static mem_t *malloc_low_bound, *malloc_high_bound;
+
 mem_t *chk_malloc(size_t size)
 {
   mem_t *ptr = (mem_t *) malloc(size);
   if (size && ptr == 0)
     ptr = (mem_t *) oom_realloc(0, size);
+  if (ptr < malloc_low_bound)
+    malloc_low_bound = ptr;
+  else if (ptr + size > malloc_high_bound)
+    malloc_high_bound = ptr + size;
   return ptr;
 }
 
@@ -944,6 +951,10 @@ mem_t *chk_calloc(size_t n, size_t size)
     ptr = (mem_t *) oom_realloc(0, size);
     memset(ptr, 0, n * size);
   }
+  if (ptr < malloc_low_bound)
+    malloc_low_bound = ptr;
+  else if (ptr + size > malloc_high_bound)
+    malloc_high_bound = ptr + size;
   return ptr;
 }
 
@@ -952,7 +963,16 @@ mem_t *chk_realloc(mem_t *old, size_t size)
   mem_t *newptr = (mem_t *) realloc(old, size);
   if (size != 0 && newptr == 0)
     newptr = oom_realloc(old, size);
+  if (newptr < malloc_low_bound)
+    malloc_low_bound = newptr;
+  else if (newptr + size > malloc_high_bound)
+    malloc_high_bound = newptr + size;
   return newptr;
+}
+
+int in_malloc_range(mem_t *ptr)
+{
+  return ptr >= malloc_low_bound && ptr < malloc_high_bound;
 }
 
 wchar_t *chk_strdup(const wchar_t *str)
@@ -1431,8 +1451,8 @@ val string_extend(val str, val tail)
 
     str->st.str = (wchar_t *) chk_realloc((mem_t *) str->st.str,
                                           alloc * sizeof *str->st.str);
-    str->st.alloc = num(alloc);
-    str->st.len = plus(str->st.len, needed);
+    set(str->st.alloc, num(alloc));
+    set(str->st.len, plus(str->st.len, needed));
 
     if (stringp(tail)) {
       wmemcpy(str->st.str + len, c_str(tail), c_num(needed) + 1);
@@ -1475,8 +1495,8 @@ val length_str(val str)
     }
 
     if (!str->st.len) {
-      str->st.len = num(wcslen(str->st.str));
-      str->st.alloc = plus(str->st.len, one);
+      set(str->st.len, num(wcslen(str->st.str)));
+      set(str->st.alloc, plus(str->st.len, one));
     }
     return str->st.len;
   }
@@ -1741,7 +1761,7 @@ val replace_str(val str_in, val items, val from, val to)
 
     wmemmove(str_in->st.str + t - c_num(len_diff), 
              str_in->st.str + t, (l - t) + 1);
-    str_in->st.len = minus(len, len_diff);
+    set(str_in->st.len, minus(len, len_diff));
     to = plus(from, len_it);
   } else if (lt(len_rep, len_it)) {
     val len_diff = minus(len_it, len_rep);
@@ -2249,7 +2269,7 @@ val intern(val str, val package)
   } else {
     val newsym = make_sym(str);
     newsym->s.package = package;
-    return *place = newsym;
+    return set(*place, newsym);
   }
 }
 
@@ -2262,7 +2282,7 @@ static val rehome_sym(val sym, val package)
 
   if (sym->s.package)
     remhash(sym->s.package->pk.symhash, symbol_name(sym));
-  sym->s.package = package;
+  set(sym->s.package, package);
   sethash(package->pk.symhash, symbol_name(sym), sym);
   return sym;
 }
@@ -3063,7 +3083,7 @@ val vec_set_length(val vec, val length)
       val *newvec = (val *) chk_realloc((mem_t *) (vec->v.vec - 2),
                                         (new_alloc + 2) * sizeof *newvec);
       vec->v.vec = newvec + 2;
-      vec->v.vec[vec_alloc] = num(new_alloc);
+      set(vec->v.vec[vec_alloc], num(new_alloc));
 #ifdef HAVE_VALGRIND
       vec->v.vec_true_start = newvec;
 #endif
@@ -3075,7 +3095,7 @@ val vec_set_length(val vec, val length)
         vec->v.vec[i] = nil;
     }
 
-    vec->v.vec[vec_length] = length;
+    set(vec->v.vec[vec_length], length);
   }
 
   return vec;
@@ -3261,6 +3281,7 @@ val replace_vec(val vec_in, val items, val from, val to)
   if (vectorp(items)) {
     memcpy(vec_in->v.vec + c_num(from), items->v.vec, 
            sizeof *vec_in->v.vec * c_num(len_it));
+    mut(vec_in);
   } else if (stringp(items)) {
     cnum f = c_num(from);
     cnum t = c_num(to);
@@ -3276,6 +3297,7 @@ val replace_vec(val vec_in, val items, val from, val to)
 
     for (iter = items; iter && f != t; iter = cdr(iter), f++)
       vec_in->v.vec[f] = car(iter);
+    mut(vec_in);
   }
   return vec_in;
 }
@@ -3316,15 +3338,15 @@ static val lazy_stream_func(val env, val lcons)
   val next = cdr(env) ? pop(cdr_l(env)) : get_line(stream);
   val ahead = get_line(stream);
 
-  lcons->lc.car = next;
-  lcons->lc.cdr = if2(ahead, make_lazy_cons(lcons->lc.func));
+  set(lcons->lc.car, next);
+  set(lcons->lc.cdr, if2(ahead, make_lazy_cons(lcons->lc.func)));
   lcons->lc.func = nil;
 
   if (!next || !ahead)
     close_stream(stream, t);
 
   if (ahead)
-    push(ahead, cdr_l(env));
+    mpush(ahead, *cdr_l(env));
 
   return next;
 }
@@ -3357,12 +3379,12 @@ val lazy_str(val lst, val term, val limit)
     obj->ls.prefix = null_string;
     obj->ls.list = nil;
   } else {
-    obj->ls.prefix = cat_str(list(first(lst), term, nao), nil);
-    obj->ls.list = rest(lst);
+    set(obj->ls.prefix, cat_str(list(first(lst), term, nao), nil));
+    set(obj->ls.list, rest(lst));
     limit = if2(limit, minus(limit, one));
   }
 
-  obj->ls.opts = cons(term, limit);
+  set(obj->ls.opts, cons(term, limit));
 
   return obj;
 }
@@ -3376,13 +3398,13 @@ val lazy_str_force(val lstr)
   while ((!lim || gt(lim, zero)) && lstr->ls.list) {
     val next = pop(&lstr->ls.list);
     val term = car(lstr->ls.opts);
-    lstr->ls.prefix = cat_str(list(lstr->ls.prefix, next, term, nao), nil);
+    set(lstr->ls.prefix, cat_str(list(lstr->ls.prefix, next, term, nao), nil));
     if (lim)
       lim = minus(lim, one);
   }
 
   if (lim)
-    *cdr_l(lstr->ls.opts) = lim;
+    set(*cdr_l(lstr->ls.opts), lim);
 
   return lstr->ls.prefix;
 }
@@ -3399,13 +3421,13 @@ val lazy_str_force_upto(val lstr, val index)
   {
     val next = pop(&lstr->ls.list);
     val term = car(lstr->ls.opts);
-    lstr->ls.prefix = cat_str(list(lstr->ls.prefix, next, term, nao), nil);
+    set(lstr->ls.prefix, cat_str(list(lstr->ls.prefix, next, term, nao), nil));
     if (lim)
       lim = minus(lim, one);
   }
 
   if (lim)
-    *cdr_l(lstr->ls.opts) = lim;
+    set(*cdr_l(lstr->ls.opts), lim);
   return lt(index, length_str(lstr->ls.prefix));
 }
 
@@ -3599,7 +3621,7 @@ val acons_new(val key, val value, val list)
   val existing = assoc(key, list);
 
   if (existing) {
-    *cdr_l(existing) = value;
+    set(*cdr_l(existing), value);
     return list;
   } else {
     return cons(cons(key, value), list);
@@ -3616,7 +3638,7 @@ val *acons_new_l(val key, val *new_p, val *list)
     return cdr_l(existing);
   } else {
     val nc = cons(key, nil);
-    *list = cons(nc, *list);
+    set(*list, cons(nc, *list));
     if (new_p)
       *new_p = t;
     return cdr_l(nc);
@@ -3628,7 +3650,7 @@ val aconsq_new(val key, val value, val list)
   val existing = assq(key, list);
 
   if (existing) {
-    *cdr_l(existing) = value;
+    set(*cdr_l(existing), value);
     return list;
   } else {
     return cons(cons(key, value), list);
@@ -3645,7 +3667,7 @@ val *aconsq_new_l(val key, val *new_p, val *list)
     return cdr_l(existing);
   } else {
     val nc = cons(key, nil);
-    *list = cons(nc, *list);
+    set(*list, cons(nc, *list));
     if (new_p)
       *new_p = t;
     return cdr_l(nc);
@@ -3778,7 +3800,11 @@ static val sort_list(val list, val lessfun, val keyfun)
       return list;
     } else {
       val cons2 = cdr(list);
-      *cdr_l(cons2) = list;
+      /* This assignent is a dangerous mutation since the list
+         may contain mixtures of old and new objects, and
+         so we could be reversing a newer->older pointer
+         relationship. */
+      set(*cdr_l(cons2), list);
       *cdr_l(list) = nil;
       return cons2;
     }
@@ -3845,8 +3871,13 @@ val sort(val seq, val lessfun, val keyfun)
   if (!keyfun)
     keyfun = identity_f;
 
-  if (consp(seq))
+  if (consp(seq)) {
+    /* The list could have a mixture of generation 0 and 1
+       objects. Sorting the list could reverse some of the
+       pointers between the generations resulting in a backpointer.
+       Thus we better inform the collector about this object. */
     return sort_list(seq, lessfun, keyfun);
+  }
 
   sort_vec(seq, lessfun, keyfun);
   return seq;
@@ -4047,8 +4078,8 @@ static void obj_init(void)
   *gethash_l(user_package->pk.symhash, nil_string, 0) = nil;
 
   /* t can't be interned, because gethash_l needs t in order to do its job. */
-  t = *gethash_l(user_package->pk.symhash, lit("t"), 0) = make_sym(lit("t"));
-  t->s.package = user_package;
+  t = set(*gethash_l(user_package->pk.symhash, lit("t"), 0), make_sym(lit("t")));
+  set(t->s.package, user_package);
 
   null = intern(lit("null"), user_package);
   cons_s = intern(lit("cons"), user_package);

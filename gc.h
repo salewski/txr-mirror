@@ -23,6 +23,7 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
+
 void gc_init(val *stack_bottom);
 val prot1(val *loc);
 void rel1(val *loc);
@@ -33,8 +34,16 @@ void gc(void);
 int gc_state(int);
 void gc_mark(val);
 int gc_is_reachable(val);
+
+#if CONFIG_GEN_GC
+val gc_set(val *, val);
+val gc_push(val, val *);
+val gc_mutated(val);
+#endif
+
 void unmark(void);
 void gc_hint_func(val *);
+
 #define gc_hint(var) gc_hint_func(&var)
 #define REACHABLE 0x100
 #define FREE      0x200
