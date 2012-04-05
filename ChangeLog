@@ -257,7 +257,7 @@
 	operations with set.
 
 	* unwind.c (uw_register_subtype): Replace mutating operation with set.
- 
+
 2012-04-02  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (vec_set_length): Use set instead of assignment.
@@ -301,7 +301,7 @@
 	equal semantics.
 	(hash_process_weak): Clear the cached hash during gc.
 
- 2012-03-31  Kaz Kylheku  <kaz@kylheku.com>
+2012-03-31  Kaz Kylheku  <kaz@kylheku.com>
 
 	If one of the blocks which are subordinate to a @(trailer)
 	happen to request a successful termination by invoking @(accept)
@@ -1143,7 +1143,7 @@
 	before retrieving the string.
 	(put_byte): Validate that the byte is in range. Pass byte
 	as C int down to the put_byte virtual.
- 
+
 2012-03-12  Kaz Kylheku  <kaz@kylheku.com>
 
 	Plugging memory leak.
@@ -7603,7 +7603,7 @@
 	in order to be sure that when walking to the bottom of
 	stack pointer, we visit all locals in main. This is the
 	whole reason why there is a separate txr_main.
- 
+
 2009-12-02  Kaz Kylheku  <kkylheku@gmail.com>
 
 	* Makefile (tests): Don't depend on the executable. Otherwise,
