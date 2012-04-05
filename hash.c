@@ -332,7 +332,7 @@ static void hash_grow(struct hash *h)
   bug_unless (new_modulus > h->modulus);
 
   for (i = 0; i < h->modulus; i++) {
-    val conses = *vecref_l(h->table, num(i));
+    val conses = vecref(h->table, num(i));
 
     while (conses) {
       val entry = car(conses);
@@ -384,7 +384,7 @@ val *gethash_l(val hash, val key, val *new_p)
 val gethash(val hash, val key)
 {
   struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
-  val chain = *vecref_l(h->table, num(h->hash_fun(key) % h->modulus));
+  val chain = vecref(h->table, num(h->hash_fun(key) % h->modulus));
   val found = h->assoc_fun(key, chain);
   return cdr(found);
 }
@@ -392,7 +392,7 @@ val gethash(val hash, val key)
 val gethash_f(val hash, val key, val *found)
 {
   struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
-  val chain = *vecref_l(h->table, num(h->hash_fun(key) % h->modulus));
+  val chain = vecref(h->table, num(h->hash_fun(key) % h->modulus));
   set(*found, h->assoc_fun(key, chain));
   return cdr(*found);
 }
@@ -400,7 +400,7 @@ val gethash_f(val hash, val key, val *found)
 val gethash_n(val hash, val key, val notfound_val)
 {
   struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
-  val chain = *vecref_l(h->table, num(h->hash_fun(key) % h->modulus));
+  val chain = vecref(h->table, num(h->hash_fun(key) % h->modulus));
   val existing = h->assoc_fun(key, chain);
   return if3(existing, cdr(existing), notfound_val);
 }
