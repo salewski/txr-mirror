@@ -1,5 +1,10 @@
 2012-04-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	* hash.c (hash_grow, gethash_l, gethash, gethash_f): Replace
+	useless use of *vecref_l() with vecref().
+
+2012-04-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	* configure (gen_gc): Default to off.
 	Help section added for gen_gc variable.
 
