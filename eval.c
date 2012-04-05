@@ -1035,17 +1035,13 @@ static val op_dohash(val form, val env)
 
   uw_block_begin (nil, result);
 
-  /*
-   * Avoid issuing set() operations in the loop;
-   * just tell GC that these variables are being mutated.
-   * TODO: This is not enough since gc can take place while we execute this
-   * loop. What we need is to conditionally re-establish this.
-   * GC needs to provide a way to let us know "has GC happened since ..."
-   */
-  mut(keyvar);
-  mut(valvar);
-
   while ((cell = hash_next(&iter)) != nil) {
+    /* These assignments are gc-safe, because keyvar and valvar
+       are newer objects than existing entries in the hash,
+       unless the body mutates hash by inserting newer objects,
+       and also deleting them such that these variables end up
+       with the only reference. But in that case, those objects
+       will be noted in the GC's check list. */
     *cdr_l(keyvar) = car(cell);
     *cdr_l(valvar) = cdr(cell);
     eval_progn(body, new_env, form);

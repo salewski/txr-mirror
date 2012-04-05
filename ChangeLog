@@ -1,5 +1,19 @@
 2012-04-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	The mut macro should only be used for vectors or vector-like objects
+	which hold direct references to other objects and must be used
+	each time a mutation takes place.
+
+	* eval.c (op_dohash): invocations of mut macro removed. 
+	Comment rewritten.
+
+	* lib.c (sort_list): Use set macro for mutating assignment.
+	Do not invoke mut on sorted list; it won't work anyway, because
+	it doesn't mean what the code wants it to mean: that the list will be
+	fully traversed during gc marking.
+
+2012-04-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	Bunch of fixes.
 
 	* gc.c (gc_mutated): Return the value.
