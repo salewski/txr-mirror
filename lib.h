@@ -393,6 +393,7 @@ val equal(val left, val right);
 mem_t *chk_malloc(size_t size);
 mem_t *chk_calloc(size_t n, size_t size);
 mem_t *chk_realloc(mem_t *, size_t size);
+int in_malloc_range(mem_t *);
 wchar_t *chk_strdup(const wchar_t *str);
 val cons(val car, val cdr);
 val make_lazy_cons(val func);

@@ -930,11 +930,17 @@ val cobj_equal_op(val left, val right)
   return eq(left, right);
 }
 
+static mem_t *malloc_low_bound, *malloc_high_bound;
+
 mem_t *chk_malloc(size_t size)
 {
   mem_t *ptr = (mem_t *) malloc(size);
   if (size && ptr == 0)
     ptr = (mem_t *) oom_realloc(0, size);
+  if (ptr < malloc_low_bound)
+    malloc_low_bound = ptr;
+  else if (ptr + size > malloc_high_bound)
+    malloc_high_bound = ptr + size;
   return ptr;
 }
 
@@ -945,6 +951,10 @@ mem_t *chk_calloc(size_t n, size_t size)
     ptr = (mem_t *) oom_realloc(0, size);
     memset(ptr, 0, n * size);
   }
+  if (ptr < malloc_low_bound)
+    malloc_low_bound = ptr;
+  else if (ptr + size > malloc_high_bound)
+    malloc_high_bound = ptr + size;
   return ptr;
 }
 
@@ -953,7 +963,16 @@ mem_t *chk_realloc(mem_t *old, size_t size)
   mem_t *newptr = (mem_t *) realloc(old, size);
   if (size != 0 && newptr == 0)
     newptr = oom_realloc(old, size);
+  if (newptr < malloc_low_bound)
+    malloc_low_bound = newptr;
+  else if (newptr + size > malloc_high_bound)
+    malloc_high_bound = newptr + size;
   return newptr;
+}
+
+int in_malloc_range(mem_t *ptr)
+{
+  return ptr >= malloc_low_bound && ptr < malloc_high_bound;
 }
 
 wchar_t *chk_strdup(const wchar_t *str)
