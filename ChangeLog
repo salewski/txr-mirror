@@ -1,5 +1,10 @@
 2012-04-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	* gc.c (FRESHQ_SIZE): Preprocessor symbol renamed to FRESHOBJ_VEC_SIZE.
+	(freshobj, make_obj): Object and function definitions follow rename.
+
+2012-04-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	* gc.c (mark_obj, sweep_one, gc_is_reachable): Check for gen > 0 rather
 	than gen == 0. This allows gen == -1 objects to be considered the
 	same as gen == 0, and traversed.

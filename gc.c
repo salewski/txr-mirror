@@ -46,7 +46,7 @@
 #define HEAP_SIZE               16384
 #define CHECKOBJ_VEC_SIZE       (2 * HEAP_SIZE)
 #define FULL_GC_INTERVAL        40
-#define FRESHQ_SIZE             (2 * HEAP_SIZE)
+#define FRESHOBJ_VEC_SIZE       (2 * HEAP_SIZE)
 
 typedef struct heap {
   struct heap *next;
@@ -78,7 +78,7 @@ int gc_enabled = 1;
 #if CONFIG_GEN_GC
 static val checkobj[CHECKOBJ_VEC_SIZE];
 static int checkobj_idx;
-static val freshobj[FRESHQ_SIZE];
+static val freshobj[FRESHOBJ_VEC_SIZE];
 static int freshobj_idx;
 static int full_gc;
 #endif
@@ -162,9 +162,9 @@ val make_obj(void)
   int tries;
 
 #if CONFIG_GEN_GC
-  if (opt_gc_debug || freshobj_idx >= FRESHQ_SIZE) {
+  if (opt_gc_debug || freshobj_idx >= FRESHOBJ_VEC_SIZE) {
     gc();
-    assert (freshobj_idx < FRESHQ_SIZE);
+    assert (freshobj_idx < FRESHOBJ_VEC_SIZE);
   }
 #else
   if (opt_gc_debug)
