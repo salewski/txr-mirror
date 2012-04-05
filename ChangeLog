@@ -1,5 +1,15 @@
 2012-04-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	* gc.c (mark_obj, sweep_one, gc_is_reachable): Check for gen > 0 rather
+	than gen == 0. This allows gen == -1 objects to be considered the
+	same as gen == 0, and traversed.
+	(gc_set, gc_mutated): When a gen 0 object is added to the checkobj
+	array, set its generation to -1.  This prevents duplicates in
+	the checkobj array. Also, it fixes a bug: an vector marked as
+	mutated was not being traversed due to being in generation 1.
+
+2012-04-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	Code cleanup and tweaking.
 
 	* gc.c (BACKPTR_VEC_SIZE): Preprocessor symbol renamed to

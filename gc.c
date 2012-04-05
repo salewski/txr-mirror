@@ -260,7 +260,7 @@ tail_call:
   t = obj->t.type;
 
 #if CONFIG_GEN_GC
-  if (!full_gc && obj->t.gen != 0)
+  if (!full_gc && obj->t.gen > 0)
     return;
 #endif
 
@@ -433,7 +433,7 @@ static int sweep_one(obj_t *block)
 #endif
 
 #if CONFIG_GEN_GC
-  if (!full_gc && block->t.gen != 0)
+  if (!full_gc && block->t.gen > 0)
     abort();
 #endif
 
@@ -602,7 +602,7 @@ int gc_is_reachable(val obj)
     return 1;
 
 #if CONFIG_GEN_GC
-  if (!full_gc && obj->t.gen != 0)
+  if (!full_gc && obj->t.gen > 0)
     return 1;
 #endif
 
@@ -618,6 +618,7 @@ val gc_set(val *ptr, val obj)
   if (in_malloc_range((mem_t *) ptr) && is_ptr(obj) && obj->t.gen == 0) {
     if (checkobj_idx >= CHECKOBJ_VEC_SIZE)
       gc();
+    obj->t.gen = -1;
     checkobj[checkobj_idx++] = obj;
   }
   *ptr = obj;
@@ -628,6 +629,7 @@ val gc_mutated(val obj)
 {
   if (checkobj_idx >= CHECKOBJ_VEC_SIZE)
     gc();
+  obj->t.gen = -1;
   return checkobj[checkobj_idx++] = obj;
 }
 
