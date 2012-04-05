@@ -235,7 +235,7 @@ val gc_set(val *, val);
 #define mpush(val, place) (gc_push(val, &(place)))
 #else
 #define set(place, val) ((place) = (val))
-#define mut(obj)
+#define mut(obj) (obj)
 #define mpush(val, place) (push(val, &(place)))
 #endif
 

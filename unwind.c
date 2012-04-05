@@ -403,7 +403,9 @@ void uw_continue(uw_frame_t *current, uw_frame_t *cont)
 
 void uw_init(void)
 {
-  protect(&toplevel_env.ev.func_bindings, &exception_subtypes, (val *) 0);
+  protect(&toplevel_env.ev.func_bindings, 
+          &toplevel_env.ev.match_context,
+          &exception_subtypes, (val *) 0);
   exception_subtypes = cons(cons(t, nil), exception_subtypes);
   uw_register_subtype(type_error_s, error_s);
   uw_register_subtype(internal_error_s, error_s);

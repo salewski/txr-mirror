@@ -427,7 +427,7 @@ val remhash(val hash, val key)
 
   if (existing) {
     val loc = memq(existing, *pchain);
-    *pchain = nappend2(ldiff(*pchain, loc), cdr(loc));
+    set(*pchain, nappend2(ldiff(*pchain, loc), cdr(loc)));
     h->count--;
     bug_unless (h->count >= 0);
   }

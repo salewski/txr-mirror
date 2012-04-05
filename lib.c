@@ -3853,8 +3853,7 @@ val sort(val seq, val lessfun, val keyfun)
        objects. Sorting the list could reverse some of the
        pointers between the generations resulting in a backpointer.
        Thus we better inform the collector about this object. */
-    mut(seq);
-    return sort_list(seq, lessfun, keyfun);
+    return mut(sort_list(seq, lessfun, keyfun));
   }
 
   sort_vec(seq, lessfun, keyfun);
