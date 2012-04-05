@@ -233,7 +233,7 @@ static val dest_set(val spec, val bindings, val pattern, val value)
       sem_error(spec, lit("~s cannot be used as a variable"), pattern, nao);
     if (!existing)
       sem_error(spec, lit("cannot set unbound variable ~s"), pattern, nao);
-    *cdr_l(existing) = value;
+    set(*cdr_l(existing), value);
   } else if (consp(pattern)) {
     if (first(pattern) == var_s) {
       uw_throwf(query_error_s, 
@@ -2828,7 +2828,7 @@ static val v_flatten(match_files_ctx *c)
       val existing = assoc(sym, c->bindings);
 
       if (existing)
-        *cdr_l(existing) = flatten(cdr(existing));
+        set(*cdr_l(existing), flatten(cdr(existing)));
     }
   }
 
@@ -2987,7 +2987,7 @@ static val v_cat(match_files_ctx *c)
     if (existing) {
       val sep = if3(sep_form, txeval(specline, sep_form, c->bindings),
                     lit(" "));
-      *cdr_l(existing) = cat_str(flatten(cdr(existing)), sep);
+      set(*cdr_l(existing), cat_str(flatten(cdr(existing)), sep));
     } else {
       sem_error(specline, lit("cat: unbound variable ~s"), sym, nao);
     }
@@ -3057,9 +3057,9 @@ static val v_output(match_files_ctx *c)
 
         if (existing) {
           if (append) {
-            *cdr_l(existing) = append2(flatten(cdr(existing)), list_out);
+            set(*cdr_l(existing), append2(flatten(cdr(existing)), list_out));
           } else {
-            *cdr_l(existing) = list_out;
+            set(*cdr_l(existing), list_out);
           }
         } else {
           c->bindings = acons(into_var, list_out, c->bindings);
@@ -3351,7 +3351,7 @@ static val v_filter(match_files_ctx *c)
     if (!existing)
       sem_error(specline, lit("filter: variable ~a is unbound"), var, nao);
 
-    *cdr_l(existing) = filter_string_tree(filter, cdr(existing));
+    set(*cdr_l(existing), filter_string_tree(filter, cdr(existing)));
   }
 
   uw_env_end;

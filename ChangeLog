@@ -3,6 +3,296 @@
 	* txr.vim: @[...] syntax not marked as "contained" because it
 	can freely occur, and is useful in @(output).
 
+2012-04-05  Kaz Kylheku  <kaz@kylheku.com>
+
+	* gc.c (FRESHQ_SIZE): Preprocessor symbol renamed to FRESHOBJ_VEC_SIZE.
+	(freshobj, make_obj): Object and function definitions follow rename.
+
+2012-04-05  Kaz Kylheku  <kaz@kylheku.com>
+
+	* gc.c (mark_obj, sweep_one, gc_is_reachable): Check for gen > 0 rather
+	than gen == 0. This allows gen == -1 objects to be considered the
+	same as gen == 0, and traversed.
+	(gc_set, gc_mutated): When a gen 0 object is added to the checkobj
+	array, set its generation to -1.  This prevents duplicates in
+	the checkobj array. Also, it fixes a bug: an vector marked as
+	mutated was not being traversed due to being in generation 1.
+
+2012-04-05  Kaz Kylheku  <kaz@kylheku.com>
+
+	Code cleanup and tweaking.
+
+	* gc.c (BACKPTR_VEC_SIZE): Preprocessor symbol renamed to
+	CHECKOBJ_VEC_SIZE.
+	(FULL_GC_INTERVAL): Increased to 40 since the modified
+	algorithm now leaves less work for the full gc to do.
+	(backptr, backptr_idx): Static variables renamed to
+	checkobj and checkobj_idx.
+	(mark): Follows rename of backptr and backptr_idx.
+	(gc): Commented out handy printf added.
+	(gc_set): Use in_malloc_range check to avoid adding to
+	the check array pointers which are being stored in non-heap locations,
+	since non-heap locations are already GC roots.
+	(gc_mutated): Follows variable renaming.
+	(gc_push): Just do the push using gc_set.
+
+	* lib.c (malloc_low_bound, malloc_high_bound): New variables.
+	(chk_malloc, chk_calloc, chk_realloc): Updated malloc_low_bound
+	and malloc_high_bound.
+	(in_malloc_range): New function.
+
+	* lib.h (in_malloc_range): Declared.
+
+2012-04-05  Kaz Kylheku  <kaz@kylheku.com>
+
+	The mut macro should only be used for vectors or vector-like objects
+	which hold direct references to other objects and must be used
+	each time a mutation takes place.
+
+	* eval.c (op_dohash): invocations of mut macro removed. 
+	Comment rewritten.
+
+	* lib.c (sort_list): Use set macro for mutating assignment.
+	Do not invoke mut on sorted list; it won't work anyway, because
+	it doesn't mean what the code wants it to mean: that the list will be
+	fully traversed during gc marking.
+
+2012-04-05  Kaz Kylheku  <kaz@kylheku.com>
+
+	Bunch of fixes.
+
+	* gc.c (gc_mutated): Return the value.
+
+	* gc.h (gc_mutated): Declaration updated.
+
+	* hash.c (remhash): Fix unsafe assignment to use set macro.
+
+	* lib.c (sort): Fix wrong use of mut macro on the list
+	before it is sorted rather than after.
+
+	* lib.h (mut): Trivial version of macro updated to return argument.
+
+	* unwind.c (uw_init): The toplevel environment's match_context
+	should be gc_protected. Though this is probably not used,
+	which is why it has not been a problem.
+
+2012-04-04  Kaz Kylheku  <kaz@kylheku.com>
+
+	* hash.c (hash_grow, gethash_l, gethash, gethash_f): Replace
+	useless use of *vecref_l() with vecref().
+
+2012-04-04  Kaz Kylheku  <kaz@kylheku.com>
+
+	* configure (gen_gc): Default to off.
+	Help section added for gen_gc variable.
+
+	* gc.c (gc): Some missing CONFIG_GEN_GC added.
+
+2012-04-04  Kaz Kylheku  <kaz@kylheku.com>
+
+	Code cleanup.
+
+	* gc.c (backptr_oflow): Static variable removed.
+	(freshq_head, freshq_tail, partial_gc_count): Static variables removed.
+	(freshq): Array renamed to freshobj.
+	(full): Variable renamed to full_gc.
+	(freshobj_idx): New varaible.
+
+	(make_obj): Add newly born objects to freshobj array rather than
+	freshq. If freshobj array is full on entry to this function,
+	trigger gc to empty it. make_obj no longer updates the free_tail;
+	the gc routine takes care of restoring this invariant.
+	(mark_obj): Follows rename of full_gc. Some code was not wrapped
+	in #if CONFIG_GEN_GC.
+	(mark, sweep_one): Follow rename of full_gc.
+	(sweep): On entry, restore free_tail invariant in the empty
+	free_list case. Code which processes freshq from tail to head
+	replaced by simple array walk of freshobj. Code wrapped properly
+	in #if CONFIG_GEN_GC.
+	(gc): Logic for triggering full gc simplified.
+	Check added for situations when a partial gc is called when
+	the free list empties, and it doesn't liberate enough memory.
+	This prevents the situation of partial gc being called over and over
+	again by make_obj, squeezing less and less memory each time until
+	finally it returns 0 objects, and more() is called.
+	(gc_is_reachable): Follows rename of full_gc, and #if CONFIG_GEN_GC
+	added.
+	(gc_set, gc_mutated): Simplified. Check if the backptr array
+	is full and trigger gc if so to flush it, then just add to the array.
+
+2012-04-03  Kaz Kylheku  <kaz@kylheku.com>
+
+	Performance tweaking and fixes.
+
+	* gc.c (BACKPTR_VEC_SIZE): Increase greatly, so that we don't
+	trigger gc due to overflow of the backptr array. This is not likely
+	to yield a lot of free objects except in a full GC.
+	(FULL_GC_INTERVAL): From 10 to 20.
+	(gc): Take a not of whether or not gc was entered with free_list
+	being exhausted or not. Call more() only if the free_list was
+	empty, and a full sweep was done.
+	Reset partial_gc_count only when a full gc is triggered.
+
+2012-04-03  Kaz Kylheku  <kaz@kylheku.com>
+
+	Fix failing test case tests/006/freeform-1.txr.
+
+	* lib.c (lazy_str_force, lazy_str_force_upto): Use set macro
+	when assigning lim. This won't cause a problem unless lim is
+	in the bignum range, however.
+	(acons_new, aconsq_new): When overwriting the cdr value of
+	the existing entry, use set. This is the smoking gun;
+	these functions are used for manipulating bindings.
+	(sort): After sorting a list, we must mark it as having
+	been mutated. If a list contains only mature conses or only
+	fresh conses, there is no problem. But if it contains a mixture,
+	then sorting could reverse their relationship, causing mature
+	conses to backpoint to the fresh ones.
+	(obj_init): Use set when installing the t symbol into the user package.
+
+2012-04-03  Kaz Kylheku  <kaz@kylheku.com>
+
+	Generational GC showing signs of working. One test case in
+	test suite fails.
+
+	* gc.c (FRESHQ_SIZE): New preprocessor symbol.
+	(backptr_oflow, freshq, freshq_head, freshq_tail): New static
+	variables.
+	(make_obj): Place newly allocated generation 0 object into
+	freshq. If freshq becomes full, transfer oldest item into
+	generation 1.
+	(mark_obj): If doing only a partial gc, then do not mark
+	objects which are not generation 0.
+	(mark_mem_region): Valgrind support: cannot mark t.type field undefined
+	because it is a bitfield. Just mark the first SIZEOF_PTR bytes
+	of the object defined.
+	(mark): Under partial gc, mark the table of back pointers.
+	(sweep_one): New static function from the prior guts of sweep.
+	Reachable objects now get promoted to generation 1.
+	(sweep): Under partial gc, sweep just the freshq which identifies
+	the generation 0 objects, rather than the entire linked list of all the
+	heaps.
+	(gc): Trigger full gc also if the backptr list has overflowed
+	due to gc having been disabled.
+	Under generational gc, reset the static variables afterward:
+	clear the list of backpointers, and the freshq.
+	(gc_is_reachable): Under partial gc, report any mature object
+	as reachable.
+	(gc_set, gc_mutated): Handle backptr array overflow situation
+	when gc is disabled.
+	(gc_push): Bugfix: it is the newly pushed cons cell that has to be
+	marked as a root, not the value being pushed.
+
+	* hash.c (sethash): Use set macro for storing value.
+
+	* lib.h (set, mut, mpush): Fix wrong-way #if test for these macros.
+	The trivial versions were being defined uner CONFIG_GEN_GC and vice
+	versa!
+
+2012-04-03  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (op_modplace): push replaced with mpush (mutating push).
+
+	* gc.c (gc_push): New function.
+
+	* gc.h (gc_push): Declared.
+
+	* hash.c (pushhash): Use mpush.
+
+	* lib.c (push): Reverted to unsafe operation. TODO comment replaced
+	with warning.
+	(lazy_flatten_scan): push occurence commented as safe.
+	(lazy_stream_func): Unsafe push replaced with mpush.
+
+	* lib.h (mpush): New macro.
+
+2012-04-02  Kaz Kylheku  <kaz@kylheku.com>
+
+	* configure: Support a gen-gc configuration variable which
+	causes CONFIG_GEN_GC to be defined as 1 in config.h.
+
+	* eval.c (op_defvar, dwim_loc, op_modplace, transform_op): Handle
+	mutating assignments via set macro.
+	(op_dohash): Inform gc about mutated variables. TODO here.
+
+	* filter.c (trie_add, trie_compress): Handle mutating assignments
+	via set macro.
+
+	* gc.c (BACKPTR_VEC_SIZE, FULL_GC_INTERVAL): New preprocessor symbols.
+	(backptr, backptr_idx, partial_gc_count, full): New static variables.
+	(make_obj): Initialize generation to zero.
+	(gc): Added logic for deciding between full and partial gc.
+	(gc_set, gc_mutated): New functions.
+
+	* gc.h (gc_set, gc_mutated): Declared.
+
+	* hash.c (hash_mark): Changed useless use of vecref_l to vecref.
+	(gethash_f): Use set when assigning through *found since it
+	is a possible mutation.
+
+	* lib.c (car_l, cdr_l, vecref_l): Got rid of loc macro uses. Using the
+	value properly is going to be the caller's responsibility.
+	(push): push may be a mutation, so use set.
+	(intern): Uset set to mutate a hash entry.
+	(acons_new_l, aconsq_new_l): Use set when replacing *list.
+
+	* lib.h (PTR_BIT): New preprocessor symbol.
+	(obj_common): New macro for defining common object fields.
+	type_t is split into two bitfields, half a pointer wide,
+	allowing for generation to be represented.
+	(struct any, struct cons, struct string, struct sym, struct package,
+	struct func, struct vec, struct lazy_cons, struct cobj, struct env, 
+	struct bignum, struct flonum): Use obj_common macro to defined
+	common fields.
+	(loc): Macro removed.
+	(set, mut): Macros conditionally defined for real functionality.
+	(list_collect, list_collect_nconc, list_collect_append): Replace
+	mutating operations with set.
+
+	* match.c (dest_set, v_cat, v_output, v_filter): Replace
+	mutating operations with set.
+
+	* stream.c (string_in_get_line, string_in_get_char,
+	strlist_out_put_string, strlist_out_put_char): Replace mutating
+	operations with set.
+
+	* unwind.c (uw_register_subtype): Replace mutating operation with set.
+ 
+2012-04-02  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (vec_set_length): Use set instead of assignment.
+	(vecref_l): Use loc to lift address of cell.
+	(replace_vec): Use macro mut to indicate the object is being
+	mutated.
+
+	* lib.h (mut): New macro.
+
+2012-04-01  Kaz Kylheku  <kaz@kylheku.com>
+
+	Start of ground-work for ephemeral GC. We must add some abstraction
+	to places where we potentially assign a reference to a younger object
+	inside a field located in an older object (chronological
+	backreference) and also where we take the address of an object
+	field, making it possible that the user of the address will do so.
+
+	This patch does not take care of vectors.
+
+	No, this is not an April Fool's joke.
+
+	* eval.c (env_fbind, env_vbind, env_replace_vbind, lookup_var,
+	lookup_sym_lisp1): Use set macro instead of assignment.
+
+	* hash.c (hash_grow, set_hash_userdata, hash_next): 
+	Use set macro instead of assignment.
+
+	* lib.c (rplaca, rplacd, string_extend, length_str, replace_str,
+	rehome_sym, lazy_stream_func, lazy_str, lazy_str_force, 
+	lazy_str_force_upto, obj_init): Use set macro instead of assignment.
+
+	(car_l, cdr_l): Use loc instead of address-of operator.
+
+	* lib.h (set, loc): New macros.
+
 2012-03-31  Kaz Kylheku  <kaz@kylheku.com>
 
 	* hash.c (last_equal_key, last_equal_hash): New static variables.

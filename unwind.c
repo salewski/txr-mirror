@@ -386,7 +386,7 @@ val uw_register_subtype(val sub, val sup)
   /* Make sub an immediate subtype of sup.
      If sub already registered, we just repoint it. */
   if (sub_entry) {
-    *cdr_l(sub_entry) = sup_entry;
+    set(*cdr_l(sub_entry), sup_entry);
   } else {
     sub_entry = cons(sub, sup_entry);
     exception_subtypes = cons(sub_entry, exception_subtypes);
@@ -403,7 +403,9 @@ void uw_continue(uw_frame_t *current, uw_frame_t *cont)
 
 void uw_init(void)
 {
-  protect(&toplevel_env.ev.func_bindings, &exception_subtypes, (val *) 0);
+  protect(&toplevel_env.ev.func_bindings, 
+          &toplevel_env.ev.match_context,
+          &exception_subtypes, (val *) 0);
   exception_subtypes = cons(cons(t, nil), exception_subtypes);
   uw_register_subtype(type_error_s, error_s);
   uw_register_subtype(internal_error_s, error_s);

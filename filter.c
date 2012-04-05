@@ -61,7 +61,7 @@ static val trie_add(val trie, val key, val value)
     val newnode_p;
     val *loc = gethash_l(node, ch, &newnode_p);
     if (newnode_p)
-      *loc = make_hash(nil, nil, nil);
+      set(*loc, make_hash(nil, nil, nil));
     node = *loc;
   }
 
@@ -90,11 +90,11 @@ static void trie_compress(val *ptrie)
     val value = get_hash_userdata(trie);
 
     if (zerop(count)) {
-      *ptrie = value;
+      set(*ptrie, value);
     } else if (eq(count, one) && nullp(value)) {
       val iter = hash_begin(trie);
       val cell = hash_next(&iter);
-      *ptrie = cons(car(cell), cdr(cell));
+      set(*ptrie, cons(car(cell), cdr(cell)));
       trie_compress(cdr_l(*ptrie));
     } else {
       val cell, iter = hash_begin(trie);
