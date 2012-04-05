@@ -44,8 +44,8 @@
 
 #define PROT_STACK_SIZE         1024
 #define HEAP_SIZE               16384
-#define BACKPTR_VEC_SIZE        (2 * HEAP_SIZE)
-#define FULL_GC_INTERVAL        20
+#define CHECKOBJ_VEC_SIZE       (2 * HEAP_SIZE)
+#define FULL_GC_INTERVAL        40
 #define FRESHQ_SIZE             (2 * HEAP_SIZE)
 
 typedef struct heap {
@@ -76,8 +76,8 @@ static val heap_min_bound, heap_max_bound;
 int gc_enabled = 1;
 
 #if CONFIG_GEN_GC
-static val backptr[BACKPTR_VEC_SIZE];
-static int backptr_idx;
+static val checkobj[CHECKOBJ_VEC_SIZE];
+static int checkobj_idx;
 static val freshobj[FRESHQ_SIZE];
 static int freshobj_idx;
 static int full_gc;
@@ -403,13 +403,13 @@ static void mark(mach_context_t *pmc, val *gc_stack_top)
 
 #if CONFIG_GEN_GC
   /*
-   * Mark the backpointers.
+   * Mark the additional objects indicated for marking.
    */
   if (!full_gc)
   {
     int i;
-    for (i = 0; i < backptr_idx; i++)
-      mark_obj(backptr[i]);
+    for (i = 0; i < checkobj_idx; i++)
+      mark_obj(checkobj[i]);
   }
 #endif
 
@@ -555,6 +555,10 @@ void gc(void)
     hash_process_weak();
     swept = sweep();
 #if CONFIG_GEN_GC
+#if 0
+    printf("sweep: freed %d full_gc == %d exhausted == %d\n",
+           (int) swept, full_gc, exhausted);
+#endif
     if (full_gc && swept < 3 * HEAP_SIZE / 4)
       more();
     else if (!full_gc && swept < HEAP_SIZE / 4 && exhausted)
@@ -565,7 +569,7 @@ void gc(void)
 #endif
 
 #if CONFIG_GEN_GC
-    backptr_idx = 0;
+    checkobj_idx = 0;
     freshobj_idx = 0;
     full_gc = 0;
 #endif
@@ -609,32 +613,27 @@ int gc_is_reachable(val obj)
 
 #if CONFIG_GEN_GC
 
-val gc_set(val *ptr, val val)
+val gc_set(val *ptr, val obj)
 {
-  if (!is_ptr(val))
-    goto out;
-  if (val->t.gen != 0)
-    goto out;
-  if (backptr_idx >= BACKPTR_VEC_SIZE)
-    gc();
-  backptr[backptr_idx++] = val;
-out:
-  *ptr = val;
-  return val;
+  if (in_malloc_range((mem_t *) ptr) && is_ptr(obj) && obj->t.gen == 0) {
+    if (checkobj_idx >= CHECKOBJ_VEC_SIZE)
+      gc();
+    checkobj[checkobj_idx++] = obj;
+  }
+  *ptr = obj;
+  return obj;
 }
 
 val gc_mutated(val obj)
 {
-  if (backptr_idx >= BACKPTR_VEC_SIZE)
+  if (checkobj_idx >= CHECKOBJ_VEC_SIZE)
     gc();
-  return backptr[backptr_idx++] = obj;
+  return checkobj[checkobj_idx++] = obj;
 }
 
 val gc_push(val obj, val *plist)
 {
-  val ret = push(obj, plist);
-  gc_mutated(*plist);
-  return ret;
+  return gc_set(plist, cons(obj, *plist));
 }
 
 #endif

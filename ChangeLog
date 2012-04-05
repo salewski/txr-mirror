@@ -1,5 +1,30 @@
 2012-04-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	Code cleanup and tweaking.
+
+	* gc.c (BACKPTR_VEC_SIZE): Preprocessor symbol renamed to
+	CHECKOBJ_VEC_SIZE.
+	(FULL_GC_INTERVAL): Increased to 40 since the modified
+	algorithm now leaves less work for the full gc to do.
+	(backptr, backptr_idx): Static variables renamed to
+	checkobj and checkobj_idx.
+	(mark): Follows rename of backptr and backptr_idx.
+	(gc): Commented out handy printf added.
+	(gc_set): Use in_malloc_range check to avoid adding to
+	the check array pointers which are being stored in non-heap locations,
+	since non-heap locations are already GC roots.
+	(gc_mutated): Follows variable renaming.
+	(gc_push): Just do the push using gc_set.
+
+	* lib.c (malloc_low_bound, malloc_high_bound): New variables.
+	(chk_malloc, chk_calloc, chk_realloc): Updated malloc_low_bound
+	and malloc_high_bound.
+	(in_malloc_range): New function.
+
+	* lib.h (in_malloc_range): Declared.
+
+2012-04-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	The mut macro should only be used for vectors or vector-like objects
 	which hold direct references to other objects and must be used
 	each time a mutation takes place.
