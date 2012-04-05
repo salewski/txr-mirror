@@ -3781,7 +3781,11 @@ static val sort_list(val list, val lessfun, val keyfun)
       return list;
     } else {
       val cons2 = cdr(list);
-      *cdr_l(cons2) = list;
+      /* This assignent is a dangerous mutation since the list
+         may contain mixtures of old and new objects, and
+         so we could be reversing a newer->older pointer
+         relationship. */
+      set(*cdr_l(cons2), list);
       *cdr_l(list) = nil;
       return cons2;
     }
@@ -3853,7 +3857,7 @@ val sort(val seq, val lessfun, val keyfun)
        objects. Sorting the list could reverse some of the
        pointers between the generations resulting in a backpointer.
        Thus we better inform the collector about this object. */
-    return mut(sort_list(seq, lessfun, keyfun));
+    return sort_list(seq, lessfun, keyfun);
   }
 
   sort_vec(seq, lessfun, keyfun);
