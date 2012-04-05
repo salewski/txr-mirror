@@ -623,11 +623,11 @@ out:
   return val;
 }
 
-void gc_mutated(val obj)
+val gc_mutated(val obj)
 {
   if (backptr_idx >= BACKPTR_VEC_SIZE)
     gc();
-  backptr[backptr_idx++] = obj;
+  return backptr[backptr_idx++] = obj;
 }
 
 val gc_push(val obj, val *plist)

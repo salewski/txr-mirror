@@ -1,3 +1,22 @@
+2012-04-05  Kaz Kylheku  <kaz@kylheku.com>
+
+	Bunch of fixes.
+
+	* gc.c (gc_mutated): Return the value.
+
+	* gc.h (gc_mutated): Declaration updated.
+
+	* hash.c (remhash): Fix unsafe assignment to use set macro.
+
+	* lib.c (sort): Fix wrong use of mut macro on the list
+	before it is sorted rather than after.
+
+	* lib.h (mut): Trivial version of macro updated to return argument.
+
+	* unwind.c (uw_init): The toplevel environment's match_context
+	should be gc_protected. Though this is probably not used,
+	which is why it has not been a problem.
+
 2012-04-04  Kaz Kylheku  <kaz@kylheku.com>
 
 	* hash.c (hash_grow, gethash_l, gethash, gethash_f): Replace
