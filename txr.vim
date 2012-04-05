@@ -133,7 +133,7 @@ syn region txr_bracket contained matchgroup=Delimiter start="\[" matchgroup=Deli
 
 syn region txr_mlist contained matchgroup=Delimiter start="@(" matchgroup=Delimiter end=")" contains=txl_keyword,txr_string,txl_regex,txr_num,txl_ident,txr_metanum,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_ncomment,txr_nested_error
 
-syn region txr_mbracket contained matchgroup=Delimiter start="@\[" matchgroup=Delimiter end="\]" contains=txl_keyword,txr_string,txl_regex,txr_num,txl_ident,txr_metanum,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_ncomment,txr_nested_error
+syn region txr_mbracket matchgroup=Delimiter start="@\[" matchgroup=Delimiter end="\]" contains=txl_keyword,txr_string,txl_regex,txr_num,txl_ident,txr_metanum,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_ncomment,txr_nested_error
 
 syn region txr_string contained oneline start=+"+ skip=+\\\\\|\\"+ end=+"+
 syn region txr_quasilit contained oneline start=+`+ skip=+\\\\\|\\`+ end=+`+ contains=txr_variable,txr_metanum,txr_bracevar,txr_mlist,txr_mbracket
