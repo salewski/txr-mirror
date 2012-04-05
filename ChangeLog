@@ -1,3 +1,8 @@
+2012-04-05  Kaz Kylheku  <kaz@kylheku.com>
+
+	* txr.vim: @[...] syntax not marked as "contained" because it
+	can freely occur, and is useful in @(output).
+
 2012-03-31  Kaz Kylheku  <kaz@kylheku.com>
 
 	* hash.c (last_equal_key, last_equal_hash): New static variables.
