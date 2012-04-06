@@ -1,3 +1,30 @@
+                                     TXR 64
+                                   2011-04-06
+
+
+  Features
+
+  - In the pattern language, binding the symbol nil as a variable
+    is permitted now and has a special meaning of matching and
+    discarding input.
+
+  - Caching optimization in hash tables.
+
+  - Ephemeral GC implemented. This is experimental and currently
+    must be enabled at compile time with the --gen-gc configure
+    option.
+
+  Bugs
+
+  - Interaction between @(trailer) and @(accept) has been clarified.
+    An @(accept) return from the forms of a @(trailer) will still
+    roll back the input position to the starting point for the
+    @(trailer).
+
+
+
+
+
                                      TXR 63
                                    2011-03-30
 

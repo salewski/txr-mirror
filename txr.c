@@ -43,7 +43,7 @@
 #include "debug.h"
 #include "txr.h"
 
-const wchli_t *version = wli("63");
+const wchli_t *version = wli("64");
 const wchar_t *progname = L"txr";
 const wchar_t *spec_file = L"stdin";
 
