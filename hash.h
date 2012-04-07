@@ -40,11 +40,15 @@ val set_hash_userdata(val hash, val data);
 val hashp(val obj);
 val maphash(val func, val hash);
 val hash_begin(val hash);
-val hash_next(val *iter);
+val hash_next(val iter);
 val hash_eql(val obj);
 val hash_equal(val obj);
 val hashv(val args);
 val hash_construct(val hashv_args, val pairs);
+val hash_keys(val hash);
+val hash_values(val hash);
+val hash_pairs(val hash);
+val hash_alist(val hash);
 
 void hash_process_weak(void);
 

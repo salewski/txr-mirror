@@ -1002,6 +1002,16 @@ val make_lazy_cons(val func)
   return obj;
 }
 
+val make_half_lazy_cons(val func, val car)
+{
+  val obj = make_obj();
+  obj->lc.type = LCONS;
+  obj->lc.car = car;
+  obj->lc.cdr = nil;
+  obj->lc.func = func;
+  return obj;
+}
+
 val lcons_fun(val lcons)
 {
   type_check(lcons, LCONS);

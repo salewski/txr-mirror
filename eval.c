@@ -1035,7 +1035,7 @@ static val op_dohash(val form, val env)
 
   uw_block_begin (nil, result);
 
-  while ((cell = hash_next(&iter)) != nil) {
+  while ((cell = hash_next(iter)) != nil) {
     /* These assignments are gc-safe, because keyvar and valvar
        are newer objects than existing entries in the hash,
        unless the body mutates hash by inserting newer objects,
@@ -2241,6 +2241,10 @@ void eval_init(void)
   reg_fun(intern(lit("maphash"), user_package), func_n2(maphash));
   reg_fun(intern(lit("hash-eql"), user_package), func_n1(hash_eql));
   reg_fun(intern(lit("hash-equal"), user_package), func_n1(hash_equal));
+  reg_fun(intern(lit("hash-keys"), user_package), func_n1(hash_keys));
+  reg_fun(intern(lit("hash-values"), user_package), func_n1(hash_values));
+  reg_fun(intern(lit("hash-pairs"), user_package), func_n1(hash_pairs));
+  reg_fun(intern(lit("hash-alist"), user_package), func_n1(hash_alist));
 
   reg_fun(intern(lit("eval"), user_package), func_n2o(eval_intrinsic, 1));
 

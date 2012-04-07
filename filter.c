@@ -93,13 +93,13 @@ static void trie_compress(val *ptrie)
       set(*ptrie, value);
     } else if (eq(count, one) && nullp(value)) {
       val iter = hash_begin(trie);
-      val cell = hash_next(&iter);
+      val cell = hash_next(iter);
       set(*ptrie, cons(car(cell), cdr(cell)));
       trie_compress(cdr_l(*ptrie));
     } else {
       val cell, iter = hash_begin(trie);
 
-      for (cell = hash_next(&iter); iter; cell = hash_next(&iter))
+      for (cell = hash_next(iter); cell; cell = hash_next(iter))
         trie_compress(cdr_l(cell));
     }
   } else if (consp(trie)) {
