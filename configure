@@ -1046,6 +1046,46 @@ else
 fi
 
 #
+# Check for annoying clashes from non-conforming BSD-derived systems that don't
+# honor Unix/POSIX feature selection macros!
+#
+
+printf "Checking for name clashes caused by nonconforming toolchains ... "
+
+for ident in trunc floorf random ; do
+  cat > conftest.c <<!
+#include <assert.h>
+#include <ctype.h>
+#include <dirent.h>
+#include <errno.h>
+#include <float.h>
+#include <limits.h>
+#include <math.h>
+#include <setjmp.h>
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/wait.h>
+#include <time.h>
+#include <unistd.h>
+#include <wchar.h>
+#include <wctype.h>
+
+struct txr_foo { int txr; } $ident;
+
+int $ident(void);
+
+int main(void) { return 0; }
+!
+  rm -f conftest
+  if ! make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+    printf "#define %s txr_%s\n" $ident $ident >> config.h
+  fi
+done
+
+#
 # Extra debugging.
 #
 

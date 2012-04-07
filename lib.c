@@ -36,11 +36,11 @@
 #include <errno.h>
 #include <wchar.h>
 #include <math.h>
-#include "config.h"
 #ifdef HAVE_GETENVIRONMENTSTRINGS
 #define NOMINMAX
 #include <windows.h>
 #endif
+#include "config.h"
 #include "lib.h"
 #include "gc.h"
 #include "arith.h"
