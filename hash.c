@@ -490,18 +490,16 @@ val hash_begin(val hash)
   return hi_obj;
 }
 
-val hash_next(val *iter)
+val hash_next(val iter)
 {
-  struct hash_iter *hi = (struct hash_iter *) cobj_handle(*iter, hash_iter_s);
+  struct hash_iter *hi = (struct hash_iter *) cobj_handle(iter, hash_iter_s);
   val hash = hi->hash;
   struct hash *h = (struct hash *) hash->co.handle;
   if (hi->cons)
     hi->cons = cdr(hi->cons);
   while (nullp(hi->cons)) {
-    if (++hi->chain >= h->modulus) {
-      *iter = nil;
+    if (++hi->chain >= h->modulus)
       return nil;
-    }
     set(hi->cons, vecref(h->table, num(hi->chain)));
   }
   return car(hi->cons);
@@ -511,7 +509,7 @@ val maphash(val fun, val hash)
 {
   val iter = hash_begin(hash);
   val cell;
-  while ((cell = hash_next(&iter)) != nil)
+  while ((cell = hash_next(iter)) != nil)
     funcall2(fun, car(cell), cdr(cell));
   return nil;
 }
@@ -638,6 +636,74 @@ val hash_construct(val hashv_args, val pairs)
   }
 
   return hash;
+}
+
+static val hash_keys_lazy(val iter, val lcons)
+{
+  val cell = hash_next(iter);
+  set(lcons->lc.cdr, if2(cell, make_half_lazy_cons(lcons->lc.func, car(cell))));
+  return nil;
+}
+
+val hash_keys(val hash)
+{
+  val iter = hash_begin(hash);
+  val cell = hash_next(iter);
+  if (!cell)
+    return nil;
+  return make_half_lazy_cons(func_f1(iter, hash_keys_lazy), car(cell));
+}
+
+static val hash_values_lazy(val iter, val lcons)
+{
+  val cell = hash_next(iter);
+  set(lcons->lc.cdr, if2(cell, make_half_lazy_cons(lcons->lc.func, cdr(cell))));
+  return nil;
+}
+
+val hash_values(val hash)
+{
+  val iter = hash_begin(hash);
+  val cell = hash_next(iter);
+  if (!cell)
+    return nil;
+  return make_half_lazy_cons(func_f1(iter, hash_values_lazy), cdr(cell));
+}
+
+static val hash_pairs_lazy(val iter, val lcons)
+{
+  val cell = hash_next(iter);
+  set(lcons->lc.cdr, if2(cell, make_half_lazy_cons(lcons->lc.func,
+                                                   cons(car(cell),
+                                                        cons(cdr(cell),
+                                                             nil)))));
+  return nil;
+}
+
+val hash_pairs(val hash)
+{
+  val iter = hash_begin(hash);
+  val cell = hash_next(iter);
+  if (!cell)
+    return nil;
+  return make_half_lazy_cons(func_f1(iter, hash_pairs_lazy),
+                             cons(car(cell), cons(cdr(cell), nil)));
+}
+
+static val hash_alist_lazy(val iter, val lcons)
+{
+  val cell = hash_next(iter);
+  set(lcons->lc.cdr, if2(cell, make_half_lazy_cons(lcons->lc.func, cell)));
+  return nil;
+}
+
+val hash_alist(val hash)
+{
+  val iter = hash_begin(hash);
+  val cell = hash_next(iter);
+  if (!cell)
+    return nil;
+  return make_half_lazy_cons(func_f1(iter, hash_alist_lazy), cell);
 }
 
 void hash_init(void)
