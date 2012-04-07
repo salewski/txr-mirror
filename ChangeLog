@@ -1,5 +1,10 @@
 2012-04-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Documented int-flo, flo-int, search-regex,
+	match-regex and regsub.
+
+2012-04-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	Rounding out hash table functionality with lazy lists that
 	can walk table content in different ways.
 

@@ -7198,9 +7198,81 @@ followed by a period, e or E.
 
 .SS Functions int-flo and flo-int
 
+.TP
+Syntax:
+
+  (int-flo <float>)
+  (flo-int <integer>)
+
+.TP
+Description:
+
+These functions perform numeric conversion between integer and floating point
+type. The int-flo function returns an integer by truncating toward zero.
+The flo-int function returns an exact floating point value corresponding to the
+integer argument, if possible, otherwise an approximation using a nearby
+floating point value.
+
 .SS Functions search-regex and match-regex
 
+.TP
+Syntax:
+
+ (search-regex <haystack-string> <needle-regex> : <start> <from-end>)
+ (match-regex <string> <regex> : <position>)
+
+.TP
+Description
+
+These functions perform regular-expression-based searching and matching.
+
+The search-regex function searches through <haystack-string> starting
+at position <start> for a match for <needle-regex>. If <start> is omitted,
+the search starts at position 0. If <from-end> is specified, the search
+proceeds in reverse, from the last position in the string, toward <start>.
+This function returns nil if no match is found, otherwise it returns
+a cons pair, whose car indicates the position of the match, and whose
+cdr indicates the length of the match. 
+
+The match-regex function tests whether <regex> matches at <position>
+in <string>. If <position> is not specified, it is taken to be zero.
+If the regex matches, then the length of the match is returned.
+If it does not match, then nil is returned.
+.
 .SS Function regsub
+
+.TP
+Syntax:
+
+  (regsub <regex> <replacement> <string>)
+
+.TP
+Description:
+
+The regsub function searches <string> for multiple occurences of
+non-overlapping matches for <regex>.  A new string is constructed
+similar to <string> but in which each matching region is replaced
+with using <replacement> as follows.
+
+The <replacement> object may be a character or a string, in which 
+case it is simply taken to be the replacement for each match
+of the regular expression.
+
+The <replacement> object may be a function of one argument, in
+which case for every match which is found, this function is invoked,
+with the matching piece of text as an argument. The function's
+return value is then taken to be the replacement text.
+
+.TP
+Examples:
+
+  ;; match every lower case e or o, and replace by filtering
+  ;; through the upcase-str function:
+  
+  [regsub #/[eo]/ upcase-str "Hello world!"] -> "HEllO wOrld!"
+
+  ;; Replace Hello with Goodbye:
+  (regsub #/Hello/ "Goodbye" "Hello world!") -> "Goodbye world!"
 
 .SS Functions make-hash, hash
 
