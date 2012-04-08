@@ -1,5 +1,10 @@
 2012-04-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	* configure: Print done and terminate line after checking for
+	clashing symbols.
+
+2012-04-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* configure: Added new check for some clashing external names,
 	which we can redefine out of the way in config.h.
 
