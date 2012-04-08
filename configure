@@ -1085,6 +1085,8 @@ int main(void) { return 0; }
   fi
 done
 
+printf "done\n"
+
 #
 # Extra debugging.
 #
