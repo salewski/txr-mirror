@@ -57,7 +57,7 @@ syn keyword txl_keyword contained *stdout* *stdin* *stddebug*
 syn keyword txl_keyword contained *stderr* format print pprint tostring tostringp
 syn keyword txl_keyword contained make-string-input-stream
 syn keyword txl_keyword contained make-string-byte-input-stream make-string-output-stream
-eval chain andf orf iff
+syn keyword txl_keyword contained eval chain andf orf iff
 syn keyword txl_keyword contained *stdout* *stdin* *stddebug*
 syn keyword txl_keyword contained *stderr* format print pprint tostring tostringp
 syn keyword txl_keyword contained make-string-input-stream
