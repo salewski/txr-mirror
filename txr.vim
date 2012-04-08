@@ -53,10 +53,6 @@ syn keyword txl_keyword contained make-hash hash hash-construct gethash sethash 
 syn keyword txl_keyword contained hash-count get-hash-userdata set-hash-userdata hashp maphash 
 syn keyword txl_keyword contained hash-eql hash-equal 
 syn keyword txl_keyword contained hash_keys hash_values hash_pairs hash_alist
-syn keyword txl_keyword contained *stdout* *stdin* *stddebug*
-syn keyword txl_keyword contained *stderr* format print pprint tostring tostringp
-syn keyword txl_keyword contained make-string-input-stream
-syn keyword txl_keyword contained make-string-byte-input-stream make-string-output-stream
 syn keyword txl_keyword contained eval chain andf orf iff
 syn keyword txl_keyword contained *stdout* *stdin* *stddebug*
 syn keyword txl_keyword contained *stderr* format print pprint tostring tostringp
