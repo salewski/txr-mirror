@@ -1,5 +1,23 @@
 2012-04-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	Fixes to get configure ccname=g++ working on OSX Lion.
+
+	* Makefile (conftest.syms): Use -n flag in nm so that the output
+	is not alphabetically sorted, but numerically. We need this
+	to get the symbols ordered by increasing offset.
+
+	* configure (read_syms): New function. Factors out logic used
+	in two places for reading the output of nm. On OSX Lion, it looks
+	like we do not get symbol sizes but offsets only, when compiling
+	with g++. The symbols are in an S section.  When compiling with
+	gcc, we get a common C section with symbol sizes.
+	So the hack is to use the deltas between offsets to get the sizes.
+	The objects had to be re-ordered in decreasing rank so alignment
+	doesn't create padding that will get counted as the size.
+	Interleaved dummy objects of type char should also work.
+
+2012-04-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* configure: Print done and terminate line after checking for
 	clashing symbols.
 

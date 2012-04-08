@@ -181,7 +181,7 @@ conftest2: conftest1.c conftest2.c
 	$(CC) $(CFLAGS) -o $@ $^
 
 conftest.syms: conftest.o
-	$(NM) -t o -P $^ > $@
+	$(NM) -n -t o -P $^ > $@
 
 .PHONY: conftest.yacc
 conftest.yacc:
