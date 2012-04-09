@@ -1,6 +1,6 @@
 2012-04-09  Kaz Kylheku  <kaz@kylheku.com>
 
-	NetBSD port.
+	Port to NetBSD (5.1).
 
 	* arith.c (bignum_dbl_ipt): Added missing #if HAVE_DOUBLE_INTPTR_T
 	around function
