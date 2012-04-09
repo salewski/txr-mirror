@@ -34,7 +34,7 @@
 set -u
 
 cmdline=
-for arg in "$0" "$@" ; do
+for arg in "$0" ${@+"$@"} ; do
   [ -n "$cmdline" ] && cmdline="$cmdline "
   case $arg in
   *" "* | " "* | *" " )
@@ -113,6 +113,7 @@ install_prefix=${install_prefix-}
 bindir=${datadir-'$(prefix)/bin'}
 datadir=${datadir-'$(prefix)/share/txr'}
 mandir=${mandir-'$(prefix)/share/man'}
+make=${make-}
 cross=${cross-}
 compiler_prefix=${compiler_prefix-}
 ccname=${ccname-gcc}
@@ -392,14 +393,23 @@ set -e
 
 printf "Checking for GNU Make ... "
 
-output=$(make --version 2>&1)
-set -- $output
+if [ -z "$make" ] ; then
+  for make in make gmake ; do
+    output=$($make --version 2>&1) || true
+    set -- $output
 
-if [ $1 != "GNU" -o $2 != "Make" ] ; then
+    if [ $1 != "GNU" -o $2 != "Make" ] ; then
+      continue
+    fi
+    break
+  done
+fi
+
+if [ -z "$make" ] ; then
   printf "missing\n"
   exit 1
 fi
-
+     
 make_version=$3
 
 save_ifs=$IFS ; IFS=. ; set -- $make_version ; IFS=$save_ifs
@@ -454,7 +464,7 @@ for name in prefix bindir datadir mandir; do
 	if [ ! -w $test_prefix ] ; then
 	  printf "okay\n  (but no write access to '%s'\n" $test_prefix
 
-	  printf "   so 'make install' will require root privileges)\n"
+	  printf "   so '$make install' will require root privileges)\n"
 	else
 	  printf "okay\n"
 	fi
@@ -603,7 +613,7 @@ int main(void)
 !
 
 rm -f conftest
-if ! make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
   printf "failed\n\n"
   printf "Errors from compilation: \n\n"
   cat conftest.err
@@ -612,6 +622,48 @@ fi
 
 rm -f conftest
 printf "okay\n"
+
+#
+# Check for annoying clashes from non-conforming BSD-derived systems that don't
+# honor Unix/POSIX feature selection macros!
+#
+
+printf "Checking for name clashes caused by nonconforming toolchains ... "
+
+for ident in trunc floorf random longlong_t ; do
+  cat > conftest.c <<!
+#include <assert.h>
+#include <ctype.h>
+#include <dirent.h>
+#include <errno.h>
+#include <float.h>
+#include <limits.h>
+#include <math.h>
+#include <setjmp.h>
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/wait.h>
+#include <time.h>
+#include <unistd.h>
+#include <wchar.h>
+#include <wctype.h>
+
+struct txr_foo { int txr; } $ident;
+
+int $ident(void);
+
+int main(void) { return 0; }
+!
+  rm -f conftest
+  if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+    printf "#define %s txr_%s\n" $ident $ident >> config.h
+  fi
+done
+
+printf "done\n"
 
 #
 # Check what kind of C type we have for integers wider than long,
@@ -626,7 +678,7 @@ for try_type in int64 __int64 "long long" ; do
 $try_type value;
 !
   rm -f conftest.o
-  if make conftest.o > conftest.err 2>&1 ; then
+  if $make conftest.o > conftest.err 2>&1 ; then
     longlong=$try_type
     break
   fi
@@ -649,7 +701,7 @@ for try_type in uint64 __uint64 "unsigned long long" ; do
 $try_type value;
 !
   rm -f conftest.o
-  if make conftest.o > conftest.err 2>&1 ; then
+  if $make conftest.o > conftest.err 2>&1 ; then
     ulonglong=$try_type
     break
   fi
@@ -667,12 +719,23 @@ printf "Checking what C type we have for integers wider than \"long long\" ... "
 
 superlong=
 
+# The C test is coded this way because on some GCC installation,
+# the 128 bit type doesn't actually work for multiplying two long longs.
+# On NetBSD. with gcc 4.1.3, the test case compile dies with an internal
+# error.
 for try_type in int128 int128_t __int128 __int128_t ; do
   cat > conftest.c <<!
-$try_type value;
+#include "config.h"
+int main(void)
+{
+   extern longlong_t a, b;
+   $try_type value = ($try_type) a * ($try_type) b;
+   return 0;
+}
+longlong_t a, b;
 !
   rm -f conftest.o
-  if make conftest.o > conftest.err 2>&1 ; then
+  if $make conftest.o > conftest.err 2>&1 ; then
     superlong=$try_type
     break
   fi
@@ -692,10 +755,17 @@ usuperlong=
 
 for try_type in uint128 uint128_t __uint128 __uint128_t ; do
   cat > conftest.c <<!
-$try_type value;
+#include "config.h"
+int main(void)
+{
+   extern longlong_t a, b;
+   $try_type value = ($try_type) a * ($try_type) b;
+   return 0;
+}
+longlong_t a, b;
 !
   rm -f conftest.o
-  if make conftest.o > conftest.err 2>&1 ; then
+  if $make conftest.o > conftest.err 2>&1 ; then
     usuperlong=$try_type
     break
   fi
@@ -769,7 +839,7 @@ char DUMMY;
 !
   rm -f conftest.o conftest.syms
 
-  if ! make conftest.syms > conftest.err 2>&1 ; then
+  if ! $make conftest.syms > conftest.err 2>&1 ; then
     printf "failed\n\n"
 
     printf "Errors from compilation: \n\n"
@@ -858,7 +928,7 @@ char DUMMY;
 !
   rm -f conftest.o conftest.syms
 
-  if ! make conftest.syms > conftest.err 2>&1 ; then
+  if ! $make conftest.syms > conftest.err 2>&1 ; then
     printf "failed\n\n"
 
     printf "Errors from compilation: \n\n"
@@ -914,7 +984,7 @@ $inline int func(void)
 }
 !
     rm -f conftest2
-    if ! make conftest2 > conftest.err 2>&1 ; then
+    if ! $make conftest2 > conftest.err 2>&1 ; then
 	continue
     fi
     break
@@ -946,7 +1016,7 @@ syntax error
 #endif
 !
   rm -rf conftest
-  if ! make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+  if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
     printf "failed\n\n"
     printf "Errors from compilation: \n\n"
     cat conftest.err
@@ -966,7 +1036,7 @@ printf "Checking for yacc program ... "
 if [ -z "$yacc_given" -a -z "$yaccname_given" ] ; then
   rm -f conftest.yacc
   for yaccname in "yacc" "byacc" "bison -y" "" ; do
-    yaccpath=$(make yaccname="$yaccname" conftest.yacc)
+    yaccpath=$($make yaccname="$yaccname" conftest.yacc)
     if command -v $yaccpath > /dev/null ; then
       break;
     fi
@@ -979,7 +1049,7 @@ if [ -z "$yacc_given" -a -z "$yaccname_given" ] ; then
 
   printf '"%s"\n' "$yaccpath"
 else
-  yaccpath=$(make conftest.yacc)
+  yaccpath=$($make conftest.yacc)
   case $yaccpath in
   *bison )
     printf "error\n\n"
@@ -1012,7 +1082,7 @@ int main(void)
 }
 !
 rm -f conftest
-if ! make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
   printf "no\n"
 else
   printf "yes\n"
@@ -1036,7 +1106,7 @@ int main(void)
 }
 !
 rm -f conftest
-if ! make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
   printf "no\n"
 else
   printf "yes\n"
@@ -1059,54 +1129,12 @@ int main(void)
 }
 !
 rm -f conftest
-if ! make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
   printf "no\n"
 else
   printf "yes\n"
   printf "#define HAVE_GETENVIRONMENTSTRINGS 1\n" >> config.h
 fi
-
-#
-# Check for annoying clashes from non-conforming BSD-derived systems that don't
-# honor Unix/POSIX feature selection macros!
-#
-
-printf "Checking for name clashes caused by nonconforming toolchains ... "
-
-for ident in trunc floorf random ; do
-  cat > conftest.c <<!
-#include <assert.h>
-#include <ctype.h>
-#include <dirent.h>
-#include <errno.h>
-#include <float.h>
-#include <limits.h>
-#include <math.h>
-#include <setjmp.h>
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/wait.h>
-#include <time.h>
-#include <unistd.h>
-#include <wchar.h>
-#include <wctype.h>
-
-struct txr_foo { int txr; } $ident;
-
-int $ident(void);
-
-int main(void) { return 0; }
-!
-  rm -f conftest
-  if ! make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
-    printf "#define %s txr_%s\n" $ident $ident >> config.h
-  fi
-done
-
-printf "done\n"
 
 #
 # Check for fields inside struct tm
@@ -1123,7 +1151,7 @@ for try_field in tm_gmtoff __tm_gmtoff ; do
 int x = sizeof ((struct tm *) 0)->$try_field;
 !
   rm -f conftest.o
-  if make conftest.o > conftest.err 2>&1 ; then
+  if $make conftest.o > conftest.err 2>&1 ; then
     printf "#define HAVE_TM_GMTOFF 1\n" >> config.h
     printf "#define TM_GMTOFF %s\n" $try_field >> config.h
     break
@@ -1136,7 +1164,7 @@ for try_field in tm_zone __tm_zone ; do
 int x = sizeof ((struct tm *) 0)->$try_field;
 !
   rm -f conftest.o
-  if make conftest.o > conftest.err 2>&1 ; then
+  if $make conftest.o > conftest.err 2>&1 ; then
     printf "#define HAVE_TM_ZONE 1\n" >> config.h
     printf "#define TM_ZONE %s\n" $try_field >> config.h
     break
@@ -1262,12 +1290,12 @@ correct!  Please check the above output for any problems, and verify that the
 contents of the generated files config.make and config.h are sane for the
 target platform.
 
-The next step is to build the program with make.
+The next step is to build the program with $make.
 
 If that is successful, please follow the INSTALL guide.
 
-Usually, most users just need to "make tests" and "make install",
-possibly switching to superuser for "make install" if the prefix
+Usually, most users just need to "$make tests" and "$make install",
+possibly switching to superuser for "$make install" if the prefix
 points to a privileged location like /usr/local/.
 
 !

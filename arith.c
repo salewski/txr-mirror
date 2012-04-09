@@ -68,12 +68,16 @@ val bignum(cnum cn)
   return n;
 }
 
+#if HAVE_DOUBLE_INTPTR_T
+
 static val bignum_dbl_ipt(double_intptr_t di)
 {
   val n = make_bignum();
   mp_set_double_intptr(mp(n), di);
   return n;
 }
+
+#endif
 
 val normalize(val bignum)
 {

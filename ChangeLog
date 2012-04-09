@@ -1,5 +1,34 @@
 2012-04-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	NetBSD port.
+
+	* arith.c (bignum_dbl_ipt): Added missing #if HAVE_DOUBLE_INTPTR_T
+	around function
+
+	* configure: NetBSD's shell is too pathetic to expand "$@" properly
+	when there are no positional arguments, so I applied the ${@+"$@"}
+	trick.
+	(make): New variable. GNU make might be known only as gmake,
+	so we now detect the command for our own use within the configure
+	script and also for giving the user advice on what command to use for
+	building. Put in a fix so that the attempt to run $make --version
+	does not bail the script under "set -e" if that command terminates
+	unsuccessfully.
+	The check for clashing names has been moved earlier, so that
+	the renaming #define's appear early in config.h (so config.h itself
+	can rely on the renames). The identifier longlong_t has been added
+	to the potential clash list.  NetBSD exposes this identifier in spite
+	of -D_POSIX_SOURCE=2, and it clashes with our longlong_t.
+	The tests for integers wider than long long has been modified
+	to actually compile a multiplication of two long-long-s into 
+	the wider precision. On the NetBSD system, with gcc 4.1.3, I found
+	that the __int128 type is there, but doesn't actually work;
+	compilation of arith.c bails with an internal compiler error.
+	We now get this internal error at configure time and avoid using
+	the type.
+
+2012-04-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	* mpi-patches/add-mp-hash (mp_hash): Fix incorrect
 	code on platforms where mp_digit is smaller than long.
 	This was left shifting a mp_digit by MP_DIGIT_BIT.
