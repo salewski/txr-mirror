@@ -1,3 +1,12 @@
+2012-04-09  Kaz Kylheku  <kaz@kylheku.com>
+
+	* mpi-patches/add-mp-hash (mp_hash): Fix incorrect
+	code on platforms where mp_digit is smaller than long.
+	This was left shifting a mp_digit by MP_DIGIT_BIT.
+	It was found by compiling on NetBSD with a gcc 4.1.3
+	which has a broken__int128_t, forcing us to use 32 bit
+	mp_digit with a 64 bit mp_word.
+
 2012-04-08  Kaz Kylheku  <kaz@kylheku.com>
 
 	* arith.c (bignum): Previously static function now exposed as external.
