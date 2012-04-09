@@ -2405,6 +2405,9 @@ void eval_init(void)
   reg_fun(intern(lit("url-encode"), user_package), func_n2o(url_encode, 1));
   reg_fun(intern(lit("url-decode"), user_package), func_n2o(url_decode, 1));
 
+  reg_fun(intern(lit("time"), user_package), func_n0(time_sec));
+  reg_fun(intern(lit("time-usec"), user_package), func_n0(time_sec_usec));
+
   eval_error_s = intern(lit("eval-error"), user_package);
   uw_register_subtype(eval_error_s, error_s);
 }

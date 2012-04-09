@@ -1109,6 +1109,43 @@ done
 printf "done\n"
 
 #
+# Check for fields inside struct tm
+#
+
+printf "Printf detecting timezone fields in struct tm ..."
+
+tm_gmtoff=
+tm_tmzone=
+
+for try_field in tm_gmtoff __tm_gmtoff ; do
+  cat > conftest.c <<!
+#include <time.h>
+int x = sizeof ((struct tm *) 0)->$try_field;
+!
+  rm -f conftest.o
+  if make conftest.o > conftest.err 2>&1 ; then
+    printf "#define HAVE_TM_GMTOFF 1\n" >> config.h
+    printf "#define TM_GMTOFF %s\n" $try_field >> config.h
+    break
+  fi
+done
+
+for try_field in tm_zone __tm_zone ; do
+  cat > conftest.c <<!
+#include <time.h>
+int x = sizeof ((struct tm *) 0)->$try_field;
+!
+  rm -f conftest.o
+  if make conftest.o > conftest.err 2>&1 ; then
+    printf "#define HAVE_TM_ZONE 1\n" >> config.h
+    printf "#define TM_ZONE %s\n" $try_field >> config.h
+    break
+  fi
+done
+
+printf "done\n"
+
+#
 # Extra debugging.
 #
 

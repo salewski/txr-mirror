@@ -61,7 +61,7 @@ val make_bignum(void)
   return n;
 }
 
-static val bignum(cnum cn)
+val bignum(cnum cn)
 {
   val n = make_bignum();
   mp_set_intptr(mp(n), cn);

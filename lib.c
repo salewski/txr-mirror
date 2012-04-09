@@ -36,6 +36,7 @@
 #include <errno.h>
 #include <wchar.h>
 #include <math.h>
+#include <sys/time.h>
 #include "config.h"
 #ifdef HAVE_GETENVIRONMENTSTRINGS
 #define NOMINMAX
@@ -1143,8 +1144,9 @@ val improper_plist_to_alist(val list, val boolean_keys)
 
 val num(cnum n)
 {
-  numeric_assert (n >= NUM_MIN && n <= NUM_MAX);
-  return (val) ((n << TAG_SHIFT) | TAG_NUM);
+  if (n >= NUM_MIN && n <= NUM_MAX)
+    return (val) ((n << TAG_SHIFT) | TAG_NUM);
+  return bignum(n);
 }
 
 cnum c_num(val num)
@@ -4465,6 +4467,22 @@ val tostringp(val obj)
   val ss = make_string_output_stream();
   obj_pprint(obj, ss);
   return get_string_from_stream(ss);
+}
+
+val time_sec(void)
+{
+  struct timeval tv;
+  if (gettimeofday(&tv, 0) == -1)
+    return nil;
+  return num(tv.tv_sec);
+}
+
+val time_sec_usec(void)
+{
+  struct timeval tv;
+  if (gettimeofday(&tv, 0) == -1)
+    return nil;
+  return cons(num(tv.tv_sec), num(tv.tv_usec));
 }
 
 void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),

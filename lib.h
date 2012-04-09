@@ -235,7 +235,7 @@ val gc_set(val *, val);
 #define mpush(val, place) (gc_push(val, &(place)))
 #else
 #define set(place, val) ((place) = (val))
-#define mut(obj) (obj)
+#define mut(obj) ((void) (obj))
 #define mpush(val, place) (push(val, &(place)))
 #endif
 
@@ -640,6 +640,8 @@ val obj_print(val obj, val stream);
 val obj_pprint(val obj, val stream);
 val tostring(val obj);
 val tostringp(val obj);
+val time_sec(void);
+val time_sec_usec(void);
 
 void init(const wchar_t *progname, mem_t *(*oom_realloc)(mem_t *, size_t),
           val *stack_bottom);
