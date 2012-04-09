@@ -1,5 +1,27 @@
 2012-04-08  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (bignum): Previously static function now exposed as external.
+
+	* arith.h (bignum): Declared.
+
+	* configure: Added check for tm_gmtoff and tm_tmzone fields
+	being present in struct tm.
+
+	* eval.c (eval_init): New intrinsic functions: time, time-usec.
+
+	* lib.c (num): If the cnum is outside of the fixnum range, then
+	construct a bignum.
+	(time_sec, time_sec_usec): New functions.
+
+	* lib.h (mut): Slight change to macro to eliminate compiler warning.
+	(time_sec, time_sec_usec): Declared.
+
+	* txr.1: Stub section for time and time-usec.
+
+	* txr.vim: Highlighting for time and time-usec.
+
+2012-04-08  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.vim: Fixed accidental breakage.
 
 2012-04-07  Kaz Kylheku  <kaz@kylheku.com>
