@@ -7274,6 +7274,46 @@ Examples:
   ;; Replace Hello with Goodbye:
   (regsub #/Hello/ "Goodbye" "Hello world!") -> "Goodbye world!"
 
+.SS Function regexp
+
+.TP
+Syntax:
+
+  (regexp <obj>)
+
+.TP
+Description:
+
+The regexp function returns t if <obj> is a compiled regular expression
+object. For any other object type, it returns nil.
+
+.SS Function regex-compile
+
+.TP
+Syntax:
+
+  (regex-compile <form>)
+
+.TP
+Description:
+
+The regex compile function takes the source code of a regular expression,
+expressed as a Lisp data structure, and compiles it to a regular expression
+object.
+
+.TP
+Examples:
+
+  ;; the equivalent of #/[a-zA-Z0-9_/
+  (regex-compile '(set (#\ea . #\ez) (#\eA . #\eZ) (#\e0 . #\e9) #\e_))
+
+  ;; the equivalent of #/.*/ and #/.+/
+  (regex-compile '(0+ wild))
+  (regex-compile '(1+ wild))
+
+  ;; #/a|b|c/
+  (regex-compile '(or (or #\ea #\eb) #\ec))
+
 .SS Functions make-hash, hash
 
 .SS Function sethash

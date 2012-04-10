@@ -1644,6 +1644,9 @@ static regm_result_t regex_machine_feed(regex_machine_t *regm, wchar_t ch)
 val search_regex(val haystack, val needle_regex, val start,
                  val from_end)
 {
+  if (!start)
+    start = zero;
+
   if (length_str_lt(haystack, start)) {
     return nil;
   } else {
@@ -1698,6 +1701,8 @@ val match_regex(val str, val reg, val pos)
   regex_machine_t regm;
   val i, retval;
   regm_result_t last_res = REGM_INCOMPLETE;
+  if (!pos)
+    pos = zero;
 
   regex_machine_init(&regm, reg);
 

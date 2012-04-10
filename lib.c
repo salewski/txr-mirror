@@ -4115,7 +4115,7 @@ static void obj_init(void)
   var_s = intern(lit("var"), system_package);
   expr_s = intern(lit("expr"), system_package);
   regex_s = intern(lit("regex"), system_package);
-  nongreedy_s = intern(lit("nongreedy"), system_package);
+  nongreedy_s = intern(lit("ng0+"), user_package);
   compiled_regex_s = intern(lit("compiled-regex"), system_package);
   quote_s = intern(lit("quote"), system_package);
   qquote_s = intern(lit("qquote"), system_package);
