@@ -48,7 +48,7 @@ syn keyword txl_keyword contained floor ceil sin cos tan asin acos atan log exp
 syn keyword txl_keyword contained fixnump bignump integerp floatp
 syn keyword txl_keyword contained numberp zerop evenp oddp >
 syn keyword txl_keyword contained zerop evenp oddp > < >= <= = max min
-syn keyword txl_keyword contained search-regex match-regex regsub
+syn keyword txl_keyword contained search-regex match-regex regsub regexp regex-compile
 syn keyword txl_keyword contained make-hash hash hash-construct gethash sethash pushhash remhash
 syn keyword txl_keyword contained hash-count get-hash-userdata set-hash-userdata hashp maphash 
 syn keyword txl_keyword contained hash-eql hash-equal 

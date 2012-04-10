@@ -1,3 +1,18 @@
+2012-04-10  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): Expose regex-compile and regexp as intrinsics.
+
+	* lib.c (obj_init): Change spelling of nongreedy operator and put
+	it into the user package so that it is available for use with
+	regex-compile.
+
+	* regex.c (match_regex, search_regex): Bugfix: optional start
+	position argument argument not defaulting to zero.
+
+	* txr.1: Documented regex-compile and regexp.
+
+	* txr.vim: Highlighting regex-compile and regexp.
+
 2012-04-09  Kaz Kylheku  <kaz@kylheku.com>
 
 	Port to NetBSD (5.1).
