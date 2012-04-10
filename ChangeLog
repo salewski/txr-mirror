@@ -1,5 +1,14 @@
 2012-04-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	* Makefile (conftest.ccver): New phony target.
+
+	* configure: The test for non-working 128 bit integers in the gcc
+	used by NetBSD 5.1 is not good enough to catch the bug.
+	Adding a test which will assume that gcc 4.3.x and lesser
+	does not have working 128 bit types.
+
+2012-04-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Expose regex-compile and regexp as intrinsics.
 
 	* lib.c (obj_init): Change spelling of nongreedy operator and put
