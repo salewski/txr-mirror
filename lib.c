@@ -1151,11 +1151,18 @@ val num(cnum n)
 
 cnum c_num(val num)
 {
-  switch (tag(num)) {
-  case TAG_CHR: case TAG_NUM:
+  switch (type(num)) {
+  case CHR: case NUM:
     return ((cnum) num) >> TAG_SHIFT;
+  case BGNUM:
+    if (in_int_ptr_range(num)) {
+      int_ptr_t out;
+      mp_get_intptr(mp(num), &out);
+      return out;
+    }
+    uw_throwf(error_s, lit("c_num: ~s is out of cnum range"), num, nao);
   default:
-    type_mismatch(lit("~s is not a fixnum"), num, nao);
+    type_mismatch(lit("c_num: ~s is not an integer"), num, nao);
   }
 }
 

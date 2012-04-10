@@ -136,8 +136,9 @@ val make_random_state(val seed)
     r->state[3] = (s >> 96) & 0xFFFFFFFFul;
 #endif
   } else if (nullp(seed)) {
-    r->state[0] = (rand32_t) time(0);
-    r->state[1] = (rand32_t) clock();
+    val time = time_sec_usec();
+    r->state[0] = (rand32_t) c_num(car(time));
+    r->state[1] = (rand32_t) c_num(cdr(time));
     memset(r->state + 2, 0xAA, sizeof r->state - 2 * sizeof r->state[0]);
   } else if (random_state_p(seed)) {
     struct random_state *rseed = (struct random_state *) 
