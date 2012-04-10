@@ -1,5 +1,14 @@
 2012-04-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	* configure: Switch from _POSIX_C_SOURCE=2 to _XOPEN_SOURCE.
+	We will be relying on the gettimeofday function which only came
+	into POSIX in 2001, but was in Unix long before then.
+
+	* HACKING: Replace notes about -D_POSIX_C_SOURCE which are not true
+	any more.
+
+2012-04-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	* Makefile (conftest.ccver): New phony target.
 
 	* configure: The test for non-working 128 bit integers in the gcc
