@@ -717,14 +717,22 @@ fi
 
 printf "Checking what C type we have for integers wider than \"long long\" ... "
 
+broken128=
+output=$($make conftest.ccver)
+set -- $output
+if [ "$1" = "gcc" ] ; then
+  gcc_version=$3
+  save_ifs=$IFS ; IFS=. ; set -- $gcc_version ; IFS=$save_ifs
+  if [ $1 -lt 4 ] || [ $1 -eq 4 -a $2 -le 3 ] ; then
+    broken128=y
+  fi
+fi
+
 superlong=
 
-# The C test is coded this way because on some GCC installation,
-# the 128 bit type doesn't actually work for multiplying two long longs.
-# On NetBSD. with gcc 4.1.3, the test case compile dies with an internal
-# error.
-for try_type in int128 int128_t __int128 __int128_t ; do
-  cat > conftest.c <<!
+if [ -z "$broken128" ] ; then
+  for try_type in int128 int128_t __int128 __int128_t ; do
+    cat > conftest.c <<!
 #include "config.h"
 int main(void)
 {
@@ -734,12 +742,13 @@ int main(void)
 }
 longlong_t a, b;
 !
-  rm -f conftest.o
-  if $make conftest.o > conftest.err 2>&1 ; then
-    superlong=$try_type
-    break
-  fi
-done
+    rm -f conftest.o
+    if $make conftest.o > conftest.err 2>&1 ; then
+      superlong=$try_type
+      break
+    fi
+  done
+fi
 
 if [ -n "$superlong" ] ; then
   printf '"%s"\n' "$superlong"
@@ -753,8 +762,9 @@ printf "Checking what C type we have for u. integers wider than \"long long\" ..
 
 usuperlong=
 
-for try_type in uint128 uint128_t __uint128 __uint128_t ; do
-  cat > conftest.c <<!
+if [ -z "$broken128" ] ; then
+  for try_type in uint128 uint128_t __uint128 __uint128_t ; do
+    cat > conftest.c <<!
 #include "config.h"
 int main(void)
 {
@@ -764,12 +774,13 @@ int main(void)
 }
 longlong_t a, b;
 !
-  rm -f conftest.o
-  if $make conftest.o > conftest.err 2>&1 ; then
-    usuperlong=$try_type
-    break
-  fi
-done
+    rm -f conftest.o
+    if $make conftest.o > conftest.err 2>&1 ; then
+      usuperlong=$try_type
+      break
+    fi
+  done
+fi
 
 if [ -n "$usuperlong" ] ; then
   printf '"%s"\n' "$usuperlong"

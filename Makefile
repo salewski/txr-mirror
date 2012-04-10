@@ -186,3 +186,7 @@ conftest.syms: conftest.o
 .PHONY: conftest.yacc
 conftest.yacc:
 	@echo $(YACC)
+
+.PHONY: conftest.ccver
+conftest.ccver:
+	@$(CC) --version
