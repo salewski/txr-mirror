@@ -51,7 +51,7 @@
 #define CNUM_BIT ((int) sizeof (cnum) * CHAR_BIT)
 #define ABS(A) ((A) < 0 ? -(A) : (A))
 
-static mp_int NUM_MAX_MP;
+static mp_int NUM_MAX_MP, INT_PTR_MAX_MP;
 
 val make_bignum(void)
 {
@@ -88,6 +88,11 @@ val normalize(val bignum)
     mp_get_intptr(mp(bignum), &fixnum);
     return num(fixnum);
   }
+}
+
+val in_int_ptr_range(val bignum)
+{
+  return (mp_cmp_mag(mp(bignum), &INT_PTR_MAX_MP) == MP_GT) ? nil : t;
 }
 
 int highest_bit(int_ptr_t n)
@@ -1487,4 +1492,6 @@ void arith_init(void)
 {
   mp_init(&NUM_MAX_MP);
   mp_set_intptr(&NUM_MAX_MP, NUM_MAX);
+  mp_init(&INT_PTR_MAX_MP);
+  mp_set_intptr(&INT_PTR_MAX_MP, INT_PTR_MAX);
 }

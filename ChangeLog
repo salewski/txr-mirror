@@ -1,5 +1,21 @@
 2012-04-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (INT_PTR_MAX_MP): New static variable.
+	(in_int_ptr_range): New function.
+	(arith_init): Initialize INT_PTR_MAX_MP.
+
+	* arith.h (in_int_ptr_range): Declared.
+
+	* lib.c (c_num): Allow bignums to be converted to a cnum, if
+	they are in range, rather than allowing only fixnums.
+
+	* rand.c (make_random_state): Now that we have such a function,
+	initialize random seed using time value from time_sec_usec rather than
+	from time and clock.  clock is bad for random seeding because it
+	measures virtual time since the start of the process.
+
+2012-04-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	* configure: Switch from _POSIX_C_SOURCE=2 to _XOPEN_SOURCE.
 	We will be relying on the gettimeofday function which only came
 	into POSIX in 2001, but was in Unix long before then.
