@@ -1,5 +1,25 @@
 2012-04-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	More NetBSD porting.
+
+	* Makefile (EXTRA_FLAGS): Handy new variable for additional
+	ad-hoc CFLAGS. Needed by a new test in configure.
+
+	* configure: Check for annoying warnings about char being used
+	as an array subscript when calling the macros from <ctype.h>.
+	If this occurs, suppress it by #undef-ing the macros.
+	(lang_flags): Switching fromm _XOPEN_SOURCE to _XOPEN_SOURCE=2
+	because this is needed on NetBSD to obtain declarations of
+	popen and pclose.
+
+	* stream.c (pipe_close): If we don't have the WIFCONTINUED macro,
+	then define it to expand to zero. It's absent on NetBSD and they
+	already seem to have a hack for this because there is a warning about
+	the function not being defined, but then the program links anyway.
+	Let's do it properly and not rely on their hack.
+
+2012-04-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (INT_PTR_MAX_MP): New static variable.
 	(in_int_ptr_range): New function.
 	(arith_init): Initialize INT_PTR_MAX_MP.

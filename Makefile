@@ -29,7 +29,7 @@
 include config.make
 
 CFLAGS := -I. -I$(top_srcdir) $(LANG_FLAGS) $(DIAG_FLAGS) \
-          $(OPT_FLAGS) $(DBG_FLAGS) $(PLATFORM_FLAGS)
+          $(OPT_FLAGS) $(DBG_FLAGS) $(PLATFORM_FLAGS) $(EXTRA_FLAGS)
 CFLAGS += -I$(top_srcdir)/mpi-$(mpi_version)
 CFLAGS := $(filter-out $(REMOVE_FLAGS),$(CFLAGS))
 
