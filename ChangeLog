@@ -1,5 +1,20 @@
 2012-04-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	Adding patch to MPI to disable its Makefile so people don't try
+	to work around TXR build problems by running make inside
+	the MPI directory, which is wrong.
+
+	Also fixing an incorrect use of ctype.h functions in
+	MPI and one case of a superfluous warning.
+
+	* mpi-patches/series: new patches added.
+
+	* mpi-patches/disable-make: New file.
+
+	* mpi-patches/fix-ctype-warnings: New file.
+
+2012-04-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	More NetBSD porting.
 
 	* Makefile (EXTRA_FLAGS): Handy new variable for additional

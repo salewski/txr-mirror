@@ -1,3 +1,4 @@
+disable-make
 config-types
 fix-warnings
 use-txr-allocator
@@ -13,3 +14,4 @@ bit-search-optimizations
 shrink-mpi-int
 faster-square-root
 mpi-to-double
+fix-ctype-warnings
