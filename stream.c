@@ -284,6 +284,9 @@ static val pipe_close(val stream, val throw_on_error)
                   lit("unable to obtain status of command ~a: ~a/~s"),
                   stream, num(errno), string_utf8(strerror(errno)), nao);
 #ifdef HAVE_SYS_WAIT
+#ifndef WIFCONTINUED
+#define WIFCONTINUED(X) 0
+#endif
       } else if (WIFEXITED(status)) {
         int exitstatus = WEXITSTATUS(status);
         uw_throwf(process_error_s, lit("pipe ~a terminated with status ~a"),

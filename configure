@@ -128,7 +128,7 @@ yacc_given=${yacc+y}
 yacc=${yacc-'$(cross)$(tool_prefix)$(yaccname)'}
 nm=${nm-'$(cross)$(tool_prefix)nm'}
 opt_flags=${opt_flags--O2}
-lang_flags=${lang_flags--ansi -D_XOPEN_SOURCE}
+lang_flags=${lang_flags--ansi -D_XOPEN_SOURCE=2}
 diag_flags=${diag_flags--Wall -Wmissing-prototypes -Wstrict-prototypes}
 debug_flags=${debug_flags--g}
 inline=${inline-}
@@ -664,6 +664,32 @@ int main(void) { return 0; }
 done
 
 printf "done\n"
+
+#
+# Check for annoying warnings from ctype.h macros
+#
+
+printf "Checking for annoying warnings from <ctype.h> macros ... "
+
+cat > conftest.c <<!
+#include <ctype.h>
+
+int main(void)
+{
+  char x = '3';
+  return isdigit(x);
+}
+!
+if ! $make EXTRA_FLAGS=-Werror conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+  printf "present\n"
+  cat >> config.h <<!
+$(for x in isalpha isupper islower isdigit isxdigit isalnum isspace \
+           ispunct isprint isgraph iscntrl isblank ; do \
+    printf "#undef %s\n" $x ; done)
+!
+else
+  printf "absent\n"
+fi
 
 #
 # Check what kind of C type we have for integers wider than long,
