@@ -44,6 +44,7 @@
 #include "match.h"
 #include "rand.h"
 #include "filter.h"
+#include "txr.h"
 #include "eval.h"
 
 typedef val (*opfun_t)(val, val);
@@ -2410,6 +2411,11 @@ void eval_init(void)
 
   reg_fun(intern(lit("time"), user_package), func_n0(time_sec));
   reg_fun(intern(lit("time-usec"), user_package), func_n0(time_sec_usec));
+
+  reg_fun(intern(lit("source-loc"), user_package), func_n1(source_loc));
+  reg_fun(intern(lit("source-loc-str"), user_package), func_n1(source_loc_str));
+
+  reg_var(intern(lit("*self-path*"), user_package), &self_path);
 
   eval_error_s = intern(lit("eval-error"), user_package);
   uw_register_subtype(eval_error_s, error_s);

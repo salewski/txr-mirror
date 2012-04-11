@@ -93,6 +93,7 @@ syn keyword txl_keyword contained random-fixnum random rand
 syn keyword txl_keyword contained range range* generate repeat force
 syn keyword txl_keyword contained throw throwf error match-fun url-encode url-decode
 syn keyword txl_keyword contained time time-usec
+syn keyword txl_keyword contained source-loc source-loc-str
 
 syn match txr_error "@[\t ]*[*]\?[\t ]*."
 syn match txr_nested_error "[^\t `]\+" contained

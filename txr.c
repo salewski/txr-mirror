@@ -46,6 +46,7 @@
 const wchli_t *version = wli("64");
 const wchar_t *progname = L"txr";
 const wchar_t *spec_file = L"stdin";
+val self_path;
 
 /*
  * Can implement an emergency allocator here from a fixed storage
@@ -173,6 +174,7 @@ int txr_main(int argc, char **argv)
   int match_loglevel = opt_loglevel;
 
   prot1(&spec_file_str);
+  prot1(&self_path);
 
   yyin_stream = std_input;
 
@@ -428,6 +430,8 @@ int txr_main(int argc, char **argv)
       format(std_error, lit("spec:\n~s\n"), spec, nao);
       format(std_error, lit("bindings:\n~s\n"), bindings, nao);
     }
+
+    self_path = spec_file_str;
 
     {
       int retval;
