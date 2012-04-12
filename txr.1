@@ -4742,7 +4742,7 @@ to express the above hash:
 
 This is correct:
 
-  ;; not supported: splicing across the entire syntax
+  ;; fine: splicing hash arguments and contents separatly
   (let ((hash-args '(:equal-based))
         (hash-contents '((a 1) (b 2))))
     '#H(,hash-args ,*hash-contents))
