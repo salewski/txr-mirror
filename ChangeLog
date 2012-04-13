@@ -1,3 +1,15 @@
+2012-04-12  Kaz Kylheku  <kaz@kylheku.com>
+
+	Improve the regex Lisp syntax by allowing strings to specify
+	character compounds. I.e. the syntax "foo" is equivalent to the
+	cumbersome canonical form (compound #\f #\o #\o).
+
+	* regex.c (nfa_compile_regex, dv_compile_regex): Use chrp function
+	instead of typeof. Handle stringp case by forming a compound out of the
+	characters and recursing. Check for some bad objects in the regex
+	that would never come out of our regex parser but could occur
+	in a "hand crafted" syntax tree.
+
 2012-04-11  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.1: Fix misleading comment example.
