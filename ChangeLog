@@ -1,3 +1,18 @@
+2012-04-13  Kaz Kylheku  <kaz@kylheku.com>
+
+	Bugfix: multiple uses of @(next :args) seeing junk "args" string
+	in argument list.  Fix is not to rely on the hack of using the  first
+	element of the list of files to hold the name of the current file.
+
+	* match.c (match_files_ctx): New member, curfile.
+	(mf_all): Initialize curfile.
+	(mf_args): Set curfile to "args".
+	(mf_file_data): Initialize curfile.
+	(v_skip, v_fuzz, v_gather, v_collect): Use c->curfile rater than
+	first(c->files) in debug calls.
+	(freeform_prepare, match_files): Pass c->curfile to ml_all constructor
+	of match_line_ctx rather than rather than first(c->files).
+
 2012-04-12  Kaz Kylheku  <kaz@kylheku.com>
 
 	Improve the regex Lisp syntax by allowing strings to specify

@@ -1098,7 +1098,7 @@ static val h_eol(match_line_ctx *c)
 }
 
 typedef struct {
-  val spec, files, bindings, data, data_lineno;
+  val spec, files, curfile, bindings, data, data_lineno;
 } match_files_ctx;
 
 static match_files_ctx mf_all(val spec, val files, val bindings,
@@ -1843,15 +1843,15 @@ static void do_output(val bindings, val specs, val filter, val out)
 static match_files_ctx mf_all(val spec, val files, val bindings,
                               val data, val data_lineno)
 {
-  match_files_ctx c = { spec, files, bindings, data, data_lineno };
+  match_files_ctx c = { spec, files, car(files), bindings, data, data_lineno };
   return c;
 }
 
 static match_files_ctx mf_args(match_files_ctx c)
 {
   match_files_ctx nc = c;
-  nc.files = cons(string(L"args"), c.files);
   nc.data = c.files;
+  nc.curfile = lit("args");
   nc.data_lineno = num(1);
   return nc;
 }
@@ -1885,6 +1885,7 @@ static match_files_ctx mf_file_data(match_files_ctx c, val file,
 {
   match_files_ctx nc = c;
   nc.files = cons(file, c.files);
+  nc.curfile = file;
   nc.data = data;
   nc.data_lineno = data_lineno;
   return nc;
@@ -1940,12 +1941,12 @@ static val v_skip(match_files_ctx *c)
         if (reps_min != cmin) {
           debuglf(skipspec, lit("skipped only ~a/~a lines to ~a:~a"),
                   num(reps_min), num(cmin),
-                  first(c->files), c->data_lineno, nao);
+                  c->curfile, c->data_lineno, nao);
           uw_block_return(nil, nil);
         }
 
         debuglf(skipspec, lit("skipped ~a lines to ~a:~a"),
-                num(reps_min), first(c->files),
+                num(reps_min), c->curfile,
                 c->data_lineno, nao);
       }
 
@@ -1957,19 +1958,19 @@ static val v_skip(match_files_ctx *c)
             last_good_result = result;
             last_good_line = c->data_lineno;
           } else {
-            debuglf(skipspec, lit("skip matched ~a:~a"), first(c->files),
+            debuglf(skipspec, lit("skip matched ~a:~a"), c->curfile,
                     c->data_lineno, nao);
             break;
           }
         } else {
           debuglf(skipspec, lit("skip didn't match ~a:~a"),
-                  first(c->files), c->data_lineno, nao);
+                  c->curfile, c->data_lineno, nao);
         }
 
         if (!c->data)
           break;
 
-        debuglf(skipspec, lit("skip didn't match ~a:~a"), first(c->files),
+        debuglf(skipspec, lit("skip didn't match ~a:~a"), c->curfile,
                 c->data_lineno, nao);
 
         c->data = rest(c->data);
@@ -1982,7 +1983,7 @@ static val v_skip(match_files_ctx *c)
         return result;
       if (last_good_result) {
         debuglf(skipspec, lit("greedy skip matched ~a:~a"), 
-                first(c->files), last_good_line, nao);
+                c->curfile, last_good_line, nao);
         return last_good_result;
       }
     }
@@ -2020,12 +2021,12 @@ static val v_fuzz(match_files_ctx *c)
         val result = match_files(fuzz_ctx);
 
         if (result) {
-          debuglf(fuzz_spec, lit("fuzz matched ~a:~a"), first(c->files),
+          debuglf(fuzz_spec, lit("fuzz matched ~a:~a"), c->curfile,
                   c->data_lineno, nao);
           good++;
         } else {
           debuglf(fuzz_spec, lit("fuzz didn't match ~a:~a"),
-                  first(c->files), c->data_lineno, nao);
+                  c->curfile, c->data_lineno, nao);
         }
 
         if (!c->data)
@@ -2036,14 +2037,14 @@ static val v_fuzz(match_files_ctx *c)
         if (!c->spec) {
           if (good >= cm)
             break;
-          debuglf(fuzz_spec, lit("fuzz failed ~a:~a"), first(c->files),
+          debuglf(fuzz_spec, lit("fuzz failed ~a:~a"), c->curfile,
                   c->data_lineno, nao);
           return nil;
         }
       }
 
       if (reps == cn && good < cm) {
-        debuglf(fuzz_spec, lit("fuzz failed ~a:~a"), first(c->files),
+        debuglf(fuzz_spec, lit("fuzz failed ~a:~a"), c->curfile,
                 c->data_lineno, nao);
         return nil;
       }
@@ -2143,7 +2144,7 @@ val freeform_prepare(val vals, match_files_ctx *c, match_line_ctx *mlc)
   val term = or2(if2(stringp(first(vals)), first(vals)),
                  if2(stringp(second(vals)), second(vals)));
   val dataline = lazy_str(c->data, term, limit);
-  *mlc = ml_all(c->bindings, first_spec, dataline, zero, c->data_lineno, first(c->files));
+  *mlc = ml_all(c->bindings, first_spec, dataline, zero, c->data_lineno, c->curfile);
   return limit;
 }
 
@@ -2550,7 +2551,7 @@ static val v_gather(match_files_ctx *c)
 
       if (success) {
         debuglf(specline, lit("until/last matched ~a:~a"),
-                first(c->files), c->data_lineno, nao);
+                c->curfile, c->data_lineno, nao);
         /* Until discards bindings and position, last keeps them. */
         if (sym == last_s) {
           val last_bindings = set_diff(until_last_bindings, c->bindings, eq_f, nil);
@@ -2676,7 +2677,7 @@ static val v_collect(match_files_ctx *c)
 
         if (success) {
           debuglf(specline, lit("until/last matched ~a:~a"),
-                  first(c->files), c->data_lineno, nao);
+                  c->curfile, c->data_lineno, nao);
           /* Until discards bindings and position, last keeps them. */
           if (sym == last_s) {
             last_bindings = set_diff(until_last_bindings,
@@ -2700,7 +2701,7 @@ static val v_collect(match_files_ctx *c)
         val have_new = strictly_new_bindings;
 
         debuglf(specline, lit("collect matched ~a:~a"),
-                first(c->files), c->data_lineno, nao);
+                c->curfile, c->data_lineno, nao);
 
         for (iter = vars; iter; iter = cdr(iter)) {
           cons_bind (var, dfl, car(iter));
@@ -3635,7 +3636,7 @@ repeat_spec_same_data:
       cons_bind (new_bindings, success,
                  match_line_completely(ml_all(c.bindings, specline,
                                               dataline, zero,
-                                              c.data_lineno, first(c.files))));
+                                              c.data_lineno, c.curfile)));
 
       if (!success)
         debug_return (nil);
