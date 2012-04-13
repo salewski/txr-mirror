@@ -842,15 +842,17 @@ static nfa_t nfa_compile_regex(val exp)
     nfa_state_t *acc = nfa_state_accept();
     nfa_state_t *s = nfa_state_empty(acc, 0);
     return nfa_make(s, acc);
-  } else if (typeof(exp) == chr_s) {
+  } else if (chrp(exp)) {
     nfa_state_t *acc = nfa_state_accept();
     nfa_state_t *s = nfa_state_single(acc, c_chr(exp));
     return nfa_make(s, acc);
+  } else if (stringp(exp)) {
+    return nfa_compile_regex(cons(compound_s, list_str(exp)));
   } else if (exp == wild_s) {
     nfa_state_t *acc = nfa_state_accept();
     nfa_state_t *s = nfa_state_wild(acc);
     return nfa_make(s, acc);
-  } else {
+  } else if (consp(exp)) {
     val sym = first(exp), args = rest(exp);
 
     if (sym == set_s) {
@@ -903,6 +905,8 @@ static nfa_t nfa_compile_regex(val exp)
     } else {
       internal_error("bad operator in regex");
     }
+  } else {
+    uw_throwf(error_s, lit("bad object in regex syntax: ~s"), exp, nao);
   }
 }
 
@@ -1174,9 +1178,11 @@ static val reg_nullable(val);
  */
 static val dv_compile_regex(val exp)
 {
-  if (atom(exp)) {
+  if (symbolp(exp) || chrp(exp)) {
     return exp;
-  } else {
+  } else if (stringp(exp)) {
+    return cons(compound_s, list_str(exp));
+  } else if (consp(exp)) {
     val sym = first(exp);
     val args = rest(exp);
 
@@ -1224,6 +1230,8 @@ static val dv_compile_regex(val exp)
     } else {
       internal_error("bad operator in regex");
     }
+  } else {
+    uw_throwf(error_s, lit("bad object in regex syntax: ~s"), exp, nao);
   }
 }
 
