@@ -1,5 +1,16 @@
 2012-04-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	* configure: Restructuring configure script to be able to detect
+	nonexistent options. Variable default values are established first,
+	which simplifies the syntax. The scanning loop detects attempts
+	to create configuration variables that do not exist.
+	The var_given convention is folded into the parsing. (If var
+	exists, and var_given exists, and the user specifies var,
+	then var_given is set to y to indicate that the value came
+	from the user.)
+
+2012-04-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	Bugfix: multiple uses of @(next :args) seeing junk "args" string
 	in argument list.  Fix is not to rely on the hack of using the  first
 	element of the list of files to hold the name of the current file.
