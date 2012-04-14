@@ -47,6 +47,58 @@ for arg in "$0" ${@+"$@"} ; do
 done
 
 #
+# Establish default values for any variables that are not specified
+# on the command line. The default derivations from prefix are in
+# Make syntax. They go verbatim into the generated config.make.
+# This way they can be overridden more flexibly at make time.
+#
+
+#
+# non-config
+#
+help=
+
+#
+# config
+#
+prefix=/usr/local
+install_prefix=
+bindir='$(prefix)/bin'
+datadir='$(prefix)/share/txr'
+mandir='$(prefix)/share/man'
+make=
+cross=
+compiler_prefix=
+ccname=gcc
+cc='$(cross)$(compiler_prefix)$(ccname)'
+intptr=
+tool_prefix=
+lex='$(cross)$(tool_prefix)flex'
+lexlib=-lfl
+yaccname_given=
+yaccname=
+yacc='$(cross)$(tool_prefix)$(yaccname)'
+yacc_given=
+nm='$(cross)$(tool_prefix)nm'
+opt_flags=-O2
+lang_flags='--ansi -D_XOPEN_SOURCE=2'
+diag_flags='-Wall -Wmissing-prototypes -Wstrict-prototypes'
+debug_flags=-g
+inline=
+platform_flags=
+remove_flags=
+lex_dbg_flags=
+txr_dbg_opts=--gc-debug
+valgrind=
+lit_align=
+extra_debugging=
+debug_support=y
+gen_gc=
+mpi_version=1.8.6
+have_quilt=
+have_patch=
+
+#
 # Parse configuration variables
 #
 while [ $# -gt 0 ] ; do
@@ -89,61 +141,23 @@ while [ $# -gt 0 ] ; do
     exit 1
   fi
 
+  eval "var_exists=\${$var+y}"
+
+  if [ "$var_exists" != y ] ; then
+    printf "$0: nonexistent option: '%s'\n" "$1"
+    exit 1
+  fi
+
   eval "$var='$val'"
+
+  eval "var_given_exists=\${${var}_given+y}"
+
+  if [ "$var_given_exists" = y ] ; then
+    eval "${var}_given=y"
+  fi
+
   shift
 done
-
-#
-# Establish default values for any variables that are not specified
-# on the command line. The default derivations from prefix are in
-# Make syntax. They go verbatim into the generated config.make.
-# This way they can be overridden more flexibly at make time.
-#
-
-#
-# non-config
-#
-help=${help-}
-
-#
-# config
-#
-prefix=${prefix-/usr/local}
-install_prefix=${install_prefix-}
-bindir=${datadir-'$(prefix)/bin'}
-datadir=${datadir-'$(prefix)/share/txr'}
-mandir=${mandir-'$(prefix)/share/man'}
-make=${make-}
-cross=${cross-}
-compiler_prefix=${compiler_prefix-}
-ccname=${ccname-gcc}
-cc=${cc-'$(cross)$(compiler_prefix)$(ccname)'}
-intptr=${intptr-}
-tool_prefix=${tool_prefix-}
-lex=${lex-'$(cross)$(tool_prefix)flex'}
-lexlib=${lexlib--lfl}
-yaccname_given=${yaccname+y}
-yaccname=${yaccname-}
-yacc_given=${yacc+y}
-yacc=${yacc-'$(cross)$(tool_prefix)$(yaccname)'}
-nm=${nm-'$(cross)$(tool_prefix)nm'}
-opt_flags=${opt_flags--O2}
-lang_flags=${lang_flags--ansi -D_XOPEN_SOURCE=2}
-diag_flags=${diag_flags--Wall -Wmissing-prototypes -Wstrict-prototypes}
-debug_flags=${debug_flags--g}
-inline=${inline-}
-platform_flags=${platform_flags-}
-remove_flags=${remove_flags-}
-lex_dbg_flags=${lex_dbg_flags-}
-txr_dbg_opts=${txr_dbg_opts---gc-debug}
-valgrind=${valgrind-}
-lit_align=${lit_align-}
-extra_debugging=${extra_debugging-}
-debug_support=${debug_support-y}
-gen_gc=${gen_gc-}
-mpi_version=1.8.6
-have_quilt=
-have_patch=
 
 #
 # If --help was given (or --help=<nonempty> or help=<nonempty>) then
