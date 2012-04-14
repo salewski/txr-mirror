@@ -2175,6 +2175,8 @@ void eval_init(void)
   reg_fun(intern(lit("remq"), user_package), func_n2(remq));
   reg_fun(intern(lit("remql"), user_package), func_n2(remql));
   reg_fun(intern(lit("remqual"), user_package), func_n2(remqual));
+  reg_fun(intern(lit("remove-if"), user_package), func_n3o(remove_if, 2));
+  reg_fun(intern(lit("keep-if"), user_package), func_n3o(keep_if, 2));
   reg_fun(intern(lit("tree-find"), user_package), func_n3o(tree_find, 2));
   reg_fun(intern(lit("some"), user_package), func_n3o(some_satisfy, 2));
   reg_fun(intern(lit("all"), user_package), func_n3o(all_satisfy, 2));

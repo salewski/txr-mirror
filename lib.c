@@ -678,6 +678,48 @@ val remqual(val obj, val list)
   return out;
 }
 
+val remove_if(val pred, val list, val key)
+{
+  list_collect_decl (out, ptail);
+  val lastmatch = cons(nil, list);
+
+  if (!key)
+    key = identity_f;
+
+  for (; list; list = cdr(list)) {
+    val subj = funcall1(key, car(list));
+    val satisfies = funcall1(pred, subj);
+
+    if (satisfies) {
+      list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
+      lastmatch = list;
+    }
+  }
+  list_collect_nconc(ptail, cdr(lastmatch));
+  return out;
+}
+
+val keep_if(val pred, val list, val key)
+{
+  list_collect_decl (out, ptail);
+  val lastmatch = cons(nil, list);
+
+  if (!key)
+    key = identity_f;
+
+  for (; list; list = cdr(list)) {
+    val subj = funcall1(key, car(list));
+    val satisfies = funcall1(pred, subj);
+
+    if (!satisfies) {
+      list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
+      lastmatch = list;
+    }
+  }
+  list_collect_nconc(ptail, cdr(lastmatch));
+  return out;
+}
+
 val tree_find(val obj, val tree, val testfun)
 {
   uses_or2;

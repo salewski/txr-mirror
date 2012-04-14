@@ -6670,6 +6670,49 @@ The input <list> is unmodified, but the returned list may share substructure
 with it. If no items are removed, it is possible that the return value
 is <list> itself.
 
+.SS Function remove-if
+
+.TP
+Syntax:
+
+  (remove-if <predicate-function> <list> : <key-function>)
+  (keep-if <predicate-function> <list> : <key-function>)
+
+.TP
+Description
+
+The remove-if function produces a list whose contents are those of
+<list> but with those elements removed which satisfy <predicate-function>.
+Those elements which are not removed appear in the same order.
+The result list may share substructure with the input list,
+and may even be the same list object if no items are removed.
+
+The optional <key-function> specifies how each element from the <list> is
+transformed to an argument to <predicate-function>. If this argument is omitted
+or specified as nil, then the predicate function is applied to the elements
+directly, a behavior which is identical to <key-function> being (fun identity).
+
+The keep-if function is exactly like remove-if, except the sense of
+the predicate is inverted. The function keep-if retains those items
+which remove-if will delete, and removes those that remove-if will preserve.
+
+.TP
+Examples:
+
+  ;; remove any element numerically equal to 3.
+  (remove-if (op = 3) '(1 2 3 4 3.0 5)) -> (1 2 4 5)
+
+  ;; remove those pairs whose first element begins with "abc"
+  [remove-if (op equal [@1 0..3] "abc")
+             '(("abcd" 4) ("defg" 5))
+             car]
+  -> (("defg 5))
+
+  ;; equivalent, without test function
+  (remove-if (op equal [(car @1) 0..3] "abc")
+             '(("abcd" 4) ("defg" 5)))
+  -> (("defg 5))
+
 .SS Function tree-find
 
 .TP

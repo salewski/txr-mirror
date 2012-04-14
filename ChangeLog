@@ -1,3 +1,13 @@
+2012-04-14  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): New functions remove-if and keep-if.
+
+	* lib.c (remove_if, keep_if): New functions.
+
+	* lib.h (remove_if, keep_if): Declared.
+
+	* txr.1: Documented.
+
 2012-04-13  Kaz Kylheku  <kaz@kylheku.com>
 
 	* configure: Restructuring configure script to be able to detect

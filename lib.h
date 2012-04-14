@@ -384,6 +384,8 @@ val memqual(val obj, val list);
 val remq(val obj, val list);
 val remql(val obj, val list);
 val remqual(val obj, val list);
+val remove_if(val pred, val list, val key);
+val keep_if(val pred, val list, val key);
 val tree_find(val obj, val tree, val testfun);
 val some_satisfy(val list, val pred, val key);
 val all_satisfy(val list, val pred, val key);
