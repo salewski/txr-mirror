@@ -720,6 +720,56 @@ val keep_if(val pred, val list, val key)
   return out;
 }
 
+static val rem_lazy_rec(val obj, val list, val env, val func);
+
+static val rem_lazy_func(val env, val lcons)
+{
+  cons_bind (pred, list, env);
+  return rplacd(lcons, rem_lazy_rec(pred, list, env, lcons_fun(lcons)));
+}
+
+static val rem_lazy_rec(val pred, val list, val env, val func)
+{
+  while (list && funcall1(pred, car(list)))
+    list = cdr(list);
+  if (!list)
+    return nil;
+  if (!env)
+    func = func_f1(cons(pred, cdr(list)), rem_lazy_func);
+  else
+    rplacd(env, cdr(list));
+  return make_half_lazy_cons(func, car(list));
+}
+
+val remq_lazy(val obj, val list)
+{
+  return rem_lazy_rec(curry_12_1(eq_f, obj), list, nil, nil);
+}
+
+val remql_lazy(val obj, val list)
+{
+  return rem_lazy_rec(curry_12_1(eql_f, obj), list, nil, nil);
+}
+
+val remqual_lazy(val obj, val list)
+{
+  return rem_lazy_rec(curry_12_1(equal_f, obj), list, nil, nil);
+}
+
+val remove_if_lazy(val pred, val list, val key)
+{
+  uses_or2;
+  val pred_key = chain(or2(key, identity_f), pred, nao);
+  return rem_lazy_rec(pred_key, list, nil, nil);
+}
+
+val keep_if_lazy(val pred, val list, val key)
+{
+  uses_or2;
+  val pred_key = chain(or2(key, identity_f), pred, null_f, nao);
+  return rem_lazy_rec(pred_key, list, nil, nil);
+}
+
 val tree_find(val obj, val tree, val testfun)
 {
   uses_or2;
