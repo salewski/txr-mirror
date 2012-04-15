@@ -2374,6 +2374,7 @@ void eval_init(void)
   reg_fun(intern(lit("merge"), user_package), func_n4o(merge, 2));
   reg_fun(intern(lit("sort"), user_package), func_n3o(sort, 2));
   reg_fun(intern(lit("find"), user_package), func_n4o(find, 2));
+  reg_fun(intern(lit("find-if"), user_package), func_n3o(find_if, 2));
   reg_fun(intern(lit("set-diff"), user_package), func_n4o(set_diff, 2));
 
   reg_fun(intern(lit("length"), user_package), func_n1(length));
