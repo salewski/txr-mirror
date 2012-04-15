@@ -4,12 +4,14 @@
 CONTENTS:
 
 0.  Overview
+
 1.  Coding Practice
 1.2  Program File Structure
 1.3  Style
 1.3  Error Handling
 1.4  I/O
 1.5  Regression
+
 2.  Dynamic Types
 2.1  Two Kinds of Values
 2.1  Pointer Bitfield
@@ -18,12 +20,18 @@ CONTENTS:
 2.4  Strings
 2.4.1  Encapsulated C Strings
 2.4.2  Representation Hacks for 2 Byte wchar_t
+
 3.  Garbage Collection
 3.1  Root Pointers
 3.2  GC-safe Code
 3.2.1  Rule One: Full Initialization
 3.2.2  Rule Two: Make it Reachable
 3.3  Weak Reference Support
+3.4  Generational GC
+3.4.2  Representation of Generations
+3.4.3  Basic Algorithm
+3.4.4  Handling Backpointers
+
 4.  Debugging
 4.2.  Debugging the Yacc-generated Parser
 4.3.  Debugging GC Issues
@@ -627,6 +635,108 @@ marking is completed in hash_process_weak. After the lapsed entries are removed
 transitively causes the chain conses to be marked. The conses that were removed
 due to the lapsing of weak keys thus stay unmarked and are reclaimed during
 the sweep phase of the gc, which soon follows.
+
+
+3.4  Generational GC
+
+3.4.1 Preprocessor Delimitation
+
+Currently, the generational GC code is delimited by #ifdef CONFIG_GEN_GC.
+So to understand what the differences are between the regular GC and
+generational, one just has to read those sections dependent on that
+preprocessor symbol.
+
+3.4.2 Representation of Generations
+
+Generational garbage collectors are typically copying collectors. In a copying
+system, objects can be segregated into generations by their physical location.
+If an object is in a certain area, then it's in a certain generation. Moving
+it to a different area reassigns it to a different generation.
+
+In TXR, the garbage collection is non-copying. For generational GC support, we
+simply carve some bits from the type field of an object to indicate the
+generation.
+
+There are only three generation values: -1, 0 and 1. Both -1 and 0 indicate a
+"baby" object. The value 1 indicates a mature object.  A freshly allocated
+object is put into generation 0. The value -1 is used to prevent
+a young object from being placed into the checkobj array twice.
+There would be no harm in doing so, so this is an optimization.  Avoiding
+duplicate entries in the table prevents it from filling up due to repetitions,
+which is desirable because when checkobj fills up, a gc must be triggered.
+The checkobj array has to do with backreferences from old to young
+objects, and is described a few paragraphs below.
+
+3.4.3 Basic Algorithm
+
+When an object is newly allocated, it is not only assigned generation 0, but is
+appended into the freshobj array. This array allows the garbage collector to
+identify all of the baby objects (because unlike a copying collector, it cannot
+just traverse a "nursery" area). The array is cleared on every garbage
+collection, and after each garbage collection, there are only mature objects,
+no babies since all live objects are promoted to generation 1. So freshobj
+identifies all baby objects since the last garbage collection, which is the
+same as all baby objects in existence, period. Whenever the freshobj array
+fills up, a generational collection cycle must be triggered, otherwise
+there is no place to record the next baby object.
+
+Generational collection walks all of the root places like the stack and
+registered globals. However, generational garbage collection does not traverse
+generation 1 objects. It traverses only objects whose generation is less
+than 1. When a generation 1 object is visited, the recursion simply returns.
+All generation 1 objects are considered reachable, without the necessity of
+visiting all of them and marking them. This of course may be wrong: there
+may be generation 1 objects which have become garbage.  Generational garbage
+collection will not find generation 1 garbage, only a full garbage collection
+pass will.
+
+Under generational GC, a full sweep is also not performed. Since a full mark
+was not done, it would be pointless. A full sweep would just waste time
+visiting all of the heaps and necessarily skipping all the unmarked
+generation 1 objects, almost defeating the point of generational GC.
+
+The full sweep is replaced by a generational sweep which traverses only the
+baby objects, which, recall, are all in the freshobj array.  Those baby objects
+which were not marked during the marking phase are recycled.  So generational
+GC saves time by avoiding doing full marking (terminating whenever it meets a
+generation 1 object) and avoiding a full sweep (processing only the freshobj
+array).
+
+3.4.4 Handling Backpointers
+
+Under generational GC, there is the problem that objects in the generation can
+be destructively changed (mutated) so that they point to baby objects. This is
+a problem, because generational GC avoids traversing the generation 1 objects.
+If the only reference to a baby object is a mutated pointer in a mature object,
+and the GC doesn't realize this, it will reclaim that object, leaving the
+mature object with an invalid, dangling pointer.  
+
+This problem is solved by identifying all such destructive operations
+in the code base, and ensuring that they use the set macro defined in "lib.h"
+rather than straight C assignment.
+
+If TXR is not compiled for generational GC support, then the set macro
+expands to a C assignment, otherwise it expands to a call to the function
+gc_set. gc_set checks whether the assignment place looks like it might be in
+the heap.  If the assignment place is not in the heap then it must be in the
+stack, or else a static variable: places which are traversed for root
+references.  For such places, gc_set can proceed to do a straight assignment
+and return.  Secondly, gc_set checks whether the object being assigned is a
+generation 0 heap object. Non-heap objects such as string literals, fixnum
+integers and characters do not have a generation and are ignored: for these,
+the assignent is done.
+
+If gc_set detects that the address of generation 0 object is being written into
+what looks might be a heap location, it changes the generation of the object
+to -1 and stores in in the next available element in checkobj array. 
+The change to -1 prevents it from repeating this action for the same object
+twice since duplicates only waste space in the checkobj array. Not only
+are the duplicates wastfully visited more than once, but when checkobj is full,
+a generational GC cycle is triggered.
+
+During a generational gc, the checkobj array is treated as an additional root
+area, ensuring that baby objects that might be the target of a backpointer from
+generation 1 are marked and retained.
 
 
 4. Debugging

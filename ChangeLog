@@ -1,5 +1,9 @@
 2012-04-14  Kaz Kylheku  <kaz@kylheku.com>
 
+	* HACKING: Added notes on generational garbage collection.
+
+2012-04-14  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): New functions remove-if and keep-if.
 
 	* lib.c (remove_if, keep_if): New functions.
