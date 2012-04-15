@@ -1,3 +1,17 @@
+2012-04-15  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): New intrinsic functions remq*, remql*,
+	remqual*, remove-if*, keep-if*.
+
+	* lib.c (rem_lazy_func, rem_lazy_rec): New static functions.
+	(remq_lazy, remql_lazy, remqual_lazy, remove_if_lazy,
+	keep_if_lazy): New functions.
+
+	* lib.h (remq_lazy, remql_lazy, remqual_lazy, remove_if_lazy,
+	keep_if_lazy): Declared.
+
+	* txr.1: New functions documented.
+
 2012-04-14  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): find-if intrinsic registered.
