@@ -3944,20 +3944,41 @@ val sort(val seq, val lessfun, val keyfun)
   return seq;
 }
 
-val find(val list, val key, val testfun, val keyfun)
+val find(val item, val list, val testfun, val keyfun)
 {
-  uses_or2;
+  if (!keyfun)
+    keyfun = identity_f;
+
+  if (!testfun)
+    testfun = equal_f;
+
+  for (; list; list = cdr(list)) {
+    val elem = car(list);
+    val key = funcall1(keyfun, elem);
+
+    if (funcall2(testfun, item, key))
+      return elem;
+  }
+
+  return nil;
+}
+
+val find_if(val pred, val list, val key)
+{
+  if (!key)
+    key = identity_f;
 
   for (; list; list = cdr(list)) {
     val item = car(list);
-    val list_key = funcall1(or2(keyfun, identity_f), item);
+    val subj = funcall1(key, item);
 
-    if (funcall2(or2(testfun, equal_f), key, list_key))
+    if (funcall1(pred, subj))
       return item;
   }
 
   return nil;
 }
+
 
 val set_diff(val list1, val list2, val testfun, val keyfun)
 {
@@ -3978,7 +3999,7 @@ val set_diff(val list1, val list2, val testfun, val keyfun)
       val item = car(list1);
       val list1_key = funcall1(keyfun, item);
 
-      if (!find(list2, list1_key, testfun, keyfun))
+      if (!find(list1_key, list2, testfun, keyfun))
         list_collect (ptail, item);
     }
   }

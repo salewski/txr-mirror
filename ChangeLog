@@ -1,5 +1,18 @@
 2012-04-14  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): find-if intrinsic registered.
+
+	* lib.c (find): First and second arguments reversed.
+	The item should be first.
+	(find_if): New function.
+
+	* lib.h (find): Declaration updated.
+	(find_if): Declaration added.
+
+	* txr.1: Stub section.
+
+2012-04-14  Kaz Kylheku  <kaz@kylheku.com>
+
 	* HACKING: Added notes on generational garbage collection.
 
 2012-04-14  Kaz Kylheku  <kaz@kylheku.com>
