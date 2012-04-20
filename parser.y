@@ -90,7 +90,7 @@ static val parsed_spec;
 %type <val> repeat_clause repeat_parts_opt o_line
 %type <val> o_elems_opt o_elems o_elem o_var rep_elem rep_parts_opt
 %type <val> regex lisp_regex regexpr regbranch
-%type <val> regterm regclass regclassterm regrange
+%type <val> regterm regtoken regclass regclassterm regrange
 %type <val> strlit chrlit quasilit quasi_items quasi_item litchars
 %type <chr> regchar
 %type <lineno> '(' '['
@@ -796,48 +796,20 @@ regterm : regterm '*'           { $$ = list(zeroplus_s, $1, nao); }
         | ']'                   { $$ = chr(']'); }
         | '-'                   { $$ = chr('-'); }
         | REGCHAR               { $$ = chr($1); }
-        | REGTOKEN              { switch ($1)
-                                  { case 's':
-                                      $$ = space_k; break;
-                                    case 'S':
-                                      $$ = cspace_k; break;
-                                    case 'd':
-                                      $$ = digit_k; break;
-                                    case 'D':
-                                      $$ = cdigit_k; break;
-                                    case 'w':
-                                      $$ = word_char_k; break;
-                                    case 'W':
-                                      $$ = cword_char_k; break; }}
+        | regtoken              { $$ = $1; }
         | '(' regexpr ')'       { $$ = $2; }
         | '(' error             { $$ = nil;
                                   yybadtoken(yychar,
                                              lit("regex subexpression")); }
         ;
 
-regclass : regclassterm                 { $$ = $1; }
-         | regclassterm regclass        { $$ = nappend2($1, $2); }
+regclass : regclassterm                 { $$ = cons($1, nil); }
+         | regclassterm regclass        { $$ = cons($1, $2); }
          ;
 
-regclassterm : regrange         { $$ = cons($1, nil); }
-             | regchar          { $$ = cons(chr($1), nil); }
-             | REGTOKEN         { switch ($1)
-                                  { case 's':
-                                      $$ = regex_space_chars;
-                                      break;
-                                    case 'd':
-                                      $$ = cons(cons(chr('0'), chr('9')), nil);
-                                      break;
-                                    case 'w':
-                                      $$ = list(cons(chr('A'), chr('Z')),
-                                                cons(chr('a'), chr('z')),
-                                                chr('_'), nao);
-                                      break;
-                                    default:
-                                      yyerrorf(lit("complemented token "
-                                                   "\\~a not allowed "
-                                                   "in regex character class"),
-                                               chr($1), nao); } }
+regclassterm : regrange         { $$ = $1; }
+             | regchar          { $$ = chr($1); }
+             | regtoken         { $$ = $1; }
              ;
 
 regrange : regchar '-' regchar  { $$ = cons(chr($1), chr($3)); }
@@ -855,6 +827,20 @@ regchar : '?'                   { $$ = '?'; }
         | '/'                   { $$ = '/'; }
         | REGCHAR               { $$ = $1; }
         ;
+
+regtoken : REGTOKEN             { switch ($1)
+                                  { case 's':
+                                      $$ = space_k; break;
+                                    case 'S':
+                                      $$ = cspace_k; break;
+                                    case 'd':
+                                      $$ = digit_k; break;
+                                    case 'D':
+                                      $$ = cdigit_k; break;
+                                    case 'w':
+                                      $$ = word_char_k; break;
+                                    case 'W':
+                                      $$ = cword_char_k; break; }}
 
 newl : '\n'
      | error '\n'       { yyerror("newline expected after directive");

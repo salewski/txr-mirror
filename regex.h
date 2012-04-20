@@ -26,7 +26,6 @@
 
 extern val space_k, digit_k, word_char_k;
 extern val cspace_k, cdigit_k, cword_char_k;
-extern val regex_space_chars;
 
 val regex_compile(val regex_sexp);
 val regexp(val);
