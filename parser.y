@@ -76,7 +76,7 @@ static val parsed_spec;
 
 %token <val> NUMBER METANUM
 
-%token <chr> REGCHAR LITCHAR
+%token <chr> REGCHAR REGTOKEN LITCHAR
 %token <chr> METAPAR METABKT SPLICE
 
 %type <val> spec clauses clauses_opt clause
@@ -105,7 +105,7 @@ static val parsed_spec;
 %left '|' '/'
 %left '&' 
 %right '~' '*' '?' '+' '%'
-%right '.' REGCHAR LITCHAR
+%right '.' REGCHAR REGTOKEN LITCHAR
 %right DOTDOT
 
 %%
@@ -796,18 +796,48 @@ regterm : regterm '*'           { $$ = list(zeroplus_s, $1, nao); }
         | ']'                   { $$ = chr(']'); }
         | '-'                   { $$ = chr('-'); }
         | REGCHAR               { $$ = chr($1); }
+        | REGTOKEN              { switch ($1)
+                                  { case 's':
+                                      $$ = space_k; break;
+                                    case 'S':
+                                      $$ = cspace_k; break;
+                                    case 'd':
+                                      $$ = digit_k; break;
+                                    case 'D':
+                                      $$ = cdigit_k; break;
+                                    case 'w':
+                                      $$ = word_char_k; break;
+                                    case 'W':
+                                      $$ = cword_char_k; break; }}
         | '(' regexpr ')'       { $$ = $2; }
         | '(' error             { $$ = nil;
                                   yybadtoken(yychar,
                                              lit("regex subexpression")); }
         ;
 
-regclass : regclassterm                 { $$ = cons($1, nil); }
-         | regclassterm regclass        { $$ = cons($1, $2); }
+regclass : regclassterm                 { $$ = $1; }
+         | regclassterm regclass        { $$ = nappend2($1, $2); }
          ;
 
-regclassterm : regrange         { $$ = $1; }
-             | regchar          { $$ = chr($1); }
+regclassterm : regrange         { $$ = cons($1, nil); }
+             | regchar          { $$ = cons(chr($1), nil); }
+             | REGTOKEN         { switch ($1)
+                                  { case 's':
+                                      $$ = regex_space_chars;
+                                      break;
+                                    case 'd':
+                                      $$ = cons(cons(chr('0'), chr('9')), nil);
+                                      break;
+                                    case 'w':
+                                      $$ = list(cons(chr('A'), chr('Z')),
+                                                cons(chr('a'), chr('z')),
+                                                chr('_'), nao);
+                                      break;
+                                    default:
+                                      yyerrorf(lit("complemented token "
+                                                   "\\~a not allowed "
+                                                   "in regex character class"),
+                                               chr($1), nao); } }
              ;
 
 regrange : regchar '-' regchar  { $$ = cons(chr($1), chr($3)); }
@@ -1130,6 +1160,7 @@ void yybadtoken(int tok, val context)
   case FINALLY: problem = lit("\"finally\""); break;
   case NUMBER:  problem = lit("number"); break;
   case REGCHAR: problem = lit("regular expression character"); break;
+  case REGTOKEN: problem = lit("regular expression token"); break;
   case LITCHAR: problem = lit("string literal character"); break;
   case METAPAR: problem = lit("@("); break;
   case METABKT: problem = lit("@["); break;

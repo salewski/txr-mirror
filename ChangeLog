@@ -1,3 +1,38 @@
+2012-04-19  Kaz Kylheku  <kaz@kylheku.com>
+
+	First cut at implementing \s, \d, \w, \S, \D and \W regex tokens.
+
+	* lib.c (init): Call regex_init.
+
+	* parser.l: return new REGTOKEN kind.
+
+	* parser.y (REGTOKEN): New token type.
+	(REGTERM): Translate REGTERM to keyword.
+	(regclass): Restructured to handle inherited nodes as lists.
+	(regclassterm): Produce $$ as list. Add handling for REGTOKEN
+	occurring inside character class by expanding it. This might not
+	be the best approach.
+	(yybadtoken): Handle REGTOKEN in switch.
+
+	* regex.c (struct any_char_set, struct small_char_set,
+	struct displaced_char_set, struct large_char_set,
+	struct xlarge_char_set): New bitfield member, stat.
+	(char_set_create): New parameter for indicating static char set.
+	(char_set_destroy): Do not free a static char set.
+	(char_set_compile): Pass zero to new parameter of char_set_create.
+	(spaces): New static array.
+	(space_cs, digit_cs, word_cs, cspace_cs, cdigit_cs, cword_cs): New
+	static pointers to char_set_t.
+	(init_special_char_sets, nfa_compile_given_set): New static function.
+	(nfa_compile_regex, dv_compile_regex): Handle new character set token
+	keywords.
+	(space_k, digit_k, word_char_k, cspace_k, cdigit_k, cword_char_k,
+	regex_space_chars): New variables.
+	(regex_init): New function.
+
+	* regex.h (space_k, digit_k, word_char_k, cspace_k, cdigit_k,
+	cword_char_k, regex_space_chars, regex_init): Declared.
+
 2012-04-15  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): New intrinsic functions remq*, remql*,
