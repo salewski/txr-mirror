@@ -574,6 +574,11 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return REGCHAR;
 }
 
+<REGEX>[\\][sSdDwW] {
+  yylval.chr = yytext[1];
+  return REGTOKEN;
+}
+
 <REGEX>{WS}[\\]\n{WS} {
   lineno++;
 }

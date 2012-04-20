@@ -38,6 +38,7 @@
 #include "unwind.h"
 #include "regex.h"
 #include "txr.h"
+#include "gc.h"
 
 #if WCHAR_MAX > 65535
 #define FULL_UNICODE
@@ -99,17 +100,20 @@ typedef cset_L2_t *cset_L3_t[17];
 struct any_char_set {
   unsigned type : 3;
   unsigned comp : 1;
+  unsigned stat : 1;
 };
 
 struct small_char_set {
   unsigned type : 3;
   unsigned comp : 1;
+  unsigned stat : 1;
   cset_L0_t bitcell;
 };
 
 struct displaced_char_set {
   unsigned type : 3;
   unsigned comp : 1;
+  unsigned stat : 1;
   cset_L0_t bitcell;
   wchar_t base;
 };
@@ -118,6 +122,7 @@ struct displaced_char_set {
 struct large_char_set {
   unsigned type : 3;
   unsigned comp : 1;
+  unsigned stat : 1;
   cset_L2_t dir;
 };
 
@@ -125,6 +130,7 @@ struct large_char_set {
 struct xlarge_char_set {
   unsigned type : 3;
   unsigned comp : 1;
+  unsigned stat : 1;
   cset_L3_t dir;
 };
 #endif
@@ -472,12 +478,13 @@ static void L3_free(cset_L3_t *L3)
 
 #endif
 
-static char_set_t *char_set_create(chset_type_t type, wchar_t base)
+static char_set_t *char_set_create(chset_type_t type, wchar_t base, unsigned st)
 {
   static char_set_t blank;
   char_set_t *cs = (char_set_t *) chk_malloc(sizeof *cs);
   *cs = blank;
   cs->any.type = type;
+  cs->any.stat = st;
 
   if (type == CHSET_DISPLACED)
     cs->d.base = base;
@@ -487,6 +494,9 @@ static char_set_t *char_set_create(chset_type_t type, wchar_t base)
 
 static void char_set_destroy(char_set_t *set)
 {
+  if (set->any.stat)
+    return;
+
   switch (set->any.type) {
   case CHSET_DISPLACED:
   case CHSET_SMALL:
@@ -644,7 +654,7 @@ static char_set_t *char_set_compile(val args, val comp)
 
 
   {
-    char_set_t *set = char_set_create(cst, min);
+    char_set_t *set = char_set_create(cst, min, 0);
 
     for (iter = args; iter; iter = rest(iter)) {
       val item = first(iter);
@@ -667,6 +677,48 @@ static char_set_t *char_set_compile(val args, val comp)
 
     return set;
   }
+}
+
+wchar_t spaces[] = {
+  0x0009, 0x000a, 0x000b, 0x000c, 0x000d, 0x0020, 0x00a0, 0x1680, 0x180e,
+  0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005, 0x2006, 0x2007, 0x2008,
+  0x2009, 0x200a, 0x2028, 0x2029, 0x205f, 0x3000, 0
+};
+
+static char_set_t *space_cs, *digit_cs, *word_cs;
+static char_set_t *cspace_cs, *cdigit_cs, *cword_cs;
+
+static void init_special_char_sets(void)
+{
+  int i;
+
+  space_cs = char_set_create(CHSET_LARGE, 0, 1);
+  cspace_cs = char_set_create(CHSET_LARGE, 0, 1);
+  digit_cs = char_set_create(CHSET_SMALL, 0, 1);
+  cdigit_cs = char_set_create(CHSET_SMALL, 0, 1);
+  word_cs = char_set_create(CHSET_SMALL, 0, 1);
+  cword_cs = char_set_create(CHSET_SMALL, 0, 1);
+
+  char_set_compl(cspace_cs);
+  char_set_compl(cdigit_cs);
+  char_set_compl(cword_cs);
+
+  for (i = 0; spaces[i] != 0; i++) {
+    wchar_t sp = spaces[i];
+    char_set_add(space_cs, sp);
+    char_set_add(cspace_cs, sp);
+    push(chr(sp), &regex_space_chars);
+  }
+
+  char_set_add_range(digit_cs, '0', '9');
+  char_set_add_range(cdigit_cs, '0', '9');
+
+  char_set_add_range(word_cs, 'A', 'Z');
+  char_set_add_range(cword_cs, 'A', 'Z');
+  char_set_add_range(word_cs, 'a', 'a');
+  char_set_add_range(cword_cs, 'a', 'a');
+  char_set_add(word_cs, '_');
+  char_set_add(cword_cs, '_');
 }
 
 static void char_set_cobj_destroy(val chset)
@@ -812,6 +864,13 @@ static nfa_t nfa_compile_set(val args, val comp)
   return nfa_make(s, acc);
 }
 
+static nfa_t nfa_compile_given_set(char_set_t *set)
+{
+  nfa_state_t *acc = nfa_state_accept();
+  nfa_state_t *s = nfa_state_set(acc, set);
+  return nfa_make(s, acc);
+}
+
 static nfa_t nfa_compile_regex(val regex);
 
 /*
@@ -852,6 +911,18 @@ static nfa_t nfa_compile_regex(val exp)
     nfa_state_t *acc = nfa_state_accept();
     nfa_state_t *s = nfa_state_wild(acc);
     return nfa_make(s, acc);
+  } else if (exp == space_k) {
+    return nfa_compile_given_set(space_cs);
+  } else if (exp == digit_k) {
+    return nfa_compile_given_set(digit_cs);
+  } else if (exp == word_char_k) {
+    return nfa_compile_given_set(word_cs);
+  } else if (exp == cspace_k) {
+    return nfa_compile_given_set(cspace_cs);
+  } else if (exp == cdigit_k) {
+    return nfa_compile_given_set(cdigit_cs);
+  } else if (exp == cword_char_k) {
+    return nfa_compile_given_set(cword_cs);
   } else if (consp(exp)) {
     val sym = first(exp), args = rest(exp);
 
@@ -1178,7 +1249,19 @@ static val reg_nullable(val);
  */
 static val dv_compile_regex(val exp)
 {
-  if (symbolp(exp) || chrp(exp)) {
+  if (exp == space_k) {
+    return cobj((mem_t *) space_cs, chset_s, &char_set_obj_ops);
+  } else if (exp == digit_k) {
+    return cobj((mem_t *) digit_cs, chset_s, &char_set_obj_ops);
+  } else if (exp == word_char_k) {
+    return cobj((mem_t *) word_cs, chset_s, &char_set_obj_ops);
+  } else if (exp == cspace_k) {
+    return cobj((mem_t *) cspace_cs, chset_s, &char_set_obj_ops);
+  } else if (exp == cdigit_k) {
+    return cobj((mem_t *) cdigit_cs, chset_s, &char_set_obj_ops);
+  } else if (exp == cword_char_k) {
+    return cobj((mem_t *) cword_cs, chset_s, &char_set_obj_ops);
+  } else if (symbolp(exp) || chrp(exp)) {
     return exp;
   } else if (stringp(exp)) {
     return cons(compound_s, list_str(exp));
@@ -1765,4 +1848,22 @@ val regsub(val regex, val repl, val str)
   } while (lt(pos, length_str(str)));
 
   return cat_str(out, nil);
+}
+
+val space_k, digit_k, word_char_k;
+val cspace_k, cdigit_k, cword_char_k;
+val regex_space_chars;
+
+void regex_init(void)
+{
+  space_k = intern(lit("space"), keyword_package);
+  digit_k = intern(lit("digit"), keyword_package);
+  word_char_k = intern(lit("word-char"), keyword_package);
+  cspace_k = intern(lit("cspace"), keyword_package);
+  cdigit_k = intern(lit("cdigit"), keyword_package);
+  cword_char_k = intern(lit("cword-char"), keyword_package);
+
+  prot1(&regex_space_chars);
+
+  init_special_char_sets();
 }
