@@ -33,6 +33,8 @@
 	* regex.h (space_k, digit_k, word_char_k, cspace_k, cdigit_k,
 	cword_char_k, regex_space_chars, regex_init): Declared.
 
+	* txr.1: Documented.
+
 2012-04-15  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): New intrinsic functions remq*, remql*,
