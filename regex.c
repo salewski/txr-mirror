@@ -209,6 +209,8 @@ union regex_machine {
 
 int opt_derivative_regex = 0;
 
+static val regex_space_chars;
+
 static int L0_full(cset_L0_t *L0)
 {
   int i;
@@ -634,6 +636,24 @@ static char_set_t *char_set_compile(val args, val comp)
         min = c_chr(item);
       if (c_chr(item) > max)
         max = c_chr(item);
+    } else if (item == space_k) {
+      if (max < 0x3000)
+        max = 0x3000;
+      if (min > 0x9)
+        min = 0x9;
+    } else if (item == digit_k) {
+      if (max < '9')
+        max = 9;
+      if (min > '0')
+        min = 0;
+    } else if (item == word_char_k) {
+      if (min > 'A')
+        min = 'A';
+      if (max < 'z')
+        max = 'z';
+    } else if (item == cspace_k || item == cdigit_k || item == cword_char_k) {
+      uw_throwf(error_s, lit("bad object in character class syntax: ~s"),
+                item, nao);
     } else {
       assert(0 && "bad regex set");
     }
@@ -667,6 +687,16 @@ static char_set_t *char_set_compile(val args, val comp)
         char_set_add_range(set, c_chr(from), c_chr(to));
       } else if (typeof(item) == chr_s) {
         char_set_add(set, c_chr(item));
+      } else if (item == space_k) {
+        val iter;
+        for (iter = regex_space_chars; iter; iter = cdr(iter))
+          char_set_add(set, c_chr(car(iter)));
+      } else if (item == digit_k) {
+        char_set_add_range(set, '0', '9');
+      } else if (item == word_char_k) {
+        char_set_add_range(set, 'A', 'Z');
+        char_set_add_range(set, 'a', 'z');
+        char_set_add(set, '_');
       } else {
         assert(0 && "bad regex set");
       }
@@ -1852,7 +1882,6 @@ val regsub(val regex, val repl, val str)
 
 val space_k, digit_k, word_char_k;
 val cspace_k, cdigit_k, cword_char_k;
-val regex_space_chars;
 
 void regex_init(void)
 {

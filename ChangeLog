@@ -1,3 +1,20 @@
+2012-04-20  Kaz Kylheku  <kaz@kylheku.com>
+
+	* parser.y (regtoken): New nonterminal symbol.
+	(regterm): REGTOKEN production factored out to regtoken.
+	(regclass): Reverted prior commmit's changes.
+	(regclassterm): Reverted prior commit, removing REGTOKEN
+	production for character classes, and introduced a regtoken
+	production. So now the keyword symbols are part of the
+	character class abstract syntax.
+	(regtoken): New production rule.
+
+	* regex.c (regex_space_chars): Converted to internal linkage.
+	(char_set_compile): Handle token keywords in character class
+	abstract syntax.
+
+	* regex.h (regex_space_chars): External declaration removed.
+
 2012-04-19  Kaz Kylheku  <kaz@kylheku.com>
 
 	First cut at implementing \s, \d, \w, \S, \D and \W regex tokens.
