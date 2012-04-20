@@ -846,9 +846,13 @@ supports the following syntax:
 Character class: matches a single character, from the set specified by
 special syntax written between the square brackets.
 Supports basic regexp character class syntax; no POSIX
-notation like [:digit:]. The class [a-zA-Z] means match an uppercase
+notation like [:digit:]. The regex tokens \es, \ed and \ew are
+permitted in character classes, but not their complementing counterparts.
+These tokens simply contribute their characters to the class.
+The class [a-zA-Z] means match an uppercase
 or lowercase letter; the class [0-9a-f] means match a digit or
 a lowercase letter; the class [^0-9] means match a non-digit, et cetera.
+The class [\ed.] means match a digit or the period character.
 A ] or - can be used within a character class, but must be escaped
 with a backslash. A ^ in the first position denotes a complemented
 class, unless it is escaped by backslash. In any other position, it denotes
@@ -861,6 +865,16 @@ are ordinary. Unescaped / characters can appear within a character class. The
 empty character class [] matches no character at all, and its complement [^]
 matches any character, and is treated as a synonym for the . (period) wildcard
 operator.
+.IP "\es, \ew and \ed"
+These regex tokens each match a single character. 
+The \es regex token matches a wide variety of ASCII whitespace characters
+and Unicode spaces. The \ew token matches alphabetic word characters; it
+is equivalent to the character class [A-Za-z_]. The \ed token matches
+a digit, and is equivalent to [0-9].
+.IP "\eS, \eW and \eD"
+These regex tokens are the complemented counterparts of \es, \ew and \ed.
+The \eS token matches all those characters which \es does not match,
+\eW matches all characters that \ew does not match and \eD matches nondigits.
 .IP empty
 An empty expression is a regular expression. It represents the set of strings
 consisting of the empty string; i.e. it matches just the empty string. The
