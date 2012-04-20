@@ -1,5 +1,17 @@
 2012-04-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 65
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES: Updated.
+
+2012-04-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	* regex.c (regex_space_chars): Variable removed.
 	(char_set_addr_str): New function.
 	(char_set_compile): Use char_set_addr_str to

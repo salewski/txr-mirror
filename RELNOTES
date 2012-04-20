@@ -1,3 +1,48 @@
+                                     TXR 65
+                                   2011-04-20
+
+
+  Features
+
+  - New ways to iterate over hash tables using lazy lists.
+
+  - Regular expression compiler expressed to user code, allowing TXR
+    programs to build regex abstract syntax trees and turn them into
+    regular expression machines.
+
+  - The popular regular expression tokens \s, \d, \w and \S, \D, \W are now
+    supported (the first three of these in character classes also).
+
+  - Low level time-of-day functions added for retrieving epoch seconds,
+    and optionally microseconds.
+
+  - New remove-if and keep-if functions, plus lazy counterparts
+    remove-if* and keep-if*.
+
+  - Lazy variants remq*, remql* and remqual* added.
+
+  - New function find-if.
+
+  - Improved seeding of pseudo-random-number generator.
+
+  - Configure script now diagnoses specification of nonexistent config
+    variables.
+
+  - Documentation improvements.
+
+  - Portability to Mac OS/X 10.7 (Lion), NetBSD 5.1 and FreeBSD 9.0.
+
+  Bugs
+
+  - Bugfix in @(next) directive, which showed up when using @(next :args)
+    more than once to scan arguments more than once.
+
+  Quiet Changes
+
+  - First two arguments to the find function were reversed.
+
+
+
                                      TXR 64
                                    2011-04-06
 
