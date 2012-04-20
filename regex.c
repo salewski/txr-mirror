@@ -209,7 +209,11 @@ union regex_machine {
 
 int opt_derivative_regex = 0;
 
-static val regex_space_chars;
+wchar_t spaces[] = {
+  0x0009, 0x000a, 0x000b, 0x000c, 0x000d, 0x0020, 0x00a0, 0x1680, 0x180e,
+  0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005, 0x2006, 0x2007, 0x2008,
+  0x2009, 0x200a, 0x2028, 0x2029, 0x205f, 0x3000, 0
+};
 
 static int L0_full(cset_L0_t *L0)
 {
@@ -574,6 +578,12 @@ static void char_set_add_range(char_set_t *set, wchar_t ch0, wchar_t ch1)
   }
 }
 
+static void char_set_add_str(char_set_t *set, wchar_t *str)
+{
+  while (*str != 0)
+    char_set_add(set, *str++);
+}
+
 static int char_set_contains(char_set_t *set, wchar_t ch)
 {
   int result = 0;
@@ -688,9 +698,7 @@ static char_set_t *char_set_compile(val args, val comp)
       } else if (typeof(item) == chr_s) {
         char_set_add(set, c_chr(item));
       } else if (item == space_k) {
-        val iter;
-        for (iter = regex_space_chars; iter; iter = cdr(iter))
-          char_set_add(set, c_chr(car(iter)));
+        char_set_add_str(set, spaces);
       } else if (item == digit_k) {
         char_set_add_range(set, '0', '9');
       } else if (item == word_char_k) {
@@ -709,19 +717,11 @@ static char_set_t *char_set_compile(val args, val comp)
   }
 }
 
-wchar_t spaces[] = {
-  0x0009, 0x000a, 0x000b, 0x000c, 0x000d, 0x0020, 0x00a0, 0x1680, 0x180e,
-  0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005, 0x2006, 0x2007, 0x2008,
-  0x2009, 0x200a, 0x2028, 0x2029, 0x205f, 0x3000, 0
-};
-
 static char_set_t *space_cs, *digit_cs, *word_cs;
 static char_set_t *cspace_cs, *cdigit_cs, *cword_cs;
 
 static void init_special_char_sets(void)
 {
-  int i;
-
   space_cs = char_set_create(CHSET_LARGE, 0, 1);
   cspace_cs = char_set_create(CHSET_LARGE, 0, 1);
   digit_cs = char_set_create(CHSET_SMALL, 0, 1);
@@ -733,20 +733,16 @@ static void init_special_char_sets(void)
   char_set_compl(cdigit_cs);
   char_set_compl(cword_cs);
 
-  for (i = 0; spaces[i] != 0; i++) {
-    wchar_t sp = spaces[i];
-    char_set_add(space_cs, sp);
-    char_set_add(cspace_cs, sp);
-    push(chr(sp), &regex_space_chars);
-  }
+  char_set_add_str(space_cs, spaces);
+  char_set_add_str(cspace_cs, spaces);
 
   char_set_add_range(digit_cs, '0', '9');
   char_set_add_range(cdigit_cs, '0', '9');
 
   char_set_add_range(word_cs, 'A', 'Z');
   char_set_add_range(cword_cs, 'A', 'Z');
-  char_set_add_range(word_cs, 'a', 'a');
-  char_set_add_range(cword_cs, 'a', 'a');
+  char_set_add_range(word_cs, 'a', 'z');
+  char_set_add_range(cword_cs, 'a', 'z');
   char_set_add(word_cs, '_');
   char_set_add(cword_cs, '_');
 }
@@ -1891,8 +1887,6 @@ void regex_init(void)
   cspace_k = intern(lit("cspace"), keyword_package);
   cdigit_k = intern(lit("cdigit"), keyword_package);
   cword_char_k = intern(lit("cword-char"), keyword_package);
-
-  prot1(&regex_space_chars);
 
   init_special_char_sets();
 }

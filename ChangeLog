@@ -1,5 +1,15 @@
 2012-04-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	* regex.c (regex_space_chars): Variable removed.
+	(char_set_addr_str): New function.
+	(char_set_compile): Use char_set_addr_str to
+	add spaces to set.
+	(init_special_char_sets): Use char_set_addr_str to
+	add spaces to set. Bugfix: word_cs, cword_cs wrongly initialized.
+	(regex_init): Removed reference to regex_space_chars.
+
+2012-04-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.y (regtoken): New nonterminal symbol.
 	(regterm): REGTOKEN production factored out to regtoken.
 	(regclass): Reverted prior commmit's changes.
