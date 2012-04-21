@@ -1,5 +1,17 @@
 2012-04-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	Fixes for configuring and building in a separate directory.
+
+	* configure: MPI is now extracted and patched in the build directory,
+	not in the source directory.
+
+	* Makefile (CFLAGS): Refer to mpi headers relative to current
+	directory, not $(top_srcdir).
+	(repatch): Run MPI repatching steps in correct directory.
+	(clean): Remove extracted MPI from build directory.
+
+2012-04-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	Version 65
 
 	* txr.c (version): Bumped.

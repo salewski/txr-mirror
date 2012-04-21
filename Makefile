@@ -30,7 +30,7 @@ include config.make
 
 CFLAGS := -I. -I$(top_srcdir) $(LANG_FLAGS) $(DIAG_FLAGS) \
           $(OPT_FLAGS) $(DBG_FLAGS) $(PLATFORM_FLAGS) $(EXTRA_FLAGS)
-CFLAGS += -I$(top_srcdir)/mpi-$(mpi_version)
+CFLAGS += -Impi-$(mpi_version)
 CFLAGS := $(filter-out $(REMOVE_FLAGS),$(CFLAGS))
 
 ifneq ($(subst g++,@,$(notdir $(CC))),$(notdir $(CC)))
@@ -81,13 +81,13 @@ clean:
 
 .PHONY: repatch
 repatch:
-	cd $(top_srcdir)/mpi-$(mpi_version); quilt pop -af
-	cd $(top_srcdir)/mpi-$(mpi_version); quilt push -a
+	cd mpi-$(mpi_version); quilt pop -af
+	cd mpi-$(mpi_version); quilt push -a
 
 .PHONY: distclean
 distclean: clean
 	rm -f config.h config.make config.log
-	rm -rf $(top_srcdir)/mpi-$(mpi_version)
+	rm -rf mpi-$(mpi_version)
 
 .PHONY: depend
 depend:

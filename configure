@@ -1288,20 +1288,19 @@ apply_patches()
 
 printf "Extracting MPI ... "
 
-if [ -e $top_srcdir/mpi-${mpi_version} ] ; then
+if [ -e mpi-${mpi_version} ] ; then
   printf "already extracted\n"
 else
-  tar -C $top_srcdir -xzf $top_srcdir/mpi-${mpi_version}.tar.gz
+  tar -xzf $top_srcdir/mpi-${mpi_version}.tar.gz
   printf "\n"
   printf "Symlinking MPI patches ...\n"
-  ln -sf ../mpi-patches \
-    $top_srcdir/mpi-${mpi_version}/patches
+  ln -sf $top_srcdir/mpi-patches mpi-${mpi_version}/patches
   printf "Applying MPI patches ...\n"
   if [ -n "$have_quilt" ] ; then
-    ( cd $top_srcdir/mpi-${mpi_version}/patches ;
+    ( cd mpi-${mpi_version}/patches ;
       if [ -e series ] ; then quilt push -a ; else echo "no patches" ; fi )
   else
-    ( cd $top_srcdir/mpi-${mpi_version} ;
+    ( cd mpi-${mpi_version} ;
       apply_patches )
   fi
 fi
