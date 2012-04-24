@@ -1,5 +1,16 @@
 2012-04-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (range_v_func, range_v_star_func): Restore the order of
+	arguments to plus, so that the from object is on the left. This
+	change was introduced in a commit on 2012-02-14, causing
+	character ranges to break due to bug that addition did not
+	commute for char + fixnum. Although the previous commit fixed
+	the regression, it's still good to have the object on the
+	left in case there are some future data types in case there
+	is ever some form of addition which does not commute.
+
+2012-04-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (plus): Fixed broken (+ fixnum char) case.
 
 2012-04-20  Kaz Kylheku  <kaz@kylheku.com>
