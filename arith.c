@@ -372,8 +372,8 @@ tail:
     }
   case TAG_PAIR(TAG_NUM, TAG_CHR):
     {
-      cnum a = c_chr(anum);
-      wchar_t b = c_num(bnum);
+      cnum a = c_num(anum);
+      wchar_t b = c_chr(bnum);
       cnum sum = a + b;
 
       if (sum < 0 || sum > 0x10FFFF)
