@@ -1,3 +1,7 @@
+2012-04-24  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c (plus): Fixed broken (+ fixnum char) case.
+
 2012-04-20  Kaz Kylheku  <kaz@kylheku.com>
 
 	Fixes for configuring and building in a separate directory.
