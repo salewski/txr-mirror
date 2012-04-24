@@ -1856,7 +1856,7 @@ static val rangev_func(val env, val lcons)
   cons_bind (to, step, to_step);
   val next = if3(functionp(step),
                  funcall1(step, from),
-                 plus(step, from));
+                 plus(from, step));
 
   rplaca(lcons, from);
 
@@ -1891,7 +1891,7 @@ static val range_star_v_func(val env, val lcons)
   cons_bind (to, step, to_step);
   val next = if3(functionp(step),
                  funcall1(step, from),
-                 plus(step, from));
+                 plus(from, step));
 
   rplaca(lcons, from);
 
