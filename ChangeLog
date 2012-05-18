@@ -1,3 +1,27 @@
+2012-05-18  Kaz Kylheku  <kaz@kylheku.com>
+
+	Implementing new pipe function to get around the limitation
+	that popen accepts a complete command. We need something which
+	accepts a program name, and a list of arguments, so that
+	we don't have to assemble together a correctly quoted string.
+	popen needs an alternative interface resembling execvp.
+
+	* eval.c (eval_init): New intrinsic registered, open-pipe-args.
+
+	* stream.c (struct stdio_handle): New member, pid.
+	(stdio_stream_print): Print the pid, if it is nonzero.
+	(pipevp_close): New close function.
+	(pipe_close): If h->pid is nonzero, it's a new-style pipe, which
+	must be closed with pipev_close.
+	(make_stdio_stream, make_pipe_stream): Initialize new stdio_handle
+	member to zero.
+	(make_pipevp_stream): New static function.
+	(open_pipevp): New function.
+
+	* stream.h (open_pipevp): Declared.
+
+	* txr.1: open-pipe-args added to stub section heading.
+
 2012-05-17  Kaz Kylheku  <kaz@kylheku.com>
 
 	* match.c (v_collect): Implemented semantics for repeat symbol.

@@ -70,12 +70,16 @@ struct stdio_handle {
   FILE *f;
   val descr;
   utf8_decoder_t ud;
+  pid_t pid;
 };
 
 static void stdio_stream_print(val stream, val out)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
-  format(out, lit("#<~s ~s>"), stream->co.cls, h->descr, nao);
+  if (h->pid)
+    format(out, lit("#<~s ~s>"), stream->co.cls, h->descr, nao);
+  else
+    format(out, lit("#<~s ~s ~s>"), stream->co.cls, h->descr, h->pid, nao);
 }
 
 static void stdio_stream_destroy(val stream)
@@ -270,12 +274,21 @@ static struct strm_ops stdio_ops = {
   stdio_flush
 };
 
+static int pipevp_close(FILE *f, pid_t pid)
+{
+  int status;
+  fclose(f);
+  while (waitpid(pid, &status, 0) == -1 && errno == EINTR)
+    ;
+  return status;
+}
+
 static val pipe_close(val stream, val throw_on_error)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
 
   if (h->f != 0) {
-    int status = pclose(h->f);
+    int status = h->pid != 0 ? pipevp_close(h->f, h->pid) : pclose(h->f);
     h->f = 0;
 
     if (status != 0 && throw_on_error) {
@@ -702,6 +715,7 @@ val make_stdio_stream(FILE *f, val descr, val input, val output)
   h->f = f;
   h->descr = descr;
   utf8_decoder_init(&h->ud);
+  h->pid = 0;
   return stream;
 }
 
@@ -712,8 +726,21 @@ val make_pipe_stream(FILE *f, val descr, val input, val output)
   h->f = f;
   h->descr = descr;
   utf8_decoder_init(&h->ud);
+  h->pid = 0;
   return stream;
 }
+
+static val make_pipevp_stream(FILE *f, val descr, pid_t pid)
+{
+  struct stdio_handle *h = (struct stdio_handle *) chk_malloc(sizeof *h);
+  val stream = cobj((mem_t *) h, stream_s, &pipe_ops.cobj_ops);
+  h->f = f;
+  h->descr = descr;
+  utf8_decoder_init(&h->ud);
+  h->pid = pid;
+  return stream;
+}
+
 
 val make_string_input_stream(val string)
 {
@@ -1500,6 +1527,78 @@ val open_pipe(val path, val mode_str)
     input = output = t;
 
   return make_pipe_stream(f, path, input, output);
+}
+
+val open_pipevp(val name, val mode_str, val args)
+{
+  int input = equal(mode_str, lit("r")) || equal(mode_str, lit("rb"));
+  int fd[2];
+  pid_t pid;
+  char **argv = 0, *utf8name = 0;
+  val iter;
+  int i, nargs = c_num(length(args));
+
+  if (pipe(fd) == -1) {
+    uw_throwf(file_error_s, lit("opening pipe ~a, pipe syscall failed: ~a/~s"),
+              name, num(errno), string_utf8(strerror(errno)), nao);
+  }
+
+  argv = (char **) chk_malloc((nargs + 1) * sizeof *argv);
+
+  for (i = 0, iter = args; iter; i++, iter = cdr(iter)) {
+    val arg = car(iter);
+    argv[i] = utf8_dup_to(c_str(arg));
+  }
+  argv[i] = 0;
+
+  utf8name = utf8_dup_to(c_str(name));
+
+  pid = fork();
+
+  if (pid == -1) {
+    uw_throwf(file_error_s, lit("opening pipe ~a, fork syscall failed: ~a/~s"),
+              name, num(errno), string_utf8(strerror(errno)), nao);
+  } 
+  
+  if (pid == 0) {
+    if (input) {
+      dup2(fd[1], STDOUT_FILENO);
+      close(fd[0]);
+    } else {
+      dup2(fd[0], STDIN_FILENO);
+      close(fd[1]);
+    }
+
+    execvp(utf8name, argv);
+    _exit(1);
+  } else {
+    int whichfd;
+    char *utf8mode = utf8_dup_to(c_str(mode_str));
+    FILE *f;
+
+    if (input) {
+      close(fd[1]);
+      whichfd = fd[0];
+    } else {
+      close(fd[0]);
+      whichfd = fd[1];
+    }
+
+    for (i = 0; i < nargs; i++)
+      free(argv[i]);
+    free(argv);
+
+    if ((f = fdopen(whichfd, utf8mode)) == 0) {
+      kill(pid, SIGKILL);
+      free(utf8mode);
+      uw_throwf(file_error_s, lit("opening pipe ~a, fdopen failed: ~a/~s"),
+                name, num(errno), string_utf8(strerror(errno)), nao);
+    }
+
+    free(utf8mode);
+    /* TODO: catch potential OOM exception here and kill process. */
+    return make_pipevp_stream(f, name, pid);
+  }
 }
 
 void stream_init(void)

@@ -2291,6 +2291,7 @@ void eval_init(void)
   reg_fun(intern(lit("open-directory"), user_package), func_n1(open_directory));
   reg_fun(intern(lit("open-file"), user_package), func_n2(open_file));
   reg_fun(intern(lit("open-pipe"), user_package), func_n2(open_pipe));
+  reg_fun(intern(lit("open-pipe-args"), user_package), func_n3o(open_pipevp, 2));
 
   reg_var(intern(lit("*user-package*"), user_package), &user_package);
   reg_var(intern(lit("*keyword-package*"), user_package), &keyword_package);
