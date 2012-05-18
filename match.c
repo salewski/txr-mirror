@@ -2617,6 +2617,7 @@ static val v_gather(match_files_ctx *c)
 static val v_collect(match_files_ctx *c)
 {
   spec_bind (specline, first_spec, c->spec);
+  val op_sym = first(first_spec);
   val coll_spec = second(first_spec);
   val until_last_spec = third(first_spec);
   val args = fourth(first_spec);
@@ -2644,7 +2645,15 @@ static val v_collect(match_files_ctx *c)
   val iter;
 
   if (gap && (max || min))
-    sem_error(specline, lit("collect: cannot mix :gap with :mingap or :maxgap"), nao);
+    sem_error(specline, lit("~s: cannot mix :gap with :mingap or :maxgap"),
+              op_sym, nao);
+
+  if (op_sym == repeat_s) {
+    if (have_vars)
+      sem_error(specline, lit("~s: collect takes :vars, repeat does not"),
+                op_sym, nao);
+    have_vars = t;
+  }
 
   vars = vars_to_bindings(specline, vars, c->bindings);
 
@@ -3787,6 +3796,7 @@ static void dir_tables_init(void)
   sethash(v_directive_table, choose_s, cptr((mem_t *) v_parallel));
   sethash(v_directive_table, gather_s, cptr((mem_t *) v_gather));
   sethash(v_directive_table, collect_s, cptr((mem_t *) v_collect));
+  sethash(v_directive_table, repeat_s, cptr((mem_t *) v_collect));
   sethash(v_directive_table, flatten_s, cptr((mem_t *) v_flatten));
   sethash(v_directive_table, forget_s, cptr((mem_t *) v_forget_local));
   sethash(v_directive_table, local_s, cptr((mem_t *) v_forget_local));

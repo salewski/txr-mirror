@@ -1,5 +1,22 @@
 2012-05-17  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (v_collect): Implemented semantics for repeat symbol.
+	(dir_tables_init): Register dispatch for repeat to v_collect
+	function.
+
+	* parser.y (collect_repeat): New nonterminal symbol.
+	(clause): Removed repeat_clause error case because that now clashes
+	with the syntax in collect_clause.
+	(collect_clause): Repeat syntax implemented, with help of
+	collect_repeat.
+	(out_clause): Error case for collect_clause removed due to
+	syntactic clash.
+
+	* txr.1: Added mention of @(collect :vars nil) and documented
+	@(repeat) as the shorthand.
+
+2012-05-17  Kaz Kylheku  <kaz@kylheku.com>
+
 	* configure: Do not capture the stderr of GNU Make in the
 	configure step; send it to /dev/null.
 

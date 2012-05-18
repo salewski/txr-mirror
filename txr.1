@@ -2111,6 +2111,13 @@ or with an until or last clause:
   ... lines of subquery: last clause
   @(end)
 
+The repeat symbol may be specified instead of collect, which changes
+the meaning, see below:
+
+  @(repeat)
+  ... lines of subquery
+  @(end)
+
 The subquery is matched repeatedly, starting at the current line.
 If it fails to match, it is tried starting at the subsequent line.
 If it matches successfully, it is tried at the line following the
@@ -2368,6 +2375,18 @@ an empty list.
   THIS DOES MATCH
   @a
   @(end)
+
+The following means: do not allow any variables to propagate out of any
+iteration of the collect and therefore collect nothing:
+
+  @(collect :vars nil)
+  ...
+  @(end)
+
+Instead of writing @(collect :vars nil), it is possible to write
+@(repeat). @(repeat) takes all collect keywords, except for :vars.
+There is a repeat directive used in @(output) clauses; that is
+a different repeat directive.
 
 .SS The Coll Directive
 

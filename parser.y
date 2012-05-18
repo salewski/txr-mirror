@@ -82,6 +82,7 @@ static val parsed_spec;
 %type <val> spec clauses clauses_opt clause
 %type <val> all_clause some_clause none_clause maybe_clause block_clause
 %type <val> cases_clause choose_clause gather_clause collect_clause until_last
+%type <val> collect_repeat
 %type <val> clause_parts additional_parts gather_parts additional_gather_parts
 %type <val> output_clause define_clause try_clause catch_clauses_opt
 %type <val> line elems_opt elems clause_parts_h additional_parts_h
@@ -143,8 +144,6 @@ clause : all_clause             { $$ = cons($1, nil); rlcp($$, $1); }
        | try_clause             { $$ = cons($1, nil); rlcp($$, $1); }
        | output_clause          { $$ = cons($1, nil); rlcp($$, $1); }
        | line                   { $$ = $1; }
-       | repeat_clause          { $$ = nil;
-                                  yyerror("repeat outside of output"); }
        ;
 
 all_clause : ALL newl clause_parts      { $$ = list(all_s, $3, nao);
@@ -260,19 +259,19 @@ additional_gather_parts : AND newl clauses additional_gather_parts      { $$ = c
                         | /* empty */                                   { $$ = nil; }
                         ;
 
-collect_clause : COLLECT exprs_opt ')' newl
-                 clauses END newl                { $$ = list(collect_s,
+collect_clause : collect_repeat exprs_opt ')' newl
+                 clauses END newl                { $$ = list(car($1),
                                                              $5, nil, $2,
                                                              nao);
-                                                   rl($$, num($1)); }
-               | COLLECT exprs_opt ')'
+                                                   rl($$, cdr($1)); }
+               | collect_repeat exprs_opt ')'
                  newl clauses until_last
-                 newl clauses END newl    { $$ = list(collect_s, $5,
+                 newl clauses END newl    { $$ = list(car($1), $5,
                                                       cons(cdr($6), $8),
                                                       $2, nao);
-                                            rl($$, num($1)); 
+                                            rl($$, cdr($1)); 
                                             rl($8, car($6)); }
-               | COLLECT exprs_opt ')'
+               | collect_repeat exprs_opt ')'
                  newl error             { $$ = nil;
                                           if (yychar == UNTIL ||
                                               yychar == END ||
@@ -281,6 +280,10 @@ collect_clause : COLLECT exprs_opt ')' newl
                                           else
                                             yybadtoken(yychar,
                                                        lit("collect clause")); }
+               ;
+
+collect_repeat : COLLECT { $$ = cons(collect_s, num($1)); }
+               | REPEAT { $$ = cons(repeat_s, num($1)); }
                ;
 
 until_last : UNTIL { $$ = cons(num($1), until_s); }
@@ -494,8 +497,6 @@ out_clause : repeat_clause              { $$ = cons($1, nil); }
                                           yyerror("match clause in output"); }
            | choose_clause              { $$ = nil;
                                           yyerror("choose clause in output"); }
-           | collect_clause             { $$ = nil;
-                                          yyerror("match clause in output"); }
            | define_clause              { $$ = nil;
                                           yyerror("match clause in output"); }
 
