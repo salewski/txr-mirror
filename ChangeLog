@@ -1,5 +1,10 @@
 2012-05-18  Kaz Kylheku  <kaz@kylheku.com>
 
+	* configure: New test added for fork, pipe, exec and waitpid.
+	Produces HAVE_FORK_STUFF in config.h.
+
+2012-05-18  Kaz Kylheku  <kaz@kylheku.com>
+
 	* utf8.c (w_fopen, w_popen): Removing unnecessary casts of
 	return values of ut8_dup_to.
 

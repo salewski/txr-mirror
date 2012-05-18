@@ -1189,6 +1189,37 @@ else
 fi
 
 #
+# fork, pipe, exec, waitpid.
+#
+
+printf "Checking for POSIX fork/pipe/exec/waitpid ... "
+
+cat > conftest.c <<!
+#include "config.h"
+#ifdef HAVE_SYS_WAIT
+#include <sys/wait.h>
+#endif
+#include <unistd.h>
+
+int main(int argc, char **argv)
+{
+  int status, fd[2];
+  pid_t p = fork();
+  (void) execvp(argv[0], argv);
+  (void) waitpid(p, &status, 0);
+  (void) pipe(fd);
+  return 0;
+}
+!
+rm -f conftest
+if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+  printf "no\n"
+else
+  printf "yes\n"
+  printf "#define HAVE_FORK_STUFF 1\n" >> config.h
+fi
+
+#
 # Check for fields inside struct tm
 #
 
