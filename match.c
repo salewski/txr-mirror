@@ -1489,7 +1489,7 @@ static fpip_t complex_open(val name, val output, val append)
     char *name;
     if (output)
       return ret;
-    name = (char *) utf8_dup_to(namestr+1);
+    name = utf8_dup_to(namestr+1);
     ret.close = fpip_closedir;
     ret.d = opendir(name);
     free(name);

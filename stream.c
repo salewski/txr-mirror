@@ -1470,7 +1470,7 @@ val flush_stream(val stream)
 
 static DIR *w_opendir(const wchar_t *wname)
 {
-  char *name = (char *) utf8_dup_to(wname);
+  char *name = utf8_dup_to(wname);
   DIR *d = opendir(name);
   free(name);
   return d;
