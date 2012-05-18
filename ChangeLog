@@ -1,5 +1,19 @@
 2012-05-18  Kaz Kylheku  <kaz@kylheku.com>
 
+	Implement open_pipev in terms of popen for Windows which
+	does not have for or exec.  We could use CreateProcess and CreatePipe,
+	et cetera, but it won't buy us anything because the whole point
+	of this function is to improve the argument passing, and CreateProcess
+	takes a single command line string, not too different from popen.
+
+	* stream.c (pipev_close, make_pipev_stream): Surrounded with
+	HAVE_FORK_STUFF ifdef.
+	(pipe_close): Choice of close strategy conditional on HAVE_FORK_STUFF.
+	(open_pipev): Conditionally defined in two ways now.
+	(win_escape_arg, win_make_cmdline): New static functions.
+
+2012-05-18  Kaz Kylheku  <kaz@kylheku.com>
+
 	* configure: New test added for fork, pipe, exec and waitpid.
 	Produces HAVE_FORK_STUFF in config.h.
 

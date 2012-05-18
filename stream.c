@@ -274,6 +274,7 @@ static struct strm_ops stdio_ops = {
   stdio_flush
 };
 
+#if HAVE_FORK_STUFF
 static int pipevp_close(FILE *f, pid_t pid)
 {
   int status;
@@ -282,13 +283,18 @@ static int pipevp_close(FILE *f, pid_t pid)
     ;
   return status;
 }
+#endif
 
 static val pipe_close(val stream, val throw_on_error)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
 
   if (h->f != 0) {
+#if HAVE_FORK_STUFF
     int status = h->pid != 0 ? pipevp_close(h->f, h->pid) : pclose(h->f);
+#else
+    int status = pclose(h->f);
+#endif
     h->f = 0;
 
     if (status != 0 && throw_on_error) {
@@ -730,6 +736,7 @@ val make_pipe_stream(FILE *f, val descr, val input, val output)
   return stream;
 }
 
+#if HAVE_FORK_STUFF
 static val make_pipevp_stream(FILE *f, val descr, pid_t pid)
 {
   struct stdio_handle *h = (struct stdio_handle *) chk_malloc(sizeof *h);
@@ -740,7 +747,7 @@ static val make_pipevp_stream(FILE *f, val descr, pid_t pid)
   h->pid = pid;
   return stream;
 }
-
+#endif
 
 val make_string_input_stream(val string)
 {
@@ -1529,6 +1536,7 @@ val open_pipe(val path, val mode_str)
   return make_pipe_stream(f, path, input, output);
 }
 
+#if HAVE_FORK_STUFF
 val open_pipevp(val name, val mode_str, val args)
 {
   int input = equal(mode_str, lit("r")) || equal(mode_str, lit("rb"));
@@ -1600,6 +1608,62 @@ val open_pipevp(val name, val mode_str, val args)
     return make_pipevp_stream(f, name, pid);
   }
 }
+#else
+
+static val win_escape_arg(val str)
+{
+  int bscount = 0, i;
+  const wchar_t *s;
+  val out = string(L"");
+
+  for (s = c_str(str); *s; s++) {
+    switch (*s) {
+    case '"':
+      for (i = 0; i < bscount; i++)
+        string_extend(out, lit("\\\\"));
+      string_extend(out, lit("\\\""));
+      bscount = 0;
+      break;
+    case '\\':
+      bscount++;
+      break;
+    default:
+      for (i = 0; i < bscount; i++)
+        string_extend(out, lit("\\"));
+      string_extend(out, chr(*s));
+      bscount = 0;
+      break;
+    }
+  }
+
+  for (i = 0; i < bscount; i++)
+    string_extend(out, lit("\\"));
+
+  return out;
+}
+
+static val win_make_cmdline(val args)
+{
+  val out = string(L"");
+
+  for (; args; args = cdr(args)) {
+    string_extend(out, lit("\""));
+    string_extend(out, win_escape_arg(car(args)));
+    if (cdr(args))
+      string_extend(out, lit("\" "));
+    else
+      string_extend(out, lit("\""));
+  }
+
+  return out;
+}
+
+val open_pipevp(val name, val mode_str, val args)
+{
+  val win_cmdline = win_make_cmdline(cons(name, args));
+  return open_pipe(win_cmdline, mode_str);
+}
+#endif
 
 void stream_init(void)
 {
