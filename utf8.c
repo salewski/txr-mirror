@@ -354,8 +354,8 @@ wint_t utf8_decode(utf8_decoder_t *ud, int (*get)(mem_t *ctx), mem_t *ctx)
 
 FILE *w_fopen(const wchar_t *wname, const wchar_t *wmode)
 {
-  char *name = (char *) utf8_dup_to(wname);
-  char *mode = (char *) utf8_dup_to(wmode);
+  char *name = utf8_dup_to(wname);
+  char *mode = utf8_dup_to(wmode);
   FILE *f = fopen(name, mode);
   free(name);
   free(mode);
@@ -364,8 +364,8 @@ FILE *w_fopen(const wchar_t *wname, const wchar_t *wmode)
 
 FILE *w_popen(const wchar_t *wcmd, const wchar_t *wmode)
 {
-  char *cmd = (char *) utf8_dup_to(wcmd);
-  char *mode = (char *) utf8_dup_to(wmode);
+  char *cmd = utf8_dup_to(wcmd);
+  char *mode = utf8_dup_to(wmode);
   FILE *f = popen(cmd, mode);
   free(cmd);
   free(mode);

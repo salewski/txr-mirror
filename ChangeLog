@@ -1,5 +1,10 @@
 2012-05-18  Kaz Kylheku  <kaz@kylheku.com>
 
+	* utf8.c (w_fopen, w_popen): Removing unnecessary casts of
+	return values of ut8_dup_to.
+
+2012-05-18  Kaz Kylheku  <kaz@kylheku.com>
+
 	Implementing new pipe function to get around the limitation
 	that popen accepts a complete command. We need something which
 	accepts a program name, and a list of arguments, so that
