@@ -409,8 +409,9 @@ printf "Checking for GNU Make ... "
 
 if [ -z "$make" ] ; then
   for make in make gmake ; do
-    output=$($make --version 2>&1) || true
+    output=$($make --version 2> /dev/null) || true
     set -- $output
+    printf "\$@=<$1> <$2> <$3>\n"
 
     if [ $1 != "GNU" -o $2 != "Make" ] ; then
       continue
@@ -423,7 +424,7 @@ if [ -z "$make" ] ; then
   printf "missing\n"
   exit 1
 fi
-     
+
 make_version=$3
 
 save_ifs=$IFS ; IFS=. ; set -- $make_version ; IFS=$save_ifs

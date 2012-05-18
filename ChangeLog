@@ -1,3 +1,10 @@
+2012-05-17  Kaz Kylheku  <kaz@kylheku.com>
+
+	* configure: Do not capture the stderr of GNU Make in the
+	configure step; send it to /dev/null.
+
+	* txr.spec: Adding specfile for building RPMs.
+
 2012-04-24  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (range_v_func, range_v_star_func): Restore the order of
