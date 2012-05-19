@@ -1,5 +1,10 @@
 2012-05-18  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (open_pipev): Bugfix: program name is included
+	as first element of argv.
+
+2012-05-18  Kaz Kylheku  <kaz@kylheku.com>
+
 	Implement open_pipev in terms of popen for Windows which
 	does not have for or exec.  We could use CreateProcess and CreatePipe,
 	et cetera, but it won't buy us anything because the whole point

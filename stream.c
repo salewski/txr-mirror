@@ -1551,9 +1551,9 @@ val open_pipevp(val name, val mode_str, val args)
               name, num(errno), string_utf8(strerror(errno)), nao);
   }
 
-  argv = (char **) chk_malloc((nargs + 1) * sizeof *argv);
+  argv = (char **) chk_malloc((nargs + 2) * sizeof *argv);
 
-  for (i = 0, iter = args; iter; i++, iter = cdr(iter)) {
+  for (i = 0, iter = cons(name, args); iter; i++, iter = cdr(iter)) {
     val arg = car(iter);
     argv[i] = utf8_dup_to(c_str(arg));
   }
