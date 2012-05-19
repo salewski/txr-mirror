@@ -1,5 +1,18 @@
 2012-05-18  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Registered open-command and open-process
+	intrinsics. open-pipe is now deprecated but stays for backward
+	compatibility as a synonym for open-command.
+
+	* stream.c (open_pipe): Renamed to open_command.
+	(open_pipevp): Renamed to open_process.
+
+	* stream.h (open_pipe, open_pipevp): Declarations updated.
+
+	* txr.1: Documentation headings updated.
+
+2012-05-18  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (open_pipev): Bugfix: program name is included
 	as first element of argv.
 

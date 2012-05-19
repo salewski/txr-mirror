@@ -1515,7 +1515,7 @@ val open_file(val path, val mode_str)
   return make_stdio_stream(f, path, input, output);
 }
 
-val open_pipe(val path, val mode_str)
+val open_command(val path, val mode_str)
 {
   FILE *f = w_popen(c_str(path), c_str(mode_str));
   val input = nil, output = nil;
@@ -1537,7 +1537,7 @@ val open_pipe(val path, val mode_str)
 }
 
 #if HAVE_FORK_STUFF
-val open_pipevp(val name, val mode_str, val args)
+val open_process(val name, val mode_str, val args)
 {
   int input = equal(mode_str, lit("r")) || equal(mode_str, lit("rb"));
   int fd[2];
@@ -1658,10 +1658,10 @@ static val win_make_cmdline(val args)
   return out;
 }
 
-val open_pipevp(val name, val mode_str, val args)
+val open_process(val name, val mode_str, val args)
 {
   val win_cmdline = win_make_cmdline(cons(name, args));
-  return open_pipe(win_cmdline, mode_str);
+  return open_command(win_cmdline, mode_str);
 }
 #endif
 
