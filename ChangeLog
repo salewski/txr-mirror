@@ -1,5 +1,11 @@
 2012-08-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (multi_sort_less): Change the semantics so that when the
+	list of the functions is empty, the left item is considered less
+	than the right, thereby preserving the order.
+
+2012-08-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (mapcarv): Changed to external linkage.
 
 	* eval.h (mapcarv): Declaration added.

@@ -3996,20 +3996,20 @@ val sort(val seq, val lessfun, val keyfun)
 
 static val multi_sort_less(val funcs, val llist, val rlist)
 {
-  val less = nil;
+  val less = t;
 
   while (funcs) {
     val func = pop(&funcs);
     val left = pop(&llist);
     val right = pop(&rlist);
 
-    if (funcall2(func, left, right)) {
-      less = t;
+    if (funcall2(func, left, right))
+      break;
+
+    if (funcall2(func, right, left)) {
+      less = nil;
       break;
     }
-
-    if (funcall2(func, right, left))
-      break;
   }
 
   return less;
