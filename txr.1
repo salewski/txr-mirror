@@ -7429,26 +7429,206 @@ Examples:
 
 .SS Functions make-hash, hash
 
+.TP
+Syntax:
+
+  (make-hash <weak-keys> <weak-vals> <equal-based>)
+  (hash [ :weak-keys ] [ :weak-vals ] [ :equal-based ])
+
+.TP
+Description:
+
+These functions construct a new hash table, using different syntax.
+
+A hash table is an object which retains an association between pairs of
+objects. Each pair consists of a key and value. Given an object which is
+similar to a key in the hash table, it is possible to retrieve the
+corresponding value. Entries in a hash table are not ordered in any way, and
+lookup is facilitated by hashing: quickly mapping a key object to a numeric
+value which is then used to index into one of many buckets where the matching
+key will be found (if such a key is present in the hash table).
+
+make-hash takes three mandatory boolean arguments which specify,
+respectively, whether the hash table has weak keys, has weak values,
+and whether it is equal based. The hash function defaults these
+properties to false, and allows them to be overridden to true by
+the presence of keyword arguments.
+
+If a hash table has weak keys, this means that from the point of view
+of garbage collection, that table holds only weak references to the keys
+stored in it.  Similarly, if a hash table has weak values, it means that it
+holds a weak reference to each value stored. A weak reference is one
+which does not prevent the reclamation of an object by the garbage
+collector. That is to say, when the garbage collector discovers that the only
+references to some object are weak references, then that object is considered
+garbage, just as if it had no references to it. The object is reclaimed, and
+the weak references "lapse" in some way, which depends on what kind they are.
+Hash table weak references lapse by entry removal: if either a key or a value
+object is reclaimed, then the corresponding key-value entry is erased from the
+hash table.
+
+Important to the operation of a hash table is the criterion by which keys are
+considered same. By default, this similarity follows the eql function.  A hash
+table will search for a stored key which is eql to the given search key.
+A hash table constructed with the equal-based property compares keys using
+the equal function instead.
+
+In addition to storing key-value pairs, a hash table can have a piece of
+information associated with it, called the user data.
+
 .SS Function sethash
+
+.TP
+Syntax:
+
+  (sethash <hash> <key> <value>)
+
+.TP
+Description:
+
+The sethash function places a value into the hash table under the given key.
+If a similar key already exists in the hash table, then the value is replaced
+under the existing key. Otherwise, the key-value pair is newly added.
 
 .SS Function pushhash
 
+.TP
+Syntax:
+
+  (pushhash <hash> <key> <element>)
+
+.TP
+Description:
+
+The pushhash function is useful when the values stored in a hash table
+are lists. If the given key does not already exist in the hash table, then
+a list of length one is made from the given element, and stored in the hash
+table under the key.  If the key already exists, then the corresponding value
+must be a list. The element is added to the front of that list, and that
+list become the new value of the key.
+
 .SS Function remhash
+
+.TP
+Syntax:
+
+  (remhash <hash> <key>)
+
+.TP
+Description:
+
+The remhash function searches the hash table for a key similar to the
+given key. If that key is found, then that key and its corresponding value are
+removed from the hash table.
 
 .SS Function hash-count
 
+.TP
+Syntax:
+
+  (hash-count <hash>)
+
+.TP
+Description:
+
+The hash-count function returns an integer representing the number of
+key-value pairs stored in the hash table.
+
 .SS Function get-hash-userdata
+
+.TP
+Syntax:
+
+  (get-hash-userdata <hash>)
+
+.TP
+Description:
+
+This function retrieves the user data object associated with the hash table.
+The user data object of a newly created hash table is initialized to nil.
 
 .SS Function set-hash-userdata
 
+.TP
+Syntax:
+
+  (set-hash-userdata <hash> <object>)
+
+.TP
+Description:
+
+The set-hash-userdata replaces the user data object associated with
+a hash table.
+
 .SS Function hashp
+
+.TP
+Syntax:
+
+  (hashp <object>)
+
+.TP
+Description:
+
+The hashp function returns t if the argument object is a hash table,
+otherwise it returns nil.
 
 .SS Function maphash
 
+.TP
+Syntax:
+
+  (maphash <hash> <binary-function>)
+
+.TP
+Description:
+
+The maphash function successively invokes binary-function for each key-value
+pair present in the hash table. The key and value are passed as arguments
+to the function, respectively.
+
 .SS Functions hash-eql and hash-equal
 
-.SS Functions hash_keys hash_values hash_pairs and hash_alist
- 
+.TP
+Syntax:
+
+  (hash-eql <object>)
+  (hash-equal <object>)
+
+.TP
+Description:
+
+These functions each compute an integer value from an object.
+If two objects A and B are the same under the eql function, then
+(hash-eql A) and (hash-eql B) produce the same integer.
+Similarly, if two objects A and B are the same under the equal function,
+then (hash-equal A) and (hash-equal B) each produce the same integer.
+
+.SS Functions hash_keys, hash_values, hash_pairs, and hash_alist
+
+.TP
+Syntax:
+  (hash-keys <hash>)
+  (hash-values <hash>)
+  (hash-pairs <hash>)
+  (hash-alist <hash>)
+
+.TP
+Description:
+
+These functions retrieve the bulk key-value data of a hash table
+in various ways. hash-keys retrieves a list of the keys. hash-values
+retrieves a list of the values. hash-pairs retrieves a list of pairs,
+which are two-element lists consisting of the key, followed by the value.
+Finally, hash-pairs retrieves the key-value pairs as a Lisp association list:
+a list of cons cells whose car fields are keys, and whose cdr fields
+are the values. 
+
+These functions all retrieve the keys and values in the
+same order. For example, if the keys are retrieved with hash-keys,
+and the values with hash-values, then the corresponding entries from
+each list correspond to the pairs in the hash table.
+
 .SS Function eval
 
 .SS Function chain
