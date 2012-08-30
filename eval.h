@@ -39,5 +39,6 @@ val eval_progn(val forms, val env, val ctx_form);
 val eval(val form, val env, val ctx_form);
 val expand(val form);
 val bindable(val obj);
+val mapcarv(val fun, val list_of_lists);
 
 void eval_init(void);

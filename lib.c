@@ -3994,6 +3994,37 @@ val sort(val seq, val lessfun, val keyfun)
   return seq;
 }
 
+static val multi_sort_less(val funcs, val llist, val rlist)
+{
+  val less = nil;
+
+  while (funcs) {
+    val func = pop(&funcs);
+    val left = pop(&llist);
+    val right = pop(&rlist);
+
+    if (funcall2(func, left, right)) {
+      less = t;
+      break;
+    }
+
+    if (funcall2(func, right, left))
+      break;
+  }
+
+  return less;
+}
+
+val multi_sort(val funcs, val lists)
+{
+  val lol = mapcarv(func_n0v(identity), lists);
+
+  if (functionp(funcs))
+    funcs = cons(funcs, nil);
+
+  return sort_list(lol, func_f2(funcs, multi_sort_less), identity_f);
+}
+
 val find(val item, val list, val testfun, val keyfun)
 {
   if (!keyfun)

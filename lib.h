@@ -635,6 +635,7 @@ val mapcon(val fun, val list);
 val mappend(val fun, val list);
 val merge(val list1, val list2, val lessfun, val keyfun);
 val sort(val seq, val lessfun, val keyfun);
+val multi_sort(val funcs, val lists);
 val find(val list, val key, val testfun, val keyfun);
 val find_if(val pred, val list, val key);
 val set_diff(val list1, val list2, val testfun, val keyfun);

@@ -1,3 +1,17 @@
+2012-08-29  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (mapcarv): Changed to external linkage.
+
+	* eval.h (mapcarv): Declaration added.
+	(eval_init): New intrinsic multi-sort registered.
+
+	* lib.c (multi_sort_less): New static function.
+	(multi_sort): New function.
+
+	* lib.h (multi_sort): Declared.
+
+	* txr.1: stub section added.
+
 2012-05-18  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): Registered open-command and open-process

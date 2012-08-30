@@ -1741,7 +1741,7 @@ val expand(val form)
   }
 }
 
-static val mapcarv(val fun, val list_of_lists)
+val mapcarv(val fun, val list_of_lists)
 {
   if (!cdr(list_of_lists)) {
     return mapcar(fun, car(list_of_lists));
@@ -2381,6 +2381,7 @@ void eval_init(void)
   reg_fun(intern(lit("merge"), user_package), func_n4o(merge, 2));
   reg_fun(intern(lit("sort"), user_package), func_n3o(sort, 2));
   reg_fun(intern(lit("find"), user_package), func_n4o(find, 2));
+  reg_fun(intern(lit("multi-sort"), user_package), func_n2(multi_sort));
   reg_fun(intern(lit("find-if"), user_package), func_n3o(find_if, 2));
   reg_fun(intern(lit("set-diff"), user_package), func_n4o(set_diff, 2));
 
