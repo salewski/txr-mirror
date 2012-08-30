@@ -393,7 +393,7 @@ val interp_fun(val env, val fun, val args)
 static val eval_intrinsic(val form, val env)
 {
   uses_or2;
-  expand(form);
+  form = expand(form);
   return eval(form, or2(env, make_env(nil, nil, env)), form);
 }
 
@@ -1643,7 +1643,7 @@ val expand(val form)
       if (body == body_ex)
         return form;
       return rlcp(cons(sym, cons(name, cons(args, body_ex))), form);
-    } else if (sym == inc_s || sym == dec_s) {
+    } else if (sym == set_s || sym == inc_s || sym == dec_s) {
       val place = second(form);
       val inc = third(form);
       val place_ex = expand_place(place);

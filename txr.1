@@ -7631,6 +7631,21 @@ each list correspond to the pairs in the hash table.
 
 .SS Function eval
 
+.TP
+Syntax:
+
+  (eval <form> <env>)
+
+.TP
+Description:
+
+The eval function treats the <form> object as a Lisp expression, which is
+evaluated. The side effects implied by the form are performed, and the value
+which it produces is returned. The <env> object specifies an environment for
+resolving the function and variable references encountered in the expression.
+The object nil can be specified as an environment, in which case the evaluation
+takes place in the top-level environment.
+
 .SS Function chain
 
 .SS Functions andf and orf
