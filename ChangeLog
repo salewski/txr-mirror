@@ -1,5 +1,10 @@
 2012-08-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (multi_sort_less): Fixing semantics of return value. Individual
+	sorted lists are returned, rather than a list of zipped tuples.
+
+2012-08-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (multi_sort_less): Change the semantics so that when the
 	list of the functions is empty, the left item is considered less
 	than the right, thereby preserving the order.
