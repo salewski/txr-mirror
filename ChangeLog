@@ -1,5 +1,9 @@
 2012-08-30  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Documented chain, andf, orf and iff.
+
+2012-08-30  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_intrinsic): Bugfix: take the expanded form instead
 	of throwing it away.
 	(expand): Recurse into expand_place for (set ...) forms.

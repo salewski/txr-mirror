@@ -7648,9 +7648,105 @@ takes place in the top-level environment.
 
 .SS Function chain
 
+.TP
+Syntax:
+
+   (chain {<func>}*)
+
+.TP
+Description:
+
+The chain function accepts zero or more functions as arguments, and returns
+a single function, called the chained function, which represents the chained
+application of those functions, in left to right order.
+
+If chain is given no arguments, then it returns a variadic function which
+ignores all of its arguments and returns nil.
+
+Otherwise, the first function may accept any number of arguments. The second
+and subsequent functions, if any, must accept one argument.
+
+The chained function can be called with an argument list which is acceptable
+to the first function. Those arguments are in fact passed to the first
+function. The return value of that call is then passed to the second
+function, and the return value of that call is passed to the third function
+and so on. The final return value is returned to the caller.
+
+.TP
+Example:
+
+  (call [chain + (op * 2)] 3 4) -> 14
+
+In this example, a two-element chain is formed from the + function
+and the function produced by (op * 2) which is a one-argument
+function that returns the value of its argument multiplied by two.
+(See the definition of the op operator).
+
+The chained function is invoked using the call function, with the arguments 3
+and 4. The chained evaluation begins by passing 3 and 4 to the + function,
+which yields 7.  This 7 is then passed to the (op * 2) doubling function,
+resulting in 14.
+
+A way to write the above example without the use of the DWIM brackets and the
+op operator is this:
+
+  (call (chain (fun +) (lambda (x) (* 2 x))) 3 4)
+
 .SS Functions andf and orf
 
+.TP
+Syntax:
+
+  (andf {<func>}*)
+  (orf {<func>}*)
+
+.TP
+Description:
+
+The andf and orf functions are the functional equivalent of the and and or
+operators. These functions accept multiple functions and return a new function
+which represents the logical combination of those functions.
+
+The input functions should have the same arity. Or, rather, there should exist
+some common argument arity with which they can all be invoked. The resulting
+combined function is then callable with that many arguments.
+
+The andf operator returns a function which combines the input functions with
+short-circuiting logical conjunction. The resulting function passes its
+arguments to the functions successively, in left to right order. As soon as any
+of the functions returns nil, then nil is returned immediately, and the
+remaining functions are not called.  Otherwise, if none of the functions return
+nil, then the value returned by the last function is returned. If the list of
+functions is empty, then t is returned.  That is, (andf) returns a function
+which accepts any arguments, and returns t.
+
+The orf operator combines the input functions with a short-circuiting logical
+disjunction. The function produced by orf passes its arguments down to the
+functions successively, in left to right order.  As soon as any function
+returns a non-nil value, that value is returned and the remaining functions are
+not called. If all functions return nil, then nil is returned. The expression
+(orf) returns a function which accepts any arguments and returns nil.
+
+
 .SS Function iff
+
+.TP
+Syntax:
+
+  (iff <cond-func> <then-func> [<else-func>])
+
+.TP
+Description:
+
+The iff function is the functional equivalent of the if operator. It accepts
+functional arguments and returns a function.
+
+The resulting function takes its arguments and applies them to cond-func.  If
+cond-func yields true, then the arguments are passed to then-func, and the
+resulting value is returned. Otherwise if cond-func yields a false result, and
+there is no else-func, then nil is returned. If cond-func yields false, and an
+else-func exists, then the original arguments are passed to else-func and the
+resulting value is returned.
 
 .SS Variables *stdout*, *stddebug*, *stdin* and *stderr*
 
