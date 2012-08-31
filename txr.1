@@ -7750,7 +7750,153 @@ resulting value is returned.
 
 .SS Variables *stdout*, *stddebug*, *stdin* and *stderr*
 
+These variables hold predefined stream objects. The *stdin*, *stdout* and
+*stderr* streams closely correspond to the underlying operating system streams.
+Various I/O functions require stream objects as arguments.
+
+The *stddebug* stream goes to the same destination as *stdout*, but is
+a separate object which can be redirected independently, allowing debugging
+output to be separated from normal output.
+
 .SS Function format
+
+.TP
+Syntax:
+
+  (format <stream-designator> <format-string> {<args>}*)
+
+.TP
+Description:
+
+The format function performs output to a stream, by interpreting the
+actions implicit in a format string, incorporating material pulled
+from additional arguments. Though the function is simple to invoke,
+there is complexithy in format string language, which is documented
+below.
+
+The stream designator argument can be a stream object, or one of the values t
+and nil. The value t serves as a shorthand for *standard-output*. The value nil
+means that the function will send output into a newly instantiated string
+output stream, and then return the resulting string.
+
+.TP
+Format string syntax:
+
+Within the format string, most characters represent themselves. Those
+characters are simply output. The character ~ (tilde) introduces formatting
+directives, which are denoted by a letter. 
+
+The special sequence ~~ (tilde-tilde) codes a single tilde. Nothing is
+permitted between the two tildes.
+
+The syntax of a directive is generally as follows:
+
+  ~[<width>[,<precision>]]<letter>
+
+The <letter> is a single alphabetic character which determines the
+general action of the directive. The optional width and precision
+can be numeric digits, or special codes documented below. 
+
+The width specifier gives the width of the character field in which the object's
+printed representation is placed. If the printed representation overflows the
+field width, then the field width is ignored. The default field width is zero.
+If the width specifier begins with the < (left angle bracket) character, then
+the printing will be left-adjusted within this field. Otherwise it will be
+right-adjusted by default.  The width can be specified as decimal digits, or as
+the character *. The * notation means that instead of digits, the value of the
+next argument is consumed, and expected to be an integer which specifies the
+width. If that integer value is negative, then the field will be left-adjusted.
+(If that value is positive, but the < notation is present prior to the *
+notation, the field will also be left-adjusted).
+
+The meaning of the precision specifier depends on the format directive.
+Also, when the precision is not specified, the default behavior may be
+different from any specific precision value.
+If the precision has a leading zero, this has special semantics for numeric
+conversions. The precision may also have a leading sign character, which
+may be a plus or space. 
+
+.TP
+Format directives:
+
+Format directives are case sensitive, so that for example ~x and ~X have a
+different effect, and ~A doesn't exist wheras ~a does. They are:
+
+.IP a
+Prints any object in an aesthetic way, as if by the pprint function.
+The aesthetic notation violates read-print consistency: this notation
+is not necessarily readable if it is implanted in TXR source code.
+The field width specifier is honored, including the left-right adjustment
+semantics. The precision field has a meaning as follows. For integer objects,
+the precision specifies the minimum number of digits to print. (A leading
+sign does not count as a digit).  If the precision field has a leading zero,
+then the number is padded with zeros to the required number of digits,
+otherwise the number is padded with spaces instead of zeros.  If zero or space
+padding is present, and a leading positive or negative sign must be printed,
+then it is placed before leading zeros, or after leading spaces, as the case
+may be. If the precision specifier has a leading + sign, then a + sign is
+printed for positive numbers. If the precision specifier has a leading space
+instead of a + sign, then the + sign is rendered as a space for positive
+numbers. If there is no leading space or +, then a sign character is omitted
+for positive numbers.  For floating point values, the precision specifies
+the maximum number of total significant figures, which do not include any
+digits in the exponent, if one is printed. Numbers are printed in exponential
+notation if their magnitude is small, or else if their exponent exceeds
+their precision. (If the precision is not specified, then it defaults to
+the system-dependent number of digits in a floating point value, derived
+from the C language DBL_DIG constant.) Floating point values which are
+integers are printed without a trailing .0 (point zero). For all other objects,
+the precision specifies the maximum number of characters to print. 
+The object's printed representation is crudely truncated at that number
+of characters.
+
+.IP s
+Prints any object in a standard way, as if by the print function.  Objects for
+which read-print consistency is possible are printed in a way such that
+if their notation is implanted in TXR source, they are readable.
+The field width specifier is honored, including the left-right adjustment
+semantics. The precision field is treated very similarly to the ~a
+format directive, except that non-exponentiated floating point numbers that
+would be mistaken for integers include a trailing ".0" for the sake read-print
+consistency. Objects truncated by precision may not have read-print
+consitency. For instance, if a string object is truncated, it loses its
+trailing closing quote, so that the resulting representation is no longer
+a properly formed string object.
+
+.IP x
+Requires an argument of character or integer type. The integer value or
+character code is printed in hexadecimal, using lower-case letters
+for the digits "a" through "f". Width and precision semantics
+are as described for the "a" format directive, for integers.
+
+.IP X
+Like the "x" directive, but the digits "a" through "f" are rendered
+in upper case.
+
+.IP o
+Like the "x" directive, but octal is used instead of hexadecimal.
+
+.IP f
+The "f" directive prints numbers in a fixed point decimal notation, with
+a fixed number of digits after the decimal point. It requires a numeric
+argument. (Unlike "x", "X" and "o", characters are not permitted).
+The precision specifier gives the number of digits past the decimal point.
+The number is rounded off to the specified precision, if necessary.
+Furthermore, that many digits are always printed, regardless of the actual
+precision of the number or its type.  If it is omitted, then the default value
+is three: three digits past the decimal point. A precision of zero means no
+digits pas the decimal point, and in this case the decimal point is suppressed
+(regardless of whether the numeric argument is floating-point or integer).  
+
+.IP e
+The "e" directive prints numbers in exponential notation. It requires
+a numeric argument. (Unlike "x", "X" and "o", characters are not permitted).
+The precision specifier gives the number of digits past the decimal point
+printed in the exponential notation, not counting the digits in the exponent.
+Exactly that many digits are printed, regardless of the precision of the
+number.  If the precision is omitted, then the number of digits after the
+decimal point is three. If the precision is zero, then a decimal portion is
+truncated off entirely, including the decimal point.
 
 .SS Functions print, pprint, tostring, tostringp
 

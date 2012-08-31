@@ -1285,7 +1285,7 @@ val vformat(val stream, val fmtstr, va_list vl)
             precision = 0;
             goto output_num;
           default:
-            if (width != 0) {
+            if (width != 0 || precision_p) {
               val str = format(nil, ch == 'a' ? lit("~a") : lit("~s"),
                                obj, nao);
               if (!vformat_str(stream, str, width, left, precision))

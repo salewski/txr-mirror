@@ -1,5 +1,13 @@
 2012-08-31  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (vformat): Bugfix: under the ~a and ~s directives,
+	apply field formatting to the object not only if a nonzero width has
+	been specified, but also if precision has been specified.
+
+	* txr.1: documented stream global variables and format.
+
+2012-08-31  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (expand): Bugfix: failure to handle regular
 	expression syntax, resulting in (set ...) syntax being regarded as
 	assignment (due to another recent change).
