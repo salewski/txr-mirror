@@ -1726,6 +1726,8 @@ val expand(val form)
       return expand_op(rest(form));
     } else if (sym == catch_s) {
       return expand_catch(rest(form));
+    } else if (sym == regex_s || regexp(sym)) {
+      return form;
     } else {
       /* funtion call
          also handles: progn, prog1, call, if, and, or, 

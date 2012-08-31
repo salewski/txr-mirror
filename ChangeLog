@@ -1,3 +1,9 @@
+2012-08-31  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (expand): Bugfix: failure to handle regular
+	expression syntax, resulting in (set ...) syntax being regarded as
+	assignment (due to another recent change).
+
 2012-08-30  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.1: Documented chain, andf, orf and iff.
