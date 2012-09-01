@@ -1,3 +1,7 @@
+2012-09-01  Kaz Kylheku  <kaz@kylheku.com>
+
+	* txr.1: Documented print, pprint, tostring and tostringp.
+
 2012-08-31  Kaz Kylheku  <kaz@kylheku.com>
 
 	* stream.c (vformat): Bugfix: under the ~a and ~s directives,
