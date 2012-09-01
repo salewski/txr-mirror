@@ -7775,7 +7775,7 @@ there is complexithy in format string language, which is documented
 below.
 
 The stream designator argument can be a stream object, or one of the values t
-and nil. The value t serves as a shorthand for *standard-output*. The value nil
+and nil. The value t serves as a shorthand for *stdout*. The value nil
 means that the function will send output into a newly instantiated string
 output stream, and then return the resulting string.
 
@@ -7913,7 +7913,7 @@ Description:
 
 The print and pprint functions render a printed character representation of the
 obj argument into a stream. If a stream argument is not supplied, then 
-the destination is the stream currently stored in the *standard-output*
+the destination is the stream currently stored in the *stdout*
 variable. The print function renders in a way which strives for read-print
 consistency: an object is printed in a notation which is recognized as
 a similar object of the same kind when it appears in TXR source code.
@@ -7938,21 +7938,205 @@ in format rather than "~s".
 
 .SS Function make-string-input-stream
 
+.TP
+Syntax:
+
+  (make-string-input-stream <string>)
+
+.TP
+Description:
+
+This function produces an input stream object. Character read operations on the
+stream object read successive characters from the given string. Output
+operations and byte operations are not supported.
+
 .SS Function make-string-byte-input-stream
+
+.TP
+Syntax:
+
+  (make-string-byte-input-stream <string>)
+
+.TP
+Description:
+
+This function produces an input stream object. Byte read operations on
+this stream object read successive byte values obtained by encoding
+the given string into UTF-8. Character read operations are not supported,
+and neither are output operations.
+
+.SS Function make-string-output-stream
+
+.TP
+Syntax:
+
+  (make-string-output-stream)
+
+.TP
+Description:
+
+This function, which takes no arguments, creates a string output stream.
+Data sent to this stream is accumulated into a string object.
+String output streams supports both character and byte output operations. 
+Bytes are assumed to represent a UTF-8 encoding, and are decoded in order
+to form characters which are stored into the string. 
+
+If an incomplete UTF-8 code is output, and a character output operation then
+takes place, that code is assumed to be terminated and is decoded as invalid
+bytes.  The UTF-8 decoding machine is reset and ready for the start of a new
+code.
+
+The get-string-from-stream function is used to retrieve the accumulated
+string.
+
+If the null character is written to a string output stream, either via
+a character output operation or as a byte operation, the resulting string
+will appear to be prematurely terminated. TXR strings cannot contain null
+bytes.
 
 .SS Function get-string-from-stream
 
+.TP
+Syntax:
+
+  (get-string-from-stream <stream>)
+
+.TP
+Description:
+
+The stream argument must be a string output stream. This function finalizes
+the data sent to the stream and retrieves the accumulated character string.
+
+If a partial UTF-8 code has been written to the stream, and then this
+function is called, the byte stream is considered complete and the partial
+code is decoded as invalid bytes.
+
+After this function is called, further output on the stream is not possible.
+
 .SS Function make-strlist-output-stream
+
+.TP
+Syntax:
+
+  (make-strlist-output-stream)
+
+.TP
+Description:
+
+This function is closely analogous to make-string-output-stream. However,
+instead of producing a string, it produces a list of strings. The
+data is broken into multiple strings by newline characters written
+to the stream. Newline characters do not appear in the string list. Also, byte
+output operations are not supported.
 
 .SS Function get-list-from-stream
 
+.TP
+Syntax:
+
+  (get-list-from-stream <stream>)
+
+.TP
+Description:
+
+This function returns the string list which has accumulated inside
+a string output stream. The string output stream is finalized, so that
+further output is no longer possible.
+
 .SS Function close-stream
+
+.TP
+Syntax:
+
+  (close-stream <stream>)
+
+.TP
+Description:
+
+The close-stream function performs a close operation on a stream,
+whose meaning is stream-dependent. For some kinds of streams, such as
+string streams, it does nothing. For real operating system streams,
+it will perform a close of the underlying file descriptor, and dissociate
+that descriptor from the stream. Any buffered data is flushed first.
 
 .SS Functions get-line, get-char and get-byte
 
-.SS Functions put-string, put-line, put-char
+.TP
+Syntax:
+
+  (get-line [<stream>])
+  (get-char [<stream>])
+  (get-byte [<stream>])
+
+.TP
+Description:
+
+These fundamental stream functions perform input.  The stream argument,
+is optional. If it is specified, it should be an input stream which supports
+the given operation. If it is not specified, then the *stdin* 
+stream is used.
+
+The get-char function pulls a character from a stream which supports character
+input.  Streams which support character input also support the get-line
+function which extracts a line of text delimited by the end of the stream or a
+newline character and returns it as a string. (The newline character does not
+appear in the string which is returned). 
+
+Character input from streams based on bytes requires UTF-8 decoding, so that
+get-char actually may read several bytes from the underlying low level
+operating system stream.
+
+The get-byte function bypasses UTF-8 decoding and reads raw bytes from
+any stream which supports byte input. Bytes are represented as integer
+values in the range 0 to 255.
+
+Note that if a stream supports both byte input and character input, then mixing
+the two operations will interfere with the UTF-8 decoding.
+
+.SS Functions put-string, put-line, put-char and put-byte
+
+.TP
+Syntax:
+
+  (put-line <string> [<stream>])
+  (put-string <string> [<stream>])
+  (put-char <char> [<stream>])
+  (put-byte <integer> [<stream>])
+
+.TP
+Description:
+
+These functions perform output on an output stream. The stream argument
+must be an output stream which supports the given operation. If it is omitted,
+then *stdout* is used.
+
+The put-char function writes a character to a stream. If the stream is
+based on bytes, then the character is encoded into UTF-8 and multiple
+bytes are written. Streams which support put-char also support put-line,
+and put-string. The put-string function writes the characters of a string
+out to the stream as if by multiple calls to put-char. The put-line
+function is like put-string, but also writes an additional newline
+character.
+
+The put-byte function writes a raw byte to a stream which supports
+such an operation. A byte is specified as an integer value in the
+range 0 to 255.
 
 .SS Function flush-stream
+
+.TP
+Syntax:
+
+  (flush-stream <stream>)
+
+.TP
+Description:
+
+This function is meaningful for output streams which accumulate data
+which is passed on to the operating system in larger transfer units.
+Calling this function causes all accumulated data to be passed
+to the operating system. If called on streams for which this function
+is not meaningful, it does nothing.
 
 .SS Function open-directory
 
