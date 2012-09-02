@@ -6559,7 +6559,59 @@ which returns non-nil.
 
 .SS Functions find and find-if
 
+.TP
+Syntax:
+
+  (find <key> <list> [<testfun> [<keyfun>]])
+  (find-if <predfun> <list> [<keyfun>])
+
+.TP
+Description:
+
+The find and find-if functions search through a list for an item which
+matches a key, or satisfies a predicate function, respectively.
+
+The keyfun argument specifies a function which is applied to the elements
+of the list to produce the comparison key. If this argument is omitted,
+then the untransformed elements of the list themselves are searched.
+
+The find function's testfun argument specifies the test function which
+is used to compare the comparison keys from the list to the search key.
+If this argument is omitted, then the equal function is used.
+The first element from the list whose comparison key (as retrieved by
+the key function) matches the search (under the test function)
+is returned. If no such element is found, nil is returned.
+
+The find-if function's predfun argument specifies a predicate function
+which is applied to the successive comparison keys pulled from the list
+by applying the key function to successive elements. The first element
+for which the predicate function yields true is returned. If no such
+element is found, nil is returned.
+
 .SS Function set-diff
+
+.TP
+Syntax:
+  (set_diff <list1> <list2> [<testfun> [<keyfun>]])
+
+.TP
+Description:
+
+The set-diff function treats two lists as if they were sets and computes
+the set difference: a list which contains those elements in list1 which
+do not occur in list2.
+
+Element equivalence is determined by a combination of testfun and keyfun.
+Elements are compared pairwise, and each element of a pair is passed through
+the keyfun function to produce a comparison value. The comparison values
+are compared with the testfun function. If keyfun is omitted, then the
+untransformed elements themselves are compared, and if testfun is omitted,
+then the equal function is used.
+
+If list1 contains duplicate elements which do not occur in list2 (and
+thus are preserved in the set difference) then these duplicates appear
+in the resulting list. Furthermore, the order of the items from list1 is
+preserved.
 
 .SS Functions mapcar, mappend, mapcar* and mappend*
 
@@ -6764,27 +6816,186 @@ Examples:
 
 .SH ASSOCIATION LISTS
 
+Association lists are ordinary lists formed according to a special convention.
+Firstly, any empty list is a valid association list. A non-empty association
+list contains only cons cells as the key elements. These cons cells are
+understood to represent key/value associations, hence the name "association
+list".
+
 .SS Function assoc
+
+.TP
+Syntax:
+
+  (assoc <key> <alist>)
+
+.TP
+Description:
+
+The assoc function searches an association list for a cons cell whose
+car field contains the given key (with equality determined by the equal
+function). The first such cons is returned. If no such cons is found,
+nil is returned.
 
 .SS Function assq
 
+.TP
+Syntax:
+
+  (assql <key> <alist>)
+
+.TP
+Description:
+
+The assql function is just like assoc, except that the equality test
+is determined using the eql function rather than equal.
+
 .SS Function acons
+
+.TP
+Syntax:
+
+  (acons <car> <cdr> <alist>)
+
+.TP
+Description:
+
+The acons function constructs a new alist by consing a new cons to the
+front of an existing alist. The following equivalence holds:
+
+  (acons car cdr alist) <--> (cons (cons car cdr) alist)
 
 .SS Function acons-new
 
-.SS Function aconsq-new
+.TP
+Syntax:
+
+  (acons-new <car> <cdr> <alist>)
+
+.TP
+Description:
+
+The acons-new function searches alist, as if using the assoc function,
+for an existing cell which matches the key provided by the car argument.
+If such a cell exists, then its cdr field is overwritten with the cdr
+argument, and then the list is returned. If no such cell exists, then
+a new list is returned by adding a new cell to the input list consisting
+of the car and cdr values, as if by the acons function.
+
+.SS Function aconsql-new
+
+.TP
+Syntax:
+
+  (aconsql-new <car> <cdr> <alist>)
+
+.TP
+Description:
+
+This function is like acons-new, except that the eql function is used
+for equality testing. Thus, the list is searched for an existing cell
+as if using the assql function rather than assoc.
 
 .SS Function alist-remove
 
+.TP
+Syntax:
+
+  (alist-remove <alist> <keys>)
+
+.TP
+Description:
+
+The alist-remove function takes an input alist and produces a duplicate
+from which cells matching the specified keys have been removed. The keys
+argument is a list of the keys not to appear in the output list.
+
 .SS Function alist-nremove
 
+.TP
+Syntax:
+
+  (alist-nremove <alist> <keys>)
+
+.TP
+Description:
+
+The alist-nremove function is like alist-remove, but potentially destructive.
+The input list may be destroyed and its structural material re-used to form the
+output list. The application should not retain references to the input list.
+
 .SS Function copy-alist
+
+.TP
+Syntax:
+
+  (copy-alist <alist>)
+
+.TP
+Description:
+
+The copy-alist function duplicates an alist. Unlike copy-list, which
+only duplicates list structure, copy-alist also duplicates each cons
+cell of the input alist. That is to say, each element of the output list
+is produced as if by the copy-cons function applied to the corresponding
+element of the input list.
 
 .SH LIST SORTING
 
 .SS Function merge
 
+.TP
+Syntax:
+
+  (merge <list1> <list2> <lessfun> <keyfun>)
+
+.TP
+Description:
+
+The merge function merges two sorted lists into a single sorted
+list. The semantics and defaulting behavior of the lessfun and keyfun arguments
+are the same as those of the sort function. The input lists are assumed to be
+sorted according to these functions.
+
+This function is destructive. The application should not retain references to
+the input lists, since the output list is formed out of the structure of the
+input lists.
+
 .SS Function multi-sort
+
+.TP
+Syntax:
+
+  (multi-sort <columns> <less-funcs> [<key-funcs>])
+
+.TP
+Description:
+
+The multi-sort function regards a list of lists to be the columns of a
+database. The corresponding elements from each list constitute a record.
+These records are to be sorted, producing a new list of lists.
+
+The columns argument supplies the list of lists which comprise the columns of
+the database. The lists should ideally be of the same length. If the lists are
+of different lengths, then the shortest list is taken to be the length of the
+database. Excess elements in the longer lists are ignored, and do not appear in
+the sorted output.
+
+The less-funcs argument supplies a list of comparison functions which are 
+applied to the columns. Successive functions correspond to successive
+columns. If less-funcs is an empty list, then the sorted database will
+emerge in the original order. If less-funcs contains exactly one function, then
+the rows of the database is sorted according to the first column. The remaining
+columns simply follow their row. If less-funcs contains more than one
+function, then additional columns are taken into consideration if the items
+in the previous columns compare equal. For instance if two elements from column
+one compare equal, then the corresponding second column elements are compared
+using the second column comparison function.
+
+The optional key-funcs argument supplies transformation functions through which
+column entries are converted to comparison keys, similarly to the single key
+function used in the sort function and others.  If there are more key functions
+than less functions, the excess key functions are ignored.
 
 .SH LAZY LISTS AND LAZY EVALUATION
 
@@ -6862,6 +7073,29 @@ another lazy cons (as in the example under make-lazy-cons).
 
 .SS Function generate
 
+.TP Syntax:
+  (generate <while-fun> <gen-fun>)
+
+.TP Description:
+
+The generate function produces a lazy list which dynamically produces items
+according to the following logic.
+
+The arguments to generate are functions which do not take any arguments.  The
+return value of generate is a lazy list. 
+
+When the lazy list is accessed, for instance with the functions car and cdr, it
+produces items on demand. Prior to producing each item, the while-fun is
+called. If it returns a true boolean value (any value other than nil), then
+the gen-fun function is called, and its return value is incorporated as
+the next item of the lazy list. But if while-fun yields nil, then the lazy
+list immediately terminates.
+
+Prior to returning the lazy list, generate invokes the while-fun one time.
+If while-fun yields nil, then generate returns the empty list nil instead
+of a lazy list. Otherwise, it instantiates a lazy list, and invokes
+the gen-func to populate it with the first item.
+
 .SS Function repeat
 
 .SS Operator gen
@@ -6875,20 +7109,19 @@ Syntax:
 Description:
 
 The gen operator produces a lazy list, in a manner similar to the generate
-function. Whereas the generate function (documented later in this manual)
-takes functional arguments, the gen operator takes two expressions, which is
-often more convenient.
+function. Whereas the generate function takes functional arguments, the gen
+operator takes two expressions, which is often more convenient.
 
 The return value of gen is a lazy list. When the lazy list is accessed, for
 instance with the functions car and cdr, it produces items on demand. Prior to
 producing each item, the <while-expression> is evaluated, in its original
-lexical scope.  If the expression yields true, then <produce-item-expression>
-is evaluated, and its return value is incorporated as the next item of the lazy
-list. If the expression yields false, then the lazy list immediately
-terminates.
+lexical scope.  If the expression yields a true value (non-nil), then
+<produce-item-expression> is evaluated, and its return value is incorporated as
+the next item of the lazy list. If the expression yields nil, then the lazy
+list immediately terminates.
 
 The gen operator itself immediately evaluates <while-expression> before
-producing the lazy list. If the expression yields false, then the operator
+producing the lazy list. If the expression yields nil, then the operator
 returns the empty list nil. Otherwise, it instantiates the lazy list and
 invokes the <produce-item-expression> to force the first item.
 
@@ -6957,6 +7190,22 @@ Example:
   *list* is (2 3)
 
 .SS Function force
+
+.TP
+Syntax:
+
+  (force <promise>)
+
+.TP
+Description:
+
+The force function accepts a promise object produced by the delay function.
+The first time force is invoked on a promise object, the promise expression
+is evaluated (in its original lexical environment, regardless of where
+in the program the force call takes place). The value of the expression is
+cached inside the promise and returned, becoming the return value of the
+force function call.  If the force function is invoked additional times on
+the same promise, the cached value is retrieved.
 
 .SH CHARACTERS AND STRINGS
 

@@ -364,8 +364,8 @@ val make_hash(val weak_keys, val weak_vals, val equal_based)
   h->userdata = nil;
 
   h->hash_fun = equal_based ? equal_hash : eql_hash;
-  h->assoc_fun = equal_based ? assoc : assq;
-  h->acons_new_l_fun = equal_based ? acons_new_l : aconsq_new_l;
+  h->assoc_fun = equal_based ? assoc : assql;
+  h->acons_new_l_fun = equal_based ? acons_new_l : aconsql_new_l;
 
   return hash;
 }

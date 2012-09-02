@@ -1,3 +1,33 @@
+2012-09-02  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): Follow function renames.
+
+	* hash.c (make_hash): Likewise.
+
+	* lib.c (assq): Renamed to assql for consistency.
+	(aconsq_new): Renamed to aconsql_new.
+	(aconsq_new_l): Renamed to aconsql_new_l.
+	(alist_remove_test): Use equal rather than eq. Association lists
+	use equal equality by default.
+	(alist_nremove): Use memqual rather than memq.
+	(alist_nremove1): Use equal rather than eq.
+	(merge): Bugfix: unnecessary consing caused by using append
+	instead of nconc on list pieces that are already destructively
+	chopped up. This has implications for the efficiency of sort
+	over lists!
+	(multi_sort_less): Implement key functions.
+	(multi_sort): Interface change: arguments rearranged, and new
+	argument to specify key functions.
+
+	* lib.h (assoc, assq, assql, aconsq_new, aconsq_new_l): Declarations
+	renamed.
+	(multi_sort): Declaration updated.
+
+	* txr.1: Documented alist library, list sorting and completed
+	documenting lazy library.
+
+	* txr.vim: multi-sort highlighted.
+
 2012-09-01  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.1: Lots of new documentation. Major rearrangement of document,

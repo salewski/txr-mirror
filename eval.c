@@ -2372,10 +2372,10 @@ void eval_init(void)
   reg_fun(intern(lit("cat-vec"), user_package), func_n1(cat_vec));
 
   reg_fun(intern(lit("assoc"), user_package), func_n2(assoc));
-  reg_fun(intern(lit("assq"), user_package), func_n2(assq));
+  reg_fun(intern(lit("assql"), user_package), func_n2(assql));
   reg_fun(intern(lit("acons"), user_package), func_n3(acons));
   reg_fun(intern(lit("acons-new"), user_package), func_n3(acons_new));
-  reg_fun(intern(lit("aconsq-new"), user_package), func_n3(aconsq_new));
+  reg_fun(intern(lit("aconsql-new"), user_package), func_n3(aconsql_new));
   reg_fun(intern(lit("alist-remove"), user_package), func_n1v(alist_remove));
   reg_fun(intern(lit("alist-nremove"), user_package), func_n1v(alist_nremove));
   reg_fun(intern(lit("copy-cons"), user_package), func_n1(copy_cons));
@@ -2383,7 +2383,7 @@ void eval_init(void)
   reg_fun(intern(lit("merge"), user_package), func_n4o(merge, 2));
   reg_fun(intern(lit("sort"), user_package), func_n3o(sort, 2));
   reg_fun(intern(lit("find"), user_package), func_n4o(find, 2));
-  reg_fun(intern(lit("multi-sort"), user_package), func_n2(multi_sort));
+  reg_fun(intern(lit("multi-sort"), user_package), func_n3o(multi_sort, 2));
   reg_fun(intern(lit("find-if"), user_package), func_n3o(find_if, 2));
   reg_fun(intern(lit("set-diff"), user_package), func_n4o(set_diff, 2));
 

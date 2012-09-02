@@ -3710,7 +3710,7 @@ val assoc(val key, val list)
   return nil;
 }
 
-val assq(val key, val list)
+val assql(val key, val list)
 {
   while (list) {
     val elem = car(list);
@@ -3756,9 +3756,9 @@ val *acons_new_l(val key, val *new_p, val *list)
   }
 }
 
-val aconsq_new(val key, val value, val list)
+val aconsql_new(val key, val value, val list)
 {
-  val existing = assq(key, list);
+  val existing = assql(key, list);
 
   if (existing) {
     set(*cdr_l(existing), value);
@@ -3768,9 +3768,9 @@ val aconsq_new(val key, val value, val list)
   }
 }
 
-val *aconsq_new_l(val key, val *new_p, val *list)
+val *aconsql_new_l(val key, val *new_p, val *list)
 {
-  val existing = assq(key, *list);
+  val existing = assql(key, *list);
 
   if (existing) {
     if (new_p)
@@ -3788,7 +3788,7 @@ val *aconsq_new_l(val key, val *new_p, val *list)
 
 static val alist_remove_test(val item, val key)
 {
-  return eq(car(item), key);
+  return equal(car(item), key);
 }
 
 val alist_remove(val list, val keys)
@@ -3806,7 +3806,7 @@ val alist_nremove(val list, val keys)
   val *plist = &list;
 
   while (*plist) {
-    if (memq(car(car(*plist)), keys))
+    if (memqual(car(car(*plist)), keys))
       *plist = cdr(*plist);
     else
       plist = cdr_l(*plist);
@@ -3820,7 +3820,7 @@ val alist_nremove1(val list, val key)
   val *plist = &list;
 
   while (*plist) {
-    if (eq(car(car(*plist)), key))
+    if (equal(car(car(*plist)), key))
       *plist = cdr(*plist);
     else
       plist = cdr_l(*plist);
@@ -3880,20 +3880,20 @@ val merge(val list1, val list2, val lessfun, val keyfun)
     if (funcall2(lessfun, el1, el2)) {
       val next = cdr(list1);
       *cdr_l(list1) = nil;
-      list_collect_append(ptail, list1);
+      list_collect_nconc(ptail, list1);
       list1 = next;
     } else {
       val next = cdr(list2);
       *cdr_l(list2) = nil;
-      list_collect_append(ptail, list2);
+      list_collect_nconc(ptail, list2);
       list2 = next;
     }
   }
 
   if (list1)
-    list_collect_append(ptail, list1);
+    list_collect_nconc(ptail, list1);
   else
-    list_collect_append(ptail, list2);
+    list_collect_nconc(ptail, list2);
 
   return out;
 }
@@ -3994,14 +3994,16 @@ val sort(val seq, val lessfun, val keyfun)
   return seq;
 }
 
-static val multi_sort_less(val funcs, val llist, val rlist)
+static val multi_sort_less(val funcs_cons, val llist, val rlist)
 {
+  cons_bind (funcs, key_funcs, funcs_cons);
   val less = t;
 
   while (funcs) {
     val func = pop(&funcs);
-    val left = pop(&llist);
-    val right = pop(&rlist);
+    val test = pop(&key_funcs);
+    val left = if3(test, funcall1(test, pop(&llist)), pop(&llist));
+    val right = if3(test, funcall1(test, pop(&rlist)), pop(&rlist));
 
     if (funcall2(func, left, right))
       break;
@@ -4015,14 +4017,15 @@ static val multi_sort_less(val funcs, val llist, val rlist)
   return less;
 }
 
-val multi_sort(val funcs, val lists)
+val multi_sort(val lists, val funcs, val key_funcs)
 {
   val tuples = mapcarv(func_n0v(identity), lists);
 
   if (functionp(funcs))
     funcs = cons(funcs, nil);
 
-  tuples = sort_list(tuples, func_f2(funcs, multi_sort_less), identity_f);
+  tuples = sort_list(tuples, func_f2(cons(funcs, key_funcs),
+                                     multi_sort_less), identity_f);
 
   return mapcarv(func_n0v(identity), tuples);
 }

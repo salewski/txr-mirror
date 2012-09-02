@@ -83,7 +83,7 @@ syn keyword txl_keyword contained list-vector copy-vec sub-vec cat-vec
 syn keyword txl_keyword contained replace-vec assoc assq acons acons-new
 syn keyword txl_keyword contained aconsq-new alist-remove alist-nremove copy-cons
 syn keyword txl_keyword contained copy-alist merge sort find set-diff length
-syn keyword txl_keyword contained sub ref replace refset
+syn keyword txl_keyword contained sub ref replace refset multi-sort
 
 syn keyword txl_keyword contained symbol-function func-get-form func-get-env
 syn keyword txl_keyword contained functionp interp-fun-p *random-state*
