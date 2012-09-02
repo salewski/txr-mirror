@@ -1849,7 +1849,7 @@ static val lazy_mappendv(val fun, val list_of_lists)
 
 static val symbol_function(val sym)
 {
-  return lookup_fun(nil, sym);
+  return cdr(lookup_fun(nil, sym));
 }
 
 static val rangev_func(val env, val lcons)

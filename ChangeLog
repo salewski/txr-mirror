@@ -1,5 +1,10 @@
 2012-09-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (symbol_function): Bugfix: return the function rather than
+	the whole binding.
+
+2012-09-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: Minor corrections, and documented most stream functions,
 	except directory-related ones.
 
