@@ -7098,6 +7098,17 @@ the gen-func to populate it with the first item.
 
 .SS Function repeat
 
+.TP
+Syntax:
+
+  (repeat <list1> {<listn>}*)
+
+.TP
+Description:
+
+The repeat function produces an infinite lazy list formed by the repeatedly
+cycled catenation of the argument lists.
+
 .SS Operator gen
 
 .TP
@@ -7211,33 +7222,244 @@ the same promise, the cached value is retrieved.
 
 .SS Function mkstring
 
+.TP
+Syntax:
+
+  (mkstring <length> <char>)
+
+.TP
+Description:
+
+The mkstring function constructs a string object of the given length.
+Every position in the string is initialized with the given character.
+
 .SS Function copy-str
+
+.TP
+Syntax:
+
+  (copy-str <string>)
+
+.TP
+Description:
+
+The copy-str function constructs a new string whose contents are identical
+to the given existing string.
 
 .SS Function upcase-str
 
+.TP
+Syntax:
+
+  (upcase-str <string>)
+
+.TP
+Description:
+
+The upcase-str function produces a copy of the input string such that
+all lower-case characters of the English alphabet are mapped to their
+upper case counterparts.
+
 .SS Function downcase-str
+
+.TP
+Syntax:
+
+  (downcase-str <string>)
+
+.TP
+Description:
+
+The downcase-str function produces a copy of the input string such that
+all upper case characters of the English alphabet are mapped to their
+lower case counterparts.
 
 .SS Function string-extend
 
+.TP
+Syntax:
+
+  (string-extend <string> <tail>)
+
+.TP
+Description:
+
+The string-extend function destructively increases the length of an ordinary
+dynamic string.  It is an error to invoke this function on a literal string or
+a lazy string.
+
+The tail argument can be a character, string or integer. If it is a string or
+character, it specifies material which is to be added to the end of the string:
+either a single character or a sequence of characters. If it is an integer, it
+specifies the number of characters to be added to the string.
+
+If tail is an integer, the newly added characters have indeterminate contents.
+The string appears to be the original one because of an internal terminating
+null character remains in place, but the characters beyond the terminating zero
+are indeterminate.
+
 .SS Function stringp
+
+.TP
+Syntax:
+
+  (stringp <obj>)
+
+.TP
+Description:
+
+The stringp function returns t if the argument object is one of the several
+kinds of strings. Otherwise it returns nil.
 
 .SS Function lazy-stringp
 
+.TP
+Syntax:
+
+  (lazy-stringp <obj>)
+
+.TP
+Description:
+
+The lazy-stringp function returns t if the argument object is a lazy
+string. Otherwise it returns nil.
+
 .SS Function length-str
+
+.TP
+Syntax:
+
+  (length-str <string>)
+
+.TP
+Description:
+
+The length-str function returns the length of the string in characters.
+The argument must be a string.
 
 .SS Function search-str
 
+.TP
+Syntax:
+
+  (search-str <haystack> <needle> [<start> [<from-end>]])
+
+.TP
+Description:
+
+The search-str function finds an occurrence of the needle string inside
+the haystack string and returns its position. If no such occurrence exists,
+it returns nil.
+
+If a start argument is specified, it gives the starting index for the
+search. If the from-end argument is specified and is non-nil, it means
+that the search is conducted right-to-left. If multiple matches are possible,
+it will find the rightmost one rather than the leftmost one.
+
 .SS Function search-str-tree
+
+.TP
+Syntax:
+
+  (search-str-tree <haystack> <tree> [<start> [<from-end>]])
+
+.TP
+Description:
+
+The search-str-tree function is similar to search-str, except that instead of
+searching the haystack for the occurence of a single needle string, it searches
+for the occurence of numerous strings at the same time.  These search strings
+are specified as an arbitrarily structured tree whose leaves are strings.
+
+The function finds the earliest possible match, in the given search direction,
+from among all of the needle strings.
+
+If the tree argument is a single string, the semantics is equivalent to
+search-str.
 
 .SS Function match-str
 
+.TP
+Syntax:
+
+  (match-str <bigstring> <littlestring> [<start>])
+
+.TP
+Description:
+
+The match-str function determines how many characters of littlestring match a
+prefix of bigstring.
+
+If the start argument is specified, then the function tests how many
+characters of littlestring match a prefix of that portion of bigstring which
+starts at the given position.
+
 .SS Function match-str-tree
+
+.TP
+Syntax:
+
+  (match-str-tree <bigstring> <tree> [<start>])
+
+.TP
+Description:
+
+The match-str-tree function is a generalization of match-str which matches
+multiple test strings against the big string at the same time. The value
+reported is the longest match from among any of the strings.
+
+The strings are specified as an arbitrarily shaped tree structure which has
+strings at the leaves.
+
+If the tree argument is a single string atom, then the function behaves
+exactly like match-str.
 
 .SS Function sub-str
 
+.TP
+Syntax:
+
+  (sub-str <string> [<from> [<to>]])
+
+.TP
+Description:
+
+The sub-str function extracts a substring from a string. It is exactly like the
+more generic function sub, except that it operates only on strings.
+For a description of the arguments and semantics, refer to the sub function.
+
 .SS Function replace-str
 
+.TP
+Syntax:
+
+  (replace-str <string> <item-sequence> [<from> [<to>]])
+
+.TP
+Description:
+
+The replace-list function replaces a substring of a string with items from
+the item-sequence argument, which may be any kind of sequence (list, vector
+or string) provided that it contains only characters, or is empty.
+
+It is like the replace function, except that the first argument must be
+a list.
+
+For a description of the arguments and semantics, refer to the replace function.
+
 .SS Function cat-str
+
+.TP
+Syntax:
+
+  (cat-str <string-list> [<sep-string>])
+
+.TP
+Description:
+
+The cat-str function catenates a list of strings into a single string.
+The optional sep-string argument specifies a separator string which
+is interposed between the catenated strings.
 
 .SS Function split-str
 
