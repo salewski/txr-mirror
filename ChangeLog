@@ -1,5 +1,10 @@
 2012-09-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Lots of new documentation. Major rearrangement of document,
+	with new headings.
+
+2012-09-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (symbol_function): Bugfix: return the function rather than
 	the whole binding.
 

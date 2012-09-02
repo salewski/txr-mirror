@@ -3487,6 +3487,8 @@ Loading is performed at evaluation time; it is not a source file inclusion
 mechanism.  A TXR script is read from beginning to end and parsed prior to
 being evaluated.
 
+See also: the *self-path* variable in TXR Lisp.
+
 .SH OUTPUT
 
 .SS Introduction
@@ -4847,7 +4849,7 @@ In TXR Lisp, the / character can occur in symbol names, and the / token
 is a symbol. Therefore the /regex/ syntax is absent, replaced with the
 #/regex/ syntax.
 
-.SS Lisp Operators
+.SH CONTROL FLOW AND SEQUENCING
 
 When the first element of a compound expression is an operator symbol,
 the interpretation of the meaning of that form is under the complete control
@@ -4900,228 +4902,6 @@ of the first form. The return value of (prog1) is nil.
 Various other operators such as let also arrange for the evaluation
 of a body of forms, the value of the last of which is returned.
 These operators are said to feature an "implicit progn".
-
-.SS Operators let and let*
-
-.TP
-Syntax:
-
-  (let ({<sym> | (<sym> <init-form>)}*) <body-form>*)
-  (let* ({<sym> | (<sym> <init-form>)}*) <body-form>*)
-
-.TP
-Description:
-
-The let and let* operators introduce a new scope with variables and
-evaluate forms in that scope. The operator symbol, either let or let*,
-is followed by a list which can contain any mixture of variable
-name symbols, or (<sym> <init-form>) pairs.  A symbol
-denotes the name of variable to be instantiated and initialized
-to the value nil.  A symbol specified with an init-form denotes
-a variable which is intialized from the value of the init-form.
-
-The symbols t and nil may not be used as variables, and neither
-can be keyword symbols: symbols denoted by a leading colon.
-
-The difference between let and let* is that in let*, later init-forms
-have visibility over the variables established by earlier variables
-in the same let* construct. In plain let, the variables are not
-visible to any of the init-forms.
-
-When the variables are established, then the body forms
-are evaluated in order. The value of the last form becomes the
-return value of the let. 
-
-If the forms are omitted, then the return value nil is produced.
-
-The variable list may be empty.
-
-
-.TP
-Examples:
-
-  (let ((a 1) (b 2)) (list a b)) -> (1 2)
-  (let* ((a 1) (b (+ a 1))) (list a b (+ a b))) -> (1 2 3)
-  (let ()) -> nil
-  (let (:a nil)) -> error, :a and nil can't be used as variables
-
-.SS Operator lambda
-
-.TP
-Syntax:
-
-  (lambda ({<sym>}*[. <sym>]) {<body-form>}*)
-
-  (lambda <sym> {<body-form>}*)
-
-.TP
-Description:
-
-The lambda operator produces a value which is a function.  Like in most other
-Lisps, functions are objects in TXR Lisp.  They can be passed to functions as
-arguments, returned from functions, aggregated into lists, stored in variables,
-et cetera.
-
-The first argument of lambda is the list of parameters for the function.   It
-may be empty, and it may also be an improper list (dot notation) where the
-terminating atom is a symbol other than nil. It can also be a single symbol.
-
-The second and subsequent arguments are the forms making up the function body.
-The body may be empty.
-
-When a function is called, the parameters are instantiated as variables that
-are visible to the body forms. The variables are initialized from the values of
-the argument expressions appearing in the function call.
-
-The dotted notation can be used to write a function that accepts
-a variable number of arguments. To write a function that accepts
-variable arguments only, with no required arguments, use a single symbol.
-
-The keyword symbol : can appear in the parameter list. It is not an argument,
-but a separator between required parameters and optional parameters.
-When the function is called, optional parameter for which arguments
-are not supplied take on the value nil.
-
-Functions created by lambda capture the surrounding variable bindings.
-
-
-.TP
-Examples:
-
-Counting function. This function, which takes no arguments, captures the
-variable "counter". Whenever this object is called, it increments the counter
-by 1 and returns the incremented value.
-
-  (let ((counter 0))
-    (lambda () (inc counter)))
-
-Function that takes two or more arguments. The third and subsequent arguments
-are aggregated into a list passed as the single parameter z:
-
-  (lambda (x y . z) (list 'my-arguments-are x y z))
-
-Variadic funcion:
-
-  (lambda args (list 'my-list-of-arguments args))
-
-Optional arguments:
-
-  [(lambda (x : y) (list x y)) 1] -> (1 nil)
-  [(lambda (x : y) (list x y)) 1 2] -> (1 2)
-
-.SS Operator op
-
-.TP
-Syntax:
-
-  (op {<form>}+)
-
-.TP
-Description:
-
-Like the lambda operator, the op operator creates an anonymous function.
-The difference is that the arguments of the function are implicit, or
-optionally specified within the function body.
-
-Also, the arguments of op are implicitly turned into a DWIM expression,
-which means that argument evaluation follows Lisp-1 rules.  (See the dwim
-operator below).
-
-The argument forms are arbitrary expressions, within which a special
-convention is permitted:
-
-.IP @<num>
-
-A number preceded by a @ is a metanumber. This is a special syntax
-which denotes an argument. For instance @2 means that the second argument of
-the anonymous function is to be substituted in place of the @2. If @2 is used
-it means that @1 also has to appear somewhere, otherwise the op
-construct is erroneous.
-
-.IP @rest
-
-The meta-symbol @rest indicates that any trailing arguments to the
-function are to be inserted. If the @<num> syntax is not used anywhere,
-it means that the function only has trailing arguments. If @1 is used,
-it means that the second and subsequent arguments are trailing arguments.
-If @rest is not used anywhere, then the rest arguments are automatically
-applied to the op form. If @rest appears, then this is suppressed.
-
-The actions of form may be understood by these examples, which show
-how op is rewritten to lambda.  However, note that the real translator
-uses generated symbols for the arguments, which are not equal to any
-symbols in the program.
-
-  (op) -> invalid
-
-  (op +) -> (lambda rest [+ . rest])
-
-  (op @1 @2) -> (lambda (arg1 arg2 . rest) [arg1 arg2 . rest])
-
-  (op foo @1 (@2) (bar @3)) -> (lambda (arg1 arg2 arg3 . rest) 
-                                  [foo arg1 (arg2) (bar arg3) . rest])
-
-  (op foo @rest @1) -> (lambda (arg1 . rest) [foo rest arg1])
-
-.TP
-
-Examples:
-
-  ;; Take a list of pairs and produce a list in which those pairs
-  ;; are reversed.
-
-  (mapcar (op list @2 @1) '((1 2) (a b)))   ->   ((2 1) (b a))
-
-.SS Operator call
-
-.TP
-Syntax:
-
-  (call <function-form> {<argument-form>}*)
-
-.TP
-Description:
-
-The call operator invokes a function. <function-form> must evaluate
-to a function. Each <argument-form> is evaluated in left to right
-order and the resulting values are passed to the function as arguments.
-The return value of the (call ...) expression is that of the function
-applied to those arguments.
-
-The <function-form> may be any Lisp form that produces a function
-as its value: a symbol denoting a variable in which a function is stored,
-a lambda expression, a function call which returns a function,
-or (fun ...) expression.
-
-.TP
-Examples:
-
-Apply arguments 1 2 to a lambda which adds them to produce 3:
-
-(call (lambda (a b) (+ a b)) 1 2) -> 3
-
-Useless use of call on a named function; equivalent to (list 1 2):
-
-(call (fun list) 1 2) -> (1 2)
-
-.SS Operator fun
-
-.TP
-Syntax:
-
-  (fun <function-name>)
-
-.TP
-Description:
-The fun operator retrieves the function object corresponding to a named
-function.
-. The <function-name> is a symbol denoting a named function: a built in
-function, or one defined by defun.
-
-.TP
-Dialect Note:
-A lambda expression is not a function name in TXR Lisp. The 
-syntax (fun (lambda ...)) is invalid.
 
 .SS Operator cond
 
@@ -5224,134 +5004,126 @@ Examples:
   (or nil 2) -> 2
   (or (> 10 20) (stringp "foo")) -> t
 
-.SS Operator defun
+.SS Operator unwind-protect
 
 .TP
 Syntax:
 
-  (defun <name> ({<param> [. <rest-param>]}*) <body-form>*)
+  (unwind-protect <protected-form> <cleanup-form>*)
 
+.TP
 Description:
 
-The defun operator introduces a new function in the global function namespace.
-The function is similar to a lambda, and has the same parameter syntax
-and semantics as the lambda operator.
+The unwind-protect operator evaluates <protected-form> in such a way that no
+matter how the execution of <protected-form> terminates, the <cleanup-form>-s
+will be executed.
 
-Unlike in lambda, the <body-form>-s of a defun are surrounded by a block.
-The name of this block is the same as the name of the function, making it
-possible to terminate the function and return a value using (return-from <name>
-<value>). For more information, see the definition of the block operator.
+The cleanup forms, however, are not protected. If a cleanup form terminates via
+some non-local jump, the subsequent cleanup forms are not evaluated.
 
-A function may call itself by name, allowing for recursion.
+Cleanup forms themselves can "hijack" a non-local control transfer such
+as an exception. If a cleanup form is evaluated during the processing of
+a dynamic control transfer such as an exception, and that cleanup form
+initiats its own dynamic control transfer, the original control transfer
+is aborted and replaced with the new one.
 
-.SS Operators inc, dec, set, push, pop, flip and del
+.TP
+Example:
+
+    (block foo
+      (unwind-protect
+        (progn (return-from foo 42)
+               (format t "not reached!\en"))
+        (format t "cleanup!\n")))
+
+In this example, the protected progn form terminates by returning from
+block foo. Therefore the form does not complete and so the
+output "not reached!" is not produced. However, the cleanup form
+excecutes, producing the output "cleanup!".
+
+.SS Operator block
 
 .TP
 Syntax:
 
-  (inc <place> [<delta>])
-  (dec <place> [<delta>])
-  (set <place> <new-value>)
-  (push <item> <place>)
-  (pop <place>)
-  (flip <place>)
-  (del <place>)
+  (block <name> <body-form>*)
 
 .TP
 Description:
 
-These destructive operators update the value of a place. A place is a storage
-location which is denoted by a form. Place forms are identical to value
-accessing forms. That is to say, any form recognized as a place by these
-operators can be evaluated by itself to retrieve the value of the storage
-location. However, the converse is false: not all forms which access storage
-location are recognized as places.
+The block operator introduces a named block around the execution of
+some forms. The <name> argument must be a symbol. Since a block name is not
+a variable binding, keyword symbols are permitted, and so are the symbols
+t and nil.   A block named by the symbol nil is slighlty special: it is
+understood to be an anonymous block.
 
-With are exceptions noted below, it is an error if a place does not exist.
-For instance, a variable being assigned must exist.
+Blocks in TXR Lisp have dynamic scope. This means that the following
+situation is allowed:
 
-Literal objects which are directly specified in the source code are
-considered part of the program body. Modifying parts of these objects
-therefore gives rise to self-modifying code. The behavior of self-modifying
-code is not specified.
+  (defun func () (return-from foo 42))
+  (block foo (func))
 
-The inc and dec update the place by adding or subtracting, respectively, a
-displacement to or from that number. If the <delta> expression is
-specified, then it is evaluated and its value is used as the increment.
-Otherwise, a default increment of 1 is used. The prior value of the place
-and the delta must be suitable operands for the + and - functions.
-(inc x) is equivalent to (set x (+ 1 x)), except that expression x
-is evaluated only once to determine the storage location. The inc
-and dec operators return the new value that was stored.
+The function can return from the foo block even though the foo block
+does not lexically surround foo.
 
-The set operator overwrites the previous value of a place with a new value,
-and also returns that value.
+Thus blocks in TXR Lisp provide dynamic non-local returns, as well
+as returns out of lexical nesting.
 
-The push and pop operators operate on a place which holds a list.  The push
-operator updates the list by replacing it with a new list which has a new item
-at the front, followed by the previous list. The item is returned.
-The pop operator performs the reverse operation: it removes the first item
-from the list and returns it. (push y x) is similar to
+.TP
+Dialect Note:
 
-  (let ((temp y)) (set x (cons temp x)) temp)
+In Common Lisp, blocks are lexical. A separate mechanism consisting of
+catch and throw operators performs non-local transfer based on symbols.
+The TXR Lisp example:
 
-except that x is evaluated only once to determine the storage place, and no
-such temporary variable is visible to the program.  Similarly, (pop x) is much
-like
+  (defun func () (return-from foo 42))
+  (block foo (func))
 
-  (let ((temp (car x))) (set x (cdr x)) temp)
- 
-except that x is evaluated only once, and no such temporary variable
-is visible to the program.
+is not allowed in Common Lisp, but can be transliterated to:
 
-The flip operator toggles a place between true and false. If the place
-contains a value other than nil, then its value is replaced with nil.
-If it contains nil, it is replaced with t.
+  (defun func () (throw 'foo 42))
+  (catch 'foo (func))
 
-The del operator does not modify the value of a place, but rather deletes the
-place itself. Index values and ranges of lists denoted using the dwim operator
-indexing notation can be subject to a deletion, as can hash table entries
-denoted using dwim or gethash. It is an error to try to delete other kinds of
-places such as simple variables. The del operator returns the value of the
-place that was deleted. Deleting from a sequence means removing the element or
-elements. Deleting a hash place means removing the corresponding entry from the
-hash table.
+Note that foo is quoted in CL. This underscores the dynamic nature of
+the construct. THROW itself is a function and not an operator.
 
-Currently, these forms are recognized as places:
+.SS Operators return, return-from
 
-  <symbol>
+.TP
+Syntax:
 
-  (car <cons>)
+  (return [<value>])
+  (return-from <name> [<value>])
 
-  (cdr <cons>)
+.TP
+Description:
 
-  (gethash <hash> <key> <default-value>)
+The return operator must be dynamically enclosed within an anonymous
+block (a block named by the symbol nil). It immediately terminates the
+evaluation of the innermost anonyous block which encloses it, causing
+it to return the specified value. If the value is omitted, the anonymous
+block returns nil.
 
-  (vecref <vector> <index>)
+The return-from operator must be dynamically enclosed within a named block
+whose name matches the <name> argument. It immediately terminates the
+evaluation of the innermost such block, causing it to return the specified
+value. If the value is omitted, that block returns nil.
 
-  (dwim <obj> ...)
-  
-  [<obj> ...]  ;; equivalent to (dwim <obj> ...)
+.TP
+Example:
 
+    (block foo
+      (let ((a "abc\n")
+            (b "def\n"))
+        (pprint a *stdout*)
+        (return-from foo 42)
+        (pprint b *stdout*)))
 
-A <symbol> place denotes a variable. If the variable does not exist, it is an
-error. 
+Here, the output produced is "abc". The value of b is not printed
+because the return-from terminates block foo, and so the second pprint
+form is not evaluated.
 
-The (car <form>) and (cdr <form>) places denote the corresponding slots
-of a cons cell. The <cons> form must be an expression which evaluates to a
-cons. 
-
-The gethash place denotes a value stored in a hash table.
-The form <hash> must evaluate to a hash table. If the place does not exist
-in the hash table under the given key, then the destructive operation
-will create it. In that case, the <default-value> form is evaluated to
-determine the initial value of the place. Otherwise it is ignored.
-
-The vecref place denotes a vector element, allowing vector elements
-to be treated as assignment places.
-
-The dwim/[] place denotes a vector element, list element, string, or hash
-table, depending on the type of obj. 
+.SH EVALUATION
 
 .SS Operator dwim
 
@@ -5520,6 +5292,193 @@ It
 an operator: (dwim ...).
 
 
+.SS Function identity
+
+.TP
+Syntax:
+
+  (identity <value>)
+
+.TP
+Description:
+
+The identity function returns its argument.
+
+
+.SS Function eval
+
+.TP
+Syntax:
+
+  (eval <form> <env>)
+
+.TP
+Description:
+
+The eval function treats the <form> object as a Lisp expression, which is
+evaluated. The side effects implied by the form are performed, and the value
+which it produces is returned. The <env> object specifies an environment for
+resolving the function and variable references encountered in the expression.
+The object nil can be specified as an environment, in which case the evaluation
+takes place in the top-level environment.
+
+.SH MUTATION
+
+.SS Operators inc, dec, set, push, pop, flip and del
+
+.TP
+Syntax:
+
+  (inc <place> [<delta>])
+  (dec <place> [<delta>])
+  (set <place> <new-value>)
+  (push <item> <place>)
+  (pop <place>)
+  (flip <place>)
+  (del <place>)
+
+.TP
+Description:
+
+These destructive operators update the value of a place. A place is a storage
+location which is denoted by a form. Place forms are identical to value
+accessing forms. That is to say, any form recognized as a place by these
+operators can be evaluated by itself to retrieve the value of the storage
+location. However, the converse is false: not all forms which access storage
+location are recognized as places.
+
+With are exceptions noted below, it is an error if a place does not exist.
+For instance, a variable being assigned must exist.
+
+Literal objects which are directly specified in the source code are
+considered part of the program body. Modifying parts of these objects
+therefore gives rise to self-modifying code. The behavior of self-modifying
+code is not specified.
+
+The inc and dec update the place by adding or subtracting, respectively, a
+displacement to or from that number. If the <delta> expression is
+specified, then it is evaluated and its value is used as the increment.
+Otherwise, a default increment of 1 is used. The prior value of the place
+and the delta must be suitable operands for the + and - functions.
+(inc x) is equivalent to (set x (+ 1 x)), except that expression x
+is evaluated only once to determine the storage location. The inc
+and dec operators return the new value that was stored.
+
+The set operator overwrites the previous value of a place with a new value,
+and also returns that value.
+
+The push and pop operators operate on a place which holds a list.  The push
+operator updates the list by replacing it with a new list which has a new item
+at the front, followed by the previous list. The item is returned.
+The pop operator performs the reverse operation: it removes the first item
+from the list and returns it. (push y x) is similar to
+
+  (let ((temp y)) (set x (cons temp x)) temp)
+
+except that x is evaluated only once to determine the storage place, and no
+such temporary variable is visible to the program.  Similarly, (pop x) is much
+like
+
+  (let ((temp (car x))) (set x (cdr x)) temp)
+ 
+except that x is evaluated only once, and no such temporary variable
+is visible to the program.
+
+The flip operator toggles a place between true and false. If the place
+contains a value other than nil, then its value is replaced with nil.
+If it contains nil, it is replaced with t.
+
+The del operator does not modify the value of a place, but rather deletes the
+place itself. Index values and ranges of lists denoted using the dwim operator
+indexing notation can be subject to a deletion, as can hash table entries
+denoted using dwim or gethash. It is an error to try to delete other kinds of
+places such as simple variables. The del operator returns the value of the
+place that was deleted. Deleting from a sequence means removing the element or
+elements. Deleting a hash place means removing the corresponding entry from the
+hash table.
+
+Currently, these forms are recognized as places:
+
+  <symbol>
+
+  (car <cons>)
+
+  (cdr <cons>)
+
+  (gethash <hash> <key> <default-value>)
+
+  (vecref <vector> <index>)
+
+  (dwim <obj> ...)
+  
+  [<obj> ...]  ;; equivalent to (dwim <obj> ...)
+
+
+A <symbol> place denotes a variable. If the variable does not exist, it is an
+error. 
+
+The (car <form>) and (cdr <form>) places denote the corresponding slots
+of a cons cell. The <cons> form must be an expression which evaluates to a
+cons. 
+
+The gethash place denotes a value stored in a hash table.
+The form <hash> must evaluate to a hash table. If the place does not exist
+in the hash table under the given key, then the destructive operation
+will create it. In that case, the <default-value> form is evaluated to
+determine the initial value of the place. Otherwise it is ignored.
+
+The vecref place denotes a vector element, allowing vector elements
+to be treated as assignment places.
+
+The dwim/[] place denotes a vector element, list element, string, or hash
+table, depending on the type of obj. 
+
+.SH BINDING AND ITERATION
+
+.SS Operators let and let*
+
+.TP
+Syntax:
+
+  (let ({<sym> | (<sym> <init-form>)}*) <body-form>*)
+  (let* ({<sym> | (<sym> <init-form>)}*) <body-form>*)
+
+.TP
+Description:
+
+The let and let* operators introduce a new scope with variables and
+evaluate forms in that scope. The operator symbol, either let or let*,
+is followed by a list which can contain any mixture of variable
+name symbols, or (<sym> <init-form>) pairs.  A symbol
+denotes the name of variable to be instantiated and initialized
+to the value nil.  A symbol specified with an init-form denotes
+a variable which is intialized from the value of the init-form.
+
+The symbols t and nil may not be used as variables, and neither
+can be keyword symbols: symbols denoted by a leading colon.
+
+The difference between let and let* is that in let*, later init-forms
+have visibility over the variables established by earlier variables
+in the same let* construct. In plain let, the variables are not
+visible to any of the init-forms.
+
+When the variables are established, then the body forms
+are evaluated in order. The value of the last form becomes the
+return value of the let. 
+
+If the forms are omitted, then the return value nil is produced.
+
+The variable list may be empty.
+
+
+.TP
+Examples:
+
+  (let ((a 1) (b 2)) (list a b)) -> (1 2)
+  (let* ((a 1) (b (+ a 1))) (list a b (+ a b))) -> (1 2 3)
+  (let ()) -> nil
+  (let (:a nil)) -> error, :a and nil can't be used as variables
+
 .SS Operators for and for*
 
 .TP
@@ -5558,72 +5517,6 @@ and processing resumes at step 2.
 
 Furthermore, the for operators establish an anonymous block,
 allowing the return operator to be used to terminate at any point.
-
-.SS Operator dohash
-
-.TP
-Syntax:
-
-  (dohash (<key-var> <value-var> <hash-form> [<result-form>])
-    <body-form>*)
-
-.TP
-Description:
-
-The dohash operator iterates over a hash table. The <hash-form> expression must
-evaluate to an object of hash table type. The <key-var> and <value-var>
-arguents must be symbols suitable for use as variable names.
-Bindings are established for these variables over the scope of the
-<body-form>-s and the optional result form.
-
-For each element in the hash table, the <key-var> and <value-var>
-variables are set to the key and value of that entry, respectively,
-and each <body-form>, if there are any, is evaluated.
-
-When all of the entries of the table are thus processed, the <result-form> is
-evaluated, and its return value becomes the return value of the dohash form. If
-there is no <result-form>, the return value is nil.
-
-The <result-form> and <body-form>-s are in the scope of an implicit anonymous
-block, which means that it is possible to terminate the execution of
-dohash early using (return) or (return <value>).
-
-.SS Operator unwind-protect
-
-.TP
-Syntax:
-
-  (unwind-protect <protected-form> <cleanup-form>*)
-
-.TP
-Description:
-
-The unwind-protect operator evaluates <protected-form> in such a way that no
-matter how the execution of <protected-form> terminates, the <cleanup-form>-s
-will be executed.
-
-The cleanup forms, however, are not protected. If a cleanup form terminates via
-some non-local jump, the subsequent cleanup forms are not evaluated.
-
-Cleanup forms themselves can "hijack" a non-local control transfer such
-as an exception. If a cleanup form is evaluated during the processing of
-a dynamic control transfer such as an exception, and that cleanup form
-initiats its own dynamic control transfer, the original control transfer
-is aborted and replaced with the new one.
-
-.TP
-Example:
-
-    (block foo
-      (unwind-protect
-        (progn (return-from foo 42)
-               (format t "not reached!\en"))
-        (format t "cleanup!\n")))
-
-In this example, the protected progn form terminates by returning from
-block foo. Therefore the form does not complete and so the
-output "not reached!" is not produced. However, the cleanup form
-excecutes, producing the output "cleanup!".
 
 .SS Operators each, each*, collect-each and collect-each*
 
@@ -5685,246 +5578,218 @@ Examples:
  9 is odd
  10 is even
 
-.SS Operator block
+.SH FUNCTION OBJECTS AND NAMED FUNCTIONS
+
+.SS Operator defun
 
 .TP
 Syntax:
 
-  (block <name> <body-form>*)
+  (defun <name> ({<param> [. <rest-param>]}*) <body-form>*)
+
+Description:
+
+The defun operator introduces a new function in the global function namespace.
+The function is similar to a lambda, and has the same parameter syntax
+and semantics as the lambda operator.
+
+Unlike in lambda, the <body-form>-s of a defun are surrounded by a block.
+The name of this block is the same as the name of the function, making it
+possible to terminate the function and return a value using (return-from <name>
+<value>). For more information, see the definition of the block operator.
+
+A function may call itself by name, allowing for recursion.
+
+.SS Operator lambda
+
+.TP
+Syntax:
+
+  (lambda ({<sym>}*[. <sym>]) {<body-form>}*)
+
+  (lambda <sym> {<body-form>}*)
 
 .TP
 Description:
 
-The block operator introduces a named block around the execution of
-some forms. The <name> argument must be a symbol. Since a block name is not
-a variable binding, keyword symbols are permitted, and so are the symbols
-t and nil.   A block named by the symbol nil is slighlty special: it is
-understood to be an anonymous block.
+The lambda operator produces a value which is a function.  Like in most other
+Lisps, functions are objects in TXR Lisp.  They can be passed to functions as
+arguments, returned from functions, aggregated into lists, stored in variables,
+et cetera.
 
-Blocks in TXR Lisp have dynamic scope. This means that the following
-situation is allowed:
+The first argument of lambda is the list of parameters for the function.   It
+may be empty, and it may also be an improper list (dot notation) where the
+terminating atom is a symbol other than nil. It can also be a single symbol.
 
-  (defun func () (return-from foo 42))
-  (block foo (func))
+The second and subsequent arguments are the forms making up the function body.
+The body may be empty.
 
-The function can return from the foo block even though the foo block
-does not lexically surround foo.
+When a function is called, the parameters are instantiated as variables that
+are visible to the body forms. The variables are initialized from the values of
+the argument expressions appearing in the function call.
 
-Thus blocks in TXR Lisp provide dynamic non-local returns, as well
-as returns out of lexical nesting.
+The dotted notation can be used to write a function that accepts
+a variable number of arguments. To write a function that accepts
+variable arguments only, with no required arguments, use a single symbol.
+
+The keyword symbol : can appear in the parameter list. It is not an argument,
+but a separator between required parameters and optional parameters.
+When the function is called, optional parameter for which arguments
+are not supplied take on the value nil.
+
+Functions created by lambda capture the surrounding variable bindings.
+
+
+.TP
+Examples:
+
+Counting function. This function, which takes no arguments, captures the
+variable "counter". Whenever this object is called, it increments the counter
+by 1 and returns the incremented value.
+
+  (let ((counter 0))
+    (lambda () (inc counter)))
+
+Function that takes two or more arguments. The third and subsequent arguments
+are aggregated into a list passed as the single parameter z:
+
+  (lambda (x y . z) (list 'my-arguments-are x y z))
+
+Variadic funcion:
+
+  (lambda args (list 'my-list-of-arguments args))
+
+Optional arguments:
+
+  [(lambda (x : y) (list x y)) 1] -> (1 nil)
+  [(lambda (x : y) (list x y)) 1 2] -> (1 2)
+
+.SS Operator call
+
+.TP
+Syntax:
+
+  (call <function-form> {<argument-form>}*)
+
+.TP
+Description:
+
+The call operator invokes a function. <function-form> must evaluate
+to a function. Each <argument-form> is evaluated in left to right
+order and the resulting values are passed to the function as arguments.
+The return value of the (call ...) expression is that of the function
+applied to those arguments.
+
+The <function-form> may be any Lisp form that produces a function
+as its value: a symbol denoting a variable in which a function is stored,
+a lambda expression, a function call which returns a function,
+or (fun ...) expression.
+
+.TP
+Examples:
+
+Apply arguments 1 2 to a lambda which adds them to produce 3:
+
+(call (lambda (a b) (+ a b)) 1 2) -> 3
+
+Useless use of call on a named function; equivalent to (list 1 2):
+
+(call (fun list) 1 2) -> (1 2)
+
+.SS Operator fun
+
+.TP
+Syntax:
+
+  (fun <function-name>)
+
+.TP
+Description:
+The fun operator retrieves the function object corresponding to a named
+function.
+. The <function-name> is a symbol denoting a named function: a built in
+function, or one defined by defun.
 
 .TP
 Dialect Note:
+A lambda expression is not a function name in TXR Lisp. The 
+syntax (fun (lambda ...)) is invalid.
 
-In Common Lisp, blocks are lexical. A separate mechanism consisting of
-catch and throw operators performs non-local transfer based on symbols.
-The TXR Lisp example:
-
-  (defun func () (return-from foo 42))
-  (block foo (func))
-
-is not allowed in Common Lisp, but can be transliterated to:
-
-  (defun func () (throw 'foo 42))
-  (catch 'foo (func))
-
-Note that foo is quoted in CL. This underscores the dynamic nature of
-the construct. THROW itself is a function and not an operator.
-
-.SS Operators return, return-from
+.SS Function symbol-function
 
 .TP
 Syntax:
 
-  (return [<value>])
-  (return-from <name> [<value>])
+  (symbol-function <symbol>)
 
 .TP
 Description:
 
-The return operator must be dynamically enclosed within an anonymous
-block (a block named by the symbol nil). It immediately terminates the
-evaluation of the innermost anonyous block which encloses it, causing
-it to return the specified value. If the value is omitted, the anonymous
-block returns nil.
-
-The return-from operator must be dynamically enclosed within a named block
-whose name matches the <name> argument. It immediately terminates the
-evaluation of the innermost such block, causing it to return the specified
-value. If the value is omitted, that block returns nil.
+The symbol-function retrieves the toplevel function binding of the given
+symbol if it has one. If the symbol has no toplevel function binding,
+the value nil is returned.
 
 .TP
-Example:
+Dialect note:
 
-    (block foo
-      (let ((a "abc\n")
-            (b "def\n"))
-        (pprint a *stdout*)
-        (return-from foo 42)
-        (pprint b *stdout*)))
+The symbol-function form is currently not an assignable place. Only
+the defun operator defines functions.
 
-Here, the output produced is "abc". The value of b is not printed
-because the return-from terminates block foo, and so the second pprint
-form is not evaluated.
-
-.SS Operator delay
+.SS Function func-get-form
 
 .TP
 Syntax:
 
-  (delay <expression>)
+  (func-get-form <func>)
 
 .TP
 Description:
 
-The delay operator arranges for the delayed (or "lazy") evaluation of
-<expression>. This means that the expression is not evaluated immediately.
-Rather, the delay expression produces a promise object.
+The func-get-form function retrieves a source code form of an interpreted
+function. The source code form has the syntax 
+(<name> <arglist> {<body-form>}*).
 
-The promise object can later be passed to the force function (described
-later in this document). The force function will trigger the evaluation
-of the expression and retrieve the value.
-
-The expression is evaluated in the original scope, no mater where
-the force takes place.
-
-The expression is evaluated at most once, by the first call to force.
-Additional calls to force only retrieve a cached value.
-
-.TP
-Example:
-
-  @(do
-    ;; list is popped only once: the value is computed
-    ;; just once when force is called on a given promise
-    ;; for the first time.
-
-    (defun get-it (promise)
-      (format t "*list* is ~s\en" *list*)
-      (format t "item is ~s\en" (force promise))
-      (format t "item is ~s\en" (force promise))
-      (format t "*list* is ~s\en" *list*))
-
-
-    (defvar *list* '(1 2 3))
-
-    (get-it (delay (pop *list*))))
-
-  Output:
-
-  *list* is (1 2 3)
-  item is 1
-  item is 1
-  *list* is (2 3)
-
-.SS Operator gen
+.SS Function func-get-env
 
 .TP
 Syntax:
 
-  (gen <while-expression> <produce-item-expression>)
+  (func-get-env <func>)
 
 .TP
 Description:
 
-The gen operator produces a lazy list, in a manner similar to the generate
-function. Whereas the generate function (documented later in this manual)
-takes functional arguments, the gen operator takes two expressions, which is
-often more convenient.
+The func-get-env function retrieves the environment object associated with
+a function.  The environment object holds the captured bindings of a lexical
+closure.
 
-The return value of gen is a lazy list. When the lazy list is accessed, for
-instance with the functions car and cdr, it produces items on demand. Prior to
-producing each item, the <while-expression> is evaluated, in its original
-lexical scope.  If the expression yields true, then <produce-item-expression>
-is evaluated, and its return value is incorporated as the next item of the lazy
-list. If the expression yields false, then the lazy list immediately
-terminates.
-
-The gen operator itself immediately evaluates <while-expression> before
-producing the lazy list. If the expression yields false, then the operator
-returns the empty list nil. Otherwise, it instantiates the lazy list and
-invokes the <produce-item-expression> to force the first item.
-
-.TP
-
-Example:
-
-  @(do
-    ;; Make a lazy list of integers up to 1000
-    ;; access and print the first three.
-    (let* ((counter 0)
-           (list (gen (< counter 1000) (inc counter))))
-      (format t "~s ~s ~s\en" (pop list) (pop list) (pop list))))
-
-  Output:
-  1 2 3
-
-.SS Operator catch
+.SS Function functionp
 
 .TP
 Syntax:
 
-  (catch <try-expression>
-    {(<symbol> (<arg>*) <body-form>*)}*)
+  (functionp <obj>)
 
 .TP
 Description:
 
-The catch operator establishes an exception catching block around
-the <try-expression>. The <try-expression> is followed by zero or more
-catch clauses. Each catch clause consists of a symbol which denotes
-an exception type, an argument list, and zero or more body forms.
+The functionp obj returns t if the argument is a function, otherwise it
+returns nil.
 
-If <try-expression> terminates normally, then the catch clauses
-are ignored. The catch itself terminates, and its return value is
-that of the <try-expression>.
-
-If <try-expression> throws an exception which is a subtype of one or more of
-the type symbols given in the exception clauses, then the first (leftmost) such
-clause becomes the exit point where the exception is handled.
-The exception is converted into arguments for the clause, and the clause
-body is executed. When the clause body terminates, the catch terminates,
-and the return value of the catch is that of the clause body.
-
-If <try-expression> throws an exception which is not a subtype of any of
-the symbols given in the clauses, then the search for an exit point for
-the exception continues through the enclosing forms. The catch clauses
-are not involved in the handling of that exception.
-
-When a clause catches an exception, the number of arguments in the catch must
-match the number of elements in the exception.  A catch argument list
-resembles a function or lambda argument list, and may be dotted.  For instance
-the clause (foo (a . b)) catches an exception subtyped from foo, with one or
-more elements. The first element binds to parameter a, and the rest, if any,
-bind to parameter b.  If there is only one element, b takes on the value nil.
-
-Also see: the unwind-protect operator, and the functions throw, throwf
-and error.
-
-.SS Lisp Functions and Variables
-
-When the first element of a compound form is a symbol denoting a function,
-the evaluation takes place as follows. The remaining forms, if any, denote
-the arguments to the function. They are evaluated in left to right order
-to produce the argument values, and passed to the function.
-An exception is thrown if there are not enough arguments, or too many.
-
-Programs can define named functions with the defun operator
-
-The following are Lisp functions and variables built-in to TXR.
-
-.SS Function identity
+.SS Function interp-fun-p
 
 .TP
 Syntax:
 
-  (identity <value>)
+  (interp-fun-p <obj>)
 
 .TP
 Description:
 
-The identity function returns its argument.
+The functionp obj returns t if the argument is an interpreted function,
+otherwise it returns nil.
 
+.SH OBJECT TYPE AND EQUIVALENCE
 
 .SS Function typeof
 
@@ -5997,6 +5862,95 @@ A bignum integer: arbitrary precision integer that is heap-allocated.
 .PP
 There are additional kinds of objects, such as streams.
 
+.SS Functions null and not
+
+.TP
+Syntax:
+
+  (null <value>)
+  (not <value>)
+
+.TP
+Description:
+
+The null and not functions are synonyms.  They tests whether a value is the
+object nil. They returns t if this is the case, nil otherwise.
+
+.TP
+Examples:
+
+  (null '()) -> t
+  (null nil) -> t
+  (null ()) -> t
+
+  (if (null x) (format t "x is nil!"))
+
+  (let ((list '(b c d)))
+    (if (not (memq 'a list))
+      (format t "list ~s does not contain the symbol a\en")))
+
+.SS Functions eq, eql and equal
+
+.TP
+Syntax:
+
+  (eq <left-obj> <right-obj>)
+  (eql <left-obj> <right-obj>)
+  (equal <left-obj> <right-obj>)
+
+.TP
+Description:
+
+The principal equality test functions eq, eql and equal test whether
+two objects are equivalent, using different criteria. They return t
+if the objects are equivalent, and nil otherwise.
+
+The eq function uses the strictest equivalence test, called implementation
+equality.  The eq function returns t if, and only if, <left-obj> and
+<right-obj> are actually the same object. The eq test is is implemented
+by comparing the raw bit pattern of the value, whether or not it is
+an immediate value or a pointer to a heaped object, including its type
+tags.  Consequently, two objects of different type are never equal, two
+character values are eq if they are the same character, and two fixnum integers
+are eq if they have the same value.  All other objects kinds are actually
+represented as pointers, and are eq if they point to the same object in memory.
+So two bignum integers might not be eq even if they have the same numeric
+value, two lists might not be eq even if all their corresponding elements are
+eq, two strings might not be eq even if they hold identical text, etc.
+
+The eql function is slightly less strict than eq. The difference between
+eql and eq is that if <left-obj> and <right-obj> are bignums which have
+the same numeric value, eql returns t, even if they are different objects.
+For all other objects, eql behaves like eq.
+
+The equal function is less strict than eql. In general, it recurses into some
+kinds of aggregate objects to perform a structural equivalence.  If <left-obj>
+and <right-obj> are eql then they are also equal.  If the two objects are both
+cons cells, then they are equal if their "car" fields are equal and their "cdr"
+fields are equal.  If two objects are vectors, they are equal if they have the
+same length, and their corresponding elements are equal.  If two objects are
+strings, they are equal if they are textually identical.  If two objects are
+functions, they are equal if they have equal environments, and if they have
+equal functions. Two compiled functions are the same if they are the same
+function. Two interpreted functions are equal if their list structure is equal.
+
+For some aggregate objects, there is no special semantics.  Two hashes,
+symbols, packages, or streams are equal if they are the same hash.
+
+Certain object types have a custom equal function.
+
+.SH BASIC LIST LIBRARY
+
+When the first element of a compound form is a symbol denoting a function,
+the evaluation takes place as follows. The remaining forms, if any, denote
+the arguments to the function. They are evaluated in left to right order
+to produce the argument values, and passed to the function.
+An exception is thrown if there are not enough arguments, or too many.
+
+Programs can define named functions with the defun operator
+
+The following are Lisp functions and variables built-in to TXR.
+
 .SS Function cons
 
 .TP
@@ -6030,6 +5984,54 @@ For instance (1 2 . 3) is an improper list of two elements,
 terminated by 3, and can be constructed using (cons 1 (cons 2 3)).
 Another notation for this list is (1 . (2 . 3))
 The list (1 2) is (1 . (2 . nil)).
+
+.SS Function atom
+
+.TP
+Syntax:
+(atom <value>)
+
+.TP
+Description:
+
+The atom function tests whether a value is an atom. It returns t if this is the
+case, nil otherwise.  All values which are not cons cells are atoms.
+
+(atom x) is equivalent to (not (consp x)).
+
+.TP
+Examples:
+
+  (atom 3) -> t
+  (atom (cons 1 2)) -> nil
+  (atom "abc") -> t
+  (atom '(3)) -> nil
+
+.SS Function consp
+
+.TP
+Syntax:
+
+(consp <value>)
+
+.TP
+Description:
+
+The atom function tests whether a value is a cons. It returns t if this is the
+case, nil otherwise.
+
+(consp x) is equivalent to (not (atom x)).
+
+Non-empty lists test positive under consp because a list is represented
+as a reference to the first cons in a chain of one or more conses.
+
+.TP
+Examples:
+
+  (consp 3) -> nil
+  (consp (cons 1 2)) -> t
+  (consp "abc") -> nil
+  (consp '(3)) -> t
 
 .SS Functions car and first
 
@@ -6213,154 +6215,36 @@ Examples:
 
 .SS Function sub-list
 
+.TP
+Syntax:
+
+  (sub-list <list> [<from> [<to>]])
+
+.TP
+Description:
+
+The sub-list function extracts a sublist from a list. It is exactly like the
+more generic function sub, except that it operates only on lists.
+For a description of the arguments and semantics, refer to the sub function.
+
 .SS Function replace-list
 
-.SS Function atom
-
 .TP
 Syntax:
-(atom <value>)
+
+  (replace-list <list> <item-sequence> [<from> [<to>]])
 
 .TP
 Description:
 
-The atom function tests whether a value is an atom. It returns t if this is the
-case, nil otherwise.  All values which are not cons cells are atoms.
+The replace-list function replaces a subrange of a list with items from
+the item-sequence argument, which may be any kind of sequence (list, vector
+or string).
 
-(atom x) is equivalent to (not (consp x)).
+It is like the replace function, except that the first argument must be
+a list.
 
-.TP
-Examples:
-
-  (atom 3) -> t
-  (atom (cons 1 2)) -> nil
-  (atom "abc") -> t
-  (atom '(3)) -> nil
-
-.SS Functions null and not
-
-.TP
-Syntax:
-
-  (null <value>)
-  (not <value>)
-
-.TP
-Description:
-
-The null and not functions are synonyms.  They tests whether a value is the
-object nil. They returns t if this is the case, nil otherwise.
-
-.TP
-Examples:
-
-  (null '()) -> t
-  (null nil) -> t
-  (null ()) -> t
-
-  (if (null x) (format t "x is nil!"))
-
-  (let ((list '(b c d)))
-    (if (not (memq 'a list))
-      (format t "list ~s does not contain the symbol a\en")))
-
-.SS Function consp
-
-.TP
-Syntax:
-
-(consp <value>)
-
-.TP
-Description:
-
-The atom function tests whether a value is a cons. It returns t if this is the
-case, nil otherwise.
-
-(consp x) is equivalent to (not (atom x)).
-
-Non-empty lists test positive under consp because a list is represented
-as a reference to the first cons in a chain of one or more conses.
-
-.TP
-Examples:
-
-  (consp 3) -> nil
-  (consp (cons 1 2)) -> t
-  (consp "abc") -> nil
-  (consp '(3)) -> t
-
-.SS Function make-lazy-cons
-
-.TP
-Syntax:
-
-(make-lazy-cons <function>)
-
-.TP
-Description:
-
-The function make-lazy-cons makes a special kind of cons cell called a lazy
-cons, or lcons.  Lazy conses are useful for implementing lazy lists.
-
-Lazy lists are lists which are not allocated all at once. Rather,
-their elements materialize when they are accessed, like
-magic stepping stones appearing under one's feet out of thin air.
-
-A lazy cons has "car" and "cdr" fields like a regular cons, and those
-fields are initialized to nil when the lazy cons is created. A lazy cons also
-has an update function, the one which is provided as an argument to
-make-lazy-cons.
-
-When either the car and cdr fields of a cons are accessed for the first time,
-the function is automatically invoked first. That function has the opportunity
-to initialize the car and cdr fields. Once the function is called, it is removed
-from the lazy cons: the lazy cons no longer has an update function.
-
-To continue a lazy list, the function can make another call to make-lazy-cons
-and install the resulting cons as the cdr of the lazy cons.
-
-.TP
-Example:
-
-  ;;; lazy list of integers between min and max
-  (defun integer-range (min max)
-    (let ((counter min))
-      ;; min is greater than max; just return empty list,
-      ;; otherwise return a lazy list
-      (if (> min max)
-        nil
-        (make-lazy-cons (lambda (lcons)
-                          ;; install next number into car
-                          (rplaca lcons counter)
-                          ;; now deal wit cdr field
-                          (cond
-                             ;; max reached, terminate list with nil!
-                            ((eql counter max) 
-                             (rplacd lcons nil))
-                            ;; max not reached: increment counter
-                            ;; and extend with another lazy cons
-                            (t
-                             (inc counter)
-                             (rplacd lcons (make-lazy-cons 
-                                            (lcons-fun lcons))))))))))
-
-.SS Function lcons-fun
-
-.TP
-Syntax:
-
-(lcons-fun <lazy-cons>)
-
-.TP
-Description:
-
-The lcons-fun function retrieves the update function of a lazy cons.
-Once a lazy cons has been accessed, it no longer has an update function
-and lcons-fun returns nil.  While the update function of a lazy cons is
-executing, it is still accessible. This allows the update function
-to retrieve a reference to itself and propagate itself into
-another lazy cons (as in the example under make-lazy-cons).
+For a description of the arguments and semantics, refer to the replace function.
 
 .SS Functions listp and proper-listp
 
@@ -6398,155 +6282,6 @@ Description:
 The length-list function returns the length of a proper or improper
 list. The length of a list is the number of conses in that list.
 
-.SS Functions mapcar, mappend, mapcar* and mappend*
-
-.TP
-Syntax:
-
-  (mapcar <function> <list> <list>*)
-  (mappend <function> <list> <list>*)
-  (mapcar* <function> <list> <list>*)
-  (mappend* <function> <list> <list>*)
-
-.TP
-Description:
-
-When given three arguments, the mapcar function processes applies a function to
-the elements of a list and returns a list of the resulting values.
-Essentially, the list is filtered through the function.
-
-When additional lists are given as arguments, this filtering behavior is
-generalized in the following way: mapcar traverses the lists in parallel,
-taking a value from each list as an argument to the function. If there
-are two lists, the function is called with two arguments and so forth.
-The process is limited by the length of the shortest list.
-The return values of the function are collected into a new list which is
-returned.
-
-The mappend function works like mapcar, with the following difference.
-Rather than accumulating the values returned by the function into a list,
-mappend expects the items returned by the function to be lists which
-are catenated with append, and the resulting list is returned.
-That is to say, (mappend f a b c) is equivalent to
-(apply (fun append) (mapcar f a b c)). 
-
-The mapcar* and mappend* functions work like mapcar and mappend, respectively.
-However, they return lazy lists rather than generating the entire
-output list prior to returning.
-
-.TP
-Caveats:
-
-Like mappend, mappend* must "consume" empty lists. For instance,
-if the function being mapped puts out a sequence of nil values,
-then the result must be the empty list nil, because
-(append nil nil nil nil ...) is nil.
-
-Suppose that mappend* is used on inputs which are infinite lazy
-lists, such that the function returns nil values indefinitely.
-For instance:
-
-  ;; Danger: infinite loop!!!
-  (mappend* (fun identity) (repeat '(nil))) 
-
-The mappend* function is caught in a loop trying to consume
-and squash an infinite stream of nil values.
-
-.TP
-Examples:
-
-  ;; multiply every element by two
-  (mapcar (lambda (item) (* 2 item)) '(1 2 3)) -> (4 6 8)
-
-  ;; "zipper" two lists together
-  (mapcar (lambda (le ri) (list le ri)) '(1 2 3) '(a b c)) '((1 a) (2 b) (3 c)))
-
-  ;; like append, mappend allows a lone atom or a trailing atom:
-  (mappend (fun identity) 3) -> (3)
-  (mappend (fun identity) '((1) 2)) -> (1 . 2)
-
-  ;; take just the even numbers
-  (mappend (lambda (item) (if (evenp x) (list x))) '(1 2 3 4 5))
-  -> (2 4)
-
-.SS Function apply
-
-.TP
-Syntax:
-
-(apply <function> <arglist>)
-
-.TP
-Description:
-
-The apply function treats a list of values as individual arguments that
-are passed to the specified function, which is called, and its return
-value becomes the return value of apply.
-
-.TP
-Examples:
-
-  ;; '(1 2 3) becomes arguments to list, thus (list 1 2 3).
-  (apply (fun list) '(1 2 3)) -> (1 2 3)
-
-.TP
-Dialect note:
-
-TXR Lisp apply does not take additional arguments before the list. 
-In Common Lisp we can write (apply #'list 1 2 (list 3 4 5)) which
-yields (1 2 3 4 5). In TXR Lisp, this usage can be simulated using
-(apply (fun list) (list 1 2 (list 3 4 5))) or
-(apply (fun list) '(,1 ,2 ,*(list 3 4 5))) .
-
-.SS Functions reduce-left and reduce-right
-
-.TP
-Syntax:
-
-  (reduce-left <binary-function> <list> <init-value> <key-function>)
-  (reduce-right <binary-function> <list> <init-value> <key-function>)
-
-.TP
-Description:
-
-The reduce-left and reduce-right functions reduce lists of operands
-specified in <list> to a single value by the repeated application of
-<binary-function>.
-
-First, both functions initialize an internal accumulator with <init-value>.
-
-Under reduce-left, the list is processed left to right. If elements
-remain to be processed, the <binary-function> is repeatedly called with two
-arguments: the accumulator and the next element from the list. After each call,
-the return value of the function replaces the accumulator. When no more items
-remain, the accumulator is returned.
-
-Under reduce-right, the list is processed right to left. If elements
-remain to be processed, the <binary-function> is repeatedly called with two
-arguments: the next element from the list and the accumulator. After each call,
-the return value of the function replaces the accumulator. When no more items
-remain, the accumulator is returned.
-
-The <key-function> specifies how each element from the <list> is converted
-to an argument to <binary-function>. The value nil is equivalent to 
-(fun identity), which means that each list element is taken as the value itself.
-
-
-.TP
-Examples:
-
-  ;;; list is empty, so 1 is just returned:
-  (reduce-left (fun +) () 1 nil)  ->  1  
-
-  ;;; computes (- (- (- 0 1) 2) 3) 
-  (reduce-left (fun -) '(1 2 3) 0 nil) -> -6
-
-  ;;; computes (- 1 (- 2 (- 3 0)))
-  (reduce-right (fun -) '(1 2 3) 0 nil) -> 2
-
-  ;;; computes (* 1 2 3)
-  (reduce-left (fun *) '((1) (2) (3)) 1 (fun first)) -> 6
-
 .SS Function copy-list
 
 .TP
@@ -6571,6 +6306,19 @@ Dialect Note:
 
 Common Lisp does not allow the argument to be an atom, except
 for the empty list nil.
+
+.SS Function copy-cons
+
+.TP
+Syntax:
+
+  (copy-cons <cons>)
+
+.TP
+Description:
+
+This function creates a fresh cons cell, whose car and cdr fields are
+copied from an existing cons cell.
 
 .SS Functions reverse, nreverse
 
@@ -6734,6 +6482,8 @@ Examples:
 
   [(remql* 13 (range 1)) 0..100]
 
+.SH APPLICATIVE LIST PROCESSING
+
 .SS Functions remove-if, keep-if, remove-if* and keep-if*
 
 .TP
@@ -6807,6 +6557,159 @@ and tree-find is recursively applied to each element of the list in turn, using
 the same <obj> and <test-function> arguments, stopping at the first element
 which returns non-nil.  
 
+.SS Functions find and find-if
+
+.SS Function set-diff
+
+.SS Functions mapcar, mappend, mapcar* and mappend*
+
+.TP
+Syntax:
+
+  (mapcar <function> <list> <list>*)
+  (mappend <function> <list> <list>*)
+  (mapcar* <function> <list> <list>*)
+  (mappend* <function> <list> <list>*)
+
+.TP
+Description:
+
+When given three arguments, the mapcar function processes applies a function to
+the elements of a list and returns a list of the resulting values.
+Essentially, the list is filtered through the function.
+
+When additional lists are given as arguments, this filtering behavior is
+generalized in the following way: mapcar traverses the lists in parallel,
+taking a value from each list as an argument to the function. If there
+are two lists, the function is called with two arguments and so forth.
+The process is limited by the length of the shortest list.
+The return values of the function are collected into a new list which is
+returned.
+
+The mappend function works like mapcar, with the following difference.
+Rather than accumulating the values returned by the function into a list,
+mappend expects the items returned by the function to be lists which
+are catenated with append, and the resulting list is returned.
+That is to say, (mappend f a b c) is equivalent to
+(apply (fun append) (mapcar f a b c)). 
+
+The mapcar* and mappend* functions work like mapcar and mappend, respectively.
+However, they return lazy lists rather than generating the entire
+output list prior to returning.
+
+.TP
+Caveats:
+
+Like mappend, mappend* must "consume" empty lists. For instance,
+if the function being mapped puts out a sequence of nil values,
+then the result must be the empty list nil, because
+(append nil nil nil nil ...) is nil.
+
+Suppose that mappend* is used on inputs which are infinite lazy
+lists, such that the function returns nil values indefinitely.
+For instance:
+
+  ;; Danger: infinite loop!!!
+  (mappend* (fun identity) (repeat '(nil))) 
+
+The mappend* function is caught in a loop trying to consume
+and squash an infinite stream of nil values.
+
+.TP
+Examples:
+
+  ;; multiply every element by two
+  (mapcar (lambda (item) (* 2 item)) '(1 2 3)) -> (4 6 8)
+
+  ;; "zipper" two lists together
+  (mapcar (lambda (le ri) (list le ri)) '(1 2 3) '(a b c)) '((1 a) (2 b) (3 c)))
+
+  ;; like append, mappend allows a lone atom or a trailing atom:
+  (mappend (fun identity) 3) -> (3)
+  (mappend (fun identity) '((1) 2)) -> (1 . 2)
+
+  ;; take just the even numbers
+  (mappend (lambda (item) (if (evenp x) (list x))) '(1 2 3 4 5))
+  -> (2 4)
+
+.SS Function apply
+
+.TP
+Syntax:
+
+(apply <function> <arglist>)
+
+.TP
+Description:
+
+The apply function treats a list of values as individual arguments that
+are passed to the specified function, which is called, and its return
+value becomes the return value of apply.
+
+.TP
+Examples:
+
+  ;; '(1 2 3) becomes arguments to list, thus (list 1 2 3).
+  (apply (fun list) '(1 2 3)) -> (1 2 3)
+
+.TP
+Dialect note:
+
+TXR Lisp apply does not take additional arguments before the list. 
+In Common Lisp we can write (apply #'list 1 2 (list 3 4 5)) which
+yields (1 2 3 4 5). In TXR Lisp, this usage can be simulated using
+(apply (fun list) (list 1 2 (list 3 4 5))) or
+(apply (fun list) '(,1 ,2 ,*(list 3 4 5))) .
+
+.SS Functions reduce-left and reduce-right
+
+.TP
+Syntax:
+
+  (reduce-left <binary-function> <list> <init-value> <key-function>)
+  (reduce-right <binary-function> <list> <init-value> <key-function>)
+
+.TP
+Description:
+
+The reduce-left and reduce-right functions reduce lists of operands
+specified in <list> to a single value by the repeated application of
+<binary-function>.
+
+First, both functions initialize an internal accumulator with <init-value>.
+
+Under reduce-left, the list is processed left to right. If elements
+remain to be processed, the <binary-function> is repeatedly called with two
+arguments: the accumulator and the next element from the list. After each call,
+the return value of the function replaces the accumulator. When no more items
+remain, the accumulator is returned.
+
+Under reduce-right, the list is processed right to left. If elements
+remain to be processed, the <binary-function> is repeatedly called with two
+arguments: the next element from the list and the accumulator. After each call,
+the return value of the function replaces the accumulator. When no more items
+remain, the accumulator is returned.
+
+The <key-function> specifies how each element from the <list> is converted
+to an argument to <binary-function>. The value nil is equivalent to 
+(fun identity), which means that each list element is taken as the value itself.
+
+
+.TP
+Examples:
+
+  ;;; list is empty, so 1 is just returned:
+  (reduce-left (fun +) () 1 nil)  ->  1  
+
+  ;;; computes (- (- (- 0 1) 2) 3) 
+  (reduce-left (fun -) '(1 2 3) 0 nil) -> -6
+
+  ;;; computes (- 1 (- 2 (- 3 0)))
+  (reduce-right (fun -) '(1 2 3) 0 nil) -> 2
+
+  ;;; computes (* 1 2 3)
+  (reduce-left (fun *) '((1) (2) (3)) 1 (fun first)) -> 6
+
 .SS Function some, all and none
 
 .TP
@@ -6859,55 +6762,435 @@ Examples:
   ;; none of the integers are even
   (none (fun evenp) '(1 3 4 7) nil) -> t
 
-.SS Functions eq, eql and equal
+.SH ASSOCIATION LISTS
+
+.SS Function assoc
+
+.SS Function assq
+
+.SS Function acons
+
+.SS Function acons-new
+
+.SS Function aconsq-new
+
+.SS Function alist-remove
+
+.SS Function alist-nremove
+
+.SS Function copy-alist
+
+.SH LIST SORTING
+
+.SS Function merge
+
+.SS Function multi-sort
+
+.SH LAZY LISTS AND LAZY EVALUATION
+
+.SS Function make-lazy-cons
 
 .TP
 Syntax:
 
-  (eq <left-obj> <right-obj>)
-  (eql <left-obj> <right-obj>)
-  (equal <left-obj> <right-obj>)
+(make-lazy-cons <function>)
 
 .TP
 Description:
 
-The principal equality test functions eq, eql and equal test whether
-two objects are equivalent, using different criteria. They return t
-if the objects are equivalent, and nil otherwise.
+The function make-lazy-cons makes a special kind of cons cell called a lazy
+cons, or lcons.  Lazy conses are useful for implementing lazy lists.
 
-The eq function uses the strictest equivalence test, called implementation
-equality.  The eq function returns t if, and only if, <left-obj> and
-<right-obj> are actually the same object. The eq test is is implemented
-by comparing the raw bit pattern of the value, whether or not it is
-an immediate value or a pointer to a heaped object, including its type
-tags.  Consequently, two objects of different type are never equal, two
-character values are eq if they are the same character, and two fixnum integers
-are eq if they have the same value.  All other objects kinds are actually
-represented as pointers, and are eq if they point to the same object in memory.
-So two bignum integers might not be eq even if they have the same numeric
-value, two lists might not be eq even if all their corresponding elements are
-eq, two strings might not be eq even if they hold identical text, etc.
+Lazy lists are lists which are not allocated all at once. Rather,
+their elements materialize when they are accessed, like
+magic stepping stones appearing under one's feet out of thin air.
 
-The eql function is slightly less strict than eq. The difference between
-eql and eq is that if <left-obj> and <right-obj> are bignums which have
-the same numeric value, eql returns t, even if they are different objects.
-For all other objects, eql behaves like eq.
+A lazy cons has "car" and "cdr" fields like a regular cons, and those
+fields are initialized to nil when the lazy cons is created. A lazy cons also
+has an update function, the one which is provided as an argument to
+make-lazy-cons.
 
-The equal function is less strict than eql. In general, it recurses into some
-kinds of aggregate objects to perform a structural equivalence.  If <left-obj>
-and <right-obj> are eql then they are also equal.  If the two objects are both
-cons cells, then they are equal if their "car" fields are equal and their "cdr"
-fields are equal.  If two objects are vectors, they are equal if they have the
-same length, and their corresponding elements are equal.  If two objects are
-strings, they are equal if they are textually identical.  If two objects are
-functions, they are equal if they have equal environments, and if they have
-equal functions. Two compiled functions are the same if they are the same
-function. Two interpreted functions are equal if their list structure is equal.
+When either the car and cdr fields of a cons are accessed for the first time,
+the function is automatically invoked first. That function has the opportunity
+to initialize the car and cdr fields. Once the function is called, it is removed
+from the lazy cons: the lazy cons no longer has an update function.
 
-For some aggregate objects, there is no special semantics.  Two hashes,
-symbols, packages, or streams are equal if they are the same hash.
+To continue a lazy list, the function can make another call to make-lazy-cons
+and install the resulting cons as the cdr of the lazy cons.
 
-Certain object types have a custom equal function.
+.TP
+Example:
+
+  ;;; lazy list of integers between min and max
+  (defun integer-range (min max)
+    (let ((counter min))
+      ;; min is greater than max; just return empty list,
+      ;; otherwise return a lazy list
+      (if (> min max)
+        nil
+        (make-lazy-cons (lambda (lcons)
+                          ;; install next number into car
+                          (rplaca lcons counter)
+                          ;; now deal wit cdr field
+                          (cond
+                             ;; max reached, terminate list with nil!
+                            ((eql counter max) 
+                             (rplacd lcons nil))
+                            ;; max not reached: increment counter
+                            ;; and extend with another lazy cons
+                            (t
+                             (inc counter)
+                             (rplacd lcons (make-lazy-cons 
+                                            (lcons-fun lcons))))))))))
+
+.SS Function lcons-fun
+
+.TP
+Syntax:
+
+(lcons-fun <lazy-cons>)
+
+.TP
+Description:
+
+The lcons-fun function retrieves the update function of a lazy cons.
+Once a lazy cons has been accessed, it no longer has an update function
+and lcons-fun returns nil.  While the update function of a lazy cons is
+executing, it is still accessible. This allows the update function
+to retrieve a reference to itself and propagate itself into
+another lazy cons (as in the example under make-lazy-cons).
+
+.SS Function generate
+
+.SS Function repeat
+
+.SS Operator gen
+
+.TP
+Syntax:
+
+  (gen <while-expression> <produce-item-expression>)
+
+.TP
+Description:
+
+The gen operator produces a lazy list, in a manner similar to the generate
+function. Whereas the generate function (documented later in this manual)
+takes functional arguments, the gen operator takes two expressions, which is
+often more convenient.
+
+The return value of gen is a lazy list. When the lazy list is accessed, for
+instance with the functions car and cdr, it produces items on demand. Prior to
+producing each item, the <while-expression> is evaluated, in its original
+lexical scope.  If the expression yields true, then <produce-item-expression>
+is evaluated, and its return value is incorporated as the next item of the lazy
+list. If the expression yields false, then the lazy list immediately
+terminates.
+
+The gen operator itself immediately evaluates <while-expression> before
+producing the lazy list. If the expression yields false, then the operator
+returns the empty list nil. Otherwise, it instantiates the lazy list and
+invokes the <produce-item-expression> to force the first item.
+
+.TP
+
+Example:
+
+  @(do
+    ;; Make a lazy list of integers up to 1000
+    ;; access and print the first three.
+    (let* ((counter 0)
+           (list (gen (< counter 1000) (inc counter))))
+      (format t "~s ~s ~s\en" (pop list) (pop list) (pop list))))
+
+  Output:
+  1 2 3
+
+.SS Operator delay
+
+.TP
+Syntax:
+
+  (delay <expression>)
+
+.TP
+Description:
+
+The delay operator arranges for the delayed (or "lazy") evaluation of
+<expression>. This means that the expression is not evaluated immediately.
+Rather, the delay expression produces a promise object.
+
+The promise object can later be passed to the force function (described
+later in this document). The force function will trigger the evaluation
+of the expression and retrieve the value.
+
+The expression is evaluated in the original scope, no mater where
+the force takes place.
+
+The expression is evaluated at most once, by the first call to force.
+Additional calls to force only retrieve a cached value.
+
+.TP
+Example:
+
+  @(do
+    ;; list is popped only once: the value is computed
+    ;; just once when force is called on a given promise
+    ;; for the first time.
+
+    (defun get-it (promise)
+      (format t "*list* is ~s\en" *list*)
+      (format t "item is ~s\en" (force promise))
+      (format t "item is ~s\en" (force promise))
+      (format t "*list* is ~s\en" *list*))
+
+
+    (defvar *list* '(1 2 3))
+
+    (get-it (delay (pop *list*))))
+
+  Output:
+
+  *list* is (1 2 3)
+  item is 1
+  item is 1
+  *list* is (2 3)
+
+.SS Function force
+
+.SH CHARACTERS AND STRINGS
+
+.SS Function mkstring
+
+.SS Function copy-str
+
+.SS Function upcase-str
+
+.SS Function downcase-str
+
+.SS Function string-extend
+
+.SS Function stringp
+
+.SS Function lazy-stringp
+
+.SS Function length-str
+
+.SS Function search-str
+
+.SS Function search-str-tree
+
+.SS Function match-str
+
+.SS Function match-str-tree
+
+.SS Function sub-str
+
+.SS Function replace-str
+
+.SS Function cat-str
+
+.SS Function split-str
+
+.SS Function split-str-set
+
+.SS Function list-str
+
+.SS Function trim-str
+
+.SS Function string-lt
+
+.SS Function chrp
+
+.SS Function chr-isalnum
+
+.SS Function chr-isalpha
+
+.SS Function chr-isascii
+
+.SS Function chr-iscntrl
+
+.SS Function chr-isdigit
+
+.SS Function chr-isgraph
+
+.SS Function chr-islower
+
+.SS Function chr-isprint
+
+.SS Function chr-ispunct
+
+.SS Function chr-isspace
+
+.SS Function chr-isupper
+
+.SS Function chr-isxdigit
+
+.SS Function chr-toupper
+
+.SS Function chr-tolower
+
+.SS Functions num-chr and chr-num
+
+.SS Function chr-str
+
+.SS Function chr-str-set
+
+.SS Function span-str
+
+.SS Function compl-span-str
+
+.SS Function break-str
+
+.SH VECTORS
+
+.SS Function vector
+
+.SS Function vectorp
+
+.SS Function vec-set-length
+
+.SS Function vecref
+
+.SS Function vec-push
+
+.SS Function length-vec
+
+.SS Function size-vec
+
+.SS Function vector-list
+
+.SS Function list-vector
+
+.SS Function copy-vec
+
+.SS Function sub-vec
+
+.SS Function replace-vec
+
+.SS Function cat-vec
+
+.SH GENERIC SEQUENCE OPERATIONS
+
+.SS Function length
+
+.SS Function sub
+
+.TP
+Syntax:
+
+   (sub <sequence> [<from> [<to>]])
+
+Description:
+
+The sub function extracts a slice from an input sequence. The slice is a
+sequence of the same type as the input sequence.
+
+If the to parameter is omitted, the behavior is as if it were specified
+as nil. Likewise, if the from parameter is omitted, the behavior is
+as if nil were specified. Thus (sub a) means (sub a nil nil).
+
+The following equivalence holds between the sub function and
+the DWIM-bracket syntax:
+
+  (sub seq from to) <--> [seq from..to] 
+
+The the description of the dwim operator---in particular, the
+section on Range Indexing---explains the semantics of the range
+specification.
+
+If the sequence is a list, the output sequence may share
+substructure with the input sequence.
+
+.SS Function replace
+
+.TP
+Syntax:
+
+   (replace <sequence> <replacement-sequence> [<from> [<to>]])
+
+.TP
+Description:
+
+The replace function replaces a subsequence of the input sequence with
+a new sequence. The subsequence may be empty, in which case an insertion
+is performed. The replacement sequence may be empty (for example,
+the empty list nil), in which case a deletion is performed.
+
+If the from and to parameters are omitted, their values default to nil.
+
+The following near equivalence holds between assignment to a place denoted by
+DWIM bracket syntax and the replace function:
+
+  (set seq (replace seq new from to)) <--> (set [seq from..to] new)
+
+The the description of the dwim operator---in particular, the
+section on Range Indexing---explains the semantics of the range
+specification.
+
+This operation is destructive: it may work "in place" by modifying
+the original sequence. The caller should retain the return value
+and stop relying on the original input sequence.
+
+.SS Functions ref and refset
+
+.TP
+Syntax:
+
+  (ref <seq> <index>)
+  (refset <seq> <index> <new-value>)
+
+.TP
+Description:
+
+The ref and refset functions perform array-like indexing into sequences.
+The ref function retrieves an element, whereas refset overwrites an element
+with a new value.
+
+The index is based from zero, and negative values are permitted, with
+a special meaning as described in the Range Indexing section under
+the description of the dwim operator.
+
+The refset function returns the new value.
+
+The following equivalences hold between ref and refset, and the DWIM
+bracket syntax:
+
+  (ref seq idx) <--> [seq idx]
+
+  (refset seq idx new) <--> (set [seq idx] new)
+
+.SS Function sort
+
+.TP
+Syntax:
+
+  (sort <sequence> <lessfun> [<keyfun>])
+
+.TP
+Description:
+
+The sort function destructively sorts a sequence, produciing a sequence
+which is sorted according to the lessfun and keyfun arguments.
+
+The keyfun argument specifies a function which is applied to elements
+of the sequence to obtain the key values which are then compared
+using the lessfun. If keyfun is omitted, the identity function is used
+by default: the sequence elements themselves are their own sort keys.
+
+The lessfun argument specifies the comparison function which determines
+the sorting order. It must be a binary function which can be invoked
+on pairs of keys as produced by the key function. The less function must
+return a non-nil value if the left argument is considered to be lesser
+than the right argument. For instance, if the numeric function < is used
+on numeric keys, it produces an ascending sorted order. If the function
+> is used, then a descending sort is produced.
+
+The sort function is stable for sequences which are lists. This means that the
+original order of items which are considered identical is preserved.
+For strings and vectors, the sort is not stable.
+
+.SH MATH LIBRARY
 
 .SS Arithmetic functions +, -
 
@@ -6976,7 +7259,7 @@ in any operation.
 
 A character may not be an operand of multiplication.
 
-.SS Arithmetic functions /, trunc, mod
+.SS Functions /, trunc, mod
 
 .TP
 Syntax:
@@ -7010,7 +7293,7 @@ then generalized into the floating point domain. For instance the
 (mod 0.75 0.5) yields a residue of 0.25 because 0.5 "goes into" 0.75 only
 once, with a "remainder" of 0.25.
 
-.SS Arithmetic function gcd
+.SS Function gcd
 
 .TP
 Syntax:
@@ -7033,7 +7316,7 @@ Negative operands are permitted; this operation effectivelly ignores sign, so
 that the value of (gcd x y) is the same as (gcd (abs x) (abs y)) for all
 x and y.
 
-.SS Arithmetic function abs
+.SS Function abs
 
 .TP
 Syntax:
@@ -7047,7 +7330,7 @@ The abs function computes the absolute value of the given number. If the number
 is positive, it is returned. If the number is negative, its additive inverse is
 returned: a positive number of the same type with exactly the same magnitude.
 
-.SS Arithmetic functions floor, ceil
+.SS Functions floor, ceil
 
 .TP
 Syntax:
@@ -7067,7 +7350,7 @@ If the argument is an integer, it is simply returned.
 If the argument is a float, then the value returned is a float.
 For instance (floor 1.1) returns 1.0.
 
-.SS Arithmetic functions sin, cos, tan, asin, acos, atan
+.SS Functions sin, cos, tan, asin, acos, atan
 
 .TP
 Syntax:
@@ -7088,7 +7371,7 @@ cosine and tangent of the argument. The argument represents an angle expressed
 in radians. The atan, acos and asin are their respective inverse functions.
 The argument to asin and acos must be in the range -1.0 to 1.0.
 
-.SS Arithmetic functions log, exp
+.SS Functions log, exp
 
 .TP
 Syntax:
@@ -7107,7 +7390,7 @@ be a positive value.
 
 Integer arguments are converted to floats.
 
-.SS Arithmetic functions expt, sqrt, isqrt
+.SS Functions expt, sqrt, isqrt
 
 .TP
 Syntax:
@@ -7138,7 +7421,7 @@ The isqrt function computes an integer square root: a value which is the
 greatest integer that is no greater than the true square root of the input
 value. The input value must be an integer.
 
-.SS Arithmetic function exptmod
+.SS Function exptmod
 
 .TP
 Syntax:
@@ -7206,7 +7489,7 @@ t if the integer is even (divisible by two), otherwise it returns nil.
 oddp returns t if the integer is nto divisible by two (odd), otherwise
 it returns nil.
 
-.SS Relational functions >, <, >=, <= and =
+.SS Functions >, <, >=, <= and =
 
 .TP
 Syntax:
@@ -7326,6 +7609,54 @@ The flo-int function returns an exact floating point value corresponding to the
 integer argument, if possible, otherwise an approximation using a nearby
 floating point value.
 
+.SH EXCEPTIONS
+
+.SS Functions throw, throwf and error
+
+.SS Operator catch
+
+.TP
+Syntax:
+
+  (catch <try-expression>
+    {(<symbol> (<arg>*) <body-form>*)}*)
+
+.TP
+Description:
+
+The catch operator establishes an exception catching block around
+the <try-expression>. The <try-expression> is followed by zero or more
+catch clauses. Each catch clause consists of a symbol which denotes
+an exception type, an argument list, and zero or more body forms.
+
+If <try-expression> terminates normally, then the catch clauses
+are ignored. The catch itself terminates, and its return value is
+that of the <try-expression>.
+
+If <try-expression> throws an exception which is a subtype of one or more of
+the type symbols given in the exception clauses, then the first (leftmost) such
+clause becomes the exit point where the exception is handled.
+The exception is converted into arguments for the clause, and the clause
+body is executed. When the clause body terminates, the catch terminates,
+and the return value of the catch is that of the clause body.
+
+If <try-expression> throws an exception which is not a subtype of any of
+the symbols given in the clauses, then the search for an exit point for
+the exception continues through the enclosing forms. The catch clauses
+are not involved in the handling of that exception.
+
+When a clause catches an exception, the number of arguments in the catch must
+match the number of elements in the exception.  A catch argument list
+resembles a function or lambda argument list, and may be dotted.  For instance
+the clause (foo (a . b)) catches an exception subtyped from foo, with one or
+more elements. The first element binds to parameter a, and the rest, if any,
+bind to parameter b.  If there is only one element, b takes on the value nil.
+
+Also see: the unwind-protect operator, and the functions throw, throwf
+and error.
+
+.SH REGULAR EXPRESSION LIBRARY
+
 .SS Functions search-regex and match-regex
 
 .TP
@@ -7426,6 +7757,8 @@ Examples:
 
   ;; #/a|b|c/
   (regex-compile '(or (or #\ea #\eb) #\ec))
+
+.SH HASHING LIBRARY
 
 .SS Functions make-hash, hash
 
@@ -7629,22 +7962,99 @@ same order. For example, if the keys are retrieved with hash-keys,
 and the values with hash-values, then the corresponding entries from
 each list correspond to the pairs in the hash table.
 
-.SS Function eval
+.SS Operator dohash
 
 .TP
 Syntax:
 
-  (eval <form> <env>)
+  (dohash (<key-var> <value-var> <hash-form> [<result-form>])
+    <body-form>*)
 
 .TP
 Description:
 
-The eval function treats the <form> object as a Lisp expression, which is
-evaluated. The side effects implied by the form are performed, and the value
-which it produces is returned. The <env> object specifies an environment for
-resolving the function and variable references encountered in the expression.
-The object nil can be specified as an environment, in which case the evaluation
-takes place in the top-level environment.
+The dohash operator iterates over a hash table. The <hash-form> expression must
+evaluate to an object of hash table type. The <key-var> and <value-var>
+arguents must be symbols suitable for use as variable names.
+Bindings are established for these variables over the scope of the
+<body-form>-s and the optional result form.
+
+For each element in the hash table, the <key-var> and <value-var>
+variables are set to the key and value of that entry, respectively,
+and each <body-form>, if there are any, is evaluated.
+
+When all of the entries of the table are thus processed, the <result-form> is
+evaluated, and its return value becomes the return value of the dohash form. If
+there is no <result-form>, the return value is nil.
+
+The <result-form> and <body-form>-s are in the scope of an implicit anonymous
+block, which means that it is possible to terminate the execution of
+dohash early using (return) or (return <value>).
+
+.SH PARTIAL EVALUATION AND COMBINATORS
+
+.SS Operator op
+
+.TP
+Syntax:
+
+  (op {<form>}+)
+
+.TP
+Description:
+
+Like the lambda operator, the op operator creates an anonymous function.
+The difference is that the arguments of the function are implicit, or
+optionally specified within the function body.
+
+Also, the arguments of op are implicitly turned into a DWIM expression,
+which means that argument evaluation follows Lisp-1 rules.  (See the dwim
+operator below).
+
+The argument forms are arbitrary expressions, within which a special
+convention is permitted:
+
+.IP @<num>
+
+A number preceded by a @ is a metanumber. This is a special syntax
+which denotes an argument. For instance @2 means that the second argument of
+the anonymous function is to be substituted in place of the @2. If @2 is used
+it means that @1 also has to appear somewhere, otherwise the op
+construct is erroneous.
+
+.IP @rest
+
+The meta-symbol @rest indicates that any trailing arguments to the
+function are to be inserted. If the @<num> syntax is not used anywhere,
+it means that the function only has trailing arguments. If @1 is used,
+it means that the second and subsequent arguments are trailing arguments.
+If @rest is not used anywhere, then the rest arguments are automatically
+applied to the op form. If @rest appears, then this is suppressed.
+
+The actions of form may be understood by these examples, which show
+how op is rewritten to lambda.  However, note that the real translator
+uses generated symbols for the arguments, which are not equal to any
+symbols in the program.
+
+  (op) -> invalid
+
+  (op +) -> (lambda rest [+ . rest])
+
+  (op @1 @2) -> (lambda (arg1 arg2 . rest) [arg1 arg2 . rest])
+
+  (op foo @1 (@2) (bar @3)) -> (lambda (arg1 arg2 arg3 . rest) 
+                                  [foo arg1 (arg2) (bar arg3) . rest])
+
+  (op foo @rest @1) -> (lambda (arg1 . rest) [foo rest arg1])
+
+.TP
+
+Examples:
+
+  ;; Take a list of pairs and produce a list in which those pairs
+  ;; are reversed.
+
+  (mapcar (op list @2 @1) '((1 2) (a b)))   ->   ((2 1) (b a))
 
 .SS Function chain
 
@@ -7747,6 +8157,15 @@ resulting value is returned. Otherwise if cond-func yields a false result, and
 there is no else-func, then nil is returned. If cond-func yields false, and an
 else-func exists, then the original arguments are passed to else-func and the
 resulting value is returned.
+
+.SH INPUT AND OUTPUT
+
+TXR Lisp supports input and output streams of various kinds, with
+generic operations that work across the stream types.
+
+In general, I/O errors are usually turned into exceptions. When the description
+of error reporting is omitted from the description of a function, it can be
+assumed that it throws an error.
 
 .SS Variables *stdout*, *stddebug*, *stdin* and *stderr*
 
@@ -8138,11 +8557,17 @@ Calling this function causes all accumulated data to be passed
 to the operating system. If called on streams for which this function
 is not meaningful, it does nothing.
 
+.SH FILESYSTEM ACCESS
+
 .SS Function open-directory
 
 .SS Functions open-file
 
+.SH COPROCESSES
+
 .SS Functions open-command, open-process
+
+.SH SYMBOLS AND PACKAGES
 
 .SS Variables *user-package*, *keyword-package*, *system-package*
 
@@ -8162,155 +8587,7 @@ is not meaningful, it does nothing.
 
 .SS Function keywordp
 
-.SS Function mkstring
-
-.SS Function copy-str
-
-.SS Function upcase-str
-
-.SS Function downcase-str
-
-.SS Function string-extend
-
-.SS Function stringp
-
-.SS Function lazy-stringp
-
-.SS Function length-str
-
-.SS Function search-str
-
-.SS Function search-str-tree
-
-.SS Function match-str
-
-.SS Function match-str-tree
-
-.SS Function sub-str
-
-.SS Function replace-str
-
-.SS Function cat-str
-
-.SS Function split-str
-
-.SS Function split-str-set
-
-.SS Function list-str
-
-.SS Function trim-str
-
-.SS Function string-lt
-
-.SS Function chrp
-
-.SS Function chr-isalnum
-
-.SS Function chr-isalpha
-
-.SS Function chr-isascii
-
-.SS Function chr-iscntrl
-
-.SS Function chr-isdigit
-
-.SS Function chr-isgraph
-
-.SS Function chr-islower
-
-.SS Function chr-isprint
-
-.SS Function chr-ispunct
-
-.SS Function chr-isspace
-
-.SS Function chr-isupper
-
-.SS Function chr-isxdigit
-
-.SS Function chr-toupper
-
-.SS Function chr-tolower
-
-.SS Functions num-chr and chr-num
-
-.SS Function chr-str
-
-.SS Function chr-str-set
-
-.SS Function span-str
-
-.SS Function compl-span-str
-
-.SS Function break-str
-
-.SS Function vector
-
-.SS Function vectorp
-
-.SS Function vec-set-length
-
-.SS Function vecref
-
-.SS Function vec-push
-
-.SS Function length-vec
-
-.SS Function size-vec
-
-.SS Function vector-list
-
-.SS Function list-vector
-
-.SS Function copy-vec
-
-.SS Function sub-vec
-
-.SS Function replace-vec
-
-.SS Function cat-vec
-
-.SS Function assoc
-
-.SS Function assq
-
-.SS Function acons
-
-.SS Function acons-new
-
-.SS Function aconsq-new
-
-.SS Function alist-remove
-
-.SS Function alist-nremove
-
-.SS Function copy-cons
-
-.SS Function copy-alist
-
-.SS Function merge
-
-.SS Function sort
-
-.SS Function multi-sort
-
-.SS Functions find and find-if
-
-.SS Function set-diff
-
-.SS Function length
-
-.SS Functions sub, ref, refset and replace
-
-.SS Function symbol-function
-
-.SS Function func-get-form
-
-.SS Function func-get-env
-
-.SS Function functionp
-
-.SS Function interp-fun-p
+.SH PSEUDO-RANDOM NUMBERS
 
 .SS Variable *random-state*
 
@@ -8320,23 +8597,25 @@ is not meaningful, it does nothing.
 
 .SS Functions random-fixnum and random
 
-.SS Function force
-
 .SS Functions range and range*
 
-.SS Function generate
-
-.SS Function repeat
-
-.SS Functions throw, throwf and error
-
-.SS Function match-fun
-
-.SS Functions url-encode and url-decode
+.SH TIME
 
 .SS Functions time and time-usec
 
+.SH WEB PROGRAMMING SUPPORT
+
+.SS Functions url-encode and url-decode
+
+.SH ACCESS TO TXR PATTERN LANGUAGE FROM LISP
+
+.SS Function match-fun
+
+.SH DEBUGGING FUNCTIONS
+
 .SS Functions source-loc and source-loc-str
+
+.SH MODULARIZATION
 
 .SS Variable *self-path*
 
