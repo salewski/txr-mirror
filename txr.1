@@ -5302,8 +5302,13 @@ Syntax:
 .TP
 Description:
 
-The identity function returns its argument.
+The identity function returns its argument. 
 
+.TP
+Notes:
+
+The identify function is useful as a functional argument, when a transformation
+function is required, but no transformation is actually desired.
 
 .SS Function eval
 
@@ -5745,8 +5750,8 @@ Syntax:
 .TP
 Description:
 
-The func-get-form function retrieves a source code form of an interpreted
-function. The source code form has the syntax 
+The func-get-form function retrieves a source code form of <func>, which
+must be an interpreted function. The source code form has the syntax 
 (<name> <arglist> {<body-form>}*).
 
 .SS Function func-get-env
@@ -5760,8 +5765,8 @@ Syntax:
 Description:
 
 The func-get-env function retrieves the environment object associated with
-a function.  The environment object holds the captured bindings of a lexical
-closure.
+function <func>.  The environment object holds the captured bindings of a
+lexical closure.
 
 .SS Function functionp
 
@@ -5773,7 +5778,7 @@ Syntax:
 .TP
 Description:
 
-The functionp obj returns t if the argument is a function, otherwise it
+The functionp function returns t if <obj> is a function, otherwise it
 returns nil.
 
 .SS Function interp-fun-p
@@ -5786,7 +5791,7 @@ Syntax:
 .TP
 Description:
 
-The functionp obj returns t if the argument is an interpreted function,
+The interp-fun-p function returns t if <obj> is an interpreted function,
 otherwise it returns nil.
 
 .SH OBJECT TYPE AND EQUIVALENCE
@@ -5801,7 +5806,7 @@ Syntax:
 .TP
 Description
 
-The typeof function returns a symbol representing the type of the value.
+The typeof function returns a symbol representing the type of <value>.
 
 .RS
 
@@ -5873,8 +5878,8 @@ Syntax:
 .TP
 Description:
 
-The null and not functions are synonyms.  They tests whether a value is the
-object nil. They returns t if this is the case, nil otherwise.
+The null and not functions are synonyms.  They tests whether <value> is the
+object nil. They return t if this is the case, nil otherwise.
 
 .TP
 Examples:
@@ -5994,7 +5999,7 @@ Syntax:
 .TP
 Description:
 
-The atom function tests whether a value is an atom. It returns t if this is the
+The atom function tests whether <value> is an atom. It returns t if this is the
 case, nil otherwise.  All values which are not cons cells are atoms.
 
 (atom x) is equivalent to (not (consp x)).
@@ -6017,7 +6022,7 @@ Syntax:
 .TP
 Description:
 
-The atom function tests whether a value is a cons. It returns t if this is the
+The atom function tests whether <value> is a cons. It returns t if this is the
 case, nil otherwise.
 
 (consp x) is equivalent to (not (atom x)).
@@ -6074,7 +6079,7 @@ Walk every element of the list (1 2 3):
 
     (for ((i '(1 2 3))) (i) ((set i (cdr i)))
       (print (car i) *stdout*)
-      (print #\newline *stdout*))
+      (print #\enewline *stdout*))
 
 The variable i marches over the cons cells which make up the "backbone"
 of the list. The elements are retrieved using the car function.
@@ -6094,7 +6099,7 @@ Syntax:
 Description:
 
 The rplaca and rplacd functions assign new values into the "car"
-and "cdr" fields of a cons cell.  Note that (rplaca x y)
+and "cdr" fields of the cell <cons>.  Note that (rplaca x y)
 is the same as the more generic (set (car x) y), and likewise
 (rplacd x y) can be written as (set (cdr x) y).
 
@@ -6139,7 +6144,7 @@ Syntax:
 Description:
 
 The append function creates a new list which is a catenation of the
-list arguments. All arguments are optional, such that (append) produces
+<list> arguments. All arguments are optional, such that (append) produces
 the empty list.
 
 If a single argument is specified, then append simply returns the value of that
@@ -6223,7 +6228,7 @@ Syntax:
 .TP
 Description:
 
-The sub-list function extracts a sublist from a list. It is exactly like the
+The sub-list function extracts a sublist from <list>. It is exactly like the
 more generic function sub, except that it operates only on lists.
 For a description of the arguments and semantics, refer to the sub function.
 
@@ -6237,7 +6242,7 @@ Syntax:
 .TP
 Description:
 
-The replace-list function replaces a subrange of a list with items from
+The replace-list function replaces a subrange of <list> with items from
 the item-sequence argument, which may be any kind of sequence (list, vector
 or string).
 
@@ -6258,7 +6263,7 @@ Syntax:
 Description:
 
 The listp and proper-listp functions test, respectively, whether
-the specified value is a list, or a proper list, and return
+<value> is a list, or a proper list, and return
 t or nil accordingly.
 
 The listp test is weaker, and executes without having to traverse
@@ -6279,8 +6284,9 @@ Syntax:
 .TP
 Description:
 
-The length-list function returns the length of a proper or improper
-list. The length of a list is the number of conses in that list.
+The length-list function returns the length of <list>, which may be
+a proper or improper list. The length of a list is the number of conses in that
+list.
 
 .SS Function copy-list
 
@@ -6292,7 +6298,7 @@ Syntax:
 .TP
 Description:
 
-The copy-list function which returns a list similar <list>, but with
+The copy-list function which returns a list similar to <list>, but with
 a newly allocated cons cell structure.
 
 If <list> is an atom, it is simply returned.
@@ -6318,7 +6324,7 @@ Syntax:
 Description:
 
 This function creates a fresh cons cell, whose car and cdr fields are
-copied from an existing cons cell.
+copied from <cons>.
 
 .SS Functions reverse, nreverse
 
@@ -6597,9 +6603,9 @@ Syntax:
 .TP
 Description:
 
-The set-diff function treats two lists as if they were sets and computes
-the set difference: a list which contains those elements in list1 which
-do not occur in list2.
+The set-diff function treats the lists <list1> and <list2> as if they were sets
+and computes the set difference: a list which contains those elements in
+<list1> which do not occur in <list2>.
 
 Element equivalence is determined by a combination of testfun and keyfun.
 Elements are compared pairwise, and each element of a pair is passed through
@@ -6608,7 +6614,7 @@ are compared with the testfun function. If keyfun is omitted, then the
 untransformed elements themselves are compared, and if testfun is omitted,
 then the equal function is used.
 
-If list1 contains duplicate elements which do not occur in list2 (and
+If <list1> contains duplicate elements which do not occur in list2 (and
 thus are preserved in the set difference) then these duplicates appear
 in the resulting list. Furthermore, the order of the items from list1 is
 preserved.
@@ -6626,8 +6632,8 @@ Syntax:
 .TP
 Description:
 
-When given three arguments, the mapcar function processes applies a function to
-the elements of a list and returns a list of the resulting values.
+When given three arguments, the mapcar function processes applies <function> to
+the elements of <list> and returns a list of the resulting values.
 Essentially, the list is filtered through the function.
 
 When additional lists are given as arguments, this filtering behavior is
@@ -6694,9 +6700,9 @@ Syntax:
 .TP
 Description:
 
-The apply function treats a list of values as individual arguments that
-are passed to the specified function, which is called, and its return
-value becomes the return value of apply.
+The apply function converts a list of values <arglist> into individual arguments
+which are passed to <function>. The return value of the apply invocation is
+that of <function>.
 
 .TP
 Examples:
@@ -6832,10 +6838,10 @@ Syntax:
 .TP
 Description:
 
-The assoc function searches an association list for a cons cell whose
-car field contains the given key (with equality determined by the equal
-function). The first such cons is returned. If no such cons is found,
-nil is returned.
+The assoc function searches an association list <alist> for a cons cell whose
+car field is equivalent to <key> (with equality determined by the equal
+function). The first such cons is returned. If no such cons is found, nil is
+returned.
 
 .SS Function assq
 
@@ -6861,7 +6867,7 @@ Syntax:
 Description:
 
 The acons function constructs a new alist by consing a new cons to the
-front of an existing alist. The following equivalence holds:
+front of <alist>. The following equivalence holds:
 
   (acons car cdr alist) <--> (cons (cons car cdr) alist)
 
@@ -6875,12 +6881,12 @@ Syntax:
 .TP
 Description:
 
-The acons-new function searches alist, as if using the assoc function,
+The acons-new function searches <alist>, as if using the assoc function,
 for an existing cell which matches the key provided by the car argument.
-If such a cell exists, then its cdr field is overwritten with the cdr
+If such a cell exists, then its cdr field is overwritten with the <cdr>
 argument, and then the list is returned. If no such cell exists, then
 a new list is returned by adding a new cell to the input list consisting
-of the car and cdr values, as if by the acons function.
+of the <car> and <cdr> values, as if by the acons function.
 
 .SS Function aconsql-new
 
@@ -6906,9 +6912,9 @@ Syntax:
 .TP
 Description:
 
-The alist-remove function takes an input alist and produces a duplicate
-from which cells matching the specified keys have been removed. The keys
-argument is a list of the keys not to appear in the output list.
+The alist-remove function takes association list <alist> and produces a
+duplicate from which cells matching the specified keys have been removed. The
+<keys> argument is a list of the keys not to appear in the output list.
 
 .SS Function alist-nremove
 
@@ -6921,8 +6927,9 @@ Syntax:
 Description:
 
 The alist-nremove function is like alist-remove, but potentially destructive.
-The input list may be destroyed and its structural material re-used to form the
-output list. The application should not retain references to the input list.
+The input list <alist> may be destroyed and its structural material re-used to
+form the output list. The application should not retain references to the input
+list.
 
 .SS Function copy-alist
 
@@ -6934,7 +6941,7 @@ Syntax:
 .TP
 Description:
 
-The copy-alist function duplicates an alist. Unlike copy-list, which
+The copy-alist function duplicates <alist>. Unlike copy-list, which
 only duplicates list structure, copy-alist also duplicates each cons
 cell of the input alist. That is to say, each element of the output list
 is produced as if by the copy-cons function applied to the corresponding
@@ -6952,10 +6959,10 @@ Syntax:
 .TP
 Description:
 
-The merge function merges two sorted lists into a single sorted
-list. The semantics and defaulting behavior of the lessfun and keyfun arguments
-are the same as those of the sort function. The input lists are assumed to be
-sorted according to these functions.
+The merge function merges two sorted lists <list1> and <list2> into a single
+sorted list. The semantics and defaulting behavior of the <lessfun> and
+<keyfun> arguments are the same as those of the sort function. The input lists
+are assumed to be sorted according to these functions.
 
 This function is destructive. The application should not retain references to
 the input lists, since the output list is formed out of the structure of the
@@ -6975,27 +6982,27 @@ The multi-sort function regards a list of lists to be the columns of a
 database. The corresponding elements from each list constitute a record.
 These records are to be sorted, producing a new list of lists.
 
-The columns argument supplies the list of lists which comprise the columns of
+The <columns> argument supplies the list of lists which comprise the columns of
 the database. The lists should ideally be of the same length. If the lists are
 of different lengths, then the shortest list is taken to be the length of the
 database. Excess elements in the longer lists are ignored, and do not appear in
 the sorted output.
 
-The less-funcs argument supplies a list of comparison functions which are 
+The <less-funcs> argument supplies a list of comparison functions which are 
 applied to the columns. Successive functions correspond to successive
-columns. If less-funcs is an empty list, then the sorted database will
-emerge in the original order. If less-funcs contains exactly one function, then
-the rows of the database is sorted according to the first column. The remaining
-columns simply follow their row. If less-funcs contains more than one
-function, then additional columns are taken into consideration if the items
+columns. If <less-funcs> is an empty list, then the sorted database will
+emerge in the original order. If <less-funcs> contains exactly one function,
+then the rows of the database is sorted according to the first column. The
+remaining columns simply follow their row. If <less-funcs> contains more than
+one function, then additional columns are taken into consideration if the items
 in the previous columns compare equal. For instance if two elements from column
 one compare equal, then the corresponding second column elements are compared
 using the second column comparison function.
 
-The optional key-funcs argument supplies transformation functions through which
-column entries are converted to comparison keys, similarly to the single key
-function used in the sort function and others.  If there are more key functions
-than less functions, the excess key functions are ignored.
+The optional <key-funcs> argument supplies transformation functions through
+which column entries are converted to comparison keys, similarly to the single
+key function used in the sort function and others.  If there are more key
+functions than less functions, the excess key functions are ignored.
 
 .SH LAZY LISTS AND LAZY EVALUATION
 
@@ -7018,8 +7025,8 @@ magic stepping stones appearing under one's feet out of thin air.
 
 A lazy cons has "car" and "cdr" fields like a regular cons, and those
 fields are initialized to nil when the lazy cons is created. A lazy cons also
-has an update function, the one which is provided as an argument to
-make-lazy-cons.
+has an update function, the one which is provided as the <function>
+argument to make-lazy-cons.
 
 When either the car and cdr fields of a cons are accessed for the first time,
 the function is automatically invoked first. That function has the opportunity
@@ -7085,13 +7092,13 @@ The arguments to generate are functions which do not take any arguments.  The
 return value of generate is a lazy list. 
 
 When the lazy list is accessed, for instance with the functions car and cdr, it
-produces items on demand. Prior to producing each item, the while-fun is
+produces items on demand. Prior to producing each item, <while-fun> is
 called. If it returns a true boolean value (any value other than nil), then
-the gen-fun function is called, and its return value is incorporated as
-the next item of the lazy list. But if while-fun yields nil, then the lazy
+the <gen-fun> function is called, and its return value is incorporated as
+the next item of the lazy list. But if <while-fun> yields nil, then the lazy
 list immediately terminates.
 
-Prior to returning the lazy list, generate invokes the while-fun one time.
+Prior to returning the lazy list, generate invokes the <while-fun> one time.
 If while-fun yields nil, then generate returns the empty list nil instead
 of a lazy list. Otherwise, it instantiates a lazy list, and invokes
 the gen-func to populate it with the first item.
@@ -7211,10 +7218,10 @@ Syntax:
 Description:
 
 The force function accepts a promise object produced by the delay function.
-The first time force is invoked on a promise object, the promise expression
+The first time force is invoked <promise>, the promise expression
 is evaluated (in its original lexical environment, regardless of where
 in the program the force call takes place). The value of the expression is
-cached inside the promise and returned, becoming the return value of the
+cached inside <promise> and returned, becoming the return value of the
 force function call.  If the force function is invoked additional times on
 the same promise, the cached value is retrieved.
 
@@ -7230,8 +7237,9 @@ Syntax:
 .TP
 Description:
 
-The mkstring function constructs a string object of the given length.
-Every position in the string is initialized with the given character.
+The mkstring function constructs a string object of a length specified
+by the <length> parameter.  Every position in the string is initialized 
+with <char>, which must be a character value.
 
 .SS Function copy-str
 
@@ -7244,7 +7252,7 @@ Syntax:
 Description:
 
 The copy-str function constructs a new string whose contents are identical
-to the given existing string.
+to <string>.
 
 .SS Function upcase-str
 
@@ -7256,9 +7264,8 @@ Syntax:
 .TP
 Description:
 
-The upcase-str function produces a copy of the input string such that
-all lower-case characters of the English alphabet are mapped to their
-upper case counterparts.
+The upcase-str function produces a copy of <string> such that all lower-case
+characters of the English alphabet are mapped to their upper case counterparts.
 
 .SS Function downcase-str
 
@@ -7270,7 +7277,7 @@ Syntax:
 .TP
 Description:
 
-The downcase-str function produces a copy of the input string such that
+The downcase-str function produces a copy of <string> such that
 all upper case characters of the English alphabet are mapped to their
 lower case counterparts.
 
@@ -7284,16 +7291,16 @@ Syntax:
 .TP
 Description:
 
-The string-extend function destructively increases the length of an ordinary
-dynamic string.  It is an error to invoke this function on a literal string or
-a lazy string.
+The string-extend function destructively increases the length of <string>,
+which must be an ordinary dynamic string.  It is an error to invoke this
+function on a literal string or a lazy string.
 
-The tail argument can be a character, string or integer. If it is a string or
+The <tail> argument can be a character, string or integer. If it is a string or
 character, it specifies material which is to be added to the end of the string:
 either a single character or a sequence of characters. If it is an integer, it
 specifies the number of characters to be added to the string.
 
-If tail is an integer, the newly added characters have indeterminate contents.
+If <tail> is an integer, the newly added characters have indeterminate contents.
 The string appears to be the original one because of an internal terminating
 null character remains in place, but the characters beyond the terminating zero
 are indeterminate.
@@ -7308,7 +7315,7 @@ Syntax:
 .TP
 Description:
 
-The stringp function returns t if the argument object is one of the several
+The stringp function returns t if <obj> is one of the several
 kinds of strings. Otherwise it returns nil.
 
 .SS Function lazy-stringp
@@ -7321,7 +7328,7 @@ Syntax:
 .TP
 Description:
 
-The lazy-stringp function returns t if the argument object is a lazy
+The lazy-stringp function returns t if <obj> is a lazy
 string. Otherwise it returns nil.
 
 .SS Function length-str
@@ -7334,7 +7341,7 @@ Syntax:
 .TP
 Description:
 
-The length-str function returns the length of the string in characters.
+The length-str function returns the length <string> in characters.
 The argument must be a string.
 
 .SS Function search-str
@@ -7347,12 +7354,12 @@ Syntax:
 .TP
 Description:
 
-The search-str function finds an occurrence of the needle string inside
-the haystack string and returns its position. If no such occurrence exists,
+The search-str function finds an occurrence of the string <needle> inside
+the <haystack> string and returns its position. If no such occurrence exists,
 it returns nil.
 
-If a start argument is specified, it gives the starting index for the
-search. If the from-end argument is specified and is non-nil, it means
+If a <start> argument is specified, it gives the starting index for the
+search. If the <from-end> argument is specified and is non-nil, it means
 that the search is conducted right-to-left. If multiple matches are possible,
 it will find the rightmost one rather than the leftmost one.
 
@@ -7367,14 +7374,15 @@ Syntax:
 Description:
 
 The search-str-tree function is similar to search-str, except that instead of
-searching the haystack for the occurence of a single needle string, it searches
+searching <haystack> for the occurence of a single needle string, it searches
 for the occurence of numerous strings at the same time.  These search strings
-are specified as an arbitrarily structured tree whose leaves are strings.
+are specified, via the <tree> argument, as an arbitrarily structured tree whose
+leaves are strings.
 
 The function finds the earliest possible match, in the given search direction,
 from among all of the needle strings.
 
-If the tree argument is a single string, the semantics is equivalent to
+If <tree> is a single string, the semantics is equivalent to
 search-str.
 
 .SS Function match-str
@@ -7387,12 +7395,12 @@ Syntax:
 .TP
 Description:
 
-The match-str function determines how many characters of littlestring match a
-prefix of bigstring.
+The match-str function determines how many characters of <littlestring> match a
+prefix of <bigstring>.
 
-If the start argument is specified, then the function tests how many
-characters of littlestring match a prefix of that portion of bigstring which
-starts at the given position.
+If the <start> argument is specified, then the function tests how many
+characters of <littlestring> match a prefix of that portion of <bigstring>
+which starts at the given position.
 
 .SS Function match-str-tree
 
@@ -7405,13 +7413,13 @@ Syntax:
 Description:
 
 The match-str-tree function is a generalization of match-str which matches
-multiple test strings against the big string at the same time. The value
+multiple test strings against <bigstring> at the same time. The value
 reported is the longest match from among any of the strings.
 
 The strings are specified as an arbitrarily shaped tree structure which has
 strings at the leaves.
 
-If the tree argument is a single string atom, then the function behaves
+If <tree> is a single string atom, then the function behaves
 exactly like match-str.
 
 .SS Function sub-str
@@ -7424,9 +7432,9 @@ Syntax:
 .TP
 Description:
 
-The sub-str function extracts a substring from a string. It is exactly like the
-more generic function sub, except that it operates only on strings.
-For a description of the arguments and semantics, refer to the sub function.
+The sub-str function extracts a substring from <string>. It is exactly like the
+more generic function sub, except that it operates only on strings.  For a
+description of the arguments and semantics, refer to the sub function.
 
 .SS Function replace-str
 
@@ -7438,9 +7446,9 @@ Syntax:
 .TP
 Description:
 
-The replace-list function replaces a substring of a string with items from
-the item-sequence argument, which may be any kind of sequence (list, vector
-or string) provided that it contains only characters, or is empty.
+The replace-list function replaces a substring of <string> with items from
+<item-sequence>, which may be any kind of sequence (list, vector
+or string) provided that it, if it is nonempty, it contains only characters.
 
 It is like the replace function, except that the first argument must be
 a list.
@@ -7457,9 +7465,9 @@ Syntax:
 .TP
 Description:
 
-The cat-str function catenates a list of strings into a single string.
-The optional sep-string argument specifies a separator string which
-is interposed between the catenated strings.
+The cat-str function catenates a list of strings given by <string-list> into a
+single string.  The optional <sep-string> argument specifies a separator string
+which is interposed between the catenated strings.
 
 .SS Function split-str
 
@@ -7554,11 +7562,11 @@ Syntax:
 
 Description:
 
-The sub function extracts a slice from an input sequence. The slice is a
-sequence of the same type as the input sequence.
+The sub function extracts a slice from input sequence <sequence>. The slice is
+a sequence of the same type as <sequence>.
 
-If the to parameter is omitted, the behavior is as if it were specified
-as nil. Likewise, if the from parameter is omitted, the behavior is
+If the <to> parameter is omitted, the behavior is as if it were specified
+as nil. Likewise, if the <from> parameter is omitted, the behavior is
 as if nil were specified. Thus (sub a) means (sub a nil nil).
 
 The following equivalence holds between the sub function and
@@ -7583,14 +7591,14 @@ Syntax:
 .TP
 Description:
 
-The replace function replaces a subsequence of the input sequence with
-a new sequence. The subsequence may be empty, in which case an insertion
-is performed. The replacement sequence may be empty (for example,
-the empty list nil), in which case a deletion is performed.
+The replace function replaces a subsequence of the <sequence> with
+<replacement-sequence>. The replaced subsequence may be empty, in which case an
+insertion is performed. If <replacement-sequence> is empty (for example, the
+empty list nil), then a deletion is performed.
 
-If the from and to parameters are omitted, their values default to nil.
+If the <from> and <to> parameters are omitted, their values default to nil.
 
-The following near equivalence holds between assignment to a place denoted by
+The following equivalence holds between assignment to a place denoted by
 DWIM bracket syntax and the replace function:
 
   (set seq (replace seq new from to)) <--> (set [seq from..to] new)
@@ -7615,12 +7623,12 @@ Syntax:
 Description:
 
 The ref and refset functions perform array-like indexing into sequences.
-The ref function retrieves an element, whereas refset overwrites an element
-with a new value.
+The ref function retrieves an element of <seq>, whereas refset overwrites an
+element of <seq> with a new value.
 
-The index is based from zero, and negative values are permitted, with
-a special meaning as described in the Range Indexing section under
-the description of the dwim operator.
+The <index> argument is based from zero, and negative values are permitted,
+with a special meaning as described in the Range Indexing section under the
+description of the dwim operator.
 
 The refset function returns the new value.
 
@@ -7641,17 +7649,17 @@ Syntax:
 .TP
 Description:
 
-The sort function destructively sorts a sequence, produciing a sequence
-which is sorted according to the lessfun and keyfun arguments.
+The sort function destructively sorts <sequence>, producing a sequence
+which is sorted according to the <lessfun> and <keyfun> arguments.
 
-The keyfun argument specifies a function which is applied to elements
+The <keyfun> argument specifies a function which is applied to elements
 of the sequence to obtain the key values which are then compared
-using the lessfun. If keyfun is omitted, the identity function is used
+using the lessfun. If <keyfun> is omitted, the identity function is used
 by default: the sequence elements themselves are their own sort keys.
 
-The lessfun argument specifies the comparison function which determines
+The <lessfun> argument specifies the comparison function which determines
 the sorting order. It must be a binary function which can be invoked
-on pairs of keys as produced by the key function. The less function must
+on pairs of keys as produced by the key function. It must
 return a non-nil value if the left argument is considered to be lesser
 than the right argument. For instance, if the numeric function < is used
 on numeric keys, it produces an ascending sorted order. If the function
@@ -7746,18 +7754,18 @@ The arguments to these functions are numbers. Characters are not permitted.
 The / function performs floating-point division. Each operands is first
 converted to floating-point type, if necessary.
 
-The trunc function performs a division whose result is truncated to integer
-toward zero. If both operands are integers, then an integer division is
-performed and the result is an integer. If either operand is a floating point
-value,  a floating point division occurs, and the result is truncated toward
-zero to a floating-point integral value.
+The trunc function performs a division of <dividend> by <divisor> whose result
+is truncated to integer toward zero. If both operands are integers, then an
+integer division is performed and the result is an integer. If either operand
+is a floating point value,  a floating point division occurs, and the result is
+truncated toward zero to a floating-point integral value.
 
 The mod function performs a modulus operation. Firstly, the absolute value
-of the divisor is taken to be a modulus. Then a residue of the dividend
-with respect to the modulus is calculated. The residue's sign follows
-that of the sign of the divisor. That is, it is the smallest magnitude
-(closest to zero) residue of the dividend with respect to the absolute
-value of the divisor, having the same sign as the divisor.
+of <divisor> is taken to be a modulus. Then a residue of <dividend>
+with respect to <modulus> is calculated. The residue's sign follows
+that of the sign of <divisor>. That is, it is the smallest magnitude
+(closest to zero) residue of <dividend> with respect to the absolute
+value of <divisor>, having the same sign as <divisor>.
 If the operands are integer, the result is an integer. If either operand
 is of type float, then the result is a float. The modulus operation is
 then generalized into the floating point domain. For instance the
@@ -7797,7 +7805,7 @@ Syntax:
 .TP
 Description:
 
-The abs function computes the absolute value of the given number. If the number
+The abs function computes the absolute value of <number>. If <number>
 is positive, it is returned. If the number is negative, its additive inverse is
 returned: a positive number of the same type with exactly the same magnitude.
 
@@ -7813,13 +7821,13 @@ Syntax:
 Description:
 
 The floor function returns the highest integer which does not exceed
-the argument. The ceiling function returns the lowest integer which does
-not exceed the argument.
+the value of <number>. The ceiling function returns the lowest integer which
+does not exceed the value of <number>.
 
-If the argument is an integer, it is simply returned.
+If <number> an integer, it is simply returned.
 
 If the argument is a float, then the value returned is a float.
-For instance (floor 1.1) returns 1.0.
+For instance (floor 1.1) returns 1.0 rather than 1.
 
 .SS Functions sin, cos, tan, asin, acos, atan
 
@@ -7838,9 +7846,10 @@ Description:
 
 These trigonometric functions convert their argument to floating point and
 return a float result. The sin, cos and tan functions compute the sine and
-cosine and tangent of the argument. The argument represents an angle expressed
-in radians. The atan, acos and asin are their respective inverse functions.
-The argument to asin and acos must be in the range -1.0 to 1.0.
+cosine and tangent of the <radians> argument which represents an angle
+expressed in radians. The atan, acos and asin are their respective inverse
+functions.  The <num> argument to asin and acos must be in the
+range -1.0 to 1.0.
 
 .SS Functions log, exp
 
@@ -7873,7 +7882,8 @@ Syntax:
 .TP
 Description:
 
-The expt function raises a base to zero or more exponents. 
+The expt function raises <base> to zero or more exponents given
+by the <exponent> arguments.
 (expt x) is equivalent to (expt x 1); and yields x for all x.
 For three or more arguments, the operation is left associative.
 That is to say, (expt x y z) is equivalent to (expt (expt x y) z) and
@@ -7903,11 +7913,11 @@ Syntax:
 Description:
 
 The exptmod function performs modular exponentiation and accepts only integer
-arguments. Furthermore, the exponent must be a non-negative and the modulus
+arguments. Furthermore, <exponent> must be a non-negative and <modulus>
 must be positive.
 
-The return value is the base raised to the exponent, and reduced to the
-least positive residue modulo the modulus.
+The return value is <base> raised to <exponent>, and reduced to the
+least positive residue modulo <modulus>.
 
 .SS Functions fixnump, bignump, integerp, floatp, numberp
 
@@ -7923,10 +7933,10 @@ Syntax:
 .TP
 Description:
 
-These functions test the type of the object, returning true if it is an object
+These functions test the type of <object>, returning true if it is an object
 of the implied type. The fixnump, bignump and floatp functions return true if
 the object is of the basic type fixnum, bignum or float.
-The function integerp returns true of the object is either a fixnum or
+The function integerp returns true of <object> is either a fixnum or
 a bignum. The function numberp returns true if the object is either
 a fixnum, bignum or float.
 
@@ -7940,7 +7950,7 @@ Syntax:
 .TP
 Description:
 
-The zerop function tests a number for equivalence to zero. The argument must be
+The zerop function tests <number> for equivalence to zero. The argument must be
 a number. It returns t for the integer value 0,  and for the floating-point
 value 0.0. For other numbers, it returns nil.
 
@@ -7956,8 +7966,8 @@ Syntax:
 Description:
 
 The evenp and oddp functions require integer arguments. evenp returns
-t if the integer is even (divisible by two), otherwise it returns nil.
-oddp returns t if the integer is nto divisible by two (odd), otherwise
+t if <integer> is even (divisible by two), otherwise it returns nil.
+oddp returns t if <integer> is not divisible by two (odd), otherwise
 it returns nil.
 
 .SS Functions >, <, >=, <= and =
@@ -7974,10 +7984,10 @@ Syntax:
 .TP
 Description:
 
-The relational functions compare characters and numbers for numeric equality or
-inequality. The arguments must be one or more numbers or characters.
+These relational functions compare characters and numbers for numeric equality
+or inequality. The arguments must be one or more numbers or characters.
 
-If a just one argument is given, then these functions all return t.
+If just one argument is given, then these functions all return t.
 
 If two arguments are given, then, they are compared as follows.
 First, if the numbers do not have the same type, then the one
@@ -8036,7 +8046,7 @@ Syntax:
 .TP
 Description:
 
-These functions extract numbers from a string. Leading whitespace, if
+These functions extract numbers <string>. Leading whitespace, if
 any, is skipped. If no digits can be successfully extracted, then nil is
 returned.  Trailing material which does not contribute to the number
 is ignored.
@@ -8252,11 +8262,19 @@ lookup is facilitated by hashing: quickly mapping a key object to a numeric
 value which is then used to index into one of many buckets where the matching
 key will be found (if such a key is present in the hash table).
 
-make-hash takes three mandatory boolean arguments which specify,
-respectively, whether the hash table has weak keys, has weak values,
-and whether it is equal based. The hash function defaults these
-properties to false, and allows them to be overridden to true by
-the presence of keyword arguments.
+make-hash takes three mandatory boolean arguments. The <weak-keys>
+argument specifies, whether the hash table shall have weak keys. The <weak-vals>
+argument specifies whether it shall have weak values, and
+<equal-based> specifies whether it is equal-based.  The hash function defaults
+all three of these properties to false, and allows them to be overridden to
+true by the presence of keyword arguments.
+
+The hash function provides an alternative interface. It accepts optional
+arguments which are keyword symbols. Any combination of the three symbols
+:weak-keys, :weak-vals and :equal-based can be specified in any order
+to turn on the corresponding properties in the newly constructed hash table.
+If any of the keywords is not specified, the corresponding property defaults to
+nil. 
 
 If a hash table has weak keys, this means that from the point of view
 of garbage collection, that table holds only weak references to the keys
@@ -8290,9 +8308,10 @@ Syntax:
 .TP
 Description:
 
-The sethash function places a value into the hash table under the given key.
-If a similar key already exists in the hash table, then the value is replaced
-under the existing key. Otherwise, the key-value pair is newly added.
+The sethash function places a value into <hash> table under the given <key>.
+If a similar key already exists in the hash table, then that key's
+value is replaced by <value>. Otherwise, the <key> and <value> pair is
+newly inserted into <hash>.
 
 .SS Function pushhash
 
@@ -8305,11 +8324,11 @@ Syntax:
 Description:
 
 The pushhash function is useful when the values stored in a hash table
-are lists. If the given key does not already exist in the hash table, then
-a list of length one is made from the given element, and stored in the hash
-table under the key.  If the key already exists, then the corresponding value
-must be a list. The element is added to the front of that list, and that
-list become the new value of the key.
+are lists.  If the given <key> does not already exist in <hash>, then a list of
+length one is made which contains <element>, and stored in <hash> table under
+<key>.  If the <key> already exists in the hash table, then the corresponding
+value must be a list. The <element> value is added to the front of that list,
+and the extended list then becomes the new value under <key>.
 
 .SS Function remhash
 
@@ -8321,8 +8340,8 @@ Syntax:
 .TP
 Description:
 
-The remhash function searches the hash table for a key similar to the
-given key. If that key is found, then that key and its corresponding value are
+The remhash function searches <hash> for a key similar to the
+<key>. If that key is found, then that key and its corresponding value are
 removed from the hash table.
 
 .SS Function hash-count
@@ -8336,7 +8355,7 @@ Syntax:
 Description:
 
 The hash-count function returns an integer representing the number of
-key-value pairs stored in the hash table.
+key-value pairs stored in <hash>.
 
 .SS Function get-hash-userdata
 
@@ -8348,7 +8367,7 @@ Syntax:
 .TP
 Description:
 
-This function retrieves the user data object associated with the hash table.
+This function retrieves the user data object associated with <hash>.
 The user data object of a newly created hash table is initialized to nil.
 
 .SS Function set-hash-userdata
@@ -8361,8 +8380,8 @@ Syntax:
 .TP
 Description:
 
-The set-hash-userdata replaces the user data object associated with
-a hash table.
+The set-hash-userdata replaces, with the <object>, the user data object
+associated with <hash>.
 
 .SS Function hashp
 
@@ -8374,7 +8393,7 @@ Syntax:
 .TP
 Description:
 
-The hashp function returns t if the argument object is a hash table,
+The hashp function returns t if the <object> is a hash table,
 otherwise it returns nil.
 
 .SS Function maphash
@@ -8388,8 +8407,8 @@ Syntax:
 Description:
 
 The maphash function successively invokes binary-function for each key-value
-pair present in the hash table. The key and value are passed as arguments
-to the function, respectively.
+pair present in <hash>. The key and value are passed as arguments
+to <binary-function>.
 
 .SS Functions hash-eql and hash-equal
 
@@ -8402,11 +8421,14 @@ Syntax:
 .TP
 Description:
 
-These functions each compute an integer value from an object.
+These functions each compute an integer hash value from the internal
+representation of <object>, which satisifes the following properties.
 If two objects A and B are the same under the eql function, then
-(hash-eql A) and (hash-eql B) produce the same integer.
-Similarly, if two objects A and B are the same under the equal function,
-then (hash-equal A) and (hash-equal B) each produce the same integer.
+(hash-eql A) and (hash-eql B) produce the same integer hash value.  Similarly,
+if two objects A and B are the same under the equal function, then (hash-equal
+A) and (hash-equal B) each produce the same integer hash value.  In all other
+circumstances, the hash values of two distinct objects are unrelated, and
+may or may not be equal.
 
 .SS Functions hash_keys, hash_values, hash_pairs, and hash_alist
 
@@ -8420,7 +8442,7 @@ Syntax:
 .TP
 Description:
 
-These functions retrieve the bulk key-value data of a hash table
+These functions retrieve the bulk key-value data of hash table <hash>
 in various ways. hash-keys retrieves a list of the keys. hash-values
 retrieves a list of the values. hash-pairs retrieves a list of pairs,
 which are two-element lists consisting of the key, followed by the value.
@@ -8478,7 +8500,7 @@ Like the lambda operator, the op operator creates an anonymous function.
 The difference is that the arguments of the function are implicit, or
 optionally specified within the function body.
 
-Also, the arguments of op are implicitly turned into a DWIM expression,
+Also, the <form> arguments of op are implicitly turned into a DWIM expression,
 which means that argument evaluation follows Lisp-1 rules.  (See the dwim
 operator below).
 
@@ -8622,12 +8644,12 @@ Description:
 The iff function is the functional equivalent of the if operator. It accepts
 functional arguments and returns a function.
 
-The resulting function takes its arguments and applies them to cond-func.  If
-cond-func yields true, then the arguments are passed to then-func, and the
-resulting value is returned. Otherwise if cond-func yields a false result, and
-there is no else-func, then nil is returned. If cond-func yields false, and an
-else-func exists, then the original arguments are passed to else-func and the
-resulting value is returned.
+The resulting function takes its arguments and applies them to <cond-func>.  If
+<cond-func> yields true, then the arguments are passed to <then-func,> and the
+resulting value is returned. Otherwise if <cond-func> yields a false result,
+and there is no <else-func,> then nil is returned. If <cond-func> yields false,
+and an <else-func> exists, then the original arguments are passed to
+<else-func> and the resulting value is returned.
 
 .SH INPUT AND OUTPUT
 
@@ -8658,13 +8680,13 @@ Syntax:
 .TP
 Description:
 
-The format function performs output to a stream, by interpreting the
-actions implicit in a format string, incorporating material pulled
-from additional arguments. Though the function is simple to invoke,
-there is complexithy in format string language, which is documented
-below.
+The format function performs output to a stream given by <stream-designator>,
+by interpreting the actions implicit in a <format-string>, incorporating
+material pulled from additional arguments given by <args>. Though the function
+is simple to invoke, there is complexity in format string language, which is
+documented below.
 
-The stream designator argument can be a stream object, or one of the values t
+The <stream-designator> argument can be a stream object, or one of the values t
 and nil. The value t serves as a shorthand for *stdout*. The value nil
 means that the function will send output into a newly instantiated string
 output stream, and then return the resulting string.
@@ -8672,7 +8694,7 @@ output stream, and then return the resulting string.
 .TP
 Format string syntax:
 
-Within the format string, most characters represent themselves. Those
+Within <format-string>, most characters represent themselves. Those
 characters are simply output. The character ~ (tilde) introduces formatting
 directives, which are denoted by a letter. 
 
@@ -8802,7 +8824,7 @@ Syntax:
 Description:
 
 The print and pprint functions render a printed character representation of the
-obj argument into a stream. If a stream argument is not supplied, then 
+<obj> argument into <stream>. If a stream argument is not supplied, then 
 the destination is the stream currently stored in the *stdout*
 variable. The print function renders in a way which strives for read-print
 consistency: an object is printed in a notation which is recognized as
@@ -8837,7 +8859,7 @@ Syntax:
 Description:
 
 This function produces an input stream object. Character read operations on the
-stream object read successive characters from the given string. Output
+stream object read successive characters from <string>. Output
 operations and byte operations are not supported.
 
 .SS Function make-string-byte-input-stream
@@ -8852,8 +8874,8 @@ Description:
 
 This function produces an input stream object. Byte read operations on
 this stream object read successive byte values obtained by encoding
-the given string into UTF-8. Character read operations are not supported,
-and neither are output operations.
+<string> into UTF-8. Character read operations are not supported, and neither
+are output operations.
 
 .SS Function make-string-output-stream
 
@@ -8894,10 +8916,10 @@ Syntax:
 .TP
 Description:
 
-The stream argument must be a string output stream. This function finalizes
+The <stream> argument must be a string output stream. This function finalizes
 the data sent to the stream and retrieves the accumulated character string.
 
-If a partial UTF-8 code has been written to the stream, and then this
+If a partial UTF-8 code has been written to <stream>, and then this
 function is called, the byte stream is considered complete and the partial
 code is decoded as invalid bytes.
 
@@ -8930,8 +8952,8 @@ Syntax:
 Description:
 
 This function returns the string list which has accumulated inside
-a string output stream. The string output stream is finalized, so that
-further output is no longer possible.
+a string output stream given by <stream>. The string output stream is
+finalized, so that further output is no longer possible.
 
 .SS Function close-stream
 
@@ -8943,11 +8965,12 @@ Syntax:
 .TP
 Description:
 
-The close-stream function performs a close operation on a stream,
-whose meaning is stream-dependent. For some kinds of streams, such as
-string streams, it does nothing. For real operating system streams,
-it will perform a close of the underlying file descriptor, and dissociate
-that descriptor from the stream. Any buffered data is flushed first.
+The close-stream function performs a close operation on <stream>,
+whose meaning is depends on the type of the stream. For some types of streams,
+such as string streams, it does nothing. For streams which are connected
+to operating system files or devices, will perform a close of the underlying
+file descriptor, and dissociate that descriptor from the stream. Any buffered
+data is flushed first.
 
 .SS Functions get-line, get-char and get-byte
 
@@ -8961,7 +8984,7 @@ Syntax:
 .TP
 Description:
 
-These fundamental stream functions perform input.  The stream argument,
+These fundamental stream functions perform input.  The <stream> argument
 is optional. If it is specified, it should be an input stream which supports
 the given operation. If it is not specified, then the *stdin* 
 stream is used.
@@ -8991,26 +9014,25 @@ Syntax:
   (put-line <string> [<stream>])
   (put-string <string> [<stream>])
   (put-char <char> [<stream>])
-  (put-byte <integer> [<stream>])
+  (put-byte <byte> [<stream>])
 
 .TP
 Description:
 
-These functions perform output on an output stream. The stream argument
+These functions perform output on an output stream. The <stream> argument
 must be an output stream which supports the given operation. If it is omitted,
 then *stdout* is used.
 
-The put-char function writes a character to a stream. If the stream is
-based on bytes, then the character is encoded into UTF-8 and multiple
-bytes are written. Streams which support put-char also support put-line,
-and put-string. The put-string function writes the characters of a string
-out to the stream as if by multiple calls to put-char. The put-line
-function is like put-string, but also writes an additional newline
-character.
+The put-char function writes a character given by <char> to a stream. If the
+stream is based on bytes, then the character is encoded into UTF-8 and multiple
+bytes are written. Streams which support put-char also support put-line, and
+put-string. The put-string function writes the characters of a string out to
+the stream as if by multiple calls to put-char. The put-line function is like
+put-string, but also writes an additional newline character.
 
-The put-byte function writes a raw byte to a stream which supports
-such an operation. A byte is specified as an integer value in the
-range 0 to 255.
+The put-byte function writes a raw byte given by the <byte> argument
+to <stream>, if <stream> supports a byte write operation. The byte
+value is specified as an integer value in the range 0 to 255.
 
 .SS Function flush-stream
 
@@ -9024,9 +9046,9 @@ Description:
 
 This function is meaningful for output streams which accumulate data
 which is passed on to the operating system in larger transfer units.
-Calling this function causes all accumulated data to be passed
-to the operating system. If called on streams for which this function
-is not meaningful, it does nothing.
+Calling this function causes all accumulated data inside <stream> to be passed
+to the operating system. If called on streams for which this function is not
+meaningful, it does nothing.
 
 .SH FILESYSTEM ACCESS
 
