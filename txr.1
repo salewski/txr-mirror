@@ -1073,7 +1073,7 @@ followed by a character name, the letter x followed by hex digits,
 the letter o followed by octal digits, or a single character. Valid character
 names are: nul, alarm, backspace, tab, linefeed, newline, vtab, page, return,
 esc, space. This convention for character literals is similar to that of the
-Scheme language.
+Scheme language.  Note that #\elinefeed and #\enewline are the same character.
 
 .SS String Literals
 
@@ -7471,55 +7471,420 @@ which is interposed between the catenated strings.
 
 .SS Function split-str
 
+.TP
+Syntax:
+
+  (split-str <string> <sep>)
+
+.TP
+Description:
+
+The split-str function breaks the <string> into pieces, returing a list
+thereof. The <sep> argument must be a string. It specifies the separator
+character sequence within <string>. All non-overlapping occurences of
+<sep> within <string> are identified in left to right order, and are removed
+from <string>. The string is broken into pieces according to the gaps left
+behind by the removed separators.
+
+Adjacent occurrences of <sep> within <string> are considered to be separate
+gaps which come between empty strings.
+
+This operation is nondestructive: <string> is not modified in any way.
+
 .SS Function split-str-set
+
+.TP
+Syntax:
+
+  (split-str <string> <set>)
+
+.TP
+Description:
+
+The split-str function breaks the <string> into pieces, returing a list
+thereof. The <sep> argument must be a string. It specifies a set of
+characters.  All occurences of any of these characters within <string> are
+identified, and are removed from <string>. The string is broken into pieces
+according to the gaps left behind by the removed separators.
+
+Adjacent occurrences of characters from <set> within <string> are considered to
+be separate gaps which come between empty strings.
+
+This operation is nondestructive: <string> is not modified in any way.
 
 .SS Function list-str
 
+.TP
+Syntax:
+
+  (list-str <string>)
+
+.TP
+Description:
+
+The list-str function converts a string into a list of characters.
+
 .SS Function trim-str
+
+.TP
+Syntax:
+
+  (trim-str <string>)
+
+.TP
+Description:
+
+The trim-str function produces a copy of <string> from which leading and
+trailing whitespace is removed. Whitespace consists of spaces, tabs,
+carriage returns, linefeeds, vertical tabs and form feeds.
 
 .SS Function string-lt
 
+.TP
+Syntax:
+
+  (string-lt <left-str> <right-str>)
+
+.TP
+Description:
+
+The string-lt function returns t if <left-str> is lexicographically prior
+to <right-str>. The behavior does not depend on any kind of locale.
+
+Note that this function forces (fully instantiates) any lazy string arguments,
+even if doing is is not necessary.
+
 .SS Function chrp
+
+.TP
+Syntax:
+
+  (chrp <obj>)
+
+.TP
+Description:
+
+Returns t if <obj> is a character, otherwise nil.
 
 .SS Function chr-isalnum
 
+.TP
+Syntax:
+
+  (chr-isalnum <char>)
+
+.TP
+Description:
+
+Returns t if <char> is an alpha-numeric character, otherwise nil. Alpha-numeric
+means one of the upper or lower case letters of the English alphabet found in
+ASCII, or an ASCII digit. This function is not affected by locale.
+
 .SS Function chr-isalpha
+
+.TP
+Syntax:
+
+  (chr-isalpha <char>)
+
+.TP
+Description:
+
+Returns t if <char> is an alphabetic character, otherwise nil. Alphabetic
+means one of the upper or lower case letters of the English alphabet found in
+ASCII. This function is not affected by locale.
 
 .SS Function chr-isascii
 
+.TP
+Syntax:
+
+  (chr-isalpha <char>)
+
+.TP
+Description:
+
+This function returns t if the code of character <char> is in the range
+0 to 127, inclusive. For characters outside of this range, it returns nil.
+
 .SS Function chr-iscntrl
+
+.TP
+Syntax:
+
+  (chr-iscntrl <char>)
+
+.TP
+Description:
+
+This function returns t if the character <char> is a character whose code
+ranges from 0 to 31, or is 127. In other words, any non-printable ASCII
+character. For other characters, it returns nil.
 
 .SS Function chr-isdigit
 
+.TP
+Syntax:
+
+  (chr-isdigit <char>)
+
+.TP
+Description:
+
+This function returns t if the character <char> is is an ASCII digit.
+Otherwise, it returns nil.
+
 .SS Function chr-isgraph
+
+.TP
+Syntax:
+
+  (chr-isgraph <char>)
+
+.TP
+Description:
+
+This function returns t if <char> is a non-space printable ASCII character.
+It returns nil if it is a space or control character.
+
+It also returns nil for non-ASCII characters: Unicode characters with a code
+above 127.
 
 .SS Function chr-islower
 
+.TP
+Syntax:
+
+  (chr-islower <char>)
+
+.TP
+Description:
+
+This function returns t if <char> is an ASCII lower case letter. Otherwise it returns nil.
+
 .SS Function chr-isprint
+
+.TP
+Syntax:
+
+  (chr-isprint <char>)
+
+.TP
+Description:
+
+This function returns t if <char> is an ASCII character which is not a
+control character.  It also returns nil for all non-ASCII characters: Unicode
+characters with a code above 127.
 
 .SS Function chr-ispunct
 
+.TP
+Syntax:
+
+  (chr-ispunct <char>)
+
+.TP
+Description:
+
+This function returns t if <char> is an ASCII character which is not a
+control character.  It also returns nil for all non-ASCII characters: Unicode
+characters with a code above 127.
+
 .SS Function chr-isspace
+
+.TP
+Syntax:
+
+  (chr-isspace <char>)
+
+.TP
+Description:
+
+This function returns t if <char> is an ASCII whitespace character: any of the
+characters in the set #\espace, #\etab, #\elinefeed, #\enewline, #\ereturn,
+#\evtab, and #\epage.  For all other characters, it returns nil.
 
 .SS Function chr-isupper
 
+.TP
+Syntax:
+
+  (chr-isupper <char>)
+
+.TP
+Description:
+
+This function returns t if <char> is an ASCII upper case letter. Otherwise it returns nil.
+
 .SS Function chr-isxdigit
+
+.TP
+Syntax:
+
+  (chr-isxdigit <char>)
+
+.TP
+Description:
+
+This function returns t if <char> is a hexadecimal digit. One of the ASCII
+letters A through F, or their lower-case equivalents, or an ASCII digit 0
+through 9.
 
 .SS Function chr-toupper
 
+.TP
+Syntax:
+
+  (chr-toupper <char>)
+
+.TP
+Description:
+
+If character <char> is a lower case ASCII letter character, this function
+returns the upper case equivalent character. If it is some other
+character, then it just returns <char>.
+
 .SS Function chr-tolower
+
+.TP
+Syntax:
+
+  (chr-tolower <char>)
+
+.TP
+Description:
+
+If character <char> is an upper case ASCII letter character, this function
+returns the lower case equivalent character. If it is some other
+character, then it just returns <char>.
 
 .SS Functions num-chr and chr-num
 
+.TP
+Syntax:
+
+  (num-chr <char>)
+  (chr-num <num>)
+
+.TP
+Description:
+
+The argument <char> must be a character. The num-chr function returns that
+character's Unicode code point value as an integer.
+
+The argument <num> must be a fixnum integer in the range 0 to #\e10FFFF.
+The argument is taken to be a Unicode code point value and the
+corresponding character object is returned.
+
 .SS Function chr-str
+
+.TP
+Syntax:
+
+  (chr-str <str> <idx>)
+
+.TP
+Description:
+
+The chr-str function performs random access on string <str> to retrieve
+the character whose position is given by integer <idx>, which must
+be within range of the string.
+
+The index value 0 corresponds to the first (leftmost) character of the string
+and so non-negative values up to one less than the length are possible.
+
+Negative index values are also allowed, such that -1 corresponds to the
+last (rightmost) character of the string, and so negative values down to
+the additive inverse of the string length are possible.
+
+An empty string cannot be indexed. A string of length one supports index 0 and
+index -1. A string of length two is indexed left to right by the values 0 and
+1, and from right to left by -1 and -2.
+
+.TP
+Notes:
+
+Direct use of chr-str is equivalent to the DWIM bracket notation except
+that <str> must be a string. The following relation holds:
+
+  (chr-str s i) --> [s i]
+
+since [s i] <--> (ref s i), this also holds:
+
+  (chr-str s i) --> (ref s i)
 
 .SS Function chr-str-set
 
+.TP
+Syntax:
+
+  (chr-str-set <str> <idx> <char>)
+
+.TP
+Description:
+
+The chr-str function performs random access on string <str> to overwrite
+the character whose position is given by integer <idx>, which must
+be within range of the string. The character at <idx> is overwritten
+with character <char>.
+
+The <idx> argument works exactly as in chr-str.
+
+The <str> argument must be a modifiable string.
+
+.TP
+Notes:
+
+Direct use of chr-str is equivalent to the DWIM bracket notation except
+that <str> must be a string. The following relation holds:
+
+  (chr-str-set s i c) --> (set [s i] c)
+
+since (set [s i] c) <--> (refset s i c), this also holds:
+
+  (chr-str s i) --> (refset s i c)
+
 .SS Function span-str
+
+.TP
+Syntax:
+
+  (span-str <str> <set>)
+
+.TP
+Description:
+
+The span-str function determines the longest prefix of string <str> which
+consists only of the characters in string <set>, in any combination.
 
 .SS Function compl-span-str
 
+.TP
+Syntax:
+
+  (compl-span-str <str> <set>)
+
+.TP
+Description:
+
+The compl-span-str function determines the longest prefix of string <str> which
+consists only of the characters which do not appear in <set>, in any
+combination.
+
 .SS Function break-str
+
+.TP
+Syntax:
+
+  (break-str <str> <set>)
+
+.TP
+Description:
+
+The break-str function returns an integer which represents the position of the
+first character in string <str> which appears in string <set>.
+
+If there is no such character, then nil is returned.
 
 .SH VECTORS
 
@@ -7638,6 +8003,11 @@ bracket syntax:
   (ref seq idx) <--> [seq idx]
 
   (refset seq idx new) <--> (set [seq idx] new)
+
+The difference is that ref and refset are first class functions which
+can be used in functional programming as higher order functions, whereas the
+bracket notation is syntactic sugar, and set is an operator, not a function.
+Therefore the brackets cannot replace all uses of ref and refset.
 
 .SS Function sort
 

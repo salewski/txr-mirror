@@ -1,3 +1,7 @@
+2012-09-06  Kaz Kylheku  <kaz@kylheku.com>
+
+	* txr.1: Documented string library.
+
 2012-09-02  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): Follow function renames.
