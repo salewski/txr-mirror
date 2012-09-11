@@ -2692,7 +2692,8 @@ static val v_collect(match_files_ctx *c)
             last_bindings = set_diff(until_last_bindings,
                                      new_bindings, eq_f, nil);
             if (success == t) {
-              c->data = t;
+              debuglf(specline, lit("collect consumed entire file"), nao);
+              c->data = nil;
             } else {
               cons_bind (new_data, new_line, success);
               c->data = new_data;

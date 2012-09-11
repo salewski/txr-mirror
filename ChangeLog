@@ -1,3 +1,10 @@
+2012-09-10  Kaz Kylheku  <kaz@kylheku.com>
+
+	* match.c (v_collect): Bug in processing of @(last) directive.
+	When a match for the @(last) material occured at the end of data,
+	c->data was being mistakenly set to nil rather than t before breaking
+	out of the loop, wreaking havoc.
+
 2012-09-06  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.1: Documented string library.
