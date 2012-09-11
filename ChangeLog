@@ -3,7 +3,8 @@
 	* match.c (v_collect): Bug in processing of @(last) directive.
 	When a match for the @(last) material occured at the end of data,
 	c->data was being mistakenly set to nil rather than t before breaking
-	out of the loop, wreaking havoc.
+	out of the loop, wreaking havoc. This is not a regression; this
+	was there since the inception of @(last) between versions 38 and 39.
 
 2012-09-06  Kaz Kylheku  <kaz@kylheku.com>
 
