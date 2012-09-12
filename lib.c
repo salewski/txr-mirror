@@ -1414,6 +1414,18 @@ val numeqv(val first, val rest)
   return t;
 }
 
+val numneqv(val list)
+{
+  val i, j;
+
+  for (i = list; i; i = cdr(i))
+    for (j = cdr(i); j; j = cdr(j))
+      if (numeq(car(i), car(j)))
+        return nil;
+
+  return t;
+}
+
 val max2(val anum, val bnum)
 {
   return if3(ge(anum, bnum), anum, bnum);

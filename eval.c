@@ -2228,6 +2228,7 @@ void eval_init(void)
   reg_fun(intern(lit(">="), user_package), func_n1v(gev));
   reg_fun(intern(lit("<="), user_package), func_n1v(lev));
   reg_fun(intern(lit("="), user_package), func_n1v(numeqv));
+  reg_fun(intern(lit("/="), user_package), func_n0v(numneqv));
   reg_fun(intern(lit("max"), user_package), func_n1v(maxv));
   reg_fun(intern(lit("min"), user_package), func_n1v(minv));
 

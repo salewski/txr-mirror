@@ -450,6 +450,7 @@ val ltv(val first, val rest);
 val gev(val first, val rest);
 val lev(val first, val rest);
 val numeqv(val first, val rest);
+val numneqv(val list);
 val max2(val anum, val bnum);
 val min2(val anum, val bnum);
 val maxv(val first, val rest);

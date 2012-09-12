@@ -1,3 +1,13 @@
+2012-09-11  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): new instrinsic function /= registered.
+
+	* lib.c (numneqv): New function.
+
+	* lib.h (numneqv): Declared.
+
+	* txr.1: New function documented.
+
 2012-09-10  Kaz Kylheku  <kaz@kylheku.com>
 
 	* match.c (v_collect): Bug in processing of @(last) directive.

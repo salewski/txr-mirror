@@ -8377,6 +8377,21 @@ undergo two different conversions.  For instance in (< <float> <character>
 its Unicode, and if that comparison suceeds, then in the second comparison, the
 character will convert to integer.
 
+.SS Function /=
+
+.TP
+Syntax:
+
+  (/= <number>*)
+
+.TP
+Description:
+
+The arguments to /= may be numbers or characters.  The /= function returns t if
+no two of its arguments are numerically equal. That is to say, if there exist
+some a and b which are distinct arguments such that (= a b) is true, then
+teh function returns nil. Otherwise it returns t.
+
 .SS Functions max and min
 
 .TP
