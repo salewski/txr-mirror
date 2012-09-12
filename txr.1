@@ -7470,7 +7470,7 @@ Syntax:
 .TP
 Description:
 
-The replace-list function replaces a substring of <string> with items from
+The replace-str function replaces a substring of <string> with items from
 <item-sequence>, which may be any kind of sequence (list, vector
 or string) provided that it, if it is nonempty, it contains only characters.
 
@@ -7914,29 +7914,198 @@ If there is no such character, then nil is returned.
 
 .SS Function vector
 
+.TP
+Syntax:
+
+  (vector <length>)
+
+.TP
+Description:
+
+The vector function creates and returns a vector object of the specified
+length.  The elements of the vector are initialized to nil.
+
 .SS Function vectorp
+
+.TP
+Syntax:
+
+  (vectorp <obj>)
+
+.TP
+Description:
+
+The vectorp function returns t if <obj> is a vector, otherwise it returns
+nil.
 
 .SS Function vec-set-length
 
+.TP
+Syntax:
+
+  (vec-set-length <vec> <len>)
+
+.TP
+Description:
+
+The vec-set-length modifies the length of <vec>, making it longer or
+shorter. If the vector is made longer, then the newly added elements
+are initialized to nil. The <len> argument must be nonnegative.
+
+The return value is <vec>.
+
 .SS Function vecref
+
+.TP
+Syntax:
+
+  (vecref <vec> <idx>)
+
+.TP
+Description:
+
+The vecref function performs indexing into a vector. It retrieves
+an element of <vec> at position <idx>, counted from zero.
+The <idx> value must range from 0 to one less than the
+length of the vector. The specified element is returned.
 
 .SS Function vec-push
 
+.TP
+Syntax:
+
+  (vec-push <vec> <elem>)
+
+.TP
+Description:
+
+The vec-push function extends the length of a vector <vec> by one element, and
+sets the new element to the value <elem>.
+
+The previous length of the vector (which is also the position of <elem>)
+is returned.
+
+This function performs similarly to the generic function ref, except that the
+first argument must be a vector.
+
 .SS Function length-vec
+
+.TP
+Syntax:
+
+  (length-vec <vec>)
+
+.TP
+Description:
+
+The length-vec function returns the length of vector <vec>. It performs
+similarly to the generic length function, except that the argument must
+be a vector.
 
 .SS Function size-vec
 
+.TP
+Syntax:
+
+  (size-vec <vec>)
+
+.TP
+Description:
+
+The size-vec function returns the number of elements for which storage
+is reserved in the vector vec. 
+
+.TP
+Notes:
+
+The length of the vector can be extended up to this size without any memory
+allocation operations having to be performed.
+
 .SS Function vector-list
+
+.TP
+Syntax:
+
+  (vector-list <list>)
+
+.TP
+Description:
+
+This function returns a vector which contains all of the same elements
+and in the same order as list <list>.
 
 .SS Function list-vector
 
+.TP
+Syntax:
+
+  (list-vector <vec>)
+
+.TP
+Description:
+
+The list-vector function returns a list of the elements of vector <vec>.
+
 .SS Function copy-vec
+
+.TP
+Syntax:
+
+  (copy-vec <vec>)
+
+.TP
+Description:
+
+The copy-vec function returns a new vector object of the same length
+as <vec> and containing the same elements in the same order.
 
 .SS Function sub-vec
 
+.TP
+Syntax:
+
+  (sub-vec <vec> [<from> [<to>]])
+
+.TP
+Description:
+
+The sub-vec function extracts a subvector from <list>. It is exactly like the
+more generic function sub, except that it operates only on vectors.
+For a description of the arguments and semantics, refer to the sub function.
+
 .SS Function replace-vec
 
+.TP
+Syntax:
+
+  (replace-vec <vec> <item-sequence> [<from> [<to>]])
+
+.TP
+Description:
+
+The replace-vec function replaces a subrange of <vec> with items from
+the item-sequence argument, which may be any kind of sequence (list, vector
+or string).
+
+It is like the replace function, except that the first argument must be
+a vector.
+
+For a description of the arguments and semantics, refer to the replace function.
+
 .SS Function cat-vec
+
+.TP
+Syntax:
+
+  (cat-vec <vec-list>)
+
+.TP
+Description:
+
+The <vec-list> argument is a list of vectors. The cat-vec function
+produces a catenation of the vectors listed in <vec-list>. It returns
+a single large vector formed by catenating those vectors together in
+order.
 
 .SH GENERIC SEQUENCE OPERATIONS
 
