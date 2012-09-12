@@ -1142,6 +1142,30 @@ else
 fi
 
 #
+# sys/stat.h
+#
+
+printf "Checking whether we have <sys/stat.h> ... "
+
+cat > conftest.c <<!
+#include <sys/stat.h>
+
+int main(void)
+{
+  struct stat s;
+  return 0;
+}
+!
+rm -f conftest
+if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+  printf "no\n"
+else
+  printf "yes\n"
+  printf "#define HAVE_SYS_STAT 1\n" >> config.h
+fi
+
+
+#
 # environ
 #
 

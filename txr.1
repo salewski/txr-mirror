@@ -6947,6 +6947,30 @@ cell of the input alist. That is to say, each element of the output list
 is produced as if by the copy-cons function applied to the corresponding
 element of the input list.
 
+.SH PROPERTY LISTS
+
+.SS Function prop
+
+.TP
+Syntax:
+
+  (prop <plist> <key>)
+
+.TP
+Description:
+
+A property list a flat list of even length consisting of interleaved
+pairs of property names (usually symbols) and their values (arbitrary
+objects). An example property list is (:a 1 :b "two") which contains
+two properties, :a having value 1, and :b having value "two".
+
+The prop function searches property list <plist> for key <key>. If
+the key is found, then the value next to it is returned. Otherwise
+nil is returned.
+
+It is ambiguous whether nil is returned due to the property not being
+found, or due to the property being present with a nil value.
+
 .SH LIST SORTING
 
 .SS Function merge
@@ -9436,6 +9460,8 @@ to the operating system. If called on streams for which this function is not
 meaningful, it does nothing.
 
 .SH FILESYSTEM ACCESS
+
+.SS Function stat
 
 .SS Function open-directory
 

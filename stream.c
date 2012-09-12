@@ -40,6 +40,9 @@
 #if HAVE_SYS_WAIT
 #include <sys/wait.h>
 #endif
+#if HAVE_SYS_STAT
+#include <sys/stat.h>
+#endif
 #include "lib.h"
 #include "gc.h"
 #include "unwind.h"
@@ -48,6 +51,10 @@
 
 val std_input, std_output, std_debug, std_error;
 val output_produced;
+
+val dev_k, ino_k, mode_k, nlink_k, uid_k;
+val gid_k, rdev_k, size_k, blksize_k, blocks_k;
+val atime_k, mtime_k, ctime_k;
 
 struct strm_ops {
   struct cobj_ops cobj_ops;
@@ -1475,6 +1482,46 @@ val flush_stream(val stream)
   }
 }
 
+#if HAVE_SYS_STAT
+static int w_stat(const wchar_t *wpath, struct stat *buf)
+{
+  char *path = utf8_dup_to(wpath);
+  int res = stat(path, buf);
+  free(path);
+  return res;
+}
+#endif
+
+val statf(val path)
+{
+#if HAVE_SYS_STAT
+  struct stat st;
+  int res = w_stat(c_str(path), &st);
+
+  if (res == -1)
+    uw_throwf(file_error_s, lit("unable to stat ~a: ~a/~s"),
+              path, num(errno), string_utf8(strerror(errno)), nao);
+
+  return list(dev_k, num(st.st_dev),
+              dev_k, num(st.st_dev),
+              ino_k, num(st.st_ino),
+              mode_k, num(st.st_mode),
+              nlink_k, num(st.st_nlink),
+              uid_k, num(st.st_uid),
+              gid_k, num(st.st_gid),
+              rdev_k, num(st.st_rdev),
+              size_k, num(st.st_size),
+              blksize_k, num(st.st_blksize),
+              blocks_k, num(st.st_blocks),
+              atime_k, num(st.st_atime),
+              mtime_k, num(st.st_mtime),
+              ctime_k, num(st.st_ctime),
+              nao);
+#else
+  uw_throwf(file_error_s, lit("stat is not implemented"), nao);
+#endif
+}
+
 static DIR *w_opendir(const wchar_t *wname)
 {
   char *name = utf8_dup_to(wname);
@@ -1482,6 +1529,7 @@ static DIR *w_opendir(const wchar_t *wname)
   free(name);
   return d;
 }
+
 
 val open_directory(val path)
 {
@@ -1673,4 +1721,18 @@ void stream_init(void)
   std_debug = make_stdio_stream(stdout, string(L"debug"), nil, t);
   std_error = make_stdio_stream(stderr, string(L"stderr"), nil, t);
   detect_format_string();
+
+  dev_k = intern(lit("dev"), keyword_package);
+  ino_k = intern(lit("ino"), keyword_package);
+  mode_k = intern(lit("mode"), keyword_package);
+  nlink_k = intern(lit("nlink"), keyword_package);
+  uid_k = intern(lit("uid"), keyword_package);
+  gid_k = intern(lit("gid"), keyword_package);
+  rdev_k = intern(lit("rdev"), keyword_package);
+  size_k = intern(lit("size"), keyword_package);
+  blksize_k = intern(lit("blksize"), keyword_package);
+  blocks_k = intern(lit("blocks"), keyword_package);
+  atime_k = intern(lit("atime"), keyword_package);
+  mtime_k = intern(lit("mtime"), keyword_package);
+  ctime_k = intern(lit("ctime"), keyword_package);
 }

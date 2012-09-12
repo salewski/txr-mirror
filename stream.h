@@ -50,6 +50,7 @@ val put_line(val string, val stream);
 val put_char(val ch, val stream);
 val put_byte(val byte, val stream);
 val flush_stream(val stream);
+val statf(val path);
 val open_directory(val path);
 val open_file(val path, val mode_str);
 val open_command(val path, val mode_str);

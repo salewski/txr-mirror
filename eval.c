@@ -2291,6 +2291,7 @@ void eval_init(void)
   reg_fun(intern(lit("put-char"), user_package), func_n2o(put_char, 1));
   reg_fun(intern(lit("put-byte"), user_package), func_n2o(put_byte, 1));
   reg_fun(intern(lit("flush-stream"), user_package), func_n1(flush_stream));
+  reg_fun(intern(lit("stat"), user_package), func_n1(statf));
   reg_fun(intern(lit("open-directory"), user_package), func_n1(open_directory));
   reg_fun(intern(lit("open-file"), user_package), func_n2(open_file));
   reg_fun(intern(lit("open-command"), user_package), func_n2(open_command));
@@ -2381,6 +2382,7 @@ void eval_init(void)
   reg_fun(intern(lit("alist-nremove"), user_package), func_n1v(alist_nremove));
   reg_fun(intern(lit("copy-cons"), user_package), func_n1(copy_cons));
   reg_fun(intern(lit("copy-alist"), user_package), func_n1(copy_alist));
+  reg_fun(intern(lit("prop"), user_package), func_n2(getplist));
   reg_fun(intern(lit("merge"), user_package), func_n4o(merge, 2));
   reg_fun(intern(lit("sort"), user_package), func_n3o(sort, 2));
   reg_fun(intern(lit("find"), user_package), func_n4o(find, 2));

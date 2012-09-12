@@ -1,5 +1,22 @@
 2012-09-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	* configure: Added test for <sys/stat.h>
+
+	* eval.c: New intrinsic functions "stat" and "prop".
+
+	* stream.c: Include <sys/stat.h> if we have it.
+	(w_stat, statf): New functions.
+	(val dev_k, ino_k, mode_k, nlink_k, uid_k,
+	val gid_k, rdev_k, size_k, blksize_k, blocks_k;
+	val atime_k, mtime_k, ctime_k): New sybol variables.
+	(stream_init): Intern new keywords symbols.
+
+	* stream.h (statf): Declared.
+
+	* txr.1: prop documented. Stub for stat created.
+
+2012-09-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): new instrinsic function /= registered.
 
 	* lib.c (numneqv): New function.
