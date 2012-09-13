@@ -49,10 +49,12 @@ syn keyword txl_keyword contained fixnump bignump integerp floatp
 syn keyword txl_keyword contained numberp zerop evenp oddp >
 syn keyword txl_keyword contained zerop evenp oddp > < >= <= = max min
 syn keyword txl_keyword contained search-regex match-regex regsub regexp regex-compile
-syn keyword txl_keyword contained make-hash hash hash-construct gethash sethash pushhash remhash
+syn keyword txl_keyword contained make-hash make-similar-hash copy-hash hash hash-construct
+syn keyword txl_keyword contained gethash sethash pushhash remhash
 syn keyword txl_keyword contained hash-count get-hash-userdata set-hash-userdata hashp maphash 
 syn keyword txl_keyword contained hash-eql hash-equal 
-syn keyword txl_keyword contained hash_keys hash_values hash_pairs hash_alist
+syn keyword txl_keyword contained hash-keys hash-values hash-pairs hash-alist
+syn keyword txl_keyword contained hash-uni hash-diff hash-isec
 syn keyword txl_keyword contained eval chain andf orf iff
 syn keyword txl_keyword contained *stdout* *stdin* *stddebug*
 syn keyword txl_keyword contained *stderr* format print pprint tostring tostringp

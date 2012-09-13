@@ -370,6 +370,51 @@ val make_hash(val weak_keys, val weak_vals, val equal_based)
   return hash;
 }
 
+val make_similar_hash(val existing)
+{
+  struct hash *ex = (struct hash *) cobj_handle(existing, hash_s);
+  struct hash *h = (struct hash *) chk_malloc(sizeof *h);
+  val mod = num(256);
+  val table = vector(mod);
+  val hash = cobj((mem_t *) h, hash_s, &hash_ops);
+
+  h->modulus = c_num(mod);
+  h->count = 0;
+  h->table = table;
+  h->userdata = ex->userdata;
+
+  h->flags = ex->flags;
+  h->hash_fun = ex->hash_fun;
+  h->assoc_fun = ex->assoc_fun;
+  h->acons_new_l_fun = ex->acons_new_l_fun;
+
+  return hash;
+}
+
+val copy_hash(val existing)
+{
+  struct hash *ex = (struct hash *) cobj_handle(existing, hash_s);
+  struct hash *h = (struct hash *) chk_malloc(sizeof *h);
+  val hash = cobj((mem_t *) h, hash_s, &hash_ops);
+  val mod = num(ex->modulus);
+  val iter;
+
+  h->modulus = ex->modulus;
+  h->count = ex->count;
+  h->table = vector(mod);
+  h->userdata = ex->userdata;
+
+  h->flags = ex->flags;
+  h->hash_fun = ex->hash_fun;
+  h->assoc_fun = ex->assoc_fun;
+  h->acons_new_l_fun = ex->acons_new_l_fun;
+
+  for (iter = zero; lt(iter, mod); iter = plus(iter, one))
+    *vecref_l(h->table, iter) = copy_alist(vecref(ex->table, iter));
+
+  return hash;
+}
+
 val *gethash_l(val hash, val key, val *new_p)
 {
   struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
@@ -704,6 +749,83 @@ val hash_alist(val hash)
   if (!cell)
     return nil;
   return make_half_lazy_cons(func_f1(iter, hash_alist_lazy), cell);
+}
+
+val hash_uni(val hash1, val hash2)
+{
+  struct hash *h1 = (struct hash *) cobj_handle(hash1, hash_s);
+  struct hash *h2 = (struct hash *) cobj_handle(hash2, hash_s);
+
+  if (h1->hash_fun != h2->hash_fun)
+    uw_throwf(error_s, lit("hash-uni: ~a and ~a are incompatible hashes"), hash1, hash2, nao);
+
+  {
+    val hout = make_similar_hash(hash1);
+    val hiter, entry;
+
+    for (hiter = hash_begin(hash1), entry = hash_next(hiter); 
+         entry;
+         entry = hash_next(hiter))
+    {
+      sethash(hout, car(entry), cdr(entry));
+    }
+
+    for (hiter = hash_begin(hash2), entry = hash_next(hiter); 
+         entry;
+         entry = hash_next(hiter))
+    {
+      sethash(hout, car(entry), cdr(entry));
+    }
+
+    return hout;
+  }
+}
+
+val hash_diff(val hash1, val hash2)
+{
+  struct hash *h1 = (struct hash *) cobj_handle(hash1, hash_s);
+  struct hash *h2 = (struct hash *) cobj_handle(hash2, hash_s);
+
+  if (h1->hash_fun != h2->hash_fun)
+    uw_throwf(error_s, lit("hash-diff: ~a and ~a are incompatible hashes"), hash1, hash2, nao);
+
+  {
+    val hout = copy_hash(hash1);
+    val hiter, entry;
+
+    for (hiter = hash_begin(hash2), entry = hash_next(hiter); 
+         entry;
+         entry = hash_next(hiter))
+    {
+      remhash(hout, car(entry));
+    }
+
+    return hout;
+  }
+}
+
+val hash_isec(val hash1, val hash2)
+{
+  struct hash *h1 = (struct hash *) cobj_handle(hash1, hash_s);
+  struct hash *h2 = (struct hash *) cobj_handle(hash2, hash_s);
+
+  if (h1->hash_fun != h2->hash_fun)
+    uw_throwf(error_s, lit("hash-uni: ~a and ~a are incompatible hashes"), hash1, hash2, nao);
+
+  {
+    val hout = make_similar_hash(hash1);
+    val hiter, entry;
+
+    for (hiter = hash_begin(hash1), entry = hash_next(hiter); 
+         entry;
+         entry = hash_next(hiter))
+    {
+      if (gethash(hash2, car(entry)))
+        sethash(hout, car(entry), cdr(entry));
+    }
+
+    return hout;
+  }
 }
 
 void hash_init(void)

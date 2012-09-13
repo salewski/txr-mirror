@@ -8876,6 +8876,29 @@ the equal function instead.
 In addition to storing key-value pairs, a hash table can have a piece of
 information associated with it, called the user data.
 
+.SS Functions make-similar-hash and copy-hash
+
+.TP
+Syntax:
+
+  (make-similar-hash <hash>)
+  (copy-hash <hash>)
+
+.TP
+Description:
+
+The make-similar-hash and copy-hash functions create a new hash object based on
+the existing <hash> object.
+
+The make-similar-hash produces an empty hash table which inherits all of the
+attributes of <hash>. It uses the same kind of key equality, the
+same configuration of weak keys and values, and has the same user data (see
+the set-hash-userdata function).
+
+The copy-hash function is like make-similar-hash, except that instead of
+producing an empty hash table, it produces one which has all the same elements
+as <hash>: it contains the same key and value objects. 
+
 .SS Function sethash
 
 .TP
@@ -9061,6 +9084,41 @@ there is no <result-form>, the return value is nil.
 The <result-form> and <body-form>-s are in the scope of an implicit anonymous
 block, which means that it is possible to terminate the execution of
 dohash early using (return) or (return <value>).
+
+.SS Functions hash-uni, hash-diff and hash-isec
+
+.TP
+Syntax:
+
+  (hash-uni <hash1> <hash2>)
+  (hash-diff <hash1> <hash2>)
+  (hash-isec <hash1> <hash2>)
+
+.TP
+Description:
+
+These functions perform basic set operations on hash tables in a nondestructive
+way, returning a new hash table without altering the inputs. The arguments
+<hash1> and <hash2> must be compatible hash tables.  This means that their keys
+must use the same kind of equality.
+
+The resulting hash table inherits attributes from <hash1>, as if by the
+make-similar-hash operation. If <hash1> has userdata, the resulting hash table
+has the same userdata. If <hash1> has weak keys, the resulting table has weak
+keys, and so forth.
+
+The hash-uni function performs a set union. The resulting hash contains all of the
+keys from <hash1> and all of the keys from <hash2>, and their corresponding values.
+If a key occurs both in <hash1> and <hash2>, then it occurs only once in the
+resulting hash. The value for this common key is the one from <hash2>.
+
+The hash-diff function performs a set difference. First, a copy of <hash1> is
+made as if by the copy-has function. Then from this copy, all keys which occur
+in <hash2> are deleted.
+
+The hash-isec function performs a set intersection. The resulting hash contains
+only those keys which occur both in <hash1> and <hash2>. The values selected
+for these common keys are those from <hash1>.
 
 .SH PARTIAL EVALUATION AND COMBINATORS
 

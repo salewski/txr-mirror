@@ -2238,8 +2238,9 @@ void eval_init(void)
   reg_fun(intern(lit("match-regex"), user_package), func_n3o(match_regex, 2));
   reg_fun(intern(lit("regsub"), user_package), func_n3(regsub));
 
-
   reg_fun(intern(lit("make-hash"), user_package), func_n3(make_hash));
+  reg_fun(intern(lit("make-similar-hash"), user_package), func_n1(make_similar_hash));
+  reg_fun(intern(lit("copy-hash"), user_package), func_n1(copy_hash));
   reg_fun(intern(lit("hash"), user_package), func_n0v(hashv));
   reg_fun(intern(lit("hash-construct"), user_package), func_n2(hash_construct));
   reg_fun(gethash_s, func_n3o(gethash_n, 2));
@@ -2259,6 +2260,9 @@ void eval_init(void)
   reg_fun(intern(lit("hash-values"), user_package), func_n1(hash_values));
   reg_fun(intern(lit("hash-pairs"), user_package), func_n1(hash_pairs));
   reg_fun(intern(lit("hash-alist"), user_package), func_n1(hash_alist));
+  reg_fun(intern(lit("hash-uni"), user_package), func_n2(hash_uni));
+  reg_fun(intern(lit("hash-diff"), user_package), func_n2(hash_diff));
+  reg_fun(intern(lit("hash-isec"), user_package), func_n2(hash_isec));
 
   reg_fun(intern(lit("eval"), user_package), func_n2o(eval_intrinsic, 1));
 

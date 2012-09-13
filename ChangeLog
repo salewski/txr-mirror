@@ -1,3 +1,18 @@
+2012-09-12  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): New intrinsics: make-similar-hash, copy-hash,
+	hash-uni, hash-diff, hash-isec.
+
+	* hash.c (make_similar_hash, copy_hash, hash_uni, hash_diff,
+	hash_isec): New functions.
+
+	* hash.h (make_similar_hash, copy_hash, hash_uni, hash_diff,
+	hash_isec): Declared.
+
+	* txr.1: Updated.
+
+	* txr.vim: Highlighting for these new functions.
+
 2012-09-11  Kaz Kylheku  <kaz@kylheku.com>
 
 	* configure: Added test for <sys/stat.h>
