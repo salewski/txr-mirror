@@ -152,16 +152,17 @@ SYM     [a-zA-Z0-9_]+
 SGN     [+\-]
 EXP     [eE][+\-]?[0-9]+
 DIG     [0-9]
+XDIG    [0-9A-Fa-f]
 NUM     {SGN}?{DIG}+
 FLO     {SGN}?({DIG}*[.]{DIG}+{EXP}?|{DIG}+[.]?{EXP})
 FLODOT  {SGN}?{DIG}+[.]
+XNUM    #x{SGN}?{XDIG}+
 BSCHR   [a-zA-Z0-9!$%&*+\-<=>?\\^_~]
 BSYM    {BSCHR}({BSCHR}|#)*
 NSCHR   [a-zA-Z0-9!$%&*+\-<=>?\\^_~/]
 ID_END  [^a-zA-Z0-9!$%&*+\-<=>?\\^_~/]
 NSYM    {NSCHR}({NSCHR}|#)*
 TOK     :?{SYM}
-ATNUM   @{NUM}
 BTOK    [:@]?{BSYM}
 NTOK    [:@]?{NSYM}
 WS      [\t ]*
@@ -194,6 +195,18 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return NUMBER;
 }
 
+<SPECIAL,NESTED,BRACED>{XNUM} {
+  val str = string_own(utf8_dup_from(yytext + 2));
+
+  if (yy_top_state() == INITIAL
+      || yy_top_state() == QSILIT)
+    yy_pop_state();
+
+  yylval.val = int_str(str, num(16));
+  return NUMBER;
+}
+
+
 <SPECIAL,NESTED,BRACED>{FLO} {
   val str = string_own(utf8_dup_from(yytext));
 
@@ -216,13 +229,23 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return NUMBER;
 }
 
-<NESTED,QSILIT>{ATNUM} {
+<NESTED,QSILIT>@{NUM} {
   val str = string_own(utf8_dup_from(yytext + 1));
 
   if (yy_top_state() == INITIAL
       || yy_top_state() == QSILIT)
     yy_pop_state();
   yylval.val = int_str(str, num(10));
+  return METANUM;
+}
+
+<NESTED,QSILIT>@{XNUM} {
+  val str = string_own(utf8_dup_from(yytext + 3));
+
+  if (yy_top_state() == INITIAL
+      || yy_top_state() == QSILIT)
+    yy_pop_state();
+  yylval.val = int_str(str, num(16));
   return METANUM;
 }
 

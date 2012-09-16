@@ -1,3 +1,11 @@
+2012-09-16  Kaz Kylheku  <kaz@kylheku.com>
+
+	* parser.l: Implemented hexadecimal integer constants.
+	These will be very useful since bit operations are about
+	to be implemented.
+
+	* txr.1: Documented.
+
 2012-09-12  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): New intrinsics: make-similar-hash, copy-hash,

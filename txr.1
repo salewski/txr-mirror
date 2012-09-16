@@ -124,9 +124,10 @@ for a failed query, even if the program produced output.
 Print the variable bindings in Lisp syntax instead of shell syntax.
 
 .IP "-a num"
-Specifies the maximum number of array dimensions to use for variables
-arising out of collect. The default is 1. Additional dimensions are
-expressed using numeric suffixes in the generated variable names.
+The decimal integer argument specifies the maximum number of array dimensions
+to use for variables arising out of collect. The default is 1. Additional
+dimensions are expressed using numeric suffixes in the generated variable
+names.
 For instance, consider the three-dimensional list arising out of a triply
 nested collect: ((("a" "b") ("c" "d")) (("e" "f") ("g" "h"))).
 Suppose this is bound to a variable V.  With -a 1, this will be
@@ -1116,6 +1117,13 @@ Examples:
   +0
   -0
   +234483527304983792384729384723234
+
+An integer constant can also be specified in hexadecimal using the prefix
+#x followed by an optional sign, followed by hexadecimal digits: 0 through 9
+and the upper or lower case letters A through F:
+
+  #xFF    ;; 255
+  #x-ABC  ;; -2748
 
 A floating-point constant is marked by the inclusion of a decimal point, the
 exponential "e notation", or both. It is an optional sign, followed
