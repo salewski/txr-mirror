@@ -1,5 +1,20 @@
 2012-09-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	Starting work on adding bit operations. The semantics is that
+	negative integers behave as an "infinite bit two's complement".
+
+	* arith.c (logand, logor, logxor): New functions.
+
+	* eval.c (eval_init): New intrinsic functions logand, logior, logxor.
+
+	* lib.h (logand, logor, logxor): Declared.
+
+	* mpi-patches/series: New patch, add-bitops.
+
+	* mpi-patches/add-bitops: New file.
+
+2012-09-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (vformat): Fix bug in ~x format directive for printing
 	integers in hex. When we use the printf's %x conversion specifiers for
 	fixnums, we get incorrect results when the values are negative, because

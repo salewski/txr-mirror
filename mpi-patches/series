@@ -15,3 +15,4 @@ shrink-mpi-int
 faster-square-root
 mpi-to-double
 fix-ctype-warnings
+add-bitops

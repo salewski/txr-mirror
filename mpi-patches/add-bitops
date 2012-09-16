@@ -1,0 +1,273 @@
+Index: mpi-1.8.6/mpi.c
+===================================================================
+--- mpi-1.8.6.orig/mpi.c	2012-09-16 10:50:08.270639006 -0700
++++ mpi-1.8.6/mpi.c	2012-09-16 13:31:03.146453506 -0700
+@@ -16,6 +16,9 @@
+ #include <ctype.h>
+ #include <math.h>
+ 
++#define MAX(A, B) ((A) > (B) ? (A) : (B))
++#define MIN(A, B) ((A) < (B) ? (A) : (B))
++
+ typedef unsigned char mem_t;
+ extern mem_t *chk_malloc(size_t size);
+ extern mem_t *chk_calloc(size_t n, size_t size);
+@@ -2330,6 +2333,232 @@
+ 
+ /* }}} */
+ 
++/*
++ * Convert a's bit vector to its two's complement, up to the
++ * number of words that it contains, storing result in b. The numeric value of
++ * this result depends on the size of mpi_digit. This is a building block for
++ * handling negative operands in the bit operations.
++ */
++mp_err mp_2comp(mp_int *a, mp_int *b, mp_size dig)
++{
++  mp_err res;
++  mp_size ix;
++  mp_digit *pa, *pb;
++  mp_word w;
++
++  ARGCHK(a != NULL && b != NULL, MP_BADARG);
++
++  if (a != b) {
++    if ((res = mp_init_size(b, dig)) != MP_OKAY)
++	return res;
++    SIGN(b) = SIGN(a);
++  } else {
++    if((res = s_mp_pad(b, dig)) != MP_OKAY)
++      return res;
++  }
++
++  for (pa = DIGITS(a), pb = DIGITS(b), w = 0, ix = 0; ix < dig; ix++) {
++    w += ~pa[ix] + (mp_word) (ix == 0);
++    pb[ix] = ACCUM(w);
++    w = CARRYOUT(w);
++  }
++
++  USED(b) = dig;
++
++  return MP_OKAY;
++}
++
++mp_err mp_and(mp_int *a, mp_int *b, mp_int *c)
++{
++  mp_err res;
++  mp_size ix, extent = 0;
++  mp_digit *pa, *pb, *pc;
++  mp_int tmp_a, tmp_b;
++
++  ARGCHK(a != NULL && b != NULL && c != NULL, MP_BADARG);
++
++  if (a == b)
++    return mp_copy(a, c);
++
++  if (ISNEG(a)) {
++    mp_init(&tmp_a);
++    extent = USED(b);
++    if ((res = mp_2comp(a, &tmp_a, extent)) != MP_OKAY)
++	return res;
++    a = &tmp_a;
++  }
++
++  if (ISNEG(b)) {
++    mp_init(&tmp_b);
++    extent = USED(a);
++    if ((res = mp_2comp(b, &tmp_b, extent)) != MP_OKAY) {
++	if (ISNEG(a))
++	  mp_clear(&tmp_a);
++	return res;
++    }
++    b = &tmp_b;
++  }
++
++  if (!extent)
++    extent = MIN(USED(a), USED(b));
++
++  if (c != a && c != b) {
++    if ((res = mp_init_size(c, extent)) != MP_OKAY)
++	return res;
++  }
++
++  for (pa = DIGITS(a), pb = DIGITS(b), pc = DIGITS(c), ix = 0;
++	 ix < extent; ix++)
++  {
++    pc[ix] = pa[ix] & pb[ix];
++  }
++
++  USED(c) = extent;
++
++  if (ISNEG(a) && ISNEG(b)) {
++    mp_2comp(c, c, extent);
++    SIGN(c) = MP_NEG;
++  }
++
++  s_mp_clamp(c);
++
++  if (ISNEG(a))
++    mp_clear(&tmp_a);
++
++  if (ISNEG(b))
++    mp_clear(&tmp_b);
++
++  return MP_OKAY;
++}
++
++mp_err mp_or(mp_int *a, mp_int *b, mp_int *c)
++{
++  mp_err res;
++  mp_size ix, extent = 0;
++  mp_digit *pa, *pb, *pc;
++  mp_int tmp_a, tmp_b;
++
++  ARGCHK(a != NULL && b != NULL && c != NULL, MP_BADARG);
++
++  extent = MAX(USED(a), USED(b));
++
++  if (a == b)
++    return mp_copy(a, c);
++
++  if (ISNEG(a)) {
++    mp_init(&tmp_a);
++    if ((res = mp_2comp(a, &tmp_a, extent)) != MP_OKAY)
++	return res;
++    a = &tmp_a;
++  }
++
++  if (ISNEG(b)) {
++    mp_init(&tmp_b);
++    if ((res = mp_2comp(b, &tmp_b, extent)) != MP_OKAY) {
++	if (ISNEG(a))
++	  mp_clear(&tmp_a);
++	return res;
++    }
++    b = &tmp_b;
++  }
++
++
++  if (c != a && c != b)
++    res = mp_init_size(c, extent);
++  else
++    res = s_mp_pad(c, extent);
++
++  if (res != MP_OKAY)
++    return res;
++
++  for (pa = DIGITS(a), pb = DIGITS(b), pc = DIGITS(c), ix = 0;
++	 ix < extent; ix++)
++  {
++    pc[ix] = pa[ix] | pb[ix];
++  }
++
++  USED(c) = extent;
++
++  if (ISNEG(a) || ISNEG(b)) {
++    mp_2comp(c, c, extent);
++    SIGN(c) = MP_NEG;
++  }
++
++  s_mp_clamp(c);
++
++  if (ISNEG(a))
++    mp_clear(&tmp_a);
++
++  if (ISNEG(b))
++    mp_clear(&tmp_b);
++
++  return MP_OKAY;
++}
++
++mp_err mp_xor(mp_int *a, mp_int *b, mp_int *c)
++{
++  mp_err res;
++  mp_size ix, extent = 0;
++  mp_digit *pa, *pb, *pc;
++  mp_int tmp_a, tmp_b;
++
++  ARGCHK(a != NULL && b != NULL && c != NULL, MP_BADARG);
++
++  extent = MAX(USED(a), USED(b)) + 1;
++
++  if (a == b)
++    return mp_copy(a, c);
++
++  if (ISNEG(a)) {
++    mp_init(&tmp_a);
++    if ((res = mp_2comp(a, &tmp_a, extent)) != MP_OKAY)
++	return res;
++    a = &tmp_a;
++  }
++
++  if (ISNEG(b)) {
++    mp_init(&tmp_b);
++    if ((res = mp_2comp(b, &tmp_b, extent)) != MP_OKAY) {
++	if (ISNEG(a))
++	  mp_clear(&tmp_a);
++	return res;
++    }
++    b = &tmp_b;
++  }
++
++
++  if (c != a && c != b)
++    res = mp_init_size(c, extent);
++  else
++    res = s_mp_pad(c, extent);
++
++  if (res != MP_OKAY)
++    return res;
++
++  for (pa = DIGITS(a), pb = DIGITS(b), pc = DIGITS(c), ix = 0;
++	 ix < extent; ix++)
++  {
++    pc[ix] = pa[ix] ^ pb[ix];
++  }
++
++  USED(c) = extent;
++
++  if (ISNEG(a) ^ ISNEG(b)) {
++    mp_2comp(c, c, extent);
++    SIGN(c) = MP_NEG;
++  }
++
++  s_mp_clamp(c);
++
++  if (ISNEG(a))
++    mp_clear(&tmp_a);
++
++  if (ISNEG(b))
++    mp_clear(&tmp_b);
++
++  return MP_OKAY;
++}
++
+ mp_err mp_to_double(mp_int *mp, double *d)
+ {
+   int ix;
+Index: mpi-1.8.6/mpi.h
+===================================================================
+--- mpi-1.8.6.orig/mpi.h	2012-09-16 10:50:08.046513006 -0700
++++ mpi-1.8.6/mpi.h	2012-09-16 13:23:09.824359506 -0700
+@@ -54,6 +54,7 @@
+ 
+ /* Macros for accessing the mp_int internals           */
+ #define  SIGN(MP)     ((MP)->sign)
++#define  ISNEG(MP)    ((MP)->sign == MP_NEG)
+ #define  USED(MP)     ((MP)->used)
+ #define  ALLOC(MP)    ((MP)->alloc)
+ #define  DIGITS(MP)   ((MP)->dp)
+@@ -187,6 +188,13 @@
+ #endif /* end MP_NUMTH */
+ 
+ /*------------------------------------------------------------------------*/
++/* Bit ops                                                                */
++mp_err mp_2comp(mp_int *a, mp_int *b, mp_size dig); /* peculiar semantics */
++mp_err mp_and(mp_int *a, mp_int *b, mp_int *c);
++mp_err mp_or(mp_int *a, mp_int *b, mp_int *c);
++mp_err mp_xor(mp_int *a, mp_int *b, mp_int *c);
++
++/*------------------------------------------------------------------------*/
+ /* Conversions                                                            */
+ 
+ mp_err mp_to_double(mp_int *mp, double *d);

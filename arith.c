@@ -1488,6 +1488,129 @@ val flo_int(val i)
   }
 }
 
+val logand(val a, val b)
+{
+  val c;
+
+  if (zerop(a) || zerop(b))
+    return zero;
+
+  switch (TYPE_PAIR(type(a), type(b))) {
+  case TYPE_PAIR(NUM, NUM):
+    if (a == b) {
+      return a;
+    } else {
+      cnum ac = c_num(a);
+      cnum bc = c_num(b);
+      return num_fast(ac & bc);
+    }
+  case TYPE_PAIR(BGNUM, NUM):
+    {
+      val tmp = a;
+      a = b;
+      b = tmp;
+    }
+    /* fallthrough */
+  case TYPE_PAIR(NUM, BGNUM):
+    a = bignum(c_num(a));
+    /* fallthrough */
+  case TYPE_PAIR(BGNUM, BGNUM):
+    if (a == b)
+      return a;
+    c = make_bignum();
+    if (mp_and(mp(a), mp(b), mp(c)) != MP_OKAY)
+      goto bad;
+    return c;
+  default:
+    uw_throwf(error_s, lit("logand: non-integral operands ~s ~s"), a, b, nao);
+  }
+
+bad:
+  uw_throwf(error_s, lit("logand: operation failed on ~s ~s"), a, b, nao);
+}
+
+val logior(val a, val b)
+{
+  val c;
+
+  if (zerop(a) && zerop(b))
+    return zero;
+
+  switch (TYPE_PAIR(type(a), type(b))) {
+  case TYPE_PAIR(NUM, NUM):
+    if (a == b) {
+      return a;
+    } else {
+      cnum ac = c_num(a);
+      cnum bc = c_num(b);
+      return num_fast(ac | bc);
+    }
+  case TYPE_PAIR(BGNUM, NUM):
+    {
+      val tmp = a;
+      a = b;
+      b = tmp;
+    }
+    /* fallthrough */
+  case TYPE_PAIR(NUM, BGNUM):
+    a = bignum(c_num(a));
+    /* fallthrough */
+  case TYPE_PAIR(BGNUM, BGNUM):
+    if (a == b)
+      return a;
+    c = make_bignum();
+    if (mp_or(mp(a), mp(b), mp(c)) != MP_OKAY)
+      goto bad;
+    return c;
+  default:
+    uw_throwf(error_s, lit("logior: non-integral operands ~s ~s"), a, b, nao);
+  }
+
+bad:
+  uw_throwf(error_s, lit("logior: operation failed on ~s ~s"), a, b, nao);
+}
+
+val logxor(val a, val b)
+{
+  val c;
+
+  if (zerop(a) && zerop(b))
+    return zero;
+
+  switch (TYPE_PAIR(type(a), type(b))) {
+  case TYPE_PAIR(NUM, NUM):
+    if (a == b) {
+      return a;
+    } else {
+      cnum ac = c_num(a);
+      cnum bc = c_num(b);
+      return num_fast(ac ^ bc);
+    }
+  case TYPE_PAIR(BGNUM, NUM):
+    {
+      val tmp = a;
+      a = b;
+      b = tmp;
+    }
+    /* fallthrough */
+  case TYPE_PAIR(NUM, BGNUM):
+    a = bignum(c_num(a));
+    /* fallthrough */
+  case TYPE_PAIR(BGNUM, BGNUM):
+    if (a == b)
+      return a;
+    c = make_bignum();
+    if (mp_xor(mp(a), mp(b), mp(c)) != MP_OKAY)
+      goto bad;
+    return c;
+  default:
+    uw_throwf(error_s, lit("logxor: non-integral operands ~s ~s"), a, b, nao);
+  }
+
+bad:
+  uw_throwf(error_s, lit("logxor: operation failed on ~s ~s"), a, b, nao);
+}
+
 void arith_init(void)
 {
   mp_init(&NUM_MAX_MP);
