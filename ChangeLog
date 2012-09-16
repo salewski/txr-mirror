@@ -1,5 +1,14 @@
 2012-09-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (vformat): Fix bug in ~x format directive for printing
+	integers in hex. When we use the printf's %x conversion specifiers for
+	fixnums, we get incorrect results when the values are negative, because
+	the argument is actually treated as an unsigned integer. 
+	The end result is that (format t "~x" -1) produces FFFFFFFF
+	rather than -1. Also, merged together mindless code duplication.
+
+2012-09-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.l: Implemented hexadecimal integer constants.
 	These will be very useful since bit operations are about
 	to be implemented.

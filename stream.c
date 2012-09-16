@@ -1126,7 +1126,7 @@ val vformat(val stream, val fmtstr, va_list vl)
       case vf_spec:
         state = vf_init;
         switch (ch) {
-        case 'x':
+        case 'x': case 'X':
           obj = va_arg(vl, val);
           if (bignump(obj)) {
             int nchars = mp_radix_size(mp(obj), 16); 
@@ -1134,20 +1134,14 @@ val vformat(val stream, val fmtstr, va_list vl)
               pnum = (char *) chk_malloc(nchars + 1);
             mp_toradix_case(mp(obj), (unsigned char *) pnum, 16, 1);
           } else {
+            const char *fmt = ch == 'x' ? num_fmt->hex : num_fmt->HEX;
             value = c_num(obj);
-            sprintf(num_buf, num_fmt->hex, value);
-          }
-          goto output_num;
-        case 'X':
-          obj = va_arg(vl, val);
-          if (bignump(obj)) {
-            int nchars = mp_radix_size(mp(obj), 16); 
-            if (nchars >= (int) sizeof (num_buf))
-              pnum = (char *) chk_malloc(nchars + 1);
-            mp_toradix_case(mp(obj), (unsigned char *) pnum, 16, 0);
-          } else {
-            value = c_num(obj);
-            sprintf(num_buf, num_fmt->HEX, value);
+            if (value < 0) {
+              num_buf[0] = '-';
+              sprintf(num_buf + 1, fmt, -value);
+            } else {
+              sprintf(num_buf, fmt, value);
+            }
           }
           goto output_num;
         case 'o':
