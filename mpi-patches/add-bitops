@@ -1,7 +1,7 @@
 Index: mpi-1.8.6/mpi.c
 ===================================================================
 --- mpi-1.8.6.orig/mpi.c	2012-09-16 10:50:08.270639006 -0700
-+++ mpi-1.8.6/mpi.c	2012-09-16 22:24:49.194978256 -0700
++++ mpi-1.8.6/mpi.c	2012-09-16 23:09:57.601600506 -0700
 @@ -16,6 +16,9 @@
  #include <ctype.h>
  #include <math.h>
@@ -12,7 +12,7 @@ Index: mpi-1.8.6/mpi.c
  typedef unsigned char mem_t;
  extern mem_t *chk_malloc(size_t size);
  extern mem_t *chk_calloc(size_t n, size_t size);
-@@ -2330,6 +2333,317 @@
+@@ -2330,6 +2333,321 @@
  
  /* }}} */
  
@@ -25,8 +25,9 @@ Index: mpi-1.8.6/mpi.c
 +mp_err mp_2comp(mp_int *a, mp_int *b, mp_size dig)
 +{
 +  mp_err res;
-+  mp_size ix;
++  mp_size ix, adig = USED(a);
 +  mp_digit *pa, *pb;
++  mp_digit padding = ISNEG(a) ? MP_DIGIT_MAX : 0;
 +  mp_word w;
 +
 +  ARGCHK(a != NULL && b != NULL, MP_BADARG);
@@ -41,7 +42,8 @@ Index: mpi-1.8.6/mpi.c
 +  }
 +
 +  for (pa = DIGITS(a), pb = DIGITS(b), w = 0, ix = 0; ix < dig; ix++) {
-+    w += ~pa[ix] + (mp_word) (ix == 0);
++    w += (ix == 0);
++    w += (ix < adig) ? ~pa[ix] : ~padding;
 +    pb[ix] = ACCUM(w);
 +    w = CARRYOUT(w);
 +  }
@@ -64,7 +66,7 @@ Index: mpi-1.8.6/mpi.c
 +    return mp_copy(a, c);
 +
 +  if (ISNEG(a)) {
-+    mp_init(&tmp_a);
++    mp_init_size(&tmp_a, extent);
 +    extent = USED(b);
 +    if ((res = mp_2comp(a, &tmp_a, extent)) != MP_OKAY)
 +	return res;
@@ -72,7 +74,7 @@ Index: mpi-1.8.6/mpi.c
 +  }
 +
 +  if (ISNEG(b)) {
-+    mp_init(&tmp_b);
++    mp_init_size(&tmp_b, extent);
 +    extent = USED(a);
 +    if ((res = mp_2comp(b, &tmp_b, extent)) != MP_OKAY) {
 +	if (ISNEG(a))
@@ -129,14 +131,14 @@ Index: mpi-1.8.6/mpi.c
 +    return mp_copy(a, c);
 +
 +  if (ISNEG(a)) {
-+    mp_init(&tmp_a);
++    mp_init_size(&tmp_a, extent);
 +    if ((res = mp_2comp(a, &tmp_a, extent)) != MP_OKAY)
 +	return res;
 +    a = &tmp_a;
 +  }
 +
 +  if (ISNEG(b)) {
-+    mp_init(&tmp_b);
++    mp_init_size(&tmp_b, extent);
 +    if ((res = mp_2comp(b, &tmp_b, extent)) != MP_OKAY) {
 +	if (ISNEG(a))
 +	  mp_clear(&tmp_a);
@@ -195,14 +197,14 @@ Index: mpi-1.8.6/mpi.c
 +  extent = MAX(USED(a), USED(b));
 +
 +  if (ISNEG(a)) {
-+    mp_init(&tmp_a);
++    mp_init_size(&tmp_a, extent);
 +    if ((res = mp_2comp(a, &tmp_a, extent)) != MP_OKAY)
 +	return res;
 +    a = &tmp_a;
 +  }
 +
 +  if (ISNEG(b)) {
-+    mp_init(&tmp_b);
++    mp_init_size(&tmp_b, extent);
 +    if ((res = mp_2comp(b, &tmp_b, extent)) != MP_OKAY) {
 +	if (ISNEG(a))
 +	  mp_clear(&tmp_a);
@@ -262,7 +264,7 @@ Index: mpi-1.8.6/mpi.c
 +    return res;
 +
 +  if (ISNEG(a)) {
-+    mp_init(&tmp);
++    mp_init_size(&tmp, dig);
 +    if ((res = mp_2comp(a, &tmp, dig)) != MP_OKAY)
 +	return res;
 +    a = &tmp;
@@ -289,6 +291,8 @@ Index: mpi-1.8.6/mpi.c
 +{
 +  mp_err res;
 +  mp_size ix, dig = bits / DIGIT_BIT, rembits = bits % DIGIT_BIT;
++  mp_size adig = USED(a);
++  mp_digit padding = ISNEG(a) ? MP_DIGIT_MAX : 0;
 +  int extra = (rembits != 0);
 +  mp_digit *pa, *pb;
 +  mp_int tmp;
@@ -304,14 +308,14 @@ Index: mpi-1.8.6/mpi.c
 +    return res;
 +
 +  if (ISNEG(a)) {
-+    mp_init(&tmp);
++    mp_init_size(&tmp, dig + extra);
 +    if ((res = mp_2comp(a, &tmp, dig + extra)) != MP_OKAY)
 +	return res;
 +    a = &tmp;
 +  }
 +
 +  for (pa = DIGITS(a), pb = DIGITS(b), ix = 0; ix < dig; ix++)
-+    pb[ix] = ~pa[ix];
++    pb[ix] = (ix < adig) ? ~pa[ix] : ~padding;
 +
 +  if (rembits) {
 +    mp_digit mask = (MP_DIGIT_MAX >> (DIGIT_BIT - rembits));

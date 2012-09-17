@@ -1,5 +1,14 @@
 2012-09-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	* mpi-patches/add-bitops:  Bugfixes: mp_2comp is extended to properly
+	allow arbitrarily wide complements (which causes the code to access
+	beyond the a argument's digits array). A similar fix is applied in
+	the new mp_clamp_comp function.  Incorrect initializations of mp_int
+	fixed in all the logic functions: mp_init was used instead of
+	mp_init_size.
+
+2012-09-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (logand, logior, logxor): Bugfix: result needs to be
 	normalized, otherwise we end up with fixnum-range bignums.
 	(comp_clamp): New function.
