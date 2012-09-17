@@ -1,7 +1,7 @@
 Index: mpi-1.8.6/mpi.c
 ===================================================================
 --- mpi-1.8.6.orig/mpi.c	2012-09-16 10:50:08.270639006 -0700
-+++ mpi-1.8.6/mpi.c	2012-09-16 13:31:03.146453506 -0700
++++ mpi-1.8.6/mpi.c	2012-09-16 20:01:35.403688256 -0700
 @@ -16,6 +16,9 @@
  #include <ctype.h>
  #include <math.h>
@@ -12,7 +12,7 @@ Index: mpi-1.8.6/mpi.c
  typedef unsigned char mem_t;
  extern mem_t *chk_malloc(size_t size);
  extern mem_t *chk_calloc(size_t n, size_t size);
-@@ -2330,6 +2333,232 @@
+@@ -2330,6 +2333,275 @@
  
  /* }}} */
  
@@ -187,10 +187,12 @@ Index: mpi-1.8.6/mpi.c
 +
 +  ARGCHK(a != NULL && b != NULL && c != NULL, MP_BADARG);
 +
-+  extent = MAX(USED(a), USED(b)) + 1;
++  if (a == b) {
++    mp_zero(c);
++    return MP_OKAY;
++  }
 +
-+  if (a == b)
-+    return mp_copy(a, c);
++  extent = MAX(USED(a), USED(b));
 +
 +  if (ISNEG(a)) {
 +    mp_init(&tmp_a);
@@ -242,13 +244,54 @@ Index: mpi-1.8.6/mpi.c
 +  return MP_OKAY;
 +}
 +
++mp_err mp_comp(mp_int *a, mp_int *b)
++{
++  mp_err res;
++  mp_size ix, dig = USED(a);
++  mp_digit *pa, *pb;
++  mp_int tmp;
++
++  ARGCHK(a != NULL && b != NULL, MP_BADARG);
++
++  if (a != b)
++    res = mp_init_size(b, dig);
++  else
++    res = s_mp_pad(b, dig);
++
++  if (res != MP_OKAY)
++    return res;
++
++  if (ISNEG(a)) {
++    mp_init(&tmp);
++    if ((res = mp_2comp(a, &tmp, dig)) != MP_OKAY)
++	return res;
++    a = &tmp;
++  }
++
++  for (pa = DIGITS(a), pb = DIGITS(b), ix = 0; ix < dig; ix++)
++    pb[ix] = ~pa[ix];
++
++  USED(b) = dig;
++
++  if (ISNEG(a)) {
++    mp_clear(&tmp);
++  } else {
++    if ((res = mp_2comp(b, b, dig)) != MP_OKAY)
++	return res;
++    SIGN(b) = MP_NEG;
++  }
++
++  s_mp_clamp(b);
++  return MP_OKAY;
++}
++
  mp_err mp_to_double(mp_int *mp, double *d)
  {
    int ix;
 Index: mpi-1.8.6/mpi.h
 ===================================================================
 --- mpi-1.8.6.orig/mpi.h	2012-09-16 10:50:08.046513006 -0700
-+++ mpi-1.8.6/mpi.h	2012-09-16 13:23:09.824359506 -0700
++++ mpi-1.8.6/mpi.h	2012-09-16 19:01:51.000595006 -0700
 @@ -54,6 +54,7 @@
  
  /* Macros for accessing the mp_int internals           */
@@ -257,7 +300,7 @@ Index: mpi-1.8.6/mpi.h
  #define  USED(MP)     ((MP)->used)
  #define  ALLOC(MP)    ((MP)->alloc)
  #define  DIGITS(MP)   ((MP)->dp)
-@@ -187,6 +188,13 @@
+@@ -187,6 +188,14 @@
  #endif /* end MP_NUMTH */
  
  /*------------------------------------------------------------------------*/
@@ -266,6 +309,7 @@ Index: mpi-1.8.6/mpi.h
 +mp_err mp_and(mp_int *a, mp_int *b, mp_int *c);
 +mp_err mp_or(mp_int *a, mp_int *b, mp_int *c);
 +mp_err mp_xor(mp_int *a, mp_int *b, mp_int *c);
++mp_err mp_comp(mp_int *a, mp_int *b);
 +
 +/*------------------------------------------------------------------------*/
  /* Conversions                                                            */

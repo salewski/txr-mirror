@@ -1,5 +1,17 @@
 2012-09-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	Adding complementing function.
+
+	* arith.c (logcomp): New function.
+
+	* eval.c (eval_init): logcomp registered as intrinsic.
+
+	* lib.h (logcomp) declared.
+
+	* mpi-patches/add-bitops: Fixed bugs in mp_xor. Implemented mp_comp.
+
+2012-09-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	Starting work on adding bit operations. The semantics is that
 	negative integers behave as an "infinite bit two's complement".
 

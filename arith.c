@@ -1611,6 +1611,26 @@ bad:
   uw_throwf(error_s, lit("logxor: operation failed on ~s ~s"), a, b, nao);
 }
 
+val logcomp(val a)
+{
+  val b;
+
+  switch (type(a)) {
+  case NUM:
+    return num_fast(~c_num(a));
+  case BGNUM:
+    b = make_bignum();
+    if (mp_comp(mp(a), mp(b)) != MP_OKAY)
+      goto bad;
+    return b;
+  default:
+    uw_throwf(error_s, lit("logcomp: non-integral operand ~s"), a, nao);
+  }
+
+bad:
+  uw_throwf(error_s, lit("logcomp: operation failed on ~s"), a, nao);
+}
+
 void arith_init(void)
 {
   mp_init(&NUM_MAX_MP);
