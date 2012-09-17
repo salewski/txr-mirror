@@ -268,6 +268,13 @@ int highest_bit(int_ptr_t n)
   abort();
 }
 
+static int highest_significant_bit(int_ptr_t n)
+{
+  if (n >= 0)
+    return highest_bit(n);
+  return highest_bit(n ^ INT_PTR_MAX);
+}
+
 val plus(val anum, val bnum)
 {
 tail:
@@ -1611,7 +1618,7 @@ bad:
   uw_throwf(error_s, lit("logxor: operation failed on ~s ~s"), a, b, nao);
 }
 
-static val comp_clamp(val a, val bits)
+static val comp_trunc(val a, val bits)
 {
   cnum an, bn;
   val b;
@@ -1626,7 +1633,7 @@ static val comp_clamp(val a, val bits)
   switch (type(a)) {
   case NUM:
     an = c_num(a);
-    if (bn <= num_bits) {
+    if (bn < num_bits) {
       cnum mask = num_mask >> (num_bits - bn);
       return num_fast((an & mask) ^ mask);
     }
@@ -1634,7 +1641,7 @@ static val comp_clamp(val a, val bits)
     /* fallthrough */
   case BGNUM:
     b = make_bignum();
-    if (mp_clamp_comp(mp(a), mp(b), bn) != MP_OKAY)
+    if (mp_trunc_comp(mp(a), mp(b), bn) != MP_OKAY)
       goto bad;
     return normalize(b);
   default:
@@ -1656,7 +1663,7 @@ val logcomp(val a, val bits)
   val b;
 
   if (bits)
-    return comp_clamp(a, bits);
+    return comp_trunc(a, bits);
 
   switch (type(a)) {
   case NUM:
@@ -1672,6 +1679,111 @@ val logcomp(val a, val bits)
 
 bad:
   uw_throwf(error_s, lit("logcomp: operation failed on ~s"), a, nao);
+}
+
+val logtrunc(val a, val bits)
+{
+  cnum an, bn;
+  val b;
+  const cnum num_mask = (NUM_MAX << 1) | 1;
+  const int num_bits = CHAR_BIT * sizeof (cnum) - 2;
+
+  if (!fixnump(bits))
+    goto bad2;
+
+  bn = c_num(bits);
+
+  switch (type(a)) {
+  case NUM:
+    an = c_num(a);
+    if (bn <= num_bits) {
+      cnum mask = num_mask >> (num_bits - bn);
+      return num_fast(an & mask);
+    }
+    a = bignum(an);
+    /* fallthrough */
+  case BGNUM:
+    b = make_bignum();
+    if (mp_trunc(mp(a), mp(b), bn) != MP_OKAY)
+      goto bad;
+    return normalize(b);
+  default:
+    goto bad3;
+  }
+
+bad:
+  uw_throwf(error_s, lit("logtrunc: operation failed on ~s"), a, nao);
+
+bad2:
+  uw_throwf(error_s, lit("logtrunc: bits value ~s is not a fixnum"), bits, nao);
+
+bad3:
+  uw_throwf(error_s, lit("logtrunc: non-integral operand ~s"), a, nao);
+}
+
+val ash(val a, val bits)
+{
+  cnum an, bn;
+  val b;
+  int hb;
+  const int num_bits = CHAR_BIT * sizeof (cnum) - 2;
+
+  if (!fixnump(bits))
+    goto bad2;
+
+  bn = c_num(bits);
+
+  if (bn == 0) {
+    switch (type(a)) {
+    case NUM:
+    case BGNUM:
+      return a;
+    default:
+      goto bad3;
+    }
+  } else if (bn > 0) {
+    switch (type(a)) {
+    case NUM:
+      an = c_num(a);
+      hb = highest_significant_bit(an);
+      if (bn + hb < num_bits)
+        return num_fast(an << bn);
+      a = bignum(an);
+      /* fallthrough */
+    case BGNUM:
+      b = make_bignum();
+      if (mp_shift(mp(a), mp(b), bn) != MP_OKAY)
+        goto bad;
+      return normalize(b);
+    default:
+      goto bad3;
+    }
+  } else {
+    switch (type(a)) {
+    case NUM:
+      an = c_num(a);
+      if (bn <= num_bits)
+        return num_fast(an >> -bn);
+      return num_fast(an >> num_bits);
+    case BGNUM:
+      b = make_bignum();
+      if (mp_shift(mp(a), mp(b), bn) != MP_OKAY)
+        goto bad;
+      return normalize(b);
+    default:
+      goto bad3;
+    }
+
+  }
+
+bad:
+  uw_throwf(error_s, lit("ashift: operation failed on ~s"), a, nao);
+
+bad2:
+  uw_throwf(error_s, lit("ashift: bits value ~s is not a fixnum"), bits, nao);
+
+bad3:
+  uw_throwf(error_s, lit("ashift: non-integral operand ~s"), a, nao);
 }
 
 void arith_init(void)

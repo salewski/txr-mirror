@@ -1,3 +1,35 @@
+2012-09-17  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c (highest_significant_bit): New static function.
+	(comp_clamp): Bugfix: avoid shifting left into sign bit. Function
+	renamed to comp_trunc.
+	(logtrunc, ash): New functions.
+
+	* eval.c (eval_init): Registered logtrunc and ash intrinsics.
+
+	* lib.h (logtrunc, ash): Declared.
+
+	* mpi-patches/add-bitops (s_highest_bit_mp): Forward declaration for
+	added.
+	(mp_clamp_comp): Bugfix in handling remainder bits. Function
+	renamed to mp_trunc_comp.
+	(mp_trunc, mp_shift): New functions.
+
+2012-09-17  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c (highest_significant_bit): New static function.
+	(comp_clamp): Bugfix: avoid shifting left into sign bit.
+	(logclamp, ash): New functions.
+
+	* eval.c (eval_init): Registered logclamp and ash intrinsics.
+
+	* lib.h (logclamp, ash): Declared.
+
+	* mpi-patches/add-bitops (s_highest_bit_mp): Forward declaration for
+	added.
+	(mp_comp_clamp): Bugfix in handling remainder bits.
+	(mp_clamp, mp_shift): New functions.
+
 2012-09-16  Kaz Kylheku  <kaz@kylheku.com>
 
 	* mpi-patches/add-bitops:  Bugfixes: mp_2comp is extended to properly
