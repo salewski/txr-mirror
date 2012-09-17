@@ -2234,7 +2234,7 @@ void eval_init(void)
   reg_fun(intern(lit("logand"), user_package), func_n2(logand));
   reg_fun(intern(lit("logior"), user_package), func_n2(logior));
   reg_fun(intern(lit("logxor"), user_package), func_n2(logxor));
-  reg_fun(intern(lit("logcomp"), user_package), func_n2o(logcomp, 1));
+  reg_fun(intern(lit("lognot"), user_package), func_n2o(lognot, 1));
   reg_fun(intern(lit("logtrunc"), user_package), func_n2(logtrunc));
   reg_fun(intern(lit("ash"), user_package), func_n2(ash));
 

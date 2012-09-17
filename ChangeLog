@@ -1,5 +1,14 @@
 2012-09-17  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (comp_trunc, logcomp): logcomp renamed to lognot,
+	consistent with Common Lisp.
+
+	* eval.c (eval_init): logcomp to lognot.
+
+	* lib.h (logcomp): Declaration updated.
+
+2012-09-17  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (highest_significant_bit): New static function.
 	(comp_clamp): Bugfix: avoid shifting left into sign bit. Function
 	renamed to comp_trunc.

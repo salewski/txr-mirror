@@ -1649,16 +1649,16 @@ static val comp_trunc(val a, val bits)
   }
 
 bad:
-  uw_throwf(error_s, lit("logcomp: operation failed on ~s"), a, nao);
+  uw_throwf(error_s, lit("lognot: operation failed on ~s"), a, nao);
 
 bad2:
-  uw_throwf(error_s, lit("logcomp: bits value ~s is not a fixnum"), bits, nao);
+  uw_throwf(error_s, lit("lognot: bits value ~s is not a fixnum"), bits, nao);
 
 bad3:
-  uw_throwf(error_s, lit("logcomp: non-integral operand ~s"), a, nao);
+  uw_throwf(error_s, lit("lognot: non-integral operand ~s"), a, nao);
 }
 
-val logcomp(val a, val bits)
+val lognot(val a, val bits)
 {
   val b;
 
@@ -1674,11 +1674,11 @@ val logcomp(val a, val bits)
       goto bad;
     return b;
   default:
-    uw_throwf(error_s, lit("logcomp: non-integral operand ~s"), a, nao);
+    uw_throwf(error_s, lit("lognot: non-integral operand ~s"), a, nao);
   }
 
 bad:
-  uw_throwf(error_s, lit("logcomp: operation failed on ~s"), a, nao);
+  uw_throwf(error_s, lit("lognot: operation failed on ~s"), a, nao);
 }
 
 val logtrunc(val a, val bits)
