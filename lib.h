@@ -474,7 +474,7 @@ val expo(val);
 val logand(val, val);
 val logior(val, val);
 val logxor(val, val);
-val logcomp(val);
+val logcomp(val, val);
 val string_own(wchar_t *str);
 val string(const wchar_t *str);
 val string_utf8(const char *str);

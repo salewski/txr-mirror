@@ -1520,7 +1520,7 @@ val logand(val a, val b)
     c = make_bignum();
     if (mp_and(mp(a), mp(b), mp(c)) != MP_OKAY)
       goto bad;
-    return c;
+    return normalize(c);
   default:
     uw_throwf(error_s, lit("logand: non-integral operands ~s ~s"), a, b, nao);
   }
@@ -1561,7 +1561,7 @@ val logior(val a, val b)
     c = make_bignum();
     if (mp_or(mp(a), mp(b), mp(c)) != MP_OKAY)
       goto bad;
-    return c;
+    return normalize(c);
   default:
     uw_throwf(error_s, lit("logior: non-integral operands ~s ~s"), a, b, nao);
   }
@@ -1602,7 +1602,7 @@ val logxor(val a, val b)
     c = make_bignum();
     if (mp_xor(mp(a), mp(b), mp(c)) != MP_OKAY)
       goto bad;
-    return c;
+    return normalize(c);
   default:
     uw_throwf(error_s, lit("logxor: non-integral operands ~s ~s"), a, b, nao);
   }
@@ -1611,9 +1611,52 @@ bad:
   uw_throwf(error_s, lit("logxor: operation failed on ~s ~s"), a, b, nao);
 }
 
-val logcomp(val a)
+static val comp_clamp(val a, val bits)
+{
+  cnum an, bn;
+  val b;
+  const cnum num_mask = (NUM_MAX << 1) | 1;
+  const int num_bits = CHAR_BIT * sizeof (cnum) - 2;
+
+  if (!fixnump(bits))
+    goto bad2;
+
+  bn = c_num(bits);
+
+  switch (type(a)) {
+  case NUM:
+    an = c_num(a);
+    if (bn <= num_bits) {
+      cnum mask = num_mask >> (num_bits - bn);
+      return num_fast((an & mask) ^ mask);
+    }
+    a = bignum(an);
+    /* fallthrough */
+  case BGNUM:
+    b = make_bignum();
+    if (mp_clamp_comp(mp(a), mp(b), bn) != MP_OKAY)
+      goto bad;
+    return normalize(b);
+  default:
+    goto bad3;
+  }
+
+bad:
+  uw_throwf(error_s, lit("logcomp: operation failed on ~s"), a, nao);
+
+bad2:
+  uw_throwf(error_s, lit("logcomp: bits value ~s is not a fixnum"), bits, nao);
+
+bad3:
+  uw_throwf(error_s, lit("logcomp: non-integral operand ~s"), a, nao);
+}
+
+val logcomp(val a, val bits)
 {
   val b;
+
+  if (bits)
+    return comp_clamp(a, bits);
 
   switch (type(a)) {
   case NUM:

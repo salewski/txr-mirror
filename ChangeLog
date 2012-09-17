@@ -1,5 +1,20 @@
 2012-09-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (logand, logior, logxor): Bugfix: result needs to be
+	normalized, otherwise we end up with fixnum-range bignums.
+	(comp_clamp): New function.
+	(logcomp): Changed to two argument form. If second argument
+	is present (not nil) then call comp_clamp.
+
+	* eval.c (eval_init): Change registration of logcomp to allow
+	optional argument.
+
+	* lib.h (logcomp): Declaration updated.
+
+	* mpi-patches/add-bitops:  New mp_clamp_comp function implemented.
+
+2012-09-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	Adding complementing function.
 
 	* arith.c (logcomp): New function.
