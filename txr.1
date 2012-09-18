@@ -8676,6 +8676,107 @@ The flo-int function returns an exact floating point value corresponding to the
 integer argument, if possible, otherwise an approximation using a nearby
 floating point value.
 
+.SH BIT OPERATIONS
+
+In TXR Lisp, similarly to Common Lisp, bit operations on integers are based
+on "infinite two's-complement".  That is to say, whereas a positive
+binary number can be regarded as being prefixed by an infinite stream of
+zero digits (for example 1 the same as 0001 or ...00001) a negative number
+in inifinite two's complement can be conceptualized by an infinite prefix 
+of 1 digits. So for instance the number -1 is represented by ...11111111: an
+infinite half-sequence of 1 digits. Any operation which produces such an
+infinite sequence gives rise to a negative number. For instance, consider the
+operation of computing the bitwise complement of the number 1.   Since the
+number 1 is actually ...0000001, then the complement is ...11111110.  Each
+one of the 0 digits in the infinite sequence is replaced by 1, giving rise
+to an infinite leading sequence of 1's.  And this means that the number
+is negative, corresponding to the two's-complement representation of the
+value -2.
+
+In fact TXR Lisp's bignum integers do not use a two's complement
+representation. Numbers are represented as an array which holds a pure
+binary number. A separate field indicates the sign, positive or non-negative.
+That negative numbers appear as two's-complement under the bit operations
+is merely a carefully maintained illusion (which makes bit operations on
+negative numbers more expensive).
+
+The logtrunc function, and a feature of the lognot function, allows bit
+manipulation code to be written which works with positive numbers only, even if
+complements are required. The trade off is that the application has to manage
+a limit on the number of bits.
+
+.SS Functions logand, logior, logxor
+
+.TP
+Syntax:
+
+  (logand <int1> <int2>)
+  (logior <int1> <int2>)
+  (logxor <int1> <int2>)
+
+.TP
+Description:
+
+These operations perform the familiar bitwise and, inclusive or, and exclusive
+or operations respectively. Positive values of <int1> and <int2> are treated as
+pure binary numbers.  Negative inputs are treated as infinite-bit
+two's-complement.
+
+For example (logand -2 7) produces 6. This is because -2 is ..111110 in
+infinite-bit two's-complement.  Or-ing this value with 7 (111) produces
+110.
+
+.SS Functions lognot and logtrunc
+
+.TP
+Syntax:
+
+  (lognot <value> [<bits>])
+  (logtrunc <value> <bits>)
+
+.TP
+Description:
+
+The lognot function performs a bitwise complement of <value>. 
+When the one-argument form of lognot is used, then if <value> is nonnegative,
+then the result is negative, and vice versa, according to the infinite-bit
+two's complement representation. For instance (lognot -2) is 1, 
+and (lognot 1) is -2.
+
+The two-argument form of lognot produces a truncated complement. Conceptually,
+t a bitwise complement is first calculated, and then the resulting number is
+truncated to the number of bits given by <bits>, which must be a nonnegative
+integer. The following equivalence holds:
+
+  (lognot a b) <--> (logtrunc (lognot a) b)
+
+The logtrunc function truncates the integer <value> to the  specified number
+of bits. If <value> is negative, then the two's-complement representation
+is truncated. The return value of logtrunc is always a non-negative integer.
+
+.SS Function ash
+
+.TP
+Syntax:
+
+  (ash <value> <bits>)
+
+.TP
+Description:
+
+The ash function shifts <value> by the specified number of <bits> producing a
+new value.  If <bits> is positive, then a left shift takes place.  If <bits>
+is negative, then a right shift takes place. If <bits> is zero, then
+<value> is returned unaltered.  For positive numbers, a left shift by n bits is
+equivalent to a multiplication by two to the power of n, or (expt 2 n).
+A right shift by n bits of a positive integer is equivalent to integer
+division by (expt 2 n), with truncation toward zero.
+For negative numbers, the bit shift is performed as if on the two's-complement
+representation. Under the infinite two's-complement representation,
+a right shift does not exhaust the infinite sequence of 1 digits which
+extends to the left. Thus if -4 is shifted right it becomes -2 because
+the bitwise representations are ...111100 and ...11110.
+
 .SH EXCEPTIONS
 
 .SS Functions throw, throwf and error
