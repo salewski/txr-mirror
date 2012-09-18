@@ -1,5 +1,15 @@
 2012-09-17  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (vformat): Slight change in ~s directive. For a floating
+	point integer, .0 is now always shown if the precision is not given,
+	or if it is given and nonzero.  Previous behavior of ~s was add .0 only
+	when a precision is not specified. The new behavior is more
+	sensible and consistent with documentation.
+
+	* txr.1: Typo fixed in related documentation.
+
+2012-09-17  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (comp_trunc, logcomp): logcomp renamed to lognot,
 	consistent with Common Lisp.
 

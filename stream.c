@@ -1272,7 +1272,7 @@ val vformat(val stream, val fmtstr, va_list vl)
                 *exp = 0;
               }
 
-              if (ch == 's' && !precision_p && !dec && !exp)
+              if (ch == 's' && (!precision_p || precision > 0) && !dec && !exp)
                   strcat(num_buf, ".0");
             }
 
