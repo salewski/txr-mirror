@@ -47,7 +47,8 @@ syn keyword txl_keyword contained expt exptmod sqrt isqrt gcd
 syn keyword txl_keyword contained floor ceil sin cos tan asin acos atan log exp
 syn keyword txl_keyword contained fixnump bignump integerp floatp
 syn keyword txl_keyword contained numberp zerop evenp oddp >
-syn keyword txl_keyword contained zerop evenp oddp > < >= <= = max min
+syn keyword txl_keyword contained zerop evenp oddp > < >= <= = /= max min
+syn keyword txl_keyword contained logand logior logxor lognot logtrunc ash
 syn keyword txl_keyword contained search-regex match-regex regsub regexp regex-compile
 syn keyword txl_keyword contained make-hash make-similar-hash copy-hash hash hash-construct
 syn keyword txl_keyword contained gethash sethash pushhash remhash
@@ -64,7 +65,8 @@ syn keyword txl_keyword contained get-string-from-stream make-strlist-output-str
 syn keyword txl_keyword contained get-list-from-stream close-stream
 syn keyword txl_keyword contained get-line get-char get-byte put-string put-line put-byte
 syn keyword txl_keyword contained put-char flush-stream open-directory open-file
-syn keyword txl_keyword contained open-pipe *user-package* *keyword-package* *system-package*
+syn keyword txl_keyword contained *user-package* *keyword-package* *system-package*
+syn keyword txl_keyword contained open-pipe open-command open-process
 syn keyword txl_keyword contained make-sym gensym *gensym-counter* make-package find-package
 syn keyword txl_keyword contained intern symbolp symbol-name symbol-package keywordp
 syn keyword txl_keyword contained mkstring copy-str upcase-str downcase-str string-extend
@@ -82,9 +84,9 @@ syn keyword txl_keyword contained chr-str-set span-str compl-span-str break-str
 syn keyword txl_keyword contained vector vec-set-length vecref
 syn keyword txl_keyword contained vec-push length-vec size-vec vector-list
 syn keyword txl_keyword contained list-vector copy-vec sub-vec cat-vec
-syn keyword txl_keyword contained replace-vec assoc assq acons acons-new
-syn keyword txl_keyword contained aconsq-new alist-remove alist-nremove copy-cons
-syn keyword txl_keyword contained copy-alist merge sort find set-diff length
+syn keyword txl_keyword contained replace-vec assoc assql acons acons-new
+syn keyword txl_keyword contained aconsql-new alist-remove alist-nremove copy-cons
+syn keyword txl_keyword contained copy-alist prop merge sort find set-diff length
 syn keyword txl_keyword contained sub ref replace refset multi-sort
 
 syn keyword txl_keyword contained symbol-function func-get-form func-get-env
