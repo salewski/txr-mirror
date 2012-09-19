@@ -8726,6 +8726,21 @@ For example (logand -2 7) produces 6. This is because -2 is ..111110 in
 infinite-bit two's-complement.  Or-ing this value with 7 (111) produces
 110.
 
+.SS Functions logtest
+
+.TP
+Syntax:
+
+  (logtest <int1> <int2>)
+
+.TP
+Description:
+
+The logtest function returns true if <int1> and <int1> have bits in
+common. The following equivalence holds:
+
+  (logtest a b) <--> (not (zerop (logand a b)))
+
 .SS Functions lognot and logtrunc
 
 .TP
@@ -9285,8 +9300,9 @@ symbols in the program.
 
   (op foo @rest @1) -> (lambda (arg1 . rest) [foo rest arg1])
 
-.TP
+.PP
 
+.TP
 Examples:
 
   ;; Take a list of pairs and produce a list in which those pairs
@@ -9555,6 +9571,8 @@ number.  If the precision is omitted, then the number of digits after the
 decimal point is three. If the precision is zero, then a decimal portion is
 truncated off entirely, including the decimal point.
 
+.PP
+
 .SS Functions print, pprint, tostring, tostringp
 
 .TP
@@ -9751,6 +9769,8 @@ values in the range 0 to 255.
 Note that if a stream supports both byte input and character input, then mixing
 the two operations will interfere with the UTF-8 decoding.
 
+These functions return nil when the end of data is reached.  Errors are
+represented as exceptions.
 .SS Functions put-string, put-line, put-char and put-byte
 
 .TP
@@ -9799,9 +9819,81 @@ meaningful, it does nothing.
 
 .SS Function stat
 
+.TP
+Syntax:
+
+  (stat <path>)
+
+.TP
+Description:
+
+The stat function inquires the filesystem about the existence of an object
+denoted by the string <path>. If the object is not found or cannot be
+accessed, an exception is thrown.
+
+Otherwise information is retrieved about the object. The information takes the
+form of a property list in which keyword symbols denote numerous properties.
+An example such property list is (:dev 2049 :ino 669944 :mode 16832 :nlink 23
+:uid 500 :gid 500 :rdev 0 :size 12288 :blksize 4096 :blocks 24 :atime
+1347933533 :mtime 1347933534 :ctime 1347933534)
+
+These properties correspond to the similarly-named entires of the struct stat
+structure in POSIX. For instance, the :dev property has the same value 
+as the st_dev field.
+
+.SS The variables s-ifmt s-iflnk s-ifreg s-ifblk ... s-ixoth
+
+The following variables exist, having integer values. These are bitmasks
+which can be applied against the value given by the :mode property
+in the property list returned by the function stat: s-ifmt, s-iflnk, s-ifreg,
+s-ifblk, s-ifdir, s-ifchr, s-ififo, s-isuid, s-isgid, s-isvtx, s-irwxu,
+s-irusr, s-iwusr, s-ixusr, s-irwxg, s-irgrp, s-iwgrp, s-ixgrp, s-irwxo,
+s-iroth, s-iwoth and s-ixoth.
+
+These variables correspond to the C constants S_IFMT, S_IFLNK, S_IFREG
+and so forth.
+
+The logtest function can be used to test these against values of mode.
+For example (logtest mode s-irgrp) tests for the group read permission.
+
 .SS Function open-directory
 
-.SS Functions open-file
+.TP
+Syntax:
+
+  (open-directory <path>)
+
+.TP
+Description:
+
+The open-directory function tries to create a stream which reads the
+directory given by the string argument <path>. If a filesystem object exists
+under the path, is accessible, and is a directory, then the function
+returns a stream. Otherwise, a file error exception is thrown.
+
+The resulting stream supports the get-line operation. Each call to the
+get-line operation retrieves a string representing the next directory
+entry. The value nil is returned when there are no more directory entries.
+The . and .. entries in Unix filesystems are not skipped.
+
+.SS Function open-file
+
+.TP
+Syntax:
+
+  (open-file <path> <mode-string>)
+
+.TP
+Description:
+
+The open-file function creates a stream connected to the file
+which is located at the given <path>, which is a string.
+The <mode-string> argument is a string which uses the same
+conventions as the mode argument of the C language fopen function.
+The mode string determines whether the stream is an input stream
+or output stream. Note that the "b" mode is not supported.
+Whether a stream is text or binary depends on which operations
+are invoked on it.
 
 .SH COPROCESSES
 

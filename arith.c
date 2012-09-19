@@ -1618,6 +1618,12 @@ bad:
   uw_throwf(error_s, lit("logxor: operation failed on ~s ~s"), a, b, nao);
 }
 
+val logtest(val a, val b)
+{
+  /* TODO: optimize */
+  return logand(a, b) == zero;
+}
+
 static val comp_trunc(val a, val bits)
 {
   cnum an, bn;

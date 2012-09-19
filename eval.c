@@ -2234,6 +2234,7 @@ void eval_init(void)
   reg_fun(intern(lit("logand"), user_package), func_n2(logand));
   reg_fun(intern(lit("logior"), user_package), func_n2(logior));
   reg_fun(intern(lit("logxor"), user_package), func_n2(logxor));
+  reg_fun(intern(lit("logtest"), user_package), func_n2(logtest));
   reg_fun(intern(lit("lognot"), user_package), func_n2o(lognot, 1));
   reg_fun(intern(lit("logtrunc"), user_package), func_n2(logtrunc));
   reg_fun(intern(lit("ash"), user_package), func_n2(ash));
@@ -2302,6 +2303,30 @@ void eval_init(void)
   reg_fun(intern(lit("put-byte"), user_package), func_n2o(put_byte, 1));
   reg_fun(intern(lit("flush-stream"), user_package), func_n1(flush_stream));
   reg_fun(intern(lit("stat"), user_package), func_n1(statf));
+
+  reg_var(intern(lit("s-ifmt"), user_package), &s_ifmt);
+  reg_var(intern(lit("s-iflnk"), user_package), &s_iflnk);
+  reg_var(intern(lit("s-ifreg"), user_package), &s_ifreg);
+  reg_var(intern(lit("s-ifblk"), user_package), &s_ifblk);
+  reg_var(intern(lit("s-ifdir"), user_package), &s_ifdir);
+  reg_var(intern(lit("s-ifchr"), user_package), &s_ifchr);
+  reg_var(intern(lit("s-ififo"), user_package), &s_ififo);
+  reg_var(intern(lit("s-isuid"), user_package), &s_isuid);
+  reg_var(intern(lit("s-isgid"), user_package), &s_isgid);
+  reg_var(intern(lit("s-isvtx"), user_package), &s_isvtx);
+  reg_var(intern(lit("s-irwxu"), user_package), &s_irwxu);
+  reg_var(intern(lit("s-irusr"), user_package), &s_irusr);
+  reg_var(intern(lit("s-iwusr"), user_package), &s_iwusr);
+  reg_var(intern(lit("s-ixusr"), user_package), &s_ixusr);
+  reg_var(intern(lit("s-irwxg"), user_package), &s_irwxg);
+  reg_var(intern(lit("s-irgrp"), user_package), &s_irgrp);
+  reg_var(intern(lit("s-iwgrp"), user_package), &s_iwgrp);
+  reg_var(intern(lit("s-ixgrp"), user_package), &s_ixgrp);
+  reg_var(intern(lit("s-irwxo"), user_package), &s_irwxo);
+  reg_var(intern(lit("s-iroth"), user_package), &s_iroth);
+  reg_var(intern(lit("s-iwoth"), user_package), &s_iwoth);
+  reg_var(intern(lit("s-ixoth"), user_package), &s_ixoth);
+
   reg_fun(intern(lit("open-directory"), user_package), func_n1(open_directory));
   reg_fun(intern(lit("open-file"), user_package), func_n2(open_file));
   reg_fun(intern(lit("open-command"), user_package), func_n2(open_command));

@@ -474,6 +474,7 @@ val expo(val);
 val logand(val, val);
 val logior(val, val);
 val logxor(val, val);
+val logtest(val, val);
 val lognot(val, val);
 val logtrunc(val a, val bits);
 val ash(val a, val bits);

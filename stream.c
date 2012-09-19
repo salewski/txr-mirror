@@ -56,6 +56,11 @@ val dev_k, ino_k, mode_k, nlink_k, uid_k;
 val gid_k, rdev_k, size_k, blksize_k, blocks_k;
 val atime_k, mtime_k, ctime_k;
 
+val s_ifmt, s_ifsock, s_iflnk, s_ifreg, s_ifblk, s_ifdir;
+val s_ifchr, s_ififo, s_isuid, s_isgid, s_isvtx, s_irwxu;
+val s_irusr, s_iwusr, s_ixusr, s_irwxg, s_irgrp, s_iwgrp;
+val s_ixgrp, s_irwxo, s_iroth, s_iwoth, s_ixoth;
+
 struct strm_ops {
   struct cobj_ops cobj_ops;
   val (*put_string)(val, val);
@@ -1497,7 +1502,6 @@ val statf(val path)
               path, num(errno), string_utf8(strerror(errno)), nao);
 
   return list(dev_k, num(st.st_dev),
-              dev_k, num(st.st_dev),
               ino_k, num(st.st_ino),
               mode_k, num(st.st_mode),
               nlink_k, num(st.st_nlink),
@@ -1729,4 +1733,13 @@ void stream_init(void)
   atime_k = intern(lit("atime"), keyword_package);
   mtime_k = intern(lit("mtime"), keyword_package);
   ctime_k = intern(lit("ctime"), keyword_package);
+
+  s_ifmt = num(S_IFMT); s_iflnk = num(S_IFLNK);
+  s_ifreg = num(S_IFREG); s_ifblk = num(S_IFBLK); s_ifdir = num(S_IFDIR);
+  s_ifchr = num(S_IFCHR); s_ififo = num(S_IFIFO); s_isuid = num(S_ISUID);
+  s_isgid = num(S_ISGID); s_isvtx = num(S_ISVTX); s_irwxu = num(S_IRWXU);
+  s_irusr = num(S_IRUSR); s_iwusr = num(S_IWUSR); s_ixusr = num(S_IXUSR);
+  s_irwxg = num(S_IRWXG); s_irgrp = num(S_IRGRP); s_iwgrp = num(S_IWGRP);
+  s_ixgrp = num(S_IXGRP); s_irwxo = num(S_IRWXO); s_iroth = num(S_IROTH);
+  s_iwoth = num(S_IWOTH); s_ixoth = num(S_IXOTH);
 }

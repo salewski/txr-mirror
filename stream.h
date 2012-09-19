@@ -27,6 +27,11 @@
 extern val std_input, std_output, std_debug, std_error;
 extern val output_produced;
 
+extern val s_ifmt, s_iflnk, s_ifreg, s_ifblk, s_ifdir;
+extern val s_ifchr, s_ififo, s_isuid, s_isgid, s_isvtx, s_irwxu;
+extern val s_irusr, s_iwusr, s_ixusr, s_irwxg, s_irgrp, s_iwgrp;
+extern val s_ixgrp, s_irwxo, s_iroth, s_iwoth, s_ixoth;
+
 val make_stdio_stream(FILE *, val descr, val input, val output);
 val make_pipe_stream(FILE *, val descr, val input, val output);
 val make_string_input_stream(val);

@@ -1,3 +1,28 @@
+2012-09-18  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c (logtest): New function.
+
+	* eval.c (eval_init): Registered logtest.
+	Registered s-ifmt, s-iflnk, s-ifreg, s-ifblk, s-ifdir,
+	s-ifchr, s-ififo, s-isuid, s-isgid, s-isvtx, s-irwxu,
+	s-irusr, s-iwusr, s-ixusr, s-irwxg, s-irgrp, s-iwgrp,
+	s-ixgrp, s-irwxo, s-iroth, s-iwoth, s-ixoth variables.
+
+	* lib.h (logtest): Declared.
+
+	* stream.c (s_ifmt, s_ifsock, s_iflnk, s_ifreg, s_ifblk,
+	s_ifdir, s_ifchr, s_ififo, s_isuid, s_isgid, s_isvtx, s_irwxu, s_irusr,
+	s_iwusr, s_ixusr, s_irwxg, s_irgrp, s_iwgrp, s_ixgrp, s_irwxo, s_iroth,
+	s_iwoth, s_ixoth): New global variables.
+
+	* stream.h (s_ifmt, s_ifsock, s_iflnk, s_ifreg, s_ifblk,
+	s_ifdir, s_ifchr, s_ififo, s_isuid, s_isgid, s_isvtx, s_irwxu, s_irusr,
+	s_iwusr, s_ixusr, s_irwxg, s_irgrp, s_iwgrp, s_ixgrp, s_irwxo, s_iroth,
+	s_iwoth, s_ixoth): Declared.
+
+	* txr.1: Documented logtest and s-* variables for stat,
+	as well as open-file and open-directory.
+
 2012-09-17  Kaz Kylheku  <kaz@kylheku.com>
 
 	* stream.c (vformat): Slight change in ~s directive. For a floating
