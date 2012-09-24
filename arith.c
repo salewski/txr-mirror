@@ -1621,7 +1621,7 @@ bad:
 val logtest(val a, val b)
 {
   /* TODO: optimize */
-  return logand(a, b) == zero;
+  return logand(a, b) == zero ? t : nil;
 }
 
 static val comp_trunc(val a, val bits)

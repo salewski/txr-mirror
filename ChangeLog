@@ -1,3 +1,7 @@
+2012-09-24  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c (logand): Fix incorrect return value.
+
 2012-09-18  Kaz Kylheku  <kaz@kylheku.com>
 
 	* arith.c (logtest): New function.
