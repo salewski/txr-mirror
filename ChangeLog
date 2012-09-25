@@ -1,5 +1,10 @@
 2012-09-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	* RELNOTES: Correct incorrect 2011 yeras on all 2012 dates. 
+	How did that happen?
+
+2012-09-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (apply): Fix in error message: hard coded "apply" instead
 	of using ctx_form.
 
