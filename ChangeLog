@@ -1,5 +1,15 @@
 2012-09-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	Bugfix: internal funcall functions not handling functions
+	with optional arguments.
+
+	* lib.c (generic_funcall): New static function, based on apply
+	from eval.c.
+	(funcall, funcall1, funcall2, funcall3, funcall4): If the function
+	being called has optional arguments, then go through generic_funcall.
+
+2012-09-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (logand): Fix incorrect return value.
 
 2012-09-18  Kaz Kylheku  <kaz@kylheku.com>
