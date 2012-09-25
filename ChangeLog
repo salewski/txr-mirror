@@ -1,3 +1,11 @@
+2012-09-25  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c: Allow the test form of a for loop to be omitted,
+	defaulting to a true test, allowing an infinite loop to
+	be expressed as (for () () () ...).
+
+	* txr.1: Documented.
+
 2012-09-24  Kaz Kylheku  <kaz@kylheku.com>
 
 	* RELNOTES: Correct incorrect 2011 years on all 2012 dates. 

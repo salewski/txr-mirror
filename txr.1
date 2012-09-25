@@ -5498,7 +5498,7 @@ Examples:
 Syntax:
 
   ({for | for*} ({<sym> | (<sym> <init-form>)}*) 
-                (<test-form> <result-form>*) 
+                ([<test-form> <result-form>*]) 
                 (<inc-form>*)
     <body-form>*)
 
@@ -5510,6 +5510,7 @@ The first argument is a list of variables with optional initializers,
 exactly the same as in the let and let* operators. Furthermore, the
 difference between for and for* is like that between let and let* with
 regard to this list of variables. 
+
 The for operators execute these steps:
 
 1. Establish bindings for the specified variables similarly to let
@@ -5519,10 +5520,11 @@ and let*. The variable bindings are visible over the <test-form>, each
 2. Establish an anonymous block over the remaining forms, allowing
 the return operator to be used to terminate the loop.
 
-3. Evaluate <test-form>. If <test-form> yields nil, then each
-<result-form> is evaluated, and the vale of the last of these forms
-is is the result value of the for loop. If there are no such forms
-then the return value is nil.
+3. Evaluate <test-form>. If <test-form> yields nil, then the loop
+terminates. Each <result-form> is evaluated, and the value of the last of these
+forms is is the result value of the for loop. If there are no <result-form>-s
+then the result value is nil. If the <test-form> is omitted, then the
+the test is taken to be true, and the loop does not terminate.
 
 4. Otherwise, if <test-form> yields non-nil, then each <body-form>
 is evaluated in turn. Then, each <inc-form> is evaluated in turn

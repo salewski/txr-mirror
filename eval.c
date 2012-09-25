@@ -1010,7 +1010,8 @@ static val op_for(val form, val env)
 
   uw_block_begin (nil, result);
 
-  for (; eval(car(cond), new_env, form); eval_progn(incs, new_env, form))
+  for (; cond == nil || eval(car(cond), new_env, form);
+       eval_progn(incs, new_env, form))
     eval_progn(forms, new_env, form);
 
   result = eval_progn(rest(cond), new_env, form);
