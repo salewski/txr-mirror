@@ -1,5 +1,10 @@
 2012-09-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (apply): Fix in error message: hard coded "apply" instead
+	of using ctx_form.
+
+2012-09-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	Bugfix: internal funcall functions not handling functions
 	with optional arguments.
 

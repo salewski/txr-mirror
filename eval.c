@@ -273,7 +273,7 @@ val apply(val fun, val arglist, val ctx_form)
   type_check (fun, FUN);
 
   type_assert (listp(arglist),
-               (lit("apply arglist ~s is not a list"), arglist, nao));
+               (lit("~s: arglist ~s is not a list"), car(ctx_form), arglist, nao));
 
   variadic = fun->f.variadic;
   fixparam = fun->f.fixparam;
