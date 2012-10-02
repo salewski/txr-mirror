@@ -68,6 +68,17 @@ val bignum(cnum cn)
   return n;
 }
 
+val bignum_from_long(long l)
+{
+#if SIZEOF_LONG <= SIZEOF_PTR
+  return bignum(l);
+#else
+  val n = make_bignum();
+  mp_set_int(mp(n), l);
+  return n;
+#endif
+}
+
 #if HAVE_DOUBLE_INTPTR_T
 
 static val bignum_dbl_ipt(double_intptr_t di)

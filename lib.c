@@ -2104,11 +2104,11 @@ val int_str(val str, val base)
 
   /* TODO: detect if we have wcstoll */
   long value = wcstol(wcs, &ptr, b ? b : 10);
+
   if (value == 0 && ptr == wcs)
     return nil;
-  if (((value == LONG_MAX || value == LONG_MIN) && errno == ERANGE) ||
-      (value < NUM_MIN || value > NUM_MAX))
-  {
+
+  if ((value == LONG_MAX || value == LONG_MIN) && errno == ERANGE) {
     val bignum = make_bignum();
     unsigned char *ucs = utf8_dup_to_uc(wcs);
     mp_err err = mp_read_radix(mp(bignum), ucs, b);
@@ -2118,10 +2118,15 @@ val int_str(val str, val base)
     if (err != MP_OKAY)
       return nil;
 
-    return bignum;
-  }
+    /* If wcstol overflowed, but the range of long is smaller than
+       that of fixnums, that means that the value might not
+       actually be a bignum, and so we must normalize.
+       We do not need this on our usual target platforms, where NUM_MAX is
+       never larger than LONG_MAX. */
+    return (LONG_MAX < NUM_MAX) ? normalize(bignum) : bignum;
+  } 
 
-  return num(value);
+  return bignum_from_long(value);
 }
 
 val flo_str(val str)

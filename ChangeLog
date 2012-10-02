@@ -1,3 +1,14 @@
+2012-10-01  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c (bignum_from_long): New function.
+
+	* arith.h (bignum_from_long): Declared.
+
+	* lib.c (int_str): Streamlined. Only use mp_read_radix in the case when
+	wcstol fails, because now we have bignum_from_long to handle all values
+	of long. Ensure that the bignum is normalized, in case it falls in the
+	fixnum range (does not happen on our usual platforms). 
+
 2012-09-25  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c: Allow the test form of a for loop to be omitted,
