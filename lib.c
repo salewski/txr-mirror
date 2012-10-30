@@ -2092,8 +2092,7 @@ val trim_str(val str)
 
 val string_lt(val astr, val bstr)
 {
-  int cmp = wcscmp(c_str(astr), c_str(bstr));
-  return cmp == -1 ? t : nil;
+  return wcscmp(c_str(astr), c_str(bstr)) < 0 ? t : nil;
 }
 
 val int_str(val str, val base)
