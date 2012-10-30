@@ -1,3 +1,12 @@
+2012-10-30  Kaz Kylheku  <kaz@kylheku.com>
+
+	* mpi-patches/config-types: Include the header as "config.h"
+	rather than "../config.h" because the dependency generation script
+	checks for this as a special case and treats it relative to the
+	build directory.
+
+	* dep.mk: Regenerated.
+
 2012-09-25  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c: Allow the test form of a for loop to be omitted,
