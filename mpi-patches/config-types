@@ -80,7 +80,7 @@ Index: mpi-1.8.6/mpi.c
      $Id: mpi.c,v 1.1 2004/02/08 04:29:29 sting Exp $
   */
  
-+#include "../config.h"
++#include "config.h"
  #include "mpi.h"
  #include <stdlib.h>
  #include <string.h>
@@ -92,7 +92,7 @@ Index: mpi-1.8.6/mplogic.c
      $Id: mplogic.c,v 1.1 2004/02/08 04:29:29 sting Exp $
   */
  
-+#include "../config.h"
++#include "config.h"
  #include "mplogic.h"
  #include <stdlib.h>
  
@@ -104,7 +104,7 @@ Index: mpi-1.8.6/mpprime.c
      $Id: mpprime.c,v 1.1 2004/02/08 04:29:29 sting Exp $
   */
  
-+#include "../config.h"
++#include "config.h"
  #include "mpprime.h"
  #include <stdlib.h>
  
@@ -116,7 +116,7 @@ Index: mpi-1.8.6/mprsa.c
    $Id: mprsa.c,v 1.1 2004/02/08 04:29:29 sting Exp $
   */
  
-+#include "../config.h"
++#include "config.h"
  #include "mprsa.h"
  #include <stdlib.h>
  #include <string.h>

@@ -1,3 +1,17 @@
+2012-10-30  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (string_lt): Bugfix: wcscmp returns some value less than zero,
+	not specifically -1.
+
+2012-10-30  Kaz Kylheku  <kaz@kylheku.com>
+
+	* mpi-patches/config-types: Include the header as "config.h"
+	rather than "../config.h" because the dependency generation script
+	checks for this as a special case and treats it relative to the
+	build directory.
+
+	* dep.mk: Regenerated.
+
 2012-10-01  Kaz Kylheku  <kaz@kylheku.com>
 
 	* arith.c (bignum_from_long): New function.
