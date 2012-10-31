@@ -1,3 +1,9 @@
+2012-10-31  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (int_str): Fix gaping bug introduced by previous commit,
+	which could have been caught by running the regression test suite.
+	The revised function was returning small integers as bignums.
+
 2012-10-30  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (string_lt): Bugfix: wcscmp returns some value less than zero,

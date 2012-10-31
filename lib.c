@@ -2125,6 +2125,9 @@ val int_str(val str, val base)
     return (LONG_MAX < NUM_MAX) ? normalize(bignum) : bignum;
   } 
 
+  if (value >= NUM_MIN && value <= NUM_MAX)
+    return num(value);
+
   return bignum_from_long(value);
 }
 
