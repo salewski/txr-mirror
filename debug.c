@@ -58,7 +58,7 @@ static void help(val stream)
                  "? - help                               s - step into form\n"
                  "h - help                               n - step over form\n"
                  "c - continue                           f - finish form\n"
-                 "v - show variable binding environment  s - show current form\n"
+                 "v - show variable binding environment  o - show current form\n"
                  "b - set breakpoint by line number      i - show current data\n"
                  "d - delete breakpoint                  w - backtrace\n"
                  "l - list breakpoints                   g - set loglevel\n"),
@@ -169,7 +169,7 @@ val debug(val form, val bindings, val data, val line, val pos, val base)
         return nil;
       } else if (equal(command, lit("v"))) {
         show_bindings(bindings, std_debug);
-      } else if (equal(command, lit("s"))) {
+      } else if (equal(command, lit("o"))) {
         print_form = t;
       } else if (equal(command, lit("i"))) {
         print_data = t;

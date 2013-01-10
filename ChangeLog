@@ -1,3 +1,9 @@
+2013-01-10  Kaz Kylheku  <kaz@kylheku.com>
+
+	* debug.c (help): Help text updated.
+	(debug): Fix conflicting command assignment.
+	Show form is now 'o'.
+
 2012-10-31  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (int_str): Fix gaping bug introduced by previous commit,
