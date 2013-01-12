@@ -9394,12 +9394,13 @@ not called. If all functions return nil, then nil is returned. The expression
 (orf) returns a function which accepts any arguments and returns nil.
 
 
-.SS Function iff
+.SS Functions iff and iffi
 
 .TP
 Syntax:
 
   (iff <cond-func> <then-func> [<else-func>])
+  (iffi <cond-func> <then-func> [<else-func>])
 
 .TP
 Description:
@@ -9410,9 +9411,20 @@ functional arguments and returns a function.
 The resulting function takes its arguments and applies them to <cond-func>.  If
 <cond-func> yields true, then the arguments are passed to <then-func,> and the
 resulting value is returned. Otherwise if <cond-func> yields a false result,
-and there is no <else-func,> then nil is returned. If <cond-func> yields false,
+and there is no <else-func>, then nil is returned. If <cond-func> yields false,
 and an <else-func> exists, then the original arguments are passed to
 <else-func> and the resulting value is returned.
+
+The iffi function differs from iff only in the defaulting behavior with respect
+to the <else-func> argument. The following equivalence holds:
+
+  (iffi a b c) <--> (iff a b c)
+
+  (iffi a b)   <--> (iff a b identity)
+
+The iffi function defaults to the identity function when <else-func> is
+omitted, and therefore is useful in situations when one value is to be replaced
+with another one when the condition is true, otherwise left alone.
 
 .SH INPUT AND OUTPUT
 

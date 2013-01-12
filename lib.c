@@ -3280,9 +3280,16 @@ static val do_iff(val env, val args)
              if2(elsefun, apply(elsefun, args, nil)));
 }
 
-val iff(val condfun, val elsefun, val thenfun)
+val iff(val condfun, val thenfun, val elsefun)
 {
-  return func_f0v(cons(condfun, cons(elsefun, thenfun)), do_iff);
+  return func_f0v(cons(condfun, cons(thenfun, elsefun)), do_iff);
+}
+
+val iffi(val condfun, val thenfun, val elsefun)
+{
+  if (!elsefun)
+    elsefun = identity_f;
+  return func_f0v(cons(condfun, cons(thenfun, elsefun)), do_iff);
 }
 
 val vector(val length)

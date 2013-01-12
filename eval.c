@@ -2278,6 +2278,7 @@ void eval_init(void)
   reg_fun(intern(lit("andf"), user_package), func_n0v(andv));
   reg_fun(intern(lit("orf"), user_package), func_n0v(orv));
   reg_fun(intern(lit("iff"), user_package), func_n3o(iff, 2));
+  reg_fun(intern(lit("iffi"), user_package), func_n3o(iffi, 2));
 
   reg_var(intern(lit("*stdout*"), user_package), &std_output);
   reg_var(intern(lit("*stddebug*"), user_package), &std_debug);

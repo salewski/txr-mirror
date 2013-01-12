@@ -596,6 +596,7 @@ val andv(val funlist);
 val orf(val first_fun, ...);
 val orv(val funlist);
 val iff(val condfun, val thenfun, val elsefun);
+val iffi(val condfun, val thenfun, val elsefun);
 val swap_12_21(val fun);
 val vector(val length);
 val vectorp(val vec);

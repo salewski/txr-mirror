@@ -1,3 +1,15 @@
+2013-01-11  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): New instrinsic function iffi registered.
+	
+	* lib.c (iff): Reversed argument names corrected. No functional
+	change.
+	(iffi): New function.
+
+	* lib.h (iffi): Declared.
+
+	* txr.1: Documented iffi.
+
 2013-01-10  Kaz Kylheku  <kaz@kylheku.com>
 
 	* debug.c (help): Help text updated.
