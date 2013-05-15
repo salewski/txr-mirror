@@ -10145,13 +10145,113 @@ returns nil.
 
 .SS Variable *random-state*
 
+The *random-state* variable holds an object which encapsulates the state
+of a pseudo-random number generator. This variable is the default argument for
+the random-fixnum and random functions, so that programs can be written
+which are not concerned about the management of random state.
+
+However, programs can create and manage random states, making it possible to
+obtain repeatable sequences of pseudo-random numbers which do not interfere
+owith each other. For instance objects or modules in a program can have their
+own independent streams of random numbers which are repeatable, independently
+of other modules making calls to the random number functions.
+
+When TXR starts up, the *random-state* variable is initialized with
+a newly created random state object, which is produced as if by
+the call (make-random-state 42).
+
 .SS Function make-random-state
+
+.TP
+Syntax:
+
+  (make-random-state <seed>)
+
+.TP
+Description:
+
+The make-random-state function creates and returns a new random state,
+an object of the same kind as what is stored in the *random-state* variable.
+
+The seed must be an integer value.
+
+Note that the sign of the value is ignored, so that negative seed
+values are equivalent to their additive inverses.
 
 .SS Function random-state-p
 
-.SS Functions random-fixnum and random
+.TP
+Syntax:
+
+  (random-state-p <obj>)
+
+.TP
+Description:
+
+The random-state-p function returns t if <obj> is a random state, otherwise it
+returns nil.
+
+.SS Functions random-fixnum, random and rand
+
+.TP
+Syntax:
+
+  (random-fixnum [<random-state>])
+  (random <random-state> <modulus>)
+  (rand <modulus> [<random-state>])
+
+.TP
+Description:
+
+All three functions produce pseudo-random numbers, which are positive integers.
+
+The numbers are obtained from a WELLS 512 pseudo-random number generator, whose
+state is stored in the random state object.
+
+The random-fixnum function produces a random fixnum integer: a reduced range
+integer which fits into a value that does not have to be heap-allocated.
+
+The random and rand functions produce a value in the range [0, modulus).  They
+differ only in the order of arguments. In the rand function, the random state
+object is the second argument and is optional. If it is omitted, the global
+*random-state* object is used.
 
 .SS Functions range and range*
+
+.TP
+Syntax:
+
+  (range [ [ [ <from> ] <to> ] <step> ])
+  (range* [ [ [ <from> ] <to> ] <step> ])
+
+.TP
+Description:
+
+The range and range* functions generate a lazy sequence of integers, with a
+fixed step between successive values.
+
+The difference between range and range* is that range* excludes the endpoint.
+For instance (range 0 3) generates the list (0 1 2 3), whereas (range* 0 3)
+generates (0 1 2).
+
+All arguments are optional. If the <step> argument is omitted, then it defaults
+to 1: each value in the sequence is greater than the previous one by 1.
+Positive or negative step sizes are allowed. There is no check for a step size
+of zero, or for a step direction which cannot meet the endpoint.
+
+The <to> argument specifies the endpoint value, which, if it occurs in the
+sequence, is excluded from it by the range* function, but included by the range
+function. If <to> is missing, then there is no endpoint, and the sequence
+which is generated is infinite, regardless of <step>.
+
+If <from> is omitted, then the sequence begins at zero, otherwise <from> must
+be an integer which specifies the initial value.
+
+The sequence stops if it reaches the endpoint value (which is included in the
+case of range, and excluded in the case of range*).  However, a sequence with a
+stepsize greater than 1 or less than -1 might step over the endpoint value, and
+therefore never attain it. In this situation, the sequence also stops, and the
+excess value which surpasses the endpoint is excluded from the sequence.
 
 .SH TIME
 
