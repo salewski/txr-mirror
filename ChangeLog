@@ -1,3 +1,11 @@
+2013-05-15  Kaz Kylheku  <kaz@kylheku.com>
+
+	* match.c (match_fun): Support debug stop on the function
+	prior to the call. The first data line number is 1, not zero,
+	if there is data.
+
+	* txr.1: Added usage example for match-fun.
+
 2013-05-14  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.1: Documented time and url encoding/decoding functions.

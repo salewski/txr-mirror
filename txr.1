@@ -10358,6 +10358,33 @@ is one of two values. If the entire input was processed, the cdr field holds
 the symbol t. Otherwise it holds another cons cell whose car is the remainder
 of the list of lines which were not matched, and the cdr is the line number.
 
+.TP
+Example:
+
+  @(define foo (x y))
+  @x:@y
+  @line
+  @(end)
+  @(do
+     (format t "~s\n"
+               (match-fun 'foo '(a b) '("alpha:beta" "gamma" "omega") nil)))
+
+  Output:
+  (((a . "alpha") (b . "beta")) ("omega") . 3)
+
+In the above example, the pattern function foo is called with arguments (a b).
+These are unbound variables, so they correspond to parameters x and y
+of the function. If x and y get bound, those values propagate to a and b.
+The data being matched consists of the lines "alpha:beta", "gamma" and
+"omega".  Inside foo, x and y bind to "alpha" and "beta", and then the
+line variable binds t "gamma". The input stream is left with "omega".
+
+Hence, the return value consists of the bindings of x and y transferred to a
+and b, and the second cons cell giving information about the rest of the
+stream: it is the part starting at "omega", which is line 3. Note that the
+binding for for line variable does not propagate out of the pattern function
+foo; it is local inside it. 
+
 .SH DEBUGGING FUNCTIONS
 
 .SS Functions source-loc and source-loc-str

@@ -3698,14 +3698,23 @@ val match_filter(val name, val arg, val other_args)
 
 val match_fun(val name, val args, val input, val files)
 {
-  val spec = cons(cons(cons(name, args), nil), nil);
+  val call = cons(name, args);
+  val spec = cons(cons(call, nil), nil);
   val in_bindings = cdr(uw_get_match_context());
   val data = if3(streamp(input),
                  lazy_stream_cons(input),
                  input);
   /* TODO: pass through source location context */
-  match_files_ctx c = mf_all(spec, files, in_bindings, data, num(0));
-  val ret = v_fun(&c);
+  match_files_ctx c = mf_all(spec, files, in_bindings, data,
+                             if3(data, one, zero));
+  val ret;
+
+  debug_enter;
+
+  debug_check(call, c.bindings, if2(consp(c.data), car(c.data)), 
+              c.data_lineno, nil, nil);
+
+  ret = v_fun(&c);
 
   if (ret == nil)
     return nil;
@@ -3713,7 +3722,9 @@ val match_fun(val name, val args, val input, val files)
   if (ret == decline_k)
     sem_error(nil, lit("match_fun: function ~s not found"), name, nao);
 
-  return cons(c.bindings, cons(c.data, c.data_lineno));
+  debug_return (cons(c.bindings, if3(c.data, cons(c.data, c.data_lineno), t)));
+
+  debug_leave;
 }
 
 int extract(val spec, val files, val predefined_bindings)
