@@ -1,3 +1,18 @@
+2013-05-14  Kaz Kylheku  <kaz@kylheku.com>
+
+	* RELNOTES: Updated in preparation for release.
+
+	* eval.c (eval_init): Expose delete-package, rehome-sym
+	and packagep.
+
+	* lib.c (make_package, intern): use ~s formatting for package name in
+	error message.
+	(packagep, delete_package, rehome_sym): New functions.
+
+	* lib.h (packagep, delete_package, rehome_sym): Declared.
+
+	* txr.1: Documented process functions and packages.
+
 2013-01-11  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): New instrinsic function iffi registered.

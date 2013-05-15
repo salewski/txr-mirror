@@ -9149,7 +9149,7 @@ Syntax:
 Description:
 
 These functions each compute an integer hash value from the internal
-representation of <object>, which satisifes the following properties.
+representation of <object>, which satisfies the following properties.
 If two objects A and B are the same under the eql function, then
 (hash-eql A) and (hash-eql B) produce the same integer hash value.  Similarly,
 if two objects A and B are the same under the equal function, then (hash-equal
@@ -9913,25 +9913,233 @@ are invoked on it.
 
 .SS Functions open-command, open-process
 
+.TP
+Syntax:
+
+  (open-command <system-command> <mode-string>)
+  (open-process <command> <mode-string> <argument-strings>)
+
+.TP
+Description:
+
+These functions spawn external programs which execute concurrently
+with the TXR program. Both functions return a unidirectional stream for
+communicating with these programs: either an output stream, or an input
+stream, depending on the contents of <mode-string>.
+
+The open-command function accepts, via the <system-command> string parameter, a
+system command, which is in a system-dependent syntax. On a POSIX system, this
+would be in the POSIX Shell Command Language.
+
+The open-process function specifies a program to invoke via the <command>
+argument. This is subject the the operating system's search strategy.
+On POSIX systems, if it is an absolute or relative path, it is treated as
+such, but if it is a simple base name, then it is subject to searching
+via the components of the PATH environment variable.
+
+The <mode-string> argument is compatible with the convention used by the POSIX
+popen function.
+
+The <argument-strings> argument is a list of strings which specifies additional
+optional arguments to be passed passed to the program. The <command> argument
+becomes the first argument, and <argument-strings> become the second and
+subsequent arguments.
+
+If a coprocess is open for writing (<mode-string> is specified as "w"), then
+writing on the returned stream feeds input to that program's standard input
+file descriptor. Indicating the end of input is performed by closing the
+stream.
+
+If a coprocess is open for reading (<mode-string> is specified as "r"), then
+the program's output can be gathered by reading from the returned stream.
+When the program finishes output, it will close the stream, which can be
+detected as normal end of data.
+
+If a coprocess terminates abnormally or unsuccessfully, an exception is raised.
+
 .SH SYMBOLS AND PACKAGES
+
+A package is an object which serves as a container of symbols.  
+
+A symbol which exists inside a package is said to be interned in that package.
+A symbol can be interned in at most one package at a time.
+
+string, but not necessarily unique. A symbol name is unique within a package,
+however: two symbols cannot be in the same package if they have the same name.
+Moreover, a symbol cannot exist in more than one package at at time, although
+it can be relocated from one package to antoher.  Symbols can exist which are
+not in packages: these are called uninterned symbols.
+
+Packages are held in a global list which can be used to search for a package by
+name. The find-package function performs this lookup.  A package may be
+deleted from the list with the delete-package function, but it continues
+to exist until the program loses the last reference to that package.
 
 .SS Variables *user-package*, *keyword-package*, *system-package*
 
+These variables hold predefined packages. The *user-package* is the one
+in which symbols are read when a TXR program is being scanned.
+The *keyword-package* holds keyword symbols, which are printed with
+a leading colon. The *system-package* is for internal symbols, helping
+the implementation avoid name clashes with user code in some situations.
+
 .SS Function make-sym
+
+.TP
+Syntax:
+
+  (make-sym <name>)
+
+Description:
+
+The make-sym function creates and returns a new symbol object. The argument
+<name>, which must be a string, specifies the name of the symbol.  The symbol
+does not belong to any package (it is said to be "uninterned").
+
+Note: an uninterned symbol can be interned into a package with the rehome-sym
+function. Also see the intern function.
 
 .SS Function make-package
 
+.TP
+Syntax:
+
+  (make-package <name>)
+
+.TP
+Description:
+
+The make-package function creates and returns a package named <name>, where
+<name> is a string. It is an error if a package by that name exists already.
+
+.SS Function packagep
+
+.TP
+Syntax:
+
+  (packagep <obj>)
+
+.TP
+Description:
+
+The packagep function returns t if <obj> is a package, otherwise it returns
+nil.
+
 .SS Function find-package
+
+.TP
+Syntax:
+
+  (find-package <name>)
+
+.TP
+Description:
+
+The argument <name> should be a string. If a package called <name> exists,
+then it is returned. Otherwise nil is returned.
 
 .SS Function intern
 
+.TP
+Sytax:
+
+  (intern <name> [<package>])
+
+.TP
+Description:
+
+The argument <name> should be a symbol. The optional argument <package>
+should be a package. If <package> is not supplied, then the value
+taken is that of *user-package*.
+
+The intern function searches <package> for a symbol called <name>.
+If that symbol is found, it is returned. If that symbol is not found, 
+then a new symbol called <name> is created and inserted into <package>,
+and that symbol is returned. In this case, the package becomes the
+symbol's home package.
+
+.SS Function rehome-sym
+
+.TP
+Syntax:
+
+  (rehome-sym <symbol> [<package>])
+
+.TP
+Description:
+
+The arguments <symbol> and <package> must be a symbol and package object,
+respectively. If <package> is not given, then it defaults to the value of
+*user-package*.
+
+The rehome-sym function moves <symbol> into <package>. If <symbol>
+is already in a package, it is first removed from that package.
+If a symbol of the same name exists in <package> that symbol is first removed
+from <package>.
+
 .SS Function symbolp
+
+.TP
+Syntax:
+
+  (symbolp <obj>)
+
+.TP
+Description:
+
+The symbolp function returns t if <obj> is a symbol, otherwise it returns
+nil.
 
 .SS Function symbol-name
 
+.TP
+Syntax:
+
+  (symbol-name <symbol>)
+
+.TP
+Description:
+
+The symbol-name function returns the name of <symbol>.
+
 .SS Function symbol-package
 
+.TP
+Syntax:
+
+  (symbol-package <symbol>)
+
+.TP
+Description:
+
+The symbol-package function returns the home package of <symbol>.
+
+.SS Function packagep
+
+.TP
+Syntax:
+
+  (packagep <obj>)
+
+.TP
+Description:
+
+The packagep function returns t if <obj> is a package, otherwise it returns
+nil.
+
 .SS Function keywordp
+
+.TP
+Syntax:
+
+  (keywordp <obj>)
+
+.TP
+Description:
+
+The keywordp function returns t if <obj> is a keyword symbol, otherwise it
+returns nil.
+
 
 .SH PSEUDO-RANDOM NUMBERS
 

@@ -2360,7 +2360,7 @@ val gensymv(val args)
 val make_package(val name)
 {
   if (find_package(name)) {
-    uw_throwf(error_s, lit("make_package: ~a exists already"), name, nao);
+    uw_throwf(error_s, lit("make_package: ~s exists already"), name, nao);
   } else {
     val obj = make_obj();
     obj->pk.type = PKG;
@@ -2372,9 +2372,27 @@ val make_package(val name)
   }
 }
 
+val packagep(val obj)
+{
+  return type(obj) == PKG ? t : nil;
+}
+
 val find_package(val name)
 {
   return cdr(assoc(name, packages));
+}
+
+val delete_package(val package)
+{
+  if (stringp(package)) {
+    package = find_package(package);
+    if (!package)
+      uw_throwf(error_s, lit("delete-package: no such package: ~s"), package, nao);
+  }
+
+  type_check (package, PKG);
+  packages = alist_nremove(packages, package->pk.name);
+  return nil;
 }
 
 val intern(val str, val package)
@@ -2387,7 +2405,7 @@ val intern(val str, val package)
   } else if (stringp(package)) {
     package = find_package(str);
     if (!package)
-      uw_throwf(error_s, lit("make_package: ~a exists already"), str, nao);
+      uw_throwf(error_s, lit("intern: symbol ~s exists already"), str, nao);
   }
 
   type_check (package, PKG);
@@ -2403,10 +2421,20 @@ val intern(val str, val package)
   }
 }
 
-static val rehome_sym(val sym, val package)
+val rehome_sym(val sym, val package)
 {
   if (!sym)
     return nil;
+
+  if (nullp(package)) {
+    package = user_package;
+  } else if (stringp(package)) {
+    val p = find_package(package);
+    if (!p)
+      uw_throwf(error_s, lit("rehome-sym: no such package: ~s"), package, nao);
+    package = p;
+  }
+
   type_check (package, PKG);
   type_check (sym, SYM);
 

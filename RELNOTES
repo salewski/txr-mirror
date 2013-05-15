@@ -1,3 +1,72 @@
+                                     TXR 66
+                                   2013-05-xx
+
+
+  Features
+
+  - Documentation completely filled in.
+
+  - Added specfile for RPM builds.
+
+  - @(repeat) introduced as shorthand for @(collect :vars nil).
+
+  - New open-command and open-process functions. The open-pipe
+    function becomes deprecated.
+
+  - New multi-sort function for sorting two or more lists
+    at the same time as if they were columns of a table.
+
+  - assq and aconsq functions are renamed to assql and
+    aconsql becuse they use eql equality, not eq.
+
+  - New prop function for property list lookup.
+
+  - New stat function for information about files.
+
+  - New functions in hashing library: 
+    - Copying hashes: make-similar-hash, copy-hash 
+    - Set operations: hash-uni, hash-diff, hash-isec.
+
+  - Gapingly missing hexadecimal integer constants have been
+    implemented.
+
+  - New bit operation functions that work with TXR's arbitrary precision
+    integers: loand, logior, loxor, lognot, logtest, ash.
+
+  - Test form in for loop can be omitted.
+
+  - New package-related functions.
+
+  Bugs
+
+  - Fixed broken (+ <fixnum> <char>) case in addition.
+    This fixes the range and range* functions too.
+
+  - Fixed nonworking building in a separate directory.
+
+  - Fixed broken eval function.
+
+  - Bugfix in form expander's handling of regular expression
+    syntax, causing the (set ...) notation for character
+    sets being mistaken for the (set ...) assignment operator.
+  
+  - Bugfix in format: apply field formatting to argument
+    not only if a nonzero with has been specified, but also
+    if a precision has been specified.
+
+  - Bugfix in format: ~s on a floating point number now
+    always shows .0 except when a precision is given,
+    and it is zero.
+
+  - Fixed broken @(last) clause processing of @(collect),
+    int he case when the last material matches at the end of a stream.
+
+  - Fixed certain function applications not being able to
+    call functions that have optional arguments with
+    fewer than 
+
+
+
                                      TXR 65
                                    2012-04-20
 
