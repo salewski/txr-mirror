@@ -10257,9 +10257,72 @@ excess value which surpasses the endpoint is excluded from the sequence.
 
 .SS Functions time and time-usec
 
+.TP
+Syntax:
+
+  (time)
+  (time-usec)
+
+.TP
+Description:
+
+The time functions return the local time in the system's timezone.
+The time function returns the number of seconds that have elapsed since
+midnight, January 1, 1970.  The time-usec function returns a cons cell whose
+car field holds the seconds measured in the same way, and whose cdr field
+extends the precision by giving number of microseconds as an integer value
+between 0 and 999999.
+
 .SH WEB PROGRAMMING SUPPORT
 
 .SS Functions url-encode and url-decode
+
+.TP
+Syntax:
+
+   (url-encode <string> [<space-plus-p>])
+   (url-decode <string> [<space-plus-p>])
+
+.TP
+Description:
+
+These functions convert character strings to and from a form which is suitable 
+for embedding into the request portions of URL syntax.
+
+Encoding a string for URL use means identifying in it certain characters that
+might have a special meaning in the URL syntax and representing it using
+"percent encoding": the percent character, followed by the ASCII value of the
+character.  Spaces and control characters are also encoded, as are all byte
+values greater than or equal to 127 (7F hex).  The printable ASCII characters
+which are percent-encoded consist of this set:
+
+  :/?#[]@!$&'()*+,;=%
+
+More generally, strings can consists of Unicode characters, but the URL
+encoding consists only of printable ASCII characters. Unicode characters in the
+original string are encoded by expanding into UTF-8, and applying
+percent-encoding the UTF-8 bytes, which are all in the range 0x80-0xFF.
+
+Decoding is the reverse process: reconstituting the UTF-8 byte sequence
+specified by the URL-encoding, and then decoding the UTF-8 sequence into the
+string of Unicode characters.
+
+There is an additional complication: whether or not to encode spaces as plus,
+and to decode plus characters to spaces. In encoding, if spaces are not encoded
+to the plus character, then they are encoded as %20, since spaces are reserved
+characters that must be encoded. In decoding, if plus characters are not
+decoded to spaces, then they are left alone: they become plus characters in the
+decoded string.
+
+The url-encode function performs the encoding process. If the space-plus-p
+argument is omitted or specified as nil, then spaces are encoded as %20.
+If the argument is a value other than nil, then spaces are encoded as the
+character + (plus).
+
+The url-decode function performs the decoding process. If the space-plus-p
+argument is omitted or specified as nil, then + (plus) characters in the
+encoded data are retained as + characters in the decoded strings. Otherwise,
+plus characters are converted to spaces.
 
 .SH ACCESS TO TXR PATTERN LANGUAGE FROM LISP
 

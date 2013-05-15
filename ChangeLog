@@ -1,5 +1,9 @@
 2013-05-14  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Documented time and url encoding/decoding functions.
+
+2013-05-14  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): State argument in random-fixnum should be
 	optional.
 
