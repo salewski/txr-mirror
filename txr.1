@@ -10328,13 +10328,64 @@ plus characters are converted to spaces.
 
 .SS Function match-fun
 
+.TP
+Syntax:
+
+  (match-fun <name> <args> <input> <files>)
+
+.TP
+Description:
+
+The match-fun function invokes a txr pattern function whose name is
+given by the <name>, which must be a symbol. 
+
+The <args> argument is a list of expressions. The expressions may be symbols
+which will be interpreted as pattern variables, and may be bound or unbound.
+If they are not symbols, then they are treated as expressions (of the
+pattern language, not TXR Lisp) and evaluated accordingly.
+
+The <input> argument is a list of strings, which may be lazy. It represents the
+lines of the text stream to be processed.
+
+The <files> argument is a list of filename specifications, which follow
+the same conventions as files given on the TXR command line. If the pattern
+function uses the @(next) directive, it can process these additional files.
+
+The match-fun function's return value falls into three cases. If there is a
+match failure, it returns nil. Otherwise it returns a cons cell. The car field
+of the cons cell holds the list of captured bindings. The cdr of the cons cell
+is one of two values. If the entire input was processed, the cdr field holds
+the symbol t. Otherwise it holds another cons cell whose car is the remainder
+of the list of lines which were not matched, and the cdr is the line number.
+
 .SH DEBUGGING FUNCTIONS
 
 .SS Functions source-loc and source-loc-str
 
+.TP
+(source-loc <form>)
+(source-loc-str <form>)
+
+.TP
+Description:
+
+These functions map an expression in a txr program to the file name and
+line number of the source code where that form came from.o
+
+The source-loc function returns the raw information as a cons cell
+whose car/cdr consist of the line number, and file name.
+
+The source-loc-str function formats the information as a string.
+
+If <form> is not a piece of the program source code that was constructed by the
+TXR parser, then source-loc returns nil, and source-loc-str returns a string
+whose text says that source location is not available.
+
 .SH MODULARIZATION
 
 .SS Variable *self-path*
+
+This variable holds the invocation path name of the TXR program.
 
 .SH DEBUGGER
 
