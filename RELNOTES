@@ -37,6 +37,8 @@
 
   - New package-related functions.
 
+  - New functions for obtaining time of day and converting to text.
+
   Bugs
 
   - Fixed broken (+ <fixnum> <char>) case in addition.

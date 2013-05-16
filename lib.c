@@ -36,6 +36,7 @@
 #include <errno.h>
 #include <wchar.h>
 #include <math.h>
+#include <time.h>
 #include <sys/time.h>
 #include "config.h"
 #ifdef HAVE_GETENVIRONMENTSTRINGS
@@ -4805,6 +4806,44 @@ val time_sec_usec(void)
   if (gettimeofday(&tv, 0) == -1)
     return nil;
   return cons(num(tv.tv_sec), num(tv.tv_usec));
+}
+
+static val string_time(struct tm *(*break_time_fn)(const time_t *, struct tm *),
+                       char *format, time_t time)
+{
+  char buffer[512] = "";
+  struct tm broken_out_time;
+
+  if (break_time_fn(&time, &broken_out_time) == 0)
+    return nil;
+
+  if (strftime(buffer, sizeof buffer, format, &broken_out_time) == 0)
+    buffer[0] = 0;
+
+  {
+    wchar_t *wctime = utf8_dup_from(buffer);
+    return string_own(wctime);
+  }
+}
+
+val time_string_local(val time, val format)
+{
+  time_t secs = c_num(time);
+  const wchar_t *wcfmt = c_str(format);
+  char *u8fmt = utf8_dup_to(wcfmt);
+  val timestr = string_time(localtime_r, u8fmt, secs);
+  free(u8fmt);
+  return timestr;
+}
+
+val time_string_utc(val time, val format)
+{
+  time_t secs = c_num(time);
+  const wchar_t *wcfmt = c_str(format);
+  char *u8fmt = utf8_dup_to(wcfmt);
+  val timestr = string_time(gmtime_r, u8fmt, secs);
+  free(u8fmt);
+  return timestr;
 }
 
 void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),

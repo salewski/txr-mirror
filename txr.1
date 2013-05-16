@@ -10266,12 +10266,36 @@ Syntax:
 .TP
 Description:
 
-The time functions return the local time in the system's timezone.
 The time function returns the number of seconds that have elapsed since
-midnight, January 1, 1970.  The time-usec function returns a cons cell whose
-car field holds the seconds measured in the same way, and whose cdr field
-extends the precision by giving number of microseconds as an integer value
-between 0 and 999999.
+midnight, January 1, 1970, in the UTC timezone.
+
+The time-usec function returns a cons cell whose car field holds the seconds
+measured in the same way, and whose cdr field extends the precision by giving
+number of microseconds as an integer value between 0 and 999999.
+
+.SS Functions time-string-local and time-string-utc
+
+.TP
+Syntax:
+
+  (time-string-local <format> <time>)
+  (time-string-utc <format> <time>)
+
+.TP
+Description:
+
+These functions take the numeric time returned by the time function,
+and convert it to a textual representation in a very flexible way, according to
+a detailed format string.
+
+The time-string-local function converts the time to the local timezone of
+the host system. The time-string-utc function produces time in UTC.
+
+The <format> argument is a string, and follows exactly the same conventions as
+the format string of the C library function strftime.
+
+The <time> argument is an integer representing seconds obtained from the
+time function or from the time-usec function.
 
 .SH WEB PROGRAMMING SUPPORT
 

@@ -663,6 +663,8 @@ val tostring(val obj);
 val tostringp(val obj);
 val time_sec(void);
 val time_sec_usec(void);
+val time_string_local(val time, val format);
+val time_string_utc(val time, val format);
 
 void init(const wchar_t *progname, mem_t *(*oom_realloc)(mem_t *, size_t),
           val *stack_bottom);
