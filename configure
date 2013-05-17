@@ -380,7 +380,7 @@ fi
 #
 
 
-txr_ver=65
+txr_ver=66
 
 #
 # The all important banner.

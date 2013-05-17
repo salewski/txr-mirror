@@ -1,3 +1,15 @@
+2013-05-16  Kaz Kylheku  <kaz@kylheku.com>
+
+	Version 66
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES: Updated.
+
 2013-05-15  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): New intrinsics, time-string-local and
