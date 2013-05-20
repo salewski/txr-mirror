@@ -7556,6 +7556,28 @@ be separate gaps which come between empty strings.
 
 This operation is nondestructive: <string> is not modified in any way.
 
+.SS Function tok-str
+
+.TP
+Syntax:
+
+  (tok-str <string> <regex>)
+
+.TP
+Description:
+
+The tok-str function searches <string> for tokens, which are defined as
+substrings of <string> which match the regular expression <regex> in the
+longest possible way, and do not overlap. These tokens are extracted from the 
+string and returned as a list.
+
+Whenever <regex> matches an empty string, then an empty token is returned, and
+the search for another token within <string> resumes after advancing by one
+character position. So for instance, (tok-str "abc" #/a?/) returns the
+list ("a" "" "" ""). After the token "a" is extracted from a non-empty match
+for the regex, the regex is considered to matches three more times: before the
+"b", between "b" and "c", and after the "c".
+
 .SS Function list-str
 
 .TP

@@ -1,5 +1,15 @@
 2013-05-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Register tok_str as intrinsic.
+
+	* lib.c (tok_str): New function.
+
+	* lib.h (tok_str): Declared.
+
+	* txr.1: Documented.
+
+2013-05-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: Corrected wrong function name in documentation
 	for split-str-set.
 

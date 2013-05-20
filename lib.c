@@ -2060,6 +2060,31 @@ val split_str_set(val str, val set)
   return out;
 }
 
+val tok_str(val str, val tok_regex)
+{
+  list_collect_decl (out, iter);
+  val pos = zero;
+
+  for (;;) {
+    cons_bind (new_pos, len, search_regex(str, tok_regex, pos, nil));
+    val end;
+
+    if (!len)
+      break;
+
+    end = plus(new_pos, len);
+
+    list_collect(iter, sub_str(str, new_pos, end));
+
+    pos = end;
+
+    if (len == zero)
+      pos = plus(pos, one);
+  }
+
+  return out;
+}
+
 val list_str(val str)
 {
   const wchar_t *cstr = c_str(str);
