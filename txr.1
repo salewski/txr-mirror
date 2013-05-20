@@ -7514,14 +7514,24 @@ Syntax:
 Description:
 
 The split-str function breaks the <string> into pieces, returing a list
-thereof. The <sep> argument must be a string. It specifies the separator
-character sequence within <string>. All non-overlapping occurences of
-<sep> within <string> are identified in left to right order, and are removed
-from <string>. The string is broken into pieces according to the gaps left
-behind by the removed separators.
+thereof. The <sep> argument must be either a string or a regular expression.
+It specifies the separator character sequence within <string>. 
 
-Adjacent occurrences of <sep> within <string> are considered to be separate
-gaps which come between empty strings.
+All non-overlapping matches for <sep> within <string> are identified in left
+to right order, and are removed from <string>. The string is broken into pieces
+according to the gaps left behind by the removed separators, and a list
+of the remaining pieces is returned.
+
+If a match for <sep> is not found in the string at all, then the string is not
+split at all: a list of one element is returned containing the original
+string.
+
+If <sep> matches the entire string, then a list of two empty strings is
+returned, except in the case that the original string is empty, in which case a
+list of one element is returned, containing the empty string.
+
+Whenever two adjacent matches for <sep> occur, they are considered separate
+cuts with an empty piece between them.
 
 This operation is nondestructive: <string> is not modified in any way.
 
