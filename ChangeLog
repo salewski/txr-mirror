@@ -1,5 +1,10 @@
 2013-05-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Corrected wrong function name in documentation
+	for split-str-set.
+
+2013-05-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: Misleading documentation updated for split-str, which
 	takes a regex, not just a fixed string separator. Clarified
 	the corner case behaviors too.
