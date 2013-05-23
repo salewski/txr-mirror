@@ -1,3 +1,11 @@
+2012-03-18  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): lazy string related functions become intrinsics.
+
+	* lib.c (string_cmp): New function.
+
+	* (string_cmp): Declared.
+ 
 2013-05-20  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): Register tok_str as intrinsic.
@@ -1832,15 +1840,6 @@
 	Keep the breakpoint list free of duplicates. Issue a message
 	if a nonexistent breakpoint is asked to be deleted.
 
-2012-03-18  Kaz Kylheku  <kaz@kylheku.com>
-
-	* eval.c (eval_init): lazy string related functions become intrinsics.
-
-	* lib.c (string_cmp): New function.
-
-	* lib.h (TYPE_SHIFT, TYPE_PAIR): New macros.
-	(string_cmp): Declared.
- 
 2012-03-18  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): url_decode has two parameters now,
