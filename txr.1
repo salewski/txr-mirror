@@ -7572,7 +7572,7 @@ This operation is nondestructive: <string> is not modified in any way.
 .TP
 Syntax:
 
-  (tok-str <string> <regex>)
+  (tok-str <string> <regex> [<keep-between>])
 
 .TP
 Description:
@@ -7588,6 +7588,13 @@ character position. So for instance, (tok-str "abc" #/a?/) returns the
 list ("a" "" "" ""). After the token "a" is extracted from a non-empty match
 for the regex, the regex is considered to matches three more times: before the
 "b", between "b" and "c", and after the "c".
+
+If the <keep-between> argument is specified, and is not nil, then the behavior
+of tok-str changes in the following way. The pieces of <string> which are
+skipped by the search for tokens are included in the output. If no token is
+found in <string>, then a list of one element is returned, containing <string>.
+Generally, if N tokens are found, then the returned list consists of 2N + 1
+elements. The first element of the list is the (possibly empty) substring which had to be skipped to find the first token. Then the token follows. The next element is the next skipped substring and so on. The last element is the substring of <string> between the last token and the end.
 
 .SS Function list-str
 

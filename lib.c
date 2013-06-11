@@ -2060,7 +2060,7 @@ val split_str_set(val str, val set)
   return out;
 }
 
-val tok_str(val str, val tok_regex)
+val tok_str(val str, val tok_regex, val keep_sep)
 {
   list_collect_decl (out, iter);
   val pos = zero;
@@ -2069,10 +2069,16 @@ val tok_str(val str, val tok_regex)
     cons_bind (new_pos, len, search_regex(str, tok_regex, pos, nil));
     val end;
 
-    if (!len)
+    if (!len) {
+      if (keep_sep)
+        list_collect(iter, sub_str(str, pos, t));
       break;
+    }
 
     end = plus(new_pos, len);
+
+    if (keep_sep)
+      list_collect(iter, sub_str(str, pos, new_pos));
 
     list_collect(iter, sub_str(str, new_pos, end));
 
