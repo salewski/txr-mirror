@@ -3674,23 +3674,28 @@ val cat_vec(val list)
   return vec;
 }
 
+static val lazy_stream_cont(val stream, val func, val env)
+{
+  val next = get_line(stream);
+
+  if (!next) {
+    close_stream(stream, t);
+    return nil;
+  }
+
+  rplacd(env, next);
+  return make_lazy_cons(func);
+}
+
 static val lazy_stream_func(val env, val lcons)
 {
   val stream = car(env);
-  val next = cdr(env) ? pop(cdr_l(env)) : get_line(stream);
-  val ahead = get_line(stream);
+  val prefetched_line = cdr(env);
 
-  set(lcons->lc.car, next);
-  set(lcons->lc.cdr, if2(ahead, make_lazy_cons(lcons->lc.func)));
-  lcons->lc.func = nil;
+  set(lcons->lc.car, prefetched_line);
+  set(lcons->lc.cdr, lazy_stream_cont(stream, lcons->lc.func, env));
 
-  if (!next || !ahead)
-    close_stream(stream, t);
-
-  if (ahead)
-    mpush(ahead, *cdr_l(env));
-
-  return next;
+  return prefetched_line;
 }
 
 val lazy_stream_cons(val stream)
@@ -3702,7 +3707,7 @@ val lazy_stream_cons(val stream)
     return nil;
   }
 
-  return make_lazy_cons(func_f1(cons(stream, cons(first, nil)),
+  return make_lazy_cons(func_f1(cons(stream, first),
                                 lazy_stream_func));
 }
 
@@ -3872,7 +3877,7 @@ val lazy_str_get_trailing_list(val lstr, val index)
   {
     uses_or2;
     val split_suffix = split_str(sub_str(lstr->ls.prefix, index, nil),
-                                    or2(car(lstr->ls.opts), string(L"\n")));
+                                 or2(car(lstr->ls.opts), string(L"\n")));
 
     return nappend2(split_suffix, lstr->ls.list);
   }

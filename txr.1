@@ -7112,6 +7112,30 @@ executing, it is still accessible. This allows the update function
 to retrieve a reference to itself and propagate itself into
 another lazy cons (as in the example under make-lazy-cons).
 
+.SS Function lazy-stream-cons
+
+.TP
+Syntax:
+
+  (lazy-stream-cons <stream>)
+
+.TP
+Description:
+
+The lazy-stream-cons returns a lazy cons which generates a lazy list based on
+reading lines of text from input stream <stream>, which form the elements of
+the list. The get-line function is called on demand to add elements to the
+list.
+
+The lazy-stream-cons function itself makes the first call to get-line
+on the stream. If this returns nil, then the stream is closed and nil is
+returned. Otherwise, a lazy cons is returned whose update function will install
+that line into the car field of the lazy cons, and continue the lazy list
+by making another call to lazy-stream-cons, installing the result into the
+cdr field.
+
+the string returned by get-line, and whose cdr contains the lazy function.
+
 .SS Function generate
 
 .TP Syntax:
@@ -7351,19 +7375,6 @@ Description:
 
 The stringp function returns t if <obj> is one of the several
 kinds of strings. Otherwise it returns nil.
-
-.SS Function lazy-stringp
-
-.TP
-Syntax:
-
-  (lazy-stringp <obj>)
-
-.TP
-Description:
-
-The lazy-stringp function returns t if <obj> is a lazy
-string. Otherwise it returns nil.
 
 .SS Function length-str
 
@@ -7951,6 +7962,195 @@ The break-str function returns an integer which represents the position of the
 first character in string <str> which appears in string <set>.
 
 If there is no such character, then nil is returned.
+
+.SH LAZY STRINGS
+
+Lazy strings are objects that were developed for the TXR pattern matching
+language, and are exposed via TXR Lisp. Lazy strings behave much like strings,
+and can be substituted for strings. However, unlike regular strings, which
+exist in their entirety, first to last character, from the moment they are
+created, lazy strings do not exist all at once, but are created on demand.  If
+character at index N of a lazy string is accessed, then characters 0 through N
+of that string are forced into existence. However, characters at indices
+beyond N need not necessarily exist.
+
+A lazy string dynamically grows by acquiring new text from a list of strings
+which is attached to that lazy string object.  When the lazy string is accessed
+beyond the end of its hitherto materialized prefix, it takes enough strings
+from the list in order to materialize the index. If the list doesn't have
+enough material, then the access fails, just like an access beyond the end of a
+regular string.  A lazy string always takes whole strings from the attached
+list.
+
+Lazy string growth is achieved via the lazy-str-force_upto function which
+forces a string to exist up to a given character position. This function is
+used internally to handle various situations.
+
+The lazy-str-force function forces the entire string to materialize.  If the
+string is connected to an infinite lazy list, this will exhaust all memory.
+
+Lazy strings are specially recognized in many of the regular string functions,
+which do the right thing with lazy strings. For instance when sub-str
+is invoked on a lazy string, a special version of the sub-str logic is
+used which handles various lazy string cases, and can potentially return
+another lazy string. Taking a sub-str of a lazy string from character position
+7 to all the way to the end does not force the entire lazy string to exist,
+and in fact the operation will work on a lazy string that is infinite.
+
+Furthermore, special lazy string functions are provided which allow programs to
+be written carefully to take better advantage of lazy strings. What carefully
+means is code that avoids unnecessarily forcing the lazy string.  For instance,
+in many situations it is necessary to obtain the length of a string, only to
+test it for equality or inequality with some number. But it is not necessary to
+compute the length of a string in order to know that it is greater than some
+value. Computing the length of a lazy string is bad, because it forces the
+string to exist, which may not even be possible.
+
+.SS Function lazy-str
+
+.TP
+Syntax:
+
+  (lazy-str <string-list> [<terminator> [<limit-count>]])
+
+.TP
+Description:
+
+The lazy-str function constructs a lazy string which draws material from
+<string-list> which is a list of strings.
+
+If the optional <terminator> argument is given, then it specifies a string
+which is appended to every string from <string-list>, before that string is
+incorporated into the lazy string. If <terminator> is not given, or specified
+as nil, then it defaults to the string "\en", and so the strings from
+<string-list> are effectively treated as lines which get terminated by newlines
+as they accumulate into the growing prefix of the lazy string.
+To avoid the use of a terminator string, a null string <terminator> argument
+must be explicitly passed. In that case, the lazy string grows simply
+by catenating elements from <string-list>.
+
+If the <limit-count> argument is specified, it must be a positive integer.  It
+expresses a maximum limit on how many elements will be consumed from
+<string-list> in order to feed the lazy string. Once that many elements are
+drawn, the string ends, even if the list has not been exhausted.
+
+.SS Function lazy-stringp
+
+.TP
+Syntax:
+
+  (lazy-stringp <obj>)
+
+.TP
+Description:
+
+The lazy-stringp function returns t if <obj> is a lazy
+string. Otherwise it returns nil.
+
+.SS Function lazy-str-force-upto
+
+.TP
+Syntax:
+
+  (lazy-str-force-upto <lazy-str> <index>)
+
+.TP
+Description:
+
+The lazy-str-force-upto function tries to instantiate the lazy string such that
+the position given by <index> materializes. The <index> is a character
+position, exactly as used in the chr-str function.
+
+Some positions beyond <index> may also materialize, as a side effect.
+
+If the string is already materialized through to at least <index>, or if it is
+possible to materialize the string that far, then the value t is returned to
+indicate success.
+
+If there is insufficient material to force the lazy string through to the
+<index> position, then nil is returned.
+
+It is an error if the <lazy-str> argument isn't a lazy string.
+
+.SS Function lazy-str-force
+
+.TP
+Syntax:
+
+  (lazy-str-force <lazy-str>)
+
+.TP
+Description:
+
+The <lazy-str> argument must be a lazy string. The lazy string is forced
+to fully materialize.
+
+The return value is an ordinary, non-lazy string equivalent to the fully
+materialized lazy string.
+
+.SS Function lazy-str-get-trailing-list
+
+.TP
+Syntax:
+
+  (lazy-str-get-trailing-list <string> <index>)
+
+.TP
+Description:
+
+The lazy-str-get-trailing-list function is a sort of inverse operation to the
+the lazy string from its associated list.
+
+Firstly, the string is forced up through the position <index>.
+
+Next, the materialized part of the string starting at position <index>,
+through to the end, is split into pieces on occurrences of the terminator
+character, which had been given as the <terminator> argument in the lazy-str
+constructor, and defaults to the newline character.
+
+Finally, a list is returned consisting of the the pieces produced by the split,
+to which is appended the remaining list of the string which has not yet been
+forced to materialize.
+
+If <index> is a position which cannot be forced, then the lazy string's
+remaining list is returned, with single null string prepended to it.
+
+
+.SS Functions length-str->, length-str->=, length-str-< and length-str-<=
+
+.TP
+Syntax:
+
+  (length-str-> <string> <len>)
+  (length-str->= <string> <len>)
+  (length-str-< <string> <len>)
+  (length-str-<= <string> <len>)
+
+.TP
+Description:
+
+These functions compare the lengths of two strings. The following
+equivalences hold, as far as the resulting value is concerned:
+
+  (length-str-> s l) <--> (> (length-str s) l)
+  (length-str->= s l) <--> (>= (length-str s) l)
+  (length-str-< s l) <--> (< (length-str s) l)
+  (length-str-<= s l) <--> (<= (length-str s) l)
+
+The difference between the length-str-* functions and the equivalent forms is
+that if the string is lazy, the length-str function will fully force it in
+order to calculate and return its length.
+
+These functions only force a string up to position <len>, so they are not
+only more efficient, but usable on infinitely long lazy strings.
+
+length-str cannot compute the length of a lazy string with an unbounded
+length; it will exhaust all memory trying to force the string.
+
+These functions can be used to test such as string whether it is longer
+or shorter than a given length, without forcing the string beyond
+that length.
+
 
 .SH VECTORS
 

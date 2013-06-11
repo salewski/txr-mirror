@@ -1,3 +1,23 @@
+2013-06-11  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): lazy-str's third argument is optional.
+	Added lazy-stringp. Changing names of length-str-{gt,ge,lt,le}
+	to be consistent with the >, >=, < and <= functions.
+
+	* lib.c (lazy_stream_func): Greatly simplified implementation.
+	The lazy list now continues by means of recursing via 
+	an optimized version of lazy_stream_cons called lazy_stream_cont.
+	The environment structure is simplified to just hold the next item,
+	rather than a pointless list. The pointless setting of lcons->lc.func
+	to nil is also removed; this is always done by the caller.
+	(lazy_stream_cont): New static function, similar to lazy_stream_cons,
+	but optimized by not consing up a new function and new environment
+	cell.
+	(lazy_stream_cons): The environment for the update function
+	is simplified to just a single cons.
+
+	* txr.1: Documented lazy string functions and lazy-stream-cons.
+
 2012-03-18  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): lazy string related functions become intrinsics.
