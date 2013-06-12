@@ -1374,6 +1374,16 @@ filter or chain or filters, updating them with the filtered values.
 .IP @(load)
 The load directive loads another TXR file and interprets its contents.
 
+.IP @(do)
+The do directive is used to evaluate TXR Lisp expressions, discarding their
+result values. See the TXR LISP section far below.
+
+.IP @(require)
+The require directive is similar to the do directive: it evaluates one or more
+TXR Lisp expressions.  If the result of the rightmost expression is nil,
+then require triggers a match failure.  See the TXR LISP section far below.
+
+
 .PP
 
 .SH INPUT SCANNING AND DATA MANIPULATION
@@ -4643,7 +4653,7 @@ definitions are in error:
 
 The TXR language contains an embedded Lisp dialect called TXR Lisp.
 
-This language is exposed in TXR in two ways.
+This language is exposed in TXR in three ways.
 
 Firstly, in any situation that calls for an expression, a Lisp compound
 expression can be used, if it is preceded by the @ symbol. The Lisp expression
@@ -4655,6 +4665,11 @@ Secondly, the @(do) directive can be used for evaluating one or more Lisp
 forms, such that their value is thrown away. This is useful for evaluating some
 Lisp code for the sake of its side effect, such as defining a variable,
 updating a hash table, et cetera.
+
+Thirdly, the @(require) directive can be used to evaluate Lisp expressions
+as part of the matching logic of the TXR pattern language. The return value
+of the rightmost expression is examined. If it is nil, then the @(require)
+directive triggers a match failure. Otherwise, matching proceeds.
 
 Examples:
 
@@ -4672,6 +4687,11 @@ Define several Lisp functions using @(do):
           ((atom list) (eql item list))
           (t (or (eq (first list) item)
                  (occurs item (rest list)))))))
+
+Trigger a failure unless previously bound variable "answer" is greater
+than 42:
+
+@(require (> (str-int answer) 42)
 
 .SS Overview
 
@@ -8866,7 +8886,7 @@ Thus (max a b c) is (max (max a b) c).
 .TP
 Syntax:
 
-  (int-str <string> <radix>)
+  (int-str <string> [<radix>])
   (flo-str <string>)
   (num-str <string>)
 
@@ -8879,7 +8899,8 @@ returned.  Trailing material which does not contribute to the number
 is ignored.
 
 The int-str function converts a string of digits in the specified
-radix to an integer value. For radices above 10, letters of the alphabet
+radix to an integer value. If the radix isn't specified, it defaults to 10.
+For radices above 10, letters of the alphabet
 are used for digits: A represent a digit whose value is 10, B represents 11 and
 so forth until Z.  For values of radix above 36, the returned value is
 unspecified. Upper and lower case letters are recognized.

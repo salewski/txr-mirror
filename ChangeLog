@@ -1,5 +1,20 @@
 2013-06-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (require_s): New variable.
+	(v_require): New static function.
+	(syms_init): Initialize require_s.
+	(dir_tables_init): Add new entries into v_directive_table
+	and h_directive_table for new require directive.
+
+	* match.h (require_s): Declared.
+
+	* txr.1: Added do and require directives to the directive summary
+	section. Documented new require directive.
+	Fixed int-str documentation to clarify that the radix is
+	optional.
+
+2013-06-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): tok-str acquires new parameter
 
 	* lib.c (tok_str): New parameter, keep_sep.
