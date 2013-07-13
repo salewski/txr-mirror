@@ -1,4 +1,4 @@
-                                     TXR 66
+                                     TXR 67
                                    2013-07-12
 
 
@@ -10,6 +10,13 @@
 
   - New pattern language directive: @(require ...).
 
+  Bugs
+
+  - Unrecognized backslash escapes in string literals
+    and string quasiliterals are diagnosed.
+
+  - Backslash-space escape recognized in string literals
+    and string quasiliterals.
 
 
 

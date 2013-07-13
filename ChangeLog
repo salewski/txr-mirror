@@ -1,5 +1,14 @@
 2013-07-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 67
+
+	txr.1: Documented line continuation for string literals,
+	supported since Version 38 but not clarified properly.
+
+	RELNOTES: Updated.
+
+2013-07-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.l: Diagnose unrecognized escape sequences in string
 	literals and quasiliterals and after @\. 
 	Support "\ " (backslash space) escape in string literals
@@ -10,8 +19,6 @@
 	* txr.1: Fix slipup, where call is referred to as funcall.
 
 2013-07-12  Kaz Kylheku  <kaz@kylheku.com>
-
-	Version 67
 
 	* txr.c (version): Bumped.
 

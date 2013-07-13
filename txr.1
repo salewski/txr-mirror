@@ -1089,6 +1089,14 @@ delimiter disappears. To write a literal semicolon immediately after a hex
 or octal escape, write two semicolons, the first of which will be interpreted
 as a delimiter. Thus, "\ex21;;" represents "!;".
 
+If the line ends in the middle of a literal, it is an error, unless the
+last character is a backslash. This backslash is a special escape which does
+not denote a character; rather, it indicates that the string literal continues
+on the next line. Leading whitespace in the following line is deleted, and
+does not constitute part of the string literal, which allows for indentation.
+The escape sequence "\e " (backslash space) can be used to encode a
+significant space.
+
 .SS String Quasiliterals
 
 Quasiliterals are similar to string literals, except that they may
