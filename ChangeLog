@@ -1,5 +1,9 @@
 2013-07-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Fix slipup, where call is referred to as funcall.
+
+2013-07-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	Version 67
 
 	* txr.c (version): Bumped.
