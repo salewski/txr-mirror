@@ -1,3 +1,7 @@
+2013-07-12  Kaz Kylheku  <kaz@kylheku.com>
+
+	* txr.vim: Bringing up to date.
+
 2013-06-11  Kaz Kylheku  <kaz@kylheku.com>
 
 	* match.c (require_s): New variable.

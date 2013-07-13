@@ -24,6 +24,7 @@ syn keyword txr_keyword contained flatten lazy-flatten forget local merge bind s
 syn keyword txr_keyword contained repeat rep first last single empty mod modlast
 syn keyword txr_keyword contained define try catch finally throw
 syn keyword txr_keyword contained defex throw deffilter filter eof eol do
+syn keyword txr_keyword contained load require
 
 syn keyword txl_keyword contained progn prog1 let syn let* lambda call fun 
 syn keyword txl_keyword contained cond if and or dwim op catch
@@ -48,7 +49,7 @@ syn keyword txl_keyword contained floor ceil sin cos tan asin acos atan log exp
 syn keyword txl_keyword contained fixnump bignump integerp floatp
 syn keyword txl_keyword contained numberp zerop evenp oddp >
 syn keyword txl_keyword contained zerop evenp oddp > < >= <= = /= max min
-syn keyword txl_keyword contained logand logior logxor lognot logtrunc ash
+syn keyword txl_keyword contained logand logior logxor lognot logtrunc logtest ash
 syn keyword txl_keyword contained search-regex match-regex regsub regexp regex-compile
 syn keyword txl_keyword contained make-hash make-similar-hash copy-hash hash hash-construct
 syn keyword txl_keyword contained gethash sethash pushhash remhash
@@ -56,7 +57,7 @@ syn keyword txl_keyword contained hash-count get-hash-userdata set-hash-userdata
 syn keyword txl_keyword contained hash-eql hash-equal 
 syn keyword txl_keyword contained hash-keys hash-values hash-pairs hash-alist
 syn keyword txl_keyword contained hash-uni hash-diff hash-isec
-syn keyword txl_keyword contained eval chain andf orf iff
+syn keyword txl_keyword contained eval chain andf orf iff iffi
 syn keyword txl_keyword contained *stdout* *stdin* *stddebug*
 syn keyword txl_keyword contained *stderr* format print pprint tostring tostringp
 syn keyword txl_keyword contained make-string-input-stream
@@ -67,13 +68,13 @@ syn keyword txl_keyword contained get-line get-char get-byte put-string put-line
 syn keyword txl_keyword contained put-char flush-stream open-directory open-file
 syn keyword txl_keyword contained *user-package* *keyword-package* *system-package*
 syn keyword txl_keyword contained open-pipe open-command open-process
-syn keyword txl_keyword contained make-sym gensym *gensym-counter* make-package find-package
-syn keyword txl_keyword contained intern symbolp symbol-name symbol-package keywordp
+syn keyword txl_keyword contained make-sym gensym *gensym-counter* make-package find-package delete-package
+syn keyword txl_keyword contained intern symbolp symbol-name symbol-package keywordp rehome-sym packagep
 syn keyword txl_keyword contained mkstring copy-str upcase-str downcase-str string-extend
 syn keyword txl_keyword contained stringp lazy-stringp length-str search-str search-str-tree
 syn keyword txl_keyword contained match-str match-str-tree
 syn keyword txl_keyword contained sub-str cat-str split-str replace-str
-syn keyword txl_keyword contained split-str-set list-str trim-str
+syn keyword txl_keyword contained split-str-set list-str trim-str tok-str
 syn keyword txl_keyword contained string-lt int-str flo-str num-str int-flo flo-int
 syn keyword txl_keyword contained chrp chr-isalnum chr-isalpha
 syn keyword txl_keyword contained chr-isascii chr-iscntrl chr-isdigit chr-isgraph
@@ -81,6 +82,10 @@ syn keyword txl_keyword contained chr-islower chr-isprint chr-ispunct chr-isspac
 syn keyword txl_keyword contained chr-isxdigit chr-toupper chr-tolower chr-str
 syn keyword txl_keyword contained num-chr chr-num
 syn keyword txl_keyword contained chr-str-set span-str compl-span-str break-str
+
+syn keyword txl_keyword contained lazy-stream-cons lazy-str lazy-stringp lazy-str-force-upto lazy-str-force lazy-str-get-trailing-list
+syn keyword txl_keyword contained length-str-> length-str->= length-str-< length-str-<=
+
 syn keyword txl_keyword contained vector vec-set-length vecref
 syn keyword txl_keyword contained vec-push length-vec size-vec vector-list
 syn keyword txl_keyword contained list-vector copy-vec sub-vec cat-vec
@@ -96,8 +101,13 @@ syn keyword txl_keyword contained random-fixnum random rand
 
 syn keyword txl_keyword contained range range* generate repeat force
 syn keyword txl_keyword contained throw throwf error match-fun url-encode url-decode
-syn keyword txl_keyword contained time time-usec
+syn keyword txl_keyword contained time time-usec time-string-local time-string-utc
 syn keyword txl_keyword contained source-loc source-loc-str
+
+syn keyword txl_keyword contained s-ifmt s-iflnk s-ifreg s-ifblk s-ifdir s-ifchr
+syn keyword txl_keyword contained s-ififo s-isuid s-isgid s-isvtx s-irwxu
+syn keyword txl_keyword contained s-irusr s-iwusr s-ixusr s-irwxg s-irgrp
+syn keyword txl_keyword contained s-iwgrp s-ixgrp s-irwxo s-iroth s-iwoth s-ixoth
 
 syn match txr_error "@[\t ]*[*]\?[\t ]*."
 syn match txr_nested_error "[^\t `]\+" contained
