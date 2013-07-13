@@ -1,4 +1,19 @@
                                      TXR 66
+                                   2013-07-12
+
+
+  Features
+
+  - New functions tok-str and string-cmp.
+  
+  - Internal lazy string functions exposed as intrinsics.
+
+  - New pattern language directive: @(require ...).
+
+
+
+
+                                     TXR 66
                                    2013-05-16
 
 

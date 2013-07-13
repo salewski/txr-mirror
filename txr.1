@@ -21,9 +21,9 @@
 .\"IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
 .\"WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
-.TH "TXR" 1 2013-05-16 "Utility Commands" "Txr Text Processing Language" "Kaz Kylheku"
+.TH "TXR" 1 2013-07-12 "Utility Commands" "Txr Text Processing Language" "Kaz Kylheku"
 .SH NAME
-txr \- text processing language (version 66)
+txr \- text processing language (version 67)
 .SH SYNOPSIS
 .B txr [ options ] query-file { data-file }*
 .sp
@@ -8178,6 +8178,29 @@ These functions can be used to test such as string whether it is longer
 or shorter than a given length, without forcing the string beyond
 that length.
 
+.SS Function string-cmp
+
+.TP
+Syntax:
+
+  (string-cmp <left-string> <right-string>)
+
+.TP
+Semantics:
+
+The string-cmp function returns a negative integer if <left-string>
+is lexicographically prior to <right-string>, and a positive integer
+if the reverse situation is the case. Otherwise the strings are equal
+and zero is returned.
+
+If either or both of the strings are lazy, then they are only forced to the
+minimum extent necessary for the function to reach a conclusion and return the
+appropriate value, since there is no need to look beyond the first character
+position in which they differ.
+
+The lexicographic ordering is naive, based on the character code point
+values in Unicode taken as integers, without regard for locale-specific
+collation orders.
 
 .SH VECTORS
 

@@ -1,5 +1,21 @@
 2013-07-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 67
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version, set date and documented string-cmp.
+
+	* configure (txr_ver): Bumped.
+
+	* eval.c (eval_init): Forgotten string-cmp registered as intrinsic.
+
+	* txr.vim: Highlighting for string-cmp.
+
+	* RELNOTES: Updated.
+
+2013-07-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.vim: Bringing up to date.
 
 2013-06-11  Kaz Kylheku  <kaz@kylheku.com>
@@ -53,7 +69,7 @@
 
 	* lib.c (string_cmp): New function.
 
-	* (string_cmp): Declared.
+	* lib.h (string_cmp): Declared.
  
 2013-05-20  Kaz Kylheku  <kaz@kylheku.com>
 
