@@ -564,6 +564,10 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return TEXT;
 }
 
+<SPECIAL>[\\]. {
+  yyerrorf(lit("unrecognized escape: \\~a"), chr(yytext[1]), nao);
+}
+
 <SPECIAL,NESTED,BRACED>[;].* {
   /* comment */
 }
@@ -688,7 +692,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return yytext[0];
 }
 
-<STRLIT,QSILIT>[\\][abtnvfre"`'\\] {
+<STRLIT,QSILIT>[\\][abtnvfre "`'\\ ] {
   yylval.chr = char_esc(yytext[1]);
   return LITCHAR;
 }
@@ -700,6 +704,10 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 <STRLIT,QSILIT>[\\](x{HEX}+|{OCT}+);?  {
   yylval.chr = num_esc(yytext+1);
   return LITCHAR;
+}
+
+<STRLIT,QSILIT>[\\]. {
+  yyerrorf(lit("unrecognized escape: \\~a"), chr(yytext[1]), nao);
 }
 
 <CHRLIT>(x{HEX}+|o{OCT}+) {
