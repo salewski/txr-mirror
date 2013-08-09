@@ -1,3 +1,8 @@
+2013-08-09  Kaz Kylheku  <kaz@kylheku.com>
+
+	* filter.c, utf8.c: Tabs changed to spaces. For some reason, filter.c
+	used 4 space tabs and utf8.c used 8 space tabs, inconsistently.
+
 2013-07-13  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 67

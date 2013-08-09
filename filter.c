@@ -153,7 +153,7 @@ val get_filter(val spec)
       val filter_list = mapcar(func_n1(get_filter), spec);
 
       if (memqual(nil, filter_list))
-	return nil;
+    return nil;
 
       return curry_12_2(func_n2(compound_filter), filter_list);
     }
@@ -237,29 +237,29 @@ val filter_string_tree(val filter, val obj)
 {
   switch (type(obj)) {
   case NIL: 
-	return nil;
+    return nil;
   case CONS:
-	return mapcar(curry_12_2(func_n2(filter_string_tree), filter), obj);
+    return mapcar(curry_12_2(func_n2(filter_string_tree), filter), obj);
   default:
-	{
-	  val type = typeof(filter);
+    {
+      val type = typeof(filter);
 
-	  if (eq(type, null))
-		return obj;
-	  if (eq(type, hash_s) || eq(type, cons_s))
-		return trie_filter_string(filter, obj);
-	  else if (type == fun_s)
-		return funcall1(filter, obj);
-	  return obj;
-	  uw_throwf(error_s, lit("filter_string: invalid filter ~a"), filter, nao);
-	}
+      if (eq(type, null))
+        return obj;
+      if (eq(type, hash_s) || eq(type, cons_s))
+        return trie_filter_string(filter, obj);
+      else if (type == fun_s)
+        return funcall1(filter, obj);
+      return obj;
+      uw_throwf(error_s, lit("filter_string: invalid filter ~a"), filter, nao);
+    }
   }
 }
 
 val filter_equal(val lfilt, val rfilt, val left, val right)
 {
   return equal(filter_string_tree(lfilt, left),
-			   filter_string_tree(rfilt, right));
+               filter_string_tree(rfilt, right));
 }
 
 val register_filter(val sym, val table)
@@ -276,7 +276,7 @@ static struct filter_pair to_html_table[] = {
 };
 
 static struct filter_pair from_html_table[] = {
-  { wli("&quot;"),     	wli("\"") },
+  { wli("&quot;"),      wli("\"") },
   { wli("&amp;"),       wli("&") },
   { wli("&apos;"),      wli("'") },
   { wli("&lt;"),        wli("<") },
@@ -535,11 +535,11 @@ static struct filter_pair from_html_table[] = {
 static int digit_value(int digit)
 {
   if (digit >= '0' && digit <= '9')
-	return digit - '0';
+    return digit - '0';
   if (digit >= 'A' && digit <= 'F')
-	return digit - 'A' + 10;
+    return digit - 'A' + 10;
   if (digit >= 'a' && digit <= 'f')
-	return digit - 'a' + 10;
+    return digit - 'a' + 10;
   internal_error("bad digit");
 }
 
@@ -611,9 +611,9 @@ val url_encode(val str, val space_plus)
   while ((ch = get_byte(in_byte)) != nil) {
     int c = c_num(ch);
 
-	if (space_plus && c == ' ')
-	  put_char(chr('+'), out);
-	else if (is_url_reserved(c))
+    if (space_plus && c == ' ')
+      put_char(chr('+'), out);
+    else if (is_url_reserved(c))
       format(out, lit("%~1X~1X"), num_fast(c >> 4), num_fast(c & 0xf), nao);
     else
       put_char(chr_num(ch), out);
@@ -635,27 +635,27 @@ val url_decode(val str, val space_plus)
       val ch3 = get_char(in);
 
       if (ch2 && ch3 && chr_isxdigit(ch2) && chr_isxdigit(ch3)) {
-		int byte = digit_value(c_num(ch2)) << 4 | digit_value(c_num(ch3));
-		put_byte(num_fast(byte), out);
+        int byte = digit_value(c_num(ch2)) << 4 | digit_value(c_num(ch3));
+        put_byte(num_fast(byte), out);
       } else {
-		put_char(ch, out);
-		if (!ch2)
-		  break;
-		put_char(ch2, out);
-		if (!ch3)
-		  break;
-		put_char(ch3, out);
+        put_char(ch, out);
+        if (!ch2)
+          break;
+        put_char(ch2, out);
+        if (!ch3)
+          break;
+        put_char(ch3, out);
       }
-	  continue;
+      continue;
     }
-	if (space_plus && ch == chr('+')) {
-	  put_char(chr(' '), out);
-	  continue;
-	}
-	if (!ch)
-	  break;
+    if (space_plus && ch == chr('+')) {
+      put_char(chr(' '), out);
+      continue;
+    }
+    if (!ch)
+      break;
 
-	put_char(ch, out);
+    put_char(ch, out);
   }
 
   return get_string_from_stream(out);
