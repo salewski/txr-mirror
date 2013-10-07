@@ -1579,10 +1579,10 @@ static val extract_vars(val output_spec)
   return vars;
 }
 
-static val extract_bindings(val bindings, val output_spec)
+static val extract_bindings(val bindings, val output_spec, val vars)
 {
   list_collect_decl (bindings_out, ptail);
-  val var_list = extract_vars(output_spec);
+  val var_list = nappend2(vars, extract_vars(output_spec));
 
   for (; bindings; bindings = cdr(bindings)) {
     val binding = car(bindings);
@@ -1627,7 +1627,8 @@ static void do_output_line(val bindings, val specline, val filter, val out)
           val mod_clauses = pop(&clauses);
           val modlast_clauses = pop(&clauses);
           val counter = getplist(args, counter_k);
-          val bind_cp = extract_bindings(bindings, elem);
+          val vars = getplist(args, vars_k);
+          val bind_cp = extract_bindings(bindings, elem, vars);
           val max_depth = reduce_left(func_n2(max2),
                                       bind_cp, zero,
                                       chain(func_n1(cdr),
@@ -1752,7 +1753,8 @@ static void do_output(val bindings, val specs, val filter, val out)
         val mod_clauses = pop(&clauses);
         val modlast_clauses = pop(&clauses);
         val counter = getplist(args, counter_k);
-        val bind_cp = extract_bindings(bindings, first_elem);
+        val vars = getplist(args, vars_k);
+        val bind_cp = extract_bindings(bindings, first_elem, vars);
         val max_depth = reduce_left(func_n2(max2),
                                     bind_cp, zero,
                                     chain(func_n1(cdr),

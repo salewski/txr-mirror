@@ -3789,13 +3789,49 @@ are none, or none of them activate, then @(last) is considered. If none
 of those clauses are present or apply, then the repetition is processed
 using the main clause.
 
-Repeat supports an optional keyword argument:
+Repeat supports arguments.
 
-  @(repeat [:counter <symbol>])
+  @(repeat [:counter <symbol>] [:vars (<symbol>*)])
 
-This designates a symbol which will behave as an integer variable over the
-scope of the clauses inside the repeat. The variable provides access to the
-reptition count, starting at zero, incrementing with each repetition.
+The :counter argumnt designates a symbol which will behave as an integer
+variable over the scope of the clauses inside the repeat. The variable provides
+access to the reptition count, starting at zero, incrementing with each
+repetition.
+
+The :vars argument specifies a list of variables. The repeat directive
+will pick out from this list those variables which have bindings.
+It will assume that all these variables occur in the repeat block and
+are to be iterated. This syntax is needed for situations in which @(repeat)
+is not able to deduce the existence of a variable in the block. 
+It does not dig very deeply to discover variables, and does not "see"
+variables that are referenced via embedded TXR Lisp expressions.
+For instance, the following produces no output:
+
+  @(bind list ("a" "b" "c"))
+  @(output)
+  @(repeat)
+  @(format nil "<~a>" list)
+  @(end)
+  @(end)
+
+Although the list variable appears in the repeat block, it is embedded
+in a TXR Lisp construct. That construct will never be evaluated because
+no repetitions take place: the repeat construct doesn't find any variables
+and so doesn't iterate. The remedy is to provide a little help via
+the :vars parameter:
+
+  @(bind list ("a" "b" "c"))
+  @(output)
+  @(repeat :vars (list))
+  @(format nil "<~a>" list)
+  @(end)
+  @(end)
+
+Now the repeat block iterates over list and the output is:
+
+  <a>
+  <b>
+  <c>
 
 .SS Nested Repeats
 
@@ -3822,6 +3858,8 @@ but everything is specified within one line:
 
 More than one @(rep) can occur within a line, mixed with other material.
 A @(rep) can be nested within a @(repeat) or within another @(rep).
+
+Also, @(rep) accepts the same :counter and :vars arguments.
 
 .SS Repeat and Rep Examples
 

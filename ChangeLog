@@ -1,3 +1,16 @@
+2013-10-06  Kaz Kylheku  <kaz@kylheku.com>
+
+	New feature: :vars argument in repeat and rep directives in an output
+	block, for specifying variables to include in iteration whose
+	presence repeat is not able to deduce.
+
+	* match.c (extract_bindings): New argument, vars, specifies
+	additional variables to consider.
+	(do_output_line, do_output): Process :vars argument of repeat
+	and rep directive.
+
+	* txr.1: Updated.
+
 2013-08-09  Kaz Kylheku  <kaz@kylheku.com>
 
 	* filter.c, utf8.c: Tabs changed to spaces. For some reason, filter.c
