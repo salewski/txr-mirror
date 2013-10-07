@@ -9609,11 +9609,11 @@ construct is erroneous.
 .IP @rest
 
 The meta-symbol @rest indicates that any trailing arguments to the
-function are to be inserted. If the @<num> syntax is not used anywhere,
-it means that the function only has trailing arguments. If @1 is used,
-it means that the second and subsequent arguments are trailing arguments.
-If @rest is not used anywhere, then the rest arguments are automatically
-applied to the op form. If @rest appears, then this is suppressed.
+function are to be inserted there. If the form does not contain
+any @<num> syntax or @<rest> syntax, then @<rest> is implicitly
+inserted.  What this means is that, for example, since the form (op foo) does
+not contain any numeric positional arguments like @1, and does not contain
+@rest, it is actually a shorthand for (op foo . @rest).
 
 The actions of form may be understood by these examples, which show
 how op is rewritten to lambda.  However, note that the real translator
@@ -9624,12 +9624,26 @@ symbols in the program.
 
   (op +) -> (lambda rest [+ . rest])
 
-  (op @1 @2) -> (lambda (arg1 arg2 . rest) [arg1 arg2 . rest])
+  (op + foo) -> (lambda rest [+ foo . rest])
+
+  (op @1 @2) -> (lambda (arg1 arg2 . rest) [arg1 arg2])
+
+  (op @1 . @rest) -> (lambda (arg1 . rest) [arg1 . @rest])
+
+  (op @1 @rest) -> (lambda (arg1 . rest) [arg1 @rest])
+
+  (op @1 @2) -> (lambda (arg1 arg2 . rest) [arg1 arg2])
 
   (op foo @1 (@2) (bar @3)) -> (lambda (arg1 arg2 arg3 . rest) 
-                                  [foo arg1 (arg2) (bar arg3) . rest])
+                                  [foo arg1 (arg2) (bar arg3)])
 
   (op foo @rest @1) -> (lambda (arg1 . rest) [foo rest arg1])
+
+Note that if argument @<n> appears, it is not necessary
+for arguments @1 through @<n-1> to appear. The function
+will have n arguments:
+
+  (op @3) -> (lambda (arg1 arg2 arg3 . rest) [arg3])
 
 .PP
 
@@ -9738,22 +9752,26 @@ The iff function is the functional equivalent of the if operator. It accepts
 functional arguments and returns a function.
 
 The resulting function takes its arguments and applies them to <cond-func>.  If
-<cond-func> yields true, then the arguments are passed to <then-func,> and the
-resulting value is returned. Otherwise if <cond-func> yields a false result,
-and there is no <else-func>, then nil is returned. If <cond-func> yields false,
-and an <else-func> exists, then the original arguments are passed to
-<else-func> and the resulting value is returned.
+<cond-func> yields true, then the arguments are passed to <then-func> and the
+resulting value is returned. Otherwise the arguments are passed to <else-func> 
+and the resulting value is returned.
+
+If <then-func> needs to be called, but is nil, then nil is returned
+immediately.  Likewise, if <else-func> needs to be calld, but is nil, then nil
+is returned.
 
 The iffi function differs from iff only in the defaulting behavior with respect
-to the <else-func> argument. The following equivalence holds:
+to the <else-func> argument. The following equivalences hold:
 
-  (iffi a b c) <--> (iff a b c)
+  (iffi a b c)   <--> (iff a b c)
 
-  (iffi a b)   <--> (iff a b identity)
+  (iffi a b)     <--> (iff a b identity)
+
+  (iffi a b nil) <--> (iff a b identity)
 
 The iffi function defaults to the identity function when <else-func> is
-omitted, and therefore is useful in situations when one value is to be replaced
-with another one when the condition is true, otherwise left alone.
+omitted or nil, and therefore is useful in situations when one value is to be
+replaced with another one when the condition is true, otherwise left alone.
 
 .SH INPUT AND OUTPUT
 

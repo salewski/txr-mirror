@@ -1493,6 +1493,11 @@ static val expand_delay(val args)
               cons(lambda_s, cons(nil, args)), nao);
 }
 
+static val format_op_arg(val num)
+{
+  return format(nil, lit("arg-~,02s-"), num, nao);
+}
+
 static val transform_op(val forms, val syms, val rg)
 {
   if (atom(forms)) {
@@ -1501,15 +1506,19 @@ static val transform_op(val forms, val syms, val rg)
     val fi = first(forms);
     val re = rest(forms);
 
+    if (fi == var_s) {
+      cons_bind (outsyms, outforms, transform_op(cons(forms, nil), syms, rg)); 
+      return cons(outsyms, rlcp(car(outforms), outforms));
+    }
+
     if (consp(fi) && car(fi) == var_s && consp(cdr(fi))) {
       val vararg = car(cdr(fi));
 
       if (integerp(vararg)) {
-        val prefix = format(nil, lit("arg-~,02s-"), vararg, nao);
         val newsyms = syms;
         val new_p;
         val *place = acons_new_l(vararg, &new_p, &newsyms);
-        val sym = if3(new_p, set(*place, gensym(prefix)), *place);
+        val sym = if3(new_p, set(*place, gensym(format_op_arg(vararg))), *place);
         cons_bind (outsyms, outforms, transform_op(re, newsyms, rg)); 
         return cons(outsyms, rlcp(cons(sym, outforms), outforms));
       } else if (eq(vararg, rest_s)) {
@@ -1538,6 +1547,25 @@ static val cons_find(val obj, val structure, val test)
              cons_find(obj, cdr(structure), test));
 }
 
+static val supplement_op_syms(val ssyms, val max)
+{
+  list_collect_decl (outsyms, tl);
+  val si, ni;
+
+  for (si = ssyms, ni = one;
+       ssyms;
+       ni = plus(ni, one), ssyms = cdr(ssyms))
+  {
+    val entry = car(si);
+    val num = car(entry);
+
+    for (; lt(ni, num); ni = plus(ni, one))
+      list_collect(tl, cons(ni, gensym(format_op_arg(ni))));
+    list_collect(tl, entry);
+  }
+
+  return outsyms;
+}
 
 static val expand_op(val body)
 {
@@ -1551,14 +1579,18 @@ static val expand_op(val body)
   val has_rest = cons_find(rest_gensym, body_trans, eq_f);
 
   if (!eql(max, length(nums)) && !zerop(min))
-    eval_error(body, lit("op: missing numeric arguments"), nao);
+    ssyms = supplement_op_syms(ssyms, max);
 
   rlcp(body_trans, body);
 
   {
+    uses_or2;
     val dwim_body = rlcp(cons(dwim_s, 
-                              append2(body_trans, if3(has_rest, nil, 
-                                                                rest_gensym))),
+                              if3(or3(has_rest, 
+                                      ssyms, 
+                                      nullp(proper_listp(body_trans))),
+                                  body_trans,
+                                  append2(body_trans, rest_gensym))),
                          body_trans);
 
     return cons(lambda_s,

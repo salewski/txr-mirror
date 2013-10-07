@@ -1,5 +1,28 @@
 2013-10-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	Improving behavior of op and fixing a bug.
+
+	Explicitly specifying @rest using (op ... . @rest)
+	did not work at all.
+
+	The then-func agument of iff and iffi may now be nil.
+
+	* eval.c (format_op_arg): New static function.
+	(transform_op): Handle dotted lists ending in @rest
+	or @<num>.
+	(supplement_op_syms): New static function.
+	(expand_op): Add missing numeric arguments,
+	so that all 1 through n are in the list.
+	Trailing rest is now added under different
+	conditions.
+
+	* lib.c (do_iff): Give thenfun the same
+	behavior on nil that elsefun enjoys.
+
+	* txr.1: Updated.
+
+2013-10-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	New feature: :vars argument in repeat and rep directives in an output
 	block, for specifying variables to include in iteration whose
 	presence repeat is not able to deduce.

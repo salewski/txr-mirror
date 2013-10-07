@@ -3375,7 +3375,7 @@ static val do_iff(val env, val args)
   cons_bind (thenfun, elsefun, choices);
 
   return if3(apply(condfun, args, nil),
-             apply(thenfun, args, nil),
+             if2(thenfun, apply(thenfun, args, nil)),
              if2(elsefun, apply(elsefun, args, nil)));
 }
 
