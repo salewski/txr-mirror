@@ -1,3 +1,31 @@
+                                     TXR 68
+                                   2013-10-07
+
+
+  Features
+
+  - @(repeat) inside @(output)  supports a :vars
+    parameter, making it possible to declare the
+    existence of iteration variables that are otherwise
+    hidden within Lisp code.
+
+  Bugs
+
+  - Out-of-sequence numeric parameters can be used
+    in the op operator now, like (op foo @2)
+    where @1 is absent.
+
+  - The implicit ". @rest" is now added to op forms
+    only if they do not mention @rest or any numeric
+    parameters, to prevent unintentional
+    passing of extra parameters.
+
+  - @rest or a numeric param like @1 can now be
+    specified in the dot position of the op form,
+    as in (op foo . @rest).
+
+
+
                                      TXR 67
                                    2013-07-13
 

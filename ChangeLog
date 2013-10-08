@@ -1,3 +1,15 @@
+2013-10-07  Kaz Kylheku  <kaz@kylheku.com>
+
+	Version 68
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version, set date and documented string-cmp.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES: Updated.
+
 2013-10-06  Kaz Kylheku  <kaz@kylheku.com>
 
 	Improving behavior of op and fixing a bug.
