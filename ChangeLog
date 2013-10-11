@@ -1,3 +1,8 @@
+2013-10-11  Kaz Kylheku  <kaz@kylheku.com>
+
+	* txr.1: Fix reversed arguments in documentation for time-string-local
+	* and time-string-utc.
+
 2013-10-07  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 68
