@@ -55,10 +55,11 @@ val decline_k, next_spec_k, repeat_spec_k;
 val mingap_k, maxgap_k, gap_k, mintimes_k, maxtimes_k, times_k;
 val lines_k, chars_k;
 val text_s, choose_s, gather_s, do_s, mod_s, modlast_s, fuzz_s, load_s;
-val require_s;
+val close_s, require_s;
 val longest_k, shortest_k, greedy_k;
 val vars_k, resolve_k;
 val append_k, into_k, var_k, list_k, string_k, env_k, counter_k;
+val named_k, continue_k, finish_k;
 
 val filter_s;
 
@@ -3019,6 +3020,7 @@ static val v_output(match_files_ctx *c)
   val append = nil;
   val dest = lit("-");
   val filter = nil;
+  val named_var = nil, continue_expr = nil, finish_expr = nil;
   val alist;
   fpip_t fp;
 
@@ -3037,6 +3039,18 @@ static val v_output(match_files_ctx *c)
 
   nothrow = cdr(assoc(nothrow_k, alist));
   append = cdr(assoc(append_k, alist));
+  named_var = cdr(assoc(named_k, alist));
+  continue_expr = cdr(assoc(continue_k, alist));
+  finish_expr = cdr(assoc(finish_k, alist));
+
+  if (named_var && continue_expr)
+    sem_error(specline, lit(":continue and :named are mutually exclusive"), nao);
+
+  if (named_var && finish_expr)
+    sem_error(specline, lit(":named and :finish are mutually exclusive"), nao);
+
+  if (continue_expr && finish_expr)
+    sem_error(specline, lit(":continue and :finish are mutually exclusive"), nao);
 
   {
     val filter_sym = cdr(assoc(filter_k, alist));
@@ -3057,6 +3071,12 @@ static val v_output(match_files_ctx *c)
 
       if (!symbolp(into_var)) 
         sem_error(specline, lit(":into requires a variable, not ~s"), into_var, nao);
+
+      if (named_var)
+        sem_error(specline, lit(":into incompatible with :named"), nao);
+
+      if (continue_expr)
+        sem_error(specline, lit(":into incompatible with :continue"), nao);
 
       debuglf(specline, lit("opening string list stream"), nao);
       uw_env_begin;
@@ -3083,6 +3103,25 @@ static val v_output(match_files_ctx *c)
     }
   }
 
+  if (continue_expr || finish_expr) {
+    uses_or2;
+    val which = or2(continue_expr, finish_expr);
+    val stream = txeval(specline, which, c->bindings);
+
+
+    if (!streamp(stream))
+      sem_error(specline, lit("~s evaluated to ~s which is not a stream"), which, stream, nao);
+
+    uw_env_begin;
+    uw_set_match_context(cons(c->spec, c->bindings));
+    do_output(c->bindings, specs, filter, stream);
+    flush_stream(stream);
+    uw_env_end;
+    if (finish_expr)
+      close_stream(stream, t);
+    return next_spec_k;
+  }
+
   fp = (errno = 0, complex_open(dest, t, append));
 
   debuglf(specline, lit("opening data sink ~a"), dest, nao);
@@ -3105,7 +3144,11 @@ static val v_output(match_files_ctx *c)
     do_output(c->bindings, specs, filter, stream);
     flush_stream(stream);
     uw_env_end;
-    close_stream(stream, t);
+
+    if (named_var)
+      c->bindings = acons(named_var, stream, c->bindings);
+    else
+      close_stream(stream, t);
   }
 
   return next_spec_k;
@@ -3558,6 +3601,23 @@ static val v_load(match_files_ctx *c)
   }
 }
 
+static val v_close(match_files_ctx *c)
+{
+  spec_bind (specline, first_spec, c->spec);
+  val args = rest(first_spec);
+  val stream = txeval(specline, first(args), c->bindings);
+
+  if (rest(specline))
+    sem_error(specline, lit("unexpected material after close"), nao);
+
+  if (!streamp(stream))
+    sem_error(specline, lit("close: ~s is not a stream"), stream, nao);
+
+  close_stream(stream, t);
+  return next_spec_k;
+}
+
+
 static val h_do(match_line_ctx *c)
 {
   val elem = first(c->specline);
@@ -3778,6 +3838,7 @@ static void syms_init(void)
   gather_s = intern(lit("gather"), user_package);
   do_s = intern(lit("do"), user_package);
   load_s = intern(lit("load"), user_package);
+  close_s = intern(lit("close"), user_package);
   require_s = intern(lit("require"), user_package);
   longest_k = intern(lit("longest"), keyword_package);
   shortest_k = intern(lit("shortest"), keyword_package);
@@ -3790,6 +3851,9 @@ static void syms_init(void)
   list_k = intern(lit("list"), keyword_package);
   string_k = intern(lit("string"), keyword_package);
   env_k = intern(lit("env"), keyword_package);
+  named_k = intern(lit("named"), keyword_package);
+  continue_k = intern(lit("continue"), keyword_package);
+  finish_k = intern(lit("finish"), keyword_package);
 
   filter_s = intern(lit("filter"), user_package);
   noval_s = intern(lit("noval"), system_package);
@@ -3843,6 +3907,7 @@ static void dir_tables_init(void)
   sethash(v_directive_table, do_s, cptr((mem_t *) v_do));
   sethash(v_directive_table, require_s, cptr((mem_t *) v_require));
   sethash(v_directive_table, load_s, cptr((mem_t *) v_load));
+  sethash(v_directive_table, close_s, cptr((mem_t *) v_close));
 
   sethash(h_directive_table, text_s, cptr((mem_t *) h_text));
   sethash(h_directive_table, var_s, cptr((mem_t *) h_var));

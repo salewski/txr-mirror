@@ -1,5 +1,22 @@
 2013-10-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	Task #11433. Implement continuation of multiple
+	output blocks across the same stream.
+
+	* match.c (close_s, named_k, continue_k, finish_k): New symbol
+	variables.
+	(v_output): Implement :named, :finish and :continue.
+	(v_close): New static function.
+	(syms_init): New symbols interned.
+	(dir_tables_init): New entry associating v_close
+	function with symbol stored in close_s.
+
+	* match.h (close_s): Declared.
+
+	* txr.1: New features documented.
+
+2013-10-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: Fix reversed arguments in documentation for time-string-local
 	* and time-string-utc.
 

@@ -3537,7 +3537,7 @@ usual printing of the variable bindings or the word false.
 
 The syntax of the @(output) directive is:
 
-  @(output [ DESTINATION ] { bool-keyword | keyword value }* )
+  @(output [ <destination> ] { bool-keyword | keyword value }* )
   .
   . one or more output directives or lines
   .
@@ -3589,6 +3589,35 @@ unless the :append keyword is used. If :append is used, then
 the new content will be appened to the previous content of
 the variable, after flattening the content to a list,
 as if by the @(flatten) directive.
+
+.IP :named 
+
+The argument of :named is a symbol which denotes a variable.
+The file or pipe stream which is opened for the output is
+stored in this variable, and is not closed at the end of the
+output block. This allows a subsequent output block to continue
+output on the same stream, which is possible using the
+next two keywords, :continue or :finish.
+A new binding is established for the variable, even if it
+already has an existing binding.
+
+.IP :continue
+
+A destination should not be specified if :continue is used.  The argument of
+:continue is an expression, such as a variable name, that must evaluates to a
+stream object. That stream object is used for the output block.
+At the end of the output block, the stream is flushed, but not
+closed.  A usage example is given in the documentation for the Close Directive
+below.
+
+.IP :finish
+
+A destination should not be specified if :finish is used.  The argument of
+:continue is an expression, such as a variable name, that must evaluates to a
+stream object. That stream object is used for the output block.
+At the end of the output block, the stream is closed.
+An example is given in the documentation for the Close Directive
+below.
 
 .SS Output Text
 
@@ -3892,6 +3921,39 @@ If the list L has one or more items, then they are produced with
 spaces each one, except the last which has no space.
 If the list has exactly one item, then the @(last) applies to it
 instead of the main clause: it is produced with no trailing space.
+
+.SS The Close Directive
+
+The syntax of the @(close) directive is:
+
+  @(close <expr>)
+
+Where <expr> evaluates to a stream. The close directive can be
+used to explicitly close streams created using @(output ... :named <var>)
+syntax, as an alternative to the @(output :finish <expr>)
+
+Examples:
+
+Write two lines to "foo.txt" over two output blocks using
+a single stream:
+
+  @(output "foo.txt" :named foo)
+  Hello,
+  @(end)
+  @(output :continue foo)
+  world!
+  @(end)
+  @(close foo)
+
+The same as above, using :finish rather than :continue
+so that the stream is closed at the end of the second block:
+
+  @(output "foo.txt" :named foo)
+  Hello,
+  @(end)
+  @(output :finish foo)
+  world!
+  @(end)
 
 .SS Output Filtering
 
