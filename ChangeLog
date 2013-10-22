@@ -1,3 +1,8 @@
+2013-10-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	* txr.1: Fixed documentation bug. expt with three or more
+	arguments is a right-associative reduction, not left.
+
 2013-10-11  Kaz Kylheku  <kaz@kylheku.com>
 
 	Task #11433. Implement continuation of multiple

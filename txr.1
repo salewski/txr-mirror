@@ -8848,9 +8848,12 @@ Description:
 The expt function raises <base> to zero or more exponents given
 by the <exponent> arguments.
 (expt x) is equivalent to (expt x 1); and yields x for all x.
-For three or more arguments, the operation is left associative.
-That is to say, (expt x y z) is equivalent to (expt (expt x y) z) and
-so forth. Exponentiation is done pairwise using a binary operation.
+For three or more arguments, the operation is right associative.
+That is to say, (expt x y z) is equivalent to (expt x (expt y z)) and
+so forth, similarly to the way nested exponents work in standard algebraic
+notation. 
+
+Exponentiation is done pairwise using a binary operation.
 If both operands to this binary operation are integers, then the
 result is an integer. If either operand is a float, then the other
 operand is converted to a float, and a floating point exponentation
