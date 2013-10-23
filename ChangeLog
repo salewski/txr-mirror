@@ -2,6 +2,8 @@
 
 	* genvim.txr: New file.
 
+	* txr.vim: Updated using genvim.txr.
+
 2013-10-23  Kaz Kylheku  <kaz@kylheku.com>
 
 	* configure: Change to header block comment generated in config.h
