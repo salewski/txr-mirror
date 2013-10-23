@@ -1,5 +1,9 @@
 2013-10-23  Kaz Kylheku  <kaz@kylheku.com>
 
+	* genvim.txr: New file.
+
+2013-10-23  Kaz Kylheku  <kaz@kylheku.com>
+
 	* configure: Change to header block comment generated in config.h
 
 2013-10-23  Kaz Kylheku  <kaz@kylheku.com>
