@@ -1,3 +1,15 @@
+2013-10-23  Kaz Kylheku  <kaz@kylheku.com>
+
+	Version 69
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES: Updated.
+
 2013-10-21  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.1: Fixed documentation bug. expt with three or more
@@ -31,7 +43,7 @@
 
 	* txr.c (version): Bumped.
 
-	* txr.1: Bumped version, set date and documented string-cmp.
+	* txr.1: Bumped version and set date.
 
 	* configure (txr_ver): Bumped.
 
