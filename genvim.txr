@@ -51,9 +51,8 @@ syn case match
 syn spell toplevel
 
 setlocal iskeyword=a-z,A-Z,48-57,!,$,&,*,+,-,<,=,>,?,\\,_,~,^
-
-syn keyword txr_keyword contained@(rep) @{txr-sym}@(end)
-syn keyword txl_keyword contained@(rep) @{txl-sym}@(end)
+@(rep) @{txr-sym}@(mod 0 4)@\nsyn keyword txr_keyword contained @{txr-sym}@(end)
+@(rep) @{txl-sym}@(mod 0 4)@\nsyn keyword txl_keyword contained @{txl-sym}@(end)
 
 syn match txr_error "@@[\t ]*[*]\?[\t ]*."
 syn match txr_nested_error "[^\t `]\+" contained

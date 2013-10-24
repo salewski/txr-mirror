@@ -1,5 +1,11 @@
 2013-10-23  Kaz Kylheku  <kaz@kylheku.com>
 
+	* genvim.txr: Split long lines of keywords.
+
+	* txr.vim: Updated.
+
+2013-10-23  Kaz Kylheku  <kaz@kylheku.com>
+
 	* genvim.txr: New file.
 
 	* txr.vim: Updated using genvim.txr.
