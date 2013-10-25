@@ -187,6 +187,12 @@ void uw_pop_frame(uw_frame_t *fr)
   }
 }
 
+void uw_pop_until(uw_frame_t *fr)
+{
+  while (uw_stack != fr)
+    uw_pop_frame(uw_stack);
+}
+
 uw_frame_t *uw_current_frame(void)
 {
   return uw_stack;

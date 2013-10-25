@@ -107,7 +107,7 @@ struct func {
   unsigned optargs : 7;  /* fixparam - optargs = required args */
   unsigned variadic : 1;
   unsigned : 1;
-  functype_t functype : 16;
+  unsigned functype : 16;
   val env;
   union {
     val interp_fun;

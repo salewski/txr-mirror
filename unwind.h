@@ -110,16 +110,25 @@ void uw_push_debug(uw_frame_t *, val func, val args,
                    val ub_p_a_pairs, val env, val data,
                    val line, val chr);
 void uw_pop_frame(uw_frame_t *);
+void uw_pop_until(uw_frame_t *);
 uw_frame_t *uw_current_frame(void);
 uw_frame_t *uw_current_exit_point(void);
 void uw_init(void);
 
 noreturn val type_mismatch(val, ...);
 
+#define uw_mark_frame                           \
+  uw_frame_t *uw_top = uw_current_frame()
+
+#define uw_fast_return(VAL)                     \
+  do {                                          \
+    uw_pop_until(uw_top);                       \
+    return VAL;                                 \
+  } while (0)
+
 #define uw_block_begin(TAG, RESULTVAR)  \
   obj_t *RESULTVAR = nil;               \
-  do                                    \
-  {                                     \
+  do {                                  \
     uw_frame_t uw_blk;                  \
     uw_push_block(&uw_blk, TAG);        \
     if (setjmp(uw_blk.bl.jb)) {         \

@@ -1,3 +1,37 @@
+2013-10-24  Kaz Kylheku  <kaz@kylheku.com>
+
+	Ouch! Turns out the code base has numerous unintended
+	deviations from C90, like mixed declations and
+	statements. GCC doesn't diagnose these without the
+	--pedantic flag.
+
+	* configure: GCC's --ansi flag should be spelled -ansi.
+
+	* lib.c (split_str, obj_print): Reorder declaration before statements.
+	(make_sym): Fix similar problem by eliminating a statement.
+	(funcall1, funcall2, funcall3, funcall4): Use assignment to initialize
+	local array with non-constant elements.  This is actually good for
+	performance because we only initialize those parts of the array that
+	we use.
+
+	* lib.h (struct func): Change functype member to unsigned,
+	since enum-typed bitfields are a GCC extension.
+
+	* match.c (ml_all, mf_all): Use assignments to initialize local
+	struct with non-constants.
+	(do_txeval, v_collect): Slightly revise unwinding macrology with help
+	of new macros to avoid mixing declarations and statements.
+	(spec_bind): Removed spurious semicolon from macro expansion.
+	(v_gather): Reorder two lines to avoid mixed decls and
+	statements.
+	(match_filter): Move declaration of ret a few lines up, ahead of
+	statements.
+
+	* unwind.c (uw_pop_until): New function.
+
+	* unwind.h (uw_pop_until): Declared.
+	(uw_mark_frame, uw_fast_return): New macros.
+
 2013-10-23  Kaz Kylheku  <kaz@kylheku.com>
 
 	* genvim.txr: Split long lines of keywords.

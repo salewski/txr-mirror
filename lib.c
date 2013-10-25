@@ -2007,10 +2007,10 @@ val split_str(val str, val sep)
       const wchar_t *cstr = c_str(str);
       const wchar_t *csep = c_str(sep);
 
+      list_collect_decl (out, iter);
+
       prot1(&str);
       prot1(&sep);
-
-      list_collect_decl (out, iter);
 
       for (;;) {
         const wchar_t *psep = wcsstr(cstr, csep);
@@ -2025,8 +2025,10 @@ val split_str(val str, val sep)
         }
         break;
       }
+
       rel1(&sep);
       rel1(&str);
+
       return out;
     }
   }
@@ -2416,8 +2418,8 @@ val make_sym(val name)
 
 val gensym(val prefix)
 {
-  gensym_counter = plus(gensym_counter, one);
-  val name = format(nil, lit("~a~,04a"), prefix, gensym_counter, nao);
+  val name = format(nil, lit("~a~,04a"), prefix,
+                    gensym_counter = plus(gensym_counter, one), nao);
   return make_sym(name);
 }
 
@@ -2991,7 +2993,8 @@ val funcall1(val fun, val arg)
   type_check(fun, FUN);
 
   if (fun->f.optargs) {
-    val args[32] = { arg };
+    val args[32];
+    args[0] = arg;
     return generic_funcall(fun, args, 1);
   }
 
@@ -3028,7 +3031,9 @@ val funcall2(val fun, val arg1, val arg2)
   type_check(fun, FUN);
 
   if (fun->f.optargs) {
-    val arg[32] = { arg1, arg2 };
+    val arg[32];
+    arg[0] = arg1;
+    arg[1] = arg2;
     return generic_funcall(fun, arg, 2);
   }
 
@@ -3070,7 +3075,10 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
   type_check(fun, FUN);
 
   if (fun->f.optargs) {
-    val arg[32] = { arg1, arg2, arg3 };
+    val arg[32];
+    arg[0] = arg1;
+    arg[1] = arg2;
+    arg[2] = arg3;
     return generic_funcall(fun, arg, 3);
   }
 
@@ -3116,7 +3124,11 @@ val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
   type_check(fun, FUN);
 
   if (fun->f.optargs) {
-    val arg[32] = { arg1, arg2, arg3, arg4 };
+    val arg[32];
+    arg[0] = arg1;
+    arg[1] = arg2;
+    arg[2] = arg3;
+    arg[3] = arg4;
     return generic_funcall(fun, arg, 4);
   }
 
@@ -4646,8 +4658,8 @@ val obj_print(val obj, val out)
   case STR:
     {
       const wchar_t *ptr;
-      put_char(chr('"'), out);
       int semi_flag = 0;
+      put_char(chr('"'), out);
 
       for (ptr = c_str(obj); *ptr; ptr++) {
         if (semi_flag && iswxdigit(*ptr))

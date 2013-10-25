@@ -81,7 +81,7 @@ yacc='$(cross)$(tool_prefix)$(yaccname)'
 yacc_given=
 nm='$(cross)$(tool_prefix)nm'
 opt_flags=-O2
-lang_flags='--ansi -D_XOPEN_SOURCE=2'
+lang_flags='-ansi -D_XOPEN_SOURCE=2'
 diag_flags='-Wall -Wmissing-prototypes -Wstrict-prototypes'
 debug_flags=-g
 inline=

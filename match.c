@@ -343,8 +343,15 @@ typedef struct {
 static match_line_ctx ml_all(val bindings, val specline, val dataline,
                              val pos, val data_lineno, val file)
 {
-  match_line_ctx c = { bindings, specline, dataline, 
-                       zero, pos, data_lineno, file };
+  match_line_ctx c;
+  c.bindings = bindings;
+  c.specline = specline;
+  c.dataline = dataline;
+  c.base = zero;
+  c.pos = pos;
+  c.data_lineno = data_lineno;
+  c.file = file;
+
   return c;
 }
 
@@ -1394,11 +1401,12 @@ static val subst_vars(val spec, val bindings, val filter)
 static val do_txeval(val spec, val form, val bindings, val allow_unbound)
 {
   val ret = nil;
+  uw_mark_frame;
+  uw_catch_begin (cons(query_error_s, nil), exc_sym, exc);
 
   if (!form)
-    return nil;
+    uw_fast_return(nil);
 
-  uw_catch_begin (cons(query_error_s, nil), exc_sym, exc);
   {
     if (!form) {
       ret = form;
@@ -1847,7 +1855,12 @@ static void do_output(val bindings, val specs, val filter, val out)
 static match_files_ctx mf_all(val spec, val files, val bindings,
                               val data, val data_lineno)
 {
-  match_files_ctx c = { spec, files, car(files), bindings, data, data_lineno };
+  match_files_ctx c;
+  c.spec = spec;
+  c.files = files;
+  c.bindings = bindings;
+  c.data = data;
+  c.data_lineno = data_lineno;
   return c;
 }
 
@@ -1906,7 +1919,7 @@ typedef val (*v_match_func)(match_files_ctx *cout);
 
 #define spec_bind(specline, first_spec, spec)           \
   val specline = first(spec);                           \
-  val first_spec = first(specline);
+  val first_spec = first(specline)
 
 static val v_skip(match_files_ctx *c)
 {
@@ -2538,8 +2551,8 @@ static val v_gather(match_files_ctx *c)
         c->bindings = new_bindings;
         max_data = t;
       } else if (consp(success) && max_data != t) {
-        c->bindings = new_bindings;
         cons_bind (new_data, new_line, success);
+        c->bindings = new_bindings;
         if (gt(new_line, max_line)) {
           max_line = new_line;
           max_data = new_data;
@@ -2647,6 +2660,8 @@ static val v_collect(match_files_ctx *c)
   cnum ctimes = fixnump(times) ? c_num(times) : 0;
   cnum clines = fixnump(lines) ? c_num(lines) : 0;
   val iter;
+  uw_mark_frame;
+  uw_block_begin(nil, result);
 
   if (gap && (max || min))
     sem_error(specline, lit("~s: cannot mix :gap with :mingap or :maxgap"),
@@ -2662,9 +2677,7 @@ static val v_collect(match_files_ctx *c)
   vars = vars_to_bindings(specline, vars, c->bindings);
 
   if ((times && ctimes == 0) || (lines && clines == 0))
-    return next_spec_k;
-
-  uw_block_begin(nil, result);
+    uw_fast_return(next_spec_k);
 
   result = t;
 
@@ -3748,10 +3761,10 @@ val match_filter(val name, val arg, val other_args)
                             cons(in_arg_sym, cons(out_arg_sym, other_args))),
                        nao), nil);
   match_files_ctx c = mf_all(spec, nil, bindings, nil, num(0));
+  val ret = v_fun(&c);
+
   (void) first_spec;
   rlcp(car(spec), specline);
-
-  val ret = v_fun(&c);
 
   if (ret == nil)
     sem_error(specline, lit("filter: (~s ~s ~s) failed"), name,
