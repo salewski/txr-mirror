@@ -1,5 +1,32 @@
 2013-10-27  Kaz Kylheku  <kaz@kylheku.com>
 
+	Fix jaw-dropping bug introduced on 2009-11-15, first affecting
+	the 022 release.
+
+	Efficient string literal objects (tag bits 11) were introduced on that
+	day.  
+	
+	The null_string object was changed to a literal, and that object is
+	efficiently returned by some string manipulation functions in cases
+	when it is obvious that the result is an empty string.
+
+	However, the LIT type code was not added to a switch statement in
+	the variable matching code, which continued to recognize only the
+	type STR as a string, to this day.
+
+	A test case for this is
+	
+	    echo ":x" | ./txr -c "@x:@x" -
+
+	which results in an "unsupported object in spec" error.
+
+	* match.c (h_var): Use stringp to test for string rather than
+	type(..) == STR. Add LIT and LSTR to the switch statement
+	so that literals an lazy strings are handled if they occur.
+	(do_output_line): Add LIT and LSTR to switch.
+
+2013-10-27  Kaz Kylheku  <kaz@kylheku.com>
+
 	* genvim.txr: Include syntactic directives which aren't extracted from
 	sources because actions aren't registered for them.
 
