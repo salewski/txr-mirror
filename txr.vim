@@ -30,6 +30,7 @@ syn keyword txr_keyword contained none output rebind repeat
 syn keyword txr_keyword contained require set skip some
 syn keyword txr_keyword contained text throw trailer try
 syn keyword txr_keyword contained var
+syn keyword txr_keyword contained end and or
 
 syn keyword txl_keyword contained * *keyword-package* *random-state* *self-path*
 syn keyword txl_keyword contained *stddebug* *stderr* *stdin* *stdout*

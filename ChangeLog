@@ -1,3 +1,10 @@
+2013-10-27  Kaz Kylheku  <kaz@kylheku.com>
+
+	* genvim.txr: Include syntactic directives which aren't extracted from
+	sources because actions aren't registered for them.
+
+	* txr.vim: Regenerated.
+
 2013-10-24  Kaz Kylheku  <kaz@kylheku.com>
 
 	Ouch! Turns out the code base has numerous unintended
