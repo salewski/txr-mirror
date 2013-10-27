@@ -1,5 +1,16 @@
 2013-10-27  Kaz Kylheku  <kaz@kylheku.com>
 
+	Fix 2013-10-06 regression in op syntax.  This happens when a @var
+	syntax appears in an op form, crashing the expander with infinite
+	recursion at program load time, before the code is run.
+
+	* eval.c (transform_op): The fi == var check to handle a
+	trailing op variable in the dot position of a form
+	needs to ensure that it really is @<num> type var, and
+	not the @<sym> type for instance.
+
+2013-10-27  Kaz Kylheku  <kaz@kylheku.com>
+
 	Fix jaw-dropping bug introduced on 2009-11-15, first affecting
 	the 022 release.
 
