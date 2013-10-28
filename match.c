@@ -2222,7 +2222,7 @@ static val v_accept_fail(match_files_ctx *c)
     sem_error(specline, lit("~a: no block named ~a in scope"),
               sym, target, nao);
   else
-    sem_error(specline, lit("%~a: no anonymous block in scope"),
+    sem_error(specline, lit("~a: no anonymous block in scope"),
               sym, nao);
   return nil;
 }
