@@ -75,7 +75,7 @@ $(MPI_OBJS): CFLAGS += -DXCALLOC=chk_calloc -DXFREE=free
 rebuild: clean repatch $(PROG)
 
 .PHONY: clean
-clean:
+clean: conftest.clean
 	rm -f $(PROG) $(OBJS) $(OBJS-y) \
 	  y.tab.c lex.yy.c y.tab.h y.output $(TESTS:.ok=.out)
 
@@ -190,3 +190,9 @@ conftest.yacc:
 .PHONY: conftest.ccver
 conftest.ccver:
 	@$(CC) --version
+
+.PHONY: conftest.clean
+conftest.clean:
+	rm -f conftest conftest.[co] \
+	conftest2 conftest[12].[oc] \
+	conftest.err conftest.syms

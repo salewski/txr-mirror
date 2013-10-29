@@ -1293,8 +1293,7 @@ fi
 # Clean up
 #
 
-rm -f conftest conftest.[co] conftest.{err,syms}
-rm -f conftest2 conftest[12].[oc]
+make conftest.clean
 
 #
 # What do we have for patch management.

@@ -1,3 +1,12 @@
+2013-10-28  Kaz Kylheku  <kaz@kylheku.com>
+
+	* Makefile (clean): depends on conftest.clean
+	(conftest.clean): New target.
+
+	* configure: Use "make conftest.clean" to clean up conftest stuff. Note
+	that there was a bug here: brace expansion was used, but the shell is
+	/bin/sh, so conftest.err wasn't being removed.
+
 2013-10-27  Kaz Kylheku  <kaz@kylheku.com>
 
 	Fix 2013-10-06 regression in op syntax.  This happens when a @var
