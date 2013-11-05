@@ -1,3 +1,10 @@
+2013-11-05  Kaz Kylheku  <kaz@kylheku.com>
+
+	* genvim.txr: Handle symbols whose C names end with _star_s,
+	and also ones with underscores.
+
+	* txr.vim: Updated.
+
 2013-10-28  Kaz Kylheku  <kaz@kylheku.com>
 
 	* Makefile (clean): depends on conftest.clean

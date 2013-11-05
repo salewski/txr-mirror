@@ -49,18 +49,18 @@ syn keyword txl_keyword contained chr-iscntrl chr-isdigit chr-isgraph chr-islowe
 syn keyword txl_keyword contained chr-isprint chr-ispunct chr-isspace chr-isupper
 syn keyword txl_keyword contained chr-isxdigit chr-num chr-str chr-str-set
 syn keyword txl_keyword contained chr-tolower chr-toupper chrp close-stream
-syn keyword txl_keyword contained collect_each collect_each_star compl-span-str cond
+syn keyword txl_keyword contained collect-each collect-each* compl-span-str cond
 syn keyword txl_keyword contained cons consp copy-alist copy-cons
 syn keyword txl_keyword contained copy-hash copy-list copy-str copy-vec
 syn keyword txl_keyword contained cos dec defun defvar
 syn keyword txl_keyword contained del delete-package dohash downcase-str
-syn keyword txl_keyword contained dwim each each_star eq
+syn keyword txl_keyword contained dwim each each* eq
 syn keyword txl_keyword contained eql equal error eval
 syn keyword txl_keyword contained evenp exp expt exptmod
 syn keyword txl_keyword contained fifth find find-if find-package
 syn keyword txl_keyword contained first fixnump flatten flatten*
 syn keyword txl_keyword contained flip flo-int flo-str floatp
-syn keyword txl_keyword contained floor flush-stream for for_star
+syn keyword txl_keyword contained floor flush-stream for for*
 syn keyword txl_keyword contained force format fourth fun
 syn keyword txl_keyword contained func-get-env func-get-form functionp gcd
 syn keyword txl_keyword contained generate gensym get-byte get-char
@@ -76,7 +76,7 @@ syn keyword txl_keyword contained lambda lazy-str lazy-str-force lazy-str-force-
 syn keyword txl_keyword contained lazy-str-get-trailing-list lazy-stream-cons lazy-stringp lcons-fun
 syn keyword txl_keyword contained ldiff length length-list length-str
 syn keyword txl_keyword contained length-str-< length-str-<= length-str-> length-str->=
-syn keyword txl_keyword contained length-vec let let_star list
+syn keyword txl_keyword contained length-vec let let* list
 syn keyword txl_keyword contained list-str list-vector listp log
 syn keyword txl_keyword contained logand logior lognot logtest
 syn keyword txl_keyword contained logtrunc logxor make-hash make-lazy-cons
@@ -102,7 +102,7 @@ syn keyword txl_keyword contained remhash remove-if remove-if* remq
 syn keyword txl_keyword contained remq* remql remql* remqual
 syn keyword txl_keyword contained remqual* repeat replace replace-list
 syn keyword txl_keyword contained replace-str replace-vec rest return
-syn keyword txl_keyword contained return_from reverse rplaca rplacd
+syn keyword txl_keyword contained return-from reverse rplaca rplacd
 syn keyword txl_keyword contained s-ifblk s-ifchr s-ifdir s-ififo
 syn keyword txl_keyword contained s-iflnk s-ifmt s-ifreg s-irgrp
 syn keyword txl_keyword contained s-iroth s-irusr s-irwxg s-irwxo
@@ -121,8 +121,8 @@ syn keyword txl_keyword contained third throw throwf time
 syn keyword txl_keyword contained time-string-local time-string-utc time-usec tok-str
 syn keyword txl_keyword contained tostring tostringp tree-find trim-str
 syn keyword txl_keyword contained trunc typeof unquote upcase-str
-syn keyword txl_keyword contained url-decode url-encode uw_protect vec-push
-syn keyword txl_keyword contained vec-set-length vecref vector vector_list
+syn keyword txl_keyword contained url-decode url-encode uw-protect vec-push
+syn keyword txl_keyword contained vec-set-length vecref vector vector-list
 syn keyword txl_keyword contained vectorp zerop
 
 syn match txr_error "@[\t ]*[*]\?[\t ]*."
