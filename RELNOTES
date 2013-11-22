@@ -1,3 +1,29 @@
+                                     TXR 70
+                                   2013-11-22
+
+
+  Features
+
+  - Fixed a nasty bug that affects all versions; I was not able to find
+    a revision in git that works right with gcc 4.6.3. Invoking an @(accept) in
+    the middle of a @(collect) was found not work at all as documented, and
+    this was root-caused to my neglect to use volatile on some local variables.
+
+  - Fixed a more recent regression in the op syntax, caused this October.
+
+  - Fixed an amazing regression introduced in TXR 22, back in November 2009,
+    easily reproduced using:
+    
+       echo ":x" | ./txr -c "@x:@x" -
+
+  - Fixed all unintentional deviations from 1990 ISO C. GCC had
+    not been diagnosing them for us due to my neglect to use
+    the --pedantic flag.
+
+  - Revamped and up-to-date txr.vim syntax file, for you Vim users.
+
+
+
                                      TXR 69
                                    2013-10-23
 

@@ -1,5 +1,17 @@
 2013-11-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 70
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES: Updated.
+
+2013-11-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	Nasty bug fixed: @(accept) from inside a @(collect) was found not to
 	propagate bindings. The culprit?  The bindings_coll variable in the
 	v_collect function being indeterminate by the well-documented and
