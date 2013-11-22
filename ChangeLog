@@ -1,3 +1,17 @@
+2013-11-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	Nasty bug fixed: @(accept) from inside a @(collect) was found not to
+	propagate bindings. The culprit?  The bindings_coll variable in the
+	v_collect function being indeterminate by the well-documented and
+	understood action of setjmp.  Marking the bindings_coll variable
+	volatile instantly fixed it.  I reviewed this code to find any other
+	instance of this oversight.
+
+	* match.c (v_skip, v_collect): Mark some local variable volatile:
+	precisely those which are used after possibly returning via an
+	unwind, and which might have been modified since setting up
+	the unwind block.
+
 2013-11-05  Kaz Kylheku  <kaz@kylheku.com>
 
 	* genvim.txr: Handle symbols whose C names end with _star_s,
