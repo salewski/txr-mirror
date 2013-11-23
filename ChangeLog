@@ -1,3 +1,10 @@
+2013-11-22  Kaz Kylheku  <kaz@kylheku.com>
+
+	* genvim.txr: Change how the hard-coded symbols (end, and, or) are
+	* added, and also add the missing rep to these.
+
+	* txr.vim: Regenerated.
+
 2013-11-21  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 70
