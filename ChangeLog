@@ -1,3 +1,13 @@
+2013-11-24  Kaz Kylheku  <kaz@kylheku.com>
+
+	Fix for uninitialized struct member curfiles in the match context.
+	This is used for reporting the current match location in debug traces.
+
+	* match.c (mf_all): Takes new argument curfiles
+	and initializes the match_files_ctx member of the same name.
+	(do_match_line, mf_from_ml, match_filter, match_fun, extract):
+	Pass curfile to ml_all.
+
 2013-11-22  Kaz Kylheku  <kaz@kylheku.com>
 
 	* genvim.txr: Change how the hard-coded symbols (end, and, or) are

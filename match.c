@@ -1111,7 +1111,7 @@ typedef struct {
 } match_files_ctx;
 
 static match_files_ctx mf_all(val spec, val files, val bindings,
-                              val data, val data_lineno);
+                              val data, val data_lineno, val curfile);
 
 static val v_fun(match_files_ctx *c);
 
@@ -1182,7 +1182,8 @@ static val do_match_line(match_line_ctx *c)
               continue;
             } else if (result == decline_k) {
               val spec = rlcp(cons(cons(elem, nil), nil), elem);
-              match_files_ctx vc = mf_all(spec, nil, c->bindings, nil, num(0));
+              match_files_ctx vc = mf_all(spec, nil, c->bindings,
+                                          nil, num(0), c->file);
               val vresult = v_fun(&vc);
 
               if (vresult == next_spec_k) {
@@ -1853,11 +1854,13 @@ static void do_output(val bindings, val specs, val filter, val out)
 }
 
 static match_files_ctx mf_all(val spec, val files, val bindings,
-                              val data, val data_lineno)
+                              val data, val data_lineno,
+                              val curfile)
 {
   match_files_ctx c;
   c.spec = spec;
   c.files = files;
+  c.curfile = curfile;
   c.bindings = bindings;
   c.data = data;
   c.data_lineno = data_lineno;
@@ -1910,7 +1913,7 @@ static match_files_ctx mf_file_data(match_files_ctx c, val file,
 
 static match_files_ctx mf_from_ml(match_line_ctx ml)
 {
-  return mf_all(cons(ml.specline, nil), nil, ml.bindings, nil, num(0));
+  return mf_all(cons(ml.specline, nil), nil, ml.bindings, nil, num(0), ml.file);
 }
 
 static val match_files(match_files_ctx a);
@@ -3760,7 +3763,7 @@ val match_filter(val name, val arg, val other_args)
   val spec = cons(list(cons(name, 
                             cons(in_arg_sym, cons(out_arg_sym, other_args))),
                        nao), nil);
-  match_files_ctx c = mf_all(spec, nil, bindings, nil, num(0));
+  match_files_ctx c = mf_all(spec, nil, bindings, nil, num(0), nil);
   val ret = v_fun(&c);
 
   (void) first_spec;
@@ -3793,7 +3796,7 @@ val match_fun(val name, val args, val input, val files)
                  input);
   /* TODO: pass through source location context */
   match_files_ctx c = mf_all(spec, files, in_bindings, data,
-                             if3(data, one, zero));
+                             if3(data, one, zero), nil);
   val ret;
 
   debug_enter;
@@ -3818,7 +3821,7 @@ int extract(val spec, val files, val predefined_bindings)
 {
   cons_bind (bindings, success, match_files(mf_all(spec, files, 
                                                    predefined_bindings,
-                                                   t, nil)));
+                                                   t, nil, nil)));
 
   if ((!output_produced && opt_nobindings <= 0) || opt_nobindings < 0) {
     if (bindings) {
