@@ -3597,6 +3597,8 @@ static val v_load(match_files_ctx *c)
       } else {
         cons_bind (new_bindings, success, result);
 
+        c->bindings = new_bindings;
+
         if (consp(success)) {
           debuglf(specline,
                   lit("load: ~s matched; "
@@ -3604,7 +3606,6 @@ static val v_load(match_files_ctx *c)
                   path, c->data_lineno, cdr(success), nao);
           c->data = car(success);
           c->data_lineno = cdr(success);
-          c->bindings = new_bindings;
         } else {
           debuglf(specline, lit("load: ~s consumed entire file"), path,
                   nao);

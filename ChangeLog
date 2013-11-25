@@ -1,5 +1,12 @@
 2013-11-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (v_load): Bugfix: bindings were propagated in only one of two
+	subcases of a successful load.  This bug means that a loaded TXR
+	sub-query was not reliably able to bind variables that are then visible
+	to subsquent directives in the parent.  
+
+2013-11-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	Fix for uninitialized struct member curfiles in the match context.
 	This is used for reporting the current match location in debug traces.
 
