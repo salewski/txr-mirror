@@ -10241,6 +10241,40 @@ Calling this function causes all accumulated data inside <stream> to be passed
 to the operating system. If called on streams for which this function is not
 meaningful, it does nothing.
 
+.SS Function seek-stream
+
+.TP
+Syntax:
+
+  (seek-stream <stream> <offset> <whence>)
+
+.TP
+Description:
+
+The seek-stream function is meaningful for file streams. It changes the
+current read/write position within <stream>.  It can also be used
+to determine the current position: see the notes about the
+return value below. 
+
+The <offset> argument is a positive or negative integer which gives a
+displacement that is measured from the point identified by the <whence>
+argument.
+
+Note that for text files, there isn't necessarily a 1:1 correspondence between
+characters and positions due to line-ending conversions and conversions
+to and from UTF-8.
+
+The <whence> argument is one of three keywords: :from-start, :from-current
+and :from-end. These denote the start of the file, the current position
+and the end of the file.
+
+If <offset> is zero, and <whence> is :from-current, then
+seek-stream returns the current absolute position within the
+stream, if it can successfully obtain it. Otherwise, it
+returns t if it is successful.
+
+On failure, it throws an exception of type stream-error.
+
 .SH FILESYSTEM ACCESS
 
 .SS Function stat

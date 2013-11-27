@@ -55,11 +55,18 @@ val output_produced;
 val dev_k, ino_k, mode_k, nlink_k, uid_k;
 val gid_k, rdev_k, size_k, blksize_k, blocks_k;
 val atime_k, mtime_k, ctime_k;
+val from_start_k, from_current_k, from_end_k;
 
 val s_ifmt, s_ifsock, s_iflnk, s_ifreg, s_ifblk, s_ifdir;
 val s_ifchr, s_ififo, s_isuid, s_isgid, s_isvtx, s_irwxu;
 val s_irusr, s_iwusr, s_ixusr, s_irwxg, s_irgrp, s_iwgrp;
 val s_ixgrp, s_irwxo, s_iroth, s_iwoth, s_ixoth;
+
+enum strm_whence {
+  strm_start = SEEK_SET,
+  strm_cur = SEEK_CUR,
+  strm_end = SEEK_SET
+};
 
 struct strm_ops {
   struct cobj_ops cobj_ops;
@@ -71,6 +78,7 @@ struct strm_ops {
   val (*get_byte)(val);
   val (*close)(val, val);
   val (*flush)(val);
+  val (*seek)(val, cnum, enum strm_whence);
 };
 
 static void common_destroy(val obj)
@@ -120,14 +128,14 @@ static val stdio_maybe_read_error(val stream)
   return nil;
 }
 
-static val stdio_maybe_write_error(val stream)
+static val stdio_maybe_error(val stream, val action)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
   if (h->f == 0)
-    uw_throwf(file_error_s, lit("error writing ~a: file closed"), stream, nao);
+    uw_throwf(file_error_s, lit("error ~a ~a: file closed"), stream, action, nao);
   clearerr(h->f);
-  uw_throwf(file_error_s, lit("error writing ~a: ~a/~s"),
-            stream, num(errno), string_utf8(strerror(errno)), nao);
+  uw_throwf(file_error_s, lit("error ~a ~a: ~a/~s"),
+            stream, action, num(errno), string_utf8(strerror(errno)), nao);
 }
 
 static int stdio_put_char_callback(int ch, mem_t *f)
@@ -152,11 +160,11 @@ static val stdio_put_string(val stream, val str)
 
     while (*s) {
       if (!utf8_encode(*s++, stdio_put_char_callback, (mem_t *) h->f))
-        return stdio_maybe_write_error(stream);
+        return stdio_maybe_error(stream, lit("writing"));
     }
     return t;
   }
-  return stdio_maybe_write_error(stream);
+  return stdio_maybe_error(stream, lit("writing"));
 }
 
 static val stdio_put_char(val stream, val ch)
@@ -167,7 +175,7 @@ static val stdio_put_char(val stream, val ch)
     output_produced = t;
 
   return h->f != 0 && utf8_encode(c_chr(ch), stdio_put_char_callback, (mem_t *) h->f)
-         ? t : stdio_maybe_write_error(stream);
+         ? t : stdio_maybe_error(stream, lit("writing"));
 }
 
 static val stdio_put_byte(val stream, int b)
@@ -178,15 +186,32 @@ static val stdio_put_byte(val stream, int b)
     output_produced = t;
 
   return h->f != 0 && putc(b, (FILE *) h->f) != EOF
-         ? t : stdio_maybe_write_error(stream);
+         ? t : stdio_maybe_error(stream, lit("writing"));
 }
 
 static val stdio_flush(val stream)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
-  if (fflush(h->f))
-    stdio_maybe_write_error(stream);
-  return t;
+  return (h->f != 0 && fflush(h->f) == 0)
+         ? t : stdio_maybe_error(stream, lit("flushing"));
+}
+
+static val stdio_seek(val stream, cnum offset, enum strm_whence whence)
+{
+  struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
+
+  if (h->f != 0) {
+    if (offset == 0) {
+      long where = ftell(h->f);
+      if (where >= 0)
+        return num(where);
+    } else {
+      if (fseek(h->f, offset, whence) == 0)
+        return t;
+    }
+  }
+
+  return stdio_maybe_error(stream, lit("seeking"));
 }
 
 static wchar_t *snarf_line(struct stdio_handle *h)
@@ -283,7 +308,8 @@ static struct strm_ops stdio_ops = {
   stdio_get_char,
   stdio_get_byte,
   stdio_close,
-  stdio_flush
+  stdio_flush,
+  stdio_seek
 };
 
 #if HAVE_FORK_STUFF
@@ -357,6 +383,7 @@ static struct strm_ops pipe_ops = {
   stdio_get_byte,
   pipe_close,
   stdio_flush,
+  0 /* seek: not on pipes */
 };
 
 static void string_in_stream_mark(val stream)
@@ -416,14 +443,15 @@ static struct strm_ops string_in_ops = {
     cobj_destroy_stub_op,
     string_in_stream_mark,
     cobj_hash_op },
-  0,
-  0,
-  0,
+  0, /* put_string */
+  0, /* put_char */
+  0, /* put_byte */
   string_in_get_line,
   string_in_get_char,
-  0,
-  0,
-  0
+  0, /* get_byte */
+  0, /* close */
+  0, /* flush */
+  0, /* TODO: seek */
 };
 
 struct byte_input {
@@ -459,13 +487,15 @@ static struct strm_ops byte_in_ops = {
     byte_in_stream_destroy,
     cobj_mark_op,
     cobj_hash_op },
-  0,
-  0,
-  0,
-  0,
-  0,
+  0, /* put_string */
+  0, /* put_char */
+  0, /* put_byte */
+  0, /* get_line */
+  0, /* get_char */
   byte_in_get_byte,
-  0
+  0, /* close */
+  0, /* flush */
+  0, /* TODO: support seek */
 };
 
 
@@ -584,10 +614,12 @@ static struct strm_ops string_out_ops = {
   string_out_put_string,
   string_out_put_char,
   string_out_put_byte,
-  0,
-  0,
-  0,
-  0,
+  0, /* get_line */
+  0, /* get_char */
+  0, /* get_byte */
+  0, /* close */
+  0, /* flush */
+  0, /* TODO: seek, with fill-with-spaces semantics if past end. */
 };
 
 static void strlist_mark(val stream)
@@ -650,11 +682,13 @@ static struct strm_ops strlist_out_ops = {
     cobj_hash_op },
   strlist_out_put_string,
   strlist_out_put_char,
-  0,
-  0,
-  0,
-  0,
-  0,
+  0, /* TODO: put_byte */
+  0, /* get_line */
+  0, /* get_char */
+  0, /* get_byte */
+  0, /* close */
+  0, /* flush */
+  0, /* seek */
 };
 
 val make_strlist_output_stream(void)
@@ -716,13 +750,15 @@ static struct strm_ops dir_ops = {
     common_destroy,
     cobj_mark_op,
     cobj_hash_op },
-  0,
-  0,
-  0,
+  0, /* put_string */
+  0, /* put_char */
+  0, /* put_byte */
   dir_get_line,
-  0,
-  0,
-  dir_close
+  0, /* get_char */
+  0, /* get_byte */
+  dir_close,
+  0, /* flush */
+  0, /* seek */
 };
 
 
@@ -1481,6 +1517,31 @@ val flush_stream(val stream)
   }
 }
 
+val seek_stream(val stream, val offset, val whence)
+{
+  type_check (stream, COBJ);
+  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
+                                            stream, nao));
+
+  {
+    struct strm_ops *ops = (struct strm_ops *) stream->co.ops;
+    enum strm_whence w;
+    cnum off = c_num(offset);
+
+    if (whence == from_start_k)
+      w = strm_start;
+    else if (whence == from_current_k)
+      w = strm_cur;
+    else if (whence == from_end_k)
+      w = strm_end;
+    else
+      uw_throwf(file_error_s, lit("seek: ~a is not a valid whence argument"),
+                whence, nao);
+    
+    return ops->seek(stream, off, w);
+  }
+}
+
 #if HAVE_SYS_STAT
 static int w_stat(const wchar_t *wpath, struct stat *buf)
 {
@@ -1733,6 +1794,9 @@ void stream_init(void)
   atime_k = intern(lit("atime"), keyword_package);
   mtime_k = intern(lit("mtime"), keyword_package);
   ctime_k = intern(lit("ctime"), keyword_package);
+  from_start_k = intern(lit("from-start"), keyword_package);
+  from_current_k = intern(lit("from-current"), keyword_package);
+  from_end_k = intern(lit("from-end"), keyword_package);
 
   s_ifmt = num(S_IFMT); s_iflnk = num(S_IFLNK);
   s_ifreg = num(S_IFREG); s_ifblk = num(S_IFBLK); s_ifdir = num(S_IFDIR);
