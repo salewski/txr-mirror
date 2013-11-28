@@ -818,6 +818,6 @@ void parse_reset(val spec_file)
       if (in == 0)
         uw_throwf(file_error_s, lit("unable to open ~a"), spec_file, nao);
     }
-    yyin_stream = make_stdio_stream(in, spec_file_str, t, nil);
+    yyin_stream = make_stdio_stream(in, spec_file_str);
   }
 }

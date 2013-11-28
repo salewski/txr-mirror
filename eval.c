@@ -2366,6 +2366,7 @@ void eval_init(void)
 
   reg_fun(intern(lit("open-directory"), user_package), func_n1(open_directory));
   reg_fun(intern(lit("open-file"), user_package), func_n2(open_file));
+  reg_fun(intern(lit("open-tail"), user_package), func_n3(open_tail));
   reg_fun(intern(lit("open-command"), user_package), func_n2(open_command));
   reg_fun(intern(lit("open-pipe"), user_package), func_n2(open_command));
   reg_fun(intern(lit("open-process"), user_package), func_n3o(open_process, 2));

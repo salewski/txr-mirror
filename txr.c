@@ -389,7 +389,7 @@ int txr_main(int argc, char **argv)
       FILE *in = w_fopen(c_str(spec_file_str), L"r");
       if (in == 0)
         uw_throwf(file_error_s, lit("unable to open ~a"), spec_file_str, nao);
-      yyin_stream = make_stdio_stream(in, spec_file_str, t, nil);
+      yyin_stream = make_stdio_stream(in, spec_file_str);
     } else {
       spec_file = L"stdin";
     }
@@ -404,7 +404,7 @@ int txr_main(int argc, char **argv)
       val name = string_utf8(*argv);
       if (in == 0)
         uw_throwf(file_error_s, lit("unable to open ~a"), name, nao);
-      yyin_stream = make_stdio_stream(in, name, t, nil);
+      yyin_stream = make_stdio_stream(in, name);
       spec_file = utf8_dup_from(*argv);
     } else {
       spec_file = L"stdin";

@@ -37,8 +37,9 @@ extern val s_ifchr, s_ififo, s_isuid, s_isgid, s_isvtx, s_irwxu;
 extern val s_irusr, s_iwusr, s_ixusr, s_irwxg, s_irgrp, s_iwgrp;
 extern val s_ixgrp, s_irwxo, s_iroth, s_iwoth, s_ixoth;
 
-val make_stdio_stream(FILE *, val descr, val input, val output);
-val make_pipe_stream(FILE *, val descr, val input, val output);
+val make_stdio_stream(FILE *, val descr);
+val make_tail_stream(FILE *, val descr);
+val make_pipe_stream(FILE *, val descr);
 val make_string_input_stream(val);
 val make_string_byte_input_stream(val);
 val make_string_output_stream(void);
@@ -64,6 +65,7 @@ val seek_stream(val stream, val offset, val whence);
 val statf(val path);
 val open_directory(val path);
 val open_file(val path, val mode_str);
+val open_tail(val path, val mode_str, val seek_end_p);
 val open_command(val path, val mode_str);
 val open_process(val path, val mode_str, val args);
 

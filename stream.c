@@ -34,9 +34,11 @@
 #include <errno.h>
 #include <ctype.h>
 #include <wchar.h>
-#include <unistd.h>
-#include <float.h>
 #include "config.h"
+#if HAVE_SYS_WAIT || HAVE_SYS_STAT || HAVE_FORK_STUFF || HAVE_POSIX_SLEEP
+#include <unistd.h>
+#endif
+#include <float.h>
 #if HAVE_SYS_WAIT
 #include <sys/wait.h>
 #endif
@@ -90,7 +92,11 @@ struct stdio_handle {
   FILE *f;
   val descr;
   utf8_decoder_t ud;
+#if HAVE_FORK_STUFF
   pid_t pid;
+#else
+  int pid;
+#endif
 };
 
 static void stdio_stream_print(val stream, val out)
@@ -311,6 +317,55 @@ static struct strm_ops stdio_ops = {
   stdio_flush,
   stdio_seek
 };
+
+static val tail_get_line(val stream)
+{
+  val ret;
+
+  while ((ret = stdio_get_line(stream)) == nil)
+    sleep(1);
+
+  return ret;
+}
+
+static val tail_get_char(val stream)
+{
+  val ret;
+
+  while ((ret = stdio_get_char(stream)) == nil)
+    sleep(1);
+
+  return ret;
+}
+
+static val tail_get_byte(val stream)
+{
+  val ret;
+
+  while ((ret = stdio_get_byte(stream)) == nil)
+    sleep(1);
+
+  return ret;
+}
+
+
+static struct strm_ops tail_ops = {
+  { cobj_equal_op,
+    stdio_stream_print,
+    stdio_stream_destroy,
+    stdio_stream_mark,
+    cobj_hash_op },
+  stdio_put_string,
+  stdio_put_char,
+  stdio_put_byte,
+  tail_get_line,
+  tail_get_char,
+  tail_get_byte,
+  stdio_close,
+  stdio_flush,
+  stdio_seek
+};
+
 
 #if HAVE_FORK_STUFF
 static int pipevp_close(FILE *f, pid_t pid)
@@ -762,10 +817,10 @@ static struct strm_ops dir_ops = {
 };
 
 
-val make_stdio_stream(FILE *f, val descr, val input, val output)
+static val make_stdio_stream_common(FILE *f, val descr, struct cobj_ops *ops)
 {
   struct stdio_handle *h = (struct stdio_handle *) chk_malloc(sizeof *h);
-  val stream = cobj((mem_t *) h, stream_s, &stdio_ops.cobj_ops);
+  val stream = cobj((mem_t *) h, stream_s, ops);
   h->f = f;
   h->descr = descr;
   utf8_decoder_init(&h->ud);
@@ -773,25 +828,26 @@ val make_stdio_stream(FILE *f, val descr, val input, val output)
   return stream;
 }
 
-val make_pipe_stream(FILE *f, val descr, val input, val output)
+val make_stdio_stream(FILE *f, val descr)
 {
-  struct stdio_handle *h = (struct stdio_handle *) chk_malloc(sizeof *h);
-  val stream = cobj((mem_t *) h, stream_s, &pipe_ops.cobj_ops);
-  h->f = f;
-  h->descr = descr;
-  utf8_decoder_init(&h->ud);
-  h->pid = 0;
-  return stream;
+  return make_stdio_stream_common(f, descr, &stdio_ops.cobj_ops);
+}
+
+val make_tail_stream(FILE *f, val descr)
+{
+  return make_stdio_stream_common(f, descr, &tail_ops.cobj_ops);
+}
+
+val make_pipe_stream(FILE *f, val descr)
+{
+  return make_stdio_stream_common(f, descr, &pipe_ops.cobj_ops);
 }
 
 #if HAVE_FORK_STUFF
 static val make_pipevp_stream(FILE *f, val descr, pid_t pid)
 {
-  struct stdio_handle *h = (struct stdio_handle *) chk_malloc(sizeof *h);
-  val stream = cobj((mem_t *) h, stream_s, &pipe_ops.cobj_ops);
-  h->f = f;
-  h->descr = descr;
-  utf8_decoder_init(&h->ud);
+  val stream = make_stdio_stream_common(f, descr, &pipe_ops.cobj_ops);
+  struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
   h->pid = pid;
   return stream;
 }
@@ -1604,43 +1660,39 @@ val open_directory(val path)
 val open_file(val path, val mode_str)
 {
   FILE *f = w_fopen(c_str(path), c_str(mode_str));
-  val input = nil, output = nil;
 
   if (!f)
     uw_throwf(file_error_s, lit("error opening ~a: ~a/~s"),
               path, num(errno), string_utf8(strerror(errno)), nao);
 
-  if (break_str(mode_str, lit("w")))
-    output = t;
-  if (break_str(mode_str, lit("a")))
-    output = t;
-  if (break_str(mode_str, lit("r")))
-    input = t;
-  if (break_str(mode_str, lit("+")))
-    input = output = t;
+  return make_stdio_stream(f, path);
+}
 
-  return make_stdio_stream(f, path, input, output);
+val open_tail(val path, val mode_str, val seek_end_p)
+{
+  FILE *f = w_fopen(c_str(path), c_str(mode_str));
+
+  if (!f)
+    uw_throwf(file_error_s, lit("error opening ~a: ~a/~s"),
+              path, num(errno), string_utf8(strerror(errno)), nao);
+
+  if (seek_end_p)
+    if (fseek(f, 0, SEEK_END) < 0)
+      uw_throwf(file_error_s, lit("error seeking to end of ~a: ~a/~s"),
+                path, num(errno), string_utf8(strerror(errno)), nao);
+
+  return make_tail_stream(f, path);
 }
 
 val open_command(val path, val mode_str)
 {
   FILE *f = w_popen(c_str(path), c_str(mode_str));
-  val input = nil, output = nil;
 
   if (!f)
     uw_throwf(file_error_s, lit("error opening pipe ~a: ~a/~s"),
               path, num(errno), string_utf8(strerror(errno)), nao);
 
-  if (break_str(mode_str, lit("w")))
-    output = t;
-  if (break_str(mode_str, lit("a")))
-    output = t;
-  if (break_str(mode_str, lit("r")))
-    input = t;
-  if (break_str(mode_str, lit("+")))
-    input = output = t;
-
-  return make_pipe_stream(f, path, input, output);
+  return make_pipe_stream(f, path);
 }
 
 #if HAVE_FORK_STUFF
@@ -1775,10 +1827,10 @@ val open_process(val name, val mode_str, val args)
 void stream_init(void)
 {
   protect(&std_input, &std_output, &std_debug, &std_error, (val *) 0);
-  std_input = make_stdio_stream(stdin, string(L"stdin"), t, nil);
-  std_output = make_stdio_stream(stdout, string(L"stdout"), nil, t);
-  std_debug = make_stdio_stream(stdout, string(L"debug"), nil, t);
-  std_error = make_stdio_stream(stderr, string(L"stderr"), nil, t);
+  std_input = make_stdio_stream(stdin, string(L"stdin"));
+  std_output = make_stdio_stream(stdout, string(L"stdout"));
+  std_debug = make_stdio_stream(stdout, string(L"debug"));
+  std_error = make_stdio_stream(stderr, string(L"stderr"));
   detect_format_string();
 
   dev_k = intern(lit("dev"), keyword_package);

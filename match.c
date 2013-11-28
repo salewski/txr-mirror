@@ -1521,9 +1521,9 @@ static val complex_snarf(fpip_t fp, val name)
 {
   switch (fp.close) {
   case fpip_fclose:
-    return lazy_stream_cons(make_stdio_stream(fp.f, name, t, nil));
+    return lazy_stream_cons(make_stdio_stream(fp.f, name));
   case fpip_pclose:
-    return lazy_stream_cons(make_pipe_stream(fp.f, name, t, nil));
+    return lazy_stream_cons(make_pipe_stream(fp.f, name));
   case fpip_closedir:
     return lazy_stream_cons(make_dir_stream(fp.d));
   }
@@ -1535,9 +1535,9 @@ static val complex_stream(fpip_t fp, val name)
 {
   switch (fp.close) {
   case fpip_fclose:
-    return make_stdio_stream(fp.f, name, t, nil);
+    return make_stdio_stream(fp.f, name);
   case fpip_pclose:
-    return make_pipe_stream(fp.f, name, t, nil);
+    return make_pipe_stream(fp.f, name);
   case fpip_closedir:
     uw_throwf(query_error_s, lit("cannot output to directory: ~a"), name, nao);
   }
@@ -3650,37 +3650,45 @@ static val match_files(match_files_ctx c)
   gc_hint(c.data);
 
   if (listp(c.data)) { /* recursive call with lazy list */
-    ; /* no specia initialization */
+    ; /* no special initialization */
   } else if (c.files) { /* c.data == t: toplevel call with file list */
     val source_spec = first(c.files);
     val name = consp(source_spec) ? cdr(source_spec) : source_spec;
-    fpip_t fp = (errno = 0, complex_open(name, nil, nil));
-    spec_bind (specline, first_spec, c.spec);
 
-    if (consp(first_spec) && eq(first(first_spec), next_s) && !rest(specline)) {
-      debuglf(first_spec, lit("not opening source ~a "
-                                   "since query starts with next directive"), name, nao);
-    } else {
-      val spec = first(c.spec);
-      debuglf(spec, lit("opening data source ~a"), name, nao);
+    if (stringp(name)) {
+      fpip_t fp = (errno = 0, complex_open(name, nil, nil));
+      spec_bind (specline, first_spec, c.spec);
 
-      if (complex_open_failed(fp)) {
-        if (consp(source_spec) && car(source_spec) == nothrow_k) {
-          debuglf(spec, lit("could not open ~a: "
-                            "treating as failed match due to nothrow"), name, nao);
+      if (consp(first_spec) && eq(first(first_spec), next_s) && !rest(specline)) {
+        debuglf(first_spec, lit("not opening source ~a "
+                                     "since query starts with next directive"), name, nao);
+      } else {
+        val spec = first(c.spec);
+        debuglf(spec, lit("opening data source ~a"), name, nao);
+
+        if (complex_open_failed(fp)) {
+          if (consp(source_spec) && car(source_spec) == nothrow_k) {
+            debuglf(spec, lit("could not open ~a: "
+                              "treating as failed match due to nothrow"), name, nao);
+            debug_return (nil);
+          } else if (errno != 0)
+            file_err(spec, lit("could not open ~a (error ~a/~a)"), name,
+                     num(errno), string_utf8(strerror(errno)), nao);
+          else
+            file_err(spec, lit("could not open ~a"), name, nao);
           debug_return (nil);
-        } else if (errno != 0)
-          file_err(spec, lit("could not open ~a (error ~a/~a)"), name,
-                   num(errno), string_utf8(strerror(errno)), nao);
-        else
-          file_err(spec, lit("could not open ~a"), name, nao);
-        debug_return (nil);
+        }
+
+        c.files = cons(name, cdr(c.files)); /* Get rid of cons and nothrow */
+
+        if ((c.data = complex_snarf(fp, name)) != nil)
+          c.data_lineno = num(1);
       }
-
-      c.files = cons(name, cdr(c.files)); /* Get rid of cons and nothrow */
-
-      if ((c.data = complex_snarf(fp, name)) != nil)
+    } else if (streamp(name)) {
+      if ((c.data = lazy_stream_cons(name)))
         c.data_lineno = num(1);
+    } else {
+      c.data = nil;
     }
   } else { /* toplevel call with no data or file list */
     c.data = nil;
