@@ -873,6 +873,7 @@ static val make_stdio_stream_common(FILE *f, val descr, struct cobj_ops *ops)
   val stream = cobj((mem_t *) h, stream_s, ops);
   h->f = f;
   h->descr = descr;
+  h->mode = nil;
   utf8_decoder_init(&h->ud);
   h->pid = 0;
   return stream;

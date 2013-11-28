@@ -1,5 +1,10 @@
 2013-11-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (make_stdio_stream_common): Initialize new
+	mode member of struct stdio_ops to nil.
+
+2013-11-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (struct stdio_handle): New member, mode.
 	(stdio_stream_mark): Mark the new member during gc.
 	(stdio_seek): When we seek, we should reset the utf8 machine.
