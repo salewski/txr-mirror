@@ -1,3 +1,17 @@
+2013-11-28  Kaz Kylheku  <kaz@kylheku.com>
+
+	* stream.c (struct stdio_handle): New member, mode.
+	(stdio_stream_mark): Mark the new member during gc.
+	(stdio_seek): When we seek, we should reset the utf8 machine.
+	(tail_strategy): New function.
+	(tail_get_line, tail_get_char, tail_get_byte): Use
+	tail_strategy for polling the file at EOF.
+	(open_tail): Store the mode in the file handle.
+
+	* utf8.c (w_freopen): New function.
+
+	* utf8.h (w_freopen): Declared.
+
 2013-11-27  Kaz Kylheku  <kaz@kylheku.com>
 
 	* Makefile (conftest.clean): Use @ to suppress output.

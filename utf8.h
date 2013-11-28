@@ -48,3 +48,4 @@ wint_t utf8_decode(utf8_decoder_t *,int (*get)(mem_t *ctx), mem_t *ctx);
 
 FILE *w_fopen(const wchar_t *, const wchar_t *);
 FILE *w_popen(const wchar_t *, const wchar_t *);
+FILE *w_freopen(const wchar_t *, const wchar_t *, FILE *);

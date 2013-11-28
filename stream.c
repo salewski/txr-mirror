@@ -91,6 +91,7 @@ static void common_destroy(val obj)
 struct stdio_handle {
   FILE *f;
   val descr;
+  val mode; /* used by tail */
   utf8_decoder_t ud;
 #if HAVE_FORK_STUFF
   pid_t pid;
@@ -119,6 +120,7 @@ static void stdio_stream_mark(val stream)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
   gc_mark(h->descr);
+  gc_mark(h->mode);
 }
 
 static val stdio_maybe_read_error(val stream)
@@ -212,8 +214,10 @@ static val stdio_seek(val stream, cnum offset, enum strm_whence whence)
       if (where >= 0)
         return num(where);
     } else {
-      if (fseek(h->f, offset, whence) == 0)
+      if (fseek(h->f, offset, whence) == 0) {
+        utf8_decoder_init(&h->ud);
         return t;
+      }
     }
   }
 
@@ -318,32 +322,78 @@ static struct strm_ops stdio_ops = {
   stdio_seek
 };
 
+static void tail_strategy(val stream, unsigned long *state)
+{
+  unsigned long count = (*state)++;
+  int sec, mod;
+  (void) stream;
+
+  if (count > 32)
+    count = 32;
+
+  sec = 1 << (count / 8);
+  mod = 8 >> (count / 8);
+
+  if (mod == 0)
+    mod = 1;
+
+  sleep(sec);
+
+  if (*state % mod == 0) {
+    struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
+    long save_pos, size;
+
+    if ((save_pos = ftell(h->f)) == -1)
+      return;
+
+    if (!(h->f = w_freopen(c_str(h->descr), c_str(h->mode), h->f)))
+      uw_throwf(file_error_s, lit("error opening ~a: ~a/~s"),
+                h->descr, num(errno), string_utf8(strerror(errno)), nao);
+
+    utf8_decoder_init(&h->ud);
+
+    if ((fseek(h->f, 0, SEEK_END)) == -1)
+      return;
+
+    if ((size = ftell(h->f)) == -1)
+      return;
+
+    if (size >= save_pos)
+      fseek(h->f, save_pos, SEEK_SET);
+    else
+      rewind(h->f);
+  }
+}
+
 static val tail_get_line(val stream)
 {
+  unsigned long state = 0;
   val ret;
 
   while ((ret = stdio_get_line(stream)) == nil)
-    sleep(1);
+    tail_strategy(stream, &state);
 
   return ret;
 }
 
 static val tail_get_char(val stream)
 {
+  unsigned long state = 0;
   val ret;
 
   while ((ret = stdio_get_char(stream)) == nil)
-    sleep(1);
+    tail_strategy(stream, &state);
 
   return ret;
 }
 
 static val tail_get_byte(val stream)
 {
+  unsigned long state = 0;
   val ret;
 
   while ((ret = stdio_get_byte(stream)) == nil)
-    sleep(1);
+    tail_strategy(stream, &state);
 
   return ret;
 }
@@ -1671,6 +1721,8 @@ val open_file(val path, val mode_str)
 val open_tail(val path, val mode_str, val seek_end_p)
 {
   FILE *f = w_fopen(c_str(path), c_str(mode_str));
+  struct stdio_handle *h;
+  val stream;
 
   if (!f)
     uw_throwf(file_error_s, lit("error opening ~a: ~a/~s"),
@@ -1681,7 +1733,10 @@ val open_tail(val path, val mode_str, val seek_end_p)
       uw_throwf(file_error_s, lit("error seeking to end of ~a: ~a/~s"),
                 path, num(errno), string_utf8(strerror(errno)), nao);
 
-  return make_tail_stream(f, path);
+  stream = make_tail_stream(f, path);
+  h = (struct stdio_handle *) stream->co.handle;
+  h->mode = mode_str;
+  return stream;
 }
 
 val open_command(val path, val mode_str)

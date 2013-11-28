@@ -371,3 +371,13 @@ FILE *w_popen(const wchar_t *wcmd, const wchar_t *wmode)
   free(mode);
   return f;
 }
+
+FILE *w_freopen(const wchar_t *wname, const wchar_t *wmode, FILE *fold)
+{
+  char *name = utf8_dup_to(wname);
+  char *mode = utf8_dup_to(wmode);
+  FILE *f = freopen(name, mode, fold);
+  free(name);
+  free(mode);
+  return f;
+}
