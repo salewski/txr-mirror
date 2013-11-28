@@ -1,5 +1,25 @@
 2013-11-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	Extending intrinsic functions to go up to 7 arguments.
+	Adding wrapper for mktime.
+
+	* eval.c (apply): Handle function codes N5 through N7.
+	(eval_init): Register make_time as intrinsic.
+
+	* lib.c (auto_k): New keyword symbol variable.
+	(equal, generic_funcall): Handle N5-N7.
+	(func_n5, func_n6, func_n7, func_n5v, func_n6v, func_n7v): New
+	functions.
+	(obj_init): Initialize auto_k.
+	(make_time): New function.
+
+	* lib.h (functype_t): New enum members: N5, N6, N7.
+	(struct func): New members: n5, n6, n7, n5v, n6v, n7v.
+	(auto_k, func_n5, func_n6, func_n7, func_n5v, func_n6v, func_n7v,
+	make_time): Declared.
+
+2013-11-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (make_stdio_stream_common): Initialize new
 	mode member of struct stdio_ops to nil.
 

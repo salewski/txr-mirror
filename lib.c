@@ -80,7 +80,7 @@ val error_s, type_error_s, internal_error_s;
 val numeric_error_s, range_error_s;
 val query_error_s, file_error_s, process_error_s;
 
-val nothrow_k, args_k, colon_k;
+val nothrow_k, args_k, colon_k, auto_k;
 
 val null_string;
 val nil_string;
@@ -974,6 +974,9 @@ val equal(val left, val right)
       case N2: return (left->f.f.n2 == right->f.f.n2) ? t : nil;
       case N3: return (left->f.f.n3 == right->f.f.n3) ? t : nil;
       case N4: return (left->f.f.n4 == right->f.f.n4) ? t : nil;
+      case N5: return (left->f.f.n5 == right->f.f.n5) ? t : nil;
+      case N6: return (left->f.f.n6 == right->f.f.n6) ? t : nil;
+      case N7: return (left->f.f.n7 == right->f.f.n7) ? t : nil;
       }
       return nil;
     }
@@ -2664,6 +2667,45 @@ val func_n4(val (*fun)(val, val, val, val))
   return obj;
 }
 
+val func_n5(val (*fun)(val, val, val, val, val))
+{
+  val obj = make_obj();
+  obj->f.type = FUN;
+  obj->f.functype = N5;
+  obj->f.env = nil;
+  obj->f.f.n5 = fun;
+  obj->f.variadic = 0;
+  obj->f.fixparam = 5;
+  obj->f.optargs = 0;
+  return obj;
+}
+
+val func_n6(val (*fun)(val, val, val, val, val, val))
+{
+  val obj = make_obj();
+  obj->f.type = FUN;
+  obj->f.functype = N6;
+  obj->f.env = nil;
+  obj->f.f.n6 = fun;
+  obj->f.variadic = 0;
+  obj->f.fixparam = 6;
+  obj->f.optargs = 0;
+  return obj;
+}
+
+val func_n7(val (*fun)(val, val, val, val, val, val, val))
+{
+  val obj = make_obj();
+  obj->f.type = FUN;
+  obj->f.functype = N7;
+  obj->f.env = nil;
+  obj->f.f.n7 = fun;
+  obj->f.variadic = 0;
+  obj->f.fixparam = 7;
+  obj->f.optargs = 0;
+  return obj;
+}
+
 val func_f0v(val env, val (*fun)(val, val))
 {
   val obj = make_obj();
@@ -2794,6 +2836,45 @@ val func_n4v(val (*fun)(val, val, val, val, val rest))
   return obj;
 }
 
+val func_n5v(val (*fun)(val, val, val, val, val, val rest))
+{
+  val obj = make_obj();
+  obj->f.type = FUN;
+  obj->f.functype = N5;
+  obj->f.env = nil;
+  obj->f.f.n5v = fun;
+  obj->f.variadic = 1;
+  obj->f.fixparam = 5;
+  obj->f.optargs = 0;
+  return obj;
+}
+
+val func_n6v(val (*fun)(val, val, val, val, val, val, val rest))
+{
+  val obj = make_obj();
+  obj->f.type = FUN;
+  obj->f.functype = N6;
+  obj->f.env = nil;
+  obj->f.f.n6v = fun;
+  obj->f.variadic = 1;
+  obj->f.fixparam = 6;
+  obj->f.optargs = 0;
+  return obj;
+}
+
+val func_n7v(val (*fun)(val, val, val, val, val, val, val, val rest))
+{
+  val obj = make_obj();
+  obj->f.type = FUN;
+  obj->f.functype = N7;
+  obj->f.env = nil;
+  obj->f.f.n7v = fun;
+  obj->f.variadic = 1;
+  obj->f.fixparam = 7;
+  obj->f.optargs = 0;
+  return obj;
+}
+
 val func_n0o(val (*fun)(void), int reqargs)
 {
   val obj = func_n0(fun);
@@ -2908,6 +2989,12 @@ static val generic_funcall(val fun, val arg[], int nargs)
       return fun->f.f.n3(arg[0], arg[1], arg[2]);
     case N4:
       return fun->f.f.n4(arg[0], arg[1], arg[2], arg[3]);
+    case N5:
+      return fun->f.f.n5(arg[0], arg[1], arg[2], arg[3], arg[4]);
+    case N6:
+      return fun->f.f.n6(arg[0], arg[1], arg[2], arg[3], arg[4], arg[5]);
+    case N7:
+      return fun->f.f.n7(arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6]);
     case FINTERP:
       internal_error("unsupported function type");
     }
@@ -2949,6 +3036,12 @@ static val generic_funcall(val fun, val arg[], int nargs)
       return fun->f.f.n3v(arg[0], arg[1], arg[2], arglist);
     case N4:
       return fun->f.f.n4v(arg[0], arg[1], arg[2], arg[3], arglist);
+    case N5:
+      return fun->f.f.n5v(arg[0], arg[1], arg[2], arg[3], arg[4], arglist);
+    case N6:
+      return fun->f.f.n6v(arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arglist);
+    case N7:
+      return fun->f.f.n7v(arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arglist);
     }
   }
 
@@ -4593,6 +4686,7 @@ static void obj_init(void)
   args_k = intern(lit("args"), keyword_package);
   nothrow_k = intern(lit("nothrow"), keyword_package);
   colon_k = intern(lit(""), keyword_package);
+  auto_k = intern(lit("auto"), keyword_package);
 
   equal_f = func_n2(equal);
   eq_f = func_n2(eq);
@@ -4931,6 +5025,32 @@ val time_string_utc(val time, val format)
   val timestr = string_time(gmtime_r, u8fmt, secs);
   free(u8fmt);
   return timestr;
+}
+
+val make_time(val year, val month, val day,
+              val hour, val minute, val second,
+              val isdst)
+{
+  struct tm local = { 0 };
+  time_t time;
+
+  local.tm_year = c_num(year) - 1900;
+  local.tm_mon = c_num(month) + 1;
+  local.tm_mday = c_num(day);
+  local.tm_hour = c_num(hour);
+  local.tm_min = c_num(minute);
+  local.tm_sec = c_num(second);
+
+  if (!isdst)
+    local.tm_isdst = 0;
+  else if (isdst == auto_k)
+    local.tm_isdst = -1;
+  else
+    local.tm_isdst = 1;
+
+  time = mktime(&local);
+
+  return time == -1 ? nil : num(time);
 }
 
 void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),

@@ -317,6 +317,12 @@ val apply(val fun, val arglist, val ctx_form)
       return fun->f.f.n3(arg[0], arg[1], arg[2]);
     case N4:
       return fun->f.f.n4(arg[0], arg[1], arg[2], arg[3]);
+    case N5:
+      return fun->f.f.n5(arg[0], arg[1], arg[2], arg[3], arg[4]);
+    case N6:
+      return fun->f.f.n6(arg[0], arg[1], arg[2], arg[3], arg[4], arg[5]);
+    case N7:
+      return fun->f.f.n7(arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6]);
     case FINTERP:
       internal_error("unsupported function type");
     }
@@ -356,6 +362,12 @@ val apply(val fun, val arglist, val ctx_form)
       return fun->f.f.n3v(arg[0], arg[1], arg[2], arglist);
     case N4:
       return fun->f.f.n4v(arg[0], arg[1], arg[2], arg[3], arglist);
+    case N5:
+      return fun->f.f.n5v(arg[0], arg[1], arg[2], arg[3], arg[4], arglist);
+    case N6:
+      return fun->f.f.n6v(arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arglist);
+    case N7:
+      return fun->f.f.n7v(arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arglist);
     }
   }
 
@@ -2518,7 +2530,7 @@ void eval_init(void)
   reg_fun(intern(lit("time-usec"), user_package), func_n0(time_sec_usec));
   reg_fun(intern(lit("time-string-local"), user_package), func_n2(time_string_local));
   reg_fun(intern(lit("time-string-utc"), user_package), func_n2(time_string_utc));
-
+  reg_fun(intern(lit("make-time"), user_package), func_n7(make_time));
   reg_fun(intern(lit("source-loc"), user_package), func_n1(source_loc));
   reg_fun(intern(lit("source-loc-str"), user_package), func_n1(source_loc_str));
 

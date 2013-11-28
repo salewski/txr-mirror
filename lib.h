@@ -52,7 +52,7 @@ typedef enum functype
 {
    FINTERP,             /* Interpreted function. */
    F0, F1, F2, F3, F4,  /* Intrinsic functions with env. */
-   N0, N1, N2, N3, N4   /* No-env intrinsics. */
+   N0, N1, N2, N3, N4, N5, N6, N7   /* No-env intrinsics. */
 } functype_t;
 
 typedef union obj obj_t;
@@ -121,6 +121,9 @@ struct func {
     val (*n2)(val, val);
     val (*n3)(val, val, val);
     val (*n4)(val, val, val, val);
+    val (*n5)(val, val, val, val, val);
+    val (*n6)(val, val, val, val, val, val);
+    val (*n7)(val, val, val, val, val, val, val);
     val (*f0v)(val, val);
     val (*f1v)(val, val, val);
     val (*f2v)(val, val, val, val);
@@ -131,6 +134,9 @@ struct func {
     val (*n2v)(val, val, val);
     val (*n3v)(val, val, val, val);
     val (*n4v)(val, val, val, val, val);
+    val (*n5v)(val, val, val, val, val, val);
+    val (*n6v)(val, val, val, val, val, val, val);
+    val (*n7v)(val, val, val, val, val, val, val, val);
   } f;
 };
 
@@ -327,7 +333,7 @@ extern val error_s, type_error_s, internal_error_s;
 extern val numeric_error_s, range_error_s;
 extern val query_error_s, file_error_s, process_error_s;
 
-extern val nothrow_k, args_k, colon_k;
+extern val nothrow_k, args_k, colon_k, auto_k;
 
 extern val null_string;
 extern val null_list; /* (nil) */
@@ -557,6 +563,9 @@ val func_n1(val (*fun)(val));
 val func_n2(val (*fun)(val, val));
 val func_n3(val (*fun)(val, val, val));
 val func_n4(val (*fun)(val, val, val, val));
+val func_n5(val (*fun)(val, val, val, val, val));
+val func_n6(val (*fun)(val, val, val, val, val, val));
+val func_n7(val (*fun)(val, val, val, val, val, val, val));
 val func_f0v(val, val (*fun)(val env, val rest));
 val func_f1v(val, val (*fun)(val env, val, val rest));
 val func_f2v(val, val (*fun)(val env, val, val, val rest));
@@ -567,6 +576,9 @@ val func_n1v(val (*fun)(val, val rest));
 val func_n2v(val (*fun)(val, val, val rest));
 val func_n3v(val (*fun)(val, val, val, val rest));
 val func_n4v(val (*fun)(val, val, val, val, val rest));
+val func_n5v(val (*fun)(val, val, val, val, val, val rest));
+val func_n6v(val (*fun)(val, val, val, val, val, val, val rest));
+val func_n7v(val (*fun)(val, val, val, val, val, val, val, val rest));
 val func_n0o(val (*fun)(void), int reqargs);
 val func_n1o(val (*fun)(val), int reqargs);
 val func_n2o(val (*fun)(val, val), int reqargs);
@@ -667,6 +679,9 @@ val time_sec(void);
 val time_sec_usec(void);
 val time_string_local(val time, val format);
 val time_string_utc(val time, val format);
+val make_time(val year, val month, val day,
+              val hour, val minute, val second,
+              val isdst);
 
 void init(const wchar_t *progname, mem_t *(*oom_realloc)(mem_t *, size_t),
           val *stack_bottom);
