@@ -193,6 +193,6 @@ conftest.ccver:
 
 .PHONY: conftest.clean
 conftest.clean:
-	rm -f conftest conftest.[co] \
+	@rm -f conftest conftest.[co] \
 	conftest2 conftest[12].[oc] \
 	conftest.err conftest.syms

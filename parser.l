@@ -35,8 +35,10 @@
 #include <dirent.h>
 #include <wchar.h>
 #include <setjmp.h>
-#include <unistd.h>
 #include "config.h"
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #include "lib.h"
 #include "y.tab.h"
 #include "gc.h"

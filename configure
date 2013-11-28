@@ -97,6 +97,7 @@ gen_gc=
 mpi_version=1.8.6
 have_quilt=
 have_patch=
+have_unistd=
 
 #
 # Parse configuration variables
@@ -675,6 +676,7 @@ int main(void) { return 0; }
   rm -f conftest
   if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
     printf "#define %s txr_%s\n" $ident $ident >> config.h
+    have_unistd=y
   fi
 done
 
@@ -1241,6 +1243,7 @@ if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
 else
   printf "yes\n"
   printf "#define HAVE_FORK_STUFF 1\n" >> config.h
+  have_unistd=y
 fi
 
 #
@@ -1295,10 +1298,16 @@ if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
 else
   printf "yes\n"
   printf "#define HAVE_POSIX_SLEEP 1\n" >> config.h
+  have_unistd=y
 fi
 
+#
+# Dependent variables
+#
 
-printf "done\n"
+if [ -n "$have_unistd" ] ; then
+  printf "#define HAVE_UNISTD_H 1\n" >> config.h
+fi
 
 #
 # Extra debugging.
@@ -1393,7 +1402,7 @@ fi
 
 printf "Regenerating config.make ... "
 gen_config_make
-printf "\n"
+printf "done\n"
 
 #
 # Save configuration in config.log

@@ -1,3 +1,91 @@
+2013-11-27  Kaz Kylheku  <kaz@kylheku.com>
+
+	* Makefile (conftest.clean): Use @ to suppress output.
+
+	* configure (have_unistd): New variable. Set true by every successful
+	test that compiles something that contains #include <unistd.h>.
+	HAVE_UNISTD_H is conditionally generated in config.h based on this variable.
+	Minor cleanup.
+
+	* parser.l: Inclusion of <unistd.h> wrapped in #if/#endif.
+
+	* stream.c: Conditional inclusion of <unistd.h> based on new HAVE_UNISTD_H symbol.
+
+2013-11-27  Kaz Kylheku  <kaz@kylheku.com>
+
+	* configure: Added check to detect POSIX sleep function.
+
+	* eval.c (eval_init): Register new open_tail function as intrinsic.
+
+	* match.c (complex_snarf, complex_stream): Update calls to
+	make_stdio_stream and make_pipe_stream to take fewer arguments.
+	(match_files): Support a stream object as a data source specification
+	in place of a string.
+
+	* parser.l (parse_reset): Update call to make_stdio_stream to take
+	fewer arguments.
+
+	* stream.c: Inclusion of <unistd.h> made properly conditional.
+	(struct stdio_handle): pid member defined as pid_t only if we have fork
+	functionality, otherwise defined as int.
+	(tail_get_line, tail_get_char, tail_get_byte): New static functions.
+	(tail_ops): New static structure.
+	(make_stdio_stream_common): New static structure.
+	(make_stdio_stream, make_pipe_stream): These functions lose the input
+	and output parameters, which ended up never used. Reimplemented
+	in terms of new common function.
+	(make_tail_stream): New function.
+	(make_pipevp_stream): Reimplemented in terms of new common function.
+	(open_file, open_command): Simplified by removal of useless local
+	variables and their computation, which used to be extra arguments to
+	make_stdio_stream and make_pipe_stream.
+	(open_tail): New function.
+	(stream_init): Calls to make_stdio_stream updated.
+
+	* stream.h (make_stdio_stream, make_pipe_stream): Declarations updated.
+	(make_tail_stream, open_tail): Declared.
+
+	* txr.c (txr_main): Calls to make_stdio_stream updated.
+
+2013-11-26  Kaz Kylheku  <kaz@kylheku.com>
+
+	Stream-seeking functionality.
+
+	Bugfix in stdio_flush: check FILE * handle for null.
+
+	Minor cleanups.
+
+	* eval.c (eval_init): Register seek_stream as intrinsic.
+
+	* stream.c (from_start_k, from_current_k, from_end_k): New symbol
+	variables.
+	(strm_whence): New enum.
+	(strm_ops): New member, seek.
+	(stdio_maybe_write_error): Renamed to stdio_maybe_error; takes
+	new string argument to describe action.
+	(stdio_put_string, stdio_put_char, stdio_put_byte): Updated call to
+	stdio_maybe_error.
+	(stdio_flush): Updated call to stdio_maybe_error. Check
+	handle for null.
+	(stdio_seek): New static function.
+	(stdio_ops): Added stdio_seek.
+	(pipe_ops, string_in_ops, byte_in_ops, string_out_ops,
+	strlist_out_ops, dir_ops): Added explicit zero entries and comments for
+	unimplemented functions.
+	(seek_stream): New function.
+	(stream_init): New keyword symbols interned.
+
+	* stream.h (from_start_k, from_current_k, from_end_k): New
+	variables declared.
+	(dev_k, ino_k, mode_k, nlink_k, uid_k, gid_k, rdev_k, size_k,
+	blksize_k, blocks_k, atime_k, mtime_k, ctime_k, s_ifmt, s_iflnk,
+	s_ifreg, s_ifblk, s_ifdir, s_ifchr, s_ififo, s_isuid, s_isgid, s_isvtx,
+	s_irwxu, s_irusr, s_iwusr, s_ixusr, s_irwxg, s_irgrp,
+	s_iwgrp): Existing extern variables declared.
+	(seek_stream): New function declared.
+
+	* txr.1: Documented seek-stream.
+
 2013-11-24  Kaz Kylheku  <kaz@kylheku.com>
 
 	* match.c (v_load): Bugfix: bindings were propagated in only one of two
@@ -18,7 +106,7 @@
 2013-11-22  Kaz Kylheku  <kaz@kylheku.com>
 
 	* genvim.txr: Change how the hard-coded symbols (end, and, or) are
-	* added, and also add the missing rep to these.
+	added, and also add the missing rep to these.
 
 	* txr.vim: Regenerated.
 

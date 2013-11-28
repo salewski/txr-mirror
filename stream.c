@@ -35,7 +35,7 @@
 #include <ctype.h>
 #include <wchar.h>
 #include "config.h"
-#if HAVE_SYS_WAIT || HAVE_SYS_STAT || HAVE_FORK_STUFF || HAVE_POSIX_SLEEP
+#if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 #include <float.h>
