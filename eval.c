@@ -2531,6 +2531,7 @@ void eval_init(void)
   reg_fun(intern(lit("time-string-local"), user_package), func_n2(time_string_local));
   reg_fun(intern(lit("time-string-utc"), user_package), func_n2(time_string_utc));
   reg_fun(intern(lit("make-time"), user_package), func_n7(make_time));
+
   reg_fun(intern(lit("source-loc"), user_package), func_n1(source_loc));
   reg_fun(intern(lit("source-loc-str"), user_package), func_n1(source_loc_str));
 
