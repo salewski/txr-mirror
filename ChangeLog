@@ -1,5 +1,9 @@
 2013-11-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Documented open-tail and make-time.
+
+2013-11-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	Extending intrinsic functions to go up to 7 arguments.
 	Adding wrapper for mktime.
 

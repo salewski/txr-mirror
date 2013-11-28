@@ -10355,6 +10355,38 @@ or output stream. Note that the "b" mode is not supported.
 Whether a stream is text or binary depends on which operations
 are invoked on it.
 
+.SS Function open-tail
+
+.TP
+Syntax:
+
+  (open-tail <path> <mode-string> <seek-to-end-p>)
+
+.TP
+Description:
+
+The open-tail function creates a tail stream connected to the file which is
+located at the given <path>.  The <mode-string> argument is a string which uses
+the same conventions as the mode argument of the C language fopen function.
+The mode string determines whether the stream is an input stream
+or output stream. Note that the "b" mode is not supported.
+Whether a stream is text or binary depends on which operations
+are invoked on it. The <seek-to-end-p> argument is a boolean whcih
+determines whether the initial read/write position is at the
+start of the file, or just past the end.
+
+A tail stream has special semantics with regard to reading at the end
+of file. A tail stream never reports an end-of-file condition; instead
+it polls the file until more data is added. Furthermore, if the file
+is truncated, or replaced with a smaller file, the tail stream follows
+this change: it automatically opens the smaller file and starts reading from
+the beginning (the <seek-to-end-p> flag only applies to the initial open).
+In this manner, a tail stream can dynamically growing rotating log files.
+
+Caveat: since a tail stream can re-open a new file which has the same
+name as the original file, it will do the wrong thing if the program
+changes the current working directory, and the path name is relative.
+
 .SH COPROCESSES
 
 .SS Functions open-command, open-process
@@ -10742,6 +10774,31 @@ the format string of the C library function strftime.
 
 The <time> argument is an integer representing seconds obtained from the
 time function or from the time-usec function.
+
+.SS Function make-time
+
+.TP
+Syntax:
+
+  (make-time <year> <month> <day> <hour> <minute> <second> <dst-advice>)
+
+.TP
+Description
+
+The make-time function returns a time value, similar to the one returned by the
+time function.  The time value is constructed not from the system clock, but
+from a date and time specified as arguments. The <year> argument is a
+calendar year, like 2013. The <month> argument ranges from 1 through 12.
+These arguments represent a local time, in the current time zone.
+
+The <dst-advice> argument specifies whether the time is expressed in
+daylight savings time (DST). It takes on these values: nil, the keyword :auto,
+or any other value which denotes boolean true.
+
+If <dst-advice> is t, then the time is assumed to be expressed in DST.
+If the argument is nil, then the time is assumed not to be in DST.
+If <dst-advice> is :auto, then the function tries to determine whether
+DST is in effect in the current time zone for the specified date and time.
 
 .SH WEB PROGRAMMING SUPPORT
 
