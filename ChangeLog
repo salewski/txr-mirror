@@ -1,5 +1,11 @@
 2013-11-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (make_time): We must subtract from the 1-12
+	month for the tm_mon member of struct tm; we
+	were adding 1 instead.
+
+2013-11-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (tail_calc): New function
 	(tail_strategy): Handle the situation when the file disappears. We
 	cannot throw an error, but must poll the filesystem

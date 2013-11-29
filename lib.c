@@ -5035,7 +5035,7 @@ val make_time(val year, val month, val day,
   time_t time;
 
   local.tm_year = c_num(year) - 1900;
-  local.tm_mon = c_num(month) + 1;
+  local.tm_mon = c_num(month) - 1;
   local.tm_mday = c_num(day);
   local.tm_hour = c_num(hour);
   local.tm_min = c_num(minute);
