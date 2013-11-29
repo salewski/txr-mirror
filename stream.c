@@ -322,20 +322,22 @@ static struct strm_ops stdio_ops = {
   stdio_seek
 };
 
-static void tail_strategy(val stream, unsigned long *state)
+static void tail_calc(unsigned long *state, int *sec, int *mod)
 {
   unsigned long count = (*state)++;
-  int sec, mod;
-  (void) stream;
-
   if (count > 32)
     count = 32;
+  *sec = 1 << (count / 8);
+  *mod = 8 >> (count / 8);
+  if (*mod == 0)
+    *mod = 1;
+}
 
-  sec = 1 << (count / 8);
-  mod = 8 >> (count / 8);
+static void tail_strategy(val stream, unsigned long *state)
+{
+  int sec, mod;
 
-  if (mod == 0)
-    mod = 1;
+  tail_calc(state, &sec, &mod);
 
   sleep(sec);
 
@@ -346,9 +348,16 @@ static void tail_strategy(val stream, unsigned long *state)
     if ((save_pos = ftell(h->f)) == -1)
       return;
 
-    if (!(h->f = w_freopen(c_str(h->descr), c_str(h->mode), h->f)))
-      uw_throwf(file_error_s, lit("error opening ~a: ~a/~s"),
-                h->descr, num(errno), string_utf8(strerror(errno)), nao);
+    for (;;) {
+      FILE *newf;
+      if (!(newf = w_freopen(c_str(h->descr), c_str(h->mode), h->f))) {
+        tail_calc(state, &sec, &mod);
+        sleep(sec);
+        continue;
+      }
+      h->f = newf;
+      break;
+    }
 
     utf8_decoder_init(&h->ud);
 
