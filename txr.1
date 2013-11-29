@@ -10800,6 +10800,38 @@ If the argument is nil, then the time is assumed not to be in DST.
 If <dst-advice> is :auto, then the function tries to determine whether
 DST is in effect in the current time zone for the specified date and time.
 
+.SH UNIX PROGRAMMING
+
+.SS Functions errno and set-errno
+
+.TP
+Syntax:
+
+   (errno [<new-errno>])
+
+.TP
+Description:
+
+These functions retrieves the current value of the C library error variable
+errno.  If the argument <new-errno> is present and is not nil, then it becomes
+the new value of errno. The value returned is the prior value.
+
+.SS Function daemon
+
+.TP
+Syntax:
+
+  (daemon <nochdir-p> <noclose-p>)
+
+.TP
+Description:
+
+This is a wrapper for the Unix function daemon of BSD origin. 
+
+It returns t if successful, nil otherwise, and the errno
+variable is set in that case.
+
+
 .SH WEB PROGRAMMING SUPPORT
 
 .SS Functions url-encode and url-decode

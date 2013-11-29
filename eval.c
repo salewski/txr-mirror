@@ -33,6 +33,9 @@
 #include <stdarg.h>
 #include <wchar.h>
 #include "config.h"
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #include "lib.h"
 #include "gc.h"
 #include "unwind.h"
@@ -2054,6 +2057,20 @@ static val force(val promise)
   return rplacd(promise, funcall(cdr(promise)));
 }
 
+static val errno_wrap(val newval)
+{
+  val oldval = num(errno);
+  if (newval)
+    errno = c_num(newval);
+  return oldval;
+}
+
+static val daemon_wrap(val nochdir, val noclose)
+{
+  int result = daemon(nochdir ? 1 : 0, noclose ? 1 : 0);
+  return result == 0 ? t : nil;
+}
+
 static void reg_fun(val sym, val fun)
 {
   sethash(top_fb, sym, cons(sym, fun));
@@ -2531,6 +2548,9 @@ void eval_init(void)
   reg_fun(intern(lit("time-string-local"), user_package), func_n2(time_string_local));
   reg_fun(intern(lit("time-string-utc"), user_package), func_n2(time_string_utc));
   reg_fun(intern(lit("make-time"), user_package), func_n7(make_time));
+
+  reg_fun(intern(lit("errno"), user_package), func_n1o(errno_wrap, 0));
+  reg_fun(intern(lit("daemon"), user_package), func_n2(daemon_wrap));
 
   reg_fun(intern(lit("source-loc"), user_package), func_n1(source_loc));
   reg_fun(intern(lit("source-loc-str"), user_package), func_n1(source_loc_str));

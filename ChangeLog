@@ -1,5 +1,17 @@
 2013-11-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	* configure: Detect the daemon function.
+
+	* eval.c: Include <unistd.h> conditionally.
+	(errno_wrap, daemon_wrap): New functions.
+	(eval_init): Registered errno_wrap and daemon_wrap as intrinsics
+	under the names daemon and errno.
+
+	* txr.1: Documented errno and daemon in new UNIX PROGRAMMING
+	section.
+
+2013-11-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: Documented open-tail and make-time.
 
 2013-11-28  Kaz Kylheku  <kaz@kylheku.com>

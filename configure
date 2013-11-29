@@ -1281,6 +1281,8 @@ int x = sizeof ((struct tm *) 0)->$try_field;
   fi
 done
 
+printf "done\n"
+
 printf "Checking for POSIX sleep function ... "
 
 cat > conftest.c <<!
@@ -1298,6 +1300,26 @@ if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
 else
   printf "yes\n"
   printf "#define HAVE_POSIX_SLEEP 1\n" >> config.h
+  have_unistd=y
+fi
+
+printf "Checking for BSD daemon function ... "
+
+cat > conftest.c <<!
+#include <unistd.h>
+
+int main(int argc, char **argv)
+{
+  daemon(0, 0);
+  return 0;
+}
+!
+rm -f conftest
+if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+  printf "no\n"
+else
+  printf "yes\n"
+  printf "#define HAVE_DAEMON 1\n" >> config.h
   have_unistd=y
 fi
 
