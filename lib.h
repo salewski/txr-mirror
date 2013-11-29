@@ -682,6 +682,9 @@ val time_string_utc(val time, val format);
 val make_time(val year, val month, val day,
               val hour, val minute, val second,
               val isdst);
+val make_time_utc(val year, val month, val day,
+                  val hour, val minute, val second,
+                  val isdst);
 
 void init(const wchar_t *progname, mem_t *(*oom_realloc)(mem_t *, size_t),
           val *stack_bottom);

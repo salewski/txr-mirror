@@ -1,4 +1,4 @@
-.\"Copyright (C) 2011, Kaz Kylheku <kaz@kylheku.com>.
+.\"Copyright (C) 20114 Kaz Kylheku <kaz@kylheku.com>.
 .\"All rights reserved.
 .\"
 .\"BSD License:
@@ -10775,12 +10775,13 @@ the format string of the C library function strftime.
 The <time> argument is an integer representing seconds obtained from the
 time function or from the time-usec function.
 
-.SS Function make-time
+.SS Functions make-time and make-time-utc
 
 .TP
 Syntax:
 
   (make-time <year> <month> <day> <hour> <minute> <second> <dst-advice>)
+  (make-time-utc <year> <month> <day> <hour> <minute> <second> <dst-advice>)
 
 .TP
 Description
@@ -10799,6 +10800,13 @@ If <dst-advice> is t, then the time is assumed to be expressed in DST.
 If the argument is nil, then the time is assumed not to be in DST.
 If <dst-advice> is :auto, then the function tries to determine whether
 DST is in effect in the current time zone for the specified date and time.
+
+The make-time-utc function is similar to make-time, except that
+it treats the time as UTC rather than in the local time zone. 
+The <dst-advice> argument is supported by make-time-utc for function
+call compatibility with make-time. It may or may not have any effect
+on the output (since the UTC zone by definition doesn't have daylight
+savings time).
 
 .SH UNIX PROGRAMMING
 

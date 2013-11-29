@@ -5027,9 +5027,10 @@ val time_string_utc(val time, val format)
   return timestr;
 }
 
-val make_time(val year, val month, val day,
-              val hour, val minute, val second,
-              val isdst)
+static val make_time_impl(time_t (*pmktime)(struct tm *),
+                          val year, val month, val day,
+                          val hour, val minute, val second,
+                          val isdst)
 {
   struct tm local = { 0 };
   time_t time;
@@ -5048,9 +5049,52 @@ val make_time(val year, val month, val day,
   else
     local.tm_isdst = 1;
 
-  time = mktime(&local);
+  time = pmktime(&local);
 
   return time == -1 ? nil : num(time);
+}
+
+val make_time(val year, val month, val day,
+              val hour, val minute, val second,
+              val isdst)
+{
+  return make_time_impl(mktime, year, month, day, hour, minute, second, isdst);
+}
+
+#if !HAVE_TIMEGM
+static time_t timegm_hack(struct tm *tm)
+{
+    time_t ret;
+    char *tz;
+
+    tz = getenv("TZ");
+    setenv("TZ", "UTC", 1);
+#if HAVE_TZSET
+    tzset();
+#endif
+    ret = mktime(tm);
+    if (tz)
+        setenv("TZ", tz, 1);
+    else
+        unsetenv("TZ");
+#if HAVE_TZSET
+    tzset();
+#endif
+    return ret;
+}
+#endif
+
+val make_time_utc(val year, val month, val day,
+                  val hour, val minute, val second,
+                  val isdst)
+{
+#if HAVE_TIMEGM
+  time_t (*pmktime)(struct tm *) = timegm;
+#else
+  time_t (*pmktime)(struct tm *) = timegm_hack;
+#endif
+
+  return make_time_impl(pmktime, year, month, day, hour, minute, second, isdst);
 }
 
 void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),

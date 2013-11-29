@@ -1,3 +1,23 @@
+2013-11-29  Kaz Kylheku  <kaz@kylheku.com>
+
+	* configure (config_flags): New variable, allowing us to
+	have stricter diagnosis for configure tests.
+	(have_timegm, need_svid_source, need_bsd_source): New
+	variables.  sys/stat.h test only declares static data and
+	compiles an object file. Adding tests for timegm, tzset,
+	setenv and unsetenv.
+
+	* eval.c (eval_init): Register new intrinsic, make_time_utc.
+
+	* lib.c (make_time_impl): New static function.
+	(make_time): Reimplemented as call to make_time_impl.
+	(timegm_hack): New conditionally-defined static function.
+	(make_time_utc): New function.
+
+	* lib.h (make_time_utc): Declared.
+
+	* txr.1: make-time-utc documented.
+
 2013-11-28  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (make_time): We must subtract from the 1-12
