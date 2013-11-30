@@ -1,5 +1,16 @@
 2013-11-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): New functions countqual, countql, countq
+	and count_if registered as intrinsics.
+
+	* lib.c (countqual, countql, countq, count_if): New functions.
+
+	* lib.h (countqual, countql, countq, count_if): Declared.
+
+	* txr.1: New functions documented.
+
+2013-11-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	* configure (config_flags): New variable, allowing us to
 	have stricter diagnosis for configure tests.
 	(have_timegm, need_svid_source, need_bsd_source): New

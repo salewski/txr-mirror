@@ -2249,6 +2249,10 @@ void eval_init(void)
   reg_fun(intern(lit("remove-if*"), user_package), func_n3o(remove_if_lazy, 2));
   reg_fun(intern(lit("keep-if*"), user_package), func_n3o(keep_if_lazy, 2));
   reg_fun(intern(lit("tree-find"), user_package), func_n3o(tree_find, 2));
+  reg_fun(intern(lit("countqual"), user_package), func_n2(countqual));
+  reg_fun(intern(lit("countql"), user_package), func_n2(countql));
+  reg_fun(intern(lit("countq"), user_package), func_n2(countq));
+  reg_fun(intern(lit("count-if"), user_package), func_n3o(count_if, 2));
   reg_fun(intern(lit("some"), user_package), func_n3o(some_satisfy, 2));
   reg_fun(intern(lit("all"), user_package), func_n3o(all_satisfy, 2));
   reg_fun(intern(lit("none"), user_package), func_n3o(none_satisfy, 2));

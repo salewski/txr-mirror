@@ -6626,6 +6626,21 @@ Examples:
 
   [(remql* 13 (range 1)) 0..100]
 
+.SS Functions countqual, countql and countq
+
+.TP
+Syntax:
+
+  (countq <object> <list>)
+  (countql <object> <list>)
+  (countqual <object> <list>)
+
+.TP
+Description
+
+The countq, countql and countqual functions count the number of objects
+in <list> which are eq, eql or equal to <object>, and return the count.
+
 .SH APPLICATIVE LIST PROCESSING
 
 .SS Functions remove-if, keep-if, remove-if* and keep-if*
@@ -6675,6 +6690,24 @@ Examples:
   (remove-if (op equal [(car @1) 0..3] "abc")
              '(("abcd" 4) ("defg" 5)))
   -> (("defg 5))
+
+.SS Function count-if
+
+.TP
+Syntax:
+
+  (count-if <predicate-function> <list> : <key-function>)
+
+.TP
+Description:
+
+The countove-if function counts the numer of elements of <list> which satisfy
+<predicate-function> and returns the count.
+
+The optional <key-function> specifies how each element from the <list> is
+transformed to an argument to <predicate-function>. If this argument is omitted
+or specified as nil, then the predicate function is applied to the elements
+directly, a behavior which is identical to <key-function> being (fun identity).
 
 .SS Function tree-find
 

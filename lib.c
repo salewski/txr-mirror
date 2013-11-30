@@ -783,6 +783,57 @@ val tree_find(val obj, val tree, val testfun)
   return nil;
 }
 
+val countqual(val obj, val list)
+{
+  val count = zero;
+
+  for (; list; list = cdr(list))
+    if (equal(car(list), obj))
+      count = plus(count, one);
+
+  return count;
+}
+
+val countql(val obj, val list)
+{
+  val count = zero;
+
+  for (; list; list = cdr(list))
+    if (eql(car(list), obj))
+      count = plus(count, one);
+
+  return count;
+}
+
+val countq(val obj, val list)
+{
+  val count = zero;
+
+  for (; list; list = cdr(list))
+    if (eq(car(list), obj))
+      count = plus(count, one);
+
+  return count;
+}
+
+val count_if(val pred, val list, val key)
+{
+  val count = zero;
+
+  if (!key)
+    key = identity_f;
+
+  for (; list; list = cdr(list)) {
+    val subj = funcall1(key, car(list));
+    val satisfies = funcall1(pred, subj);
+
+    if (satisfies)
+      count = plus(count, one);
+  }
+
+  return count;
+}
+
 val some_satisfy(val list, val pred, val key)
 {
   if (!key)
