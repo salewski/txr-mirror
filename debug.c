@@ -92,6 +92,8 @@ val debug(val form, val bindings, val data, val line, val pos, val base)
   val loc = source_loc(form);
   cons_bind (lineno, file, loc);
 
+  data = if2(consp(data), car(data));
+
   if (!step_mode && !memqual(loc, breakpoints) 
       && (debug_depth > next_depth))
   {

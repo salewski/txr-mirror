@@ -3700,8 +3700,7 @@ repeat_spec_same_data:
   {
     spec_bind (specline, first_spec, c.spec);
 
-    debug_check(first_spec, c.bindings, if2(consp(c.data), car(c.data)), 
-                c.data_lineno, nil, nil);
+    debug_check(first_spec, c.bindings, c.data, c.data_lineno, nil, nil);
 
     if (consp(first_spec) && !rest(specline)) {
       val sym = first(first_spec);
@@ -3809,8 +3808,7 @@ val match_fun(val name, val args, val input, val files)
 
   debug_enter;
 
-  debug_check(call, c.bindings, if2(consp(c.data), car(c.data)), 
-              c.data_lineno, nil, nil);
+  debug_check(call, c.bindings, c.data, c.data_lineno, nil, nil);
 
   ret = v_fun(&c);
 
