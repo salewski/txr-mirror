@@ -360,17 +360,17 @@ static void tail_calc(unsigned long *state, int *sec, int *mod)
 
 static void tail_strategy(val stream, unsigned long *state)
 {
+  struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
   int sec, mod;
 
   tail_calc(state, &sec, &mod);
 
   sleep(sec);
 
-  if (*state % mod == 0) {
-    struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
-    long save_pos, size;
+  if (*state % mod == 0 || h->f == 0) {
+    long save_pos = 0, size;
 
-    if ((save_pos = ftell(h->f)) == -1)
+    if (h->f != 0 && (save_pos = ftell(h->f)) == -1)
       return;
 
     for (;;) {
@@ -925,7 +925,7 @@ static val make_stdio_stream_common(FILE *f, val descr, struct cobj_ops *ops)
   utf8_decoder_init(&h->ud);
   h->pid = 0;
 #if HAVE_ISATTY
-  h->is_real_time = (isatty(fileno(h->f)) == 1);
+  h->is_real_time = (h->f != 0 && isatty(fileno(h->f)) == 1);
 #else
   h->is_real_time = 0;
 #endif
@@ -1798,22 +1798,14 @@ val open_file(val path, val mode_str)
 
 val open_tail(val path, val mode_str, val seek_end_p)
 {
-  FILE *f = w_fopen(c_str(path), c_str(mode_str));
   struct stdio_handle *h;
   val stream;
+  unsigned long state = 0;
 
-  if (!f)
-    uw_throwf(file_error_s, lit("error opening ~a: ~a/~s"),
-              path, num(errno), string_utf8(strerror(errno)), nao);
-
-  if (seek_end_p)
-    if (fseek(f, 0, SEEK_END) < 0)
-      uw_throwf(file_error_s, lit("error seeking to end of ~a: ~a/~s"),
-                path, num(errno), string_utf8(strerror(errno)), nao);
-
-  stream = make_tail_stream(f, path);
+  stream = make_tail_stream(0, path);
   h = (struct stdio_handle *) stream->co.handle;
   h->mode = mode_str;
+  tail_strategy(stream, &state);
   return stream;
 }
 

@@ -1,5 +1,20 @@
 2013-12-02  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (tail_strategy): Execute the strategy code also
+	in the case that the stream's FILE * handle is null. This handles
+	opening the file for the first time.
+	(make_stdio_stream_common): Do not use the FILE * handle if it is null.
+	(open_tail): Do not open the file immediately and error out.
+	This is undesirable because log files might not exist at the time
+	open_tail is called on them. Instead, produce a stream which contains
+	a null file handle, and use tail_strategy to poll for the file
+	to come into existence.
+
+	* utf8.c (w_freopen): Just in case freopen doesn't like a null
+	pointer for the existing stream, use fopen instead if that is the case.
+
+2013-12-02  Kaz Kylheku  <kaz@kylheku.com>
+
 	* genvim.txr: Missing catch and finally keywords added.
 
 	* txr.vim: Regenerated.
