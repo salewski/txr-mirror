@@ -1,5 +1,11 @@
 2013-12-02  Kaz Kylheku  <kaz@kylheku.com>
 
+	* genvim.txr: Missing catch and finally keywords added.
+
+	* txr.vim: Regenerated.
+
+2013-12-02  Kaz Kylheku  <kaz@kylheku.com>
+
 	debug_check calls are the culprit triggering lookahead
 	in lazy lists. Changing the semantics of the data argument
 	so that it can just be the list.
