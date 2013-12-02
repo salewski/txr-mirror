@@ -58,6 +58,7 @@ val dev_k, ino_k, mode_k, nlink_k, uid_k;
 val gid_k, rdev_k, size_k, blksize_k, blocks_k;
 val atime_k, mtime_k, ctime_k;
 val from_start_k, from_current_k, from_end_k;
+val real_time_k;
 
 val s_ifmt, s_ifsock, s_iflnk, s_ifreg, s_ifblk, s_ifdir;
 val s_ifchr, s_ififo, s_isuid, s_isgid, s_isvtx, s_irwxu;
@@ -81,6 +82,8 @@ struct strm_ops {
   val (*close)(val, val);
   val (*flush)(val);
   val (*seek)(val, cnum, enum strm_whence);
+  val (*get_prop)(val, val ind);
+  val (*set_prop)(val, val ind, val);
 };
 
 static void common_destroy(val obj)
@@ -98,6 +101,7 @@ struct stdio_handle {
 #else
   int pid;
 #endif
+  unsigned is_real_time;
 };
 
 static void stdio_stream_print(val stream, val out)
@@ -224,6 +228,25 @@ static val stdio_seek(val stream, cnum offset, enum strm_whence whence)
   return stdio_maybe_error(stream, lit("seeking"));
 }
 
+static val stdio_get_prop(val stream, val ind)
+{
+  if (ind == real_time_k) {
+    struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
+    return h->is_real_time ? t : nil;
+  }
+  return nil;
+}
+
+static val stdio_set_prop(val stream, val ind, val prop)
+{
+  if (ind == real_time_k) {
+    struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
+    h->is_real_time = prop ? 0 : 1;
+    return t;
+  }
+  return nil;
+}
+
 static wchar_t *snarf_line(struct stdio_handle *h)
 {
   const size_t min_size = 512;
@@ -319,7 +342,9 @@ static struct strm_ops stdio_ops = {
   stdio_get_byte,
   stdio_close,
   stdio_flush,
-  stdio_seek
+  stdio_seek,
+  stdio_get_prop,
+  stdio_set_prop
 };
 
 static void tail_calc(unsigned long *state, int *sec, int *mod)
@@ -422,7 +447,9 @@ static struct strm_ops tail_ops = {
   tail_get_byte,
   stdio_close,
   stdio_flush,
-  stdio_seek
+  stdio_seek,
+  stdio_get_prop,
+  stdio_set_prop
 };
 
 
@@ -497,7 +524,9 @@ static struct strm_ops pipe_ops = {
   stdio_get_byte,
   pipe_close,
   stdio_flush,
-  0 /* seek: not on pipes */
+  0, /* seek: not on pipes */
+  stdio_get_prop,
+  stdio_set_prop
 };
 
 static void string_in_stream_mark(val stream)
@@ -566,6 +595,8 @@ static struct strm_ops string_in_ops = {
   0, /* close */
   0, /* flush */
   0, /* TODO: seek */
+  0, /* get_prop */
+  0  /* set_prop */
 };
 
 struct byte_input {
@@ -610,6 +641,8 @@ static struct strm_ops byte_in_ops = {
   0, /* close */
   0, /* flush */
   0, /* TODO: support seek */
+  0, /* get_prop */
+  0  /* set_prop */
 };
 
 
@@ -734,6 +767,8 @@ static struct strm_ops string_out_ops = {
   0, /* close */
   0, /* flush */
   0, /* TODO: seek, with fill-with-spaces semantics if past end. */
+  0, /* get_prop */
+  0  /* set_prop */
 };
 
 static void strlist_mark(val stream)
@@ -803,6 +838,8 @@ static struct strm_ops strlist_out_ops = {
   0, /* close */
   0, /* flush */
   0, /* seek */
+  0, /* get_prop */
+  0  /* set_prop */
 };
 
 val make_strlist_output_stream(void)
@@ -873,6 +910,8 @@ static struct strm_ops dir_ops = {
   dir_close,
   0, /* flush */
   0, /* seek */
+  0, /* get_prop */
+  0  /* set_prop */
 };
 
 
@@ -885,6 +924,11 @@ static val make_stdio_stream_common(FILE *f, val descr, struct cobj_ops *ops)
   h->mode = nil;
   utf8_decoder_init(&h->ud);
   h->pid = 0;
+#if HAVE_ISATTY
+  h->is_real_time = (isatty(fileno(h->f)) == 1);
+#else
+  h->is_real_time = 0;
+#endif
   return stream;
 }
 
@@ -895,7 +939,9 @@ val make_stdio_stream(FILE *f, val descr)
 
 val make_tail_stream(FILE *f, val descr)
 {
-  return make_stdio_stream_common(f, descr, &tail_ops.cobj_ops);
+  val stream = make_stdio_stream_common(f, descr, &tail_ops.cobj_ops);
+  stream_set_prop(stream, real_time_k, t);
+  return stream;
 }
 
 val make_pipe_stream(FILE *f, val descr)
@@ -983,6 +1029,28 @@ val make_dir_stream(DIR *dir)
 val streamp(val obj)
 {
   return typeof(obj) == stream_s ? t : nil;
+}
+
+val stream_set_prop(val stream, val ind, val prop)
+{
+  type_check (stream, COBJ);
+  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
+                                            stream, nao));
+
+  {
+    struct strm_ops *ops = (struct strm_ops *) stream->co.ops;
+    return ops->set_prop ? ops->set_prop(stream, ind, prop) : nil;
+  }
+}
+
+val real_time_stream_p(val obj)
+{
+  if (streamp(obj)) {
+    struct strm_ops *ops = (struct strm_ops *) obj->co.ops;
+    return ops->get_prop ? ops->get_prop(obj, real_time_k) : nil;
+  }
+
+  return nil;
 }
 
 val close_stream(val stream, val throw_on_error)
@@ -1914,6 +1982,7 @@ void stream_init(void)
   from_start_k = intern(lit("from-start"), keyword_package);
   from_current_k = intern(lit("from-current"), keyword_package);
   from_end_k = intern(lit("from-end"), keyword_package);
+  real_time_k = intern(lit("real-time"), keyword_package);
 
   s_ifmt = num(S_IFMT); s_iflnk = num(S_IFLNK);
   s_ifreg = num(S_IFREG); s_ifblk = num(S_IFBLK); s_ifdir = num(S_IFDIR);

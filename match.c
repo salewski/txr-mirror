@@ -1545,7 +1545,6 @@ static val complex_stream(fpip_t fp, val name)
   internal_error("bad input source type");
 }
 
-
 static val robust_length(val obj)
 {
   if (obj == nil)
@@ -3738,9 +3737,9 @@ repeat_spec_same_data:
       }
     }
 
-    if (c.data)
+    if (c.data && car(c.data))
     {
-      val dataline = first(c.data);
+      val dataline = car(c.data);
 
       cons_bind (new_bindings, success,
                  match_line_completely(ml_all(c.bindings, specline,

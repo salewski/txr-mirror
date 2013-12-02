@@ -3836,6 +3836,16 @@ val cat_vec(val list)
   return vec;
 }
 
+static val simple_lazy_stream_func(val stream, val lcons)
+{
+  if (set(lcons->lc.car, get_line(stream)) != nil)
+    set(lcons->lc.cdr, make_lazy_cons(lcons->lc.func));
+  else
+    lcons->lc.cdr = nil;
+
+  return nil;
+}
+
 static val lazy_stream_cont(val stream, val func, val env)
 {
   val next = get_line(stream);
@@ -3862,15 +3872,19 @@ static val lazy_stream_func(val env, val lcons)
 
 val lazy_stream_cons(val stream)
 {
-  val first = get_line(stream);
+  if (real_time_stream_p(stream)) {
+    return make_lazy_cons(func_f1(stream, simple_lazy_stream_func));
+  } else {
+    val first = get_line(stream);
 
-  if (!first) {
-    close_stream(stream, t);
-    return nil;
+    if (!first) {
+      close_stream(stream, t);
+      return nil;
+    }
+
+    return make_lazy_cons(func_f1(cons(stream, first),
+                                  lazy_stream_func));
   }
-
-  return make_lazy_cons(func_f1(cons(stream, first),
-                                lazy_stream_func));
 }
 
 val lazy_str(val lst, val term, val limit)

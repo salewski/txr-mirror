@@ -31,6 +31,7 @@ extern val dev_k, ino_k, mode_k, nlink_k, uid_k;
 extern val gid_k, rdev_k, size_k, blksize_k, blocks_k;
 extern val atime_k, mtime_k, ctime_k;
 extern val from_start_k, from_current_k, from_end_k;
+extern val real_time_k;
 
 extern val s_ifmt, s_iflnk, s_ifreg, s_ifblk, s_ifdir;
 extern val s_ifchr, s_ififo, s_isuid, s_isgid, s_isvtx, s_irwxu;
@@ -48,6 +49,8 @@ val make_strlist_output_stream(void);
 val get_list_from_stream(val);
 val make_dir_stream(DIR *);
 val streamp(val obj);
+val real_time_stream_p(val obj);
+val stream_set_prop(val stream, val ind, val prop);
 val close_stream(val stream, val throw_on_error);
 val get_line(val);
 val get_char(val);

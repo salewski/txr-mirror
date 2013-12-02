@@ -1,3 +1,53 @@
+2013-12-01  Kaz Kylheku  <kaz@kylheku.com>
+
+	Steps toward fixing an issue: lazy list readahead.
+	The problem is that accurate lazy lists are not suitable for
+	real time use, where we want the TXR program to respond immediately
+	to matching some datum.
+
+	I'm implementing a simple, naive variant of lazy stream lists
+	which simply populates the lazy cons by reading from the stream when
+	the car or cdr fields are accessed. This type of stream can never
+	be nil (empty list) even if the file is empty; in that case
+	it will be (nil) and in general, it will have a spurious nil
+	item at the end instead of ending in a string.
+	(An adjustment was made in match.c to detect this; more 
+	will be needed.)
+
+	I'm adding attributes to streams so streams can now have a
+	"real-time" attribute. When a lazy string list is constructed over
+	a real-time stream, the simple implementation is used.
+	File streams are automatically real-time if (on Unix) they are tied
+	to tty streams. Tail streams are also real-time. 
+
+	More work is needed to achieve the goal of this change,
+	but this is a big step in the right direction.
+
+	* configure: Detect isatty function.
+
+	* lib.c (simple_lazy_stream_func): New static function.
+	(lazy_stream_cons): Use simple implementation for real-time streams.
+
+	* match.c (match_files): Do not call match_line_completely
+	with a data line that is nil (as a result of simple lazy list
+	over a real-time stream). A nil item in a lazy list of strings
+	is treated as eof.
+
+	* stream.c (real_time_k): New symbol variable.
+	(struct strm_ops): New members: get_prop, set_prop.
+	(struct stdio_handle): New member: is_real_time.
+	(stdio_get_prop, stdio_set_prop): New static function.
+	(stdio_ops, tail_ops, pipe_ops): stdio_get_prop and
+	stdio_set_prop funtions wired in.
+	(make_stdio_stream_common): Attribute streams as real-time
+	if they are tty devices.
+	(make_tail_stream): Tail streams are real-time attributed.
+	(stream_set_prop, real_time_stream_p): New functions.
+	(stream_init): Initialize real_time_k.
+
+	* stream.h (real_time_k): Declared.
+	(real_time_stream_p, stream_set_prop): Likewise.
+
 2013-11-29  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): New functions countqual, countql, countq

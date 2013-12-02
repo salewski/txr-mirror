@@ -1386,6 +1386,26 @@ else
   have_unistd=y
 fi
 
+printf "Checking for isatty function ... "
+
+cat > conftest.c <<!
+#include <unistd.h>
+
+int main(void)
+{
+  isatty(0);
+  return 0;
+}
+!
+rm -f conftest
+if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+  printf "no\n"
+else
+  printf "yes\n"
+  printf "#define HAVE_ISATTY 1\n" >> config.h
+  have_unistd=y
+fi
+
 #
 # Dependent variables
 #
