@@ -241,7 +241,7 @@ static val stdio_set_prop(val stream, val ind, val prop)
 {
   if (ind == real_time_k) {
     struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
-    h->is_real_time = prop ? 0 : 1;
+    h->is_real_time = prop ? 1 : 0;
     return t;
   }
   return nil;

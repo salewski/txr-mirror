@@ -1,5 +1,9 @@
 2013-12-02  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (stdio_set_prop): Fix reversed boolean.
+
+2013-12-02  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (tail_strategy): Execute the strategy code also
 	in the case that the stream's FILE * handle is null. This handles
 	opening the file for the first time.
