@@ -38,6 +38,7 @@ void yybadtoken(int tok, val context);
 void end_of_regex(void);
 void end_of_char(void);
 int yylex(void);
+int yylex_destroy(void);
 void parse_init(void);
 void parse_reset(val spec_file);
 val source_loc(val form);
@@ -48,3 +49,4 @@ INLINE val rlcp(val to, val from)
 {
   return rlset(to, source_loc(from));
 }
+val regex_parse(val string, val error_stream);

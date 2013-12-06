@@ -9357,6 +9357,8 @@ The regex compile function takes the source code of a regular expression,
 expressed as a Lisp data structure, and compiles it to a regular expression
 object.
 
+Suitable source code is produced by regex-parse.
+
 .TP
 Examples:
 
@@ -9369,6 +9371,34 @@ Examples:
 
   ;; #/a|b|c/
   (regex-compile '(or (or #\ea #\eb) #\ec))
+
+.SS Function regex-parse
+
+.TP
+Syntax:
+
+  (regex-parse <string> : <stream>)
+
+.TP
+Description:
+
+The regex string parses a character string which contains a regular expression
+(without any surrounding / characters) and turns it into a Lisp data structure
+(the abstract syntax tree representation of the regular expression).
+
+The regular expression syntax #/RE/ produces the same structure, but as a
+literal which is processed at the time TXR source code is read; the regex-parse
+function performs this parsing at run-time.
+
+If there are parse errors, the function returns nil.
+
+The optional <stream> argument specifies a stream to which error messages
+are sent from the parser. By default, diagnostic output goes to the *stdnull*
+stream, which discards it. If <stream> is specified as t, then the diagnostic
+output goes to the *stdout* stream.
+
+If regex-parse returns a non-nil value, that structure is then something
+which is suitable as input to regex-compile.
 
 .SH HASHING LIBRARY
 
@@ -9880,7 +9910,7 @@ In general, I/O errors are usually turned into exceptions. When the description
 of error reporting is omitted from the description of a function, it can be
 assumed that it throws an error.
 
-.SS Variables *stdout*, *stddebug*, *stdin* and *stderr*
+.SS Variables *stdout*, *stddebug*, *stdin*, *stderr* and *stdnull*
 
 These variables hold predefined stream objects. The *stdin*, *stdout* and
 *stderr* streams closely correspond to the underlying operating system streams.
@@ -9889,6 +9919,10 @@ Various I/O functions require stream objects as arguments.
 The *stddebug* stream goes to the same destination as *stdout*, but is
 a separate object which can be redirected independently, allowing debugging
 output to be separated from normal output.
+
+The *stdnull* stream is a special kind of stream called a null stream.
+This stream is not connected to any device or file.  It is similar to
+the /dev/null device on Unix, but does not involve the operating system.
 
 .SS Function format
 

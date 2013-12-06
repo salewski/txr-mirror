@@ -2312,6 +2312,7 @@ void eval_init(void)
   reg_fun(intern(lit("search-regex"), user_package), func_n4o(search_regex, 2));
   reg_fun(intern(lit("match-regex"), user_package), func_n3o(match_regex, 2));
   reg_fun(intern(lit("regsub"), user_package), func_n3(regsub));
+  reg_fun(intern(lit("regex-parse"), user_package), func_n2o(regex_parse, 1));
 
   reg_fun(intern(lit("make-hash"), user_package), func_n3(make_hash));
   reg_fun(intern(lit("make-similar-hash"), user_package), func_n1(make_similar_hash));
@@ -2351,6 +2352,7 @@ void eval_init(void)
   reg_var(intern(lit("*stddebug*"), user_package), &std_debug);
   reg_var(intern(lit("*stdin*"), user_package), &std_input);
   reg_var(intern(lit("*stderr*"), user_package), &std_error);
+  reg_var(intern(lit("*stdnull*"), user_package), &std_null);
   reg_fun(intern(lit("format"), user_package), func_n2v(formatv));
   reg_fun(intern(lit("print"), user_package), func_n2o(obj_print, 1));
   reg_fun(intern(lit("pprint"), user_package), func_n2o(obj_pprint, 1));

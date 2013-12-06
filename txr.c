@@ -417,6 +417,7 @@ int txr_main(int argc, char **argv)
   {
     int gc = gc_state(0);
     yyparse();
+    yylex_destroy();
     gc_state(gc);
 
     if (errors)

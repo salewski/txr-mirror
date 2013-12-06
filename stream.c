@@ -51,7 +51,7 @@
 #include "stream.h"
 #include "utf8.h"
 
-val std_input, std_output, std_debug, std_error;
+val std_input, std_output, std_debug, std_error, std_null;
 val output_produced;
 
 val dev_k, ino_k, mode_k, nlink_k, uid_k;
@@ -89,6 +89,35 @@ struct strm_ops {
 static void common_destroy(val obj)
 {
   (void) close_stream(obj, nil);
+}
+
+static void null_stream_print(val stream, val out)
+{
+  format(out, lit("#<~s null>"), stream->co.cls, nao);
+}
+
+static struct strm_ops null_ops = {
+  { cobj_equal_op,
+    null_stream_print,
+    cobj_destroy_stub_op,
+    cobj_mark_op,
+    cobj_hash_op },
+  0, /* put_string */
+  0, /*_put_char */
+  0, /* put_byte, */
+  0, /* get_line, */
+  0, /* get_char, */
+  0, /* get_byte, */
+  0, /* close, */
+  0, /* flush, */
+  0, /* seek, */
+  0, /* get_prop, */
+  0, /* set_prop */
+};
+
+val make_null_stream(void)
+{
+  return cobj((mem_t *) 0, stream_s, &null_ops.cobj_ops);
 }
 
 struct stdio_handle {
@@ -1951,11 +1980,12 @@ val open_process(val name, val mode_str, val args)
 
 void stream_init(void)
 {
-  protect(&std_input, &std_output, &std_debug, &std_error, (val *) 0);
+  protect(&std_input, &std_output, &std_debug, &std_error, &std_null, (val *) 0);
   std_input = make_stdio_stream(stdin, string(L"stdin"));
   std_output = make_stdio_stream(stdout, string(L"stdout"));
   std_debug = make_stdio_stream(stdout, string(L"debug"));
   std_error = make_stdio_stream(stderr, string(L"stderr"));
+  std_null = make_null_stream();
   detect_format_string();
 
   dev_k = intern(lit("dev"), keyword_package);

@@ -1,3 +1,30 @@
+2013-12-05  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): Registered regex_parse as new
+	intrinsic function and std_null as new variable.
+
+	* parser.h (yylex_destroy): Existing function declared.
+
+	* parser.l (regex_parse): New function.
+	New lexical syntax added which returns SECRET_ESCAPE_R.
+
+	* parser.y (SECRET_ESCAPE_R): New token.
+	(spec): Added syntactic variant which lets us
+	smuggle a regex into the parser easily.
+
+	* stream.c:x (std_null): New global variable.
+	(null_stream_print): New static function.
+	(null_ops): New static structure.
+	(make_null_stream): New function.
+	(stream_init): Protect and initialize std_null.
+
+	* stream.h (std_null, make_null_stream): Declared.
+
+	* txr.1: New features documented: regex-parse, *stdnull*.
+
+	* txr.c (txr_main): Call yylex_destroy after parsing the program now
+	that I know about this function; this can free up some memory.
+
 2013-12-02  Kaz Kylheku  <kaz@kylheku.com>
 
 	* stream.c (stdio_set_prop): Fix reversed boolean.

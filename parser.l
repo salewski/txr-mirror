@@ -675,6 +675,11 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   yy_push_state(SPECIAL);
 }
 
+<INITIAL>@\x01R {
+  yy_push_state(REGEX);
+  return SECRET_ESCAPE_R;
+}
+
 <INITIAL>^@[#;].*\n {
   /* eat whole line comment */
   lineno++;
@@ -822,4 +827,24 @@ void parse_reset(val spec_file)
     }
     yyin_stream = make_stdio_stream(in, spec_file_str);
   }
+}
+
+val regex_parse(val string, val error_stream)
+{
+  uses_or2;
+  val parse_string = cat_str(list(lit("@\x01R/"), string, lit("/"), nao), nil);
+  yyin_stream = make_string_byte_input_stream(parse_string);
+  errors = 0;
+  lineno = 1;
+  val save_stream = std_error;
+  std_error = if3(error_stream == t, std_output, or2(error_stream, std_null));
+  {
+    int gc = gc_state(0);
+    spec_file_str = string;
+    yyparse();
+    yylex_destroy();
+    gc_state(gc);
+  }
+  std_error = save_stream;
+  return errors ? nil : rest(get_spec());
 }
