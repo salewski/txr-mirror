@@ -1,5 +1,14 @@
 2013-12-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	* regex.c (regex_compile): Handle string input.
+
+	* regex.h (regex_compile): Don't call argument
+	regex_sexp, since it can be a string.
+
+	* txr.1: Updated.
+
+2013-12-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Registered regex_parse as new
 	intrinsic function and std_null as new variable.
 

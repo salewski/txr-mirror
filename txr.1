@@ -9348,16 +9348,20 @@ object. For any other object type, it returns nil.
 .TP
 Syntax:
 
-  (regex-compile <form>)
+  (regex-compile <form-or-string>)
 
 .TP
 Description:
 
 The regex compile function takes the source code of a regular expression,
-expressed as a Lisp data structure, and compiles it to a regular expression
-object.
+expressed as a Lisp data structure representing an abstract syntax tree, or
+else a regular expression specified as a character string, and compiles it to a
+regular expression object.
 
-Suitable source code is produced by regex-parse.
+If <form-or-string> is a character string, it is parsed to an
+abstract syntax tree first, if by a call to (regex-parse <form-or-string>). 
+If the parse is successful (the result is not nil) then
+it is compiled by a recursive call to regex-compile.
 
 .TP
 Examples:
@@ -9371,6 +9375,9 @@ Examples:
 
   ;; #/a|b|c/
   (regex-compile '(or (or #\ea #\eb) #\ec))
+
+  ;; string
+  (regex-compile "a|b|c")
 
 .SS Function regex-parse
 

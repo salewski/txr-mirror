@@ -35,6 +35,7 @@
 #include <limits.h>
 #include "config.h"
 #include "lib.h"
+#include "parser.h"
 #include "unwind.h"
 #include "regex.h"
 #include "txr.h"
@@ -1614,7 +1615,10 @@ static val regex_requires_dv(val exp)
 
 val regex_compile(val regex_sexp)
 {
-  if (opt_derivative_regex || regex_requires_dv(regex_sexp)) {
+  if (stringp(regex_sexp)) {
+    regex_sexp = regex_parse(regex_sexp, nil);
+    return if2(regex_sexp, regex_compile(regex_sexp));
+  } else if (opt_derivative_regex || regex_requires_dv(regex_sexp)) {
     return cons(compiled_regex_s, cons(dv_compile_regex(regex_sexp), nil));
   } else {
     nfa_t *pnfa = (nfa_t *) chk_malloc(sizeof *pnfa);
