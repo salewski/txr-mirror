@@ -778,9 +778,11 @@ void end_of_regex(void)
     internal_error("end_of_regex called in wrong scanner state");
 
   yy_pop_state();
-  if (yy_top_state() == INITIAL
-      || yy_top_state() == QSILIT)
-    yy_pop_state();
+
+  if (YYSTATE != INITIAL) {
+    if (yy_top_state() == INITIAL || yy_top_state() == QSILIT)
+      yy_pop_state();
+  }
 }
 
 void end_of_char(void)
