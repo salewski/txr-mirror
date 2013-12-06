@@ -1,5 +1,25 @@
 2013-12-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Update registration of regex-compile
+	to reflect that it has two arguments now.
+
+	* parser.y (grammar): Update calls to regex_compile to
+	pass two arguments. Since we don't expect regex_compile to
+	parse, we specify the error stream as nil.
+	(spec): The "secret syntax" for a regex is simplified
+	not to include the slashes.  This provides better diagnostics for
+	unterminated syntax and requires less string processing to generate.
+	Also, the form returned doesn't have the regex symbol
+	consed onto it, which parse_regex just throws away.
+
+	* regex.c (regex_compile): Now takes a stream argument.
+
+	* regex.h (regex_compile): Declaration updated.
+
+	* txr.1: Updated
+
+2013-12-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	Fixing some old-style coding that became obsolete
 	around November 2009.
 

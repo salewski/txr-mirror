@@ -114,7 +114,7 @@ static val parsed_spec;
 
 spec : clauses                  { parsed_spec = $1; }
      | /* empty */              { parsed_spec = nil; }
-     | SECRET_ESCAPE_R regex    { parsed_spec = $2; }
+     | SECRET_ESCAPE_R regexpr  { parsed_spec = $2; end_of_regex(); }
      | error '\n'               { parsed_spec = nil;
                                   if (errors >= 8)
                                     YYABORT;
@@ -320,12 +320,12 @@ text : TEXT                     { $$ = rl(string_own($1), num(lineno)); }
      | SPACE                    { if ($1[0] == ' ' && $1[1] == 0)
                                   { val spaces = list(oneplus_s, 
                                                       chr(' '), nao);
-                                    $$ = cons(regex_compile(spaces), spaces);
+                                    $$ = cons(regex_compile(spaces, nil), spaces);
                                     rl($$, num(lineno));
                                     free($1); }
                                   else
                                   { $$ = rl(string_own($1), num(lineno)); }}
-     | regex                    { $$ = cons(regex_compile(rest($1)),
+     | regex                    { $$ = cons(regex_compile(rest($1), nil),
                                             rest($1));
                                   rl($$, num(lineno)); }
      ;
@@ -652,7 +652,7 @@ var_op : '*'                    { $$ = list(t, nao); }
        ;
 
 modifiers : NUMBER              { $$ = cons($1, nil); }
-          | regex               { $$ = cons(cons(regex_compile(rest($1)), 
+          | regex               { $$ = cons(cons(regex_compile(rest($1), nil), 
                                                  rest($1)), nil);
                                   rlcp($$, $1); }
           | list                { $$ = cons($1, nil); }
@@ -742,7 +742,7 @@ expr : IDENT                    { $$ = rl(intern(string_own($1), nil),
      | vector                   { $$ = $1; }
      | hash                     { $$ = $1; }
      | meta_expr                { $$ = $1; }
-     | lisp_regex               { $$ = cons(regex_compile(rest($1)),
+     | lisp_regex               { $$ = cons(regex_compile(rest($1), nil),
                                             rest($1));
                                   rlcp($$, $1); }
      | chrlit                   { $$ = rl($1, num(lineno)); }

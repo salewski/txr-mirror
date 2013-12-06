@@ -2307,7 +2307,7 @@ void eval_init(void)
   reg_fun(intern(lit("logtrunc"), user_package), func_n2(logtrunc));
   reg_fun(intern(lit("ash"), user_package), func_n2(ash));
 
-  reg_fun(intern(lit("regex-compile"), user_package), func_n1(regex_compile));
+  reg_fun(intern(lit("regex-compile"), user_package), func_n2o(regex_compile, 1));
   reg_fun(intern(lit("regexp"), user_package), func_n1(regexp));
   reg_fun(intern(lit("search-regex"), user_package), func_n4o(search_regex, 2));
   reg_fun(intern(lit("match-regex"), user_package), func_n3o(match_regex, 2));

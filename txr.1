@@ -9348,7 +9348,7 @@ object. For any other object type, it returns nil.
 .TP
 Syntax:
 
-  (regex-compile <form-or-string>)
+  (regex-compile <form-or-string> : <error-stream>)
 
 .TP
 Description:
@@ -9362,6 +9362,9 @@ If <form-or-string> is a character string, it is parsed to an
 abstract syntax tree first, if by a call to (regex-parse <form-or-string>). 
 If the parse is successful (the result is not nil) then
 it is compiled by a recursive call to regex-compile.
+
+The optional <error-stream> argument is passed down to regex-compile,
+if that call takes place.
 
 .TP
 Examples:
@@ -9384,7 +9387,7 @@ Examples:
 .TP
 Syntax:
 
-  (regex-parse <string> : <stream>)
+  (regex-parse <string> : <error-stream>)
 
 .TP
 Description:
@@ -9399,10 +9402,10 @@ function performs this parsing at run-time.
 
 If there are parse errors, the function returns nil.
 
-The optional <stream> argument specifies a stream to which error messages
+The optional <error-stream> argument specifies a stream to which error messages
 are sent from the parser. By default, diagnostic output goes to the *stdnull*
-stream, which discards it. If <stream> is specified as t, then the diagnostic
-output goes to the *stdout* stream.
+stream, which discards it. If <error-stream> is specified as t, then the
+diagnostic output goes to the *stdout* stream.
 
 If regex-parse returns a non-nil value, that structure is then something
 which is suitable as input to regex-compile.
