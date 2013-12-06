@@ -1,5 +1,11 @@
 2013-12-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.l (regex_parse): Match the simplified grammar now
+	expected in the parser, with no slashes around the regex.
+	Change prefix for diagnostic message. 
+
+2013-12-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Update registration of regex-compile
 	to reflect that it has two arguments now.
 

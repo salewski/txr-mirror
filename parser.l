@@ -832,7 +832,7 @@ void parse_reset(val spec_file)
 val regex_parse(val string, val error_stream)
 {
   uses_or2;
-  val parse_string = cat_str(list(lit("@\x01R/"), string, lit("/"), nao), nil);
+  val parse_string = cat_str(list(lit("@\x01R"), string, nao), nil);
   yyin_stream = make_string_byte_input_stream(parse_string);
   errors = 0;
   lineno = 1;
@@ -840,11 +840,13 @@ val regex_parse(val string, val error_stream)
   std_error = if3(error_stream == t, std_output, or2(error_stream, std_null));
   {
     int gc = gc_state(0);
-    spec_file_str = string;
+    spec_file_str = if3(std_error != std_null,
+                        format(nil, lit("regex: ~s"), string, nao),
+                        lit(""));
     yyparse();
     yylex_destroy();
     gc_state(gc);
   }
   std_error = save_stream;
-  return errors ? nil : rest(get_spec());
+  return errors ? nil : get_spec();
 }
