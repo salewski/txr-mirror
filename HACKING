@@ -52,7 +52,7 @@ provide rationale and make coding recommendations.
 Txr is written in a language that consists of the common dialect between C90
 and C++98.  The code can be built with either the GNU C compiler or the GNU C++
 compiler.  Use is made of some Unix functions from before Unix95, which are
-requested by means of -D_XOPEN_SOURCE (POSIX.1, POSIX.2, X/Open Portabiity
+requested by means of -D_XOPEN_SOURCE (POSIX.1, POSIX.2, X/Open Portability
 Guide 4).  Also, the <wchar.h> header is used, which was introduced by a 1995
 addendum to the C language, so it may be said that the actual C dialect is C95.
 
@@ -62,7 +62,7 @@ requirements.
 
 C++ compilation can be arranged using ./configure --ccname=g++ (for instance).
 
-Note that txr takes some nonportable liberties with the language, such as
+Note that txr takes some non-portable liberties with the language, such as
 encoding bit fields into pointers, and treating automatic storage as a flat
 stack which can be treated as an array that can be walked by a garbage
 collector looking for references to objects. There are assumptions about the
@@ -92,7 +92,7 @@ parallel, but on separate lines, must be horizontally aligned with each other:
   if (function(argument1,
                argument))
 
-father than:
+rather than:
 
   if (function(argument1,
       argument))
@@ -136,7 +136,7 @@ Certain C programming conventions are avoided. For generic pointers to anything
 (needed in some low-level code) use the type mem_t *, not void *, and use casts
 on conversions to and from this pointer.
 
-The void * pointer, which came into C by way of C++, is braindamaged.  It
+The void * pointer, which came into C by way of C++, is brain-damaged.  It
 allows C programs to subvert the type system without any cast operators or
 diagnostics. In C++ it's a little better because conversions from void *
 require a cast.  In this project, we want all hazardous pointer conversions to
@@ -196,7 +196,7 @@ point to anything.
 2.1 Pointer Bitfield
 
 Immediate and heaped values are distinguished by a two-bit field in the least
-signficant bits of the pointer. If the two bits are 00 (i.e. the pointer is
+significant bits of the pointer. If the two bits are 00 (i.e. the pointer is
 four-byte-aligned) then the value is a pointer to a heaped object, unless
 it is the null pointer. The null pointer is understood to be the object
 nil.  The is_ptr(v) macro evaluates true for a value v which is not nil,
@@ -275,7 +275,7 @@ is converted to an encapsulated C string by masking the bits 11 into the least
 significant two bit positions of its pointer, and then manipulated as a value
 of type val (pointer to obj_t).
 
-Enapsulated C strings can be transparently used wherever the other kinds of
+Encapsulated C strings can be transparently used wherever the other kinds of
 strings can be used, so the benefit is immense, for the small cost of a bit
 operation.
 
@@ -296,7 +296,7 @@ thing are provided, because it is generally much safer to convert a static
 string to a val (due to its indefinite lifetime) than an automatic string
 (which becomes indeterminate when the enclosing block terminates).  Care should
 be taken to only ever use auto_str to wrap a stack-allocated string as a val,
-so that such usage can be found in the program bys searching for occurences of
+so that such usage can be found in the program by searching for occurrences of
 ``auto_str''. Secondly, care should be taken to ensure that values produced by
 auto_str do not try to escape beyond the lifetime of the enclosing block.  If
 they are passed to functions those functions must not retain the value in any
@@ -360,9 +360,9 @@ The wref macro hides the displacement of the first character:
 
   wchar_t *ptr_a = wref(abc); /* pointer to "a" */
 
-  wref(abc)[1] = L'B'; /* overwite 'b' with 'B' */
+  wref(abc)[1] = L'B'; /* overwrite 'b' with 'B' */
 
-On a platform where this hack isn't needed, these w* macros are noops.
+On a platform where this hack isn't needed, these w* macros are no-ops.
 
 
 3. Garbage Collection
@@ -422,7 +422,7 @@ function parameter, that value is visible to the gc and protected.  Thus, the
 rules only have to be followed in lower-level code which is close to the
 allocator. Normal application code does not have to follow any special rules.
 
-The garbage collector is called implicitly by code which calles make_obj to
+The garbage collector is called implicitly by code which calls make_obj to
 pull a raw object from the garbage collector's free list. Code which does
 not allocate code will not be interrupted by the garbage collector.
 That's another helpful simplification, but it comes at the cost of not
@@ -516,7 +516,7 @@ point in the code if the value stored in it has a next use: another code can be
 reached from that point which uses the value.  The variable c has no next use
 after the t->value = c assignment. There is only one execution path from that
 point in the code, and that path leads to the termination of the block, which
-destroys c. Essentially, the t->value struture member is the sink for the
+destroys c. Essentially, the t->value structure member is the sink for the
 data flow which carries the cons cell: The data flow emanates from the call
 cons(foo, bar), and terminates in t->value.
 
@@ -613,7 +613,7 @@ objects, but rather leave them unmarked.
 
 After the initial marking phase, gc will call a global function in each module
 that manages objects with weak references. (Currently there is only one such
-function: hash_process_weak; a similar function must be writen
+function: hash_process_weak; a similar function must be written
 for a new module and added).
 
 This function must process and clear the weak list gathered during the
@@ -724,14 +724,14 @@ references.  For such places, gc_set can proceed to do a straight assignment
 and return.  Secondly, gc_set checks whether the object being assigned is a
 generation 0 heap object. Non-heap objects such as string literals, fixnum
 integers and characters do not have a generation and are ignored: for these,
-the assignent is done.
+the assignment is done.
 
 If gc_set detects that the address of generation 0 object is being written into
 what looks might be a heap location, it changes the generation of the object
 to -1 and stores in in the next available element in checkobj array. 
 The change to -1 prevents it from repeating this action for the same object
 twice since duplicates only waste space in the checkobj array. Not only
-are the duplicates wastfully visited more than once, but when checkobj is full,
+are the duplicates wastefully visited more than once, but when checkobj is full,
 a generational GC cycle is triggered.
 
 During a generational gc, the checkobj array is treated as an additional root
@@ -758,7 +758,7 @@ Simply run
 then "make clean" and "make".
 
 If the program catches an exception and terminates cleanly, then
-place a breapoint on the function "uw_throw" to catch this in the debugger.
+place a breakpoint on the function "uw_throw" to catch this in the debugger.
 
 Sample debug session:
 
@@ -899,10 +899,10 @@ areas in the stack frame can similarly contain stale data, because when a
 register value is restored from the save area, the copy remains there.
 
 Spurious retention can also happen if a bit pattern is generated which looks
-ike a reference to an object, by chance. We share this problem with
+like a reference to an object, by chance. We share this problem with
 garbage collectors like Boehm. Luckily, unlike Boehm, we do not have this
 problem over dynamic objects, because we do not scan dynamic memory. All
-dynamic objects are registred with the garbage collector and are precisely
+dynamic objects are registered with the garbage collector and are precisely
 traced. What isn't precisely traced is the call stack and machine context.
 
 
