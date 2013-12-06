@@ -1981,10 +1981,10 @@ val open_process(val name, val mode_str, val args)
 void stream_init(void)
 {
   protect(&std_input, &std_output, &std_debug, &std_error, &std_null, (val *) 0);
-  std_input = make_stdio_stream(stdin, string(L"stdin"));
-  std_output = make_stdio_stream(stdout, string(L"stdout"));
-  std_debug = make_stdio_stream(stdout, string(L"debug"));
-  std_error = make_stdio_stream(stderr, string(L"stderr"));
+  std_input = make_stdio_stream(stdin, lit("stdin"));
+  std_output = make_stdio_stream(stdout, lit("stdout"));
+  std_debug = make_stdio_stream(stdout, lit("debug"));
+  std_error = make_stdio_stream(stderr, lit("stderr"));
   std_null = make_null_stream();
   detect_format_string();
 

@@ -3896,7 +3896,7 @@ val lazy_str(val lst, val term, val limit)
   /* Must init before calling something that can gc! */
   obj->ls.opts = obj->ls.list = obj->ls.prefix = nil;
 
-  term = or2(term, string(L"\n"));
+  term = or2(term, lit("\n"));
 
   if (nullp(lst)) {
     obj->ls.prefix = null_string;
@@ -4053,7 +4053,7 @@ val lazy_str_get_trailing_list(val lstr, val index)
   {
     uses_or2;
     val split_suffix = split_str(sub_str(lstr->ls.prefix, index, nil),
-                                 or2(car(lstr->ls.opts), string(L"\n")));
+                                 or2(car(lstr->ls.opts), lit("\n")));
 
     return nappend2(split_suffix, lstr->ls.list);
   }

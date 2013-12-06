@@ -1,3 +1,16 @@
+2013-12-06  Kaz Kylheku  <kaz@kylheku.com>
+
+	Fixing some old-style coding that became obsolete
+	around November 2009.
+
+	* lib.c (lazy_str): Use the efficient lit("...") that
+	doesn't allocate memory instead of string(L"...").
+	(lazy_str_get_trailing_list): Likewise.
+
+	* stream.c (open_process): Likewise.
+
+	* txr.c (remove_hash_bang_line): Likewise.
+
 2013-12-05  Kaz Kylheku  <kaz@kylheku.com>
 
 	* regex.c (regex_compile): Handle string input.
