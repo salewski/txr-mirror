@@ -1,3 +1,43 @@
+                                     TXR 71
+                                   2013-12-07
+
+
+  Features
+
+  - New functions countqual, countql, countq and count-if.
+
+  - New regex-parse function: parse regex from a string at run-time.
+
+  - New *stdnull* stream for discarding data.
+
+  - New function: seek-stream for positioning within a stream.
+
+  - New function open-tail for opening a new kind of stream called a tail
+    stream. This stream follows rotating log files.
+
+  - New functions for converting a time expressed as individual fields
+    into numeric time: make-time, make-time-utc.
+
+  - New function daemon (where supported). Calls the BSD-derived daemon
+    function to daemonize the process in one step.
+
+  - New errno function for accessing C errno.
+
+  - Real-time input support in pattern matching language, via "simple"
+    lazy text stream line lists which sacrifice accuracy of representation for
+    timely delivery.
+
+  Bugs
+
+  - Fixed missing recognition for hexadecimal integers in Vim
+    syntax higlighting file txr.vim.
+
+  - Fixed missing check for null handle in stdio back-end of flush-stream.
+
+  - Grammar and spelling in HACKING guide.
+
+
+
                                      TXR 70
                                    2013-11-22
 
