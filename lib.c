@@ -1399,6 +1399,24 @@ val mulv(val nlist)
   return reduce_left(func_n2(mul), cdr(nlist), car(nlist), nil);
 }
 
+val logandv(val nlist)
+{
+  if (!nlist)
+    return negone;
+  else if (!cdr(nlist))
+    return car(nlist);
+  return reduce_left(func_n2(logand), cdr(nlist), car(nlist), nil);
+}
+
+val logiorv(val nlist)
+{
+  if (!nlist)
+    return zero;
+  else if (!cdr(nlist))
+    return car(nlist);
+  return reduce_left(func_n2(logior), cdr(nlist), car(nlist), nil);
+}
+
 val gtv(val first, val rest)
 {
   val iter;

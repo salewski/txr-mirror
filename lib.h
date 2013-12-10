@@ -483,6 +483,8 @@ val loga(val);
 val expo(val);
 val logand(val, val);
 val logior(val, val);
+val logandv(val nlist);
+val logiorv(val nlist);
 val logxor(val, val);
 val logtest(val, val);
 val lognot(val, val);

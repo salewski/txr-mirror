@@ -48,6 +48,7 @@
 #include "rand.h"
 #include "filter.h"
 #include "txr.h"
+#include "syslog.h"
 #include "eval.h"
 
 typedef val (*opfun_t)(val, val);
@@ -2299,8 +2300,8 @@ void eval_init(void)
   reg_fun(intern(lit("/="), user_package), func_n0v(numneqv));
   reg_fun(intern(lit("max"), user_package), func_n1v(maxv));
   reg_fun(intern(lit("min"), user_package), func_n1v(minv));
-  reg_fun(intern(lit("logand"), user_package), func_n2(logand));
-  reg_fun(intern(lit("logior"), user_package), func_n2(logior));
+  reg_fun(intern(lit("logand"), user_package), func_n0v(logandv));
+  reg_fun(intern(lit("logior"), user_package), func_n0v(logiorv));
   reg_fun(intern(lit("logxor"), user_package), func_n2(logxor));
   reg_fun(intern(lit("logtest"), user_package), func_n2(logtest));
   reg_fun(intern(lit("lognot"), user_package), func_n2o(lognot, 1));
@@ -2558,6 +2559,31 @@ void eval_init(void)
 
   reg_fun(intern(lit("errno"), user_package), func_n1o(errno_wrap, 0));
   reg_fun(intern(lit("daemon"), user_package), func_n2(daemon_wrap));
+
+  reg_var(intern(lit("s-ixoth"), user_package), &s_ixoth);
+
+#if HAVE_SYSLOG
+  reg_var(intern(lit("log-pid"), user_package), &log_pid_v);
+  reg_var(intern(lit("log-cons"), user_package), &log_cons_v);
+  reg_var(intern(lit("log-ndelay"), user_package), &log_ndelay_v);
+  reg_var(intern(lit("log-odelay"), user_package), &log_odelay_v);
+  reg_var(intern(lit("log-nowait"), user_package), &log_nowait_v);
+  reg_var(intern(lit("log-perror"), user_package), &log_perror_v);
+  reg_var(intern(lit("log-user"), user_package), &log_user_v);
+  reg_var(intern(lit("log-daemon"), user_package), &log_daemon_v);
+  reg_var(intern(lit("log-auth"), user_package), &log_auth_v);
+  reg_var(intern(lit("log-emerg"), user_package), &log_emerg_v);
+  reg_var(intern(lit("log-alert"), user_package), &log_alert_v);
+  reg_var(intern(lit("log-crit"), user_package), &log_crit_v);
+  reg_var(intern(lit("log-err"), user_package), &log_err_v);
+  reg_var(intern(lit("log-warning"), user_package), &log_warning_v);
+  reg_var(intern(lit("log-notice"), user_package), &log_notice_v);
+  reg_var(intern(lit("log-info"), user_package), &log_info_v);
+  reg_var(intern(lit("log-debug"), user_package), &log_debug_v);
+  reg_fun(intern(lit("openlog"), user_package), func_n3o(openlog_wrap, 1));
+  reg_fun(intern(lit("setlogmask"), user_package), func_n1(setlogmask_wrap));
+  reg_fun(intern(lit("syslog"), user_package), func_n2v(syslog_wrap));
+#endif
 
   reg_fun(intern(lit("source-loc"), user_package), func_n1(source_loc));
   reg_fun(intern(lit("source-loc-str"), user_package), func_n1(source_loc_str));

@@ -100,6 +100,7 @@ have_quilt=
 have_patch=
 have_unistd=
 have_timegm=
+have_syslog=
 need_svid_source=
 need_bsd_source=
 
@@ -572,6 +573,9 @@ compiler_prefix := $compiler_prefix
 
 # prefix for non-compiler toolchain commands
 tool_prefix := $tool_prefix
+
+# do we compile in syslog support?
+have_syslog := $have_syslog
 
 # do we compile in debug support?
 debug_support := $debug_support
@@ -1404,6 +1408,29 @@ else
   printf "yes\n"
   printf "#define HAVE_ISATTY 1\n" >> config.h
   have_unistd=y
+fi
+
+printf "Checking for syslog ... "
+
+cat > conftest.c <<!
+#include <syslog.h>
+
+int main(void)
+{
+  openlog("foo", LOG_CONS, LOG_DAEMON);
+  syslog(LOG_EMERG, "bar %d\n", 3);
+  setlogmask(0);
+  closelog();
+  return 0;
+}
+!
+rm -f conftest
+if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+  printf "no\n"
+else
+  printf "yes\n"
+  printf "#define HAVE_SYSLOG 1\n" >> config.h
+  have_syslog=y
 fi
 
 #

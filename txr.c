@@ -41,6 +41,7 @@
 #include "match.h"
 #include "utf8.h"
 #include "debug.h"
+#include "syslog.h"
 #include "txr.h"
 
 const wchli_t *version = wli("71");
@@ -162,6 +163,9 @@ int main(int argc, char **argv)
   match_init();
   parse_init();
   debug_init();
+#if HAVE_SYSLOG
+  syslog_init();
+#endif
   return txr_main(argc, argv);
 }
 

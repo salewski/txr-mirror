@@ -1,3 +1,25 @@
+2013-12-10  Kaz Kylheku  <kaz@kylheku.com>
+
+	syslog support; bitwise logior and logand functions become variadic.
+
+	* Makefile: Use -iquote to restrict our #include search paths from being
+	processed for #include <...>.  Add syslog.o to OBJS-y if have_syslog is y.
+
+	* configure (have_syslog): New variable, set by detecting syslog API.
+
+	* eval.c (eval_init): logand and logior registrations changed to
+	go to variadic versions. New syslog variables and functions registered.
+
+	* lib.c (logandv, logiorv): New functions.
+
+	* lib.h (logandv, logiorv): Declared.
+
+	* txr.c (main): Call syslog_init.
+
+	* syslog.c: New file.
+
+	* syslog.h: New file.
+
 2013-12-07  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 71

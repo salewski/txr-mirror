@@ -28,9 +28,9 @@
 
 include config.make
 
-CFLAGS := -I. -I$(top_srcdir) $(LANG_FLAGS) $(DIAG_FLAGS) \
+CFLAGS := -iquote $(top_srcdir) $(LANG_FLAGS) $(DIAG_FLAGS) \
           $(OPT_FLAGS) $(DBG_FLAGS) $(PLATFORM_FLAGS) $(EXTRA_FLAGS)
-CFLAGS += -Impi-$(mpi_version)
+CFLAGS += -iquote mpi-$(mpi_version)
 CFLAGS := $(filter-out $(REMOVE_FLAGS),$(CFLAGS))
 
 ifneq ($(subst g++,@,$(notdir $(CC))),$(notdir $(CC)))
@@ -40,7 +40,8 @@ endif
 # TXR objects
 OBJS := txr.o lex.yy.o y.tab.o match.o lib.o regex.o gc.o unwind.o stream.o
 OBJS += arith.o hash.o utf8.o filter.o eval.o rand.o
-OBJS-$(debug_support) := debug.o
+OBJS-$(debug_support) += debug.o
+OBJS-$(have_syslog) += syslog.o
 
 # MPI objects
 MPI_OBJ_BASE=mpi.o mplogic.o
