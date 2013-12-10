@@ -9139,21 +9139,28 @@ a limit on the number of bits.
 .TP
 Syntax:
 
-  (logand <int1> <int2>)
-  (logior <int1> <int2>)
+  (logand . <integers>)
+  (logior . <integers>)
   (logxor <int1> <int2>)
 
 .TP
 Description:
 
 These operations perform the familiar bitwise and, inclusive or, and exclusive
-or operations respectively. Positive values of <int1> and <int2> are treated as
+or operations respectively. Positive values inputs are treated as
 pure binary numbers.  Negative inputs are treated as infinite-bit
 two's-complement.
 
 For example (logand -2 7) produces 6. This is because -2 is ..111110 in
 infinite-bit two's-complement.  Or-ing this value with 7 (111) produces
 110.
+
+The logand and logior functions are variadic, and may be called with zero, one,
+two, or more input values. If logand is called with no arguments, it produces
+the value -1 (all bits 1). If logior is called with no arguments it produces
+zero. In the one-argument case, the functions just return their argument value.
+
+
 
 .SS Functions logtest
 
@@ -9220,6 +9227,36 @@ representation. Under the infinite two's-complement representation,
 a right shift does not exhaust the infinite sequence of 1 digits which
 extends to the left. Thus if -4 is shifted right it becomes -2 because
 the bitwise representations are ...111100 and ...11110.
+
+.SS Function mask
+
+.TP
+Syntax:
+
+  (mask . <integer-values>)
+
+.TP
+Description:
+
+The mask function takes zero or more integer arguments, and produces an integer
+value which corresponds a bitmask made up of the bit positions specified by the
+integer values.
+
+If mask is called with no arguments, then the return value is zero.
+
+If mask is called with a single argument B then the return value is the same as
+that of the expression (ash 1 <value>): one shifted left by <value> bit
+positions. If <value> is zero, then the result is 1; if <value> is 1, the
+result is 2 and so forth.  If <value> is negative, then the result is zero.
+
+If mask is called with two or more arguments, then the result is a bitwise of
+the masks individually computed for each of the values.  
+
+In other words, the following equivalences hold:
+
+  (mask) == 0
+  (mask a) == (ash 1 a)
+  (mask a b c ...) == (logior (mask a) (mask b) (mask c) ...)
 
 .SH EXCEPTIONS
 
@@ -10916,6 +10953,107 @@ This is a wrapper for the Unix function daemon of BSD origin.
 It returns t if successful, nil otherwise, and the errno
 variable is set in that case.
 
+.SH UNIX SYSLOG
+
+On platforms where a Unix-like syslog API is available, TXR exports this
+interface. TXR programs can configure logging via the openlog function,
+control the loging mask via setlogmask and generate logs vis syslog,
+or using special syslog streams.
+
+.SS Variables log-pid, log-cons, log-ndelay, log-odelay, log-nowait and log-perror
+
+These variables take on the values of the corresponding C preprocessor
+constants from the <syslog.h> header: LOG_PID, LOG_CONS, etc. These
+integer values represent logging options used in the option argument to the
+openlog function.
+
+.SS Variables log-user, log-daemon and log-auth
+
+These variables take on the values of the corresponding C preprocessor
+constants from the <syslog.h> header: LOG_USER, LOG_DAEMON, and LOG_AUTH.
+These are the integer facility codes specified in the openlog function.
+
+.SS Variables log-emerg, log-alert, log-crit, log-err, log-warning, log-notice, log-info and log-debug
+
+These variables take on the values of the corresponding C preprocessor
+constants from the <syslog.h> header: LOG_EMERG, LOG_ALERT, etc.
+These are the integer priority codes specified in the syslog call.
+
+.SS The *stdlog* variable holds a special kind of stream: a syslog stream.
+Each newline-terminated line of text sent to this stream becomes a log
+message. The stream internally maintains a priority value that is applied
+when it generates messages. By default, this value is that of log-info.
+Note that messages generated via the openlog function are not newline
+terminated; this is a convention of the syslog stream. The newline characters
+written to the syslog stream are only used to recognize the message framing,
+and are not sent to syslog.
+
+.SS The openlog function
+
+.TP
+Syntax:
+
+  (openlog <id-string> : <options> <facility>)
+
+.TP
+Description:
+
+The openlog TXR Lisp function is a wrapper for the openlog C function, and the
+arguments have the same semantics. It is not necessary to use openlog in order
+to call the syslog function or to write data to *stdlog*. The call is necessary
+in order to override the default identifying string, to set options, such
+ashaving the PID (process ID) recorded in log messages, and to specify the facility.
+
+The <id-string> argument is manadatory.
+
+The <options> argument is a bitwise mask (see the logior function) of option
+values such as log-pid and log-cons. If it is missing, then a value of 0 is
+used, specifying the absence of any options.
+
+The <facility> argument is one of the values log-user, log-daemon or log-auth.
+If it is missing, then log-user is assumed.
+
+.SS The setlogmask function
+
+.TP
+Syntax:
+
+  (setlogmask <bitmask-integer>)
+
+.TP
+Description:
+
+The setlogmask function interfaces to the corresponding C function, and has the
+same argument and return value semantics. The argument is a mask of priority
+values to enable. The return value is the prior value. Note that if the
+argument is zero, then the function doesn't set the mask to zero; it only
+returns the current value of the mask.
+
+Note that the priority values like log-emerg and log-debug are integer
+enumerations, not bitmasks. These values cannot be combined directly to create
+a bitmask. Rather, the mask function should be used on these values.
+
+.TP
+Example:
+
+  ;; Enable LOG_EMERG and LOG_ALERT messages, suppressing all others
+  (setlogmask (mask log-emerg log-alert))
+
+
+.SS The syslog function
+
+.TP
+Syntax:
+
+  (syslog <priority> <format> . <args>)
+
+.TP
+Description:
+
+This function is the interface to the syslog C function. The printf formatting
+capabilities of the function are not used; it follows the conventions of the
+TXR Lisp format function instead. Note in particular that %m for interpolating
+the value of strerror(errno) is currenly not supported.
 
 .SH WEB PROGRAMMING SUPPORT
 

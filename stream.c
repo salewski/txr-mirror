@@ -65,27 +65,6 @@ val s_ifchr, s_ififo, s_isuid, s_isgid, s_isvtx, s_irwxu;
 val s_irusr, s_iwusr, s_ixusr, s_irwxg, s_irgrp, s_iwgrp;
 val s_ixgrp, s_irwxo, s_iroth, s_iwoth, s_ixoth;
 
-enum strm_whence {
-  strm_start = SEEK_SET,
-  strm_cur = SEEK_CUR,
-  strm_end = SEEK_SET
-};
-
-struct strm_ops {
-  struct cobj_ops cobj_ops;
-  val (*put_string)(val, val);
-  val (*put_char)(val, val);
-  val (*put_byte)(val, int);
-  val (*get_line)(val);
-  val (*get_char)(val);
-  val (*get_byte)(val);
-  val (*close)(val, val);
-  val (*flush)(val);
-  val (*seek)(val, cnum, enum strm_whence);
-  val (*get_prop)(val, val ind);
-  val (*set_prop)(val, val ind, val);
-};
-
 static void common_destroy(val obj)
 {
   (void) close_stream(obj, nil);

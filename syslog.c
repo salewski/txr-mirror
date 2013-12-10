@@ -49,15 +49,23 @@ val log_user_v, log_daemon_v, log_auth_v;
 val log_emerg_v, log_alert_v, log_crit_v, log_err_v;
 val log_warning_v, log_notice_v, log_info_v, log_debug_v;
 
+val prio_k;
+
+val std_log;
+
 void syslog_init(void)
 {
+  prot1(&std_log);
+
   log_pid_v = num(LOG_PID);
   log_cons_v = num(LOG_CONS);
   log_ndelay_v = num(LOG_NDELAY);
 
   log_odelay_v = num(LOG_ODELAY);
   log_nowait_v = num(LOG_NOWAIT);
+#ifdef LOG_PERROR
   log_perror_v = num(LOG_PERROR);
+#endif
 
   log_user_v = num(LOG_USER);
   log_daemon_v = num(LOG_DAEMON);
@@ -71,6 +79,10 @@ void syslog_init(void)
   log_notice_v = num(LOG_NOTICE);
   log_info_v = num(LOG_INFO);
   log_debug_v = num(LOG_DEBUG);
+
+  prio_k = intern(lit("prio"), keyword_package);
+
+  std_log = make_syslog_stream(log_info_v);
 }
 
 val openlog_wrap(val wident, val optmask, val facility)
@@ -98,4 +110,112 @@ val syslog_wrap(val prio, val fmt, val args)
   char *u8text = utf8_dup_to(c_str(text));
   syslog(c_num(prio), "%s", u8text);
   return nil;
+}
+
+static void syslog_mark(val stream)
+{
+  val stuff = (val) stream->co.handle;
+  gc_mark(stuff);
+}
+
+static val syslog_put_string(val stream, val str)
+{
+  val cell = (val) stream->co.handle;
+  cons_bind (prio, strstream, cell);
+
+  for (;;) {
+    val length = length_str(str);
+    val span_to_newline = compl_span_str(str, lit("\n"));
+
+    if (zerop(length))
+      break;
+
+    put_string(sub_str(str, nil, span_to_newline), strstream);
+
+    if (equal(span_to_newline, length))
+      break;
+
+    str = sub_str(str, plus(span_to_newline, num(1)), nil);
+    syslog_wrap(prio, lit("~a"), list(get_string_from_stream(strstream), nao));
+    strstream = make_string_output_stream();
+  }
+
+  set(*cdr_l(cell), strstream);
+  return t;
+}
+
+static val syslog_put_char(val stream, val ch)
+{
+  val cell = (val) stream->co.handle;
+  cons_bind (prio, strstream, cell);
+
+  if (ch == chr('\n')) {
+    syslog_wrap(prio, lit("~a"), list(get_string_from_stream(strstream), nao));
+    strstream = make_string_output_stream();
+  } else {
+    put_char(ch, strstream);
+  }
+
+  set(*cdr_l(cell), strstream);
+  return t;
+}
+
+static val syslog_put_byte(val stream, int ch)
+{
+  val cell = (val) stream->co.handle;
+  cons_bind (prio, strstream, cell);
+
+  if (ch == '\n') {
+    syslog_wrap(prio, lit("~a"), list(get_string_from_stream(strstream), nao));
+    strstream = make_string_output_stream();
+  } else {
+    put_byte(num(ch), strstream);
+  }
+
+  set(*cdr_l(cell), strstream);
+  return t;
+}
+
+static val syslog_get_prop(val stream, val ind)
+{
+  if (ind == real_time_k) {
+    val cell = (val) stream->co.handle;
+    return car(cell);
+  }
+  return nil;
+}
+
+static val syslog_set_prop(val stream, val ind, val prop)
+{
+  if (ind == prio_k) {
+    val cell = (val) stream->co.handle;
+    set(*car_l(cell), prop);
+    return t;
+  }
+  return nil;
+}
+
+static struct strm_ops syslog_strm_ops = {
+  { cobj_equal_op,
+    cobj_print_op,
+    cobj_destroy_stub_op,
+    syslog_mark,
+    cobj_hash_op },
+  syslog_put_string,
+  syslog_put_char,
+  syslog_put_byte,
+  0, /* get_line */
+  0, /* get_char */
+  0, /* get_byte */
+  0, /* close */
+  0, /* flush */
+  0, /* seek */
+  syslog_get_prop,
+  syslog_set_prop
+};
+
+val make_syslog_stream(val prio)
+{
+  return cobj((mem_t *) cons(prio, make_string_output_stream()), 
+              stream_s, &syslog_strm_ops.cobj_ops);
 }

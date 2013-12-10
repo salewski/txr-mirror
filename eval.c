@@ -36,6 +36,9 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#ifdef HAVE_SYSLOG
+#include <syslog.h>
+#endif
 #include "lib.h"
 #include "gc.h"
 #include "unwind.h"
@@ -48,7 +51,9 @@
 #include "rand.h"
 #include "filter.h"
 #include "txr.h"
+#ifdef HAVE_SYSLOG
 #include "syslog.h"
+#endif
 #include "eval.h"
 
 typedef val (*opfun_t)(val, val);
@@ -2307,6 +2312,7 @@ void eval_init(void)
   reg_fun(intern(lit("lognot"), user_package), func_n2o(lognot, 1));
   reg_fun(intern(lit("logtrunc"), user_package), func_n2(logtrunc));
   reg_fun(intern(lit("ash"), user_package), func_n2(ash));
+  reg_fun(intern(lit("mask"), user_package), func_n0v(maskv));
 
   reg_fun(intern(lit("regex-compile"), user_package), func_n2o(regex_compile, 1));
   reg_fun(intern(lit("regexp"), user_package), func_n1(regexp));
@@ -2354,6 +2360,9 @@ void eval_init(void)
   reg_var(intern(lit("*stdin*"), user_package), &std_input);
   reg_var(intern(lit("*stderr*"), user_package), &std_error);
   reg_var(intern(lit("*stdnull*"), user_package), &std_null);
+#ifdef HAVE_SYSLOG
+  reg_var(intern(lit("*stdlog*"), user_package), &std_log);
+#endif
   reg_fun(intern(lit("format"), user_package), func_n2v(formatv));
   reg_fun(intern(lit("print"), user_package), func_n2o(obj_print, 1));
   reg_fun(intern(lit("pprint"), user_package), func_n2o(obj_pprint, 1));
@@ -2560,15 +2569,15 @@ void eval_init(void)
   reg_fun(intern(lit("errno"), user_package), func_n1o(errno_wrap, 0));
   reg_fun(intern(lit("daemon"), user_package), func_n2(daemon_wrap));
 
-  reg_var(intern(lit("s-ixoth"), user_package), &s_ixoth);
-
 #if HAVE_SYSLOG
   reg_var(intern(lit("log-pid"), user_package), &log_pid_v);
   reg_var(intern(lit("log-cons"), user_package), &log_cons_v);
   reg_var(intern(lit("log-ndelay"), user_package), &log_ndelay_v);
   reg_var(intern(lit("log-odelay"), user_package), &log_odelay_v);
   reg_var(intern(lit("log-nowait"), user_package), &log_nowait_v);
+#ifdef LOG_PERROR
   reg_var(intern(lit("log-perror"), user_package), &log_perror_v);
+#endif
   reg_var(intern(lit("log-user"), user_package), &log_user_v);
   reg_var(intern(lit("log-daemon"), user_package), &log_daemon_v);
   reg_var(intern(lit("log-auth"), user_package), &log_auth_v);

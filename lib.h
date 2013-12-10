@@ -490,6 +490,7 @@ val logtest(val, val);
 val lognot(val, val);
 val logtrunc(val a, val bits);
 val ash(val a, val bits);
+val maskv(val bits);
 val string_own(wchar_t *str);
 val string(const wchar_t *str);
 val string_utf8(const char *str);

@@ -2,8 +2,9 @@
 
 	syslog support; bitwise logior and logand functions become variadic.
 
-	* Makefile: Use -iquote to restrict our #include search paths from being
-	processed for #include <...>.  Add syslog.o to OBJS-y if have_syslog is y.
+	* Makefile: Use -iquote to restrict our #include search paths from
+	being processed for #include <...>.  Add syslog.o to OBJS-y if
+	have_syslog is y.
 
 	* configure (have_syslog): New variable, set by detecting syslog API.
 
@@ -19,6 +20,10 @@
 	* syslog.c: New file.
 
 	* syslog.h: New file.
+
+	* txr.1: Updated.
+
+	* txr.vim: Regenerated.
 
 2013-12-07  Kaz Kylheku  <kaz@kylheku.com>
 

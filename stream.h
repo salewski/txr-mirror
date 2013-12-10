@@ -24,6 +24,27 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+enum strm_whence {
+  strm_start = SEEK_SET,
+  strm_cur = SEEK_CUR,
+  strm_end = SEEK_SET
+};
+
+struct strm_ops {
+  struct cobj_ops cobj_ops;
+  val (*put_string)(val, val);
+  val (*put_char)(val, val);
+  val (*put_byte)(val, int);
+  val (*get_line)(val);
+  val (*get_char)(val);
+  val (*get_byte)(val);
+  val (*close)(val, val);
+  val (*flush)(val);
+  val (*seek)(val, cnum, enum strm_whence);
+  val (*get_prop)(val, val ind);
+  val (*set_prop)(val, val ind, val);
+};
+
 extern val std_input, std_output, std_debug, std_error, std_null;
 extern val output_produced;
 

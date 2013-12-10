@@ -33,7 +33,12 @@ extern val log_user_v, log_daemon_v, log_auth_v;
 extern val log_emerg_v, log_alert_v, log_crit_v, log_err_v;
 extern val log_warning_v, log_notice_v, log_info_v, log_debug_v;
 
+extern val prio_k;
+
+extern val std_log;
+
 void syslog_init(void);
 val openlog_wrap(val ident, val optmask, val facility);
 val setlogmask_wrap(val mask);
 val syslog_wrap(val prio, val fmt, val args);
+val make_syslog_stream(val prio);

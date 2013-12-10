@@ -1803,6 +1803,19 @@ bad3:
   uw_throwf(error_s, lit("ashift: non-integral operand ~s"), a, nao);
 }
 
+val maskv(val bits)
+{
+  val accum = zero;
+
+  for (; bits; bits = cdr(bits)) {
+    val num = car(bits);
+    val mask = ash(one, num);
+    accum = logior(accum, mask);
+  }
+
+  return accum;
+}
+
 void arith_init(void)
 {
   mp_init(&NUM_MAX_MP);
