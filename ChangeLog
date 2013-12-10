@@ -1,5 +1,18 @@
 2013-12-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Register streamp, real_time_stream_p,
+	stream_get_prop and stream_set_prop as intrinsics.
+
+	* stream.c (stream_get_prop): New function.
+
+	* stream.h (stream_get_prop): Declared.
+
+	* syslog.c (syslog_get_prop): Bugfix: check for prio_k not real_time_k.
+
+	* txr.1: Updated.
+
+2013-12-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	syslog support; bitwise logior and logand functions become variadic.
 
 	* Makefile: Use -iquote to restrict our #include search paths from

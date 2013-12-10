@@ -73,6 +73,7 @@ val make_dir_stream(DIR *);
 val streamp(val obj);
 val real_time_stream_p(val obj);
 val stream_set_prop(val stream, val ind, val prop);
+val stream_get_prop(val stream, val ind);
 val close_stream(val stream, val throw_on_error);
 val get_line(val);
 val get_char(val);

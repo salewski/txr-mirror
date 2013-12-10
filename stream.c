@@ -1051,6 +1051,18 @@ val stream_set_prop(val stream, val ind, val prop)
   }
 }
 
+val stream_get_prop(val stream, val ind)
+{
+  type_check (stream, COBJ);
+  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
+                                            stream, nao));
+
+  {
+    struct strm_ops *ops = (struct strm_ops *) stream->co.ops;
+    return ops->get_prop ? ops->get_prop(stream, ind) : nil;
+  }
+}
+
 val real_time_stream_p(val obj)
 {
   if (streamp(obj)) {

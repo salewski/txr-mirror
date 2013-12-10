@@ -2385,7 +2385,10 @@ void eval_init(void)
   reg_fun(intern(lit("flush-stream"), user_package), func_n1(flush_stream));
   reg_fun(intern(lit("seek-stream"), user_package), func_n3(seek_stream));
   reg_fun(intern(lit("stat"), user_package), func_n1(statf));
-
+  reg_fun(intern(lit("streamp"), user_package), func_n1(streamp));
+  reg_fun(intern(lit("real-time-stream-p"), user_package), func_n1(real_time_stream_p));
+  reg_fun(intern(lit("stream-set-prop"), user_package), func_n3(stream_set_prop));
+  reg_fun(intern(lit("stream-get-prop"), user_package), func_n2(stream_get_prop));
   reg_var(intern(lit("s-ifmt"), user_package), &s_ifmt);
   reg_var(intern(lit("s-iflnk"), user_package), &s_iflnk);
   reg_var(intern(lit("s-ifreg"), user_package), &s_ifreg);

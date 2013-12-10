@@ -9948,7 +9948,7 @@ The iffi function defaults to the identity function when <else-func> is
 omitted or nil, and therefore is useful in situations when one value is to be
 replaced with another one when the condition is true, otherwise left alone.
 
-.SH INPUT AND OUTPUT
+.SH INPUT AND OUTPUT (STREAMS)
 
 TXR Lisp supports input and output streams of various kinds, with
 generic operations that work across the stream types.
@@ -10150,6 +10150,50 @@ and calls to these functions:
 
 For pprint and tostringp, the equivalence is produced by using "~a"
 in format rather than "~s".
+
+.SS Function streamp
+
+.TP
+Syntax:
+
+  (streamp <obj>)
+
+.TP
+Description:
+
+The streamp function returns t if <obj> is any type of stream.
+Otherwise it returns nil.
+
+.SS Function real-time-stream-p
+
+.TP
+Syntax:
+
+  (real-time-stream-p <obj>)
+
+.TP
+Description:
+
+The real-time-streamp-p function returns t if <obj> is a stream marked as
+"real-time".  If <obj> is not a stream, or not a stream marked as "real-time",
+then it returns nil.
+
+Note: the expression (real-time-stream-p S) is almost like
+(stream-get-prop S :real-time), except the latter requires S to be a stream.
+
+Only certain kinds of streams accept the real-time attribute: file streams and
+tail streams. This attribute controls the semantics of the application of
+lazy-stream-cons to the stream.  For a real-time stream, lazy-stream-cons
+returns a stream with "naive" semantics which returns data as soon as it is
+available, at the cost of generating spurious nil item when the stream
+terminates. The application has to recognize and discard that nil item.
+The ordinary lazy streams read ahead by one line and suppress this extra
+item, so their representation is more accurate.
+
+Streams connected to TTY devices (devices which for which the isatty function
+reports true) are marked as real-time. This is only supported on platforms that
+have an isatty function.
+
 
 .SS Function make-string-input-stream
 
@@ -10388,6 +10432,38 @@ stream, if it can successfully obtain it. Otherwise, it
 returns t if it is successful.
 
 On failure, it throws an exception of type stream-error.
+
+.SS Functions stream-get-prop and stream-set-prop
+
+.TP
+Syntax:
+
+  (stream-get-prop <stream> <indicator>)
+  (stream-set-prop <stream> <indicator> <value>)
+
+.TP
+Description:
+
+These functions get and set properties on a stream. Only certain properties
+are meaningful with certain kinds of streams, and the meaning depends on
+the stream. If two or more stream types support a property of the same name, it
+is expected that the property has the same or very similar meaning for both
+streams to the maximum extent that similarity is possible possible.
+
+The stream-set-prop fucntion sets a property on a stream. The <indicator>
+argument is a symbol, usually a keyword symbol, denoting the property,
+and <value> is the property value. If the stream understands and accepts the
+property, the function returns t. Otherwise it returns nil.
+
+The stream-get-prop function inquires about the value of a property on a
+stream. If the stream understands the property, then it returns its current
+value.  If the stream does not understand a property, nil is returned, which is
+also returned if the property exists, but its value happens to be nil. 
+
+Properties are currently used for marking certain streams as "real-time" (see
+the stream-real-time-p function above), and also for setting the priority at
+which messages are reported to syslog by the *stdlog* stream (see *stdlog*
+in the UNIX SYSLOG section).
 
 .SH FILESYSTEM ACCESS
 
@@ -10981,12 +11057,25 @@ These are the integer priority codes specified in the syslog call.
 
 .SS The *stdlog* variable holds a special kind of stream: a syslog stream.
 Each newline-terminated line of text sent to this stream becomes a log
-message. The stream internally maintains a priority value that is applied
+message. 
+
+The stream internally maintains a priority value that is applied
 when it generates messages. By default, this value is that of log-info.
+The stream holds the priority as the value of the :prio property,
+which may be changed with the stream-set-prop function.
+
+The latest priority value which has been configured on the stream is used
+at the time the newline character is processed and the log message
+is generated, not necessarily the value which was in effect at the time the
+accumulation of a line began to take place.
+
 Note that messages generated via the openlog function are not newline
 terminated; this is a convention of the syslog stream. The newline characters
 written to the syslog stream are only used to recognize the message framing,
 and are not sent to syslog.
+
+Multiple lines can be written to the stream in a single operation, and
+these result in multiple syslog mesages.
 
 .SS The openlog function
 

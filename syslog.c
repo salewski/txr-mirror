@@ -178,7 +178,7 @@ static val syslog_put_byte(val stream, int ch)
 
 static val syslog_get_prop(val stream, val ind)
 {
-  if (ind == real_time_k) {
+  if (ind == prio_k) {
     val cell = (val) stream->co.handle;
     return car(cell);
   }
