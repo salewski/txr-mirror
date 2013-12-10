@@ -411,7 +411,7 @@ Since garbage collection is being used in code processed by a compiler which
 knows nothing about garbage collection, it is important to obey certain rules
 so that the code is gc-safe. Code which is not gc-safe is susceptible
 to two potential serious problems: the premature garbage collection of an
-object, and accesses, in the garbage allocator, to uninitialized parts of an
+object, and accesses, in the garbage collector, to uninitialized parts of an
 object.
 
 The rules for gc-safe code are not difficult in txr, due to the immense
@@ -465,7 +465,7 @@ as well as any other field that is visited during garbage collection.
   A function which constructs an object must place it in live, reachable
   storage before attempting to construct another object.
 
-The garbage allocator does not scan all of memory for root pointers, only the
+The garbage collector does not scan all of memory for root pointers, only the
 stack and registered globals. So for instance, if the only reference to an
 object is inside a dynamically allocated structure, and that structure is not
 visible to the allocator, then if gc is invoked, that object will be reclaimed.
@@ -482,8 +482,9 @@ assigned to pointer t, the allocation of the cons cell stored in t->value, and
 the allocation of the COBJ.  The issue is that the object t is not known to the
 allocator.  It is a ``native'' C type, which the garbage collector will not
 traverse.  The garbage allocator can see the pointer t, because it scans the
-stack and registers, but that object means nothing to the garbage collector,
-and so the collector cannot find and mark the t->value member.
+stack and registers, but that pointer is not recognized by the garbage
+collector since it doesn't point into one of its heaps, and so the collector
+will not find and mark the t->value member.
 
 Of course, the operations structure ``some_type_ops'' presumably contains a
 mark function which knows how to traverse this object and find values inside
