@@ -1,5 +1,17 @@
 2013-12-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): log_authpriv_v registered as log-authpriv.
+
+	* syslog.c (log_authpriv_v): New variable.
+	(syslog_init): New variable initialized.
+
+	* syslog.h (log_authpriv_v): Declared.
+
+	* txr.1: Documented log-authpriv, and put in notes about testing
+	for variables that may not be present, including log-perror.
+
+2013-12-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (symbol_value, boundp, fboundp): New functions.
 	(eval_init): New functions registred as intrinsics.
 

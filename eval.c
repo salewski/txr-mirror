@@ -2603,6 +2603,9 @@ void eval_init(void)
   reg_var(intern(lit("log-user"), user_package), &log_user_v);
   reg_var(intern(lit("log-daemon"), user_package), &log_daemon_v);
   reg_var(intern(lit("log-auth"), user_package), &log_auth_v);
+#ifdef LOG_AUTHPRIV
+  reg_var(intern(lit("log-authpriv"), user_package), &log_authpriv_v);
+#endif
   reg_var(intern(lit("log-emerg"), user_package), &log_emerg_v);
   reg_var(intern(lit("log-alert"), user_package), &log_alert_v);
   reg_var(intern(lit("log-crit"), user_package), &log_crit_v);

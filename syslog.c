@@ -43,7 +43,7 @@
 val log_pid_v, log_cons_v, log_ndelay_v;
 val log_odelay_v, log_nowait_v, log_perror_v;
 
-val log_user_v, log_daemon_v, log_auth_v;
+val log_user_v, log_daemon_v, log_auth_v, log_authpriv_v;
 
 val log_emerg_v, log_alert_v, log_crit_v, log_err_v;
 val log_warning_v, log_notice_v, log_info_v, log_debug_v;
@@ -69,6 +69,9 @@ void syslog_init(void)
   log_user_v = num(LOG_USER);
   log_daemon_v = num(LOG_DAEMON);
   log_auth_v = num(LOG_AUTH);
+#ifdef LOG_AUTHPRIV
+  log_authpriv_v = num(LOG_AUTHPRIV);
+#endif
 
   log_emerg_v = num(LOG_EMERG);
   log_alert_v = num(LOG_ALERT);

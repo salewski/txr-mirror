@@ -28,7 +28,7 @@
 extern val log_pid_v, log_cons_v, log_ndelay_v;
 extern val log_odelay_v, log_nowait_v, log_perror_v;
 
-extern val log_user_v, log_daemon_v, log_auth_v;
+extern val log_user_v, log_daemon_v, log_auth_v, log_authpriv_v;
 
 extern val log_emerg_v, log_alert_v, log_crit_v, log_err_v;
 extern val log_warning_v, log_notice_v, log_info_v, log_debug_v;

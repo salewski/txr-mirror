@@ -11066,11 +11066,20 @@ constants from the <syslog.h> header: LOG_PID, LOG_CONS, etc. These
 integer values represent logging options used in the option argument to the
 openlog function.
 
-.SS Variables log-user, log-daemon and log-auth
+Note: LOG_PERROR is not in POSIX, and so log-perror might not be available.
+See notes about LOG_AUTHPRIV in the next section.
+
+.SS Variables log-user, log-daemon, log-auth and log-authpriv
 
 These variables take on the values of the corresponding C preprocessor
-constants from the <syslog.h> header: LOG_USER, LOG_DAEMON, and LOG_AUTH.
-These are the integer facility codes specified in the openlog function.
+constants from the <syslog.h> header: LOG_USER, LOG_DAEMON, LOG_AUTH
+and LOG_AUTHPRIV.  These are the integer facility codes specified in the
+openlog function.
+
+Note: LOG_AUTHPRIV is not in POSIX, and so log-authpriv might not be available.
+For portability use code like (of (symbol-value 'log-authpriv) 0) to
+evaluate to 0 if log-authpriv doesn't exist, or else check for its
+existence using (boundp 'log-authpriv).
 
 .SS Variables log-emerg, log-alert, log-crit, log-err, log-warning, log-notice, log-info and log-debug
 
