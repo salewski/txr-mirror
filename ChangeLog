@@ -1,5 +1,15 @@
 2013-12-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): closelog_wrap interned.
+
+	* syslog.c (closelog_wrap): New function.
+
+	* syslog.h (closelog_wrap): Declared.
+
+	* txr.1: Documented.
+
+2013-12-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Register streamp, real_time_stream_p,
 	stream_get_prop and stream_set_prop as intrinsics.
 

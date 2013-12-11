@@ -2593,6 +2593,7 @@ void eval_init(void)
   reg_var(intern(lit("log-info"), user_package), &log_info_v);
   reg_var(intern(lit("log-debug"), user_package), &log_debug_v);
   reg_fun(intern(lit("openlog"), user_package), func_n3o(openlog_wrap, 1));
+  reg_fun(intern(lit("closelog"), user_package), func_n0(closelog_wrap));
   reg_fun(intern(lit("setlogmask"), user_package), func_n1(setlogmask_wrap));
   reg_fun(intern(lit("syslog"), user_package), func_n2v(syslog_wrap));
 #endif

@@ -112,6 +112,12 @@ val syslog_wrap(val prio, val fmt, val args)
   return nil;
 }
 
+val closelog_wrap(void)
+{
+  closelog();
+  return nil;
+}
+
 static void syslog_mark(val stream)
 {
   val stuff = (val) stream->co.handle;

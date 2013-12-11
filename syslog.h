@@ -39,6 +39,7 @@ extern val std_log;
 
 void syslog_init(void);
 val openlog_wrap(val ident, val optmask, val facility);
+val closelog_wrap(void);
 val setlogmask_wrap(val mask);
 val syslog_wrap(val prio, val fmt, val args);
 val make_syslog_stream(val prio);
