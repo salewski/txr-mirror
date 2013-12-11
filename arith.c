@@ -29,7 +29,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <wctype.h>
-#include <assert.h>
 #include <limits.h>
 #include <stdarg.h>
 #include <dirent.h>

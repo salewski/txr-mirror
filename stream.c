@@ -29,7 +29,6 @@
 #include <dirent.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <setjmp.h>
 #include <errno.h>
 #include <ctype.h>

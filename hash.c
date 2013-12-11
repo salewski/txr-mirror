@@ -29,7 +29,6 @@
 #include <dirent.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <setjmp.h>
 #include <limits.h>
 #include "config.h"

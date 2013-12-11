@@ -1,3 +1,9 @@
+2013-12-11  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c, hash.c, lib.c, rand.c, stream.c, syslog.c: Removing
+	#include <assert.h> since none of these modules uses the standard C
+	assert macro.
+
 2013-12-10  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): closelog_wrap interned.
