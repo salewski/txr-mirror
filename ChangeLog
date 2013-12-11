@@ -1,5 +1,12 @@
 2013-12-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (symbol_value, boundp, fboundp): New functions.
+	(eval_init): New functions registred as intrinsics.
+
+	* txr.1: Documented.
+
+2013-12-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c, hash.c, lib.c, rand.c, stream.c, syslog.c: Removing
 	#include <assert.h> since none of these modules uses the standard C
 	assert macro.

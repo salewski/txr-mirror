@@ -5858,25 +5858,48 @@ Dialect Note:
 A lambda expression is not a function name in TXR Lisp. The 
 syntax (fun (lambda ...)) is invalid.
 
-.SS Function symbol-function
+.SS Functions symbol-function and symbol-value
 
 .TP
 Syntax:
 
   (symbol-function <symbol>)
+  (symbol-value <symbol>)
 
 .TP
 Description:
 
-The symbol-function retrieves the toplevel function binding of the given
-symbol if it has one. If the symbol has no toplevel function binding,
-the value nil is returned.
+The symbol-function retrieves the value of the toplevel function binding of the
+given symbol if it has one: that is, the function object tied to the symbol. If
+the symbol has no toplevel function binding, the value nil is returned.
+
+The symbol-value retrives the value of a toplevel variable, if it exists,
+otherwise nil.
 
 .TP
 Dialect note:
 
-The symbol-function form is currently not an assignable place. Only
-the defun operator defines functions.
+Forms which call symbol-function or symbol-value are currently not an
+assignable place. Only the defun operator defines functions, and the set
+operator modifies variables. There is no way to modify a toplevel variable that
+is shadowed by a lexical variable.
+
+.SS Functions boundp and fboundp
+
+.TP
+Syntax:
+
+  (boundp <symbol>)
+  (fboundp <symbol>)
+
+.TP
+Description:
+
+boundp returns t if the symbol has a variable binding in the toplevel
+environment, otherwise nil.  
+
+Foundp returns t if the symbol has a function binding in the toplevel
+environment, or if it is an operator, otherwise nil.
 
 .SS Function func-get-form
 

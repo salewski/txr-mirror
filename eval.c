@@ -1903,9 +1903,25 @@ static val lazy_mappendv(val fun, val list_of_lists)
   return lazy_appendv(lazy_mapcarv(fun, list_of_lists));
 }
 
+static val symbol_value(val sym)
+{
+  return cdr(lookup_var(nil, sym));
+}
+
 static val symbol_function(val sym)
 {
   return cdr(lookup_fun(nil, sym));
+}
+
+static val boundp(val sym)
+{
+  return if3(lookup_var(nil, sym), t, nil);
+}
+
+static val fboundp(val sym)
+{
+  return if3(lookup_fun(nil, sym), t,
+             if3(gethash(op_table, sym), t, nil));
 }
 
 static val rangev_func(val env, val lcons)
@@ -2534,7 +2550,10 @@ void eval_init(void)
   reg_fun(intern(lit("refset"), user_package), func_n3(refset));
   reg_fun(intern(lit("replace"), user_package), func_n4o(replace, 2));
 
+  reg_fun(intern(lit("symbol-value"), user_package), func_n1(symbol_value));
   reg_fun(intern(lit("symbol-function"), user_package), func_n1(symbol_function));
+  reg_fun(intern(lit("boundp"), user_package), func_n1(boundp));
+  reg_fun(intern(lit("fboundp"), user_package), func_n1(fboundp));
   reg_fun(intern(lit("func-get-form"), user_package), func_n1(func_get_form));
   reg_fun(intern(lit("func-get-env"), user_package), func_n1(func_get_env));
   reg_fun(intern(lit("functionp"), user_package), func_n1(functionp));
