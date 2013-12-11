@@ -1,4 +1,4 @@
-/* Copyright 2012
+/* Copyright 2010-2014
  * Kaz Kylheku <kaz@kylheku.com>
  * Vancouver, Canada
  * All rights reserved.
