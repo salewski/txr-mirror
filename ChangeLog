@@ -1,3 +1,10 @@
+2013-12-12  Kaz Kylheku  <kaz@kylheku.com>
+
+	* configure: Fix warnings in test cases for HAVE_FORK_STUFF
+	and HAVE_DAEMON.
+
+	* eval.c: daemon support must be wrapped in #if HAVE_DAEMON
+
 2013-12-11  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.c (txr_main): Change stderr to line buffered mode.

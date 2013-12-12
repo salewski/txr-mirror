@@ -1235,9 +1235,10 @@ int main(int argc, char **argv)
 {
   int status, fd[2];
   pid_t p = fork();
+  int res = pipe(fd);
   (void) execvp(argv[0], argv);
   (void) waitpid(p, &status, 0);
-  (void) pipe(fd);
+  (void) res;
   return 0;
 }
 !
@@ -1377,8 +1378,7 @@ cat > conftest.c <<!
 
 int main(int argc, char **argv)
 {
-  daemon(0, 0);
-  return 0;
+  return daemon(0, 0);
 }
 !
 rm -f conftest

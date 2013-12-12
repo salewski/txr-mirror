@@ -2087,11 +2087,13 @@ static val errno_wrap(val newval)
   return oldval;
 }
 
+#if HAVE_DAEMON
 static val daemon_wrap(val nochdir, val noclose)
 {
   int result = daemon(nochdir ? 1 : 0, noclose ? 1 : 0);
   return result == 0 ? t : nil;
 }
+#endif
 
 static void reg_fun(val sym, val fun)
 {
@@ -2589,7 +2591,9 @@ void eval_init(void)
   reg_fun(intern(lit("make-time-utc"), user_package), func_n7(make_time_utc));
 
   reg_fun(intern(lit("errno"), user_package), func_n1o(errno_wrap, 0));
+#if HAVE_DAEMON
   reg_fun(intern(lit("daemon"), user_package), func_n2(daemon_wrap));
+#endif
 
 #if HAVE_SYSLOG
   reg_var(intern(lit("log-pid"), user_package), &log_pid_v);
