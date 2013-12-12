@@ -1,5 +1,9 @@
 2013-12-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.c (txr_main): Change stderr to line buffered mode.
+
+2013-12-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): log_authpriv_v registered as log-authpriv.
 
 	* syslog.c (log_authpriv_v): New variable.

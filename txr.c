@@ -179,6 +179,8 @@ int txr_main(int argc, char **argv)
   prot1(&spec_file_str);
   prot1(&self_path);
 
+  setvbuf(stderr, 0, _IOLBF, 0);
+
   yyin_stream = std_input;
 
   if (argc <= 1) {
