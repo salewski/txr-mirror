@@ -1,5 +1,19 @@
 2013-12-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	* signal.c (sig_handler): Pass two arguments to signal
+	handler rather than 1. The new argument is the value t,
+	telling the handler that it's asynchronously invoked in
+	a real signal context. If the signal handler returns
+	true, then mark it deferred so that it can re-trigger
+	in a synchronous context.
+	(sig_check): Pass nil as a the second argument to signal handlers,
+	indicating that they are synchronously called, not
+	in a signal handler context.
+
+	* txr.1: Added documentation.
+
+2013-12-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	* signal.c (set_sig_handler): Disable signals around this
 	function because it manipulates the mask of deferred
 	signals which can also be manipulated by an async signal.

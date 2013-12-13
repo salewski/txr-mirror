@@ -59,7 +59,8 @@ static void sig_handler(int sig)
   if (lambda) {
     if (async_sig_enabled) {
       async_sig_enabled = 0;
-      funcall1(lambda, num_fast(sig));
+      if (funcall2(lambda, num_fast(sig), t))
+        sig_deferred |= (1UL << sig);
       async_sig_enabled = 1;
     } else {
       sig_deferred |= (1UL << sig);
@@ -191,7 +192,7 @@ val sig_check(void)
     if ((sd & mask) != 0) {
       sd &= ~mask;
       sig_deferred = sd;
-      funcall1(sig_lambda[i], num_fast(i));
+      funcall2(sig_lambda[i], num_fast(i), nil);
     }
   }
 

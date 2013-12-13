@@ -11142,6 +11142,32 @@ Note that the certain signals like sig-quit and sig-kill cannot be handled.
 Please observe the signal documentation in the IEEE POSIX standard, and your
 platform.
 
+A signal handling function must take two arguments. It is of the form:
+
+  (lambda (signal async-p) ...)
+
+The signal argument is an integer indicating the signal number for which the
+handler is being invoked. The asyncp-p argument is a boolean value, nil or t.
+If it is t, it indicates that the handler is being invoked
+asynchronously---directly in a signal handling context.  If it is nil, then it
+is a deferred call.  Handlers may do more things in a deferred call, such
+as terminate by throwing exceptions, and perform I/O.
+
+The return value of a handler is normally ignored. However if it invoked
+asynchronously (the async-p argument is true), then if the handler returns
+a true value (any value other than nil), the handler is understood as
+requesting that it be deferred. This means that the signal will be marked
+as deferred, and handler will be called one more time again at some later
+time in a deferred context (async-p nil). This is not guaranteed, however;
+it's possible that another signal will arrive before that happens,
+possibly resulting in an async call.
+
+If a handler is invoked synchronously, then its return value is ignored.
+
+In the current implementation, signals do not queue. If a signal is delivered
+to the process again, while it is marked as deferred, it simply stays deferred;
+there is no counter associated with a signal, only a boolean flag.
+
 .SS The sig-check function
 
 .TP
