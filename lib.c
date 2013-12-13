@@ -36,7 +36,9 @@
 #include <wchar.h>
 #include <math.h>
 #include <time.h>
+#include <signal.h>
 #include <sys/time.h>
+#include <assert.h>
 #include "config.h"
 #ifdef HAVE_GETENVIRONMENTSTRINGS
 #define NOMINMAX
@@ -47,6 +49,7 @@
 #include "arith.h"
 #include "rand.h"
 #include "hash.h"
+#include "signal.h"
 #include "unwind.h"
 #include "stream.h"
 #include "utf8.h"
@@ -1082,6 +1085,9 @@ static mem_t *malloc_low_bound, *malloc_high_bound;
 mem_t *chk_malloc(size_t size)
 {
   mem_t *ptr = (mem_t *) malloc(size);
+
+  assert (!async_sig_enabled);
+
   if (size && ptr == 0)
     ptr = (mem_t *) oom_realloc(0, size);
   if (ptr < malloc_low_bound)
@@ -1094,6 +1100,9 @@ mem_t *chk_malloc(size_t size)
 mem_t *chk_calloc(size_t n, size_t size)
 {
   mem_t *ptr = (mem_t *) calloc(n, size);
+
+  assert (!async_sig_enabled);
+
   if (size && ptr == 0) {
     ptr = (mem_t *) oom_realloc(0, size);
     memset(ptr, 0, n * size);
@@ -1108,6 +1117,9 @@ mem_t *chk_calloc(size_t n, size_t size)
 mem_t *chk_realloc(mem_t *old, size_t size)
 {
   mem_t *newptr = (mem_t *) realloc(old, size);
+
+  assert (!async_sig_enabled);
+
   if (size != 0 && newptr == 0)
     newptr = oom_realloc(old, size);
   if (newptr < malloc_low_bound)
@@ -1126,6 +1138,7 @@ wchar_t *chk_strdup(const wchar_t *str)
 {
   size_t nchar = wcslen(str) + 1;
   wchar_t *copy = (wchar_t *) chk_malloc(nchar * sizeof *copy);
+  assert (!async_sig_enabled);
   wmemcpy(copy, str, nchar);
   return copy;
 }
@@ -5188,6 +5201,9 @@ void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),
 
   oom_realloc = oom;
   gc_init(stack_bottom);
+#if HAVE_POSIX_SIGS
+  sig_init();
+#endif
   obj_init();
   arith_init();
   rand_init();

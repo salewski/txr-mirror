@@ -31,9 +31,11 @@
 #include <stdlib.h>
 #include <setjmp.h>
 #include <limits.h>
+#include <signal.h>
 #include "config.h"
 #include "lib.h"
 #include "gc.h"
+#include "signal.h"
 #include "unwind.h"
 #include "stream.h"
 #include "hash.h"

@@ -31,6 +31,7 @@
 #include <setjmp.h>
 #include <dirent.h>
 #include <wchar.h>
+#include <signal.h>
 #include "config.h"
 #ifdef HAVE_VALGRIND
 #include <valgrind/memcheck.h>
@@ -41,6 +42,7 @@
 #include "txr.h"
 #include "eval.h"
 #include "gc.h"
+#include "signal.h"
 
 #define PROT_STACK_SIZE         1024
 #define HEAP_SIZE               16384
@@ -115,20 +117,6 @@ void protect(val *first, ...)
   va_end (vl);
 }
 
-void release(val *last, ...)
-{
-  val *next = last;
-  va_list vl;
-  va_start (vl, last);
-
-  while (next) {
-    rel1(next);
-    next = va_arg(vl, val *);
-  }
-
-  va_end (vl);
-}
-
 static void more(void)
 {
   heap_t *heap = (heap_t *) chk_malloc(sizeof *heap);
@@ -160,6 +148,8 @@ static void more(void)
 val make_obj(void)
 {
   int tries;
+
+  assert (!async_sig_enabled);
 
 #if CONFIG_GEN_GC
   if (opt_gc_debug || freshobj_idx >= FRESHOBJ_VEC_SIZE) {

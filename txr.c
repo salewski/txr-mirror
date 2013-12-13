@@ -32,10 +32,12 @@
 #include <setjmp.h>
 #include <stdarg.h>
 #include <wchar.h>
+#include <signal.h>
 #include "config.h"
 #include "lib.h"
 #include "stream.h"
 #include "gc.h"
+#include "signal.h"
 #include "unwind.h"
 #include "parser.h"
 #include "match.h"

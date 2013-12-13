@@ -33,9 +33,11 @@
 #include <setjmp.h>
 #include <dirent.h>
 #include <limits.h>
+#include <signal.h>
 #include "config.h"
 #include "lib.h"
 #include "parser.h"
+#include "signal.h"
 #include "unwind.h"
 #include "regex.h"
 #include "txr.h"

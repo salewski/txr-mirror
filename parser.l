@@ -35,6 +35,7 @@
 #include <dirent.h>
 #include <wchar.h>
 #include <setjmp.h>
+#include <signal.h>
 #include "config.h"
 #if HAVE_UNISTD_H
 #include <unistd.h>
@@ -44,6 +45,7 @@
 #include "gc.h"
 #include "stream.h"
 #include "utf8.h"
+#include "signal.h"
 #include "unwind.h"
 #include "hash.h"
 #include "parser.h"

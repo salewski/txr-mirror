@@ -31,11 +31,13 @@
 #include <setjmp.h>
 #include <dirent.h>
 #include <stdarg.h>
+#include <signal.h>
 #include "config.h"
 #include "lib.h"
 #include "gc.h"
 #include "stream.h"
 #include "txr.h"
+#include "signal.h"
 #include "unwind.h"
 
 static uw_frame_t *uw_stack;
@@ -67,7 +69,7 @@ static void uw_unwind_to_exit_point(void)
       uw_stack->ca.exception = nil;
       uw_stack->ca.cont = uw_exit_point;
       /* 1 means unwind only. */
-      longjmp(uw_stack->ca.jb, 1);
+      extended_longjmp(uw_stack->ca.jb, 1);
       abort();
     case UW_ENV:
       /* Maintain consistency of unwind stack pointer */
@@ -85,13 +87,13 @@ static void uw_unwind_to_exit_point(void)
 
   switch (uw_stack->uw.type) {
   case UW_BLOCK:
-    longjmp(uw_stack->bl.jb, 1);
+    extended_longjmp(uw_stack->bl.jb, 1);
     abort();
   case UW_ENV: /* env frame cannot be exit point */
     abort();
   case UW_CATCH:
     /* 2 means actual catch, not just unwind */
-    longjmp(uw_stack->ca.jb, 2);
+    extended_longjmp(uw_stack->ca.jb, 2);
   default:
     abort();
   }

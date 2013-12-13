@@ -36,9 +36,11 @@
 #include <wchar.h>
 #include <limits.h>
 #include <math.h>
+#include <signal.h>
 #include <ctype.h>
 #include "config.h"
 #include "lib.h"
+#include "signal.h"
 #include "unwind.h"
 #include "gc.h"
 #include "arith.h"

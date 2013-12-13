@@ -35,8 +35,10 @@
 #include <wchar.h>
 #include <limits.h>
 #include <time.h>
+#include <signal.h>
 #include "config.h"
 #include "lib.h"
+#include "signal.h"
 #include "unwind.h"
 #include "gc.h"
 #include "arith.h"

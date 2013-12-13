@@ -28,7 +28,6 @@ void gc_init(val *stack_bottom);
 val prot1(val *loc);
 void rel1(val *loc);
 void protect(val *, ...);
-void release(val *, ...);
 val make_obj(void);
 void gc(void);
 int gc_state(int);

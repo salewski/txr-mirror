@@ -1,5 +1,52 @@
 2013-12-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	First cut at signal handling support.
+
+	* Makefile (OBJS-y): Include signal.o if have_posix_sigs is "y".
+
+	* configure (have_posix_sigs): New variable, set by detecting POSIX
+	signal stuff.
+
+	* dep.mk: Regenerated.
+
+	* arith.c, debug.c, eval.c, filter.c, hash.c, match.c, parser.y,
+	parser.l, rand.c, regex.c, syslog.c, txr.c, utf8.c: Include new
+	signal.h header, now required by unwind, and the <signal.h> system
+	header.
+
+	* eval.c (exit_wrap): New function.
+	(eval_init): New functions registered as intrinsics: exit_wrap,
+	set_sig_handler, get_sig_handler, sig_check.
+
+	* gc.c (release): Unused functions removed.
+
+	* gc.h (release): Declaration removed.
+
+	* lib.c (init): Call sig_init.
+
+	* stream.c (set_putc, se_getc, se_fflush): New static functions.
+	(stdio_put_char_callback, stdio_get_char_callback, stdio_put_byte,
+	stdio_flush, stdio_get_byte): Use new functions to enable
+	signals when blocked on I/O.
+	(tail_strategy): Allow signals across sleep.
+	(pipev_close): Allow signals across waitpid.
+	(se_pclose): New static function.
+	(pipe_close): Use new function to enable signals across pclose.
+
+	* unwind.c (uw_unwind_to_exit_point): use extended_longjmp instead of
+	longjmp.
+
+	* unwind.h (struct uw_block, struct uw_catch): jb member changes from
+	jmp_buf to extended_jmp_buf.
+	(uw_block_begin, uw_simple_catch_begin, uw_catch_begin): Use
+	extended_setjmp instead of setjmp.
+
+	* signal.c: New file.
+
+	* signal.h: New file.
+
+2013-12-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	* configure (config_flags): Variable removed. This was more trouble than it
 	was worth, and only solved problems caused by not checking that the test
 	program was made all the way to an executable.

@@ -32,6 +32,7 @@
 #include <setjmp.h>
 #include <stdarg.h>
 #include <wchar.h>
+#include <signal.h>
 #include "config.h"
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -41,6 +42,7 @@
 #endif
 #include "lib.h"
 #include "gc.h"
+#include "signal.h"
 #include "unwind.h"
 #include "regex.h"
 #include "stream.h"
@@ -2095,6 +2097,22 @@ static val daemon_wrap(val nochdir, val noclose)
 }
 #endif
 
+static val exit_wrap(val status)
+{
+  int stat;
+
+  if (status == nil)
+    stat = EXIT_FAILURE;
+  else if (status == t)
+    stat = EXIT_SUCCESS;
+  else
+    stat = c_num(status);
+
+  exit(stat);
+  /* notreached */
+  return nil;
+}
+
 static void reg_fun(val sym, val fun)
 {
   sethash(top_fb, sym, cons(sym, fun));
@@ -2591,6 +2609,8 @@ void eval_init(void)
   reg_fun(intern(lit("make-time-utc"), user_package), func_n7(make_time_utc));
 
   reg_fun(intern(lit("errno"), user_package), func_n1o(errno_wrap, 0));
+  reg_fun(intern(lit("exit"), user_package), func_n1(exit_wrap));
+
 #if HAVE_DAEMON
   reg_fun(intern(lit("daemon"), user_package), func_n2(daemon_wrap));
 #endif
@@ -2622,6 +2642,12 @@ void eval_init(void)
   reg_fun(intern(lit("closelog"), user_package), func_n0(closelog_wrap));
   reg_fun(intern(lit("setlogmask"), user_package), func_n1(setlogmask_wrap));
   reg_fun(intern(lit("syslog"), user_package), func_n2v(syslog_wrap));
+#endif
+
+#if HAVE_POSIX_SIGS
+  reg_fun(intern(lit("set-sig-handler"), user_package), func_n2(set_sig_handler));
+  reg_fun(intern(lit("get-sig-handler"), user_package), func_n1(get_sig_handler));
+  reg_fun(intern(lit("sig-check"), user_package), func_n0(sig_check));
 #endif
 
   reg_fun(intern(lit("source-loc"), user_package), func_n1(source_loc));

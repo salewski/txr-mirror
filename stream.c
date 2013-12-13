@@ -33,6 +33,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include <wchar.h>
+#include <signal.h>
 #include "config.h"
 #if HAVE_UNISTD_H
 #include <unistd.h>
@@ -46,6 +47,7 @@
 #endif
 #include "lib.h"
 #include "gc.h"
+#include "signal.h"
 #include "unwind.h"
 #include "stream.h"
 #include "utf8.h"
@@ -157,14 +159,42 @@ static val stdio_maybe_error(val stream, val action)
             stream, action, num(errno), string_utf8(strerror(errno)), nao);
 }
 
+static int se_putc(int ch, FILE *f)
+{
+  int ret;
+  sig_save_enable;
+  ret = putc(ch, f);
+  sig_restore_enable;
+  return ret;
+}
+
+static int se_getc(FILE *f)
+{
+  int ret;
+  sig_save_enable;
+  ret = getc(f);
+  sig_restore_enable;
+  return ret;
+}
+
+static int se_fflush(FILE *f)
+{
+  int ret;
+  sig_save_enable;
+  ret = fflush(f);
+  sig_restore_enable;
+  return ret;
+}
+
 static int stdio_put_char_callback(int ch, mem_t *f)
 {
-  return putc(ch, (FILE *) f) != EOF;
+  int ret = se_putc(ch, (FILE *) f) != EOF;
+  return ret;
 }
 
 static int stdio_get_char_callback(mem_t *f)
 {
-  return getc((FILE *) f);
+  return se_getc((FILE *) f);
 }
 
 static val stdio_put_string(val stream, val str)
@@ -204,14 +234,14 @@ static val stdio_put_byte(val stream, int b)
   if (stream != std_debug && stream != std_error)
     output_produced = t;
 
-  return h->f != 0 && putc(b, (FILE *) h->f) != EOF
+  return h->f != 0 && se_putc(b, (FILE *) h->f) != EOF
          ? t : stdio_maybe_error(stream, lit("writing"));
 }
 
 static val stdio_flush(val stream)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
-  return (h->f != 0 && fflush(h->f) == 0)
+  return (h->f != 0 && se_fflush(h->f) == 0)
          ? t : stdio_maybe_error(stream, lit("flushing"));
 }
 
@@ -313,7 +343,7 @@ static val stdio_get_byte(val stream)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
   if (h->f) {
-    int ch = getc(h->f);
+    int ch = se_getc(h->f);
     return (ch != EOF) ? num(ch) : stdio_maybe_read_error(stream);
   }
   return stdio_maybe_read_error(stream);
@@ -384,7 +414,9 @@ static void tail_strategy(val stream, unsigned long *state)
       FILE *newf;
       if (!(newf = w_freopen(c_str(h->descr), c_str(h->mode), h->f))) {
         tail_calc(state, &sec, &mod);
+        sig_save_enable;
         sleep(sec);
+        sig_restore_enable;
         continue;
       }
       h->f = newf;
@@ -465,11 +497,22 @@ static int pipevp_close(FILE *f, pid_t pid)
 {
   int status;
   fclose(f);
+  sig_save_enable;
   while (waitpid(pid, &status, 0) == -1 && errno == EINTR)
     ;
+  sig_restore_enable;
   return status;
 }
 #endif
+
+static int se_pclose(FILE *f)
+{
+  int ret;
+  sig_save_enable;
+  ret = pclose(f);
+  sig_restore_enable;
+  return ret;
+}
 
 static val pipe_close(val stream, val throw_on_error)
 {
@@ -477,9 +520,9 @@ static val pipe_close(val stream, val throw_on_error)
 
   if (h->f != 0) {
 #if HAVE_FORK_STUFF
-    int status = h->pid != 0 ? pipevp_close(h->f, h->pid) : pclose(h->f);
+    int status = h->pid != 0 ? pipevp_close(h->f, h->pid) : se_pclose(h->f);
 #else
-    int status = pclose(h->f);
+    int status = se_pclose(h->f);
 #endif
     h->f = 0;
 

@@ -32,9 +32,11 @@
 #include <stdarg.h>
 #include <dirent.h>
 #include <stdio.h>
+#include <signal.h>
 #include "config.h"
 #include "lib.h"
 #include "hash.h"
+#include "signal.h"
 #include "unwind.h"
 #include "match.h"
 #include "filter.h"

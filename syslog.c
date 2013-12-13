@@ -29,6 +29,7 @@
 #include <stdarg.h>
 #include <setjmp.h>
 #include <wchar.h>
+#include <signal.h>
 #include <dirent.h>
 #include <syslog.h>
 #include "config.h"
@@ -36,6 +37,7 @@
 #include "stream.h"
 #include "hash.h"
 #include "gc.h"
+#include "signal.h"
 #include "unwind.h"
 #include "utf8.h"
 #include "syslog.h"

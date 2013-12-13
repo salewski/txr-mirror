@@ -44,7 +44,7 @@ struct uw_block {
   val tag;
   val result;
   val protocol;
-  jmp_buf jb;
+  extended_jmp_buf jb;
 };
 
 struct uw_dynamic_env {
@@ -63,7 +63,7 @@ struct uw_catch {
   val exception;
   uw_frame_t *cont;
   int visible;
-  jmp_buf jb;
+  extended_jmp_buf jb;
 };
 
 struct uw_debug {
@@ -126,14 +126,14 @@ noreturn val type_mismatch(val, ...);
     return VAL;                                 \
   } while (0)
 
-#define uw_block_begin(TAG, RESULTVAR)  \
-  obj_t *RESULTVAR = nil;               \
-  do {                                  \
-    uw_frame_t uw_blk;                  \
-    uw_push_block(&uw_blk, TAG);        \
-    if (setjmp(uw_blk.bl.jb)) {         \
-      RESULTVAR = uw_blk.bl.result;     \
-    } else {                            \
+#define uw_block_begin(TAG, RESULTVAR)          \
+  obj_t *RESULTVAR = nil;                       \
+  do {                                          \
+    uw_frame_t uw_blk;                          \
+    uw_push_block(&uw_blk, TAG);                \
+    if (extended_setjmp(uw_blk.bl.jb)) {        \
+      RESULTVAR = uw_blk.bl.result;             \
+    } else {                                    \
       typedef int uw_d_u_m_m_y
 
 #define uw_block_end                    \
@@ -150,21 +150,21 @@ noreturn val type_mismatch(val, ...);
     uw_pop_frame(&uw_env);              \
   } while (0)
 
-#define uw_simple_catch_begin           \
-  do {                                  \
-    uw_frame_t uw_catch;                \
-    uw_push_catch(&uw_catch, nil);      \
-    switch (setjmp(uw_catch.ca.jb)) {   \
+#define uw_simple_catch_begin                   \
+  do {                                          \
+    uw_frame_t uw_catch;                        \
+    uw_push_catch(&uw_catch, nil);              \
+    switch (extended_setjmp(uw_catch.ca.jb)) {  \
     case 0:
 
-#define uw_catch_begin(MATCHES, SYMVAR, \
-                       EXCVAR)          \
-  obj_t *SYMVAR = nil;                  \
-  obj_t *EXCVAR = nil;                  \
-  do {                                  \
-    uw_frame_t uw_catch;                \
-    uw_push_catch(&uw_catch, MATCHES);  \
-    switch (setjmp(uw_catch.ca.jb)) {   \
+#define uw_catch_begin(MATCHES, SYMVAR,         \
+                       EXCVAR)                  \
+  obj_t *SYMVAR = nil;                          \
+  obj_t *EXCVAR = nil;                          \
+  do {                                          \
+    uw_frame_t uw_catch;                        \
+    uw_push_catch(&uw_catch, MATCHES);          \
+    switch (extended_setjmp(uw_catch.ca.jb)) {  \
     case 0:
 
 #define uw_catch(SYMVAR, EXCVAR)        \

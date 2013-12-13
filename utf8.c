@@ -29,8 +29,10 @@
 #include <stdlib.h>
 #include <wchar.h>
 #include <setjmp.h>
+#include <signal.h>
 #include "config.h"
 #include "lib.h"
+#include "signal.h"
 #include "unwind.h"
 #include "utf8.h"
 

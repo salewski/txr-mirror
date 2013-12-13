@@ -100,6 +100,7 @@ have_patch=
 have_unistd=
 have_timegm=
 have_syslog=
+have_posix_sigs=
 need_svid_source=
 need_bsd_source=
 
@@ -575,6 +576,9 @@ tool_prefix := $tool_prefix
 
 # do we compile in syslog support?
 have_syslog := $have_syslog
+
+# do we modern posix signal handling?
+have_posix_sigs := $have_posix_sigs
 
 # do we compile in debug support?
 debug_support := $debug_support
@@ -1435,6 +1439,33 @@ else
   printf "yes\n"
   printf "#define HAVE_SYSLOG 1\n" >> config.h
   have_syslog=y
+fi
+
+printf "Checking for reasonably modern POSIX signal handling ... "
+
+cat > conftest.c <<!
+#include <signal.h>
+#include <setjmp.h>
+
+int main(void)
+{
+  sigjmp_buf jb;
+  static struct sigaction old, new;
+  static sigset_t olds, news;
+  sigaction(0, &new, &old);
+  sigprocmask(SIG_BLOCK, &news, &olds);
+  if (!sigsetjmp(jb, 1)) 
+    siglongjmp(jb, 1);
+  return 0;
+}
+!
+rm -f conftest
+if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+  printf "no\n"
+else
+  printf "yes\n"
+  printf "#define HAVE_POSIX_SIGS 1\n" >> config.h
+  have_posix_sigs=y
 fi
 
 #

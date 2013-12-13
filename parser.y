@@ -33,8 +33,10 @@
 #include <stdlib.h>
 #include <setjmp.h>
 #include <wchar.h>
+#include <signal.h>
 #include "config.h"
 #include "lib.h"
+#include "signal.h"
 #include "unwind.h"
 #include "regex.h"
 #include "utf8.h"
