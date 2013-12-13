@@ -137,10 +137,14 @@ val set_sig_handler(val signo, val lambda)
   old_lambda = sig_lambda[sig];
 
   if (lambda != old_lambda) {
+    unsigned long mask = 1UL << sig;
+
     if (lambda == nil) {
       signal(sig, SIG_IGN);
+      sig_deferred &= ~mask;
     } else if (lambda == t) {
       signal(sig, SIG_DFL);
+      sig_deferred &= ~mask;
     } else {
       struct sigaction sa = { 0 };
 

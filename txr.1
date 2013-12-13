@@ -11028,7 +11028,7 @@ savings time).
 .TP
 Syntax:
 
-   (errno [<new-errno>])
+  (errno [<new-errno>])
 
 .TP
 Description:
@@ -11036,6 +11036,23 @@ Description:
 These functions retrieves the current value of the C library error variable
 errno.  If the argument <new-errno> is present and is not nil, then it becomes
 the new value of errno. The value returned is the prior value.
+
+.SS Funtion exit
+
+.TP
+Syntax:
+
+  (exit <status>)
+
+.TP
+Description:
+
+The exit function terminates the entire process (running TXR image), specifying
+the termination status to the operating system. Values of <status> may be nil,
+t, or integer values.  The value nil corresponds to the C constant
+EXIT_FAILURE, and t corresponds to EXIT_SUCCESS. These are platform-independent
+indicators of failed or successful termination. The numeric value 0 also
+indicates success.
 
 .SS Function daemon
 
@@ -11051,6 +11068,99 @@ This is a wrapper for the Unix function daemon of BSD origin.
 
 It returns t if successful, nil otherwise, and the errno
 variable is set in that case.
+
+.SH UNIX SIGNAL HANDLING
+
+On platforms where certain advanced features of POSIX signal handling are
+available at the C API level, TXR exposes signal-handling functionality.
+
+A TXR program can install a TXR Lisp function (such as an anonymous lambda,
+or the function object associated with a named function) as the handler for
+a signal.
+
+When that signal is delivered, TXR will intercept it with its own safe,
+internal handler, mark the signal as deferred (in a TXR sense) and then
+dispatch the lambda at a convenient time.
+
+Handlers currently are not permitted to interrupt the execution of most TXR
+internal code.  Immediate, asynchronous execution of handlers is currently
+enabled only while TXR is blocked on I/O operations or sleep on a tail stream.
+Additionally, the sig-check function can be used to dispatch and clear deferred
+signals. These handlers are then safely called if they were subroutines of
+sig-check, and not asynchronous interrupts.
+
+.SS Variables sig-hup, sig-int, sig-quit, sig-ill, sig-trap, sig-abrt, sig-bus, sig-fpe, sig-kill, sig-usr1, sig-segv, sig-usr2, sig-pipe, sig-alrm, sig-term, sig-chld, sig-cont, sig-stop, sig-tstp, sig-ttin, sig-ttou, sig-urg, sig-xcpu, sig-xfsz, sig-vtalrm, sig-prof, sig-poll, sig-sys, sig-winch, sig-iot, sig-stkflt, sig-io, sig-lost and sig-pwr
+
+.TP
+Description:
+
+These variables correspond to the C signal constants SIGHUP, SIGINT and so forth. 
+The variables sig-winch, sig-iot, sig-stkflt, sig-io, sig-lost and sig-pwr may not be
+available since a system may lack the correspoding signal constants. See notes
+for the log log-authpriv below. The remaining signal constants are described in
+the Single Unix Specification and are expected by TXR to be present.
+
+The highest signal number is 31.
+
+
+.SS Functions set-sig-handler and get-sig-handler
+
+.TP
+Syntax:
+
+  (set-sig-handler <signal-number> <handling-spec>)
+  (get-sig-handler <signal-number>)
+
+.TP
+Description:
+
+The set-sig-handler function is used to specify the handling for a signal, such
+as the installation of a hander function. It updates the signal handling for
+a signal whose number is <signal-number> (usually one of the constants like
+sig-hup, sig-int and so forth), and returns the previous value.  The
+get-sig-handler function returns the current value.
+
+The <signal-number> must be an integer the range 1 to 31.
+
+Initially, all 31 signal handling specifications are set to the value t.
+
+The <handling-spec> parameter may be a function. If a function is specified,
+then the signal is enabled and connected to that function until another
+call to set-sig-handler changes the handling for that signal.
+
+If <handling-spec> is the symbol nil, then the function previously associated
+with the signal, if any, is removed, and the signal is disabled. For a signal
+to be disabled means that the signal is set to the SIG_IGN disposition (refer to the
+C API).
+
+If <handling-spec> is the symbol t, then the function previously associated
+with the signal, if any, is removed, and the signal is set to its default
+disposition. This means that it is set to SIG_DFL (refer to the C API).
+Some signals terminate the process in their default disposition.
+
+Note that the certain signals like sig-quit and sig-kill cannot be handled.
+Please observe the signal documentation in the IEEE POSIX standard, and your
+platform.
+
+.SS The sig-check function
+
+.TP
+Syntax:
+
+  (sig-check)
+
+.TP
+Description:
+
+The sig-check function tests whether any signals are deferred, and for each
+deferred signal in turn, it executes the corresponding handler.  For a signal to
+be deferred means that the signal was caught by an internal handler in TXR and
+the event was recorded by a flag.  If a handler function is removed while a
+signal is deferred, the deferred flag is cleared for that signal.
+
+Calls to the sig-check function may be inserted into CPU-intensive code that
+has no opportunity to be interrupted by signals, because it doesn't invoke any
+I/O functions.
 
 .SH UNIX SYSLOG
 

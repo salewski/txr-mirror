@@ -1,3 +1,10 @@
+2013-12-13  Kaz Kylheku  <kaz@kylheku.com>
+
+	* signal.c (set_sig_handler): Clear the deferred flag
+	for a signal that is being set to ignored or default.
+
+	* txr.1: Documented signals.
+
 2013-12-12  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): Registered vars for signal numbers.
