@@ -84,7 +84,6 @@ opt_flags=-O2
 lang_flags='-ansi -D_XOPEN_SOURCE=2'
 diag_flags='-Wall -Wmissing-prototypes -Wstrict-prototypes'
 debug_flags=-g
-config_flags=' -Werror' # special: used only during configure
 inline=
 platform_flags=
 remove_flags=
@@ -591,7 +590,7 @@ NM := $nm
 
 OPT_FLAGS := $opt_flags
 LANG_FLAGS := $lang_flags
-DIAG_FLAGS := $diag_flags$config_flags
+DIAG_FLAGS := $diag_flags
 DBG_FLAGS := $debug_flags
 PLATFORM_FLAGS := $platform_flags
 REMOVE_FLAGS := $remove_flags
@@ -1046,7 +1045,7 @@ $inline int func(void)
 }
 !
     rm -f conftest2
-    if ! $make conftest2 > conftest.err 2>&1 ; then
+    if ! $make conftest2 > conftest.err 2>&1 || ! [ -x conftest2 ] ; then
 	continue
     fi
     break
@@ -1161,9 +1160,14 @@ cat > conftest.c <<!
 #include <sys/stat.h>
 
 struct stat s;
+
+int main(void)
+{
+  return 0;
+}
 !
 rm -f conftest
-if ! $make conftest.o > conftest.err 2>&1; then
+if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
   printf "no\n"
 else
   printf "yes\n"
@@ -1533,7 +1537,7 @@ fi
 #
 
 printf "Regenerating config.make ... "
-config_flags=
+
 if [ -n "$need_svid_source" ] ; then
   lang_flags="$lang_flags -D_SVID_SOURCE"
 fi

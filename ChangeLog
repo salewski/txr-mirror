@@ -1,5 +1,11 @@
 2013-12-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	* configure (config_flags): Variable removed. This was more trouble than it
+	was worth, and only solved problems caused by not checking that the test
+	program was made all the way to an executable.
+
+2013-12-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	* configure: Fix warnings in test cases for HAVE_FORK_STUFF
 	and HAVE_DAEMON.
 
