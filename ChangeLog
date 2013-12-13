@@ -1,5 +1,11 @@
 2013-12-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	* signal.c (set_sig_handler): Disable signals around this
+	function because it manipulates the mask of deferred
+	signals which can also be manipulated by an async signal.
+
+2013-12-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	* signal.c (set_sig_handler): Clear the deferred flag
 	for a signal that is being set to ignored or default.
 

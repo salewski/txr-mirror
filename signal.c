@@ -130,6 +130,10 @@ val set_sig_handler(val signo, val lambda)
 {
   cnum sig = c_num(signo);
   val old_lambda;
+  sigset_t block, saved;
+
+  sigfillset(&block);
+  sigprocmask(SIG_BLOCK, &block, &saved);
 
   if (sig < 0 || sig >= MAX_SIG)
     uw_throwf(error_s, lit("set-sig-handler: signal ~s out of range\n"), sig, nao);
@@ -158,6 +162,8 @@ val set_sig_handler(val signo, val lambda)
 
     sig_lambda[sig] = lambda;
   }
+
+  sigprocmask(SIG_SETMASK, &saved, 0);
 
   return old_lambda;
 }
