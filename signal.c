@@ -46,6 +46,13 @@ volatile sig_atomic_t async_sig_enabled = 0;
 static val sig_lambda[MAX_SIG];
 volatile unsigned long sig_deferred;
 
+val sig_hup, sig_int, sig_quit, sig_ill, sig_trap, sig_abrt, sig_bus;
+val sig_fpe, sig_kill, sig_usr1, sig_segv, sig_usr2, sig_pipe, sig_alrm;
+val sig_term, sig_chld, sig_cont, sig_stop, sig_tstp, sig_ttin;
+val sig_ttou, sig_urg, sig_xcpu, sig_xfsz, sigtalrm, sig_prof;
+val sig_poll, sig_sys, sig_winch, sig_iot, sig_stkflt;
+val sig_io, sig_lost, sig_pwr;
+
 static void sig_handler(int sig)
 {
   val lambda = sig_lambda[sig];
@@ -70,6 +77,53 @@ void sig_init(void)
     sig_lambda[i] = t; 
     prot1(&sig_lambda[i]);
   }
+
+  sig_hup = num_fast(SIGHUP);
+  sig_int = num_fast(SIGINT);
+  sig_quit = num_fast(SIGQUIT);
+  sig_ill = num_fast(SIGILL);
+  sig_trap = num_fast(SIGTRAP);
+  sig_abrt = num_fast(SIGABRT);
+  sig_bus = num_fast(SIGBUS);
+  sig_fpe = num_fast(SIGFPE);
+  sig_kill = num_fast(SIGKILL);
+  sig_usr1 = num_fast(SIGUSR1);
+  sig_segv = num_fast(SIGSEGV);
+  sig_usr2 = num_fast(SIGUSR2);
+  sig_pipe = num_fast(SIGPIPE);
+  sig_alrm = num_fast(SIGALRM);
+  sig_term = num_fast(SIGTERM);
+  sig_chld = num_fast(SIGCHLD);
+  sig_cont = num_fast(SIGCONT);
+  sig_stop = num_fast(SIGSTOP);
+  sig_tstp = num_fast(SIGTSTP);
+  sig_ttin = num_fast(SIGTTIN);
+  sig_ttou = num_fast(SIGTTOU);
+  sig_urg = num_fast(SIGURG);
+  sig_xcpu = num_fast(SIGXCPU);
+  sig_xfsz = num_fast(SIGXFSZ);
+  sigtalrm = num_fast(SIGVTALRM);
+  sig_prof = num_fast(SIGPROF);
+  sig_poll = num_fast(SIGPOLL);
+  sig_sys = num_fast(SIGSYS);
+#ifdef SIGWINCH
+  sig_winch = num_fast(SIGWINCH);
+#endif
+#ifdef SIGIOT
+  sig_iot = num_fast(SIGIOT);
+#endif
+#ifdef SIGSTKFLT
+  sig_stkflt = num_fast(SIGSTKFLT);
+#endif
+#ifdef SIGIO
+  sig_io = num_fast(SIGIO);
+#endif
+#ifdef SIGLOST
+  sig_lost = num_fast(SIGLOST);
+#endif
+#ifdef SIGPWR
+  sig_pwr = num_fast(SIGPWR);
+#endif
 }
 
 val set_sig_handler(val signo, val lambda)

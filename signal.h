@@ -87,6 +87,13 @@ tyedef jmp_buf extended_jmp_buf;
 
 extern volatile sig_atomic_t async_sig_enabled;
 
+extern val sig_hup, sig_int, sig_quit, sig_ill, sig_trap, sig_abrt, sig_bus;
+extern val sig_fpe, sig_kill, sig_usr1, sig_segv, sig_usr2, sig_pipe, sig_alrm;
+extern val sig_term, sig_chld, sig_cont, sig_stop, sig_tstp, sig_ttin;
+extern val sig_ttou, sig_urg, sig_xcpu, sig_xfsz, sigtalrm, sig_prof;
+extern val sig_poll, sig_sys, sig_winch, sig_iot, sig_stkflt;
+extern val sig_io, sig_lost, sig_pwr;
+
 void sig_init(void);
 val set_sig_handler(val signo, val lambda);
 val get_sig_handler(val signo);

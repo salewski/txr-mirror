@@ -2648,6 +2648,52 @@ void eval_init(void)
   reg_fun(intern(lit("set-sig-handler"), user_package), func_n2(set_sig_handler));
   reg_fun(intern(lit("get-sig-handler"), user_package), func_n1(get_sig_handler));
   reg_fun(intern(lit("sig-check"), user_package), func_n0(sig_check));
+  reg_var(intern(lit("sig-hup"), user_package), &sig_hup);
+  reg_var(intern(lit("sig-int"), user_package), &sig_int);
+  reg_var(intern(lit("sig-quit"), user_package), &sig_quit);
+  reg_var(intern(lit("sig-ill"), user_package), &sig_ill);
+  reg_var(intern(lit("sig-trap"), user_package), &sig_trap);
+  reg_var(intern(lit("sig-abrt"), user_package), &sig_abrt);
+  reg_var(intern(lit("sig-bus"), user_package), &sig_bus);
+  reg_var(intern(lit("sig-fpe"), user_package), &sig_fpe);
+  reg_var(intern(lit("sig-kill"), user_package), &sig_kill);
+  reg_var(intern(lit("sig-usr1"), user_package), &sig_usr1);
+  reg_var(intern(lit("sig-segv"), user_package), &sig_segv);
+  reg_var(intern(lit("sig-usr2"), user_package), &sig_usr2);
+  reg_var(intern(lit("sig-pipe"), user_package), &sig_pipe);
+  reg_var(intern(lit("sig-alrm"), user_package), &sig_alrm);
+  reg_var(intern(lit("sig-term"), user_package), &sig_term);
+  reg_var(intern(lit("sig-chld"), user_package), &sig_chld);
+  reg_var(intern(lit("sig-cont"), user_package), &sig_cont);
+  reg_var(intern(lit("sig-stop"), user_package), &sig_stop);
+  reg_var(intern(lit("sig-tstp"), user_package), &sig_tstp);
+  reg_var(intern(lit("sig-ttin"), user_package), &sig_ttin);
+  reg_var(intern(lit("sig-ttou"), user_package), &sig_ttou);
+  reg_var(intern(lit("sig-urg"), user_package), &sig_urg);
+  reg_var(intern(lit("sig-xcpu"), user_package), &sig_xcpu);
+  reg_var(intern(lit("sig-xfsz"), user_package), &sig_xfsz);
+  reg_var(intern(lit("sig-vtalrm"), user_package), &sigtalrm);
+  reg_var(intern(lit("sig-prof"), user_package), &sig_prof);
+  reg_var(intern(lit("sig-poll"), user_package), &sig_poll);
+  reg_var(intern(lit("sig-sys"), user_package), &sig_sys);
+#ifdef SIGWINCH
+  reg_var(intern(lit("sig-winch"), user_package), &sig_winch);
+#endif
+#ifdef SIGIOT
+  reg_var(intern(lit("sig-iot"), user_package), &sig_iot);
+#endif
+#ifdef SIGSTKFLT
+  reg_var(intern(lit("sig-stkflt"), user_package), &sig_stkflt);
+#endif
+#ifdef SIGIO
+  reg_var(intern(lit("sig-io"), user_package), &sig_io);
+#endif
+#ifdef SIGLOST
+  reg_var(intern(lit("sig-lost"), user_package), &sig_lost);
+#endif
+#ifdef SIGPWR
+  reg_var(intern(lit("sig-pwr"), user_package), &sig_pwr);
+#endif
 #endif
 
   reg_fun(intern(lit("source-loc"), user_package), func_n1(source_loc));

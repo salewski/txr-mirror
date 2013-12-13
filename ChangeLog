@@ -1,5 +1,19 @@
 2013-12-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Registered vars for signal numbers.
+
+	* signal.c (sig_hup, sig_int, sig_quit, sig_ill, sig_trap, sig_abrt,
+	sig_bus, val sig_fpe, sig_kill, sig_usr1, sig_segv, sig_usr2, sig_pipe,
+	sig_alrm, val sig_term, sig_chld, sig_cont, sig_stop, sig_tstp,
+	sig_ttin, val sig_ttou, sig_urg, sig_xcpu, sig_xfsz, sigtalrm,
+	sig_prof, val sig_poll, sig_sys, sig_winch, sig_iot, sig_stkflt,
+	sig_io, sig_lost, sig_pwr): New variables.
+	(sig_init): New variables initialized.
+
+	* signal.h: New variables declared.
+
+2013-12-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	First cut at signal handling support.
 
 	* Makefile (OBJS-y): Include signal.o if have_posix_sigs is "y".
