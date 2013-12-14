@@ -191,6 +191,8 @@ static val syslog_get_prop(val stream, val ind)
   if (ind == prio_k) {
     val cell = (val) stream->co.handle;
     return car(cell);
+  } else if (ind == name_k) {
+    return lit("syslog");
   }
   return nil;
 }

@@ -1,5 +1,23 @@
 2013-12-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	New stream property: name. Some streams can report
+	their name: some kind of string.
+
+	* stream.c (name_k): New variable.
+	(null_get_prop): New static function.
+	(null_ops): Wire null_get_prop into ops structure.
+	(stdio_get_prop): Report h->descr as name.
+	(string_in_get_prop): New function.
+	(string_in_ops): Wire string_in_get_prop into ops structure.
+	(stream_init): Initialize name_k.
+
+	* stream.h (name_k): Declared.
+
+	* syslog.c (syslog_get_prop): Report "syslog" as
+	stream name.
+
+2013-12-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	* signal.c (sig_handler): Pass two arguments to signal
 	handler rather than 1. The new argument is the value t,
 	telling the handler that it's asynchronously invoked in

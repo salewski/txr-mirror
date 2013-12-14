@@ -59,7 +59,7 @@ val dev_k, ino_k, mode_k, nlink_k, uid_k;
 val gid_k, rdev_k, size_k, blksize_k, blocks_k;
 val atime_k, mtime_k, ctime_k;
 val from_start_k, from_current_k, from_end_k;
-val real_time_k;
+val real_time_k, name_k;
 
 val s_ifmt, s_ifsock, s_iflnk, s_ifreg, s_ifblk, s_ifdir;
 val s_ifchr, s_ififo, s_isuid, s_isgid, s_isvtx, s_irwxu;
@@ -74,6 +74,13 @@ static void common_destroy(val obj)
 static void null_stream_print(val stream, val out)
 {
   format(out, lit("#<~s null>"), stream->co.cls, nao);
+}
+
+static val null_get_prop(val stream, val ind)
+{
+  if (ind == name_k)
+    return lit("null-stream");
+  return nil;
 }
 
 static struct strm_ops null_ops = {
@@ -91,7 +98,7 @@ static struct strm_ops null_ops = {
   0, /* close, */
   0, /* flush, */
   0, /* seek, */
-  0, /* get_prop, */
+  null_get_prop,
   0, /* set_prop */
 };
 
@@ -267,9 +274,12 @@ static val stdio_seek(val stream, cnum offset, enum strm_whence whence)
 
 static val stdio_get_prop(val stream, val ind)
 {
+  struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
+
   if (ind == real_time_k) {
-    struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
     return h->is_real_time ? t : nil;
+  } else if (ind == name_k) {
+    return h->descr;
   }
   return nil;
 }
@@ -630,6 +640,15 @@ static val string_in_get_char(val stream)
   return nil;
 }
 
+static val string_in_get_prop(val stream, val ind)
+{
+  if (ind == name_k) {
+    val pair = (val) stream->co.handle;
+    return format(nil, lit("string-stream (~s)"), car(pair), nao);
+  }
+  return nil;
+}
+
 static struct strm_ops string_in_ops = {
   { cobj_equal_op,
     cobj_print_op,
@@ -645,7 +664,7 @@ static struct strm_ops string_in_ops = {
   0, /* close */
   0, /* flush */
   0, /* TODO: seek */
-  0, /* get_prop */
+  string_in_get_prop,
   0  /* set_prop */
 };
 
@@ -2038,6 +2057,7 @@ void stream_init(void)
   from_current_k = intern(lit("from-current"), keyword_package);
   from_end_k = intern(lit("from-end"), keyword_package);
   real_time_k = intern(lit("real-time"), keyword_package);
+  name_k = intern(lit("name"), keyword_package);
 
   s_ifmt = num(S_IFMT); s_iflnk = num(S_IFLNK);
   s_ifreg = num(S_IFREG); s_ifblk = num(S_IFBLK); s_ifdir = num(S_IFDIR);
