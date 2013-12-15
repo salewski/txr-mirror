@@ -94,5 +94,6 @@ val open_file(val path, val mode_str);
 val open_tail(val path, val mode_str, val seek_end_p);
 val open_command(val path, val mode_str);
 val open_process(val path, val mode_str, val args);
+val make_catenated_stream(val stream_list);
 
 void stream_init(void);

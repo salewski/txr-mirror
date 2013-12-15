@@ -682,6 +682,12 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return SECRET_ESCAPE_R;
 }
 
+<INITIAL>@\x01E {
+  yy_push_state(SPECIAL);
+  yy_push_state(NESTED);
+  return SECRET_ESCAPE_E;
+}
+
 <INITIAL>^@[#;].*\n {
   /* eat whole line comment */
   lineno++;
@@ -837,16 +843,40 @@ val regex_parse(val string, val error_stream)
 {
   uses_or2;
   val parse_string = cat_str(list(lit("@\x01R"), string, nao), nil);
+  val save_stream = std_error;
   yyin_stream = make_string_byte_input_stream(parse_string);
   errors = 0;
   lineno = 1;
-  val save_stream = std_error;
   std_error = if3(error_stream == t, std_output, or2(error_stream, std_null));
   {
     int gc = gc_state(0);
     spec_file_str = if3(std_error != std_null,
                         format(nil, lit("regex: ~s"), string, nao),
                         lit(""));
+    yyparse();
+    yylex_destroy();
+    gc_state(gc);
+  }
+  std_error = save_stream;
+  return errors ? nil : get_spec();
+}
+
+val lisp_parse(val source, val error_stream)
+{
+  uses_or2;
+  val input_stream = if3(stringp(source), make_string_byte_input_stream(source), source);
+  val secret_token_stream = make_string_byte_input_stream(lit("@\x01" "E"));
+  val name = if3(stringp(source),
+                 format(nil, lit("expr: ~s"), source, nao),
+                 stream_get_prop(source, name_k));
+  val save_stream = std_error;
+  yyin_stream = make_catenated_stream(list(secret_token_stream, input_stream, nao));
+  errors = 0;
+  lineno = 1;
+  std_error = if3(error_stream == t, std_output, or2(error_stream, std_null));
+  {
+    int gc = gc_state(0);
+    spec_file_str = if3(std_error != std_null, name, lit(""));
     yyparse();
     yylex_destroy();
     gc_state(gc);

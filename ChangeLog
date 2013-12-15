@@ -1,3 +1,26 @@
+2013-12-14  Kaz Kylheku  <kaz@kylheku.com>
+
+	Support for parsing Lisp expression out of strings and streams.
+	New catenated streams make the Yacc hack possible.
+
+	* eval.c (eval_init): Register lisp_parse as intrinsic.
+
+	* parser.h (lisp_parse): Declared.
+
+	* parser.l: New lexical hack to produce SECRET_ESCAPE_E token.
+	(regex_parse): Move declaration before statements.
+	(lisp_parse): New function.
+
+	* parser.y (SECRET_ESCAPE_E): New token type.
+	(spec): New production rule for single expression.
+
+	* stream.c (cat_stream_print, cat_get_line, cat_get_char,
+	cat_get_byte, cat_get_prop): New static functions.
+	(cat_stream_ops): New static function.
+	(make_catenated_stream): New function.
+
+	* stream.h (make_catenated_stream): Declared.
+
 2013-12-13  Kaz Kylheku  <kaz@kylheku.com>
 
 	New stream property: name. Some streams can report

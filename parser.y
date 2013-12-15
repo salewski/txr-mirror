@@ -75,7 +75,7 @@ static val parsed_spec;
 %token <lineno> MOD MODLAST DEFINE TRY CATCH FINALLY
 %token <lineno> ERRTOK /* deliberately not used in grammar */
 %token <lineno> HASH_BACKSLASH HASH_SLASH DOTDOT HASH_H
-%token <lineno> SECRET_ESCAPE_R
+%token <lineno> SECRET_ESCAPE_R SECRET_ESCAPE_E
 
 %token <val> NUMBER METANUM
 
@@ -117,6 +117,7 @@ static val parsed_spec;
 spec : clauses                  { parsed_spec = $1; }
      | /* empty */              { parsed_spec = nil; }
      | SECRET_ESCAPE_R regexpr  { parsed_spec = $2; end_of_regex(); }
+     | SECRET_ESCAPE_E expr     { parsed_spec = $2; }
      | error '\n'               { parsed_spec = nil;
                                   if (errors >= 8)
                                     YYABORT;

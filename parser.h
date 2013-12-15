@@ -50,3 +50,4 @@ INLINE val rlcp(val to, val from)
   return rlset(to, source_loc(from));
 }
 val regex_parse(val string, val error_stream);
+val lisp_parse(val source, val error_stream);

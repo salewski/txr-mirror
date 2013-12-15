@@ -2384,6 +2384,7 @@ void eval_init(void)
   reg_fun(intern(lit("hash-isec"), user_package), func_n2(hash_isec));
 
   reg_fun(intern(lit("eval"), user_package), func_n2o(eval_intrinsic, 1));
+  reg_fun(intern(lit("lisp-parse"), user_package), func_n2o(lisp_parse, 1));
 
   reg_fun(intern(lit("chain"), user_package), func_n0v(chainv));
   reg_fun(intern(lit("andf"), user_package), func_n0v(andv));

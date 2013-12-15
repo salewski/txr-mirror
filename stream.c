@@ -2030,6 +2030,86 @@ val open_process(val name, val mode_str, val args)
 }
 #endif
 
+static void cat_stream_print(val stream, val out)
+{
+  val streams = (val) stream->co.handle;
+  format(out, lit("#<~s catenated ~s>"), stream->co.cls, streams, nao);
+}
+
+static val cat_get_line(val stream)
+{
+  val streams = (val) stream->co.handle;
+
+  while (streams) {
+    val line = get_line(first(streams));
+    if (line)
+      return line;
+    stream->co.handle = (mem_t *) (streams = rest(streams));
+  }
+
+  return nil;
+}
+
+static val cat_get_char(val stream)
+{
+  val streams = (val) stream->co.handle;
+
+  while (streams) {
+    val ch = get_char(first(streams));
+    if (ch)
+      return ch;
+    stream->co.handle = (mem_t *) (streams = rest(streams));
+  }
+
+  return nil;
+}
+
+static val cat_get_byte(val stream)
+{
+  val streams = (val) stream->co.handle;
+
+  while (streams) {
+    val byte = get_byte(first(streams));
+    if (byte)
+      return byte;
+    stream->co.handle = (mem_t *) (streams = rest(streams));
+  }
+
+  return nil;
+}
+
+static val cat_get_prop(val stream, val ind)
+{
+  val streams = (val) stream->co.handle;
+  if (streams)
+    return stream_get_prop(first(streams), ind);
+  return nil;
+}
+
+static struct strm_ops cat_stream_ops = {
+  { cobj_equal_op,
+    cat_stream_print,
+    cobj_destroy_stub_op,
+    cobj_mark_op,
+    cobj_hash_op },
+  0, /* put_string */
+  0, /*_put_char */
+  0, /* put_byte, */
+  cat_get_line,
+  cat_get_char,
+  cat_get_byte,
+  0, /* close, */
+  0, /* flush, */
+  0, /* seek, */
+  cat_get_prop,
+  0, /* set_prop */
+};
+
+val make_catenated_stream(val stream_list)
+{
+  return cobj((mem_t *) stream_list, stream_s, &cat_stream_ops.cobj_ops);
+}
+
 void stream_init(void)
 {
   protect(&std_input, &std_output, &std_debug, &std_error, &std_null, (val *) 0);
