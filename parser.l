@@ -260,17 +260,8 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
       || yy_top_state() == QSILIT)
     yy_pop_state();
 
-  switch (yytext[0]) {
-  case ':':
-    yylval.lexeme = utf8_dup_from(yytext + 1);
-    return KEYWORD;
-  case '@':
-    yylval.lexeme = utf8_dup_from(yytext + 1);
-    return METAVAR;
-  default:
-    yylval.lexeme = utf8_dup_from(yytext);
-    return IDENT;
-  }
+  yylval.lexeme = utf8_dup_from(yytext);
+  return SYMTOK;
 }
 
 <BRACED,NESTED>: {
@@ -278,7 +269,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
       || yy_top_state() == QSILIT)
     yy_pop_state();
   yylval.lexeme = utf8_dup_from("");
-  return KEYWORD;
+  return SYMTOK;
 }
 
 <SPECIAL>\({WS}all{WS}\) {
@@ -732,12 +723,12 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
 <CHRLIT>{SYM} {
   yylval.lexeme = utf8_dup_from(yytext);
-  return IDENT;
+  return SYMTOK;
 }
 
 <CHRLIT>[^ \t\n] {
   yylval.lexeme = utf8_dup_from(yytext);
-  return IDENT; /* hack */
+  return SYMTOK; /* hack */
 }
 
 <STRLIT>\n {

@@ -48,6 +48,7 @@
 int yylex(void);
 void yyerror(const char *);
 
+static val sym_helper(wchar_t *lexeme, val meta_allowed);
 static val repeat_rep_helper(val sym, val args, val main, val parts);
 static val o_elems_transform(val output_form);
 static val define_transform(val define_form);
@@ -55,7 +56,7 @@ static val lit_char_helper(val litchars);
 static val optimize_text(val text_form);
 static val unquotes_occur(val quoted_form);
 static val choose_quote(val quoted_form);
-static wchar_t char_from_name(wchar_t *name);
+static wchar_t char_from_name(const wchar_t *name);
 
 static val parsed_spec;
 
@@ -68,7 +69,7 @@ static val parsed_spec;
   cnum lineno;
 }
 
-%token <lexeme> SPACE TEXT IDENT KEYWORD METAVAR
+%token <lexeme> SPACE TEXT SYMTOK
 %token <lineno> ALL SOME NONE MAYBE CASES BLOCK CHOOSE GATHER
 %token <lineno> AND OR END COLLECT
 %token <lineno> UNTIL COLL OUTPUT REPEAT REP SINGLE FIRST LAST EMPTY 
@@ -100,7 +101,7 @@ static val parsed_spec;
 %type <lineno> '(' '['
 
 %nonassoc LOW /* used for precedence assertion */
-%right IDENT '{' '}'
+%right SYMTOK '{' '}'
 %right ALL SOME NONE MAYBE CASES CHOOSE AND OR END COLLECT UNTIL COLL
 %right OUTPUT REPEAT REP FIRST LAST EMPTY DEFINE
 %right SPACE TEXT NUMBER
@@ -617,35 +618,34 @@ rep_parts_opt : SINGLE o_elems_opt
 /* This sucks, but factoring '*' into a nonterminal
  * that generates an empty phrase causes reduce/reduce conflicts.
  */
-var : IDENT                     { $$ = list(var_s, intern(string_own($1), nil),
-                                            nao); }
-    | IDENT elem                { $$ = list(var_s, intern(string_own($1), nil),
+var : SYMTOK                    { $$ = list(var_s, sym_helper($1, nil), nao); }
+    | SYMTOK elem               { $$ = list(var_s, sym_helper($1, nil),
                                             $2, nao); }
-    | '{' IDENT '}'             { $$ = list(var_s, intern(string_own($2), nil),
-                                            nao); }
-    | '{' IDENT '}' elem        { $$ = list(var_s, intern(string_own($2), nil),
+    | '{' SYMTOK '}'            { $$ = list(var_s, sym_helper($2, nil), nao); }
+    | '{' SYMTOK '}' elem       { $$ = list(var_s, sym_helper($2, nil),
                                             $4, nao); }
-    | '{' IDENT modifiers '}'   { $$ = list(var_s, intern(string_own($2), nil),
+    | '{' SYMTOK modifiers '}'  { $$ = list(var_s, sym_helper($2, nil),
                                             nil, $3, nao); }
-    | '{' IDENT modifiers '}' elem  
-                                { $$ = list(var_s, intern(string_own($2), nil),
+    | '{' SYMTOK modifiers '}' elem
+                                { $$ = list(var_s, sym_helper($2, nil),
                                             $5, $3, nao); }
-    | var_op IDENT              { $$ = list(var_s, intern(string_own($2), nil),
+    | var_op SYMTOK             { $$ = list(var_s, sym_helper($2, nil),
                                             nil, $1, nao); }
-    | var_op IDENT elem         { $$ = list(var_s, intern(string_own($2), nil),
+    | var_op SYMTOK elem        { $$ = list(var_s, sym_helper($2, nil),
                                             $3, $1, nao); }
-    | var_op '{' IDENT '}'      { $$ = list(var_s, intern(string_own($3), nil),
+    | var_op '{' SYMTOK '}'     { $$ = list(var_s, sym_helper($3, nil),
                                             nil, $1, nao); }
-    | var_op '{' IDENT '}' elem { $$ = list(var_s, intern(string_own($3), nil),
+    | var_op '{' SYMTOK '}' elem
+                                { $$ = list(var_s, sym_helper($3, nil),
                                             $5, $1, nao); }
-    | var_op '{' IDENT regex '}'        { $$ = nil;
+    | var_op '{' SYMTOK regex '}'       { $$ = nil;
                                           yyerror("longest match "
                                                   "not useable with regex"); }
-    | var_op '{' IDENT NUMBER '}'       { $$ = nil;
+    | var_op '{' SYMTOK NUMBER '}'      { $$ = nil;
                                           yyerror("longest match "
                                                   "not useable with "
                                                   "fixed width match"); }
-    | IDENT error               { $$ = nil;
+    | SYMTOK error              { $$ = nil;
                                   yybadtoken(yychar, lit("variable spec")); }
     | var_op error              { $$ = nil;
                                   yybadtoken(yychar, lit("variable spec")); }
@@ -661,15 +661,14 @@ modifiers : NUMBER              { $$ = cons($1, nil); }
           | list                { $$ = cons($1, nil); }
           ;
 
-o_var : IDENT                   { $$ = list(var_s, intern(string_own($1), nil),
-                                            nao); }
-      | IDENT o_elem            { $$ = list(var_s, intern(string_own($1), nil),
+o_var : SYMTOK                  { $$ = list(var_s, sym_helper($1, nil), nao); }
+      | SYMTOK o_elem           { $$ = list(var_s, sym_helper($1, nil),
                                             $2, nao); }
       | '{' expr exprs_opt '}' 
                                 { $$ = list(var_s, $2, nil, $3, nao); }
       | '{' expr exprs_opt '}' o_elem      
                                 { $$ = list(var_s, $2, $5, $3, nao); }
-      | IDENT error             { $$ = nil;
+      | SYMTOK error            { $$ = nil;
                                     yybadtoken(yychar, lit("variable spec")); }
       ;
 
@@ -730,14 +729,7 @@ exprs_opt : exprs               { $$ = $1; }
           | /* empty */         { $$ = nil; }
           ;
 
-expr : IDENT                    { $$ = rl(intern(string_own($1), nil), 
-                                          num(lineno)); }
-     | KEYWORD                  { $$ = rl(intern(string_own($1),
-                                                 keyword_package),
-                                          num(lineno)); }
-     | METAVAR                  { $$ = list(var_s,
-                                            intern(string_own($1), nil), nao);
-                                  rl($$, num(lineno)); }
+expr : SYMTOK                   { $$ = rl(sym_helper($1, t), num(lineno)); }
      | METANUM                  { $$ = cons(var_s, cons($1, nil));
                                   rl($$, num(lineno)); }
      | NUMBER                   { $$ = $1; }
@@ -860,12 +852,14 @@ strlit : '"' '"'                { $$ = null_string; }
                                   yybadtoken(yychar, lit("string literal")); }
        ;
 
-chrlit : HASH_BACKSLASH IDENT   { wchar_t ch;
+chrlit : HASH_BACKSLASH SYMTOK  { wchar_t ch;
                                   val str = string_own($2);
-                                  if ($2[1] == 0)
-                                  { ch = $2[0]; }
+                                  const wchar_t *cstr = c_str(str);
+
+                                  if (cstr[1] == 0)
+                                  { ch = cstr[0]; }
                                   else
-                                  { ch = char_from_name($2);
+                                  { ch = char_from_name(cstr);
                                     if (ch == L'!')
                                     { yyerrorf(lit("unknown character name: ~a"),
                                                str, nao); }}
@@ -902,6 +896,49 @@ litchars : LITCHAR              { $$ = cons(chr($1), nil); }
          ;
 
 %%
+
+static val sym_helper(wchar_t *lexeme, val meta_allowed)
+{
+  int leading_at = *lexeme == L'@';
+  wchar_t *tokfree = lexeme;
+  wchar_t *colon = wcschr(lexeme, L':');
+  val sym_name = nil;
+  val package = nil;
+  val sym;
+
+  if (leading_at) {
+    if (!meta_allowed) {
+      val tok = string_own(lexeme);
+      yyerrorf(lit("~a: meta variable not allowed in this context"), tok, nao);
+      return nil;
+    }
+    lexeme++;
+  }
+
+  if (colon != 0)
+    *colon = 0;
+
+  if (colon == lexeme) {
+    package = keyword_package;
+    sym_name = string(colon + 1);
+    free(tokfree);
+  } else if (colon != 0) {
+    package = string(lexeme);
+    sym_name = string(colon + 1);
+    free(tokfree);
+    if (!package) {
+      yyerrorf(lit("~a:~a: package ~a not found"), package, sym_name, package, nao);
+      return nil;
+    }
+  } else {
+    sym_name = string(lexeme);
+    free(tokfree);
+  }
+
+  sym = intern(sym_name, package);
+
+  return leading_at ? list(var_s, sym, nao) : sym;
+}
 
 static val repeat_rep_helper(val sym, val args, val main, val parts)
 {
@@ -1076,7 +1113,7 @@ val rlset(val form, val info)
   return form;
 }
 
-static wchar_t char_from_name(wchar_t *name)
+static wchar_t char_from_name(const wchar_t *name)
 {
   static struct {
     const wchar_t *name;
@@ -1123,9 +1160,7 @@ void yybadtoken(int tok, val context)
     return;
   case SPACE:   problem = lit("space"); break;
   case TEXT:    problem = lit("text"); break;
-  case IDENT:   problem = lit("identifier"); break;
-  case KEYWORD: problem = lit("keyword"); break;
-  case METAVAR: problem = lit("metavar"); break;
+  case SYMTOK:  problem = lit("symbol-token"); break;
   case METANUM: problem = lit("metanum"); break;
   case ALL:     problem = lit("\"all\""); break;
   case SOME:    problem = lit("\"some\""); break;

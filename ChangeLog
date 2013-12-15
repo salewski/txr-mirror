@@ -1,3 +1,25 @@
+2013-12-15  Kaz Kylheku  <kaz@kylheku.com>
+
+	Changing the tokenizer to get rid of IDENT, KEYWORD and METAVAR
+	token categories, replaced by a single one called SYMTOK.
+	Package prefixes are now recognized and processed in tokens.
+
+	* lib.c (delete_package): Fix problem in no-such-package
+	error case: it would always report nil as the name.
+	(intern): Fix nonsensical error message: in the no-such-package case it
+	would report that the symbol exists already.
+
+	* parser.l (grammar): Occurences of KEYWORD, METAVAR, and IDENT
+	scrubbed. All rules reporting any of these now return
+	SYMTOK. The main one of these is greatly simplified.
+
+	* parser.y (sym_helper): New function.
+	(char_from_name): const qualifier inside param's type declaration.
+	(grammar): IDENT, KEYWORD and METAVAR tokens are gone.
+	New token SYMTOK. Grammar refactored around SYMTOK and using
+	the new sym_helper function.
+	(char_from_name): Updated.
+
 2013-12-14  Kaz Kylheku  <kaz@kylheku.com>
 
 	Support for parsing Lisp expression out of strings and streams.

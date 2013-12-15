@@ -2542,9 +2542,10 @@ val find_package(val name)
 val delete_package(val package)
 {
   if (stringp(package)) {
-    package = find_package(package);
-    if (!package)
+    val p = find_package(package);
+    if (!p)
       uw_throwf(error_s, lit("delete-package: no such package: ~s"), package, nao);
+    package = p;
   }
 
   type_check (package, PKG);
@@ -2562,7 +2563,7 @@ val intern(val str, val package)
   } else if (stringp(package)) {
     package = find_package(str);
     if (!package)
-      uw_throwf(error_s, lit("intern: symbol ~s exists already"), str, nao);
+      uw_throwf(error_s, lit("intern: ~s no such package"), str, nao);
   }
 
   type_check (package, PKG);
