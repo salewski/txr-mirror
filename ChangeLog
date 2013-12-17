@@ -1,5 +1,10 @@
 2013-12-17  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (stdio_seek): Bugfix. Was returning current position
+	whenever offset is zero, regardless of whence argument.
+
+2013-12-17  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.y (yybadtoken): Handle HASH_H.
 
 2013-12-17  Kaz Kylheku  <kaz@kylheku.com>

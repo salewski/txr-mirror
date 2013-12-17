@@ -257,7 +257,7 @@ static val stdio_seek(val stream, cnum offset, enum strm_whence whence)
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
 
   if (h->f != 0) {
-    if (offset == 0) {
+    if (offset == 0 && whence == strm_cur) {
       long where = ftell(h->f);
       if (where >= 0)
         return num(where);
