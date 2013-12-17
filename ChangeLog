@@ -1,5 +1,9 @@
 2013-12-17  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.y (yybadtoken): Handle HASH_H.
+
+2013-12-17  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (op_defvar): Fix the semantics to be similar to Common Lisp:
 	no effect if the variable already exists.
 

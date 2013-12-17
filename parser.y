@@ -1193,6 +1193,7 @@ void yybadtoken(int tok, val context)
   case DOTDOT: problem = lit(".."); break;
   case HASH_BACKSLASH: problem = lit("#\\"); break;
   case HASH_SLASH:     problem = lit("#/"); break;
+  case HASH_H:         problem = lit("#H"); break;
   }
 
   if (problem != 0)
