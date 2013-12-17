@@ -1,3 +1,34 @@
+                                     TXR 72
+                                   2013-12-17
+
+
+  Features
+
+  - Syslog functionality: openlog, closelog, syslog, setlogmask.
+    Plus: the *stdlog* stream for logging directly to syslog.
+
+  - Stream properties.
+
+  - logand and logior functions become variadic.
+
+  - Signal handling support. TXR Lisp code can catch POSIX signals.
+
+  - Syntax changes in the area of symbol names. Package prefixes are
+    supported now, like foo:bar (symbol bar in package foo).
+
+  Bugs
+
+  - Nonsensical error diagnostics in intern and delete-package, in the
+    case when a package doesn't exist.
+
+  - defvar is documented now and behaves more similarly to the Common Lisp
+    defvar.
+  
+  - seek-stream with a zero offset was reporting the current offset instead
+    of seeking regardless of the value of the whence argument.
+
+                                   
+
                                      TXR 71
                                    2013-12-07
 
