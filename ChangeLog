@@ -1,3 +1,10 @@
+2013-12-17  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (op_defvar): Fix the semantics to be similar to Common Lisp:
+	no effect if the variable already exists.
+
+	* txr.1: Documented defvar and lisp-parse.
+
 2013-12-16  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (intern): fix the previous diagnostic bug once more with more

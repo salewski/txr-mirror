@@ -721,13 +721,10 @@ static val op_defvar(val form, val env)
     eval_error(form, lit("let: ~s is not a bindable sybol"), sym, nao);
 
   {
-    val value = eval(second(args), env, form);
-    val existing = gethash(top_vb, sym);
-
-    if (existing)
-      set(*cdr_l(existing), value);
-    else 
+    if (!gethash(top_vb, sym)) {
+      val value = eval(second(args), env, form);
       sethash(top_vb, sym, cons(sym, value));
+    }
   }
 
   return sym;

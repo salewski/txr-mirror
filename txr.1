@@ -5576,6 +5576,29 @@ table, depending on the type of obj.
 
 .SH BINDING AND ITERATION
 
+.SS Operator defvar
+
+.TP
+Syntax:
+
+  (defvar <sym> <value>)
+
+.TP
+Description:
+
+The defvar operator binds a variable in the top-level environment. 
+
+If the variable named <sym> already exists in the top-level environment, the
+form has no effect; the <value> form is not evaluated, and the value of the
+variable is unchanged.
+
+If the variable does not exist, then it is introduced, with a value given by
+evaluating the <value> form. The <value> form is evaluated in the environment
+in which the defvar form occurs, not necessarily in the top-level environment.
+
+The symbols t and nil may not be used as variables, and neither
+can be keyword symbols: symbols denoted by a leading colon.
+
 .SS Operators let and let*
 
 .TP
@@ -10378,6 +10401,7 @@ the two operations will interfere with the UTF-8 decoding.
 
 These functions return nil when the end of data is reached.  Errors are
 represented as exceptions.
+
 .SS Functions put-string, put-line, put-char and put-byte
 
 .TP
@@ -10487,6 +10511,27 @@ Properties are currently used for marking certain streams as "real-time" (see
 the stream-real-time-p function above), and also for setting the priority at
 which messages are reported to syslog by the *stdlog* stream (see *stdlog*
 in the UNIX SYSLOG section).
+
+.SS Function lisp-parse
+
+.TP
+Syntax:
+
+   (lisp-parse <source> : <error-stream>)
+
+.TP
+Description:
+
+The lisp-parse function converts text denoting TXR Lisp structure, into the
+corresponding data structure. The <source> argument may be either a character
+string, or a stream. The source must provide the syntax of one complete Lisp
+object, without any stray tokens after that object.
+
+The optional <error-stream> argument can be used to specify a stream to which
+parse errors diagnostics are sent. If absent, the diagnostics are suppressed.
+
+If there are parse errors, the function returns nil; otherwise, it returns the
+parsed data structure.
 
 .SH FILESYSTEM ACCESS
 
