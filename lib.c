@@ -2561,9 +2561,10 @@ val intern(val str, val package)
   if (nullp(package)) {
     package = user_package;
   } else if (stringp(package)) {
-    package = find_package(str);
-    if (!package)
-      uw_throwf(error_s, lit("intern: ~s no such package"), str, nao);
+    val p = find_package(package);
+    if (!p)
+      uw_throwf(error_s, lit("intern: ~s no such package"), package, nao);
+    package = p;
   }
 
   type_check (package, PKG);

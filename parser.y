@@ -902,9 +902,7 @@ static val sym_helper(wchar_t *lexeme, val meta_allowed)
   int leading_at = *lexeme == L'@';
   wchar_t *tokfree = lexeme;
   wchar_t *colon = wcschr(lexeme, L':');
-  val sym_name = nil;
-  val package = nil;
-  val sym;
+  val sym_name = nil, pkg_name = nil, package = nil, sym;
 
   if (leading_at) {
     if (!meta_allowed) {
@@ -923,11 +921,12 @@ static val sym_helper(wchar_t *lexeme, val meta_allowed)
     sym_name = string(colon + 1);
     free(tokfree);
   } else if (colon != 0) {
-    package = string(lexeme);
+    pkg_name = string(lexeme);
+    package = find_package(pkg_name);
     sym_name = string(colon + 1);
     free(tokfree);
     if (!package) {
-      yyerrorf(lit("~a:~a: package ~a not found"), package, sym_name, package, nao);
+      yyerrorf(lit("~a:~a: package ~a not found"), pkg_name, sym_name, pkg_name, nao);
       return nil;
     }
   } else {

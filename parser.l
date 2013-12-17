@@ -166,9 +166,13 @@ BSYM    {BSCHR}({BSCHR}|#)*
 NSCHR   [a-zA-Z0-9!$%&*+\-<=>?\\^_~/]
 ID_END  [^a-zA-Z0-9!$%&*+\-<=>?\\^_~/]
 NSYM    {NSCHR}({NSCHR}|#)*
-TOK     :?{SYM}
-BTOK    [:@]?{BSYM}
-NTOK    [:@]?{NSYM}
+TOK     {SYM}
+BTREG   ({BSYM}|@)({BSYM}|#)*(:({BSYM}|#)*)?
+BTKEY   @?:({BSYM}|#)*
+BTOK    {BTREG}|{BTKEY}
+NTREG   ({NSYM}|@)({NSYM}|#)*(:({NSYM}|#)*)?
+NTKEY   @?:({NSYM}|#)*
+NTOK    {NTREG}|{NTKEY}
 WS      [\t ]*
 HEX     [0-9A-Fa-f]
 OCT     [0-7]
@@ -261,14 +265,6 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
     yy_pop_state();
 
   yylval.lexeme = utf8_dup_from(yytext);
-  return SYMTOK;
-}
-
-<BRACED,NESTED>: {
-  if (yy_top_state() == INITIAL
-      || yy_top_state() == QSILIT)
-    yy_pop_state();
-  yylval.lexeme = utf8_dup_from("");
   return SYMTOK;
 }
 

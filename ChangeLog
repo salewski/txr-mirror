@@ -1,3 +1,14 @@
+2013-12-16  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (intern): fix the previous diagnostic bug once more with more
+	feeling.
+
+	* parser.l (grammar): Recognize package prefixes in symbol tokens.
+	Got rid of special rule for handling lone colon.
+
+	* parser.y (sym_helper): Catch undefined package as a parsing 
+	error rather allowing intern function to throw exception.
+
 2013-12-15  Kaz Kylheku  <kaz@kylheku.com>
 
 	Changing the tokenizer to get rid of IDENT, KEYWORD and METAVAR
