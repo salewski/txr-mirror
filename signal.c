@@ -26,8 +26,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdarg.h>
 #include <setjmp.h>
+#include <errno.h>
 #include <wchar.h>
 #include <dirent.h>
 #include <signal.h>
@@ -42,6 +44,7 @@
 #define MAX_SIG 32
 
 volatile sig_atomic_t async_sig_enabled = 0;
+sigset_t sig_blocked_cache;
 
 static val sig_lambda[MAX_SIG];
 volatile unsigned long sig_deferred;
@@ -134,7 +137,7 @@ val set_sig_handler(val signo, val lambda)
   sigset_t block, saved;
 
   sigfillset(&block);
-  sigprocmask(SIG_BLOCK, &block, &saved);
+  sig_mask(SIG_BLOCK, &block, &saved);
 
   if (sig < 0 || sig >= MAX_SIG)
     uw_throwf(error_s, lit("set-sig-handler: signal ~s out of range\n"), sig, nao);
@@ -164,7 +167,7 @@ val set_sig_handler(val signo, val lambda)
     sig_lambda[sig] = lambda;
   }
 
-  sigprocmask(SIG_SETMASK, &saved, 0);
+  sig_mask(SIG_SETMASK, &saved, 0);
 
   return old_lambda;
 }
@@ -197,4 +200,50 @@ val sig_check(void)
   }
 
   return t;
+}
+
+static void mem_set_bits(mem_t *target, const mem_t *bits, size_t size)
+{
+  while (size--)
+    *target++ |= *bits++;
+}
+
+static void mem_clr_bits(mem_t *target, const mem_t *bits, size_t size)
+{
+  while (size--)
+    *target++ &= ~*bits++;
+}
+
+int sig_mask(int how, const sigset_t *set, sigset_t *oldset)
+{
+  sigset_t new;
+  const sigset_t *pnew;
+
+  switch (how) {
+  case SIG_SETMASK:
+    pnew = set;
+    break;
+  case SIG_BLOCK:
+    pnew = &new;
+    new = sig_blocked_cache;
+    mem_set_bits((mem_t *) &new, (mem_t *) set, sizeof new);
+    break;
+  case SIG_UNBLOCK:
+    pnew = &new;
+    new = sig_blocked_cache;
+    mem_clr_bits((mem_t *) &new, (mem_t *) set, sizeof new);
+    break;
+  default:
+    errno = EINVAL;
+    return -1;
+  }
+
+  if (memcmp(&sig_blocked_cache, pnew, sizeof *pnew) != 0) {
+    sig_blocked_cache = *pnew;
+    return sig_mask(SIG_BLOCK, pnew, oldset);
+  }
+
+  if (oldset != 0)
+    *oldset = sig_blocked_cache;
+  return 0;
 }

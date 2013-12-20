@@ -1,3 +1,26 @@
+2013-12-20  Kaz Kylheku  <kaz@kylheku.com>
+
+	Fixing a bug and performance issue.
+
+	Problem: we are using sigsetjmp but with a jmp_buf structure;
+	it requires sigjmp_buf!
+
+	Performance issue: sigsetjmp is a dog which makes system calls.
+	Solution: let's roll our own cached version of sigprocmask which
+	only calls the real sigprocmask when the mask changes. Then
+	our extended_setjmp will just use regular setjmp, plus our own
+	custom signal saving and restoring based on the cached version.
+
+	* signal.c (sig_blocked_cache): New variable.
+	(set_sig_handler): Use our sig_mask instead of sigprocmask.
+	(mem_set_bits, mem_clr_bits): New static functions.
+	(sig_mask): New function.
+
+	* signal.h (extended_jmp_buf): New member, blocked.
+	(extended_setjmp): save blocked signals by peeking into
+	sig_blocked_cache, and restore using sig_mask.
+	(sig_blocked_cache, sig_mask): Declared.
+
 2013-12-17  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 72
