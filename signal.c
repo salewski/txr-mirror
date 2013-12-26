@@ -132,6 +132,7 @@ void sig_init(void)
 
 val set_sig_handler(val signo, val lambda)
 {
+  static struct sigaction blank;
   cnum sig = c_num(signo);
   val old_lambda;
   sigset_t block, saved;
@@ -154,7 +155,7 @@ val set_sig_handler(val signo, val lambda)
       signal(sig, SIG_DFL);
       sig_deferred &= ~mask;
     } else {
-      struct sigaction sa = { 0 };
+      struct sigaction sa = blank;
 
       type_check(lambda, FUN);
 
@@ -216,7 +217,7 @@ static void mem_clr_bits(mem_t *target, const mem_t *bits, size_t size)
 
 int sig_mask(int how, const sigset_t *set, sigset_t *oldset)
 {
-  sigset_t new;
+  sigset_t newset;
   const sigset_t *pnew;
 
   switch (how) {
@@ -224,14 +225,14 @@ int sig_mask(int how, const sigset_t *set, sigset_t *oldset)
     pnew = set;
     break;
   case SIG_BLOCK:
-    pnew = &new;
-    new = sig_blocked_cache;
-    mem_set_bits((mem_t *) &new, (mem_t *) set, sizeof new);
+    pnew = &newset;
+    newset = sig_blocked_cache;
+    mem_set_bits((mem_t *) &newset, (mem_t *) set, sizeof newset);
     break;
   case SIG_UNBLOCK:
-    pnew = &new;
-    new = sig_blocked_cache;
-    mem_clr_bits((mem_t *) &new, (mem_t *) set, sizeof new);
+    pnew = &newset;
+    newset = sig_blocked_cache;
+    mem_clr_bits((mem_t *) &newset, (mem_t *) set, sizeof newset);
     break;
   default:
     errno = EINVAL;

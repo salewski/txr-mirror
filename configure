@@ -1450,9 +1450,9 @@ cat > conftest.c <<!
 int main(void)
 {
   sigjmp_buf jb;
-  static struct sigaction old, new;
+  static struct sigaction olda, newa;
   static sigset_t olds, news;
-  sigaction(0, &new, &old);
+  sigaction(0, &newa, &olda);
   sigprocmask(SIG_BLOCK, &news, &olds);
   if (!sigsetjmp(jb, 1)) 
     siglongjmp(jb, 1);

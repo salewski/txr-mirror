@@ -1,3 +1,13 @@
+2013-12-25  Kaz Kylheku  <kaz@kylheku.com>
+
+	Merry C++mas!
+
+	* configure: Avoid using "new" as identifier in signals test case.
+
+	* signal.c (set_sig_handler): Fix warning about { 0 } initializer.
+	(sig_mask): Avoid using "new" as identifier.
+
+
 2013-12-20  Kaz Kylheku  <kaz@kylheku.com>
 
 	Fixing a bug and performance issue.
