@@ -33,7 +33,9 @@ void eval_init(void)
      (let* ((hash (hash :equal-based)))
        (mapcar (op sethash hash @1 @1) list)
        [sort (hash-values hash) string-lt])))
-@(do (set [txr-sym 0..0] '("rep" "end" "and" "or" "catch" "finally")))
+@(do (set [txr-sym 0..0] '("rep" "end" "and" "or"
+                           "catch" "finally"
+                           "until" "last")))
 @(set (txr-sym txl-sym) (@(sortuniq txr-sym) @(sortuniq txl-sym)))
 @(output)
 " VIM Syntax file for txr

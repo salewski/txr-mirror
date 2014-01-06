@@ -25,12 +25,13 @@ syn keyword txr_keyword contained choose close coll collect
 syn keyword txr_keyword contained defex deffilter define do
 syn keyword txr_keyword contained end eof eol fail
 syn keyword txr_keyword contained filter finally flatten forget
-syn keyword txr_keyword contained freeform fuzz gather load
-syn keyword txr_keyword contained local maybe merge next
-syn keyword txr_keyword contained none or output rebind
-syn keyword txr_keyword contained rep repeat require set
-syn keyword txr_keyword contained skip some text throw
-syn keyword txr_keyword contained trailer try var
+syn keyword txr_keyword contained freeform fuzz gather last
+syn keyword txr_keyword contained load local maybe merge
+syn keyword txr_keyword contained next none or output
+syn keyword txr_keyword contained rebind rep repeat require
+syn keyword txr_keyword contained set skip some text
+syn keyword txr_keyword contained throw trailer try until
+syn keyword txr_keyword contained var
 
 syn keyword txl_keyword contained * *keyword-package* *random-state* *self-path*
 syn keyword txl_keyword contained *stddebug* *stderr* *stdin* *stdlog*
