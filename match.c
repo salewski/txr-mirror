@@ -3583,6 +3583,7 @@ static val v_load(match_files_ctx *c)
     int gc = gc_state(0);
     parse_reset(path);
     yyparse();
+    yylex_destroy();
     gc_state(gc);
 
     if (errors)
