@@ -7807,7 +7807,7 @@ Whenever <regex> matches an empty string, then an empty token is returned, and
 the search for another token within <string> resumes after advancing by one
 character position. So for instance, (tok-str "abc" #/a?/) returns the
 list ("a" "" "" ""). After the token "a" is extracted from a non-empty match
-for the regex, the regex is considered to matches three more times: before the
+for the regex, the regex is considered to match three more times: before the
 "b", between "b" and "c", and after the "c".
 
 If the <keep-between> argument is specified, and is not nil, then the behavior
