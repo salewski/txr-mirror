@@ -118,7 +118,7 @@ static val parsed_spec;
 spec : clauses                  { parsed_spec = $1; }
      | /* empty */              { parsed_spec = nil; }
      | SECRET_ESCAPE_R regexpr  { parsed_spec = $2; end_of_regex(); }
-     | SECRET_ESCAPE_E expr     { parsed_spec = $2; }
+     | SECRET_ESCAPE_E expr     { parsed_spec = $2; YYACCEPT; }
      | error '\n'               { parsed_spec = nil;
                                   if (errors >= 8)
                                     YYABORT;
@@ -720,9 +720,13 @@ meta_expr : METAPAR exprs ')'   { $$ = rlcp(cons(expr_s, expand($2)), $2); }
           | METAPAR error       { $$ = nil;
                                   yybadtoken(yychar, lit("meta expression")); }
           ;
+
 exprs : expr                    { $$ = rlcp(cons($1, nil), $1); }
       | expr exprs              { $$ = rlcp(cons($1, $2), $1); }
       | expr '.' expr           { $$ = rlcp(cons($1, $3), $1); }
+      | expr DOTDOT exprs       { $$ = rlcp(cons(list(cons_s, $1,
+                                                      car($3), nao),
+                                                 cdr($3)), $1); }
       ;
 
 exprs_opt : exprs               { $$ = $1; }
@@ -743,7 +747,6 @@ expr : SYMTOK                   { $$ = rl(sym_helper($1, t), num(lineno)); }
      | chrlit                   { $$ = rl($1, num(lineno)); }
      | strlit                   { $$ = $1; }
      | quasilit                 { $$ = $1; }
-     | expr DOTDOT expr         { $$ = list(cons_s, $1, $3, nao); }
      ;
 
 regex : '/' regexpr '/'         { $$ = cons(regex_s, $2); end_of_regex();

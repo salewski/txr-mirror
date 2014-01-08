@@ -52,15 +52,10 @@
 
 #define YY_INPUT(buf, result, max_size)           \
   do {                                            \
-    val c = nil;                                  \
-    size_t n;                                     \
-    int ch = '*';                                 \
-    for (n = 0; n < max_size &&                   \
-                (c = get_byte(yyin_stream)) &&    \
-                (ch = c_num(c)) != '\n'; ++n)     \
-      buf[n] = (char) ch;                         \
-    if (ch == '\n')                               \
-      buf[n++] = (char) ch;                       \
+    val c = get_byte(yyin_stream);                \
+    int n = 0;                                    \
+    if (c)                                        \
+      buf[n++] = (char) c_num(c);                 \
     result = n;                                   \
   } while (0)
 

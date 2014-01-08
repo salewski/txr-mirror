@@ -1,5 +1,36 @@
 2014-01-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	The lisp-parse function can now be called multiple times
+	on the same stream to extract multiple objects; the requirement
+	that the stream must hold exactly one complete Lisp object
+	with no following material is now lifted.
+
+	* parser.l (YY_INPUT): Modified the macro so that it reads no more
+	than one character. Though this probably makes the lexer less
+	efficient, it gives us the important property that the lexer does
+	not scan ahead into the input stream, hogging data into its buffer
+	which is then destroyed. This is essential if the lisp-parse function
+	is to support multiple calls to pull objects one by one out of
+	a stream.
+
+	* parser.y (spec): Use YYACCEPT in the SECRET_ESCAPE_E clause for
+	pulling a single expression out of the token stream. YYACCEPT
+	is a trick for not invoking the $accept : spec . $end production
+	which is implicitly built into the grammar, and which causes
+	a token of lookahead to occur.  This allows us to read a full
+	expression without stealing any further token: but only if the
+	grammar is structured right.
+	(exprs): This phrase structure now handles the DOTDOT syntax.
+	There is no such thing as an expr DOTDOT expr expression any more;
+	it is in the list syntax (and not supported in the dot position).
+	(expr): Remove DOTDOT syntax.
+
+	* txr.1: Updated description of .. syntax, and relaxed the description
+	of lisp-parse since it now allows multiple calls to extract
+	multiple objects.
+
+2014-01-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (v_load): Call yylex_destroy after yyparse, so we don't
 	have stray scanner state possibly interfering with a subsquent
 	parse job.

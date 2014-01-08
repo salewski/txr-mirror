@@ -4963,6 +4963,20 @@ to represent a pair of numbers or other objects. For instance, if L
 is a list, then [L 1 .. 3] computes a sublist of L consisting of
 elements 1 through 2 (counting from zero).
 
+.TP
+Restrictions: 
+
+The notation must be enclosed in a list. For instance a..b is not an
+expression, but (a..b) is. This is important if Lisp data is being parsed from
+a string or stream using the lisp-parse function. If the data "a..b"  is
+parsed, the symbol "a" will be extracted, leaving "..a", which, if parsed,
+produces a syntax error since it consists of a "dotdot" token followed by
+a symbol, which is not valid syntax, akin to something like ")a" or ".a".
+
+The notation cannot occur in the dot position; that is, the syntax (a . b .. c)
+is invalid. The dotdot operator can only be used between the non-dot-position
+elements of a list.
+
 .SS The DWIM Brackets
 
 TXR Lisp has a square bracket notation. The syntax [...] is a shorthand
@@ -10525,7 +10539,11 @@ Description:
 The lisp-parse function converts text denoting TXR Lisp structure, into the
 corresponding data structure. The <source> argument may be either a character
 string, or a stream. The source must provide the syntax of one complete Lisp
-object, without any stray tokens after that object.
+object.
+
+Multiple calls to lisp-parse on the same stream will extract successive objects
+from the stream. To parse successive objects from a string, it is necessary
+to convert it to a string stream.
 
 The optional <error-stream> argument can be used to specify a stream to which
 parse errors diagnostics are sent. If absent, the diagnostics are suppressed.
