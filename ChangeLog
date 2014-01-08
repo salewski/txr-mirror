@@ -1,3 +1,15 @@
+2013-01-08  Kaz Kylheku  <kaz@kylheku.com>
+
+	Version 73
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES: Updated.
+
 2014-01-07  Kaz Kylheku  <kaz@kylheku.com>
 
 	The lisp-parse function can now be called multiple times

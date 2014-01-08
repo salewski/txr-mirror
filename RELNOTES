@@ -1,3 +1,20 @@
+                                     TXR 73
+                                   2014-01-08
+
+
+  Features
+  
+  - The new lisp-parse function scans TXR Lisp expressions at run-time
+    out of strings and streams, which means that TXR can now more easily keep
+    persistent, complex data in text files.
+
+  Bugs
+
+  - Fixed signal-handling-related performance issue caused by excessive
+    calls to the sigprocmask function.
+
+
+
                                      TXR 72
                                    2013-12-17
 
