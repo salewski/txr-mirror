@@ -45,12 +45,20 @@
 #if HAVE_SYS_STAT
 #include <sys/stat.h>
 #endif
+#if HAVE_WINDOWS_H
+#include <windows.h>
+#endif
 #include "lib.h"
 #include "gc.h"
 #include "signal.h"
 #include "unwind.h"
 #include "stream.h"
 #include "utf8.h"
+
+#if HAVE_WINDOWS_H
+int fileno(FILE *stream);
+int pclose(FILE *stream);
+#endif
 
 val std_input, std_output, std_debug, std_error, std_null;
 val output_produced;
@@ -404,6 +412,20 @@ static void tail_calc(unsigned long *state, int *sec, int *mod)
   if (*mod == 0)
     *mod = 1;
 }
+
+#if !HAVE_POSIX_SLEEP && HAVE_WINDOWS_H
+
+int sleep(int sec);
+
+int sleep(int sec)
+{
+   Sleep(sec * 1000);
+   return 0;
+}
+
+#else
+#error port me!
+#endif
 
 static void tail_strategy(val stream, unsigned long *state)
 {
@@ -982,7 +1004,6 @@ static struct strm_ops dir_ops = {
   0, /* get_prop */
   0  /* set_prop */
 };
-
 
 static val make_stdio_stream_common(FILE *f, val descr, struct cobj_ops *ops)
 {
@@ -1835,8 +1856,13 @@ val statf(val path)
               gid_k, num(st.st_gid),
               rdev_k, num(st.st_rdev),
               size_k, num(st.st_size),
+#if !HAVE_WINDOWS_H
               blksize_k, num(st.st_blksize),
               blocks_k, num(st.st_blocks),
+#else
+              blksize_k, zero,
+              blocks_k, zero,
+#endif
               atime_k, num(st.st_atime),
               mtime_k, num(st.st_mtime),
               ctime_k, num(st.st_ctime),
@@ -2139,12 +2165,59 @@ void stream_init(void)
   real_time_k = intern(lit("real-time"), keyword_package);
   name_k = intern(lit("name"), keyword_package);
 
-  s_ifmt = num(S_IFMT); s_iflnk = num(S_IFLNK);
+  s_ifmt = num(S_IFMT); 
+
+#ifdef S_IFLNK
+  s_iflnk = num(S_IFLNK);
+#endif
+
   s_ifreg = num(S_IFREG); s_ifblk = num(S_IFBLK); s_ifdir = num(S_IFDIR);
-  s_ifchr = num(S_IFCHR); s_ififo = num(S_IFIFO); s_isuid = num(S_ISUID);
-  s_isgid = num(S_ISGID); s_isvtx = num(S_ISVTX); s_irwxu = num(S_IRWXU);
-  s_irusr = num(S_IRUSR); s_iwusr = num(S_IWUSR); s_ixusr = num(S_IXUSR);
-  s_irwxg = num(S_IRWXG); s_irgrp = num(S_IRGRP); s_iwgrp = num(S_IWGRP);
-  s_ixgrp = num(S_IXGRP); s_irwxo = num(S_IRWXO); s_iroth = num(S_IROTH);
-  s_iwoth = num(S_IWOTH); s_ixoth = num(S_IXOTH);
-}
+  s_ifchr = num(S_IFCHR); s_ififo = num(S_IFIFO);
+
+#ifdef S_ISUID
+  s_isuid = num(S_ISUID);
+#endif
+
+#ifdef S_ISGID
+  s_isgid = num(S_ISGID);
+#endif
+
+#ifdef S_ISVTX
+  s_isvtx = num(S_ISVTX);
+#endif
+
+  s_irwxu = num(S_IRWXU); s_irusr = num(S_IRUSR); s_iwusr = num(S_IWUSR);
+  s_ixusr = num(S_IXUSR);
+
+#ifdef S_IRWXG
+  s_irwxg = num(S_IRWXG); 
+#endif
+
+#ifdef S_IRGRP
+  s_irgrp = num(S_IRGRP);
+#endif
+
+#ifdef S_IWGRP
+ s_iwgrp = num(S_IWGRP);
+#endif
+
+#ifdef S_IXGRP
+  s_ixgrp = num(S_IXGRP); 
+#endif
+
+#ifdef S_IRWXO
+  s_irwxo = num(S_IRWXO);
+#endif
+
+#ifdef S_IROTH
+  s_iroth = num(S_IROTH);
+#endif
+
+#ifdef S_IWOTH
+  s_iwoth = num(S_IWOTH);
+#endif
+
+#ifdef S_IXOTH
+ s_ixoth = num(S_IXOTH);
+#endif
+}  

@@ -78,7 +78,7 @@ rebuild: clean repatch $(PROG)
 
 .PHONY: clean
 clean: conftest.clean
-	rm -f $(PROG) $(OBJS) $(OBJS-y) \
+	rm -f $(PROG)$(EXE) $(OBJS) $(OBJS-y) \
 	  y.tab.c lex.yy.c y.tab.h y.output $(TESTS:.ok=.out)
 
 .PHONY: repatch
@@ -195,6 +195,6 @@ conftest.ccver:
 
 .PHONY: conftest.clean
 conftest.clean:
-	@rm -f conftest conftest.[co] \
-	conftest2 conftest[12].[oc] \
+	@rm -f conftest$(EXE) conftest.[co] \
+	conftest2$(EXE) conftest[12].[oc] \
 	conftest.err conftest.syms

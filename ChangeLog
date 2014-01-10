@@ -1,3 +1,37 @@
+2013-01-09  Kaz Kylheku  <kaz@kylheku.com>
+
+	Long overdue MinGW port maintenance.
+
+	* Makefile: Use new EXE variable from config.mk.
+
+	* configure (exe, have_windows_h): New variables.
+	Handle situations with .exe suffix; on MiGW, the rm command
+	doesn't work on executables if the .exe suffix is not given.
+	New tests for localtime_r and gmtime_r.
+
+	* lib.c: Supply declarations which are missing on MinGW because
+	we use gcc -ansi, because MinGW doesn't follow established conventions
+	like -D_POSIX_SOURCE.  Supply definitions for gmtime_r, localtime_r,
+	setenv and unsetenv.
+
+	* parser.l: Supply declarations which are missing on MinGW.
+
+	* signal.h (async_sig_enabled): Declare differently based on
+	HAVE_POSIX_SIGS.
+	Misspelled typedef fixed in the code for !HAVE_POSIX_SIGS
+	that has hitherto not been compiled.
+	(sig_mask): Wrap declaration in #ifdef HAVE_POSIX_SIGS because
+	it relies on sigset_t.
+
+	* stream.c: Supply declarations which are missing on MinGW.
+	Include <windows.h> if we have it. 
+	(sleep): Define for Windows.
+	(statf): Handle missing st_blksize and st_blocks members in struct
+	stat.
+	(stream_init): Handle numerous missing S_* macros.
+
+	* utf8.c: Supply declarations which are missing on MinGW.
+
 2013-01-08  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 73

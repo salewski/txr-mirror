@@ -60,6 +60,15 @@
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
+#if HAVE_WINDOWS_H
+int putenv(const char *);
+int tzset(void);
+#endif
+
+#if !HAVE_POSIX_SIGS
+int async_sig_enabled = 0;
+#endif
+
 val packages;
 
 val system_package, keyword_package, user_package;
@@ -5086,6 +5095,29 @@ val time_sec_usec(void)
   return cons(num(tv.tv_sec), num(tv.tv_usec));
 }
 
+#if !HAVE_GMTIME_R
+/*
+ * Ugly hacks for MingW, which uses the Microsft C Run Time Library, 
+ * whic in turn is stuck in the Dark Ages * without _r functions.
+ */
+struct tm *gmtime_r(const time_t *timep, struct tm *result);
+struct tm *localtime_r(const time_t *timep, struct tm *result);
+
+struct tm *gmtime_r(const time_t *timep, struct tm *result)
+{
+  struct tm *hack = gmtime(timep);
+  *result = *hack;
+  return hack;
+}
+
+struct tm *localtime_r(const time_t *timep, struct tm *result)
+{
+  struct tm *hack = localtime(timep);
+  *result = *hack;
+  return hack;
+}
+#endif
+
 static val string_time(struct tm *(*break_time_fn)(const time_t *, struct tm *),
                        char *format, time_t time)
 {
@@ -5157,6 +5189,25 @@ val make_time(val year, val month, val day,
 {
   return make_time_impl(mktime, year, month, day, hour, minute, second, isdst);
 }
+
+#if !HAVE_SETENV
+static void
+setenv(const char *name, const char *value, int overwrite)
+{
+  int len = strlen(name)+1+strlen(value)+1;
+  char *str = (char *) chk_malloc(len);
+  (void) overwrite;
+  sprintf(str, "%s=%s", name, value);
+  putenv(str);
+} 
+
+static void
+unsetenv(const char *name)
+{
+  setenv(name, "", 1);
+}
+
+#endif
 
 #if !HAVE_TIMEGM
 static time_t timegm_hack(struct tm *tm)

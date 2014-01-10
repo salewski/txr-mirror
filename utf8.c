@@ -36,6 +36,10 @@
 #include "unwind.h"
 #include "utf8.h"
 
+#if HAVE_WINDOWS_H
+FILE *popen(const char *path, const char *mode);
+#endif
+
 #if WCHAR_MAX > 65535
 #define FULL_UNICODE
 #endif

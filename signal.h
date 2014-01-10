@@ -76,6 +76,7 @@ typedef struct {
   ((EJB).rv = (ARG), longjmp((EJB).jb, 1))
 
 extern sigset_t sig_blocked_cache;
+extern volatile sig_atomic_t async_sig_enabled;
 
 #else
 
@@ -85,13 +86,12 @@ extern sigset_t sig_blocked_cache;
 #define sig_restore_enable do { } while (0); } while (0)
 #define sig_restore_disable do { } while (0); } while (0)
 
-tyedef jmp_buf extended_jmp_buf;
+typedef jmp_buf extended_jmp_buf;
 #define extended_setjmp(EJB) setjmp(EJB)
 #define extended_longjmp(EJB, ARG) longjmp(EJB, ARG)
+extern int async_sig_enabled;
 
 #endif
-
-extern volatile sig_atomic_t async_sig_enabled;
 
 extern val sig_hup, sig_int, sig_quit, sig_ill, sig_trap, sig_abrt, sig_bus;
 extern val sig_fpe, sig_kill, sig_usr1, sig_segv, sig_usr2, sig_pipe, sig_alrm;
@@ -104,4 +104,6 @@ void sig_init(void);
 val set_sig_handler(val signo, val lambda);
 val get_sig_handler(val signo);
 val sig_check(void);
+#if HAVE_POSIX_SIGS
 int sig_mask(int how, const sigset_t *set, sigset_t *oldset);
+#endif

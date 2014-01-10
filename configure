@@ -72,6 +72,7 @@ compiler_prefix=
 ccname=gcc
 cc='$(cross)$(compiler_prefix)$(ccname)'
 intptr=
+exe=
 tool_prefix=
 lex='$(cross)$(tool_prefix)flex'
 lexlib=-lfl
@@ -100,6 +101,7 @@ have_patch=
 have_unistd=
 have_timegm=
 have_syslog=
+have_windows_h=
 have_posix_sigs=
 need_svid_source=
 need_bsd_source=
@@ -586,6 +588,9 @@ debug_support := $debug_support
 # MPI version
 mpi_version := $mpi_version
 
+# EXE suffix
+exe := $exe
+
 CC := $cc
 LEX := $lex
 LEXLIB := $lexlib
@@ -639,7 +644,7 @@ int main(void)
 }
 !
 
-rm -f conftest
+rm -f conftest conftest.exe
 if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
   printf "failed\n\n"
   printf "Errors from compilation: \n\n"
@@ -647,8 +652,18 @@ if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
   exit 1
 fi
 
-rm -f conftest
 printf "okay\n"
+
+printf "Checking whether executables have that idiotic .exe suffix ... "
+
+if ls conftest.exe > /dev/null ; then
+  echo "yes"
+  exe=.exe
+else
+  echo "no"
+fi
+
+rm -f conftest$exe
 
 #
 # Check for annoying clashes from non-conforming BSD-derived systems that don't
@@ -684,7 +699,7 @@ int $ident(void);
 
 int main(void) { return 0; }
 !
-  rm -f conftest
+  rm -f conftest$exe
   if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
     printf "#define %s txr_%s\n" $ident $ident >> config.h
     have_unistd=y
@@ -1048,7 +1063,7 @@ $inline int func(void)
   return 0;
 }
 !
-    rm -f conftest2
+    rm -f conftest2$exe
     if ! $make conftest2 > conftest.err 2>&1 || ! [ -x conftest2 ] ; then
 	continue
     fi
@@ -1146,7 +1161,7 @@ int main(void)
   return 0;
 }
 !
-rm -f conftest
+rm -f conftest$exe
 if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
   printf "no\n"
 else
@@ -1170,7 +1185,7 @@ int main(void)
   return 0;
 }
 !
-rm -f conftest
+rm -f conftest$exe
 if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
   printf "no\n"
 else
@@ -1195,7 +1210,7 @@ int main(void)
   return 0;
 }
 !
-rm -f conftest
+rm -f conftest$exe
 if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
   printf "no\n"
 else
@@ -1218,12 +1233,13 @@ int main(void)
   return 0;
 }
 !
-rm -f conftest
+rm -f conftest$exe
 if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
   printf "no\n"
 else
   printf "yes\n"
   printf "#define HAVE_GETENVIRONMENTSTRINGS 1\n" >> config.h
+  have_windows_h=y
 fi
 
 #
@@ -1250,7 +1266,7 @@ int main(int argc, char **argv)
   return 0;
 }
 !
-rm -f conftest
+rm -f conftest$exe
 if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
   printf "no\n"
 else
@@ -1308,7 +1324,7 @@ int main(void)
   return 0;
 }
 !
-rm -f conftest
+rm -f conftest$exe
 if ! $make EXTRA_FLAGS='-D_SVID_SOURCE' conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
   printf "no\n"
 else
@@ -1331,7 +1347,7 @@ int main(void)
   return 0;
 }
 !
-  rm -f conftest
+  rm -f conftest$exe
   if ! $make EXTRA_FLAGS='-D_BSD_SOURCE' conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
     printf "no\n"
   else
@@ -1351,13 +1367,38 @@ int main(void)
   return 0;
 }
 !
-rm -f conftest
+rm -f conftest$exe
 if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
   printf "no\n"
 else
   printf "yes\n"
   printf "#define HAVE_TZSET 1\n" >> config.h
 fi
+
+printf "Checking for localtime_r and gmtime_r functions ... "
+
+cat > conftest.c <<!
+#include <time.h>
+
+int main(int argc, char **argv)
+{
+  struct tm stm;
+  time_t t;
+
+  localtime_r(&t, &stm);
+  gmtime_r(&t, &stm);
+  return 0;
+}
+!
+rm -f conftest$exe
+if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+  printf "no\n"
+else
+  printf "yes\n"
+  printf "#define HAVE_GMTIME_R 1\n" >> config.h
+  have_unistd=y
+fi
+
 
 printf "Checking for POSIX sleep function ... "
 
@@ -1370,7 +1411,7 @@ int main(int argc, char **argv)
   return 0;
 }
 !
-rm -f conftest
+rm -f conftest$exe
 if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
   printf "no\n"
 else
@@ -1389,7 +1430,7 @@ int main(int argc, char **argv)
   return daemon(0, 0);
 }
 !
-rm -f conftest
+rm -f conftest$exe
 if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
   printf "no\n"
 else
@@ -1409,7 +1450,7 @@ int main(void)
   return 0;
 }
 !
-rm -f conftest
+rm -f conftest$exe
 if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
   printf "no\n"
 else
@@ -1432,7 +1473,7 @@ int main(void)
   return 0;
 }
 !
-rm -f conftest
+rm -f conftest$exe
 if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
   printf "no\n"
 else
@@ -1459,7 +1500,7 @@ int main(void)
   return 0;
 }
 !
-rm -f conftest
+rm -f conftest$exe
 if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
   printf "no\n"
 else
@@ -1474,6 +1515,10 @@ fi
 
 if [ -n "$have_unistd" ] ; then
   printf "#define HAVE_UNISTD_H 1\n" >> config.h
+fi
+
+if [ -n "$have_windows_h" ] ; then
+  printf "#define HAVE_WINDOWS_H 1\n" >> config.h
 fi
 
 #
