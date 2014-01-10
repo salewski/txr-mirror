@@ -3594,7 +3594,7 @@ val vector(val length)
   cnum alloc_plus = c_num(length) + 2;
   val vec = make_obj();
   val *v = (val *) chk_malloc(alloc_plus * sizeof *v);
-#ifdef HAVE_VALGRIND
+#if HAVE_VALGRIND
   vec->v.vec_true_start = v;
 #endif
   v += 2;
@@ -3629,7 +3629,7 @@ val vec_set_length(val vec, val length)
                                         (new_alloc + 2) * sizeof *newvec);
       vec->v.vec = newvec + 2;
       set(vec->v.vec[vec_alloc], num(new_alloc));
-#ifdef HAVE_VALGRIND
+#if HAVE_VALGRIND
       vec->v.vec_true_start = newvec;
 #endif
     }
@@ -3718,7 +3718,7 @@ val copy_vec(val vec_in)
   cnum alloc_plus = c_num(length) + 2;
   val vec = make_obj();
   val *v = (val *) chk_malloc(alloc_plus * sizeof *v);
-#ifdef HAVE_VALGRIND
+#if HAVE_VALGRIND
   vec->v.vec_true_start = v;
 #endif
   v += 2;
@@ -3759,7 +3759,7 @@ val sub_vec(val vec_in, val from, val to)
     size_t nelem = c_num(to) - cfrom;
     val vec = make_obj();
     val *v = (val *) chk_malloc((nelem + 2) * sizeof *v);
-#ifdef HAVE_VALGRIND
+#if HAVE_VALGRIND
     vec->v.vec_true_start = v;
 #endif
     v += 2;
@@ -3859,7 +3859,7 @@ val cat_vec(val list)
   vec = make_obj();
   v = (val *) chk_malloc((total + 2) * sizeof *v);
 
-#ifdef HAVE_VALGRIND
+#if HAVE_VALGRIND
   vec->v.vec_true_start = v;
 #endif
   v += 2;

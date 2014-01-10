@@ -296,7 +296,7 @@ int txr_main(int argc, char **argv)
       argv++, argc--;
       continue;
     } else if (!strcmp(*argv, "--vg-debug")) {
-#ifdef HAVE_VALGRIND
+#if HAVE_VALGRIND
       opt_vg_debug = 1;
       argv++, argc--;
       continue;

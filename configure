@@ -1104,7 +1104,7 @@ syntax error
   fi
 
   printf "okay\n"
-  printf "#define HAVE_VALGRIND\n" >> config.h
+  printf "#define HAVE_VALGRIND 1\n" >> config.h
 fi
 
 #

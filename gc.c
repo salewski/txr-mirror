@@ -33,7 +33,7 @@
 #include <wchar.h>
 #include <signal.h>
 #include "config.h"
-#ifdef HAVE_VALGRIND
+#if HAVE_VALGRIND
 #include <valgrind/memcheck.h>
 #endif
 #include "lib.h"
@@ -62,7 +62,7 @@ typedef struct mach_context {
 #define save_context(X) setjmp((X).buf)
 
 int opt_gc_debug;
-#ifdef HAVE_VALGRIND
+#if HAVE_VALGRIND
 int opt_vg_debug;
 #endif
 static val *gc_stack_bottom;
@@ -139,7 +139,7 @@ static void more(void)
   heap->next = heap_list;
   heap_list = heap;
 
-#ifdef HAVE_VALGRIND
+#if HAVE_VALGRIND
   if (opt_vg_debug)
     VALGRIND_MAKE_MEM_NOACCESS(&heap->block, sizeof heap->block);
 #endif
@@ -164,12 +164,12 @@ val make_obj(void)
   for (tries = 0; tries < 3; tries++) {
     if (free_list) {
       val ret = free_list;
-#ifdef HAVE_VALGRIND
+#if HAVE_VALGRIND
       if (opt_vg_debug)
         VALGRIND_MAKE_MEM_DEFINED(free_list, sizeof *free_list);
 #endif
       free_list = free_list->t.next;
-#ifdef HAVE_VALGRIND
+#if HAVE_VALGRIND
       if (opt_vg_debug)
         VALGRIND_MAKE_MEM_UNDEFINED(ret, sizeof *ret);
 #endif
@@ -359,11 +359,11 @@ static void mark_mem_region(val *low, val *high)
 
   while (low < high) {
     val maybe_obj = *low;
-#ifdef HAVE_VALGRIND
+#if HAVE_VALGRIND
     VALGRIND_MAKE_MEM_DEFINED(&maybe_obj, sizeof maybe_obj);
 #endif
     if (in_heap(maybe_obj)) {
-#ifdef HAVE_VALGRIND
+#if HAVE_VALGRIND
       if (opt_vg_debug)
         VALGRIND_MAKE_MEM_DEFINED(maybe_obj, SIZEOF_PTR);
 #endif
@@ -371,7 +371,7 @@ static void mark_mem_region(val *low, val *high)
       if ((t & FREE) == 0) {
         mark_obj(maybe_obj);
       } else {
-#ifdef HAVE_VALGRIND
+#if HAVE_VALGRIND
         if (opt_vg_debug)
           VALGRIND_MAKE_MEM_NOACCESS(maybe_obj, sizeof *maybe_obj);
 #endif
@@ -416,7 +416,7 @@ static void mark(mach_context_t *pmc, val *gc_stack_top)
 
 static int sweep_one(obj_t *block)
 {
-#ifdef HAVE_VALGRIND
+#if HAVE_VALGRIND
   const int vg_dbg = opt_vg_debug;
 #else
   const int vg_dbg = 0;
@@ -439,7 +439,7 @@ static int sweep_one(obj_t *block)
   }
 
   if (block->t.type & FREE) {
-#ifdef HAVE_VALGRIND
+#if HAVE_VALGRIND
     if (vg_dbg)
       VALGRIND_MAKE_MEM_NOACCESS(block, sizeof *block);
 #endif
@@ -457,13 +457,13 @@ static int sweep_one(obj_t *block)
      code which is still using the object will trip on
      the freed object before it is recycled. */
   if (vg_dbg || opt_gc_debug) {
-#ifdef HAVE_VALGRIND
+#if HAVE_VALGRIND
     if (vg_dbg && free_tail != &free_list)
       VALGRIND_MAKE_MEM_DEFINED(free_tail, sizeof *free_tail);
 #endif
     *free_tail = block;
     block->t.next = nil;
-#ifdef HAVE_VALGRIND
+#if HAVE_VALGRIND
     if (vg_dbg) {
       if (free_tail != &free_list)
         VALGRIND_MAKE_MEM_NOACCESS(free_tail, sizeof *free_tail);
@@ -483,7 +483,7 @@ static int_ptr_t sweep(void)
 {
   int_ptr_t free_count = 0;
   heap_t *heap;
-#ifdef HAVE_VALGRIND
+#if HAVE_VALGRIND
   const int vg_dbg = opt_vg_debug;
 #endif
 
@@ -505,7 +505,7 @@ static int_ptr_t sweep(void)
   for (heap = heap_list; heap != 0; heap = heap->next) {
     obj_t *block, *end;
 
-#ifdef HAVE_VALGRIND
+#if HAVE_VALGRIND
     if (vg_dbg)
         VALGRIND_MAKE_MEM_DEFINED(&heap->block, sizeof heap->block);
 #endif

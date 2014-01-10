@@ -29,7 +29,7 @@ extern int opt_nobindings;
 extern int opt_lisp_bindings;
 extern int opt_arraydims;
 extern int opt_gc_debug;
-#ifdef HAVE_VALGRIND
+#if HAVE_VALGRIND
 extern int opt_vg_debug;
 #endif
 extern int opt_derivative_regex;

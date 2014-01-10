@@ -1,3 +1,19 @@
+2014-01-10  Kaz Kylheku  <kaz@kylheku.com>
+
+	* configure: Generate HAVE_VALGRIND as #define-d to 1, rathern
+	than just fdefined.
+
+	* gc.c: Use #if HAVE_VALGRIND instaed of #ifdef HAVE_VALGRIND,
+	consistently with other HAVE_* config variables.
+
+	* lib.c: Likewise.
+
+	* lib.h: Likewise.
+
+	* txr.c: Likewise.
+
+	* txr.h: Likewise.
+
 2014-01-09  Kaz Kylheku  <kaz@kylheku.com>
 
 	Fix broken Json parsing test case on MinGW.

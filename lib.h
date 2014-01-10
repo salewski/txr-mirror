@@ -148,7 +148,7 @@ struct vec {
   /* vec[-2] is allocated size */
   /* vec[-1] is fill pointer */
   val *vec;
-#ifdef HAVE_VALGRIND
+#if HAVE_VALGRIND
   val *vec_true_start;
 #endif
 };
