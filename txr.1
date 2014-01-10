@@ -4763,7 +4763,7 @@ The TXR language contains an embedded Lisp dialect called TXR Lisp.
 
 This language is exposed in TXR in three ways.
 
-Firstly, in any situation that calls for an expression, a Lisp compound
+Firstly, in any situation that calls for an expression, a Lisp 
 expression can be used, if it is preceded by the @ symbol. The Lisp expression
 is evaluated and its value  becomes the value of that expression.
 Thus, TXR directives are embedded in literal text using @, and Lisp expressions
@@ -4784,6 +4784,10 @@ Examples:
 Bind variable a to the integer 4:
 
   @(bind a @(+ 2 2))
+
+Bind variable b to the standard input stream:
+
+  @(bind a @*stdin*)
 
 Define several Lisp functions using @(do):
 

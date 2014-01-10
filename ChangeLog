@@ -1,3 +1,14 @@
+014-01-10  Kaz Kylheku  <kaz@kylheku.com>
+
+	* match.c (do_txeval): Lift an annoying restriction in the pattern
+	language's expression evaluator. Whereas TXR Lisp expressions can be
+	used int the pattern language, preceded by @, it was not possible
+	to evaluate TXR Lisp variables this way. So instead of @var,
+	some clumsy trick had to be used like @(identity var). This is not
+	necessary any more. Code like @(next @*stdin*) will now work.
+
+	* txr.1: Updated.
+
 2014-01-10  Kaz Kylheku  <kaz@kylheku.com>
 
 	* configure: Generate HAVE_VALGRIND as #define-d to 1, rathern

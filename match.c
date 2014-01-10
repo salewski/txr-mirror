@@ -1432,8 +1432,10 @@ static val do_txeval(val spec, val form, val bindings, val allow_unbound)
       } else if (regexp(car(form))) {
         ret = form;
       } else if (first(form) == var_s) {
-        sem_error(spec, lit("metavariable @~s syntax cannot be used here"),
-                  second(form), nao);
+        uw_env_begin;
+        uw_set_match_context(cons(spec, bindings));
+        ret = eval(second(form), make_env(bindings, nil, nil), form);
+        uw_env_end;
       } else if (first(form) == expr_s) {
         uw_env_begin;
         uw_set_match_context(cons(spec, bindings));
