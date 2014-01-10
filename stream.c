@@ -1528,11 +1528,14 @@ val vformat(val stream, val fmtstr, va_list vl)
                   else if (*scan == '+')
                     scan++;
 
-                  while (scan[0] == '0' && scan[1] == '0')
+                  while (*scan == '0')
                     scan++;
 
-                  while (*scan)
-                    *exp++ = *scan++;
+                  if (!*scan)
+                    *exp++ = '0';
+                  else
+                    while (*scan)
+                      *exp++ = *scan++;
 
                   *exp = 0;
                 }
@@ -1588,7 +1591,7 @@ val vformat(val stream, val fmtstr, va_list vl)
                 else if (*scan == '+')
                   scan++;
 
-                while (*scan == 0)
+                while (*scan == '0')
                   scan++;
 
                 while (*scan)

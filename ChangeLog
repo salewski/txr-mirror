@@ -1,5 +1,15 @@
 2014-01-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	Fix broken Json parsing test case on MinGW.
+
+	* stream.c (vformat): Fix incorrect code for normalizing
+	exponent fields in the output of sprintf's floating-point
+	conversion. For ~e, the logic would let through a leading zero.
+	For ~a/~s conversion, it was comparing to 0 instead of '0',
+	not squashing leading zeros at all.
+
+2014-01-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c: Eliminate useless #else section containing #error
 
 2013-01-09  Kaz Kylheku  <kaz@kylheku.com>
