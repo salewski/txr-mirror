@@ -423,8 +423,6 @@ int sleep(int sec)
    return 0;
 }
 
-#else
-#error port me!
 #endif
 
 static void tail_strategy(val stream, unsigned long *state)

@@ -1,3 +1,7 @@
+2014-01-09  Kaz Kylheku  <kaz@kylheku.com>
+
+	* stream.c: Eliminate useless #else section containing #error
+
 2013-01-09  Kaz Kylheku  <kaz@kylheku.com>
 
 	Long overdue MinGW port maintenance.
