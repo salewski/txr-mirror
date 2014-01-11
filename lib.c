@@ -5190,6 +5190,8 @@ val make_time(val year, val month, val day,
   return make_time_impl(mktime, year, month, day, hour, minute, second, isdst);
 }
 
+#if !HAVE_TIMEGM
+
 #if !HAVE_SETENV
 static void
 setenv(const char *name, const char *value, int overwrite)
@@ -5206,10 +5208,8 @@ unsetenv(const char *name)
 {
   setenv(name, "", 1);
 }
-
 #endif
 
-#if !HAVE_TIMEGM
 static time_t timegm_hack(struct tm *tm)
 {
     time_t ret;

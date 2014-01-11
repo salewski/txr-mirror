@@ -82,7 +82,7 @@ yacc='$(cross)$(tool_prefix)$(yaccname)'
 yacc_given=
 nm='$(cross)$(tool_prefix)nm'
 opt_flags=-O2
-lang_flags='-ansi -D_XOPEN_SOURCE=2'
+lang_flags='-ansi -D_BSD_SOURCE -D_POSIX_C_SOURCE=199309L'
 diag_flags='-Wall -Wmissing-prototypes -Wstrict-prototypes'
 debug_flags=-g
 inline=
@@ -656,7 +656,7 @@ printf "okay\n"
 
 printf "Checking whether executables have that idiotic .exe suffix ... "
 
-if ls conftest.exe > /dev/null ; then
+if ls conftest.exe > /dev/null 2>&1 ; then
   echo "yes"
   exe=.exe
 else
@@ -1253,6 +1253,7 @@ cat > conftest.c <<!
 #ifdef HAVE_SYS_WAIT
 #include <sys/wait.h>
 #endif
+#include <sys/types.h>
 #include <unistd.h>
 
 int main(int argc, char **argv)
@@ -1325,19 +1326,17 @@ int main(void)
 }
 !
 rm -f conftest$exe
-if ! $make EXTRA_FLAGS='-D_SVID_SOURCE' conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
   printf "no\n"
 else
   printf "yes\n"
   printf "#define HAVE_TIMEGM 1\n" >> config.h
   have_timegm=y
-  need_svid_source=y
 fi
 
-if [ -z "$have_timegm" ] ; then
-  printf "Checking for setenv and unsetenv functions ... "
+printf "Checking for setenv and unsetenv functions ... "
 
-  cat > conftest.c <<!
+cat > conftest.c <<!
 #include <stdlib.h>
 
 int main(void)
@@ -1347,14 +1346,13 @@ int main(void)
   return 0;
 }
 !
-  rm -f conftest$exe
-  if ! $make EXTRA_FLAGS='-D_BSD_SOURCE' conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
-    printf "no\n"
-  else
-    printf "yes\n"
-    printf "#define HAVE_SETENV 1\n" >> config.h
-    need_bsd_source=y
-  fi
+rm -f conftest$exe
+if ! $make EXTRA_FLAGS='-D_BSD_SOURCE' conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+  printf "no\n"
+else
+  printf "yes\n"
+  printf "#define HAVE_SETENV 1\n" >> config.h
+  need_bsd_source=y
 fi
 printf "Checking for tzset function ... "
 
@@ -1417,6 +1415,47 @@ if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
 else
   printf "yes\n"
   printf "#define HAVE_POSIX_SLEEP 1\n" >> config.h
+  have_unistd=y
+fi
+
+printf "Checking for POSIX usleep function ... "
+
+cat > conftest.c <<!
+#include <unistd.h>
+
+int main(int argc, char **argv)
+{
+  usleep(42);
+  return 0;
+}
+!
+rm -f conftest$exe
+if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+  printf "no\n"
+else
+  printf "yes\n"
+  printf "#define HAVE_POSIX_USLEEP 1\n" >> config.h
+  have_unistd=y
+fi
+
+printf "Checking for POSIX nanosleep function ... "
+
+cat > conftest.c <<!
+#include <time.h>
+
+int main(int argc, char **argv)
+{
+  struct timespec ts;
+  nanosleep(&ts, &ts);
+  return 0;
+}
+!
+rm -f conftest$exe
+if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+  printf "no\n"
+else
+  printf "yes\n"
+  printf "#define HAVE_POSIX_NANOSLEEP 1\n" >> config.h
   have_unistd=y
 fi
 

@@ -33,9 +33,13 @@
 #include <stdarg.h>
 #include <wchar.h>
 #include <signal.h>
+#include <time.h>
 #include "config.h"
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+#ifdef HAVE_WINDOWS_H
+#include <windows.h>
 #endif
 #ifdef HAVE_SYSLOG
 #include <syslog.h>
@@ -2110,6 +2114,32 @@ static val exit_wrap(val status)
   return nil;
 }
 
+static val usleep_wrap(val usec)
+{
+  val retval;
+  cnum u = c_num(usec);
+
+  sig_save_enable;
+
+#if HAVE_POSIX_NANOSLEEP
+  struct timespec ts;
+  ts.tv_sec = u / 1000000;
+  ts.tv_nsec = (u % 1000000) * 1000;
+  retval = if3(nanosleep(&ts, 0) == 0, t, nil);
+#elif HAVE_POSIX_SLEEP && HAVE_POSIX_USLEEP
+  retval = if2(sleep(u / 1000000) == 0 &&
+               usleep(u % 1000000) == 0, t);
+#elif HAVE_WINDOWS_H
+  Sleep(u / 1000);
+  retval = t;
+#else
+#error port me!
+#endif
+
+  sig_restore_enable;
+  return retval;
+}
+
 static void reg_fun(val sym, val fun)
 {
   sethash(top_fb, sym, cons(sym, fun));
@@ -2608,6 +2638,7 @@ void eval_init(void)
 
   reg_fun(intern(lit("errno"), user_package), func_n1o(errno_wrap, 0));
   reg_fun(intern(lit("exit"), user_package), func_n1(exit_wrap));
+  reg_fun(intern(lit("usleep"), user_package), func_n1(usleep_wrap));
 
 #if HAVE_DAEMON
   reg_fun(intern(lit("daemon"), user_package), func_n2(daemon_wrap));
