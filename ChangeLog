@@ -1,3 +1,12 @@
+2014-01-10  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): Renaming lisp-parse to read; lisp-parse
+	is retained as an obsolescent synonym. All arguments become optional.
+
+	* parser.l (lisp_parse): Handle nil source.
+
+	* txr.1: Updated.
+
 014-01-10  Kaz Kylheku  <kaz@kylheku.com>
 
 	* match.c (do_txeval): Lift an annoying restriction in the pattern

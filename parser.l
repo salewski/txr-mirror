@@ -850,11 +850,13 @@ val regex_parse(val string, val error_stream)
 val lisp_parse(val source, val error_stream)
 {
   uses_or2;
-  val input_stream = if3(stringp(source), make_string_byte_input_stream(source), source);
+  val input_stream = if3(stringp(source),
+                         make_string_byte_input_stream(source),
+                         or2(source, std_input));
   val secret_token_stream = make_string_byte_input_stream(lit("@\x01" "E"));
   val name = if3(stringp(source),
                  format(nil, lit("expr: ~s"), source, nao),
-                 stream_get_prop(source, name_k));
+                 stream_get_prop(input_stream, name_k));
   val save_stream = std_error;
   yyin_stream = make_catenated_stream(list(secret_token_stream, input_stream, nao));
   errors = 0;

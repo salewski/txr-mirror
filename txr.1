@@ -4972,7 +4972,7 @@ Restrictions:
 
 The notation must be enclosed in a list. For instance a..b is not an
 expression, but (a..b) is. This is important if Lisp data is being parsed from
-a string or stream using the lisp-parse function. If the data "a..b"  is
+a string or stream using the read function. If the data "a..b"  is
 parsed, the symbol "a" will be extracted, leaving "..a", which, if parsed,
 produces a syntax error since it consists of a "dotdot" token followed by
 a symbol, which is not valid syntax, akin to something like ")a" or ".a".
@@ -10530,22 +10530,24 @@ the stream-real-time-p function above), and also for setting the priority at
 which messages are reported to syslog by the *stdlog* stream (see *stdlog*
 in the UNIX SYSLOG section).
 
-.SS Function lisp-parse
+.SS Function read
 
 .TP
 Syntax:
 
-   (lisp-parse <source> : <error-stream>)
+   (read : <source> <error-stream>)
+   (lisp-parse <source> : <error-stream>) ;; obsolescent synonym for read
 
 .TP
 Description:
 
-The lisp-parse function converts text denoting TXR Lisp structure, into the
+The read function converts text denoting TXR Lisp structure, into the
 corresponding data structure. The <source> argument may be either a character
-string, or a stream. The source must provide the syntax of one complete Lisp
-object.
+string, or a stream.  If it is omitted, then *stdin* is used as the stream.
 
-Multiple calls to lisp-parse on the same stream will extract successive objects
+The source must provide the text representation of one complete TXR Lisp object.
+
+Multiple calls to read on the same stream will extract successive objects
 from the stream. To parse successive objects from a string, it is necessary
 to convert it to a string stream.
 
