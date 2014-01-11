@@ -1,5 +1,20 @@
 2014-01-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	* configure: Detect platforms which don't reveal declarations
+	in C headers which are extensions to standard C, like popen or fileno,
+	in response to standard feature selection macros like -D_POSIX_SOURCE.
+	MinGW and Cygwin are offenders.  These platforms hide the declarations
+	when gcc is in -ansi mode, by testing for __STRICT_ANSI__. Turns out,
+	however, that -U__STRICT_ANSI__ on the gcc command line strips this
+	away, causing the declarations to be revealed.
+
+	* lib.c, parser.l, stream.c, utf8.c: Removed the declarations which
+	compensated for the above problem. Yippee!  Fuck you, stupid Cygwin
+	troglodytes, and the MinGW horse you rode in on.
+	http://cygwin.com/ml/cygwin/2011-10/msg00131.html
+
+2014-01-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Renaming lisp-parse to read; lisp-parse
 	is retained as an obsolescent synonym. All arguments become optional.
 

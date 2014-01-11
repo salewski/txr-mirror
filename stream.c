@@ -55,11 +55,6 @@
 #include "stream.h"
 #include "utf8.h"
 
-#if HAVE_WINDOWS_H
-int fileno(FILE *stream);
-int pclose(FILE *stream);
-#endif
-
 val std_input, std_output, std_debug, std_error, std_null;
 val output_produced;
 

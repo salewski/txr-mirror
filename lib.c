@@ -60,11 +60,6 @@
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
-#if HAVE_WINDOWS_H
-int putenv(const char *);
-int tzset(void);
-#endif
-
 #if !HAVE_POSIX_SIGS
 int async_sig_enabled = 0;
 #endif

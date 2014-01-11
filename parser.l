@@ -50,10 +50,6 @@
 #include "hash.h"
 #include "parser.h"
 
-#if HAVE_WINDOWS_H
-int fileno(FILE *stream);
-#endif
-
 #define YY_INPUT(buf, result, max_size)           \
   do {                                            \
     val c = get_byte(yyin_stream);                \

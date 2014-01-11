@@ -709,6 +709,29 @@ done
 printf "done\n"
 
 #
+# Check for idiotic behavior: extensions in C header files controlled
+# by __STRICT_ANSI__ rather than things like __POSIX_SOURCE.
+#
+
+printf "Checking for proper support for feature-test macros ... "
+
+cat > conftest.c <<!
+#include <stdio.h>
+
+int main(void)
+{
+   return fileno(stdin);
+}
+!
+rm -f conftest$exe
+if ! $make EXTRA_FLAGS=-Werror conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+  printf "no\n"
+  lang_flags="$lang_flags -U__STRICT_ANSI__"
+else
+  printf "yes\n"
+fi
+
+#
 # Check for annoying warnings from ctype.h macros
 #
 
