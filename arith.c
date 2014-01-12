@@ -927,7 +927,7 @@ static val to_float(val func, val num)
   case FLNUM:
     return num;
   default:
-    uw_throwf(error_s, lit("~s: invalid operand ~s"), func, num, nao);
+    uw_throwf(error_s, lit("~a: invalid operand ~s"), func, num, nao);
   }
 }
 
@@ -1813,6 +1813,60 @@ val maskv(val bits)
   }
 
   return accum;
+}
+
+/*
+ * Source:
+ * Better Approximations to Cumulative Normal Functions
+ * Graeme West
+ * 2009
+ */
+val cum_norm_dist(val arg)
+{
+  val arg_flo = to_float(lit("cum-norm-dist"), arg);
+  double x = c_flo(arg_flo);
+  double xabs = fabs(x);
+
+  if (xabs > 37.0) {
+    return flo(1.0);
+  } else {
+    double ex = exp(-(xabs * xabs) / 2.0);
+    double retval, accum;
+
+    if (xabs < 7.07106781186547) {
+      accum = 3.52624965998911E-02 * xabs + 0.700383064443688;
+      accum = accum * xabs + 6.37396220353165;
+      accum = accum * xabs + 33.912866078383;
+      accum = accum * xabs + 112.079291497871;
+      accum = accum * xabs + 221.213596169931;
+      accum = accum * xabs + 220.206867912376;
+
+      retval = ex * accum;
+
+      accum = 8.83883476483184E-02 * xabs + 1.75566716318264;
+      accum = accum * xabs + 16.064177579207;
+      accum = accum * xabs + 86.7807322029461;
+      accum = accum * xabs + 296.564248779674;
+      accum = accum * xabs + 637.333633378831;
+      accum = accum * xabs + 793.826512519948;
+      accum = accum * xabs + 440.413735824752;
+
+      retval /= accum;
+    } else {
+      accum = xabs + 0.65;
+      accum = xabs + 4.0 / accum;
+      accum = xabs + 3.0 / accum;
+      accum = xabs + 2.0 / accum;
+      accum = xabs + 1.0 / accum;
+
+      retval = ex / accum / 2.506628274631;
+    }
+
+    if (x > 0)
+      retval = 1.0 - retval;
+
+    return flo(retval);
+  }
 }
 
 void arith_init(void)

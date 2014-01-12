@@ -46,6 +46,7 @@
 #endif
 #include "lib.h"
 #include "gc.h"
+#include "arith.h"
 #include "signal.h"
 #include "unwind.h"
 #include "regex.h"
@@ -2351,6 +2352,7 @@ void eval_init(void)
   reg_fun(intern(lit("log"), user_package), func_n1(loga));
   reg_fun(intern(lit("exp"), user_package), func_n1(expo));
   reg_fun(intern(lit("sqrt"), user_package), func_n1(sqroot));
+  reg_fun(intern(lit("cum-norm-dist"), user_package), func_n1(cum_norm_dist));
   reg_fun(intern(lit("fixnump"), user_package), func_n1(fixnump));
   reg_fun(intern(lit("bignump"), user_package), func_n1(bignump));
   reg_fun(intern(lit("floatp"), user_package), func_n1(floatp));

@@ -1,3 +1,16 @@
+2014-01-11  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c (to_float): Print function name as ~a rather than ~s,
+	so it doesn't have quotes around it.
+	(cum_norm_dist): New function.
+
+	* arith.h (cum_norm_dist): Declared.
+
+	* eval.c: Include arith.h.
+	(eval_init): Register cum_norm_dist as intrinsic.
+
+	* txr.1: Documented cum-norm-dist.
+
 2014-01-10  Kaz Kylheku  <kaz@kylheku.com>
 
 	* configure: Detect platforms which don't reveal declarations

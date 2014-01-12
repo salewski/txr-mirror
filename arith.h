@@ -30,4 +30,5 @@ val bignum_from_long(long l);
 int highest_bit(int_ptr_t n);
 val normalize(val bignum);
 val in_int_ptr_range(val bignum);
+val cum_norm_dist(val x);
 void arith_init(void);
