@@ -1,5 +1,16 @@
 2014-01-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (rising_product): New static function.
+	(n_choose_k, n_perm_k): New functions.
+
+	* arith.h (n_choose_k, n_perm_k): Declared.
+
+	* eval.c (eval_init): New functions interned.
+
+	* txr.1: Documented.
+
+2014-01-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (to_float): Print function name as ~a rather than ~s,
 	so it doesn't have quotes around it.
 	(cum_norm_dist): New function.

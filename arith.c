@@ -1869,6 +1869,43 @@ val cum_norm_dist(val arg)
   }
 }
 
+static val rising_product(val m, val n)
+{
+  val acc;
+
+  if (lt(n, one))
+    return one;
+
+  if (ge(m, n))
+    return one;
+
+  if (lt(m, one))
+    m = one;
+
+  acc = m;
+
+  m = plus(m, one);
+
+  while (le(m, n)) {
+    acc = mul(acc, m);
+    m = plus(m, one);
+  }
+
+  return acc;
+}
+
+val n_choose_k(val n, val k)
+{
+  val top = rising_product(plus(minus(n, k), one), n);
+  val bottom = rising_product(one, k);
+  return trunc(top, bottom);
+}
+
+val n_perm_k(val n, val k)
+{
+  return rising_product(plus(minus(n, k), one), n);
+}
+
 void arith_init(void)
 {
   mp_init(&NUM_MAX_MP);
