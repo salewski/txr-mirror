@@ -1,3 +1,28 @@
+                                     TXR 74
+                                   2014-01-13
+
+
+  Features
+
+  - Maintenance: builds on Cygwin, MinGW and Mac OS X 10.7.3.
+
+  - New math functions: n-choose-k, n-perm-k, cum-norm-dist.
+
+  - lisp-parse function renamed read; old name is obsolescent.
+
+  - In the TXR pattern language, the @ escape can now evaluate a non-compound
+    TXR Lisp expression also. Previously compounds like @(+ 1 1) 
+    were supported, but atoms like @foo were not.
+
+
+  Bugs
+
+  - Small fix in how exponent fields of printed floating point values
+    are normalized. Across all platforms, there are now no leading zeros
+    after the 'e'.
+    
+
+
                                      TXR 73
                                    2014-01-08
 
