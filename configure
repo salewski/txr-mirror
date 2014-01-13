@@ -103,8 +103,7 @@ have_timegm=
 have_syslog=
 have_windows_h=
 have_posix_sigs=
-need_svid_source=
-need_bsd_source=
+need_darwin_c_source=
 
 #
 # Parse configuration variables
@@ -730,6 +729,22 @@ if ! $make EXTRA_FLAGS=-Werror conftest > conftest.err 2>&1 || ! [ -x conftest ]
 else
   printf "yes\n"
 fi
+
+#
+# Detect Apple environment. We need _DARWIN_C_SOURCE.
+#
+
+case "$ccname" in
+  *gcc )
+     printf "Checking for Apple environment ... "
+     if echo | gcc -dM -E - | grep -s __APPLE__ > /dev/null 2>&1 ; then
+       need_darwin_c_source=y
+       printf "yes\n"
+     else
+       printf "no\n"
+     fi
+     ;;
+esac
 
 #
 # Check for annoying warnings from ctype.h macros
@@ -1370,12 +1385,11 @@ int main(void)
 }
 !
 rm -f conftest$exe
-if ! $make EXTRA_FLAGS='-D_BSD_SOURCE' conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
   printf "no\n"
 else
   printf "yes\n"
   printf "#define HAVE_SETENV 1\n" >> config.h
-  need_bsd_source=y
 fi
 printf "Checking for tzset function ... "
 
@@ -1676,12 +1690,10 @@ fi
 
 printf "Regenerating config.make ... "
 
-if [ -n "$need_svid_source" ] ; then
-  lang_flags="$lang_flags -D_SVID_SOURCE"
+if [ -n "$need_darwin_c_source" ] ; then
+  lang_flags="$lang_flags -D_DARWIN_C_SOURCE"
 fi
-if [ -n "$need_bsd_source" ] ; then
-  lang_flags="$lang_flags -D_BSD_SOURCE"
-fi
+
 gen_config_make
 printf "done\n"
 

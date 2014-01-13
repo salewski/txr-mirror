@@ -108,7 +108,9 @@ void sig_init(void)
   sig_xfsz = num_fast(SIGXFSZ);
   sigtalrm = num_fast(SIGVTALRM);
   sig_prof = num_fast(SIGPROF);
+#ifdef SIGPOLL
   sig_poll = num_fast(SIGPOLL);
+#endif
   sig_sys = num_fast(SIGSYS);
 #ifdef SIGWINCH
   sig_winch = num_fast(SIGWINCH);
