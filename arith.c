@@ -304,6 +304,8 @@ tail:
     case BGNUM:
       {
         val n;
+        if (anum == zero)
+          return bnum;
         n = make_bignum();
         if (sizeof (int_ptr_t) <= sizeof (mp_digit))  {
           cnum a = c_num(anum);
@@ -333,6 +335,8 @@ tail:
       {
         val n;
         n = make_bignum();
+        if (bnum == zero)
+          return anum;
         if (sizeof (int_ptr_t) <= sizeof (mp_digit))  {
           cnum b = c_num(bnum);
           cnum bp = ABS(b);
@@ -426,6 +430,10 @@ tail:
       {
         val n;
         n = make_bignum();
+        if (anum == zero) {
+          mp_neg(mp(bnum), mp(n));
+          return n;
+        }
         if (sizeof (int_ptr_t) <= sizeof (mp_digit))  {
           cnum a = c_num(anum);
           cnum ap = ABS(a);
@@ -453,6 +461,8 @@ tail:
     case BGNUM:
       {
         val n;
+        if (bnum == zero)
+          return anum;
         n = make_bignum();
         if (sizeof (int_ptr_t) <= sizeof (mp_digit))  {
           cnum b = c_num(bnum);
@@ -588,6 +598,8 @@ tail:
     case BGNUM:
       {
         val n;
+        if (anum == one)
+          return bnum;
         n = make_bignum();
         if (sizeof (int_ptr_t) <= sizeof (mp_digit)) {
           cnum a = c_num(anum);
@@ -614,6 +626,8 @@ tail:
     case BGNUM:
       {
         val n;
+        if (bnum == one)
+          return anum;
         n = make_bignum();
         if (sizeof (int_ptr_t) <= sizeof (mp_digit)) {
           cnum b = c_num(bnum);
@@ -700,6 +714,8 @@ tail:
     case BGNUM:
       {
         val n;
+        if (bnum == one)
+          return anum;
         n = make_bignum();
         if (sizeof (int_ptr_t) <= sizeof (mp_digit)) {
           cnum b = c_num(bnum);

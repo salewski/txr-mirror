@@ -1,3 +1,10 @@
+2014-01-12  Kaz Kylheku  <kaz@kylheku.com>
+
+	Some bignum-related optimizations
+
+	* arith.c (plus, minus, mul, trunc): Optimize cases
+	where bignum is opposite 1 or 0.
+
 2014-01-11  Kaz Kylheku  <kaz@kylheku.com>
 
 	* arith.c (rising_product): New static function.
