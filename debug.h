@@ -85,7 +85,8 @@ void debug_init(void);
 
 #define debug_return(VAL) return VAL
 
-INLINE val debug_check(val form, val bindings, val data, val line, val chr)
+INLINE val debug_check(val form, val bindings, val data, val line,
+                       val pos, val base)
 {
   return nil;
 }

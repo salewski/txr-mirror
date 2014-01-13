@@ -1,3 +1,8 @@
+2014-01-13  Kaz Kylheku  <kaz@kylheku.com>
+
+	* debug.h (debug_check): Fix broken build when debugger is disabled:
+	the debug-disabled stub function needs six arguments.
+
 2014-01-12  Kaz Kylheku  <kaz@kylheku.com>
 
 	Some bignum-related optimizations
