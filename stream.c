@@ -1777,7 +1777,7 @@ val put_byte(val byte, val stream)
 
   {
     struct strm_ops *ops = (struct strm_ops *) stream->co.ops;
-    return ops->put_char ? ops->put_byte(stream, b) : nil;
+    return ops->put_byte ? ops->put_byte(stream, b) : nil;
   }
 }
 

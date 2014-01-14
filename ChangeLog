@@ -1,5 +1,10 @@
 2014-01-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (put_byte): Bugfix: was checking whether the put_char
+	virtual function is not null, rather than put_byte.
+
+2014-01-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	Bugfix in regex char ranges affecting ranges whose upper end
 	corresponds to the high bit of a bitmap cell: for instance
 	the character \x7f when the cell size is 32 bits.
