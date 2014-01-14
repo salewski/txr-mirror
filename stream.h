@@ -38,6 +38,8 @@ struct strm_ops {
   val (*get_line)(val);
   val (*get_char)(val);
   val (*get_byte)(val);
+  val (*unget_char)(val, val);
+  val (*unget_byte)(val, int);
   val (*close)(val, val);
   val (*flush)(val);
   val (*seek)(val, cnum, enum strm_whence);
@@ -78,6 +80,8 @@ val close_stream(val stream, val throw_on_error);
 val get_line(val);
 val get_char(val);
 val get_byte(val);
+val unget_char(val ch, val stream);
+val unget_byte(val byte, val stream);
 val vformat(val stream, val string, va_list);
 val vformat_to_string(val string, va_list);
 val format(val stream, val string, ...);

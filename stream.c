@@ -98,6 +98,8 @@ static struct strm_ops null_ops = {
   0, /* get_line, */
   0, /* get_char, */
   0, /* get_byte, */
+  0, /* unget_char, */
+  0, /* unget_byte, */
   0, /* close, */
   0, /* flush, */
   0, /* seek, */
@@ -114,6 +116,7 @@ struct stdio_handle {
   FILE *f;
   val descr;
   val mode; /* used by tail */
+  val unget_c;
   utf8_decoder_t ud;
 #if HAVE_FORK_STUFF
   pid_t pid;
@@ -305,7 +308,14 @@ static wchar_t *snarf_line(struct stdio_handle *h)
   wchar_t *buf = 0;
 
   for (;;) {
-    wint_t ch = utf8_decode(&h->ud, stdio_get_char_callback, (mem_t *) h->f);
+    wint_t ch;
+   
+    if (h->unget_c) {
+      ch = c_chr(h->unget_c);
+      h->unget_c = nil;
+    } else {
+      ch = utf8_decode(&h->ud, stdio_get_char_callback, (mem_t *) h->f);
+    }
 
     if (ch == WEOF && buf == 0)
       break;
@@ -345,6 +355,11 @@ static val stdio_get_line(val stream)
 static val stdio_get_char(val stream)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
+  val uc = h->unget_c;
+  if (uc) {
+    h->unget_c = nil;
+    return uc;
+  }
   if (h->f) {
     wint_t ch = utf8_decode(&h->ud, stdio_get_char_callback, (mem_t *) h->f);
     return (ch != WEOF) ? chr(ch) : stdio_maybe_read_error(stream);
@@ -360,6 +375,29 @@ static val stdio_get_byte(val stream)
     return (ch != EOF) ? num(ch) : stdio_maybe_read_error(stream);
   }
   return stdio_maybe_read_error(stream);
+}
+
+static val stdio_unget_char(val stream, val ch)
+{
+  struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
+
+  if (!is_chr(ch))
+    type_mismatch(lit("unget-char: ~s is not a character"), ch, nao);
+
+  if (h->unget_c)
+    uw_throwf(file_error_s, lit("unget-char overflow on ~a: "), stream, nao);
+
+  h->unget_c = ch;
+  return ch;
+}
+
+static val stdio_unget_byte(val stream, int byte)
+{
+  struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
+
+  return h->f != 0 && ungetc(byte, (FILE *) h->f) != EOF
+         ? num_fast(byte)
+         : stdio_maybe_error(stream, lit("pushing back byte into"));
 }
 
 static val stdio_close(val stream, val throw_on_error)
@@ -390,6 +428,8 @@ static struct strm_ops stdio_ops = {
   stdio_get_line,
   stdio_get_char,
   stdio_get_byte,
+  stdio_unget_char,
+  stdio_unget_byte,
   stdio_close,
   stdio_flush,
   stdio_seek,
@@ -509,6 +549,8 @@ static struct strm_ops tail_ops = {
   tail_get_line,
   tail_get_char,
   tail_get_byte,
+  stdio_unget_char,
+  stdio_unget_byte,
   stdio_close,
   stdio_flush,
   stdio_seek,
@@ -597,6 +639,8 @@ static struct strm_ops pipe_ops = {
   stdio_get_line,
   stdio_get_char,
   stdio_get_byte,
+  stdio_unget_char,
+  stdio_unget_byte,
   pipe_close,
   stdio_flush,
   0, /* seek: not on pipes */
@@ -655,6 +699,27 @@ static val string_in_get_char(val stream)
   return nil;
 }
 
+static val string_in_unget_char(val stream, val ch)
+{
+  val pair = (val) stream->co.handle;
+  val string = car(pair);
+  val pos = cdr(pair);
+
+  if (pos == zero)
+    uw_throwf(file_error_s,
+              lit("unget-char: cannot push past beginning of string"), nao);
+
+  pos = minus(pos, one);
+
+  if (chr_str(string, pos) != ch)
+    uw_throwf(file_error_s,
+              lit("unget-char: ~s doesn't match the character that was read"),
+              nao);
+
+  set(*cdr_l(pair), plus(pos, one));
+  return ch;
+}
+
 static val string_in_get_prop(val stream, val ind)
 {
   if (ind == name_k) {
@@ -676,6 +741,8 @@ static struct strm_ops string_in_ops = {
   string_in_get_line,
   string_in_get_char,
   0, /* get_byte */
+  string_in_unget_char,
+  0, /* unget_byte, */
   0, /* close */
   0, /* flush */
   0, /* TODO: seek */
@@ -710,6 +777,19 @@ static val byte_in_get_byte(val stream)
   return nil;
 }
 
+static val byte_in_unget_byte(val stream, int byte)
+{
+  struct byte_input *bi = (struct byte_input *) stream->co.handle;
+
+  if (bi->index == 0)
+    uw_throwf(file_error_s,
+              lit("unget-char: cannot push past beginning of byte stream"),
+              nao);
+
+  bi->buf[--bi->index] = byte;
+  return num_fast(byte);
+}
+
 static struct strm_ops byte_in_ops = {
   { cobj_equal_op,
     cobj_print_op,
@@ -722,6 +802,8 @@ static struct strm_ops byte_in_ops = {
   0, /* get_line */
   0, /* get_char */
   byte_in_get_byte,
+  0, /* unget_char, */
+  byte_in_unget_byte,
   0, /* close */
   0, /* flush */
   0, /* TODO: support seek */
@@ -848,6 +930,8 @@ static struct strm_ops string_out_ops = {
   0, /* get_line */
   0, /* get_char */
   0, /* get_byte */
+  0, /* unget_char, */
+  0, /* unget_byte, */
   0, /* close */
   0, /* flush */
   0, /* TODO: seek, with fill-with-spaces semantics if past end. */
@@ -919,6 +1003,8 @@ static struct strm_ops strlist_out_ops = {
   0, /* get_line */
   0, /* get_char */
   0, /* get_byte */
+  0, /* unget_char, */
+  0, /* unget_byte, */
   0, /* close */
   0, /* flush */
   0, /* seek */
@@ -991,6 +1077,8 @@ static struct strm_ops dir_ops = {
   dir_get_line,
   0, /* get_char */
   0, /* get_byte */
+  0, /* unget_char, */
+  0, /* unget_byte, */
   dir_close,
   0, /* flush */
   0, /* seek */
@@ -1005,6 +1093,7 @@ static val make_stdio_stream_common(FILE *f, val descr, struct cobj_ops *ops)
   h->f = f;
   h->descr = descr;
   h->mode = nil;
+  h->unget_c = nil;
   utf8_decoder_init(&h->ud);
   h->pid = 0;
 #if HAVE_ISATTY
@@ -1202,6 +1291,42 @@ val get_byte(val stream)
   {
     struct strm_ops *ops = (struct strm_ops *) stream->co.ops;
     return ops->get_byte ? ops->get_byte(stream) : nil;
+  }
+}
+
+val unget_char(val ch, val stream)
+{
+  if (!stream)
+    stream = std_input;
+
+  type_check (stream, COBJ);
+  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
+                                            stream, nao));
+
+  {
+    struct strm_ops *ops = (struct strm_ops *) stream->co.ops;
+    return ops->unget_char ? ops->unget_char(stream, ch) : nil;
+  }
+}
+
+val unget_byte(val byte, val stream)
+{
+  cnum b = c_num(byte);
+
+  if (!stream)
+    stream = std_input;
+
+  type_check (stream, COBJ);
+  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
+                                            stream, nao));
+
+  if (b < 0 || b > 255)
+    uw_throwf(file_error_s, lit("unget-byte on ~a: byte value ~a out of range"),
+              stream, byte, nao);
+
+  {
+    struct strm_ops *ops = (struct strm_ops *) stream->co.ops;
+    return ops->unget_byte ? ops->unget_byte(stream, b) : nil;
   }
 }
 
@@ -2120,6 +2245,8 @@ static struct strm_ops cat_stream_ops = {
   cat_get_line,
   cat_get_char,
   cat_get_byte,
+  0, /* unget_char, */
+  0, /* unget_byte, */
   0, /* close, */
   0, /* flush, */
   0, /* seek, */

@@ -219,6 +219,8 @@ static struct strm_ops syslog_strm_ops = {
   0, /* get_line */
   0, /* get_char */
   0, /* get_byte */
+  0, /* unget_char */
+  0, /* unget_byte */
   0, /* close */
   0, /* flush */
   0, /* seek */

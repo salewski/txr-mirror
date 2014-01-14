@@ -10465,6 +10465,29 @@ the two operations will interfere with the UTF-8 decoding.
 These functions return nil when the end of data is reached.  Errors are
 represented as exceptions.
 
+.SS Functions unget-char and unget-byte
+
+.TP
+Syntax:
+
+  (unget-char <char> [<stream>])
+  (unget-byte <byte> [<stream>])
+
+.TP
+Description:
+
+These character put back, into a stream, a character or byte which was
+previously read.  The character or byte must match the one which was most
+recently read. If the <stream> parameter is omitted, then the *stdin*
+stream is used.
+
+If the operation succeeds, the byte or character value is returned.
+A nil return indicates that the operation is unsupported.
+
+Some streams do not support these operations; some support
+only one of them.   In general, if a stream supports get-char,
+it supports unget-char, and likewise for get-byte and unget-byte.
+
 .SS Functions put-string, put-line, put-char and put-byte
 
 .TP

@@ -1,5 +1,31 @@
 2014-01-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	Support for pushing back bytes and characters into streams.
+
+	* stream.c (null_ops, stdio_ops, tail_ops, pipe_ops,
+	string_in_ops, byte_in_ops, string_out_ops, strlist_out_ops,
+	dir_ops, cat_stream_ops): Structure definition updated
+	with new initializers for two new virtuals.
+	(stdio_handle): New member, unget_c.
+	(snarf_line, stdio_get_char): Handle pushed-back character in
+	h->unget_c.
+	(stdio_unget_char, stdio_unget_byte, string_in_unget_char,
+	byte_in_unget_byte): New static functions.
+	(make_stdio_stream_common): Initialize unget_c member.
+	(unget_char, unget_byte): New functions.
+
+	* stream.h (struct strm_ops): New virtuals: unget_char and unget_byte.
+	(unget_char, unget_byte): New functions declared.
+
+	* syslog.c (syslog_strm_ops): Two new initializers.
+
+	* eval.c (eval_init): Registered unget_char and unget_byte as
+	intrinsics.
+
+	* txr.1: Documented.
+
+2014-01-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (put_byte): Bugfix: was checking whether the put_char
 	virtual function is not null, rather than put_byte.
 

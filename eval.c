@@ -2451,6 +2451,8 @@ void eval_init(void)
   reg_fun(intern(lit("put-line"), user_package), func_n2o(put_line, 1));
   reg_fun(intern(lit("put-char"), user_package), func_n2o(put_char, 1));
   reg_fun(intern(lit("put-byte"), user_package), func_n2o(put_byte, 1));
+  reg_fun(intern(lit("unget-char"), user_package), func_n2o(unget_char, 1));
+  reg_fun(intern(lit("unget-byte"), user_package), func_n2o(unget_byte, 1));
   reg_fun(intern(lit("flush-stream"), user_package), func_n1(flush_stream));
   reg_fun(intern(lit("seek-stream"), user_package), func_n3(seek_stream));
   reg_fun(intern(lit("stat"), user_package), func_n1(statf));
