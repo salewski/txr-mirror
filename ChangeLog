@@ -1,3 +1,11 @@
+2014-01-14  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (bind_args): Implemented default values for optional
+	arguments.
+	(op_defun): Permit the syntax.
+
+	* txr.1: Documented.
+
 2014-01-13  Kaz Kylheku  <kaz@kylheku.com>
 
 	Support for pushing back bytes and characters into streams.

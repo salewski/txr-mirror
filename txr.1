@@ -5821,6 +5821,12 @@ but a separator between required parameters and optional parameters.
 When the function is called, optional parameter for which arguments
 are not supplied take on the value nil.
 
+An optional parameter can also be written in the form (<name> <expr>).
+In this situation, if the call does not specify a value for the parameter,
+then the parameter takes on the value of the expression <expr>. 
+The expression is evaluated in the environment in which the lambda
+was constructed.
+
 Functions created by lambda capture the surrounding variable bindings.
 
 

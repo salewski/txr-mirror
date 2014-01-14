@@ -235,8 +235,11 @@ static val bind_args(val env, val params, val args, val ctx_form)
       param = car(params);
     }
 
+    if (optargs && consp(param))
+      param = car(param);
+
     if (!bindable(param))
-      eval_error(ctx_form, lit("~a: ~s is not a bindable sybol"),
+      eval_error(ctx_form, lit("~a: ~s is not a bindable symbol"),
                  car(ctx_form), param, nao);
 
     new_bindings = acons(param, car(args), new_bindings);
@@ -254,9 +257,16 @@ static val bind_args(val env, val params, val args, val ctx_form)
     if (!optargs)
       eval_error(ctx_form, lit("~s: too few arguments"), car(ctx_form), nao);
     while (consp(params)) {
-      if (car(params) == colon_k)
+      val param = car(params);
+      val val = nil;
+      if (param == colon_k)
         goto twocol;
-      new_bindings = acons(car(params), nil, new_bindings);
+      if (consp(param)) {
+        val = car(cdr(param));
+        param = car(param);
+      }
+      new_bindings = acons(param, eval(val, env, ctx_form),
+                           new_bindings);
       params = cdr(params);
     }
     if (bindable(params))
@@ -758,6 +768,8 @@ static val op_defun(val form, val env)
           colon = t;
       continue;
     }
+    if (colon && consp(param))
+      continue;
     if (!bindable(param))
       eval_error(form, lit("defun: parameter ~s is not a bindable symbol"), param, nao);
   }
