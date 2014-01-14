@@ -9377,6 +9377,29 @@ In other words, the following equivalences hold:
 
 .SS Functions throw, throwf and error
 
+.TP
+Syntax:
+
+  (throw <symbol> . <args>)
+  (throwf <symbol> <format-string> . <format-args>)
+  (error <format-string> . <format-args>)
+
+.TP
+Description:
+
+These functions generate an exception. The throw and throwf functions generate
+an exception identified by <symbol>, whereas error throws an exception of
+type error. The call (error ...) can be regarded as a shorthand for
+(throwf 'error ...).
+
+The throw function takes zero or more additional arguments. These arguments
+become the arguments of a catch handler which takes the exception. The
+handler will have to be capable of accepting that number of arguments.
+
+The throwf and error functions generate an exception which has a single
+argument: a character string created by a formatted print to a string stream
+using the format string and additional arguments.
+
 .SS Operator catch
 
 .TP

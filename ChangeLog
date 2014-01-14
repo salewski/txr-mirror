@@ -1,5 +1,9 @@
 2014-01-14  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Wrote missing documentation for throw, throwf and error.
+
+2014-01-14  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (stdio_seek): After a successful seek, discard the character
 	that may have been put back with unget_char.
 
