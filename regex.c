@@ -62,11 +62,12 @@ typedef union regex_machine regex_machine_t;
 
 typedef unsigned int bitcell_t;
 
-#define BITCELL_ALL1 UINT_MAX
 #define CHAR_SET_SIZE (256 / (sizeof (bitcell_t) * CHAR_BIT))
 
-#define CHAR_SET_INDEX(CH) ((CH) / (sizeof (bitcell_t) * CHAR_BIT))
-#define CHAR_SET_BIT(CH) ((CH) % (sizeof (bitcell_t) * CHAR_BIT))
+#define BITCELL_BIT (sizeof (bitcell_t) * CHAR_BIT)
+
+#define CHAR_SET_INDEX(CH) ((CH) / BITCELL_BIT)
+#define CHAR_SET_BIT(CH) ((CH) % BITCELL_BIT)
 
 #define CHAR_SET_L0(CH) ((CH) & 0xFF)
 #define CHAR_SET_L1(CH) (((CH) >> 8) & 0xF)
@@ -236,7 +237,9 @@ static void L0_fill_range(cset_L0_t *L0, wchar_t ch0, wchar_t ch1)
   bitcell_t mask0 = ~(((bitcell_t) 1 << bt0) - 1);
   int bt1 = CHAR_SET_BIT(ch1);
   int bc1 = CHAR_SET_INDEX(ch1);
-  bitcell_t mask1 = (((bitcell_t) 1 << (bt1 + 1) % 32) - 1);
+  bitcell_t mask1 = (bt1 == (BITCELL_BIT - 1))
+                     ? (bitcell_t) -1
+                     : (((bitcell_t) 1 << (bt1 + 1)) - 1);
 
   if (bc1 == bc0) {
     (*L0)[bc0] |= (mask0 & mask1);

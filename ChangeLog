@@ -1,5 +1,19 @@
 2014-01-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	Bugfix in regex char ranges affecting ranges whose upper end
+	corresponds to the high bit of a bitmap cell: for instance
+	the character \x7f when the cell size is 32 bits.
+
+	* regex.c (BITCELL_ALL1): Unused macro removed.
+	(BITCELL_BIT): New macro to replace occurrences of a repeated
+	expression.
+	(CHAR_SET_INDEX, CHAR_SET_BIT): Updated to use BITCELL_BIT.
+	(L0_fill_range): Bugfix: the mask1 calculation was producing all-zero
+	in the condition bt1 == BITCELL_BIT; it should produce an all-ones
+	mask.
+
+2014-01-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	Version 74
 
 	* txr.c (version): Bumped.
