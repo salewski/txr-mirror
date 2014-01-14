@@ -1,5 +1,10 @@
 2014-01-14  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (stdio_seek): After a successful seek, discard the character
+	that may have been put back with unget_char.
+
+2014-01-14  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (bind_args): Implemented default values for optional
 	arguments.
 	(op_defun): Permit the syntax.

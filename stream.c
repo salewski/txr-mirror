@@ -270,6 +270,7 @@ static val stdio_seek(val stream, cnum offset, enum strm_whence whence)
     } else {
       if (fseek(h->f, offset, whence) == 0) {
         utf8_decoder_init(&h->ud);
+        h->unget_c = nil;
         return t;
       }
     }
