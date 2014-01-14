@@ -10494,6 +10494,16 @@ Some streams do not support these operations; some support
 only one of them.   In general, if a stream supports get-char,
 it supports unget-char, and likewise for get-byte and unget-byte.
 
+Space is available for only one character or byte of pushback.
+
+Pushing both a byte and a character, in either order, is  also unsupported.
+Pushing a byte and then reading a character, or pushing a character and
+reading a byte, are also unsupported mixtures of operations.
+
+If the stream is binary, then pushing back a byte decrements its position,
+except if the position is already zero. At that point, the position becomes
+indeterminate.
+
 .SS Functions put-string, put-line, put-char and put-byte
 
 .TP
@@ -10569,6 +10579,11 @@ If <offset> is zero, and <whence> is :from-current, then
 seek-stream returns the current absolute position within the
 stream, if it can successfully obtain it. Otherwise, it
 returns t if it is successful.
+
+If a character has been successfully put back into a text stream with
+unget-char and is still pending, then the position value is unspecified. If a
+byte has been put back into a binary stream with unget-byte, and the previous
+position wasn't zero, then the position is decremented by one.
 
 On failure, it throws an exception of type stream-error.
 
