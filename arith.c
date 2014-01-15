@@ -1431,6 +1431,12 @@ val atang(val num)
   return flo(atan(c_flo(to_float(lit("atan"), num))));
 }
 
+val atang2(val y, val x)
+{
+  return flo(atan2(c_flo(to_float(lit("atan2"), y)),
+                   c_flo(to_float(lit("atan2"), x))));
+}
+
 val loga(val num)
 {
   return flo(log(c_flo(to_float(lit("log"), num))));

@@ -479,6 +479,7 @@ val tang(val);
 val asine(val);
 val acosi(val);
 val atang(val);
+val atang2(val, val);
 val loga(val);
 val expo(val);
 val logand(val, val);
