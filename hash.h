@@ -47,6 +47,7 @@ val hash_eql(val obj);
 val hash_equal(val obj);
 val hashv(val args);
 val hash_construct(val hashv_args, val pairs);
+val group_by(val func, val seq, val hashv_args);
 val hash_keys(val hash);
 val hash_values(val hash);
 val hash_pairs(val hash);

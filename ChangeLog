@@ -1,5 +1,15 @@
 2014-01-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	* hash.c (group_by): New function.
+
+	* hash.h (group_by): Declared.
+
+	* eval.c (eval_init): group_by registered as group-by intrinsic.
+
+	* txr.1: Documented.
+
+2014-01-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	Version 75
 
 	* txr.c (version): Bumped.

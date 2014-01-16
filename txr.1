@@ -9656,6 +9656,37 @@ the equal function instead.
 In addition to storing key-value pairs, a hash table can have a piece of
 information associated with it, called the user data.
 
+.SS Function group-by
+
+.TP
+Syntax:
+
+  (group-by <func> <sequence> . <options>)
+
+.TP
+Description:
+
+The group-by function produces a hash table from <sequence>, which is a
+list or vector. Entries of the hash table are not elements of sequence,
+but lists of elements of <sequence>. The function <func> is applied toe
+each element of <sequence> to compute a key. That key is used to determine
+which list the item is added to in the hash table.
+
+The trailing arguments <options>, if any, consist of the same keywords
+that are understood by the hash function, and determine the properties
+of the hash.
+
+.TP
+Example:
+
+Group the integers from 0 to 10 into three buckets keyed on 0, 1 and 2
+according to the modulo 3 congruence:
+
+  (group-by (op mod @1 3) (range 0 10)))
+
+  -> #H(() (0 (0 3 6 9)) (1 (1 4 7 10)) (2 (2 5 8)))
+
+
 .SS Functions make-similar-hash and copy-hash
 
 .TP

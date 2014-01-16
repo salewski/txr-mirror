@@ -684,6 +684,35 @@ val hash_construct(val hashv_args, val pairs)
   return hash;
 }
 
+val group_by(val func, val seq, val hashv_args)
+{
+  val hash = hashv(hashv_args);
+
+  if (vectorp(seq)) {
+    cnum i, len;
+
+    for (i = 0, len = c_num(length(seq)); i < len; i++) {
+      val v = vecref(seq, num_fast(i));
+      pushhash(hash, funcall1(func, v), v);
+    }
+  } else {
+    for (; seq; seq = cdr(seq)) {
+      val v = car(seq);
+      pushhash(hash, funcall1(func, v), v);
+    }
+  }
+
+  {
+    val iter = hash_begin(hash);
+    val cell;
+
+    while ((cell = hash_next(iter)) != nil)
+      rplacd(cell, nreverse(cdr(cell)));
+
+    return hash;
+  }
+}
+
 static val hash_keys_lazy(val iter, val lcons)
 {
   val cell = hash_next(iter);
