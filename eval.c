@@ -79,6 +79,7 @@ val cond_s, if_s, defvar_s, defun_s;
 val inc_s, dec_s, push_s, pop_s, flip_s, gethash_s, car_s, cdr_s;
 val del_s, vecref_s;
 val for_s, for_star_s, each_s, each_star_s, collect_each_s, collect_each_star_s;
+val append_each_s, append_each_star_s;
 val dohash_s;
 val uw_protect_s, return_s, return_from_s;
 val list_s, append_s, apply_s, gen_s, generate_s, rest_s;
@@ -617,8 +618,11 @@ static val op_each(val form, val env)
   val args = rest(form);
   val vars = first(args);
   val body = rest(args);
-  val star = or2(eq(each, each_star_s), eq(each, collect_each_star_s));
+  val star = or3(eq(each, each_star_s),
+                 eq(each, collect_each_star_s),
+                 eq(each, append_each_star_s));
   val collect = or2(eq(each, collect_each_s), eq(each, collect_each_star_s));
+  val append = or2(eq(each, append_each_s), eq(each, append_each_star_s));
   val new_bindings = bindings_helper(vars, env, star, form);
   val lists = mapcar(cdr_f, new_bindings);
   list_collect_decl (collection, ptail);
@@ -643,6 +647,8 @@ static val op_each(val form, val env)
       val res = eval_progn(body, make_env(new_bindings, nil, env), form);
       if (collect)
         list_collect(ptail, res);
+      else if (append)
+        list_collect_nconc(ptail, res);
     }
   }
 
@@ -1675,7 +1681,8 @@ val expand(val form)
 
     if (sym == let_s || sym == let_star_s || sym == lambda_s || 
         sym == each_s || sym == each_star_s || sym == collect_each_s ||
-        sym == collect_each_star_s)
+        sym == collect_each_star_s || sym == append_each_s ||
+        sym == append_each_star_s)
     {
       val body = rest(rest(form));
       val vars = second(form);
@@ -2212,6 +2219,8 @@ void eval_init(void)
   each_star_s = intern(lit("each*"), user_package);
   collect_each_s = intern(lit("collect-each"), user_package);
   collect_each_star_s = intern(lit("collect-each*"), user_package);
+  append_each_s = intern(lit("append-each"), user_package);
+  append_each_star_s = intern(lit("append-each*"), user_package);
   dohash_s = intern(lit("dohash"), user_package);
   uw_protect_s = intern(lit("unwind-protect"), user_package);
   return_s = intern(lit("return"), user_package);
@@ -2245,6 +2254,8 @@ void eval_init(void)
   sethash(op_table, each_star_s, cptr((mem_t *) op_each));
   sethash(op_table, collect_each_s, cptr((mem_t *) op_each));
   sethash(op_table, collect_each_star_s, cptr((mem_t *) op_each));
+  sethash(op_table, append_each_s, cptr((mem_t *) op_each));
+  sethash(op_table, append_each_star_s, cptr((mem_t *) op_each));
   sethash(op_table, let_star_s, cptr((mem_t *) op_let));
   sethash(op_table, lambda_s, cptr((mem_t *) op_lambda));
   sethash(op_table, call_s, cptr((mem_t *) op_call));

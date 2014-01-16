@@ -1,3 +1,12 @@
+2014-01-15  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (append_each_s, append_each_star_s): New symbol variables.
+	(op_each, expand): Support append-each and append-each*.
+	(eval_init): Initialize new symbol variables, and register
+	new operators.
+
+	* txr.1: Document append-each and append-each*.
+
 2014-01-14  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.1: Wrote missing documentation for throw, throwf and error.

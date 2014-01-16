@@ -5702,7 +5702,7 @@ and processing resumes at step 2.
 Furthermore, the for operators establish an anonymous block,
 allowing the return operator to be used to terminate at any point.
 
-.SS Operators each, each*, collect-each and collect-each*
+.SS Operators each, each*, collect-each, collect-each*, append-each and append-each*
 
 .TP
 Syntax:
@@ -5711,6 +5711,8 @@ Syntax:
   (each* ({(<sym> <init-form>)}*) <body-form>*)
   (collect-each ({(<sym> <init-form>)}*) <body-form>*)
   (collect-each* ({(<sym> <init-form>)}*) <body-form>*)
+  (append-each ({(<sym> <init-form>)}*) <body-form>*)
+  (append-each* ({(<sym> <init-form>)}*) <body-form>*)
 
 .TP
 Description:
@@ -5728,18 +5730,26 @@ the return value.
 
 The collect-each and collect-each* variants are like each and each*,
 except that for each iteration, the resulting value of the body is collected
-into a list. When the iteration terminates, the return value is this
-collection.
+into a list. When the iteration terminates, the return value of the
+collect-each or collect-each* operator is this collection.
 
-The alternate forms denoted by the adorned symbols each* and collect-each*
-variants differ from each and collect-each in the following way. The plain
-forms evaluate the <init-form>-s in an environment in which none of the <sym>
-variables are yet visible. By contrast, the alternate forms evaluate each
-<init-form> in an environment in which bindings for the previous <sym>
-variables are visible.  In this phase of evaluation, <sym> variables are
-list-valued: one by one they are each bound to the list object emanating from
-their corresponding <init-form>. Just before the first loop iteration, however,
-the <sym> variables are assigned the first item from each of their lists.
+The append-each and append-each* variants are like each and each*,
+except that for each iteration other than the last, the resulting value of the
+body must be a list. The last iteration may produce either an atom or a list.
+The objects produced by the iterations are combined together as if they
+were arguments to the append function, and the resulting value is the
+value of the append-each or append-each* operator.
+
+The alternate forms denoted by the adorned symbols each*, collect-each* and
+append-each*, variants differ from each, collect-each and append-each* in the
+following way. The plain forms evaluate the <init-form>-s in an environment in
+which none of the <sym> variables are yet visible. By contrast, the alternate
+forms evaluate each <init-form> in an environment in which bindings for the
+previous <sym> variables are visible.  In this phase of evaluation, <sym>
+variables are list-valued: one by one they are each bound to the list object
+emanating from their corresponding <init-form>. Just before the first loop
+iteration, however, the <sym> variables are assigned the first item from each
+of their lists.
 
 .TP
 Examples:
