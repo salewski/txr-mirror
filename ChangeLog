@@ -1,3 +1,15 @@
+2014-01-16  Kaz Kylheku  <kaz@kylheku.com>
+
+	Version 75
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES, txr.vim: Updated.
+
 2014-01-15  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (obj_print, obj_pprint): Convert the internal representation

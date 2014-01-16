@@ -46,7 +46,7 @@
 #include "syslog.h"
 #include "txr.h"
 
-const wchli_t *version = wli("74");
+const wchli_t *version = wli("75");
 const wchar_t *progname = L"txr";
 const wchar_t *spec_file = L"stdin";
 val self_path;
