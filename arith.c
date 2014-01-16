@@ -402,10 +402,10 @@ tail:
       return chr(sum);
     }
   }
-  uw_throwf(error_s, lit("plus: invalid operands ~s ~s"), anum, bnum, nao);
+  uw_throwf(error_s, lit("+: invalid operands ~s ~s"), anum, bnum, nao);
 char_range:
   uw_throwf(numeric_error_s, 
-            lit("plus: sum of ~s and ~s is out of character range"),
+            lit("+: sum of ~s and ~s is out of character range"),
             anum, bnum, nao);
 }
 
@@ -513,12 +513,12 @@ tail:
 
       if (sum < 0 || sum > 0x10FFFF)
         uw_throwf(numeric_error_s, 
-                  lit("minus: difference of ~s and ~s is out of character range"),
+                  lit("-: difference of ~s and ~s is out of character range"),
                   anum, bnum, nao);
       return chr(sum);
     }
   }
-  uw_throwf(error_s, lit("minus: invalid operands ~s ~s"), anum, bnum, nao);
+  uw_throwf(error_s, lit("-: invalid operands ~s ~s"), anum, bnum, nao);
 }
 
 val neg(val anum)
@@ -535,7 +535,7 @@ val neg(val anum)
   case NUM:
     return num(-c_num(anum));
   default:
-    uw_throwf(error_s, lit("neg: ~s is not a number"), anum, nao);
+    uw_throwf(error_s, lit("-: ~s is not a number"), anum, nao);
   }
 }
 
@@ -556,7 +556,7 @@ val abso(val anum)
       return num(n < 0 ? -n : n);
     }
   default:
-    uw_throwf(error_s, lit("abso: ~s is not a number"), anum, nao);
+    uw_throwf(error_s, lit("abs: ~s is not a number"), anum, nao);
   }
 }
 
@@ -670,7 +670,7 @@ tail:
       break;
     }
   }
-  uw_throwf(error_s, lit("mul: invalid operands ~s ~s"), anum, bnum, nao);
+  uw_throwf(error_s, lit("*: invalid operands ~s ~s"), anum, bnum, nao);
 }
 
 val trunc(val anum, val bnum)
@@ -1033,7 +1033,7 @@ tail:
     goto tail;
   }
 
-  uw_throwf(error_s, lit("gt: invalid operands ~s ~s"), anum, bnum, nao);
+  uw_throwf(error_s, lit(">: invalid operands ~s ~s"), anum, bnum, nao);
 }
 
 val lt(val anum, val bnum)
@@ -1069,7 +1069,7 @@ tail:
     goto tail;
   }
 
-  uw_throwf(error_s, lit("lt: invalid operands ~s ~s"), anum, bnum, nao);
+  uw_throwf(error_s, lit("<: invalid operands ~s ~s"), anum, bnum, nao);
 }
 
 val ge(val anum, val bnum)
@@ -1110,7 +1110,7 @@ tail:
     goto tail;
   }
 
-  uw_throwf(error_s, lit("ge: invalid operands ~s ~s"), anum, bnum, nao);
+  uw_throwf(error_s, lit(">=: invalid operands ~s ~s"), anum, bnum, nao);
 }
 
 val le(val anum, val bnum)
@@ -1151,7 +1151,7 @@ tail:
     goto tail;
   }
 
-  uw_throwf(error_s, lit("lt: invalid operands ~s ~s"), anum, bnum, nao);
+  uw_throwf(error_s, lit("<=: invalid operands ~s ~s"), anum, bnum, nao);
 }
 
 val numeq(val anum, val bnum)

@@ -503,7 +503,7 @@ val replace_list(val list, val items, val from, val to)
   else if (stringp(items))
     items = list_str(items);
   else if (!listp(items))
-    uw_throwf(error_s, lit("replace_list: cannot replace with ~s"), items, nao);
+    uw_throwf(error_s, lit("replace-list: cannot replace with ~s"), items, nao);
 
   if (!list)
     return items;
@@ -1323,9 +1323,9 @@ cnum c_num(val num)
       mp_get_intptr(mp(num), &out);
       return out;
     }
-    uw_throwf(error_s, lit("c_num: ~s is out of cnum range"), num, nao);
+    uw_throwf(error_s, lit("~s is out of cnum range"), num, nao);
   default:
-    type_mismatch(lit("c_num: ~s is not an integer"), num, nao);
+    type_mismatch(lit("~s is not an integer"), num, nao);
   }
 }
 
@@ -1645,7 +1645,7 @@ val string_extend(val str, val tail)
     else if (fixnump(tail))
       needed = tail;
     else
-      uw_throwf(error_s, lit("string_extend: tail ~s bad type"), str, nao);
+      uw_throwf(error_s, lit("string-extend: tail ~s bad type"), str, nao);
 
     room = num(alloc - len - 1);
 
@@ -1659,7 +1659,7 @@ val string_extend(val str, val tail)
     }
 
     if (gt(needed, room))
-      uw_throwf(error_s, lit("string_extend: overflow"), nao);
+      uw_throwf(error_s, lit("string-extend: overflow"), nao);
 
     str->st.str = (wchar_t *) chk_realloc((mem_t *) str->st.str,
                                           alloc * sizeof *str->st.str);
@@ -1943,7 +1943,7 @@ val replace_str(val str_in, val items, val from, val to)
   val len_rep;
 
   if (type(str_in) != STR)
-    uw_throwf(error_s, lit("replace_str: string ~s of type ~s not supported"),
+    uw_throwf(error_s, lit("replace-str: string ~s of type ~s not supported"),
               str_in, typeof(str_in), nao);
 
   if (from == nil)
@@ -2003,7 +2003,7 @@ val replace_str(val str_in, val items, val from, val to)
       for (s = 0; f != t; f++, s++)
         str_in->st.str[f] = c_chr(vecref(items, num(s)));
     } else {
-      uw_throwf(error_s, lit("replace_str: source object ~s not supported"),
+      uw_throwf(error_s, lit("replace-str: source object ~s not supported"),
                 items, nao);
     }
   }
@@ -2034,7 +2034,7 @@ val cat_str(val list, val sep)
         total += len_sep;
       continue;
     }
-    uw_throwf(error_s, lit("cat_str: ~s is not a character or string"),
+    uw_throwf(error_s, lit("cat-str: ~s is not a character or string"),
               item, nao);
   }
 
@@ -2521,7 +2521,7 @@ val gensymv(val args)
 val make_package(val name)
 {
   if (find_package(name)) {
-    uw_throwf(error_s, lit("make_package: ~s exists already"), name, nao);
+    uw_throwf(error_s, lit("make-package: ~s exists already"), name, nao);
   } else {
     val obj = make_obj();
     obj->pk.type = PKG;
@@ -3014,7 +3014,7 @@ val func_get_form(val fun)
 {
   type_check(fun, FUN);
   if (fun->f.functype != FINTERP)
-    uw_throwf(error_s, lit("func_get_form: ~a is not an interpreted function"),
+    uw_throwf(error_s, lit("func-get-form: ~a is not an interpreted function"),
               fun, nao);
   return fun->f.f.interp_fun;
 }
@@ -3684,7 +3684,7 @@ val vector_list(val list)
   val vec = vector(zero);
  
   if (!listp(list))
-    uw_throwf(error_s, lit("vector_list: list expected, not ~s"), list, nao);
+    uw_throwf(error_s, lit("vector-list: list expected, not ~s"), list, nao);
 
   for (; consp(list); list = cdr(list))
     vec_push(vec, car(list));

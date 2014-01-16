@@ -253,7 +253,7 @@ val filter_string_tree(val filter, val obj)
       else if (type == fun_s)
         return funcall1(filter, obj);
       return obj;
-      uw_throwf(error_s, lit("filter_string: invalid filter ~a"), filter, nao);
+      uw_throwf(error_s, lit("invalid filter ~a"), filter, nao);
     }
   }
 }

@@ -1266,7 +1266,7 @@ val format_field(val obj, val modifier, val filter, val eval_fun)
   for (; modifier; pop(&modifier)) {
     val item = first(modifier);
     if (regexp(item)) {
-      uw_throw(query_error_s, lit("format_field: regex modifier in output"));
+      uw_throw(query_error_s, lit("bad field format: regex modifier in output"));
     } else if (keywordp(item)) {
       plist = modifier;
       break;
@@ -1294,7 +1294,8 @@ val format_field(val obj, val modifier, val filter, val eval_fun)
       else if (stringp(v))
         sep = v;
       else
-        uw_throwf(query_error_s, lit("format_field: bad modifier object: ~s"),
+        uw_throwf(query_error_s,
+                  lit("bad field format: bad modifier object: ~s"),
                   item, nao);
     }
   }
@@ -1311,7 +1312,8 @@ val format_field(val obj, val modifier, val filter, val eval_fun)
       filter = get_filter(filter_sym);
 
       if (!filter) {
-        uw_throwf(query_error_s, lit("format_field: ~s specifies unknown filter"),
+        uw_throwf(query_error_s,
+                  lit("bad field format: ~s specifies unknown filter"),
                   filter_sym, nao);
       }
     }
