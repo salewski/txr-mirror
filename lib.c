@@ -4823,6 +4823,12 @@ val obj_print(val obj, val out)
       } else if (sym == splice_s) {
         put_string(lit(",*"), out);
         obj_print(second(obj), out);
+      } else if (sym == var_s && symbolp(second(obj))) {
+        put_char(chr('@'), out);
+        obj_print(second(obj), out);
+      } else if (sym == expr_s) {
+        put_char(chr('@'), out);
+        obj_print(rest(obj), out);
       } else {
         val iter;
         val closepar = chr(')');
@@ -4982,6 +4988,12 @@ val obj_pprint(val obj, val out)
       } else if (sym == splice_s) {
         put_string(lit(",*"), out);
         obj_pprint(second(obj), out);
+      } else if (sym == var_s && symbolp(second(obj))) {
+        put_char(chr('@'), out);
+        obj_print(second(obj), out);
+      } else if (sym == expr_s) {
+        put_char(chr('@'), out);
+        obj_print(rest(obj), out);
       } else {
         val iter;
         val closepar = chr(')');

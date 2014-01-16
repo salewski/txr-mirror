@@ -1,5 +1,11 @@
 2014-01-15  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (obj_print, obj_pprint): Convert the internal representation
+	of @sym and @(expr ...) syntax back to these notations instead
+	of leaving them as (sys:var sym) and (sys:expr expr ...).
+
+2014-01-15  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (append_each_s, append_each_star_s): New symbol variables.
 	(op_each, expand): Support append-each and append-each*.
 	(eval_init): Initialize new symbol variables, and register
