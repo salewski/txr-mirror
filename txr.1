@@ -5003,6 +5003,40 @@ In TXR Lisp, the / character can occur in symbol names, and the / token
 is a symbol. Therefore the /regex/ syntax is absent, replaced with the
 #/regex/ syntax.
 
+.SS Generalization of List Accessors car and cdr
+
+In ancient Lisp in the 1960's, it was not possible to apply the operations
+car and cdr to the nil symbol (empty list), because it is not a cons cell. In
+the InterLisp dialect, this restriction was lifted: these operations were
+extended to accept nil (and return nil). The convention was adopted in
+other Lisp dialects and in Common Lisp. Thus there exists an object which
+is not a cons, yet which takes car and cdr.
+
+In TXR Lisp, this concept is extended further. For the sake of convenience,
+the operations car and cdr, are extended to work with strings and vectors:
+
+  (cdr "") -> nil
+  (car "") -> nil
+
+  (car "abc") -> #\ea
+  (cdr "abc") -> "bc"
+
+  (cdr #(1 2 3)) -> #(2 3)
+  (car #(1 2 3)) -> 1
+
+The ldiff function is also extended in a special way. When the right parameter
+is a string or vector, then it uses the equal equality test rather than eq
+for detecting the tail of the list.
+
+  (ldiff "abcd" "cd") -> (#\ea #\eb)
+
+The ldiff operation starts with "abcd" and repeatedly applies cdr to produce
+"bcd" and "cd", until the suffix is equal to the second argument: (equal "cd"
+"cd") yields true.
+
+Operations based on car, cdr and ldiff, such as keep-if and remq extend to
+strings and vectors.
+
 .SH CONTROL FLOW AND SEQUENCING
 
 When the first element of a compound expression is an operator symbol,

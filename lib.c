@@ -203,6 +203,16 @@ val car(val cons)
       cons->lc.func = nil;
       return cons->lc.car;
     }
+  case VEC:
+    if (zerop(cons->v.vec[vec_length]))
+      return nil;
+    return cons->v.vec[0];
+  case STR:
+  case LIT:
+  case LSTR:
+    if (zerop(length_str(cons)))
+      return nil;
+    return chr_str(cons, zero);
   default:
     type_mismatch(lit("~s is not a cons"), cons, nao);
   }
@@ -223,6 +233,13 @@ val cdr(val cons)
       cons->lc.func = nil;
       return cons->lc.cdr;
     }
+  case VEC:
+  case STR:
+  case LIT:
+  case LSTR:
+    if (le(length(cons), one))
+      return nil;
+    return sub(cons, one, t);
   default:
     type_mismatch(lit("~s is not a cons"), cons, nao);
   }
@@ -611,9 +628,22 @@ val ldiff(val list1, val list2)
 {
   list_collect_decl (out, ptail);
 
-  while (list1 && list1 != list2) {
-    list_collect (ptail, car(list1));
-    list1 = cdr(list1);
+  switch (type(list2)) {
+  case STR:
+  case LIT:
+  case LSTR:
+  case VEC:
+    while (list1 && !equal(list1, list2)) {
+      list_collect (ptail, car(list1));
+      list1 = cdr(list1);
+    }
+    break;
+  default:
+    while (list1 && list1 != list2) {
+      list_collect (ptail, car(list1));
+      list1 = cdr(list1);
+    }
+    break;
   }
 
   return out;

@@ -1,3 +1,11 @@
+2014-01-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (car, cdr, ldiff): Extend to handle vectors and strings.
+	Thereby, numerous previously list-only operations in TXR Lisp
+	now magically handle strings and vectors.
+
+	* txr.1: Documented.
+
 2014-01-20  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (broken_down_time_list): New static function.
