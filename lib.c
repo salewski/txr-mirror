@@ -5163,6 +5163,40 @@ val time_string_utc(val time, val format)
   return timestr;
 }
 
+static val broken_time_list(struct tm *tms)
+{
+  return list(num(tms->tm_year + 1900),
+              num_fast(tms->tm_mon + 1),
+              num_fast(tms->tm_mday),
+              num_fast(tms->tm_hour),
+              num_fast(tms->tm_min),
+              num_fast(tms->tm_sec),
+              tms->tm_isdst ? t : nil,
+              nao);
+}
+
+val time_fields_local(val time)
+{
+  struct tm tms;
+  time_t secs = c_num(time);
+
+  if (localtime_r(&secs, &tms) == 0)
+    return nil;
+
+  return broken_time_list(&tms);
+}
+
+val time_fields_utc(val time)
+{
+  struct tm tms;
+  time_t secs = c_num(time);
+
+  if (gmtime_r(&secs, &tms) == 0)
+    return nil;
+
+  return broken_time_list(&tms);
+}
+
 static val make_time_impl(time_t (*pmktime)(struct tm *),
                           val year, val month, val day,
                           val hour, val minute, val second,

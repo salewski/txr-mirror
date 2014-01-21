@@ -11212,6 +11212,31 @@ the format string of the C library function strftime.
 The <time> argument is an integer representing seconds obtained from the
 time function or from the time-usec function.
 
+.SS Functions time-fields-local and time-fields-utc
+
+.TP
+Syntax:
+
+  (time-fields-local <time>)
+  (time-fields-utc <time>)
+
+.TP
+Description:
+
+These functions take the numeric time returned by the time function,
+and convert it to a list of seven fields.
+
+The time-string-local function converts the time to the local timezone of
+the host system. The time-string-utc function produces time in UTC.
+
+The fields returned as a list are six integers, and a boolean value.
+The six integers represent the year, month, day, hour, minute and second.
+The boolean value indicates whether daylight savings time is in effect
+(always nil in the case of time-fields-utc).
+
+The <time> argument is an integer representing seconds obtained from the
+time function or from the time-usec function.
+
 .SS Functions make-time and make-time-utc
 
 .TP

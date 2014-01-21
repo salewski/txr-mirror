@@ -1,3 +1,15 @@
+2014-01-20  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (broken_down_time_list): New static function.
+	(time_fields_local, time_fields_utc): New functions.
+
+	* lib.h (time_fields_local, time_fields_utc): Declared.
+
+	* eval.c (eval_init): Intern time_fields_local and time_fields_utc
+	as intrinsic functions.
+
+	* txr.1: Documented.
+
 2014-01-16  Kaz Kylheku  <kaz@kylheku.com>
 
 	* hash.c (group_by): New function.
