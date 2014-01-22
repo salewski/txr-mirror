@@ -463,16 +463,9 @@ static val do_eval(val form, val env, val ctx_form,
       debug_return (oper);
 
     {
-      val fbinding = lookup_fun(env, oper);
+      val entry = gethash(op_table, oper);
 
-      if (fbinding) {
-        val args = do_eval_args(rest(form), env, form, lookup);
-        debug_frame(oper, args, nil, env, nil, nil, nil);
-        debug_return (apply(cdr(fbinding), args, form));
-        debug_end;
-      } else {
-        val entry = gethash(op_table, oper);
-
+      if (entry) {
         if (!entry) {
           eval_error(form, lit("no such function or operator: ~s"), oper, nao);
           abort();
@@ -480,6 +473,12 @@ static val do_eval(val form, val env, val ctx_form,
           opfun_t fp = (opfun_t) cptr_get(entry);
           debug_return (fp(form, env));
         }
+      } else {
+        val fbinding = lookup_fun(env, oper);
+        val args = do_eval_args(rest(form), env, form, lookup);
+        debug_frame(oper, args, nil, env, nil, nil, nil);
+        debug_return (apply(cdr(fbinding), args, form));
+        debug_end;
       }
     }
   } else {
@@ -2191,6 +2190,34 @@ static void reg_var(val sym, val *loc)
   sethash(top_vb, sym, cobj((mem_t *) cv, cptr_s, &c_var_ops));
 }
 
+static val if_fun(val cond, val then, val alt)
+{
+  return if3(cond, then, alt);
+}
+
+static val or_fun(val vals)
+{
+  for (; vals != nil; vals = cdr(vals)) {
+    val item = car(vals);
+    if (item)
+      return item;
+  }
+  return nil;
+}
+
+static val and_fun(val vals)
+{
+  val item = t;
+
+  for (; vals != nil; vals = cdr(vals)) {
+    item = car(vals);
+    if (!item)
+      return nil;
+  }
+
+  return item;
+}
+
 void eval_init(void)
 {
   protect(&top_vb, &top_fb, &op_table, (val *) 0);
@@ -2450,6 +2477,9 @@ void eval_init(void)
   reg_fun(intern(lit("orf"), user_package), func_n0v(orv));
   reg_fun(intern(lit("iff"), user_package), func_n3o(iff, 2));
   reg_fun(intern(lit("iffi"), user_package), func_n3o(iffi, 2));
+  reg_fun(intern(lit("if"), user_package), func_n3o(if_fun, 2));
+  reg_fun(intern(lit("or"), user_package), func_n0v(or_fun));
+  reg_fun(intern(lit("and"), user_package), func_n0v(and_fun));
 
   reg_var(intern(lit("*stdout*"), user_package), &std_output);
   reg_var(intern(lit("*stddebug*"), user_package), &std_debug);

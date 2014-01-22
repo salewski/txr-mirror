@@ -1,5 +1,20 @@
 2014-01-22  Kaz Kylheku  <kaz@kylheku.com>
 
+ 	Support function versions of if, and, or so that partial
+	evaluation like (op or @1 42) or (op if (eq @1 foo) bar xyzzy)
+	is possible.
+
+	* eval.c (do_eval): Change precedence between operator and
+	function lookup to favor operators. This is important since
+	there are several operators now which are also functions.
+	(if_fun, or_fun, and_fun): New static functions.
+	(eval_init): New functions registered as intrinsics.
+
+	* txr.1: Documented that if, and, or exist as both functions
+	and operators.
+
+2014-01-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_instrinsic): Changed to external linkage.
 
 	* eval.h (eval_intrinsic): Declared.
