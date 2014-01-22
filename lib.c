@@ -404,6 +404,27 @@ val copy_list(val list)
   return out;
 }
 
+val make_like(val list, val thatobj)
+{
+  if (list != thatobj) {
+    switch (type(thatobj)) {
+    case VEC:
+      return list_vector(list);
+    case STR:
+    case LIT:
+    case LSTR:
+      return cat_str(list, nil);
+    case NIL:
+    case CONS:
+    case LCONS:
+    default:
+      break;
+    }
+  }
+
+  return list;
+}
+
 val nreverse(val in)
 {
   val rev = nil;
@@ -420,6 +441,7 @@ val nreverse(val in)
 
 val reverse(val in)
 {
+  val in_orig = in;
   val rev = nil;
 
   while (in) {
@@ -427,7 +449,7 @@ val reverse(val in)
     in = cdr(in);
   }
 
-  return rev;
+  return make_like(rev, in_orig);
 }
 
 val append2(val list1, val list2)
@@ -673,6 +695,7 @@ val memqual(val obj, val list)
 val remq(val obj, val list)
 {
   list_collect_decl (out, ptail);
+  val list_orig = list;
   val lastmatch = cons(nil, list);
 
   for (; list; list = cdr(list)) {
@@ -682,12 +705,13 @@ val remq(val obj, val list)
     }
   }
   list_collect_nconc(ptail, cdr(lastmatch));
-  return out;
+  return make_like(out, list_orig);
 }
 
 val remql(val obj, val list)
 {
   list_collect_decl (out, ptail);
+  val list_orig = list;
   val lastmatch = cons(nil, list);
 
   for (; list; list = cdr(list)) {
@@ -697,12 +721,13 @@ val remql(val obj, val list)
     }
   }
   list_collect_nconc(ptail, cdr(lastmatch));
-  return out;
+  return make_like(out, list_orig);
 }
 
 val remqual(val obj, val list)
 {
   list_collect_decl (out, ptail);
+  val list_orig = list;
   val lastmatch = cons(nil, list);
 
   for (; list; list = cdr(list)) {
@@ -712,12 +737,13 @@ val remqual(val obj, val list)
     }
   }
   list_collect_nconc(ptail, cdr(lastmatch));
-  return out;
+  return make_like(out, list_orig);
 }
 
 val remove_if(val pred, val list, val key)
 {
   list_collect_decl (out, ptail);
+  val list_orig = list;
   val lastmatch = cons(nil, list);
 
   if (!key)
@@ -733,12 +759,13 @@ val remove_if(val pred, val list, val key)
     }
   }
   list_collect_nconc(ptail, cdr(lastmatch));
-  return out;
+  return make_like(out, list_orig);
 }
 
 val keep_if(val pred, val list, val key)
 {
   list_collect_decl (out, ptail);
+  val list_orig = list;
   val lastmatch = cons(nil, list);
 
   if (!key)
@@ -754,7 +781,7 @@ val keep_if(val pred, val list, val key)
     }
   }
   list_collect_nconc(ptail, cdr(lastmatch));
-  return out;
+  return make_like(out, list_orig);
 }
 
 static val rem_lazy_rec(val obj, val list, val env, val func);
@@ -4320,31 +4347,34 @@ val copy_alist(val list)
 val mapcar(val fun, val list)
 {
   list_collect_decl (out, iter);
+  val list_orig = list;
 
   for (; list; list = cdr(list))
     list_collect (iter, funcall1(fun, car(list)));
 
-  return out;
+  return make_like(out, list_orig);
 }
 
 val mapcon(val fun, val list)
 {
   list_collect_decl (out, iter);
+  val list_orig = list;
 
   for (; list; list = cdr(list))
     list_collect_nconc (iter, funcall1(fun, list));
 
-  return out;
+  return make_like(out, list_orig);
 }
 
 val mappend(val fun, val list)
 {
   list_collect_decl (out, iter);
+  val list_orig = list;
 
   for (; list; list = cdr(list))
     list_collect_append (iter, funcall1(fun, car(list)));
 
-  return out;
+  return make_like(out, list_orig);
 }
 
 val merge(val list1, val list2, val lessfun, val keyfun)
@@ -4547,6 +4577,7 @@ val find_if(val pred, val list, val key)
 val set_diff(val list1, val list2, val testfun, val keyfun)
 {
   list_collect_decl (out, ptail);
+  val list_orig = list1;
 
   if (!keyfun)
     keyfun = identity_f;
@@ -4568,7 +4599,7 @@ val set_diff(val list1, val list2, val testfun, val keyfun)
     }
   }
 
-  return out;
+  return make_like(out, list_orig);
 }
 
 val length(val seq)

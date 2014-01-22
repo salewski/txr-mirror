@@ -1828,6 +1828,7 @@ val mapcarv(val fun, val list_of_lists)
     return mapcar(fun, car(list_of_lists));
   } else {
     val lofl = copy_list(list_of_lists);
+    val list_orig = car(list_of_lists);
     list_collect_decl (out, otail);
 
     for (;;) {
@@ -1837,7 +1838,7 @@ val mapcarv(val fun, val list_of_lists)
       for (iter = lofl; iter; iter = cdr(iter)) {
         val list = car(iter);
         if (!list)
-          return out;
+          return make_like(out, list_orig);
         list_collect(atail, car(list));
         *car_l(iter) = cdr(list);
       }
@@ -1853,6 +1854,7 @@ static val mappendv(val fun, val list_of_lists)
     return mappend(fun, car(list_of_lists));
   } else {
     val lofl = copy_list(list_of_lists);
+    val list_orig = car(list_of_lists);
     list_collect_decl (out, otail);
 
     for (;;) {
@@ -1862,7 +1864,7 @@ static val mappendv(val fun, val list_of_lists)
       for (iter = lofl; iter; iter = cdr(iter)) {
         val list = car(iter);
         if (!list)
-          return out;
+          return make_like(out, list_orig);
         list_collect(atail, car(list));
         *car_l(iter) = cdr(list);
       }

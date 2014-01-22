@@ -5037,6 +5037,15 @@ The ldiff operation starts with "abcd" and repeatedly applies cdr to produce
 Operations based on car, cdr and ldiff, such as keep-if and remq extend to
 strings and vectors.
 
+Derived list processing operations such as remq or mapcar obey the following
+rule: the returned object follows the type of the leftmost input list object.
+For instance, if one or more sequences are processed by mapcar, and the
+leftmost one is a character string, the function is expected to return
+characters, which are converted to a character string.
+
+The lazy versions of these functions such as mapcar* do not have this behavior;
+they produce lazy lists.
+
 .SH CONTROL FLOW AND SEQUENCING
 
 When the first element of a compound expression is an operator symbol,

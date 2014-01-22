@@ -373,6 +373,7 @@ val *ltail(val *cons);
 val pop(val *plist);
 val push(val v, val *plist);
 val copy_list(val list);
+val make_like(val list, val thatobj);
 val nreverse(val in);
 val reverse(val in);
 val append2(val list1, val list2);

@@ -1,5 +1,19 @@
 2014-01-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (mapcarv, mappendv): Convert output to type of leftmost
+	input sequence.
+
+	* lib.c (make_like): New function.
+	(reverse, remq, remql, remqual, remove_if, keep_if, mapcar, mapcon,
+	mappend, set_diff): Convert output list to type of leftmost input
+	sequence.
+
+	* lib.h (make_like): Declared.
+
+	* txr.1: Documented.
+
+2014-01-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (car, cdr, ldiff): Extend to handle vectors and strings.
 	Thereby, numerous previously list-only operations in TXR Lisp
 	now magically handle strings and vectors.
