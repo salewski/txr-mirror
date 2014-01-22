@@ -44,11 +44,11 @@
 #include "utf8.h"
 #include "debug.h"
 #include "syslog.h"
+#include "eval.h"
 #include "txr.h"
 
 const wchli_t *version = wli("75");
 const wchar_t *progname = L"txr";
-const wchar_t *spec_file = L"stdin";
 val self_path;
 
 /*
@@ -175,7 +175,9 @@ int txr_main(int argc, char **argv)
 {
   val specstring = nil;
   val spec = nil;
+  val spec_file = nil;
   val bindings = nil;
+  val evaled = nil;
   int match_loglevel = opt_loglevel;
 
   prot1(&spec_file_str);
@@ -253,7 +255,9 @@ int txr_main(int argc, char **argv)
       return 0;
     }
 
-    if (!strcmp(*argv, "-a") || !strcmp(*argv, "-c") || !strcmp(*argv, "-f")) {
+    if (!strcmp(*argv, "-a") || !strcmp(*argv, "-c") || !strcmp(*argv, "-f") ||
+        !strcmp(*argv, "-e") || !strcmp(*argv, "-p"))
+    {
       long optval;
       char *errp;
       char opt = (*argv)[1];
@@ -283,7 +287,17 @@ int txr_main(int argc, char **argv)
         specstring = string_utf8(*argv);
         break;
       case 'f':
-        spec_file_str = string_utf8(*argv);
+        spec_file = string_utf8(*argv);
+        break;
+      case 'e':
+        eval_intrinsic(lisp_parse(string_utf8(*argv), std_error), nil);
+        evaled = t;
+        break;
+      case 'p':
+        obj_print(eval_intrinsic(lisp_parse(string_utf8(*argv), std_error),
+                                 nil), std_output);
+        put_char(chr('\n'), std_output);
+        evaled = t;
         break;
       }
 
@@ -359,6 +373,8 @@ int txr_main(int argc, char **argv)
           break;
         case 'a':
         case 'c':
+        case 'e':
+        case 'p':
         case 'D':
           format(std_error, lit("~a: option -~a does not clump\n"),
                  prog_string, chr(*popt), nao);
@@ -378,30 +394,32 @@ int txr_main(int argc, char **argv)
     }
   }
 
-  if (specstring && spec_file_str) {
+  if (specstring && spec_file) {
     format(std_error, lit("~a: cannot specify both -f and -c\n"),
            prog_string, nao);
     return EXIT_FAILURE;
   }
 
   if (specstring) {
-    spec_file = L"cmdline";
-    spec_file_str = string(spec_file);
+    spec_file_str = lit("cmdline");
     if (gt(length_str(specstring), zero) &&
         chr_str(specstring, minus(length_str(specstring), one)) != chr('\n'))
       specstring = cat_str(list(specstring, string(L"\n"), nao), nil);
     yyin_stream = make_string_byte_input_stream(specstring);
-  } else if (spec_file_str) {
-    if (wcscmp(c_str(spec_file_str), L"-") != 0) {
-      FILE *in = w_fopen(c_str(spec_file_str), L"r");
+  } else if (spec_file) {
+    if (wcscmp(c_str(spec_file), L"-") != 0) {
+      FILE *in = w_fopen(c_str(spec_file), L"r");
       if (in == 0)
-        uw_throwf(file_error_s, lit("unable to open ~a"), spec_file_str, nao);
-      yyin_stream = make_stdio_stream(in, spec_file_str);
+        uw_throwf(file_error_s, lit("unable to open ~a"), spec_file, nao);
+      yyin_stream = make_stdio_stream(in, spec_file);
+      spec_file_str = spec_file;
     } else {
-      spec_file = L"stdin";
+      spec_file_str = lit("stdin");
     }
   } else {
     if (argc < 1) {
+      if (evaled)
+        return EXIT_SUCCESS;
       hint();
       return EXIT_FAILURE;
     }
@@ -412,12 +430,11 @@ int txr_main(int argc, char **argv)
       if (in == 0)
         uw_throwf(file_error_s, lit("unable to open ~a"), name, nao);
       yyin_stream = make_stdio_stream(in, name);
-      spec_file = utf8_dup_from(*argv);
+      spec_file_str = string_utf8(*argv);
     } else {
-      spec_file = L"stdin";
+      spec_file_str = lit("stdin");
     }
     argc--, argv++;
-    spec_file_str = string(spec_file);
   }
 
 

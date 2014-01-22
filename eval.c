@@ -429,7 +429,7 @@ val interp_fun(val env, val fun, val args)
   return eval_progn(body, fun_env, body);
 }
 
-static val eval_intrinsic(val form, val env)
+val eval_intrinsic(val form, val env)
 {
   uses_or2;
   form = expand(form);

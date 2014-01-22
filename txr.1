@@ -182,6 +182,16 @@ Specifies the file from which the query is to be read, instead of the
 query-file argument. This is useful in #! scripts. (See Hash Bang Support
 below).
 
+.IP "-e expression"
+Evaluates a TXR Lisp expression for its side effects, without printing
+its value. Can be specified more than once. The query-file argument becomes
+optional if -e is used at least once.
+
+.IP "-p expression"
+Evaluates a TXR Lisp expression and prints its value.  Can be specified more
+than once. The query-file argument becomes optional if -p is used at least
+once.
+
 .IP --help
 Prints usage summary on standard output, and terminates successfully.
 

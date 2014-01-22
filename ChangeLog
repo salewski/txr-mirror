@@ -1,3 +1,14 @@
+2014-01-22  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_instrinsic): Changed to external linkage.
+
+	* eval.h (eval_intrinsic): Declared.
+
+	* txr.c (spec_file): Global variable removed.
+	(txr_main): Support for -e and -p options. Minor code cleanup.
+
+	* txr.1: Documented new options.
+
 2014-01-21  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (mapcarv, mappendv): Convert output to type of leftmost
