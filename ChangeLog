@@ -1,5 +1,14 @@
 2014-01-23  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (expand_op): Takes sym argument to distinguish op and do.
+	The dwim operator is deleted when the symbol is do.
+	(expand): Expand do_s form with expand_op, not only op_s. Pass down
+	symbol.
+
+	* txr.1: Document do operator.
+
+2014-01-23  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (do_eval): Fix incorrect, recently introduced code
 	rearrangement that gives precedence to operator lookup over function
 	lookup.

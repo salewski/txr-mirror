@@ -1611,7 +1611,7 @@ static val supplement_op_syms(val ssyms, val max)
   return outsyms;
 }
 
-static val expand_op(val body)
+static val expand_op(val sym, val body)
 {
   val body_ex = expand_forms(body);
   val rest_gensym = gensym(lit("rest-"));
@@ -1636,6 +1636,9 @@ static val expand_op(val body)
                                   body_trans,
                                   append2(body_trans, rest_gensym))),
                          body_trans);
+
+    if (sym == do_s)
+      dwim_body = rlcp(cdr(dwim_body), dwim_body);
 
     return cons(lambda_s,
                 cons(append2(mapcar(cdr_f, ssyms), rest_gensym),
@@ -1793,8 +1796,8 @@ val expand(val form)
       return expand(expand_gen(rest(form)));
     } else if (sym == delay_s) {
       return expand(expand_delay(rest(form)));
-    } else if (sym == op_s) {
-      return expand_op(rest(form));
+    } else if (sym == op_s || sym == do_s) {
+      return expand_op(sym, rest(form));
     } else if (sym == catch_s) {
       return expand_catch(rest(form));
     } else if (sym == regex_s || regexp(sym)) {

@@ -10065,15 +10065,18 @@ for these common keys are those from <hash1>.
 
 .SH PARTIAL EVALUATION AND COMBINATORS
 
-.SS Operator op
+.SS Operators op and do
 
 .TP
 Syntax:
 
   (op {<form>}+)
+  (do {<form>}+)
 
 .TP
 Description:
+
+The op and do operators are similar. 
 
 Like the lambda operator, the op operator creates an anonymous function.
 The difference is that the arguments of the function are implicit, or
@@ -10082,6 +10085,18 @@ optionally specified within the function body.
 Also, the <form> arguments of op are implicitly turned into a DWIM expression,
 which means that argument evaluation follows Lisp-1 rules.  (See the dwim
 operator below).
+
+The do operator is like the op operator with the following difference:
+the <form> arguments of op are not implicitly treated as a DWIM expression,
+but as an ordinary expression. In particular, this means that operator
+syntax is permitted. Note that the syntax (op @1) makes sense, since
+the argument can be a function, which will be invoked, but (do @1) doesn't
+make sense because it will produce a Lisp-2 form like (#:arg1 ...) referring
+to nonexistent function #:arg1. This is why the operator is called "do": it
+requires some operation. Moreover, it can be used with imperative constructs
+which are not functions, like set: like set: for instance (do set x) produces
+an anonymous function which, if called with one argument, stores that argument
+into x.
 
 The argument forms are arbitrary expressions, within which a special
 convention is permitted:
@@ -10127,11 +10142,18 @@ symbols in the program.
 
   (op foo @rest @1) -> (lambda (arg1 . rest) [foo rest arg1])
 
+  (do + foo) -> (lambda rest (+ foo . rest))
+
+  (do @1 @2) -> (lambda (arg1 arg2 . rest) (arg1 arg2))
+
+  (do foo @rest @1) -> (lambda (arg1 . rest) (foo rest arg1))
+
 Note that if argument @<n> appears, it is not necessary
 for arguments @1 through @<n-1> to appear. The function
 will have n arguments:
 
   (op @3) -> (lambda (arg1 arg2 arg3 . rest) [arg3])
+
 
 .PP
 
