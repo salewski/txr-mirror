@@ -7027,12 +7027,58 @@ Examples:
   (mappend (lambda (item) (if (evenp x) (list x))) '(1 2 3 4 5))
   -> (2 4)
 
+.SS Functions conses and conses*
+
+.TP
+Syntax:
+
+  (conses <list>)
+  (conses* <list>)
+
+.TP
+Description:
+
+These functions return a list whose elements are the conses which make
+up <list>. The conses* function does this in a lazy way, avoiding the
+computation of the entire list: it returns a lazy list of the conses of <list>.
+The conses function computes the entire list before returning.
+
+The input <list> may be proper or improper.
+
+The first cons of a list is that list itself. The second cons is the rest
+of the list, or (cdr <list>). The third cons is (cdr (cdr <list>)) and so on.
+
+.TP
+Example:
+
+  (conses '(1 2 3)) -> ((1 2 3) (2 3) (3))
+
+.TP
+Dialect Note:
+
+These functions are useful for simulating the maplist function found in
+other dialects like Common Lisp. 
+
+TXR Lisp's (conses x) can be expressed in Common Lisp as
+(maplist #'identity x).
+
+Conversely, the Common Lisp operation (maplist function list) can be computed
+in TXR Lisp as (mapcar function (conses list)).
+
+More generally, the Common Lisp operation
+
+  (maplist function list0 list1 ... listn)
+  
+can be expressed as:
+
+  (mapcar function (conses list0) (conses list1) ... (conses listn))
+
 .SS Function apply
 
 .TP
 Syntax:
 
-(apply <function> <arglist>)
+  (apply <function> <arglist>)
 
 .TP
 Description:

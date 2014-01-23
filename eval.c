@@ -2351,6 +2351,8 @@ void eval_init(void)
   reg_fun(intern(lit("fourth"), user_package), func_n1(fourth));
   reg_fun(intern(lit("fifth"), user_package), func_n1(fifth));
   reg_fun(intern(lit("sixth"), user_package), func_n1(sixth));
+  reg_fun(intern(lit("conses"), user_package), func_n1(conses));
+  reg_fun(intern(lit("conses*"), user_package), func_n1(lazy_conses));
   reg_fun(intern(lit("copy-list"), user_package), func_n1(copy_list));
   reg_fun(intern(lit("nreverse"), user_package), func_n1(nreverse));
   reg_fun(intern(lit("reverse"), user_package), func_n1(reverse));
@@ -2668,6 +2670,7 @@ void eval_init(void)
   reg_fun(intern(lit("fboundp"), user_package), func_n1(fboundp));
   reg_fun(intern(lit("func-get-form"), user_package), func_n1(func_get_form));
   reg_fun(intern(lit("func-get-env"), user_package), func_n1(func_get_env));
+  reg_fun(intern(lit("func-set-env"), user_package), func_n2(func_set_env));
   reg_fun(intern(lit("functionp"), user_package), func_n1(functionp));
   reg_fun(intern(lit("interp-fun-p"), user_package), func_n1(interp_fun_p));
 

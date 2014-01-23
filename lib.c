@@ -337,6 +337,36 @@ val sixth(val cons)
   return car(cdr(cdr(cdr(cdr(cdr(cons))))));
 }
 
+val conses(val list)
+{
+  list_collect_decl (out, ptail);
+
+  for (; consp(list); list = cdr(list))
+    ptail = list_collect(ptail, list);
+
+  return out;
+}
+
+static val lazy_conses_func(val env, val lcons)
+{
+  val fun = lcons_fun(lcons);
+  rplaca(lcons, env);
+  func_set_env(fun, env = cdr(env));
+
+  if (env)
+    rplacd(lcons, make_lazy_cons(fun));
+  else
+    rplacd(lcons, nil);
+  return nil;
+}
+
+val lazy_conses(val list)
+{
+  if (!list)
+    return nil;
+  return make_lazy_cons(func_f1(list, lazy_conses_func));
+}
+
 val listref(val list, val ind)
 {
   if (lt(ind, zero))
@@ -3170,6 +3200,13 @@ val func_get_env(val fun)
 {
   type_check(fun, FUN);
   return fun->f.env;
+}
+
+val func_set_env(val fun, val env)
+{
+  type_check(fun, FUN);
+  set(fun->f.env, env);
+  return env;
 }
 
 val functionp(val obj)

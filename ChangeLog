@@ -1,5 +1,17 @@
 2014-01-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (conses, lazy_conses, func_set_env): New functions.
+	(lazy_conses_func): New static function.
+
+	* lib.h (conses, lazy_conses, func_set_env): Declared.
+
+	* eval.c (eval_init): conses, lazy_conses and func_set_env registered
+	as intrinsics.
+
+	* txr.1: Documented.
+
+2014-01-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	Changes to the list collection mechanism to improve
 	the extension of list operations over vectors and strings.
 
