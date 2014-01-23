@@ -466,19 +466,19 @@ static val do_eval(val form, val env, val ctx_form,
       val entry = gethash(op_table, oper);
 
       if (entry) {
-        if (!entry) {
-          eval_error(form, lit("no such function or operator: ~s"), oper, nao);
-          abort();
-        } else { 
-          opfun_t fp = (opfun_t) cptr_get(entry);
-          debug_return (fp(form, env));
-        }
+        opfun_t fp = (opfun_t) cptr_get(entry);
+        debug_return (fp(form, env));
       } else {
         val fbinding = lookup_fun(env, oper);
-        val args = do_eval_args(rest(form), env, form, lookup);
-        debug_frame(oper, args, nil, env, nil, nil, nil);
-        debug_return (apply(cdr(fbinding), args, form));
-        debug_end;
+        if (!fbinding) {
+          eval_error(form, lit("no such function or operator: ~s"), oper, nao);
+          abort();
+        } else {
+          val args = do_eval_args(rest(form), env, form, lookup);
+          debug_frame(oper, args, nil, env, nil, nil, nil);
+          debug_return (apply(cdr(fbinding), args, form));
+          debug_end;
+        }
       }
     }
   } else {
