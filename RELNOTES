@@ -1,3 +1,38 @@
+                                     TXR 76
+                                   2014-01-23
+                                   
+
+  Features
+
+  - New time functions: time-fields-local and time-fields-utc for obtaining
+    broken-down time from Epoch seconds.
+
+  - New group-by function for constructing a hash from a list when the
+    list elements can be partitioned into equivalence classes tied to keys,
+    rather than treated individually.
+
+  - Sweeping changes in TXR List to allow vectors and strings to be manipulated
+    in many situations as if they were lists. Functions like car, cdr and
+    mapcar work on strings and vectors.
+
+  - New command line options -e and -p for evaluating TXR Lisp expressions
+    more conveniently from the command line.
+
+  - The and, or and if special operators are now also provided as functions,
+    so they can be indirected upon functionally.
+
+  - New functions conses and conses*, useful for iterating over a list
+    similarly to Common Lisp's maplist function.
+
+  - New do operator (unrelated to @(do) directive) similar to op, but 
+    geared toward doing imperative things involving special operators.
+
+  Bugs
+
+  - @(require ...) directive was not expanding its forms prior to evaluation.
+
+
+
                                      TXR 75
                                    2014-01-16
 

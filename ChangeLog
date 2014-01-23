@@ -1,5 +1,19 @@
 2014-01-23  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 76
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES, txr.vim, dep.mk: Updated.
+
+	* genvim.txr: Add missing op and do.
+
+2014-01-23  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (expand_op): Takes sym argument to distinguish op and do.
 	The dwim operator is deleted when the symbol is do.
 	(expand): Expand do_s form with expand_op, not only op_s. Pass down
