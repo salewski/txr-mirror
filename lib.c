@@ -389,17 +389,16 @@ val push(val value, val *plist)
   /* Unsafe for mutating object fields: use mpush macro. */
   return *plist = cons(value, *plist);
 }
-
 val copy_list(val list)
 {
   list_collect_decl (out, ptail);
 
   while (consp(list)) {
-    list_collect(ptail, car(list));
+    ptail = list_collect(ptail, car(list));
     list = cdr(list);
   }
 
-  list_collect_append(ptail, list);
+  ptail = list_collect_nconc(ptail, list);
 
   return out;
 }
@@ -409,7 +408,7 @@ val make_like(val list, val thatobj)
   if (list != thatobj) {
     switch (type(thatobj)) {
     case VEC:
-      return list_vector(list);
+      return vector_list(list);
     case STR:
     case LIT:
     case LSTR:
@@ -423,6 +422,97 @@ val make_like(val list, val thatobj)
   }
 
   return list;
+}
+
+val to_seq(val seq)
+{
+  switch (type(seq)) {
+  case VEC:
+  case STR:
+  case LIT:
+  case LSTR:
+  case NIL:
+  case CONS:
+  case LCONS:
+    return seq;
+  default:
+    return cons(seq, nil);
+  }
+}
+
+val *list_collect(val *ptail, val obj)
+{
+  switch (type(*ptail)) {
+  case NIL:
+    set(*ptail, cons(obj, nil));
+    return ptail;
+  case CONS:
+  case LCONS:
+    ptail = tail(*ptail);
+    set(*ptail, cons(obj, nil));
+    return ptail;
+  case VEC:
+    replace_vec(*ptail, cons(obj, nil), t, t);
+    return ptail;
+  case STR:
+  case LIT:
+  case LSTR:
+    replace_str(*ptail, cons(obj, nil), t, t);
+    return ptail;
+  default:
+    uw_throwf(error_s, lit("cannot append ~s to ~s"), obj, *ptail, nao);
+  }
+}
+
+val *list_collect_nconc(val *ptail, val obj)
+{
+  switch (type(*ptail)) {
+  case NIL:
+    set(*ptail, obj);
+    return ptail;
+  case CONS:
+  case LCONS:
+    ptail = tail(*ptail);
+    set(*ptail, obj);
+    return ptail;
+  case VEC:
+    replace_vec(*ptail, obj, t, t);
+    return ptail;
+  case STR:
+  case LIT:
+  case LSTR:
+    replace_str(*ptail, obj, t, t);
+    return ptail;
+  default:
+    uw_throwf(error_s, lit("cannot nconc ~s to ~s"), obj, *ptail, nao);
+  }
+}
+
+val *list_collect_append(val *ptail, val obj)
+{
+  switch (type(*ptail)) {
+  case NIL:
+    set(*ptail, obj);
+    return ptail;
+  case CONS:
+  case LCONS:
+    set(*ptail, copy_list(*ptail));
+    ptail = tail(*ptail);
+    set(*ptail, obj);
+    return ptail;
+  case VEC:
+    set(*ptail, copy_vec(*ptail));
+    replace_vec(*ptail, obj, t, t);
+    return ptail;
+  case STR:
+  case LIT:
+  case LSTR:
+    set(*ptail, copy_str(*ptail));
+    replace_str(*ptail, obj, t, t);
+    return ptail;
+  default:
+    uw_throwf(error_s, lit("cannot append ~s to ~s"), obj, *ptail, nao);
+  }
 }
 
 val nreverse(val in)
@@ -456,8 +546,8 @@ val append2(val list1, val list2)
 {
   list_collect_decl (out, ptail);
 
-  list_collect_append (ptail, list1);
-  list_collect_append (ptail, list2);
+  ptail = list_collect_append (ptail, list1);
+  ptail = list_collect_append (ptail, list2);
 
   return out;
 }
@@ -468,9 +558,7 @@ val appendv(val lists)
 
   for (; lists; lists = cdr(lists)) {
     val item = car(lists);
-    if (!listp(*ptail))
-      uw_throwf(error_s, lit("append: ~s is not a list"), *ptail, nao);
-    list_collect_append(ptail, item);
+    ptail = list_collect_append(ptail, item);
   }
 
   return out;
@@ -480,8 +568,8 @@ val nappend2(val list1, val list2)
 {
   list_collect_decl (out, ptail);
 
-  list_collect_nconc (ptail, list1);
-  list_collect_nconc (ptail, list2);
+  ptail = list_collect_nconc (ptail, list1);
+  ptail = list_collect_nconc (ptail, list2);
 
   return out;
 }
@@ -526,7 +614,7 @@ val sub_list(val list, val from, val to)
       if (ge(i, to))
         break;
       if (from && ge(i, from))
-        list_collect(ptail, car(iter));
+        ptail = list_collect(ptail, car(iter));
     }
 
     return out;
@@ -572,10 +660,11 @@ val replace_list(val list, val items, val from, val to)
       for (i = zero, iter = list; iter; iter = cdr(iter), i = plus(i, one)) {
         if (from && ge(i, from))
           break;
-        list_collect (ptail, car(iter));
+        ptail = list_collect(ptail, car(iter));
       }
 
-      list_collect_nconc(ptail, listp(items) ? items : list_vector(items));
+      ptail = list_collect_nconc(ptail, if3(listp(items),
+                                            items, list_vector(items)));
       return out;
     }
   } else {
@@ -586,11 +675,11 @@ val replace_list(val list, val items, val from, val to)
       if (ge(i, to))
         break;
       if (from && lt(i, from))
-        list_collect(ptail, car(iter));
+        ptail = list_collect(ptail, car(iter));
     }
 
-    list_collect_nconc(ptail, append2(listp(items) ? items 
-                                                   : list_vector(items),
+    ptail = list_collect_nconc(ptail, append2(if3(listp(items), items,
+                                                  list_vector(items)),
                                       iter));
     return out;
   }
@@ -656,13 +745,13 @@ val ldiff(val list1, val list2)
   case LSTR:
   case VEC:
     while (list1 && !equal(list1, list2)) {
-      list_collect (ptail, car(list1));
+      ptail = list_collect(ptail, car(list1));
       list1 = cdr(list1);
     }
     break;
   default:
     while (list1 && list1 != list2) {
-      list_collect (ptail, car(list1));
+      ptail = list_collect(ptail, car(list1));
       list1 = cdr(list1);
     }
     break;
@@ -700,11 +789,11 @@ val remq(val obj, val list)
 
   for (; list; list = cdr(list)) {
     if (car(list) == obj) {
-      list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
+      ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
       lastmatch = list;
     }
   }
-  list_collect_nconc(ptail, cdr(lastmatch));
+  ptail = list_collect_nconc(ptail, cdr(lastmatch));
   return make_like(out, list_orig);
 }
 
@@ -716,11 +805,11 @@ val remql(val obj, val list)
 
   for (; list; list = cdr(list)) {
     if (eql(car(list), obj)) {
-      list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
+      ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
       lastmatch = list;
     }
   }
-  list_collect_nconc(ptail, cdr(lastmatch));
+  ptail = list_collect_nconc(ptail, cdr(lastmatch));
   return make_like(out, list_orig);
 }
 
@@ -732,11 +821,11 @@ val remqual(val obj, val list)
 
   for (; list; list = cdr(list)) {
     if (equal(car(list), obj)) {
-      list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
+      ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
       lastmatch = list;
     }
   }
-  list_collect_nconc(ptail, cdr(lastmatch));
+  ptail = list_collect_nconc(ptail, cdr(lastmatch));
   return make_like(out, list_orig);
 }
 
@@ -754,11 +843,11 @@ val remove_if(val pred, val list, val key)
     val satisfies = funcall1(pred, subj);
 
     if (satisfies) {
-      list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
+      ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
       lastmatch = list;
     }
   }
-  list_collect_nconc(ptail, cdr(lastmatch));
+  ptail = list_collect_nconc(ptail, cdr(lastmatch));
   return make_like(out, list_orig);
 }
 
@@ -776,11 +865,11 @@ val keep_if(val pred, val list, val key)
     val satisfies = funcall1(pred, subj);
 
     if (!satisfies) {
-      list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
+      ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
       lastmatch = list;
     }
   }
-  list_collect_nconc(ptail, cdr(lastmatch));
+  ptail = list_collect_nconc(ptail, cdr(lastmatch));
   return make_like(out, list_orig);
 }
 
@@ -1337,7 +1426,7 @@ val proper_plist_to_alist(val list)
   for (; list; list = cdr(cdr(list))) {
     val ind = first(list);
     val prop = second(list);
-    list_collect (ptail, cons(ind, prop));
+    ptail = list_collect(ptail, cons(ind, prop));
   }
 
   return out;
@@ -1351,10 +1440,10 @@ val improper_plist_to_alist(val list, val boolean_keys)
     val ind = first(list);
 
     if (memqual(ind, boolean_keys)) {
-      list_collect (ptail, cons(ind, t));
+      ptail = list_collect(ptail, cons(ind, t));
     } else {
       val prop = second(list);
-      list_collect (ptail, cons(ind, prop));
+      ptail = list_collect(ptail, cons(ind, prop));
       list = cdr(list);
     }
   }
@@ -1995,8 +2084,9 @@ val sub_str(val str_in, val from, val to)
 
 val replace_str(val str_in, val items, val from, val to)
 {
+  val itseq = to_seq(items);
   val len = length_str(str_in);
-  val len_it = length(items);
+  val len_it = length(itseq);
   val len_rep;
 
   if (type(str_in) != STR)
@@ -2045,23 +2135,23 @@ val replace_str(val str_in, val items, val from, val to)
   
   if (zerop(len_it))
     return str_in;
-  if (stringp(items)) {
-    wmemcpy(str_in->st.str + c_num(from), c_str(items), c_num(len_it));
+  if (stringp(itseq)) {
+    wmemcpy(str_in->st.str + c_num(from), c_str(itseq), c_num(len_it));
   } else {
     val iter;
     cnum f = c_num(from);
     cnum t = c_num(to);
     cnum s;
 
-    if (listp(items)) {
-      for (iter = items; iter && f != t; iter = cdr(iter), f++)
+    if (listp(itseq)) {
+      for (iter = itseq; iter && f != t; iter = cdr(iter), f++)
         str_in->st.str[f] = c_chr(car(iter));
-    } else if (vectorp(items)) {
+    } else if (vectorp(itseq)) {
       for (s = 0; f != t; f++, s++)
-        str_in->st.str[f] = c_chr(vecref(items, num(s)));
+        str_in->st.str[f] = c_chr(vecref(itseq, num(s)));
     } else {
       uw_throwf(error_s, lit("replace-str: source object ~s not supported"),
-                items, nao);
+                itseq, nao);
     }
   }
   return str_in;
@@ -2132,7 +2222,7 @@ val split_str(val str, val sep)
       if (eql(pos, new_pos) && len == zero)
         new_pos = plus(new_pos, one);
 
-      list_collect(iter, sub_str(str, pos, new_pos));
+      iter = list_collect(iter, sub_str(str, pos, new_pos));
       pos = new_pos;
 
       if (len) {
@@ -2162,7 +2252,7 @@ val split_str(val str, val sep)
         size_t span = (psep != 0) ? psep - cstr : wcslen(cstr);
         val piece = mkustring(num(span));
         init_str(piece, cstr);
-        list_collect(iter, piece);
+        iter = list_collect(iter, piece);
         cstr += span;
         if (psep != 0) {
           cstr += len_sep;
@@ -2192,7 +2282,7 @@ val split_str_set(val str, val set)
     size_t span = wcscspn(cstr, cset);
     val piece = mkustring(num(span));
     init_str(piece, cstr);
-    list_collect (iter, piece);
+    iter = list_collect(iter, piece);
     cstr += span;
     if (*cstr) {
       cstr++;
@@ -2218,16 +2308,16 @@ val tok_str(val str, val tok_regex, val keep_sep)
 
     if (!len) {
       if (keep_sep)
-        list_collect(iter, sub_str(str, pos, t));
+        iter = list_collect(iter, sub_str(str, pos, t));
       break;
     }
 
     end = plus(new_pos, len);
 
     if (keep_sep)
-      list_collect(iter, sub_str(str, pos, new_pos));
+      iter = list_collect(iter, sub_str(str, pos, new_pos));
 
-    list_collect(iter, sub_str(str, new_pos, end));
+    iter = list_collect(iter, sub_str(str, new_pos, end));
 
     pos = end;
 
@@ -2243,7 +2333,7 @@ val list_str(val str)
   const wchar_t *cstr = c_str(str);
   list_collect_decl (out, iter);
   while (*cstr)
-    list_collect(iter, chr(*cstr++));
+    iter = list_collect(iter, chr(*cstr++));
   return out;
 }
 
@@ -3526,10 +3616,10 @@ val chain(val first_fun, ...)
   if (first_fun != nao) {
     val next_fun;
     va_start (vl, first_fun);
-    list_collect (iter, first_fun);
+    iter = list_collect(iter, first_fun);
 
     while ((next_fun = va_arg(vl, val)) != nao)
-      list_collect (iter, next_fun);
+      iter = list_collect(iter, next_fun);
 
     va_end (vl);
   }
@@ -3559,10 +3649,10 @@ val andf(val first_fun, ...)
   if (first_fun != nao) {
     val next_fun;
     va_start (vl, first_fun);
-    list_collect (iter, first_fun);
+    iter = list_collect(iter, first_fun);
 
     while ((next_fun = va_arg(vl, val)) != nao)
-      list_collect (iter, next_fun);
+      iter = list_collect(iter, next_fun);
 
     va_end (vl);
   }
@@ -3602,10 +3692,10 @@ val orf(val first_fun, ...)
   if (first_fun != nao) {
     val next_fun;
     va_start (vl, first_fun);
-    list_collect (iter, first_fun);
+    iter = list_collect(iter, first_fun);
 
     while ((next_fun = va_arg(vl, val)) != nao)
-      list_collect (iter, next_fun);
+      iter = list_collect(iter, next_fun);
 
     va_end (vl);
   }
@@ -3759,7 +3849,7 @@ val list_vector(val vec)
   len = c_num(vec->v.vec[vec_length]);
 
   for (i = 0; i < len; i++)
-    list_collect(ptail, vec->v.vec[i]);
+    ptail = list_collect(ptail, vec->v.vec[i]);
 
   return list;
 }
@@ -3825,8 +3915,9 @@ val sub_vec(val vec_in, val from, val to)
 
 val replace_vec(val vec_in, val items, val from, val to)
 {
+  val it_seq = to_seq(items);
   val len = length_vec(vec_in);
-  val len_it = length(items);
+  val len_it = length(it_seq);
   val len_rep;
 
   if (from == nil)
@@ -3875,15 +3966,15 @@ val replace_vec(val vec_in, val items, val from, val to)
   
   if (zerop(len_it))
     return vec_in;
-  if (vectorp(items)) {
-    memcpy(vec_in->v.vec + c_num(from), items->v.vec, 
+  if (vectorp(it_seq)) {
+    memcpy(vec_in->v.vec + c_num(from), it_seq->v.vec, 
            sizeof *vec_in->v.vec * c_num(len_it));
     mut(vec_in);
-  } else if (stringp(items)) {
+  } else if (stringp(it_seq)) {
     cnum f = c_num(from);
     cnum t = c_num(to);
     cnum s;
-    const wchar_t *str = c_str(items);
+    const wchar_t *str = c_str(it_seq);
 
     for (s = 0; f != t; f++, s++)
       vec_in->v.vec[f] = chr(str[s]);
@@ -3892,7 +3983,7 @@ val replace_vec(val vec_in, val items, val from, val to)
     cnum f = c_num(from);
     cnum t = c_num(to);
 
-    for (iter = items; iter && f != t; iter = cdr(iter), f++)
+    for (iter = it_seq; iter && f != t; iter = cdr(iter), f++)
       vec_in->v.vec[f] = car(iter);
     mut(vec_in);
   }
@@ -4350,7 +4441,7 @@ val mapcar(val fun, val list)
   val list_orig = list;
 
   for (; list; list = cdr(list))
-    list_collect (iter, funcall1(fun, car(list)));
+    iter = list_collect(iter, funcall1(fun, car(list)));
 
   return make_like(out, list_orig);
 }
@@ -4361,7 +4452,7 @@ val mapcon(val fun, val list)
   val list_orig = list;
 
   for (; list; list = cdr(list))
-    list_collect_nconc (iter, funcall1(fun, list));
+    iter = list_collect_nconc(iter, funcall1(fun, list));
 
   return make_like(out, list_orig);
 }
@@ -4372,7 +4463,7 @@ val mappend(val fun, val list)
   val list_orig = list;
 
   for (; list; list = cdr(list))
-    list_collect_append (iter, funcall1(fun, car(list)));
+    iter = list_collect_append(iter, funcall1(fun, car(list)));
 
   return make_like(out, list_orig);
 }
@@ -4388,20 +4479,20 @@ val merge(val list1, val list2, val lessfun, val keyfun)
     if (funcall2(lessfun, el1, el2)) {
       val next = cdr(list1);
       *cdr_l(list1) = nil;
-      list_collect_nconc(ptail, list1);
+      ptail = list_collect_nconc(ptail, list1);
       list1 = next;
     } else {
       val next = cdr(list2);
       *cdr_l(list2) = nil;
-      list_collect_nconc(ptail, list2);
+      ptail = list_collect_nconc(ptail, list2);
       list2 = next;
     }
   }
 
   if (list1)
-    list_collect_nconc(ptail, list1);
+    ptail = list_collect_nconc(ptail, list1);
   else
-    list_collect_nconc(ptail, list2);
+    ptail = list_collect_nconc(ptail, list2);
 
   return out;
 }
@@ -4595,7 +4686,7 @@ val set_diff(val list1, val list2, val testfun, val keyfun)
       val list1_key = funcall1(keyfun, item);
 
       if (!find(list1_key, list2, testfun, keyfun))
-        list_collect (ptail, item);
+        ptail = list_collect(ptail, item);
     }
   }
 
@@ -4702,7 +4793,7 @@ val env(void)
     char **iter = environ;
 
     for (; *iter != 0; iter++)
-      list_collect (ptail, string_utf8(*iter));
+      ptail = list_collect(ptail, string_utf8(*iter));
 
     return env_list = out;
 #elif HAVE_GETENVIRONMENTSTRINGS
@@ -4713,7 +4804,7 @@ val env(void)
       uw_throwf(error_s, lit("out of memory"), nao);
 
     for (; *iter; iter += wcslen(iter) + 1)
-      list_collect (ptail, string(iter));
+      ptail = list_collect(ptail, string(iter));
 
     FreeEnvironmentStringsW(env);
 

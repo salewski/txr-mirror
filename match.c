@@ -327,10 +327,10 @@ static val vars_to_bindings(val spec, val vars, val bindings)
   for (iter = vars; iter; iter = cdr(iter)) {
     val item = car(iter);
     if (bindable(item)) {
-      list_collect (ptail, cons(item, noval_s));
+      ptail = list_collect(ptail, cons(item, noval_s));
     } else if (consp(item) && bindable(first(item))) {
-      list_collect (ptail, cons(first(item), 
-                                txeval(spec, second(item), bindings)));
+      ptail = list_collect(ptail, cons(first(item), 
+                                       txeval(spec, second(item), bindings)));
     } else { 
       sem_error(spec, lit("not a variable spec: ~a"), item, nao);
     }
@@ -795,7 +795,7 @@ static val h_coll(match_line_ctx *c)
 
           if (!exists) {
             if (dfl == noval_s)
-              list_collect (ptail, var);
+              ptail = list_collect(ptail, var);
             else
               strictly_new_bindings = acons(var, dfl, strictly_new_bindings);
           }
@@ -1381,7 +1381,7 @@ static val subst_vars(val spec, val bindings, val filter)
         continue;
       } else if (sym == quasi_s) {
         val nested = subst_vars(rest(elem), bindings, filter);
-        list_collect_append(iter, nested);
+        iter = list_collect_append(iter, nested);
         spec = cdr(spec);
         continue;
       } else if (sym == expr_s) {
@@ -1390,13 +1390,13 @@ static val subst_vars(val spec, val bindings, val filter)
         continue;
       } else {
         val nested = subst_vars(elem, bindings, filter);
-        list_collect_append(iter, nested);
+        iter = list_collect_append(iter, nested);
         spec = cdr(spec);
         continue;
       }
     }
 
-    list_collect(iter, elem);
+    iter = list_collect(iter, elem);
     spec = cdr(spec);
   }
 
@@ -1582,12 +1582,12 @@ static val extract_vars(val output_spec)
     val sym = first(output_spec);
     if (sym == var_s) {
       if (bindable(second(output_spec)))
-        list_collect (tai, second(output_spec));
+        tai = list_collect(tai, second(output_spec));
       else
-        list_collect_nconc (tai, extract_vars(second(output_spec)));
+        tai = list_collect_nconc(tai, extract_vars(second(output_spec)));
     } else if (sym != expr_s) {
       for (; output_spec; output_spec = cdr(output_spec))
-        list_collect_nconc(tai, extract_vars(car(output_spec)));
+        tai = list_collect_nconc(tai, extract_vars(car(output_spec)));
     }
   }
 
@@ -1605,7 +1605,7 @@ static val extract_bindings(val bindings, val output_spec, val vars)
     if (assoc(sym, bindings_out))
       continue;
     if (memq(sym, var_list))
-      list_collect(ptail, binding);
+      ptail = list_collect(ptail, binding);
   }
 
   return bindings_out;
@@ -1689,7 +1689,7 @@ static void do_output_line(val bindings, val specline, val filter, val out)
                     val m = txeval(args, second(args), bind_a);
 
                     if (eql(mod(num_fast(i), m), n))
-                      list_collect_append (ptail, rest(clause));
+                      ptail = list_collect_append(ptail, rest(clause));
                   }
 
                   if (active_mods)
@@ -1712,7 +1712,7 @@ static void do_output_line(val bindings, val specline, val filter, val out)
                   val m = txeval(args, second(args), bind_a);
 
                   if (eql(mod(num_fast(i), m), n))
-                    list_collect_append (ptail, rest(clause));
+                    ptail = list_collect_append(ptail, rest(clause));
                 }
 
                 if (active_mods)
@@ -1812,7 +1812,7 @@ static void do_output(val bindings, val specs, val filter, val out)
                   val m = txeval(args, second(args), bind_a);
 
                   if (eql(mod(num_fast(i), m), n))
-                    list_collect_append (ptail, rest(clause));
+                    ptail = list_collect_append(ptail, rest(clause));
                 }
 
                 if (active_mods)
@@ -1835,7 +1835,7 @@ static void do_output(val bindings, val specs, val filter, val out)
                 val m = txeval(args, second(args), bind_a);
 
                 if (eql(mod(num_fast(i), m), n))
-                  list_collect_append (ptail, rest(clause));
+                  ptail = list_collect_append(ptail, rest(clause));
               }
 
               if (active_mods)
@@ -2554,7 +2554,7 @@ static val v_gather(match_files_ctx *c)
 
       if (!success) {
         *cdr_l(iter) = nil;
-        list_collect_nconc(ptail, iter);
+        ptail = list_collect_nconc(ptail, iter);
       } else if (success == t) {
         c->bindings = new_bindings;
         max_data = t;
@@ -2744,7 +2744,7 @@ static val v_collect(match_files_ctx *c)
 
           if (!exists) {
             if (dfl == noval_s) 
-              list_collect (ptail, var);
+              ptail = list_collect(ptail, var);
             else
               strictly_new_bindings = acons(var, dfl, strictly_new_bindings);
           }

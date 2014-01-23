@@ -374,6 +374,7 @@ val pop(val *plist);
 val push(val v, val *plist);
 val copy_list(val list);
 val make_like(val list, val thatobj);
+val to_seq(val obj);
 val nreverse(val in);
 val reverse(val in);
 val append2(val list1, val list2);
@@ -724,45 +725,22 @@ INLINE val eq(val a, val b) { return ((a) == (b) ? t : nil); }
 #define c_true(c_cond) ((c_cond) ? t : nil)
 
 #define list_collect_decl(OUT, PTAIL)           \
-  obj_t *OUT = nil, **PTAIL = &OUT
+  val OUT = nil, *PTAIL = &OUT
 
-#define list_collect(PTAIL, OBJ)                \
-  do {                                          \
-    if (*PTAIL)                                 \
-      PTAIL = tail(*PTAIL);                     \
-    set(*PTAIL, cons(OBJ, nil));                \
-    PTAIL = cdr_l(*PTAIL);                      \
-  } while(0)
-
-#define list_collect_nconc(PTAIL, OBJ)          \
-  do {                                          \
-    if (*PTAIL) {                               \
-      PTAIL = tail(*PTAIL);                     \
-    }                                           \
-    set(*PTAIL, OBJ);                           \
-  } while (0)
-
-#define list_collect_append(PTAIL, OBJ)         \
-  do {                                          \
-    if (*PTAIL) {                               \
-      set(*PTAIL, copy_list(*PTAIL));           \
-      PTAIL = tail(*PTAIL);                     \
-    }                                           \
-    set(*PTAIL, OBJ);                           \
-  } while (0)
+val *list_collect(val *pptail, val obj);
+val *list_collect_nconc(val *pptail, val obj);
+val *list_collect_append(val *pptail, val obj);
 
 #define cons_bind(CAR, CDR, CONS)               \
   obj_t *c_o_n_s ## CAR ## CDR = CONS;          \
   obj_t *CAR = car(c_o_n_s ## CAR ## CDR);      \
   obj_t *CDR = cdr(c_o_n_s ## CAR ## CDR)
-
 #define cons_set(CAR, CDR, CONS)                \
   do {                                          \
      obj_t *c_o_n_s ## CAR ## CDR = CONS;       \
      CAR = car(c_o_n_s ## CAR ## CDR);          \
      CDR = cdr(c_o_n_s ## CAR ## CDR);          \
   } while (0)
-
 
 #define zero num_fast(0)
 #define one num_fast(1)

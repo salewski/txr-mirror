@@ -1306,9 +1306,9 @@ static val dv_compile_regex(val exp)
       return cobj((mem_t *) set, chset_s, &char_set_obj_ops);
     } else if (sym == compound_s) {
       list_collect_decl (out, iter);
-      list_collect (iter, compound_s);
+      iter = list_collect(iter, compound_s);
       for (; args; args = cdr(args))
-        list_collect (iter, dv_compile_regex(first(args)));
+        iter = list_collect(iter, dv_compile_regex(first(args)));
       return out;
     } else if (sym == zeroplus_s || sym == oneplus_s ||
                sym == optional_s || sym == compl_s) {
@@ -1865,16 +1865,17 @@ val regsub(val regex, val repl, val str)
     if (!find) {
       if (pos == zero)
         return str;
-      list_collect(ptail, sub_str(str, pos, nil));
+      ptail = list_collect(ptail, sub_str(str, pos, nil));
       break;
     }
-    list_collect(ptail, sub_str(str, pos, find));
-    list_collect(ptail, if3(isfunc,
-                            funcall1(repl, sub_str(str, find, plus(find, len))),
-                            repl));
+    ptail = list_collect(ptail, sub_str(str, pos, find));
+    ptail = list_collect(ptail, if3(isfunc,
+                                    funcall1(repl, sub_str(str, find,
+                                                           plus(find, len))),
+                                    repl));
     if (len == zero && eql(find, pos)) {
       if (lt(pos, length_str(str))) {
-        list_collect(ptail, chr_str(str, pos));
+        ptail = list_collect(ptail, chr_str(str, pos));
         pos = plus(pos, one);
       }
     } else {

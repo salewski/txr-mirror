@@ -414,9 +414,9 @@ static val do_eval_args(val form, val env, val ctx_form,
 {
   list_collect_decl (values, ptail);
   for (; consp(form); form = cdr(form))
-    list_collect(ptail, do_eval(car(form), env, ctx_form, lookup));
+    ptail = list_collect(ptail, do_eval(car(form), env, ctx_form, lookup));
   if (form)
-    list_collect_append(ptail, do_eval(form, env, ctx_form, lookup));
+    ptail = list_collect_append(ptail, do_eval(form, env, ctx_form, lookup));
   return values;
 }
 
@@ -582,7 +582,7 @@ static val bindings_helper(val vars, val env, val sequential, val ctx_form)
                    car(ctx_form), var, nao);
     }
 
-    list_collect (ptail, cons(var, val));
+    ptail = list_collect (ptail, cons(var, val));
 
     if (sequential)
       env_replace_vbind(nenv, new_bindings);
@@ -645,9 +645,9 @@ static val op_each(val form, val env)
     {
       val res = eval_progn(body, make_env(new_bindings, nil, env), form);
       if (collect)
-        list_collect(ptail, res);
+        ptail = list_collect(ptail, res);
       else if (append)
-        list_collect_nconc(ptail, res);
+        ptail = list_collect_nconc(ptail, res);
     }
   }
 
@@ -1291,7 +1291,7 @@ static val subst_vars(val forms, val env)
         continue;
       } else if (sym == quasi_s) {
         val nested = subst_vars(rest(form), env);
-        list_collect_append(iter, nested);
+        iter = list_collect_append(iter, nested);
         forms = cdr(forms);
         continue;
       } else if (sym == expr_s) {
@@ -1300,7 +1300,7 @@ static val subst_vars(val forms, val env)
         continue;
       } else {
         val nested = subst_vars(form, env);
-        list_collect_append(iter, nested);
+        iter = list_collect_append(iter, nested);
         forms = cdr(forms);
         continue;
       }
@@ -1320,7 +1320,7 @@ static val subst_vars(val forms, val env)
                                form, nao);
     }
 
-    list_collect(iter, form);
+    iter = list_collect(iter, form);
     forms = cdr(forms);
   }
 
@@ -1604,8 +1604,8 @@ static val supplement_op_syms(val ssyms, val max)
     val num = car(entry);
 
     for (; lt(ni, num); ni = plus(ni, one))
-      list_collect(tl, cons(ni, gensym(format_op_arg(ni))));
-    list_collect(tl, entry);
+      tl = list_collect(tl, cons(ni, gensym(format_op_arg(ni))));
+    tl = list_collect(tl, entry);
   }
 
   return outsyms;
@@ -1838,11 +1838,11 @@ val mapcarv(val fun, val list_of_lists)
         val list = car(iter);
         if (!list)
           return make_like(out, list_orig);
-        list_collect(atail, car(list));
+        atail = list_collect(atail, car(list));
         *car_l(iter) = cdr(list);
       }
 
-      list_collect(otail, apply(fun, args, nil));
+      otail = list_collect(otail, apply(fun, args, nil));
     }
   }
 }
@@ -1864,11 +1864,11 @@ static val mappendv(val fun, val list_of_lists)
         val list = car(iter);
         if (!list)
           return make_like(out, list_orig);
-        list_collect(atail, car(list));
+        atail = list_collect(atail, car(list));
         *car_l(iter) = cdr(list);
       }
 
-      list_collect_append (otail, apply(fun, args, nil));
+      otail = list_collect_append(otail, apply(fun, args, nil));
     }
   }
 }

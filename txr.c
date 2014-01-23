@@ -463,7 +463,7 @@ int txr_main(int argc, char **argv)
       list_collect_decl(filenames, iter);
 
       while (*argv)
-        list_collect(iter, string_utf8(*argv++));
+        iter = list_collect(iter, string_utf8(*argv++));
 
       retval = extract(spec, filenames, bindings);
 

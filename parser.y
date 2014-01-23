@@ -1006,12 +1006,12 @@ static val o_elems_transform(val o_elems)
       val pat = third(elem);
       val modifiers = fourth(elem);
 
-      list_collect(ptail, list(first(elem), sym, nil, modifiers, nao));
+      ptail = list_collect(ptail, list(first(elem), sym, nil, modifiers, nao));
       elem = pat;
     }
 
     if (elem)
-      list_collect(ptail, elem);
+      ptail = list_collect(ptail, elem);
   }
   
   return o_elems_out;

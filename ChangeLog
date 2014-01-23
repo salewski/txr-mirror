@@ -1,6 +1,48 @@
 2014-01-22  Kaz Kylheku  <kaz@kylheku.com>
 
- 	Support function versions of if, and, or so that partial
+	Changes to the list collection mechanism to improve
+	the extension of list operations over vectors and strings.
+
+	* eval.c (do_eval_args, bindings_helper, op_each,
+	subst_vars, supplement_op_syms, mapcarv, mappendv): Switch from
+	list_collect_* macros to functions.
+
+	* lib.c (copy_list): Switch from list_collect* macros to functions.
+	Use list_collect_nconc for the final terminator. Doing a copy
+	there with list_collect_append was actually wasteful, and now
+	that list_collect_append calls copy_list in places, it triggered
+	runaway recursion.
+	(make_like): Bugfix: list_vector was used instead of vector_list.
+	(to_seq, list_collect, list_collect_nconc, list_collect_append): New
+	functions.
+	(append2, appendv, nappend2, sub_list, replace_list, ldiff, remq,
+	remql, remqual, remove_if, keep_if, proper_plist_to_alist,
+	improper_plist_to_alist, split_str, split_str_set, tok_str,
+	list_str, chain, andf, orf, lis_vector, mapcar, mapcon, mappend,
+	merge, set_diff, env): Switch from list_collect* macros to functions.
+	(replace_str, replace_vec): Allow single item replacement sequence.
+
+	* lib.h (to_seq): Declared.
+	(list_collect, list_collect_nconc, list_collect_append): Macros
+	removed, replaced by function declarations of the same name.
+	These functions return the new ptail since they cannot assign
+	to it, requiring all uses to be updated to do the assignment
+	of the returned value.
+	(list_collect_decl): Use val rather than obj_t *.
+
+	* match.c (vars_to_bindings, h_coll, subst_vars, extract_vars,
+	extract_bindings, do_output_line, do_output, v_gather, v_collect):
+	Switch from list_collect* macros to functions.
+
+	* parser.y (o_elems_transform): Likewise.
+
+	* regex.c (dv_compile_regex, regsub): Likewise.
+
+	* txr.c (txr_main): Likewise.
+
+2014-01-22  Kaz Kylheku  <kaz@kylheku.com>
+
+	Support function versions of if, and, or so that partial
 	evaluation like (op or @1 42) or (op if (eq @1 foo) bar xyzzy)
 	is possible.
 
