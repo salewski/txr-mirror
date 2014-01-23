@@ -341,8 +341,11 @@ texts : text %prec LOW          { $$ = rlcp(cons($1, nil), $1); }
 elem : texts                    { $$ = rlcp(cons(text_s, $1), $1);
                                   $$ = rlcp(optimize_text($$), $$); }
      | var                      { $$ = rl($1, num(lineno)); }
-     | list                     { if (first($1) == do_s)
-                                    $$ = expand($1);
+     | list                     { val sym = first($1);
+                                  if (sym == do_s || sym == require_s)
+                                    $$ = rlcp(cons(sym,
+                                                   expand_forms(rest($1))),
+                                              $1);
                                   else
                                     $$ = $1; }
      | COLL exprs_opt ')' elems END     { $$ = list(coll_s, $4, nil, $2, nao);

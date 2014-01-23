@@ -1,3 +1,15 @@
+2014-01-23  Kaz Kylheku  <kaz@kylheku.com>
+
+	Bugfix: @(require ...) not expanding forms.
+
+	* eval.c (expand_forms): Static function becomes external.
+	(expand_form): Remove case which handles do_s.
+
+	* eval.h (expand_forms): Declared.
+
+	* parser.y (elem): Expand both do_s and require_s forms by
+	using expand_forms.
+
 2014-01-22  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (conses, lazy_conses, func_set_env): New functions.

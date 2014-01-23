@@ -1332,7 +1332,7 @@ static val op_quasi_lit(val form, val env)
   return cat_str(subst_vars(rest(form), env), nil);
 }
 
-static val expand_forms(val form)
+val expand_forms(val form)
 {
   if (atom(form)) {
     return form;
@@ -1783,13 +1783,6 @@ val expand(val form)
       return cons(sym, cons(cons(keysym, 
                                  cons(valsym, cons(hashform_ex, nil))),
                             body_ex));
-    } else if (sym == do_s) {
-      val forms = rest(form);
-      val forms_ex = expand_forms(forms);
-
-      if (forms == forms_ex)
-        return form;
-      return rlcp(cons(sym, forms_ex), form);
     } else if (sym == quasi_s) {
       val quasi = rest(form);
       val quasi_ex = expand_quasi(quasi);
