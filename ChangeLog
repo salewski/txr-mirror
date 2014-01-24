@@ -1,5 +1,10 @@
 2014-01-23  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (expand): Bugfix in expansion of dohash: neglected
+	to insert result form into the expanded output.
+
+2014-01-23  Kaz Kylheku  <kaz@kylheku.com>
+
 	Version 76
 
 	* txr.c (version): Bumped.

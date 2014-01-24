@@ -1784,7 +1784,9 @@ val expand(val form)
       if (hashform == hashform_ex && resform == resform_ex && body == body_ex)
         return form;
       return cons(sym, cons(cons(keysym, 
-                                 cons(valsym, cons(hashform_ex, nil))),
+                                 cons(valsym, 
+                                      cons(hashform_ex, 
+                                           cons(resform_ex, nil)))),
                             body_ex));
     } else if (sym == quasi_s) {
       val quasi = rest(form);
