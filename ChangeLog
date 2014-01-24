@@ -1,3 +1,17 @@
+2014-01-24  Kaz Kylheku  <kaz@kylheku.com>
+
+	* hash.c (hash_update): New function.
+
+	* hash.h (hash_update): Declared.
+
+	* lib.c (update): New function.
+
+	* lib.h (update): Declared.
+
+	* eval.c (eval_init): Register hash_update and update as intrinsics.
+
+	* txr.1: Documented.
+
 2014-01-23  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (expand): Bugfix in expansion of dohash: neglected

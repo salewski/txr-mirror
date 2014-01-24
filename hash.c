@@ -858,6 +858,15 @@ val hash_isec(val hash1, val hash2)
   }
 }
 
+val hash_update(val hash, val fun)
+{
+  val iter = hash_begin(hash);
+  val cell;
+  while ((cell = hash_next(iter)) != nil)
+    rplacd(cell, funcall1(fun, cdr(cell)));
+  return hash;
+}
+
 void hash_init(void)
 {
   weak_keys_k = intern(lit("weak-keys"), keyword_package);

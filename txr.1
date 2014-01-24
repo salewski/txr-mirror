@@ -8847,6 +8847,22 @@ can be used in functional programming as higher order functions, whereas the
 bracket notation is syntactic sugar, and set is an operator, not a function.
 Therefore the brackets cannot replace all uses of ref and refset.
 
+.SS Function update
+
+.TP
+Syntax:
+
+  (update <sequence-or-hash> <function>)
+
+.TP
+Description:
+
+The update function replaces each elements in a sequence, or each value
+in a hash table, with the value of <function> applied to that element
+or value.
+
+The sequence or hash table is returned.
+
 .SS Function sort
 
 .TP
@@ -9787,6 +9803,21 @@ the equal function instead.
 
 In addition to storing key-value pairs, a hash table can have a piece of
 information associated with it, called the user data.
+
+.SS Function hash-update
+
+.TP
+Syntax:
+
+  (hash-update <hash> <function>)
+
+.TP
+Description:
+
+The update function replaces each values in <hash>, with the value of
+<function> applied to that value.
+
+The return value is <hash>.
 
 .SS Function group-by
 

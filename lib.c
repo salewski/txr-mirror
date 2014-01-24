@@ -4819,6 +4819,43 @@ val replace(val seq, val items, val from, val to)
   }
 }
 
+val update(val seq, val fun)
+{
+  switch (type(seq)) {
+  case NIL:
+    break;
+  case CONS:
+  case LCONS:
+    {
+      val iter = seq;
+
+      while (consp(iter)) {
+        rplaca(iter, funcall1(fun, car(iter)));
+        iter = cdr(iter);
+      }
+    }
+    break;
+  case LIT:
+  case STR:
+  case VEC:
+    {
+      val len = length(seq);
+      val i;
+      for (i = zero; lt(i, len); i = plus(i, one))
+        refset(seq, i, funcall1(fun, ref(seq, i)));
+    }
+    break;
+  case COBJ:
+    if (hashp(seq))
+      return hash_update(seq, fun);
+    /* fallthrough */
+  default:
+    type_mismatch(lit("replace: ~s is not a sequence"), cons, nao);
+  }
+
+  return seq;
+}
+
 val env(void)
 {
   if (env_list) {
