@@ -1,3 +1,14 @@
+2014-01-26  Kaz Kylheku  <kaz@kylheku.com>
+
+	Sigh; more lexical-syntactic hacks. This adds handling
+	for the @' combination, as in @(bind a @'(foo ,bar))
+
+	* parser.l: Handle the new METAQUO token.
+
+	* parser.y (METAQUO): New token.
+	(meta_expr): New "METAQUO expr" case. Added missing METABKT
+	error handling case.
+
 2014-01-24  Kaz Kylheku  <kaz@kylheku.com>
 
 	* hash.c (hash_update): New function.

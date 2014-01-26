@@ -81,7 +81,7 @@ static val parsed_spec;
 %token <val> NUMBER METANUM
 
 %token <chr> REGCHAR REGTOKEN LITCHAR
-%token <chr> METAPAR METABKT SPLICE
+%token <chr> METAPAR METABKT METAQUO SPLICE
 
 %type <val> spec clauses clauses_opt clause
 %type <val> all_clause some_clause none_clause maybe_clause block_clause
@@ -106,7 +106,7 @@ static val parsed_spec;
 %right OUTPUT REPEAT REP FIRST LAST EMPTY DEFINE
 %right SPACE TEXT NUMBER
 %nonassoc '[' ']' '(' ')'
-%left '-' ',' '\'' SPLICE
+%left '-' ',' '\'' SPLICE METAQUO
 %left '|' '/'
 %left '&' 
 %right '~' '*' '?' '+' '%'
@@ -700,7 +700,7 @@ list : '(' exprs ')'            { $$ = rl($2, num($1)); }
                                     expr = cons(quote_s, rest(expr));
                                   $$ = rlcp(list(unquote_s, expr, nao), $2); }
      | '\'' expr                { $$ = rlcp(list(choose_quote($2),
-                                            $2, nao), $2); }
+                                                 $2, nao), $2); }
      | SPLICE expr              { val expr = $2;
                                   if (consp(expr) && first(expr) == qquote_s)
                                     expr = cons(quote_s, rest(expr));
@@ -713,14 +713,23 @@ list : '(' exprs ')'            { $$ = rl($2, num($1)); }
 
 meta_expr : METAPAR exprs ')'   { $$ = rlcp(cons(expr_s, expand($2)), $2); }
           | METABKT exprs ']'   { $$ = rlcp(cons(expr_s, 
-                                                 rlcp(expand(cons(dwim_s, $2)),
+                                                 rlcp(expand(cons(dwim_s,
+                                                                  $2)),
                                                       $2)), 
                                             $2); }
           | METAPAR ')'         { $$ = rl(cons(expr_s, nil), num(lineno)); }
           | METABKT ']'         { $$ = rl(cons(expr_s, rl(cons(dwim_s, nil), 
                                                           num(lineno))),
                                           num(lineno)); }
+          | METAQUO expr        { val expnq = expand(list(choose_quote($2),
+                                                          $2, nao));
+                                  val quote = rlcp(expnq, $2);
+                                  $$ = rlcp(cons(expr_s, quote), quote); }
+          | METAQUO error       { $$ = nil;
+                                  yybadtoken(yychar, lit("meta expression")); }
           | METAPAR error       { $$ = nil;
+                                  yybadtoken(yychar, lit("meta expression")); }
+          | METABKT error       { $$ = nil;
                                   yybadtoken(yychar, lit("meta expression")); }
           ;
 

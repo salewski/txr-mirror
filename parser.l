@@ -432,15 +432,26 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return yytext[0];
 }
 
-<SPECIAL>[(\[] |
-<NESTED,BRACED>@?[(\[] {
+<SPECIAL,NESTED,BRACED>[(\[] {
  yy_push_state(NESTED);
- if (yytext[0] == '@') {
-   yylval.chr = yytext[1];
-   return yytext[1] == '(' ? METAPAR : METABKT;
- }
  yylval.lineno = lineno;
  return yytext[0];
+}
+
+<NESTED,BRACED>@[(\['] {
+ yylval.chr = yytext[1];
+ yylval.lineno = lineno;
+ switch (yytext[1]) {
+ case '(': 
+   yy_push_state(NESTED);
+   return METAPAR;
+ case '[':
+   yy_push_state(NESTED);
+   return METABKT;
+ default:
+ case '\'':
+   return METAQUO;
+ }
 }
 
 <NESTED>,[*] {
