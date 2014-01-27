@@ -1,5 +1,48 @@
 2014-01-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	Implementing more correct treatment of meta forms 
+	like @[...] and @(...) occurring in the TXR pattern language.
+
+	The previous behavior is that the parser always expands the interior
+	of these forms when they occur. This is wrong.
+
+	These forms only denote TXR Lisp (and so require expansion) when they
+	occur in a directive, inside a sub-expression that is not already known
+	to be Lisp.
+
+	For instance in @(do @(op foo)), the inner @(op foo) should not be
+	subject to expansion. The reason that the argument forms of @(do)
+	are TXR Lisp. The @(op foo) form denotes (sys:expr foo), and that
+	operator currently has no meaning; and so we should not expand it.
+	The previous, buggy behavior would turn the @(op ..) into 
+	a @(lambda ...).
+
+	Another example is @(bind a @(list @(op foo))) where @(list ...)
+	denotes TXR Lisp and so the interior of the form should be expanded.
+	However, the @(op foo) should not be expanded into @(lambda ...)
+
+	Expanding @(...) forms is not currently harmful, but it interferes
+	with code that wants to use the @(...) syntax for its own use,
+
+	The solution involves adding shims in the parser so that the expansion
+	is only applied when expressions are reduced to the top level
+	within a directive, and then to walk the expressions, looking for
+	the @ syntax and expanding only the outermost occurrence thereof.
+
+	* parser.y (expand_meta): New static function.
+	(n_exprs n_expr): New nonterminal symbols.
+	(elem): The arguments of the list elem (representing a generic
+	directive) now need to be put through expand_meta when it is not
+	@(do ...) or @(require ...).
+	(list): Use n_exprs instead of exprs.
+	(meta_expr): Do not call expand, and use n_expr(s) instead of expr(s).
+	(exprs, expr): These rules no become just a shim which expands
+	the outer-most metas. The actual parsing is represented by n_expr
+	and n_exprs ("n" stands for nested), which behave just like the
+	old expr and exprs.
+
+2014-01-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	Sigh; more lexical-syntactic hacks. This adds handling
 	for the @' combination, as in @(bind a @'(foo ,bar))
 

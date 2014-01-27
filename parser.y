@@ -56,6 +56,7 @@ static val lit_char_helper(val litchars);
 static val optimize_text(val text_form);
 static val unquotes_occur(val quoted_form);
 static val choose_quote(val quoted_form);
+static val expand_meta(val form);
 static wchar_t char_from_name(const wchar_t *name);
 
 static val parsed_spec;
@@ -91,7 +92,8 @@ static val parsed_spec;
 %type <val> output_clause define_clause try_clause catch_clauses_opt
 %type <val> line elems_opt elems clause_parts_h additional_parts_h
 %type <val> text texts elem var var_op modifiers meta_expr vector hash
-%type <val> list exprs exprs_opt expr out_clauses out_clauses_opt out_clause
+%type <val> list exprs exprs_opt expr n_exprs n_expr
+%type <val> out_clauses out_clauses_opt out_clause
 %type <val> repeat_clause repeat_parts_opt o_line
 %type <val> o_elems_opt o_elems o_elem o_var rep_elem rep_parts_opt
 %type <val> regex lisp_regex regexpr regbranch
@@ -347,7 +349,9 @@ elem : texts                    { $$ = rlcp(cons(text_s, $1), $1);
                                                    expand_forms(rest($1))),
                                               $1);
                                   else
-                                    $$ = $1; }
+                                    $$ = rlcp(cons(sym,
+                                                   expand_meta(rest($1))),
+                                              $1); }
      | COLL exprs_opt ')' elems END     { $$ = list(coll_s, $4, nil, $2, nao);
                                           rl($$, num($1)); }
      | COLL exprs_opt ')' elems
@@ -691,17 +695,17 @@ hash : HASH_H list              { if (unquotes_occur($2))
                                               num($1)); }
      ;
 
-list : '(' exprs ')'            { $$ = rl($2, num($1)); }
+list : '(' n_exprs ')'          { $$ = rl($2, num($1)); }
      | '(' ')'                  { $$ = nil; }
-     | '[' exprs ']'            { $$ = rl(cons(dwim_s, $2), num($1)); }
+     | '[' n_exprs ']'          { $$ = rl(cons(dwim_s, $2), num($1)); }
      | '[' ']'                  { $$ = rl(cons(dwim_s, nil), num($1)); }
-     | ',' expr                 { val expr = $2;
+     | ',' n_expr               { val expr = $2;
                                   if (consp(expr) && first(expr) == qquote_s)
                                     expr = cons(quote_s, rest(expr));
                                   $$ = rlcp(list(unquote_s, expr, nao), $2); }
-     | '\'' expr                { $$ = rlcp(list(choose_quote($2),
+     | '\'' n_expr              { $$ = rlcp(list(choose_quote($2),
                                                  $2, nao), $2); }
-     | SPLICE expr              { val expr = $2;
+     | SPLICE n_expr            { val expr = $2;
                                   if (consp(expr) && first(expr) == qquote_s)
                                     expr = cons(quote_s, rest(expr));
                                   $$ = rlcp(list(splice_s, expr, nao), $2); }
@@ -711,18 +715,15 @@ list : '(' exprs ')'            { $$ = rl($2, num($1)); }
                                   yybadtoken(yychar, lit("DWIM expression")); }
      ;
 
-meta_expr : METAPAR exprs ')'   { $$ = rlcp(cons(expr_s, expand($2)), $2); }
-          | METABKT exprs ']'   { $$ = rlcp(cons(expr_s, 
-                                                 rlcp(expand(cons(dwim_s,
-                                                                  $2)),
-                                                      $2)), 
+meta_expr : METAPAR n_exprs ')' { $$ = rlcp(cons(expr_s, $2), $2); }
+          | METABKT n_exprs ']' { $$ = rlcp(cons(expr_s, 
+                                                 rlcp(cons(dwim_s, $2), $2)), 
                                             $2); }
           | METAPAR ')'         { $$ = rl(cons(expr_s, nil), num(lineno)); }
           | METABKT ']'         { $$ = rl(cons(expr_s, rl(cons(dwim_s, nil), 
                                                           num(lineno))),
                                           num(lineno)); }
-          | METAQUO expr        { val expnq = expand(list(choose_quote($2),
-                                                          $2, nao));
+          | METAQUO n_expr      { val expnq = list(choose_quote($2), $2, nao);
                                   val quote = rlcp(expnq, $2);
                                   $$ = rlcp(cons(expr_s, quote), quote); }
           | METAQUO error       { $$ = nil;
@@ -733,33 +734,37 @@ meta_expr : METAPAR exprs ')'   { $$ = rlcp(cons(expr_s, expand($2)), $2); }
                                   yybadtoken(yychar, lit("meta expression")); }
           ;
 
-exprs : expr                    { $$ = rlcp(cons($1, nil), $1); }
-      | expr exprs              { $$ = rlcp(cons($1, $2), $1); }
-      | expr '.' expr           { $$ = rlcp(cons($1, $3), $1); }
-      | expr DOTDOT exprs       { $$ = rlcp(cons(list(cons_s, $1,
-                                                      car($3), nao),
-                                                 cdr($3)), $1); }
-      ;
+exprs : n_exprs                 { $$ = rlcp(expand_meta($1), $1); }
+
+expr : n_expr                   { $$ = rlcp(expand_meta($1), $1); }
 
 exprs_opt : exprs               { $$ = $1; }
           | /* empty */         { $$ = nil; }
           ;
 
-expr : SYMTOK                   { $$ = rl(sym_helper($1, t), num(lineno)); }
-     | METANUM                  { $$ = cons(var_s, cons($1, nil));
-                                  rl($$, num(lineno)); }
-     | NUMBER                   { $$ = $1; }
-     | list                     { $$ = $1; }
-     | vector                   { $$ = $1; }
-     | hash                     { $$ = $1; }
-     | meta_expr                { $$ = $1; }
-     | lisp_regex               { $$ = cons(regex_compile(rest($1), nil),
+n_exprs : n_expr                { $$ = rlcp(cons($1, nil), $1); }
+        | n_expr n_exprs        { $$ = rlcp(cons($1, $2), $1); }
+        | n_expr '.' n_expr     { $$ = rlcp(cons($1, $3), $1); }
+        | n_expr DOTDOT n_exprs { $$ = rlcp(cons(list(cons_s, $1,
+                                                      car($3), nao),
+                                                 cdr($3)), $1); }
+      ;
+
+n_expr : SYMTOK                 { $$ = rl(sym_helper($1, t), num(lineno)); }
+       | METANUM                { $$ = cons(var_s, cons($1, nil));
+                                rl($$, num(lineno)); }
+       | NUMBER                 { $$ = $1; }
+       | list                   { $$ = $1; }
+       | vector                 { $$ = $1; }
+       | hash                   { $$ = $1; }
+       | meta_expr              { $$ = $1; }
+       | lisp_regex             { $$ = cons(regex_compile(rest($1), nil),
                                             rest($1));
                                   rlcp($$, $1); }
-     | chrlit                   { $$ = rl($1, num(lineno)); }
-     | strlit                   { $$ = $1; }
-     | quasilit                 { $$ = $1; }
-     ;
+       | chrlit                 { $$ = rl($1, num(lineno)); }
+       | strlit                 { $$ = $1; }
+       | quasilit               { $$ = $1; }
+       ;
 
 regex : '/' regexpr '/'         { $$ = cons(regex_s, $2); end_of_regex();
                                   rl($$, num(lineno)); }
@@ -771,10 +776,11 @@ regex : '/' regexpr '/'         { $$ = cons(regex_s, $2); end_of_regex();
 lisp_regex : HASH_SLASH regexpr '/'    
                                 { $$ = cons(regex_s, $2); end_of_regex();
                                   rl($$, num(lineno)); }
-      | HASH_SLASH error        { $$ = nil;
+           | HASH_SLASH error        
+                                { $$ = nil;
                                   yybadtoken(yychar, lit("regex"));
                                   end_of_regex(); }
-      ;
+           ;
 
 regexpr : regbranch                     { $$ = if3(cdr($1), 
                                                    cons(compound_s, $1),
@@ -1113,6 +1119,26 @@ static val unquotes_occur(val quoted_form)
 static val choose_quote(val quoted_form)
 {
   return unquotes_occur(quoted_form) ? qquote_s : quote_s;
+}
+
+static val expand_meta(val form)
+{
+  if (atom(form))
+    return form;
+
+  if (car(form) == expr_s)
+    return cons(expr_s, expand(rest(form)));
+
+  {
+    list_collect_decl (out, ptail);
+
+    for (; consp(form); form = cdr(form)) 
+      ptail = list_collect(ptail, expand_meta(car(form)));
+
+    list_collect_nconc(ptail, form);
+
+    return out;
+  }
 }
 
 val rl(val form, val lineno)
