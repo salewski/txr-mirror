@@ -1854,6 +1854,26 @@ val match_regex(val str, val reg, val pos)
   return nil;
 }
 
+val match_regex_right(val str, val regex, val pos)
+{
+  val slen = length(str);
+
+  if (!pos)
+    pos = zero;
+
+  for (;;) {
+    cons_bind (from, len, search_regex(str, regex, pos, nil));
+
+    if (!from)
+      return nil;
+
+    if (eql(plus(from, len), slen))
+      return len;
+
+    pos = plus(pos, one);
+  }
+}
+
 val regsub(val regex, val repl, val str)
 {
   list_collect_decl (out, ptail);
