@@ -1,3 +1,10 @@
+2014-01-27  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (obj_print, obj_pprint): Bugfix: there may be
+	additional expressions forms in (sys:var <sym>) after
+	the sym. These were not being printed. Such syntax occurs
+	often in the TXR pattern language.
+
 2014-01-26  Kaz Kylheku  <kaz@kylheku.com>
 
 	* regex.c (match_regex_right): New function.
