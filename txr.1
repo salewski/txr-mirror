@@ -9604,18 +9604,15 @@ and error.
 
 .SH REGULAR EXPRESSION LIBRARY
 
-.SS Functions search-regex and match-regex
+.SS Function search-regex
 
 .TP
 Syntax:
 
  (search-regex <haystack-string> <needle-regex> : <start> <from-end>)
- (match-regex <string> <regex> : <position>)
 
 .TP
 Description
-
-These functions perform regular-expression-based searching and matching.
 
 The search-regex function searches through <haystack-string> starting
 at position <start> for a match for <needle-regex>. If <start> is omitted,
@@ -9625,11 +9622,76 @@ This function returns nil if no match is found, otherwise it returns
 a cons pair, whose car indicates the position of the match, and whose
 cdr indicates the length of the match. 
 
+.SS Function match-regex
+
+.TP
+Syntax:
+
+ (match-regex <string> <regex> : <position>)
+
+.TP
+Description
+
 The match-regex function tests whether <regex> matches at <position>
 in <string>. If <position> is not specified, it is taken to be zero.
 If the regex matches, then the length of the match is returned.
 If it does not match, then nil is returned.
-.
+
+.SS Function match-regex-right
+
+.TP
+Syntax:
+
+ (match-regex-right <string> <regex> : <end-position>)
+
+.TP
+Description
+
+The match-regex function tests whether <string> contains a match which ends
+precisely on the character just before <end-position>.  If <end-position> is
+not specified, it defaults to the length of the string, and the function
+performs a right-anchored regex match.
+
+If a match is found, then the length of the match is returned, and
+the matching substring is then returned.
+
+The match must terminate just before <end-position> in the sense that
+additional characters at <end-position> and beyond can no longer satisfy the
+regular expression. More formally, the function searches, starting from
+position zero, for positions where there occurs a match for the regular
+expression, taking the longest possible match. The length of first such a match
+which terminates on the character just before <end-position> is returned.
+If no such a match is found, then nil is returned.
+
+.TP
+Examples:
+
+  ;; Return matching portion rather than length thereof.
+
+  (defun match-regex-right-substring (str reg : end-pos)
+    (set end-pos (or end-pos (length str)))
+    (let ((len (match-regex-right str reg end-pos)))
+      (if len
+        [str (- end-pos len)..end-pos]
+        nil)))
+     
+  (match-regex-right-substring "abc" #/c/) -> ""
+
+  (match-regex-right-substring "acc" #/c*/) -> "cc"
+
+  ;; Regex matches starting at multiple positions, but all
+  ;; the matches extend past the limit.
+  (match-regex-right-substring "acc" #/c*/ 2) -> nil
+
+  ;; If the above behavior is not wanted, then
+  ;; we can extract the string up to the limiting
+  ;; position and do the match on that.
+  (match-regex-right-substring ["acc" 0..2] #/c*/) -> "c"
+
+  ;; Equivalent of above call
+  (match-regex-right-substring "ac" #/c*/) -> "c"
+
+
 .SS Function regsub
 
 .TP

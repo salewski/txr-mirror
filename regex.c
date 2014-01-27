@@ -1854,20 +1854,21 @@ val match_regex(val str, val reg, val pos)
   return nil;
 }
 
-val match_regex_right(val str, val regex, val pos)
+val match_regex_right(val str, val regex, val end)
 {
+  val pos = zero;
   val slen = length(str);
 
-  if (!pos)
-    pos = zero;
+  if (!end || gt(end, slen))
+    end = slen;
 
-  for (;;) {
+  while (lt(pos, end)) {
     cons_bind (from, len, search_regex(str, regex, pos, nil));
 
     if (!from)
       return nil;
 
-    if (eql(plus(from, len), slen))
+    if (eql(plus(from, len), end))
       return len;
 
     pos = plus(pos, one);
