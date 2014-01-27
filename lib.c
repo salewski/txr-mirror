@@ -3542,6 +3542,12 @@ val reduce_left(val fun, val list, val init, val key)
   if (!key)
     key = identity_f;
 
+  if (!init && list)
+    init = pop(&list);
+
+  if (!init && !list)
+    return funcall(fun);
+
   for (; list; list = cdr(list))
     init = funcall2(fun, init, funcall1(key, car(list)));
 
@@ -3553,8 +3559,25 @@ val reduce_right(val fun, val list, val init, val key)
   if (!key)
     key = identity_f;
 
-  if (nullp(list))
+  if (list) {
+    if (!init) {
+      if (!rest(list))
+        return funcall1(key, first(list));
+      if (!rest(rest(list)))
+        return funcall2(fun, funcall1(key, first(list)),
+                        funcall1(key, second(list)));
+      /* fall through: no init, three or more items in list */
+    } else {
+      if (!rest(list))
+        return funcall2(fun, funcall1(key, first(list)), init);
+      /* fall through: init, and two or more items in list */
+    }
+  } else if (init) {
     return init;
+  } else {
+    return funcall(fun);
+  }
+
   return funcall2(fun, funcall1(key, car(list)),
                        if3(cdr(list), reduce_right(fun, cdr(list), init, key),
                                       init));

@@ -1,5 +1,15 @@
 2014-01-27  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (reduce_left, reduce_right): changing the behavior so that
+	the initial value is optional. this creates the possibility that
+	the effective list of operands is empty, in which case the function
+	must support a call with no arguments, just like in the common lisp
+	reduce.
+
+	* txr.1: rewrote reduce-left and reduce-right documentation.
+
+2014-01-27  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (obj_print, obj_pprint): Bugfix: there may be
 	additional expressions forms in (sys:var <sym>) after
 	the sym. These were not being printed. Such syntax occurs

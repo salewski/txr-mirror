@@ -7107,39 +7107,64 @@ yields (1 2 3 4 5). In TXR Lisp, this usage can be simulated using
 .TP
 Syntax:
 
-  (reduce-left <binary-function> <list> <init-value> <key-function>)
-  (reduce-right <binary-function> <list> <init-value> <key-function>)
+  (reduce-left <binary-function> <list> : <init-value> <key-function>)
+  (reduce-right <binary-function> <list> : <init-value> <key-function>)
 
 .TP
 Description:
 
-The reduce-left and reduce-right functions reduce lists of operands
-specified in <list> to a single value by the repeated application of
-<binary-function>.
+The reduce-left and reduce-right functions reduce lists of operands specified
+by <list> and <init-value> to a single value by the repeated application of
+<binary-function>. 
 
-First, both functions initialize an internal accumulator with <init-value>.
+An effective list of operands is formed by combining <list> and
+<init-value>.   If <key-function> is specified and not nil, then
+the items of <list> are mapped to a new values through <key-function>.
+If an <init-value> is supplied and not nil, then in the
+case of reduce-left, the effective list of operands is formed by prepending
+<init-value> to <lits>. In the case of reduce-right, the effective
+operand list is produced by appending <init-value> to <list>.
 
-Under reduce-left, the list is processed left to right. If elements
-remain to be processed, the <binary-function> is repeatedly called with two
-arguments: the accumulator and the next element from the list. After each call,
-the return value of the function replaces the accumulator. When no more items
-remain, the accumulator is returned.
+The production of the effective list can be expressed like this,
+though this is not to be understood as the actual impelmentation:
 
-Under reduce-right, the list is processed right to left. If elements
-remain to be processed, the <binary-function> is repeatedly called with two
-arguments: the next element from the list and the accumulator. After each call,
-the return value of the function replaces the accumulator. When no more items
-remain, the accumulator is returned.
+  ;; reduce-left
+  (let ((eff-list (append (if init-value (list init-value))
+                          [mapcar (or key-function identity) list])))
 
-The <key-function> specifies how each element from the <list> is converted
-to an argument to <binary-function>. The value nil is equivalent to 
-(fun identity), which means that each list element is taken as the value itself.
+In the reduce-right case, the arguments to append are reversed.
 
+If the effective list of operands is empty, then <binary-function> is called
+with no arguments at all, and its value is returned. This is the only
+case in which <binary-function> is called with no arguments; in all
+remaining cases, it is called with two arguments.
+
+If the effective list contains one item, then that item is returned.
+
+Otherwise, the effective list contains two or more items, and is decimated as
+follows. 
+
+Under reduce-left, the leftmost pair of operands is removed
+from the list and passed as arguments to <binary-function>, in the same order
+that they appear in the list, and the resulting value initializes an
+accumulator. Then, for each remaining item in the list, <binary-function> is
+invoked on two arguments: the current accumulator value, and the next element
+from the list. After each call, the accumulator is updated with the return
+value of <binary-function>.  The final value of the accumulator is returned.
+
+Under reduce-right, the list is processed right to left.  The rightmost
+pair of elements in the effetive list is removed, and passed as arguments to
+<binary-function>, in the same order that they appear in the list. The
+resulting value initializes an accumulator. Then, for each remaining item in
+the list, <binary-function> is invoked on two arguments:  the
+next element from the list, in right to left order, and the current
+accumulator value. After each call, the accumulator is updated with the return
+value of <binary-function>. The final value of the accumulator is returned.
 
 .TP
 Examples:
 
-  ;;; list is empty, so 1 is just returned:
+  ;;; effective list is (1) so 1 is returned
   (reduce-left (fun +) () 1 nil)  ->  1  
 
   ;;; computes (- (- (- 0 1) 2) 3) 
@@ -7149,7 +7174,11 @@ Examples:
   (reduce-right (fun -) '(1 2 3) 0 nil) -> 2
 
   ;;; computes (* 1 2 3)
-  (reduce-left (fun *) '((1) (2) (3)) 1 (fun first)) -> 6
+  (reduce-left (fun *) '((1) (2) (3)) nil (fun first)) -> 6
+
+  ;;; computes 1 because the effective list is empty
+  ;;; and so * is called with no arguments, which yields 1.
+  (reduce-left (fun *) nil)
 
 .SS Function some, all and none
 
