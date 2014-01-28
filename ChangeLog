@@ -22,6 +22,9 @@
 	added here.
 	(yybadtoken): Removed references to METAPAR, METABKT and METAQUO.
 
+	* txr.vim, genvim.txr: There can now be whitespace in TXR Lisp
+	like @ (a b c) and @ [1 2 3].
+
 2014-01-27  Kaz Kylheku  <kaz@kylheku.com>
 
 	* parser.y (yybadtoken): Handle METAQUO in switch.
