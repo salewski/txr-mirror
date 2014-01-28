@@ -1,3 +1,19 @@
+2014-01-28  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (meta_meta_p, meta_meta_strip): New static functions.
+	(transform_op): Recognize compounded metas, and strip one level off.
+	(eval_init): Intern sys:expand function so we have access to the
+	form expander from TXR Lisp.
+
+	* lib.c (obj_print, obj_pprint): Fix: wasn't rendering metanumbers.
+
+	* parser.y (list): Support @ in front of anything. If it's an atom,
+	treat it similarly to a metasymbol or metanumber.
+
+	* txr.1: Documented meta-meta arguments in nested op.
+
+	* genvim.txr, txr.vim: Support coloring for compounded meta syntax.
+ 
 2014-01-27  Kaz Kylheku  <kaz@kylheku.com>
 
 	Lexing and parsing improvements, leaving things less hacky than before,

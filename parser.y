@@ -699,7 +699,10 @@ list : '(' n_exprs ')'          { $$ = rl($2, num($1)); }
      | '(' ')'                  { $$ = nil; }
      | '[' n_exprs ']'          { $$ = rl(cons(dwim_s, $2), num($1)); }
      | '[' ']'                  { $$ = rl(cons(dwim_s, nil), num($1)); }
-     | '@' list                 { $$ = rlcp(cons(expr_s, $2), $2); }
+     | '@' n_expr               { if (consp($2))
+                                    $$ = rlcp(cons(expr_s, $2), $2);
+                                  else
+                                    $$ = rlcp(cons(var_s, cons($2, nil)), $2); }
      | '(' error                { $$ = nil;
                                   yybadtoken(yychar, lit("list expression")); }
      | '[' error                { $$ = nil;

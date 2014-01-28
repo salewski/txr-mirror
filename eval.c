@@ -1540,6 +1540,25 @@ static val format_op_arg(val num)
   return format(nil, lit("arg-~,02s-"), num, nao);
 }
 
+static val meta_meta_p(val form)
+{
+  uses_or2;
+  if (atom(form))
+    return nil;
+  if (cdr(form))
+    return if2(car(form) == var_s && meta_meta_p(cdr(form)), t);
+  return or2(integerp(car(form)), eq(car(form), rest_s));
+}
+
+static val meta_meta_strip(val args)
+{
+  uses_or2;
+  val strip = cdr(args);
+  return if3(or2(integerp(car(strip)), eq(car(strip), rest_s)), 
+             cons(var_s, strip),
+             cons(expr_s, strip));
+}
+
 static val transform_op(val forms, val syms, val rg)
 {
   if (atom(forms)) {
@@ -1547,6 +1566,9 @@ static val transform_op(val forms, val syms, val rg)
   } else {
     val fi = first(forms);
     val re = rest(forms);
+
+    if (fi == expr_s && meta_meta_p(re))
+      return cons(syms, rlcp(meta_meta_strip(re), forms));
 
     /* This handles improper list forms like (a b c . @42)
        when the recursion hits the @42 part. */
@@ -2474,7 +2496,7 @@ void eval_init(void)
   reg_fun(intern(lit("eval"), user_package), func_n2o(eval_intrinsic, 1));
   reg_fun(intern(lit("lisp-parse"), user_package), func_n2o(lisp_parse, 0));
   reg_fun(intern(lit("read"), user_package), func_n2o(lisp_parse, 0));
-
+  reg_fun(intern(lit("expand"), system_package), func_n1(expand));
   reg_fun(intern(lit("chain"), user_package), func_n0v(chainv));
   reg_fun(intern(lit("andf"), user_package), func_n0v(andv));
   reg_fun(intern(lit("orf"), user_package), func_n0v(orv));
