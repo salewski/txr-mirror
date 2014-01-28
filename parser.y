@@ -1231,6 +1231,7 @@ void yybadtoken(int tok, val context)
   case LITCHAR: problem = lit("string literal character"); break;
   case METAPAR: problem = lit("@("); break;
   case METABKT: problem = lit("@["); break;
+  case METAQUO: problem = lit("@'"); break;
   case DOTDOT: problem = lit(".."); break;
   case HASH_BACKSLASH: problem = lit("#\\"); break;
   case HASH_SLASH:     problem = lit("#/"); break;

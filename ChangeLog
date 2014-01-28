@@ -1,5 +1,9 @@
 2014-01-27  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.y (yybadtoken): Handle METAQUO in switch.
+
+2014-01-27  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (reduce_left, reduce_right): changing the behavior so that
 	the initial value is optional. this creates the possibility that
 	the effective list of operands is empty, in which case the function
