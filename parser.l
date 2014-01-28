@@ -157,16 +157,20 @@ FLO     {SGN}?({DIG}*[.]{DIG}+{EXP}?|{DIG}+[.]?{EXP})
 FLODOT  {SGN}?{DIG}+[.]
 XNUM    #x{SGN}?{XDIG}+
 BSCHR   [a-zA-Z0-9!$%&*+\-<=>?\\^_~]
-BSYM    {BSCHR}({BSCHR}|#)*
 NSCHR   [a-zA-Z0-9!$%&*+\-<=>?\\^_~/]
 ID_END  [^a-zA-Z0-9!$%&*+\-<=>?\\^_~/]
-NSYM    {NSCHR}({NSCHR}|#)*
 TOK     {SYM}
-BTREG   ({BSYM}|@)({BSYM}|#)*(:({BSYM}|#)*)?
-BTKEY   @?:({BSYM}|#)*
+BT0     {BSCHR}({BSCHR}|#)*
+BT1     @({BSCHR}|#)+
+BT2     ({BSCHR}|#)+
+BTREG   (({BT0}|{BT1})?:{BT2}|({BT0}|{BT1})(:{BT2})?|:)
+BTKEY   @?:{BT2}?
 BTOK    {BTREG}|{BTKEY}
-NTREG   ({NSYM}|@)({NSYM}|#)*(:({NSYM}|#)*)?
-NTKEY   @?:({NSYM}|#)*
+NT0     {NSCHR}({NSCHR}|#)*
+NT1     @({NSCHR}|#)+
+NT2     ({NSCHR}|#)+
+NTREG   (({NT0}|{NT1})?:{NT2}|({NT0}|{NT1})(:{NT2})?|:)
+NTKEY   @?:{NT2}?
 NTOK    {NTREG}|{NTKEY}
 WS      [\t ]*
 HEX     [0-9A-Fa-f]
@@ -438,20 +442,9 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
  return yytext[0];
 }
 
-<NESTED,BRACED>@[(\['] {
- yylval.chr = yytext[1];
- yylval.lineno = lineno;
- switch (yytext[1]) {
- case '(': 
-   yy_push_state(NESTED);
-   return METAPAR;
- case '[':
-   yy_push_state(NESTED);
-   return METABKT;
- default:
- case '\'':
-   return METAQUO;
- }
+<NESTED,BRACED>@ {
+  yylval.lineno = lineno;
+  return yytext[0];
 }
 
 <NESTED>,[*] {

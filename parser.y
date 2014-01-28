@@ -81,8 +81,7 @@ static val parsed_spec;
 
 %token <val> NUMBER METANUM
 
-%token <chr> REGCHAR REGTOKEN LITCHAR
-%token <chr> METAPAR METABKT METAQUO SPLICE
+%token <chr> REGCHAR REGTOKEN LITCHAR SPLICE
 
 %type <val> spec clauses clauses_opt clause
 %type <val> all_clause some_clause none_clause maybe_clause block_clause
@@ -91,7 +90,7 @@ static val parsed_spec;
 %type <val> clause_parts additional_parts gather_parts additional_gather_parts
 %type <val> output_clause define_clause try_clause catch_clauses_opt
 %type <val> line elems_opt elems clause_parts_h additional_parts_h
-%type <val> text texts elem var var_op modifiers meta_expr vector hash
+%type <val> text texts elem var var_op modifiers vector hash
 %type <val> list exprs exprs_opt expr n_exprs n_expr
 %type <val> out_clauses out_clauses_opt out_clause
 %type <val> repeat_clause repeat_parts_opt o_line
@@ -100,7 +99,7 @@ static val parsed_spec;
 %type <val> regterm regtoken regclass regclassterm regrange
 %type <val> strlit chrlit quasilit quasi_items quasi_item litchars
 %type <chr> regchar
-%type <lineno> '(' '['
+%type <lineno> '(' '[' '@'
 
 %nonassoc LOW /* used for precedence assertion */
 %right SYMTOK '{' '}'
@@ -108,7 +107,7 @@ static val parsed_spec;
 %right OUTPUT REPEAT REP FIRST LAST EMPTY DEFINE
 %right SPACE TEXT NUMBER
 %nonassoc '[' ']' '(' ')'
-%left '-' ',' '\'' SPLICE METAQUO
+%left '-' ',' '\'' SPLICE '@'
 %left '|' '/'
 %left '&' 
 %right '~' '*' '?' '+' '%'
@@ -344,7 +343,7 @@ elem : texts                    { $$ = rlcp(cons(text_s, $1), $1);
                                   $$ = rlcp(optimize_text($$), $$); }
      | var                      { $$ = rl($1, num(lineno)); }
      | list                     { val sym = first($1);
-                                  if (sym == do_s || sym == require_s)
+                                  if (sym ==  do_s || sym == require_s)
                                     $$ = rlcp(cons(sym,
                                                    expand_forms(rest($1))),
                                               $1);
@@ -376,8 +375,9 @@ elem : texts                    { $$ = rlcp(cons(text_s, $1), $1);
        clause_parts_h           { $$ = list(choose_s, t, $4, $2, nao);
                                   rl($$, num($1)); }
      | CHOOSE exprs_opt ')' END { yyerror("empty cases clause"); }
-     | DEFINE exprs ')' elems END       { $$ = list(define_s, t, $4, $2, nao);
-                                          rl($$, num($1)); }
+     | DEFINE exprs ')' elems END       
+                                { $$ = list(define_s, t, $4, $2, nao);
+                                  rl($$, num($1)); }
      ;
 
 clause_parts_h : elems additional_parts_h { $$ = cons($1, $2); }
@@ -699,44 +699,20 @@ list : '(' n_exprs ')'          { $$ = rl($2, num($1)); }
      | '(' ')'                  { $$ = nil; }
      | '[' n_exprs ']'          { $$ = rl(cons(dwim_s, $2), num($1)); }
      | '[' ']'                  { $$ = rl(cons(dwim_s, nil), num($1)); }
-     | ',' n_expr               { val expr = $2;
-                                  if (consp(expr) && first(expr) == qquote_s)
-                                    expr = cons(quote_s, rest(expr));
-                                  $$ = rlcp(list(unquote_s, expr, nao), $2); }
-     | '\'' n_expr              { $$ = rlcp(list(choose_quote($2),
-                                                 $2, nao), $2); }
-     | SPLICE n_expr            { val expr = $2;
-                                  if (consp(expr) && first(expr) == qquote_s)
-                                    expr = cons(quote_s, rest(expr));
-                                  $$ = rlcp(list(splice_s, expr, nao), $2); }
+     | '@' list                 { $$ = rlcp(cons(expr_s, $2), $2); }
      | '(' error                { $$ = nil;
                                   yybadtoken(yychar, lit("list expression")); }
      | '[' error                { $$ = nil;
                                   yybadtoken(yychar, lit("DWIM expression")); }
+     | '@' error                { $$ = nil;
+                                  yybadtoken(yychar, lit("meta expression")); }
      ;
 
-meta_expr : METAPAR n_exprs ')' { $$ = rlcp(cons(expr_s, $2), $2); }
-          | METABKT n_exprs ']' { $$ = rlcp(cons(expr_s, 
-                                                 rlcp(cons(dwim_s, $2), $2)), 
-                                            $2); }
-          | METAPAR ')'         { $$ = rl(cons(expr_s, nil), num(lineno)); }
-          | METABKT ']'         { $$ = rl(cons(expr_s, rl(cons(dwim_s, nil), 
-                                                          num(lineno))),
-                                          num(lineno)); }
-          | METAQUO n_expr      { val expnq = list(choose_quote($2), $2, nao);
-                                  val quote = rlcp(expnq, $2);
-                                  $$ = rlcp(cons(expr_s, quote), quote); }
-          | METAQUO error       { $$ = nil;
-                                  yybadtoken(yychar, lit("meta expression")); }
-          | METAPAR error       { $$ = nil;
-                                  yybadtoken(yychar, lit("meta expression")); }
-          | METABKT error       { $$ = nil;
-                                  yybadtoken(yychar, lit("meta expression")); }
-          ;
-
 exprs : n_exprs                 { $$ = rlcp(expand_meta($1), $1); }
+      ;
 
 expr : n_expr                   { $$ = rlcp(expand_meta($1), $1); }
+     ;
 
 exprs_opt : exprs               { $$ = $1; }
           | /* empty */         { $$ = nil; }
@@ -757,13 +733,22 @@ n_expr : SYMTOK                 { $$ = rl(sym_helper($1, t), num(lineno)); }
        | list                   { $$ = $1; }
        | vector                 { $$ = $1; }
        | hash                   { $$ = $1; }
-       | meta_expr              { $$ = $1; }
        | lisp_regex             { $$ = cons(regex_compile(rest($1), nil),
                                             rest($1));
                                   rlcp($$, $1); }
        | chrlit                 { $$ = rl($1, num(lineno)); }
        | strlit                 { $$ = $1; }
        | quasilit               { $$ = $1; }
+       | ',' n_expr             { val expr = $2;
+                                  if (consp(expr) && first(expr) == qquote_s)
+                                    expr = cons(quote_s, rest(expr));
+                                  $$ = rlcp(list(unquote_s, expr, nao), $2); }
+       | '\'' n_expr            { $$ = rlcp(list(choose_quote($2),
+                                                 $2, nao), $2); }
+       | SPLICE n_expr          { val expr = $2;
+                                  if (consp(expr) && first(expr) == qquote_s)
+                                    expr = cons(quote_s, rest(expr));
+                                  $$ = rlcp(list(splice_s, expr, nao), $2); }
        ;
 
 regex : '/' regexpr '/'         { $$ = cons(regex_s, $2); end_of_regex();
@@ -1229,9 +1214,6 @@ void yybadtoken(int tok, val context)
   case REGCHAR: problem = lit("regular expression character"); break;
   case REGTOKEN: problem = lit("regular expression token"); break;
   case LITCHAR: problem = lit("string literal character"); break;
-  case METAPAR: problem = lit("@("); break;
-  case METABKT: problem = lit("@["); break;
-  case METAQUO: problem = lit("@'"); break;
   case DOTDOT: problem = lit(".."); break;
   case HASH_BACKSLASH: problem = lit("#\\"); break;
   case HASH_SLASH:     problem = lit("#/"); break;

@@ -1,5 +1,29 @@
 2014-01-27  Kaz Kylheku  <kaz@kylheku.com>
 
+	Lexing and parsing improvements, leaving things less hacky than before,
+	albeit hacky.
+
+	* parser.l (BSYM, NSYM): Regex definitions gone.
+	(BT0, BT1, BT2, NT0, NT1, NT2): New regex definitions.
+	(BTREG, BTKEY, NTREG, NTKEY): Rewritten, so that they cannot
+	match a lone @ character as a symbol name.
+	(grammar): Rules for returning METAPAR, METABKT and METAQUO
+	are gone. Instead, we just recognize a @ in the NESTED
+	and BRACED states and return it as a token.
+
+	* parser.y (METAPAR, METABKT, METAQUO): Token types removed.
+	(meta_expr): Nonterminal symbol removed.
+	('@'): New token type.
+	(list): Quotes and splices handling removed from this rule.
+	The new token '@' is handled here, on the other hand, because
+	there are places that reference the list rule that need to support
+	@ expressions.
+	(n_expr): Reference to meta_expr removed. Quote, unquote and splice
+	added here.
+	(yybadtoken): Removed references to METAPAR, METABKT and METAQUO.
+
+2014-01-27  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.y (yybadtoken): Handle METAQUO in switch.
 
 2014-01-27  Kaz Kylheku  <kaz@kylheku.com>
