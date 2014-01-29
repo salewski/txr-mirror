@@ -5912,19 +5912,29 @@ The dotted notation can be used to write a function that accepts
 a variable number of arguments. To write a function that accepts
 variable arguments only, with no required arguments, use a single symbol.
 
-The keyword symbol : can appear in the parameter list. It is not an argument,
-but a separator between required parameters and optional parameters.
-When the function is called, optional parameter for which arguments
-are not supplied take on the value nil.
+The keyword symbol : (colon) can appear in the parameter list. It is not an
+argument, but a separator between required parameters and optional parameters.
+When the function is called, optional parameter for which arguments are not
+supplied take on the value nil.
 
 An optional parameter can also be written in the form (<name> <expr>).
 In this situation, if the call does not specify a value for the parameter,
 then the parameter takes on the value of the expression <expr>. 
-The expression is evaluated in the environment in which the lambda
-was constructed.
 
-Functions created by lambda capture the surrounding variable bindings.
+The initializer expressions are evaluated an environment in which
+all of the parameters are visible, which extends the environment in
+which the lambda was constructed. For instance:
 
+  (let ((default 0))
+    (lambda (str : (end (length str)) (counter default))
+      (list str end counter)))
+
+In this lambda, the initializing expression for the optional parameter
+end is (length str), and the str variable it refers to is the previous
+argument. The initializer for the optional variable counter is
+the expression default, and it refers to the binding established
+by the surrounding let. This reference is captured as part of the
+lambda's lexical closure.
 
 .TP
 Examples:

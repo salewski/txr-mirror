@@ -1,3 +1,17 @@
+2014-01-29  Kaz Kylheku  <kaz@kylheku.com>
+
+	Default argument initializer scoping rule change, allowing
+	things like (defun foo (s : (l (length s))) ...).
+	Default arguments can be initialized by expressions that
+	refer to the arguments.
+
+	* eval.c (bind_args): By means of a local array, defer the evaluation
+	of optional argument init forms until the lexical environment,
+	including all the parameters, is captured. Then valuates the forms
+	in the array, and set the variable values. 
+
+	* txr.1: Clarify the new scoping rules.
+
 2014-01-28  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): Registered existing make_catenated_stream as

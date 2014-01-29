@@ -220,8 +220,11 @@ static val lookup_sym_lisp1(val env, val sym)
 
 static val bind_args(val env, val params, val args, val ctx_form)
 {
+  val opt_init_parm[32];
+  val *oi_parm = &opt_init_parm[0], *oi_end = &opt_init_parm[32], *oi_iter;
   val new_bindings = nil;
   val optargs = nil;
+  val new_env;
 
   for (; args && consp(params); args = cdr(args), params = cdr(params)) {
     val param = car(params);
@@ -259,15 +262,18 @@ static val bind_args(val env, val params, val args, val ctx_form)
       eval_error(ctx_form, lit("~s: too few arguments"), car(ctx_form), nao);
     while (consp(params)) {
       val param = car(params);
-      val val = nil;
       if (param == colon_k)
         goto twocol;
       if (consp(param)) {
-        val = car(cdr(param));
-        param = car(param);
+        if (oi_parm == oi_end)
+          eval_error(ctx_form,
+                     lit("~s: too many optional args with initializers"),
+                     car(ctx_form), nao);
+        new_bindings = acons(car(param), car(cdr(param)), new_bindings);
+        *oi_parm++ = car(new_bindings);
+      } else {
+        new_bindings = acons(param, nil, new_bindings);
       }
-      new_bindings = acons(param, eval(val, env, ctx_form),
-                           new_bindings);
       params = cdr(params);
     }
     if (bindable(params))
@@ -279,7 +285,14 @@ static val bind_args(val env, val params, val args, val ctx_form)
     eval_error(ctx_form, lit("~s: too many arguments"), car(ctx_form), nao);
   }
 
-  return make_env(new_bindings, nil, env);
+  new_env = make_env(new_bindings, nil, env);
+
+  for (oi_iter = &opt_init_parm[0]; oi_iter < oi_parm; oi_iter++) {
+    val initval = eval(cdr(*oi_iter), new_env, ctx_form);
+    rplacd(*oi_iter, initval);
+  }
+
+  return new_env;
 twocol:
   eval_error(ctx_form, lit("~a: multiple colons in parameter list"),
              car(ctx_form), nao);
