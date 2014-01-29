@@ -10983,6 +10983,46 @@ the stream-real-time-p function above), and also for setting the priority at
 which messages are reported to syslog by the *stdlog* stream (see *stdlog*
 in the UNIX SYSLOG section).
 
+If <stream> is a catenated stream (see the function make-catenated-stream)
+then these functions transparently operate on the current head stream of the
+catenation.
+
+.SS Function make-catenated-stream
+
+.TP
+Syntax:
+
+  (make-catenated-stream . streams)
+
+.TP
+Description
+
+The make-catenated-stream function takes zero or more arguments which
+are input streams of the same type.
+
+A concatenaed stream does not support seeking operations or output,
+regardless of the capabilities of the streams in the list.
+
+If the stream list is not empty, then the leftmost element of the
+list is called the head stream.
+
+The get-char, get-byte, get-line, unget-char and unget-byte delegate
+to the corresponding operations on the head stream, if it exists.
+If the stream list is empty, they return nil to the caller.
+
+The a get-char, get-byte or get-line operation on the head stream yields nil,
+and there are more lists in the stream, then the stream is removed from the
+list, and the next stream, if any, becomes the head list. The operation is then
+tried again.  If any of these operations fail on the last list, it is not
+removed from the list, so that a stream remains in place which can take
+the unget-char or unget-byte operations.
+
+In this manner, the catenated streams appear to be a single stream.
+
+Note that the operations can fail due to being unsupported. It is
+the caller's responsibility to make sure all of the streams in the list
+are compatible with the intended operations.
+
 .SS Function read
 
 .TP

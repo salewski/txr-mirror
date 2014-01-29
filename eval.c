@@ -2542,6 +2542,7 @@ void eval_init(void)
   reg_fun(intern(lit("real-time-stream-p"), user_package), func_n1(real_time_stream_p));
   reg_fun(intern(lit("stream-set-prop"), user_package), func_n3(stream_set_prop));
   reg_fun(intern(lit("stream-get-prop"), user_package), func_n2(stream_get_prop));
+  reg_fun(intern(lit("make-catenated-stream"), user_package), func_n0v(make_catenated_stream));
   reg_var(intern(lit("s-ifmt"), user_package), &s_ifmt);
   reg_var(intern(lit("s-iflnk"), user_package), &s_iflnk);
   reg_var(intern(lit("s-ifreg"), user_package), &s_ifreg);
@@ -2573,6 +2574,7 @@ void eval_init(void)
   reg_fun(intern(lit("open-process"), user_package), func_n3o(open_process, 2));
   reg_fun(intern(lit("remove-path"), user_package), func_n1(remove_path));
   reg_fun(intern(lit("rename-path"), user_package), func_n2(rename_path));
+
   reg_var(intern(lit("*user-package*"), user_package), &user_package);
   reg_var(intern(lit("*keyword-package*"), user_package), &keyword_package);
   reg_var(intern(lit("*system-package*"), user_package), &system_package);

@@ -2253,7 +2253,8 @@ static val cat_get_line(val stream)
     val line = get_line(first(streams));
     if (line)
       return line;
-    stream->co.handle = (mem_t *) (streams = rest(streams));
+    if ((streams = rest(streams)) != nil)
+      stream->co.handle = (mem_t *) streams;
   }
 
   return nil;
@@ -2267,7 +2268,8 @@ static val cat_get_char(val stream)
     val ch = get_char(first(streams));
     if (ch)
       return ch;
-    stream->co.handle = (mem_t *) (streams = rest(streams));
+    if ((streams = rest(streams)) != nil)
+      stream->co.handle = (mem_t *) streams;
   }
 
   return nil;
@@ -2281,10 +2283,41 @@ static val cat_get_byte(val stream)
     val byte = get_byte(first(streams));
     if (byte)
       return byte;
-    stream->co.handle = (mem_t *) (streams = rest(streams));
+    if ((streams = rest(streams)) != nil)
+      stream->co.handle = (mem_t *) streams;
   }
 
   return nil;
+}
+
+static val cat_unget_byte(val stream, int byte)
+{
+  val streams = (val) stream->co.handle;
+
+  if (!streams) {
+    uw_throwf(file_error_s,
+              lit("unget-byte on catenated stream ~a: stream list empty"),
+              stream, nao);
+  } else {
+    val stream = car(streams);
+    return unget_byte(stream, num_fast(byte));
+  }
+
+  return nil;
+}
+
+static val cat_unget_char(val stream, val ch)
+{
+  val streams = (val) stream->co.handle;
+
+  if (!streams) {
+    uw_throwf(file_error_s,
+              lit("unget-char on catenated stream ~a: stream list empty"),
+              stream, nao);
+  } else {
+    val stream = car(streams);
+    return unget_char(stream, ch);
+  }
 }
 
 static val cat_get_prop(val stream, val ind)
@@ -2307,8 +2340,8 @@ static struct strm_ops cat_stream_ops = {
   cat_get_line,
   cat_get_char,
   cat_get_byte,
-  0, /* unget_char, */
-  0, /* unget_byte, */
+  cat_unget_char,
+  cat_unget_byte,
   0, /* close, */
   0, /* flush, */
   0, /* seek, */

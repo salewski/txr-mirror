@@ -1,5 +1,20 @@
 2014-01-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Registered existing make_catenated_stream as
+	intrinsic.
+
+	* stream.c (cat_get_line, cat_get_char, cat_get_byte): Do not
+	remove the last stream from the stream list, so that there is
+	some stream object there which can take the unget-char or
+	unget-byte operations.
+	(cat_unget_byte, cat_unget_char): New static functions.
+	(cat_stream_ops): unget_char and unget_byte function pointers
+	filled in.
+
+	* txr.1: Documented catenated-streams.
+
+2014-01-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (struct stdio_handle): New member, is_rotated.
 	Moved mode member down.
 	(make_stdio_stream_common): Initialize is_rotated.
