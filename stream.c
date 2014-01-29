@@ -2260,6 +2260,23 @@ val make_catenated_stream(val stream_list)
   return cobj((mem_t *) stream_list, stream_s, &cat_stream_ops.cobj_ops);
 }
 
+val remove_path(val path)
+{
+  if (w_remove(c_str(path)) < 0)
+    uw_throwf(file_error_s, lit("trying to remove ~a: ~a/~s"),
+                path, num(errno), string_utf8(strerror(errno)), nao);
+  return t;
+}
+
+val rename_path(val from, val to)
+{
+  if (w_rename(c_str(from), c_str(to)) < 0)
+    uw_throwf(file_error_s, lit("trying to rename ~a to ~a: ~a/~s"),
+                from, to, num(errno), string_utf8(strerror(errno)), nao);
+  return t;
+}
+
+
 void stream_init(void)
 {
   protect(&std_input, &std_output, &std_debug, &std_error, &std_null, (val *) 0);

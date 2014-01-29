@@ -2571,7 +2571,8 @@ void eval_init(void)
   reg_fun(intern(lit("open-command"), user_package), func_n2(open_command));
   reg_fun(intern(lit("open-pipe"), user_package), func_n2(open_command));
   reg_fun(intern(lit("open-process"), user_package), func_n3o(open_process, 2));
-
+  reg_fun(intern(lit("remove-path"), user_package), func_n1(remove_path));
+  reg_fun(intern(lit("rename-path"), user_package), func_n2(rename_path));
   reg_var(intern(lit("*user-package*"), user_package), &user_package);
   reg_var(intern(lit("*keyword-package*"), user_package), &keyword_package);
   reg_var(intern(lit("*system-package*"), user_package), &system_package);

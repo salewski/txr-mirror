@@ -383,3 +383,21 @@ FILE *w_freopen(const wchar_t *wname, const wchar_t *wmode, FILE *fold)
   free(mode);
   return f;
 }
+
+int w_remove(const wchar_t *wpath)
+{
+  char *path = utf8_dup_to(wpath);
+  int err = remove(path);
+  free(path);
+  return err;
+}
+
+int w_rename(const wchar_t *wfrom, const wchar_t *wto)
+{
+  char *from = utf8_dup_to(wfrom);
+  char *to = utf8_dup_to(wto);
+  int err = rename(from, to);
+  free(to);
+  free(from);
+  return err;
+}

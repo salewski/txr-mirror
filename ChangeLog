@@ -1,5 +1,18 @@
 2014-01-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (remove_path, rename_path): New functions.
+
+	* stream.h (remove_path, rename_path): Declared.
+
+	* utf8.c (w_remove, w_rename): New functions.
+
+	* utf8.h (w_remove, w_rename): Declared.
+
+	* eval.c (eval_init): Registered remove_path and rename_path
+	as intrinsics.
+
+2014-01-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (meta_meta_p, meta_meta_strip): New static functions.
 	(transform_op): Recognize compounded metas, and strip one level off.
 	(eval_init): Intern sys:expand function so we have access to the

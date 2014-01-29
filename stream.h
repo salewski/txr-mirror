@@ -99,5 +99,7 @@ val open_tail(val path, val mode_str, val seek_end_p);
 val open_command(val path, val mode_str);
 val open_process(val path, val mode_str, val args);
 val make_catenated_stream(val stream_list);
+val remove_path(val path);
+val rename_path(val from, val to);
 
 void stream_init(void);
