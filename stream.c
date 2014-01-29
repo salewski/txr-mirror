@@ -115,7 +115,6 @@ val make_null_stream(void)
 struct stdio_handle {
   FILE *f;
   val descr;
-  val mode; /* used by tail */
   val unget_c;
   utf8_decoder_t ud;
 #if HAVE_FORK_STUFF
@@ -123,6 +122,8 @@ struct stdio_handle {
 #else
   int pid;
 #endif
+  val mode; /* used by tail */
+  unsigned is_rotated; /* used by tail */
   unsigned is_real_time;
 };
 
@@ -464,13 +465,29 @@ int sleep(int sec)
 static void tail_strategy(val stream, unsigned long *state)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
-  int sec, mod;
+  int sec = 0, mod = 0;
 
   tail_calc(state, &sec, &mod);
 
-  sleep(sec);
+  if (h->is_rotated) {
+    /* We already know that the file has rotated. The caller
+     * has read through to the end of the old open file, and
+     * so we can close it now and open a new file.
+     */
+    fclose(h->f);
+    h->f = 0;
+    h->is_rotated = 0;
+  } else if (h->f != 0) {
+    /* We have a file and it hasn't rotated; so sleep on it. */
+    sig_save_enable;
+    sleep(sec);
+    sig_restore_enable;
+  }
 
-  if (*state % mod == 0 || h->f == 0) {
+  /* If the state indicates we should poll for a file rotation,
+   * or we have no file ...
+   */
+  if (h->f == 0 || *state % mod == 0) {
     long save_pos = 0, size;
 
     if (h->f != 0 && (save_pos = ftell(h->f)) == -1)
@@ -478,29 +495,72 @@ static void tail_strategy(val stream, unsigned long *state)
 
     for (;;) {
       FILE *newf;
-      if (!(newf = w_freopen(c_str(h->descr), c_str(h->mode), h->f))) {
+
+      /* Try to open the file. 
+       */
+      if (!(newf = w_fopen(c_str(h->descr), c_str(h->mode)))) {
+        /* If already have the file open previously, and the name
+         * does not open any more, then the file has rotated.
+         * Have the caller try to read the last bit of data
+         * from the old h->f.
+         */
+        if (h->f) {
+          h->is_rotated = 1;
+          return;
+        }
+
+        /* Unable to open; keep trying. */
         tail_calc(state, &sec, &mod);
         sig_save_enable;
         sleep(sec);
         sig_restore_enable;
         continue;
       }
+
+      /* We opened the new file. If we have no old file,
+       * then this is all we have.
+       */
+      if (!h->f) {
+        h->f = newf;
+        break;
+      }
+
+      /* Obtain size of new file. If we can't, then let's just pretend we never
+       * opened it and bail out. 
+       */
+      if (fseek(newf, 0, SEEK_END) == -1 || (size = ftell(newf)) == -1) {
+        fclose(newf);
+        return;
+      }
+
+      /* The newly opened file is smaller than the previously opened
+       * file. The file has rotated and is quite possibly a new object.
+       * We just close newf, and let the caller read the last bit of data from
+       * the old stream before cutting over.
+       */
+      if (size < save_pos) {
+        /* TODO: optimize: keep newf in the handle so as not to have to
+           re-open it again. */
+        h->is_rotated = 1;
+        fclose(newf);
+        return;
+      }
+
+      /* Newly opened file is not smaller. We take a gamble and say
+       * that it's the same object as h->f, since rotating files 
+       * are usually large and it is unlikely that it is a new file
+       * which has grown larger than the original. Just in case,
+       * though, we take the new file handle. But we do not reset
+       * the UTF8 machine.
+       */
+      if (save_pos)
+        fseek(newf, save_pos, SEEK_SET);
+      fclose(h->f);
       h->f = newf;
-      break;
+      return;
     }
 
     utf8_decoder_init(&h->ud);
-
-    if ((fseek(h->f, 0, SEEK_END)) == -1)
-      return;
-
-    if ((size = ftell(h->f)) == -1)
-      return;
-
-    if (size >= save_pos)
-      fseek(h->f, save_pos, SEEK_SET);
-    else
-      rewind(h->f);
   }
 }
 
@@ -1093,10 +1153,11 @@ static val make_stdio_stream_common(FILE *f, val descr, struct cobj_ops *ops)
   val stream = cobj((mem_t *) h, stream_s, ops);
   h->f = f;
   h->descr = descr;
-  h->mode = nil;
   h->unget_c = nil;
   utf8_decoder_init(&h->ud);
   h->pid = 0;
+  h->mode = nil;
+  h->is_rotated = 0;
 #if HAVE_ISATTY
   h->is_real_time = (h->f != 0 && isatty(fileno(h->f)) == 1);
 #else

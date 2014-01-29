@@ -1,5 +1,16 @@
 2014-01-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (struct stdio_handle): New member, is_rotated.
+	Moved mode member down.
+	(make_stdio_stream_common): Initialize is_rotated.
+	(tail_strategy): Substantially rewritten in order to address
+	a possible race condition, when a file is rotated.
+	The issue is that even when the file disappears, or when the file has
+	been replaced, we must continue reading from the old stream until the
+	end, and only then can we switch to the newly rotated file.
+
+2014-01-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (remove_path, rename_path): New functions.
 
 	* stream.h (remove_path, rename_path): Declared.
