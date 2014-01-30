@@ -1,3 +1,56 @@
+                                     TXR 77
+                                   2014-01-30
+
+
+  Features
+
+  - More streamlined parser containing fewer hacks, and fewer obscure
+    cases that don't work.
+
+  - @'expr syntax now works as expected in directives for evaluating quoted
+    TXR Lisp expressions.
+
+  - In nested uses of the do and op operators in TXR Lisp there is now
+    a way to refer to the outer parameters from the inner nestings, using
+    compounded meta syntax like (op (op @1 @@1)), where @1 is argument 1
+    of the function denoted by the inner op, and @@1 is argument 1 of the
+    outer function.  Each additional @ "escapes" out one level of nesting
+    of the op syntax.
+
+  - New update and hash-update functions.
+
+  - The interfaces of reduce-left and reduce-right functions has been
+    improved, making them easier to use, while mostly retaining backward
+    compatibility.
+
+  - New functions remove-path and rename-path for removing and renaming
+    filesystem objects.
+
+  - Catenated streams, previously an internal feature, are exposed
+    now via the make-catenated-stream function.
+
+  - Scope rule change for expressions that provide default intialization
+    for optional arguments. These eexpressions now have the parameters
+    in scope, and so now uses like (lambda (x : (y (length x))) ...)
+    are possible where y is initialized with (length x) if the argument
+    is not supplied. Previously, parameter x would not have been considered 
+    to be in scope of the expression (length x).
+
+    
+
+  Bugs
+
+  - Fixed neglected handling of result form in dohash syntax.
+
+  - In the object printer, the handling of syntax like @(sys:var x ...) was
+    ignoring any additional ... forms, and rendering as @x.
+
+  - Fixed possible race condition in tail streams, whereby when a file
+    rotates, the stream prematurely follows the new file, neglecting
+    to read the last piece of material just added to the previous file.
+
+
+
                                      TXR 76
                                    2014-01-23
                                    

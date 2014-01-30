@@ -1,5 +1,17 @@
 2014-01-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 77
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES, txr.vim: Updated.
+
+2014-01-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	* regex.c (match_regex_right): Fix not returning value.
 
 2014-01-29  Kaz Kylheku  <kaz@kylheku.com>
