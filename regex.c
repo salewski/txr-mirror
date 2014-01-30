@@ -1873,6 +1873,8 @@ val match_regex_right(val str, val regex, val end)
 
     pos = plus(pos, one);
   }
+
+  return nil;
 }
 
 val regsub(val regex, val repl, val str)

@@ -1,5 +1,9 @@
 2014-01-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	* regex.c (match_regex_right): Fix not returning value.
+
+2014-01-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	Default argument initializer scoping rule change, allowing
 	things like (defun foo (s : (l (length s))) ...).
 	Default arguments can be initialized by expressions that
