@@ -1,3 +1,11 @@
+2014-01-30  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (expand_op): Fix broken do operator. In the case of the do
+	operator, we must feed the entire form to the expander, not the
+	individual forms.  That is to say (do operator arg) must expand the
+	form (operator arg), whereas (op fun arg) just expands the forms fun
+	and arg individually.
+
 2014-01-29  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 77

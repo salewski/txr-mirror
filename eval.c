@@ -1648,7 +1648,7 @@ static val supplement_op_syms(val ssyms, val max)
 
 static val expand_op(val sym, val body)
 {
-  val body_ex = expand_forms(body);
+  val body_ex = if3(sym == op_s, expand_forms(body), expand(body));
   val rest_gensym = gensym(lit("rest-"));
   cons_bind (syms, body_trans, transform_op(body_ex, nil, rest_gensym));
   val ssyms = sort(syms, func_n2(lt), car_f);
