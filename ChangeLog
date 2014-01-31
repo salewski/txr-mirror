@@ -1,5 +1,12 @@
 2014-01-30  Kaz Kylheku  <kaz@kylheku.com>
 
+	* genvim.txr: Support floating-point constants.
+	Do not color embedded decimal integers in symbols as integers.
+
+	* txr.vim: Regenerated.
+
+2014-01-30  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (expand_op): When the variant is do, and the symbol
 	is an operator, then suppress the addition of the rest
 	parameter in the dotted cons position at the end of the form,
