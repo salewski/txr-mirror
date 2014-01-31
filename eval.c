@@ -1656,6 +1656,8 @@ static val expand_op(val sym, val body)
   val max = if3(nums, maxv(car(nums), cdr(nums)), zero);
   val min = if3(nums, minv(car(nums), cdr(nums)), zero);
   val has_rest = cons_find(rest_gensym, body_trans, eq_f);
+  val is_op = and3(sym == do_s, consp(body_trans),
+                   gethash(op_table, car(body_trans)));
 
   if (!eql(max, length(nums)) && !zerop(min))
     ssyms = supplement_op_syms(ssyms, max);
@@ -1665,8 +1667,7 @@ static val expand_op(val sym, val body)
   {
     uses_or2;
     val dwim_body = rlcp(cons(dwim_s, 
-                              if3(or3(has_rest, 
-                                      ssyms, 
+                              if3(or4(is_op, has_rest, ssyms, 
                                       nullp(proper_listp(body_trans))),
                                   body_trans,
                                   append2(body_trans, rest_gensym))),

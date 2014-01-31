@@ -726,6 +726,10 @@ INLINE val eq(val a, val b) { return ((a) == (b) ? t : nil); }
 
 #define or4(a, b, c, d) or2(a, or3(b, c, d))
 
+#define and2(a, b) ((a) ? (b) : nil)
+
+#define and3(a, b, c) ((a) && (b) ? (c) : nil)
+
 #define c_true(c_cond) ((c_cond) ? t : nil)
 
 #define list_collect_decl(OUT, PTAIL)           \
