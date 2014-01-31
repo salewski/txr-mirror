@@ -418,7 +418,6 @@ if [ -z "$make" ] ; then
   for make in make gmake ; do
     output=$($make --version 2> /dev/null) || true
     set -- $output
-    printf "\$@=<$1> <$2> <$3>\n"
 
     if [ $1 != "GNU" -o $2 != "Make" ] ; then
       continue
