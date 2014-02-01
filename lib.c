@@ -5577,7 +5577,9 @@ void dump(val obj, val out)
  */
 void d(val obj)
 {
+  int save = gc_state(0);
   dump(obj, std_output);
+  gc_state(save);
 }
 
 /*
