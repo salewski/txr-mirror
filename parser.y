@@ -731,7 +731,7 @@ n_exprs : n_expr                { $$ = rlcp(cons($1, nil), $1); }
 
 n_expr : SYMTOK                 { $$ = rl(sym_helper($1, t), num(lineno)); }
        | METANUM                { $$ = cons(var_s, cons($1, nil));
-                                rl($$, num(lineno)); }
+                                  rl($$, num(lineno)); }
        | NUMBER                 { $$ = $1; }
        | list                   { $$ = $1; }
        | vector                 { $$ = $1; }
