@@ -9876,6 +9876,9 @@ argument specifies whether it shall have weak values, and
 all three of these properties to false, and allows them to be overridden to
 true by the presence of keyword arguments.
 
+It is an error to attmpt to construct an equal-based hash table which
+has weak keys.
+
 The hash function provides an alternative interface. It accepts optional
 arguments which are keyword symbols. Any combination of the three symbols
 :weak-keys, :weak-vals and :equal-based can be specified in any order
