@@ -805,7 +805,7 @@ void parse_init(void)
   protect(&yyin_stream, &prepared_error_message,
           &form_to_ln_hash, (val *) 0);
 
-  form_to_ln_hash = make_hash(t, nil, t);
+  form_to_ln_hash = make_hash(t, nil, nil);
 }
 
 void parse_reset(val spec_file)

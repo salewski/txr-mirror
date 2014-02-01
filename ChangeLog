@@ -1,5 +1,21 @@
 2014-02-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	* hash.c (hash_mark, hash_grow, make_similar_hash,
+	copy_hash, gethash_l, gethash, gethash_f, gethash_n, 
+	hash_count, hash_next, hash_eql, hash_equal): Use
+	num_fast instead of num.
+	(make_hash): An attempt to make a weak-keys hash that has
+	equal-based keys is nonsensical; it is now diagnosed with
+	an exception. Use num_fast instead of num.
+	(hash_process_weak): Call breakpt whenever the weak object(s) due to
+	which entries are being deleted match the value in break_obj.
+	Use num_fast instead of num.
+
+	* parser.l (parse_init): Bugfix: the forms_to_ln_hash
+	was equal-based, which makes no sense.
+
+2014-02-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	Export break_obj.
 
 	* gc.c (break_obj): Change to external linkage.
