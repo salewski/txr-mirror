@@ -1,5 +1,14 @@
 2014-02-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	Export break_obj.
+
+	* gc.c (break_obj): Change to external linkage.
+	(mark): Use t variable instead of re-evaluating obj->t.type.
+
+	* gc.h (break_obj): Declared.
+
+2014-02-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (d): Disable garbage collection around the dump.
 	It's importa for this function not to have the side effect
 	of triggering garbage collection, when it is used for 

@@ -86,7 +86,7 @@ static int full_gc;
 #endif
 
 #if EXTRA_DEBUGGING
-static val break_obj;
+val break_obj;
 #endif
 
 val prot1(val *loc)
@@ -260,7 +260,7 @@ tail_call:
   if ((t & FREE) != 0)
     abort();
 
-  obj->t.type = (type_t) (obj->t.type | REACHABLE);
+  obj->t.type = (type_t) (t | REACHABLE);
 
 #if EXTRA_DEBUGGING
   if (obj == break_obj)
