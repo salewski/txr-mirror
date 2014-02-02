@@ -5024,9 +5024,10 @@ arugments are symbols, they are treated according to Lisp-2 namespacing rules.
 Additionally, if there is an expression in the dotted position, it is also
 evaluated. It should evaluate to a sequence: a list, vector or string.  The
 elements of the sequence generate additional arguments for the function
-call.  In some other Lisp dialects, a function called apply (or similar) must
-be used to do the same thing, and applying sequences other than lists is not
-supported.
+call. Note, however, that a compound form cannot be used in the dot position,
+for obvious reasons, namely that (a b c . (foo z)) does not mean that there is
+a compound form in the dot position, but a different spelling for
+(a b c foo z), where foo behaves as a variable.
 
 The DWIM brackets are similar, except that the first position is an arbitrary
 expression which is evaluated according to the same rules as the remaining
@@ -5051,6 +5052,13 @@ Examples:
   [foo a b . c] ;; calls (foo 3 4 5 6 7)
 
   [c 1]         ;; indexes into vector #(5 6 7) to yield 6
+
+.TP Dialect Note:
+
+In some other Lisp dialects, the improper list syntax is not supported;
+a function called apply (or similar) must be used for application even if
+the expression which gives the trailing arguments is a symbol. Moreover,
+applying sequences other than lists is not supported.
 
 .SS Regular Expressions
 
