@@ -5007,6 +5007,48 @@ according to a modified namespace lookup rule.
 
 More details are given in the documentation for the dwim operator.
 
+.SS Compound Forms
+
+In TXR Lisp, there are two types of compound forms: the Lisp-2 style
+compound forms, denoted by ordinary lists that are expressed with parentheses.
+There are Lisp-1 style compound forms denoted by the DWIM Brackets, discussed
+in the previous section.
+
+The first position of an ordinary Lisp-2 style compound form, is expected to
+have a function or operator name.  Then arguments follow. Finally, there may
+also be an expression in the dotted position, if the form is a function call.
+
+If the form is a function call then the arguments are evaluated. If any of the
+arugments are symbols, they are treated according to Lisp-2 namespacing rules.
+
+Additionally, if there is an expression in the dotted position, it is also
+evaluated. It should evaluate to a list or vector.  The elements of the list
+or vector generate additional arguments for the function call. 
+In some other Lisp dialects, a function called apply (or similar) must be
+used to do the same thing.
+
+The DWIM brackets are similar, except that the first position is an arbitrary
+expression which is evaluated according to the same rules as the remaining
+positions. The first expression must evaluate to a function, or else to some
+other object for which the DWIM syntax is defined, such as a vector, string,
+list or hash. Operators are not supported.   The dotted syntax for application
+of additional arguments from a list or vector is supported in the DWIM
+brackets just like in the parentheses.
+
+.TP
+Examples:
+
+  ;; a contains 3
+  ;; b contains 4
+  ;; c contains #(5 6 7)
+
+  (foo a b . c) ;; calls (foo 3 4 5 6 7)
+  (foo a)       ;; calls (foo 3)
+
+  [foo a b . c] ;; calls (foo 3 4 5 6 7)
+
+  [c 1]         ;; indexes into vector #(5 6 7) to yield 6
+
 .SS Regular Expressions
 
 In TXR Lisp, the / character can occur in symbol names, and the / token
@@ -7104,11 +7146,28 @@ Examples:
   (apply (fun list) '(1 2 3)) -> (1 2 3)
 
 .TP
-Dialect note:
+Dialect Note 1:
+
+Note that some uses of this function that are necessary in other Lisp dialects
+are not necessary in TXR Lisp. The reason is that in TXR Lisp, improper list
+syntax is accepted as a compound form, and performs application:
+
+  (foo a b . x)
+
+Here, the variables a and b supply the first two arguments for foo. In
+the dotted position, x must evaluate to a list or vector. The list or
+vector's elements are pulled out and treated as additional arguments for foo.
+
+.TP
+Dialect Note 2:
 
 TXR Lisp apply does not take additional arguments before the list. 
 In Common Lisp we can write (apply #'list 1 2 (list 3 4 5)) which
-yields (1 2 3 4 5). In TXR Lisp, this usage can be simulated using
+yields (1 2 3 4 5). 
+In TXR Lisp, 
+
+In TXR Lisp, this usage can be simulated using the approach in the
+previous Dialect Note 1, or by using code such as:
 (apply (fun list) (list 1 2 (list 3 4 5))) or
 (apply (fun list) '(,1 ,2 ,*(list 3 4 5))) .
 

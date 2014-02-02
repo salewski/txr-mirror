@@ -428,8 +428,12 @@ static val do_eval_args(val form, val env, val ctx_form,
   list_collect_decl (values, ptail);
   for (; consp(form); form = cdr(form))
     ptail = list_collect(ptail, do_eval(car(form), env, ctx_form, lookup));
-  if (form)
-    ptail = list_collect_append(ptail, do_eval(form, env, ctx_form, lookup));
+  if (form) {
+    val dotpos = do_eval(form, env, ctx_form, lookup);
+    ptail = list_collect_append(ptail, if3(vectorp(dotpos),
+                                           list_vector(dotpos),
+                                           dotpos));
+  }
   return values;
 }
 

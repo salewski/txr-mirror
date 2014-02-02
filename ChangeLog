@@ -1,5 +1,13 @@
 2014-02-02  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (do_eval_args): If the dotted position of the argument
+	list evaluates to a vector, then convert the vector to a list.
+
+	* txr.1: Document compound forms, and how they allow the dotted
+	position and how it may be a vector.
+
+2014-02-02  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Register vector_list function a second time
 	under the name vec, as a variadic function.
 
