@@ -1,5 +1,17 @@
 2014-02-02  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (apply): Support string and vector arglist.
+	(do_eval_args): Support string or vector in dot position.
+
+	* lib.c (tolist): New function.
+
+	* lib.h (tolist): Declared.
+
+	* txr.1: Document how apply and dot position in compound forms
+	supports strings as well as vectors.
+
+2014-02-02  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (do_eval_args): If the dotted position of the argument
 	list evaluates to a vector, then convert the vector to a list.
 

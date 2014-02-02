@@ -312,8 +312,13 @@ val apply(val fun, val arglist, val ctx_form)
 
   type_check (fun, FUN);
 
-  type_assert (listp(arglist),
-               (lit("~s: arglist ~s is not a list"), car(ctx_form), arglist, nao));
+  if (!listp(arglist)) {
+    val arglist_conv = tolist(arglist);
+    type_assert (listp(arglist_conv),
+                 (lit("~s: arglist ~s is not a list"), car(ctx_form),
+                  arglist, nao));
+    arglist = arglist_conv;
+  }
 
   variadic = fun->f.variadic;
   fixparam = fun->f.fixparam;
@@ -430,9 +435,8 @@ static val do_eval_args(val form, val env, val ctx_form,
     ptail = list_collect(ptail, do_eval(car(form), env, ctx_form, lookup));
   if (form) {
     val dotpos = do_eval(form, env, ctx_form, lookup);
-    ptail = list_collect_append(ptail, if3(vectorp(dotpos),
-                                           list_vector(dotpos),
-                                           dotpos));
+    ptail = list_collect_append(ptail, if3(listp(dotpos),
+                                           dotpos, tolist(dotpos)));
   }
   return values;
 }

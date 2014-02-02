@@ -470,6 +470,23 @@ val to_seq(val seq)
   }
 }
 
+val tolist(val seq)
+{
+  switch (type(seq)) {
+  case VEC:
+    return list_vector(seq);
+  case STR:
+  case LIT:
+  case LSTR:
+    return list_str(seq);
+  case NIL:
+  case CONS:
+  case LCONS:
+  default:
+    return seq;
+  }
+}
+
 val *list_collect(val *ptail, val obj)
 {
   switch (type(*ptail)) {
