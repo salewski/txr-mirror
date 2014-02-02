@@ -1,5 +1,20 @@
 2014-02-02  Kaz Kylheku  <kaz@kylheku.com>
 
+	append can now take additional leading arguments before the list.
+
+	* eval.c (apply_frob_args): New static function.
+	(apply_intrinsic): Process arguments with apply_frob_args.
+	(eval_init): apply_intrinsic registered differently, as a
+	variadic function with one mandatory arg.
+
+	* lib.c (lastcons): New function.
+
+	* lib.h (lastcons): Declared.
+
+	* txr.1: Updated append documentation.
+
+2014-02-02  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (apply): Support string and vector arglist.
 	(do_eval_args): Support string or vector in dot position.
 

@@ -7141,16 +7141,27 @@ can be expressed as:
 .TP
 Syntax:
 
-  (apply <function> <argsequence>)
+  (apply <function> [ {<arg>}* <trailing-args> ])
 
 .TP
 Description:
 
-The apply function converts a sequence of values <argsequence> into individual
-arguments which are passed to <function>. The return value of the apply
-invocation is that of <function>.
+The apply function invokes <function>, optionally passing to it an argument
+list. The return value of the apply call is that of <function>.
 
-<argsequence> must be list, vector or string. 
+If no arguments are present after <function>, then <function> is invoked
+without arguments.
+
+If one argument is present after <function>, then it is interpreted as
+<trailing-args>. If this is a sequence (a list, vector or string),
+then the elements of the sequence are passed as individual arguments to
+<function>.  If <trailing-args> is not a sequence, then the function is invoked
+with an improper argument list, terminated by the <trailing-args> atom.
+
+If two or more arguments are present after <function>, then the last of
+these arguments is interpreted as <trailing-args>. The previous arguments
+represent leading arguments which are applied to <function>, prior to the
+arguments taken from <trailing-args>.
 
 .TP
 Examples:
@@ -7158,11 +7169,17 @@ Examples:
   ;; '(1 2 3) becomes arguments to list, thus (list 1 2 3).
   (apply (fun list) '(1 2 3)) -> (1 2 3)
 
+  ;; this effectively invokes (list 1 2 3 4)
+  (apply (fun list) 1 2 '(3 4)) -> (1 2 3)
+
+  ;; this effectively invokes (list 1 2 . 3)
+  (apply (fun list) 1 2 3)) -> (1 2 . 3)
+
   ;; "abc" is separated into characters which become arguments of list
   (apply (fun list) "abc") -> (#\ea #\eb #\ec)
 
 .TP
-Dialect Note 1:
+Dialect Note:
 
 Note that some uses of this function that are necessary in other Lisp dialects
 are not necessary in TXR Lisp. The reason is that in TXR Lisp, improper list
@@ -7173,19 +7190,8 @@ syntax is accepted as a compound form, and performs application:
 Here, the variables a and b supply the first two arguments for foo. In
 the dotted position, x must evaluate to a list or vector. The list or
 vector's elements are pulled out and treated as additional arguments for foo.
-
-.TP
-Dialect Note 2:
-
-TXR Lisp apply does not take additional arguments before the list. 
-In Common Lisp we can write (apply #'list 1 2 (list 3 4 5)) which
-yields (1 2 3 4 5). 
-In TXR Lisp, 
-
-In TXR Lisp, this usage can be simulated using the approach in the
-previous Dialect Note 1, or by using code such as:
-(apply (fun list) (list 1 2 (list 3 4 5))) or
-(apply (fun list) '(,1 ,2 ,*(list 3 4 5))) .
+Of course, this syntax can only be used if x is a symbolic form or an atom.  It
+cannot be a compound form.
 
 .SS Functions reduce-left and reduce-right
 

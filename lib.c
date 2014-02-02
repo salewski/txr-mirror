@@ -400,6 +400,16 @@ val *tail(val cons)
   return cdr_l(cons);
 }
 
+val *lastcons(val list)
+{
+  val *ret = 0;
+  while (consp(cdr(list))) {
+    ret = cdr_l(list);
+    list = cdr(list);
+  }
+  return ret;
+}
+
 val *ltail(val *cons)
 {
   while (cdr(*cons))

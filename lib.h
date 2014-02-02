@@ -371,6 +371,7 @@ val lazy_conses(val list);
 val listref(val list, val ind);
 val *listref_l(val list, val ind);
 val *tail(val cons);
+val *lastcons(val list);
 val *ltail(val *cons);
 val pop(val *plist);
 val push(val v, val *plist);

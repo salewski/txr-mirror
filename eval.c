@@ -419,9 +419,20 @@ val apply(val fun, val arglist, val ctx_form)
   internal_error("corrupt function type field");
 }
 
+static val apply_frob_args(val args)
+{
+  val *plast = lastcons(args);
+  if (plast) {
+    *plast = car(*plast);
+    return args;
+  } else {
+    return car(args);
+  }
+}
+
 static val apply_intrinsic(val fun, val args)
 {
-  return apply(fun, args, cons(apply_s, nil));
+  return apply(fun, apply_frob_args(args), cons(apply_s, nil));
 }
 
 static val do_eval(val form, val env, val ctx_form,
@@ -2384,7 +2395,7 @@ void eval_init(void)
   reg_fun(intern(lit("mapcar*"), user_package), func_n1v(lazy_mapcarv));
   reg_fun(intern(lit("mappend"), user_package), func_n1v(mappendv));
   reg_fun(intern(lit("mappend*"), user_package), func_n1v(lazy_mappendv));
-  reg_fun(apply_s, func_n2(apply_intrinsic));
+  reg_fun(apply_s, func_n1v(apply_intrinsic));
   reg_fun(intern(lit("reduce-left"), user_package), func_n4o(reduce_left, 2));
   reg_fun(intern(lit("reduce-right"), user_package), func_n4o(reduce_right, 2));
 
