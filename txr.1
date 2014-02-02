@@ -6585,6 +6585,42 @@ Examples:
   (list 1) -> (1)
   (list 'a 'b) -> (a b)
 
+.SS Function list*
+
+.TP
+Syntax:
+
+(list* {<value>}*)
+
+.TP
+Description:
+
+The list* function is a generalization of cons. If called with exactly
+two arguments, it behaves exactly like cons: (list* x y) is
+identical to (cons x y).  If three or more arguments are specified,
+the leading arguments specify additional atoms to be consed to the
+front of the list. So for instance (list* 1 2 3) is the same as
+(cons 1 (cons 2 3)) and produces the improper list (1 2 . 3).
+Generalizing in the other direction, list* can be called with just
+one argument, in which case it returns that argument, and
+can also be called with no arguments in which case it returns nil.
+
+.TP
+Examples:
+
+  (list*) -> nil
+  (list* 1) -> 1
+  (list* 'a 'b) -> (a . b)
+  (list* 'a 'b 'c) -> (a b . c)
+
+.TP
+Dialect Note:
+
+Note that unlike in some other Lisp dialects, the effect
+of (list* 1 2 x) can also be obtained using (list 1 2 . x).
+However, (list* 1 2 (func 3)) cannot be rewritten as (list 1 2 . (func 3))
+because the latter is equivalent to (list 1 2 func 3).
+
 .SS Function sub-list
 
 .TP

@@ -1,5 +1,15 @@
 2014-02-02  Kaz Kylheku  <kaz@kylheku.com>
 
+	Adding list* since we get it "for free" thanks to the
+	new helper function that supports apply.
+
+	* eval.c (list_star_intrinsic): New static function.
+	(eval_init): Register list_star_intrinsic as list*.
+
+	* txr.1: Document list*.
+
+2014-02-02  Kaz Kylheku  <kaz@kylheku.com>
+
 	append can now take additional leading arguments before the list.
 
 	* eval.c (apply_frob_args): New static function.
