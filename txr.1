@@ -760,9 +760,9 @@ following example:
 The @(all) directive does nothing other than assert that all clauses must
 match. It has only one clause, @var2. So this is equivalent to just @var1@var2,
 except that if both variables are unbound, no semantic error is identified in
-this situation. The situation is handled as a variable followed by a directive.
-Of course @var2 matches any position current position, and so @var1 ends up
-with nothing.
+this situation. SUch a situation is handled as a variable followed by a
+directive.  Of course @var2 matches everything at the current position, and so
+@var1 ends up with nothing.
 
 Example 1: b matches at position 0 and a gets nothing:
 
