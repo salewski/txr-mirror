@@ -2385,7 +2385,7 @@ void eval_init(void)
   reg_fun(append_s, func_n0v(appendv));
   reg_fun(intern(lit("append*"), user_package), func_n0v(lazy_appendv));
   reg_fun(list_s, func_n0v(identity));
-  reg_fun(intern(lit("list*"), user_package), func_n1v(list_star_intrinsic));
+  reg_fun(intern(lit("list*"), user_package), func_n0v(list_star_intrinsic));
   reg_fun(intern(lit("identity"), user_package), identity_f);
   reg_fun(intern(lit("typeof"), user_package), func_n1(typeof));
 
