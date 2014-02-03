@@ -220,11 +220,8 @@ static val lookup_sym_lisp1(val env, val sym)
 
 static val bind_args(val env, val params, val args, val ctx_form)
 {
-  val opt_init_parm[32];
-  val *oi_parm = &opt_init_parm[0], *oi_end = &opt_init_parm[32], *oi_iter;
-  val new_bindings = nil;
+  val new_env = make_env(nil, nil, env);
   val optargs = nil;
-  val new_env;
 
   for (; args && consp(params); args = cdr(args), params = cdr(params)) {
     val param = car(params);
@@ -246,11 +243,11 @@ static val bind_args(val env, val params, val args, val ctx_form)
       eval_error(ctx_form, lit("~a: ~s is not a bindable symbol"),
                  car(ctx_form), param, nao);
 
-    new_bindings = acons(param, car(args), new_bindings);
+    env_vbind(new_env, param, car(args));
   }
 
   if (bindable(params)) {
-    new_bindings = acons(params, args, new_bindings);
+    env_vbind(new_env, params, args);
   } else if (consp(params)) {
     if (car(params) == colon_k) {
       if (optargs)
@@ -265,31 +262,21 @@ static val bind_args(val env, val params, val args, val ctx_form)
       if (param == colon_k)
         goto twocol;
       if (consp(param)) {
-        if (oi_parm == oi_end)
-          eval_error(ctx_form,
-                     lit("~s: too many optional args with initializers"),
-                     car(ctx_form), nao);
-        new_bindings = acons(car(param), car(cdr(param)), new_bindings);
-        *oi_parm++ = car(new_bindings);
+        val initval = eval(car(cdr(param)), new_env, ctx_form);
+        new_env = make_env(nil, nil, new_env);
+        env_vbind(new_env, car(param), initval);
       } else {
-        new_bindings = acons(param, nil, new_bindings);
+        env_vbind(new_env, param, nil);
       }
       params = cdr(params);
     }
     if (bindable(params))
-      new_bindings = acons(params, args, new_bindings);
+      env_vbind(new_env, params, nil);
   } else if (params) {
     eval_error(ctx_form, lit("~a: ~s is not a bindable sybol"),
                car(ctx_form), params, nao);
   } else if (args) {
     eval_error(ctx_form, lit("~s: too many arguments"), car(ctx_form), nao);
-  }
-
-  new_env = make_env(new_bindings, nil, env);
-
-  for (oi_iter = &opt_init_parm[0]; oi_iter < oi_parm; oi_iter++) {
-    val initval = eval(cdr(*oi_iter), new_env, ctx_form);
-    rplacd(*oi_iter, initval);
   }
 
   return new_env;

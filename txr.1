@@ -5977,8 +5977,8 @@ In this situation, if the call does not specify a value for the parameter,
 then the parameter takes on the value of the expression <expr>. 
 
 The initializer expressions are evaluated an environment in which
-all of the parameters are visible, which extends the environment in
-which the lambda was constructed. For instance:
+all of the previous parameters are visible, in addition to the surrounding
+environment of the lambda. For instance:
 
   (let ((default 0))
     (lambda (str : (end (length str)) (counter default))

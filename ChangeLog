@@ -1,5 +1,21 @@
 2014-02-03  Kaz Kylheku  <kaz@kylheku.com>
 
+	Tighten up environment visibility semantics of default argument
+	init forms, while streamlining the implementation.
+
+	* eval.c (bind_args): Get rid of opt_init_parm array hack;
+	turns out we already have a useful function for extending an
+	environment object, namely env_vbind: hitherto unused!  We now make a
+	blank environment upfront and extend it destructively with env_vbind.
+	Except that after evaluating an init form, we create a new environment:
+	this is in case a lexical closure was made by the init form, in which
+	event we don't want to be destructively manipulating the environment
+	any more.
+
+	* txr.1: Clarified.
+
+2014-02-03  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Fix incorrect registration of
 	list_star_intrinsic, diagnosed by compiler.
 
