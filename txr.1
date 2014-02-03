@@ -863,6 +863,8 @@ These tokens simply contribute their characters to the class.
 The class [a-zA-Z] means match an uppercase
 or lowercase letter; the class [0-9a-f] means match a digit or
 a lowercase letter; the class [^0-9] means match a non-digit, et cetera.
+There are no locale-specific behaviors in TXR regular expressions;
+[A-Z] denotes an ASCII/Unicode range of characters.
 The class [\ed.] means match a digit or the period character.
 A ] or - can be used within a character class, but must be escaped
 with a backslash. A ^ in the first position denotes a complemented
