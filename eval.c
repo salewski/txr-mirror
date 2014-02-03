@@ -1041,7 +1041,7 @@ static val op_modplace(val form, val env)
 
   if (op == set_s) {
     if (!third_arg_p)
-      eval_error(form, lit("~a: missing argument"), op, place, nao);
+      eval_error(form, lit("~a: missing argument"), op, nao);
     return set(*loc, eval(newform, env, form));
   } else if (op == inc_s) {
     val inc = or2(eval(newform, env, form), one);
@@ -1053,7 +1053,7 @@ static val op_modplace(val form, val env)
     return mpush(newval, *loc);
   } else if (op == pop_s) {
     if (third_arg_p)
-      eval_error(form, lit("~a: superfluous argument"), op, place, nao);
+      eval_error(form, lit("~a: superfluous argument"), op, nao);
     return pop(loc);
   } else if (op == flip_s) {
     return *loc = nullp(*loc);

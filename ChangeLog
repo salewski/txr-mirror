@@ -1,5 +1,10 @@
 2014-02-03  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (op_modplace): Fixing a few argument count mismatches
+	in format calls.
+
+2014-02-03  Kaz Kylheku  <kaz@kylheku.com>
+
 	Tighten up environment visibility semantics of default argument
 	init forms, while streamlining the implementation.
 
