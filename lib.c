@@ -1418,11 +1418,6 @@ val consp(val obj)
   return (ty == CONS || ty == LCONS) ? t : nil;
 }
 
-val nullp(val obj)
-{
-  return obj == 0 ? t : nil;
-}
-
 val atom(val obj)
 {
   return if3(consp(obj), nil, t);

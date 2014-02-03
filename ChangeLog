@@ -1,5 +1,12 @@
 2014-02-03  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (nullp): Function removed.
+
+	* lib.h (nullp): New inline function.
+	(eq): Removed useless parentheses: it's not a macro.
+
+2014-02-03  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (op_modplace): Fixing a few argument count mismatches
 	in format calls.
 

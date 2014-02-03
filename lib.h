@@ -424,7 +424,6 @@ val make_half_lazy_cons(val func, val car);
 val lcons_fun(val lcons);
 val list(val first, ...); /* terminated by nao */
 val consp(val obj);
-val nullp(val obj);
 val atom(val obj);
 val listp(val obj);
 val proper_listp(val obj);
@@ -712,7 +711,9 @@ void breakpt(void);
 
 #define nil ((obj_t *) 0)
 
-INLINE val eq(val a, val b) { return ((a) == (b) ? t : nil); }
+INLINE val eq(val a, val b) { return a == b ? t : nil; }
+
+INLINE val nullp(val v) { return v ? nil : t; }
 
 #define nao ((obj_t *) (1 << TAG_SHIFT)) /* "not an object" sentinel value. */
 
