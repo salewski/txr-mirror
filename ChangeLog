@@ -1,5 +1,14 @@
 2014-02-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (bind_args): Support optional parameters in the
+	form (sym initform present-p-sym).  Also, support the convention
+	that a value of : explicitly passed for an optional argument produces
+	the same behavior as if that argument value were missing.
+
+	* txr.1: Document new conventions.
+
+2014-02-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (apply): Pass missing optional arguments as colon_k.
 	to functions for which this is requested.
 	(reg_fun_mark): New static function.

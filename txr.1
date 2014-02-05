@@ -5920,7 +5920,7 @@ Examples:
 .TP
 Syntax:
 
-  (defun <name> ({<param> [. <rest-param>]}*) <body-form>*)
+  (defun <name> (<param>* [: <opt-param>*] [. <rest-param>]) <body-form>*)
 
 Description:
 
@@ -5940,9 +5940,9 @@ A function may call itself by name, allowing for recursion.
 .TP
 Syntax:
 
-  (lambda ({<sym>}*[. <sym>]) {<body-form>}*)
+  (lambda (<param>* [: <opt-param>*] [. <rest-param>]) {<body-form>}*)
 
-  (lambda <sym> {<body-form>}*)
+  (lambda <rest-param> {<body-form>}*)
 
 .TP
 Description:
@@ -5967,14 +5967,21 @@ The dotted notation can be used to write a function that accepts
 a variable number of arguments. To write a function that accepts
 variable arguments only, with no required arguments, use a single symbol.
 
-The keyword symbol : (colon) can appear in the parameter list. It is not an
-argument, but a separator between required parameters and optional parameters.
-When the function is called, optional parameter for which arguments are not
-supplied take on the value nil.
+The keyword symbol : (colon) can appear in the parameter list. This is
+the symbol in the keyword package whose name is the empty string.  This
+symbol is treated specially: it serves as a separator between
+required parameters and optional parameters.  Furthermore, the : symbol
+has a role to play in function calls: it can be specified as an argument
+value to an optional parameter by which the caller indicates that the
+optional argument is not being specified. It will be processed exactly
+that way.
 
-An optional parameter can also be written in the form (<name> <expr>).
-In this situation, if the call does not specify a value for the parameter,
-then the parameter takes on the value of the expression <expr>. 
+An optional parameter can also be written in the form (<name> <expr> [<sym>]).
+In this situation, if the call does not specify a value for the parameter
+(or specifies a value as the keyword : (colon)) then the parameter takes on the
+value of the expression <expr>.  If <sym> is specified, then <sym> will be
+introduced as an additional binding with a boolean value which indicates
+whether or not the optional parameter had been specified by the caller.
 
 The initializer expressions are evaluated an environment in which
 all of the previous parameters are visible, in addition to the surrounding

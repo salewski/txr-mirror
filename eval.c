@@ -225,6 +225,8 @@ static val bind_args(val env, val params, val args, val ctx_form)
 
   for (; args && consp(params); args = cdr(args), params = cdr(params)) {
     val param = car(params);
+    val initform = nil;
+    val presentsym = nil;
 
     if (param == colon_k) {
       if (optargs)
@@ -236,14 +238,41 @@ static val bind_args(val env, val params, val args, val ctx_form)
       param = car(params);
     }
 
-    if (optargs && consp(param))
-      param = car(param);
+    if (optargs && consp(param)) {
+      val sym = pop(&param);
+      initform = pop(&param);
+      presentsym = pop(&param);
+      param = sym;
+    }
 
     if (!bindable(param))
       eval_error(ctx_form, lit("~a: ~s is not a bindable symbol"),
                  car(ctx_form), param, nao);
 
-    env_vbind(new_env, param, car(args));
+    if (presentsym && !bindable(presentsym)) 
+      eval_error(ctx_form, lit("~a: ~s is not a bindable symbol"),
+                 car(ctx_form), presentsym, nao);
+
+    if (optargs) {
+      val arg = car(args);
+      val initval = nil;
+      val present = nil;
+
+      if (arg == colon_k) {
+        if (initform) {
+          initval = eval(initform, new_env, ctx_form);
+          new_env = make_env(nil, nil, new_env);
+        } 
+      } else {
+        initval = arg;
+        present = t;
+      }
+      env_vbind(new_env, param, initval);
+      if (presentsym)
+        env_vbind(new_env, presentsym, present);
+    } else {
+      env_vbind(new_env, param, car(args));
+    }
   }
 
   if (bindable(params)) {
@@ -262,9 +291,22 @@ static val bind_args(val env, val params, val args, val ctx_form)
       if (param == colon_k)
         goto twocol;
       if (consp(param)) {
-        val initval = eval(car(cdr(param)), new_env, ctx_form);
+        val sym = pop(&param);
+        val initform = pop(&param);
+        val presentsym = pop(&param);
+        val initval = eval(initform, new_env, ctx_form);
+        if (!bindable(sym))
+          eval_error(ctx_form, lit("~a: ~s is not a bindable symbol"),
+                     car(ctx_form), sym, nao);
+
         new_env = make_env(nil, nil, new_env);
-        env_vbind(new_env, car(param), initval);
+        env_vbind(new_env, sym, initval);
+        if (presentsym) {
+          if (!bindable(presentsym)) 
+            eval_error(ctx_form, lit("~a: ~s is not a bindable symbol"),
+                       car(ctx_form), presentsym, nao);
+          env_vbind(new_env, presentsym, nil);
+        }
       } else {
         env_vbind(new_env, param, nil);
       }
@@ -278,6 +320,7 @@ static val bind_args(val env, val params, val args, val ctx_form)
   } else if (args) {
     eval_error(ctx_form, lit("~s: too many arguments"), car(ctx_form), nao);
   }
+
 
   return new_env;
 twocol:
