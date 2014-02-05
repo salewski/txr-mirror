@@ -1,3 +1,27 @@
+2014-02-05  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (apply): Pass missing optional arguments as colon_k.
+	to functions for which this is requested.
+	(reg_fun_mark): New static function.
+	(eval_init): Register reduce_left and reduce_right as requiring
+	marking for missing optionals.
+
+	* lib.c (func_set_mark_missing): New function.
+	(generic_funcall): Pass missing optional arguments as colon_k
+	to functions for which this is requested.
+	(reduce_left, reduce_right): Handle missing values of init and key.
+	(func_f0, func_f1, func_f2, func_f3, func_f4, func_n0, func_n1,
+	func_n2, func_n3, func_n4, func_n5, func_n6, func_n7, func_f0v,
+	func_f1v, func_f2v, func_f3v, func_f4v, func_n0v, func_n1v,
+	func_n2v, func_n3v, func_n4v, func_n5v, func_n6v, func_n7v):
+	Initialize new mark_missing_args member of struct func.
+
+	* lib.h (struct func): New bitfield member, mark_missing_args.
+	(func_set_mark_missing): Declared.
+	(missingp, null_or_missing_p): New inline functions.
+
+	* txr.1: Updated descriptions of reduce-left and reduce-right.
+
 2014-02-03  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (nullp): Function removed.

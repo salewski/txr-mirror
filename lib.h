@@ -106,7 +106,7 @@ struct func {
   unsigned fixparam : 7; /* total non-variadic parameters */
   unsigned optargs : 7;  /* fixparam - optargs = required args */
   unsigned variadic : 1;
-  unsigned : 1;
+  unsigned mark_missing_args: 1; /* missing opt. args given as special value */
   unsigned functype : 16;
   val env;
   union {
@@ -601,6 +601,7 @@ val func_interp(val env, val form);
 val func_get_form(val fun);
 val func_get_env(val fun);
 val func_set_env(val fun, val env);
+val func_set_mark_missing(val fun);
 val functionp(val);
 val interp_fun_p(val);
 val funcall(val fun);
@@ -716,6 +717,10 @@ INLINE val eq(val a, val b) { return a == b ? t : nil; }
 INLINE val nullp(val v) { return v ? nil : t; }
 
 #define nao ((obj_t *) (1 << TAG_SHIFT)) /* "not an object" sentinel value. */
+
+INLINE val missingp(val v) { return v == colon_k ? t : nil; }
+
+INLINE val null_or_missing_p(val v) { return (!v || v == colon_k) ? t : nil; }
 
 #define if2(a, b) ((a) ? (b) : nil)
 

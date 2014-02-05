@@ -288,6 +288,7 @@ twocol:
 val apply(val fun, val arglist, val ctx_form)
 {
   val arg[32], *p = arg;
+  val missing;
   int variadic, fixparam, reqargs, nargs;
 
   if (symbolp(fun)) {
@@ -298,6 +299,8 @@ val apply(val fun, val arglist, val ctx_form)
   }
 
   type_check (fun, FUN);
+
+  missing = fun->f.mark_missing_args ? colon_k : nil;
 
   if (!listp(arglist)) {
     val arglist_conv = tolist(arglist);
@@ -326,7 +329,7 @@ val apply(val fun, val arglist, val ctx_form)
                  car(ctx_form), nao);
 
     for (; nargs < fixparam; nargs++)
-      *p++ = nil;
+      *p++ = missing;
 
     switch (fun->f.functype) {
     case F0:
@@ -369,7 +372,7 @@ val apply(val fun, val arglist, val ctx_form)
                  car(ctx_form), nao);
 
     for (; nargs < fixparam; nargs++)
-      *p++ = nil;
+      *p++ = missing;
 
     switch (fun->f.functype) {
     case FINTERP:
@@ -2211,6 +2214,12 @@ static void reg_fun(val sym, val fun)
   sethash(top_fb, sym, cons(sym, fun));
 }
 
+static void reg_fun_mark(val sym, val fun)
+{
+  sethash(top_fb, sym, cons(sym, fun));
+  func_set_mark_missing(fun);
+}
+
 static void c_var_mark(val obj)
 {
   struct c_var *cv = (struct c_var *) obj->co.handle;
@@ -2389,8 +2398,10 @@ void eval_init(void)
   reg_fun(intern(lit("mappend"), user_package), func_n1v(mappendv));
   reg_fun(intern(lit("mappend*"), user_package), func_n1v(lazy_mappendv));
   reg_fun(apply_s, func_n1v(apply_intrinsic));
-  reg_fun(intern(lit("reduce-left"), user_package), func_n4o(reduce_left, 2));
-  reg_fun(intern(lit("reduce-right"), user_package), func_n4o(reduce_right, 2));
+  reg_fun_mark(intern(lit("reduce-left"), user_package),
+               func_n4o(reduce_left, 2));
+  reg_fun_mark(intern(lit("reduce-right"), user_package),
+               func_n4o(reduce_right, 2));
 
   reg_fun(intern(lit("second"), user_package), func_n1(second));
   reg_fun(intern(lit("third"), user_package), func_n1(third));

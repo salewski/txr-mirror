@@ -7247,18 +7247,17 @@ by <list> and <init-value> to a single value by the repeated application of
 <binary-function>. 
 
 An effective list of operands is formed by combining <list> and
-<init-value>.   If <key-function> is specified and not nil, then
-the items of <list> are mapped to a new values through <key-function>.
-If an <init-value> is supplied and not nil, then in the
-case of reduce-left, the effective list of operands is formed by prepending
-<init-value> to <lits>. In the case of reduce-right, the effective
+<init-value>.   If <key-function> is specified, then the items of <list> are
+mapped to a new values through <key-function>.  If <init-value> is supplied,
+then in the case of reduce-left, the effective list of operands is formed by
+prepending <init-value> to <lits>. In the case of reduce-right, the effective
 operand list is produced by appending <init-value> to <list>.
 
 The production of the effective list can be expressed like this,
-though this is not to be understood as the actual impelmentation:
+though this is not to be understood as the actual implementation:
 
   ;; reduce-left
-  (let ((eff-list (append (if init-value (list init-value))
+  (let ((eff-list (append (if init-value-present (list init-value))
                           [mapcar (or key-function identity) list])))
 
 In the reduce-right case, the arguments to append are reversed.
@@ -7273,6 +7272,13 @@ If the effective list contains one item, then that item is returned.
 Otherwise, the effective list contains two or more items, and is decimated as
 follows. 
 
+Note that an <init-value> specified as nil is not the same as a missing
+<init-value>; this means that the initial value is the object nil.  Omitting
+<init-value> is the same as specifying a value of : (the colon symbol).
+It is possible to specify <key-function> while omitting an <init-value>
+argument. This is achieved by explicitly specifying : as the <init-value>
+argument.
+
 Under reduce-left, the leftmost pair of operands is removed
 from the list and passed as arguments to <binary-function>, in the same order
 that they appear in the list, and the resulting value initializes an
@@ -7282,7 +7288,7 @@ from the list. After each call, the accumulator is updated with the return
 value of <binary-function>.  The final value of the accumulator is returned.
 
 Under reduce-right, the list is processed right to left.  The rightmost
-pair of elements in the effetive list is removed, and passed as arguments to
+pair of elements in the effective list is removed, and passed as arguments to
 <binary-function>, in the same order that they appear in the list. The
 resulting value initializes an accumulator. Then, for each remaining item in
 the list, <binary-function> is invoked on two arguments:  the

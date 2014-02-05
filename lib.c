@@ -2833,6 +2833,7 @@ val func_f0(val env, val (*fun)(val))
   obj->f.variadic = 0;
   obj->f.fixparam = 0;
   obj->f.optargs = 0;
+  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -2846,6 +2847,7 @@ val func_f1(val env, val (*fun)(val, val))
   obj->f.variadic = 0;
   obj->f.fixparam = 1;
   obj->f.optargs = 0;
+  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -2859,6 +2861,7 @@ val func_f2(val env, val (*fun)(val, val, val))
   obj->f.variadic = 0;
   obj->f.fixparam = 2;
   obj->f.optargs = 0;
+  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -2872,6 +2875,7 @@ val func_f3(val env, val (*fun)(val, val, val, val))
   obj->f.variadic = 0;
   obj->f.fixparam = 3;
   obj->f.optargs = 0;
+  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -2885,6 +2889,7 @@ val func_f4(val env, val (*fun)(val, val, val, val, val))
   obj->f.variadic = 0;
   obj->f.fixparam = 4;
   obj->f.optargs = 0;
+  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -2898,6 +2903,7 @@ val func_n0(val (*fun)(void))
   obj->f.variadic = 0;
   obj->f.fixparam = 0;
   obj->f.optargs = 0;
+  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -2911,6 +2917,7 @@ val func_n1(val (*fun)(val))
   obj->f.variadic = 0;
   obj->f.fixparam = 1;
   obj->f.optargs = 0;
+  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -2924,6 +2931,7 @@ val func_n2(val (*fun)(val, val))
   obj->f.variadic = 0;
   obj->f.fixparam = 2;
   obj->f.optargs = 0;
+  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -2937,6 +2945,7 @@ val func_n3(val (*fun)(val, val, val))
   obj->f.variadic = 0;
   obj->f.fixparam = 3;
   obj->f.optargs = 0;
+  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -2950,6 +2959,7 @@ val func_n4(val (*fun)(val, val, val, val))
   obj->f.variadic = 0;
   obj->f.fixparam = 4;
   obj->f.optargs = 0;
+  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -2963,6 +2973,7 @@ val func_n5(val (*fun)(val, val, val, val, val))
   obj->f.variadic = 0;
   obj->f.fixparam = 5;
   obj->f.optargs = 0;
+  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -2976,6 +2987,7 @@ val func_n6(val (*fun)(val, val, val, val, val, val))
   obj->f.variadic = 0;
   obj->f.fixparam = 6;
   obj->f.optargs = 0;
+  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -2989,6 +3001,7 @@ val func_n7(val (*fun)(val, val, val, val, val, val, val))
   obj->f.variadic = 0;
   obj->f.fixparam = 7;
   obj->f.optargs = 0;
+  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3002,6 +3015,7 @@ val func_f0v(val env, val (*fun)(val, val))
   obj->f.variadic = 1;
   obj->f.fixparam = 0;
   obj->f.optargs = 0;
+  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3015,6 +3029,7 @@ val func_f1v(val env, val (*fun)(val env, val, val rest))
   obj->f.variadic = 1;
   obj->f.fixparam = 1;
   obj->f.optargs = 0;
+  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3028,6 +3043,7 @@ val func_f2v(val env, val (*fun)(val env, val, val, val rest))
   obj->f.variadic = 1;
   obj->f.fixparam = 2;
   obj->f.optargs = 0;
+  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3041,6 +3057,7 @@ val func_f3v(val env, val (*fun)(val env, val, val, val, val rest))
   obj->f.variadic = 1;
   obj->f.fixparam = 3;
   obj->f.optargs = 0;
+  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3054,6 +3071,7 @@ val func_f4v(val env, val (*fun)(val env, val, val, val, val, val rest))
   obj->f.variadic = 1;
   obj->f.fixparam = 4;
   obj->f.optargs = 0;
+  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3067,6 +3085,7 @@ val func_n0v(val (*fun)(val rest))
   obj->f.variadic = 1;
   obj->f.fixparam = 0;
   obj->f.optargs = 0;
+  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3080,6 +3099,7 @@ val func_n1v(val (*fun)(val, val rest))
   obj->f.variadic = 1;
   obj->f.fixparam = 1;
   obj->f.optargs = 0;
+  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3093,6 +3113,7 @@ val func_n2v(val (*fun)(val, val, val rest))
   obj->f.variadic = 1;
   obj->f.fixparam = 2;
   obj->f.optargs = 0;
+  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3106,6 +3127,7 @@ val func_n3v(val (*fun)(val, val, val, val rest))
   obj->f.variadic = 1;
   obj->f.fixparam = 3;
   obj->f.optargs = 0;
+  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3119,6 +3141,7 @@ val func_n4v(val (*fun)(val, val, val, val, val rest))
   obj->f.variadic = 1;
   obj->f.fixparam = 4;
   obj->f.optargs = 0;
+  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3132,6 +3155,7 @@ val func_n5v(val (*fun)(val, val, val, val, val, val rest))
   obj->f.variadic = 1;
   obj->f.fixparam = 5;
   obj->f.optargs = 0;
+  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3145,6 +3169,7 @@ val func_n6v(val (*fun)(val, val, val, val, val, val, val rest))
   obj->f.variadic = 1;
   obj->f.fixparam = 6;
   obj->f.optargs = 0;
+  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3158,6 +3183,7 @@ val func_n7v(val (*fun)(val, val, val, val, val, val, val, val rest))
   obj->f.variadic = 1;
   obj->f.fixparam = 7;
   obj->f.optargs = 0;
+  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3206,6 +3232,7 @@ val func_interp(val env, val form)
   obj->f.variadic = 1;
   obj->f.fixparam = 0;
   obj->f.optargs = 0;
+  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3231,6 +3258,13 @@ val func_set_env(val fun, val env)
   return env;
 }
 
+val func_set_mark_missing(val fun)
+{
+  type_check(fun, FUN);
+  fun->f.mark_missing_args = 1;
+  return nil;
+}
+
 val functionp(val obj)
 {
   return type(obj) == FUN ? t : nil;
@@ -3244,9 +3278,11 @@ val interp_fun_p(val obj)
 static val generic_funcall(val fun, val arg[], int nargs)
 {
   int variadic, fixparam, reqargs;
+  val missing;
 
   type_check (fun, FUN);
 
+  missing = fun->f.mark_missing_args ? colon_k : nil;
   variadic = fun->f.variadic;
   fixparam = fun->f.fixparam;
   reqargs = fixparam - fun->f.optargs;
@@ -3259,7 +3295,7 @@ static val generic_funcall(val fun, val arg[], int nargs)
       uw_throw(error_s, lit("funcall: too many arguments"));
 
     for (; nargs < fixparam; )
-      arg[nargs++] = 0;
+      arg[nargs++] = missing;
 
     switch (fun->f.functype) {
     case F0:
@@ -3301,7 +3337,7 @@ static val generic_funcall(val fun, val arg[], int nargs)
       uw_throw(error_s, lit("funcall: missing required arguments"));
 
     for (; nargs < fixparam; )
-      arg[nargs++] = nil;
+      arg[nargs++] = missing;
 
     for (; nargs > fixparam; )
       arglist = cons(arg[--nargs], arglist);
@@ -3561,14 +3597,15 @@ val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
 
 val reduce_left(val fun, val list, val init, val key)
 {
-  if (!key)
+  if (null_or_missing_p(key))
     key = identity_f;
 
-  if (!init && list)
-    init = pop(&list);
-
-  if (!init && !list)
-    return funcall(fun);
+  if (missingp(init)) {
+    if (list)
+      init = pop(&list);
+    else
+      return funcall(fun);
+  }
 
   for (; list; list = cdr(list))
     init = funcall2(fun, init, funcall1(key, car(list)));
@@ -3578,11 +3615,11 @@ val reduce_left(val fun, val list, val init, val key)
 
 val reduce_right(val fun, val list, val init, val key)
 {
-  if (!key)
+  if (null_or_missing_p(key))
     key = identity_f;
 
   if (list) {
-    if (!init) {
+    if (missingp(init)) {
       if (!rest(list))
         return funcall1(key, first(list));
       if (!rest(rest(list)))
@@ -3594,7 +3631,7 @@ val reduce_right(val fun, val list, val init, val key)
         return funcall2(fun, funcall1(key, first(list)), init);
       /* fall through: init, and two or more items in list */
     }
-  } else if (init) {
+  } else if (!missingp(init)) {
     return init;
   } else {
     return funcall(fun);
