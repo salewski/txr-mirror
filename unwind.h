@@ -213,16 +213,3 @@ noreturn val type_mismatch(val, ...);
     internal_error("assertion "         \
                             #EXPR       \
                             " failed")
-
-#define numeric_assert(EXPR)            \
-  if (!(EXPR))                          \
-   uw_throwf(numeric_error_s,           \
-             lit("assertion " #EXPR     \
-                 " failed"), nao)
-
-#define range_bug_unless(EXPR)          \
-  if (!(EXPR))                          \
-   uw_throwf(range_error_s,             \
-             lit("assertion " #EXPR     \
-                 " failed"), nao)
-

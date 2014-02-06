@@ -2610,7 +2610,9 @@ val chr_str(val str, val ind)
     index = c_num(ind);
   }
 
-  bug_unless (index >= 0 && length_str_gt(str, ind));
+  if (index < 0 || !length_str_gt(str, ind))
+    uw_throwf(error_s, lit("chr-str: ~s is out of range for string ~s"),
+              ind, str, nao);
 
   if (lazy_stringp(str)) {
     lazy_str_force_upto(str, ind);
@@ -2629,7 +2631,10 @@ val chr_str_set(val str, val ind, val chr)
     index = c_num(ind);
   }
 
-  bug_unless (index >= 0 && length_str_gt(str, ind));
+  if (index < 0 || !length_str_gt(str, ind))
+    uw_throwf(error_s, lit("chr-str-set: ~s is out of range for string ~s"),
+              ind, str, nao);
+
 
   if (lazy_stringp(str)) {
     lazy_str_force_upto(str, ind);
@@ -3894,7 +3899,9 @@ val vecref(val vec, val ind)
   cnum len = c_num(length_vec(vec));
   if (index < 0)
     index = len + index;
-  range_bug_unless (index >= 0 && index < len);
+  if (index < 0 || index >= len)
+    uw_throwf(error_s, lit("vecref: ~s is out of range for vector ~s"),
+              ind, vec, nao);
   return vec->v.vec[index];
 }
 
@@ -3902,7 +3909,9 @@ val *vecref_l(val vec, val ind)
 {
   cnum index = c_num(ind);
   cnum len = c_num(length_vec(vec));
-  range_bug_unless (index >= 0 && index < len);
+  if (index < 0 || index >= len)
+    uw_throwf(error_s, lit("vecref: ~s is out of range for vector ~s"),
+              ind, vec, nao);
   return vec->v.vec + index;
 }
 

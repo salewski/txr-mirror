@@ -1,3 +1,16 @@
+2014-02-06  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (op_dwim): Gutted down to just a few lines.
+	Basically the dwim operator is just a Lisp-1 version of the call
+	operator now. It doesn't have to do anything funny with non-function
+	objects, since they are callable.
+
+	* lib.c (chr_str, chr_str_set, vecref, vecref_l): Replace
+	inappropriate internal assertions with error exceptions.
+
+	* unwind.h (numeric_assert, range_bug_unless): Unused macros
+	removed.
+
 2014-02-05  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (generic_funcall): If a cons cell is passed as
