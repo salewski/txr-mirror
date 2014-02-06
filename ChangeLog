@@ -1,5 +1,17 @@
 2014-02-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 78
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES, txr.vim: Updated.
+
+2014-02-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (int_str): Regression: handle base argument properly.
 
 2014-02-06  Kaz Kylheku  <kaz@kylheku.com>

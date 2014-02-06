@@ -1,3 +1,50 @@
+                                     TXR 78
+                                   2014-02-06
+
+
+  Features
+
+  - vec function for making a vector out of its arguments, to complement
+    the existing vector function which makes a vector of a given size.
+
+  - The dot position of function call forms can now apply strings and
+    vectors. The same is true of the apply function.
+
+  - The apply function now takes additional optional arguments before the list,
+    similarly to Common Lisp's apply.
+
+  - New function: list*.
+
+  - Three-element forms for optional parameters are now supported;
+    the variable can be specified, an initialization form used when the
+    argument is omitted, and a symbol that is bound to a boolean indicating
+    whether or not the argument is present. (Common Lisp style, IOTW).
+
+  - New protocol for optional parameters: the colon symbol : can be
+    passed as a value for an optional parameter, which causes that
+    parameter to behave as if it were missing.
+
+  - reduce-left and reduce-right can now use nil as the initial object,
+    which is an useful and important behavior.
+
+  - strings, vectors, lists and hashes are now generally callable like
+    functions, not only in the DWIM operator or DWIM brackets notation.
+
+  Bugs
+
+  - Lexical scope of optional argument default init forms now properly
+    restricted.
+
+  - Fixed breakages in do operator.
+
+  - Bugfix in logic for tracking source code file and line number info
+    that would cause the info to disappear under garbage collection.
+
+  - Fixed a erroneous exception throws in the mutation operator logic
+    which would cause usage errors to turn into internal errors.
+
+
+
                                      TXR 77
                                    2014-01-30
 

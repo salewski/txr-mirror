@@ -47,7 +47,7 @@
 #include "eval.h"
 #include "txr.h"
 
-const wchli_t *version = wli("77");
+const wchli_t *version = wli("78");
 const wchar_t *progname = L"txr";
 val self_path;
 
