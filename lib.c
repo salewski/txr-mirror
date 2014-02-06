@@ -2448,7 +2448,7 @@ val int_str(val str, val base)
 {
   const wchar_t *wcs = c_str(str);
   wchar_t *ptr;
-  cnum b = if3(base, c_num(base), 10);
+  cnum b = c_num(default_arg(base, num_fast(10)));
 
   /* TODO: detect if we have wcstoll */
   long value = wcstol(wcs, &ptr, b ? b : 10);

@@ -1,5 +1,9 @@
 2014-02-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (int_str): Regression: handle base argument properly.
+
+2014-02-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	* hash.c (hash_grow, make_hash, make_similar_hash, copy_hash):
 	Pass second argument to vector.
 
