@@ -340,6 +340,16 @@ val apply(val fun, val arglist, val ctx_form)
     fun = cdr(binding);
   }
 
+  if (!functionp(fun)) {
+    for (nargs = 0;
+         (p < arg + 32) && consp(arglist);
+         nargs++, p++, arglist = cdr(arglist))
+    {
+      *p = car(arglist);
+    }
+    return generic_funcall(fun, arg, nargs);
+  }
+
   type_check (fun, FUN);
 
   if (!listp(arglist)) {

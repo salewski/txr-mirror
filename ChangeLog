@@ -1,5 +1,22 @@
 2014-02-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	Allow sequences and hashes to be called as functions.
+	This is already supported in the DWIM operator.
+
+	* eval.c (apply): If object isn't a function, gather the
+	arguments into an array and delegate to generic_funcall.
+
+	* lib.c (generic_funcall): Changed from static to external linkage.
+	Supports sequences and hashes as functions. Error messages
+	fixed not to refer to "funcall".
+	(funcall, funcall1, funcall2, funcall3, funcall4): Do not throw
+	exception if fun is not of FUN type; instead, delegate
+	to generic_funcall. Error messages fixed not to refer to "funcall".
+
+	* lib.h (generic_function): Declared.
+
+2014-02-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (lognot): Conform to new scheme for defaulting optional args.
 
 	* eval.c (apply): Unconditionally use colon_k for missing optional

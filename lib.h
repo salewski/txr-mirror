@@ -603,6 +603,7 @@ val func_get_env(val fun);
 val func_set_env(val fun, val env);
 val functionp(val);
 val interp_fun_p(val);
+val generic_funcall(val fun, val arg[], int nargs);
 val funcall(val fun);
 val funcall1(val fun, val arg);
 val funcall2(val fun, val arg1, val arg2);

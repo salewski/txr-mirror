@@ -3230,11 +3230,47 @@ val interp_fun_p(val obj)
   return (functionp(obj) && obj->f.functype == FINTERP) ? t : nil;
 }
 
-static val generic_funcall(val fun, val arg[], int nargs)
+val generic_funcall(val fun, val arg[], int nargs)
 {
   int variadic, fixparam, reqargs;
 
-  type_check (fun, FUN);
+  switch (type(fun)) {
+  case FUN:
+    break;
+  case NIL:
+  case CONS:
+  case LCONS:
+  case VEC:
+  case STR:
+  case LIT:
+  case LSTR:
+    switch (nargs) {
+    case 0:
+      uw_throw(error_s, lit("call: missing required arguments"));
+    case 1:
+      return ref(fun, arg[0]);
+    case 2:
+      return sub(fun, arg[0], arg[1]);
+    default:
+      uw_throw(error_s, lit("call: too many arguments"));
+    }
+  case COBJ:
+    if (fun->co.cls == hash_s) {
+      switch (nargs) {
+      case 0:
+        uw_throw(error_s, lit("call: missing required arguments"));
+      case 1:
+        return gethash(fun, arg[0]);
+      case 2:
+        return gethash_n(fun, arg[0], arg[1]);
+      default:
+        uw_throw(error_s, lit("call: too many arguments"));
+      }
+    }
+    /* fallthrough */
+  default:
+    type_mismatch(lit("call: ~s is not callable"), fun, nao);
+  }
 
   variadic = fun->f.variadic;
   fixparam = fun->f.fixparam;
@@ -3242,10 +3278,10 @@ static val generic_funcall(val fun, val arg[], int nargs)
 
   if (!variadic) {
     if (nargs < reqargs)
-      uw_throw(error_s, lit("funcall: missing required arguments"));
+      uw_throw(error_s, lit("call: missing required arguments"));
     
     if (nargs > fixparam)
-      uw_throw(error_s, lit("funcall: too many arguments"));
+      uw_throw(error_s, lit("call: too many arguments"));
 
     for (; nargs < fixparam; )
       arg[nargs++] = colon_k;
@@ -3287,7 +3323,7 @@ static val generic_funcall(val fun, val arg[], int nargs)
       nargs = fixparam;
 
     if (nargs < reqargs)
-      uw_throw(error_s, lit("funcall: missing required arguments"));
+      uw_throw(error_s, lit("call: missing required arguments"));
 
     for (; nargs < fixparam; )
       arg[nargs++] = colon_k;
@@ -3332,9 +3368,7 @@ static val generic_funcall(val fun, val arg[], int nargs)
 
 val funcall(val fun)
 {
-  type_check(fun, FUN);
-
-  if (fun->f.optargs) {
+  if (fun->f.optargs || type(fun) != FUN) {
     val arg[32] = { nil };
     return generic_funcall(fun, arg, 0);
   }
@@ -3360,14 +3394,12 @@ val funcall(val fun)
       break;
     }
   }
-  uw_throw(error_s, lit("funcall: wrong number of arguments"));
+  uw_throw(error_s, lit("call: wrong number of arguments"));
 }
 
 val funcall1(val fun, val arg)
 {
-  type_check(fun, FUN);
-
-  if (fun->f.optargs) {
+  if (fun->f.optargs || type(fun) != FUN) {
     val args[32];
     args[0] = arg;
     return generic_funcall(fun, args, 1);
@@ -3398,14 +3430,12 @@ val funcall1(val fun, val arg)
       break;
     }
   }
-  uw_throw(error_s, lit("funcall1: wrong number of arguments"));
+  uw_throw(error_s, lit("call: wrong number of arguments"));
 }
 
 val funcall2(val fun, val arg1, val arg2)
 {
-  type_check(fun, FUN);
-
-  if (fun->f.optargs) {
+  if (fun->f.optargs || type(fun) != FUN) {
     val arg[32];
     arg[0] = arg1;
     arg[1] = arg2;
@@ -3442,14 +3472,12 @@ val funcall2(val fun, val arg1, val arg2)
       break;
     }
   }
-  uw_throw(error_s, lit("funcall2: wrong number of arguments"));
+  uw_throw(error_s, lit("call: wrong number of arguments"));
 }
 
 val funcall3(val fun, val arg1, val arg2, val arg3)
 {
-  type_check(fun, FUN);
-
-  if (fun->f.optargs) {
+  if (fun->f.optargs || type(fun) != FUN) {
     val arg[32];
     arg[0] = arg1;
     arg[1] = arg2;
@@ -3491,14 +3519,12 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
       break;
     }
   }
-  uw_throw(error_s, lit("funcall3: wrong number of arguments"));
+  uw_throw(error_s, lit("call: wrong number of arguments"));
 }
 
 val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
 {
-  type_check(fun, FUN);
-
-  if (fun->f.optargs) {
+  if (fun->f.optargs || type(fun) != FUN) {
     val arg[32];
     arg[0] = arg1;
     arg[1] = arg2;
@@ -3545,7 +3571,7 @@ val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
       break;
     }
   }
-  uw_throw(error_s, lit("funcall4: wrong number of arguments"));
+  uw_throw(error_s, lit("call: wrong number of arguments"));
 }
 
 val reduce_left(val fun, val list, val init, val key)
