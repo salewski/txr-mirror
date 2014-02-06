@@ -8775,13 +8775,14 @@ collation orders.
 .TP
 Syntax:
 
-  (vector <length>)
+  (vector <length> [<initval>])
 
 .TP
 Description:
 
 The vector function creates and returns a vector object of the specified
-length.  The elements of the vector are initialized to nil.
+length.  The elements of the vector are initialized to <initval>,
+or to nil if <initval> is omitted.
 
 .SS Function vec
 

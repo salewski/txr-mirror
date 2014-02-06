@@ -328,7 +328,7 @@ static void hash_grow(struct hash *h)
 {
   cnum i;
   cnum new_modulus = 2 * h->modulus;
-  val new_table = vector(num_fast(new_modulus));
+  val new_table = vector(num_fast(new_modulus), nil);
 
   bug_unless (new_modulus > h->modulus);
 
@@ -361,7 +361,7 @@ val make_hash(val weak_keys, val weak_vals, val equal_based)
     int flags = ((weak_vals != nil) << 1) | (weak_keys != nil);
     struct hash *h = (struct hash *) chk_malloc(sizeof *h);
     val mod = num_fast(256);
-    val table = vector(mod);
+    val table = vector(mod, nil);
     val hash = cobj((mem_t *) h, hash_s, &hash_ops);
 
     h->flags = (hash_flags_t) flags;
@@ -383,7 +383,7 @@ val make_similar_hash(val existing)
   struct hash *ex = (struct hash *) cobj_handle(existing, hash_s);
   struct hash *h = (struct hash *) chk_malloc(sizeof *h);
   val mod = num_fast(256);
-  val table = vector(mod);
+  val table = vector(mod, nil);
   val hash = cobj((mem_t *) h, hash_s, &hash_ops);
 
   h->modulus = c_num(mod);
@@ -409,7 +409,7 @@ val copy_hash(val existing)
 
   h->modulus = ex->modulus;
   h->count = ex->count;
-  h->table = vector(mod);
+  h->table = vector(mod, nil);
   h->userdata = ex->userdata;
 
   h->flags = ex->flags;

@@ -1,5 +1,21 @@
 2014-02-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	* hash.c (hash_grow, make_hash, make_similar_hash, copy_hash):
+	Pass second argument to vector.
+
+	* lib.c (vector): Takes additional argument specifying the value
+	for the slots of the vector.
+	(vector_list, sub_vec): Pass second argument to vector.
+
+	* lib.h (vector): Declaration updated.
+
+	* eval.c (eval_init): Register vector as two-argument function
+	with one required arg.
+	
+	* txr.1: Updated.
+
+2014-02-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (op_dwim): Gutted down to just a few lines.
 	Basically the dwim operator is just a Lisp-1 version of the call
 	operator now. It doesn't have to do anything funny with non-function

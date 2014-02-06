@@ -2655,7 +2655,7 @@ void eval_init(void)
   reg_fun(intern(lit("length-str-<"), user_package), func_n2(length_str_lt));
   reg_fun(intern(lit("length-str-<="), user_package), func_n2(length_str_le));
 
-  reg_fun(intern(lit("vector"), user_package), func_n1(vector));
+  reg_fun(intern(lit("vector"), user_package), func_n2o(vector, 1));
   reg_fun(intern(lit("vec"), user_package), func_n0v(vector_list));
   reg_fun(intern(lit("vectorp"), user_package), func_n1(vectorp));
   reg_fun(intern(lit("vec-set-length"), user_package), func_n2(vec_set_length));

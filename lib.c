@@ -3835,12 +3835,13 @@ val iffi(val condfun, val thenfun, val elsefun)
   return func_f0v(cons(condfun, cons(thenfun, elsefun)), do_iff);
 }
 
-val vector(val length)
+val vector(val length, val initval)
 {
   int i;
   cnum alloc_plus = c_num(length) + 2;
   val vec = make_obj();
   val *v = (val *) chk_malloc(alloc_plus * sizeof *v);
+  initval = default_bool_arg(initval);
 #if HAVE_VALGRIND
   vec->v.vec_true_start = v;
 #endif
@@ -3850,7 +3851,7 @@ val vector(val length)
   v[vec_alloc] = length;
   v[vec_length] = length;
   for (i = 0; i < alloc_plus - 2; i++)
-    vec->v.vec[i] = nil;
+    vec->v.vec[i] = initval;
   return vec;
 }
 
@@ -3937,7 +3938,7 @@ val size_vec(val vec)
 
 val vector_list(val list)
 {
-  val vec = vector(zero);
+  val vec = vector(zero, nil);
  
   if (!listp(list))
     uw_throwf(error_s, lit("vector-list: list expected, not ~s"), list, nao);
@@ -4004,7 +4005,7 @@ val sub_vec(val vec_in, val from, val to)
   to = max2(zero, min2(to, len));
 
   if (ge(from, to)) {
-    return vector(zero);
+    return vector(zero, nil);
   } else {
     cnum cfrom = c_num(from);
     size_t nelem = c_num(to) - cfrom;
