@@ -1700,7 +1700,7 @@ val lognot(val a, val bits)
 {
   val b;
 
-  if (bits)
+  if (default_bool_arg(bits))
     return comp_trunc(a, bits);
 
   switch (type(a)) {

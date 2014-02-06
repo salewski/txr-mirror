@@ -1358,8 +1358,7 @@ val get_byte(val stream)
 
 val unget_char(val ch, val stream)
 {
-  if (!stream)
-    stream = std_input;
+  stream = default_arg(stream, std_input);
 
   type_check (stream, COBJ);
   type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
@@ -1375,8 +1374,7 @@ val unget_byte(val byte, val stream)
 {
   cnum b = c_num(byte);
 
-  if (!stream)
-    stream = std_input;
+  stream = default_arg(stream, std_input);
 
   type_check (stream, COBJ);
   type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
@@ -1919,8 +1917,7 @@ val formatv(val stream, val string, val args)
 
 val put_string(val string, val stream)
 {
-  if (!stream)
-    stream = std_output;
+  stream = default_arg(stream, std_output);
 
   type_check (stream, COBJ);
   type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
@@ -1934,8 +1931,7 @@ val put_string(val string, val stream)
 
 val put_char(val ch, val stream)
 {
-  if (!stream)
-    stream = std_output;
+  stream = default_arg(stream, std_output);
 
   type_check (stream, COBJ);
   type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
@@ -1951,8 +1947,7 @@ val put_byte(val byte, val stream)
 {
   cnum b = c_num(byte);
 
-  if (!stream)
-    stream = std_output;
+  stream = default_arg(stream, std_output);
 
   type_check (stream, COBJ);
   type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
@@ -1967,7 +1962,6 @@ val put_byte(val byte, val stream)
     return ops->put_byte ? ops->put_byte(stream, b) : nil;
   }
 }
-
 
 val put_line(val string, val stream)
 {
@@ -2118,7 +2112,10 @@ val open_process(val name, val mode_str, val args)
   pid_t pid;
   char **argv = 0, *utf8name = 0;
   val iter;
-  int i, nargs = c_num(length(args));
+  int i, nargs;
+
+  args = default_bool_arg(args);
+  nargs = c_num(length(args));
 
   if (pipe(fd) == -1) {
     uw_throwf(file_error_s, lit("opening pipe ~a, pipe syscall failed: ~a/~s"),

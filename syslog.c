@@ -93,11 +93,12 @@ val openlog_wrap(val wident, val optmask, val facility)
 {
   static char *ident;
   char *old_ident = ident;
- 
+
+  optmask = default_arg(optmask, zero);
+  facility = default_arg(facility, num_fast(LOG_USER));
+  
   ident = utf8_dup_to(c_str(wident));
-  openlog(ident,
-          if3(optmask, c_num(optmask), 0),
-          if3(facility, c_num(facility), LOG_USER));
+  openlog(ident, c_num(optmask), c_num(facility));
   free(old_ident);
 
   return nil;

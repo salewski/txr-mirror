@@ -106,7 +106,7 @@ struct func {
   unsigned fixparam : 7; /* total non-variadic parameters */
   unsigned optargs : 7;  /* fixparam - optargs = required args */
   unsigned variadic : 1;
-  unsigned mark_missing_args: 1; /* missing opt. args given as special value */
+  unsigned : 1;
   unsigned functype : 16;
   val env;
   union {
@@ -601,7 +601,6 @@ val func_interp(val env, val form);
 val func_get_form(val fun);
 val func_get_env(val fun);
 val func_set_env(val fun, val env);
-val func_set_mark_missing(val fun);
 val functionp(val);
 val interp_fun_p(val);
 val funcall(val fun);
@@ -739,6 +738,16 @@ INLINE val null_or_missing_p(val v) { return (!v || v == colon_k) ? t : nil; }
 #define and3(a, b, c) ((a) && (b) ? (c) : nil)
 
 #define c_true(c_cond) ((c_cond) ? t : nil)
+
+INLINE val default_arg(val arg, val dfl)
+{
+  return if3(null_or_missing_p(arg), dfl, arg);
+}
+
+INLINE val default_bool_arg(val arg)
+{
+  return if3(missingp(arg), nil, arg);
+}
 
 #define list_collect_decl(OUT, PTAIL)           \
   val OUT = nil, *PTAIL = &OUT

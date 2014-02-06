@@ -331,7 +331,6 @@ twocol:
 val apply(val fun, val arglist, val ctx_form)
 {
   val arg[32], *p = arg;
-  val missing;
   int variadic, fixparam, reqargs, nargs;
 
   if (symbolp(fun)) {
@@ -342,8 +341,6 @@ val apply(val fun, val arglist, val ctx_form)
   }
 
   type_check (fun, FUN);
-
-  missing = fun->f.mark_missing_args ? colon_k : nil;
 
   if (!listp(arglist)) {
     val arglist_conv = tolist(arglist);
@@ -372,7 +369,7 @@ val apply(val fun, val arglist, val ctx_form)
                  car(ctx_form), nao);
 
     for (; nargs < fixparam; nargs++)
-      *p++ = missing;
+      *p++ = colon_k;
 
     switch (fun->f.functype) {
     case F0:
@@ -415,7 +412,7 @@ val apply(val fun, val arglist, val ctx_form)
                  car(ctx_form), nao);
 
     for (; nargs < fixparam; nargs++)
-      *p++ = missing;
+      *p++ = colon_k;
 
     switch (fun->f.functype) {
     case FINTERP:
@@ -501,9 +498,8 @@ val interp_fun(val env, val fun, val args)
 
 val eval_intrinsic(val form, val env)
 {
-  uses_or2;
   form = expand(form);
-  return eval(form, or2(env, make_env(nil, nil, env)), form);
+  return eval(form, default_arg(env, make_env(nil, nil, env)), form);
 }
 
 static val do_eval(val form, val env, val ctx_form,
@@ -2065,10 +2061,9 @@ static val rangev_func(val env, val lcons)
 
 static val rangev(val args)
 {
-  uses_or2;
-  val from = or2(first(args), zero);
-  val to = second(args);
-  val step = or2(third(args), if3(to && gt(from, to), negone, one));
+  val from = default_arg(first(args), zero);
+  val to = default_bool_arg(second(args));
+  val step = default_arg(third(args), if3(to && gt(from, to), negone, one));
   val env = cons(from, cons(to, step));
 
   return make_lazy_cons(func_f1(env, rangev_func));
@@ -2101,8 +2096,8 @@ static val range_star_v_func(val env, val lcons)
 static val range_star_v(val args)
 {
   uses_or2;
-  val from = or2(first(args), zero);
-  val to = second(args);
+  val from = default_arg(first(args), zero);
+  val to = default_bool_arg(second(args));
 
   if (eql(from, to)) {
     return nil;
@@ -2197,7 +2192,7 @@ static val force(val promise)
 static val errno_wrap(val newval)
 {
   val oldval = num(errno);
-  if (newval)
+  if (default_bool_arg(newval))
     errno = c_num(newval);
   return oldval;
 }
@@ -2255,12 +2250,6 @@ static val usleep_wrap(val usec)
 static void reg_fun(val sym, val fun)
 {
   sethash(top_fb, sym, cons(sym, fun));
-}
-
-static void reg_fun_mark(val sym, val fun)
-{
-  sethash(top_fb, sym, cons(sym, fun));
-  func_set_mark_missing(fun);
 }
 
 static void c_var_mark(val obj)
@@ -2441,10 +2430,8 @@ void eval_init(void)
   reg_fun(intern(lit("mappend"), user_package), func_n1v(mappendv));
   reg_fun(intern(lit("mappend*"), user_package), func_n1v(lazy_mappendv));
   reg_fun(apply_s, func_n1v(apply_intrinsic));
-  reg_fun_mark(intern(lit("reduce-left"), user_package),
-               func_n4o(reduce_left, 2));
-  reg_fun_mark(intern(lit("reduce-right"), user_package),
-               func_n4o(reduce_right, 2));
+  reg_fun(intern(lit("reduce-left"), user_package), func_n4o(reduce_left, 2));
+  reg_fun(intern(lit("reduce-right"), user_package), func_n4o(reduce_right, 2));
 
   reg_fun(intern(lit("second"), user_package), func_n1(second));
   reg_fun(intern(lit("third"), user_package), func_n1(third));
@@ -2757,7 +2744,7 @@ void eval_init(void)
   reg_fun(intern(lit("copy-cons"), user_package), func_n1(copy_cons));
   reg_fun(intern(lit("copy-alist"), user_package), func_n1(copy_alist));
   reg_fun(intern(lit("prop"), user_package), func_n2(getplist));
-  reg_fun(intern(lit("merge"), user_package), func_n4o(merge, 2));
+  reg_fun(intern(lit("merge"), user_package), func_n4o(merge, 3));
   reg_fun(intern(lit("sort"), user_package), func_n3o(sort, 2));
   reg_fun(intern(lit("find"), user_package), func_n4o(find, 2));
   reg_fun(intern(lit("multi-sort"), user_package), func_n3o(multi_sort, 2));

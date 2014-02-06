@@ -1,5 +1,57 @@
 2014-02-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (lognot): Conform to new scheme for defaulting optional args.
+
+	* eval.c (apply): Unconditionally use colon_k for missing optional
+	args, for intrinsic functions.
+	(eval_intrinsic, rangev, rangev_star, errno_wrap): Conform to new
+	scheme for defaulting optional args.
+	(reg_fun_mark): Function removed.
+	(eval_init): Switch reduce_left and reduce_right back to reg_fun
+	registration.
+
+	* hash.c (gethash_n): Conform to new scheme for defaulting optional
+	arguments.
+
+	* lib.c (sub_list, replace_list, remove_if, keep_if, remove_if_lazy,
+	keep_if_lazy, tree_find, count_if, some_satisfy, all_satisfy,
+	none_satisfy, search_str, match_str, match_str_tree, sub_str,
+	replace_str, cat_str, tok_str, intern, rehome_sym, sub_vec,
+	replace_vec, lazy_str, sort, multi_sort, find, find_if, set_diff,
+	obj_print, obj_pprint): Conform to new scheme for defaulting optional
+	arguments.
+	(func_f0, func_f1, func_f2, func_f3, func_f4, func_n0, func_n1,
+	func_n2, func_n3, func_n4, func_n5, func_n6, func_n7, func_f0v,
+	func_f1v, func_f2v, func_f3v, func_f4v, func_n0v, func_n1v,
+	func_n2v, func_n3v, func_n4v, func_n5v, func_n6v, func_n7v):
+	Remove references to removed mark_missing_args member of struct func.
+	(func_set_mark_missing): Function removed.
+	(generic_funcall): Unconditionally use colon_k for missing optional
+	args, for intrinsic functions.
+
+	* lib.h (struct func): mark_missing_args member removed.
+	(func_set_mark_missing): Declaration removed.
+	(default_arg, default_bool_arg): New inline functions.
+
+	* rand.c (random): Left argument is not optional.
+	(rnd): Conform to new scheme for defaulting optional arguments.
+
+	* regex.c (search_regex, match_regex): Conform to new scheme for
+	defaulting optional arguments.
+
+	* stream.c (unget_char, unget_byte, put_string, put_char, put_byte,
+	put_line): Conform to new scheme for defaulting optional arguments.
+
+	* syslog.c (openlog_wrap): Conform to new scheme for defaulting
+	optional arguments.
+
+	* txr.1: Remove the specification that nil is a sentinel value in
+	default arguments, where necessary. Use consistent syntax for
+	specifying variable parts in argument lists. A few errors and omissions
+	addressed.
+
+2014-02-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (bind_args): Support optional parameters in the
 	form (sym initform present-p-sym).  Also, support the convention
 	that a value of : explicitly passed for an optional argument produces

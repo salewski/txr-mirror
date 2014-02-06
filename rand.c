@@ -167,10 +167,9 @@ val random_fixnum(val state)
 
 val random(val state, val modulus)
 {
-  uses_or2;
   struct random_state *r = (struct random_state *) 
-                             cobj_handle(or2(state, random_state),
-                                         random_state_s);
+                             cobj_handle(random_state, random_state_s);
+
   if (bignump(modulus)) {
     mp_int *m = mp(modulus);
     int bits = mp_count_bits(m);
@@ -245,6 +244,7 @@ invalid:
 
 val rnd(val modulus, val state)
 {
+  state = default_arg(state, random_state);
   return random(state, modulus);
 }
 

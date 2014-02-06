@@ -455,7 +455,7 @@ val gethash_n(val hash, val key, val notfound_val)
   struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
   val chain = vecref(h->table, num_fast(h->hash_fun(key) % h->modulus));
   val existing = h->assoc_fun(key, chain);
-  return if3(existing, cdr(existing), notfound_val);
+  return if3(existing, cdr(existing), default_bool_arg(notfound_val));
 }
 
 val sethash(val hash, val key, val value)

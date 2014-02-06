@@ -4773,7 +4773,7 @@ definitions are in error:
 
 The TXR language contains an embedded Lisp dialect called TXR Lisp.
 
-This language is exposed in TXR in three ways.
+This language is exposed in TXR in several ways.
 
 Firstly, in any situation that calls for an expression, a Lisp 
 expression can be used, if it is preceded by the @ symbol. The Lisp expression
@@ -4790,6 +4790,9 @@ Thirdly, the @(require) directive can be used to evaluate Lisp expressions
 as part of the matching logic of the TXR pattern language. The return value
 of the rightmost expression is examined. If it is nil, then the @(require)
 directive triggers a match failure. Otherwise, matching proceeds.
+
+Lastly, TXR Lisp expressions can be evaluated via the txr command line,
+using the -e and -p options.
 
 Examples:
 
@@ -5131,6 +5134,12 @@ in the Description section.
 {syntax}*  <word>*
 
 This indicates a repetition of zero or more of the given
+syntax enclosed in the braces or syntactic unit.
+
+.TP
+{syntax}+  <word>+
+
+This indicates a repetition of one or more of the given
 syntax enclosed in the braces or syntactic unit.
 
 .TP
@@ -6599,7 +6608,7 @@ Examples:
 .TP
 Syntax:
 
-(list* {<value>}*)
+(list* <value>*)
 
 .TP
 Description:
@@ -6922,10 +6931,10 @@ in <list> which are eq, eql or equal to <object>, and return the count.
 .TP
 Syntax:
 
-  (remove-if <predicate-function> <list> : <key-function>)
-  (keep-if <predicate-function> <list> : <key-function>)
-  (remove-if* <predicate-function> <list> : <key-function>)
-  (keep-if* <predicate-function> <list> : <key-function>)
+  (remove-if <predicate-function> <list> [<key-function>])
+  (keep-if <predicate-function> <list> [<key-function>])
+  (remove-if* <predicate-function> <list> [<key-function>])
+  (keep-if* <predicate-function> <list> [<key-function>])
 
 .TP
 Description
@@ -6938,8 +6947,8 @@ and may even be the same list object if no items are removed.
 
 The optional <key-function> specifies how each element from the <list> is
 transformed to an argument to <predicate-function>. If this argument is omitted
-or specified as nil, then the predicate function is applied to the elements
-directly, a behavior which is identical to <key-function> being (fun identity).
+then the predicate function is applied to the elements directly, a behavior
+which is identical to <key-function> being (fun identity).
 
 The keep-if function is exactly like remove-if, except the sense of
 the predicate is inverted. The function keep-if retains those items
@@ -6970,18 +6979,18 @@ Examples:
 .TP
 Syntax:
 
-  (count-if <predicate-function> <list> : <key-function>)
+  (count-if <predicate-function> <list> [<key-function>])
 
 .TP
 Description:
 
-The countove-if function counts the numer of elements of <list> which satisfy
+The count-if function counts the numer of elements of <list> which satisfy
 <predicate-function> and returns the count.
 
 The optional <key-function> specifies how each element from the <list> is
 transformed to an argument to <predicate-function>. If this argument is omitted
-or specified as nil, then the predicate function is applied to the elements
-directly, a behavior which is identical to <key-function> being (fun identity).
+then the predicate function is applied to the elements directly, a behavior
+which is identical to <key-function> being (fun identity).
 
 .SS Function tree-find
 
@@ -7186,7 +7195,7 @@ can be expressed as:
 .TP
 Syntax:
 
-  (apply <function> [ {<arg>}* <trailing-args> ])
+  (apply <function> [ <arg>* <trailing-args> ])
 
 .TP
 Description:
@@ -7243,8 +7252,8 @@ cannot be a compound form.
 .TP
 Syntax:
 
-  (reduce-left <binary-function> <list> : <init-value> <key-function>)
-  (reduce-right <binary-function> <list> : <init-value> <key-function>)
+  (reduce-left <binary-function> <list> [ <init-value> [ <key-function> ]])
+  (reduce-right <binary-function> <list> [ <init-value> [ <key-function> ]])
 
 .TP
 Description:
@@ -7327,18 +7336,18 @@ Examples:
 .TP
 Syntax:
 
-  (some <list> <predicate-fun> <key-fun>)
-  (all <list> <predicate-fun> <key-fun>)
-  (none <list> <predicate-fun> <key-fun>)
+  (some <list> <predicate-fun> [<key-fun>])
+  (all <list> <predicate-fun> [<key-fun>])
+  (none <list> <predicate-fun> [<key-fun>])
 
 .TP
 Description
 
-The some, all and none functions apply a predicate test over a list of
-elements.  The elements of <list> are reduced to values using <key-fun>, which
-is a one-argument function. If <key-fun> is specified as nil, then (fun
-identity) is substituted, and thus the values of the list are taken as they
-are.
+The some, all and none functions apply a predicate test function
+<predicate-fun> over a list of elements.  If the argument <key-fun> is
+specified, then values <list> are passed into <key-fun>, and <predicate-fun> is
+applied to the resulting values. If <key-fun> is omitted, the behavior is
+as if <key-fun> is the identity function.
 
 These functions have short-circuiting semantics and return conventions similar
 to the and and or operators.
@@ -7532,7 +7541,7 @@ found, or due to the property being present with a nil value.
 .TP
 Syntax:
 
-  (merge <list1> <list2> <lessfun> <keyfun>)
+  (merge <list1> <list2> <lessfun> [<keyfun>])
 
 .TP
 Description:
@@ -7710,7 +7719,7 @@ the gen-func to populate it with the first item.
 .TP
 Syntax:
 
-  (repeat <list1> {<listn>}*)
+  (repeat <list1> <list>*)
 
 .TP
 Description:
@@ -7948,7 +7957,7 @@ the <haystack> string and returns its position. If no such occurrence exists,
 it returns nil.
 
 If a <start> argument is specified, it gives the starting index for the
-search. If the <from-end> argument is specified and is non-nil, it means
+search. If the <from-end> argument is specified and is not nil, it means
 that the search is conducted right-to-left. If multiple matches are possible,
 it will find the rightmost one rather than the leftmost one.
 
@@ -8572,8 +8581,8 @@ The lazy-str function constructs a lazy string which draws material from
 
 If the optional <terminator> argument is given, then it specifies a string
 which is appended to every string from <string-list>, before that string is
-incorporated into the lazy string. If <terminator> is not given, or specified
-as nil, then it defaults to the string "\en", and so the strings from
+incorporated into the lazy string. If <terminator> is not given,
+then it defaults to the string "\en", and so the strings from
 <string-list> are effectively treated as lines which get terminated by newlines
 as they accumulate into the growing prefix of the lazy string.
 To avoid the use of a terminator string, a null string <terminator> argument
@@ -8952,8 +8961,8 @@ The sub function extracts a slice from input sequence <sequence>. The slice is
 a sequence of the same type as <sequence>.
 
 If the <to> parameter is omitted, the behavior is as if it were specified
-as nil. Likewise, if the <from> parameter is omitted, the behavior is
-as if nil were specified. Thus (sub a) means (sub a nil nil).
+as 0. Likewise, if the <from> parameter is omitted, the behavior is
+as if t were specified. Thus (sub a) means (sub a 0 t).
 
 The following equivalence holds between the sub function and
 the DWIM-bracket syntax:
@@ -8982,7 +8991,8 @@ The replace function replaces a subsequence of the <sequence> with
 insertion is performed. If <replacement-sequence> is empty (for example, the
 empty list nil), then a deletion is performed.
 
-If the <from> and <to> parameters are omitted, their values default to nil.
+If the <from> and <to> parameters are omitted, their values default
+to 0 and t respectively.
 
 The following equivalence holds between assignment to a place denoted by
 DWIM bracket syntax and the replace function:
@@ -9597,8 +9607,8 @@ a limit on the number of bits.
 .TP
 Syntax:
 
-  (logand . <integers>)
-  (logior . <integers>)
+  (logand <integer>*)
+  (logior <integer>*)
   (logxor <int1> <int2>)
 
 .TP
@@ -9691,7 +9701,7 @@ the bitwise representations are ...111100 and ...11110.
 .TP
 Syntax:
 
-  (mask . <integer-values>)
+  (mask <integer>*)
 
 .TP
 Description:
@@ -9723,9 +9733,9 @@ In other words, the following equivalences hold:
 .TP
 Syntax:
 
-  (throw <symbol> . <args>)
-  (throwf <symbol> <format-string> . <format-args>)
-  (error <format-string> . <format-args>)
+  (throw <symbol> <arg>*)
+  (throwf <symbol> <format-string> <format-arg>*)
+  (error <format-string> <format-arg>*)
 
 .TP
 Description:
@@ -9792,7 +9802,7 @@ and error.
 .TP
 Syntax:
 
- (search-regex <haystack-string> <needle-regex> : <start> <from-end>)
+ (search-regex <haystack-string> <needle-regex> [ <start> [<from-end>] ])
 
 .TP
 Description
@@ -9810,7 +9820,7 @@ cdr indicates the length of the match.
 .TP
 Syntax:
 
- (match-regex <string> <regex> : <position>)
+ (match-regex <string> <regex> [<position>])
 
 .TP
 Description
@@ -9825,7 +9835,7 @@ If it does not match, then nil is returned.
 .TP
 Syntax:
 
- (match-regex-right <string> <regex> : <end-position>)
+ (match-regex-right <string> <regex> [<end-position>])
 
 .TP
 Description
@@ -9928,7 +9938,7 @@ object. For any other object type, it returns nil.
 .TP
 Syntax:
 
-  (regex-compile <form-or-string> : <error-stream>)
+  (regex-compile <form-or-string> [<error-stream>])
 
 .TP
 Description:
@@ -9967,7 +9977,7 @@ Examples:
 .TP
 Syntax:
 
-  (regex-parse <string> : <error-stream>)
+  (regex-parse <string> [<error-stream>])
 
 .TP
 Description:
@@ -9998,7 +10008,7 @@ which is suitable as input to regex-compile.
 Syntax:
 
   (make-hash <weak-keys> <weak-vals> <equal-based>)
-  (hash [ :weak-keys ] [ :weak-vals ] [ :equal-based ])
+  (hash { :weak-keys | :weak-vals | :equal-based }*)
 
 .TP
 Description:
@@ -10072,7 +10082,7 @@ The return value is <hash>.
 .TP
 Syntax:
 
-  (group-by <func> <sequence> . <options>)
+  (group-by <func> <sequence> <option>*)
 
 .TP
 Description:
@@ -10083,7 +10093,7 @@ but lists of elements of <sequence>. The function <func> is applied toe
 each element of <sequence> to compute a key. That key is used to determine
 which list the item is added to in the hash table.
 
-The trailing arguments <options>, if any, consist of the same keywords
+The trailing arguments <option>*, if any, consist of the same keywords
 that are understood by the hash function, and determine the properties
 of the hash.
 
@@ -10471,7 +10481,7 @@ a parameter from the outermost op, into the innermost op.
 .TP
 Syntax:
 
-   (chain {<func>}*)
+   (chain <func>*)
 
 .TP
 Description:
@@ -10517,8 +10527,8 @@ op operator is this:
 .TP
 Syntax:
 
-  (andf {<func>}*)
-  (orf {<func>}*)
+  (andf <func>*)
+  (orf <func>*)
 
 .TP
 Description:
@@ -10568,8 +10578,8 @@ resulting value is returned. Otherwise the arguments are passed to <else-func>
 and the resulting value is returned.
 
 If <then-func> needs to be called, but is nil, then nil is returned
-immediately.  Likewise, if <else-func> needs to be calld, but is nil, then nil
-is returned.
+immediately.  Likewise, if <else-func> needs to be called, but is omitted or
+nil, then nil is returned.
 
 The iffi function differs from iff only in the defaulting behavior with respect
 to the <else-func> argument. The following equivalences hold:
@@ -10612,16 +10622,16 @@ the /dev/null device on Unix, but does not involve the operating system.
 .TP
 Syntax:
 
-  (format <stream-designator> <format-string> {<args>}*)
+  (format <stream-designator> <format-string> <format-arg>*)
 
 .TP
 Description:
 
 The format function performs output to a stream given by <stream-designator>,
 by interpreting the actions implicit in a <format-string>, incorporating
-material pulled from additional arguments given by <args>. Though the function
-is simple to invoke, there is complexity in format string language, which is
-documented below.
+material pulled from additional arguments given by <format-arg>*. Though the
+function is simple to invoke, there is complexity in format string language,
+which is documented below.
 
 The <stream-designator> argument can be a stream object, or one of the values t
 and nil. The value t serves as a shorthand for *stdout*. The value nil
@@ -11149,7 +11159,7 @@ catenation.
 .TP
 Syntax:
 
-  (make-catenated-stream . streams)
+  (make-catenated-stream <stream>*)
 
 .TP
 Description
@@ -11185,8 +11195,8 @@ are compatible with the intended operations.
 .TP
 Syntax:
 
-   (read : <source> <error-stream>)
-   (lisp-parse <source> : <error-stream>) ;; obsolescent synonym for read
+   (read [ <source> [<error-stream>] ])
+   (lisp-parse <source> [<error-stream>]) ;; obsolescent synonym for read
 
 .TP
 Description:
@@ -11327,7 +11337,7 @@ changes the current working directory, and the path name is relative.
 Syntax:
 
   (open-command <system-command> <mode-string>)
-  (open-process <command> <mode-string> <argument-strings>)
+  (open-process <command> <mode-string> [<argument-strings>])
 
 .TP
 Description:
@@ -11353,7 +11363,7 @@ popen function.
 The <argument-strings> argument is a list of strings which specifies additional
 optional arguments to be passed passed to the program. The <command> argument
 becomes the first argument, and <argument-strings> become the second and
-subsequent arguments.
+subsequent arguments. If <argument-strings> is omitted, it defaults to empty.
 
 If a coprocess is open for writing (<mode-string> is specified as "w"), then
 writing on the returned stream feeds input to that program's standard input
@@ -11651,8 +11661,8 @@ of zero, or for a step direction which cannot meet the endpoint.
 
 The <to> argument specifies the endpoint value, which, if it occurs in the
 sequence, is excluded from it by the range* function, but included by the range
-function. If <to> is missing, then there is no endpoint, and the sequence
-which is generated is infinite, regardless of <step>.
+function. If <to> is missing, or specified as nil, then there is no endpoint,
+and the sequence which is generated is infinite, regardless of <step>.
 
 If <from> is omitted, then the sequence begins at zero, otherwise <from> must
 be an integer which specifies the initial value.
@@ -11767,7 +11777,7 @@ savings time).
 
 .SH UNIX PROGRAMMING
 
-.SS Functions errno and set-errno
+.SS Function errno
 
 .TP
 Syntax:
@@ -11778,8 +11788,9 @@ Syntax:
 Description:
 
 These functions retrieves the current value of the C library error variable
-errno.  If the argument <new-errno> is present and is not nil, then it becomes
-the new value of errno. The value returned is the prior value.
+errno.  If the argument <new-errno> is present and is not nil, then it
+specifies a value which is stored into errno.  The value returned is the prior
+value.
 
 .SS Funtion exit
 
@@ -11994,7 +12005,7 @@ these result in multiple syslog mesages.
 .TP
 Syntax:
 
-  (openlog <id-string> : <options> <facility>)
+  (openlog <id-string> [ <options> [<facility>] ])
 
 .TP
 Description:
@@ -12058,15 +12069,15 @@ Example:
 .TP
 Syntax:
 
-  (syslog <priority> <format> . <args>)
+  (syslog <priority> <format> <format-arg>*)
 
 .TP
 Description:
 
 This function is the interface to the syslog C function. The printf formatting
 capabilities of the function are not used; it follows the conventions of the
-TXR Lisp format function instead. Note in particular that %m for interpolating
-the value of strerror(errno) is currenly not supported.
+TXR Lisp format function instead. Note in particular that the %m convention
+for interpolating the value of strerror(errno) is currenly not supported.
 
 .SH WEB PROGRAMMING SUPPORT
 

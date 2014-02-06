@@ -638,7 +638,7 @@ val sub_list(val list, val from, val to)
   if (!list)
     return nil;
 
-  if (from == nil)
+  if (null_or_missing_p(from))
     from = zero;
   else if (from == t)
     from = nil;
@@ -648,9 +648,9 @@ val sub_list(val list, val from, val to)
       to = nil;
   }
 
-  if (to == t)
+  if (to == t || null_or_missing_p(to))
     to = nil;
-  else if (to && lt(to, zero))
+  else if (!null_or_missing_p(to) && lt(to, zero))
     to = plus(to, if3(len, len, len = length(list)));
 
   if (to && from && gt(from, to)) {
@@ -692,7 +692,7 @@ val replace_list(val list, val items, val from, val to)
   if (!list)
     return items;
 
-  if (from == nil)
+  if (null_or_missing_p(from))
     from = zero;
   else if (from == t)
     from = nil;
@@ -702,7 +702,7 @@ val replace_list(val list, val items, val from, val to)
       to = len;
   }
 
-  if (to == t)
+  if (to == t || null_or_missing_p(to))
     to = nil;
   if (to && lt(to, zero))
     to = plus(to, len ? len : (len = length(list)));
@@ -892,8 +892,7 @@ val remove_if(val pred, val list, val key)
   val list_orig = list;
   val lastmatch = cons(nil, list);
 
-  if (!key)
-    key = identity_f;
+  key = default_arg(key, identity_f);
 
   for (; list; list = cdr(list)) {
     val subj = funcall1(key, car(list));
@@ -914,8 +913,7 @@ val keep_if(val pred, val list, val key)
   val list_orig = list;
   val lastmatch = cons(nil, list);
 
-  if (!key)
-    key = identity_f;
+  key = default_arg(key, identity_f);
 
   for (; list; list = cdr(list)) {
     val subj = funcall1(key, car(list));
@@ -968,23 +966,19 @@ val remqual_lazy(val obj, val list)
 
 val remove_if_lazy(val pred, val list, val key)
 {
-  uses_or2;
-  val pred_key = chain(or2(key, identity_f), pred, nao);
+  val pred_key = chain(default_arg(key, identity_f), pred, nao);
   return rem_lazy_rec(pred_key, list, nil, nil);
 }
 
 val keep_if_lazy(val pred, val list, val key)
 {
-  uses_or2;
-  val pred_key = chain(or2(key, identity_f), pred, null_f, nao);
+  val pred_key = chain(default_arg(key, identity_f), pred, null_f, nao);
   return rem_lazy_rec(pred_key, list, nil, nil);
 }
 
 val tree_find(val obj, val tree, val testfun)
 {
-  uses_or2;
-
-  if (funcall2(or2(testfun, equal_f), obj, tree))
+  if (funcall2(default_arg(testfun, equal_f), obj, tree))
     return t;
   else if (consp(tree))
     return some_satisfy(tree, curry_123_2(func_n3(tree_find), 
@@ -1029,8 +1023,7 @@ val count_if(val pred, val list, val key)
 {
   val count = zero;
 
-  if (!key)
-    key = identity_f;
+  key = default_arg(key, identity_f);
 
   for (; list; list = cdr(list)) {
     val subj = funcall1(key, car(list));
@@ -1045,8 +1038,7 @@ val count_if(val pred, val list, val key)
 
 val some_satisfy(val list, val pred, val key)
 {
-  if (!key)
-    key = identity_f;
+  key = default_arg(key, identity_f);
 
   for (; list; list = cdr(list)) {
     val item;
@@ -1061,8 +1053,7 @@ val all_satisfy(val list, val pred, val key)
 {
   val item = t;
 
-  if (!key)
-    key = identity_f;
+  key = default_arg(key, identity_f);
 
   for (; list; list = cdr(list)) {
     if ((item = funcall1(pred, funcall1(key, car(list)))) == nil)
@@ -1074,8 +1065,7 @@ val all_satisfy(val list, val pred, val key)
 
 val none_satisfy(val list, val pred, val key)
 {
-  if (!key)
-    key = identity_f;
+  key = default_arg(key, identity_f);
 
   for (; list; list = cdr(list)) {
     if (funcall1(pred, funcall1(key, car(list))))
@@ -1934,9 +1924,8 @@ const wchar_t *c_str(val obj)
 
 val search_str(val haystack, val needle, val start_num, val from_end)
 {
-  uses_or2;
-
-  start_num = or2(start_num, zero);
+  from_end = default_bool_arg(from_end);
+  start_num = default_arg(start_num, zero);
 
   if (length_str_lt(haystack, start_num)) {
     return nil;
@@ -2004,8 +1993,7 @@ val match_str(val bigstr, val str, val pos)
 {
   val i, p;
 
-  if (pos == nil)
-    pos = zero;
+  pos = default_arg(pos, zero);
 
   for (i = zero;
        length_str_gt(bigstr, p = plus(pos, i)) && length_str_gt(str, i);
@@ -2020,8 +2008,7 @@ val match_str(val bigstr, val str, val pos)
 
 val match_str_tree(val bigstr, val tree, val pos)
 {
-  if (pos == nil)
-    pos = zero;
+  pos = default_arg(pos, zero);
 
   if (stringp(tree)) {
     if (match_str(bigstr, tree, pos))
@@ -2104,7 +2091,7 @@ val sub_str(val str_in, val from, val to)
 
   len = length_str(str_in);
 
-  if (from == nil)
+  if (null_or_missing_p(from))
     from = zero;
   else if (from == t)
     return null_string;
@@ -2114,7 +2101,7 @@ val sub_str(val str_in, val from, val to)
       to = len;
   }
 
-  if (to == nil || to == t)
+  if (null_or_missing_p(to) || to == t)
     to = len;
   else if (lt(to, zero))
     to = plus(to, len);
@@ -2145,7 +2132,7 @@ val replace_str(val str_in, val items, val from, val to)
     uw_throwf(error_s, lit("replace-str: string ~s of type ~s not supported"),
               str_in, typeof(str_in), nao);
 
-  if (from == nil)
+  if (null_or_missing_p(from))
     from = zero;
   else if (from == t)
     from = len;
@@ -2155,7 +2142,7 @@ val replace_str(val str_in, val items, val from, val to)
       to = len;
   }
 
-  if (to == nil || to == t)
+  if (null_or_missing_p(to) || to == t)
     to = len;
   else if (lt(to, zero))
     to = plus(to, len);
@@ -2215,7 +2202,7 @@ val cat_str(val list, val sep)
   cnum total = 0;
   val iter;
   wchar_t *str, *ptr;
-  cnum len_sep = sep ? c_num(length_str(sep)) : 0;
+  cnum len_sep = (!null_or_missing_p(sep)) ? c_num(length_str(sep)) : 0;
 
   for (iter = list; iter != nil; iter = cdr(iter)) {
     val item = car(iter);
@@ -2353,6 +2340,8 @@ val tok_str(val str, val tok_regex, val keep_sep)
 {
   list_collect_decl (out, iter);
   val pos = zero;
+
+  keep_sep = default_bool_arg(keep_sep);
 
   for (;;) {
     cons_bind (new_pos, len, search_regex(str, tok_regex, pos, nil));
@@ -2761,7 +2750,7 @@ val intern(val str, val package)
   val new_p;
   val *place;
 
-  if (nullp(package)) {
+  if (null_or_missing_p(package)) {
     package = user_package;
   } else if (stringp(package)) {
     val p = find_package(package);
@@ -2788,7 +2777,7 @@ val rehome_sym(val sym, val package)
   if (!sym)
     return nil;
 
-  if (nullp(package)) {
+  if (null_or_missing_p(package)) {
     package = user_package;
   } else if (stringp(package)) {
     val p = find_package(package);
@@ -2833,7 +2822,6 @@ val func_f0(val env, val (*fun)(val))
   obj->f.variadic = 0;
   obj->f.fixparam = 0;
   obj->f.optargs = 0;
-  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -2847,7 +2835,6 @@ val func_f1(val env, val (*fun)(val, val))
   obj->f.variadic = 0;
   obj->f.fixparam = 1;
   obj->f.optargs = 0;
-  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -2861,7 +2848,6 @@ val func_f2(val env, val (*fun)(val, val, val))
   obj->f.variadic = 0;
   obj->f.fixparam = 2;
   obj->f.optargs = 0;
-  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -2875,7 +2861,6 @@ val func_f3(val env, val (*fun)(val, val, val, val))
   obj->f.variadic = 0;
   obj->f.fixparam = 3;
   obj->f.optargs = 0;
-  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -2889,7 +2874,6 @@ val func_f4(val env, val (*fun)(val, val, val, val, val))
   obj->f.variadic = 0;
   obj->f.fixparam = 4;
   obj->f.optargs = 0;
-  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -2903,7 +2887,6 @@ val func_n0(val (*fun)(void))
   obj->f.variadic = 0;
   obj->f.fixparam = 0;
   obj->f.optargs = 0;
-  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -2917,7 +2900,6 @@ val func_n1(val (*fun)(val))
   obj->f.variadic = 0;
   obj->f.fixparam = 1;
   obj->f.optargs = 0;
-  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -2931,7 +2913,6 @@ val func_n2(val (*fun)(val, val))
   obj->f.variadic = 0;
   obj->f.fixparam = 2;
   obj->f.optargs = 0;
-  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -2945,7 +2926,6 @@ val func_n3(val (*fun)(val, val, val))
   obj->f.variadic = 0;
   obj->f.fixparam = 3;
   obj->f.optargs = 0;
-  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -2959,7 +2939,6 @@ val func_n4(val (*fun)(val, val, val, val))
   obj->f.variadic = 0;
   obj->f.fixparam = 4;
   obj->f.optargs = 0;
-  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -2973,7 +2952,6 @@ val func_n5(val (*fun)(val, val, val, val, val))
   obj->f.variadic = 0;
   obj->f.fixparam = 5;
   obj->f.optargs = 0;
-  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -2987,7 +2965,6 @@ val func_n6(val (*fun)(val, val, val, val, val, val))
   obj->f.variadic = 0;
   obj->f.fixparam = 6;
   obj->f.optargs = 0;
-  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3001,7 +2978,6 @@ val func_n7(val (*fun)(val, val, val, val, val, val, val))
   obj->f.variadic = 0;
   obj->f.fixparam = 7;
   obj->f.optargs = 0;
-  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3015,7 +2991,6 @@ val func_f0v(val env, val (*fun)(val, val))
   obj->f.variadic = 1;
   obj->f.fixparam = 0;
   obj->f.optargs = 0;
-  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3029,7 +3004,6 @@ val func_f1v(val env, val (*fun)(val env, val, val rest))
   obj->f.variadic = 1;
   obj->f.fixparam = 1;
   obj->f.optargs = 0;
-  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3043,7 +3017,6 @@ val func_f2v(val env, val (*fun)(val env, val, val, val rest))
   obj->f.variadic = 1;
   obj->f.fixparam = 2;
   obj->f.optargs = 0;
-  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3057,7 +3030,6 @@ val func_f3v(val env, val (*fun)(val env, val, val, val, val rest))
   obj->f.variadic = 1;
   obj->f.fixparam = 3;
   obj->f.optargs = 0;
-  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3071,7 +3043,6 @@ val func_f4v(val env, val (*fun)(val env, val, val, val, val, val rest))
   obj->f.variadic = 1;
   obj->f.fixparam = 4;
   obj->f.optargs = 0;
-  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3085,7 +3056,6 @@ val func_n0v(val (*fun)(val rest))
   obj->f.variadic = 1;
   obj->f.fixparam = 0;
   obj->f.optargs = 0;
-  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3099,7 +3069,6 @@ val func_n1v(val (*fun)(val, val rest))
   obj->f.variadic = 1;
   obj->f.fixparam = 1;
   obj->f.optargs = 0;
-  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3113,7 +3082,6 @@ val func_n2v(val (*fun)(val, val, val rest))
   obj->f.variadic = 1;
   obj->f.fixparam = 2;
   obj->f.optargs = 0;
-  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3127,7 +3095,6 @@ val func_n3v(val (*fun)(val, val, val, val rest))
   obj->f.variadic = 1;
   obj->f.fixparam = 3;
   obj->f.optargs = 0;
-  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3141,7 +3108,6 @@ val func_n4v(val (*fun)(val, val, val, val, val rest))
   obj->f.variadic = 1;
   obj->f.fixparam = 4;
   obj->f.optargs = 0;
-  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3155,7 +3121,6 @@ val func_n5v(val (*fun)(val, val, val, val, val, val rest))
   obj->f.variadic = 1;
   obj->f.fixparam = 5;
   obj->f.optargs = 0;
-  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3169,7 +3134,6 @@ val func_n6v(val (*fun)(val, val, val, val, val, val, val rest))
   obj->f.variadic = 1;
   obj->f.fixparam = 6;
   obj->f.optargs = 0;
-  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3183,7 +3147,6 @@ val func_n7v(val (*fun)(val, val, val, val, val, val, val, val rest))
   obj->f.variadic = 1;
   obj->f.fixparam = 7;
   obj->f.optargs = 0;
-  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3232,7 +3195,6 @@ val func_interp(val env, val form)
   obj->f.variadic = 1;
   obj->f.fixparam = 0;
   obj->f.optargs = 0;
-  obj->f.mark_missing_args = 0;
   return obj;
 }
 
@@ -3258,13 +3220,6 @@ val func_set_env(val fun, val env)
   return env;
 }
 
-val func_set_mark_missing(val fun)
-{
-  type_check(fun, FUN);
-  fun->f.mark_missing_args = 1;
-  return nil;
-}
-
 val functionp(val obj)
 {
   return type(obj) == FUN ? t : nil;
@@ -3278,11 +3233,9 @@ val interp_fun_p(val obj)
 static val generic_funcall(val fun, val arg[], int nargs)
 {
   int variadic, fixparam, reqargs;
-  val missing;
 
   type_check (fun, FUN);
 
-  missing = fun->f.mark_missing_args ? colon_k : nil;
   variadic = fun->f.variadic;
   fixparam = fun->f.fixparam;
   reqargs = fixparam - fun->f.optargs;
@@ -3295,7 +3248,7 @@ static val generic_funcall(val fun, val arg[], int nargs)
       uw_throw(error_s, lit("funcall: too many arguments"));
 
     for (; nargs < fixparam; )
-      arg[nargs++] = missing;
+      arg[nargs++] = colon_k;
 
     switch (fun->f.functype) {
     case F0:
@@ -3337,7 +3290,7 @@ static val generic_funcall(val fun, val arg[], int nargs)
       uw_throw(error_s, lit("funcall: missing required arguments"));
 
     for (; nargs < fixparam; )
-      arg[nargs++] = missing;
+      arg[nargs++] = colon_k;
 
     for (; nargs > fixparam; )
       arglist = cons(arg[--nargs], arglist);
@@ -3995,7 +3948,7 @@ val sub_vec(val vec_in, val from, val to)
 {
   val len = length_vec(vec_in);
 
-  if (from == nil)
+  if (null_or_missing_p(from))
     from = zero;
   else if (from == t)
     from = len;
@@ -4005,7 +3958,7 @@ val sub_vec(val vec_in, val from, val to)
       to = len;
   }
 
-  if (to == nil || to == t)
+  if (null_or_missing_p(to) || to == t)
     to = len;
   else if (lt(to, zero))
     to = plus(to, len);
@@ -4039,7 +3992,7 @@ val replace_vec(val vec_in, val items, val from, val to)
   val len_it = length(it_seq);
   val len_rep;
 
-  if (from == nil)
+  if (null_or_missing_p(from))
     from = zero;
   else if (from == t)
     from = len;
@@ -4049,7 +4002,7 @@ val replace_vec(val vec_in, val items, val from, val to)
       to = len;
   }
 
-  if (to == nil || to == t)
+  if (null_or_missing_p(to) || to == t)
     to = len;
   else if (lt(to, zero))
     to = plus(to, len);
@@ -4192,14 +4145,14 @@ val lazy_stream_cons(val stream)
 
 val lazy_str(val lst, val term, val limit)
 {
-  uses_or2;
   val obj = make_obj();
   obj->ls.type = LSTR;
 
   /* Must init before calling something that can gc! */
   obj->ls.opts = obj->ls.list = obj->ls.prefix = nil;
 
-  term = or2(term, lit("\n"));
+  term = default_arg(term, lit("\n"));
+  limit = default_bool_arg(limit);
 
   if (nullp(lst)) {
     obj->ls.prefix = null_string;
@@ -4697,8 +4650,7 @@ val sort(val seq, val lessfun, val keyfun)
   if (!seq)
     return nil;
 
-  if (!keyfun)
-    keyfun = identity_f;
+  keyfun = default_arg(keyfun, identity_f);
 
   if (consp(seq)) {
     /* The list could have a mixture of generation 0 and 1
@@ -4739,6 +4691,8 @@ val multi_sort(val lists, val funcs, val key_funcs)
 {
   val tuples = mapcarv(func_n0v(identity), lists);
 
+  key_funcs = default_bool_arg(key_funcs);
+
   if (functionp(funcs))
     funcs = cons(funcs, nil);
 
@@ -4750,11 +4704,8 @@ val multi_sort(val lists, val funcs, val key_funcs)
 
 val find(val item, val list, val testfun, val keyfun)
 {
-  if (!keyfun)
-    keyfun = identity_f;
-
-  if (!testfun)
-    testfun = equal_f;
+  testfun = default_arg(testfun, equal_f);
+  keyfun = default_arg(keyfun, identity_f);
 
   for (; list; list = cdr(list)) {
     val elem = car(list);
@@ -4769,8 +4720,7 @@ val find(val item, val list, val testfun, val keyfun)
 
 val find_if(val pred, val list, val key)
 {
-  if (!key)
-    key = identity_f;
+  key = default_arg(key, identity_f);
 
   for (; list; list = cdr(list)) {
     val item = car(list);
@@ -4789,11 +4739,8 @@ val set_diff(val list1, val list2, val testfun, val keyfun)
   list_collect_decl (out, ptail);
   val list_orig = list1;
 
-  if (!keyfun)
-    keyfun = identity_f;
-
-  if (!testfun)
-    testfun = equal_f;
+  testfun = default_arg(testfun, equal_f);
+  keyfun = default_arg(keyfun, identity_f);
 
   for (; list1; list1 = cdr(list1)) {
     /* optimization: list2 is a tail of list1, and so we
@@ -5110,8 +5057,7 @@ static void obj_init(void)
 
 val obj_print(val obj, val out)
 {
-  if (out == nil)
-    out = std_output;
+  out = default_arg(out, std_output);
 
   switch (type(obj)) {
   case NIL:
@@ -5277,8 +5223,7 @@ val obj_print(val obj, val out)
 
 val obj_pprint(val obj, val out)
 {
-  if (out == nil)
-    out = std_output;
+  out = default_arg(out, std_output);
 
   switch (type(obj)) {
   case NIL:
