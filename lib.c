@@ -3248,6 +3248,8 @@ val generic_funcall(val fun, val arg[], int nargs)
     case 0:
       uw_throw(error_s, lit("call: missing required arguments"));
     case 1:
+      if (consp(arg[0]))
+        return sub(fun, car(arg[0]), cdr(arg[0]));
       return ref(fun, arg[0]);
     case 2:
       return sub(fun, arg[0], arg[1]);

@@ -1,5 +1,13 @@
 2014-02-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (generic_funcall): If a cons cell is passed as
+	one argument to a sequence being used as a function, split it into two
+	arguments. This is consistent with the DWIM operator behavior.
+
+	* txr.1: Document callable objects.
+
+2014-02-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	Allow sequences and hashes to be called as functions.
 	This is already supported in the DWIM operator.
 
