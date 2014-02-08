@@ -3839,8 +3839,12 @@ val vector(val length, val initval)
 {
   int i;
   cnum alloc_plus = c_num(length) + 2;
+  size_t size = alloc_plus * sizeof (val);
+  val *v = (size / sizeof *v == alloc_plus)
+           ? (val *) chk_malloc(size)
+           : (val *) uw_throwf(error_s, lit("vector: length ~a is too large"),
+                               length, nao);
   val vec = make_obj();
-  val *v = (val *) chk_malloc(alloc_plus * sizeof *v);
   initval = default_bool_arg(initval);
 #if HAVE_VALGRIND
   vec->v.vec_true_start = v;
@@ -3870,6 +3874,10 @@ val vec_set_length(val vec, val length)
     cnum old_alloc = c_num(vec->v.vec[vec_alloc]);
     cnum length_delta = new_length - old_length;
     cnum alloc_delta = new_length - old_alloc;
+
+    if (new_length > ((size_t) -1)/(sizeof (val)) - 2)
+      uw_throwf(error_s, lit("vec-set-length: cannot extend to length ~s"),
+                length, nao);
 
     if (alloc_delta > 0) {
       cnum new_alloc = max(new_length, 2*old_alloc);
@@ -4102,12 +4110,19 @@ val replace_vec(val vec_in, val items, val from, val to)
 
 val cat_vec(val list)
 {
-  cnum total = 0;
+  size_t total = 0;
   val iter;
   val vec, *v;
 
-  for (iter = list; iter != nil; iter = cdr(iter))
-    total += c_num(length_vec(car(iter)));
+  for (iter = list; iter != nil; iter = cdr(iter)) {
+    size_t newtot = total + c_num(length_vec(car(iter)));
+    if (newtot < total)
+      goto toobig;
+    total = newtot;
+  }
+
+  if (total > ((size_t) -1)/(sizeof (val)) - 2)
+    goto toobig;
 
   vec = make_obj();
   v = (val *) chk_malloc((total + 2) * sizeof *v);
@@ -4128,6 +4143,8 @@ val cat_vec(val list)
   }
 
   return vec;
+toobig:
+  uw_throwf(error_s, lit("cat-vec: resulting vector too large"), nao);
 }
 
 static val simple_lazy_stream_func(val stream, val lcons)
