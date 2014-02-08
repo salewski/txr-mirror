@@ -7869,6 +7869,42 @@ cached inside <promise> and returned, becoming the return value of the
 force function call.  If the force function is invoked additional times on
 the same promise, the cached value is retrieved.
 
+.SS Function perm
+
+.TP
+Syntax:
+
+  (rperm <seq> <len>)
+
+.TP
+Description:
+
+The rperm function returns a lazy list which consists of all the repeating
+permutations of length <len> formed by items taken from <seq>. 
+"Repeating" means that the items from <seq> can appear more than
+once in the permutations.
+
+Argument <len> must be a positive integer, and <seq> must be a sequence.
+
+If <seq> is empty, or if <len> is zero, then the empty list is returned.
+
+Otherwise permutations are returned which are sequences of the same kind as
+<seq>.
+
+The first permutation consists of <len> repetitions of the first element of
+<seq>. The next repetition, if there is one, differs from the first
+repetition in that its last element is the second element of <seq>.
+
+.TP
+Examples:
+
+  (rperm "01" 4) -> ("000" "001" "010" "011" "100" "101" "110" "111")
+
+  (rperm #(1) 3) -> (#(1 1 1))
+
+  (rperm '(0 1 2) 2) -> ((0 0) (0 1) (0 2) (1 0) (1 1) (1 2) (2 0) (2 1) (2 2))
+
+
 .SH CHARACTERS AND STRINGS
 
 .SS Function mkstring

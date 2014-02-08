@@ -2125,6 +2125,101 @@ static val force(val promise)
   return rplacd(promise, funcall(cdr(promise)));
 }
 
+static val rperm_while_fun(val env)
+{
+  val vec = cdr(env);
+  return consp(vecref(vec, zero));
+}
+
+static val rperm_gen_fun(val env)
+{
+  cons_bind (list, vec, env);
+  list_collect_decl(out, ptail);
+  cnum i;
+  cnum len = c_num(length_vec(vec));
+
+  for (i = 0; i < len; i++)
+    list_collect(ptail, car(vec->v.vec[i]));
+
+  for (i = len-1; i >= 0; i--) {
+    pop(&vec->v.vec[i]);
+    if (atom(vec->v.vec[i]) && i > 0)
+      vec->v.vec[i] = list;
+    else
+      break;
+  }
+
+  return out;
+}
+
+static val rperm_list(val list, val n)
+{
+  val vec = vector(n, list);
+  val env = cons(list, vec);
+  return generate(func_f0(env, rperm_while_fun),
+                  func_f0(env, rperm_gen_fun));
+}
+
+static val rperm_vec_gen_fun(val env)
+{
+  val list = rperm_gen_fun(env);
+  return vector_list(list);
+}
+
+static val rperm_vec(val ve, val n)
+{
+  val list = list_vector(ve);
+  val vec = vector(n, list);
+  val env = cons(list, vec);
+  return generate(func_f0(env, rperm_while_fun),
+                  func_f0(env, rperm_vec_gen_fun));
+}
+
+static val rperm_str_gen_fun(val env)
+{
+  val list = rperm_gen_fun(env);
+  return cat_str(list, nil);
+}
+
+static val rperm_str(val str, val n)
+{
+  val list = list_str(str);
+  val vec = vector(n, list);
+  val env = cons(list, vec);
+  return generate(func_f0(env, rperm_while_fun),
+                  func_f0(env, rperm_str_gen_fun));
+}
+
+static val rperm(val seq, val n)
+{
+  if (!integerp(n))
+    type_mismatch(lit("rperm: ~s is not an integer"), n, nao);
+
+  if (zerop(n))
+    return nil;
+
+  if (lt(n, zero))
+    uw_throwf(numeric_error_s, lit("rperm: ~s is not a positive integer"),
+              n, nao);
+
+  switch (type(seq)) {
+  case NIL:
+    return nil;
+  case CONS:
+  case LCONS:
+    return rperm_list(seq, n);
+  case VEC:
+    return rperm_vec(seq, n);
+  case STR:
+  case LSTR:
+  case LIT:
+    return rperm_str(seq, n);
+  default:
+    type_mismatch(lit("rperm: ~s is not a sequence"), seq, nao);
+  }
+}
+
+
 static val errno_wrap(val newval)
 {
   val oldval = num(errno);
@@ -2717,6 +2812,7 @@ void eval_init(void)
   reg_fun(generate_s, func_n2(generate));
   reg_fun(intern(lit("repeat"), user_package), func_n1v(repeatv));
   reg_fun(intern(lit("force"), user_package), func_n1(force));
+  reg_fun(intern(lit("rperm"), user_package), func_n2(rperm));
 
   reg_fun(throw_s, func_n1v(uw_throw));
   reg_fun(intern(lit("throwf"), user_package), func_n2v(uw_throwfv));
