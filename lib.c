@@ -3918,6 +3918,8 @@ val *vecref_l(val vec, val ind)
 {
   cnum index = c_num(ind);
   cnum len = c_num(length_vec(vec));
+  if (index < 0)
+    index = len + index;
   if (index < 0 || index >= len)
     uw_throwf(error_s, lit("vecref: ~s is out of range for vector ~s"),
               ind, vec, nao);

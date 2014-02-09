@@ -1,3 +1,22 @@
+2014-02-09  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (rperm_list, rperm_vec, rperm_str): n variable renamed
+	to k, for consistency with rperm.
+	(rperm): Likewise, and the behavior in the k == zero case is
+	changed to return a single empty permutation.
+	(perm_while_fun, perm_index, perm_gen_fun_common, perm_init_common,
+	perm_vec_gen_fill, perm_vec_gen_fun, perm_vec, 
+	perm_list_gen_fill, perm_list_gen_fun, perm_list, 
+	perm_str_gen_fill, perm_str_gen_fun, perm_str, perm): New
+	static functions.
+	(eval_init): perm registered as intrinsic.
+
+	* lib.c (vecref_l): Bugfix: allow negative indices, just like vecref.
+
+	* lib.h (three, four): New macros.
+
+	* txr.1: Updated documentation for rperm. Documented perm.
+
 2014-02-08  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (vector, vec_set_length, cat_vec): When the vector size

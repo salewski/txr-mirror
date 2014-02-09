@@ -7869,7 +7869,7 @@ cached inside <promise> and returned, becoming the return value of the
 force function call.  If the force function is invoked additional times on
 the same promise, the cached value is retrieved.
 
-.SS Function perm
+.SS Function rperm
 
 .TP
 Syntax:
@@ -7884,16 +7884,21 @@ permutations of length <len> formed by items taken from <seq>.
 "Repeating" means that the items from <seq> can appear more than
 once in the permutations.
 
-Argument <len> must be a positive integer, and <seq> must be a sequence.
+The permutations which are returned are sequences of the same kind as <seq>.
 
-If <seq> is empty, or if <len> is zero, then the empty list is returned.
+Argument <len> must be a nonnegative integer, and <seq> must be a sequence.
 
-Otherwise permutations are returned which are sequences of the same kind as
-<seq>.
+If <len> is zero, then a single permutation is returned, of zero length.
+This is true regardless of whether <seq> is itself empty.
+
+If <seq> is empty and <len> is greater than zero, then no permutations are
+returned, since permutations of a positive length require items, and the
+sequence has no items. Thus there exist no such permutations.
 
 The first permutation consists of <len> repetitions of the first element of
 <seq>. The next repetition, if there is one, differs from the first
 repetition in that its last element is the second element of <seq>.
+That is to say, the permutations are lexicographically ordered.
 
 .TP
 Examples:
@@ -7904,6 +7909,32 @@ Examples:
 
   (rperm '(0 1 2) 2) -> ((0 0) (0 1) (0 2) (1 0) (1 1) (1 2) (2 0) (2 1) (2 2))
 
+.SS Function perm
+
+.TP
+Syntax:
+
+  (perm <seq> [<len>])
+
+.TP
+Description:
+
+The rperm function returns a lazy list which consists of all
+length <len> permutations of formed by items taken from <seq>. 
+The permutations do not use any element of <seq> more than once.
+
+Argument <len>, if present, must be a positive integer no greater
+than the length of <seq>, and <seq> must be a sequence.
+
+If <len> is not present, then its value defaults to the length of <seq>:
+the list of the full permutations of the entire sequence is returned.
+
+The permutations in the returned list are sequences of the same kind as <seq>.
+
+If <len> is zero, then a list containing one permutation is returned, and that
+permutations is of zero length.
+
+The permutations are lexicographically ordered.
 
 .SH CHARACTERS AND STRINGS
 

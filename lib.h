@@ -771,6 +771,8 @@ val *list_collect_append(val *pptail, val obj);
 #define zero num_fast(0)
 #define one num_fast(1)
 #define two num_fast(2)
+#define three num_fast(3)
+#define four num_fast(4)
 #define negone num_fast(-1)
 #define maxint num_fast(NUM_MAX)
 #define minint num_fast(NUM_MIN)

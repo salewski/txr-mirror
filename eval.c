@@ -2152,9 +2152,9 @@ static val rperm_gen_fun(val env)
   return out;
 }
 
-static val rperm_list(val list, val n)
+static val rperm_list(val list, val k)
 {
-  val vec = vector(n, list);
+  val vec = vector(k, list);
   val env = cons(list, vec);
   return generate(func_f0(env, rperm_while_fun),
                   func_f0(env, rperm_gen_fun));
@@ -2166,10 +2166,10 @@ static val rperm_vec_gen_fun(val env)
   return vector_list(list);
 }
 
-static val rperm_vec(val ve, val n)
+static val rperm_vec(val ve, val k)
 {
   val list = list_vector(ve);
-  val vec = vector(n, list);
+  val vec = vector(k, list);
   val env = cons(list, vec);
   return generate(func_f0(env, rperm_while_fun),
                   func_f0(env, rperm_vec_gen_fun));
@@ -2181,44 +2181,238 @@ static val rperm_str_gen_fun(val env)
   return cat_str(list, nil);
 }
 
-static val rperm_str(val str, val n)
+static val rperm_str(val str, val k)
 {
   val list = list_str(str);
-  val vec = vector(n, list);
+  val vec = vector(k, list);
   val env = cons(list, vec);
   return generate(func_f0(env, rperm_while_fun),
                   func_f0(env, rperm_str_gen_fun));
 }
 
-static val rperm(val seq, val n)
+static val rperm(val seq, val k)
 {
-  if (!integerp(n))
-    type_mismatch(lit("rperm: ~s is not an integer"), n, nao);
+  if (!integerp(k))
+    type_mismatch(lit("rperm: ~s is not an integer"), k, nao);
 
-  if (zerop(n))
-    return nil;
-
-  if (lt(n, zero))
+  if (lt(k, zero))
     uw_throwf(numeric_error_s, lit("rperm: ~s is not a positive integer"),
-              n, nao);
+              k, nao);
 
   switch (type(seq)) {
   case NIL:
+    if (zerop(k))
+      return cons(nil, nil);
     return nil;
   case CONS:
   case LCONS:
-    return rperm_list(seq, n);
+    if (zerop(k))
+      return cons(nil, nil);
+    return rperm_list(seq, k);
   case VEC:
-    return rperm_vec(seq, n);
+    if (zerop(k))
+      return cons(vector(zero, nil), nil);
+    return rperm_vec(seq, k);
   case STR:
   case LSTR:
   case LIT:
-    return rperm_str(seq, n);
+    if (zerop(k))
+      return cons(null_string, nil);
+    return rperm_str(seq, k);
   default:
     type_mismatch(lit("rperm: ~s is not a sequence"), seq, nao);
   }
 }
 
+static val perm_while_fun(val state)
+{
+  val p = vecref(state, zero);
+  cnum k = c_num(vecref(state, one));
+  val c = vecref(state, two);
+  cnum n = c_num(length(p));
+  cnum i, j; 
+
+  for (i = k - 1, j = n - k + 1; i >= 0; i--, j++) {
+    cnum ci = c_num(c->v.vec[i]) + 1;
+
+    if (ci >= j) {
+      if (i == 0)
+        return nil;
+      c->v.vec[i] = zero;
+    } else {
+      c->v.vec[i] = num_fast(ci);
+      break;
+    }
+  }
+
+  return t;
+}
+
+static cnum perm_index(cnum n, val b)
+{
+  cnum i, j;
+
+  for (i = 0, j = 0; i < n; i++, j++) {
+    while (b->v.vec[j])
+      j++;
+  }
+
+  while (b->v.vec[j])
+    j++;
+
+  return j;
+}
+
+static void perm_gen_fun_common(val state, val out,
+                                void (*fill)(val out, cnum i, val v))
+{
+  val p = vecref(state, zero);
+  val kk = vecref(state, one);
+  val c = vecref(state, two);
+  val nn = length(p);
+  val b = vector(nn, nil);
+  cnum k = c_num(kk);
+  cnum i; 
+
+  for (i = 0; i < k; i++) {
+    cnum ci = c_num(c->v.vec[i]);
+    cnum j = perm_index(ci, b);
+    fill(out, i, p->v.vec[j]);
+    b->v.vec[j] = t;
+  }
+}
+
+static val perm_init_common(val p, val k_null)
+{
+  uses_or2;
+  val n = length(p);
+  val k = or2(k_null, n);
+  val state = vector(three, nil);
+  val c = vector(k, zero);
+
+  if (gt(k, n))
+    uw_throwf(numeric_error_s,
+              lit("perm: permutation length ~s exceeds sequence length ~s"),
+              k, n, nao);
+
+  *vecref_l(state, zero) = p;
+  *vecref_l(state, one) = k;
+  *vecref_l(state, two) = c;
+  *vecref_l(c, negone) = negone;
+
+  return state;
+}
+
+static void perm_vec_gen_fill(val out, cnum i, val v)
+{
+  out->v.vec[i] = v;
+}
+
+static val perm_vec_gen_fun(val state)
+{
+  val kk = vecref(state, one);
+  val out = vector(kk, nil);
+  perm_gen_fun_common(state, out, perm_vec_gen_fill);
+  return out;
+}
+
+static val perm_vec(val p, val k)
+{
+  k = default_arg(k, length_vec(p));
+
+  if (k == zero) {
+    return cons(vector(zero, nil), nil);
+  } else {
+    val state = perm_init_common(p, k);
+    return generate(func_f0(state, perm_while_fun),
+                    func_f0(state, perm_vec_gen_fun));
+  }
+}
+
+static void perm_list_gen_fill(val out, cnum i, val v)
+{
+  val tail = cdr(out);
+  val nc = cons(v, nil);
+  if (tail)
+    rplacd(tail, nc);
+  else
+    rplaca(out, nc);
+  rplacd(out, nc);
+}
+
+static val perm_list_gen_fun(val state)
+{
+  val out = cons(nil, nil);
+  perm_gen_fun_common(state, out, perm_list_gen_fill);
+  return car(out);
+}
+
+static val perm_list(val p, val k)
+{
+  if (k == zero || (!k && !p)) {
+    return cons(nil, nil);
+  } else {
+    val state = perm_init_common(vector_list(p), k);
+    return generate(func_f0(state, perm_while_fun),
+                    func_f0(state, perm_list_gen_fun));
+  }
+}
+
+static void perm_str_gen_fill(val out, cnum i, val v)
+{
+  out->st.str[i] = c_chr(v);
+}
+
+static val perm_str_gen_fun(val state)
+{
+  val kk = vecref(state, one);
+  val out = mkustring(kk);
+  perm_gen_fun_common(state, out, perm_str_gen_fill);
+  out->st.str[c_num(kk)] = 0;
+  return out;
+}
+
+static val perm_str(val p, val k)
+{
+  k = default_arg(k, length_str(p));
+
+  if (k == zero) {
+    return cons(null_string, nil);
+  } else {
+    val state = perm_init_common(vector_list(list_str(p)), k);
+    return generate(func_f0(state, perm_while_fun),
+                    func_f0(state, perm_str_gen_fun));
+  }
+}
+
+static val perm(val seq, val k)
+{
+  if (null_or_missing_p(k)) {
+    k = nil;
+  } else {
+    if (!integerp(k))
+      type_mismatch(lit("perm: ~s is not an integer"), k, nao);
+
+    if (lt(k, zero))
+      uw_throwf(numeric_error_s, lit("perm: ~s is not a positive integer"),
+                k, nao);
+  }
+
+  switch (type(seq)) {
+  case CONS:
+  case LCONS:
+  case NIL:
+    return perm_list(seq, k);
+  case VEC:
+    return perm_vec(seq, k);
+  case STR:
+  case LSTR:
+  case LIT:
+    return perm_str(seq, k);
+  default:
+    type_mismatch(lit("perm: ~s is not a sequence"), seq, nao);
+  }
+}
 
 static val errno_wrap(val newval)
 {
@@ -2813,6 +3007,7 @@ void eval_init(void)
   reg_fun(intern(lit("repeat"), user_package), func_n1v(repeatv));
   reg_fun(intern(lit("force"), user_package), func_n1(force));
   reg_fun(intern(lit("rperm"), user_package), func_n2(rperm));
+  reg_fun(intern(lit("perm"), user_package), func_n2o(perm, 1));
 
   reg_fun(throw_s, func_n1v(uw_throw));
   reg_fun(intern(lit("throwf"), user_package), func_n2v(uw_throwfv));
