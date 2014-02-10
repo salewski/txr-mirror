@@ -7936,7 +7936,7 @@ permutations is of zero length.
 
 The permutations are lexicographically ordered.
 
-.SS Function comb
+.SS Functions comb and rcomb
 
 .TP
 Syntax:
@@ -7952,13 +7952,39 @@ length <len> non-repeating combinations formed by taking items taken from
 element of <seq> more than once. If <seq> contains no duplicates, then
 the combinations contain no duplicates.
 
-Argument <len> must be a positive integer no greater than the length of <seq>,
-and <seq> must be a sequence.
+Argument <len> must be a nonnegative integer no greater than the length of
+<seq>, and <seq> must be a sequence.
 
 The combinations in the returned list are sequences of the same kind as <seq>.
 
 If <len> is zero, then a list containing one combination is returned, and that
 permutations is of zero length.
+
+The combinations are lexicographically ordered.
+
+.SS Function rcomb
+
+.TP
+Syntax:
+
+  (rcomb <seq> <len>)
+
+.TP
+Description:
+
+The comb function returns a lazy list which consists of all
+length <len> repeating combinations formed by taking items taken from
+<seq>.  "Repeating combinations" means that the combinations can use
+an element of <seq> more than once.
+
+Argument <len> must be a nonnegative integer, and <seq> must be a sequence.
+
+The combinations in the returned list are sequences of the same kind as <seq>.
+
+If <len> is zero, then a list containing one combination is returned, and that
+permutations is of zero length. This is true even if <seq> is empty.
+
+If <seq> is empty, and <len> is nonzero, then an empty list is returned.
 
 The combinations are lexicographically ordered.
 

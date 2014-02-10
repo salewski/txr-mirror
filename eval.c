@@ -2546,6 +2546,126 @@ static val comb(val seq, val k)
   }
 }
 
+static val rcomb_while_fun(val state)
+{
+  return car(state);
+}
+
+static void rcomb_gen_fun_common(val state)
+{
+  val iter;
+  val rev = nil;
+
+  for (iter = state; consp(iter); iter = cdr(iter)) {
+    val curr = first(iter);
+    val curr_rest = rest(curr);
+
+    push(iter, &rev);
+
+    if (consp(curr_rest)) {
+      val iter2;
+      for (iter2 = rev; iter2; iter2 = cdr(iter2)) {
+        val revit = car(iter2);
+        *car_l(revit) = curr_rest;
+      }
+      return;
+    } else if (rest(iter)) {
+      val next = second(iter);
+      if (curr != next)
+        *car_l(iter) = rest(next);
+    } 
+  }
+
+  *car_l(state) = nil;
+}
+
+static val rcomb_list_gen_fun(val state)
+{
+  val out = nreverse(mapcar(car_f, state));
+  rcomb_gen_fun_common(state);
+  return out;
+}
+
+static val rcomb_list(val list, val k)
+{
+  val state = nreverse(list_vector(vector(k, list)));
+  return generate(func_f0(state, rcomb_while_fun),
+                  func_f0(state, rcomb_list_gen_fun));
+}
+
+static val rcomb_vec_gen_fun(val state)
+{
+  val nn = length_list(state);
+  cnum i, n = c_num(nn);
+  val iter, out = vector(nn, nil);
+
+  for (iter = state, i = n - 1; i >= 0; iter = cdr(iter), i--)
+    out->v.vec[i] = car(car(iter));
+
+  rcomb_gen_fun_common(state);
+  return out;
+}
+
+static val rcomb_vec(val vec, val k)
+{
+  val state = nreverse(list_vector(vector(k, list_vector(vec))));
+  return generate(func_f0(state, rcomb_while_fun),
+                  func_f0(state, rcomb_vec_gen_fun));
+}
+
+static val rcomb_str_gen_fun(val state)
+{
+  val nn = length_list(state);
+  cnum i, n = c_num(nn);
+  val iter, out = mkustring(nn);
+
+  out->st.str[n] = 0;
+
+  for (iter = state, i = n - 1; i >= 0; iter = cdr(iter), i--)
+    out->st.str[i] = c_chr(car(car(iter)));
+
+  rcomb_gen_fun_common(state);
+  return out;
+}
+
+static val rcomb_str(val str, val k)
+{
+  val state = nreverse(list_vector(vector(k, list_str(str))));
+  return generate(func_f0(state, rcomb_while_fun),
+                  func_f0(state, rcomb_str_gen_fun));
+}
+
+static val rcomb(val seq, val k)
+{
+  if (!integerp(k))
+    type_mismatch(lit("rcomb: ~s is not an integer"), k, nao);
+
+  if (lt(k, zero))
+    uw_throwf(numeric_error_s, lit("rcomb: ~s is not a positive integer"),
+              k, nao);
+
+  switch (type(seq)) {
+  case CONS:
+  case LCONS:
+  case NIL:
+    if (k == zero)
+      return cons(nil, nil);
+    return rcomb_list(seq, k);
+  case VEC:
+    if (k == zero)
+      return cons(vector(zero, nil), nil);
+    return rcomb_vec(seq, k);
+  case STR:
+  case LSTR:
+  case LIT:
+    if (k == zero)
+      return cons(string(L""), nil);
+    return rcomb_str(seq, k);
+  default:
+    type_mismatch(lit("rcomb: ~s is not a sequence"), seq, nao);
+  }
+}
+
 static val errno_wrap(val newval)
 {
   val oldval = num(errno);
@@ -3141,6 +3261,7 @@ void eval_init(void)
   reg_fun(intern(lit("rperm"), user_package), func_n2(rperm));
   reg_fun(intern(lit("perm"), user_package), func_n2o(perm, 1));
   reg_fun(intern(lit("comb"), user_package), func_n2(comb));
+  reg_fun(intern(lit("rcomb"), user_package), func_n2(rcomb));
 
   reg_fun(throw_s, func_n1v(uw_throw));
   reg_fun(intern(lit("throwf"), user_package), func_n2v(uw_throwfv));

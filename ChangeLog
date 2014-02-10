@@ -1,5 +1,14 @@
 2014-02-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (rcomb_while_fun, rcomb_gen_fun_common,
+	rcomb_list_gen_fun, rcomb_list, rcomb_vec_gen_fun, rcomb_vec,
+	rcomb_str_gen_fun, rcomb_str, rcomb): New static functions.
+	(eval_init): Register rcomb as intrinsic.
+
+	* txr.1: Documented rcomb.
+
+2014-02-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (rperm, perm_str): Just in case, return a mutable empty
 	string, rather than null_string, which is a literal.
 	(k_conses, comb_while_fun, comb_gen_fun_common,
