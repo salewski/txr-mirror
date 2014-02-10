@@ -1,5 +1,10 @@
 2014-02-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (rcomb_gen_fun_common): Streamlined implementation.
+	Got rid of stack that is consed up on each call.
+
+2014-02-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	Relaxed behavior: don't throw errors for impossible permutations,
 	but return an empty list.
 

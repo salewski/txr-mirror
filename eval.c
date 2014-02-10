@@ -2558,22 +2558,21 @@ static val rcomb_while_fun(val state)
 static void rcomb_gen_fun_common(val state)
 {
   val iter;
-  val rev = nil;
+  val next;
 
-  for (iter = state; consp(iter); iter = cdr(iter)) {
+  for (iter = state, next = cdr(state);
+       consp(iter);
+       iter = next, next = cdr(iter))
+  {
     val curr = first(iter);
     val curr_rest = rest(curr);
 
-    push(iter, &rev);
-
     if (consp(curr_rest)) {
-      val iter2;
-      for (iter2 = rev; iter2; iter2 = cdr(iter2)) {
-        val revit = car(iter2);
-        *car_l(revit) = curr_rest;
-      }
+      val jter;
+      for (jter = state; jter != next; jter = cdr(jter))
+        *car_l(jter) = curr_rest;
       return;
-    } else if (rest(iter)) {
+    } else if (next) {
       val next = second(iter);
       if (curr != next)
         *car_l(iter) = rest(next);
