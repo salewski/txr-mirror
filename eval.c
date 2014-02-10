@@ -2217,7 +2217,7 @@ static val rperm(val seq, val k)
   case LSTR:
   case LIT:
     if (zerop(k))
-      return cons(null_string, nil);
+      return cons(string(L""), nil);
     return rperm_str(seq, k);
   default:
     type_mismatch(lit("rperm: ~s is not a sequence"), seq, nao);
@@ -2377,7 +2377,7 @@ static val perm_str(val p, val k)
   k = default_arg(k, length_str(p));
 
   if (k == zero) {
-    return cons(null_string, nil);
+    return cons(string(L""), nil);
   } else {
     val state = perm_init_common(vector_list(list_str(p)), k);
     return generate(func_f0(state, perm_while_fun),
@@ -2411,6 +2411,138 @@ static val perm(val seq, val k)
     return perm_str(seq, k);
   default:
     type_mismatch(lit("perm: ~s is not a sequence"), seq, nao);
+  }
+}
+
+static val k_conses(val list, val k)
+{
+  val iter = list, i = k;
+  list_collect_decl (out, ptail);
+
+  for (; consp(iter) && gt(i, zero); iter = cdr(iter), i = minus(i, one))
+    ptail = list_collect(ptail, iter);
+
+  if (i != zero)
+    uw_throwf(numeric_error_s,
+              lit("comb: permutation length ~s exceeds sequence length ~s"),
+              k, length(list), nao);
+
+  return out;
+}
+
+static val comb_while_fun(val state)
+{
+  return car(state);
+}
+
+static void comb_gen_fun_common(val state)
+{
+  val iter;
+  val prev = nil;
+
+  for (iter = state; consp(iter); iter = cdr(iter)) {
+    val curr = first(iter);
+    val curr_rest = rest(curr);
+    if (curr_rest != prev && consp(curr_rest)) {
+      *car_l(iter) = curr_rest;
+      return;
+    } else if (rest(iter)) {
+      val next = second(iter);
+      val next_rest = rest(next);
+      val next_rest_rest = rest(next_rest);
+      prev = curr;
+      if (next_rest != curr && consp(next_rest_rest))
+        prev = *car_l(iter) = next_rest_rest;
+    } 
+  }
+
+  *car_l(state) = nil;
+}
+
+static val comb_list_gen_fun(val state)
+{
+  val out = nreverse(mapcar(car_f, state));
+  comb_gen_fun_common(state);
+  return out;
+}
+
+static val comb_list(val list, val k)
+{
+  val state = nreverse(k_conses(list, k));
+  return generate(func_f0(state, comb_while_fun),
+                  func_f0(state, comb_list_gen_fun));
+}
+
+static val comb_vec_gen_fun(val state)
+{
+  val nn = length_list(state);
+  cnum i, n = c_num(nn);
+  val iter, out = vector(nn, nil);
+
+  for (iter = state, i = n - 1; i >= 0; iter = cdr(iter), i--)
+    out->v.vec[i] = car(car(iter));
+
+  comb_gen_fun_common(state);
+  return out;
+}
+
+static val comb_vec(val vec, val k)
+{
+  val state = nreverse(k_conses(list_vector(vec), k));
+  return generate(func_f0(state, comb_while_fun),
+                  func_f0(state, comb_vec_gen_fun));
+}
+
+static val comb_str_gen_fun(val state)
+{
+  val nn = length_list(state);
+  cnum i, n = c_num(nn);
+  val iter, out = mkustring(nn);
+
+  out->st.str[n] = 0;
+
+  for (iter = state, i = n - 1; i >= 0; iter = cdr(iter), i--)
+    out->st.str[i] = c_chr(car(car(iter)));
+
+  comb_gen_fun_common(state);
+  return out;
+}
+
+static val comb_str(val str, val k)
+{
+  val state = nreverse(k_conses(list_str(str), k));
+  return generate(func_f0(state, comb_while_fun),
+                  func_f0(state, comb_str_gen_fun));
+}
+
+static val comb(val seq, val k)
+{
+  if (!integerp(k))
+    type_mismatch(lit("comb: ~s is not an integer"), k, nao);
+
+  if (lt(k, zero))
+    uw_throwf(numeric_error_s, lit("comb: ~s is not a positive integer"),
+              k, nao);
+
+  switch (type(seq)) {
+  case CONS:
+  case LCONS:
+  case NIL:
+    if (k == zero)
+      return cons(nil, nil);
+    return comb_list(seq, k);
+  case VEC:
+    if (k == zero)
+      return cons(vector(zero, nil), nil);
+    return comb_vec(seq, k);
+  case STR:
+  case LSTR:
+  case LIT:
+    if (k == zero)
+      return cons(string(L""), nil);
+    return comb_str(seq, k);
+  default:
+    type_mismatch(lit("comb: ~s is not a sequence"), seq, nao);
   }
 }
 
@@ -3008,6 +3140,7 @@ void eval_init(void)
   reg_fun(intern(lit("force"), user_package), func_n1(force));
   reg_fun(intern(lit("rperm"), user_package), func_n2(rperm));
   reg_fun(intern(lit("perm"), user_package), func_n2o(perm, 1));
+  reg_fun(intern(lit("comb"), user_package), func_n2(comb));
 
   reg_fun(throw_s, func_n1v(uw_throw));
   reg_fun(intern(lit("throwf"), user_package), func_n2v(uw_throwfv));

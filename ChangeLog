@@ -1,3 +1,14 @@
+2014-02-10  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (rperm, perm_str): Just in case, return a mutable empty
+	string, rather than null_string, which is a literal.
+	(k_conses, comb_while_fun, comb_gen_fun_common,
+	comb_list_gen_fun, comb_list, comb_vec_gen_fun, comb_vec,
+	comb_str_gen_fun, comb_str, comb): New static functions.
+	(eval_init): Registered comb as instrinsic.
+
+	* txr.1: Documented comb.
+
 2014-02-09  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (rperm_list, rperm_vec, rperm_str): n variable renamed

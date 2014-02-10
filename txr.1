@@ -7936,6 +7936,32 @@ permutations is of zero length.
 
 The permutations are lexicographically ordered.
 
+.SS Function comb
+
+.TP
+Syntax:
+
+  (comb <seq> <len>)
+
+.TP
+Description:
+
+The comb function returns a lazy list which consists of all
+length <len> non-repeating combinations formed by taking items taken from
+<seq>.  "Non-repeating combinations" means that the combinations do not use any
+element of <seq> more than once. If <seq> contains no duplicates, then
+the combinations contain no duplicates.
+
+Argument <len> must be a positive integer no greater than the length of <seq>,
+and <seq> must be a sequence.
+
+The combinations in the returned list are sequences of the same kind as <seq>.
+
+If <len> is zero, then a list containing one combination is returned, and that
+permutations is of zero length.
+
+The combinations are lexicographically ordered.
+
 .SH CHARACTERS AND STRINGS
 
 .SS Function mkstring
