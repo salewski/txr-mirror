@@ -2287,20 +2287,18 @@ static val perm_init_common(val p, val k_null)
   uses_or2;
   val n = length(p);
   val k = or2(k_null, n);
-  val state = vector(three, nil);
-  val c = vector(k, zero);
 
-  if (gt(k, n))
-    uw_throwf(numeric_error_s,
-              lit("perm: permutation length ~s exceeds sequence length ~s"),
-              k, n, nao);
-
-  *vecref_l(state, zero) = p;
-  *vecref_l(state, one) = k;
-  *vecref_l(state, two) = c;
-  *vecref_l(c, negone) = negone;
-
-  return state;
+  if (gt(k, n)) {
+    return nil;
+  } else {
+    val state = vector(three, nil);
+    val c = vector(k, zero);
+    *vecref_l(state, zero) = p;
+    *vecref_l(state, one) = k;
+    *vecref_l(state, two) = c;
+    *vecref_l(c, negone) = negone;
+    return state;
+  }
 }
 
 static void perm_vec_gen_fill(val out, cnum i, val v)
@@ -2324,6 +2322,8 @@ static val perm_vec(val p, val k)
     return cons(vector(zero, nil), nil);
   } else {
     val state = perm_init_common(p, k);
+    if (!state)
+      return nil;
     return generate(func_f0(state, perm_while_fun),
                     func_f0(state, perm_vec_gen_fun));
   }
@@ -2353,6 +2353,8 @@ static val perm_list(val p, val k)
     return cons(nil, nil);
   } else {
     val state = perm_init_common(vector_list(p), k);
+    if (!state)
+      return nil;
     return generate(func_f0(state, perm_while_fun),
                     func_f0(state, perm_list_gen_fun));
   }
@@ -2380,6 +2382,8 @@ static val perm_str(val p, val k)
     return cons(string(L""), nil);
   } else {
     val state = perm_init_common(vector_list(list_str(p)), k);
+    if (!state)
+      return nil;
     return generate(func_f0(state, perm_while_fun),
                     func_f0(state, perm_str_gen_fun));
   }
@@ -2422,12 +2426,7 @@ static val k_conses(val list, val k)
   for (; consp(iter) && gt(i, zero); iter = cdr(iter), i = minus(i, one))
     ptail = list_collect(ptail, iter);
 
-  if (i != zero)
-    uw_throwf(numeric_error_s,
-              lit("comb: permutation length ~s exceeds sequence length ~s"),
-              k, length(list), nao);
-
-  return out;
+  return (i != zero) ? nil : out;
 }
 
 static val comb_while_fun(val state)
@@ -2469,8 +2468,9 @@ static val comb_list_gen_fun(val state)
 static val comb_list(val list, val k)
 {
   val state = nreverse(k_conses(list, k));
-  return generate(func_f0(state, comb_while_fun),
-                  func_f0(state, comb_list_gen_fun));
+  return state ? generate(func_f0(state, comb_while_fun),
+                          func_f0(state, comb_list_gen_fun))
+               : nil;
 }
 
 static val comb_vec_gen_fun(val state)
@@ -2534,12 +2534,16 @@ static val comb(val seq, val k)
   case VEC:
     if (k == zero)
       return cons(vector(zero, nil), nil);
+    if (gt(k, length(seq)))
+      return nil;
     return comb_vec(seq, k);
   case STR:
   case LSTR:
   case LIT:
     if (k == zero)
       return cons(string(L""), nil);
+    if (gt(k, length(seq)))
+      return nil;
     return comb_str(seq, k);
   default:
     type_mismatch(lit("comb: ~s is not a sequence"), seq, nao);

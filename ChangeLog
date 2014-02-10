@@ -1,5 +1,21 @@
 2014-02-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	Relaxed behavior: don't throw errors for impossible permutations,
+	but return an empty list.
+
+	* eval.c (perm_init_common): Do not throw error; return a nil
+	state if permutation length exceeds sequence length.
+	(perm_vec, perm_list, perm_str): Check for null return from
+	perm_init_common and return empty list.
+	(k_conses): Do not throw error; return empty list.
+	(comb_list_gen_fun): Check for nil value out of k_conses.
+	(comb): For vectors and strings, check length against k and
+	return nil if necessary. For lists, comb_list_gen_fun handles it.
+
+	* txr.1: Section order rearranged, and updated.
+
+2014-02-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (rcomb_while_fun, rcomb_gen_fun_common,
 	rcomb_list_gen_fun, rcomb_list, rcomb_vec_gen_fun, rcomb_vec,
 	rcomb_str_gen_fun, rcomb_str, rcomb): New static functions.

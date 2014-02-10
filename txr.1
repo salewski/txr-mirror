@@ -7869,6 +7869,37 @@ cached inside <promise> and returned, becoming the return value of the
 force function call.  If the force function is invoked additional times on
 the same promise, the cached value is retrieved.
 
+.SS Function perm
+
+.TP
+Syntax:
+
+  (perm <seq> [<len>])
+
+.TP
+Description:
+
+The rperm function returns a lazy list which consists of all
+length <len> permutations of formed by items taken from <seq>. 
+The permutations do not use any element of <seq> more than once.
+
+Argument <len>, if present, must be a positive integer, and <seq> must be a
+sequence.
+
+If <len> is not present, then its value defaults to the length of <seq>:
+the list of the full permutations of the entire sequence is returned.
+
+The permutations in the returned list are sequences of the same kind as <seq>.
+
+If <len> is zero, then a list containing one permutation is returned, and that
+permutations is of zero length.
+
+If <len> exceeds the length of <seq>, then an empty list is returned,
+since it is impossible to make a single non-repeating permutation that
+requires more items than are available.
+
+The permutations are lexicographically ordered.
+
 .SS Function rperm
 
 .TP
@@ -7909,34 +7940,8 @@ Examples:
 
   (rperm '(0 1 2) 2) -> ((0 0) (0 1) (0 2) (1 0) (1 1) (1 2) (2 0) (2 1) (2 2))
 
-.SS Function perm
 
-.TP
-Syntax:
-
-  (perm <seq> [<len>])
-
-.TP
-Description:
-
-The rperm function returns a lazy list which consists of all
-length <len> permutations of formed by items taken from <seq>. 
-The permutations do not use any element of <seq> more than once.
-
-Argument <len>, if present, must be a positive integer no greater
-than the length of <seq>, and <seq> must be a sequence.
-
-If <len> is not present, then its value defaults to the length of <seq>:
-the list of the full permutations of the entire sequence is returned.
-
-The permutations in the returned list are sequences of the same kind as <seq>.
-
-If <len> is zero, then a list containing one permutation is returned, and that
-permutations is of zero length.
-
-The permutations are lexicographically ordered.
-
-.SS Functions comb and rcomb
+.SS Function comb
 
 .TP
 Syntax:
@@ -7952,13 +7957,16 @@ length <len> non-repeating combinations formed by taking items taken from
 element of <seq> more than once. If <seq> contains no duplicates, then
 the combinations contain no duplicates.
 
-Argument <len> must be a nonnegative integer no greater than the length of
-<seq>, and <seq> must be a sequence.
+Argument <len> must be a nonnegative integer, and <seq> must be a sequence.
 
 The combinations in the returned list are sequences of the same kind as <seq>.
 
 If <len> is zero, then a list containing one combination is returned, and that
 permutations is of zero length.
+
+If <len> exceeds the length of <seq>, then an empty list is returned,
+since it is impossible to make a single non-repeating combination that
+requires more items than are available.
 
 The combinations are lexicographically ordered.
 
