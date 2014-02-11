@@ -230,7 +230,10 @@ cnum cobj_hash_op(val obj)
 
 static val print_key_val(val out, val key, val value)
 {
-  format(out, lit(" (~s ~s)"), key, value, nao);
+  if (value)
+    format(out, lit(" (~s ~s)"), key, value, nao);
+  else
+    format(out, lit(" (~s)"), key, nao);
   return nil;
 }
 

@@ -33,6 +33,7 @@
 #include "signal.h"
 #include "unwind.h"
 #include "eval.h"
+#include "hash.h"
 #include "combi.h"
 
 static val perm_while_fun(val state)
@@ -426,6 +427,33 @@ static val comb_str(val str, val k)
                   func_f0(state, comb_str_gen_fun));
 }
 
+static val comb_hash_while_fun(val state)
+{
+  return car(car(state));
+}
+
+static val comb_hash_gen_fun(val hstate)
+{
+  cons_bind (state, hash, hstate);
+  val iter, out = make_similar_hash(hash);
+
+  for (iter = state; iter; iter = cdr(iter)) {
+    val pair = car(car(iter));
+    sethash(out, car(pair), cdr(pair));
+  }
+
+  comb_gen_fun_common(state);
+  return out;
+}
+
+
+static val comb_hash(val hash, val k)
+{
+  val hstate = cons(nreverse(k_conses(hash_alist(hash), k)), hash);
+  return generate(func_f0(hstate, comb_hash_while_fun),
+                  func_f0(hstate, comb_hash_gen_fun));
+}
+
 val comb(val seq, val k)
 {
   if (!integerp(k))
@@ -457,6 +485,13 @@ val comb(val seq, val k)
       return nil;
     return comb_str(seq, k);
   default:
+    if (hashp(seq)) {
+      if (k == zero)
+        return cons(make_similar_hash(seq), nil);
+      if (gt(k, hash_count(seq)))
+        return nil;
+      return comb_hash(seq, k);
+    }
     type_mismatch(lit("comb: ~s is not a sequence"), seq, nao);
   }
 }

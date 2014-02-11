@@ -7957,18 +7957,20 @@ length <len> non-repeating combinations formed by taking items taken from
 element of <seq> more than once. If <seq> contains no duplicates, then
 the combinations contain no duplicates.
 
-Argument <len> must be a nonnegative integer, and <seq> must be a sequence.
+Argument <len> must be a nonnegative integer, and <seq> must be a sequence
+or a hash table.
 
-The combinations in the returned list are sequences of the same kind as <seq>.
+The combinations in the returned list are objects of the same kind as <seq>.
 
 If <len> is zero, then a list containing one combination is returned, and that
 permutations is of zero length.
 
-If <len> exceeds the length of <seq>, then an empty list is returned,
-since it is impossible to make a single non-repeating combination that
-requires more items than are available.
+If <len> exceeds the number of elements in <seq>, then an empty list is
+returned, since it is impossible to make a single non-repeating combination
+that requires more items than are available.
 
-The combinations are lexicographically ordered.
+If <seq> is a sequence, the returned combinations are lexicographically ordered.
+This requirement is not applicable when <seq> is a hash table.
 
 .SS Function rcomb
 

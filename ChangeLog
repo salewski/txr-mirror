@@ -1,5 +1,19 @@
 2014-02-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	* combi.c (comb_hash_while_fun, comb_hash_gen_fun, comb_hash): New
+	static functions.
+	(comb): Support hash tables.
+
+	* hash.c (print_key_val): When values are nil, print in a more condensed
+	way by omitting the second element. This notation is accepted as 
+	input already by the parser.
+	(hash_insert_pair): New function.
+
+	* txr.1: Description of comb updated to indicate that it works over
+	hashes.
+
+2014-02-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c: Remove inclusion of unneeded headers: <limits.h>
 	and <dirent.h>.
 
