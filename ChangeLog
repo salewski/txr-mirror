@@ -1,5 +1,11 @@
 2014-02-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (apply): Fix regression in dwim operator: not handling
+	nil object properly. Since dwim now trivially delegates to apply,
+	apply must recognize nil.
+
+2014-02-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* combi.c (comb_hash_while_fun, comb_hash_gen_fun, comb_hash): New
 	static functions.
 	(comb): Support hash tables.

@@ -334,7 +334,7 @@ val apply(val fun, val arglist, val ctx_form)
   val arg[32], *p = arg;
   int variadic, fixparam, reqargs, nargs;
 
-  if (symbolp(fun)) {
+  if (fun && symbolp(fun)) {
     val binding = gethash(top_fb, fun);
     if (!binding)
       eval_error(ctx_form, lit("~s: no such function ~s"), car(ctx_form), fun, nao);
