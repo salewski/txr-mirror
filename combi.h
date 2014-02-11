@@ -1,4 +1,4 @@
-/* Copyright 2010-2014
+/* Copyright 2012-2014
  * Kaz Kylheku <kaz@kylheku.com>
  * Vancouver, Canada
  * All rights reserved.
@@ -24,24 +24,7 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-extern val dwim_s, vector_lit_s, vector_list_s;
-extern val hash_lit_s, hash_construct_s;
-
-val make_env(val fbindings, val vbindings, val up_env);
-val env_fbind(val env, val sym, val fun);
-val env_vbind(val env, val sym, val obj);
-val lookup_var(val env, val sym);
-val *lookup_var_l(val env, val sym);
-val lookup_fun(val env, val sym);
-val interp_fun(val env, val fun, val args);
-val apply(val fun, val arglist, val ctx_form);
-val eval_progn(val forms, val env, val ctx_form);
-val eval(val form, val env, val ctx_form);
-val eval_intrinsic(val form, val env);
-val expand(val form);
-val expand_forms(val forms);
-val bindable(val obj);
-val mapcarv(val fun, val list_of_lists);
-val generate(val while_pred, val gen_fun);
-
-void eval_init(void);
+val perm(val seq, val k);
+val rperm(val seq, val k);
+val comb(val seq, val k);
+val rcomb(val seq, val k);

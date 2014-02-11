@@ -1,5 +1,23 @@
 2014-02-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	* Makefile (OBJS): New object file, combi.o.
+
+	* dep.mk: Updated.
+
+	* eval.c: Removed combination and permutation functions; they
+	now reside in combi.c.
+	(generate): Changed from static to external linkage.
+
+	* eval.h (generate): Declared.
+
+	* combi.c: New file.
+
+	* combi.h: New file.
+
+	* txr.vim: Regenerated.
+
+2014-02-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (rcomb_gen_fun_common): Streamlined implementation.
 	Got rid of stack that is consed up on each call.
 
