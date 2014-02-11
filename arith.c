@@ -29,12 +29,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <wctype.h>
-#include <limits.h>
 #include <stdarg.h>
-#include <dirent.h>
 #include <setjmp.h>
 #include <wchar.h>
-#include <limits.h>
 #include <math.h>
 #include <signal.h>
 #include <ctype.h>
