@@ -1,5 +1,18 @@
 2014-02-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (subst_vars): Bugfix: results of expressions not
+	treated in the same way as variables: lists not stringified,
+	causing expansions with parentheses, and sometimes errors
+	due to unhandled objects. Also, use tostringp instead of
+	format for stringifying objects.
+	stringifying object. Bugfix.k
+
+	* match.c (subst_vars): Added comment similar to the one in
+	the subst_vars of eval.c. Removed superfluous conversion code where the
+	str variable is already known to be a string.
+
+2014-02-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (apply): Fix regression in dwim operator: not handling
 	nil object properly. Since dwim now trivially delegates to apply,
 	apply must recognize nil.

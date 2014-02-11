@@ -1280,17 +1280,24 @@ static val subst_vars(val forms, val env)
         val modifiers = fourth(form);
         val str = eval(expr, env, form);
 
+        /* If the object is a list, we let format_field deal with the
+           conversion to text, because the modifiers influence how
+           it is done. */
         if (!stringp(str) && !listp(str))
-          str = format(nil, lit("~a"), str, nao);
+          str = tostringp(str);
 
-        if (pat)
+        if (pat) {
           forms = cons(str, cons(pat, rest(forms)));
-        else if (modifiers)
+        } else if (modifiers) {
           forms = cons(format_field(str, modifiers, nil, 
                                     curry_123_1(func_n3(eval), env, form)),
                        rest(forms));
-        else
+        } else {
+          if (listp(str))
+            str = cat_str(mapcar(func_n1(tostringp), str), lit(" "));
           forms = cons(str, rest(forms));
+        }
+
         continue;
       } else if (sym == quasi_s) {
         val nested = subst_vars(rest(form), env);
@@ -1298,8 +1305,12 @@ static val subst_vars(val forms, val env)
         forms = cdr(forms);
         continue;
       } else if (sym == expr_s) {
-        val result = eval(rest(form), env, form);
-        forms = cons(format(nil, lit("~a"), result, nao), rest(forms));
+        val str = eval(rest(form), env, form);
+        if (listp(str))
+          str = cat_str(mapcar(func_n1(tostringp), str), lit(" "));
+        else if (!stringp(str))
+          str = tostringp(str);
+        forms = cons(str, rest(forms));
         continue;
       } else {
         val nested = subst_vars(form, env);

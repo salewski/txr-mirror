@@ -1359,8 +1359,11 @@ static val subst_vars(val spec, val bindings, val filter)
         val modifiers = fourth(elem);
         val str = txeval(spec, expr, bindings);
 
+        /* If the object is a list, we let format_field deal with the
+           conversion to text, because the modifiers influence how
+           it is done. */
         if (!stringp(str) && !listp(str))
-          str = format(nil, lit("~a"), str, nao);
+          str = tostringp(str);
 
         if (pat)
           spec = cons(pat, rest(spec));
@@ -1372,8 +1375,6 @@ static val subst_vars(val spec, val bindings, val filter)
         } else {
           if (listp(str))
             str = cat_str(mapcar(func_n1(tostringp), str), lit(" "));
-          else
-            str = if3(stringp(str), str, tostringp(str));
 
           spec = cons(filter_string_tree(filter, str), rest(spec));
         }
