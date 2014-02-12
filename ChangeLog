@@ -1,3 +1,8 @@
+2014-02-12  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (some_satisfy, all_satisfy, none_satisfy): Fix coding
+	mistake from two commits ago leading to a regression.
+
 2014-02-11  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): Register new functions posqual, posql,
