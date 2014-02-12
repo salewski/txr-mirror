@@ -1,3 +1,23 @@
+                                     TXR 79
+                                   2014-02-11
+
+
+  Features
+
+  - New functions comb, perm, rcomp and rperm for calculating repeating and
+    non-repeating combinations and permuations of sequences (lists, vectors and
+    strings).  Hashes are supported by comb function.
+
+  Bugs
+
+  - Hardening of code for handling excessively large vectors.
+
+  - Bugfix in quasistring handling in TXR Lisp.
+
+  - Bugfix in if function (not the if operator).
+
+
+
                                      TXR 78
                                    2014-02-06
 

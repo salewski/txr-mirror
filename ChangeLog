@@ -1,5 +1,17 @@
 2014-02-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 79
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES: Updated.
+
+2014-02-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (if_fun): Bugfix: forgotten handling of optional
 	alternative argument.
 
