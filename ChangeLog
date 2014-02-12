@@ -1,5 +1,13 @@
 2014-02-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	* hash.c (struct hash): New member, equal_fun.
+	(hash_equal_op): Short circuited logic: whenever we pull
+	identical cells from either hash, we don't have to go
+	through the pending lookaside list.
+	(make_hash, make_similar_hash): Initialize new structure member.
+
+2014-02-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	* hash.c (hash_equal_op, hash_hash_op): New static functions.
 	(hash_ops): New functions registered in table of operations.
 

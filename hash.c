@@ -55,6 +55,7 @@ struct hash {
   cnum count;
   val userdata;
   cnum (*hash_fun)(val);
+  val (*equal_fun)(val, val);
   val (*assoc_fun)(val key, val list);
   val *(*acons_new_l_fun)(val key, val *new_p, val *list);
 };
@@ -246,6 +247,14 @@ static val hash_equal_op(val left, val right)
   while ((lcell = hash_next(liter)) && ((rcell = hash_next(riter)))) {
     val ncons = or2(pop(&free_conses), cons(nil, nil));
     val found;
+
+    /*
+     * Short circuit the logic if we have two identical cells;
+     * no need to go through the pending list.
+     */
+
+    if (l->equal_fun(car(lcell), car(rcell)) && equal(cdr(lcell), cdr(rcell)))
+      continue;
 
     /*
      * Try to find a cell matching the left cell on the pending list by key.
@@ -460,6 +469,7 @@ val make_hash(val weak_keys, val weak_vals, val equal_based)
     h->userdata = nil;
 
     h->hash_fun = equal_based ? equal_hash : eql_hash;
+    h->equal_fun = equal_based ? equal : eql;
     h->assoc_fun = equal_based ? assoc : assql;
     h->acons_new_l_fun = equal_based ? acons_new_l : aconsql_new_l;
 
@@ -482,6 +492,7 @@ val make_similar_hash(val existing)
 
   h->flags = ex->flags;
   h->hash_fun = ex->hash_fun;
+  h->equal_fun = ex->equal_fun;
   h->assoc_fun = ex->assoc_fun;
   h->acons_new_l_fun = ex->acons_new_l_fun;
 
