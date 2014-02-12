@@ -1038,6 +1038,7 @@ val count_if(val pred, val list, val key)
 
 val some_satisfy(val list, val pred, val key)
 {
+  pred = default_arg(key, identity_f);
   key = default_arg(key, identity_f);
 
   for (; list; list = cdr(list)) {
@@ -1053,6 +1054,7 @@ val all_satisfy(val list, val pred, val key)
 {
   val item = t;
 
+  pred = default_arg(key, identity_f);
   key = default_arg(key, identity_f);
 
   for (; list; list = cdr(list)) {
@@ -1065,6 +1067,7 @@ val all_satisfy(val list, val pred, val key)
 
 val none_satisfy(val list, val pred, val key)
 {
+  pred = default_arg(key, identity_f);
   key = default_arg(key, identity_f);
 
   for (; list; list = cdr(list)) {

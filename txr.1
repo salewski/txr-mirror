@@ -7369,9 +7369,9 @@ Examples:
 .TP
 Syntax:
 
-  (some <list> <predicate-fun> [<key-fun>])
-  (all <list> <predicate-fun> [<key-fun>])
-  (none <list> <predicate-fun> [<key-fun>])
+  (some <list> [ <predicate-fun> [<key-fun>] ])
+  (all <list> [ <predicate-fun> [<key-fun>] ])
+  (none <list> [ <predicate-fun> [<key-fun>] ])
 
 .TP
 Description
@@ -7380,7 +7380,8 @@ The some, all and none functions apply a predicate test function
 <predicate-fun> over a list of elements.  If the argument <key-fun> is
 specified, then values <list> are passed into <key-fun>, and <predicate-fun> is
 applied to the resulting values. If <key-fun> is omitted, the behavior is
-as if <key-fun> is the identity function.
+as if <key-fun> is the identity function. If <predicate-fun> is omitted,
+the behavior is as if <predicate-fun> is the identity function.
 
 These functions have short-circuiting semantics and return conventions similar
 to the and and or operators.
