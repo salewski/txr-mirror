@@ -7025,6 +7025,68 @@ transformed to an argument to <predicate-function>. If this argument is omitted
 then the predicate function is applied to the elements directly, a behavior
 which is identical to <key-function> being (fun identity).
 
+.SS Functions posqual, posql and posq
+
+.TP
+Syntax:
+
+  (posq <object> <list>)
+  (posql <object> <list>)
+  (posqual <object> <list>)
+
+.TP
+Description
+
+The posq, posql and posqual functions return the zero-based position of the
+first item in <list> which is, respectively, eq, eql or equal to <object>.
+
+.SS Functions posqual, posql and posq
+
+.TP
+Syntax:
+
+  (posq <object> <list>)
+  (posql <object> <list>)
+  (posqual <object> <list>)
+
+.TP
+Description
+
+The posq, posql and posqual functions return the zero-based position of the
+first item in <list> which is, respectively, eq, eql or equal to <object>.
+
+.SS Functions pos and pos-if
+
+.TP
+Syntax:
+
+  (pos <key> <list> [<testfun> [<keyfun>]])
+  (pos-if <predfun> <list> [<keyfun>])
+
+.TP
+Description:
+
+The pos and pos-if functions search through a list for an item which
+matches a key, or satisfies a predicate function, respectively.
+They return the zero based position of the matching item.
+
+The keyfun argument specifies a function which is applied to the elements
+of the list to produce the comparison key. If this argument is omitted,
+then the untransformed elements of the list themselves are searched.
+
+The pos function's testfun argument specifies the test function which
+is used to compare the comparison keys from the list to the search key.
+If this argument is omitted, then the equal function is used.
+The position of the first element from the list whose comparison key (as
+retrieved by the key function) matches the search (under the test function) is
+returned. If no such element is found, nil is returned.
+
+The pos-if function's predfun argument specifies a predicate function
+which is applied to the successive comparison keys pulled from the list
+by applying the key function to successive elements. The position of
+the first element for which the predicate function yields true is returned. If
+no such element is found, nil is returned.
+
 .SS Function tree-find
 
 .TP

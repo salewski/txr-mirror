@@ -1,5 +1,16 @@
 2014-02-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Register new functions posqual, posql,
+	posq, pos, and pos_if as intrinsics.
+
+	* lib.c (posqual, posql, posq, pos, pos_if): New functions.
+
+	* lib.h (posqual, posql, posq, pos, pos_if): Declared.
+
+	* txr.1: Documented
+
+2014-02-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Turn a require argument into an optional
 	one for the functions some, all and none.
 

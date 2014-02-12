@@ -4793,6 +4793,72 @@ val find_if(val pred, val list, val key)
   return nil;
 }
 
+val posqual(val obj, val list)
+{
+  val pos = zero;
+
+  for (; list; list = cdr(list), pos = plus(pos, one))
+    if (equal(car(list), obj))
+      return pos;
+
+  return nil;
+}
+
+val posql(val obj, val list)
+{
+  val pos = zero;
+
+  for (; list; list = cdr(list), pos = plus(pos, one))
+    if (eql(car(list), obj))
+      return pos;
+
+  return nil;
+}
+
+val posq(val obj, val list)
+{
+  val pos = zero;
+
+  for (; list; list = cdr(list), pos = plus(pos, one))
+    if (eq(car(list), obj))
+      return pos;
+
+  return nil;
+}
+
+val pos(val item, val list, val testfun, val keyfun)
+{
+  val pos = zero;
+  testfun = default_arg(testfun, equal_f);
+  keyfun = default_arg(keyfun, identity_f);
+
+  for (; list; list = cdr(list), pos = plus(pos, one)) {
+    val elem = car(list);
+    val key = funcall1(keyfun, elem);
+
+    if (funcall2(testfun, item, key))
+      return pos;
+  }
+
+  return nil;
+}
+
+
+val pos_if(val pred, val list, val key)
+{
+  val pos = zero;
+  key = default_arg(key, identity_f);
+
+  for (; list; list = cdr(list), pos = plus(pos, one)) {
+    val item = car(list);
+    val subj = funcall1(key, item);
+
+    if (funcall1(pred, subj))
+      return pos;
+  }
+
+  return nil;
+}
 
 val set_diff(val list1, val list2, val testfun, val keyfun)
 {

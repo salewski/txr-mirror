@@ -2412,6 +2412,11 @@ void eval_init(void)
   reg_fun(intern(lit("countql"), user_package), func_n2(countql));
   reg_fun(intern(lit("countq"), user_package), func_n2(countq));
   reg_fun(intern(lit("count-if"), user_package), func_n3o(count_if, 2));
+  reg_fun(intern(lit("posqual"), user_package), func_n2(posqual));
+  reg_fun(intern(lit("posql"), user_package), func_n2(posql));
+  reg_fun(intern(lit("posq"), user_package), func_n2(posq));
+  reg_fun(intern(lit("pos"), user_package), func_n4o(pos, 2));
+  reg_fun(intern(lit("pos-if"), user_package), func_n3o(pos_if, 2));
   reg_fun(intern(lit("some"), user_package), func_n3o(some_satisfy, 1));
   reg_fun(intern(lit("all"), user_package), func_n3o(all_satisfy, 1));
   reg_fun(intern(lit("none"), user_package), func_n3o(none_satisfy, 1));
