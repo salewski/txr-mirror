@@ -219,6 +219,110 @@ static val print_key_val(val out, val key, val value)
   return nil;
 }
 
+static val hash_equal_op(val left, val right)
+{
+  uses_or2;
+  struct hash *l = (struct hash *) left->co.handle;
+  struct hash *r = (struct hash *) right->co.handle;
+  val liter, riter, lcell, rcell;
+  val free_conses = nil;
+  val pending = nil;
+
+  if (l->hash_fun != r->hash_fun)
+    return nil;
+
+  if (l->count != r->count)
+    return nil;
+
+  if (!equal(l->userdata, r->userdata))
+    return nil;
+
+  if (l->count == 0)
+    return t;
+
+  liter = hash_begin(left);
+  riter = hash_begin(right);
+
+  while ((lcell = hash_next(liter)) && ((rcell = hash_next(riter)))) {
+    val ncons = or2(pop(&free_conses), cons(nil, nil));
+    val found;
+
+    /*
+     * Try to find a cell matching the left cell on the pending list by key.
+     * If it is found, and the associated datum is equal, then remove it from
+     * the list.  If it is found and the data is not equal, then we have found
+     * a difference between the hash tables, and conclude they are different.
+     * If there is no match, then we insert the cell into the pending list. 
+     */
+    found = l->assoc_fun(car(lcell), pending);
+
+    if (found && !equal(cdr(found), cdr(lcell))) {
+      return nil;
+    } else if (found) {
+      val loc = memq(found, pending);
+      pending = nappend2(ldiff(pending, loc), cdr(loc));
+      set(*cdr_l(loc), free_conses);
+      free_conses = loc;
+    } else {
+      ncons = or2(pop(&free_conses), cons(nil, nil));
+      set(*car_l(ncons), lcell);
+      set(*cdr_l(ncons), pending);
+      pending = ncons;
+    }
+
+    /*
+     * The logic is mirrored for the right cell.
+     */
+    found = l->assoc_fun(car(rcell), pending);
+
+    if (found && !equal(cdr(found), cdr(rcell))) {
+      return nil;
+    } else if (found) {
+      val loc = memq(found, pending);
+      pending = nappend2(ldiff(pending, loc), cdr(loc));
+      set(*cdr_l(loc), free_conses);
+      free_conses = loc;
+    } else {
+      ncons = or2(pop(&free_conses), cons(nil, nil));
+      set(*car_l(ncons), rcell);
+      set(*cdr_l(ncons), pending);
+      pending = ncons;
+    }
+  }
+
+  /*
+   * The hashes are equal if and only if the pending list
+   * balances down to zero.
+   */
+  return eq(pending, nil);
+}
+
+static cnum hash_hash_op(val obj)
+{
+  cnum out = 0;
+  struct hash *h = (struct hash *) obj->co.handle;
+  val iter, cell;
+
+  switch (sizeof (mem_t *)) {
+  case 4:
+    out += ((cnum) h->hash_fun) >> 4;
+  case 8: default:
+    out += ((cnum) h->hash_fun) >> 5;
+  }
+
+  out += equal_hash(h->userdata);
+  out &= NUM_MAX;
+
+  iter = hash_begin(obj);
+
+  while ((cell = hash_next(iter)) != nil) {
+    out += equal_hash(cell);
+    out &= NUM_MAX;
+  }
+
+  return out;
+}
+
 static void hash_print_op(val hash, val out)
 {
   struct hash *h = (struct hash *) hash->co.handle;
@@ -302,11 +406,11 @@ static void hash_mark(val hash)
 }
 
 static struct cobj_ops hash_ops = {
-  cobj_equal_op,
+  hash_equal_op,
   hash_print_op,
   cobj_destroy_free_op,
   hash_mark,
-  cobj_hash_op
+  hash_hash_op,
 };
 
 static void hash_grow(struct hash *h)

@@ -1,5 +1,13 @@
 2014-02-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	* hash.c (hash_equal_op, hash_hash_op): New static functions.
+	(hash_ops): New functions registered in table of operations.
+
+	* txr.1: Documentation for equal function updated to explain
+	how two hashes are equal.
+
+2014-02-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	Undoing bogus optimization, which can only work when objects
 	are treated as immutable.
 

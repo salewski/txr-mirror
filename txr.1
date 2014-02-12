@@ -6347,18 +6347,31 @@ the same numeric value, eql returns t, even if they are different objects.
 For all other objects, eql behaves like eq.
 
 The equal function is less strict than eql. In general, it recurses into some
-kinds of aggregate objects to perform a structural equivalence.  If <left-obj>
-and <right-obj> are eql then they are also equal.  If the two objects are both
-cons cells, then they are equal if their "car" fields are equal and their "cdr"
-fields are equal.  If two objects are vectors, they are equal if they have the
-same length, and their corresponding elements are equal.  If two objects are
-strings, they are equal if they are textually identical.  If two objects are
-functions, they are equal if they have equal environments, and if they have
-equal functions. Two compiled functions are the same if they are the same
-function. Two interpreted functions are equal if their list structure is equal.
+kinds of aggregate objects to perform a structural equivalence.  
 
-For some aggregate objects, there is no special semantics.  Two hashes,
-symbols, packages, or streams are equal if they are the same hash.
+If <left-obj> and <right-obj> are eql then they are also equal.  
+
+If the two objects are both cons cells, then they are equal if their "car"
+fields are equal and their "cdr" fields are equal.  
+
+If two objects are vectors, they are equal if they have the same length, and
+their corresponding elements are equal. 
+
+If two objects are strings, they are equal if they are textually identical.  
+
+If two objects are functions, they are equal if they have equal environments,
+and if they have equal functions.  Two compiled functions are the same if they
+are the same function. Two interpreted functions are equal if their list
+structure is equal.
+
+Two hashes are equal if they use the same equality (both are equal-based,
+or both are the default eql-based), if their user-data elements are equal, if
+their sets of keys are identical, and if the data items associated with
+corresponding keys from each respective hash are equal objects.
+
+For some aggregate objects, there is no special semantics.  Two arguments
+which are symbols, packages, or streams are equal if and only if they
+are the same object.
 
 Certain object types have a custom equal function.
 
