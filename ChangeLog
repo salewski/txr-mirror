@@ -1,5 +1,14 @@
 2014-02-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	Undoing bogus optimization, which can only work when objects
+	are treated as immutable.
+
+	* hash.c (last_equal_key, last_equal_hash): Variables removed.
+	(equal_hash, hash_process_weak): All references to removed
+	variables scrubbed.
+
+2014-02-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (some_satisfy, all_satisfy, none_satisfy): Fix coding
 	mistake from two commits ago leading to a regression.
 
