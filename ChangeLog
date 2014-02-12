@@ -1,5 +1,10 @@
 2014-02-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (if_fun): Bugfix: forgotten handling of optional
+	alternative argument.
+
+2014-02-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (subst_vars): Bugfix: results of expressions not
 	treated in the same way as variables: lists not stringified,
 	causing expansions with parentheses, and sometimes errors

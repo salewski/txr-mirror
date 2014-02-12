@@ -2226,7 +2226,7 @@ static void reg_var(val sym, val *loc)
 
 static val if_fun(val cond, val then, val alt)
 {
-  return if3(cond, then, alt);
+  return if3(cond, then, default_bool_arg(alt));
 }
 
 static val or_fun(val vals)
