@@ -922,7 +922,7 @@ val hash_alist(val hash)
   return make_half_lazy_cons(func_f1(iter, hash_alist_lazy), cell);
 }
 
-val hash_uni(val hash1, val hash2)
+val hash_uni(val hash1, val hash2, val join_func)
 {
   struct hash *h1 = (struct hash *) cobj_handle(hash1, hash_s);
   struct hash *h2 = (struct hash *) cobj_handle(hash2, hash_s);
@@ -934,13 +934,6 @@ val hash_uni(val hash1, val hash2)
     val hout = make_similar_hash(hash1);
     val hiter, entry;
 
-    for (hiter = hash_begin(hash1), entry = hash_next(hiter); 
-         entry;
-         entry = hash_next(hiter))
-    {
-      sethash(hout, car(entry), cdr(entry));
-    }
-
     for (hiter = hash_begin(hash2), entry = hash_next(hiter); 
          entry;
          entry = hash_next(hiter))
@@ -948,35 +941,16 @@ val hash_uni(val hash1, val hash2)
       sethash(hout, car(entry), cdr(entry));
     }
 
-    return hout;
-  }
-}
-
-val hash_guni(val hash1, val hash2)
-{
-  struct hash *h1 = (struct hash *) cobj_handle(hash1, hash_s);
-  struct hash *h2 = (struct hash *) cobj_handle(hash2, hash_s);
-
-  if (h1->hash_fun != h2->hash_fun)
-    uw_throwf(error_s, lit("hash-guni: ~a and ~a are incompatible hashes"), hash1, hash2, nao);
-
-  {
-    val hout = make_similar_hash(hash1);
-    val hiter, entry;
-
     for (hiter = hash_begin(hash1), entry = hash_next(hiter); 
          entry;
          entry = hash_next(hiter))
     {
-      sethash(hout, car(entry), cdr(entry));
-    }
-
-    for (hiter = hash_begin(hash2), entry = hash_next(hiter); 
-         entry;
-         entry = hash_next(hiter))
-    {
-      val *loc = gethash_l(hout, car(entry), 0);
-      set(*loc, append2(*loc, cdr(entry)));
+      if (missingp(join_func)) {
+        sethash(hout, car(entry), cdr(entry));
+      } else {
+        val *loc = gethash_l(hout, car(entry), 0);
+        set(*loc, funcall2(join_func, cdr(entry), *loc));
+      }
     }
 
     return hout;
@@ -1006,33 +980,7 @@ val hash_diff(val hash1, val hash2)
   }
 }
 
-val hash_isec(val hash1, val hash2)
-{
-  struct hash *h1 = (struct hash *) cobj_handle(hash1, hash_s);
-  struct hash *h2 = (struct hash *) cobj_handle(hash2, hash_s);
-
-  if (h1->hash_fun != h2->hash_fun)
-    uw_throwf(error_s, lit("hash-uni: ~a and ~a are incompatible hashes"), hash1, hash2, nao);
-
-  {
-    val hout = make_similar_hash(hash1);
-    val hiter, entry;
-
-    for (hiter = hash_begin(hash1), entry = hash_next(hiter); 
-         entry;
-         entry = hash_next(hiter))
-    {
-      val found;
-      gethash_f(hash2, car(entry), &found);
-      if (found)
-        sethash(hout, car(entry), cdr(entry));
-    }
-
-    return hout;
-  }
-}
-
-val hash_gisec(val hash1, val hash2)
+val hash_isec(val hash1, val hash2, val join_func)
 {
   struct hash *h1 = (struct hash *) cobj_handle(hash1, hash_s);
   struct hash *h2 = (struct hash *) cobj_handle(hash2, hash_s);
@@ -1050,8 +998,12 @@ val hash_gisec(val hash1, val hash2)
     {
       val found;
       val data2 = gethash_f(hash2, car(entry), &found);
-      if (found)
-        sethash(hout, car(entry), append2(cdr(entry), data2));
+      if (found) {
+        if (missingp(join_func))
+          sethash(hout, car(entry), cdr(entry));
+        else
+          sethash(hout, car(entry), funcall2(join_func, cdr(entry), data2));
+      }
     }
 
     return hout;

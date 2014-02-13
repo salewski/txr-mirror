@@ -10599,11 +10599,9 @@ dohash early using (return) or (return <value>).
 .TP
 Syntax:
 
-  (hash-uni <hash1> <hash2>)
-  (hash-guni <hash1> <hash2>)
+  (hash-uni <hash1> <hash2> [<join-func>])
   (hash-diff <hash1> <hash2>)
-  (hash-isec <hash1> <hash2>)
-  (hash-gisec <hash1> <hash2>)
+  (hash-isec <hash1> <hash2> [<join-func>])
 
 .TP
 Description:
@@ -10621,26 +10619,22 @@ keys, and so forth.
 The hash-uni function performs a set union. The resulting hash contains all of
 the keys from <hash1> and all of the keys from <hash2>, and their corresponding
 values.  If a key occurs both in <hash1> and <hash2>, then it occurs only once
-in the resulting hash. The value for this common key is the one from <hash2>.
-The hash-guni function is similar, except that if a key occurs in both <hash1>
-and <hash2>, then the respective data items from <hash1> and <hash2> for that
-key appear appended together in the resulting hash as if by the append
-function, in that order.  (The hash-guni name is a reference to the group-by
-function. A sequence of data items can be grouped in multiple ways, and then
-the hashes combined with hash-guni.)
+in the resulting hash. In this case, if the <join-func> argument is not given
+specified, value associated with this key is the one from <hash1>. If
+<join-func> is specified then it is called with two arguments: the respective
+data items from <hash1> and <hash2>. The return value of this function is used
+as the value in the union hash.
 
 The hash-diff function performs a set difference. First, a copy of <hash1> is
 made as if by the copy-has function. Then from this copy, all keys which occur
 in <hash2> are deleted.
 
 The hash-isec function performs a set intersection. The resulting hash contains
-only those keys which occur both in <hash1> and <hash2>. The values selected
-for these common keys are those from <hash1>.
-
-The hash-gisec function performs a set intersection similarly to hash-isec.
-However, for each key placed in the resulting hash, the associated data is
-formed by appending together the data item from <hash1> and from <hash2>, in
-that order.
+only those keys which occur both in <hash1> and <hash2>. If <join-func> is not
+specified, the values selected for these common keys are those from <hash1>.
+If <join-func> is specified, then for each key which occurs in both <hash1> and
+<hash2>, it is called with two arguments: the respective data items. The return
+value is then used as the data item in the intersection hash.
 
 .SH PARTIAL EVALUATION AND COMBINATORS
 

@@ -11,6 +11,28 @@
 
 2014-02-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	Different approach: optional arguments on hash-isec and hash-uni allow
+	for more flexible joining of data from the hash tables.
+
+	* eval.c (eval_init): Remove hash_guni and hash_gisec. Change
+	registration for hash_uni and hash_isec to three arguments with
+	one optional.
+
+	* hash.c (hash_uni): Third parameter introduced, join_func.
+	The default behavior changes: in the two argument case,
+	clashing keys prefer the value from hash1 rather than hash2.
+	For this reason, we now iterate over hash2 first, then hash1.
+	(hash_guni): Removed.
+	(hash_isec): Third parameter introduced, join_func.
+	(hash_gisec): Removed.
+
+	* hash.h (hash_uni, hash_isec): Declarations updated.
+	(hash_guni, hash_gisec): Delarations removed.
+
+	* txr.1: Documentation updated.
+
+2014-02-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Register hash_guni and hash_gisec as intrinsics.
 
 	* hash.c (hash_guni, hash_gisec): New functions.
