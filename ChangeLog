@@ -1,5 +1,14 @@
 2014-02-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.l: Disallow syntax like 1.0a, flagging it as
+	an invalid floating-point token.  The problem is that 1a is allowed,
+	for compatibility with other Lisp dialects (it is a symbol) whereas
+	1.0a was scanning as 1.0 followed by a, which is inconsistent.
+	Some Lisp dialects embedded dots in symbols, and allow 1.0a
+	as a symbol token. We don't.
+
+2014-02-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	* hash.c (struct hash): New member, equal_fun.
 	(hash_equal_op): Short circuited logic: whenever we pull
 	identical cells from either hash, we don't have to go
