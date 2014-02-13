@@ -2509,8 +2509,10 @@ void eval_init(void)
   reg_fun(intern(lit("hash-pairs"), user_package), func_n1(hash_pairs));
   reg_fun(intern(lit("hash-alist"), user_package), func_n1(hash_alist));
   reg_fun(intern(lit("hash-uni"), user_package), func_n2(hash_uni));
+  reg_fun(intern(lit("hash-guni"), user_package), func_n2(hash_guni));
   reg_fun(intern(lit("hash-diff"), user_package), func_n2(hash_diff));
   reg_fun(intern(lit("hash-isec"), user_package), func_n2(hash_isec));
+  reg_fun(intern(lit("hash-gisec"), user_package), func_n2(hash_gisec));
   reg_fun(intern(lit("group-by"), user_package), func_n2v(group_by));
   reg_fun(intern(lit("hash-update"), user_package), func_n2(hash_update));
 

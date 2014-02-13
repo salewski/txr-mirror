@@ -11,6 +11,19 @@
 
 2014-02-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Register hash_guni and hash_gisec as intrinsics.
+
+	* hash.c (hash_guni, hash_gisec): New functions.
+	(hash_isec): Bugfix: since gethash was naively used, keys in hash2
+	associated with the value nil were erroneously omitted from the
+	intersection.
+
+	* hash.h (hash_guni, hash_gisec): Declared.
+
+	* txr.1: Documented new functions.
+
+2014-02-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.l: Disallow syntax like 1.0a, flagging it as
 	an invalid floating-point token.  The problem is that 1a is allowed,
 	for compatibility with other Lisp dialects (it is a symbol) whereas

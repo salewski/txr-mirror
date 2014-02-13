@@ -54,8 +54,10 @@ val hash_values(val hash);
 val hash_pairs(val hash);
 val hash_alist(val hash);
 val hash_uni(val hash1, val hash2);
+val hash_guni(val hash1, val hash2);
 val hash_diff(val hash1, val hash2);
 val hash_isec(val hash1, val hash2);
+val hash_gisec(val hash1, val hash2);
 val hash_update(val hash, val fun);
 
 void hash_process_weak(void);
