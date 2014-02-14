@@ -1,3 +1,14 @@
+2014-02-14  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): Register inhash as intrinsic.
+
+	* hash.c (inhash): New function.
+
+	* hash.h (inhash): Declared.
+
+	* txr.1: Documented inhash. Also, added surprisingly missing
+	documentation for gethash!
+
 2014-02-12  Kaz Kylheku  <kaz@kylheku.com>
 
 	* parser.l: Disallow syntax like 1.0a, flagging it as

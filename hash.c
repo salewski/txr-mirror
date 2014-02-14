@@ -542,6 +542,28 @@ val gethash(val hash, val key)
   return cdr(found);
 }
 
+val inhash(val hash, val key, val init)
+{
+  struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
+  val found;
+
+  if (missingp(init)) {
+    val chain = vecref(h->table, num_fast(h->hash_fun(key) % h->modulus));
+    found = h->assoc_fun(key, chain);
+  } else {
+    val *pchain = vecref_l(h->table, num_fast(h->hash_fun(key) % h->modulus));
+    val old = *pchain, new;
+    val *place = h->acons_new_l_fun(key, &new, pchain);
+    if (old != *pchain && ++h->count > 2 * h->modulus)
+      hash_grow(h);
+    if (new)
+      *place = init;
+    found = h->assoc_fun(key, *pchain);
+  }
+
+  return found;
+}
+
 val gethash_f(val hash, val key, val *found)
 {
   struct hash *h = (struct hash *) cobj_handle(hash, hash_s);

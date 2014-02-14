@@ -10370,6 +10370,44 @@ The copy-hash function is like make-similar-hash, except that instead of
 producing an empty hash table, it produces one which has all the same elements
 as <hash>: it contains the same key and value objects. 
 
+.SS Function inhash
+
+.TP
+Syntax:
+
+  (inhash <hash> <key> [<init>])
+
+.TP
+Description:
+
+The inhash function searches hash table <hash> for <key>. 
+If <key> is found, then it return the hash table's cons cell which 
+represents the association between <hash> and <key>.
+Otherwise, it returns nil.
+
+If argument <init> is specified, then the function will create
+an entry for <key> in <hash> whose value is that of <init>.
+The cons cell representing that association is returned.
+
+Note: for as long as the <key> continues to exist inside <hash>. modifying the
+car field of the returned cons has ramifications for the logical integrity of
+the hash. Modifying the cdr field has the effect of updating the association.
+
+.SS Function gethash
+
+.TP
+Syntax:
+
+  (gethash <hash> <key> [<alt>])
+
+.TP
+Description:
+
+The gethash function searches hash table <hash> for key <key>. If the
+key is found then the associated value is returned. Otherwise, if
+the <alt> argument was specified, it is returned. If the <alt> argument
+was not specified, nil is returned.
+
 .SS Function sethash
 
 .TP
