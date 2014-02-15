@@ -1,5 +1,11 @@
 2014-02-14  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (class_check): Bugfix: the function was assuming that
+	the argument is a pointer type object, leading to a crash
+	if given a fixnum integer or string literal.
+
+2014-02-14  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Register inhash as intrinsic.
 
 	* hash.c (inhash): New function.
