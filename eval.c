@@ -655,7 +655,7 @@ static val bindings_helper(val vars, val env, val sequential, val ctx_form)
 
     if (symbolp(var)) {
       if (!bindable(var))
-        eval_error(ctx_form, lit("~s: ~s is not a bindable sybol"),
+        eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
                    car(ctx_form), var, nao);
     }
 
