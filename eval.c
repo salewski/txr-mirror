@@ -329,6 +329,44 @@ twocol:
              car(ctx_form), nao);
 }
 
+static val expand_opt_params(val params)
+{
+  if (atom(params)) {
+    return params;
+  } else {
+    val form = car(params);
+    if (atom(form) || !consp(cdr(form))) { /* sym, or no init form */
+      val params_ex = expand_opt_params(cdr(params));
+      if (params_ex == cdr(params))
+        return params;
+      return rlcp(cons(form, params_ex), cdr(params));
+    } else { /* has initform */
+      val initform = car(cdr(form));
+      val initform_ex = rlcp(expand(initform), initform);
+      val form_ex = rlcp(cons(car(form), cons(initform_ex, cdr(cdr(form)))),
+                         form);
+      return rlcp(cons(form_ex, expand_opt_params(rest(params))), cdr(params));
+    } 
+  }
+}
+
+static val expand_params(val params)
+{
+  if (atom(params)) {
+    return params;
+  } else if (car(params) == colon_k) {
+    val params_ex = expand_opt_params(cdr(params));
+    if (params_ex == cdr(params))
+      return params;
+    return rlcp(cons(colon_k, params_ex), cdr(params));
+  } else {
+    val params_ex = expand_params(cdr(params));
+    if (params_ex == cdr(params))
+      return params;
+    return rlcp(cons(car(params), params_ex), cdr(params));
+  }
+}
+
 val apply(val fun, val arglist, val ctx_form)
 {
   val arg[32], *p = arg;
@@ -1494,17 +1532,17 @@ static val expand_vars(val vars)
     val rest_vars_ex = expand_vars(rest_vars);
     if (rest_vars == rest_vars_ex)
       return vars;
-    return cons(car(vars), rest_vars_ex);
+    return rlcp(cons(car(vars), rest_vars_ex), vars);
   } else {
     cons_bind (var, init, car(vars));
     val rest_vars = rest(vars);
-    val init_ex = expand_forms(init);
-    val rest_vars_ex = expand_vars(rest_vars);
+    val init_ex = rlcp(expand_forms(init), init);
+    val rest_vars_ex = rlcp(expand_vars(rest_vars), rest_vars);
 
     if (init == init_ex && rest_vars == rest_vars_ex)
       return vars;
 
-    return cons(cons(var, init_ex), rest_vars_ex);
+    return rlcp(cons(cons(var, init_ex), rest_vars_ex), vars);
   }
 }
 
@@ -1719,7 +1757,7 @@ val expand(val form)
   } else {
     val sym = car(form);
 
-    if (sym == let_s || sym == let_star_s || sym == lambda_s || 
+    if (sym == let_s || sym == let_star_s ||
         sym == each_s || sym == each_star_s || sym == collect_each_s ||
         sym == collect_each_star_s || sym == append_each_s ||
         sym == append_each_star_s)
@@ -1753,15 +1791,25 @@ val expand(val form)
       if (init == init_ex)
         return form;
       return rlcp(cons(sym, cons(name, cons(init_ex, nil))), form);
+    } else if (sym == lambda_s) {
+      val params = second(form);
+      val body = rest(rest(form));
+      val params_ex = expand_params(params);
+      val body_ex = expand_forms(body);
+
+      if (body == body_ex && params == params_ex)
+        return form;
+      return rlcp(cons(sym, cons(params_ex, body_ex)), form);
     } else if (sym == defun_s) {
       val name = second(form);
-      val args = third(form);
+      val params = third(form);
+      val params_ex = expand_params(params);
       val body = rest(rest(rest(form)));
       val body_ex = expand_forms(body);
 
-      if (body == body_ex)
+      if (body == body_ex && params == params_ex)
         return form;
-      return rlcp(cons(sym, cons(name, cons(args, body_ex))), form);
+      return rlcp(cons(sym, cons(name, cons(params_ex, body_ex))), form);
     } else if (sym == set_s || sym == inc_s || sym == dec_s) {
       val place = second(form);
       val inc = third(form);

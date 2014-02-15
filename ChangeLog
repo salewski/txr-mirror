@@ -1,5 +1,17 @@
 2014-02-15  Kaz Kylheku  <kaz@kylheku.com>
 
+	Bugfix: parameters of defun were not being treated by expander.
+	They need to be since they can contain evaluable initforms for default
+	arguments. Ditto with lambda; lambda parameters were being treated
+	using expand_vars, which is not appropriate.
+
+	* eval.c (expand_opt_params, expand_params): New static functions.
+	(expand_vars): Bugfix: added some missing rlcp's to propagate
+	line number info.
+	(expand): Move lambda to separate case, and expand its params
+
+2014-02-15  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (bind_args, op_modplace): Use ~s consistently
 	in error messages.
 
