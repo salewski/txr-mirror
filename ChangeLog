@@ -1,5 +1,9 @@
 2014-02-14  Kaz Kylheku  <kaz@kylheku.com>
 
+	* hash.c (inhash): Simplify code with gethash_f.
+
+2014-02-14  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Registered hash_update_1 as intrinsic.
 
 	* hash.c (hash_update_1): New function.

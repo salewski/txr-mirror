@@ -544,13 +544,12 @@ val gethash(val hash, val key)
 
 val inhash(val hash, val key, val init)
 {
-  struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
   val found;
 
   if (missingp(init)) {
-    val chain = vecref(h->table, num_fast(h->hash_fun(key) % h->modulus));
-    found = h->assoc_fun(key, chain);
+    gethash_f(hash, key, &found);
   } else {
+    struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
     val *pchain = vecref_l(h->table, num_fast(h->hash_fun(key) % h->modulus));
     val old = *pchain, new_p;
     val *place = h->acons_new_l_fun(key, &new_p, pchain);
