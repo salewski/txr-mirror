@@ -544,23 +544,18 @@ val gethash(val hash, val key)
 
 val inhash(val hash, val key, val init)
 {
-  val found;
+  val cell;
 
   if (missingp(init)) {
-    gethash_f(hash, key, &found);
+    gethash_f(hash, key, &cell);
   } else {
-    struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
-    val *pchain = vecref_l(h->table, num_fast(h->hash_fun(key) % h->modulus));
-    val old = *pchain, new_p;
-    val cell = h->acons_new_c_fun(key, &new_p, pchain);
-    if (old != *pchain && ++h->count > 2 * h->modulus)
-      hash_grow(h);
+    val new_p;
+    cell = gethash_c(hash, key, &new_p);
     if (new_p)
       rplacd(cell, init);
-    found = h->assoc_fun(key, *pchain);
   }
 
-  return found;
+  return cell;
 }
 
 val gethash_f(val hash, val key, val *found)

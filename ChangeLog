@@ -1,5 +1,9 @@
 2014-02-14  Kaz Kylheku  <kaz@kylheku.com>
 
+	* hash.c (inhash): Simplify with gethash_c.
+
+2014-02-14  Kaz Kylheku  <kaz@kylheku.com>
+
 	Replacing acons_new_l and aconsq_new_l interfaces with ones
 	that return the new or old cons cell rather than a pointer
 	to its cdr field.
