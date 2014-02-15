@@ -1597,8 +1597,9 @@ static val transform_op(val forms, val syms, val rg)
       if (integerp(vararg)) {
         val newsyms = syms;
         val new_p;
-        val *place = acons_new_l(vararg, &new_p, &newsyms);
-        val sym = if3(new_p, set(*place, gensym(format_op_arg(vararg))), *place);
+        val cell = acons_new_c(vararg, &new_p, &newsyms);
+        val sym = if3(new_p, rplacd(cell, gensym(format_op_arg(vararg))),
+                             cdr(cell));
         cons_bind (outsyms, outforms, transform_op(re, newsyms, rg)); 
         return cons(outsyms, rlcp(cons(sym, outforms), outforms));
       } else if (eq(vararg, rest_s)) {

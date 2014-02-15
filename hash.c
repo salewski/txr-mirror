@@ -57,7 +57,7 @@ struct hash {
   cnum (*hash_fun)(val);
   val (*equal_fun)(val, val);
   val (*assoc_fun)(val key, val list);
-  val *(*acons_new_l_fun)(val key, val *new_p, val *list);
+  val (*acons_new_c_fun)(val key, val *new_p, val *list);
 };
 
 struct hash_iter {
@@ -471,7 +471,7 @@ val make_hash(val weak_keys, val weak_vals, val equal_based)
     h->hash_fun = equal_based ? equal_hash : eql_hash;
     h->equal_fun = equal_based ? equal : eql;
     h->assoc_fun = equal_based ? assoc : assql;
-    h->acons_new_l_fun = equal_based ? acons_new_l : aconsql_new_l;
+    h->acons_new_c_fun = equal_based ? acons_new_c : aconsql_new_c;
 
     return hash;
   }
@@ -494,7 +494,7 @@ val make_similar_hash(val existing)
   h->hash_fun = ex->hash_fun;
   h->equal_fun = ex->equal_fun;
   h->assoc_fun = ex->assoc_fun;
-  h->acons_new_l_fun = ex->acons_new_l_fun;
+  h->acons_new_c_fun = ex->acons_new_c_fun;
 
   return hash;
 }
@@ -515,7 +515,7 @@ val copy_hash(val existing)
   h->flags = ex->flags;
   h->hash_fun = ex->hash_fun;
   h->assoc_fun = ex->assoc_fun;
-  h->acons_new_l_fun = ex->acons_new_l_fun;
+  h->acons_new_c_fun = ex->acons_new_c_fun;
 
   for (iter = zero; lt(iter, mod); iter = plus(iter, one))
     *vecref_l(h->table, iter) = copy_alist(vecref(ex->table, iter));
@@ -523,15 +523,15 @@ val copy_hash(val existing)
   return hash;
 }
 
-val *gethash_l(val hash, val key, val *new_p)
+val gethash_c(val hash, val key, val *new_p)
 {
   struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
   val *pchain = vecref_l(h->table, num_fast(h->hash_fun(key) % h->modulus));
   val old = *pchain;
-  val *place = h->acons_new_l_fun(key, new_p, pchain);
+  val cell = h->acons_new_c_fun(key, new_p, pchain);
   if (old != *pchain && ++h->count > 2 * h->modulus)
     hash_grow(h);
-  return place;
+  return cell;
 }
 
 val gethash(val hash, val key)
@@ -552,11 +552,11 @@ val inhash(val hash, val key, val init)
     struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
     val *pchain = vecref_l(h->table, num_fast(h->hash_fun(key) % h->modulus));
     val old = *pchain, new_p;
-    val *place = h->acons_new_l_fun(key, &new_p, pchain);
+    val cell = h->acons_new_c_fun(key, &new_p, pchain);
     if (old != *pchain && ++h->count > 2 * h->modulus)
       hash_grow(h);
     if (new_p)
-      *place = init;
+      rplacd(cell, init);
     found = h->assoc_fun(key, *pchain);
   }
 
@@ -582,7 +582,7 @@ val gethash_n(val hash, val key, val notfound_val)
 val sethash(val hash, val key, val value)
 {
   val new_p;
-  set(*gethash_l(hash, key, &new_p), value);
+  rplacd(gethash_c(hash, key, &new_p), value);
   return new_p;
 }
 

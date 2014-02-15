@@ -4468,20 +4468,20 @@ val acons_new(val key, val value, val list)
   }
 }
 
-val *acons_new_l(val key, val *new_p, val *list)
+val acons_new_c(val key, val *new_p, val *list)
 {
   val existing = assoc(key, *list);
 
   if (existing) {
     if (new_p)
       *new_p = nil;
-    return cdr_l(existing);
+    return existing;
   } else {
     val nc = cons(key, nil);
     set(*list, cons(nc, *list));
     if (new_p)
       *new_p = t;
-    return cdr_l(nc);
+    return nc;
   }
 }
 
@@ -4497,20 +4497,20 @@ val aconsql_new(val key, val value, val list)
   }
 }
 
-val *aconsql_new_l(val key, val *new_p, val *list)
+val aconsql_new_c(val key, val *new_p, val *list)
 {
   val existing = assql(key, *list);
 
   if (existing) {
     if (new_p)
       *new_p = nil;
-    return cdr_l(existing);
+    return existing;
   } else {
     val nc = cons(key, nil);
     set(*list, cons(nc, *list));
     if (new_p)
       *new_p = t;
-    return cdr_l(nc);
+    return nc;
   }
 }
 
@@ -5073,10 +5073,11 @@ static void obj_init(void)
   /* nil can't be interned because it's not a SYM object;
      it works as a symbol because the nil case is handled by
      symbol-manipulating function. */
-  *gethash_l(user_package->pk.symhash, nil_string, 0) = nil;
+  rplacd(gethash_c(user_package->pk.symhash, nil_string, 0), nil);
 
-  /* t can't be interned, because gethash_l needs t in order to do its job. */
-  t = set(*gethash_l(user_package->pk.symhash, lit("t"), 0), make_sym(lit("t")));
+  /* t can't be interned, because intern needs t in order to do its job. */
+  t = rplacd(gethash_c(user_package->pk.symhash,
+                       lit("t"), 0), make_sym(lit("t")));
   set(t->s.package, user_package);
 
   null = intern(lit("null"), user_package);

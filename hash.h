@@ -29,7 +29,7 @@ extern val weak_keys_k, weak_vals_k, equal_based_k;
 val make_hash(val weak_keys, val weak_vals, val equal_based);
 val make_similar_hash(val existing);
 val copy_hash(val existing);
-val *gethash_l(val hash, val key, val *new_p);
+val gethash_c(val hash, val key, val *new_p);
 val gethash(val hash, val key);
 val inhash(val hash, val key, val init);
 val gethash_n(val hash, val key, val notfound_val);
@@ -60,5 +60,10 @@ val hash_update(val hash, val fun);
 val hash_update_1(val hash, val key, val fun, val init);
 
 void hash_process_weak(void);
+
+INLINE val *gethash_l(val hash, val key, val *new_p)
+{
+  return cdr_l(gethash_c(hash, key, new_p));
+}
 
 void hash_init(void);

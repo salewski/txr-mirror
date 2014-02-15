@@ -1,5 +1,33 @@
 2014-02-14  Kaz Kylheku  <kaz@kylheku.com>
 
+	Replacing acons_new_l and aconsq_new_l interfaces with ones
+	that return the new or old cons cell rather than a pointer
+	to its cdr field.
+
+	* eval.c (transform_op): use of acons_new_l replaced with
+	acons_new_c.
+
+	* hash.c (struct hash): acons_new_l_fun member replaced
+	with acons_new_c_fun.
+	(make_hash, make_similar_hash): initialize acons_new_l_fun
+	member using either acons_new_c or aconsql_new_c.
+	(gethash_l): function becomes an inline in hash.h.
+	(gethash_c): new function, based on gethash_l.
+	(inhash, gethash_n): updated w.r.t struct hash change.
+
+	* hash.h (gethash_c): declared.
+	(gethash_l): becomes an inline wrapper for gethash_c.
+
+	* lib.c (acons_new_l, aconsql_new_l): functions removed.
+	(acons_new_c, aconsql_new_c): new functions.
+	(obj_init): use gethash_c and rplacd instead of gethash_l
+	and set.
+
+	* lib.h (acons_new_l, aconsql_new_l): declarations removed.
+	(acons_new_c, aconsql_new_c): declared.
+
+2014-02-14  Kaz Kylheku  <kaz@kylheku.com>
+
 	* hash.c (inhash): Simplify code with gethash_f.
 
 2014-02-14  Kaz Kylheku  <kaz@kylheku.com>
