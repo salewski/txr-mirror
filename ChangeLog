@@ -1,5 +1,10 @@
 2014-02-15  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (bind_args, op_modplace): Use ~s consistently
+	in error messages.
+
+2014-02-15  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (bindings_helper): Fixed misspelling of "symbol" in exception
 	message.
 

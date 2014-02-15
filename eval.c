@@ -247,11 +247,11 @@ static val bind_args(val env, val params, val args, val ctx_form)
     }
 
     if (!bindable(param))
-      eval_error(ctx_form, lit("~a: ~s is not a bindable symbol"),
+      eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
                  car(ctx_form), param, nao);
 
     if (presentsym && !bindable(presentsym)) 
-      eval_error(ctx_form, lit("~a: ~s is not a bindable symbol"),
+      eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
                  car(ctx_form), presentsym, nao);
 
     if (optargs) {
@@ -297,14 +297,14 @@ static val bind_args(val env, val params, val args, val ctx_form)
         val presentsym = pop(&param);
         val initval = eval(initform, new_env, ctx_form);
         if (!bindable(sym))
-          eval_error(ctx_form, lit("~a: ~s is not a bindable symbol"),
+          eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
                      car(ctx_form), sym, nao);
 
         new_env = make_env(nil, nil, new_env);
         env_vbind(new_env, sym, initval);
         if (presentsym) {
           if (!bindable(presentsym)) 
-            eval_error(ctx_form, lit("~a: ~s is not a bindable symbol"),
+            eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
                        car(ctx_form), presentsym, nao);
           env_vbind(new_env, presentsym, nil);
         }
@@ -316,7 +316,7 @@ static val bind_args(val env, val params, val args, val ctx_form)
     if (bindable(params))
       env_vbind(new_env, params, nil);
   } else if (params) {
-    eval_error(ctx_form, lit("~a: ~s is not a bindable sybol"),
+    eval_error(ctx_form, lit("~s: ~s is not a bindable sybol"),
                car(ctx_form), params, nao);
   } else if (args) {
     eval_error(ctx_form, lit("~s: too many arguments"), car(ctx_form), nao);
@@ -325,7 +325,7 @@ static val bind_args(val env, val params, val args, val ctx_form)
 
   return new_env;
 twocol:
-  eval_error(ctx_form, lit("~a: multiple colons in parameter list"),
+  eval_error(ctx_form, lit("~s: multiple colons in parameter list"),
              car(ctx_form), nao);
 }
 
@@ -1039,7 +1039,7 @@ static val op_modplace(val form, val env)
   if (op == push_s) {
     val tmp = place;
     if (!third_arg_p)
-      eval_error(form, lit("~a: missing argument"), op, place, nao);
+      eval_error(form, lit("~s: missing argument"), op, place, nao);
     place = third(form);
     newform = tmp;
     newval = eval(newform, env, form);
@@ -1047,7 +1047,7 @@ static val op_modplace(val form, val env)
 
   if (symbolp(place)) {
     if (!bindable(place))
-      eval_error(form, lit("~a: ~s is not a bindable sybol"), op, place, nao);
+      eval_error(form, lit("~s: ~s is not a bindable sybol"), op, place, nao);
     loc = lookup_var_l(env, place);
     if (!loc)
       eval_error(form, lit("unbound variable ~s"), place, nao);
@@ -1082,19 +1082,19 @@ static val op_modplace(val form, val env)
       val ind = eval(third(place), env, form);
       loc = vecref_l(vec, ind);
     } else {
-      eval_error(form, lit("~a: ~s is not a recognized place form"),
+      eval_error(form, lit("~s: ~s is not a recognized place form"),
                  op, place, nao);
     }
   } else {
-    eval_error(form, lit("~a: ~s is not a place"), op, place, nao);
+    eval_error(form, lit("~s: ~s is not a place"), op, place, nao);
   }
 
   if (!loc)
-    eval_error(form, lit("~a: place ~s doesn't exist"), op, place, nao);
+    eval_error(form, lit("~s: place ~s doesn't exist"), op, place, nao);
 
   if (op == set_s) {
     if (!third_arg_p)
-      eval_error(form, lit("~a: missing argument"), op, nao);
+      eval_error(form, lit("~s: missing argument"), op, nao);
     return set(*loc, eval(newform, env, form));
   } else if (op == inc_s) {
     val inc = or2(eval(newform, env, form), one);
@@ -1106,12 +1106,12 @@ static val op_modplace(val form, val env)
     return mpush(newval, *loc);
   } else if (op == pop_s) {
     if (third_arg_p)
-      eval_error(form, lit("~a: superfluous argument"), op, nao);
+      eval_error(form, lit("~s: superfluous argument"), op, nao);
     return pop(loc);
   } else if (op == flip_s) {
     return *loc = nullp(*loc);
   } else if (op == del_s) {
-    eval_error(form, lit("~a: cannot delete ~a"), op, place, nao);
+    eval_error(form, lit("~s: cannot delete ~a"), op, place, nao);
   }
 
   internal_error("unhandled place modifier");
