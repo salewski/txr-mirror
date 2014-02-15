@@ -1008,8 +1008,10 @@ val hash_update(val hash, val fun)
 {
   val iter = hash_begin(hash);
   val cell;
-  while ((cell = hash_next(iter)) != nil)
-    rplacd(cell, funcall1(fun, cdr(cell)));
+  while ((cell = hash_next(iter)) != nil) {
+    val *loc = cdr_l(cell);
+    set(*loc, funcall1(fun, *loc));
+  }
   return hash;
 }
 

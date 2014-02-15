@@ -1,5 +1,9 @@
 2014-02-14  Kaz Kylheku  <kaz@kylheku.com>
 
+	* hash.c (hash_update): Avoid double cdr.
+
+2014-02-14  Kaz Kylheku  <kaz@kylheku.com>
+
 	* hash.c (inhash): Simplify with gethash_c.
 
 2014-02-14  Kaz Kylheku  <kaz@kylheku.com>
