@@ -478,7 +478,7 @@ does not split the line into two; it's embedded into the line and
 thus cannot match anything. However, @\en may be useful in the @(cat)
 directive and in @(output).
 
-.SS International Characters
+.SS Character Handling and International Characters
 
 .B TXR
 represents text internally using wide characters, which are used to represent
@@ -518,6 +518,13 @@ byte of the ill-formed multibyte character, and extracts just that byte,
 mapping it to the Unicode character range U+DC00 through U+DCFF.  The decoding
 resumes afresh at the following byte, expecting that byte to be the start
 of a UTF-8 code.
+
+Furthermore, because TXR internally uses a null-terminated character
+representation of strings which easily interoperates with C language
+interfaces, when a null character is read from a stream, TXR converts it to
+the code U+DC00. On output, this code converts back to a null byte,
+as explained in the previous paragraph. By means of this representational
+trick, TXR can handle textual data containing null bytes.
 
 .SS Regular Expression Directives
 

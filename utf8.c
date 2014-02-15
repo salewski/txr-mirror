@@ -260,6 +260,7 @@ int utf8_encode(wchar_t wch, int (*put)(int ch, mem_t *ctx), mem_t *ctx)
 void utf8_decoder_init(utf8_decoder_t *ud)
 {
   ud->state = utf8_init;
+  ud->flags = 0;
   ud->wch = 0;
   ud->head = ud->tail = ud->back = 0;
 }
@@ -295,6 +296,8 @@ wint_t utf8_decode(utf8_decoder_t *ud, int (*get)(mem_t *ctx), mem_t *ctx)
       case 0x0: case 0x1: case 0x2: case 0x3:
       case 0x4: case 0x5: case 0x6: case 0x7:
         ud->back = ud->tail;
+        if (ch == 0 && (ud->flags & UTF8_ADMIT_NUL) == 0)
+          return 0xDC00;
         return ch;
       case 0xC: case 0xD:
         ud->state = utf8_more1;

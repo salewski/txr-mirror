@@ -35,8 +35,11 @@ unsigned char *utf8_dup_to_uc(const wchar_t *);
 
 enum utf8_state { utf8_init, utf8_more1, utf8_more2, utf8_more3 };
 
+#define UTF8_ADMIT_NUL 1
+
 typedef struct utf8_decoder {
   enum utf8_state state;
+  int flags;
   wchar_t wch, wch_min;
   int head, tail, back;
   int buf[8];

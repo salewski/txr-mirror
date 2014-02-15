@@ -1,3 +1,18 @@
+2014-02-15  Kaz Kylheku  <kaz@kylheku.com>
+
+	A trivial change in the UTF-8 decoder allows TXR to handle null bytes
+	in text.
+
+	* utf8.h (UTF8_ADMIT_NUL): New preprocessor symbol.
+	(utf8_decoder): New member, flags.
+
+	* utf8.c (utf8_decoder_init): Initialize flags to 0.
+	(utf8_decode): If a null byte is encountered in the input,
+	then convert it to 0xDC00, rather than keeping it as zero,
+	unless flags contains UTF8_ADMIT_NUL.
+
+	* txr.1: Document handling of null bytes.
+
 2014-02-14  Kaz Kylheku  <kaz@kylheku.com>
 
 	* hash.c (hash_update): Avoid double cdr.
