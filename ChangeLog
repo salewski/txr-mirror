@@ -1,5 +1,15 @@
 2014-02-14  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Registered hash_update_1 as intrinsic.
+
+	* hash.c (hash_update_1): New function.
+
+	* hash.h (hash_update_1): Declared.
+
+	* txr.1: Documented hash-update-1.
+
+2014-02-14  Kaz Kylheku  <kaz@kylheku.com>
+
 	* hash.c (inhash): Rename local variable from new to new_p.
 	This is consistent with usage elsewhere in the module,
 	and more importantly, keeps our code C++.

@@ -1019,6 +1019,25 @@ val hash_update(val hash, val fun)
   return hash;
 }
 
+val hash_update_1(val hash, val key, val fun, val init)
+{
+  if (missingp(init)) {
+    val cons;
+    val data = gethash_f(hash, key, &cons);
+    if (cons)
+      rplacd(cons, funcall1(fun, data));
+    return data;
+  } else {
+    val new_p;
+    val *place = gethash_l(hash, key, &new_p);
+    if (new_p)
+      *place = funcall1(fun, init);
+    else
+      *place = funcall1(fun, *place);
+    return *place;
+  }
+}
+
 void hash_init(void)
 {
   weak_keys_k = intern(lit("weak-keys"), keyword_package);

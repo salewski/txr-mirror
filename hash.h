@@ -57,6 +57,7 @@ val hash_uni(val hash1, val hash2, val join_func);
 val hash_diff(val hash1, val hash2);
 val hash_isec(val hash1, val hash2, val join_func);
 val hash_update(val hash, val fun);
+val hash_update_1(val hash, val key, val fun, val init);
 
 void hash_process_weak(void);
 

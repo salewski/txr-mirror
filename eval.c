@@ -2513,6 +2513,8 @@ void eval_init(void)
   reg_fun(intern(lit("hash-isec"), user_package), func_n3o(hash_isec, 2));
   reg_fun(intern(lit("group-by"), user_package), func_n2v(group_by));
   reg_fun(intern(lit("hash-update"), user_package), func_n2(hash_update));
+  reg_fun(intern(lit("hash-update-1"), user_package),
+          func_n4o(hash_update_1, 3));
 
   reg_fun(intern(lit("eval"), user_package), func_n2o(eval_intrinsic, 1));
   reg_fun(intern(lit("lisp-parse"), user_package), func_n2o(lisp_parse, 0));

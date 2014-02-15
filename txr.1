@@ -10311,10 +10311,34 @@ Syntax:
 .TP
 Description:
 
-The update function replaces each values in <hash>, with the value of
+The hash-update function replaces each values in <hash>, with the value of
 <function> applied to that value.
 
 The return value is <hash>.
+
+.SS Function hash-update-1
+
+.TP
+Syntax:
+
+  (hash-update-1 <hash> <key> <function> [<init>])
+
+.TP
+Description:
+
+The hash-update-1 function operates on a single entry in the hash table.
+
+If <key> exists in the hash table, then its corresponding value is passed
+into <function>, and the return value of <function> is then installed
+in place of the key's value. The value is then returned.
+
+If <key> does not exist in the hash table, and no <init> argument is given,
+then the function does nothing and returns nil.
+
+If <key> does not exist in the hash table, and an <init> argument is given,
+then <function> is applied to <init>, and then <key> is inserted into
+<hash> with the value returned by <function> as the datum. This value
+is also returned.
 
 .SS Function group-by
 
