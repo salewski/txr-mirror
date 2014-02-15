@@ -552,11 +552,11 @@ val inhash(val hash, val key, val init)
     found = h->assoc_fun(key, chain);
   } else {
     val *pchain = vecref_l(h->table, num_fast(h->hash_fun(key) % h->modulus));
-    val old = *pchain, new;
-    val *place = h->acons_new_l_fun(key, &new, pchain);
+    val old = *pchain, new_p;
+    val *place = h->acons_new_l_fun(key, &new_p, pchain);
     if (old != *pchain && ++h->count > 2 * h->modulus)
       hash_grow(h);
-    if (new)
+    if (new_p)
       *place = init;
     found = h->assoc_fun(key, *pchain);
   }
