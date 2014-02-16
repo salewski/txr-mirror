@@ -1,5 +1,22 @@
 2014-02-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	Nice idea: how about a function which walks the tree structure and
+	back-fills some missing source code location info.  We apply this to
+	macro expansions.  If some error occurs in expanded code, this way it
+	is referenced to the line where the macro *call* occurs.
+	Not only is this better than nothing, it may be better than tracing
+	it to the macro definition. Ideally, we would have both places:
+	("the error is in the code expanded from this macro, at this site").
+
+	* eval.c (expand): Use rlcp_tree to back-fill source info in
+	macro expansion by taking it from the unexpanded form.
+
+	* parser.h (rlcp_tree): Declared.
+
+	* parser.y (rlcp_tree): New function.
+
+2014-02-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	Bugfixes: not propagating source loc info in quasiliterals.
 
 	* eval.c (expand_quasi): Add some rlcp's here.

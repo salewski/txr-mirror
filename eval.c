@@ -2086,8 +2086,7 @@ tail:
       val mac_expand = expand_macro(form_ex, macro, make_env(nil, nil, nil));
       if (mac_expand == form)
         return form;
-      if (!source_loc(mac_expand))
-        rlcp(mac_expand, form);
+      rlcp_tree(mac_expand, form);
       form = mac_expand;
       goto tail;
     } else {
