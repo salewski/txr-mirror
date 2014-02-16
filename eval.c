@@ -1928,6 +1928,7 @@ val expand(val form)
 {
   val macro = nil;
 
+tail:
   if (atom(form)) {
     return form;
   } else {
@@ -2063,9 +2064,11 @@ val expand(val form)
         return form;
       return rlcp(cons(sym, quasi_ex), form);
     } else if (sym == gen_s) {
-      return expand(expand_gen(rest(form)));
+      form = expand_gen(rest(form));
+      goto tail;
     } else if (sym == delay_s) {
-      return expand(expand_delay(rest(form)));
+      form = expand_delay(rest(form));
+      goto tail;
     } else if (sym == op_s || sym == do_s) {
       return expand_op(sym, rest(form));
     } else if (sym == catch_s) {
@@ -2086,7 +2089,8 @@ val expand(val form)
         return form;
       if (!source_loc(mac_expand))
         rlcp(mac_expand, form);
-      return expand(mac_expand);
+      form = mac_expand;
+      goto tail;
     } else {
       /* funtion call
          also handles: progn, prog1, call, if, and, or, 

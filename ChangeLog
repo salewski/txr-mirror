@@ -1,3 +1,8 @@
+2014-02-16  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (expand): Replace blatant tail calls with
+	a backwards goto.
+
 2014-02-15  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (bind_macro_params): Bugfix: the :whole parameter must
