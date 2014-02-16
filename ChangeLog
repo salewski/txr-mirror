@@ -1,5 +1,22 @@
 2014-02-15  Kaz Kylheku  <kaz@kylheku.com>
 
+	First cut at implementation of macros.
+
+	* eval.c (top_mb, defmacro_s, macro_time_s, whole_k, env_k): New global
+	variables.
+	(expand_params): Recurse to handle macro parameter lists too.
+	(bind_macro_params, op_defmacro, expand_macro): New static functions.
+	(expand): Evaluate defmacro forms and macro-time forms at expansion
+	time. Recognize and expand macros (albeit not yet with proper lexical
+	scoping: local bindings are not able to shadow a macro).
+	(eval_init): Protect top_mb from GC and initialize it.
+	Intern new symbols defmacro, macro-time, and :whole.
+	Register defmacro operator in op_table.
+
+	* match.h (env_k): Added declaration for existing external variable.
+
+2014-02-15  Kaz Kylheku  <kaz@kylheku.com>
+
 	Bugfix: parameters of defun were not being treated by expander.
 	They need to be since they can contain evaluable initforms for default
 	arguments. Ditto with lambda; lambda parameters were being treated

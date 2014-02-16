@@ -71,12 +71,12 @@ struct c_var {
   val bind;
 };
 
-val top_vb, top_fb;
+val top_vb, top_fb, top_mb;
 val op_table;
 
 val eval_error_s;
 val dwim_s, progn_s, prog1_s, let_s, let_star_s, lambda_s, call_s;
-val cond_s, if_s, defvar_s, defun_s;
+val cond_s, if_s, defvar_s, defun_s, defmacro_s;
 val inc_s, dec_s, push_s, pop_s, flip_s, gethash_s, car_s, cdr_s;
 val del_s, vecref_s;
 val for_s, for_star_s, each_s, each_star_s, collect_each_s, collect_each_star_s;
@@ -87,6 +87,9 @@ val list_s, append_s, apply_s, gen_s, generate_s, rest_s;
 val delay_s, promise_s, op_s;
 val hash_lit_s, hash_construct_s;
 val vector_lit_s, vector_list_s;
+val macro_time_s;
+
+val whole_k, env_k;
 
 val make_env(val vbindings, val fbindings, val up_env)
 {
@@ -359,6 +362,12 @@ static val expand_params(val params)
     if (params_ex == cdr(params))
       return params;
     return rlcp(cons(colon_k, params_ex), cdr(params));
+  } else if (consp(car(params))) {
+    val car_ex = expand_params(car(params));
+    val params_ex = expand_params(cdr(params));
+    if (car_ex == car(params) && params_ex == cdr(params))
+      return params;
+    return rlcp(cons(car_ex, params_ex), params);
   } else {
     val params_ex = expand_params(cdr(params));
     if (params_ex == cdr(params))
@@ -517,6 +526,140 @@ static val apply_intrinsic(val fun, val args)
 static val list_star_intrinsic(val args)
 {
   return apply_frob_args(args);
+}
+
+static val bind_macro_params(val env, val mac_env, val params, val form,
+                             val loose_p, val ctx_form)
+{
+  val new_env = make_env(nil, nil, env);
+  val err_sym = nil;
+  val whole = params;
+  val optargs = nil;
+
+  while (consp(params)) {
+    val param = car(params);
+
+    if (param == whole_k || param == env_k) {
+      val nparam;
+      val next = cdr(params);
+      if (!next)
+        eval_error(ctx_form, lit("~s: dangling ~s in param list"),
+                   car(ctx_form), param, nao);
+      nparam = car(next);
+      if (!bindable(nparam)) {
+        err_sym = nparam;
+        goto nbind;
+      }
+      env_vbind(new_env, nparam, if3(param == whole_k, whole, mac_env));
+      params = cdr(next);
+      continue;
+    } 
+    
+    if (param == colon_k) {
+      if (optargs)
+        goto twocol;
+      optargs = t;
+      params = cdr(params);
+      continue;
+    } 
+
+    if (car(form) == colon_k) {
+      form = cdr(form);
+      goto noarg;
+    }
+
+    if (consp(form)) {
+      if (bindable(param)) {
+        env_vbind(new_env, param, car(form));
+      } else if (consp(param)) {
+        if (optargs) {
+          val nparam = pop(&param);
+          val initform = pop(&param);
+          val presentsym = pop(&param);
+
+          (void) initform;
+
+          if (presentsym && !bindable(presentsym)) {
+            err_sym = presentsym;
+            goto nbind;
+          }
+
+          new_env = bind_macro_params(new_env, mac_env,
+                                      nparam, car(form), t, ctx_form);
+
+          if (presentsym)
+            env_vbind(new_env, presentsym, t);
+        } else {
+          new_env = bind_macro_params(new_env, mac_env,
+                                      param, car(form),
+                                      loose_p, ctx_form);
+        }
+      } else {
+        err_sym = param;
+        goto nbind;
+      }
+      params = cdr(params);
+      form = cdr(form);
+      continue;
+    }
+
+    if (form)
+      eval_error(ctx_form, lit("~s: atom ~s not matched by parameter list"),
+                 car(ctx_form), form, nao);
+
+    if (!optargs && !loose_p) {
+      eval_error(ctx_form, lit("~s: insufficient number of arguments"),
+                 car(ctx_form), nao);
+    }
+
+noarg:
+    if (bindable(param)) {
+      env_vbind(new_env, param, nil);
+    } else if (consp(param)) {
+      val nparam = pop(&param);
+      val initform = pop(&param);
+      val presentsym = pop(&param);
+
+      if (presentsym && !bindable(presentsym)) {
+        err_sym = presentsym;
+        goto nbind;
+      }
+
+      if (initform) {
+        val initval = eval(initform, new_env, ctx_form);
+        new_env = bind_macro_params(new_env, mac_env,
+                                    nparam, initval, t, ctx_form);
+      } else {
+        new_env = bind_macro_params(new_env, mac_env,
+                                    nparam, nil, t, ctx_form);
+      }
+
+      if (presentsym)
+        env_vbind(new_env, presentsym, nil);
+    } else {
+      err_sym = param;
+      goto nbind;
+    }
+
+    params = cdr(params);
+  }
+
+  if (params) {
+    if (!bindable(params)) {
+      err_sym = params;
+      goto nbind;
+    }
+    env_vbind(new_env, params, form);
+  }
+
+  return new_env;
+
+nbind:
+  eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
+             car(ctx_form), err_sym, nao);
+twocol:
+  eval_error(ctx_form, lit("~s: multiple colons in parameter list"),
+             car(ctx_form), nao);
 }
 
 static val do_eval(val form, val env, val ctx_form,
@@ -900,6 +1043,37 @@ static val op_defun(val form, val env)
   /* defun captures lexical environment, so env is passed */
   sethash(top_fb, name, cons(name, func_interp(env, fun)));
   return name;
+}
+
+static val op_defmacro(val form, val env)
+{
+  val args = rest(form);
+  val name = first(args);
+  val params = second(args);
+  val body = rest(rest(args));
+  val block = cons(block_s, cons(name, body));
+
+  if (!bindable(name))
+    eval_error(form, lit("defmacro: ~s is not a bindable sybol"), name, nao);
+
+  /* defmacro captures lexical environment, so env is passed */
+  sethash(top_mb, name, cons(name, cons(env, cons(params, cons(block, nil)))));
+  return name;
+}
+
+static val expand_macro(val form, val expander, val mac_env)
+{
+  debug_enter;
+  val name = car(form);
+  val args = rest(form);
+  val env = car(cdr(expander));
+  val params = car(cdr(cdr(expander)));
+  val body = cdr(cdr(cdr(expander)));
+  val exp_env = bind_macro_params(env, mac_env, params, args, nil, form);
+  debug_frame(name, args, nil, env, nil, nil, nil);
+  debug_return(eval_progn(body, exp_env, body));
+  debug_end;
+  debug_leave;
 }
 
 static val op_modplace(val form, val env);
@@ -1752,6 +1926,8 @@ static val expand_catch(val body)
 
 val expand(val form)
 {
+  val macro = nil;
+
   if (atom(form)) {
     return form;
   } else {
@@ -1800,16 +1976,22 @@ val expand(val form)
       if (body == body_ex && params == params_ex)
         return form;
       return rlcp(cons(sym, cons(params_ex, body_ex)), form);
-    } else if (sym == defun_s) {
+    } else if (sym == defun_s || sym == defmacro_s) {
       val name = second(form);
       val params = third(form);
       val params_ex = expand_params(params);
       val body = rest(rest(rest(form)));
       val body_ex = expand_forms(body);
+      val form_ex = form;
 
-      if (body == body_ex && params == params_ex)
-        return form;
-      return rlcp(cons(sym, cons(name, cons(params_ex, body_ex))), form);
+      if (body != body_ex || params != params_ex)
+        form_ex = rlcp(cons(sym, cons(name, cons(params_ex, body_ex))), form);
+
+      if (sym == defmacro_s) {
+        val result = eval(form_ex, make_env(nil, nil, nil), form);
+        return cons(quote_s, cons(result, nil));
+      }
+      return form_ex;
     } else if (sym == set_s || sym == inc_s || sym == dec_s) {
       val place = second(form);
       val inc = third(form);
@@ -1890,6 +2072,19 @@ val expand(val form)
       return expand_catch(rest(form));
     } else if (sym == regex_s || regexp(sym)) {
       return form;
+    } else if (sym == macro_time_s) {
+      val args = rest(form);
+      val args_ex = expand_forms(args);
+      val result = eval_progn(args_ex, make_env(nil, nil, nil), args);
+      return cons(quote_s, cons(result, nil));
+    } else if ((macro = gethash(top_mb, sym))) {
+      val args = rest(form);
+      val args_ex = expand_forms(args);
+      val form_ex = if3(args_ex == args, form, cons(sym, args_ex));
+      val mac_expand = expand_macro(form_ex, macro, make_env(nil, nil, nil));
+      if (mac_expand == form)
+        return form;
+      return expand(mac_expand);
     } else {
       /* funtion call
          also handles: progn, prog1, call, if, and, or, 
@@ -2303,9 +2498,10 @@ static val and_fun(val vals)
 
 void eval_init(void)
 {
-  protect(&top_vb, &top_fb, &op_table, (val *) 0);
+  protect(&top_vb, &top_fb, &top_mb, &op_table, (val *) 0);
   top_fb = make_hash(t, nil, nil);
   top_vb = make_hash(t, nil, nil);
+  top_mb = make_hash(t, nil, nil);
   op_table = make_hash(nil, nil, nil);
 
   dwim_s = intern(lit("dwim"), user_package);
@@ -2319,6 +2515,7 @@ void eval_init(void)
   if_s = intern(lit("if"), user_package);
   defvar_s = intern(lit("defvar"), user_package);
   defun_s = intern(lit("defun"), user_package);
+  defmacro_s = intern(lit("defmacro"), user_package);
   inc_s = intern(lit("inc"), user_package);
   dec_s = intern(lit("dec"), user_package);
   push_s = intern(lit("push"), user_package);
@@ -2354,6 +2551,8 @@ void eval_init(void)
   hash_construct_s = intern(lit("hash-construct"), user_package);
   vector_lit_s = intern(lit("vector-lit"), system_package);
   vector_list_s = intern(lit("vector-list"), user_package);
+  macro_time_s = intern(lit("macro-time"), user_package);
+  whole_k = intern(lit("whole"), keyword_package);
 
   sethash(op_table, quote_s, cptr((mem_t *) op_quote));
   sethash(op_table, qquote_s, cptr((mem_t *) op_qquote_error));
@@ -2378,6 +2577,7 @@ void eval_init(void)
   sethash(op_table, or_s, cptr((mem_t *) op_or));
   sethash(op_table, defvar_s, cptr((mem_t *) op_defvar));
   sethash(op_table, defun_s, cptr((mem_t *) op_defun));
+  sethash(op_table, defmacro_s, cptr((mem_t *) op_defmacro));
   sethash(op_table, inc_s, cptr((mem_t *) op_modplace));
   sethash(op_table, dec_s, cptr((mem_t *) op_modplace));
   sethash(op_table, set_s, cptr((mem_t *) op_modplace));
