@@ -91,6 +91,8 @@ val macro_time_s;
 
 val whole_k, env_k;
 
+val last_form_evaled;
+
 val make_env(val vbindings, val fbindings, val up_env)
 {
   val env = make_obj();
@@ -716,6 +718,8 @@ static val do_eval(val form, val env, val ctx_form,
     }
   } else if (consp(form)) {
     val oper = car(form);
+
+    last_form_evaled = form;
 
     if (regexp(oper))
       debug_return (oper);
@@ -2502,7 +2506,7 @@ static val and_fun(val vals)
 
 void eval_init(void)
 {
-  protect(&top_vb, &top_fb, &top_mb, &op_table, (val *) 0);
+  protect(&top_vb, &top_fb, &top_mb, &op_table, &last_form_evaled, (val *) 0);
   top_fb = make_hash(t, nil, nil);
   top_vb = make_hash(t, nil, nil);
   top_mb = make_hash(t, nil, nil);

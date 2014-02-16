@@ -1,5 +1,31 @@
 2014-02-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	In the spirit of the previous hack, here is another hack to
+	alleviate a long-standing pain: when an exception happens in
+	TXR's library somewhere, the program dies without leaving
+	a clue about what code was being evaluated when that happened.
+	What we can do is have the evaluator publish the most recent
+	compound form it has processed by stashing it in a variable.
+	Then when an unhandled exception occurs, we can peek at that
+	and try to pull out source location info.
+
+	* eval.c (last_form_evaled): New variable.
+	(do_eval): When evaluating a compound form, stash it in
+	last_form_evaled.
+	(eval_init): Protect last_form_evaled from gc.
+
+	* eval.h (last_form_evaled): Declared.
+	(eval_error_s): Existing variable declared.
+
+	* unwind.c: Has to include "eval.h" for the above variable
+	and "parser.h" for the source_loc function.
+	(uw_throw): When an exception is unhandled, if 
+	last_form_evaled has source info, add it to the diagnostic.
+	But not if the exception is eval-error; because errors from
+	the evaluators already have the info.
+
+2014-02-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	Nice idea: how about a function which walks the tree structure and
 	back-fills some missing source code location info.  We apply this to
 	macro expansions.  If some error occurs in expanded code, this way it

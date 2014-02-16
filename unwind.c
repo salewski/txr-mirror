@@ -38,6 +38,8 @@
 #include "stream.h"
 #include "txr.h"
 #include "signal.h"
+#include "eval.h"
+#include "parser.h"
 #include "unwind.h"
 
 static uw_frame_t *uw_stack;
@@ -275,10 +277,18 @@ val uw_throw(val sym, val exception)
 
     if (opt_loglevel >= 1) {
       val s = stringp(exception);
+      val info = if2(source_loc(last_form_evaled),
+                     source_loc_str(last_form_evaled));
       format(std_error, lit("~a: unhandled exception of type ~a:\n"),
              prog_string, sym, nao);
+
+      if (info && sym != eval_error_s)
+        format(std_error, lit("~a: possibly triggered by ~a\n"),
+               prog_string, info, nao);
+
       format(std_error, s ? lit("~a: ~a\n") : lit("~a: ~s\n"),
              prog_string, exception, nao);
+      
     }
     if (uw_exception_subtype_p(sym, query_error_s) ||
         uw_exception_subtype_p(sym, file_error_s)) {

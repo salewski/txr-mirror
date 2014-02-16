@@ -26,6 +26,8 @@
 
 extern val dwim_s, vector_lit_s, vector_list_s;
 extern val hash_lit_s, hash_construct_s;
+extern val eval_error_s;
+extern val last_form_evaled;
 
 val make_env(val fbindings, val vbindings, val up_env);
 val env_fbind(val env, val sym, val fun);
