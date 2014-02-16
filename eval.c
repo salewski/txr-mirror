@@ -654,6 +654,11 @@ noarg:
     env_vbind(new_env, params, form);
   }
 
+  if (form)
+    eval_error(ctx_form,
+               lit("~s: extra form part ~s not matched by parameter list"),
+               car(ctx_form), form, nao);
+
   return new_env;
 
 nbind:

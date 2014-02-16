@@ -1,5 +1,10 @@
 2014-02-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (bind_macro_params): Bugfix: enforce mismatch on
+	superfluous material.
+
+2014-02-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	In the spirit of the previous hack, here is another hack to
 	alleviate a long-standing pain: when an exception happens in
 	TXR's library somewhere, the program dies without leaving
