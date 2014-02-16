@@ -668,13 +668,17 @@ modifiers : NUMBER              { $$ = cons($1, nil); }
           | list                { $$ = cons($1, nil); }
           ;
 
-o_var : SYMTOK                  { $$ = list(var_s, sym_helper($1, nil), nao); }
+o_var : SYMTOK                  { $$ = list(var_s, sym_helper($1, nil), nao);
+                                  rl($$, num(lineno)); }
       | SYMTOK o_elem           { $$ = list(var_s, sym_helper($1, nil),
-                                            $2, nao); }
+                                            $2, nao);
+                                  rl($$, num(lineno)); }
       | '{' expr exprs_opt '}' 
-                                { $$ = list(var_s, $2, nil, $3, nao); }
+                                { $$ = list(var_s, $2, nil, $3, nao);
+				  rl($$, num(lineno)); }
       | '{' expr exprs_opt '}' o_elem      
-                                { $$ = list(var_s, $2, $5, $3, nao); }
+                                { $$ = list(var_s, $2, $5, $3, nao);
+				  rl($$, num(lineno)); }
       | SYMTOK error            { $$ = nil;
                                     yybadtoken(yychar, lit("variable spec")); }
       ;
@@ -888,8 +892,10 @@ quasilit : '`' '`'              { $$ = null_string; }
                                   yybadtoken(yychar, lit("string literal")); }
          ;
 
-quasi_items : quasi_item                { $$ = cons($1, nil); }
-            | quasi_item quasi_items    { $$ = cons($1, $2); }
+quasi_items : quasi_item                { $$ = cons($1, nil);
+                                          rl($$, num(lineno)); }
+            | quasi_item quasi_items    { $$ = cons($1, $2);
+                                          rl($$, num(lineno)); }
             ;
 
 quasi_item : litchars           { $$ = lit_char_helper($1); }
@@ -1012,7 +1018,9 @@ static val o_elems_transform(val o_elems)
       val pat = third(elem);
       val modifiers = fourth(elem);
 
-      ptail = list_collect(ptail, list(first(elem), sym, nil, modifiers, nao));
+      ptail = list_collect(ptail,
+			   rlcp(list(first(elem), sym, nil, modifiers, nao),
+				elem));
       elem = pat;
     }
 
@@ -1020,7 +1028,7 @@ static val o_elems_transform(val o_elems)
       ptail = list_collect(ptail, elem);
   }
   
-  return o_elems_out;
+  return rlcp(o_elems_out, o_elems);
 }
 
 static val define_transform(val define_form)

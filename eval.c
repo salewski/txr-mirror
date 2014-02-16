@@ -1736,13 +1736,12 @@ static val expand_quasi(val quasi_forms)
         val expr_ex = expand(rest(form));
 
         if (expr_ex != rest(form))
-          form_ex = cons(sym, expr_ex);
-
+          form_ex = rlcp(cons(sym, expr_ex), form);
       } 
     }
 
     if (form != form_ex)
-      return cons(form_ex, expand_quasi(rest(quasi_forms)));
+      return rlcp(cons(form_ex, expand_quasi(rest(quasi_forms))), quasi_forms);
     return quasi_forms;
   }
 }

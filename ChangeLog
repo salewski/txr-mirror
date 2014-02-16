@@ -1,5 +1,13 @@
 2014-02-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	Bugfixes: not propagating source loc info in quasiliterals.
+
+	* eval.c (expand_quasi): Add some rlcp's here.
+
+	* parser.y (o_var, quasi_items, o_elems_transform): Likewise.
+
+2014-02-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (expand): Replace blatant tail calls with
 	a backwards goto.
 
