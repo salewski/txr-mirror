@@ -12506,13 +12506,161 @@ stream: it is the part starting at "omega", which is line 3. Note that the
 binding for for line variable does not propagate out of the pattern function
 foo; it is local inside it. 
 
+.SH MACROS
+
+TXR Lisp supports structural macros. TXR's model of macroexpansion is that TXR
+Lisp code is processed in two phases: the expansion phase and the evaluation
+phase. The expansion phase is invoked on Lisp code early during the processing
+of source code. For instance when a TXR File containing a @(do ...) directive
+is loaded, expansion of the Lisp forms are its arguments takes place during the
+parsing of the entire source file, and is complete before any of the code in
+that file is executed. If and when the @(do ...) form is later executed,
+the expanded forms are evaluated.
+
+When Lisp data is processed as code by the eval function, it is first expanded,
+and so processed in its entirety in the expansion phase. Then it is processed
+in the evaluation phase.
+
+.SS Macro parameter lists.
+
+TXR macros support destructuring, similarly to Common Lisp macros.
+This means that macro parameter lists are like function argument lists,
+but support nesting. A macro parameter list can specify a nested parameter
+list in every place where a function argument list allows only a parameter
+name. For instance, consider this macro parameter list:
+
+  ((a (b c)) : (c frm) ((d e) frm2 de-p) . g)
+
+The top level of this list has four elements: the mandatory parameter (a (b
+c)), the optional parameter c (with default init form frm), the optional
+parameter (d e) with default init form frm2 and presence-indicating variable
+de-p, and the parameter g which captures trailing arguments.
+
+Note that some of the parameters are compounds: (a (b c)) and (d e).
+These compounds express nested macro parameter lists.
+
+Macro parameter lists match a similar tree structure to their own.
+For instance a mandatory parameter (a (b c)) matches a structure like
+(1 (2 3)), such that the parameters a, b and c will end up bound
+to 1, 2, and 3, respectively.
+
+The binding strictness is relaxed for optional parameters. If (a (b c))
+is optional, and the argument is, say, (1), then a gets 1, and b and c
+receive nil. 
+
+Macro parameter lists also support two special keywords, namely :env and :whole.
+
+The parameter list (:whole x :env y) will bind parameter x to the entire
+macro form, and y will bind parameter y to the macro environment.
+(Note: Macro environments currently do not do anything in TXR Lisp; this
+functionality is for future expansion.)   The :whole and :env notation
+can occur anywhere in a macro parameter list.
+
+.SS Operator macro-time
+
+.TP
+Syntax:
+
+  (macro-time {<form>}*)
+
+.TP
+Description:
+
+The macro-time operator has a syntax similar to a progn form. The forms are
+evaluated from left to right, and the resulting value is that of the last form.
+
+The special behavior of macro-time is that the evaluation takes place during
+the expansion phase, rather than during the evaluation phase.
+
+During the expansion phase, all macro-time expressions which occur in a context
+that calls for evaluation are evaluated, and replaced by their quoted values.
+For instance (macro-time (list 1 2 3)) evaluates (list 1 2 3) to the object (1
+2 3) and the entire macro-time form is replaced by the quoted list '(1 2 3).
+If the form is evaluated again at evaluation-time, the resulting value will be
+that of the quote.
+
+macro-time forms do not see the lexical environment; the see only top-level
+function and variable bindings and macros.
+
+Note 1: macro-time is intended for defining helper functions and variables that
+are used by macros. A macro cannot "see" a defun function or defvar variable
+because defun and defvar forms are evaluated at evaluation time, which occurs
+after expansion time.  The macro-time operator hoists the evaluation of these
+forms to macro-expansion time. 
+
+Note 2: defmacro forms are implicitly in macro-time; they do not have to
+be wrapped with the macro-time operator. The macro-time operator doesn't have
+to be used in programs whose macros do not make references to variables
+or functions.
+
+.SS Operator defmacro
+
+.TP
+Syntax:
+
+  (defmacro <name> (<param>* [: <opt-param>*] [. <rest-param>]) <body-form>*)
+
+.TP
+Description:
+
+The defmacro operator is evaluated at expansion-time. It defines a 
+macro-expander function under the name <name>, effectively creating
+a new operator. 
+
+Note that the parameter list is a macro parameter list, and not a
+function parameter list. This means that each <param> can have not
+only the syntax <symbol> but it can itself be a parameter list.
+The corresponding argument is then treated as an argument list.
+Similarly, each symbol in the <opt-param> syntax can be an argument list.
+
+This nesting can be carried to an arbitrary depth.
+
+A macro is called like any other operator, and resembles a function.  Unlike in
+a function call, the macro receives the argument expressions themselves, rather
+than their values.  Therefore it operates on syntax rather than on values.
+Also, unlike a function call, a macro call occurs in the expansion phase,
+rather than the evaluation phase. 
+
+The return value of the macro is is the macro expansion. It is substituted in
+place of the entire macro call form. That form is then expanded again;
+it may itself be another macro call, or contain more macro calls.
+
+.TP
+Examples:
+
+   ;; A macro to swap two places, such as variables.
+   ;; (swap x y) will now exchange the contents of x and y.
+
+   (defmacro swap (a b)
+     (let ((temp (gensym)))
+       '(let ((,temp ,a))
+          (set ,a ,b)
+          (set ,b ,temp))))
+
+
+   ;; dolist macro similar to Common Lisp's:
+   ;;
+   ;; The following will print 1, 2 and 3 on separate lines:
+   ;; and return 42.
+   ;;
+   ;; (dolist (x '(1 2 3) 42)
+   ;;   (format t "~s\en"))
+
+   (defmacro dolist ((var list : result) . body)
+     (let ((i (my-gensym)))
+       '(for ((i ,list)) (i ,result) ((set i (cdr i)))
+          (let ((,var (car i)))
+            ,*body))))
+
 .SH DEBUGGING FUNCTIONS
 
 .SS Functions source-loc and source-loc-str
 
 .TP
-(source-loc <form>)
-(source-loc-str <form>)
+Syntax:
+
+  (source-loc <form>)
+  (source-loc-str <form>)
 
 .TP
 Description:
@@ -12528,6 +12676,23 @@ The source-loc-str function formats the information as a string.
 If <form> is not a piece of the program source code that was constructed by the
 TXR parser, then source-loc returns nil, and source-loc-str returns a string
 whose text says that source location is not available.
+
+.SS Function rlcp
+
+.TP
+Syntax:
+
+  (rlcp <dest-form> <source-form>)
+
+The rlcp function copies the source code location info (rl = read location)
+from the <source-form> object to the <dest-form> object. These objects
+are pieces of list-based syntax.
+
+Note: the function is intended to be used in macros. If a macro transforms
+<source-form> to <dest-form>, this function can be used to propagate the
+source code location info also, so that when the TXR Lisp evaluator
+encounters errors in transformed code, it can give diagnostics which refer
+to the original untransformed source code.
 
 .SH MODULARIZATION
 

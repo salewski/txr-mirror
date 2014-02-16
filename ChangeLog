@@ -1,5 +1,15 @@
 2014-02-15  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (bind_macro_params): Bugfix: the :whole parameter must
+	capture the entire form, not just the arguments.
+	(expand): Apply rlcp to the result of macro expansion, if it has
+	not set up source code location.
+	(eval_init): Register rlcp as intrinsic.
+
+	* txr.1: Start of macro documentation. Documented rlcp.
+
+2014-02-15  Kaz Kylheku  <kaz@kylheku.com>
+
 	First cut at implementation of macros.
 
 	* eval.c (top_mb, defmacro_s, macro_time_s, whole_k, env_k): New global

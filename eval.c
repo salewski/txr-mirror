@@ -533,7 +533,7 @@ static val bind_macro_params(val env, val mac_env, val params, val form,
 {
   val new_env = make_env(nil, nil, env);
   val err_sym = nil;
-  val whole = params;
+  val whole = form;
   val optargs = nil;
 
   while (consp(params)) {
@@ -2084,6 +2084,8 @@ val expand(val form)
       val mac_expand = expand_macro(form_ex, macro, make_env(nil, nil, nil));
       if (mac_expand == form)
         return form;
+      if (!source_loc(mac_expand))
+        rlcp(mac_expand, form);
       return expand(mac_expand);
     } else {
       /* funtion call
@@ -3100,6 +3102,7 @@ void eval_init(void)
 
   reg_fun(intern(lit("source-loc"), user_package), func_n1(source_loc));
   reg_fun(intern(lit("source-loc-str"), user_package), func_n1(source_loc_str));
+  reg_fun(intern(lit("rlcp"), user_package), func_n2(rlcp));
 
   reg_var(intern(lit("*self-path*"), user_package), &self_path);
 
