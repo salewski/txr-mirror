@@ -1,5 +1,14 @@
 2014-02-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (op_tree_case): Removed superfluous handling of
+	nil parameter list; this is correctly handled by bind_macro_params.
+	Added support for the colon symbol as an indication that
+	the case is declined.
+
+	* txr.1: Updated.
+
+2014-02-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	New destructuring operators.
 
 	* eval.c (tree_case_s, tree_bind_s): New symbol variables.

@@ -1107,15 +1107,12 @@ static val op_tree_case(val form, val env)
   for (; consp(cases); cases = cdr(cases)) {
     val onecase = car(cases);
     cons_bind (params, forms, onecase);
-
-    if (!params) {
-      if (!expr_val)
-        return eval_progn(forms, env, forms);
-    } else {
-      val new_env = bind_macro_params(env, nil, params, expr_val,
+    val new_env = bind_macro_params(env, nil, params, expr_val,
                                       colon_k, onecase);
-      if (new_env)
-        return eval_progn(forms, new_env, forms);
+    if (new_env) {
+      val ret = eval_progn(forms, new_env, forms);
+      if (ret != colon_k)
+        return ret;
     }
   }
 

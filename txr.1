@@ -12689,9 +12689,14 @@ style parameter list <macro-style-params>.
 
 If the object produced by <expr> matches <macro-style-params>, then the
 parameters are bound, becoming local variables, and the <form>-s, if any, are
-evaluated in order in the environment in which those variables are visible. The
-evaluation of tree-case then ends, returning the value of the last <form>, or
-else nil if there are no forms.
+evaluated in order in the environment in which those variables are visible. 
+
+If there are forms, the value of the last <form> becomes the result value of
+the case, otherwise the result value of the case is nil.
+
+If the result value of a case is the object : (the colon symbol), then
+processing continues with the next case. Otherwise the evaluation of tree-case
+terminates, returning the result value.
 
 If the value of <expr> does not match the <macro-style-params> parameter
 list, then the usual exception is thrown; instead, processing continues
