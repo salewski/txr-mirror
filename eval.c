@@ -76,7 +76,7 @@ val op_table;
 
 val eval_error_s;
 val dwim_s, progn_s, prog1_s, let_s, let_star_s, lambda_s, call_s;
-val cond_s, if_s, defvar_s, defun_s, defmacro_s;
+val cond_s, if_s, defvar_s, defun_s, defmacro_s, tree_case_s, tree_bind_s;
 val inc_s, dec_s, push_s, pop_s, flip_s, gethash_s, car_s, cdr_s;
 val del_s, vecref_s;
 val for_s, for_star_s, each_s, each_star_s, collect_each_s, collect_each_star_s;
@@ -565,12 +565,12 @@ static val bind_macro_params(val env, val mac_env, val params, val form,
       continue;
     } 
 
-    if (car(form) == colon_k) {
-      form = cdr(form);
-      goto noarg;
-    }
-
     if (consp(form)) {
+      if (car(form) == colon_k) {
+        form = cdr(form);
+        goto noarg;
+      }
+
       if (bindable(param)) {
         env_vbind(new_env, param, car(form));
       } else if (consp(param)) {
@@ -595,6 +595,8 @@ static val bind_macro_params(val env, val mac_env, val params, val form,
           new_env = bind_macro_params(new_env, mac_env,
                                       param, car(form),
                                       loose_p, ctx_form);
+          if (!new_env)
+            return nil;
         }
       } else {
         err_sym = param;
@@ -605,13 +607,19 @@ static val bind_macro_params(val env, val mac_env, val params, val form,
       continue;
     }
 
-    if (form)
+    if (form) {
+      if (loose_p == colon_k)
+        return nil;
       eval_error(ctx_form, lit("~s: atom ~s not matched by parameter list"),
                  car(ctx_form), form, nao);
+    }
 
-    if (!optargs && !loose_p) {
-      eval_error(ctx_form, lit("~s: insufficient number of arguments"),
-                 car(ctx_form), nao);
+    if (!optargs) {
+      if (!loose_p)
+        eval_error(ctx_form, lit("~s: insufficient number of arguments"),
+                   car(ctx_form), nao);
+      if (loose_p == colon_k)
+        return nil;
     }
 
 noarg:
@@ -652,12 +660,16 @@ noarg:
       goto nbind;
     }
     env_vbind(new_env, params, form);
+    return new_env;
   }
 
-  if (form)
+  if (form) {
+    if (loose_p == colon_k)
+      return nil;
     eval_error(ctx_form,
                lit("~s: extra form part ~s not matched by parameter list"),
                car(ctx_form), form, nao);
+  }
 
   return new_env;
 
@@ -1083,6 +1095,83 @@ static val expand_macro(val form, val expander, val mac_env)
   debug_return(eval_progn(body, exp_env, body));
   debug_end;
   debug_leave;
+}
+
+static val op_tree_case(val form, val env)
+{
+  val cases = form;
+  val expr = (pop(&cases), pop(&cases));
+
+  val expr_val = eval(expr, env, form);
+
+  for (; consp(cases); cases = cdr(cases)) {
+    val onecase = car(cases);
+    cons_bind (params, forms, onecase);
+
+    if (!params) {
+      if (!expr_val)
+        return eval_progn(forms, env, forms);
+    } else {
+      val new_env = bind_macro_params(env, nil, params, expr_val,
+                                      colon_k, onecase);
+      if (new_env)
+        return eval_progn(forms, new_env, forms);
+    }
+  }
+
+  return nil;
+}
+
+static val expand_tree_cases(val cases)
+{
+  if (atom(cases)) {
+    return cases;
+  } else {
+    val onecase = car(cases);
+
+    if (atom(onecase)) {
+      val rest_ex = expand_tree_cases(cdr(cases));
+      if (rest_ex == cdr(cases))
+        return cases;
+      return rlcp(cons(onecase, rest_ex), cases);
+    } else {
+      val dstr_args = car(onecase);
+      val forms = cdr(onecase);
+      val dstr_args_ex = expand_params(dstr_args);
+      val forms_ex = expand_forms(forms);
+      val rest_ex = expand_tree_cases(cdr(cases));
+
+      if (dstr_args_ex == dstr_args && forms_ex == forms &&
+          rest_ex == cdr(cases))
+        return cases;
+
+      return rlcp(cons(cons(dstr_args_ex, forms_ex), rest_ex), cases);
+    }
+  }
+}
+
+static val expand_tree_case(val form)
+{
+  val sym = first(form);
+  val expr = second(form);
+  val tree_cases = rest(rest(form));
+  val expr_ex = expand(expr);
+  val tree_cases_ex = expand_tree_cases(tree_cases);
+
+  if (expr_ex == expr && tree_cases_ex == tree_cases)
+    return form;
+
+  return rlcp(cons(sym, cons(expr_ex, tree_cases_ex)), form);
+}
+
+static val op_tree_bind(val form, val env)
+{
+  val params = second(form);
+  val expr = third(form);
+  val body = rest(rest(rest(form)));
+  val expr_val = eval(expr, env, expr);
+  val new_env = bind_macro_params(env, nil, params, expr_val, nil, form);
+  return eval_progn(body, new_env, body);
 }
 
 static val op_modplace(val form, val env);
@@ -2001,6 +2090,19 @@ tail:
         return cons(quote_s, cons(result, nil));
       }
       return form_ex;
+    } else if (sym == tree_case_s) {
+      return expand_tree_case(form);
+    } else if (sym == tree_bind_s) {
+      val params = second(form);
+      val expr = third(form);
+      val body = rest(rest(rest(form)));
+      val params_ex = expand_params(params);
+      val expr_ex = expand(expr);
+      val body_ex = expand_forms(body);
+
+      if (params_ex == params && expr_ex == expr && body_ex == body)
+        return form;
+      return rlcp(cons(sym, cons(params_ex, cons(expr_ex, body_ex))), form);
     } else if (sym == set_s || sym == inc_s || sym == dec_s) {
       val place = second(form);
       val inc = third(form);
@@ -2529,6 +2631,8 @@ void eval_init(void)
   defvar_s = intern(lit("defvar"), user_package);
   defun_s = intern(lit("defun"), user_package);
   defmacro_s = intern(lit("defmacro"), user_package);
+  tree_case_s = intern(lit("tree-case"), user_package);
+  tree_bind_s = intern(lit("tree-bind"), user_package);
   inc_s = intern(lit("inc"), user_package);
   dec_s = intern(lit("dec"), user_package);
   push_s = intern(lit("push"), user_package);
@@ -2591,6 +2695,8 @@ void eval_init(void)
   sethash(op_table, defvar_s, cptr((mem_t *) op_defvar));
   sethash(op_table, defun_s, cptr((mem_t *) op_defun));
   sethash(op_table, defmacro_s, cptr((mem_t *) op_defmacro));
+  sethash(op_table, tree_case_s, cptr((mem_t *) op_tree_case));
+  sethash(op_table, tree_bind_s, cptr((mem_t *) op_tree_bind));
   sethash(op_table, inc_s, cptr((mem_t *) op_modplace));
   sethash(op_table, dec_s, cptr((mem_t *) op_modplace));
   sethash(op_table, set_s, cptr((mem_t *) op_modplace));

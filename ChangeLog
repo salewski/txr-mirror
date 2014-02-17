@@ -1,5 +1,24 @@
 2014-02-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	New destructuring operators.
+
+	* eval.c (tree_case_s, tree_bind_s): New symbol variables.
+	(bind_macro_params): Bugfix: inappropriate exception thrown when atom
+	matched against parameter list. Bugfix: nil being returned when
+	atom matches empty parameter list. Added support for a new convention:
+	if loose_p is the colon keyword, then exceptions are not thrown
+	for destructuring mismatches; nil is returned instad.
+	(op_tree_case, expand_tree_cases, expand_tree_case, op_tree_bind):
+	New static functions.
+	(expand): Handle tree_case_s and tree_bind_s.
+	(eval_init): Intern tree-case and tree-bind symbols.
+	Register the corresponding operator functions op_tree_case and
+	op_tree_bind under these symbols in op_table.
+
+	* txr.1: Documented tree-case and tree-bind operators.
+
+2014-02-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (bind_macro_params): Bugfix: enforce mismatch on
 	superfluous material.
 

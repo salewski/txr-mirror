@@ -12652,6 +12652,72 @@ Examples:
           (let ((,var (car i)))
             ,*body))))
 
+.SS Operator tree-bind
+
+.TP
+Syntax:
+
+  (tree-bind <macro-style-params> <expr> <form>*)
+
+.TP
+Description:
+
+The tree-bind operator evaluates <expr>, and then uses the
+resulting value as a counterpart to a macro-style parameter list.
+If the value has a tree structure which matches the parameters,
+then those parameters are established as bindings, and the
+<form>-s, if any, are evaluated in the scope of those bindings.  The value
+of the last <form> is returned. If there are no forms,
+nil is returned.
+
+Note: this operator throws an exception if there is a mismatch
+between the parameters and the value of <expr>.
+
+.SS Operator tree-case
+
+.TP
+Syntax:
+
+  (tree-case <expr> { (<macro-style-params> <form>*) }*)
+
+.TP
+Description:
+
+The tree case operator evaluates <expr> and matches it against a succession
+of zero or more cases. Each case defines a pattern match, expressed as a macro
+style parameter list <macro-style-params>. 
+
+If the object produced by <expr> matches <macro-style-params>, then the
+parameters are bound, becoming local variables, and the <form>-s, if any, are
+evaluated in order in the environment in which those variables are visible. The
+evaluation of tree-case then ends, returning the value of the last <form>, or
+else nil if there are no forms.
+
+If the value of <expr> does not match the <macro-style-params> parameter
+list, then the usual exception is thrown; instead, processing continues
+with the next case.
+
+If no cases match, then tree-case terminates, returning nil.
+
+.SS
+Example:
+
+   ;; reverse function implemented using tree-case
+
+   (defun tb-reverse (obj)
+     (tree-case obj
+       (() ())      ;; the empty list is just returned
+       ((a) obj)    ;; one-element list just returned (unnecessary case)
+       ((a . b) '(,*(tb-reverse b) ,a)) ;; car/cdr recursion
+       (a a)))     ;; atom is just returned
+
+Note that in this example, the atom case is placed last, because an
+argument list which consists of a symbol is a "catch all" match
+that matches any object. We know that it matches an atom, because
+the previous (a . b) case matches conses. In general, the order of the cases in
+tree-case is important. Also note that the one-element case can be
+removed.
+
 .SH DEBUGGING FUNCTIONS
 
 .SS Functions source-loc and source-loc-str
