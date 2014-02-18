@@ -321,7 +321,7 @@ static val bind_args(val env, val params, val args, val ctx_form)
     if (bindable(params))
       env_vbind(new_env, params, nil);
   } else if (params) {
-    eval_error(ctx_form, lit("~s: ~s is not a bindable sybol"),
+    eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
                car(ctx_form), params, nao);
   } else if (args) {
     eval_error(ctx_form, lit("~s: too many arguments"), car(ctx_form), nao);
@@ -1017,7 +1017,7 @@ static val op_defvar(val form, val env)
   val sym = first(args);
 
   if (!bindable(sym))
-    eval_error(form, lit("let: ~s is not a bindable sybol"), sym, nao);
+    eval_error(form, lit("let: ~s is not a bindable symbol"), sym, nao);
 
   {
     if (!gethash(top_vb, sym)) {
@@ -1041,7 +1041,7 @@ static val op_defun(val form, val env)
   val colon = nil;
 
   if (!bindable(name))
-    eval_error(form, lit("defun: ~s is not a bindable sybol"), name, nao);
+    eval_error(form, lit("defun: ~s is not a bindable symbol"), name, nao);
 
   for (iter = params; consp(iter); iter = cdr(iter)) {
     val param = car(iter);
@@ -1075,7 +1075,7 @@ static val op_defmacro(val form, val env)
   val block = cons(block_s, cons(name, body));
 
   if (!bindable(name))
-    eval_error(form, lit("defmacro: ~s is not a bindable sybol"), name, nao);
+    eval_error(form, lit("defmacro: ~s is not a bindable symbol"), name, nao);
 
   /* defmacro captures lexical environment, so env is passed */
   sethash(top_mb, name, cons(name, cons(env, cons(params, cons(block, nil)))));
@@ -1354,7 +1354,7 @@ static val op_modplace(val form, val env)
 
   if (symbolp(place)) {
     if (!bindable(place))
-      eval_error(form, lit("~s: ~s is not a bindable sybol"), op, place, nao);
+      eval_error(form, lit("~s: ~s is not a bindable symbol"), op, place, nao);
     loc = lookup_var_l(env, place);
     if (!loc)
       eval_error(form, lit("unbound variable ~s"), place, nao);

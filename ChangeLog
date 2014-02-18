@@ -1,5 +1,10 @@
 2014-02-17  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (bind_args, op_defvar, op_defun, op_defmacro, op_modplace):
+	Fix sybol misspelling.
+
+2014-02-17  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Register gensym function as the gensym
 	intrinsic, rather than gensymv.
 	Register gensym_counter as *gensym-counter*.
