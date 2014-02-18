@@ -1,5 +1,17 @@
 2014-02-17  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 80
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES, txr.vim, dep.mk: Updated.
+
+2014-02-17  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (bind_args, op_defvar, op_defun, op_defmacro, op_modplace):
 	Fix sybol misspelling.
 

@@ -1,3 +1,58 @@
+                                     TXR 80
+                                   2014-02-17
+
+
+  Features
+
+  - TXR now nicely handles null characters in text stream inputs.
+    They are internally encoded to the Unicode value U+DC00,
+    which will map back to a single null byte on output (that being
+    existing behavior).
+
+  - TXR now has Lisp macros: the defmacro operator is implemented,
+    with destructuring lambda lists and all.
+
+  - New operators tree-bind and tree-case for pattern binding similar
+    to Common Lisp's destructuring. This piggybacks off the defmacro
+    infrastructure which we now have.
+
+  - Big improvement in debuggability: the unhandled exception error message now
+    gives source code location information.
+
+  - New functions pos, pos-if, posq, posql and posqual for finding item
+    positions in sequences.
+
+  - Predicate function is now optional in the some, all and none functions.
+
+  - hash-uni and hash-isec functions take a join-func argument which
+    lets you specify how elements from two tables are merged.
+
+  - new hash table functions inhash and hash-update-1.
+
+  - two hashes can now be tested for deep equality using equal.
+
+  Bugs
+
+  - Removed bogus optimization from hash table implementation.
+
+  - Syntactic fix: input like 1.0a no longer parses as a floating-point number
+    followed by a symbol, but is diagnosed as an error. Syntax like 123a
+    continues to work as before: it denotes one symbol, not 123
+    followed by a.
+
+  - Bugfix in type check for "cobj" class objects that would crash if
+    given non-heaped values like fixnum integers.
+
+  - Corrected problems in the code walking and expansion of lambda and
+    defun forms.
+
+  - Fixed failure to propagate line number info through the abstract syntax
+    of string quasiliterals.
+
+  - Doc bugs: missing descriptions of gethash and gensym.
+
+
+
                                      TXR 79
                                    2014-02-11
 
