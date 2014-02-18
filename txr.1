@@ -11628,9 +11628,16 @@ the same conventions as the mode argument of the C language fopen function.
 The mode string determines whether the stream is an input stream
 or output stream. Note that the "b" mode is not supported.
 Whether a stream is text or binary depends on which operations
-are invoked on it. The <seek-to-end-p> argument is a boolean whcih
-determines whether the initial read/write position is at the
-start of the file, or just past the end.
+are invoked on it. 
+
+The <seek-to-end-p> argument is a boolean which determines whether the initial
+read/write position is at the start of the file, or just past the end.  This
+argument only makes a difference if the file exists at the time open-tail is
+called. If the file does not exist, and is later created, then the tail stream
+will follow that file from the beginning.  In other words, <seek-to-end-p>
+controls whether the tail stream reads all the existing data in the file, if
+any, or whether it reads only newly added data from approximately the time the
+stream is created.
 
 A tail stream has special semantics with regard to reading at the end
 of file. A tail stream never reports an end-of-file condition; instead

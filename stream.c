@@ -2082,14 +2082,21 @@ val open_file(val path, val mode_str)
 
 val open_tail(val path, val mode_str, val seek_end_p)
 {
+  FILE *f = w_fopen(c_str(path), c_str(mode_str));
   struct stdio_handle *h;
   val stream;
   unsigned long state = 0;
 
-  stream = make_tail_stream(0, path);
+  if (f && seek_end_p)
+    if (fseek(f, 0, SEEK_END) < 0)
+      uw_throwf(file_error_s, lit("error seeking to end of ~a: ~a/~s"),
+                path, num(errno), string_utf8(strerror(errno)), nao);
+
+  stream = make_tail_stream(f, path);
   h = (struct stdio_handle *) stream->co.handle;
   h->mode = mode_str;
-  tail_strategy(stream, &state);
+  if (!f)
+    tail_strategy(stream, &state);
   return stream;
 }
 

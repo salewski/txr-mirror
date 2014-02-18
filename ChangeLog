@@ -1,5 +1,14 @@
 2014-02-18  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (open_tail): Fix 2013-12-02 regression:
+	seek_to_end_p argument being ignored, with the
+	behavior being no initial seek to the end.
+
+	* txr.1: Clarified the behavior of the seek-to-end-p
+	option.
+
+2014-02-18  Kaz Kylheku  <kaz@kylheku.com>
+
 	* combi.c (rperm_gen_full): Update ptail with return value
 	of list_collect. This is not necessary for correctness, but it spares
 	list_collect from having to search for the tail on each call.
