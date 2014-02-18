@@ -244,7 +244,7 @@ static val rperm_gen_fun(val env)
   cnum len = c_num(length_vec(vec));
 
   for (i = 0; i < len; i++)
-    list_collect(ptail, car(vec->v.vec[i]));
+    ptail = list_collect(ptail, car(vec->v.vec[i]));
 
   for (i = len-1; i >= 0; i--) {
     pop(&vec->v.vec[i]);
