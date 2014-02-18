@@ -11734,6 +11734,35 @@ does not belong to any package (it is said to be "uninterned").
 Note: an uninterned symbol can be interned into a package with the rehome-sym
 function. Also see the intern function.
 
+.SS Function gensym
+
+.TP
+Syntax:
+
+  (gensym [<prefix>])
+
+Description
+
+The gensym function is similar to make-sym. It creates and returns a new
+symbol object. If the <prefix> argument is omitted, it defaults to "g".
+Otherwise it must be a string.
+
+The difference between gensym and make-sym is that gensym creates the name
+by combining the prefix with a numeric suffix.
+
+The numeric sufix is a decimal digit string, taken from the value of
+the variable *gensym-counter*, after incrementing it.
+
+Note: the variation in name is not the basis of the uniqueness of gensym; the
+basis of its uniqueness is that it is a freshly instantiated object. make-sym
+also returns unique symbols even if repeatedly called with the same string.
+
+.SS Variable *gensym-counter*
+
+This variable is initialized to 0. Each time the gensym function is called,
+it is incremented. The incremented value forms the basis of the numeric
+suffix which gensym uses to form the name of the new symbol.
+
 .SS Function make-package
 
 .TP

@@ -2964,7 +2964,8 @@ void eval_init(void)
   reg_var(intern(lit("*keyword-package*"), user_package), &keyword_package);
   reg_var(intern(lit("*system-package*"), user_package), &system_package);
   reg_fun(intern(lit("make-sym"), user_package), func_n1(make_sym));
-  reg_fun(intern(lit("gensym"), user_package), func_n0v(gensymv));
+  reg_fun(intern(lit("gensym"), user_package), func_n1o(gensym, 0));
+  reg_var(intern(lit("*gensym-counter*"), user_package), &gensym_counter);
   reg_fun(intern(lit("make-package"), user_package), func_n1(make_package));
   reg_fun(intern(lit("find-package"), user_package), func_n1(find_package));
   reg_fun(intern(lit("delete-package"), user_package), func_n1(delete_package));

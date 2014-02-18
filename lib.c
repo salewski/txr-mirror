@@ -2703,16 +2703,10 @@ val make_sym(val name)
 
 val gensym(val prefix)
 {
+  prefix = default_arg(prefix, lit("g"));
   val name = format(nil, lit("~a~,04a"), prefix,
                     gensym_counter = plus(gensym_counter, one), nao);
   return make_sym(name);
-}
-
-val gensymv(val args)
-{
-  uses_or2;
-  val prefix = or2(car(args), lit("g"));
-  return gensym(prefix);
 }
 
 val make_package(val name)

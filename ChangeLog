@@ -1,5 +1,20 @@
 2014-02-17  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Register gensym function as the gensym
+	intrinsic, rather than gensymv.
+	Register gensym_counter as *gensym-counter*.
+
+	* lib.c (gensym): Handle missing prefix argument by defaulting
+	the prefix to "g".
+	(gensymv): Function removed.
+
+	* lib.h (gensymv): Declaration removed.
+
+	* txr.1: Fixed omission: missing documentation for gensym.
+	Documented *gensym-counter*.
+
+2014-02-17  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (expand): Bugfix: do not expand any part of the macro
 	form via expand_forms. This is completely wrong since only the
 	macro knows what material is evaluated and what isn't.
