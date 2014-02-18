@@ -11450,7 +11450,7 @@ the stream. If two or more stream types support a property of the same name, it
 is expected that the property has the same or very similar meaning for both
 streams to the maximum extent that similarity is possible possible.
 
-The stream-set-prop fucntion sets a property on a stream. The <indicator>
+The stream-set-prop function sets a property on a stream. The <indicator>
 argument is a symbol, usually a keyword symbol, denoting the property,
 and <value> is the property value. If the stream understands and accepts the
 property, the function returns t. Otherwise it returns nil.
@@ -11482,7 +11482,7 @@ Description
 The make-catenated-stream function takes zero or more arguments which
 are input streams of the same type.
 
-A concatenaed stream does not support seeking operations or output,
+A catenated stream does not support seeking operations or output,
 regardless of the capabilities of the streams in the list.
 
 If the stream list is not empty, then the leftmost element of the
