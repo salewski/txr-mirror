@@ -2188,10 +2188,7 @@ tail:
       val result = eval_progn(args_ex, make_env(nil, nil, nil), args);
       return cons(quote_s, cons(result, nil));
     } else if ((macro = gethash(top_mb, sym))) {
-      val args = rest(form);
-      val args_ex = expand_forms(args);
-      val form_ex = if3(args_ex == args, form, cons(sym, args_ex));
-      val mac_expand = expand_macro(form_ex, macro, make_env(nil, nil, nil));
+      val mac_expand = expand_macro(form, macro, make_env(nil, nil, nil));
       if (mac_expand == form)
         return form;
       rlcp_tree(mac_expand, form);

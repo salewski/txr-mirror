@@ -1,3 +1,9 @@
+2014-02-17  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (expand): Bugfix: do not expand any part of the macro
+	form via expand_forms. This is completely wrong since only the
+	macro knows what material is evaluated and what isn't.
+
 2014-02-16  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (op_tree_case): Removed superfluous handling of
