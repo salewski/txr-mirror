@@ -11598,13 +11598,14 @@ The . and .. entries in Unix filesystems are not skipped.
 .TP
 Syntax:
 
-  (open-file <path> <mode-string>)
+  (open-file <path> [<mode-string>])
 
 .TP
 Description:
 
 The open-file function creates a stream connected to the file
 which is located at the given <path>, which is a string.
+
 The <mode-string> argument is a string which uses the same
 conventions as the mode argument of the C language fopen function.
 The mode string determines whether the stream is an input stream
@@ -11612,12 +11613,14 @@ or output stream. Note that the "b" mode is not supported.
 Whether a stream is text or binary depends on which operations
 are invoked on it.
 
+If the <mode-string> argument is omitted, the mode "r" is used.
+
 .SS Function open-tail
 
 .TP
 Syntax:
 
-  (open-tail <path> <mode-string> <seek-to-end-p>)
+  (open-tail <path> [ [<mode-string>] <seek-to-end-p> ])
 
 .TP
 Description:
@@ -11625,19 +11628,18 @@ Description:
 The open-tail function creates a tail stream connected to the file which is
 located at the given <path>.  The <mode-string> argument is a string which uses
 the same conventions as the mode argument of the C language fopen function.
-The mode string determines whether the stream is an input stream
-or output stream. Note that the "b" mode is not supported.
-Whether a stream is text or binary depends on which operations
-are invoked on it. 
+If it is missing, it defaults to "r".  Note that the "b" mode is not supported.
+Whether a stream is text or binary depends on which operations are invoked on
+it. 
 
 The <seek-to-end-p> argument is a boolean which determines whether the initial
-read/write position is at the start of the file, or just past the end.  This
-argument only makes a difference if the file exists at the time open-tail is
-called. If the file does not exist, and is later created, then the tail stream
-will follow that file from the beginning.  In other words, <seek-to-end-p>
-controls whether the tail stream reads all the existing data in the file, if
-any, or whether it reads only newly added data from approximately the time the
-stream is created.
+read/write position is at the start of the file, or just past the end.
+It defaults to nil.  This argument only makes a difference if the file exists
+at the time open-tail is called. If the file does not exist, and is later
+created, then the tail stream will follow that file from the beginning.  In
+other words, <seek-to-end-p> controls whether the tail stream reads all the
+existing data in the file, if any, or whether it reads only newly added data
+from approximately the time the stream is created.
 
 A tail stream has special semantics with regard to reading at the end
 of file. A tail stream never reports an end-of-file condition; instead
@@ -11658,7 +11660,7 @@ changes the current working directory, and the path name is relative.
 .TP
 Syntax:
 
-  (open-command <system-command> <mode-string>)
+  (open-command <system-command> [<mode-string>])
   (open-process <command> <mode-string> [<argument-strings>])
 
 .TP
@@ -11668,6 +11670,9 @@ These functions spawn external programs which execute concurrently
 with the TXR program. Both functions return a unidirectional stream for
 communicating with these programs: either an output stream, or an input
 stream, depending on the contents of <mode-string>.
+
+In open-command, the <mode-string> argument is optional, defaulting to
+the value "r" if it is missing.
 
 The open-command function accepts, via the <system-command> string parameter, a
 system command, which is in a system-dependent syntax. On a POSIX system, this

@@ -1,5 +1,17 @@
 2014-02-18  Kaz Kylheku  <kaz@kylheku.com>
 
+	The mode argument in some stream-opening functions becomes optional.
+
+	* eval.c (eval_init): Change registration for open_file, open_tail
+	and open_command.
+
+	* stream.c (open_file, open_tail, open_command): mode_str argument
+	defaulted.
+
+	* txr.1: Updated.
+
+2014-02-18  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (open_tail): Fix 2013-12-02 regression:
 	seek_to_end_p argument being ignored, with the
 	behavior being no initial seek to the end.

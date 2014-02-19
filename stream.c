@@ -2071,7 +2071,7 @@ val open_directory(val path)
 
 val open_file(val path, val mode_str)
 {
-  FILE *f = w_fopen(c_str(path), c_str(mode_str));
+  FILE *f = w_fopen(c_str(path), c_str(default_arg(mode_str, lit("r"))));
 
   if (!f)
     uw_throwf(file_error_s, lit("error opening ~a: ~a/~s"),
@@ -2082,19 +2082,20 @@ val open_file(val path, val mode_str)
 
 val open_tail(val path, val mode_str, val seek_end_p)
 {
-  FILE *f = w_fopen(c_str(path), c_str(mode_str));
+  val mode = default_arg(mode_str, lit("r"));
+  FILE *f = w_fopen(c_str(path), c_str(mode));
   struct stdio_handle *h;
   val stream;
   unsigned long state = 0;
 
-  if (f && seek_end_p)
+  if (f && default_bool_arg(seek_end_p))
     if (fseek(f, 0, SEEK_END) < 0)
       uw_throwf(file_error_s, lit("error seeking to end of ~a: ~a/~s"),
                 path, num(errno), string_utf8(strerror(errno)), nao);
 
   stream = make_tail_stream(f, path);
   h = (struct stdio_handle *) stream->co.handle;
-  h->mode = mode_str;
+  h->mode = mode;
   if (!f)
     tail_strategy(stream, &state);
   return stream;
@@ -2102,7 +2103,7 @@ val open_tail(val path, val mode_str, val seek_end_p)
 
 val open_command(val path, val mode_str)
 {
-  FILE *f = w_popen(c_str(path), c_str(mode_str));
+  FILE *f = w_popen(c_str(path), c_str(default_arg(mode_str, lit("r"))));
 
   if (!f)
     uw_throwf(file_error_s, lit("error opening pipe ~a: ~a/~s"),
