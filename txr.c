@@ -49,7 +49,7 @@
 
 const wchli_t *version = wli("80");
 const wchar_t *progname = L"txr";
-val self_path;
+val self_path, prog_args_full, prog_args;
 
 /*
  * Can implement an emergency allocator here from a fixed storage
@@ -179,9 +179,10 @@ int txr_main(int argc, char **argv)
   val bindings = nil;
   val evaled = nil;
   int match_loglevel = opt_loglevel;
+  val arg;
+  list_collect_decl(arg_list, arg_tail);
 
-  prot1(&spec_file_str);
-  prot1(&self_path);
+  protect(&spec_file_str, &self_path, &prog_args, &prog_args_full, (val *) 0);
 
   setvbuf(stderr, 0, _IOLBF, 0);
 
@@ -192,160 +193,138 @@ int txr_main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  argc--, argv++;
+  while (*argv)
+    arg_tail = list_collect(arg_tail, string_utf8(*argv++));
 
-  while (argc > 0 && (*argv)[0] == '-') {
-    if (!strcmp(*argv, "--")) {
-      argv++, argc--;
+  prog_args_full = arg_list;
+
+  arg_list = cdr(arg_list);
+
+  for (arg = pop(&arg_list); arg && car(arg) == chr('-'); arg = pop(&arg_list))
+  {
+    if (equal(arg, lit("--")))
+      break;
+
+    if (equal(arg, lit("-"))) {
+      push(arg, &arg_list);
       break;
     }
 
-    if (!strcmp(*argv, "-"))
-      break;
+    if (equal(sub(arg, zero, two), lit("-D"))) {
+      val dopt_arg = sub(arg, two, t);
+      cons_bind(var, def, split_str(dopt_arg, lit("=")));
+      val deflist = if2(def, split_str(car(def), lit(",")));
 
-    if (!strncmp(*argv, "-D", 2)) {
-      char *var = *argv + 2;
-      char *equals = strchr(var, '=');
-      char *has_comma = (equals != 0) ? strchr(equals, ',') : 0;
+      if (rest(deflist))
+        bindings = cons(cons(intern(var, nil), deflist), bindings);
+      else if (deflist)
+        bindings = cons(cons(intern(var, nil), car(deflist)), bindings);
+      else 
+        bindings = cons(cons(intern(var, nil), t), bindings);
 
-      if (has_comma) {
-        char *pval = equals + 1;
-        val list = nil;
-
-        *equals = 0;
-
-        for (;;) {
-          size_t piece = strcspn(pval, ",");
-          char comma_p = pval[piece];
-
-          pval[piece] = 0;
-
-          list = cons(string_utf8(pval), list);
-
-          if (!comma_p)
-            break;
-
-          pval += piece + 1;
-        }
-
-        list = nreverse(list);
-        bindings = cons(cons(intern(string_utf8(var), nil), list), bindings);
-      } else if (equals) {
-        char *pval = equals + 1;
-        *equals = 0;
-        bindings = cons(cons(intern(string_utf8(var), nil),
-                             string_utf8(pval)), bindings);
-      } else {
-        bindings = cons(cons(intern(string_utf8(var), nil),
-                             null_string), bindings);
-      }
-
-      argc--, argv++;
       continue;
     }
 
-    if (!strcmp(*argv, "--version")) {
+    if (equal(arg, lit("--version"))) {
       format(std_output, lit("~a: version ~a\n"),
              prog_string, auto_str(version), nao);
       return 0;
     }
 
-    if (!strcmp(*argv, "--help")) {
+    if (equal(arg, lit("--help"))) {
       help();
       return 0;
     }
 
-    if (!strcmp(*argv, "-a") || !strcmp(*argv, "-c") || !strcmp(*argv, "-f") ||
-        !strcmp(*argv, "-e") || !strcmp(*argv, "-p"))
+    if (memqual(arg, list(lit("-a"), lit("-c"), lit("-f"),
+                          lit("-e"), lit("-p"), nao)))
     {
-      long optval;
-      char *errp;
-      char opt = (*argv)[1];
+      val opt = chr_str(arg, one);
 
-      if (argc == 1) {
+      if (!arg_list) {
         format(std_error, lit("~a: option -~a needs argument\n"),
-               prog_string, chr(opt), nao);
+               prog_string, opt, nao);
 
         return EXIT_FAILURE;
       }
 
-      argv++, argc--;
+      arg = pop(&arg_list);
 
-      switch (opt) {
+      switch (c_chr(opt)) {
       case 'a':
-        optval = strtol(*argv, &errp, 10);
-        if (*errp != 0) {
-          format(std_error, lit("~a: option -~a needs numeric argument, "
-                                "not ~a\n"), prog_string, chr(opt),
-                                string_utf8(*argv), nao);
-          return EXIT_FAILURE;
-        }
+        {
+          val optval = int_str(arg, nil);
 
-        opt_arraydims = optval;
+          if (!optval || !fixnump(optval)) {
+            format(std_error, lit("~a: option -~a needs a small integer "
+                                  "argument, not ~a\n"), prog_string, opt,
+                                  arg, nao);
+            return EXIT_FAILURE;
+          }
+
+          opt_arraydims = c_num(optval);
+        }
         break;
       case 'c':
-        specstring = string_utf8(*argv);
+        specstring = arg;
         break;
       case 'f':
-        spec_file = string_utf8(*argv);
+        spec_file = arg;
         break;
       case 'e':
-        eval_intrinsic(lisp_parse(string_utf8(*argv), std_error), nil);
+        eval_intrinsic(lisp_parse(arg, std_error), nil);
         evaled = t;
         break;
       case 'p':
-        obj_print(eval_intrinsic(lisp_parse(string_utf8(*argv), std_error),
+        obj_print(eval_intrinsic(lisp_parse(arg, std_error),
                                  nil), std_output);
         put_char(chr('\n'), std_output);
         evaled = t;
         break;
       }
 
-      argv++, argc--;
       continue;
     }
 
-    if (!strcmp(*argv, "--gc-debug")) {
+    if (equal(arg, lit("--gc-debug"))) {
       opt_gc_debug = 1;
-      argv++, argc--;
       continue;
-    } else if (!strcmp(*argv, "--vg-debug")) {
+    } else if (equal(arg, lit("--vg-debug"))) {
 #if HAVE_VALGRIND
       opt_vg_debug = 1;
-      argv++, argc--;
       continue;
 #else
       format(std_error,
              lit("~a: option ~a requires Valgrind support compiled in\n"),
-             prog_string, string_utf8(*argv), nao);
+             prog_string, arg, nao);
       return EXIT_FAILURE;
 #endif
-    } else if (!strcmp(*argv, "--dv-regex")) {
+    } else if (equal(arg, lit("--dv-regex"))) {
       opt_derivative_regex = 1;
-      argv++, argc--;
       continue;
-    } else if (!strcmp(*argv, "--lisp-bindings")) {
+    } else if (equal(arg, lit("--lisp-bindings"))) {
       opt_lisp_bindings = 1;
-      argv++, argc--;
       continue;
-    } else if (!strcmp(*argv, "--debugger")) {
+    } else if (equal(arg, lit("--debugger"))) {
 #if CONFIG_DEBUG_SUPPORT
       opt_debugger = 1;
+      continue;
 #else
       format(std_error,
              lit("~a: option ~a requires debug support compiled in\n"),
-             prog_string, string_utf8(*argv), nao);
+             prog_string, arg, nao);
       return EXIT_FAILURE;
 #endif
-      argv++, argc--;
-      continue;
     }
 
 
     {
-      char *popt;
-      for (popt = (*argv)+1; *popt != 0; popt++) {
-        switch (*popt) {
+      val optchars = cdr(arg);
+
+      for (; optchars != nil; optchars = cdr(optchars)) {
+        val opch = car(optchars);
+
+        switch (c_chr(opch)) {
         case 'v':
           match_loglevel = 2;
           break;
@@ -367,7 +346,7 @@ int txr_main(int argc, char **argv)
 #else
           format(std_error,
                  lit("~a: option ~a requires debug support compiled in\n"),
-                 prog_string, chr(*popt), nao);
+                 prog_string, opch, nao);
           return EXIT_FAILURE;
 #endif
           break;
@@ -377,20 +356,18 @@ int txr_main(int argc, char **argv)
         case 'p':
         case 'D':
           format(std_error, lit("~a: option -~a does not clump\n"),
-                 prog_string, chr(*popt), nao);
+                 prog_string, opch, nao);
           return EXIT_FAILURE;
         case '-':
           format(std_error, lit("~a: unrecognized long option: --~a\n"),
-                 prog_string, string_utf8(popt + 1), nao);
+                 prog_string, cdr(optchars), nao);
           return EXIT_FAILURE;
         default:
           format(std_error, lit("~a: unrecognized option: -~a\n"),
-                 prog_string, chr(*popt), nao);
+                 prog_string, opch, nao);
           return EXIT_FAILURE;
         }
       }
-
-      argc--, argv++;
     }
   }
 
@@ -406,6 +383,7 @@ int txr_main(int argc, char **argv)
         chr_str(specstring, minus(length_str(specstring), one)) != chr('\n'))
       specstring = cat_str(list(specstring, string(L"\n"), nao), nil);
     yyin_stream = make_string_byte_input_stream(specstring);
+    push(arg, &arg_list);
   } else if (spec_file) {
     if (wcscmp(c_str(spec_file), L"-") != 0) {
       FILE *in = w_fopen(c_str(spec_file), L"r");
@@ -416,27 +394,27 @@ int txr_main(int argc, char **argv)
     } else {
       spec_file_str = lit("stdin");
     }
+    push(arg, &arg_list);
   } else {
-    if (argc < 1) {
+    if (!arg) {
       if (evaled)
         return EXIT_SUCCESS;
       hint();
       return EXIT_FAILURE;
     }
 
-    if (strcmp(*argv, "-") != 0) {
-      FILE *in = fopen(*argv, "r");
-      val name = string_utf8(*argv);
+    if (!equal(arg, lit("-"))) {
+      FILE *in = w_fopen(c_str(arg), L"r");
       if (in == 0)
-        uw_throwf(file_error_s, lit("unable to open ~a"), name, nao);
-      yyin_stream = make_stdio_stream(in, name);
-      spec_file_str = string_utf8(*argv);
+        uw_throwf(file_error_s, lit("unable to open ~a"), arg, nao);
+      yyin_stream = make_stdio_stream(in, arg);
+      spec_file_str = arg;
     } else {
       spec_file_str = lit("stdin");
     }
-    argc--, argv++;
   }
 
+  prog_args = arg_list;
 
   {
     int gc = gc_state(0);
@@ -459,14 +437,7 @@ int txr_main(int argc, char **argv)
     self_path = spec_file_str;
 
     {
-      int retval;
-      list_collect_decl(filenames, iter);
-
-      while (*argv)
-        iter = list_collect(iter, string_utf8(*argv++));
-
-      retval = extract(spec, filenames, bindings);
-
+      int retval = extract(spec, arg_list, bindings);
       return errors ? EXIT_FAILURE : retval;
     }
   }

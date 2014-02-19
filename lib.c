@@ -5648,6 +5648,8 @@ static time_t timegm_hack(struct tm *tm)
 #if HAVE_TZSET
     tzset();
 #endif
+
+    env_list = nil;
     return ret;
 }
 #endif

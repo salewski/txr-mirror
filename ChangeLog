@@ -1,5 +1,22 @@
 2014-02-18  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (env_hash): new function.
+	(eval_init): Register env and env_hash functions.  Register prog_args
+	and prog_args_full as *args* and *full-args*.
+
+	* lib.c (timegm_hack): Invalidate env_list, after mucking with
+	the environment via setenv and unsetenv.
+
+	* txr.c (prog_args_full, prog_args): New global variables.
+	(txr_main): Command-line processing converted to use TXR's
+	library. Populates prog_args_full and prog_args.
+
+	* txr.h (prog_args_full, prog_args): Declared.
+
+	* txr.1: Documented *args*, *full-args*, env and env-hash.
+
+2014-02-18  Kaz Kylheku  <kaz@kylheku.com>
+
 	The mode argument in some stream-opening functions becomes optional.
 
 	* eval.c (eval_init): Change registration for open_file, open_tail

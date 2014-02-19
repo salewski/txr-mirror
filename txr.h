@@ -35,4 +35,4 @@ extern int opt_vg_debug;
 extern int opt_derivative_regex;
 extern const wchli_t *version;
 extern const wchar_t *progname;
-extern val self_path;
+extern val self_path, prog_args_full, prog_args;

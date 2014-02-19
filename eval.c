@@ -2548,6 +2548,19 @@ static val usleep_wrap(val usec)
   return retval;
 }
 
+static val env_hash(void)
+{
+  val env_strings = env();
+  val hash = make_hash(nil, nil, t);
+
+  for (; env_strings; env_strings = cdr(env_strings)) {
+    cons_bind (key, val_cons, split_str(car(env_strings), lit("=")));
+    sethash(hash, key, car(val_cons));
+  }
+
+  return hash;
+}
+
 static void reg_fun(val sym, val fun)
 {
   sethash(top_fb, sym, cons(sym, fun));
@@ -3126,6 +3139,11 @@ void eval_init(void)
   reg_fun(intern(lit("errno"), user_package), func_n1o(errno_wrap, 0));
   reg_fun(intern(lit("exit"), user_package), func_n1(exit_wrap));
   reg_fun(intern(lit("usleep"), user_package), func_n1(usleep_wrap));
+
+  reg_fun(intern(lit("env"), user_package), func_n0(env));
+  reg_fun(intern(lit("env-hash"), user_package), func_n0(env_hash));
+  reg_var(intern(lit("*args*"), user_package), &prog_args);
+  reg_var(intern(lit("*full-args*"), user_package), &prog_args_full);
 
 #if HAVE_DAEMON
   reg_fun(intern(lit("daemon"), user_package), func_n2(daemon_wrap));

@@ -12131,6 +12131,49 @@ call compatibility with make-time. It may or may not have any effect
 on the output (since the UTC zone by definition doesn't have daylight
 savings time).
 
+.SH ENVIRONMENT VARIABLES AND COMMAND LINE
+
+.SS Variables *args* and *args-full*
+
+The *args* variable holds a list of strings representing the remaining
+arguments which follow any options processed by the txr executable, and the
+script name.
+
+The *args-full* variable holds the original, complete list of arguments passed
+from the operating system.
+
+Note: the *args* variable is nil during the processing of the command line,
+so TXR Lisp invoked using the -p or -e option cannot use it.
+
+.SS Function env
+
+.TP
+Syntax:
+
+  (env)
+
+.TP
+Description:
+
+The env function retrieves the list of environment variables. Each
+variable is represented by a single entry in the list: a string which
+contains an = (equal) character somewhere, separating the variable name
+from its value.
+
+See also: the env-hash function.
+
+.SS Function env-hash
+
+Syntax:
+
+  (env-hash)
+
+.TP
+Description:
+
+The env-hash function constructs and returns an :equal-based hash.  The hash is
+populated with the environment variables, represented as key-value pairs. 
+
 .SH UNIX PROGRAMMING
 
 .SS Function errno
