@@ -68,6 +68,7 @@ val filter_s;
 val noval_s;
 
 static val h_directive_table, v_directive_table;
+static val non_matching_directive_table;
 
 static void debuglf(val form, val fmt, ...)
 {
@@ -3650,27 +3651,28 @@ static val h_do(match_line_ctx *c)
   return next_spec_k;
 }
 
-static val match_files(match_files_ctx c)
+static void open_data_source(match_files_ctx *c)
 {
-  debug_enter;
+  /* c->data == t is set up by the top level call to match_files.
+   * It indicates that we have not yet opened any data source.
+   */
 
-  gc_hint(c.data);
-
-  if (listp(c.data)) { /* recursive call with lazy list */
-    ; /* no special initialization */
-  } else if (c.files) { /* c.data == t: toplevel call with file list */
-    val source_spec = first(c.files);
+  if (c->data == t && c->files) {
+    val source_spec = first(c->files);
     val name = consp(source_spec) ? cdr(source_spec) : source_spec;
 
     if (stringp(name)) {
       fpip_t fp = (errno = 0, complex_open(name, nil, nil));
-      spec_bind (specline, first_spec, c.spec);
+      spec_bind (specline, first_spec, c->spec);
 
-      if (consp(first_spec) && eq(first(first_spec), next_s) && !rest(specline)) {
+      if (consp(first_spec) && (gethash(non_matching_directive_table,
+                                        first(first_spec))))
+      {
         debuglf(first_spec, lit("not opening source ~a "
-                                     "since query starts with next directive"), name, nao);
+                                "since query starts with non-matching "
+                                "directive."), name, nao);
       } else {
-        val spec = first(c.spec);
+        val spec = first(c->spec);
         debuglf(spec, lit("opening data source ~a"), name, nao);
 
         if (complex_open_failed(fp)) {
@@ -3686,20 +3688,25 @@ static val match_files(match_files_ctx c)
           debug_return (nil);
         }
 
-        c.files = cons(name, cdr(c.files)); /* Get rid of cons and nothrow */
+        c->files = cons(name, cdr(c->files)); /* Get rid of cons and nothrow */
 
-        if ((c.data = complex_snarf(fp, name)) != nil)
-          c.data_lineno = num(1);
+        if ((c->data = complex_snarf(fp, name)) != nil)
+          c->data_lineno = num(1);
       }
     } else if (streamp(name)) {
-      if ((c.data = lazy_stream_cons(name)))
-        c.data_lineno = num(1);
+      if ((c->data = lazy_stream_cons(name)))
+        c->data_lineno = num(1);
     } else {
-      c.data = nil;
+      c->data = nil;
     }
-  } else { /* toplevel call with no data or file list */
-    c.data = nil;
   }
+}
+
+static val match_files(match_files_ctx c)
+{
+  debug_enter;
+
+  gc_hint(c.data);
 
   for (; c.spec; c.spec = rest(c.spec), 
                  c.data = rest(c.data),
@@ -3707,6 +3714,8 @@ static val match_files(match_files_ctx c)
 repeat_spec_same_data:
   {
     spec_bind (specline, first_spec, c.spec);
+
+    open_data_source(&c);
 
     debug_check(first_spec, c.bindings, c.data, c.data_lineno, nil, nil);
 
@@ -3898,8 +3907,10 @@ static void dir_tables_init(void)
 {
   h_directive_table = make_hash(nil, nil, nil);
   v_directive_table = make_hash(nil, nil, nil);
+  non_matching_directive_table = make_hash(nil, nil, nil);
 
-  protect(&h_directive_table, &v_directive_table, (val *) 0);
+  protect(&h_directive_table, &v_directive_table,
+          &non_matching_directive_table, (val *) 0);
 
   sethash(v_directive_table, skip_s, cptr((mem_t *) v_skip));
   sethash(v_directive_table, fuzz_s, cptr((mem_t *) v_fuzz));
@@ -3963,6 +3974,29 @@ static void dir_tables_init(void)
   sethash(h_directive_table, eol_s, cptr((mem_t *) h_eol));
   sethash(h_directive_table, do_s, cptr((mem_t *) h_do));
   sethash(h_directive_table, require_s, cptr((mem_t *) hv_trampoline));
+
+  sethash(non_matching_directive_table, block_s, t);
+  sethash(non_matching_directive_table, accept_s, t);
+  sethash(non_matching_directive_table, fail_s, t);
+  sethash(non_matching_directive_table, next_s, t);
+  sethash(non_matching_directive_table, forget_s, t);
+  sethash(non_matching_directive_table, local_s, t);
+  sethash(non_matching_directive_table, merge_s, t);
+  sethash(non_matching_directive_table, bind_s, t);
+  sethash(non_matching_directive_table, rebind_s, t);
+  sethash(non_matching_directive_table, set_s, t);
+  sethash(non_matching_directive_table, cat_s, t);
+  sethash(non_matching_directive_table, output_s, t);
+  sethash(non_matching_directive_table, define_s, t);
+  sethash(non_matching_directive_table, try_s, t);
+  sethash(non_matching_directive_table, defex_s, t);
+  sethash(non_matching_directive_table, throw_s, t);
+  sethash(non_matching_directive_table, deffilter_s, t);
+  sethash(non_matching_directive_table, filter_s, t);
+  sethash(non_matching_directive_table, require_s, t);
+  sethash(non_matching_directive_table, do_s, t);
+  sethash(non_matching_directive_table, load_s, t);
+  sethash(non_matching_directive_table, close_s, t);
 }
 
 void match_init(void)

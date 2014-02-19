@@ -1461,13 +1461,13 @@ match failure.
 The variant @(next :args) means that the remaining command line arguments are to
 be treated as a data source. For this purpose, each argument is considered to
 be a line of text. If an argument is currently being processed as an input
-source, that argument is included. Note that if the first entry in the argument
-list is not intended to name an input source, then the query should begin with
-@(next :args) or some other form of next directive, to prevent an attempt to
-open the input source named by that argument. If the very first directive of a query is any variant of the next directive, then
-.B TXR
-avoids opening the first input source, but it does open the input source for
-any other directive, even one which does not consume any data.
+source, that argument is included at the front of the list.  As the arguments
+are matched, they are consumed. This means that if a @(next) directive without
+arguments is executed in the scope of @(next :args), it opens the file named
+by the first unconsumed argument.  
+
+To process arguments, and then continue with the original file and argument
+list, wrap the argument processing in a @(block).
 
 The variant @(next :env) means that the list of process environment variables
 is treated as a source of data. It looks like a text file stream

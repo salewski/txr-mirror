@@ -1,3 +1,30 @@
+2014-02-19  Kaz Kylheku  <kaz@kylheku.com>
+
+	Fixing a long-running issue in the TXR pattern language: premature
+	opening of files, prior to directives that actually need data.
+	The documentation basically lied that this is the case: namely,
+	the text "A file isn't opened until the query demands material from
+	that file, and then the contents are read on demand, not all at
+	once."   This is now a fact.
+
+	* match.c (non_matching_directive_table): New global variable.
+	(open_data_source): New static function. Contains an almost
+	verbatim migration of the source-opening logic that used
+	to be in match_files. The useless assignment to c->nil is gone,
+	and c->data == t is explicitly tested for. Instead of assuming
+	that only the @(next) directive does not need to have a data source
+	open, the table of non-matching directives is consulted. Opening
+	the data source is now skipped for numerous directives.
+	(match_files): Call open_data_source within the loop. This
+	means that even after processing numerous non-matching directives,
+	we will still correctly set up the data lazy list.
+	(dir_tables_init): Initialize non_matching_directive_table,
+	protect from GC and populate with numerous directives.
+
+	* txr.1: Improved documentation for @(next :args), and removed
+	a description of the hack that a single @(next) at the top of the
+	query suppressed the opening of the data source.
+
 2014-02-18  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (env_hash): new function.
