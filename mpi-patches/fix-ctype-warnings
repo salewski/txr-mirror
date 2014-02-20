@@ -1,7 +1,7 @@
 Index: mpi-1.8.6/mpi.c
 ===================================================================
---- mpi-1.8.6.orig/mpi.c	2012-04-10 20:44:54.109795757 -0700
-+++ mpi-1.8.6/mpi.c	2012-04-10 20:45:57.857633757 -0700
+--- mpi-1.8.6.orig/mpi.c	2014-02-19 19:01:29.294491437 -0800
++++ mpi-1.8.6/mpi.c	2014-02-19 19:01:39.562347737 -0800
 @@ -200,7 +200,7 @@
  int      s_mp_ispow2(mp_int *v);               /* is v a power of 2?      */
  int      s_mp_ispow2d(mp_digit d);             /* is d a power of 2?      */
@@ -11,7 +11,7 @@ Index: mpi-1.8.6/mpi.c
  char     s_mp_todigit(int val, int r, int low); /* convert val to digit   */
  int      s_mp_outlen(int bits, int r);          /* output length in bytes */
  
-@@ -4258,7 +4258,7 @@
+@@ -4264,7 +4264,7 @@
    The results will be odd if you use a radix < 2 or > 62, you are
    expected to know what you're up to.
   */
@@ -20,7 +20,7 @@ Index: mpi-1.8.6/mpi.c
  {
    int    val, xch;
    
-@@ -4302,7 +4302,7 @@
+@@ -4308,7 +4308,7 @@
    
  char     s_mp_todigit(int val, int r, int low)
  {

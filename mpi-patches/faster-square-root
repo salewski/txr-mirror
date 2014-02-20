@@ -1,7 +1,7 @@
 Index: mpi-1.8.6/mpi.c
 ===================================================================
---- mpi-1.8.6.orig/mpi.c	2012-03-04 11:45:43.071884757 -0800
-+++ mpi-1.8.6/mpi.c	2012-03-04 11:45:43.556157007 -0800
+--- mpi-1.8.6.orig/mpi.c	2014-02-17 22:25:46.042680203 -0800
++++ mpi-1.8.6/mpi.c	2014-02-19 19:00:21.279452088 -0800
 @@ -158,6 +158,9 @@
  mp_err   s_mp_grow(mp_int *mp, mp_size min);   /* increase allocated size */
  mp_err   s_mp_pad(mp_int *mp, mp_size min);    /* left pad with zeroes    */
@@ -12,7 +12,7 @@ Index: mpi-1.8.6/mpi.c
  void     s_mp_clamp(mp_int *mp);               /* clip leading zeroes     */
  
  void     s_mp_exch(mp_int *a, mp_int *b);      /* swap a and b in place   */
-@@ -1535,77 +1538,55 @@
+@@ -1535,77 +1538,61 @@
  
  /* {{{ mp_sqrt(a, b) */
  
@@ -85,8 +85,9 @@ Index: mpi-1.8.6/mpi.c
 +  if ((err = mp_init(&guess_sqr)))
 +    goto cleanup_guess;
 +
-+  for (mask_shift = s_highest_bit_mp(a) / 2; mask_shift > 0; mask_shift--) {
++  for (mask_shift = s_highest_bit_mp(a) / 2; mask_shift >= 0; mask_shift--) {
 +    mp_int *temp;
++    int cmp;
 +
 +    if ((err = mp_copy(proot, pguess)))
 +	goto cleanup;
@@ -97,10 +98,15 @@ Index: mpi-1.8.6/mpi.c
 +    if ((err = s_mp_sqr(&guess_sqr)))
 +	goto cleanup;
 +
-+    if (s_mp_cmp(&guess_sqr, a) <= 0) {
++    cmp = s_mp_cmp(&guess_sqr, a);
++
++    if (cmp < 0) {
 +	temp = proot;
 +	proot = pguess;
 +	pguess = temp;
++    } else if (cmp == 0) {
++	proot = pguess;
++	break;
 +    }
    }
  
@@ -130,7 +136,7 @@ Index: mpi-1.8.6/mpi.c
  
  /* }}} */
  
-@@ -2554,21 +2535,9 @@
+@@ -2554,21 +2541,9 @@
  
  int    mp_count_bits(mp_int *mp)
  {
@@ -153,7 +159,7 @@ Index: mpi-1.8.6/mpi.c
  } /* end mp_count_bits() */
  
  /* }}} */
-@@ -3132,6 +3101,27 @@
+@@ -3132,6 +3107,27 @@
    abort();
  }
  

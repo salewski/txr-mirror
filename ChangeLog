@@ -1,5 +1,19 @@
 2014-02-19  Kaz Kylheku  <kaz@kylheku.com>
 
+	* mpi-patches/faster-square-root (mp_sqrt): Bugfix: was computing square
+	roots that were incorrect in the last digit/bit, because it was not
+	generating the guess mask all the way down to bit zero. Also, added
+	an early test to bail the loop when an the guess at the root happens
+	to be right.
+
+	* mpi-patches/add-bitops: Refreshed.
+
+	* mpi-patches/fix-ctype-warnings: Likewise.
+
+	* mpi-patches/mpi-to-double: Likewise.
+
+2014-02-19  Kaz Kylheku  <kaz@kylheku.com>
+
 	Fixing a long-running issue in the TXR pattern language: premature
 	opening of files, prior to directives that actually need data.
 	The documentation basically lied that this is the case: namely,
