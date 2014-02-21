@@ -12736,6 +12736,46 @@ Examples:
           (let ((,var (car i)))
             ,*body))))
 
+.SS Function macro-form-p
+
+.TP
+Syntax:
+
+  (macro-form-p <obj>)
+
+.TP
+Description:
+
+The macro-form-p function returns t if <obj> represents the syntax of
+a form which is a macro form. Otherwise it returns nil.
+
+A macro form will transform under macroexpand-1 or macroexpand; an object
+which isn't a macro form will not undergo expansion.
+
+.SS Functions macroexpand-1 and macroexpand
+
+.TP
+Syntax:
+
+  (macroexpand-1 <obj>)
+  (macroexpand <obj>)
+
+.TP
+Description:
+
+If <obj> is a macro form (an object for which macro-form-p returns t),
+these functions expand the macro form and return the expanded form.
+Otherwise, they return <obj>.
+
+macroexpand-1 performs a single expansion, expanding just the macro
+that is referenced by the symbol in the first position of <obj>,
+and returns the expansion. That expansion may itself be a macro form.
+
+macroexpand performs an expansion, like macroexpand-1. If the result is
+a macro form, then it expands that form, and keeps repeating this process
+until the expansion yields a non-macro-form. That non-macro-form is then
+returned.
+
 .SS Operator tree-bind
 
 .TP

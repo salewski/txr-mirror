@@ -2209,6 +2209,43 @@ tail:
   }
 }
 
+static val macro_form_p(val form)
+{
+  if (!consp(form))
+    return nil;
+  if (!gethash(top_mb, car(form)))
+    return nil;
+  return t;
+}
+
+static val macroexpand_1(val form, val mac_env)
+{
+  val macro;
+
+  mac_env = default_arg(mac_env, make_env(nil, nil, nil));
+
+  if (atom(form)) {
+    return form;
+  } else if ((macro = gethash(top_mb, car(form)))) {
+    val mac_expand = expand_macro(form, macro, mac_env);
+    if (mac_expand == form)
+      return form;
+    rlcp_tree(mac_expand, form);
+    return mac_expand;
+  }
+  return form;
+}
+
+static val macroexpand(val form, val mac_env)
+{
+  for (;;) {
+    val mac_expand = macroexpand_1(form, mac_env);
+    if (mac_expand == form)
+      return form;
+    form = mac_expand;
+  }
+}
+
 val mapcarv(val fun, val list_of_lists)
 {
   if (!cdr(list_of_lists)) {
@@ -2895,6 +2932,11 @@ void eval_init(void)
   reg_fun(intern(lit("lisp-parse"), user_package), func_n2o(lisp_parse, 0));
   reg_fun(intern(lit("read"), user_package), func_n2o(lisp_parse, 0));
   reg_fun(intern(lit("expand"), system_package), func_n1(expand));
+  reg_fun(intern(lit("macro-form-p"), user_package), func_n1(macro_form_p));
+  reg_fun(intern(lit("macroexpand-1"), user_package),
+          func_n2o(macroexpand_1, 1));
+  reg_fun(intern(lit("macroexpand"), user_package),
+          func_n2o(macroexpand, 1));
   reg_fun(intern(lit("chain"), user_package), func_n0v(chainv));
   reg_fun(intern(lit("andf"), user_package), func_n0v(andv));
   reg_fun(intern(lit("orf"), user_package), func_n0v(orv));
