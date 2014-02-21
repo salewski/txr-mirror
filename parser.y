@@ -1106,8 +1106,6 @@ static val unquotes_occur(val quoted_form)
     val sym = car(quoted_form);
     if (sym == unquote_s || sym == splice_s)
       return t;
-    if (sym == quote_s)
-      return nil;
     return or2(unquotes_occur(sym), unquotes_occur(cdr(quoted_form)));
   }
 }
