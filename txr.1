@@ -12785,12 +12785,51 @@ Examples:
           (let ((,var (car i)))
             ,*body))))
 
+.SS Operator macrolet
+
+.TP
+Syntax:
+
+  (macrolet ({(<name> <macro-style-params> <macro-body-form>*)}*)
+     <body-form>*)
+
+.TP
+Description:
+
+The macrolet binding operator extends the macro-time lexical environment
+by making zero or more new local macros visible.  
+
+The operator symbol is followed by a list of macro definitions.
+Each definition is a form which begins with a name, followed by a macro
+parameter list, and zero or more forms. These macro definitions are similar
+to those globally defined by the defmacro operator, except that they
+are in a local environment, and do not capture any regular lexical scope.
+
+The macro definitions are followed by optional forms. 
+
+The macros thus defined are visible to the the <body-form>-s.
+
+Forms inside the macro definitions such as the <macro-body-form>-s,
+and initializer forms appearing in <macro-style-params> are subject
+to macro-expansion in a scope in which none of the new macros being
+defined are yet visible. Once the macro definitions are themselves
+macro-expanded, they are placed into a new macro environment, which
+is then used for macro expanding the <body-form>-s.
+
+A macrolet form is fully processed in the expansion phase of a form, and is
+effectively replaced by progn form which contains expanded versions of
+<body-forms>-s, only. This expanded structure shows no evidence that any
+macrolet forms ever existed in it. Therefore, it is impossible for the code
+evaluated in the bodies and parameter lists of macrolet macros to have any
+visibility to any surrounding lexical variable bindings, which are only
+instantiated in the evaluation phase, after expansion is done.
+
 .SS Function macro-form-p
 
 .TP
 Syntax:
 
-  (macro-form-p <obj>)
+  (macro-form-p <obj> [<env>])
 
 .TP
 Description:
@@ -12801,13 +12840,44 @@ a form which is a macro form. Otherwise it returns nil.
 A macro form will transform under macroexpand-1 or macroexpand; an object
 which isn't a macro form will not undergo expansion.
 
+The optional <env> parameter is a macroexpansion environment. 
+A macroexpansion environment is passed down to macros and can be received
+via their special :env parameter.  A macro can use this environment to
+determine whether a piece of syntax <obj> is a macro form in that
+environment.
+
+.TP
+Example:
+
+  ;; macro which translates form to the form 'yes if it is a macro
+  ;; form, otherwise to the form 'no.
+
+  (defmacro global (:env menv form)
+   (if (macro-form-p form menv)
+    ''yes ''no)) 
+
+  (macrolet ((local ()))
+    (global (local)))    ;; yields yes
+
+  (global (local))       ;; yields no
+
+
+During macroexpansion, the global macro is handed the environment which
+it receives via :env menv.  When the macro is invoked within the macrolet,
+this environment includes the macro-time lexical scope in which the
+local macro is defined. So when global checks whether the argument form
+(local) is a macro, the conclusion is yes: the (local) form is a macro
+call in that environment: macro-form-p yields t.  When (global (local)) is
+invoked outside of the macrolet, no local macro is visible, and so macro-form-p
+yields nil.
+
 .SS Functions macroexpand-1 and macroexpand
 
 .TP
 Syntax:
 
-  (macroexpand-1 <obj>)
-  (macroexpand <obj>)
+  (macroexpand-1 <obj> [<env>])
+  (macroexpand <obj> [<env>])
 
 .TP
 Description:
@@ -12824,6 +12894,38 @@ macroexpand performs an expansion, like macroexpand-1. If the result is
 a macro form, then it expands that form, and keeps repeating this process
 until the expansion yields a non-macro-form. That non-macro-form is then
 returned.
+
+The optional <env> parameter is a macroexpansion environment. 
+A macroexpansion environment is passed down to macros and can be received
+via their special :env parameter. The environment they receive is their
+lexically apparent macro-time environment in which local macros may be
+visible.  A macro can use this environment to "manually" expand some
+form in the context of that environment.
+
+.TP
+Example:
+
+  ;; (foo x) expands x, and if x begins with a number, it removes 
+  ;; the number and returns the resulting form. Otherwise, it
+  ;; returns the entire form.
+
+  (defmacro rem-num (:env menv some-form)
+    (let ((expanded (macroexpand some-form menv)))
+      (if (numberp (car expanded))
+        (cdr expanded)
+        some-form)))
+
+  ;; The following yields (42 a).
+
+  (macrolet ((foo () '(1 list 42))
+             (bar () '(list 'a)))
+    (list (rem-num (foo)) (rem-num (bar)))))
+
+The rem-num macro is able to expand the (foo) and (bar) forms it receives as
+the some-form argument, using the local macro that is lexically apparent
+where those forms are passed, and is correctly able to work with the
+expansions (1 list 42) and (list 'a) to produce (list 42) and (list 'a)
+which evaluate to 42 and a respectively.
 
 .SS Operator tree-bind
 

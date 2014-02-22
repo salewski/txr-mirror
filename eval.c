@@ -738,7 +738,7 @@ val interp_fun(val env, val fun, val args)
 val eval_intrinsic(val form, val env)
 {
   form = expand(form, nil);
-  return eval(form, default_arg(env, make_env(nil, nil, env)), form);
+  return eval(form, default_bool_arg(env), form);
 }
 
 static val do_eval(val form, val env, val ctx_form,
@@ -746,7 +746,6 @@ static val do_eval(val form, val env, val ctx_form,
 {
   debug_enter;
 
-  type_check(env, ENV);
   debug_check(consp(form) ? form : ctx_form, env, nil, nil, nil, nil);
 
   if (nilp(form)) {
@@ -1767,8 +1766,6 @@ static val op_with_saved_vars(val form, val env)
 
 val expand_forms(val form, val menv)
 {
-  menv = default_arg(menv, make_env(nil, nil, nil));
-
   if (atom(form)) {
     return form;
   } else {
@@ -2166,7 +2163,7 @@ val expand(val form, val menv)
 {
   val macro = nil;
 
-  menv = default_arg(menv, make_env(nil, nil, nil));
+  menv = default_bool_arg(menv);
 
 tail:
   if (atom(form)) {
@@ -2375,11 +2372,11 @@ tail:
   }
 }
 
-static val macro_form_p(val form)
+static val macro_form_p(val form, val menv)
 {
   if (!consp(form))
     return nil;
-  if (!gethash(top_mb, car(form)))
+  if (!lookup_mac(menv, car(form)))
     return nil;
   return t;
 }
@@ -2388,11 +2385,11 @@ static val macroexpand_1(val form, val menv)
 {
   val macro;
 
-  menv = default_arg(menv, make_env(nil, nil, nil));
+  menv = default_bool_arg(menv);
 
   if (atom(form)) {
     return form;
-  } else if ((macro = gethash(top_mb, car(form)))) {
+  } else if ((macro = lookup_mac(menv, car(form)))) {
     val mac_expand = expand_macro(form, macro, menv);
     if (mac_expand == form)
       return form;
@@ -3104,7 +3101,7 @@ void eval_init(void)
   reg_fun(intern(lit("lisp-parse"), user_package), func_n2o(lisp_parse, 0));
   reg_fun(intern(lit("read"), user_package), func_n2o(lisp_parse, 0));
   reg_fun(intern(lit("expand"), system_package), func_n2o(expand, 1));
-  reg_fun(intern(lit("macro-form-p"), user_package), func_n1(macro_form_p));
+  reg_fun(intern(lit("macro-form-p"), user_package), func_n2o(macro_form_p, 1));
   reg_fun(intern(lit("macroexpand-1"), user_package),
           func_n2o(macroexpand_1, 1));
   reg_fun(intern(lit("macroexpand"), user_package),
