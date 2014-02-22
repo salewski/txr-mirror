@@ -1,5 +1,16 @@
 2014-02-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	Implemented macrolet.
+
+	* eval.c (macrolet_s): New variable.
+	(lookup_mac, expand_macrolet): New static functions.
+	(expand): Recognize and expand macrolet form.
+	use lookup_mac to resolve macros rather than gethash,
+	since we have lexical macros now.
+	(eval_init): Intern macrolet symbol.
+
+2014-02-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (bind_macro_params, expand_macro, macroexpand_1, macroexpand):
 	Rename mac_env variable to menv for consistency.
 

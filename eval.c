@@ -87,8 +87,7 @@ val list_s, append_s, apply_s, gen_s, generate_s, rest_s;
 val delay_s, promise_s, op_s;
 val hash_lit_s, hash_construct_s;
 val vector_lit_s, vector_list_s;
-val macro_time_s;
-val with_saved_vars_s;
+val macro_time_s, with_saved_vars_s, macrolet_s;
 
 val whole_k, env_k;
 
@@ -199,6 +198,23 @@ val lookup_fun(val env, val sym)
     }
   }
 }
+
+static val lookup_mac(val menv, val sym)
+{
+  if (nilp(menv)) {
+    return gethash(top_mb, sym);
+  } else  {
+    type_check(menv, ENV);
+
+    {
+      val binding = assoc(sym, menv->e.fbindings);
+      if (binding)
+        return binding;
+      return lookup_mac(menv->e.up_env, sym);
+    }
+  }
+}
+
 
 static val lookup_sym_lisp1(val env, val sym)
 {
@@ -1135,6 +1151,29 @@ static val expand_macro(val form, val expander, val menv)
   debug_return(eval_progn(body, exp_env, body));
   debug_end;
   debug_leave;
+}
+
+static val expand_macrolet(val form, val menv)
+{
+  val body = cdr(form);
+  val macs = pop(&body);
+  val new_env = make_env(nil, nil, menv);
+
+  for (; macs; macs = cdr(macs)) {
+    val macro = car(macs);
+    val name = pop(&macro);
+    val params = expand_params(pop(&macro), menv);
+    val macro_ex = expand_forms(macro, menv);
+    val block = cons(block_s, cons(name, macro_ex));
+
+    /* We store the macrolet in the same form as a top level defmacro,
+     * so they can be treated uniformly. The nil after the name is
+     * the ordinary lexical environment: a macrolet doesn't capture that.
+     */
+    env_fbind(new_env, name, cons(nil, cons(params, cons(block, nil))));
+  }
+
+  return cons(progn_s, expand_forms(body, new_env));
 }
 
 static val op_tree_case(val form, val env)
@@ -2312,7 +2351,9 @@ tail:
       if (expr == expr_ex)
         return form;
       return cons(vars, cons(expr_ex, nil));
-    } else if ((macro = gethash(top_mb, sym))) {
+    } else if (sym == macrolet_s) {
+      return expand_macrolet(form, menv);
+    } else if ((macro = lookup_mac(menv, sym))) {
       val mac_expand = expand_macro(form, macro, menv);
       if (mac_expand == form)
         return form;
@@ -2841,6 +2882,7 @@ void eval_init(void)
   vector_lit_s = intern(lit("vector-lit"), system_package);
   vector_list_s = intern(lit("vector-list"), user_package);
   macro_time_s = intern(lit("macro-time"), user_package);
+  macrolet_s = intern(lit("macrolet"), user_package);
   with_saved_vars_s = intern(lit("with-saved-vars"), system_package);
   whole_k = intern(lit("whole"), keyword_package);
 
