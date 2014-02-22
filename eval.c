@@ -71,7 +71,7 @@ struct c_var {
   val bind;
 };
 
-val top_vb, top_fb, top_mb;
+val top_vb, top_fb, top_mb, special;
 val op_table;
 
 val eval_error_s;
@@ -88,6 +88,7 @@ val delay_s, promise_s, op_s;
 val hash_lit_s, hash_construct_s;
 val vector_lit_s, vector_list_s;
 val macro_time_s;
+val with_saved_vars_s;
 
 val whole_k, env_k;
 
@@ -222,6 +223,16 @@ static val lookup_sym_lisp1(val env, val sym)
       return lookup_sym_lisp1(env->e.up_env, sym);
     }
   }
+}
+
+static void mark_special(val sym)
+{
+  sethash(special, sym, t);
+}
+
+static val special_p(val sym)
+{
+  return gethash(special, sym);
 }
 
 static val bind_args(val env, val params, val args, val ctx_form)
@@ -835,37 +846,55 @@ static val op_unquote_error(val form, val env)
 }
 
 
-static val bindings_helper(val vars, val env, val sequential, val ctx_form)
+static val bindings_helper(val vars, val env, val sequential,
+                           val include_specials, val ctx_form)
 {
   val iter;
   list_collect_decl (new_bindings, ptail);
   val nenv = if3(sequential, make_env(nil, nil, env), env);
+  val spec_val[32], *spec_loc[32];
+  int speci = 0;
 
   for (iter = vars; iter; iter = cdr(iter)) {
     val item = car(iter);
-    val var, val = nil;
+    val var, value = nil;
 
     if (consp(item)) {
-      if (!consp(cdr(item))) 
-        eval_error(ctx_form, lit("~s: invalid syntax: ~s"),
-                   car(ctx_form), item, nao);
-      var = first(item);
-      val = eval(second(item), nenv, ctx_form);
+      var = pop(&item);
+      value = eval(pop(&item), nenv, ctx_form);
     } else {
       var = item;
     }
 
-    if (symbolp(var)) {
-      if (!bindable(var))
+    if (!bindable(var)) {
+      val special = car(item);
+      val *loc = lookup_var_l(nil, special);
+      if (var != colon_k)
         eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
                    car(ctx_form), var, nao);
+      if (!loc)
+        eval_error(ctx_form, lit("~s: cannot rebind variable ~s: not found"),
+                   car(ctx_form), special, nao);
+      if (sequential) {
+        *loc = value;
+      } else if (speci < 32) {
+        spec_val[speci] = value;
+        spec_loc[speci++] = loc;
+      } else {
+        eval_error(ctx_form, lit("~s: too many special variables rebound"),
+                   car(ctx_form), nao);
+      }
+      if (include_specials)
+        ptail = list_collect (ptail, cons(colon_k, var));
+    } else {
+      ptail = list_collect (ptail, cons(var, value));
+
+      if (sequential)
+        env_replace_vbind(nenv, new_bindings);
     }
-
-    ptail = list_collect (ptail, cons(var, val));
-
-    if (sequential)
-      env_replace_vbind(nenv, new_bindings);
   }
+  while (speci-- > 0)
+    *spec_loc[speci] = spec_val[speci];
   return new_bindings;
 }
 
@@ -885,7 +914,7 @@ static val op_let(val form, val env)
   val args = rest(form);
   val vars = first(args);
   val body = rest(args);
-  val new_bindings = bindings_helper(vars, env, eq(let, let_star_s), form);
+  val new_bindings = bindings_helper(vars, env, eq(let, let_star_s), nil, form);
   return eval_progn(body, make_env(new_bindings, nil, env), form);
 }
 
@@ -901,7 +930,7 @@ static val op_each(val form, val env)
                  eq(each, append_each_star_s));
   val collect = or2(eq(each, collect_each_s), eq(each, collect_each_star_s));
   val append = or2(eq(each, append_each_s), eq(each, append_each_star_s));
-  val new_bindings = bindings_helper(vars, env, star, form);
+  val new_bindings = bindings_helper(vars, env, star, t, form);
   val lists = mapcar(cdr_f, new_bindings);
   list_collect_decl (collection, ptail);
 
@@ -915,9 +944,18 @@ static val op_each(val form, val env)
     {
       val binding = car(biter);
       val list = car(liter);
+      val sym = car(binding);
       if (!list)
         goto out;
-      rplacd(binding, car(list));
+      if (sym == colon_k) {
+        val *loc = lookup_var_l(nil, cdr(binding));
+        if (!loc)
+          eval_error(form, lit("~s: nonexistent special var ~a"),
+                     car(form), sym);
+        *loc = car(list);
+      } else {
+        rplacd(binding, car(list));
+      }
       rplaca(liter, cdr(list));
     }
   
@@ -1024,6 +1062,7 @@ static val op_defvar(val form, val env)
       val value = eval(second(args), env, form);
       sethash(top_vb, sym, cons(sym, value));
     }
+    mark_special(sym);
   }
 
   return sym;
@@ -1431,7 +1470,8 @@ static val op_for(val form, val env)
   val cond = third(form);
   val incs = fourth(form);
   val forms = rest(rest(rest(rest(form))));
-  val new_bindings = bindings_helper(vars, env, eq(forsym, for_star_s), form);
+  val new_bindings = bindings_helper(vars, env, eq(forsym, for_star_s),
+                                     nil, form);
   val new_env = make_env(new_bindings, nil, env);
 
   uw_block_begin (nil, result);
@@ -1652,6 +1692,39 @@ static val op_quasi_lit(val form, val env)
   return cat_str(subst_vars(rest(form), env), nil);
 }
 
+static val op_with_saved_vars(val form, val env)
+{
+  val vars = (pop(&form), pop(&form));
+  val prot_form = pop(&form);
+  val result = nil;
+  val var_save[32], *var_loc[32];
+  int n;
+
+  uw_simple_catch_begin;
+
+  for (n = 0; n < 32 && vars; n++, vars = cdr(vars)) {
+    val sym = car(vars);
+    val *loc = lookup_var_l(nil, sym);
+    if (!loc) {
+      eval_error(form, lit("~s: cannot save value of "
+                           "nonexistent var ~a"), car(form), sym, nao);
+    }
+    var_loc[n] = loc;
+    var_save[n] = *loc;
+  }
+
+  result = eval(prot_form, env, prot_form);
+
+  uw_unwind {
+    while (n-- > 0)
+      *var_loc[n] = var_save[n];
+  }
+
+  uw_catch_end;
+
+  return result;
+}
+
 val expand_forms(val form)
 {
   if (atom(form)) {
@@ -1791,26 +1864,42 @@ static val expand_qquote(val qquoted_form)
   abort();
 }
 
-static val expand_vars(val vars)
+static val expand_vars(val vars, val specials)
 {
+  val sym;
+
   if (atom(vars)) {
     return vars;
-  } else if (symbolp(car(vars))) {
+  } else if (special_p(sym = car(vars))) {
     val rest_vars = rest(vars);
-    val rest_vars_ex = expand_vars(rest_vars);
+    cons_bind (rest_vars_ex, new_specials,
+               rlcp(expand_vars(rest_vars, specials), rest_vars));
+    val ret_specials = cons(sym, new_specials);
+    val var_ex = cons(colon_k, cons(nil, cons(sym, nil)));
+    return cons(rlcp(cons(var_ex, rest_vars_ex), vars), ret_specials);
+  } else if (symbolp(sym)) {
+    val rest_vars = rest(vars);
+    cons_bind (rest_vars_ex, new_specials, expand_vars(rest_vars, specials));
     if (rest_vars == rest_vars_ex)
-      return vars;
-    return rlcp(cons(car(vars), rest_vars_ex), vars);
+      return cons(vars, new_specials);
+    return cons(rlcp(cons(sym, rest_vars_ex), vars), new_specials);
   } else {
-    cons_bind (var, init, car(vars));
+    cons_bind (var, init, sym);
     val rest_vars = rest(vars);
     val init_ex = rlcp(expand_forms(init), init);
-    val rest_vars_ex = rlcp(expand_vars(rest_vars), rest_vars);
+    cons_bind (rest_vars_ex, new_specials,
+               rlcp(expand_vars(rest_vars, specials), rest_vars));
 
-    if (init == init_ex && rest_vars == rest_vars_ex)
-      return vars;
-
-    return rlcp(cons(cons(var, init_ex), rest_vars_ex), vars);
+    if (special_p(var)) {
+      val ret_specials = cons(var, new_specials);
+      val var_ex = cons(colon_k, cons(car(init_ex), cons(var, nil)));
+      return cons(rlcp(cons(var_ex, rest_vars_ex), vars), ret_specials);
+    } else {
+      if (init == init_ex && rest_vars == rest_vars_ex)
+        return cons(vars, new_specials);
+      return cons(rlcp(cons(cons(var, init_ex), rest_vars_ex), vars),
+                  new_specials);
+    } 
   }
 }
 
@@ -1992,13 +2081,13 @@ static val expand_op(val sym, val body)
 static val expand_catch_clause(val form)
 {
   val sym = first(form);
-  val vars = second(form);
+  val params = second(form);
   val body = rest(rest(form));
-  val vars_ex = expand_vars(vars);
+  val params_ex = expand_params(params);
   val body_ex = expand_forms(body);
-  if (body == body_ex && vars == vars_ex)
+  if (body == body_ex && params == params_ex)
     return form;
-  return rlcp(cons(sym, cons(vars_ex, body_ex)), form);
+  return rlcp(cons(sym, cons(params_ex, body_ex)), form);
 }
 
 static val expand_catch(val body)
@@ -2015,6 +2104,13 @@ static val expand_catch(val body)
                       cons(catch_syms, 
                            cons(try_form_ex, catch_clauses_ex)));
   return rlcp(expanded, body);
+}
+
+static val expand_save_specials(val form, val specials)
+{
+  if (!specials)
+    return form;
+  return rlcp(cons(with_saved_vars_s, cons(specials, cons(form, nil))), form);
 }
 
 val expand(val form)
@@ -2035,10 +2131,13 @@ tail:
       val body = rest(rest(form));
       val vars = second(form);
       val body_ex = expand_forms(body);
-      val vars_ex = expand_vars(vars);
-      if (body == body_ex && vars == vars_ex)
+      cons_bind (vars_ex, specials, expand_vars(vars, nil));
+      if (body == body_ex && vars == vars_ex && !specials) {
         return form;
-      return rlcp(cons(sym, cons(vars_ex, body_ex)), form);
+      } else {
+        val basic_form = rlcp(cons(sym, cons(vars_ex, body_ex)), form);
+        return expand_save_specials(basic_form, specials);
+      }
     } else if (sym == block_s || sym == return_from_s) {
       val name = second(form);
       val body = rest(rest(form));
@@ -2134,17 +2233,21 @@ tail:
       val cond = third(form);
       val incs = fourth(form);
       val forms = rest(rest(rest(rest(form))));
-      val vars_ex = expand_vars(vars);
+      cons_bind (vars_ex, specials, expand_vars(vars, nil));
       val cond_ex = expand_forms(cond);
       val incs_ex = expand_forms(incs);
       val forms_ex = expand_forms(forms);
 
       if (vars == vars_ex && cond == cond_ex && 
-          incs == incs_ex && forms == forms_ex)
+          incs == incs_ex && forms == forms_ex && !specials) {
         return form;
-      return rlcp(cons(sym, 
-                       cons(vars_ex, 
-                            cons(cond_ex, cons(incs_ex, forms_ex)))), form);
+      } else {
+        val basic_form = rlcp(cons(sym, 
+                                   cons(vars_ex, 
+                                        cons(cond_ex,
+                                             cons(incs_ex, forms_ex)))), form);
+        return expand_save_specials(basic_form, specials);
+      }
     } else if (sym == dohash_s) {
       val spec = second(form);
       val keysym = first(spec);
@@ -2186,6 +2289,17 @@ tail:
       val args_ex = expand_forms(args);
       val result = eval_progn(args_ex, make_env(nil, nil, nil), args);
       return cons(quote_s, cons(result, nil));
+    } else if (sym == with_saved_vars_s) {
+      /* We should never have to expand a machine-generated with-saved-vars
+       * produced by the expander itself. This is for the sake of someone
+       * testing with-saved-vars in isolation.
+       */
+      val vars = first(form);
+      val expr = second(form);
+      val expr_ex = expand(expr);
+      if (expr == expr_ex)
+        return form;
+      return cons(vars, cons(expr_ex, nil));
     } else if ((macro = gethash(top_mb, sym))) {
       val mac_expand = expand_macro(form, macro, make_env(nil, nil, nil));
       if (mac_expand == form)
@@ -2624,6 +2738,7 @@ static void reg_var(val sym, val *loc)
   cv->loc = loc;
   cv->bind = cons(sym, *loc);
   sethash(top_vb, sym, cobj((mem_t *) cv, cptr_s, &c_var_ops));
+  mark_special(sym);
 }
 
 static val if_fun(val cond, val then, val alt)
@@ -2656,10 +2771,12 @@ static val and_fun(val vals)
 
 void eval_init(void)
 {
-  protect(&top_vb, &top_fb, &top_mb, &op_table, &last_form_evaled, (val *) 0);
+  protect(&top_vb, &top_fb, &top_mb, &special,
+          &op_table, &last_form_evaled, (val *) 0);
   top_fb = make_hash(t, nil, nil);
   top_vb = make_hash(t, nil, nil);
   top_mb = make_hash(t, nil, nil);
+  special = make_hash(t, nil, nil);
   op_table = make_hash(nil, nil, nil);
 
   dwim_s = intern(lit("dwim"), user_package);
@@ -2712,6 +2829,7 @@ void eval_init(void)
   vector_lit_s = intern(lit("vector-lit"), system_package);
   vector_list_s = intern(lit("vector-list"), user_package);
   macro_time_s = intern(lit("macro-time"), user_package);
+  with_saved_vars_s = intern(lit("with-saved-vars"), system_package);
   whole_k = intern(lit("whole"), keyword_package);
 
   sethash(op_table, quote_s, cptr((mem_t *) op_quote));
@@ -2757,6 +2875,7 @@ void eval_init(void)
   sethash(op_table, dwim_s, cptr((mem_t *) op_dwim));
   sethash(op_table, quasi_s, cptr((mem_t *) op_quasi_lit));
   sethash(op_table, catch_s, cptr((mem_t *) op_catch));
+  sethash(op_table, with_saved_vars_s, cptr((mem_t *) op_with_saved_vars));
 
   reg_fun(cons_s, func_n2(cons));
   reg_fun(intern(lit("make-lazy-cons"), user_package), func_n1(make_lazy_cons));

@@ -1,5 +1,40 @@
 2014-02-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	Implementing special variables with local overriding.
+	All predefined globals become special.
+
+	* eval.c (special, with_saved_vars_s): New global variables.
+	(mark_special, special_p): New functions.
+	(bindings_helper): Takes new argument, include_specials.
+	Now processes the special colon syntax for denoting special variables,
+	setting up their values, taking care to observe whether the
+	binding is parallel or sequential.
+	(op_let, op_for): Pass new argument to bindings_helper.
+	(op_each): Pass new argument to bindings_helper with a value of it,
+	and deal with the colon annotations that emerge in the bindings.
+	(op_defvar, regvar): Mark symbol as special.
+	(op_with_saved_vars): New static function.
+	(expand_vars): Takes new argument, returns a cons. Detects special
+	variables among the vars and produces the colon syntax.
+	(expand_catch_clause): Bugfix: this was using expand_vars on
+	a parameter list. Now properly uses expand_params.
+	(expand_save_specials): New static function.
+	(expand): For the operators that are binding constructs, handle
+	the new form of expand_vars which returns information about
+	special variables. If specials occur, then generate the 
+	with-saved-vars form around the expansion which will save and restore
+	their values. The expansion of vars done by expand_vars, together
+	with the run-time actions of bindings_helper, do the rest.
+	Speaking of which, the new with-saved-vars operator form is now
+	expanded here too.
+	(eval_init): Protect new variables special and with_saved_vars_s.
+	Initialize special with new hash table. Store new interned
+	symbol in with_saved_vars_s. Register op_with_save_vars in op_table.
+
+	* txr.1: Documented specials.
+
+2014-02-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (subst_vars): Change throwing of query_error_s
 	to eval_error call. This is a leftover from when this was cloned
 	from its counterpart in match.c. However, I can't think of a way

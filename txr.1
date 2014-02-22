@@ -5154,6 +5154,50 @@ Here, the shorthand 1 .. 3 denotes (cons 1 3). This is treated just like
 (call '(1 2 3 4) 1 3), which performs range extraction: taking a slice
 of the list starting at index 1, up to and not including index 3.
 
+.SS Special Variables
+
+Similarly to Common Lisp, TXR Lisp is lexically scoped by default, but
+also has dynamically scoped (a.k.a "special") variables.
+
+When a variable is defined with defvar, it is introduced as a top-level
+(global) binding, regardless of where in the scope the defvar form occurs.
+
+Furthermore, at the time the defvar form is evaluated, the symbol which
+names the variable is tagged as special.
+
+When a symbol is tagged as special, it behaves differently when it is used
+in a lexical binding construct like let, and all other such constructs
+such as function parameter lists. Such a binding is not the usual lexical
+binding, but a "rebinding" of the global variable. Over the dynamic scope
+of the form, the global variable takes on the value given to it by the
+rebinding. When the form terminates, the prior value of the variable
+is restored. (This is true no matter how the form terminates; even if by
+an exception.)
+
+Because of this "pervasive special" behavior of a symbol that has been
+used as the name of a global variable, a good practice is to make global
+variables have visually distinct names via the "earmuffs" convention:
+beginning and ending the name with an asterisk.
+
+Certain variables in TXR's library break this convention; however, they at
+least have distinct prefixes, examples being example s-ifmt, log-emerg and
+sig-hup.
+
+.TP
+Example:
+
+  (defvar *x* 42)     ;; *x* has a value of 42
+
+  (defun print-x ()
+    (format t "~a\en" *x*))
+
+  (let ((*x* "abc"))  ;; this overrides *x*
+    (print-x))        ;; *x* is now "abc" and so that is printed
+
+  (print-x)           ;; *x* is 42 again and so "42" is printed
+
+
+
 .SH CONTROL FLOW AND SEQUENCING
 
 When the first element of a compound expression is an operator symbol,
@@ -5806,6 +5850,11 @@ in which the defvar form occurs, not necessarily in the top-level environment.
 
 The symbols t and nil may not be used as variables, and neither
 can be keyword symbols: symbols denoted by a leading colon.
+
+In addition to creating a binding, the defvar operator also marks <sym>
+as the name of a special variable. This changes what it means to bind
+that symbol in a lexical binding construct such as the let operator,
+or a function parameter list. See the section "Special Variables" far above.
 
 .SS Operators let and let*
 
@@ -10918,7 +10967,7 @@ In general, I/O errors are usually turned into exceptions. When the description
 of error reporting is omitted from the description of a function, it can be
 assumed that it throws an error.
 
-.SS Variables *stdout*, *stddebug*, *stdin*, *stderr* and *stdnull*
+.SS Special variables *stdout*, *stddebug*, *stdin*, *stderr* and *stdnull*
 
 These variables hold predefined stream objects. The *stdin*, *stdout* and
 *stderr* streams closely correspond to the underlying operating system streams.
@@ -11558,7 +11607,7 @@ These properties correspond to the similarly-named entires of the struct stat
 structure in POSIX. For instance, the :dev property has the same value 
 as the st_dev field.
 
-.SS The variables s-ifmt s-iflnk s-ifreg s-ifblk ... s-ixoth
+.SS Special variables s-ifmt s-iflnk s-ifreg s-ifblk ... s-ixoth
 
 The following variables exist, having integer values. These are bitmasks
 which can be applied against the value given by the :mode property
@@ -11722,7 +11771,7 @@ name. The find-package function performs this lookup.  A package may be
 deleted from the list with the delete-package function, but it continues
 to exist until the program loses the last reference to that package.
 
-.SS Variables *user-package*, *keyword-package*, *system-package*
+.SS Special variables *user-package*, *keyword-package*, *system-package*
 
 These variables hold predefined packages. The *user-package* is the one
 in which symbols are read when a TXR program is being scanned.
@@ -11769,7 +11818,7 @@ Note: the variation in name is not the basis of the uniqueness of gensym; the
 basis of its uniqueness is that it is a freshly instantiated object. make-sym
 also returns unique symbols even if repeatedly called with the same string.
 
-.SS Variable *gensym-counter*
+.SS Special variable *gensym-counter*
 
 This variable is initialized to 0. Each time the gensym function is called,
 it is incremented. The incremented value forms the basis of the numeric
@@ -11919,7 +11968,7 @@ returns nil.
 
 .SH PSEUDO-RANDOM NUMBERS
 
-.SS Variable *random-state*
+.SS Special variable *random-state*
 
 The *random-state* variable holds an object which encapsulates the state
 of a pseudo-random number generator. This variable is the default argument for
@@ -12133,7 +12182,7 @@ savings time).
 
 .SH ENVIRONMENT VARIABLES AND COMMAND LINE
 
-.SS Variables *args* and *args-full*
+.SS Special variables *args* and *args-full*
 
 The *args* variable holds a list of strings representing the remaining
 arguments which follow any options processed by the txr executable, and the
@@ -12243,7 +12292,7 @@ Additionally, the sig-check function can be used to dispatch and clear deferred
 signals. These handlers are then safely called if they were subroutines of
 sig-check, and not asynchronous interrupts.
 
-.SS Variables sig-hup, sig-int, sig-quit, sig-ill, sig-trap, sig-abrt, sig-bus, sig-fpe, sig-kill, sig-usr1, sig-segv, sig-usr2, sig-pipe, sig-alrm, sig-term, sig-chld, sig-cont, sig-stop, sig-tstp, sig-ttin, sig-ttou, sig-urg, sig-xcpu, sig-xfsz, sig-vtalrm, sig-prof, sig-poll, sig-sys, sig-winch, sig-iot, sig-stkflt, sig-io, sig-lost and sig-pwr
+.SS Special variables sig-hup, sig-int, sig-quit, sig-ill, sig-trap, sig-abrt, sig-bus, sig-fpe, sig-kill, sig-usr1, sig-segv, sig-usr2, sig-pipe, sig-alrm, sig-term, sig-chld, sig-cont, sig-stop, sig-tstp, sig-ttin, sig-ttou, sig-urg, sig-xcpu, sig-xfsz, sig-vtalrm, sig-prof, sig-poll, sig-sys, sig-winch, sig-iot, sig-stkflt, sig-io, sig-lost and sig-pwr
 
 .TP
 Description:
@@ -12349,7 +12398,7 @@ interface. TXR programs can configure logging via the openlog function,
 control the loging mask via setlogmask and generate logs vis syslog,
 or using special syslog streams.
 
-.SS Variables log-pid, log-cons, log-ndelay, log-odelay, log-nowait and log-perror
+.SS Special variables log-pid, log-cons, log-ndelay, log-odelay, log-nowait and log-perror
 
 These variables take on the values of the corresponding C preprocessor
 constants from the <syslog.h> header: LOG_PID, LOG_CONS, etc. These
@@ -12359,7 +12408,7 @@ openlog function.
 Note: LOG_PERROR is not in POSIX, and so log-perror might not be available.
 See notes about LOG_AUTHPRIV in the next section.
 
-.SS Variables log-user, log-daemon, log-auth and log-authpriv
+.SS Special variables log-user, log-daemon, log-auth and log-authpriv
 
 These variables take on the values of the corresponding C preprocessor
 constants from the <syslog.h> header: LOG_USER, LOG_DAEMON, LOG_AUTH
@@ -12371,14 +12420,14 @@ For portability use code like (of (symbol-value 'log-authpriv) 0) to
 evaluate to 0 if log-authpriv doesn't exist, or else check for its
 existence using (boundp 'log-authpriv).
 
-.SS Variables log-emerg, log-alert, log-crit, log-err, log-warning, log-notice, log-info and log-debug
+.SS Special variables log-emerg, log-alert, log-crit, log-err, log-warning, log-notice, log-info and log-debug
 
 These variables take on the values of the corresponding C preprocessor
 constants from the <syslog.h> header: LOG_EMERG, LOG_ALERT, etc.
 These are the integer priority codes specified in the syslog call.
 
-.SS The *stdlog* variable holds a special kind of stream: a syslog stream.
-Each newline-terminated line of text sent to this stream becomes a log
+.SS The *stdlog* special variable holds a special kind of stream: a syslog
+stream.  Each newline-terminated line of text sent to this stream becomes a log
 message. 
 
 The stream internally maintains a priority value that is applied
@@ -12891,7 +12940,7 @@ to the original untransformed source code.
 
 .SH MODULARIZATION
 
-.SS Variable *self-path*
+.SS Special variable *self-path*
 
 This variable holds the invocation path name of the TXR program.
 
