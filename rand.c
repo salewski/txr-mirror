@@ -63,7 +63,7 @@ val random_state;
 val random_state_s;
 
 static struct cobj_ops random_state_ops = {
-  cobj_equal_op,
+  eq,
   cobj_print_op,
   cobj_destroy_free_op,
   cobj_mark_op,

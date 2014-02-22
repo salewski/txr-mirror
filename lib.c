@@ -1014,7 +1014,7 @@ val countq(val obj, val list)
   val count = zero;
 
   for (; list; list = cdr(list))
-    if (eq(car(list), obj))
+    if (car(list) == obj)
       count = plus(count, one);
 
   return count;
@@ -1276,11 +1276,6 @@ val equal(val left, val right)
   internal_error("unhandled case in equal function");
 }
 
-val cobj_equal_op(val left, val right)
-{
-  return eq(left, right);
-}
-
 static mem_t *malloc_low_bound, *malloc_high_bound;
 
 mem_t *chk_malloc(size_t size)
@@ -1444,7 +1439,7 @@ val getplist(val list, val key)
 {
   for (; list; list = cdr(cdr(list))) {
     val ind = first(list);
-    if (eq(ind, key))
+    if (ind == key)
       return second(list);
   }
 
@@ -1455,7 +1450,7 @@ val getplist_f(val list, val key, val *found)
 {
   for (; list; list = cdr(cdr(list))) {
     val ind = first(list);
-    if (eq(ind, key)) {
+    if (ind == key) {
       *found = t;
       return second(list);
     }
@@ -1979,7 +1974,7 @@ val search_str_tree(val haystack, val tree, val start_num, val from_end)
       val result = search_str_tree(haystack, car(tree), start_num, from_end);
       if (result) {
         cons_bind (pos, len, result);
-        if (!it || lt(pos, minpos) || (eq(pos, minpos) && gt(len, maxlen))) {
+        if (!it || lt(pos, minpos) || (pos == minpos && gt(len, maxlen))) {
           minpos = pos;
           maxlen = len;
           it = result;
@@ -4815,7 +4810,7 @@ val posq(val obj, val list)
   val pos = zero;
 
   for (; list; list = cdr(list), pos = plus(pos, one))
-    if (eq(car(list), obj))
+    if (car(list) == obj)
       return pos;
 
   return nil;

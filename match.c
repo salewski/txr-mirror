@@ -3047,7 +3047,7 @@ static val v_output(match_files_ctx *c)
   val alist;
   fpip_t fp;
 
-  if (eq(first(dest_spec), nothrow_k)) {
+  if (first(dest_spec) == nothrow_k) {
     if (rest(dest_spec))
       sem_error(specline, lit("material after :nothrow in output"), nao);
   } else if (!keywordp(first(dest_spec))) {

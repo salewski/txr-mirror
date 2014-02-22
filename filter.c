@@ -93,7 +93,7 @@ static void trie_compress(val *ptrie)
 
     if (zerop(count)) {
       set(*ptrie, value);
-    } else if (eq(count, one) && nilp(value)) {
+    } else if (count == one && nilp(value)) {
       val iter = hash_begin(trie);
       val cell = hash_next(iter);
       set(*ptrie, cons(car(cell), cdr(cell)));
@@ -131,7 +131,7 @@ val trie_lookup_feed_char(val node, val ch)
     return gethash(node, ch);
   if (functionp(node))
     return funcall1(node, ch);
-  if (consp(node) && eq(ch,car(node)))
+  if (consp(node) && ch == car(node))
     return cdr(node);
   return nil;
 }
@@ -246,9 +246,9 @@ val filter_string_tree(val filter, val obj)
     {
       val type = typeof(filter);
 
-      if (eq(type, null_s))
+      if (type == null_s)
         return obj;
-      if (eq(type, hash_s) || eq(type, cons_s))
+      if (type == hash_s || type == cons_s)
         return trie_filter_string(filter, obj);
       else if (type == fun_s)
         return funcall1(filter, obj);
@@ -549,7 +549,7 @@ static val html_hex_continue(val hexlist, val ch)
 {
   if (iswxdigit(c_chr(ch))) {
     return func_f1(cons(ch, hexlist), html_hex_continue);
-  } if (eq(ch, chr(';'))) {
+  } if (ch == chr(';')) {
     wchar_t out[2] = { 0 };
     val iter;
 
@@ -573,7 +573,7 @@ static val html_dec_continue(val declist, val ch)
 {
   if (iswdigit(c_chr(ch))) {
     return func_f1(cons(ch, declist), html_dec_continue);
-  } if (eq(ch, chr(';'))) {
+  } if (ch == chr(';')) {
     wchar_t out[2] = { 0 };
     val iter;
 
@@ -592,7 +592,7 @@ static val html_dec_continue(val declist, val ch)
 
 static val html_numeric_handler(val ch)
 {
-  if (eq(ch, chr('x')))
+  if (ch == chr('x'))
     return func_f1(nil, html_hex_continue);
   if (!iswdigit(c_chr(ch)))
     return nil;

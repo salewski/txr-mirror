@@ -761,7 +761,7 @@ static void char_set_cobj_destroy(val chset)
 }
 
 static struct cobj_ops char_set_obj_ops = {
-  cobj_equal_op,
+  eq,
   cobj_print_op,
   char_set_cobj_destroy,
   cobj_mark_op,
@@ -1264,7 +1264,7 @@ static void regex_destroy(val regex)
 }
 
 static struct cobj_ops regex_obj_ops = {
-  cobj_equal_op,
+  eq,
   cobj_print_op,
   regex_destroy,
   cobj_mark_op,
@@ -1501,7 +1501,7 @@ static val reg_derivative(val exp, val ch)
   if (exp == nil || exp == t) {
     return t;
   } else if (chrp(exp)) {
-    return if3(eq(exp, ch), nil, t);
+    return null(eq(exp, ch));
   } else if (typeof(exp) == chset_s) {
     char_set_t *set = (char_set_t *) exp->co.handle;
     return if3(char_set_contains(set, c_chr(ch)), nil, t);
@@ -1635,7 +1635,7 @@ val regex_compile(val regex_sexp, val error_stream)
 val regexp(val obj)
 {
   if (consp(obj))
-    return if2(eq(car(obj), compiled_regex_s), t);
+    return eq(car(obj), compiled_regex_s);
 
   return typeof(obj) == regex_s ? t : nil;
 }

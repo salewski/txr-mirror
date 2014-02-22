@@ -193,8 +193,10 @@ struct cobj_ops {
   cnum (*hash)(val self);
 };
 
-/* Default operations for above structure. */
-val cobj_equal_op(val, val);
+/* Default operations for above structure.
+ * Default equal is eq
+ */
+
 void cobj_print_op(val, val);
 void cobj_destroy_stub_op(val);
 void cobj_destroy_free_op(val);
@@ -725,9 +727,9 @@ INLINE val null(val v) { return v ? nil : t; }
 
 #define nao ((obj_t *) (1 << TAG_SHIFT)) /* "not an object" sentinel value. */
 
-INLINE val missingp(val v) { return v == colon_k ? t : nil; }
+#define missingp(v) ((v) == colon_k)
 
-INLINE val null_or_missing_p(val v) { return (!v || v == colon_k) ? t : nil; }
+INLINE int null_or_missing_p(val v) { return (nilp(v) || missingp(v)); }
 
 #define if2(a, b) ((a) ? (b) : nil)
 

@@ -209,7 +209,7 @@ static val syslog_set_prop(val stream, val ind, val prop)
 }
 
 static struct strm_ops syslog_strm_ops = {
-  { cobj_equal_op,
+  { eq,
     cobj_print_op,
     cobj_destroy_stub_op,
     syslog_mark,

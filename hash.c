@@ -637,7 +637,7 @@ static void hash_iter_mark(val hash_iter)
 }
 
 static struct cobj_ops hash_iter_ops = {
-  cobj_equal_op,
+  eq,
   cobj_print_op,
   cobj_destroy_free_op,
   hash_iter_mark,

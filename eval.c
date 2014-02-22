@@ -1996,7 +1996,7 @@ static val transform_op(val forms, val syms, val rg)
                              cdr(cell));
         cons_bind (outsyms, outforms, transform_op(re, newsyms, rg)); 
         return cons(outsyms, rlcp(cons(sym, outforms), outforms));
-      } else if (eq(vararg, rest_s)) {
+      } else if (vararg == rest_s) {
         cons_bind (outsyms, outforms, transform_op(re, syms, rg)); 
         return cons(outsyms, rlcp(cons(rg, outforms), outforms));
       }
@@ -2725,7 +2725,7 @@ static void c_var_mark(val obj)
 }
 
 static struct cobj_ops c_var_ops = {
-  cobj_equal_op,
+  eq,
   cobj_print_op,
   cobj_destroy_free_op,
   c_var_mark,

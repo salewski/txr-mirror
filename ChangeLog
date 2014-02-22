@@ -1,5 +1,45 @@
 2014-02-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	Replacing uses of the eq function which are used only as C booleans,
+	with just using the == operator. 
+
+	Removing cobj_equal_op since it's indistinguishable from eq.
+
+	Streamlining missingp and null_or_missing_p.
+
+	* eval.c (transform_op): eq to ==.
+	(c_var_ops): cobj_equal_op to eq.
+
+	* filter.c (trie_compress, trie_lookup_feed_char, filter_string_tree,
+	html_hex_continue, html_dec_continue): eq to ==.
+
+	* hash.c (hash_iter_ops): cobj_equal to eq.
+
+	* lib.c (countq, getplist, getplist_f, search_str_tree,
+	posq): eq to ==.
+	(cobj_equal_op): Function removed.
+
+	* lib.h (cobj_equal_op): Declaration removed.
+	(missingp): Becomes a simple macro that yields a C boolean instead
+	of t/nil val, because it's only used that way.
+	(null_or_missing_p): Becomes inline function returning int.
+
+	* match.c (v_output): eq to ==.
+
+	* rand.c (random_state_ops): cobj_equal_op to eq.
+
+	* regex.c (char_set_obj_ops, regex_obj_ops): cobj_equal_op to eq.
+	(reg_derivative): Silly if3 expression replaced by null.
+	(regexp): Redundant if2 expression wrapped around eq removed.
+
+	* stream.c (null_ops, stdio_ops, tail_ops, pipe_ops, string_in_ops,
+	byte_in_ops, string_out_ops, strlist_out_ops, dir_ops,
+	cat_stream_ops): cobj_equal_op to eq.
+
+	* syslog.c (syslog_strm_ops): cobj_equal_op to eq.
+
+2014-02-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	The C function nullp is being renamed to null, and the rarely
 	used global variable null which holds a symbol becomes null_s.
 

@@ -87,7 +87,7 @@ static val null_get_prop(val stream, val ind)
 }
 
 static struct strm_ops null_ops = {
-  { cobj_equal_op,
+  { eq,
     null_stream_print,
     cobj_destroy_stub_op,
     cobj_mark_op,
@@ -419,7 +419,7 @@ static val stdio_close(val stream, val throw_on_error)
 }
 
 static struct strm_ops stdio_ops = {
-  { cobj_equal_op,
+  { eq,
     stdio_stream_print,
     stdio_stream_destroy,
     stdio_stream_mark,
@@ -599,7 +599,7 @@ static val tail_get_byte(val stream)
 
 
 static struct strm_ops tail_ops = {
-  { cobj_equal_op,
+  { eq,
     stdio_stream_print,
     stdio_stream_destroy,
     stdio_stream_mark,
@@ -689,7 +689,7 @@ static val pipe_close(val stream, val throw_on_error)
 }
 
 static struct strm_ops pipe_ops = {
-  { cobj_equal_op,
+  { eq,
     stdio_stream_print,
     stdio_stream_destroy,
     stdio_stream_mark,
@@ -791,7 +791,7 @@ static val string_in_get_prop(val stream, val ind)
 }
 
 static struct strm_ops string_in_ops = {
-  { cobj_equal_op,
+  { eq,
     cobj_print_op,
     cobj_destroy_stub_op,
     string_in_stream_mark,
@@ -852,7 +852,7 @@ static val byte_in_unget_byte(val stream, int byte)
 }
 
 static struct strm_ops byte_in_ops = {
-  { cobj_equal_op,
+  { eq,
     cobj_print_op,
     byte_in_stream_destroy,
     cobj_mark_op,
@@ -980,7 +980,7 @@ static val string_out_put_byte(val stream, int ch)
 }
 
 static struct strm_ops string_out_ops = {
-  { cobj_equal_op,
+  { eq,
     cobj_print_op,
     string_out_stream_destroy,
     cobj_mark_op,
@@ -1053,7 +1053,7 @@ static val strlist_out_put_char(val stream, val ch)
 }
 
 static struct strm_ops strlist_out_ops = {
-  { cobj_equal_op,
+  { eq,
     cobj_print_op,
     cobj_destroy_stub_op,
     strlist_mark,
@@ -1127,7 +1127,7 @@ static val dir_close(val stream, val throw_on_error)
 }
 
 static struct strm_ops dir_ops = {
-  { cobj_equal_op,
+  { eq,
     cobj_print_op,
     common_destroy,
     cobj_mark_op,
@@ -2334,7 +2334,7 @@ static val cat_get_prop(val stream, val ind)
 }
 
 static struct strm_ops cat_stream_ops = {
-  { cobj_equal_op,
+  { eq,
     cat_stream_print,
     cobj_destroy_stub_op,
     cobj_mark_op,
