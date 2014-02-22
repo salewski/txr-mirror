@@ -68,7 +68,7 @@ val packages;
 
 val system_package, keyword_package, user_package;
 
-val null, t, cons_s, str_s, chr_s, fixnum_s, sym_s, pkg_s, fun_s, vec_s;
+val null_s, t, cons_s, str_s, chr_s, fixnum_s, sym_s, pkg_s, fun_s, vec_s;
 val stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s, cptr_s;
 val env_s, bignum_s, float_s;
 val var_s, expr_s, regex_s, chset_s, set_s, cset_s, wild_s, oneplus_s;
@@ -110,7 +110,7 @@ val identity(val obj)
 static val code2type(int code)
 {
   switch ((type_t) code) {
-  case NIL: return null;
+  case NIL: return null_s;
   case CONS: return cons_s;
   case STR: return str_s;
   case LIT: return str_s;
@@ -1101,7 +1101,7 @@ static val lazy_flatten_scan(val list, val *escape)
   for (;;) { 
     if (list) {
       val a = car(list);
-      if (nullp(a)) {
+      if (nilp(a)) {
         list = cdr(list);
       } else if (atom(a)) {
         return list;
@@ -3738,7 +3738,7 @@ val chainv(val funlist)
 static val do_and(val fun1_list, val args)
 {
   for (; fun1_list; fun1_list = cdr(fun1_list))
-    if (nullp(apply(car(fun1_list), args, nil)))
+    if (nilp(apply(car(fun1_list), args, nil)))
       return nil;
 
   return t;
@@ -4209,7 +4209,7 @@ val lazy_str(val lst, val term, val limit)
   term = default_arg(term, lit("\n"));
   limit = default_bool_arg(limit);
 
-  if (nullp(lst)) {
+  if (nilp(lst)) {
     obj->ls.prefix = null_string;
     obj->ls.list = nil;
   } else {
@@ -4251,7 +4251,7 @@ val lazy_str_force_upto(val lstr, val index)
   lim = cdr(lstr->ls.opts);
 
   while (ge(index, length_str(lstr->ls.prefix)) && lstr->ls.list &&
-         or2(nullp(lim),gt(lim,zero)))
+         or2(null(lim),gt(lim,zero)))
   {
     val next = pop(&lstr->ls.list);
     val term = car(lstr->ls.opts);
@@ -5074,7 +5074,7 @@ static void obj_init(void)
                        lit("t"), 0), make_sym(lit("t")));
   set(t->s.package, user_package);
 
-  null = intern(lit("null"), user_package);
+  null_s = intern(lit("null"), user_package);
   cons_s = intern(lit("cons"), user_package);
   str_s = intern(lit("str"), user_package);
   chr_s = intern(lit("chr"), user_package);
@@ -5172,7 +5172,7 @@ static void obj_init(void)
   identity_f = func_n1(identity);
   car_f = func_n1(car);
   cdr_f = func_n1(cdr);
-  null_f = func_n1(nullp);
+  null_f = func_n1(null);
   gensym_counter = zero;
   prog_string = string(progname);
 }
@@ -5220,7 +5220,7 @@ val obj_print(val obj, val out)
 
         for (iter = obj; consp(iter); iter = cdr(iter)) {
           obj_print(car(iter), out);
-          if (nullp(cdr(iter))) {
+          if (nilp(cdr(iter))) {
             put_char(closepar, out);
           } else if (consp(cdr(iter))) {
             put_char(chr(' '), out);
@@ -5386,7 +5386,7 @@ val obj_pprint(val obj, val out)
 
         for (iter = obj; consp(iter); iter = cdr(iter)) {
           obj_pprint(car(iter), out);
-          if (nullp(cdr(iter))) {
+          if (nilp(cdr(iter))) {
             put_char(closepar, out);
           } else if (consp(cdr(iter))) {
             put_char(chr(' '), out);

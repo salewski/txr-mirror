@@ -315,7 +315,8 @@ INLINE val chr(wchar_t ch)
 #define lit(strlit) lit_noex(strlit)
 
 extern val keyword_package, system_package, user_package;
-extern val null, t, cons_s, str_s, chr_s, fixnum_s, sym_s, pkg_s, fun_s, vec_s;
+extern val null_s, t, cons_s, str_s, chr_s, fixnum_sl;
+extern val sym_s, pkg_s, fun_s, vec_s;
 extern val stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s, cptr_s;
 extern val env_s, bignum_s, float_s;
 extern val var_s, expr_s, regex_s, chset_s, set_s, cset_s, wild_s, oneplus_s;
@@ -718,7 +719,9 @@ void breakpt(void);
 
 INLINE val eq(val a, val b) { return a == b ? t : nil; }
 
-INLINE val nullp(val v) { return v ? nil : t; }
+INLINE val null(val v) { return v ? nil : t; }
+
+#define nilp(o) ((o) == nil)
 
 #define nao ((obj_t *) (1 << TAG_SHIFT)) /* "not an object" sentinel value. */
 

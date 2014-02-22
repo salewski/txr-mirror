@@ -666,7 +666,7 @@ val hash_next(val iter)
   struct hash *h = (struct hash *) hash->co.handle;
   if (hi->cons)
     hi->cons = cdr(hi->cons);
-  while (nullp(hi->cons)) {
+  while (nilp(hi->cons)) {
     if (++hi->chain >= h->modulus)
       return nil;
     set(hi->cons, vecref(h->table, num_fast(hi->chain)));

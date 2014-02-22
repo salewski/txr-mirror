@@ -929,7 +929,7 @@ static nfa_t nfa_compile_list(val exp_list)
  */
 static nfa_t nfa_compile_regex(val exp)
 {
-  if (nullp(exp)) {
+  if (nilp(exp)) {
     nfa_state_t *acc = nfa_state_accept();
     nfa_state_t *s = nfa_state_empty(acc, 0);
     return nfa_make(s, acc);

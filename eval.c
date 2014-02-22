@@ -141,7 +141,7 @@ noreturn static val eval_error(val form, val fmt, ...)
 
 val lookup_var(val env, val sym)
 {
-  if (nullp(env)) {
+  if (nilp(env)) {
     val bind = gethash(top_vb, sym);
     if (cobjp(bind)) {
       struct c_var *cv = (struct c_var *) cptr_get(bind);
@@ -163,7 +163,7 @@ val lookup_var(val env, val sym)
 
 val *lookup_var_l(val env, val sym)
 {
-  if (nullp(env)) {
+  if (nilp(env)) {
     val bind = gethash(top_vb, sym);
     if (cobjp(bind)) {
       struct c_var *cv = (struct c_var *) cptr_get(bind);
@@ -186,7 +186,7 @@ val *lookup_var_l(val env, val sym)
 
 val lookup_fun(val env, val sym)
 {
-  if (nullp(env)) {
+  if (nilp(env)) {
     return gethash(top_fb, sym);
   } else  {
     type_check(env, ENV);
@@ -204,7 +204,7 @@ static val lookup_sym_lisp1(val env, val sym)
 {
   uses_or2;
 
-  if (nullp(env)) {
+  if (nilp(env)) {
     val bind = gethash(top_vb, sym);
     if (cobjp(bind)) {
       struct c_var *cv = (struct c_var *) cptr_get(bind);
@@ -732,7 +732,7 @@ static val do_eval(val form, val env, val ctx_form,
   type_check(env, ENV);
   debug_check(consp(form) ? form : ctx_form, env, nil, nil, nil, nil);
 
-  if (nullp(form)) {
+  if (nilp(form)) {
     debug_return (nil);
   } else if (symbolp(form)) {
     if (!bindable(form)) {
@@ -1455,7 +1455,7 @@ static val op_modplace(val form, val env)
       eval_error(form, lit("~s: superfluous argument"), op, nao);
     return pop(loc);
   } else if (op == flip_s) {
-    return *loc = nullp(*loc);
+    return *loc = null(*loc);
   } else if (op == del_s) {
     eval_error(form, lit("~s: cannot delete ~a"), op, place, nao);
   }
@@ -1809,7 +1809,7 @@ static val expand_place(val place)
 
 static val expand_qquote(val qquoted_form)
 {
-  if (nullp(qquoted_form)) {
+  if (nilp(qquoted_form)) {
     return nil;
   } if (atom(qquoted_form)) {
     return rlcp(cons(quote_s, cons(qquoted_form, nil)), qquoted_form);
@@ -1905,7 +1905,7 @@ static val expand_vars(val vars, val specials)
 
 static val expand_quasi(val quasi_forms)
 {
-  if (nullp(quasi_forms)) {
+  if (nilp(quasi_forms)) {
     return nil;
   } else {
     val form = first(quasi_forms);
@@ -2064,7 +2064,7 @@ static val expand_op(val sym, val body)
     uses_or2;
     val dwim_body = rlcp(cons(dwim_s, 
                               if3(or4(is_op, has_rest, ssyms, 
-                                      nullp(proper_listp(body_trans))),
+                                      null(proper_listp(body_trans))),
                                   body_trans,
                                   append2(body_trans, rest_gensym))),
                          body_trans);
@@ -2896,8 +2896,8 @@ void eval_init(void)
   reg_fun(intern(lit("typeof"), user_package), func_n1(typeof));
 
   reg_fun(intern(lit("atom"), user_package), func_n1(atom));
-  reg_fun(intern(lit("null"), user_package), func_n1(nullp));
-  reg_fun(intern(lit("not"), user_package), func_n1(nullp));
+  reg_fun(intern(lit("null"), user_package), func_n1(null));
+  reg_fun(intern(lit("not"), user_package), func_n1(null));
   reg_fun(intern(lit("consp"), user_package), func_n1(consp));
   reg_fun(intern(lit("listp"), user_package), func_n1(listp));
   reg_fun(intern(lit("proper-listp"), user_package), func_n1(proper_listp));

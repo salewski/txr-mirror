@@ -136,7 +136,7 @@ val make_random_state(val seed)
     r->state[2] = (s >> 64) & 0xFFFFFFFFul;
     r->state[3] = (s >> 96) & 0xFFFFFFFFul;
 #endif
-  } else if (nullp(seed)) {
+  } else if (nilp(seed)) {
     val time = time_sec_usec();
     r->state[0] = (rand32_t) c_num(car(time));
     r->state[1] = (rand32_t) c_num(cdr(time));

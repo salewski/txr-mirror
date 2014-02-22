@@ -1,5 +1,46 @@
 2014-02-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	The C function nullp is being renamed to null, and the rarely
+	used global variable null which holds a symbol becomes null_s.
+
+	A new macro called nilp is added that more efficiently checks whether
+	an object is nil, producing a C boolean value rather than t or nil.
+
+	Most of the uses of nullp in the codebase just become the more
+	streamlined nilp.
+
+	* debug.c (show_bindings): nullp to nilp
+
+	* eval.c (lookup_var, lookup_var_l, lookup_fun, lookup_sym_lisp1,
+	do_eval, expand_qquote, expand_quasi, expand_op): nullp to nilp.
+	(op_modplace): nullp to null.
+	(eval_init): Update registration of null and not from C function
+	nullp to null.
+
+	* filter.c (trie_compress, html_hex_continue): nullp to nil.
+	(filter_string_tree): null to null_s.
+
+	* hash.c (hash_next): nullp to nilp.
+
+	* lib.c (null): Variable renamed to null_s.
+	(code2type): null to null_s.
+	(lazy_flatten_scan, chainv, lazy_str, lazy_str_force_upto,
+	obj_print, obj_pprint):
+	nullp to nilp.
+	(obj_init): null to null_s; nullp to null.
+
+	* lib.h (null): declaration changed to null_s.
+	(nullp): Inline function renamed to null.
+	(nilp): New macro.
+
+	* match.c (do_match_line): nullp to nilp.
+
+	* rand.c (make_random_state): Likewise.
+
+	* regex.c (compile_regex): Likewise.
+
+2014-02-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.y: Bugfix, I think. :) We do not need to call the expander
 	for a Lisp expression in a quasistring, and doing so leads to a
 	potentially incorrect double expansion because the whole thing

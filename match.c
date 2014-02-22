@@ -1145,7 +1145,7 @@ static val do_match_line(match_line_ctx *c)
 
         if (regexp(directive)) {
           val past = match_regex(c->dataline, directive, c->pos);
-          if (nullp(past)) {
+          if (nilp(past)) {
             LOG_MISMATCH("regex");
             debug_return (nil);
           }

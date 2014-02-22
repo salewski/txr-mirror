@@ -93,7 +93,7 @@ static void trie_compress(val *ptrie)
 
     if (zerop(count)) {
       set(*ptrie, value);
-    } else if (eq(count, one) && nullp(value)) {
+    } else if (eq(count, one) && nilp(value)) {
       val iter = hash_begin(trie);
       val cell = hash_next(iter);
       set(*ptrie, cons(car(cell), cdr(cell)));
@@ -246,7 +246,7 @@ val filter_string_tree(val filter, val obj)
     {
       val type = typeof(filter);
 
-      if (eq(type, null))
+      if (eq(type, null_s))
         return obj;
       if (eq(type, hash_s) || eq(type, cons_s))
         return trie_filter_string(filter, obj);
@@ -553,7 +553,7 @@ static val html_hex_continue(val hexlist, val ch)
     wchar_t out[2] = { 0 };
     val iter;
 
-    if (nullp(hexlist))
+    if (nilp(hexlist))
       return nil;
 
     for (iter = nreverse(hexlist); iter; iter = cdr(iter)) {

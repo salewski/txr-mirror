@@ -71,7 +71,7 @@ static void show_bindings(val env, val stream)
   put_string(lit("bindings:\n"), stream);
 
   for (;; level = plus(level, one)) {
-    if (nullp(env))
+    if (nilp(env))
       break;
     else if (consp(env)) {
       format(stream, lit("~s: ~s\n"), level, env, nao);
