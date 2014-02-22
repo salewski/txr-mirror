@@ -56,7 +56,7 @@ static val lit_char_helper(val litchars);
 static val optimize_text(val text_form);
 static val unquotes_occur(val quoted_form);
 static val choose_quote(val quoted_form);
-static val expand_meta(val form);
+static val expand_meta(val form, val menv);
 static wchar_t char_from_name(const wchar_t *name);
 
 static val parsed_spec;
@@ -345,11 +345,11 @@ elem : texts                    { $$ = rlcp(cons(text_s, $1), $1);
      | list                     { val sym = first($1);
                                   if (sym ==  do_s || sym == require_s)
                                     $$ = rlcp(cons(sym,
-                                                   expand_forms(rest($1))),
+                                                   expand_forms(rest($1), nil)),
                                               $1);
                                   else
                                     $$ = rlcp(cons(sym,
-                                                   expand_meta(rest($1))),
+                                                   expand_meta(rest($1), nil)),
                                               $1); }
      | COLL exprs_opt ')' elems END     { $$ = list(coll_s, $4, nil, $2, nao);
                                           rl($$, num($1)); }
@@ -582,7 +582,8 @@ o_elem : TEXT                   { $$ = string_own($1);
        | SPACE                  { $$ = string_own($1);
                                   rl($$, num(lineno)); }
        | o_var                  { $$ = $1; }
-       | list                   { $$ = rlcp(cons(expr_s, expand($1)), $1); }
+       | list                   { $$ = rlcp(cons(expr_s,
+                                                 expand($1, nil)), $1); }
        | rep_elem               { $$ = $1; }
        ;
 
@@ -715,10 +716,10 @@ list : '(' n_exprs ')'          { $$ = rl($2, num($1)); }
                                   yybadtoken(yychar, lit("meta expression")); }
      ;
 
-exprs : n_exprs                 { $$ = rlcp(expand_meta($1), $1); }
+exprs : n_exprs                 { $$ = rlcp(expand_meta($1, nil), $1); }
       ;
 
-expr : n_expr                   { $$ = rlcp(expand_meta($1), $1); }
+expr : n_expr                   { $$ = rlcp(expand_meta($1, nil), $1); }
      ;
 
 exprs_opt : exprs               { $$ = $1; }
@@ -1115,19 +1116,21 @@ static val choose_quote(val quoted_form)
   return unquotes_occur(quoted_form) ? qquote_s : quote_s;
 }
 
-static val expand_meta(val form)
+static val expand_meta(val form, val menv)
 {
   if (atom(form))
     return form;
 
+  menv = default_arg(menv, make_env(nil, nil, nil));
+
   if (car(form) == expr_s)
-    return cons(expr_s, expand(rest(form)));
+    return cons(expr_s, expand(rest(form), menv));
 
   {
     list_collect_decl (out, ptail);
 
     for (; consp(form); form = cdr(form)) 
-      ptail = list_collect(ptail, expand_meta(car(form)));
+      ptail = list_collect(ptail, expand_meta(car(form), menv));
 
     list_collect_nconc(ptail, form);
 

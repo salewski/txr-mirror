@@ -1,5 +1,23 @@
 2014-02-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	Preparation for lexical macros: we need to pass a macro
+	environment down through the expander call hierarchy.
+
+	* eval.c (expand_opt_params, expand_params, expand_tree_cases,
+	expand_tree_case, expand_forms, val expand_cond_pairs, val
+	expand_place, expand_qquote, expand_vars, expand_quasi, expand_op,
+	expand_catch_clause, expand_catch, expand): All expanders get new
+	parameter, menv. expand_forms and expand handle a nil value of menv.
+	(eval_intrinsic): Pass nil macro environment to expand.
+	(eval_init): Update intrinsic registration for expand.
+
+	* eval.h (expand, expand_forms): Declarations updated.
+
+	* parser.y (expand_meta): Gets macro env parameter.
+	(elem, o_elem, exprs, expr): Pass nil to expand_forms and expand_meta.
+
+2014-02-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	Replacing uses of the eq function which are used only as C booleans,
 	with just using the == operator. 
 

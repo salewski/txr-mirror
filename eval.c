@@ -345,44 +345,45 @@ twocol:
              car(ctx_form), nao);
 }
 
-static val expand_opt_params(val params)
+static val expand_opt_params(val params, val menv)
 {
   if (atom(params)) {
     return params;
   } else {
     val form = car(params);
     if (atom(form) || !consp(cdr(form))) { /* sym, or no init form */
-      val params_ex = expand_opt_params(cdr(params));
+      val params_ex = expand_opt_params(cdr(params), menv);
       if (params_ex == cdr(params))
         return params;
       return rlcp(cons(form, params_ex), cdr(params));
     } else { /* has initform */
       val initform = car(cdr(form));
-      val initform_ex = rlcp(expand(initform), initform);
+      val initform_ex = rlcp(expand(initform, menv), initform);
       val form_ex = rlcp(cons(car(form), cons(initform_ex, cdr(cdr(form)))),
                          form);
-      return rlcp(cons(form_ex, expand_opt_params(rest(params))), cdr(params));
+      return rlcp(cons(form_ex, expand_opt_params(rest(params), menv)),
+                  cdr(params));
     } 
   }
 }
 
-static val expand_params(val params)
+static val expand_params(val params, val menv)
 {
   if (atom(params)) {
     return params;
   } else if (car(params) == colon_k) {
-    val params_ex = expand_opt_params(cdr(params));
+    val params_ex = expand_opt_params(cdr(params), menv);
     if (params_ex == cdr(params))
       return params;
     return rlcp(cons(colon_k, params_ex), cdr(params));
   } else if (consp(car(params))) {
-    val car_ex = expand_params(car(params));
-    val params_ex = expand_params(cdr(params));
+    val car_ex = expand_params(car(params), menv);
+    val params_ex = expand_params(cdr(params), menv);
     if (car_ex == car(params) && params_ex == cdr(params))
       return params;
     return rlcp(cons(car_ex, params_ex), params);
   } else {
-    val params_ex = expand_params(cdr(params));
+    val params_ex = expand_params(cdr(params), menv);
     if (params_ex == cdr(params))
       return params;
     return rlcp(cons(car(params), params_ex), cdr(params));
@@ -720,7 +721,7 @@ val interp_fun(val env, val fun, val args)
 
 val eval_intrinsic(val form, val env)
 {
-  form = expand(form);
+  form = expand(form, nil);
   return eval(form, default_arg(env, make_env(nil, nil, env)), form);
 }
 
@@ -1158,7 +1159,7 @@ static val op_tree_case(val form, val env)
   return nil;
 }
 
-static val expand_tree_cases(val cases)
+static val expand_tree_cases(val cases, val menv)
 {
   if (atom(cases)) {
     return cases;
@@ -1166,16 +1167,16 @@ static val expand_tree_cases(val cases)
     val onecase = car(cases);
 
     if (atom(onecase)) {
-      val rest_ex = expand_tree_cases(cdr(cases));
+      val rest_ex = expand_tree_cases(cdr(cases), menv);
       if (rest_ex == cdr(cases))
         return cases;
       return rlcp(cons(onecase, rest_ex), cases);
     } else {
       val dstr_args = car(onecase);
       val forms = cdr(onecase);
-      val dstr_args_ex = expand_params(dstr_args);
-      val forms_ex = expand_forms(forms);
-      val rest_ex = expand_tree_cases(cdr(cases));
+      val dstr_args_ex = expand_params(dstr_args, menv);
+      val forms_ex = expand_forms(forms, menv);
+      val rest_ex = expand_tree_cases(cdr(cases), menv);
 
       if (dstr_args_ex == dstr_args && forms_ex == forms &&
           rest_ex == cdr(cases))
@@ -1186,13 +1187,13 @@ static val expand_tree_cases(val cases)
   }
 }
 
-static val expand_tree_case(val form)
+static val expand_tree_case(val form, val menv)
 {
   val sym = first(form);
   val expr = second(form);
   val tree_cases = rest(rest(form));
-  val expr_ex = expand(expr);
-  val tree_cases_ex = expand_tree_cases(tree_cases);
+  val expr_ex = expand(expr, menv);
+  val tree_cases_ex = expand_tree_cases(tree_cases, menv);
 
   if (expr_ex == expr && tree_cases_ex == tree_cases)
     return form;
@@ -1725,15 +1726,17 @@ static val op_with_saved_vars(val form, val env)
   return result;
 }
 
-val expand_forms(val form)
+val expand_forms(val form, val menv)
 {
+  menv = default_arg(menv, make_env(nil, nil, nil));
+
   if (atom(form)) {
     return form;
   } else {
     val f = car(form);
     val r = cdr(form);
-    val ex_f = expand(f);
-    val ex_r = expand_forms(r);
+    val ex_f = expand(f, menv);
+    val ex_r = expand_forms(r, menv);
 
     if (ex_f == f && ex_r == r)
       return form;
@@ -1741,15 +1744,15 @@ val expand_forms(val form)
   }
 }
 
-static val expand_cond_pairs(val form)
+static val expand_cond_pairs(val form, val menv)
 {
   if (atom(form)) {
     return form;
   } else {
     val pair = first(form);
     val others = rest(form);
-    val pair_ex = expand_forms(pair);
-    val others_ex = expand_cond_pairs(others);
+    val pair_ex = expand_forms(pair, menv);
+    val others_ex = expand_cond_pairs(others, menv);
 
     if (pair_ex == pair && others_ex == others)
       return form;
@@ -1757,7 +1760,7 @@ static val expand_cond_pairs(val form)
   }
 }
 
-static val expand_place(val place)
+static val expand_place(val place, val menv)
 {
   if (atom(place)) {
     return place;
@@ -1765,7 +1768,7 @@ static val expand_place(val place)
     val sym = first(place);
     if (sym == dwim_s) {
       val args = rest(place);
-      val args_ex = expand_forms(args);
+      val args_ex = expand_forms(args, menv);
 
       if (args == args_ex)
         return place;
@@ -1775,9 +1778,9 @@ static val expand_place(val place)
       val hash = second(place);
       val key = third(place);
       val dfl_val = fourth(place);
-      val hash_ex = expand(hash);
-      val key_ex = expand(key);
-      val dfl_val_ex = expand(dfl_val);
+      val hash_ex = expand(hash, menv);
+      val key_ex = expand(key, menv);
+      val dfl_val_ex = expand(dfl_val, menv);
 
       if (hash == hash_ex && key == key_ex && dfl_val == dfl_val_ex)
         return place;
@@ -1787,15 +1790,15 @@ static val expand_place(val place)
                   place);
     } else if (sym == car_s || sym == cdr_s) {
       val cell = second(place);
-      val cell_ex = expand(cell);
+      val cell_ex = expand(cell, menv);
       if (cell == cell_ex)
         return place;
       return cons(sym, cons(cell_ex, nil));
     } else if (sym == vecref_s) {
       val vec = second(place);
-      val vec_ex = expand(vec);
+      val vec_ex = expand(vec, menv);
       val ind = third(place);
-      val ind_ex = expand(ind);
+      val ind_ex = expand(ind, menv);
 
       if (vec == vec_ex && ind == ind_ex)
         return place;
@@ -1807,7 +1810,7 @@ static val expand_place(val place)
   }
 }
 
-static val expand_qquote(val qquoted_form)
+static val expand_qquote(val qquoted_form, val menv)
 {
   if (nilp(qquoted_form)) {
     return nil;
@@ -1820,36 +1823,40 @@ static val expand_qquote(val qquoted_form)
       eval_error(qquoted_form, lit("',*~s syntax is invalid"),
                  second(qquoted_form), nao);
     } else if (sym == unquote_s) {
-      return expand(second(qquoted_form));
+      return expand(second(qquoted_form), menv);
     } else if (sym == qquote_s) {
-      return rlcp(expand_qquote(expand_qquote(second(qquoted_form))), 
+      return rlcp(expand_qquote(expand_qquote(second(qquoted_form),
+                                              menv),
+                                menv), 
                   qquoted_form);
     } else if (sym == hash_lit_s) {
-      val args = expand_qquote(second(qquoted_form));
-      val pairs = expand_qquote(rest(rest(qquoted_form)));
+      val args = expand_qquote(second(qquoted_form), menv);
+      val pairs = expand_qquote(rest(rest(qquoted_form)), menv);
       return rlcp(list(hash_construct_s, args, pairs, nao), qquoted_form);
     } else if (sym == vector_lit_s) {
-      val args = expand_qquote(second(qquoted_form));
+      val args = expand_qquote(second(qquoted_form), menv);
       return rlcp(list(vector_list_s, args, nao), qquoted_form);
     } else {
       val f = car(qquoted_form);
       val r = cdr(qquoted_form);
       val f_ex;
-      val r_ex = expand_qquote(r);
+      val r_ex = expand_qquote(r, menv);
 
       if (consp(f)) {
         val qsym = car(f);
         if (qsym == splice_s) {
-          f_ex = expand(second(f));
+          f_ex = expand(second(f), menv);
         } else if (qsym == unquote_s) {
-          f_ex = cons(list_s, cons(expand(second(f)), nil));
+          f_ex = cons(list_s, cons(expand(second(f), menv), nil));
         } else if (qsym == qquote_s) {
-          f_ex = cons(list_s, cons(expand_qquote(expand_qquote(second(f))), nil));
+          f_ex = cons(list_s, cons(expand_qquote(expand_qquote(second(f),
+                                                               menv),
+                                                 menv), nil));
         } else {
-          f_ex = cons(list_s, cons(expand_qquote(f), nil));
+          f_ex = cons(list_s, cons(expand_qquote(f, menv), nil));
         }
       } else {
-        f_ex = cons(list_s, cons(expand_qquote(f), nil));
+        f_ex = cons(list_s, cons(expand_qquote(f, menv), nil));
       }
 
       if (atom(r_ex)) {
@@ -1864,7 +1871,7 @@ static val expand_qquote(val qquoted_form)
   abort();
 }
 
-static val expand_vars(val vars, val specials)
+static val expand_vars(val vars, val specials, val menv)
 {
   val sym;
 
@@ -1873,22 +1880,23 @@ static val expand_vars(val vars, val specials)
   } else if (special_p(sym = car(vars))) {
     val rest_vars = rest(vars);
     cons_bind (rest_vars_ex, new_specials,
-               rlcp(expand_vars(rest_vars, specials), rest_vars));
+               rlcp(expand_vars(rest_vars, specials, menv), rest_vars));
     val ret_specials = cons(sym, new_specials);
     val var_ex = cons(colon_k, cons(nil, cons(sym, nil)));
     return cons(rlcp(cons(var_ex, rest_vars_ex), vars), ret_specials);
   } else if (symbolp(sym)) {
     val rest_vars = rest(vars);
-    cons_bind (rest_vars_ex, new_specials, expand_vars(rest_vars, specials));
+    cons_bind (rest_vars_ex, new_specials,
+               expand_vars(rest_vars, specials, menv));
     if (rest_vars == rest_vars_ex)
       return cons(vars, new_specials);
     return cons(rlcp(cons(sym, rest_vars_ex), vars), new_specials);
   } else {
     cons_bind (var, init, sym);
     val rest_vars = rest(vars);
-    val init_ex = rlcp(expand_forms(init), init);
+    val init_ex = rlcp(expand_forms(init, menv), init);
     cons_bind (rest_vars_ex, new_specials,
-               rlcp(expand_vars(rest_vars, specials), rest_vars));
+               rlcp(expand_vars(rest_vars, specials, menv), rest_vars));
 
     if (special_p(var)) {
       val ret_specials = cons(var, new_specials);
@@ -1903,7 +1911,7 @@ static val expand_vars(val vars, val specials)
   }
 }
 
-static val expand_quasi(val quasi_forms)
+static val expand_quasi(val quasi_forms, val menv)
 {
   if (nilp(quasi_forms)) {
     return nil;
@@ -1916,7 +1924,7 @@ static val expand_quasi(val quasi_forms)
     } else {
       val sym = car(form);
       if (sym == expr_s) {
-        val expr_ex = expand(rest(form));
+        val expr_ex = expand(rest(form), menv);
 
         if (expr_ex != rest(form))
           form_ex = rlcp(cons(sym, expr_ex), form);
@@ -1924,7 +1932,8 @@ static val expand_quasi(val quasi_forms)
     }
 
     if (form != form_ex)
-      return rlcp(cons(form_ex, expand_quasi(rest(quasi_forms))), quasi_forms);
+      return rlcp(cons(form_ex, expand_quasi(rest(quasi_forms), menv)),
+                  quasi_forms);
     return quasi_forms;
   }
 }
@@ -2042,9 +2051,9 @@ static val supplement_op_syms(val ssyms, val max)
   return outsyms;
 }
 
-static val expand_op(val sym, val body)
+static val expand_op(val sym, val body, val menv)
 {
-  val body_ex = if3(sym == op_s, expand_forms(body), expand(body));
+  val body_ex = if3(sym == op_s, expand_forms(body, menv), expand(body, menv));
   val rest_gensym = gensym(lit("rest-"));
   cons_bind (syms, body_trans, transform_op(body_ex, nil, rest_gensym));
   val ssyms = sort(syms, func_n2(lt), car_f);
@@ -2078,25 +2087,26 @@ static val expand_op(val sym, val body)
   }
 }
 
-static val expand_catch_clause(val form)
+static val expand_catch_clause(val form, val menv)
 {
   val sym = first(form);
   val params = second(form);
   val body = rest(rest(form));
-  val params_ex = expand_params(params);
-  val body_ex = expand_forms(body);
+  val params_ex = expand_params(params, menv);
+  val body_ex = expand_forms(body, menv);
   if (body == body_ex && params == params_ex)
     return form;
   return rlcp(cons(sym, cons(params_ex, body_ex)), form);
 }
 
-static val expand_catch(val body)
+static val expand_catch(val body, val menv)
 {
   val try_form = first(body);
   val catch_clauses = rest(body);
   val catch_syms = mapcar(car_f, catch_clauses);
-  val try_form_ex = expand(try_form);
-  val catch_clauses_ex = rlcp(mapcar(func_n1(expand_catch_clause), 
+  val try_form_ex = expand(try_form, menv);
+  val catch_clauses_ex = rlcp(mapcar(curry_12_1(func_n2(expand_catch_clause),
+                                                menv), 
                                      catch_clauses),
                               catch_clauses);
 
@@ -2113,9 +2123,11 @@ static val expand_save_specials(val form, val specials)
   return rlcp(cons(with_saved_vars_s, cons(specials, cons(form, nil))), form);
 }
 
-val expand(val form)
+val expand(val form, val menv)
 {
   val macro = nil;
+
+  menv = default_arg(menv, make_env(nil, nil, nil));
 
 tail:
   if (atom(form)) {
@@ -2130,8 +2142,8 @@ tail:
     {
       val body = rest(rest(form));
       val vars = second(form);
-      val body_ex = expand_forms(body);
-      cons_bind (vars_ex, specials, expand_vars(vars, nil));
+      val body_ex = expand_forms(body, menv);
+      cons_bind (vars_ex, specials, expand_vars(vars, nil, menv));
       if (body == body_ex && vars == vars_ex && !specials) {
         return form;
       } else {
@@ -2141,13 +2153,13 @@ tail:
     } else if (sym == block_s || sym == return_from_s) {
       val name = second(form);
       val body = rest(rest(form));
-      val body_ex = expand_forms(body);
+      val body_ex = expand_forms(body, menv);
       if (body == body_ex)
         return form;
       return rlcp(cons(sym, cons(name, body_ex)), form);
     } else if (sym == cond_s) {
       val pairs = rest(form);
-      val pairs_ex = expand_cond_pairs(pairs);
+      val pairs_ex = expand_cond_pairs(pairs, menv);
 
       if (pairs == pairs_ex)
         return form;
@@ -2155,7 +2167,7 @@ tail:
     } else if (sym == defvar_s) {
       val name = second(form);
       val init = third(form);
-      val init_ex = expand(init);
+      val init_ex = expand(init, menv);
 
       if (init == init_ex)
         return form;
@@ -2163,8 +2175,8 @@ tail:
     } else if (sym == lambda_s) {
       val params = second(form);
       val body = rest(rest(form));
-      val params_ex = expand_params(params);
-      val body_ex = expand_forms(body);
+      val params_ex = expand_params(params, menv);
+      val body_ex = expand_forms(body, menv);
 
       if (body == body_ex && params == params_ex)
         return form;
@@ -2172,9 +2184,9 @@ tail:
     } else if (sym == defun_s || sym == defmacro_s) {
       val name = second(form);
       val params = third(form);
-      val params_ex = expand_params(params);
+      val params_ex = expand_params(params, menv);
       val body = rest(rest(rest(form)));
-      val body_ex = expand_forms(body);
+      val body_ex = expand_forms(body, menv);
       val form_ex = form;
 
       if (body != body_ex || params != params_ex)
@@ -2186,14 +2198,14 @@ tail:
       }
       return form_ex;
     } else if (sym == tree_case_s) {
-      return expand_tree_case(form);
+      return expand_tree_case(form, menv);
     } else if (sym == tree_bind_s) {
       val params = second(form);
       val expr = third(form);
       val body = rest(rest(rest(form)));
-      val params_ex = expand_params(params);
-      val expr_ex = expand(expr);
-      val body_ex = expand_forms(body);
+      val params_ex = expand_params(params, menv);
+      val expr_ex = expand(expr, menv);
+      val body_ex = expand_forms(body, menv);
 
       if (params_ex == params && expr_ex == expr && body_ex == body)
         return form;
@@ -2201,8 +2213,8 @@ tail:
     } else if (sym == set_s || sym == inc_s || sym == dec_s) {
       val place = second(form);
       val inc = third(form);
-      val place_ex = expand_place(place);
-      val inc_ex = expand(inc);
+      val place_ex = expand_place(place, menv);
+      val inc_ex = expand(inc, menv);
 
       if (place == place_ex && inc == inc_ex)
         return form;
@@ -2211,32 +2223,32 @@ tail:
       return rlcp(cons(sym, cons(place_ex, cons(inc_ex, nil))), form);
     } else if (sym == push_s) {
       val inc = second(form);
-      val inc_ex = expand(inc);
+      val inc_ex = expand(inc, menv);
       val place = third(form);
-      val place_ex = expand_place(place);
+      val place_ex = expand_place(place, menv);
 
       if (place == place_ex && inc == inc_ex)
         return form;
       return rlcp(cons(sym, cons(inc_ex, cons(place_ex, nil))), form);
     } else if (sym == pop_s || sym == flip_s) {
       val place = second(form);
-      val place_ex = expand_place(place);
+      val place_ex = expand_place(place, menv);
       if (place == place_ex)
         return form;
       return rlcp(cons(sym, cons(place_ex, nil)), form);
     } else if (sym == quote_s || sym == fun_s) {
       return form;
     } else if (sym == qquote_s) {
-      return expand_qquote(second(form));
+      return expand_qquote(second(form), menv);
     } else if (sym == for_s || sym == for_star_s) {
       val vars = second(form);
       val cond = third(form);
       val incs = fourth(form);
       val forms = rest(rest(rest(rest(form))));
-      cons_bind (vars_ex, specials, expand_vars(vars, nil));
-      val cond_ex = expand_forms(cond);
-      val incs_ex = expand_forms(incs);
-      val forms_ex = expand_forms(forms);
+      cons_bind (vars_ex, specials, expand_vars(vars, nil, menv));
+      val cond_ex = expand_forms(cond, menv);
+      val incs_ex = expand_forms(incs, menv);
+      val forms_ex = expand_forms(forms, menv);
 
       if (vars == vars_ex && cond == cond_ex && 
           incs == incs_ex && forms == forms_ex && !specials) {
@@ -2255,9 +2267,9 @@ tail:
       val hashform = third(spec);
       val resform = fourth(spec);
       val body = rest(rest(form));
-      val hashform_ex = expand(hashform);
-      val resform_ex = expand(resform);
-      val body_ex = expand_forms(body);
+      val hashform_ex = expand(hashform, menv);
+      val resform_ex = expand(resform, menv);
+      val body_ex = expand_forms(body, menv);
      
       if (hashform == hashform_ex && resform == resform_ex && body == body_ex)
         return form;
@@ -2268,7 +2280,7 @@ tail:
                             body_ex));
     } else if (sym == quasi_s) {
       val quasi = rest(form);
-      val quasi_ex = expand_quasi(quasi);
+      val quasi_ex = expand_quasi(quasi, menv);
       if (quasi == quasi_ex)
         return form;
       return rlcp(cons(sym, quasi_ex), form);
@@ -2279,14 +2291,14 @@ tail:
       form = expand_delay(rest(form));
       goto tail;
     } else if (sym == op_s || sym == do_s) {
-      return expand_op(sym, rest(form));
+      return expand_op(sym, rest(form), menv);
     } else if (sym == catch_s) {
-      return expand_catch(rest(form));
+      return expand_catch(rest(form), menv);
     } else if (sym == regex_s || regexp(sym)) {
       return form;
     } else if (sym == macro_time_s) {
       val args = rest(form);
-      val args_ex = expand_forms(args);
+      val args_ex = expand_forms(args, menv);
       val result = eval_progn(args_ex, make_env(nil, nil, nil), args);
       return cons(quote_s, cons(result, nil));
     } else if (sym == with_saved_vars_s) {
@@ -2296,12 +2308,12 @@ tail:
        */
       val vars = first(form);
       val expr = second(form);
-      val expr_ex = expand(expr);
+      val expr_ex = expand(expr, menv);
       if (expr == expr_ex)
         return form;
       return cons(vars, cons(expr_ex, nil));
     } else if ((macro = gethash(top_mb, sym))) {
-      val mac_expand = expand_macro(form, macro, make_env(nil, nil, nil));
+      val mac_expand = expand_macro(form, macro, menv);
       if (mac_expand == form)
         return form;
       rlcp_tree(mac_expand, form);
@@ -2312,7 +2324,7 @@ tail:
          also handles: progn, prog1, call, if, and, or, 
          unwind-protect, return, dwim  */
       val args = rest(form);
-      val args_ex = expand_forms(args);
+      val args_ex = expand_forms(args, menv);
 
       if (args == args_ex)
         return form;
@@ -3049,7 +3061,7 @@ void eval_init(void)
   reg_fun(intern(lit("eval"), user_package), func_n2o(eval_intrinsic, 1));
   reg_fun(intern(lit("lisp-parse"), user_package), func_n2o(lisp_parse, 0));
   reg_fun(intern(lit("read"), user_package), func_n2o(lisp_parse, 0));
-  reg_fun(intern(lit("expand"), system_package), func_n1(expand));
+  reg_fun(intern(lit("expand"), system_package), func_n2o(expand, 1));
   reg_fun(intern(lit("macro-form-p"), user_package), func_n1(macro_form_p));
   reg_fun(intern(lit("macroexpand-1"), user_package),
           func_n2o(macroexpand_1, 1));
