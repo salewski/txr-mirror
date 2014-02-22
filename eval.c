@@ -542,7 +542,7 @@ static val list_star_intrinsic(val args)
   return apply_frob_args(args);
 }
 
-static val bind_macro_params(val env, val mac_env, val params, val form,
+static val bind_macro_params(val env, val menv, val params, val form,
                              val loose_p, val ctx_form)
 {
   val new_env = make_env(nil, nil, env);
@@ -564,7 +564,7 @@ static val bind_macro_params(val env, val mac_env, val params, val form,
         err_sym = nparam;
         goto nbind;
       }
-      env_vbind(new_env, nparam, if3(param == whole_k, whole, mac_env));
+      env_vbind(new_env, nparam, if3(param == whole_k, whole, menv));
       params = cdr(next);
       continue;
     } 
@@ -598,13 +598,13 @@ static val bind_macro_params(val env, val mac_env, val params, val form,
             goto nbind;
           }
 
-          new_env = bind_macro_params(new_env, mac_env,
+          new_env = bind_macro_params(new_env, menv,
                                       nparam, car(form), t, ctx_form);
 
           if (presentsym)
             env_vbind(new_env, presentsym, t);
         } else {
-          new_env = bind_macro_params(new_env, mac_env,
+          new_env = bind_macro_params(new_env, menv,
                                       param, car(form),
                                       loose_p, ctx_form);
           if (!new_env)
@@ -649,10 +649,10 @@ noarg:
 
       if (initform) {
         val initval = eval(initform, new_env, ctx_form);
-        new_env = bind_macro_params(new_env, mac_env,
+        new_env = bind_macro_params(new_env, menv,
                                     nparam, initval, t, ctx_form);
       } else {
-        new_env = bind_macro_params(new_env, mac_env,
+        new_env = bind_macro_params(new_env, menv,
                                     nparam, nil, t, ctx_form);
       }
 
@@ -1122,7 +1122,7 @@ static val op_defmacro(val form, val env)
   return name;
 }
 
-static val expand_macro(val form, val expander, val mac_env)
+static val expand_macro(val form, val expander, val menv)
 {
   debug_enter;
   val name = car(form);
@@ -1130,7 +1130,7 @@ static val expand_macro(val form, val expander, val mac_env)
   val env = car(cdr(expander));
   val params = car(cdr(cdr(expander)));
   val body = cdr(cdr(cdr(expander)));
-  val exp_env = bind_macro_params(env, mac_env, params, args, nil, form);
+  val exp_env = bind_macro_params(env, menv, params, args, nil, form);
   debug_frame(name, args, nil, env, nil, nil, nil);
   debug_return(eval_progn(body, exp_env, body));
   debug_end;
@@ -2343,16 +2343,16 @@ static val macro_form_p(val form)
   return t;
 }
 
-static val macroexpand_1(val form, val mac_env)
+static val macroexpand_1(val form, val menv)
 {
   val macro;
 
-  mac_env = default_arg(mac_env, make_env(nil, nil, nil));
+  menv = default_arg(menv, make_env(nil, nil, nil));
 
   if (atom(form)) {
     return form;
   } else if ((macro = gethash(top_mb, car(form)))) {
-    val mac_expand = expand_macro(form, macro, mac_env);
+    val mac_expand = expand_macro(form, macro, menv);
     if (mac_expand == form)
       return form;
     rlcp_tree(mac_expand, form);
@@ -2361,10 +2361,10 @@ static val macroexpand_1(val form, val mac_env)
   return form;
 }
 
-static val macroexpand(val form, val mac_env)
+static val macroexpand(val form, val menv)
 {
   for (;;) {
-    val mac_expand = macroexpand_1(form, mac_env);
+    val mac_expand = macroexpand_1(form, menv);
     if (mac_expand == form)
       return form;
     form = mac_expand;

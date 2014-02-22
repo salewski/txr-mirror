@@ -1,5 +1,10 @@
 2014-02-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (bind_macro_params, expand_macro, macroexpand_1, macroexpand):
+	Rename mac_env variable to menv for consistency.
+
+2014-02-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	Preparation for lexical macros: we need to pass a macro
 	environment down through the expander call hierarchy.
 
