@@ -1,3 +1,10 @@
+2014-02-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (subst_vars): Change throwing of query_error_s
+	to eval_error call. This is a leftover from when this was cloned
+	from its counterpart in match.c. However, I can't think of a way
+	this call can ever be reached.
+
 2014-02-20  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (macro_form_p, macroexpand_1, macroexpand): New static

@@ -1637,8 +1637,7 @@ static val subst_vars(val forms, val env)
         forms = cons(str, rest(forms));
         continue;
       }
-      uw_throwf(query_error_s, lit("unbound variable ~a"),
-                               form, nao);
+      eval_error(forms, lit("unbound variable ~s"), form, nao);
     }
 
     iter = list_collect(iter, form);
