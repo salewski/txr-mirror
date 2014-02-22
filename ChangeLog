@@ -1,3 +1,13 @@
+2014-02-22  Kaz Kylheku  <kaz@kylheku.com>
+
+	* parser.y: Bugfix, I think. :) We do not need to call the expander
+	for a Lisp expression in a quasistring, and doing so leads to a
+	potentially incorrect double expansion because the whole thing
+	will be expanded again, either by the TXR Lisp quasi operator's
+	expander (if this is a quasiliteral in Lisp) or in the TXR
+	pattern language, by expand_meta, which hunts down down @ expressions
+	and expands them. 
+
 2014-02-21  Kaz Kylheku  <kaz@kylheku.com>
 
 	Implementing special variables with local overriding.

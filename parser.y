@@ -903,7 +903,7 @@ quasi_item : litchars           { $$ = lit_char_helper($1); }
            | o_var              { $$ = $1; }
            | METANUM            { $$ = cons(var_s, cons($1, nil));
                                   rl($$, num(lineno)); }
-           | list               { $$ = rlcp(cons(expr_s, expand($1)), $1); }
+           | list               { $$ = rlcp(cons(expr_s, $1), $1); }
            ;
 
 litchars : LITCHAR              { $$ = cons(chr($1), nil); }
