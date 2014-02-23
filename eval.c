@@ -2819,6 +2819,20 @@ static val and_fun(val vals)
   return item;
 }
 
+static val prinl(val obj, val stream)
+{
+  val ret = obj_print(obj, stream);
+  put_char(chr('\n'), stream);
+  return ret;
+}
+
+static val pprinl(val obj, val stream)
+{
+  val ret = obj_pprint(obj, stream);
+  put_char(chr('\n'), stream);
+  return ret;
+}
+
 void eval_init(void)
 {
   protect(&top_vb, &top_fb, &top_mb, &special,
@@ -3128,6 +3142,8 @@ void eval_init(void)
   reg_fun(intern(lit("pprint"), user_package), func_n2o(obj_pprint, 1));
   reg_fun(intern(lit("tostring"), user_package), func_n1(tostring));
   reg_fun(intern(lit("tostringp"), user_package), func_n1(tostringp));
+  reg_fun(intern(lit("prinl"), user_package), func_n2o(prinl, 1));
+  reg_fun(intern(lit("pprinl"), user_package), func_n2o(pprinl, 1));
   reg_fun(intern(lit("make-string-input-stream"), user_package), func_n1(make_string_input_stream));
   reg_fun(intern(lit("make-string-byte-input-stream"), user_package), func_n1(make_string_byte_input_stream));
   reg_fun(intern(lit("make-string-output-stream"), user_package), func_n0(make_string_output_stream));

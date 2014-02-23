@@ -11150,13 +11150,15 @@ truncated off entirely, including the decimal point.
 
 .PP
 
-.SS Functions print, pprint, tostring, tostringp
+.SS Functions print, pprint, prinl, pprinl, tostring, tostringp
 
 .TP
 Syntax:
 
   (print <obj> [<stream>])
   (pprint <obj> [<stream>])
+  (prinl <obj> [<stream>])
+  (pprinl <obj> [<stream>])
   (tostring <obj>)
   (tostringp <obj>)
 
@@ -11172,7 +11174,11 @@ a similar object of the same kind when it appears in TXR source code.
 The pprint function ("pretty print") does not strive for read-print consistency.
 For instance it prints a string object simply by dumping its characters, rather
 than by adding the surrounding quotes and rendering escape syntax for
-special characters.
+special characters. Both functions return <obj>.
+
+The prinl and pprinl functions are like print and pprint, except
+that they issue a newline character after printing the object.
+These functions also return <obj>.
 
 The tostring and tostringp functions are like print and pprint, but
 they do not accept a stream argument, instead printing to a freshly
@@ -11183,10 +11189,11 @@ and calls to these functions:
 
   (format stream "~s" obj)  <-->  (print obj stream)
   (format t "~s" obj)       <-->  (print obj)
+  (format t "~s\en" obj)     <-->  (prinl obj)
   (format nil "~s" obj)     <-->  (tostring obj)
 
-For pprint and tostringp, the equivalence is produced by using "~a"
-in format rather than "~s".
+For pprint, tostringp and pprinl, the equivalence is produced by using "~a" in
+format rather than "~s".
 
 .SS Function streamp
 

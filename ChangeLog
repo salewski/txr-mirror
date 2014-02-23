@@ -1,5 +1,12 @@
 2014-02-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (prinl, pprinl): New functions.
+	(eval_init): Registered as intrinsics.
+
+	* txr.1: Documented.
+
+2014-02-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (obj_init): changing the quote, qquote, unquote
 	and splice symbols to be in the regular user package,
 	rather than the system package.
