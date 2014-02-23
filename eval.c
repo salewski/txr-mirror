@@ -2522,7 +2522,10 @@ static val symbol_value(val sym)
 
 static val symbol_function(val sym)
 {
-  return cdr(lookup_fun(nil, sym));
+  uses_or2;
+  return or2(cdr(or2(lookup_fun(nil, sym),
+                     lookup_mac(nil, sym))),
+             gethash(op_table, sym));
 }
 
 static val boundp(val sym)
@@ -2532,8 +2535,8 @@ static val boundp(val sym)
 
 static val fboundp(val sym)
 {
-  return if3(lookup_fun(nil, sym), t,
-             if3(gethash(op_table, sym), t, nil));
+  return if2(lookup_fun(nil, sym) || lookup_mac(nil, sym) ||
+             gethash(op_table, sym), t);
 }
 
 static val rangev_func(val env, val lcons)

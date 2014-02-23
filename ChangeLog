@@ -1,5 +1,17 @@
 2014-02-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (symbol_function): Retrieve the global macro binding if the
+	function lookup fails, and if that fails, retrieve the special
+	operator binding.
+	(fboundp): Report t if there is a global macro binding.
+
+	* txr.1: Use "global" rather than "toplevel". Added note that
+	the fun operator doesn't see macro bindings. Documented that
+	symbol-function and fboundp see global macro bindings,
+	and that symbol-function can retrieve a special operator binding.
+
+2014-02-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (prinl, pprinl): New functions.
 	(eval_init): Registered as intrinsics.
 

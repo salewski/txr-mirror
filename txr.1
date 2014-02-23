@@ -6189,9 +6189,13 @@ Syntax:
 .TP
 Description:
 The fun operator retrieves the function object corresponding to a named
-function.
-. The <function-name> is a symbol denoting a named function: a built in
+function in the current lexical environment.
+
+The <function-name> is a symbol denoting a named function: a built in
 function, or one defined by defun.
+
+Note: the fun operator does not see macro bindings. It is possible to
+retrieve a global macro expander using symbol-function.
 
 .TP
 Dialect Note:
@@ -6209,20 +6213,33 @@ Syntax:
 .TP
 Description:
 
-The symbol-function retrieves the value of the toplevel function binding of the
+The symbol-function retrieves the value of the global function binding of the
 given symbol if it has one: that is, the function object tied to the symbol. If
-the symbol has no toplevel function binding, the value nil is returned.
+the symbol has no global function binding, then the value of the global macro
+binding is returned. If that doesn't exist, then the value of a global special
+operator binding is returned, and if that doesn't exist, then nil is returned.
 
-The symbol-value retrives the value of a toplevel variable, if it exists,
+The symbol-value retrives the value of a global variable, if it exists,
 otherwise nil.
+
+Note: a function binding is a function, but a macro or special operator binding
+binding isn't.  The value of a macro binding is a list of the following form:
+
+  (#<environment object> <macro-parameter-list> <body-form>*)
+
+The value of a special operator binding is a "C pointer" object, whose
+printed representation looks like:
+
+  #<cptr: 808be4f>
+
+These details may change in future version of TXR.
 
 .TP
 Dialect note:
 
 Forms which call symbol-function or symbol-value are currently not an
 assignable place. Only the defun operator defines functions, and the set
-operator modifies variables. There is no way to modify a toplevel variable that
-is shadowed by a lexical variable.
+operator modifies variables. 
 
 .SS Functions boundp and fboundp
 
@@ -6235,10 +6252,10 @@ Syntax:
 .TP
 Description:
 
-boundp returns t if the symbol has a variable binding in the toplevel
+boundp returns t if the symbol has a variable binding in the global
 environment, otherwise nil.  
 
-Foundp returns t if the symbol has a function binding in the toplevel
+Foundp returns t if the symbol has a function or macro binding in the global
 environment, or if it is an operator, otherwise nil.
 
 .SS Function func-get-form
