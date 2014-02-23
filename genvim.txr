@@ -36,7 +36,7 @@ void eval_init(void)
 @(do (set [txr-sym 0..0] '("rep" "end" "and" "or"
                            "catch" "finally"
                            "until" "last")))
-@(do (set [txl-sym 0..0] '("do" "op")))@# Doo...wop! :)
+@(do (set [txl-sym 0..0] '("do" "op" "macro-time" "macrolet")))
 @(set (txr-sym txl-sym) (@(sortuniq txr-sym) @(sortuniq txl-sym)))
 @(output)
 " VIM Syntax file for txr
