@@ -4845,6 +4845,33 @@ Much of the TXR Lisp syntax has been introduced in the previous sections of the
 manual, since directive forms are based on it. There is some additional syntax
 that is useful in TXR Lisp programming.
 
+.SS Consing Dot
+
+Unlike other major Lisp dialects, TXR Lisp allows a consing dot with no forms
+preceding it. This construct simply denotes the form which follows the dot.
+That is to say, the parser implements the following transformation:
+
+  (. expr) -> expr
+
+This is convenient in writing function argument lists that only take
+variable arguments. Instead of the syntax:
+
+  (defun fun args ...)
+
+the following syntax can be used:
+
+  (defun fun (. args) ...)
+
+When a lambda form is printed, it is printed in the following style.
+
+  (lambda nil ...) -> (lambda () ...)
+  (lambda sym ...) -> (lambda (. sym) ...)
+  (lambda (sym) ...) -> (lambda (sym) ...)
+
+In no other circumstances is nil printed as (), or a symbol as (. sym).
+
+symbol is followed by a symbol.
+
 .SS Quoting/Unquoting
 
 .IP 'form

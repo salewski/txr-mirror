@@ -702,6 +702,7 @@ hash : HASH_H list              { if (unquotes_occur($2))
 
 list : '(' n_exprs ')'          { $$ = rl($2, num($1)); }
      | '(' ')'                  { $$ = nil; }
+     | '(' '.' n_expr ')'       { $$ = $3; }
      | '[' n_exprs ']'          { $$ = rl(cons(dwim_s, $2), num($1)); }
      | '[' ']'                  { $$ = rl(cons(dwim_s, nil), num($1)); }
      | '@' n_expr               { if (consp($2))

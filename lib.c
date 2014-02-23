@@ -5213,8 +5213,22 @@ val obj_print(val obj, val out)
           put_char(chr('('), out);
         }
 
+        if (sym == lambda_s && cdr(obj) && symbolp(second(obj))) {
+          obj_print(sym, out);
+          if (second(obj)) {
+            put_string(lit(" (. "), out);
+            obj_print(second(obj), out);
+            put_char(chr(')'), out);
+          } else {
+            put_string(lit(" ()"), out);
+          }
+          iter = (cdr(obj));
+          goto finish;
+        }
+
         for (iter = obj; consp(iter); iter = cdr(iter)) {
           obj_print(car(iter), out);
+finish:
           if (nilp(cdr(iter))) {
             put_char(closepar, out);
           } else if (consp(cdr(iter))) {
@@ -5379,8 +5393,22 @@ val obj_pprint(val obj, val out)
           put_char(chr('('), out);
         }
 
+        if (sym == lambda_s && cdr(obj) && symbolp(second(obj))) {
+          obj_print(sym, out);
+          if (second(obj)) {
+            put_string(lit(" (. "), out);
+            obj_print(second(obj), out);
+            put_char(chr(')'), out);
+          } else {
+            put_string(lit(" ()"), out);
+          }
+          iter = (cdr(obj));
+          goto finish;
+        }
+
         for (iter = obj; consp(iter); iter = cdr(iter)) {
           obj_pprint(car(iter), out);
+finish:
           if (nilp(cdr(iter))) {
             put_char(closepar, out);
           } else if (consp(cdr(iter))) {

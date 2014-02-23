@@ -1,5 +1,16 @@
 2014-02-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.y: Allow the (. expr) syntax to denote expr.
+
+	* eval.h: Declare existing lambda_s extern variable.
+
+	* lib.c (obj_print, obj_pprint): print (lambda sym ...)
+	as (lambda (. sym) ...) and (lambda sym) as (lambda (. sym)).
+
+	* txr.1: document it.
+
+2014-02-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	Implemented macrolet.
 
 	* eval.c (macrolet_s): New variable.
