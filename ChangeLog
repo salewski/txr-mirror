@@ -1,5 +1,40 @@
 2014-02-23  Kaz Kylheku  <kaz@kylheku.com>
 
+	Get special variable overriding working in function and macro
+	parameter lists.
+
+	There is a bugfix here too (see eval_init below).
+
+	* eval.c (special_s): New global variable. This symbol is used
+	as a marker in parameter lists denoting expander-generating
+	syntax that gives information about specials.
+	(lookup_var, looup_var_l): Bugfix: walk the dynamic chain properly.
+	Fallback from the lexical chain to the dynamic.
+	(env_vbind_special): New static function.
+	(bind_args, bind_macro_params):  Detect special list in params. Use
+	env_vbind_special to bind variables either in the dynamic environment
+	or the lexical one.
+	(expand_opt_params, expand_params): Renamed to expand_opt_params_rec
+	and expand_params_rec, respectively. Now take extra argument for
+	accumulating list of special variables found in the param list.
+	(expand_params): New static function.
+	(set_dyn_env): New static function.
+	(interp_fun, expand_macro): Set up and tear down new dynamic
+	environment around parameter list evaluation and body evaluation. This
+	will take any new dynamic bindings.
+	(bindings_helper, op_each): The special_s symbol is now used instead of
+	colon_k for marking specials.
+	(op_defun): Recognize the specials added to the parameter list
+	so as not to t report that as not a bindable symbol.
+	(op_catch): Set up an tear down new dynamic environment around
+	the evaluation of the catch clause param binding and body.
+	(expand_vars): use colon_s symbol instead of colon_k for marking
+	special var.
+	(eval_init): Bugfix: gc-protect recently added dyn_env variable.
+	Intern special symbol into special_s variable.
+
+2014-02-23  Kaz Kylheku  <kaz@kylheku.com>
+
 	Introducing some changes for improved handling of special variables.
 	Saving and restoring of individual variables is very silly
 	and it's making it difficult to implement function parameters
