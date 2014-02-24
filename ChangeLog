@@ -1,5 +1,24 @@
 2014-02-23  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (env_fbind, env_vbind): Use acons_new_c, and provide
+	a much more useful return value: the binding cell itself,
+	rather than the symbol.
+	(bind_args): Bugfix: env_vbind was still being called in one case,
+	leading to a neglect to bind a special variable properly.
+	(bindings_helper): Changed interface. Bugfix: in sequential binding,
+	actually bind the successive environments so closures will behave
+	100% correctly. Returns a list of the actual bindings, in which
+	special variables are not distinguished in any way.
+	(op_let, op_for): Conform to new bindings_helper interface. Use the
+	lexical environment that it returns instead of making a new one.
+	(op_each): Use the environment and list of bindings out of
+	bindings_helper. The bindings are used for stepping the lists,
+	and that includes stepping any special vars. The lexical environment
+	is used for evaluating the body. Thus, we need no special processing
+	for special vars here any more.
+
+2014-02-23  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (bindings_helper): This must now bind dynamic values
 	rather than just assign to them. Got rid of the superfluous variable
 	saving array. Fixed the problem in recognizing the special_s symbol (it

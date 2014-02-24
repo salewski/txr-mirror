@@ -106,22 +106,20 @@ val make_env(val vbindings, val fbindings, val up_env)
 
 val env_fbind(val env, val sym, val fun)
 {
+  val cell;
   type_check(env, ENV);
-  set(env->e.fbindings, acons_new(sym, fun, env->e.fbindings));
-  return sym;
+  cell = acons_new_c(sym, 0, &env->e.fbindings);
+  rplacd(cell, fun);
+  return cell;
 }
 
 val env_vbind(val env, val sym, val obj)
 {
+  val cell;
   type_check(env, ENV);
-  set(env->e.vbindings, acons_new(sym, obj, env->e.vbindings));
-  return sym;
-}
-
-static void env_replace_vbind(val env, val bindings)
-{
-  type_check(env, ENV);
-  set(env->e.vbindings, bindings);
+  cell = acons_new_c(sym, 0, &env->e.vbindings);
+  rplacd(cell, obj);
+  return cell;
 }
 
 noreturn static val eval_error(val form, val fmt, ...)
@@ -343,7 +341,7 @@ static val bind_args(val env, val params, val args, val ctx_form)
       if (presentsym)
         env_vbind_special(new_env, presentsym, present, special_list, ctx_form);
     } else {
-      env_vbind(new_env, param, car(args));
+      env_vbind_special(new_env, param, car(args), special_list, ctx_form);
     }
 
     args = cdr(args);
@@ -946,12 +944,12 @@ static val op_unquote_error(val form, val env)
 
 
 static val bindings_helper(val vars, val env, val sequential,
-                           val include_specials, val ctx_form)
+                           val *env_out, val ctx_form)
 {
   val iter;
+  val de = if3(sequential, dyn_env, make_env(nil, nil, dyn_env));
+  val ne = if3(sequential, env, make_env(nil, nil, env));
   list_collect_decl (new_bindings, ptail);
-  list_collect_decl (new_dyn_bindings, ptail_d);
-  val nenv = if3(sequential, make_env(nil, nil, env), env);
 
   for (iter = vars; iter; iter = cdr(iter)) {
     val item = car(iter);
@@ -959,33 +957,30 @@ static val bindings_helper(val vars, val env, val sequential,
 
     if (consp(item)) {
       var = pop(&item);
-      value = eval(pop(&item), nenv, ctx_form);
+      value = eval(pop(&item), if3(sequential, ne, env), ctx_form);
     } else {
       var = item;
     }
 
     if (var == special_s) {
       val special = car(item);
-      ptail_d = list_collect(ptail_d, cons(special, value));
-
-      if (sequential)
-        env_replace_vbind(dyn_env, new_dyn_bindings);
-
-      if (include_specials)
-        ptail = list_collect (ptail, cons(special_s, var));
+      val binding = env_vbind(de, special, value);
+      ptail = list_collect (ptail, binding);
     } else if (bindable(var)) {
-      ptail = list_collect (ptail, cons(var, value));
-
-      if (sequential)
-        env_replace_vbind(nenv, new_bindings);
+      val le = if3(sequential, make_env(nil, nil, ne), ne);
+      val binding = env_vbind(le, var, value);
+      ptail = list_collect (ptail, binding);
+      ne = le;
     } else {
       eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
                  car(ctx_form), var, nao);
     }
   }
 
-  if (new_dyn_bindings)
-    env_replace_vbind(dyn_env, new_dyn_bindings);
+  if (de != dyn_env)
+    dyn_env = de;
+  if (env_out)
+    *env_out = ne;
   return new_bindings;
 }
 
@@ -1005,8 +1000,9 @@ static val op_let(val form, val env)
   val args = rest(form);
   val vars = first(args);
   val body = rest(args);
-  val new_bindings = bindings_helper(vars, env, eq(let, let_star_s), nil, form);
-  return eval_progn(body, make_env(new_bindings, nil, env), form);
+  val new_env;
+  (void) bindings_helper(vars, env, eq(let, let_star_s), &new_env, form);
+  return eval_progn(body, new_env, form);
 }
 
 static val op_each(val form, val env)
@@ -1021,7 +1017,8 @@ static val op_each(val form, val env)
                  eq(each, append_each_star_s));
   val collect = or2(eq(each, collect_each_s), eq(each, collect_each_star_s));
   val append = or2(eq(each, append_each_s), eq(each, append_each_star_s));
-  val new_bindings = bindings_helper(vars, env, star, t, form);
+  val new_env;
+  val new_bindings = bindings_helper(vars, env, star, &new_env, form);
   val lists = mapcar(cdr_f, new_bindings);
   list_collect_decl (collection, ptail);
 
@@ -1035,23 +1032,14 @@ static val op_each(val form, val env)
     {
       val binding = car(biter);
       val list = car(liter);
-      val sym = car(binding);
       if (!list)
         goto out;
-      if (sym == special_s) {
-        val *loc = lookup_var_l(nil, cdr(binding));
-        if (!loc)
-          eval_error(form, lit("~s: nonexistent special var ~a"),
-                     car(form), sym);
-        *loc = car(list);
-      } else {
-        rplacd(binding, car(list));
-      }
+      rplacd(binding, car(list));
       rplaca(liter, cdr(list));
     }
   
     {
-      val res = eval_progn(body, make_env(new_bindings, nil, env), form);
+      val res = eval_progn(body, new_env, form);
       if (collect)
         ptail = list_collect(ptail, res);
       else if (append)
@@ -1589,11 +1577,12 @@ static val op_for(val form, val env)
   val cond = third(form);
   val incs = fourth(form);
   val forms = rest(rest(rest(rest(form))));
+  val new_env;
   val new_bindings = bindings_helper(vars, env, eq(forsym, for_star_s),
-                                     nil, form);
-  val new_env = make_env(new_bindings, nil, env);
-
+                                     &new_env, form);
   uw_block_begin (nil, result);
+
+  (void) new_bindings;
 
   for (; cond == nil || eval(car(cond), new_env, form);
        eval_progn(incs, new_env, form))
