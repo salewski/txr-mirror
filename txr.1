@@ -4883,8 +4883,10 @@ For instance if '(+ 2 2) is evaluated, the value is the three-element list
 value of 'a is the symbol a itself, whereas the value of a is the value
 of the variable a.
 
-Note that TXR Lisp does not have a distinct quote and backquote syntax.
-There is only one quote, which supports unquoting.
+Note that TXR Lisp does not have a distinct quote and backquote read syntax.
+There is only one quote, which supports unquoting. However, there is an
+underlying expression syntax which distinguishes them: see the documentation
+quote and qquote operator.
 
 A quoted form which contains no unquotes codifies an ordinary quote.
 
@@ -12689,6 +12691,149 @@ and b, and the second cons cell giving information about the rest of the
 stream: it is the part starting at "omega", which is line 3. Note that the
 binding for for line variable does not propagate out of the pattern function
 foo; it is local inside it. 
+
+.SH QUOTE/QUASIQUOTE OPERATOR SYNTAX
+
+The quasiquote read syntax has a target language made up of operators. The TXR
+parser rewrites the syntax into the appropriate combination of these operators,
+and automatically selects whether a form is based on the quote operator or the
+qquote operator. The operators are described below.
+
+.SS Operator quote
+
+.TP
+Syntax:
+
+  (quote <form>)
+
+.TP
+Description:
+
+The quote operator, when evaluated, suppresses the evaluation of <form>,
+and instead returns <form> itself as an object. For example, if <form>
+is a symbol, then <form> is not evaluated to the symbol's value; rather
+the symbol itself is returned.
+
+Note: when the quote syntax '<form> is used, then if <form> is not a list
+structure which contains unquotes or splices, it is translated to
+(quote <form>).
+
+.TP
+Example:
+
+  (quote a) ;; yields a
+
+  (quote (+ 2 2)) ;; yields (+ 2 2), not 4.
+
+.SS Operator qquote
+
+.TP
+Syntax:
+
+  (qquote <form>)
+
+.TP
+Description:
+
+The qquote (quasi-quote) operator implements a notation for convenient
+list construction.  If <form> is an atom, or a list structure which
+does not contain any unquote or splice operators, then (qquote <form>)
+is equivalent to (quote <form>).
+
+If <form>, however, is a list structure which contains unquote or splice
+operators, then the substitutions implied by those operators are performed
+on <form>, and the qquote operator returns the resulting structure.
+Note: how the qquote operator actually works is that it is compiled into
+code: a Lisp expression which computes the resulting structure when evaluated.
+
+A qquote can contain another qquote. If an unquote or splice operator occurs
+within a nested qquote, it belongs to that qquote, and not to the outer one.
+
+However, an unquote operator which occurs inside another one belongs one level
+higher. For instance in (qquote (qquote (unquote (unquote x)))), 
+the leftmost qquote belongs with the rightmost unquote, and the inner
+qquote and unquote belong together. When the outer qquote is evaluated,
+it will insert the x, resulting in the value (qquote (unquote <val-x>)).
+where <val-x> represents the object which is the value of variable x. If this
+resulting qquote value is evaluated again as Lisp syntax, then it
+will yield <val-val-x>, where <val-val-x> denotes the value of <val-x>
+when <val-x> is treated as a Lisp expression and evaluated.
+
+.TP
+Examples:
+
+  (qquote a) -> a
+
+  (qquote (a b c)) -> (a b c)
+
+  (qquote (1 2 3 (unquote (+ 2 2) (+ 2 3)))) -> (1 2 3 4 (+ 2 3))
+
+  (quote (unquote (+ 2 2))) -> 4
+
+In the second-to-last example, the 1 2 3 and the (+ 2 3) were taken verbatim.
+But the (unquote (+ 2 2)) operator caused the evaluation of (+ 2 2) and the
+substitution of the resulting value.
+
+The last example shows that <form> can itself be an unquote operator.
+However, note: (quote (splice <form>)) is not valid.
+
+Note: a way to understand the nesting behavior is a model of quasi-quote
+expansion which recursively compiles any nested quasi quotes first, and then
+treats the result of their expansion. For instance, in the processing of
+(qquote (qquote (unquote (unquote x)))), the quote operator finds the
+internal (qquote ...) and compiles it to code. During that recursive
+compilation, the syntax (unquote (unquote x)) is encountered.
+The inner quote processes the outer unquote which belongs to it,
+and the (unquote x) becomes material embedded in the compilation,
+which will then be found when the outer quasiquote takes the inner
+compilation and processes its interior.
+
+.SS Operator unquote
+
+.TP
+Syntax:
+
+  (qquote (... (unquote <form>) ...))
+
+  (qquote (unquote <form>))
+
+.TP
+Description:
+
+The unquote operator is not an operator per se. The unquote symbol has no
+binding in the global environment. It is a special syntax that is recognized
+within a qquote form, to indicate forms within the quasiquote which are to be
+evaluated and insertd into the resulting structure.
+
+The variant (qquote (unquote <form>)) is equivalent to <form>: the
+qquote and unquote "cancel out".
+
+Nesting of qquotes and unquotes is explained in the qquote operator.
+
+.SS Operator splice
+
+.TP
+Syntax:
+
+  (qquote (... (splice <form>) ...))
+
+.TP
+Description:
+
+The splice operator is not an operator per se. The splice symbol has no
+binding in the global environment. It is a special syntax that is recognized
+within a qquote form, to indicate forms within the quasiquote which are to be
+evaluated and inserted into the resulting structure.
+
+The variant (qquote (unquote <form>)) is not permitted and raises
+an exception if evaluated. The splice syntax must occur within a list,
+and not in the dotted position.
+
+The splice form differs from unquote in that (splice <form>)
+requires that <form> must evaluate to a list. That list is 
+integrated into the surrounding list. 
+
+Nesting of qquotes and unquotes is explained in the qquote operator.
 
 .SH MACROS
 

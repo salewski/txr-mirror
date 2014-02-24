@@ -1,5 +1,9 @@
 2014-02-23  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Document quasiquote operator syntax.
+
+2014-02-23  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (env_fbind, env_vbind): Use acons_new_c, and provide
 	a much more useful return value: the binding cell itself,
 	rather than the symbol.
