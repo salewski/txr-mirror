@@ -1,5 +1,21 @@
 2014-02-23  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (bindings_helper): This must now bind dynamic values
+	rather than just assign to them. Got rid of the superfluous variable
+	saving array. Fixed the problem in recognizing the special_s symbol (it
+	is bindable).
+	(op_with_saved_vars): This simplifies, since it no longer needs
+	to save individual variables in an array, only to set up and
+	tear down a new dynamic environment frame.
+	(expand_vars): No longer returns two values with a cons. 
+	Takes a form argument for error reporting and a pointer to a boolean
+	just to report whether there are special vars without listing them.
+	(expand_save_specials): The with-saved-specials form doesn't need
+	a var list any more, so the expander is updated not to stick them in.
+	(expand): Update calls to expand_vars to new interface.
+
+2014-02-23  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (get_string_from_stream): Bugfix: do not abort if
 	stream is not a string stream, but throw a proper error exception.
 
