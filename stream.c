@@ -1228,7 +1228,8 @@ val get_string_from_stream(val stream)
 {
   type_check (stream, COBJ);
   type_assert (stream->co.cls == stream_s,
-               (lit("~a is not a stream"), stream, nao));
+               (lit("~a is not a stream"),
+                stream, nao));
 
   if (stream->co.ops == &string_out_ops.cobj_ops) {
     struct string_output *so = (struct string_output *) stream->co.handle;
@@ -1247,11 +1248,13 @@ val get_string_from_stream(val stream)
     out = string_own(so->buf);
     free(so);
     return out;
-  } else if (stream->co.ops == &string_in_ops.cobj_ops) {
-    val pair = (val) stream->co.handle;
-    return pair ? car(pair) : nil;
   } else {
-    abort(); /* not a string input or output stream */
+    type_assert (stream->co.ops == &string_in_ops.cobj_ops,
+                 (lit("~a is not a string stream"), stream, nao));
+    {
+      val pair = (val) stream->co.handle;
+      return pair ? car(pair) : nil;
+    }
   }
 }
 

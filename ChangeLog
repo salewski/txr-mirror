@@ -1,5 +1,10 @@
 2014-02-23  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (get_string_from_stream): Bugfix: do not abort if
+	stream is not a string stream, but throw a proper error exception.
+
+2014-02-23  Kaz Kylheku  <kaz@kylheku.com>
+
 	Get special variable overriding working in function and macro
 	parameter lists.
 
