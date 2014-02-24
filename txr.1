@@ -1152,6 +1152,15 @@ and the upper or lower case letters A through F:
   #xFF    ;; 255
   #x-ABC  ;; -2748
 
+Similarly, octal numbers are supported with the prefix #o followed by 
+octal digits:
+
+  #b777   ;; 511
+
+and binary numbers can be written with a #b prefix:
+
+  #b1110  ;; 14
+
 A floating-point constant is marked by the inclusion of a decimal point, the
 exponential "e notation", or both. It is an optional sign, followed
 by a mantissa consisting of digits, a decimal point, more digits, and then an

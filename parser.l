@@ -156,6 +156,8 @@ NUM     {SGN}?{DIG}+
 FLO     {SGN}?({DIG}*[.]{DIG}+{EXP}?|{DIG}+[.]?{EXP})
 FLODOT  {SGN}?{DIG}+[.]
 XNUM    #x{SGN}?{XDIG}+
+ONUM    #o{SGN}?[0-7]+
+BNUM    #b{SGN}?[0-1]+
 BSCHR   [a-zA-Z0-9!$%&*+\-<=>?\\^_~]
 NSCHR   [a-zA-Z0-9!$%&*+\-<=>?\\^_~/]
 ID_END  [^a-zA-Z0-9!$%&*+\-<=>?\\^_~/]
@@ -213,6 +215,28 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return NUMBER;
 }
 
+<SPECIAL,NESTED,BRACED>{ONUM} {
+  val str = string_own(utf8_dup_from(yytext + 2));
+
+  if (yy_top_state() == INITIAL
+      || yy_top_state() == QSILIT)
+    yy_pop_state();
+
+  yylval.val = int_str(str, num(8));
+  return NUMBER;
+}
+
+<SPECIAL,NESTED,BRACED>{BNUM} {
+  val str = string_own(utf8_dup_from(yytext + 2));
+
+  if (yy_top_state() == INITIAL
+      || yy_top_state() == QSILIT)
+    yy_pop_state();
+
+  yylval.val = int_str(str, num(2));
+  return NUMBER;
+}
+
 <SPECIAL>({FLO}|{FLODOT}){TOK} |
 <BRACED>({FLO}|{FLODOT}){BTOK} |
 <NESTED>({FLO}|{FLODOT}){NTOK} {
@@ -267,6 +291,26 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
       || yy_top_state() == QSILIT)
     yy_pop_state();
   yylval.val = int_str(str, num(16));
+  return METANUM;
+}
+
+<NESTED,QSILIT>@{ONUM} {
+  val str = string_own(utf8_dup_from(yytext + 3));
+
+  if (yy_top_state() == INITIAL
+      || yy_top_state() == QSILIT)
+    yy_pop_state();
+  yylval.val = int_str(str, num(8));
+  return METANUM;
+}
+
+<NESTED,QSILIT>@{BNUM} {
+  val str = string_own(utf8_dup_from(yytext + 3));
+
+  if (yy_top_state() == INITIAL
+      || yy_top_state() == QSILIT)
+    yy_pop_state();
+  yylval.val = int_str(str, num(2));
   return METANUM;
 }
 

@@ -1,5 +1,13 @@
 2014-02-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.l: Support octal and binary numbers.
+
+	* txr.1: Documented.
+
+	* genvim.txr, txr.vim: Updated.
+
+2014-02-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.y (modifiers): Bugfix: list element not subject to expansion
 	of Lisp forms denoted by @.
 	(expand_meta): Bugfix: failure to expand vars, which can be

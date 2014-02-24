@@ -85,6 +85,8 @@ syn match txr_ncomment ";.*" contained
 
 syn match txr_dot "\." contained
 syn match txr_num "#x[+\-]\?[0-9A-Fa-f]\+" contained
+syn match txr_num "#o[+\-]\?[0-7]\+" contained
+syn match txr_num "#b[+\-]\?[0-1]\+" contained
 syn match txr_num "[+\-]\?[0-9]\+" contained
 syn match txr_ident "[:@@]\?[A-Za-z0-9!$%&*+\-<=>?\\^_~]*[A-Za-z!$%&*+\-<=>?\\^_~][A-Za-z0-9!$%&*+\-<=>?\\^_~]*" contained
 syn match txl_ident "[:@@]\?[A-Za-z0-9!$%&*+\-<=>?\\^_~/]*[A-Za-z!$%&*+\-<=>?\\^_~/][A-Za-z0-9!$%&*+\-<=>?\\^_~/]*" contained
