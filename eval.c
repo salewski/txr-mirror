@@ -71,7 +71,7 @@ struct c_var {
   val bind;
 };
 
-val top_vb, top_fb, top_mb, special;
+val top_vb, top_fb, top_mb, top_smb, special;
 val op_table;
 val dyn_env;
 
@@ -89,6 +89,7 @@ val delay_s, promise_s, op_s;
 val hash_lit_s, hash_construct_s;
 val vector_lit_s, vector_list_s;
 val macro_time_s, with_saved_vars_s, macrolet_s;
+val defsymacro_s, symacrolet_s;
 
 val special_s, whole_k, env_k;
 
@@ -234,6 +235,21 @@ static val lookup_mac(val menv, val sym)
   }
 }
 
+static val lookup_symac(val menv, val sym)
+{
+  if (nilp(menv)) {
+    return gethash(top_smb, sym);
+  } else  {
+    type_check(menv, ENV);
+
+    {
+      val binding = assoc(sym, menv->e.vbindings);
+      if (binding) /* special_s: see make_var_shadowing_env */
+        return (cdr(binding) == special_s) ? nil : binding;
+      return lookup_symac(menv->e.up_env, sym);
+    }
+  }
+}
 
 static val lookup_sym_lisp1(val env, val sym)
 {
@@ -462,6 +478,48 @@ static val expand_params(val params, val menv)
   return if3(specials,
              rlcp(cons(cons(special_s, specials), params_ex), params_ex),
              params_ex);
+}
+
+
+static val get_opt_param_syms(val params)
+{
+  if (bindable(params)) {
+    return cons(params, nil);
+  } else if (atom(params)) {
+    return nil;
+  } else {
+    val form = car(params);
+
+    if (atom(form) || !consp(cdr(form))) { /* sym, or no init form */
+      val rest_syms = get_opt_param_syms(cdr(params));
+      if (bindable(form))
+        return cons(form, rest_syms);
+      if (bindable(car(form)))
+        return cons(car(form), rest_syms);
+      return rest_syms;
+    } else { /* has initform */
+      val sym = car(form);
+      return cons(sym, get_opt_param_syms(cdr(params)));
+    } 
+  }
+}
+
+static val get_param_syms(val params)
+{
+  if (bindable(params)) {
+    return cons(params, nil);
+  } else if (atom(params)) {
+    return nil;
+  } else if (car(params) == colon_k) {
+    return get_opt_param_syms(cdr(params));
+  } else if (consp(car(params))) {
+    return nappend2(get_param_syms(car(params)),
+                    get_param_syms(cdr(params)));
+  } else if (bindable(car(params))) {
+    return cons(car(params), get_param_syms(cdr(params)));
+  } else {
+    return get_param_syms(cdr(params));
+  }
 }
 
 val apply(val fun, val arglist, val ctx_form)
@@ -1147,6 +1205,20 @@ static val op_defvar(val form, val env)
   return sym;
 }
 
+static val op_defsymacro(val form, val env)
+{
+  val args = rest(form);
+  val sym = first(args);
+
+  (void) env;
+
+  if (!bindable(sym))
+    eval_error(form, lit("let: ~s is not a bindable symbol"), sym, nao);
+
+  sethash(top_smb, sym, cons(sym, second(args)));
+  return sym;
+}
+
 static val op_defun(val form, val env)
 {
   val args = rest(form);
@@ -1243,6 +1315,53 @@ static val expand_macrolet(val form, val menv)
   return cons(progn_s, expand_forms(body, new_env));
 }
 
+static val expand_symacrolet(val form, val menv)
+{
+  val body = cdr(form);
+  val symacs = pop(&body);
+  val new_env = make_env(nil, nil, menv);
+
+  for (; symacs; symacs = cdr(symacs)) {
+    val macro = car(symacs);
+    val name = pop(&macro);
+    val repl = pop(&macro);
+    val repl_ex = expand(repl, menv);
+    env_vbind(new_env, name, repl_ex);
+  }
+
+  return cons(progn_s, expand_forms(body, new_env));
+}
+
+/*
+ * Generate a symbol macro environment in which every
+ * variable in the binding list vars is listed
+ * as a binding, with the value sys:special.
+ * This is a shadow entry, which allows ordinary
+ * bindings to shadow symbol macros bindings.
+ */
+static val make_var_shadowing_env(val menv, val vars)
+{
+  if (nilp(vars)) {
+    return menv;
+  } else {
+    list_collect_decl (shadows, ptail);
+
+    for (; vars; vars = cdr(vars)) {
+      val var = car(vars);
+      
+      if (consp(var)) {
+        val sym = car(var);
+        if (sym != colon_k)
+          ptail = list_collect(ptail, cons(car(var), special_s));
+      } else {
+        list_collect(ptail, cons(var, special_s));
+      }
+    }
+
+    return make_env(shadows, nil, menv);
+  }
+}
+
 static val op_tree_case(val form, val env)
 {
   val cases = form;
@@ -1280,8 +1399,9 @@ static val expand_tree_cases(val cases, val menv)
     } else {
       val dstr_args = car(onecase);
       val forms = cdr(onecase);
+      val new_menv = make_var_shadowing_env(menv, get_param_syms(dstr_args));
       val dstr_args_ex = expand_params(dstr_args, menv);
-      val forms_ex = expand_forms(forms, menv);
+      val forms_ex = expand_forms(forms, new_menv);
       val rest_ex = expand_tree_cases(cdr(cases), menv);
 
       if (dstr_args_ex == dstr_args && forms_ex == forms &&
@@ -1846,7 +1966,7 @@ static val expand_cond_pairs(val form, val menv)
 static val expand_place(val place, val menv)
 {
   if (atom(place)) {
-    return place;
+    return expand(place, menv);
   } else {
     val sym = first(place);
     if (sym == dwim_s) {
@@ -2176,8 +2296,9 @@ static val expand_catch_clause(val form, val menv)
   val sym = first(form);
   val params = second(form);
   val body = rest(rest(form));
+  val new_menv = make_var_shadowing_env(menv, get_param_syms(params));
   val params_ex = expand_params(params, menv);
-  val body_ex = expand_forms(body, menv);
+  val body_ex = expand_forms(body, new_menv);
   if (body == body_ex && params == params_ex)
     return form;
   return rlcp(cons(sym, cons(params_ex, body_ex)), form);
@@ -2214,7 +2335,20 @@ val expand(val form, val menv)
   menv = default_bool_arg(menv);
 
 tail:
-  if (atom(form)) {
+  if (nilp(form)) {
+    return nil;
+  } else if (bindable(form)) {
+    val symac_bind = lookup_symac(menv, form);
+
+    if (symac_bind) {
+      val symac = cdr(symac_bind);
+      if (symac == form)
+        return form;
+      form = rlcp_tree(symac, form);
+      goto tail;
+    }
+    return form;
+  } else if (atom(form)) {
     return form;
   } else {
     val sym = car(form);
@@ -2226,9 +2360,10 @@ tail:
     {
       val body = rest(rest(form));
       val vars = second(form);
-      val body_ex = expand_forms(body, menv);
+      val new_menv = make_var_shadowing_env(menv, vars);
+      val body_ex = expand_forms(body, new_menv);
       val specials_p = nil;
-      val vars_ex = expand_vars(vars, menv, form, &specials_p);
+      val vars_ex = expand_vars(vars, new_menv, form, &specials_p);
       if (body == body_ex && vars == vars_ex && !specials_p) {
         return form;
       } else {
@@ -2249,19 +2384,27 @@ tail:
       if (pairs == pairs_ex)
         return form;
       return rlcp(cons(cond_s, pairs_ex), form);
-    } else if (sym == defvar_s) {
+    } else if (sym == defvar_s || sym == defsymacro_s) {
       val name = second(form);
       val init = third(form);
       val init_ex = expand(init, menv);
+      val form_ex = form;
 
-      if (init == init_ex)
-        return form;
-      return rlcp(cons(sym, cons(name, cons(init_ex, nil))), form);
+      if (init != init_ex)
+        form_ex = rlcp(cons(sym, cons(name, cons(init_ex, nil))), form);
+
+      if (sym == defsymacro_s) {
+        val result = eval(form_ex, make_env(nil, nil, nil), form);
+        return cons(quote_s, cons(result, nil));
+      }
+
+      return form_ex;
     } else if (sym == lambda_s) {
       val params = second(form);
       val body = rest(rest(form));
+      val new_menv = make_var_shadowing_env(menv, get_param_syms(params));
       val params_ex = expand_params(params, menv);
-      val body_ex = expand_forms(body, menv);
+      val body_ex = expand_forms(body, new_menv);
 
       if (body == body_ex && params == params_ex)
         return form;
@@ -2269,9 +2412,10 @@ tail:
     } else if (sym == defun_s || sym == defmacro_s) {
       val name = second(form);
       val params = third(form);
+      val new_menv = make_var_shadowing_env(menv, get_param_syms(params));
       val params_ex = expand_params(params, menv);
       val body = rest(rest(rest(form)));
-      val body_ex = expand_forms(body, menv);
+      val body_ex = expand_forms(body, new_menv);
       val form_ex = form;
 
       if (body != body_ex || params != params_ex)
@@ -2288,9 +2432,10 @@ tail:
       val params = second(form);
       val expr = third(form);
       val body = rest(rest(rest(form)));
+      val new_menv = make_var_shadowing_env(menv, get_param_syms(params));
       val params_ex = expand_params(params, menv);
-      val expr_ex = expand(expr, menv);
-      val body_ex = expand_forms(body, menv);
+      val expr_ex = expand(expr, new_menv);
+      val body_ex = expand_forms(body, new_menv);
 
       if (params_ex == params && expr_ex == expr && body_ex == body)
         return form;
@@ -2332,9 +2477,10 @@ tail:
       val forms = rest(rest(rest(rest(form))));
       val specials_p = nil;
       val vars_ex = expand_vars(vars, menv, form, &specials_p);
-      val cond_ex = expand_forms(cond, menv);
-      val incs_ex = expand_forms(incs, menv);
-      val forms_ex = expand_forms(forms, menv);
+      val new_menv = make_var_shadowing_env(menv, vars);
+      val cond_ex = expand_forms(cond, new_menv);
+      val incs_ex = expand_forms(incs, new_menv);
+      val forms_ex = expand_forms(forms, new_menv);
 
       if (vars == vars_ex && cond == cond_ex && 
           incs == incs_ex && forms == forms_ex && !specials_p) {
@@ -2400,12 +2546,13 @@ tail:
       return cons(vars, cons(expr_ex, nil));
     } else if (sym == macrolet_s) {
       return expand_macrolet(form, menv);
+    } else if (sym == symacrolet_s) {
+      return expand_symacrolet(form, menv);
     } else if ((macro = lookup_mac(menv, sym))) {
       val mac_expand = expand_macro(form, macro, menv);
       if (mac_expand == form)
         return form;
-      rlcp_tree(mac_expand, form);
-      form = mac_expand;
+      form = rlcp_tree(mac_expand, form);
       goto tail;
     } else {
       /* funtion call
@@ -2424,11 +2571,13 @@ tail:
 
 static val macro_form_p(val form, val menv)
 {
-  if (!consp(form))
-    return nil;
-  if (!lookup_mac(menv, car(form)))
-    return nil;
-  return t;
+  menv = default_bool_arg(menv);
+
+  if (bindable(form) && lookup_symac(menv, form)) 
+    return t;
+  if (consp(form) && lookup_mac(menv, car(form)))
+    return t;
+  return nil;
 }
 
 static val macroexpand_1(val form, val menv)
@@ -2437,15 +2586,20 @@ static val macroexpand_1(val form, val menv)
 
   menv = default_bool_arg(menv);
 
-  if (atom(form)) {
-    return form;
-  } else if ((macro = lookup_mac(menv, car(form)))) {
+  if (consp(form) && (macro = lookup_mac(menv, car(form)))) {
     val mac_expand = expand_macro(form, macro, menv);
     if (mac_expand == form)
       return form;
-    rlcp_tree(mac_expand, form);
-    return mac_expand;
+    return rlcp_tree(mac_expand, form);
   }
+
+  if (bindable(form) && (macro = lookup_symac(menv, form))) {
+    val mac_expand = cdr(macro);
+    if (mac_expand == form)
+      return form;
+    return rlcp_tree(mac_expand, form);
+  }
+
   return form;
 }
 
@@ -2888,11 +3042,12 @@ static val pprinl(val obj, val stream)
 
 void eval_init(void)
 {
-  protect(&top_vb, &top_fb, &top_mb, &special, &dyn_env,
+  protect(&top_vb, &top_fb, &top_mb, &top_smb, &special, &dyn_env,
           &op_table, &last_form_evaled, (val *) 0);
   top_fb = make_hash(t, nil, nil);
   top_vb = make_hash(t, nil, nil);
   top_mb = make_hash(t, nil, nil);
+  top_smb = make_hash(t, nil, nil);
   special = make_hash(t, nil, nil);
   op_table = make_hash(nil, nil, nil);
 
@@ -2908,6 +3063,7 @@ void eval_init(void)
   defvar_s = intern(lit("defvar"), user_package);
   defun_s = intern(lit("defun"), user_package);
   defmacro_s = intern(lit("defmacro"), user_package);
+  defsymacro_s = intern(lit("defsymacro"), user_package);
   tree_case_s = intern(lit("tree-case"), user_package);
   tree_bind_s = intern(lit("tree-bind"), user_package);
   inc_s = intern(lit("inc"), user_package);
@@ -2947,6 +3103,7 @@ void eval_init(void)
   vector_list_s = intern(lit("vector-list"), user_package);
   macro_time_s = intern(lit("macro-time"), user_package);
   macrolet_s = intern(lit("macrolet"), user_package);
+  symacrolet_s = intern(lit("symacrolet"), user_package);
   with_saved_vars_s = intern(lit("with-saved-vars"), system_package);
   whole_k = intern(lit("whole"), keyword_package);
   special_s = intern(lit("special"), system_package);
@@ -2975,6 +3132,7 @@ void eval_init(void)
   sethash(op_table, defvar_s, cptr((mem_t *) op_defvar));
   sethash(op_table, defun_s, cptr((mem_t *) op_defun));
   sethash(op_table, defmacro_s, cptr((mem_t *) op_defmacro));
+  sethash(op_table, defsymacro_s, cptr((mem_t *) op_defsymacro));
   sethash(op_table, tree_case_s, cptr((mem_t *) op_tree_case));
   sethash(op_table, tree_bind_s, cptr((mem_t *) op_tree_bind));
   sethash(op_table, inc_s, cptr((mem_t *) op_modplace));

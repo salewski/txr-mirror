@@ -5188,7 +5188,7 @@ of the list starting at index 1, up to and not including index 3.
 Similarly to Common Lisp, TXR Lisp is lexically scoped by default, but
 also has dynamically scoped (a.k.a "special") variables.
 
-When a variable is defined with defvar, it is introduced as a top-level
+When a variable is defined with defvar, it is introduced as a global
 (global) binding, regardless of where in the scope the defvar form occurs.
 
 Furthermore, at the time the defvar form is evaluated, the symbol which
@@ -5742,7 +5742,7 @@ evaluated. The side effects implied by the form are performed, and the value
 which it produces is returned. The <env> object specifies an environment for
 resolving the function and variable references encountered in the expression.
 The object nil can be specified as an environment, in which case the evaluation
-takes place in the top-level environment.
+takes place in the global environment.
 
 .SH MUTATION
 
@@ -5867,15 +5867,15 @@ Syntax:
 .TP
 Description:
 
-The defvar operator binds a variable in the top-level environment. 
+The defvar operator binds a variable in the global environment. 
 
-If the variable named <sym> already exists in the top-level environment, the
+If the variable named <sym> already exists in the global environment, the
 form has no effect; the <value> form is not evaluated, and the value of the
 variable is unchanged.
 
 If the variable does not exist, then it is introduced, with a value given by
 evaluating the <value> form. The <value> form is evaluated in the environment
-in which the defvar form occurs, not necessarily in the top-level environment.
+in which the defvar form occurs, not necessarily in the global environment.
 
 The symbols t and nil may not be used as variables, and neither
 can be keyword symbols: symbols denoted by a leading colon.
@@ -12846,6 +12846,9 @@ parsing of the entire source file, and is complete before any of the code in
 that file is executed. If and when the @(do ...) form is later executed,
 the expanded forms are evaluated.
 
+TXR Lisp also supports symbol macros, which are symbolic forms that stand
+for forms, with which they are replaced at macro expansion time.
+
 When Lisp data is processed as code by the eval function, it is first expanded,
 and so processed in its entirety in the expansion phase. Then it is processed
 in the evaluation phase.
@@ -12908,8 +12911,8 @@ For instance (macro-time (list 1 2 3)) evaluates (list 1 2 3) to the object (1
 If the form is evaluated again at evaluation-time, the resulting value will be
 that of the quote.
 
-macro-time forms do not see the lexical environment; the see only top-level
-function and variable bindings and macros.
+macro-time forms do not see the surrounding lexical environment; the see only
+global function and variable bindings and macros.
 
 Note 1: macro-time is intended for defining helper functions and variables that
 are used by macros. A macro cannot "see" a defun function or defvar variable
@@ -12932,7 +12935,7 @@ Syntax:
 .TP
 Description:
 
-The defmacro operator is evaluated at expansion-time. It defines a 
+The defmacro operator is evaluated at expansion time. It defines a 
 macro-expander function under the name <name>, effectively creating
 a new operator. 
 
@@ -13031,7 +13034,8 @@ Syntax:
 Description:
 
 The macro-form-p function returns t if <obj> represents the syntax of
-a form which is a macro form. Otherwise it returns nil.
+a form which is a macro form: either a compound macro or a symbol macro.
+Otherwise it returns nil.
 
 A macro form will transform under macroexpand-1 or macroexpand; an object
 which isn't a macro form will not undergo expansion.
@@ -13122,6 +13126,58 @@ the some-form argument, using the local macro that is lexically apparent
 where those forms are passed, and is correctly able to work with the
 expansions (1 list 42) and (list 'a) to produce (list 42) and (list 'a)
 which evaluate to 42 and a respectively.
+
+.SS Operator defsymacro
+
+.TP
+Syntax:
+
+  (defsymacro <sym> <form>)
+
+.TP
+Description:
+
+The defsymacro operator binds a symbol macro in the global environment.
+A defsymacro form is implicitly executed at expansion time, and thus need
+not be wrapped in a macro-time form.
+
+The visibility of a symbol macro binding for <sym> specifies that occurrences
+of <sym> in program code which are to be evaluated, or which denote places
+which are the targets of assignments, are subject to a replacement by <form>.
+
+The replacement <form> is then subject to further expansion, if possible.
+It may be a compound form which is a macro call, or another symbol that
+has a symbol macro binding.
+
+Note: if a symbol macro expands to itself directly, expansion stops. However,
+if a symbol macro expands to itself through a chain of expansions,
+an infinite expansion time loop results.
+
+.SS Operator symacrolet
+
+.TP
+Syntax:
+
+  (symacrolet ({(<sym> <form>)}*) <body-form>*)
+
+.TP
+Description:
+
+The symacrolet operator binds local, lexically scoped macros that are
+similar to the global symbol macros introduced by defsymacro.
+
+Each <sym> in the bindings list is bound to its corresponding form, creating a
+new extension of the expansion-time lexical macro environment.
+
+Each <body-form> is subequently macro-expanded in this new environment
+in which the new symbol macros are visible.
+
+Note: ordinary lexical bindings such as those introduced by let or by
+function parameters lists shadow symbol macros. If a symbol X is bound
+by both a macrolet and a let, then a body which is enclosed by both
+constructs will see whichever of the two bindings is innermost,
+even though the bindings are active in completely separate phases of
+processing. 
 
 .SS Operator tree-bind
 

@@ -1,3 +1,29 @@
+2014-02-24  Kaz Kylheku  <kaz@kylheku.com>
+
+	Symbol macros.
+
+	* eval.c (top_smb, defsymacro_s, symacrolet_s): New global variables.
+	(lookup_symac, get_opt_param_syms, get_param_syms, op_defsymacro,
+	expand_symacrolet, make_var_shadowing_env): New static functions.
+	(expand_tree_cases, expand_catch_clause): Install shadowing environment
+	so lexical bindings hide any symbol macrolets.
+	(expand_place): Fix neglect to expand an atomic form, which breaks
+	symbol macros used as places.
+	(expand): Expand symbol macros, expand symacrolet binding forms.
+	Make sure symbol macros are shadowed in the lexical binding
+	constructs. Take advantage of return value of rlcp_tree in a
+	few places.
+	(macro_form_p): Support for symbol macros; bugfix: not handling
+	default argument.
+	(macroexpand_1): Streamlined, and support added for symbol macros.
+	(eval_init): Protect top_smb from gc. Create new hash, stored in
+	top_smb. Initialize defsymacro_s and symacrolet_s.
+	Register op_defsymacro.
+
+	* parser.y (rlcp_tree): Return the to form instead of useless t and nil.
+
+	* txr.1: Documented.
+
 2014-02-23  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.1: Document quasiquote operator syntax.

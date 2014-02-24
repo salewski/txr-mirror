@@ -1153,15 +1153,14 @@ val rlset(val form, val info)
 
 val rlcp_tree(val to, val from)
 {
-  if (atom(to)) {
-    return nil;
-  } else {
+  val ret = to;
+  if (consp(to)) {
     if (!source_loc(to))
       rlcp(to, from);
     for (; consp(to); to = cdr(to))
       rlcp_tree(car(to), from);
-    return t;
   }
+  return ret;
 }
 
 static wchar_t char_from_name(const wchar_t *name)
