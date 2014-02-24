@@ -1,5 +1,12 @@
 2014-02-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.y (modifiers): Bugfix: list element not subject to expansion
+	of Lisp forms denoted by @.
+	(expand_meta): Bugfix: failure to expand vars, which can be
+	symbol macros now.
+
+2014-02-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (obj_print, obj_pprint): Render quasi-quote hash and
 	vector literals using their original notation.
 

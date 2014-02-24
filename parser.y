@@ -666,7 +666,8 @@ modifiers : NUMBER              { $$ = cons($1, nil); }
           | regex               { $$ = cons(cons(regex_compile(rest($1), nil), 
                                                  rest($1)), nil);
                                   rlcp($$, $1); }
-          | list                { $$ = cons($1, nil); }
+          | list                { $$ = rlcp(cons(expand_meta($1, nil),
+				                 nil), $1); }
           ;
 
 o_var : SYMTOK                  { $$ = list(var_s, sym_helper($1, nil), nao);
@@ -1122,13 +1123,26 @@ static val choose_quote(val quoted_form)
 
 static val expand_meta(val form, val menv)
 {
+  val sym;
+
   if (atom(form))
     return form;
 
   menv = default_arg(menv, make_env(nil, nil, nil));
 
-  if (car(form) == expr_s)
-    return cons(expr_s, expand(rest(form), menv));
+  if ((sym = car(form)) == expr_s) {
+    val exp_x = expand(rest(form), menv);
+    if (!bindable(exp_x))
+      return cons(sym, exp_x);
+    return cons(var_s, cons(exp_x, nil));
+  }
+
+  if (sym == var_s) {
+    val var_x = expand(second(form), menv);
+    if (!bindable(var_x))
+      return cons(expr_s, var_x);
+    return cons(var_s, cons(var_x, nil));
+  }
 
   {
     list_collect_decl (out, ptail);
