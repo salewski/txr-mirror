@@ -1,3 +1,35 @@
+2014-02-23  Kaz Kylheku  <kaz@kylheku.com>
+
+	Introducing some changes for improved handling of special variables.
+	Saving and restoring of individual variables is very silly
+	and it's making it difficult to implement function parameters
+	that are rebindings of special variables.
+
+	Let's have a global pointer to a dynamic environment called dyn_env.
+	Let's make it part of the extended_jmp_buf structure, so that it's
+	implicitly saved and restored across exception handling.
+
+	Special variable lookups go through the dyn_env chain, and fall back on
+	the global bindings.
+
+	To override some specials, we just push a new dynamic environment and
+	stick them there. (As a bonus, the bindings can even be repeated in the
+	lexical environment (i.e. the same objects), so they can be found
+	faster. We have to make sure we remove that environment when we
+	leave the scope in the normal way. If we unwind out, it is done
+	automatically by extended_longjmp mechanism.
+
+	* eval.c (dyn_env): New global variable.
+	(lookup_var, lookup_var_l): If env is nil, look in the dyn_env
+	first, and only if that fails, look in the global bindings top_vb.
+
+	* signal.h (extended_jmp_buf): New member, de, for saving/restoring
+	dyn_env. This structure is now used whether or not we have signals.
+	(extended_setjmp, extended_longjmp): Updated to save and restore
+	dyn_env, and to do it regardless of whether there is POSIX signal
+	support.
+	(dyn_env): Declared here.
+
 2014-02-22  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (symbol_function): Retrieve the global macro binding if the

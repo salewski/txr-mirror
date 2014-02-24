@@ -73,6 +73,7 @@ struct c_var {
 
 val top_vb, top_fb, top_mb, special;
 val op_table;
+val dyn_env;
 
 val eval_error_s;
 val dwim_s, progn_s, prog1_s, let_s, let_star_s, lambda_s, call_s;
@@ -141,14 +142,22 @@ noreturn static val eval_error(val form, val fmt, ...)
 val lookup_var(val env, val sym)
 {
   if (nilp(env)) {
-    val bind = gethash(top_vb, sym);
-    if (cobjp(bind)) {
-      struct c_var *cv = (struct c_var *) cptr_get(bind);
-      set(cv->bind->c.cdr, *cv->loc);
-      return cv->bind;
+    if (dyn_env) {
+      val binding = assoc(sym, dyn_env->e.vbindings);
+      if (binding)
+        return binding;
+    } 
+    
+    {
+      val bind = gethash(top_vb, sym);
+      if (cobjp(bind)) {
+        struct c_var *cv = (struct c_var *) cptr_get(bind);
+        set(cv->bind->c.cdr, *cv->loc);
+        return cv->bind;
+      }
+      return bind;
     }
-    return bind;
-  } else  {
+  } else {
     type_check(env, ENV);
 
     {
@@ -163,15 +172,23 @@ val lookup_var(val env, val sym)
 val *lookup_var_l(val env, val sym)
 {
   if (nilp(env)) {
-    val bind = gethash(top_vb, sym);
-    if (cobjp(bind)) {
-      struct c_var *cv = (struct c_var *) cptr_get(bind);
-      return cv->loc;
+    if (dyn_env) {
+      val binding = assoc(sym, dyn_env->e.vbindings);
+      if (binding)
+        return cdr_l(binding);
     }
-    if (bind)
-      return cdr_l(bind);
-    return 0;
-  } else  {
+
+    {
+      val bind = gethash(top_vb, sym);
+      if (cobjp(bind)) {
+        struct c_var *cv = (struct c_var *) cptr_get(bind);
+        return cv->loc;
+      }
+      if (bind)
+        return cdr_l(bind);
+      return 0;
+    }
+  } else {
     type_check(env, ENV);
 
     {
