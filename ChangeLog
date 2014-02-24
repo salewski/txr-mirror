@@ -1,5 +1,15 @@
 2014-02-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (expand_qquote): Bugfix. Was not handling an unquote
+	in the dotted position: (qquote x1 .. xn . (unquote form)),
+	which looks like the structure (qquote x1 .. xn unquote form).
+	Fixed by a hack: after recursively expanding the (unquote form)
+	part (rest of the form), we check whether the unexpanded
+	version has unquote at the front. If so, we know the expansion is just
+	form, and use it to emit the suitable expansion.
+
+2014-02-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	Symbol macros.
 
 	* eval.c (top_smb, defsymacro_s, symacrolet_s): New global variables.

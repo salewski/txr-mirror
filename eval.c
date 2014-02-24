@@ -2065,7 +2065,9 @@ static val expand_qquote(val qquoted_form, val menv)
       if (atom(r_ex)) {
         return rlcp(cons(append_s, cons(f_ex, r_ex)), qquoted_form);
       } else {
-        if (car(r_ex) == append_s)
+        if (consp(r) && car(r) == unquote_s)
+          r_ex = cons(r_ex, nil);
+        else if (car(r_ex) == append_s)
           r_ex = cdr(r_ex);
         return rlcp(cons(append_s, cons(f_ex, r_ex)), qquoted_form);
       }
