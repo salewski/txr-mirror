@@ -1,5 +1,18 @@
 2014-02-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (obj_print, obj_pprint): Render quasi-quote hash and
+	vector literals using their original notation.
+
+	* parser.y (unquotes_occur): Takes new argument, level. 
+	Only finds quotes which are at the given quasiquoting level.
+	Finally, this is the right semantics. In the first version of this
+	function, we were not eager enough: we neglected to find unquotes
+	that were wrapped in nested quasiquotes. Then we were too eager:
+	finding any unquotes, even ones belonging to the inner backquotes.
+	(vector, hash, choose_quote): Pass zero to unquotes_occur function.
+
+2014-02-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (expand_qquote): Bugfix. Was not handling an unquote
 	in the dotted position: (qquote x1 .. xn . (unquote form)),
 	which looks like the structure (qquote x1 .. xn unquote form).

@@ -5194,6 +5194,12 @@ val obj_print(val obj, val out)
       } else if (sym == splice_s) {
         put_string(lit(",*"), out);
         obj_print(second(obj), out);
+      } else if (sym == vector_lit_s) {
+        put_string(lit("#"), out);
+        obj_print(second(obj), out);
+      } else if (sym == hash_lit_s) {
+        put_string(lit("#H"), out);
+        obj_print(rest(obj), out);
       } else if (sym == var_s && (symbolp(second(obj)) || integerp(second(obj)))
                  && !cdr(cdr(obj)))
       {
@@ -5374,6 +5380,12 @@ val obj_pprint(val obj, val out)
       } else if (sym == splice_s) {
         put_string(lit(",*"), out);
         obj_pprint(second(obj), out);
+      } else if (sym == vector_lit_s) {
+        put_string(lit("#"), out);
+        obj_print(second(obj), out);
+      } else if (sym == hash_lit_s) {
+        put_string(lit("#H"), out);
+        obj_print(rest(obj), out);
       } else if (sym == var_s && (symbolp(second(obj)) || integerp(second(obj)))
                  && !cdr(cdr(obj)))
       {
@@ -5397,7 +5409,7 @@ val obj_pprint(val obj, val out)
           obj_print(sym, out);
           if (second(obj)) {
             put_string(lit(" (. "), out);
-            obj_print(second(obj), out);
+            obj_pprint(second(obj), out);
             put_char(chr(')'), out);
           } else {
             put_string(lit(" ()"), out);

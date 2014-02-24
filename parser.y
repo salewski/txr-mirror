@@ -54,7 +54,7 @@ static val o_elems_transform(val output_form);
 static val define_transform(val define_form);
 static val lit_char_helper(val litchars);
 static val optimize_text(val text_form);
-static val unquotes_occur(val quoted_form);
+static val unquotes_occur(val quoted_form, int level);
 static val choose_quote(val quoted_form);
 static val expand_meta(val form, val menv);
 static wchar_t char_from_name(const wchar_t *name);
@@ -684,14 +684,14 @@ o_var : SYMTOK                  { $$ = list(var_s, sym_helper($1, nil), nao);
                                     yybadtoken(yychar, lit("variable spec")); }
       ;
 
-vector : '#' list               { if (unquotes_occur($2))
+vector : '#' list               { if (unquotes_occur($2, 0))
                                     $$ = rlcp(cons(vector_lit_s,
                                                    cons($2, nil)), $2);
                                   else
                                     $$ = rlcp(vector_list($2), $2); }
        ;
 
-hash : HASH_H list              { if (unquotes_occur($2))
+hash : HASH_H list              { if (unquotes_occur($2, 0))
                                     $$ = rlcp(cons(hash_lit_s, $2),
                                               num($1));
                                   else
@@ -1098,7 +1098,7 @@ static val optimize_text(val text_form)
   return text_form;
 }
 
-static val unquotes_occur(val quoted_form)
+static val unquotes_occur(val quoted_form, int level)
 {
   uses_or2;
 
@@ -1107,14 +1107,17 @@ static val unquotes_occur(val quoted_form)
   } else {
     val sym = car(quoted_form);
     if (sym == unquote_s || sym == splice_s)
-      return t;
-    return or2(unquotes_occur(sym), unquotes_occur(cdr(quoted_form)));
+      return (level == 0) ? t : unquotes_occur(cdr(quoted_form), level - 1);
+    if (sym == qquote_s)
+      return unquotes_occur(cdr(quoted_form), level + 1);
+    return or2(unquotes_occur(sym, level),
+               unquotes_occur(cdr(quoted_form), level));
   }
 }
 
 static val choose_quote(val quoted_form)
 {
-  return unquotes_occur(quoted_form) ? qquote_s : quote_s;
+  return unquotes_occur(quoted_form, 0) ? qquote_s : quote_s;
 }
 
 static val expand_meta(val form, val menv)
