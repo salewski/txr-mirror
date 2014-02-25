@@ -3602,6 +3602,9 @@ void eval_init(void)
   reg_fun(intern(lit("minor"), user_package), func_n1(minor_wrap));
   reg_fun(intern(lit("major"), user_package), func_n1(major_wrap));
   reg_fun(intern(lit("mknod"), user_package), func_n3(mknod_wrap));
+  reg_fun(intern(lit("symlink"), user_package), func_n2(symlink_wrap));
+  reg_fun(intern(lit("link"), user_package), func_n2(link_wrap));
+  reg_fun(intern(lit("readlink"), user_package), func_n1(readlink_wrap));
 #endif
 
 #if HAVE_SYSLOG

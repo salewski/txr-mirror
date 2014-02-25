@@ -1,5 +1,15 @@
 2014-02-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Intern symlink_wrap, link_wrap, readlink_wrap.
+
+	* stream.c (symlink_wrap, link_wrap, readlink_wrap): New functions.
+
+	* stream.h (symlink_wrap, link_wrap, readlink_wrap): Declared.
+
+	* txr.1: Documented.
+
+2014-02-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Register forgotten s_ifsock variable.
 	Register mkdir_wrap, chdir_wrap, getcwd_wrap, makedev_wrap, minor_wrap,
 	major_wrap and mknod_wrap.

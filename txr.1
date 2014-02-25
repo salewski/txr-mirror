@@ -12470,6 +12470,42 @@ Example:
 
    (mknod "dev/foo" (logior #o700 s-ifchr) (makedev 8 3))
 
+.SS Functions symlink and link
+
+.TP
+Syntax:
+
+  (symlink <target> <path>)
+  (link <target> <path>)
+
+.TP
+Description:
+
+The symlink function creates a symbolic link called <path> whose contents
+are the absolute or relative path <target>. <target> does not actually have
+to exist.
+
+The link function creates a hard link. The object at <target> is installed
+into the filesystem at <path> also.
+
+If these functions succeed, they return t. Otherwise they throw an exception
+of type file-error.
+
+
+.SS Function readlink
+
+.TP
+Syntax:
+
+  (readlink <path>)
+
+.TP
+Description:
+
+If <path> names a filesystem object which is a symbolic link, the readlink
+function reads the contents of that symbolic link and returns it
+as a string.  Otherwise, it fails by throwing an exception of type file-error.
+
 .SH UNIX SIGNAL HANDLING
 
 On platforms where certain advanced features of POSIX signal handling are

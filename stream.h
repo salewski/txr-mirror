@@ -108,5 +108,8 @@ val makedev_wrap(val major, val minor);
 val minor_wrap(val dev);
 val major_wrap(val dev);
 val mknod_wrap(val path, val mode, val dev);
+val symlink_wrap(val target, val to);
+val link_wrap(val target, val to);
+val readlink_wrap(val path);
 
 void stream_init(void);

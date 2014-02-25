@@ -2419,7 +2419,9 @@ val getcwd_wrap(void)
                   num(errno), string_utf8(strerror(errno)), nao);
       }
       if (2 * guess > guess)
-        guess = 2 * guess;
+        guess *= 2;
+      else
+        uw_throwf(file_error_s, lit("getcwd: weird problem"), nao);
     } else {
       val out = string_utf8(u8buf);
       free(u8buf);
@@ -2455,6 +2457,61 @@ val mknod_wrap(val path, val mode, val dev)
               string_utf8(strerror(errno)), nao);
 
   return t;
+}
+
+val symlink_wrap(val target, val to)
+{
+  char *u8target = utf8_dup_to(c_str(target));
+  char *u8to = utf8_dup_to(c_str(to));
+  int err = symlink(u8target, u8to);
+  free(u8target);
+  free(u8to);
+  if (err < 0)
+    uw_throwf(file_error_s, lit("symlink ~a ~a: ~a/~s"),
+              target, to, num(errno), string_utf8(strerror(errno)), nao);
+  return t;
+}
+
+val link_wrap(val target, val to)
+{
+  char *u8target = utf8_dup_to(c_str(target));
+  char *u8to = utf8_dup_to(c_str(to));
+  int err = link(u8target, u8to);
+  free(u8target);
+  free(u8to);
+  if (err < 0)
+    uw_throwf(file_error_s, lit("link ~a ~a: ~a/~s"),
+              target, to, num(errno), string_utf8(strerror(errno)), nao);
+  return t;
+}
+
+val readlink_wrap(val path)
+{
+  char *u8path = utf8_dup_to(c_str(path));
+  ssize_t guess = 256;
+
+  for (;;) {
+    char *u8buf = (char *) chk_malloc(guess);
+    ssize_t bytes = readlink(u8path, u8buf, guess);
+
+    if (bytes >= guess) {
+      free(u8buf);
+      if (2 * guess > guess)
+        guess *= 2;
+      else
+        uw_throwf(file_error_s, lit("readlink: weird problem"), nao);
+    } else if (bytes <= 0) {
+      free(u8buf);
+      uw_throwf(file_error_s, lit("readlink ~a: ~a/~s"),
+                path, num(errno), string_utf8(strerror(errno)), nao);
+    } else {
+      val out;
+      u8buf[bytes] = 0;
+      out = string_utf8(u8buf);
+      free(u8buf);
+      return out;
+    }
+  }
 }
 
 #endif
