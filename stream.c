@@ -2424,7 +2424,8 @@ val getcwd_wrap(void)
 
   for (;;) {
     char *u8buf = (char *) chk_malloc(guess);
-    if (getcwd(u8buf, 256) < 0) {
+
+    if (getcwd(u8buf, guess) == 0) {
       free(u8buf);
       if (errno != ERANGE) {
         uw_throwf(file_error_s, lit("getcwd: ~a/~s"),
