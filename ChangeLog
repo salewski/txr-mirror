@@ -1,5 +1,10 @@
 2014-02-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	* debug.c (debug): Fix 2013-12-02 regression, which leaves the
+	debugger not printing the current line of data.
+
+2014-02-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Intern symlink_wrap, link_wrap, readlink_wrap.
 
 	* stream.c (symlink_wrap, link_wrap, readlink_wrap): New functions.
