@@ -3598,7 +3598,7 @@ void eval_init(void)
   reg_fun(intern(lit("chdir"), user_package), func_n1(chdir_wrap));
   reg_fun(intern(lit("pwd"), user_package), func_n0(getcwd_wrap));
 
-#if HAVE_MKDEV
+#if HAVE_MAKEDEV
   reg_fun(intern(lit("makedev"), user_package), func_n2(makedev_wrap));
   reg_fun(intern(lit("minor"), user_package), func_n1(minor_wrap));
   reg_fun(intern(lit("major"), user_package), func_n1(major_wrap));

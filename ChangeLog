@@ -1,5 +1,9 @@
 2014-02-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): HAVE_MAKEDEV not HAVE_MKDEV.
+
+2014-02-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (getcwd_wrap): Implement correct test of getcwd's
 	return value.
 
