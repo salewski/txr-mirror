@@ -1,5 +1,10 @@
 2014-02-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* configure: Use -Werror= on the missing prototypes and
+	strict prototypes warnings; these should be errors.
+
+2014-02-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	* configure: Added feature tests for makedev, link/symlink/readlink,
 	mkdir and mknod.
 

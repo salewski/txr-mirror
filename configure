@@ -83,7 +83,7 @@ yacc_given=
 nm='$(cross)$(tool_prefix)nm'
 opt_flags=-O2
 lang_flags='-ansi -D_BSD_SOURCE -D_POSIX_C_SOURCE=199309L'
-diag_flags='-Wall -Wmissing-prototypes -Wstrict-prototypes'
+diag_flags='-Wall -Werror=missing-prototypes -Werror=strict-prototypes'
 debug_flags=-g
 inline=
 platform_flags=
