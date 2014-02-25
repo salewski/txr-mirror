@@ -1584,6 +1584,95 @@ else
   have_posix_sigs=y
 fi
 
+printf "Checking for makedev ... "
+
+cat > conftest.c <<!
+#include <sys/types.h>
+
+int main(void)
+{
+  int d = makedev(1, 2);
+  int j = major(d);
+  int n = minor(d);
+  return 0;
+}
+!
+rm -f conftest$exe
+if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+  printf "no\n"
+else
+  printf "yes\n"
+  printf "#define HAVE_MAKEDEV 1\n" >> config.h
+fi
+
+printf "Checking for link, symlink and readlink ... "
+
+cat > conftest.c <<!
+#include <unistd.h>
+
+int main(void)
+{
+  int e1 = symlink("a", "b");
+  int e2 = link("c", "d");
+  char buf[256];
+  ssize_t foo = readlink("e", buf, sizeof buf);
+  return 0;
+}
+!
+rm -f conftest$exe
+if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+  printf "no\n"
+else
+  printf "yes\n"
+  printf "#define HAVE_SYMLINK 1\n" >> config.h
+  have_unistd=y
+fi
+
+printf "Checking for POSIX mkdir ... "
+
+cat > conftest.c <<!
+#included "config.h"
+#include <sys/stat.h>
+#if HAVE_WINDOWS_H
+#include <windows.h>
+#endif
+
+int main(void)
+{
+  int e = mkdir("a", 0);
+  return 0;
+}
+!
+rm -f conftest$exe
+if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+  printf "no\n"
+else
+  printf "yes\n"
+cat conftest.err
+exit 1
+  printf "#define HAVE_MKDIR 1\n" >> config.h
+fi
+
+printf "Checking for mknod ... "
+
+cat > conftest.c <<!
+#include <unistd.h>
+
+int main(void)
+{
+  int e = mknod("a", 0, 0);
+  return 0;
+}
+!
+rm -f conftest$exe
+if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
+  printf "no\n"
+else
+  printf "yes\n"
+  printf "#define HAVE_MKNOD 1\n" >> config.h
+  have_unistd=y
+fi
+
 #
 # Dependent variables
 #

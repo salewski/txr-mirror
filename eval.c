@@ -3591,17 +3591,24 @@ void eval_init(void)
   reg_fun(intern(lit("daemon"), user_package), func_n2(daemon_wrap));
 #endif
 
-#ifdef HAVE_SYS_STAT
+#if HAVE_MKDIR || HAVE_WINDOWS_H
   reg_fun(intern(lit("mkdir"), user_package), func_n2o(mkdir_wrap, 1));
 #endif
 
-#ifdef HAVE_UNISTD_H
   reg_fun(intern(lit("chdir"), user_package), func_n1(chdir_wrap));
   reg_fun(intern(lit("pwd"), user_package), func_n0(getcwd_wrap));
+
+#if HAVE_MKDEV
   reg_fun(intern(lit("makedev"), user_package), func_n2(makedev_wrap));
   reg_fun(intern(lit("minor"), user_package), func_n1(minor_wrap));
   reg_fun(intern(lit("major"), user_package), func_n1(major_wrap));
+#endif
+
+#if HAVE_MKNOD
   reg_fun(intern(lit("mknod"), user_package), func_n3(mknod_wrap));
+#endif
+
+#if HAVE_SYMLINK
   reg_fun(intern(lit("symlink"), user_package), func_n2(symlink_wrap));
   reg_fun(intern(lit("link"), user_package), func_n2(link_wrap));
   reg_fun(intern(lit("readlink"), user_package), func_n1(readlink_wrap));

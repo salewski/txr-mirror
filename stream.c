@@ -2378,13 +2378,25 @@ val rename_path(val from, val to)
   return t;
 }
 
-#if HAVE_SYS_STAT
+#if HAVE_MKDIR
 val mkdir_wrap(val path, val mode)
 {
   char *u8path = utf8_dup_to(c_str(path));
   int err = mkdir(u8path, c_num(default_arg(mode, num_fast(0777))));
   free(u8path);
 
+  if (err < 0)
+    uw_throwf(file_error_s, lit("mkdir ~a: ~a/~s"),
+              path, num(errno), string_utf8(strerror(errno)), nao);
+
+  return t;
+}
+#elif HAVE_WINDOWS_H
+val mkdir_wrap(val path, val mode)
+{
+  int err = _wmkdir(c_str(path));
+
+  (void) mode;
   if (err < 0)
     uw_throwf(file_error_s, lit("mkdir ~a: ~a/~s"),
               path, num(errno), string_utf8(strerror(errno)), nao);
@@ -2430,6 +2442,8 @@ val getcwd_wrap(void)
   }
 }
 
+#if HAVE_MAKEDEV
+
 val makedev_wrap(val major, val minor)
 {
   return num(makedev(c_num(major), c_num(minor)));
@@ -2445,6 +2459,10 @@ val major_wrap(val dev)
   return num(major(c_num(dev)));
 }
 
+#endif
+
+#if HAVE_MKNOD
+
 val mknod_wrap(val path, val mode, val dev)
 {
   char *u8path = utf8_dup_to(c_str(path));
@@ -2458,6 +2476,10 @@ val mknod_wrap(val path, val mode, val dev)
 
   return t;
 }
+
+#endif
+
+#if HAVE_SYMLINK
 
 val symlink_wrap(val target, val to)
 {
@@ -2513,6 +2535,8 @@ val readlink_wrap(val path)
     }
   }
 }
+
+#endif
 
 #endif
 

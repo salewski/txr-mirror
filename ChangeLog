@@ -1,3 +1,18 @@
+2014-02-25  Kaz Kylheku  <kaz@kylheku.com>
+
+	* configure: Added feature tests for makedev, link/symlink/readlink,
+	mkdir and mknod.
+
+	* eval.c (eval_init): Wrap #ifdefs around the registrations of
+	the wrappers for these functions.
+
+	* stream.c (mkdir_wrap): Wrap in #ifdef HAVE_MKDIR, and
+	provide a Windows version if HAVE_MKDIR is missing, but
+	HAVE_WINDOWS_H is true.
+	(makedev_wrap, major_wrap, minor_wrap): Wrap with #if HAVE_MAKEDEV.
+	(mknod): Use #if HAVE_MKNOD.
+	(symlink_wrap, link_wrap, readlink_wrap): Wrap with #if HAVE_SYMLINK.
+
 2014-02-24  Kaz Kylheku  <kaz@kylheku.com>
 
 	* debug.c (debug): Fix 2013-12-02 regression, which leaves the
