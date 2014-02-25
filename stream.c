@@ -2378,6 +2378,86 @@ val rename_path(val from, val to)
   return t;
 }
 
+#if HAVE_SYS_STAT
+val mkdir_wrap(val path, val mode)
+{
+  char *u8path = utf8_dup_to(c_str(path));
+  int err = mkdir(u8path, c_num(default_arg(mode, num_fast(0777))));
+  free(u8path);
+
+  if (err < 0)
+    uw_throwf(file_error_s, lit("mkdir ~a: ~a/~s"),
+              path, num(errno), string_utf8(strerror(errno)), nao);
+
+  return t;
+}
+#endif
+
+#if HAVE_UNISTD_H
+val chdir_wrap(val path)
+{
+  char *u8path = utf8_dup_to(c_str(path));
+  int err = chdir(u8path);
+  free(u8path);
+
+  if (err < 0)
+    uw_throwf(file_error_s, lit("chdir ~a: ~a/~s"),
+              path, num(errno), string_utf8(strerror(errno)), nao);
+  return t;
+}
+
+val getcwd_wrap(void)
+{
+  size_t guess = 256;
+
+  for (;;) {
+    char *u8buf = (char *) chk_malloc(guess);
+    if (getcwd(u8buf, 256) < 0) {
+      free(u8buf);
+      if (errno != ERANGE) {
+        uw_throwf(file_error_s, lit("getcwd: ~a/~s"),
+                  num(errno), string_utf8(strerror(errno)), nao);
+      }
+      if (2 * guess > guess)
+        guess = 2 * guess;
+    } else {
+      val out = string_utf8(u8buf);
+      free(u8buf);
+      return out;
+    }
+  }
+}
+
+val makedev_wrap(val major, val minor)
+{
+  return num(makedev(c_num(major), c_num(minor)));
+}
+
+val minor_wrap(val dev)
+{
+  return num(minor(c_num(dev)));
+}
+
+val major_wrap(val dev)
+{
+  return num(major(c_num(dev)));
+}
+
+val mknod_wrap(val path, val mode, val dev)
+{
+  char *u8path = utf8_dup_to(c_str(path));
+  int err = mknod(u8path, c_num(mode), c_num(default_arg(dev, zero)));
+  free(u8path);
+
+  if (err < 0)
+    uw_throwf(file_error_s, lit("mknod ~a ~a ~a (~a:~a): ~a/~s"),
+              path, mode, dev, major_wrap(dev), minor_wrap(dev), num(errno),
+              string_utf8(strerror(errno)), nao);
+
+  return t;
+}
+
+#endif
 
 void stream_init(void)
 {
@@ -2409,6 +2489,10 @@ void stream_init(void)
   name_k = intern(lit("name"), keyword_package);
 
   s_ifmt = num(S_IFMT); 
+
+#ifdef S_IFSOCK
+  s_ifsock = num(S_IFSOCK); 
+#endif
 
 #ifdef S_IFLNK
   s_iflnk = num(S_IFLNK);

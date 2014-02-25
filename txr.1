@@ -11673,10 +11673,10 @@ as the st_dev field.
 
 The following variables exist, having integer values. These are bitmasks
 which can be applied against the value given by the :mode property
-in the property list returned by the function stat: s-ifmt, s-iflnk, s-ifreg,
-s-ifblk, s-ifdir, s-ifchr, s-ififo, s-isuid, s-isgid, s-isvtx, s-irwxu,
-s-irusr, s-iwusr, s-ixusr, s-irwxg, s-irgrp, s-iwgrp, s-ixgrp, s-irwxo,
-s-iroth, s-iwoth and s-ixoth.
+in the property list returned by the function stat: s-ifmt, s-ifsock, s-iflnk,
+s-ifreg, s-ifblk, s-ifdir, s-ifchr, s-ififo, s-isuid, s-isgid, s-isvtx,
+s-irwxu, s-irusr, s-iwusr, s-ixusr, s-irwxg, s-irgrp, s-iwgrp, s-ixgrp,
+s-irwxo, s-iroth, s-iwoth and s-ixoth.
 
 These variables correspond to the C constants S_IFMT, S_IFLNK, S_IFREG
 and so forth.
@@ -11763,6 +11763,44 @@ In this manner, a tail stream can dynamically growing rotating log files.
 Caveat: since a tail stream can re-open a new file which has the same
 name as the original file, it will do the wrong thing if the program
 changes the current working directory, and the path name is relative.
+
+.SS Function remove-path
+
+.TP
+Syntax:
+
+  (remove-path <path>)
+
+.TP
+Description:
+
+The remove-path function tries to remove the filesystem object named
+by <path>, which may be a file, directory or something else.
+
+If successful, it returns t.
+
+A failure to remove the object results in an exception of type file-error.
+
+.SS Function rename-path
+
+.TP
+Syntax:
+
+  (rename-path <from-path> <to-path>)
+
+.TP
+Description:
+
+The remove-path function tries to rename filesystem path <from-path>, which may
+refer to a file, directory or something else, to the path <to-path>.
+
+If successful, it returns t.
+
+A failure to rename path results in an exception of type file-error.
+
+
+.TP
+Description:
 
 .SH COPROCESSES
 
@@ -12319,6 +12357,52 @@ EXIT_FAILURE, and t corresponds to EXIT_SUCCESS. These are platform-independent
 indicators of failed or successful termination. The numeric value 0 also
 indicates success.
 
+.SS Function mkdir
+
+.TP
+Syntax:
+
+  (mkdir <path> [<mode>])
+
+.TP
+Description:
+
+Try to create the directory named <path> using the POSIX mkdir function.
+An exception of type file_error is thrown if the function fails. Returns
+t on success.
+
+The <mode> argument specifies the request numeric permissions
+for the newly created directory. If omitted, the requested permissions are
+#o777 (511): readable and writable to everyone. The requested permissions
+are subject to umask.
+
+.SS Function chdir
+
+.TP
+Syntax:
+
+  (chdir <path>)
+
+.TP
+Description:
+
+This changes the current working directory to <path>, and returns t,
+or else throws an exception of type file-error.
+
+.SS Function pwd
+
+.TP
+Syntax:
+
+  (pwd)
+
+.TP
+Description:
+
+This function retrieves the current working directory. 
+If the underlying getcwd system call fails with an errno other than ERANGE,
+an exception will be thrown.
+
 .SS Function daemon
 
 .TP
@@ -12333,6 +12417,58 @@ This is a wrapper for the Unix function daemon of BSD origin.
 
 It returns t if successful, nil otherwise, and the errno
 variable is set in that case.
+
+.SS Functions makedev, minor, major
+
+.TP
+Syntax:
+
+  (makedev <minor> <major>)
+  (minor <dev>)
+  (major <dev>)
+
+.TP
+Description:
+
+The parameters <minor>, <major> and <dev> are all integers.  The makedev
+function constructs a combined device number from a minor and major pair (by
+calling the Unix makedev function).  This device number is suitable as an
+argument to the mknod function (see below). Device numbers also appear as :dev
+property returned by the stat function.
+
+The minor and major functions extract the minor and major device number
+from a combined device number.
+
+.SS Function mknod
+
+.TP
+Syntax:
+
+  (mknod <path> <mode> [<dev>])
+
+.TP
+Description:
+
+The mknod function tries to create an entry in the filesystem: a file,
+FIFO, or a device special file, under the name <path>. If it is successful,
+it returns t, otherwise it throws an exception of type file-error.
+
+The <mode> argument is a bitwise "or" combination of the requested permisions,
+and the type of object to create: one of the constants s-ifreg, s-ififo,
+s-ifchr or s-ifblk or s-ifsock. The permissions are subject to the umask.
+
+If a block or character special device (s-ifchr or s-ifblk) is being
+created, then the <dev> argument specifies the major and minor numbers
+of the device. A suitable value can be constructed from a major and minor
+pair using the makedev function.
+
+.TP
+Example:
+
+   ;; make a character device (8, 3) called /dev/foo
+   ;; requesting rwx------ permissions
+
+   (mknod "dev/foo" (logior #o700 s-ifchr) (makedev 8 3))
 
 .SH UNIX SIGNAL HANDLING
 

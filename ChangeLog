@@ -1,5 +1,22 @@
 2014-02-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Register forgotten s_ifsock variable.
+	Register mkdir_wrap, chdir_wrap, getcwd_wrap, makedev_wrap, minor_wrap,
+	major_wrap and mknod_wrap.
+
+	* stream.c (mkdir_wrap, chdir_wrap, getcwd_wrap, makedev_wrap,
+	minor_wrap, major_wrap, mknod_wrap): New functions.
+	(stream_init): Initialize forgotten variable s-ifsock.
+
+	* stream.h (s_ifsock): Declared.
+	(mkdir_wrap, chdir_wrap, getcwd_wrap, makedev_wrap,
+	minor_wrap, major_wrap, mknod_wrap): Declared.
+
+	* txr.1: Forgotten documentation for remove-path and rename-path
+	added. Forgotten mention of s-ifsock. Documented new Unix functions.
+
+2014-02-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.l: Support octal and binary numbers.
 
 	* txr.1: Documented.

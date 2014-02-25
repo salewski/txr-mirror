@@ -3383,6 +3383,7 @@ void eval_init(void)
   reg_fun(intern(lit("stream-get-prop"), user_package), func_n2(stream_get_prop));
   reg_fun(intern(lit("make-catenated-stream"), user_package), func_n0v(make_catenated_stream));
   reg_var(intern(lit("s-ifmt"), user_package), &s_ifmt);
+  reg_var(intern(lit("s-ifsock"), user_package), &s_ifsock);
   reg_var(intern(lit("s-iflnk"), user_package), &s_iflnk);
   reg_var(intern(lit("s-ifreg"), user_package), &s_ifreg);
   reg_var(intern(lit("s-ifblk"), user_package), &s_ifblk);
@@ -3588,6 +3589,19 @@ void eval_init(void)
 
 #if HAVE_DAEMON
   reg_fun(intern(lit("daemon"), user_package), func_n2(daemon_wrap));
+#endif
+
+#ifdef HAVE_SYS_STAT
+  reg_fun(intern(lit("mkdir"), user_package), func_n2o(mkdir_wrap, 1));
+#endif
+
+#ifdef HAVE_UNISTD_H
+  reg_fun(intern(lit("chdir"), user_package), func_n1(chdir_wrap));
+  reg_fun(intern(lit("pwd"), user_package), func_n0(getcwd_wrap));
+  reg_fun(intern(lit("makedev"), user_package), func_n2(makedev_wrap));
+  reg_fun(intern(lit("minor"), user_package), func_n1(minor_wrap));
+  reg_fun(intern(lit("major"), user_package), func_n1(major_wrap));
+  reg_fun(intern(lit("mknod"), user_package), func_n3(mknod_wrap));
 #endif
 
 #if HAVE_SYSLOG

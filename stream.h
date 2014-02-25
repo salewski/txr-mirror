@@ -56,7 +56,7 @@ extern val atime_k, mtime_k, ctime_k;
 extern val from_start_k, from_current_k, from_end_k;
 extern val real_time_k, name_k;
 
-extern val s_ifmt, s_iflnk, s_ifreg, s_ifblk, s_ifdir;
+extern val s_ifmt, s_ifsock, s_iflnk, s_ifreg, s_ifblk, s_ifdir;
 extern val s_ifchr, s_ififo, s_isuid, s_isgid, s_isvtx, s_irwxu;
 extern val s_irusr, s_iwusr, s_ixusr, s_irwxg, s_irgrp, s_iwgrp;
 extern val s_ixgrp, s_irwxo, s_iroth, s_iwoth, s_ixoth;
@@ -101,5 +101,12 @@ val open_process(val path, val mode_str, val args);
 val make_catenated_stream(val stream_list);
 val remove_path(val path);
 val rename_path(val from, val to);
+val mkdir_wrap(val path, val mode);
+val chdir_wrap(val path);
+val getcwd_wrap(void);
+val makedev_wrap(val major, val minor);
+val minor_wrap(val dev);
+val major_wrap(val dev);
+val mknod_wrap(val path, val mode, val dev);
 
 void stream_init(void);
