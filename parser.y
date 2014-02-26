@@ -730,12 +730,15 @@ exprs_opt : exprs               { $$ = $1; }
           ;
 
 n_exprs : n_expr                { $$ = rlcp(cons($1, nil), $1); }
-        | n_expr n_exprs        { $$ = rlcp(cons($1, $2), $1); }
-        | n_expr '.' n_expr     { $$ = rlcp(cons($1, $3), $1); }
-        | n_expr DOTDOT n_exprs { $$ = rlcp(cons(list(cons_s, $1,
+        | n_expr n_exprs        { uses_or2;
+	                          $$ = rlcp(cons($1, $2), or2($1, $2)); }
+        | n_expr '.' n_expr     { uses_or2;
+	                          $$ = rlcp(cons($1, $3), or2($1, $3)); }
+        | n_expr DOTDOT n_exprs { uses_or2;
+	                          $$ = rlcp(cons(list(cons_s, $1,
                                                       car($3), nao),
-                                                 cdr($3)), $1); }
-      ;
+                                                 cdr($3)), or2($1, $3)); }
+        ;
 
 n_expr : SYMTOK                 { $$ = sym_helper($1, t); }
        | METANUM                { $$ = cons(var_s, cons($1, nil));

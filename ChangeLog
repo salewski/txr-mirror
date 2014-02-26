@@ -1,5 +1,18 @@
 2014-02-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (expand_op): Use rlcp_tree when constructing the
+	dwim_body, since the append2 copies list structure.
+
+	* parser.y (n_exprs): propagate source loc info from both 
+	constituents, giving precedence to the left one, rather than just taking
+	it from the left one and ignoring the second constituent.  This fixes
+	cases of missing location info. The left constituent n_expr is often 
+	a symbol, and those do not have location info. We want a case like
+	like ((x) y) to take from (x), and (x (y)) to take it from (y),
+	and so on.
+
+2014-02-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.y (list): For @n_expr, get the source location info
 	from the @ token.
 	(n_expr): Bugfix: do not attribute a symbol with location info.

@@ -2227,12 +2227,12 @@ static val expand_op(val sym, val body, val menv)
 
   {
     uses_or2;
-    val dwim_body = rlcp(cons(dwim_s, 
-                              if3(or4(is_op, has_rest, ssyms, 
-                                      null(proper_listp(body_trans))),
-                                  body_trans,
-                                  append2(body_trans, rest_gensym))),
-                         body_trans);
+    val dwim_body = rlcp_tree(cons(dwim_s, 
+                                   if3(or4(is_op, has_rest, ssyms, 
+                                           null(proper_listp(body_trans))),
+                                       body_trans,
+                                       append2(body_trans, rest_gensym))),
+                              body_trans);
 
     if (sym == do_s)
       dwim_body = rlcp(cdr(dwim_body), dwim_body);
