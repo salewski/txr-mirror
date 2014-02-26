@@ -707,9 +707,10 @@ list : '(' n_exprs ')'          { $$ = rl($2, num($1)); }
      | '[' n_exprs ']'          { $$ = rl(cons(dwim_s, $2), num($1)); }
      | '[' ']'                  { $$ = rl(cons(dwim_s, nil), num($1)); }
      | '@' n_expr               { if (consp($2))
-                                    $$ = rlcp(cons(expr_s, $2), $2);
+                                    $$ = rl(cons(expr_s, $2), num($1));
                                   else
-                                    $$ = rlcp(cons(var_s, cons($2, nil)), $2); }
+                                    $$ = rl(cons(var_s, cons($2, nil)),
+				            num($1)); }
      | '(' error                { $$ = nil;
                                   yybadtoken(yychar, lit("list expression")); }
      | '[' error                { $$ = nil;
@@ -736,7 +737,7 @@ n_exprs : n_expr                { $$ = rlcp(cons($1, nil), $1); }
                                                  cdr($3)), $1); }
       ;
 
-n_expr : SYMTOK                 { $$ = rl(sym_helper($1, t), num(lineno)); }
+n_expr : SYMTOK                 { $$ = sym_helper($1, t); }
        | METANUM                { $$ = cons(var_s, cons($1, nil));
                                   rl($$, num(lineno)); }
        | NUMBER                 { $$ = $1; }
@@ -890,6 +891,7 @@ chrlit : HASH_BACKSLASH SYMTOK  { wchar_t ch;
 
 quasilit : '`' '`'              { $$ = null_string; }
          | '`' quasi_items '`'  { $$ = cons(quasi_s, o_elems_transform($2));
+                                  rlcp($$, $2);
                                   rl($$, num(lineno)); }
          | '`' error            { $$ = nil;
                                   yybadtoken(yychar, lit("string literal")); }

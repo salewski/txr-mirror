@@ -1,5 +1,13 @@
 2014-02-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.y (list): For @n_expr, get the source location info
+	from the @ token.
+	(n_expr): Bugfix: do not attribute a symbol with location info.
+	(quasilit): Obtain location info from quasi_items, and only
+	if that is unavailable, then from lineno.
+
+2014-02-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	Version 81
 
 	* txr.c (version): Bumped.
