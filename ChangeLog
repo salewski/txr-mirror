@@ -1,5 +1,10 @@
 2014-02-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (do_eval): Set last_form_evaled just before
+	dispatching function, so it is not clobbered by argument evaluations.
+
+2014-02-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (expand_op): Use rlcp_tree when constructing the
 	dwim_body, since the append2 copies list structure.
 

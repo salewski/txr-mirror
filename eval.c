@@ -902,8 +902,6 @@ static val do_eval(val form, val env, val ctx_form,
   } else if (consp(form)) {
     val oper = car(form);
 
-    last_form_evaled = form;
-
     if (regexp(oper))
       debug_return (oper);
 
@@ -912,15 +910,18 @@ static val do_eval(val form, val env, val ctx_form,
 
       if (entry) {
         opfun_t fp = (opfun_t) cptr_get(entry);
+        last_form_evaled = form;
         debug_return (fp(form, env));
       } else {
         val fbinding = lookup_fun(env, oper);
         if (!fbinding) {
+          last_form_evaled = form;
           eval_error(form, lit("no such function or operator: ~s"), oper, nao);
           abort();
         } else {
           val args = do_eval_args(rest(form), env, form, lookup);
           debug_frame(oper, args, nil, env, nil, nil, nil);
+          last_form_evaled = form;
           debug_return (apply(cdr(fbinding), args, form));
           debug_end;
         }
