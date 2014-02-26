@@ -895,7 +895,7 @@ val regex_parse(val string, val error_stream)
   {
     int gc = gc_state(0);
     spec_file_str = if3(std_error != std_null,
-                        format(nil, lit("regex: ~s"), string, nao),
+                        format(nil, lit("regex --> ~a"), string, nao),
                         lit(""));
     yyparse();
     yylex_destroy();
@@ -913,7 +913,7 @@ val lisp_parse(val source, val error_stream)
                          or2(source, std_input));
   val secret_token_stream = make_string_byte_input_stream(lit("@\x01" "E"));
   val name = if3(stringp(source),
-                 format(nil, lit("expr: ~s"), source, nao),
+                 format(nil, lit("expr --> ~a"), source, nao),
                  stream_get_prop(input_stream, name_k));
   val save_stream = std_error;
   yyin_stream = make_catenated_stream(list(secret_token_stream, input_stream, nao));
