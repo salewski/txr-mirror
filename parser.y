@@ -119,7 +119,7 @@ static val parsed_spec;
 spec : clauses                  { parsed_spec = $1; }
      | /* empty */              { parsed_spec = nil; }
      | SECRET_ESCAPE_R regexpr  { parsed_spec = $2; end_of_regex(); }
-     | SECRET_ESCAPE_E expr     { parsed_spec = $2; YYACCEPT; }
+     | SECRET_ESCAPE_E n_expr   { parsed_spec = $2; YYACCEPT; }
      | error '\n'               { parsed_spec = nil;
                                   if (errors >= 8)
                                     YYABORT;
@@ -746,7 +746,7 @@ n_expr : SYMTOK                 { $$ = rl(sym_helper($1, t), num(lineno)); }
        | lisp_regex             { $$ = cons(regex_compile(rest($1), nil),
                                             rest($1));
                                   rlcp($$, $1); }
-       | chrlit                 { $$ = rl($1, num(lineno)); }
+       | chrlit                 { $$ = $1; }
        | strlit                 { $$ = $1; }
        | quasilit               { $$ = $1; }
        | ',' n_expr             { val expr = $2;
@@ -1133,22 +1133,25 @@ static val expand_meta(val form, val menv)
   if ((sym = car(form)) == expr_s) {
     val exp_x = expand(rest(form), menv);
     if (!bindable(exp_x))
-      return cons(sym, exp_x);
-    return cons(var_s, cons(exp_x, nil));
+      return rlcp(cons(sym, exp_x), form);
+    return rlcp(cons(var_s, cons(exp_x, nil)), form);
   }
 
   if (sym == var_s) {
     val var_x = expand(second(form), menv);
     if (!bindable(var_x))
-      return cons(expr_s, var_x);
-    return cons(var_s, cons(var_x, nil));
+      return rlcp(cons(expr_s, var_x), form);
+    return rlcp(cons(var_s, cons(var_x, nil)), form);
   }
 
   {
     list_collect_decl (out, ptail);
 
-    for (; consp(form); form = cdr(form)) 
-      ptail = list_collect(ptail, expand_meta(car(form), menv));
+    for (; consp(form); form = cdr(form)) {
+      val *nptail = list_collect(ptail, expand_meta(car(form), menv));
+      rlcp(*ptail, form);
+      ptail = nptail;
+    }
 
     list_collect_nconc(ptail, form);
 
@@ -1156,15 +1159,18 @@ static val expand_meta(val form, val menv)
   }
 }
 
-val rl(val form, val lineno)
+val rlset(val form, val info)
 {
-  sethash(form_to_ln_hash, form, cons(lineno, spec_file_str));
+  val cell = gethash_c(form_to_ln_hash, form, 0);
+  val *place = cdr_l(cell);
+  if (nilp(*place))
+    *place = info;
   return form;
 }
 
-val rlset(val form, val info)
+val rl(val form, val lineno)
 {
-  sethash(form_to_ln_hash, form, info);
+  rlset(form, cons(lineno, spec_file_str));
   return form;
 }
 

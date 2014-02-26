@@ -1,5 +1,18 @@
 2014-02-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.y (spec): Bugfix: SECRET_ESCAPE_E should use n_expr
+	not expr. expr is subject to expand_meta.
+	(n_expr): Do not associate source info with character
+	literals.
+	(expand_meta): Bugfix: when walking forms in a collecting loop,
+	propagate the source info to them. Bugfix: attach source
+	info to var and expr expansions.
+	(rl): Rewritten in terms of rlset.
+	(rlset): Only set source info for an object that doesn't already
+	have it.
+
+2014-02-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (obj_init): Revert qquote, unquote and splice
 	to the system namespace, for hygiene.
 
