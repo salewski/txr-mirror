@@ -83,7 +83,7 @@ yacc_given=
 nm='$(cross)$(tool_prefix)nm'
 opt_flags=-O2
 lang_flags='-ansi -D_BSD_SOURCE -D_POSIX_C_SOURCE=199309L'
-diag_flags='-Wall -Werror=missing-prototypes -Werror=strict-prototypes'
+diag_flags='-Wall -Werror=implicit-function-declaration -Werror=missing-prototypes -Werror=strict-prototypes'
 debug_flags=-g
 inline=
 platform_flags=
@@ -725,6 +725,9 @@ rm -f conftest$exe
 if ! $make EXTRA_FLAGS=-Werror conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
   printf "no\n"
   lang_flags="$lang_flags -U__STRICT_ANSI__"
+  printf "Regenerating config.make ..."
+  gen_config_make
+  printf "done\n"
 else
   printf "yes\n"
 fi
@@ -737,8 +740,12 @@ case "$ccname" in
   *gcc )
      printf "Checking for Apple environment ... "
      if echo | gcc -dM -E - | grep -s __APPLE__ > /dev/null 2>&1 ; then
-       need_darwin_c_source=y
        printf "yes\n"
+       need_darwin_c_source=y
+       lang_flags="$lang_flags -D_DARWIN_C_SOURCE"
+       printf "Regenerating config.make ..."
+       gen_config_make
+       printf "done\n"
      else
        printf "no\n"
      fi
@@ -1631,7 +1638,7 @@ fi
 printf "Checking for POSIX mkdir ... "
 
 cat > conftest.c <<!
-#included "config.h"
+#include "config.h"
 #include <sys/stat.h>
 #if HAVE_WINDOWS_H
 #include <windows.h>
@@ -1648,15 +1655,17 @@ if ! $make conftest > conftest.err 2>&1 || ! [ -x conftest ] ; then
   printf "no\n"
 else
   printf "yes\n"
-cat conftest.err
-exit 1
   printf "#define HAVE_MKDIR 1\n" >> config.h
 fi
 
 printf "Checking for mknod ... "
 
 cat > conftest.c <<!
+#include "config.h"
 #include <unistd.h>
+#if HAVE_SYS_STAT
+#include <sys/stat.h>
+#endif
 
 int main(void)
 {
@@ -1777,11 +1786,6 @@ fi
 #
 
 printf "Regenerating config.make ... "
-
-if [ -n "$need_darwin_c_source" ] ; then
-  lang_flags="$lang_flags -D_DARWIN_C_SOURCE"
-fi
-
 gen_config_make
 printf "done\n"
 

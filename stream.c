@@ -48,6 +48,9 @@
 #if HAVE_WINDOWS_H
 #include <windows.h>
 #endif
+#if HAVE_MAKEDEV
+#include <sys/types.h>
+#endif
 #include "lib.h"
 #include "gc.h"
 #include "signal.h"
@@ -2471,9 +2474,15 @@ val mknod_wrap(val path, val mode, val dev)
   free(u8path);
 
   if (err < 0)
+#if HAVE_MAKEDEV
     uw_throwf(file_error_s, lit("mknod ~a ~a ~a (~a:~a): ~a/~s"),
               path, mode, dev, major_wrap(dev), minor_wrap(dev), num(errno),
               string_utf8(strerror(errno)), nao);
+#else
+    uw_throwf(file_error_s, lit("mknod ~a ~a ~a: ~a/~s"),
+              path, mode, dev, num(errno),
+              string_utf8(strerror(errno)), nao);
+#endif
 
   return t;
 }

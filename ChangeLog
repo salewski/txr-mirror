@@ -1,5 +1,17 @@
 2014-02-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* configure: Make it an error to have implicit function declarations by
+	means of -Werror=implicit-function-declarations.  Fix broken mkdir and
+	mknod tests. Regenerate config.make if we add -U__STRICT_ANSI__
+	to the compiler options, so that later tests benefit from this.
+	Regenerate config.make right away if adding -D_DARWIN_C_SOURCE.
+	This allows the makedev test to pass.
+
+	* stream.c: Include <sys/types.h> for makedev.
+	(mknod_wrap): Don't rely on makedev wrappers to be there; test.
+
+2014-02-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.y (spec): Bugfix: SECRET_ESCAPE_E should use n_expr
 	not expr. expr is subject to expand_meta.
 	(n_expr): Do not associate source info with character
