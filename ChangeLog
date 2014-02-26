@@ -1,5 +1,17 @@
 2014-02-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 81
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version and set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES, txr.vim: Updated.
+
+2014-02-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.l (regex_parse, lisp_parse): Better formatting
 	for the context string that serves in place of a filename.
 

@@ -1,3 +1,91 @@
+                                     TXR 81
+                                   2014-02-25
+
+
+  Features
+
+  - Calls to stream opening functions can omit the mode parameter,
+    which defaults to "r".
+
+  - New functions for accessing environment variables from TXR Lisp,
+    augmenting the @(next :env) method in TXR pattern language.
+
+  - New variables *args* and *full-args* for accessing the
+    partial and full command line.
+
+  - New functions macro-form-p, macroexpand and macroexpand-1.
+
+  - Implemented special variables (dynamic scope). All global variables
+    defined with defvar and all the predefined variables are special,
+    with the symbols being attributed for special binding similarly
+    to Common Lisp.
+
+  - Implemented the macrolet operator for binding local macros.
+    The macroexpand and macro-form-p functions work correctly with
+    the environment from a macrolet.
+
+  - Implemented symbol macros: global symbol macros via defsymacro,
+    and local macros via symacrolet. Local symbol maros are shadowed
+    properly by lexical bindings, and are expanded properly in
+    situations where they are used as assignment places by the
+    set operator, and related operators.
+
+  - Introduced the (. expr) syntax which is equivalent to expr.
+    Handy for writing a function argument list that accepts
+    only trailing parameters as (lambda (. rest) ...)
+    rather than (lambda rest ...).
+
+  - New functions prinl and pprinl, which are like print and pprint,
+    but add a newline.
+
+  - Added new Unix filesystem access functions: symlink, link, mkdir,
+    readlink, mknod. Also makedev, minor and major.
+
+
+
+  Bugs
+
+  - Fixed broken seek-to-end-p boolean parameter in open-tail,
+    a regression in TXR 71.
+
+  - Fixed a regression in the debugger, also introduced in TXR 71,
+    causing it not to print the data line being processed in a horizontal
+    scanning context.
+
+  - Fixed premature opening of data sources in the TXR pattern language.
+    Opening files is now delayed until a data consuming directive
+    needs to match data. The previous kludgy approach recognized only the
+    @(next) directive, and only one occurrence of it.
+
+  - Fixed incorrect square root calculation over bignums. It was
+    not computing the last bit of the result and so could be off by
+    one.
+
+  - Numerous bugfixes in form expansion, in particular handling of
+    variable bindings and function and macro parameter lists.
+
+  - Global macro bindings make a symbol fboundp. Also, symbol-function
+    retrieves information about a global macro.
+
+  - Fixed several bugs in quasiquote, including the handling of 
+    `(... . ,form) in quasiquote.
+
+  - Fixed get-string-from-stream throwing an inappropriate internal error on
+    type mismatch.
+
+  - Fixed the neglect to expand Lisp forms in the argument lists
+    of the directives of the pattern matching language.
+
+  - Added the neglected s-ifsock variable, which is part of the Unix
+    filesystem interface, corresponding to S_IFSOCK.
+
+  - Fixed some instances of source code line number not propagating
+    through code transformations.
+
+  - Fixed numerous formatting issues in the documentation, and omissions.
+
+
+
                                      TXR 80
                                    2014-02-17
 
