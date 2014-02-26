@@ -1963,56 +1963,6 @@ static val expand_cond_pairs(val form, val menv)
   }
 }
 
-static val expand_place(val place, val menv)
-{
-  if (atom(place)) {
-    return expand(place, menv);
-  } else {
-    val sym = first(place);
-    if (sym == dwim_s) {
-      val args = rest(place);
-      val args_ex = expand_forms(args, menv);
-
-      if (args == args_ex)
-        return place;
-
-      return rlcp(cons(sym, args_ex), place);
-    } if (sym == gethash_s) {
-      val hash = second(place);
-      val key = third(place);
-      val dfl_val = fourth(place);
-      val hash_ex = expand(hash, menv);
-      val key_ex = expand(key, menv);
-      val dfl_val_ex = expand(dfl_val, menv);
-
-      if (hash == hash_ex && key == key_ex && dfl_val == dfl_val_ex)
-        return place;
-
-      return rlcp(cons(sym, cons(hash_ex, cons(key_ex, 
-                                               cons(dfl_val_ex, nil)))), 
-                  place);
-    } else if (sym == car_s || sym == cdr_s) {
-      val cell = second(place);
-      val cell_ex = expand(cell, menv);
-      if (cell == cell_ex)
-        return place;
-      return cons(sym, cons(cell_ex, nil));
-    } else if (sym == vecref_s) {
-      val vec = second(place);
-      val vec_ex = expand(vec, menv);
-      val ind = third(place);
-      val ind_ex = expand(ind, menv);
-
-      if (vec == vec_ex && ind == ind_ex)
-        return place;
-      return rlcp(cons(sym, cons(vec_ex, cons(ind_ex, nil))), place);
-    } else {
-      eval_error(place, lit("unrecognized place: ~s"), place, nao);
-    }
-    abort();
-  }
-}
-
 static val expand_qquote(val qquoted_form, val menv)
 {
   if (nilp(qquoted_form)) {
@@ -2442,32 +2392,6 @@ tail:
       if (params_ex == params && expr_ex == expr && body_ex == body)
         return form;
       return rlcp(cons(sym, cons(params_ex, cons(expr_ex, body_ex))), form);
-    } else if (sym == set_s || sym == inc_s || sym == dec_s) {
-      val place = second(form);
-      val inc = third(form);
-      val place_ex = expand_place(place, menv);
-      val inc_ex = expand(inc, menv);
-
-      if (place == place_ex && inc == inc_ex)
-        return form;
-      if (inc == nil)
-        return rlcp(cons(sym, cons(place_ex, nil)), form);
-      return rlcp(cons(sym, cons(place_ex, cons(inc_ex, nil))), form);
-    } else if (sym == push_s) {
-      val inc = second(form);
-      val inc_ex = expand(inc, menv);
-      val place = third(form);
-      val place_ex = expand_place(place, menv);
-
-      if (place == place_ex && inc == inc_ex)
-        return form;
-      return rlcp(cons(sym, cons(inc_ex, cons(place_ex, nil))), form);
-    } else if (sym == pop_s || sym == flip_s) {
-      val place = second(form);
-      val place_ex = expand_place(place, menv);
-      if (place == place_ex)
-        return form;
-      return rlcp(cons(sym, cons(place_ex, nil)), form);
     } else if (sym == quote_s || sym == fun_s) {
       return form;
     } else if (sym == qquote_s) {
@@ -2529,7 +2453,7 @@ tail:
     } else if (sym == catch_s) {
       return expand_catch(rest(form), menv);
     } else if (sym == regex_s || regexp(sym)) {
-      return form;
+      return form; /* regex syntax isn't Lisp code; don't expand! */
     } else if (sym == macro_time_s) {
       val args = rest(form);
       val args_ex = expand_forms(args, menv);
@@ -2559,7 +2483,8 @@ tail:
     } else {
       /* funtion call
          also handles: progn, prog1, call, if, and, or, 
-         unwind-protect, return, dwim  */
+         unwind-protect, return, dwim, set, inc, dec,
+         push, pop, flip. */
       val args = rest(form);
       val args_ex = expand_forms(args, menv);
 

@@ -1,3 +1,16 @@
+2014-02-26  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (expand_place): Unnecessary, buggy function removed.
+	It was handling silly special cases with the net effect of being
+	nearly equivalent to just expand, while failing to expand places
+	which are compound macro calls. It did diagnose nonexistent place
+	types at expansion time, which isn't worth much.
+	(expand): All the expansions for the mutating operator sset, inc, dec,
+	push, pop and flip were also pointless and have been removed.  they did
+	the precise equivalent of doing expand(rest(form)), and consing the
+	symbol to the front, which is the fallback case for function call
+	forms.
+
 2014-02-25  Kaz Kylheku  <kaz@kylheku.com>
 
 	* configure: Make it an error to have implicit function declarations by
