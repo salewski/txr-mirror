@@ -5094,9 +5094,9 @@ static void obj_init(void)
   nongreedy_s = intern(lit("ng0+"), user_package);
   compiled_regex_s = intern(lit("compiled-regex"), system_package);
   quote_s = intern(lit("quote"), user_package);
-  qquote_s = intern(lit("qquote"), user_package);
-  unquote_s = intern(lit("unquote"), user_package);
-  splice_s = intern(lit("splice"), user_package);
+  qquote_s = intern(lit("qquote"), system_package);
+  unquote_s = intern(lit("unquote"), system_package);
+  splice_s = intern(lit("splice"), system_package);
   chset_s = intern(lit("chset"), system_package);
   set_s = intern(lit("set"), user_package);
   cset_s = intern(lit("cset"), user_package);

@@ -12906,12 +12906,12 @@ Example:
 
   (quote (+ 2 2)) ;; yields (+ 2 2), not 4.
 
-.SS Operator qquote
+.SS Operator sys:qquote
 
 .TP
 Syntax:
 
-  (qquote <form>)
+  (sys:qquote <form>)
 
 .TP
 Description:
@@ -12943,40 +12943,48 @@ when <val-x> is treated as a Lisp expression and evaluated.
 .TP
 Examples:
 
-  (qquote a) -> a
+  (sys:qquote a) -> a
 
-  (qquote (a b c)) -> (a b c)
+  (sys:qquote (a b c)) -> (a b c)
 
-  (qquote (1 2 3 (unquote (+ 2 2) (+ 2 3)))) -> (1 2 3 4 (+ 2 3))
+  (sys:qquote (1 2 3 (sys:unquote (+ 2 2) (+ 2 3)))) -> (1 2 3 4 (+ 2 3))
 
-  (quote (unquote (+ 2 2))) -> 4
+  (quote (sys:unquote (+ 2 2))) -> 4
 
 In the second-to-last example, the 1 2 3 and the (+ 2 3) were taken verbatim.
 But the (unquote (+ 2 2)) operator caused the evaluation of (+ 2 2) and the
 substitution of the resulting value.
 
 The last example shows that <form> can itself be an unquote operator.
-However, note: (quote (splice <form>)) is not valid.
+However, note: (sys:quote (sys:splice <form>)) is not valid.
 
 Note: a way to understand the nesting behavior is a model of quasi-quote
 expansion which recursively compiles any nested quasi quotes first, and then
 treats the result of their expansion. For instance, in the processing of
-(qquote (qquote (unquote (unquote x)))), the quote operator finds the
-internal (qquote ...) and compiles it to code. During that recursive
-compilation, the syntax (unquote (unquote x)) is encountered.
+(sys:qquote (sys:qquote (sys:unquote (sys:unquote x)))), the quote operator
+finds the internal (sys:qquote ...) and compiles it to code. During that recursive
+compilation, the syntax (sys:unquote (sys:unquote x)) is encountered.
 The inner quote processes the outer unquote which belongs to it,
 and the (unquote x) becomes material embedded in the compilation,
 which will then be found when the outer quasiquote takes the inner
 compilation and processes its interior.
 
-.SS Operator unquote
+Note: qquote, and related symbols, are in the system namespace,
+and so carry the sys: package prefix.  This is for hygiene. User code which
+uses the quasiquote syntax can use symbols like unquote without encountering
+problems. For instance the user who is not aware of the internal symbols
+might write '(foo unquote bar) which evaluates to the expected (foo unquote bar).
+Since unquote is not sys:unquote, this is not interpreted
+as '(foo .  (unquote bar)) which corresponds to '(foo . ,bar).  
+
+.SS Operator sys:unquote
 
 .TP
 Syntax:
 
-  (qquote (... (unquote <form>) ...))
+  (sys:qquote (... (sys:unquote <form>) ...))
 
-  (qquote (unquote <form>))
+  (sys:qquote (sys:unquote <form>))
 
 .TP
 Description:
@@ -12986,17 +12994,17 @@ binding in the global environment. It is a special syntax that is recognized
 within a qquote form, to indicate forms within the quasiquote which are to be
 evaluated and insertd into the resulting structure.
 
-The variant (qquote (unquote <form>)) is equivalent to <form>: the
+The variant (sys:qquote (sys:unquote <form>)) is equivalent to <form>: the
 qquote and unquote "cancel out".
 
 Nesting of qquotes and unquotes is explained in the qquote operator.
 
-.SS Operator splice
+.SS Operator sys:splice
 
 .TP
 Syntax:
 
-  (qquote (... (splice <form>) ...))
+  (sys:qquote (... (sys:splice <form>) ...))
 
 .TP
 Description:
@@ -13006,15 +13014,15 @@ binding in the global environment. It is a special syntax that is recognized
 within a qquote form, to indicate forms within the quasiquote which are to be
 evaluated and inserted into the resulting structure.
 
-The variant (qquote (unquote <form>)) is not permitted and raises
+The variant (sys:qquote (sys:unquote <form>)) is not permitted and raises
 an exception if evaluated. The splice syntax must occur within a list,
 and not in the dotted position.
 
-The splice form differs from unquote in that (splice <form>)
+The splice form differs from unquote in that (sys:splice <form>)
 requires that <form> must evaluate to a list. That list is 
 integrated into the surrounding list. 
 
-Nesting of qquotes and unquotes is explained in the qquote operator.
+Nesting of qquotes and unquotes is explained in the sys:qquote operator.
 
 .SH MACROS
 

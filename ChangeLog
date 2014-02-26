@@ -1,5 +1,12 @@
 2014-02-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (obj_init): Revert qquote, unquote and splice
+	to the system namespace, for hygiene.
+
+	* txr.1: Updated.
+
+2014-02-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): HAVE_MAKEDEV not HAVE_MKDEV.
 
 2014-02-25  Kaz Kylheku  <kaz@kylheku.com>
