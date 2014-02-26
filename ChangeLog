@@ -1,5 +1,13 @@
 2014-02-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (lit_s): New symbol.
+	(code2type): Return lit_s for LIT type.
+	(typeof): Return lit_s for TAG_LIT.
+	(replace_str): Error message wording.
+	(obj_init): lit_s interned.
+
+2014-02-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (do_eval): Set last_form_evaled just before
 	dispatching function, so it is not clobbered by argument evaluations.
 

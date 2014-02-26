@@ -69,7 +69,7 @@ val packages;
 val system_package, keyword_package, user_package;
 
 val null_s, t, cons_s, str_s, chr_s, fixnum_s, sym_s, pkg_s, fun_s, vec_s;
-val stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s, cptr_s;
+val lit_s, stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s, cptr_s;
 val env_s, bignum_s, float_s;
 val var_s, expr_s, regex_s, chset_s, set_s, cset_s, wild_s, oneplus_s;
 val nongreedy_s, compiled_regex_s;
@@ -113,7 +113,7 @@ static val code2type(int code)
   case NIL: return null_s;
   case CONS: return cons_s;
   case STR: return str_s;
-  case LIT: return str_s;
+  case LIT: return lit_s;
   case CHR: return chr_s;
   case NUM: return fixnum_s;
   case SYM: return sym_s;
@@ -138,7 +138,7 @@ val typeof(val obj)
   case TAG_CHR:
     return chr_s;
   case TAG_LIT:
-    return str_s;
+    return lit_s;
   case TAG_PTR:
     {
       int typecode = type(obj);
@@ -2127,9 +2127,11 @@ val replace_str(val str_in, val items, val from, val to)
   val len_it = length(itseq);
   val len_rep;
 
-  if (type(str_in) != STR)
-    uw_throwf(error_s, lit("replace-str: string ~s of type ~s not supported"),
+  if (type(str_in) != STR) {
+    uw_throwf(error_s, lit("replace-str: ~s of type ~s is not "
+                           "a modifiable string"),
               str_in, typeof(str_in), nao);
+  }
 
   if (null_or_missing_p(from))
     from = zero;
@@ -5072,6 +5074,7 @@ static void obj_init(void)
   null_s = intern(lit("null"), user_package);
   cons_s = intern(lit("cons"), user_package);
   str_s = intern(lit("str"), user_package);
+  lit_s = intern(lit("lit"), user_package);
   chr_s = intern(lit("chr"), user_package);
   fixnum_s = intern(lit("fixnum"), user_package);
   sym_s = intern(lit("sym"), user_package);
