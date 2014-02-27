@@ -9355,9 +9355,35 @@ produces a catenation of the vectors listed in <vec-list>. It returns
 a single large vector formed by catenating those vectors together in
 order.
 
-.SH GENERIC SEQUENCE OPERATIONS
+.SH SEQUENCE MANIPULATION
 
 .SS Function length
+
+.TP
+Syntax:
+
+  (length <sequence>)
+
+.TP
+Description:
+
+The length function returns the number of items in <sequence>, and
+returns it.
+
+.SS Function copy
+
+.TP
+Syntax:
+
+  (copy <sequence>)
+
+.TP
+Description:
+
+The copy function duplicates a sequence. If <sequence> is nil, it
+returns nil. If <sequence> is a list, it returns (copy-list <sequence>);
+if <sequence> is a string, it returns (copy-str <sequence>); and
+if <sequence> is a vector, it returns (copy-vec <sequence>).
 
 .SS Function sub
 

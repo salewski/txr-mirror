@@ -1,5 +1,15 @@
 2014-02-27  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (copy): New function.
+
+	* lib.h (copy): Declared.
+
+	* eval.c (eval_init): Registered copy function as intrinsic.
+
+	* txr.1: Added missing documentation for length. Documented copy.
+
+2014-02-27  Kaz Kylheku  <kaz@kylheku.com>
+
 	* genvim.txr: Updated with regard to how operators are registered in
 	in eval_init. Also, scans reg_mac registrations now.
 

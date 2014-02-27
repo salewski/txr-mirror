@@ -687,6 +687,7 @@ val posq(val obj, val list);
 val pos(val list, val key, val testfun, val keyfun);
 val pos_if(val pred, val list, val key);
 val set_diff(val list1, val list2, val testfun, val keyfun);
+val copy(val seq);
 val length(val seq);
 val sub(val seq, val from, val to);
 val ref(val seq, val ind);

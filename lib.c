@@ -4879,6 +4879,24 @@ val set_diff(val list1, val list2, val testfun, val keyfun)
   return make_like(out, list_orig);
 }
 
+val copy(val seq)
+{
+  switch (type(seq)) {
+  case NIL:
+    return nil;
+  case CONS:
+  case LCONS:
+    return copy_list(seq);
+  case LIT:
+  case STR:
+    return copy_str(seq);
+  case VEC:
+    return copy_vec(seq);
+  default:
+    type_mismatch(lit("copy: ~s is not a sequence"), seq, nao);
+  }
+}
+
 val length(val seq)
 {
   switch (type(seq)) {
