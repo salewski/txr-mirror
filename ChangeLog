@@ -1,3 +1,9 @@
+2014-02-27  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (maybe_progn): New function.
+	(expand_macrolet, expand_symacrolet): Use maybe_progn
+	to eliminate unnecessary progn wrapping.
+
 2014-02-26  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (gun_s): New global variable.

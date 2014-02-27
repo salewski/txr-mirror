@@ -1299,6 +1299,12 @@ static val expand_macro(val form, val expander, val menv)
   }
 }
 
+static val maybe_progn(val forms)
+{
+  return if3(cdr(forms), cons(progn_s, forms), car(forms));
+}
+
+
 static val expand_macrolet(val form, val menv)
 {
   val body = cdr(form);
@@ -1319,7 +1325,7 @@ static val expand_macrolet(val form, val menv)
     env_fbind(new_env, name, cons(nil, cons(params, cons(block, nil))));
   }
 
-  return cons(progn_s, expand_forms(body, new_env));
+  return maybe_progn(expand_forms(body, new_env));
 }
 
 static val expand_symacrolet(val form, val menv)
@@ -1336,7 +1342,7 @@ static val expand_symacrolet(val form, val menv)
     env_vbind(new_env, name, repl_ex);
   }
 
-  return cons(progn_s, expand_forms(body, new_env));
+  return maybe_progn(expand_forms(body, new_env));
 }
 
 /*
