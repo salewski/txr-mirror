@@ -34,9 +34,9 @@ This document was created by
 @(output)
 <HTML>
 <FONT FACE="courier">
-<HEAD><TITLE>Manpage for txr @VERSION</TITLE>
+<HEAD><TITLE>Manpage for TXR @VERSION</TITLE>
 </HEAD><BODY>
-<H2>Manpage for <A HREF="#lbAB">Txr </a>@VERSION</H2>
+<H2>Manpage for <A HREF="#lbAB">TXR </a>@VERSION</H2>
 <H2>@{MONTH :filter month_name} @DAY, @YEAR</H2>
 @(repeat)
 @TOC
