@@ -237,21 +237,6 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return NUMBER;
 }
 
-<SPECIAL>({FLO}|{FLODOT}){TOK} |
-<BRACED>({FLO}|{FLODOT}){BTOK} |
-<NESTED>({FLO}|{FLODOT}){NTOK} {
-  val str = string_utf8(yytext);
-
-  yyerrorf(lit("trailing junk in floating-point literal: ~a"), str, nao);
-
-  if (yy_top_state() == INITIAL
-      || yy_top_state() == QSILIT)
-    yy_pop_state();
-
-  yylval.val = flo_str(str);
-  return NUMBER;
-}
-
 <SPECIAL,NESTED,BRACED>{FLO} {
   val str = string_own(utf8_dup_from(yytext));
 
@@ -265,6 +250,21 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
 <SPECIAL,NESTED,BRACED>{FLODOT}/[^.] {
   val str = string_own(utf8_dup_from(yytext));
+
+  if (yy_top_state() == INITIAL
+      || yy_top_state() == QSILIT)
+    yy_pop_state();
+
+  yylval.val = flo_str(str);
+  return NUMBER;
+}
+
+<SPECIAL>({FLO}|{FLODOT}){TOK} |
+<BRACED>({FLO}|{FLODOT}){BTOK} |
+<NESTED>({FLO}|{FLODOT}){NTOK} {
+  val str = string_utf8(yytext);
+
+  yyerrorf(lit("trailing junk in floating-point literal: ~a"), str, nao);
 
   if (yy_top_state() == INITIAL
       || yy_top_state() == QSILIT)
