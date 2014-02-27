@@ -1,5 +1,12 @@
 2014-02-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (make_like): If the first element of list isn't
+	a character, then don't try to make it into a string;
+	keep it as a list. This allows [mapcar list "abc" "def"]
+	to work intuitively rather than blow up.
+
+2014-02-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (lit_s): New symbol.
 	(code2type): Return lit_s for LIT type.
 	(typeof): Return lit_s for TAG_LIT.

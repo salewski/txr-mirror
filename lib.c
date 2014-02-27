@@ -453,7 +453,9 @@ val make_like(val list, val thatobj)
     case STR:
     case LIT:
     case LSTR:
-      return cat_str(list, nil);
+      if (is_chr(car(list)))
+        return cat_str(list, nil);
+      break;
     case NIL:
     case CONS:
     case LCONS:
