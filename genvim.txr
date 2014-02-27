@@ -13,10 +13,10 @@ void eval_init(void)
 {
 @(collect)
 @  (cases)
-  sethash(op_table, @{txl-sym-nostar}_star_s,@(skip)
+  reg_@/op|mac/(@{txl-sym-nostar}_star_s,@(skip)
 @    (bind txl-sym `@{txl-sym-nostar}*`)
 @  (or)
-  sethash(op_table, @{txl-sym}_s,@(skip)
+  reg_@/op|mac/(@{txl-sym}_s,@(skip)
 @  (or)
   reg_fun(intern(lit("@{txl-sym}"),@(skip)
 @  (or)
@@ -36,7 +36,7 @@ void eval_init(void)
 @(do (set [txr-sym 0..0] '("rep" "end" "and" "or"
                            "catch" "finally"
                            "until" "last")))
-@(do (set [txl-sym 0..0] '("do" "op" "macro-time" "macrolet" "symacrolet")))
+@(do (set [txl-sym 0..0] '("macro-time" "macrolet" "symacrolet")))
 @(set (txr-sym txl-sym) (@(sortuniq txr-sym) @(sortuniq txl-sym)))
 @(output)
 " VIM Syntax file for txr

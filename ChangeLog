@@ -1,5 +1,13 @@
 2014-02-27  Kaz Kylheku  <kaz@kylheku.com>
 
+	* genvim.txr: Updated with regard to how operators are registered in
+	in eval_init. Also, scans reg_mac registrations now.
+
+	* txr.vim: Refreshed. The previously missed "delay" operator is now
+	listed, thanks to reg_mac.
+
+2014-02-27  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (maybe_progn): New function.
 	(expand_macrolet, expand_symacrolet): Use maybe_progn
 	to eliminate unnecessary progn wrapping.
