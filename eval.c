@@ -85,7 +85,7 @@ val for_s, for_star_s, each_s, each_star_s, collect_each_s, collect_each_star_s;
 val append_each_s, append_each_star_s;
 val dohash_s;
 val uw_protect_s, return_s, return_from_s;
-val list_s, append_s, apply_s, gen_s, generate_s, rest_s;
+val list_s, append_s, apply_s, gen_s, gun_s, generate_s, rest_s;
 val delay_s, promise_s, op_s;
 val hash_lit_s, hash_construct_s;
 val vector_lit_s, vector_list_s;
@@ -1946,6 +1946,15 @@ static val me_gen(val form, val menv)
               list(lambda_s, nil, third(form), nao), nao);
 }
 
+static val me_gun(val form, val menv)
+{
+  val var = gensym(nil);
+  val expr = second(form);
+  (void) menv;
+  return list(let_s, cons(var, nil),
+              list(gen_s, list(set_s, var, expr, nao), var, nao), nao);
+}
+
 static val me_delay(val form, val menv)
 {
   (void) menv;
@@ -3027,6 +3036,7 @@ void eval_init(void)
   append_s = intern(lit("append"), user_package);
   apply_s = intern(lit("apply"), user_package);
   gen_s = intern(lit("gen"), user_package);
+  gun_s = intern(lit("gun"), user_package);
   generate_s = intern(lit("generate"), user_package);
   delay_s = intern(lit("delay"), user_package);
   promise_s = intern(lit("promise"), system_package);
@@ -3091,6 +3101,7 @@ void eval_init(void)
   reg_op(with_saved_vars_s, op_with_saved_vars);
 
   reg_mac(gen_s, me_gen);
+  reg_mac(gun_s, me_gun);
   reg_mac(delay_s, me_delay);
   reg_mac(op_s, me_op);
   reg_mac(do_s, me_op);

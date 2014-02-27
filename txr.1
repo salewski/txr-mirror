@@ -7973,12 +7973,13 @@ Description:
 The repeat function produces an infinite lazy list formed by the repeatedly
 cycled catenation of the argument lists.
 
-.SS Macro gen
+.SS Macros gen and gun
 
 .TP
 Syntax:
 
   (gen <while-expression> <produce-item-expression>)
+  (gun <produce-item-expression>)
 
 .TP
 Description:
@@ -7999,6 +8000,34 @@ The gen operator itself immediately evaluates <while-expression> before
 producing the lazy list. If the expression yields nil, then the operator
 returns the empty list nil. Otherwise, it instantiates the lazy list and
 invokes the <produce-item-expression> to force the first item.
+
+The gun macro similarly creates a lazy list according to the following
+rules. Each successive item of the lazy list is obtained as a result of
+evaluating <produce-item-expression>. However, when <produce-item-expression>
+yields nil, then the list terminates (without adding that nil as an item).
+
+Note 1: the form gun can be implemented as a macro-expanding to
+an instance of the gen operator, like this:
+
+  (defmacro gun (expr)
+    (let ((var (gensym)))
+      '(let (,var)
+         (gen (set ,var ,expr)
+              ,var))))
+
+This exploits the fact that the set operator returns the value that is
+assigned, so the set expression is tested as a condition by gen,
+while havin the side effect of storing the next item temporarily
+in a hidden variable.
+
+In turn, gen can be implemented as a macro expanding to some lambda
+functions which are passed to the generate function:
+
+  (defmacro gen (while-expr produce-expr)
+    '(generate (lambda () ,while-expr) (lambda () ,produce-expr)))
+
+Note 2: GEN can be considered as an acronym for Generate, testing Expression
+before Next item, whereas GUN stands for Generate Until Null.
 
 .TP
 

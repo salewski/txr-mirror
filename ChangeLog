@@ -1,5 +1,14 @@
 2014-02-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (gun_s): New global variable.
+	(me_gun): New static function.
+	(eval_init): New gun symbol interened, me_gun registered
+	as intrinsic macro.
+
+	* txr.1: Documented gun.
+
+2014-02-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	Converting expander special case code transformations into
 	formal macros that are in the top_mb table, make their symbols
 	fboundp and can be expanded with macroexpand.
