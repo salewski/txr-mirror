@@ -1,5 +1,33 @@
 2014-02-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	Converting expander special case code transformations into
+	formal macros that are in the top_mb table, make their symbols
+	fboundp and can be expanded with macroexpand.
+
+	* eval.c (mefun_t): New typedef name.
+	(expand_macro): If the expander is a cobj, then pull out the C function
+	and call it, otherwise realize the interpreted macro as before.
+	(me_gen, me_delay): New static functions, replace expand_gen
+	and expand_delay.
+	(expand_qquote): Renamed to me_quote.
+	(expand_gen, expand_delay): Renamed to me_gen and me_delay,
+	with an interface adjustment and moved.
+	(expand_op): Renamed to me_op.
+	(expand): Removed qquote, gen, delay, op, and do handling, since
+	these operators are now macros.
+	Removed the unnecessary expansion of with-saved-vars.
+	(reg_op, reg_fun): Assert that the symbol is not nil, to catch
+	initialization order issues.  One just showed up: op_do was
+	interned in match.c, which is initialized later.
+	(reg_mac): New static function
+	(eval_init): Intern do_s, because match.c hasn't done it yet
+	at this point. Register me_gen, me_delay, me_op (twice) and me_qquote
+	as intrinsic macros.
+
+	* txr.1: Documented those operators as macros.
+
+2014-02-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (reg_op): New static function.
 	(eval_init): Register operators with reg_op instead of direct sethash
 	calls.

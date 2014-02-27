@@ -65,6 +65,7 @@
 #include "eval.h"
 
 typedef val (*opfun_t)(val, val);
+typedef val (*mefun_t)(val, val);
 
 struct c_var {
   val *loc;
@@ -1278,19 +1279,24 @@ static val op_defmacro(val form, val env)
 
 static val expand_macro(val form, val expander, val menv)
 {
-  debug_enter;
-  val name = car(form);
-  val args = rest(form);
-  val env = car(cdr(expander));
-  val params = car(cdr(cdr(expander)));
-  val body = cdr(cdr(cdr(expander)));
-  val saved_de = set_dyn_env(make_env(nil, nil, dyn_env));
-  val exp_env = bind_macro_params(env, menv, params, args, nil, form);
-  debug_frame(name, args, nil, env, nil, nil, nil);
-  debug_return(eval_progn(body, exp_env, body));
-  debug_end;
-  set_dyn_env(saved_de); /* not reached but shuts up compiler */
-  debug_leave;
+  if (cobjp(expander)) {
+    mefun_t fp = (mefun_t) cptr_get(expander);
+    return fp(form, menv);
+  } else {
+    debug_enter;
+    val name = car(form);
+    val args = rest(form);
+    val env = car(cdr(expander));
+    val params = car(cdr(cdr(expander)));
+    val body = cdr(cdr(cdr(expander)));
+    val saved_de = set_dyn_env(make_env(nil, nil, dyn_env));
+    val exp_env = bind_macro_params(env, menv, params, args, nil, form);
+    debug_frame(name, args, nil, env, nil, nil, nil);
+    debug_return(eval_progn(body, exp_env, body));
+    debug_end;
+    set_dyn_env(saved_de); /* not reached but shuts up compiler */
+    debug_leave;
+  }
 }
 
 static val expand_macrolet(val form, val menv)
@@ -1932,6 +1938,23 @@ static val op_with_saved_vars(val form, val env)
   return result;
 }
 
+static val me_gen(val form, val menv)
+{
+  (void) menv;
+  return list(generate_s,
+              list(lambda_s, nil, second(form), nao),
+              list(lambda_s, nil, third(form), nao), nao);
+}
+
+static val me_delay(val form, val menv)
+{
+  (void) menv;
+  return list(cons_s,
+              cons(quote_s, cons(promise_s, nil)),
+              cons(lambda_s, cons(nil, rest(form))), nao);
+}
+
+
 val expand_forms(val form, val menv)
 {
   if (atom(form)) {
@@ -2027,6 +2050,11 @@ static val expand_qquote(val qquoted_form, val menv)
   abort();
 }
 
+static val me_qquote(val form, val menv)
+{
+  return expand_qquote(second(form), menv);
+}
+
 static val expand_vars(val vars, val menv, val form, val *spec_p)
 {
   val sym;
@@ -2093,20 +2121,6 @@ static val expand_quasi(val quasi_forms, val menv)
                   quasi_forms);
     return quasi_forms;
   }
-}
-
-static val expand_gen(val args)
-{
-  return list(generate_s,
-              list(lambda_s, nil, first(args), nao),
-              list(lambda_s, nil, second(args), nao), nao);
-}
-
-static val expand_delay(val args)
-{
-  return list(cons_s,
-              cons(quote_s, cons(promise_s, nil)),
-              cons(lambda_s, cons(nil, args)), nao);
 }
 
 static val format_op_arg(val num)
@@ -2208,8 +2222,9 @@ static val supplement_op_syms(val ssyms, val max)
   return outsyms;
 }
 
-static val expand_op(val sym, val body, val menv)
+static val me_op(val form, val menv)
 {
+  cons_bind (sym, body, form);
   val body_ex = if3(sym == op_s, expand_forms(body, menv), expand(body, menv));
   val rest_gensym = gensym(lit("rest-"));
   cons_bind (syms, body_trans, transform_op(body_ex, nil, rest_gensym));
@@ -2395,8 +2410,6 @@ tail:
       return rlcp(cons(sym, cons(params_ex, cons(expr_ex, body_ex))), form);
     } else if (sym == quote_s || sym == fun_s) {
       return form;
-    } else if (sym == qquote_s) {
-      return expand_qquote(second(form), menv);
     } else if (sym == for_s || sym == for_star_s) {
       val vars = second(form);
       val cond = third(form);
@@ -2443,14 +2456,6 @@ tail:
       if (quasi == quasi_ex)
         return form;
       return rlcp(cons(sym, quasi_ex), form);
-    } else if (sym == gen_s) {
-      form = expand_gen(rest(form));
-      goto tail;
-    } else if (sym == delay_s) {
-      form = expand_delay(rest(form));
-      goto tail;
-    } else if (sym == op_s || sym == do_s) {
-      return expand_op(sym, rest(form), menv);
     } else if (sym == catch_s) {
       return expand_catch(rest(form), menv);
     } else if (sym == regex_s || regexp(sym)) {
@@ -2460,17 +2465,6 @@ tail:
       val args_ex = expand_forms(args, menv);
       val result = eval_progn(args_ex, make_env(nil, nil, nil), args);
       return cons(quote_s, cons(result, nil));
-    } else if (sym == with_saved_vars_s) {
-      /* We should never have to expand a machine-generated with-saved-vars
-       * produced by the expander itself. This is for the sake of someone
-       * testing with-saved-vars in isolation.
-       */
-      val vars = first(form);
-      val expr = second(form);
-      val expr_ex = expand(expr, menv);
-      if (expr == expr_ex)
-        return form;
-      return cons(vars, cons(expr_ex, nil));
     } else if (sym == macrolet_s) {
       return expand_macrolet(form, menv);
     } else if (sym == symacrolet_s) {
@@ -2485,7 +2479,7 @@ tail:
       /* funtion call
          also handles: progn, prog1, call, if, and, or, 
          unwind-protect, return, dwim, set, inc, dec,
-         push, pop, flip. */
+         push, pop, flip, and with-saved-vars. */
       val args = rest(form);
       val args_ex = expand_forms(args, menv);
 
@@ -2898,12 +2892,20 @@ static val env_hash(void)
 
 static void reg_op(val sym, opfun_t fun)
 {
+  assert (sym != 0);
   sethash(op_table, sym, cptr((mem_t *) fun));
 }
 
 static void reg_fun(val sym, val fun)
 {
+  assert (sym != 0);
   sethash(top_fb, sym, cons(sym, fun));
+}
+
+static void reg_mac(val sym, mefun_t fun)
+{
+  assert (sym != 0);
+  sethash(top_mb, sym, cptr((mem_t *) fun));
 }
 
 static void c_var_mark(val obj)
@@ -3029,6 +3031,7 @@ void eval_init(void)
   delay_s = intern(lit("delay"), user_package);
   promise_s = intern(lit("promise"), system_package);
   op_s = intern(lit("op"), user_package);
+  do_s = intern(lit("do"), user_package);
   rest_s = intern(lit("rest"), user_package);
   hash_lit_s = intern(lit("hash-construct"), system_package);
   hash_construct_s = intern(lit("hash-construct"), user_package);
@@ -3086,6 +3089,12 @@ void eval_init(void)
   reg_op(quasi_s, op_quasi_lit);
   reg_op(catch_s, op_catch);
   reg_op(with_saved_vars_s, op_with_saved_vars);
+
+  reg_mac(gen_s, me_gen);
+  reg_mac(delay_s, me_delay);
+  reg_mac(op_s, me_op);
+  reg_mac(do_s, me_op);
+  reg_mac(qquote_s, me_qquote);
 
   reg_fun(cons_s, func_n2(cons));
   reg_fun(intern(lit("make-lazy-cons"), user_package), func_n1(make_lazy_cons));

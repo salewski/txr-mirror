@@ -4895,7 +4895,7 @@ of the variable a.
 Note that TXR Lisp does not have a distinct quote and backquote read syntax.
 There is only one quote, which supports unquoting. However, there is an
 underlying expression syntax which distinguishes them: see the documentation
-quote and qquote operator.
+quote operator and sys:qquote macro operator.
 
 A quoted form which contains no unquotes codifies an ordinary quote.
 
@@ -5236,12 +5236,36 @@ Example:
 
 
 
-.SH CONTROL FLOW AND SEQUENCING
+.SH OPERATOR AND FUNCTION LIBRARY
 
-When the first element of a compound expression is an operator symbol,
-the interpretation of the meaning of that form is under the complete control
-of that operator. The following sections list all of the operators available
-in TXR Lisp.
+A compound expression with a symbol as its first element, if
+intended to be evaluated, denotes either an operator invocation or a function
+call. This depends on whether the symbol names an operator or a function.
+
+When the form is an operator invocation, the interpretation of the meaning of
+that form is under the complete control of that operator. 
+
+Functions calls do not control the evaluation of the function call forms which
+invoke them; function call forms are evaluated according to very regular rules
+that apply to all function calls.
+
+Some operators are macros. There exist predefined macros in the library, and
+macro operators can also be user-defined using the macro-defining operator
+defmacro.  Operators that are not macros are called special operators. 
+
+Macro operators work as functions which are given the source code of the form.
+They analyze the form, and translate it to another form which is substituted in
+their place.   This happens during a code walking phase called the expansion
+phase, which is applied to Lisp code prior to evaluation. All macros are
+expanded in the expansion phase, resulting in code which contains only
+function calls and the executable forms of the operators.
+
+(Special operators can also perform code transformations during the expansion
+phase, but that is not considered macroexpansion, but rather an adjustment
+of the representation of the operator into an required executable form.)
+
+The following sections list all of the special operators, macros
+and functions in TXR Lisp.
 
 In these sections Syntax is indicated using these conventions:
 
@@ -5274,6 +5298,8 @@ alternative1 | alternative2 | ... | alternativeN
 
 Multiple syntactic variations allowed in one place are
 indicated as bar-separated items.
+
+.SH CONTROL FLOW AND SEQUENCING
 
 .SS Operators progn and prog1
 
@@ -7947,7 +7973,7 @@ Description:
 The repeat function produces an infinite lazy list formed by the repeatedly
 cycled catenation of the argument lists.
 
-.SS Operator gen
+.SS Macro gen
 
 .TP
 Syntax:
@@ -7957,9 +7983,9 @@ Syntax:
 .TP
 Description:
 
-The gen operator produces a lazy list, in a manner similar to the generate
-function. Whereas the generate function takes functional arguments, the gen
-operator takes two expressions, which is often more convenient.
+The gen macro operator produces a lazy list, in a manner similar to the
+generate function. Whereas the generate function takes functional arguments,
+the gen operator takes two expressions, which is often more convenient.
 
 The return value of gen is a lazy list. When the lazy list is accessed, for
 instance with the functions car and cdr, it produces items on demand. Prior to
@@ -7988,7 +8014,7 @@ Example:
   Output:
   1 2 3
 
-.SS Operator delay
+.SS Macro delay
 
 .TP
 Syntax:
@@ -10773,7 +10799,7 @@ value is then used as the data item in the intersection hash.
 
 .SH PARTIAL EVALUATION AND COMBINATORS
 
-.SS Operators op and do
+.SS Macros op and do
 
 .TP
 Syntax:
@@ -10784,7 +10810,7 @@ Syntax:
 .TP
 Description:
 
-The op and do operators are similar. 
+The op and do macro operators are similar. 
 
 Like the lambda operator, the op operator creates an anonymous function.
 The difference is that the arguments of the function are implicit, or
@@ -12906,7 +12932,7 @@ Example:
 
   (quote (+ 2 2)) ;; yields (+ 2 2), not 4.
 
-.SS Operator sys:qquote
+.SS Macro sys:qquote
 
 .TP
 Syntax:
@@ -12916,7 +12942,7 @@ Syntax:
 .TP
 Description:
 
-The qquote (quasi-quote) operator implements a notation for convenient
+The qquote (quasi-quote) macro operator implements a notation for convenient
 list construction.  If <form> is an atom, or a list structure which
 does not contain any unquote or splice operators, then (qquote <form>)
 is equivalent to (quote <form>).
