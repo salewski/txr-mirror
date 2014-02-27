@@ -2896,6 +2896,11 @@ static val env_hash(void)
   return hash;
 }
 
+static void reg_op(val sym, opfun_t fun)
+{
+  sethash(op_table, sym, cptr((mem_t *) fun));
+}
+
 static void reg_fun(val sym, val fun)
 {
   sethash(top_fb, sym, cons(sym, fun));
@@ -3036,51 +3041,51 @@ void eval_init(void)
   whole_k = intern(lit("whole"), keyword_package);
   special_s = intern(lit("special"), system_package);
 
-  sethash(op_table, quote_s, cptr((mem_t *) op_quote));
-  sethash(op_table, qquote_s, cptr((mem_t *) op_qquote_error));
-  sethash(op_table, unquote_s, cptr((mem_t *) op_unquote_error));
-  sethash(op_table, splice_s, cptr((mem_t *) op_unquote_error));
-  sethash(op_table, progn_s, cptr((mem_t *) op_progn));
-  sethash(op_table, prog1_s, cptr((mem_t *) op_prog1));
-  sethash(op_table, let_s, cptr((mem_t *) op_let));
-  sethash(op_table, each_s, cptr((mem_t *) op_each));
-  sethash(op_table, each_star_s, cptr((mem_t *) op_each));
-  sethash(op_table, collect_each_s, cptr((mem_t *) op_each));
-  sethash(op_table, collect_each_star_s, cptr((mem_t *) op_each));
-  sethash(op_table, append_each_s, cptr((mem_t *) op_each));
-  sethash(op_table, append_each_star_s, cptr((mem_t *) op_each));
-  sethash(op_table, let_star_s, cptr((mem_t *) op_let));
-  sethash(op_table, lambda_s, cptr((mem_t *) op_lambda));
-  sethash(op_table, call_s, cptr((mem_t *) op_call));
-  sethash(op_table, fun_s, cptr((mem_t *) op_fun));
-  sethash(op_table, cond_s, cptr((mem_t *) op_cond));
-  sethash(op_table, if_s, cptr((mem_t *) op_if));
-  sethash(op_table, and_s, cptr((mem_t *) op_and));
-  sethash(op_table, or_s, cptr((mem_t *) op_or));
-  sethash(op_table, defvar_s, cptr((mem_t *) op_defvar));
-  sethash(op_table, defun_s, cptr((mem_t *) op_defun));
-  sethash(op_table, defmacro_s, cptr((mem_t *) op_defmacro));
-  sethash(op_table, defsymacro_s, cptr((mem_t *) op_defsymacro));
-  sethash(op_table, tree_case_s, cptr((mem_t *) op_tree_case));
-  sethash(op_table, tree_bind_s, cptr((mem_t *) op_tree_bind));
-  sethash(op_table, inc_s, cptr((mem_t *) op_modplace));
-  sethash(op_table, dec_s, cptr((mem_t *) op_modplace));
-  sethash(op_table, set_s, cptr((mem_t *) op_modplace));
-  sethash(op_table, push_s, cptr((mem_t *) op_modplace));
-  sethash(op_table, pop_s, cptr((mem_t *) op_modplace));
-  sethash(op_table, flip_s, cptr((mem_t *) op_modplace));
-  sethash(op_table, del_s, cptr((mem_t *) op_modplace));
-  sethash(op_table, for_s, cptr((mem_t *) op_for));
-  sethash(op_table, for_star_s, cptr((mem_t *) op_for));
-  sethash(op_table, dohash_s, cptr((mem_t *) op_dohash));
-  sethash(op_table, uw_protect_s, cptr((mem_t *) op_unwind_protect));
-  sethash(op_table, block_s, cptr((mem_t *) op_block));
-  sethash(op_table, return_s, cptr((mem_t *) op_return));
-  sethash(op_table, return_from_s, cptr((mem_t *) op_return_from));
-  sethash(op_table, dwim_s, cptr((mem_t *) op_dwim));
-  sethash(op_table, quasi_s, cptr((mem_t *) op_quasi_lit));
-  sethash(op_table, catch_s, cptr((mem_t *) op_catch));
-  sethash(op_table, with_saved_vars_s, cptr((mem_t *) op_with_saved_vars));
+  reg_op(quote_s, op_quote);
+  reg_op(qquote_s, op_qquote_error);
+  reg_op(unquote_s, op_unquote_error);
+  reg_op(splice_s, op_unquote_error);
+  reg_op(progn_s, op_progn);
+  reg_op(prog1_s, op_prog1);
+  reg_op(let_s, op_let);
+  reg_op(each_s, op_each);
+  reg_op(each_star_s, op_each);
+  reg_op(collect_each_s, op_each);
+  reg_op(collect_each_star_s, op_each);
+  reg_op(append_each_s, op_each);
+  reg_op(append_each_star_s, op_each);
+  reg_op(let_star_s, op_let);
+  reg_op(lambda_s, op_lambda);
+  reg_op(call_s, op_call);
+  reg_op(fun_s, op_fun);
+  reg_op(cond_s, op_cond);
+  reg_op(if_s, op_if);
+  reg_op(and_s, op_and);
+  reg_op(or_s, op_or);
+  reg_op(defvar_s, op_defvar);
+  reg_op(defun_s, op_defun);
+  reg_op(defmacro_s, op_defmacro);
+  reg_op(defsymacro_s, op_defsymacro);
+  reg_op(tree_case_s, op_tree_case);
+  reg_op(tree_bind_s, op_tree_bind);
+  reg_op(inc_s, op_modplace);
+  reg_op(dec_s, op_modplace);
+  reg_op(set_s, op_modplace);
+  reg_op(push_s, op_modplace);
+  reg_op(pop_s, op_modplace);
+  reg_op(flip_s, op_modplace);
+  reg_op(del_s, op_modplace);
+  reg_op(for_s, op_for);
+  reg_op(for_star_s, op_for);
+  reg_op(dohash_s, op_dohash);
+  reg_op(uw_protect_s, op_unwind_protect);
+  reg_op(block_s, op_block);
+  reg_op(return_s, op_return);
+  reg_op(return_from_s, op_return_from);
+  reg_op(dwim_s, op_dwim);
+  reg_op(quasi_s, op_quasi_lit);
+  reg_op(catch_s, op_catch);
+  reg_op(with_saved_vars_s, op_with_saved_vars);
 
   reg_fun(cons_s, func_n2(cons));
   reg_fun(intern(lit("make-lazy-cons"), user_package), func_n1(make_lazy_cons));
