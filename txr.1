@@ -5122,10 +5122,10 @@ In ancient Lisp in the 1960's, it was not possible to apply the operations
 car and cdr to the nil symbol (empty list), because it is not a cons cell. In
 the InterLisp dialect, this restriction was lifted: these operations were
 extended to accept nil (and return nil). The convention was adopted in
-other Lisp dialects and in Common Lisp. Thus there exists an object which
-is not a cons, yet which takes car and cdr.
+other Lisp dialects such as MacLisp and eventually in Common Lisp. Thus there
+exists an object which is not a cons, yet which takes car and cdr.
 
-In TXR Lisp, this concept is extended further. For the sake of convenience,
+In TXR Lisp, this relaxation is extended further. For the sake of convenience,
 the operations car and cdr, are extended to work with strings and vectors:
 
   (cdr "") -> nil
@@ -5154,7 +5154,13 @@ Derived list processing operations such as remq or mapcar obey the following
 rule: the returned object follows the type of the leftmost input list object.
 For instance, if one or more sequences are processed by mapcar, and the
 leftmost one is a character string, the function is expected to return
-characters, which are converted to a character string.
+characters, which are converted to a character string. However, in the
+event that the objects produced cannot be assembled into that type of
+sequence, a list is returned instead.
+
+For example [mapcar list "ab" "12"] returns ((#\ea #\eb) (#\e1 #\e2)),
+because a string cannot hold lists of characters. However
+[mappend list "ab" "12"] returns "a1b2".
 
 The lazy versions of these functions such as mapcar* do not have this behavior;
 they produce lazy lists.
