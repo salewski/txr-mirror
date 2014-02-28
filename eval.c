@@ -86,7 +86,7 @@ val append_each_s, append_each_star_s;
 val dohash_s;
 val uw_protect_s, return_s, return_from_s;
 val list_s, append_s, apply_s, gen_s, gun_s, generate_s, rest_s;
-val delay_s, promise_s, op_s;
+val promise_s, op_s;
 val hash_lit_s, hash_construct_s;
 val vector_lit_s, vector_list_s;
 val macro_time_s, with_saved_vars_s, macrolet_s;
@@ -3044,7 +3044,6 @@ void eval_init(void)
   gen_s = intern(lit("gen"), user_package);
   gun_s = intern(lit("gun"), user_package);
   generate_s = intern(lit("generate"), user_package);
-  delay_s = intern(lit("delay"), user_package);
   promise_s = intern(lit("promise"), system_package);
   op_s = intern(lit("op"), user_package);
   do_s = intern(lit("do"), user_package);
@@ -3108,7 +3107,7 @@ void eval_init(void)
 
   reg_mac(gen_s, me_gen);
   reg_mac(gun_s, me_gun);
-  reg_mac(delay_s, me_delay);
+  reg_mac(intern(lit("delay"), user_package), me_delay);
   reg_mac(op_s, me_op);
   reg_mac(do_s, me_op);
   reg_mac(qquote_s, me_qquote);

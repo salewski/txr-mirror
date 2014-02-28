@@ -1,5 +1,14 @@
 2014-02-27  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (delay_s): Global variable removed.
+	(eval_init): Initialiation of delay_s removed.
+	Symbol now interned in reg_mac call for registering me_delay .
+
+	* genvim.txr: Updated to recognize a reg_mac call
+	with intern.
+
+2014-02-27  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: Improved documentation for the dwim operator.
 
 2014-02-26  Kaz Kylheku  <kaz@kylheku.com>
