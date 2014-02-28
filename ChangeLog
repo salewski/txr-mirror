@@ -1,5 +1,18 @@
 2014-02-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (op_defvar): Remove the same-named symbol macro when a
+	variable is defined.
+	(op_defsymacro): Remove the same-named variable when a symbol macro is
+	defined.
+	(op_defun): Throw excpetion if an attempt is made to define a
+	special operator as a function. Remove the same-named macro when a
+	function is defined.
+	(op_defmacro): Throw excpetion if an attempt is made to define a
+	special operator as a macro. REmove the same-named function
+	when a macro is defined.
+
+2014-02-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (expand_qquote): Fix broken '(,x . ,y) case, which
 	is generating (append (list x) . y) instead of (append (list x) y).
 	Also, added a nil case which is now necessary to prevent

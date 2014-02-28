@@ -1199,6 +1199,7 @@ static val op_defvar(val form, val env)
   {
     if (!gethash(top_vb, sym)) {
       val value = eval(second(args), env, form);
+      remhash(top_smb, sym);
       sethash(top_vb, sym, cons(sym, value));
     }
     mark_special(sym);
@@ -1217,6 +1218,7 @@ static val op_defsymacro(val form, val env)
   if (!bindable(sym))
     eval_error(form, lit("let: ~s is not a bindable symbol"), sym, nao);
 
+  remhash(top_vb, sym);
   sethash(top_smb, sym, cons(sym, second(args)));
   return sym;
 }
@@ -1234,6 +1236,11 @@ static val op_defun(val form, val env)
 
   if (!bindable(name))
     eval_error(form, lit("defun: ~s is not a bindable symbol"), name, nao);
+
+  if (gethash(op_table, name))
+    eval_error(form, lit("defun: ~s is a special operator"), name, nao);
+
+  remhash(top_mb, name);
 
   for (iter = params; consp(iter); iter = cdr(iter)) {
     val param = car(iter);
@@ -1272,6 +1279,10 @@ static val op_defmacro(val form, val env)
   if (!bindable(name))
     eval_error(form, lit("defmacro: ~s is not a bindable symbol"), name, nao);
 
+  if (gethash(op_table, name))
+    eval_error(form, lit("defmacro: ~s is a special operator"), name, nao);
+
+  remhash(top_fb, name);
   /* defmacro captures lexical environment, so env is passed */
   sethash(top_mb, name, cons(name, cons(env, cons(params, cons(block, nil)))));
   return name;
