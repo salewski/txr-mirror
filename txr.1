@@ -21,9 +21,9 @@
 .\"IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
 .\"WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
-.TH "TXR" 1 2014-02-25 "Utility Commands" "TXR Text Processing Language" "Kaz Kylheku"
+.TH "TXR" 1 2014-02-27 "Utility Commands" "TXR Text Processing Language" "Kaz Kylheku"
 .SH NAME
-txr \- text processing language (version 81)
+txr \- text processing language (version 82)
 .SH SYNOPSIS
 .B txr [ options ] query-file { data-file }*
 .sp
@@ -6915,7 +6915,11 @@ If <list> is an atom, it is simply returned.
 
 Otherwise, <list> is a cons cell, and copy-list returns
 (cons (car <list>) (copy-list (cdr <list>))) except that recursion
-is not used.
+is not necessarily used.
+
+Note that the object (car <list>) is not deeply copied, but only
+propagated by reference into the new list. copy-list produces
+a new list structure out of the same items that are in <list>.
 
 .TP
 Dialect Note:
@@ -8109,7 +8113,7 @@ Syntax:
 .TP
 Description:
 
-The force function accepts a promise object produced by the delay function.
+The force function accepts a promise object produced by the delay macro.
 The first time force is invoked <promise>, the promise expression
 is evaluated (in its original lexical environment, regardless of where
 in the program the force call takes place). The value of the expression is
@@ -9384,6 +9388,16 @@ The copy function duplicates a sequence. If <sequence> is nil, it
 returns nil. If <sequence> is a list, it returns (copy-list <sequence>);
 if <sequence> is a string, it returns (copy-str <sequence>); and
 if <sequence> is a vector, it returns (copy-vec <sequence>).
+
+Except in the case when <sequence> is nil, copy returns a value that
+is distinct from (not eq to) <sequence>. This is different from
+the behavior of [<sequence> 0..t] or (sub <sequence> 0 t), which recognize
+that they need not make a copy of <sequence>, and just return it.
+
+Note however, that the elements of the returned sequence may be
+eq to elements of the original sequence. In other words, copy is
+a deeper copy than just duplicating the <sequence> value itself,
+but it is not a deep copy.
 
 .SS Function sub
 

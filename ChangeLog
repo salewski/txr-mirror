@@ -1,3 +1,17 @@
+2014-02-26  Kaz Kylheku  <kaz@kylheku.com>
+
+	Version 82
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version, set date, improved the documentation
+	for the copy function and copy-list, and fixed the
+	an instance where the delay macro was called a function.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES, txr.vim: Updated.
+
 2014-02-27  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.1: Typos, grammar and formatting fixes mailed in

@@ -1,3 +1,35 @@
+                                     TXR 82
+                                   2014-02-27
+
+
+  Features
+
+  - Intuitive behavior in various sequence processing in the library:
+    don't try to output a string if the resulting items are not characters,
+    and then fail; make a list.
+
+  - All operators that were implemented as special code expanding hacks
+    in the TXR Lisp code walker are have been converted to intrinsic
+    macros. Only a few bona-fide special forms are subject to minor
+    code transformations.
+
+  - New generation macro called "gun". (gun (read-line stream))
+    produces a lazy list of lines from a stream. gun, which stands
+    for "generate until nil", evaluates the enclosed expression while that
+    expression produces non-nil values, and makes a lazy list out of them.
+
+  - New function copy, for copying sequences.
+
+  - Documentation improvements thanks to Roman Mishin. 
+
+  Bugs
+
+  - Regression fix: error thrown on valid floating point constants.
+
+  - Doc bugs: documentation was missing for the delay operator
+    and the length function.
+
+
                                      TXR 81
                                    2014-02-25
 
