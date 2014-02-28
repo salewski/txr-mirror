@@ -5606,18 +5606,34 @@ The dwim operator takes a variable number of arguments, which are
 all evaluated in the same way: the first argument is not evaluated differently
 from the remaining arguments. 
 
-Furthermore, the evaluation of symbols is done differently: all of the
-enclosing scopes are considered as if the function and variable namespaces are
-collapsed into a single namespace, in which variable names take precedence over 
-functions if there exist mutiple bindings. This allows functions to be
-referenced without the fun operator.
+This means that the first argument isn't a function name, but an ordinary
+expression which can simply compute a function object (or, more generally,
+a callable object).
 
-All forms which are not symbols are evaluated using the normal evaluation rules.
+Furthermore, for those arguments of dwim which are symbols (after all
+macro-expansion is performed on the arguments), the evaluation rules are
+altered. For the purposes of resolving symbols to values, the function and
+variable binding namespaces are considered to be merged into a single space.
 
-The first argument may not be an operator such as let, et cetera. 
+It must be noted that all arguments of dwim which, after macro expansion, are
+not symbols are evaluated using the normal evaluation rules; they must
+themselves be dwim forms if they are to take advantage of this feature.
 
-How many are required depends on the type of object to which the first argument
-expression evaluates: of the first argument.  The possibilities are:
+After macro expansion, the first argument of dwim may not be an operator such
+as let, or the name of a macro. Prior to macroexpansion, any argument of dwim
+may be a symbol macro.
+
+If a symbol has bindings both in the variable and function namespace in scope,
+and is referenced by a dwim argument, this is conflict which is resolved
+according to two rules.  When nested scopes are concerned, then an inner
+binding shadows an outer binding, regardless of their kind.  An inner
+variable binding for a symbol X shadows an outer or global function binding.
+If a symbol is bound to both a function and variable in the global namespace,
+then the variable binding is favored.
+
+How many arguments are required by the dwim operator depends on the type of
+object to which the first argument expression evaluates: of the first argument.
+The possibilities are:
 
 .IP "[<function> <argument>*]"
 Call the given the function object to the given arguments.
