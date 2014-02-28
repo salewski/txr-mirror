@@ -2070,7 +2070,8 @@ static val me_qquote(val form, val menv)
   return expand_qquote(second(form), menv);
 }
 
-static val expand_vars(val vars, val menv, val form, val *spec_p)
+static val expand_vars(val vars, val menv, val form,
+                       val *spec_p, int seq_p)
 {
   val sym;
 
@@ -2082,21 +2083,27 @@ static val expand_vars(val vars, val menv, val form, val *spec_p)
     return vars;
   } else if (special_p(sym = car(vars))) {
     val rest_vars = rest(vars);
-    val rest_vars_ex = rlcp(expand_vars(rest_vars, menv, form, spec_p),
+    val rest_vars_ex = rlcp(expand_vars(rest_vars, menv, form, spec_p, seq_p),
                             rest_vars);
     val var_ex = cons(special_s, cons(nil, cons(sym, nil)));
     return rlcp(cons(var_ex, rest_vars_ex), vars);
   } else if (symbolp(sym)) {
     val rest_vars = rest(vars);
-    val rest_vars_ex = expand_vars(rest_vars, menv, form, spec_p);
+    val rest_vars_ex = expand_vars(rest_vars, menv, form, spec_p, seq_p);
     if (rest_vars == rest_vars_ex)
       return vars;
     return rlcp(cons(sym, rest_vars_ex), vars);
   } else {
     cons_bind (var, init, sym);
     val rest_vars = rest(vars);
+    /* This var's init form sees a previous symbol macro whose name is
+       the same as the variable, so menv is used. */
     val init_ex = rlcp(expand_forms(init, menv), init);
-    val rest_vars_ex = rlcp(expand_vars(rest_vars, menv, form, spec_p),
+    /* The initforms of subsequent vars in a sequential binding
+       do not see a previous symbol macro; they see the var. */
+    val menv_new = seq_p ? make_var_shadowing_env(menv, cons(var, nil)) : menv;
+    val rest_vars_ex = rlcp(expand_vars(rest_vars, menv_new, form,
+                                        spec_p, seq_p),
                             rest_vars);
 
     if (special_p(var)) {
@@ -2343,10 +2350,12 @@ tail:
     {
       val body = rest(rest(form));
       val vars = second(form);
+      int seq_p = sym == let_star_s || sym == each_star_s ||
+                  sym == collect_each_star_s || sym == append_each_star_s;
       val new_menv = make_var_shadowing_env(menv, vars);
       val body_ex = expand_forms(body, new_menv);
       val specials_p = nil;
-      val vars_ex = expand_vars(vars, new_menv, form, &specials_p);
+      val vars_ex = expand_vars(vars, menv, form, &specials_p, seq_p);
       if (body == body_ex && vars == vars_ex && !specials_p) {
         return form;
       } else {
@@ -2431,7 +2440,8 @@ tail:
       val incs = fourth(form);
       val forms = rest(rest(rest(rest(form))));
       val specials_p = nil;
-      val vars_ex = expand_vars(vars, menv, form, &specials_p);
+      val vars_ex = expand_vars(vars, menv, form, &specials_p,
+                                sym == for_star_s);
       val new_menv = make_var_shadowing_env(menv, vars);
       val cond_ex = expand_forms(cond, new_menv);
       val incs_ex = expand_forms(incs, new_menv);

@@ -1,3 +1,18 @@
+2014-02-28  Kaz Kylheku  <kaz@kylheku.com>
+
+	Bugfixing semantics of symbol macro hiding by variable bindings.
+
+	* eval.c (expand_vars): Expand vars needs to know whether it's
+	handling a sequential (let*-like) or parallel (let-like) binding.
+	The init form of a variable sees the previous macro environment,
+	but that variable must, for the remaining variables, shadow any
+	previous symbol macro.
+	(expand): In expand we must inform expand_vars whether we have
+	a sequential or parallel binding construct. Moreover, there was
+	a huge bug here: the new_menv (with the shadows) was passed to
+	expand_vars, so that all the variables were hiding same-named
+	symbol macros from all their initforms.
+
 2014-02-27  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (delay_s): Global variable removed.
