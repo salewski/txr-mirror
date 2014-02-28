@@ -1,5 +1,14 @@
 2014-02-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (expand_qquote): Fix broken '(,x . ,y) case, which
+	is generating (append (list x) . y) instead of (append (list x) y).
+	Also, added a nil case which is now necessary to prevent
+	'(,x) from generating (append (list x) nil), though this is
+	effectively an optimization, which is pointless, since
+	the expander isn't optimizing overall.
+
+2014-02-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	* tests/010/output-clauses.expected: New file.
 
 	* tests/010/output-clauses.txr: New file.
