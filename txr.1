@@ -347,7 +347,7 @@ Thus, the query line "a b" (one space) matches texts like "a b", "a   b", et
 cetera (arbitrary number of tabs and spaces between a and b).  However "a  b"
 (two spaces) matches only "a  b" (two spaces).
 
-For matching a single space, the syntax @\ can be used (backslash-escaped
+For matching a single space, the syntax @\e can be used (backslash-escaped
 space).
 
 It is more often necessary to match multiple spaces, than to exactly
@@ -439,13 +439,13 @@ continuations when it is necessary for leading spaces to be preserved.
 For instance the two line sequence
 
    abcd@\
-     @\  efg
+     @\e  efg
 
 is equivalent to the line
 
   abcd  efg
 
-The two spaces before the @\ in the second line are consumed. The
+The two spaces before the @\e in the second line are consumed. The
 spaces after are preserved.
 
 .IP @\ea
@@ -974,7 +974,7 @@ a backslash to suppress its meaning and denote the character itself.
 Furthermore, all of the same escapes as are described in the section Special
 Characters in Text above are supported---the difference is that in regular
 expressions, the @ character is not required, so for example a tab is coded as
-\et rather than @\e\t. Octal and hex character escapes can be optionally
+\et rather than @\et. Octal and hex character escapes can be optionally
 terminated by a semicolon, which is useful if the following characters are
 octal or hex digits not intended to be part of the escape.
 
@@ -2716,9 +2716,9 @@ The right hand side does not have to be a variable. It may be some other
 object, like a string, quasiliteral, regexp, or list of strings, et cetera. For
 instance
 
-  @(bind A "ab\tc")
+  @(bind A "ab\etc")
 
-will bind the string "ab\tc" (the letter a, b, a tab character, and c)
+will bind the string "ab\etc" (the letter a, b, a tab character, and c)
 to the variable A if A is unbound. If A is bound, this will fail unless
 A already contains an identical string. However, the right hand side of
 cannot be an unbound variable, nor a complex expression that contains unbound
@@ -3215,7 +3215,7 @@ argument.
 Example:
 
   @(define collect_words (list))
-  @(coll)@{list /[^ \t]/}@(end)
+  @(coll)@{list /[^ \et]/}@(end)
   @(end)
 
 The above function "collect_words" contains a query which collects words from a
@@ -5182,12 +5182,12 @@ arguments. This allows for syntax like (call "abc" 0..1).
 .TP
 Example 1:
 
-  (mapcar "abc" '(2 0 1)) -> (#\c #\a #\b)
+  (mapcar "abc" '(2 0 1)) -> (#\ec #\ea #\eb)
 
 Here, mapcar treats the string "abc" as a function of one argument (since there
 is one list argument). This function maps the indices 0, 1 and 2 to the
 corresponding characters of string "abc". Through this function, the list of 
-integer indices (2 0 1) is taken to the list of characters (#\c #\a #\b).
+integer indices (2 0 1) is taken to the list of characters (#\ec #\ea #\eb).
 
 .TP
 Example 2:
@@ -5492,7 +5492,7 @@ Example:
       (unwind-protect
         (progn (return-from foo 42)
                (format t "not reached!\en"))
-        (format t "cleanup!\n")))
+        (format t "cleanup!\en")))
 
 In this example, the protected progn form terminates by returning from
 block foo. Therefore the form does not complete and so the
@@ -5571,8 +5571,8 @@ value. If the value is omitted, that block returns nil.
 Example:
 
     (block foo
-      (let ((a "abc\n")
-            (b "def\n"))
+      (let ((a "abc\en")
+            (b "def\en"))
         (pprint a *stdout*)
         (return-from foo 42)
         (pprint b *stdout*)))
@@ -6066,7 +6066,7 @@ Examples:
  ;; print numbers from 1 to 10 and whether they are even or odd
  (each* ((n (range 1 10)) 
          (even (collect-each ((n m)) (evenp m)))) ;; n is a list here
-   (format t "~s is ~s\n" n (if even "even" "odd"))) ;; n is an item here
+   (format t "~s is ~s\en" n (if even "even" "odd"))) ;; n is an item here
 
  Output:
 
@@ -12955,7 +12955,7 @@ Example:
   @line
   @(end)
   @(do
-     (format t "~s\n"
+     (format t "~s\en"
                (match-fun 'foo '(a b) '("alpha:beta" "gamma" "omega") nil)))
 
   Output:
@@ -13627,7 +13627,7 @@ HTML. This is the code, saved in a file called navytime.txr:
   <TITLE>What time is it?</TITLE>
   <H2> US Naval Observatory Master Clock Time</H2> <H3><PRE>
   @(collect :vars (MO DD HH MM SS (PM "  ") TZ TZNAME))
-  <BR>@MO. @DD, @HH:@MM:@SS @(maybe)@{PM /PM/} @(end)@TZ@/\t+/@TZNAME
+  <BR>@MO. @DD, @HH:@MM:@SS @(maybe)@{PM /PM/} @(end)@TZ@/\et+/@TZNAME
   @  (until)
   </PRE>@/.*/
   @(end)
@@ -13653,10 +13653,10 @@ The user types s to step into the (next ...) form.
 
   txr> s
   stopped at line 2 of navytime.txr
-  form: (sys:text "<!DOCTYPE" (#<sys:regex: 95e4590> 1+ #\space) "HTML" (#<sys:regex: 95e4618> 1+ #\space) "PUBLIC" (#<sys:regex: 95e46a8> 1+ #\space) "\"-//W3C//DTD" (#<sys:regex: 95e4750> 1+ #\space) "HTML" (#<sys:regex: 95e47d8> 1+ #\space) "3.2" (#<sys:regex: 95e4860> 1+ #\space) "Final\"//EN>")
+  form: (sys:text "<!DOCTYPE" (#<sys:regex: 95e4590> 1+ #\espace) "HTML" (#<sys:regex: 95e4618> 1+ #\espace) "PUBLIC" (#<sys:regex: 95e46a8> 1+ #\espace) "\e"-//W3C//DTD" (#<sys:regex: 95e4750> 1+ #\espace) "HTML" (#<sys:regex: 95e47d8> 1+ #\espace) "3.2" (#<sys:regex: 95e4860> 1+ #\espace) "Final\e"//EN>")
   depth: 2
   data (1):
-  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final\"//EN>"
+  "<!DOCTYPE HTML PUBLIC \e"-//W3C//DTD HTML 3.2 Final\e"//EN>"
   txr> s
 
 The current form now is a syt:text form which is an internal representation of
@@ -13665,7 +13665,7 @@ this point, and so the line of data is printed without an indication of
 character position. 
 
   stopped at line 2 of navytime.txr
-  form: (sys:text "<!DOCTYPE" (#<sys:regex: 95e4590> 1+ #\space) "HTML" (#<sys:regex: 95e4618> 1+ #\space) "PUBLIC" (#<sys:regex: 95e46a8> 1+ #\space) "\"-//W3C//DTD" (#<sys:regex: 95e4750> 1+ #\space) "HTML" (#<sys:regex: 95e47d8> 1+ #\space) "3.2" (#<sys:regex: 95e4860> 1+ #\space) "Final\"//EN>")
+  form: (sys:text "<!DOCTYPE" (#<sys:regex: 95e4590> 1+ #\espace) "HTML" (#<sys:regex: 95e4618> 1+ #\espace) "PUBLIC" (#<sys:regex: 95e46a8> 1+ #\espace) "\e"-//W3C//DTD" (#<sys:regex: 95e4750> 1+ #\espace) "HTML" (#<sys:regex: 95e47d8> 1+ #\espace) "3.2" (#<sys:regex: 95e4860> 1+ #\espace) "Final\e"//EN>")
   depth: 3
   data (1:0):
   "" . "<!DOCTYPE HTML PUBLIC \e"-//W3C//DTD HTML 3.2 Final\e"//EN>"
