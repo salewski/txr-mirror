@@ -1,5 +1,11 @@
 2014-02-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	* tests/010/output-clauses.expected: New file.
+
+	* tests/010/output-clauses.txr: New file.
+
+2014-02-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	About time for some new regression tests.
 
 	* tests/011/macros-1.expected: New file.

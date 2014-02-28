@@ -1,0 +1,38 @@
+@(bind l ("zero" "one" "two" "three" "four"))
+@(bind a (@[l 0..0] @[l 0..2] @[l 0..3] @[l 0..4] @[l 0..5]))
+@(output)
+@(repeat :counter i)
+counter:@i:A
+@(repeat)
+  main:@a
+@(first)
+  first:@a
+@(mod 1 2)
+  odd:@a
+@(mod 0 2)
+  even:@a
+@(last)
+  last:@a
+@(modlast 1 2)
+  oddlast:@a
+@(modlast 0 2)
+  evenlast:@a
+@(empty)
+  empty
+@(end)
+counter:@i:B
+@(repeat)
+  main:@a
+@(first)
+  first:@a
+@(mod 1 2)
+  odd:@a
+@(mod 0 2)
+  even:@a
+@(last)
+  last:@a
+@(empty)
+  empty
+@(end)
+@(end)
+@(end)

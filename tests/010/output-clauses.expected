@@ -1,0 +1,40 @@
+counter:0:A
+  empty
+counter:0:B
+  empty
+counter:1:A
+  first:zero
+  oddlast:one
+counter:1:B
+  first:zero
+  last:one
+counter:2:A
+  first:zero
+  odd:one
+  evenlast:two
+counter:2:B
+  first:zero
+  odd:one
+  last:two
+counter:3:A
+  first:zero
+  odd:one
+  even:two
+  oddlast:three
+counter:3:B
+  first:zero
+  odd:one
+  even:two
+  last:three
+counter:4:A
+  first:zero
+  odd:one
+  even:two
+  odd:three
+  evenlast:four
+counter:4:B
+  first:zero
+  odd:one
+  even:two
+  odd:three
+  last:four
