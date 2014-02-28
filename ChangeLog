@@ -1,5 +1,21 @@
 2014-02-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	About time for some new regression tests.
+
+	* tests/011/macros-1.expected: New file.
+
+	* tests/011/macros-1.txr: New file.
+
+	* tests/011/macros-2.expected: New file.
+
+	* tests/011/macros-2.txr: New file.
+
+	* tests/011/special-1.expected: New file.
+
+	* tests/011/special-1.txr: New file.
+
+2014-02-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	Bugfixing semantics of symbol macro hiding by variable bindings.
 
 	* eval.c (expand_vars): Expand vars needs to know whether it's

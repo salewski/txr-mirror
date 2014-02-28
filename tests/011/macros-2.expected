@@ -1,0 +1,12 @@
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+(block #:brk-blk-0004 (for nil ((< i 100) nil) nil (block #:cnt-blk-0003 (if (< (inc i) 20) (return-from #:cnt-blk-0003)) (if (> i 30) (return-from #:brk-blk-0004)) (prinl i))))
