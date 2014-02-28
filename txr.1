@@ -2013,7 +2013,7 @@ of the clauses are retained. Bindings extracted by any successful clause are
 visible the clauses which follow.
 
 .IP @(cases)
-Each of the clauses is matched at the current position. The
+Each of the clauses is matched at the current position.
 The clauses are matched, in order, at the current position.
 If any clause matches, the matching stops and the bindings
 collected from that clause are retained. Any remaining clauses
@@ -2332,7 +2332,7 @@ used if these other two are not used. Thus:
  @(end)
 
 means collect every other line starting with the current line. Several
-other supported keywords are :times, :mintimes, :maxtimes and lines.
+other supported keywords are :times, :mintimes, :maxtimes and :lines.
 The shorthand :times N means the same thing as :mintimes N :maxtimes N.
 These specify how many matches should be collected. If there are fewer
 than mintimes matches, the collect fails. If maxtimes matches are collected,
@@ -2870,7 +2870,7 @@ to @(block nil).
 The @(skip) and @(collect) directives introduce implicit anonymous blocks,
 as do function bodies.
 
-Blocks are useful for terminating parts of a pattern matchin search
+Blocks are useful for terminating parts of a pattern matching search
 prematurely, and escaping to a higher level. This makes blocks not only
 useful for simplifying the semantics of certain pattern matches,
 but also an optimization tool. 
@@ -3641,7 +3641,7 @@ below.
 .IP :finish
 
 A destination should not be specified if :finish is used.  The argument of
-:continue is an expression, such as a variable name, that must evaluates to a
+:finish is an expression, such as a variable name, that must evaluates to a
 stream object. That stream object is used for the output block.
 At the end of the output block, the stream is closed.
 An example is given in the documentation for the Close Directive
@@ -3685,7 +3685,7 @@ See Output Filtering below.
 
 .SS Output Variables: Indexing
 
-Additional syntax is supported in output variables that is does not appear
+Additional syntax is supported in output variables that does not appear
 in pattern matching variables.
 
 A square bracket index notation may be used to extract elements or
@@ -3742,7 +3742,7 @@ Here, the quasiliteral expression `@a:` is evaluated, producing the string
 
 .SS The Repeat Directive
 
-The repeat directive is generates repeated text from a ``boilerplate'',
+The repeat directive generates repeated text from a ``boilerplate'',
 by taking successive elements from lists. The syntax of repeat is
 like this:
 
@@ -3892,7 +3892,7 @@ Now the repeat block iterates over list and the output is:
 
 .SS Nested Repeats
 
-If a repeat clause encloses variables which holds multidimensional lists,
+If a repeat clause encloses variables which hold multidimensional lists,
 those lists require additional nesting levels of repeat (or rep).
 It is an error to attempt to output a list variable which has not been
 decimated into primary elements via a repeat construct.
@@ -4045,21 +4045,21 @@ Encode to URL encoding, which is like percent encoding except that
 a space maps to + rather than %20. The + character, being in the
 reserved set, encodes to %2B.
 
-.PP :tonumber
+.IP :tonumber
 Converts strings to numbers. Strings that contain a period, e or E are
 converted to floating point as if by the function flo-str. Otherwise
 they are converted to integer as if using int-str with a radix of 10.
 Non-numeric junk results in the object nil.
 
-.PP :tointeger
+.IP :tointeger
 Converts strings to integers as if using int-str with a radix of 10.
 Non-numeric junk results in the object nil.
 
-.PP :tofloat
+.IP :tofloat
 Converts strings to floating-point values as if using the function flo-str.
 Non-numeric junk results in the object nil.
 
-.PP :hextoint
+.IP :hextoint
 Converts strings to integers as if using int-str with a radix of 16.
 Non-numeric junk results in the object nil.
 

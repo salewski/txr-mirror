@@ -1,5 +1,10 @@
 2014-02-27  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Typos, grammar and formatting fixes mailed in
+	by Roman Mishin.
+
+2014-02-27  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.l: Regression: valid floating-point literals tagged
 	as having trailing junk. The fix is to put the junk-matching rule after
 	the valid rules.
