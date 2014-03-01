@@ -340,6 +340,9 @@ extern val eof_s, eol_s;
 extern val error_s, type_error_s, internal_error_s;
 extern val numeric_error_s, range_error_s;
 extern val query_error_s, file_error_s, process_error_s;
+extern val gensym_counter_s;
+
+#define gensym_counter (*lookup_var_l(nil, gensym_counter_s))
 
 extern val nothrow_k, args_k, colon_k, auto_k;
 
@@ -348,7 +351,6 @@ extern val null_list; /* (nil) */
 
 extern val identity_f, equal_f, eql_f, eq_f, car_f, cdr_f, null_f;
 
-extern val gensym_counter;
 
 extern const wchar_t *progname;
 extern val prog_string;

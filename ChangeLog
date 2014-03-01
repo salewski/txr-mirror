@@ -1,5 +1,24 @@
 2014-02-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	Turn *gensym-counter* into proper special variable.
+
+	* eval.c (eval_init): Save *gensym-counter* symbol in gensym_counter_s
+	symbol variable right after interning, and use zero as the inital value
+	rather than the gensym_counter variable which is removed now.
+
+	* lib.c (gensym_counter_s): New symbol variable.
+	(gensym_counter): Variable removed.
+	(gensym): Slight refactoring to avoid a double variable lookup.
+	Also, for generational GC correctness, use the set macro to update it,
+	since the variable could live inside heap object and the counter
+	could overflow to bignums which are heap objects.
+	(obj_init): Remove initialization of gensym_counter.
+
+	* lib.h (gensym_counter_s): Declared.
+	(gensym_counter): Declaration removed, replaced by macro.
+
+2014-02-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	Change in the design of how special variables work, to fix the broken
 	re-binding. C code now has to go through the dynamic environment lookup
 	to access things like *random-state*, or *stdout*.  As part of this,

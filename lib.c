@@ -86,6 +86,7 @@ val eof_s, eol_s;
 val error_s, type_error_s, internal_error_s;
 val numeric_error_s, range_error_s;
 val query_error_s, file_error_s, process_error_s;
+val gensym_counter_s;
 
 val nothrow_k, args_k, colon_k, auto_k;
 
@@ -94,8 +95,6 @@ val nil_string;
 val null_list;
 
 val identity_f, equal_f, eql_f, eq_f, car_f, cdr_f, null_f;
-
-val gensym_counter;
 
 val prog_string;
 
@@ -2704,8 +2703,9 @@ val make_sym(val name)
 val gensym(val prefix)
 {
   prefix = default_arg(prefix, lit("g"));
+  val *gs_loc = &gensym_counter;
   val name = format(nil, lit("~a~,04a"), prefix,
-                    gensym_counter = plus(gensym_counter, one), nao);
+                    set(*gs_loc, plus(*gs_loc, one)), nao);
   return make_sym(name);
 }
 
@@ -5213,7 +5213,6 @@ static void obj_init(void)
   car_f = func_n1(car);
   cdr_f = func_n1(cdr);
   null_f = func_n1(null);
-  gensym_counter = zero;
   prog_string = string(progname);
 }
 
