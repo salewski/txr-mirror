@@ -1,5 +1,12 @@
 2014-03-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	* configure (conftest, conftest_o): New functions
+	Use functions throughout tests instead of repeated code for removing
+	target, invoking make with redirection and testing for existence of
+	target.
+
+2014-03-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	* tests/011/special-1.txr: Add some coverage for evaluation
 	of a re-bound special under the Lisp-1 evaluation of the [ ]
 	notation. This test case would have failed three commits
