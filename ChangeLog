@@ -1,5 +1,11 @@
 2014-02-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	* tests/011/mandel.expected: New file.
+
+	* tests/011/mandel.txr: New file.
+
+2014-02-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	Turn *gensym-counter* into proper special variable.
 
 	* eval.c (eval_init): Save *gensym-counter* symbol in gensym_counter_s

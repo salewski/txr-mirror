@@ -1,0 +1,63 @@
+@(do 
+    (defvar x-centre -0.5)
+    (defvar y-centre 0.0)
+    (defvar width 4.0)
+    (defvar i-max 80)
+    (defvar j-max 60)
+    (defvar n 100)
+    (defvar r-max 2.0)
+    (defvar file "mandelbrot.pgm")
+    (defvar colour-max 255)
+    (defvar pixel-size (/ width i-max))
+    (defvar x-offset (- x-centre (* 0.5 pixel-size (+ i-max 1))))
+    (defvar y-offset (+ y-centre (* 0.5 pixel-size (+ j-max 1))))
+ 
+    ;; complex number library
+    (defmacro cplx (x y) '(cons ,x ,y))
+    (defmacro re (c) '(car ,c))
+    (defmacro im (c) '(cdr ,c))
+
+    (defsymacro c0 (macro-time (cplx 0 0)))
+
+    (macro-time 
+      (defun with-cplx-expand (specs body)
+        (tree-case specs
+           (((re im expr) . rest) 
+            '(tree-bind (,re . ,im) ,expr ,(with-cplx-expand rest body)))
+           (() (tree-case body
+                 ((a b . rest) '(progn ,a ,b ,*rest))
+                 ((a) a)
+                 (x (error "with-cplx: invalid body ~s" body))))
+           (x (error "with-cplx: bad args ~s" x)))))
+
+    (defmacro with-cplx (specs . body)
+      (with-cplx-expand specs body))
+
+    (defun c+ (x y)
+      (with-cplx ((a b x) (c d y))
+        (cplx (+ a c) (+ b d))))
+
+    (defun c* (x y)
+      (with-cplx ((a b x) (c d y))
+        (cplx (- (* a c) (* b d)) (+ (* b c) (* a d)))))
+
+    (defun modulus (z)
+      (with-cplx ((a b z))
+        (sqrt (+ (* a a) (* b b)))))
+
+    ;; Mandelbrot routines
+    (defun inside-p (z0 : (z c0) (n n))
+      (and (< (modulus z) r-max)
+           (or (zerop n)
+               (inside-p z0 (c+ (c* z z) z0) (- n 1)))))
+
+    (defun pixel (i j)
+      (inside-p
+        (cplx (+ x-offset (* pixel-size i))
+              (- y-offset (* pixel-size j)))))
+
+    ;; Mandelbrot loop and output
+    (each ((j (range 1 j-max)))
+      (each ((i (range 1 i-max)))
+        (put-char (if (pixel i j) #\* #\space)))
+      (put-char #\newline)))
