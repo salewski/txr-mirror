@@ -57,20 +57,17 @@
 #include "unwind.h"
 #include "stream.h"
 #include "utf8.h"
+#include "eval.h"
 
-val std_input, std_output, std_debug, std_error, std_null;
 val output_produced;
+
+val stdin_s, stdout_s, stddebug_s, stderr_s, stdnull_s;
 
 val dev_k, ino_k, mode_k, nlink_k, uid_k;
 val gid_k, rdev_k, size_k, blksize_k, blocks_k;
 val atime_k, mtime_k, ctime_k;
 val from_start_k, from_current_k, from_end_k;
 val real_time_k, name_k;
-
-val s_ifmt, s_ifsock, s_iflnk, s_ifreg, s_ifblk, s_ifdir;
-val s_ifchr, s_ififo, s_isuid, s_isgid, s_isvtx, s_irwxu;
-val s_irusr, s_iwusr, s_ixusr, s_irwxg, s_irgrp, s_iwgrp;
-val s_ixgrp, s_irwxo, s_iroth, s_iwoth, s_ixoth;
 
 static void common_destroy(val obj)
 {
@@ -2553,11 +2550,6 @@ val readlink_wrap(val path)
 void stream_init(void)
 {
   protect(&std_input, &std_output, &std_debug, &std_error, &std_null, (val *) 0);
-  std_input = make_stdio_stream(stdin, lit("stdin"));
-  std_output = make_stdio_stream(stdout, lit("stdout"));
-  std_debug = make_stdio_stream(stdout, lit("debug"));
-  std_error = make_stdio_stream(stderr, lit("stderr"));
-  std_null = make_null_stream();
   detect_format_string();
 
   dev_k = intern(lit("dev"), keyword_package);
@@ -2579,63 +2571,127 @@ void stream_init(void)
   real_time_k = intern(lit("real-time"), keyword_package);
   name_k = intern(lit("name"), keyword_package);
 
-  s_ifmt = num(S_IFMT); 
-
-#ifdef S_IFSOCK
-  s_ifsock = num(S_IFSOCK); 
+#ifndef S_IFSOCK
+#define S_IFSOCK 0
 #endif
 
-#ifdef S_IFLNK
-  s_iflnk = num(S_IFLNK);
+#ifndef S_IFLNK
+#define S_IFLNK 0
 #endif
 
-  s_ifreg = num(S_IFREG); s_ifblk = num(S_IFBLK); s_ifdir = num(S_IFDIR);
-  s_ifchr = num(S_IFCHR); s_ififo = num(S_IFIFO);
-
-#ifdef S_ISUID
-  s_isuid = num(S_ISUID);
+#ifndef S_ISUID
+#define S_ISUID 0
 #endif
 
-#ifdef S_ISGID
-  s_isgid = num(S_ISGID);
+#ifndef S_ISGID
+#define S_ISGID 0
 #endif
 
-#ifdef S_ISVTX
-  s_isvtx = num(S_ISVTX);
+#ifndef S_ISVTX
+#define S_ISVTX 0
 #endif
 
-  s_irwxu = num(S_IRWXU); s_irusr = num(S_IRUSR); s_iwusr = num(S_IWUSR);
-  s_ixusr = num(S_IXUSR);
-
-#ifdef S_IRWXG
-  s_irwxg = num(S_IRWXG); 
+#ifndef S_IRWXG
+#define S_IRWXG 0
 #endif
 
-#ifdef S_IRGRP
-  s_irgrp = num(S_IRGRP);
+#ifndef S_IRGRP
+#define S_IRGRP 0
 #endif
 
-#ifdef S_IWGRP
- s_iwgrp = num(S_IWGRP);
+#ifndef S_IWGRP
+#define S_IWGRP 0
 #endif
 
-#ifdef S_IXGRP
-  s_ixgrp = num(S_IXGRP); 
+#ifndef S_IXGRP
+#define S_IXGRP 0
 #endif
 
-#ifdef S_IRWXO
-  s_irwxo = num(S_IRWXO);
+#ifndef S_IRWXO
+#define S_IRWXO 0
 #endif
 
-#ifdef S_IROTH
-  s_iroth = num(S_IROTH);
+#ifndef S_IROTH
+#define S_IROTH 0
 #endif
 
-#ifdef S_IWOTH
-  s_iwoth = num(S_IWOTH);
+#ifndef S_IWOTH
+#define S_IWOTH 0
 #endif
 
-#ifdef S_IXOTH
- s_ixoth = num(S_IXOTH);
+#ifndef S_IXOTH
+#define S_IXOTH 0
 #endif
-}  
+
+#if HAVE_SYS_STAT
+  reg_var(intern(lit("s-ifmt"), user_package), num_fast(S_IFMT));
+  reg_var(intern(lit("s-ifsock"), user_package), num_fast(S_IFSOCK));
+  reg_var(intern(lit("s-iflnk"), user_package), num_fast(S_IFLNK));
+  reg_var(intern(lit("s-ifreg"), user_package), num_fast(S_IFREG));
+  reg_var(intern(lit("s-ifblk"), user_package), num_fast(S_IFBLK));
+  reg_var(intern(lit("s-ifdir"), user_package), num_fast(S_IFDIR));
+  reg_var(intern(lit("s-ifchr"), user_package), num_fast(S_IFCHR));
+  reg_var(intern(lit("s-ififo"), user_package), num_fast(S_IFIFO));
+  reg_var(intern(lit("s-isuid"), user_package), num_fast(S_ISUID));
+  reg_var(intern(lit("s-isgid"), user_package), num_fast(S_ISGID));
+  reg_var(intern(lit("s-isvtx"), user_package), num_fast(S_ISVTX));
+  reg_var(intern(lit("s-irwxu"), user_package), num_fast(S_IRWXU));
+  reg_var(intern(lit("s-irusr"), user_package), num_fast(S_IRUSR));
+  reg_var(intern(lit("s-iwusr"), user_package), num_fast(S_IWUSR));
+  reg_var(intern(lit("s-ixusr"), user_package), num_fast(S_IXUSR));
+  reg_var(intern(lit("s-irwxg"), user_package), num_fast(S_IRWXG));
+  reg_var(intern(lit("s-irgrp"), user_package), num_fast(S_IRGRP));
+  reg_var(intern(lit("s-iwgrp"), user_package), num_fast(S_IWGRP));
+  reg_var(intern(lit("s-ixgrp"), user_package), num_fast(S_IXGRP));
+  reg_var(intern(lit("s-irwxo"), user_package), num_fast(S_IRWXO));
+  reg_var(intern(lit("s-iroth"), user_package), num_fast(S_IROTH));
+  reg_var(intern(lit("s-iwoth"), user_package), num_fast(S_IWOTH));
+  reg_var(intern(lit("s-ixoth"), user_package), num_fast(S_IXOTH));
+#endif
+
+  reg_var(stdin_s = intern(lit("*stdin*"), user_package),
+          make_stdio_stream(stdin, lit("stdin")));
+  reg_var(stdout_s = intern(lit("*stdout*"), user_package),
+          make_stdio_stream(stdout, lit("stdout")));
+  reg_var(stddebug_s = intern(lit("*stddebug*"), user_package),
+          make_stdio_stream(stdout, lit("debug")));
+  reg_var(stderr_s = intern(lit("*stderr*"), user_package),
+          make_stdio_stream(stderr, lit("stderr")));
+  reg_var(stdnull_s = intern(lit("*stdnull*"), user_package),
+          make_null_stream());
+
+  reg_fun(intern(lit("format"), user_package), func_n2v(formatv));
+  reg_fun(intern(lit("make-string-input-stream"), user_package), func_n1(make_string_input_stream));
+  reg_fun(intern(lit("make-string-byte-input-stream"), user_package), func_n1(make_string_byte_input_stream));
+  reg_fun(intern(lit("make-string-output-stream"), user_package), func_n0(make_string_output_stream));
+  reg_fun(intern(lit("get-string-from-stream"), user_package), func_n1(get_string_from_stream));
+  reg_fun(intern(lit("make-strlist-output-stream"), user_package), func_n0(make_strlist_output_stream));
+  reg_fun(intern(lit("get-list-from-stream"), user_package), func_n1(get_list_from_stream));
+  reg_fun(intern(lit("close-stream"), user_package), func_n2o(close_stream, 1));
+  reg_fun(intern(lit("get-line"), user_package), func_n1o(get_line, 0));
+  reg_fun(intern(lit("get-char"), user_package), func_n1o(get_char, 0));
+  reg_fun(intern(lit("get-byte"), user_package), func_n1o(get_byte, 0));
+  reg_fun(intern(lit("put-string"), user_package), func_n2o(put_string, 1));
+  reg_fun(intern(lit("put-line"), user_package), func_n2o(put_line, 1));
+  reg_fun(intern(lit("put-char"), user_package), func_n2o(put_char, 1));
+  reg_fun(intern(lit("put-byte"), user_package), func_n2o(put_byte, 1));
+  reg_fun(intern(lit("unget-char"), user_package), func_n2o(unget_char, 1));
+  reg_fun(intern(lit("unget-byte"), user_package), func_n2o(unget_byte, 1));
+  reg_fun(intern(lit("flush-stream"), user_package), func_n1(flush_stream));
+  reg_fun(intern(lit("seek-stream"), user_package), func_n3(seek_stream));
+  reg_fun(intern(lit("stat"), user_package), func_n1(statf));
+  reg_fun(intern(lit("streamp"), user_package), func_n1(streamp));
+  reg_fun(intern(lit("real-time-stream-p"), user_package), func_n1(real_time_stream_p));
+  reg_fun(intern(lit("stream-set-prop"), user_package), func_n3(stream_set_prop));
+  reg_fun(intern(lit("stream-get-prop"), user_package), func_n2(stream_get_prop));
+  reg_fun(intern(lit("make-catenated-stream"), user_package), func_n0v(make_catenated_stream));
+
+  reg_fun(intern(lit("open-directory"), user_package), func_n1(open_directory));
+  reg_fun(intern(lit("open-file"), user_package), func_n2o(open_file, 1));
+  reg_fun(intern(lit("open-tail"), user_package), func_n3o(open_tail, 1));
+  reg_fun(intern(lit("open-command"), user_package), func_n2o(open_command, 1));
+  reg_fun(intern(lit("open-pipe"), user_package), func_n2(open_command));
+  reg_fun(intern(lit("open-process"), user_package), func_n3o(open_process, 2));
+  reg_fun(intern(lit("remove-path"), user_package), func_n1(remove_path));
+  reg_fun(intern(lit("rename-path"), user_package), func_n2(rename_path));
+}

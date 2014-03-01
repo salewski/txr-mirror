@@ -40,6 +40,7 @@
 #include "gc.h"
 #include "signal.h"
 #include "unwind.h"
+#include "eval.h"
 
 #define MAX_SIG 32
 
@@ -82,54 +83,59 @@ void sig_init(void)
     prot1(&sig_lambda[i]);
   }
 
-  sig_hup = num_fast(SIGHUP);
-  sig_int = num_fast(SIGINT);
-  sig_quit = num_fast(SIGQUIT);
-  sig_ill = num_fast(SIGILL);
-  sig_trap = num_fast(SIGTRAP);
-  sig_abrt = num_fast(SIGABRT);
-  sig_bus = num_fast(SIGBUS);
-  sig_fpe = num_fast(SIGFPE);
-  sig_kill = num_fast(SIGKILL);
-  sig_usr1 = num_fast(SIGUSR1);
-  sig_segv = num_fast(SIGSEGV);
-  sig_usr2 = num_fast(SIGUSR2);
-  sig_pipe = num_fast(SIGPIPE);
-  sig_alrm = num_fast(SIGALRM);
-  sig_term = num_fast(SIGTERM);
-  sig_chld = num_fast(SIGCHLD);
-  sig_cont = num_fast(SIGCONT);
-  sig_stop = num_fast(SIGSTOP);
-  sig_tstp = num_fast(SIGTSTP);
-  sig_ttin = num_fast(SIGTTIN);
-  sig_ttou = num_fast(SIGTTOU);
-  sig_urg = num_fast(SIGURG);
-  sig_xcpu = num_fast(SIGXCPU);
-  sig_xfsz = num_fast(SIGXFSZ);
-  sigtalrm = num_fast(SIGVTALRM);
-  sig_prof = num_fast(SIGPROF);
+  reg_var(intern(lit("sig-hup"), user_package), num_fast(SIGHUP));
+  reg_var(intern(lit("sig-int"), user_package), num_fast(SIGINT));
+  reg_var(intern(lit("sig-quit"), user_package), num_fast(SIGQUIT));
+  reg_var(intern(lit("sig-ill"), user_package), num_fast(SIGILL));
+  reg_var(intern(lit("sig-trap"), user_package), num_fast(SIGTRAP));
+  reg_var(intern(lit("sig-abrt"), user_package), num_fast(SIGABRT));
+  reg_var(intern(lit("sig-bus"), user_package), num_fast(SIGBUS));
+  reg_var(intern(lit("sig-fpe"), user_package), num_fast(SIGFPE));
+  reg_var(intern(lit("sig-kill"), user_package), num_fast(SIGKILL));
+  reg_var(intern(lit("sig-usr1"), user_package), num_fast(SIGUSR1));
+  reg_var(intern(lit("sig-segv"), user_package), num_fast(SIGSEGV));
+  reg_var(intern(lit("sig-usr2"), user_package), num_fast(SIGUSR2));
+  reg_var(intern(lit("sig-pipe"), user_package), num_fast(SIGPIPE));
+  reg_var(intern(lit("sig-alrm"), user_package), num_fast(SIGALRM));
+  reg_var(intern(lit("sig-term"), user_package), num_fast(SIGTERM));
+  reg_var(intern(lit("sig-chld"), user_package), num_fast(SIGCHLD));
+  reg_var(intern(lit("sig-cont"), user_package), num_fast(SIGCONT));
+  reg_var(intern(lit("sig-stop"), user_package), num_fast(SIGSTOP));
+  reg_var(intern(lit("sig-tstp"), user_package), num_fast(SIGTSTP));
+  reg_var(intern(lit("sig-ttin"), user_package), num_fast(SIGTTIN));
+  reg_var(intern(lit("sig-ttou"), user_package), num_fast(SIGTTOU));
+  reg_var(intern(lit("sig-urg"), user_package), num_fast(SIGURG));
+  reg_var(intern(lit("sig-xcpu"), user_package), num_fast(SIGXCPU));
+  reg_var(intern(lit("sig-xfsz"), user_package), num_fast(SIGXFSZ));
+  reg_var(intern(lit("sig-vtalrm"), user_package), num_fast(SIGVTALRM));
+  reg_var(intern(lit("sig-prof"), user_package), num_fast(SIGPROF));
 #ifdef SIGPOLL
-  sig_poll = num_fast(SIGPOLL);
+  reg_var(intern(lit("sig-poll"), user_package), num_fast(SIGPOLL));
 #endif
-  sig_sys = num_fast(SIGSYS);
+  reg_var(intern(lit("sig-sys"), user_package), num_fast(SIGSYS));
 #ifdef SIGWINCH
-  sig_winch = num_fast(SIGWINCH);
+  reg_var(intern(lit("sig-winch"), user_package), num_fast(SIGWINCH));
 #endif
 #ifdef SIGIOT
-  sig_iot = num_fast(SIGIOT);
+  reg_var(intern(lit("sig-iot"), user_package), num_fast(SIGIOT));
 #endif
 #ifdef SIGSTKFLT
-  sig_stkflt = num_fast(SIGSTKFLT);
+  reg_var(intern(lit("sig-stkflt"), user_package), num_fast(SIGSTKFLT));
 #endif
 #ifdef SIGIO
-  sig_io = num_fast(SIGIO);
+  reg_var(intern(lit("sig-io"), user_package), num_fast(SIGIO));
 #endif
 #ifdef SIGLOST
-  sig_lost = num_fast(SIGLOST);
+  reg_var(intern(lit("sig-lost"), user_package), num_fast(SIGLOST));
 #endif
 #ifdef SIGPWR
-  sig_pwr = num_fast(SIGPWR);
+  reg_var(intern(lit("sig-pwr"), user_package), num_fast(SIGPWR));
 #endif
+
+  reg_fun(intern(lit("set-sig-handler"), user_package), func_n2(set_sig_handler));
+  reg_fun(intern(lit("get-sig-handler"), user_package), func_n1(get_sig_handler));
+  reg_fun(intern(lit("sig-check"), user_package), func_n0(sig_check));
+
 }
 
 val set_sig_handler(val signo, val lambda)

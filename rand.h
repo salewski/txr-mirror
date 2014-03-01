@@ -24,7 +24,7 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-extern val random_state;
+#define random_state (*lookup_var_l(nil, random_state_s))
 extern val random_state_s;
 val make_random_state(val seed);
 val random_state_p(val obj);

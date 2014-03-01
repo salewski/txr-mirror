@@ -316,7 +316,12 @@ INLINE val chr(wchar_t ch)
 
 #define lit(strlit) lit_noex(strlit)
 
-extern val keyword_package, system_package, user_package;
+#define keyword_package (*get_keyword_package())
+#define user_package (*get_user_package())
+#define system_package (*get_system_package())
+
+extern val system_package_var, keyword_package_var, user_package_var;
+extern val keyword_package_s, system_package_s, user_package_s;
 extern val null_s, t, cons_s, str_s, chr_s, fixnum_sl;
 extern val sym_s, pkg_s, fun_s, vec_s;
 extern val stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s, cptr_s;
@@ -568,6 +573,9 @@ val symbolp(val sym);
 val symbol_name(val sym);
 val symbol_package(val sym);
 val keywordp(val sym);
+val *get_user_package(void);
+val *get_system_package(void);
+val *get_keyword_package(void);
 val func_f0(val, val (*fun)(val env));
 val func_f1(val, val (*fun)(val env, val));
 val func_f2(val, val (*fun)(val env, val, val));

@@ -92,6 +92,7 @@ val break_obj;
 val prot1(val *loc)
 {
   assert (top < prot_stack_limit);
+  assert (loc != 0);
   *top++ = loc;
   return nil; /* for use in macros */
 }

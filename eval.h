@@ -36,6 +36,8 @@ val lookup_var(val env, val sym);
 val *lookup_var_l(val env, val sym);
 val lookup_fun(val env, val sym);
 val interp_fun(val env, val fun, val args);
+void reg_var(val sym, val val);
+void reg_fun(val sym, val fun);
 val apply(val fun, val arglist, val ctx_form);
 val eval_progn(val forms, val env, val ctx_form);
 val eval(val form, val env, val ctx_form);

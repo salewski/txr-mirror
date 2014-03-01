@@ -1,5 +1,115 @@
 2014-02-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	Change in the design of how special variables work, to fix the broken
+	re-binding. C code now has to go through the dynamic environment lookup
+	to access things like *random-state*, or *stdout*.  As part of this,
+	I'm moving some intrinsic variable and function initializations out of
+	eval.c and into their respective modules.  Macros are are used to make
+	global variables look like ordinary C variables.  This is very similar
+	to the errno trick in POSIX threads implementations.
+
+	* eval.c (looup_var, lookup_var_l): Restructured to eliminate silly
+	goto, the cobjp handling is gone.
+	(reg_fun, reg_var): Internal function becomes external.
+	reg_var registers a simple cons cell binding now, without any
+	C pointer tricks to real C global variables.
+	(c_var_mark): Static function removed.
+	(c_var_ops): Static struct removed.
+	(eval_init): Numerous initializations for streams, syslog, rand,
+	signals and others moved to their respective modules.
+	The new symbol variables user_package_s, keyword_package_s
+	and system_package_s are interned here, and the variables are
+	created in a special way.
+
+	* eval.h (reg_var, reg_fun): Declared.
+
+	* gc.c (prot1): Added assert that the loc pointer isn't null.
+	This happened, and blew up during garbage collection.
+
+	* lib.c (system_package, keyword_package, user_package): Variables
+	removed these become macros.
+	(system_package_var, keyword_package_var, user_package_var): New
+	global variables.
+	(system_package_s, keyword_package_s, user_package_s): New
+	symbol globals.
+	(get_user_package, get_system_package, get_keyword_package): New 
+	functions.
+	(obj_init): Protect new variables. Initialization order of modules
+	tweaked: the modules sig_init, stream_init, and rand_init are moved
+	after eval_init because they register variables.
+
+	* lib.h (keyword_package, system_pckage, user_package): Variables
+	turned into macros.
+	(system_package_var, keyword_package_var, user_package_var): Declared.
+	(system_package_s, keyword_package_s, user_package_s): Declared.
+	(get_user_package, get_system_package, get_keyword_package): Declared.
+
+	* rand.c (struct random_state): Renamed to struct rand_state to
+	avoid clash with new random_state macro.
+	(random_state): Global variable removed.
+	(random_state_s): New symbol global.
+	(make_state, rand32, make_random_state, random_fixnum, random):
+	Follow rename of struct random_state.
+	(rand_init): Reference to random_state variable gone. Using
+	reg_var to create the *random-state* variable that is referenced
+	from C using the random_stat macro.
+
+	* rand.h (random_state): Variable removed, replaced by macro
+	that performs dynamic lookup.
+
+	* signal.c (sig_init): References to all the sig_* global variables
+	removed. The signal-related reg_var and reg_fun calls from eval.c moved
+	here.
+
+	* stream.c (std_input, std_output, std_debug, std_error, std_null):
+	Variables removed.
+	(s_ifmt, s_ifsock, s_iflnk, s_ifreg, s_ifblk, s_ifdir,
+	s_ifchr, s_ififo, s_isuid, s_isgid, s_isvtx, s_irwxu,
+	s_irusr, s_iwusr, s_ixusr, s_irwxg, s_irgrp, s_iwgrp,
+	s_ixgrp, s_irwxo, s_iroth, s_iwoth, s_ixoth): Variables removed.
+	(stdin_s, stdout_s, stddebug_s, stderr_s, stdnull_s): New symbol
+	globals.
+	(stream_init): References to removed variables gone. Moved
+	stream-related initializations here from eval.c. The global
+	streams are set up differently.
+
+	* stream.h (std_input, std_output, std_debug, std_error, std_null):
+	Variable declarations replaced by macros.
+	(lookup_var_l): Declared.
+	(s_ifmt, s_ifsock, s_iflnk, s_ifreg, s_ifblk, s_ifdir,
+	s_ifchr, s_ififo, s_isuid, s_isgid, s_isvtx, s_irwxu,
+	s_irusr, s_iwusr, s_ixusr, s_irwxg, s_irgrp, s_iwgrp,
+	s_ixgrp, s_irwxo, s_iroth, s_iwoth, s_ixoth): Declarations removed.
+
+	* syslog.c (log_pid_v, log_cons_v, log_ndelay_v, log_odelay_v,
+	log_nowait_v, log_perror_v, log_user_v, log_daemon_v, log_auth_v,
+	log_authpriv_v, log_emerg_v, log_alert_v, log_crit_v, log_err_v,
+	log_warning_v, log_notice_v, log_info_v,
+	log_debug_v, std_log): Variables removed.
+	(syslog_init): References to removed variables removed.
+	Moved syslog-related initializations here out of eval_init.
+
+	* syslog.h:x (std_log): Declration removed.
+
+	* txr.c (self_path, prog_args_full, prog_args): Variables gone.
+	(txr_main): References to removed varaibles are gone.
+	Moved registration of special variables out of eval_init
+	here.
+
+	* txr.h (self_path, prog_args_full, prog_args): Declarations gone.
+
+	* tests/011/special-1.txr: Test case modified to properly test
+	special variables. Previously it produced the expected output
+	even though *stdout* wasn't rebound properly.
+
+	* tests/011/special-1.expected: Updated.
+
+	* genvim.txr: Updated to follow variable and function registration
+	moves. It has to scan more files than just eval.c. Produces identical
+	contents, so no change to txr.vim.
+
+2014-02-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (op_defvar): Remove the same-named symbol macro when a
 	variable is defined.
 	(op_defsymacro): Remove the same-named variable when a symbol macro is

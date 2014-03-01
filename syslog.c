@@ -40,53 +40,43 @@
 #include "signal.h"
 #include "unwind.h"
 #include "utf8.h"
+#include "eval.h"
 #include "syslog.h"
-
-val log_pid_v, log_cons_v, log_ndelay_v;
-val log_odelay_v, log_nowait_v, log_perror_v;
-
-val log_user_v, log_daemon_v, log_auth_v, log_authpriv_v;
-
-val log_emerg_v, log_alert_v, log_crit_v, log_err_v;
-val log_warning_v, log_notice_v, log_info_v, log_debug_v;
 
 val prio_k;
 
-val std_log;
-
 void syslog_init(void)
 {
-  prot1(&std_log);
-
-  log_pid_v = num(LOG_PID);
-  log_cons_v = num(LOG_CONS);
-  log_ndelay_v = num(LOG_NDELAY);
-
-  log_odelay_v = num(LOG_ODELAY);
-  log_nowait_v = num(LOG_NOWAIT);
+  reg_var(intern(lit("log-pid"), user_package), num_fast(LOG_PID));
+  reg_var(intern(lit("log-cons"), user_package), num_fast(LOG_CONS));
+  reg_var(intern(lit("log-ndelay"), user_package), num_fast(LOG_NDELAY));
+  reg_var(intern(lit("log-odelay"), user_package), num_fast(LOG_ODELAY));
+  reg_var(intern(lit("log-nowait"), user_package), num_fast(LOG_NOWAIT));
 #ifdef LOG_PERROR
-  log_perror_v = num(LOG_PERROR);
+  reg_var(intern(lit("log-perror"), user_package), num_fast(LOG_PERROR));
 #endif
-
-  log_user_v = num(LOG_USER);
-  log_daemon_v = num(LOG_DAEMON);
-  log_auth_v = num(LOG_AUTH);
+  reg_var(intern(lit("log-user"), user_package), num_fast(LOG_USER));
+  reg_var(intern(lit("log-daemon"), user_package), num_fast(LOG_DAEMON));
+  reg_var(intern(lit("log-auth"), user_package), num_fast(LOG_AUTH));
 #ifdef LOG_AUTHPRIV
-  log_authpriv_v = num(LOG_AUTHPRIV);
+  reg_var(intern(lit("log-authpriv"), user_package), num_fast(LOG_AUTHPRIV));
 #endif
-
-  log_emerg_v = num(LOG_EMERG);
-  log_alert_v = num(LOG_ALERT);
-  log_crit_v = num(LOG_CRIT);
-  log_err_v = num(LOG_ERR);
-  log_warning_v = num(LOG_WARNING);
-  log_notice_v = num(LOG_NOTICE);
-  log_info_v = num(LOG_INFO);
-  log_debug_v = num(LOG_DEBUG);
+  reg_var(intern(lit("log-emerg"), user_package), num_fast(LOG_EMERG));
+  reg_var(intern(lit("log-alert"), user_package), num_fast(LOG_ALERT));
+  reg_var(intern(lit("log-crit"), user_package), num_fast(LOG_CRIT));
+  reg_var(intern(lit("log-err"), user_package), num_fast(LOG_ERR));
+  reg_var(intern(lit("log-warning"), user_package), num_fast(LOG_WARNING));
+  reg_var(intern(lit("log-notice"), user_package), num_fast(LOG_NOTICE));
+  reg_var(intern(lit("log-info"), user_package), num_fast(LOG_INFO));
+  reg_var(intern(lit("log-debug"), user_package), num_fast(LOG_DEBUG));
+  reg_fun(intern(lit("openlog"), user_package), func_n3o(openlog_wrap, 1));
+  reg_fun(intern(lit("closelog"), user_package), func_n0(closelog_wrap));
+  reg_fun(intern(lit("setlogmask"), user_package), func_n1(setlogmask_wrap));
+  reg_fun(intern(lit("syslog"), user_package), func_n2v(syslog_wrap));
 
   prio_k = intern(lit("prio"), keyword_package);
 
-  std_log = make_syslog_stream(log_info_v);
+  reg_var(intern(lit("*stdlog*"), user_package), make_syslog_stream(num_fast(LOG_INFO)));
 }
 
 val openlog_wrap(val wident, val optmask, val facility)

@@ -49,7 +49,6 @@
 
 const wchli_t *version = wli("82");
 const wchar_t *progname = L"txr";
-val self_path, prog_args_full, prog_args;
 
 /*
  * Can implement an emergency allocator here from a fixed storage
@@ -182,7 +181,7 @@ int txr_main(int argc, char **argv)
   val arg;
   list_collect_decl(arg_list, arg_tail);
 
-  protect(&spec_file_str, &self_path, &prog_args, &prog_args_full, (val *) 0);
+  prot1(&spec_file_str);
 
   setvbuf(stderr, 0, _IOLBF, 0);
 
@@ -196,7 +195,7 @@ int txr_main(int argc, char **argv)
   while (*argv)
     arg_tail = list_collect(arg_tail, string_utf8(*argv++));
 
-  prog_args_full = arg_list;
+  reg_var(intern(lit("*full-args*"), user_package), arg_list);
 
   arg_list = cdr(arg_list);
 
@@ -414,7 +413,7 @@ int txr_main(int argc, char **argv)
     }
   }
 
-  prog_args = arg_list;
+  reg_var(intern(lit("*args*"), user_package), arg_list);
 
   {
     int gc = gc_state(0);
@@ -434,7 +433,7 @@ int txr_main(int argc, char **argv)
       format(std_error, lit("bindings:\n~s\n"), bindings, nao);
     }
 
-    self_path = spec_file_str;
+    reg_var(intern(lit("*self-path*"), user_package), spec_file_str);
 
     {
       int retval = extract(spec, arg_list, bindings);

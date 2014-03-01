@@ -66,7 +66,8 @@ int async_sig_enabled = 0;
 
 val packages;
 
-val system_package, keyword_package, user_package;
+val system_package_var, keyword_package_var, user_package_var;
+val system_package_s, keyword_package_s, user_package_s;
 
 val null_s, t, cons_s, str_s, chr_s, fixnum_s, sym_s, pkg_s, fun_s, vec_s;
 val lit_s, stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s, cptr_s;
@@ -2814,6 +2815,27 @@ val keywordp(val sym)
   return (symbolp(sym) && symbol_package(sym) == keyword_package) ? t : nil;
 }
 
+val *get_user_package(void)
+{
+  if (nilp(user_package_s))
+    return &user_package_var;
+  return lookup_var_l(nil, user_package_s);
+}
+
+val *get_system_package(void)
+{
+  if (nilp(system_package_s))
+    return &system_package_var;
+  return lookup_var_l(nil, system_package_s);
+}
+
+val *get_keyword_package(void)
+{
+  if (nilp(keyword_package_s))
+    return &keyword_package_var;
+  return lookup_var_l(nil, keyword_package_s);
+}
+
 val func_f0(val env, val (*fun)(val))
 {
   val obj = make_obj();
@@ -5064,8 +5086,8 @@ static void obj_init(void)
    * symbols.
    */
 
-  protect(&packages, &system_package, &keyword_package,
-          &user_package, &null_string, &nil_string,
+  protect(&packages, &system_package_var, &keyword_package_var,
+          &user_package_var, &null_string, &nil_string,
           &null_list, &equal_f, &eq_f, &eql_f, &car_f, &cdr_f, &null_f,
           &identity_f, &prog_string, &env_list,
           (val *) 0);
@@ -5734,15 +5756,15 @@ void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),
 
   oom_realloc = oom;
   gc_init(stack_bottom);
+  obj_init();
+  arith_init();
+  uw_init();
+  eval_init();
+  rand_init();
+  stream_init();
 #if HAVE_POSIX_SIGS
   sig_init();
 #endif
-  obj_init();
-  arith_init();
-  rand_init();
-  uw_init();
-  stream_init();
-  eval_init();
   filter_init();
   hash_init();
   regex_init();

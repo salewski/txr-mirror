@@ -43,6 +43,7 @@
 #include "gc.h"
 #include "arith.h"
 #include "rand.h"
+#include "eval.h"
 
 #if SIZEOF_INT == 4
 typedef unsigned int rand32_t;
@@ -54,12 +55,11 @@ typedef unsigned long rand32_t;
  * The algorithm here is WELL 512.
  * (Francois Panneton, Pierre L'Ecuyer.)
  */
-struct random_state {
+struct rand_state {
   rand32_t state[16];
   int cur;
 };
 
-val random_state;
 val random_state_s;
 
 static struct cobj_ops random_state_ops = {
@@ -72,7 +72,7 @@ static struct cobj_ops random_state_ops = {
 
 static val make_state(void)
 {
-  struct random_state *r = (struct random_state *) chk_malloc(sizeof *r);
+  struct rand_state *r = (struct rand_state *) chk_malloc(sizeof *r);
   return cobj((mem_t *) r, random_state_s, &random_state_ops);
 }
 
@@ -81,7 +81,7 @@ val random_state_p(val obj)
   return typeof(obj) == random_state_s ? t : nil;
 }
 
-static rand32_t rand32(struct random_state *r)
+static rand32_t rand32(struct rand_state *r)
 {
   #define RSTATE(r,i) ((r)->state[((r)->cur + i) % 16])
   rand32_t s0 = RSTATE(r, 0);
@@ -106,8 +106,7 @@ val make_random_state(val seed)
 {
   val rs = make_state();
   int i;
-  struct random_state *r = (struct random_state *) 
-                             cobj_handle(rs, random_state_s);
+  struct rand_state *r = (struct rand_state *) cobj_handle(rs, random_state_s);
 
   r->cur = 0;
 
@@ -142,8 +141,8 @@ val make_random_state(val seed)
     r->state[1] = (rand32_t) c_num(cdr(time));
     memset(r->state + 2, 0xAA, sizeof r->state - 2 * sizeof r->state[0]);
   } else if (random_state_p(seed)) {
-    struct random_state *rseed = (struct random_state *) 
-                                   cobj_handle(seed, random_state_s);
+    struct rand_state *rseed = (struct rand_state *)
+                                  cobj_handle(seed, random_state_s);
     *r = *rseed;
   } else {
     uw_throwf(error_s, lit("make-random-state: seed ~s is not a number"),
@@ -159,16 +158,16 @@ val make_random_state(val seed)
 val random_fixnum(val state)
 {
   uses_or2;
-  struct random_state *r = (struct random_state *) 
-                             cobj_handle(or2(state, random_state),
-                                         random_state_s);
+  struct rand_state *r = (struct rand_state *) cobj_handle(or2(state,
+                                                               random_state),
+                                                           random_state_s);
   return num(rand32(r) & NUM_MAX);
 }
 
 val random(val state, val modulus)
 {
-  struct random_state *r = (struct random_state *) 
-                             cobj_handle(random_state, random_state_s);
+  struct rand_state *r = (struct rand_state *) cobj_handle(random_state,
+                                                           random_state_s);
 
   if (bignump(modulus)) {
     mp_int *m = mp(modulus);
@@ -250,7 +249,7 @@ val rnd(val modulus, val state)
 
 void rand_init(void)
 {
-  prot1(&random_state);
   random_state_s = intern(lit("random-state"), user_package);
-  random_state = make_random_state(num(42));
+  reg_var(intern(lit("*random-state*"), user_package),
+          make_random_state(num_fast(42)));
 }

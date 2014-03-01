@@ -4,5 +4,6 @@
         (progn ,*forms (get-string-from-stream ,var))))
 
    (let ((x (with-output-to-string (*stdout*)
-              (format t "hello"))))
+              (format t "world!"))))
+     (format *stdout* "Hello, ")
      (put-line x)))

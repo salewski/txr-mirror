@@ -41,9 +41,6 @@
 #ifdef HAVE_WINDOWS_H
 #include <windows.h>
 #endif
-#ifdef HAVE_SYSLOG
-#include <syslog.h>
-#endif
 #include "lib.h"
 #include "gc.h"
 #include "arith.h"
@@ -58,9 +55,6 @@
 #include "rand.h"
 #include "filter.h"
 #include "txr.h"
-#ifdef HAVE_SYSLOG
-#include "syslog.h"
-#endif
 #include "combi.h"
 #include "eval.h"
 
@@ -141,24 +135,7 @@ noreturn static val eval_error(val form, val fmt, ...)
 
 val lookup_var(val env, val sym)
 {
-  if (nilp(env)) {
-dyn:
-    for (env = dyn_env; env; env = env->e.up_env) {
-      val binding = assoc(sym, env->e.vbindings);
-      if (binding)
-        return binding;
-    } 
-    
-    {
-      val bind = gethash(top_vb, sym);
-      if (cobjp(bind)) {
-        struct c_var *cv = (struct c_var *) cptr_get(bind);
-        set(cv->bind->c.cdr, *cv->loc);
-        return cv->bind;
-      }
-      return bind;
-    }
-  } else {
+  if (env) {
     type_check(env, ENV);
 
     for (; env; env = env->e.up_env) {
@@ -166,32 +143,20 @@ dyn:
       if (binding)
         return binding;
     }
-
-    goto dyn;
   }
+
+  for (env = dyn_env; env; env = env->e.up_env) {
+    val binding = assoc(sym, env->e.vbindings);
+    if (binding)
+      return binding;
+  } 
+    
+  return(gethash(top_vb, sym));
 }
 
 val *lookup_var_l(val env, val sym)
 {
-  if (nilp(env)) {
-dyn:
-    for (env = dyn_env; env; env = env->e.up_env) {
-      val binding = assoc(sym, env->e.vbindings);
-      if (binding)
-        return cdr_l(binding);
-    }
-
-    {
-      val bind = gethash(top_vb, sym);
-      if (cobjp(bind)) {
-        struct c_var *cv = (struct c_var *) cptr_get(bind);
-        return cv->loc;
-      }
-      if (bind)
-        return cdr_l(bind);
-      return 0;
-    }
-  } else {
+  if (env) {
     type_check(env, ENV);
 
     for (; env; env = env->e.up_env) {
@@ -199,8 +164,17 @@ dyn:
       if (binding)
         return cdr_l(binding);
     }
+  }
 
-    goto dyn;
+  for (env = dyn_env; env; env = env->e.up_env) {
+    val binding = assoc(sym, env->e.vbindings);
+    if (binding)
+      return cdr_l(binding);
+  }
+
+  {
+    val binding = gethash(top_vb, sym);
+    return (binding) ? cdr_l(binding) : 0;
   }
 }
 
@@ -2934,7 +2908,7 @@ static void reg_op(val sym, opfun_t fun)
   sethash(op_table, sym, cptr((mem_t *) fun));
 }
 
-static void reg_fun(val sym, val fun)
+void reg_fun(val sym, val fun)
 {
   assert (sym != 0);
   sethash(top_fb, sym, cons(sym, fun));
@@ -2946,28 +2920,10 @@ static void reg_mac(val sym, mefun_t fun)
   sethash(top_mb, sym, cptr((mem_t *) fun));
 }
 
-static void c_var_mark(val obj)
+void reg_var(val sym, val val)
 {
-  struct c_var *cv = (struct c_var *) obj->co.handle;
-  cv->bind->c.cdr = *cv->loc; /* synchronize shadow binding with variable */
-  gc_mark(cv->bind);
-  /* we don't mark *loc since it should be a gc-protected C global! */
-}
-
-static struct cobj_ops c_var_ops = {
-  eq,
-  cobj_print_op,
-  cobj_destroy_free_op,
-  c_var_mark,
-  cobj_hash_op
-};
-
-static void reg_var(val sym, val *loc)
-{
-  struct c_var *cv = (struct c_var *) chk_malloc(sizeof *cv);
-  cv->loc = loc;
-  cv->bind = cons(sym, *loc);
-  sethash(top_vb, sym, cobj((mem_t *) cv, cptr_s, &c_var_ops));
+  assert (sym != nil);
+  sethash(top_vb, sym, cons(sym, val));
   mark_special(sym);
 }
 
@@ -3322,84 +3278,23 @@ void eval_init(void)
   reg_fun(intern(lit("or"), user_package), func_n0v(or_fun));
   reg_fun(intern(lit("and"), user_package), func_n0v(and_fun));
 
-  reg_var(intern(lit("*stdout*"), user_package), &std_output);
-  reg_var(intern(lit("*stddebug*"), user_package), &std_debug);
-  reg_var(intern(lit("*stdin*"), user_package), &std_input);
-  reg_var(intern(lit("*stderr*"), user_package), &std_error);
-  reg_var(intern(lit("*stdnull*"), user_package), &std_null);
-#ifdef HAVE_SYSLOG
-  reg_var(intern(lit("*stdlog*"), user_package), &std_log);
-#endif
-  reg_fun(intern(lit("format"), user_package), func_n2v(formatv));
   reg_fun(intern(lit("print"), user_package), func_n2o(obj_print, 1));
   reg_fun(intern(lit("pprint"), user_package), func_n2o(obj_pprint, 1));
   reg_fun(intern(lit("tostring"), user_package), func_n1(tostring));
   reg_fun(intern(lit("tostringp"), user_package), func_n1(tostringp));
   reg_fun(intern(lit("prinl"), user_package), func_n2o(prinl, 1));
   reg_fun(intern(lit("pprinl"), user_package), func_n2o(pprinl, 1));
-  reg_fun(intern(lit("make-string-input-stream"), user_package), func_n1(make_string_input_stream));
-  reg_fun(intern(lit("make-string-byte-input-stream"), user_package), func_n1(make_string_byte_input_stream));
-  reg_fun(intern(lit("make-string-output-stream"), user_package), func_n0(make_string_output_stream));
-  reg_fun(intern(lit("get-string-from-stream"), user_package), func_n1(get_string_from_stream));
-  reg_fun(intern(lit("make-strlist-output-stream"), user_package), func_n0(make_strlist_output_stream));
-  reg_fun(intern(lit("get-list-from-stream"), user_package), func_n1(get_list_from_stream));
-  reg_fun(intern(lit("close-stream"), user_package), func_n2o(close_stream, 1));
-  reg_fun(intern(lit("get-line"), user_package), func_n1o(get_line, 0));
-  reg_fun(intern(lit("get-char"), user_package), func_n1o(get_char, 0));
-  reg_fun(intern(lit("get-byte"), user_package), func_n1o(get_byte, 0));
-  reg_fun(intern(lit("put-string"), user_package), func_n2o(put_string, 1));
-  reg_fun(intern(lit("put-line"), user_package), func_n2o(put_line, 1));
-  reg_fun(intern(lit("put-char"), user_package), func_n2o(put_char, 1));
-  reg_fun(intern(lit("put-byte"), user_package), func_n2o(put_byte, 1));
-  reg_fun(intern(lit("unget-char"), user_package), func_n2o(unget_char, 1));
-  reg_fun(intern(lit("unget-byte"), user_package), func_n2o(unget_byte, 1));
-  reg_fun(intern(lit("flush-stream"), user_package), func_n1(flush_stream));
-  reg_fun(intern(lit("seek-stream"), user_package), func_n3(seek_stream));
-  reg_fun(intern(lit("stat"), user_package), func_n1(statf));
-  reg_fun(intern(lit("streamp"), user_package), func_n1(streamp));
-  reg_fun(intern(lit("real-time-stream-p"), user_package), func_n1(real_time_stream_p));
-  reg_fun(intern(lit("stream-set-prop"), user_package), func_n3(stream_set_prop));
-  reg_fun(intern(lit("stream-get-prop"), user_package), func_n2(stream_get_prop));
-  reg_fun(intern(lit("make-catenated-stream"), user_package), func_n0v(make_catenated_stream));
-  reg_var(intern(lit("s-ifmt"), user_package), &s_ifmt);
-  reg_var(intern(lit("s-ifsock"), user_package), &s_ifsock);
-  reg_var(intern(lit("s-iflnk"), user_package), &s_iflnk);
-  reg_var(intern(lit("s-ifreg"), user_package), &s_ifreg);
-  reg_var(intern(lit("s-ifblk"), user_package), &s_ifblk);
-  reg_var(intern(lit("s-ifdir"), user_package), &s_ifdir);
-  reg_var(intern(lit("s-ifchr"), user_package), &s_ifchr);
-  reg_var(intern(lit("s-ififo"), user_package), &s_ififo);
-  reg_var(intern(lit("s-isuid"), user_package), &s_isuid);
-  reg_var(intern(lit("s-isgid"), user_package), &s_isgid);
-  reg_var(intern(lit("s-isvtx"), user_package), &s_isvtx);
-  reg_var(intern(lit("s-irwxu"), user_package), &s_irwxu);
-  reg_var(intern(lit("s-irusr"), user_package), &s_irusr);
-  reg_var(intern(lit("s-iwusr"), user_package), &s_iwusr);
-  reg_var(intern(lit("s-ixusr"), user_package), &s_ixusr);
-  reg_var(intern(lit("s-irwxg"), user_package), &s_irwxg);
-  reg_var(intern(lit("s-irgrp"), user_package), &s_irgrp);
-  reg_var(intern(lit("s-iwgrp"), user_package), &s_iwgrp);
-  reg_var(intern(lit("s-ixgrp"), user_package), &s_ixgrp);
-  reg_var(intern(lit("s-irwxo"), user_package), &s_irwxo);
-  reg_var(intern(lit("s-iroth"), user_package), &s_iroth);
-  reg_var(intern(lit("s-iwoth"), user_package), &s_iwoth);
-  reg_var(intern(lit("s-ixoth"), user_package), &s_ixoth);
 
-  reg_fun(intern(lit("open-directory"), user_package), func_n1(open_directory));
-  reg_fun(intern(lit("open-file"), user_package), func_n2o(open_file, 1));
-  reg_fun(intern(lit("open-tail"), user_package), func_n3o(open_tail, 1));
-  reg_fun(intern(lit("open-command"), user_package), func_n2o(open_command, 1));
-  reg_fun(intern(lit("open-pipe"), user_package), func_n2(open_command));
-  reg_fun(intern(lit("open-process"), user_package), func_n3o(open_process, 2));
-  reg_fun(intern(lit("remove-path"), user_package), func_n1(remove_path));
-  reg_fun(intern(lit("rename-path"), user_package), func_n2(rename_path));
+  reg_var(user_package_s = intern(lit("*user-package*"), user_package_var),
+          user_package_var);
+  reg_var(system_package_s = intern(lit("*system-package*"), user_package_var),
+          system_package_var);
+  reg_var(keyword_package_s = intern(lit("*keyword-package*"), user_package_var),
+          keyword_package_var);
 
-  reg_var(intern(lit("*user-package*"), user_package), &user_package);
-  reg_var(intern(lit("*keyword-package*"), user_package), &keyword_package);
-  reg_var(intern(lit("*system-package*"), user_package), &system_package);
   reg_fun(intern(lit("make-sym"), user_package), func_n1(make_sym));
   reg_fun(intern(lit("gensym"), user_package), func_n1o(gensym, 0));
-  reg_var(intern(lit("*gensym-counter*"), user_package), &gensym_counter);
+  reg_var(intern(lit("*gensym-counter*"), user_package), gensym_counter);
   reg_fun(intern(lit("make-package"), user_package), func_n1(make_package));
   reg_fun(intern(lit("find-package"), user_package), func_n1(find_package));
   reg_fun(intern(lit("delete-package"), user_package), func_n1(delete_package));
@@ -3522,7 +3417,6 @@ void eval_init(void)
   reg_fun(intern(lit("functionp"), user_package), func_n1(functionp));
   reg_fun(intern(lit("interp-fun-p"), user_package), func_n1(interp_fun_p));
 
-  reg_var(intern(lit("*random-state*"), user_package), &random_state);
   reg_fun(intern(lit("make-random-state"), user_package), func_n1(make_random_state));
   reg_fun(intern(lit("random-state-p"), user_package), func_n1(random_state_p));
   reg_fun(intern(lit("random-fixnum"), user_package), func_n1o(random_fixnum, 1));
@@ -3563,8 +3457,6 @@ void eval_init(void)
 
   reg_fun(intern(lit("env"), user_package), func_n0(env));
   reg_fun(intern(lit("env-hash"), user_package), func_n0(env_hash));
-  reg_var(intern(lit("*args*"), user_package), &prog_args);
-  reg_var(intern(lit("*full-args*"), user_package), &prog_args_full);
 
 #if HAVE_DAEMON
   reg_fun(intern(lit("daemon"), user_package), func_n2(daemon_wrap));
@@ -3593,92 +3485,9 @@ void eval_init(void)
   reg_fun(intern(lit("readlink"), user_package), func_n1(readlink_wrap));
 #endif
 
-#if HAVE_SYSLOG
-  reg_var(intern(lit("log-pid"), user_package), &log_pid_v);
-  reg_var(intern(lit("log-cons"), user_package), &log_cons_v);
-  reg_var(intern(lit("log-ndelay"), user_package), &log_ndelay_v);
-  reg_var(intern(lit("log-odelay"), user_package), &log_odelay_v);
-  reg_var(intern(lit("log-nowait"), user_package), &log_nowait_v);
-#ifdef LOG_PERROR
-  reg_var(intern(lit("log-perror"), user_package), &log_perror_v);
-#endif
-  reg_var(intern(lit("log-user"), user_package), &log_user_v);
-  reg_var(intern(lit("log-daemon"), user_package), &log_daemon_v);
-  reg_var(intern(lit("log-auth"), user_package), &log_auth_v);
-#ifdef LOG_AUTHPRIV
-  reg_var(intern(lit("log-authpriv"), user_package), &log_authpriv_v);
-#endif
-  reg_var(intern(lit("log-emerg"), user_package), &log_emerg_v);
-  reg_var(intern(lit("log-alert"), user_package), &log_alert_v);
-  reg_var(intern(lit("log-crit"), user_package), &log_crit_v);
-  reg_var(intern(lit("log-err"), user_package), &log_err_v);
-  reg_var(intern(lit("log-warning"), user_package), &log_warning_v);
-  reg_var(intern(lit("log-notice"), user_package), &log_notice_v);
-  reg_var(intern(lit("log-info"), user_package), &log_info_v);
-  reg_var(intern(lit("log-debug"), user_package), &log_debug_v);
-  reg_fun(intern(lit("openlog"), user_package), func_n3o(openlog_wrap, 1));
-  reg_fun(intern(lit("closelog"), user_package), func_n0(closelog_wrap));
-  reg_fun(intern(lit("setlogmask"), user_package), func_n1(setlogmask_wrap));
-  reg_fun(intern(lit("syslog"), user_package), func_n2v(syslog_wrap));
-#endif
-
-#if HAVE_POSIX_SIGS
-  reg_fun(intern(lit("set-sig-handler"), user_package), func_n2(set_sig_handler));
-  reg_fun(intern(lit("get-sig-handler"), user_package), func_n1(get_sig_handler));
-  reg_fun(intern(lit("sig-check"), user_package), func_n0(sig_check));
-  reg_var(intern(lit("sig-hup"), user_package), &sig_hup);
-  reg_var(intern(lit("sig-int"), user_package), &sig_int);
-  reg_var(intern(lit("sig-quit"), user_package), &sig_quit);
-  reg_var(intern(lit("sig-ill"), user_package), &sig_ill);
-  reg_var(intern(lit("sig-trap"), user_package), &sig_trap);
-  reg_var(intern(lit("sig-abrt"), user_package), &sig_abrt);
-  reg_var(intern(lit("sig-bus"), user_package), &sig_bus);
-  reg_var(intern(lit("sig-fpe"), user_package), &sig_fpe);
-  reg_var(intern(lit("sig-kill"), user_package), &sig_kill);
-  reg_var(intern(lit("sig-usr1"), user_package), &sig_usr1);
-  reg_var(intern(lit("sig-segv"), user_package), &sig_segv);
-  reg_var(intern(lit("sig-usr2"), user_package), &sig_usr2);
-  reg_var(intern(lit("sig-pipe"), user_package), &sig_pipe);
-  reg_var(intern(lit("sig-alrm"), user_package), &sig_alrm);
-  reg_var(intern(lit("sig-term"), user_package), &sig_term);
-  reg_var(intern(lit("sig-chld"), user_package), &sig_chld);
-  reg_var(intern(lit("sig-cont"), user_package), &sig_cont);
-  reg_var(intern(lit("sig-stop"), user_package), &sig_stop);
-  reg_var(intern(lit("sig-tstp"), user_package), &sig_tstp);
-  reg_var(intern(lit("sig-ttin"), user_package), &sig_ttin);
-  reg_var(intern(lit("sig-ttou"), user_package), &sig_ttou);
-  reg_var(intern(lit("sig-urg"), user_package), &sig_urg);
-  reg_var(intern(lit("sig-xcpu"), user_package), &sig_xcpu);
-  reg_var(intern(lit("sig-xfsz"), user_package), &sig_xfsz);
-  reg_var(intern(lit("sig-vtalrm"), user_package), &sigtalrm);
-  reg_var(intern(lit("sig-prof"), user_package), &sig_prof);
-  reg_var(intern(lit("sig-poll"), user_package), &sig_poll);
-  reg_var(intern(lit("sig-sys"), user_package), &sig_sys);
-#ifdef SIGWINCH
-  reg_var(intern(lit("sig-winch"), user_package), &sig_winch);
-#endif
-#ifdef SIGIOT
-  reg_var(intern(lit("sig-iot"), user_package), &sig_iot);
-#endif
-#ifdef SIGSTKFLT
-  reg_var(intern(lit("sig-stkflt"), user_package), &sig_stkflt);
-#endif
-#ifdef SIGIO
-  reg_var(intern(lit("sig-io"), user_package), &sig_io);
-#endif
-#ifdef SIGLOST
-  reg_var(intern(lit("sig-lost"), user_package), &sig_lost);
-#endif
-#ifdef SIGPWR
-  reg_var(intern(lit("sig-pwr"), user_package), &sig_pwr);
-#endif
-#endif
-
   reg_fun(intern(lit("source-loc"), user_package), func_n1(source_loc));
   reg_fun(intern(lit("source-loc-str"), user_package), func_n1(source_loc_str));
   reg_fun(intern(lit("rlcp"), user_package), func_n2(rlcp));
-
-  reg_var(intern(lit("*self-path*"), user_package), &self_path);
 
   eval_error_s = intern(lit("eval-error"), user_package);
   uw_register_subtype(eval_error_s, error_s);

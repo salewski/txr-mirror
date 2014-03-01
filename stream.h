@@ -47,7 +47,13 @@ struct strm_ops {
   val (*set_prop)(val, val ind, val);
 };
 
-extern val std_input, std_output, std_debug, std_error, std_null;
+#define std_input (*lookup_var_l(nil, stdin_s))
+#define std_output (*lookup_var_l(nil, stdout_s))
+#define std_debug (*lookup_var_l(nil, stddebug_s))
+#define std_error (*lookup_var_l(nil, stderr_s))
+#define std_null (*lookup_var_l(nil, stdnull_s))
+val *lookup_var_l(val env, val sym);
+
 extern val output_produced;
 
 extern val dev_k, ino_k, mode_k, nlink_k, uid_k;
@@ -56,10 +62,7 @@ extern val atime_k, mtime_k, ctime_k;
 extern val from_start_k, from_current_k, from_end_k;
 extern val real_time_k, name_k;
 
-extern val s_ifmt, s_ifsock, s_iflnk, s_ifreg, s_ifblk, s_ifdir;
-extern val s_ifchr, s_ififo, s_isuid, s_isgid, s_isvtx, s_irwxu;
-extern val s_irusr, s_iwusr, s_ixusr, s_irwxg, s_irgrp, s_iwgrp;
-extern val s_ixgrp, s_irwxo, s_iroth, s_iwoth, s_ixoth;
+val stdin_s, stdout_s, stddebug_s, stderr_s, stdnull_s;
 
 val make_null_stream(void);
 val make_stdio_stream(FILE *, val descr);

@@ -35,8 +35,6 @@ extern val log_warning_v, log_notice_v, log_info_v, log_debug_v;
 
 extern val prio_k;
 
-extern val std_log;
-
 void syslog_init(void);
 val openlog_wrap(val ident, val optmask, val facility);
 val closelog_wrap(void);
