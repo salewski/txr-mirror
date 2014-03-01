@@ -1,5 +1,12 @@
 2014-03-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	* tests/011/special-1.txr: Add some coverage for evaluation
+	of a re-bound special under the Lisp-1 evaluation of the [ ]
+	notation. This test case would have failed three commits
+	back.
+
+2014-03-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (expand_qquote): Another bugfix: not recognizing a trailing
 	atom that comes out of recursive call, wrapped in (quote ...),
 	resulting in '(,a . b) expanding to (append 'a . quote b)
