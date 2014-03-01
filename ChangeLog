@@ -1,5 +1,11 @@
 2014-02-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (lookup_sym_lisp1): Bugfix: wasn't following the dynamic
+	environment at all, and still had vestiges of support for the the old
+	cptr based global variables.
+
+2014-02-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	* Makefile: Use target-specific assignment
 	to suppress TXR_DBG_OPTS for tests under tests/011.
 	The --gen-gc makes mandel.txr run too slow.

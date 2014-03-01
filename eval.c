@@ -154,6 +154,31 @@ val lookup_var(val env, val sym)
   return(gethash(top_vb, sym));
 }
 
+static val lookup_sym_lisp1(val env, val sym)
+{
+  uses_or2;
+
+  if (env) {
+    type_check(env, ENV);
+
+    for (; env; env = env->e.up_env) {
+      val binding = or2(assoc(sym, env->e.vbindings),
+                        assoc(sym, env->e.fbindings));
+      if (binding)
+        return binding;
+    }
+  }
+
+  for (env = dyn_env; env; env = env->e.up_env) {
+      val binding = or2(assoc(sym, env->e.vbindings),
+                        assoc(sym, env->e.fbindings));
+    if (binding)
+      return binding;
+  } 
+
+  return or2(gethash(top_vb, sym), gethash(top_fb, sym));
+}
+
 val *lookup_var_l(val env, val sym)
 {
   if (env) {
@@ -222,31 +247,6 @@ static val lookup_symac(val menv, val sym)
       if (binding) /* special_s: see make_var_shadowing_env */
         return (cdr(binding) == special_s) ? nil : binding;
       return lookup_symac(menv->e.up_env, sym);
-    }
-  }
-}
-
-static val lookup_sym_lisp1(val env, val sym)
-{
-  uses_or2;
-
-  if (nilp(env)) {
-    val bind = gethash(top_vb, sym);
-    if (cobjp(bind)) {
-      struct c_var *cv = (struct c_var *) cptr_get(bind);
-      set(cv->bind->c.cdr, *cv->loc);
-      return cv->bind;
-    }
-    return or2(bind, gethash(top_fb, sym));
-  } else  {
-    type_check(env, ENV);
-
-    {
-      val binding = or2(assoc(sym, env->e.vbindings),
-                        assoc(sym, env->e.fbindings));
-      if (binding)
-        return binding;
-      return lookup_sym_lisp1(env->e.up_env, sym);
     }
   }
 }
