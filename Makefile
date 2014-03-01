@@ -117,6 +117,8 @@ tests/010/align-columns.ok: TXR_ARGS := $(top_srcdir)/tests/010/align-columns.da
 
 tests/002/%: TXR_SCRIPT_ON_CMDLINE := y
 
+tests/011/%: TXR_DBG_OPTS := 
+
 %.ok: %.txr
 	mkdir -p $(dir $@)
 	$(if $(TXR_SCRIPT_ON_CMDLINE),\

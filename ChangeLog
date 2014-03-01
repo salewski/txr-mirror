@@ -1,5 +1,11 @@
 2014-02-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	* Makefile: Use target-specific assignment
+	to suppress TXR_DBG_OPTS for tests under tests/011.
+	The --gen-gc makes mandel.txr run too slow.
+
+2014-02-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (self_evaluating_p, maybe_quote): New functions.
 	(expand): Use maybe-quote form macro-time, to not quote
 	result unnecessarily.
