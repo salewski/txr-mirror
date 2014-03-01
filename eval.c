@@ -2034,7 +2034,7 @@ static val expand_qquote(val qquoted_form, val menv)
       val args = expand_qquote(second(qquoted_form), menv);
       return rlcp(list(vector_list_s, args, nao), qquoted_form);
     } else {
-      val f = car(qquoted_form);
+      val f = sym;
       val r = cdr(qquoted_form);
       val f_ex;
       val r_ex = expand_qquote(r, menv);
@@ -2065,6 +2065,8 @@ static val expand_qquote(val qquoted_form, val menv)
           r_ex = cons(r_ex, nil);
         else if (car(r_ex) == append_s)
           r_ex = cdr(r_ex);
+        else if (car(r_ex) == quote_s)
+          r_ex = cons(r_ex, nil);
         return rlcp(cons(append_s, cons(f_ex, r_ex)), qquoted_form);
       }
     }

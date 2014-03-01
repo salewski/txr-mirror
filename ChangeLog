@@ -1,3 +1,10 @@
+2014-03-01  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (expand_qquote): Another bugfix: not recognizing a trailing
+	atom that comes out of recursive call, wrapped in (quote ...),
+	resulting in '(,a . b) expanding to (append 'a . quote b)
+	rather than (append (list 'a) (quote b)); i.e.  (append (list 'a) 'b).
+
 2014-02-28  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (lookup_sym_lisp1): Bugfix: wasn't following the dynamic
