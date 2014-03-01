@@ -1289,6 +1289,26 @@ static val maybe_progn(val forms)
   return if3(cdr(forms), cons(progn_s, forms), car(forms));
 }
 
+static val self_evaluating_p(val form)
+{
+  if (nilp(form) || form == t)
+    return t;
+
+  if (symbolp(form))
+    return if2(keywordp(form), t);
+
+  if (atom(form))
+    return t;
+
+  return nil;
+}
+
+static val maybe_quote(val form)
+{
+  if (self_evaluating_p(form))
+    return form;
+  return cons(quote_s, cons(form, nil));
+}
 
 static val expand_macrolet(val form, val menv)
 {
@@ -2476,7 +2496,7 @@ tail:
       val args = rest(form);
       val args_ex = expand_forms(args, menv);
       val result = eval_progn(args_ex, make_env(nil, nil, nil), args);
-      return cons(quote_s, cons(result, nil));
+      return maybe_quote(result);
     } else if (sym == macrolet_s) {
       return expand_macrolet(form, menv);
     } else if (sym == symacrolet_s) {

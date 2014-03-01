@@ -1,5 +1,11 @@
 2014-02-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (self_evaluating_p, maybe_quote): New functions.
+	(expand): Use maybe-quote form macro-time, to not quote
+	result unnecessarily.
+
+2014-02-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	* tests/011/mandel.expected: New file.
 
 	* tests/011/mandel.txr: New file.
