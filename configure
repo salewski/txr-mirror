@@ -748,14 +748,14 @@ int main(void)
    return fileno(stdin);
 }
 !
-if ! conftest EXTRA_FLAGS=-Werror ; then
+if conftest EXTRA_FLAGS=-Werror ; then
+  printf "yes\n"
+else
   printf "no\n"
   lang_flags="$lang_flags -U__STRICT_ANSI__"
   printf "Regenerating config.make ..."
   gen_config_make
   printf "done\n"
-else
-  printf "yes\n"
 fi
 
 #
@@ -793,15 +793,15 @@ int main(void)
   return isdigit(x);
 }
 !
-if ! conftest EXTRA_FLAGS=-Werror ; then
+if conftest EXTRA_FLAGS=-Werror ; then
+  printf "absent\n"
+else
   printf "present\n"
   cat >> config.h <<!
 $(for x in isalpha isupper islower isdigit isxdigit isalnum isspace \
            ispunct isprint isgraph iscntrl isblank ; do \
     printf "#undef %s\n" $x ; done)
 !
-else
-  printf "absent\n"
 fi
 
 #
@@ -1218,11 +1218,11 @@ int main(void)
   return 0;
 }
 !
-if ! conftest ; then
-  printf "no\n"
-else
+if conftest ; then
   printf "yes\n"
   printf "#define HAVE_SYS_WAIT 1\n" >> config.h
+else
+  printf "no\n"
 fi
 
 #
@@ -1241,11 +1241,11 @@ int main(void)
   return 0;
 }
 !
-if ! conftest ; then
-  printf "no\n"
-else
+if conftest ; then
   printf "yes\n"
   printf "#define HAVE_SYS_STAT 1\n" >> config.h
+else
+  printf "no\n"
 fi
 
 
@@ -1265,11 +1265,11 @@ int main(void)
   return 0;
 }
 !
-if ! conftest ; then
-  printf "no\n"
-else
+if conftest ; then
   printf "yes\n"
   printf "#define HAVE_ENVIRON 1\n" >> config.h
+else
+  printf "no\n"
 fi
 
 #
@@ -1287,12 +1287,12 @@ int main(void)
   return 0;
 }
 !
-if ! conftest ; then
-  printf "no\n"
-else
+if conftest ; then
   printf "yes\n"
   printf "#define HAVE_GETENVIRONMENTSTRINGS 1\n" >> config.h
   have_windows_h=y
+else
+  printf "no\n"
 fi
 
 #
@@ -1320,12 +1320,13 @@ int main(int argc, char **argv)
   return 0;
 }
 !
-if ! conftest ; then
-  printf "no\n"
-else
+
+if conftest ; then
   printf "yes\n"
   printf "#define HAVE_FORK_STUFF 1\n" >> config.h
   have_unistd=y
+else
+  printf "no\n"
 fi
 
 #
@@ -1375,12 +1376,12 @@ int main(void)
   return 0;
 }
 !
-if ! conftest ; then
-  printf "no\n"
-else
+if conftest ; then
   printf "yes\n"
   printf "#define HAVE_TIMEGM 1\n" >> config.h
   have_timegm=y
+else
+  printf "no\n"
 fi
 
 printf "Checking for setenv and unsetenv functions ... "
@@ -1395,11 +1396,11 @@ int main(void)
   return 0;
 }
 !
-if ! conftest ; then
-  printf "no\n"
-else
+if conftest ; then
   printf "yes\n"
   printf "#define HAVE_SETENV 1\n" >> config.h
+else
+  printf "no\n"
 fi
 printf "Checking for tzset function ... "
 
@@ -1412,11 +1413,11 @@ int main(void)
   return 0;
 }
 !
-if ! conftest ; then
-  printf "no\n"
-else
+if conftest ; then
   printf "yes\n"
   printf "#define HAVE_TZSET 1\n" >> config.h
+else
+  printf "no\n"
 fi
 
 printf "Checking for localtime_r and gmtime_r functions ... "
@@ -1434,12 +1435,12 @@ int main(int argc, char **argv)
   return 0;
 }
 !
-if ! conftest ; then
-  printf "no\n"
-else
+if conftest ; then
   printf "yes\n"
   printf "#define HAVE_GMTIME_R 1\n" >> config.h
   have_unistd=y
+else
+  printf "no\n"
 fi
 
 
@@ -1454,12 +1455,12 @@ int main(int argc, char **argv)
   return 0;
 }
 !
-if ! conftest ; then
-  printf "no\n"
-else
+if conftest ; then
   printf "yes\n"
   printf "#define HAVE_POSIX_SLEEP 1\n" >> config.h
   have_unistd=y
+else
+  printf "no\n"
 fi
 
 printf "Checking for POSIX usleep function ... "
@@ -1473,12 +1474,12 @@ int main(int argc, char **argv)
   return 0;
 }
 !
-if ! conftest ; then
-  printf "no\n"
-else
+if conftest ; then
   printf "yes\n"
   printf "#define HAVE_POSIX_USLEEP 1\n" >> config.h
   have_unistd=y
+else
+  printf "no\n"
 fi
 
 printf "Checking for POSIX nanosleep function ... "
@@ -1493,12 +1494,12 @@ int main(int argc, char **argv)
   return 0;
 }
 !
-if ! conftest ; then
-  printf "no\n"
-else
+if conftest ; then
   printf "yes\n"
   printf "#define HAVE_POSIX_NANOSLEEP 1\n" >> config.h
   have_unistd=y
+else
+  printf "no\n"
 fi
 
 printf "Checking for BSD daemon function ... "
@@ -1511,12 +1512,12 @@ int main(int argc, char **argv)
   return daemon(0, 0);
 }
 !
-if ! conftest ; then
-  printf "no\n"
-else
+if conftest ; then
   printf "yes\n"
   printf "#define HAVE_DAEMON 1\n" >> config.h
   have_unistd=y
+else
+  printf "no\n"
 fi
 
 printf "Checking for isatty function ... "
@@ -1530,12 +1531,12 @@ int main(void)
   return 0;
 }
 !
-if ! conftest ; then
-  printf "no\n"
-else
+if conftest ; then
   printf "yes\n"
   printf "#define HAVE_ISATTY 1\n" >> config.h
   have_unistd=y
+else
+  printf "no\n"
 fi
 
 printf "Checking for syslog ... "
@@ -1552,12 +1553,12 @@ int main(void)
   return 0;
 }
 !
-if ! conftest ; then
-  printf "no\n"
-else
+if conftest ; then
   printf "yes\n"
   printf "#define HAVE_SYSLOG 1\n" >> config.h
   have_syslog=y
+else
+  printf "no\n"
 fi
 
 printf "Checking for reasonably modern POSIX signal handling ... "
@@ -1578,12 +1579,12 @@ int main(void)
   return 0;
 }
 !
-if ! conftest ; then
-  printf "no\n"
-else
+if conftest ; then
   printf "yes\n"
   printf "#define HAVE_POSIX_SIGS 1\n" >> config.h
   have_posix_sigs=y
+else
+  printf "no\n"
 fi
 
 printf "Checking for makedev ... "
@@ -1599,11 +1600,11 @@ int main(void)
   return 0;
 }
 !
-if ! conftest ; then
-  printf "no\n"
-else
+if conftest ; then
   printf "yes\n"
   printf "#define HAVE_MAKEDEV 1\n" >> config.h
+else
+  printf "no\n"
 fi
 
 printf "Checking for link, symlink and readlink ... "
@@ -1620,12 +1621,12 @@ int main(void)
   return 0;
 }
 !
-if ! conftest ; then
-  printf "no\n"
-else
+if conftest ; then
   printf "yes\n"
   printf "#define HAVE_SYMLINK 1\n" >> config.h
   have_unistd=y
+else
+  printf "no\n"
 fi
 
 printf "Checking for POSIX mkdir ... "
@@ -1643,11 +1644,11 @@ int main(void)
   return 0;
 }
 !
-if ! conftest ; then
-  printf "no\n"
-else
+if conftest ; then
   printf "yes\n"
   printf "#define HAVE_MKDIR 1\n" >> config.h
+else
+  printf "no\n"
 fi
 
 printf "Checking for mknod ... "
@@ -1665,12 +1666,12 @@ int main(void)
   return 0;
 }
 !
-if ! conftest ; then
-  printf "no\n"
-else
+if conftest ; then
   printf "yes\n"
   printf "#define HAVE_MKNOD 1\n" >> config.h
   have_unistd=y
+else
+  printf "no\n"
 fi
 
 #

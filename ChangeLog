@@ -1,5 +1,10 @@
 2014-03-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	* configure: changed numerous "if ! conftest" tests to "if conftest",
+	swapping around the consequent and alternative clauses.
+
+2014-03-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	* configure (conftest, conftest_o): New functions
 	Use functions throughout tests instead of repeated code for removing
 	target, invoking make with redirection and testing for existence of
