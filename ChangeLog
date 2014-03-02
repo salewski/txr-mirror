@@ -1,3 +1,11 @@
+2014-03-02  Kaz Kylheku  <kaz@kylheku.com>
+
+	Bugfix: catenated stream objects not hooked into garbage collector,
+	causing premature collection of the catenated stream list.
+
+	* stream.c (cat_mark): new function.
+	(cat_stream_ops): use cat_mark for gc mark function.
+
 2014-03-01  Kaz Kylheku  <kaz@kylheku.com>
 
 	New quasiquote idea: let's have two quasiquote macros sharing one

@@ -2336,11 +2336,17 @@ static val cat_get_prop(val stream, val ind)
   return nil;
 }
 
+static void cat_mark(val stream)
+{
+  val obj = (val) stream->co.handle;
+  gc_mark(obj);
+}
+
 static struct strm_ops cat_stream_ops = {
   { eq,
     cat_stream_print,
     cobj_destroy_stub_op,
-    cobj_mark_op,
+    cat_mark,
     cobj_hash_op },
   0, /* put_string */
   0, /*_put_char */
