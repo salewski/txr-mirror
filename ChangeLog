@@ -1,5 +1,40 @@
 2014-03-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	New quasiquote idea: let's have two quasiquote macros sharing one
+	expander. One macro based on sys:qquote, sys:unquote and sys:splice,
+	and the other based on qquote, unquote and splice in the user package.
+	The read syntax puts out the sys: one.
+
+	* eval.c (expand_qquote): Takes three additional arguments: the
+	qquote, unquote and splice symbols to recognize.
+	The invalid splice diagnostic is adjusted based on which backquote
+	we are expanding.
+	(me_qquote): Look at the symbol in the first position of the form
+	and then expand either the internal quasiquote macro or the public one,
+	passing the right symbols into expand_qquote.
+	(eval_init): Register error-throwing stub functions
+	for the sys_qquote_s, sys_unquote_s and sys_splice_s symbols.
+	Register a macro for sys_qquote_s.
+
+	* lib.c (sys_qquote_s, sys_unquote_s, sys_splice_s): New symbol
+	variables.
+	(obj_init): Initialize new variables. Change qquote_s,
+	unquote_s and splice_s to user package.
+	(obj_print, obj_pprint): Convert only sys_qquote_s,
+	sys_unquote_s and sys_splice_s to the read syntax.
+	The quote_s, unquote_s and splice_s symbols are not
+	treated specially.
+
+	* lib.h (sys_qquote_s, sys_unquote_s, sys_splice_s): Declared.
+
+	* parser.y (n_expr): Use sys_qquote_s, sys_unquote_s and
+	sys_splice_s rather than qquote_s, unquote_s and splice_s.
+	(unquotes_occur): Likewise.
+
+	* txr.1: Documented.
+
+2014-03-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	* configure: changed numerous "if ! conftest" tests to "if conftest",
 	swapping around the consequent and alternative clauses.
 

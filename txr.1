@@ -4893,9 +4893,10 @@ value of 'a is the symbol a itself, whereas the value of a is the value
 of the variable a.
 
 Note that TXR Lisp does not have a distinct quote and backquote read syntax.
-There is only one quote, which supports unquoting. However, there is an
-underlying expression syntax which distinguishes them: see the documentation
-quote operator and sys:qquote macro operator.
+There is only one quote, which supports unquoting. However, this is true
+only of the read syntax. There is a quote special operator, and
+a qquote macro. The quote read syntax translates either to the quote
+operator, or to an inernal version of qquote.
 
 A quoted form which contains no unquotes codifies an ordinary quote.
 
@@ -13023,12 +13024,12 @@ Example:
 
   (quote (+ 2 2)) ;; yields (+ 2 2), not 4.
 
-.SS Macro sys:qquote
+.SS Macro qquote
 
 .TP
 Syntax:
 
-  (sys:qquote <form>)
+  (qquote <form>)
 
 .TP
 Description:
@@ -13060,48 +13061,71 @@ when <val-x> is treated as a Lisp expression and evaluated.
 .TP
 Examples:
 
-  (sys:qquote a) -> a
+  (qquote a) -> a
 
-  (sys:qquote (a b c)) -> (a b c)
+  (qquote (a b c)) -> (a b c)
 
-  (sys:qquote (1 2 3 (sys:unquote (+ 2 2) (+ 2 3)))) -> (1 2 3 4 (+ 2 3))
+  (qquote (1 2 3 (unquote (+ 2 2) (+ 2 3)))) -> (1 2 3 4 (+ 2 3))
 
-  (quote (sys:unquote (+ 2 2))) -> 4
+  (qquote (unquote (+ 2 2))) -> 4
 
 In the second-to-last example, the 1 2 3 and the (+ 2 3) were taken verbatim.
 But the (unquote (+ 2 2)) operator caused the evaluation of (+ 2 2) and the
 substitution of the resulting value.
 
 The last example shows that <form> can itself be an unquote operator.
-However, note: (sys:quote (sys:splice <form>)) is not valid.
+However, note: (quote (splice <form>)) is not valid.
 
 Note: a way to understand the nesting behavior is a model of quasi-quote
 expansion which recursively compiles any nested quasi quotes first, and then
 treats the result of their expansion. For instance, in the processing of
-(sys:qquote (sys:qquote (sys:unquote (sys:unquote x)))), the quote operator
-finds the internal (sys:qquote ...) and compiles it to code. During that recursive
-compilation, the syntax (sys:unquote (sys:unquote x)) is encountered.
+(qquote (qquote (unquote (unquote x)))), the quote operator
+finds the internal (qquote ...) and compiles it to code. During that recursive
+compilation, the syntax (unquote (unquote x)) is encountered.
 The inner quote processes the outer unquote which belongs to it,
 and the (unquote x) becomes material embedded in the compilation,
 which will then be found when the outer quasiquote takes the inner
 compilation and processes its interior.
 
-Note: qquote, and related symbols, are in the system namespace,
-and so carry the sys: package prefix.  This is for hygiene. User code which
-uses the quasiquote syntax can use symbols like unquote without encountering
-problems. For instance the user who is not aware of the internal symbols
-might write '(foo unquote bar) which evaluates to the expected (foo unquote bar).
-Since unquote is not sys:unquote, this is not interpreted
-as '(foo .  (unquote bar)) which corresponds to '(foo . ,bar).  
+.TP
+Dialect note:
 
-.SS Operator sys:unquote
+In Lisp dialects which have a published syntax, there is the expectation
+that the quasiquote read syntax corresponds to it. That is to say, that
+for instance 1(a b ,c) is translated to (qquote b (unquote c)).
+
+In TXR Lisp, this is not true! Although '(b b ,c) is translated to a
+quasiquoting macro, it is an internal one, not based on the public qquote,
+unquote and splice symbols.
+
+This idea exists for hygiene. The quasiquote read syntax is not confused
+by the presence of the symbols qquote, unquote or splice in the template,
+since it doesn't treat them specially.
+
+This also allows programmers to use the quasiquote read syntax to construct
+quasiquote macros. For instance
+
+  '(qquote (unquote ,x))
+
+does not mean '',x.  To the quasiquote reader, the qquote and unquote symbols
+mean nothing special, and so this syntax simply means that if the value of x is
+foo, the result will be (qquote (unquote foo)).
+
+The form's expansion is actually this:
+
+  (sys:qquote (qquote (unquote (sys:unquote x))))
+
+the sys:qquote macro recognizes sys:unquote embedded in the form, and 
+the other symbols not in the sys: package are just static template material.
+
+.SS Operator unquote
 
 .TP
 Syntax:
 
-  (sys:qquote (... (sys:unquote <form>) ...))
+  (qquote (... (unquote <form>) ...))
 
-  (sys:qquote (sys:unquote <form>))
+  (qquote (unquote <form>))
 
 .TP
 Description:
@@ -13111,17 +13135,17 @@ binding in the global environment. It is a special syntax that is recognized
 within a qquote form, to indicate forms within the quasiquote which are to be
 evaluated and insertd into the resulting structure.
 
-The variant (sys:qquote (sys:unquote <form>)) is equivalent to <form>: the
+The variant (qquote (unquote <form>)) is equivalent to <form>: the
 qquote and unquote "cancel out".
 
 Nesting of qquotes and unquotes is explained in the qquote operator.
 
-.SS Operator sys:splice
+.SS Operator splice
 
 .TP
 Syntax:
 
-  (sys:qquote (... (sys:splice <form>) ...))
+  (qquote (... (splice <form>) ...))
 
 .TP
 Description:
@@ -13131,15 +13155,15 @@ binding in the global environment. It is a special syntax that is recognized
 within a qquote form, to indicate forms within the quasiquote which are to be
 evaluated and inserted into the resulting structure.
 
-The variant (sys:qquote (sys:unquote <form>)) is not permitted and raises
+The variant (qquote (unquote <form>)) is not permitted and raises
 an exception if evaluated. The splice syntax must occur within a list,
 and not in the dotted position.
 
-The splice form differs from unquote in that (sys:splice <form>)
+The splice form differs from unquote in that (splice <form>)
 requires that <form> must evaluate to a list. That list is 
 integrated into the surrounding list. 
 
-Nesting of qquotes and unquotes is explained in the sys:qquote operator.
+Nesting of qquotes and unquotes is explained in the qquote operator.
 
 .SH MACROS
 

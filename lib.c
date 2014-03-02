@@ -75,6 +75,7 @@ val env_s, bignum_s, float_s;
 val var_s, expr_s, regex_s, chset_s, set_s, cset_s, wild_s, oneplus_s;
 val nongreedy_s, compiled_regex_s;
 val quote_s, qquote_s, unquote_s, splice_s;
+val sys_qquote_s, sys_unquote_s, sys_splice_s;
 val zeroplus_s, optional_s, compl_s, compound_s, or_s, and_s, quasi_s;
 val skip_s, trailer_s, block_s, next_s, freeform_s, fail_s, accept_s;
 val all_s, some_s, none_s, maybe_s, cases_s, collect_s, until_s, coll_s;
@@ -5139,9 +5140,12 @@ static void obj_init(void)
   nongreedy_s = intern(lit("ng0+"), user_package);
   compiled_regex_s = intern(lit("compiled-regex"), system_package);
   quote_s = intern(lit("quote"), user_package);
-  qquote_s = intern(lit("qquote"), system_package);
-  unquote_s = intern(lit("unquote"), system_package);
-  splice_s = intern(lit("splice"), system_package);
+  qquote_s = intern(lit("qquote"), user_package);
+  unquote_s = intern(lit("unquote"), user_package);
+  splice_s = intern(lit("splice"), user_package);
+  sys_qquote_s = intern(lit("qquote"), system_package);
+  sys_unquote_s = intern(lit("unquote"), system_package);
+  sys_splice_s = intern(lit("splice"), system_package);
   chset_s = intern(lit("chset"), system_package);
   set_s = intern(lit("set"), user_package);
   cset_s = intern(lit("cset"), user_package);
@@ -5229,13 +5233,13 @@ val obj_print(val obj, val out)
     {
       val sym = car(obj);
 
-      if (sym == quote_s || sym == qquote_s) {
+      if (sym == quote_s || sym == sys_qquote_s) {
         put_char(chr('\''), out);
         obj_print(second(obj), out);
-      } else if (sym == unquote_s) {
+      } else if (sym == sys_unquote_s) {
         put_char(chr(','), out);
         obj_print(second(obj), out);
-      } else if (sym == splice_s) {
+      } else if (sym == sys_splice_s) {
         put_string(lit(",*"), out);
         obj_print(second(obj), out);
       } else if (sym == vector_lit_s) {
@@ -5415,13 +5419,13 @@ val obj_pprint(val obj, val out)
     {
       val sym = car(obj);
 
-      if (sym == quote_s || sym == qquote_s) {
+      if (sym == quote_s || sym == sys_qquote_s) {
         put_char(chr('\''), out);
         obj_pprint(second(obj), out);
-      } else if (sym == unquote_s) {
+      } else if (sym == sys_unquote_s) {
         put_char(chr(','), out);
         obj_pprint(second(obj), out);
-      } else if (sym == splice_s) {
+      } else if (sym == sys_splice_s) {
         put_string(lit(",*"), out);
         obj_pprint(second(obj), out);
       } else if (sym == vector_lit_s) {

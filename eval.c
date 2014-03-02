@@ -2007,7 +2007,8 @@ static val expand_cond_pairs(val form, val menv)
   }
 }
 
-static val expand_qquote(val qquoted_form, val menv)
+static val expand_qquote(val qquoted_form, val menv,
+                         val qq, val unq, val spl)
 {
   if (nilp(qquoted_form)) {
     return nil;
@@ -2016,44 +2017,50 @@ static val expand_qquote(val qquoted_form, val menv)
   } else {
     val sym = car(qquoted_form);
 
-    if (sym == splice_s) {
-      eval_error(qquoted_form, lit("',*~s syntax is invalid"),
-                 second(qquoted_form), nao);
-    } else if (sym == unquote_s) {
+    if (sym == spl) {
+      val error_msg = if3(spl == sys_splice_s,
+                          lit("the splice ,*~s cannot occur as an atom "
+                              "or in the dotted position of a list"),
+                          lit("(splice ~s) cannot occur as an atom "
+                              "or in the dotted position of a list"));
+        eval_error(qquoted_form, error_msg,
+                   second(qquoted_form), nao);
+    } else if (sym == unq) {
       return expand(second(qquoted_form), menv);
-    } else if (sym == qquote_s) {
+    } else if (sym == qq) {
       return rlcp(expand_qquote(expand_qquote(second(qquoted_form),
-                                              menv),
-                                menv), 
+                                              menv, qq, unq, spl),
+                                menv, qq, unq, spl), 
                   qquoted_form);
     } else if (sym == hash_lit_s) {
-      val args = expand_qquote(second(qquoted_form), menv);
-      val pairs = expand_qquote(rest(rest(qquoted_form)), menv);
+      val args = expand_qquote(second(qquoted_form), menv, qq, unq, spl);
+      val pairs = expand_qquote(rest(rest(qquoted_form)), menv, qq, unq, spl);
       return rlcp(list(hash_construct_s, args, pairs, nao), qquoted_form);
     } else if (sym == vector_lit_s) {
-      val args = expand_qquote(second(qquoted_form), menv);
+      val args = expand_qquote(second(qquoted_form), menv, qq, unq, spl);
       return rlcp(list(vector_list_s, args, nao), qquoted_form);
     } else {
       val f = sym;
       val r = cdr(qquoted_form);
       val f_ex;
-      val r_ex = expand_qquote(r, menv);
+      val r_ex = expand_qquote(r, menv, qq, unq, spl);
 
       if (consp(f)) {
         val qsym = car(f);
-        if (qsym == splice_s) {
+        if (qsym == spl) {
           f_ex = expand(second(f), menv);
-        } else if (qsym == unquote_s) {
+        } else if (qsym == unq) {
           f_ex = cons(list_s, cons(expand(second(f), menv), nil));
-        } else if (qsym == qquote_s) {
+        } else if (qsym == qq) {
           f_ex = cons(list_s, cons(expand_qquote(expand_qquote(second(f),
-                                                               menv),
-                                                 menv), nil));
+                                                               menv, qq,
+                                                               unq, spl),
+                                                 menv, qq, unq, spl), nil));
         } else {
-          f_ex = cons(list_s, cons(expand_qquote(f, menv), nil));
+          f_ex = cons(list_s, cons(expand_qquote(f, menv, qq, unq, spl), nil));
         }
       } else {
-        f_ex = cons(list_s, cons(expand_qquote(f, menv), nil));
+        f_ex = cons(list_s, cons(expand_qquote(f, menv, qq, unq, spl), nil));
       }
 
       if (nilp(r_ex)) {
@@ -2061,7 +2068,7 @@ static val expand_qquote(val qquoted_form, val menv)
       } else if (atom(r_ex)) {
         return rlcp(cons(append_s, cons(f_ex, cons(r_ex, nil))), qquoted_form);
       } else {
-        if (consp(r) && car(r) == unquote_s)
+        if (consp(r) && car(r) == unq)
           r_ex = cons(r_ex, nil);
         else if (car(r_ex) == append_s)
           r_ex = cdr(r_ex);
@@ -2076,7 +2083,12 @@ static val expand_qquote(val qquoted_form, val menv)
 
 static val me_qquote(val form, val menv)
 {
-  return expand_qquote(second(form), menv);
+  if (first(form) == sys_qquote_s)
+    return expand_qquote(second(form), menv,
+                         sys_qquote_s, sys_unquote_s, sys_splice_s);
+  return expand_qquote(second(form), menv,
+                       qquote_s, unquote_s, splice_s);
+                       
 }
 
 static val expand_vars(val vars, val menv, val form,
@@ -3062,8 +3074,11 @@ void eval_init(void)
 
   reg_op(quote_s, op_quote);
   reg_op(qquote_s, op_qquote_error);
+  reg_op(sys_qquote_s, op_qquote_error);
   reg_op(unquote_s, op_unquote_error);
+  reg_op(sys_unquote_s, op_unquote_error);
   reg_op(splice_s, op_unquote_error);
+  reg_op(sys_splice_s, op_unquote_error);
   reg_op(progn_s, op_progn);
   reg_op(prog1_s, op_prog1);
   reg_op(let_s, op_let);
@@ -3112,6 +3127,7 @@ void eval_init(void)
   reg_mac(op_s, me_op);
   reg_mac(do_s, me_op);
   reg_mac(qquote_s, me_qquote);
+  reg_mac(sys_qquote_s, me_qquote);
 
   reg_fun(cons_s, func_n2(cons));
   reg_fun(intern(lit("make-lazy-cons"), user_package), func_n1(make_lazy_cons));
