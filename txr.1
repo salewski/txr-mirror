@@ -5096,7 +5096,8 @@ Examples:
 
   [c 1]         ;; indexes into vector #(5 6 7) to yield 6
 
-.TP Dialect Note:
+.TP
+Dialect Note:
 
 In some other Lisp dialects, the improper list syntax is not supported;
 a function called apply (or similar) must be used for application even if
@@ -7999,10 +8000,13 @@ the string returned by get-line, and whose cdr contains the lazy function.
 
 .SS Function generate
 
-.TP Syntax:
+.TP
+Syntax:
+
   (generate <while-fun> <gen-fun>)
 
-.TP Description:
+.TP
+Description:
 
 The generate function produces a lazy list which dynamically produces items
 according to the following logic.
