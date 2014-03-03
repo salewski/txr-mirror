@@ -55,7 +55,6 @@ static val define_transform(val define_form);
 static val lit_char_helper(val litchars);
 static val optimize_text(val text_form);
 static val unquotes_occur(val quoted_form, int level);
-static val choose_quote(val quoted_form);
 static val expand_meta(val form, val menv);
 static wchar_t char_from_name(const wchar_t *name);
 
@@ -107,7 +106,7 @@ static val parsed_spec;
 %right OUTPUT REPEAT REP FIRST LAST EMPTY DEFINE
 %right SPACE TEXT NUMBER
 %nonassoc '[' ']' '(' ')'
-%left '-' ',' '\'' SPLICE '@'
+%left '-' ',' '\'' '^' SPLICE '@'
 %left '|' '/'
 %left '&' 
 %right '~' '*' '?' '+' '%'
@@ -753,18 +752,10 @@ n_expr : SYMTOK                 { $$ = sym_helper($1, t); }
        | chrlit                 { $$ = $1; }
        | strlit                 { $$ = $1; }
        | quasilit               { $$ = $1; }
-       | ',' n_expr             { val expr = $2;
-                                  if (consp(expr) && car(expr) == sys_qquote_s)
-                                    expr = cons(quote_s, rest(expr));
-                                  $$ = rlcp(list(sys_unquote_s, expr, nao),
-				            $2); }
-       | '\'' n_expr            { $$ = rlcp(list(choose_quote($2),
-                                                 $2, nao), $2); }
-       | SPLICE n_expr          { val expr = $2;
-                                  if (consp(expr) && car(expr) == sys_qquote_s)
-                                    expr = cons(quote_s, rest(expr));
-                                  $$ = rlcp(list(sys_splice_s, expr, nao),
-				            $2); }
+       | '\'' n_expr            { $$ = rlcp(list(quote_s, $2, nao), $2); }
+       | '^' n_expr             { $$ = rlcp(list(sys_qquote_s, $2, nao), $2); }
+       | ',' n_expr             { $$ = rlcp(list(sys_unquote_s, $2, nao), $2); }
+       | SPLICE n_expr          { $$ = rlcp(list(sys_splice_s, $2, nao), $2); }
        ;
 
 regex : '/' regexpr '/'         { $$ = cons(regex_s, $2); end_of_regex();
@@ -1121,11 +1112,6 @@ static val unquotes_occur(val quoted_form, int level)
     return or2(unquotes_occur(sym, level),
                unquotes_occur(cdr(quoted_form), level));
   }
-}
-
-static val choose_quote(val quoted_form)
-{
-  return unquotes_occur(quoted_form, 0) ? sys_qquote_s : quote_s;
 }
 
 static val expand_meta(val form, val menv)

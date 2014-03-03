@@ -1,3 +1,35 @@
+2014-03-03  Kaz Kylheku  <kaz@kylheku.com>
+
+	* parser.l: Allowing ^ to be a quote character, and adjusting definition
+	of identifiers to rule this out from being the first character of a
+	symbol which has no prefix. Recognize the ^ character as a token in the
+	NESTED state.
+
+	* lib.c (obj_print, obj_pprint): Render sys:qquote as ^.
+
+	* parser.y (choose_quote): Function removed.
+	(n_expr): Recognize '^' as quasiquote. Removed all the "smart quote"
+	hacks that try to make quote behave as quote or quasiquote, or try to
+	cancel out unquotes and quotes.
+
+	* tests/009/json.txr: Fixed to ^ quasiquote.
+
+	* tests/010/reghash.txr: Likewise.
+
+	* tests/011/macros-2.txr: Likewise.
+
+	* tests/011/mandel.txr: Likewise.
+
+	* tests/011/special-1.txr: Likewise.
+
+	* txr.1: Updated docs.
+
+	* genvim.txr: Revamped definitions for txr_ident and txl_ident so that
+	unqualified identifiers cannot start with # or ^, but ones with @ or :
+	in front can start with these characters.
+
+	* txr.vim: Regenerated.
+
 2014-03-02  Kaz Kylheku  <kaz@kylheku.com>
 
 	* Makefile (lex.yy.c): Remove lex.yy.c before trying to regenerate it.

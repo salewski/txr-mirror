@@ -66,7 +66,7 @@
                 @(bind pair (p e))@\
                 @(until)}@\
              @(end)}@(ws)@\
-  @(bind v @(progn '#H((:equal-based) ,*pair)))@\
+  @(bind v @(progn ^#H((:equal-based) ,*pair)))@\
 @(end)
 @;
 @; Recognize an array.
@@ -74,7 +74,7 @@
 @(define array (v))@\
   @(local e)@\
   @(ws)[@(ws)@(coll :gap 0 :vars (e))@(value e)@/,?/@(until)]@(end)]@(ws)@\
-  @(bind v @(progn '#(,*e)))@\
+  @(bind v @(progn ^#(,*e)))@\
 @(end)
 @;
 @; Now parse the input as a JSON object

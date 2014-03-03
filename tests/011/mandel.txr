@@ -13,9 +13,9 @@
     (defvar y-offset (+ y-centre (* 0.5 pixel-size (+ j-max 1))))
  
     ;; complex number library
-    (defmacro cplx (x y) '(cons ,x ,y))
-    (defmacro re (c) '(car ,c))
-    (defmacro im (c) '(cdr ,c))
+    (defmacro cplx (x y) ^(cons ,x ,y))
+    (defmacro re (c) ^(car ,c))
+    (defmacro im (c) ^(cdr ,c))
 
     (defsymacro c0 (macro-time (cplx 0 0)))
 
@@ -23,9 +23,9 @@
       (defun with-cplx-expand (specs body)
         (tree-case specs
            (((re im expr) . rest) 
-            '(tree-bind (,re . ,im) ,expr ,(with-cplx-expand rest body)))
+            ^(tree-bind (,re . ,im) ,expr ,(with-cplx-expand rest body)))
            (() (tree-case body
-                 ((a b . rest) '(progn ,a ,b ,*rest))
+                 ((a b . rest) ^(progn ,a ,b ,*rest))
                  ((a) a)
                  (x (error "with-cplx: invalid body ~s" body))))
            (x (error "with-cplx: bad args ~s" x)))))

@@ -158,19 +158,20 @@ FLODOT  {SGN}?{DIG}+[.]
 XNUM    #x{SGN}?{XDIG}+
 ONUM    #o{SGN}?[0-7]+
 BNUM    #b{SGN}?[0-1]+
-BSCHR   [a-zA-Z0-9!$%&*+\-<=>?\\^_~]
-NSCHR   [a-zA-Z0-9!$%&*+\-<=>?\\^_~/]
-ID_END  [^a-zA-Z0-9!$%&*+\-<=>?\\^_~/]
+BSCHR   [a-zA-Z0-9!$%&*+\-<=>?\\_~]
+NSCHR   [a-zA-Z0-9!$%&*+\-<=>?\\_~/]
+ID_END  [^a-zA-Z0-9!$%&*+\-<=>?\\_~/]
+EXTRA   [#^]
 TOK     {SYM}
-BT0     {BSCHR}({BSCHR}|#)*
-BT1     @({BSCHR}|#)+
-BT2     ({BSCHR}|#)+
+BT0     {BSCHR}({BSCHR}|{EXTRA})*
+BT1     @({BSCHR}|{EXTRA})+
+BT2     ({BSCHR}|{EXTRA})+
 BTREG   (({BT0}|{BT1})?:{BT2}|({BT0}|{BT1})(:{BT2})?|:)
 BTKEY   @?:{BT2}?
 BTOK    {BTREG}|{BTKEY}
-NT0     {NSCHR}({NSCHR}|#)*
-NT1     @({NSCHR}|#)+
-NT2     ({NSCHR}|#)+
+NT0     {NSCHR}({NSCHR}|{EXTRA})*
+NT1     @({NSCHR}|{EXTRA})+
+NT2     ({NSCHR}|{EXTRA})+
 NTREG   (({NT0}|{NT1})?:{NT2}|({NT0}|{NT1})(:{NT2})?|:)
 NTKEY   @?:{NT2}?
 NTOK    {NTREG}|{NTKEY}
@@ -510,7 +511,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return SPLICE;
 }
 
-<NESTED>[,'] {
+<NESTED>[,'^] {
   yylval.chr = yytext[0];
   return yytext[0];
 }

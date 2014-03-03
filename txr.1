@@ -4873,66 +4873,68 @@ In no other circumstances is nil printed as (), or a symbol as (. sym).
 
 symbol is followed by a symbol.
 
-.SS Quoting/Unquoting
+.SS Quote and Quasiquote
 
-.IP 'form
+.IP '<expr>
 
-The quote character in front of a form is used for suppressing evaluation,
+The quote character in front of an expression is used for suppressing evaluation,
 which is useful for forms that evaluate to something other than themselves.
 For instance if '(+ 2 2) is evaluated, the value is the three-element list
 (+ 2 2), wheras if (+ 2 2) is evaluated, the value is 4. Similarly, the
 value of 'a is the symbol a itself, whereas the value of a is the value
 of the variable a.
 
-Note that TXR Lisp does not have a distinct quote and backquote read syntax.
-There is only one quote, which supports unquoting. However, this is true
-only of the read syntax. There is a quote special operator, and
-a qquote macro. The quote read syntax translates either to the quote
-operator, or to an inernal version of qquote.
+.IP ^<qq-template>
 
-A quoted form which contains no unquotes codifies an ordinary quote.
+The caret in front of an expression is a quasiquote. A quasiquote is like
+a quote, but with the possibility of substitution of material.
 
-A quoted form which contains unquotes expresses a quasiquote. (This should not
-be confused with a string quasiliteral, although it is a related concept.)
+Under a quasiquote, form is considered to be a quasiquote template. The template
+is considered to be a literal structure, except that it may contain
+the notations ,<expr> and ,*<expr>  which denote non-constant parts.
 
-.IP ,form
+A quasiquote gets translated into code which, when evaluated, constructs
+the structure implied by <qq-template>, taking into account the unquotes
+and splices.
 
-The comma character is used within a quoted list to denote an unquote.  Wheras
+A quasiquote also processes nested quasiquotes specially.
+
+If <qq-template> does not contain any unquotes or splices (which match its
+level of nesting), or is simply an atom, then ^<qq-template> is equivalent to
+'<qq-template>: in other words, it is like an ordinary quote.  For instance ^(a
+b ^(c ,d)) is equivalent to '(a b ^(c ,d)).  Although there is an unquote ,d it
+belongs to the inner quasiquote ^(c ,d), and the outer quasiquote does not have
+any unquotes of its own, making it equivalent to a quote.
+
+Dialect note: in Common Lisp and Scheme, ^form is written `form, and
+quasiquotes are also informally known as backquotes.  In TXR, the backquote is
+used for quasi string literals already.  Moreover, the caret is more visually
+distinct from the backquote, making it somewhat easier to tell apart generated
+code from its surroundings.
+
+.IP ,<expr>
+
+The comma character is used within a <qq-template> to denote an unquote.  Whereas
 the quote suppresses evaluation, the comma introduces an exception: an element
-of a form which is evaluated. For example, list '(a b c ,(+ 2 2)
+of a form which is evaluated. For example, list ^(a b c ,(+ 2 2)
 (+ 2 2)) is the list (a b c 4 (+ 2 2)).  Everything
-in the quote stands for itself, except for the ,(+ 2 2) which is evaluated.
-The presence of ,(+ 2 2) in the quoted list turns it into a quasiquote.
+in the quasiquote stands for itself, except for the ,(+ 2 2) which is evaluated.
 
-.IP ,*form
+Note: if a variable is called *x*, then the syntax ,*x* means ,* x*: splice
+the value of x*. In this situation, whitespace between the comma and the
+variable name should be used: , *x*.
 
-The comma-star operator is used within a quoted list to denote a splicing unquote.
-Wheras the quote suppresses evaluation, the comma introduces an exception: 
-the form which follows ,* must evaluate to a list. That list is spliced into
-the quoted list. For example: '(a b c ,*(list (+ 3 3) (+ 4 4) d)) evaluates
-to (a b c 6 8 d).  The expression (list (+ 3 3) (+ 4 4)) is evaluated
-to produce the list (6 8), and this list is spliced into the quoted template.
+.IP ,*<expr>
 
-.IP ,'form
+The comma-star operator is used within quasiquote list to denote a splicing unquote.
+The form which follows ,* must evaluate to a list. That list is spliced into
+the structure which the quasiquote denotes. For example: '(a b c ,*(list
+(+ 3 3) (+ 4 4) d)) evaluates to (a b c 6 8 d).  The expression (list (+ 3 3)
+(+ 4 4)) is evaluated to produce the list (6 8), and this list is spliced into
+the quoted template.
 
-The comma-quote combination has a special meaning: the quote always
-behaves as a regular quote and not a quasiquote, even if form contains
-unquotes. Therefore, it does not "capture" these unquotes: they cannot
-"belong" to this quote.  The comma and quote "cancel out", so the only effect
-of comma-quote is to add one level of unquoting.  So for instance, whereas 
-in '(a b c '(,d)), the subsitution of d belongs to the inner quote (it is
-unquoted by the leftmost comma which belongs to the innermost quote) by
-contrast, in '(a b c '(,',d)) the d is now one comma removed from the leftmost
-comma and thus the substitution of d belongs to the outer quote. 
-In other dialects of Lisp, this would be written `(a b c `(,',d)), making it
-explicit which kind of quote is being specified. TXR Lisp works out which
-kind of quote to use internally.
-
-.IP ,*'form
-
-The comma-splice form is analogous to comma-quote (see above).  Like in the
-,' combination, in the ,*' combination, the quote behaves as a regular quote
-and not a quasiquote.
+Dialect note: in other Lisp dialects, the equivalent syntax is usually ,@
+(comma at). The @ character already has an assigned meaning, so * is used.
 
 .SS Quasiquoting non-List Objects
 
@@ -4940,19 +4942,31 @@ Quasiquoting is supported over hash table and vector literals (see Vectors
 and Hashes below).  A hash table or vector literal can be quoted, like any
 object, for instance:
 
-  '#(1 2 3) ; value is #(1 2 3)
+  '#(1 2 3)
 
-If unquotes occur in the vector, it is a quasivector.
+The #(1 2 3) literal is turned into a vector atom right in the TXR parser,
+and this atom is being quoted: this is (quote <atom>) syntactically,
+which evaluates to <atom>.
+
+When a vector is quasi-quoted, this is a case of ^<atom>, which
+evaluates to <atom>.
+
+  ^#(1 2 3)
+
+If unquotes occur in the quasi-quoted vector, it is a quasivector.
 
   (let ((a 42))
-    '#(1 ,a 3)) ; value is #(1 42 3)
+    ^#(1 ,a 3)) ; value is #(1 42 3)
+
+In this situation, the ^#(...) notation produces code which constructs
+a vector.
 
 The vector in the following example is also a quasivector. It contains
 unquotes, and is though the quote is not directly applied to it,
 it is surrounded in a quote.
 
   (let ((a 42))
-    '(a b c #(d ,a))) ; value is (a b c #(d 42))
+    ^(a b c #(d ,a))) ; value is (a b c #(d 42))
 
 Hash table literals have two parts: the list of hash construction
 arguments and the key-value pairs. For instance:
@@ -4960,20 +4974,20 @@ arguments and the key-value pairs. For instance:
    #H((:equal-based) (a 1) (b 2))
 
 where (:equal-based) is the list of arguments and the pairs are (a 1) and (b
-2).  In quasiquoting, the arguments and pairs are treated as separate syntax;
-it is not one big list.  So the following is not a possible way
-to express the above hash:
+2). Hash literals may be quasiquoted.  In quasiquoting, the arguments and pairs
+are treated as separate syntax; it is not one big list.  So the following is
+not a possible way to express the above hash:
 
   ;; not supported: splicing across the entire syntax
   (let ((hash-syntax '((:equal-based) (a 1) (b 2))))
-    '#H(,*hash-syntax))
+    ^#H(,*hash-syntax))
 
 This is correct:
 
   ;; fine: splicing hash arguments and contents separatly
   (let ((hash-args '(:equal-based))
         (hash-contents '((a 1) (b 2))))
-    '#H(,hash-args ,*hash-contents))
+    ^#H(,hash-args ,*hash-contents))
 
 .SS Vectors
 
@@ -4992,19 +5006,6 @@ keywords as are used when calling the function hash to construct
 a hash table. Allowed keywords are: :equal-based, :weak-keys, :weak-values.
 An empty list can be specified as nil or (), which defaults to a
 hash table basd on the eq function, with no weak semantics.
-
-.SS Nested Quotes
-
-Quotes can be nested.  What if it is necessary to unquote something in the
-nested list? The following will not work in TXR Lisp like it does in
-Common Lisp or Scheme: '(1 2 3 '(4 5 6 ,(+ 1 2))).  This is because the quote
-is also "active" as a quasiquote, and so the ,(+ 1 2) belongs to the inner
-quote, which protects it from evaluation. To get the (+ 1 2) value "through"
-to the inner quote, the unquote syntax must also be nested using multiple
-commas, like this: '(1 2 3 '(4 5 6 ,',(+ 1 2))). The leftmost comma goes
-with the innermost quote.  The quote between the commas protects the (+ 1 2)
-from repeated evaluations: the two unquotes call for two evaluations, but
-we only want (+ 1 2) to be evaluated once.
 
 .SS The .. notation
 
@@ -8077,7 +8078,7 @@ an instance of the gen operator, like this:
 
   (defmacro gun (expr)
     (let ((var (gensym)))
-      '(let (,var)
+      ^(let (,var)
          (gen (set ,var ,expr)
               ,var))))
 
@@ -8090,7 +8091,7 @@ In turn, gen can be implemented as a macro expanding to some lambda
 functions which are passed to the generate function:
 
   (defmacro gen (while-expr produce-expr)
-    '(generate (lambda () ,while-expr) (lambda () ,produce-expr)))
+    ^(generate (lambda () ,while-expr) (lambda () ,produce-expr)))
 
 Note 2: GEN can be considered as an acronym for Generate, testing Expression
 before Next item, whereas GUN stands for Generate Until Null.
@@ -13131,9 +13132,9 @@ Dialect note:
 
 In Lisp dialects which have a published syntax, there is the expectation
 that the quasiquote read syntax corresponds to it. That is to say, that
-for instance 1(a b ,c) is translated to (qquote b (unquote c)).
+for instance ^(a b ,c) is translated to (qquote b (unquote c)).
 
-In TXR Lisp, this is not true! Although '(b b ,c) is translated to a
+In TXR Lisp, this is not true! Although ^(b b ,c) is translated to a
 quasiquoting macro, it is an internal one, not based on the public qquote,
 unquote and splice symbols.
 
@@ -13144,9 +13145,9 @@ since it doesn't treat them specially.
 This also allows programmers to use the quasiquote read syntax to construct
 quasiquote macros. For instance
 
-  '(qquote (unquote ,x))
+  ^(qquote (unquote ,x))
 
-does not mean '',x.  To the quasiquote reader, the qquote and unquote symbols
+does not mean ^^,x.  To the quasiquote reader, the qquote and unquote symbols
 mean nothing special, and so this syntax simply means that if the value of x is
 foo, the result will be (qquote (unquote foo)).
 
@@ -13334,7 +13335,7 @@ Examples:
 
    (defmacro swap (a b)
      (let ((temp (gensym)))
-       '(let ((,temp ,a))
+       ^(let ((,temp ,a))
           (set ,a ,b)
           (set ,b ,temp))))
 
@@ -13349,7 +13350,7 @@ Examples:
 
    (defmacro dolist ((var list : result) . body)
      (let ((i (my-gensym)))
-       '(for ((i ,list)) (i ,result) ((set i (cdr i)))
+       ^(for ((i ,list)) (i ,result) ((set i (cdr i)))
           (let ((,var (car i)))
             ,*body))))
 
@@ -13609,7 +13610,7 @@ Example:
      (tree-case obj
        (() ())      ;; the empty list is just returned
        ((a) obj)    ;; one-element list just returned (unnecessary case)
-       ((a . b) '(,*(tb-reverse b) ,a)) ;; car/cdr recursion
+       ((a . b) ^(,*(tb-reverse b) ,a)) ;; car/cdr recursion
        (a a)))     ;; atom is just returned
 
 Note that in this example, the atom case is placed last, because an

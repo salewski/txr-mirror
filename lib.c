@@ -5233,8 +5233,11 @@ val obj_print(val obj, val out)
     {
       val sym = car(obj);
 
-      if (sym == quote_s || sym == sys_qquote_s) {
+      if (sym == quote_s) {
         put_char(chr('\''), out);
+        obj_print(second(obj), out);
+      } else if (sym == sys_qquote_s) {
+        put_char(chr('^'), out);
         obj_print(second(obj), out);
       } else if (sym == sys_unquote_s) {
         put_char(chr(','), out);
@@ -5419,9 +5422,12 @@ val obj_pprint(val obj, val out)
     {
       val sym = car(obj);
 
-      if (sym == quote_s || sym == sys_qquote_s) {
+      if (sym == quote_s) {
         put_char(chr('\''), out);
-        obj_pprint(second(obj), out);
+        obj_print(second(obj), out);
+      } else if (sym == sys_qquote_s) {
+        put_char(chr('^'), out);
+        obj_print(second(obj), out);
       } else if (sym == sys_unquote_s) {
         put_char(chr(','), out);
         obj_pprint(second(obj), out);
