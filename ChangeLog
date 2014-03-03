@@ -1,5 +1,15 @@
 2014-03-02  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.y (unquotes_occur): Fix use of unquote_s rather than sys_unquote_s
+	which breaks backquote, caught by tests/010/reghash.txr.
+	I thought fixed this already! But I must have made the change to y.tab.c
+	rather than parser.y.
+
+	* Makefile (lex.yy.c, y.tab.c): Make these files readonly to prevent
+	unintended edits.
+
+2014-03-02  Kaz Kylheku  <kaz@kylheku.com>
+
 	* genvim.txr: Skip lines that contain system_package.
 
 	* txr.vim: Regenerated.

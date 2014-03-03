@@ -1114,7 +1114,7 @@ static val unquotes_occur(val quoted_form, int level)
     return nil;
   } else {
     val sym = car(quoted_form);
-    if (sym == unquote_s || sym == sys_splice_s)
+    if (sym == sys_unquote_s || sym == sys_splice_s)
       return (level == 0) ? t : unquotes_occur(cdr(quoted_form), level - 1);
     if (sym == sys_qquote_s)
       return unquotes_occur(cdr(quoted_form), level + 1);

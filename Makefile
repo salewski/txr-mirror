@@ -62,9 +62,10 @@ VPATH := $(top_srcdir)
 
 lex.yy.c: parser.l
 	$(LEX) $(LEX_DBG_FLAGS) $<
+	chmod a-w $@
 
 y.tab.c y.tab.h: parser.y
-	if $(YACC) -v -d $< ; then true ; else rm $@ ; false ; fi
+	if $(YACC) -v -d $< ; then chmod a-w $@ ; true ; else rm $@ ; false ; fi
 
 # Suppress useless sccs id array and unused label warning in byacc otuput.
 # Bison-generated parser also tests for this lint define.
