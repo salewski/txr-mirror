@@ -1,5 +1,12 @@
 2014-03-02  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (make_env_intrinsic): New static function.
+	(eval_init): Register new intrinsics make-env, env-fbind and env-vbind.
+	
+	* txr.1: Documented.
+
+2014-03-02  Kaz Kylheku  <kaz@kylheku.com>
+
 	Version 83
 
 	* txr.c (version): Bumped.

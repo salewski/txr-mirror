@@ -5802,6 +5802,49 @@ resolving the function and variable references encountered in the expression.
 The object nil can be specified as an environment, in which case the evaluation
 takes place in the global environment.
 
+See also: the make-env function.
+
+.SS Function make-env
+
+.TP
+Syntax:
+
+  (make-env [<variable-bindings> [<function-bindings> [<next-env>]]])
+
+.TP
+Description:
+
+The make-env function creates an environment object suitable as the <env> parameter.
+
+The <variable-bindings> and <function-bindings> parameters, if specified,
+should be association lists, mapping symbols to objects.  The objects in
+<function-bindings> should be functions, or objects callable as functions.
+
+The <next-env> argument, if specified, should be an environment. 
+
+Note: bindings can also be added to an environment usign the env-vbind
+and env-fbind functions.
+
+.SS Functions env-vbind and env-fbind
+
+.TP
+Syntax:
+
+  (env-vbind <env> <symbol> <value>)
+  (env-fbind <env> <symbol> <value>)
+
+.TP
+Description:
+
+These functions bind a symbol to a value in either the function or variable space
+of environment <env>.
+
+Values established in the function space should be functions or objects that
+can be used as functions such as lists, strings, arrays or hashes.
+
+If <symbol> already exists in the environment, in the given space, then its
+value is updated with <value>.
+
 .SH MUTATION
 
 .SS Operators inc, dec, set, push, pop, flip and del

@@ -100,6 +100,18 @@ val make_env(val vbindings, val fbindings, val up_env)
   return env;
 }
 
+/*
+ * Wrapper for performance reasons: don't make make_env
+ * process default arguments.
+ */
+static val make_env_intrinsic(val vbindings, val fbindings, val up_env)
+{
+  vbindings = default_bool_arg(vbindings);
+  fbindings = default_bool_arg(fbindings);
+  up_env = default_bool_arg(up_env);
+  return make_env(vbindings, fbindings, up_env);
+}
+
 val env_fbind(val env, val sym, val fun)
 {
   val cell;
@@ -3309,6 +3321,9 @@ void eval_init(void)
           func_n2o(macroexpand_1, 1));
   reg_fun(intern(lit("macroexpand"), user_package),
           func_n2o(macroexpand, 1));
+  reg_fun(intern(lit("make-env"), user_package), func_n3o(make_env_intrinsic, 0));
+  reg_fun(intern(lit("env-fbind"), user_package), func_n3(env_fbind));
+  reg_fun(intern(lit("env-vbind"), user_package), func_n3(env_vbind));
   reg_fun(intern(lit("chain"), user_package), func_n0v(chainv));
   reg_fun(intern(lit("andf"), user_package), func_n0v(andv));
   reg_fun(intern(lit("orf"), user_package), func_n0v(orv));
