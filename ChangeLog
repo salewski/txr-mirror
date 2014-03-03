@@ -1,5 +1,12 @@
 2014-03-02  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (expand): Bugfix. When processing a defvar, should mark
+	the variable as special at expansion time. Without this, binding
+	forms in other parts of the tree won't be expanded properly
+	to bring about the special semantics.
+
+2014-03-02  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.y (unquotes_occur): Fix use of unquote_s rather than sys_unquote_s
 	which breaks backquote, caught by tests/010/reghash.txr.
 	I thought fixed this already! But I must have made the change to y.tab.c

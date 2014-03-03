@@ -2409,6 +2409,8 @@ tail:
       if (sym == defsymacro_s) {
         val result = eval(form_ex, make_env(nil, nil, nil), form);
         return cons(quote_s, cons(result, nil));
+      } else {
+        mark_special(name);
       }
 
       return form_ex;
