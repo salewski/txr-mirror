@@ -1,3 +1,38 @@
+                                     TXR 83
+                                   2014-03-02
+
+
+  Features
+  
+  - The qquote macro is now in the regular user namespace, while the 
+    quasiquoting read syntax uses a different macro based on private symbols.
+    So when the read syntax is used, the template can contain the symbols
+    qquote, unquote and splice, even though these are the basis for
+    a quasiquote macro.
+
+  - Diagnosis of attempt to redefine a special operator as a function or macro.
+    Remove the macro when a function of the same name is defined and vice-versa.
+
+  Bugs
+
+  - Fixed bugs in the implementation lexical variable shadowing by symbol
+    macros.
+
+  - Fixed incorrect handling of trailing atoms in quasiquote.
+
+  - Redesigned the implementaton of special variables, and how they integrate
+    with internal C global variables in the interpreter, in order to fix the
+    broken dynamic overriding of the predefined globals.
+
+  - The Lisp-1 style evaluation of the dwim operator or square brackets was not
+    resolving over-ridden special variables correctly, using a lookup method
+    that saw only the global bindings.
+
+  - Fixed missing integration between catenated stream objects and the
+    garbage collector.
+
+
+
                                      TXR 82
                                    2014-02-27
 

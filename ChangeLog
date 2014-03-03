@@ -1,5 +1,19 @@
 2014-03-02  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 83
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version, set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES: Updated
+
+	* dep.mk: Updated.
+
+2014-03-02  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (expand): Bugfix. When processing a defvar, should mark
 	the variable as special at expansion time. Without this, binding
 	forms in other parts of the tree won't be expanded properly

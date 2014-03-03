@@ -6,16 +6,16 @@
 ./regex.o: config.h $(top_srcdir)/./lib.h $(top_srcdir)/./parser.h $(top_srcdir)/./signal.h $(top_srcdir)/./unwind.h $(top_srcdir)/./regex.h $(top_srcdir)/./txr.h $(top_srcdir)/./gc.h
 ./gc.o: config.h $(top_srcdir)/./lib.h $(top_srcdir)/./stream.h $(top_srcdir)/./hash.h $(top_srcdir)/./txr.h $(top_srcdir)/./eval.h $(top_srcdir)/./gc.h $(top_srcdir)/./signal.h
 ./unwind.o: config.h $(top_srcdir)/./lib.h $(top_srcdir)/./gc.h $(top_srcdir)/./stream.h $(top_srcdir)/./txr.h $(top_srcdir)/./signal.h $(top_srcdir)/./eval.h $(top_srcdir)/./parser.h $(top_srcdir)/./unwind.h
-./stream.o: config.h $(top_srcdir)/./lib.h $(top_srcdir)/./gc.h $(top_srcdir)/./signal.h $(top_srcdir)/./unwind.h $(top_srcdir)/./stream.h $(top_srcdir)/./utf8.h
+./stream.o: config.h $(top_srcdir)/./lib.h $(top_srcdir)/./gc.h $(top_srcdir)/./signal.h $(top_srcdir)/./unwind.h $(top_srcdir)/./stream.h $(top_srcdir)/./utf8.h $(top_srcdir)/./eval.h
 ./arith.o: config.h $(top_srcdir)/./lib.h $(top_srcdir)/./signal.h $(top_srcdir)/./unwind.h $(top_srcdir)/./gc.h $(top_srcdir)/./arith.h
 ./hash.o: config.h $(top_srcdir)/./lib.h $(top_srcdir)/./gc.h $(top_srcdir)/./signal.h $(top_srcdir)/./unwind.h $(top_srcdir)/./stream.h $(top_srcdir)/./hash.h
 ./utf8.o: config.h $(top_srcdir)/./lib.h $(top_srcdir)/./signal.h $(top_srcdir)/./unwind.h $(top_srcdir)/./utf8.h
 ./filter.o: config.h $(top_srcdir)/./lib.h $(top_srcdir)/./hash.h $(top_srcdir)/./signal.h $(top_srcdir)/./unwind.h $(top_srcdir)/./match.h $(top_srcdir)/./filter.h $(top_srcdir)/./gc.h $(top_srcdir)/./stream.h
-./eval.o: config.h $(top_srcdir)/./lib.h $(top_srcdir)/./gc.h $(top_srcdir)/./arith.h $(top_srcdir)/./signal.h $(top_srcdir)/./unwind.h $(top_srcdir)/./regex.h $(top_srcdir)/./stream.h $(top_srcdir)/./parser.h $(top_srcdir)/./hash.h $(top_srcdir)/./debug.h $(top_srcdir)/./match.h $(top_srcdir)/./rand.h $(top_srcdir)/./filter.h $(top_srcdir)/./txr.h $(top_srcdir)/./syslog.h $(top_srcdir)/./combi.h $(top_srcdir)/./eval.h
-./rand.o: config.h $(top_srcdir)/./lib.h $(top_srcdir)/./signal.h $(top_srcdir)/./unwind.h $(top_srcdir)/./gc.h $(top_srcdir)/./arith.h $(top_srcdir)/./rand.h
+./eval.o: config.h $(top_srcdir)/./lib.h $(top_srcdir)/./gc.h $(top_srcdir)/./arith.h $(top_srcdir)/./signal.h $(top_srcdir)/./unwind.h $(top_srcdir)/./regex.h $(top_srcdir)/./stream.h $(top_srcdir)/./parser.h $(top_srcdir)/./hash.h $(top_srcdir)/./debug.h $(top_srcdir)/./match.h $(top_srcdir)/./rand.h $(top_srcdir)/./filter.h $(top_srcdir)/./txr.h $(top_srcdir)/./combi.h $(top_srcdir)/./eval.h
+./rand.o: config.h $(top_srcdir)/./lib.h $(top_srcdir)/./signal.h $(top_srcdir)/./unwind.h $(top_srcdir)/./gc.h $(top_srcdir)/./arith.h $(top_srcdir)/./rand.h $(top_srcdir)/./eval.h
 ./combi.o: config.h $(top_srcdir)/./lib.h $(top_srcdir)/./signal.h $(top_srcdir)/./unwind.h $(top_srcdir)/./eval.h $(top_srcdir)/./hash.h $(top_srcdir)/./combi.h
 mpi-1.8.6/mpi.o: config.h $(top_srcdir)/mpi-1.8.6/mpi.h $(top_srcdir)/mpi-1.8.6/logtab.h
 mpi-1.8.6/mplogic.o: config.h $(top_srcdir)/mpi-1.8.6/mplogic.h
 ./debug.o: config.h $(top_srcdir)/./lib.h $(top_srcdir)/./debug.h $(top_srcdir)/./gc.h $(top_srcdir)/./signal.h $(top_srcdir)/./unwind.h $(top_srcdir)/./stream.h $(top_srcdir)/./parser.h $(top_srcdir)/./txr.h
-./syslog.o: config.h $(top_srcdir)/./lib.h $(top_srcdir)/./stream.h $(top_srcdir)/./hash.h $(top_srcdir)/./gc.h $(top_srcdir)/./signal.h $(top_srcdir)/./unwind.h $(top_srcdir)/./utf8.h $(top_srcdir)/./syslog.h
-./signal.o: config.h $(top_srcdir)/./lib.h $(top_srcdir)/./stream.h $(top_srcdir)/./hash.h $(top_srcdir)/./gc.h $(top_srcdir)/./signal.h $(top_srcdir)/./unwind.h
+./syslog.o: config.h $(top_srcdir)/./lib.h $(top_srcdir)/./stream.h $(top_srcdir)/./hash.h $(top_srcdir)/./gc.h $(top_srcdir)/./signal.h $(top_srcdir)/./unwind.h $(top_srcdir)/./utf8.h $(top_srcdir)/./eval.h $(top_srcdir)/./syslog.h
+./signal.o: config.h $(top_srcdir)/./lib.h $(top_srcdir)/./stream.h $(top_srcdir)/./hash.h $(top_srcdir)/./gc.h $(top_srcdir)/./signal.h $(top_srcdir)/./unwind.h $(top_srcdir)/./eval.h
