@@ -700,7 +700,7 @@ fails if there is any material after the space. The right way to do this is:
  @a @b@(eol)@(bind have_ab "y")
 
 That is to say, match an explicit @(eol) after the variable. This will
-search for the end of the lne and capture the spanning text into b, as
+search for the end of the line and capture the spanning text into b, as
 intended.  The bind then happens afterward.
 
 .SS Consecutive Variables
@@ -767,7 +767,7 @@ following example:
 The @(all) directive does nothing other than assert that all clauses must
 match. It has only one clause, @var2. So this is equivalent to just @var1@var2,
 except that if both variables are unbound, no semantic error is identified in
-this situation. SUch a situation is handled as a variable followed by a
+this situation. Such a situation is handled as a variable followed by a
 directive.  Of course @var2 matches everything at the current position, and so
 @var1 ends up with nothing.
 
@@ -972,7 +972,7 @@ Any of the special characters, including the delimiting /,  can be escaped with
 a backslash to suppress its meaning and denote the character itself.
 
 Furthermore, all of the same escapes as are described in the section Special
-Characters in Text above are supported---the difference is that in regular
+Characters in Text above are supported - the difference is that in regular
 expressions, the @ character is not required, so for example a tab is coded as
 \et rather than @\et. Octal and hex character escapes can be optionally
 terminated by a semicolon, which is useful if the following characters are
@@ -1050,7 +1050,7 @@ The general syntax of a directive is:
   @EXPR
 
 where expr is a parenthesized list of subexpressions. A subexpression
-is an symbol, number, string literal, character literal, quasiliteral, regular
+is a symbol, number, string literal, character literal, quasiliteral, regular
 expression, or a parenthesized expression.  So, examples of syntactically valid
 directives are:
 
@@ -1097,8 +1097,8 @@ Scheme language.  Note that #\elinefeed and #\enewline are the same character.
 
 .SS String Literals
 
-String literals are delimited by double respectively, and may not span multiple
-lines. A double quote within a string literal is encoded using \e"
+String literals are delimited by double quote respectively, and may not span
+multiple lines. A double quote within a string literal is encoded using \e"
 and a backslash is encoded as \e\e. Backslash escapes like \en and \et
 are recognized, as are hexadecimal escapes like \exFF or \exxabc and octal
 escapes like \e123.  Ambiguity between an escape and subsequent
@@ -1122,7 +1122,7 @@ Quasiliterals are similar to string literals, except that they may
 contain variable references denoted by the usual @ syntax. The quasiliteral
 represents a string formed by substituting the values of those variables
 into the literal template. If a is bound to "apple" and b to "banana",
-the quasiliteral `one@a and two @{b}s` represents the string
+the quasiliteral `one @a and two @{b}s` represents the string
 "one apple and two bananas". A backquote escaped by a backslash represents
 itself, and two consecutive @ characters code for a literal @.
 There is no \e@ escape.  Quasiliterals support the full output variable
@@ -1229,8 +1229,7 @@ oriented) syntax.
 If such a directive is embedded in a line (has preceding or trailing material)
 then it is in a horizontal syntactic and semantic context (character-oriented).
 
-There is an exception: the a definition of a horizontal function
-looks like this:
+There is an exception: the definition of a horizontal function looks like this:
 
   @(define name (arg))body material@(end)
 
@@ -1250,7 +1249,7 @@ the input stream.
 
 .IP @(eol)
 Explicitly match the end of line. Fails if the the current position is not the
-end of a line. Also Fails if no data remains (there is no current line).
+end of a line. Also fails if no data remains (there is no current line).
 
 .IP @(next)
 Continue matching in another file or other data source.
@@ -1334,7 +1333,7 @@ Equivalent to @(and). Choice is stylistic.
 
 .IP @(end)
 Required terminator for @(some), @(all), @(none), @(maybe), @(cases),
-@(collect), @(coll), @(output), and @(repeat).
+@(collect), @(coll), @(output), @(repeat), @(rep), @(block) and @(define).
 
 .IP @(fail)
 Terminate the processing of a block, as if it were a failed match.
@@ -1662,7 +1661,7 @@ to the last good match once it runs out of data. The regular skip with explicit
 
 .SS Reducing Backtracking with Blocks
 
-Skip can consider considerable CPU time when multiple skips are nested.
+Skip can consume considerable CPU time when multiple skips are nested.
 Consider:
 
   @(skip)
@@ -1954,7 +1953,7 @@ The semantics of the parallel directives is:
 Each of the clauses is matched at the current position. If any of the
 clauses fails to match, the directive fails (and thus does not produce
 any variable bindings). Clauses following the failed directive are not
-evaluated. Bindings extracted by a successful clause are visible the clauses
+evaluated. Bindings extracted by a successful clause are visible to the clauses
 which follow, and if the directive succeeds, all of the combined bindings
 emerge.
 
@@ -2010,7 +2009,7 @@ success or failure.
 Each of the clauses is matched at the current position.  The directive always
 succeeds, even if all of the clauses fail.  Whatever bindings are found in any
 of the clauses are retained. Bindings extracted by any successful clause are
-visible the clauses which follow.
+visible to the clauses which follow.
 
 .IP @(cases)
 Each of the clauses is matched at the current position.
@@ -2022,7 +2021,7 @@ directive fails, and produces no bindings.
 
 .IP "@(choose [ :longest <var> | :shortest <var> ])"
 Each of the clauses is matched at the current position in order. In this
-construct, bindings established an earlier clause are not visible to later
+construct, bindings established by an earlier clause are not visible to later
 clauses.  Although any or all of the clauses can potentially match, the clause
 which succeeds is the one which maximizes or minimizes the length of the
 text bound to the specified variable. The other clauses have no effect.
@@ -2278,8 +2277,8 @@ be an N-dimensional list. A one dimensional list is a list of strings;
 a two dimensional list is a list of lists of strings, etc.
 
 It is important to note that the variables which are bound within the main
-clause of a collect---i.e. the variables which are subject to
-collection---appear, within the collect, as normal one-value bindings. The
+clause of a collect - i.e. the variables which are subject to
+collection - appear, within the collect, as normal one-value bindings. The
 collation into lists happens outside of the collect. So for instance in the
 query:
 
@@ -2475,15 +2474,15 @@ and any bindings from that iteration are discarded.
 Like collect, coll also supports a last clause, which propagates varaible
 bindings and advances the position.
 
-Coll clauses nest, and variables bound within a coll are available to within
-the rest of the coll clause, including the until clause, and appear as single
-values.  The final list aggregation is only visible after the coll clause.
+Coll clauses nest, and variables bound within a coll are available to clauses
+within the rest of the coll clause, including the until clause, and appear as
+single values. The final list aggregation is only visible after the coll clause.
 
 The behavior of coll is troublesome, when delimited variables are used,
 because in text file formats, the material which separates items is not
-repeated after the last item. For instance, a comma-separated list usually
+repeated after the last item. For instance, a comma-separated list usually does
 not appear as "a,b,c," but rather "a,b,c". There might not be any explicit
-termination---the last item might be at the very end of the line.
+termination - the last item might be at the very end of the line.
 
 So for instance, the following result is not satisfactory:
 
@@ -2535,13 +2534,6 @@ the semicolon from being a valid character inside an item, and
 add an until clause which recognizes a semicolon:
 
   pattern:      @(coll)@{a /[^ ;]+/}@(until);@(end);
-
-  data:         1 2 3 4 5;
-  result:       a[0]="1"
-                a[1]="2"
-                a[2]="3"
-                a[3]="4"
-                a[4]="5"
 
   data:         1 2 3 4 5;
   result:       a[0]="1"
@@ -2680,7 +2672,7 @@ The syntax of the @(bind) directive is:
   @(bind pattern expression { keyword value }*)
 
 The @(bind) directive is a kind of pattern match, which matches one or more
-variables on in the left hand side pattern to the value of a variable on the
+variables on the left hand side pattern to the value of a variable on the
 right hand side.  The right hand side variable must have a binding, or else the
 directive fails. Any variables on the left hand side which are unbound receive
 a matching piece of the right hand side value. Any variables on the left which
@@ -2720,7 +2712,7 @@ instance
 
 will bind the string "ab\etc" (the letter a, b, a tab character, and c)
 to the variable A if A is unbound. If A is bound, this will fail unless
-A already contains an identical string. However, the right hand side of
+A already contains an identical string. However, the right hand side of a bind
 cannot be an unbound variable, nor a complex expression that contains unbound
 variables.
 
@@ -2875,7 +2867,7 @@ prematurely, and escaping to a higher level. This makes blocks not only
 useful for simplifying the semantics of certain pattern matches,
 but also an optimization tool. 
 
-Judicious use of blocks and escapes can reduce or eliminate the amount
+Judicious use of blocks and escapes can reduce or eliminate the amount of
 backtracking that TXR performs.
 
 .SS Block Scope
@@ -3215,7 +3207,7 @@ argument.
 Example:
 
   @(define collect_words (list))
-  @(coll)@{list /[^ \et]/}@(end)
+  @(coll)@{list /[^ \et]+/}@(end)
   @(end)
 
 The above function "collect_words" contains a query which collects words from a
@@ -3295,7 +3287,7 @@ syntax are:
   @(define bar ())
   @(define match (a b c))
 
-If the define directive is followed by more material on the same line, then it
+If the define directive is followed by more material on the same line, then
 it defines a horizontal function:
 
   @(define match_x)x@(end)
@@ -9480,8 +9472,8 @@ the DWIM-bracket syntax:
 
   (sub seq from to) <--> [seq from..to] 
 
-The the description of the dwim operator---in particular, the
-section on Range Indexing---explains the semantics of the range
+The the description of the dwim operator - in particular, the
+section on Range Indexing - explains the semantics of the range
 specification.
 
 If the sequence is a list, the output sequence may share
@@ -9510,8 +9502,8 @@ DWIM bracket syntax and the replace function:
 
   (set seq (replace seq new from to)) <--> (set [seq from..to] new)
 
-The the description of the dwim operator---in particular, the
-section on Range Indexing---explains the semantics of the range
+The the description of the dwim operator - in particular, the
+section on Range Indexing - explains the semantics of the range
 specification.
 
 This operation is destructive: it may work "in place" by modifying
@@ -12747,7 +12739,7 @@ A signal handling function must take two arguments. It is of the form:
 The signal argument is an integer indicating the signal number for which the
 handler is being invoked. The asyncp-p argument is a boolean value, nil or t.
 If it is t, it indicates that the handler is being invoked
-asynchronously---directly in a signal handling context.  If it is nil, then it
+asynchronously - directly in a signal handling context.  If it is nil, then it
 is a deferred call.  Handlers may do more things in a deferred call, such
 as terminate by throwing exceptions, and perform I/O.
 

@@ -1,5 +1,9 @@
 2014-03-02  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Incorporating more corrections from Roman Mishin.
+
+2014-03-02  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (make_env_intrinsic): New static function.
 	(eval_init): Register new intrinsics make-env, env-fbind and env-vbind.
 	
