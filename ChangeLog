@@ -1,5 +1,12 @@
 2014-03-02  Kaz Kylheku  <kaz@kylheku.com>
 
+	* Makefile (lex.yy.c): Remove lex.yy.c before trying to regenerate it.
+	(y.tab.c, y.tab.h): Remove y.tab.c before running yacc. Write-protect
+	y.tab.c, not $@, which could expand to the y.tab.h target if that is
+	what triggered the rule.
+
+2014-03-02  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: Incorporating more corrections from Roman Mishin.
 
 2014-03-02  Kaz Kylheku  <kaz@kylheku.com>
