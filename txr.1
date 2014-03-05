@@ -9778,13 +9778,14 @@ functions.  The <num> argument to asin and acos must be in the
 range -1.0 to 1.0. The atan2 function converts the rectilinear coordinates
 <x>  and <y> to an angle in polar coordinates in the range [0, 2pi).
 
-.SS Functions log, exp
+.SS Functions exp, log, log10
 
 .TP
 Syntax:
 
   (exp <number>)
   (log <number>)
+  (log10 <number>)
 
 .TP
 Description:
@@ -9793,6 +9794,9 @@ The exp function calculates the value of the transcendental number e raised to
 the specified exponent.
 
 The log function calculates the base e logarithm of its argument, which must
+be a positive value.
+
+The log10 function calculates the base 10 logarithm of its argument, which must
 be a positive value.
 
 Integer arguments are converted to floats.

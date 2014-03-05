@@ -497,6 +497,7 @@ val acosi(val);
 val atang(val);
 val atang2(val, val);
 val loga(val);
+val logten(val num);
 val expo(val);
 val logand(val, val);
 val logior(val, val);

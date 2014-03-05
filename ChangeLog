@@ -1,3 +1,13 @@
+2014-03-04  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c (logten): New function.
+
+	* eval.c (eval_init): logten registered as intrinsic.
+
+	* lib.h (logten): Declared.
+
+	* txr.1: Documented.
+
 2014-03-03  Kaz Kylheku  <kaz@kylheku.com>
 
 	* parser.l: Allowing ^ to be a quote character, and adjusting definition

@@ -1439,6 +1439,11 @@ val loga(val num)
   return flo(log(c_flo(to_float(lit("log"), num))));
 }
 
+val logten(val num)
+{
+  return flo(log10(c_flo(to_float(lit("log"), num))));
+}
+
 val expo(val num)
 {
   return flo(exp(c_flo(to_float(lit("exp"), num))));
