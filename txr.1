@@ -11237,24 +11237,56 @@ The <letter> is a single alphabetic character which determines the
 general action of the directive. The optional width and precision
 can be numeric digits, or special codes documented below. 
 
-The width specifier gives the width of the character field in which the object's
-printed representation is placed. If the printed representation overflows the
-field width, then the field width is ignored. The default field width is zero.
-If the width specifier begins with the < (left angle bracket) character, then
-the printing will be left-adjusted within this field. Otherwise it will be
-right-adjusted by default.  The width can be specified as decimal digits, or as
-the character *. The * notation means that instead of digits, the value of the
-next argument is consumed, and expected to be an integer which specifies the
-width. If that integer value is negative, then the field will be left-adjusted.
-(If that value is positive, but the < notation is present prior to the *
-notation, the field will also be left-adjusted).
+.TP
+width
 
-The meaning of the precision specifier depends on the format directive.
-Also, when the precision is not specified, the default behavior may be
-different from any specific precision value.
-If the precision has a leading zero, this has special semantics for numeric
-conversions. The precision may also have a leading sign character, which
-may be a plus or space. 
+The width specifier consists of an optional < (left angle bracket) character,
+followed by an optional width specification.
+
+If the < character is present, then the printing will be left-adjusted within
+this field. Otherwise it will be right-adjusted by default.  
+
+The width can be specified as a decimal integer, or as the character *. The *
+notation means that instead of digits, the value of the next argument is
+consumed, and expected to be an integer which specifies the width. If that
+integer value is negative, then the field will be left-adjusted.  
+If the value is positive, but the < character is present in the width
+specifier, then the field is left adjusted also.
+
+.TP
+precision
+
+The precision specifier consists of an optional combination of the
+special leading characters 0 (the "leading zero flag"), + (print a sign for
+positive values") or space (print a space in place of a positive sign),
+followed by a specification of the precision value, which is either a decimal
+integer that does not begin with a zero digit, or the * character.
+
+The precision field's components have a meaning which depends on the type of
+object printed and the conversion specifier.
+
+For integer arguments, the precision value specifies the minimum number of digits
+to print.  If the precision field has a leading zero flag, then the integer is
+padded with zeros to the required number of digits, otherwise the number is
+padded with spaces instead of zeros.  If zero or space padding is present, and
+a leading positive or negative sign must be printed, then it is placed before
+leading zeros, or after leading spaces, as the case may be.
+
+For floating-point values, the meaning of the precision value depends on which
+specific conversion specifier (f, e, a or s) is used. The details are
+documented in the description of each of these, below. The leading zero flag is
+ignored for floating-point values regardless of the conversion specifier.
+
+For integer or floating-point arguments, if the precision specifier has a + sign
+among the special characters, then a + sign is printed for positive numbers. If
+the precision specifier has a leading space instead of a + sign, then the +
+sign is rendered as a space for positive numbers. If there is no leading space
+or +, then a sign character is omitted for positive numbers. Negative
+numbers are unconditionally prefixed with a - sign.
+
+For all other objects, the precision specifies the maximum number of characters
+to print.  The object's printed representation is crudely truncated at that
+number of characters.
 
 .TP
 Format directives:
@@ -11267,28 +11299,16 @@ Prints any object in an aesthetic way, as if by the pprint function.
 The aesthetic notation violates read-print consistency: this notation
 is not necessarily readable if it is implanted in TXR source code.
 The field width specifier is honored, including the left-right adjustment
-semantics. The precision field has a meaning as follows. For integer objects,
-the precision specifies the minimum number of digits to print. (A leading
-sign does not count as a digit).  If the precision field has a leading zero,
-then the number is padded with zeros to the required number of digits,
-otherwise the number is padded with spaces instead of zeros.  If zero or space
-padding is present, and a leading positive or negative sign must be printed,
-then it is placed before leading zeros, or after leading spaces, as the case
-may be. If the precision specifier has a leading + sign, then a + sign is
-printed for positive numbers. If the precision specifier has a leading space
-instead of a + sign, then the + sign is rendered as a space for positive
-numbers. If there is no leading space or +, then a sign character is omitted
-for positive numbers.  For floating point values, the precision specifies
+semantics. 
+
+When this specifier is used for floating-point values, the precision specifies
 the maximum number of total significant figures, which do not include any
 digits in the exponent, if one is printed. Numbers are printed in exponential
-notation if their magnitude is small, or else if their exponent exceeds
-their precision. (If the precision is not specified, then it defaults to
-the system-dependent number of digits in a floating point value, derived
-from the C language DBL_DIG constant.) Floating point values which are
-integers are printed without a trailing .0 (point zero). For all other objects,
-the precision specifies the maximum number of characters to print. 
-The object's printed representation is crudely truncated at that number
-of characters.
+notation if their magnitude is small, or else if their exponent exceeds their
+precision. (If the precision is not specified, then it defaults to the
+system-dependent number of digits in a floating point value, derived from the C
+language DBL_DIG constant.) Floating point values which are integers are
+printed without a trailing .0 (point zero). 
 
 .IP s
 Prints any object in a standard way, as if by the print function.  Objects for

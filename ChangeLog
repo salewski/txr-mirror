@@ -1,5 +1,18 @@
 2014-03-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (vformat): Fix broken parsing of parameteric width and
+	precision (i.e. given by *). The simplest way to do this is to add a
+	state vf_star which is similar to vf_digits, and reuses much of the
+	logic via a goto. Fixing forgotten --fmt (push back char) when moving
+	from vf_precision to vf_spec state due to unhandled character.
+	Also, allowing a leading zero before a precision given as *
+	so that computed precisions can be combined with zero padding.
+
+	* txr.1: Documented leading zero better so it is clear it
+	combines with *. Restructured documentation.
+
+2014-03-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (put_line): Default string argument to empty string.
 	(stream_init): Change how put_line is registered to take advantage of
 	new optional parameter.

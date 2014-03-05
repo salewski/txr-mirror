@@ -1511,7 +1511,7 @@ val vformat(val stream, val fmtstr, va_list vl)
   {
     const wchar_t *fmt = c_str(fmtstr);
     enum {
-      vf_init, vf_width, vf_digits, vf_precision, vf_spec
+      vf_init, vf_width, vf_digits, vf_star, vf_precision, vf_spec
     } state = vf_init, saved_state = vf_init;
     int width = 0, precision = 0, precision_p = 0, digits = 0;
     int left = 0, sign = 0, zeropad = 0;
@@ -1561,9 +1561,8 @@ val vformat(val stream, val fmtstr, va_list vl)
           digits = ch - '0';
           continue;
         case '*':
-          obj = va_arg(vl, val);
-          width = c_num(obj);
-          state = vf_precision;
+          saved_state = state;
+          state = vf_star;
           continue;
         default:
           state = vf_spec;
@@ -1575,7 +1574,7 @@ val vformat(val stream, val fmtstr, va_list vl)
         switch (ch) {
         case '0':
           zeropad = 1;
-          /* fallthrough */
+          continue;
         case '1': case '2': case '3': case '4': case '5':
         case '6': case '7': case '8': case '9':
           saved_state = state;
@@ -1586,13 +1585,12 @@ val vformat(val stream, val fmtstr, va_list vl)
           sign = ch;
           continue;
         case '*':
-          obj = va_arg(vl, val);
-          width = c_num(obj);
-          precision = vf_precision;
-          precision_p = 1;
+          saved_state = state;
+          state = vf_star;
           continue;
         default:
           state = vf_spec;
+          --fmt;
           continue;
         }
         break;
@@ -1605,6 +1603,7 @@ val vformat(val stream, val fmtstr, va_list vl)
             goto toobig;
           continue;
         default:
+  do_digits:
           switch (saved_state) {
           case vf_width:
             if (width < 0) {
@@ -1630,6 +1629,11 @@ val vformat(val stream, val fmtstr, va_list vl)
             internal_error("unexpected state in formatter");
           }
         }
+        break;
+      case vf_star:
+        obj = va_arg(vl, val);
+        digits = c_num(obj);
+        goto do_digits;
         break;
       case vf_spec:
         state = vf_init;
