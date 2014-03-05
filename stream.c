@@ -1968,7 +1968,7 @@ val put_byte(val byte, val stream)
 
 val put_line(val string, val stream)
 {
-  return (put_string(string, stream), put_char(chr('\n'), stream));
+  return (put_string(default_arg(string, null_string), stream), put_char(chr('\n'), stream));
 }
 
 val flush_stream(val stream)
@@ -2678,7 +2678,7 @@ void stream_init(void)
   reg_fun(intern(lit("get-char"), user_package), func_n1o(get_char, 0));
   reg_fun(intern(lit("get-byte"), user_package), func_n1o(get_byte, 0));
   reg_fun(intern(lit("put-string"), user_package), func_n2o(put_string, 1));
-  reg_fun(intern(lit("put-line"), user_package), func_n2o(put_line, 1));
+  reg_fun(intern(lit("put-line"), user_package), func_n2o(put_line, 0));
   reg_fun(intern(lit("put-char"), user_package), func_n2o(put_char, 1));
   reg_fun(intern(lit("put-byte"), user_package), func_n2o(put_byte, 1));
   reg_fun(intern(lit("unget-char"), user_package), func_n2o(unget_char, 1));

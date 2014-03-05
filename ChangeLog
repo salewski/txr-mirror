@@ -1,3 +1,11 @@
+2014-03-05  Kaz Kylheku  <kaz@kylheku.com>
+
+	* stream.c (put_line): Default string argument to empty string.
+	(stream_init): Change how put_line is registered to take advantage of
+	new optional parameter.
+
+	* txr.1: Updated.
+
 2014-03-04  Kaz Kylheku  <kaz@kylheku.com>
 
 	* arith.c (logten): New function.

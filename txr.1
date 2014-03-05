@@ -11628,7 +11628,7 @@ indeterminate.
 .TP
 Syntax:
 
-  (put-line <string> [<stream>])
+  (put-line [<string> [<stream>]])
   (put-string <string> [<stream>])
   (put-char <char> [<stream>])
   (put-byte <byte> [<stream>])
@@ -11645,7 +11645,8 @@ stream is based on bytes, then the character is encoded into UTF-8 and multiple
 bytes are written. Streams which support put-char also support put-line, and
 put-string. The put-string function writes the characters of a string out to
 the stream as if by multiple calls to put-char. The put-line function is like
-put-string, but also writes an additional newline character.
+put-string, but also writes an additional newline character. The string
+is optional in put-line, and defaults to the empty string.
 
 The put-byte function writes a raw byte given by the <byte> argument
 to <stream>, if <stream> supports a byte write operation. The byte
