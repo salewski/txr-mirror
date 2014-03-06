@@ -1,5 +1,10 @@
 2014-03-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (match_files): Fix it again. The data (nil)
+	can occur from an interactive/real-time stream.
+
+2014-03-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	g++ regressions.
 
 	* eval.c (env_k): Duplicate global variable definition removed.

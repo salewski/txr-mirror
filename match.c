@@ -3770,7 +3770,7 @@ repeat_spec_same_data:
         debug_return (nil);
 
       c.bindings = new_bindings;
-    } else if (nilp(c.data)) {
+    } else if (consp(c.data) || nilp(c.data)) {
       debuglf(specline, lit("spec ran out of data"), nao);
       debug_return (nil);
     } else {
