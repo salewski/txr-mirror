@@ -3699,6 +3699,8 @@ static void open_data_source(match_files_ctx *c)
     } else {
       c->data = nil;
     }
+  } else if (c->data == t && c->files == nil) {
+    c->data = nil;
   }
 }
 
@@ -3753,7 +3755,9 @@ repeat_spec_same_data:
       }
     }
 
-    if (c.data && car(c.data))
+    open_data_source(&c);
+
+    if (consp(c.data) && car(c.data))
     {
       val dataline = car(c.data);
 
@@ -3766,9 +3770,11 @@ repeat_spec_same_data:
         debug_return (nil);
 
       c.bindings = new_bindings;
-    } else {
+    } else if (nilp(c.data)) {
       debuglf(specline, lit("spec ran out of data"), nao);
       debug_return (nil);
+    } else {
+      internal_error("bug in data stream opening logic");
     }
   }
 

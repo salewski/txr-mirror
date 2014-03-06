@@ -1,5 +1,21 @@
 2014-03-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	Fixing regression caused by the 2014-02-19 change ("Fixed long-running
+	issue ...").
+
+	* match.c (open_data_source): if c->data is t, but c->files
+	is nil, set c->data to nil: we cannot possibly open anything later.
+	(match_files): We need to call open_data_source one more time just
+	before processing a line with horizontal material.  The previous
+	call(s) to open_data_source might not have opened anything. Before
+	accesing car(c.data) the correct test is consp(c.data), not c.data. In
+	the else clause, we now specificially check for nilp(c.data) which is
+	the correct indicator of no more data. If c.data is any other atom at
+	that point, we have an internal error, for which an assertion is added
+	now.
+
+2014-03-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (vformat): Fix broken parsing of parameteric width and
 	precision (i.e. given by *). The simplest way to do this is to add a
 	state vf_star which is similar to vf_digits, and reuses much of the
