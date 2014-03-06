@@ -1,5 +1,20 @@
 2014-03-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (apply_intrinsic, lazy_mapcar): Changed linkage to external.
+
+	* eval.h (apply_intrinsic, lazy_mapcar): Declarations added.
+
+	* stream.c (open_files, open_file_star): New functions.
+	(stream_init): Registered new functions as intrinsics.
+
+	* txr.1: Documented open-files and open-files*. Added to make-catenated-stream documentation.
+
+	* genvim.txr: Replace bunch of code with open-files.
+
+	* txr.vim: Regenerated.
+
+2014-03-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (match_files): Fix it again. The data (nil)
 	can occur from an interactive/real-time stream.
 

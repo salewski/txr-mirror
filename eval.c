@@ -651,7 +651,7 @@ static val apply_frob_args(val args)
   }
 }
 
-static val apply_intrinsic(val fun, val args)
+val apply_intrinsic(val fun, val args)
 {
   return apply(fun, apply_frob_args(args), cons(apply_s, nil));
 }
@@ -2661,7 +2661,7 @@ static val lazy_mapcar_func(val env, val lcons)
   return nil;
 }
 
-static val lazy_mapcar(val fun, val list)
+val lazy_mapcar(val fun, val list)
 {
   if (!list)
     return nil;

@@ -2555,6 +2555,31 @@ val readlink_wrap(val path)
 
 #endif
 
+static val open_files(val file_list, val substitute_stream)
+{
+  substitute_stream = default_bool_arg(substitute_stream);
+
+  if (nilp(file_list) && substitute_stream) {
+    return substitute_stream;
+  } else {
+    return apply_intrinsic(func_n0v(make_catenated_stream),
+                           cons(mapcar(func_n2o(open_file, 1), file_list), nil));
+
+  }
+}
+
+static val open_files_star(val file_list, val substitute_stream)
+{
+  substitute_stream = default_bool_arg(substitute_stream);
+
+  if (nilp(file_list) && substitute_stream) {
+    return substitute_stream;
+  } else {
+    return apply_intrinsic(func_n0v(make_catenated_stream),
+                           cons(lazy_mapcar(func_n2o(open_file, 1), file_list), nil));
+  }
+}
+
 #endif
 
 void stream_init(void)
@@ -2704,4 +2729,6 @@ void stream_init(void)
   reg_fun(intern(lit("open-process"), user_package), func_n3o(open_process, 2));
   reg_fun(intern(lit("remove-path"), user_package), func_n1(remove_path));
   reg_fun(intern(lit("rename-path"), user_package), func_n2(rename_path));
+  reg_fun(intern(lit("open-files"), user_package), func_n2o(open_files, 1));
+  reg_fun(intern(lit("open-files*"), user_package), func_n2o(open_files_star, 1));
 }

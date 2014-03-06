@@ -11799,6 +11799,49 @@ Note that the operations can fail due to being unsupported. It is
 the caller's responsibility to make sure all of the streams in the list
 are compatible with the intended operations.
 
+If the stream list is empty then an empty catenated stream is produced.
+Input operations on this stream yield nil, and the unget-char
+and unget-byte operations throw an exception.
+
+.SS Functions open-files and open-files*
+
+.TP
+Syntax:
+
+  (open-files <path-list> [<alternative-stream>])
+  (open-files* <path-list> [<alternative-stream>])
+
+.TP
+Description:
+
+The open-files and open-files* functions create a list of streams by invoking the open-file
+function on each element of <path-list>. These streamas are turned into a catenated
+stream as if applied as arguments to make-catenated-stream.
+
+The effect is that multiple files appear to be catenated together into a single
+input stream.
+
+If the optional <alternative-stream> argument is supplied, then if <path-list> is empty, 
+that argument is returned instead of an empty catenated stream.
+
+The difference between open-files and open-files* is that open-files creates all of the
+streams up-front. So if any of the paths cannot be opened, the operation throws.
+The open-files* variant is lazy: it creates a lazy list of streams out of the
+path list. The streams are opened as needed: before the second stream is opened,
+the program has to read the first stream to the end, and so on.
+
+.TP
+Example:
+
+Collect lines from all files that are given as arguments on the command line. If
+there are no files, then read from standard input:
+
+   @(next @(open-files *args* *stdin*))
+   @(collect)
+   @line
+   @(end)
+
+
 .SS Function read
 
 .TP

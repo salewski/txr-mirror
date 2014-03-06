@@ -39,6 +39,7 @@ val interp_fun(val env, val fun, val args);
 void reg_var(val sym, val val);
 void reg_fun(val sym, val fun);
 val apply(val fun, val arglist, val ctx_form);
+val apply_intrinsic(val fun, val args);
 val eval_progn(val forms, val env, val ctx_form);
 val eval(val form, val env, val ctx_form);
 val eval_intrinsic(val form, val env);
@@ -46,6 +47,7 @@ val expand(val form, val menv);
 val expand_forms(val forms, val menv);
 val bindable(val obj);
 val mapcarv(val fun, val list_of_lists);
+val lazy_mapcar(val fun, val list);
 val generate(val while_pred, val gen_fun);
 
 void eval_init(void);
