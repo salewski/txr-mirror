@@ -1,5 +1,9 @@
 2014-03-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.c (txr_main): Don't push back arg into arg_list if arg is nil.
+
+2014-03-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	Fixing regression caused by the 2014-02-19 change ("Fixed long-running
 	issue ...").
 

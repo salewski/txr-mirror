@@ -382,7 +382,8 @@ int txr_main(int argc, char **argv)
         chr_str(specstring, minus(length_str(specstring), one)) != chr('\n'))
       specstring = cat_str(list(specstring, string(L"\n"), nao), nil);
     yyin_stream = make_string_byte_input_stream(specstring);
-    push(arg, &arg_list);
+    if (arg)
+      push(arg, &arg_list);
   } else if (spec_file) {
     if (wcscmp(c_str(spec_file), L"-") != 0) {
       FILE *in = w_fopen(c_str(spec_file), L"r");
@@ -393,7 +394,8 @@ int txr_main(int argc, char **argv)
     } else {
       spec_file_str = lit("stdin");
     }
-    push(arg, &arg_list);
+    if (arg)
+      push(arg, &arg_list);
   } else {
     if (!arg) {
       if (evaled)
