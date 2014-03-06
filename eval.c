@@ -86,7 +86,7 @@ val vector_lit_s, vector_list_s;
 val macro_time_s, with_saved_vars_s, macrolet_s;
 val defsymacro_s, symacrolet_s;
 
-val special_s, whole_k, env_k;
+val special_s, whole_k;
 
 val last_form_evaled;
 

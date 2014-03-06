@@ -3860,7 +3860,7 @@ val vector(val length, val initval)
   int i;
   cnum alloc_plus = c_num(length) + 2;
   size_t size = alloc_plus * sizeof (val);
-  val *v = (size / sizeof *v == alloc_plus)
+  val *v = ((cnum) (size / sizeof *v) == alloc_plus)
            ? (val *) chk_malloc(size)
            : (val *) uw_throwf(error_s, lit("vector: length ~a is too large"),
                                length, nao);
@@ -3895,7 +3895,7 @@ val vec_set_length(val vec, val length)
     cnum length_delta = new_length - old_length;
     cnum alloc_delta = new_length - old_alloc;
 
-    if (new_length > ((size_t) -1)/(sizeof (val)) - 2)
+    if (new_length > (cnum) ((size_t) -1/sizeof (val) - 2))
       uw_throwf(error_s, lit("vec-set-length: cannot extend to length ~s"),
                 length, nao);
 

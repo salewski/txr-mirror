@@ -1,3 +1,15 @@
+2014-03-06  Kaz Kylheku  <kaz@kylheku.com>
+
+	g++ regressions.
+
+	* eval.c (env_k): Duplicate global variable definition removed.
+	
+	* lib.c (vector, vec_set_length): Fixed signed/unsigned comparison
+	warnings.
+
+	* stream.h (stdin_s, stdout_s, stddebug_s, stderr_s, stdnull_s):
+	Declarations were definitions due to missing extern.
+
 2014-03-05  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.c (txr_main): Don't push back arg into arg_list if arg is nil.
