@@ -1,3 +1,55 @@
+                                     TXR 84
+                                   2014-03-07
+
+
+  Features
+
+  - TXR Lisp no longer uses one quote for regular quote and quasiquote syntax.
+    The quasiquote character is now ^ and the apostrophe is just regular quote.
+    This change breaks backward compatibility, unfortunately, but the
+    single-quote experiment had to come to an end, now that TXR has a powerful
+    macro facility, with quasiquotes playing a central role.
+
+  - TXR Lisp exposes the environment manipulation functions make-env, env-vbind
+    and env-fbind.
+
+  - New function log10 for base 10 logarithms.
+
+  - New functions open-files and open-files* for opening a big catenated stream
+    which marches through multiple files as if they were one.
+
+  - New directive, @(assert), for writing certain kind of robust matching code
+    more simply.
+
+  - put-line can be called with no arguments, in which case it just writes
+    a newline to standard output.
+
+  - In the format function, if a precision is specified as *, it can now
+    have a leading 0 in front of it, which applies as usual (to the formatting
+    of an integer which falls short of the number of digits required
+    by the precision).
+
+  Bugs
+
+  - In the format function, the * character for specifying a variable
+    field width or precision (derived from an integer argument) was broken.
+
+  - Fixed a regression causing the exception "t is not a cons" on queries
+    that match data, when no input files are specified.
+
+  - Fixed a regression causing file names not to be tracked in the pattern
+    matching language, and consequently error messages not to give that
+    useful information.
+
+  - Fixed some bugs related to command line processing, which had recently
+    been rewritten: the element nil was being added to *args* in some situations,
+    the argument - would end up repeated twice, and args was being sometimes
+    manipulated in such a way that (ldiff *full-args* *args*) wouldn't work,
+    due to new conses pushed onto *args* so that it's not a structural
+    suffix of *full-args*.
+
+
+
                                      TXR 83
                                    2014-03-02
 

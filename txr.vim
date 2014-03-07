@@ -19,19 +19,19 @@ syn spell toplevel
 
 setlocal iskeyword=a-z,A-Z,48-57,!,$,&,*,+,-,<,=,>,?,\\,_,~,^
 
-syn keyword txr_keyword contained accept all and bind
-syn keyword txr_keyword contained block cases cat catch
-syn keyword txr_keyword contained choose close coll collect
-syn keyword txr_keyword contained defex deffilter define do
-syn keyword txr_keyword contained end eof eol fail
-syn keyword txr_keyword contained filter finally flatten forget
-syn keyword txr_keyword contained freeform fuzz gather last
-syn keyword txr_keyword contained load local maybe merge
-syn keyword txr_keyword contained next none or output
-syn keyword txr_keyword contained rebind rep repeat require
-syn keyword txr_keyword contained set skip some text
-syn keyword txr_keyword contained throw trailer try until
-syn keyword txr_keyword contained var
+syn keyword txr_keyword contained accept all and assert
+syn keyword txr_keyword contained bind block cases cat
+syn keyword txr_keyword contained catch choose close coll
+syn keyword txr_keyword contained collect defex deffilter define
+syn keyword txr_keyword contained do end eof eol
+syn keyword txr_keyword contained fail filter finally flatten
+syn keyword txr_keyword contained forget freeform fuzz gather
+syn keyword txr_keyword contained last load local maybe
+syn keyword txr_keyword contained merge next none or
+syn keyword txr_keyword contained output rebind rep repeat
+syn keyword txr_keyword contained require set skip some
+syn keyword txr_keyword contained text throw trailer try
+syn keyword txr_keyword contained until var
 
 syn keyword txl_keyword contained * *args* *full-args* *gensym-counter*
 syn keyword txl_keyword contained *keyword-package* *random-state* *self-path* *stddebug*
