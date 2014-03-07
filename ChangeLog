@@ -1,5 +1,21 @@
 2014-03-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (assert_s): New global variable.
+	(obj_init): Intern assert symbol, store in assert_s.
+
+	* lib.h (assert_s): Declared.
+
+	* match.c (typed_error, v_assert, h_assert): New static functions.
+	(dir_tables_init): Register v_assert and h_assert.
+	Register assert_s as non-data-matching directive.
+
+	* unwind.c (uw_init): Register assert as a subtype
+	of error.
+
+	* txr.1: Describe assert.
+
+2014-03-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c: (v_next): Set the "curfile" in the context to "env" when
 	scanning environment.
 	(open_data_source): Regression: was not setting c->curfile when opening

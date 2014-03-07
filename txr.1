@@ -1354,6 +1354,11 @@ Special clauses within @(try). See EXCEPTIONS below.
 .IP "@(defex), @(throw)"
 Define custom exception types; throw an exception.  See EXCEPTIONS below.
 
+.IP @(assert)
+The assert directive requires the following material to match, otherwise
+it throws an exception. It is useful for catching mistakes or omissions
+in parts of a query that are sure-fire matches.
+
 .IP @(flatten)
 Normalizes a set of specified variables to one-dimensional lists. Those
 variables which have scalar value are reduced to lists of that value.
@@ -1417,7 +1422,6 @@ result values. See the TXR LISP section far below.
 The require directive is similar to the do directive: it evaluates one or more
 TXR Lisp expressions.  If the result of the rightmost expression is nil,
 then require triggers a match failure.  See the TXR LISP section far below.
-
 
 .PP
 
@@ -4777,6 +4781,53 @@ definitions are in error:
   @(defex x y)
   @(defex y x)@# error: circularity; y is already a supertype of x.
 
+.SS The Assert directive
+
+The assert directive requires the remaining query or sub-query which follows it
+to match. If the remainder fails to match, the assert directive throws an
+exception. If the directive is simply
+
+  @(assert)
+
+Then it throws an assertion of type assert, which is a subtype of error.
+The assert directive also takes arguments similar to the throw
+directive. The following assert directive, if it triggers, will throw
+an exception of type foo, with arguments 1 and "2".
+
+  @(assert foo 1 "2")
+
+The throw directive generates an exception. A type must be specified,
+followed by optional arguments.
+
+Example:
+
+  @(collect)
+  Important Header
+  ----------------
+  @(assert)
+  Foo: @a, @b
+  @(end)
+
+Without the assertion in places, if the "Foo: @a, @b" part does not
+match, then the entire interior of the @(collect) clause fails,
+and the collect continues searching for another match.
+
+With the assertion in place, if the "Important Header" and its
+underline match, then the remainder of the collect body must
+match, otherwise an exception is thrown. Now the program will not
+silently skip over any Important Header sections due to a problem
+in its matching logic. This is particularly useful when the matching is varied
+with numerous cases, and they must all be handled.
+
+There is a horizontal directive also. For instance:
+
+  abc@(assert)d@x
+
+asserts that if the prefix "abc" is matched, then it must be
+followed by a successful match for "d@x", or else an exception
+is thrown.
+
+
 .SH TXR LISP
 
 The TXR language contains an embedded Lisp dialect called TXR Lisp.
@@ -4814,19 +4865,19 @@ Bind variable b to the standard input stream:
 
 Define several Lisp functions using @(do):
 
-@(do 
-  (defun add (x y) (+ x y))
+  @(do 
+    (defun add (x y) (+ x y))
 
-  (defun occurs (item list)
-    (cond ((null list) nil)
-          ((atom list) (eql item list))
-          (t (or (eq (first list) item)
-                 (occurs item (rest list)))))))
+    (defun occurs (item list)
+      (cond ((null list) nil)
+            ((atom list) (eql item list))
+            (t (or (eq (first list) item)
+                   (occurs item (rest list)))))))
 
 Trigger a failure unless previously bound variable "answer" is greater
 than 42:
 
-@(require (> (str-int answer) 42)
+  @(require (> (str-int answer) 42)
 
 .SS Overview
 

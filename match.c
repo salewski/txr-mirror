@@ -112,6 +112,20 @@ static void file_err(val form, val fmt, ...)
   abort();
 }
 
+static void typed_error(val type, val form, val fmt, ...)
+{
+  va_list vl;
+  val stream = make_string_output_stream();
+
+  va_start (vl, fmt);
+  if (form)
+    format(stream, lit("(~a) "), source_loc_str(form), nao);
+  (void) vformat(stream, fmt, vl);
+  va_end (vl);
+
+  uw_throw(type, get_string_from_stream(stream));
+  abort();
+}
 
 static void dump_shell_string(const wchar_t *str)
 {
@@ -3562,6 +3576,37 @@ static val v_require(match_files_ctx *c)
   return next_spec_k;
 }
 
+static val v_assert(match_files_ctx *c)
+{
+  spec_bind (specline, first_spec, c->spec);
+
+  if (rest(specline))
+    return decline_k;
+
+  c->spec = rest(c->spec);
+
+  if (!c->spec)
+    return cons(c->bindings, cons(c->data, c->data_lineno));
+
+  {
+    val args = rest(first_spec);
+    val type = pop(&args);
+    val result = match_files(*c);
+
+    if (result) {
+      return result;
+    } else if (type) {
+      val values = mapcar(curry_123_2(func_n3(txeval_allow_ub), 
+                                      specline, c->bindings), args);
+      uw_throw(type, values);
+    } else {
+      if (c->curfile)
+        typed_error(assert_s, first_spec, lit("assertion (at ~s:~s)"), c->curfile, c->data_lineno, nao);
+      typed_error(assert_s, first_spec, lit("assertion (line ~s)"), c->data_lineno, nao);
+    }
+  }
+  abort();
+}
 
 static val v_load(match_files_ctx *c)
 {
@@ -3649,6 +3694,26 @@ static val h_do(match_line_ctx *c)
   val args = rest(elem);
   (void) eval_progn(args, make_env(c->bindings, nil, nil), elem);
   return next_spec_k;
+}
+
+static val h_assert(match_line_ctx *c)
+{
+  val elem = rest(first(c->specline));
+  val type = pop(&elem);
+  val result = match_line(ml_specline(*c, rest(c->specline)));
+
+  if (result) {
+    return result;
+  } else if (type) {
+    val values = mapcar(curry_123_2(func_n3(txeval_allow_ub), 
+                                    c->specline, c->bindings), elem);
+    uw_throw(type, values);
+  } else {
+    if (c->file)
+      typed_error(assert_s, elem, lit("assertion (at ~s:~s)"), c->file, c->data_lineno, nao);
+    typed_error(assert_s, elem, lit("assertion (line ~s)"), c->data_lineno, nao);
+  }
+  abort();
 }
 
 static void open_data_source(match_files_ctx *c)
@@ -3954,6 +4019,7 @@ static void dir_tables_init(void)
   sethash(v_directive_table, eof_s, cptr((mem_t *) v_eof));
   sethash(v_directive_table, do_s, cptr((mem_t *) v_do));
   sethash(v_directive_table, require_s, cptr((mem_t *) v_require));
+  sethash(v_directive_table, assert_s, cptr((mem_t *) v_assert));
   sethash(v_directive_table, load_s, cptr((mem_t *) v_load));
   sethash(v_directive_table, close_s, cptr((mem_t *) v_close));
 
@@ -3981,6 +4047,7 @@ static void dir_tables_init(void)
   sethash(h_directive_table, eol_s, cptr((mem_t *) h_eol));
   sethash(h_directive_table, do_s, cptr((mem_t *) h_do));
   sethash(h_directive_table, require_s, cptr((mem_t *) hv_trampoline));
+  sethash(h_directive_table, assert_s, cptr((mem_t *) h_assert));
 
   sethash(non_matching_directive_table, block_s, t);
   sethash(non_matching_directive_table, accept_s, t);
@@ -4001,6 +4068,7 @@ static void dir_tables_init(void)
   sethash(non_matching_directive_table, deffilter_s, t);
   sethash(non_matching_directive_table, filter_s, t);
   sethash(non_matching_directive_table, require_s, t);
+  sethash(non_matching_directive_table, assert_s, t);
   sethash(non_matching_directive_table, do_s, t);
   sethash(non_matching_directive_table, load_s, t);
   sethash(non_matching_directive_table, close_s, t);
