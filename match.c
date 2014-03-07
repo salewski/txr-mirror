@@ -2267,7 +2267,7 @@ static val v_next(match_files_ctx *c)
         sem_error(specline, lit("(next :env) takes no additional arguments"), nao);
       } else {
         cons_bind (new_bindings, success,
-                   match_files(mf_data(*c, env(), num(1))));
+                   match_files(mf_file_data(*c, lit("env"), env(), num(1))));
 
         if (success)
           return cons(new_bindings,
@@ -3689,6 +3689,7 @@ static void open_data_source(match_files_ctx *c)
         }
 
         c->files = cons(name, cdr(c->files)); /* Get rid of cons and nothrow */
+        c->curfile = source_spec;
 
         if ((c->data = complex_snarf(fp, name)) != nil)
           c->data_lineno = num(1);

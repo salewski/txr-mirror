@@ -1,5 +1,12 @@
 2014-03-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c: (v_next): Set the "curfile" in the context to "env" when
+	scanning environment.
+	(open_data_source): Regression: was not setting c->curfile when opening
+	anything.
+
+2014-03-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (apply_intrinsic, lazy_mapcar): Changed linkage to external.
 
 	* eval.h (apply_intrinsic, lazy_mapcar): Declarations added.
