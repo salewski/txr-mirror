@@ -426,6 +426,12 @@ val pop(val *plist)
   return ret;
 }
 
+val upop(val *plist, val *pundo)
+{
+  *pundo = *plist;
+  return pop(plist);
+}
+
 val push(val value, val *plist)
 {
   /* Unsafe for mutating object fields: use mpush macro. */

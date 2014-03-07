@@ -385,6 +385,7 @@ val *tail(val cons);
 val *lastcons(val list);
 val *ltail(val *cons);
 val pop(val *plist);
+val upop(val *plist, val *pundo);
 val push(val v, val *plist);
 val copy_list(val list);
 val make_like(val list, val thatobj);

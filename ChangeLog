@@ -1,5 +1,21 @@
 2014-03-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (upop): New function.
+
+	* lib.h (upop): Declared.
+
+	* txr.c (txr_main): Two bugfixes. One is that the argument -
+	was being pushed back twice resulting in *args* being ("-" "-").
+	This is because the option processing loop checked for "-" and pushed
+	it back into args, and then some logic after the loop pushed arg back
+	into args again. But, these pushes were wrong because they push
+	back a different cons cell; we would like to be able to
+	do (ldiff *full-args* *args*). This is solved by upop, which provides
+	one element of undo. After upop, we can restore the prior list
+	from the undo save location.
+
+2014-03-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (assert_s): New global variable.
 	(obj_init): Intern assert symbol, store in assert_s.
 

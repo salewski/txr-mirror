@@ -178,7 +178,7 @@ int txr_main(int argc, char **argv)
   val bindings = nil;
   val evaled = nil;
   int match_loglevel = opt_loglevel;
-  val arg;
+  val arg_undo = nil, arg;
   list_collect_decl(arg_list, arg_tail);
 
   prot1(&spec_file_str);
@@ -199,15 +199,15 @@ int txr_main(int argc, char **argv)
 
   arg_list = cdr(arg_list);
 
-  for (arg = pop(&arg_list); arg && car(arg) == chr('-'); arg = pop(&arg_list))
+  for (arg = upop(&arg_list, &arg_undo);
+       arg && car(arg) == chr('-');
+       arg = upop(&arg_list, &arg_undo))
   {
     if (equal(arg, lit("--")))
       break;
 
-    if (equal(arg, lit("-"))) {
-      push(arg, &arg_list);
+    if (equal(arg, lit("-")))
       break;
-    }
 
     if (equal(sub(arg, zero, two), lit("-D"))) {
       val dopt_arg = sub(arg, two, t);
@@ -247,7 +247,7 @@ int txr_main(int argc, char **argv)
         return EXIT_FAILURE;
       }
 
-      arg = pop(&arg_list);
+      arg = upop(&arg_list, &arg_undo);
 
       switch (c_chr(opt)) {
       case 'a':
@@ -383,7 +383,7 @@ int txr_main(int argc, char **argv)
       specstring = cat_str(list(specstring, string(L"\n"), nao), nil);
     yyin_stream = make_string_byte_input_stream(specstring);
     if (arg)
-      push(arg, &arg_list);
+      arg_list = arg_undo;
   } else if (spec_file) {
     if (wcscmp(c_str(spec_file), L"-") != 0) {
       FILE *in = w_fopen(c_str(spec_file), L"r");
@@ -395,7 +395,7 @@ int txr_main(int argc, char **argv)
       spec_file_str = lit("stdin");
     }
     if (arg)
-      push(arg, &arg_list);
+      arg_list = arg_undo;
   } else {
     if (!arg) {
       if (evaled)
