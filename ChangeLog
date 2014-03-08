@@ -1,5 +1,14 @@
 2014-03-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (LOG_MATCH, LOG_MISMATCH): Wouldn't you know it;
+	the format strings in these macros contained a workaround for
+	the broken * variable field width syntax, specifying
+	~*~a where the extra ~ in the middle just feeds a character
+	that the broken state machine expects.  These workarounds broke when I
+	fixed the formatting, making -v mode useless.
+
+2014-03-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	Version 84
 
 	* txr.c (version): Bumped.

@@ -407,14 +407,14 @@ typedef val (*h_match_func)(match_line_ctx *c);
           plus(c->pos, c->base), c->file, c->data_lineno, nao);         \
   debuglf(elem, lit("  ~a"), c->dataline, nao);                         \
   if (c_num(c->pos) < 77)                                               \
-    debuglf(elem, lit("  ~*~a^"), c->pos, lit(""), nao)
+    debuglf(elem, lit("  ~*a^"), c->pos, lit(""), nao)
 
 #define LOG_MATCH(KIND, EXTENT)                                         \
   debuglf(elem, lit(KIND " matched, position ~a-~a (~a:~a)"),           \
           plus(c->pos, c->base), EXTENT, c->file, c->data_lineno, nao); \
   debuglf(elem, lit("  ~a"), c->dataline, nao);                         \
   if (c_num(EXTENT) < 77)                                               \
-    debuglf(elem, lit("  ~*~a~<*~a^"), c->pos, lit(""),                 \
+    debuglf(elem, lit("  ~*a~<*a^"), c->pos, lit(""),                   \
               minus(EXTENT, c->pos), lit("^"), nao)
 
 #define elem_bind(elem_var, directive_var, specline)    \
