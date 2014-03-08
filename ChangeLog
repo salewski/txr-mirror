@@ -1,5 +1,9 @@
 2014-03-08  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Added missing documentation for @(forget)/@(local).
+
+2014-03-08  Kaz Kylheku  <kaz@kylheku.com>
+
 	* rand.c (rand_init): Oops! Spectacular silliness here
 	broke the symbol module: two intern calls in consecutive
 	lines, one for the name without "earmuffs", one with,

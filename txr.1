@@ -1389,6 +1389,12 @@ Evaluates an expression in the current binding environment, and
 then creates new bindings for the variables in the structural pattern.
 Useful for temporarily overriding variable values in a scope.
 
+.IP @(forget)
+Removes variable bindings.
+
+.IP @(local)
+Synonym of @(forget).
+
 .IP @(output)
 A directive which encloses an output clause in the query. An output section
 does not match text, but produces text. The directives above are not
@@ -2852,6 +2858,35 @@ to write and faster to execute:
   @;; ...
   @(end)
 
+.SS The Forget Directive
+
+The Forget Directive has two spellings @(forget) and @(local).
+
+The arguments are one or more symbols, for example:
+
+  @(forget a)
+  @(local a b c)
+
+this can be written
+
+  @(local a)
+  @(local a b c)
+
+Directives which follow the forget or local directive no longer see
+any bindings for the symbols mentioned in that directive, and
+can establish new bindings.
+
+It is not an error if the bindings do not exist.
+
+It is strongly recommended to use @(local) spelling in functions,
+because the forgetting action simulates local variables:
+for the given symbols, the machine forgets any earlier variables
+from outside of the function, and consequently, any new bindings
+for those variables belong to the function. (Furthermore,
+functions suppress the propagation of variables that are not
+in their parameter list, so these locals will be automatically
+forgotten when the function terminates.)
+
 .SH BLOCKS
 
 .SS Introduction
@@ -3471,6 +3506,44 @@ Example:
   Data:           B
 
   Output:         fun="horizontal"
+
+.SS Local Variables
+
+As described earlier, variables bound in a function body which are not
+parameters of the function are discarded when the function returns. However,
+that, by itself, doesn't make these variables local, because pattern functions
+have visibility to all variables in their calling environment. If a variable x
+exists already when a function is called, then an attempt to bind it inside a
+function may result in a failure.  The @(local) directive must be used in a
+pattern function to list which variables are local. 
+
+Example:
+
+  @(define path (path))@\e
+    @(local x y)@\e
+    @(cases)@\e
+      (@(path x))@(path y)@(bind path `(@x)@y`)@\e
+    @(or)@\e
+      @{x /[.,;'!?][^ \et\ef\ev]/}@(path y)@(bind path `@x@y`)@\e
+    @(or)@\e
+      @{x /[^ .,;'!?()\et\ef\ev]/}@(path y)@(bind path `@x@y`)@\e
+    @(or)@\e
+      @(bind path "")@\e
+    @(end)@\e
+  @(end)
+
+This is a horizontal function which matches a path, which lands into four
+recursive cases. A path can be parenthesized path followed by a path; it can be
+a certain character followed by a path, or it can be empty
+
+This function ensures that the variables it uses internally, x and y, 
+do not have anything to do with any inherited bindings for x and y.
+
+Note that the function is recursive, which cannot work without x and y being
+local, even if no such bindings exist prior to the top-level invocation of the
+function. The invocation @(path x) causes x to be bound, which is
+visible inside the invocation @(path y), but that invocation needs
+to have its own binding of x for local use.
 
 .SS Nested Functions
 
