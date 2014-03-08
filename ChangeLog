@@ -1,3 +1,11 @@
+2014-03-08  Kaz Kylheku  <kaz@kylheku.com>
+
+	* rand.c (rand_init): Oops! Spectacular silliness here
+	broke the symbol module: two intern calls in consecutive
+	lines, one for the name without "earmuffs", one with,
+	leading to the situation that the C code looks for a
+	dynamic variable that does not exist.
+
 2014-03-07  Kaz Kylheku  <kaz@kylheku.com>
 
 	* match.c (LOG_MATCH, LOG_MISMATCH): Wouldn't you know it;

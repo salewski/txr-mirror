@@ -249,7 +249,6 @@ val rnd(val modulus, val state)
 
 void rand_init(void)
 {
-  random_state_s = intern(lit("random-state"), user_package);
-  reg_var(intern(lit("*random-state*"), user_package),
-          make_random_state(num_fast(42)));
+  random_state_s = intern(lit("*random-state*"), user_package);
+  reg_var(random_state_s, make_random_state(num_fast(42)));
 }
