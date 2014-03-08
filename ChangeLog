@@ -1,5 +1,19 @@
 2014-03-08  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 85
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version, set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES: Updated
+
+	* txr.vim: Updated.
+
+2014-03-08  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: Added missing documentation for @(forget)/@(local).
 
 2014-03-08  Kaz Kylheku  <kaz@kylheku.com>

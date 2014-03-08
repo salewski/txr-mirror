@@ -1,3 +1,15 @@
+                                     TXR 85
+                                   2014-03-07
+
+  Bugs
+
+  - Fixed a regression related to the *random-state* variable, 
+    breaking all pseudo-random number functions.
+
+  - Fixed broken "txr -v".
+
+
+
                                      TXR 84
                                    2014-03-07
 
