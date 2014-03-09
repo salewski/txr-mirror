@@ -1,5 +1,26 @@
 2014-03-08  Kaz Kylheku  <kaz@kylheku.com>
 
+	Issue: match_regex and search_regex were continuing to feed characters
+	to the regex machine even when there is no transition available.  This
+	was due to the broken return value protocol of regex_machine_feed.  For
+	instance for the regex / +/ (one or more spaces), after matching some
+	spaces, it would report REGM_INCOMPLETE for additional non-space
+	characters, never reporting REGM_FAIL.
+
+	* regex.c (regm_result_t): Block comment added, documenting protocol.
+	(regex_machine_feed): Return REGM_FAIL if there are no transitions for
+	the given character, even a partial match has been recorded. This is
+	a signal to stop feeding more characters. At that point, the function
+	can be called with a null character to distinguish the three cases:
+	fail, partial or full match. 
+	(search_regex): Now when the search loop gets a REGM_FAIL, it can
+	no longer assume that nothing was matched and the search must restart
+	at the next position. Upon the REGM_FAIL signal, it is necesary to
+	seal the search by feeding in the 0 character. Only if that returns
+	REGM_FAIL is it a no match situation. Otherwise it is actually a match!
+
+2014-03-08  Kaz Kylheku  <kaz@kylheku.com>
+
 	Version 85
 
 	* txr.c (version): Bumped.

@@ -54,8 +54,32 @@ typedef struct nfa {
   nfa_state_t *accept;
 } nfa_t;
 
+/*
+ * Result from regex_machine_feed.
+ * These values have two meanings, based on whether
+ * the matching is still open (characters are being fed)
+ * or finalized. 
+ *
+ * When feeding characters:
+ * REGM_INCOMPLETE: no match at this character, but matching can continue.
+ * REGM_FAIL: no more state transitions are possible.
+ * REGM_MATCH: match (accept state) for this character.
+ * 
+ * When the end of the input is encountered, or a REGM_FAIL,
+ * then regex_machine_feed is called one more time with
+ * the null character. It then reports:
+ * REGM_INCOMPLETE: there was a partial match for the input.
+ * REGM_FAIL: none of the input matched.
+ * REGM_MATCH: the input was completely matched
+ *
+ * Note that a REGM_FAIL (no transitions) during the character feeding phase
+ * can turn into REGM_INCOMPLETE (partial match) when the match is sealed with
+ * the null character signal!
+ */
 typedef enum regm_result {
-  REGM_INCOMPLETE, REGM_FAIL, REGM_MATCH
+  REGM_INCOMPLETE,
+  REGM_FAIL,
+  REGM_MATCH
 } regm_result_t;
 
 typedef union regex_machine regex_machine_t;
@@ -1097,7 +1121,7 @@ static int nfa_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
   int i, nout = 0;
   int stackp = 0;
 
-  /* First, add all states in the input state to the closure,
+  /* First, add all states in the input set to the closure,
      push them on the stack, and mark them as visited. */
   for (i = 0; i < nin; i++) {
     if (stackp >= NFA_SET_SIZE)
@@ -1728,16 +1752,14 @@ static regm_result_t regex_machine_feed(regex_machine_t *regm, wchar_t ch)
                                   regm->n.nmove, regm->n.clos,
                                   regm->n.visited++, &accept);
 
-      if (accept)
+      regm->n.nfa.start->a.visited = regm->n.visited;
+
+      if (accept) {
         regm->n.last_accept_pos = regm->n.count;
-    }
+        return REGM_MATCH;
+      }
 
-    regm->n.nfa.start->a.visited = regm->n.visited;
-
-    if (ch && regm->n.nclos != 0) {
-      if (accept)
-         return REGM_MATCH;
-      return REGM_INCOMPLETE;
+      return (regm->n.nclos != 0) ? REGM_INCOMPLETE : REGM_FAIL;
     }
   } else {
     val accept = nil;
@@ -1745,14 +1767,13 @@ static regm_result_t regex_machine_feed(regex_machine_t *regm, wchar_t ch)
     if (ch != 0) {
       regm->d.count++;
       regm->d.deriv = reg_derivative(regm->d.deriv, chr(ch));
-      if ((accept = reg_nullable(regm->d.deriv)))
-        regm->d.last_accept_pos = regm->d.count;
-    }
 
-    if (ch && regm->d.deriv != t) {
-      if (accept)
-         return REGM_MATCH;
-      return REGM_INCOMPLETE;
+      if ((accept = reg_nullable(regm->d.deriv))) {
+        regm->d.last_accept_pos = regm->d.count;
+        return REGM_MATCH;
+      }
+
+      return (regm->d.deriv != t) ? REGM_INCOMPLETE : REGM_FAIL;
     }
   }
 
@@ -1765,7 +1786,6 @@ static regm_result_t regex_machine_feed(regex_machine_t *regm, wchar_t ch)
     return REGM_FAIL;
   return REGM_INCOMPLETE;
 }
-
 
 val search_regex(val haystack, val needle_regex, val start,
                  val from_end)
@@ -1798,9 +1818,13 @@ again:
         last_res = regex_machine_feed(&regm, c_chr(chr_str(haystack, i)));
 
         if (last_res == REGM_FAIL) {
-          regex_machine_reset(&regm);
-          pos = plus(pos, one);
-          goto again;
+          last_res = regex_machine_feed(&regm, 0);
+          if (last_res == REGM_FAIL) {
+            regex_machine_reset(&regm);
+            pos = plus(pos, one);
+            goto again;
+          }
+          break;
         }
       }
 
