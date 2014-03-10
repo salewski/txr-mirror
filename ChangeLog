@@ -1,5 +1,12 @@
 2014-03-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (v_trailer): Fix segfault. The code which
+	helps implement the special interaction between @(accept) and
+	@(trailer) was not handling the situation when there is not
+	current unwind exit point.
+
+2014-03-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.l: Syntactic tweak. Do not allow the "extra"
 	constituent chars # or ^ to start the symbol name after an @.
 	Prior to this change @^a is a "meta-symbol" whose name is "^a",

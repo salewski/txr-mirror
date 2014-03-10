@@ -2129,7 +2129,7 @@ static val v_trailer(match_files_ctx *c)
      */
     uw_unwind {
       uw_frame_t *ex = uw_current_exit_point();
-      if (ex->uw.type == UW_BLOCK && ex->bl.protocol == accept_s)
+      if (ex && ex->uw.type == UW_BLOCK && ex->bl.protocol == accept_s)
         rplacd(ex->bl.result, cons(c->data, c->data_lineno));
     }
 
