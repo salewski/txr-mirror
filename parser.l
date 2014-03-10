@@ -164,13 +164,13 @@ ID_END  [^a-zA-Z0-9!$%&*+\-<=>?\\_~/]
 EXTRA   [#^]
 TOK     {SYM}
 BT0     {BSCHR}({BSCHR}|{EXTRA})*
-BT1     @({BSCHR}|{EXTRA})+
+BT1     @{BT0}+
 BT2     ({BSCHR}|{EXTRA})+
 BTREG   (({BT0}|{BT1})?:{BT2}|({BT0}|{BT1})(:{BT2})?|:)
 BTKEY   @?:{BT2}?
 BTOK    {BTREG}|{BTKEY}
 NT0     {NSCHR}({NSCHR}|{EXTRA})*
-NT1     @({NSCHR}|{EXTRA})+
+NT1     @{NT0}+
 NT2     ({NSCHR}|{EXTRA})+
 NTREG   (({NT0}|{NT1})?:{NT2}|({NT0}|{NT1})(:{NT2})?|:)
 NTKEY   @?:{NT2}?
