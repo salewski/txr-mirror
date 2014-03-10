@@ -1,3 +1,18 @@
+2014-03-09  Kaz Kylheku  <kaz@kylheku.com>
+
+	Fixing broken processing of horizontal matching across
+	long lines produced by @(freeform). Once the matching
+	passes about 4000 characters, the "consume_prefix"
+	function kicks in to save memory. Then any code which is
+	not properly written to handle this displaced situation
+	will break.
+
+	* match.c (h_text, h_var, h_coll, h_parallel, h_fun): Bugfix.
+	The recursive calls to match_line return an absolute position.
+	From this value we must subtract c->base if we are to 
+	compare it with c->pos, or update c->pos.  If we use the
+	absolute value, we are abruptly jumping ahead in the data.
+
 2014-03-08  Kaz Kylheku  <kaz@kylheku.com>
 
 	Issue: match_regex and search_regex were continuing to feed characters

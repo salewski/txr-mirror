@@ -428,7 +428,7 @@ static val h_text(match_line_ctx *c)
   val new_pos = cdr(match_line(ml_specline(*c, texts)));
 
   if (new_pos) {
-    c->pos = new_pos;
+    c->pos = minus(new_pos, c->base);
     return next_spec_k;
   }
 
@@ -538,6 +538,8 @@ static val h_var(match_line_ctx *c)
       LOG_MISMATCH("var spanning form");
       return nil;
     }
+
+    new_pos = minus(new_pos, c->base);
 
     LOG_MATCH("var spanning form", new_pos);
     if (sym)
@@ -785,6 +787,8 @@ static val h_coll(match_line_ctx *c)
                    match_line(ml_bindings_specline(*c, new_bindings, spec)));
 
         if (until_pos) {
+          until_pos = minus(until_pos, c->base);
+
           LOG_MATCH("until/last", until_pos);
           if (sym == last_s) {
             last_bindings = set_diff(until_last_bindings,
@@ -802,6 +806,8 @@ static val h_coll(match_line_ctx *c)
         val strictly_new_bindings = set_diff(new_bindings,
                                              c->bindings, eq_f, nil);
         val have_new = strictly_new_bindings;
+
+        new_pos = minus(new_pos, c->base);
         LOG_MATCH("coll", new_pos);
 
         for (iter = vars; iter; iter = cdr(iter)) {
@@ -935,6 +941,7 @@ static val h_parallel(match_line_ctx *c)
 
     if (new_pos) {
       some_match = t;
+      new_pos = minus(new_pos, c->base);
 
       if (resolve_ub_vars) {
         val uiter;
@@ -1101,7 +1108,7 @@ static val h_fun(match_line_ctx *c)
           }
         }
 
-        c->pos = success;
+        c->pos = minus(success, c->base);
       }
     }
 
