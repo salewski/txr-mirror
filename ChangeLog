@@ -1,5 +1,13 @@
 2014-03-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (lazy_sub_str): Bugfix: "from" was mistakenly used
+	in the adjustment of the "to" value.
+
+	* match.c (search_form): Use predefined constants for -1 and 1
+	instead of calling num.
+
+2014-03-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	Fixing broken processing of horizontal matching across
 	long lines produced by @(freeform). Once the matching
 	passes about 4000 characters, the "consume_prefix"

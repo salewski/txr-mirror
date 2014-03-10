@@ -457,7 +457,7 @@ static val search_form(match_line_ctx *c, val needle_form, val from_end)
   } else {
     val spec = cons(needle_form, nil);
     val pos = from_end ? length_str(c->dataline) : c->pos;
-    val step = from_end ? num(-1) : num(1);
+    val step = from_end ? negone : one;
 
     rlcp(spec, needle_form);
 

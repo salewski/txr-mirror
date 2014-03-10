@@ -2064,7 +2064,7 @@ static val lazy_sub_str(val lstr, val from, val to)
     to = t;
   } else {
     if (lt(to, zero)) {
-      to = plus(from, len = length_str(lstr));
+      to = plus(to, len = length_str(lstr));
       to = max(zero, to);
     }
 
