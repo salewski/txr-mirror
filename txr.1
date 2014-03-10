@@ -11685,7 +11685,7 @@ finalized, so that further output is no longer possible.
 .TP
 Syntax:
 
-  (close-stream <stream>)
+  (close-stream <stream> [<throw-on-error-p>])
 
 .TP
 Description:
@@ -11696,6 +11696,23 @@ such as string streams, it does nothing. For streams which are connected
 to operating system files or devices, will perform a close of the underlying
 file descriptor, and dissociate that descriptor from the stream. Any buffered
 data is flushed first.
+
+The function returns a boolean true value if the close has occurred without
+errors, otherwise nil.
+
+For most streams, "without errors" means that any buffered output data is
+flushed successfully.
+
+For command and process pipes (see open-command and open-process), success also
+means that the process terminates normally, with a successful error code, or an
+unsuccessul one. An abnormal termination is considered an error, as
+as is the inability to retrieve the termination status, as well as the situation
+that the process continues running in spite of the close attempt.
+Detecting these situations is platform specific.
+
+If the <throw-on-error-p> argument is specified, and isn't nil, then the
+function throws an exception if an error occurs during the close operation
+instead of returning nil.
 
 .SS Functions get-line, get-char and get-byte
 

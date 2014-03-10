@@ -1,3 +1,14 @@
+2014-03-10  Kaz Kylheku  <kaz@kylheku.com>
+
+	* stream.c (pipe_close): Restructured the function a bit.
+	Do not throw exceptions for normal process terminations, only for
+	abnormal ones (terminated by a signal). Return the termination
+	status instead of just t.
+
+	* txr.1: Fixed the neglected documentation of the optional boolean
+	argument of close-stream. Described the behaviors with regard
+	to pipes in more detail.
+
 2014-03-09  Kaz Kylheku  <kaz@kylheku.com>
 
 	* match.c (v_trailer): Fix segfault. The code which

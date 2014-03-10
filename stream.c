@@ -654,36 +654,37 @@ static val pipe_close(val stream, val throw_on_error)
 #endif
     h->f = 0;
 
-    if (status != 0 && throw_on_error) {
-      if (status < 0) {
+    if (status < 0) {
+      if (throw_on_error)
         uw_throwf(process_error_s,
                   lit("unable to obtain status of command ~a: ~a/~s"),
                   stream, num(errno), string_utf8(strerror(errno)), nao);
+    } else {
 #ifdef HAVE_SYS_WAIT
+      if (throw_on_error) {
+        if (WIFSIGNALED(status)) {
+          int termsig = WTERMSIG(status);
+          uw_throwf(process_error_s, lit("pipe ~a terminated by signal ~a"),
+                    stream, num(termsig), nao);
 #ifndef WIFCONTINUED
 #define WIFCONTINUED(X) 0
 #endif
-      } else if (WIFEXITED(status)) {
-        int exitstatus = WEXITSTATUS(status);
-        uw_throwf(process_error_s, lit("pipe ~a terminated with status ~a"),
-                  stream, num(exitstatus), nao);
-      } else if (WIFSIGNALED(status)) {
-        int termsig = WTERMSIG(status);
-        uw_throwf(process_error_s, lit("pipe ~a terminated by signal ~a"),
-                  stream, num(termsig), nao);
-
-      } else if (WIFSTOPPED(status) || WIFCONTINUED(status)) {
-        uw_throwf(process_error_s,
-                  lit("processes of closed pipe ~a still running"),
-                  stream, nao);
-      } else {
-        uw_throwf(file_error_s, lit("strange status in when closing pipe ~a"),
-                  stream, nao);
-#endif
+        } else if (WIFSTOPPED(status) || WIFCONTINUED(status)) {
+          uw_throwf(process_error_s,
+                    lit("processes of closed pipe ~a still running"),
+                    stream, nao);
+        }
       }
-    }
-
-    return status == 0 ? t : nil;
+      if (WIFEXITED(status)) {
+        int exitstatus = WEXITSTATUS(status);
+        return num(exitstatus);
+      }
+#else
+      if (status != 0 && throw_on_error)
+        uw_throwf(process_error_s, lit("closing pipe ~a failed"), stream, nao);
+#endif
+      return status == 0 ? zero : nil;
+    } 
   }
   return nil;
 }
