@@ -38,6 +38,9 @@
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#if HAVE_FCNTL_H
+#include <fcntl.h>
+#endif
 #include <float.h>
 #if HAVE_SYS_WAIT
 #include <sys/wait.h>
@@ -2131,7 +2134,7 @@ val open_process(val name, val mode_str, val args)
   int i, nargs;
 
   args = default_bool_arg(args);
-  nargs = c_num(length(args));
+  nargs = c_num(length(args)) + 1;
 
   if (pipe(fd) == -1) {
     uw_throwf(file_error_s, lit("opening pipe ~a, pipe syscall failed: ~a/~s"),
@@ -2151,6 +2154,9 @@ val open_process(val name, val mode_str, val args)
   pid = fork();
 
   if (pid == -1) {
+    for (i = 0; i < nargs; i++)
+      free(argv[i]);
+    free(argv);
     uw_throwf(file_error_s, lit("opening pipe ~a, fork syscall failed: ~a/~s"),
               name, num(errno), string_utf8(strerror(errno)), nao);
   } 
@@ -2186,6 +2192,10 @@ val open_process(val name, val mode_str, val args)
     for (i = 0; i < nargs; i++)
       free(argv[i]);
     free(argv);
+
+#if HAVE_FCNTL_H
+    fcntl(whichfd, F_SETFD, FD_CLOEXEC);
+#endif
 
     if ((f = fdopen(whichfd, utf8mode)) == 0) {
       int status;

@@ -1,5 +1,18 @@
 2014-03-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	* configure: new test for fcntl.
+
+	* stream.c (open_process): Fixed off-by one erroneous value of nargs,
+	causing memory leak of one string. Fixed memory leak on fork failure.
+	Fixed a deadlock that can occur in the pipe close function when
+	multiple pipes are in existence. This is fixed by setting the
+	FD_CLOEXEC flag on the pipe file descriptor. Without this, one child
+	process can hold another's pipe open, causing that other one not to
+	terminate when we're trying to shut it down, resulting in that child
+	blocked on a write, while we block on waitpid.
+
+2014-03-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (open_process): In the event of fdopen failure,
 	kill the child process less abruptly by hitting it with SIGINT and
 	SIGTERM, rather than with SIGKILL. Also, collect the child
