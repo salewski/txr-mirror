@@ -79,12 +79,12 @@ val for_s, for_star_s, each_s, each_star_s, collect_each_s, collect_each_star_s;
 val append_each_s, append_each_star_s;
 val dohash_s;
 val uw_protect_s, return_s, return_from_s;
-val list_s, append_s, apply_s, gen_s, gun_s, generate_s, rest_s;
+val list_s, append_s, apply_s, gen_s, gun_s, generate_s, rest_s, plus_s;
 val promise_s, op_s;
 val hash_lit_s, hash_construct_s;
 val vector_lit_s, vector_list_s;
 val macro_time_s, with_saved_vars_s, macrolet_s;
-val defsymacro_s, symacrolet_s;
+val defsymacro_s, symacrolet_s, prof_s;
 
 val special_s, whole_k;
 
@@ -1961,6 +1961,19 @@ static val op_with_saved_vars(val form, val env)
   return result;
 }
 
+static val op_prof(val form, val env)
+{
+  clock_t start_time = clock();
+  alloc_bytes_t start_mlbytes = malloc_bytes;
+  alloc_bytes_t start_gcbytes = gc_bytes;
+  val result = eval_progn(rest(form), env, form);
+  return list(result,
+              num(malloc_bytes - start_mlbytes),
+              num(gc_bytes - start_gcbytes),
+              trunc(mul(num(clock() - start_time), num_fast(1000)), num_fast(CLOCKS_PER_SEC)),
+              nao);
+}
+
 static val me_gen(val form, val menv)
 {
   (void) menv;
@@ -1986,6 +1999,27 @@ static val me_delay(val form, val menv)
               cons(lambda_s, cons(nil, rest(form))), nao);
 }
 
+static val me_pprof(val form, val menv)
+{
+  val retval = gensym(lit("retval-"));
+  val mbytes = gensym(lit("mal-bytes-"));
+  val gcbytes = gensym(lit("gc-bytes-"));
+  val msecs = gensym(lit("usecs-"));
+
+  (void) menv;
+  return list(tree_bind_s,
+              list(retval, mbytes, gcbytes, msecs, nao),
+              cons(prof_s, rest(form)),
+              list(format_s, t, lit("malloc bytes:  ~12a\n"
+                                    "gc heap bytes: ~12a\n"
+                                    "total:         ~12a\n"
+                                    "milliseconds:  ~12a\n"),
+                   mbytes, gcbytes,
+                   list(plus_s, mbytes, gcbytes, nao),
+                   msecs, nao),
+              retval,
+              nao);
+}
 
 val expand_forms(val form, val menv)
 {
@@ -3085,6 +3119,7 @@ void eval_init(void)
   with_saved_vars_s = intern(lit("with-saved-vars"), system_package);
   whole_k = intern(lit("whole"), keyword_package);
   special_s = intern(lit("special"), system_package);
+  prof_s = intern(lit("prof"), user_package);
 
   reg_op(quote_s, op_quote);
   reg_op(qquote_s, op_qquote_error);
@@ -3134,6 +3169,7 @@ void eval_init(void)
   reg_op(quasi_s, op_quasi_lit);
   reg_op(catch_s, op_catch);
   reg_op(with_saved_vars_s, op_with_saved_vars);
+  reg_op(prof_s, op_prof);
 
   reg_mac(gen_s, me_gen);
   reg_mac(gun_s, me_gun);
@@ -3142,6 +3178,7 @@ void eval_init(void)
   reg_mac(do_s, me_op);
   reg_mac(qquote_s, me_qquote);
   reg_mac(sys_qquote_s, me_qquote);
+  reg_mac(intern(lit("pprof"), user_package), me_pprof);
 
   reg_fun(cons_s, func_n2(cons));
   reg_fun(intern(lit("make-lazy-cons"), user_package), func_n1(make_lazy_cons));
@@ -3220,7 +3257,7 @@ void eval_init(void)
   reg_fun(intern(lit("eql"), user_package), eql_f);
   reg_fun(intern(lit("equal"), user_package), equal_f);
 
-  reg_fun(intern(lit("+"), user_package), func_n0v(plusv));
+  reg_fun(plus_s = intern(lit("+"), user_package), func_n0v(plusv));
   reg_fun(intern(lit("-"), user_package), func_n1v(minusv));
   reg_fun(intern(lit("*"), user_package), func_n0v(mulv));
   reg_fun(intern(lit("abs"), user_package), func_n1(abso));

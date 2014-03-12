@@ -1,3 +1,38 @@
+2014-03-12  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (plus_s, prof_s): New symbol global variables.
+	(op_prof, me_pprof): New static functions.
+	(eval_init): Intern prof symbol, store in prof_s.
+	Captured interned + symbol in plus_s. Register prof operator and pprof
+	macro.
+
+	* gc.c (gc_bytes): New global variable.
+	(more): Use nse function chk_malloc_gc_more instead of chk_malloc.
+	(make_obj): Increment gc_bytes.
+
+	* lib.c (malloc_bytes): New global variable.
+	(chk_malloc, chk_realloc): Increment malloc_bytes.
+	(chk_calloc): Bugfix: incorrect size in recursion into oom_realloc.
+	Incorrect calculation of malloc_high_bound.  Increment malloc_bytes.
+	(chk_malloc_gc_more): New function.
+
+	* lib.h (alloc_bytes_t): New typedef.
+	(malloc_bytes, gc_bytes): Declared.
+	(chk_malloc_gc_more): Declared.
+
+	* stream.c (format_s): New symbol global.
+	(stream_init): format_s inited.
+	format_s used to register formatv function.
+
+	* stream.h (format_s): Declared.
+
+	* txr.1: Documented prof and pprof.
+
+	* genvim.txr: Recognize reg_fun calls with intern
+	followed by a preceding assignment or other syntax.
+
+	* txr.vim: Updated.
+
 2014-03-11  Kaz Kylheku  <kaz@kylheku.com>
 
 	* configure: new test for fcntl.

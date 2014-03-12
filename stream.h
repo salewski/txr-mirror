@@ -61,6 +61,7 @@ extern val gid_k, rdev_k, size_k, blksize_k, blocks_k;
 extern val atime_k, mtime_k, ctime_k;
 extern val from_start_k, from_current_k, from_end_k;
 extern val real_time_k, name_k;
+extern val format_s;
 
 extern val stdin_s, stdout_s, stddebug_s, stderr_s, stdnull_s;
 

@@ -14026,6 +14026,66 @@ source code location info also, so that when the TXR Lisp evaluator
 encounters errors in transformed code, it can give diagnostics which refer
 to the original untransformed source code.
 
+.SH PROFILING
+
+.SS Operator prof
+
+.TP
+Syntax:
+
+  (prof <form>*)
+
+.TP
+Description:
+
+The prof operator evaluates the enclosed forms from left to right similarly
+to progn, while determining the memory allocation requests and time
+consumed by the evaluation of the forms.  
+
+If there are no forms, the prof operator measures the smallest measurable
+operation of evaluating nothing and producing nil.
+
+If the evaluation terminates normally (not abruptly by a non-local
+control transfer), then prof yields a list consisting of:
+
+  (<value> <malloc-bytes> <gc-bytes> <milliseconds>)
+
+where <values> is the value returned by the rightmost <form>, or nil if there
+are no forms, <malloc-bytes> is the total number of bytes of all malloc
+requests (or at least those known to the TXR runtime, such as those of all
+internal objects), <gc-bytes> is the total number of bytes drawn from the
+garbage-collected heaps, and <milliseconds> is the total processor time
+consumed over the execution of those forms.
+
+Notes:
+
+The bytes allocated by the garbage collector from malloc to create
+heap areas are not counted as <malloc-bytes>. <malloc-bytes> includes storage
+such as the space used for dynamic strings, vectors and bignums (in addition to
+their gc-heap allocated nodes), and the various structures used by the cobj
+type objects such as streams and hashes. Objects in external libraries that use
+un-instrumented allocators are not counted: for instance the C FILE * streams.
+
+.SS Macro pprof
+
+.TP
+Syntax:
+
+  (pprof <form>*)
+
+.TP
+Description:
+
+The pprof (pretty-printing prof) macro is similar to progn. It evaluates forms,
+and returns the rightmost one, or nil if there are no forms.
+
+Over the evaluation of the forms, it counts memory allocations, and measures
+CPU time. If the forms terminate normally, then just prior to returning,
+pprof prints these statistics are printed in a concise report on the
+*std-output* stream, prior to returning the value or nil.
+
+The pprof macro relies on the prof operator.
+
 .SH MODULARIZATION
 
 .SS Special variable *self-path*

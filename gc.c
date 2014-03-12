@@ -75,6 +75,8 @@ static val free_list, *free_tail = &free_list;
 static heap_t *heap_list;
 static val heap_min_bound, heap_max_bound;
 
+alloc_bytes_t gc_bytes;
+
 int gc_enabled = 1;
 
 #if CONFIG_GEN_GC
@@ -120,7 +122,7 @@ void protect(val *first, ...)
 
 static void more(void)
 {
-  heap_t *heap = (heap_t *) chk_malloc(sizeof *heap);
+  heap_t *heap = (heap_t *) chk_malloc_gc_more(sizeof *heap);
   obj_t *block = heap->block, *end = heap->block + HEAP_SIZE;
 
   if (end > heap_max_bound)
@@ -178,6 +180,7 @@ val make_obj(void)
       ret->t.gen = 0;
       freshobj[freshobj_idx++] = ret;
 #endif
+      gc_bytes += sizeof (obj_t);
       return ret;
     }
 

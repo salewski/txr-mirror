@@ -358,6 +358,15 @@ extern val prog_string;
 
 extern mem_t *(*oom_realloc)(mem_t *, size_t);
 
+#if HAVE_ULONGLONG_T 
+typedef ulonglong_t alloc_bytes_t;
+#else
+typedef unsigned long alloc_bytes_t;
+#endif
+
+extern alloc_bytes_t malloc_bytes;
+extern alloc_bytes_t gc_bytes;
+
 val identity(val obj);
 val typeof(val obj);
 val type_check(val obj, int);
@@ -426,6 +435,7 @@ val none_satisfy(val list, val pred, val key);
 val eql(val left, val right);
 val equal(val left, val right);
 mem_t *chk_malloc(size_t size);
+mem_t *chk_malloc_gc_more(size_t size);
 mem_t *chk_calloc(size_t n, size_t size);
 mem_t *chk_realloc(mem_t *, size_t size);
 int in_malloc_range(mem_t *);

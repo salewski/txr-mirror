@@ -71,6 +71,7 @@ val gid_k, rdev_k, size_k, blksize_k, blocks_k;
 val atime_k, mtime_k, ctime_k;
 val from_start_k, from_current_k, from_end_k;
 val real_time_k, name_k;
+val format_s;
 
 static void common_destroy(val obj)
 {
@@ -2624,6 +2625,7 @@ void stream_init(void)
   from_end_k = intern(lit("from-end"), keyword_package);
   real_time_k = intern(lit("real-time"), keyword_package);
   name_k = intern(lit("name"), keyword_package);
+  format_s = intern(lit("format"), user_package);
 
 #ifndef S_IFSOCK
 #define S_IFSOCK 0
@@ -2714,7 +2716,7 @@ void stream_init(void)
   reg_var(stdnull_s = intern(lit("*stdnull*"), user_package),
           make_null_stream());
 
-  reg_fun(intern(lit("format"), user_package), func_n2v(formatv));
+  reg_fun(format_s, func_n2v(formatv));
   reg_fun(intern(lit("make-string-input-stream"), user_package), func_n1(make_string_input_stream));
   reg_fun(intern(lit("make-string-byte-input-stream"), user_package), func_n1(make_string_byte_input_stream));
   reg_fun(intern(lit("make-string-output-stream"), user_package), func_n0(make_string_output_stream));
