@@ -2158,9 +2158,13 @@ val open_process(val name, val mode_str, val args)
   if (pid == 0) {
     if (input) {
       dup2(fd[1], STDOUT_FILENO);
+      if (fd[1] != STDOUT_FILENO) /* You never know */
+        close(fd[1]);
       close(fd[0]);
     } else {
       dup2(fd[0], STDIN_FILENO);
+      if (fd[0] != STDIN_FILENO) /* You never know */
+        close(fd[0]);
       close(fd[1]);
     }
 

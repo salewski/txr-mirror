@@ -1,3 +1,9 @@
+2014-03-11  Kaz Kylheku  <kaz@kylheku.com>
+
+	* stream.c (open_process): Close the original pipe file descriptor
+	in the child process after dup2-ing it to standard input or standard
+	output, so the child doesn't have to references to the pipe.
+
 2014-03-10  Kaz Kylheku  <kaz@kylheku.com>
 
 	* stream.c (pipe_close): Restructured the function a bit.
