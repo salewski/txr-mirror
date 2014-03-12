@@ -1,5 +1,12 @@
 2014-03-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (open_process): In the event of fdopen failure,
+	kill the child process less abruptly by hitting it with SIGINT and
+	SIGTERM, rather than with SIGKILL. Also, collect the child
+	process with waitpid.
+
+2014-03-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Registration of url_encode and url_decode
 	moved to filter.c.
 

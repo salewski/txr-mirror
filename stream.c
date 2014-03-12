@@ -2188,7 +2188,11 @@ val open_process(val name, val mode_str, val args)
     free(argv);
 
     if ((f = fdopen(whichfd, utf8mode)) == 0) {
-      kill(pid, SIGKILL);
+      int status;
+      kill(pid, SIGINT);
+      kill(pid, SIGTERM);
+      while (waitpid(pid, &status, 0) == -1 && errno == EINTR)
+        ;
       free(utf8mode);
       uw_throwf(file_error_s, lit("opening pipe ~a, fdopen failed: ~a/~s"),
                 name, num(errno), string_utf8(strerror(errno)), nao);
