@@ -3495,9 +3495,6 @@ void eval_init(void)
 
   reg_fun(intern(lit("match-fun"), user_package), func_n4(match_fun));
 
-  reg_fun(intern(lit("url-encode"), user_package), func_n2o(url_encode, 1));
-  reg_fun(intern(lit("url-decode"), user_package), func_n2o(url_decode, 1));
-
   reg_fun(intern(lit("time"), user_package), func_n0(time_sec));
   reg_fun(intern(lit("time-usec"), user_package), func_n0(time_sec_usec));
   reg_fun(intern(lit("time-string-local"), user_package), func_n2(time_string_local));

@@ -7,7 +7,8 @@ static void dir_tables_init(void)
 @(until)
 }
 @(end)
-@(next @(open-files '("eval.c" "rand.c" "signal.c" "stream.c" "syslog.c" "txr.c")))
+@(next @(open-files '("eval.c" "rand.c" "signal.c" "stream.c"
+                      "syslog.c" "filter.c" "txr.c")))
 @(collect)
 @  (block)
 @    (cases)

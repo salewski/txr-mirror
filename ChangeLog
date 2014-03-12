@@ -1,5 +1,22 @@
 2014-03-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Registration of url_encode and url_decode
+	moved to filter.c.
+
+	* filter.c (trie_compress_intrinsic, html_encode, html_decode): New
+	static functions.
+	(filter_init): Register make_trie, trie_add, trie_compress_intrinsic,
+	filter_string_tree, filter_equal, html_encode and html_decode
+	as intrinsics. Move registration of url_encode and url_decode here.
+
+	* genvim.txr: Look for registrations in filter.c too.
+
+	* txr.1: Documented.
+
+	* txr.vim: Updated.
+
+2014-03-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (open_process): Close the original pipe file descriptor
 	in the child process after dup2-ing it to standard input or standard
 	output, so the child doesn't have to references to the pipe.

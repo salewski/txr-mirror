@@ -13179,6 +13179,161 @@ argument is omitted or specified as nil, then + (plus) characters in the
 encoded data are retained as + characters in the decoded strings. Otherwise,
 plus characters are converted to spaces.
 
+.SS Functions html-encode and html-decode
+
+.TP
+Syntax:
+
+   (html-encode <text-string>)
+   (html-decode <html-string>)
+
+.TP
+Description:
+
+The html-encode and decode functions convert between an HTML and raw
+representation of of text. 
+
+The hml-encode function returns a string which is based on the content of
+<text-string>, but in which all characters which have special meaning in HTML
+have been replaced by special HTML codes for representing those characters.
+The returned string is the HTML-encoded verbatim representation of
+<text-string>.
+
+The html-decode function converts <html-string>, which may contain HTML
+character encodings, into a string which contains the characters represented
+by those encodings.
+
+The function composition (html-decode (html-encode text)) returns a string
+which is equal to text.
+
+The reverse composition (html-encode (html-decode html)) does not necessarily
+return a string equal to text.
+
+For instance if html is the string "<p>Hello, world&#33;</p>",
+then html-decode produces "<p>Hello, world!</p>". Then, html-encode
+produces "&lt;p&gt;Hello, world!&lt;/p&gt;".
+
+.SH FILTER MODULE
+
+The filter module provides a trie (pronunced "try") data structure,
+which is suitable for representing dictionaries for efficient filtering.
+Dictionaires are unordered collections of keys, which are strings, which 
+have associated values, which are also strings.  A trie can be used to filter
+text, such that keys appearing in the text are replaced by the corresponding
+values. A trie supports this filtering operation by providing an efficient
+prefix-based lookup method which only looks at each input character ones, and
+which does not require knowledge of the length of the key in advance.
+
+.SS Function make-trie
+
+.TP
+Syntax:
+
+  (make-trie)
+
+.TP
+Description:
+
+This function creates an empty trie. There is no special data type for
+a trie; a trie is some existing type such as a hash table.
+
+.SS Function trie-add
+
+.TP
+Syntax:
+
+  (trie-add <trie> <key> <value>)
+
+.TP
+Description:
+
+The trie-add function adds the string <key> to the trie, associating
+it with <value>. If <key> already exists in <trie>, then the value
+is updated with <value>.
+
+The <trie> must be a trie that has not been compressed with trie-compress.
+
+A trie can contain keys which are prefixes of other keys. For instance
+it can contain "dog" and "dogma". When a trie is used for matching
+and substitution, the longest match is used. If the input presents
+the text "doggy", then the match is "dog".  If the input is "dogmatic",
+then "dogma" matches.
+
+
+.SS Function trie-compress
+
+.TP
+Syntax:
+
+   (trie-compress <trie>)
+
+.TP
+Description:
+
+The trie-compress function changes the representation of <trie> to
+a representation which occupies less space and supports faster lookups.
+The new representation is returned. 
+
+The compressed representation of a trie does not support the trie-add function.
+
+This function destructively manipulates <trie>, and may return an object
+that is the same object as <trie>, or it may return a different object,
+while at the same time still modifying the internals of <trie>.
+Consequently, the program should not retain the input object <trie>,
+but use the returned object in its place.
+
+
+.SS Function filter-string-tree
+
+.TP
+Syntax:
+
+  (filter-string-tree <filter> <obj>)
+
+.TP
+The filter-string-tree a tree structure similar to <obj>, in which all of the
+string atoms have been filtered through <filter>.
+
+The <obj> argument is a string tree structure: either the symbol nil, denoting
+an empty structure; a string; or a list of tree structures. If <obj> is
+nil, then filter-string-tree returns nil.
+
+The <filter> argument is a filter: it is either a trie, a function, or nil.
+If <filter> is nil, then filter-string-trie just returns <obj>.
+
+If <filter> is a function, it must be a function that can be called
+with one argument. The strings of the string tree are filtered by passing
+each one into the function and substituting the return value into the
+corresponding place in the returned structure.
+
+Otherwise if <filter> is a trie, then this trie is used for filtering,
+the string elements similarly to a function. For each string, a new
+string is returned in which occurrences of the keys in the trie are
+replaced by the values in the trie.
+
+.SS Function filter-equal
+
+.TP
+Syntax:
+
+  (filter-equal <filter-1> <filter-2> <obj-1> <obj-2>)
+
+.TP
+Description:
+
+The filter-equal function tests whether two string trees are equal
+under the given filters. 
+
+The precise semantics can be given by this expression:
+
+  (equal (filter-string-tree <filter-1> <obj-1>)
+         (filter-string-tree <filter-2> <obj-2>)) 
+
+The string tree <obj-1> is filtered through <filter-1>, as if
+by the filter-string-tree function, and similarly, <obj-2> is
+filtered through <filter-2>. The resulting structures are compared
+using equal, and the result of that is returned.
+
 .SH ACCESS TO TXR PATTERN LANGUAGE FROM LISP
 
 .SS Function match-fun

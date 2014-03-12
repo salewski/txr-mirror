@@ -41,6 +41,7 @@
 #include "match.h"
 #include "filter.h"
 #include "gc.h"
+#include "eval.h"
 #include "stream.h"
 
 val filters;
@@ -107,6 +108,12 @@ static void trie_compress(val *ptrie)
   } else if (consp(trie)) {
     trie_compress(cdr_l(trie));
   } 
+}
+
+static val trie_compress_intrinsic(val ptrie)
+{
+  trie_compress(&ptrie);
+  return ptrie;
 }
 
 val trie_lookup_begin(val trie)
@@ -663,6 +670,16 @@ val url_decode(val str, val space_plus)
   return get_string_from_stream(out);
 }
 
+static val html_encode(val str)
+{
+  return trie_filter_string(get_filter(to_html_k), str);
+}
+
+static val html_decode(val str)
+{
+  return trie_filter_string(get_filter(from_html_k), str);
+}
+
 void filter_init(void)
 {
   protect(&filters, (val *) 0);
@@ -702,4 +719,15 @@ void filter_init(void)
   sethash(filters, tointeger_k, curry_12_1(func_n2(int_str), nil));
   sethash(filters, tofloat_k, func_n1(flo_str));
   sethash(filters, hextoint_k, curry_12_1(func_n2(int_str), num_fast(16)));
+
+  reg_fun(intern(lit("make-trie"), user_package), func_n0(make_trie));
+  reg_fun(intern(lit("trie-add"), user_package), func_n3(trie_add));
+  reg_fun(intern(lit("trie-compress"), user_package),
+          func_n1(trie_compress_intrinsic));
+  reg_fun(intern(lit("filter-string-tree"), user_package), func_n2(filter_string_tree));
+  reg_fun(intern(lit("filter-equal"), user_package), func_n4(filter_equal));
+  reg_fun(intern(lit("url-encode"), user_package), func_n2o(url_encode, 1));
+  reg_fun(intern(lit("url-decode"), user_package), func_n2o(url_decode, 1));
+  reg_fun(intern(lit("html-encode"), user_package), func_n1(html_encode));
+  reg_fun(intern(lit("html-decode"), user_package), func_n1(html_decode));
 }
