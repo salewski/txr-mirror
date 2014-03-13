@@ -12177,7 +12177,7 @@ Description:
 Syntax:
 
   (open-command <system-command> [<mode-string>])
-  (open-process <command> <mode-string> [<argument-strings>])
+  (open-process <program> <mode-string> [<argument-strings>])
 
 .TP
 Description:
@@ -12198,13 +12198,16 @@ The open-process function specifies a program to invoke via the <command>
 argument. This is subject the the operating system's search strategy.
 On POSIX systems, if it is an absolute or relative path, it is treated as
 such, but if it is a simple base name, then it is subject to searching
-via the components of the PATH environment variable.
+via the components of the PATH environment variable. If open-process
+is not able to find <program>, or is otherwise unable to execute
+the proram, the child process will exit, using the value of errno
+as its exit status. This value can be retrieved via close-stream.
 
 The <mode-string> argument is compatible with the convention used by the POSIX
 popen function.
 
 The <argument-strings> argument is a list of strings which specifies additional
-optional arguments to be passed passed to the program. The <command> argument
+optional arguments to be passed passed to the program. The <program> argument
 becomes the first argument, and <argument-strings> become the second and
 subsequent arguments. If <argument-strings> is omitted, it defaults to empty.
 
@@ -12858,7 +12861,6 @@ into the filesystem at <path> also.
 If these functions succeed, they return t. Otherwise they throw an exception
 of type file-error.
 
-
 .SS Function readlink
 
 .TP
@@ -12872,6 +12874,33 @@ Description:
 If <path> names a filesystem object which is a symbolic link, the readlink
 function reads the contents of that symbolic link and returns it
 as a string.  Otherwise, it fails by throwing an exception of type file-error.
+
+.SS Functions sh and run
+
+.TP
+Syntax:
+
+  (sh <system-command>)
+  (run <program> [<argument-list>])
+
+.TP
+Description:
+
+The sh function executes <system-command> using the system command interpreter.
+The run function spawns a <program>, searching for it using the
+system PATH.  Using either method, the executed process receives environment
+variables from the parent.
+
+TXR blocks until the process finishes executing. If the program terminates
+normally, then its integer exit status is returned. The value zero indicates
+successful termination.
+
+The return value nil indicates an abnormal termination, or the inability
+to run the process at all.
+
+In the case of the run function, if the child process is created successfully
+but the proram cannot be executed, then the exit status will be an errno value
+from the failed exec attempt.
 
 .SH UNIX SIGNAL HANDLING
 

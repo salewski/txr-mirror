@@ -1,3 +1,10 @@
+2014-03-13  Kaz Kylheku  <kaz@kylheku.com>
+
+	* stream.c (open_process): If execvp fails, use errno as the
+	exit status.
+	(sh, run): New static functions.
+	(stream_init): sh and run registered as intrinsics.
+
 2014-03-12  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (iffi): Bugfix: was still using incorrect, outdated optional

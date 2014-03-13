@@ -2176,7 +2176,7 @@ val open_process(val name, val mode_str, val args)
     }
 
     execvp(utf8name, argv);
-    _exit(1);
+    _exit(errno);
   } else {
     int whichfd;
     char *utf8mode = utf8_dup_to(c_str(mode_str));
@@ -2268,6 +2268,81 @@ val open_process(val name, val mode_str, val args)
 {
   val win_cmdline = win_make_cmdline(cons(name, args));
   return open_command(win_cmdline, mode_str);
+}
+#endif
+
+static val sh(val command)
+{
+  char *cmd = utf8_dup_to(c_str(command));
+  int status = system(cmd);
+  if (status < 0)
+    return nil;
+#if HAVE_SYS_WAIT
+  if (WIFEXITED(status)) {
+    int exitstatus = WEXITSTATUS(status);
+    return num(exitstatus);
+  }
+#endif
+  return status == 0 ? zero : nil;
+}
+
+#if HAVE_FORK_STUFF
+static val run(val name, val args)
+{
+  pid_t pid;
+  char **argv = 0, *utf8name = 0;
+  val iter;
+  int i, nargs;
+
+  args = default_bool_arg(args);
+  nargs = c_num(length(args)) + 1;
+
+  argv = (char **) chk_malloc((nargs + 2) * sizeof *argv);
+
+  for (i = 0, iter = cons(name, args); iter; i++, iter = cdr(iter)) {
+    val arg = car(iter);
+    argv[i] = utf8_dup_to(c_str(arg));
+  }
+  argv[i] = 0;
+
+  utf8name = utf8_dup_to(c_str(name));
+
+  pid = fork();
+
+  if (pid == -1) {
+    for (i = 0; i < nargs; i++)
+      free(argv[i]);
+    free(argv);
+    uw_throwf(file_error_s, lit("opening process ~a, fork syscall failed: ~a/~s"),
+              name, num(errno), string_utf8(strerror(errno)), nao);
+  } 
+  
+  if (pid == 0) {
+    execvp(utf8name, argv);
+    _exit(errno);
+  } else {
+    int status;
+    for (i = 0; i < nargs; i++)
+      free(argv[i]);
+    free(argv);
+    while (waitpid(pid, &status, 0) == -1 && errno == EINTR)
+      ;
+    if (status < 0)
+      return nil;
+#if HAVE_SYS_WAIT
+    if (WIFEXITED(status)) {
+      int exitstatus = WEXITSTATUS(status);
+      return num(exitstatus);
+    }
+#endif
+    return status == 0 ? zero : nil;
+  }
+}
+#else
+static val run(val command, val args)
+{
+  val win_cmdline = win_make_cmdline(cons(name, args));
+  return sh(win_cmdline);
 }
 #endif
 
@@ -2748,6 +2823,8 @@ void stream_init(void)
   reg_fun(intern(lit("open-command"), user_package), func_n2o(open_command, 1));
   reg_fun(intern(lit("open-pipe"), user_package), func_n2(open_command));
   reg_fun(intern(lit("open-process"), user_package), func_n3o(open_process, 2));
+  reg_fun(intern(lit("sh"), user_package), func_n1(sh));
+  reg_fun(intern(lit("run"), user_package), func_n2o(run, 1));
   reg_fun(intern(lit("remove-path"), user_package), func_n1(remove_path));
   reg_fun(intern(lit("rename-path"), user_package), func_n2(rename_path));
   reg_fun(intern(lit("open-files"), user_package), func_n2o(open_files, 1));
