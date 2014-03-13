@@ -62,6 +62,7 @@ typedef struct {
   sig_atomic_t se;
   sigset_t blocked;
   val de;
+  int gc;
   int rv;
 } extended_jmp_buf;
 
@@ -69,10 +70,12 @@ typedef struct {
   (setjmp((EJB).jb)                             \
    ? (async_sig_enabled = (EJB).se,             \
       dyn_env = (EJB).de,                       \
+      gc_enabled = ((EJB).gc),                  \
       sig_mask(SIG_SETMASK, &(EJB).blocked, 0), \
       (EJB).rv)                                 \
    : ((EJB).se = async_sig_enabled,             \
       (EJB).de = dyn_env,                       \
+      (EJB).gc = gc_enabled,                    \
       (EJB).blocked = sig_blocked_cache, 0))
 
 #define extended_longjmp(EJB, ARG)              \
@@ -92,14 +95,18 @@ extern volatile sig_atomic_t async_sig_enabled;
 typedef struct {
   jmp_buf jb;
   val de;
+  int gc;
   int rv;
 } extended_jmp_buf;
 
 #define extended_setjmp(EJB)                    \
   (setjmp((EJB).jb)                             \
    ? (dyn_env = (EJB).de,                       \
+      gc_enabled = ((EJB).gc),                  \
       (EJB).rv)                                 \
-   : ((EJB).de = dyn_env, 0))
+   : ((EJB).de = dyn_env,                       \
+      (EJB).gc = gc_enabled,                    \
+      0))
 
 #define extended_longjmp(EJB, ARG)              \
   ((EJB).rv = (ARG), longjmp((EJB).jb, 1))

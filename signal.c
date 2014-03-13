@@ -57,9 +57,31 @@ val sig_ttou, sig_urg, sig_xcpu, sig_xfsz, sigtalrm, sig_prof;
 val sig_poll, sig_sys, sig_winch, sig_iot, sig_stkflt;
 val sig_io, sig_lost, sig_pwr;
 
+static int is_cpu_exception(int sig)
+{
+  switch (sig) {
+  case SIGFPE: case SIGILL:
+  case SIGSEGV: case SIGBUS:
+  case SIGTRAP:
+    return 1;
+  default:
+    return 0;
+  }
+}
+
 static void sig_handler(int sig)
 {
   val lambda = sig_lambda[sig];
+  int gc = 0;
+  int as = 0;
+  int exc = is_cpu_exception(sig);
+
+  if (exc) {
+    gc = gc_state(0);
+    as = async_sig_enabled;
+    async_sig_enabled = 1;
+  }
+
   if (lambda) {
     if (async_sig_enabled) {
       async_sig_enabled = 0;
@@ -69,6 +91,11 @@ static void sig_handler(int sig)
     } else {
       sig_deferred |= (1UL << sig);
     }
+  }
+
+  if (exc) {
+    async_sig_enabled = as;
+    gc_state(gc);
   }
 }
 
@@ -135,8 +162,48 @@ void sig_init(void)
   reg_fun(intern(lit("set-sig-handler"), user_package), func_n2(set_sig_handler));
   reg_fun(intern(lit("get-sig-handler"), user_package), func_n1(get_sig_handler));
   reg_fun(intern(lit("sig-check"), user_package), func_n0(sig_check));
-
 }
+
+#if HAVE_SIGALTSTACK
+
+static void *stack;
+
+static void setup_alt_stack(void)
+{
+  stack_t ss;
+
+  if (!stack)
+    stack = chk_malloc(SIGSTKSZ);
+
+  ss.ss_sp = stack;
+  ss.ss_size = SIGSTKSZ;
+  ss.ss_flags = 0;
+
+  if (sigaltstack(&ss, NULL) == -1) {
+    free(stack);
+    stack = 0;
+  }
+}
+
+static void teardown_alt_stack(void)
+{
+  stack_t ss;
+
+  if (!stack)
+    return;
+
+  ss.ss_sp = stack;
+  ss.ss_size = SIGSTKSZ;
+  ss.ss_flags = SS_DISABLE;
+
+  if (sigaltstack(&ss, NULL) == -1)
+    return;
+
+  free(stack);
+  stack = 0;
+}
+
+#endif
 
 val set_sig_handler(val signo, val lambda)
 {
@@ -170,8 +237,18 @@ val set_sig_handler(val signo, val lambda)
       sa.sa_flags = SA_RESTART;
       sa.sa_handler = sig_handler;
       sigfillset(&sa.sa_mask);
+#if HAVE_SIGALTSTACK
+      if (sig == SIGSEGV)
+        setup_alt_stack();
+      sa.sa_flags |= SA_ONSTACK;
+#endif
       sigaction(sig, &sa, 0);
     }
+
+#if HAVE_SIGALTSTACK
+    if (sig == SIGSEGV && (lambda == nil || lambda == t))
+        teardown_alt_stack();
+#endif
 
     sig_lambda[sig] = lambda;
   }

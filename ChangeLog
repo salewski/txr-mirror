@@ -1,5 +1,37 @@
 2014-03-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	On platforms with sigaltstack, TXR programs can now catch the
+	segmentation fault that occurs when running out of stack space,
+	and escape by throwing an exception.
+
+	Also, bugfix: save and restore the gc enable/disable state.  Without
+	this, if we are ever running cod in a gc disabled state and it jumps
+	out, gc stays disabled.
+
+	* configure: added check for sigaltstack.
+
+	* gc.h (gc_enabled): Declaration added for existing variable.
+
+	* signal.c (is_cpu_exception): New static function.
+	(sig_handler): For cpu_exception type signals that pertain
+	to the execution of some instruction, turn on async_sig_enabled,
+	so that the signal is not deferred. Otherwise we will just
+	return without calling the user-defined handler, restart
+	the instruction and get into a loop. Also, disable gc around
+	the handler just in case. One issue is that we might be on
+	an alternate stack, which gc won't like.
+	(setup_alt_stack, teardown_alt_stack): New static functions.
+	(set_sig_handler): If we have sigaltstack, and are asked
+	to set up a SEGV handler, then set it up on the alternate
+	stack.
+
+	* signal.h (extended_jmp_buf): Adding new member, gc.
+	(extended_setjmp, extended_longjmp): use gc member
+	to save and restore the gc_enable state across
+	setjmp and longjmp.
+
+2014-03-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (open_process): If execvp fails, use errno as the
 	exit status.
 	(sh, run): New static functions.

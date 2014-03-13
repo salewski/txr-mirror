@@ -1611,6 +1611,28 @@ else
   printf "no\n"
 fi
 
+printf "Checking for sigaltstack ... "
+
+cat > conftest.c <<!
+#include <signal.h>
+#include <stdlib.h>
+
+int main(void)
+{
+  stack_t ss;
+  ss.ss_sp = malloc(SIGSTKSZ);
+  ss.ss_size = SIGSTKSZ;
+  ss.ss_flags = 0;
+  return sigaltstack(&ss, 0);
+}
+!
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_SIGALTSTACK 1\n" >> config.h
+else
+  printf "no\n"
+fi
+
 printf "Checking for makedev ... "
 
 cat > conftest.c <<!

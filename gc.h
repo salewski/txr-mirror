@@ -43,6 +43,8 @@ val gc_mutated(val);
 void unmark(void);
 void gc_hint_func(val *);
 
+extern int gc_enabled;
+
 #if EXTRA_DEBUGGING
 val break_obj;
 #endif
