@@ -3871,8 +3871,7 @@ val iff(val condfun, val thenfun, val elsefun)
 
 val iffi(val condfun, val thenfun, val elsefun)
 {
-  if (!elsefun)
-    elsefun = identity_f;
+  elsefun = default_arg(elsefun, identity_f);
   return func_f0v(cons(condfun, cons(thenfun, elsefun)), do_iff);
 }
 

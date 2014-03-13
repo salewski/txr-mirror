@@ -1,5 +1,10 @@
 2014-03-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (iffi): Bugfix: was still using incorrect, outdated optional
+	argument defaulting logic.
+
+2014-03-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (plus_s, prof_s): New symbol global variables.
 	(op_prof, me_pprof): New static functions.
 	(eval_init): Intern prof symbol, store in prof_s.
