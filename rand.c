@@ -37,6 +37,9 @@
 #include <time.h>
 #include <signal.h>
 #include "config.h"
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #include "lib.h"
 #include "signal.h"
 #include "unwind.h"
@@ -110,6 +113,8 @@ val make_random_state(val seed)
 
   r->cur = 0;
 
+  seed = default_bool_arg(seed);
+
   if (bignump(seed)) {
     int i, dig, bit;
     mp_int *m = mp(seed);
@@ -139,7 +144,8 @@ val make_random_state(val seed)
     val time = time_sec_usec();
     r->state[0] = (rand32_t) c_num(car(time));
     r->state[1] = (rand32_t) c_num(cdr(time));
-    memset(r->state + 2, 0xAA, sizeof r->state - 2 * sizeof r->state[0]);
+    r->state[2] = (rand32_t) getpid();
+    memset(r->state + 3, 0xAA, sizeof r->state - 3 * sizeof r->state[0]);
   } else if (random_state_p(seed)) {
     struct rand_state *rseed = (struct rand_state *)
                                   cobj_handle(seed, random_state_s);
@@ -157,16 +163,15 @@ val make_random_state(val seed)
 
 val random_fixnum(val state)
 {
-  uses_or2;
-  struct rand_state *r = (struct rand_state *) cobj_handle(or2(state,
-                                                               random_state),
+  struct rand_state *r = (struct rand_state *) cobj_handle(default_arg(state,
+                                                                       random_state),
                                                            random_state_s);
   return num(rand32(r) & NUM_MAX);
 }
 
 val random(val state, val modulus)
 {
-  struct rand_state *r = (struct rand_state *) cobj_handle(random_state,
+  struct rand_state *r = (struct rand_state *) cobj_handle(state,
                                                            random_state_s);
 
   if (bignump(modulus)) {

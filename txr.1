@@ -12546,7 +12546,7 @@ the call (make-random-state 42).
 .TP
 Syntax:
 
-  (make-random-state <seed>)
+  (make-random-state [<seed>])
 
 .TP
 Description:
@@ -12554,10 +12554,31 @@ Description:
 The make-random-state function creates and returns a new random state,
 an object of the same kind as what is stored in the *random-state* variable.
 
-The seed must be an integer value.
+The seed, if specified, must be an integer value.
 
-Note that the sign of the value is ignored, so that negative seed
+Note that the sign of the seed is ignored, so that negative seed
 values are equivalent to their additive inverses.
+
+If the seed is not specified, then make-random-state produces a seed based 
+on some information in the process environment, such as current
+time of day. It is not guaranteed that two calls to (make-random-state nil)
+that are separated by less than some minimum increment of real time produce
+different seeds.  The minimum time increment depends on the platform, but on any
+given platform, it is the platform's smallest available time increment, or a
+microsecond, whichever is longer.
+
+Of course, it is not guranteed that any two calls to make-random-state produce
+different values under any circumstances, due to possible collisions; however,
+time differences smaller than the minimum increment may predictably produce
+identical values.
+
+For instance, on a platform with a nanosecond-resolution real-time clock,
+the minimum time increment is a microsecond. Calls to make-random-state
+closer together than a microsecond may predictably produce the same seed.
+
+In a platform with a millisecond-resolution real-time clock, the minimum
+time increment is a millisecond. Calls to make-random-state less than
+a millisecond apart may predictably produce the same seed.
 
 .SS Function random-state-p
 

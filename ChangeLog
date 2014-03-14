@@ -1,3 +1,20 @@
+2014-03-14  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): Make seed argument optional in make-random-state.
+
+	* rand.c (make_random_state): Do argument defaulting on seed.
+	Also, mix getpid() into the seed.
+	(random_fixnum): Bugfix: do proper defaulting on optional
+	agument, rather than relying on nil.
+	(random): Fix 2014-02-05 regression. This was totally broken,
+	ignoring the random state passed in and using the global
+	random state. This function must only use the state passed in;
+	there is no defaulting to the global random state.
+
+	* txr.1: Documenting that seed is optional in make-random-state.
+	Describing what guarantees can be expected with regard to
+	calls made close together temporally.
+
 2014-03-13  Kaz Kylheku  <kaz@kylheku.com>
 
 	Implementing @(if)/@(elif)/@(else) in the pattern language.
