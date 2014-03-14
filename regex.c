@@ -1645,7 +1645,7 @@ static val regex_requires_dv(val exp)
 val regex_compile(val regex_sexp, val error_stream)
 {
   if (stringp(regex_sexp)) {
-    regex_sexp = regex_parse(regex_sexp, error_stream);
+    regex_sexp = regex_parse(regex_sexp, default_bool_arg(error_stream));
     return if2(regex_sexp, regex_compile(regex_sexp, error_stream));
   } else if (opt_derivative_regex || regex_requires_dv(regex_sexp)) {
     return cons(compiled_regex_s, cons(dv_compile_regex(regex_sexp), nil));

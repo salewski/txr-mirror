@@ -910,6 +910,7 @@ val regex_parse(val string, val error_stream)
   yyin_stream = make_string_byte_input_stream(parse_string);
   errors = 0;
   lineno = 1;
+  error_stream = default_bool_arg(error_stream);
   std_error = if3(error_stream == t, std_output, or2(error_stream, std_null));
   {
     int gc = gc_state(0);
@@ -924,9 +925,10 @@ val regex_parse(val string, val error_stream)
   return errors ? nil : get_spec();
 }
 
-val lisp_parse(val source, val error_stream)
+val lisp_parse(val source_in, val error_stream)
 {
   uses_or2;
+  val source = default_bool_arg(source_in);
   val input_stream = if3(stringp(source),
                          make_string_byte_input_stream(source),
                          or2(source, std_input));
@@ -938,6 +940,7 @@ val lisp_parse(val source, val error_stream)
   yyin_stream = make_catenated_stream(list(secret_token_stream, input_stream, nao));
   errors = 0;
   lineno = 1;
+  error_stream = default_bool_arg(error_stream);
   std_error = if3(error_stream == t, std_output, or2(error_stream, std_null));
   {
     int gc = gc_state(0);
