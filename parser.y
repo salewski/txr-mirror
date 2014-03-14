@@ -697,7 +697,7 @@ modifiers : NUMBER              { $$ = cons($1, nil); }
                                                  rest($1)), nil);
                                   rlcp($$, $1); }
           | list                { $$ = rlcp(cons(expand_meta($1, nil),
-				                 nil), $1); }
+                                                 nil), $1); }
           ;
 
 o_var : SYMTOK                  { $$ = list(var_s, sym_helper($1, nil), nao);
@@ -707,10 +707,10 @@ o_var : SYMTOK                  { $$ = list(var_s, sym_helper($1, nil), nao);
                                   rl($$, num(lineno)); }
       | '{' expr exprs_opt '}' 
                                 { $$ = list(var_s, $2, nil, $3, nao);
-				  rl($$, num(lineno)); }
+                                  rl($$, num(lineno)); }
       | '{' expr exprs_opt '}' o_elem      
                                 { $$ = list(var_s, $2, $5, $3, nao);
-				  rl($$, num(lineno)); }
+                                  rl($$, num(lineno)); }
       | SYMTOK error            { $$ = nil;
                                     yybadtoken(yychar, lit("variable spec")); }
       ;
@@ -740,7 +740,7 @@ list : '(' n_exprs ')'          { $$ = rl($2, num($1)); }
                                     $$ = rl(cons(expr_s, $2), num($1));
                                   else
                                     $$ = rl(cons(var_s, cons($2, nil)),
-				            num($1)); }
+                                            num($1)); }
      | '(' error                { $$ = nil;
                                   yybadtoken(yychar, lit("list expression")); }
      | '[' error                { $$ = nil;
@@ -761,11 +761,11 @@ exprs_opt : exprs               { $$ = $1; }
 
 n_exprs : n_expr                { $$ = rlcp(cons($1, nil), $1); }
         | n_expr n_exprs        { uses_or2;
-	                          $$ = rlcp(cons($1, $2), or2($1, $2)); }
+                                  $$ = rlcp(cons($1, $2), or2($1, $2)); }
         | n_expr '.' n_expr     { uses_or2;
-	                          $$ = rlcp(cons($1, $3), or2($1, $3)); }
+                                  $$ = rlcp(cons($1, $3), or2($1, $3)); }
         | n_expr DOTDOT n_exprs { uses_or2;
-	                          $$ = rlcp(cons(list(cons_s, $1,
+                                  $$ = rlcp(cons(list(cons_s, $1,
                                                       car($3), nao),
                                                  cdr($3)), or2($1, $3)); }
         ;
@@ -1051,8 +1051,8 @@ static val o_elems_transform(val o_elems)
       val modifiers = fourth(elem);
 
       ptail = list_collect(ptail,
-			   rlcp(list(first(elem), sym, nil, modifiers, nao),
-				elem));
+                           rlcp(list(first(elem), sym, nil, modifiers, nao),
+                                elem));
       elem = pat;
     }
 
