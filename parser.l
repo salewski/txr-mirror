@@ -489,6 +489,24 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return FINALLY;
 }
 
+<SPECIAL>\({WS}if/{ID_END} {
+  yy_push_state(NESTED);
+  yylval.lineno = lineno;
+  return IF;
+}
+
+<SPECIAL>\({WS}elif/{ID_END} {
+  yy_push_state(NESTED);
+  yylval.lineno = lineno;
+  return ELIF;
+}
+
+<SPECIAL>\({WS}else{WS}\) {
+  yy_pop_state();
+  yylval.lineno = lineno;
+  return ELSE;
+}
+
 <SPECIAL>[{] {
   yy_push_state(BRACED);
   yylval.lineno = lineno;

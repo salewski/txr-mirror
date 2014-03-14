@@ -41,7 +41,8 @@ static void dir_tables_init(void)
        [sort (hash-values hash) string-lt])))
 @(do (set [txr-sym 0..0] '("rep" "end" "and" "or"
                            "catch" "finally"
-                           "until" "last")))
+                           "until" "last"
+                           "if" "else" "elif")))
 @(do (set [txl-sym 0..0] '("macro-time" "macrolet" "symacrolet")))
 @(set (txr-sym txl-sym) (@(sortuniq txr-sym) @(sortuniq txl-sym)))
 @(output)

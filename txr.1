@@ -1302,6 +1302,15 @@ to the later clauses.
 Multiple clauses are applied to the same input. Evaluation stops on the
 first successful clause.
 
+.IP @(require)
+The require directive is similar to the do directive: it evaluates one or more
+TXR Lisp expressions.  If the result of the rightmost expression is nil,
+then require triggers a match failure.  See the TXR LISP section far below.
+
+.IP "@(if), @(elif), @(else)"
+The if directive with optional elif and else clauses is a syntactic sugar
+which translates to a combination of @(cases) and @(require)
+
 .IP @(choose)
 Multiple clauses are applied to the same input. The one whose effect persists
 is the one which maximizes or minimizes the length of a particular variable.
@@ -1423,11 +1432,6 @@ The load directive loads another TXR file and interprets its contents.
 .IP @(do)
 The do directive is used to evaluate TXR Lisp expressions, discarding their
 result values. See the TXR LISP section far below.
-
-.IP @(require)
-The require directive is similar to the do directive: it evaluates one or more
-TXR Lisp expressions.  If the result of the rightmost expression is nil,
-then require triggers a match failure.  See the TXR LISP section far below.
 
 .PP
 
@@ -2045,6 +2049,88 @@ For instance if there are two subclauses, and one of them matches three lines,
 but the other one matches five lines, then the overall clause is considered to
 have made a five line match at its position. If more directives follow, they
 begin matching five lines down from that position.
+
+.SS The Require Directive
+
+The syntax of @(require) is:
+
+  @(require <lisp-expression>)
+
+The require directive evaluates a TXR Lisp expression. (See TXR LISP far
+below.) If the expression yields a true value, then it succeeds, and matching
+continues with the directives which follow. Otherwise the directive fails.
+
+In the context of the @(require) directive, should not be delimited by an @.
+
+Example:
+
+  @# require that 4 is greater than 3
+  @# This succeeds; therefore, @a is processed
+  @(require (> (+ 2 2) 3))
+  @a
+
+
+.SS The If Directive
+
+The syntax of the directive can be exemplified as follows
+
+  @(if <lisp-expr>)
+  .
+  .
+  .
+  @(elif <lisp-expr>)
+  .
+  .
+  .
+  @(elif <lisp-expr>)
+  .
+  .
+  .
+  @(else)
+  .
+  .
+  .
+  @(end)
+
+The @(elif) and @(else) clauses are all optional. If @(else) is present, it must be
+last, before @(end), after any @(elif) clauses. Any of the clauses may be empty.
+
+See the TXR Lisp section about TXR Lisp expressions. In this directive, TXR Lisp
+expressions are not introduced by the @ symbol.
+
+For example:
+
+  @(if (> (length str) 42))
+  foo: @a @b
+  @(else)
+  {@c}
+  @(end)
+
+In this example, if the length of the variable str is greater than 42, then
+matching continues with "foo: @a b", otherwise it proceeds with {@c}.
+
+The if directive is actually a syntactic sugar which is translated to @(cases)
+and @(require).  That is to say, the following pattern:
+
+  @(cases)
+  @(require <lisp-expr-1>)
+  A
+  @(or)
+  @(require <lisp-expr-2>)
+  B
+  @(or)
+  C
+  @(end)
+
+corresponds to the somewhat shorter and clearer:
+
+  @(if <lisp-expr-1>)
+  A
+  @(elsif <lisp-expr-2>)
+  B
+  @(else
+  C
+  @(end)
 
 .SS The Gather Directive
 

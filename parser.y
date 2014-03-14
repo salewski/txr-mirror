@@ -31,6 +31,7 @@
 #include <limits.h>
 #include <dirent.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <setjmp.h>
 #include <wchar.h>
 #include <signal.h>
@@ -43,6 +44,7 @@
 #include "match.h"
 #include "hash.h"
 #include "eval.h"
+#include "stream.h"
 #include "parser.h"
 
 int yylex(void);
@@ -88,6 +90,7 @@ static val parsed_spec;
 %type <val> collect_repeat
 %type <val> clause_parts additional_parts gather_parts additional_gather_parts
 %type <val> output_clause define_clause try_clause catch_clauses_opt
+%type <val> if_clause elif_clauses_opt else_clause_opt
 %type <val> line elems_opt elems clause_parts_h additional_parts_h
 %type <val> text texts elem var var_op modifiers vector hash
 %type <val> list exprs exprs_opt expr n_exprs n_expr
@@ -103,7 +106,7 @@ static val parsed_spec;
 %nonassoc LOW /* used for precedence assertion */
 %right SYMTOK '{' '}'
 %right ALL SOME NONE MAYBE CASES CHOOSE AND OR END COLLECT UNTIL COLL
-%right OUTPUT REPEAT REP FIRST LAST EMPTY DEFINE
+%right OUTPUT REPEAT REP FIRST LAST EMPTY DEFINE IF ELIF ELSE
 %right SPACE TEXT NUMBER
 %nonassoc '[' ']' '(' ')'
 %left '-' ',' '\'' '^' SPLICE '@'
@@ -148,6 +151,7 @@ clause : all_clause             { $$ = cons($1, nil); rlcp($$, $1); }
                                   rlcp(car($$), $1);
                                   rlcp($$, $1); }
        | try_clause             { $$ = cons($1, nil); rlcp($$, $1); }
+       | if_clause              { $$ = cons($1, nil); rlcp($$, $1); }
        | output_clause          { $$ = cons($1, nil); rlcp($$, $1); }
        | line                   { $$ = $1; }
        ;
@@ -303,6 +307,33 @@ additional_parts : END newl                             { $$ = nil; }
                  | AND newl clauses additional_parts    { $$ = cons($3, $4); }
                  | OR newl clauses additional_parts     { $$ = cons($3, $4); }
                  ;
+
+if_clause : IF exprs_opt ')'
+            newl clauses_opt
+            elif_clauses_opt
+            else_clause_opt
+            END newl            { val req = rlcp(cons(require_s, $2), $2);
+                                  val iff = rlcp(cons(cons(cons(req, nil), $5), nil), $2);
+                                  val elifs = $6;
+                                  val els = cons($7, nil);
+                                  val cases = nappend2(nappend2(iff, elifs), els);
+                                  $$ = list(cases_s, cases, nao); }
+          | IF exprs_opt ')'
+            newl error          { $$ = nil; yybadtoken(yychar, lit("if clause")); }
+          ;
+
+elif_clauses_opt : ELIF exprs_opt ')' newl
+                   clauses_opt
+                   elif_clauses_opt  { val req = rlcp(cons(require_s, $2), $2);
+                                       $$ = cons(cons(cons(req, nil), $5), $6); }
+                 |                   { $$ = nil; }
+                 ;
+
+else_clause_opt : ELSE newl
+                  clauses_opt        { $$ = $3; }
+                  |                  { $$ = nil; }
+                  ;
+
 
 line : elems_opt '\n'           { $$ = $1; }
      ;
@@ -1251,6 +1282,9 @@ void yybadtoken(int tok, val context)
   case TRY:     problem = lit("\"try\""); break;
   case CATCH:   problem = lit("\"catch\""); break;
   case FINALLY: problem = lit("\"finally\""); break;
+  case IF:      problem = lit("\"if\""); break;
+  case ELIF:    problem = lit("\"elif\""); break;
+  case ELSE:    problem = lit("\"else\""); break;
   case NUMBER:  problem = lit("number"); break;
   case REGCHAR: problem = lit("regular expression character"); break;
   case REGTOKEN: problem = lit("regular expression token"); break;

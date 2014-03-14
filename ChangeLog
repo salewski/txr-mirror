@@ -1,5 +1,22 @@
 2014-03-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	Implementing @(if)/@(elif)/@(else) in the pattern language.
+	Input side for now; output later.
+
+	* parser.y (if_clause, elif_clauses_opt, else_clause_opt): New nonterminals.
+	(IF, ELIF, ELSE): New tokens.
+	(yybadtoken): Handle IF, ELIF, ELSE.
+
+	* parser.l: Recognize and return new tokens IF, ELIF and ELSE.
+
+	* txr.1: Documented.
+
+	* genvim.txr: Updated with if, elsif and else directive keywords.
+
+	* txr.vim: Regenerated
+
+2014-03-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	On platforms with sigaltstack, TXR programs can now catch the
 	segmentation fault that occurs when running out of stack space,
 	and escape by throwing an exception.
