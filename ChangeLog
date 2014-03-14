@@ -1,5 +1,10 @@
 2014-03-14  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (run): Fix MinGW build failures. The run function doesn't
+	work right with arguments, though: the win command line is broken.
+
+2014-03-14  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Make seed argument optional in make-random-state.
 
 	* rand.c (make_random_state): Do argument defaulting on seed.

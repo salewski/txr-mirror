@@ -2341,7 +2341,7 @@ static val run(val name, val args)
 #else
 static val run(val command, val args)
 {
-  val win_cmdline = win_make_cmdline(cons(name, args));
+  val win_cmdline = win_make_cmdline(cons(command, default_bool_arg(args)));
   return sh(win_cmdline);
 }
 #endif
