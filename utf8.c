@@ -359,48 +359,68 @@ wint_t utf8_decode(utf8_decoder_t *ud, int (*get)(mem_t *ctx), mem_t *ctx)
 
 FILE *w_fopen(const wchar_t *wname, const wchar_t *wmode)
 {
+#ifdef _WIN32
+  return _wfopen(wname, wmode);
+#else
   char *name = utf8_dup_to(wname);
   char *mode = utf8_dup_to(wmode);
   FILE *f = fopen(name, mode);
   free(name);
   free(mode);
   return f;
+#endif
 }
 
 FILE *w_popen(const wchar_t *wcmd, const wchar_t *wmode)
 {
+#ifdef _WIN32
+  return _wpopen(wcmd, wmode);
+#else
   char *cmd = utf8_dup_to(wcmd);
   char *mode = utf8_dup_to(wmode);
   FILE *f = popen(cmd, mode);
   free(cmd);
   free(mode);
   return f;
+#endif
 }
 
 FILE *w_freopen(const wchar_t *wname, const wchar_t *wmode, FILE *fold)
 {
+#ifdef _WIN32
+  return _wfreopen(wname, wmode, fold);
+#else
   char *name = utf8_dup_to(wname);
   char *mode = utf8_dup_to(wmode);
   FILE *f = fold ? freopen(name, mode, fold) : fopen(name, mode);
   free(name);
   free(mode);
   return f;
+#endif
 }
 
 int w_remove(const wchar_t *wpath)
 {
+#ifdef _WIN32
+  return _wremove(wpath);
+#else
   char *path = utf8_dup_to(wpath);
   int err = remove(path);
   free(path);
   return err;
+#endif
 }
 
 int w_rename(const wchar_t *wfrom, const wchar_t *wto)
 {
+#ifdef _WIN32
+  return _wrename(wfrom, wto);
+#else
   char *from = utf8_dup_to(wfrom);
   char *to = utf8_dup_to(wto);
   int err = rename(from, to);
   free(to);
   free(from);
   return err;
+#endif
 }

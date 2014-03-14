@@ -1,5 +1,11 @@
 2014-03-14  Kaz Kylheku  <kaz@kylheku.com>
 
+	* utf8.c (w_fopen, w_popen, w_freopen, w_remove, w_rename): We
+	have similar functions in the MSVCRT library used by MinGW,
+	so if _WIN32 is defined, our functions now just wrap those.
+
+2014-03-14  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (run): Fix MinGW build failures. The run function doesn't
 	work right with arguments, though: the win command line is broken.
 
