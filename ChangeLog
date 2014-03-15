@@ -1,3 +1,10 @@
+2014-03-15  Kaz Kylheku  <kaz@kylheku.com>
+
+	* parser.y (text): Allow the EMPTY token (the @(empty) syntax)
+	to be a text.
+
+	* txr.1: Documented @(empty).
+
 2014-03-14  Kaz Kylheku  <kaz@kylheku.com>
 
 	* parser.l (regex_parse, lisp_parse): Fix neglected handling of

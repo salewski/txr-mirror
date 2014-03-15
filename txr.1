@@ -1315,6 +1315,12 @@ which translates to a combination of @(cases) and @(require)
 Multiple clauses are applied to the same input. The one whose effect persists
 is the one which maximizes or minimizes the length of a particular variable.
 
+.IP @(empty)
+The @(empty) directive matches the empty string. It is useful in certain
+situations, such as expressing an empty match in a directive that doesn't
+accept an empty clause. The @(empty) syntax has another meaning in
+@(output) clauses, in conjunctio with @(repeat).
+
 .IP "@(define NAME ( ARGUMENTS ...))"
 Introduces a function. Functions are discussed in the FUNCTIONS section below.
 

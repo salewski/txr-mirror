@@ -334,7 +334,6 @@ else_clause_opt : ELSE newl
                   |                  { $$ = nil; }
                   ;
 
-
 line : elems_opt '\n'           { $$ = $1; }
      ;
 
@@ -363,6 +362,7 @@ text : TEXT                     { $$ = rl(string_own($1), num(lineno)); }
      | regex                    { $$ = cons(regex_compile(rest($1), nil),
                                             rest($1));
                                   rl($$, num(lineno)); }
+     | EMPTY                    { $$ = null_string; }
      ;
 
 texts : text %prec LOW          { $$ = rlcp(cons($1, nil), $1); }
