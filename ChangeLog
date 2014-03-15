@@ -1,5 +1,22 @@
 2014-03-15  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.l: Bugfix. When handling a backslash-newline continuation
+	in the SPECIAL, NESTED and BRACED states, do not pop the state in all
+	three, only in SPECIAL (to terminate the @\ continuation).
+
+	* txr.1: Eliminate wrong claim that string literals do not split across lines,
+	which is directly contradicted two paragraphs later.  Document that
+	quasiliterals also split.
+
+	* genvim.txr (txr_regex, txl_regex): These definitions change from "syn match"
+	to "syn region" so that the backslash-newline continuation can be properly
+	handled.
+	(txr_string, txr_quasilit): Correctly handle split literals.
+
+	* txr.vim: Regenerated.
+
+2014-03-15  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.y (text): Allow the EMPTY token (the @(empty) syntax)
 	to be a text.
 

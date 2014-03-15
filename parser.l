@@ -609,7 +609,8 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 }
 
 <SPECIAL,NESTED,BRACED>[\\]\n{WS} {
-  yy_pop_state();
+  if (YYSTATE == SPECIAL)
+    yy_pop_state();  /* @\ continuation */
   lineno++;
 }
 

@@ -1097,8 +1097,8 @@ Scheme language.  Note that #\elinefeed and #\enewline are the same character.
 
 .SS String Literals
 
-String literals are delimited by double quote respectively, and may not span
-multiple lines. A double quote within a string literal is encoded using \e"
+String literals are delimited by double quote respectively.
+A double quote within a string literal is encoded using \e"
 and a backslash is encoded as \e\e. Backslash escapes like \en and \et
 are recognized, as are hexadecimal escapes like \exFF or \exxabc and octal
 escapes like \e123.  Ambiguity between an escape and subsequent
@@ -1129,6 +1129,9 @@ There is no \e@ escape.  Quasiliterals support the full output variable
 syntax. Expressions within variables substitutions follow the evaluation rules
 of TXR Lisp when the quasiliteral occurs in TXR Lisp, and the rules of
 the TXR pattern language when the quasiliteral occurs in the pattern language.
+
+Quasliterals can be split into multiple lines in the same way as ordinary
+string literals.
 
 .SS Numbers
 
