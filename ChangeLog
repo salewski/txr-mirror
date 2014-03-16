@@ -1,5 +1,17 @@
 2014-03-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (win_make_cmdline): I think I cracked the code of
+	passing escaped arguments to Microsoft's popen and system
+	functions. The first argument cannot be quoted, but the
+	subsequent ones can. It is the quoting of the first argument
+	that causes the whole thing to be quoted. So we just
+	avoid quoting the first argument. (If it has spaces, too bad;
+	don't do that).
+	(open_process): Fix neglected optional argument handling
+	in Windows version of this function.
+
+2014-03-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	* configure: Detect _wspawn* functions.
 
 	* stream.c (run): Implement using _wspawnvp on MinGW.

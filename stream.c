@@ -2252,6 +2252,9 @@ static val win_make_cmdline(val args)
 {
   val out = string(L"");
 
+  string_extend(out, pop(&args));
+  string_extend(out, lit(" "));
+
   for (; args; args = cdr(args)) {
     string_extend(out, lit("\""));
     string_extend(out, win_escape_arg(car(args)));
@@ -2266,7 +2269,7 @@ static val win_make_cmdline(val args)
 
 val open_process(val name, val mode_str, val args)
 {
-  val win_cmdline = win_make_cmdline(cons(name, args));
+  val win_cmdline = win_make_cmdline(cons(name, default_bool_arg(args)));
   return open_command(win_cmdline, mode_str);
 }
 #endif
