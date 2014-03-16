@@ -1,3 +1,17 @@
+2014-03-08  Kaz Kylheku  <kaz@kylheku.com>
+
+	Version 86
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version, set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES: Updated
+
+	* dep.mk: Regenerated.
+
 2014-03-16  Kaz Kylheku  <kaz@kylheku.com>
 
 	* stream.c (win_make_cmdline): I think I cracked the code of

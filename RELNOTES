@@ -1,3 +1,72 @@
+                                     TXR 86
+                                   2014-03-16
+
+
+  Features
+
+  - Exposed the implementation of tries to user code.
+
+  - New functions: html-encode, html-decode.
+
+  - New prof operator and pprof macro for simple profiling: time spent and memory
+    allocated over the evaluation of an expression.
+
+  - New functions sh and run for running system commands.
+
+  - If available, sigaltstack is used when the program registers a handler for
+    the SIGSEGV signal, allowing TXR programs to catch stack exhaustion and
+    recover by throwing an exception.
+
+  - New syntactic sugar in the pattern language: @(if)/@(elif)/@(else)/@(end),
+    which works by transformation to a pattern involving @(cases) and @(require).
+
+  - The @(empty) directive which plays a role in @(output) blocks has a new meaning
+    in the pattern language for denoting an explicit empty match.
+
+  Bugs
+
+  - Fixed severe performance problem with regex on long strings, caused by feeding
+    characters to the regex machine past the point that it is clear it will not
+    accept any more.
+
+  - Fixed broken horizontal matching under @(freeform) on long lines, due to bugs
+    in the handling of the memory-saving optimization which consumes the prefix of
+    the lazy string as scanning progresses.
+
+  - Fixed breakage in sub-str over lazy strings.
+
+  - Fixed possible crash in @(trailer) directive.
+
+  - Fixed memory leaks on open-process: one that happened on every call, and one on
+    failure of the fork function.
+
+  - Fixed pipe-close deadlocks occurring in code that opens numerous pipes; solved
+    by setting the close-on-exec flag on the pipe descriptors.
+
+  - Fixed faulty argument defaulting logic in the functions: iffi, regex-parse,
+    lisp-parse, regex-compile and Windows version of open-process.
+
+  - Fixed regression in the random number module, causing the random function to
+    ignore the seeded random state passed in as an argument, and rely on the global one.
+
+  - Fixed a bug in a rarely used form of the backslash line continuation.
+
+  - Fixed buggy argument quoting in Windows version of open-process.
+
+  - The gc on/off state is now saved and restored as part of unwinding, so if
+    code that turned off gc throws an exception, gc will be turned back on
+    at the catch site.
+
+  - Fixed incorrect calculation of malloc upper and lower boundaries, affecting
+    the correctness of generational garbage collection.
+
+  - In open process, if fdopen fails, kill the process more gently with SIGINT
+    and SIGTERM rather than SIGKILL, and wait on it.
+
+  - Syntax fix. @^a is not meta applied to the symbol ^a, but rather meta quasiquote a.
+
+
+
                                      TXR 85
                                    2014-03-07
 

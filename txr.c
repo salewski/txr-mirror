@@ -47,7 +47,7 @@
 #include "eval.h"
 #include "txr.h"
 
-const wchli_t *version = wli("85");
+const wchli_t *version = wli("86");
 const wchar_t *progname = L"txr";
 
 /*
