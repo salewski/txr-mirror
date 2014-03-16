@@ -1,3 +1,9 @@
+2014-03-16  Kaz Kylheku  <kaz@kylheku.com>
+
+	* configure: Detect _wspawn* functions.
+
+	* stream.c (run): Implement using _wspawnvp on MinGW.
+
 2014-03-15  Kaz Kylheku  <kaz@kylheku.com>
 
 	* parser.l: Bugfix. When handling a backslash-newline continuation

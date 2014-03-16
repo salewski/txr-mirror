@@ -1720,6 +1720,27 @@ else
   printf "no\n"
 fi
 
+printf "Checking for _wspawvp ... "
+
+cat > conftest.c <<!
+#include "config.h"
+#include <process.h>
+#include <wchar.h>
+
+int main(int argc, char **argv)
+{
+  wchar_t *wargv[] = { L"foo", L"bar", 0 };
+  int r = _wspawnlp(_P_WAIT, L"foo", wargv);
+  return 0;
+}
+!
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_WSPAWN 1\n" >> config.h
+else
+  printf "no\n"
+fi
+
 #
 # Dependent variables
 #

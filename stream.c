@@ -2338,6 +2338,30 @@ static val run(val name, val args)
     return status == 0 ? zero : nil;
   }
 }
+#elif HAVE_WSPAWN
+static val run(val command, val args)
+{
+  const wchar_t **wargv = 0;
+  val iter;
+  int i, nargs, status;
+
+  args = default_bool_arg(args);
+  nargs = c_num(length(args)) + 1;
+
+  wargv = (const wchar_t **) chk_malloc((nargs + 2) * sizeof *wargv);
+
+  for (i = 0, iter = cons(command, args); iter; i++, iter = cdr(iter))
+    wargv[i] = c_str(car(iter));
+  wargv[i] = 0;
+
+  status = _wspawnvp(_P_WAIT, c_str(command), wargv);
+ 
+  for (i = 0; i < nargs; i++)
+    free((void *) wargv[i]);
+  free((void *) wargv);
+
+  return (status < 0) ? nil : num(status);
+}
 #else
 static val run(val command, val args)
 {
