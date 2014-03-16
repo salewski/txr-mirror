@@ -1111,10 +1111,23 @@ as a delimiter. Thus, "\ex21;;" represents "!;".
 If the line ends in the middle of a literal, it is an error, unless the
 last character is a backslash. This backslash is a special escape which does
 not denote a character; rather, it indicates that the string literal continues
-on the next line. Leading whitespace in the following line is deleted, and
-does not constitute part of the string literal, which allows for indentation.
+on the next line.  The backslash is deleted, along with whitespace which
+immediately precedes it, as well as leading whitespace in the following line.
 The escape sequence "\e " (backslash space) can be used to encode a
 significant space.
+
+Example:
+
+   "foo   \e
+    bar"
+
+   "foo   \e
+   \ bar"
+
+   "foo\  \e
+    bar"
+
+The first string literal is the string "foobar". The second two are "foo bar".
 
 .SS String Quasiliterals
 
