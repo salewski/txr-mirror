@@ -1,5 +1,21 @@
 2014-03-19  Kaz Kylheku  <kaz@kylheku.com>
 
+	Fixing gaping bug in the handling of @-delimited expressions
+	within quasiliterals. This has been a problem for years.
+	Quasiliteral strings existed very early before TXR Lisp was introduced.
+	So it made sense that when @ is seen in a quasiliteral, the
+	lexical analyzer pushed into the SPECIAL state in which directives
+	are recognized, like in the pattern language. I noticed
+	this because there is an @(if) directive now, which prevents
+	`@(if ...)` from being valid.
+
+	* parser.l (QSPECIAL): New scanner state. This is a state
+	similar to SPECIAL that we enter into when @ is seen in a QSLIT state.
+	In this state we recognize constructs like braced variables, but not
+	certain other features like directives.
+
+2014-03-19  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (int_flo): Fix non-handling of negative values.
 
 2014-03-19  Kaz Kylheku  <kaz@kylheku.com>

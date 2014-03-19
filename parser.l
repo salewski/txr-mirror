@@ -190,11 +190,11 @@ UANY    {ASC}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 UANYN   {ASCN}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U} 
 UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
-%x      SPECIAL BRACED NESTED REGEX STRLIT CHRLIT QSILIT
+%x      SPECIAL BRACED NESTED REGEX STRLIT CHRLIT QSILIT QSPECIAL
 
 %%
 
-<SPECIAL,NESTED,BRACED>{NUM} {
+<SPECIAL,QSPECIAL,NESTED,BRACED>{NUM} {
   val str = string_own(utf8_dup_from(yytext));
 
   if (yy_top_state() == INITIAL
@@ -205,7 +205,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return NUMBER;
 }
 
-<SPECIAL,NESTED,BRACED>{XNUM} {
+<SPECIAL,QSPECIAL,NESTED,BRACED>{XNUM} {
   val str = string_own(utf8_dup_from(yytext + 2));
 
   if (yy_top_state() == INITIAL
@@ -216,7 +216,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return NUMBER;
 }
 
-<SPECIAL,NESTED,BRACED>{ONUM} {
+<SPECIAL,QSPECIAL,NESTED,BRACED>{ONUM} {
   val str = string_own(utf8_dup_from(yytext + 2));
 
   if (yy_top_state() == INITIAL
@@ -227,7 +227,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return NUMBER;
 }
 
-<SPECIAL,NESTED,BRACED>{BNUM} {
+<SPECIAL,QSPECIAL,NESTED,BRACED>{BNUM} {
   val str = string_own(utf8_dup_from(yytext + 2));
 
   if (yy_top_state() == INITIAL
@@ -238,7 +238,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return NUMBER;
 }
 
-<SPECIAL,NESTED,BRACED>{FLO} {
+<SPECIAL,QSPECIAL,NESTED,BRACED>{FLO} {
   val str = string_own(utf8_dup_from(yytext));
 
   if (yy_top_state() == INITIAL
@@ -249,7 +249,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return NUMBER;
 }
 
-<SPECIAL,NESTED,BRACED>{FLODOT}/[^.] {
+<SPECIAL,QSPECIAL,NESTED,BRACED>{FLODOT}/[^.] {
   val str = string_own(utf8_dup_from(yytext));
 
   if (yy_top_state() == INITIAL
@@ -260,7 +260,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return NUMBER;
 }
 
-<SPECIAL>({FLO}|{FLODOT}){TOK} |
+<SPECIAL,QSPECIAL>({FLO}|{FLODOT}){TOK} |
 <BRACED>({FLO}|{FLODOT}){BTOK} |
 <NESTED>({FLO}|{FLODOT}){NTOK} {
   val str = string_utf8(yytext);
@@ -315,7 +315,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return METANUM;
 }
 
-<SPECIAL>{TOK} |
+<SPECIAL,QSPECIAL>{TOK} |
 <BRACED>{BTOK} |
 <NESTED>{NTOK} {
   if (yy_top_state() == INITIAL
@@ -507,13 +507,13 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return ELSE;
 }
 
-<SPECIAL>[{] {
+<SPECIAL,QSPECIAL>[{] {
   yy_push_state(BRACED);
   yylval.lineno = lineno;
   return yytext[0];
 }
 
-<SPECIAL,NESTED,BRACED>[(\[] {
+<SPECIAL,QSPECIAL,NESTED,BRACED>[(\[] {
  yy_push_state(NESTED);
  yylval.lineno = lineno;
  return yytext[0];
@@ -542,7 +542,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return yytext[0];
 }
 
-<SPECIAL,NESTED>[)\]] {
+<SPECIAL,QSPECIAL,NESTED>[)\]] {
   yy_pop_state();
   if (yy_top_state() == INITIAL
       || yy_top_state() == QSILIT)
@@ -550,26 +550,26 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return yytext[0];
 }
 
-<SPECIAL,NESTED,BRACED>{WS} {
+<SPECIAL,QSPECIAL,NESTED,BRACED>{WS} {
   /* Eat whitespace in directive */
 }
 
-<SPECIAL,NESTED,BRACED>\" {
+<SPECIAL,QSPECIAL,NESTED,BRACED>\" {
   yy_push_state(STRLIT);
   return '"';
 }
 
-<SPECIAL,NESTED,BRACED>#\\ {
+<SPECIAL,QSPECIAL,NESTED,BRACED>#\\ {
   yy_push_state(CHRLIT);
   return HASH_BACKSLASH;
 }
 
-<SPECIAL,NESTED,BRACED>#[/] {
+<SPECIAL,QSPECIAL,NESTED,BRACED>#[/] {
   yy_push_state(REGEX);
   return HASH_SLASH;
 }
 
-<SPECIAL,NESTED,BRACED>` {
+<SPECIAL,QSPECIAL,NESTED,BRACED>` {
   yy_push_state(QSILIT);
   return '`';
 }
@@ -594,7 +594,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return TEXT;
 }
 
-<SPECIAL,NESTED,BRACED>\n {
+<SPECIAL,QSPECIAL,NESTED,BRACED>\n {
   lineno++;
 }
 
@@ -603,12 +603,12 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return '/';
 }
 
-<SPECIAL,NESTED>\. {
+<SPECIAL,QSPECIAL,NESTED>\. {
   yylval.chr = '.';
   return '.';
 }
 
-<SPECIAL,NESTED,BRACED>[\\]\n{WS} {
+<SPECIAL,QSPECIAL,NESTED,BRACED>[\\]\n{WS} {
   if (YYSTATE == SPECIAL)
     yy_pop_state();  /* @\ continuation */
   lineno++;
@@ -636,17 +636,17 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   yyerrorf(lit("unrecognized escape: \\~a"), chr(yytext[1]), nao);
 }
 
-<SPECIAL,NESTED,BRACED>[;].* {
+<SPECIAL,QSPECIAL,NESTED,BRACED>[;].* {
   /* comment */
 }
 
-<SPECIAL,NESTED,BRACED>{UANYN} {
+<SPECIAL,QSPECIAL,NESTED,BRACED>{UANYN} {
   yyerrprepf(lit("bad character in directive: '~a'"),
              string_utf8(yytext), nao);
   return ERRTOK;
 }
 
-<SPECIAL,NESTED,BRACED>. {
+<SPECIAL,QSPECIAL,NESTED,BRACED>. {
   yyerrprepf(lit("non-UTF-8 byte in directive: "
                  "'\\x~02x'"),
              num((unsigned char) yytext[0]), nao);
@@ -826,7 +826,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 }
 
 <QSILIT>@ {
-  yy_push_state(SPECIAL);
+  yy_push_state(QSPECIAL);
 }
 
 <STRLIT,CHRLIT,QSILIT>{UANYN} {
