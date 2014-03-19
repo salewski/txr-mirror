@@ -33,4 +33,6 @@ val in_int_ptr_range(val bignum);
 val cum_norm_dist(val x);
 val n_choose_k(val n, val k);
 val n_perm_k(val n, val k);
+val tofloat(val obj);
+val toint(val obj, val base);
 void arith_init(void);

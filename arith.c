@@ -1930,6 +1930,56 @@ val n_perm_k(val n, val k)
   return rising_product(plus(minus(n, k), one), n);
 }
 
+val tofloat(val obj)
+{
+  switch (tag(obj)) {
+  case TAG_NUM:
+    return flo_int(obj);
+  case TAG_LIT:
+    return flo_str(obj);
+  case TAG_PTR:
+    switch (type(obj)) {
+    case BGNUM:
+      return flo_int(obj);
+    case FLNUM:
+      return obj;
+    case STR:
+    case LSTR:
+      return flo_str(obj);
+    default:
+      break;
+    }
+    /* fallthrough */
+  default:
+    uw_throwf(error_s, lit("tofloat: ~s is not convertible to float"), obj, nao);
+  }
+}
+
+val toint(val obj, val base)
+{
+  switch (tag(obj)) {
+  case TAG_NUM:
+    return obj;
+  case TAG_LIT:
+    return int_str(obj, base);
+  case TAG_PTR:
+    switch (type(obj)) {
+    case BGNUM:
+      return obj;
+    case FLNUM:
+      return int_flo(obj);
+    case STR:
+    case LSTR:
+      return int_str(obj, base);
+    default:
+      break;
+    }
+    /* fallthrough */
+  default:
+    uw_throwf(error_s, lit("tofloat: ~s is not convertible to float"), obj, nao);
+  }
+}
+
 void arith_init(void)
 {
   mp_init(&NUM_MAX_MP);

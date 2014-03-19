@@ -3426,6 +3426,8 @@ void eval_init(void)
   reg_fun(intern(lit("num-str"), user_package), func_n1(num_str));
   reg_fun(intern(lit("int-flo"), user_package), func_n1(int_flo));
   reg_fun(intern(lit("flo-int"), user_package), func_n1(flo_int));
+  reg_fun(intern(lit("tofloat"), user_package), func_n1(tofloat));
+  reg_fun(intern(lit("toint"), user_package), func_n2o(toint, 1));
   reg_fun(intern(lit("chrp"), user_package), func_n1(chrp));
   reg_fun(intern(lit("chr-isalnum"), user_package), func_n1(chr_isalnum));
   reg_fun(intern(lit("chr-isalpha"), user_package), func_n1(chr_isalpha));

@@ -10317,6 +10317,32 @@ The flo-int function returns an exact floating point value corresponding to the
 integer argument, if possible, otherwise an approximation using a nearby
 floating point value.
 
+.SS Functions tofloat and toint
+
+.TP
+Syntax:
+
+  (tofloat <value>)
+  (toint <value> [<radix>])
+
+.TP
+Description:
+
+These convenience functions convert a given value to a floating-point value or
+to an integer, respectively.
+
+If a floating-point value is passed into tofloat, or an integer value into
+toint, then the value is simply returned.
+
+If <value> is a string, then it is converted by tofloat as if by the
+function flo-str, and by toint as if by the function int-str.
+
+If <value> is an integer, then it is converted by tofloat as if by
+the function flo-int.
+
+If <value> is a floating-point number, then it is converted by toint
+as if by the function int-flo.
+
 .SH BIT OPERATIONS
 
 In TXR Lisp, similarly to Common Lisp, bit operations on integers are based

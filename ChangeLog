@@ -1,3 +1,14 @@
+2014-03-19  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c (tofloat, toint): New functions.
+
+	* arith.h (tofloat, toint): Declared.
+
+	* eval.c (eval_init): tofloat and toint registered
+	as intrinsics.
+
+	* txr.1: Documented.
+
 2014-03-16  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 86
