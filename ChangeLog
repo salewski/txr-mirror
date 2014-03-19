@@ -1,5 +1,9 @@
 2014-03-19  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (int_flo): Fix non-handling of negative values.
+
+2014-03-19  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (tofloat, toint): New functions.
 
 	* arith.h (tofloat, toint): Declared.
