@@ -17,7 +17,7 @@
 syn case match
 syn spell toplevel
 
-setlocal iskeyword=a-z,A-Z,48-57,!,$,&,*,+,-,<,=,>,?,\\,_,~,^
+setlocal iskeyword=a-z,A-Z,48-57,!,$,&,*,+,-,<,=,>,?,\\,_,~,/
 
 syn keyword txr_keyword contained accept all and assert
 syn keyword txr_keyword contained bind block cases cat
@@ -161,14 +161,14 @@ syn keyword txl_keyword contained symbol-value symbolp symlink sys-qquote
 syn keyword txl_keyword contained sys-splice sys-unquote syslog tan
 syn keyword txl_keyword contained third throw throwf time
 syn keyword txl_keyword contained time-fields-local time-fields-utc time-string-local time-string-utc
-syn keyword txl_keyword contained time-usec tok-str tostring tostringp
-syn keyword txl_keyword contained tree-bind tree-case tree-find trie-add
-syn keyword txl_keyword contained trie-compress trim-str trunc typeof
-syn keyword txl_keyword contained unget-byte unget-char unquote upcase-str
-syn keyword txl_keyword contained update url-decode url-encode usleep
-syn keyword txl_keyword contained uw-protect vec vec-push vec-set-length
-syn keyword txl_keyword contained vecref vector vector-list vectorp
-syn keyword txl_keyword contained with-saved-vars zerop
+syn keyword txl_keyword contained time-usec tofloat toint tok-str
+syn keyword txl_keyword contained tostring tostringp tree-bind tree-case
+syn keyword txl_keyword contained tree-find trie-add trie-compress trim-str
+syn keyword txl_keyword contained trunc typeof unget-byte unget-char
+syn keyword txl_keyword contained unquote upcase-str update url-decode
+syn keyword txl_keyword contained url-encode usleep uw-protect vec
+syn keyword txl_keyword contained vec-push vec-set-length vecref vector
+syn keyword txl_keyword contained vector-list vectorp with-saved-vars zerop
 
 syn match txr_error "@[\t ]*[*]\?[\t ]*."
 syn match txr_nested_error "[^\t `]\+" contained
