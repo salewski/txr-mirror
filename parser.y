@@ -59,6 +59,7 @@ static val optimize_text(val text_form);
 static val unquotes_occur(val quoted_form, int level);
 static val expand_meta(val form, val menv);
 static wchar_t char_from_name(const wchar_t *name);
+static val make_expr(val sym, val rest, val lineno);
 
 static val parsed_spec;
 
@@ -100,6 +101,7 @@ static val parsed_spec;
 %type <val> regex lisp_regex regexpr regbranch
 %type <val> regterm regtoken regclass regclassterm regrange
 %type <val> strlit chrlit quasilit quasi_items quasi_item litchars
+%type <val> not_a_clause
 %type <chr> regchar
 %type <lineno> '(' '[' '@'
 
@@ -528,25 +530,6 @@ out_clauses : out_clause                { $$ = cons($1, nil); }
 
 out_clause : repeat_clause              { $$ = cons($1, nil); }
            | o_line                     { $$ = $1; }
-           | all_clause                 { $$ = nil;
-                                          yyerror("match clause in output"); }
-           | some_clause                { $$ = nil;
-                                          yyerror("match clause in output"); }
-           | none_clause                { $$ = nil;
-                                          yyerror("match clause in output"); }
-           | maybe_clause               { $$ = nil;
-                                          yyerror("match clause in output"); }
-           | cases_clause               { $$ = nil;
-                                          yyerror("match clause in output"); }
-           | choose_clause              { $$ = nil;
-                                          yyerror("choose clause in output"); }
-           | define_clause              { $$ = nil;
-                                          yyerror("match clause in output"); }
-
-           | try_clause                 { $$ = nil;
-                                          yyerror("match clause in output"); }
-           | output_clause              { $$ = nil;
-                                          yyerror("match clause in output"); }
            ;
 
 repeat_clause : REPEAT exprs_opt ')' newl
@@ -605,6 +588,8 @@ o_elems_opt : o_elems           { $$ = o_elems_transform($1);
 
 o_elems : o_elem                { $$ = cons($1, nil); }
         | o_elem o_elems        { $$ = cons($1, $2); }
+        | not_a_clause          { $$ = cons($1, nil); }
+        | not_a_clause o_elems  { $$ = cons($1, $2); }
         ;
 
 o_elem : TEXT                   { $$ = string_own($1);
@@ -942,6 +927,41 @@ litchars : LITCHAR              { $$ = cons(chr($1), nil); }
          | LITCHAR litchars     { $$ = cons(chr($1), $2); }
          ;
 
+not_a_clause : ALL              { $$ = make_expr(all_s, nil, num(lineno)); }
+             | SOME             { $$ = make_expr(some_s, nil, num(lineno)); }
+             | NONE             { $$ = make_expr(none_s, nil, num(lineno)); }
+             | MAYBE            { $$ = make_expr(maybe_s, nil, num(lineno)); }
+             | CASES            { $$ = make_expr(cases_s, nil, num(lineno)); }
+             | AND              { $$ = make_expr(and_s, nil, num(lineno)); }
+             | OR               { $$ = make_expr(or_s, nil, num(lineno)); }
+             | TRY              { $$ = make_expr(try_s, nil, num(lineno)); }
+             | FINALLY          { $$ = make_expr(finally_s, nil, num(lineno)); }
+             | ELSE             { $$ = make_expr(intern(lit("else"), nil),
+                                                 nil, num(lineno)); }
+             | ELIF             { $$ = make_expr(intern(lit("elif"), nil),
+                                                 nil, num(lineno)); }
+             | BLOCK
+               exprs_opt ')'    { $$ = make_expr(block_s, $2, nil); }
+             | CHOOSE
+               exprs_opt ')'    { $$ = make_expr(choose_s, $2, nil); }
+             | COLLECT
+               exprs_opt ')'    { $$ = make_expr(collect_s, $2, nil); }
+             | COLL
+               exprs_opt ')'    { $$ = make_expr(coll_s, $2, nil); }
+             | GATHER
+               exprs_opt ')'    { $$ = make_expr(gather_s, $2, nil); }
+             | DEFINE
+               exprs_opt ')'    { $$ = make_expr(define_s, $2, nil); }
+             | CATCH
+               exprs_opt ')'    { $$ = make_expr(catch_s, $2, nil); }
+             | IF
+               exprs_opt ')'    { $$ = make_expr(intern(lit("if"), nil),
+                                                 $2, nil); }
+             | OUTPUT
+                exprs_opt ')'   { yyerror("@(output) doesn't nest"); }
+
+             ;
+
 %%
 
 static val sym_helper(wchar_t *lexeme, val meta_allowed)
@@ -1237,6 +1257,22 @@ static wchar_t char_from_name(const wchar_t *name)
   }
 
   return L'!'; /* code meaning not found */
+}
+
+static val make_expr(val sym, val rest, val lineno)
+{
+  val expr = cons(sym, rest);
+  val ret = cons(expr_s, expr);
+
+  if (rest) {
+    rlcp(expr, rest);
+    rlcp(ret, rest);
+  } else {
+    rl(expr, lineno);
+    rl(ret, lineno);
+  }
+
+  return ret;
 }
 
 val get_spec(void)

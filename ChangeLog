@@ -1,5 +1,20 @@
 2014-03-19  Kaz Kylheku  <kaz@kylheku.com>
 
+	Second round of bugfixing on the theme of the previous commit.
+	Here were are changing the output clause to recognize all special
+	clause tokens that are not used in output and turning them into
+	regular Lisp.  So @(if a b c) in an output clause works once again,
+	recognized as IF exprs_opt ')' syntax, and turned into Lisp. Other
+	things work that didn't work before like @(and), @(or) and so forth.
+
+	* parser.y (make_expr): New static function.
+	(not_a_clause): New nonterminal.
+	(out_clause): Remove error-catching productions for match-side
+	clauses.
+	(o_elems): Now consists of a mixture of o_elems and not_a_clause's.
+
+2014-03-19  Kaz Kylheku  <kaz@kylheku.com>
+
 	Fixing gaping bug in the handling of @-delimited expressions
 	within quasiliterals. This has been a problem for years.
 	Quasiliteral strings existed very early before TXR Lisp was introduced.
