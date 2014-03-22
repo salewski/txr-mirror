@@ -5580,6 +5580,21 @@ If the first form of a group yields nil, then processing continues with the
 next group, if any. If all form groups yield nil, then the cond form yields
 nil.  This holds in the case that the syntax is empty: (cond) yields nil.
 
+.SS Macro when
+
+.TP
+Syntax:
+
+  (when <expression> {<form>}*)
+
+.TP
+Description:
+
+The when macro operator evaluates <expression>. If <expression> yields
+true, and there are additiona forms, then each <form> is evaluated.
+The value of the last form is becomes the result value of the when form.
+If there are no forms, then the result is nil.
+
 .SS Operator/function if
 
 .TP

@@ -1,3 +1,10 @@
+2014-03-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (me_when): New static function.
+	(eval_init): Register "when" macro.
+
+	* txr.1: Documented when macro.
+
 2014-03-19  Kaz Kylheku  <kaz@kylheku.com>
 
 	Second round of bugfixing on the theme of the previous commit.

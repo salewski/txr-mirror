@@ -2021,6 +2021,12 @@ static val me_pprof(val form, val menv)
               nao);
 }
 
+static val me_when(val form, val menv)
+{
+  (void) menv;
+  return cons(cond_s, cons(rest(form), nil));
+}
+
 val expand_forms(val form, val menv)
 {
   if (atom(form)) {
@@ -3179,6 +3185,7 @@ void eval_init(void)
   reg_mac(qquote_s, me_qquote);
   reg_mac(sys_qquote_s, me_qquote);
   reg_mac(intern(lit("pprof"), user_package), me_pprof);
+  reg_mac(intern(lit("when"), user_package), me_when);
 
   reg_fun(cons_s, func_n2(cons));
   reg_fun(intern(lit("make-lazy-cons"), user_package), func_n1(make_lazy_cons));
