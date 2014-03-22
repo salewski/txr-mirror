@@ -5846,7 +5846,7 @@ way for writing dwim expressions.
 
 The dwim operator takes a variable number of arguments, which are
 all evaluated in the same way: the first argument is not evaluated differently
-from the remaining arguments. 
+from the remaining arguments.
 
 This means that the first argument isn't a function name, but an ordinary
 expression which can simply compute a function object (or, more generally,
@@ -5855,27 +5855,44 @@ a callable object).
 Furthermore, for those arguments of dwim which are symbols (after all
 macro-expansion is performed on the arguments), the evaluation rules are
 altered. For the purposes of resolving symbols to values, the function and
-variable binding namespaces are considered to be merged into a single space.
+variable binding namespaces are considered to be merged into a single space,
+creating a situation that is very similar to a Lisp-1 style dialect.
 
-It must be noted that all arguments of dwim which, after macro expansion, are
-not symbols are evaluated using the normal evaluation rules; they must
-themselves be dwim forms if they are to take advantage of this feature.
+This special Lisp-1 evaluation is not recursively applied.  All arguments of
+dwim which, after macro expansion, are not symbols are evaluated using the
+normal Lisp-2 evaluation rules. Thus, the DWIM operator must be used
+in every expression where the Lisp-1 rules for reducing symbols to
+values are desired.
 
 After macro expansion, the first argument of dwim may not be an operator such
 as let, or the name of a macro. Prior to macroexpansion, any argument of dwim
 may be a symbol macro.
 
 If a symbol has bindings both in the variable and function namespace in scope,
-and is referenced by a dwim argument, this is conflict which is resolved
-according to two rules.  When nested scopes are concerned, then an inner
-binding shadows an outer binding, regardless of their kind.  An inner
-variable binding for a symbol X shadows an outer or global function binding.
+and is referenced by a dwim argument, this constitues a conflict which is
+resolved according to two rules.  When nested scopes are concerned, then an
+inner binding shadows an outer binding, regardless of their kind.  An inner
+variable binding for a symbol X shadows an outer or global function binding,
+and vice versa.
+
 If a symbol is bound to both a function and variable in the global namespace,
 then the variable binding is favored.
 
+Macros do not participate in the special scope conflation. This is apparent
+in two ways. Firstly, the space of symbol macros is not folded together with
+the space of regular macros. An argument of dwim that is a symbol might be
+symbol macro, variable or function, but it cannot be interpreted as the name of
+a regular macro. Secondly, function bindings cannot shadow symbol macros. If a
+function is defined in an inner scope relative to a symbol macro for the
+same symbol, that symbol macro still hides the function when it appears in
+a dwim form. Symbol macros are expanded without any consideration for the
+dwim operator, which is not treated specially by the expansion phase.
+(Interaction between dwim and macros may become more sophisticated in the
+future.)
+
 How many arguments are required by the dwim operator depends on the type of
-object to which the first argument expression evaluates: of the first argument.
-The possibilities are:
+object to which the first argument expression evaluates.  The possibilities
+are:
 
 .IP "[<function> <argument>*]"
 Call the given the function object to the given arguments.
