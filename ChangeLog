@@ -1,5 +1,19 @@
 2014-03-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 87
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version, set date.
+
+	* configure (txr_ver): Bumped.
+
+	* RELNOTES: Updated
+
+	* txr.vim: Regenerated.
+
+2014-03-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* utf8.c (w_fopen, w_popen, w_freopen, w_remove, w_rename): Revert
 	2014-03-14 changes.
 

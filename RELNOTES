@@ -1,3 +1,28 @@
+                                     TXR 87
+                                   2014-03-22
+
+
+  Features
+
+  - New convenience functions tofloat, toint: convert string or number to
+    integer or floating-point.
+
+  - New macro: when.
+
+  Bugs
+
+  - int-flo function was failing on negative numbers.
+
+  - Fixed long-standing syntax issue: directives of the pattern matching
+    language being syntactically recognized in the @(output) clause and
+    in string quasiliterals, interfering with the ability to invoke Lisp
+    forms based on the same symbols. This issue really "hit home" with
+    the recent introduction of the @(if) directive, causing
+    @(if expr then else) to suddenly be inaccessible in @(output) and
+    quasistrings.
+
+
+
                                      TXR 86
                                    2014-03-16
 

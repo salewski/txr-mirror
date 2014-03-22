@@ -168,7 +168,8 @@ syn keyword txl_keyword contained trunc typeof unget-byte unget-char
 syn keyword txl_keyword contained unquote upcase-str update url-decode
 syn keyword txl_keyword contained url-encode usleep uw-protect vec
 syn keyword txl_keyword contained vec-push vec-set-length vecref vector
-syn keyword txl_keyword contained vector-list vectorp with-saved-vars zerop
+syn keyword txl_keyword contained vector-list vectorp when with-saved-vars
+syn keyword txl_keyword contained zerop
 
 syn match txr_error "@[\t ]*[*]\?[\t ]*."
 syn match txr_nested_error "[^\t `]\+" contained
