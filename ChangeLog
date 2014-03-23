@@ -1,3 +1,8 @@
+2014-03-22  Kaz Kylheku  <kaz@kylheku.com>
+
+	* utf8.c (w_fopen, w_popen, w_freopen, w_remove, w_rename): Revert
+	2014-03-14 changes.
+
 2014-03-21  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (me_when): New static function.
