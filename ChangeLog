@@ -1,3 +1,11 @@
+2014-03-23  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (not_s): New symbol var.
+	(me_unless, me_while, m_until): New static functions.
+	(eval_init): Register macros unless, while and until.
+
+	* txr.1: Document unless, while and until.
+
 2014-03-22  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 87

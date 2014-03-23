@@ -5580,20 +5580,54 @@ If the first form of a group yields nil, then processing continues with the
 next group, if any. If all form groups yield nil, then the cond form yields
 nil.  This holds in the case that the syntax is empty: (cond) yields nil.
 
-.SS Macro when
+.SS Macros when and unless
 
 .TP
 Syntax:
 
-  (when <expression> {<form>}*)
+  (when <expression> <form>*)
+  (unless <expression> <form>*)
 
 .TP
 Description:
 
 The when macro operator evaluates <expression>. If <expression> yields
-true, and there are additiona forms, then each <form> is evaluated.
+true, and there are additional forms, then each <form> is evaluated.
 The value of the last form is becomes the result value of the when form.
 If there are no forms, then the result is nil.
+
+The unless operator is similar to when, except that it reverses the
+logic of the test. The forms, if any, are evaluated if, and only if
+<expression> is false.
+
+.SS Macros while and until
+
+.TP
+Syntax:
+
+  (while <expression> <form>*)
+  (until <expression> <form>*)
+
+.TP
+Description:
+
+The while macro operator provides a looping construct.  It evaluates
+<expression>. If <expression> yields nil, then the evaluation of the while form
+terminates, producing the value nil.  Otherwise, if there are additional forms,
+then each <form> is evaluated.  Next, evaluation returns to <expression>,
+repeating all of the previous steps.
+
+The until macro operator is similar to while, except that the until form
+terminates when <expression> evaluates true, rather than false.
+
+These operators arrange for the evaluation of all their enclosed forms
+in an anonymous block. Any of the <form>-s, or <expression>, may use
+the return operator to terminate the loop, and optionally to specify
+a result value for the form.
+
+The only way these forms can yield a value other than nil is if
+the return operator is used to terminate the implicit anonymous block,
+and is given an argument, which becomes the result value.
 
 .SS Operator/function if
 

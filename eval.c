@@ -73,7 +73,7 @@ val dyn_env;
 val eval_error_s;
 val dwim_s, progn_s, prog1_s, let_s, let_star_s, lambda_s, call_s;
 val cond_s, if_s, defvar_s, defun_s, defmacro_s, tree_case_s, tree_bind_s;
-val inc_s, dec_s, push_s, pop_s, flip_s, gethash_s, car_s, cdr_s;
+val inc_s, dec_s, push_s, pop_s, flip_s, gethash_s, car_s, cdr_s, not_s;
 val del_s, vecref_s;
 val for_s, for_star_s, each_s, each_star_s, collect_each_s, collect_each_star_s;
 val append_each_s, append_each_star_s;
@@ -2027,6 +2027,27 @@ static val me_when(val form, val menv)
   return cons(cond_s, cons(rest(form), nil));
 }
 
+static val me_unless(val form, val menv)
+{
+  (void) menv;
+  return list(if_s, second(form), nil, cons(progn_s, rest(rest(form))), nao);
+}
+
+static val me_while(val form, val menv)
+{
+  (void) menv;
+  return apply_frob_args(list(for_s, nil, cons(second(form), nil), nil,
+                              rest(rest(form)), nao));
+}
+
+static val me_until(val form, val menv)
+{
+  val inv = cons(not_s, cons(second(form), nil));
+  (void) menv;
+  return apply_frob_args(list(for_s, nil, cons(inv, nil), nil,
+                              rest(rest(form)), nao));
+}
+
 val expand_forms(val form, val menv)
 {
   if (atom(form)) {
@@ -3104,6 +3125,7 @@ void eval_init(void)
   gethash_s = intern(lit("gethash"), user_package);
   car_s = intern(lit("car"), user_package);
   cdr_s = intern(lit("cdr"), user_package);
+  not_s = intern(lit("not"), user_package);
   vecref_s = intern(lit("vecref"), user_package);
   list_s = intern(lit("list"), user_package);
   append_s = intern(lit("append"), user_package);
@@ -3186,6 +3208,9 @@ void eval_init(void)
   reg_mac(sys_qquote_s, me_qquote);
   reg_mac(intern(lit("pprof"), user_package), me_pprof);
   reg_mac(intern(lit("when"), user_package), me_when);
+  reg_mac(intern(lit("unless"), user_package), me_unless);
+  reg_mac(intern(lit("while"), user_package), me_while);
+  reg_mac(intern(lit("until"), user_package), me_until);
 
   reg_fun(cons_s, func_n2(cons));
   reg_fun(intern(lit("make-lazy-cons"), user_package), func_n1(make_lazy_cons));
@@ -3207,7 +3232,7 @@ void eval_init(void)
 
   reg_fun(intern(lit("atom"), user_package), func_n1(atom));
   reg_fun(intern(lit("null"), user_package), func_n1(null));
-  reg_fun(intern(lit("not"), user_package), func_n1(null));
+  reg_fun(not_s, func_n1(null));
   reg_fun(intern(lit("consp"), user_package), func_n1(consp));
   reg_fun(intern(lit("listp"), user_package), func_n1(listp));
   reg_fun(intern(lit("proper-listp"), user_package), func_n1(proper_listp));
