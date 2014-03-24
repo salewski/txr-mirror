@@ -712,6 +712,7 @@ val pos_if(val pred, val list, val key);
 val set_diff(val list1, val list2, val testfun, val keyfun);
 val copy(val seq);
 val length(val seq);
+val empty(val seq);
 val sub(val seq, val from, val to);
 val ref(val seq, val ind);
 val refset(val seq, val ind, val newval);

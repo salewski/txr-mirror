@@ -9727,7 +9727,20 @@ Syntax:
 Description:
 
 The length function returns the number of items in <sequence>, and
-returns it.
+returns it. <sequence> may be a hash, in which case (hash-count <sequence>) is
+returned.
+
+.SS Function empty
+
+.TP
+Syntax:
+
+  (empty <sequence>)
+
+.TP
+Description:
+
+Returns t if (length <sequence>) is zero, otherwise nil.
 
 .SS Function copy
 
@@ -9741,8 +9754,9 @@ Description:
 
 The copy function duplicates a sequence. If <sequence> is nil, it
 returns nil. If <sequence> is a list, it returns (copy-list <sequence>);
-if <sequence> is a string, it returns (copy-str <sequence>); and
-if <sequence> is a vector, it returns (copy-vec <sequence>).
+if <sequence> is a string, it returns (copy-str <sequence>);
+if <sequence> is a vector, it returns (copy-vec <sequence>); and
+if <sequence> is a hash, it return (copy-hash <sequence>).
 
 Except in the case when <sequence> is nil, copy returns a value that
 is distinct from (not eq to) <sequence>. This is different from

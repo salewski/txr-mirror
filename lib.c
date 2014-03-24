@@ -4932,9 +4932,14 @@ val copy(val seq)
     return copy_list(seq);
   case LIT:
   case STR:
+  case LSTR:
     return copy_str(seq);
   case VEC:
     return copy_vec(seq);
+  case COBJ:
+    if (seq->co.cls == hash_s)
+      return copy_hash(seq);
+    /* fallthrough */
   default:
     type_mismatch(lit("copy: ~s is not a sequence"), seq, nao);
   }
@@ -4950,11 +4955,40 @@ val length(val seq)
     return length_list(seq);
   case LIT:
   case STR:
+  case LSTR:
     return length_str(seq);
   case VEC:
     return length_vec(seq);
+  case COBJ:
+    if (seq->co.cls == hash_s)
+      return hash_count(seq);
+    /* fallthrough */
   default:
     type_mismatch(lit("length: ~s is not a sequence"), seq, nao);
+  }
+}
+
+val empty(val seq)
+{
+  switch (type(seq)) {
+  case NIL:
+    return t;
+  case CONS:
+  case LCONS:
+    return nil;
+  case LIT:
+  case STR:
+    return if2(c_str(seq)[0] == 0, t);
+  case LSTR:
+    return length_str_le(seq, zero);
+  case VEC:
+    return eq(length_vec(seq), zero);
+  case COBJ:
+    if (seq->co.cls == hash_s)
+      return eq(hash_count(seq), zero);
+    /* fallthrough */
+  default:
+    type_mismatch(lit("empty: ~s is not a sequence"), seq, nao);
   }
 }
 

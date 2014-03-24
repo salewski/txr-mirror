@@ -3527,6 +3527,7 @@ void eval_init(void)
   reg_fun(intern(lit("set-diff"), user_package), func_n4o(set_diff, 2));
 
   reg_fun(intern(lit("length"), user_package), func_n1(length));
+  reg_fun(intern(lit("empty"), user_package), func_n1(empty));
   reg_fun(intern(lit("copy"), user_package), func_n1(copy));
   reg_fun(intern(lit("sub"), user_package), func_n3o(sub, 1));
   reg_fun(intern(lit("ref"), user_package), func_n2(ref));

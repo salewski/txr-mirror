@@ -1,5 +1,19 @@
 2014-03-23  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Register empty as intrinsic.
+
+	* lib.c (copy): Bugfix: handle lazy strings. Also, handle hash
+	tables via copy_hash.
+	(length): Bugifx: handle lazy strings. Also, handle hash tables
+	via hash_count.
+	(empty): New function.
+
+	* lib.h (empty): Declared.
+
+	* txr.1: Documented.
+
+2014-03-23  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (not_s): New symbol var.
 	(me_unless, me_while, m_until): New static functions.
 	(eval_init): Register macros unless, while and until.
