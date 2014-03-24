@@ -7353,6 +7353,22 @@ Examples:
     (ldiff a b))
   -> (1)
 
+.SS Function last
+
+.TP
+Syntax:
+
+  (last <list>)
+
+.TP
+Description:
+
+If <list> is a nonempty proper or improper list, the last function
+returns the last cons cell in the list: that cons cell whose cdr field
+is a terminating atom.
+
+If <list> is nil, then nil is returned.
+
 .SS Functions flatten, flatten*
 
 .TP

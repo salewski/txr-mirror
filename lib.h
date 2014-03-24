@@ -392,6 +392,7 @@ val listref(val list, val ind);
 val *listref_l(val list, val ind);
 val *tail(val cons);
 val *lastcons(val list);
+val last(val list);
 val *ltail(val *cons);
 val pop(val *plist);
 val upop(val *plist, val *pundo);

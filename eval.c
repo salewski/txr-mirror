@@ -3257,6 +3257,7 @@ void eval_init(void)
   reg_fun(intern(lit("nreverse"), user_package), func_n1(nreverse));
   reg_fun(intern(lit("reverse"), user_package), func_n1(reverse));
   reg_fun(intern(lit("ldiff"), user_package), func_n2(ldiff));
+  reg_fun(intern(lit("last"), user_package), func_n1(last));
   reg_fun(intern(lit("flatten"), user_package), func_n1(flatten));
   reg_fun(intern(lit("flatten*"), user_package), func_n1(lazy_flatten));
   reg_fun(intern(lit("memq"), user_package), func_n2(memq));

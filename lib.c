@@ -412,6 +412,12 @@ val *lastcons(val list)
   return ret;
 }
 
+val last(val list)
+{
+  val *p = lastcons(list);
+  return p ? *p : list;
+}
+
 val *ltail(val *cons)
 {
   while (cdr(*cons))
