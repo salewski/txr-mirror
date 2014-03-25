@@ -1129,6 +1129,46 @@ Example:
 
 The first string literal is the string "foobar". The second two are "foo bar".
 
+.SS Word List Literals
+
+A word list literal provides a convenient way to write a list of strings
+when such a list can be given as whitespace-delimited words.
+
+There are two flavors of the word list literal: the regular word list
+literal which begins with #" (hash, double-quote) and the splicing
+list literal which begins with #*" (hash, star, double-quote).
+
+Both literals are terminated by a double quote, which may be escaped
+as \e" in order to include it as a character. All the escaping conventions
+used in string literals can be used in words literals.
+
+Unlike in string literals, whitespace (tabs, spaces and newlines) is not
+significant in word literals: it separates words.  Whitespace may be
+escaped with a backslash in order to include it as a literal character.
+
+
+Example:
+
+  #"abc def ghi"  --> notates ("abc" "def" "ghi")
+
+  #"abc   def
+  ghi"            --> notates ("abc" "def" "ghi")
+
+  #"abc\ def ghi" --> notates ("abc def" "ghi")
+
+A splicing word literal differs from a word literal in that it deos not
+produce a list of string literals, but rather it produces a sequence of string
+literal tokens that is merged into the surrounding syntax.
+
+Example:
+
+  (1 2 3 #*"abc def" 4 5 #"abc def")
+
+  --> (1 2 3 "abc" "def" 4 5 ("abc" "def"))
+
+The regular word list literal produced a single list object, but the splicing
+word list literal expanded into multiple string literal objects.
+
 .SS String Quasiliterals
 
 Quasiliterals are similar to string literals, except that they may

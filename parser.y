@@ -79,6 +79,7 @@ static val parsed_spec;
 %token <lineno> MOD MODLAST DEFINE TRY CATCH FINALLY
 %token <lineno> ERRTOK /* deliberately not used in grammar */
 %token <lineno> HASH_BACKSLASH HASH_SLASH DOTDOT HASH_H
+%token <lineno> WORDS WSPLICE
 %token <lineno> SECRET_ESCAPE_R SECRET_ESCAPE_E
 
 %token <val> NUMBER METANUM
@@ -100,7 +101,7 @@ static val parsed_spec;
 %type <val> o_elems_opt o_elems o_elem o_var rep_elem rep_parts_opt
 %type <val> regex lisp_regex regexpr regbranch
 %type <val> regterm regtoken regclass regclassterm regrange
-%type <val> strlit chrlit quasilit quasi_items quasi_item litchars
+%type <val> strlit chrlit quasilit quasi_items quasi_item litchars wordslit
 %type <val> not_a_clause
 %type <chr> regchar
 %type <lineno> '(' '[' '@'
@@ -753,6 +754,9 @@ n_exprs : n_expr                { $$ = rlcp(cons($1, nil), $1); }
                                   $$ = rlcp(cons(list(cons_s, $1,
                                                       car($3), nao),
                                                  cdr($3)), or2($1, $3)); }
+        | WSPLICE wordslit      { $$ = rl($2, num($1)); }
+        | WSPLICE wordslit
+          n_exprs               { $$ = nappend2(rl($2, num($1)), $3); }
         ;
 
 n_expr : SYMTOK                 { $$ = sym_helper($1, t); }
@@ -768,6 +772,7 @@ n_expr : SYMTOK                 { $$ = sym_helper($1, t); }
        | chrlit                 { $$ = $1; }
        | strlit                 { $$ = $1; }
        | quasilit               { $$ = $1; }
+       | WORDS wordslit         { $$ = rl($2, num($1)); }
        | '\'' n_expr            { $$ = rlcp(list(quote_s, $2, nao), $2); }
        | '^' n_expr             { $$ = rlcp(list(sys_qquote_s, $2, nao), $2); }
        | ',' n_expr             { $$ = rlcp(list(sys_unquote_s, $2, nao), $2); }
@@ -923,8 +928,17 @@ quasi_item : litchars           { $$ = lit_char_helper($1); }
            | list               { $$ = rlcp(cons(expr_s, $1), $1); }
            ;
 
-litchars : LITCHAR              { $$ = cons(chr($1), nil); }
-         | LITCHAR litchars     { $$ = cons(chr($1), $2); }
+litchars : LITCHAR              { $$ = rl(cons(chr($1), nil), num(lineno)); }
+         | LITCHAR litchars     { $$ = rl(cons(chr($1), $2), num(lineno)); }
+         ;
+
+wordslit : '"'                  { $$ = nil; }
+         | ' ' wordslit         { $$ = $2; }
+         | '\n' wordslit        { $$ = $2; }
+         | litchars wordslit    { val word = lit_char_helper($1);
+                                  $$ = rlcp(cons(word, $2), $1); }
+         | error                { $$ = nil;
+                                  yybadtoken(yychar, lit("word literal")); }
          ;
 
 not_a_clause : ALL              { $$ = make_expr(all_s, nil, num(lineno)); }

@@ -190,7 +190,7 @@ UANY    {ASC}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 UANYN   {ASCN}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U} 
 UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
-%x      SPECIAL BRACED NESTED REGEX STRLIT CHRLIT QSILIT QSPECIAL
+%x      SPECIAL BRACED NESTED REGEX STRLIT CHRLIT QSILIT QSPECIAL WLIT
 
 %%
 
@@ -574,6 +574,16 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return '`';
 }
 
+<SPECIAL,QSPECIAL,NESTED,BRACED>#\" {
+  yy_push_state(WLIT);
+  return WORDS;
+}
+
+<SPECIAL,QSPECIAL,NESTED,BRACED>#\*\" {
+  yy_push_state(WLIT);
+  return WSPLICE;
+}
+
 <NESTED,BRACED># {
   return '#';
 }
@@ -761,7 +771,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   /* comment to end of line */
 }
 
-<STRLIT>\" {
+<STRLIT,WLIT>\" {
   yy_pop_state();
   return yytext[0];
 }
@@ -771,21 +781,21 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return yytext[0];
 }
 
-<STRLIT,QSILIT>[\\][abtnvfre "`'\\ ] {
+<STRLIT,QSILIT,WLIT>[\\][abtnvfre "`'\\ ] {
   yylval.chr = char_esc(yytext[1]);
   return LITCHAR;
 }
 
-<STRLIT,QSILIT>{WS}[\\]\n{WS} {
+<STRLIT,QSILIT,WLIT>{WS}[\\]\n{WS} {
   lineno++;
 }
                                 
-<STRLIT,QSILIT>[\\](x{HEX}+|{OCT}+);?  {
+<STRLIT,QSILIT,WLIT>[\\](x{HEX}+|{OCT}+);?  {
   yylval.chr = num_esc(yytext+1);
   return LITCHAR;
 }
 
-<STRLIT,QSILIT>[\\]. {
+<STRLIT,QSILIT,WLIT>[\\]. {
   yyerrorf(lit("unrecognized escape: \\~a"), chr(yytext[1]), nao);
 }
 
@@ -825,18 +835,27 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return ERRTOK;
 }
 
+<WLIT>\n {
+  lineno++;
+  return '\n';
+}
+
 <QSILIT>@ {
   yy_push_state(QSPECIAL);
 }
 
-<STRLIT,CHRLIT,QSILIT>{UANYN} {
+<WLIT>{WS} {
+  return ' ';
+}
+
+<STRLIT,CHRLIT,QSILIT,WLIT>{UANYN} {
   wchar_t buf[8];
   utf8_from(buf, yytext);
   yylval.chr = buf[0];
   return LITCHAR;
 }
 
-<STRLIT,CHRLIT,QSILIT>. {
+<STRLIT,CHRLIT,QSILIT,WLIT>. {
   yyerrprepf(lit("non-UTF-8 byte in literal: '\\x~02x'"),
              num((unsigned char) yytext[0]), nao);
   return ERRTOK;

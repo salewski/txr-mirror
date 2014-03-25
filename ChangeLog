@@ -1,3 +1,21 @@
+2014-03-25  Kaz Kylheku  <kaz@kylheku.com>
+
+	Introducing word list literals.
+
+	* parser.l (WLIT): New exclusive start state.
+	Extend lexical grammar to transition to WLIT state upon
+	the #" or #*" sequence which kicks off a word literal,
+	and in that state, piecewise lexically analyze the literal,
+	mostly by borrowing rules from other literals.
+
+	* parser.y (WORDS, WSPLICE): New tokens.
+	(n_exprs): Integrate splicing form of word list literal syntax.
+	(n_expr): Integrate non-splicit for of word list literal syntax.
+	(litchars): Propagate line number info.
+	(wordslit): New grammar rule.
+
+	* txr.1: Updated.
+
 2014-03-23  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): Register last function as intrinsic.
