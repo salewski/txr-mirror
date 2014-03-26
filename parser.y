@@ -79,7 +79,7 @@ static val parsed_spec;
 %token <lineno> MOD MODLAST DEFINE TRY CATCH FINALLY
 %token <lineno> ERRTOK /* deliberately not used in grammar */
 %token <lineno> HASH_BACKSLASH HASH_SLASH DOTDOT HASH_H
-%token <lineno> WORDS WSPLICE
+%token <lineno> WORDS WSPLICE QWORDS QWSPLICE
 %token <lineno> SECRET_ESCAPE_R SECRET_ESCAPE_E
 
 %token <val> NUMBER METANUM
@@ -102,7 +102,7 @@ static val parsed_spec;
 %type <val> regex lisp_regex regexpr regbranch
 %type <val> regterm regtoken regclass regclassterm regrange
 %type <val> strlit chrlit quasilit quasi_items quasi_item litchars wordslit
-%type <val> not_a_clause
+%type <val> wordsqlit not_a_clause
 %type <chr> regchar
 %type <lineno> '(' '[' '@'
 
@@ -757,6 +757,9 @@ n_exprs : n_expr                { $$ = rlcp(cons($1, nil), $1); }
         | WSPLICE wordslit      { $$ = rl($2, num($1)); }
         | WSPLICE wordslit
           n_exprs               { $$ = nappend2(rl($2, num($1)), $3); }
+        | QWSPLICE wordsqlit    { $$ = rl($2, num($1)); }
+        | QWSPLICE wordsqlit
+          n_exprs               { $$ = nappend2(rl($2, num($1)), $3); }
         ;
 
 n_expr : SYMTOK                 { $$ = sym_helper($1, t); }
@@ -773,6 +776,7 @@ n_expr : SYMTOK                 { $$ = sym_helper($1, t); }
        | strlit                 { $$ = $1; }
        | quasilit               { $$ = $1; }
        | WORDS wordslit         { $$ = rl($2, num($1)); }
+       | QWORDS wordsqlit       { $$ = rl(cons(quasilist_s, $2), num($1)); }
        | '\'' n_expr            { $$ = rlcp(list(quote_s, $2, nao), $2); }
        | '^' n_expr             { $$ = rlcp(list(sys_qquote_s, $2, nao), $2); }
        | ',' n_expr             { $$ = rlcp(list(sys_unquote_s, $2, nao), $2); }
@@ -911,7 +915,7 @@ quasilit : '`' '`'              { $$ = null_string; }
                                   rlcp($$, $2);
                                   rl($$, num(lineno)); }
          | '`' error            { $$ = nil;
-                                  yybadtoken(yychar, lit("string literal")); }
+                                  yybadtoken(yychar, lit("quasistring")); }
          ;
 
 quasi_items : quasi_item                { $$ = cons($1, nil);
@@ -934,12 +938,23 @@ litchars : LITCHAR              { $$ = rl(cons(chr($1), nil), num(lineno)); }
 
 wordslit : '"'                  { $$ = nil; }
          | ' ' wordslit         { $$ = $2; }
-         | '\n' wordslit        { $$ = $2; }
          | litchars wordslit    { val word = lit_char_helper($1);
                                   $$ = rlcp(cons(word, $2), $1); }
          | error                { $$ = nil;
-                                  yybadtoken(yychar, lit("word literal")); }
+                                  yybadtoken(yychar, lit("word list")); }
          ;
+
+wordsqlit : '`'                  { $$ = nil; }
+          | ' ' wordsqlit        { $$ = $2; }
+          | quasi_items '`'      { val qword = cons(quasi_s,
+                                                    o_elems_transform($1));
+                                   $$ = rlcp(cons(qword, nil), $1); }
+          | quasi_items ' '
+            wordsqlit
+                                 { val qword = cons(quasi_s,
+                                                    o_elems_transform($1));
+                                   $$ = rlcp(cons(qword, $3), $1); }
+          ;
 
 not_a_clause : ALL              { $$ = make_expr(all_s, nil, num(lineno)); }
              | SOME             { $$ = make_expr(some_s, nil, num(lineno)); }
@@ -1345,6 +1360,8 @@ void yybadtoken(int tok, val context)
   case HASH_H:         problem = lit("#H"); break;
   case WORDS:   problem = lit("#\""); break;
   case WSPLICE: problem = lit("#*\""); break;
+  case QWORDS:         problem = lit("#`"); break;
+  case QWSPLICE:       problem = lit("#*`"); break;
   }
 
   if (problem != 0)

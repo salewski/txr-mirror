@@ -190,7 +190,7 @@ UANY    {ASC}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 UANYN   {ASCN}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U} 
 UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
-%x      SPECIAL BRACED NESTED REGEX STRLIT CHRLIT QSILIT QSPECIAL WLIT
+%x      SPECIAL BRACED NESTED REGEX STRLIT CHRLIT QSILIT QSPECIAL WLIT QWLIT
 
 %%
 
@@ -198,7 +198,8 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   val str = string_own(utf8_dup_from(yytext));
 
   if (yy_top_state() == INITIAL
-      || yy_top_state() == QSILIT)
+      || yy_top_state() == QSILIT
+      || yy_top_state() == QWLIT)
     yy_pop_state();
 
   yylval.val = int_str(str, num(10));
@@ -209,7 +210,8 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   val str = string_own(utf8_dup_from(yytext + 2));
 
   if (yy_top_state() == INITIAL
-      || yy_top_state() == QSILIT)
+      || yy_top_state() == QSILIT
+      || yy_top_state() == QWLIT)
     yy_pop_state();
 
   yylval.val = int_str(str, num(16));
@@ -220,7 +222,8 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   val str = string_own(utf8_dup_from(yytext + 2));
 
   if (yy_top_state() == INITIAL
-      || yy_top_state() == QSILIT)
+      || yy_top_state() == QSILIT
+      || yy_top_state() == QWLIT)
     yy_pop_state();
 
   yylval.val = int_str(str, num(8));
@@ -231,7 +234,8 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   val str = string_own(utf8_dup_from(yytext + 2));
 
   if (yy_top_state() == INITIAL
-      || yy_top_state() == QSILIT)
+      || yy_top_state() == QSILIT
+      || yy_top_state() == QWLIT)
     yy_pop_state();
 
   yylval.val = int_str(str, num(2));
@@ -242,7 +246,8 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   val str = string_own(utf8_dup_from(yytext));
 
   if (yy_top_state() == INITIAL
-      || yy_top_state() == QSILIT)
+      || yy_top_state() == QSILIT
+      || yy_top_state() == QWLIT)
     yy_pop_state();
 
   yylval.val = flo_str(str);
@@ -253,7 +258,8 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   val str = string_own(utf8_dup_from(yytext));
 
   if (yy_top_state() == INITIAL
-      || yy_top_state() == QSILIT)
+      || yy_top_state() == QSILIT
+      || yy_top_state() == QWLIT)
     yy_pop_state();
 
   yylval.val = flo_str(str);
@@ -268,48 +274,53 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   yyerrorf(lit("trailing junk in floating-point literal: ~a"), str, nao);
 
   if (yy_top_state() == INITIAL
-      || yy_top_state() == QSILIT)
+      || yy_top_state() == QSILIT
+      || yy_top_state() == QWLIT)
     yy_pop_state();
 
   yylval.val = flo_str(str);
   return NUMBER;
 }
 
-<NESTED,QSILIT>@{NUM} {
+<NESTED,QSILIT,QWLIT>@{NUM} {
   val str = string_own(utf8_dup_from(yytext + 1));
 
   if (yy_top_state() == INITIAL
-      || yy_top_state() == QSILIT)
+      || yy_top_state() == QSILIT
+      || yy_top_state() == QWLIT)
     yy_pop_state();
   yylval.val = int_str(str, num(10));
   return METANUM;
 }
 
-<NESTED,QSILIT>@{XNUM} {
+<NESTED,QSILIT,QWLIT>@{XNUM} {
   val str = string_own(utf8_dup_from(yytext + 3));
 
   if (yy_top_state() == INITIAL
-      || yy_top_state() == QSILIT)
+      || yy_top_state() == QSILIT
+      || yy_top_state() == QWLIT)
     yy_pop_state();
   yylval.val = int_str(str, num(16));
   return METANUM;
 }
 
-<NESTED,QSILIT>@{ONUM} {
+<NESTED,QSILIT,QWLIT>@{ONUM} {
   val str = string_own(utf8_dup_from(yytext + 3));
 
   if (yy_top_state() == INITIAL
-      || yy_top_state() == QSILIT)
+      || yy_top_state() == QSILIT
+      || yy_top_state() == QWLIT)
     yy_pop_state();
   yylval.val = int_str(str, num(8));
   return METANUM;
 }
 
-<NESTED,QSILIT>@{BNUM} {
+<NESTED,QSILIT,QWLIT>@{BNUM} {
   val str = string_own(utf8_dup_from(yytext + 3));
 
   if (yy_top_state() == INITIAL
-      || yy_top_state() == QSILIT)
+      || yy_top_state() == QSILIT
+      || yy_top_state() == QWLIT)
     yy_pop_state();
   yylval.val = int_str(str, num(2));
   return METANUM;
@@ -319,7 +330,8 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 <BRACED>{BTOK} |
 <NESTED>{NTOK} {
   if (yy_top_state() == INITIAL
-      || yy_top_state() == QSILIT)
+      || yy_top_state() == QSILIT
+      || yy_top_state() == QWLIT)
     yy_pop_state();
 
   yylval.lexeme = utf8_dup_from(yytext);
@@ -537,7 +549,8 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 <BRACED>[}] {
   yy_pop_state();
   if (yy_top_state() == INITIAL
-      || yy_top_state() == QSILIT)
+      || yy_top_state() == QSILIT
+      || yy_top_state() == QWLIT)
     yy_pop_state();
   return yytext[0];
 }
@@ -545,7 +558,8 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 <SPECIAL,QSPECIAL,NESTED>[)\]] {
   yy_pop_state();
   if (yy_top_state() == INITIAL
-      || yy_top_state() == QSILIT)
+      || yy_top_state() == QSILIT
+      || yy_top_state() == QWLIT)
     yy_pop_state();
   return yytext[0];
 }
@@ -582,6 +596,16 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 <SPECIAL,QSPECIAL,NESTED,BRACED>#\*\" {
   yy_push_state(WLIT);
   return WSPLICE;
+}
+
+<SPECIAL,QSPECIAL,NESTED,BRACED>#\` {
+  yy_push_state(QWLIT);
+  return QWORDS;
+}
+
+<SPECIAL,QSPECIAL,NESTED,BRACED>#\*\` {
+  yy_push_state(QWLIT);
+  return QWSPLICE;
 }
 
 <NESTED,BRACED># {
@@ -776,26 +800,26 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return yytext[0];
 }
 
-<QSILIT>` {
+<QSILIT,QWLIT>\` {
   yy_pop_state();
   return yytext[0];
 }
 
-<STRLIT,QSILIT,WLIT>[\\][abtnvfre "`'\\ ] {
+<STRLIT,QSILIT,WLIT,QWLIT>[\\][abtnvfre "`'\\ ] {
   yylval.chr = char_esc(yytext[1]);
   return LITCHAR;
 }
 
-<STRLIT,QSILIT,WLIT>{WS}[\\]\n{WS} {
+<STRLIT,QSILIT,WLIT,QWLIT>{WS}[\\]\n{WS} {
   lineno++;
 }
                                 
-<STRLIT,QSILIT,WLIT>[\\](x{HEX}+|{OCT}+);?  {
+<STRLIT,QSILIT,WLIT,QWLIT>[\\](x{HEX}+|{OCT}+);?  {
   yylval.chr = num_esc(yytext+1);
   return LITCHAR;
 }
 
-<STRLIT,QSILIT,WLIT>[\\]. {
+<STRLIT,QSILIT,WLIT,QWLIT>[\\]. {
   yyerrorf(lit("unrecognized escape: \\~a"), chr(yytext[1]), nao);
 }
 
@@ -835,27 +859,27 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return ERRTOK;
 }
 
-<WLIT>\n {
+<WLIT,QWLIT>\n {
   lineno++;
-  return '\n';
-}
-
-<QSILIT>@ {
-  yy_push_state(QSPECIAL);
-}
-
-<WLIT>{WS} {
   return ' ';
 }
 
-<STRLIT,CHRLIT,QSILIT,WLIT>{UANYN} {
+<QSILIT,QWLIT>@ {
+  yy_push_state(QSPECIAL);
+}
+
+<WLIT,QWLIT>{WS} {
+  return ' ';
+}
+
+<STRLIT,CHRLIT,QSILIT,WLIT,QWLIT>{UANYN} {
   wchar_t buf[8];
   utf8_from(buf, yytext);
   yylval.chr = buf[0];
   return LITCHAR;
 }
 
-<STRLIT,CHRLIT,QSILIT,WLIT>. {
+<STRLIT,CHRLIT,QSILIT,WLIT,QWLIT>. {
   yyerrprepf(lit("non-UTF-8 byte in literal: '\\x~02x'"),
              num((unsigned char) yytext[0]), nao);
   return ERRTOK;
@@ -871,7 +895,9 @@ void end_of_regex(void)
   yy_pop_state();
 
   if (YYSTATE != INITIAL) {
-    if (yy_top_state() == INITIAL || yy_top_state() == QSILIT)
+    if (yy_top_state() == INITIAL
+      || yy_top_state() == QSILIT
+      || yy_top_state() == QWLIT)
       yy_pop_state();
   }
 }

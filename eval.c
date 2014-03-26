@@ -2048,6 +2048,11 @@ static val me_until(val form, val menv)
                               rest(rest(form)), nao));
 }
 
+static val me_quasilist(val form, val menv)
+{
+  return cons(list_s, cdr(form));
+}
+
 val expand_forms(val form, val menv)
 {
   if (atom(form)) {
@@ -3214,6 +3219,7 @@ void eval_init(void)
   reg_mac(intern(lit("unless"), user_package), me_unless);
   reg_mac(intern(lit("while"), user_package), me_while);
   reg_mac(intern(lit("until"), user_package), me_until);
+  reg_mac(quasilist_s, me_quasilist);
 
   reg_fun(cons_s, func_n2(cons));
   reg_fun(intern(lit("make-lazy-cons"), user_package), func_n1(make_lazy_cons));

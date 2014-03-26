@@ -1,5 +1,32 @@
 2014-03-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (me_quasilist): New static function.
+	(eval_init): Register me_quasilist as quasilist macro expander.
+
+	* lib.c (quasilist_s): New global variable.
+	(obj_init): quasilist_s initialized.
+
+	* lib.h (quasilist_s): Declared.
+
+	* match.c (do_txreval): Handle quasilist syntax.
+
+	* parser.l (QWLIT): New exclusive state.
+	Extend lexical grammar to transition to QWLIT state upon
+	the #` or #*` sequence which kicks off a word literal,
+	and in that state, piecewise lexically analyze the QLL,
+	mostly by borrowing rules from quasiliterals.
+
+	* parser.y (QWORDS, QWSPLICE): New tokens.
+	(n_exprs): Integrate splicing form of QLL syntax.
+	(n_expr): Integrate non-splicing form of QLL syntax.
+	(litchars): Propagate line number info.
+	(quasilit): Fix "string literal" wording in error message.
+
+	* txr.1: Introduced WLL abbreviation for word list literals,
+	cleaned up the text a little, and documented QLL's.
+
+2014-03-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (expand_quasi): Bugfix: incorrect logic, failing
 	to macro-expand the embedded forms in a quasiliteral except
 	when they are the very first item.

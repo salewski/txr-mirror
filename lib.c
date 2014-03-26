@@ -76,7 +76,8 @@ val var_s, expr_s, regex_s, chset_s, set_s, cset_s, wild_s, oneplus_s;
 val nongreedy_s, compiled_regex_s;
 val quote_s, qquote_s, unquote_s, splice_s;
 val sys_qquote_s, sys_unquote_s, sys_splice_s;
-val zeroplus_s, optional_s, compl_s, compound_s, or_s, and_s, quasi_s;
+val zeroplus_s, optional_s, compl_s, compound_s;
+val or_s, and_s, quasi_s, quasilist_s;
 val skip_s, trailer_s, block_s, next_s, freeform_s, fail_s, accept_s;
 val all_s, some_s, none_s, maybe_s, cases_s, collect_s, until_s, coll_s;
 val define_s, output_s, single_s, first_s, last_s, empty_s;
@@ -5218,6 +5219,7 @@ static void obj_init(void)
   or_s = intern(lit("or"), user_package);
   and_s = intern(lit("and"), user_package);
   quasi_s = intern(lit("quasi"), system_package);
+  quasilist_s = intern(lit("quasilist"), system_package);
   skip_s = intern(lit("skip"), user_package);
   trailer_s = intern(lit("trailer"), user_package);
   block_s = intern(lit("block"), user_package);

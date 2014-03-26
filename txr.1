@@ -1131,16 +1131,16 @@ The first string literal is the string "foobar". The second two are "foo bar".
 
 .SS Word List Literals
 
-A word list literal provides a convenient way to write a list of strings
+A word list literal (WLL) provides a convenient way to write a list of strings
 when such a list can be given as whitespace-delimited words.
 
-There are two flavors of the word list literal: the regular word list
-literal which begins with #" (hash, double-quote) and the splicing
-list literal which begins with #*" (hash, star, double-quote).
+There are two flavors of the WLL: the regular WLL which begins with #" (hash,
+double-quote) and the splicing list literal which begins with #*" (hash, star,
+double-quote).
 
-Both literals are terminated by a double quote, which may be escaped
+Both types are terminated by a double quote, which may be escaped
 as \e" in order to include it as a character. All the escaping conventions
-used in string literals can be used in words literals.
+used in string literals can be used in word literals.
 
 Unlike in string literals, whitespace (tabs, spaces and newlines) is not
 significant in word literals: it separates words.  Whitespace may be
@@ -1156,9 +1156,9 @@ Example:
 
   #"abc\ def ghi" --> notates ("abc def" "ghi")
 
-A splicing word literal differs from a word literal in that it deos not
+A splicing word literal differs from a word literal in that it does not
 produce a list of string literals, but rather it produces a sequence of string
-literal tokens that is merged into the surrounding syntax.
+literals that is merged into the surrounding syntax.
 
 Example:
 
@@ -1166,8 +1166,8 @@ Example:
 
   --> (1 2 3 "abc" "def" 4 5 ("abc" "def"))
 
-The regular word list literal produced a single list object, but the splicing
-word list literal expanded into multiple string literal objects.
+The regular WLL produced a single list object, but the splicing
+WLL expanded into multiple string literal objects.
 
 .SS String Quasiliterals
 
@@ -1185,6 +1185,44 @@ the TXR pattern language when the quasiliteral occurs in the pattern language.
 
 Quasliterals can be split into multiple lines in the same way as ordinary
 string literals.
+
+.SS Quasiword Lists Literals
+
+The quasiword list literals (QLL-s) are to quasiliterals what WLL-s are to
+ordinary literals. (See the above section Word List Literals.)
+
+A QLL combines the convenience of the WLL
+with the power of quasistrings.
+
+Just as in the case of WLL-s, there are two flavors of the
+QLL: the regular QLL which begins with #`
+(hash, backquote) and the splicing list literal which begins with #*` (hash,
+star, backquote).
+
+Both types are terminated by a backquote, which may be escaped
+as \e` in order to include it as a character. All the escaping conventions
+used in quasiliterals can be used in QLL.
+
+Unlike in quasiliterals, whitespace (tabs, spaces and newlines) is not
+significant in QLL: it separates words.  Whitespace may be
+escaped with a backslash in order to include it as a literal character.
+
+Note that the delimiting into words is done before the variable
+substitution. If the variable a contains spaces, then #`@a` nevertheless
+expands into a list of one item: the string derived from a.
+
+Example:
+
+  #`abc @a ghi`  --> notates (`abc` `@a` `ghi`)
+
+  #`abc   @d@e@f
+  ghi`            --> notates (`abc` `@d@e@f` `ghi`)
+
+  #`@a\ @b @c` --> notates (`@a @b` `@c`)
+
+A splicing QLL differs from an ordinary QLL in that it does not produce a list
+of quasiliterals, but rather it produces a sequence of quasiliterals that is
+merged into the surrounding syntax.
 
 .SS Numbers
 
