@@ -1,5 +1,10 @@
 2014-03-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.y (yybadtoken): Add missing cases for new token
+	types WORDS and WSPLICE.
+
+2014-03-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	Introducing word list literals.
 
 	* parser.l (WLIT): New exclusive start state.

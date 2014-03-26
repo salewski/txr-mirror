@@ -1343,6 +1343,8 @@ void yybadtoken(int tok, val context)
   case HASH_BACKSLASH: problem = lit("#\\"); break;
   case HASH_SLASH:     problem = lit("#/"); break;
   case HASH_H:         problem = lit("#H"); break;
+  case WORDS:   problem = lit("#\""); break;
+  case WSPLICE: problem = lit("#*\""); break;
   }
 
   if (problem != 0)
