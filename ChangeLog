@@ -1,5 +1,11 @@
 2014-03-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (expand_quasi): Bugfix: incorrect logic, failing
+	to macro-expand the embedded forms in a quasiliteral except
+	when they are the very first item.
+
+2014-03-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.y (yybadtoken): Add missing cases for new token
 	types WORDS and WSPLICE.
 

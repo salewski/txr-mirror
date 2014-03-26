@@ -2220,22 +2220,25 @@ static val expand_quasi(val quasi_forms, val menv)
     val form = first(quasi_forms);
     val form_ex = form;
 
-    if (atom(form)) {
-      form_ex = form;
-    } else {
+    if (consp(form)) {
       val sym = car(form);
       if (sym == expr_s) {
         val expr_ex = expand(rest(form), menv);
 
         if (expr_ex != rest(form))
           form_ex = rlcp(cons(sym, expr_ex), form);
-      } 
+      }
     }
 
-    if (form != form_ex)
-      return rlcp(cons(form_ex, expand_quasi(rest(quasi_forms), menv)),
-                  quasi_forms);
-    return quasi_forms;
+    {
+      val rest_forms = rest(quasi_forms);
+      val rest_ex = expand_quasi(rest_forms, menv);
+
+      if (form == form_ex && rest_ex == rest_forms)
+        return quasi_forms;
+
+      return rlcp(cons(form_ex, rest_ex), quasi_forms);
+    }
   }
 }
 
