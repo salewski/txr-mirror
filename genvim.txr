@@ -86,8 +86,6 @@ syn match txr_chr "#\\x[A-Fa-f0-9]\+" contained
 syn match txr_chr "#\\o[0-9]\+" contained
 syn match txr_chr "#\\[^ \t\nA-Za-z0-9_]" contained
 syn match txr_chr "#\\[A-Za-z0-9_]\+" contained
-"syn match txr_regex "/\(\\/\|[^/]\|\\\n\)*/" contained
-"syn match txl_regex "#/\(\\/\|[^/]\|\\\n\)*/" contained
 syn match txr_ncomment ";.*" contained
 
 syn match txr_dot "\." contained
