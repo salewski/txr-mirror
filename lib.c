@@ -1296,6 +1296,14 @@ static mem_t *malloc_low_bound, *malloc_high_bound;
 
 alloc_bytes_t malloc_bytes;
 
+static void adjust_bounds(mem_t *ptr, size_t size)
+{
+  if (ptr < malloc_low_bound)
+    malloc_low_bound = ptr;
+  else if (ptr + size > malloc_high_bound)
+    malloc_high_bound = ptr + size;
+}
+
 mem_t *chk_malloc(size_t size)
 {
   mem_t *ptr = (mem_t *) malloc(size);
@@ -1304,10 +1312,7 @@ mem_t *chk_malloc(size_t size)
 
   if (size && ptr == 0)
     ptr = (mem_t *) oom_realloc(0, size);
-  if (ptr < malloc_low_bound)
-    malloc_low_bound = ptr;
-  else if (ptr + size > malloc_high_bound)
-    malloc_high_bound = ptr + size;
+  adjust_bounds(ptr, size);
   malloc_bytes += size;
   return ptr;
 }
@@ -1318,6 +1323,7 @@ mem_t *chk_malloc_gc_more(size_t size)
   assert (!async_sig_enabled);
   if (size && ptr == 0)
     ptr = (mem_t *) oom_realloc(0, size);
+  adjust_bounds(ptr, size);
   return ptr;
 }
 
@@ -1332,10 +1338,7 @@ mem_t *chk_calloc(size_t n, size_t size)
     ptr = (mem_t *) oom_realloc(0, total);
     memset(ptr, 0, total);
   }
-  if (ptr < malloc_low_bound)
-    malloc_low_bound = ptr;
-  else if (ptr + size > malloc_high_bound)
-    malloc_high_bound = ptr + total;
+  adjust_bounds(ptr, size);
   malloc_bytes += total;
   return ptr;
 }
@@ -1348,10 +1351,7 @@ mem_t *chk_realloc(mem_t *old, size_t size)
 
   if (size != 0 && newptr == 0)
     newptr = oom_realloc(old, size);
-  if (newptr < malloc_low_bound)
-    malloc_low_bound = newptr;
-  else if (newptr + size > malloc_high_bound)
-    malloc_high_bound = newptr + size;
+  adjust_bounds(newptr, size);
   malloc_bytes += size;
   return newptr;
 }

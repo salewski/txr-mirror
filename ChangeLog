@@ -1,3 +1,14 @@
+2014-03-27  Kaz Kylheku  <kaz@kylheku.com>
+
+	Fix generational GC regression caused by fixes
+	in in 2014-03-12, when prof was introduced.
+	The attempt to fix a bug made things worse.
+
+	* lib.c (adjust_bounds): New static function.
+	(chk_malloc, chk_calloc, chk_realloc): Replace existing logic with
+	call to adjust_bounds.
+	(chk_malloc_gc_more): Bugfix: add missing call to adjust_bounds.
+
 2014-03-26  Kaz Kylheku  <kaz@kylheku.com>
 
 	* genvim.txr: Update for WLL's and QLL's.
