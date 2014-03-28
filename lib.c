@@ -595,7 +595,7 @@ val nreverse(val in)
 
   while (in) {
     val temp = cdr(in);
-    *cdr_l(in) = rev;
+    set(*cdr_l(in), rev);
     rev = in;
     in = temp;
   }
@@ -782,7 +782,7 @@ static val lazy_appendv_func(val env, val lcons)
   {
     val *ptail = ltail(&nonempty);
     rplaca(env, car(*ptail));
-    *ptail = make_lazy_cons(lcons_fun(lcons));
+    set(*ptail, make_lazy_cons(lcons_fun(lcons)));
     rplacd(lcons, nonempty);
   }
   return nil;
@@ -803,8 +803,8 @@ val lazy_appendv(val lists)
 
   {
     val *ptail = ltail(&nonempty);
-    *ptail = make_lazy_cons(func_f1(cons(car(*ptail), lists),
-                                    lazy_appendv_func));
+    set(*ptail, make_lazy_cons(func_f1(cons(car(*ptail), lists),
+                                       lazy_appendv_func)));
     return nonempty;
   }
 }
@@ -2746,6 +2746,7 @@ val make_package(val name)
     val obj = make_obj();
     obj->pk.type = PKG;
     obj->pk.name = name;
+    obj->pk.symhash = nil; /* make_hash call below could trigger gc! */
     obj->pk.symhash = make_hash(nil, nil, lit("t")); /* don't have t yet! */
 
     push(cons(name, obj), &packages);
@@ -3977,7 +3978,7 @@ val vec_push(val vec, val item)
 {
   val length = length_vec(vec);
   vec_set_length(vec, plus(length, one));
-  *vecref_l(vec, length) = item;
+  set(*vecref_l(vec, length), item);
   return length;
 }
 
@@ -5041,12 +5042,12 @@ val refset(val seq, val ind, val newval)
   case NIL:
   case CONS:
   case LCONS:
-    return *listref_l(seq, ind) = newval;
+    return set(*listref_l(seq, ind), newval);
   case LIT:
   case STR:
     return chr_str_set(seq, ind, newval);
   case VEC:
-    return *vecref_l(seq, ind) = newval;
+    return set(*vecref_l(seq, ind), newval);
   default:
     type_mismatch(lit("ref: ~s is not a sequence"), cons, nao);
   }

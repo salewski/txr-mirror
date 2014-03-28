@@ -1,5 +1,22 @@
 2014-03-27  Kaz Kylheku  <kaz@kylheku.com>
 
+	More generational GC fixes. One GC fix.
+
+	* combi.c (perm_init_common, comb_gen_fun_common,
+	rcomb_gen_fun_common): Use set macro instead of plain assignment.
+
+	* hash.c (hash_grow, copy_hash, hash_update_1): Use set macro
+	instead of plain assignment.
+
+	* lib.c (nreverse, lazy_appendv_func, lazy_appendv,
+	vec_push, refset): Use set macro instead of plain assignment.
+	(make_package): Assign all fields of the newly created PKG
+	object before calling a function which can trigger GC.
+
+	* parser.y (rlset): Use set macro.
+
+2014-03-27  Kaz Kylheku  <kaz@kylheku.com>
+
 	Fix generational GC regression caused by fixes
 	in in 2014-03-12, when prof was introduced.
 	The attempt to fix a bug made things worse.

@@ -439,7 +439,7 @@ static void hash_grow(struct hash *h)
       val key = car(entry);
       val *pchain = vecref_l(new_table,
                              num_fast(h->hash_fun(key) % new_modulus));
-      *cdr_l(conses) = *pchain;
+      set(*cdr_l(conses), *pchain);
       *pchain = conses;
       conses = next;
     }
@@ -518,7 +518,7 @@ val copy_hash(val existing)
   h->acons_new_c_fun = ex->acons_new_c_fun;
 
   for (iter = zero; lt(iter, mod); iter = plus(iter, one))
-    *vecref_l(h->table, iter) = copy_alist(vecref(ex->table, iter));
+    set(*vecref_l(h->table, iter), copy_alist(vecref(ex->table, iter)));
 
   return hash;
 }
@@ -1027,9 +1027,9 @@ val hash_update_1(val hash, val key, val fun, val init)
     val new_p;
     val *place = gethash_l(hash, key, &new_p);
     if (new_p)
-      *place = funcall1(fun, init);
+      set(*place, funcall1(fun, init));
     else
-      *place = funcall1(fun, *place);
+      set(*place, funcall1(fun, *place));
     return *place;
   }
 }

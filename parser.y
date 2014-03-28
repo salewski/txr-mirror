@@ -1237,7 +1237,7 @@ val rlset(val form, val info)
   val cell = gethash_c(form_to_ln_hash, form, 0);
   val *place = cdr_l(cell);
   if (nilp(*place))
-    *place = info;
+    set(*place, info);
   return form;
 }
 
