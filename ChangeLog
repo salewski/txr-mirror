@@ -1,5 +1,33 @@
 2014-03-27  Kaz Kylheku  <kaz@kylheku.com>
 
+	Fix a bug arising from putting generation 1 objects into the
+	checkobj array (via the mut macro that expands to gc_mutated).
+	The garbage collector assumes that checkobj has only generation 0
+	objects, which all exist in the freshobj array, which is subject
+	to a sweep. So gen 1 objects in checkobj are never cleaned up
+	properly: they do not have their REACHABLE flag reset, or
+	their generation restored to 1. To fix this, a new array for these
+	objects is introduced separate from checkobj.
+
+	* gc.c (MUTOBJ_VEC_SIZE): New preprocessor symbol.
+	(mutobj, mutobj_idx): New static array and integer.
+	(mark_obj): Check for REACHABLE flag before checking the full_gc
+	flag and generation, since those cost additional memory accesses.
+	(mark): Mark the objects in the new mutobj array.
+	(sweep): Sweep the objects in the mutobj array.
+	(gc): Reset mutobx_idx to zero after gc.
+	(gc_set): Rearrange logic. In the case that the checkobj array
+	is full and a gc is done to make room, there is no point in
+	adding to the array: the gc pass moves all babies to generation 1,
+	so the object that was passed into the function is no longer a baby.
+	(gc_mutated): Rewrite in terms of mutobj rather than checkobj,
+	fixing the bug.
+
+	* HACKING: Improved documentation of GC. Describe mut macro
+	and mutobj array.
+
+2014-03-27  Kaz Kylheku  <kaz@kylheku.com>
+
 	More generational GC fixes. One GC fix.
 
 	* combi.c (perm_init_common, comb_gen_fun_common,

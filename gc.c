@@ -47,6 +47,7 @@
 #define PROT_STACK_SIZE         1024
 #define HEAP_SIZE               16384
 #define CHECKOBJ_VEC_SIZE       (2 * HEAP_SIZE)
+#define MUTOBJ_VEC_SIZE         (HEAP_SIZE / 4)
 #define FULL_GC_INTERVAL        40
 #define FRESHOBJ_VEC_SIZE       (2 * HEAP_SIZE)
 
@@ -82,6 +83,8 @@ int gc_enabled = 1;
 #if CONFIG_GEN_GC
 static val checkobj[CHECKOBJ_VEC_SIZE];
 static int checkobj_idx;
+static val mutobj[MUTOBJ_VEC_SIZE];
+static int mutobj_idx;
 static val freshobj[FRESHOBJ_VEC_SIZE];
 static int freshobj_idx;
 static int full_gc;
@@ -253,13 +256,13 @@ tail_call:
 
   t = obj->t.type;
 
+  if ((t & REACHABLE) != 0)
+    return;
+
 #if CONFIG_GEN_GC
   if (!full_gc && obj->t.gen > 0)
     return;
 #endif
-
-  if ((t & REACHABLE) != 0)
-    return;
 
   if ((t & FREE) != 0)
     abort();
@@ -404,6 +407,8 @@ static void mark(mach_context_t *pmc, val *gc_stack_top)
     int i;
     for (i = 0; i < checkobj_idx; i++)
       mark_obj(checkobj[i]);
+    for (i = 0; i < mutobj_idx; i++)
+      mark_obj(mutobj[i]);
   }
 #endif
 
@@ -502,6 +507,12 @@ static int_ptr_t sweep(void)
     for (i = 0; i < freshobj_idx; i++)
       free_count += sweep_one(freshobj[i]);
 
+    /* Generation 1 objects that were indicated for dangerous
+       mutation must have their REACHABLE flag flipped off,
+       and must be returned to gen 1. */
+    for (i = 0; i < mutobj_idx; i++)
+      sweep_one(mutobj[i]);
+
     return free_count;
   }
 #endif
@@ -564,6 +575,7 @@ void gc(void)
 
 #if CONFIG_GEN_GC
     checkobj_idx = 0;
+    mutobj_idx = 0;
     freshobj_idx = 0;
     full_gc = 0;
 #endif
@@ -609,9 +621,10 @@ int gc_is_reachable(val obj)
 
 val gc_set(val *ptr, val obj)
 {
-  if (in_malloc_range((mem_t *) ptr) && is_ptr(obj) && obj->t.gen == 0) {
-    if (checkobj_idx >= CHECKOBJ_VEC_SIZE)
-      gc();
+  if (checkobj_idx >= CHECKOBJ_VEC_SIZE) {
+    gc();
+    /* obj can't be in gen 0 because there are no baby objects after gc */
+  } else if (in_malloc_range((mem_t *) ptr) && is_ptr(obj) && obj->t.gen == 0) {
     obj->t.gen = -1;
     checkobj[checkobj_idx++] = obj;
   }
@@ -621,11 +634,19 @@ val gc_set(val *ptr, val obj)
 
 val gc_mutated(val obj)
 {
-  if (checkobj_idx >= CHECKOBJ_VEC_SIZE)
-    gc();
+  /* We care only about mature generation objects that have not
+     already been noted. */
+  if (obj->t.gen <= 0)
+    return obj;
   obj->t.gen = -1;
-  return checkobj[checkobj_idx++] = obj;
+  /* Store in mutobj array *before* triggering gc, otherwise
+     baby objects referenced by obj could be reclaimed! */
+  mutobj[mutobj_idx++] = obj;
+  if (mutobj_idx >= MUTOBJ_VEC_SIZE)
+    gc();
+  return obj;
 }
+
 
 val gc_push(val obj, val *plist)
 {
