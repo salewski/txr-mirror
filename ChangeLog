@@ -1,8 +1,28 @@
 2014-03-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	* gc.c (make_obj): If we have room in the freshobj array,
+	but are out of objects, then call more. Without this,
+	we don't take proper advantage of this nursing area.
+	(gc): Set the full_gc flag after doing gc, in preparation
+	for next time. If we know full GC is coming, we can
+	adjust some behaviors. Increase the threshold for calling the more()
+	function to be the same as in the non-generational case:
+	less than 3/4 of the size of a heap scavenged.
+	(gc_set): Now does nothing if it is known that
+	a full gc is coming. Also, in the checkobj array overflow
+	case when we invoke gc, there is no point in adding obj
+	to the array, since it must have been promoted to the mature
+	generation.
+	(gc_mutated): Don't bother storing the object in the
+	array if a full GC is coming.
+
+2014-03-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (string_time): If possible, change the timezone in the
 	struct tm from "GMT" to "UTC", so that the time_string_utc
 	function will use UTC for the %Z format.
+
+	Generational GC tweaks.
 
 2014-03-27  Kaz Kylheku  <kaz@kylheku.com>
 

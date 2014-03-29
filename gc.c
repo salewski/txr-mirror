@@ -187,6 +187,13 @@ val make_obj(void)
       return ret;
     }
 
+#if CONFIG_GEN_GC
+    if (freshobj_idx < FRESHOBJ_VEC_SIZE) {
+      more();
+      continue;
+    }
+#endif
+
     switch (tries) {
     case 0: gc(); break;
     case 1: more(); break;
@@ -541,17 +548,12 @@ void gc(void)
   val gc_stack_top = nil;
 #if CONFIG_GEN_GC
   int exhausted = (free_list == 0);
+  int full_gc_next_time = 0;
+  static int gc_counter;
 #endif
 
   if (gc_enabled) {
     int swept;
-#if CONFIG_GEN_GC
-    static int gc_counter;
-    if (++gc_counter >= FULL_GC_INTERVAL) {
-      full_gc = 1;
-      gc_counter = 0;
-    }
-#endif
 
     mach_context_t mc;
     save_context(mc);
@@ -564,9 +566,11 @@ void gc(void)
     printf("sweep: freed %d full_gc == %d exhausted == %d\n",
            (int) swept, full_gc, exhausted);
 #endif
-    if (full_gc && swept < 3 * HEAP_SIZE / 4)
-      more();
-    else if (!full_gc && swept < HEAP_SIZE / 4 && exhausted)
+    if (++gc_counter >= FULL_GC_INTERVAL - 1) {
+      full_gc_next_time = 1;
+      gc_counter = 0;
+    }
+    if (exhausted && full_gc && swept < 3 * HEAP_SIZE / 4)
       more();
 #else
     if (swept < 3 * HEAP_SIZE / 4)
@@ -577,7 +581,7 @@ void gc(void)
     checkobj_idx = 0;
     mutobj_idx = 0;
     freshobj_idx = 0;
-    full_gc = 0;
+    full_gc = full_gc_next_time;
 #endif
     gc_enabled = 1;
   }
@@ -621,12 +625,14 @@ int gc_is_reachable(val obj)
 
 val gc_set(val *ptr, val obj)
 {
-  if (checkobj_idx >= CHECKOBJ_VEC_SIZE) {
-    gc();
-    /* obj can't be in gen 0 because there are no baby objects after gc */
-  } else if (in_malloc_range((mem_t *) ptr) && is_ptr(obj) && obj->t.gen == 0) {
-    obj->t.gen = -1;
-    checkobj[checkobj_idx++] = obj;
+  if (!full_gc) {
+    if (checkobj_idx >= CHECKOBJ_VEC_SIZE) {
+      gc();
+      /* obj can't be in gen 0 because there are no baby objects after gc */
+    } else if (in_malloc_range((mem_t *) ptr) && is_ptr(obj) && obj->t.gen == 0) {
+      obj->t.gen = -1;
+      checkobj[checkobj_idx++] = obj;
+    }
   }
   *ptr = obj;
   return obj;
@@ -635,8 +641,8 @@ val gc_set(val *ptr, val obj)
 val gc_mutated(val obj)
 {
   /* We care only about mature generation objects that have not
-     already been noted. */
-  if (obj->t.gen <= 0)
+     already been noted. And if a full gc is coming, don't bother. */
+  if (full_gc || obj->t.gen <= 0)
     return obj;
   obj->t.gen = -1;
   /* Store in mutobj array *before* triggering gc, otherwise
