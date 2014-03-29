@@ -35,8 +35,8 @@ void gc_mark(val);
 int gc_is_reachable(val);
 
 #if CONFIG_GEN_GC
-val gc_set(val *, val);
-val gc_push(val, val *);
+val gc_set(loc, val);
+val gc_push(val, loc);
 val gc_mutated(val);
 #endif
 

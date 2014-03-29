@@ -1,5 +1,122 @@
 2014-03-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	Change to how locations are passed around, for the sake of generational
+	GC. The issue being solved here is the accuracy of the gc_set function.
+	The existing impelmentation is too conservative. It has no generation
+	information about the memory location being stored, and so it assumes
+	the worst: that it is a location in the middle of a gen 1 object.
+	This is sub-optimal, creating unacceptable pressure against the
+	checkobj array and, worse, as a consequence causing unreachable gen 0
+	objects to be tenured into gen 1.
+
+	To solve this problem, we replace "val *" pointers with a structure
+	of type "loc" which keeps track of the object too, which lets us
+	discover the generation.
+
+	I tried another approach: using just a pointer with a bitfield
+	indicating the generation.  This turned out to have a serious issue:
+	such a bitfield goes stale when the object is moved to a different
+	generation. The object holding the memory location is in gen 1, but the
+	annotated pointer still indicates gen 0. The gc_set function then
+	makes the wrong decision, and premature reclamation takes place.
+
+	* combi.c (perm_init_common, comb_gen_fun_common,
+	rcomb_gen_fun_common, rcomb_list_gen_fun): Update to new interfaces
+	for managing mutation.
+
+	* debug.c (debug): Update to new interfaces for managing mutation.
+	Avoid loc variable name.
+
+	* eval.c (env_fbind, env_fbind): Update to new interfaces
+	for managing mutation.
+	(lookup_var_l, dwim_loc): Return loc type and update to new interfaces.
+	(apply_frob_args, op_modplace, op_dohash, transform_op, mapcarv,
+	mappendv, repeat_infinite_func, repeat_times_func): Update to new
+	interfaces for managing mutation.
+
+	* eval.h (lookup_var_l): Declaration updated.
+
+	* filter.c (trie_add, trie_compress, trie_compress_intrinsic,
+	* build_filter, built_filter_from_list, filter_init): Update to new
+	* interfaces.
+
+	* gc.c (gc_set): Rewritten to use loc type which provides the exact
+	generation. We do not need the in_malloc_range hack any more, since
+	we have the backpointer to the object.
+	(gc_push): Take loc rather than raw pointer.
+
+	* gc.h (gc_set, gc_push): Declarations updated.
+
+	* hash.c (struct hash): The acons* functions use loc instead
+	of val * now.
+	(hash_equal_op, copy_hash, gethash_c, inhash, gethash_n, pushhash,
+	remhash, set_hash_userdata, hash_next, group_by, hash_keys,
+	hash_values, hash_pairs, hash_uni, hash_isec, hash_update,
+	hash_update_1): Updated to new interfaces for managing mutation.
+	(hash_grow): Needs hash table argument to call the new form of set.
+	(hash_process_weak): We need to use valptr to recover the val *
+	from the loc that we receive from some functions now.
+
+	* hash.h (gethash_c, gethash_f): Declarations updated.
+	(gethash_l): Inline function's prototype changes.
+
+	* lib.c (rplaca, rplacd, car_l, cdr_l, listref_l, tail, lastcons, last,
+	ltail, list_collect, list_collect_nconc, list_collect_append, nreverse,
+	lazy_appendv_func, lazy_appendv): Update to new interfaces.
+	(malloc_low_bound, malloc_high_bound): Static variables removed.
+	(adjust_bounds): Static function removed.
+	(chk_malloc, chk_malloc_gc_more, chk_calloc, chk_realloc):
+	Calls to adjust_bounds removed.
+	(in_malloc_range): Function removed.
+	(get_plist_f, string_extend, length_str, replace_str, make_sym,
+	delete_package, intern, rehome_sym, get_user_package,
+	get_system_package, get_keyword_package, func_get_env, vec_set_length,
+	vecref, vecref_l, vec_push, simple_lazy_stream_func, lazy_stream_func,
+	lazy_str, lazy_str_force, lazy_str_force_upto, acons_new, acons_new_c,
+	aconsql_new, aconsql_new_c, alist_nremove, alist_nremove1, merge,
+	sort_list, refset, obj_init): Update to new interfaces.
+
+	* lib.h (loc): New typedef.
+	(gc_set): Interface change.
+	(mkloc_fun): New inline function.
+	(mkloc, mkcloc, nulloc, nullocp, deref, valptr): New macros
+	(set): Interface change: takes loc as first argument,
+	rather than lvalue expression.
+	(mpush): Interface change: second argument is loc, rather
+	than lvalue.
+	(keyword_package, user_package, system_package, gensym_counter): Use
+	deref rather than dereference operator.
+	(in_malloc_range): Declaration removed.
+	(car_l, cdr_l, listref_l, tail, lastcons, ltail, getplist_f,
+	get_user_package, get_system_pckage, get_keyword_package,
+	vecref_l, acons_new_c, aconsql_new_c): Declarations updated.
+	(list_collect_decl): Updated to follow new interfaces.
+
+	* match.c (dest_set, h_coll, v_gather, v_collect, v_cat, v_output,
+	v_filter): Updated to follow new interfaces.
+
+	* parser.y (expand_meta, rlset): Updated to follow new interfaces.
+
+	* rand.h (random_state): Use deref.
+
+	* stream.c (string_in_get_line, string_in_get_char,
+	string_in_unget_char, strlist_out_put_string, strlist_out_put_char):
+	Updated to follow new interfaces.
+
+	* stream.h (std_input, std_output, std_debug, std_error,
+	std_null): Use deref macro.
+	(lookup_var_l): Declaration updated.
+
+	* syslog.c (syslog_put_string, syslog_put_char, syslog_put_byte,
+	syslog_set_prop): Updated to follow new interfaces.
+
+	* unwind.c (uw_register_subtype): Updated to follow
+	new interfaces.
+
+2014-03-29  Kaz Kylheku  <kaz@kylheku.com>
+
+	Generational GC tweaks.
+
 	* gc.c (make_obj): If we have room in the freshobj array,
 	but are out of objects, then call more. Without this,
 	we don't take proper advantage of this nursing area.

@@ -252,7 +252,7 @@ static val dest_set(val spec, val bindings, val pattern, val value)
       sem_error(spec, lit("~s cannot be used as a variable"), pattern, nao);
     if (!existing)
       sem_error(spec, lit("cannot set unbound variable ~s"), pattern, nao);
-    set(*cdr_l(existing), value);
+    set(cdr_l(existing), value);
   } else if (consp(pattern)) {
     if (first(pattern) == var_s) {
       uw_throwf(query_error_s, 
@@ -751,7 +751,7 @@ static val h_coll(match_line_ctx *c)
   val maxtimes = txeval(elem, getplist(args, maxtimes_k), c->bindings);
   val chars = txeval(elem, getplist(args, chars_k), c->bindings);
   val have_vars;
-  val vars = getplist_f(args, vars_k, &have_vars);
+  val vars = getplist_f(args, vars_k, mkcloc(have_vars));
   cnum cmax = fixnump(gap) ? c_num(gap) : (fixnump(max) ? c_num(max) : 0);
   cnum cmin = fixnump(gap) ? c_num(gap) : (fixnump(min) ? c_num(min) : 0);
   cnum mincounter = cmin, maxcounter = 0;
@@ -2586,7 +2586,7 @@ static val v_gather(match_files_ctx *c)
                  match_files(mf_spec(*c, nested_spec)));
 
       if (!success) {
-        *cdr_l(iter) = nil;
+        deref(cdr_l(iter)) = nil;
         ptail = list_collect_nconc(ptail, iter);
       } else if (success == t) {
         c->bindings = new_bindings;
@@ -2689,7 +2689,7 @@ static val v_collect(match_files_ctx *c)
   val maxtimes = txeval(specline, getplist(args, maxtimes_k), c->bindings);
   val lines = txeval(specline, getplist(args, lines_k), c->bindings);
   val have_vars;
-  volatile val vars = getplist_f(args, vars_k, &have_vars);
+  volatile val vars = getplist_f(args, vars_k, mkcloc(have_vars));
   cnum cmax = fixnump(gap) ? c_num(gap) : (fixnump(max) ? c_num(max) : 0);
   cnum cmin = fixnump(gap) ? c_num(gap) : (fixnump(min) ? c_num(min) : 0);
   cnum mincounter = cmin, maxcounter = 0;
@@ -2816,7 +2816,7 @@ static val v_collect(match_files_ctx *c)
 
           c->data = new_data;
           c->data_lineno = new_line;
-          *car_l(success) = nil;
+          deref(car_l(success)) = nil;
         } else {
           debuglf(specline, lit("collect consumed entire file"), nao);
           c->data = nil;
@@ -2897,7 +2897,7 @@ static val v_flatten(match_files_ctx *c)
       val existing = assoc(sym, c->bindings);
 
       if (existing)
-        set(*cdr_l(existing), flatten(cdr(existing)));
+        set(cdr_l(existing), flatten(cdr(existing)));
     }
   }
 
@@ -3056,7 +3056,7 @@ static val v_cat(match_files_ctx *c)
     if (existing) {
       val sep = if3(sep_form, txeval(specline, sep_form, c->bindings),
                     lit(" "));
-      set(*cdr_l(existing), cat_str(flatten(cdr(existing)), sep));
+      set(cdr_l(existing), cat_str(flatten(cdr(existing)), sep));
     } else {
       sem_error(specline, lit("cat: unbound variable ~s"), sym, nao);
     }
@@ -3145,9 +3145,9 @@ static val v_output(match_files_ctx *c)
 
         if (existing) {
           if (append) {
-            set(*cdr_l(existing), append2(flatten(cdr(existing)), list_out));
+            set(cdr_l(existing), append2(flatten(cdr(existing)), list_out));
           } else {
-            set(*cdr_l(existing), list_out);
+            set(cdr_l(existing), list_out);
           }
         } else {
           c->bindings = acons(into_var, list_out, c->bindings);
@@ -3462,7 +3462,7 @@ static val v_filter(match_files_ctx *c)
     if (!existing)
       sem_error(specline, lit("filter: variable ~a is unbound"), var, nao);
 
-    set(*cdr_l(existing), filter_string_tree(filter, cdr(existing)));
+    set(cdr_l(existing), filter_string_tree(filter, cdr(existing)));
   }
 
   uw_env_end;

@@ -1221,8 +1221,8 @@ static val expand_meta(val form, val menv)
     list_collect_decl (out, ptail);
 
     for (; consp(form); form = cdr(form)) {
-      val *nptail = list_collect(ptail, expand_meta(car(form), menv));
-      rlcp(*ptail, form);
+      loc nptail = list_collect(ptail, expand_meta(car(form), menv));
+      rlcp(deref(ptail), form);
       ptail = nptail;
     }
 
@@ -1234,10 +1234,10 @@ static val expand_meta(val form, val menv)
 
 val rlset(val form, val info)
 {
-  val cell = gethash_c(form_to_ln_hash, form, 0);
-  val *place = cdr_l(cell);
-  if (nilp(*place))
-    set(*place, info);
+  val cell = gethash_c(form_to_ln_hash, form, nulloc);
+  loc place = cdr_l(cell);
+  if (nilp(deref(place)))
+    set(place, info);
   return form;
 }
 

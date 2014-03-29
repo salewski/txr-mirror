@@ -623,17 +623,20 @@ int gc_is_reachable(val obj)
 
 #if CONFIG_GEN_GC
 
-val gc_set(val *ptr, val obj)
+val gc_set(loc lo, val obj)
 {
-  if (!full_gc) {
-    if (checkobj_idx >= CHECKOBJ_VEC_SIZE) {
-      gc();
-      /* obj can't be in gen 0 because there are no baby objects after gc */
-    } else if (in_malloc_range((mem_t *) ptr) && is_ptr(obj) && obj->t.gen == 0) {
+  val *ptr = valptr(lo);
+
+  if (lo.obj && is_ptr(obj) && lo.obj->t.gen == 1 && obj->t.gen == 0 && !full_gc) {
+    if (checkobj_idx < CHECKOBJ_VEC_SIZE) {
       obj->t.gen = -1;
       checkobj[checkobj_idx++] = obj;
+    } else {
+      gc();
+        /* obj can't be in gen 0 because there are no baby objects after gc */
     }
   }
+
   *ptr = obj;
   return obj;
 }
@@ -654,9 +657,9 @@ val gc_mutated(val obj)
 }
 
 
-val gc_push(val obj, val *plist)
+val gc_push(val obj, loc plist)
 {
-  return gc_set(plist, cons(obj, *plist));
+  return gc_set(plist, cons(obj, deref(plist)));
 }
 
 #endif

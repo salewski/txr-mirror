@@ -47,12 +47,12 @@ struct strm_ops {
   val (*set_prop)(val, val ind, val);
 };
 
-#define std_input (*lookup_var_l(nil, stdin_s))
-#define std_output (*lookup_var_l(nil, stdout_s))
-#define std_debug (*lookup_var_l(nil, stddebug_s))
-#define std_error (*lookup_var_l(nil, stderr_s))
-#define std_null (*lookup_var_l(nil, stdnull_s))
-val *lookup_var_l(val env, val sym);
+#define std_input (deref(lookup_var_l(nil, stdin_s)))
+#define std_output (deref(lookup_var_l(nil, stdout_s)))
+#define std_debug (deref(lookup_var_l(nil, stddebug_s)))
+#define std_error (deref(lookup_var_l(nil, stderr_s)))
+#define std_null (deref(lookup_var_l(nil, stdnull_s)))
+loc lookup_var_l(val env, val sym);
 
 extern val output_produced;
 

@@ -116,7 +116,7 @@ val env_fbind(val env, val sym, val fun)
 {
   val cell;
   type_check(env, ENV);
-  cell = acons_new_c(sym, 0, &env->e.fbindings);
+  cell = acons_new_c(sym, nulloc, mkloc(env->e.fbindings, env));
   rplacd(cell, fun);
   return cell;
 }
@@ -125,7 +125,7 @@ val env_vbind(val env, val sym, val obj)
 {
   val cell;
   type_check(env, ENV);
-  cell = acons_new_c(sym, 0, &env->e.vbindings);
+  cell = acons_new_c(sym, nulloc, mkloc(env->e.vbindings, env));
   rplacd(cell, obj);
   return cell;
 }
@@ -191,7 +191,7 @@ static val lookup_sym_lisp1(val env, val sym)
   return or2(gethash(top_vb, sym), gethash(top_fb, sym));
 }
 
-val *lookup_var_l(val env, val sym)
+loc lookup_var_l(val env, val sym)
 {
   if (env) {
     type_check(env, ENV);
@@ -211,7 +211,7 @@ val *lookup_var_l(val env, val sym)
 
   {
     val binding = gethash(top_vb, sym);
-    return (binding) ? cdr_l(binding) : 0;
+    return (binding) ? cdr_l(binding) : nulloc;
   }
 }
 
@@ -642,9 +642,9 @@ val apply(val fun, val arglist, val ctx_form)
 
 static val apply_frob_args(val args)
 {
-  val *plast = lastcons(args);
-  if (plast) {
-    *plast = car(*plast);
+  loc plast = lastcons(args);
+  if (!nullocp(plast)) {
+    deref(plast) = car(deref(plast));
     return args;
   } else {
     return car(args);
@@ -1469,7 +1469,7 @@ static val op_tree_bind(val form, val env)
 
 static val op_modplace(val form, val env);
 
-static val *dwim_loc(val form, val env, val op, val newform, val *retval)
+static loc dwim_loc(val form, val env, val op, val newform, val *retval)
 {
   val obj = eval_lisp1(second(form), env, form);
   val args = eval_args_lisp1(rest(rest(form)), env, form);
@@ -1497,7 +1497,7 @@ static val *dwim_loc(val form, val env, val op, val newform, val *retval)
                      obj, index, nao);
         }
 
-        return 0;
+        return nulloc;
       } else {
         uses_or2;
 
@@ -1522,7 +1522,7 @@ static val *dwim_loc(val form, val env, val op, val newform, val *retval)
           eval_error(form, lit("[~s ~s]: only set, inc, dec and del can be "
                                "used for string indices"), obj, index, nao);
         }
-        return 0;
+        return nulloc;
       }
     }
   case SYM:
@@ -1549,12 +1549,12 @@ static val *dwim_loc(val form, val env, val op, val newform, val *retval)
           eval_error(form, lit("[~s ~s]: ranges allow only set and del operators"),
                      obj, index, nao);
         }
-        return 0;
+        return nulloc;
       } else {
         if (op == del_s) {
           *retval = vecref(obj, index);
           replace_vec(obj, nil, index, plus(index, one));
-          return 0;
+          return nulloc;
         }
         return vecref_l(obj, index);
       }
@@ -1572,7 +1572,7 @@ static val *dwim_loc(val form, val env, val op, val newform, val *retval)
         if (op == del_s) {
           *retval = vecref(obj, index);
           replace_list(obj, nil, index, plus(index, one));
-          return 0;
+          return nulloc;
         }
         return listref_l(obj, index);
       } else if (consp(index)) {
@@ -1596,7 +1596,7 @@ static val *dwim_loc(val form, val env, val op, val newform, val *retval)
           eval_error(form, lit("[~s ~s]: ranges allow only set and del operators"),
                      obj, index, nao);
         }
-        return 0;
+        return nulloc;
       } else {
         eval_error(form, lit("[~s ~s]: index must be integer, or pair"),
                    cell, index, nao);
@@ -1605,7 +1605,8 @@ static val *dwim_loc(val form, val env, val op, val newform, val *retval)
   case COBJ:
     {
       if (hashp(obj)) {
-        val new_p, *loc;
+        val new_p;
+        loc place;
         if (lt(length(args), one))
           eval_error(form, lit("[~s ...]: hash indexing needs at least one arg"),
                      obj, nao);
@@ -1613,20 +1614,20 @@ static val *dwim_loc(val form, val env, val op, val newform, val *retval)
         if (op == del_s) {
           *retval = gethash(obj, first(args));
           remhash(obj, first(args));
-          return 0;
+          return nulloc;
         }
 
-        loc = gethash_l(obj, first(args), &new_p);
+        place = gethash_l(obj, first(args), mkcloc(new_p));
         if (new_p)
-          set(*loc, second(args));
-        return loc;
+          set(place, second(args));
+        return place;
       }
     }
   default:
     eval_error(form, lit("object ~s not supported by [] notation"), obj, nao);
   }
 
-  return 0;
+  return nulloc;
 }
 
 static val op_modplace(val form, val env)
@@ -1637,7 +1638,7 @@ static val op_modplace(val form, val env)
   val third_arg_p = rest(rest(form));
   val newform = if3(car(third_arg_p), third(form), nil);
   val newval = nil;
-  val *loc = 0;
+  loc ptr = nulloc;
 
   if (op == push_s) {
     val tmp = place;
@@ -1651,16 +1652,16 @@ static val op_modplace(val form, val env)
   if (symbolp(place)) {
     if (!bindable(place))
       eval_error(form, lit("~s: ~s is not a bindable symbol"), op, place, nao);
-    loc = lookup_var_l(env, place);
-    if (!loc)
+    ptr = lookup_var_l(env, place);
+    if (nullocp(ptr))
       eval_error(form, lit("unbound variable ~s"), place, nao);
   } else if (consp(place)) {
     /* TODO: dispatch these with hash table. */
     val sym = car(place);
     if (sym == dwim_s) {
       val ret = nil;
-      loc = dwim_loc(place, env, op, newform, &ret);
-      if (loc == 0)
+      ptr = dwim_loc(place, env, op, newform, &ret);
+      if (nullocp(ptr))
         return ret;
     } else if (sym == gethash_s) {
       val hash = eval(second(place), env, form);
@@ -1671,19 +1672,19 @@ static val op_modplace(val form, val env)
         remhash(hash, key);
         return ret;
       }
-      loc = gethash_l(hash, key, &new_p);
+      ptr = gethash_l(hash, key, mkcloc(new_p));
       if (new_p)
-        set(*loc, eval(fourth(place), env, form));
+        set(ptr, eval(fourth(place), env, form));
     } else if (sym == car_s) {
       val cons = eval(second(place), env, form);
-      loc = car_l(cons);
+      ptr = car_l(cons);
     } else if (sym == cdr_s) {
       val cons = eval(second(place), env, form);
-      loc = cdr_l(cons);
+      ptr = cdr_l(cons);
     } else if (sym == vecref_s) {
       val vec = eval(second(place), env, form);
       val ind = eval(third(place), env, form);
-      loc = vecref_l(vec, ind);
+      ptr = vecref_l(vec, ind);
     } else {
       eval_error(form, lit("~s: ~s is not a recognized place form"),
                  op, place, nao);
@@ -1692,27 +1693,27 @@ static val op_modplace(val form, val env)
     eval_error(form, lit("~s: ~s is not a place"), op, place, nao);
   }
 
-  if (!loc)
+  if (nullocp(ptr))
     eval_error(form, lit("~s: place ~s doesn't exist"), op, place, nao);
 
   if (op == set_s) {
     if (!third_arg_p)
       eval_error(form, lit("~s: missing argument"), op, nao);
-    return set(*loc, eval(newform, env, form));
+    return set(ptr, eval(newform, env, form));
   } else if (op == inc_s) {
     val inc = or2(eval(newform, env, form), one);
-    return set(*loc, plus(*loc, inc));
+    return set(ptr, plus(deref(ptr), inc));
   } else if (op == dec_s) {
     val inc = or2(eval(newform, env, form), one);
-    return set(*loc,  minus(*loc, inc));
+    return set(ptr, minus(deref(ptr), inc));
   } else if (op == push_s) {
-    return mpush(newval, *loc);
+    return mpush(newval, ptr);
   } else if (op == pop_s) {
     if (third_arg_p)
       eval_error(form, lit("~s: superfluous argument"), op, nao);
-    return pop(loc);
+    return pop(valptr(ptr));
   } else if (op == flip_s) {
-    return *loc = null(*loc);
+    return deref(ptr) = null(deref(ptr));
   } else if (op == del_s) {
     eval_error(form, lit("~s: cannot delete ~a"), op, place, nao);
   }
@@ -1768,8 +1769,8 @@ static val op_dohash(val form, val env)
        and also deleting them such that these variables end up
        with the only reference. But in that case, those objects
        will be noted in the GC's check list. */
-    *cdr_l(keyvar) = car(cell);
-    *cdr_l(valvar) = cdr(cell);
+    deref(cdr_l(keyvar)) = car(cell);
+    deref(cdr_l(valvar)) = cdr(cell);
     eval_progn(body, new_env, form);
   }
 
@@ -2295,7 +2296,7 @@ static val transform_op(val forms, val syms, val rg)
       if (integerp(vararg)) {
         val newsyms = syms;
         val new_p;
-        val cell = acons_new_c(vararg, &new_p, &newsyms);
+        val cell = acons_new_c(vararg, mkcloc(new_p), mkcloc(newsyms));
         val sym = if3(new_p, rplacd(cell, gensym(format_op_arg(vararg))),
                              cdr(cell));
         cons_bind (outsyms, outforms, transform_op(re, newsyms, rg)); 
@@ -2682,7 +2683,7 @@ val mapcarv(val fun, val list_of_lists)
         if (!list)
           return make_like(out, list_orig);
         atail = list_collect(atail, car(list));
-        *car_l(iter) = cdr(list);
+        deref(car_l(iter)) = cdr(list);
       }
 
       otail = list_collect(otail, apply(fun, args, nil));
@@ -2708,7 +2709,7 @@ static val mappendv(val fun, val list_of_lists)
         if (!list)
           return make_like(out, list_orig);
         atail = list_collect(atail, car(list));
-        *car_l(iter) = cdr(list);
+        deref(car_l(iter)) = cdr(list);
       }
 
       otail = list_collect_append(otail, apply(fun, args, nil));
@@ -2899,7 +2900,7 @@ static val repeat_infinite_func(val env, val lcons)
 {
   if (!car(env))
     rplaca(env, cdr(env));
-  rplaca(lcons, pop(car_l(env)));
+  rplaca(lcons, pop(valptr(car_l(env))));
   rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
   return nil;
 }
@@ -2914,7 +2915,7 @@ static val repeat_times_func(val env, val lcons)
     rplacd(list_count, count = minus(count, one));
   }
 
-  rplaca(lcons, pop(car_l(env)));
+  rplaca(lcons, pop(valptr(car_l(env))));
 
   if (!car(env) && count == one) {
     rplacd(lcons, nil);

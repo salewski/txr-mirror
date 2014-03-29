@@ -141,7 +141,7 @@ static val syslog_put_string(val stream, val str)
     strstream = make_string_output_stream();
   }
 
-  set(*cdr_l(cell), strstream);
+  set(cdr_l(cell), strstream);
   return t;
 }
 
@@ -157,7 +157,7 @@ static val syslog_put_char(val stream, val ch)
     put_char(ch, strstream);
   }
 
-  set(*cdr_l(cell), strstream);
+  set(cdr_l(cell), strstream);
   return t;
 }
 
@@ -173,7 +173,7 @@ static val syslog_put_byte(val stream, int ch)
     put_byte(num(ch), strstream);
   }
 
-  set(*cdr_l(cell), strstream);
+  set(cdr_l(cell), strstream);
   return t;
 }
 
@@ -192,7 +192,7 @@ static val syslog_set_prop(val stream, val ind, val prop)
 {
   if (ind == prio_k) {
     val cell = (val) stream->co.handle;
-    set(*car_l(cell), prop);
+    set(car_l(cell), prop);
     return t;
   }
   return nil;

@@ -57,7 +57,7 @@ struct hash {
   cnum (*hash_fun)(val);
   val (*equal_fun)(val, val);
   val (*assoc_fun)(val key, val list);
-  val (*acons_new_c_fun)(val key, val *new_p, val *list);
+  val (*acons_new_c_fun)(val key, loc new_p, loc list);
 };
 
 struct hash_iter {
@@ -270,12 +270,12 @@ static val hash_equal_op(val left, val right)
     } else if (found) {
       val loc = memq(found, pending);
       pending = nappend2(ldiff(pending, loc), cdr(loc));
-      set(*cdr_l(loc), free_conses);
+      set(cdr_l(loc), free_conses);
       free_conses = loc;
     } else {
       ncons = or2(pop(&free_conses), cons(nil, nil));
-      set(*car_l(ncons), lcell);
-      set(*cdr_l(ncons), pending);
+      set(car_l(ncons), lcell);
+      set(cdr_l(ncons), pending);
       pending = ncons;
     }
 
@@ -289,12 +289,12 @@ static val hash_equal_op(val left, val right)
     } else if (found) {
       val loc = memq(found, pending);
       pending = nappend2(ldiff(pending, loc), cdr(loc));
-      set(*cdr_l(loc), free_conses);
+      set(cdr_l(loc), free_conses);
       free_conses = loc;
     } else {
       ncons = or2(pop(&free_conses), cons(nil, nil));
-      set(*car_l(ncons), rcell);
-      set(*cdr_l(ncons), pending);
+      set(car_l(ncons), rcell);
+      set(cdr_l(ncons), pending);
       pending = ncons;
     }
   }
@@ -422,7 +422,7 @@ static struct cobj_ops hash_ops = {
   hash_hash_op,
 };
 
-static void hash_grow(struct hash *h)
+static void hash_grow(struct hash *h, val hash)
 {
   cnum i;
   cnum new_modulus = 2 * h->modulus;
@@ -437,16 +437,17 @@ static void hash_grow(struct hash *h)
       val entry = car(conses);
       val next = cdr(conses);
       val key = car(entry);
-      val *pchain = vecref_l(new_table,
-                             num_fast(h->hash_fun(key) % new_modulus));
-      set(*cdr_l(conses), *pchain);
-      *pchain = conses;
+      loc pchain = vecref_l(new_table,
+                            num_fast(h->hash_fun(key) % new_modulus));
+      set(cdr_l(conses), deref(pchain));
+      set(pchain, conses);
       conses = next;
     }
   }
 
   h->modulus = new_modulus;
-  set(h->table, new_table);
+  h->table = new_table;
+  set(mkloc(h->table, hash), new_table);
 }
 
 val make_hash(val weak_keys, val weak_vals, val equal_based)
@@ -518,19 +519,19 @@ val copy_hash(val existing)
   h->acons_new_c_fun = ex->acons_new_c_fun;
 
   for (iter = zero; lt(iter, mod); iter = plus(iter, one))
-    set(*vecref_l(h->table, iter), copy_alist(vecref(ex->table, iter)));
+    set(vecref_l(h->table, iter), copy_alist(vecref(ex->table, iter)));
 
   return hash;
 }
 
-val gethash_c(val hash, val key, val *new_p)
+val gethash_c(val hash, val key, loc new_p)
 {
   struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
-  val *pchain = vecref_l(h->table, num_fast(h->hash_fun(key) % h->modulus));
-  val old = *pchain;
+  loc pchain = vecref_l(h->table, num_fast(h->hash_fun(key) % h->modulus));
+  val old = deref(pchain);
   val cell = h->acons_new_c_fun(key, new_p, pchain);
-  if (old != *pchain && ++h->count > 2 * h->modulus)
-    hash_grow(h);
+  if (old != deref(pchain) && ++h->count > 2 * h->modulus)
+    hash_grow(h, hash);
   return cell;
 }
 
@@ -547,10 +548,10 @@ val inhash(val hash, val key, val init)
   val cell;
 
   if (missingp(init)) {
-    gethash_f(hash, key, &cell);
+    gethash_f(hash, key, mkcloc(cell));
   } else {
     val new_p;
-    cell = gethash_c(hash, key, &new_p);
+    cell = gethash_c(hash, key, mkcloc(new_p));
     if (new_p)
       rplacd(cell, init);
   }
@@ -558,12 +559,12 @@ val inhash(val hash, val key, val init)
   return cell;
 }
 
-val gethash_f(val hash, val key, val *found)
+val gethash_f(val hash, val key, loc found)
 {
   struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
   val chain = vecref(h->table, num_fast(h->hash_fun(key) % h->modulus));
-  set(*found, h->assoc_fun(key, chain));
-  return cdr(*found);
+  set(found, h->assoc_fun(key, chain));
+  return cdr(deref(found));
 }
 
 val gethash_n(val hash, val key, val notfound_val)
@@ -577,26 +578,26 @@ val gethash_n(val hash, val key, val notfound_val)
 val sethash(val hash, val key, val value)
 {
   val new_p;
-  rplacd(gethash_c(hash, key, &new_p), value);
+  rplacd(gethash_c(hash, key, mkcloc(new_p)), value);
   return new_p;
 }
 
 val pushhash(val hash, val key, val value)
 {
   val new_p;
-  mpush(value, *gethash_l(hash, key, &new_p));
+  mpush(value, gethash_l(hash, key, mkcloc(new_p)));
   return new_p;
 }
 
 val remhash(val hash, val key)
 {
   struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
-  val *pchain = vecref_l(h->table, num_fast(h->hash_fun(key) % h->modulus));
-  val existing = h->assoc_fun(key, *pchain);
+  loc pchain = vecref_l(h->table, num_fast(h->hash_fun(key) % h->modulus));
+  val existing = h->assoc_fun(key, deref(pchain));
 
   if (existing) {
-    val loc = memq(existing, *pchain);
-    set(*pchain, nappend2(ldiff(*pchain, loc), cdr(loc)));
+    val cell = memq(existing, deref(pchain));
+    set(pchain, nappend2(ldiff(deref(pchain), cell), cdr(cell)));
     h->count--;
     bug_unless (h->count >= 0);
   }
@@ -620,7 +621,7 @@ val set_hash_userdata(val hash, val data)
 {
   struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
   val olddata = h->userdata;
-  set(h->userdata, data);
+  set(mkloc(h->userdata, hash), data);
   return olddata;
 }
 
@@ -669,7 +670,7 @@ val hash_next(val iter)
   while (nilp(hi->cons)) {
     if (++hi->chain >= h->modulus)
       return nil;
-    set(hi->cons, vecref(h->table, num_fast(hi->chain)));
+    set(mkloc(hi->cons, iter), vecref(h->table, num_fast(hi->chain)));
   }
   return car(hi->cons);
 }
@@ -720,7 +721,7 @@ void hash_process_weak(void)
          that are garbage. */
       for (i = 0; i < h->modulus; i++) {
         val ind = num_fast(i);
-        val *pchain = vecref_l(h->table, ind);
+        val *pchain = valptr(vecref_l(h->table, ind));
         val *iter;
 
         for (iter = pchain; !gc_is_reachable(*iter); ) {
@@ -732,7 +733,7 @@ void hash_process_weak(void)
               breakpt();
 #endif
           } else {
-            iter = cdr_l(*iter);
+            iter = valptr(cdr_l(*iter));
           }
         }
       }
@@ -744,7 +745,7 @@ void hash_process_weak(void)
          that are garbage. */
       for (i = 0; i < h->modulus; i++) {
         val ind = num_fast(i);
-        val *pchain = vecref_l(h->table, ind);
+        val *pchain = valptr(vecref_l(h->table, ind));
         val *iter;
 
         for (iter = pchain; !gc_is_reachable(*iter); ) {
@@ -756,7 +757,7 @@ void hash_process_weak(void)
               breakpt();
 #endif
           } else {
-            iter = cdr_l(*iter);
+            iter = valptr(cdr_l(*iter));
           }
         }
       }
@@ -768,7 +769,7 @@ void hash_process_weak(void)
          or values that are garbage. */
       for (i = 0; i < h->modulus; i++) {
         val ind = num_fast(i);
-        val *pchain = vecref_l(h->table, ind);
+        val *pchain = valptr(vecref_l(h->table, ind));
         val *iter;
 
         for (iter = pchain; !gc_is_reachable(*iter); ) {
@@ -784,7 +785,7 @@ void hash_process_weak(void)
               breakpt();
 #endif
           } else {
-            iter = cdr_l(*iter);
+            iter = valptr(cdr_l(*iter));
           }
         }
       }
@@ -851,7 +852,7 @@ val group_by(val func, val seq, val hashv_args)
 static val hash_keys_lazy(val iter, val lcons)
 {
   val cell = hash_next(iter);
-  set(lcons->lc.cdr, if2(cell, make_half_lazy_cons(lcons->lc.func, car(cell))));
+  set(mkloc(lcons->lc.cdr, lcons), if2(cell, make_half_lazy_cons(lcons->lc.func, car(cell))));
   return nil;
 }
 
@@ -867,7 +868,7 @@ val hash_keys(val hash)
 static val hash_values_lazy(val iter, val lcons)
 {
   val cell = hash_next(iter);
-  set(lcons->lc.cdr, if2(cell, make_half_lazy_cons(lcons->lc.func, cdr(cell))));
+  set(mkloc(lcons->lc.cdr, lcons), if2(cell, make_half_lazy_cons(lcons->lc.func, cdr(cell))));
   return nil;
 }
 
@@ -883,10 +884,10 @@ val hash_values(val hash)
 static val hash_pairs_lazy(val iter, val lcons)
 {
   val cell = hash_next(iter);
-  set(lcons->lc.cdr, if2(cell, make_half_lazy_cons(lcons->lc.func,
-                                                   cons(car(cell),
-                                                        cons(cdr(cell),
-                                                             nil)))));
+  set(mkloc(lcons->lc.cdr, lcons), if2(cell, make_half_lazy_cons(lcons->lc.func,
+                                                                 cons(car(cell),
+                                                                      cons(cdr(cell),
+                                                                           nil)))));
   return nil;
 }
 
@@ -903,7 +904,7 @@ val hash_pairs(val hash)
 static val hash_alist_lazy(val iter, val lcons)
 {
   val cell = hash_next(iter);
-  set(lcons->lc.cdr, if2(cell, make_half_lazy_cons(lcons->lc.func, cell)));
+  set(mkloc(lcons->lc.cdr, lcons), if2(cell, make_half_lazy_cons(lcons->lc.func, cell)));
   return nil;
 }
 
@@ -942,8 +943,8 @@ val hash_uni(val hash1, val hash2, val join_func)
       if (missingp(join_func)) {
         sethash(hout, car(entry), cdr(entry));
       } else {
-        val *loc = gethash_l(hout, car(entry), 0);
-        set(*loc, funcall2(join_func, cdr(entry), *loc));
+        loc ptr = gethash_l(hout, car(entry), nulloc);
+        set(ptr, funcall2(join_func, cdr(entry), deref(ptr)));
       }
     }
 
@@ -991,7 +992,7 @@ val hash_isec(val hash1, val hash2, val join_func)
          entry = hash_next(hiter))
     {
       val found;
-      val data2 = gethash_f(hash2, car(entry), &found);
+      val data2 = gethash_f(hash2, car(entry), mkcloc(found));
       if (found) {
         if (missingp(join_func))
           sethash(hout, car(entry), cdr(entry));
@@ -1009,8 +1010,8 @@ val hash_update(val hash, val fun)
   val iter = hash_begin(hash);
   val cell;
   while ((cell = hash_next(iter)) != nil) {
-    val *loc = cdr_l(cell);
-    set(*loc, funcall1(fun, *loc));
+    loc ptr = cdr_l(cell);
+    set(ptr, funcall1(fun, deref(ptr)));
   }
   return hash;
 }
@@ -1019,18 +1020,18 @@ val hash_update_1(val hash, val key, val fun, val init)
 {
   if (missingp(init)) {
     val cons;
-    val data = gethash_f(hash, key, &cons);
+    val data = gethash_f(hash, key, mkcloc(cons));
     if (cons)
       rplacd(cons, funcall1(fun, data));
     return data;
   } else {
     val new_p;
-    val *place = gethash_l(hash, key, &new_p);
+    loc place = gethash_l(hash, key, mkcloc(new_p));
     if (new_p)
-      set(*place, funcall1(fun, init));
+      set(place, funcall1(fun, init));
     else
-      set(*place, funcall1(fun, *place));
-    return *place;
+      set(place, funcall1(fun, deref(place)));
+    return deref(place);
   }
 }
 

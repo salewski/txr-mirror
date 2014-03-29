@@ -105,10 +105,10 @@ static val perm_init_common(val p, val k_null)
   } else {
     val state = vector(three, nil);
     val c = vector(k, zero);
-    set(*vecref_l(state, zero), p);
-    set(*vecref_l(state, one), k);
-    set(*vecref_l(state, two), c);
-    *vecref_l(c, negone) = negone;
+    set(vecref_l(state, zero), p);
+    set(vecref_l(state, one), k);
+    set(vecref_l(state, two), c);
+    deref(vecref_l(c, negone)) = negone;
     return state;
   }
 }
@@ -355,7 +355,7 @@ static void comb_gen_fun_common(val state)
     val curr = first(iter);
     val curr_rest = rest(curr);
     if (curr_rest != prev && consp(curr_rest)) {
-      set(*car_l(iter), curr_rest);
+      set(car_l(iter), curr_rest);
       return;
     } else if (rest(iter)) {
       val next = second(iter);
@@ -363,11 +363,11 @@ static void comb_gen_fun_common(val state)
       val next_rest_rest = rest(next_rest);
       prev = curr;
       if (next_rest != curr && consp(next_rest_rest))
-        prev = set(*car_l(iter), next_rest_rest);
-    } 
+        prev = set(car_l(iter), next_rest_rest);
+    }
   }
 
-  *car_l(state) = nil;
+  deref(car_l(state)) = nil;
 }
 
 static val comb_list_gen_fun(val state)
@@ -516,16 +516,16 @@ static void rcomb_gen_fun_common(val state)
     if (consp(curr_rest)) {
       val jter;
       for (jter = state; jter != next; jter = cdr(jter))
-        set(*car_l(jter), curr_rest);
+        set(car_l(jter), curr_rest);
       return;
     } else if (next) {
       val next = second(iter);
       if (curr != next)
-        set(*car_l(iter), rest(next));
+        set(car_l(iter), rest(next));
     }
   }
 
-  *car_l(state) = nil;
+  deref(car_l(state)) = nil;
 }
 
 static val rcomb_list_gen_fun(val state)

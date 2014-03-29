@@ -33,7 +33,7 @@ val make_env(val fbindings, val vbindings, val up_env);
 val env_fbind(val env, val sym, val fun);
 val env_vbind(val env, val sym, val obj);
 val lookup_var(val env, val sym);
-val *lookup_var_l(val env, val sym);
+loc lookup_var_l(val env, val sym);
 val lookup_fun(val env, val sym);
 val interp_fun(val env, val fun, val args);
 void reg_var(val sym, val val);

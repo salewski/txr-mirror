@@ -62,10 +62,10 @@ static val trie_add(val trie, val key, val value)
   for (node = trie, i = zero; lt(i, len); i = plus(i, one)) {
     val ch = chr_str(key, i);
     val newnode_p;
-    val *loc = gethash_l(node, ch, &newnode_p);
+    loc place = gethash_l(node, ch, mkcloc(newnode_p));
     if (newnode_p)
-      set(*loc, make_hash(nil, nil, nil));
-    node = *loc;
+      set(place, make_hash(nil, nil, nil));
+    node = deref(place);
   }
 
   set_hash_userdata(node, value);
@@ -84,21 +84,21 @@ static val trie_add(val trie, val key, val value)
  *    character, and whose CDR is the transition.
  */
 
-static void trie_compress(val *ptrie)
+static void trie_compress(loc ptrie)
 {
-  val trie = *ptrie;
+  val trie = deref(ptrie);
 
   if (hashp(trie)) {
     val count = hash_count(trie);
     val value = get_hash_userdata(trie);
 
     if (zerop(count)) {
-      set(*ptrie, value);
+      set(ptrie, value);
     } else if (count == one && nilp(value)) {
       val iter = hash_begin(trie);
       val cell = hash_next(iter);
-      set(*ptrie, cons(car(cell), cdr(cell)));
-      trie_compress(cdr_l(*ptrie));
+      set(ptrie, cons(car(cell), cdr(cell)));
+      trie_compress(cdr_l(deref(ptrie)));
     } else {
       val cell, iter = hash_begin(trie);
 
@@ -107,12 +107,12 @@ static void trie_compress(val *ptrie)
     }
   } else if (consp(trie)) {
     trie_compress(cdr_l(trie));
-  } 
+  }
 }
 
 static val trie_compress_intrinsic(val ptrie)
 {
-  trie_compress(&ptrie);
+  trie_compress(mkcloc(ptrie));
   return ptrie;
 }
 
@@ -184,7 +184,7 @@ static val build_filter(struct filter_pair *pair, val compress_p)
     trie_add(trie, static_str(pair[i].key), static_str(pair[i].value));
 
   if (compress_p)
-    trie_compress(&trie);
+    trie_compress(mkcloc(trie));
   return trie;
 }
 
@@ -198,7 +198,7 @@ static val build_filter_from_list(val list)
     mapcar(curry_123_2(func_n3(trie_add), trie, first(tuple)), rest(tuple));
   }
 
-  trie_compress(&trie);
+  trie_compress(mkcloc(trie));
   return trie;
 }
 
@@ -706,7 +706,7 @@ void filter_init(void)
   {
     val trie = build_filter(from_html_table, nil);
     trie_add(trie, lit("&#"), func_n1(html_numeric_handler));
-    trie_compress(&trie);
+    trie_compress(mkcloc(trie));
     sethash(filters, from_html_k, trie);
   }
   sethash(filters, upcase_k, func_n1(upcase_str));

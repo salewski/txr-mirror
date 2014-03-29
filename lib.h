@@ -237,14 +237,39 @@ union obj {
 };
 
 #if CONFIG_GEN_GC
-val gc_set(val *, val);
-#define set(place, val) (gc_set(&(place), val))
+typedef struct {
+  val *ptr;
+  val obj;
+} loc;
+
+val gc_set(loc, val);
+
+INLINE loc mkloc_fun(val *ptr, val obj)
+{
+  loc l = { ptr, obj };
+  return l;
+}
+
+#define mkloc(expr, fun) mkloc_fun(&(expr), fun)
+#define mkcloc(expr) mkloc_fun(&(expr), 0)
+#define nulloc mkloc_fun(0, 0)
+#define nullocp(lo) (!(lo).ptr)
+#define deref(lo) (*(lo).ptr)
+#define valptr(lo) ((lo).ptr)
+#define set(lo, val) (gc_set(lo, val))
 #define mut(obj) (gc_mutated(obj));
-#define mpush(val, place) (gc_push(val, &(place)))
+#define mpush(val, lo) (gc_push(val, lo))
 #else
-#define set(place, val) ((place) = (val))
+typedef val *loc;
+#define mkloc(expr, obj) (&(expr))
+#define mkcloc(expr) (&(expr))
+#define nulloc ((loc) 0)
+#define nullocp(lo) (!(lo))
+#define deref(lo) (*(lo))
+#define valptr(lo) (lo)
+#define set(lo, val) (*(lo) = (val))
 #define mut(obj) ((void) (obj))
-#define mpush(val, place) (push(val, &(place)))
+#define mpush(val, lo) (push(val, lo))
 #endif
 
 INLINE cnum tag(val obj) { return ((cnum) obj) & TAG_MASK; }
@@ -316,9 +341,9 @@ INLINE val chr(wchar_t ch)
 
 #define lit(strlit) lit_noex(strlit)
 
-#define keyword_package (*get_keyword_package())
-#define user_package (*get_user_package())
-#define system_package (*get_system_package())
+#define keyword_package (deref(get_keyword_package()))
+#define user_package (deref(get_user_package()))
+#define system_package (deref(get_system_package()))
 
 extern val system_package_var, keyword_package_var, user_package_var;
 extern val keyword_package_s, system_package_s, user_package_s;
@@ -344,7 +369,7 @@ extern val numeric_error_s, range_error_s;
 extern val query_error_s, file_error_s, process_error_s;
 extern val gensym_counter_s;
 
-#define gensym_counter (*lookup_var_l(nil, gensym_counter_s))
+#define gensym_counter (deref(lookup_var_l(nil, gensym_counter_s)))
 
 extern val nothrow_k, args_k, colon_k, auto_k;
 
@@ -378,8 +403,8 @@ val car(val cons);
 val cdr(val cons);
 val rplaca(val cons, val new_car);
 val rplacd(val cons, val new_car);
-val *car_l(val cons);
-val *cdr_l(val cons);
+loc car_l(val cons);
+loc cdr_l(val cons);
 val first(val cons);
 val rest(val cons);
 val second(val cons);
@@ -390,11 +415,11 @@ val sixth(val cons);
 val conses(val list);
 val lazy_conses(val list);
 val listref(val list, val ind);
-val *listref_l(val list, val ind);
-val *tail(val cons);
-val *lastcons(val list);
+loc listref_l(val list, val ind);
+loc tail(val cons);
+loc lastcons(val list);
 val last(val list);
-val *ltail(val *cons);
+loc ltail(loc cons);
 val pop(val *plist);
 val upop(val *plist, val *pundo);
 val push(val v, val *plist);
@@ -440,7 +465,6 @@ mem_t *chk_malloc(size_t size);
 mem_t *chk_malloc_gc_more(size_t size);
 mem_t *chk_calloc(size_t n, size_t size);
 mem_t *chk_realloc(mem_t *, size_t size);
-int in_malloc_range(mem_t *);
 wchar_t *chk_strdup(const wchar_t *str);
 val cons(val car, val cdr);
 val make_lazy_cons(val func);
@@ -453,7 +477,7 @@ val listp(val obj);
 val proper_listp(val obj);
 val length_list(val list);
 val getplist(val list, val key);
-val getplist_f(val list, val key, val *found);
+val getplist_f(val list, val key, loc found);
 val proper_plist_to_alist(val list);
 val improper_plist_to_alist(val list, val boolean_keys);
 val num(cnum val);
@@ -590,9 +614,9 @@ val symbolp(val sym);
 val symbol_name(val sym);
 val symbol_package(val sym);
 val keywordp(val sym);
-val *get_user_package(void);
-val *get_system_package(void);
-val *get_keyword_package(void);
+loc get_user_package(void);
+loc get_system_package(void);
+loc get_keyword_package(void);
 val func_f0(val, val (*fun)(val env));
 val func_f1(val, val (*fun)(val env, val));
 val func_f2(val, val (*fun)(val env, val, val));
@@ -661,7 +685,7 @@ val vector(val length, val initval);
 val vectorp(val vec);
 val vec_set_length(val vec, val fill);
 val vecref(val vec, val ind);
-val *vecref_l(val vec, val ind);
+loc vecref_l(val vec, val ind);
 val vec_push(val vec, val item);
 val length_vec(val vec);
 val size_vec(val vec);
@@ -689,9 +713,9 @@ val assoc(val key, val list);
 val assql(val key, val list);
 val acons(val car, val cdr, val list);
 val acons_new(val key, val value, val list);
-val acons_new_c(val key, val *new_p, val *list);
+val acons_new_c(val key, loc new_p, loc list);
 val aconsql_new(val key, val value, val list);
-val aconsql_new_c(val key, val *new_p, val *list);
+val aconsql_new_c(val key, loc new_p, loc list);
 val alist_remove(val list, val keys);
 val alist_remove1(val list, val key);
 val alist_nremove(val list, val keys);
@@ -787,11 +811,12 @@ INLINE val default_bool_arg(val arg)
 }
 
 #define list_collect_decl(OUT, PTAIL)           \
-  val OUT = nil, *PTAIL = &OUT
+  val OUT = nil;                                \
+  loc PTAIL = mkcloc(OUT)
 
-val *list_collect(val *pptail, val obj);
-val *list_collect_nconc(val *pptail, val obj);
-val *list_collect_append(val *pptail, val obj);
+loc list_collect(loc pptail, val obj);
+loc list_collect_nconc(loc pptail, val obj);
+loc list_collect_append(loc pptail, val obj);
 
 #define cons_bind(CAR, CDR, CONS)               \
   obj_t *c_o_n_s ## CAR ## CDR = CONS;          \

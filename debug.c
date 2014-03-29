@@ -89,15 +89,15 @@ static void show_bindings(val env, val stream)
 val debug(val form, val bindings, val data, val line, val pos, val base)
 {
   uses_or2;
-  val loc = source_loc(form);
-  cons_bind (lineno, file, loc);
+  val rl = source_loc(form);
+  cons_bind (lineno, file, rl);
 
   if (consp(data))
     data = car(data);
   else if (data == t)
     data = nil;
 
-  if (!step_mode && !memqual(loc, breakpoints) 
+  if (!step_mode && !memqual(rl, breakpoints) 
       && (debug_depth > next_depth))
   {
     return nil;
