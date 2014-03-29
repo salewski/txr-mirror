@@ -1,3 +1,9 @@
+2014-03-29  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (string_time): If possible, change the timezone in the
+	struct tm from "GMT" to "UTC", so that the time_string_utc
+	function will use UTC for the %Z format.
+
 2014-03-27  Kaz Kylheku  <kaz@kylheku.com>
 
 	Fix a bug arising from putting generation 1 objects into the

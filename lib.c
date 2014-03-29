@@ -5666,6 +5666,11 @@ static val string_time(struct tm *(*break_time_fn)(const time_t *, struct tm *),
   if (break_time_fn(&time, &broken_out_time) == 0)
     return nil;
 
+#if HAVE_TM_ZONE
+  if (strcmp(broken_out_time.TM_ZONE, "GMT") == 0)
+    broken_out_time.TM_ZONE = "UTC";
+#endif
+
   if (strftime(buffer, sizeof buffer, format, &broken_out_time) == 0)
     buffer[0] = 0;
 
