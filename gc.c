@@ -46,10 +46,10 @@
 
 #define PROT_STACK_SIZE         1024
 #define HEAP_SIZE               16384
-#define CHECKOBJ_VEC_SIZE       (2 * HEAP_SIZE)
+#define CHECKOBJ_VEC_SIZE       (8 * HEAP_SIZE)
 #define MUTOBJ_VEC_SIZE         (HEAP_SIZE / 4)
 #define FULL_GC_INTERVAL        40
-#define FRESHOBJ_VEC_SIZE       (2 * HEAP_SIZE)
+#define FRESHOBJ_VEC_SIZE       (8 * HEAP_SIZE)
 
 typedef struct heap {
   struct heap *next;

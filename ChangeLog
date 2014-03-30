@@ -1,5 +1,11 @@
 2014-03-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	* gc.c (CHECKOBJ_VEC_SIZE, FRESHOBJ_VEC_SIZE): Increase
+	to 8 * HEAP_SIZE from 2 * HEAP_SIZE to reduce frequency
+	of garbage collections.
+
+2014-03-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	* HACKING: Updating generational GC notes in light of changes.
 
 2014-03-29  Kaz Kylheku  <kaz@kylheku.com>
