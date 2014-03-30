@@ -1,5 +1,9 @@
 2014-03-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	* HACKING: Updating generational GC notes in light of changes.
+
+2014-03-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	Change to how locations are passed around, for the sake of generational
 	GC. The issue being solved here is the accuracy of the gc_set function.
 	The existing impelmentation is too conservative. It has no generation

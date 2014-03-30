@@ -712,46 +712,55 @@ and the GC doesn't realize this, it will reclaim that baby object, leaving the
 mature object with an invalid, dangling pointer.
 
 This problem is solved by identifying all such destructive operations
-in the code base, and ensuring that they either use the set macro defined in
-"lib.h" rather than straight C assignment, or the mpush macro or mut function,
-as appropriate.
+in the code base, and ensuring that they go through an appropriate interface
+rather than a direct C assignment.
 
-If TXR is not compiled for generational GC support, then the set macro
-expands to a C assignment, otherwise it expands to a call to the function
-gc_set. gc_set checks whether the assignment place looks like it might be in
-the heap.  If the assignment place is not in the heap then it must be in the
-stack, or else a static variable: places which are traversed for root
-references.  For such places, gc_set can proceed to do a straight assignment
-and return.  Secondly, gc_set checks whether the object being assigned is a
-generation 0 heap object. Non-heap objects such as string literals, fixnum
-integers and characters do not have a generation and are ignored: for these,
-the assignment is done.
+In various areas of the code base, a type called loc is used which points
+to a memory location of type val. When TXR is compiled with the ordinary
+mark-and-sweep garbage collector, the loc type is just a typedef name for
+"val *".  When TXR is compiled for generational GC support, the loc type
+becomes a structure holding a pair of values: a val * pointer called "ptr" and
+a val called "obj". The obj member holds a reference to an object, and ptr
+points to specific memory location inside that object, such as the cdr field of
+a cons cell, the element of an array or whatever.
 
-If gc_set detects that the address of generation 0 object is being written into
-what looks might be a heap location, it changes the generation of the object
-to -1 and stores in in the next available element in checkobj array.
+Any potentially unsafe assignment to a storage location inside a heap
+object is performed by obtaining a pointer to that location of type loc.
+The set macro is then used to store a value in it. Under generational GC, the
+set macro expands to the call to a function called gc_set which performs the
+necessary checks to see whether a location within a gen 1 object is being
+assigned to hold a gen 0 object.
+
+When gc_set detects that the address of gen 0 object is being written
+into the field of a gen 1 object, it changes the generation of the gen 0
+object to -1 and stores in in the next available element in checkobj array.
 The change to -1 prevents it from repeating this action for the same object
-twice since duplicates only waste space in the checkobj array. Not only
-are the duplicates wastefully visited more than once, but when checkobj is full,
-a generational GC cycle is triggered.
+twice since duplicates only waste space in the checkobj array. Not only are the
+duplicates wastefully visited more than once, but when checkobj is full, a
+generational GC cycle is triggered.
 
 During a generational gc, the checkobj array is treated as an additional root
 area, ensuring that baby objects that might be the target of a backpointer from
 generation 1 are marked and retained.
 
-In some cases, the mut macro is used. This macro is part of an alternative
-strategy for dealing with the backpointer problem.  Under the regular garbage
-collector, this macro does nothing, but under generational GC, it places
-objects into the mutobj array, which is similar to the checkobj array.  Unlike
-the checkobj array, which holds baby objects suspected of being reachable from
-generation 1, the mutobj array holds generation 1 objects which are suspected
-of referencing baby objects. Like with checkobj, object placed in mutobj
-are assigned to generation -1. In the case of mutobj, this is essential,
-in two ways. Firstly, this array must not contain duplicates, whereas
-in the case of checkobj, duplicates only waste CPU cycles.  Secondly, it is
-essential that these generation 1 objects are reassigned to -1, so that they
-are treated as babies during marking and are traversed in order to mark the
-baby objects they reference.
+In addition to set there is also mpush: a macro for pushing onto a list
+which handles the situation of gen 0 cons cell being pushed onto
+list held in a gen 1 location.
+
+In some cases, an additional macro called mut is used instead. This macro is
+part of an alternative strategy for dealing with the backpointer problem.
+Under the regular garbage collector, this macro does nothing, but under
+generational GC, it places objects into the mutobj array, which is similar to
+the checkobj array.  Unlike the checkobj array, which holds baby objects
+suspected of being reachable from generation 1, the mutobj array holds
+generation 1 objects which are suspected of referencing baby objects. Like with
+checkobj, object placed in mutobj are assigned to generation -1. In the case of
+mutobj, this is essential, in two ways. Firstly, the mutobj array must not
+contain duplicates, whereas in the case of checkobj, duplicates only waste CPU
+cycles.  Secondly, it is essential that these generation 1 objects are
+reassigned to -1, so that they are treated as babies during marking and are
+traversed in order to mark the baby objects they reference. Objects marked
+with generation 1 are not traversed during a generational GC cycle.
 
 During a generational gc, like checkobj, mutobj is treated as an additional
 root area. Because the objects have been reassigned to generation -1, they are
