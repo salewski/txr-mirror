@@ -94,7 +94,7 @@ valgrind=
 lit_align=
 extra_debugging=
 debug_support=y
-gen_gc=
+gen_gc=y
 mpi_version=1.8.6
 have_quilt=
 have_patch=
@@ -220,7 +220,7 @@ prefix [$prefix]
   Specifies root directory where the software will ultimately be installed and
   run from.
 
-install_prefix [$install_prefix]
+install-prefix [$install_prefix]
 
   Specifies an extra path prefix that will be prepended to all paths during
   installation, which allows the software to be installed in a temporary
@@ -247,7 +247,7 @@ cross [$cross]
   It should include the trailing slash, unless the \$compiler_prefix
   and \$tool_prefix variables take care of this by providing a leading slash.
 
-compiler_prefix [$compiler_prefix]
+compiler-prefix [$compiler_prefix]
 
   Specifies a prefix to be added to the compiler command.
   This is added to the \$(cross) prefix. This can include some path name
@@ -273,7 +273,7 @@ intptr [$intptr]
   value can be converted to it. If this is blank, the configure script
   will try to auto detect it.
 
-lit_align [$lit_align]
+lit-align [$lit_align]
 
   Specifies alignment for wide string literals.  This is guessed
   from the size of the wchar_t type. If your wchar_t type is two byte wide, but
@@ -291,7 +291,7 @@ inline [$inline]
   If blank, an attempt is made to auto-detect this which
   falls back on "static".
 
-tool_prefix [$tool_prefix]
+tool-prefix [$tool_prefix]
 
   Specifies a prefix to be added to tool commands other than the
   compiler, like lex and yacc, in addition to \$cross.
@@ -319,43 +319,43 @@ nm [$nm]
 
   Specifies the nm program for dumping symbols from an object file.
 
-opt_flags [$opt_flags]
+opt-flags [$opt_flags]
 
   Specifies optimization flags to use for compiling and linking
   C sources.
 
-lang_flags [$lang_flags]
+lang-flags [$lang_flags]
 
   Specifies compiler flags which control the C language dialect and standard
   conformance in the language and header files. The txr program is written
   in C90, and requires POSIX and possibly other extensions.
 
-diag_flags [$diag_flags]
+diag-flags [$diag_flags]
 
   Specifies compiler flags for obtaining extra diagnostics.
 
-debug_flags [$debug_flags]
+debug-flags [$debug_flags]
 
   Specifies flags for requesting that debugging information be
   retained in the compile and link.
 
-platform_flags [$platform_flags]
+platform-flags [$platform_flags]
 
   Specify additional compiler flags for anything else, such as CPU tuning,
   target ABI selection, code generation options, et cetera.
 
-remove_flags [$remove_flags]
+remove-flags [$remove_flags]
 
   This is a negative otpion. Any flags mentioned in this variable
   will be removed from any of the other compiler flags options above.
   The flags may contain GNU Make patterns.
 
-lex_dbg_flags [$lex_dbg_flags]
+lex-dbg-flags [$lex_dbg_flags]
 
   Specifies debug flags to be passed to lex, perhaps to generate a debugging
   scanner.
 
-txr_dbg_opts [$txr_dbg_opts]
+txr-dbg-opts [$txr_dbg_opts]
 
   Specifies debug flags to pass to the txr program during the execution
   of "make tests".
@@ -367,16 +367,18 @@ valgrind [$valgrind]
   it advises valgrind about stack memory locations accessed by the garbage
   collector, to suppress diagnostics about uninitialized accesses.
 
-extra_debugging [$extra_debugging]
+extra-debugging [$extra_debugging]
 
   Use --extra_debugging to configure some additional debugging features,
   which incur a run-time penalty.
 
-gen_gc [$gen_gc]
+gen-gc [$gen_gc]
 
-  Use --gen-gc to enable the experimental generational garbage collector.
-  This is currently disabled by default: a mark-and-sweep garbage collection
-  strategy is used which performs a full sweep.
+  Use --no-gen-gc to disable the generational garbage collector which
+  is now enabled by default.
+
+  When disabled, the garbage collector performs a full object traversal and
+  sweep on each garbage collection.
 
 !
   exit 1
@@ -387,7 +389,7 @@ fi
 #
 
 
-txr_ver=87
+txr_ver=88
 
 #
 # The all important banner.

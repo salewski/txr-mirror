@@ -1,3 +1,20 @@
+2014-04-04  Kaz Kylheku  <kaz@kylheku.com>
+
+	Version 88
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version, set date.
+
+	* configure (txr_ver): Bumped. Generational GC is now
+	enabled by default.
+
+	* txr.spec: Bumped version.
+
+	* RELNOTES: Updated
+
+	* txr.vim: Regenerated.
+
 2014-03-29  Kaz Kylheku  <kaz@kylheku.com>
 
 	* gc.c (CHECKOBJ_VEC_SIZE, FRESHOBJ_VEC_SIZE): Increase
@@ -148,8 +165,6 @@
 	* lib.c (string_time): If possible, change the timezone in the
 	struct tm from "GMT" to "UTC", so that the time_string_utc
 	function will use UTC for the %Z format.
-
-	Generational GC tweaks.
 
 2014-03-27  Kaz Kylheku  <kaz@kylheku.com>
 

@@ -1,3 +1,40 @@
+                                     TXR 88
+                                   2014-04-04
+
+
+  Features
+
+  - New TXR Lisp macros: while, unless, until.
+
+  - New functions empty and last.
+
+  - copy and length functions take hash tables now.
+
+  - Word list literals and word list quasiliterals.
+
+  - Big improvements in efficiency of generational garbage collection.
+    Situations when a backpointer to a fresh object is stored into a
+    mature object now are precisely identified, eliminating GC pressure
+    caused by conservatively wrong guesses.
+
+  - TXR is now configured to build with Generational GC by default.
+
+  Bugs
+
+  - copy and length functions handle lazy strings now.
+
+  - time-string-utc on Linux now renders %Z strftime code as "UTC" rather than
+    "GMT". Not our issue: this is a workaround for library behavior.
+
+  - Generational GC fix: a number of functions which mutate state weren't using
+    the proper set macro.
+
+  - Generational GC fix: the gc_mutated function was not correctly implemented
+    and could cause reachable objects with their GC reachability flag to
+    continue to be set after GC is done.
+
+
+
                                      TXR 87
                                    2014-03-22
 
