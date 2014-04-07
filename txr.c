@@ -68,7 +68,7 @@ static void help(void)
 "\n"
 "txr version ~a\n"
 "\n"
-"copyright 2012, Kaz Kylheku <kaz@kylheku.com>\n"
+"copyright 2014, Kaz Kylheku <kaz@kylheku.com>\n"
 "\n"
 "usage:\n"
 "\n"
