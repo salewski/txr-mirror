@@ -2805,8 +2805,8 @@ static val rangev_func(val env, val lcons)
 
   rplaca(lcons, from);
 
-  if (eql(from, to) ||
-      (to && 
+  if (numeq(from, to) ||
+      (to &&
        ((lt(from, to) && gt(next, to)) ||
         (gt(from, to) && lt(next, to)))))
   {
@@ -2839,7 +2839,7 @@ static val range_star_v_func(val env, val lcons)
 
   rplaca(lcons, from);
 
-  if (eql(next, to) ||
+  if (numeq(next, to) ||
       (to &&
        ((lt(from, to) && gt(next, to)) ||
         (gt(from, to) && lt(next, to)))))

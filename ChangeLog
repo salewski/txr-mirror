@@ -1,3 +1,8 @@
+2014-04-08  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (rangev_func, range_star_v_func): Use numeric
+	equivalence comparison for end test, rather than eql.
+
 2014-04-07  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (eql): Bugfix: not handling floating-point types!
