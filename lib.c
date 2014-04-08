@@ -1170,12 +1170,20 @@ cnum c_num(val num);
 
 val eql(val left, val right)
 {
-  /* eql is same as eq for now, but when we get bignums,
-     eql will compare different bignum objects which are
-     the same number as equal. */
-  if (type(left) == BGNUM)
+  /* eql is the same as eq except that numbers
+     are compared by value. This means that bignum and
+     floatinmg point objects which are distinct are
+     treated through the equal function. */
+  if (left == right)
+    return t;
+
+  switch (type(left)) {
+  case BGNUM:
+  case FLNUM:
     return equal(left, right);
-  return eq(left, right);
+  default:
+    return nil;
+  }
 }
 
 val equal(val left, val right)

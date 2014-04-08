@@ -1,3 +1,9 @@
+2014-04-07  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (eql): Bugfix: not handling floating-point types!
+	Two objects which are equal floating-point values must be considered
+	eql even if they are distinct objects (not eq).
+
 2014-04-04  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 88
