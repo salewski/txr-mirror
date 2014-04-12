@@ -1,3 +1,8 @@
+2014-04-11  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (make_var_shadowing_env): Remove unnecessary test for
+	colon symbol.
+
 2014-04-08  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (rangev_func, range_star_v_func): Use numeric

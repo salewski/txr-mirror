@@ -1378,14 +1378,10 @@ static val make_var_shadowing_env(val menv, val vars)
 
     for (; vars; vars = cdr(vars)) {
       val var = car(vars);
-      
-      if (consp(var)) {
-        val sym = car(var);
-        if (sym != colon_k)
-          ptail = list_collect(ptail, cons(car(var), special_s));
-      } else {
-        list_collect(ptail, cons(var, special_s));
-      }
+
+      ptail = list_collect(ptail, cons(if3(consp(var),
+                                           car(var),
+                                           var), special_s));
     }
 
     return make_env(shadows, nil, menv);
