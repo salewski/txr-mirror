@@ -41,7 +41,6 @@
 #include "unwind.h"
 #include "regex.h"
 #include "txr.h"
-#include "gc.h"
 
 #if WCHAR_MAX > 65535
 #define FULL_UNICODE

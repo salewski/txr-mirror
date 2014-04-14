@@ -43,7 +43,6 @@
 #include "lib.h"
 #include "signal.h"
 #include "unwind.h"
-#include "gc.h"
 #include "arith.h"
 #include "rand.h"
 #include "eval.h"

@@ -53,7 +53,6 @@
 #include "debug.h"
 #include "match.h"
 #include "rand.h"
-#include "filter.h"
 #include "txr.h"
 #include "combi.h"
 #include "eval.h"
