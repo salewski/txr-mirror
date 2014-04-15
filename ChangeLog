@@ -1,3 +1,8 @@
+2014-04-14  Kaz Kylheku  <kaz@kylheku.com>
+
+	* stream.c (get_line, get_char, get_byte): Fix outdated, incorrect
+	optional argument defaulting logic.
+
 2014-04-13  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c, gc.c, rand.c, regex.c, signal.c: Remove inclusion of unneeded

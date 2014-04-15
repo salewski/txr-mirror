@@ -1321,8 +1321,7 @@ val close_stream(val stream, val throw_on_error)
 
 val get_line(val stream)
 {
-  if (!stream)
-    stream = std_input;
+  stream = default_arg(stream, std_input);
 
   type_check (stream, COBJ);
   type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
@@ -1336,8 +1335,7 @@ val get_line(val stream)
 
 val get_char(val stream)
 {
-  if (!stream)
-    stream = std_input;
+  stream = default_arg(stream, std_input);
 
   type_check (stream, COBJ);
   type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
@@ -1351,8 +1349,7 @@ val get_char(val stream)
 
 val get_byte(val stream)
 {
-  if (!stream)
-    stream = std_input;
+  stream = default_arg(stream, std_input);
 
   type_check (stream, COBJ);
   type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
