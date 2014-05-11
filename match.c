@@ -1234,6 +1234,8 @@ static val do_match_line(match_line_ctx *c)
       }
       break;
     case STR:
+    case LSTR:
+    case LIT:
       {
         val newpos;
         if (!match_str(c->dataline, elem, c->pos)) {
@@ -1767,6 +1769,8 @@ static void do_output_line(val bindings, val specline, val filter, val out)
       }
       break;
     case STR:
+    case LSTR:
+    case LIT:
       put_string(elem, out);
       break;
     case 0:

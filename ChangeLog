@@ -1,3 +1,19 @@
+2014-05-10  Kaz Kylheku  <kaz@kylheku.com>
+
+	String type related bugfixes: neglecting to handle all three kinds in
+	some places. In particular, the test case
+
+	  echo : | ./txr -c '@a:@a' -
+
+	breaks because of neglected LIT in do_match_line.
+
+	* arith.c (tofloat, toint): Handle LIT type in switch.
+
+	* lib.c (ref, refset, replace, update): Handle LSTR type.
+
+	* match.c (do_match_line, do_output_line): Handle LSTR and LIT
+	objects in switch.
+
 2014-04-14  Kaz Kylheku  <kaz@kylheku.com>
 
 	* stream.c (get_line, get_char, get_byte): Fix outdated, incorrect

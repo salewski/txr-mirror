@@ -1945,6 +1945,7 @@ val tofloat(val obj)
       return obj;
     case STR:
     case LSTR:
+    case LIT:
       return flo_str(obj);
     default:
       break;
@@ -1970,6 +1971,7 @@ val toint(val obj, val base)
       return int_flo(obj);
     case STR:
     case LSTR:
+    case LIT:
       return int_str(obj, base);
     default:
       break;

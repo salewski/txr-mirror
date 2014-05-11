@@ -5017,6 +5017,7 @@ val ref(val seq, val ind)
     return listref(seq, ind);
   case LIT:
   case STR:
+  case LSTR:
     return chr_str(seq, ind);
   case VEC:
     return vecref(seq, ind);
@@ -5034,6 +5035,7 @@ val refset(val seq, val ind, val newval)
     return set(listref_l(seq, ind), newval);
   case LIT:
   case STR:
+  case LSTR:
     return chr_str_set(seq, ind, newval);
   case VEC:
     return set(vecref_l(seq, ind), newval);
@@ -5052,6 +5054,7 @@ val replace(val seq, val items, val from, val to)
     return replace_list(seq, items, from, to);
   case LIT:
   case STR:
+  case LSTR:
     return replace_str(seq, items, from, to);
   case VEC:
     return replace_vec(seq, items, from, to);
@@ -5078,6 +5081,7 @@ val update(val seq, val fun)
     break;
   case LIT:
   case STR:
+  case LSTR:
   case VEC:
     {
       val len = length(seq);
