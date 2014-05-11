@@ -1,3 +1,27 @@
+                                     TXR 89
+                                   2014-05-11
+
+
+  Bugs
+
+  - The eql function was not handling floating-point values correctly.
+
+  - The range and range* functions internally use numeric comparison for end
+    test rather than eql, so that they can step through floating-point values,
+    but use an integer boundary, or vice versa.
+
+  - Fixed broken default argument handling in get-line, get-char and get-byte.
+
+  - The functions ref, refset, replace, and update (and the DWIM brackets
+    syntax based on them) were not handling lazy strings.
+
+  - Fixed a bug in the pattern language: when a variable ends up bound
+    to the empty string, a literal empty string object was used, and
+    that was not handled in the matching language. Best illustrated
+    by the test case "echo : | ./txr -c '@a:@a' -".
+
+
+
                                      TXR 88
                                    2014-04-04
 

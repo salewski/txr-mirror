@@ -1,5 +1,19 @@
 2014-05-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 89
+
+	* txr.c (version): Bumped.
+
+	* txr.1: Bumped version, set date.
+
+	* configure (txr_ver): Bumped. 
+
+	* txr.spec: Bumped version.
+
+	* RELNOTES: Updated
+
+2014-05-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	String type related bugfixes: neglecting to handle all three kinds in
 	some places. In particular, the test case
 

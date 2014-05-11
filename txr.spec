@@ -3,7 +3,7 @@
 #
 
 Name:           txr
-Version:        88
+Version:        89
 Release:        0
 Source:         txr-%{version}.tar.gz
 URL:            http://www.nongnu.org/txr
