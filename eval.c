@@ -655,6 +655,11 @@ val apply_intrinsic(val fun, val args)
   return apply(fun, apply_frob_args(args), cons(apply_s, nil));
 }
 
+static val call(val fun, val args)
+{
+  return apply(fun, args, cons(apply_s, nil));
+}
+
 static val list_star_intrinsic(val args)
 {
   return apply_frob_args(args);
@@ -930,11 +935,6 @@ static val eval_lisp1(val form, val env, val ctx_form)
   return do_eval(form, env, ctx_form, &lookup_sym_lisp1);
 }
 
-static val eval_args(val form, val env, val ctx_form)
-{
-  return do_eval_args(form, env, ctx_form, &lookup_var);
-}
-
 static val eval_args_lisp1(val form, val env, val ctx_form)
 {
   return do_eval_args(form, env, ctx_form, &lookup_sym_lisp1);
@@ -1103,14 +1103,6 @@ out:
 static val op_lambda(val form, val env)
 {
   return func_interp(env, form);
-}
-
-static val op_call(val form, val env)
-{
-  val args = rest(form);
-  val func_form = first(args);
-  val func = eval(func_form, env, form);
-  return apply(func, eval_args(rest(args), env, form), form);
 }
 
 static val op_fun(val form, val env)
@@ -3171,7 +3163,6 @@ void eval_init(void)
   reg_op(append_each_star_s, op_each);
   reg_op(let_star_s, op_let);
   reg_op(lambda_s, op_lambda);
-  reg_op(call_s, op_call);
   reg_op(fun_s, op_fun);
   reg_op(cond_s, op_cond);
   reg_op(if_s, op_if);
@@ -3248,6 +3239,7 @@ void eval_init(void)
   reg_fun(intern(lit("mappend"), user_package), func_n1v(mappendv));
   reg_fun(intern(lit("mappend*"), user_package), func_n1v(lazy_mappendv));
   reg_fun(apply_s, func_n1v(apply_intrinsic));
+  reg_fun(call_s, func_n1v(call));
   reg_fun(intern(lit("reduce-left"), user_package), func_n4o(reduce_left, 2));
   reg_fun(intern(lit("reduce-right"), user_package), func_n4o(reduce_right, 2));
 

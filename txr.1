@@ -6620,26 +6620,18 @@ Optional arguments:
   [(lambda (x : y) (list x y)) 1] -> (1 nil)
   [(lambda (x : y) (list x y)) 1 2] -> (1 2)
 
-.SS Operator call
+.SS Function call
 
 .TP
 Syntax:
 
-  (call <function-form> {<argument-form>}*)
+  (call <function> <argument>*)
 
 .TP
 Description:
 
-The call operator invokes a function. <function-form> must evaluate
-to a function. Each <argument-form> is evaluated in left to right
-order and the resulting values are passed to the function as arguments.
-The return value of the (call ...) expression is that of the function
-applied to those arguments.
-
-The <function-form> may be any Lisp form that produces a function
-as its value: a symbol denoting a variable in which a function is stored,
-a lambda expression, a function call which returns a function,
-or (fun ...) expression.
+The call function invokes <function>, passing it the given
+arguments, if any.
 
 .TP
 Examples:

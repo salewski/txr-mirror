@@ -1,3 +1,13 @@
+2014-05-20  Kaz Kylheku  <kaz@kylheku.com>
+
+	The call operator should be a function!
+
+	* eval.c (call): New static function.
+	(eval_args, op_call): Static functions removed.
+	(eval_init): call_s registered as operator rather than function.
+
+	* txr.1: Updated.
+
 2014-05-10  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 89
