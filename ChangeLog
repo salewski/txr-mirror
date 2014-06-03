@@ -1,5 +1,12 @@
 2014-06-03  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_lisp1): Function removed.
+	(op_dwim, dwim_locs): Removing silly logic of separately calling
+	eval_lisp1 on the functor, and eval_lisp1_args on its arguments, since
+	lisp1 evaluation treats all position the same way.
+
+2014-06-03  Kaz Kylheku  <kaz@kylheku.com>
+
 	Documenting the return value of rplaca and rplacd, and changing
 	it to be the cell, rather than the new value.
 

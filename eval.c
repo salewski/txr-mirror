@@ -930,11 +930,6 @@ val eval(val form, val env, val ctx_form)
   return do_eval(form, env, ctx_form, &lookup_var);
 }
 
-static val eval_lisp1(val form, val env, val ctx_form)
-{
-  return do_eval(form, env, ctx_form, &lookup_sym_lisp1);
-}
-
 static val eval_args_lisp1(val form, val env, val ctx_form)
 {
   return do_eval_args(form, env, ctx_form, &lookup_sym_lisp1);
@@ -1458,8 +1453,9 @@ static val op_modplace(val form, val env);
 
 static loc dwim_loc(val form, val env, val op, val newform, val *retval)
 {
-  val obj = eval_lisp1(second(form), env, form);
-  val args = eval_args_lisp1(rest(rest(form)), env, form);
+  val evargs = eval_args_lisp1(rest(form), env, form);
+  val obj = first(evargs);
+  val args = rest(evargs);
 
   switch (type(obj)) {
   case LIT:
@@ -1816,9 +1812,8 @@ static val op_return_from(val form, val env)
 
 static val op_dwim(val form, val env)
 {
-  val obj = eval_lisp1(second(form), env, form);
-  val args = eval_args_lisp1(rest(rest(form)), env, form);
-  return apply(obj, args, form);
+  val args = eval_args_lisp1(cdr(form), env, form);
+  return apply(car(args), cdr(args), form);
 }
 
 static val op_catch(val form, val env)
