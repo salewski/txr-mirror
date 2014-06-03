@@ -2284,8 +2284,9 @@ static val transform_op(val forms, val syms, val rg)
         val newsyms = syms;
         val new_p;
         val cell = acons_new_c(vararg, mkcloc(new_p), mkcloc(newsyms));
-        val sym = if3(new_p, rplacd(cell, gensym(format_op_arg(vararg))),
-                             cdr(cell));
+        val sym = cdr(if3(new_p,
+                          rplacd(cell, gensym(format_op_arg(vararg))),
+                          cell));
         cons_bind (outsyms, outforms, transform_op(re, newsyms, rg)); 
         return cons(outsyms, rlcp(cons(sym, outforms), outforms));
       } else if (vararg == rest_s) {
@@ -2933,7 +2934,7 @@ static val force(val promise)
     return cdr(promise);
 
   rplaca(promise, nil);
-  return rplacd(promise, funcall(cdr(promise)));
+  return cdr(rplacd(promise, funcall(cdr(promise))));
 }
 
 static val errno_wrap(val newval)

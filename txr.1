@@ -7102,6 +7102,11 @@ is the same as the more generic (set (car x) y), and likewise
 It is an error if <cons> is not a cons or lazy cons. In particular,
 whereas (car nil) is correct, (rplaca nil ...) is erroneous.
 
+The rplaca and rplacd functions return <cons>.
+
+Note: TXR versions 89 and earlier, these functions returned the new value.
+The behavior was undocumented.
+
 .SS Functions second, third, fourth, fifth and sixth
 
 .TP

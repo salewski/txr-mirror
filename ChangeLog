@@ -1,3 +1,16 @@
+2014-06-03  Kaz Kylheku  <kaz@kylheku.com>
+
+	Documenting the return value of rplaca and rplacd, and changing
+	it to be the cell, rather than the new value.
+
+	* eval.c (transform_op): Fix use of rplacd that uses return value.
+	(force): Likewise.
+
+	* lib.c (rplaca, rplacd): Return cons.
+	(rem_lazy_rec, obj_init): Fix use of rplacd that uses return value.
+
+	* txr.1: Documented.
+
 2014-05-20  Kaz Kylheku  <kaz@kylheku.com>
 
 	The call operator should be a function!

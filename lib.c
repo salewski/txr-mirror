@@ -252,9 +252,11 @@ val rplaca(val cons, val new_car)
 {
   switch (type(cons)) {
   case CONS:
-    return set(mkloc(cons->c.car, cons), new_car);
+    set(mkloc(cons->c.car, cons), new_car);
+    return cons;
   case LCONS:
-    return set(mkloc(cons->lc.car, cons), new_car);
+    set(mkloc(cons->lc.car, cons), new_car);
+    return cons;
   default:
     type_mismatch(lit("~s is not a cons"), cons, nao);
   }
@@ -265,9 +267,11 @@ val rplacd(val cons, val new_cdr)
 {
   switch (type(cons)) {
   case CONS:
-    return set(mkloc(cons->c.cdr, cons), new_cdr);
+    set(mkloc(cons->c.cdr, cons), new_cdr);
+    return cons;
   case LCONS:
-    return set(mkloc(cons->lc.cdr, cons), new_cdr);
+    set(mkloc(cons->lc.cdr, cons), new_cdr);
+    return cons;
   default:
     type_mismatch(lit("~s is not a cons"), cons, nao);
   }
@@ -950,7 +954,7 @@ static val rem_lazy_rec(val obj, val list, val env, val func);
 static val rem_lazy_func(val env, val lcons)
 {
   cons_bind (pred, list, env);
-  return rplacd(lcons, rem_lazy_rec(pred, list, env, lcons_fun(lcons)));
+  return cdr(rplacd(lcons, rem_lazy_rec(pred, list, env, lcons_fun(lcons))));
 }
 
 static val rem_lazy_rec(val pred, val list, val env, val func)
@@ -5165,8 +5169,8 @@ static void obj_init(void)
   rplacd(gethash_c(user_package->pk.symhash, nil_string, nulloc), nil);
 
   /* t can't be interned, because intern needs t in order to do its job. */
-  t = rplacd(gethash_c(user_package->pk.symhash,
-                       lit("t"), nulloc), make_sym(lit("t")));
+  t = cdr(rplacd(gethash_c(user_package->pk.symhash,
+                           lit("t"), nulloc), make_sym(lit("t"))));
   set(mkloc(t->s.package, t), user_package);
 
   null_s = intern(lit("null"), user_package);
