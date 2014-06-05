@@ -97,7 +97,7 @@ yacc='$(cross)$(tool_prefix)$(yaccname)'
 yacc_given=
 nm='$(cross)$(tool_prefix)nm'
 opt_flags=-O2
-lang_flags='-ansi -D_BSD_SOURCE -D_XOPEN_SOURCE=500'
+lang_flags='-ansi -D_XOPEN_SOURCE=500'
 diag_flags='-Wall -Werror=implicit-function-declaration -Werror=missing-prototypes -Werror=strict-prototypes'
 debug_flags=-g
 inline=
@@ -801,6 +801,42 @@ case "$ccname" in
      fi
      ;;
 esac
+
+#
+# Detect stupid FreeBSD problem: no defined way to reveal
+# traditional BSD functions if Unix compliance is selected with
+# _XOPEN_SOURCE. Heaven help these troglodytes.
+#
+
+printf "Detecting what symbol reveals BSD functions ... "
+
+cat > conftest.c <<!
+#include <unistd.h>
+#include <stdlib.h>
+
+int main(int argc, char **argv)
+{
+  int (*pdaemon)(int, int) = &daemon;
+}
+!
+
+if conftest ; then
+  printf "none needed\n"
+else
+  for flag in _BSD_SOURCE __BSD_VISIBLE _GNU_SOURCE _X_OOPS; do
+    if [ $flag = _X_OOPS ] ; then
+      printf "failed\n"
+      break
+    fi
+    
+    if conftest EXTRA_FLAGS=-D$flag ; then
+      printf "%s\n" $flag 
+      lang_flags="$lang_flags -D$flag"
+      gen_config_make
+      break
+    fi
+  done
+fi
 
 #
 # Check for annoying warnings from ctype.h macros
@@ -1552,11 +1588,12 @@ fi
 printf "Checking for BSD daemon function ... "
 
 cat > conftest.c <<!
+#include <stdlib.h>
 #include <unistd.h>
 
 int main(int argc, char **argv)
 {
-  return daemon(0, 0);
+  int (*pdaemon)(int, int) = &daemon;
 }
 !
 if conftest ; then

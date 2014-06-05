@@ -1,3 +1,16 @@
+2014-06-05  Kaz Kylheku  <kaz@kylheku.com>
+
+	* configure (lang_flags): Removing -D_BSD_SOURCE
+	from lang_flags. Adding a test for determining
+	which flag reveals BSD functions. This is due to the
+	braindamaged way feature selection macros work on
+	FreeBSD. There is no way to say "give me only the
+	functions from a certain version of the Unix spec,
+	plus traditional BSD functions", so we have to resort to
+	using the internal symbol __BSD_VISIBLE. Also, changing
+	the detection test for daemon function to the
+	pointer-based approach.
+
 2014-06-04  Kaz Kylheku  <kaz@kylheku.com>
 
 	* configure (lang_flags): drop -D_POSIX_C_SOURCE=199309L.
