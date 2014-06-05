@@ -1,5 +1,10 @@
 2014-06-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	* configure (lang_flags): drop -D_POSIX_C_SOURCE=199309L.
+	This is subsumed by -D_XOPEN_SOURCE=500.
+
+2014-06-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	* configure: Typo in diagnostic output: wspawnlp.
 
 2014-06-04  Kaz Kylheku  <kaz@kylheku.com>
