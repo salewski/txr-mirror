@@ -1,5 +1,9 @@
 2014-06-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	* configure: Typo in diagnostic output: wspawnlp.
+
+2014-06-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	Changes for FreeBSD 9.
 
 	* configure: Use pointer-based test for timegm, because

@@ -1743,7 +1743,7 @@ else
   printf "no\n"
 fi
 
-printf "Checking for _wspawvp ... "
+printf "Checking for _wspawnlp ... "
 
 cat > conftest.c <<!
 #include "config.h"
