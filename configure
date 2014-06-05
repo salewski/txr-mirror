@@ -1419,8 +1419,7 @@ cat > conftest.c <<!
 
 int main(void)
 {
-  struct tm tms = { 0 };
-  timegm(&tms);
+  time_t (*ptgm)(struct tm *) = &timegm;
   return 0;
 }
 !

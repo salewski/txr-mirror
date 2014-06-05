@@ -1,5 +1,16 @@
 2014-06-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	Changes for FreeBSD 9.
+
+	* configure: Use pointer-based test for timegm, because
+	-Werror=implicit-function-declaration does not work in the
+	gcc 4.2 used on FreeBSD 9.
+
+	* parser.l: Check for Flex 2.5.9 and earlier which don't
+	have yylex_destroy. Thanks to Marcus Breiing.
+
+2014-06-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	* configure: Changes for building on Solaris 10 using the
 	/usr/bin/xpg4/sh shell. Solaris' /bin/sh does not like test
 	-e. Adding break to the new shell existence testing loop so we
