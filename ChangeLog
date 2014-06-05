@@ -1,5 +1,15 @@
 2014-06-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	* configure: Changes for building on Solaris 10 using the
+	/usr/bin/xpg4/sh shell. Solaris' /bin/sh does not like test
+	-e. Adding break to the new shell existence testing loop so we
+	use the first shell in the list. Solaris wants _XOPEN_SOURCE=500
+	to reveal certain functions. Fix breakage in the make utility
+	detection, and also use the $make variable everywhere instead
+	of make.
+
+2014-06-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	* configure: Defend against legacy, non-POSIX /bin/sh implementations.
 	We boostrap using #!/bin/sh, but try to detect a better shell
 	and re-execute the script with that shell. Furthermore, we now

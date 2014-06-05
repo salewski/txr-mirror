@@ -33,8 +33,9 @@
 
 if test x$txr_shell = x ; then
   for shell in /usr/xpg4/bin/sh /bin/bash /usr/bin/bash ; do
-    if test -e $shell ; then
+    if test -x $shell ; then
        txr_shell=$shell
+       break
     fi
   done
   if test x$txr_shell = x ; then
@@ -96,7 +97,7 @@ yacc='$(cross)$(tool_prefix)$(yaccname)'
 yacc_given=
 nm='$(cross)$(tool_prefix)nm'
 opt_flags=-O2
-lang_flags='-ansi -D_BSD_SOURCE -D_POSIX_C_SOURCE=199309L'
+lang_flags='-ansi -D_BSD_SOURCE -D_XOPEN_SOURCE=500 -D_POSIX_C_SOURCE=199309L'
 diag_flags='-Wall -Werror=implicit-function-declaration -Werror=missing-prototypes -Werror=strict-prototypes'
 debug_flags=-g
 inline=
@@ -437,7 +438,7 @@ if [ -z "$make" ] ; then
     output=$($make --version 2> /dev/null) || true
     set -- $output
 
-    if [ $1 != "GNU" -o $2 != "Make" ] ; then
+    if [ $# -lt 2 ] || [ $1 != "GNU" -o $2 != "Make" ] ; then
       continue
     fi
     break
@@ -658,7 +659,7 @@ cat <<! > config.h
 conftest()
 {
   rm -f ${exe-"conftest conftest.exe"} ${exe+"conftest$exe"}
-  $make conftest "$@" > conftest.err 2>&1 && [ -x conftest ] 
+  $make conftest ${@+"$@"} > conftest.err 2>&1 && [ -x conftest ] 
 }
 
 #
@@ -667,7 +668,7 @@ conftest()
 conftest_o()
 {
   rm -f conftest.o
-  $make conftest.o "$@" > conftest.err 2>&1
+  $make conftest.o ${@+"$@"} > conftest.err 2>&1
 }
 
 #
@@ -676,7 +677,7 @@ conftest_o()
 conftest_syms()
 {
   rm -f conftest.o conftest.syms
-  $make conftest.syms "$@" > conftest.err 2>&1
+  $make conftest.syms ${@+"$@"} > conftest.err 2>&1
 }
 
 
@@ -1789,7 +1790,7 @@ fi
 # Clean up
 #
 
-make conftest.clean
+$make conftest.clean
 
 #
 # What do we have for patch management.
