@@ -751,6 +751,11 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return REGCHAR;
 }
 
+<REGEX>[\\] {
+  yyerrprepf(lit("dangling backslash in regex"), nao);
+  return ERRTOK;
+}
+
 <REGEX>{UANYN}  {
   wchar_t buf[8];
   utf8_from(buf, yytext);

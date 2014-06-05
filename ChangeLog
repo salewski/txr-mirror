@@ -1,5 +1,12 @@
 2014-06-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.l: Adding an explicit lexical rule to
+	catch backslashes occurring within a regex, not followed by a
+	character. This can happen in dynamically parsed regexes
+	such as "abc\\".
+
+2014-06-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.l (yylex_destroy): Only rely on the FLEX_ version
 	numbers if they are defined. In a newer flex, they are prefixed
 	by YY_.
