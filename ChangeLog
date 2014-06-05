@@ -1,5 +1,11 @@
 2014-06-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.l (yylex_destroy): Only rely on the FLEX_ version
+	numbers if they are defined. In a newer flex, they are prefixed
+	by YY_.
+
+2014-06-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	* configure (lang_flags): Removing -D_BSD_SOURCE
 	from lang_flags. Adding a test for determining
 	which flag reveals BSD functions. This is due to the

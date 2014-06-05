@@ -71,6 +71,7 @@ val form_to_ln_hash;
 
 static val prepared_error_message;
 
+#ifdef FLEX_MAJOR_VERSION
 #define FLEX_NUM_VERSION 1000*FLEX_MAJOR_VERSION + \
                          100*FLEX_MINOR_VERSION + \
                          FLEX_SUBMINOR_VERSION
@@ -80,6 +81,7 @@ int yylex_destroy(void)
 {
   return 0;
 }
+#endif
 #endif
 
 void yyerror(const char *s)
