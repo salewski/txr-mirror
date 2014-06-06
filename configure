@@ -416,7 +416,7 @@ else
   banner_text=" Configuring txr (unknown version) "
 fi
 banner_box=$(printf "%.${#banner_text}s\n" \
-		    "-------------------------------------------")
+             "-------------------------------------------")
 printf "+%s+\n|%s|\n+%s+\n" $banner_box "$banner_text" $banner_box
 
 #
@@ -497,18 +497,18 @@ for name in prefix bindir datadir mandir; do
 
     while true ; do
       if [ -e $test_prefix ] ; then
-	if [ ! -d $test_prefix ] ; then
-	  printf "incorrect ('%s' is not a directory)!\n" $test_prefix
-	  exit 1
-	fi
-	if [ ! -w $test_prefix ] ; then
-	  printf "okay\n  (but no write access to '%s'\n" $test_prefix
+      if [ ! -d $test_prefix ] ; then
+        printf "incorrect ('%s' is not a directory)!\n" $test_prefix
+        exit 1
+      fi
+      if [ ! -w $test_prefix ] ; then
+        printf "okay\n  (but no write access to '%s'\n" $test_prefix
 
-	  printf "   so '$make install' will require root privileges)\n"
-	else
-	  printf "okay\n"
-	fi
-	break
+        printf "   so '$make install' will require root privileges)\n"
+      else
+        printf "okay\n"
+      fi
+      break
       fi
       test_prefix=$(dirname $test_prefix)
     done
@@ -1002,15 +1002,15 @@ read_syms()
       ;;
     S )
       if [ -n "$deferred_offset" ] ; then
-	size=$(( offset - deferred_offset ))
-	case "$deferred_sym" in
-	SIZEOF* )
-	  eval $(printf "%s=%d\n" "$deferred_sym" "$size")
+      size=$(( offset - deferred_offset ))
+      case "$deferred_sym" in
+      SIZEOF* )
+        eval $(printf "%s=%d\n" "$deferred_sym" "$size")
           if [ -n "$print_into_config" ] ; then
-	    printf "#define %s %s\n" "$deferred_sym" "$size" >> config.h
+          printf "#define %s %s\n" "$deferred_sym" "$size" >> config.h
           fi
-	  ;;
-	esac
+        ;;
+      esac
       fi
       deferred_sym=$symbol
       deferred_offset=$offset
@@ -1183,7 +1183,7 @@ $inline int func(void)
 !
     rm -f conftest2$exe
     if ! $make conftest2 > conftest.err 2>&1 || ! [ -x conftest2 ] ; then
-	continue
+      continue
     fi
     break
   done
