@@ -1,5 +1,32 @@
 2014-06-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	Fixing issue with list-like iteration over generic sequences,
+	namely that empty strings and vectors are not nil.
+	The nullify function is introduced. It is also exposed to
+	users, as is the existing make_like function.
+
+	* eval.c (mapcarv, mappendv, lazy_mapcar, lazy_mapcarv):
+	Use nullify to handle non-list inputs correctly.
+	(eval_init): Registering make_like and nullify as intrinsics.
+
+	* lib.c (copy_list, to_seq, list_collect_nconc, list_collect_append,
+	reverse, lazy_appendv_func, lazy_appendv, ldiff, memq, memql,
+	memqual, remq, remql, remqual, remove_if, keep_if, rem_lazy_rec,
+	remq_lazy, remql_lazy, remqual_lazy, remove_if_lazy, keep_if_lazy,
+	countqual, countql, countq, count_if, some_satisfy, all_satisfy,
+	none_satisfy, do_chain, chainv, do_and, andv, do_or, orv,
+	cat_vec, assoc, assql, mapcar, mapcon, mappend, sort, multi_sort,
+	find, find_if, posqual, posql, posq, pos, pos_if, set_diff,
+	search): Use nullify for correctness. Some functions fixed
+	so return sequence matches type of input sequence.
+	(nullify): New function.
+
+	* lib.h (nullify): Declared.
+
+	* txr.1: Documented nullify and ake-like.
+
+2014-06-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Register new search function as intrinsic.
 
 	* lib.c (search_list): New static function.

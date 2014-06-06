@@ -427,6 +427,7 @@ val copy_list(val list);
 val make_like(val list, val thatobj);
 val to_seq(val obj);
 val tolist(val seq);
+val nullify(val seq);
 val nreverse(val in);
 val reverse(val in);
 val append2(val list1, val list2);

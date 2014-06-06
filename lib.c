@@ -448,9 +448,12 @@ val push(val value, val *plist)
   /* Unsafe for mutating object fields: use mpush macro. */
   return *plist = cons(value, *plist);
 }
+
 val copy_list(val list)
 {
   list_collect_decl (out, ptail);
+
+  list = nullify(list);
 
   while (consp(list)) {
     ptail = list_collect(ptail, car(list));
@@ -495,7 +498,7 @@ val to_seq(val seq)
   case NIL:
   case CONS:
   case LCONS:
-    return seq;
+    return nullify(seq);
   default:
     return cons(seq, nil);
   }
@@ -513,6 +516,26 @@ val tolist(val seq)
   case NIL:
   case CONS:
   case LCONS:
+  default:
+    return seq;
+  }
+}
+
+val nullify(val seq)
+{
+  switch (type(seq)) {
+  case NIL:
+    return nil;
+  case CONS:
+  case LCONS:
+    return seq;
+  case LIT:
+  case STR:
+    return c_str(seq)[0] ? seq : nil;
+  case LSTR:
+    return if3(length_str_gt(seq, zero), seq, nil);
+  case VEC:
+    return if3(length_vec(seq) != zero, seq, nil);
   default:
     return seq;
   }
@@ -544,6 +567,8 @@ loc list_collect(loc ptail, val obj)
 
 loc list_collect_nconc(loc ptail, val obj)
 {
+  obj = nullify(obj);
+
   switch (type(deref(ptail))) {
   case NIL:
     set(ptail, obj);
@@ -568,6 +593,8 @@ loc list_collect_nconc(loc ptail, val obj)
 
 loc list_collect_append(loc ptail, val obj)
 {
+  obj = nullify(obj);
+
   switch (type(deref(ptail))) {
   case NIL:
     set(ptail, obj);
@@ -611,6 +638,8 @@ val reverse(val in)
 {
   val in_orig = in;
   val rev = nil;
+
+  in = nullify(in);
 
   while (in) {
     rev = cons(car(in), rev);
@@ -769,7 +798,7 @@ static val lazy_appendv_func(val env, val lcons)
   val nonempty = nil;
 
   while (lists) {
-    nonempty = pop(&lists);
+    nonempty = nullify(pop(&lists));
     if (nonempty)
       break;
   }
@@ -797,7 +826,7 @@ val lazy_appendv(val lists)
   val nonempty = nil;
 
   while (lists) {
-    nonempty = pop(&lists);
+    nonempty = nullify(pop(&lists));
     if (nonempty)
       break;
   }
@@ -815,7 +844,11 @@ val lazy_appendv(val lists)
 
 val ldiff(val list1, val list2)
 {
+  val list_orig = list1;
   list_collect_decl (out, ptail);
+
+  list1 = nullify(list1);
+  list2 = nullify(list2);
 
   switch (type(list2)) {
   case STR:
@@ -835,28 +868,34 @@ val ldiff(val list1, val list2)
     break;
   }
 
-  return out;
+  return make_like(out, list_orig);
 }
 
 val memq(val obj, val list)
 {
+  val list_orig = list;
+  list = nullify(list);
   while (list && car(list) != obj)
     list = cdr(list);
-  return list;
+  return make_like(list, list_orig);
 }
 
 val memql(val obj, val list)
 {
+  val list_orig = list;
+  list = nullify(list);
   while (list && !eql(car(list), obj))
     list = cdr(list);
-  return list;
+  return make_like(list, list_orig);
 }
 
 val memqual(val obj, val list)
 {
+  val list_orig = list;
+  list = nullify(list);
   while (list && !equal(car(list), obj))
     list = cdr(list);
-  return list;
+  return make_like(list, list_orig);
 }
 
 val remq(val obj, val list)
@@ -864,6 +903,8 @@ val remq(val obj, val list)
   list_collect_decl (out, ptail);
   val list_orig = list;
   val lastmatch = cons(nil, list);
+
+  list = nullify(list);
 
   for (; list; list = cdr(list)) {
     if (car(list) == obj) {
@@ -881,6 +922,8 @@ val remql(val obj, val list)
   val list_orig = list;
   val lastmatch = cons(nil, list);
 
+  list = nullify(list);
+
   for (; list; list = cdr(list)) {
     if (eql(car(list), obj)) {
       ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
@@ -896,6 +939,8 @@ val remqual(val obj, val list)
   list_collect_decl (out, ptail);
   val list_orig = list;
   val lastmatch = cons(nil, list);
+
+  list = nullify(list);
 
   for (; list; list = cdr(list)) {
     if (equal(car(list), obj)) {
@@ -914,6 +959,8 @@ val remove_if(val pred, val list, val key)
   val lastmatch = cons(nil, list);
 
   key = default_arg(key, identity_f);
+
+  list = nullify(list);
 
   for (; list; list = cdr(list)) {
     val subj = funcall1(key, car(list));
@@ -935,6 +982,8 @@ val keep_if(val pred, val list, val key)
   val lastmatch = cons(nil, list);
 
   key = default_arg(key, identity_f);
+
+  list = nullify(list);
 
   for (; list; list = cdr(list)) {
     val subj = funcall1(key, car(list));
@@ -972,29 +1021,29 @@ static val rem_lazy_rec(val pred, val list, val env, val func)
 
 val remq_lazy(val obj, val list)
 {
-  return rem_lazy_rec(curry_12_1(eq_f, obj), list, nil, nil);
+  return rem_lazy_rec(curry_12_1(eq_f, obj), nullify(list), nil, nil);
 }
 
 val remql_lazy(val obj, val list)
 {
-  return rem_lazy_rec(curry_12_1(eql_f, obj), list, nil, nil);
+  return rem_lazy_rec(curry_12_1(eql_f, obj), nullify(list), nil, nil);
 }
 
 val remqual_lazy(val obj, val list)
 {
-  return rem_lazy_rec(curry_12_1(equal_f, obj), list, nil, nil);
+  return rem_lazy_rec(curry_12_1(equal_f, obj), nullify(list), nil, nil);
 }
 
 val remove_if_lazy(val pred, val list, val key)
 {
   val pred_key = chain(default_arg(key, identity_f), pred, nao);
-  return rem_lazy_rec(pred_key, list, nil, nil);
+  return rem_lazy_rec(pred_key, nullify(list), nil, nil);
 }
 
 val keep_if_lazy(val pred, val list, val key)
 {
   val pred_key = chain(default_arg(key, identity_f), pred, null_f, nao);
-  return rem_lazy_rec(pred_key, list, nil, nil);
+  return rem_lazy_rec(pred_key, nullify(list), nil, nil);
 }
 
 val tree_find(val obj, val tree, val testfun)
@@ -1011,6 +1060,8 @@ val countqual(val obj, val list)
 {
   val count = zero;
 
+  list = nullify(list);
+
   for (; list; list = cdr(list))
     if (equal(car(list), obj))
       count = plus(count, one);
@@ -1022,6 +1073,8 @@ val countql(val obj, val list)
 {
   val count = zero;
 
+  list = nullify(list);
+
   for (; list; list = cdr(list))
     if (eql(car(list), obj))
       count = plus(count, one);
@@ -1032,6 +1085,8 @@ val countql(val obj, val list)
 val countq(val obj, val list)
 {
   val count = zero;
+
+  list = nullify(list);
 
   for (; list; list = cdr(list))
     if (car(list) == obj)
@@ -1045,6 +1100,7 @@ val count_if(val pred, val list, val key)
   val count = zero;
 
   key = default_arg(key, identity_f);
+  list = nullify(list);
 
   for (; list; list = cdr(list)) {
     val subj = funcall1(key, car(list));
@@ -1061,6 +1117,7 @@ val some_satisfy(val list, val pred, val key)
 {
   pred = default_arg(pred, identity_f);
   key = default_arg(key, identity_f);
+  list = nullify(list);
 
   for (; list; list = cdr(list)) {
     val item;
@@ -1077,6 +1134,7 @@ val all_satisfy(val list, val pred, val key)
 
   pred = default_arg(pred, identity_f);
   key = default_arg(key, identity_f);
+  list = nullify(list);
 
   for (; list; list = cdr(list)) {
     if ((item = funcall1(pred, funcall1(key, car(list)))) == nil)
@@ -1090,6 +1148,7 @@ val none_satisfy(val list, val pred, val key)
 {
   pred = default_arg(pred, identity_f);
   key = default_arg(key, identity_f);
+  list = nullify(list);
 
   for (; list; list = cdr(list)) {
     if (funcall1(pred, funcall1(key, car(list))))
@@ -3744,6 +3803,8 @@ static val do_chain(val fun1_list, val args)
 {
   val arg = nil;
 
+  fun1_list = nullify(fun1_list);
+
   if (fun1_list) {
     arg = apply(car(fun1_list), args, nil);
     fun1_list = cdr(fun1_list);
@@ -3776,11 +3837,13 @@ val chain(val first_fun, ...)
 
 val chainv(val funlist)
 {
-  return func_f0v(funlist, do_chain);
+  return func_f0v(nullify(funlist), do_chain);
 }
 
 static val do_and(val fun1_list, val args)
 {
+  fun1_list = nullify(fun1_list);
+
   for (; fun1_list; fun1_list = cdr(fun1_list))
     if (nilp(apply(car(fun1_list), args, nil)))
       return nil;
@@ -3809,7 +3872,7 @@ val andf(val first_fun, ...)
 
 val andv(val funlist)
 {
-  return func_f0v(funlist, do_and);
+  return func_f0v(nullify(funlist), do_and);
 }
 
 static val do_swap_12_21(val fun, val left, val right)
@@ -3824,6 +3887,8 @@ val swap_12_21(val fun)
 
 static val do_or(val fun1_list, val args)
 {
+  fun1_list = nullify(fun1_list);
+
   for (; fun1_list; fun1_list = cdr(fun1_list))
     if (apply(car(fun1_list), args, nil))
       return t;
@@ -3852,7 +3917,7 @@ val orf(val first_fun, ...)
 
 val orv(val funlist)
 {
-  return func_f0v(funlist, do_or);
+  return func_f0v(nullify(funlist), do_or);
 }
 
 static val do_iff(val env, val args)
@@ -4156,6 +4221,8 @@ val cat_vec(val list)
   size_t total = 0;
   val iter;
   val vec, *v;
+
+  list = nullify(list);
 
   for (iter = list; iter != nil; iter = cdr(iter)) {
     size_t newtot = total + c_num(length_vec(car(iter)));
@@ -4466,6 +4533,8 @@ mem_t *cptr_get(val cptr)
 
 val assoc(val key, val list)
 {
+  list = nullify(list);
+
   while (list) {
     val elem = car(list);
     if (equal(car(elem), key))
@@ -4478,6 +4547,8 @@ val assoc(val key, val list)
 
 val assql(val key, val list)
 {
+  list = nullify(list);
+
   while (list) {
     val elem = car(list);
     if (eql(car(elem), key))
@@ -4610,6 +4681,8 @@ val mapcar(val fun, val list)
   list_collect_decl (out, iter);
   val list_orig = list;
 
+  list = nullify(list);
+
   for (; list; list = cdr(list))
     iter = list_collect(iter, funcall1(fun, car(list)));
 
@@ -4621,6 +4694,8 @@ val mapcon(val fun, val list)
   list_collect_decl (out, iter);
   val list_orig = list;
 
+  list = nullify(list);
+
   for (; list; list = cdr(list))
     iter = list_collect_nconc(iter, funcall1(fun, list));
 
@@ -4631,6 +4706,8 @@ val mappend(val fun, val list)
 {
   list_collect_decl (out, iter);
   val list_orig = list;
+
+  list = nullify(list);
 
   for (; list; list = cdr(list))
     iter = list_collect_append(iter, funcall1(fun, car(list)));
@@ -4743,10 +4820,13 @@ static void sort_vec(val vec, val lessfun, val keyfun)
   quicksort(vec, lessfun, keyfun, 0, len);
 }
 
-val sort(val seq, val lessfun, val keyfun)
+val sort(val seq_in, val lessfun, val keyfun)
 {
+  val seq_orig = seq_in;
+  val seq = nullify(seq_in);
+
   if (!seq)
-    return nil;
+    return make_like(nil, seq_orig);
 
   keyfun = default_arg(keyfun, identity_f);
 
@@ -4787,7 +4867,7 @@ static val multi_sort_less(val funcs_cons, val llist, val rlist)
 
 val multi_sort(val lists, val funcs, val key_funcs)
 {
-  val tuples = mapcarv(func_n0v(identity), lists);
+  val tuples = mapcarv(func_n0v(identity), nullify(lists));
 
   key_funcs = default_bool_arg(key_funcs);
 
@@ -4805,6 +4885,8 @@ val find(val item, val list, val testfun, val keyfun)
   testfun = default_arg(testfun, equal_f);
   keyfun = default_arg(keyfun, identity_f);
 
+  list = nullify(list);
+
   for (; list; list = cdr(list)) {
     val elem = car(list);
     val key = funcall1(keyfun, elem);
@@ -4819,6 +4901,7 @@ val find(val item, val list, val testfun, val keyfun)
 val find_if(val pred, val list, val key)
 {
   key = default_arg(key, identity_f);
+  list = nullify(list);
 
   for (; list; list = cdr(list)) {
     val item = car(list);
@@ -4835,6 +4918,8 @@ val posqual(val obj, val list)
 {
   val pos = zero;
 
+  list = nullify(list);
+
   for (; list; list = cdr(list), pos = plus(pos, one))
     if (equal(car(list), obj))
       return pos;
@@ -4846,6 +4931,8 @@ val posql(val obj, val list)
 {
   val pos = zero;
 
+  list = nullify(list);
+
   for (; list; list = cdr(list), pos = plus(pos, one))
     if (eql(car(list), obj))
       return pos;
@@ -4856,6 +4943,8 @@ val posql(val obj, val list)
 val posq(val obj, val list)
 {
   val pos = zero;
+
+  list = nullify(list);
 
   for (; list; list = cdr(list), pos = plus(pos, one))
     if (car(list) == obj)
@@ -4869,6 +4958,7 @@ val pos(val item, val list, val testfun, val keyfun)
   val pos = zero;
   testfun = default_arg(testfun, equal_f);
   keyfun = default_arg(keyfun, identity_f);
+  list = nullify(list);
 
   for (; list; list = cdr(list), pos = plus(pos, one)) {
     val elem = car(list);
@@ -4886,6 +4976,7 @@ val pos_if(val pred, val list, val key)
 {
   val pos = zero;
   key = default_arg(key, identity_f);
+  list = nullify(list);
 
   for (; list; list = cdr(list), pos = plus(pos, one)) {
     val item = car(list);
@@ -4902,6 +4993,9 @@ val set_diff(val list1, val list2, val testfun, val keyfun)
 {
   list_collect_decl (out, ptail);
   val list_orig = list1;
+
+  list1 = nullify(list1);
+  list2 = nullify(list2);
 
   testfun = default_arg(testfun, equal_f);
   keyfun = default_arg(keyfun, identity_f);
@@ -5152,6 +5246,7 @@ val search(val seq, val key, val testfun, val keyfun)
 {
   testfun = default_arg(testfun, equal_f);
   keyfun = default_arg(keyfun, identity_f);
+  seq = nullify(seq);
 
   switch (type(seq)) {
   case NIL:

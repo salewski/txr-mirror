@@ -2651,9 +2651,9 @@ static val macroexpand(val form, val menv)
 val mapcarv(val fun, val list_of_lists)
 {
   if (!cdr(list_of_lists)) {
-    return mapcar(fun, car(list_of_lists));
+    return mapcar(fun, nullify(car(list_of_lists)));
   } else {
-    val lofl = copy_list(list_of_lists);
+    val lofl = mapcar(func_n1(nullify), list_of_lists);
     val list_orig = car(list_of_lists);
     list_collect_decl (out, otail);
 
@@ -2679,7 +2679,7 @@ static val mappendv(val fun, val list_of_lists)
   if (!cdr(list_of_lists)) {
     return mappend(fun, car(list_of_lists));
   } else {
-    val lofl = copy_list(list_of_lists);
+    val lofl = mapcar(func_n1(nullify), list_of_lists);
     val list_orig = car(list_of_lists);
     list_collect_decl (out, otail);
 
@@ -2716,6 +2716,7 @@ static val lazy_mapcar_func(val env, val lcons)
 
 val lazy_mapcar(val fun, val list)
 {
+  list = nullify(list);
   if (!list)
     return nil;
   return make_lazy_cons(func_f1(cons(fun, list), lazy_mapcar_func));
@@ -2744,7 +2745,7 @@ static val lazy_mapcarv(val fun, val list_of_lists)
   } else if (some_satisfy(list_of_lists, null_f, identity_f)) {
     return nil;
   } else {
-    val lofl = copy_list(list_of_lists);
+    val lofl = mapcar(func_n1(nullify), list_of_lists);
     return make_lazy_cons(func_f1(cons(fun, lofl), lazy_mapcarv_func));
   }
 }
@@ -3529,6 +3530,9 @@ void eval_init(void)
   reg_fun(intern(lit("replace"), user_package), func_n4o(replace, 2));
   reg_fun(intern(lit("update"), user_package), func_n2(update));
   reg_fun(intern(lit("search"), user_package), func_n4o(search, 2));
+
+  reg_fun(intern(lit("make-like"), user_package), func_n2(make_like));
+  reg_fun(intern(lit("nullify"), user_package), func_n1(nullify));
 
   reg_fun(intern(lit("symbol-value"), user_package), func_n1(symbol_value));
   reg_fun(intern(lit("symbol-function"), user_package), func_n1(symbol_function));

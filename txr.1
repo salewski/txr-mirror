@@ -10048,6 +10048,52 @@ The sort function is stable for sequences which are lists. This means that the
 original order of items which are considered identical is preserved.
 For strings and vectors, the sort is not stable.
 
+.SS Function make-like
+
+.TP
+Syntax:
+
+  (make-like <list> <ref-sequence>)
+
+.TP
+Description:
+
+The <list> argument must be a list.  If <ref-sequence> is a sequence type,
+then <list> is converted to the same type of sequence and returned.
+Otherwise the original <list> is returned.
+
+Note: the make-like function is a helper which supports the development of
+unoptimized versions of a generic function that accepts any type of
+sequence as input, and produces a sequence of the same type as output.
+The implementation of such a function can internally accumulate a list, and
+then convert the resulting list to the same type as an input value
+by using make-like.
+
+.SS Function nullify
+
+.TP
+Syntax:
+
+  (nullify <sequence>)
+
+.TP
+Description:
+
+The nullify function returns nil if <sequence> is an empty sequence.
+Otherwise it returns <sequence> itself.
+
+Note: the nullify function is a helper to support unoptimized generic
+programming over sequences.  Thanks to the generic behavior cdr, any
+sequence can be traversed using cdr functions, checking for the nil
+value as a terminator.  This, however, breaks for empty sequences which are not
+lists, because they are not equal to nil: to car and cdr they look like
+a one-element sequence containing nil. The nullify function reduces all empty
+sequences to nil, thereby correcting the behavior of code which traverses
+sequences using cdr, and tests for termination with nil.
+
+.TP
+
+
 .SH MATH LIBRARY
 
 .SS Arithmetic functions +, -
