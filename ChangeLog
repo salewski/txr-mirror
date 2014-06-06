@@ -1,3 +1,16 @@
+2014-06-06  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): Register new search function as intrinsic.
+
+	* lib.c (search_list): New static function.
+	(search): New function.
+
+	* lib.h (search): New function declared.
+
+	* txr.1: Documented.
+
+	* txr.vim: Regenerated.
+
 2014-06-05  Kaz Kylheku  <kaz@kylheku.com>
 
 	* parser.l: Adding an explicit lexical rule to

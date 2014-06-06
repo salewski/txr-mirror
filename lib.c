@@ -5105,6 +5105,72 @@ val update(val seq, val fun)
   return seq;
 }
 
+static val search_list(val seq, val key, val testfun, val keyfun)
+{
+  val iter, siter, kiter;
+  val pos = zero;
+
+  switch (type(key)) {
+  case NIL:
+    return pos;
+  case CONS:
+  case LCONS:
+  case LIT:
+  case STR:
+  case LSTR:
+  case VEC:
+    /* TODO: optimize me */
+    for (iter = seq; iter; iter = cdr(iter)) {
+      for (siter = iter, kiter = key;
+           siter && kiter;
+           siter = cdr(siter), kiter = cdr(kiter))
+      {
+        if (!funcall2(testfun,
+                      funcall1(keyfun, car(siter)),
+                      funcall1(keyfun, car(kiter))))
+        {
+          pos = plus(pos, one);
+          break;
+        }
+      }
+
+      if (!kiter)
+        return pos;
+
+      if (!siter)
+        break;
+    }
+    break;
+  default:
+    type_mismatch(lit("search: ~s is not a sequence"), cons, nao);
+  }
+
+  return nil;
+}
+
+val search(val seq, val key, val testfun, val keyfun)
+{
+  testfun = default_arg(testfun, equal_f);
+  keyfun = default_arg(keyfun, identity_f);
+
+  switch (type(seq)) {
+  case NIL:
+    return if3(length(key) == zero, zero, nil);
+  case CONS:
+  case LCONS:
+  case LIT:
+  case STR:
+  case LSTR:
+  case VEC:
+    /* TODO: optimize me */
+    return search_list(seq, key, testfun, keyfun);
+  default:
+    type_mismatch(lit("search: ~s is not a sequence"), cons, nao);
+  }
+
+  return seq;
+}
+
 val env(void)
 {
   if (env_list) {

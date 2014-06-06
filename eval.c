@@ -3528,6 +3528,7 @@ void eval_init(void)
   reg_fun(intern(lit("refset"), user_package), func_n3(refset));
   reg_fun(intern(lit("replace"), user_package), func_n4o(replace, 2));
   reg_fun(intern(lit("update"), user_package), func_n2(update));
+  reg_fun(intern(lit("search"), user_package), func_n4o(search, 2));
 
   reg_fun(intern(lit("symbol-value"), user_package), func_n1(symbol_value));
   reg_fun(intern(lit("symbol-function"), user_package), func_n1(symbol_function));

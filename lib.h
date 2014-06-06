@@ -744,6 +744,7 @@ val ref(val seq, val ind);
 val refset(val seq, val ind, val newval);
 val replace(val seq, val items, val from, val to);
 val update(val seq, val fun);
+val search(val seq, val key, val from, val to);
 val env(void);
 val obj_print(val obj, val stream);
 val obj_pprint(val obj, val stream);
