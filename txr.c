@@ -262,6 +262,7 @@ int txr_main(int argc, char **argv)
           }
 
           opt_arraydims = c_num(optval);
+          opt_print_bindings = 1;
         }
         break;
       case 'c':
@@ -303,6 +304,7 @@ int txr_main(int argc, char **argv)
       continue;
     } else if (equal(arg, lit("--lisp-bindings"))) {
       opt_lisp_bindings = 1;
+      opt_print_bindings = 1;
       continue;
     } else if (equal(arg, lit("--debugger"))) {
 #if CONFIG_DEBUG_SUPPORT
@@ -330,14 +332,14 @@ int txr_main(int argc, char **argv)
         case 'q':
           match_loglevel = 0;
           break;
-        case 'b':
-          opt_nobindings = 1;
+        case 'b': /* deprecated */
           break;
         case 'B':
-          opt_nobindings = -1;
+          opt_print_bindings = 1;
           break;
         case 'l':
           opt_lisp_bindings = 1;
+          opt_print_bindings = 1;
           break;
         case 'd':
 #if CONFIG_DEBUG_SUPPORT

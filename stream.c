@@ -62,8 +62,6 @@
 #include "utf8.h"
 #include "eval.h"
 
-val output_produced;
-
 val stdin_s, stdout_s, stddebug_s, stderr_s, stdnull_s;
 
 val dev_k, ino_k, mode_k, nlink_k, uid_k;
@@ -219,9 +217,6 @@ static val stdio_put_string(val stream, val str)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
 
-  if (stream != std_debug && stream != std_error)
-    output_produced = t;
-
   if (h->f != 0) {
     const wchar_t *s = c_str(str);
 
@@ -238,9 +233,6 @@ static val stdio_put_char(val stream, val ch)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
 
-  if (stream != std_debug && stream != std_error)
-    output_produced = t;
-
   return h->f != 0 && utf8_encode(c_chr(ch), stdio_put_char_callback, (mem_t *) h->f)
          ? t : stdio_maybe_error(stream, lit("writing"));
 }
@@ -248,9 +240,6 @@ static val stdio_put_char(val stream, val ch)
 static val stdio_put_byte(val stream, int b)
 {
   struct stdio_handle *h = (struct stdio_handle *) stream->co.handle;
-
-  if (stream != std_debug && stream != std_error)
-    output_produced = t;
 
   return h->f != 0 && se_putc(b, (FILE *) h->f) != EOF
          ? t : stdio_maybe_error(stream, lit("writing"));

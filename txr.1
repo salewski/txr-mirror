@@ -106,26 +106,25 @@ Invoke the interactive txr debugger. See the DEBUGGER section.
 Verbose operation. Detailed logging is enabled.
 
 .IP -b
-Suppresses the printing of variable bindings for a successful query, and the
-word .
-IR false
-for a failed query. The program still sets an appropriate
-termination status.  Bindings are implicitly suppressed if the TXR query
-performs an output operation on any file stream other than *stddebug*.
-(Internal streams like string streams do not count as output.)
+This is a deprecated option, which is silently ignored. In TXR versions
+prior to 90, the printing of variable bindings (see -B option) was
+implicit behavior which was automatically suppressed in certain situations.
+The -b option suppressed it unconditionally.
 
 .IP -B
-Force the printing of variable bindings for a successful query, and the
-word .
-IR false
-for a failed query, even if the program produced output.
+If the query is successful, print the variable bindings as a sequence
+of assignmnents in shell syntax can be evaled by a POSIX shell.
+If the query failes, print the word "false". Evaluation of this word
+by the shell has the effect of producing an unsuccessful termination
+status from the eval command.
 
 .IP "-l or --lisp-bindings"
-Print the variable bindings in Lisp syntax instead of shell syntax.
+This option implies -B. Print the variable bindings in Lisp syntax instead of
+shell syntax.
 
 .IP "-a num"
-The decimal integer argument specifies the maximum number of array dimensions
-to use for variables arising out of collect. The default is 1. Additional
+This option implies -B. The decimal integer argument specifies the maximum number of array dimensions
+to use for list-valued variable bindings. The default is 1. Additional
 dimensions are expressed using numeric suffixes in the generated variable
 names.
 For instance, consider the three-dimensional list arising out of a triply
@@ -245,15 +244,6 @@ If the command line arguments are incorrect, or the query has a malformed
 syntax, or fails to match,
 .B TXR
 issues an error diagnostic and terminates with a failed status.
-
-If the query is accepted, but fails to execute, either due to a
-semantic error or due to a mismatch against the data,
-.B TXR
-terminates with a failed status, it also prints the word
-.IR false
-on standard output. (See NOTES ON FALSE below).  Printing of false
-is suppressed if the query executed one or more @(output) directive
-directed to standard output.
 
 If the query is well-formed, and matches, then
 .B TXR
@@ -14905,38 +14895,3 @@ trailing context is deeply involved in its logic.  For single-character
 trailing contexts, it may be a good idea to use a complemented character class
 instead. That is to say, rather than (.%a)bc, consider [^a]*bc. The set of
 strings which don't contain the character a is adequately expressed by [^a]*.
-
-.SH APPENDIX B: NOTES ON FALSE
-
-The reason for printing the word
-.IR false
-on standard output when
-a query doesn't match, in addition to returning a failed termination
-status, is that the output of
-.B TXR
-may be collected by a shell script, by the application of eval to command
-substitution syntax. Printing
-.IR false
-will cause eval to evaluate the
-.IR false
-command, and thus failed status will propagate from the eval
-itself.   The eval command conceals the termination status of a
-program run via command substitution.  That is to say, if a program
-fails, without producing output, its output is substituted into the eval
-command which then succeeds, masking the failure of the program. For example:
-
-  eval "$(false)"
-
-appears successful: the false utility indicates a failed status, but
-produces no output. Eval evaluates an empty script and reports success;
-the failed status of the false program is forgotten.
-Note the difference between the above and this:
-
-  eval "$(echo false)"
-
-This command has a failed status. The echo prints the word false and succeeds;
-this false word is then evaluated as a script, and thus interpreted as the
-false command which fails. This failure
-.B is
-propagated as the result of the eval
-command.

@@ -1,3 +1,29 @@
+2014-06-09  Kaz Kylheku  <kaz@kylheku.com>
+
+	The dumping of bindings and printing of false must now
+	be explicitly requested by the -B option.
+
+	* match.c (opt_nobindings): Variable removed.
+	(opt_print_bindings): New variable.
+	(extract): Print bindings or "false" if opt_print_bindings is true.
+
+	* stream.c (output_produced): Variable removed.
+	(stdio_put_string, stdio_put_char, stdio_put_byte): Remove
+	update of output_produced.
+
+	* stream.h (output_produced): Declaration removed.
+
+	* txr.1: Documentation updated.
+
+	* txr.c (txr_main): Option 'b' does nothing. 'B', 'l', 'a',
+	and '--lisp-bindings' set opt_print_bindings to 1.
+
+	* txr.h (opt_nobindings): Declaration removed.
+	(opt_print_bindings): Declared.
+
+	* unwind.c (uw_throw): When exiting due to a query error or
+	file error, print false when opt_print_bindings is true.
+
 2014-06-06  Kaz Kylheku  <kaz@kylheku.com>
 
 	Fixing issue with list-like iteration over generic sequences,

@@ -49,7 +49,7 @@
 #include "eval.h"
 #include "match.h"
 
-int opt_nobindings = 0;
+int opt_print_bindings = 0;
 int opt_lisp_bindings = 0;
 int opt_arraydims = 1;
 
@@ -3939,7 +3939,7 @@ int extract(val spec, val files, val predefined_bindings)
                                                    predefined_bindings,
                                                    t, nil, nil)));
 
-  if ((!output_produced && opt_nobindings <= 0) || opt_nobindings < 0) {
+  if (opt_print_bindings) {
     if (bindings) {
       bindings = nreverse(bindings);
       dump_bindings(bindings);

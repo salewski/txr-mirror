@@ -25,7 +25,7 @@
  */
 
 extern int opt_loglevel;
-extern int opt_nobindings;
+extern int opt_print_bindings;
 extern int opt_lisp_bindings;
 extern int opt_arraydims;
 extern int opt_gc_debug;

@@ -54,8 +54,6 @@ struct strm_ops {
 #define std_null (deref(lookup_var_l(nil, stdnull_s)))
 loc lookup_var_l(val env, val sym);
 
-extern val output_produced;
-
 extern val dev_k, ino_k, mode_k, nlink_k, uid_k;
 extern val gid_k, rdev_k, size_k, blksize_k, blocks_k;
 extern val atime_k, mtime_k, ctime_k;
