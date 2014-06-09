@@ -106,17 +106,24 @@ tests: $(TESTS)
 	@echo "** tests passed!"
 
 tests/001/%: TXR_ARGS := $(top_srcdir)/tests/001/data
+tests/001/query-1.ok: TXR_OPTS := -B
+tests/001/query-2.ok: TXR_OPTS := -B
+tests/001/query-4.ok: TXR_OPTS := -B
 tests/002/%: TXR_OPTS := -DTESTDIR=$(top_srcdir)/tests/002
 tests/004/%: TXR_ARGS := -a 123 -b -c
 tests/005/%: TXR_ARGS := $(top_srcdir)/tests/005/data
+tests/005/%: TXR_OPTS := -B
 tests/006/%: TXR_ARGS := $(top_srcdir)/tests/006/data
+tests/006/%: TXR_OPTS := -B
 tests/008/tokenize.ok: TXR_ARGS := $(top_srcdir)/tests/008/data
 tests/008/configfile.ok: TXR_ARGS := $(top_srcdir)/tests/008/configfile
 tests/008/students.ok: TXR_ARGS := $(top_srcdir)/tests/008/students.xml
 tests/008/soundex.ok: TXR_ARGS := soundex sowndex lloyd lee jackson robert
+tests/008/filtenv.ok: TXR_OPTS := -B
 tests/009/json.ok: TXR_ARGS = $(addprefix $(top_srcdir)/tests/009/,webapp.json pass1.json)
-tests/009/json.ok: TXR_OPTS := -l
 tests/010/align-columns.ok: TXR_ARGS := $(top_srcdir)/tests/010/align-columns.dat
+tests/010/block.ok: TXR_OPTS := -B
+tests/010/reghash.ok: TXR_OPTS := -B
 
 tests/002/%: TXR_SCRIPT_ON_CMDLINE := y
 

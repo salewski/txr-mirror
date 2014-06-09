@@ -1,5 +1,11 @@
 2014-06-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	* Makefile: fix broken tests; numerous test cases output
+	bindings, and need the -B option. One test case does not
+	need the -l option which now implies -B.
+
+2014-06-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.c (txr_main): New option --args.
 	Also, put in missing check for -f being erroneously clumped.
 
