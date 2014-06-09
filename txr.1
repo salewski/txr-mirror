@@ -160,7 +160,7 @@ Example:
   # input is specified as - and the data
   # comes from shell "here document" redirection.
 
-  txr -c "@a
+  txr -B -c "@a
   @b" - <<!
   1
   2
@@ -172,7 +172,7 @@ Example:
 
 The @; comment syntax can be used for better formatting:
 
-  txr -c "@;
+  txr -B -c "@;
   @a
   @b"
 
@@ -293,7 +293,7 @@ Shell example: create a simple executable program called "twoline.txr" and
 run it. This assumes txr is installed in /usr/bin.
 
   $ cat > twoline.txr
-  #!/usr/bin/txr
+  #!/usr/bin/txr -B
   @a
   @b
   [Ctrl-D]
@@ -1919,7 +1919,7 @@ terminator.
                 2:3
                 4
 
-  Output:       a="1"
+  Output (-B):  a="1"
                 b="2"
                 c="3"
                 d="4"
@@ -2404,7 +2404,7 @@ Example:
                 5
                 6
 
-  Output:       a[0]="1"
+  Output (-B):  a[0]="1"
                 a[1]="2"
                 a[2]="3"
                 c="42"
@@ -2414,7 +2414,7 @@ the until does not advance the position, so variable c takes 42.
 
 If the @(until) is changed to @(last) the output will be different:
 
-  Output:       a[0]="1"
+  Output (-B):  a[0]="1"
                 a[1]="2"
                 a[2]="3"
                 b=5
@@ -2438,7 +2438,7 @@ Example:
                 Mary:Jane:202
                 Bob:Coder:313
 
-  Output:
+  Output (-B):
                 a[0]="John"
                 a[1]="Mary"
                 a[2]="Bob"
@@ -3248,7 +3248,7 @@ Example:
                 2
                 3
 
-  Output:       first="1"
+  Output (-B):  first="1"
                 second="2"
 
 At the point where the accept occurs, the foo block has matched the first line,
@@ -3285,7 +3285,7 @@ outside of the @(some) directive, this has the effect of terminating the
                 4
                 5
 
-  Output:       first="1"
+  Output (-B):  first="1"
                 second="2"
 
 The second clause of the @(some) directive, namely:
@@ -3323,7 +3323,7 @@ is different:
                 4
                 5
 
-  Output:       first="1"
+  Output (-B):  first="1"
                 one="1"
                 two="2"
                 three="3"
@@ -3355,7 +3355,7 @@ Example:
                 2
                 3
 
-  Output:       line1="1"
+  Output (-B):  line1="1"
                 line2="2"
                 line3="1"
 
@@ -3439,7 +3439,7 @@ and the function is called like this:
 
   @(collect_words wordlist)
 
-The result is:
+The result with txr -B is:
 
   wordlist[0]=Fine
   wordlist[1]=summer
@@ -3578,11 +3578,11 @@ Example:
                  @(end)
                  @(pair first second)
                  @(pair "ice" cream)
- 
+
   Data:          one two
                  ice milk
- 
-  Output:        first="one"
+
+  Output (-B)    first="one"
                  second="two"
                  cream="milk"
 
@@ -3625,7 +3625,7 @@ Example:
                   @(end)
                   @(which fun)
 
-  Output:         fun="vertical"
+  Output (-B):    fun="vertical"
 
 Not only does this call go to the vertical function, but
 it is in a vertical context.
@@ -3642,7 +3642,7 @@ Example:
 
   Data:           ABC
 
-  Output:         false
+  Output (-B):    false
 
 The query failed. Why? Because since @(which fun) is in horizontal mode,
 it matches characters in a line. Since the function body consists
@@ -3658,7 +3658,7 @@ Example:
 
   Data:           <empty line>
 
-  Output:         fun="horizontal"
+  Output (-B):    fun="horizontal"
 
 A call made in a clearly horizontal context will prefer the
 horizontal function, and only fall back on the vertical one
@@ -3681,7 +3681,7 @@ Example:
 
   Data:           B
 
-  Output:         fun="horizontal"
+  Output (-B):    fun="horizontal"
 
 .SS Local Variables
 
@@ -4676,9 +4676,9 @@ Example:
                 2
                 3
 
-  Output:       a=1
-                b=2
-                c=3
+  Output (-B):  a="1"
+                b="2"
+                c="3"
 
 In this example, the main clause of the try captures line "1" of the data as
 variable a, then the finally clause captures "2" as b, and then the
@@ -4697,7 +4697,7 @@ Example:
   Data:         1
                 2
 
-  Output:       b=1
+  Output (-B):  b=1
                 c=2
 
 In this example, the main clause of the try fails to match, because
@@ -4799,9 +4799,9 @@ Example:
                 2
                 3
 
-  Output:       a=1
-                b=2
-                c=3
+  Output (-B):  a="1"
+                b="2"
+                c="3"
 
 Here, the try block's main clause is terminated abruptly by a file_error
 exception from the @(next) directive.   This is handled by the
@@ -4865,7 +4865,7 @@ unbound, and if it is bound, it stays as is.
 
   Data:         honda toyota
 
-  Output:       car1="honda"
+  Output (-B):  car1="honda"
                 car2="toyota"
 
 If a catch has fewer parameters than there are throw arguments,
@@ -4876,7 +4876,7 @@ the excess arguments are ignored.
                  @(catch e (fruit))
                  @(end)
 
-  Output:        fruit="banana"
+  Output (-B):   fruit="banana"
 
 If a catch has more parameters than there are throw arguments, the excess
 parameters are left alone. They may be bound or unbound variables.
@@ -4889,7 +4889,7 @@ parameters are left alone. They may be bound or unbound variables.
 
   Data:         honda toyota
 
-  Output:       car1="honda"
+  Output (-B):  car1="honda"
                 car2="toyota"
 
 A throw argument passing a value to a catch parameter which is unbound causes
@@ -4907,7 +4907,7 @@ is done in the context of the catch.
                 @(catch e (b a))
                 @(end)
 
-   Output:      c="c"
+   Output (-B): c="c"
                 b="a"
                 a="lc"
 
