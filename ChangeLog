@@ -1,5 +1,12 @@
 2014-06-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.c (txr_main): New option --args.
+	Also, put in missing check for -f being erroneously clumped.
+
+	* txr.1: Documented.
+
+2014-06-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	The dumping of bindings and printing of false must now
 	be explicitly requested by the -B option.
 

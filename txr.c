@@ -209,6 +209,13 @@ int txr_main(int argc, char **argv)
     if (equal(arg, lit("-")))
       break;
 
+    if (match_str(arg, lit("--args"), zero) && ge(length(arg), num(7))) {
+      val sep = sub_str(arg, num(6), num(7));
+      arg = sub_str(arg, num(7), nil);
+      arg_list = append2(split_str(arg, sep), arg_list);
+      continue;
+    }
+
     if (equal(sub(arg, zero, two), lit("-D"))) {
       val dopt_arg = sub(arg, two, t);
       cons_bind(var, def, split_str(dopt_arg, lit("=")));
@@ -355,6 +362,7 @@ int txr_main(int argc, char **argv)
         case 'c':
         case 'e':
         case 'p':
+        case 'f':
         case 'D':
           format(std_error, lit("~a: option -~a does not clump\n"),
                  prog_string, opch, nao);

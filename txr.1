@@ -197,6 +197,12 @@ Prints usage summary on standard output, and terminates successfully.
 .IP --version
 Prints program version standard output, and terminates successfully.
 
+.IP --args
+The --args option provides a way to encode multiple arguments as a single
+argument, which is useful on some systems which have limitations in
+their implementation of the "hash bang" mechanism. See Hash Bang Support
+below.
+
 .IP --
 Signifies the end of the option list. This option does not combine with others, so for instance -b- does not mean -b --, but is an error.
 
@@ -284,6 +290,9 @@ an obsolescent feature.
 
 .SS Hash Bang Support
 
+TXR has several features which support use of the "hash bang" convention
+for creating apparently stand-alone executable programs.
+
 If the first line of a query begins with the characters #!,
 that entire line is deleted from the query. This allows
 for TXR queries to be turned into standalone executable programs in the POSIX
@@ -292,35 +301,67 @@ environment.
 Shell example: create a simple executable program called "twoline.txr" and
 run it. This assumes txr is installed in /usr/bin.
 
-  $ cat > twoline.txr
-  #!/usr/bin/txr -B
-  @a
-  @b
-  [Ctrl-D]
-  $ chmod a+x twoline.txr
-  $ ./twoline.txr -
-  1
-  2
-  [Ctrl-D]
-  a=1
-  b=2
+  $ cat > hello.txr
+  #!/usr/bin/txr
+  @(bind a "Hey")
+  @(output)
+  Hello, world!
+  @(end)
+  $ chmod a+x hello.txr
+  $ ./hello.txr
+  Hello, world!
 
-A script written in this manner will not pass options to txr.  For
-instance, if the above script is invoked like this
+When this plain hash bang line is used, txr receives the name of the script
+as an argument.  Therefore, it is not possible to pass additional options
+to txr.  For instance, if the above script is invoked like this
 
-  ./twoline.txr -Da=42
+  $ ./hello.txr -B
 
-the -D option isn't passed down to txr; -Da=42 is an ordinary
-argument (which the script will try to open as an input file).
-This behavior is useful if the script author wants not to
-expose the txr options to the user of the script.
+the -B option isn't processed by txr, but treated as an additional argument,
+just as if "txr <scriptname> -B" had been executed directly.
 
-However, if the hash bang line can use the -f option:
+This behavior is useful if the script author wants not to expose the txr
+options to the user of the script.
+
+However, the hash bang line can use the -f option:
 
   #!/usr/bin/txr -f
 
 Now, the name of the script is passed as an argument to the -f option,
-and TXR will look for more options after that.
+and TXR will look for more options after that, so that the resulting
+program appears to accept TXR options. Now we can run
+
+  $ ./hello.txr -B
+  Hello, world!
+  a="Hey"
+
+The -B option is honored.
+
+On some oeprating systems, it is not possible to pass more than one
+argument through the hash bang mechanism. That is to say, this will
+not work.
+
+  #!/usr/bin/txr -B -f
+
+To support systems like this, TXR supports special argument called
+--args.  With --args, it is possible to encode multiple arguments
+into one argument.  The --args option must be followed by a separator
+character, chosen by the programmer. The characters after that are
+split into multiple arguments on the separator character. The --args
+option is then removed from the argument list and replaced with these
+arguments, which are processed in its place.
+
+Example:
+
+  #!/usr/bin/txr --args:-B:-f
+
+The above has the same behavior as
+
+  #!/usr/bin/txr -B -f
+
+on a system which supports multiple arguments in hash bang.
+The separator character is the colon, and so the remainder
+of tha rgument, -B:-f, is split into the two arguments -B -f.
 
 .SS Whitespace
 
