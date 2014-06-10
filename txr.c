@@ -34,6 +34,12 @@
 #include <wchar.h>
 #include <signal.h>
 #include "config.h"
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#if HAVE_WINDOWS_H
+#include <windows.h>
+#endif
 #include "lib.h"
 #include "stream.h"
 #include "gc.h"
@@ -49,6 +55,8 @@
 
 const wchli_t *version = wli("89");
 const wchar_t *progname = L"txr";
+static const char *progname_u8;
+static val progpath = nil;
 
 /*
  * Can implement an emergency allocator here from a fixed storage
@@ -154,12 +162,81 @@ static val remove_hash_bang_line(val spec)
   }
 }
 
+#if __linux__
+static val get_self_path(void)
+{
+  char self[PATH_MAX] = { 0 };
+  int nchar = readlink("/proc/self/exe", self, sizeof self);
+
+  if (nchar < 0 || nchar >= sizeof self)
+    return nil;
+  return string_utf8(self);
+}
+#elif HAVE_WINDOWS_H
+static val get_self_path(void)
+{
+  wchar_t self[MAX_PATH] = { 0 };
+  DWORD nchar;
+
+  SetLastError(0);
+  nchar = GetModuleFilename(NULL, self, MAX_PATH);
+
+  if (nchar == 0 ||
+      (nchar == MAX_PATH &&
+       (GetLastError() == ERROR_INSUFFICIENT_BUFFER) ||
+       (self[MAX_PATH - 1] != 0)))
+    return nil;
+
+  return string(self);
+}
+#else
+static val get_self_path(void)
+{
+  char self[PATH_MAX];
+
+  if (!progname_u8)
+    return nil;
+
+  if (realpath(progname_u8, self))
+    return string_utf8(self);
+
+  return nil;
+}
+#endif
+
+static val sysroot_helper(val exepart, val target)
+{
+  if (match_str(progpath, exepart, negone))
+    return format(nil, lit("~a~a"),
+                  sub_str(progpath, 0, neg(length(exepart))),
+                  target, nao);
+  return nil;
+}
+
+static val sysroot(val target)
+{
+  uses_or2;
+  return or4(sysroot_helper(lit("bin/txr"), target),
+             sysroot_helper(lit("bin/txr.exe"), target),
+             sysroot_helper(lit("txr"), target),
+             sysroot_helper(lit("txr.exe"), target));
+}
+
+static void sysroot_init(void)
+{
+  prot1(&progpath);
+  progpath = get_self_path();
+  reg_var(intern(lit("stdlib"), user_package),
+          sysroot(lit("share/txr/stdlib")));
+}
+
 int txr_main(int argc, char **argv);
 
 int main(int argc, char **argv)
 {
   val stack_bottom = nil;
   progname = argv[0] ? utf8_dup_from(argv[0]) : progname;
+  progname_u8 = argv[0];
   init(progname, oom_realloc_handler, &stack_bottom);
   match_init();
   parse_init();
@@ -167,6 +244,7 @@ int main(int argc, char **argv)
 #if HAVE_SYSLOG
   syslog_init();
 #endif
+  sysroot_init();
   return txr_main(argc, argv);
 }
 
@@ -184,6 +262,7 @@ int txr_main(int argc, char **argv)
   prot1(&spec_file_str);
 
   setvbuf(stderr, 0, _IOLBF, 0);
+
 
   yyin_stream = std_input;
 

@@ -1,5 +1,15 @@
 2014-06-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	New variable stdlib, with a sysroot mechanism to compute
+	the path based on the "sysroot" where it is actually installed.
+
+	* txr.c (progname_8u, progpath): New static variables.
+	(get_self_path, sysroot_helper, sysroot, sysroot_init): New
+	static functions. Sysroot creates a stdlib variable.
+	(main): Initialize progname_u8 value, and call sysroot_init.
+
+2014-06-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (match_str): Extended to suffix testing, with a negative
 	start argument.
 
