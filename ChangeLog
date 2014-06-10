@@ -1,3 +1,8 @@
+2014-06-10  Kaz Kylheku  <kaz@kylheku.com>
+
+	* parser.l (yylex_destroy): The FLEX_ version are prefixed with YY_
+	in old flexes too.
+
 2014-06-09  Kaz Kylheku  <kaz@kylheku.com>
 
 	New variable stdlib, with a sysroot mechanism to compute
