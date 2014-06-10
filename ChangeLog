@@ -1,5 +1,20 @@
 2014-06-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	* Makefile (PROG): Removing ./ prefix from variable name; adding it
+	to invocations of $(PROG) in some rules.
+	(txr.o): Pass several strings as macros on the command line:
+	TXR_REL_PATH, EXE_SUFF and PROG_NAME.
+
+	* configure (bindir, datadir, mandir): These variables become
+	just relative paths from the prefix.
+
+	* txr.c (sysroot): Use the TXR_REL_PATH, EXE_SUFF and PROG_NAME
+	preprocessor symbols defined on the command line to avoid
+	hard-coding strings like "bin/txr" and "bin/txr.exe" which
+	actually should reflect the value of the bindir variable.
+
+2014-06-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.c (get_self_path): Fix spelling of GetModuleFileName.
 	Add missing parentheses in expression.
 	(sysroot_init): On Windows, filter progpath to change

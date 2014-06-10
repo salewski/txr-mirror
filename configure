@@ -76,11 +76,11 @@ help=
 #
 # config
 #
-prefix=/usr/local
+prefix='/usr/local'
 install_prefix=
-bindir='$(prefix)/bin'
-datadir='$(prefix)/share/txr'
-mandir='$(prefix)/share/man'
+bindir='bin'
+datadir='share/txr'
+mandir='share/man'
 make=
 cross=
 compiler_prefix=
@@ -244,15 +244,18 @@ install-prefix [$install_prefix]
 
 bindir [$bindir]
 
-  Specifies where the program executable will be installed.
+  Specifies where the program executable will be installed, as a relative
+  path from the prefix.
 
 datadir [$datadir]
 
-  Specifies where read-only program data is to be stored.
+  Specifies where read-only program data is to be stored, as a relative
+  path from the prefix.
 
 mandir [$mandir]
 
-  Specifies the directory where to install man pages.
+  Specifies the directory where to install man pages, as a relative
+  path from the prefix.
 
 cross [$cross]
 
@@ -467,9 +470,9 @@ fi
 
 printf "Checking installation paths:\n"
 
-for name in prefix bindir datadir mandir; do
-  eval path="\$install_prefix\${$name}"
-  printf "\$(install_prefix)\$(%s)=%s ... " $name "$path"
+for name in bindir datadir mandir; do
+  eval path="\$install_prefix\$prefix/\${$name}"
+  printf "\$(install_prefix)\$(prefix)/\$%s=%s ... " $name "$path"
   test_access=y
   case "$path" in
   " "* | *" "* | *" " )
@@ -574,14 +577,17 @@ prefix := $prefix
 # e.g. for an operating system distro.
 DESTDIR := $install_prefix
 
+# relative path from prefix to datadir
+bindir_rel := $bindir
+
 # executable directory
-bindir := $bindir
+bindir := \$(prefix)/\$(bindir_rel)
 
 # read-only data directory
-datadir := $datadir
+datadir := \$(prefix)/$datadir
 
 # man page directory
-mandir := $mandir
+mandir := \$(prefix)/$mandir
 
 # cross compiler toolchain root directory
 cross := $cross

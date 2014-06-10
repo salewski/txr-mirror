@@ -51,7 +51,7 @@ MPI_OBJS := $(addprefix mpi-$(mpi_version)/,$(MPI_OBJ_BASE))
 
 OBJS += $(MPI_OBJS)
 
-PROG := ./txr
+PROG := txr
 
 $(PROG): $(OBJS) $(OBJS-y)
 	$(CC) $(CFLAGS) -o $@ $^ -lm $(LEXLIB)
@@ -72,6 +72,12 @@ y.tab.c y.tab.h: parser.y
 # Suppress useless sccs id array and unused label warning in byacc otuput.
 # Bison-generated parser also tests for this lint define.
 y.tab.o: CFLAGS += -Dlint
+
+# txr.c needs to know the relative datadir path to do some sysroot
+# calculations.
+
+txr.o: CFLAGS += -DTXR_REL_PATH=\"$(bindir_rel)/$(PROG)$(EXE)\"
+txr.o: CFLAGS += -DEXE_SUFF=\"$(EXE)\" -DPROG_NAME=\"$(PROG)\"
 
 $(MPI_OBJS): CFLAGS += -DXMALLOC=chk_malloc -DXREALLOC=chk_realloc
 $(MPI_OBJS): CFLAGS += -DXCALLOC=chk_calloc -DXFREE=free
@@ -132,13 +138,13 @@ tests/011/%: TXR_DBG_OPTS :=
 %.ok: %.txr
 	mkdir -p $(dir $@)
 	$(if $(TXR_SCRIPT_ON_CMDLINE),\
-	  $(PROG) $(TXR_DBG_OPTS) $(TXR_OPTS) -c "$$(cat $^)" \
+	  ./$(PROG) $(TXR_DBG_OPTS) $(TXR_OPTS) -c "$$(cat $^)" \
 	    $(TXR_ARGS) > $(@:.ok=.out),\
-	  $(PROG) $(TXR_DBG_OPTS) $(TXR_OPTS) $^ $(TXR_ARGS) > $(@:.ok=.out))
+	  ./$(PROG) $(TXR_DBG_OPTS) $(TXR_OPTS) $^ $(TXR_ARGS) > $(@:.ok=.out))
 	diff -u $(^:.txr=.expected) $(@:.ok=.out)
 
 %.expected: %.txr
-	$(PROG) $(TXR_OPTS) $^ $(TXR_ARGS) > $@
+	./$(PROG) $(TXR_OPTS) $^ $(TXR_ARGS) > $@
 
 #
 # Installation macro.
@@ -178,7 +184,7 @@ install-tests:
 # Generate web page from man page
 # 
 txr-manpage.html: txr.1 genman.txr
-	man2html $< | $(PROG) genman.txr - > $@
+	man2html $< | ./$(PROG) genman.txr - > $@
 
 config.make config.h:
 	@echo "$@ missing: you didn't run ./configure"

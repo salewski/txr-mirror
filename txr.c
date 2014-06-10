@@ -217,10 +217,10 @@ static val sysroot_helper(val exepart, val target)
 static val sysroot(val target)
 {
   uses_or2;
-  return or4(sysroot_helper(lit("bin/txr"), target),
-             sysroot_helper(lit("bin/txr.exe"), target),
-             sysroot_helper(lit("txr"), target),
-             sysroot_helper(lit("txr.exe"), target));
+  return or4(sysroot_helper(lit(TXR_REL_PATH), target),
+             sysroot_helper(lit(TXR_REL_PATH EXE_SUFF), target),
+             sysroot_helper(lit(PROG_NAME), target),
+             sysroot_helper(lit(PROG_NAME EXE_SUFF), target));
 }
 
 static void sysroot_init(void)
