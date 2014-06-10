@@ -1,5 +1,25 @@
 2014-06-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Change registration of string_cmp
+	to cmp_str. Add registrations for str_eq, str_lt,
+	str_gt, str_le, and str_lt.
+
+	* lib.c (string_cmp): Name changes to cmp_str, and the
+	function fixed so that it actually works.
+	The name change doesn't affect anyone because the function
+	was too broken to use due to the incorrect type dispatch.
+	(string_lt): Name changes to str_lt.
+	(str_eq, str_gt, str_le, str_ge): New functions.
+
+	* lib.h (string_cmp, string_lt): Declarations renamed.
+	(str_eq, str_gt, str_le, str_ge): New declarations.
+
+	* txr.1: Document string-cmp to cmp-str rename, that
+	string-lt is deprecated, and the new str<, str>,
+	str>=, str<= and str= functions.
+
+2014-06-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	* Makefile (PROG): Removing ./ prefix from variable name; adding it
 	to invocations of $(PROG) in some rules.
 	(txr.o): Pass several strings as macros on the command line:

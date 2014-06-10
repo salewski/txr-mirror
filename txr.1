@@ -9075,22 +9075,6 @@ The trim-str function produces a copy of <string> from which leading and
 trailing whitespace is removed. Whitespace consists of spaces, tabs,
 carriage returns, linefeeds, vertical tabs and form feeds.
 
-.SS Function string-lt
-
-.TP
-Syntax:
-
-  (string-lt <left-str> <right-str>)
-
-.TP
-Description:
-
-The string-lt function returns t if <left-str> is lexicographically prior
-to <right-str>. The behavior does not depend on any kind of locale.
-
-Note that this function forces (fully instantiates) any lazy string arguments,
-even if doing is is not necessary.
-
 .SS Function chrp
 
 .TP
@@ -9611,17 +9595,17 @@ These functions can be used to test such as string whether it is longer
 or shorter than a given length, without forcing the string beyond
 that length.
 
-.SS Function string-cmp
+.SS Function cmp-str
 
 .TP
 Syntax:
 
-  (string-cmp <left-string> <right-string>)
+  (cmp-str <left-string> <right-string>)
 
 .TP
 Semantics:
 
-The string-cmp function returns a negative integer if <left-string>
+The cmp-str function returns a negative integer if <left-string>
 is lexicographically prior to <right-string>, and a positive integer
 if the reverse situation is the case. Otherwise the strings are equal
 and zero is returned.
@@ -9634,6 +9618,50 @@ position in which they differ.
 The lexicographic ordering is naive, based on the character code point
 values in Unicode taken as integers, without regard for locale-specific
 collation orders.
+
+.SS Functions str=, str<, str>, str>= and str<=
+
+.TP
+Syntax:
+
+  (str= <left-string> <right-string>)
+  (str< <left-string> <right-string>)
+  (str> <left-string> <right-string>)
+  (str<= <left-string> <right-string>)
+  (str>= <left-string> <right-string>)
+
+.TP
+Semantics:
+
+These functions compare <left-string> and <right-string> lexicographically,
+as if by the cmp-str function.
+
+The str= function returns t if the two strings are exactly the same, character
+for character, otherwise it returns nil.
+
+The str< function returns t if <left-string> is lexicographically before
+<right-string>, otherwise nil.
+
+The str> function returns t if <left-string> is lexicographically after
+<right-string>, otherwise nil.
+
+The str< function returns t if <left-string> is lexicographically before
+<right-string>, or if they are exactly the same, otherwise nil.
+
+The str< function returns t if <left-string> is lexicographically after
+<right-string>, or if they are exactly the same, otherwise nil.
+
+.SS Function string-lt
+
+.TP
+Syntax:
+
+  (string-lt <left-str> <right-str>)
+
+.TP
+Description:
+
+The string-lt is a deprecated alias for str<.
 
 .SH VECTORS
 

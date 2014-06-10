@@ -3446,8 +3446,13 @@ void eval_init(void)
   reg_fun(intern(lit("tok-str"), user_package), func_n3o(tok_str, 1));
   reg_fun(intern(lit("list-str"), user_package), func_n1(list_str));
   reg_fun(intern(lit("trim-str"), user_package), func_n1(trim_str));
-  reg_fun(intern(lit("string-cmp"), user_package), func_n2(string_cmp));
-  reg_fun(intern(lit("string-lt"), user_package), func_n2(string_lt));
+  reg_fun(intern(lit("cmp-str"), user_package), func_n2(cmp_str));
+  reg_fun(intern(lit("string-lt"), user_package), func_n2(str_lt));
+  reg_fun(intern(lit("str="), user_package), func_n2(str_eq));
+  reg_fun(intern(lit("str<"), user_package), func_n2(str_lt));
+  reg_fun(intern(lit("str>"), user_package), func_n2(str_gt));
+  reg_fun(intern(lit("str<="), user_package), func_n2(str_le));
+  reg_fun(intern(lit("str>="), user_package), func_n2(str_ge));
   reg_fun(intern(lit("int-str"), user_package), func_n2o(int_str, 1));
   reg_fun(intern(lit("flo-str"), user_package), func_n1(flo_str));
   reg_fun(intern(lit("num-str"), user_package), func_n1(num_str));

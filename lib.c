@@ -2499,9 +2499,9 @@ val trim_str(val str)
   }
 }
 
-val string_cmp(val astr, val bstr)
+val cmp_str(val astr, val bstr)
 {
-   switch (TYPE_PAIR(tag(astr), tag(bstr))) {
+   switch (TYPE_PAIR(type(astr), type(bstr))) {
    case TYPE_PAIR(LIT, LIT):
    case TYPE_PAIR(STR, STR):
    case TYPE_PAIR(LIT, STR):
@@ -2522,25 +2522,47 @@ val string_cmp(val astr, val bstr)
          val bch = chr_str(bstr, i);
 
          if (ach < bch)
-           return num_fast(-1);
+           return one;
          else if (ach < bch)
-           return num_fast(1);
+           return one;
        }
        if (length_str_lt(bstr, i))
-         return num_fast(-1);
+         return negone;
        if (length_str_lt(astr, i))
-         return num_fast(1);
+         return negone;
        return zero;
      }
    default:
-     uw_throwf(error_s, lit("string-cmp: invalid operands ~s ~s"),
+     uw_throwf(error_s, lit("cmp-str: invalid operands ~s ~s"),
                astr, bstr, nao);
   }
 }
 
-val string_lt(val astr, val bstr)
+val str_eq(val astr, val bstr)
 {
-  return wcscmp(c_str(astr), c_str(bstr)) < 0 ? t : nil;
+  return if2(cmp_str(astr, bstr) == zero, t);
+}
+
+val str_lt(val astr, val bstr)
+{
+  return if2(cmp_str(astr, bstr) == negone, t);
+}
+
+val str_gt(val astr, val bstr)
+{
+  return if2(cmp_str(astr, bstr) == one, t);
+}
+
+val str_le(val astr, val bstr)
+{
+  val cmp = cmp_str(astr, bstr);
+  return if2(cmp == zero || cmp == negone, t);
+}
+
+val str_ge(val astr, val bstr)
+{
+  val cmp = cmp_str(astr, bstr);
+  return if2(cmp == zero || cmp == one, t);
 }
 
 val int_str(val str, val base)
