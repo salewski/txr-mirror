@@ -51,6 +51,7 @@
 #include "debug.h"
 #include "syslog.h"
 #include "eval.h"
+#include "regex.h"
 #include "txr.h"
 
 const wchli_t *version = wli("89");
@@ -179,12 +180,12 @@ static val get_self_path(void)
   DWORD nchar;
 
   SetLastError(0);
-  nchar = GetModuleFilename(NULL, self, MAX_PATH);
+  nchar = GetModuleFileNameW(NULL, self, MAX_PATH);
 
   if (nchar == 0 ||
       (nchar == MAX_PATH &&
-       (GetLastError() == ERROR_INSUFFICIENT_BUFFER) ||
-       (self[MAX_PATH - 1] != 0)))
+       ((GetLastError() == ERROR_INSUFFICIENT_BUFFER) ||
+        (self[MAX_PATH - 1] != 0))))
     return nil;
 
   return string(self);
@@ -224,8 +225,14 @@ static val sysroot(val target)
 
 static void sysroot_init(void)
 {
+#if HAVE_WINDOWS_H
+  val slash = regex_compile(lit("\\\\"), nil);
+#endif
   prot1(&progpath);
   progpath = get_self_path();
+#if HAVE_WINDOWS_H
+  progpath = regsub(slash, lit("/"), progpath);
+#endif
   reg_var(intern(lit("stdlib"), user_package),
           sysroot(lit("share/txr/stdlib")));
 }

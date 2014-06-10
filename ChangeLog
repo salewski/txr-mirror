@@ -1,5 +1,12 @@
 2014-06-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.c (get_self_path): Fix spelling of GetModuleFileName.
+	Add missing parentheses in expression.
+	(sysroot_init): On Windows, filter progpath to change
+	backslashes to forward slashes.
+
+2014-06-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.l (yylex_destroy): The FLEX_ version are prefixed with YY_
 	in old flexes too.
 
