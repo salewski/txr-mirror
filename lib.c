@@ -2077,15 +2077,30 @@ val match_str(val bigstr, val str, val pos)
 
   pos = default_arg(pos, zero);
 
-  for (i = zero;
-       length_str_gt(bigstr, p = plus(pos, i)) && length_str_gt(str, i);
-       i = plus(i, one))
-  {
-    if (chr_str(bigstr, p) != chr_str(str, i))
-      return nil;
-  }
+  if (ge(pos, zero)) {
+    for (i = zero;
+         length_str_gt(bigstr, p = plus(pos, i)) && length_str_gt(str, i);
+         i = plus(i, one))
+    {
+      if (chr_str(bigstr, p) != chr_str(str, i))
+        return nil;
+    }
 
-  return length_str_le(str, i) ? t : nil;
+    return length_str_le(str, i) ? t : nil;
+  } else {
+    pos = plus(pos, length(bigstr));
+    pos = plus(minus(pos, length(str)), one);
+
+    for (i = minus(length(str), one);
+         ge(i, zero) && ge(p = plus(pos, i), zero);
+         i = minus(i, one))
+    {
+      if (chr_str(bigstr, p) != chr_str(str, i))
+        return nil;
+    }
+
+    return lt(i, zero) ? t : nil;
+  }
 }
 
 val match_str_tree(val bigstr, val tree, val pos)

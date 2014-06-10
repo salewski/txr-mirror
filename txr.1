@@ -8884,12 +8884,21 @@ Syntax:
 .TP
 Description:
 
-The match-str function determines how many characters of <littlestring> match a
-prefix of <bigstring>.
+Without the <start> argument, the match-str function determines whether
+<littlestring> is a prefix of <bigstring>, returning a t or nil
+indication.
 
-If the <start> argument is specified, then the function tests how many
-characters of <littlestring> match a prefix of that portion of <bigstring>
-which starts at the given position.
+If the <start> argument is specified, and is a non-negative integer, then the
+function tests whether <littlestring> matches a prefix of that portion of
+<bigstring> which starts at the given position.
+
+If the <start> argument is a negative integer, then match-str determines
+whether <littlestring> is a suffix of <bigstring>, ending on that position
+of bigstring, where -1 denotes the last character of <bigstring>,
+-2 the second last one and so on.
+
+If <start> is -1, then this corresponds to testing whether <littlestring>
+is a suffix of <bigstring>.
 
 .SS Function match-str-tree
 

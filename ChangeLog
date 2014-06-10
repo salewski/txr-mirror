@@ -1,5 +1,12 @@
 2014-06-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (match_str): Extended to suffix testing, with a negative
+	start argument.
+
+	* txr.1: Documented.
+
+2014-06-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	* Makefile: fix broken tests; numerous test cases output
 	bindings, and need the -B option. One test case does not
 	need the -l option which now implies -B.
