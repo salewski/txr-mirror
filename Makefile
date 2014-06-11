@@ -78,6 +78,7 @@ y.tab.o: CFLAGS += -Dlint
 
 txr.o: CFLAGS += -DTXR_REL_PATH=\"$(bindir_rel)/$(PROG)$(EXE)\"
 txr.o: CFLAGS += -DEXE_SUFF=\"$(EXE)\" -DPROG_NAME=\"$(PROG)\"
+txr.o: CFLAGS += -DTXR_VER=\"$(txr_ver)\"
 
 $(MPI_OBJS): CFLAGS += -DXMALLOC=chk_malloc -DXREALLOC=chk_realloc
 $(MPI_OBJS): CFLAGS += -DXCALLOC=chk_calloc -DXFREE=free
@@ -160,10 +161,29 @@ define INSTALL
 	touch -r $(2) $(3)/$(notdir $(2))
 endef
 
+PREINSTALL := :
+
 .PHONY: install
 install: $(PROG)
+	$(PREINSTALL)
 	$(call INSTALL,0755,txr,$(DESTDIR)$(bindir))
 	$(call INSTALL,0444,$(top_srcdir)/txr.1,$(DESTDIR)$(mandir)/man1)
+
+.PHONY: unixtar tar zip
+
+pax tar zip: DESTDIR=pkg
+pax tar zip: prefix=
+pax tar zip: PREINSTALL=rm -rf pkg
+
+pax: install
+	cd pkg; find . | pax -w -f ../txr-$(txr_ver)-bin.tar -x ustar .
+	compress txr-$(txr_ver)-bin.tar
+
+tar: install
+	tar -C pkg -cZf txr-$(txr_ver)-bin.tar.Z .
+
+zip: install
+	cd pkg; zip -r ../txr-$(txr_ver)-bin.zip .
 
 #
 # Install the tests as well as the script to run them

@@ -54,7 +54,7 @@
 #include "regex.h"
 #include "txr.h"
 
-const wchli_t *version = wli("89");
+const wchli_t *version = wli(TXR_VER);
 const wchar_t *progname = L"txr";
 static const char *progname_u8;
 static val progpath = nil;

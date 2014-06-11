@@ -564,6 +564,8 @@ gen_config_make()
 # derived from the txr_shell variable.
 SHELL := $txr_shell
 
+txr_ver := $txr_ver
+
 # absolute path to source code directory
 top_srcdir := $top_srcdir
 
@@ -581,13 +583,13 @@ DESTDIR := $install_prefix
 bindir_rel := $bindir
 
 # executable directory
-bindir := \$(prefix)/\$(bindir_rel)
+bindir = \$(prefix)/\$(bindir_rel)
 
 # read-only data directory
-datadir := \$(prefix)/$datadir
+datadir = \$(prefix)/$datadir
 
 # man page directory
-mandir := \$(prefix)/$mandir
+mandir = \$(prefix)/$mandir
 
 # cross compiler toolchain root directory
 cross := $cross

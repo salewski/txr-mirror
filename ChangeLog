@@ -1,3 +1,24 @@
+2014-06-11  Kaz Kylheku  <kaz@kylheku.com>
+
+	* Makefile (txr.o): Pass TXR_VER preprocessor symbol on gcc command
+	line.
+	(PREINSTALL): New variable holding a step for the install recipe.
+	(pax tar zip): New targets.
+
+	* configure (txr_ver): Version now added to config.make, passed
+	through to txr.c.
+	(gen_config_make): bindir, datadir and mandir are established
+	using gmake's regular macro assignment (=) rather than
+	expanding assignment (:=). This allows us to override the
+	prefix variable after configure time.
+
+	* lib.h (wli_noex): New macro.
+	(wli): Retarget to wli_noex, so that argument is subject
+	to macro replacement.
+
+	* txr.c (version): Use TXR_VER defined on compiler command line,
+	rather than hard-coded string literal.
+
 2014-06-10  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): Change registration of string_cmp

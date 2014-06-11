@@ -289,14 +289,15 @@ INLINE type_t type(val obj)
 typedef struct wli wchli_t;
 
 #if LIT_ALIGN < 4
-#define wli(lit) ((const wchli_t *) (L"\0" L ## lit L"\0" + 1))
+#define wli_noex(lit) ((const wchli_t *) (L"\0" L ## lit L"\0" + 1))
 #define wini(ini) L"\0" L ## ini L"\0"
 #define wref(arr) ((arr) + 1)
 #else
-#define wli(lit) ((const wchli_t *) L ## lit)
+#define wli_noex(lit) ((const wchli_t *) L ## lit)
 #define wini(ini) L ## ini
 #define wref(arr) (arr)
 #endif
+#define wli(lit) wli_noex(lit)
 
 INLINE val auto_str(const wchli_t *str)
 {
