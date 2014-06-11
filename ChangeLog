@@ -1,5 +1,19 @@
 2014-06-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 90
+
+	* txr.1: Bumped version, set date.
+
+	* configure (txr_ver): Bumped.
+
+	* txr.spec: Bumped version.
+
+	* txr.vim, dep.mk: Regenerated.
+
+	* RELNOTES: Updated
+
+2014-06-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* Makefile (txr.o): Pass TXR_VER preprocessor symbol on gcc command
 	line.
 	(PREINSTALL): New variable holding a step for the install recipe.

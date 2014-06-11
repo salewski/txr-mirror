@@ -1,3 +1,56 @@
+                                     TXR 90
+                                   2014-06-11
+
+
+  Features
+
+  - TXR has been ported to FreeBSD 9 and Solaris 10. These operating
+    systems are officially supported going forward.  TXR's configure
+    and build system has better portability support as a result.
+
+  - call operator is a function now, like it should be.
+
+  - Traling backslash in a dynamic regex is rejected as an error.
+
+  - TXR no longer automatically prints out the bindings; this must be
+    requested explicitly with -B. The -a and -l options now imply -B.
+    The -b option for suppresing the automatic printing of bindings
+    is deprecated.
+
+  - New --args option, allows multiple logical command line arguments to be
+    encoded in one physical argument which is useful in conjunction
+    with very limited hash-bang (#!) scripting mechanisms on some systems.
+
+  - New variable "stdlib" which expands to a path in the TXR installation.
+    This will allow inclusion of standard modules. The stdlib variable
+    automatically tracks relocation of the TXR installation.
+
+  - New function for searching sequences for substrings: search.
+
+  - New functions nullify and make-like for easily adapting list processing
+    functions to correctly work on vectors and strings.
+
+  - match-str function can now match from the end of a string, at various
+    negative offsets.
+
+  - New string comparison functions: str=, str<, str>, str<= and str>=.
+
+  - string-lt function deprecated, replaced by str<.
+
+  Bugs
+
+  - rplaca and rplacd now return the cell rather than assigned value,
+    and the return values are now documented.
+
+  - Fixed a widespread bug which occurs when empty strings and vectors
+    are treated as lists, due to the fact that they are not equal to
+    the nil object.
+
+  - Fixed completely broken string-cmp function, and changed its name
+    to cmp-str.
+
+
+
                                      TXR 89
                                    2014-05-11
 
