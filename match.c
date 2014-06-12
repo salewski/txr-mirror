@@ -1432,6 +1432,7 @@ static val do_txeval(val spec, val form, val bindings, val allow_unbound)
 {
   val ret = nil;
   uw_mark_frame;
+  uses_or2;
   uw_catch_begin (cons(query_error_s, nil), exc_sym, exc);
 
   if (!form)
@@ -1441,7 +1442,7 @@ static val do_txeval(val spec, val form, val bindings, val allow_unbound)
     if (!form) {
       ret = form;
     } else if (bindable(form)) {
-      val binding = assoc(form, bindings);
+      val binding = or2(assoc(form, bindings), lookup_var(nil, form));
       if (!binding) {
         if (allow_unbound)
           ret = noval_s;

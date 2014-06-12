@@ -52,6 +52,7 @@
 #include "syslog.h"
 #include "eval.h"
 #include "regex.h"
+#include "arith.h"
 #include "txr.h"
 
 const wchli_t *version = wli(TXR_VER);
@@ -235,6 +236,8 @@ static void sysroot_init(void)
 #endif
   reg_var(intern(lit("stdlib"), user_package),
           sysroot(lit("share/txr/stdlib")));
+  reg_var(intern(lit("*txr-version*"), user_package),
+          toint(lit(TXR_VER), nil));
 }
 
 int txr_main(int argc, char **argv);

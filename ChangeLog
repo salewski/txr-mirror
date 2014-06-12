@@ -1,5 +1,18 @@
 2014-06-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	* Makefile: Install share/txr/stdlib/*.txr material.
+
+	* match.c (do_txeval): If a variable is not in the bindings, fall
+	back on treating it as a TXR Lisp dynamic variable. This allows
+	us to refer to the stdlib variable from a quasistring in a
+	@(load ...) directive.
+
+	* txr.c (sysroot_init): Register new variable, *txr-version*.
+
+	* share/txr/stdlib/ver.txr: New file.
+
+2014-06-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (v_load): use the abs_path_p function instead of
 	checking for leading slash.
 
