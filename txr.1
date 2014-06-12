@@ -12452,6 +12452,42 @@ there are no files, then read from standard input:
    @line
    @(end)
 
+.SS Function abs-path-p
+
+.TP
+Syntax:
+
+  (abs-path-p <path>)
+
+.TP
+Description:
+
+The abs-path-function whether the argument <path> is an absolute path.
+If this is true, it returns t, otherwise nil.
+
+An absolute path is a string which either begins with a slash or backslash
+character, or which begins with an alphanumeric word, followed by a colon,
+followed by a slash or backslash.
+
+Examples of absolute paths:
+
+  /etc
+
+  c:/tmp
+
+  ftp://user@server
+
+  disk0:/home
+
+  Z:\eUsers
+
+Examples of strings which are not absolute paths.
+
+  (the empty string)
+  .
+  abc
+  foo:bar/x
+  $:\eabc
 
 .SS Function read
 

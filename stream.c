@@ -61,6 +61,7 @@
 #include "stream.h"
 #include "utf8.h"
 #include "eval.h"
+#include "regex.h"
 
 val stdin_s, stdout_s, stddebug_s, stderr_s, stdnull_s;
 
@@ -2690,6 +2691,25 @@ static val open_files_star(val file_list, val substitute_stream)
 
 #endif
 
+val abs_path_p(val path)
+{
+  static val reg;
+  val ch;
+
+  if (length(path) == zero)
+    return nil;
+  if ((ch = chr_str(path, zero)) == chr('/') || ch == chr('\\'))
+    return t;
+
+  if (!reg)
+    reg = regex_compile(lit("[A-Za-z0-9]+:[/\\\\]"), nil);
+
+  if (match_regex(path, reg, zero))
+    return t;
+
+  return nil;
+}
+
 void stream_init(void)
 {
   protect(&std_input, &std_output, &std_debug, &std_error, &std_null, (val *) 0);
@@ -2842,4 +2862,5 @@ void stream_init(void)
   reg_fun(intern(lit("rename-path"), user_package), func_n2(rename_path));
   reg_fun(intern(lit("open-files"), user_package), func_n2o(open_files, 1));
   reg_fun(intern(lit("open-files*"), user_package), func_n2o(open_files_star, 1));
+  reg_fun(intern(lit("abs-path-p"), user_package), func_n1(abs_path_p));
 }

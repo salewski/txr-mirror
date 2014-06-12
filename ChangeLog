@@ -1,3 +1,17 @@
+2014-06-12  Kaz Kylheku  <kaz@kylheku.com>
+
+	* match.c (v_load): use the abs_path_p function instead of
+	checking for leading slash.
+
+	* stream.c (abs_path_p): New function.
+	(stream_init): Register abs_path_p as abs-path-p.
+
+	* stream.h (abs_path_p): Declared.
+
+	* txr.1: Documented abs-path-p.
+
+	* dep.mk: Updated.
+
 2014-06-11  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 90

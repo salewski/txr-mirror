@@ -113,5 +113,6 @@ val mknod_wrap(val path, val mode, val dev);
 val symlink_wrap(val target, val to);
 val link_wrap(val target, val to);
 val readlink_wrap(val path);
+val abs_path_p(val path);
 
 void stream_init(void);
