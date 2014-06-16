@@ -3535,6 +3535,8 @@ void eval_init(void)
   reg_fun(intern(lit("replace"), user_package), func_n4o(replace, 2));
   reg_fun(intern(lit("update"), user_package), func_n2(update));
   reg_fun(intern(lit("search"), user_package), func_n4o(search, 2));
+  reg_fun(intern(lit("where"), user_package), func_n2(where));
+  reg_fun(intern(lit("select"), user_package), func_n2(sel));
 
   reg_fun(intern(lit("make-like"), user_package), func_n2(make_like));
   reg_fun(intern(lit("nullify"), user_package), func_n1(nullify));

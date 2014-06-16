@@ -1,5 +1,18 @@
 2014-06-15  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): where and sel registered as intrinsics
+	where and select.
+
+	* lib.c (generic_funcall): Support a sequence as an argument
+	to a sequence.
+	(where, sel): New functions.
+
+	* lib.h (where, sel): Declared.
+
+	* txr.1: Documented.
+
+2014-06-15  Kaz Kylheku  <kaz@kylheku.com>
+
 	Bugfix: range and range* broken when "to" argument is
 	omitted. This was broken in version 89, by the
 	2014-04-08 commit.

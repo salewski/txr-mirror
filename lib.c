@@ -3391,8 +3391,14 @@ val generic_funcall(val fun, val arg[], int nargs)
     case 0:
       uw_throw(error_s, lit("call: missing required arguments"));
     case 1:
-      if (consp(arg[0]))
-        return sub(fun, car(arg[0]), cdr(arg[0]));
+      if (consp(arg[0])) {
+        cons_bind (x, y, arg[0]);
+        if (atom(y))
+          return sub(fun, x, y);
+        return sel(fun, arg[0]);
+      }
+      if (vectorp(arg[0]))
+        return sel(fun, arg[0]);
       return ref(fun, arg[0]);
     case 2:
       return sub(fun, arg[0], arg[1]);
@@ -5301,6 +5307,63 @@ val search(val seq, val key, val testfun, val keyfun)
   }
 
   return seq;
+}
+
+val where(val seq_in, val func)
+{
+  list_collect_decl (out, ptail);
+  val seq = nullify(seq_in);
+  val idx = zero;
+
+  for (; seq; seq = cdr(seq), idx = plus(idx, one)) {
+    val elt = car(seq);
+    if (funcall1(func, elt))
+      list_collect(ptail, idx);
+  }
+
+  return out;
+}
+
+val sel(val seq_in, val where_in)
+{
+  list_collect_decl (out, ptail);
+  val seq = nullify(seq_in);
+  val where = nullify(where_in);
+
+  switch (type(seq)) {
+  case NIL:
+    return nil;
+  case CONS:
+  case LCONS:
+    {
+      val idx = zero;
+
+      for (; seq && where; seq = cdr(seq), idx = plus(idx, one)) {
+        val wh;
+
+        do {
+          wh = car(where);
+          where = cdr(where);
+        } while (lt(wh, idx));
+
+        if (eql(wh, idx))
+          list_collect (ptail, car(seq));
+      }
+    }
+    break;
+  default:
+    {
+      val len = length(seq);
+      for (; where; where = cdr(where)) {
+        val wh = car(where);
+        if (ge(wh, len))
+          break;
+        list_collect (ptail, ref(seq, car(where)));
+      }
+    }
+    break;
+  }
+  return make_like(out, seq_in);
 }
 
 val env(void)

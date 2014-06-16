@@ -5530,9 +5530,18 @@ Example 2:
 
   (call '(1 2 3 4) 1..3) -> (2 3)
 
-Here, the shorthand 1 .. 3 denotes (cons 1 3). This is treated just like
-(call '(1 2 3 4) 1 3), which performs range extraction: taking a slice
-of the list starting at index 1, up to and not including index 3.
+Here, the shorthand 1 .. 3 denotes (cons 1 3). A cons cell as an argument
+to a sequence performs range extraction: taking a slice starting at
+index 1, up to and not including index 3, as if by the call
+(sub '(1 2 3 4) 1 3).
+
+.TP
+Example 3:
+
+  (call '(1 2 3 4) '(0 2)) -> (1 2)
+
+A list of indices applied to a sequence is equivalent to using the
+select function, as if (select '(1 2 3 4) '(0 2)) were called.
 
 .SS Special Variables
 
@@ -6080,6 +6089,12 @@ using (sub-str <string> <from-index> <to-below-index>).
 The range of elements is specified in the car and cdr fields of a cons cell,
 for which the .. (dotdot) syntactic sugar is useful.
 See the section on Indexing below.
+
+.IP [<sequence> <index-list>]
+This is equivalent to (select <sequence> <index-list>). Elements specified
+by <index-list> are extracted from <sequence> and returned as a sequence
+of the same kind as <sequence>. See the description of the sequence function
+for the exact semantics.
 
 .IP "[<hash-table> <key> <default-value>]"
 Retrieve a value from the hash table corresponding to <key>,
@@ -7720,6 +7735,47 @@ which is applied to the successive comparison keys pulled from the list
 by applying the key function to successive elements. The position of
 the first element for which the predicate function yields true is returned. If
 no such element is found, nil is returned.
+
+.SS Function where
+
+.TP
+Syntax:
+
+  (where <sequence> <function>)
+
+.TP
+Description:
+
+The where function searches <sequence> for elements which satisfy <function>,
+and returns a list of the numeric indices of those elements within
+<sequence>, in order of increasing index.
+
+<function> must be a function that can be called with one argument.
+For each element of <sequence>, <function> is called with that element
+as an argument.  If a non-nil value is returned, then the zero-based index of
+that element is added to a list. Finally, the list is returned.
+
+.SS Function select
+
+.TP
+Syntax:
+
+  (select <sequence> <index-list>)
+
+.TP
+Description:
+
+The select function returns a sequence, of the same kind as <sequence>,
+which consists of those elements of sequence which are identified by
+the numeric indices in <index-list>.
+
+The select function stops processing <sequence> upon encountering
+an index inside <index-list> which is out of range.
+
+If <sequence> is a list, then <index-list> must contain montonically increasing
+numeric values, even if no value is out of range, since the <select> function
+makes a single pass through the list based on the assumption that indices
+are ordered.
 
 .SS Function tree-find
 
