@@ -377,7 +377,7 @@ extern val nothrow_k, args_k, colon_k, auto_k;
 extern val null_string;
 extern val null_list; /* (nil) */
 
-extern val identity_f, equal_f, eql_f, eq_f, car_f, cdr_f, null_f;
+extern val identity_f, equal_f, eql_f, eq_f, gt_f, lt_f, car_f, cdr_f, null_f;
 
 
 extern const wchar_t *progname;
@@ -426,9 +426,10 @@ val upop(val *plist, val *pundo);
 val push(val v, val *plist);
 val copy_list(val list);
 val make_like(val list, val thatobj);
-val to_seq(val obj);
+val toseq(val obj);
 val tolist(val seq);
 val nullify(val seq);
+val seqp(val obj);
 val nreverse(val in);
 val reverse(val in);
 val append2(val list1, val list2);
@@ -736,11 +737,15 @@ val sort(val seq, val lessfun, val keyfun);
 val multi_sort(val lists, val funcs, val key_funcs);
 val find(val list, val key, val testfun, val keyfun);
 val find_if(val pred, val list, val key);
+val find_max(val seq, val testfun, val keyfun);
+val find_min(val seq, val testfun, val keyfun);
 val posqual(val obj, val list);
 val posql(val obj, val list);
 val posq(val obj, val list);
 val pos(val list, val key, val testfun, val keyfun);
 val pos_if(val pred, val list, val key);
+val pos_max(val seq, val testfun, val keyfun);
+val pos_min(val seq, val testfun, val keyfun);
 val set_diff(val list1, val list2, val testfun, val keyfun);
 val copy(val seq);
 val length(val seq);

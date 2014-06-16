@@ -96,7 +96,7 @@ val null_string;
 val nil_string;
 val null_list;
 
-val identity_f, equal_f, eql_f, eq_f, car_f, cdr_f, null_f;
+val identity_f, equal_f, eql_f, eq_f, gt_f, lt_f, car_f, cdr_f, null_f;
 
 val prog_string;
 
@@ -488,7 +488,7 @@ val make_like(val list, val thatobj)
   return list;
 }
 
-val to_seq(val seq)
+val toseq(val seq)
 {
   switch (type(seq)) {
   case VEC:
@@ -538,6 +538,22 @@ val nullify(val seq)
     return if3(length_vec(seq) != zero, seq, nil);
   default:
     return seq;
+  }
+}
+
+val seqp(val obj)
+{
+  switch (type(obj)) {
+  case NIL:
+  case CONS:
+  case LCONS:
+  case VEC:
+  case STR:
+  case LSTR:
+  case LIT:
+    return t;
+  default:
+    return nil;
   }
 }
 
@@ -2220,7 +2236,7 @@ val sub_str(val str_in, val from, val to)
 
 val replace_str(val str_in, val items, val from, val to)
 {
-  val itseq = to_seq(items);
+  val itseq = toseq(items);
   val len = length_str(str_in);
   val len_it = length(itseq);
   val len_rep;
@@ -4184,7 +4200,7 @@ val sub_vec(val vec_in, val from, val to)
 
 val replace_vec(val vec_in, val items, val from, val to)
 {
-  val it_seq = to_seq(items);
+  val it_seq = toseq(items);
   val len = length_vec(vec_in);
   val len_it = length(it_seq);
   val len_rep;
@@ -4941,6 +4957,38 @@ val find(val item, val list, val testfun, val keyfun)
   return nil;
 }
 
+val find_max(val seq_in, val testfun, val keyfun)
+{
+  val seq = nullify(seq_in);
+  val maxkey;
+  val maxelt;
+
+  if (!seq)
+    return nil;
+
+  testfun = default_arg(testfun, gt_f);
+  keyfun = default_arg(keyfun, identity_f);
+
+  maxelt = car(seq_in);
+  maxkey = funcall1(keyfun, maxelt);
+
+  for (seq = cdr(seq); seq; seq = cdr(seq)) {
+    val elt = car(seq);
+    val key = funcall1(keyfun, elt);
+    if (funcall2(testfun, key, maxkey)) {
+      maxkey = key;
+      maxelt = elt;
+    }
+  }
+
+  return maxelt;
+}
+
+val find_min(val seq, val testfun, val keyfun)
+{
+  return find_max(seq, default_arg(testfun, lt_f), keyfun);
+}
+
 val find_if(val pred, val list, val key)
 {
   key = default_arg(key, identity_f);
@@ -5030,6 +5078,38 @@ val pos_if(val pred, val list, val key)
   }
 
   return nil;
+}
+
+val pos_max(val seq_in, val testfun, val keyfun)
+{
+  val pos = zero;
+  val seq = nullify(seq_in);
+  val maxkey;
+  val maxpos = zero;
+
+  if (!seq)
+    return nil;
+
+  testfun = default_arg(testfun, gt_f);
+  keyfun = default_arg(keyfun, identity_f);
+
+  maxkey = funcall1(keyfun, car(seq));
+
+  for (seq = cdr(seq); seq; seq = cdr(seq)) {
+    val key = funcall1(keyfun, car(seq));
+    pos = plus(pos, one);
+    if (funcall2(testfun, key, maxkey)) {
+      maxkey = key;
+      maxpos = pos;
+    }
+  }
+
+  return maxpos;
+}
+
+val pos_min(val seq, val testfun, val keyfun)
+{
+  return pos_max(seq, default_arg(testfun, lt_f), keyfun);
 }
 
 val set_diff(val list1, val list2, val testfun, val keyfun)
@@ -5409,7 +5489,8 @@ static void obj_init(void)
 
   protect(&packages, &system_package_var, &keyword_package_var,
           &user_package_var, &null_string, &nil_string,
-          &null_list, &equal_f, &eq_f, &eql_f, &car_f, &cdr_f, &null_f,
+          &null_list, &equal_f, &eq_f, &eql_f, &gt_f, &lt_f,
+          &car_f, &cdr_f, &null_f,
           &identity_f, &prog_string, &env_list,
           (val *) 0);
 
@@ -5535,6 +5616,8 @@ static void obj_init(void)
   equal_f = func_n2(equal);
   eq_f = func_n2(eq);
   eql_f = func_n2(eql);
+  gt_f = func_n2(gt);
+  lt_f = func_n2(lt);
   identity_f = func_n1(identity);
   car_f = func_n1(car);
   cdr_f = func_n1(cdr);

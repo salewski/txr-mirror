@@ -1,3 +1,23 @@
+2014-06-16  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): Register pos_max, pos_min, find_max,
+	find_min and seqp as intrinsics.
+
+	* lib.c (gt_f, lt_f): New variables.
+	(to_seq): renamed to toseq.
+	(seqp): New function.
+	(minmax): New static function.
+	(replace_str, replace_vec): Follow to_seq renaming.
+	(find_max, find_min, pos_max, pos_min): New functions.
+	(obj_init): gc-protect and initialize gt_f and lt_f.
+
+
+	* lib.h (gt_f, lt_f): Declared.
+	(to_seq): Declaration updated to toseq.
+	(seqp, find_max, find_min, pos_max, pos_min): Declared.
+
+	* txr.1: Updated.
+
 2014-06-15  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): where and sel registered as intrinsics

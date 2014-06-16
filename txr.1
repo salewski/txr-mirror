@@ -7736,6 +7736,40 @@ by applying the key function to successive elements. The position of
 the first element for which the predicate function yields true is returned. If
 no such element is found, nil is returned.
 
+.SS Functions pos-max and pos-min
+
+.TP
+Syntax:
+
+  (pos-max <sequence> [<testfun> [<keyfun>]])
+  (pos-min <sequence> [<testfun> [<keyfun>]])
+
+.TP
+Description:
+
+The pos-min and pos-max function implement exactly the same algorithm; they
+differ only in their defaulting behavior with regard to the <testfun>
+argument.  If <tesfunc> is not given, then the pos-max function defaults it to
+the > function, whereas pos-min defaults it to the < function.
+
+If <sequence> is empty, both functions return nil.
+
+Without a <testfun> argument, the pos-max function finds the zero-based
+position index of the numerically maximum value occurring in <sequence>,
+whereas pos-min without a <testfun> argument finds the index of the minimum
+value.
+
+If a <testfun> argument is given, the two functions are equivalent.
+The <testfun> function must be callable with two arguments.
+If <testfun> behaves like a greater-than comparison, then pos-max
+and pos-min return the index of the maximum element. If <testfun>
+behaves like a less-than comparison, then the functions return
+the index of the minimum element.
+
+The <keyfun> argument defaults to the identity function. Each element
+from sequence is passed through this one-argument function, and
+the resulting value is used in its place.
+
 .SS Function where
 
 .TP
@@ -7832,6 +7866,38 @@ which is applied to the successive comparison keys pulled from the list
 by applying the key function to successive elements. The first element
 for which the predicate function yields true is returned. If no such
 element is found, nil is returned.
+
+.SS Functions find-max and find-min
+
+.TP
+Syntax:
+
+  (find-max <sequence> [<testfun> [<keyfun>]])
+  (find-min <sequence> [<testfun> [<keyfun>]])
+
+.TP
+Description:
+
+The find-min and find-max function implement exactly the same algorithm; they
+differ only in their defaulting behavior with regard to the <testfun>
+argument.  If <tesfunc> is not given, then the find-max function defaults it to
+the > function, whereas find-min defaults it to the < function.
+
+Without a <testfun> argument, the find-max function finds the numerically
+maximum value occurring in <sequence>, whereas pos-min without a <testfun>
+argument finds the minimum value.
+
+If a <testfun> argument is given, the two functions are equivalent.
+The <testfun> function must be callable with two arguments.
+If <testfun> behaves like a greater-than comparison, then find-max
+and find-min both return the maximum element. If <testfun>
+behaves like a less-than comparison, then the functions return
+the minimum element.
+
+The <keyfun> argument defaults to the identity function. Each element
+from sequence is passed through this one-argument function, and
+the resulting value is used in its place for the purposes of the
+comparison. However, the original element is returned.
 
 .SS Function set-diff
 
@@ -9930,6 +9996,21 @@ a single large vector formed by catenating those vectors together in
 order.
 
 .SH SEQUENCE MANIPULATION
+
+.SS Function seqp
+
+.TP
+Syntax:
+
+  (seqp <object>)
+
+.TP
+Description:
+
+The function seqp returns t if <object> is a sequence, otherwise nil.
+
+A sequence is defined as a list, vector or string. The object nil denotes
+the empty list and so is a sequence.
 
 .SS Function length
 
