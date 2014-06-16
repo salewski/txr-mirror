@@ -1123,8 +1123,12 @@ Character literals are introduced by the #\e syntax, which is either
 followed by a character name, the letter x followed by hex digits,
 the letter o followed by octal digits, or a single character. Valid character
 names are: nul, alarm, backspace, tab, linefeed, newline, vtab, page, return,
-esc, space. This convention for character literals is similar to that of the
-Scheme language.  Note that #\elinefeed and #\enewline are the same character.
+esc, space and pnul. This convention for character literals is similar to that
+of the Scheme language.  Note that #\elinefeed and #\enewline are the same
+character. The #\epnul character is specific to TXR and denotes the U+DC00
+code in Unicode; the name stands for "pseudo-null", which is related to
+its special function. For more information about this, see the section
+"Character Handling and International Characters".
 
 .SS String Literals
 
@@ -12135,6 +12139,22 @@ and calls to these functions:
 
 For pprint, tostringp and pprinl, the equivalence is produced by using "~a" in
 format rather than "~s".
+
+Note: for characters, the print function behaves as follows: most control
+characters in the Unicode C0 and C1 range are rendered using the #\ex notation,
+using two hex digits. Codes in the range D800 to DFFF, and the codes
+FFFE and FFFF are printed in the #\exNNNN with four hexadecimal digits, and
+charater above this range are printed using the same notation, but with six
+hexadecimal digits. Certain characters in the C0 range are printed using
+their names such as #\enul and #\ereturn, which are documented
+in the Character Literals section not far from the start of this document.
+The DC00 character is printed as #\epnul.  All other characters are printed as
+#\e<char>, where <char> is the actual character.
+
+Caution: read-print consistency is affected by trailing material. If additional
+digits are printed immediately after a number without intervening whitespace,
+they extend that number. If hex digits are printed after the character x,
+which is rendered as #\ex, they look like a hex character code.
 
 .SS Function streamp
 

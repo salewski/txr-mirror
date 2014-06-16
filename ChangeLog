@@ -1,5 +1,19 @@
 2014-06-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (obj_print): Render character DC00 as "pnul".
+	Clean up code which chooses rendering for characters.
+	Print C0 and C1 control characters, as well as D800-DFFF,
+	FFFE and FFFF and characters above FFFF using hex;
+	others are printed using the #\<char> notation.
+
+	* parser.y (char_from_name): map "pnul" to DC00.
+
+	* txr.1: Documented pnul, clarified character
+	printing rules, and added a cautionary note about
+	possible ambiguity in printing.
+
+2014-06-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Register pos_max, pos_min, find_max,
 	find_min and seqp as intrinsics.
 

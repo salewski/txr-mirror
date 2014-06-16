@@ -1276,6 +1276,7 @@ static wchar_t char_from_name(const wchar_t *name)
     { L"return", L'\r' },
     { L"esc", 27 },
     { L"space", L' ' },
+    { L"pnul", 0xDC00 },
     { 0, 0 },
   };
   int i;

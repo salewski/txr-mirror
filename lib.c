@@ -5754,11 +5754,16 @@ finish:
       case '\r': put_string(lit("return"), out); break;
       case 27: put_string(lit("esc"), out); break;
       case ' ': put_string(lit("space"), out); break;
+      case 0xDC00: put_string(lit("pnul"), out); break;
       default:
-        if (ch >= ' ')
-          put_char(chr(ch), out);
-        else
+        if ((ch < 0x20) || (ch >= 0x80 && ch < 0xA0))
           format(out, lit("x~,02x"), num(ch), nao);
+        else if ((ch >= 0xD800 && ch < 0xE000) || ch == 0xFFFE || ch == 0xFFFF)
+          format(out, lit("x~,04x"), num(ch), nao);
+        else if (ch >= 0xFFFF)
+          format(out, lit("x~,06x"), num(ch), nao);
+        else
+          put_char(chr(ch), out);
       }
     }
     return obj;
