@@ -1,3 +1,12 @@
+2014-06-15  Kaz Kylheku  <kaz@kylheku.com>
+
+	Bugfix: range and range* broken when "to" argument is
+	omitted. This was broken in version 89, by the
+	2014-04-08 commit.
+
+	* eval.c (rangev_func, range_star_v_func): Only perform
+	numeric tests between from and to if to is not nil.
+
 2014-06-12  Kaz Kylheku  <kaz@kylheku.com>
 
 	* Makefile: Install share/txr/stdlib/*.txr material.
