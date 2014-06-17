@@ -3057,6 +3057,11 @@ static val and_fun(val vals)
   return item;
 }
 
+static val not_null(val obj)
+{
+  return if3(nilp(obj), nil, t);
+}
+
 static val prinl(val obj, val stream)
 {
   val ret = obj_print(obj, stream);
@@ -3224,8 +3229,10 @@ void eval_init(void)
   reg_fun(intern(lit("typeof"), user_package), func_n1(typeof));
 
   reg_fun(intern(lit("atom"), user_package), func_n1(atom));
-  reg_fun(intern(lit("null"), user_package), func_n1(null));
-  reg_fun(not_s, func_n1(null));
+  reg_fun(intern(lit("null"), user_package), null_f);
+  reg_fun(intern(lit("false"), user_package), null_f);
+  reg_fun(intern(lit("true"), user_package), func_n1(not_null));
+  reg_fun(not_s, null_f);
   reg_fun(intern(lit("consp"), user_package), func_n1(consp));
   reg_fun(intern(lit("listp"), user_package), func_n1(listp));
   reg_fun(intern(lit("proper-listp"), user_package), func_n1(proper_listp));

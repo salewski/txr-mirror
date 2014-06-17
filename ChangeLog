@@ -1,5 +1,14 @@
 2014-06-17  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (not_null): New static function.
+	(eval_init): Use null_f in existing registration of null
+	and not. Add registration for not_null as "true",
+	and for null_f as "false".
+
+	* txr.1: Documented true and false.
+
+2014-06-17  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): register tuples as intrinsic.
 
 	* lib.c (tuples_func): New static function.

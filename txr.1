@@ -6900,19 +6900,20 @@ A bignum integer: arbitrary precision integer that is heap-allocated.
 .PP
 There are additional kinds of objects, such as streams.
 
-.SS Functions null and not
+.SS Functions null, not, false
 
 .TP
 Syntax:
 
   (null <value>)
   (not <value>)
+  (false <value>)
 
 .TP
 Description:
 
-The null and not functions are synonyms.  They tests whether <value> is the
-object nil. They return t if this is the case, nil otherwise.
+The null, not and false functions are synonyms.  They tests whether <value> is
+the object nil. They return t if this is the case, nil otherwise.
 
 .TP
 Examples:
@@ -6920,12 +6921,38 @@ Examples:
   (null '()) -> t
   (null nil) -> t
   (null ()) -> t
+  (false t) -> nil
 
   (if (null x) (format t "x is nil!"))
 
   (let ((list '(b c d)))
     (if (not (memq 'a list))
       (format t "list ~s does not contain the symbol a\en")))
+
+.SS Function true
+
+.TP
+Syntax:
+
+  (true <value>)
+
+.TP
+Description:
+
+The true function is the complement of the null, not and false functions.
+It return t if the <value> is any object other than nil. If <value> is
+nil, it returns nil.
+
+Note: programs should avoid explicitly testing values with true.
+For instance (if x ...) should be favored over (if (true x) ...)
+
+.TP
+Example:
+
+   ;; Compute indices where the list '(1 nil 2 nil 3) has true values:
+   ;; "Where is (1 nil 2 nil 3) true?"
+
+   [where '(1 nil 2 nil 3) true] -> (1 3)
 
 .SS Functions eq, eql and equal
 
