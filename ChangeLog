@@ -1,5 +1,9 @@
 2014-06-17  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Fix broken examples for some and none functions.
+
+2014-06-17  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (not_null): New static function.
 	(eval_init): Use null_f in existing registration of null
 	and not. Add registration for not_null as "true",

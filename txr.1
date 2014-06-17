@@ -8261,10 +8261,10 @@ values, the none function returns t.
 Examples:
 
   ;; some of the integers are odd
-  (some (fun oddp) '(2 4 6 9) nil) -> t
+  [some '(2 4 6 9) oddp] -> t
 
   ;; none of the integers are even
-  (none (fun evenp) '(1 3 4 7) nil) -> t
+  [none '(1 3 4 7) evenp] -> t
 
 .SH ASSOCIATION LISTS
 
