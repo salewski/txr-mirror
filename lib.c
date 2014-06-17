@@ -1245,6 +1245,41 @@ val lazy_flatten(val list)
   }
 }
 
+static val tuples_func(val env, val lcons)
+{
+  list_collect_decl (out, ptail);
+  cons_bind (seq_in, envr, env);
+  cons_bind (n, fill, envr);
+  val seq = seq_in;
+  val count;
+
+  for (count = n; count != zero && seq; count = minus(count, one))
+    list_collect(ptail, pop(&seq));
+
+  if (!missingp(fill))
+    for (; gt(count, zero); count = minus(count, one))
+      list_collect(ptail, fill);
+
+  rplaca(env, seq);
+
+  if (seq)
+    rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+  rplaca(lcons, make_like(out, seq_in));
+
+  return nil;
+}
+
+val tuples(val n, val seq, val fill)
+{
+  seq = nullify(seq);
+
+  if (!seq)
+    return nil;
+
+  return make_lazy_cons(func_f1(cons(seq, cons(n, fill)),
+                                tuples_func));
+}
+
 cnum c_num(val num);
 
 val eql(val left, val right)

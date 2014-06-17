@@ -3254,6 +3254,7 @@ void eval_init(void)
   reg_fun(intern(lit("last"), user_package), func_n1(last));
   reg_fun(intern(lit("flatten"), user_package), func_n1(flatten));
   reg_fun(intern(lit("flatten*"), user_package), func_n1(lazy_flatten));
+  reg_fun(intern(lit("tuples"), user_package), func_n3o(tuples, 2));
   reg_fun(intern(lit("memq"), user_package), func_n2(memq));
   reg_fun(intern(lit("memql"), user_package), func_n2(memql));
   reg_fun(intern(lit("memqual"), user_package), func_n2(memqual));

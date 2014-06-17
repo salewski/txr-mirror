@@ -10257,6 +10257,39 @@ The sort function is stable for sequences which are lists. This means that the
 original order of items which are considered identical is preserved.
 For strings and vectors, the sort is not stable.
 
+.SS Function tuples
+
+.TP
+Syntax:
+
+  (tuples <length> <sequence> [<fill-value>])
+
+.TP
+Description:
+
+The tuples function produces a lazy list which represents a reorganization
+of the elements of <sequence> into tuples of <length>, where <length>
+must be a positive integer.
+
+The length of the sequence might not be evenly divisible by the tuple length.
+In this case, if a <fill-value> argument is specified, then the last tuple
+is padded with enough repetitions of <fill-value> to make it have <length>
+elements. If <fill-value> is not specified, then the last tuple is left
+shorter than <length>.
+
+The output of the function is a list, but the tuples themselves are sequences
+of the same kind as <sequence>. If <sequence> is any kind of list, they
+are lists, and not lazy lists.
+
+.TP
+Examples:
+
+  (tuples 3 #(1 2 3 4 5 6 7 8) 0) -> (#(1 2 3) #(4 5 6) #(7 8 0))
+  (tuples 3 "abc") -> ("abc")
+  (tuples 3 "abcd") -> ("abc" "d")
+  (tuples 3 "abcd" #\z) -> ("abc" "dzz")
+  (tuples 3 (list 1 2) #\z) -> ((1 2 #\z))
+
 .SS Function make-like
 
 .TP
