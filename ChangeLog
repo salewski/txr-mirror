@@ -1,5 +1,21 @@
 2014-06-17  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (generic_funcall): Bugfixes: support symbols.
+	Removed dubious statement which clamps nargs to the number
+	of fixed parameters, breaking variadic calls.
+	Test case: (mapcar 'list '(1 2)) -> ((1) (2))
+	Note: generic_funcall is only used when non-function objects
+	are used as functions; variadic funcalls were not broken.
+
+2014-06-17  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (generic_funcall): Bugfixes: support symbols.
+	Removed dubious statement which clamps nargs to the number
+	of fixed parameters, breaking variadic calls.
+	Test case: (mapcar 'list '(1 2)) -> ((1) (2))
+
+2014-06-17  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: Fix broken examples for some and none functions.
 
 2014-06-17  Kaz Kylheku  <kaz@kylheku.com>

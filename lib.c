@@ -3456,6 +3456,17 @@ val generic_funcall(val fun, val arg[], int nargs)
     default:
       uw_throw(error_s, lit("call: too many arguments"));
     }
+  case SYM:
+    {
+      val binding = lookup_fun(nil, fun);
+      if (!binding) {
+        uw_throwf(error_s, lit("call: symbol ~s has no function binding"),
+                  fun, nao);
+        abort();
+      }
+      fun = cdr(binding);
+    }
+    break;
   case COBJ:
     if (fun->co.cls == hash_s) {
       switch (nargs) {
@@ -3481,7 +3492,7 @@ val generic_funcall(val fun, val arg[], int nargs)
   if (!variadic) {
     if (nargs < reqargs)
       uw_throw(error_s, lit("call: missing required arguments"));
-    
+
     if (nargs > fixparam)
       uw_throw(error_s, lit("call: too many arguments"));
 
@@ -3520,9 +3531,6 @@ val generic_funcall(val fun, val arg[], int nargs)
     }
   } else {
     val arglist = nil;
-
-    if (nargs > fixparam)
-      nargs = fixparam;
 
     if (nargs < reqargs)
       uw_throw(error_s, lit("call: missing required arguments"));
