@@ -445,6 +445,8 @@ val tuples(val n, val seq, val fill);
 val memq(val obj, val list);
 val memql(val obj, val list);
 val memqual(val obj, val list);
+val member(val item, val list, val testfun, val keyfun);
+val member_if(val pred, val list, val key);
 val remq(val obj, val list);
 val remql(val obj, val list);
 val remqual(val obj, val list);

@@ -7572,6 +7572,36 @@ If no such element found, nil is returned.
 Otherwise, that tail of the list is returned whose first element
 is the matching object.
 
+.SS Functions member and member-if
+
+.TP
+Syntax:
+
+  (member <key> <sequence> [<testfun> [<keyfun>]])
+  (member-if <predfun> <sequence> [<keyfun>])
+
+.TP
+Description:
+
+The find and find-if functions search through <sequence> for an item which
+matches a key, or satisfies a predicate function, respectively.
+
+The keyfun argument specifies a function which is applied to the elements
+of the sequence to produce the comparison key. If this argument is omitted,
+then the untransformed elements of the sequence themselves are examined.
+
+The member function's testfun argument specifies the test function which is
+used to compare the comparison keys taken from the sequence to the search key.
+If this argument is omitted, then the equal function is used.
+If member does not find a matching element, it returns nil. Otherwise it
+returns the suffix of <sequence> which begins with the matching element.
+
+The member-if function's predfun argument specifies a predicate function
+which is applied to the successive comparison keys pulled from the sequence
+by applying the key function to successive elements.  If no match is found,
+then nil is returned, otherwise the suffix of <sequence> which begins
+with the matching element.
+
 .SS Functions remq, remql and remqual
 
 .TP
@@ -7752,7 +7782,7 @@ They return the zero based position of the matching item.
 
 The keyfun argument specifies a function which is applied to the elements
 of the list to produce the comparison key. If this argument is omitted,
-then the untransformed elements of the list themselves are searched.
+then the untransformed elements of the list themselves are examined.
 
 The pos function's testfun argument specifies the test function which
 is used to compare the comparison keys from the list to the search key.

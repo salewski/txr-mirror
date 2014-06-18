@@ -1,3 +1,15 @@
+2014-06-18  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): Register member and member_if as intrinsics.
+
+	* lib.c (member, member_if): New functions.
+
+	* lib.h (member, member_if): Declared.
+
+	* txr.1: Documented.
+
+	* txr.vim: Regenerated.
+
 2014-06-17  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (generic_funcall): Bugfixes: support symbols.

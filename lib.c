@@ -914,6 +914,41 @@ val memqual(val obj, val list)
   return make_like(list, list_orig);
 }
 
+val member(val item, val list, val testfun, val keyfun)
+{
+  testfun = default_arg(testfun, equal_f);
+  keyfun = default_arg(keyfun, identity_f);
+
+  list = nullify(list);
+
+  for (; list; list = cdr(list)) {
+    val elem = car(list);
+    val key = funcall1(keyfun, elem);
+
+    if (funcall2(testfun, item, key))
+      return list;
+  }
+
+  return nil;
+}
+
+val member_if(val pred, val list, val key)
+{
+  key = default_arg(key, identity_f);
+  list = nullify(list);
+
+  for (; list; list = cdr(list)) {
+    val item = car(list);
+    val subj = funcall1(key, item);
+
+    if (funcall1(pred, subj))
+      return list;
+  }
+
+  return nil;
+}
+
+
 val remq(val obj, val list)
 {
   list_collect_decl (out, ptail);
