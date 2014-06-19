@@ -1,5 +1,16 @@
 2014-06-19  Kaz Kylheku  <kaz@kylheku.com>
 
+	Bugfix: dwim operator contradicts the documentation
+	and intended design.
+
+	* eval.c (do_eval): When calling do_eval_args to evaluate
+	the arguments of a compound form that is a function call,
+	do not pass down the lookup function, but substitute &lookup_var.
+	Passing down the lookup function means tha all evaluation
+	enclosed in (dwim ...) or [...] follows the Lisp-1 style.
+
+2014-06-19  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (me_ap): New static function.
 	(eval_init): Use new list_f instead of func_n0v(identity).
 	Register multi as intrinsic.  Register me_ap as ap macro.

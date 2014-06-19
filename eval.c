@@ -910,7 +910,7 @@ static val do_eval(val form, val env, val ctx_form,
           eval_error(form, lit("no such function or operator: ~s"), oper, nao);
           abort();
         } else {
-          val args = do_eval_args(rest(form), env, form, lookup);
+          val args = do_eval_args(rest(form), env, form, &lookup_var);
           debug_frame(oper, args, nil, env, nil, nil, nil);
           last_form_evaled = form;
           debug_return (apply(cdr(fbinding), args, form));
