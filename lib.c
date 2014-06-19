@@ -97,6 +97,7 @@ val nil_string;
 val null_list;
 
 val identity_f, equal_f, eql_f, eq_f, gt_f, lt_f, car_f, cdr_f, null_f;
+val list_f;
 
 val prog_string;
 
@@ -1207,6 +1208,13 @@ val none_satisfy(val list, val pred, val key)
   }
 
   return t;
+}
+
+val multi(val func, val lists)
+{
+  val transposed = mapcarv(list_f, lists);
+  val processed = funcall1(func, transposed);
+  return mapcarv(list_f, processed);
 }
 
 val flatten(val list)
@@ -5004,7 +5012,7 @@ static val multi_sort_less(val funcs_cons, val llist, val rlist)
 
 val multi_sort(val lists, val funcs, val key_funcs)
 {
-  val tuples = mapcarv(func_n0v(identity), nullify(lists));
+  val tuples = mapcarv(list_f, nullify(lists));
 
   key_funcs = default_bool_arg(key_funcs);
 
@@ -5014,7 +5022,7 @@ val multi_sort(val lists, val funcs, val key_funcs)
   tuples = sort_list(tuples, func_f2(cons(funcs, key_funcs),
                                      multi_sort_less), identity_f);
 
-  return mapcarv(func_n0v(identity), tuples);
+  return mapcarv(list_f, tuples);
 }
 
 val find(val item, val list, val testfun, val keyfun)
@@ -5568,7 +5576,7 @@ static void obj_init(void)
   protect(&packages, &system_package_var, &keyword_package_var,
           &user_package_var, &null_string, &nil_string,
           &null_list, &equal_f, &eq_f, &eql_f, &gt_f, &lt_f,
-          &car_f, &cdr_f, &null_f,
+          &car_f, &cdr_f, &null_f, &list_f,
           &identity_f, &prog_string, &env_list,
           (val *) 0);
 
@@ -5700,6 +5708,7 @@ static void obj_init(void)
   car_f = func_n1(car);
   cdr_f = func_n1(cdr);
   null_f = func_n1(null);
+  list_f = func_n0v(identity);
   prog_string = string(progname);
 }
 

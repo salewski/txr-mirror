@@ -1,3 +1,18 @@
+2014-06-19  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (me_ap): New static function.
+	(eval_init): Use new list_f instead of func_n0v(identity).
+	Register multi as intrinsic.  Register me_ap as ap macro.
+
+	* lib.c (list_f): New global variable.
+	(multi): New function.
+	(multi_sort): Use list_f in place of func_n0v(identity).
+	(obj_init): gc-protect and initialize list_f.
+
+	* lib.h (list_f, multi): Declared.
+
+	* txr.1: Documented multi and ap.
+
 2014-06-18  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): Register member and member_if as intrinsics.

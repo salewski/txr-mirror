@@ -8296,6 +8296,54 @@ Examples:
   ;; none of the integers are even
   [none '(1 3 4 7) evenp] -> t
 
+.SS Function multi
+
+.TP
+Syntax:
+
+  (multi <function> <list>*)
+
+.TP
+Description:
+
+The multi function distributes an arbitrary list processing function <multi>
+over multiple lists given by the <list> arguments.
+
+The <list> arguments are first transposed into a single list of tuples. Each
+successive element of this transposed list consists of a combination of the
+successive items from the lists. The length of the transposed list is that
+of the shortest <list> argument.
+
+The transposed list is then passed to <function> as an argument.
+
+The <function> is expected to produce a list of tuples, which are transposed
+again to produce a list of lists which is then returned.
+
+Conceptually, the input lists are columns and <function> is invoked on
+a list of the rows formed from these columns. The output of <function>
+is a transformed list of rows which is reconstituted into a list of columns.
+
+.TP
+Example:
+
+  ;; Take three lists in parallel, and remove from all of them
+  ;; them the element at all positions where the third list
+  ;; has an element of 20.
+
+  (multi (op remove-if (op eql 20) @1 third)
+         '(1 2 3)
+         '(a b c)
+         '(10 20 30))
+
+  -> ((1 3) (a c) (10 30))
+
+  ;; The (2 b 20) "row" is gone from the three "columns".
+
+  ;; Note that the (op remove if (op eql 20) @1 third)
+  ;; expression can be simplified using the ap operator:
+  ;;
+  ;; (op remove-if (ap eql @3 20))
+
 .SH ASSOCIATION LISTS
 
 Association lists are ordinary lists formed according to a special convention.
@@ -11765,13 +11813,13 @@ value is then used as the data item in the intersection hash.
 .TP
 Syntax:
 
-  (op {<form>}+)
-  (do {<form>}+)
+  (op <form>+)
+  (do <form>+)
 
 .TP
 Description:
 
-The op and do macro operators are similar. 
+The op and do macro operators are similar.
 
 Like the lambda operator, the op operator creates an anonymous function.
 The difference is that the arguments of the function are implicit, or
@@ -11863,9 +11911,9 @@ Examples:
 .TP
 Nested op:
 
-The op and do operators can be nested. This raises the question: if a
-metanumber like @1 or @rest occurs in an op that is nested within an op,
-what is the meaning?
+The op and do operators can be nested, in any combination. This raises the
+question: if a metanumber like @1 or @rest occurs in an op that is nested
+within an op, what is the meaning?
 
 A metanumber always belongs with the inner-most op or do operator. So for
 instance  (op (op @1)) means that an (op @1) expression is nested
@@ -11881,6 +11929,33 @@ the first @1 is argument of the outer function, and the second @1
 is the first argument of the inner function. Of course, if there
 are three levels of nesting, then three metas are needed to insert
 a parameter from the outermost op, into the innermost op.
+
+.SS Macro ap
+
+.TP
+Syntax:
+
+  (ap <form>+)
+
+.TP
+Description:
+
+The ap macro is based on the op macro and has identical argument
+conventions.
+
+The ap macro analyzes its argumetns and produces a function, in exactly the
+same same way as the op macro.   It then returns a different one-argument
+function which accepts a list, and calls that function, applying the
+list as arguments.
+
+In other words, the following equivalence holds:
+
+  (ap form ...) <--> (lambda (args) (apply (op form ...)))
+
+except that the symbol args is to be understood as a generated symbol (gensym).
+
+The ap macro nests properly with op and do, in any combination, in regard
+to the @@n notation.
 
 .SS Function chain
 

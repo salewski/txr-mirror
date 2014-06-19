@@ -378,7 +378,7 @@ extern val null_string;
 extern val null_list; /* (nil) */
 
 extern val identity_f, equal_f, eql_f, eq_f, gt_f, lt_f, car_f, cdr_f, null_f;
-
+extern val list_f;
 
 extern const wchar_t *progname;
 extern val prog_string;
@@ -465,6 +465,7 @@ val count_if(val pred, val list, val key);
 val some_satisfy(val list, val pred, val key);
 val all_satisfy(val list, val pred, val key);
 val none_satisfy(val list, val pred, val key);
+val multi(val func, val lists);
 val eql(val left, val right);
 val equal(val left, val right);
 mem_t *chk_malloc(size_t size);

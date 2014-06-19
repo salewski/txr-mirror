@@ -2367,6 +2367,16 @@ static val me_op(val form, val menv)
   }
 }
 
+static val me_ap(val form, val menv)
+{
+  /* We do not use an op to generate the outer lambda, because
+     it wouldn't be hygienic; this hidden op would capture @@n
+     references from the body of the ap form. */
+  val args = gensym(lit("args-"));
+  return list(lambda_s, cons(args, nil),
+              list(apply_s, cons(op_s, rest(form)), args, nao), nao);
+}
+
 static val expand_catch_clause(val form, val menv)
 {
   val sym = first(form);
@@ -3201,6 +3211,7 @@ void eval_init(void)
   reg_mac(intern(lit("delay"), user_package), me_delay);
   reg_mac(op_s, me_op);
   reg_mac(do_s, me_op);
+  reg_mac(intern(lit("ap"), user_package), me_ap);
   reg_mac(qquote_s, me_qquote);
   reg_mac(sys_qquote_s, me_qquote);
   reg_mac(intern(lit("pprof"), user_package), me_pprof);
@@ -3223,7 +3234,7 @@ void eval_init(void)
   reg_fun(intern(lit("replace-list"), user_package), func_n4o(replace_list, 2));
   reg_fun(append_s, func_n0v(appendv));
   reg_fun(intern(lit("append*"), user_package), func_n0v(lazy_appendv));
-  reg_fun(list_s, func_n0v(identity));
+  reg_fun(list_s, list_f);
   reg_fun(intern(lit("list*"), user_package), func_n0v(list_star_intrinsic));
   reg_fun(intern(lit("identity"), user_package), identity_f);
   reg_fun(intern(lit("typeof"), user_package), func_n1(typeof));
@@ -3290,6 +3301,7 @@ void eval_init(void)
   reg_fun(intern(lit("some"), user_package), func_n3o(some_satisfy, 1));
   reg_fun(intern(lit("all"), user_package), func_n3o(all_satisfy, 1));
   reg_fun(intern(lit("none"), user_package), func_n3o(none_satisfy, 1));
+  reg_fun(intern(lit("multi"), user_package), func_n1v(multi));
   reg_fun(intern(lit("eq"), user_package), eq_f);
   reg_fun(intern(lit("eql"), user_package), eql_f);
   reg_fun(intern(lit("equal"), user_package), equal_f);
