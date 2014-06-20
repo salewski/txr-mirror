@@ -1464,7 +1464,7 @@ static val do_txeval(val spec, val form, val bindings, val allow_unbound)
         list_collect_decl (out, tail);
         uw_set_match_context(cons(spec, bindings));
         for (iter = rest(form); iter != nil; iter = cdr(iter))
-          list_collect(tail, subst_vars(cdr(car(iter)), bindings, nil));
+          tail = list_collect(tail, subst_vars(cdr(car(iter)), bindings, nil));
         ret = out;
         uw_env_end;
       } else if (regexp(sym)) {

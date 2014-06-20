@@ -1,5 +1,17 @@
 2014-06-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	Optimization: add missing tail updates to some list
+	collecting loops.
+
+	* lib.c (tuples_func, where, sel): Catch return value of
+	list_collect and update tail variable.
+
+	* match.c (do_txeval): Likewise.
+
+	* parser.y (expand_meta): Likewise for list_collect_nconc.
+
+2014-06-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (do_apf, apf): New functions.
 	(eval_init): Register apf as intrinsic.
 

@@ -1297,11 +1297,11 @@ static val tuples_func(val env, val lcons)
   val count;
 
   for (count = n; count != zero && seq; count = minus(count, one))
-    list_collect(ptail, pop(&seq));
+    ptail = list_collect(ptail, pop(&seq));
 
   if (!missingp(fill))
     for (; gt(count, zero); count = minus(count, one))
-      list_collect(ptail, fill);
+      ptail = list_collect(ptail, fill);
 
   rplaca(env, seq);
 
@@ -5484,7 +5484,7 @@ val where(val seq_in, val func)
   for (; seq; seq = cdr(seq), idx = plus(idx, one)) {
     val elt = car(seq);
     if (funcall1(func, elt))
-      list_collect(ptail, idx);
+      ptail = list_collect(ptail, idx);
   }
 
   return out;
@@ -5513,7 +5513,7 @@ val sel(val seq_in, val where_in)
         } while (lt(wh, idx));
 
         if (eql(wh, idx))
-          list_collect (ptail, car(seq));
+          ptail = list_collect (ptail, car(seq));
       }
     }
     break;
@@ -5524,7 +5524,7 @@ val sel(val seq_in, val where_in)
         val wh = car(where);
         if (ge(wh, len))
           break;
-        list_collect (ptail, ref(seq, car(where)));
+        ptail = list_collect (ptail, ref(seq, car(where)));
       }
     }
     break;

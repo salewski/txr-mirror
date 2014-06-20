@@ -1226,7 +1226,7 @@ static val expand_meta(val form, val menv)
       ptail = nptail;
     }
 
-    list_collect_nconc(ptail, form);
+    ptail = list_collect_nconc(ptail, form);
 
     return out;
   }
