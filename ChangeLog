@@ -1,5 +1,15 @@
 2014-06-19  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (identity_s): New global variable.
+	(me_ret, tf, nilf, do_retf, retf): New static functions.
+	(eval_init): Initialize identity_s, and use it for registration
+	of identity. Register ret macro, and the retf, tf and nilf
+	functions.
+
+	* txr.1: Documentation for ret, retf, tf and nilf.
+
+2014-06-19  Kaz Kylheku  <kaz@kylheku.com>
+
 	Bugfix: dwim operator contradicts the documentation
 	and intended design.
 

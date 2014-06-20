@@ -11957,6 +11957,34 @@ except that the symbol args is to be understood as a generated symbol (gensym).
 The ap macro nests properly with op and do, in any combination, in regard
 to the @@n notation.
 
+.SS Macro ret
+
+.TP
+Syntax:
+
+  (ret <form>)
+
+.TP
+Description:
+
+The ret macro's argument is treated similarly to the arguments of the op
+operator, except that the first form of the op operator denotes
+a function to be called where as the one and only argument form of the
+ret operator denotes a value.
+
+The ret macro produces a function which takes any number of arguments,
+and returns the value specified by <form>.
+
+The following equivalence holds:
+
+  (ret x) <--> (op identity x)
+
+The expression (ret @2) returns a function similar to
+(lambda (x y . z) y).
+
+The expression (ret 42) returns a function similar to
+(lambda (. rest) 42).
+
 .SS Function chain
 
 .TP
@@ -12074,6 +12102,60 @@ to the <else-func> argument. The following equivalences hold:
 The iffi function defaults to the identity function when <else-func> is
 omitted or nil, and therefore is useful in situations when one value is to be
 replaced with another one when the condition is true, otherwise left alone.
+
+.SH Functions tf and nilf
+
+.TP
+Syntax:
+
+  (tf <arg>*)
+  (nilf <arg>*)
+
+.TP
+Description:
+
+The tf and nilf functions take zero or more arguments, and ignore them.
+The tf function returns t, and the nilf function returns nil.
+
+.TP
+Example:
+
+  ;; tf and nilf are useful when functions are chained together.
+  ;; test whether (trunc n 2) is odd.
+
+  (defun trunc-n-2-odd (n)
+    [[chain (op trunc @1 2) [iff oddp tf nilf]] n)
+
+In this example, two functions are chained together, and n is passed
+through the chain such that it is first divided by two via the
+function denoted by (op trunc @1 2) and then the result is passed into the
+function denoted by [iff oddp tf nilf]. The iff function passes its
+argument into oddp, and if oddp yields true, it passes the same argument to tf.
+Here tf proves its utility by ignoring that value and returning t.
+If the argument (the divided value) passed into iff is even, then
+iff passes it into the nilf function, which ignores the value and
+returns nil.
+
+.SH Function retf
+
+.TP
+Syntax:
+
+  (retf <value>)
+
+.TP
+Description:
+
+The retf function returns a function. That function can take zero or
+more arguments. When called, it ignores its arguments and returns <value>.
+
+See also: the ret macro.
+
+.TP
+Example:
+
+  ;; the function returned by (retf 42) ignores 1 2 3 and returns 42.
+  (call (retf 42) 1 2 3) -> 42
 
 .SH INPUT AND OUTPUT (STREAMS)
 

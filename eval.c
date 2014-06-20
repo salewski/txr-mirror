@@ -79,7 +79,7 @@ val append_each_s, append_each_star_s;
 val dohash_s;
 val uw_protect_s, return_s, return_from_s;
 val list_s, append_s, apply_s, gen_s, gun_s, generate_s, rest_s, plus_s;
-val promise_s, op_s;
+val promise_s, op_s, identity_s;
 val hash_lit_s, hash_construct_s;
 val vector_lit_s, vector_list_s;
 val macro_time_s, with_saved_vars_s, macrolet_s;
@@ -2377,6 +2377,11 @@ static val me_ap(val form, val menv)
               list(apply_s, cons(op_s, rest(form)), args, nao), nao);
 }
 
+static val me_ret(val form, val menv)
+{
+  return cons(op_s, cons(identity_s, rest(form)));
+}
+
 static val expand_catch_clause(val form, val menv)
 {
   val sym = first(form);
@@ -3072,6 +3077,29 @@ static val not_null(val obj)
   return if3(nilp(obj), nil, t);
 }
 
+static val tf(val args)
+{
+  (void) args;
+  return t;
+}
+
+static val nilf(val args)
+{
+  (void) args;
+  return nil;
+}
+
+static val do_retf(val ret, val args)
+{
+  (void) args;
+  return ret;
+}
+
+static val retf(val ret)
+{
+  return func_f0v(ret, do_retf);
+}
+
 static val prinl(val obj, val stream)
 {
   val ret = obj_print(obj, stream);
@@ -3144,6 +3172,7 @@ void eval_init(void)
   promise_s = intern(lit("promise"), system_package);
   op_s = intern(lit("op"), user_package);
   do_s = intern(lit("do"), user_package);
+  identity_s = intern(lit("identity"), user_package);
   rest_s = intern(lit("rest"), user_package);
   hash_lit_s = intern(lit("hash-construct"), system_package);
   hash_construct_s = intern(lit("hash-construct"), user_package);
@@ -3212,6 +3241,7 @@ void eval_init(void)
   reg_mac(op_s, me_op);
   reg_mac(do_s, me_op);
   reg_mac(intern(lit("ap"), user_package), me_ap);
+  reg_mac(intern(lit("ret"), user_package), me_ret);
   reg_mac(qquote_s, me_qquote);
   reg_mac(sys_qquote_s, me_qquote);
   reg_mac(intern(lit("pprof"), user_package), me_pprof);
@@ -3236,7 +3266,7 @@ void eval_init(void)
   reg_fun(intern(lit("append*"), user_package), func_n0v(lazy_appendv));
   reg_fun(list_s, list_f);
   reg_fun(intern(lit("list*"), user_package), func_n0v(list_star_intrinsic));
-  reg_fun(intern(lit("identity"), user_package), identity_f);
+  reg_fun(identity_s, identity_f);
   reg_fun(intern(lit("typeof"), user_package), func_n1(typeof));
 
   reg_fun(intern(lit("atom"), user_package), func_n1(atom));
@@ -3421,6 +3451,9 @@ void eval_init(void)
   reg_fun(intern(lit("if"), user_package), func_n3o(if_fun, 2));
   reg_fun(intern(lit("or"), user_package), func_n0v(or_fun));
   reg_fun(intern(lit("and"), user_package), func_n0v(and_fun));
+  reg_fun(intern(lit("retf"), user_package), func_n1(retf));
+  reg_fun(intern(lit("tf"), user_package), func_n0v(tf));
+  reg_fun(intern(lit("nilf"), user_package), func_n0v(nilf));
 
   reg_fun(intern(lit("print"), user_package), func_n2o(obj_print, 1));
   reg_fun(intern(lit("pprint"), user_package), func_n2o(obj_pprint, 1));
