@@ -95,10 +95,10 @@ static val parsed_spec;
 %type <val> if_clause elif_clauses_opt else_clause_opt
 %type <val> line elems_opt elems clause_parts_h additional_parts_h
 %type <val> text texts elem var var_op modifiers vector hash
-%type <val> list exprs exprs_opt expr n_exprs n_expr
+%type <val> list exprs exprs_opt expr n_exprs n_expr n_exprs_opt
 %type <val> out_clauses out_clauses_opt out_clause
 %type <val> repeat_clause repeat_parts_opt o_line
-%type <val> o_elems_opt o_elems o_elem o_var rep_elem rep_parts_opt
+%type <val> o_elems_opt o_elems o_elem o_var q_var rep_elem rep_parts_opt
 %type <val> regex lisp_regex regexpr regbranch
 %type <val> regterm regtoken regclass regclassterm regrange
 %type <val> strlit chrlit quasilit quasi_items quasi_item litchars wordslit
@@ -701,6 +701,22 @@ o_var : SYMTOK                  { $$ = list(var_s, sym_helper($1, nil), nao);
                                     yybadtoken(yychar, lit("variable spec")); }
       ;
 
+q_var : SYMTOK                  { $$ = list(var_s, sym_helper($1, nil), nao);
+                                  rl($$, num(lineno)); }
+      | SYMTOK quasi_item       { $$ = list(var_s, sym_helper($1, nil),
+                                            $2, nao);
+                                  rl($$, num(lineno)); }
+      | '{' n_expr n_exprs_opt '}'
+                                { $$ = list(var_s, $2, nil, $3, nao);
+                                  rl($$, num(lineno)); }
+      | '{' n_expr n_exprs_opt '}' quasi_item
+                                { $$ = list(var_s, $2, $5, $3, nao);
+                                  rl($$, num(lineno)); }
+      | SYMTOK error            { $$ = nil;
+                                    yybadtoken(yychar, lit("variable spec")); }
+      ;
+
+
 vector : '#' list               { if (unquotes_occur($2, 0))
                                     $$ = rlcp(cons(vector_lit_s,
                                                    cons($2, nil)), $2);
@@ -782,6 +798,10 @@ n_expr : SYMTOK                 { $$ = sym_helper($1, t); }
        | ',' n_expr             { $$ = rlcp(list(sys_unquote_s, $2, nao), $2); }
        | SPLICE n_expr          { $$ = rlcp(list(sys_splice_s, $2, nao), $2); }
        ;
+
+n_exprs_opt : n_exprs           { $$ = $1; }
+            | /* empty */       { $$ = nil; }
+          ;
 
 regex : '/' regexpr '/'         { $$ = cons(regex_s, $2); end_of_regex();
                                   rl($$, num(lineno)); }
@@ -926,7 +946,7 @@ quasi_items : quasi_item                { $$ = cons($1, nil);
 
 quasi_item : litchars           { $$ = lit_char_helper($1); }
            | TEXT               { $$ = string_own($1); }
-           | o_var              { $$ = $1; }
+           | q_var              { $$ = $1; }
            | METANUM            { $$ = cons(var_s, cons($1, nil));
                                   rl($$, num(lineno)); }
            | list               { $$ = rlcp(cons(expr_s, $1), $1); }

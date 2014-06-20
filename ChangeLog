@@ -1,5 +1,20 @@
 2014-06-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	Bugfix: macros not being expanded in expansions embedded in
+	quasilierals: i.e. the forms X and Y in `@{X}`
+	and `@{X Y}`, where X and Y can be Lisp symbol macros or compound
+	forms that is a macro call.
+
+	* eval.c (expand_quasi): Handle the var forms in a quasi.
+
+	* parser.y (n_exprs_opt, q_var): New grammar nonterminals.
+	q_var is a clone of o_var, but with different construction behavior.
+	It fixes the bug that o_var applies expand_meta to embedded
+	Lisp forms, which is not appropriate for TXR Lisp quasiliterals.
+	(quasi_item): Derive q_var rather than o_var.
+
+2014-06-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	Optimization: add missing tail updates to some list
 	collecting loops.
 
