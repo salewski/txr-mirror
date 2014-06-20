@@ -1,3 +1,12 @@
+2014-06-20  Kaz Kylheku  <kaz@kylheku.com>
+
+	Improve error reporting.
+
+	* eval.c (eval_error): Use last_form_evaled if form is null.
+	(apply): Substitute apply symbol if ctx_form is null.
+	(apply_intrinsic): Do not pass fake (apply) context form to
+	apply, just pass nil.
+
 2014-06-19  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (identity_s): New global variable.

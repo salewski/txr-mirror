@@ -135,6 +135,10 @@ noreturn static val eval_error(val form, val fmt, ...)
   val stream = make_string_output_stream();
 
   va_start (vl, fmt);
+
+  if (!form)
+    form = last_form_evaled;
+
   if (form)
     format(stream, lit("(~a) "), source_loc_str(form), nao);
   (void) vformat(stream, fmt, vl);
@@ -512,11 +516,12 @@ val apply(val fun, val arglist, val ctx_form)
 {
   val arg[32], *p = arg;
   int variadic, fixparam, reqargs, nargs;
+  val ctx = if3(ctx_form, car(ctx_form), apply_s);
 
   if (fun && symbolp(fun)) {
     val binding = gethash(top_fb, fun);
     if (!binding)
-      eval_error(ctx_form, lit("~s: no such function ~s"), car(ctx_form), fun, nao);
+      eval_error(ctx_form, lit("~s: no such function ~s"), ctx, fun, nao);
     fun = cdr(binding);
   }
 
@@ -535,7 +540,7 @@ val apply(val fun, val arglist, val ctx_form)
   if (!listp(arglist)) {
     val arglist_conv = tolist(arglist);
     type_assert (listp(arglist_conv),
-                 (lit("~s: arglist ~s is not a list"), car(ctx_form),
+                 (lit("~s: arglist ~s is not a list"), ctx,
                   arglist, nao));
     arglist = arglist_conv;
   }
@@ -552,11 +557,11 @@ val apply(val fun, val arglist, val ctx_form)
 
     if (nargs < reqargs)
       eval_error(ctx_form, lit("~s: missing required arguments"),
-                 car(ctx_form), nao);
-    
+                 ctx, nao);
+
     if (nargs > fixparam)
       eval_error(ctx_form, lit("~s: too many arguments"),
-                 car(ctx_form), nao);
+                 ctx, nao);
 
     for (; nargs < fixparam; nargs++)
       *p++ = colon_k;
@@ -598,8 +603,7 @@ val apply(val fun, val arglist, val ctx_form)
     nargs = p - arg;
 
     if (nargs < reqargs)
-      eval_error(ctx_form, lit("~s: missing required arguments"),
-                 car(ctx_form), nao);
+      eval_error(ctx_form, lit("~s: missing required arguments"), ctx, nao);
 
     for (; nargs < fixparam; nargs++)
       *p++ = colon_k;
@@ -652,7 +656,7 @@ static val apply_frob_args(val args)
 
 val apply_intrinsic(val fun, val args)
 {
-  return apply(fun, apply_frob_args(args), cons(apply_s, nil));
+  return apply(fun, apply_frob_args(args), nil);
 }
 
 static val call(val fun, val args)
