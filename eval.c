@@ -3104,6 +3104,16 @@ static val retf(val ret)
   return func_f0v(ret, do_retf);
 }
 
+static val do_apf(val fun, val args)
+{
+  return apply(fun, args, nil);
+}
+
+static val apf(val fun)
+{
+  return func_f1(fun, do_apf);
+}
+
 static val prinl(val obj, val stream)
 {
   val ret = obj_print(obj, stream);
@@ -3456,6 +3466,7 @@ void eval_init(void)
   reg_fun(intern(lit("or"), user_package), func_n0v(or_fun));
   reg_fun(intern(lit("and"), user_package), func_n0v(and_fun));
   reg_fun(intern(lit("retf"), user_package), func_n1(retf));
+  reg_fun(intern(lit("apf"), user_package), func_n1(apf));
   reg_fun(intern(lit("tf"), user_package), func_n0v(tf));
   reg_fun(intern(lit("nilf"), user_package), func_n0v(nilf));
 

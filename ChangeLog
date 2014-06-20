@@ -1,5 +1,12 @@
 2014-06-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (do_apf, apf): New functions.
+	(eval_init): Register apf as intrinsic.
+
+	* txr.1: Document apf.
+
+2014-06-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	Improve error reporting.
 
 	* eval.c (eval_error): Use last_form_evaled if form is null.
