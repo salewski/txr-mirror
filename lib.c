@@ -3894,6 +3894,11 @@ val curry_12_1(val fun2, val arg2)
   return func_f1(cons(fun2, arg2), do_curry_12_1);
 }
 
+static val curry_12_1_v(val fun2, val arg2)
+{
+  return func_f0v(cons(fun2, arg2), do_curry_12_1);
+}
+
 static val do_curry_123_3(val fcons, val arg3)
 {
   return funcall3(car(fcons), car(cdr(fcons)), cdr(cdr(fcons)), arg3);
@@ -3942,6 +3947,26 @@ static val do_curry_1234_34(val fcons, val arg3, val arg4)
 val curry_1234_34(val fun4, val arg1, val arg2)
 {
   return func_f2(cons(fun4, cons(arg1, arg2)), do_curry_1234_34);
+}
+
+val transpose(val list)
+{
+  val func = list_f;
+
+  switch (type(car(list))) {
+  case STR:
+  case LSTR:
+  case LIT:
+    func = curry_12_1_v(func_n2(cat_str), nil);
+    break;
+  case VEC:
+    func = func_n0v(vector_list);
+    break;
+  default:
+    break;
+  }
+
+  return make_like(mapcarv(func, list), list);
 }
 
 static val do_chain(val fun1_list, val args)
@@ -4821,17 +4846,21 @@ val copy_alist(val list)
   return mapcar(func_n1(copy_cons), list);
 }
 
-val mapcar(val fun, val list)
+val mapcar_listout(val fun, val list)
 {
   list_collect_decl (out, iter);
-  val list_orig = list;
 
   list = nullify(list);
 
   for (; list; list = cdr(list))
     iter = list_collect(iter, funcall1(fun, car(list)));
 
-  return make_like(out, list_orig);
+  return out;
+}
+
+val mapcar(val fun, val list)
+{
+  return make_like(mapcar_listout(fun, list), list);
 }
 
 val mapcon(val fun, val list)

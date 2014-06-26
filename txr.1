@@ -8056,6 +8056,57 @@ Examples:
   (mappend (lambda (item) (if (evenp x) (list x))) '(1 2 3 4 5))
   -> (2 4)
 
+.SS Functions tranpose and zip
+
+.TP
+Syntax:
+
+  (transpose <sequence>)
+  (zip <sequence>*)
+
+.TP
+Description:
+
+The transpose function performs a transposition on <sequence>. This means that the
+elements of <sequence> must be sequences.  These sequences are understood to be
+columns; transpose exchanges rows and columns, returning a sequence of the rows
+which make up the columns.  The returned sequence is of the same kind as
+<sequence>, and the rows are also the same kind of sequence as the first column
+of the original sequence. The number of rows returned is limited by the
+shortest column among the sequences.
+
+All of the input sequences (the elements of <sequence>) must have elements
+which are compatible with the first sequence. This means that if the first
+element of <sequence> is a string, then the remaining sequences must be
+strings, or else sequences of characters, or of strings.
+
+The zip function takes variable arguments, and is equivalent to calling
+transpose on a list of the arguments. The following equivalences hold:
+
+   (zip . x) <--> (transpose x)
+
+   [apply zip x] <--> (transpose x)
+
+.TP
+Examples:
+
+  ;; transpose list of lists
+  (transpose '((a b c) (c d e))) ->  ((a c) (b d) (c e))
+
+  ;; transpose vector of strings:
+  ;; - string columns become string rows
+  ;; - vector input becomes vector output
+  (transpose #("abc" "def" "ghij")) -> #("adg" "beh" "cfi")
+
+  ;; error: transpose wants to make a list of strings
+  ;; but 1 is not a character
+  (transpose #("abc" "def" '(1 2 3))) ;; error!
+
+  ;; String elements are catenated:
+  (transpose #("abc" "def" ("UV" "XY" "WZ"))) -> #("adUV" "beXY" "cfWZ")
+
+  (zip '(a b c) '(c d e)) ->  ((a c) (b d) (c e))
+
 .SS Functions conses and conses*
 
 .TP

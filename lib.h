@@ -673,6 +673,7 @@ val funcall3(val fun, val arg1, val arg2, val arg3);
 val funcall4(val fun, val arg1, val arg2, val arg3, val arg4);
 val reduce_left(val fun, val list, val init, val key);
 val reduce_right(val fun, val list, val init, val key);
+val transpose(val lists);
 /* The notation curry_12_2 means take some function f(arg1, arg2) and
    fix a value for argument 1 to create a g(arg2).
    Other variations follow by analogy. */
@@ -733,6 +734,7 @@ val alist_nremove(val list, val keys);
 val alist_nremove1(val list, val key);
 val copy_cons(val cons);
 val copy_alist(val list);
+val mapcar_listout(val fun, val list);
 val mapcar(val fun, val list);
 val mapcon(val fun, val list);
 val mappend(val fun, val list);

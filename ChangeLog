@@ -1,3 +1,17 @@
+2014-06-26  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (mapcarv): Use mapcar_listout, so list_of_lists can be
+	a non-list sequence.
+	(eval_init): Register transpose and zip as intrinsics.
+
+	* lib.c (curry_12_1_v): New static function.
+	(transpose, mapcar_listout): New functions.
+	(mapcar): Redefined in terms of mapcar_listout.
+
+	* lib.h (transpose, mapcar_listout): Declared.
+
+	* txr.1: Documented transpose and zip.
+
 2014-06-20  Kaz Kylheku  <kaz@kylheku.com>
 
 	Bugfix: macros not being expanded in expansions embedded in

@@ -2686,7 +2686,7 @@ val mapcarv(val fun, val list_of_lists)
   if (!cdr(list_of_lists)) {
     return mapcar(fun, nullify(car(list_of_lists)));
   } else {
-    val lofl = mapcar(func_n1(nullify), list_of_lists);
+    val lofl = mapcar_listout(func_n1(nullify), list_of_lists);
     val list_orig = car(list_of_lists);
     list_collect_decl (out, otail);
 
@@ -3315,6 +3315,8 @@ void eval_init(void)
   reg_fun(call_s, func_n1v(call));
   reg_fun(intern(lit("reduce-left"), user_package), func_n4o(reduce_left, 2));
   reg_fun(intern(lit("reduce-right"), user_package), func_n4o(reduce_right, 2));
+  reg_fun(intern(lit("transpose"), user_package), func_n1(transpose));
+  reg_fun(intern(lit("zip"), user_package), func_n0v(transpose));
 
   reg_fun(intern(lit("second"), user_package), func_n1(second));
   reg_fun(intern(lit("third"), user_package), func_n1(third));
