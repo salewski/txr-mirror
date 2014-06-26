@@ -1,5 +1,9 @@
 2014-06-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (last): Bugfix: reversed null test.
+
+2014-06-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): register range_regex and tok_where
 	as intrinsics.
 

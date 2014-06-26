@@ -421,7 +421,7 @@ loc lastcons(val list)
 val last(val list)
 {
   loc p = lastcons(list);
-  return nullocp(p) ? deref(p) : list;
+  return nullocp(p) ? list : deref(p);
 }
 
 loc ltail(loc cons)
