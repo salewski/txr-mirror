@@ -78,7 +78,8 @@ val for_s, for_star_s, each_s, each_star_s, collect_each_s, collect_each_star_s;
 val append_each_s, append_each_star_s;
 val dohash_s;
 val uw_protect_s, return_s, return_from_s;
-val list_s, append_s, apply_s, gen_s, gun_s, generate_s, rest_s, plus_s;
+val list_s, append_s, apply_s, iapply_s;
+val gen_s, gun_s, generate_s, rest_s, plus_s;
 val promise_s, op_s, identity_s;
 val hash_lit_s, hash_construct_s;
 val vector_lit_s, vector_list_s;
@@ -657,6 +658,31 @@ static val apply_frob_args(val args)
 val apply_intrinsic(val fun, val args)
 {
   return apply(fun, apply_frob_args(args), nil);
+}
+
+static val iapply(val fun, val args)
+{
+  if (args && atom(args)) {
+    args = cons(args, nil);
+  } else {
+    loc plast = lastcons(args);
+    if (!nullocp(plast)) {
+      deref(plast) = car(deref(plast));
+    } else {
+      args = car(args);
+    }
+
+    if (args && atom(args)) {
+      args = cons(args, nil);
+    } else if (args) {
+      val la = last(args);
+      val cd = cdr(la);
+      if (cd && atom(cd))
+        rplacd(la, cons(cd, nil));
+    }
+  }
+
+  return apply(fun, args, nil);
 }
 
 static val call(val fun, val args)
@@ -2395,6 +2421,13 @@ static val me_ap(val form, val menv)
               list(apply_s, cons(op_s, rest(form)), args, nao), nao);
 }
 
+static val me_ip(val form, val menv)
+{
+  val args = gensym(lit("args-"));
+  return list(lambda_s, cons(args, nil),
+              list(iapply_s, cons(op_s, rest(form)), args, nao), nao);
+}
+
 static val me_ret(val form, val menv)
 {
   return cons(op_s, cons(identity_s, rest(form)));
@@ -3120,12 +3153,22 @@ static val retf(val ret)
 
 static val do_apf(val fun, val args)
 {
-  return apply(fun, args, nil);
+  return apply_intrinsic(fun, args);
 }
 
 static val apf(val fun)
 {
   return func_f1(fun, do_apf);
+}
+
+static val do_ipf(val fun, val args)
+{
+  return iapply(fun, args);
+}
+
+static val ipf(val fun)
+{
+  return func_f1(fun, do_ipf);
 }
 
 static val prinl(val obj, val stream)
@@ -3194,6 +3237,7 @@ void eval_init(void)
   list_s = intern(lit("list"), user_package);
   append_s = intern(lit("append"), user_package);
   apply_s = intern(lit("apply"), user_package);
+  iapply_s = intern(lit("iapply"), user_package);
   gen_s = intern(lit("gen"), user_package);
   gun_s = intern(lit("gun"), user_package);
   generate_s = intern(lit("generate"), user_package);
@@ -3269,6 +3313,7 @@ void eval_init(void)
   reg_mac(op_s, me_op);
   reg_mac(do_s, me_op);
   reg_mac(intern(lit("ap"), user_package), me_ap);
+  reg_mac(intern(lit("ip"), user_package), me_ip);
   reg_mac(intern(lit("ret"), user_package), me_ret);
   reg_mac(qquote_s, me_qquote);
   reg_mac(sys_qquote_s, me_qquote);
@@ -3312,6 +3357,7 @@ void eval_init(void)
   reg_fun(intern(lit("mappend"), user_package), func_n1v(mappendv));
   reg_fun(intern(lit("mappend*"), user_package), func_n1v(lazy_mappendv));
   reg_fun(apply_s, func_n1v(apply_intrinsic));
+  reg_fun(iapply_s, func_n1v(iapply));
   reg_fun(call_s, func_n1v(call));
   reg_fun(intern(lit("reduce-left"), user_package), func_n4o(reduce_left, 2));
   reg_fun(intern(lit("reduce-right"), user_package), func_n4o(reduce_right, 2));
@@ -3484,6 +3530,7 @@ void eval_init(void)
   reg_fun(intern(lit("and"), user_package), func_n0v(and_fun));
   reg_fun(intern(lit("retf"), user_package), func_n1(retf));
   reg_fun(intern(lit("apf"), user_package), func_n1(apf));
+  reg_fun(intern(lit("ipf"), user_package), func_n1(ipf));
   reg_fun(intern(lit("tf"), user_package), func_n0v(tf));
   reg_fun(intern(lit("nilf"), user_package), func_n0v(nilf));
 

@@ -1,3 +1,14 @@
+2014-06-26  kaz kylheku  <kaz@kylheku.com>
+
+	* eval.c (iapply_s): new global variable.
+	(iapply, me_ip): new static functions.
+	(do_apf): Bugfix: use apply_intrinsic, not apply.
+	(do_ipf, ipf): New static functions.
+	(eval_init): initialize iapply_s. register me_ip macro
+	expander, and the iapply and ipf functions.
+
+	* txr.1: Documented iapply, ipf and ip.
+
 2014-06-26  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (last): Bugfix: reversed null test.

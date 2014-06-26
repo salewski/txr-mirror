@@ -8153,12 +8153,13 @@ can be expressed as:
 
   (mapcar function (conses list0) (conses list1) ... (conses listn))
 
-.SS Function apply
+.SS Functions apply and iapply
 
 .TP
 Syntax:
 
   (apply <function> [ <arg>* <trailing-args> ])
+  (iapply <function> [ <arg>* <trailing-args> ])
 
 .TP
 Description:
@@ -8179,6 +8180,16 @@ If two or more arguments are present after <function>, then the last of
 these arguments is interpreted as <trailing-args>. The previous arguments
 represent leading arguments which are applied to <function>, prior to the
 arguments taken from <trailing-args>.
+
+The iapply function ("improper apply") is similar to apply, except with regard
+to the treatment of <trailing-args>. Firstly, under iapply, if <trailing-args>
+is an atom other than nil (possibly a sequence, such as a vector or string),
+then it is treated as an ordinary argument: <function> is invoked with a proper
+argument list, whose last element is <trailing-args>.  Secondly, if
+<trailing-args> is a list, but an improper list, then the terminating atom of
+<trailing-args> becomes an ordinary argument. Thus, in all possible cases,
+iapply treats an extra non-nil atom as an argument, and never calls
+<function> with an improper argument list.
 
 .TP
 Examples:
@@ -12003,12 +12014,13 @@ is the first argument of the inner function. Of course, if there
 are three levels of nesting, then three metas are needed to insert
 a parameter from the outermost op, into the innermost op.
 
-.SS Macro ap
+.SS Macros ap and ip
 
 .TP
 Syntax:
 
   (ap <form>+)
+  (ip <form>+)
 
 .TP
 Description:
@@ -12016,7 +12028,7 @@ Description:
 The ap macro is based on the op macro and has identical argument
 conventions.
 
-The ap macro analyzes its argumetns and produces a function, in exactly the
+The ap macro analyzes its arguments and produces a function, in exactly the
 same same way as the op macro.   It then returns a different one-argument
 function which accepts a list, and calls that function, applying the
 list as arguments.
@@ -12030,7 +12042,13 @@ except that the symbol args is to be understood as a generated symbol (gensym).
 The ap macro nests properly with op and do, in any combination, in regard
 to the @@n notation.
 
-See also: the apf function.
+The ip macro is very similar to the ap macro, except that it is based
+on the semantics of the function iapply rather than apply, according
+to the following equivalence:
+
+  (ap form ...) <--> (lambda (args) (iapply (op form ...)))
+
+See also: the apf function
 
 .SS Macro ret
 
@@ -12232,20 +12250,24 @@ Example:
   ;; the function returned by (retf 42) ignores 1 2 3 and returns 42.
   (call (retf 42) 1 2 3) -> 42
 
-.SH Function apf
+.SH Functions apf and ipf
 
 .TP
 Syntax:
 
   (apf <function>)
+  (ipf <function>)
 
 .TP
 Description:
 
 The apf function returns a one-argument function which accepts
 a list. When the function is called, it treats the list as
-argument which are applied to <function>. It returns whatever
+argument which are applied to <function> as if by apply. It returns whatever
 <function> returns.
+
+The ipf function is similar to apf, except that the returned
+function applies arguments as if by iapply rather than apply.
 
 See also: the ap macro.
 
