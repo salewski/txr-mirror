@@ -3424,6 +3424,7 @@ void eval_init(void)
   reg_fun(intern(lit("regex-compile"), user_package), func_n2o(regex_compile, 1));
   reg_fun(intern(lit("regexp"), user_package), func_n1(regexp));
   reg_fun(intern(lit("search-regex"), user_package), func_n4o(search_regex, 2));
+  reg_fun(intern(lit("range-regex"), user_package), func_n4o(range_regex, 2));
   reg_fun(intern(lit("match-regex"), user_package), func_n3o(match_regex, 2));
   reg_fun(intern(lit("match-regex-right"), user_package),
           func_n3o(match_regex_right, 2));
@@ -3532,6 +3533,7 @@ void eval_init(void)
   reg_fun(intern(lit("split-str"), user_package), func_n2(split_str));
   reg_fun(intern(lit("split-str-set"), user_package), func_n2(split_str_set));
   reg_fun(intern(lit("tok-str"), user_package), func_n3o(tok_str, 1));
+  reg_fun(intern(lit("tok-where"), user_package), func_n2(tok_where));
   reg_fun(intern(lit("list-str"), user_package), func_n1(list_str));
   reg_fun(intern(lit("trim-str"), user_package), func_n1(trim_str));
   reg_fun(intern(lit("cmp-str"), user_package), func_n2(cmp_str));

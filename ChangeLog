@@ -1,5 +1,20 @@
 2014-06-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): register range_regex and tok_where
+	as intrinsics.
+
+	* lib.c (tok_where): New function.
+
+	* lib.h (tok_where): Declared.
+
+	* regex.c (range_regex): New function.
+
+	* regex.h (range_regex): Declared.
+
+	* txr.1: Documented tok-where and range-regex.
+
+2014-06-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (search): Bugfix in type mismatch error message:
 	trying to print cons function pointer as value.
 

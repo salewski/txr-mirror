@@ -2562,6 +2562,29 @@ val tok_str(val str, val tok_regex, val keep_sep)
   return out;
 }
 
+val tok_where(val str, val tok_regex)
+{
+  list_collect_decl (out, iter);
+  val pos = zero;
+
+  for (;;) {
+    val range = range_regex(str, tok_regex, pos, nil);
+    cons_bind (match_start, match_end, range);
+
+    if (!match_start)
+      break;
+
+    iter = list_collect(iter, range);
+
+    pos = match_end;
+
+    if (numeq(match_end, match_start))
+      pos = plus(pos, one);
+  }
+
+  return out;
+}
+
 val list_str(val str)
 {
   const wchar_t *cstr = c_str(str);

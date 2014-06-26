@@ -9302,12 +9302,13 @@ be separate gaps which come between empty strings.
 
 This operation is nondestructive: <string> is not modified in any way.
 
-.SS Function tok-str
+.SS Functions tok-str and tok-where
 
 .TP
 Syntax:
 
   (tok-str <string> <regex> [<keep-between>])
+  (tok-where <string> <regex>)
 
 .TP
 Description:
@@ -9329,7 +9330,20 @@ of tok-str changes in the following way. The pieces of <string> which are
 skipped by the search for tokens are included in the output. If no token is
 found in <string>, then a list of one element is returned, containing <string>.
 Generally, if N tokens are found, then the returned list consists of 2N + 1
-elements. The first element of the list is the (possibly empty) substring which had to be skipped to find the first token. Then the token follows. The next element is the next skipped substring and so on. The last element is the substring of <string> between the last token and the end.
+elements. The first element of the list is the (possibly empty) substring which
+had to be skipped to find the first token. Then the token follows. The next
+element is the next skipped substring and so on. The last element is the
+substring of <string> between the last token and the end.
+
+The tok-where function works similarly to tok-str, but instead of returning
+the extracted tokens themselves, it returns a list of the character position
+ranges within <string> where matches for <regex> occur. The ranges
+are pairs of numbers, represented as cons cells, where the first number
+of the pair gives the starting character position, and the second number
+is one position past the end of the match.  If a match is empty, then the
+two numbers are equal.
+
+The tok-where function does not support the <keep-between> parameter.
 
 .SS Function list-str
 
@@ -11233,12 +11247,13 @@ and error.
 
 .SH REGULAR EXPRESSION LIBRARY
 
-.SS Function search-regex
+.SS Functions search-regex and range-regex
 
 .TP
 Syntax:
 
  (search-regex <haystack-string> <needle-regex> [ <start> [<from-end>] ])
+ (range-regex <haystack-string> <needle-regex> [ <start> [<from-end>] ])
 
 .TP
 Description
@@ -11249,7 +11264,14 @@ the search starts at position 0. If <from-end> is specified, the search
 proceeds in reverse, from the last position in the string, toward <start>.
 This function returns nil if no match is found, otherwise it returns
 a cons pair, whose car indicates the position of the match, and whose
-cdr indicates the length of the match. 
+cdr indicates the length of the match.
+
+The range-regex function is similar to search-regex, except when
+a match is found, it returns a position range, rather than a position
+and length. A cons pair is returned whose car indicates the position
+of the match, and whose cdr indicates the position one element past the
+last character of the match. If the match is empty, the two integers
+are equal.
 
 .SS Function match-regex
 

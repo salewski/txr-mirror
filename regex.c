@@ -1845,6 +1845,19 @@ again:
   }
 }
 
+val range_regex(val haystack, val needle_regex, val start,
+                val from_end)
+{
+  val result = search_regex(haystack, needle_regex, start, from_end);
+
+  if (result) {
+    cons_bind (pos, len, result);
+    rplacd(result, plus(pos, len));
+  }
+
+  return result;
+}
+
 val match_regex(val str, val reg, val pos)
 {
   regex_machine_t regm;
