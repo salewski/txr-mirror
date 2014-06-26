@@ -5498,7 +5498,7 @@ val search(val seq, val key, val testfun, val keyfun)
     /* TODO: optimize me */
     return search_list(seq, key, testfun, keyfun);
   default:
-    type_mismatch(lit("search: ~s is not a sequence"), cons, nao);
+    type_mismatch(lit("search: ~s is not a sequence"), seq, nao);
   }
 
   return seq;
