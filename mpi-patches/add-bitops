@@ -1,7 +1,7 @@
 Index: mpi-1.8.6/mpi.c
 ===================================================================
---- mpi-1.8.6.orig/mpi.c	2014-02-19 19:01:39.562347737 -0800
-+++ mpi-1.8.6/mpi.c	2014-02-19 19:01:43.174297255 -0800
+--- mpi-1.8.6.orig/mpi.c	2014-06-16 11:22:15.632802821 -0700
++++ mpi-1.8.6/mpi.c	2014-06-26 14:09:52.178356697 -0700
 @@ -16,6 +16,9 @@
  #include <ctype.h>
  #include <math.h>
@@ -51,7 +51,7 @@ Index: mpi-1.8.6/mpi.c
 +
 +  for (pa = DIGITS(a), pb = DIGITS(b), w = 0, ix = 0; ix < dig; ix++) {
 +    w += (ix == 0);
-+    w += (ix < adig) ? ~pa[ix] : ~padding;
++    w += (ix < adig) ? ~pa[ix] : padding;
 +    pb[ix] = ACCUM(w);
 +    w = CARRYOUT(w);
 +  }
@@ -74,16 +74,16 @@ Index: mpi-1.8.6/mpi.c
 +    return mp_copy(a, c);
 +
 +  if (ISNEG(a)) {
-+    mp_init_size(&tmp_a, extent);
 +    extent = USED(b);
++    mp_init_size(&tmp_a, extent);
 +    if ((res = mp_2comp(a, &tmp_a, extent)) != MP_OKAY)
 +	return res;
 +    a = &tmp_a;
 +  }
 +
 +  if (ISNEG(b)) {
-+    mp_init_size(&tmp_b, extent);
 +    extent = USED(a);
++    mp_init_size(&tmp_b, extent);
 +    if ((res = mp_2comp(b, &tmp_b, extent)) != MP_OKAY) {
 +	if (ISNEG(a))
 +	  mp_clear(&tmp_a);
@@ -437,8 +437,8 @@ Index: mpi-1.8.6/mpi.c
    int ix;
 Index: mpi-1.8.6/mpi.h
 ===================================================================
---- mpi-1.8.6.orig/mpi.h	2014-02-19 19:01:29.302491325 -0800
-+++ mpi-1.8.6/mpi.h	2014-02-19 19:01:43.178297199 -0800
+--- mpi-1.8.6.orig/mpi.h	2014-06-16 11:22:15.620803044 -0700
++++ mpi-1.8.6/mpi.h	2014-06-16 11:22:15.648802523 -0700
 @@ -54,6 +54,7 @@
  
  /* Macros for accessing the mp_int internals           */

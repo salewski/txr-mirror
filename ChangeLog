@@ -1,3 +1,18 @@
+2014-06-26  Kaz Kylheku  <kaz@kylheku.com>
+
+	Fixes to bignum bit operations affecting pretty much all bit operations
+	when bit field operands are negative, affecting logand, logor, logxor,
+	lognot, logtrunc, logtest and ash. In addition, logtest was found to
+	return the logical inverse of its correct value.
+
+	* arith.c (logtest): Fix broken boolean polarity
+	of return value.
+
+	* mpi-patches/add-bitops (mp_2comp): Fix incorrect
+	treatment of negative values.
+	(mp_and): Fix incorrectly ordered statements, which
+	cause failure when operands are negative.
+
 2014-06-26  kaz kylheku  <kaz@kylheku.com>
 
 	* eval.c (iapply_s): new global variable.
