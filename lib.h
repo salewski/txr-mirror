@@ -418,6 +418,7 @@ val lazy_conses(val list);
 val listref(val list, val ind);
 loc listref_l(val list, val ind);
 loc tail(val cons);
+loc term(loc head);
 loc lastcons(val list);
 val last(val list);
 loc ltail(loc cons);

@@ -646,12 +646,16 @@ val apply(val fun, val arglist, val ctx_form)
 
 static val apply_frob_args(val args)
 {
-  loc plast = lastcons(args);
-  if (!nullocp(plast)) {
-    deref(plast) = car(deref(plast));
-    return args;
-  } else {
+  if (!cdr(args)) {
     return car(args);
+  } else {
+    list_collect_decl (out, ptail);
+
+    for (; cdr(args); args = cdr(args))
+      ptail = list_collect(ptail, car(args));
+
+    list_collect_nconc(ptail, car(args));
+    return out;
   }
 }
 
@@ -662,27 +666,28 @@ val apply_intrinsic(val fun, val args)
 
 static val iapply(val fun, val args)
 {
-  if (args && atom(args)) {
-    args = cons(args, nil);
-  } else {
-    loc plast = lastcons(args);
-    if (!nullocp(plast)) {
-      deref(plast) = car(deref(plast));
-    } else {
-      args = car(args);
-    }
+  list_collect_decl (mod_args, ptail);
+  loc saved_ptail;
 
-    if (args && atom(args)) {
-      args = cons(args, nil);
-    } else if (args) {
-      val la = last(args);
-      val cd = cdr(la);
-      if (cd && atom(cd))
-        rplacd(la, cons(cd, nil));
+  for (; cdr(args); args = cdr(args))
+    ptail = list_collect(ptail, car(args));
+
+  saved_ptail = ptail;
+
+  ptail = list_collect_nconc(ptail, car(args));
+
+  {
+    loc pterm = term(ptail);
+    val tatom = deref(pterm);
+
+    if (tatom) {
+      deref(ptail) = nil;
+      ptail = list_collect_nconc(saved_ptail, copy_list(car(args)));
+      set(term(ptail), cons(tatom, nil));
     }
   }
 
-  return apply(fun, args, nil);
+  return apply(fun, mod_args, nil);
 }
 
 static val call(val fun, val args)

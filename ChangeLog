@@ -1,3 +1,16 @@
+2014-06-27  Kaz Kylheku  <kaz@kylheku.com>
+
+	Bugfix: apply_intrinsic and iapply must not destructively
+	manipulate argument lists.
+
+	* eval.c (apply_frob_args): Rewrite to non-destructive
+	one-pass version.
+	(iapply): Likewise.
+
+	* lib.c (term): New function.
+
+	* lib.h (term): Declared.
+
 2014-06-26  Kaz Kylheku  <kaz@kylheku.com>
 
 	Fixes to bignum bit operations affecting pretty much all bit operations

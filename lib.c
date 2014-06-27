@@ -408,6 +408,13 @@ loc tail(val cons)
   return cdr_l(cons);
 }
 
+loc term(loc head)
+{
+  while (consp(deref(head)))
+    head = cdr_l(deref(head));
+  return head;
+}
+
 loc lastcons(val list)
 {
   loc ret = nulloc;
