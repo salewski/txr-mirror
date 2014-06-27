@@ -14481,11 +14481,6 @@ foo; it is local inside it.
 
 .SH QUOTE/QUASIQUOTE OPERATOR SYNTAX
 
-The quasiquote read syntax has a target language made up of operators. The TXR
-parser rewrites the syntax into the appropriate combination of these operators,
-and automatically selects whether a form is based on the quote operator or the
-qquote operator. The operators are described below.
-
 .SS Operator quote
 
 .TP
@@ -14501,8 +14496,7 @@ and instead returns <form> itself as an object. For example, if <form>
 is a symbol, then <form> is not evaluated to the symbol's value; rather
 the symbol itself is returned.
 
-Note: when the quote syntax '<form> is used, then if <form> is not a list
-structure which contains unquotes or splices, it is translated to
+Note: when the quote syntax '<form> is used it is translated to
 (quote <form>).
 
 .TP
@@ -14578,9 +14572,10 @@ compilation and processes its interior.
 .TP
 Dialect note:
 
-In Lisp dialects which have a published syntax, there is the expectation
-that the quasiquote read syntax corresponds to it. That is to say, that
-for instance ^(a b ,c) is translated to (qquote b (unquote c)).
+In Lisp dialects which have a published quasiquoting operator syntax, there is
+the expectation that the quasiquote read syntax corresponds to it. That is to
+say, that for instance the read syntax ^(a b ,c) is translated to
+(qquote b (unquote c)).
 
 In TXR Lisp, this is not true! Although ^(b b ,c) is translated to a
 quasiquoting macro, it is an internal one, not based on the public qquote,
@@ -14593,17 +14588,17 @@ since it doesn't treat them specially.
 This also allows programmers to use the quasiquote read syntax to construct
 quasiquote macros. For instance
 
-  ^(qquote (unquote ,x))
+  ^(qquote (unquote ,x)) ;; does not mean ^^,x 
 
-does not mean ^^,x.  To the quasiquote reader, the qquote and unquote symbols
-mean nothing special, and so this syntax simply means that if the value of x is
-foo, the result will be (qquote (unquote foo)).
+To the quasiquote reader, the qquote and unquote symbols mean nothing special,
+and so this syntax simply means that if the value of x is foo, the result will
+be (qquote (unquote foo)).
 
 The form's expansion is actually this:
 
   (sys:qquote (qquote (unquote (sys:unquote x))))
 
-the sys:qquote macro recognizes sys:unquote embedded in the form, and 
+the sys:qquote macro recognizes sys:unquote embedded in the form, and
 the other symbols not in the sys: package are just static template material.
 
 .SS Operator unquote
@@ -14621,7 +14616,7 @@ Description:
 The unquote operator is not an operator per se. The unquote symbol has no
 binding in the global environment. It is a special syntax that is recognized
 within a qquote form, to indicate forms within the quasiquote which are to be
-evaluated and insertd into the resulting structure.
+evaluated and inserted into the resulting structure.
 
 The variant (qquote (unquote <form>)) is equivalent to <form>: the
 qquote and unquote "cancel out".
