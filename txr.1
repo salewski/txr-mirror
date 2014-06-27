@@ -8712,6 +8712,76 @@ cdr field.
 
 the string returned by get-line, and whose cdr contains the lazy function.
 
+.SS Macro delay
+
+.TP
+Syntax:
+
+  (delay <expression>)
+
+.TP
+Description:
+
+The delay operator arranges for the delayed (or "lazy") evaluation of
+<expression>. This means that the expression is not evaluated immediately.
+Rather, the delay expression produces a promise object.
+
+The promise object can later be passed to the force function (described
+later in this document). The force function will trigger the evaluation
+of the expression and retrieve the value.
+
+The expression is evaluated in the original scope, no mater where
+the force takes place.
+
+The expression is evaluated at most once, by the first call to force.
+Additional calls to force only retrieve a cached value.
+
+.TP
+Example:
+
+  @(do
+    ;; list is popped only once: the value is computed
+    ;; just once when force is called on a given promise
+    ;; for the first time.
+
+    (defun get-it (promise)
+      (format t "*list* is ~s\en" *list*)
+      (format t "item is ~s\en" (force promise))
+      (format t "item is ~s\en" (force promise))
+      (format t "*list* is ~s\en" *list*))
+
+
+    (defvar *list* '(1 2 3))
+
+    (get-it (delay (pop *list*))))
+
+  Output:
+
+  *list* is (1 2 3)
+  item is 1
+  item is 1
+  *list* is (2 3)
+
+.SS Function force
+
+.TP
+Syntax:
+
+  (force <promise>)
+
+.TP
+Description:
+
+The force function accepts a promise object produced by the delay macro.
+The first time force is invoked <promise>, the promise expression
+is evaluated (in its original lexical environment, regardless of where
+in the program the force call takes place). The value of the expression is
+cached inside <promise> and returned, becoming the return value of the
+force function call.  If the force function is invoked additional times on
+the same promise, the cached value is retrieved.
+
+.SH LAZY SEQUENCES, RANGES, PERMUTATIONS AND COMBINATIONS
+
 .SS Function generate
 
 .TP
@@ -8726,7 +8796,7 @@ The generate function produces a lazy list which dynamically produces items
 according to the following logic.
 
 The arguments to generate are functions which do not take any arguments.  The
-return value of generate is a lazy list. 
+return value of generate is a lazy list.
 
 When the lazy list is accessed, for instance with the functions car and cdr, it
 produces items on demand. Prior to producing each item, <while-fun> is
@@ -8823,73 +8893,42 @@ Example:
   Output:
   1 2 3
 
-.SS Macro delay
+.SS Functions range and range*
 
 .TP
 Syntax:
 
-  (delay <expression>)
+  (range [ [ [ <from> ] <to> ] <step> ])
+  (range* [ [ [ <from> ] <to> ] <step> ])
 
 .TP
 Description:
 
-The delay operator arranges for the delayed (or "lazy") evaluation of
-<expression>. This means that the expression is not evaluated immediately.
-Rather, the delay expression produces a promise object.
+The range and range* functions generate a lazy sequence of integers, with a
+fixed step between successive values.
 
-The promise object can later be passed to the force function (described
-later in this document). The force function will trigger the evaluation
-of the expression and retrieve the value.
+The difference between range and range* is that range* excludes the endpoint.
+For instance (range 0 3) generates the list (0 1 2 3), whereas (range* 0 3)
+generates (0 1 2).
 
-The expression is evaluated in the original scope, no mater where
-the force takes place.
+All arguments are optional. If the <step> argument is omitted, then it defaults
+to 1: each value in the sequence is greater than the previous one by 1.
+Positive or negative step sizes are allowed. There is no check for a step size
+of zero, or for a step direction which cannot meet the endpoint.
 
-The expression is evaluated at most once, by the first call to force.
-Additional calls to force only retrieve a cached value.
+The <to> argument specifies the endpoint value, which, if it occurs in the
+sequence, is excluded from it by the range* function, but included by the range
+function. If <to> is missing, or specified as nil, then there is no endpoint,
+and the sequence which is generated is infinite, regardless of <step>.
 
-.TP
-Example:
+If <from> is omitted, then the sequence begins at zero, otherwise <from> must
+be an integer which specifies the initial value.
 
-  @(do
-    ;; list is popped only once: the value is computed
-    ;; just once when force is called on a given promise
-    ;; for the first time.
-
-    (defun get-it (promise)
-      (format t "*list* is ~s\en" *list*)
-      (format t "item is ~s\en" (force promise))
-      (format t "item is ~s\en" (force promise))
-      (format t "*list* is ~s\en" *list*))
-
-
-    (defvar *list* '(1 2 3))
-
-    (get-it (delay (pop *list*))))
-
-  Output:
-
-  *list* is (1 2 3)
-  item is 1
-  item is 1
-  *list* is (2 3)
-
-.SS Function force
-
-.TP
-Syntax:
-
-  (force <promise>)
-
-.TP
-Description:
-
-The force function accepts a promise object produced by the delay macro.
-The first time force is invoked <promise>, the promise expression
-is evaluated (in its original lexical environment, regardless of where
-in the program the force call takes place). The value of the expression is
-cached inside <promise> and returned, becoming the return value of the
-force function call.  If the force function is invoked additional times on
-the same promise, the cached value is retrieved.
+The sequence stops if it reaches the endpoint value (which is included in the
+case of range, and excluded in the case of range*).  However, a sequence with a
+stepsize greater than 1 or less than -1 might step over the endpoint value, and
+therefore never attain it. In this situation, the sequence also stops, and the
+excess value which surpasses the endpoint is excluded from the sequence.
 
 .SS Function perm
 
@@ -13563,43 +13602,6 @@ The random and rand functions produce a value in the range [0, modulus).  They
 differ only in the order of arguments. In the rand function, the random state
 object is the second argument and is optional. If it is omitted, the global
 *random-state* object is used.
-
-.SS Functions range and range*
-
-.TP
-Syntax:
-
-  (range [ [ [ <from> ] <to> ] <step> ])
-  (range* [ [ [ <from> ] <to> ] <step> ])
-
-.TP
-Description:
-
-The range and range* functions generate a lazy sequence of integers, with a
-fixed step between successive values.
-
-The difference between range and range* is that range* excludes the endpoint.
-For instance (range 0 3) generates the list (0 1 2 3), whereas (range* 0 3)
-generates (0 1 2).
-
-All arguments are optional. If the <step> argument is omitted, then it defaults
-to 1: each value in the sequence is greater than the previous one by 1.
-Positive or negative step sizes are allowed. There is no check for a step size
-of zero, or for a step direction which cannot meet the endpoint.
-
-The <to> argument specifies the endpoint value, which, if it occurs in the
-sequence, is excluded from it by the range* function, but included by the range
-function. If <to> is missing, or specified as nil, then there is no endpoint,
-and the sequence which is generated is infinite, regardless of <step>.
-
-If <from> is omitted, then the sequence begins at zero, otherwise <from> must
-be an integer which specifies the initial value.
-
-The sequence stops if it reaches the endpoint value (which is included in the
-case of range, and excluded in the case of range*).  However, a sequence with a
-stepsize greater than 1 or less than -1 might step over the endpoint value, and
-therefore never attain it. In this situation, the sequence also stops, and the
-excess value which surpasses the endpoint is excluded from the sequence.
 
 .SH TIME
 
