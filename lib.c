@@ -5537,13 +5537,23 @@ val search(val seq, val key, val testfun, val keyfun)
 val where(val seq_in, val func)
 {
   list_collect_decl (out, ptail);
-  val seq = nullify(seq_in);
-  val idx = zero;
 
-  for (; seq; seq = cdr(seq), idx = plus(idx, one)) {
-    val elt = car(seq);
-    if (funcall1(func, elt))
-      ptail = list_collect(ptail, idx);
+  if (hashp(seq_in)) {
+    val hiter = hash_begin(seq_in);
+    val cell;
+
+    while ((cell = hash_next(hiter)))
+      if (funcall1(func, cdr(cell)))
+        ptail = list_collect(ptail, car(cell));
+  } else {
+    val seq = nullify(seq_in);
+    val idx = zero;
+
+    for (; seq; seq = cdr(seq), idx = plus(idx, one)) {
+      val elt = car(seq);
+      if (funcall1(func, elt))
+        ptail = list_collect(ptail, idx);
+    }
   }
 
   return out;
@@ -5576,6 +5586,24 @@ val sel(val seq_in, val where_in)
       }
     }
     break;
+  case COBJ:
+    if (!hashp(seq))
+      type_mismatch(lit("select: ~s is not a sequence or hash"), seq, nao);
+    {
+      val newhash = make_similar_hash(seq);
+
+      for (; where; where = cdr(where)) {
+        val found;
+        loc pfound = mkcloc(found);
+        val key = car(where);
+        val value = gethash_f(seq, car(where), pfound);
+
+        if (found)
+          sethash(newhash, key, value);
+      }
+
+      return newhash;
+    }
   default:
     {
       val len = length(seq);

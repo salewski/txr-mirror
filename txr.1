@@ -7836,17 +7836,20 @@ the resulting value is used in its place.
 .TP
 Syntax:
 
-  (where <sequence> <function>)
+  (where <object> <function>)
 
 .TP
 Description:
 
-The where function searches <sequence> for elements which satisfy <function>,
-and returns a list of the numeric indices of those elements within
-<sequence>, in order of increasing index.
+If <object> is a sequence, the where function returns
+a list of the numeric indices of those of its elements which satisfy
+<function>. The numeric indices appear in increasing order.
+
+If <object> is a hash, the where function returns an unordered list
+of keys which have values which satisfy <function>.
 
 <function> must be a function that can be called with one argument.
-For each element of <sequence>, <function> is called with that element
+For each element of <object>, <function> is called with that element
 as an argument.  If a non-nil value is returned, then the zero-based index of
 that element is added to a list. Finally, the list is returned.
 
@@ -7855,22 +7858,30 @@ that element is added to a list. Finally, the list is returned.
 .TP
 Syntax:
 
-  (select <sequence> <index-list>)
+  (select <object> <index-list>)
 
 .TP
 Description:
 
-The select function returns a sequence, of the same kind as <sequence>,
-which consists of those elements of sequence which are identified by
-the numeric indices in <index-list>.
+The select function returns an object, of the same kind as <object>,
+which consists of those elements of <object> which are identified by
+the indices in <index-list>.
 
-The select function stops processing <sequence> upon encountering
-an index inside <index-list> which is out of range.
+If <object> is a sequence, then <index-list> consists of numeric
+indices.  The select function stops processing <object> upon encountering an
+index inside <index-list> which is out of range. (Rationale: without
+this strict behavior, select would not be able to terminate if
+<index-list> is infinite.)
 
-If <sequence> is a list, then <index-list> must contain montonically increasing
-numeric values, even if no value is out of range, since the <select> function
+If <object> is a list, then <index-list> must contain montonically increasing
+numeric values, even if no value is out of range, since the select function
 makes a single pass through the list based on the assumption that indices
-are ordered.
+are ordered. (Rationale: optmization.)
+
+If <object> is a hash, then <index-list> is a list of keys. A new hash is
+returned which contains those elements of <object> whose keys appear
+in <index-list>. All of <index-list> is processed, even if it contains
+keys which are not in <object>.
 
 .SS Function tree-find
 

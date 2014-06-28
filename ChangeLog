@@ -1,5 +1,11 @@
 2014-06-27  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (where, sel): Extend into hashes.
+
+	* txr.1: document hash support for select and where.
+
+2014-06-27  Kaz Kylheku  <kaz@kylheku.com>
+
 	Bugfix: apply_intrinsic and iapply must not destructively
 	manipulate argument lists.
 
