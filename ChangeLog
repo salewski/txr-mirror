@@ -1,5 +1,17 @@
 2014-06-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (bit): New function.
+
+	* eval.c (eval_init): Register bit as intrinsic.
+
+	* lib.h (bit): Declared.
+
+	* mpi-patches/add-bitops (mp_bit): New function.
+
+	* txr.1: Documented bit
+
+2014-06-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	* mpi-patches/add-bitops (mp_and, mp_or, mp_xor, mp_shift): Plug memory
 	leaks caused by wrongly initializing the temporary destination operand
 	for mp2_comp with a size, which mp2_comp then clobbers by doing the same

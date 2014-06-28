@@ -3470,6 +3470,7 @@ void eval_init(void)
   reg_fun(intern(lit("lognot"), user_package), func_n2o(lognot, 1));
   reg_fun(intern(lit("logtrunc"), user_package), func_n2(logtrunc));
   reg_fun(intern(lit("ash"), user_package), func_n2(ash));
+  reg_fun(intern(lit("bit"), user_package), func_n2(bit));
   reg_fun(intern(lit("mask"), user_package), func_n0v(maskv));
 
   reg_fun(intern(lit("regex-compile"), user_package), func_n2o(regex_compile, 1));

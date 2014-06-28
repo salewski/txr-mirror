@@ -1,7 +1,7 @@
 Index: mpi-1.8.6/mpi.c
 ===================================================================
 --- mpi-1.8.6.orig/mpi.c	2014-06-16 11:22:15.632802821 -0700
-+++ mpi-1.8.6/mpi.c	2014-06-28 07:20:04.364811464 -0700
++++ mpi-1.8.6/mpi.c	2014-06-28 07:42:26.140352649 -0700
 @@ -16,6 +16,9 @@
  #include <ctype.h>
  #include <math.h>
@@ -20,7 +20,7 @@ Index: mpi-1.8.6/mpi.c
  int      s_highest_bit_mp(mp_int *a);
  mp_err   s_mp_set_bit(mp_int *a, int bit);
  
-@@ -2336,6 +2340,411 @@
+@@ -2336,6 +2340,430 @@
  
  /* }}} */
  
@@ -429,13 +429,32 @@ Index: mpi-1.8.6/mpi.c
 +  return MP_OKAY;
 +}
 +
++mp_err mp_bit(mp_int *a, mp_digit bit)
++{
++  mp_int tmp;
++  mp_err res;
++  int a_neg = ISNEG(a);
++  int digit = bit / MP_DIGIT_BIT;
++  mp_digit mask = ((mp_digit) 1 << (bit % MP_DIGIT_BIT));
++
++  if (a_neg) {
++    mp_init(&tmp);
++    if ((res = mp_2comp(a, &tmp, bit + 1)) != MP_OKAY)
++	return res;
++    SIGN(&tmp) = MP_ZPOS;
++    a = &tmp;
++  }
++
++  return (DIGITS(a)[digit] & mask) != 0 ? MP_YES : MP_NO;
++}
++
  mp_err mp_to_double(mp_int *mp, double *d)
  {
    int ix;
 Index: mpi-1.8.6/mpi.h
 ===================================================================
 --- mpi-1.8.6.orig/mpi.h	2014-06-16 11:22:15.620803044 -0700
-+++ mpi-1.8.6/mpi.h	2014-06-16 11:22:15.648802523 -0700
++++ mpi-1.8.6/mpi.h	2014-06-28 08:46:48.354193482 -0700
 @@ -54,6 +54,7 @@
  
  /* Macros for accessing the mp_int internals           */
@@ -444,7 +463,7 @@ Index: mpi-1.8.6/mpi.h
  #define  USED(MP)     ((MP)->used)
  #define  ALLOC(MP)    ((MP)->alloc)
  #define  DIGITS(MP)   ((MP)->dp)
-@@ -187,6 +188,17 @@
+@@ -187,6 +188,18 @@
  #endif /* end MP_NUMTH */
  
  /*------------------------------------------------------------------------*/
@@ -457,6 +476,7 @@ Index: mpi-1.8.6/mpi.h
 +mp_err mp_trunc_comp(mp_int *a, mp_int *b, mp_digit bits);
 +mp_err mp_trunc(mp_int *a, mp_int *b, mp_digit bits);
 +mp_err mp_shift(mp_int *a, mp_int *b, int bits); /* + left, - right */
++mp_err mp_bit(mp_int *a, mp_digit bit);
 +
 +/*------------------------------------------------------------------------*/
  /* Conversions                                                            */

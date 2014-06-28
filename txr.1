@@ -11207,6 +11207,28 @@ a right shift does not exhaust the infinite sequence of 1 digits which
 extends to the left. Thus if -4 is shifted right it becomes -2 because
 the bitwise representations are ...111100 and ...11110.
 
+.SS Function bit
+
+.TP
+Syntax:
+
+  (bit <value> <bit>)
+
+.TP
+Description:
+
+The bit function tests whether the integer <value> has a 1 in bit position <bit>.
+The <bit> argument must be a non-negative integer. A value of zero of <bit>
+indicates the least significant bit position of <value>.
+
+The bit function has a boolean result, returning the symbol t if bit <bit>
+of <value> is set, otherwise nil.
+
+If <value> is negative, it is treated as if it had an infinite-bit two's
+complement representation. For instance, if value is -2, then the bit
+function returns nil for a <bit> value of zero, and t for all other values,
+since the infinite bit two's complement representation of -2 is ...11110.
+
 .SS Function mask
 
 .TP

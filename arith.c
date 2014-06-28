@@ -1826,6 +1826,56 @@ bad3:
   uw_throwf(error_s, lit("ashift: non-integral operand ~s"), a, nao);
 }
 
+val bit(val a, val bit)
+{
+  cnum bn;
+
+  if (!fixnump(bit))
+    goto bad;
+
+  bn = c_num(bit);
+
+  if (bn < 0)
+    goto bad2;
+
+  switch (type(a)) {
+  case NUM:
+    {
+      cnum an = c_num(a);
+      if (bn < (SIZEOF_PTR * CHAR_BIT))
+        return (an & ((cnum) 1 << bn)) ? t : nil;
+      return an < 0 ? t : nil;
+    }
+  case BGNUM:
+    {
+      mp_err res = mp_bit(mp(a), bn);
+
+      switch (res) {
+      case MP_YES:
+        return t;
+      case MP_NO:
+        return nil;
+      default:
+        goto bad4;
+      }
+    }
+  default:
+    goto bad3;
+  }
+
+bad:
+  uw_throwf(error_s, lit("bit: bit position ~s is not a fixnum"), bit, nao);
+
+bad2:
+  uw_throwf(error_s, lit("bit: bit position ~s is negative"), bit, nao);
+
+bad3:
+  uw_throwf(error_s, lit("bit: non-integral operand ~s"), a, nao);
+
+bad4:
+  uw_throwf(error_s, lit("bit: operation failed on ~s, bit ~s"), a, bit, nao);
+}
+
 val maskv(val bits)
 {
   val accum = zero;
