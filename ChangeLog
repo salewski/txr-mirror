@@ -1,3 +1,11 @@
+2014-06-28  Kaz Kylheku  <kaz@kylheku.com>
+
+	* mpi-patches/add-bitops (mp_and, mp_or, mp_xor, mp_shift): Plug memory
+	leaks caused by wrongly initializing the temporary destination operand
+	for mp2_comp with a size, which mp2_comp then clobbers by doing the same
+	thing.  Also plug memory leaks that happen in in out-of-memory return
+	case.
+
 2014-06-27  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (where, sel): Extend into hashes.
