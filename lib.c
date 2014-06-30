@@ -5576,10 +5576,8 @@ val sel(val seq_in, val where_in)
       for (; seq && where; seq = cdr(seq), idx = plus(idx, one)) {
         val wh;
 
-        do {
-          wh = car(where);
-          where = cdr(where);
-        } while (lt(wh, idx));
+        for (; where && lt(wh = car(where), idx); where = cdr(where))
+          ; /* empty */
 
         if (eql(wh, idx))
           ptail = list_collect (ptail, car(seq));
