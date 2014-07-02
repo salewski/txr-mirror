@@ -3993,6 +3993,26 @@
 
 	* txr.1: Updated.
 
+2014-01-10  Kaz Kylheku  <kaz@kylheku.com>
+
+	* configure (lang_flags): Let us switch from using _XOPEN_SOURCE=2
+	to _POSIX_C_SOURCE=199309L and _BSD_SOURCE.
+	In the .exe suffix test, try harder to redirect ls's output.
+	Test for fork stuff now needs <sys/types.h> evidently;
+	<unistd.h> does not necessarily pid_t, even though it defines
+	functions that return and accept pid_t!
+	The timegm test no longer needs _SVID_SOURCE since _BSD_SOURCE
+	covers it, and so we end up not using _SVID_SOURCE any more.
+	New tests for usleep and nanosleep.
+	The test for setenv is not conditional on timegm failing.
+
+	* eval.c: Include <time.h> and conditionally <windows.h>.
+	(usleep_wrap): New function.
+	(eval_init): New usleep_wrap function registered as usleep intrinsic.
+
+	* lib.c: Only define setenv and unsetenv if we don't have timegm,
+	because only in that situation they are used.
+
 014-01-10  Kaz Kylheku  <kaz@kylheku.com>
 
 	* match.c (do_txeval): Lift an annoying restriction in the pattern
