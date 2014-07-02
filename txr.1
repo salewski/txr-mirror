@@ -13828,6 +13828,27 @@ EXIT_FAILURE, and t corresponds to EXIT_SUCCESS. These are platform-independent
 indicators of failed or successful termination. The numeric value 0 also
 indicates success.
 
+.SS Function usleep
+
+.TP
+Syntax:
+
+  (usleep <usec>)
+
+.TP
+Description:
+
+The usleep function suspends the execution of the program for at least
+<usec> microseconds.
+
+The return value is t if the sleep was successfully executed. A nil
+value indicates premature wakup or complete failure.
+
+Note: the actual sleep resolution is not guaranteed, and depends on granularity
+of the system timer.  Actual sleep times may be rounded up to the nearest 10
+millisecond multiple on a system where timed suspensions are triggered by a 100
+Hz tick.
+
 .SS Function mkdir
 
 .TP
