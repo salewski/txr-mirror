@@ -1503,15 +1503,22 @@ static loc dwim_loc(val form, val env, val op, val newform, val *retval)
       val index = first(args);
 
       if (consp(index)) {
+        cons_bind (from, to, index);
+
+        if (listp(to)) {
+          from = index;
+          to = colon_k;
+        }
+
         if (op == set_s) {
           val newval = eval(newform, env, form);
-          replace_str(obj, newval, car(index), cdr(index));
+          replace_str(obj, newval, from, to);
           *retval = newval;
         } else if (op == del_s) {
-          *retval = sub_str(obj, car(index), cdr(index));
-          replace_str(obj, nil, car(index), cdr(index));
+          *retval = sub_str(obj, from, to);
+          replace_str(obj, nil, from, to);
         } else {
-          eval_error(form, lit("[~s ~s]: ranges allow only set and del operators"),
+          eval_error(form, lit("[~s ~s]: ranges and index lists allow only set and del operators"),
                      obj, index, nao);
         }
 
@@ -1555,14 +1562,20 @@ static loc dwim_loc(val form, val env, val op, val newform, val *retval)
       val index = first(args);
 
       if (consp(index)) {
+        cons_bind (from, to, index);
+
+        if (listp(to)) {
+          from = index;
+          to = colon_k;
+        }
 
         if (op == set_s) {
           val newval = eval(newform, env, form);
-          replace_vec(obj, newval, car(index), cdr(index));
+          replace_vec(obj, newval, from, to);
           *retval = newval;
         } else if (op == del_s) {
-          *retval = sub_vec(obj, car(index), cdr(index));
-          replace_vec(obj, nil, car(index), cdr(index));
+          *retval = sub_vec(obj, from, to);
+          replace_vec(obj, nil, from, to);
         } else {
           eval_error(form, lit("[~s ~s]: ranges allow only set and del operators"),
                      obj, index, nao);
@@ -1596,17 +1609,23 @@ static loc dwim_loc(val form, val env, val op, val newform, val *retval)
       } else if (consp(index)) {
         val newlist;
         val tempform;
+        cons_bind (from, to, index);
+
+        if (listp(to)) {
+          from = index;
+          to = colon_k;
+        }
 
         if (op == set_s) {
           val newval = eval(newform, env, form);
-          newlist = replace_list(obj, newval, car(index), cdr(index));
+          newlist = replace_list(obj, newval, from, to);
           tempform = list(op, second(form), 
                           cons(quote_s, cons(newlist, nil)), nao);
           op_modplace(tempform, env);
           *retval = newval;
         } else if (op == del_s) {
-          *retval = sub_list(obj, car(index), cdr(index));
-          newlist = replace_list(obj, nil, car(index), cdr(index));
+          *retval = sub_list(obj, from, to);
+          newlist = replace_list(obj, nil, from, to);
           tempform = list(op, second(form), 
                           cons(quote_s, cons(newlist, nil)), nao);
           op_modplace(tempform, env);

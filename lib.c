@@ -766,11 +766,32 @@ val replace_list(val list, val items, val from, val to)
   if (!list)
     return items;
 
-  if (null_or_missing_p(from))
+  if (consp(from)) {
+    val where = from;
+    val seq = list;
+    val idx = zero;
+
+    if (!missingp(to))
+      uw_throwf(error_s,
+                lit("replace-list: to-arg not applicable when from-arg is a list"),
+                nao);
+
+    for (; seq && where && items; seq = cdr(seq), idx = plus(idx, one)) {
+      val wh;
+
+      for (; where && lt(wh = car(where), idx); where = cdr(where))
+        ; /* empty */
+
+      if (eql(wh, idx))
+        rplaca(seq, pop(&items));
+    }
+
+    return list;
+  } else if (null_or_missing_p(from)) {
     from = zero;
-  else if (from == t)
+  } else if (from == t) {
     from = nil;
-  else if (lt(from, zero)) {
+  } else if (lt(from, zero)) {
     from = plus(from, len ? len : (len = length(list)));
     if (to == zero)
       to = len;
@@ -2332,11 +2353,28 @@ val replace_str(val str_in, val items, val from, val to)
               str_in, typeof(str_in), nao);
   }
 
-  if (null_or_missing_p(from))
+  if (consp(from)) {
+    val where = from;
+    val len = length_str(str_in);
+
+    if (!missingp(to))
+      uw_throwf(error_s,
+                lit("replace-str: to-arg not applicable when from-arg is a list"),
+                nao);
+
+    for (; where && items; where = cdr(where)) {
+      val wh = car(where);
+      if (ge(wh, len))
+        break;
+      chr_str_set(str_in, wh, pop(&items));
+    }
+
+    return str_in;
+  } else if (null_or_missing_p(from)) {
     from = zero;
-  else if (from == t)
+  } else if (from == t) {
     from = len;
-  else if (lt(from, zero)) {
+  } else if (lt(from, zero)) {
     from = plus(from, len);
     if (to == zero)
       to = len;
@@ -4346,11 +4384,28 @@ val replace_vec(val vec_in, val items, val from, val to)
   val len_it = length(it_seq);
   val len_rep;
 
-  if (null_or_missing_p(from))
+  if (consp(from)) {
+    val where = from;
+    val len = length_vec(vec_in);
+
+    if (!missingp(to))
+      uw_throwf(error_s,
+                lit("replace-vec: to-arg not applicable when from-arg is a list"),
+                nao);
+
+    for (; where && items; where = cdr(where)) {
+      val wh = car(where);
+      if (ge(wh, len))
+        break;
+      set(vecref_l(vec_in, wh), pop(&items));
+    }
+
+    return vec_in;
+  } else if (null_or_missing_p(from)) {
     from = zero;
-  else if (from == t)
+  } else if (from == t) {
     from = len;
-  else if (lt(from, zero)) {
+  } else if (lt(from, zero)) {
     from = plus(from, len);
     if (to == zero)
       to = len;
@@ -5594,7 +5649,7 @@ val sel(val seq_in, val where_in)
         val found;
         loc pfound = mkcloc(found);
         val key = car(where);
-        val value = gethash_f(seq, car(where), pfound);
+        val value = gethash_f(seq, key, pfound);
 
         if (found)
           sethash(newhash, key, value);

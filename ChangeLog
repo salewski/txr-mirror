@@ -1,3 +1,19 @@
+2014-07-02  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (dwim_loc): Support indexing using a list of positions,
+	such as obtained by the where function.
+
+	* lib.c (replace_list, replace_str, replace_vec): Allow the
+	from argument to be a list of index positions, possibly empty.
+
+	* txr.1: Condensed syntactic descriptions under dwim operator.
+	Range Indexing section no longer says that the value nil
+	can be used as either endpoint of a range. This will not
+	work any longer since a "from" value of nil looks like an
+	empty list of indexes. Documented new behavior under
+	replace, and shortened documentation for replace-list,
+	replace-str and replace-vec.
+
 2014-06-30  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (sel): Bugfix: not implemented correctly for sequences
