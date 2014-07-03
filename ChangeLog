@@ -1,5 +1,18 @@
 2014-07-03  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (apf_s, ipf_s): New symbol variables.
+	(me_ap, me_ip): Generate a much simpler macro-expansion:
+	a call to apf or ipf, rather than lambda syntax.
+	(me_ado, me_ido): New static functions.
+	(eval_init): Initialize apf_s and ipf_s variables.
+	Use them in the registration calls for apf and ipf.
+	Register ado and ido macros.
+
+	* txr.1: Streamlined documentation for ap and ip,
+	and added ado and ido.
+
+2014-07-03  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (apf, ipf): Bugfix: do_apf and do_ipf
 	should be registered as variadic functions.
 

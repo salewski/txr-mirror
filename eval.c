@@ -80,7 +80,7 @@ val dohash_s;
 val uw_protect_s, return_s, return_from_s;
 val list_s, append_s, apply_s, iapply_s;
 val gen_s, gun_s, generate_s, rest_s, plus_s;
-val promise_s, op_s, identity_s;
+val promise_s, op_s, identity_s, apf_s, ipf_s;
 val hash_lit_s, hash_construct_s;
 val vector_lit_s, vector_list_s;
 val macro_time_s, with_saved_vars_s, macrolet_s;
@@ -2437,19 +2437,22 @@ static val me_op(val form, val menv)
 
 static val me_ap(val form, val menv)
 {
-  /* We do not use an op to generate the outer lambda, because
-     it wouldn't be hygienic; this hidden op would capture @@n
-     references from the body of the ap form. */
-  val args = gensym(lit("args-"));
-  return list(lambda_s, cons(args, nil),
-              list(apply_s, cons(op_s, rest(form)), args, nao), nao);
+  return list(apf_s, cons(op_s, rest(form)), nao);
 }
 
 static val me_ip(val form, val menv)
 {
-  val args = gensym(lit("args-"));
-  return list(lambda_s, cons(args, nil),
-              list(iapply_s, cons(op_s, rest(form)), args, nao), nao);
+  return list(ipf_s, cons(op_s, rest(form)), nao);
+}
+
+static val me_ado(val form, val menv)
+{
+  return list(apf_s, cons(do_s, rest(form)), nao);
+}
+
+static val me_ido(val form, val menv)
+{
+  return list(ipf_s, cons(do_s, rest(form)), nao);
 }
 
 static val me_ret(val form, val menv)
@@ -3268,6 +3271,8 @@ void eval_init(void)
   promise_s = intern(lit("promise"), system_package);
   op_s = intern(lit("op"), user_package);
   do_s = intern(lit("do"), user_package);
+  apf_s = intern(lit("apf"), user_package);
+  ipf_s = intern(lit("ipf"), user_package);
   identity_s = intern(lit("identity"), user_package);
   rest_s = intern(lit("rest"), user_package);
   hash_lit_s = intern(lit("hash-construct"), system_package);
@@ -3338,6 +3343,8 @@ void eval_init(void)
   reg_mac(do_s, me_op);
   reg_mac(intern(lit("ap"), user_package), me_ap);
   reg_mac(intern(lit("ip"), user_package), me_ip);
+  reg_mac(intern(lit("ado"), user_package), me_ado);
+  reg_mac(intern(lit("ido"), user_package), me_ido);
   reg_mac(intern(lit("ret"), user_package), me_ret);
   reg_mac(qquote_s, me_qquote);
   reg_mac(sys_qquote_s, me_qquote);
@@ -3554,8 +3561,8 @@ void eval_init(void)
   reg_fun(intern(lit("or"), user_package), func_n0v(or_fun));
   reg_fun(intern(lit("and"), user_package), func_n0v(and_fun));
   reg_fun(intern(lit("retf"), user_package), func_n1(retf));
-  reg_fun(intern(lit("apf"), user_package), func_n1(apf));
-  reg_fun(intern(lit("ipf"), user_package), func_n1(ipf));
+  reg_fun(apf_s, func_n1(apf));
+  reg_fun(ipf_s, func_n1(ipf));
   reg_fun(intern(lit("tf"), user_package), func_n0v(tf));
   reg_fun(intern(lit("nilf"), user_package), func_n0v(nilf));
 
