@@ -1,3 +1,77 @@
+                                     TXR 91
+                                   2014-07-02
+
+
+
+  Features
+
+  - @(load `@stdlib/ver`) brings in a definition of a new variable
+    called *lib-version* which lets programs check what version of
+    the library they are using.
+
+  - New functions where and sel for working with multiple indexes
+    into a sequence.
+
+  - New function seqp for testing whether an object is a sequence of any type.
+
+  - New functions pos-max, pos-min, find-max and find-min.
+
+  - New character constant #\pnul denoting the U+DC00 code
+    (TXR's  "pseudo null").
+
+  - New function tuples for reorganizing a sequence into tuples.
+
+  - New functions true and false, expressive in applicative programming:
+    for instance [all true list].
+
+  - New functions member and member-if.
+
+  - New function multi for applying a one-sequence operation to
+    parallel sequences.
+
+  - New functions tf, nilf, retf, apf, ipf.
+
+  - New macros ret, ip and ap.
+
+  - New function iapply for applying improper lists.
+
+  - New functions transpose and zip.
+
+  - New functions tok-where and range-regex.
+
+  - New function bit for testing bits.
+
+  - [] indexing now allows element extraction by index list,
+    as well as assignment by index list, increasing the "slicing power".
+
+  Bugs
+
+  - Fixed reliance on leading slash as indicator of absolute path in @(load).
+
+  - Fixed breakage in range and range* function (regression introduced
+    in TXR 89).
+
+  - Fixed bug in dwim operator: Lisp-1 evaluation semantics being propagated
+    into nested forms, contrary to documentation.
+
+  - Line number of error correctly reported in some situations in which
+    it previously wasn't.
+
+  - Fixed macros not being expanded inside quasiliteral brace notation.
+
+  - Fixed broken last function.
+
+  - Fixed broken bignum bit operations, not handling negative values
+    properly.
+
+  - Fixed reversed logic of logtest function.
+
+  - Fixed some memory leaks in MPI bignum integer operations.
+
+  - Documentation fixes.
+
+
+
                                      TXR 90
                                    2014-06-11
 
