@@ -1,5 +1,21 @@
 2014-07-02  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 91.
+
+	* RELNOTES: Updated.
+
+	* configure, txr.1: Bumped version.
+
+	* dep.mk, txr.vim: Regenerated.
+
+2014-07-02  Kaz Kylheku  <kaz@kylheku.com>
+
+	* Makefile: use $(EXE) in install: recipe.
+
+	* configure: set up EXE variable in config.make, not exe.
+
+2014-07-02  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: Documented usleep.
 
 2014-07-02  Kaz Kylheku  <kaz@kylheku.com>

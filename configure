@@ -619,7 +619,7 @@ debug_support := $debug_support
 mpi_version := $mpi_version
 
 # EXE suffix
-exe := $exe
+EXE := $exe
 
 CC := $cc
 LEX := $lex

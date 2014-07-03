@@ -166,7 +166,7 @@ PREINSTALL := :
 .PHONY: install
 install: $(PROG)
 	$(PREINSTALL)
-	$(call INSTALL,0755,txr,$(DESTDIR)$(bindir))
+	$(call INSTALL,0755,txr$(EXE),$(DESTDIR)$(bindir))
 	$(call INSTALL,0444,$(top_srcdir)/txr.1,$(DESTDIR)$(mandir)/man1)
 	$(call INSTALL,0444,$(top_srcdir)/share/txr/stdlib/*.txr,$(DESTDIR)$(datadir)/stdlib)
 
