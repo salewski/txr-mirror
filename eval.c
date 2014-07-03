@@ -3182,7 +3182,7 @@ static val do_apf(val fun, val args)
 
 static val apf(val fun)
 {
-  return func_f1(fun, do_apf);
+  return func_f0v(fun, do_apf);
 }
 
 static val do_ipf(val fun, val args)
@@ -3192,7 +3192,7 @@ static val do_ipf(val fun, val args)
 
 static val ipf(val fun)
 {
-  return func_f1(fun, do_ipf);
+  return func_f0v(fun, do_ipf);
 }
 
 static val prinl(val obj, val stream)

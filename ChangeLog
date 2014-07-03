@@ -1,3 +1,8 @@
+2014-07-03  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (apf, ipf): Bugfix: do_apf and do_ipf
+	should be registered as variadic functions.
+
 2014-07-02  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 91.
