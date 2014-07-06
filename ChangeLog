@@ -1,3 +1,7 @@
+2014-07-06  Kaz Kylheku  <kaz@kylheku.com>
+
+	* txr.1: Corrections from Roman Mishin
+
 2014-07-03  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (apf_s, ipf_s): New symbol variables.
