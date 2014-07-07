@@ -1,5 +1,15 @@
 2014-07-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	* LICENSE: Switching to simplified two-clause BSD license,
+	but with modifications. Adding back the no-liability
+	part of the disclaimer, but with abbreviated text.
+	Also, rewriting the initial paragraph to make it clear
+	that the two conditions cover redistribution, and that
+	use of the software is tantamount to agreeing with the
+	disclaimer.
+
+2014-07-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: Spell check.
 
 2014-07-06  Kaz Kylheku  <kaz@kylheku.com>
