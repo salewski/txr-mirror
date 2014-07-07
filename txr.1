@@ -36,7 +36,7 @@ A
 .B TXR
 script is called a query, and it specifies a pattern which matches (a prefix
 of) an entire file, or multiple files.  Patterns can consists of large
-chunks of multi-line freeform text, which is matched literally
+chunks of multi-line free-form text, which is matched literally
 against material in the input sources. Free variables occurring in the pattern
 (denoted by the @ symbol) are bound to the pieces of text occurring in the
 corresponding positions. If the overall match is successful, then
@@ -113,8 +113,8 @@ The -b option suppressed it unconditionally.
 
 .IP -B
 If the query is successful, print the variable bindings as a sequence
-of assignmnents in shell syntax can be evaled by a POSIX shell.
-If the query failes, print the word "false". Evaluation of this word
+of assignments in shell syntax can be eval-ed by a POSIX shell.
+If the query fails, print the word "false". Evaluation of this word
 by the shell has the effect of producing an unsuccessful termination
 status from the eval command.
 
@@ -339,7 +339,7 @@ program appears to accept TXR options. Now we can run
 
 The -B option is honored.
 
-On some oeprating systems, it is not possible to pass more than one
+On some operating systems, it is not possible to pass more than one
 argument through the hash bang mechanism. That is to say, this will
 not work.
 
@@ -363,7 +363,7 @@ The above has the same behavior as
 
 on a system which supports multiple arguments in hash bang.
 The separator character is the colon, and so the remainder
-of tha rgument, -B:-f, is split into the two arguments -B -f.
+of that argument, -B:-f, is split into the two arguments -B -f.
 
 .SS Whitespace
 
@@ -793,7 +793,7 @@ Examples:
 
 .SS Consecutive Variables Via Directive
 
-Two variables can be de-facto consecutive in a manner shown in the
+Two variables can be de facto consecutive in a manner shown in the
 following example:
 
   @var1@(all)@var2@(end)
@@ -865,7 +865,7 @@ text skipped over by @(y z w) is also bound to the variable x.
 See FUNCTIONS below.
 
 In the NUMBER form, the match processes a field of text which
-consists of the specified number of characters, which must be nonnegative
+consists of the specified number of characters, which must be non-negative
 number.  If the data line doesn't have that many characters starting at the
 current position, the match fails. A match for zero characters produces an
 empty string.  The text which is actually matched by this construct
@@ -1221,7 +1221,7 @@ syntax. Expressions within variables substitutions follow the evaluation rules
 of TXR Lisp when the quasiliteral occurs in TXR Lisp, and the rules of
 the TXR pattern language when the quasiliteral occurs in the pattern language.
 
-Quasliterals can be split into multiple lines in the same way as ordinary
+Quasiliterals can be split into multiple lines in the same way as ordinary
 string literals.
 
 .SS Quasiword Lists Literals
@@ -1387,7 +1387,7 @@ end of a line. Also fails if no data remains (there is no current line).
 Continue matching in another file or other data source.
 
 .IP @(block)
-Groups to gether a sequence of directives into a logical name block,
+Groups together a sequence of directives into a logical name block,
 which can be explicitly terminated from within using
 the @(accept) and @(fail) directives.
 Blocks are discussed in the section BLOCKS below.
@@ -1452,7 +1452,7 @@ is the one which maximizes or minimizes the length of a particular variable.
 The @(empty) directive matches the empty string. It is useful in certain
 situations, such as expressing an empty match in a directive that doesn't
 accept an empty clause. The @(empty) syntax has another meaning in
-@(output) clauses, in conjunctio with @(repeat).
+@(output) clauses, in conjunction with @(repeat).
 
 .IP "@(define NAME ( ARGUMENTS ...))"
 Introduces a function. Functions are discussed in the FUNCTIONS section below.
@@ -1582,7 +1582,7 @@ The next directive indicates that the remainder of the query is to be applied
 to a new input source.
 
 It can only occur by itself as the only element in a query line,
-and takes various arguments, according to these possiblities:
+and takes various arguments, according to these possibilities:
 
   @(next)
   @(next SOURCE)
@@ -1946,13 +1946,13 @@ of the data still remains as a list of lines.
 
 After the subquery is applied to the virtual line, the unmatched remainder
 of that line is broken up into multiple lines again, by looking for and
-removing all occurences of the terminator string within the flattened portion.
+removing all occurrences of the terminator string within the flattened portion.
 
 Care must be taken if the terminator is other than the default "\en". All
-occurences of the terminator string are treated as line terminators in
+occurrences of the terminator string are treated as line terminators in
 the flattened portion of the data, so extra line breaks may be introduced.
 Likewise, in the yet unflattened portion, no breaking takes place, even if
-the text contains occurences of the terminator string. The extent of data which
+the text contains occurrences of the terminator string. The extent of data which
 is flattened, and the amount of it which remains, depends entirely on the
 query line underneath @(flatten).
 
@@ -2112,7 +2112,7 @@ emerge.
 .IP "@(some [ :resolve (vars ...) ])"
 Each of the clauses is matched at the current position. If any of the clauses
 succeed, the directive succeeds, retaining the bindings accumulated by the
-successully matching clauses.  Evaluation does not stop on the first successful
+successfully matching clauses.  Evaluation does not stop on the first successful
 clause. Bindings extracted by a successful clause are visible to the clauses
 which follow.
 
@@ -2349,7 +2349,7 @@ end up thrown away.
 
 .SS Gather Keyword Parameters
 
-The gather diretive accepts the keyword parameter :vars. The argument to vars is
+The gather directive accepts the keyword parameter :vars. The argument to vars is
 a list of required and optional variables.  Optional variables are denoted by
 the specification of a default value. Example:
 
@@ -2705,7 +2705,7 @@ follows the last character of the match, if such a position exists.
 If not bounded by an until clause, it will exhaust the entire line.  If the
 until clause matches, then the collection stops at that position,
 and any bindings from that iteration are discarded.
-Like collect, coll also supports a last clause, which propagates varaible
+Like collect, coll also supports a last clause, which propagates variable
 bindings and advances the position.
 
 Coll clauses nest, and variables bound within a coll are available to clauses
@@ -3055,7 +3055,7 @@ A ends up with "A", B ends up with ("B1" "B2") and C gets ("C1" and "C2").
 .SS The Rebind Directive
 
 The @(rebind) directive resembles @(set) but it is not an assignment.
-It combines the semanticss of @(local), @(bind) and @(set).
+It combines the semantics of @(local), @(bind) and @(set).
 The expression on the right hand side is evaluated in the current
 environment. Then the variables in the pattern on the left are introduced
 as new bindings, whose values come from the pattern.
@@ -3816,7 +3816,7 @@ local definition.  When @(which) is called directly from the top level, its
 
 .SS The Load Directive
 
-The syntx of the load directive is:
+The syntax of the load directive is:
 
   @(load EXPR)
 
@@ -3896,7 +3896,7 @@ The following value keywords are supported:
 .IP :filter
 
 The argument can be a symbol, which specifies a filter to be applied to
-the variable substitutions occuring within the output clause.
+the variable substitutions occurring within the output clause.
 The argument can also be a list of filter symbols, which specifies
 that multiple filters are to be applied, in left to right order.
 
@@ -3908,7 +3908,7 @@ The argument of :into is a symbol which denotes a variable.
 The output will go into that variable.  If the variable is unbound,
 it will be created. Otherwise, its contents are overwritten
 unless the :append keyword is used. If :append is used, then
-the new content will be appened to the previous content of
+the new content will be appended to the previous content of
 the variable, after flattening the content to a list,
 as if by the @(flatten) directive.
 
@@ -4144,9 +4144,9 @@ Repeat supports arguments.
 
   @(repeat [:counter <symbol>] [:vars (<symbol>*)])
 
-The :counter argumnt designates a symbol which will behave as an integer
+The :counter argument designates a symbol which will behave as an integer
 variable over the scope of the clauses inside the repeat. The variable provides
-access to the reptition count, starting at zero, incrementing with each
+access to the repetition count, starting at zero, incrementing with each
 repetition.
 
 The :vars argument specifies a list of variables. The repeat directive
@@ -4362,7 +4362,7 @@ Non-numeric junk results in the object nil.
 .TP
 Examples
 
-To escape HTML characters in all variable substitutions occuring in an
+To escape HTML characters in all variable substitutions occurring in an
 output clause, specify :filter :to_html in the directive:
 
   @(output :filter :to_html)
@@ -5229,7 +5229,7 @@ symbol is followed by a symbol.
 The quote character in front of an expression is used for suppressing evaluation,
 which is useful for forms that evaluate to something other than themselves.
 For instance if '(+ 2 2) is evaluated, the value is the three-element list
-(+ 2 2), wheras if (+ 2 2) is evaluated, the value is 4. Similarly, the
+(+ 2 2), whereas if (+ 2 2) is evaluated, the value is 4. Similarly, the
 value of 'a is the symbol a itself, whereas the value of a is the value
 of the variable a.
 
@@ -5333,7 +5333,7 @@ not a possible way to express the above hash:
 
 This is correct:
 
-  ;; fine: splicing hash arguments and contents separatly
+  ;; fine: splicing hash arguments and contents separately
   (let ((hash-args '(:equal-based))
         (hash-contents '((a 1) (b 2))))
     ^#H(,hash-args ,*hash-contents))
@@ -5354,11 +5354,11 @@ The first item in the syntax is a list of keywords. These are the same
 keywords as are used when calling the function hash to construct
 a hash table. Allowed keywords are: :equal-based, :weak-keys, :weak-values.
 An empty list can be specified as nil or (), which defaults to a
-hash table basd on the eq function, with no weak semantics.
+hash table based on the eq function, with no weak semantics.
 
 .SS The .. notation
 
-In TXR Lisp, there is a special "dotdot" notation consiting of a pair of dots.
+In TXR Lisp, there is a special "dotdot" notation consisting of a pair of dots.
 This can be written between successive atoms or compound expressions, and is a
 shorthand for cons.
 
@@ -5884,7 +5884,7 @@ some non-local jump, the subsequent cleanup forms are not evaluated.
 Cleanup forms themselves can "hijack" a non-local control transfer such
 as an exception. If a cleanup form is evaluated during the processing of
 a dynamic control transfer such as an exception, and that cleanup form
-initiats its own dynamic control transfer, the original control transfer
+initiates its own dynamic control transfer, the original control transfer
 is aborted and replaced with the new one.
 
 .TP
@@ -5899,7 +5899,7 @@ Example:
 In this example, the protected progn form terminates by returning from
 block foo. Therefore the form does not complete and so the
 output "not reached!" is not produced. However, the cleanup form
-excecutes, producing the output "cleanup!".
+executes, producing the output "cleanup!".
 
 .SS Operator block
 
@@ -5914,7 +5914,7 @@ Description:
 The block operator introduces a named block around the execution of
 some forms. The <name> argument must be a symbol. Since a block name is not
 a variable binding, keyword symbols are permitted, and so are the symbols
-t and nil.   A block named by the symbol nil is slighlty special: it is
+t and nil.   A block named by the symbol nil is slightly special: it is
 understood to be an anonymous block.
 
 Blocks in TXR Lisp have dynamic scope. This means that the following
@@ -5960,7 +5960,7 @@ Description:
 
 The return operator must be dynamically enclosed within an anonymous
 block (a block named by the symbol nil). It immediately terminates the
-evaluation of the innermost anonyous block which encloses it, causing
+evaluation of the innermost anonymous block which encloses it, causing
 it to return the specified value. If the value is omitted, the anonymous
 block returns nil.
 
@@ -6029,7 +6029,7 @@ as let, or the name of a macro. Prior to macroexpansion, any argument of dwim
 may be a symbol macro.
 
 If a symbol has bindings both in the variable and function namespace in scope,
-and is referenced by a dwim argument, this constitues a conflict which is
+and is referenced by a dwim argument, this constitutes a conflict which is
 resolved according to two rules.  When nested scopes are concerned, then an
 inner binding shadows an outer binding, regardless of their kind.  An inner
 variable binding for a symbol X shadows an outer or global function binding,
@@ -6171,7 +6171,7 @@ are just as convenient as parentheses and at the same time visually distinct,
 making it clear that different rules apply.
 
 The Lisp-1 is useful for functional programming, because it eliminates
-occurences of the call and fun operators.  For instance:
+occurrences of the call and fun operators.  For instance:
 
   ;; regular notation
 
@@ -6245,7 +6245,7 @@ should be association lists, mapping symbols to objects.  The objects in
 
 The <next-env> argument, if specified, should be an environment. 
 
-Note: bindings can also be added to an environment usign the env-vbind
+Note: bindings can also be added to an environment using the env-vbind
 and env-fbind functions.
 
 .SS Functions env-vbind and env-fbind
@@ -6426,7 +6426,7 @@ is followed by a list which can contain any mixture of variable
 name symbols, or (<sym> <init-form>) pairs.  A symbol
 denotes the name of variable to be instantiated and initialized
 to the value nil.  A symbol specified with an init-form denotes
-a variable which is intialized from the value of the init-form.
+a variable which is initialized from the value of the init-form.
 
 The symbols t and nil may not be used as variables, and neither
 can be keyword symbols: symbols denoted by a leading colon.
@@ -6517,7 +6517,7 @@ determines the number of iterations, so if any of the <init-form>-s evaluate to
 an empty list, the body is not executed.
 
 The body forms are enclosed in an anonymous block, allowing the return
-operator to terminate the looop prematurely and optionally specify
+operator to terminate the loop prematurely and optionally specify
 the return value.
 
 The collect-each and collect-each* variants are like each and each*,
@@ -6664,7 +6664,7 @@ are aggregated into a list passed as the single parameter z:
 
   (lambda (x y . z) (list 'my-arguments-are x y z))
 
-Variadic funcion:
+Variadic function:
 
   (lambda args (list 'my-list-of-arguments args))
 
@@ -6737,7 +6737,7 @@ the symbol has no global function binding, then the value of the global macro
 binding is returned. If that doesn't exist, then the value of a global special
 operator binding is returned, and if that doesn't exist, then nil is returned.
 
-The symbol-value retrives the value of a global variable, if it exists,
+The symbol-value retrieves the value of a global variable, if it exists,
 otherwise nil.
 
 Note: a function binding is a function, but a macro or special operator binding
@@ -7043,7 +7043,7 @@ Syntax:
 
 Description:
 
-The cons function allocates, intializes and returns a single cons cell.
+The cons function allocates, initializes and returns a single cons cell.
 A cons has two fields called "car" and "cdr", which are accessed by
 functions of the same name, or by the functions "first" and "rest",
 which are alternative spellings.
@@ -7727,7 +7727,7 @@ Syntax:
 .TP
 Description:
 
-The count-if function counts the numer of elements of <list> which satisfy
+The count-if function counts the number of elements of <list> which satisfy
 <predicate-function> and returns the count.
 
 The optional <key-function> specifies how each element from the <list> is
@@ -7810,7 +7810,7 @@ Description:
 
 The pos-min and pos-max function implement exactly the same algorithm; they
 differ only in their defaulting behavior with regard to the <testfun>
-argument.  If <tesfunc> is not given, then the pos-max function defaults it to
+argument.  If <testfun> is not given, then the pos-max function defaults it to
 the > function, whereas pos-min defaults it to the < function.
 
 If <sequence> is empty, both functions return nil.
@@ -7873,10 +7873,10 @@ index inside <index-list> which is out of range. (Rationale: without
 this strict behavior, select would not be able to terminate if
 <index-list> is infinite.)
 
-If <object> is a list, then <index-list> must contain montonically increasing
+If <object> is a list, then <index-list> must contain monotonically increasing
 numeric values, even if no value is out of range, since the select function
 makes a single pass through the list based on the assumption that indices
-are ordered. (Rationale: optmization.)
+are ordered. (Rationale: optimization.)
 
 If <object> is a hash, then <index-list> is a list of keys. A new hash is
 returned which contains those elements of <object> whose keys appear
@@ -7893,7 +7893,7 @@ Syntax:
 .TP
 Description:
 
-The tree-find function searches <tree> for an occurence of <obj>.  Tree can be
+The tree-find function searches <tree> for an occurrence of <obj>.  Tree can be
 any atom, or a cons. If <tree> it is a cons, it is understood to be a proper
 list whose elements are also trees.
 
@@ -7952,7 +7952,7 @@ Description:
 
 The find-min and find-max function implement exactly the same algorithm; they
 differ only in their defaulting behavior with regard to the <testfun>
-argument.  If <tesfunc> is not given, then the find-max function defaults it to
+argument.  If <testfun> is not given, then the find-max function defaults it to
 the > function, whereas find-min defaults it to the < function.
 
 Without a <testfun> argument, the find-max function finds the numerically
@@ -8067,7 +8067,7 @@ Examples:
   (mappend (lambda (item) (if (evenp x) (list x))) '(1 2 3 4 5))
   -> (2 4)
 
-.SS Functions tranpose and zip
+.SS Functions transpose and zip
 
 .TP
 Syntax:
@@ -8251,7 +8251,7 @@ An effective list of operands is formed by combining <list> and
 <init-value>.   If <key-function> is specified, then the items of <list> are
 mapped to a new values through <key-function>.  If <init-value> is supplied,
 then in the case of reduce-left, the effective list of operands is formed by
-prepending <init-value> to <lits>. In the case of reduce-right, the effective
+prepending <init-value> to <list>. In the case of reduce-right, the effective
 operand list is produced by appending <init-value> to <list>.
 
 The production of the effective list can be expressed like this,
@@ -8878,7 +8878,7 @@ an instance of the gen operator, like this:
 
 This exploits the fact that the set operator returns the value that is
 assigned, so the set expression is tested as a condition by gen,
-while havin the side effect of storing the next item temporarily
+while having the side effect of storing the next item temporarily
 in a hidden variable.
 
 In turn, gen can be implemented as a macro expanding to some lambda
@@ -9206,8 +9206,8 @@ Syntax:
 Description:
 
 The search-str-tree function is similar to search-str, except that instead of
-searching <haystack> for the occurence of a single needle string, it searches
-for the occurence of numerous strings at the same time.  These search strings
+searching <haystack> for the occurrence of a single needle string, it searches
+for the occurrence of numerous strings at the same time.  These search strings
 are specified, via the <tree> argument, as an arbitrarily structured tree whose
 leaves are strings.
 
@@ -9316,7 +9316,7 @@ Syntax:
 .TP
 Description:
 
-The split-str function breaks the <string> into pieces, returing a list
+The split-str function breaks the <string> into pieces, returning a list
 thereof. The <sep> argument must be either a string or a regular expression.
 It specifies the separator character sequence within <string>. 
 
@@ -9348,9 +9348,9 @@ Syntax:
 .TP
 Description:
 
-The split-str-set function breaks the <string> into pieces, returing a list
+The split-str-set function breaks the <string> into pieces, returning a list
 thereof. The <sep> argument must be a string. It specifies a set of
-characters.  All occurences of any of these characters within <string> are
+characters.  All occurrences of any of these characters within <string> are
 identified, and are removed from <string>. The string is broken into pieces
 according to the gaps left behind by the removed separators.
 
@@ -9779,7 +9779,7 @@ enough material, then the access fails, just like an access beyond the end of a
 regular string.  A lazy string always takes whole strings from the attached
 list.
 
-Lazy string growth is achieved via the lazy-str-force_upto function which
+Lazy string growth is achieved via the lazy-str-force-upto function which
 forces a string to exist up to a given character position. This function is
 used internally to handle various situations.
 
@@ -10404,7 +10404,7 @@ If <testfun> is supplied, it must be a function which can be
 called with two arguments. If it is not supplied, it defaults to eql.
 
 If <keyfun> is supplied, it must be a function which can be called
-with one argument. If it is not supplied, it deafaults to identity.
+with one argument. If it is not supplied, it defaults to identity.
 
 .TP
 Examples:
@@ -10600,7 +10600,7 @@ The +, - and * functions perform addition, subtraction and multiplication,
 respectively.  Additionally, the - function performs additive inverse.
 
 The + function requires zero or more arguments. When called with no
-arguments, it produces 0 (the identity element for adddition), otherwise it
+arguments, it produces 0 (the identity element for addition), otherwise it
 produces the sum over all of the arguments.
 
 Similarly, the * function requires zero or more arguments. When called
@@ -10704,7 +10704,7 @@ The value of (gcd 0 x) is 0 for all x, including 0.
 
 The value of (gcd x 123) is is (abs x) for all x.
 
-Negative operands are permitted; this operation effectivelly ignores sign, so
+Negative operands are permitted; this operation effectively ignores sign, so
 that the value of (gcd x y) is the same as (gcd (abs x) (abs y)) for all
 x and y.
 
@@ -10812,12 +10812,12 @@ notation.
 Exponentiation is done pairwise using a binary operation.
 If both operands to this binary operation are integers, then the
 result is an integer. If either operand is a float, then the other
-operand is converted to a float, and a floating point exponentation
-is performed. Exponentation that would produce a complex number is
+operand is converted to a float, and a floating point exponentiation
+is performed. Exponentiation that would produce a complex number is
 not supported.
 
 The sqrt function produces a floating-point square root. The numeric
-oeprand is converted from integer to floating-point if necessary.
+operand is converted from integer to floating-point if necessary.
 Negative operands are not supported.
 
 The isqrt function computes an integer square root: a value which is the
@@ -10971,7 +10971,7 @@ the comparison (< b c) is performed in isolation, and if that yields false, nil
 is returned, otherwise t is returned.  Note that it is possible for b to
 undergo two different conversions.  For instance in (< <float> <character>
 <integer>), the character will convert to a floating-point representation of
-its Unicode, and if that comparison suceeds, then in the second comparison, the
+its Unicode, and if that comparison succeeds, then in the second comparison, the
 character will convert to integer.
 
 .SS Function /=
@@ -10987,7 +10987,7 @@ Description:
 The arguments to /= may be numbers or characters.  The /= function returns t if
 no two of its arguments are numerically equal. That is to say, if there exist
 some a and b which are distinct arguments such that (= a b) is true, then
-teh function returns nil. Otherwise it returns t.
+the function returns nil. Otherwise it returns t.
 
 .SS Functions max and min
 
@@ -11105,7 +11105,7 @@ In TXR Lisp, similarly to Common Lisp, bit operations on integers are based
 on "infinite two's-complement".  That is to say, whereas a positive
 binary number can be regarded as being prefixed by an infinite stream of
 zero digits (for example 1 the same as 0001 or ...00001) a negative number
-in inifinite two's complement can be conceptualized by an infinite prefix 
+in infinite two's complement can be conceptualized by an infinite prefix 
 of 1 digits. So for instance the number -1 is represented by ...11111111: an
 infinite half-sequence of 1 digits. Any operation which produces such an
 infinite sequence gives rise to a negative number. For instance, consider the
@@ -11451,7 +11451,7 @@ Syntax:
 .TP
 Description:
 
-The regsub function searches <string> for multiple occurences of
+The regsub function searches <string> for multiple occurrences of
 non-overlapping matches for <regex>.  A new string is constructed
 similar to <string> but in which each matching region is replaced
 with using <replacement> as follows.
@@ -11586,7 +11586,7 @@ argument specifies whether it shall have weak values, and
 all three of these properties to false, and allows them to be overridden to
 true by the presence of keyword arguments.
 
-It is an error to attmpt to construct an equal-based hash table which
+It is an error to attempt to construct an equal-based hash table which
 has weak keys.
 
 The hash function provides an alternative interface. It accepts optional
@@ -11919,7 +11919,7 @@ Description:
 
 The dohash operator iterates over a hash table. The <hash-form> expression must
 evaluate to an object of hash table type. The <key-var> and <value-var>
-arguents must be symbols suitable for use as variable names.
+arguments must be symbols suitable for use as variable names.
 Bindings are established for these variables over the scope of the
 <body-form>-s and the optional result form.
 
@@ -11935,7 +11935,7 @@ The <result-form> and <body-form>-s are in the scope of an implicit anonymous
 block, which means that it is possible to terminate the execution of
 dohash early using (return) or (return <value>).
 
-.SS Functions hash-uni, hash-guni, hash-diff, hash-isec and hash-gisec
+.SS Functions hash-uni, hash-diff, hash-isec
 
 .TP
 Syntax:
@@ -12138,7 +12138,7 @@ to the following equivalence:
 The ado and ido macros is related to do macro in the same way that ap and ip
 are related to op. They produce a one-argument function is produced which works
 as if by applying its arguments to the function generated by do,
-according ot the following equivalence:
+according to the following equivalence:
 
   (ado form ...) <--> (apf (do form ...))
 
@@ -12492,7 +12492,7 @@ number of characters.
 Format directives:
 
 Format directives are case sensitive, so that for example ~x and ~X have a
-different effect, and ~A doesn't exist wheras ~a does. They are:
+different effect, and ~A doesn't exist whereas ~a does. They are:
 
 .IP a
 Prints any object in an aesthetic way, as if by the pprint function.
@@ -12609,7 +12609,7 @@ Note: for characters, the print function behaves as follows: most control
 characters in the Unicode C0 and C1 range are rendered using the #\ex notation,
 using two hex digits. Codes in the range D800 to DFFF, and the codes
 FFFE and FFFF are printed in the #\exNNNN with four hexadecimal digits, and
-charater above this range are printed using the same notation, but with six
+character above this range are printed using the same notation, but with six
 hexadecimal digits. Certain characters in the C0 range are printed using
 their names such as #\enul and #\ereturn, which are documented
 in the Character Literals section not far from the start of this document.
@@ -12797,7 +12797,7 @@ flushed successfully.
 
 For command and process pipes (see open-command and open-process), success also
 means that the process terminates normally, with a successful error code, or an
-unsuccessul one. An abnormal termination is considered an error, as
+unsuccessful one. An abnormal termination is considered an error, as
 as is the inability to retrieve the termination status, as well as the situation
 that the process continues running in spite of the close attempt.
 Detecting these situations is platform specific.
@@ -13048,7 +13048,7 @@ Syntax:
 Description:
 
 The open-files and open-files* functions create a list of streams by invoking
-the open-file function on each element of <path-list>. These streamas are turned
+the open-file function on each element of <path-list>. These streams are turned
 into a catenated stream as if applied as arguments to make-catenated-stream.
 
 The effect is that multiple files appear to be catenated together into a single
@@ -13160,7 +13160,7 @@ An example such property list is (:dev 2049 :ino 669944 :mode 16832 :nlink 23
 :uid 500 :gid 500 :rdev 0 :size 12288 :blksize 4096 :blocks 24 :atime
 1347933533 :mtime 1347933534 :ctime 1347933534)
 
-These properties correspond to the similarly-named entires of the struct stat
+These properties correspond to the similarly-named entries of the struct stat
 structure in POSIX. For instance, the :dev property has the same value 
 as the st_dev field.
 
@@ -13328,7 +13328,7 @@ On POSIX systems, if it is an absolute or relative path, it is treated as
 such, but if it is a simple base name, then it is subject to searching
 via the components of the PATH environment variable. If open-process
 is not able to find <program>, or is otherwise unable to execute
-the proram, the child process will exit, using the value of errno
+the program, the child process will exit, using the value of errno
 as its exit status. This value can be retrieved via close-stream.
 
 The <mode-string> argument is compatible with the convention used by the POSIX
@@ -13361,7 +13361,7 @@ A symbol can be interned in at most one package at a time.
 string, but not necessarily unique. A symbol name is unique within a package,
 however: two symbols cannot be in the same package if they have the same name.
 Moreover, a symbol cannot exist in more than one package at at time, although
-it can be relocated from one package to antoher.  Symbols can exist which are
+it can be relocated from one package to another.  Symbols can exist which are
 not in packages: these are called uninterned symbols.
 
 Packages are held in a global list which can be used to search for a package by
@@ -13409,7 +13409,7 @@ Otherwise it must be a string.
 The difference between gensym and make-sym is that gensym creates the name
 by combining the prefix with a numeric suffix.
 
-The numeric sufix is a decimal digit string, taken from the value of
+The numeric suffix is a decimal digit string, taken from the value of
 the variable *gensym-counter*, after incrementing it.
 
 Note: the variation in name is not the basis of the uniqueness of gensym; the
@@ -13464,7 +13464,7 @@ then it is returned. Otherwise nil is returned.
 .SS Function intern
 
 .TP
-Sytax:
+Syntax:
 
   (intern <name> [<package>])
 
@@ -13575,7 +13575,7 @@ which are not concerned about the management of random state.
 
 However, programs can create and manage random states, making it possible to
 obtain repeatable sequences of pseudo-random numbers which do not interfere
-owith each other. For instance objects or modules in a program can have their
+with each other. For instance objects or modules in a program can have their
 own independent streams of random numbers which are repeatable, independently
 of other modules making calls to the random number functions.
 
@@ -13609,7 +13609,7 @@ different seeds.  The minimum time increment depends on the platform, but on any
 given platform, it is the platform's smallest available time increment, or a
 microsecond, whichever is longer.
 
-Of course, it is not guranteed that any two calls to make-random-state produce
+Of course, it is not guaranteed that any two calls to make-random-state produce
 different values under any circumstances, due to possible collisions; however,
 time differences smaller than the minimum increment may predictably produce
 identical values.
@@ -13822,7 +13822,7 @@ errno.  If the argument <new-errno> is present and is not nil, then it
 specifies a value which is stored into errno.  The value returned is the prior
 value.
 
-.SS Funtion exit
+.SS Function exit
 
 .TP
 Syntax:
@@ -13853,7 +13853,7 @@ The usleep function suspends the execution of the program for at least
 <usec> microseconds.
 
 The return value is t if the sleep was successfully executed. A nil
-value indicates premature wakup or complete failure.
+value indicates premature wakeup or complete failure.
 
 Note: the actual sleep resolution is not guaranteed, and depends on granularity
 of the system timer.  Actual sleep times may be rounded up to the nearest 10
@@ -13956,7 +13956,7 @@ The mknod function tries to create an entry in the filesystem: a file,
 FIFO, or a device special file, under the name <path>. If it is successful,
 it returns t, otherwise it throws an exception of type file-error.
 
-The <mode> argument is a bitwise "or" combination of the requested permisions,
+The <mode> argument is a bitwise "or" combination of the requested permissions,
 and the type of object to create: one of the constants s-ifreg, s-ififo,
 s-ifchr or s-ifblk or s-ifsock. The permissions are subject to the umask.
 
@@ -14032,7 +14032,7 @@ The return value nil indicates an abnormal termination, or the inability
 to run the process at all.
 
 In the case of the run function, if the child process is created successfully
-but the proram cannot be executed, then the exit status will be an errno value
+but the program cannot be executed, then the exit status will be an errno value
 from the failed exec attempt.
 
 .SH UNIX SIGNAL HANDLING
@@ -14062,7 +14062,7 @@ Description:
 
 These variables correspond to the C signal constants SIGHUP, SIGINT and so forth. 
 The variables sig-winch, sig-iot, sig-stkflt, sig-io, sig-lost and sig-pwr may not be
-available since a system may lack the correspoding signal constants. See notes
+available since a system may lack the corresponding signal constants. See notes
 for the log log-authpriv below. The remaining signal constants are described in
 the Single Unix Specification and are expected by TXR to be present.
 
@@ -14081,7 +14081,7 @@ Syntax:
 Description:
 
 The set-sig-handler function is used to specify the handling for a signal, such
-as the installation of a hander function. It updates the signal handling for
+as the installation of a handler function. It updates the signal handling for
 a signal whose number is <signal-number> (usually one of the constants like
 sig-hup, sig-int and so forth), and returns the previous value.  The
 get-sig-handler function returns the current value.
@@ -14158,7 +14158,7 @@ I/O functions.
 
 On platforms where a Unix-like syslog API is available, TXR exports this
 interface. TXR programs can configure logging via the openlog function,
-control the loging mask via setlogmask and generate logs vis syslog,
+control the logging mask via setlogmask and generate logs via syslog,
 or using special syslog streams.
 
 .SS Special variables log-pid, log-cons, log-ndelay, log-odelay, log-nowait and log-perror
@@ -14209,7 +14209,7 @@ written to the syslog stream are only used to recognize the message framing,
 and are not sent to syslog.
 
 Multiple lines can be written to the stream in a single operation, and
-these result in multiple syslog mesages.
+these result in multiple syslog messages.
 
 .SS The openlog function
 
@@ -14225,9 +14225,9 @@ The openlog TXR Lisp function is a wrapper for the openlog C function, and the
 arguments have the same semantics. It is not necessary to use openlog in order
 to call the syslog function or to write data to *stdlog*. The call is necessary
 in order to override the default identifying string, to set options, such
-ashaving the PID (process ID) recorded in log messages, and to specify the facility.
+as having the PID (process ID) recorded in log messages, and to specify the facility.
 
-The <id-string> argument is manadatory.
+The <id-string> argument is mandatory.
 
 The <options> argument is a bitwise mask (see the logior function) of option
 values such as log-pid and log-cons. If it is missing, then a value of 0 is
@@ -14288,7 +14288,7 @@ Description:
 This function is the interface to the syslog C function. The printf formatting
 capabilities of the function are not used; it follows the conventions of the
 TXR Lisp format function instead. Note in particular that the %m convention
-for interpolating the value of strerror(errno) is currenly not supported.
+for interpolating the value of strerror(errno) is currently not supported.
 
 .SH WEB PROGRAMMING SUPPORT
 
@@ -14355,7 +14355,7 @@ Description:
 The html-encode and decode functions convert between an HTML and raw
 representation of of text. 
 
-The hml-encode function returns a string which is based on the content of
+The html-encode function returns a string which is based on the content of
 <text-string>, but in which all characters which have special meaning in HTML
 have been replaced by special HTML codes for representing those characters.
 The returned string is the HTML-encoded verbatim representation of
@@ -14377,9 +14377,9 @@ produces "&lt;p&gt;Hello, world!&lt;/p&gt;".
 
 .SH FILTER MODULE
 
-The filter module provides a trie (pronunced "try") data structure,
+The filter module provides a trie (pronounced "try") data structure,
 which is suitable for representing dictionaries for efficient filtering.
-Dictionaires are unordered collections of keys, which are strings, which 
+Dictionaries are unordered collections of keys, which are strings, which 
 have associated values, which are also strings.  A trie can be used to filter
 text, such that keys appearing in the text are replaced by the corresponding
 values. A trie supports this filtering operation by providing an efficient
@@ -15060,7 +15060,7 @@ similar to the global symbol macros introduced by defsymacro.
 Each <sym> in the bindings list is bound to its corresponding form, creating a
 new extension of the expansion-time lexical macro environment.
 
-Each <body-form> is subequently macro-expanded in this new environment
+Each <body-form> is subsequently macro-expanded in this new environment
 in which the new symbol macros are visible.
 
 Note: ordinary lexical bindings such as those introduced by let or by
@@ -15221,7 +15221,7 @@ heap areas are not counted as <malloc-bytes>. <malloc-bytes> includes storage
 such as the space used for dynamic strings, vectors and bignums (in addition to
 their gc-heap allocated nodes), and the various structures used by the cobj
 type objects such as streams and hashes. Objects in external libraries that use
-un-instrumented allocators are not counted: for instance the C FILE * streams.
+uninstrumented allocators are not counted: for instance the C FILE * streams.
 
 .SS Macro pprof
 
@@ -15262,7 +15262,7 @@ allowing for the opportunity to set breakpoints.
 
 Help can be obtained with the h or ? command.
 
-Whenever the program stosp at the debugger, it prints the Lisp-ified
+Whenever the program stops at the debugger, it prints the Lisp-ified
 piece of syntax tree that is about to be interpreted.
 It also shows the context of the input being matched.
 
@@ -15274,7 +15274,7 @@ nodes in the abstract syntax tree node of the next directive.
 
 .SS Sample Session
 
-Here is an example of the debugger beign applied to a web scraping program
+Here is an example of the debugger being applied to a web scraping program
 which connects to a US NAVY clock server to retrieve a dynamically-generated
 web page, from which the current time is extracted, in various time zones.
 The handling of the web request is done by the wget command; the txr
@@ -15320,7 +15320,7 @@ The user types s to step into the (next ...) form.
   "<!DOCTYPE HTML PUBLIC \e"-//W3C//DTD HTML 3.2 Final\e"//EN>"
   txr> s
 
-The current form now is a syt:text form which is an internal representation of
+The current form now is a sys:text form which is an internal representation of
 a block of horizontal material. The pattern matching is in vertical mode at
 this point, and so the line of data is printed without an indication of
 character position. 
@@ -15344,7 +15344,7 @@ Now, the form about to be processed is the first item of the (sys:text ...),
 a the string "<!DOCTYPE". 
 
 The input is shown broken into two quoted strings with a dot in between.
-The dot indicates the current position. The left string is emtpy, meaning
+The dot indicates the current position. The left string is empty, meaning
 that this is the leftmost position. The programmer steps:
 
   txr> s
@@ -15358,7 +15358,7 @@ Control has now passed to the second element of the (sys:text ...),
 a regular expression which matches one or more spaces, generated by
 a single space in the source code according to the language rules.
 
-The input context shows taht "<!DOCTYPE" was matched in the input, and the
+The input context shows that "<!DOCTYPE" was matched in the input, and the
 position moved past it.
 
   txr> s
@@ -15368,7 +15368,7 @@ position moved past it.
   data (1:10):
   "<!DOCTYPE " . "HTML PUBLIC \e"-//W3C//DTD HTML 3.2 Final\e"//EN>"
 
-Now, the regular expression has matched and moved the psoition past
+Now, the regular expression has matched and moved the position past
 the space; the facing input is now "HTML ...".
 
 The programmer then repeats the s command by hitting Enter.
