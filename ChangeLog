@@ -1,3 +1,9 @@
+2014-07-08  Kaz Kylheku  <kaz@kylheku.com>
+
+	* LICENSE: Adding copyright for MPI Library.
+
+	* METALICENSE: Adding notes about MPI.
+
 2014-07-07  Kaz Kylheku  <kaz@kylheku.com>
 
 	* Makefile: install the LICENSE and METALICENSE files into the data

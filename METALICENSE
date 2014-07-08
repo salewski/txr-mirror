@@ -33,3 +33,18 @@ differences between the TXR LICENSE file and the BSD license.
 
 4. The disclaimer is substantially abridged from the verbose original.
    Interested parties are hereby encouraged to research the differences.
+
+Regarding the MPI library, the README file in the mpi-1.8.6.tar.gz
+archive states:
+
+   This software is in the public domain.  It is entirely free, and you
+   may use it and/or redistribute it for whatever purpose you choose;
+   however, as free software, it is provided without warranty of any
+   kind, not even the implied warranty of merchantability or fitness for
+   a particular purpose.
+
+Whether or not software can be explicitly deposited into the public domain is
+legally questionable, so the MPI library must be regarded as being copyrighted
+by Michael J. Fromberger. The above text can be reasonably understood to
+constitute a license which is compatible with the TXR LICENSE file
+in the sense that it is at least as permissive.
