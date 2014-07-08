@@ -1,0 +1,35 @@
+Copyright (C) 2009-2014, Kaz Kylheku <kaz@kylheku.com>.
+All rights reserved.
+
+The document named LICENSE specifies the license for the TXR program.
+
+This METALICENSE document provides explanatory notes about the license, and
+does not constitute part of that license.
+
+The license is closely based on the two-clause BSD license, and is believed to
+be identical to that license in intent. For all practical intents and purposes,
+excluding situations of legal proceedings in a court of law or elsewhere, it is
+accurate to say that this software is "BSD licensed".
+
+Here is a summary, not guaranteed to be complete and correct, of the
+differences between the TXR LICENSE file and the BSD license.
+
+1. The introductory paragraph uses the phrase "of this software" to clarify
+   what the license refers to. The BSD license does not (but it does use
+   "THIS SOFTWARE" several times in the disclaimer).
+
+2. The introductory paragraph has been modified.  The original introductory
+   paragraph states that the redistribution and use are subject to
+   the conditions.  The modified paragraph states that only redistribution is
+   subject to the conditions, which is obvious from the interpretation of the
+   meaning of those conditions.
+
+4. The second, new, introductory paragraph states that use of the program
+   constitutes agreement with the disclaimer. The original BSD two-clause
+   license neglects to make such an assertion explicitly. However, it is
+   obvious that it has this intent.
+
+3. The conditions are unmodified.
+
+4. The disclaimer is substantially abridged from the verbose original.
+   Interested parties are hereby encouraged to research the differences.

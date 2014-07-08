@@ -1,5 +1,11 @@
 2014-07-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	* LICENSE: Small wording change. Add pointer to METALICENSE.
+
+	* METALICENSE: New file.
+
+2014-07-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* LICENSE: Switching to simplified two-clause BSD license,
 	but with modifications. Adding back the no-liability
 	part of the disclaimer, but with abbreviated text.
