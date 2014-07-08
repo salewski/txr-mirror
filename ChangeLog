@@ -1,5 +1,18 @@
 2014-07-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	* Makefile: install the LICENSE and METALICENSE files into the data
+	directory.
+
+	* txr.c (help): Help text updated to document --license option.
+	(license): New function.
+	(txr_main): Implement --license option.
+
+	* unwind.h (uw_catch): Add cast to suppress warning about unused symbol.
+
+	* txr.1: Document --license option.
+
+2014-07-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (replace_list, sel): fix use of unused variable.
 
 2014-07-07  Kaz Kylheku  <kaz@kylheku.com>

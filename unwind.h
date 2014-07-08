@@ -173,6 +173,7 @@ noreturn val type_mismatch(val, ...);
     case 2:                             \
       EXCVAR = uw_catch.ca.exception;   \
       SYMVAR = uw_catch.ca.sym;         \
+      (void) SYMVAR;                    \
       /* prevent looping */             \
       uw_catch.ca.matches = nil;
 

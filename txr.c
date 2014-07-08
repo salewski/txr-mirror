@@ -121,6 +121,9 @@ static void help(void)
 "                       to the utility.\n"
 "--help                 You already know!\n"
 "--version              Display program version\n"
+"--license              Display software license\n"
+"                       Use of txr implies agreement with the disclaimer\n"
+"                       section at the bottom of the license.\n"
 "--lisp-bindings        Synonym for -l\n"
 "--debugger             Synonym for -d\n"
 "\n"
@@ -240,6 +243,39 @@ static void sysroot_init(void)
           toint(lit(TXR_VER), nil));
 }
 
+static int license(void)
+{
+  int retval = EXIT_SUCCESS;
+
+  uw_catch_begin(cons(error_s, nil), esym, eobj);
+
+  {
+    val path = sysroot(lit("share/txr/LICENSE"));
+    val lic = open_file(path, lit("r"));
+    val line;
+
+    put_char(chr('\n'), std_output);
+
+    while ((line = get_line(lic)))
+      put_line(line, std_output);
+
+    put_char(chr('\n'), std_output);
+
+    close_stream(lic, nil);
+  }
+
+  uw_catch (esym, eobj) {
+    format(std_output, lit("~a:\nThis TXR installation might be unlicensed.\n"), eobj, nao);
+    retval = EXIT_FAILURE;
+  }
+
+  uw_unwind { }
+
+  uw_catch_end;
+
+  return retval;
+}
+
 int txr_main(int argc, char **argv);
 
 int main(int argc, char **argv)
@@ -330,6 +366,9 @@ int txr_main(int argc, char **argv)
       help();
       return 0;
     }
+
+    if (equal(arg, lit("--license")))
+      return license();
 
     if (memqual(arg, list(lit("-a"), lit("-c"), lit("-f"),
                           lit("-e"), lit("-p"), nao)))
