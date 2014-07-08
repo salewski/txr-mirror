@@ -1,5 +1,9 @@
 2014-07-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (replace_list, sel): fix use of unused variable.
+
+2014-07-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* LICENSE: Small wording change. Add pointer to METALICENSE.
 
 	* METALICENSE: New file.

@@ -777,7 +777,7 @@ val replace_list(val list, val items, val from, val to)
                 nao);
 
     for (; seq && where && items; seq = cdr(seq), idx = plus(idx, one)) {
-      val wh;
+      val wh = nil;
 
       for (; where && lt(wh = car(where), idx); where = cdr(where))
         ; /* empty */
@@ -5629,7 +5629,7 @@ val sel(val seq_in, val where_in)
       val idx = zero;
 
       for (; seq && where; seq = cdr(seq), idx = plus(idx, one)) {
-        val wh;
+        val wh = nil;
 
         for (; where && lt(wh = car(where), idx); where = cdr(where))
           ; /* empty */
