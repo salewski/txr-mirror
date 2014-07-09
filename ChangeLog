@@ -1,5 +1,14 @@
 2014-07-08  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (bindings_helper): New parameter to indicate that
+	the caller needs the return value, so the function
+	can avoid consing up a list that will be thrown away.
+	(op_let): Pass nil argument to new parameter of bindings_helper.
+	(op_each, op_for): Pass t to indicate that the return value
+	is needed.
+
+2014-07-08  Kaz Kylheku  <kaz@kylheku.com>
+
 	* LICENSE: Adding copyright for MPI Library.
 
 	* METALICENSE: Adding notes about MPI.

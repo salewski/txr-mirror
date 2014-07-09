@@ -1019,7 +1019,8 @@ static val op_unquote_error(val form, val env)
 
 
 static val bindings_helper(val vars, val env, val sequential,
-                           val *env_out, val ctx_form)
+                           val *env_out, val ret_new_bindings,
+                           val ctx_form)
 {
   val iter;
   val de = if3(sequential, dyn_env, make_env(nil, nil, dyn_env));
@@ -1040,11 +1041,13 @@ static val bindings_helper(val vars, val env, val sequential,
     if (var == special_s) {
       val special = car(item);
       val binding = env_vbind(de, special, value);
-      ptail = list_collect (ptail, binding);
+      if (ret_new_bindings)
+        ptail = list_collect (ptail, binding);
     } else if (bindable(var)) {
       val le = if3(sequential, make_env(nil, nil, ne), ne);
       val binding = env_vbind(le, var, value);
-      ptail = list_collect (ptail, binding);
+      if (ret_new_bindings)
+        ptail = list_collect (ptail, binding);
       ne = le;
     } else {
       eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
@@ -1076,7 +1079,7 @@ static val op_let(val form, val env)
   val vars = first(args);
   val body = rest(args);
   val new_env;
-  (void) bindings_helper(vars, env, eq(let, let_star_s), &new_env, form);
+  (void) bindings_helper(vars, env, eq(let, let_star_s), &new_env, nil, form);
   return eval_progn(body, new_env, form);
 }
 
@@ -1093,7 +1096,7 @@ static val op_each(val form, val env)
   val collect = or2(eq(each, collect_each_s), eq(each, collect_each_star_s));
   val append = or2(eq(each, append_each_s), eq(each, append_each_star_s));
   val new_env;
-  val new_bindings = bindings_helper(vars, env, star, &new_env, form);
+  val new_bindings = bindings_helper(vars, env, star, &new_env, t, form);
   val lists = mapcar(cdr_f, new_bindings);
   list_collect_decl (collection, ptail);
 
@@ -1767,7 +1770,7 @@ static val op_for(val form, val env)
   val forms = rest(rest(rest(rest(form))));
   val new_env;
   val new_bindings = bindings_helper(vars, env, eq(forsym, for_star_s),
-                                     &new_env, form);
+                                     &new_env, t, form);
   uw_block_begin (nil, result);
 
   (void) new_bindings;
