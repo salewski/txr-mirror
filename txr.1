@@ -6835,6 +6835,55 @@ Description:
 The interp-fun-p function returns t if <obj> is an interpreted function,
 otherwise it returns nil.
 
+.SS Macros flet and labels
+
+.TP
+Syntax:
+
+  (flet ({(<name> <param-list> <function-body-form>*)}*)
+     <body-form>*)
+
+  (labels ({(<name> <param-list> <function-body-form>*)}*)
+     <body-form>*)
+
+.TP
+Description:
+
+The flet and labels macros bind local, named functions in the lexical scope.
+The difference between flet and labels is that a function defined by labels can
+see itself, and therefore recurse directly by name. Moreover, if multiple
+functions are defined by the same labels construct, they all see each other.
+By contrast, a flet function does not have itself in scope and cannot recurse.
+Multiple functions in the same flet do not have each other in scope.
+
+More formally, the <function-body-form>-s and <param-list> of the functions
+defined by labels are in a scope in which all of the function names being
+defined by that labels construct are visible.
+
+Under both labels and flet, the local functions that are defined are
+lexically visible to the main <body-form>s.
+
+Note that labels and flat are properly scoped with regard to macros.
+During macro expansion, they shadow, macros defined by macrolet and defmacro.
+
+See also: the macrolet operator.
+
+.TP
+Examples:
+
+  ;; Wastefully slow algorithm for determining even-ness.
+  ;; Note:
+  ;; - mutual recursion between labels-defined functions
+  ;; - inner is-even bound by labels shadows the outer one bound by defun
+  ;;   so the (is-even n) call goes to the local function.
+
+  (defun is-even (n)
+   (labels ((is-even (n)
+              (if (zerop n) t (is-odd (- n 1))))
+            (is-odd (n)
+              (if (zerop n) nil (is-even (- n 1)))))
+     (is-even n)))
+
 .SH OBJECT TYPE AND EQUIVALENCE
 
 .SS Function typeof

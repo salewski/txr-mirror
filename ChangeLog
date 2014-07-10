@@ -1,3 +1,21 @@
+2014-07-10  Kaz Kylheku  <kaz@kylheku.com>
+
+	Implementing local function binding constructs.
+
+	* eval.c (fbind_s, lbind_s, flet_s, labels_s): New symbol globals.
+	(env_fb_to_fb): New static function.
+	(lookup_mac): Implement the same shadow check for function macros
+	that is done for symbol macros, because we now have local functions
+	that can shadow local macros.
+	(fbindings_helper, op_fbind, make_fun_shadowing_env,
+	expand_fbind_vars, me_flet_labels): New static functions.
+	(expand): Add cases for fbind and lbind.
+	(eval_init): Intern the four new symbols.
+	Register sys:fbind and sys:lbind operators.
+	Register flet and labels macros.
+
+	* txr.1: Documented flet and labels.
+
 2014-07-08  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (bindings_helper): New parameter to indicate that

@@ -85,6 +85,7 @@ val hash_lit_s, hash_construct_s;
 val vector_lit_s, vector_list_s;
 val macro_time_s, with_saved_vars_s, macrolet_s;
 val defsymacro_s, symacrolet_s, prof_s;
+val fbind_s, lbind_s, flet_s, labels_s;
 
 val special_s, whole_k;
 
@@ -128,6 +129,13 @@ val env_vbind(val env, val sym, val obj)
   cell = acons_new_c(sym, nulloc, mkloc(env->e.vbindings, env));
   rplacd(cell, obj);
   return cell;
+}
+
+static void env_vb_to_fb(val env)
+{
+  type_check(env, ENV);
+  env->e.fbindings = env->e.vbindings;
+  env->e.vbindings = nil;
 }
 
 noreturn static val eval_error(val form, val fmt, ...)
@@ -244,8 +252,8 @@ static val lookup_mac(val menv, val sym)
 
     {
       val binding = assoc(sym, menv->e.fbindings);
-      if (binding)
-        return binding;
+      if (binding) /* special_s: see make_fun_shadowing_env */
+        return (cdr(binding) == special_s) ? nil : binding;
       return lookup_mac(menv->e.up_env, sym);
     }
   }
@@ -1062,6 +1070,28 @@ static val bindings_helper(val vars, val env, val sequential,
   return new_bindings;
 }
 
+static val fbindings_helper(val vars, val env, val lbind, val ctx_form)
+{
+  val iter;
+  val nenv = make_env(nil, nil, env);
+  val lenv = if3(lbind, nenv, env);
+
+  for (iter = vars; iter; iter = cdr(iter)) {
+    val item = car(iter);
+    val var = pop(&item);
+    val value = eval(pop(&item), lenv, ctx_form);
+
+    if (bindable(var)) {
+      (void) env_fbind(nenv, var, value);
+    } else {
+      eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
+                 car(ctx_form), var, nao);
+    }
+  }
+
+  return nenv;
+}
+
 static val op_progn(val form, val env)
 {
   return eval_progn(rest(form), env, form);
@@ -1080,6 +1110,16 @@ static val op_let(val form, val env)
   val body = rest(args);
   val new_env;
   (void) bindings_helper(vars, env, eq(let, let_star_s), &new_env, nil, form);
+  return eval_progn(body, new_env, form);
+}
+
+static val op_fbind(val form, val env)
+{
+  val oper = first(form);
+  val args = rest(form);
+  val vars = first(args);
+  val body = rest(args);
+  val new_env = fbindings_helper(vars, env, eq(oper, lbind_s), form);
   return eval_progn(body, new_env, form);
 }
 
@@ -1410,6 +1450,13 @@ static val make_var_shadowing_env(val menv, val vars)
 
     return make_env(shadows, nil, menv);
   }
+}
+
+static val make_fun_shadowing_env(val menv, val funcs)
+{
+  val env = make_var_shadowing_env(menv, funcs);
+  env_vb_to_fb(env);
+  return env;
 }
 
 static val op_tree_case(val form, val env)
@@ -2253,7 +2300,36 @@ static val expand_vars(val vars, val menv, val form,
       if (init == init_ex && rest_vars == rest_vars_ex)
         return vars;
       return rlcp(cons(cons(var, init_ex), rest_vars_ex), vars);
-    } 
+    }
+  }
+}
+
+static val expand_fbind_vars(val vars, val menv, val form)
+{
+  val sym;
+
+  if (nilp(vars)) {
+    return nil;
+  } else if (atom(vars)) {
+    eval_error(form, lit("~a is an invalid function binding syntax"),
+               vars, nao);
+    return vars;
+  } else if (symbolp(sym = car(vars))) {
+    eval_error(form, lit("symbols in this construct require initforms"), nao);
+  } else {
+    cons_bind (var, init, sym);
+    val rest_vars = rest(vars);
+    /* This var's init form sees a previous macro whose name is
+       the same as the symbol, so menv is used. */
+    val init_ex = rlcp(expand_forms(init, menv), init);
+    /* The initforms of subsequent vars in a sequential binding
+       do not see a previous symbol macro; they see the var. */
+    val rest_vars_ex = rlcp(expand_fbind_vars(rest_vars, menv, form),
+                            rest_vars);
+
+    if (init == init_ex && rest_vars == rest_vars_ex)
+      return vars;
+    return rlcp(cons(cons(var, init_ex), rest_vars_ex), vars);
   }
 }
 
@@ -2463,6 +2539,25 @@ static val me_ret(val form, val menv)
   return cons(op_s, cons(identity_s, rest(form)));
 }
 
+static val me_flet_labels(val form, val menv)
+{
+  val body = form;
+  val sym = pop(&body);
+  val funcs = pop(&body);
+  list_collect_decl (lambdas, ptail);
+
+  for (; funcs; funcs = cdr(funcs)) {
+    val func = car(funcs);
+    val name = pop(&func);
+    val params = pop(&func);
+    val lambda = cons(lambda_s, cons(params, func));
+    ptail = list_collect (ptail, cons(name, cons(lambda, nil)));
+  }
+
+  return cons(if3(eq(sym, flet_s), fbind_s, lbind_s),
+              cons(lambdas, body));
+}
+
 static val expand_catch_clause(val form, val menv)
 {
   val sym = first(form);
@@ -2543,6 +2638,18 @@ tail:
       } else {
         val basic_form = rlcp(cons(sym, cons(vars_ex, body_ex)), form);
         return expand_save_specials(basic_form, specials_p);
+      }
+    } else if (sym == fbind_s || sym == lbind_s) {
+      val body = rest(rest(form));
+      val funcs = second(form);
+      val new_menv = make_fun_shadowing_env(menv, funcs);
+      val body_ex = expand_forms(body, new_menv);
+      val funcs_ex = expand_fbind_vars(funcs,
+                                       sym == lbind_s ? new_menv : menv, form);
+      if (body == body_ex && funcs == funcs_ex) {
+        return form;
+      } else {
+        return rlcp(cons(sym, cons(funcs_ex, body_ex)), form);
       }
     } else if (sym == block_s || sym == return_from_s) {
       val name = second(form);
@@ -3232,6 +3339,10 @@ void eval_init(void)
   let_s = intern(lit("let"), user_package);
   let_star_s = intern(lit("let*"), user_package);
   lambda_s = intern(lit("lambda"), user_package);
+  fbind_s = intern(lit("fbind"), system_package);
+  lbind_s = intern(lit("lbind"), system_package);
+  flet_s = intern(lit("flet"), user_package);
+  labels_s = intern(lit("labels"), user_package);
   call_s = intern(lit("call"), user_package);
   cond_s = intern(lit("cond"), user_package);
   if_s = intern(lit("if"), user_package);
@@ -3307,6 +3418,8 @@ void eval_init(void)
   reg_op(append_each_s, op_each);
   reg_op(append_each_star_s, op_each);
   reg_op(let_star_s, op_let);
+  reg_op(fbind_s, op_fbind);
+  reg_op(lbind_s, op_fbind);
   reg_op(lambda_s, op_lambda);
   reg_op(fun_s, op_fun);
   reg_op(cond_s, op_cond);
@@ -3357,6 +3470,8 @@ void eval_init(void)
   reg_mac(intern(lit("while"), user_package), me_while);
   reg_mac(intern(lit("until"), user_package), me_until);
   reg_mac(quasilist_s, me_quasilist);
+  reg_mac(flet_s, me_flet_labels);
+  reg_mac(labels_s, me_flet_labels);
 
   reg_fun(cons_s, func_n2(cons));
   reg_fun(intern(lit("make-lazy-cons"), user_package), func_n1(make_lazy_cons));
