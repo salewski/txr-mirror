@@ -24,4 +24,11 @@
             continue)
           (if (> i 30)
             break)
-          (prinl i)))))
+          (prinl i))))
+
+   (let ((i 0))
+     (while ((< i 5))
+       (inc i)
+       (labels ((while () 'while))
+         (let ((break 'break))
+           (prinl (list (while) break)))))))

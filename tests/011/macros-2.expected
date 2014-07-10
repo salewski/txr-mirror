@@ -9,4 +9,9 @@
 28
 29
 30
-(block #:brk-blk-0004 (for nil ((< i 100) nil) nil (block #:cnt-blk-0003 (if (< (inc i) 20) (return-from #:cnt-blk-0003)) (if (> i 30) (return-from #:brk-blk-0004)) (prinl i))))
+(block #:brk-blk-0006 (for nil ((< i 100) nil) nil (block #:cnt-blk-0005 (if (< (inc i) 20) (return-from #:cnt-blk-0005)) (if (> i 30) (return-from #:brk-blk-0006)) (prinl i))))
+(while break)
+(while break)
+(while break)
+(while break)
+(while break)

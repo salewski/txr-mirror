@@ -1,5 +1,14 @@
 2014-07-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	* tests/011/macros-2.txr: Added test for labels shadowing macro,
+	and let shadowing symacro.
+
+	* tests/011/macros-2.expected: Regenerated
+
+	* txr.vim: Regenerated.
+
+2014-07-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	Implementing local function binding constructs.
 
 	* eval.c (fbind_s, lbind_s, flet_s, labels_s): New symbol globals.
