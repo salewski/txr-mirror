@@ -1391,7 +1391,7 @@ static val expand_symacrolet(val form, val menv)
  * variable in the binding list vars is listed
  * as a binding, with the value sys:special.
  * This is a shadow entry, which allows ordinary
- * bindings to shadow symbol macros bindings.
+ * bindings to shadow symbol macro bindings.
  */
 static val make_var_shadowing_env(val menv, val vars)
 {
