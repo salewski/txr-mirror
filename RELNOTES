@@ -1,3 +1,25 @@
+                                     TXR 92
+                                   2014-07-11
+
+
+  Features
+
+  - New operators ado and ido.
+
+  - New command line option --license.
+
+  - Long overdue flet and labels operators for lexical binding in the function
+    space, added as macros.
+
+  Bugs
+
+  - apf and ipf functions fixed.
+
+  - Uninitialized variable bug fix in select function
+    and in the index list case of replace-list.
+
+
+
                                      TXR 91
                                    2014-07-02
 

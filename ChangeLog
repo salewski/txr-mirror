@@ -1,5 +1,15 @@
 2014-07-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 92.
+
+	* RELNOTES: Updated.
+
+	* configure, txr.1: Bumped version.
+
+	* share/txr/stdlib/ver.txr: Likewise
+
+2014-07-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	* tests/011/macros-2.txr: Added test for labels shadowing macro,
 	and let shadowing symacro.
 
