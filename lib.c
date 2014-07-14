@@ -1612,6 +1612,11 @@ val consp(val obj)
   return (ty == CONS || ty == LCONS) ? t : nil;
 }
 
+val lconsp(val obj)
+{
+  return type(obj) == LCONS ? t : nil;
+}
+
 val atom(val obj)
 {
   return if3(consp(obj), nil, t);
@@ -4972,6 +4977,62 @@ val mappend(val fun, val list)
     iter = list_collect_append(iter, funcall1(fun, car(list)));
 
   return make_like(out, list_orig);
+}
+
+static val lazy_interpose_func(val env, val lcons)
+{
+  cons_bind (sep, list, env);
+  val next = cdr(list);
+  val fun = lcons_fun(lcons);
+
+  rplaca(lcons, car(list));
+
+  if (next) {
+    rplacd(env, next);
+    func_set_env(fun, env);
+    rplacd(lcons, cons(sep, make_lazy_cons(fun)));
+  }
+
+  return nil;
+}
+
+static val lazy_interpose(val sep, val list)
+{
+  return make_lazy_cons(func_f1(cons(sep, list),
+                                lazy_interpose_func));
+}
+
+val interpose(val sep, val seq)
+{
+  switch (type(seq)) {
+  case NIL:
+    return nil;
+  case CONS:
+    {
+      val next;
+      list_collect_decl (out, ptail);
+      for (next = cdr(seq); next; seq = next, next = cdr(seq)) {
+        ptail = list_collect(ptail, car(seq));
+        ptail = list_collect(ptail, sep);
+        if (lconsp(next)) {
+          list_collect_nconc(ptail, lazy_interpose(sep, next));
+          return out;
+        }
+      }
+      list_collect(ptail, car(seq));
+      return out;
+    }
+  case LCONS:
+    return lazy_interpose(sep, seq);
+  case LIT:
+  case STR:
+  case LSTR:
+    return cat_str(interpose(sep, tolist(seq)), nil);
+  case VEC:
+    return vector_list(interpose(sep, tolist(seq)));
+  default:
+    type_mismatch(lit("interpose: ~s is not a sequence"), seq, nao);
+  }
 }
 
 val merge(val list1, val list2, val lessfun, val keyfun)

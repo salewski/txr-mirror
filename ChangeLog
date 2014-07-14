@@ -1,3 +1,14 @@
+2014-07-14  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): Register interpose and lconsp as intrinsics.
+
+	* lib.c (lconsp, interpose): New functions.
+	(lazy_interpose_func, lazy_interpose): New static functions.
+
+	* lib.h (lconsp, interpose): Declared.
+
+	* txr.1: Documented lconsp and interpose.
+
 2014-07-10  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 92.

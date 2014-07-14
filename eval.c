@@ -3497,6 +3497,7 @@ void eval_init(void)
   reg_fun(intern(lit("true"), user_package), func_n1(not_null));
   reg_fun(not_s, null_f);
   reg_fun(intern(lit("consp"), user_package), func_n1(consp));
+  reg_fun(intern(lit("lconsp"), user_package), func_n1(lconsp));
   reg_fun(intern(lit("listp"), user_package), func_n1(listp));
   reg_fun(intern(lit("proper-listp"), user_package), func_n1(proper_listp));
   reg_fun(intern(lit("length-list"), user_package), func_n1(length_list));
@@ -3512,6 +3513,7 @@ void eval_init(void)
   reg_fun(intern(lit("reduce-right"), user_package), func_n4o(reduce_right, 2));
   reg_fun(intern(lit("transpose"), user_package), func_n1(transpose));
   reg_fun(intern(lit("zip"), user_package), func_n0v(transpose));
+  reg_fun(intern(lit("interpose"), user_package), func_n2(interpose));
 
   reg_fun(intern(lit("second"), user_package), func_n1(second));
   reg_fun(intern(lit("third"), user_package), func_n1(third));

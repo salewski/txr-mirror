@@ -7160,6 +7160,9 @@ case, nil otherwise.
 Non-empty lists test positive under consp because a list is represented
 as a reference to the first cons in a chain of one or more conses.
 
+Note that a lazy cons is a cons and satisfies the consp test.  See the function
+make-lazy-cons.
+
 .TP
 Examples:
 
@@ -8172,6 +8175,41 @@ Examples:
 
   (zip '(a b c) '(c d e)) ->  ((a c) (b d) (c e))
 
+.SS Function interpose
+
+.TP
+Syntax:
+
+  (interpose <sep> <sequence>)
+
+.TP
+Description:
+
+The interpose function returns a sequence of the same type as <sequence>,
+in which the elements from <sequence> appear with the <sep> value inserted
+between them.
+
+If <sequence> is an empty sequence or a sequence of length 1, then a
+sequence identical to <sequence> is returned. It may be a copy of <sequence>
+or it may be <sequence> itself.
+
+If <sequence> is a character string, then the value <sep> must be a character.
+
+It is permissible for <sequence>, or for a suffix of <sequence> to be a lazy
+list, in which case interpose returns a lazy list, or a list with a lazy
+suffix.
+
+.SS
+Examples:
+
+  (interpose #\e- "xyz") -> "x-y-z"
+  (interpose t nil) -> nil
+  (interpose t #()) -> #()
+  (interpose #\ea "") -> ""
+  (interpose t (range 0 0)) -> (0)
+  (interpose t (range 0 1)) -> (0 t 1)
+  (interpose t (range 0 2)) -> (0 t 1 t 2)
+
 .SS Functions conses and conses*
 
 .TP
@@ -8735,6 +8773,19 @@ Example:
                              (inc counter)
                              (rplacd lcons (make-lazy-cons 
                                             (lcons-fun lcons))))))))))
+
+.SS Function lconsp
+
+.TP
+Syntax:
+
+  (lconsp <value>)
+
+.TP
+Description:
+
+The lconsp function returns t if <value> is a lazy cons cell. Otherwise
+it returns nil, even if <value> is an ordinary cons cell.
 
 .SS Function lcons-fun
 

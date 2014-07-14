@@ -480,6 +480,7 @@ val make_half_lazy_cons(val func, val car);
 val lcons_fun(val lcons);
 val list(val first, ...); /* terminated by nao */
 val consp(val obj);
+val lconsp(val obj);
 val atom(val obj);
 val listp(val obj);
 val proper_listp(val obj);
@@ -741,6 +742,7 @@ val mapcar_listout(val fun, val list);
 val mapcar(val fun, val list);
 val mapcon(val fun, val list);
 val mappend(val fun, val list);
+val interpose(val sep, val seq);
 val merge(val list1, val list2, val lessfun, val keyfun);
 val sort(val seq, val lessfun, val keyfun);
 val multi_sort(val lists, val funcs, val key_funcs);
