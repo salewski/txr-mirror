@@ -1,5 +1,10 @@
 2014-07-14  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.c (txr_main): Allow Lisp code executed via -e and -p options to
+	see the bindings set up by prior -D options.
+
+2014-07-14  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Register interpose and lconsp as intrinsics.
 
 	* lib.c (lconsp, interpose): New functions.
