@@ -1,5 +1,21 @@
 2014-07-15  Kaz Kylheku  <kaz@kylheku.com>
 
+	Fix old, known syntax highlighting problems between symbols,
+	integers and floating literals.
+
+	* genvin.txr (txr_num): The general solution is to over-match
+	a number by one character: a non-token constituent, and then
+	subtract that from the highlight region using me=e-1.
+	This solves the prefix ambiguities between numbers and symbols.
+	(txr_badnum): New match: matches floating literals with trailing
+	junk, which are highlighted as errors.
+	(txr_directive, txr_list, txr_bracket, txr_mlist, txr_mbracket):
+	All of these contain a txr_badnum.
+
+	* txr.vim: Regenerated.
+
+2014-07-15  Kaz Kylheku  <kaz@kylheku.com>
+
 	Fix broken regex highlighting.
 
 	* genvim.txr (txl_regex): Missing syntactic region added.
