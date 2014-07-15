@@ -1,7 +1,3 @@
-@#
-@# This file is in the public domain.
-@# It was authored by Kaz Kylheku <kkylheku@gmail.com> in 2009
-@#
 @(next `!ls @TESTDIR/proc | sort -n`)
 @(collect)
 @{process /[0-9]+/}

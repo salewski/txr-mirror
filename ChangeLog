@@ -1,5 +1,17 @@
 2014-07-15  Kaz Kylheku  <kaz@kylheku.com>
 
+	* tests/001/query-1.txr: Remove bogus public domain header.
+
+	* tests/001/query-2.txr: Likewise.
+
+	* tests/001/query-3.txr: Likewise.
+
+	* tests/001/query-4.txr: Likewise.
+
+	* tests/002/query-1.txr: Likewise.
+
+2014-07-15  Kaz Kylheku  <kaz@kylheku.com>
+
 	Fix old, known syntax highlighting problems between symbols,
 	integers and floating literals.
 
