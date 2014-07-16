@@ -1124,7 +1124,7 @@ static val h_eol(match_line_ctx *c)
 
   if (length_str_le(c->dataline, c->pos)) {
     LOG_MATCH("eol", c->pos);
-    return cons(c->bindings, plus(c->pos, c->base));
+    return next_spec_k;
   }
   LOG_MISMATCH("eol");
   return nil;

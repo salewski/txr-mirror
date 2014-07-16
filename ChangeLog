@@ -1,5 +1,11 @@
 2014-07-15  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (h_eol): Fix broken horizontal @(eol).
+	It should be returning next_spec_k, rather
+	than bindings, which indicate a complete match.
+
+2014-07-15  Kaz Kylheku  <kaz@kylheku.com>
+
 	* tests/001/query-1.txr: Remove bogus public domain header.
 
 	* tests/001/query-2.txr: Likewise.
