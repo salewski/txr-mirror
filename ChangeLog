@@ -1,5 +1,13 @@
 2014-07-15  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (v_do, v_require): Set up and tear down environment frame,
+	like other situations that evaluate TXR Lisp from the pattern language.
+	Otherwise obscure things will go wrong.
+	(h_do): Same as above, and additionally, add the forgotten
+	call to install the bindings into the match context.
+
+2014-07-15  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (h_eol): Fix broken horizontal @(eol).
 	It should be returning next_spec_k, rather
 	than bindings, which indicate a complete match.

@@ -3583,8 +3583,10 @@ static val v_do(match_files_ctx *c)
 {
   spec_bind (specline, first_spec, c->spec);
   val args = rest(first_spec);
+  uw_env_begin;
   uw_set_match_context(cons(c->spec, c->bindings));
   (void) eval_progn(args, make_env(c->bindings, nil, nil), specline);
+  uw_env_end;
   return next_spec_k;
 }
 
@@ -3592,9 +3594,13 @@ static val v_require(match_files_ctx *c)
 {
   spec_bind (specline, first_spec, c->spec);
   val args = rest(first_spec);
+  val ret;
+  uw_env_begin;
   uw_set_match_context(cons(c->spec, c->bindings));
-  if (!eval_progn(args, make_env(c->bindings, nil, nil), specline))
-    return nil;
+  ret = eval_progn(args, make_env(c->bindings, nil, nil), specline);
+  uw_env_end;
+  if (!ret)
+    return ret;
   return next_spec_k;
 }
 
@@ -3714,7 +3720,10 @@ static val h_do(match_line_ctx *c)
 {
   val elem = first(c->specline);
   val args = rest(elem);
+  uw_env_begin;
+  uw_set_match_context(cons(cons(c->specline, nil), c->bindings));
   (void) eval_progn(args, make_env(c->bindings, nil, nil), elem);
+  uw_env_end;
   return next_spec_k;
 }
 
