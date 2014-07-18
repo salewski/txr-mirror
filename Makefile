@@ -218,10 +218,10 @@ config.make config.h:
 #
 
 conftest: conftest.c
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^ -lm
 
 conftest2: conftest1.c conftest2.c
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^ -lm
 
 conftest.syms: conftest.o
 	$(NM) -n -t o -P $^ > $@

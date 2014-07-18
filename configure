@@ -97,7 +97,7 @@ yacc='$(cross)$(tool_prefix)$(yaccname)'
 yacc_given=
 nm='$(cross)$(tool_prefix)nm'
 opt_flags=-O2
-lang_flags='-ansi -D_XOPEN_SOURCE=500'
+lang_flags='-ansi -D_XOPEN_SOURCE=600'
 diag_flags='-Wall -Werror=implicit-function-declaration -Werror=missing-prototypes -Werror=strict-prototypes'
 debug_flags=-g
 inline=
@@ -1805,6 +1805,24 @@ int main(int argc, char **argv)
 if conftest ; then
   printf "yes\n"
   printf "#define HAVE_WSPAWN 1\n" >> config.h
+else
+  printf "no\n"
+fi
+
+printf "Checking for log2 ... "
+
+cat > conftest.c <<!
+#include <math.h>
+
+int main(void)
+{
+  double x = log2(42.0);
+  return 0;
+}
+!
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_LOG2 1\n" >> config.h
 else
   printf "no\n"
 fi

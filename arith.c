@@ -1444,6 +1444,33 @@ val logten(val num)
   return flo(log10(c_flo(to_float(lit("log"), num))));
 }
 
+#if HAVE_LOG2
+
+static void log2_init(void)
+{
+}
+
+#else
+
+static double l2;
+
+static void log2_init(void)
+{
+  l2 = log(2.0);
+}
+
+double log2(double x)
+{
+  return log(x)/l2;
+}
+
+#endif
+
+val logtwo(val num)
+{
+  return flo(log2(c_flo(to_float(lit("log"), num))));
+}
+
 val expo(val num)
 {
   return flo(exp(c_flo(to_float(lit("exp"), num))));
@@ -2038,4 +2065,5 @@ void arith_init(void)
   mp_set_intptr(&NUM_MAX_MP, NUM_MAX);
   mp_init(&INT_PTR_MAX_MP);
   mp_set_intptr(&INT_PTR_MAX_MP, INT_PTR_MAX);
+  log2_init();
 }

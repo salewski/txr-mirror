@@ -1,3 +1,23 @@
+2014-07-18  Kaz Kylheku  <kaz@kylheku.com>
+
+	* Makefile (conftest, conftest2): Link math
+	library so we can test for math functions.
+
+	* arith.c (log2_init): New static function.
+	(log2, logtwo): New functions.
+	(l2): New static variable.
+	(arith_init): Call log2_init.
+
+	* configure (lang_flags): Switching _XOPEN_SOURCE
+	from 500 to 600 to reveal log2.
+	Adding test for log2.
+
+	* eval.c (eval_init): Register log2 intrinsic.
+
+	* lib.h (logtwo): Declared.
+
+	* txr.1: Documented log2.
+
 2014-07-15  Kaz Kylheku  <kaz@kylheku.com>
 
 	* match.c (v_do, v_require): Set up and tear down environment frame,

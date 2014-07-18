@@ -3585,6 +3585,7 @@ void eval_init(void)
   reg_fun(intern(lit("atan2"), user_package), func_n2(atang2));
   reg_fun(intern(lit("log"), user_package), func_n1(loga));
   reg_fun(intern(lit("log10"), user_package), func_n1(logten));
+  reg_fun(intern(lit("log2"), user_package), func_n1(logtwo));
   reg_fun(intern(lit("exp"), user_package), func_n1(expo));
   reg_fun(intern(lit("sqrt"), user_package), func_n1(sqroot));
   reg_fun(intern(lit("cum-norm-dist"), user_package), func_n1(cum_norm_dist));
