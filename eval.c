@@ -2958,6 +2958,30 @@ static val lazy_mappendv(val fun, val list_of_lists)
   return lazy_appendv(lazy_mapcarv(fun, list_of_lists));
 }
 
+static val mapdov(val fun, val list_of_lists)
+{
+  if (!cdr(list_of_lists)) {
+    return mapdo(fun, car(list_of_lists));
+  } else {
+    val lofl = mapcar_listout(func_n1(nullify), list_of_lists);
+
+    for (;;) {
+      val iter;
+      list_collect_decl (args, atail);
+
+      for (iter = lofl; iter; iter = cdr(iter)) {
+        val list = car(iter);
+        if (!list)
+          return nil;
+        atail = list_collect(atail, car(list));
+        deref(car_l(iter)) = cdr(list);
+      }
+
+      apply(fun, args, nil);
+    }
+  }
+}
+
 static val symbol_value(val sym)
 {
   return cdr(lookup_var(nil, sym));
@@ -3506,6 +3530,7 @@ void eval_init(void)
   reg_fun(intern(lit("mapcar*"), user_package), func_n1v(lazy_mapcarv));
   reg_fun(intern(lit("mappend"), user_package), func_n1v(mappendv));
   reg_fun(intern(lit("mappend*"), user_package), func_n1v(lazy_mappendv));
+  reg_fun(intern(lit("mapdo"), user_package), func_n1v(mapdov));
   reg_fun(apply_s, func_n1v(apply_intrinsic));
   reg_fun(iapply_s, func_n1v(iapply));
   reg_fun(call_s, func_n1v(call));

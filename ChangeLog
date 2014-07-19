@@ -1,5 +1,17 @@
 2014-07-19  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (mapdov): New function.
+	(eval_init): Register mapdo intrinsic.
+
+	* lib.c (mapdo): New function.
+
+	* lib.h (mapdo): Declared.
+
+	* txr.1: Documented mapdo.  Documented zero-argument case
+	for mapcar, mapcar*, mappend and mappend*.
+
+2014-07-19  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (put_strings, put_lines): New functions.
 	(stream_init): Registered new functions as intrinsics.
 

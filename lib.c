@@ -4979,6 +4979,16 @@ val mappend(val fun, val list)
   return make_like(out, list_orig);
 }
 
+val mapdo(val fun, val list)
+{
+  list = nullify(list);
+
+  for (; list; list = cdr(list))
+    funcall1(fun, car(list));
+
+  return nil;
+}
+
 static val lazy_interpose_func(val env, val lcons)
 {
   cons_bind (sep, list, env);

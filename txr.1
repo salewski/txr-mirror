@@ -8058,15 +8058,18 @@ preserved.
 .TP
 Syntax:
 
-  (mapcar <function> <list> <list>*)
-  (mappend <function> <list> <list>*)
-  (mapcar* <function> <list> <list>*)
-  (mappend* <function> <list> <list>*)
+  (mapcar <function> <list>*)
+  (mappend <function> <list>*)
+  (mapcar* <function> <list>*)
+  (mappend* <function> <list>*)
 
 .TP
 Description:
 
-When given three arguments, the mapcar function applies <function> to
+When given only one argument, the mapcar function returns nil.
+The <function> is never called.
+
+When given two arguments, the mapcar function applies <function> to
 the elements of <list> and returns a list of the resulting values.
 Essentially, the list is filtered through the function.
 
@@ -8123,6 +8126,31 @@ Examples:
   ;; take just the even numbers
   (mappend (lambda (item) (if (evenp x) (list x))) '(1 2 3 4 5))
   -> (2 4)
+
+.SS Function mapdo
+
+.TP
+Syntax:
+
+  (mapdo <function> <sequence>*)
+
+.TP
+Description:
+
+The mapdo function is similar to mapcar, but always returns nil.  It is useful
+when <function> performs some kind of side effect, hence the "do" in the name,
+which is a mnemonic for the execution of imperative actions.
+
+When only the <function> argument is given, the function is never called,
+and nil is returned.
+
+If a single <sequence> argument is given, then mapdo iterates over
+<sequence>, invoking <function> on each element.
+
+If two or more <sequence> arguments are given, then mapdo iterates over
+the sequences in parallel, extracting parallel tuples of items. These
+tuples are passed as arguments to <function>, which must accept as many
+arguments as there are sequences.
 
 .SS Functions transpose and zip
 
