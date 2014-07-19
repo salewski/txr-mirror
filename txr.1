@@ -13027,8 +13027,8 @@ indeterminate.
 .TP
 Syntax:
 
-  (put-line [<string> [<stream>]])
   (put-string <string> [<stream>])
+  (put-line [<string> [<stream>]])
   (put-char <char> [<stream>])
   (put-byte <byte> [<stream>])
 
@@ -13042,14 +13042,43 @@ then *stdout* is used.
 The put-char function writes a character given by <char> to a stream. If the
 stream is based on bytes, then the character is encoded into UTF-8 and multiple
 bytes are written. Streams which support put-char also support put-line, and
-put-string. The put-string function writes the characters of a string out to
-the stream as if by multiple calls to put-char. The put-line function is like
-put-string, but also writes an additional newline character. The string
-is optional in put-line, and defaults to the empty string.
+put-string.
+
+The put-string function writes the characters of a string out to
+the stream as if by multiple calls to put-char. The <string> argument
+may be a symbol, in which case its name is used as the string.
+
+The put-line function is like put-string, but also writes an additional newline
+character. The string is optional in put-line, and defaults to the empty
+string.
 
 The put-byte function writes a raw byte given by the <byte> argument
 to <stream>, if <stream> supports a byte write operation. The byte
 value is specified as an integer value in the range 0 to 255.
+
+.SS Functions put-strings and put-lines
+
+.TP
+Syntax:
+
+  (put-strings <sequence> [<stream>]])
+  (put-lines <sequence> [<stream>]])
+
+.TP
+Description:
+
+These functions assume <sequence> to be a sequence of strings, or of
+symbols, or a mixture thereof. These strings are sent to the stream.  The
+<stream> argument must be an output stream.  If it is omitted, then *stdout* is
+used.
+
+The put-strings function iterates over <sequence> and writes each element
+to the stream as if using the put-string function.
+
+The put-lines function iterates over <sequence> and writes each element
+to the stream as if using the put-line function.
+
+Both functions return t.
 
 .SS Function flush-stream
 

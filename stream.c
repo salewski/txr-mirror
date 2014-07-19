@@ -1967,6 +1967,24 @@ val put_line(val string, val stream)
   return (put_string(default_arg(string, null_string), stream), put_char(chr('\n'), stream));
 }
 
+val put_strings(val strings, val stream)
+{
+  strings = nullify(strings);
+
+  for (; strings; strings = cdr(strings))
+    put_string(car(strings), stream);
+  return t;
+}
+
+val put_lines(val lines, val stream)
+{
+  lines = nullify(lines);
+
+  for (; lines; lines = cdr(lines))
+    put_line(car(lines), stream);
+  return t;
+}
+
 val flush_stream(val stream)
 {
   type_check (stream, COBJ);
@@ -2858,6 +2876,8 @@ void stream_init(void)
   reg_fun(intern(lit("put-line"), user_package), func_n2o(put_line, 0));
   reg_fun(intern(lit("put-char"), user_package), func_n2o(put_char, 1));
   reg_fun(intern(lit("put-byte"), user_package), func_n2o(put_byte, 1));
+  reg_fun(intern(lit("put-lines"), user_package), func_n2o(put_lines, 1));
+  reg_fun(intern(lit("put-strings"), user_package), func_n2o(put_strings, 1));
   reg_fun(intern(lit("unget-char"), user_package), func_n2o(unget_char, 1));
   reg_fun(intern(lit("unget-byte"), user_package), func_n2o(unget_byte, 1));
   reg_fun(intern(lit("flush-stream"), user_package), func_n1(flush_stream));

@@ -92,6 +92,8 @@ val put_string(val string, val stream);
 val put_line(val string, val stream);
 val put_char(val ch, val stream);
 val put_byte(val byte, val stream);
+val put_strings(val strings, val stream);
+val put_lines(val lines, val stream);
 val flush_stream(val stream);
 val seek_stream(val stream, val offset, val whence);
 val get_string(val stream, val nchars);

@@ -1,5 +1,14 @@
 2014-07-19  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (put_strings, put_lines): New functions.
+	(stream_init): Registered new functions as intrinsics.
+
+	* stream.h (put_strings, put_lines): Declared.
+
+	* txr.1: Documented.
+
+2014-07-19  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Register get-lines as a synonym for lazy-stream-cons.
 
 	* stream.c (get_string): New function.
