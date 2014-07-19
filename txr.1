@@ -10409,7 +10409,7 @@ Description:
 The sub function extracts a slice from input sequence <sequence>. The slice is
 a sequence of the same type as <sequence>.
 
-If the <from> parameter is omitted, it defaults to 0.  If the <to> parameter is
+If the <from> argument is omitted, it defaults to 0.  If the <to> parameter is
 omitted, it defaults to t.  Thus (sub a) means (sub a 0 t).
 
 The following equivalence holds between the sub function and
@@ -10446,7 +10446,7 @@ The first form of the replace function replaces a contiguous subsequence of the
 in which case an insertion is performed. If <replacement-sequence> is empty
 (for example, the empty list nil), then a deletion is performed.
 
-If the <from> and <to> parameters are omitted, their values default
+If the <from> and <to> arguments are omitted, their values default
 to 0 and t respectively.
 
 The following equivalence holds between assignment to a place denoted by
@@ -12965,7 +12965,7 @@ Description:
 
 These character put back, into a stream, a character or byte which was
 previously read.  The character or byte must match the one which was most
-recently read. If the <stream> parameter is omitted, then the *stdin*
+recently read. If the <stream> argument is omitted, then the *stdin*
 stream is used.
 
 If the operation succeeds, the byte or character value is returned.
