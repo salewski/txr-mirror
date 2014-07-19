@@ -2004,6 +2004,24 @@ val seek_stream(val stream, val offset, val whence)
   }
 }
 
+val get_string(val stream, val nchars)
+{
+  val strstream = make_string_output_stream();
+  nchars = default_bool_arg(nchars);
+  val ch;
+
+  if (nchars) {
+    for (; gt(nchars, zero) && (ch = get_char(stream));
+         nchars = minus(nchars, one))
+      put_char(ch, strstream);
+  } else {
+    while ((ch = get_char(stream)))
+      put_char(ch, strstream);
+  }
+
+  return get_string_from_stream(strstream);
+}
+
 #if HAVE_SYS_STAT
 static int w_stat(const wchar_t *wpath, struct stat *buf)
 {
@@ -2835,6 +2853,7 @@ void stream_init(void)
   reg_fun(intern(lit("get-line"), user_package), func_n1o(get_line, 0));
   reg_fun(intern(lit("get-char"), user_package), func_n1o(get_char, 0));
   reg_fun(intern(lit("get-byte"), user_package), func_n1o(get_byte, 0));
+  reg_fun(intern(lit("get-string"), user_package), func_n2o(get_string, 0));
   reg_fun(intern(lit("put-string"), user_package), func_n2o(put_string, 1));
   reg_fun(intern(lit("put-line"), user_package), func_n2o(put_line, 0));
   reg_fun(intern(lit("put-char"), user_package), func_n2o(put_char, 1));

@@ -3774,6 +3774,7 @@ void eval_init(void)
   reg_fun(intern(lit("break-str"), user_package), func_n2(break_str));
 
   reg_fun(intern(lit("lazy-stream-cons"), user_package), func_n1(lazy_stream_cons));
+  reg_fun(intern(lit("get-lines"), user_package), func_n1(lazy_stream_cons));
   reg_fun(intern(lit("lazy-str"), user_package), func_n3o(lazy_str, 1));
   reg_fun(intern(lit("lazy-stringp"), user_package), func_n1(lazy_stringp));
   reg_fun(intern(lit("lazy-str-force-upto"), user_package), func_n2(lazy_str_force_upto));

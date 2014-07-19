@@ -1,3 +1,16 @@
+2014-07-19  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): Register get-lines as a synonym for lazy-stream-cons.
+
+	* stream.c (get_string): New function.
+
+	* stream.h (get_string): Declared.
+	(stream_init): get_string registered as get-string intrinsic.
+
+	* txr.1: Documented get-string, and get-lines as a synonym for
+	lazy-stream-cons.  Documented the behavioral difference of
+	lazy-stream-cons lazy lists for real-time and non-real-time streams.
+
 2014-07-18  Kaz Kylheku  <kaz@kylheku.com>
 
 	* Makefile (conftest, conftest2): Link math

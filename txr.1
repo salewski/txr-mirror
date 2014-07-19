@@ -8804,15 +8804,19 @@ executing, it is still accessible. This allows the update function
 to retrieve a reference to itself and propagate itself into
 another lazy cons (as in the example under make-lazy-cons).
 
-.SS Function lazy-stream-cons
+.SS Functions lazy-stream-cons and get-lines
 
 .TP
 Syntax:
 
   (lazy-stream-cons <stream>)
+  (get-lines <stream>)
 
 .TP
 Description:
+
+The lazy-stream-cons and get-lines functions are synonyms. Thus, the following
+description of lazy-stream-cons also applies to get-lines.
 
 The lazy-stream-cons returns a lazy cons which generates a lazy list based on
 reading lines of text from input stream <stream>, which form the elements of
@@ -8827,6 +8831,16 @@ by making another call to lazy-stream-cons, installing the result into the
 cdr field.
 
 the string returned by get-line, and whose cdr contains the lazy function.
+
+The lazy-stream-cons function inspects the real-time property of a stream
+as if by the real-time-stream-p function. This determines which of two
+styles of lazy list are returned. For an ordinary (non-real-time) stream,
+the lazy list treats the end-of-file condition accurately: an empty
+file turns into the empty list nil, a one line file into a one-element
+list which contains that line and so on. This accuracy requries one
+line of lookahead which is not acceptable in real-time streams. For real-time
+streams, the lazy list will generate an extra nil item after the last
+line, and so an empty input source translates to the list (nil).
 
 .SS Macro delay
 
@@ -12951,6 +12965,29 @@ the two operations will interfere with the UTF-8 decoding.
 
 These functions return nil when the end of data is reached.  Errors are
 represented as exceptions.
+
+See also: get-lines
+
+.SS Function get-string
+
+.TP
+Syntax:
+
+  (get-string [<stream> [<count>]])
+
+.TP
+Description:
+
+The get-string function reads characters from a stream, and assembles them into
+a string, which is returned. If the <stream> argument is omitted, then the
+*stdin* stream is used.
+
+If the <count> argument is missing, then all of the characters from the
+stream are read and assembled into a string.
+
+If present, the <count> argument should be a positive integer indicating
+a limit on how many characters to read. The returned string will be no
+longer than <count>, but may be shorter.
 
 .SS Functions unget-char and unget-byte
 
