@@ -812,6 +812,8 @@ val hash_construct(val hashv_args, val pairs)
 {
   val hash = hashv(hashv_args);
 
+  pairs = nullify(pairs);
+
   for (; pairs; pairs = cdr(pairs)) {
     val pair = car(pairs);
     sethash(hash, first(pair), second(pair));

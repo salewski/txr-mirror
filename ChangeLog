@@ -1,5 +1,12 @@
 2014-07-19  Kaz Kylheku  <kaz@kylheku.com>
 
+	* hash.c (hash_construct): Nullify the pairs argument so that
+	it works correctly with an empty vector.
+
+	* txr.1: Write missing documentation for hash-construct.
+
+2014-07-19  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (mapdov): New function.
 	(eval_init): Register mapdo intrinsic.
 

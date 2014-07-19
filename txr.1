@@ -11769,6 +11769,24 @@ the equal function instead.
 In addition to storing key-value pairs, a hash table can have a piece of
 information associated with it, called the user data.
 
+.SS Function hash-construct
+
+.TP
+Syntax:
+
+  (hash-construct <hash-args> <key-val-pairs>)
+
+.TP
+Description:
+
+The hash-construct function constructs a populated hash in one step. The <hash-args>
+argument specifies a list suitable as an argument list in a call to the hash function.
+The <key-val-pairs> is a sequence of pairs, which are two-element lists representing
+key-value pairs.
+
+A hash is constructed as if by a call to [apply hash <hash-args>], then populated
+with the specified pairs, and returned.
+
 .SS Function hash-update
 
 .TP
