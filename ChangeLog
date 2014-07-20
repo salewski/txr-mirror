@@ -1,5 +1,15 @@
 2014-07-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (divi): Support one-argument form.
+	Use "/" name in error reporting, not "divi".
+
+	* eval.c (eval_init): Change registration of / so only
+	one argument is required out of two.
+
+	* txr.1: Document one-argument division.
+
+2014-07-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	* genvim.txr: Fixed highlighting issues in numbers followed by newline.
 
 	* txr.vim: Regenerated.

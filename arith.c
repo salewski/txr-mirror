@@ -946,13 +946,20 @@ static val to_float(val func, val num)
 
 val divi(val anum, val bnum)
 {
-  double a = c_flo(to_float(lit("divi"), anum));
-  double b = c_flo(to_float(lit("divi"), bnum));
+  if (missingp(bnum)) {
+    double b = c_flo(to_float(lit("/"), anum));
+    if (b == 0.0)
+      uw_throw(numeric_error_s, lit("/: division by zero"));
+    return flo(1.0 / b);
+  } else {
+    double a = c_flo(to_float(lit("/"), anum));
+    double b = c_flo(to_float(lit("/"), bnum));
 
-  if (b == 0.0)
-    uw_throw(numeric_error_s, lit("divi: division by zero"));
+    if (b == 0.0)
+      uw_throw(numeric_error_s, lit("/: division by zero"));
 
-  return flo(a / b);
+    return flo(a / b);
+  }
 }
 
 val zerop(val num)

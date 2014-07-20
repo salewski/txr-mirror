@@ -10807,7 +10807,7 @@ A character may not be an operand of multiplication.
 .TP
 Syntax:
 
-  (/ <dividend> <divisor>)
+  (/ [<dividend>] <divisor>)
   (trunc <dividend> <divisor>)
   (mod <dividend> <divisor>)
 
@@ -10816,7 +10816,8 @@ Description:
 The arguments to these functions are numbers. Characters are not permitted.
 
 The / function performs floating-point division. Each operands is first
-converted to floating-point type, if necessary.
+converted to floating-point type, if necessary. If <dividend> is omitted,
+then it is taken to be 1.0 and the function performs a reciprocal.
 
 The trunc function performs a division of <dividend> by <divisor> whose result
 is truncated to integer toward zero. If both operands are integers, then an
