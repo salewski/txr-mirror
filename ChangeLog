@@ -1,5 +1,16 @@
 2014-07-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Register juxt as intrinsic.
+
+	* lib.c (do_juxt): New static function.
+	(juxtv): New function.
+
+	* lib.h (juxtv): Declared.
+
+	* txr.1: Documented juxt.
+
+2014-07-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (divi): Support one-argument form.
 	Use "/" name in error reporting, not "divi".
 

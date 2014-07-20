@@ -12394,6 +12394,41 @@ op operator is this:
 
   (call (chain (fun +) (lambda (x) (* 2 x))) 3 4)
 
+.SS Function juxt
+
+.TP
+Syntax:
+
+  (juxt <func>*)
+
+.TP
+Description:
+
+The juxt function accepts a variable number of arguments which are functions.
+It combines these into a single function which, when invoked, passes its arguments
+to each of the functions, and collects the results into a list. The results
+
+Note: the juxt function can be understood in terms of the following reference
+implementation:
+
+  (defun juxt (funcs)
+    (lambda (. args)
+      (mapcar (lambda (fun)
+                (apply fun args))
+              funcs)))
+
+.TP
+Example:
+
+   ;; separate list (1 2 3 4 5 6) into lists of evens and odds, which end up
+   ;; juxtaposed in the output list:
+
+   [(op [juxt keep-if remove-if] evenp) '(1 2 3 4 5 6)] -> ((2 4 6) (1 3 5))
+
+   ;; call several functions on 1, collecting their results:
+   [[juxt (op + 1) (op - 1) evenp sin cos] 1]'
+   -> (2 0 nil 0.841470984807897 0.54030230586814)
+
 .SS Functions andf and orf
 
 .TP

@@ -4093,6 +4093,16 @@ val chainv(val funlist)
   return func_f0v(nullify(funlist), do_chain);
 }
 
+static val do_juxt(val funcs, val args)
+{
+  return mapcar(curry_123_1(func_n3(apply), args, nil), funcs);
+}
+
+val juxtv(val funlist)
+{
+  return func_f0v(nullify(funlist), do_juxt);
+}
+
 static val do_and(val fun1_list, val args)
 {
   fun1_list = nullify(fun1_list);
