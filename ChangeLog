@@ -1,5 +1,12 @@
 2014-07-19  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (search_str): Support negative starting index.
+	Hoist uselessly repeated c_str operation out of loop.
+
+	* txr.1: Document negative starting index for search-str.
+
+2014-07-19  Kaz Kylheku  <kaz@kylheku.com>
+
 	* hash.c (hash_construct): Nullify the pairs argument so that
 	it works correctly with an empty vector.
 

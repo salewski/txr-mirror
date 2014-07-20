@@ -2145,11 +2145,14 @@ val search_str(val haystack, val needle, val start_num, val from_end)
     const wchar_t *n = c_str(needle), *h;
 
     if (!h_is_lazy) {
-      do {
-        const wchar_t *f;
-        h = c_str(haystack);
+      h = c_str(haystack);
 
-        f = wcsstr(h + start, n);
+      if (start < 0)
+        start += wcslen(h);
+
+    nonlazy:
+      do {
+        const wchar_t *f = wcsstr(h + start, n);
 
         if (f)
           pos = f - h;
@@ -2158,6 +2161,13 @@ val search_str(val haystack, val needle, val start_num, val from_end)
       } while (pos != -1 && (good = pos) != -1 && from_end && h[start++]);
     } else {
       size_t ln = c_num(length_str(needle));
+
+      if (start < 0) {
+        lazy_str_force(haystack);
+        h = c_str(haystack->ls.prefix);
+        start += wcslen(h);
+        goto nonlazy;
+      }
 
       do {
         lazy_str_force_upto(haystack, plus(num(start + 1), length_str(needle)));

@@ -9337,8 +9337,12 @@ The search-str function finds an occurrence of the string <needle> inside
 the <haystack> string and returns its position. If no such occurrence exists,
 it returns nil.
 
-If a <start> argument is specified, it gives the starting index for the
-search. If the <from-end> argument is specified and is not nil, it means
+If a <start> argument is not specified, it defaults to zero. If it is
+a non-negative integer, it specifies the starting character position for
+the search.  Negative values of <start> indicate positions from the end of the
+string, such that -1 is the last character of the string.
+
+If the <from-end> argument is specified and is not nil, it means
 that the search is conducted right-to-left. If multiple matches are possible,
 it will find the rightmost one rather than the leftmost one.
 
