@@ -96,10 +96,10 @@ syn match txr_ident "[:@@][A-Za-z0-9!#$%&*+\-<=>?\\^_~]\+" contained
 syn match txr_ident "[A-Za-z0-9!$%&*+\-<=>?\\_~]*[A-Za-z!$#%&*+\-<=>?\\^_~][A-Za-z0-9!$#%&*+\-<=>?\\^_~]*" contained
 syn match txl_ident "[:@@][A-Za-z0-9!$%&*+\-<=>?\\\^_~/]\+" contained
 syn match txl_ident "[A-Za-z0-9!$%&*+\-<=>?\\_~/]*[A-Za-z!$#%&*+\-<=>?\\^_~/][A-Za-z0-9!$#%&*+\-<=>?\\^_~/]*" contained
-syn match txr_num "[+\-]\?[0-9]\+[^A-Za-z0-9!$#%&*+\-<=>?\\^_~/]"me=e-1 contained
+syn match txr_num "[+\-]\?[0-9]\+\([^A-Za-z0-9!$#%&*+\-<=>?\\^_~/]\|\n\)"me=e-1 contained
 syn match txr_badnum "[+\-]\?[0-9]*[.][0-9]\+\([eE][+\-]\?[0-9]\+\)\?[A-Za-z!$#%&*+\-<=>?\\^_~/]\+" contained
-syn match txr_num "[+\-]\?[0-9]*[.][0-9]\+\([eE][+\-]\?[0-9]\+\)\?[^A-Za-z0-9!$#%&*+\-<=>?\\^_~/]"me=e-1 contained
-syn match txr_num "[+\-]\?[0-9]\+\([eE][+\-]\?[0-9]\+\)[^A-Za-z0-9!$#%&*+\-<=>?\\^_~/]"me=e-1 contained
+syn match txr_num "[+\-]\?[0-9]*[.][0-9]\+\([eE][+\-]\?[0-9]\+\)\?\([^A-Za-z0-9!$#%&*+\-<=>?\\^_~/]\|\n\)"me=e-1 contained
+syn match txr_num "[+\-]\?[0-9]\+\([eE][+\-]\?[0-9]\+\)\([^A-Za-z0-9!$#%&*+\-<=>?\\^_~/]\|\n\)"me=e-1 contained
 syn match txl_ident ":" contained
 
 syn match txr_unquote "," contained
