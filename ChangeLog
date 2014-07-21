@@ -1,5 +1,17 @@
 2014-07-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (caseq_s, caseql_s, casequal_s, memq_s, memql_s, memqual_s,
+	eq_s, eql_s, equal_s): New symbol variables.
+	(me_case): New static function.
+	(eval_init): Initialize new variables. Register caseq, caseql and
+	casequal macros.
+	Re-register memq, memql, memqual, eq, eql and equal using
+	new symbol variables.
+
+	* txr.1: Document case, caseql and casequal.
+
+2014-07-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Register juxt as intrinsic.
 
 	* lib.c (do_juxt): New static function.

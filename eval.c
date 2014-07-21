@@ -72,6 +72,9 @@ val dyn_env;
 val eval_error_s;
 val dwim_s, progn_s, prog1_s, let_s, let_star_s, lambda_s, call_s;
 val cond_s, if_s, defvar_s, defun_s, defmacro_s, tree_case_s, tree_bind_s;
+val caseq_s, caseql_s, casequal_s;
+val memq_s, memql_s, memqual_s;
+val eq_s, eql_s, equal_s;
 val inc_s, dec_s, push_s, pop_s, flip_s, gethash_s, car_s, cdr_s, not_s;
 val del_s, vecref_s;
 val for_s, for_star_s, each_s, each_star_s, collect_each_s, collect_each_star_s;
@@ -2558,6 +2561,51 @@ static val me_flet_labels(val form, val menv)
               cons(lambdas, body));
 }
 
+static val me_case(val form, val menv)
+{
+  val form_orig = form;
+  val casesym = pop(&form);
+  val testform = pop(&form);
+  val tformsym = gensym(lit("test-"));
+  val memfuncsym, eqfuncsym;
+  list_collect_decl (condpairs, ptail);
+
+  if (casesym == caseq_s) {
+    memfuncsym = memq_s;
+    eqfuncsym = eq_s;
+  } else if (casesym == caseql_s) {
+    memfuncsym = memql_s;
+    eqfuncsym = eql_s;
+  } else {
+    memfuncsym = memqual_s;
+    eqfuncsym = equal_s;
+  }
+
+  for (; consp(form); form = cdr(form)) {
+    cons_bind (clause, rest, form);
+    cons_bind (keys, forms, clause);
+
+    if (!rest && keys == t) {
+      ptail = list_collect(ptail, clause);
+      break;
+    }
+
+    if (keys == t)
+      eval_error(form_orig, lit("~s: symbol t used as key"), casesym, nao);
+
+    ptail = list_collect(ptail,
+                         cons(list(if3(atom(keys), eqfuncsym, memfuncsym),
+                                   tformsym, keys, nao),
+                              forms));
+  }
+
+  if (form && atom(form))
+    eval_error(form_orig, lit("~s: improper form terminated by ~s"), casesym, form, nao);
+
+  return list(let_s, cons(list(tformsym, testform, nao), nil),
+              cons(cond_s, condpairs), nao);
+}
+
 static val expand_catch_clause(val form, val menv)
 {
   val sym = first(form);
@@ -3369,6 +3417,15 @@ void eval_init(void)
   labels_s = intern(lit("labels"), user_package);
   call_s = intern(lit("call"), user_package);
   cond_s = intern(lit("cond"), user_package);
+  caseq_s = intern(lit("caseq"), user_package);
+  caseql_s = intern(lit("caseql"), user_package);
+  casequal_s = intern(lit("casequal"), user_package);
+  memq_s = intern(lit("memq"), user_package);
+  memql_s = intern(lit("memql"), user_package);
+  memqual_s = intern(lit("memqual"), user_package);
+  eq_s = intern(lit("eq"), user_package);
+  eql_s = intern(lit("eql"), user_package);
+  equal_s = intern(lit("equal"), user_package);
   if_s = intern(lit("if"), user_package);
   defvar_s = intern(lit("defvar"), user_package);
   defun_s = intern(lit("defun"), user_package);
@@ -3496,6 +3553,9 @@ void eval_init(void)
   reg_mac(quasilist_s, me_quasilist);
   reg_mac(flet_s, me_flet_labels);
   reg_mac(labels_s, me_flet_labels);
+  reg_mac(caseq_s, me_case);
+  reg_mac(caseql_s, me_case);
+  reg_mac(casequal_s, me_case);
 
   reg_fun(cons_s, func_n2(cons));
   reg_fun(intern(lit("make-lazy-cons"), user_package), func_n1(make_lazy_cons));
@@ -3555,9 +3615,9 @@ void eval_init(void)
   reg_fun(intern(lit("flatten"), user_package), func_n1(flatten));
   reg_fun(intern(lit("flatten*"), user_package), func_n1(lazy_flatten));
   reg_fun(intern(lit("tuples"), user_package), func_n3o(tuples, 2));
-  reg_fun(intern(lit("memq"), user_package), func_n2(memq));
-  reg_fun(intern(lit("memql"), user_package), func_n2(memql));
-  reg_fun(intern(lit("memqual"), user_package), func_n2(memqual));
+  reg_fun(memq_s, func_n2(memq));
+  reg_fun(memql_s, func_n2(memql));
+  reg_fun(memqual_s, func_n2(memqual));
   reg_fun(intern(lit("member"), user_package), func_n4o(member, 2));
   reg_fun(intern(lit("member-if"), user_package), func_n3o(member_if, 2));
   reg_fun(intern(lit("remq"), user_package), func_n2(remq));
@@ -3584,9 +3644,9 @@ void eval_init(void)
   reg_fun(intern(lit("all"), user_package), func_n3o(all_satisfy, 1));
   reg_fun(intern(lit("none"), user_package), func_n3o(none_satisfy, 1));
   reg_fun(intern(lit("multi"), user_package), func_n1v(multi));
-  reg_fun(intern(lit("eq"), user_package), eq_f);
-  reg_fun(intern(lit("eql"), user_package), eql_f);
-  reg_fun(intern(lit("equal"), user_package), equal_f);
+  reg_fun(eq_s, eq_f);
+  reg_fun(eql_s, eql_f);
+  reg_fun(equal_s, equal_f);
 
   reg_fun(plus_s = intern(lit("+"), user_package), func_n0v(plusv));
   reg_fun(intern(lit("-"), user_package), func_n1v(minusv));

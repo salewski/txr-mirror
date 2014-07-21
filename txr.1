@@ -5711,6 +5711,58 @@ If the first form of a group yields nil, then processing continues with the
 next group, if any. If all form groups yield nil, then the cond form yields
 nil.  This holds in the case that the syntax is empty: (cond) yields nil.
 
+.SS Macros caseq, caseql and casequal
+
+.TP
+Syntax:
+
+  (caseq <test-form> <normal-clause>* [<else-clause>])
+  (caseql <test-form> <normal-clause>* [<else-clause>])
+  (caseqqual <test-form> <normal-clause>* [<else-clause>])
+
+.TP
+Description:
+
+These three macros arrange for the evaluation of of <test-form>, whose value
+is then compared against the key or keys in each <normal-clause> in turn.
+When the value matches a key, then the remaining forms of <normal-clause>
+are evaluated, and the value of the last form is returned; subsequent
+clauses are not evaluated. When the value doesn't match any of the keys
+of a <normal-clause> then the next <normal-clause> is tested.
+If all these clauses are exhausted, and there is no <else-clause>,
+then the value nil is returned. Otherwise, the forms in the <else-clause>
+are evaluated, and the value of the last one is returned.
+
+The syntax of a <normal-clause> takes on these two forms:
+
+  (<key> <form>*)
+
+where <key> may be an atom which denotes a single key, or else a list
+of keys.  There is a restriction that the symbol t may not be used
+as <key>. The form (t) may be used as a key to match that symbol.
+
+The syntax of an <else-clause> is:
+
+  (t <form>*)
+
+which resembles a form that is often used as the final clause
+in the cond syntax.
+
+The three forms of the case construct differ from what type of
+test they apply between the value of <test-form> and the keys.
+The caseq macro generates code which uses the eq function's
+equality. The caseql macro uses eql, and casequal uses equal.
+
+.TP
+Example:
+
+  (let ((command-symbol (casequal command-string
+                          (("q" "quit") 'quit)
+                          (("a" "add") 'add)
+                          (("d" "del" "delete") 'delete)
+                          (t 'unknown))))
+    ...)
+
 .SS Macros when and unless
 
 .TP
