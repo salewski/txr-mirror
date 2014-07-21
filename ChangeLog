@@ -1,5 +1,14 @@
 2014-07-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	* signal.c (set_sig_handler): Set up and tear down alternate
+	stack for SIGBUS also, not only for SIGSEGV. On Linux,
+	when stack growth collides with another memory mapping,
+	it triggers a SIGBUS not SIGSEGV, which occurs when the
+	process limit on stack size is exceeded. In either
+	situation, we need an alternative stack.
+
+2014-07-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (caseq_s, caseql_s, casequal_s, memq_s, memql_s, memqual_s,
 	eq_s, eql_s, equal_s): New symbol variables.
 	(me_case): New static function.
