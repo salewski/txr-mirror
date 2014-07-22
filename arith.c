@@ -1466,7 +1466,7 @@ static void log2_init(void)
   l2 = log(2.0);
 }
 
-double log2(double x)
+static double log2(double x)
 {
   return log(x)/l2;
 }

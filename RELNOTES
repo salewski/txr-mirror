@@ -1,3 +1,49 @@
+                                     TXR 93
+                                   2014-07-22
+
+
+  Features
+
+  - New list munging functions interpose, mapdo, and juxt.
+
+  - New macros caseq, caseql and casequal based on Lisp's case construct.
+
+  - New math function log2 for computing base 2 logarithm.
+
+  - New function get-lines for obtaining list of lines from a stream.
+    Actually this is not new; it is a nice synonym for lazy-stream-cons.
+
+  - New functions put-lines and put-strings.
+
+  - Missing function lconsp added for testing whether an object is
+    a lazy cons.
+
+  - Documented existing function hash-construct.
+
+  - search-str now supports a negative starting position, which counts from the
+    tail of the string.
+
+  - The division function / can now be used with one argument, denoting
+    the reciprocal operation.
+
+  Bugs
+
+  - Bindings created using -D command line option are now visible to code
+    executed via -e or -p later in the command line.
+
+  - Fixed broken @(eol) directive; was behaving as a complete match, so that
+    subsequent directives are ignored.
+
+  - Obscure bug-fixes in @(do) and @(require), involving code that invokes
+    pattern funcions, and the visibily of bindings.
+
+  - Fixed hash-construct so it correctly works on an empty vector.
+
+  - Alternative stack (sigaltstack) is now automatically used for SIGBUS
+    handlers, not only SIGSEGV.
+
+
+
                                      TXR 92
                                    2014-07-11
 

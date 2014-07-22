@@ -1,3 +1,13 @@
+2014-07-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	* RELNOTES: Updated.
+
+	* configure, txr.1: Bumped version.
+
+	* share/txr/stdlib/ver.txr: Likewise
+
+	* arith.c (log2): Change to static.
+
 2014-07-22  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (me_case): Fix quoting issue in expansion.
