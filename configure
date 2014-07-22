@@ -704,13 +704,21 @@ int main(void)
 !
 
 if ! conftest ; then
-  printf "failed\n\n"
-  printf "Errors from compilation: \n\n"
-  cat conftest.err
-  exit 1
+  printf "failed\n"
+  printf "Checking whether the failure is due to a requirement to use C99 ... "
+  if conftest EXTRA_FLAGS=-std=c99 ; then
+    printf "yes\n"
+    lang_flags="$(echo "$lang_flags" | sed -e 's/-ansi/-std=c99/')"
+  else
+    printf "no\n\n"
+    conftest && true
+    printf "Errors from compilation: \n\n"
+    cat conftest.err
+    exit 1
+  fi
+else
+  printf "okay\n"
 fi
-
-printf "okay\n"
 
 printf "Checking whether executables have that idiotic .exe suffix ... "
 

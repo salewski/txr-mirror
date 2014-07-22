@@ -105,6 +105,28 @@ static val env_list;
 
 mem_t *(*oom_realloc)(mem_t *, size_t);
 
+/* C99 inline instantiations. */
+#if __STDC_VERSION__ >= 199901L
+loc mkloc_fun(val *ptr, val obj);
+cnum tag(val obj);
+int is_ptr(val obj);
+int is_num(val obj);
+int is_chr(val obj);
+int is_lit(val obj);
+type_t type(val obj);
+val auto_str(const wchli_t *str);
+val static_str(const wchli_t *str);
+wchar_t *litptr(val obj);
+val num_fast(cnum n);
+mp_int *mp(val bign);
+val chr(wchar_t ch);
+val eq(val a, val b);
+val null(val v);
+int null_or_missing_p(val v);
+val default_arg(val arg, val dfl);
+val default_bool_arg(val arg);
+#endif
+
 val identity(val obj)
 {
   return obj;

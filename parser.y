@@ -1013,6 +1013,11 @@ not_a_clause : ALL              { $$ = make_expr(all_s, nil, num(lineno)); }
 
 %%
 
+/* C99 inline instantiations. */
+#if __STDC_VERSION__ >= 199901L
+val rlcp(val to, val from);
+#endif
+
 static val sym_helper(wchar_t *lexeme, val meta_allowed)
 {
   int leading_at = *lexeme == L'@';

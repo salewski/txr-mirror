@@ -47,6 +47,11 @@ static uw_frame_t *uw_env_stack;
 static uw_frame_t *uw_exit_point;
 static uw_frame_t toplevel_env;
 
+/* C99 inline instantiations. */
+#if __STDC_VERSION__ >= 199901L
+val uw_block_return(val tag, val result);
+#endif
+
 static void uw_unwind_to_exit_point(void)
 {
   assert (uw_exit_point);

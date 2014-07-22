@@ -1,3 +1,21 @@
+2014-07-22  Kaz Kylheku  <kaz@kylheku.com>
+
+	* configure: Add a check, in the case that we cannot make an
+	executable, whether this is due to being required to use C99.
+	For instance, the Solaris environment requires compilation
+	using the C99 dialect if _XOPEN_SOURCE is set to 600 or higher.
+
+	* debug.c: When compiling as C99, we have to obey the special
+	C99 conventions for instantiating inline functions.
+
+	* hash.c: Likewise.
+
+	* lib.c: Likewise.
+
+	* parser.y: Likewise.
+
+	* unwind.c: Likewise.
+
 2014-07-21  Kaz Kylheku  <kaz@kylheku.com>
 
 	* RELNOTES: Updated.

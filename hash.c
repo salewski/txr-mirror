@@ -73,6 +73,11 @@ val weak_keys_k, weak_vals_k, equal_based_k;
  */
 static struct hash *reachable_weak_hashes;
 
+/* C99 inline instantiations. */
+#if __STDC_VERSION__ >= 199901L
+loc gethash_l(val hash, val key, loc new_p);
+#endif
+
 /*
  * This is is an adaptation of hashpjw, from Compilers: Principles, Techniques
  * and Tools, Aho, Sethi, Ulman, 1988. P. 436.  The register is wider by

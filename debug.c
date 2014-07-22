@@ -52,6 +52,13 @@ static val breakpoints;
 static val last_command;
 static int cols = 80;
 
+/* C99 inline instantiations. */
+#if __STDC_VERSION__ >= 199901L
+val debug_check(val form, val bindings, val data, val line,
+                val pos, val base);
+void debug_init(void);
+#endif
+
 static void help(val stream)
 {
   put_string(lit("commands:\n"
