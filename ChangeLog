@@ -1,3 +1,7 @@
+2014-07-22  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (me_case): Fix quoting issue in expansion.
+
 2014-07-20  Kaz Kylheku  <kaz@kylheku.com>
 
 	* signal.c (set_sig_handler): Set up and tear down alternate

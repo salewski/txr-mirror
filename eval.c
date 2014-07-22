@@ -2595,7 +2595,9 @@ static val me_case(val form, val menv)
 
     ptail = list_collect(ptail,
                          cons(list(if3(atom(keys), eqfuncsym, memfuncsym),
-                                   tformsym, keys, nao),
+                                   tformsym, 
+                                   if3(atom(keys), keys, list(quote_s, keys, nao)),
+                                   nao),
                               forms));
   }
 
