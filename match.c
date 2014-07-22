@@ -1411,7 +1411,7 @@ static val subst_vars(val spec, val bindings, val filter)
         continue;
       } else if (sym == expr_s) {
         val result = eval(rest(elem), make_env(bindings, nil, nil), elem);
-        spec = cons(format(nil, lit("~a"), result, nao), rest(spec));
+        spec = cons(filter_string_tree(filter, tostringp(result)), rest(spec));
         continue;
       } else {
         val nested = subst_vars(elem, bindings, filter);

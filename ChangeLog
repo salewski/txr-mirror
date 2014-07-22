@@ -1,5 +1,11 @@
 2014-07-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (subst_vars): Bugfix: I neglected to apply the
+	filter which is in effect to the result of interpolating a TXR Lisp
+	expression, oops!
+
+2014-07-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.y (METANUM): Forgotten %right declaration for this
 	token has been resulting in a shift-reduce conflict.
 
