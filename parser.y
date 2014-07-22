@@ -110,7 +110,7 @@ static val parsed_spec;
 %right SYMTOK '{' '}'
 %right ALL SOME NONE MAYBE CASES CHOOSE AND OR END COLLECT UNTIL COLL
 %right OUTPUT REPEAT REP FIRST LAST EMPTY DEFINE IF ELIF ELSE
-%right SPACE TEXT NUMBER
+%right SPACE TEXT NUMBER METANUM
 %nonassoc '[' ']' '(' ')'
 %left '-' ',' '\'' '^' SPLICE '@'
 %left '|' '/'

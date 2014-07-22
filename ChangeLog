@@ -1,5 +1,10 @@
 2014-07-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.y (METANUM): Forgotten %right declaration for this
+	token has been resulting in a shift-reduce conflict.
+
+2014-07-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* configure: Add a check, in the case that we cannot make an
 	executable, whether this is due to being required to use C99.
 	For instance, the Solaris environment requires compilation
