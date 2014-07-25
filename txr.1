@@ -248,25 +248,32 @@ but has run out of files to process, the match fails.
 sends errors and verbose logs to the standard error device. The following
 paragraphs apply when
 .B TXR
-is run without enabling verbose mode. If verbose mode is enabled, then
+is run without enabling verbose mode with -v, or the printing of variable
+bindings with -B or -a.
+
+If the command line arguments are incorrect, or the query has a malformed
+syntax,
+.B TXR
+issues an error diagnostic and terminates with a failed status.
+
+If the query fails due to a mismatch,
+.B TXR
+terminates with a failed status. No diagnostics are issued.
+
+If the query is well-formed, and matches, then
+.B TXR
+issues no diagnostics, and terminates with a successful status.
+
+In verbose mode (-v),
 .B TXR
 issues diagnostics on the standard error device even in situations which are
 not erroneous.
 
-If the command line arguments are incorrect, or the query has a malformed
-syntax, or fails to match,
+In bindings-printing mode (-B or -a),
 .B TXR
-issues an error diagnostic and terminates with a failed status.
-
-If the query is well-formed, and matches, then
-.B TXR
-issues no diagnostics on standard error (except in the case of verbose
-reporting enabled by -v).  If no variables were bound in the query, then
-nothing is printed on standard output.  If the query has matched one or more
-variables, then these variables are printed on standard output, in the form of
-a shell script which, when evaluated, will cause shell variables to be
-assigned.  Printing of these variables is suppressed if the query executed one
-or more @(output) directive directed to standard output.
+prints the word "false" if the query fails, and exits with a failed
+termination status. If the query succeeds, the variable bindings, if any,
+are output on standard output.
 
 .SH BASIC QUERY SYNTAX AND SEMANTICS
 
@@ -15922,5 +15929,5 @@ does not contain a. The change in behavior of the % operator upon modifying the
 trailing context is not as intuitive as that of the * operator, because the
 trailing context is deeply involved in its logic.  For single-character
 trailing contexts, it may be a good idea to use a complemented character class
-instead. That is to say, rather than (.%a)bc, consider [^a]*bc. The set of
+instead. That is to say, rather than (.%a)bc, consider [^a]*abc. The set of
 strings which don't contain the character a is adequately expressed by [^a]*.
