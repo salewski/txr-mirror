@@ -1,3 +1,11 @@
+2014-07-26  Kaz Kylheku  <kaz@kylheku.com>
+
+	* unwind.h (uw_block_begin): Get rid of the unused typedef trick,
+	replace with do { } while (0), since we don't have any instances of a
+	uw_block_begin followed by declarations.
+	(uw_catch_begin): Move SYMVAR and EXCVAR inside the do/while block,
+	so that the expansion doesn't begin with a declaration.
+
 2014-07-23  Kaz Kylheku  <kaz@kylheku.com>
 
 	* Makefile, arith.c, arith.h, combi.c, combi.h, configure, debug.c,

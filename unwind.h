@@ -134,7 +134,7 @@ noreturn val type_mismatch(val, ...);
     if (extended_setjmp(uw_blk.bl.jb)) {        \
       RESULTVAR = uw_blk.bl.result;             \
     } else {                                    \
-      typedef int uw_d_u_m_m_y
+      do { } while (0)
 
 #define uw_block_end                    \
     }                                   \
@@ -159,9 +159,9 @@ noreturn val type_mismatch(val, ...);
 
 #define uw_catch_begin(MATCHES, SYMVAR,         \
                        EXCVAR)                  \
-  obj_t *SYMVAR = nil;                          \
-  obj_t *EXCVAR = nil;                          \
   do {                                          \
+    obj_t *SYMVAR = nil;                        \
+    obj_t *EXCVAR = nil;                        \
     uw_frame_t uw_catch;                        \
     uw_push_catch(&uw_catch, MATCHES);          \
     switch (extended_setjmp(uw_catch.ca.jb)) {  \
