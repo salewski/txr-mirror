@@ -3157,6 +3157,36 @@ val generate(val while_pred, val gen_fun)
   }
 }
 
+static val giterate_func(val env, val lcons)
+{
+  cons_bind (while_pred, gen_fun, env);
+  val value = lcons->lc.car;
+
+  if (!funcall1(while_pred, value)) {
+    rplacd(lcons, nil);
+  } else {
+    val next_item = funcall1(gen_fun, value);
+    val lcons_next = make_lazy_cons(lcons_fun(lcons));
+    rplacd(lcons, lcons_next);
+    rplaca(lcons_next, next_item);
+  }
+  return nil;
+}
+
+static val giterate(val while_pred, val gen_fun, val init_val)
+{
+  init_val = default_bool_arg(init_val);
+
+  if (!funcall1(while_pred, init_val)) {
+    return nil;
+  } else {
+    val first_item = funcall1(gen_fun, init_val);
+    val lc = make_lazy_cons(func_f1(cons(while_pred, gen_fun), giterate_func));
+    rplaca(lc, first_item);
+    return lc;
+  }
+}
+
 static val repeat_infinite_func(val env, val lcons)
 {
   if (!car(env))
@@ -3942,6 +3972,7 @@ void eval_init(void)
   reg_fun(intern(lit("range"), user_package), func_n0v(rangev));
   reg_fun(intern(lit("range*"), user_package), func_n0v(range_star_v));
   reg_fun(generate_s, func_n2(generate));
+  reg_fun(intern(lit("giterate"), user_package), func_n3o(giterate, 2));
   reg_fun(intern(lit("repeat"), user_package), func_n1v(repeatv));
   reg_fun(intern(lit("force"), user_package), func_n1(force));
   reg_fun(intern(lit("rperm"), user_package), func_n2(rperm));

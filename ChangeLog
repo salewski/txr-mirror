@@ -1,3 +1,10 @@
+2014-07-27  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (giterate_func, giterate): New static functions.
+	(eval_init): Registered giterate as intrinsic.
+
+	* txr.1: Documented giterate.
+
 2014-07-26  Kaz Kylheku  <kaz@kylheku.com>
 
 	* unwind.h (uw_block_begin): Get rid of the unused typedef trick,

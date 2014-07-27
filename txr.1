@@ -8999,12 +8999,13 @@ the same promise, the cached value is retrieved.
 
 .SH LAZY SEQUENCES, RANGES, PERMUTATIONS AND COMBINATIONS
 
-.SS Function generate
+.SS Functions generate and giterate
 
 .TP
 Syntax:
 
   (generate <while-fun> <gen-fun>)
+  (giterate <while-fun> <gen-fun> [<value>])
 
 .TP
 Description:
@@ -9027,9 +9028,30 @@ If while-fun yields nil, then generate returns the empty list nil instead
 of a lazy list. Otherwise, it instantiates a lazy list, and invokes
 the gen-func to populate it with the first item.
 
+The giterate function is similar to generate, except that <while-fun>
+and <gen-fun> are functions of one argument rather than functions of
+no arguments. The optional <value> argument defaults to nil and
+is threaded through the function calls.  Prior to producing the first item,
+the lazy list returned by giterate invokes <while-fun> on <value>.
+If the call yields true, then <gen-fun> is invoked on <value> and the
+resulting value is added to the sequence. That resulting value also becomes the
+value for the next iteration: when <while-fun> is invoked again, that
+value is used, rather than the original value.
+
+Note: the giterate function could be written in terms of generate
+like this:
+
+  (defun giterate (w g v)
+     (generate (lambda () [w v]) (lambda () (set v [g v]))))
+
+.SS
+Example:
+
+  (giterate (op > 5) (op + 1) 0) -> (1 2 3 4 5)
+
 .SS Function repeat
 
-.TP
+
 Syntax:
 
   (repeat <list1> <list>*)
