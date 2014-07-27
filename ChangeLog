@@ -1,5 +1,14 @@
 2014-07-27  Kaz Kylheku  <kaz@kylheku.com>
 
+	Fix 2014-02-05 safety regression: unchecked use of non-function objects
+	in some contexts that require functions.
+
+	* lib.c (funcall, funcall1, funcall2, funcall3, funcall4):
+	check type(fun) before dereferencing to see whether there
+	are optional args.
+
+2014-07-27  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (giterate_func, giterate): New static functions.
 	(eval_init): Registered giterate as intrinsic.
 

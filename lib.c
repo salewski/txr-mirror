@@ -3726,7 +3726,7 @@ val generic_funcall(val fun, val arg[], int nargs)
 
 val funcall(val fun)
 {
-  if (fun->f.optargs || type(fun) != FUN) {
+  if (type(fun) != FUN || fun->f.optargs) {
     val arg[32] = { nil };
     return generic_funcall(fun, arg, 0);
   }
@@ -3757,7 +3757,7 @@ val funcall(val fun)
 
 val funcall1(val fun, val arg)
 {
-  if (fun->f.optargs || type(fun) != FUN) {
+  if (type(fun) != FUN || fun->f.optargs) {
     val args[32];
     args[0] = arg;
     return generic_funcall(fun, args, 1);
@@ -3793,7 +3793,7 @@ val funcall1(val fun, val arg)
 
 val funcall2(val fun, val arg1, val arg2)
 {
-  if (fun->f.optargs || type(fun) != FUN) {
+  if (type(fun) != FUN || fun->f.optargs) {
     val arg[32];
     arg[0] = arg1;
     arg[1] = arg2;
@@ -3835,7 +3835,7 @@ val funcall2(val fun, val arg1, val arg2)
 
 val funcall3(val fun, val arg1, val arg2, val arg3)
 {
-  if (fun->f.optargs || type(fun) != FUN) {
+  if (type(fun) != FUN || fun->f.optargs) {
     val arg[32];
     arg[0] = arg1;
     arg[1] = arg2;
@@ -3882,7 +3882,7 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
 
 val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
 {
-  if (fun->f.optargs || type(fun) != FUN) {
+  if (type(fun) != FUN || fun->f.optargs) {
     val arg[32];
     arg[0] = arg1;
     arg[1] = arg2;
