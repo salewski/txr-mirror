@@ -1329,7 +1329,9 @@ Examples which are not floating-point constant tokens:
 
   .       (consing dot)
   123E    (the symbol 123E)
-  1.0E-   (floating point 1.0 followed by symbol E-)
+  1.0E-   (syntax error: invalid floating point constant)
+  1.0E    (syntax error: invalid floating point constant)
+  1.E     (1; consing dot; symbol E)
   .e      (consing dot followed by symbol e)
 
 In TXR there is a special "dotdot" token consisting of two consecutive periods.
