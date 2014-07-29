@@ -1,5 +1,11 @@
 2014-07-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (plus, minus, mul): Fix missing breaks
+	to switch statements, leading to strange error
+	messages when wrong types are passed in.
+
+2014-07-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Register nconc as intrinsic.
 
 	* lib.c (nconcv): New function.

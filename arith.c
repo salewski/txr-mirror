@@ -377,6 +377,7 @@ tail:
     default:
       break;
     }
+    break;
   case TAG_PAIR(TAG_CHR, TAG_NUM):
     {
       wchar_t a = c_chr(anum);
@@ -452,6 +453,7 @@ tail:
     default:
       break;
     }
+    break;
   case TAG_PAIR(TAG_PTR, TAG_NUM):
     switch (type(anum)) {
     case BGNUM:
@@ -481,6 +483,7 @@ tail:
     default:
       break;
     }
+    break;
   case TAG_PAIR(TAG_PTR, TAG_PTR):
     switch (TYPE_PAIR(type(anum), type(bnum))) {
     case TYPE_PAIR(BGNUM, BGNUM):
@@ -501,6 +504,7 @@ tail:
     default:
       break;
     }
+    break;
   case TAG_PAIR(TAG_CHR, TAG_NUM):
     {
       wchar_t a = c_chr(anum);
@@ -617,6 +621,7 @@ tail:
     default:
       break;
     }
+    break;
   case TAG_PAIR(TAG_PTR, TAG_NUM):
     switch (type(anum)) {
     case BGNUM:
@@ -645,6 +650,7 @@ tail:
     default:
       break;
     }
+    break;
   case TAG_PAIR(TAG_PTR, TAG_PTR):
     switch (TYPE_PAIR(type(anum), type(bnum))) {
     case TYPE_PAIR(BGNUM, BGNUM):
