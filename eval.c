@@ -3160,12 +3160,9 @@ val generate(val while_pred, val gen_fun)
 static val giterate_func(val env, val lcons)
 {
   cons_bind (while_pred, gen_fun, env);
-  val value = lcons->lc.car;
+  val next_item = funcall1(gen_fun, lcons->lc.car);
 
-  if (!funcall1(while_pred, value)) {
-    rplacd(lcons, nil);
-  } else {
-    val next_item = funcall1(gen_fun, value);
+  if (funcall1(while_pred, next_item)) {
     val lcons_next = make_lazy_cons(lcons_fun(lcons));
     rplacd(lcons, lcons_next);
     rplaca(lcons_next, next_item);
@@ -3180,9 +3177,8 @@ static val giterate(val while_pred, val gen_fun, val init_val)
   if (!funcall1(while_pred, init_val)) {
     return nil;
   } else {
-    val first_item = funcall1(gen_fun, init_val);
     val lc = make_lazy_cons(func_f1(cons(while_pred, gen_fun), giterate_func));
-    rplaca(lc, first_item);
+    rplaca(lc, init_val);
     return lc;
   }
 }

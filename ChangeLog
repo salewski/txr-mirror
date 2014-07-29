@@ -1,3 +1,12 @@
+2014-07-29  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (giterate_func, giterate): Adjusting semantics of giterate to
+	include seed item in the sequence. The while test is applied to
+	each item before it is passed through the function. Also,
+	eliminated useless rplacd operation.
+
+	* txr.1: Updated documentation of giterate.
+
 2014-07-28  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): Register partition-by intrinsic.
