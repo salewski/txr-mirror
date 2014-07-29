@@ -727,6 +727,18 @@ val nappend2(val list1, val list2)
   return out;
 }
 
+val nconcv(val lists)
+{
+  list_collect_decl (out, ptail);
+
+  for (; lists; lists = cdr(lists)) {
+    val item = car(lists);
+    ptail = list_collect_nconc(ptail, item);
+  }
+
+  return out;
+}
+
 val sub_list(val list, val from, val to)
 {
   val len = nil;

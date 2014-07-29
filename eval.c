@@ -3598,6 +3598,7 @@ void eval_init(void)
   reg_fun(intern(lit("replace-list"), user_package), func_n4o(replace_list, 2));
   reg_fun(append_s, func_n0v(appendv));
   reg_fun(intern(lit("append*"), user_package), func_n0v(lazy_appendv));
+  reg_fun(intern(lit("nconc"), user_package), func_n0v(nconcv));
   reg_fun(list_s, list_f);
   reg_fun(intern(lit("list*"), user_package), func_n0v(list_star_intrinsic));
   reg_fun(identity_s, identity_f);

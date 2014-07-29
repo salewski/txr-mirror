@@ -1,5 +1,15 @@
 2014-07-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Register nconc as intrinsic.
+
+	* lib.c (nconcv): New function.
+
+	* lib.h (nconcv): Declared.
+
+	* txr.1: Documented nconc.
+
+2014-07-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (reduce_left, reduce_right): Nullify incoming sequence
 	argument so empty vectors and strings can be processed.
 

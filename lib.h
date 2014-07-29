@@ -436,6 +436,7 @@ val reverse(val in);
 val append2(val list1, val list2);
 val nappend2(val list1, val list2);
 val appendv(val lists);
+val nconcv(val lists);
 val sub_list(val list, val from, val to);
 val replace_list(val list, val items, val from, val to);
 val lazy_appendv(val lists);

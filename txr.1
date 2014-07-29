@@ -7331,13 +7331,14 @@ Examples:
   (second '(1 2)) -> 2
   (third '(1 2 . 3)) -> **error**
 
-.SS Functions append and append*
+.SS Functions append, nconc and append*
 
 .TP
 Syntax:
 
-(append [<list>* <last-arg>])
-(append* [<list>* <last-arg>])
+  (append [<list>* <last-arg>])
+  (nconc [<list>* <last-arg>])
+  (append* [<list>* <last-arg>])
 
 .TP
 Description:
@@ -7356,6 +7357,10 @@ installed into the cdr field of the last cons cell of the resulting list.
 Thus, if argument N is also a list, it is catenated onto the resulting list,
 but without being copied. Argument N may be an atom other than nil; in that
 case append produces an improper list.
+
+The nconc function works like append, but avoids consing. It destructively
+manipulates (that is to say, mutates) incoming lists to catenate them, and so
+must be used with care.
 
 The append* function works like append, but returns a lazy list which produces
 the catenation of the lists on demand.  If some of the arguments are
