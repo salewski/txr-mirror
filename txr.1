@@ -11109,7 +11109,7 @@ The n-choose-k function computes the binomial coefficient nCk which
 expresses the number of combinations of <k> items that can be chosen from
 a set of <n>, where combinations are subsets.
 
-The n-choose-k function computes nPk: the number of permutations of size <k>
+The n-perm-k function computes nPk: the number of permutations of size <k>
 that can be drawn from a set of <n>, where permutations are sequences,
 whose order is significant.
 
@@ -12584,7 +12584,7 @@ The iffi function defaults to the identity function when <else-func> is
 omitted or nil, and therefore is useful in situations when one value is to be
 replaced with another one when the condition is true, otherwise left alone.
 
-.SH Functions tf and nilf
+.SS Functions tf and nilf
 
 .TP
 Syntax:
@@ -12617,7 +12617,7 @@ If the argument (the divided value) passed into iff is even, then
 iff passes it into the nilf function, which ignores the value and
 returns nil.
 
-.SH Function retf
+.SS Function retf
 
 .TP
 Syntax:
@@ -12638,7 +12638,7 @@ Example:
   ;; the function returned by (retf 42) ignores 1 2 3 and returns 42.
   (call (retf 42) 1 2 3) -> 42
 
-.SH Functions apf and ipf
+.SS Functions apf and ipf
 
 .TP
 Syntax:

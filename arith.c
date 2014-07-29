@@ -1983,7 +1983,7 @@ static val rising_product(val m, val n)
   if (lt(n, one))
     return one;
 
-  if (ge(m, n))
+  if (gt(m, n))
     return one;
 
   if (lt(m, one))

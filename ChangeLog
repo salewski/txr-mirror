@@ -1,3 +1,10 @@
+2014-07-28  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c (rising_product): Fix wrong m == n case,
+	which breaks the n_perm_k function for k == 1.
+
+	* txr.1: Fix typo: n-choose-k written in place of n-perm-k.
+
 2014-07-27  Kaz Kylheku  <kaz@kylheku.com>
 
 	Fix 2014-02-05 safety regression: unchecked use of non-function objects
