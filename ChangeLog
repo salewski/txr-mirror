@@ -1,5 +1,10 @@
 2014-07-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (reduce_left, reduce_right): Nullify incoming sequence
+	argument so empty vectors and strings can be processed.
+
+2014-07-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (giterate_func, giterate): Adjusting semantics of giterate to
 	include seed item in the sequence. The while test is applied to
 	each item before it is passed through the function. Also,

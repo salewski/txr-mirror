@@ -3983,6 +3983,8 @@ val reduce_left(val fun, val list, val init, val key)
   if (null_or_missing_p(key))
     key = identity_f;
 
+  list = nullify(list);
+
   if (missingp(init)) {
     if (list)
       init = pop(&list);
@@ -4000,6 +4002,8 @@ val reduce_right(val fun, val list, val init, val key)
 {
   if (null_or_missing_p(key))
     key = identity_f;
+
+  list = nullify(list);
 
   if (list) {
     if (missingp(init)) {
