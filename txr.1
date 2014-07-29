@@ -10770,6 +10770,45 @@ Examples:
   (tuples 3 "abcd" #\z) -> ("abc" "dzz")
   (tuples 3 (list 1 2) #\z) -> ((1 2 #\z))
 
+.SS Function partition-by
+
+.TP
+Syntax:
+
+  (partition-by <function> <sequence>)
+
+.TP
+Description:
+
+If <sequence> is empty, then partition-by returns an empty list,
+and <function> is never called.
+
+Otherwise, partition-by returns a lazy list of partitions of the sequence
+<sequence>.   Partitions are consecutive, non-empty sub-strings of <sequence>,
+of the same kind as <sequence>.
+
+The partitioning begins with the first element of <sequence> being is placed
+into a partition.
+
+The subsequent partitioning is done according to <function>, which is applied
+to each element of <sequence>. Whenever, for the next element, the function
+returns the same value as it returned for the previous element, the
+element is placed into the same partition. Otherwise, the next element
+is placed into, and begins, a new partition.
+
+The return values of the calls to <function> are compared using the equal
+function.
+
+Note:
+
+.TP
+Examples:
+
+  [partition-by identity '(1 2 3 3 4 4 4 5)] -> ((1) (2) (3 3) (4 4 4) (5))
+
+  (partition-by (op = 3) #(1 2 3 4 5 6 7)) -> (#(1 2) #(3) #(4 5 6 7))
+
+
 .SS Function make-like
 
 .TP

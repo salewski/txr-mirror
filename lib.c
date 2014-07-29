@@ -1373,6 +1373,52 @@ val tuples(val n, val seq, val fill)
                                 tuples_func));
 }
 
+static val partition_by_func(val env, val lcons)
+{
+  list_collect_decl (out, ptail);
+  cons_bind (seq_func, func, env);
+  cons_bind (flast, seq_in, seq_func);
+  val seq = seq_in;
+  val last = pop(&seq);
+  val next, fnext = nil;
+
+  ptail = list_collect(ptail, last);
+
+  while (seq) {
+    fnext = funcall1(func, next = car(seq));
+
+    if (!equal(flast, fnext))
+      break;
+
+    ptail = list_collect(ptail, next);
+
+    seq = cdr(seq);
+    last = next;
+    flast = fnext;
+  }
+
+  rplaca(seq_func, fnext);
+  rplacd(seq_func, seq);
+
+  if (seq)
+    rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+
+  rplaca(lcons, make_like(out, seq_in));
+  return nil;
+}
+
+val partition_by(val func, val seq)
+{
+  seq = nullify(seq);
+
+  if (!seq)
+    return nil;
+
+  return make_lazy_cons(func_f1(cons(cons(funcall1(func, car(seq)), seq),
+                                     func),
+                                partition_by_func));
+}
+
 cnum c_num(val num);
 
 val eql(val left, val right)
