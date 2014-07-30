@@ -10751,6 +10751,22 @@ The sort function is stable for sequences which are lists. This means that the
 original order of items which are considered identical is preserved.
 For strings and vectors, the sort is not stable.
 
+.SS Function uniq
+
+.TP
+Syntax:
+
+  (uniq <sequence>)
+
+.TP
+Description:
+
+The uniq function returns a sequence of the same kind as <sequence>, but with
+duplicates removed. Elements of <sequence> are considered equal under
+the equal function. The first occurrence of each element is retained,
+and the subsequent duplicates of that element, of any, are suppressed,
+such that the order of the elements is otherwise preserved.
+
 .SS Function tuples
 
 .TP

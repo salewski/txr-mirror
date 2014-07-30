@@ -5314,6 +5314,39 @@ val multi_sort(val lists, val funcs, val key_funcs)
   return mapcarv(list_f, tuples);
 }
 
+val uniq(val seq)
+{
+  val hash = make_hash(nil, nil, t);
+  list_collect_decl (out, ptail);
+
+  if (vectorp(seq) || stringp(seq)) {
+    cnum i, len;
+
+    for (i = 0, len = c_num(length(seq)); i < len; i++) {
+      val new_p;
+      val v = ref(seq, num_fast(i));
+
+      (void) gethash_c(hash, v, mkcloc(new_p));
+
+      if (new_p)
+        ptail = list_collect(ptail, v);
+    }
+  } else {
+    for (; seq; seq = cdr(seq)) {
+      val new_p;
+      val v = car(seq);
+
+      (void) gethash_c(hash, v, mkcloc(new_p));
+
+      if (new_p)
+        ptail = list_collect(ptail, v);
+    }
+  }
+
+  return make_like(out, seq);
+}
+
+
 val find(val item, val list, val testfun, val keyfun)
 {
   testfun = default_arg(testfun, equal_f);

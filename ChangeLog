@@ -1,5 +1,15 @@
 2014-07-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Register uniq function.
+
+	* lib.c (uniq): New function.
+
+	* lib.h (uniq): Declared.
+
+	* txr.1: Documented uniq.
+
+2014-07-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (repeatv): Renamed to repeat. Turned into function
 	with one optional argument, reflecting existing behavior.
 	(eval_init): Registration of repeat updated.
