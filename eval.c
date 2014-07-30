@@ -3213,15 +3213,15 @@ static val repeat_times_func(val env, val lcons)
   return nil;
 }
 
-static val repeatv(val list, val rest)
+static val repeat(val list, val count)
 {
   if (!list)
     return nil;
-  if (rest) {
-    val count = car(rest);
-    if (count == zero)
+
+  if (!missingp(count)) {
+    if (le(count, zero))
       return nil;
-    return make_lazy_cons(func_f1(cons(list, cons(list, count)), 
+    return make_lazy_cons(func_f1(cons(list, cons(list, count)),
                                   repeat_times_func));
   }
   return make_lazy_cons(func_f1(cons(list, list), repeat_infinite_func));
@@ -3971,7 +3971,7 @@ void eval_init(void)
   reg_fun(intern(lit("range*"), user_package), func_n0v(range_star_v));
   reg_fun(generate_s, func_n2(generate));
   reg_fun(intern(lit("giterate"), user_package), func_n3o(giterate, 2));
-  reg_fun(intern(lit("repeat"), user_package), func_n1v(repeatv));
+  reg_fun(intern(lit("repeat"), user_package), func_n2o(repeat, 2));
   reg_fun(intern(lit("force"), user_package), func_n1(force));
   reg_fun(intern(lit("rperm"), user_package), func_n2(rperm));
   reg_fun(intern(lit("perm"), user_package), func_n2o(perm, 1));

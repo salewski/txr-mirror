@@ -9062,13 +9062,21 @@ Example:
 
 Syntax:
 
-  (repeat <list1> <list>*)
+  (repeat <list> [<count>])
 
 .TP
 Description:
 
-The repeat function produces an infinite lazy list formed by the repeatedly
-cycled catenation of the argument lists.
+If <list> is empty, then repeat returns an empty list.
+
+If <count> is omitted, the repeat function produces an infinite lazy list
+formed by catenating together copies of <list>.
+
+If <count> is specified and is zero or negative, then an empty list is
+returned.
+
+Otherwise a list is returned consisting of <count> repetitions of <list>
+catenated together.
 
 .SS Macros gen and gun
 
