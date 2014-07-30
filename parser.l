@@ -547,12 +547,17 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return yytext[0];
 }
 
-<NESTED>,[*] {
+<NESTED,QSPECIAL,BRACED>,[*] {
   yylval.chr = '*';
   return SPLICE;
 }
 
 <NESTED>[,'^] {
+  yylval.chr = yytext[0];
+  return yytext[0];
+}
+
+<QSPECIAL,BRACED>[,'] {
   yylval.chr = yytext[0];
   return yytext[0];
 }

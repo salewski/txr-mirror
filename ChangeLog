@@ -1,3 +1,14 @@
+2014-07-30  Kaz Kylheku  <kaz@kylheku.com>
+
+	* parser.l: Allow unquotes and splices in QSPECIAL and BRACED states.
+
+	* parser.y (quasi_item): Support splices as items.
+
+	* genvim.txr: Syntax highlighting support for unquotes in
+	quasiliterals.
+
+	* txr.vim: Updated.
+
 2014-07-29  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): Register uniq function.

@@ -5352,6 +5352,18 @@ This is correct:
         (hash-contents '((a 1) (b 2))))
     ^#H(,hash-args ,*hash-contents))
 
+.SS Quasiquoting combined with Quasiliterals
+
+When a quasiliteral is embedded in a quasiquote, it is possible to use
+splicing to insert material into the quasiliteral.
+
+.TP
+Example:
+
+  (eval (let ((a 3)) ^`abc @,a @{,a} @{(list 1 2 ,a)}`))
+
+  -> "abc 3 3 1 2 3"
+
 .SS Vectors
 
 .IP "#(...)"
