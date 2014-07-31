@@ -97,6 +97,12 @@ static void sig_handler(int sig)
   }
 }
 
+static val kill_wrap(val pid, val sig)
+{
+  cnum p = c_num(pid), s = c_num(default_arg(sig, num_fast(SIGTERM)));
+  return num(kill(p, s));
+}
+
 void sig_init(void)
 {
   int i;
@@ -160,6 +166,7 @@ void sig_init(void)
   reg_fun(intern(lit("set-sig-handler"), user_package), func_n2(set_sig_handler));
   reg_fun(intern(lit("get-sig-handler"), user_package), func_n1(get_sig_handler));
   reg_fun(intern(lit("sig-check"), user_package), func_n0(sig_check));
+  reg_fun(intern(lit("kill"), user_package), func_n2o(kill_wrap, 1));
 }
 
 #if HAVE_SIGALTSTACK

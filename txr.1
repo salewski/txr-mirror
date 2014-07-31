@@ -14331,6 +14331,20 @@ This function retrieves the current working directory.
 If the underlying getcwd system call fails with an errno other than ERANGE,
 an exception will be thrown.
 
+.SS Functions getpid and getppid
+
+.TP
+Syntax:
+
+  (getpid)
+  (getppid)
+
+.TP
+Description:
+
+These functions retrieve the current proces ID and the parent process ID
+respectively. They are wrappers for the POSIX functions getpid and getppid.
+
 .SS Function daemon
 
 .TP
@@ -14578,6 +14592,21 @@ signal is deferred, the deferred flag is cleared for that signal.
 Calls to the sig-check function may be inserted into CPU-intensive code that
 has no opportunity to be interrupted by signals, because it doesn't invoke any
 I/O functions.
+
+.SS The kill function
+
+.TP
+Syntax:
+
+  (kill <process-id> [<signal>])
+
+.TP
+Description:
+
+The kill function is used for sending a signal to a process group or process.
+It is a wrapper for the POSIX kill function.
+
+If the <signal> argument is omitted, it defaults to the same value as sig-term.
 
 .SH UNIX SYSLOG
 

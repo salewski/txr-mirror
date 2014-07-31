@@ -1,5 +1,15 @@
 2014-07-30  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (getpid_wrap, getppid_wrap): New static functions.
+	(eval_init): Registered getpid and getppid intrinsics.
+
+	* signal.c (kill_wrap): New static function.
+	(sig-init): Registered kill intrinsic function.
+
+	* txr.1: Documented getpid, gettpid and kill.
+
+2014-07-30  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.l: Allow unquotes and splices in QSPECIAL and BRACED states.
 
 	* parser.y (quasi_item): Support splices as items.

@@ -3294,6 +3294,18 @@ static val usleep_wrap(val usec)
   return retval;
 }
 
+#if HAVE_UNISTD_H
+static val getpid_wrap(void)
+{
+  return num(getpid());
+}
+
+static val getppid_wrap(void)
+{
+  return num(getppid());
+}
+#endif
+
 static val env_hash(void)
 {
   val env_strings = env();
@@ -3997,6 +4009,10 @@ void eval_init(void)
   reg_fun(intern(lit("errno"), user_package), func_n1o(errno_wrap, 0));
   reg_fun(intern(lit("exit"), user_package), func_n1(exit_wrap));
   reg_fun(intern(lit("usleep"), user_package), func_n1(usleep_wrap));
+#if HAVE_UNISTD_H
+  reg_fun(intern(lit("getpid"), user_package), func_n0(getpid_wrap));
+  reg_fun(intern(lit("getppid"), user_package), func_n0(getppid_wrap));
+#endif
 
   reg_fun(intern(lit("env"), user_package), func_n0(env));
   reg_fun(intern(lit("env-hash"), user_package), func_n0(env_hash));
