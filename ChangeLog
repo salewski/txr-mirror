@@ -1,3 +1,14 @@
+2014-08-01  Kaz Kylheku  <kaz@kylheku.com>
+
+	* signal.c (sig_hup, sig_int, sig_quit, sig_ill, sig_trap, sig_abrt,
+	sig_bus, sig_fpe, sig_kill, sig_usr1, sig_segv, sig_usr2, sig_pipe,
+	sig_alrm, sig_term, sig_chld, sig_cont, sig_stop, sig_tstp, sig_ttin,
+	sig_ttou, sig_urg, sig_xcpu, sig_xfsz, sigtalrm, sig_prof, sig_poll,
+	sig_sys, sig_winch, sig_iot, sig_stkflt, sig_io, sig_lost, sig_pwr):
+	Remove unused global variables variables.
+
+	* signal.h: Remove declarations thereof.
+
 2014-07-30  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (getpid_wrap, getppid_wrap): New static functions.

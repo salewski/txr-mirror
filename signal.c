@@ -48,13 +48,6 @@ sigset_t sig_blocked_cache;
 static val sig_lambda[MAX_SIG];
 volatile unsigned long sig_deferred;
 
-val sig_hup, sig_int, sig_quit, sig_ill, sig_trap, sig_abrt, sig_bus;
-val sig_fpe, sig_kill, sig_usr1, sig_segv, sig_usr2, sig_pipe, sig_alrm;
-val sig_term, sig_chld, sig_cont, sig_stop, sig_tstp, sig_ttin;
-val sig_ttou, sig_urg, sig_xcpu, sig_xfsz, sigtalrm, sig_prof;
-val sig_poll, sig_sys, sig_winch, sig_iot, sig_stkflt;
-val sig_io, sig_lost, sig_pwr;
-
 static int is_cpu_exception(int sig)
 {
   switch (sig) {
