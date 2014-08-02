@@ -46,6 +46,7 @@
 #define MAX_SIG 32
 
 volatile sig_atomic_t async_sig_enabled = 0;
+static volatile sig_atomic_t interrupt_count = 0;
 sigset_t sig_blocked_cache;
 
 static val sig_lambda[MAX_SIG];
@@ -69,6 +70,7 @@ static void sig_handler(int sig)
   int gc = 0;
   int as = 0;
   int exc = is_cpu_exception(sig);
+  int in_interrupt = interrupt_count++ > 0;
 
   if (exc) {
     gc = gc_state(0);
@@ -77,7 +79,7 @@ static void sig_handler(int sig)
   }
 
   if (lambda) {
-    if (async_sig_enabled) {
+    if (!in_interrupt && async_sig_enabled) {
       async_sig_enabled = 0;
       if (funcall2(lambda, num_fast(sig), t))
         sig_deferred |= (1UL << sig);
@@ -91,6 +93,8 @@ static void sig_handler(int sig)
     async_sig_enabled = as;
     gc_state(gc);
   }
+
+  interrupt_count--;
 }
 
 static val kill_wrap(val pid, val sig)

@@ -1,3 +1,11 @@
+2014-08-02  Kaz Kylheku  <kaz@kylheku.com>
+
+	* signal.c (interrupt_count): New global variable.
+	(sig_handler): Increment and decrement interrupt count.
+	If the interrupt count is already positive, treat
+	that as if async signals were not enabled: do not
+	invoke handlers.
+
 2014-08-01  Kaz Kylheku  <kaz@kylheku.com>
 
 	* configure (have_sys_time): New variable.
