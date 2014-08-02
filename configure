@@ -114,6 +114,7 @@ mpi_version=1.8.6
 have_quilt=
 have_patch=
 have_unistd=
+have_sys_time=
 have_timegm=
 have_syslog=
 have_windows_h=
@@ -1709,6 +1710,29 @@ else
   printf "no\n"
 fi
 
+printf "Checking for setitimer/getitimer ... "
+
+cat > conftest.c <<!
+#include <sys/time.h>
+
+int main(void)
+{
+  struct itimerval itv, itv2;
+  int err;
+  err = getitimer(ITIMER_REAL, &itv);
+  err = getitimer(ITIMER_VIRTUAL, &itv);
+  err = setitimer(ITIMER_VIRTUAL, &itv, &itv2);
+  return 0;
+}
+!
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_ITIMER 1\n" >> config.h
+  have_sys_time=y
+else
+  printf "no\n"
+fi
+
 printf "Checking for makedev ... "
 
 cat > conftest.c <<!
@@ -1841,6 +1865,10 @@ fi
 
 if [ -n "$have_unistd" ] ; then
   printf "#define HAVE_UNISTD_H 1\n" >> config.h
+fi
+
+if [ -n "$have_sys_time" ] ; then
+  printf "#define HAVE_SYS_TIME 1\n" >> config.h
 fi
 
 if [ -n "$have_windows_h" ] ; then

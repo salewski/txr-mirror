@@ -1,5 +1,20 @@
 2014-08-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	* configure (have_sys_time): New variable.
+	Added check for setitimer/getitimer which also
+	checks for <sys/time.h>.
+
+	* signal.c (sig_init): Register itimer-real, itimer-virtual,
+	itimer-prof variables and getitimer and setitimer functions.
+	(tv_to_usec): New static function.
+	(getitimer_wrap, setitimer_wrap): New functions.
+
+	* signal.h (getitimer_wrap, setitimer_wrap): Declared.
+
+	* txr.1: Documented itimers.
+
+2014-08-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	* signal.c (set_sig_handler): Don't use SA_ONSTACK
 	except for signals for which we use alt stack.
 

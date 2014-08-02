@@ -124,3 +124,8 @@ val sig_check(void);
 #if HAVE_POSIX_SIGS
 int sig_mask(int how, const sigset_t *set, sigset_t *oldset);
 #endif
+
+#if HAVE_ITIMER
+val getitimer_wrap(val which);
+val setitimer_wrap(val which, val interval, val currval);
+#endif

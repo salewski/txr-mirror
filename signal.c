@@ -34,6 +34,9 @@
 #include <dirent.h>
 #include <signal.h>
 #include "config.h"
+#if HAVE_SYS_TIME
+#include <sys/time.h>
+#endif
 #include "lib.h"
 #include "gc.h"
 #include "signal.h"
@@ -154,6 +157,14 @@ void sig_init(void)
 #endif
 #ifdef SIGPWR
   reg_var(intern(lit("sig-pwr"), user_package), num_fast(SIGPWR));
+#endif
+
+#if HAVE_ITIMER
+  reg_var(intern(lit("itimer-real"), user_package), num_fast(ITIMER_REAL));
+  reg_var(intern(lit("itimer-virtual"), user_package), num_fast(ITIMER_VIRTUAL));
+  reg_var(intern(lit("itimer-prov"), user_package), num_fast(ITIMER_PROF));
+  reg_fun(intern(lit("getitimer"), user_package), func_n1(getitimer_wrap));
+  reg_fun(intern(lit("setitimer"), user_package), func_n3(setitimer_wrap));
 #endif
 
   reg_fun(intern(lit("set-sig-handler"), user_package), func_n2(set_sig_handler));
@@ -332,3 +343,43 @@ int sig_mask(int how, const sigset_t *set, sigset_t *oldset)
     *oldset = sig_blocked_cache;
   return 0;
 }
+
+#if HAVE_ITIMER
+
+static val tv_to_usec(val sec, val usec)
+{
+  const val meg = num_fast(1000000);
+  return plus(mul(sec, meg), usec);
+}
+
+val getitimer_wrap(val which)
+{
+  struct itimerval itv;
+
+  if (getitimer(c_num(which), &itv) < 0)
+    return nil;
+
+  return list(tv_to_usec(num(itv.it_interval.tv_sec), num(itv.it_interval.tv_usec)),
+              tv_to_usec(num(itv.it_value.tv_sec), num(itv.it_value.tv_usec)),
+              nao);
+}
+
+val setitimer_wrap(val which, val interval, val currval)
+{
+  struct itimerval itn, itv;
+  const val meg = num_fast(1000000);
+
+  itn.it_interval.tv_sec = c_num(trunc(interval, meg));
+  itn.it_interval.tv_usec = c_num(mod(interval, meg));
+  itn.it_value.tv_sec = c_num(trunc(currval, meg));
+  itn.it_value.tv_usec = c_num(mod(currval, meg));
+
+  if (setitimer(c_num(which), &itn, &itv) < 0)
+    return nil;
+
+  return list(tv_to_usec(num(itv.it_interval.tv_sec), num(itv.it_interval.tv_usec)),
+              tv_to_usec(num(itv.it_value.tv_sec), num(itv.it_value.tv_usec)),
+              nao);
+}
+
+#endif

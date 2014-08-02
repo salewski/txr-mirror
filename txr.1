@@ -14608,6 +14608,43 @@ It is a wrapper for the POSIX kill function.
 
 If the <signal> argument is omitted, it defaults to the same value as sig-term.
 
+.SH UNIX ITIMERS
+
+Itimers can be used in combination with signal handling to execute asynchronous
+actions. Itimers deliver one-time or periodic signals. For more information,
+consult the POSIX specification.
+
+.SS Variables itimer-real, itimer-virtual and itimer-prof
+
+.TP
+Description:
+
+These variables correspond to the POSIX constants ITIMER_REAL, ITIMER_VIRTUAL
+and ITIMER_PROF. Thir values are suitable as the <timer> argument of
+the getitimer and setitimer functions.
+
+.SS Functions getitimer and setitimer
+
+.TP
+Syntax:
+
+  (getitimer <timer>)
+  (setitimer <timer> <interval> <value>)
+
+.TP
+Description
+
+The getitimer function returns the current value of the specified timer,
+which must be itimer-real, itimer-virtual or itimer-prof.
+
+The current value consists of a list of two integer values, which
+represents microseconds. The first value is the timer interval,
+and the second value is the timer's current value.
+
+The setitimer function also retrieves the specified timer, exactly
+as getitimer. In addition, it stores a new value in the timer,
+which is given by the two arguments, expressed in microseconds.
+
 .SH UNIX SYSLOG
 
 On platforms where a Unix-like syslog API is available, TXR exports this
