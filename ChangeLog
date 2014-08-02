@@ -1,5 +1,14 @@
 2014-08-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	* signal.c (set_sig_handler): Don't use SA_ONSTACK
+	except for signals for which we use alt stack.
+
+	* signal.h (sig_save_enable): Do sig_check before
+	enabling async signals. This caused the !async_sig_enabled assertion
+	to trip inside make_obj.
+
+2014-08-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	* signal.c (sig_hup, sig_int, sig_quit, sig_ill, sig_trap, sig_abrt,
 	sig_bus, sig_fpe, sig_kill, sig_usr1, sig_segv, sig_usr2, sig_pipe,
 	sig_alrm, sig_term, sig_chld, sig_cont, sig_stop, sig_tstp, sig_ttin,

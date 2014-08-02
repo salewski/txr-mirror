@@ -30,9 +30,9 @@
 #define sig_save_enable                         \
   do {                                          \
     int sig_save = async_sig_enabled;           \
-    async_sig_enabled = 1;                      \
     if (!sig_save)                              \
       sig_check();                              \
+    async_sig_enabled = 1;                      \
     {                                           \
       typedef void v_o_i_d
 

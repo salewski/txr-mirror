@@ -236,9 +236,10 @@ val set_sig_handler(val signo, val lambda)
       sa.sa_handler = sig_handler;
       sigfillset(&sa.sa_mask);
 #if HAVE_SIGALTSTACK
-      if (sig == SIGSEGV || sig == SIGBUS)
+      if (sig == SIGSEGV || sig == SIGBUS) {
         setup_alt_stack();
-      sa.sa_flags |= SA_ONSTACK;
+        sa.sa_flags |= SA_ONSTACK;
+      }
 #endif
       sigaction(sig, &sa, 0);
     }
