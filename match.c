@@ -3660,16 +3660,18 @@ static val v_load(match_files_ctx *c)
                                          zero, negone),
                                     cons(target, nil)), lit("/")));
     int gc = gc_state(0);
-    parse_reset(path);
-    yyparse();
-    yylex_destroy();
+    val stream, name;
+    parser_t parser;
+
+    open_txr_file(path, &stream, &name);
+    parse(stream, name, &parser);
     gc_state(gc);
 
-    if (errors)
+    if (parser.errors)
       sem_error(specline, lit("load: errors encountered in ~s"), path, nao);
 
     { 
-      val spec = get_spec();
+      val spec = parser.syntax_tree;
       val result = match_files(mf_spec(*c, spec));
 
       if (!result) {

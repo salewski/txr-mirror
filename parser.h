@@ -24,26 +24,34 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-extern cnum lineno;
-extern int errors;
-extern val yyin_stream;
+typedef struct {
+  cnum lineno;
+  int errors;
+  val stream;
+  val name;
+  val prepared_msg;
+  val syntax_tree;
+  void *scanner;
+} parser_t;
+
 extern const wchar_t *spec_file;
-extern val spec_file_str;
 extern val form_to_ln_hash;
-int yyparse(void);
-val get_spec(void);
-void yyerror(const char *s);
-void yyerrorf(val s, ...);
+int yyparse(parser_t *, void *scanner);
+void yyerror(parser_t *, void *scanner, const char *s);
+void yyerr(void *scanner, const char *s);
+void yyerrorf(void *scanner, val s, ...);
 void yybadtoken(int tok, val context);
-void end_of_regex(void);
-void end_of_char(void);
-int yylex(void);
-int yylex_destroy(void);
+void end_of_regex(void *scanner);
+void end_of_char(void *scanner);
+int yylex_init(void **pscanner);
+int yylex_destroy(void *scanner);
+parser_t *yyget_extra(void *scanner);
+void yyset_extra(parser_t *, void *scanner);
 void parse_init(void);
-void parse_reset(val spec_file);
+void open_txr_file(val spec_file, val *name, val *stream);
+int parse(val stream, val name, parser_t *parser);
 val source_loc(val form);
 val source_loc_str(val form);
-val rl(val form, val lineno);
 val rlset(val form, val info);
 INLINE val rlcp(val to, val from)
 {

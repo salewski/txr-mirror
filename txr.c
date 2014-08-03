@@ -301,16 +301,13 @@ int txr_main(int argc, char **argv)
   val spec_file = nil;
   val bindings = nil;
   val evaled = nil;
+  val spec_file_str;
   int match_loglevel = opt_loglevel;
   val arg_undo = nil, arg;
+  val parse_stream = std_input;
   list_collect_decl(arg_list, arg_tail);
 
-  prot1(&spec_file_str);
-
   setvbuf(stderr, 0, _IOLBF, 0);
-
-
-  yyin_stream = std_input;
 
   if (argc <= 1) {
     hint();
@@ -519,7 +516,7 @@ int txr_main(int argc, char **argv)
     if (gt(length_str(specstring), zero) &&
         chr_str(specstring, minus(length_str(specstring), one)) != chr('\n'))
       specstring = cat_str(list(specstring, string(L"\n"), nao), nil);
-    yyin_stream = make_string_byte_input_stream(specstring);
+    parse_stream = make_string_byte_input_stream(specstring);
     if (arg)
       arg_list = arg_undo;
   } else if (spec_file) {
@@ -527,7 +524,7 @@ int txr_main(int argc, char **argv)
       FILE *in = w_fopen(c_str(spec_file), L"r");
       if (in == 0)
         uw_throwf(file_error_s, lit("unable to open ~a"), spec_file, nao);
-      yyin_stream = make_stdio_stream(in, spec_file);
+      parse_stream = make_stdio_stream(in, spec_file);
       spec_file_str = spec_file;
     } else {
       spec_file_str = lit("stdin");
@@ -546,7 +543,7 @@ int txr_main(int argc, char **argv)
       FILE *in = w_fopen(c_str(arg), L"r");
       if (in == 0)
         uw_throwf(file_error_s, lit("unable to open ~a"), arg, nao);
-      yyin_stream = make_stdio_stream(in, arg);
+      parse_stream = make_stdio_stream(in, arg);
       spec_file_str = arg;
     } else {
       spec_file_str = lit("stdin");
@@ -557,14 +554,14 @@ int txr_main(int argc, char **argv)
 
   {
     int gc = gc_state(0);
-    yyparse();
-    yylex_destroy();
+    parser_t parser;
+    parse(parse_stream, spec_file_str, &parser);
     gc_state(gc);
 
-    if (errors)
+    if (parser.errors)
       return EXIT_FAILURE;
 
-    spec = remove_hash_bang_line(get_spec());
+    spec = remove_hash_bang_line(parser.syntax_tree);
 
     opt_loglevel = match_loglevel;
 
@@ -577,7 +574,7 @@ int txr_main(int argc, char **argv)
 
     {
       int retval = extract(spec, arg_list, bindings);
-      return errors ? EXIT_FAILURE : retval;
+      return parser.errors ? EXIT_FAILURE : retval;
     }
   }
 }
