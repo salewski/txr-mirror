@@ -3976,7 +3976,7 @@ void eval_init(void)
 
   reg_fun(intern(lit("make-random-state"), user_package), func_n1o(make_random_state, 0));
   reg_fun(intern(lit("random-state-p"), user_package), func_n1(random_state_p));
-  reg_fun(intern(lit("random-fixnum"), user_package), func_n1o(random_fixnum, 1));
+  reg_fun(intern(lit("random-fixnum"), user_package), func_n1o(random_fixnum, 0));
   reg_fun(intern(lit("random"), user_package), func_n2(random));
   reg_fun(intern(lit("rand"), user_package), func_n2o(rnd, 1));
 
