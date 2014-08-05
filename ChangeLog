@@ -1,3 +1,12 @@
+2014-08-05  Kaz Kylheku  <kaz@kylheku.com>
+
+	* parser.y: Back port from Berkeley Yacc to GNU Bison.
+	We need a prototype of yylex that is in scope of the grammar,
+	but YYSTYPE is not defined there.
+
+	* parser.l: Bison 3 declares yyparse in y.tab.h, so we have to
+	reorder some #includes.
+
 2014-08-02  Kaz Kylheku  <kaz@kylheku.com>
 
 	Big switch to reentrant lexing and parsing.

@@ -41,7 +41,6 @@
 #include <unistd.h>
 #endif
 #include "lib.h"
-#include "y.tab.h"
 #include "gc.h"
 #include "stream.h"
 #include "utf8.h"
@@ -49,6 +48,7 @@
 #include "unwind.h"
 #include "hash.h"
 #include "parser.h"
+#include "y.tab.h"
 
 #define YY_INPUT(buf, result, max_size)           \
   do {                                            \

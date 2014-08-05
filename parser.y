@@ -59,6 +59,11 @@ static val rlrec(parser_t *, val form, val line);
 static wchar_t char_from_name(const wchar_t *name);
 static val make_expr(parser_t *, val sym, val rest, val lineno);
 
+#if YYBISON
+union YYSTYPE;
+int yylex(union YYSTYPE *, void *scanner);
+#endif
+
 #define rl(form, line) rlrec(parser, form, line)
 #define mkexp(sym, rest, lineno) make_expr(parser, sym, rest, lineno)
 #define symhlpr(lexeme, meta_allowed) sym_helper(scnr, lexeme, meta_allowed)
