@@ -125,19 +125,25 @@ val make_random_state(val seed)
         dig++, bit = 0;
     }
 
-    for (; i < 16; i++) {
-      r->state[i] = 0xAAAAAAAA;
-    }
+    while (i > 0 && !r->state[i - 1])
+      i--;
+
+    if (i < 16)
+      memset(r->state + i, 0xAA, sizeof r->state - i * sizeof r->state[0]);
   } else if (fixnump(seed)) {
     cnum s = c_num(seed) & NUM_MAX;
 
     memset(r->state, 0xAA, sizeof r->state);
     r->state[0] = s & 0xFFFFFFFFul;
 #if SIZEOF_PTR >= 8
-    r->state[1] = (s >> 32) & 0xFFFFFFFFul;
-#elif SIZEOF_PTR >= 16
-    r->state[2] = (s >> 64) & 0xFFFFFFFFul;
-    r->state[3] = (s >> 96) & 0xFFFFFFFFul;
+    s >>= 32;
+    if (s)
+      r->state[1] = s & 0xFFFFFFFFul;
+#endif
+#if SIZEOF_PTR >= 16
+    s >>= 32;
+    if (s)
+      r->state[2] = s & 0xFFFFFFFFul;
 #endif
   } else if (nilp(seed)) {
     val time = time_sec_usec();
