@@ -1,3 +1,48 @@
+                                     TXR 94
+                                   2014-08-05
+
+
+  Features
+
+  - New functions: giterate, partition-by, uniq.
+
+  - reduce-left and reduce-right correctly work on strings and vectors.
+
+  - quasiquote splices can now occur in string quasiliterals, directly
+    as `xyz @,foo`,  `xyz @{,foo}`, `xyz @,(foo)` etc. Previously this
+    syntax was rejected, requiring workarounds like (let ((x ,foo)) `xyz @x`).
+
+  - POSIX functions exposed: getpid, getppid, kill, setitimer, getitimer.
+
+  - The parser is now re-entrant. This means that macro expanders can
+    safely recurse into the parser, for instance with regex-parse
+    or read.
+
+  Bugs
+
+  - @(output) blocks were discovered not to be applying filters to the results
+    of embedded TXR Lisp evaluations.
+
+  - n-perm-k function was broken for values of k equal to 1.
+
+  - Fixed situations when exceptions with bogus messages are issued when the
+    arithmetic +, - and * functions are called with wrong type arguments.
+
+  - Fixed grossly incorrect documentation of the repeat function, to
+    reflect actual syntax and behavior.
+
+  - Fixed situations in which some signal handlers that don't need to
+    execute on a separate stack might do so.
+
+  - Put in a guard against async signal nesting: a situation when
+    an asynchronous signal handler performs some blocking operation
+    which enables async signal handling triggering re-entrancy.
+
+  - Fixed platform-dependent behaviors in random number seeding
+    (make-random-state function).
+
+
+
                                      TXR 93
                                    2014-07-22
 

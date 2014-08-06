@@ -1,5 +1,17 @@
 2014-08-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 94.
+
+	* RELNOTES: Updated.
+
+	* configure, txr.1: Bumped version.
+
+	* share/txr/stdlib/ver.txr: Likewise
+
+	* txr.vim, dep.mk: Updated.
+
+2014-08-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	* rand.c (make_random_state): Make the seeding behavior
 	portable when the seed is a fixnum or bignum. The goal is that the same
 	values of seed should produce the same random sequences on any
