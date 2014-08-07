@@ -1,3 +1,16 @@
+2014-08-07  Kaz Kylheku  <kaz@kylheku.com>
+
+	Reentrant parser regression
+
+	* parser.y (yybadtok): New macro.
+	(yybadtoken): Function must take parser argument.
+	(grammar): Replace uses of yybadtoken with yybadtok.
+
+	* parser.h (yybadtoken): Declaration updated.
+
+	* parser.l (grammar): Fix incorrect yyprepf calls
+	that are missing the yyscanner parameter.
+
 2014-08-05  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 94.

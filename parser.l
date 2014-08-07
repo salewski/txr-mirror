@@ -694,14 +694,13 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 }
 
 <SPECIAL,QSPECIAL,NESTED,BRACED>{UANYN} {
-  yyerrprepf(lit("bad character in directive: '~a'"),
+  yyerrprepf(yyscanner, lit("bad character in directive: '~a'"),
              string_utf8(yytext), nao);
   return ERRTOK;
 }
 
 <SPECIAL,QSPECIAL,NESTED,BRACED>. {
-  yyerrprepf(lit("non-UTF-8 byte in directive: "
-                 "'\\x~02x'"),
+  yyerrprepf(yyscanner, lit("non-UTF-8 byte in directive: '\\x~02x'"),
              num((unsigned char) yytext[0]), nao);
   return ERRTOK;
 }
@@ -733,7 +732,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
 <REGEX>\n {
   yyextra->lineno++;
-  yyerrprepf(lit("newline in regex"), nao);
+  yyerrprepf(yyscanner, lit("newline in regex"), nao);
   return ERRTOK;
 }
 
@@ -758,7 +757,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 }
 
 <REGEX>[\\] {
-  yyerrprepf(lit("dangling backslash in regex"), nao);
+  yyerrprepf(yyscanner, lit("dangling backslash in regex"), nao);
   return ERRTOK;
 }
 
@@ -770,7 +769,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 }
 
 <REGEX>. {
-  yyerrprepf(lit("non-UTF-8 byte in regex: '\\x~02x'"),
+  yyerrprepf(yyscanner, lit("non-UTF-8 byte in regex: '\\x~02x'"),
              num((unsigned char) yytext[0]), nao);
   return ERRTOK;
 }
@@ -863,21 +862,21 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 }
 
 <STRLIT>\n {
-  yyerrprepf(lit("newline in string literal"), nao);
+  yyerrprepf(yyscanner, lit("newline in string literal"), nao);
   yyextra->lineno++;
   yylval->chr = yytext[0];
   return ERRTOK;
 }
 
 <CHRLIT>\n {
-  yyerrprepf(lit("newline in character literal"), nao);
+  yyerrprepf(yyscanner, lit("newline in character literal"), nao);
   yyextra->lineno++;
   yylval->chr = yytext[0];
   return ERRTOK;
 }
 
 <QSILIT>\n {
-  yyerrprepf(lit("newline in string quasiliteral"), nao);
+  yyerrprepf(yyscanner, lit("newline in string quasiliteral"), nao);
   yyextra->lineno++;
   yylval->chr = yytext[0];
   return ERRTOK;
@@ -904,7 +903,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 }
 
 <STRLIT,CHRLIT,QSILIT,WLIT,QWLIT>. {
-  yyerrprepf(lit("non-UTF-8 byte in literal: '\\x~02x'"),
+  yyerrprepf(yyscanner, lit("non-UTF-8 byte in literal: '\\x~02x'"),
              num((unsigned char) yytext[0]), nao);
   return ERRTOK;
 }

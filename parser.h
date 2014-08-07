@@ -40,7 +40,7 @@ int yyparse(parser_t *, void *scanner);
 void yyerror(parser_t *, void *scanner, const char *s);
 void yyerr(void *scanner, const char *s);
 void yyerrorf(void *scanner, val s, ...);
-void yybadtoken(int tok, val context);
+void yybadtoken(parser_t *, int tok, val context);
 void end_of_regex(void *scanner);
 void end_of_char(void *scanner);
 int yylex_init(void **pscanner);
