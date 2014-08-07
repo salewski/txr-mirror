@@ -1,5 +1,16 @@
 2014-08-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.l (yyerr): Function removed; it is not used in the lexer,
+	and converted to a macro in the parser.
+
+	* parser.y (define_transform): take a parser argument rather
+	than scanner. Set up scnr local variable for yyerr macro.
+	Remove scnr argument from macro calls.
+	(yyerr): New macro.
+	(grammar): Remove scnr argument from yyerr calls.
+
+2014-08-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	Reentrant parser regression
 
 	* parser.y (yybadtok): New macro.

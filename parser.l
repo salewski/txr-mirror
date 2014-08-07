@@ -87,11 +87,6 @@ void yyerror(parser_t *parser, void *scanner, const char *s)
   }
 }
 
-void yyerr(void *scanner, const char *s)
-{
-  yyerror(yyget_extra(scanner), scanner, s);
-}
-
 void yyerrorf(void *scanner, val fmt, ...)
 {
   parser_t *parser = yyget_extra(scanner);

@@ -50,7 +50,7 @@
 static val sym_helper(void *scnr, wchar_t *lexeme, val meta_allowed);
 static val repeat_rep_helper(val sym, val args, val main, val parts);
 static val o_elems_transform(val output_form);
-static val define_transform(void *scnr, val define_form);
+static val define_transform(parser_t *parser, val define_form);
 static val lit_char_helper(val litchars);
 static val optimize_text(val text_form);
 static val unquotes_occur(val quoted_form, int level);
@@ -67,6 +67,7 @@ int yylex(union YYSTYPE *, void *scanner);
 #define rl(form, line) rlrec(parser, form, line)
 #define mkexp(sym, rest, lineno) make_expr(parser, sym, rest, lineno)
 #define symhlpr(lexeme, meta_allowed) sym_helper(scnr, lexeme, meta_allowed)
+#define yyerr(msg) yyerror(scnr, parser, msg)
 #define yybadtok(tok, context) yybadtoken(parser, tok, context)
 
 %}
@@ -161,7 +162,7 @@ clause : all_clause             { $$ = cons($1, nil); rlcp($$, $1); }
        | choose_clause          { $$ = cons($1, nil); rlcp($$, $1); }
        | collect_clause         { $$ = cons($1, nil); rlcp($$, $1); }
        | gather_clause          { $$ = cons($1, nil); rlcp($$, $1); }
-       | define_clause          { $$ = list(define_transform(scnr, $1), nao);
+       | define_clause          { $$ = list(define_transform(parser, $1), nao);
                                   rlcp(car($$), $1);
                                   rlcp($$, $1); }
        | try_clause             { $$ = cons($1, nil); rlcp($$, $1); }
@@ -175,7 +176,7 @@ all_clause : ALL newl clause_parts      { $$ = list(all_s, $3, nao);
            | ALL newl error             { $$ = nil;
                                           yybadtok(yychar, lit("all clause")); }
            | ALL newl END newl          { $$ = nil;
-                                          yyerr(scnr, "empty all clause"); }
+                                          yyerr("empty all clause"); }
 
            ;
 
@@ -188,7 +189,7 @@ some_clause : SOME exprs_opt ')'
                                           yybadtok(yychar, lit("some clause")); }
             | SOME exprs_opt ')'
               newl END newl             { $$ = nil;
-                                          yyerr(scnr, "empty some clause"); }
+                                          yyerr("empty some clause"); }
             ;
 
 none_clause : NONE newl clause_parts    { $$ = list(none_s, $3, nao);
@@ -196,7 +197,7 @@ none_clause : NONE newl clause_parts    { $$ = list(none_s, $3, nao);
             | NONE newl error           { $$ = nil;
                                           yybadtok(yychar, lit("none clause")); }
             | NONE newl END newl        { $$ = nil;
-                                          yyerr(scnr, "empty none clause"); }
+                                          yyerr("empty none clause"); }
             ;
 
 maybe_clause : MAYBE newl clause_parts  { $$ = list(maybe_s, $3, nao);
@@ -204,7 +205,7 @@ maybe_clause : MAYBE newl clause_parts  { $$ = list(maybe_s, $3, nao);
              | MAYBE newl error         { $$ = nil;
                                           yybadtok(yychar, lit("maybe clause")); }
              | MAYBE newl END newl      { $$ = nil;
-                                          yyerr(scnr, "empty maybe clause"); }
+                                          yyerr("empty maybe clause"); }
              ;
 
 cases_clause : CASES newl clause_parts  { $$ = list(cases_s, $3, nao);
@@ -212,14 +213,14 @@ cases_clause : CASES newl clause_parts  { $$ = list(cases_s, $3, nao);
              | CASES newl error         { $$ = nil;
                                           yybadtok(yychar, lit("cases clause")); }
              | CASES newl END newl      { $$ = nil;
-                                          yyerr(scnr, "empty cases clause"); }
+                                          yyerr("empty cases clause"); }
              ;
 
 block_clause  : BLOCK exprs_opt ')'
                 newl clauses_opt
                 END newl                { val name = first($2); 
                                           if (gt(length($2), one))
-                                            yyerr(scnr, "block: takes zero or no arguments");
+                                            yyerr("block: takes zero or no arguments");
                                           if (name && !bindable(name))
                                             yyerrorf(scnr,
                                                      lit("block: ~s is not a bindable symbol"),
@@ -239,7 +240,7 @@ choose_clause : CHOOSE exprs_opt ')'
                                           yybadtok(yychar, lit("choose clause")); }
               | CHOOSE exprs_opt ')'
                 newl END newl           { $$ = nil;
-                                          yyerr(scnr, "empty choose clause"); }
+                                          yyerr("empty choose clause"); }
               ;
 
 gather_clause : GATHER exprs_opt ')'
@@ -265,7 +266,7 @@ gather_clause : GATHER exprs_opt ')'
                                           yybadtok(yychar, lit("gather clause")); }
               | GATHER exprs_opt ')'
                 newl END newl           { $$ = nil;
-                                          yyerr(scnr, "empty gather clause"); }
+                                          yyerr("empty gather clause"); }
               ;
 
 gather_parts : clauses additional_gather_parts  { $$ = cons($1, $2); }
@@ -293,7 +294,7 @@ collect_clause : collect_repeat exprs_opt ')' newl
                                           if (yychar == UNTIL ||
                                               yychar == END ||
                                               yychar == LAST)
-                                            yyerr(scnr, "empty collect");
+                                            yyerr("empty collect");
                                           else
                                             yybadtok(yychar, lit("collect clause")); }
                ;
@@ -352,7 +353,7 @@ elems : elem                    { $$ = cons($1, nil);
       | elem elems              { $$ = cons($1, $2);
                                   rlcp($$, $1); }
       | rep_elem                { $$ = nil;
-                                  yyerr(scnr, "rep outside of output"); }
+                                  yyerr("rep outside of output"); }
       ;
 
 
@@ -397,20 +398,20 @@ elem : texts                    { $$ = rlcp(cons(text_s, $1), $1);
      | COLL error               { $$ = nil;
                                   yybadtok(yychar, lit("coll clause")); }
      | ALL clause_parts_h       { $$ = rl(list(all_s, t, $2, nao), num($1)); }
-     | ALL END                  { yyerr(scnr, "empty all clause"); }
+     | ALL END                  { yyerr("empty all clause"); }
      | SOME exprs_opt ')'
        clause_parts_h           { $$ = rl(list(some_s, t, $4, $2, nao), num($1)); }
-     | SOME exprs_opt ')' END   { yyerr(scnr, "empty some clause"); }
+     | SOME exprs_opt ')' END   { yyerr("empty some clause"); }
      | NONE clause_parts_h      { $$ = rl(list(none_s, t, $2, nao), num($1)); }
-     | NONE END                 { yyerr(scnr, "empty none clause"); }
+     | NONE END                 { yyerr("empty none clause"); }
      | MAYBE clause_parts_h     { $$ = rl(list(maybe_s, t, $2, nao), num($1)); }
-     | MAYBE END                { yyerr(scnr, "empty maybe clause"); }
+     | MAYBE END                { yyerr("empty maybe clause"); }
      | CASES clause_parts_h     { $$ = rl(list(cases_s, t, $2, nao), num($1)); }
-     | CASES END                { yyerr(scnr, "empty cases clause"); }
+     | CASES END                { yyerr("empty cases clause"); }
      | CHOOSE exprs_opt ')'
        clause_parts_h           { $$ = list(choose_s, t, $4, $2, nao);
                                   rl($$, num($1)); }
-     | CHOOSE exprs_opt ')' END { yyerr(scnr, "empty cases clause"); }
+     | CHOOSE exprs_opt ')' END { yyerr("empty cases clause"); }
      | DEFINE exprs ')' elems END       
                                 { $$ = list(define_s, t, $4, $2, nao);
                                   rl($$, num($1)); }
@@ -453,7 +454,7 @@ try_clause : TRY newl
              error              { $$ = nil;
                                   if (yychar == END || yychar == CATCH ||
                                       yychar == FINALLY)
-                                    yyerr(scnr, "empty try clause");
+                                    yyerr("empty try clause");
                                   else
                                     yybadtok(yychar, lit("try clause")); }
            | TRY newl
@@ -493,7 +494,7 @@ catch_clauses_opt : CATCH ')' newl
 output_clause : OUTPUT ')' o_elems '\n'
                 out_clauses
                 END newl        { $$ = nil;
-                                  yyerr(scnr, "obsolete output syntax: trailing material"); }
+                                  yyerr("obsolete output syntax: trailing material"); }
               | OUTPUT ')' newl
                 END newl        { $$ = rl(list(output_s, nao), num($1)); }
               | OUTPUT ')' newl
@@ -507,7 +508,7 @@ output_clause : OUTPUT ')' o_elems '\n'
               | OUTPUT exprs ')' o_elems '\n'
                 out_clauses
                 END newl        { $$ = nil;
-                                  yyerr(scnr, "invalid combination of old and "
+                                  yyerr("invalid combination of old and "
                                                "new syntax in output directive"); }
               | OUTPUT error    { $$ = nil;
                                   yybadtok(yychar, lit("list expression")); }
@@ -663,12 +664,12 @@ var : SYMTOK                    { $$ = list(var_s, symhlpr($1, nil), nao); }
                                 { $$ = list(var_s, symhlpr($3, nil),
                                             $5, $1, nao); }
     | var_op '{' SYMTOK regex '}'       { $$ = nil;
-                                          yyerr(scnr, "longest match "
-                                                       "not useable with regex"); }
+                                          yyerr("longest match "
+                                                "not useable with regex"); }
     | var_op '{' SYMTOK NUMBER '}'      { $$ = nil;
-                                          yyerr(scnr, "longest match "
-                                                      "not useable with "
-                                                      "fixed width match"); }
+                                          yyerr("longest match "
+                                                "not useable with "
+                                                "fixed width match"); }
     | SYMTOK error              { $$ = nil;
                                   yybadtok(yychar, lit("variable spec")); }
     | var_op error              { $$ = nil;
@@ -897,7 +898,7 @@ regtoken : REGTOKEN             { switch ($1)
                                       $$ = cword_char_k; break; }}
 
 newl : '\n'
-     | error '\n'       { yyerr(scnr, "newline expected after directive");
+     | error '\n'       { yyerr("newline expected after directive");
                           yyerrok; }
      ;
 
@@ -1007,7 +1008,7 @@ not_a_clause : ALL              { $$ = mkexp(all_s, nil, num(parser->lineno)); }
                exprs_opt ')'    { $$ = mkexp(intern(lit("if"), nil),
                                                  $2, nil); }
              | OUTPUT
-                exprs_opt ')'   { yyerr(scnr, "@(output) doesn't nest"); }
+                exprs_opt ')'   { yyerr("@(output) doesn't nest"); }
 
              ;
 
@@ -1139,8 +1140,9 @@ static val o_elems_transform(val o_elems)
   return rlcp(o_elems_out, o_elems);
 }
 
-static val define_transform(void *scnr, val define_form)
+static val define_transform(parser_t *parser, val define_form)
 {
+  void *scnr = parser->scanner;
   val sym = first(define_form);
   val args = second(define_form);
 
@@ -1150,29 +1152,29 @@ static val define_transform(void *scnr, val define_form)
   assert (sym == define_s);
 
   if (args == nil) {
-    yyerr(scnr, "define requires arguments");
+    yyerr("define requires arguments");
     return define_form;
   }
 
   if (!consp(args) || !listp(cdr(args))) {
-    yyerr(scnr, "bad define argument syntax");
+    yyerr("bad define argument syntax");
     return define_form;
   } else {
     val name = first(args);
     val params = second(args);
 
     if (!symbolp(name)) {
-      yyerr(scnr, "function name must be a symbol");
+      yyerr("function name must be a symbol");
       return define_form;
     }
 
     if (!proper_listp(params)) {
-      yyerr(scnr, "invalid function parameter list");
+      yyerr("invalid function parameter list");
       return define_form;
     }
 
     if (!all_satisfy(params, func_n1(symbolp), nil))
-      yyerr(scnr, "function parameters must be symbols");
+      yyerr("function parameters must be symbols");
   }
 
   return define_form;
