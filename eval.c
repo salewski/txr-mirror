@@ -2539,7 +2539,9 @@ static val me_ido(val form, val menv)
 
 static val me_ret(val form, val menv)
 {
-  return cons(op_s, cons(identity_s, rest(form)));
+  return list(op_s, identity_s, cons(progn_s,
+                                     cons(list(var_s, rest_s, nao),
+                                          rest(form))), nao);
 }
 
 static val me_flet_labels(val form, val menv)

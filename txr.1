@@ -12504,7 +12504,10 @@ and returns the value specified by <form>.
 
 The following equivalence holds:
 
-  (ret x) <--> (op identity x)
+  (ret x) <--> (op identity (progn @rest x))
+
+where the @rest parameter is mentioned for its side effect of making
+op generate a function which accepts any number of arguments.
 
 The expression (ret @2) returns a function similar to
 (lambda (x y . z) y).

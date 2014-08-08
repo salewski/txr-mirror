@@ -1,3 +1,13 @@
+2014-08-08  Kaz Kylheku  <kaz@kylheku.com>
+
+	Bugfix: ret operator does not generate functions
+	that take any number of arguments.
+
+	* eval.c (me_ret): Generate (op identity (progn @rest <expr>))
+	rather than of (op identity <expr>).
+
+	* txr.1: Update misleading equivalence.
+
 2014-08-07  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 95.
