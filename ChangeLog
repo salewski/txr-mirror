@@ -1,5 +1,13 @@
 2014-08-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	No getppid on MinGW.
+
+	* configure: Add test for getppid.
+
+	* eval.c (getppid_wrap, eval_init): use HAVE_GETPPID
+
+2014-08-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.l (yyerr): Function removed; it is not used in the lexer,
 	and converted to a macro in the parser.
 

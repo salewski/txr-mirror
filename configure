@@ -1406,6 +1406,27 @@ else
   printf "no\n"
 fi
 
+printf "Checking for POSIX getppid ... "
+
+cat > conftest.c <<!
+#include <sys/types.h>
+#include <unistd.h>
+
+int main(int argc, char **argv)
+{
+  pid_t p = getppid();
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_GETPPID 1\n" >> config.h
+  have_unistd=y
+else
+  printf "no\n"
+fi
+
 #
 # fcntl
 #

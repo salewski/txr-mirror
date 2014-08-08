@@ -3295,15 +3295,19 @@ static val usleep_wrap(val usec)
 }
 
 #if HAVE_UNISTD_H
+
 static val getpid_wrap(void)
 {
   return num(getpid());
 }
 
+#if HAVE_GETPPID
 static val getppid_wrap(void)
 {
   return num(getppid());
 }
+#endif
+
 #endif
 
 static val env_hash(void)
@@ -4011,7 +4015,9 @@ void eval_init(void)
   reg_fun(intern(lit("usleep"), user_package), func_n1(usleep_wrap));
 #if HAVE_UNISTD_H
   reg_fun(intern(lit("getpid"), user_package), func_n0(getpid_wrap));
+#if HAVE_GETPPID
   reg_fun(intern(lit("getppid"), user_package), func_n0(getppid_wrap));
+#endif
 #endif
 
   reg_fun(intern(lit("env"), user_package), func_n0(env));
