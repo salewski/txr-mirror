@@ -1,3 +1,13 @@
+2014-08-05  Kaz Kylheku  <kaz@kylheku.com>
+
+	Version 95.
+
+	* RELNOTES: Updated.
+
+	* configure, txr.1: Bumped version.
+
+	* share/txr/stdlib/ver.txr: Likewise
+
 2014-08-07  Kaz Kylheku  <kaz@kylheku.com>
 
 	No getppid on MinGW.
