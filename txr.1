@@ -14938,6 +14938,64 @@ while at the same time still modifying the internals of <trie>.
 Consequently, the program should not retain the input object <trie>,
 but use the returned object in its place.
 
+.SS Function trie-lookup-begin
+
+.TP
+Syntax:
+
+  (trie-lookup-begin <trie>)
+
+.TP
+Description:
+
+The trie-lookup-begin function returns a context object for performing
+an open-coded lookup traversal of a trie. The <trie> argument
+is expected to be a trie that was created by the make-trie function.
+
+.SS Function trie-lookup-feed-char
+
+.TP
+Syntax:
+
+  (trie-lookup-feed-char <trie-context> <char>)
+
+.TP
+Description:
+
+The trie-lookup-feed-char function performs a one character step in a trie
+lookup. The <trie-context> argument must be a trie contxt returned
+by trie-lookup-begin, or by some previous call to trie-lookup-feed-char.
+The <char> argument is the character to search for.
+
+If the lookup is successful (the match through the trie can continue
+with the given character) then a new trie context object is returned.
+The old trie context remains valid.
+
+If the lookup is unsuccessful, nil is returned.
+
+Note: determining whether a given string is stored in a trie can be
+performed looking up every character of the string successively
+with trie-lookup-feed-char, using the newly returned context
+for each successive operation. If every character is found, it means
+that either that exact string is found in the trie, or a prefix.
+The ambiguity can be resolved by testing whether the trie has a value
+at the last node using tree-value-at. For instance, if "catalog"
+is inserted into an empty trie with value "foo", then "cat" will look up
+successfully, being a prefix of "catalog"; however, the value at "cat" is nil.
+
+.SS Function tree-value-at
+
+.TP
+Syntax:
+
+  (trie-value-at <trie-context>)
+
+.TP
+Description:
+
+The trie-value-at function returns the value stored at the node in
+in the trie given by <trie-context>. Nodes which have not been given
+a value hold the value nil.
 
 .SS Function filter-string-tree
 

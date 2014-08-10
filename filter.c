@@ -724,6 +724,9 @@ void filter_init(void)
   reg_fun(intern(lit("trie-add"), user_package), func_n3(trie_add));
   reg_fun(intern(lit("trie-compress"), user_package),
           func_n1(trie_compress_intrinsic));
+  reg_fun(intern(lit("trie-lookup-begin"), user_package), func_n1(trie_lookup_begin));
+  reg_fun(intern(lit("trie-value-at"), user_package), func_n1(trie_value_at));
+  reg_fun(intern(lit("trie-lookup-feed-char"), user_package), func_n2(trie_lookup_feed_char));
   reg_fun(intern(lit("filter-string-tree"), user_package), func_n2(filter_string_tree));
   reg_fun(intern(lit("filter-equal"), user_package), func_n4(filter_equal));
   reg_fun(intern(lit("url-encode"), user_package), func_n2o(url_encode, 1));

@@ -1,3 +1,10 @@
+2014-08-09  Kaz Kylheku  <kaz@kylheku.com>
+
+	* filter.c (filter_init): Expose the trie-lookup-begin,
+	trie-value-at and trie-lookup-feed-char functions as intrinsics.
+
+	* txr.1: Document exposed functions.
+
 2014-08-08  Kaz Kylheku  <kaz@kylheku.com>
 
 	Bugfix: ret operator does not generate functions
