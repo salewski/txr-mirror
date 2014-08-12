@@ -644,25 +644,10 @@ rep_parts_opt : SINGLE o_elems_opt
  * that generates an empty phrase causes reduce/reduce conflicts.
  */
 var : SYMTOK                    { $$ = list(var_s, symhlpr($1, nil), nao); }
-    | SYMTOK elem               { $$ = list(var_s, symhlpr($1, nil),
-                                            $2, nao); }
     | '{' SYMTOK '}'            { $$ = list(var_s, symhlpr($2, nil), nao); }
-    | '{' SYMTOK '}' elem       { $$ = list(var_s, symhlpr($2, nil),
-                                            $4, nao); }
-    | '{' SYMTOK modifiers '}'  { $$ = list(var_s, symhlpr($2, nil),
-                                            nil, $3, nao); }
-    | '{' SYMTOK modifiers '}' elem
-                                { $$ = list(var_s, symhlpr($2, nil),
-                                            $5, $3, nao); }
-    | var_op SYMTOK             { $$ = list(var_s, symhlpr($2, nil),
-                                            nil, $1, nao); }
-    | var_op SYMTOK elem        { $$ = list(var_s, symhlpr($2, nil),
-                                            $3, $1, nao); }
-    | var_op '{' SYMTOK '}'     { $$ = list(var_s, symhlpr($3, nil),
-                                            nil, $1, nao); }
-    | var_op '{' SYMTOK '}' elem
-                                { $$ = list(var_s, symhlpr($3, nil),
-                                            $5, $1, nao); }
+    | '{' SYMTOK modifiers '}'  { $$ = list(var_s, symhlpr($2, nil), $3, nao); }
+    | var_op SYMTOK             { $$ = list(var_s, symhlpr($2, nil), $1, nao); }
+    | var_op '{' SYMTOK '}'     { $$ = list(var_s, symhlpr($3, nil), $1, nao); }
     | var_op '{' SYMTOK regex '}'       { $$ = nil;
                                           yyerr("longest match "
                                                 "not useable with regex"); }

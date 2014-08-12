@@ -1,3 +1,21 @@
+2014-08-11  Kaz Kylheku  <kaz@kylheku.com>
+
+	First cut at restructuring how variable matching works in the pattern
+	language. The goal is to remove the strict behavior of using only one
+	element of context after a variable.
+	variable form at parse time: we unravel that first.
+
+	* parser.y (grammar): Simplifying the phrase structure
+	rule for the var element. All the variants that have
+	a trailing elem are removed. The abstract syntax
+	changes; the modifier moves to the third position in the
+	list.
+
+	* match.c (h_var): Matching change: the element which follows
+	a variable is now pulled from the specline rather than the variable
+	syntax, which is how it should have been done in the first place. The
+	modifiers are pulled from a different spot in the variable syntax.
+
 2014-08-09  Kaz Kylheku  <kaz@kylheku.com>
 
 	* filter.c (filter_init): Expose the trie-lookup-begin,

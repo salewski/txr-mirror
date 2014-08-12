@@ -484,16 +484,16 @@ static val search_form(match_line_ctx *c, val needle_form, val from_end)
 
 static val h_var(match_line_ctx *c)
 {
-  val elem = first(c->specline);
+  val elem = pop(&c->specline);
   val sym = second(elem);
-  val pat = third(elem);
-  val modifiers = fourth(elem);
+  val pat = first(c->specline);
+  val modifiers = third(elem);
   val modifier = first(modifiers);
   val pair = if2(sym, assoc(sym, c->bindings)); /* exists? */
 
   if (sym == t)
     sem_error(elem, lit("t is not a bindable symbol"), nao);
-  
+
   if (gt(length_list(modifiers), one)) {
     sem_error(elem, lit("multiple modifiers on variable ~s"),
               sym, nao);
@@ -504,10 +504,11 @@ static val h_var(match_line_ctx *c)
        it with its value, and treat it as a string match.
        The spec looks like ((var <sym> <pat>) ...)
        and it must be transformed into
-       (<sym-substituted> <pat> ...) */
-    if (pat) {
-      c->specline = rlcp(cons(cdr(pair), cons(pat, rest(c->specline))), c->specline);
-    } else if (fixnump(modifier)) {
+       (<sym-substituted> <pat> ...).
+       But if the variable is a fix sized field match,
+       then we treat that specially: it has to match
+       that much text. */
+    if (fixnump(modifier)) {
       val past = plus(c->pos, modifier);
 
       if (length_str_lt(c->dataline, past) || lt(past, c->pos))
@@ -525,9 +526,9 @@ static val h_var(match_line_ctx *c)
 
       LOG_MATCH("fixed field", past);
       c->pos = past;
-      c->specline = cdr(c->specline);
+      c->specline = rest(c->specline);
     } else {
-      c->specline = rlcp(cons(cdr(pair), rest(c->specline)), c->specline);
+      c->specline = rlcp(cons(cdr(pair), c->specline), c->specline);
     }
     return repeat_spec_k;
   } else if (consp(modifier)) { /* var bound over text matched by form */
@@ -599,9 +600,8 @@ static val h_var(match_line_ctx *c)
     /* Unbound var followed by var: the following one must either
        be bound, or must specify a regex. */
     val second_sym = second(pat);
-    val next_pat = third(pat);
-    val next_modifiers = fourth(pat);
-    val next_modifier = first(fourth(pat));
+    val next_modifiers = third(pat);
+    val next_modifier = first(next_modifiers);
     val pair = if2(second_sym, assoc(second_sym, c->bindings)); /* exists? */
 
     if (gt(length_list(next_modifiers), one)) {
@@ -634,21 +634,14 @@ static val h_var(match_line_ctx *c)
       c->pos = fpos;
       LOG_MATCH("double var regex (second var)", plus(fpos, flen));
       c->pos = plus(fpos, flen);
-      if (next_pat) {
-        c->specline = rlcp(cons(next_pat, rest(c->specline)), c->specline);
-        return repeat_spec_k;
-      }
+      return next_spec_k;
     } else if (!pair) {
       sem_error(elem, lit("consecutive unbound variables"), nao);
     } else {
     /* Re-generate a new spec with an edited version of
        the element we just processed, and repeat. */
       val new_elem = list(var_s, sym, cdr(pair), modifier, nao);
-
-      if (next_pat)
-         c->specline = cons(new_elem, cons(next_pat, rest(c->specline)));
-      else
-         c->specline = cons(new_elem, rest(c->specline));
+      c->specline = cons(elem, cons(new_elem, rest(c->specline)));
       return repeat_spec_k;
     }
   } else if (consp(pat) && (consp(first(pat)) || stringp(first(pat)))) {
