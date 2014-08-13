@@ -1,3 +1,16 @@
+2014-08-13  Kaz Kylheku  <kaz@kylheku.com>
+
+	Fix regression in previous change: we must match a compound text
+	element whole, and not break it up.
+
+	* match.c (search_match): Take a spec argument.
+	(h_var): Turn a text element into a one-element spec and process
+	with search_match.
+
+	* txr.1: Updated text about matching of variables
+	followed by a directive or function, and about consecutive
+	variables via directive.
+
 2014-08-12  Kaz Kylheku  <kaz@kylheku.com>
 
 	When a variable is delimited by some form other than

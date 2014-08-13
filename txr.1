@@ -722,32 +722,28 @@ text which is bound to FOO.
 .SS Variable Followed by a Function Call or Directive
 
 If the variable is followed by a function call, or a directive, the extent is
-determined by scanning the text for the first position where a match occurs for
-the regular expression, call or directive. (For a description of functions,
+determined by scanning the text for the first position where a match occurs
+for the entire remainder of the line. (For a description of functions,
 see FUNCTIONS.)
 
-Note that the given variable and the function or directive are considered
-in isolation. This means, for instance, that @var@(skip)text is a degenerate
-form. The @(skip) will be processed alone, without regard for the trailing
-text and so consume the input to the end of the line. The right way to
-express the most probable intent of this is @{var}text.
+For example:
 
-Another degenerate case is @var@(bind ...), or in general, a variable
-followed by some directive not used for matching text. Watch out for
-the following pitfall:
+  @foo@(bind a "abc")xyz
 
- @a @b@(bind have_ab "y")
+Here, foo will match the text from the current position to where "xyz"
+occurs, even though there is a @(bind) directive. Furthermore, if
+more material is added after the xyz, it is part of the search.
+Note the difference between the following two:
 
-The intent here is that the variable b captures everything after the space to
-the end of the line, and then the variable have_ab is set to "y". But since
-@(bind) always succeeds, b captures an empty string, and then the whole line
-fails if there is any material after the space. The right way to do this is:
+  @foo@/abc/@(func)
+  @foo@(func)@/abc/
 
- @a @b@(eol)@(bind have_ab "y")
-
-That is to say, match an explicit @(eol) after the variable. This will
-search for the end of the line and capture the spanning text into b, as
-intended.  The bind then happens afterward.
+In the first example, the variable foo matches the text from the current
+position until the match for the regular expression abc. @(func) is not
+considered when processing @foo.  In the second example, the variable foo
+matches the text from the current position until the position whcih matches
+the function call, followed by a match for the regular expression.
+The entire sequence @(func)@/abc/ is considered.
 
 .SS Consecutive Variables
 
@@ -810,12 +806,10 @@ following example:
 
   @var1@(all)@var2@(end)
 
-The @(all) directive does nothing other than assert that all clauses must
-match. It has only one clause, @var2. So this is equivalent to just @var1@var2,
-except that if both variables are unbound, no semantic error is identified in
-this situation. Such a situation is handled as a variable followed by a
-directive.  Of course @var2 matches everything at the current position, and so
-@var1 ends up with nothing.
+This is treated just like the variable followed by directive. No semantic
+error is identified, even if both variables are unbound. Here, @var2
+@var2 matches everything at the current position, and so @var1 ends up
+bound to the empty string.
 
 Example 1: b matches at position 0 and a gets nothing:
 

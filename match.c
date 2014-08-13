@@ -450,9 +450,8 @@ static void consume_prefix(match_line_ctx *c)
 }
 
 
-static val search_match(match_line_ctx *c, val from_end)
+static val search_match(match_line_ctx *c, val from_end, val spec)
 {
-  val spec = c->specline;
   val pos = from_end ? length_str(c->dataline) : c->pos;
   val step = from_end ? negone : one;
 
@@ -640,11 +639,17 @@ static val h_var(match_line_ctx *c)
         return repeat_spec_k;
       }
     } else if (op == text_s) {
-      /* Clumped texts: break out the first one. */
-      val text_elem = rlcp(second(next), c->specline);
-      val rest_texts = cons(text_s, rest(rest(next)));
-      c->specline = cons(elem, cons(text_elem,
-                                    cons(rest_texts, rest(c->specline))));
+      val text_only_spec = cons(next, nil);
+      val find = search_match(c, modifier, text_only_spec);
+      val fpos = car(find);
+      if (!find) {
+        LOG_MISMATCH("var delimiting text compound");
+        return nil;
+      }
+      LOG_MATCH("var delimiting text compound", fpos);
+      if (sym)
+        c->bindings = acons(sym, sub_str(c->dataline, c->pos, fpos), c->bindings);
+      c->pos = fpos;
       return repeat_spec_k;
     } else if (consp(op) || stringp(op)) {
       cons_bind (find, len, search_str_tree(c->dataline, next, c->pos, modifier));
@@ -656,7 +661,7 @@ static val h_var(match_line_ctx *c)
         c->bindings = acons(sym, sub_str(c->dataline, c->pos, find), c->bindings);
       c->pos = plus(find, len);
     } else {
-      val find = search_match(c, modifier);
+      val find = search_match(c, modifier, c->specline);
       val fpos = car(find);
       if (!find) {
         LOG_MISMATCH("var delimiting spec");
