@@ -450,43 +450,35 @@ static void consume_prefix(match_line_ctx *c)
 }
 
 
-static val search_form(match_line_ctx *c, val needle_form, val from_end)
+static val search_match(match_line_ctx *c, val from_end)
 {
-  if (regexp(first(needle_form))) {
-    return search_regex(c->dataline, first(needle_form), c->pos, from_end);
-  } else {
-    val spec = cons(needle_form, nil);
-    val pos = from_end ? length_str(c->dataline) : c->pos;
-    val step = from_end ? negone : one;
+  val spec = c->specline;
+  val pos = from_end ? length_str(c->dataline) : c->pos;
+  val step = from_end ? negone : one;
 
-    rlcp(spec, needle_form);
-
-    for (; (from_end && ge(pos, c->pos)) || 
-           (!from_end && length_str_ge(c->dataline, pos));
-         pos = plus(pos, step))
-    {
-      cons_bind (new_bindings, new_pos,
-                 match_line(ml_specline_pos(*c, spec, pos)));
-      if (new_pos == t) {
-        return cons(pos, t);
-      } else if (new_pos) {
-        new_pos = minus(new_pos, c->base);
-        c->bindings = new_bindings;
-        return cons(pos, minus(new_pos, pos));
-      }
-
-      consume_prefix(c);
+  for (; (from_end && ge(pos, c->pos)) ||
+         (!from_end && length_str_ge(c->dataline, pos));
+       pos = plus(pos, step))
+  {
+    val new_pos = cdr(match_line(ml_specline_pos(*c, spec, pos)));
+    if (new_pos == t) {
+      return cons(pos, t);
+    } else if (new_pos) {
+      new_pos = minus(new_pos, c->base);
+      return cons(pos, minus(new_pos, pos));
     }
 
-    return nil;
+    consume_prefix(c);
   }
+
+  return nil;
 }
 
 static val h_var(match_line_ctx *c)
 {
   val elem = pop(&c->specline);
   val sym = second(elem);
-  val pat = first(c->specline);
+  val next = first(c->specline);
   val modifiers = third(elem);
   val modifier = first(modifiers);
   val pair = if2(sym, assoc(sym, c->bindings)); /* exists? */
@@ -502,9 +494,9 @@ static val h_var(match_line_ctx *c)
   if (pair) {
     /* If the variable already has a binding, we replace
        it with its value, and treat it as a string match.
-       The spec looks like ((var <sym> <pat>) ...)
+       The spec looks like ((var <sym>) <next> ...)
        and it must be transformed into
-       (<sym-substituted> <pat> ...).
+       (<sym-substituted> <next> ...).
        But if the variable is a fix sized field match,
        then we treat that specially: it has to match
        that much text. */
@@ -547,8 +539,8 @@ static val h_var(match_line_ctx *c)
       c->bindings = acons(sym, sub_str(c->dataline, c->pos, new_pos), new_bindings);
     c->pos = new_pos;
     /* This may have another variable attached */
-    if (pat) {
-      c->specline = rlcp(cons(pat, rest(c->specline)), c->specline);
+    if (next) {
+      c->specline = rlcp(cons(next, rest(c->specline)), c->specline);
       return repeat_spec_k;
     }
   } else if (fixnump(modifier)) { /* fixed field */
@@ -563,19 +555,19 @@ static val h_var(match_line_ctx *c)
       c->bindings = acons(sym, trim_str(sub_str(c->dataline, c->pos, past)), c->bindings);
     c->pos = past;
     /* This may have another variable attached */
-    if (pat) {
-      c->specline = cons(pat, rest(c->specline));
+    if (next) {
+      c->specline = rlcp(cons(next, rest(c->specline)), c->specline);
       return repeat_spec_k;
     }
   } else if (modifier && modifier != t) {
     sem_error(elem, lit("invalid modifier ~s on variable ~s"),
               modifier, sym, nao);
-  } else if (pat == nil) { /* no modifier, no elem -> to end of line */
+  } else if (next == nil) { /* no modifier, no elem -> to end of line */
     if (sym)
       c->bindings = acons(sym, sub_str(c->dataline, c->pos, nil), c->bindings);
     c->pos = length_str(c->dataline);
-  } else if (type(pat) == STR) {
-    val find = search_str(c->dataline, pat, c->pos, modifier);
+  } else if (type(next) == STR) {
+    val find = search_str(c->dataline, next, c->pos, modifier);
     if (!find) {
       LOG_MISMATCH("var delimiting string");
       return nil;
@@ -583,78 +575,101 @@ static val h_var(match_line_ctx *c)
     LOG_MATCH("var delimiting string", find);
     if (sym)
       c->bindings = acons(sym, sub_str(c->dataline, c->pos, find), c->bindings);
-    c->pos = plus(find, length_str(pat));
-  } else if (consp(pat) && first(pat) != var_s) {
-    val find = search_form(c, pat, modifier);
-    val fpos = car(find);
-    val flen = cdr(find);
-    if (!find) {
-      LOG_MISMATCH("var delimiting form");
-      return nil;
-    }
-    LOG_MATCH("var delimiting form", fpos);
-    if (sym)
-      c->bindings = acons(sym, sub_str(c->dataline, c->pos, fpos), c->bindings);
-    c->pos = if3(flen == t, t, plus(fpos, flen));
-  } else if (consp(pat)) {
-    /* Unbound var followed by var: the following one must either
-       be bound, or must specify a regex. */
-    val second_sym = second(pat);
-    val next_modifiers = third(pat);
-    val next_modifier = first(next_modifiers);
-    val pair = if2(second_sym, assoc(second_sym, c->bindings)); /* exists? */
+    c->pos = plus(find, length_str(next));
+  } else if (consp(next)) {
+    val op = first(next);
 
-    if (gt(length_list(next_modifiers), one)) {
-      sem_error(elem, lit("multiple modifiers on variable ~s"),
-                second_sym, nao);
-    }
-
-    if (!pair && consp(next_modifier)) {
-      val find = search_form(c, next_modifier, modifier);
+    if (regexp(op)) {
+      val find = search_regex(c->dataline, op, c->pos, modifier);
       val fpos = car(find);
       val flen = cdr(find);
-
       if (!find) {
-        LOG_MISMATCH("double var regex");
+        LOG_MISMATCH("var delimiting regex");
         return nil;
       }
-
-      /* Text from here to start of regex match goes to this
-         variable. */
+      LOG_MATCH("var delimiting regex", fpos);
       if (sym)
-        c->bindings = acons(sym, sub_str(c->dataline, c->pos, fpos),
-                            c->bindings);
-      /* Text from start of regex match to end goes to the
-         second variable */
-      if (second_sym)
-        c->bindings = acons(second_sym,
-                            sub_str(c->dataline, fpos, plus(fpos, flen)),
-                            c->bindings);
-      LOG_MATCH("double var regex (first var)", fpos);
-      c->pos = fpos;
-      LOG_MATCH("double var regex (second var)", plus(fpos, flen));
-      c->pos = plus(fpos, flen);
-      return next_spec_k;
-    } else if (!pair) {
-      sem_error(elem, lit("consecutive unbound variables"), nao);
+        c->bindings = acons(sym, sub_str(c->dataline, c->pos, fpos), c->bindings);
+      c->pos = if3(flen == t, t, plus(fpos, flen));
+    } else if (op == var_s) {
+      /* Unbound var followed by var: the following one must either
+         be bound, or must specify a regex. */
+      val second_sym = second(next);
+      val next_modifiers = third(next);
+      val next_modifier = first(next_modifiers);
+      val pair = if2(second_sym, assoc(second_sym, c->bindings)); /* exists? */
+
+      if (gt(length_list(next_modifiers), one)) {
+        sem_error(elem, lit("multiple modifiers on variable ~s"),
+                  second_sym, nao);
+      }
+
+      if (!pair && consp(next_modifier)) {
+        val find = search_regex(c->dataline, first(next_modifier), c->pos, modifier);
+        val fpos = car(find);
+        val flen = cdr(find);
+
+        if (!find) {
+          LOG_MISMATCH("double var regex");
+          return nil;
+        }
+
+        /* Text from here to start of regex match goes to this
+           variable. */
+        if (sym)
+          c->bindings = acons(sym, sub_str(c->dataline, c->pos, fpos),
+                              c->bindings);
+        /* Text from start of regex match to end goes to the
+           second variable */
+        if (second_sym)
+          c->bindings = acons(second_sym,
+                              sub_str(c->dataline, fpos, plus(fpos, flen)),
+                              c->bindings);
+        LOG_MATCH("double var regex (first var)", fpos);
+        c->pos = fpos;
+        LOG_MATCH("double var regex (second var)", plus(fpos, flen));
+        c->pos = plus(fpos, flen);
+        return next_spec_k;
+      } else if (!pair) {
+        sem_error(elem, lit("consecutive unbound variables"), nao);
+      } else {
+      /* Re-generate a new spec with an edited version of
+         the element we just processed, and repeat. */
+        val new_elem = list(var_s, sym, cdr(pair), modifier, nao);
+        c->specline = cons(elem, cons(new_elem, rest(c->specline)));
+        return repeat_spec_k;
+      }
+    } else if (op == text_s) {
+      /* Clumped texts: break out the first one. */
+      val text_elem = rlcp(second(next), c->specline);
+      val rest_texts = cons(text_s, rest(rest(next)));
+      c->specline = cons(elem, cons(text_elem,
+                                    cons(rest_texts, rest(c->specline))));
+      return repeat_spec_k;
+    } else if (consp(op) || stringp(op)) {
+      cons_bind (find, len, search_str_tree(c->dataline, next, c->pos, modifier));
+      if (!find) {
+        LOG_MISMATCH("string");
+        return nil;
+      }
+      if (sym)
+        c->bindings = acons(sym, sub_str(c->dataline, c->pos, find), c->bindings);
+      c->pos = plus(find, len);
     } else {
-    /* Re-generate a new spec with an edited version of
-       the element we just processed, and repeat. */
-      val new_elem = list(var_s, sym, cdr(pair), modifier, nao);
-      c->specline = cons(elem, cons(new_elem, rest(c->specline)));
+      val find = search_match(c, modifier);
+      val fpos = car(find);
+      if (!find) {
+        LOG_MISMATCH("var delimiting spec");
+        return nil;
+      }
+      LOG_MATCH("var delimiting spec", fpos);
+      if (sym)
+        c->bindings = acons(sym, sub_str(c->dataline, c->pos, fpos), c->bindings);
+      c->pos = fpos;
       return repeat_spec_k;
     }
-  } else if (consp(pat) && (consp(first(pat)) || stringp(first(pat)))) {
-    cons_bind (find, len, search_str(c->dataline, pat, c->pos, modifier));
-    if (!find) {
-      LOG_MISMATCH("string");
-      return nil;
-    }
-    if (sym)
-      c->bindings = acons(sym, sub_str(c->dataline, c->pos, find), c->bindings);
-    c->pos = plus(find, len);
   } else {
-    sem_error(elem, lit("variable followed by invalid element"), nao);
+    sem_error(elem, lit("variable followed by invalid element: ~s"), next, nao);
   }
 
   return next_spec_k;

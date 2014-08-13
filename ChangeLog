@@ -1,3 +1,24 @@
+2014-08-12  Kaz Kylheku  <kaz@kylheku.com>
+
+	When a variable is delimited by some form other than
+	the contents of a variable, fixed string or regex, we now
+	use the entire tail of the specline to find the match.
+	So for instance @var@(trailer)foo works as intuition
+	might expect.
+
+	* match.c (search_form): Static function removed.
+	(search_match): New static function based on search_form.
+	Does not handle regexes, and does not update c->bindings.
+	(h_var): Renamed local variable pat to next. Added a few
+	missing rlcp's. Combined the cases when pat is a cons to
+	one block so consp isn't repeatedly tested. Function now
+	handles a var followed by (sys:text ...) elements specially;
+	the first element of the text block is pulled out and
+	matched. Implemented "var delimiting spec" general case
+	which matches the entire tail of the spec at successive
+	character positions until a match is found, and the skipped
+	text goes into the variable.
+
 2014-08-11  Kaz Kylheku  <kaz@kylheku.com>
 
 	First cut at restructuring how variable matching works in the pattern
