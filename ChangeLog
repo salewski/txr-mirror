@@ -1,3 +1,15 @@
+2014-08-14  Kaz Kylheku  <kaz@kylheku.com>
+
+	Version 96.
+
+	* RELNOTES: Updated.
+
+	* configure, txr.1: Bumped version.
+
+	* share/txr/stdlib/ver.txr: Likewise
+
+	* txr.vim: Regenerated.
+
 2014-08-13  Kaz Kylheku  <kaz@kylheku.com>
 
 	Uprooting stupidities in handling of output variables.

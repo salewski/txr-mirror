@@ -1,4 +1,24 @@
-                                     TXR 94
+                                     TXR 96
+                                   2014-08-14
+
+
+  Features
+
+  - Big change in pattern language in the variable binding logic.
+    When unbound variables are followed by directives, then the full right hand
+    context to the end of the line is used to determine the binding.
+
+  - Internal functions related to tries exposed: trie-lookup-begin,
+    trie-value-at, trie-lookup-feed-char.
+
+  Bugs
+
+  - Fixed bug in ret operator: was generating fixed arity functions
+    rather than n-ary as documented.
+
+
+
+                                     TXR 95
                                    2014-08-07
 
 
