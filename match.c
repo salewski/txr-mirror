@@ -1392,8 +1392,7 @@ static val subst_vars(val spec, val bindings, val filter)
 
       if (sym == var_s) {
         val expr = second(elem);
-        val pat = third(elem);
-        val modifiers = fourth(elem);
+        val modifiers = third(elem);
         val str = txeval(spec, expr, bindings);
 
         /* If the object is a list, we let format_field deal with the
@@ -1401,9 +1400,6 @@ static val subst_vars(val spec, val bindings, val filter)
            it is done. */
         if (!stringp(str) && !listp(str))
           str = tostringp(str);
-
-        if (pat)
-          spec = cons(pat, rest(spec));
 
         if (modifiers) {
           spec = cons(format_field(str, modifiers, filter,

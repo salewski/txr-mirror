@@ -1,5 +1,27 @@
 2014-08-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	Uprooting stupidities in handling of output variables.
+
+	* parser.y (o_elems_transform): Remove useless function which
+	was only unwrapping the strange parse of output vars.
+	(o_elems_opt, rep_elem, quasilit, wordsqlit): Eliminate
+	o_elems_transform call.
+	(o_var, q_var): Eliminate the phrase structure rules which
+	match an extra o_elem or quasi_item, and which incorporate
+	them into the var syntax tree element. Place the modifiers
+	into the third position, not fourth.
+
+	* eval.c (subst_vars): Eliminate handling of "pat"
+	element. Actually that was not even there thanks to
+	o_elems_transform being applied: dead code. Pull modifiers
+	from the third element of the var form now, not fourth.
+
+	* match.c (subst_vars): Similar changes as in the match.c
+	subst_vars function. Here the pat variable is even more obviously
+	useless; if it is not nil, it is just punted back to the spec.
+
+2014-08-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	Fix regression in previous change: we must match a compound text
 	element whole, and not break it up.
 

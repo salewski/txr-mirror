@@ -1973,8 +1973,7 @@ static val subst_vars(val forms, val env)
 
       if (sym == var_s) {
         val expr = second(form);
-        val pat = third(form);
-        val modifiers = fourth(form);
+        val modifiers = third(form);
         val str = eval(expr, env, form);
 
         /* If the object is a list, we let format_field deal with the
@@ -1983,10 +1982,8 @@ static val subst_vars(val forms, val env)
         if (!stringp(str) && !listp(str))
           str = tostringp(str);
 
-        if (pat) {
-          forms = cons(str, cons(pat, rest(forms)));
-        } else if (modifiers) {
-          forms = cons(format_field(str, modifiers, nil, 
+        if (modifiers) {
+          forms = cons(format_field(str, modifiers, nil,
                                     curry_123_1(func_n3(eval), env, form)),
                        rest(forms));
         } else {

@@ -49,7 +49,6 @@
 
 static val sym_helper(void *scnr, wchar_t *lexeme, val meta_allowed);
 static val repeat_rep_helper(val sym, val args, val main, val parts);
-static val o_elems_transform(val output_form);
 static val define_transform(parser_t *parser, val define_form);
 static val lit_char_helper(val litchars);
 static val optimize_text(val text_form);
@@ -583,7 +582,7 @@ out_clauses_opt : out_clauses   { $$ = $1; }
 o_line : o_elems_opt '\n'       { $$ = $1; }
        ;
 
-o_elems_opt : o_elems           { $$ = o_elems_transform($1);
+o_elems_opt : o_elems           { $$ = $1;
                                   rl($$, num(parser->lineno)); }
             |                   { $$ = nil; }
             ;
@@ -605,10 +604,7 @@ o_elem : TEXT                   { $$ = string_own($1);
        ;
 
 rep_elem : REP exprs_opt ')' o_elems_opt
-           rep_parts_opt END    { $$ = repeat_rep_helper(rep_s, 
-                                                         $2,
-                                                         o_elems_transform($4),
-                                                         $5);
+           rep_parts_opt END    { $$ = repeat_rep_helper(rep_s, $2, $4, $5);
                                   rl($$, num($1)); }
          | REP error            { $$ = nil;
                                   yybadtok(yychar, lit("rep clause")); }
@@ -674,32 +670,20 @@ modifiers : NUMBER              { $$ = cons($1, nil); }
 
 o_var : SYMTOK                  { $$ = list(var_s, symhlpr($1, nil), nao);
                                   rl($$, num(parser->lineno)); }
-      | SYMTOK o_elem           { $$ = list(var_s, symhlpr($1, nil),
-                                            $2, nao);
-                                  rl($$, num(parser->lineno)); }
-      | '{' expr exprs_opt '}' 
-                                { $$ = list(var_s, $2, nil, $3, nao);
-                                  rl($$, num(parser->lineno)); }
-      | '{' expr exprs_opt '}' o_elem      
-                                { $$ = list(var_s, $2, $5, $3, nao);
+      | '{' expr exprs_opt '}'
+                                { $$ = list(var_s, $2, $3, nao);
                                   rl($$, num(parser->lineno)); }
       | SYMTOK error            { $$ = nil;
-                                    yybadtok(yychar, lit("variable spec")); }
+                                  yybadtok(yychar, lit("variable spec")); }
       ;
 
 q_var : SYMTOK                  { $$ = list(var_s, symhlpr($1, nil), nao);
                                   rl($$, num(parser->lineno)); }
-      | SYMTOK quasi_item       { $$ = list(var_s, symhlpr($1, nil),
-                                            $2, nao);
-                                  rl($$, num(parser->lineno)); }
       | '{' n_expr n_exprs_opt '}'
-                                { $$ = list(var_s, $2, nil, $3, nao);
-                                  rl($$, num(parser->lineno)); }
-      | '{' n_expr n_exprs_opt '}' quasi_item
-                                { $$ = list(var_s, $2, $5, $3, nao);
+                                { $$ = list(var_s, $2, $3, nao);
                                   rl($$, num(parser->lineno)); }
       | SYMTOK error            { $$ = nil;
-                                    yybadtok(yychar, lit("variable spec")); }
+                                  yybadtok(yychar, lit("variable spec")); }
       ;
 
 
@@ -915,7 +899,7 @@ chrlit : HASH_BACKSLASH SYMTOK  { wchar_t ch;
        ;
 
 quasilit : '`' '`'              { $$ = null_string; }
-         | '`' quasi_items '`'  { $$ = cons(quasi_s, o_elems_transform($2));
+         | '`' quasi_items '`'  { $$ = cons(quasi_s, $2);
                                   rlcp($$, $2);
                                   rl($$, num(parser->lineno)); }
          | '`' error            { $$ = nil;
@@ -952,13 +936,11 @@ wordslit : '"'                  { $$ = nil; }
 
 wordsqlit : '`'                  { $$ = nil; }
           | ' ' wordsqlit        { $$ = $2; }
-          | quasi_items '`'      { val qword = cons(quasi_s,
-                                                    o_elems_transform($1));
+          | quasi_items '`'      { val qword = cons(quasi_s, $1);
                                    $$ = rlcp(cons(qword, nil), $1); }
           | quasi_items ' '
             wordsqlit
-                                 { val qword = cons(quasi_s,
-                                                    o_elems_transform($1));
+                                 { val qword = cons(quasi_s, $1);
                                    $$ = rlcp(cons(qword, $3), $1); }
           ;
 
@@ -1097,32 +1079,6 @@ static val repeat_rep_helper(val sym, val args, val main, val parts)
   return list(sym, args, main, single_parts, first_parts,
               last_parts, empty_parts, nreverse(mod_parts),
               nreverse(modlast_parts), nao);
-}
-
-static val o_elems_transform(val o_elems)
-{
-  list_collect_decl(o_elems_out, ptail);
-  val iter;
-
-  for (iter = o_elems; iter; iter = cdr(iter)) {
-    val elem = car(iter);
-
-    while (consp(elem) && first(elem) == var_s) {
-      val sym = second(elem);
-      val pat = third(elem);
-      val modifiers = fourth(elem);
-
-      ptail = list_collect(ptail,
-                           rlcp(list(first(elem), sym, nil, modifiers, nao),
-                                elem));
-      elem = pat;
-    }
-
-    if (elem)
-      ptail = list_collect(ptail, elem);
-  }
-  
-  return rlcp(o_elems_out, o_elems);
 }
 
 static val define_transform(parser_t *parser, val define_form)
