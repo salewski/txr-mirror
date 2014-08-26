@@ -2729,8 +2729,14 @@ val list_str(val str)
 {
   const wchar_t *cstr = c_str(str);
   list_collect_decl (out, iter);
+
+  prot1(&str);
+
   while (*cstr)
     iter = list_collect(iter, chr(*cstr++));
+
+  rel1(&str);
+
   return out;
 }
 
@@ -2835,11 +2841,12 @@ val int_str(val str, val base)
     return nil;
 
   if ((value == LONG_MAX || value == LONG_MIN) && errno == ERANGE) {
-    val bignum = make_bignum();
+    val bignum = (prot1(&str), make_bignum());
     unsigned char *ucs = utf8_dup_to_uc(wcs);
     mp_err err = mp_read_radix(mp(bignum), ucs, b);
 
     free(ucs); /* TODO: make wchar_t version of mp_read_radix. */
+    rel1(&str);
 
     if (err != MP_OKAY)
       return nil;
@@ -2850,7 +2857,7 @@ val int_str(val str, val base)
        We do not need this on our usual target platforms, where NUM_MAX is
        never larger than LONG_MAX. */
     return (LONG_MAX < NUM_MAX) ? normalize(bignum) : bignum;
-  } 
+  }
 
   if (value >= NUM_MIN && value <= NUM_MAX)
     return num(value);

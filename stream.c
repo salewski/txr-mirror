@@ -1477,21 +1477,28 @@ static val vformat_str(val stream, val str, int width, int left,
   int slack = (truelen < width) ? width - truelen : 0;
   int i;
 
+  prot1(&str);
+
   if (!left)
     for (i = 0; i < slack; i++)
       if (!put_char(chr(' '), stream))
-        return nil;
+        goto nilout;
 
   for (i = 0; i < truelen; i++)
     if (!put_char(chr(cstr[i]), stream))
-      return nil;
+      goto nilout;
 
   if (left)
     for (i = 0; i < slack; i++)
       if (!put_char(chr(' '), stream))
-        return nil;
+        goto nilout;
 
+  rel1(&str);
   return t;
+
+nilout:
+  rel1(&str);
+  return nil;
 }
 
 val vformat(val stream, val fmtstr, va_list vl)
@@ -1499,6 +1506,8 @@ val vformat(val stream, val fmtstr, va_list vl)
   type_check (stream, COBJ);
   type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
                                             stream, nao));
+
+  prot1(&fmtstr);
 
   {
     const wchar_t *fmt = c_str(fmtstr);
@@ -1725,7 +1734,7 @@ val vformat(val stream, val fmtstr, va_list vl)
             if (!isdigit(num_buf[0]) && !isdigit(num_buf[1])) {
               if (!vformat_str(stream, lit("#<bad-float>"),
                                width, left, 0))
-                return nil;
+                goto nilout;
               continue;
             }
             precision = 0;
@@ -1786,7 +1795,7 @@ val vformat(val stream, val fmtstr, va_list vl)
             if (!isdigit(num_buf[0]) && !isdigit(num_buf[1])) {
               if (!vformat_str(stream, lit("#<bad-float>"),
                                width, left, 0))
-                return nil;
+                goto nilout;
               continue;
             }
 
@@ -1797,7 +1806,7 @@ val vformat(val stream, val fmtstr, va_list vl)
               val str = format(nil, ch == 'a' ? lit("~a") : lit("~s"),
                                obj, nao);
               if (!vformat_str(stream, str, width, left, precision))
-                return nil;
+                goto nilout;
               continue;
             }
           }
@@ -1821,7 +1830,7 @@ val vformat(val stream, val fmtstr, va_list vl)
             if (pnum != num_buf)
               free(pnum);
             if (!res)
-              return nil;
+              goto nilout;
             continue;
           }
         }
@@ -1834,7 +1843,13 @@ val vformat(val stream, val fmtstr, va_list vl)
 
   if (va_arg(vl, val) != nao)
     internal_error("unterminated format argument list");
+
+  rel1(&fmtstr);
   return t;
+
+nilout:
+  rel1(&fmtstr);
+  return nil;
 premature:
   internal_error("insufficient arguments for format");
 toobig:
@@ -2374,6 +2389,8 @@ static val run(val command, val args)
   args = default_bool_arg(args);
   nargs = c_num(length(args)) + 1;
 
+  prot1(&args);
+
   wargv = (const wchar_t **) chk_malloc((nargs + 2) * sizeof *wargv);
 
   for (i = 0, iter = cons(command, args); iter; i++, iter = cdr(iter))
@@ -2385,6 +2402,8 @@ static val run(val command, val args)
   for (i = 0; i < nargs; i++)
     free((void *) wargv[i]);
   free((void *) wargv);
+
+  rel1(&args);
 
   return (status < 0) ? nil : num(status);
 }

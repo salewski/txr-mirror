@@ -1,3 +1,19 @@
+2014-08-25  Kaz Kylheku  <kaz@kylheku.com>
+
+	GC correctness fixes: make sure we pin down objects for which we borrow
+	low level C pointers, while we execute code that can cons memory.
+
+	* lib.c (list_str): Protect the str argument.
+	(int_str): Likewise.
+
+	* regex.c (search_regex): protect the haystack string,
+	while using the h pointer to its data, since regex_run
+	can use the derivative-based engine which conses.
+
+	* stream.c (vformat_str): Protect str argument, since
+	put_char might conceivably cons.
+	(vformat): Protect fmtstr.
+
 2014-08-14  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 96.
