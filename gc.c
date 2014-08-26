@@ -69,7 +69,7 @@ static val *gc_stack_bottom;
 
 static val *prot_stack[PROT_STACK_SIZE];
 static val **prot_stack_limit = prot_stack + PROT_STACK_SIZE;
-static val **top = prot_stack;
+val **gc_prot_top = prot_stack;
 
 static val free_list, *free_tail = &free_list;
 static heap_t *heap_list;
@@ -95,16 +95,16 @@ val break_obj;
 
 val prot1(val *loc)
 {
-  assert (top < prot_stack_limit);
+  assert (gc_prot_top < prot_stack_limit);
   assert (loc != 0);
-  *top++ = loc;
+  *gc_prot_top++ = loc;
   return nil; /* for use in macros */
 }
 
 void rel1(val *loc)
 {
   /* protect and release calls must nest. */
-  if (*--top != loc)
+  if (*--gc_prot_top != loc)
     abort();
 }
 
@@ -401,7 +401,7 @@ static void mark(mach_context_t *pmc, val *gc_stack_top)
   /*
    * First, scan the officially registered locations.
    */
-  for (rootloc = prot_stack; rootloc != top; rootloc++)
+  for (rootloc = prot_stack; rootloc != gc_prot_top; rootloc++)
     mark_obj(**rootloc);
 
 #if CONFIG_GEN_GC

@@ -1,5 +1,15 @@
 2014-08-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* gc.c (top): Renamed to gc_prot_top, turned extern.
+	(prot1, rel1, mark): Follow rename.
+
+	* gc.h (gc_prot_top): Declared.
+
+	* signal.h (extended_jmp_buf): New member, gc_pt.
+	(extended_setjmp): Save and restore gc_prot_top.
+
+2014-08-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	GC correctness fixes: make sure we pin down objects for which we borrow
 	low level C pointers, while we execute code that can cons memory.
 

@@ -44,6 +44,7 @@ void unmark(void);
 void gc_hint_func(val *);
 
 extern int gc_enabled;
+extern val **gc_prot_top;
 
 #if EXTRA_DEBUGGING
 val break_obj;
