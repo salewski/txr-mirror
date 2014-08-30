@@ -1,3 +1,7 @@
+2014-08-29  Kaz Kylheku  <kaz@kylheku.com>
+
+	* match.c (v_load): Fix regression introduced in 94: broken @(load).
+
 2014-08-25  Kaz Kylheku  <kaz@kylheku.com>
 
 	* gc.c (top): Renamed to gc_prot_top, turned extern.
