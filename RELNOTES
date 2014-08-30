@@ -1,3 +1,17 @@
+                                     TXR 97
+                                   2014-08-14
+
+
+  Bugs
+
+  - A few GC-related fixes after code review.
+
+  - Fixed @(load), broken in TXR 94.
+
+  - Fixed broken @{var mod} syntax Lisp quasiliterals, broken in TXR 96.
+
+
+
                                      TXR 96
                                    2014-08-14
 
