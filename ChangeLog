@@ -1,5 +1,12 @@
 2014-08-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (expand_quasi): Regression: fix broken handling
+	of @{var mod} syntax triggering a bogus assertion. Mods are the third
+	element in the abstract syntax now, not fourth. There is no next link.
+	Removing bogus comment referring to a nonexistent function.
+
+2014-08-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (v_load): Fix regression introduced in 94: broken @(load).
 
 2014-08-25  Kaz Kylheku  <kaz@kylheku.com>

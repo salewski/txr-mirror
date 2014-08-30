@@ -2350,15 +2350,9 @@ static val expand_quasi(val quasi_forms, val menv)
           form_ex = rlcp(cons(sym, expr_ex), form);
       } else if (sym == var_s) {
         val param = second(form);
-        val next = third(form);
-        val mods = fourth(form);
+        val mods = third(form);
         val param_ex = expand(param, menv);
         val mods_ex = expand_forms(mods, menv);
-
-        /* next should be nil because this structure should have
-           been passed through o_elemes_transform in the parser
-           which unravels the nesting. */
-        assert (next == nil);
 
         if (param_ex != param || mods_ex != mods)
           form_ex = rlcp(list(sym, param_ex, nil, mods_ex, nao), form);
