@@ -1,3 +1,16 @@
+2014-09-02  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c (arith_init): Register some variables: *flo-dig*,
+	*flo-min*, *flo-max*, *flo-epsilon*, *pi* and *e*.
+
+	* genvim.txr: Include arith.c in scan for symbols.
+
+	* lib.c (init): arith_init() must now be called after eval_init().
+
+	* txr.1: Documented new variables..
+
+	* txr.vim: Updated.
+
 2014-08-29  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 97.

@@ -6623,9 +6623,9 @@ void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),
   oom_realloc = oom;
   gc_init(stack_bottom);
   obj_init();
-  arith_init();
   uw_init();
   eval_init();
+  arith_init();
   rand_init();
   stream_init();
 #if HAVE_POSIX_SIGS

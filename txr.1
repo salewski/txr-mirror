@@ -10888,9 +10888,6 @@ a one-element sequence containing nil. The nullify function reduces all empty
 sequences to nil, thereby correcting the behavior of code which traverses
 sequences using cdr, and tests for termination with nil.
 
-.TP
-
-
 .SH MATH LIBRARY
 
 .SS Arithmetic functions +, -
@@ -11412,6 +11409,43 @@ the function flo-int.
 
 If <value> is a floating-point number, then it is converted by toint
 as if by the function int-flo.
+
+.SS Variables *flo-min*, *flo-max* and *flo-epsilon*
+
+.TP
+Description:
+
+These variables hold, respectively: the smallest positive floating-point
+value; the largest positive floating-point value; and the difference
+between 1.0 and the smallest representable value greater than 1.0.
+
+The *flo-min* and *flo-max* define the floating-point range, which consists
+of five regions: values from (- *flo-max*) to (- *flo-min*); the value
+0.0, and values from *flo-min* to *flo-max*.
+
+.SS Variable *flo-dig*
+
+This variable holds an integer representing the number of decimal digits
+in a decimal floating-point number such that this number can be converted
+to a TXR floating-point number, and back to decimal, without a change in any of
+the digits. This holds regardless of the value of the number, provided that it
+does not exceed the floating-point range.
+
+.TP
+Description:
+
+These variables hold, respectively: the smallest positive floating-point
+value; the largest positive floating-point value; and the difference
+between 1.0 and the smallest representable value greater than 1.0.
+
+.SS Variables *pi* and *e*
+
+.TP
+Description:
+
+These variables hold an approximation of the mathematical constants pi and e.
+To four digits of precision, pi is 3.142 and e is 2.718. The *pi* and *e*
+approximations are accurate to *flo-dig* decimal digits.
 
 .SH BIT OPERATIONS
 

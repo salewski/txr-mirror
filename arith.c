@@ -34,11 +34,13 @@
 #include <math.h>
 #include <signal.h>
 #include <ctype.h>
+#include <float.h>
 #include "config.h"
 #include "lib.h"
 #include "signal.h"
 #include "unwind.h"
 #include "gc.h"
+#include "eval.h"
 #include "arith.h"
 
 #define TAG_PAIR(A, B) ((A) << TAG_SHIFT | (B))
@@ -2078,4 +2080,17 @@ void arith_init(void)
   mp_init(&INT_PTR_MAX_MP);
   mp_set_intptr(&INT_PTR_MAX_MP, INT_PTR_MAX);
   log2_init();
+
+  reg_var(intern(lit("*flo-dig*"), user_package), num_fast(DBL_DIG));
+  reg_var(intern(lit("*flo-max*"), user_package), flo(DBL_MAX));
+  reg_var(intern(lit("*flo-min*"), user_package), flo(DBL_MIN));
+  reg_var(intern(lit("*flo-epsilon*"), user_package), flo(DBL_EPSILON));
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+  reg_var(intern(lit("*pi*"), user_package), flo(M_PI));
+#ifndef M_E
+#define M_E 2.71828182845904523536
+#endif
+  reg_var(intern(lit("*e*"), user_package), flo(M_E));
 }
