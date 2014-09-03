@@ -404,11 +404,12 @@ int txr_main(int argc, char **argv)
         spec_file = arg;
         break;
       case 'e':
-        eval_intrinsic(lisp_parse(arg, std_error), make_env(bindings, nil, nil));
+        eval_intrinsic(lisp_parse(arg, std_error, colon_k),
+                       make_env(bindings, nil, nil));
         evaled = t;
         break;
       case 'p':
-        obj_print(eval_intrinsic(lisp_parse(arg, std_error),
+        obj_print(eval_intrinsic(lisp_parse(arg, std_error, colon_k),
                                  make_env(bindings, nil, nil)), std_output);
         put_char(chr('\n'), std_output);
         evaled = t;

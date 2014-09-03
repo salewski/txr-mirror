@@ -87,7 +87,7 @@ val try_s, catch_s, finally_s, throw_s, defex_s, deffilter_s;
 val eof_s, eol_s, assert_s;
 val error_s, type_error_s, internal_error_s;
 val numeric_error_s, range_error_s;
-val query_error_s, file_error_s, process_error_s;
+val query_error_s, file_error_s, process_error_s, syntax_error_s;
 val gensym_counter_s;
 
 val nothrow_k, args_k, colon_k, auto_k;
@@ -6047,6 +6047,7 @@ static void obj_init(void)
   query_error_s = intern(lit("query_error"), user_package);
   file_error_s = intern(lit("file_error"), user_package);
   process_error_s = intern(lit("process_error"), user_package);
+  syntax_error_s = intern(lit("syntax-error"), user_package);
   assert_s = intern(lit("assert"), user_package);
 
   args_k = intern(lit("args"), keyword_package);

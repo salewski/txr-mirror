@@ -438,4 +438,5 @@ void uw_init(void)
   uw_register_subtype(file_error_s, error_s);
   uw_register_subtype(process_error_s, error_s);
   uw_register_subtype(assert_s, error_s);
+  uw_register_subtype(syntax_error_s, error_s);
 }

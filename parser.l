@@ -989,7 +989,7 @@ val regex_parse(val string, val error_stream)
   return parser.errors ? nil : parser.syntax_tree;
 }
 
-val lisp_parse(val source_in, val error_stream)
+val lisp_parse(val source_in, val error_stream, val error_return_val)
 {
   uses_or2;
   val source = default_bool_arg(source_in);
@@ -1013,5 +1013,11 @@ val lisp_parse(val source_in, val error_stream)
     gc_state(gc);
   }
   std_error = save_stream;
-  return parser.errors ? nil : parser.syntax_tree;
+
+  if (parser.errors) {
+    if (missingp(error_return_val))
+      uw_throwf(syntax_error_s, lit("read: syntax error"), nao);
+    return error_return_val;
+  }
+  return parser.syntax_tree;
 }

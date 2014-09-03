@@ -1,5 +1,26 @@
 2014-09-02  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Update registration of lisp-parse and read
+	to account for new parameter.
+
+	* lib.c (syntax_error_s): New symbol_variable.
+	(obj_init): New symbol variable initialized.
+
+	* lib.h (syntax_error_s): Declared.
+
+	* parser.h (lisp_parse): Declaration updated.
+
+	* parser.l (lisp_parse): Takes third parameter.
+
+	* txr.1: Third parameter of read described.
+
+	* txr.c (txr_main): Pass colon_k to third parameter of lisp_parse
+	to obtain exception throwing behavior.
+
+	* unwind.c (uw_init): Register syntax-error as subtype of error.
+
+2014-09-02  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (arith_init): Register some variables: *flo-dig*,
 	*flo-min*, *flo-max*, *flo-epsilon*, *pi* and *e*.
 

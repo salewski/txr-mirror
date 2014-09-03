@@ -13572,8 +13572,7 @@ Examples of strings which are not absolute paths.
 .TP
 Syntax:
 
-   (read [ <source> [<error-stream>] ])
-   (lisp-parse <source> [<error-stream>]) ;; obsolescent synonym for read
+   (read [<source> [<error-stream> [<error-return-value>]]])
 
 .TP
 Description:
@@ -13591,8 +13590,10 @@ to convert it to a string stream.
 The optional <error-stream> argument can be used to specify a stream to which
 parse errors diagnostics are sent. If absent, the diagnostics are suppressed.
 
-If there are parse errors, the function returns nil; otherwise, it returns the
-parsed data structure.
+If there are no parse errors, the function returns the parsed data
+structure. If there are parse errors, and the <error-return-value> parameter is
+present, its value is returned. If the <error-return-value> parameter
+is not present, then an exception of type syntax-error is thrown.
 
 .SH FILESYSTEM ACCESS
 
