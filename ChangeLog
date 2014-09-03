@@ -1,5 +1,16 @@
 2014-09-02  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Document -C option.
+
+	* txr.c (opt_compat): New global variable.
+	(help): Describe -C option.
+	(txr_main): Process -C, and set opt_compat.
+	Ensure -C does not clump.
+
+	* txr.h (opt_compat): Declared.
+
+2014-09-02  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Update registration of lisp-parse and read
 	to account for new parameter.
 

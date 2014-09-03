@@ -191,6 +191,17 @@ Evaluates a TXR Lisp expression and prints its value.  Can be specified more
 than once. The query-file argument becomes optional if -p is used at least
 once.
 
+.IP "-C number"
+Requests TXR to behave in a manner that is compatible with the specified
+version of TXR. This makes a difference in situations when a release of
+TXR breaks backward compatibility. If some version N+1 deliberately introduces
+a change which is backward incompatible, then -C N can be used to request
+the old behavior.  The requested value of N can be too low, in which case TXR
+will complain and exit with an unsuccessful termination status. This indicates
+that TXR refuses to be compatible with such an old version. Users requiring
+the behavior of that version will have to install an older version of TXR which
+supports that behavior, or even that exact version.
+
 .IP --help
 Prints usage summary on standard output, and terminates successfully.
 

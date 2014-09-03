@@ -59,6 +59,7 @@ const wchli_t *version = wli(TXR_VER);
 const wchar_t *progname = L"txr";
 static const char *progname_u8;
 static val progpath = nil;
+int opt_compat;
 
 /*
  * Can implement an emergency allocator here from a fixed storage
@@ -119,6 +120,8 @@ static void help(void)
 "                       option, instead of the query-file argument.\n"
 "                       This allows #! scripts to pass options through\n"
 "                       to the utility.\n"
+"-C number              Request backward-compatible behavior to the\n"
+"                       specified version of TXR.\n"
 "--help                 You already know!\n"
 "--version              Display program version\n"
 "--license              Display software license\n"
@@ -368,7 +371,7 @@ int txr_main(int argc, char **argv)
       return license();
 
     if (memqual(arg, list(lit("-a"), lit("-c"), lit("-f"),
-                          lit("-e"), lit("-p"), nao)))
+                          lit("-e"), lit("-p"), lit("-C"), nao)))
     {
       val opt = chr_str(arg, one);
 
@@ -383,6 +386,7 @@ int txr_main(int argc, char **argv)
 
       switch (c_chr(opt)) {
       case 'a':
+      case 'C':
         {
           val optval = int_str(arg, nil);
 
@@ -393,8 +397,17 @@ int txr_main(int argc, char **argv)
             return EXIT_FAILURE;
           }
 
-          opt_arraydims = c_num(optval);
-          opt_print_bindings = 1;
+          if (opt == chr('a')) {
+            opt_arraydims = c_num(optval);
+            opt_print_bindings = 1;
+          } else {
+            if ((opt_compat = c_num(optval)) < 97) {
+              format(std_error, lit("~a: compatibility with versions "
+                                    "lower than 97 not supported by version ~a\n"),
+                     prog_string, auto_str(version), nao);
+              return EXIT_FAILURE;
+            }
+          }
         }
         break;
       case 'c':
@@ -489,6 +502,7 @@ int txr_main(int argc, char **argv)
         case 'e':
         case 'p':
         case 'f':
+        case 'C':
         case 'D':
           format(std_error, lit("~a: option -~a does not clump\n"),
                  prog_string, opch, nao);
