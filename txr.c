@@ -407,6 +407,7 @@ int txr_main(int argc, char **argv)
                      prog_string, auto_str(version), nao);
               return EXIT_FAILURE;
             }
+            compat_fixup(opt_compat);
           }
         }
         break;

@@ -3064,6 +3064,12 @@ val symbol_name(val sym)
   return sym ? sym->s.name : nil_string;
 }
 
+static void symbol_setname(val sym, val name)
+{
+  type_check(sym, SYM);
+  sym->s.name = name;
+}
+
 val symbol_package(val sym)
 {
   if (sym == nil)
@@ -6040,13 +6046,13 @@ static void obj_init(void)
   eof_s = intern(lit("eof"), user_package);
   eol_s = intern(lit("eol"), user_package);
   error_s = intern(lit("error"), user_package);
-  type_error_s = intern(lit("type_error"), user_package);
-  internal_error_s = intern(lit("internal_error"), user_package);
-  numeric_error_s = intern(lit("numeric_error"), user_package);
-  range_error_s = intern(lit("range_error"), user_package);
-  query_error_s = intern(lit("query_error"), user_package);
-  file_error_s = intern(lit("file_error"), user_package);
-  process_error_s = intern(lit("process_error"), user_package);
+  type_error_s = intern(lit("type-error"), user_package);
+  internal_error_s = intern(lit("internal-error"), user_package);
+  numeric_error_s = intern(lit("numeric-error"), user_package);
+  range_error_s = intern(lit("range-error"), user_package);
+  query_error_s = intern(lit("query-error"), user_package);
+  file_error_s = intern(lit("file-error"), user_package);
+  process_error_s = intern(lit("process-error"), user_package);
   syntax_error_s = intern(lit("syntax-error"), user_package);
   assert_s = intern(lit("assert"), user_package);
 
@@ -6637,6 +6643,19 @@ void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),
   regex_init();
 
   gc_state(gc_save);
+}
+
+void compat_fixup(int compat_ver)
+{
+  if (compat_ver <= 97) {
+    symbol_setname(type_error_s, lit("type_error"));
+    symbol_setname(internal_error_s, lit("internal_error"));
+    symbol_setname(numeric_error_s, lit("numeric_error"));
+    symbol_setname(range_error_s, lit("range_error"));
+    symbol_setname(query_error_s, lit("query_error"));
+    symbol_setname(file_error_s, lit("file_error"));
+    symbol_setname(process_error_s, lit("process_error"));
+  }
 }
 
 void dump(val obj, val out)

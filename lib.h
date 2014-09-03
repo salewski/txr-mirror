@@ -795,6 +795,7 @@ val make_time_utc(val year, val month, val day,
 
 void init(const wchar_t *progname, mem_t *(*oom_realloc)(mem_t *, size_t),
           val *stack_bottom);
+void compat_fixup(int compat_ver);
 void dump(val obj, val stream);
 void d(val obj);
 void breakpt(void);

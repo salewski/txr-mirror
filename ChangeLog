@@ -1,3 +1,18 @@
+2014-09-03  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (symbol_setname): New static function.
+	(obj_init): Change exception symbol names with underscores
+	to use friendly dashes instead.
+	(compat_fixup): New function.
+
+	* lib.h (compat_fixup): Declared.
+
+	* txr.1: Change occurrences of exception symbols from
+	underscores to dashes.
+
+	* txr.c (txr_main): Call compat_fixup when -C option
+	is processed.
+
 2014-09-02  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.1: Document -C option.

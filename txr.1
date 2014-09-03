@@ -196,11 +196,15 @@ Requests TXR to behave in a manner that is compatible with the specified
 version of TXR. This makes a difference in situations when a release of
 TXR breaks backward compatibility. If some version N+1 deliberately introduces
 a change which is backward incompatible, then -C N can be used to request
-the old behavior.  The requested value of N can be too low, in which case TXR
+the old behavior.
+
+The requested value of N can be too low, in which case TXR
 will complain and exit with an unsuccessful termination status. This indicates
 that TXR refuses to be compatible with such an old version. Users requiring
 the behavior of that version will have to install an older version of TXR which
 supports that behavior, or even that exact version.
+
+For more information, see the COMPATIBILITY section.
 
 .IP --help
 Prints usage summary on standard output, and terminates successfully.
@@ -2633,7 +2637,7 @@ variables do not propagate.
 
 Furthermore, for any variable which is not specified with a default value, the
 collect body, whenever it matches successfully, must bind that variable. If it
-neglects to bind the variable, an exception of type query_error is thrown.
+neglects to bind the variable, an exception of type query-error is thrown.
 (If a collect body matches successfully, but produces no new bindings, then
 this error is suppressed.)
 
@@ -4622,12 +4626,12 @@ of whose applications is error handling.
 
 An exception control transfer (simply called an exception) is always identified
 by a symbol, which is its type. Types are organized in a subtype-supertype
-hierarchy.  For instance, the file_error exception type is a subtype of the
+hierarchy.  For instance, the file-error exception type is a subtype of the
 error type. This means that a file error is a kind of error. An exception
 handling block which catches exceptions of type error will catch exceptions of
-type file_error, but a block which catches file_error will not catch all
-exceptions of type error. A query_error is a kind of error, but not a kind of
-file_error. The symbol t is the supertype of every type: every exception type
+type file-error, but a block which catches file-error will not catch all
+exceptions of type error. A query-error is a kind of error, but not a kind of
+file-error. The symbol t is the supertype of every type: every exception type
 is considered to be a kind of t.  (Mnemonic: t stands for type, as in any
 type).
 
@@ -4801,18 +4805,18 @@ Example:
   @  (finally)
   @    (accept)
   @  (end)
-  @(catch file_error)
+  @(catch file-error)
   @  (output)
   file error caught
   @  (end)
   @(end)
 
-In this example, the @(next) directive throws an exception of type file_error,
+In this example, the @(next) directive throws an exception of type file-error,
 because the given file does not exist. The exit point for this exception is the
-@(catch file_error) clause in the outer-most try block. The inner block is
+@(catch file-error) clause in the outer-most try block. The inner block is
 not eligible because it contains no catch clauses at all. However, the inner
 try block has a finally clause, and so during the processing of this
-exception which is headed for the @(catch file_error), the finally
+exception which is headed for the @(catch file-error), the finally
 clause performs an anonymous accept. The exit point for the accept
 is the anonymous block surrounding the inner try.  So the original
 transfer to the catch clause is forgotten. The inner try terminates
@@ -4856,7 +4860,7 @@ Example:
   Query:        @(try)
                 @  (next "nonexistent-file")
                 @  x
-                @  (catch file_error)
+                @  (catch file-error)
                 @a
                 @(finally)
                 @b
@@ -4871,7 +4875,7 @@ Example:
                 b="2"
                 c="3"
 
-Here, the try block's main clause is terminated abruptly by a file_error
+Here, the try block's main clause is terminated abruptly by a file-error
 exception from the @(next) directive.   This is handled by the
 catch clause, which binds variable a to the input line "1".
 Then the finally clause executes, binding b to "2". The try block
@@ -14339,7 +14343,7 @@ Syntax:
 Description:
 
 Try to create the directory named <path> using the POSIX mkdir function.
-An exception of type file_error is thrown if the function fails. Returns
+An exception of type file-error is thrown if the function fails. Returns
 t on success.
 
 The <mode> argument specifies the request numeric permissions
@@ -16029,6 +16033,31 @@ Then a continue command, which finishes the program, whose output appears:
   Mar-30 04:22:52 PM PDT
   Mar-30 03:22:52 PM AKDT
   Mar-30 01:22:52 PM HAST
+
+.SH COMPATIBILITY
+
+New TXR versions are usually intended to be backward-compatible with prior
+releases in the sense that documented features will continue to work in
+the same way. Due to new features, new versions of TXR will supply new
+behaviors where old versions of TXR would have produced an error, such as a
+syntax error. Though, strictly speaking, this means that something is working
+differently in a new version, replacing an error situation with functionality
+is usually not considered a deviation from backward-compatibility.
+
+When a change is introduced which is not backward compatible, TXR's 
+-C option can be used to request emulation of old behavior.
+
+The option was introduced in TXR 98, and so the oldest TXR version which
+can be emulated is TXR 97.
+
+Here are values which have a special meaning as arguments to -C:
+the -C option, along with a description of what behaviors are affected:
+
+.IP 97
+Up to TXR 97, the error exception symbols such as "file-error" were named with
+underscores, as in "file-error".  These error symbols existed: type_error,
+internal_error, numeric_error, range_error, query_error, file_error and
+process_error.
 
 .SH APPENDIX A: NOTES ON EXOTIC REGULAR EXPRESSIONS
 
