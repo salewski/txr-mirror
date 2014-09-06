@@ -49,6 +49,7 @@
 #define MUTOBJ_VEC_SIZE         (HEAP_SIZE / 4)
 #define FULL_GC_INTERVAL        40
 #define FRESHOBJ_VEC_SIZE       (8 * HEAP_SIZE)
+#define MALLOC_DELTA_THRESH     (64L * 1024 * 1024)
 
 typedef struct heap {
   struct heap *next;
@@ -76,6 +77,7 @@ static heap_t *heap_list;
 static val heap_min_bound, heap_max_bound;
 
 alloc_bytes_t gc_bytes;
+static alloc_bytes_t prev_malloc_bytes;
 
 int gc_enabled = 1;
 
@@ -153,17 +155,22 @@ static void more(void)
 val make_obj(void)
 {
   int tries;
-
+  alloc_bytes_t malloc_delta = malloc_bytes - prev_malloc_bytes;
   assert (!async_sig_enabled);
 
 #if CONFIG_GEN_GC
-  if (opt_gc_debug || freshobj_idx >= FRESHOBJ_VEC_SIZE) {
+  if (opt_gc_debug || freshobj_idx >= FRESHOBJ_VEC_SIZE ||
+      malloc_delta >= MALLOC_DELTA_THRESH)
+  {
     gc();
     assert (freshobj_idx < FRESHOBJ_VEC_SIZE);
+    prev_malloc_bytes = malloc_bytes;
   }
 #else
-  if (opt_gc_debug)
+  if (opt_gc_debug || malloc_delta >= MALLOC_DELTA_THRESH) {
     gc();
+    prev_malloc_bytes = malloc_bytes;
+  }
 #endif
 
   for (tries = 0; tries < 3; tries++) {

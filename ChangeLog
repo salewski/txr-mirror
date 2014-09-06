@@ -1,3 +1,15 @@
+2014-09-06  Kaz Kylheku  <kaz@kylheku.com>
+
+	Make the garbage collector aware of malloced bytes, to
+	prevent skyrocketing memory use when the program manipulates
+	heap objects that have large amounts of malloc memory
+	attached, like very large bignums.
+
+	* gc.c (MALLOC_DELTA_THRESH): New preprocessor symbol.
+	(prev_malloc_bytes): New static variable.
+	(make_obj): when the value of malloc_bytes jumps by MALLOC_DELTA_THRESH
+	or more since the last gc, trigger gc.
+
 2014-09-03  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (symbol_setname): New static function.
