@@ -1,3 +1,25 @@
+2014-09-08  Kaz Kylheku  <kaz@kylheku.com>
+
+	* gc.c (MALLOC_DELTA_THRESH): Macro remaned to DFL_MALLOC_DELTA_THRESH.
+	(opt_gc_delta): New global variable.
+	(make_obj): Use opt_gc_delta rather than MALLOC_DELTA_THRESH.
+	(gc_set_delta, gc_wrap): New static functions.
+	(gc_late_init): New function.
+
+	* gc.h (gc_late_init): Declared.
+
+	* genvim.txr: scan gc.c also.
+
+	* lib.c (init): call gc_late_init.
+
+	* txr.1: Document new --gc-delta option and the functions
+	gc and gc-set-delta.
+
+	* txr.c (help): Help text for --gc-delta.
+	(txr_main): Parse --gc-delta option.
+
+	* txr.h (opt_gc_delta): Declared.
+
 2014-09-06  Kaz Kylheku  <kaz@kylheku.com>
 
 	Make the garbage collector aware of malloced bytes, to

@@ -34,5 +34,6 @@ extern int opt_vg_debug;
 #endif
 extern int opt_derivative_regex;
 extern int opt_compat;
+extern alloc_bytes_t opt_gc_delta;
 extern const wchli_t *version;
 extern const wchar_t *progname;

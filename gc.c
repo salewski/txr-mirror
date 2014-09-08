@@ -40,6 +40,7 @@
 #include "stream.h"
 #include "hash.h"
 #include "txr.h"
+#include "eval.h"
 #include "gc.h"
 #include "signal.h"
 
@@ -49,7 +50,7 @@
 #define MUTOBJ_VEC_SIZE         (HEAP_SIZE / 4)
 #define FULL_GC_INTERVAL        40
 #define FRESHOBJ_VEC_SIZE       (8 * HEAP_SIZE)
-#define MALLOC_DELTA_THRESH     (64L * 1024 * 1024)
+#define DFL_MALLOC_DELTA_THRESH (64L * 1024 * 1024)
 
 typedef struct heap {
   struct heap *next;
@@ -78,6 +79,7 @@ static val heap_min_bound, heap_max_bound;
 
 alloc_bytes_t gc_bytes;
 static alloc_bytes_t prev_malloc_bytes;
+alloc_bytes_t opt_gc_delta = DFL_MALLOC_DELTA_THRESH;
 
 int gc_enabled = 1;
 
@@ -160,14 +162,14 @@ val make_obj(void)
 
 #if CONFIG_GEN_GC
   if (opt_gc_debug || freshobj_idx >= FRESHOBJ_VEC_SIZE ||
-      malloc_delta >= MALLOC_DELTA_THRESH)
+      malloc_delta >= opt_gc_delta)
   {
     gc();
     assert (freshobj_idx < FRESHOBJ_VEC_SIZE);
     prev_malloc_bytes = malloc_bytes;
   }
 #else
-  if (opt_gc_debug || malloc_delta >= MALLOC_DELTA_THRESH) {
+  if (opt_gc_debug || malloc_delta >= opt_gc_delta) {
     gc();
     prev_malloc_bytes = malloc_bytes;
   }
@@ -669,6 +671,24 @@ val gc_push(val obj, loc plist)
 }
 
 #endif
+
+static val gc_set_delta(val delta)
+{
+  opt_gc_delta = c_num(delta);
+  return nil;
+}
+
+static val gc_wrap(void)
+{
+  gc();
+  return nil;
+}
+
+void gc_late_init(void)
+{
+  reg_fun(intern(lit("gc"), system_package), func_n0(gc_wrap));
+  reg_fun(intern(lit("gc-set-delta"), system_package), func_n1(gc_set_delta));
+}
 
 /*
  * Useful functions for gdb'ing.

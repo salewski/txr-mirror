@@ -6641,6 +6641,7 @@ void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),
   filter_init();
   hash_init();
   regex_init();
+  gc_late_init();
 
   gc_state(gc_save);
 }

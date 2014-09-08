@@ -206,6 +206,13 @@ supports that behavior, or even that exact version.
 
 For more information, see the COMPATIBILITY section.
 
+.IP "--gc-delta=number"
+
+The argument to this option must be a decimal integer. It represents
+a megabyte value, the "GC delta": one megabyte is 1048576 bytes.  The "GC
+delta" controls an aspect of the garbage collector behavior.
+See the gc-set-delta function for a description.
+
 .IP --help
 Prints usage summary on standard output, and terminates successfully.
 
@@ -15838,6 +15845,57 @@ pprof prints these statistics are printed in a concise report on the
 *std-output* stream, prior to returning the value or nil.
 
 The pprof macro relies on the prof operator.
+
+.SH GARBAGE COLLECTION
+
+.SS Function sys:gc
+
+.TP
+Syntax:
+
+  (sys:gc)
+
+.TP
+Description:
+
+The gc function triggers garbage collection.  Garbage collection means
+that unreachable objects are identified and reclaimed, so that their
+storage can be re-used.
+
+.SS Function sys:gc-set-delta
+
+.TP
+Syntax:
+
+  (sys:gc-set-delta <bytes>)
+
+.TP
+Description:
+
+The gc-set-delta function sets the GC delta parameter.
+
+Note: This function may disappear in a future release of TXR or suffer
+a backward-incompatible change in its syntax or behavior.
+
+When the amount of new dynamic memory allocated since the last garbage
+collection equals or exceeds the GC delta, a garbage collection pass is
+triggered. From that point, a new delta begins to be accumulated.
+
+Dynamic memory is used for allocating heaps of small garbage-collected objects
+such as cons cells, as well as the satellite data attached to some objects:
+like the storage arrays of vectors, strings or bignum integers. Most garbage
+collector behaviors are based on counting objects in the heaps.
+
+Sometimes a program works with a small number of objects which are very large,
+frequently allocating new, large objects and turning old ones into garbage.
+For instance a single large integer could be many megabytes long.  In such a
+situation, a small number of heap objects therefore control a large amount of
+memory.  This requires garbage collection to be triggered much more often than
+when working with small objects, such as conses, to prevent runaway allocation
+of memory. It is for this reason that the garbage collector uses the GC delta.
+
+There is a default GC delta of 64 megabytes. This may be overridden in
+special builds of TXR for small systems.
 
 .SH MODULARIZATION
 

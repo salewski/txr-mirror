@@ -129,6 +129,8 @@ static void help(void)
 "                       section at the bottom of the license.\n"
 "--lisp-bindings        Synonym for -l\n"
 "--debugger             Synonym for -d\n"
+"--gc-delta=N           Invoke garbage collection when malloc activity\n"
+"                       increments by N megabytes since last collection.\n"
 "\n"
 "Options that take no argument can be combined. The -q and -v options\n"
 "are mutually exclusive; the right-most one dominates.\n"
@@ -353,6 +355,13 @@ int txr_main(int argc, char **argv)
       else 
         bindings = cons(cons(intern(var, nil), t), bindings);
 
+      continue;
+    }
+
+    if (match_str(arg, lit("--gc-delta="), zero)) {
+      val megs = mul(int_str(sub(arg, num_fast(11), t), num_fast(10)),
+                     num_fast(1048576));
+      opt_gc_delta = c_num(megs);
       continue;
     }
 
