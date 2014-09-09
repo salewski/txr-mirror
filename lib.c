@@ -1486,6 +1486,83 @@ val partition(val seq, val indices)
                                 partition_func));
 }
 
+static val partition_star_func(val env, val lcons)
+{
+  for (;;) {
+    cons_bind (seq, indices_base, env);
+    cons_bind (indices, base, indices_base);
+
+    if (indices) {
+      val index = pop(&indices);
+      val index_rebased = minus(index, base);
+      val first = nullify(sub(seq, zero, index_rebased));
+
+      seq = nullify(sub(seq, plus(index_rebased, one), t));
+
+      rplaca(env, seq);
+      rplaca(indices_base, indices);
+      rplacd(indices_base, base = plus(index, one));
+
+      if (!first)
+        continue;
+
+      rplaca(lcons, first);
+
+      while (seq && eql(car(indices), base)) {
+        seq = nullify(cdr(seq));
+        base = plus(base, one);
+        pop(&indices);
+      }
+
+      rplaca(indices_base, indices);
+      rplacd(indices_base, base);
+
+      if (seq)
+        rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+    } else {
+      rplaca(lcons, seq);
+    }
+
+    break;
+  }
+
+  return nil;
+}
+
+val partition_star(val seq, val indices)
+{
+  val base = zero;
+  seq = nullify(seq);
+  indices = nullify(indices);
+
+  if (!seq)
+    return nil;
+
+  if (!indices)
+    return cons(seq, nil);
+
+  if (functionp(indices))
+    indices = funcall1(indices, seq);
+
+  if (indices == zero)
+    return nullify(rest(seq));
+
+  if (atom(indices)) {
+    indices = cons(indices, nil);
+  } else {
+    while (eql(car(indices), base)) {
+      seq = nullify(cdr(seq));
+      if (!seq)
+        return nil;
+      base = plus(base, one);
+      pop(&indices);
+    }
+  }
+
+  return make_lazy_cons(func_f1(cons(seq, cons(indices, base)),
+                                partition_star_func));
+}
+
 cnum c_num(val num);
 
 val eql(val left, val right)
