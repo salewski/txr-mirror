@@ -1,5 +1,16 @@
 2014-09-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Register intrinsic partition function.
+
+	* lib.c (partition_func): New static function.
+	(partition): New function.
+
+	* lib.h (partition): Declared.
+
+	* txr.1: Documented partition.
+
+2014-09-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.c (help): Revised help text.
 
 2014-09-08  Kaz Kylheku  <kaz@kylheku.com>

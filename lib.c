@@ -1431,6 +1431,61 @@ val partition_by(val func, val seq)
                                 partition_by_func));
 }
 
+static val partition_func(val env, val lcons)
+{
+  cons_bind (seq, indices_base, env);
+  cons_bind (indices, base, indices_base);
+
+  for (;;) {
+    if (indices) {
+      val index = pop(&indices);
+      val index_rebased = minus(index, base);
+
+      if (le(index_rebased, zero)) {
+        continue;
+      } else {
+        val first = sub(seq, zero, index_rebased);
+        val rest = nullify(sub(seq, index_rebased, t));
+
+        rplaca(env, rest);
+        rplaca(indices_base, indices);
+        rplacd(indices_base, index);
+
+        if (rest)
+          rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+
+        rplaca(lcons, first);
+      }
+    } else {
+      rplaca(lcons, seq);
+    }
+    break;
+  }
+
+  return nil;
+}
+
+val partition(val seq, val indices)
+{
+  seq = nullify(seq);
+  indices = nullify(indices);
+
+  if (!seq)
+    return nil;
+
+  if (!indices)
+    return cons(seq, nil);
+
+  if (functionp(indices))
+    indices = funcall1(indices, seq);
+
+  if (atom(indices))
+    indices = cons(indices, nil);
+
+  return make_lazy_cons(func_f1(cons(seq, cons(indices, zero)),
+                                partition_func));
+}
+
 cnum c_num(val num);
 
 val eql(val left, val right)

@@ -8034,6 +8034,48 @@ returned which contains those elements of <object> whose keys appear
 in <index-list>. All of <index-list> is processed, even if it contains
 keys which are not in <object>.
 
+.SS Funtion partition
+
+.TP
+Syntax:
+
+  (partition <sequence> {<index-list> | <index> | <function>})
+
+.TP
+Description:
+
+If <sequence> is empty, then partition returns an empty list, and the
+second argument is ignored; if it is <function>, it is not called.
+
+Otherwise, partition-by returns a lazy list of partitions of the sequence
+<sequence>.   Partitions are consecutive, non-empty sub-strings of <sequence>,
+of the same kind as <sequence>.
+
+If the second argument is of the form <index-list>, it is a sequence of
+strictly increasing, positive integers. First, any leading zeros in this sequence
+are dropped. The partition function then divides <sequence> according to the
+indices in index list. The first partition begins with the first element of
+<sequence>. The second partition begins at the first position in <index-list>,
+and so on. Indices beyond the length of the sequence are ignored.
+
+If <index-list> is empty then a one-element list containing the entire
+<sequence> is returned.
+
+If the second argument is a function, then this function is applied
+to <sequence>, and the return value of this call is then used in place of the
+second argument, which must be an <index> or <index-list>.
+
+If the second argument is an atom other than a function, it is assumed to be
+an integer index, and is turned into an <index-list> of one element.
+
+.TP
+Examples:
+
+  (partition '(1 2 3) 1) -> ((1) (2 3))
+
+  ;; split the string where there is a "b"
+  (partition "abcbcbd" (op where @1 (op eql #\eb))) -> ("a" "bc" "bc" "bd")
+
 .SS Function tree-find
 
 .TP
