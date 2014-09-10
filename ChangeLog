@@ -1,5 +1,10 @@
 2014-09-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.c (txr_main): Cleaning up option handling code.
+	Better checking for misused long options.
+
+2014-09-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Register intrinsic partition* function.
 
 	* lib.c (partition_star_func): New static function.

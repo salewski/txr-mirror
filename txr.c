@@ -337,6 +337,8 @@ int txr_main(int argc, char **argv)
     if (equal(arg, lit("-")))
       break;
 
+    /* Odd case 1: --args is followed by an arbitrary delimiting
+     * character, not necessarily = */
     if (match_str(arg, lit("--args"), zero) && ge(length(arg), num(7))) {
       val sep = sub_str(arg, num(6), num(7));
       arg = sub_str(arg, num(7), nil);
@@ -344,6 +346,7 @@ int txr_main(int argc, char **argv)
       continue;
     }
 
+    /* Odd case 2: -Dfoo=bar syntax. */
     if (equal(sub(arg, zero, two), lit("-D"))) {
       val dopt_arg = sub(arg, two, t);
       cons_bind(var, def, split_str(dopt_arg, lit("=")));
@@ -359,29 +362,88 @@ int txr_main(int argc, char **argv)
       continue;
     }
 
-    if (match_str(arg, lit("--gc-delta="), zero)) {
-      val megs = mul(int_str(sub(arg, num_fast(11), t), num_fast(10)),
-                     num_fast(1048576));
-      opt_gc_delta = c_num(megs);
-      continue;
+    /* Regular long opts */
+    if (match_str(arg, lit("--"), zero)) {
+      val no_dashes = sub(arg, two, t);
+      val pair = partition_star(no_dashes, pos(chr('='), no_dashes, nil, nil));
+      val opt = pop(&pair);
+      val org = pop(&pair);
+
+      /* Long opts with arguments */
+      if (equal(opt, lit("gc-delta"))) {
+        if (!org)
+          goto requires_arg;
+        opt_gc_delta = c_num(mul(int_str(org, num_fast(10)),
+                                 num_fast(1048576)));
+        continue;
+      }
+
+      /* Long opts with no arguments */
+      if (org)
+        goto takes_no_arg;
+
+      if (equal(opt, lit("version"))) {
+        format(std_output, lit("~a: version ~a\n"),
+               prog_string, auto_str(version), nao);
+        return 0;
+      }
+
+      if (equal(opt, lit("help"))) {
+        help();
+        return 0;
+      }
+
+      if (equal(opt, lit("license")))
+        return license();
+
+      if (equal(opt, lit("gc-debug"))) {
+        opt_gc_debug = 1;
+        continue;
+      } else if (equal(opt, lit("vg-debug"))) {
+#if HAVE_VALGRIND
+        opt_vg_debug = 1;
+        continue;
+#else
+        format(std_error,
+               lit("~a: option ~a requires Valgrind support compiled in\n"),
+               prog_string, arg, nao);
+        return EXIT_FAILURE;
+#endif
+      } else if (equal(opt, lit("dv-regex"))) {
+        opt_derivative_regex = 1;
+        continue;
+      } else if (equal(opt, lit("lisp-bindings"))) {
+        opt_lisp_bindings = 1;
+        opt_print_bindings = 1;
+        continue;
+      } else if (equal(arg, lit("debugger"))) {
+#if CONFIG_DEBUG_SUPPORT
+        opt_debugger = 1;
+        continue;
+#else
+        format(std_error,
+               lit("~a: option ~a requires debug support compiled in\n"),
+               prog_string, arg, nao);
+        return EXIT_FAILURE;
+#endif
+      }
+
+    requires_arg:
+        format(std_error,
+               lit("~a: option --~a requires an argument\n"),
+               prog_string, opt, nao);
+        return EXIT_FAILURE;
+
+    takes_no_arg:
+        format(std_error,
+               lit("~a: option --~a takes no argument, ~a given\n"),
+               prog_string, opt, org, nao);
+        return EXIT_FAILURE;
     }
 
-    if (equal(arg, lit("--version"))) {
-      format(std_output, lit("~a: version ~a\n"),
-             prog_string, auto_str(version), nao);
-      return 0;
-    }
 
-    if (equal(arg, lit("--help"))) {
-      help();
-      return 0;
-    }
-
-    if (equal(arg, lit("--license")))
-      return license();
-
-    if (memqual(arg, list(lit("-a"), lit("-c"), lit("-f"),
-                          lit("-e"), lit("-p"), lit("-C"), nao)))
+    /* Single letter options with args: non-clumping. */
+    if (length(arg) == two && find(ref(arg, one), lit("acfepC"), nil, nil))
     {
       val opt = chr_str(arg, one);
 
@@ -443,39 +505,7 @@ int txr_main(int argc, char **argv)
       continue;
     }
 
-    if (equal(arg, lit("--gc-debug"))) {
-      opt_gc_debug = 1;
-      continue;
-    } else if (equal(arg, lit("--vg-debug"))) {
-#if HAVE_VALGRIND
-      opt_vg_debug = 1;
-      continue;
-#else
-      format(std_error,
-             lit("~a: option ~a requires Valgrind support compiled in\n"),
-             prog_string, arg, nao);
-      return EXIT_FAILURE;
-#endif
-    } else if (equal(arg, lit("--dv-regex"))) {
-      opt_derivative_regex = 1;
-      continue;
-    } else if (equal(arg, lit("--lisp-bindings"))) {
-      opt_lisp_bindings = 1;
-      opt_print_bindings = 1;
-      continue;
-    } else if (equal(arg, lit("--debugger"))) {
-#if CONFIG_DEBUG_SUPPORT
-      opt_debugger = 1;
-      continue;
-#else
-      format(std_error,
-             lit("~a: option ~a requires debug support compiled in\n"),
-             prog_string, arg, nao);
-      return EXIT_FAILURE;
-#endif
-    }
-
-
+    /* Clumping single-letter options. */
     {
       val optchars = cdr(arg);
 
