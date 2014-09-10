@@ -130,6 +130,7 @@ static void help(void)
 "                       section at the bottom of the license.\n"
 "--lisp-bindings        Synonym for -l\n"
 "--debugger             Synonym for -d\n"
+"--compat=N             Synonym for -C N\n"
 "--gc-delta=N           Invoke garbage collection when malloc activity\n"
 "                       increments by N megabytes since last collection.\n"
 "\n"
@@ -300,6 +301,56 @@ int main(int argc, char **argv)
   return txr_main(argc, argv);
 }
 
+static void requires_arg(val opt)
+{
+    format(std_error, lit("~a: option --~a requires an argument\n"),
+           prog_string, opt, nao);
+}
+
+static int do_fixnum_opt(int (*opt_func)(val), val opt, val arg)
+{
+  if (arg) {
+    val optval = int_str(arg, nil);
+
+    if (!optval || !fixnump(optval)) {
+      format(std_error, lit("~a: option -~a needs a small integer "
+                            "argument, not ~a\n"), prog_string, opt,
+                            arg, nao);
+      return 0;
+    }
+
+    return opt_func(optval);
+  }
+
+  requires_arg(opt);
+  return 0;
+}
+
+static int compat(val optval)
+{
+  if ((opt_compat = c_num(optval)) < 97) {
+    format(std_error, lit("~a: compatibility with versions "
+                          "lower than 97 not supported by version ~a\n"),
+           prog_string, auto_str(version), nao);
+    return 0;
+  }
+  compat_fixup(opt_compat);
+  return 1;
+}
+
+static int array_dim(val optval)
+{
+  opt_arraydims = c_num(optval);
+  opt_print_bindings = 1;
+  return 1;
+}
+
+static int gc_delta(val optval)
+{
+  opt_gc_delta = c_num(mul(optval, num_fast(1048576)));
+  return 1;
+}
+
 int txr_main(int argc, char **argv)
 {
   val specstring = nil;
@@ -371,16 +422,24 @@ int txr_main(int argc, char **argv)
 
       /* Long opts with arguments */
       if (equal(opt, lit("gc-delta"))) {
-        if (!org)
-          goto requires_arg;
-        opt_gc_delta = c_num(mul(int_str(org, num_fast(10)),
-                                 num_fast(1048576)));
+        if (!do_fixnum_opt(gc_delta, opt, arg))
+          return EXIT_FAILURE;
+        continue;
+      }
+
+      if (equal(opt, lit("compat"))) {
+        if (!do_fixnum_opt(compat, opt, org))
+          return EXIT_FAILURE;
         continue;
       }
 
       /* Long opts with no arguments */
-      if (org)
-        goto takes_no_arg;
+      if (org) {
+        format(std_error,
+               lit("~a: option --~a takes no argument, ~a given\n"),
+               prog_string, opt, org, nao);
+        return EXIT_FAILURE;
+      }
 
       if (equal(opt, lit("version"))) {
         format(std_output, lit("~a: version ~a\n"),
@@ -427,18 +486,6 @@ int txr_main(int argc, char **argv)
         return EXIT_FAILURE;
 #endif
       }
-
-    requires_arg:
-        format(std_error,
-               lit("~a: option --~a requires an argument\n"),
-               prog_string, opt, nao);
-        return EXIT_FAILURE;
-
-    takes_no_arg:
-        format(std_error,
-               lit("~a: option --~a takes no argument, ~a given\n"),
-               prog_string, opt, org, nao);
-        return EXIT_FAILURE;
     }
 
 
@@ -448,9 +495,7 @@ int txr_main(int argc, char **argv)
       val opt = chr_str(arg, one);
 
       if (!arg_list) {
-        format(std_error, lit("~a: option -~a needs argument\n"),
-               prog_string, opt, nao);
-
+        requires_arg(opt);
         return EXIT_FAILURE;
       }
 
@@ -458,30 +503,12 @@ int txr_main(int argc, char **argv)
 
       switch (c_chr(opt)) {
       case 'a':
+        if (!do_fixnum_opt(array_dim, opt, arg))
+          return EXIT_FAILURE;
+        break;
       case 'C':
-        {
-          val optval = int_str(arg, nil);
-
-          if (!optval || !fixnump(optval)) {
-            format(std_error, lit("~a: option -~a needs a small integer "
-                                  "argument, not ~a\n"), prog_string, opt,
-                                  arg, nao);
-            return EXIT_FAILURE;
-          }
-
-          if (opt == chr('a')) {
-            opt_arraydims = c_num(optval);
-            opt_print_bindings = 1;
-          } else {
-            if ((opt_compat = c_num(optval)) < 97) {
-              format(std_error, lit("~a: compatibility with versions "
-                                    "lower than 97 not supported by version ~a\n"),
-                     prog_string, auto_str(version), nao);
-              return EXIT_FAILURE;
-            }
-            compat_fixup(opt_compat);
-          }
-        }
+        if (!do_fixnum_opt(compat, opt, arg))
+          return EXIT_FAILURE;
         break;
       case 'c':
         specstring = arg;

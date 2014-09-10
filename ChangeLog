@@ -1,5 +1,15 @@
 2014-09-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.c (help): List new --compat option.
+	(requires_arg, do_fixnum_opt, compat, array_dim, gc_delta): New static
+	functions.
+	(txr_main): Use do_fixnum_opt for handling options with integer
+	argument. Add --compat alias for -C.
+
+	* txr.1: Documented --compat. Added missing description of --debugger.
+
+2014-09-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.c (txr_main): Cleaning up option handling code.
 	Better checking for misused long options.
 
