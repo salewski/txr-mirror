@@ -6778,9 +6778,12 @@ void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),
   gc_state(gc_save);
 }
 
-void compat_fixup(int compat_ver)
+int compat_fixup(int compat_ver)
 {
-  if (compat_ver <= 97) {
+  if (compat_ver < 97)
+    return 97;
+
+  if (compat_ver == 97) {
     symbol_setname(type_error_s, lit("type_error"));
     symbol_setname(internal_error_s, lit("internal_error"));
     symbol_setname(numeric_error_s, lit("numeric_error"));
@@ -6789,6 +6792,8 @@ void compat_fixup(int compat_ver)
     symbol_setname(file_error_s, lit("file_error"));
     symbol_setname(process_error_s, lit("process_error"));
   }
+
+  return 0;
 }
 
 void dump(val obj, val out)

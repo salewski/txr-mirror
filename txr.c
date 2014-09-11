@@ -328,13 +328,17 @@ static int do_fixnum_opt(int (*opt_func)(val), val opt, val arg)
 
 static int compat(val optval)
 {
-  if ((opt_compat = c_num(optval)) < 97) {
+  int compat = c_num(optval);
+  int min = compat_fixup(compat);
+
+  if (min) {
     format(std_error, lit("~a: compatibility with versions "
-                          "lower than 97 not supported by version ~a\n"),
-           prog_string, auto_str(version), nao);
+                          "lower than ~a not supported by version ~a\n"),
+           prog_string, num(min), auto_str(version), nao);
     return 0;
   }
-  compat_fixup(opt_compat);
+
+  opt_compat = compat;
   return 1;
 }
 
