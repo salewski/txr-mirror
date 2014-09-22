@@ -206,6 +206,9 @@ install-tests:
 txr-manpage.html: txr.1 genman.txr
 	man2html $< | ./$(PROG) genman.txr - > $@
 
+txr-manpage.pdf: txr.1
+	tbl $< | pdfroff -man --no-toc - > $@
+
 config.make config.h:
 	@echo "$@ missing: you didn't run ./configure"
 	@exit 1

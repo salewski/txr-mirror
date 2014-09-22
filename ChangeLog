@@ -1,3 +1,7 @@
+2014-09-22  Kaz Kylheku  <kaz@kylheku.com>
+
+	* Makefile (txr-manpage.pdf): New target.
+
 2014-09-10  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (compat_fixup): void return changed to int.
