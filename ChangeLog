@@ -1,3 +1,9 @@
+2014-09-25  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (do_and, do_or): Fix broken andf and orf,
+	lacking the semantics of returning the last value,
+	or the first true value, respectively.
+
 2014-09-22  Kaz Kylheku  <kaz@kylheku.com>
 
 	* Makefile (txr-manpage.pdf): New target.

@@ -4335,12 +4335,13 @@ val juxtv(val funlist)
 static val do_and(val fun1_list, val args)
 {
   fun1_list = nullify(fun1_list);
+  val ret = nil;
 
   for (; fun1_list; fun1_list = cdr(fun1_list))
-    if (nilp(apply(car(fun1_list), args, nil)))
-      return nil;
+    if (nilp((ret = apply(car(fun1_list), args, nil))))
+      break;
 
-  return t;
+  return ret;
 }
 
 val andf(val first_fun, ...)
@@ -4380,12 +4381,13 @@ val swap_12_21(val fun)
 static val do_or(val fun1_list, val args)
 {
   fun1_list = nullify(fun1_list);
+  val ret = nil;
 
   for (; fun1_list; fun1_list = cdr(fun1_list))
-    if (apply(car(fun1_list), args, nil))
-      return t;
+    if ((ret = apply(car(fun1_list), args, nil)))
+      break;
 
-  return nil;
+  return ret;
 }
 
 val orf(val first_fun, ...)
