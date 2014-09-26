@@ -2,10 +2,13 @@
 @# and is now part of manutils.
 @# See here: http://primates.ximian.com/~flucifredi/man/
 @# It does not work with that other man2html written in Perl.
-@(deffilter month_name 
+@(deffilter month-name
   ("01" "Jan") ("02" "Feb") ("03" "Mar") ("04" "Apr")
   ("05" "May") ("06" "Jun") ("07" "Jul") ("08" "Aug")
   ("09" "Sep") ("10" "Oct") ("11" "Nov") ("12" "Dec"))
+@(bind txrhash @(hash :equal-based))
+@(bind txlhash @(hash :equal-based))
+@(bind tgthash txrhash)
 Content-type: text/html
 @(skip 15)
 <H1>TXR</H1>
@@ -15,29 +18,58 @@ Content-type: text/html
 @(until)
 txr - text processing language @(skip)
 @(end)
+@(bind lookup @[orf txrhash txlhash])
 @(all)
 txr - text processing language @VERSION
 @  (and)
-@  (collect)
+@  (collect :vars (BODY LOOKUP))
+@    (some)
 @BODY
+@    (and)
+<H2>13 TXR LISP</H2>
+@      (set lookup @[orf txlhash txrhash])
+@    (end)
+@    (bind LOOKUP lookup)
 @  (until)
 <HR>
 <A NAME="index">&nbsp;</A><H2>Index</H2>
 @  (end)
 @(end)
 <HR>
-@(collect)
+@(collect :vars (TOC))
+@  (some)
 @TOC
+@  (and)
+<DT><A HREF="@nil">@nil TXR LISP</A><DD>
+@  (set tgthash txlhash)
+@  (and)
+<DT><A HREF="@tag">@(coll :vars (sym))<TT>@sym</TT>@(end)
+@    (do (mapdo (do unless [tgthash @1] (set [tgthash @1] tag))
+                sym))
+@  (end)
 @(until)
 This document was created by
 @(end)
+@(set BODY @(mapcar (do if (search-regex @1 #/<H[1-9]>/)
+                          @1
+                          (regsub #/<TT>.%<\/TT>/
+                                  (do let ((tok [@1 4 -5]) tag)
+                                        (if (match-str tok "@(")
+                                          (let ((sym [tok 2 -1]))
+                                            (set tag [txrhash sym]))
+                                          (set tag [@@2 tok]))
+                                        (if tag
+                                          `<A HREF="@tag">@1</A>`
+                                          @1))
+                                  @1))
+                    BODY
+                    LOOKUP))
 @(output)
 <HTML>
-<FONT FACE="courier">
 <HEAD><TITLE>Manpage for TXR @VERSION</TITLE>
 </HEAD><BODY>
 <H2>Manpage for <A HREF="#lbAB">TXR </a>@VERSION</H2>
-<H2>@{MONTH :filter month_name} @DAY, @YEAR</H2>
+<H2>@{MONTH :filter month-name} @DAY, @YEAR</H2>
 @(repeat)
 @TOC
 @(end)

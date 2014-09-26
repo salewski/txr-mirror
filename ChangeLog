@@ -1,3 +1,11 @@
+2014-09-26  Kaz Kylheku  <kaz@kylheku.com>
+
+	* txr.1: Substantially revised with rich troff markup,
+	and restructured in some places.
+
+	* genman.txr: No longer generate the whole document in
+	monospaced font. Add hyperlinks.
+
 2014-09-25  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (do_and, do_or): Fix broken andf and orf,
