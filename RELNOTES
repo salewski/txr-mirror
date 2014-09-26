@@ -1,3 +1,38 @@
+                                     TXR 98
+                                   2014-09-26
+
+
+  Features
+
+  - New numeric constants givin pi, e and various limits of floating point
+    representation.
+
+  - New syntax-error exception type; syntax errors in expressions passed
+    on the cmomand line with -p or -e throw exception how instead of silently
+    producing nil.
+
+  - New --gc-delta option and gc-set-delta function related to
+    bugfix below.
+
+  - New -C/--compat option for specifying compatibility.
+
+  - New functions: partition and partition*.
+
+  - Revamped documentation: nicely formatted with fonts and section numbering;
+    HTML version uses proportional font now, and has internal hyperlinks.
+
+  - Exception names like file_error have been renamed to use a dash
+    like file-error.
+
+  Bugs
+
+  - Fixed bad memory performance when the program works with large
+    heaped objects, by making GC aware of this memory.
+
+  - Fixed broken return value semantics of orf and and combinators.
+
+
+
                                      TXR 97
                                    2014-08-14
 
