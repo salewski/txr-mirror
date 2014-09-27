@@ -1,5 +1,10 @@
 2014-09-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (do_and): Fix andf again: (andf) not producing
+	a function that returns t, as documented.
+
+2014-09-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	Version 98.
 
 	* RELNOTES: Updated.

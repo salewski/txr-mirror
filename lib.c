@@ -4335,7 +4335,7 @@ val juxtv(val funlist)
 static val do_and(val fun1_list, val args)
 {
   fun1_list = nullify(fun1_list);
-  val ret = nil;
+  val ret = t;
 
   for (; fun1_list; fun1_list = cdr(fun1_list))
     if (nilp((ret = apply(car(fun1_list), args, nil))))
