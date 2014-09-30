@@ -16,11 +16,11 @@ Content-type: text/html
 @(collect)
 @PREAMBLE
 @(until)
-txr - text processing language @(skip)
+<B>TXR</B> - text processing language @(skip)
 @(end)
 @(bind lookup @[orf txrhash txlhash])
 @(all)
-txr - text processing language @VERSION
+<B>TXR</B> - text processing language @VERSION
 @  (and)
 @  (collect :vars (BODY LOOKUP))
 @    (some)
