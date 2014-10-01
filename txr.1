@@ -362,9 +362,10 @@ material in the input sources. Free variables occurring in the pattern
 (denoted by the
 .code @
 symbol) are bound to the pieces of text occurring in the
-corresponding positions. If the overall match is successful, then \*(TX
-can do one of two things: it can report the list of variables which were bound,
-in the form of a set of variable assignments which can be evaluated by the
+corresponding positions. If the overall match is successful, then
+\*(TX can do one of two things: it can report the list of variables which were
+bound, in the form of a set of variable assignments which can be evaluated by
+the
 .B eval
 command of the POSIX shell language, or generate a custom report according
 to special directives in the query. Patterns can be arbitrarily complex,
@@ -374,12 +375,12 @@ or vertically (spanning multiple lines). Multiple lines can be treated
 as a single line.
 
 
-In addition to embedded variables which implicitly match text, the \*(TX
-query language supports a number of directives, for matching text using regular
-expressions, for continuing a match in another file, for searching through a
-file for the place where an entire sub-query matches, for collecting lists, and
-for combining sub-queries using logical conjunction, disjunction and negation,
-and numerous others.
+In addition to embedded variables which implicitly match text, the
+\*(TX query language supports a number of directives, for matching text using
+regular expressions, for continuing a match in another file, for searching
+through a file for the place where an entire sub-query matches, for collecting
+lists, and for combining sub-queries using logical conjunction, disjunction and
+negation, and numerous others.
 
 Furthermore, embedded within \*(TX is a powerful Lisp dialect.  \*(TL supports
 functional and imperative programming, and provides data types such as symbols,
@@ -521,8 +522,8 @@ Specifies the query in the form of a command line argument. If this option is
 used, the query-file argument is omitted. The first non-option argument,
 if there is one, now specifies the first input source rather than a query.
 Unlike queries read from a file, (non-empty) queries specified as arguments
-using -c do not have to properly end in a newline. Internally, \*(TX
-adds the missing newline before parsing the query. Thus
+using -c do not have to properly end in a newline. Internally,
+\*(TX adds the missing newline before parsing the query. Thus
 .code -c
 .str @a
 is a valid query which matches a line.
@@ -606,8 +607,8 @@ a change which is backward incompatible, then
 .code -C N
 can be used to request the old behavior.
 
-The requested value of N can be too low, in which case \*(TX
-will complain and exit with an unsuccessful termination status. This indicates
+The requested value of N can be too low, in which case \*(TX will
+complain and exit with an unsuccessful termination status. This indicates
 that \*(TX refuses to be compatible with such an old version. Users requiring
 the behavior of that version will have to install an older version of \*(TX which
 supports that behavior, or even that exact version.
@@ -699,11 +700,11 @@ or
 If the command line arguments are incorrect, or the query has a malformed
 syntax, \*(TX issues an error diagnostic and terminates with a failed status.
 
-If the query fails due to a mismatch, \*(TX
-terminates with a failed status. No diagnostics are issued.
+If the query fails due to a mismatch, \*(TX terminates
+with a failed status. No diagnostics are issued.
 
-If the query is well-formed, and matches, then \*(TX
-issues no diagnostics, and terminates with a successful status.
+If the query is well-formed, and matches, then \*(TX issues
+no diagnostics, and terminates with a successful status.
 
 In verbose mode (option
 .codn -v ),
@@ -803,8 +804,8 @@ just as if
 .cble
 had been executed directly.
 
-This behavior is useful if the script author wants not to expose the \*(TX
-options to the user of the script.
+This behavior is useful if the script author wants not to expose the
+\*(TX options to the user of the script.
 
 However, the hash bang line can use the
 .code -f
@@ -2162,14 +2163,21 @@ directives are:
   @(_ `@file.txt`)
 .cble
 
-A symbol has the same lexical form as a
+A symbol has a slight more permissive lexical than the
 .meta bident
 in the syntax
 .cblk
 .meti <> @{ bident }
 .cble
-introduced earlier. It must not be a number;
-tokens that look like numbers are treated as numbers and not symbols.
+introduced earlier. The
+.code /
+(slash) character may be part of an identifier, or even
+constitute an entire identifier. In fact a symbol inside a
+directive is a
+.metn lident .
+This is discussed in the Symbol Tokens section under TXR LISP.
+A symbolmust not be a number; tokens that look like numbers are treated as
+numbers and not symbols.
 
 .SS* Character Literals
 
@@ -3855,8 +3863,8 @@ after any
 .code @(elif)
 clauses. Any of the clauses may be empty.
 
-See the \*(TL section about \*(TL expressions. In this directive, \*(TL
-expressions are not introduced by the
+See the \*(TL section about \*(TL expressions. In this directive,
+\*(TL expressions are not introduced by the
 .code @
 symbol, just like in the
 .code require
@@ -7651,8 +7659,8 @@ to upper case and HTML encode:
 
 .SS* Introduction
 
-The exceptions mechanism in \*(TX
-is another disciplined form of non-local transfer, in addition to the blocks
+The exceptions mechanism in \*(TX is another
+disciplined form of non-local transfer, in addition to the blocks
 mechanism (see BLOCKS above).  Like blocks, exceptions provide a construct
 which serves as the target for a dynamic exit.  Both blocks and exceptions
 can be used to bail out of deep nesting when some condition occurs.
@@ -10676,7 +10684,7 @@ will create it. In that case, the
 form is evaluated to
 determine the initial value of the place. Otherwise it is ignored.
 
-.meIP (vecref < vector> << index )
+.meIP (vecref < vector << index )
 The
 .code vecref
 place denotes a vector element, allowing vector elements
@@ -11107,7 +11115,7 @@ that way.
 
 An optional parameter can also be written in the form
 .cblk
-.meti >> ( name < expr <> [ sym ]) .
+.meti >> ( name < expr <> [ sym ]).
 .cble
 In this situation, if the call does not specify a value for the parameter
 (or specifies a value as the keyword
@@ -12831,12 +12839,12 @@ but produce lazy lists.
   [remove-if (op equal [@1 0..3] "abc")
              '(("abcd" 4) ("defg" 5))
              car]
-  -> (("defg 5))
+  -> (("defg" 5))
 
   ;; equivalent, without test function
   (remove-if (op equal [(car @1) 0..3] "abc")
              '(("abcd" 4) ("defg" 5)))
-  -> (("defg 5))
+  -> (("defg" 5))
 .cble
 
 .coNP Function @ count-if
@@ -13219,7 +13227,8 @@ of one element.
   (partition '(1 2 3) 1) -> ((1) (2 3))
 
   ;; split the string where there is a "b"
-  (partition "abcbcbd" (op where @1 (op eql #\eb))) -> ("a" "bc" "bc" "bd")
+  (partition "abcbcbd" (op where @1 (op eql #\eb))) -> ("a" "bc"
+                                                       "bc" "bd")
 .cble
 
 .coNP Function @ partition*
@@ -22269,8 +22278,8 @@ savings time).
 The
 .code *args*
 variable holds a list of strings representing the remaining
-arguments which follow any options processed by the \*(TX
-executable, and the script name.
+arguments which follow any options processed by the \*(TX executable,
+and the script name.
 
 The
 .code *args-full*
@@ -22643,9 +22652,9 @@ When that signal is delivered, \*(TX will intercept it with its own safe,
 internal handler, mark the signal as deferred (in a \*(TX sense) and then
 dispatch the registered function at a convenient time.
 
-Handlers currently are not permitted to interrupt the execution of most \*(TX
-internal code.  Immediate, asynchronous execution of handlers is currently
-enabled only while \*(TX is blocked on I/O operations or sleeping.
+Handlers currently are not permitted to interrupt the execution of most
+\*(TX internal code.  Immediate, asynchronous execution of handlers is
+currently enabled only while \*(TX is blocked on I/O operations or sleeping.
 Additionally, the
 .code sig-check
 function can be used to dispatch and clear deferred
@@ -22791,9 +22800,9 @@ The
 .code sig-check
 function tests whether any signals are deferred, and for each
 deferred signal in turn, it executes the corresponding handler.  For a signal to
-be deferred means that the signal was caught by an internal handler in \*(TX
-and the event was recorded by a flag.  If a handler function is removed while a
-signal is deferred, the deferred flag is cleared for that signal.
+be deferred means that the signal was caught by an internal handler in
+\*(TX and the event was recorded by a flag.  If a handler function is removed
+while a signal is deferred, the deferred flag is cleared for that signal.
 
 Calls to the
 .code sig-check
@@ -23069,7 +23078,7 @@ C function. The
 formatting capabilities of the function are not used;
 the
 .meta format
-argument follows the conventions of the \*(TL
+argument follows the conventions of the \*(TL 
 .code format
 function instead. Note in particular that
 the
@@ -24783,8 +24792,9 @@ directive, whereas the surface syntax appears flat.
 Here is an example of the debugger being applied to a web scraping program
 which connects to a US NAVY clock server to retrieve a dynamically-generated
 web page, from which the current time is extracted, in various time zones.
-The handling of the web request is done by the wget command; the \*(TX
-query opens a wget command as and scans the body of the HTTP response containing
+The handling of the web request is done by the wget command; the
+\*(TX query opens a wget command as and scans the body of the HTTP response
+containing
 HTML. This is the code, saved in a file called navytime.txr:
 
 .cblk

@@ -1,5 +1,12 @@
 2014-09-30  Kaz Kylheku  <kaz@kylheku.com>
 
+	* genman.txr: Add PayPal donation button.
+
+	* txr.1: Avoid escapes at the end of a line; man2html doesn't
+	handle this properly.
+
+2014-09-30  Kaz Kylheku  <kaz@kylheku.com>
+
 	* genman.txr: TXR is now bolded in the title.
 
 	* txr.1: More formatting and wording fixes.
