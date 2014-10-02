@@ -353,7 +353,7 @@ extern val sym_s, pkg_s, fun_s, vec_s;
 extern val stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s, cptr_s;
 extern val env_s, bignum_s, float_s;
 extern val var_s, expr_s, regex_s, chset_s, set_s, cset_s, wild_s, oneplus_s;
-extern val nongreedy_s, compiled_regex_s;
+extern val nongreedy_s;
 extern val quote_s, qquote_s, unquote_s, splice_s;
 extern val sys_qquote_s, sys_unquote_s, sys_splice_s;
 extern val zeroplus_s, optional_s, compl_s, compound_s;

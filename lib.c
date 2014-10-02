@@ -73,7 +73,7 @@ val null_s, t, cons_s, str_s, chr_s, fixnum_s, sym_s, pkg_s, fun_s, vec_s;
 val lit_s, stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s, cptr_s;
 val env_s, bignum_s, float_s;
 val var_s, expr_s, regex_s, chset_s, set_s, cset_s, wild_s, oneplus_s;
-val nongreedy_s, compiled_regex_s;
+val nongreedy_s;
 val quote_s, qquote_s, unquote_s, splice_s;
 val sys_qquote_s, sys_unquote_s, sys_splice_s;
 val zeroplus_s, optional_s, compl_s, compound_s;
@@ -6120,7 +6120,6 @@ static void obj_init(void)
   expr_s = intern(lit("expr"), system_package);
   regex_s = intern(lit("regex"), system_package);
   nongreedy_s = intern(lit("ng0+"), user_package);
-  compiled_regex_s = intern(lit("compiled-regex"), system_package);
   quote_s = intern(lit("quote"), user_package);
   qquote_s = intern(lit("qquote"), user_package);
   unquote_s = intern(lit("unquote"), user_package);

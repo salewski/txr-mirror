@@ -54,6 +54,14 @@ typedef struct nfa {
   nfa_state_t *accept;
 } nfa_t;
 
+typedef struct regex {
+  enum { REGEX_NFA, REGEX_DV } kind;
+  union {
+    struct nfa nfa;
+    val dv;
+  } r;
+} regex_t;
+
 /*
  * Result from regex_machine_feed.
  * These values have two meanings, based on whether
@@ -1279,19 +1287,27 @@ static cnum regex_machine_match_span(regex_machine_t *regm)
   return regm->n.last_accept_pos;
 }
 
-static void regex_destroy(val regex)
+static void regex_destroy(val obj)
 {
-  nfa_t *pnfa = (nfa_t *) regex->co.handle;
-  nfa_free(*pnfa);
-  free(pnfa);
-  regex->co.handle = 0;
+  regex_t *regex = (regex_t *) obj->co.handle;
+  if (regex->kind == REGEX_NFA)
+    nfa_free(regex->r.nfa);
+  free(regex);
+  obj->co.handle = 0;
+}
+
+static void regex_mark(val obj)
+{
+  regex_t *regex = (regex_t *) obj->co.handle;
+  if (regex->kind == REGEX_DV)
+    gc_mark(regex->r.dv);
 }
 
 static struct cobj_ops regex_obj_ops = {
   eq,
   cobj_print_op,
   regex_destroy,
-  cobj_mark_op,
+  regex_mark,
   cobj_hash_op
 };
 
@@ -1406,7 +1422,7 @@ static val reg_nullable(val exp)
       return nil;
     } else if (sym == compound_s) {
       return reg_nullable_list(args);
-    } else if (sym == oneplus_s || sym == compiled_regex_s) {
+    } else if (sym == oneplus_s) {
       return reg_nullable(first(args));
     } else if (sym == zeroplus_s || sym == optional_s) {
       return t;
@@ -1537,8 +1553,6 @@ static val reg_derivative(val exp, val ch)
 
     if (sym == set_s || sym == cset_s) {
       internal_error("uncompiled regex passed to reg_derivative");
-    } else if (sym == compiled_regex_s) {
-      return reg_derivative(first(args), ch);
     } else if (sym == compound_s) {
       return reg_derivative_list(args, ch);
     } else if (sym == optional_s) {
@@ -1648,33 +1662,30 @@ val regex_compile(val regex_sexp, val error_stream)
     regex_sexp = regex_parse(regex_sexp, default_bool_arg(error_stream));
     return if2(regex_sexp, regex_compile(regex_sexp, error_stream));
   } else if (opt_derivative_regex || regex_requires_dv(regex_sexp)) {
-    return cons(compiled_regex_s, cons(dv_compile_regex(regex_sexp), nil));
+    regex_t *regex = (regex_t *) chk_malloc(sizeof *regex);
+    regex->kind = REGEX_DV;
+    regex->r.dv = dv_compile_regex(regex_sexp);
+    return cobj((mem_t *) regex, regex_s, &regex_obj_ops);
   } else {
-    nfa_t *pnfa = (nfa_t *) chk_malloc(sizeof *pnfa);
-    *pnfa = nfa_compile_regex(regex_sexp);
-    return cobj((mem_t *) pnfa, regex_s, &regex_obj_ops);
+    regex_t *regex = (regex_t *) chk_malloc(sizeof *regex);
+    regex->kind = REGEX_NFA;
+    regex->r.nfa = nfa_compile_regex(regex_sexp);
+    return cobj((mem_t *) regex, regex_s, &regex_obj_ops);
   }
 }
 
 val regexp(val obj)
 {
-  if (consp(obj))
-    return eq(car(obj), compiled_regex_s);
-
   return typeof(obj) == regex_s ? t : nil;
-}
-
-static nfa_t *regex_nfa(val reg)
-{
-  assert (typeof(reg) == regex_s);
-  return (nfa_t *) reg->co.handle;
 }
 
 static cnum regex_run(val compiled_regex, const wchar_t *str)
 {
-  if (consp(compiled_regex))
-    return dv_run(compiled_regex, str);
-  return nfa_run(*regex_nfa(compiled_regex), str);
+  regex_t *regex = (regex_t *) cobj_handle(compiled_regex, regex_s);
+
+  return if3(regex->kind == REGEX_DV,
+             dv_run(regex->r.dv, str),
+             nfa_run(regex->r.nfa, str));
 }
 
 /*
@@ -1706,14 +1717,16 @@ static void regex_machine_reset(regex_machine_t *regm)
     regm->n.last_accept_pos = regm->n.count;
 }
 
-static void regex_machine_init(regex_machine_t *regm, val regex)
+static void regex_machine_init(regex_machine_t *regm, val reg)
 {
-  if (consp(regex)) {
+  regex_t *regex = (regex_t *) cobj_handle(reg, regex_s);
+
+  if (regex->kind == REGEX_DV) {
     regm->n.is_nfa = 0;
-    regm->d.regex = regex;
+    regm->d.regex = regex->r.dv;
   } else {
     regm->n.is_nfa = 1;
-    regm->n.nfa = *regex_nfa(regex);
+    regm->n.nfa = regex->r.nfa;
     regm->n.move = (nfa_state_t **)
                      chk_malloc(NFA_SET_SIZE * sizeof *regm->n.move);
     regm->n.clos = (nfa_state_t **)

@@ -1,3 +1,28 @@
+2014-10-02  Kaz Kylheku  <kaz@kylheku.com>
+
+	Using unified COBJ representation for both regex kinds,
+	rather than the list-based notation for derivative-based
+	regexes, and an encapsulated COBJ for NFA-based regexes.
+
+	* lib.c (compiled_regex_s): Variable removed.
+	(obj_init): Initialization of compiled_regex_s removed.
+
+	* lib.h (compiled_regex_s): Declaration removed.
+
+	* regex.c (struct regex, regex_t): New type.
+	(regex_destroy): Object is now a regex_t, not nfa_t.
+	(regex_mark): New function.
+	(regex_obj_ops): Register regex_mark operation.
+	(reg_nullable, reg_derivative): Remove cases that handles
+	compiled_regex_s.
+	(regex_compile): Output of dv_compile_regex becomes
+	a cobj nwo. Output of nfa_compile_regex must be
+	embedded in regex_t structure.
+	(regexp): Drop the check for compiles_regex_s.
+	(regex_nfa): Function removed.
+	(regex_run, regex_machine_init): Use cobj_handle to retrieve regex_t *
+	pointer and dispatch appropriate code based on regex->kind.
+
 2014-09-30  Kaz Kylheku  <kaz@kylheku.com>
 
 	* genman.txr: Add PayPal donation button.
