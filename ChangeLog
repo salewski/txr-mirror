@@ -1,5 +1,17 @@
 2014-10-03  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (h_var): Fix regression introduced in 2014-08-11
+	commit. The incompleteness of that change broke the case of an unbound
+	variable followed by a bound variable. The value of the
+	second variable was still being wrapped in the old complicated
+	representation before being pushed to the front of the spec.
+
+	* txr.1: Replace bogus text which says that variables are not
+	bound to regexes, and so regex matches from variable substitutions
+	do not arise. This works fine after this change.
+
+2014-10-03  Kaz Kylheku  <kaz@kylheku.com>
+
 	* Makefile: rules that rely on values from config.make
 	now have config.make as a prerequisite.
 

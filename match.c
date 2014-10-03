@@ -632,10 +632,9 @@ static val h_var(match_line_ctx *c)
       } else if (!pair) {
         sem_error(elem, lit("consecutive unbound variables"), nao);
       } else {
-      /* Re-generate a new spec with an edited version of
-         the element we just processed, and repeat. */
-        val new_elem = list(var_s, sym, cdr(pair), modifier, nao);
-        c->specline = cons(elem, cons(new_elem, rest(c->specline)));
+      /* Re-generate a new spec in which the next variable
+         is replaced by its value, and repeat. */
+        c->specline = cons(elem, cons(cdr(pair), rest(c->specline)));
         return repeat_spec_k;
       }
     } else if (op == text_s) {

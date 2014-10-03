@@ -1441,8 +1441,24 @@ seems to have dubious value).
 
 An unbound variable may be followed by one which is bound. The bound
 variable is replaced by the text which it denotes, and the logic proceeds
-accordingly.  Variables are never bound to regular expressions, so
-the regular expression match does not arise in this case.
+accordingly.
+
+It is possible for a variable to be bound to a regular expression.
+If
+.code x
+is an unbound variable and
+.code y
+is bound to a regular expression
+.codn RE ,
+then
+.code @x@y
+means
+.codn @x@/RE/ .
+A variable
+.code v
+can be bound to a regular expression using, for example,
+.codn @(bind v #/RE/) .
+
 The
 .code @*
 syntax for longest match is available. Example:
