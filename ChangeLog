@@ -1,3 +1,8 @@
+2014-10-03  Kaz Kylheku  <kaz@kylheku.com>
+
+	* Makefile: rules that rely on values from config.make
+	now have config.make as a prerequisite.
+
 2014-10-02  Kaz Kylheku  <kaz@kylheku.com>
 
 	Using unified COBJ representation for both regex kinds,

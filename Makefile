@@ -57,12 +57,14 @@ VPATH := $(top_srcdir)
 
 -include $(top_srcdir)/dep.mk
 
-lex.yy.c: parser.l
+$(OBJS) $(OBJS-y): config.make
+
+lex.yy.c: parser.l config.make
 	rm -f $@
 	$(LEX) $(LEX_DBG_FLAGS) $<
 	chmod a-w $@
 
-y.tab.c y.tab.h: parser.y
+y.tab.c y.tab.h: parser.y config.make
 	rm -f y.tab.c
 	if $(YACC) -v -d $< ; then chmod a-w y.tab.c ; true ; else rm y.tab.c ; false ; fi
 
