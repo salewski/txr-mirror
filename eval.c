@@ -938,30 +938,24 @@ static val do_eval(val form, val env, val ctx_form,
     }
   } else if (consp(form)) {
     val oper = car(form);
+    val entry = gethash(op_table, oper);
 
-    if (regexp(oper))
-      debug_return (oper);
-
-    {
-      val entry = gethash(op_table, oper);
-
-      if (entry) {
-        opfun_t fp = (opfun_t) cptr_get(entry);
+    if (entry) {
+      opfun_t fp = (opfun_t) cptr_get(entry);
+      last_form_evaled = form;
+      debug_return (fp(form, env));
+    } else {
+      val fbinding = lookup_fun(env, oper);
+      if (!fbinding) {
         last_form_evaled = form;
-        debug_return (fp(form, env));
+        eval_error(form, lit("no such function or operator: ~s"), oper, nao);
+        abort();
       } else {
-        val fbinding = lookup_fun(env, oper);
-        if (!fbinding) {
-          last_form_evaled = form;
-          eval_error(form, lit("no such function or operator: ~s"), oper, nao);
-          abort();
-        } else {
-          val args = do_eval_args(rest(form), env, form, &lookup_var);
-          debug_frame(oper, args, nil, env, nil, nil, nil);
-          last_form_evaled = form;
-          debug_return (apply(cdr(fbinding), args, form));
-          debug_end;
-        }
+        val args = do_eval_args(rest(form), env, form, &lookup_var);
+        debug_frame(oper, args, nil, env, nil, nil, nil);
+        last_form_evaled = form;
+        debug_return (apply(cdr(fbinding), args, form));
+        debug_end;
       }
     }
   } else {
@@ -2817,8 +2811,6 @@ tail:
       return rlcp(cons(sym, quasi_ex), form);
     } else if (sym == catch_s) {
       return expand_catch(rest(form), menv);
-    } else if (sym == regex_s || regexp(sym)) {
-      return form; /* regex syntax isn't Lisp code; don't expand! */
     } else if (sym == macro_time_s) {
       val args = rest(form);
       val args_ex = expand_forms(args, menv);

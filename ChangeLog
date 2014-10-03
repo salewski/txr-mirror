@@ -1,5 +1,25 @@
 2014-10-03  Kaz Kylheku  <kaz@kylheku.com>
 
+	Eliminating the extra list wrapping applied to regular
+	expression objects in the syntax tree. The parser
+	just puts out a #<regex ...> instead of (#<regex ...> regex-syntax).
+
+	* eval.c (do_eval): We no longer need the hack of
+	treating (#<regex> ...) as a special form which
+	evaluates to #<regex>.
+	(expand): We no longer have to skip over regex syntax,
+	so the case is removed.
+
+	* match.c (h_var, do_txeval, do_match_line): regexp cases are no longer
+	subcases of consp but stand on their own. In do_match_line, we
+	introduce a COBJ case into the type switch for regexes.
+
+	* parser.y: regexes are now compiled in the regex and lisp_regex
+	grammar rules instead of the dependent rules, and are not wrapped in
+	extra syntax.
+
+2014-10-03  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (h_var): Fix regression introduced in 2014-08-11
 	commit. The incompleteness of that change broke the case of an unbound
 	variable followed by a bound variable. The value of the

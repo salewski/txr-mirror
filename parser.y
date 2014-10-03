@@ -360,13 +360,12 @@ text : TEXT                     { $$ = rl(string_own($1), num(parser->lineno)); 
      | SPACE                    { if ($1[0] == ' ' && $1[1] == 0)
                                   { val spaces = list(oneplus_s, 
                                                       chr(' '), nao);
-                                    $$ = cons(regex_compile(spaces, nil), spaces);
+                                    $$ = regex_compile(spaces, nil);
                                     rl($$, num(parser->lineno));
                                     free($1); }
                                   else
                                   { $$ = rl(string_own($1), num(parser->lineno)); }}
-     | regex                    { $$ = cons(regex_compile(rest($1), nil),
-                                            rest($1));
+     | regex                    { $$ = $1;
                                   rl($$, num(parser->lineno)); }
      | EMPTY                    { $$ = null_string; }
      ;
@@ -661,8 +660,7 @@ var_op : '*'                    { $$ = list(t, nao); }
        ;
 
 modifiers : NUMBER              { $$ = cons($1, nil); }
-          | regex               { $$ = cons(cons(regex_compile(rest($1), nil), 
-                                                 rest($1)), nil);
+          | regex               { $$ = cons($1, nil);
                                   rlcp($$, $1); }
           | list                { $$ = rlcp(cons(expand_meta($1, nil),
                                                  nil), $1); }
@@ -755,9 +753,7 @@ n_expr : SYMTOK                 { $$ = symhlpr($1, t); }
        | list                   { $$ = $1; }
        | vector                 { $$ = $1; }
        | hash                   { $$ = $1; }
-       | lisp_regex             { $$ = cons(regex_compile(rest($1), nil),
-                                            rest($1));
-                                  rlcp($$, $1); }
+       | lisp_regex             { $$ = $1; }
        | chrlit                 { $$ = $1; }
        | strlit                 { $$ = $1; }
        | quasilit               { $$ = $1; }
@@ -773,7 +769,8 @@ n_exprs_opt : n_exprs           { $$ = $1; }
             | /* empty */       { $$ = nil; }
           ;
 
-regex : '/' regexpr '/'         { $$ = cons(regex_s, $2); end_of_regex(scnr);
+regex : '/' regexpr '/'         { $$ = regex_compile($2, nil);
+                                  end_of_regex(scnr);
                                   rl($$, num(parser->lineno)); }
       | '/' error               { $$ = nil;
                                   yybadtok(yychar, lit("regex"));
@@ -781,7 +778,8 @@ regex : '/' regexpr '/'         { $$ = cons(regex_s, $2); end_of_regex(scnr);
       ;
 
 lisp_regex : HASH_SLASH regexpr '/'    
-                                { $$ = cons(regex_s, $2); end_of_regex(scnr);
+                                { $$ = regex_compile($2, nil);
+                                  end_of_regex(scnr);
                                   rl($$, num(parser->lineno)); }
            | HASH_SLASH error        
                                 { $$ = nil;

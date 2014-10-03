@@ -522,7 +522,7 @@ static val h_var(match_line_ctx *c)
       c->specline = rlcp(cons(cdr(pair), c->specline), c->specline);
     }
     return repeat_spec_k;
-  } else if (consp(modifier)) { /* var bound over text matched by form */
+  } else if (consp(modifier) || regexp(modifier)) { /* var bound over text matched by form */
     cons_bind (new_bindings, new_pos,
                match_line(ml_specline(*c, modifiers)));
 
@@ -575,22 +575,22 @@ static val h_var(match_line_ctx *c)
     if (sym)
       c->bindings = acons(sym, sub_str(c->dataline, c->pos, find), c->bindings);
     c->pos = plus(find, length_str(next));
+  } else if (regexp(next)) {
+    val find = search_regex(c->dataline, next, c->pos, modifier);
+    val fpos = car(find);
+    val flen = cdr(find);
+    if (!find) {
+      LOG_MISMATCH("var delimiting regex");
+      return nil;
+    }
+    LOG_MATCH("var delimiting regex", fpos);
+    if (sym)
+      c->bindings = acons(sym, sub_str(c->dataline, c->pos, fpos), c->bindings);
+    c->pos = if3(flen == t, t, plus(fpos, flen));
   } else if (consp(next)) {
     val op = first(next);
 
-    if (regexp(op)) {
-      val find = search_regex(c->dataline, op, c->pos, modifier);
-      val fpos = car(find);
-      val flen = cdr(find);
-      if (!find) {
-        LOG_MISMATCH("var delimiting regex");
-        return nil;
-      }
-      LOG_MATCH("var delimiting regex", fpos);
-      if (sym)
-        c->bindings = acons(sym, sub_str(c->dataline, c->pos, fpos), c->bindings);
-      c->pos = if3(flen == t, t, plus(fpos, flen));
-    } else if (op == var_s) {
+    if (op == var_s) {
       /* Unbound var followed by var: the following one must either
          be bound, or must specify a regex. */
       val second_sym = second(next);
@@ -603,8 +603,8 @@ static val h_var(match_line_ctx *c)
                   second_sym, nao);
       }
 
-      if (!pair && consp(next_modifier)) {
-        val find = search_regex(c->dataline, first(next_modifier), c->pos, modifier);
+      if (!pair && regexp(next_modifier)) {
+        val find = search_regex(c->dataline, next_modifier, c->pos, modifier);
         val fpos = car(find);
         val flen = cdr(find);
 
@@ -1176,15 +1176,7 @@ static val do_match_line(match_line_ctx *c)
       {
         val directive = first(elem);
 
-        if (regexp(directive)) {
-          val past = match_regex(c->dataline, directive, c->pos);
-          if (nilp(past)) {
-            LOG_MISMATCH("regex");
-            debug_return (nil);
-          }
-          LOG_MATCH("regex", past);
-          c->pos = past;
-        } else if (consp(directive) || stringp(directive)) {
+        if (consp(directive) || stringp(directive)) {
           val len = match_str_tree(c->dataline, elem, c->pos);
           val newpos;
 
@@ -1259,6 +1251,18 @@ static val do_match_line(match_line_ctx *c)
         c->pos = newpos;
         break;
       }
+    case COBJ:
+      if (elem->co.cls == regex_s) {
+        val past = match_regex(c->dataline, elem, c->pos);
+        if (nilp(past)) {
+          LOG_MISMATCH("regex");
+          debug_return (nil);
+        }
+        LOG_MATCH("regex", past);
+        c->pos = past;
+        break;
+      }
+      /* fallthrough */
     default:
       sem_error(elem, lit("unsupported object in spec: ~s"), elem, nao);
     }
@@ -1447,7 +1451,7 @@ static val do_txeval(val spec, val form, val bindings, val allow_unbound)
     uw_fast_return(nil);
 
   {
-    if (!form) {
+    if (!form || regexp(form)) {
       ret = form;
     } else if (bindable(form)) {
       val binding = or2(assoc(form, bindings), lookup_var(nil, form));
@@ -1475,8 +1479,6 @@ static val do_txeval(val spec, val form, val bindings, val allow_unbound)
           tail = list_collect(tail, subst_vars(cdr(car(iter)), bindings, nil));
         ret = out;
         uw_env_end;
-      } else if (regexp(sym)) {
-        ret = form;
       } else if (sym == var_s) {
         uw_env_begin;
         uw_set_match_context(cons(spec, bindings));
