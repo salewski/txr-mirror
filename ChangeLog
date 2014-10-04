@@ -1,3 +1,13 @@
+2014-10-04  Kaz Kylheku  <kaz@kylheku.com>
+
+	Keep regex source code in regex objects, in anticipation
+	of pretty-printing. Fix object construction bugs.
+
+	* regex.c (struct regex): New member, source.
+	(regex_mark): Ensure source is visited by garbage collector.
+	(regex_compile): Store regex_sexp in source.
+	Fix violations of section 3.2 of HACKING document.
+
 2014-10-03  Kaz Kylheku  <kaz@kylheku.com>
 
 	Eliminating the extra list wrapping applied to regular

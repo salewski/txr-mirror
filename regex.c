@@ -60,6 +60,7 @@ typedef struct regex {
     struct nfa nfa;
     val dv;
   } r;
+  val source;
 } regex_t;
 
 /*
@@ -1301,6 +1302,7 @@ static void regex_mark(val obj)
   regex_t *regex = (regex_t *) obj->co.handle;
   if (regex->kind == REGEX_DV)
     gc_mark(regex->r.dv);
+  gc_mark(regex->source);
 }
 
 static struct cobj_ops regex_obj_ops = {
@@ -1663,14 +1665,23 @@ val regex_compile(val regex_sexp, val error_stream)
     return if2(regex_sexp, regex_compile(regex_sexp, error_stream));
   } else if (opt_derivative_regex || regex_requires_dv(regex_sexp)) {
     regex_t *regex = (regex_t *) chk_malloc(sizeof *regex);
+    val ret;
     regex->kind = REGEX_DV;
+    regex->r.dv = nil;
+    regex->source = nil;
+    ret = cobj((mem_t *) regex, regex_s, &regex_obj_ops);
     regex->r.dv = dv_compile_regex(regex_sexp);
-    return cobj((mem_t *) regex, regex_s, &regex_obj_ops);
+    regex->source = regex_sexp;
+    return ret;
   } else {
     regex_t *regex = (regex_t *) chk_malloc(sizeof *regex);
+    val ret;
     regex->kind = REGEX_NFA;
+    regex->source = nil;
+    ret = cobj((mem_t *) regex, regex_s, &regex_obj_ops);
     regex->r.nfa = nfa_compile_regex(regex_sexp);
-    return cobj((mem_t *) regex, regex_s, &regex_obj_ops);
+    regex->source = regex_sexp;
+    return ret;
   }
 }
 
