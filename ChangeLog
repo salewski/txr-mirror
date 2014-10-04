@@ -1,5 +1,15 @@
 2014-10-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	Printing of regular expression objects implemented.
+
+	* regex.c (regex_print): New static function.
+	(regex_obj_ops): Registered regex_print.  (print_class_char,
+	paren_print_rec, print_rec): New static functions.
+
+	* dep.mk: Regenerated.
+
+2014-10-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	Keep regex source code in regex objects, in anticipation
 	of pretty-printing. Fix object construction bugs.
 

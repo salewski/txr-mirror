@@ -39,6 +39,7 @@
 #include "parser.h"
 #include "signal.h"
 #include "unwind.h"
+#include "stream.h"
 #include "gc.h"
 #include "regex.h"
 #include "txr.h"
@@ -1305,9 +1306,11 @@ static void regex_mark(val obj)
   gc_mark(regex->source);
 }
 
+static void regex_print(val obj, val stream);
+
 static struct cobj_ops regex_obj_ops = {
   eq,
-  cobj_print_op,
+  regex_print,
   regex_destroy,
   regex_mark,
   cobj_hash_op
@@ -1688,6 +1691,153 @@ val regex_compile(val regex_sexp, val error_stream)
 val regexp(val obj)
 {
   return typeof(obj) == regex_s ? t : nil;
+}
+
+static void print_class_char(val ch, val first_p, val stream)
+{
+  wchar_t c = c_chr(ch);
+  switch (c) {
+  case '^':
+    if (!first_p)
+      break;
+    /* fallthrough */
+  case '-':
+    put_char(chr('\\'), stream);
+    break;
+  }
+  put_char(ch, stream);
+}
+
+static void print_rec(val exp, val stream);
+
+static void paren_print_rec(val exp, val stream)
+{
+  put_char(chr('('), stream);
+  print_rec(exp, stream);
+  put_char(chr(')'), stream);
+}
+
+static void print_rec(val exp, val stream)
+{
+  if (exp == space_k) {
+    put_string(lit("\\s"), stream);
+  } else if (exp == digit_k) {
+    put_string(lit("\\d"), stream);
+  } else if (exp == word_char_k) {
+    put_string(lit("\\w"), stream);
+  } else if (exp == cspace_k) {
+    put_string(lit("\\S"), stream);
+  } else if (exp == cdigit_k) {
+    put_string(lit("\\D"), stream);
+  } else if (exp == cword_char_k) {
+    put_string(lit("\\W"), stream);
+  } else if (exp == wild_s) {
+    put_char(chr('.'), stream);
+  } else if (chrp(exp)) {
+    wchar_t ch = c_chr(exp);
+    switch (ch) {
+    case '?': case '.': case '*': case '+':
+    case '(': case ')': case '|': case '~':
+    case '&': case '%': case '/': case '\\':
+      put_char(chr('\\'), stream);
+      break;
+      }
+    put_char(exp, stream);
+  } else if (stringp(exp)) {
+    cnum i;
+    cnum l = c_num(length(exp));
+    for (i = 0; i < l; i++)
+      print_rec(chr_str(exp, num(i)), stream);
+  } else if (consp(exp)) {
+    val sym = first(exp);
+    val args = rest(exp);
+
+    if (sym == set_s || sym == cset_s) {
+      put_char(chr('['), stream);
+      val first_p = t;
+
+      if (sym == cset_s) {
+        put_char(chr('^'), stream);
+        first_p = nil;
+      }
+
+      while (args) {
+        val arg = pop(&args);
+        if (consp(arg)) {
+          print_class_char(car(arg), first_p, stream);
+          put_char(chr('-'), stream);
+          print_class_char(cdr(arg), nil, stream);
+        } else {
+          print_class_char(arg, first_p, stream);
+        }
+        first_p = nil;
+      }
+      put_char(chr(']'), stream);
+    } else if (sym == compound_s) {
+      while (args)
+        print_rec(pop(&args), stream);
+    } else if (sym == zeroplus_s || sym == oneplus_s || sym == optional_s) {
+      val arg = pop(&args);
+      if (consp(arg) && car(arg) != set_s && car(arg) != cset_s)
+        paren_print_rec(arg, stream);
+      else
+        print_rec(arg, stream);
+      if (sym == zeroplus_s)
+        put_char(chr('*'), stream);
+      else if (sym == oneplus_s)
+        put_char(chr('+'), stream);
+      else
+        put_char(chr('?'), stream);
+    } else if (sym == compl_s) {
+      val arg = pop(&args);
+      put_char(chr('~'), stream);
+      if (consp(arg) && (car(arg) == or_s || car(arg) == and_s))
+        paren_print_rec(arg, stream);
+      else
+        print_rec(arg, stream);
+    } else if (sym == and_s) {
+      val arg1 = pop(&args);
+      val arg2 = pop(&args);
+      if (consp(arg1) && car(arg2) == or_s)
+        paren_print_rec(arg1, stream);
+      else
+        print_rec(arg1, stream);
+      put_char(chr('&'), stream);
+      if (consp(arg2) && car(arg2) == or_s)
+        paren_print_rec(arg2, stream);
+      else
+        print_rec(arg2, stream);
+    } else if (sym == or_s) {
+      print_rec(pop(&args), stream);
+      put_char(chr('|'), stream);
+      print_rec(pop(&args), stream);
+    } else if (sym == nongreedy_s) {
+      val arg1 = pop(&args);
+      val arg2 = pop(&args);
+      if (consp(arg1) && car(arg1) != set_s && car(arg1) != cset_s)
+        paren_print_rec(arg1, stream);
+      else
+        print_rec(arg1, stream);
+      put_char(chr('%'), stream);
+      if (consp(arg2) && (car(arg2) == and_s && car(arg2) == or_s))
+        paren_print_rec(arg2, stream);
+      else
+        print_rec(arg2, stream);
+    } else {
+      uw_throwf(error_s, lit("bad operator in regex syntax: ~s"), sym, nao);
+    }
+  } else {
+    uw_throwf(error_s, lit("bad object in regex syntax: ~s"), exp, nao);
+  }
+}
+
+static void regex_print(val obj, val stream)
+{
+  regex_t *regex = (regex_t *) cobj_handle(obj, regex_s);
+
+  put_string(lit("#/"), stream);
+  print_rec(regex->source, stream);
+  put_char(chr('/'), stream);
 }
 
 static cnum regex_run(val compiled_regex, const wchar_t *str)
