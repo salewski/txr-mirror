@@ -1,3 +1,17 @@
+2014-10-05  Kaz Kylheku  <kaz@kylheku.com>
+
+	Version 99.
+
+	* RELNOTES: Updated.
+
+	* configure, txr.1: Bumped version.
+
+	* share/txr/stdlib/ver.txr: Likewise
+
+	* Makefile: Improve binary packaging rules.
+
+	* regex.c: #include <stdarg.h> added.
+
 2014-10-04  Kaz Kylheku  <kaz@kylheku.com>
 
 	Printing of regular expression objects implemented.

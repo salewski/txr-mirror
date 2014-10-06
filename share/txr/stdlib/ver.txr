@@ -1,1 +1,1 @@
-@(do (defvar *lib-version* 98))
+@(do (defvar *lib-version* 99))

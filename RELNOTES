@@ -1,10 +1,33 @@
+                                     TXR 99
+                                   2014-10-05
+
+
+  Features
+
+  - Variables in the pattern language can be bound to regexes, in
+    which case they perform regex matches when matched against
+    input.
+
+  - Representation for compiled regexes is streamlined.
+
+  - Regex objects now print in regex notation.
+
+  Bugs
+
+  - Fixed August 11 regression affecting 96 through 98: broken matching of
+    unbound variables followed by bound variables.
+
+  - Fixed one more problem with andf function: (andf) not returning t. 
+
+
+
                                      TXR 98
                                    2014-09-26
 
 
   Features
 
-  - New numeric constants givin pi, e and various limits of floating point
+  - New numeric constants giving pi, e and various limits of floating point
     representation.
 
   - New syntax-error exception type; syntax errors in expressions passed
@@ -29,12 +52,12 @@
   - Fixed bad memory performance when the program works with large
     heaped objects, by making GC aware of this memory.
 
-  - Fixed broken return value semantics of orf and and combinators.
+  - Fixed broken return value semantics of orf and andf combinators.
 
 
 
                                      TXR 97
-                                   2014-08-14
+                                   2014-08-29
 
 
   Bugs

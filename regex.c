@@ -34,6 +34,7 @@
 #include <dirent.h>
 #include <limits.h>
 #include <signal.h>
+#include <stdarg.h>
 #include "config.h"
 #include "lib.h"
 #include "parser.h"

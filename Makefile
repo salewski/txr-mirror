@@ -171,18 +171,19 @@ install: $(PROG)
 	$(call INSTALL,0444,$(top_srcdir)/txr.1,$(DESTDIR)$(mandir)/man1)
 	$(call INSTALL,0444,$(top_srcdir)/share/txr/stdlib/*.txr,$(DESTDIR)$(datadir)/stdlib)
 
-.PHONY: unixtar tar zip
+.PHONY: unixtar gnutar zip
 
-pax tar zip: DESTDIR=pkg
-pax tar zip: prefix=
-pax tar zip: PREINSTALL=rm -rf pkg
+unixtar gnutar zip: DESTDIR=pkg
+zip: prefix=/txr
+unixtar gnutar zip: PREINSTALL=rm -rf pkg
 
-pax: install
-	cd pkg; find . | pax -w -f ../txr-$(txr_ver)-bin.tar -x ustar .
+unixtar: install
+	cd pkg; pwd; find . | pax -M uidgid -w -f ../txr-$(txr_ver)-bin.tar -x ustar ; ls ../*.tar
+	pwd
 	compress txr-$(txr_ver)-bin.tar
 
-tar: install
-	tar -C pkg -cZf txr-$(txr_ver)-bin.tar.Z .
+gnutar: install
+	tar --owner=0 --group=0 -C pkg -czf txr-$(txr_ver)-bin.tar.gz .
 
 zip: install
 	cd pkg; zip -r ../txr-$(txr_ver)-bin.zip .
