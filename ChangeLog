@@ -1,3 +1,23 @@
+2014-10-08  Kaz Kylheku  <kaz@kylheku.com>
+
+	Fix 2011-12-03 regression. The freeform directive code
+	relies on lazy_str_get_trailing_list and the behavior
+	of that function changed because (split-str "" any-separator)
+	changed from returning nil to returning the empty string.
+	The resulting behavior change of lazy_str_get_trailing_list was later
+	described in the documentation, thereby codifying it.
+
+	This patch changes the lazy_str_get_trailing_list behavior,
+	which is poor, and causes infinite looping. We do not want
+	an extra empty string prepended, because it looks like
+	a spurious line.
+
+	* lib.c (lazy_str_get_trailing_list): if split_str produces
+	a the list (""), then just return the unmaterialized list from
+	the lazy string without prepending that one-element list to it.
+
+	* txr.1: Updated documentation for lazy-str-get-trailing-list.
+
 2014-10-05  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 99.

@@ -4987,6 +4987,9 @@ val lazy_str_get_trailing_list(val lstr, val index)
     val split_suffix = split_str(sub_str(lstr->ls.prefix, index, nil),
                                  or2(car(lstr->ls.opts), lit("\n")));
 
+    if (!cdr(split_suffix) && equal(car(split_suffix), null_string))
+      return lstr->ls.list;
+
     return nappend2(split_suffix, lstr->ls.list);
   }
 }

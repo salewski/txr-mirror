@@ -16376,29 +16376,36 @@ materialized lazy string.
 .desc
 The
 .code lazy-str-get-trailing-list
-function is a sort of inverse operation to
-the lazy string from its associated list.
+function can be considered, in some way, an inverse operation to
+the production of the lazy string from its associated list.
 
-First, the string is forced up through the position
+First,
+.meta string
+is forced up through the position
 .metn index .
+That is the only extent to which
+.meta string
+is modified by this function.
 
-Next, the materialized part of the string starting at position
+Next, the suffix of the materialized part of the lazy string starting at
+position
 .metn index ,
-through to the end, is split into pieces on occurrences of the terminator
-character, which had been given as the
+is split into pieces on occurrences of the
+terminator character (which had been given as the
 .meta terminator
 argument in the
 .code lazy-str
-constructor, and defaults to the newline character.
+constructor, and defaults to newline).   If the
+.meta index
+position is beyond the part of the string which can be materialized
+(in adherence with the lazy string's
+.meta limit-count
+constructor parameter), then the list of pieces is considered
+to be empty.
 
 Finally, a list is returned consisting of the pieces produced by the split,
 to which is appended the remaining list of the string which has not yet been
 forced to materialize.
-
-If
-.meta index
-is a position which cannot be forced, then the lazy string's
-remaining list is returned, with single null string prepended to it.
 
 .coNP Functions @, length-str-> @, length-str->= @ length-str-< and @ length-str-<=
 .synb
