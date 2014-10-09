@@ -45,14 +45,8 @@
 #if HAVE_SYS_WAIT
 #include <sys/wait.h>
 #endif
-#if HAVE_SYS_STAT
-#include <sys/stat.h>
-#endif
 #if HAVE_WINDOWS_H
 #include <windows.h>
-#endif
-#if HAVE_MAKEDEV
-#include <sys/types.h>
 #endif
 #include "lib.h"
 #include "gc.h"
@@ -2055,50 +2049,6 @@ val get_string(val stream, val nchars)
   return get_string_from_stream(strstream);
 }
 
-#if HAVE_SYS_STAT
-static int w_stat(const wchar_t *wpath, struct stat *buf)
-{
-  char *path = utf8_dup_to(wpath);
-  int res = stat(path, buf);
-  free(path);
-  return res;
-}
-#endif
-
-val statf(val path)
-{
-#if HAVE_SYS_STAT
-  struct stat st;
-  int res = w_stat(c_str(path), &st);
-
-  if (res == -1)
-    uw_throwf(file_error_s, lit("unable to stat ~a: ~a/~s"),
-              path, num(errno), string_utf8(strerror(errno)), nao);
-
-  return list(dev_k, num(st.st_dev),
-              ino_k, num(st.st_ino),
-              mode_k, num(st.st_mode),
-              nlink_k, num(st.st_nlink),
-              uid_k, num(st.st_uid),
-              gid_k, num(st.st_gid),
-              rdev_k, num(st.st_rdev),
-              size_k, num(st.st_size),
-#if !HAVE_WINDOWS_H
-              blksize_k, num(st.st_blksize),
-              blocks_k, num(st.st_blocks),
-#else
-              blksize_k, zero,
-              blocks_k, zero,
-#endif
-              atime_k, num(st.st_atime),
-              mtime_k, num(st.st_mtime),
-              ctime_k, num(st.st_ctime),
-              nao);
-#else
-  uw_throwf(file_error_s, lit("stat is not implemented"), nao);
-#endif
-}
-
 static DIR *w_opendir(const wchar_t *wname)
 {
   char *name = utf8_dup_to(wname);
@@ -2552,173 +2502,6 @@ val rename_path(val from, val to)
   return t;
 }
 
-#if HAVE_MKDIR
-val mkdir_wrap(val path, val mode)
-{
-  char *u8path = utf8_dup_to(c_str(path));
-  int err = mkdir(u8path, c_num(default_arg(mode, num_fast(0777))));
-  free(u8path);
-
-  if (err < 0)
-    uw_throwf(file_error_s, lit("mkdir ~a: ~a/~s"),
-              path, num(errno), string_utf8(strerror(errno)), nao);
-
-  return t;
-}
-#elif HAVE_WINDOWS_H
-val mkdir_wrap(val path, val mode)
-{
-  int err = _wmkdir(c_str(path));
-
-  (void) mode;
-  if (err < 0)
-    uw_throwf(file_error_s, lit("mkdir ~a: ~a/~s"),
-              path, num(errno), string_utf8(strerror(errno)), nao);
-
-  return t;
-}
-#endif
-
-#if HAVE_UNISTD_H
-val chdir_wrap(val path)
-{
-  char *u8path = utf8_dup_to(c_str(path));
-  int err = chdir(u8path);
-  free(u8path);
-
-  if (err < 0)
-    uw_throwf(file_error_s, lit("chdir ~a: ~a/~s"),
-              path, num(errno), string_utf8(strerror(errno)), nao);
-  return t;
-}
-
-val getcwd_wrap(void)
-{
-  size_t guess = 256;
-
-  for (;;) {
-    char *u8buf = (char *) chk_malloc(guess);
-
-    if (getcwd(u8buf, guess) == 0) {
-      free(u8buf);
-      if (errno != ERANGE) {
-        uw_throwf(file_error_s, lit("getcwd: ~a/~s"),
-                  num(errno), string_utf8(strerror(errno)), nao);
-      }
-      if (2 * guess > guess)
-        guess *= 2;
-      else
-        uw_throwf(file_error_s, lit("getcwd: weird problem"), nao);
-    } else {
-      val out = string_utf8(u8buf);
-      free(u8buf);
-      return out;
-    }
-  }
-}
-
-#if HAVE_MAKEDEV
-
-val makedev_wrap(val major, val minor)
-{
-  return num(makedev(c_num(major), c_num(minor)));
-}
-
-val minor_wrap(val dev)
-{
-  return num(minor(c_num(dev)));
-}
-
-val major_wrap(val dev)
-{
-  return num(major(c_num(dev)));
-}
-
-#endif
-
-#if HAVE_MKNOD
-
-val mknod_wrap(val path, val mode, val dev)
-{
-  char *u8path = utf8_dup_to(c_str(path));
-  int err = mknod(u8path, c_num(mode), c_num(default_arg(dev, zero)));
-  free(u8path);
-
-  if (err < 0)
-#if HAVE_MAKEDEV
-    uw_throwf(file_error_s, lit("mknod ~a ~a ~a (~a:~a): ~a/~s"),
-              path, mode, dev, major_wrap(dev), minor_wrap(dev), num(errno),
-              string_utf8(strerror(errno)), nao);
-#else
-    uw_throwf(file_error_s, lit("mknod ~a ~a ~a: ~a/~s"),
-              path, mode, dev, num(errno),
-              string_utf8(strerror(errno)), nao);
-#endif
-
-  return t;
-}
-
-#endif
-
-#if HAVE_SYMLINK
-
-val symlink_wrap(val target, val to)
-{
-  char *u8target = utf8_dup_to(c_str(target));
-  char *u8to = utf8_dup_to(c_str(to));
-  int err = symlink(u8target, u8to);
-  free(u8target);
-  free(u8to);
-  if (err < 0)
-    uw_throwf(file_error_s, lit("symlink ~a ~a: ~a/~s"),
-              target, to, num(errno), string_utf8(strerror(errno)), nao);
-  return t;
-}
-
-val link_wrap(val target, val to)
-{
-  char *u8target = utf8_dup_to(c_str(target));
-  char *u8to = utf8_dup_to(c_str(to));
-  int err = link(u8target, u8to);
-  free(u8target);
-  free(u8to);
-  if (err < 0)
-    uw_throwf(file_error_s, lit("link ~a ~a: ~a/~s"),
-              target, to, num(errno), string_utf8(strerror(errno)), nao);
-  return t;
-}
-
-val readlink_wrap(val path)
-{
-  char *u8path = utf8_dup_to(c_str(path));
-  ssize_t guess = 256;
-
-  for (;;) {
-    char *u8buf = (char *) chk_malloc(guess);
-    ssize_t bytes = readlink(u8path, u8buf, guess);
-
-    if (bytes >= guess) {
-      free(u8buf);
-      if (2 * guess > guess)
-        guess *= 2;
-      else
-        uw_throwf(file_error_s, lit("readlink: weird problem"), nao);
-    } else if (bytes <= 0) {
-      free(u8buf);
-      uw_throwf(file_error_s, lit("readlink ~a: ~a/~s"),
-                path, num(errno), string_utf8(strerror(errno)), nao);
-    } else {
-      val out;
-      u8buf[bytes] = 0;
-      out = string_utf8(u8buf);
-      free(u8buf);
-      return out;
-    }
-  }
-}
-
-#endif
-
 static val open_files(val file_list, val substitute_stream)
 {
   substitute_stream = default_bool_arg(substitute_stream);
@@ -2743,8 +2526,6 @@ static val open_files_star(val file_list, val substitute_stream)
                            cons(lazy_mapcar(func_n2o(open_file, 1), file_list), nil));
   }
 }
-
-#endif
 
 val abs_path_p(val path)
 {
@@ -2790,84 +2571,6 @@ void stream_init(void)
   name_k = intern(lit("name"), keyword_package);
   format_s = intern(lit("format"), user_package);
 
-#ifndef S_IFSOCK
-#define S_IFSOCK 0
-#endif
-
-#ifndef S_IFLNK
-#define S_IFLNK 0
-#endif
-
-#ifndef S_ISUID
-#define S_ISUID 0
-#endif
-
-#ifndef S_ISGID
-#define S_ISGID 0
-#endif
-
-#ifndef S_ISVTX
-#define S_ISVTX 0
-#endif
-
-#ifndef S_IRWXG
-#define S_IRWXG 0
-#endif
-
-#ifndef S_IRGRP
-#define S_IRGRP 0
-#endif
-
-#ifndef S_IWGRP
-#define S_IWGRP 0
-#endif
-
-#ifndef S_IXGRP
-#define S_IXGRP 0
-#endif
-
-#ifndef S_IRWXO
-#define S_IRWXO 0
-#endif
-
-#ifndef S_IROTH
-#define S_IROTH 0
-#endif
-
-#ifndef S_IWOTH
-#define S_IWOTH 0
-#endif
-
-#ifndef S_IXOTH
-#define S_IXOTH 0
-#endif
-
-#if HAVE_SYS_STAT
-  reg_var(intern(lit("s-ifmt"), user_package), num_fast(S_IFMT));
-  reg_var(intern(lit("s-ifsock"), user_package), num_fast(S_IFSOCK));
-  reg_var(intern(lit("s-iflnk"), user_package), num_fast(S_IFLNK));
-  reg_var(intern(lit("s-ifreg"), user_package), num_fast(S_IFREG));
-  reg_var(intern(lit("s-ifblk"), user_package), num_fast(S_IFBLK));
-  reg_var(intern(lit("s-ifdir"), user_package), num_fast(S_IFDIR));
-  reg_var(intern(lit("s-ifchr"), user_package), num_fast(S_IFCHR));
-  reg_var(intern(lit("s-ififo"), user_package), num_fast(S_IFIFO));
-  reg_var(intern(lit("s-isuid"), user_package), num_fast(S_ISUID));
-  reg_var(intern(lit("s-isgid"), user_package), num_fast(S_ISGID));
-  reg_var(intern(lit("s-isvtx"), user_package), num_fast(S_ISVTX));
-  reg_var(intern(lit("s-irwxu"), user_package), num_fast(S_IRWXU));
-  reg_var(intern(lit("s-irusr"), user_package), num_fast(S_IRUSR));
-  reg_var(intern(lit("s-iwusr"), user_package), num_fast(S_IWUSR));
-  reg_var(intern(lit("s-ixusr"), user_package), num_fast(S_IXUSR));
-  reg_var(intern(lit("s-irwxg"), user_package), num_fast(S_IRWXG));
-  reg_var(intern(lit("s-irgrp"), user_package), num_fast(S_IRGRP));
-  reg_var(intern(lit("s-iwgrp"), user_package), num_fast(S_IWGRP));
-  reg_var(intern(lit("s-ixgrp"), user_package), num_fast(S_IXGRP));
-  reg_var(intern(lit("s-irwxo"), user_package), num_fast(S_IRWXO));
-  reg_var(intern(lit("s-iroth"), user_package), num_fast(S_IROTH));
-  reg_var(intern(lit("s-iwoth"), user_package), num_fast(S_IWOTH));
-  reg_var(intern(lit("s-ixoth"), user_package), num_fast(S_IXOTH));
-#endif
-
   reg_var(stdin_s = intern(lit("*stdin*"), user_package),
           make_stdio_stream(stdin, lit("stdin")));
   reg_var(stdout_s = intern(lit("*stdout*"), user_package),
@@ -2901,7 +2604,6 @@ void stream_init(void)
   reg_fun(intern(lit("unget-byte"), user_package), func_n2o(unget_byte, 1));
   reg_fun(intern(lit("flush-stream"), user_package), func_n1(flush_stream));
   reg_fun(intern(lit("seek-stream"), user_package), func_n3(seek_stream));
-  reg_fun(intern(lit("stat"), user_package), func_n1(statf));
   reg_fun(intern(lit("streamp"), user_package), func_n1(streamp));
   reg_fun(intern(lit("real-time-stream-p"), user_package), func_n1(real_time_stream_p));
   reg_fun(intern(lit("stream-set-prop"), user_package), func_n3(stream_set_prop));

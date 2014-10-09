@@ -27,7 +27,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 #include <dirent.h>
 #include <setjmp.h>
 #include <stdarg.h>
@@ -35,12 +34,6 @@
 #include <signal.h>
 #include <time.h>
 #include "config.h"
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#ifdef HAVE_WINDOWS_H
-#include <windows.h>
-#endif
 #include "lib.h"
 #include "gc.h"
 #include "arith.h"
@@ -3221,93 +3214,6 @@ static val force(val promise)
   return cdr(rplacd(promise, funcall(cdr(promise))));
 }
 
-static val errno_wrap(val newval)
-{
-  val oldval = num(errno);
-  if (default_bool_arg(newval))
-    errno = c_num(newval);
-  return oldval;
-}
-
-#if HAVE_DAEMON
-static val daemon_wrap(val nochdir, val noclose)
-{
-  int result = daemon(nochdir ? 1 : 0, noclose ? 1 : 0);
-  return result == 0 ? t : nil;
-}
-#endif
-
-static val exit_wrap(val status)
-{
-  int stat;
-
-  if (status == nil)
-    stat = EXIT_FAILURE;
-  else if (status == t)
-    stat = EXIT_SUCCESS;
-  else
-    stat = c_num(status);
-
-  exit(stat);
-  /* notreached */
-  return nil;
-}
-
-static val usleep_wrap(val usec)
-{
-  val retval;
-  cnum u = c_num(usec);
-
-  sig_save_enable;
-
-#if HAVE_POSIX_NANOSLEEP
-  struct timespec ts;
-  ts.tv_sec = u / 1000000;
-  ts.tv_nsec = (u % 1000000) * 1000;
-  retval = if3(nanosleep(&ts, 0) == 0, t, nil);
-#elif HAVE_POSIX_SLEEP && HAVE_POSIX_USLEEP
-  retval = if2(sleep(u / 1000000) == 0 &&
-               usleep(u % 1000000) == 0, t);
-#elif HAVE_WINDOWS_H
-  Sleep(u / 1000);
-  retval = t;
-#else
-#error port me!
-#endif
-
-  sig_restore_enable;
-  return retval;
-}
-
-#if HAVE_UNISTD_H
-
-static val getpid_wrap(void)
-{
-  return num(getpid());
-}
-
-#if HAVE_GETPPID
-static val getppid_wrap(void)
-{
-  return num(getppid());
-}
-#endif
-
-#endif
-
-static val env_hash(void)
-{
-  val env_strings = env();
-  val hash = make_hash(nil, nil, t);
-
-  for (; env_strings; env_strings = cdr(env_strings)) {
-    cons_bind (key, val_cons, split_str(car(env_strings), lit("=")));
-    sethash(hash, key, car(val_cons));
-  }
-
-  return hash;
-}
-
 static void reg_op(val sym, opfun_t fun)
 {
   assert (sym != 0);
@@ -3996,46 +3902,6 @@ void eval_init(void)
   reg_fun(intern(lit("time-fields-utc"), user_package), func_n1(time_fields_utc));
   reg_fun(intern(lit("make-time"), user_package), func_n7(make_time));
   reg_fun(intern(lit("make-time-utc"), user_package), func_n7(make_time_utc));
-
-  reg_fun(intern(lit("errno"), user_package), func_n1o(errno_wrap, 0));
-  reg_fun(intern(lit("exit"), user_package), func_n1(exit_wrap));
-  reg_fun(intern(lit("usleep"), user_package), func_n1(usleep_wrap));
-#if HAVE_UNISTD_H
-  reg_fun(intern(lit("getpid"), user_package), func_n0(getpid_wrap));
-#if HAVE_GETPPID
-  reg_fun(intern(lit("getppid"), user_package), func_n0(getppid_wrap));
-#endif
-#endif
-
-  reg_fun(intern(lit("env"), user_package), func_n0(env));
-  reg_fun(intern(lit("env-hash"), user_package), func_n0(env_hash));
-
-#if HAVE_DAEMON
-  reg_fun(intern(lit("daemon"), user_package), func_n2(daemon_wrap));
-#endif
-
-#if HAVE_MKDIR || HAVE_WINDOWS_H
-  reg_fun(intern(lit("mkdir"), user_package), func_n2o(mkdir_wrap, 1));
-#endif
-
-  reg_fun(intern(lit("chdir"), user_package), func_n1(chdir_wrap));
-  reg_fun(intern(lit("pwd"), user_package), func_n0(getcwd_wrap));
-
-#if HAVE_MAKEDEV
-  reg_fun(intern(lit("makedev"), user_package), func_n2(makedev_wrap));
-  reg_fun(intern(lit("minor"), user_package), func_n1(minor_wrap));
-  reg_fun(intern(lit("major"), user_package), func_n1(major_wrap));
-#endif
-
-#if HAVE_MKNOD
-  reg_fun(intern(lit("mknod"), user_package), func_n3(mknod_wrap));
-#endif
-
-#if HAVE_SYMLINK
-  reg_fun(intern(lit("symlink"), user_package), func_n2(symlink_wrap));
-  reg_fun(intern(lit("link"), user_package), func_n2(link_wrap));
-  reg_fun(intern(lit("readlink"), user_package), func_n1(readlink_wrap));
-#endif
 
   reg_fun(intern(lit("source-loc"), user_package), func_n1(source_loc));
   reg_fun(intern(lit("source-loc-str"), user_package), func_n1(source_loc_str));

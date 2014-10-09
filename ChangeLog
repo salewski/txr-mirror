@@ -1,5 +1,36 @@
 2014-10-08  Kaz Kylheku  <kaz@kylheku.com>
 
+	Moving system interface functions to separate module out of
+	the eval and stream modules.
+
+	* Makefile (OBJS): Add sysif.o.
+
+	* dep.mk: Regenerated.
+
+	* eval.c (errno_wrap, daemon_wrap, exit_wrap, usleep_wrap, getpid_wrap,
+	getppid_wrap, env_hash): Functions moved to sysif.c and changed
+	to static functions.
+	(eval_init): Registrations of functions moved to sysif.c.
+
+	* lib.c (init): Call sysif_init.
+
+	* stream.c (w_stat, statf, mkdir_wrap, chdir_wrap, getcwd_wrap,
+	makedev_wrap, minor_wrap, major_wrap, mknod_wrap): Functions
+	moved to sysif.c and become static functions.
+	(stream_init): Registration of stat moved to sysif.c.
+	(open_files, open_files_star): Bugfix: no longer erroneously included
+	in #ifdef HAVE_UNISTD_H block.
+
+	* stream.h (mkdir_wrap, chdir_wrap, getcwd_wrap, makedev_wrap,
+	minor_wrap, major_wrap, mknod_wrap, symlink_wrap, link_wrap,
+	readlink_wrap): Declarations removed.
+
+	* sysif.c: New file.
+
+	* sysif.h: New file.
+
+2014-10-08  Kaz Kylheku  <kaz@kylheku.com>
+
 	Add test case for recent breakage.
 
 	* tests/006/freeform-3.expected: New file.

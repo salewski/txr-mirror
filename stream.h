@@ -106,16 +106,6 @@ val open_process(val path, val mode_str, val args);
 val make_catenated_stream(val stream_list);
 val remove_path(val path);
 val rename_path(val from, val to);
-val mkdir_wrap(val path, val mode);
-val chdir_wrap(val path);
-val getcwd_wrap(void);
-val makedev_wrap(val major, val minor);
-val minor_wrap(val dev);
-val major_wrap(val dev);
-val mknod_wrap(val path, val mode, val dev);
-val symlink_wrap(val target, val to);
-val link_wrap(val target, val to);
-val readlink_wrap(val path);
 val abs_path_p(val path);
 
 void stream_init(void);

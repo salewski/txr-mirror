@@ -55,6 +55,7 @@
 #include "utf8.h"
 #include "filter.h"
 #include "eval.h"
+#include "sysif.h"
 #include "regex.h"
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
@@ -6768,6 +6769,7 @@ void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),
   obj_init();
   uw_init();
   eval_init();
+  sysif_init();
   arith_init();
   rand_init();
   stream_init();
