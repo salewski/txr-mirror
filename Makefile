@@ -121,6 +121,7 @@ tests/005/%: TXR_ARGS := $(top_srcdir)/tests/005/data
 tests/005/%: TXR_OPTS := -B
 tests/006/%: TXR_ARGS := $(top_srcdir)/tests/006/data
 tests/006/%: TXR_OPTS := -B
+tests/006/freeform-3.ok: TXR_ARGS := $(top_srcdir)/tests/006/passwd
 tests/008/tokenize.ok: TXR_ARGS := $(top_srcdir)/tests/008/data
 tests/008/configfile.ok: TXR_ARGS := $(top_srcdir)/tests/008/configfile
 tests/008/students.ok: TXR_ARGS := $(top_srcdir)/tests/008/students.xml

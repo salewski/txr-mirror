@@ -1,0 +1,4 @@
+@(collect)
+@(freeform 1 ":")
+@(coll)@{token /[^:]*/}:@(end)
+@(end)

@@ -1,5 +1,17 @@
 2014-10-08  Kaz Kylheku  <kaz@kylheku.com>
 
+	Add test case for recent breakage.
+
+	* tests/006/freeform-3.expected: New file.
+
+	* tests/006/freeform-3.txr: New file.
+
+	* tests/006/passwd: New file.
+
+	* Makefile (TXR_ARGS): Set up for new test case.
+
+2014-10-08  Kaz Kylheku  <kaz@kylheku.com>
+
 	Fix 2011-12-03 regression. The freeform directive code
 	relies on lazy_str_get_trailing_list and the behavior
 	of that function changed because (split-str "" any-separator)
