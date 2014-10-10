@@ -1,5 +1,14 @@
 2014-10-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	Fix gc safety issue in abs_path_p function.
+
+	* stream.c (ap_regex): New static variable.
+	(abs_path_p): Remove local reg variable; replace
+	uses of reg with ap_regex.
+	(stream_init): gc-protect ap_regex.
+
+2014-10-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (stream_init): No need to gc-protect
 	std_input, std_output, std_debug, std_error and std_null.  These are
 	not ordinary variables but macros which expand to locations in the

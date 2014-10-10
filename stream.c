@@ -2527,9 +2527,10 @@ static val open_files_star(val file_list, val substitute_stream)
   }
 }
 
+static val ap_regex;
+
 val abs_path_p(val path)
 {
-  static val reg;
   val ch;
 
   if (length(path) == zero)
@@ -2537,10 +2538,10 @@ val abs_path_p(val path)
   if ((ch = chr_str(path, zero)) == chr('/') || ch == chr('\\'))
     return t;
 
-  if (!reg)
-    reg = regex_compile(lit("[A-Za-z0-9]+:[/\\\\]"), nil);
+  if (!ap_regex)
+    ap_regex = regex_compile(lit("[A-Za-z0-9]+:[/\\\\]"), nil);
 
-  if (match_regex(path, reg, zero))
+  if (match_regex(path, ap_regex, zero))
     return t;
 
   return nil;
@@ -2548,6 +2549,8 @@ val abs_path_p(val path)
 
 void stream_init(void)
 {
+  prot1(&ap_regex);
+
   detect_format_string();
 
   dev_k = intern(lit("dev"), keyword_package);
