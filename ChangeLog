@@ -1,3 +1,13 @@
+2014-10-09  Kaz Kylheku  <kaz@kylheku.com>
+
+	* stream.c (stream_init): No need to gc-protect
+	std_input, std_output, std_debug, std_error and std_null.  These are
+	not ordinary variables but macros which expand to locations in the
+	variable binding environment that are already protected.  This call was
+	actually doing nothing, because the symbol involved in the expression
+	std_input is not  yet initialized and so &std_input yields a null
+	pointer which causes protect to bail.
+
 2014-10-08  Kaz Kylheku  <kaz@kylheku.com>
 
 	Moving system interface functions to separate module out of

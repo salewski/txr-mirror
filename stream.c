@@ -2548,7 +2548,6 @@ val abs_path_p(val path)
 
 void stream_init(void)
 {
-  protect(&std_input, &std_output, &std_debug, &std_error, &std_null, (val *) 0);
   detect_format_string();
 
   dev_k = intern(lit("dev"), keyword_package);
