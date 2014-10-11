@@ -611,6 +611,8 @@ val chr_islower(val ch);
 val chr_isprint(val ch);
 val chr_ispunct(val ch);
 val chr_isspace(val ch);
+val chr_isblank(val ch);
+val chr_isunisp(val ch);
 val chr_isupper(val ch);
 val chr_isxdigit(val ch);
 val chr_toupper(val ch);

@@ -3787,6 +3787,8 @@ void eval_init(void)
   reg_fun(intern(lit("chr-isprint"), user_package), func_n1(chr_isprint));
   reg_fun(intern(lit("chr-ispunct"), user_package), func_n1(chr_ispunct));
   reg_fun(intern(lit("chr-isspace"), user_package), func_n1(chr_isspace));
+  reg_fun(intern(lit("chr-isblank"), user_package), func_n1(chr_isblank));
+  reg_fun(intern(lit("chr-isunisp"), user_package), func_n1(chr_isunisp));
   reg_fun(intern(lit("chr-isupper"), user_package), func_n1(chr_isupper));
   reg_fun(intern(lit("chr-isxdigit"), user_package), func_n1(chr_isxdigit));
   reg_fun(intern(lit("chr-toupper"), user_package), func_n1(chr_toupper));

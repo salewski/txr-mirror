@@ -1,3 +1,20 @@
+2014-10-11  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): Register chr_isblank and chr_isunisp as
+	intrinsics.
+
+	* lib.c (chr_isblank, chr_isunisp): New functions.
+
+	* lib.h (chr_isblank, chr_isunisp): Declared.
+
+	* regex.h (spaces): Declaration for existing variable added.
+
+	* txr.1: Documented chr-isblank and chr-isunisp.
+
+	* genvim.txr: Add missing sysif.c.
+
+	* txr.vim: Regenerated.
+
 2014-10-09  Kaz Kylheku  <kaz@kylheku.com>
 
 	Fix gc safety issue in abs_path_p function.

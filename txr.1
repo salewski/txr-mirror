@@ -15996,6 +15996,61 @@ and
 For all other characters, it returns
 .codn nil .
 
+.coNP Function @ chr-isblank
+.synb
+.mets (chr-isblank << char )
+.syne
+.desc
+This function returns
+.code t
+if
+.meta char
+is a space or tab: the character
+.code #\espace
+or
+.codn #\etab .
+For all other characters, it returns
+.codn nil .
+
+.coNP Function @ chr-isunisp
+.synb
+.mets (chr-isunisp << char )
+.syne
+.desc
+This function returns
+.code t
+if
+.meta char
+is a Unicode whitespace character. This the case for
+all the characters for which
+.code chr-isspace
+returns
+.codn t.
+It also returns
+.code t
+for these additional characters:
+.codn #\exa0 ,
+.codn #\ex1680 ,
+.codn #\ex180e ,
+.codn #\ex2000 ,
+.codn #\ex2001 ,
+.codn #\ex2002 ,
+.codn #\ex2003 ,
+.codn #\ex2004 ,
+.codn #\ex2005 ,
+.codn #\ex2006 ,
+.codn #\ex2007 ,
+.codn #\ex2008 ,
+.codn #\ex2009 ,
+.codn #\ex200a ,
+.codn #\ex2028 ,
+.codn #\ex2029 ,
+.codn #\ex205f ,
+and
+.codn #\ex3000 .
+For all other characters, it returns
+.codn nil .
+
 .coNP Function @ chr-isupper
 .synb
 .mets (chr-isupper < char )

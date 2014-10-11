@@ -3085,6 +3085,16 @@ val chr_isspace(val ch)
   return c_true(iswspace(c_chr(ch)));
 }
 
+val chr_isblank(val ch)
+{
+  return c_true(ch == chr(' ') || ch == chr('\t'));
+}
+
+val chr_isunisp(val ch)
+{
+  return c_true(wcschr(spaces, c_chr(ch)));
+}
+
 val chr_isupper(val ch)
 {
   return c_true(iswupper(c_chr(ch)));
