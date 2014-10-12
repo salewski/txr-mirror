@@ -1,3 +1,30 @@
+2014-10-12  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (merge_wrap): New static function
+	(eval_init): Register less as intrinsic.  Retarget merge intrinsic to
+	merge_wrap for proper argument defaulting which is missing from merge,
+	and which we don't want to introduce there since internal calls
+	to merge don't erquire it. Change registration of sort so it has
+	only one required argument, not two.
+
+	* lib.c (less_f): New global variable.
+	(less_tab): New static array.
+	(less_tab_init): New static function.
+	(less): New function.
+	(sort): Default lessfun argument to the less function.
+	(obj_init): GC-protect the less_f variable.
+	Initialize it with a function object made from the less function.
+	(init): Call less_tab_init.
+
+	* lib.h (enum type): New enumeration member MAX_TYPE, an alias
+	for the largest type.
+	(less_f, less): Declared.
+
+	* txr.1: Documented new less function, and that the lessfun
+	argument in sort and merge is optional, defaulting to less.
+
+	* txr.vim: Regenerated.
+
 2014-10-11  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): Register chr_isblank and chr_isunisp as

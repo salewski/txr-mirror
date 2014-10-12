@@ -42,7 +42,8 @@ typedef int_ptr_t cnum;
 typedef enum type {
   NIL, NUM = TAG_NUM, CHR = TAG_CHR, LIT = TAG_LIT, CONS,
   STR, SYM, PKG, FUN, VEC, LCONS, LSTR, COBJ, ENV,
-  BGNUM, FLNUM /* If extending, check TYPE_SHIFT */
+  BGNUM, FLNUM, MAXTYPE = FLNUM
+  /* If extending, check TYPE_SHIFT */
 } type_t;
 
 #define TYPE_SHIFT 4
@@ -378,7 +379,7 @@ extern val null_string;
 extern val null_list; /* (nil) */
 
 extern val identity_f, equal_f, eql_f, eq_f, gt_f, lt_f, car_f, cdr_f, null_f;
-extern val list_f;
+extern val list_f, less_f;
 
 extern const wchar_t *progname;
 extern val prog_string;
@@ -599,6 +600,7 @@ val flo_str(val str);
 val num_str(val str);
 val int_flo(val f);
 val flo_int(val i);
+val less(val left, val right);
 val chrp(val chr);
 wchar_t c_chr(val chr);
 val chr_isalnum(val ch);

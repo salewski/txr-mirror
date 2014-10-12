@@ -14520,7 +14520,7 @@ value.
 .SS* List Sorting
 .coNP Function @ merge
 .synb
-.mets (merge < list1 < list2 < lessfun <> [ keyfun ])
+.mets (merge < list1 < list2 >> [ lessfun <> [ keyfun ]])
 .syne
 .desc
 The
@@ -17236,9 +17236,136 @@ or value.
 
 The sequence or hash table is returned.
 
+.coNP Function @ less
+.synb
+.mets (less < left-obj << right-obj )
+.syne
+.desc
+The
+.code less
+function determines whether
+.meta left-obj
+compares less than
+.meta right-obj
+in a generic way which handles arguments of various types.
+
+The function is used as the default for the
+.meta lessfun
+argument of the functions
+.code sort
+and
+.codn merge .
+
+The
+.code less
+function is capable of comparing numbers, characters, symbols, strings,
+as well as lists and vectors of these.
+
+If both arguments are the same object so that
+.cblk
+.meti (eq < left-obj << right-obj )
+.cble
+holds true, then the function returns
+.code nil
+regardless of the type of
+.metn left-obj ,
+even if the function doesn't handle comparing different instances
+of that type. In other words, no object is less than itself, no matter
+what it is.
+
+If both arguments are numbers or characters, they are compared as if using the
+.code < function.
+
+If both arguments are strings, they are compared as if using the
+.code string-lt
+function.
+
+If both arguments are symbols, then their names are compared in
+their place, as if by the
+.code string-lt
+function.
+
+If both arguments are conses, then they are compared as follows:
+.RS
+.IP 1.
+The
+.code less
+function is recursively applied to the
+.code car
+fields of both arguments. If it yields true, then
+.meta left-obj
+is deemed to be less than
+.metn right-obj .
+.IP 2.
+Otherwise, if the
+.code car
+fields are unequal under
+the
+.code equal
+function,
+.code less
+returns
+.codn nil.
+.IP 3.
+If the
+.code car
+fields are
+.code equal
+then
+.code less
+is recursively applied to the
+.code cdr
+fields of the arguments, and the result of that comparison is returned.
+.RE
+
+.IP
+This logic performs a lexicographic comparison on ordinary lists such
+that for instance
+.code (1 1)
+is less than
+.code (1 1 1)
+but not less than
+.code (1 0)
+or
+.codn (1) .
+
+Note that the empty
+.code nil
+list nil compared to a cons is handled by type-based precedence, described
+below.
+
+If the arguments are vectors, they are compared lexicographically, similar
+to strings. Corresponding elements, starting with element 0, of the
+vectors are compared until an index position is found where the vectors
+differ. If this differing position is beyond the end of one of the two vectors,
+then the shorter vector is considered to be lesser. Otherwise, the result
+of
+.code less
+is the outcome of comparing those differing elements themselves
+with
+.codn less .
+
+If the two arguments are of the above types, but of mutually different types,
+then
+.code less
+resolves the situation based on the following precedence: numbers and
+characters are less than strings, which are less than symbols,
+which are less than conses, which are less than vectors.
+
+Note that since
+.code nil
+is a symbol, it is ranked lower than a cons. This interpretation ensures
+correct behavior when
+.code nil
+is regarded as an empty list, since the empty list is lexicographically prior to
+a nonempty list.
+
+Finally, if either of the arguments has a type other than the above discussed
+types, the situation is an error.
+
 .coNP Function @ sort
 .synb
-.mets (sort < sequence < lessfun <> [ keyfun ])
+.mets (sort < sequence >> [ lessfun <> [ keyfun ]])
 .syne
 .desc
 The
@@ -17274,7 +17401,11 @@ than the right argument. For instance, if the numeric function
 is used
 on numeric keys, it produces an ascending sorted order. If the function
 .code >
-is used, then a descending sort is produced.
+is used, then a descending sort is produced. If
+.meta lessfun
+is omitted, then it defaults to the generic
+.code less
+function.
 
 The
 .code sort

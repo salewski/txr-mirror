@@ -98,7 +98,7 @@ val nil_string;
 val null_list;
 
 val identity_f, equal_f, eql_f, eq_f, gt_f, lt_f, car_f, cdr_f, null_f;
-val list_f;
+val list_f, less_f;
 
 val prog_string;
 
@@ -3023,6 +3023,130 @@ val num_str(val str)
   return flo_str(str);
 }
 
+static int less_tab[MAXTYPE+1][MAXTYPE+1];
+
+static void less_tab_init(void)
+{
+  int l, r;
+  static int type_prec[MAXTYPE+1] = {
+    2, /* NIL */
+    0, /* NUM */
+    0, /* CHR */
+    1, /* LIT */
+    3, /* CONS */
+    1, /* STR */
+    2, /* SYM */
+    6, /* PKG */
+    5, /* FUN */
+    4, /* VEC */
+    3, /* LCONS */
+    1, /* LSTR */
+    8, /* COBJ */
+    7, /* ENV */
+    0, /* BGNUM */
+    0, /* FLNUM */
+  };
+
+  for (l = 0; l <= MAXTYPE; l++)
+    for (r = 0; r <= MAXTYPE; r++) {
+      int l_prec = type_prec[l];
+      int r_prec = type_prec[r];
+
+      if (l_prec < r_prec)
+        less_tab[l][r] = 1;
+      else if (l_prec == r_prec)
+        less_tab[l][r] = 2;
+    }
+}
+
+val less(val left, val right)
+{
+  type_t l_type, r_type;
+
+  if (left == right)
+    return nil;
+
+  l_type = type(left);
+  r_type = type(right);
+
+  switch (less_tab[l_type][r_type]) {
+  case 0:
+    return nil;
+  case 1:
+    return t;
+  default:
+    break;
+  }
+
+  switch (l_type) {
+  case NUM:
+  case CHR:
+  case BGNUM:
+  case FLNUM:
+    return lt(left, right);
+  case LIT:
+  case STR:
+  case LSTR:
+    return str_lt(left, right);
+  case NIL:
+    return str_lt(nil_string, symbol_name(right));
+  case SYM:
+    return str_lt(left->s.name, symbol_name(right));
+  case CONS:
+  case LCONS:
+    for (;;) {
+      val carl = car(left);
+      val carr = car(right);
+
+      if (less(carl, carr))
+        return t;
+
+      if (equal(carl, carr)) {
+        val cdrl = cdr(left);
+        val cdrr = cdr(right);
+
+        if (consp(cdrl) && consp(cdrr)) {
+          left = cdrl;
+          right = cdrr;
+          continue;
+        }
+
+        return less(cdrl, cdrr);
+      }
+      break;
+    }
+    return nil;
+  case VEC:
+    {
+      cnum i;
+      cnum lenl = c_num(length_vec(left));
+      cnum lenr = c_num(length_vec(right));
+      cnum len = min(lenl, lenr);
+
+      for (i = 0; i < len; i++) {
+        val litem = vecref(left, num_fast(i));
+        val ritem = vecref(right, num_fast(i));
+
+        if (less(litem, ritem))
+          return t;
+
+        if (!equal(litem, ritem))
+          return nil;
+      }
+
+      return c_true (lenl < lenr);
+    }
+  case FUN:
+  case PKG:
+  case ENV:
+  case COBJ:
+    uw_throwf(type_error_s, lit("less: cannot compare ~s and ~s"),
+              left, right, nao);
+  }
+
+  internal_error("unhandled case in less function");
+}
+
 val chrp(val chr)
 {
   return (is_chr(chr)) ? t : nil;
@@ -5424,6 +5548,7 @@ val sort(val seq_in, val lessfun, val keyfun)
     return make_like(nil, seq_orig);
 
   keyfun = default_arg(keyfun, identity_f);
+  lessfun = default_arg(lessfun, less_f);
 
   if (consp(seq)) {
     /* The list could have a mixture of generation 0 and 1
@@ -6086,7 +6211,7 @@ static void obj_init(void)
           &user_package_var, &null_string, &nil_string,
           &null_list, &equal_f, &eq_f, &eql_f, &gt_f, &lt_f,
           &car_f, &cdr_f, &null_f, &list_f,
-          &identity_f, &prog_string, &env_list,
+          &identity_f, &less_f, &prog_string, &env_list,
           (val *) 0);
 
   nil_string = lit("nil");
@@ -6218,6 +6343,7 @@ static void obj_init(void)
   cdr_f = func_n1(cdr);
   null_f = func_n1(null);
   list_f = func_n0v(identity);
+  less_f = func_n2(less);
   prog_string = string(progname);
 }
 
@@ -6790,6 +6916,7 @@ void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),
   hash_init();
   regex_init();
   gc_late_init();
+  less_tab_init();
 
   gc_state(gc_save);
 }

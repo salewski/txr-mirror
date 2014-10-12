@@ -3329,6 +3329,14 @@ static val pprinl(val obj, val stream)
   return ret;
 }
 
+static val merge_wrap(val list1, val list2, val lessfun, val keyfun)
+{
+  keyfun = default_arg(keyfun, identity_f);
+  lessfun = default_arg(lessfun, less_f);
+
+  return merge(list1, list2, lessfun, keyfun);
+}
+
 void eval_init(void)
 {
   protect(&top_vb, &top_fb, &top_mb, &top_smb, &special, &dyn_env,
@@ -3776,6 +3784,7 @@ void eval_init(void)
   reg_fun(intern(lit("flo-int"), user_package), func_n1(flo_int));
   reg_fun(intern(lit("tofloat"), user_package), func_n1(tofloat));
   reg_fun(intern(lit("toint"), user_package), func_n2o(toint, 1));
+  reg_fun(intern(lit("less"), user_package), func_n2(less));
   reg_fun(intern(lit("chrp"), user_package), func_n1(chrp));
   reg_fun(intern(lit("chr-isalnum"), user_package), func_n1(chr_isalnum));
   reg_fun(intern(lit("chr-isalpha"), user_package), func_n1(chr_isalpha));
@@ -3838,8 +3847,8 @@ void eval_init(void)
   reg_fun(intern(lit("copy-cons"), user_package), func_n1(copy_cons));
   reg_fun(intern(lit("copy-alist"), user_package), func_n1(copy_alist));
   reg_fun(intern(lit("prop"), user_package), func_n2(getplist));
-  reg_fun(intern(lit("merge"), user_package), func_n4o(merge, 3));
-  reg_fun(intern(lit("sort"), user_package), func_n3o(sort, 2));
+  reg_fun(intern(lit("merge"), user_package), func_n4o(merge_wrap, 2));
+  reg_fun(intern(lit("sort"), user_package), func_n3o(sort, 1));
   reg_fun(intern(lit("find"), user_package), func_n4o(find, 2));
   reg_fun(intern(lit("multi-sort"), user_package), func_n3o(multi_sort, 2));
   reg_fun(intern(lit("find-if"), user_package), func_n3o(find_if, 2));
