@@ -34,17 +34,12 @@ static void dir_tables_init(void)
 @    (set txl-sym @(regsub #/_/ #\- txl-sym))
 @  (end)
 @(end)
-@(do
-   (defun sortuniq (list)
-     (let* ((hash (hash :equal-based)))
-       (mapcar (op sethash hash @1 @1) list)
-       [sort (hash-values hash) string-lt])))
 @(do (set [txr-sym 0..0] '("rep" "end" "and" "or"
                            "catch" "finally"
                            "until" "last"
                            "if" "else" "elif")))
 @(do (set [txl-sym 0..0] '("macro-time" "macrolet" "symacrolet")))
-@(set (txr-sym txl-sym) (@(sortuniq txr-sym) @(sortuniq txl-sym)))
+@(set (txr-sym txl-sym) (@(sort (uniq txr-sym)) @(sort (uniq txl-sym))))
 @(output)
 " VIM Syntax file for txr
 " Kaz Kylheku <kaz@@kylheku.com>
