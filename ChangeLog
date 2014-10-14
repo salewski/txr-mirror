@@ -1,3 +1,7 @@
+2014-10-14  Kaz Kylheku  <kaz@kylheku.com>
+
+	* txr.1: Round of fixes.
+
 2014-10-13  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): Register greater function as intrinsic.

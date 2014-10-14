@@ -1740,7 +1740,7 @@ able to denote an infinite set of texts.
 \*(TX contains an original implementation of regular expressions, which
 supports the following syntax:
 .coIP .
-(period) is a "wildcard" that matches any character.
+The period is a "wildcard" that matches any character.
 .coIP []
 Character class: matches a single character, from the set specified by
 special syntax written between the square brackets.
@@ -1817,7 +1817,7 @@ matches no character at all, and its complement
 matches any character, and is treated as a synonym for the 
 .code .
 (period) wildcard operator.
-.coIP "\es, \ew and \ed"
+.ccIP @, \es @ \ew and @ \ed
 These regex tokens each match a single character. 
 The
 .code \es
@@ -1831,7 +1831,7 @@ The
 .code \ed
 token matches a digit, and is equivalent to
 .codn [0-9] .
-.coIP "\eS, \eW and \eD"
+.ccIP @, \eS @ \eW and @ \eD
 These regex tokens are the complemented counterparts of
 .codn \es ,
 .code \ew
@@ -1906,10 +1906,10 @@ The syntax
 .code ()
 is valid and equivalent to the empty regular expression.
 .coIP R?
-optionally match the preceding regular expression
+Optionally match the preceding regular expression
 .codn R .
 .coIP R*
-match the expression
+Match the expression
 .code R
 zero or more times. This
 operator is sometimes called the "Kleene star", or "Kleene closure".
@@ -1920,7 +1920,7 @@ can match, than that match occurs in which
 .code R1*
 matches the longest possible text.
 .coIP R+
-match the preceding expression
+Match the preceding expression
 .code R
 one or more times.  Like
 .codn R* ,
@@ -1929,7 +1929,7 @@ this favors the longest possible match:
 is equivalent to
 .codn RR* .
 .coIP R1%R2
-match
+Match
 .code R1
 zero or more times, then match
 .codn R2 .
@@ -1965,12 +1965,12 @@ is equivalent to
 .codn (R1*)R2 ,
 the expression
 .code (R1%R2)
-is 
+is
 .B not
 equivalent to
 .codn (R1%)R2 .
 .coIP ~R
-match the opposite of the following expression
+Match the opposite of the following expression
 .codn R ;
 that is, match exactly
 those texts that
@@ -1988,7 +1988,7 @@ or
 This operator is known by
 a number of names: union, logical or, disjunction, branch, or alternative.
 .coIP R1&R2
-match both the expression
+Match both the expression
 .code R1
 and
 .code R2
@@ -2179,7 +2179,7 @@ directives are:
   @(_ `@file.txt`)
 .cble
 
-A symbol has a slight more permissive lexical than the
+A symbol has a slight more permissive lexical syntax than the
 .meta bident
 in the syntax
 .cblk
@@ -2235,7 +2235,7 @@ its special function. For more information about this, see the section
 
 .SS* String Literals
 
-String literals are delimited by double quote respectively.
+String literals are delimited by double quotes.
 A double quote within a string literal is encoded using
 .cblk
 \e"
@@ -2284,9 +2284,9 @@ Example:
    bar"
 
   "foo   \e
-  \ bar"
+  \e bar"
 
-  "foo\  \e
+  "foo\e  \e
    bar"
 .cble
 
@@ -2336,14 +2336,13 @@ Example:
 
 A splicing word literal differs from a word literal in that it does not
 produce a list of string literals, but rather it produces a sequence of string
-literals that is merged into the surrounding syntax.
-
-Example:
+literals that is merged into the surrounding syntax.  Thus, the following two
+notations are equivalent:
 
 .cblk
   (1 2 3 #*"abc def" 4 5 #"abc def")
 
-  --> (1 2 3 "abc" "def" 4 5 ("abc" "def"))
+  (1 2 3 "abc" "def" 4 5 ("abc" "def"))
 .cble
 
 The regular WLL produced a single list object, but the splicing
@@ -2394,7 +2393,7 @@ with the power of quasistrings.
 Just as in the case of WLL-s, there are two flavors of the
 QLL: the regular QLL which begins with
 .code #`
-\ (hash, backquote) and the splicing list literal which begins with
+\ (hash, backquote) and the splicing QLL which begins with
 .code #*`
 \ (hash, star, backquote).
 
@@ -2600,11 +2599,11 @@ There is an exception: the definition of a horizontal function looks like this:
 
 Yet, this is considered one vertical item, which means that it does not match
 a line of data. (This is necessary because all horizontal syntax matches
-something within a line of data.)
+something within a line of data, which is undesirable for definitions.)
 
-Many directives have a horizontal and vertical syntax, with different but
-closely related semantics. A few are still "vertical only", and some are
-horizontal only but in future releases, these exceptions will be minimized.
+Many directives exhibit both horizontal and vertical syntax, with different but
+closely related semantics. A few are vertical only, and some are
+horizontal only.
 
 A summary of the available directives follows:
 
@@ -2678,7 +2677,13 @@ The require directive is similar to the do directive: it evaluates one or more
 then require triggers a match failure.  See the TXR LISP section far below.
 
 .ccIP @, @(if) @, @(elif) and @ @(else)
-The if directive with optional elif and else clauses is a syntactic sugar
+The
+.code if
+directive with optional
+.code elif
+and
+.code else
+clauses is a syntactic sugar
 which translates to a combination of
 .code @(cases)
 and
@@ -2863,8 +2868,8 @@ result values. See the TXR LISP section far below.
 
 The
 .code next
-directive indicates that the remainder of the query is to be applied
-to a new input source.
+directive indicates that the remaining directives in the current block
+are to be applied against a new input source.
 
 It can only occur by itself as the only element in a query line,
 and takes various arguments, according to these possibilities:
@@ -2881,17 +2886,15 @@ and takes various arguments, according to these possibilities:
 
 The lone
 .code @(next)
-without arguments switches to the next file in the
-argument list which was passed to the \*(TX utility.
-However, "switch to the next file" means in a pattern matching
-way, not in an imperative way. It is possible for the pattern matching
-logic to implicitly backtrack to the previous file.
+without arguments specifies that subsequent directives
+will match inside the next file in the argument list which was passed
+to \*(TX on the command line.
 
 If
 .meta source
-is given, it must be text-valued expression which denotes an
-input source; it may be a string literal, quasiliteral or a variable.
-For instance, if variable
+is given, it must be string-valued expression which denotes an
+input source; it may be a string literal, quasiliteral or a string-valued
+variable.  For instance, if variable
 .code A
 contains the text
 .strn "data" ,
@@ -2919,9 +2922,9 @@ The variant
 .code @(next :args)
 means that the remaining command line arguments are to
 be treated as a data source. For this purpose, each argument is considered to
-be a line of text. If an argument is currently being processed as an input
-source, that argument is included at the front of the list.  As the arguments
-are matched, they are consumed. This means that if a
+be a line of text. The argument list does include that argument which specifies
+the file that is currently being processed or was most recently processed.
+As the arguments are matched, they are consumed. This means that if a
 .code @(next)
 directive without
 arguments is executed in the scope of
@@ -2932,6 +2935,8 @@ by the first unconsumed argument.
 To process arguments, and then continue with the original file and argument
 list, wrap the argument processing in a
 .codn @(block) .
+When the block terminates, the input source and argument list are restored
+to what they were before the block.
 
 The variant
 .code @(next :env)
@@ -2944,27 +2949,31 @@ on a given platform, an exception is thrown.
 
 The syntax
 .cblk
-.meti @(next :list << expr)
+.meti @(next :list << expr )
 .cble
-treats the expression as a source of
-text. The value of the expression is flattened to a list in a way similar
-to the
+treats expression
+.meta expr
+as a source of
+text. The value of
+.meta expr
+is flattened to a simple list in a way similar to the
 .code @(flatten)
 directive.  The resulting list is treated as if it were the
-lines of a text file: each element of the list is a line. If the lines
-happen contain embedded newline characters, they are a visible constituent
-of the line, and do not act as line separators.
+lines of a text file: each element of the list must be a string,
+which represents a line.  If the strings happen contain embedded newline
+characters, they are a visible constituent of the line, and do not act as line
+separators.
 
 The syntax
 .cblk
-.meti @(next :string << expr)
+.meti @(next :string << expr )
 .cble
-treats the expression as a source of
-text. The value of the expression must be a string. Newlines in the string are
-interpreted as line terminators.
+treats expression
+.meta expr
+as a source of text. The value of the expression must be a string. Newlines in
+the string are interpreted as line terminators.
 
-A string which is not terminated by
-a newline is tolerated, so that:
+A string which is not terminated by a newline is tolerated, so that:
 
 .cblk
   @(next :string "abc")
@@ -3016,12 +3025,11 @@ the list
 which is not an empty input stream, but a stream consisting of
 one empty line.
 
-Note that "remainder of the query" which is applied to the stream opened
-by
+Note that the
 .code @(next)
-refers to the subquery in which the next directive appears, not
-necessarily the entire query.  For example, the following query looks for the
-line starting with
+directive only redirect the source of input over the scope of subquery in which
+the next directive appears, not necessarily all remaining directives.  For
+example, the following query looks for the line starting with
 .str "xyz"
 at the top of the file
 .strn "foo.txt" ,
@@ -3032,13 +3040,18 @@ which terminates the
 .codn @(some) ,
 the
 .str "abc"
-is matched in the previous file again.
+is matched in the previous input stream which was in effect before
+the
+.code
+@(next)
+directive:
 
 .cblk
   @(some)
   @(next "foo.txt")
   xyz@suffix
-  @(end) abc
+  @(end)
+  abc
 .cble
 
 However, if the
@@ -3048,7 +3061,9 @@ subquery successfully matched
 within the
 file
 .codn foo.text ,
-there is now a binding for the suffix variable, which
+there is now a binding for the
+.code suffix
+variable, which
 is visible to the remainder of the entire query. The variable bindings
 survive beyond the clause, but the data stream does not.
 
@@ -3077,11 +3092,12 @@ The
 .code skip
 directive considers the remainder of the query as a search
 pattern. The remainder is no longer required to strictly match at the
-current line in the current file. Rather, the current file is searched,
+current line in the current input stream. Rather, the current stream is searched,
 starting with the current line, for the first line where the entire remainder
-of the query will successfully match. If no such line is found, the skip
+of the query will successfully match. If no such line is found, the
+.code skip
 directive fails. If a matching position is found, the remainder of
-the query is understood to be processed there.
+the query is processed from that point.
 
 Of course, the remainder of the query can itself contain skip directives.
 Each such directive performs a recursive subsearch.
@@ -3116,8 +3132,23 @@ the next 15 lines:
 .cble
 
 Without the range limitation skip will keep searching until it consumes
-the entire input source. While sometimes this is what is intended,
-often it is not. Sometimes a skip is nested within a collect, or
+the entire input source.  In a horizontal
+.codn skip ,
+the range-limiting numeric argument is expressed in characters, so that
+
+.cblk
+  abc@(skip 5)def
+.cble
+
+means: there must be a match for
+.str "abc"
+at the start of the line, and then within the next five characters,
+there must be a match for
+.strn "def" .
+
+Sometimes a skip is nested within a
+.codn collect ,
+or
 following another skip. For instance, consider:
 
 .cblk
@@ -3128,8 +3159,12 @@ following another skip. For instance, consider:
   @(end)
 .cble
 
-The collect iterates over the entire input. But, potentially, so does
-the skip. Suppose that
+The above
+.code collect
+iterates over the entire input. But, potentially, so does
+the embedded
+.codn skip .
+Suppose that
 .str "begin x"
 is matched, but the data has no
 matching
@@ -3141,7 +3176,7 @@ reasonable expectation that an
 .code "end x"
 occurs 15 lines of a
 .strn "begin x" ,
-this can be written instead:
+this can be specified instead:
 
 .cblk
   @(collect)
@@ -3296,7 +3331,7 @@ giving rise to a large number combinations of skips which match
 .code A
 and
 .codn B ,
-and yet no match for
+and yet do not find a match for
 .codn C ,
 triggering backtracking. The nested stepping which tries
 the combinations of
@@ -3334,7 +3369,7 @@ in backreferencing situations such as:
 
 .cblk
   @;
-  @; Find some three lines which are the same.
+  @; Find three lines anywhere in the input which are identical.
   @;
   @(skip)
   @line
@@ -10610,7 +10645,7 @@ The
 operator overwrites the previous value of a place with a new value,
 and also returns that value.
 
-The.
+The
 .code push
 and
 .code pop
@@ -10916,6 +10951,7 @@ is evaluated in turn. Then, each
 is evaluated in turn and processing resumes at step 2.
 .RE
 
+.IP
 Furthermore, the
 .code for
 and
@@ -19642,13 +19678,21 @@ retrieves a list of the values.
 retrieves a list of pairs,
 which are two-element lists consisting of the key, followed by the value.
 Finally,
-.code hash-pairs
+.code hash-alist
 retrieves the key-value pairs as a Lisp association list:
 a list of cons cells whose
 .code car
 fields are keys, and whose
 .code cdr
-fields are the values.
+fields are the values. Note that
+.code hash-alist
+returns the actual entries from the hash table, which are
+conses. Modifying the
+.code cdr
+fields of these conses constitutes modifying the hash values
+in the original hash table. Modifying the
+.code car
+fields interferes with the integrity of the hash table.
 
 These functions all retrieve the keys and values in the
 same order. For example, if the keys are retrieved with
@@ -19896,6 +19940,7 @@ syntax, it explicitly denotes the list of trailing arguments,
 allowing them to be placed anywhere in the expression.
 .RE
 
+.IP
 Functions generated by
 .code op
 are always variadic; they always take additional arguments after
@@ -20463,7 +20508,7 @@ and
   ;; test whether (trunc n 2) is odd.
 
   (defun trunc-n-2-odd (n)
-    [[chain (op trunc @1 2) [iff oddp tf nilf]] n)
+    [[chain (op trunc @1 2) [iff oddp tf nilf]] n])
 .cble
 
 In this example, two functions are chained together, and
@@ -20641,14 +20686,30 @@ permitted between the two tildes.
 The syntax of a directive is generally as follows:
 
 .cblk
-.mets ~[ [ < width ] [ >> , precision ] ] < letter
+.mets <> ~[ width ] <> [, precision ] < letter
 .cble
+
+In other words, the
+.code ~
+(tilde) character, followed by a
+.meta width 
+specifier, a
+.meta precision 
+specifier introduced by a comma,
+and a
+.metn letter ,
+such that
+.meta width
+and
+.meta precision
+are independently optional: either or both may be omitted.
+No whitespace is allowed between these elements.
 
 The
 .meta letter
 is a single alphabetic character which determines the
 general action of the directive. The optional width and precision
-can be numeric digits, or special codes documented below.
+are specified as follows:
 
 .RS
 .meIP < width
@@ -20683,12 +20744,14 @@ character, then it means that
 is being omitted; there is only a precision field.
 
 The precision specifier may begin with these optional characters:
+.RS
 .coIP 0
 (the "leading zero flag"),
 .coIP +
 (print a sign for positive values")
 .IP space
 (print a space in place of a positive sign).
+.RE
 
 The precision specifier itself is either a decimal integer that does not
 begin with a zero digit, or the
@@ -24023,7 +24086,7 @@ quasiquoting macro, it is an internal one, not based on the public
 .code unquote
 and
 .code splice
-symbols being documentd here.
+symbols being documented here.
 
 This idea exists for hygiene. The quasiquote read syntax is not confused
 by the presence of the symbols
@@ -24244,7 +24307,7 @@ and
 .codn :whole .
 
 The parameter list
-.codn (:whole x :env y)
+.code (:whole x :env y)
 will bind parameter
 .code x
 to the entire
@@ -24435,7 +24498,7 @@ form is fully processed in the expansion phase of a form, and is
 effectively replaced by
 .code progn
 form which contains expanded versions of
-.metn body-forms s.
+.metn body-form s.
 This expanded structure shows no evidence that any
 macrolet forms ever existed in it. Therefore, it is impossible for the code
 evaluated in the bodies and parameter lists of
