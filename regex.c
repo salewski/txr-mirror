@@ -56,8 +56,10 @@ typedef struct nfa {
   nfa_state_t *accept;
 } nfa_t;
 
+typedef enum { REGEX_NFA, REGEX_DV } regex_kind_t;
+
 typedef struct regex {
-  enum { REGEX_NFA, REGEX_DV } kind;
+  regex_kind_t kind;
   union {
     struct nfa nfa;
     val dv;

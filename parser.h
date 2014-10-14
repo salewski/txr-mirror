@@ -36,8 +36,7 @@ typedef struct {
 
 extern const wchar_t *spec_file;
 extern val form_to_ln_hash;
-int yyparse(parser_t *, void *scanner);
-void yyerror(parser_t *, void *scanner, const char *s);
+void yyerror(void *scanner, parser_t *, const char *s);
 void yyerr(void *scanner, const char *s);
 void yyerrorf(void *scanner, val s, ...);
 void yybadtoken(parser_t *, int tok, val context);

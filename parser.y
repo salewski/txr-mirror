@@ -72,8 +72,8 @@ int yylex(union YYSTYPE *, void *scanner);
 %}
 
 %pure-parser
-%parse-param{parser_t *parser}
 %parse-param{void *scnr}
+%parse-param{parser_t *parser}
 %lex-param{void *scnr}
 
 %union {
@@ -1365,7 +1365,7 @@ int parse(val stream, val name, parser_t *parser)
 
   yyset_extra(parser, parser->scanner);
 
-  res = yyparse(parser, parser->scanner);
+  res = yyparse(parser->scanner, parser);
 
   yylex_destroy(parser->scanner);
 

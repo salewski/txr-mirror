@@ -78,7 +78,7 @@ int yylex_destroy(void)
 int yyget_column(void *);
 void yyset_column (int  column_no , yyscan_t yyscanner);
 
-void yyerror(parser_t *parser, void *scanner, const char *s)
+void yyerror(void *scanner, parser_t *parser, const char *s)
 {
   yyerrorf(scanner, lit("~a"), string_utf8(s), nao);
   if (parser->prepared_msg) {
@@ -141,13 +141,13 @@ static wchar_t num_esc(void *scn, char *num)
 {
   if (num[0] == 'x') {
     if (strlen(num) > 7)
-      yyerror(yyget_extra(scn), scn, "too many digits in hex character escape");
+      yyerror(scn, yyget_extra(scn), "too many digits in hex character escape");
     return strtol(num + 1, 0, 16);
   } else {
     if (num[0] == 'o')
       num++;
     if (strlen(num) > 8)
-      yyerror(yyget_extra(scn), scn, "too many digits in octal character escape");
+      yyerror(scn, yyget_extra(scn), "too many digits in octal character escape");
     return strtol(num, 0, 8);
   }
 }

@@ -1,5 +1,37 @@
 2014-10-14  Kaz Kylheku  <kaz@kylheku.com>
 
+	C++ upkeep.
+
+	TXR's support for compiling as C++ pays off:  C++ compiler finds
+	serious bugs introduced in August 2 ("Big switch to reentrant lexing
+	and parsing"). The yyerror function was being misused; some of
+	the calls reversed the scanner and parser arguments. Since one
+	of the two parameters is void *, this reversal wasn't caught.
+
+	* parser.l (yyerror): Fix first two arguments being
+	reversed.
+	(num_esc): Change previously correct call to yyerror to follow reversed
+	arguments, so that it stays correct.
+
+	* parser.y (%parse-param): Change order of these directives
+	so that the scnr parameter is before the parser parameter.
+	This causes the yacc-generated calls to yyerror to have
+	the arguments in the correct order.  It also has the
+	effect of changing the signature of yyparse, reversing its parameters.
+	(parse): Update call to yyparse to new argument order.
+
+	* parser.h (yyparse): Declaration removed.
+	(yyerror): Declaration updated.
+
+	* regex.c (regex_kind_t): New enum typedef.
+	(struct regex): Use regex_kind_t rather than an enum
+	inside the struct, which has different scoping rules
+	under C++.
+
+	* txr.c (get_self_path): Fix signed/unsigned warning.
+
+2014-10-14  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: Round of fixes.
 
 2014-10-13  Kaz Kylheku  <kaz@kylheku.com>
