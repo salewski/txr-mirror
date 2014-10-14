@@ -97,8 +97,8 @@ val null_string;
 val nil_string;
 val null_list;
 
-val identity_f, equal_f, eql_f, eq_f, gt_f, lt_f, car_f, cdr_f, null_f;
-val list_f, less_f;
+val identity_f, equal_f, eql_f, eq_f, car_f, cdr_f, null_f;
+val list_f, less_f, greater_f;
 
 val prog_string;
 
@@ -3147,6 +3147,11 @@ val less(val left, val right)
   internal_error("unhandled case in less function");
 }
 
+val greater(val left, val right)
+{
+  return less(right, left);
+}
+
 val chrp(val chr)
 {
   return (is_chr(chr)) ? t : nil;
@@ -5660,7 +5665,7 @@ val find_max(val seq_in, val testfun, val keyfun)
   if (!seq)
     return nil;
 
-  testfun = default_arg(testfun, gt_f);
+  testfun = default_arg(testfun, greater_f);
   keyfun = default_arg(keyfun, identity_f);
 
   maxelt = car(seq_in);
@@ -5680,7 +5685,7 @@ val find_max(val seq_in, val testfun, val keyfun)
 
 val find_min(val seq, val testfun, val keyfun)
 {
-  return find_max(seq, default_arg(testfun, lt_f), keyfun);
+  return find_max(seq, default_arg(testfun, less_f), keyfun);
 }
 
 val find_if(val pred, val list, val key)
@@ -5784,7 +5789,7 @@ val pos_max(val seq_in, val testfun, val keyfun)
   if (!seq)
     return nil;
 
-  testfun = default_arg(testfun, gt_f);
+  testfun = default_arg(testfun, greater_f);
   keyfun = default_arg(keyfun, identity_f);
 
   maxkey = funcall1(keyfun, car(seq));
@@ -5803,7 +5808,7 @@ val pos_max(val seq_in, val testfun, val keyfun)
 
 val pos_min(val seq, val testfun, val keyfun)
 {
-  return pos_max(seq, default_arg(testfun, lt_f), keyfun);
+  return pos_max(seq, default_arg(testfun, less_f), keyfun);
 }
 
 val set_diff(val list1, val list2, val testfun, val keyfun)
@@ -6209,9 +6214,9 @@ static void obj_init(void)
 
   protect(&packages, &system_package_var, &keyword_package_var,
           &user_package_var, &null_string, &nil_string,
-          &null_list, &equal_f, &eq_f, &eql_f, &gt_f, &lt_f,
+          &null_list, &equal_f, &eq_f, &eql_f,
           &car_f, &cdr_f, &null_f, &list_f,
-          &identity_f, &less_f, &prog_string, &env_list,
+          &identity_f, &less_f, &greater_f, &prog_string, &env_list,
           (val *) 0);
 
   nil_string = lit("nil");
@@ -6336,14 +6341,13 @@ static void obj_init(void)
   equal_f = func_n2(equal);
   eq_f = func_n2(eq);
   eql_f = func_n2(eql);
-  gt_f = func_n2(gt);
-  lt_f = func_n2(lt);
   identity_f = func_n1(identity);
   car_f = func_n1(car);
   cdr_f = func_n1(cdr);
   null_f = func_n1(null);
   list_f = func_n0v(identity);
   less_f = func_n2(less);
+  greater_f = func_n2(greater);
   prog_string = string(progname);
 }
 

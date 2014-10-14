@@ -1,5 +1,27 @@
 2014-10-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Register greater function as intrinsic.
+
+	* lib.c (gt_f, lt_f): Global variables removed.
+	(greater_f): New variable.
+	(greater): New function.
+	(find_max, pos_max): Use greater_f as default for testfun,
+	rather than gt_f.
+	(find_min, pos_min): Use less_f as default for testfun,
+	rather than lt_f.
+	(obj_init): Remove references to gt_f and lt_f.
+	GC-protect and initialize greater_f.
+
+	* lib.h (greater_f): Declared.
+	(gt_f, lt_f): Declarations removed.
+
+	* txr.1: Documented greater, and use of less and greater
+	in pos-min, pos-max, find-min and find-max.
+
+	* txr.vim: Regenerated.
+
+2014-10-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	* genvim.txr (sortuniq): Remove unnecessary function,
 	since (sortuniq list) can be done as (sort (uniq list)).
 

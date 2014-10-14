@@ -13025,12 +13025,11 @@ argument.  If
 is not given, then the pos-max function defaults
 .meta testfun
 to the
-.code >
-("greater than") function, whereas
+.code greater
+function, whereas
 .code pos-min
 defaults it to the
-.code <
-("less than")
+.code less
 function.
 
 If
@@ -13438,11 +13437,11 @@ argument.  If
 .meta testfun
 is not given, then the find-max function defaults it to
 the
-.code >
+.code greater
 function, whereas
 .code find-min
 defaults it to the
-.code <
+.code less
 function.
 
 Without a
@@ -17254,7 +17253,13 @@ The function is used as the default for the
 argument of the functions
 .code sort
 and
-.codn merge .
+.codn merge ,
+as well as the
+.meta testfun
+argument of the
+.code pos-min
+and
+.codn find-min .
 
 The
 .code less
@@ -17362,6 +17367,33 @@ a nonempty list.
 
 Finally, if either of the arguments has a type other than the above discussed
 types, the situation is an error.
+
+.coNP Function @ greater
+.synb
+.mets (greater < left-obj << right-obj )
+.syne
+.desc
+The
+.code
+greater
+function is equivalent to
+.code less
+with the arguments reversed. That is to say, the following
+equivalence holds:
+
+.cblk
+  (greater a b) <--> (less b a)
+.cble
+
+The
+.code greater
+function is used as the default for the
+.meta testfun
+argument of the
+.code pos-max
+and
+.code find-max
+functions.
 
 .coNP Function @ sort
 .synb

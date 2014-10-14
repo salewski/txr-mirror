@@ -3785,6 +3785,7 @@ void eval_init(void)
   reg_fun(intern(lit("tofloat"), user_package), func_n1(tofloat));
   reg_fun(intern(lit("toint"), user_package), func_n2o(toint, 1));
   reg_fun(intern(lit("less"), user_package), func_n2(less));
+  reg_fun(intern(lit("greater"), user_package), func_n2(greater));
   reg_fun(intern(lit("chrp"), user_package), func_n1(chrp));
   reg_fun(intern(lit("chr-isalnum"), user_package), func_n1(chr_isalnum));
   reg_fun(intern(lit("chr-isalpha"), user_package), func_n1(chr_isalpha));
