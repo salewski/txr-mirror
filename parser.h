@@ -24,6 +24,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+typedef struct yyguts_t scanner_t;
+
 typedef struct {
   cnum lineno;
   int errors;
@@ -31,17 +33,17 @@ typedef struct {
   val name;
   val prepared_msg;
   val syntax_tree;
-  void *scanner;
+  scanner_t *scanner;
 } parser_t;
 
 extern const wchar_t *spec_file;
 extern val form_to_ln_hash;
-void yyerror(void *scanner, parser_t *, const char *s);
-void yyerr(void *scanner, const char *s);
-void yyerrorf(void *scanner, val s, ...);
+void yyerror(scanner_t *scanner, parser_t *, const char *s);
+void yyerr(scanner_t *scanner, const char *s);
+void yyerrorf(scanner_t *scanner, val s, ...);
 void yybadtoken(parser_t *, int tok, val context);
-void end_of_regex(void *scanner);
-void end_of_char(void *scanner);
+void end_of_regex(scanner_t *scanner);
+void end_of_char(scanner_t *scanner);
 int yylex_init(void **pscanner);
 int yylex_destroy(void *scanner);
 parser_t *yyget_extra(void *scanner);

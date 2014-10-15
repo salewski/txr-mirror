@@ -1,5 +1,32 @@
 2014-10-14  Kaz Kylheku  <kaz@kylheku.com>
 
+	More type safety, with help from C++ compiler.
+
+	* parser.h (scanner_t): New typedef. Cleverly, we use
+	yyguts_t as the basis for this, which pays off in
+	a few places, getting rid of conversions.
+	(parser_t): scanner member redeclared to scanner_t *.
+	(yyerror, yyerr, yyerrof, end_of_regex, end_of_char):
+	Declarations updated.
+
+	* parser.l (yyerror, yyerrorf, num_esc): scanner argument becomes
+	scanner_t * instead of void *.
+	(yyscanner): Occurrences replaced by yyg: why should we
+	refer to the type-unsafe void *yyscanner, when we know that
+	in the middle of the yylex function we have the properly
+	typed yyguts_t *yyg.
+	(end_of_regex, end_of_char): Argument changes to scanner_t * and name
+	strategically changes to yyg, eliminating the local variable and cast.
+
+	* parser.y (sym_helper): scanner argument becomes
+	scanner_t * instead of void *.
+	(%parse-param}: void *scnr becomes scanner_t *scnr.
+	(define-transform, yybadtoken): Use scanner_t * instead of void *.
+	(parse): Since yylex_init takes a void **, we use it to initialize
+	a local void *, and then assign it to the structure member.
+
+2014-10-14  Kaz Kylheku  <kaz@kylheku.com>
+
 	C++ upkeep.
 
 	TXR's support for compiling as C++ pays off:  C++ compiler finds

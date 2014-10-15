@@ -47,7 +47,7 @@
 #include "stream.h"
 #include "parser.h"
 
-static val sym_helper(void *scnr, wchar_t *lexeme, val meta_allowed);
+static val sym_helper(scanner_t *scnr, wchar_t *lexeme, val meta_allowed);
 static val repeat_rep_helper(val sym, val args, val main, val parts);
 static val define_transform(parser_t *parser, val define_form);
 static val lit_char_helper(val litchars);
@@ -72,7 +72,7 @@ int yylex(union YYSTYPE *, void *scanner);
 %}
 
 %pure-parser
-%parse-param{void *scnr}
+%parse-param{scanner_t *scnr}
 %parse-param{parser_t *parser}
 %lex-param{void *scnr}
 
@@ -986,7 +986,7 @@ int yylex(YYSTYPE *, void *scanner);
 val rlcp(val to, val from);
 #endif
 
-static val sym_helper(void *scnr, wchar_t *lexeme, val meta_allowed)
+static val sym_helper(scanner_t *scnr, wchar_t *lexeme, val meta_allowed)
 {
   int leading_at = *lexeme == L'@';
   wchar_t *tokfree = lexeme;
@@ -1081,7 +1081,7 @@ static val repeat_rep_helper(val sym, val args, val main, val parts)
 
 static val define_transform(parser_t *parser, val define_form)
 {
-  void *scnr = parser->scanner;
+  scanner_t *scnr = parser->scanner;
   val sym = first(define_form);
   val args = second(define_form);
 
@@ -1280,7 +1280,7 @@ static val make_expr(parser_t *parser, val sym, val rest, val lineno)
 void yybadtoken(parser_t *parser, int tok, val context)
 {
   val problem = nil;
-  void *scnr = parser->scanner;
+  scanner_t *scnr = parser->scanner;
 
   switch (tok) {
   case ERRTOK:
@@ -1354,6 +1354,7 @@ void yybadtoken(parser_t *parser, int tok, val context)
 int parse(val stream, val name, parser_t *parser)
 {
   int res;
+  void *scanner;
 
   parser->lineno = 1;
   parser->errors = 0;
@@ -1361,7 +1362,8 @@ int parse(val stream, val name, parser_t *parser)
   parser->name = name;
   parser->prepared_msg = nil;
   parser->syntax_tree = nil;
-  yylex_init(&parser->scanner);
+  yylex_init(&scanner);
+  parser->scanner = (scanner_t *) scanner;
 
   yyset_extra(parser, parser->scanner);
 

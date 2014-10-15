@@ -78,7 +78,7 @@ int yylex_destroy(void)
 int yyget_column(void *);
 void yyset_column (int  column_no , yyscan_t yyscanner);
 
-void yyerror(void *scanner, parser_t *parser, const char *s)
+void yyerror(scanner_t *scanner, parser_t *parser, const char *s)
 {
   yyerrorf(scanner, lit("~a"), string_utf8(s), nao);
   if (parser->prepared_msg) {
@@ -87,7 +87,7 @@ void yyerror(void *scanner, parser_t *parser, const char *s)
   }
 }
 
-void yyerrorf(void *scanner, val fmt, ...)
+void yyerrorf(scanner_t *scanner, val fmt, ...)
 {
   parser_t *parser = yyget_extra(scanner);
 
@@ -137,7 +137,7 @@ static wchar_t char_esc(int letter)
   internal_error("unhandled escape character");
 }
 
-static wchar_t num_esc(void *scn, char *num)
+static wchar_t num_esc(scanner_t *scn, char *num)
 {
   if (num[0] == 'x') {
     if (strlen(num) > 7)
@@ -280,7 +280,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 <NESTED>({FLO}|{FLODOT}){NTOK} {
   val str = string_utf8(yytext);
 
-  yyerrorf(yyscanner, lit("trailing junk in floating-point literal: ~a"), str, nao);
+  yyerrorf(yyg, lit("trailing junk in floating-point literal: ~a"), str, nao);
 
   if (yy_top_state(yyscanner) == INITIAL
       || yy_top_state(yyscanner) == QSILIT
@@ -673,7 +673,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
 <SPECIAL>[\\](x{HEX}+|{OCT}+) {
   wchar_t lexeme[2];
-  lexeme[0] = num_esc(yyscanner, yytext + 1);
+  lexeme[0] = num_esc(yyg, yytext + 1);
   lexeme[1] = 0;
   yylval->lexeme = chk_strdup(lexeme);
   yy_pop_state(yyscanner);
@@ -681,7 +681,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 }
 
 <SPECIAL>[\\]. {
-  yyerrorf(yyscanner, lit("unrecognized escape: \\~a"), chr(yytext[1]), nao);
+  yyerrorf(yyg, lit("unrecognized escape: \\~a"), chr(yytext[1]), nao);
 }
 
 <SPECIAL,QSPECIAL,NESTED,BRACED>[;].* {
@@ -712,7 +712,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 }
 
 <REGEX>[\\](x{HEX}+|{OCT}+);? {
-  yylval->chr = num_esc(yyscanner, yytext + 1);
+  yylval->chr = num_esc(yyg, yytext + 1);
   return REGCHAR;
 }
 
@@ -833,16 +833,16 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 }
                                 
 <STRLIT,QSILIT,WLIT,QWLIT>[\\](x{HEX}+|{OCT}+);?  {
-  yylval->chr = num_esc(yyscanner, yytext+1);
+  yylval->chr = num_esc(yyg, yytext+1);
   return LITCHAR;
 }
 
 <STRLIT,QSILIT,WLIT,QWLIT>[\\]. {
-  yyerrorf(yyscanner, lit("unrecognized escape: \\~a"), chr(yytext[1]), nao);
+  yyerrorf(yyg, lit("unrecognized escape: \\~a"), chr(yytext[1]), nao);
 }
 
 <CHRLIT>(x{HEX}+|o{OCT}+) {
-  yylval->chr = num_esc(yyscanner, yytext);
+  yylval->chr = num_esc(yyg, yytext);
   return LITCHAR;
 }
 
@@ -905,31 +905,27 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
 %%
 
-void end_of_regex(yyscan_t yyscanner)
+void end_of_regex(scanner_t *yyg)
 {
-  struct yyguts_t *yyg = (struct yyguts_t *) yyscanner;
-
   if (YYSTATE != REGEX)
     internal_error("end_of_regex called in wrong scanner state");
 
-  yy_pop_state(yyscanner);
+  yy_pop_state(yyg);
 
   if (YYSTATE != INITIAL) {
-    if (yy_top_state(yyscanner) == INITIAL
-      || yy_top_state(yyscanner) == QSILIT
-      || yy_top_state(yyscanner) == QWLIT)
-      yy_pop_state(yyscanner);
+    if (yy_top_state(yyg) == INITIAL
+      || yy_top_state(yyg) == QSILIT
+      || yy_top_state(yyg) == QWLIT)
+      yy_pop_state(yyg);
   }
 }
 
-void end_of_char(yyscan_t yyscanner)
+void end_of_char(scanner_t *yyg)
 {
-  struct yyguts_t *yyg = (struct yyguts_t *) yyscanner;
-
   if (YYSTATE != CHRLIT)
     internal_error("end_of_char called in wrong scanner state");
 
-  yy_pop_state(yyscanner);
+  yy_pop_state(yyg);
 }
 
 val source_loc(val form)
