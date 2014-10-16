@@ -1,3 +1,21 @@
+2014-10-15  Kaz Kylheku  <kaz@kylheku.com>
+
+	* match.c (subst_vars): Fix buggy rendering of TXR Lisp expressions
+	that evaluate to lists. For instance `@(list)` renders to the
+	string "nil", and `@(list 1 2)` renders as "(1 2)". The desired
+	behavior is "" and "1 2", respectively.
+	(do_output_line): In output directives, there is a similar problem.
+	A @(list) in the middle of an output block turns to nil, and
+	a @(list 1 2) renders in parentheses as (1 2).  Furthermore,
+	there is the additional problem that no filtering is applied
+	to the interpolated value. These behaviors are subject to the
+	compatibility option, since they change the externally visible
+	behavior of TXR programs.
+
+	* txr.1: Document that empty lists in @(output) variable substitutions
+	turn into nothing. Document value of 100 for -C option, describing
+	the above issue.
+
 2014-10-14  Kaz Kylheku  <kaz@kylheku.com>
 
 	More type safety, with help from C++ compiler.

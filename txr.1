@@ -6731,6 +6731,7 @@ A list is converted to a string in a special way: the elements are
 individually converted to a string and then they are catenated together.
 The default separator string is a single space: an alternate separation
 can be specified as an argument in the brace substitution syntax.
+Empty lists turn into an empty string.
 
 Lists may be output within
 .code @(repeat)
@@ -25322,6 +25323,20 @@ can be emulated is \*(TX 97.
 Here are values which have a special meaning as arguments to the
 .code -C
 option, along with a description of what behaviors are affected:
+.IP 99
+Up to \*(TX 99, the substitution of TXR Lisp expressions in
+.code @(output)
+directives and in the quasistrings of the pattern language
+exhibited the buggy behavior that if the TXR Lisp expression
+produced a list, the list was rendered as a parenthesized
+representation, or the text
+.code nil
+in the empty list case. Moreover, in the
+.code @(output)
+case, the value of TXR Lisp expressions was not subject to filtering. 
+Starting with \*(TX 100, these issues
+are fixed, making the the behavior is consistent with
+the behavior of TXR Lisp quasiliterals.
 .IP 97
 Up to \*(TX 97, the error exception symbols such as
 .code file-error

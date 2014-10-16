@@ -1422,9 +1422,19 @@ static val subst_vars(val spec, val bindings, val filter)
         spec = cdr(spec);
         continue;
       } else if (sym == expr_s) {
-        val result = eval(rest(elem), make_env(bindings, nil, nil), elem);
-        spec = cons(filter_string_tree(filter, tostringp(result)), rest(spec));
-        continue;
+        if (opt_compat && opt_compat < 100) {
+          val result = eval(rest(elem), make_env(bindings, nil, nil), elem);
+          spec = cons(filter_string_tree(filter, tostringp(result)), rest(spec));
+          continue;
+        } else {
+          val str = eval(rest(elem), make_env(bindings, nil, nil), elem);
+          if (listp(str))
+            str = cat_str(mapcar(func_n1(tostringp), str), lit(" "));
+          else if (!stringp(str))
+            str = tostringp(str);
+          spec = cons(filter_string_tree(filter, tostringp(str)), rest(spec));
+          continue;
+        }
       } else {
         val nested = subst_vars(elem, bindings, filter);
         iter = list_collect_append(iter, nested);
@@ -1774,8 +1784,17 @@ static void do_output_line(val bindings, val specline, val filter, val out)
           }
 
         } else if (directive == expr_s) {
-          format(out, lit("~a"), 
-                 eval(rest(elem), make_env(bindings, nil, nil), elem), nao);
+          if (opt_compat && opt_compat < 100) {
+            format(out, lit("~a"), 
+                   eval(rest(elem), make_env(bindings, nil, nil), elem), nao);
+          } else {
+            val str = cat_str(subst_vars(cons(elem, nil),
+                                         bindings, filter), nil);
+            if (str == nil)
+              sem_error(specline, lit("bad substitution: ~a"),
+                        second(elem), nao);
+            put_string(str, out);
+          }
         }
       }
       break;
