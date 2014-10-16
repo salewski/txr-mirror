@@ -1,3 +1,18 @@
+2014-10-16  Kaz Kylheku  <kaz@kylheku.com>
+
+	New @(line) and @(chr) directives.
+
+	* match.c (line_s): New variable.
+	(h_chr, v_line): New static functions.
+	(syms_init): line_s initialized.
+	(dir_tables_init): Register v_line and h_chr.
+
+	* match.h (line_s): Declared.
+
+	* txr.1: Document @(line) and @(chr) directives.
+
+	* txr.vim: Regenerated.
+
 2014-10-15  Kaz Kylheku  <kaz@kylheku.com>
 
 	* match.c (subst_vars): Fix buggy rendering of TXR Lisp expressions

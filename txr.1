@@ -91,6 +91,7 @@
 ..
 .\" Multiple directive heading
 .de dirs
+.  ds s "
 .  while (\\n[.$]>2) \{\
 .    as s \f[4]\\$1\f[], 
 .    shift
@@ -2646,6 +2647,10 @@ explicitly in that string.
 The fuzz directive, inspired by the patch utility, specifies a partial
 match for some lines.
 
+.ccIP @ @(line) and @ @(chr)
+These directives match a variable or expression against the current line
+number or character position.
+
 .coIP @(some)
 Multiple clauses are each applied to the same input. Succeeds if at least one
 of the clauses matches the input. The bindings established by earlier
@@ -3610,6 +3615,68 @@ the
 .code fuzz
 directive, then m of them must succeed nevertheless. (If there
 are fewer than m, then this is impossible.)
+
+.dirs line chr
+
+The
+.code line
+and
+.code chr
+directives perform binding between the current input line number or character
+position within a line, against an expression or variable:
+
+.cblk
+  @(line 42)
+  @(line x)
+  abc@(chr 3)def@(chr y)
+.cble
+
+The directive
+.code @(line 42)
+means "match the current input line number against the integer 42". If
+the current line is 42, then the directive matches, otherwise it fails.
+.code line
+is a vertical directive which doesn't consume a line of input. Thus,
+the following matches at the beginning of an input stream, and
+.code x
+ends up bound to the first line of input:
+
+.cblk
+  @(line 1)
+  @(line 1)
+  @(line 1)
+  @x
+.cble
+
+The directive
+.code @(line x)
+binds variable
+.code x
+to the current input line number, if
+.code x
+is an unbound variable. If
+.code x
+is already bound, then the value of
+.code x
+must match the current line number, otherwise the directive fails.
+
+The
+.code chr
+directive is similar to
+.code line
+except that it's a horizontal directive, and matches the character position
+rather than the line position. Character positions are measured from zero,
+rather than one.
+.code chr
+does not consume a character. Hence the two occurrences of
+.code chr
+in the following example both match, and
+.code x
+takes the entire line of input:
+
+.cblk
+  @(chr 0)@(chr 0)@x
+.cble
 
 .dirs some all none maybe cases choose
 

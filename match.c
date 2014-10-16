@@ -56,7 +56,7 @@ int opt_arraydims = 1;
 val decline_k, next_spec_k, repeat_spec_k;
 val mingap_k, maxgap_k, gap_k, mintimes_k, maxtimes_k, times_k;
 val lines_k, chars_k;
-val text_s, choose_s, gather_s, do_s, mod_s, modlast_s, fuzz_s, load_s;
+val text_s, choose_s, gather_s, do_s, mod_s, modlast_s, line_s, fuzz_s, load_s;
 val close_s, require_s;
 val longest_k, shortest_k, greedy_k;
 val vars_k, resolve_k;
@@ -1140,6 +1140,28 @@ static val h_eol(match_line_ctx *c)
   }
   LOG_MISMATCH("eol");
   return nil;
+}
+
+static val h_chr(match_line_ctx *c)
+{
+  val elem = first(c->specline);
+  val args = rest(elem);
+  val pat = car(args);
+
+  if (!args || rest(args))
+      sem_error(elem, lit("chr directive takes one argument"), nao);
+
+  uw_env_begin;
+  uw_set_match_context(cons(cons(c->specline, nil), c->bindings));
+  c->bindings = dest_bind(elem, c->bindings, pat, c->pos, eql_f);
+  uw_env_end;
+
+  if (c->bindings == t) {
+    debuglf(elem, lit("chr mismatch (position ~a vs. ~a)"), c->pos, pat, nao);
+    return nil;
+  }
+
+  return next_spec_k;
 }
 
 typedef struct {
@@ -3746,6 +3768,28 @@ static val v_close(match_files_ctx *c)
   return next_spec_k;
 }
 
+static val v_line(match_files_ctx *c)
+{
+  spec_bind (specline, first_spec, c->spec);
+  val args = rest(first_spec);
+  val pat = car(args);
+
+  if (!args || rest(args))
+      sem_error(specline, lit("line directive takes one argument"), nao);
+
+  uw_env_begin;
+  uw_set_match_context(cons(c->spec, c->bindings));
+  c->bindings = dest_bind(specline, c->bindings, pat, c->data_lineno, eql_f);
+  uw_env_end;
+
+  if (c->bindings == t) {
+    debuglf(specline, lit("line mismatch (line ~a vs. ~a)"), c->data_lineno, pat, nao);
+    return nil;
+  }
+
+  return next_spec_k;
+}
+
 
 static val h_do(match_line_ctx *c)
 {
@@ -4033,6 +4077,7 @@ static void syms_init(void)
 
   mod_s = intern(lit("mod"), user_package);
   modlast_s = intern(lit("modlast"), user_package);
+  line_s = intern(lit("line"), user_package);
   fuzz_s = intern(lit("fuzz"), user_package);
   counter_k = intern(lit("counter"), keyword_package);
 }
@@ -4084,6 +4129,7 @@ static void dir_tables_init(void)
   sethash(v_directive_table, assert_s, cptr((mem_t *) v_assert));
   sethash(v_directive_table, load_s, cptr((mem_t *) v_load));
   sethash(v_directive_table, close_s, cptr((mem_t *) v_close));
+  sethash(v_directive_table, line_s, cptr((mem_t *) v_line));
 
   sethash(h_directive_table, text_s, cptr((mem_t *) h_text));
   sethash(h_directive_table, var_s, cptr((mem_t *) h_var));
@@ -4107,6 +4153,7 @@ static void dir_tables_init(void)
   sethash(h_directive_table, trailer_s, cptr((mem_t *) h_trailer));
   sethash(h_directive_table, define_s, cptr((mem_t *) h_define));
   sethash(h_directive_table, eol_s, cptr((mem_t *) h_eol));
+  sethash(h_directive_table, chr_s, cptr((mem_t *) h_chr));
   sethash(h_directive_table, do_s, cptr((mem_t *) h_do));
   sethash(h_directive_table, require_s, cptr((mem_t *) hv_trampoline));
   sethash(h_directive_table, assert_s, cptr((mem_t *) h_assert));
