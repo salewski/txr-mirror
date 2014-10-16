@@ -286,7 +286,8 @@ static val dest_bind(val spec, val bindings, val pattern,
           return bindings;
         if (tree_find(cdr(existing), value, testfun))
           return bindings;
-        debuglf(spec, lit("bind variable mismatch: ~a"), pattern, nao);
+        debuglf(spec, lit("variable ~a binding mismatch (~s vs. ~s)"),
+                pattern, cdr(existing), value, nao);
         return t;
       }
       return cons(cons(pattern, value), bindings);
