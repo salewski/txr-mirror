@@ -1,5 +1,10 @@
 2014-10-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (gcd, lognot): Bugfix: bignum results
+	in fixnum range not normalized.
+
+2014-10-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (dest_bind): More detailed log message for variable
 	mismatch.
 

@@ -1389,7 +1389,7 @@ val gcd(val anum, val bnum)
   if (mp_gcd(mp(anum), mp(bnum), mp(n)) != MP_OKAY)
     goto bad;
 
-  return n;
+  return normalize(n);
 inval:
   uw_throwf(error_s, lit("gcd: non-integral operands ~s ~s"),
             anum, bnum, nao);
@@ -1753,7 +1753,7 @@ val lognot(val a, val bits)
     b = make_bignum();
     if (mp_comp(mp(a), mp(b)) != MP_OKAY)
       goto bad;
-    return b;
+    return normalize(b);
   default:
     uw_throwf(error_s, lit("lognot: non-integral operand ~s"), a, nao);
   }
