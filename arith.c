@@ -1375,8 +1375,11 @@ val gcd(val anum, val bnum)
   if (!integerp(anum) || !integerp(bnum))
     goto inval;
 
-  if (zerop(anum))
-    return zero;
+  if (anum == zero)
+    return bnum;
+
+  if (bnum == zero)
+    return anum;
 
   if (fixnump(anum))
     anum = bignum(c_num(anum));
@@ -1396,6 +1399,17 @@ inval:
 bad:
   uw_throwf(error_s, lit("gcd: operation failed on ~s ~s"),
             anum, bnum, nao);
+}
+
+val lcm(val anum, val bnum)
+{
+  if (anum == zero || bnum == zero) {
+    return zero;
+  } else {
+    val prod = mul(anum, bnum);
+    val gcdv = gcd(anum, bnum);
+    return abso(trunc(prod, gcdv));
+  }
 }
 
 val floorf(val num)

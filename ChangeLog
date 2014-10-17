@@ -1,5 +1,22 @@
 2014-10-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (gcd): Fix semantics. If either operand is
+	zero, return the other operand.
+	(lcm): New function.
+
+	* eval.c (eval_init): Retarget registration of gcd to
+	variable argument gcdv function. Register lcm.
+
+	* lib.c (gcdv, lcmv): New functions.
+
+	* lib.h (gcdv, lcm, lcmv): Declared.
+
+	* txr.1: Re-document gcd with coverage of lcm.
+
+	* txr.vim: Regenerated.
+
+2014-10-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (gcd, lognot): Bugfix: bignum results
 	in fixnum range not normalized.
 

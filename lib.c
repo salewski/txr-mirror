@@ -2150,6 +2150,24 @@ val exptv(val nlist)
   return reduce_right(func_n2(expt), nlist, one, nil);
 }
 
+val gcdv(val nlist)
+{
+  if (!nlist)
+    return zero;
+  if (!cdr(nlist))
+    return abso(car(nlist));
+  return reduce_left(func_n2(gcd), nlist, colon_k, nil);
+}
+
+val lcmv(val nlist)
+{
+  if (!nlist)
+    return one;
+  if (!cdr(nlist))
+    return abso(car(nlist));
+  return reduce_left(func_n2(lcm), nlist, colon_k, nil);
+}
+
 val string_own(wchar_t *str)
 {
   val obj = make_obj();

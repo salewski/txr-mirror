@@ -17745,7 +17745,7 @@ and tests for termination with
 .codn nil .
 
 .SS* Math Library
-.coNP Arithmetic functions @ + and @ -
+.coNP Functions @ + and @ -
 .synb
 .mets (+ << number *)
 .mets (- < number << number *)
@@ -17910,44 +17910,69 @@ then generalized into the floating point domain. For instance the expression
 yields a residue of 0.25 because 0.5 "goes into" 0.75 only
 once, with a "remainder" of 0.25.
 
-.coNP Function @ gcd
+.coNP Functions @ gcd and @ lcm
 .synb
-.mods (gcd < left << right )
+.mets (gcd << number *)
+.mets (lcm << number *)
 .syne
 .desc
 The
 .code gcd
 function computes the greatest common divisor: the largest positive
-integer which divides both arguments.
+integer which divides each
+.metn number .
 
-Operands
-.meta left
-and
-.meta right
-must be integers, or else an exception is thrown.
+The
+.code lcm
+function computes the lowest common multiple: the smallest positive
+integer which is a multiple of
+each
+.metn number .
 
-The value of
-.code (gcd 0 x)
-is 0 for all
-.codn x ,
-including 0.
+Each
+.meta number
+must be an integer.
 
-The value of
-.code (gcd x 123)
+Negative integers are replaced by their absolute values, so
+.code (lcm -3 -4)
 is
-.code (abs x)
-for all
-.codn x .
+.code 12 
+and 
+.code (gcd -12 -9)
+yields
+.codn 3 .
 
-Negative operands are permitted; this operation effectively ignores sign, so
-that the value of
-.code (gcd x y)
-is the same as
-.code (gcd (abs x) (abs y))
-for all
-.code x
+The value of
+.code (gcd)
+is
+.code 0
+and that of
+.code (lcm)
+is 1 .
+
+The value of
+.code (gcd x)
 and
-.codn y .
+.code (lcm x)
+is
+.codn (abs x) .
+
+Any arguments of
+.code gcd
+which are zero are effectively ignored so that
+.code (gcd 0)
+and
+.code (gcd 0 0 0)
+are both the same as
+.code (gcd)
+and
+.code (gcd 1 0 2 0 3)
+is the same as
+.codn (gcd 1 2 3) .
+
+If
+.code lcm
+has any argument which is zero, it yields zero.
 
 .coNP Function @ abs
 .synb
