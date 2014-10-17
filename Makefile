@@ -35,11 +35,14 @@ CFLAGS := $(filter-out -Wmissing-prototypes -Wstrict-prototypes,$(CFLAGS))
 endif
 
 # TXR objects
+OBJS-y := # make sure OBJ-y is a value variable, not a macro variable
 OBJS := txr.o lex.yy.o y.tab.o match.o lib.o regex.o gc.o unwind.o stream.o
 OBJS += arith.o hash.o utf8.o filter.o eval.o rand.o combi.o sysif.o
 OBJS-$(debug_support) += debug.o
 OBJS-$(have_syslog) += syslog.o
 OBJS-$(have_posix_sigs) += signal.o
+SRCS := $(filter-out lex.yy.c y.tab.c y.tab.h,\
+           $(shell git ls-files "*.c" "*.h" "*.l" "*.y"))
 
 # MPI objects
 MPI_OBJ_BASE=mpi.o mplogic.o
@@ -146,6 +149,15 @@ tests/011/%: TXR_DBG_OPTS :=
 
 %.expected: %.txr
 	./$(PROG) $(TXR_OPTS) $^ $(TXR_ARGS) > $@
+
+.PHONY: enforce
+enforce:
+	@if [ $$(grep -E '\<void[\t ]*\*' $(SRCS) | wc -l) -ne 1 ] ; then \
+	  echo "New 'void *' occurrences have been found:" ; \
+	  grep -n -E '\<void[\t ]*\*' $(SRCS) \
+	    | grep -v -F 'typedef void *yyscan_t' ; \
+	  exit 1 ; \
+	fi
 
 #
 # Installation macro.

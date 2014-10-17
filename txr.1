@@ -21007,6 +21007,14 @@ Exactly that many digits are printed, regardless of the precision of the
 number.  If the precision is omitted, then the number of digits after the
 decimal point is three. If the precision is zero, then a decimal portion is
 truncated off entirely, including the decimal point.
+
+.coIP p
+The
+.code p
+directive prints a numeric representation in hexadecimal of the bit pattern
+of the object, which is meaningful to someone familiar with the internals
+of \*(TX.  If the object is a pointer to heaped data, that value
+has a correspondence to its address.
 .RE
 
 .PP

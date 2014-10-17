@@ -60,7 +60,7 @@ static val make_expr(parser_t *, val sym, val rest, val lineno);
 
 #if YYBISON
 union YYSTYPE;
-int yylex(union YYSTYPE *, void *scanner);
+int yylex(union YYSTYPE *, yyscan_t scanner);
 #endif
 
 #define rl(form, line) rlrec(parser, form, line)
@@ -74,7 +74,7 @@ int yylex(union YYSTYPE *, void *scanner);
 %pure-parser
 %parse-param{scanner_t *scnr}
 %parse-param{parser_t *parser}
-%lex-param{void *scnr}
+%lex-param{yyscan_t scnr}
 
 %union {
   wchar_t *lexeme;
@@ -979,7 +979,7 @@ not_a_clause : ALL              { $$ = mkexp(all_s, nil, num(parser->lineno)); }
 
 %%
 
-int yylex(YYSTYPE *, void *scanner);
+int yylex(YYSTYPE *, yyscan_t scanner);
 
 /* C99 inline instantiations. */
 #if __STDC_VERSION__ >= 199901L
@@ -1354,7 +1354,7 @@ void yybadtoken(parser_t *parser, int tok, val context)
 int parse(val stream, val name, parser_t *parser)
 {
   int res;
-  void *scanner;
+  yyscan_t scanner;
 
   parser->lineno = 1;
   parser->errors = 0;

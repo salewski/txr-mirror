@@ -1511,7 +1511,6 @@ val vformat(val stream, val fmtstr, va_list vl)
     int width = 0, precision = 0, precision_p = 0, digits = 0;
     int left = 0, sign = 0, zeropad = 0;
     cnum value;
-    void *ptr;
 
     for (;;) {
       val obj;
@@ -1810,9 +1809,11 @@ val vformat(val stream, val fmtstr, va_list vl)
             obj_print(obj, stream);
           continue;
         case 'p':
-          ptr = va_arg(vl, void *);
-          value = (cnum) ptr;
-          sprintf(num_buf, num_fmt->hex, value);
+          {
+            val ptr = va_arg(vl, val);
+            value = (cnum) ptr;
+            sprintf(num_buf, num_fmt->hex, value);
+          }
           goto output_num;
         default:
           uw_throwf(error_s, lit("unknown format directive character ~s\n"), 
@@ -2350,8 +2351,8 @@ static val run(val command, val args)
   status = _wspawnvp(_P_WAIT, c_str(command), wargv);
  
   for (i = 0; i < nargs; i++)
-    free((void *) wargv[i]);
-  free((void *) wargv);
+    free((wchar_t *) wargv[i]);
+  free((wchar_t **) wargv);
 
   rel1(&args);
 

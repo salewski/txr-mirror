@@ -5177,7 +5177,7 @@ void cobj_print_op(val obj, val out)
 {
   put_string(lit("#<"), out);
   obj_print(obj->co.cls, out);
-  format(out, lit(": ~p>"), obj->co.handle, nao);
+  format(out, lit(": ~p>"), (val) obj->co.handle, nao);
 }
 
 static val cptr_equal_op(val left, val right)
@@ -6555,11 +6555,11 @@ finish:
     obj->co.ops->print(obj, out);
     return obj;
   case ENV:
-    format(out, lit("#<environment: ~p>"), (void *) obj, nao);
+    format(out, lit("#<environment: ~p>"), obj, nao);
     return obj;
   }
 
-  format(out, lit("#<garbage: ~p>"), (void *) obj, nao);
+  format(out, lit("#<garbage: ~p>"), obj, nao);
   return obj;
 }
 
@@ -6686,11 +6686,11 @@ finish:
     obj->co.ops->print(obj, out);
     return obj;
   case ENV:
-    format(out, lit("#<environment: ~p>"), (void *) obj, nao);
+    format(out, lit("#<environment: ~p>"), obj, nao);
     return obj;
   }
 
-  format(out, lit("#<garbage: ~p>"), (void *) obj, nao);
+  format(out, lit("#<garbage: ~p>"), obj, nao);
   return obj;
 }
 

@@ -36,6 +36,11 @@ typedef struct {
   scanner_t *scanner;
 } parser_t;
 
+#ifndef YY_TYPEDEF_YY_SCANNER_T
+#define YY_TYPEDEF_YY_SCANNER_T
+typedef void *yyscan_t;
+#endif
+
 extern const wchar_t *spec_file;
 extern val form_to_ln_hash;
 void yyerror(scanner_t *scanner, parser_t *, const char *s);
@@ -44,10 +49,10 @@ void yyerrorf(scanner_t *scanner, val s, ...);
 void yybadtoken(parser_t *, int tok, val context);
 void end_of_regex(scanner_t *scanner);
 void end_of_char(scanner_t *scanner);
-int yylex_init(void **pscanner);
-int yylex_destroy(void *scanner);
-parser_t *yyget_extra(void *scanner);
-void yyset_extra(parser_t *, void *scanner);
+int yylex_init(yyscan_t *pscanner);
+int yylex_destroy(yyscan_t scanner);
+parser_t *yyget_extra(yyscan_t scanner);
+void yyset_extra(parser_t *, yyscan_t);
 void parse_init(void);
 void open_txr_file(val spec_file, val *name, val *stream);
 int parse(val stream, val name, parser_t *parser);

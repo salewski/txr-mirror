@@ -179,7 +179,7 @@ void sig_init(void)
 
 #if HAVE_SIGALTSTACK
 
-static void *stack;
+static mem_t *stack;
 
 static void setup_alt_stack(void)
 {

@@ -1,3 +1,40 @@
+2014-10-17  Kaz Kylheku  <kaz@kylheku.com>
+
+	Purge stray occurrences of "void *" from code base.
+
+	* lib.c (cobj_print_op): In the format call, cast
+	the C pointer to val, since the ~p conversion now
+	takes a val rather than void *.
+	(cptr_equal_op, obj_print, obj_pprint): Remove cast to
+	void *, since obj now already has the type that ~p expects.
+
+	* lib.h (struct any): Use mem_t * instead of void *.
+
+	* parser.h (yyscan_t): Repeat the definition from inside
+	the Flex-generated lex.yy.c.
+	(yylex_init, yylex_destroy, yyget_extra, yyset_extra): Re-declare
+	using yyscan_t typedef in place of void *.
+
+	* parser.l (yyget_column, yyerrprepf): Re-declare using yyscan_t.
+	(grammar): Use yyg in place of yyscanner in calls to yyerrprepf.
+
+	* parser.y (yylex, %lex-param): Use yyscan_t instead of void *.
+	(parse): Use yyscan_t for local variable.
+
+	* signal.c (stack): Change type from void * to mem_t *.
+
+	* stream.c (vformat): Conversion specifier p extracts val
+	instead of void *.
+	(run): Use casts that only remove const, not all the way to void *.
+
+	* txr.1: Documented p conversion specifier of format.
+
+	* Makefile (OBJS-y): Initialize with := to make sure it is a
+	simple variable, and not a macro.
+	(SRCS): New variable, listing source files.
+	(enforce): New rule for enforcing coding conventions.
+	Currently checks for void * occurrences.
+
 2014-10-16  Kaz Kylheku  <kaz@kylheku.com>
 
 	* arith.c (gcd): Fix semantics. If either operand is

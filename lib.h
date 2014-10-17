@@ -73,7 +73,7 @@ typedef unsigned char mem_t;
 
 struct any {
   obj_common;
-  void *dummy[2];
+  mem_t *dummy[2];
   val next; /* GC free list */
 };
 
