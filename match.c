@@ -3540,7 +3540,7 @@ static val v_filter(match_files_ctx *c)
 
 static val v_eof(match_files_ctx *c)
 {
-  if (c->data) {
+  if (c->data && car(c->data)) {
     debuglf(c->spec, lit("eof failed to match at ~a"), c->data_lineno, nao);
     return nil;
   }

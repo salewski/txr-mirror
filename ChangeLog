@@ -1,5 +1,11 @@
 2014-10-17  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (v_eof): Bugfix: we are at EOF not only when
+	the remaining data is nil but when it is (nil). This
+	happens for interactive streams.
+
+2014-10-17  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (dest_bind): Remove the restriction of not allowing
 	@(expr ...) and @var on the left side of a bind. This
 	is useful, and necessary for @(line @(lisp expr)) to work:
