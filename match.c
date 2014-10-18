@@ -296,15 +296,27 @@ static val dest_bind(val spec, val bindings, val pattern,
     }
   } else if (consp(pattern)) {
     val piter = pattern, viter = value;
+    val lisp_evaled = nil;
+    val ret;
 
     if (first(pattern) == var_s) {
-      sem_error(spec, lit("metavariable @~a syntax cannot be used here"), second(pattern), nao);
+      uw_env_begin;
+      uw_set_match_context(cons(spec, bindings));
+      ret = eval(second(pattern), make_env(bindings, nil, nil), pattern);
+      lisp_evaled = t;
+      uw_env_end;
     }
 
     if (first(pattern) == expr_s) {
-      sem_error(spec, lit("the @~s syntax cannot be used here"), rest(pattern), nao);
+      uw_env_begin;
+      uw_set_match_context(cons(spec, bindings));
+      ret = eval(rest(pattern), make_env(bindings, nil, nil), pattern);
+      lisp_evaled = t;
+      uw_env_end;
     }
 
+    if (lisp_evaled)
+      return if3(tree_find(value, ret, swap_12_21(testfun)), bindings, t);
 
     while (consp(piter) && consp(viter))
     {

@@ -1,5 +1,17 @@
 2014-10-17  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (dest_bind): Remove the restriction of not allowing
+	@(expr ...) and @var on the left side of a bind. This
+	is useful, and necessary for @(line @(lisp expr)) to work:
+	matching computed line numbers and character positions.
+
+	* txr.1: Document use of Lisp on left hand side of bind,
+	that there is a restriction on the left hand side of a set,
+	and that Lisp can be used in a line or chr directive for
+	computed matches.
+
+2014-10-17  Kaz Kylheku  <kaz@kylheku.com>
+
 	* HACKING: New section Type Safety.
 	Table of contents regenerated with line numbers.
 

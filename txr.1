@@ -3678,6 +3678,19 @@ takes the entire line of input:
   @(chr 0)@(chr 0)@x
 .cble
 
+The argument of
+.code line
+or
+.code chr
+may be a
+.codn @ -delimited
+Lisp expression. This is useful for matching computed lines or
+character positions:
+
+.cblk
+  @(line @(+ a (* b c)))
+.cble
+
 .dirs some all none maybe cases choose
 
 These directives, called the parallel directives, combine multiple subqueries,
@@ -5351,6 +5364,33 @@ matches
 .str c
 if these are upcased.
 
+.coNP Lisp forms in the @ bind directive
+
+\*(TL forms, introduced by
+.code @
+may be used on either side of
+.codn bind .
+
+
+Example:
+
+.cblk
+  @(bind a @(+ 2 2))
+  @(bind @(+ 2 2) @(* 2 2))
+.cble
+
+Here,
+.code a
+is bound to the integer
+.codn 4 .
+The second
+.code bind
+then succeeds because the forms
+.code (+ 2 2)
+and
+.code (* 2 2)
+produce equal values.
+
 .dir set
 
 The
@@ -5419,6 +5459,21 @@ binds to
   @(bind (A B C) (() () ()))
   @(set (A B . C) D)
 .cble
+
+Note that
+.code set
+does not support a \*(TL expression on the left side, so the following
+are invalid syntax:
+
+.cblk
+  @(set @(+ 1 1) @(* 2 2))
+  @(set @b @(list "a"))
+.cble
+
+The second one is erroneous even though there is a variable on the left.
+Because it is preceded by the
+.code @
+escape, it is a Lisp variable, and not a pattern variable.
 
 .dir rebind
 
