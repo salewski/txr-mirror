@@ -3,39 +3,42 @@
 
 CONTENTS:
 
-0.  Overview
+SECTION                                                                    LINE
 
-1.  Coding Practice
-1.2  Program File Structure
-1.3  Style
-1.3  Error Handling
-1.4  I/O
-1.5  Regression
+0.       Overview                                                            44
 
-2.  Dynamic Types
-2.1  Two Kinds of Values
-2.1  Pointer Bitfield
-2.2  Heap Objects
-2.3  The COBJ type
-2.4  Strings
-2.4.1  Encapsulated C Strings
-2.4.2  Representation Hacks for 2 Byte wchar_t
+1.       Coding Practice                                                     51
+1.2      Program File Structure                                              74
+1.3      Style                                                               88
+1.3      Error Handling                                                     150
+1.4      I/O                                                                163
+1.5      Type Safety                                                        173
+1.6      Regression                                                         215
 
-3.  Garbage Collection
-3.1  Root Pointers
-3.2  GC-safe Code
-3.2.1  Rule One: Full Initialization
-3.2.2  Rule Two: Make it Reachable
-3.3  Weak Reference Support
-3.4  Generational GC
-3.4.2  Representation of Generations
-3.4.3  Basic Algorithm
-3.4.4  Handling Backpointers
+2.       Dynamic Types                                                      224
+2.1      Two Kinds of Values                                                231
+2.1      Pointer Bitfield                                                   242
+2.2      Heap Objects                                                       265
+2.3      The COBJ type                                                      279
+2.4      Strings                                                            296
+2.4.1    Encapsulated C Strings                                             311
+2.4.2    Representation Hacks for 2 Byte wchar_t                            355
 
-4.  Debugging
-4.2.  Debugging the Yacc-generated Parser
-4.3.  Debugging GC Issues
-4.4.  Valgrind: Your Friend
+3.       Garbage Collection                                                 414
+3.1      Root Pointers                                                      431
+3.2      GC-safe Code                                                       454
+3.2.1    Rule One: Full Initialization                                      480
+3.2.2    Rule Two: Make it Reachable                                        509
+3.3      Weak Reference Support                                             644
+3.4      Generational GC                                                    687
+3.4.2    Representation of Generations                                      696
+3.4.3    Basic Algorithm                                                    716
+3.4.4    Handling Backpointers                                              751
+
+4.       Debugging                                                          828
+4.2.     Debugging the Yacc-generated Parser                                959
+4.3.     Debugging GC Issues                                                972
+4.4.     Valgrind: Your Friend                                              995
 
 
 0. Overview
@@ -74,7 +77,7 @@ The txr code has a simple flat structure: a collection of .c files
 (and also a .l flex file and a .y yacc file) and headers.
 The txr project follows the include header style that every C source file
 includes all needed headers, in the proper order. Headers do not include other
-headers. 
+headers.
 
 The generation of the dependency makefile dep.mk depends on this; the
 depend.txr script does not scan headers for inclusion of other headers.  If
@@ -143,6 +146,7 @@ require a cast.  In this project, we want all hazardous pointer conversions to
 be marked in the code by casts, whose presence is demanded by compiler
 diagnostics.
 
+
 1.3 Error Handling
 
 Multiple return points from functions are encouraged. Txr has a garbage
@@ -166,7 +170,49 @@ that standard I/O streams can do, such as binary I/O, but
 their capabilities can be extended.
 
 
-1.5 Regression
+1.5 Type Safety
+
+The void * type must be avoided in this project. For a generic pointer to
+any object, use the mem_t * type, which comes from lib.h. Do not call
+malloc directly; use chk_malloc. This function won't return a null pointer;
+it throws an exception. It returns mem_t *.
+
+  struct mystruct *foo = coerce(struct mystruct *, chk_malloc(sizeof *foo));
+
+Raw C casts like (ptr *) must be avoided. Three macros are provided for
+different kinds of casting: strip_qual, convert and coerce. Use the strip_qual
+macro for writing conversions which strip type qualifiers (const, volatile)
+from a pointer:
+
+  const char *with_const = "abc";
+  char *without_const = strip_qual(char *, with_const);
+
+Use the convert macro for most value conversions that do not involve type
+punning, but do not take place implicitly.
+
+  int i = 0;
+  enum foo { a, b, c } enum_val = a;
+
+  enum_val = convert(enum foo, i);
+
+Use the coerce macro for type punning conversions:
+
+  char *str = "abc";
+  unsigned char *buf = coerce(unsigned char *, p);
+  extern void function(int);
+  cnum n = coerce(cnum, function);
+
+If you compile TXR using a C++ compiler, it will inform you if you have
+used these macros incorrectly: for instance, using a convert for
+a conversion that requires a coerce or vice versa, or writing
+a convert or coerce which strips qualifiers.
+
+Use ``make enforce'' to check the code for violations of some rules;
+this make rule must succeed.  Also, the code must build cleanly as C++, not
+only as C.
+
+
+1.6 Regression
 
 All changes must be verified not to break the test cases. This is done by
 running ``make tests''. Running ``make tests'' is not possible if the code is

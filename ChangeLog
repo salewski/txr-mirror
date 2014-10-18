@@ -1,5 +1,12 @@
 2014-10-17  Kaz Kylheku  <kaz@kylheku.com>
 
+	* HACKING: New section Type Safety.
+	Table of contents regenerated with line numbers.
+
+	* HACKING-toc.txr: New file.
+
+2014-10-17  Kaz Kylheku  <kaz@kylheku.com>
+
 	Converting cast expressions to macros that are retargetted
 	to C++ style casts when compiling as C++.
 

@@ -1,0 +1,25 @@
+@(skip)
+@(block)
+@(trailer)
+
+0. Overview
+@(end)
+@(collect :mingap 1)
+
+@(line lineno)
+@(cases)
+@{num /[0-9]+\./} @rest
+@(bind break "\n")
+@(or)
+@{num /[0-9.]+/} @rest
+@(bind break "")
+@(end)
+
+@(end)
+@(output)
+SECTION  @{""   49} @{"LINE" -20}
+@  (repeat)
+@break@\
+@{num 8} @{rest 49} @{lineno -20}
+@  (end)
+@(end)
