@@ -571,7 +571,7 @@ tail:
       cnum a = c_num(anum);
       cnum b = c_num(bnum);
 #if HAVE_DOUBLE_INTPTR_T
-      double_intptr_t product = a * (double_intptr_t) b;
+      double_intptr_t product = a * convert(double_intptr_t, b);
       if (product < NUM_MIN || product > NUM_MAX)
         return bignum_dbl_ipt(product);
       return num_fast(product);
@@ -1330,7 +1330,7 @@ bad:
 
 static int_ptr_t isqrt_fixnum(int_ptr_t a)
 {
-  int_ptr_t mask = (int_ptr_t) 1 << (highest_bit(a) / 2);
+  int_ptr_t mask = convert(int_ptr_t, 1) << (highest_bit(a) / 2);
   int_ptr_t root = 0;
 
   for (; mask != 0; mask >>= 1) {
@@ -1898,7 +1898,7 @@ val bit(val a, val bit)
     {
       cnum an = c_num(a);
       if (bn < (SIZEOF_PTR * CHAR_BIT))
-        return (an & ((cnum) 1 << bn)) ? t : nil;
+        return (an & (convert(cnum, 1) << bn)) ? t : nil;
       return an < 0 ? t : nil;
     }
   case BGNUM:

@@ -1108,7 +1108,7 @@ if [ -n "$uintptr" ] ; then
   printf "#define HAVE_UINTPTR_T 1\n" >> config.h
   printf "typedef unsigned $intptr uint_ptr_t;\n" >> config.h
 fi
-intptr_max_expr="((((($intptr) 1 << $((SIZEOF_PTR * 8 - 2))) - 1) << 1) + 1)"
+intptr_max_expr="((((convert($intptr, 1) << $((SIZEOF_PTR * 8 - 2))) - 1) << 1) + 1)"
 printf "#define INT_PTR_MAX %s\n" "$intptr_max_expr" >> config.h
 printf "#define INT_PTR_MIN (-INT_PTR_MAX)\n" >> config.h
 

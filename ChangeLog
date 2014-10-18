@@ -1,5 +1,99 @@
 2014-10-17  Kaz Kylheku  <kaz@kylheku.com>
 
+	Converting cast expressions to macros that are retargetted
+	to C++ style casts when compiling as C++.
+
+	* lib.h (strip_qual, convert, coerce): New casting macros.
+	(TAG_MASK, tag, type, wli_noex, auto_str, static_str,
+	litptr, num_fast, chr, lit_noex, nil, nao): Use cast macros.
+
+	* arith.c (mul, isqrt_fixnum, bit): Use cast macros.
+
+	* configure (INT_PTR_MAX): Define using cast macro.
+
+	* debug.c (debug_init): Use cast macro.
+
+	* eval.c (do_eval, expand_macro, reg_op, reg_mac, eval_init):
+	Use cast macros.
+
+	* filter.c (filter_init): Use cast macro.
+
+	* gc.c (more, mark_obj, in_heap, mark, sweep_one, unmark): Use
+	cast macros.
+
+	* hash.c (hash_double, equal_hash, eql_hash, hash_equal_op,
+	hash_hash_op, hash_print_op, hash_mark, make_hash, make_similar_hash,
+	copy_hash, gethash_c, gethash, gethash_f, gethash_n, remhash,
+	hash_count, get_hash_userdata, set_hash_userdata, hash_iter_destroy,
+	hash_iter_mark, hash_begin, hash_uni, hash_diff, hash_isec): Use
+	cast macros.
+
+	* lib.c (code2type, chk_malloc, chk_malloc_gc_more, chk_calloc,
+	chk_realloc, chk_strdup, num, c_num, string, mkstring, mkustring,
+	upcase_str, downcase_str, string_extend, sub_str, cat_str, trim_str,
+	c_chr, vector, vec_set_length, copy_vec, sub_vec, cat_vec,
+	cobj_print_op, obj_init): Likewise.
+
+	* match.c (do_match_line, hv_trampoline, match_files, dir_tables_init):
+	Likewise.
+
+	* parser.l (grammar): Likewise.
+
+	* parser.y (parse): Likewise.
+
+	* rand.c (make_state, make_random_state, random_fixnum, random):
+	Likewise.
+
+	* regex.c (CHAR_SET_L2_LO, CHAR_SET_L2_HI, CHAR_SET_L1_LO,
+	CHAR_SET_L1_HI, CHAR_SET_L0_LO, CHAR_SET_L0_HI, L0_full, L0_fill_range,
+	L1_full, L1_fill_range, L1_contains, L1_free, L2_full, L2_fill_range,
+	L2_contains, L2_free, L3_fill_range, L3_contains, L3_free,
+	char_set_create, char_set_cobj_destroy, nfa_state_accept,
+	nfa_state_empty, nfa_state_single, nfa_state_wild, nfa_state_set,
+	nfa_free, nfa_run, regex_destroy, regex_mark, dv_compile_regex,
+	reg_derivative, regex_compile, regex_print, regex_run,
+	regex_machine_init): Likewise.
+
+	* signal.c (sig_mask): Likewise.
+
+	* stream.c (make_null_stream, stdio_stream_print, stdio_stream_destroy,
+	stdio_stream_mark, stdio_maybe_read_error, stdio_maybe_error,
+	stdio_put_char_callback, stdio_get_char_callback, stdio_put_string,
+	stdio_put_char, stdio_put_byte, stdio_flush, stdio_seek,
+	stdio_get_prop, snarf_line, stdio_get_line, stdio_get_char,
+	stdio_get_byte, stdio_unget_char, stdio_unget_byte, stdio_close,
+	tail_strategy, pipe_close, string_in_stream_mark, string_in_get_line,
+	string_in_get_char, string_in_unget_char, string_in_get_prop,
+	byte_in_stream_destroy, byte_in_get_byte, byte_in_unget_byte,
+	string_out_stream_destroy, string_out_byte_callback,
+	string_out_byte_flush, string_out_put_string, string_out_put_char,
+	string_out_put_byte, strlist_mark, strlist_out_put_string,
+	strlist_out_put_char, make_strlist_output_stream, get_list_from_stream,
+	dir_get_line, dir_close, make_stdio_stream_common, make_pipevp_stream,
+	make_string_input_stream, make_string_byte_input_stream,
+	make_string_output_stream, get_string_from_stream, make_dir_stream,
+	stream_set_prop, stream_get_prop, close_stream, get_line, get_char,
+	get_byte, unget_char, unget_byte, vformat, put_string, put_char,
+	put_byte, flush_stream, seek_stream, open_tail, open_process, run,
+	cat_stream_print, cat_get_line, cat_get_char, cat_get_byte,
+	cat_unget_byte, cat_unget_char, cat_get_prop, cat_mark,
+	make_catenated_stream): Likewise.
+
+	* sysif.c (getcwd_wrap): Likewise.
+
+	* syslog.c (syslog_mark, syslog_put_string, syslog_put_char,
+	syslog_put_byte, syslog_get_prop, syslog_set_prop, make_syslog_stream):
+	Likewise.
+
+	* txr.c (get_self_path): Likewise.
+
+	* unwind.c (uw_init): Likewise.
+
+	* utf8.c (utf8_from_uc, utf8_to_uc, utf8_to, utf8_dup_from_uc,
+	utf8_dup_from, utf8_dup_to, utf8_decode): Likewise.
+
+2014-10-17  Kaz Kylheku  <kaz@kylheku.com>
+
 	Purge stray occurrences of "void *" from code base.
 
 	* lib.c (cobj_print_op): In the format call, cast

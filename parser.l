@@ -696,7 +696,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
 <SPECIAL,QSPECIAL,NESTED,BRACED>. {
   yyerrprepf(yyg, lit("non-UTF-8 byte in directive: '\\x~02x'"),
-             num((unsigned char) yytext[0]), nao);
+             num(convert(unsigned char, yytext[0])), nao);
   return ERRTOK;
 }
 
@@ -765,7 +765,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
 <REGEX>. {
   yyerrprepf(yyg, lit("non-UTF-8 byte in regex: '\\x~02x'"),
-             num((unsigned char) yytext[0]), nao);
+             num(convert(unsigned char, yytext[0])), nao);
   return ERRTOK;
 }
 
@@ -899,7 +899,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
 <STRLIT,CHRLIT,QSILIT,WLIT,QWLIT>. {
   yyerrprepf(yyg, lit("non-UTF-8 byte in literal: '\\x~02x'"),
-             num((unsigned char) yytext[0]), nao);
+             num(convert(unsigned char, yytext[0])), nao);
   return ERRTOK;
 }
 

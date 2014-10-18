@@ -128,7 +128,7 @@ void protect(val *first, ...)
 
 static void more(void)
 {
-  heap_t *heap = (heap_t *) chk_malloc_gc_more(sizeof *heap);
+  heap_t *heap = coerce(heap_t *, chk_malloc_gc_more(sizeof *heap));
   obj_t *block = heap->block, *end = heap->block + HEAP_SIZE;
 
   if (end > heap_max_bound)
@@ -139,7 +139,7 @@ static void more(void)
 
   while (block < end) {
     block->t.next = free_list;
-    block->t.type = (type_t) FREE;
+    block->t.type = convert(type_t, FREE);
     free_list = block++;
   }
 
@@ -282,7 +282,7 @@ tail_call:
   if ((t & FREE) != 0)
     abort();
 
-  obj->t.type = (type_t) (t | REACHABLE);
+  obj->t.type = convert(type_t, t | REACHABLE);
 
 #if EXTRA_DEBUGGING
   if (obj == break_obj)
@@ -364,7 +364,7 @@ static int in_heap(val ptr)
 
   for (heap = heap_list; heap != 0; heap = heap->next) {
     if (ptr >= heap->block && ptr < heap->block + HEAP_SIZE)
-      if (((char *) ptr - (char *) heap->block) % sizeof (obj_t) == 0)
+      if ((coerce(char *, ptr) - coerce(char *, heap->block)) % sizeof (obj_t) == 0)
         return 1;
   }
 
@@ -430,7 +430,7 @@ static void mark(mach_context_t *pmc, val *gc_stack_top)
   /*
    * Then the machine context
    */
-  mark_mem_region((val *) pmc, (val *) (pmc + 1));
+  mark_mem_region(coerce(val *, pmc), coerce(val *, (pmc + 1)));
 
   /*
    * Finally, the stack.
@@ -455,7 +455,7 @@ static int sweep_one(obj_t *block)
     abort();
 
   if (block->t.type & REACHABLE) {
-    block->t.type = (type_t) (block->t.type & ~REACHABLE);
+    block->t.type = convert(type_t, block->t.type & ~REACHABLE);
 #if CONFIG_GEN_GC
     block->t.gen = 1;
 #endif
@@ -471,7 +471,7 @@ static int sweep_one(obj_t *block)
   }
 
   finalize(block);
-  block->t.type = (type_t) (block->t.type | FREE);
+  block->t.type = convert(type_t, block->t.type | FREE);
 
   /* If debugging is turned on, we want to catch instances
      where a reachable object is wrongly freed. This is difficult
@@ -703,7 +703,7 @@ void unmark(void)
          block < end;
          block++)
     {
-      block->t.type = (type_t) (block->t.type & ~(FREE | REACHABLE));
+      block->t.type = convert(type_t, block->t.type & ~(FREE | REACHABLE));
     }
   }
 }

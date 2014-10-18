@@ -105,7 +105,7 @@ static cnum hash_double(double n)
   unsigned long h = 0;
 #endif
 
-  mem_t *p = (mem_t *) &n, *q = p + sizeof(double);
+  mem_t *p = coerce(mem_t *, &n), *q = p + sizeof(double);
 
   while (p < q) {
     h = h << 8 | h >> (8 * sizeof h - 1);
@@ -135,13 +135,13 @@ static cnum equal_hash(val obj)
   case ENV:
     switch (sizeof (mem_t *)) {
     case 4:
-      return (((cnum) obj) >> 4) & NUM_MAX;
+      return (coerce(cnum, obj) >> 4) & NUM_MAX;
     case 8: default:
-      return (((cnum) obj) >> 5) & NUM_MAX;
+      return (coerce(cnum, obj) >> 5) & NUM_MAX;
     }
     break;
   case FUN:
-    return ((cnum) obj->f.f.interp_fun + equal_hash(obj->f.env)) & NUM_MAX;
+    return (coerce(cnum, obj->f.f.interp_fun) + equal_hash(obj->f.env)) & NUM_MAX;
   case VEC:
     {
       val length = obj->v.vec[vec_length];
@@ -183,9 +183,9 @@ static cnum eql_hash(val obj)
     default:
       switch (sizeof (mem_t *)) {
       case 4:
-        return (((cnum) obj) >> 4) & NUM_MAX;
+        return (coerce(cnum, obj) >> 4) & NUM_MAX;
       case 8: default:
-        return (((cnum) obj) >> 5) & NUM_MAX;
+        return (coerce(cnum, obj) >> 5) & NUM_MAX;
       }
     }
   case TAG_CHR:
@@ -195,9 +195,9 @@ static cnum eql_hash(val obj)
   case TAG_LIT:
     switch (sizeof (mem_t *)) {
     case 4:
-      return (((cnum) obj) >> 2) & NUM_MAX;
+      return (coerce(cnum, obj) >> 2) & NUM_MAX;
     case 8: default:
-      return (((cnum) obj) >> 3) & NUM_MAX;
+      return (coerce(cnum, obj) >> 3) & NUM_MAX;
     }
   }
   /* notreached */
@@ -208,9 +208,9 @@ cnum cobj_hash_op(val obj)
 {
   switch (sizeof (mem_t *)) {
   case 4:
-    return (((cnum) obj) >> 4) & NUM_MAX;
+    return (coerce(cnum, obj) >> 4) & NUM_MAX;
   case 8: default:
-    return (((cnum) obj) >> 5) & NUM_MAX;
+    return (coerce(cnum, obj) >> 5) & NUM_MAX;
   }
   /* notreached */
   abort();
@@ -228,8 +228,8 @@ static val print_key_val(val out, val key, val value)
 static val hash_equal_op(val left, val right)
 {
   uses_or2;
-  struct hash *l = (struct hash *) left->co.handle;
-  struct hash *r = (struct hash *) right->co.handle;
+  struct hash *l = coerce(struct hash *, left->co.handle);
+  struct hash *r = coerce(struct hash *, right->co.handle);
   val liter, riter, lcell, rcell;
   val free_conses = nil;
   val pending = nil;
@@ -314,14 +314,14 @@ static val hash_equal_op(val left, val right)
 static cnum hash_hash_op(val obj)
 {
   cnum out = 0;
-  struct hash *h = (struct hash *) obj->co.handle;
+  struct hash *h = coerce(struct hash *, obj->co.handle);
   val iter, cell;
 
   switch (sizeof (mem_t *)) {
   case 4:
-    out += ((cnum) h->hash_fun) >> 4;
+    out += coerce(cnum, h->hash_fun) >> 4;
   case 8: default:
-    out += ((cnum) h->hash_fun) >> 5;
+    out += coerce(cnum, h->hash_fun) >> 5;
   }
 
   out += equal_hash(h->userdata);
@@ -339,7 +339,7 @@ static cnum hash_hash_op(val obj)
 
 static void hash_print_op(val hash, val out)
 {
-  struct hash *h = (struct hash *) hash->co.handle;
+  struct hash *h = coerce(struct hash *, hash->co.handle);
   int need_space = 0;
 
   put_string(lit("#H(("), out);
@@ -371,7 +371,7 @@ static void hash_print_op(val hash, val out)
 
 static void hash_mark(val hash)
 {
-  struct hash *h = (struct hash *) hash->co.handle;
+  struct hash *h = coerce(struct hash *, hash->co.handle);
   cnum i;
 
   gc_mark(h->userdata);
@@ -463,12 +463,12 @@ val make_hash(val weak_keys, val weak_vals, val equal_based)
               nao);
   } else {
     int flags = ((weak_vals != nil) << 1) | (weak_keys != nil);
-    struct hash *h = (struct hash *) chk_malloc(sizeof *h);
+    struct hash *h = coerce(struct hash *, chk_malloc(sizeof *h));
     val mod = num_fast(256);
     val table = vector(mod, nil);
-    val hash = cobj((mem_t *) h, hash_s, &hash_ops);
+    val hash = cobj(coerce(mem_t *, h), hash_s, &hash_ops);
 
-    h->flags = (hash_flags_t) flags;
+    h->flags = convert(hash_flags_t, flags);
     h->modulus = c_num(mod);
     h->count = 0;
     h->table = table;
@@ -485,11 +485,11 @@ val make_hash(val weak_keys, val weak_vals, val equal_based)
 
 val make_similar_hash(val existing)
 {
-  struct hash *ex = (struct hash *) cobj_handle(existing, hash_s);
-  struct hash *h = (struct hash *) chk_malloc(sizeof *h);
+  struct hash *ex = coerce(struct hash *, cobj_handle(existing, hash_s));
+  struct hash *h = coerce(struct hash *, chk_malloc(sizeof *h));
   val mod = num_fast(256);
   val table = vector(mod, nil);
-  val hash = cobj((mem_t *) h, hash_s, &hash_ops);
+  val hash = cobj(coerce(mem_t *, h), hash_s, &hash_ops);
 
   h->modulus = c_num(mod);
   h->count = 0;
@@ -507,9 +507,9 @@ val make_similar_hash(val existing)
 
 val copy_hash(val existing)
 {
-  struct hash *ex = (struct hash *) cobj_handle(existing, hash_s);
-  struct hash *h = (struct hash *) chk_malloc(sizeof *h);
-  val hash = cobj((mem_t *) h, hash_s, &hash_ops);
+  struct hash *ex = coerce(struct hash *, cobj_handle(existing, hash_s));
+  struct hash *h = coerce(struct hash *, chk_malloc(sizeof *h));
+  val hash = cobj(coerce(mem_t *, h), hash_s, &hash_ops);
   val mod = num_fast(ex->modulus);
   val iter;
 
@@ -531,7 +531,7 @@ val copy_hash(val existing)
 
 val gethash_c(val hash, val key, loc new_p)
 {
-  struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
+  struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
   loc pchain = vecref_l(h->table, num_fast(h->hash_fun(key) % h->modulus));
   val old = deref(pchain);
   val cell = h->acons_new_c_fun(key, new_p, pchain);
@@ -542,7 +542,7 @@ val gethash_c(val hash, val key, loc new_p)
 
 val gethash(val hash, val key)
 {
-  struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
+  struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
   val chain = vecref(h->table, num_fast(h->hash_fun(key) % h->modulus));
   val found = h->assoc_fun(key, chain);
   return cdr(found);
@@ -566,7 +566,7 @@ val inhash(val hash, val key, val init)
 
 val gethash_f(val hash, val key, loc found)
 {
-  struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
+  struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
   val chain = vecref(h->table, num_fast(h->hash_fun(key) % h->modulus));
   set(found, h->assoc_fun(key, chain));
   return cdr(deref(found));
@@ -574,7 +574,7 @@ val gethash_f(val hash, val key, loc found)
 
 val gethash_n(val hash, val key, val notfound_val)
 {
-  struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
+  struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
   val chain = vecref(h->table, num_fast(h->hash_fun(key) % h->modulus));
   val existing = h->assoc_fun(key, chain);
   return if3(existing, cdr(existing), default_bool_arg(notfound_val));
@@ -596,7 +596,7 @@ val pushhash(val hash, val key, val value)
 
 val remhash(val hash, val key)
 {
-  struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
+  struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
   loc pchain = vecref_l(h->table, num_fast(h->hash_fun(key) % h->modulus));
   val existing = h->assoc_fun(key, deref(pchain));
 
@@ -612,19 +612,19 @@ val remhash(val hash, val key)
 
 val hash_count(val hash)
 {
-  struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
+  struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
   return num_fast(h->count);
 }
 
 val get_hash_userdata(val hash)
 {
-  struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
+  struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
   return h->userdata;
 }
 
 val set_hash_userdata(val hash, val data)
 {
-  struct hash *h = (struct hash *) cobj_handle(hash, hash_s);
+  struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
   val olddata = h->userdata;
   set(mkloc(h->userdata, hash), data);
   return olddata;
@@ -637,7 +637,7 @@ val hashp(val obj)
 
 static void hash_iter_mark(val hash_iter)
 {
-  struct hash_iter *hi = (struct hash_iter *) hash_iter->co.handle;
+  struct hash_iter *hi = coerce(struct hash_iter *, hash_iter->co.handle);
   gc_mark(hi->hash);
   gc_mark(hi->cons);
 }
@@ -656,20 +656,20 @@ val hash_begin(val hash)
   struct hash_iter *hi;
   class_check (hash, hash_s);
 
-  hi = (struct hash_iter *) chk_malloc(sizeof *hi);
+  hi = coerce(struct hash_iter *, chk_malloc(sizeof *hi));
   hi->hash = nil;
   hi->chain = -1;
   hi->cons = nil;
-  hi_obj = cobj((mem_t *) hi, hash_iter_s, &hash_iter_ops);
+  hi_obj = cobj(coerce(mem_t *, hi), hash_iter_s, &hash_iter_ops);
   hi->hash = hash;
   return hi_obj;
 }
 
 val hash_next(val iter)
 {
-  struct hash_iter *hi = (struct hash_iter *) cobj_handle(iter, hash_iter_s);
+  struct hash_iter *hi = coerce(struct hash_iter *, cobj_handle(iter, hash_iter_s));
   val hash = hi->hash;
-  struct hash *h = (struct hash *) hash->co.handle;
+  struct hash *h = coerce(struct hash *, hash->co.handle);
   if (hi->cons)
     hi->cons = cdr(hi->cons);
   while (nilp(hi->cons)) {
@@ -926,8 +926,8 @@ val hash_alist(val hash)
 
 val hash_uni(val hash1, val hash2, val join_func)
 {
-  struct hash *h1 = (struct hash *) cobj_handle(hash1, hash_s);
-  struct hash *h2 = (struct hash *) cobj_handle(hash2, hash_s);
+  struct hash *h1 = coerce(struct hash *, cobj_handle(hash1, hash_s));
+  struct hash *h2 = coerce(struct hash *, cobj_handle(hash2, hash_s));
 
   if (h1->hash_fun != h2->hash_fun)
     uw_throwf(error_s, lit("hash-uni: ~a and ~a are incompatible hashes"), hash1, hash2, nao);
@@ -961,8 +961,8 @@ val hash_uni(val hash1, val hash2, val join_func)
 
 val hash_diff(val hash1, val hash2)
 {
-  struct hash *h1 = (struct hash *) cobj_handle(hash1, hash_s);
-  struct hash *h2 = (struct hash *) cobj_handle(hash2, hash_s);
+  struct hash *h1 = coerce(struct hash *, cobj_handle(hash1, hash_s));
+  struct hash *h2 = coerce(struct hash *, cobj_handle(hash2, hash_s));
 
   if (h1->hash_fun != h2->hash_fun)
     uw_throwf(error_s, lit("hash-diff: ~a and ~a are incompatible hashes"), hash1, hash2, nao);
@@ -984,8 +984,8 @@ val hash_diff(val hash1, val hash2)
 
 val hash_isec(val hash1, val hash2, val join_func)
 {
-  struct hash *h1 = (struct hash *) cobj_handle(hash1, hash_s);
-  struct hash *h2 = (struct hash *) cobj_handle(hash2, hash_s);
+  struct hash *h1 = coerce(struct hash *, cobj_handle(hash1, hash_s));
+  struct hash *h2 = coerce(struct hash *, cobj_handle(hash2, hash_s));
 
   if (h1->hash_fun != h2->hash_fun)
     uw_throwf(error_s, lit("hash-uni: ~a and ~a are incompatible hashes"), hash1, hash2, nao);

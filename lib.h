@@ -28,8 +28,18 @@
 
 typedef int_ptr_t cnum;
 
+#ifdef __cplusplus
+#define strip_qual(TYPE, EXPR) (const_cast<TYPE>(EXPR))
+#define convert(TYPE, EXPR) (static_cast<TYPE>(EXPR))
+#define coerce(TYPE, EXPR) (reinterpret_cast<TYPE>(EXPR))
+#else
+#define strip_qual(TYPE, EXPR) ((TYPE) (EXPR))
+#define convert(TYPE, EXPR) ((TYPE) (EXPR))
+#define coerce(TYPE, EXPR) ((TYPE) (EXPR))
+#endif
+
 #define TAG_SHIFT 2
-#define TAG_MASK (((cnum) 1 << TAG_SHIFT) - 1)
+#define TAG_MASK ((convert(cnum, 1) << TAG_SHIFT) - 1)
 #define TAG_PTR 0
 #define TAG_NUM 1
 #define TAG_CHR 2
@@ -273,7 +283,7 @@ typedef val *loc;
 #define mpush(val, lo) (push(val, lo))
 #endif
 
-INLINE cnum tag(val obj) { return ((cnum) obj) & TAG_MASK; }
+INLINE cnum tag(val obj) { return coerce(cnum, obj) & TAG_MASK; }
 INLINE int is_ptr(val obj) { return obj && tag(obj) == TAG_PTR; }
 INLINE int is_num(val obj) { return tag(obj) == TAG_NUM; }
 INLINE int is_chr(val obj) { return tag(obj) == TAG_CHR; }
@@ -281,8 +291,9 @@ INLINE int is_lit(val obj) { return tag(obj) == TAG_LIT; }
 
 INLINE type_t type(val obj)
 {
-  return obj ? tag(obj) 
-               ? (type_t) tag(obj)
+  cnum tg = tag(obj);
+  return obj ? tg
+               ? convert(type_t, tg)
                : obj->t.type
              : NIL;
 }
@@ -290,11 +301,15 @@ INLINE type_t type(val obj)
 typedef struct wli wchli_t;
 
 #if LIT_ALIGN < 4
-#define wli_noex(lit) ((const wchli_t *) (L"\0" L ## lit L"\0" + 1))
+#define wli_noex(lit) (coerce(const wchli_t *,\
+                              convert(const wchar_t *,\
+                                      "\0" L ## lit L"\0" + 1)))
 #define wini(ini) L"\0" L ## ini L"\0"
 #define wref(arr) ((arr) + 1)
 #else
-#define wli_noex(lit) ((const wchli_t *) L ## lit)
+#define wli_noex(lit) (coerce(const wchli_t *,\
+                              convert(const wchar_t *,\
+                                      L ## lit)))
 #define wini(ini) L ## ini
 #define wref(arr) (arr)
 #endif
@@ -302,27 +317,27 @@ typedef struct wli wchli_t;
 
 INLINE val auto_str(const wchli_t *str)
 {
-  return (val) (((cnum) str) | TAG_LIT);
+  return coerce(val, coerce(cnum, str) | TAG_LIT);
 }
 
 INLINE val static_str(const wchli_t *str)
 {
-  return (val) (((cnum) str) | TAG_LIT);
+  return coerce(val, coerce(cnum, str) | TAG_LIT);
 }
 
 INLINE wchar_t *litptr(val obj)
 {
 #if LIT_ALIGN < 4
- wchar_t *ret = (wchar_t *) ((cnum) obj & ~TAG_MASK);
+ wchar_t *ret = coerce(wchar_t *, (coerce(cnum, obj) & ~TAG_MASK));
  return (*ret == 0) ? ret + 1 : ret;
 #else
- return (wchar_t *) ((cnum) obj & ~TAG_MASK);
+ return coerce(wchar_t *, coerce(cnum, obj) & ~TAG_MASK);
 #endif
 }
 
 INLINE val num_fast(cnum n)
 {
-  return (val) ((n << TAG_SHIFT) | TAG_NUM);
+  return coerce(val, (n << TAG_SHIFT) | TAG_NUM);
 }
 
 INLINE mp_int *mp(val bign)
@@ -332,13 +347,15 @@ INLINE mp_int *mp(val bign)
 
 INLINE val chr(wchar_t ch)
 {
-  return (val) (((cnum) ch << TAG_SHIFT) | TAG_CHR);
+  return coerce(val, (convert(cnum, ch) << TAG_SHIFT) | TAG_CHR);
 }
 
 #if LIT_ALIGN < 4
-#define lit_noex(strlit) ((obj_t *) ((cnum) (L"\0" L ## strlit L"\0" + 1) | TAG_LIT))
+#define lit_noex(strlit) coerce(obj_t *,\
+                                coerce(cnum, L"\0" L ## strlit L"\0" + 1) | \
+                                TAG_LIT)
 #else
-#define lit_noex(strlit) ((obj_t *) ((cnum) (L ## strlit) | TAG_LIT))
+#define lit_noex(strlit) coerce(obj_t *, coerce(cnum, L ## strlit) | TAG_LIT)
 #endif
 
 #define lit(strlit) lit_noex(strlit)
@@ -810,7 +827,7 @@ void dump(val obj, val stream);
 void d(val obj);
 void breakpt(void);
 
-#define nil ((obj_t *) 0)
+#define nil convert(obj_t *, 0)
 
 INLINE val eq(val a, val b) { return a == b ? t : nil; }
 
@@ -818,7 +835,7 @@ INLINE val null(val v) { return v ? nil : t; }
 
 #define nilp(o) ((o) == nil)
 
-#define nao ((obj_t *) (1 << TAG_SHIFT)) /* "not an object" sentinel value. */
+#define nao coerce(obj_t *, 1 << TAG_SHIFT) /* "not an object" sentinel value. */
 
 #define missingp(v) ((v) == colon_k)
 

@@ -245,7 +245,7 @@ val debug(val form, val bindings, val data, val line, val pos, val base)
 void debug_init(void)
 {
   step_mode = 1;
-  protect(&breakpoints, &last_command, (val *) 0);
+  protect(&breakpoints, &last_command, convert(val *, 0));
   debug_block_s = intern(lit("debug-block"), system_package);
   {
     char *columns = getenv("COLUMNS");

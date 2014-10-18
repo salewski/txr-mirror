@@ -114,7 +114,7 @@ size_t utf8_from_uc(wchar_t *wdst, const unsigned char *src)
       if (ch >= 0x80 && ch < 0xC0) {
         wch <<= 6;
         wch |= (ch & 0x3F);
-        state = (enum utf8_state) (state - 1);
+        state = convert(enum utf8_state, state - 1);
         if (state == utf8_init) {
           if (wch < wch_min ||
               (wch <= 0xFFFF && (wch & 0xFF00) == 0xDC00) ||
@@ -147,7 +147,7 @@ size_t utf8_from_uc(wchar_t *wdst, const unsigned char *src)
 
 size_t utf8_from(wchar_t *wdst, const char *src)
 {
-   return utf8_from_uc(wdst, (const unsigned char *) src);
+   return utf8_from_uc(wdst, coerce(const unsigned char *, src));
 }
 
 size_t utf8_to_uc(unsigned char *dst, const wchar_t *wsrc)
@@ -197,13 +197,13 @@ size_t utf8_to_uc(unsigned char *dst, const wchar_t *wsrc)
 
 size_t utf8_to(char *dst, const wchar_t *wsrc)
 {
-  return utf8_to_uc((unsigned char *) dst, wsrc);
+  return utf8_to_uc(coerce(unsigned char *, dst), wsrc);
 }
 
 wchar_t *utf8_dup_from_uc(const unsigned char *str)
 {
   size_t nchar = utf8_from_uc(0, str);
-  wchar_t *wstr = (wchar_t *) chk_malloc(nchar * sizeof *wstr);
+  wchar_t *wstr = coerce(wchar_t *, chk_malloc(nchar * sizeof *wstr));
   utf8_from_uc(wstr, str);
   return wstr;
 }
@@ -211,7 +211,7 @@ wchar_t *utf8_dup_from_uc(const unsigned char *str)
 wchar_t *utf8_dup_from(const char *str)
 {
   size_t nchar = utf8_from(0, str);
-  wchar_t *wstr = (wchar_t *) chk_malloc(nchar * sizeof *wstr);
+  wchar_t *wstr = coerce(wchar_t *, chk_malloc(nchar * sizeof *wstr));
   utf8_from(wstr, str);
   return wstr;
 }
@@ -227,7 +227,7 @@ unsigned char *utf8_dup_to_uc(const wchar_t *wstr)
 char *utf8_dup_to(const wchar_t *wstr)
 {
   size_t nbyte = utf8_to(0, wstr);
-  char *str = (char *) chk_malloc(nbyte);
+  char *str = coerce(char *, chk_malloc(nbyte));
   utf8_to(str, wstr);
   return str;
 }
@@ -332,9 +332,9 @@ wint_t utf8_decode(utf8_decoder_t *ud, int (*get)(mem_t *ctx), mem_t *ctx)
       if (ch >= 0x80 && ch < 0xC0) {
         ud->wch <<= 6;
         ud->wch |= (ch & 0x3F);
-        ud->state = (enum utf8_state) (ud->state - 1);
+        ud->state = convert(enum utf8_state, ud->state - 1);
         if (ud->state == utf8_init) {
-          if (ud->wch < ud->wch_min || 
+          if (ud->wch < ud->wch_min ||
               (ud->wch <= 0xFFFF && (ud->wch & 0xFF00) == 0xDC00) ||
               (ud->wch > 0x10FFFF))
           {

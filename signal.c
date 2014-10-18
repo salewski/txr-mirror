@@ -326,12 +326,12 @@ int sig_mask(int how, const sigset_t *set, sigset_t *oldset)
   case SIG_BLOCK:
     pnew = &newset;
     newset = sig_blocked_cache;
-    mem_set_bits((mem_t *) &newset, (mem_t *) set, sizeof newset);
+    mem_set_bits(coerce(mem_t *, &newset), coerce(const mem_t *, set), sizeof newset);
     break;
   case SIG_UNBLOCK:
     pnew = &newset;
     newset = sig_blocked_cache;
-    mem_clr_bits((mem_t *) &newset, (mem_t *) set, sizeof newset);
+    mem_clr_bits(coerce(mem_t *, &newset), coerce(const mem_t *, set), sizeof newset);
     break;
   default:
     errno = EINVAL;

@@ -934,7 +934,7 @@ static val do_eval(val form, val env, val ctx_form,
     val entry = gethash(op_table, oper);
 
     if (entry) {
-      opfun_t fp = (opfun_t) cptr_get(entry);
+      opfun_t fp = coerce(opfun_t, cptr_get(entry));
       last_form_evaled = form;
       debug_return (fp(form, env));
     } else {
@@ -1331,7 +1331,7 @@ static val op_defmacro(val form, val env)
 static val expand_macro(val form, val expander, val menv)
 {
   if (cobjp(expander)) {
-    mefun_t fp = (mefun_t) cptr_get(expander);
+    mefun_t fp = coerce(mefun_t, cptr_get(expander));
     return fp(form, menv);
   } else {
     debug_enter;
@@ -3217,7 +3217,7 @@ static val force(val promise)
 static void reg_op(val sym, opfun_t fun)
 {
   assert (sym != 0);
-  sethash(op_table, sym, cptr((mem_t *) fun));
+  sethash(op_table, sym, cptr(coerce(mem_t *, fun)));
 }
 
 void reg_fun(val sym, val fun)
@@ -3229,7 +3229,7 @@ void reg_fun(val sym, val fun)
 static void reg_mac(val sym, mefun_t fun)
 {
   assert (sym != 0);
-  sethash(top_mb, sym, cptr((mem_t *) fun));
+  sethash(top_mb, sym, cptr(coerce(mem_t *, fun)));
 }
 
 void reg_var(val sym, val val)
@@ -3340,7 +3340,7 @@ static val merge_wrap(val list1, val list2, val lessfun, val keyfun)
 void eval_init(void)
 {
   protect(&top_vb, &top_fb, &top_mb, &top_smb, &special, &dyn_env,
-          &op_table, &last_form_evaled, (val *) 0);
+          &op_table, &last_form_evaled, convert(val *, 0));
   top_fb = make_hash(t, nil, nil);
   top_vb = make_hash(t, nil, nil);
   top_mb = make_hash(t, nil, nil);

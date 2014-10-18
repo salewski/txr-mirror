@@ -193,7 +193,7 @@ static val getcwd_wrap(void)
   size_t guess = 256;
 
   for (;;) {
-    char *u8buf = (char *) chk_malloc(guess);
+    char *u8buf = coerce(char *, chk_malloc(guess));
 
     if (getcwd(u8buf, guess) == 0) {
       free(u8buf);
@@ -291,7 +291,7 @@ static val readlink_wrap(val path)
   ssize_t guess = 256;
 
   for (;;) {
-    char *u8buf = (char *) chk_malloc(guess);
+    char *u8buf = coerce(char *, chk_malloc(guess));
     ssize_t bytes = readlink(u8path, u8buf, guess);
 
     if (bytes >= guess) {

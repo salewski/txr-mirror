@@ -682,7 +682,7 @@ static val html_decode(val str)
 
 void filter_init(void)
 {
-  protect(&filters, (val *) 0);
+  protect(&filters, convert(val *, 0));
 
   filters = make_hash(nil, nil, nil);
   filter_k = intern(lit("filter"), keyword_package);

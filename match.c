@@ -1214,7 +1214,7 @@ static val do_match_line(match_line_ctx *c)
         } else {
           val entry = gethash(h_directive_table, directive);
           if (entry) {
-            h_match_func hmf = (h_match_func) cptr_get(entry);
+            h_match_func hmf = coerce(h_match_func, cptr_get(entry));
             val result = hmf(c);
 
             if (result == next_spec_k) {
@@ -3064,7 +3064,7 @@ static val hv_trampoline(match_line_ctx *c)
     internal_error("hv_trampoline: missing dispatch table entry");
 
   {
-    v_match_func vmf = (v_match_func) cptr_get(entry);
+    v_match_func vmf = coerce(v_match_func, cptr_get(entry));
     ret = vmf(&mf);
     if (ret == next_spec_k)
       c->bindings = mf.bindings;
@@ -3899,7 +3899,7 @@ repeat_spec_same_data:
       val entry = gethash(v_directive_table, sym);
 
       if (entry) {
-        v_match_func vmf = (v_match_func) cptr_get(entry);
+        v_match_func vmf = coerce(v_match_func, cptr_get(entry));
         val result;
 
         result = vmf(&c);
@@ -4090,74 +4090,74 @@ static void dir_tables_init(void)
   non_matching_directive_table = make_hash(nil, nil, nil);
 
   protect(&h_directive_table, &v_directive_table,
-          &non_matching_directive_table, (val *) 0);
+          &non_matching_directive_table, convert(val *, 0));
 
-  sethash(v_directive_table, skip_s, cptr((mem_t *) v_skip));
-  sethash(v_directive_table, fuzz_s, cptr((mem_t *) v_fuzz));
-  sethash(v_directive_table, trailer_s, cptr((mem_t *) v_trailer));
-  sethash(v_directive_table, freeform_s, cptr((mem_t *) v_freeform));
-  sethash(v_directive_table, block_s, cptr((mem_t *) v_block));
-  sethash(v_directive_table, accept_s, cptr((mem_t *) v_accept_fail));
-  sethash(v_directive_table, fail_s, cptr((mem_t *) v_accept_fail));
-  sethash(v_directive_table, next_s, cptr((mem_t *) v_next));
-  sethash(v_directive_table, some_s, cptr((mem_t *) v_parallel));
-  sethash(v_directive_table, all_s, cptr((mem_t *) v_parallel));
-  sethash(v_directive_table, none_s, cptr((mem_t *) v_parallel));
-  sethash(v_directive_table, maybe_s, cptr((mem_t *) v_parallel));
-  sethash(v_directive_table, cases_s, cptr((mem_t *) v_parallel));
-  sethash(v_directive_table, choose_s, cptr((mem_t *) v_parallel));
-  sethash(v_directive_table, gather_s, cptr((mem_t *) v_gather));
-  sethash(v_directive_table, collect_s, cptr((mem_t *) v_collect));
-  sethash(v_directive_table, repeat_s, cptr((mem_t *) v_collect));
-  sethash(v_directive_table, flatten_s, cptr((mem_t *) v_flatten));
-  sethash(v_directive_table, forget_s, cptr((mem_t *) v_forget_local));
-  sethash(v_directive_table, local_s, cptr((mem_t *) v_forget_local));
-  sethash(v_directive_table, merge_s, cptr((mem_t *) v_merge));
-  sethash(v_directive_table, bind_s, cptr((mem_t *) v_bind));
-  sethash(v_directive_table, rebind_s, cptr((mem_t *) v_rebind));
-  sethash(v_directive_table, set_s, cptr((mem_t *) v_set));
-  sethash(v_directive_table, cat_s, cptr((mem_t *) v_cat));
-  sethash(v_directive_table, output_s, cptr((mem_t *) v_output));
-  sethash(v_directive_table, define_s, cptr((mem_t *) v_define));
-  sethash(v_directive_table, try_s, cptr((mem_t *) v_try));
-  sethash(v_directive_table, defex_s, cptr((mem_t *) v_defex));
-  sethash(v_directive_table, throw_s, cptr((mem_t *) v_throw));
-  sethash(v_directive_table, deffilter_s, cptr((mem_t *) v_deffilter));
-  sethash(v_directive_table, filter_s, cptr((mem_t *) v_filter));
-  sethash(v_directive_table, eof_s, cptr((mem_t *) v_eof));
-  sethash(v_directive_table, do_s, cptr((mem_t *) v_do));
-  sethash(v_directive_table, require_s, cptr((mem_t *) v_require));
-  sethash(v_directive_table, assert_s, cptr((mem_t *) v_assert));
-  sethash(v_directive_table, load_s, cptr((mem_t *) v_load));
-  sethash(v_directive_table, close_s, cptr((mem_t *) v_close));
-  sethash(v_directive_table, line_s, cptr((mem_t *) v_line));
+  sethash(v_directive_table, skip_s, cptr(coerce(mem_t *, v_skip)));
+  sethash(v_directive_table, fuzz_s, cptr(coerce(mem_t *, v_fuzz)));
+  sethash(v_directive_table, trailer_s, cptr(coerce(mem_t *, v_trailer)));
+  sethash(v_directive_table, freeform_s, cptr(coerce(mem_t *, v_freeform)));
+  sethash(v_directive_table, block_s, cptr(coerce(mem_t *, v_block)));
+  sethash(v_directive_table, accept_s, cptr(coerce(mem_t *, v_accept_fail)));
+  sethash(v_directive_table, fail_s, cptr(coerce(mem_t *, v_accept_fail)));
+  sethash(v_directive_table, next_s, cptr(coerce(mem_t *, v_next)));
+  sethash(v_directive_table, some_s, cptr(coerce(mem_t *, v_parallel)));
+  sethash(v_directive_table, all_s, cptr(coerce(mem_t *, v_parallel)));
+  sethash(v_directive_table, none_s, cptr(coerce(mem_t *, v_parallel)));
+  sethash(v_directive_table, maybe_s, cptr(coerce(mem_t *, v_parallel)));
+  sethash(v_directive_table, cases_s, cptr(coerce(mem_t *, v_parallel)));
+  sethash(v_directive_table, choose_s, cptr(coerce(mem_t *, v_parallel)));
+  sethash(v_directive_table, gather_s, cptr(coerce(mem_t *, v_gather)));
+  sethash(v_directive_table, collect_s, cptr(coerce(mem_t *, v_collect)));
+  sethash(v_directive_table, repeat_s, cptr(coerce(mem_t *, v_collect)));
+  sethash(v_directive_table, flatten_s, cptr(coerce(mem_t *, v_flatten)));
+  sethash(v_directive_table, forget_s, cptr(coerce(mem_t *, v_forget_local)));
+  sethash(v_directive_table, local_s, cptr(coerce(mem_t *, v_forget_local)));
+  sethash(v_directive_table, merge_s, cptr(coerce(mem_t *, v_merge)));
+  sethash(v_directive_table, bind_s, cptr(coerce(mem_t *, v_bind)));
+  sethash(v_directive_table, rebind_s, cptr(coerce(mem_t *, v_rebind)));
+  sethash(v_directive_table, set_s, cptr(coerce(mem_t *, v_set)));
+  sethash(v_directive_table, cat_s, cptr(coerce(mem_t *, v_cat)));
+  sethash(v_directive_table, output_s, cptr(coerce(mem_t *, v_output)));
+  sethash(v_directive_table, define_s, cptr(coerce(mem_t *, v_define)));
+  sethash(v_directive_table, try_s, cptr(coerce(mem_t *, v_try)));
+  sethash(v_directive_table, defex_s, cptr(coerce(mem_t *, v_defex)));
+  sethash(v_directive_table, throw_s, cptr(coerce(mem_t *, v_throw)));
+  sethash(v_directive_table, deffilter_s, cptr(coerce(mem_t *, v_deffilter)));
+  sethash(v_directive_table, filter_s, cptr(coerce(mem_t *, v_filter)));
+  sethash(v_directive_table, eof_s, cptr(coerce(mem_t *, v_eof)));
+  sethash(v_directive_table, do_s, cptr(coerce(mem_t *, v_do)));
+  sethash(v_directive_table, require_s, cptr(coerce(mem_t *, v_require)));
+  sethash(v_directive_table, assert_s, cptr(coerce(mem_t *, v_assert)));
+  sethash(v_directive_table, load_s, cptr(coerce(mem_t *, v_load)));
+  sethash(v_directive_table, close_s, cptr(coerce(mem_t *, v_close)));
+  sethash(v_directive_table, line_s, cptr(coerce(mem_t *, v_line)));
 
-  sethash(h_directive_table, text_s, cptr((mem_t *) h_text));
-  sethash(h_directive_table, var_s, cptr((mem_t *) h_var));
-  sethash(h_directive_table, skip_s, cptr((mem_t *) h_skip));
-  sethash(h_directive_table, coll_s, cptr((mem_t *) h_coll));
-  sethash(h_directive_table, flatten_s, cptr((mem_t *) hv_trampoline));
-  sethash(h_directive_table, forget_s, cptr((mem_t *) hv_trampoline));
-  sethash(h_directive_table, local_s, cptr((mem_t *) hv_trampoline));
-  sethash(h_directive_table, merge_s, cptr((mem_t *) hv_trampoline));
-  sethash(h_directive_table, bind_s, cptr((mem_t *) hv_trampoline));
-  sethash(h_directive_table, rebind_s, cptr((mem_t *) hv_trampoline));
-  sethash(h_directive_table, set_s, cptr((mem_t *) hv_trampoline));
-  sethash(h_directive_table, cat_s, cptr((mem_t *) hv_trampoline));
-  sethash(h_directive_table, filter_s, cptr((mem_t *) hv_trampoline));
-  sethash(h_directive_table, some_s, cptr((mem_t *) h_parallel));
-  sethash(h_directive_table, all_s, cptr((mem_t *) h_parallel));
-  sethash(h_directive_table, none_s, cptr((mem_t *) h_parallel));
-  sethash(h_directive_table, maybe_s, cptr((mem_t *) h_parallel));
-  sethash(h_directive_table, cases_s, cptr((mem_t *) h_parallel));
-  sethash(h_directive_table, choose_s, cptr((mem_t *) h_parallel));
-  sethash(h_directive_table, trailer_s, cptr((mem_t *) h_trailer));
-  sethash(h_directive_table, define_s, cptr((mem_t *) h_define));
-  sethash(h_directive_table, eol_s, cptr((mem_t *) h_eol));
-  sethash(h_directive_table, chr_s, cptr((mem_t *) h_chr));
-  sethash(h_directive_table, do_s, cptr((mem_t *) h_do));
-  sethash(h_directive_table, require_s, cptr((mem_t *) hv_trampoline));
-  sethash(h_directive_table, assert_s, cptr((mem_t *) h_assert));
+  sethash(h_directive_table, text_s, cptr(coerce(mem_t *, h_text)));
+  sethash(h_directive_table, var_s, cptr(coerce(mem_t *, h_var)));
+  sethash(h_directive_table, skip_s, cptr(coerce(mem_t *, h_skip)));
+  sethash(h_directive_table, coll_s, cptr(coerce(mem_t *, h_coll)));
+  sethash(h_directive_table, flatten_s, cptr(coerce(mem_t *, hv_trampoline)));
+  sethash(h_directive_table, forget_s, cptr(coerce(mem_t *, hv_trampoline)));
+  sethash(h_directive_table, local_s, cptr(coerce(mem_t *, hv_trampoline)));
+  sethash(h_directive_table, merge_s, cptr(coerce(mem_t *, hv_trampoline)));
+  sethash(h_directive_table, bind_s, cptr(coerce(mem_t *, hv_trampoline)));
+  sethash(h_directive_table, rebind_s, cptr(coerce(mem_t *, hv_trampoline)));
+  sethash(h_directive_table, set_s, cptr(coerce(mem_t *, hv_trampoline)));
+  sethash(h_directive_table, cat_s, cptr(coerce(mem_t *, hv_trampoline)));
+  sethash(h_directive_table, filter_s, cptr(coerce(mem_t *, hv_trampoline)));
+  sethash(h_directive_table, some_s, cptr(coerce(mem_t *, h_parallel)));
+  sethash(h_directive_table, all_s, cptr(coerce(mem_t *, h_parallel)));
+  sethash(h_directive_table, none_s, cptr(coerce(mem_t *, h_parallel)));
+  sethash(h_directive_table, maybe_s, cptr(coerce(mem_t *, h_parallel)));
+  sethash(h_directive_table, cases_s, cptr(coerce(mem_t *, h_parallel)));
+  sethash(h_directive_table, choose_s, cptr(coerce(mem_t *, h_parallel)));
+  sethash(h_directive_table, trailer_s, cptr(coerce(mem_t *, h_trailer)));
+  sethash(h_directive_table, define_s, cptr(coerce(mem_t *, h_define)));
+  sethash(h_directive_table, eol_s, cptr(coerce(mem_t *, h_eol)));
+  sethash(h_directive_table, chr_s, cptr(coerce(mem_t *, h_chr)));
+  sethash(h_directive_table, do_s, cptr(coerce(mem_t *, h_do)));
+  sethash(h_directive_table, require_s, cptr(coerce(mem_t *, hv_trampoline)));
+  sethash(h_directive_table, assert_s, cptr(coerce(mem_t *, h_assert)));
 
   sethash(non_matching_directive_table, block_s, t);
   sethash(non_matching_directive_table, accept_s, t);

@@ -180,7 +180,7 @@ static val get_self_path(void)
   char self[PATH_MAX] = { 0 };
   int nchar = readlink("/proc/self/exe", self, sizeof self);
 
-  if (nchar < 0 || nchar >= (int) sizeof self)
+  if (nchar < 0 || nchar >= convert(int, sizeof self))
     return nil;
   return string_utf8(self);
 }

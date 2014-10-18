@@ -135,7 +135,7 @@ val identity(val obj)
 
 static val code2type(int code)
 {
-  switch ((type_t) code) {
+  switch (convert(type_t, code)) {
   case NIL: return null_s;
   case CONS: return cons_s;
   case STR: return str_s;
@@ -1702,34 +1702,34 @@ alloc_bytes_t malloc_bytes;
 
 mem_t *chk_malloc(size_t size)
 {
-  mem_t *ptr = (mem_t *) malloc(size);
+  mem_t *ptr = convert(mem_t *, malloc(size));
 
   assert (!async_sig_enabled);
 
   if (size && ptr == 0)
-    ptr = (mem_t *) oom_realloc(0, size);
+    ptr = convert(mem_t *, oom_realloc(0, size));
   malloc_bytes += size;
   return ptr;
 }
 
 mem_t *chk_malloc_gc_more(size_t size)
 {
-  mem_t *ptr = (mem_t *) malloc(size);
+  mem_t *ptr = convert(mem_t *, malloc(size));
   assert (!async_sig_enabled);
   if (size && ptr == 0)
-    ptr = (mem_t *) oom_realloc(0, size);
+    ptr = convert(mem_t *, oom_realloc(0, size));
   return ptr;
 }
 
 mem_t *chk_calloc(size_t n, size_t size)
 {
-  mem_t *ptr = (mem_t *) calloc(n, size);
-  cnum total = (cnum) size * (cnum) n;
+  mem_t *ptr = convert(mem_t *, calloc(n, size));
+  cnum total = convert(cnum, size) * convert(cnum, n);
 
   assert (!async_sig_enabled);
 
   if (size && ptr == 0) {
-    ptr = (mem_t *) oom_realloc(0, total);
+    ptr = convert(mem_t *, oom_realloc(0, total));
     memset(ptr, 0, total);
   }
   malloc_bytes += total;
@@ -1738,7 +1738,7 @@ mem_t *chk_calloc(size_t n, size_t size)
 
 mem_t *chk_realloc(mem_t *old, size_t size)
 {
-  mem_t *newptr = (mem_t *) realloc(old, size);
+  mem_t *newptr = convert(mem_t *, realloc(old, size));
 
   assert (!async_sig_enabled);
 
@@ -1751,7 +1751,7 @@ mem_t *chk_realloc(mem_t *old, size_t size)
 wchar_t *chk_strdup(const wchar_t *str)
 {
   size_t nchar = wcslen(str) + 1;
-  wchar_t *copy = (wchar_t *) chk_malloc(nchar * sizeof *copy);
+  wchar_t *copy = coerce(wchar_t *, chk_malloc(nchar * sizeof *copy));
   assert (!async_sig_enabled);
   wmemcpy(copy, str, nchar);
   return copy;
@@ -1918,7 +1918,7 @@ val improper_plist_to_alist(val list, val boolean_keys)
 val num(cnum n)
 {
   if (n >= NUM_MIN && n <= NUM_MAX)
-    return (val) ((n << TAG_SHIFT) | TAG_NUM);
+    return coerce(val, (n << TAG_SHIFT) | TAG_NUM);
   return bignum(n);
 }
 
@@ -1926,7 +1926,7 @@ cnum c_num(val num)
 {
   switch (type(num)) {
   case CHR: case NUM:
-    return ((cnum) num) >> TAG_SHIFT;
+    return coerce(cnum, num) >> TAG_SHIFT;
   case BGNUM:
     if (in_int_ptr_range(num)) {
       int_ptr_t out;
@@ -2182,7 +2182,7 @@ val string(const wchar_t *str)
 {
   val obj = make_obj();
   obj->st.type = STR;
-  obj->st.str = (wchar_t *) chk_strdup(str);
+  obj->st.str = coerce(wchar_t *, chk_strdup(str));
   obj->st.len = nil;
   obj->st.alloc = nil;
   return obj;
@@ -2201,7 +2201,7 @@ val string_utf8(const char *str)
 val mkstring(val len, val ch)
 {
   size_t nchar = c_num(len) + 1;
-  wchar_t *str = (wchar_t *) chk_malloc(nchar * sizeof *str);
+  wchar_t *str = coerce(wchar_t *, chk_malloc(nchar * sizeof *str));
   val s = string_own(str);
   wmemset(str, c_chr(ch), nchar);
   s->st.len = len;
@@ -2212,7 +2212,7 @@ val mkstring(val len, val ch)
 val mkustring(val len)
 {
   cnum l = c_num(len);
-  wchar_t *str = (wchar_t *) chk_malloc((l + 1) * sizeof *str);
+  wchar_t *str = coerce(wchar_t *, chk_malloc((l + 1) * sizeof *str));
   val s = string_own(str);
   str[l] = 0;
   s->st.len = len;
@@ -2234,7 +2234,7 @@ val copy_str(val str)
 val upcase_str(val str)
 {
   val len = length_str(str);
-  wchar_t *dst = (wchar_t *) chk_malloc((c_num(len) + 1) * sizeof *dst);
+  wchar_t *dst = coerce(wchar_t *, chk_malloc((c_num(len) + 1) * sizeof *dst));
   const wchar_t *src = c_str(str);
   val out = string_own(dst);
 
@@ -2247,7 +2247,7 @@ val upcase_str(val str)
 val downcase_str(val str)
 {
   val len = length_str(str);
-  wchar_t *dst = (wchar_t *) chk_malloc((c_num(len) + 1) * sizeof *dst);
+  wchar_t *dst = coerce(wchar_t *, chk_malloc((c_num(len) + 1) * sizeof *dst));
   const wchar_t *src = c_str(str);
   val out = string_own(dst);
 
@@ -2289,8 +2289,8 @@ val string_extend(val str, val tail)
     if (gt(needed, room))
       uw_throwf(error_s, lit("string-extend: overflow"), nao);
 
-    str->st.str = (wchar_t *) chk_realloc((mem_t *) str->st.str,
-                                          alloc * sizeof *str->st.str);
+    str->st.str = coerce(wchar_t *, chk_realloc(coerce(mem_t *, str->st.str),
+                                                alloc * sizeof *str->st.str));
     set(mkloc(str->st.alloc, str), num(alloc));
     set(mkloc(str->st.len, str), plus(str->st.len, needed));
 
@@ -2578,7 +2578,7 @@ val sub_str(val str_in, val from, val to)
     return null_string;
   } else {
     size_t nchar = c_num(to) - c_num(from) + 1;
-    wchar_t *sub = (wchar_t *) chk_malloc(nchar * sizeof (wchar_t));
+    wchar_t *sub = coerce(wchar_t *, chk_malloc(nchar * sizeof *sub));
     const wchar_t *str = c_str(str_in);
     wcsncpy(sub, str + c_num(from), nchar);
     sub[nchar-1] = 0;
@@ -2708,7 +2708,7 @@ val cat_str(val list, val sep)
               item, nao);
   }
 
-  str = (wchar_t *) chk_malloc((total + 1) * sizeof *str);
+  str = coerce(wchar_t *, chk_malloc((total + 1) * sizeof *str));
 
   for (ptr = str, iter = list; iter != nil; iter = cdr(iter)) {
     val item = car(iter);
@@ -2906,7 +2906,7 @@ val trim_str(val str)
     return null_string;
   } else {
     size_t len = end - start;
-    wchar_t *buf = (wchar_t *) chk_malloc((len + 1) * sizeof *buf);
+    wchar_t *buf = coerce(wchar_t *, chk_malloc((len + 1) * sizeof *buf));
     wmemcpy(buf, start, len);
     buf[len] = 0;
     return string_own(buf);
@@ -3179,7 +3179,7 @@ wchar_t c_chr(val chr)
 {
   if (!is_chr(chr))
     type_mismatch(lit("~s is not a character"), chr, nao);
-  return (wchar_t) ((cnum) chr >> TAG_SHIFT);
+  return convert(wchar_t, coerce(cnum, chr) >> TAG_SHIFT);
 }
 
 val chr_isalnum(val ch)
@@ -4598,10 +4598,10 @@ val vector(val length, val initval)
   int i;
   cnum alloc_plus = c_num(length) + 2;
   size_t size = alloc_plus * sizeof (val);
-  val *v = ((cnum) (size / sizeof *v) == alloc_plus)
-           ? (val *) chk_malloc(size)
-           : (val *) uw_throwf(error_s, lit("vector: length ~a is too large"),
-                               length, nao);
+  val *v = (convert(cnum, size / sizeof *v) == alloc_plus)
+           ? coerce(val *, chk_malloc(size))
+           : coerce(val *, uw_throwf(error_s, lit("vector: length ~a is too large"),
+                                     length, nao));
   val vec = make_obj();
   initval = default_bool_arg(initval);
 #if HAVE_VALGRIND
@@ -4633,14 +4633,14 @@ val vec_set_length(val vec, val length)
     cnum length_delta = new_length - old_length;
     cnum alloc_delta = new_length - old_alloc;
 
-    if (new_length > (cnum) ((size_t) -1/sizeof (val) - 2))
+    if (new_length > convert(cnum, (convert(size_t, -1)/sizeof (val) - 2)))
       uw_throwf(error_s, lit("vec-set-length: cannot extend to length ~s"),
                 length, nao);
 
     if (alloc_delta > 0) {
       cnum new_alloc = max(new_length, 2*old_alloc);
-      val *newvec = (val *) chk_realloc((mem_t *) (vec->v.vec - 2),
-                                        (new_alloc + 2) * sizeof *newvec);
+      val *newvec = coerce(val *, chk_realloc(coerce(mem_t *, vec->v.vec - 2),
+                                              (new_alloc + 2) * sizeof *newvec));
       vec->v.vec = newvec + 2;
       set(mkloc(vec->v.vec[vec_alloc], vec), num(new_alloc));
 #if HAVE_VALGRIND
@@ -4737,7 +4737,7 @@ val copy_vec(val vec_in)
   val length = length_vec(vec_in);
   cnum alloc_plus = c_num(length) + 2;
   val vec = make_obj();
-  val *v = (val *) chk_malloc(alloc_plus * sizeof *v);
+  val *v = coerce(val *, chk_malloc(alloc_plus * sizeof *v));
 #if HAVE_VALGRIND
   vec->v.vec_true_start = v;
 #endif
@@ -4778,7 +4778,7 @@ val sub_vec(val vec_in, val from, val to)
     cnum cfrom = c_num(from);
     size_t nelem = c_num(to) - cfrom;
     val vec = make_obj();
-    val *v = (val *) chk_malloc((nelem + 2) * sizeof *v);
+    val *v = coerce(val *, chk_malloc((nelem + 2) * sizeof *v));
 #if HAVE_VALGRIND
     vec->v.vec_true_start = v;
 #endif
@@ -4900,11 +4900,11 @@ val cat_vec(val list)
     total = newtot;
   }
 
-  if (total > ((size_t) -1)/(sizeof (val)) - 2)
+  if (total > (convert(size_t, -1)/(sizeof (val)) - 2))
     goto toobig;
 
   vec = make_obj();
-  v = (val *) chk_malloc((total + 2) * sizeof *v);
+  v = coerce(val *, chk_malloc((total + 2) * sizeof *v));
 
 #if HAVE_VALGRIND
   vec->v.vec_true_start = v;
@@ -5177,7 +5177,7 @@ void cobj_print_op(val obj, val out)
 {
   put_string(lit("#<"), out);
   obj_print(obj->co.cls, out);
-  format(out, lit(": ~p>"), (val) obj->co.handle, nao);
+  format(out, lit(": ~p>"), coerce(val, obj->co.handle), nao);
 }
 
 static val cptr_equal_op(val left, val right)
@@ -6235,7 +6235,7 @@ static void obj_init(void)
           &null_list, &equal_f, &eq_f, &eql_f,
           &car_f, &cdr_f, &null_f, &list_f,
           &identity_f, &less_f, &greater_f, &prog_string, &env_list,
-          (val *) 0);
+          convert(val *, 0));
 
   nil_string = lit("nil");
   null_string = lit("");

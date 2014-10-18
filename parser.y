@@ -1363,7 +1363,7 @@ int parse(val stream, val name, parser_t *parser)
   parser->prepared_msg = nil;
   parser->syntax_tree = nil;
   yylex_init(&scanner);
-  parser->scanner = (scanner_t *) scanner;
+  parser->scanner = convert(scanner_t *, scanner);
 
   yyset_extra(parser, parser->scanner);
 

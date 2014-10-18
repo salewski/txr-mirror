@@ -114,15 +114,15 @@ typedef unsigned int bitcell_t;
 #endif
 
 #ifdef FULL_UNICODE
-#define CHAR_SET_L2_LO(CH) ((CH) & (~(wchar_t) 0xFFFF))
-#define CHAR_SET_L2_HI(CH) ((CH) | ((wchar_t) 0xFFFF))
+#define CHAR_SET_L2_LO(CH) ((CH) & ~convert(wchar_t, 0xFFFF))
+#define CHAR_SET_L2_HI(CH) ((CH) | convert(wchar_t, 0xFFFF))
 #endif
 
-#define CHAR_SET_L1_LO(CH) ((CH) & (~(wchar_t) 0xFFF))
-#define CHAR_SET_L1_HI(CH) ((CH) | ((wchar_t) 0xFFF))
+#define CHAR_SET_L1_LO(CH) ((CH) & ~convert(wchar_t, 0xFFF))
+#define CHAR_SET_L1_HI(CH) ((CH) | convert(wchar_t, 0xFFF))
 
-#define CHAR_SET_L0_LO(CH) ((CH) & (~(wchar_t) 0xFF))
-#define CHAR_SET_L0_HI(CH) ((CH) | ((wchar_t) 0xFF))
+#define CHAR_SET_L0_LO(CH) ((CH) & ~convert(wchar_t, 0xFF))
+#define CHAR_SET_L0_HI(CH) ((CH) | convert(wchar_t, 0xFF))
 
 typedef enum {
   CHSET_SMALL, CHSET_DISPLACED, CHSET_LARGE, 
@@ -260,8 +260,8 @@ static int L0_full(cset_L0_t *L0)
 {
   int i;
 
-  for (i = 0; i < (int) CHAR_SET_SIZE; i++)
-    if ((*L0)[i] != ((bitcell_t) -1))
+  for (i = 0; i < convert(int, CHAR_SET_SIZE); i++)
+    if ((*L0)[i] != convert(bitcell_t, -1))
       return 0;
   return 1;
 }
@@ -271,12 +271,12 @@ static void L0_fill_range(cset_L0_t *L0, wchar_t ch0, wchar_t ch1)
   int i;
   int bt0 = CHAR_SET_BIT(ch0);
   int bc0 = CHAR_SET_INDEX(ch0);
-  bitcell_t mask0 = ~(((bitcell_t) 1 << bt0) - 1);
+  bitcell_t mask0 = ~((convert(bitcell_t, 1) << bt0) - 1);
   int bt1 = CHAR_SET_BIT(ch1);
   int bc1 = CHAR_SET_INDEX(ch1);
   bitcell_t mask1 = (bt1 == (BITCELL_BIT - 1))
-                     ? (bitcell_t) -1
-                     : (((bitcell_t) 1 << (bt1 + 1)) - 1);
+                     ? convert(bitcell_t, -1)
+                     : (convert(bitcell_t, 1) << (bt1 + 1)) - 1;
 
   if (bc1 == bc0) {
     (*L0)[bc0] |= (mask0 & mask1);
@@ -284,7 +284,7 @@ static void L0_fill_range(cset_L0_t *L0, wchar_t ch0, wchar_t ch1)
     (*L0)[bc0] |= mask0;
     (*L0)[bc1] |= mask1;
     for (i = bc0 + 1; i < bc1; i++)
-      (*L0)[i] = ((bitcell_t) -1);
+      (*L0)[i] = convert(bitcell_t, -1);
   }
 }
 
@@ -297,7 +297,7 @@ static int L1_full(cset_L1_t *L1)
 {
   int i;
   for (i = 0; i < 16; i++)
-    if ((*L1)[i] != (cset_L0_t *) -1)
+    if ((*L1)[i] != coerce(cset_L0_t *, -1))
       return 0;
   return 1;
 }
@@ -315,7 +315,7 @@ static void L1_fill_range(cset_L1_t *L1, wchar_t ch0, wchar_t ch1)
 
     if (i1 > i10 && i1 < i11) {
       free((*L1)[i1]);
-      (*L1)[i1] = (cset_L0_t *) -1;
+      (*L1)[i1] = coerce(cset_L0_t *, -1);
       continue;
     } else if (i10 == i11) {
       c0 = ch0;
@@ -328,12 +328,12 @@ static void L1_fill_range(cset_L1_t *L1, wchar_t ch0, wchar_t ch1)
       c1 = ch1;
     }
 
-    if ((L0 = (*L1)[i1]) == (cset_L0_t *) -1)
+    if ((L0 = (*L1)[i1]) == coerce(cset_L0_t *, -1))
       continue;
 
     if (L0 == 0) {
       static cset_L0_t blank;
-      L0 = (*L1)[i1] = (cset_L0_t *) chk_malloc(sizeof *L0);
+      L0 = (*L1)[i1] = coerce(cset_L0_t *, chk_malloc(sizeof *L0));
       memcpy(L0, &blank, sizeof *L0);
     }
 
@@ -341,7 +341,7 @@ static void L1_fill_range(cset_L1_t *L1, wchar_t ch0, wchar_t ch1)
 
     if (L0_full(L0)) {
       free(L0);
-      (*L1)[i1] = (cset_L0_t *) -1;
+      (*L1)[i1] = coerce(cset_L0_t *, -1);
     }
   }
 }
@@ -353,7 +353,7 @@ static int L1_contains(cset_L1_t *L1, wchar_t ch)
 
   if (L0 == 0)
     return 0;
-  else if (L0 == (cset_L0_t *) -1)
+  else if (L0 == coerce(cset_L0_t *, -1))
     return 1;
   else
     return L0_contains(L0, CHAR_SET_L0(ch));
@@ -364,11 +364,11 @@ static void L1_free(cset_L1_t *L1)
 {
   int i1;
 
-  if (L1 == (cset_L1_t *) -1)
+  if (L1 == coerce(cset_L1_t *, -1))
     return;
 
   for (i1 = 0; i1 < 16; i1++)
-    if ((*L1)[i1] != (cset_L0_t *) -1)
+    if ((*L1)[i1] != coerce(cset_L0_t *, -1))
       free((*L1)[i1]);
 }
 
@@ -377,7 +377,7 @@ static int L2_full(cset_L2_t *L2)
 {
   int i;
   for (i = 0; i < 16; i++)
-    if ((*L2)[i] != (cset_L1_t *) -1)
+    if ((*L2)[i] != coerce(cset_L1_t *, -1))
       return 0;
   return 1;
 }
@@ -396,7 +396,7 @@ static void L2_fill_range(cset_L2_t *L2, wchar_t ch0, wchar_t ch1)
 
     if (i2 > i20 && i2 < i21) {
       free((*L2)[i2]);
-      (*L2)[i2] = (cset_L1_t *) -1;
+      (*L2)[i2] = coerce(cset_L1_t *, -1);
       continue;
     } else if (i20 == i21) {
       c0 = ch0;
@@ -409,12 +409,12 @@ static void L2_fill_range(cset_L2_t *L2, wchar_t ch0, wchar_t ch1)
       c1 = ch1;
     }
 
-    if ((L1 = (*L2)[i2]) == (cset_L1_t *) -1)
+    if ((L1 = (*L2)[i2]) == coerce(cset_L1_t *, -1))
       continue;
 
     if (L1 == 0) {
       static cset_L1_t blank;
-      L1 = (*L2)[i2] = (cset_L1_t *) chk_malloc(sizeof *L1);
+      L1 = (*L2)[i2] = coerce(cset_L1_t *, chk_malloc(sizeof *L1));
       memcpy(L1, &blank, sizeof *L1);
     }
 
@@ -422,7 +422,7 @@ static void L2_fill_range(cset_L2_t *L2, wchar_t ch0, wchar_t ch1)
 
     if (L1_full(L1)) {
       free(L1);
-      (*L2)[i2] = (cset_L1_t *) -1;
+      (*L2)[i2] = coerce(cset_L1_t *, -1);
     }
   }
 }
@@ -434,7 +434,7 @@ static int L2_contains(cset_L2_t *L2, wchar_t ch)
 
   if (L1 == 0)
     return 0;
-  else if (L1 == (cset_L1_t *) -1)
+  else if (L1 == coerce(cset_L1_t *, -1))
     return 1;
   else
     return L1_contains(L1, ch);
@@ -446,7 +446,7 @@ static void L2_free(cset_L2_t *L2)
 
   for (i2 = 0; i2 < 16; i2++) {
     cset_L1_t *L1 = (*L2)[i2];
-    if (L1 != 0 && L1 != (cset_L1_t *) -1) {
+    if (L1 != 0 && L1 != coerce(cset_L1_t *, -1)) {
       L1_free((*L2)[i2]);
       free((*L2)[i2]);
     }
@@ -468,7 +468,7 @@ static void L3_fill_range(cset_L3_t *L3, wchar_t ch0, wchar_t ch1)
 
     if (i3 > i30 && i3 < i31) {
       free((*L3)[i3]);
-      (*L3)[i3] = (cset_L2_t *) -1;
+      (*L3)[i3] = coerce(cset_L2_t *, -1);
       continue;
     } else if (i30 == i31) {
       c0 = ch0;
@@ -481,19 +481,19 @@ static void L3_fill_range(cset_L3_t *L3, wchar_t ch0, wchar_t ch1)
       c1 = ch1;
     }
 
-    if ((L2 = (*L3)[i3]) == (cset_L2_t *) -1)
+    if ((L2 = (*L3)[i3]) == coerce(cset_L2_t *, -1))
       continue;
 
     if (L2 == 0) {
       static cset_L2_t blank;
-      L2 = (*L3)[i3] = (cset_L2_t *) chk_malloc(sizeof *L2);
+      L2 = (*L3)[i3] = coerce(cset_L2_t *, chk_malloc(sizeof *L2));
       memcpy(L2, &blank, sizeof *L2);
     }
 
     L2_fill_range(L2, c0, c1);
     if (L2_full(L2)) {
       free(L2);
-      (*L3)[i3] = (cset_L2_t *) -1;
+      (*L3)[i3] = coerce(cset_L2_t *, -1);
     }
   }
 }
@@ -506,7 +506,7 @@ static int L3_contains(cset_L3_t *L3, wchar_t ch)
 
   if (L2 == 0)
     return 0;
-  else if (L2 == (cset_L2_t *) -1)
+  else if (L2 == coerce(cset_L2_t *, -1))
     return 1;
   else
     return L2_contains(L2, ch);
@@ -518,7 +518,7 @@ static void L3_free(cset_L3_t *L3)
 
   for (i3 = 0; i3 < 17; i3++) {
     cset_L2_t *L2 = (*L3)[i3];
-    if (L2 != 0 && L2 != (cset_L2_t *) -1) {
+    if (L2 != 0 && L2 != coerce(cset_L2_t *, -1)) {
       L2_free((*L3)[i3]);
       free((*L3)[i3]);
     }
@@ -530,7 +530,7 @@ static void L3_free(cset_L3_t *L3)
 static char_set_t *char_set_create(chset_type_t type, wchar_t base, unsigned st)
 {
   static char_set_t blank;
-  char_set_t *cs = (char_set_t *) chk_malloc(sizeof *cs);
+  char_set_t *cs = coerce(char_set_t *, chk_malloc(sizeof *cs));
   *cs = blank;
   cs->any.type = type;
   cs->any.stat = st;
@@ -792,7 +792,7 @@ static void init_special_char_sets(void)
 
 static void char_set_cobj_destroy(val chset)
 {
-  char_set_t *set = (char_set_t *) chset->co.handle;
+  char_set_t *set = coerce(char_set_t *, chset->co.handle);
   char_set_destroy(set);
   chset->co.handle = 0;
 }
@@ -807,7 +807,7 @@ static struct cobj_ops char_set_obj_ops = {
 
 static nfa_state_t *nfa_state_accept(void)
 {
-  nfa_state_t *st = (nfa_state_t *) chk_malloc(sizeof *st);
+  nfa_state_t *st = coerce(nfa_state_t *, chk_malloc(sizeof *st));
   st->a.kind = nfa_accept;
   st->a.visited = 0;
   return st;
@@ -815,7 +815,7 @@ static nfa_state_t *nfa_state_accept(void)
 
 static nfa_state_t *nfa_state_empty(nfa_state_t *t0, nfa_state_t *t1)
 {
-  nfa_state_t *st = (nfa_state_t *) chk_malloc(sizeof *st);
+  nfa_state_t *st = coerce(nfa_state_t *, chk_malloc(sizeof *st));
   st->e.kind = nfa_empty;
   st->e.visited = 0;
   st->e.trans0 = t0;
@@ -825,7 +825,7 @@ static nfa_state_t *nfa_state_empty(nfa_state_t *t0, nfa_state_t *t1)
 
 static nfa_state_t *nfa_state_single(nfa_state_t *t, wchar_t ch)
 {
-  nfa_state_t *st = (nfa_state_t *) chk_malloc(sizeof *st);
+  nfa_state_t *st = coerce(nfa_state_t *, chk_malloc(sizeof *st));
   st->o.kind = nfa_single;
   st->o.visited = 0;
   st->o.trans = t;
@@ -835,7 +835,7 @@ static nfa_state_t *nfa_state_single(nfa_state_t *t, wchar_t ch)
 
 static nfa_state_t *nfa_state_wild(nfa_state_t *t)
 {
-  nfa_state_t *st = (nfa_state_t *) chk_malloc(sizeof *st);
+  nfa_state_t *st = coerce(nfa_state_t *, chk_malloc(sizeof *st));
   st->o.kind = nfa_wild;
   st->o.visited = 0;
   st->o.trans = t;
@@ -857,7 +857,7 @@ static void nfa_state_shallow_free(nfa_state_t *st)
 
 static nfa_state_t *nfa_state_set(nfa_state_t *t, char_set_t *cs)
 {
-  nfa_state_t *st = (nfa_state_t *) chk_malloc(sizeof *st);
+  nfa_state_t *st = coerce(nfa_state_t *, chk_malloc(sizeof *st));
   st->s.kind = nfa_set;
   st->s.visited = 0;
   st->s.trans = t;
@@ -1100,7 +1100,7 @@ static int nfa_all_states(nfa_state_t **inout, int num, unsigned visited)
 
 static void nfa_free(nfa_t nfa)
 {
-  nfa_state_t **all = (nfa_state_t **) chk_malloc(NFA_SET_SIZE * sizeof *all);
+  nfa_state_t **all = coerce(nfa_state_t **, chk_malloc(NFA_SET_SIZE * sizeof *all));
   int nstates, i;
 
   all[0] = nfa.start;
@@ -1250,9 +1250,9 @@ static cnum nfa_run(nfa_t nfa, const wchar_t *str)
 {
   const wchar_t *last_accept_pos = 0, *ptr = str;
   unsigned visited = nfa.start->a.visited + 1;
-  nfa_state_t **move = (nfa_state_t **) chk_malloc(NFA_SET_SIZE * sizeof *move);
-  nfa_state_t **clos = (nfa_state_t **) chk_malloc(NFA_SET_SIZE * sizeof *clos);
-  nfa_state_t **stack = (nfa_state_t **) chk_malloc(NFA_SET_SIZE * sizeof *stack);
+  nfa_state_t **move = coerce(nfa_state_t **, chk_malloc(NFA_SET_SIZE * sizeof *move));
+  nfa_state_t **clos = coerce(nfa_state_t **, chk_malloc(NFA_SET_SIZE * sizeof *clos));
+  nfa_state_t **stack = coerce(nfa_state_t **, chk_malloc(NFA_SET_SIZE * sizeof *stack));
   int nmove = 1, nclos;
   int accept = 0;
 
@@ -1294,7 +1294,7 @@ static cnum regex_machine_match_span(regex_machine_t *regm)
 
 static void regex_destroy(val obj)
 {
-  regex_t *regex = (regex_t *) obj->co.handle;
+  regex_t *regex = coerce(regex_t *, obj->co.handle);
   if (regex->kind == REGEX_NFA)
     nfa_free(regex->r.nfa);
   free(regex);
@@ -1303,7 +1303,7 @@ static void regex_destroy(val obj)
 
 static void regex_mark(val obj)
 {
-  regex_t *regex = (regex_t *) obj->co.handle;
+  regex_t *regex = coerce(regex_t *, obj->co.handle);
   if (regex->kind == REGEX_DV)
     gc_mark(regex->r.dv);
   gc_mark(regex->source);
@@ -1330,17 +1330,17 @@ static val reg_nullable(val);
 static val dv_compile_regex(val exp)
 {
   if (exp == space_k) {
-    return cobj((mem_t *) space_cs, chset_s, &char_set_obj_ops);
+    return cobj(coerce(mem_t *, space_cs), chset_s, &char_set_obj_ops);
   } else if (exp == digit_k) {
-    return cobj((mem_t *) digit_cs, chset_s, &char_set_obj_ops);
+    return cobj(coerce(mem_t *, digit_cs), chset_s, &char_set_obj_ops);
   } else if (exp == word_char_k) {
-    return cobj((mem_t *) word_cs, chset_s, &char_set_obj_ops);
+    return cobj(coerce(mem_t *, word_cs), chset_s, &char_set_obj_ops);
   } else if (exp == cspace_k) {
-    return cobj((mem_t *) cspace_cs, chset_s, &char_set_obj_ops);
+    return cobj(coerce(mem_t *, cspace_cs), chset_s, &char_set_obj_ops);
   } else if (exp == cdigit_k) {
-    return cobj((mem_t *) cdigit_cs, chset_s, &char_set_obj_ops);
+    return cobj(coerce(mem_t *, cdigit_cs), chset_s, &char_set_obj_ops);
   } else if (exp == cword_char_k) {
-    return cobj((mem_t *) cword_cs, chset_s, &char_set_obj_ops);
+    return cobj(coerce(mem_t *, cword_cs), chset_s, &char_set_obj_ops);
   } else if (symbolp(exp) || chrp(exp)) {
     return exp;
   } else if (stringp(exp)) {
@@ -1351,7 +1351,7 @@ static val dv_compile_regex(val exp)
 
     if (sym == set_s || sym == cset_s) {
       char_set_t *set = char_set_compile(args, eq(sym, cset_s));
-      return cobj((mem_t *) set, chset_s, &char_set_obj_ops);
+      return cobj(coerce(mem_t *, set), chset_s, &char_set_obj_ops);
     } else if (sym == compound_s) {
       list_collect_decl (out, iter);
       iter = list_collect(iter, compound_s);
@@ -1551,7 +1551,7 @@ static val reg_derivative(val exp, val ch)
   } else if (chrp(exp)) {
     return null(eq(exp, ch));
   } else if (typeof(exp) == chset_s) {
-    char_set_t *set = (char_set_t *) exp->co.handle;
+    char_set_t *set = coerce(char_set_t *, exp->co.handle);
     return if3(char_set_contains(set, c_chr(ch)), nil, t);
   } else if (exp == wild_s) {
     return nil;
@@ -1670,21 +1670,21 @@ val regex_compile(val regex_sexp, val error_stream)
     regex_sexp = regex_parse(regex_sexp, default_bool_arg(error_stream));
     return if2(regex_sexp, regex_compile(regex_sexp, error_stream));
   } else if (opt_derivative_regex || regex_requires_dv(regex_sexp)) {
-    regex_t *regex = (regex_t *) chk_malloc(sizeof *regex);
+    regex_t *regex = coerce(regex_t *, chk_malloc(sizeof *regex));
     val ret;
     regex->kind = REGEX_DV;
     regex->r.dv = nil;
     regex->source = nil;
-    ret = cobj((mem_t *) regex, regex_s, &regex_obj_ops);
+    ret = cobj(coerce(mem_t *, regex), regex_s, &regex_obj_ops);
     regex->r.dv = dv_compile_regex(regex_sexp);
     regex->source = regex_sexp;
     return ret;
   } else {
-    regex_t *regex = (regex_t *) chk_malloc(sizeof *regex);
+    regex_t *regex = coerce(regex_t *, chk_malloc(sizeof *regex));
     val ret;
     regex->kind = REGEX_NFA;
     regex->source = nil;
-    ret = cobj((mem_t *) regex, regex_s, &regex_obj_ops);
+    ret = cobj(coerce(mem_t *, regex), regex_s, &regex_obj_ops);
     regex->r.nfa = nfa_compile_regex(regex_sexp);
     regex->source = regex_sexp;
     return ret;
@@ -1836,7 +1836,7 @@ static void print_rec(val exp, val stream)
 
 static void regex_print(val obj, val stream)
 {
-  regex_t *regex = (regex_t *) cobj_handle(obj, regex_s);
+  regex_t *regex = coerce(regex_t *, cobj_handle(obj, regex_s));
 
   put_string(lit("#/"), stream);
   print_rec(regex->source, stream);
@@ -1845,7 +1845,7 @@ static void regex_print(val obj, val stream)
 
 static cnum regex_run(val compiled_regex, const wchar_t *str)
 {
-  regex_t *regex = (regex_t *) cobj_handle(compiled_regex, regex_s);
+  regex_t *regex = coerce(regex_t *, cobj_handle(compiled_regex, regex_s));
 
   return if3(regex->kind == REGEX_DV,
              dv_run(regex->r.dv, str),
@@ -1883,7 +1883,7 @@ static void regex_machine_reset(regex_machine_t *regm)
 
 static void regex_machine_init(regex_machine_t *regm, val reg)
 {
-  regex_t *regex = (regex_t *) cobj_handle(reg, regex_s);
+  regex_t *regex = coerce(regex_t *, cobj_handle(reg, regex_s));
 
   if (regex->kind == REGEX_DV) {
     regm->n.is_nfa = 0;
@@ -1891,12 +1891,12 @@ static void regex_machine_init(regex_machine_t *regm, val reg)
   } else {
     regm->n.is_nfa = 1;
     regm->n.nfa = regex->r.nfa;
-    regm->n.move = (nfa_state_t **)
-                     chk_malloc(NFA_SET_SIZE * sizeof *regm->n.move);
-    regm->n.clos = (nfa_state_t **)
-                     chk_malloc(NFA_SET_SIZE * sizeof *regm->n.clos);
-    regm->n.stack = (nfa_state_t **)
-                      chk_malloc(NFA_SET_SIZE * sizeof *regm->n.stack);
+    regm->n.move = coerce(nfa_state_t **,
+                          chk_malloc(NFA_SET_SIZE * sizeof *regm->n.move));
+    regm->n.clos = coerce(nfa_state_t **,
+                          chk_malloc(NFA_SET_SIZE * sizeof *regm->n.clos));
+    regm->n.stack = coerce(nfa_state_t **,
+                           chk_malloc(NFA_SET_SIZE * sizeof *regm->n.stack));
   }
 
   regex_machine_reset(regm);

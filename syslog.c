@@ -115,13 +115,13 @@ val closelog_wrap(void)
 
 static void syslog_mark(val stream)
 {
-  val stuff = (val) stream->co.handle;
+  val stuff = coerce(val, stream->co.handle);
   gc_mark(stuff);
 }
 
 static val syslog_put_string(val stream, val str)
 {
-  val cell = (val) stream->co.handle;
+  val cell = coerce(val, stream->co.handle);
   cons_bind (prio, strstream, cell);
 
   for (;;) {
@@ -147,7 +147,7 @@ static val syslog_put_string(val stream, val str)
 
 static val syslog_put_char(val stream, val ch)
 {
-  val cell = (val) stream->co.handle;
+  val cell = coerce(val, stream->co.handle);
   cons_bind (prio, strstream, cell);
 
   if (ch == chr('\n')) {
@@ -163,7 +163,7 @@ static val syslog_put_char(val stream, val ch)
 
 static val syslog_put_byte(val stream, int ch)
 {
-  val cell = (val) stream->co.handle;
+  val cell = coerce(val, stream->co.handle);
   cons_bind (prio, strstream, cell);
 
   if (ch == '\n') {
@@ -180,7 +180,7 @@ static val syslog_put_byte(val stream, int ch)
 static val syslog_get_prop(val stream, val ind)
 {
   if (ind == prio_k) {
-    val cell = (val) stream->co.handle;
+    val cell = coerce(val, stream->co.handle);
     return car(cell);
   } else if (ind == name_k) {
     return lit("syslog");
@@ -191,7 +191,7 @@ static val syslog_get_prop(val stream, val ind)
 static val syslog_set_prop(val stream, val ind, val prop)
 {
   if (ind == prio_k) {
-    val cell = (val) stream->co.handle;
+    val cell = coerce(val, stream->co.handle);
     set(car_l(cell), prop);
     return t;
   }
@@ -221,6 +221,6 @@ static struct strm_ops syslog_strm_ops = {
 
 val make_syslog_stream(val prio)
 {
-  return cobj((mem_t *) cons(prio, make_string_output_stream()), 
+  return cobj(coerce(mem_t *, cons(prio, make_string_output_stream())),
               stream_s, &syslog_strm_ops.cobj_ops);
 }

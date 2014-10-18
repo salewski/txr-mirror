@@ -74,8 +74,8 @@ static struct cobj_ops random_state_ops = {
 
 static val make_state(void)
 {
-  struct rand_state *r = (struct rand_state *) chk_malloc(sizeof *r);
-  return cobj((mem_t *) r, random_state_s, &random_state_ops);
+  struct rand_state *r = coerce(struct rand_state *, chk_malloc(sizeof *r));
+  return cobj(coerce(mem_t *, r), random_state_s, &random_state_ops);
 }
 
 val random_state_p(val obj)
@@ -108,7 +108,8 @@ val make_random_state(val seed)
 {
   val rs = make_state();
   int i;
-  struct rand_state *r = (struct rand_state *) cobj_handle(rs, random_state_s);
+  struct rand_state *r = coerce(struct rand_state *,
+                                cobj_handle(rs, random_state_s));
 
   r->cur = 0;
 
@@ -147,13 +148,13 @@ val make_random_state(val seed)
 #endif
   } else if (nilp(seed)) {
     val time = time_sec_usec();
-    r->state[0] = (rand32_t) c_num(car(time));
-    r->state[1] = (rand32_t) c_num(cdr(time));
-    r->state[2] = (rand32_t) getpid();
+    r->state[0] = convert(rand32_t, c_num(car(time)));
+    r->state[1] = convert(rand32_t, c_num(cdr(time)));
+    r->state[2] = convert(rand32_t, getpid());
     memset(r->state + 3, 0xAA, sizeof r->state - 3 * sizeof r->state[0]);
   } else if (random_state_p(seed)) {
-    struct rand_state *rseed = (struct rand_state *)
-                                  cobj_handle(seed, random_state_s);
+    struct rand_state *rseed = coerce(struct rand_state *,
+                                      cobj_handle(seed, random_state_s));
     *r = *rseed;
   } else {
     uw_throwf(error_s, lit("make-random-state: seed ~s is not a number"),
@@ -168,23 +169,23 @@ val make_random_state(val seed)
 
 val random_fixnum(val state)
 {
-  struct rand_state *r = (struct rand_state *) cobj_handle(default_arg(state,
-                                                                       random_state),
-                                                           random_state_s);
+  struct rand_state *r = coerce(struct rand_state *,
+                                cobj_handle(default_arg(state, random_state),
+                                            random_state_s));
   return num(rand32(r) & NUM_MAX);
 }
 
 val random(val state, val modulus)
 {
-  struct rand_state *r = (struct rand_state *) cobj_handle(state,
-                                                           random_state_s);
+  struct rand_state *r = coerce(struct rand_state *,
+                                cobj_handle(state, random_state_s));
 
   if (bignump(modulus)) {
     mp_int *m = mp(modulus);
     int bits = mp_count_bits(m);
     int rands_needed = (bits + 32 - 1) / 32;
     int msb_rand_bits = bits % 32;
-    rand32_t msb_rand_mask = ((rand32_t) -1) >> (32 - msb_rand_bits);
+    rand32_t msb_rand_mask = convert(rand32_t, -1) >> (32 - msb_rand_bits);
     val out = make_bignum();
     mp_int *om = mp(out);
 
@@ -223,7 +224,7 @@ val random(val state, val modulus)
     int rands_needed = (bits + 32 - 1) / 32;
 #endif
     int msb_rand_bits = bits % 32;
-    rand32_t msb_rand_mask = ((rand32_t) -1) >> (32 - msb_rand_bits);
+    rand32_t msb_rand_mask = convert(rand32_t, -1) >> (32 - msb_rand_bits);
     if (m <= 0)
       goto invalid;
     for (;;) {
