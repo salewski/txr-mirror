@@ -1,3 +1,15 @@
+2014-10-18  Kaz Kylheku  <kaz@kylheku.com>
+
+	* match.c (mf_all): Drop data_lineno parameter. Initialize
+	the corresponding member based on whether or not data is nil.
+	(do_match_line, mf_from_ml, match_filter, match_fun, extract):
+	Do not pass starting line number argument to mf_all.
+	This fixes a bug when the line number at @(eof) for an empty
+	file comes out as zero.
+	(mf_args, v_skip, v_fuzz, v_next, v_gather, v_collect,
+	open_data_source, match_files): Use zero and one instead of num(0) and
+	num(1).
+
 2014-10-17  Kaz Kylheku  <kaz@kylheku.com>
 
 	* match.c (v_eof): Bugfix: we are at EOF not only when

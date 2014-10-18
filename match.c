@@ -1182,7 +1182,7 @@ typedef struct {
 } match_files_ctx;
 
 static match_files_ctx mf_all(val spec, val files, val bindings,
-                              val data, val data_lineno, val curfile);
+                              val data, val curfile);
 
 static val v_fun(match_files_ctx *c);
 
@@ -1246,7 +1246,7 @@ static val do_match_line(match_line_ctx *c)
             } else if (result == decline_k) {
               val spec = rlcp(cons(cons(elem, nil), nil), elem);
               match_files_ctx vc = mf_all(spec, nil, c->bindings,
-                                          nil, num(0), c->file);
+                                          nil, c->file);
               val vresult = v_fun(&vc);
 
               if (vresult == next_spec_k) {
@@ -1961,8 +1961,7 @@ static void do_output(val bindings, val specs, val filter, val out)
 }
 
 static match_files_ctx mf_all(val spec, val files, val bindings,
-                              val data, val data_lineno,
-                              val curfile)
+                              val data, val curfile)
 {
   match_files_ctx c;
   c.spec = spec;
@@ -1970,7 +1969,7 @@ static match_files_ctx mf_all(val spec, val files, val bindings,
   c.curfile = curfile;
   c.bindings = bindings;
   c.data = data;
-  c.data_lineno = data_lineno;
+  c.data_lineno = if3(data, one, zero);
   return c;
 }
 
@@ -1979,7 +1978,7 @@ static match_files_ctx mf_args(match_files_ctx c)
   match_files_ctx nc = c;
   nc.data = c.files;
   nc.curfile = lit("args");
-  nc.data_lineno = num(1);
+  nc.data_lineno = one;
   return nc;
 }
 
@@ -2020,7 +2019,7 @@ static match_files_ctx mf_file_data(match_files_ctx c, val file,
 
 static match_files_ctx mf_from_ml(match_line_ctx ml)
 {
-  return mf_all(cons(ml.specline, nil), nil, ml.bindings, nil, num(0), ml.file);
+  return mf_all(cons(ml.specline, nil), nil, ml.bindings, nil, ml.file);
 }
 
 static val match_files(match_files_ctx a);
@@ -2052,7 +2051,7 @@ static val v_skip(match_files_ctx *c)
     cnum cmin = fixnump(min) ? c_num(min) : 0;
     val greedy = eq(max, greedy_k);
     volatile val last_good_result = nil;
-    volatile val last_good_line = num(0);
+    volatile val last_good_line = zero;
 
     {
       cnum reps_max = 0, reps_min = 0;
@@ -2060,7 +2059,7 @@ static val v_skip(match_files_ctx *c)
 
       while (c->data && min && reps_min < cmin) {
         c->data = rest(c->data);
-        c->data_lineno = plus(c->data_lineno, num(1));
+        c->data_lineno = plus(c->data_lineno, one);
         reps_min++;
       }
 
@@ -2101,7 +2100,7 @@ static val v_skip(match_files_ctx *c)
                 c->data_lineno, nao);
 
         c->data = rest(c->data);
-        c->data_lineno = plus(c->data_lineno, num(1));
+        c->data_lineno = plus(c->data_lineno, one);
       }
 
       uw_block_end;
@@ -2159,7 +2158,7 @@ static val v_fuzz(match_files_ctx *c)
         if (!c->data)
           break;
         c->data = rest(c->data);
-        c->data_lineno = plus(c->data_lineno, num(1));
+        c->data_lineno = plus(c->data_lineno, one);
         c->spec = rest(c->spec);
         if (!c->spec) {
           if (good >= cm)
@@ -2367,7 +2366,7 @@ static val v_next(match_files_ctx *c)
         sem_error(specline, lit("(next :env) takes no additional arguments"), nao);
       } else {
         cons_bind (new_bindings, success,
-                   match_files(mf_file_data(*c, lit("env"), env(), num(1))));
+                   match_files(mf_file_data(*c, lit("env"), env(), one)));
 
         if (success)
           return cons(new_bindings,
@@ -2414,7 +2413,7 @@ static val v_next(match_files_ctx *c)
         {
           cons_bind (new_bindings, success,
                      match_files(mf_file_data(*c, lit("var"),
-                                 lazy_flatten(cdr(existing)), num(1))));
+                                 lazy_flatten(cdr(existing)), one)));
 
           if (success)
             return cons(new_bindings,
@@ -2425,7 +2424,7 @@ static val v_next(match_files_ctx *c)
         val list_val = txeval(specline, list_expr, c->bindings);
         cons_bind (new_bindings, success,
                    match_files(mf_file_data(*c, lit("var"),
-                               lazy_flatten(list_val), num(1))));
+                               lazy_flatten(list_val), one)));
 
         if (success)
           return cons(new_bindings,
@@ -2439,7 +2438,7 @@ static val v_next(match_files_ctx *c)
         {
           cons_bind (new_bindings, success,
                      match_files(mf_file_data(*c, lit("var"),
-                                 split_str(str_val, lit("\n")), num(1))));
+                                 split_str(str_val, lit("\n")), one)));
 
           if (success)
             return cons(new_bindings,
@@ -2707,7 +2706,7 @@ static val v_gather(match_files_ctx *c)
       debuglf(specline, lit("gather consumed entire file"), nao);
       c->data = nil;
     } else {
-      c->data_lineno = plus(c->data_lineno, num(1));
+      c->data_lineno = plus(c->data_lineno, one);
       c->data = rest(c->data);
       debuglf(specline, lit("gather advancing by one line to ~a"), c->data_lineno, nao);
     }
@@ -2877,7 +2876,7 @@ static val v_collect(match_files_ctx *c)
 
           if (new_line == c->data_lineno) {
             new_data = cdr(new_data);
-            new_line = plus(new_line, num(1));
+            new_line = plus(new_line, one);
           }
 
           debuglf(specline, lit("collect advancing from line ~a to ~a"),
@@ -2902,7 +2901,7 @@ next_collect:
         mincounter++;
         if ((gap || max) && ++maxcounter > cmax)
           break;
-        c->data_lineno = plus(c->data_lineno, num(1));
+        c->data_lineno = plus(c->data_lineno, one);
         c->data = rest(c->data);
       }
     }
@@ -3876,11 +3875,11 @@ static void open_data_source(match_files_ctx *c)
         c->curfile = source_spec;
 
         if ((c->data = complex_snarf(fp, name)) != nil)
-          c->data_lineno = num(1);
+          c->data_lineno = one;
       }
     } else if (streamp(name)) {
       if ((c->data = lazy_stream_cons(name)))
-        c->data_lineno = num(1);
+        c->data_lineno = one;
     } else {
       c->data = nil;
     }
@@ -3897,7 +3896,7 @@ static val match_files(match_files_ctx c)
 
   for (; c.spec; c.spec = rest(c.spec), 
                  c.data = rest(c.data),
-                 c.data_lineno = plus(c.data_lineno, num(1)))
+                 c.data_lineno = plus(c.data_lineno, one))
 repeat_spec_same_data:
   {
     spec_bind (specline, first_spec, c.spec);
@@ -3978,7 +3977,7 @@ val match_filter(val name, val arg, val other_args)
   val spec = cons(list(cons(name, 
                             cons(in_arg_sym, cons(out_arg_sym, other_args))),
                        nao), nil);
-  match_files_ctx c = mf_all(spec, nil, bindings, nil, num(0), nil);
+  match_files_ctx c = mf_all(spec, nil, bindings, nil, nil);
   val ret = v_fun(&c);
 
   (void) first_spec;
@@ -4010,8 +4009,7 @@ val match_fun(val name, val args, val input, val files)
                  lazy_stream_cons(input),
                  input);
   /* TODO: pass through source location context */
-  match_files_ctx c = mf_all(spec, files, in_bindings, data,
-                             if3(data, one, zero), nil);
+  match_files_ctx c = mf_all(spec, files, in_bindings, data, nil);
   val ret;
 
   debug_enter;
@@ -4033,9 +4031,9 @@ val match_fun(val name, val args, val input, val files)
 
 int extract(val spec, val files, val predefined_bindings)
 {
-  cons_bind (bindings, success, match_files(mf_all(spec, files, 
+  cons_bind (bindings, success, match_files(mf_all(spec, files,
                                                    predefined_bindings,
-                                                   t, nil, nil)));
+                                                   t, nil)));
 
   if (opt_print_bindings) {
     if (bindings) {
