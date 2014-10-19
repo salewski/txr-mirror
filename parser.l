@@ -48,6 +48,7 @@
 #include "unwind.h"
 #include "hash.h"
 #include "parser.h"
+#include "eval.h"
 #include "y.tab.h"
 
 #define YY_INPUT(buf, result, max_size)           \
@@ -996,24 +997,32 @@ val lisp_parse(val source_in, val error_stream, val error_return_val)
   val name = if3(stringp(source),
                  format(nil, lit("expr --> ~a"), source, nao),
                  stream_get_prop(input_stream, name_k));
-  val save_stream = std_error;
   val stream = make_catenated_stream(list(secret_token_stream, input_stream, nao));
+  val saved_dyn = dyn_env;
   parser_t parser;
 
+  dyn_env = make_env(nil, nil, dyn_env);
+
   error_stream = default_bool_arg(error_stream);
-  std_error = if3(error_stream == t, std_output, or2(error_stream, std_null));
+  error_stream = if3(error_stream == t, std_output, or2(error_stream, std_null));
+  class_check (error_stream, stream_s);
+
+  env_vbind(dyn_env, stderr_s, error_stream);
+
   {
     int gc = gc_state(0);
     name = if3(std_error != std_null, name, lit(""));
     parse(stream, name, &parser);
     gc_state(gc);
   }
-  std_error = save_stream;
+
+  dyn_env = saved_dyn;
 
   if (parser.errors) {
     if (missingp(error_return_val))
       uw_throwf(syntax_error_s, lit("read: syntax error"), nao);
     return error_return_val;
   }
+
   return parser.syntax_tree;
 }

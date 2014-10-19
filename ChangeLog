@@ -1,5 +1,15 @@
 2014-10-19  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.l (lisp_parse): Bugfix: the error_stream argument
+	must be checked to be a stream before we plant it in place
+	of std_error, otherwise we will get a type exception thrown
+	lower down, which leads to runaway recursion as TXR tries
+	to print the error messages on std_error.
+
+	* dep.mk: Regenerated.
+
+2014-10-19  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.y (r_exprs): New grammar symbol. r_exprs uses
 	left-recursive rules to avoid filling the yacc stack, and
 	returns the items in reverse order. The output of each
