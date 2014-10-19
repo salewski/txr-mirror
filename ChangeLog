@@ -1,3 +1,13 @@
+2014-10-19  Kaz Kylheku  <kaz@kylheku.com>
+
+	* parser.y (r_exprs): New grammar symbol. r_exprs uses
+	left-recursive rules to avoid filling the yacc stack, and
+	returns the items in reverse order. The output of each
+	r_exprs-generating rule consists of a list which gives
+	the terminating atom, and then the list contents in reverse order.
+	(n_exprs): Becomes wrapper for r_exprs which deals with
+	the terminating atom, and reversed items.
+
 2014-10-18  Kaz Kylheku  <kaz@kylheku.com>
 
 	* parser.y: Allow TXR to support large programs, and efficiently so.

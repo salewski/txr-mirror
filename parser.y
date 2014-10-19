@@ -106,7 +106,7 @@ int yylex(union YYSTYPE *, yyscan_t scanner);
 %type <val> if_clause elif_clauses_opt else_clause_opt
 %type <val> line elems_opt elems clause_parts_h additional_parts_h
 %type <val> text texts elem var var_op modifiers vector hash
-%type <val> list exprs exprs_opt expr n_exprs n_expr n_exprs_opt
+%type <val> list exprs exprs_opt expr n_exprs r_exprs n_expr n_exprs_opt
 %type <val> out_clauses out_clauses_opt out_clause
 %type <val> repeat_clause repeat_parts_opt o_line
 %type <val> o_elems_opt o_elems o_elem o_var q_var rep_elem rep_parts_opt
@@ -731,21 +731,51 @@ exprs_opt : exprs               { $$ = $1; }
           | /* empty */         { $$ = nil; }
           ;
 
-n_exprs : n_expr                { $$ = rlcp(cons($1, nil), $1); }
-        | n_expr n_exprs        { uses_or2;
-                                  $$ = rlcp(cons($1, $2), or2($1, $2)); }
-        | n_expr '.' n_expr     { uses_or2;
-                                  $$ = rlcp(cons($1, $3), or2($1, $3)); }
-        | n_expr DOTDOT n_exprs { uses_or2;
-                                  $$ = rlcp(cons(list(cons_s, $1,
-                                                      car($3), nao),
-                                                 cdr($3)), or2($1, $3)); }
-        | WSPLICE wordslit      { $$ = rl($2, num($1)); }
-        | WSPLICE wordslit
-          n_exprs               { $$ = nappend2(rl($2, num($1)), $3); }
-        | QWSPLICE wordsqlit    { $$ = rl($2, num($1)); }
-        | QWSPLICE wordsqlit
-          n_exprs               { $$ = nappend2(rl($2, num($1)), $3); }
+n_exprs : r_exprs               { val term_atom = pop(&$1);
+                                   val tail_cons = $1;
+                                   $$ = nreverse($1);
+                                   rplacd(tail_cons, term_atom); }
+        ;
+
+r_exprs : n_expr                { val exprs = cons($1, nil);
+                                  rlcp(exprs, $1);
+                                  $$ = rlcp(cons(nil, exprs), exprs); }
+        | r_exprs n_expr        { uses_or2;
+                                  val term_atom_cons = $1;
+                                  val exprs = cdr($1);
+                                  rplacd(term_atom_cons,
+                                         rlcp(cons($2, exprs), or2($2, exprs)));
+                                  $$ = term_atom_cons; }
+        | r_exprs '.' n_expr     { val term_atom_cons = $1;
+                                   rplaca(term_atom_cons, $3);
+                                   $$ = $1; }
+        | r_exprs DOTDOT n_expr { uses_or2;
+                                  val term_atom_cons = $1;
+                                  val exprs = cdr($1);
+                                  rplacd(term_atom_cons,
+                                         rlcp(cons(list(cons_s, car(exprs),
+                                                        $3, nao),
+                                                   cdr(exprs)),
+                                              or2($3, exprs)));
+                                  $$ = term_atom_cons; }
+        | WSPLICE wordslit      { $$ = cons(nil, nreverse(rl($2, num($1))));
+                                  rlcp($$, cdr($$)); }
+        | r_exprs WSPLICE
+          wordslit              { val term_atom_cons = $1;
+                                  val exprs = cdr($1);
+                                  rplacd(term_atom_cons,
+                                         nappend2(rl(nreverse($3), num($2)),
+                                                  exprs));
+                                  $$ = term_atom_cons; }
+        | QWSPLICE wordsqlit    { $$ = cons(nil, rl($2, num($1)));
+                                  rlcp($$, cdr($$)); }
+        | r_exprs QWSPLICE
+          wordsqlit             { val term_atom_cons = $1;
+                                  val exprs = cdr($1);
+                                  rplacd(term_atom_cons,
+                                         nappend2(rl(nreverse($3), num($2)),
+                                                  exprs));
+                                  $$ = term_atom_cons; }
         ;
 
 n_expr : SYMTOK                 { $$ = symhlpr($1, t); }
