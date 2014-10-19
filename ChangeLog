@@ -1,5 +1,17 @@
 2014-10-18  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.y: Allow TXR to support large programs, and efficiently so.
+	(clauses_rev): New grammar symbol. Uses a left-recursive rule that
+	does not consume an amount of parser stack proportional to the number
+	of clauses, and sticks to efficient consing, which means that
+	the list is built up in reverse.
+	(clauses): Now just a wrapper rule for clauses_rev which nreverses
+	its output.
+	(clauses_opt): Retargetted to use clauses_rev instead of clauses,
+	and reverse its output.
+
+2014-10-18  Kaz Kylheku  <kaz@kylheku.com>
+
 	Deal with situation when GC is disabled and the freshobj array runs out
 	of room.  This could happen when parsing a really large TXR program,
 	since gc is disabled during parsing. Currently it asserts, which

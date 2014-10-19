@@ -97,7 +97,7 @@ int yylex(union YYSTYPE *, yyscan_t scanner);
 
 %token <chr> REGCHAR REGTOKEN LITCHAR SPLICE
 
-%type <val> spec clauses clauses_opt clause
+%type <val> spec clauses_rev clauses clauses_opt clause
 %type <val> all_clause some_clause none_clause maybe_clause block_clause
 %type <val> cases_clause choose_clause gather_clause collect_clause until_last
 %type <val> collect_repeat
@@ -144,11 +144,13 @@ spec : clauses                  { parser->syntax_tree = $1; }
 
      ;
 
-clauses : clause                { $$ = cons($1, nil); }
-        | clause clauses        { $$ = cons($1, $2);  }
-        ;
+clauses : clauses_rev           { $$ = nreverse($1); }
 
-clauses_opt : clauses           { $$ = $1; }
+clauses_rev : clause                    { $$ = cons($1, nil); }
+            | clauses_rev clause        { $$ = cons($2, $1);  }
+            ;
+
+clauses_opt : clauses_rev       { $$ = nreverse($1); }
             | /* empty */       { $$ = nil; }
             ;
 
