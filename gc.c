@@ -165,7 +165,8 @@ val make_obj(void)
       malloc_delta >= opt_gc_delta)
   {
     gc();
-    assert (freshobj_idx < FRESHOBJ_VEC_SIZE);
+    if (freshobj_idx >= FRESHOBJ_VEC_SIZE)
+      full_gc = 1;
     prev_malloc_bytes = malloc_bytes;
   }
 #else
@@ -189,7 +190,8 @@ val make_obj(void)
 #endif
 #if CONFIG_GEN_GC
       ret->t.gen = 0;
-      freshobj[freshobj_idx++] = ret;
+      if (!full_gc)
+        freshobj[freshobj_idx++] = ret;
 #endif
       gc_bytes += sizeof (obj_t);
       return ret;
@@ -208,7 +210,7 @@ val make_obj(void)
     }
   }
 
-  return 0;
+  abort();
 }
 
 static void finalize(val obj)

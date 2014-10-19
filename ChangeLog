@@ -1,5 +1,22 @@
 2014-10-18  Kaz Kylheku  <kaz@kylheku.com>
 
+	Deal with situation when GC is disabled and the freshobj array runs out
+	of room.  This could happen when parsing a really large TXR program,
+	since gc is disabled during parsing. Currently it asserts, which
+	is not acceptable.
+
+	* gc.c (make_obj): If after gc, the freshobj array has not been
+	emptied (obviously because gc is disabled), do not assert.
+	Rather, set the full_gc flag to request a full garbage collection
+	when gc is re-enabled.  Furthermore, only place newly allocated objects
+	into freshobj if full_gc has not been set. Thus, if we exhaust the
+	freshobj array while gc is off, the full_gc flag is set, and we
+	discontinue use of that array. When gc is re-enabled, we will do a full
+	gc pass. A full gc pass ignores freshobj array, so it doesn't matter
+	that its use was discontinued.
+
+2014-10-18  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (mf_all): Drop data_lineno parameter. Initialize
 	the corresponding member based on whether or not data is nil.
 	(do_match_line, mf_from_ml, match_filter, match_fun, extract):
