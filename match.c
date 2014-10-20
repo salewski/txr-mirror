@@ -57,7 +57,7 @@ val decline_k, next_spec_k, repeat_spec_k;
 val mingap_k, maxgap_k, gap_k, mintimes_k, maxtimes_k, times_k;
 val lines_k, chars_k;
 val text_s, choose_s, gather_s, do_s, mod_s, modlast_s, line_s, fuzz_s, load_s;
-val close_s, require_s;
+val include_s, close_s, require_s;
 val longest_k, shortest_k, greedy_k;
 val vars_k, resolve_k;
 val append_k, into_k, var_k, list_k, string_k, env_k, counter_k;
@@ -3703,18 +3703,19 @@ static val v_load(match_files_ctx *c)
 {
   uses_or2;
   spec_bind (specline, first_spec, c->spec);
+  val sym = first(first_spec);
   val args = rest(first_spec);
   val parent = or2(cdr(source_loc(specline)), null_string);
   val target = txeval(specline, first(args), c->bindings);
 
   if (rest(specline))
-    sem_error(specline, lit("unexpected material after load"), nao);
+    sem_error(specline, lit("unexpected material after ~s"), sym, nao);
 
   if (!stringp(target))
-    sem_error(specline, lit("load: path ~s is not a string"), target, nao);
+    sem_error(specline, lit("~s: path ~s is not a string"), sym, target, nao);
 
   if (equal(target, null_string))
-    sem_error(specline, lit("load: null string path given"), nao);
+    sem_error(specline, lit("~s: null string path given"), sym, nao);
 
   {
     val path = if3(abs_path_p(target),
@@ -3731,9 +3732,11 @@ static val v_load(match_files_ctx *c)
     gc_state(gc);
 
     if (parser.errors)
-      sem_error(specline, lit("load: errors encountered in ~s"), path, nao);
+      sem_error(specline, lit("~s: errors encountered in ~s"), sym, path, nao);
 
-    { 
+    if (sym == include_s) {
+      return parser.syntax_tree;
+    } else {
       val spec = parser.syntax_tree;
       val result = match_files(mf_spec(*c, spec));
 
@@ -4029,6 +4032,13 @@ val match_fun(val name, val args, val input, val files)
   debug_leave;
 }
 
+val include(val specline)
+{
+  val spec = cons(specline, nil);
+  match_files_ctx c = mf_all(spec, nil, nil, nil, nil);
+  return v_load(&c);
+}
+
 int extract(val spec, val files, val predefined_bindings)
 {
   cons_bind (bindings, success, match_files(mf_all(spec, files,
@@ -4066,6 +4076,7 @@ static void syms_init(void)
   gather_s = intern(lit("gather"), user_package);
   do_s = intern(lit("do"), user_package);
   load_s = intern(lit("load"), user_package);
+  include_s = intern(lit("include"), user_package);
   close_s = intern(lit("close"), user_package);
   require_s = intern(lit("require"), user_package);
   longest_k = intern(lit("longest"), keyword_package);

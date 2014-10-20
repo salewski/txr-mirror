@@ -1,3 +1,26 @@
+2014-10-20  Kaz Kylheku  <kaz@kylheku.com>
+
+	Source file inclusion implemented: needed for macros.
+
+	* match.c (include_s): New symbol variable.
+	(v_load): Function extended to handle include semantics.
+	(include): External wrapper function for doing inclusion
+	via v_load.
+	(syms_init): include_s initialized.
+
+	* match.h (include_s): Declared.
+	(include): Declared.
+
+	* parser.y (check_for_include): New static function.
+	(clauses_rev): Use check_for_include to replace @(include ..)
+	directive.
+
+	* txr.1: Documented include.
+
+	* genvim.txr: Added include symbol.
+
+	* txr.vim: Regenerated.
+
 2014-10-19  Kaz Kylheku  <kaz@kylheku.com>
 
 	* match.c (match_fun): Bugfix: replace incorrect plain return

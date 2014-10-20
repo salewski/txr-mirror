@@ -27,12 +27,12 @@ syn keyword txr_keyword contained define do elif else
 syn keyword txr_keyword contained end eof eol fail
 syn keyword txr_keyword contained filter finally flatten forget
 syn keyword txr_keyword contained freeform fuzz gather if
-syn keyword txr_keyword contained last line load local
-syn keyword txr_keyword contained maybe merge next none
-syn keyword txr_keyword contained or output rebind rep
-syn keyword txr_keyword contained repeat require set skip
-syn keyword txr_keyword contained some text throw trailer
-syn keyword txr_keyword contained try until var
+syn keyword txr_keyword contained include last line load
+syn keyword txr_keyword contained local maybe merge next
+syn keyword txr_keyword contained none or output rebind
+syn keyword txr_keyword contained rep repeat require set
+syn keyword txr_keyword contained skip some text throw
+syn keyword txr_keyword contained trailer try until var
 
 syn keyword txl_keyword contained * *args* *e* *flo-dig*
 syn keyword txl_keyword contained *flo-epsilon* *flo-max* *flo-min* *full-args*

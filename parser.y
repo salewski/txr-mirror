@@ -57,6 +57,7 @@ static val expand_meta(val form, val menv);
 static val rlrec(parser_t *, val form, val line);
 static wchar_t char_from_name(const wchar_t *name);
 static val make_expr(parser_t *, val sym, val rest, val lineno);
+static val check_for_include(val spec_rev);
 
 #if YYBISON
 union YYSTYPE;
@@ -146,8 +147,8 @@ spec : clauses                  { parser->syntax_tree = $1; }
 
 clauses : clauses_rev           { $$ = nreverse($1); }
 
-clauses_rev : clause                    { $$ = cons($1, nil); }
-            | clauses_rev clause        { $$ = cons($2, $1);  }
+clauses_rev : clause                    { $$ = check_for_include(cons($1, nil)); }
+            | clauses_rev clause        { $$ = check_for_include(cons($2, $1));  }
             ;
 
 clauses_opt : clauses_rev       { $$ = nreverse($1); }
@@ -1303,6 +1304,20 @@ static val make_expr(parser_t *parser, val sym, val rest, val lineno)
   }
 
   return ret;
+}
+
+static val check_for_include(val spec_rev)
+{
+  val line = first(spec_rev);
+
+  if (consp(line)) {
+    val elem = first(line);
+    if (consp(elem)) {
+      if (car(elem) == include_s)
+        return nappend2(nreverse(include(line)), rest(spec_rev));
+    }
+  }
+  return spec_rev;
 }
 
 #ifndef YYEOF

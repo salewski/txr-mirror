@@ -2858,8 +2858,9 @@ as a filter. See Function Filters below.
 The filter directive passes one or more variables through a given
 filter or chain or filters, updating them with the filtered values.
 
-.coIP @(load)
-The load directive loads another \*(TX file and interprets its contents.
+.coSS @ @(load) and @ @(include)
+These directives allow \*(TX programs to be modularized. They bring in
+code from a file, in two different ways.
 
 .coIP @(do)
 The do directive is used to evaluate \*(TL expressions, discarding their
@@ -6662,14 +6663,17 @@ call goes to the toplevel definition.
 
 .SH* MODULARIZATION
 
-.dir load
+.dirs load include
 
 The syntax of the
 .code load
-directive is:
+and
+.code include
+directives is:
 
 .cblk
 .mets @(load << expr )
+.mets @(include << expr )
 .cble
 
 Where
@@ -6689,13 +6693,38 @@ attempt is made. Thus load expressions need not refer to the suffix.
 In the future, additional suffixes may be searched (compiled versions
 of a file).
 
-Loading is performed at evaluation time; it is not a source file inclusion
-mechanism.  A \*(TX script is read from beginning to end and parsed prior to
-being evaluated.
+The two directives differ as follows. The action of
+.code load
+is not performed immediately but at evaluation time. Evaluation time
+occurs after a \*(TX program is read from beginning to end and parsed.
+The action of
+.code include
+is performed immediately, as the code is being scanned and parsed.
+That is to say, as the \*(TX parser encounters
+.code @(include)
+it processes it immediately. The included material is read and parsed, and its
+syntax tree is substituted in place of the
+.code include
+directive. The parser then
+continues processing the original file after the
+.code include
+directive.
+
+Note: the
+.code include
+directive is useful for loading \*(TX files which contain Lisp macros
+which are needed by the parent program. The parent program cannot use
+.code load
+to bring in macros because macros are required during expansion, which
+takes place prior to evaluation time, whereas
+.code load
+doesn't execute until evaluation time.
 
 See also: the
 .code *self-path*
-variable in \*(TL.
+and
+.code stdlib
+variables in \*(TL.
 
 .SH* OUTPUT
 
@@ -25212,6 +25241,20 @@ special builds of \*(TX for small systems.
 .coNP Special variable @ *self-path*
 .desc
 This variable holds the invocation path name of the \*(TX program.
+
+.coNP Special variable @ stdlib
+The
+.code stdlib
+variable expands to the directory where the \*(TX standard library
+is installed. It can be referenced in
+.code @(load)
+and
+.code @(include)
+directives via quasiliteral substitution, as in, for example:
+
+.cblk
+  @(include `@stdlib/extract`)
+.cble
 
 .SS* Debugger
 \*(TX has a simple, crude, built-in debugger. The debugger is invoked by adding
