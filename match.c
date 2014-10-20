@@ -4019,7 +4019,7 @@ val match_fun(val name, val args, val input, val files)
   ret = v_fun(&c);
 
   if (ret == nil)
-    return nil;
+    debug_return (nil);
 
   if (ret == decline_k)
     sem_error(nil, lit("match_fun: function ~s not found"), name, nao);
