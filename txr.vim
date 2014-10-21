@@ -185,13 +185,14 @@ syn keyword txl_keyword contained tok-str tok-where tostring tostringp
 syn keyword txl_keyword contained transpose tree-bind tree-case tree-find
 syn keyword txl_keyword contained trie-add trie-compress trie-lookup-begin trie-lookup-feed-char
 syn keyword txl_keyword contained trie-value-at trim-str true trunc
-syn keyword txl_keyword contained tuples typeof unget-byte unget-char
-syn keyword txl_keyword contained uniq unless unquote until
-syn keyword txl_keyword contained upcase-str update url-decode url-encode
-syn keyword txl_keyword contained usleep uw-protect vec vec-push
-syn keyword txl_keyword contained vec-set-length vecref vector vector-list
-syn keyword txl_keyword contained vectorp when where while
-syn keyword txl_keyword contained with-saved-vars zerop zip
+syn keyword txl_keyword contained tuples txr-case txr-if txr-when
+syn keyword txl_keyword contained typeof unget-byte unget-char uniq
+syn keyword txl_keyword contained unless unquote until upcase-str
+syn keyword txl_keyword contained update url-decode url-encode usleep
+syn keyword txl_keyword contained uw-protect vec vec-push vec-set-length
+syn keyword txl_keyword contained vecref vector vector-list vectorp
+syn keyword txl_keyword contained when where while with-saved-vars
+syn keyword txl_keyword contained zerop zip
 
 syn match txr_error "@[\t ]*[*]\?[\t ]*."
 syn match txr_nested_error "[^\t `]\+" contained

@@ -39,7 +39,8 @@ static void dir_tables_init(void)
                            "until" "last"
                            "if" "else" "elif"
                            "include")))
-@(do (set [txl-sym 0..0] '("macro-time" "macrolet" "symacrolet")))
+@(do (set [txl-sym 0..0] '("macro-time" "macrolet" "symacrolet"
+                           "txr-if" "txr-when" "txr-case")))
 @(set (txr-sym txl-sym) (@(sort (uniq txr-sym)) @(sort (uniq txl-sym))))
 @(output)
 " VIM Syntax file for txr

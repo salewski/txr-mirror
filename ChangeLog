@@ -1,3 +1,17 @@
+2014-10-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	* share/txr/stdlib/txr-case.txr: New file.
+
+	* txr.1: Document txr-if, txr-when and txr-case.
+
+	* genvim.txr: Added new macro names.
+
+	* tests/011/txr-case.expected: New file.
+
+	* tests/011/txr-case.txr: New file.
+
+	* txr.vim: Regenerated.
+
 2014-10-20  Kaz Kylheku  <kaz@kylheku.com>
 
 	Source file inclusion implemented: needed for macros.

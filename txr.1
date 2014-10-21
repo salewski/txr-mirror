@@ -253,6 +253,14 @@
 .de syne
 .  cble
 ..
+.\" Require section markup
+.de reqb
+.  TP* Requires:
+.  cblk
+..
+.de reqe
+.  cble
+..
 .\" Used for meta-variables in syntax blocks
 .de mets
 .  nr fsav \\n[.f]
@@ -23958,6 +23966,29 @@ using
 and the result of that is returned.
 
 .SS* Access To TXR Pattern Language From Lisp
+
+It is useful to be able to invoke the abilities of the \*(TX pattern Language
+from \*(TL. An interface for doing this provided in the form of the
+.code match-fun
+function, which is used for invoking a \*(TX pattern function.
+
+The
+.code match-fun
+function has a cumbersome interface which requires the \*(TL program to
+explicitly deal with the variable bindings emerging from the pattern match
+in the form of an association list.
+
+To make it the interface easier to use, \*(TX provides a library of macros:
+the macros
+.codn txr-if ,
+.codn txr-when
+and
+.codn txr-case .
+
+These macros are not in the \*(TX image; they must be included from the
+.code stdlib
+directory.
+
 .coNP Function match-fun
 .synb
 .mets (match-fun < name < args < input << files )
@@ -24077,6 +24108,189 @@ variable does not propagate
 out of the pattern function
 .codn foo ;
 it is local inside it.
+
+.coNP Macro txr-if
+.reqb
+.mets @(include `@stdlib/txr-case`)
+.reqe
+.synb
+.mets (txr-if < name <> ( argument *) < input < then-expr <> [ else-expr ])
+.syne
+.desc
+The
+.code txr-if
+macro invokes the \*(TX pattern matching function
+.metn name
+on some input given by the
+.meta input
+parameter, which is a list of strings, or a single string.
+
+If
+.meta name
+succeeds, then
+.meta then-expr
+is evaluated, and if it fails,
+.meta else-expr
+is evaluated instead.
+
+In the successful case,
+.meta then-expr
+is evaluated in a scope in which the bindings emerging from the
+.meta name
+function are turned into \*(TL variables.
+The result of
+.code txr-if
+is that of
+.metn then-expr .
+
+In the failed case,
+.meta else-expr
+is evaluated in a scope which does not have any new bindings.
+The result of
+.code txr-if
+is that of
+.metn else-expr .
+If
+.meta else-expr
+is missing, the result is
+.codn nil .
+
+The
+.meta argument
+forms supply arguments to the pattern function
+.metn name .
+There must be as many of these arguments as the function
+has parameters.
+
+Any argument which is a symbol is treated, for the purposes
+of calling the pattern function, as an unbound pattern variable.
+The function may or may not produce a binding for that variable.
+Also, every argument which is a symbol also denotes a local variable
+that is established around
+.meta then-expr
+if the function suceeds. For any such pattern variable for which the function
+produces a binding, the corresponding local variable will be initialized
+with the value of that pattern variable. For any such pattern variable
+which is left unbound by the function, the corresponding local variable
+will be set to
+.codn nil .
+
+Any
+.meta argument
+can be a form other than a symbol. In this situation, the argument is
+evaluated, and will be passed to the pattern function as the value of
+the binding for the corresponding argument.
+
+.TP* Example:
+
+.cblk
+  @(include `@stdlib/txr-case`)
+  @(define date (year month day))
+  @{year /\d\d\d\d/}-@{month /\d\d/}-@{day /\d\d/}
+  @(end)
+  @(do
+     (each ((date '("09-10-20" "2009-10-20" "July-15-2014" "foo")))
+       (txr-if date (y m d) date
+         (put-line `match: year @y, month @m, day @d`)
+         (put-line `no match for @date`))))
+
+  Output:
+
+  no match for 09-10-20
+  match: year 2009, month 10, day 20
+  no match for July-15-2014
+  no match for foo
+.cble
+
+.coNP Macro @ txr-when
+.reqb
+.mets @(include `@stdlib/txr-case`)
+.reqe
+.synb
+.mets (txr-when < name <> ( argument *) < input << form *)
+.syne
+.desc
+The
+.code txr-when
+macro is based on
+.codn txr-if .
+It is equivalent to
+.code
+
+.cblk
+.meti \ \ (txr-if < name <> ( argument *) < input (progn << form *))
+.cble
+
+If the pattern function
+.meta name
+produces a match, then each
+.meta form
+is evaluated in the scope of the variables established by the
+.meta argument
+expressions. The result of the
+.code txr-when
+form is that of the last
+.metn form .
+
+If the pattern function fails then the forms are not evaluated,
+adn the result value is
+.codn nil .
+
+.coNP Macro @ txr-case
+.reqb
+.mets @(include `@stdlib/txr-case`)
+.reqe
+.synb
+.mets (txr-case < input-form
+.mets \ \  >> {( name <> ( argument *) << form *)}*
+.mets \ \  >> [( t << form *)])
+.syne
+.desc
+The
+.code txr-case
+macro evaluates
+.meta input-form
+and then uses the value as an input to zero or more test clauses.
+Each test clause invokes the pattern function named by that clause's
+.meta name
+argument.
+
+If the function succeeds, then each
+.meta form
+is evaluated, and the value of the last
+.meta form
+is taken to be the result value of
+.codn txr-case ,
+which terminates. If there are no forms, then
+.code txr-case
+terminates with a
+.code nil
+result.
+
+The forms are evaluated in an environment in which variables are bound
+based on the
+.meta argument
+forms, with values depending on the result of the
+invocation of the
+.meta name
+pattern function, in the same manner as documented in detail for the
+.code txr-if
+macro.
+
+If the function fails, then the forms are not evaluated, and control passes to
+the next clause.
+
+A clause which begins with the symbol
+.code t
+executes unconditionally and causes
+.code txr-case
+to terminate. If it has no forms, then
+.code txr-case
+yields
+.codn nil ,
+otherwise the forms are evaluated in order and the value of the last
+one specifies the result of
+.codn txr-case .
 
 .SS* Quote/Quasiquote Operator Syntax
 .coNP Operator @ quote
