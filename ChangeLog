@@ -1,5 +1,21 @@
 2014-10-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Register notf intrinsic function.
+
+	* lib.c (do_not): New static function.
+	(notf): New function.
+
+	* lib.h (notf): Declared.
+
+	* txr.1: Documented notf.
+
+	* share/txr/stdlib/txr-case.txr (bindable): Eliminated.
+	(txr-if): Use functional expression, taking advantage of notf.
+
+	* txr.vim: Regenerated.
+
+2014-10-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	* share/txr/stdlib/txr-case.txr: New file.
 
 	* txr.1: Document txr-if, txr-when and txr-case.

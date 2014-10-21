@@ -20576,6 +20576,23 @@ is returned. The expression
 returns a function which accepts any arguments and returns
 .codn nil .
 
+.coNP Function @ notf
+.synb
+.mets (notf << function )
+.syne
+.desc
+The
+.code notf
+function returns a function which is the boolean negation
+of
+.metn function .
+
+The returned function takes a variable number of arguments. When
+invoked, it passes all of these arguments to
+.meta function
+and then inverts the result as if by application of the
+.codn not .
+
 .coNP Functions @ iff and @ iffi
 .synb
 .mets (iff < cond-func < then-func <> [ else-func ])

@@ -725,6 +725,7 @@ val andf(val first_fun, ...);
 val andv(val funlist);
 val orf(val first_fun, ...);
 val orv(val funlist);
+val notf(val fun);
 val iff(val condfun, val thenfun, val elsefun);
 val iffi(val condfun, val thenfun, val elsefun);
 val swap_12_21(val fun);

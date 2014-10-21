@@ -4572,6 +4572,16 @@ val orv(val funlist)
   return func_f0v(nullify(funlist), do_or);
 }
 
+static val do_not(val fun, val args)
+{
+  return null(apply(fun, args, nil));
+}
+
+val notf(val fun)
+{
+  return func_f0v(fun, do_not);
+}
+
 static val do_iff(val env, val args)
 {
   cons_bind (condfun, choices, env);
