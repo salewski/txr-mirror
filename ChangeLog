@@ -1,5 +1,11 @@
 2014-10-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (interp_fun): If the function doesn't have
+	specials, then don't bother saving and restoring dynamic
+	env around the argument binding and evaluation.
+
+2014-10-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Register notf intrinsic function.
 
 	* lib.c (do_not): New static function.

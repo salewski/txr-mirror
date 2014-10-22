@@ -897,11 +897,19 @@ val interp_fun(val env, val fun, val args)
   val def = cdr(fun);
   val params = car(def);
   val body = cdr(def);
-  val saved_de = set_dyn_env(make_env(nil, nil, dyn_env));
-  val fun_env = bind_args(env, params, args, fun);
-  val ret = eval_progn(body, fun_env, body);
-  set_dyn_env(saved_de);
-  return ret;
+  val firstparam = if2(consp(params), car(params));
+
+  if (!consp(firstparam) || car(firstparam) != special_s)
+  {
+    val fun_env = bind_args(env, params, args, fun);
+    return eval_progn(body, fun_env, body);
+  } else {
+    val saved_de = set_dyn_env(make_env(nil, nil, dyn_env));
+    val fun_env = bind_args(env, params, args, fun);
+    val ret = eval_progn(body, fun_env, body);
+    set_dyn_env(saved_de);
+    return ret;
+  }
 }
 
 val eval_intrinsic(val form, val env)
