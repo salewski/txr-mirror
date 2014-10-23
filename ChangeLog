@@ -1,3 +1,13 @@
+2014-10-22  Kaz Kylheku  <kaz@kylheku.com>
+
+	Version 100.
+
+	* RELNOTES: Updated.
+
+	* configure, txr.1: Bumped version.
+
+	* share/txr/stdlib/ver.txr: Likewise
+
 2014-10-21  Kaz Kylheku  <kaz@kylheku.com>
 
 	Ensure that a hash reorganization doesn't take place

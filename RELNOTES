@@ -1,3 +1,68 @@
+                                    TXR 100
+                                   2014-10-22
+
+
+  Features
+
+  - New functions: chr-isblank and chr-isunisp
+
+  - New generic less and greater functions, which are also used as
+    default functions in sort, find-max, max-pos, and others.
+
+  - New directives @(line) and @(chr) for binding or asserting the current line
+    number or character position.
+
+  - Lisp expressions allowed on left side of @(bind) and @(rebind) now.
+
+  - New function lcm (lowest common multiple).
+
+  - The gcd function now takes zero or more arguments instead of exactly two.
+
+  - New @(include) for parse-time loading of code, useful for loading macros
+    which are needed later in the same file.
+
+  - Beginning of library external to TXR executable: macros txr-if, txr-when
+    and txr-bind for more convenient access back into the pattern
+    language from TXR Lisp.
+
+  - New combinator function notf for negating a function.
+
+  Bugs
+
+  - Fixed December 2011 regression affecting @(freeform) directive.
+
+  - Fixed GC-safety bug in abs-path-p function.
+
+  - Fixed breakage in scanner and parser introduced in August.
+    Caught by C++ compiler.
+
+  - Fixed inappropriate printed rendering of list objects produced by
+    interpolated TXR Lisp expressions in @(output) blocks, and in
+    the quasiliterals of the pattern language. (TXR Lisp quasiliterals
+    not affected.) Users who depend on the old behavior not wanting
+    to fix their programs can use --compat 99.
+
+  - Bugfix in the gcd and lognot functions: neglecting to normalize some
+    bignum result to the fixnum type.
+
+  - Bugfix in @(eof) directive: not matching the end of interactive
+    streams.
+
+  - Fixed abort due to assertion going off when GC is disabled and the array of
+    new generation objects runs out of space. This could happen during
+    large parses.
+
+  - Fixed parser stack overflow and inefficiencies when handling large TXR
+    programs.
+
+  - Bugfix in match_fun causing memory accesses to automatic storage
+    that has been released, as well as an invalid longjmp.
+
+  - Hash table reorganization is prevented during hash table traversal,
+    so existing items are not skipped or visited twice.
+
+
+
                                      TXR 99
                                    2014-10-05
 
