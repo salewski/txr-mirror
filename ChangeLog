@@ -1,5 +1,10 @@
 2014-10-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Fix incorrect, registration of
+	repeat; it must have one optional argument.
+
+2014-10-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	Version 100.
 
 	* RELNOTES: Updated.

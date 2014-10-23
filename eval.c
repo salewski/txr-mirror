@@ -3903,7 +3903,7 @@ void eval_init(void)
   reg_fun(intern(lit("range*"), user_package), func_n0v(range_star_v));
   reg_fun(generate_s, func_n2(generate));
   reg_fun(intern(lit("giterate"), user_package), func_n3o(giterate, 2));
-  reg_fun(intern(lit("repeat"), user_package), func_n2o(repeat, 2));
+  reg_fun(intern(lit("repeat"), user_package), func_n2o(repeat, 1));
   reg_fun(intern(lit("force"), user_package), func_n1(force));
   reg_fun(intern(lit("rperm"), user_package), func_n2(rperm));
   reg_fun(intern(lit("perm"), user_package), func_n2o(perm, 1));
