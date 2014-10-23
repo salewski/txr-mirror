@@ -54,6 +54,7 @@ struct hash {
   cnum modulus;
   cnum count;
   val userdata;
+  int usecount;
   cnum (*hash_fun)(val);
   val (*equal_fun)(val, val);
   val (*assoc_fun)(val key, val list);
@@ -61,6 +62,7 @@ struct hash {
 };
 
 struct hash_iter {
+  struct hash_iter *next;
   val hash;
   cnum chain;
   val cons;
@@ -69,9 +71,10 @@ struct hash_iter {
 val weak_keys_k, weak_vals_k, equal_based_k;
 
 /*
- * Dynamic list built up during gc.
+ * Dynamic lists built up during gc.
  */
 static struct hash *reachable_weak_hashes;
+static struct hash_iter *reachable_iters;
 
 /* C99 inline instantiations. */
 #if __STDC_VERSION__ >= 199901L
@@ -376,6 +379,10 @@ static void hash_mark(val hash)
 
   gc_mark(h->userdata);
 
+  /* Use counts will be re-calculated by a scan of the
+     hash iterators which are still reachable. */
+  h->usecount = 0;
+
   switch (h->flags) {
   case hash_weak_none:
     /* If the hash is not weak, we can simply mark the table
@@ -474,6 +481,7 @@ val make_hash(val weak_keys, val weak_vals, val equal_based)
     h->table = table;
     h->userdata = nil;
 
+    h->usecount = 0;
     h->hash_fun = equal_based ? equal_hash : eql_hash;
     h->equal_fun = equal_based ? equal : eql;
     h->assoc_fun = equal_based ? assoc : assql;
@@ -497,6 +505,7 @@ val make_similar_hash(val existing)
   h->userdata = ex->userdata;
 
   h->flags = ex->flags;
+  h->usecount = 0;
   h->hash_fun = ex->hash_fun;
   h->equal_fun = ex->equal_fun;
   h->assoc_fun = ex->assoc_fun;
@@ -519,6 +528,7 @@ val copy_hash(val existing)
   h->userdata = ex->userdata;
 
   h->flags = ex->flags;
+  h->usecount = 0;
   h->hash_fun = ex->hash_fun;
   h->assoc_fun = ex->assoc_fun;
   h->acons_new_c_fun = ex->acons_new_c_fun;
@@ -535,7 +545,7 @@ val gethash_c(val hash, val key, loc new_p)
   loc pchain = vecref_l(h->table, num_fast(h->hash_fun(key) % h->modulus));
   val old = deref(pchain);
   val cell = h->acons_new_c_fun(key, new_p, pchain);
-  if (old != deref(pchain) && ++h->count > 2 * h->modulus)
+  if (old != deref(pchain) && ++h->count > 2 * h->modulus && h->usecount == 0)
     hash_grow(h, hash);
   return cell;
 }
@@ -638,8 +648,11 @@ val hashp(val obj)
 static void hash_iter_mark(val hash_iter)
 {
   struct hash_iter *hi = coerce(struct hash_iter *, hash_iter->co.handle);
-  gc_mark(hi->hash);
+  if (hi->hash)
+    gc_mark(hi->hash);
   gc_mark(hi->cons);
+  hi->next = reachable_iters;
+  reachable_iters = hi;
 }
 
 static struct cobj_ops hash_iter_ops = {
@@ -654,14 +667,16 @@ val hash_begin(val hash)
 {
   val hi_obj;
   struct hash_iter *hi;
-  class_check (hash, hash_s);
+  struct hash *h = (struct hash *) hash->co.handle;
 
   hi = coerce(struct hash_iter *, chk_malloc(sizeof *hi));
+  hi->next = 0;
   hi->hash = nil;
   hi->chain = -1;
   hi->cons = nil;
   hi_obj = cobj(coerce(mem_t *, hi), hash_iter_s, &hash_iter_ops);
   hi->hash = hash;
+  h->usecount++;
   return hi_obj;
 }
 
@@ -673,8 +688,11 @@ val hash_next(val iter)
   if (hi->cons)
     hi->cons = cdr(hi->cons);
   while (nilp(hi->cons)) {
-    if (++hi->chain >= h->modulus)
+    if (++hi->chain >= h->modulus) {
+      hi->hash = nil;
+      h->usecount--;
       return nil;
+    }
     set(mkloc(hi->cons, iter), vecref(h->table, num_fast(hi->chain)));
   }
   return car(hi->cons);
@@ -704,7 +722,7 @@ val hash_equal(val obj)
  * that were visited during the marking phase, maintained in the list
  * reachable_weak_hashes.
  */
-void hash_process_weak(void)
+static void do_weak_tables(void)
 {
   struct hash *h;
   cnum i;
@@ -803,6 +821,38 @@ void hash_process_weak(void)
   /* Done with weak processing; clear out the list in preparation for
      the next gc round. */
   reachable_weak_hashes = 0;
+}
+
+static void do_iters(void)
+{
+  struct hash_iter *hi;
+
+  for (hi = reachable_iters; hi != 0; hi = hi->next) {
+    val hash = hi->hash;
+
+    if (!hash)
+      continue;
+
+#if CONFIG_GEN_GC
+    /* If the hash is a tenured object, we do not touch it.
+       It wasn't marked and so its usecount wasn't reset to zero. */
+    if (!full_gc && hash->t.gen > 0)
+      continue;
+#endif
+
+    {
+      struct hash *h = coerce(struct hash *, hash->co.handle);
+      h->usecount++;
+    }
+  }
+
+  reachable_iters = 0;
+}
+
+void hash_process_weak(void)
+{
+  do_weak_tables();
+  do_iters();
 }
 
 val hashv(val args)

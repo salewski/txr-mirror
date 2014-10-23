@@ -1,5 +1,36 @@
 2014-10-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	Ensure that a hash reorganization doesn't take place
+	during a traversal, which could cause items to be visited
+	twice or skipped.
+
+	* gc.c (full_gc): Changed from static to exter (full_gc): Changed to
+	internal linkage.
+
+	* gc.h (full_gc): Declared.
+
+	* hash.c (struct hash): New member, usecount.
+	(struct hash_iter): New member, next.
+	(reachable_iters): New static variable.
+	(hash_mark): Reset the usecount of every reachable hash table.
+	(hash_iter_mark): Add every reachable iterator to reachable_iters
+	list.
+	(make_hash, make_similar_hash, copy_hash): Initialize usecount.
+	(gethash_c): Do not call hash_grow if usecount is nonzero.
+	(hash_begin): Initialize next field of hash_iter to null.
+	Increment use count on hash table.
+	(hash_next): When traversal ends, release use count, and
+	null out the hash table reference.
+	(do_weak_tables): New static function.
+	(do_iters): New static function.
+	(hash_process_weak): Weak hash processing logic moved
+	to do_weak_tables. Also calls do_iters.
+
+	* txr.1: Describe hash table traversal, and the assurances
+	and caveats about inserting and deleting items.
+
+2014-10-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (interp_fun): If the function doesn't have
 	specials, then don't bother saving and restoring dynamic
 	env around the argument binding and evaluation.

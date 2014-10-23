@@ -19455,6 +19455,36 @@ function instead.
 In addition to storing key-value pairs, a hash table can have a piece of
 information associated with it, called the user data.
 
+A hash table can be traversed to visit all of the keys and data.  The order of
+traversal bears no relation to the order of insertion, or to any properties of
+the key type.
+
+During an open traversal, new keys can be inserted into a hash table or deleted
+from it while a a traversal is in progress. Insertion of a new key during
+traversal will not cause any existing key to be visited twice or to be skipped;
+however, it is not specified whether the new key will be traversed. Similarly,
+if a key is deleted during traversal, and that key has not yet been visited, it
+is not specified whether it will be visited during the remainder of the
+traversal.
+
+An open traversal of a hash table is performed by the
+.code maphash
+function and the
+.code dohash
+operator. The traversal is open because code supplied by the program
+is evaluated for each entry.
+
+The functions
+.codn hash-keys ,
+.codn hash-values ,
+.codn hash-pairs ,
+and
+.code hash-alist also perform an open traversal, because they return
+lazy lists. The traversal isn't complete until the returned lazy list
+is fully instantiated. In the meanwhile, the
+\*(TX program can mutate the hash table from which the lazy list
+is being generated.
+
 .coNP Function @ hash-construct
 .synb
 .mets (hash-construct < hash-args << key-val-pairs )
@@ -19887,6 +19917,9 @@ and the values with
 then the corresponding entries from
 each list pairwise correspond to the pairs in
 .metn hash .
+
+The list returned by each of these functions is lazy, and hence constitutes
+an open traversal of the hash table.
 
 .coNP Operator @ dohash
 .synb

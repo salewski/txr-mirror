@@ -39,6 +39,7 @@ int gc_is_reachable(val);
 val gc_set(loc, val);
 val gc_push(val, loc);
 val gc_mutated(val);
+extern int full_gc;
 #endif
 
 void unmark(void);

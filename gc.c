@@ -90,7 +90,7 @@ static val mutobj[MUTOBJ_VEC_SIZE];
 static int mutobj_idx;
 static val freshobj[FRESHOBJ_VEC_SIZE];
 static int freshobj_idx;
-static int full_gc;
+int full_gc;
 #endif
 
 #if EXTRA_DEBUGGING
