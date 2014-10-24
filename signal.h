@@ -56,7 +56,7 @@
     if (sig_save)                               \
       sig_check();                              \
   } while(0)
-    
+
 typedef struct {
   jmp_buf jb;
   sig_atomic_t se;

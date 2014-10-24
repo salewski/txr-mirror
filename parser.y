@@ -87,7 +87,7 @@ int yylex(union YYSTYPE *, yyscan_t scanner);
 %token <lexeme> SPACE TEXT SYMTOK
 %token <lineno> ALL SOME NONE MAYBE CASES BLOCK CHOOSE GATHER
 %token <lineno> AND OR END COLLECT
-%token <lineno> UNTIL COLL OUTPUT REPEAT REP SINGLE FIRST LAST EMPTY 
+%token <lineno> UNTIL COLL OUTPUT REPEAT REP SINGLE FIRST LAST EMPTY
 %token <lineno> MOD MODLAST DEFINE TRY CATCH FINALLY
 %token <lineno> ERRTOK /* deliberately not used in grammar */
 %token <lineno> HASH_BACKSLASH HASH_SLASH DOTDOT HASH_H
@@ -126,7 +126,7 @@ int yylex(union YYSTYPE *, yyscan_t scanner);
 %nonassoc '[' ']' '(' ')'
 %left '-' ',' '\'' '^' SPLICE '@'
 %left '|' '/'
-%left '&' 
+%left '&'
 %right '~' '*' '?' '+' '%'
 %right '.' REGCHAR REGTOKEN LITCHAR
 %right DOTDOT
@@ -186,7 +186,7 @@ some_clause : SOME exprs_opt ')'
               newl clause_parts         { $$ = list(some_s, $5, $2, nao);
                                           rl($$, num($1)); }
             | SOME exprs_opt ')'
-              newl error           
+              newl error
                                         { $$ = nil;
                                           yybadtok(yychar, lit("some clause")); }
             | SOME exprs_opt ')'
@@ -220,7 +220,7 @@ cases_clause : CASES newl clause_parts  { $$ = list(cases_s, $3, nao);
 
 block_clause  : BLOCK exprs_opt ')'
                 newl clauses_opt
-                END newl                { val name = first($2); 
+                END newl                { val name = first($2);
                                           if (gt(length($2), one))
                                             yyerr("block: takes zero or no arguments");
                                           if (name && !bindable(name))
@@ -247,20 +247,20 @@ choose_clause : CHOOSE exprs_opt ')'
 
 gather_clause : GATHER exprs_opt ')'
                 newl gather_parts
-                END newl                { $$ = list(gather_s, 
+                END newl                { $$ = list(gather_s,
                                                     append2(mapcar(curry_12_1(func_n2(cons), nil),
                                                                    first($5)), rest($5)),
-                                                    $2, nao); 
+                                                    $2, nao);
                                           rl($$, num($1)); }
 
-              | GATHER exprs_opt ')' 
+              | GATHER exprs_opt ')'
                 newl gather_parts
-                until_last newl 
+                until_last newl
                 clauses
-                END newl                { $$ = list(gather_s, 
+                END newl                { $$ = list(gather_s,
                                                     append2(mapcar(curry_12_1(func_n2(cons), nil),
                                                                    first($5)), rest($5)),
-                                                    $2, cons(cdr($6), $8), nao); 
+                                                    $2, cons(cdr($6), $8), nao);
                                           rl($$, num($1)); }
 
               | GATHER exprs_opt ')'
@@ -289,7 +289,7 @@ collect_clause : collect_repeat exprs_opt ')' newl
                  newl clauses END newl    { $$ = list(car($1), $5,
                                                       cons(cdr($6), $8),
                                                       $2, nao);
-                                            rl($$, cdr($1)); 
+                                            rl($$, cdr($1));
                                             rl($8, car($6)); }
                | collect_repeat exprs_opt ')'
                  newl error             { $$ = nil;
@@ -306,7 +306,7 @@ collect_repeat : COLLECT { $$ = cons(collect_s, num($1)); }
                ;
 
 until_last : UNTIL { $$ = cons(num($1), until_s); }
-           | LAST  { $$ = cons(num($1), last_s); } 
+           | LAST  { $$ = cons(num($1), last_s); }
            ;
 
 clause_parts : clauses additional_parts { $$ = cons($1, $2); }
@@ -350,7 +350,7 @@ elems_opt : elems               { $$ = $1; }
           |                     { $$ = nil; }
           ;
 
-elems : elem                    { $$ = cons($1, nil); 
+elems : elem                    { $$ = cons($1, nil);
                                   rlcp($$, $1); }
       | elem elems              { $$ = cons($1, $2);
                                   rlcp($$, $1); }
@@ -361,7 +361,7 @@ elems : elem                    { $$ = cons($1, nil);
 
 text : TEXT                     { $$ = rl(string_own($1), num(parser->lineno)); }
      | SPACE                    { if ($1[0] == ' ' && $1[1] == 0)
-                                  { val spaces = list(oneplus_s, 
+                                  { val spaces = list(oneplus_s,
                                                       chr(' '), nao);
                                     $$ = regex_compile(spaces, nil);
                                     rl($$, num(parser->lineno));
@@ -392,7 +392,7 @@ elem : texts                    { $$ = rlcp(cons(text_s, $1), $1);
      | COLL exprs_opt ')' elems END     { $$ = list(coll_s, $4, nil, $2, nao);
                                           rl($$, num($1)); }
      | COLL exprs_opt ')' elems
-       until_last elems END     { $$ = list(coll_s, $4, cons(cdr($5), $6), 
+       until_last elems END     { $$ = list(coll_s, $4, cons(cdr($5), $6),
                                             $2, nao);
                                   rl($$, num($1));
                                   rl($6, car($5)); }
@@ -413,7 +413,7 @@ elem : texts                    { $$ = rlcp(cons(text_s, $1), $1);
        clause_parts_h           { $$ = list(choose_s, t, $4, $2, nao);
                                   rl($$, num($1)); }
      | CHOOSE exprs_opt ')' END { yyerr("empty cases clause"); }
-     | DEFINE exprs ')' elems END       
+     | DEFINE exprs ')' elems END
                                 { $$ = list(define_s, t, $4, $2, nao);
                                   rl($$, num($1)); }
      ;
@@ -538,7 +538,7 @@ out_clause : repeat_clause              { $$ = cons($1, nil); }
 repeat_clause : REPEAT exprs_opt ')' newl
                 out_clauses_opt
                 repeat_parts_opt
-                END newl                { $$ = repeat_rep_helper(repeat_s, 
+                END newl                { $$ = repeat_rep_helper(repeat_s,
                                                                  $2, $5, $6);
                                           rl($$, num($1)); }
               | REPEAT newl
@@ -565,7 +565,7 @@ repeat_parts_opt : SINGLE newl
                  | MOD exprs_opt ')'
                    newl
                    out_clauses_opt
-                   repeat_parts_opt     { $$ = cons(cons(mod_s, 
+                   repeat_parts_opt     { $$ = cons(cons(mod_s,
                                                          cons($2, $5)), $6);
                                           rl($$, num($1)); }
                  | MODLAST exprs_opt ')'
@@ -626,12 +626,12 @@ rep_parts_opt : SINGLE o_elems_opt
                                           rl($$, num($1)); }
               | MOD exprs_opt ')'
                 o_elems_opt
-                rep_parts_opt           { $$ = cons(cons(mod_s, 
+                rep_parts_opt           { $$ = cons(cons(mod_s,
                                                          cons($2, $4)), $5);
                                           rl($$, num($1)); }
               | MODLAST exprs_opt ')'
                 o_elems_opt
-                rep_parts_opt           { $$ = cons(cons(modlast_s, 
+                rep_parts_opt           { $$ = cons(cons(modlast_s,
                                                          cons($2, $4)), $5);
                                           rl($$, num($1)); }
               | /* empty */             { $$ = nil; }
@@ -810,17 +810,17 @@ regex : '/' regexpr '/'         { $$ = regex_compile($2, nil);
                                   end_of_regex(scnr); }
       ;
 
-lisp_regex : HASH_SLASH regexpr '/'    
+lisp_regex : HASH_SLASH regexpr '/'
                                 { $$ = regex_compile($2, nil);
                                   end_of_regex(scnr);
                                   rl($$, num(parser->lineno)); }
-           | HASH_SLASH error        
+           | HASH_SLASH error
                                 { $$ = nil;
                                   yybadtok(yychar, lit("regex"));
                                   end_of_regex(scnr); }
            ;
 
-regexpr : regbranch                     { $$ = if3(cdr($1), 
+regexpr : regbranch                     { $$ = if3(cdr($1),
                                                    cons(compound_s, $1),
                                                    car($1)); }
         | regexpr '|' regexpr           { $$ = list(or_s, $1, $3, nao); }

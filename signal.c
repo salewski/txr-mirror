@@ -110,7 +110,7 @@ void sig_init(void)
   for (i = 0; i < MAX_SIG; i++) {
     /* t means SIG_DFL, which is what signals
      * are before we manipulate them. */
-    sig_lambda[i] = t; 
+    sig_lambda[i] = t;
     prot1(&sig_lambda[i]);
   }
 

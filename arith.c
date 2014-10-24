@@ -287,7 +287,7 @@ val plus(val anum, val bnum)
 {
 tail:
   switch (TAG_PAIR(tag(anum), tag(bnum))) {
-  case TAG_PAIR(TAG_NUM, TAG_NUM): 
+  case TAG_PAIR(TAG_NUM, TAG_NUM):
     {
       cnum a = c_num(anum);
       cnum b = c_num(bnum);
@@ -296,7 +296,7 @@ tail:
       if (sum < NUM_MIN || sum > NUM_MAX)
         return bignum(sum);
       return num_fast(sum);
-    } 
+    }
   case TAG_PAIR(TAG_NUM, TAG_PTR):
     switch (type(bnum)) {
     case BGNUM:
@@ -403,7 +403,7 @@ tail:
   }
   uw_throwf(error_s, lit("+: invalid operands ~s ~s"), anum, bnum, nao);
 char_range:
-  uw_throwf(numeric_error_s, 
+  uw_throwf(numeric_error_s,
             lit("+: sum of ~s and ~s is out of character range"),
             anum, bnum, nao);
 }
@@ -412,8 +412,8 @@ val minus(val anum, val bnum)
 {
 tail:
   switch (TAG_PAIR(tag(anum), tag(bnum))) {
-  case TAG_PAIR(TAG_NUM, TAG_NUM): 
-  case TAG_PAIR(TAG_CHR, TAG_CHR): 
+  case TAG_PAIR(TAG_NUM, TAG_NUM):
+  case TAG_PAIR(TAG_CHR, TAG_CHR):
     {
       cnum a = c_num(anum);
       cnum b = c_num(bnum);
@@ -422,7 +422,7 @@ tail:
       if (sum < NUM_MIN || sum > NUM_MAX)
         return bignum(sum);
       return num_fast(sum);
-    } 
+    }
   case TAG_PAIR(TAG_NUM, TAG_PTR):
     switch (type(bnum)) {
     case BGNUM:
@@ -514,7 +514,7 @@ tail:
       cnum sum = a - b;
 
       if (sum < 0 || sum > 0x10FFFF)
-        uw_throwf(numeric_error_s, 
+        uw_throwf(numeric_error_s,
                   lit("-: difference of ~s and ~s is out of character range"),
                   anum, bnum, nao);
       return chr(sum);
@@ -566,7 +566,7 @@ val mul(val anum, val bnum)
 {
 tail:
   switch (TAG_PAIR(tag(anum), tag(bnum))) {
-  case TAG_PAIR(TAG_NUM, TAG_NUM): 
+  case TAG_PAIR(TAG_NUM, TAG_NUM):
     {
       cnum a = c_num(anum);
       cnum b = c_num(bnum);
@@ -706,7 +706,7 @@ tail:
         double x = c_num(anum), y = c_flo(bnum);
         if (y == 0.0)
           goto divzero;
-        else 
+        else
           return flo((x - fmod(x, y))/y);
       }
     default:
@@ -745,7 +745,7 @@ tail:
         double x = c_flo(anum), y = c_num(bnum);
         if (y == 0.0)
           goto divzero;
-        else 
+        else
           return flo((x - fmod(x, y))/y);
       }
     default:
@@ -767,7 +767,7 @@ tail:
         double x = c_flo(anum), y = c_flo(bnum);
         if (y == 0.0)
           goto divzero;
-        else 
+        else
           return flo((x - fmod(x, y))/y);
       }
     case TYPE_PAIR(BGNUM, FLNUM):

@@ -411,7 +411,7 @@ int txr_main(int argc, char **argv)
         bindings = cons(cons(intern(var, nil), deflist), bindings);
       else if (deflist)
         bindings = cons(cons(intern(var, nil), car(deflist)), bindings);
-      else 
+      else
         bindings = cons(cons(intern(var, nil), t), bindings);
 
       continue;

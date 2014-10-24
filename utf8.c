@@ -43,7 +43,7 @@
 #ifndef FULL_UNICODE
 static void conversion_error(void)
 {
-  uw_throw(range_error_s, 
+  uw_throw(range_error_s,
            lit("encountered utf-8 character that needs full unicode support"));
 }
 #endif

@@ -269,7 +269,7 @@ static val hash_equal_op(val left, val right)
      * If it is found, and the associated datum is equal, then remove it from
      * the list.  If it is found and the data is not equal, then we have found
      * a difference between the hash tables, and conclude they are different.
-     * If there is no match, then we insert the cell into the pending list. 
+     * If there is no match, then we insert the cell into the pending list.
      */
     found = l->assoc_fun(car(lcell), pending);
 
@@ -986,14 +986,14 @@ val hash_uni(val hash1, val hash2, val join_func)
     val hout = make_similar_hash(hash1);
     val hiter, entry;
 
-    for (hiter = hash_begin(hash2), entry = hash_next(hiter); 
+    for (hiter = hash_begin(hash2), entry = hash_next(hiter);
          entry;
          entry = hash_next(hiter))
     {
       sethash(hout, car(entry), cdr(entry));
     }
 
-    for (hiter = hash_begin(hash1), entry = hash_next(hiter); 
+    for (hiter = hash_begin(hash1), entry = hash_next(hiter);
          entry;
          entry = hash_next(hiter))
     {
@@ -1021,7 +1021,7 @@ val hash_diff(val hash1, val hash2)
     val hout = copy_hash(hash1);
     val hiter, entry;
 
-    for (hiter = hash_begin(hash2), entry = hash_next(hiter); 
+    for (hiter = hash_begin(hash2), entry = hash_next(hiter);
          entry;
          entry = hash_next(hiter))
     {
@@ -1044,7 +1044,7 @@ val hash_isec(val hash1, val hash2, val join_func)
     val hout = make_similar_hash(hash1);
     val hiter, entry;
 
-    for (hiter = hash_begin(hash1), entry = hash_next(hiter); 
+    for (hiter = hash_begin(hash1), entry = hash_next(hiter);
          entry;
          entry = hash_next(hiter))
     {

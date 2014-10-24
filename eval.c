@@ -169,8 +169,8 @@ val lookup_var(val env, val sym)
     val binding = assoc(sym, env->e.vbindings);
     if (binding)
       return binding;
-  } 
-    
+  }
+
   return(gethash(top_vb, sym));
 }
 
@@ -194,7 +194,7 @@ static val lookup_sym_lisp1(val env, val sym)
                         assoc(sym, env->e.fbindings));
     if (binding)
       return binding;
-  } 
+  }
 
   return or2(gethash(top_vb, sym), gethash(top_fb, sym));
 }
@@ -330,7 +330,7 @@ static val bind_args(val env, val params, val args, val ctx_form)
       eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
                  car(ctx_form), param, nao);
 
-    if (presentsym && !bindable(presentsym)) 
+    if (presentsym && !bindable(presentsym))
       eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
                  car(ctx_form), presentsym, nao);
 
@@ -343,7 +343,7 @@ static val bind_args(val env, val params, val args, val ctx_form)
         if (initform) {
           initval = eval(initform, new_env, ctx_form);
           new_env = make_env(nil, nil, new_env);
-        } 
+        }
       } else {
         initval = arg;
         present = t;
@@ -385,7 +385,7 @@ static val bind_args(val env, val params, val args, val ctx_form)
         new_env = make_env(nil, nil, new_env);
         env_vbind_special(new_env, sym, initval, special_list, ctx_form);
         if (presentsym) {
-          if (!bindable(presentsym)) 
+          if (!bindable(presentsym))
             eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
                        car(ctx_form), presentsym, nao);
           env_vbind_special(new_env, presentsym, nil, special_list, ctx_form);
@@ -437,7 +437,7 @@ static val expand_opt_params_rec(val params, val menv, val *pspecials)
       return rlcp(cons(form_ex, expand_opt_params_rec(rest(params),
                                                       menv, pspecials)),
                   cdr(params));
-    } 
+    }
   }
 }
 
@@ -495,7 +495,7 @@ static val get_opt_param_syms(val params)
     } else { /* has initform */
       val sym = car(form);
       return cons(sym, get_opt_param_syms(cdr(params)));
-    } 
+    }
   }
 }
 
@@ -742,15 +742,15 @@ static val bind_macro_params(val env, val menv, val params, val form,
                         specials, ctx_form);
       params = cdr(next);
       continue;
-    } 
-    
+    }
+
     if (param == colon_k) {
       if (optargs)
         goto twocol;
       optargs = t;
       params = cdr(params);
       continue;
-    } 
+    }
 
     if (consp(form)) {
       if (car(form) == colon_k) {
@@ -1142,8 +1142,8 @@ static val op_each(val form, val env)
 
   for (;;) {
     val biter, liter;
-    
-    for (biter = new_bindings, liter = lists; biter; 
+
+    for (biter = new_bindings, liter = lists; biter;
          biter = cdr(biter), liter = cdr(liter))
     {
       val binding = car(biter);
@@ -1153,7 +1153,7 @@ static val op_each(val form, val env)
       rplacd(binding, car(list));
       rplaca(liter, cdr(list));
     }
-  
+
     {
       val res = eval_progn(body, new_env, form);
       if (collect)
@@ -1310,7 +1310,7 @@ static val op_defun(val form, val env)
 
   if (iter && !bindable(iter))
     eval_error(form, lit("defun: dot parameter ~s is not a bindable symbol"), iter, nao);
-  
+
   /* defun captures lexical environment, so env is passed */
   sethash(top_fb, name, cons(name, func_interp(env, fun)));
   return name;
@@ -1667,14 +1667,14 @@ static loc dwim_loc(val form, val env, val op, val newform, val *retval)
         if (op == set_s) {
           val newval = eval(newform, env, form);
           newlist = replace_list(obj, newval, from, to);
-          tempform = list(op, second(form), 
+          tempform = list(op, second(form),
                           cons(quote_s, cons(newlist, nil)), nao);
           op_modplace(tempform, env);
           *retval = newval;
         } else if (op == del_s) {
           *retval = sub_list(obj, from, to);
           newlist = replace_list(obj, nil, from, to);
-          tempform = list(op, second(form), 
+          tempform = list(op, second(form),
                           cons(quote_s, cons(newlist, nil)), nao);
           op_modplace(tempform, env);
         } else {
@@ -2190,7 +2190,7 @@ static val expand_qquote(val qquoted_form, val menv,
     } else if (sym == qq) {
       return rlcp(expand_qquote(expand_qquote(second(qquoted_form),
                                               menv, qq, unq, spl),
-                                menv, qq, unq, spl), 
+                                menv, qq, unq, spl),
                   qquoted_form);
     } else if (sym == hash_lit_s) {
       val args = expand_qquote(second(qquoted_form), menv, qq, unq, spl);
@@ -2248,7 +2248,6 @@ static val me_qquote(val form, val menv)
                          sys_qquote_s, sys_unquote_s, sys_splice_s);
   return expand_qquote(second(form), menv,
                        qquote_s, unquote_s, splice_s);
-                       
 }
 
 static val expand_vars(val vars, val menv, val form,
@@ -2385,7 +2384,7 @@ static val meta_meta_strip(val args)
 {
   uses_or2;
   val strip = cdr(args);
-  return if3(or2(integerp(car(strip)), eq(car(strip), rest_s)), 
+  return if3(or2(integerp(car(strip)), eq(car(strip), rest_s)),
              cons(var_s, strip),
              cons(expr_s, strip));
 }
@@ -2404,7 +2403,7 @@ static val transform_op(val forms, val syms, val rg)
     /* This handles improper list forms like (a b c . @42)
        when the recursion hits the @42 part. */
     if (fi == var_s && integerp(car(re))) {
-      cons_bind (outsyms, outforms, transform_op(cons(forms, nil), syms, rg)); 
+      cons_bind (outsyms, outforms, transform_op(cons(forms, nil), syms, rg));
       return cons(outsyms, rlcp(car(outforms), outforms));
     }
 
@@ -2418,17 +2417,17 @@ static val transform_op(val forms, val syms, val rg)
         val sym = cdr(if3(new_p,
                           rplacd(cell, gensym(format_op_arg(vararg))),
                           cell));
-        cons_bind (outsyms, outforms, transform_op(re, newsyms, rg)); 
+        cons_bind (outsyms, outforms, transform_op(re, newsyms, rg));
         return cons(outsyms, rlcp(cons(sym, outforms), outforms));
       } else if (vararg == rest_s) {
-        cons_bind (outsyms, outforms, transform_op(re, syms, rg)); 
+        cons_bind (outsyms, outforms, transform_op(re, syms, rg));
         return cons(outsyms, rlcp(cons(rg, outforms), outforms));
       }
     }
 
     {
-      cons_bind (fisyms, fiform, transform_op(fi, syms, rg)); 
-      cons_bind (resyms, reforms, transform_op(re, fisyms, rg)); 
+      cons_bind (fisyms, fiform, transform_op(fi, syms, rg));
+      cons_bind (resyms, reforms, transform_op(re, fisyms, rg));
       return cons(resyms, rlcp(cons(fiform, reforms), fiform));
     }
   }
@@ -2487,8 +2486,8 @@ static val me_op(val form, val menv)
 
   {
     uses_or2;
-    val dwim_body = rlcp_tree(cons(dwim_s, 
-                                   if3(or4(is_op, has_rest, ssyms, 
+    val dwim_body = rlcp_tree(cons(dwim_s,
+                                   if3(or4(is_op, has_rest, ssyms,
                                            null(proper_listp(body_trans))),
                                        body_trans,
                                        append2(body_trans, rest_gensym))),
@@ -2583,7 +2582,7 @@ static val me_case(val form, val menv)
 
     ptail = list_collect(ptail,
                          cons(list(if3(atom(keys), eqfuncsym, memfuncsym),
-                                   tformsym, 
+                                   tformsym,
                                    if3(atom(keys), keys, list(quote_s, keys, nao)),
                                    nao),
                               forms));
@@ -2616,12 +2615,12 @@ static val expand_catch(val body, val menv)
   val catch_syms = mapcar(car_f, catch_clauses);
   val try_form_ex = expand(try_form, menv);
   val catch_clauses_ex = rlcp(mapcar(curry_12_1(func_n2(expand_catch_clause),
-                                                menv), 
+                                                menv),
                                      catch_clauses),
                               catch_clauses);
 
-  val expanded = cons(catch_s, 
-                      cons(catch_syms, 
+  val expanded = cons(catch_s,
+                      cons(catch_syms,
                            cons(try_form_ex, catch_clauses_ex)));
   return rlcp(expanded, body);
 }
@@ -2776,12 +2775,12 @@ tail:
       val incs_ex = expand_forms(incs, new_menv);
       val forms_ex = expand_forms(forms, new_menv);
 
-      if (vars == vars_ex && cond == cond_ex && 
+      if (vars == vars_ex && cond == cond_ex &&
           incs == incs_ex && forms == forms_ex && !specials_p) {
         return form;
       } else {
-        val basic_form = rlcp(cons(sym, 
-                                   cons(vars_ex, 
+        val basic_form = rlcp(cons(sym,
+                                   cons(vars_ex,
                                         cons(cond_ex,
                                              cons(incs_ex, forms_ex)))), form);
         return expand_save_specials(basic_form, specials_p);
@@ -2796,12 +2795,12 @@ tail:
       val hashform_ex = expand(hashform, menv);
       val resform_ex = expand(resform, menv);
       val body_ex = expand_forms(body, menv);
-     
+
       if (hashform == hashform_ex && resform == resform_ex && body == body_ex)
         return form;
-      return cons(sym, cons(cons(keysym, 
-                                 cons(valsym, 
-                                      cons(hashform_ex, 
+      return cons(sym, cons(cons(keysym,
+                                 cons(valsym,
+                                      cons(hashform_ex,
                                            cons(resform_ex, nil)))),
                             body_ex));
     } else if (sym == quasi_s) {
@@ -2829,7 +2828,7 @@ tail:
       goto tail;
     } else {
       /* funtion call
-         also handles: progn, prog1, call, if, and, or, 
+         also handles: progn, prog1, call, if, and, or,
          unwind-protect, return, dwim, set, inc, dec,
          push, pop, flip, and with-saved-vars. */
       val args = rest(form);
@@ -2847,7 +2846,7 @@ static val macro_form_p(val form, val menv)
 {
   menv = default_bool_arg(menv);
 
-  if (bindable(form) && lookup_symac(menv, form)) 
+  if (bindable(form) && lookup_symac(menv, form))
     return t;
   if (consp(form) && lookup_mac(menv, car(form)))
     return t;

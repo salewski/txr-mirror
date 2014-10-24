@@ -255,13 +255,13 @@ static val dest_set(val spec, val bindings, val pattern, val value)
     set(cdr_l(existing), value);
   } else if (consp(pattern)) {
     if (first(pattern) == var_s) {
-      uw_throwf(query_error_s, 
+      uw_throwf(query_error_s,
                 lit("metavariable @~a syntax cannot be used here"),
                 second(pattern), nao);
     }
 
     if (first(pattern) == expr_s) {
-      uw_throwf(query_error_s, 
+      uw_throwf(query_error_s,
                 lit("the @~s syntax cannot be used here"),
                 rest(pattern), nao);
     }
@@ -349,7 +349,7 @@ static val vars_to_bindings(val spec, val vars, val bindings)
   val iter;
   list_collect_decl (fixed_vars, ptail);
 
-  if (vars && !consp(vars)) 
+  if (vars && !consp(vars))
     sem_error(spec, lit("not a valid variable list: ~a"), vars, nao);
 
   for (iter = vars; iter; iter = cdr(iter)) {
@@ -357,9 +357,9 @@ static val vars_to_bindings(val spec, val vars, val bindings)
     if (bindable(item)) {
       ptail = list_collect(ptail, cons(item, noval_s));
     } else if (consp(item) && bindable(first(item))) {
-      ptail = list_collect(ptail, cons(first(item), 
+      ptail = list_collect(ptail, cons(first(item),
                                        txeval(spec, second(item), bindings)));
-    } else { 
+    } else {
       sem_error(spec, lit("not a variable spec: ~a"), item, nao);
     }
   }
@@ -703,7 +703,7 @@ static val h_skip(match_line_ctx *c)
   val last_good_result = nil, last_good_pos = nil;
 
   if (!rest(c->specline)) {
-    debuglf(elem, 
+    debuglf(elem,
             lit("skip to end of line ~a:~a"), c->file, c->data_lineno, nao);
     return cons(c->bindings, t);
   }
@@ -780,9 +780,9 @@ static val h_coll(match_line_ctx *c)
   cnum cmax = fixnump(gap) ? c_num(gap) : (fixnump(max) ? c_num(max) : 0);
   cnum cmin = fixnump(gap) ? c_num(gap) : (fixnump(min) ? c_num(min) : 0);
   cnum mincounter = cmin, maxcounter = 0;
-  cnum ctimax = fixnump(times) ? c_num(times) 
+  cnum ctimax = fixnump(times) ? c_num(times)
                                : (fixnump(maxtimes) ? c_num(maxtimes) : 0);
-  cnum ctimin = fixnump(times) ? c_num(times) 
+  cnum ctimin = fixnump(times) ? c_num(times)
                                : (fixnump(mintimes) ? c_num(mintimes) : 0);
   cnum cchars = fixnump(chars) ? c_num(chars) : 0;
   cnum timescounter = 0, charscounter = 0;
@@ -858,7 +858,7 @@ static val h_coll(match_line_ctx *c)
 
           if (!have_vars || vars_binding) {
             val existing = assoc(car(binding), bindings_coll);
-            bindings_coll = acons_new(car(binding), 
+            bindings_coll = acons_new(car(binding),
                                       cons(cdr(binding), cdr(existing)),
                                       bindings_coll);
           }
@@ -1028,7 +1028,7 @@ static val h_parallel(match_line_ctx *c)
 
   /* No check for maybe, since it always succeeds. */
 
- 
+
   if (resolve_bindings)
     c->bindings = nappend2(resolve_bindings, c->bindings);
 
@@ -1121,7 +1121,7 @@ static val h_fun(match_line_ctx *c)
           if (symbolp(arg)) {
             val newbind = assoc(param, new_bindings);
             if (newbind) {
-              c->bindings = dest_bind(elem, c->bindings, 
+              c->bindings = dest_bind(elem, c->bindings,
                                       arg, cdr(newbind), equal_f);
               if (c->bindings == t) {
                 debuglf(elem,
@@ -1544,7 +1544,7 @@ static val do_txeval(val spec, val form, val bindings, val allow_unbound)
     }
 
     uw_catch (exc_sym, exc) {
-      if (stringp(exc) && !equal(exc, lit("")) && 
+      if (stringp(exc) && !equal(exc, lit("")) &&
           chr_str(exc, zero) == chr('('))
       {
         uw_throw (exc_sym, exc);
@@ -1741,7 +1741,7 @@ static void do_output_line(val bindings, val specline, val filter, val out)
                                             func_n1(robust_length),
                                             nao));
 
-          if (counter && !bindable(counter)) 
+          if (counter && !bindable(counter))
             sem_error(elem, lit(":counter requires a bindable symbol, not ~s"),
                       counter, nao);
 
@@ -1820,7 +1820,7 @@ static void do_output_line(val bindings, val specline, val filter, val out)
 
         } else if (directive == expr_s) {
           if (opt_compat && opt_compat < 100) {
-            format(out, lit("~a"), 
+            format(out, lit("~a"),
                    eval(rest(elem), make_env(bindings, nil, nil), elem), nao);
           } else {
             val str = cat_str(subst_vars(cons(elem, nil),
@@ -1900,7 +1900,7 @@ static void do_output(val bindings, val specs, val filter, val out)
 
             if (i == 0 && first_clauses) {
               do_output(bind_a, first_clauses, filter, out);
-            } else if (i == c_num(max_depth) - 1 && 
+            } else if (i == c_num(max_depth) - 1 &&
                        (last_clauses || modlast_clauses))
             {
               if (modlast_clauses) {
@@ -2108,7 +2108,7 @@ static val v_skip(match_files_ctx *c)
       if (result)
         return result;
       if (last_good_result) {
-        debuglf(skipspec, lit("greedy skip matched ~a:~a"), 
+        debuglf(skipspec, lit("greedy skip matched ~a:~a"),
                 c->curfile, last_good_line, nao);
         return last_good_result;
       }
@@ -2141,7 +2141,7 @@ static val v_fuzz(match_files_ctx *c)
 
     {
       cnum reps, good;
-  
+
       for (reps = 0, good = 0; reps < cn; reps++) {
         match_files_ctx fuzz_ctx = mf_spec(*c, cons(first(c->spec), nil));
         val result = match_files(fuzz_ctx);
@@ -2339,7 +2339,7 @@ static val v_accept_fail(match_files_ctx *c)
 static val v_next(match_files_ctx *c)
 {
   spec_bind (specline, first_spec, c->spec);
-  
+
   if ((c->spec = rest(c->spec)) == nil)
     return cons(c->bindings, cons(c->data, c->data_lineno));
 
@@ -2374,7 +2374,7 @@ static val v_next(match_files_ctx *c)
         return nil;
       }
     }
-    
+
     if (keywordp(first(args))) {
       source = nil;
     } else {
@@ -2404,7 +2404,7 @@ static val v_next(match_files_ctx *c)
       if (from_var) {
         val existing = assoc(from_var, c->bindings);
 
-        if (!symbolp(from_var)) 
+        if (!symbolp(from_var))
           sem_error(specline, lit(":var requires a variable, not ~s"), from_var, nao);
 
         if (!existing)
@@ -2529,7 +2529,7 @@ static val v_parallel(match_files_ctx *c)
     for (iter = specs; iter != nil; iter = rest(iter))
     {
       val nested_spec = first(iter);
-      cons_bind (new_bindings, success, 
+      cons_bind (new_bindings, success,
                  match_files(mf_spec(*c, nested_spec)));
 
       if (success) {
@@ -2650,7 +2650,7 @@ static val v_gather(match_files_ctx *c)
 
     for (iter = specs, next = cdr(iter); iter != nil; iter = next, next = cdr(iter)) {
       val nested_spec = first(iter);
-      cons_bind (new_bindings, success, 
+      cons_bind (new_bindings, success,
                  match_files(mf_spec(*c, nested_spec)));
 
       if (!success) {
@@ -2761,9 +2761,9 @@ static val v_collect(match_files_ctx *c)
   cnum cmax = fixnump(gap) ? c_num(gap) : (fixnump(max) ? c_num(max) : 0);
   cnum cmin = fixnump(gap) ? c_num(gap) : (fixnump(min) ? c_num(min) : 0);
   cnum mincounter = cmin, maxcounter = 0;
-  cnum ctimax = fixnump(times) ? c_num(times) 
+  cnum ctimax = fixnump(times) ? c_num(times)
                                : (fixnump(maxtimes) ? c_num(maxtimes) : 0);
-  cnum ctimin = fixnump(times) ? c_num(times) 
+  cnum ctimin = fixnump(times) ? c_num(times)
                                : (fixnump(mintimes) ? c_num(mintimes) : 0);
   volatile cnum timescounter = 0, linescounter = 0;
   cnum ctimes = fixnump(times) ? c_num(times) : 0;
@@ -2844,7 +2844,7 @@ static val v_collect(match_files_ctx *c)
           val exists = assoc(var, new_bindings);
 
           if (!exists) {
-            if (dfl == noval_s) 
+            if (dfl == noval_s)
               ptail = list_collect(ptail, var);
             else
               strictly_new_bindings = acons(var, dfl, strictly_new_bindings);
@@ -3050,7 +3050,7 @@ static val v_bind(match_files_ctx *c)
 
     testfun = curry_1234_34(func_n4(filter_equal), lfilt, rfilt);
   }
-  
+
   uw_env_begin;
   uw_set_match_context(cons(c->spec, c->bindings));
 
@@ -3105,7 +3105,7 @@ static val v_rebind(match_files_ctx *c)
   val val = txeval(specline, form, c->bindings);
 
   c->bindings = alist_remove(c->bindings, args);
-  c->bindings = dest_bind(specline, c->bindings, 
+  c->bindings = dest_bind(specline, c->bindings,
                           pattern, val, equal_f);
 
   return next_spec_k;
@@ -3191,7 +3191,7 @@ static val v_output(match_files_ctx *c)
     if (into_var) {
       val stream = make_strlist_output_stream();
 
-      if (!symbolp(into_var)) 
+      if (!symbolp(into_var))
         sem_error(specline, lit(":into requires a variable, not ~s"), into_var, nao);
 
       if (named_var)
@@ -3316,7 +3316,7 @@ static val v_try(match_files_ctx *c)
                 val value = car(viter);
 
                 if (value != noval_s) {
-                  c->bindings = dest_bind(specline, c->bindings, 
+                  c->bindings = dest_bind(specline, c->bindings,
                                          param, value, equal_f);
 
                   if (c->bindings == t) {
@@ -3465,7 +3465,7 @@ static val v_throw(match_files_ctx *c)
     sem_error(specline, lit("throw: ~a is not a type symbol"),
               type, nao);
   {
-    val values = mapcar(curry_123_2(func_n3(txeval_allow_ub), 
+    val values = mapcar(curry_123_2(func_n3(txeval_allow_ub),
                                     specline, c->bindings), args);
     uw_throw(type, values);
   }
@@ -3484,17 +3484,17 @@ static val v_deffilter(match_files_ctx *c)
   {
     val table_evaled = txeval(specline, table, c->bindings);
 
-    if (!all_satisfy(table_evaled, andf(func_n1(listp), 
+    if (!all_satisfy(table_evaled, andf(func_n1(listp),
                                         chain(func_n1(length_list),
                                               curry_12_1(func_n2(ge), two), nao),
                                         chain(func_n1(rest),
-                                              curry_123_1(func_n3(all_satisfy), 
-                                                          func_n1(stringp), 
+                                              curry_123_1(func_n3(all_satisfy),
+                                                          func_n1(stringp),
                                                           nil),
-                                              nao), 
+                                              nao),
                                         nao),
                                    nil))
-    sem_error(specline, 
+    sem_error(specline,
               lit("deffilter arguments must be lists of at least two strings"),
               nao);
 
@@ -3524,7 +3524,7 @@ static val v_filter(match_files_ctx *c)
     val existing = assoc(var, c->bindings);
 
     if (!bindable(var))
-      sem_error(specline, lit("filter: ~a is not a variable name"), 
+      sem_error(specline, lit("filter: ~a is not a variable name"),
                 var, nao);
 
     if (!existing)
@@ -3609,7 +3609,7 @@ static val v_fun(match_files_ctx *c)
           if (symbolp(arg)) {
             val newbind = assoc(param, new_bindings);
             if (newbind) {
-              c->bindings = dest_bind(specline, c->bindings, 
+              c->bindings = dest_bind(specline, c->bindings,
                                      arg, cdr(newbind), equal_f);
               if (c->bindings == t) {
                 debuglf(specline,
@@ -3687,7 +3687,7 @@ static val v_assert(match_files_ctx *c)
     if (result) {
       return result;
     } else if (type) {
-      val values = mapcar(curry_123_2(func_n3(txeval_allow_ub), 
+      val values = mapcar(curry_123_2(func_n3(txeval_allow_ub),
                                       specline, c->bindings), args);
       uw_throw(type, values);
     } else {
@@ -3826,7 +3826,7 @@ static val h_assert(match_line_ctx *c)
   if (result) {
     return result;
   } else if (type) {
-    val values = mapcar(curry_123_2(func_n3(txeval_allow_ub), 
+    val values = mapcar(curry_123_2(func_n3(txeval_allow_ub),
                                     c->specline, c->bindings), elem);
     uw_throw(type, values);
   } else {
@@ -3897,7 +3897,7 @@ static val match_files(match_files_ctx c)
 
   gc_hint(c.data);
 
-  for (; c.spec; c.spec = rest(c.spec), 
+  for (; c.spec; c.spec = rest(c.spec),
                  c.data = rest(c.data),
                  c.data_lineno = plus(c.data_lineno, one))
 repeat_spec_same_data:
@@ -3977,7 +3977,7 @@ val match_filter(val name, val arg, val other_args)
   val in_arg_sym = make_sym(lit("in_arg"));
   val out_arg_sym = make_sym(lit("out_arg"));
   val bindings = cons(cons(in_arg_sym, arg), in_bindings);
-  val spec = cons(list(cons(name, 
+  val spec = cons(list(cons(name,
                             cons(in_arg_sym, cons(out_arg_sym, other_args))),
                        nao), nil);
   match_files_ctx c = mf_all(spec, nil, bindings, nil, nil);

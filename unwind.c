@@ -293,7 +293,6 @@ val uw_throw(val sym, val exception)
 
       format(std_error, s ? lit("~a: ~a\n") : lit("~a: ~s\n"),
              prog_string, exception, nao);
-      
     }
     if (uw_exception_subtype_p(sym, query_error_s) ||
         uw_exception_subtype_p(sym, file_error_s)) {

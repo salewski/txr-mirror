@@ -72,7 +72,7 @@ static val trie_add(val trie, val key, val value)
   return node;
 }
 
-/* 
+/*
  * Reduce the storage requirement for a the trie, by applying
  * these rules:
  *
@@ -245,7 +245,7 @@ static val trie_filter_string(val filter, val str)
 val filter_string_tree(val filter, val obj)
 {
   switch (type(obj)) {
-  case NIL: 
+  case NIL:
     return nil;
   case CONS:
     return mapcar(curry_12_2(func_n2(filter_string_tree), filter), obj);

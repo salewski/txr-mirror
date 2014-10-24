@@ -137,7 +137,7 @@ tests/010/reghash.ok: TXR_OPTS := -B
 
 tests/002/%: TXR_SCRIPT_ON_CMDLINE := y
 
-tests/011/%: TXR_DBG_OPTS := 
+tests/011/%: TXR_DBG_OPTS :=
 
 %.ok: %.txr
 	mkdir -p $(dir $@)
@@ -150,14 +150,21 @@ tests/011/%: TXR_DBG_OPTS :=
 %.expected: %.txr
 	./$(PROG) $(TXR_OPTS) $^ $(TXR_ARGS) > $@
 
-.PHONY: enforce
-enforce:
-	@if [ $$(grep -E '\<void[\t ]*\*' $(SRCS) | wc -l) -ne 1 ] ; then \
-	  echo "New 'void *' occurrences have been found:" ; \
-	  grep -n -E '\<void[\t ]*\*' $(SRCS) \
-	    | grep -v -F 'typedef void *yyscan_t' ; \
+define GREP_CHECK
+	@if [ $$(grep -E $(1) $(SRCS) | wc -l) -ne $(3) ] ; then \
+	  echo "New '$(2)' occurrences have been found:" ; \
+	  grep -n -E $(1) $(SRCS) \
+	    | sed -e 's/\(.*:.*:\).*/\1 $(2)/' \
+	    | grep $(4) ; \
 	  exit 1 ; \
 	fi
+endef
+
+.PHONY: enforce
+enforce:
+	$(call GREP_CHECK,'\<void[	 ]*\*',void *,1,-v 'typedef void \*yyscan_t')
+	$(call GREP_CHECK,'	',tabs,0,'.')
+	$(call GREP_CHECK,' $$',trailing spaces,0,'.')
 
 #
 # Installation macro.
@@ -203,7 +210,7 @@ zip: install
 
 #
 # Install the tests as well as the script to run them
-# 
+#
 install-tests:
 	mkdir -p $(DESTDIR)$(datadir)
 	(cd $(top_srcdir) ; \
@@ -218,7 +225,7 @@ install-tests:
 
 #
 # Generate web page from man page
-# 
+#
 txr-manpage.html: txr.1 genman.txr
 	man2html $< | ./$(PROG) genman.txr - > $@
 

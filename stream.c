@@ -488,7 +488,7 @@ static void tail_strategy(val stream, unsigned long *state)
     for (;;) {
       FILE *newf;
 
-      /* Try to open the file. 
+      /* Try to open the file.
        */
       if (!(newf = w_fopen(c_str(h->descr), c_str(h->mode)))) {
         /* If already have the file open previously, and the name
@@ -518,7 +518,7 @@ static void tail_strategy(val stream, unsigned long *state)
       }
 
       /* Obtain size of new file. If we can't, then let's just pretend we never
-       * opened it and bail out. 
+       * opened it and bail out.
        */
       if (fseek(newf, 0, SEEK_END) == -1 || (size = ftell(newf)) == -1) {
         fclose(newf);
@@ -539,7 +539,7 @@ static void tail_strategy(val stream, unsigned long *state)
       }
 
       /* Newly opened file is not smaller. We take a gamble and say
-       * that it's the same object as h->f, since rotating files 
+       * that it's the same object as h->f, since rotating files
        * are usually large and it is unlikely that it is a new file
        * which has grown larger than the original. Just in case,
        * though, we take the new file handle. But we do not reset
@@ -676,7 +676,7 @@ static val pipe_close(val stream, val throw_on_error)
         uw_throwf(process_error_s, lit("closing pipe ~a failed"), stream, nao);
 #endif
       return status == 0 ? zero : nil;
-    } 
+    }
   }
   return nil;
 }
@@ -870,7 +870,7 @@ struct string_output {
   wchar_t *buf;
   size_t size;
   size_t fill;
-  utf8_decoder_t ud; 
+  utf8_decoder_t ud;
   unsigned char byte_buf[4];
   int head, tail;
 };
@@ -1424,13 +1424,13 @@ static void detect_format_string(void)
 }
 
 static val vformat_num(val stream, const char *str,
-                       int width, int left, int zeropad, 
+                       int width, int left, int zeropad,
                        int precision, int sign)
 {
   int sign_char = (str[0] == '-' || str[0] == '+') ? str[0] : 0;
   int digit_len = strlen(str) - (sign_char != 0);
   int padlen = precision > digit_len ? precision - digit_len : 0;
-  int total_len = digit_len + padlen + (sign_char || sign); 
+  int total_len = digit_len + padlen + (sign_char || sign);
   int slack = (total_len < width) ? width - total_len : 0;
   int i;
 
@@ -1659,7 +1659,7 @@ val vformat(val stream, val fmtstr, va_list vl)
         case 'o':
           obj = va_arg(vl, val);
           if (bignump(obj)) {
-            int nchars = mp_radix_size(mp(obj), 8); 
+            int nchars = mp_radix_size(mp(obj), 8);
             if (nchars >= convert(int, sizeof (num_buf)))
               pnum = coerce(char *, chk_malloc(nchars + 1));
             mp_toradix(mp(obj), coerce(unsigned char *, pnum), 8);
@@ -1750,7 +1750,7 @@ val vformat(val stream, val fmtstr, va_list vl)
             goto output_num;
           case BGNUM:
             {
-              int nchars = mp_radix_size(mp(obj), 10); 
+              int nchars = mp_radix_size(mp(obj), 10);
               if (nchars >= convert(int, sizeof (num_buf)))
                 pnum = coerce(char *, chk_malloc(nchars + 1));
               mp_toradix(mp(obj), coerce(unsigned char *, pnum), 10);
@@ -1822,7 +1822,7 @@ val vformat(val stream, val fmtstr, va_list vl)
           }
           goto output_num;
         default:
-          uw_throwf(error_s, lit("unknown format directive character ~s\n"), 
+          uw_throwf(error_s, lit("unknown format directive character ~s\n"),
                     chr(ch), nao);
         output_num:
           {
@@ -2033,7 +2033,7 @@ val seek_stream(val stream, val offset, val whence)
     else
       uw_throwf(file_error_s, lit("seek: ~a is not a valid whence argument"),
                 whence, nao);
-    
+
     return ops->seek(stream, off, w);
   }
 }
@@ -2155,8 +2155,8 @@ val open_process(val name, val mode_str, val args)
     free(argv);
     uw_throwf(file_error_s, lit("opening pipe ~a, fork syscall failed: ~a/~s"),
               name, num(errno), string_utf8(strerror(errno)), nao);
-  } 
-  
+  }
+
   if (pid == 0) {
     if (input) {
       dup2(fd[1], STDOUT_FILENO);
@@ -2313,8 +2313,8 @@ static val run(val name, val args)
     free(argv);
     uw_throwf(file_error_s, lit("opening process ~a, fork syscall failed: ~a/~s"),
               name, num(errno), string_utf8(strerror(errno)), nao);
-  } 
-  
+  }
+
   if (pid == 0) {
     execvp(utf8name, argv);
     _exit(errno);

@@ -71,13 +71,13 @@ typedef struct regex {
  * Result from regex_machine_feed.
  * These values have two meanings, based on whether
  * the matching is still open (characters are being fed)
- * or finalized. 
+ * or finalized.
  *
  * When feeding characters:
  * REGM_INCOMPLETE: no match at this character, but matching can continue.
  * REGM_FAIL: no more state transitions are possible.
  * REGM_MATCH: match (accept state) for this character.
- * 
+ *
  * When the end of the input is encountered, or a REGM_FAIL,
  * then regex_machine_feed is called one more time with
  * the null character. It then reports:
@@ -125,7 +125,7 @@ typedef unsigned int bitcell_t;
 #define CHAR_SET_L0_HI(CH) ((CH) | convert(wchar_t, 0xFF))
 
 typedef enum {
-  CHSET_SMALL, CHSET_DISPLACED, CHSET_LARGE, 
+  CHSET_SMALL, CHSET_DISPLACED, CHSET_LARGE,
 #ifdef FULL_UNICODE
   CHSET_XLARGE
 #endif
@@ -1376,17 +1376,17 @@ static val dv_compile_regex(val exp)
         val any = list(zeroplus_s, wild_s, nao);
         val notempty = list(oneplus_s, wild_s, nao);
 
-        return list(compound_s, 
-                    list(and_s, 
+        return list(compound_s,
+                    list(and_s,
                          zplus,
-                         list(compl_s, 
-                              list(compound_s, 
-                                   any, 
+                         list(compl_s,
+                              list(compound_s,
+                                   any,
                                    if3(reg_nullable(xsecond),
                                        list(and_s, xsecond, notempty, nao),
                                        xsecond),
-                                   any, nao), 
-                              nao), 
+                                   any, nao),
+                              nao),
                          nao),
                     xsecond, nao);
       }
@@ -1405,7 +1405,7 @@ static val dv_compile_regex(val exp)
 static val reg_nullable_list(val exp_list)
 {
   if (rest(exp_list)) {
-    return if2(reg_nullable(first(exp_list)) && 
+    return if2(reg_nullable(first(exp_list)) &&
                reg_nullable_list(rest(exp_list)),
                t);
   } else {
@@ -1461,7 +1461,7 @@ static val unflatten_or(val exlist)
 {
   val f = first(exlist);
   val r = rest(exlist);
-  
+
   if (r) {
     return cons(or_s, cons(f, cons(unflatten_or(r), nil)));
   } else {
@@ -1473,7 +1473,7 @@ static val unique_first(val exlist)
 {
   val f = first(exlist);
   val r = rest(exlist);
-  
+
   if (!memqual(f, r))
     return cons(first(exlist), nil);
   return nil;
@@ -1519,7 +1519,7 @@ static val reg_derivative_list(val exp_list, val ch)
       if (d_first == t)
         return d_rest;
 
-      return list(or_s, 
+      return list(or_s,
                   if3(d_first == nil,
                       cons(compound_s, rest(exp_list)),
                       cons(compound_s, cons(d_first, rest(exp_list)))),
@@ -1533,7 +1533,7 @@ static val reg_derivative_list(val exp_list, val ch)
       else if (d_first == nil)
         return cons(compound_s, rest(exp_list));
       else
-        return cons(compound_s, 
+        return cons(compound_s,
                     cons(d_first, rest(exp_list)));
     }
   } else {
@@ -1654,7 +1654,7 @@ static val regex_requires_dv(val exp)
     } else if (sym == compl_s) {
       return t;
     } else if (sym == or_s) {
-      return if2(regex_requires_dv(first(args)) || 
+      return if2(regex_requires_dv(first(args)) ||
                  regex_requires_dv(second(args)), t);
     } else if (sym == and_s || sym == nongreedy_s) {
       return t;

@@ -42,7 +42,7 @@ static val perm_while_fun(val state)
   cnum k = c_num(vecref(state, one));
   val c = vecref(state, two);
   cnum n = c_num(length(p));
-  cnum i, j; 
+  cnum i, j;
 
   for (i = k - 1, j = n - k + 1; i >= 0; i--, j++) {
     cnum ci = c_num(c->v.vec[i]) + 1;
@@ -84,7 +84,7 @@ static void perm_gen_fun_common(val state, val out,
   val nn = length(p);
   val b = vector(nn, nil);
   cnum k = c_num(kk);
-  cnum i; 
+  cnum i;
 
   for (i = 0; i < k; i++) {
     cnum ci = c_num(c->v.vec[i]);

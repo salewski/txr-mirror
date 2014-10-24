@@ -104,7 +104,7 @@ val debug(val form, val bindings, val data, val line, val pos, val base)
   else if (data == t)
     data = nil;
 
-  if (!step_mode && !memqual(rl, breakpoints) 
+  if (!step_mode && !memqual(rl, breakpoints)
       && (debug_depth > next_depth))
   {
     return nil;
@@ -155,7 +155,7 @@ val debug(val form, val bindings, val data, val line, val pos, val base)
       flush_stream(std_debug);
 
       input = split_str_set(or2(get_line(std_input), lit("q")), lit("\t "));
-      command = if3(equal(first(input), null_string), 
+      command = if3(equal(first(input), null_string),
                     or2(last_command, lit("")), first(input));
       last_command = command;
 

@@ -210,7 +210,7 @@ val type_check3(val obj, int t1, int t2, int t3)
 val class_check(val cobj, val class_sym)
 {
   type_assert (is_ptr(cobj) && cobj->t.type == COBJ &&
-               cobj->co.cls == class_sym, 
+               cobj->co.cls == class_sym,
                (lit("~a is not of type ~a"), cobj, class_sym, nao));
   return t;
 }
@@ -1166,7 +1166,7 @@ val tree_find(val obj, val tree, val testfun)
   if (funcall2(default_arg(testfun, equal_f), obj, tree))
     return t;
   else if (consp(tree))
-    return some_satisfy(tree, curry_123_2(func_n3(tree_find), 
+    return some_satisfy(tree, curry_123_2(func_n3(tree_find),
                                           obj, testfun), nil);
   return nil;
 }
@@ -1299,7 +1299,7 @@ val flatten(val list)
  */
 static val lazy_flatten_scan(val list, val *escape)
 {
-  for (;;) { 
+  for (;;) {
     if (list) {
       val a = car(list);
       if (nilp(a)) {
@@ -2308,8 +2308,8 @@ val string_extend(val str, val tail)
 val stringp(val str)
 {
   switch (type(str)) {
-  case LIT: 
-  case STR: 
+  case LIT:
+  case STR:
   case LSTR:
     return t;
   default:
@@ -2532,7 +2532,7 @@ static val lazy_sub_str(val lstr, val from, val to)
 
   {
     val pfxsub = sub_str(lstr->ls.prefix, from, to);
-     
+
     if (to != t) {
       return pfxsub;
     } else {
@@ -2641,7 +2641,7 @@ val replace_str(val str_in, val items, val from, val to)
     cnum t = c_num(to);
     cnum l = c_num(len);
 
-    wmemmove(str_in->st.str + t - c_num(len_diff), 
+    wmemmove(str_in->st.str + t - c_num(len_diff),
              str_in->st.str + t, (l - t) + 1);
     set(mkloc(str_in->st.len, str_in), minus(len, len_diff));
     to = plus(from, len_it);
@@ -2655,7 +2655,7 @@ val replace_str(val str_in, val items, val from, val to)
              str_in->st.str + t, (l - t) + 1);
     to = plus(from, len_it);
   }
-  
+
   if (zerop(len_it))
     return str_in;
   if (stringp(itseq)) {
@@ -4717,7 +4717,7 @@ val size_vec(val vec)
 val vector_list(val list)
 {
   val vec = vector(zero, nil);
- 
+
   if (!listp(list))
     uw_throwf(error_s, lit("vector-list: list expected, not ~s"), list, nao);
 
@@ -4850,7 +4850,7 @@ val replace_vec(val vec_in, val items, val from, val to)
     cnum t = c_num(to);
     cnum l = c_num(len);
 
-    memmove(vec_in->v.vec + t - c_num(len_diff), 
+    memmove(vec_in->v.vec + t - c_num(len_diff),
             vec_in->v.vec + t,
             (l - t) * sizeof vec_in->v.vec);
 
@@ -4863,16 +4863,16 @@ val replace_vec(val vec_in, val items, val from, val to)
 
     vec_set_length(vec_in, plus(len, len_diff));
 
-    memmove(vec_in->v.vec + t + c_num(len_diff), 
+    memmove(vec_in->v.vec + t + c_num(len_diff),
             vec_in->v.vec + t,
             (l - t) * sizeof vec_in->v.vec);
     to = plus(from, len_it);
   }
-  
+
   if (zerop(len_it))
     return vec_in;
   if (vectorp(it_seq)) {
-    memcpy(vec_in->v.vec + c_num(from), it_seq->v.vec, 
+    memcpy(vec_in->v.vec + c_num(from), it_seq->v.vec,
            sizeof *vec_in->v.vec * c_num(len_it));
     mut(vec_in);
   } else if (stringp(it_seq)) {
@@ -6736,7 +6736,7 @@ val time_sec_usec(void)
 
 #if !HAVE_GMTIME_R
 /*
- * Ugly hacks for MingW, which uses the Microsft C Run Time Library, 
+ * Ugly hacks for MingW, which uses the Microsft C Run Time Library,
  * whic in turn is stuck in the Dark Ages * without _r functions.
  */
 struct tm *gmtime_r(const time_t *timep, struct tm *result);
@@ -6879,7 +6879,7 @@ setenv(const char *name, const char *value, int overwrite)
   (void) overwrite;
   sprintf(str, "%s=%s", name, value);
   putenv(str);
-} 
+}
 
 static void
 unsetenv(const char *name)

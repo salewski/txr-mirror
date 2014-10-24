@@ -197,7 +197,7 @@ U3      [\xe0-\xef]
 U4      [\xf0-\xf4]
 
 UANY    {ASC}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
-UANYN   {ASCN}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U} 
+UANYN   {ASCN}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
 %x      SPECIAL BRACED NESTED REGEX STRLIT CHRLIT QSILIT QSPECIAL WLIT QWLIT
@@ -832,7 +832,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 <STRLIT,QSILIT,WLIT,QWLIT>{WS}[\\]\n{WS} {
   yyextra->lineno++;
 }
-                                
+
 <STRLIT,QSILIT,WLIT,QWLIT>[\\](x{HEX}+|{OCT}+);?  {
   yylval->chr = num_esc(yyg, yytext+1);
   return LITCHAR;

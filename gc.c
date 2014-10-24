@@ -726,7 +726,7 @@ void dheap(heap_t *heap, int start, int end)
  * from caching the value across function calls.
  * This is needed for situations where
  * - a compiler caches a variable in a register, but not entirely (the variable
- *   has a backing memory location); and 
+ *   has a backing memory location); and
  * - that location contains a stale old value of the variable, which cannot be
  *   garbage-collected as a result; and
  * - this causes a problem, like unbounded memory growth.

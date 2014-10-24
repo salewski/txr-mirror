@@ -403,7 +403,7 @@ extern val prog_string;
 
 extern mem_t *(*oom_realloc)(mem_t *, size_t);
 
-#if HAVE_ULONGLONG_T 
+#if HAVE_ULONGLONG_T
 typedef ulonglong_t alloc_bytes_t;
 #else
 typedef unsigned long alloc_bytes_t;

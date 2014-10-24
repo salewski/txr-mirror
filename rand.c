@@ -69,7 +69,7 @@ static struct cobj_ops random_state_ops = {
   cobj_print_op,
   cobj_destroy_free_op,
   cobj_mark_op,
-  cobj_hash_op 
+  cobj_hash_op
 };
 
 static val make_state(void)
@@ -95,7 +95,7 @@ static rand32_t rand32(struct rand_state *r)
   rand32_t r2 = s9 ^ (s9 >> 11);
 
   rand32_t ns0 = RSTATE(r, 0) = r1 ^ r2;
-  rand32_t ns15 = s15 ^ (s15 << 2) ^ r1 ^ (r1 << 18) ^ r2 ^ (r2 << 28) ^ 
+  rand32_t ns15 = s15 ^ (s15 << 2) ^ r1 ^ (r1 << 18) ^ r2 ^ (r2 << 28) ^
                   ((ns0 ^ (ns0 << 5)) & 0xda442d24ul);
 
   RSTATE(r, 15) = ns15;
@@ -246,7 +246,7 @@ val random(val state, val modulus)
         continue;
       return num(out);
     }
-  } 
+  }
 invalid:
   uw_throwf(numeric_error_s, lit("random: invalid modulus ~s"),
       modulus, nao);

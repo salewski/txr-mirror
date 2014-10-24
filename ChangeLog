@@ -1,3 +1,14 @@
+2014-10-24  Kaz Kylheku  <kaz@kylheku.com>
+
+	* Makefile: Removing trailing spaces.
+	(GREP_CHECK): New macro.
+	(enforce): Rewritten using GREP_CHECK, with new checks.
+
+	* arith.c, combi.c, debug.c, eval.c, filter.c, gc.c, hash.c, lib.c,
+	* lib.h, match.c, parser.l, parser.y, rand.c, regex.c, signal.c,
+	* signal.h, stream.c, syslog.c, txr.c, unwind.c, utf8.c: Remove
+	trailing spaces.
+
 2014-10-22  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): Fix incorrect, registration of

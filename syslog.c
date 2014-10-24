@@ -86,7 +86,7 @@ val openlog_wrap(val wident, val optmask, val facility)
 
   optmask = default_arg(optmask, zero);
   facility = default_arg(facility, num_fast(LOG_USER));
-  
+
   ident = utf8_dup_to(c_str(wident));
   openlog(ident, c_num(optmask), c_num(facility));
   free(old_ident);
