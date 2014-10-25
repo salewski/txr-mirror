@@ -1,5 +1,18 @@
 2014-10-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	GNU Flex's libfl library provides nothing.  Let us not refer to it. It
+	only causes build issues on some systems where it is not provided
+	in the standard location, or is not cross-compiled properly.
+
+	* Makefile (LEXLIB): Reference to variable removed.
+
+	* configure (lexlib): Variable removed.
+	(LEXLIB): config.make variable not generated.
+
+	* parser.l (yywrap): Provide this trivial function as inline.
+
+2014-10-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	* Makefile: Removing trailing spaces.
 	(GREP_CHECK): New macro.
 	(enforce): Rewritten using GREP_CHECK, with new checks.

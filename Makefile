@@ -54,7 +54,7 @@ OBJS += $(MPI_OBJS)
 PROG := txr
 
 $(PROG): $(OBJS) $(OBJS-y)
-	$(CC) $(CFLAGS) -o $@ $^ -lm $(LEXLIB)
+	$(CC) $(CFLAGS) -o $@ $^ -lm
 
 VPATH := $(top_srcdir)
 

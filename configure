@@ -90,7 +90,6 @@ intptr=
 exe=
 tool_prefix=
 lex='$(cross)$(tool_prefix)flex'
-lexlib=-lfl
 yaccname_given=
 yaccname=
 yacc='$(cross)$(tool_prefix)$(yaccname)'
@@ -319,10 +318,6 @@ lex [$lex]
 
   Specifies the program to use for compiling lex scanners to C.
   This must be compatible with GNU flex, since flex extensions are used.
-
-lexlib [$lexlib]
-
-  Specifies the linker flag to use for linking the lex library.
 
 yaccname [$yaccname]
 
@@ -624,7 +619,6 @@ EXE := $exe
 
 CC := $cc
 LEX := $lex
-LEXLIB := $lexlib
 YACC := $yacc
 NM := $nm
 

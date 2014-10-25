@@ -79,6 +79,15 @@ int yylex_destroy(void)
 int yyget_column(yyscan_t);
 void yyset_column (int column_no, yyscan_t yyscanner);
 
+/* The following function is all that libflex provides.
+   By providing it here, we eliminate the need to link libflex. */
+#define YY_SKIP_YYWRAP
+INLINE int yywrap(yyscan_t scanner)
+{
+  (void) scanner;
+  return 1;
+}
+
 void yyerror(scanner_t *scanner, parser_t *parser, const char *s)
 {
   yyerrorf(scanner, lit("~a"), string_utf8(s), nao);
