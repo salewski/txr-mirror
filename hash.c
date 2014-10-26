@@ -666,10 +666,9 @@ static struct cobj_ops hash_iter_ops = {
 val hash_begin(val hash)
 {
   val hi_obj;
-  struct hash_iter *hi;
-  struct hash *h = (struct hash *) hash->co.handle;
+  struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
+  struct hash_iter *hi = coerce(struct hash_iter *, chk_malloc(sizeof *hi));
 
-  hi = coerce(struct hash_iter *, chk_malloc(sizeof *hi));
   hi->next = 0;
   hi->hash = nil;
   hi->chain = -1;

@@ -1,3 +1,10 @@
+2014-10-25  Kaz Kylheku  <kaz@kylheku.com>
+
+	* hash.c (hash_begin): Use coerce macro instead of raw C cast.
+	Use cobj_handle so hash argument is validated.
+
+	* parser.l (YY_INPUT): Use convert macro instead of raw C cast.
+
 2014-10-24  Kaz Kylheku  <kaz@kylheku.com>
 
 	GNU Flex's libfl library provides nothing.  Let us not refer to it. It

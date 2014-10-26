@@ -56,7 +56,7 @@
     val c = get_byte(yyextra->stream);            \
     int n = 0;                                    \
     if (c)                                        \
-      buf[n++] = (char) c_num(c);                 \
+      buf[n++] = convert(char, c_num(c));         \
     result = n;                                   \
   } while (0)
 
