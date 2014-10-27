@@ -183,11 +183,9 @@ val typeof(val obj)
   }
 }
 
-val type_check(val obj, int typecode)
+val throw_mismatch(val obj, type_t t)
 {
-  if (type(obj) != typecode)
-    type_mismatch(lit("~s is not of type ~s"), obj, code2type(typecode), nao);
-  return t;
+  type_mismatch(lit("~s is not of type ~s"), obj, code2type(t), nao);
 }
 
 val type_check2(val obj, int t1, int t2)

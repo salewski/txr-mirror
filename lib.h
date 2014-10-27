@@ -414,7 +414,13 @@ extern alloc_bytes_t gc_bytes;
 
 val identity(val obj);
 val typeof(val obj);
-val type_check(val obj, int);
+val throw_mismatch(val obj, type_t);
+INLINE val type_check(val obj, type_t typecode)
+{
+  if (type(obj) != typecode)
+    throw_mismatch(obj, typecode);
+  return t;
+}
 val type_check2(val obj, int, int);
 val type_check3(val obj, int, int, int);
 val class_check(val cobj, val class_sym);
