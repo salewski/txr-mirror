@@ -1,3 +1,8 @@
+2014-10-30  Kaz Kylheku  <kaz@kylheku.com>
+
+	* gc.h (break_obj): Missing extern added on declaration.
+	This broke C++ compilation with -DEXTRA_DEBUGGING turned on.
+
 2014-10-29  Kaz Kylheku  <kaz@kylheku.com>
 
 	Vim syntax coloring for standalone TXR Lisp (*.tl) files.

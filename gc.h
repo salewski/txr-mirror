@@ -49,7 +49,7 @@ extern int gc_enabled;
 extern val **gc_prot_top;
 
 #if EXTRA_DEBUGGING
-val break_obj;
+extern val break_obj;
 #endif
 
 #define gc_hint(var) gc_hint_func(&var)
