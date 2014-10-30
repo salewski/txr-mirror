@@ -1,3 +1,14 @@
+2014-10-29  Kaz Kylheku  <kaz@kylheku.com>
+
+	Vim syntax coloring for standalone TXR Lisp (*.tl) files.
+
+	* genvim.txr (generate): New pattern function, contains
+	generation logic so we can do it twice.
+
+	* txr.vim: Regenerated.
+
+	* tl.vim: New file.
+
 2014-10-26  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (type_check): Function moved to header file inline.

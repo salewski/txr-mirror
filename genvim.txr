@@ -42,17 +42,19 @@ static void dir_tables_init(void)
 @(do (set [txl-sym 0..0] '("macro-time" "macrolet" "symacrolet"
                            "txr-if" "txr-when" "txr-case")))
 @(set (txr-sym txl-sym) (@(sort (uniq txr-sym)) @(sort (uniq txl-sym))))
-@(output)
+@(define generate (txr-p))
+@  (output @(if txr-p "txr.vim" "tl.vim") :named out)
 " VIM Syntax file for txr
 " Kaz Kylheku <kaz@@kylheku.com>
 
 " INSTALL-HOWTO:
 "
 " 1. Create the directory .vim/syntax in your home directory and
-"    put this file there.
-" 2. In your .vimrc, add this command to associate *.txr files
-"    with the txr filetype.
+"    put the files txr.vim and txl.vim into this directory.
+" 2. In your .vimrc, add this command to associate *.txr and *.tl
+"    files with the txr and txl filetypes:
 "    :au BufRead,BufNewFile *.txr set filetype=txr | set lisp
+"    :au BufRead,BufNewFile *.tl set filetype=txl | set lisp
 "
 " If you want syntax highlighting to be on automatically (for any language)
 " you need to add ":syntax on" in your .vimrc also. But you knew that already!
@@ -63,12 +65,12 @@ syn case match
 syn spell toplevel
 
 setlocal iskeyword=a-z,A-Z,48-57,!,$,&,*,+,-,<,=,>,?,\\,_,~,/
-@(rep) @{txr-sym}@(mod 0 4)@\nsyn keyword txr_keyword contained @{txr-sym}@(end)
-@(rep) @{txl-sym}@(mod 0 4)@\nsyn keyword txl_keyword contained @{txl-sym}@(end)
-
+@  (rep) @{txl-sym}@(mod 0 4)@\nsyn keyword txl_keyword contained @{txl-sym}@(end)
+@  (end)
+@  (if txr-p)
+@    (output :continue out)
+@      (rep) @{txr-sym}@(mod 0 4)@\nsyn keyword txr_keyword contained @{txr-sym}@(end)
 syn match txr_error "@@[\t ]*[*]\?[\t ]*."
-syn match txr_nested_error "[^\t `]\+" contained
-syn match txr_hashbang "^#!.*"
 syn match txr_atat "@@[ \t]*@@"
 syn match txr_comment "@@[ \t]*[#;].*"
 syn match txr_contin "@@[ \t]*\\$"
@@ -76,29 +78,34 @@ syn match txr_char "@@[ \t]*\\."
 syn match txr_char "@@[ \t]*\\x[0-9A-Fa-f]\+"
 syn match txr_char "@@[ \t]*\\[0-9]\+"
 syn match txr_variable "@@[ \t]*[*]\?[ \t]*[A-Za-z_][A-Za-z0-9_]*"
-syn match txr_metanum "@@[0-9]\+"
 syn match txr_splicevar "@@[ \t,*]*[A-Za-z_][A-Za-z0-9_]*"
 syn match txr_regdir "@@[ \t]*/\(\\/\|[^/]\|\\\n\)*/"
+syn match txr_hashbang "^#!.*"
+@    (end)
+@  (end)
+@  (output :continue out)
+syn match txr_metanum "@@[0-9]\+"
+syn match txr_nested_error "[^\t `]\+" contained
 
-syn match txr_chr "#\\x[A-Fa-f0-9]\+" contained
-syn match txr_chr "#\\o[0-9]\+" contained
-syn match txr_chr "#\\[^ \t\nA-Za-z0-9_]" contained
-syn match txr_chr "#\\[A-Za-z0-9_]\+" contained
-syn match txr_ncomment ";.*" contained
+syn match txr_chr "#\\x[A-Fa-f0-9]\+"@(if txr-p " contained")
+syn match txr_chr "#\\o[0-9]\+"@(if txr-p " contained")
+syn match txr_chr "#\\[^ \t\nA-Za-z0-9_]"@(if txr-p " contained")
+syn match txr_chr "#\\[A-Za-z0-9_]\+"@(if txr-p " contained")
+syn match txr_ncomment ";.*"@(if txr-p " contained")
 
 syn match txr_dot "\." contained
-syn match txr_num "#x[+\-]\?[0-9A-Fa-f]\+" contained
-syn match txr_num "#o[+\-]\?[0-7]\+" contained
-syn match txr_num "#b[+\-]\?[0-1]\+" contained
+syn match txr_num "#x[+\-]\?[0-9A-Fa-f]\+"@(if txr-p " contained")
+syn match txr_num "#o[+\-]\?[0-7]\+"@(if txr-p " contained")
+syn match txr_num "#b[+\-]\?[0-1]\+"@(if txr-p " contained")
 syn match txr_ident "[A-Za-z0-9!$%&*+\-<=>?\\_~]*[A-Za-z!$#%&*+\-<=>?\\^_~][A-Za-z0-9!$#%&*+\-<=>?\\^_~]*" contained
-syn match txl_ident "[:@@][A-Za-z0-9!$%&*+\-<=>?\\\^_~/]\+" contained
-syn match txl_ident "[A-Za-z0-9!$%&*+\-<=>?\\_~/]*[A-Za-z!$#%&*+\-<=>?\\^_~/][A-Za-z0-9!$#%&*+\-<=>?\\^_~/]*" contained
-syn match txr_num "[+\-]\?[0-9]\+\([^A-Za-z0-9!$#%&*+\-<=>?\\^_~/]\|\n\)"me=e-1 contained
-syn match txr_badnum "[+\-]\?[0-9]*[.][0-9]\+\([eE][+\-]\?[0-9]\+\)\?[A-Za-z!$#%&*+\-<=>?\\^_~/]\+" contained
-syn match txr_num "[+\-]\?[0-9]*[.][0-9]\+\([eE][+\-]\?[0-9]\+\)\?\([^A-Za-z0-9!$#%&*+\-<=>?\\^_~/]\|\n\)"me=e-1 contained
-syn match txr_num "[+\-]\?[0-9]\+\([eE][+\-]\?[0-9]\+\)\([^A-Za-z0-9!$#%&*+\-<=>?\\^_~/]\|\n\)"me=e-1 contained
-syn match txl_ident ":" contained
-syn match txl_splice "[ \t,]\|,[*]" contained
+syn match txl_ident "[:@@][A-Za-z0-9!$%&*+\-<=>?\\\^_~/]\+"@(if txr-p " contained")
+syn match txl_ident "[A-Za-z0-9!$%&*+\-<=>?\\_~/]*[A-Za-z!$#%&*+\-<=>?\\^_~/][A-Za-z0-9!$#%&*+\-<=>?\\^_~/]*"@(if txr-p " contained")
+syn match txr_num "[+\-]\?[0-9]\+\([^A-Za-z0-9!$#%&*+\-<=>?\\^_~/]\|\n\)"me=e-1@(if txr-p " contained")
+syn match txr_badnum "[+\-]\?[0-9]*[.][0-9]\+\([eE][+\-]\?[0-9]\+\)\?[A-Za-z!$#%&*+\-<=>?\\^_~/]\+"@(if txr-p " contained")
+syn match txr_num "[+\-]\?[0-9]*[.][0-9]\+\([eE][+\-]\?[0-9]\+\)\?\([^A-Za-z0-9!$#%&*+\-<=>?\\^_~/]\|\n\)"me=e-1@(if txr-p " contained")
+syn match txr_num "[+\-]\?[0-9]\+\([eE][+\-]\?[0-9]\+\)\([^A-Za-z0-9!$#%&*+\-<=>?\\^_~/]\|\n\)"me=e-1@(if txr-p " contained")
+syn match txl_ident ":"@(if txr-p " contained")
+syn match txl_splice "[ \t,]\|,[*]"@(if txr-p " contained")
 
 syn match txr_unquote "," contained
 syn match txr_splice ",\*" contained
@@ -107,16 +114,22 @@ syn match txr_quote "\^" contained
 syn match txr_dotdot "\.\." contained
 syn match txr_metaat "@@" contained
 
+@  (end)
+@  (if txr-p)
+@    (output :continue out)
 syn region txr_bracevar matchgroup=Delimiter start="@@[ \t]*[*]\?{" matchgroup=Delimiter end="}" contains=txr_num,txr_ident,txr_string,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_regex,txr_quasilit,txr_chr,txl_splice,txr_nested_error
 syn region txr_directive matchgroup=Delimiter start="@@[ \t]*(" matchgroup=Delimiter end=")" contains=txr_keyword,txr_string,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_num,txr_badnum,txl_ident,txl_regex,txr_string,txr_chr,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_ncomment,txr_nested_error
-syn region txr_list contained matchgroup=Delimiter start="#\?H\?(" matchgroup=Delimiter end=")" contains=txl_keyword,txr_string,txl_regex,txr_num,txr_badnum,txl_ident,txr_metanum,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_ncomment,txr_nested_error
-syn region txr_bracket contained matchgroup=Delimiter start="\[" matchgroup=Delimiter end="\]" contains=txl_keyword,txr_string,txl_regex,txr_num,txr_badnum,txl_ident,txr_metanum,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_ncomment,txr_nested_error
-syn region txr_mlist contained matchgroup=Delimiter start="@@[ \t]*(" matchgroup=Delimiter end=")" contains=txl_keyword,txr_string,txl_regex,txr_num,txr_badnum,txl_ident,txr_metanum,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_ncomment,txr_nested_error
+@    (end)
+@  (end)
+@  (output :continue out)
+syn region txr_list @(if txr-p "contained ")matchgroup=Delimiter start="#\?H\?(" matchgroup=Delimiter end=")" contains=txl_keyword,txr_string,txl_regex,txr_num,txr_badnum,txl_ident,txr_metanum,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_ncomment,txr_nested_error
+syn region txr_bracket @(if txr-p "contained ")matchgroup=Delimiter start="\[" matchgroup=Delimiter end="\]" contains=txl_keyword,txr_string,txl_regex,txr_num,txr_badnum,txl_ident,txr_metanum,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_ncomment,txr_nested_error
+syn region txr_mlist @(if txr-p "contained ")matchgroup=Delimiter start="@@[ \t]*(" matchgroup=Delimiter end=")" contains=txl_keyword,txr_string,txl_regex,txr_num,txr_badnum,txl_ident,txr_metanum,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_ncomment,txr_nested_error
 syn region txr_mbracket matchgroup=Delimiter start="@@[ \t]*\[" matchgroup=Delimiter end="\]" contains=txl_keyword,txr_string,txl_regex,txr_num,txr_badnum,txl_ident,txr_metanum,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_ncomment,txr_nested_error
-syn region txr_string contained start=+#\?\*\?"+ skip=+\\\\\|\\"\|\\\n+ end=+"\|\n+
-syn region txr_quasilit contained start=+#\?\*\?`+ skip=+\\\\\|\\`\|\\\n+ end=+`\|\n+ contains=txr_splicevar,txr_metanum,txr_bracevar,txr_mlist,txr_mbracket
-syn region txr_regex contained start="/" skip="\\\\\|\\/\|\\\n" end="/\|\n"
-syn region txl_regex contained start="#/" skip="\\\\\|\\/\|\\\n" end="/\|\n"
+syn region txr_string @(if txr-p "contained ")start=+#\?\*\?"+ skip=+\\\\\|\\"\|\\\n+ end=+"\|\n+
+syn region txr_quasilit @(if txr-p "contained ")start=+#\?\*\?`+ skip=+\\\\\|\\`\|\\\n+ end=+`\|\n+ contains=txr_splicevar,txr_metanum,txr_bracevar,txr_mlist,txr_mbracket
+syn region txr_regex @(if txr-p "contained ")start="/" skip="\\\\\|\\/\|\\\n" end="/\|\n"
+syn region txl_regex @(if txr-p "contained ")start="#/" skip="\\\\\|\\/\|\\\n" end="/\|\n"
 
 hi def link txr_at Special
 hi def link txr_atstar Special
@@ -153,4 +166,7 @@ hi def link txr_error Error
 hi def link txr_nested_error Error
 
 let b:current_syntax = "lisp"
+@  (end)
 @(end)
+@(generate t)
+@(generate nil)
