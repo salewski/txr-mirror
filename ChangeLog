@@ -1,5 +1,34 @@
 2014-10-30  Kaz Kylheku  <kaz@kylheku.com>
 
+	Implementing finalization hooks.
+
+	* gc.c (struct fin_reg): New struct type.
+	(final_list, final_tail, mark_makefresh): New static variables.
+	(mark_obj): Under generational GC, if make_makefresh is in
+	effect, set the generation to -1 on all marked objects.
+	(sweep_one): In an EXTRA_DEBUGGING  build, call breakpt
+	if the object being swept is the one in break_obj.
+	Under generational GC, place reachable objects that are
+	in generation -1 the freshobj nursery and assign them to generation 0,
+	rather than sticking them into the mature generation 1.
+	(sweep): Under generational gc, reset the freshobj_idx variable
+	here, so that sweep_one has an empty nursery in which
+	to place the generation -1 objects.
+	(prepare_finals, call_finals): New static functions.
+	(gc): Call prepare_finals before sweep, and call call_finals
+	just before re-enabling GC and returning. Do not reset freshobj_idx to
+	zero; this was done in sweep, which may have added entries into it.
+	(gc_finalize): New function.
+	(gc_late_init): Register gc_finalize as intrinsic function finalize.
+
+	* txr.1: Documented finalize.
+
+	* HACKING: Documented finalization, described the additional
+	meaning of the -1 generation, and added a section on debugging with
+	break_obj and breakpt.
+
+2014-10-30  Kaz Kylheku  <kaz@kylheku.com>
+
 	* gc.h (break_obj): Missing extern added on declaration.
 	This broke C++ compilation with -DEXTRA_DEBUGGING turned on.
 

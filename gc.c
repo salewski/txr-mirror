@@ -83,6 +83,13 @@ alloc_bytes_t opt_gc_delta = DFL_MALLOC_DELTA_THRESH;
 
 int gc_enabled = 1;
 
+static struct fin_reg {
+  struct fin_reg *next;
+  val obj;
+  val fun;
+  type_t obj_type;
+} *final_list, **final_tail = &final_list;
+
 #if CONFIG_GEN_GC
 static val checkobj[CHECKOBJ_VEC_SIZE];
 static int checkobj_idx;
@@ -91,6 +98,7 @@ static int mutobj_idx;
 static val freshobj[FRESHOBJ_VEC_SIZE];
 static int freshobj_idx;
 int full_gc;
+static int mark_makefresh;
 #endif
 
 #if EXTRA_DEBUGGING
@@ -284,6 +292,13 @@ tail_call:
   if ((t & FREE) != 0)
     abort();
 
+#if CONFIG_GEN_GC
+  if (mark_makefresh)
+    obj->t.gen = -1; /* Will be put into freshobj by sweep_one */
+  else if (obj->t.gen == -1)
+    obj->t.gen = 0;  /* Will be promoted to generation 1 by sweep_one */
+#endif
+
   obj->t.type = convert(type_t, t | REACHABLE);
 
 #if EXTRA_DEBUGGING
@@ -448,6 +463,11 @@ static int sweep_one(obj_t *block)
   const int vg_dbg = 0;
 #endif
 
+#if EXTRA_DEBUGGING
+  if (block == break_obj)
+    breakpt();
+#endif
+
 #if CONFIG_GEN_GC
   if (!full_gc && block->t.gen > 0)
     abort();
@@ -457,10 +477,20 @@ static int sweep_one(obj_t *block)
     abort();
 
   if (block->t.type & REACHABLE) {
-    block->t.type = convert(type_t, block->t.type & ~REACHABLE);
 #if CONFIG_GEN_GC
-    block->t.gen = 1;
+    if (block->t.gen == -1) {
+      block->t.gen = 0;
+      if (freshobj_idx < FRESHOBJ_VEC_SIZE)
+        freshobj[freshobj_idx++] = block;
+      /* If freshobj is full, it doesn't matter the next make_obj
+         call will find this situation and set the full_gc flag,
+         and the subsequent full_gc will take care of all
+         these objects. */
+    } else {
+      block->t.gen = 1;
+    }
 #endif
+    block->t.type = convert(type_t, block->t.type & ~REACHABLE);
     return 0;
   }
 
@@ -519,9 +549,13 @@ static int_ptr_t sweep(void)
 #if CONFIG_GEN_GC
   if (!full_gc) {
     int i;
+    int limit = freshobj_idx;
+
+    freshobj_idx = 0; /* sweep_one can put NOPROMOTE objects into freshobj */
+
     /* No need to mark block defined via Valgrind API; everything
        in the freshobj is an allocated node! */
-    for (i = 0; i < freshobj_idx; i++)
+    for (i = 0; i < limit; i++)
       free_count += sweep_one(freshobj[i]);
 
     /* Generation 1 objects that were indicated for dangerous
@@ -532,6 +566,8 @@ static int_ptr_t sweep(void)
 
     return free_count;
   }
+
+  freshobj_idx = 0;
 #endif
 
   for (heap = heap_list; heap != 0; heap = heap->next) {
@@ -553,6 +589,58 @@ static int_ptr_t sweep(void)
   return free_count;
 }
 
+static void prepare_finals(void)
+{
+  struct fin_reg *f;
+
+  if (!final_list)
+    return;
+
+#if CONFIG_GEN_GC
+  mark_makefresh = 1;
+#endif
+
+  for (f = final_list; f; f = f->next)
+    f->obj_type = f->obj->t.type;
+
+  for (f = final_list; f; f = f->next) {
+    mark_obj(f->obj);
+    mark_obj(f->fun);
+  }
+}
+
+static void call_finals(void)
+{
+  struct fin_reg *new_list = 0, *old_list = final_list;
+  struct fin_reg **tail = &new_list, *f, *next;
+
+  if (!final_list)
+    return;
+
+  final_list = 0;
+  final_tail = &final_list;
+
+#if CONFIG_GEN_GC
+  mark_makefresh = 0;
+#endif
+
+  for (f = old_list; f; f = next) {
+    next = f->next;
+
+    if ((f->obj_type & REACHABLE) != 0) {
+      funcall1(f->fun, f->obj);
+      free(f);
+    } else {
+      *tail = f;
+      tail = &f->next;
+    }
+  }
+
+  *tail = 0;
+  *final_tail = new_list;
+  final_tail = tail;
+}
+
 void gc(void)
 {
   val gc_stack_top = nil;
@@ -570,6 +658,7 @@ void gc(void)
     gc_enabled = 0;
     mark(&mc, &gc_stack_top);
     hash_process_weak();
+    prepare_finals();
     swept = sweep();
 #if CONFIG_GEN_GC
 #if 0
@@ -590,9 +679,9 @@ void gc(void)
 #if CONFIG_GEN_GC
     checkobj_idx = 0;
     mutobj_idx = 0;
-    freshobj_idx = 0;
     full_gc = full_gc_next_time;
 #endif
+    call_finals();
     gc_enabled = 1;
   }
 }
@@ -686,10 +775,27 @@ static val gc_wrap(void)
   return nil;
 }
 
+static val gc_finalize(val obj, val fun)
+{
+  type_check(fun, FUN);
+
+  if (is_ptr(obj)) {
+    struct fin_reg *f = coerce(struct fin_reg *, chk_malloc(sizeof *f));
+    f->obj = obj;
+    f->fun = fun;
+    f->obj_type = NIL;
+    f->next = 0;
+    *final_tail = f;
+    final_tail = &f->next;
+  }
+  return obj;
+}
+
 void gc_late_init(void)
 {
   reg_fun(intern(lit("gc"), system_package), func_n0(gc_wrap));
   reg_fun(intern(lit("gc-set-delta"), system_package), func_n1(gc_set_delta));
+  reg_fun(intern(lit("finalize"), user_package), func_n2(gc_finalize));
 }
 
 /*

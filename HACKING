@@ -5,40 +5,43 @@ CONTENTS:
 
 SECTION                                                                    LINE
 
-0.       Overview                                                            44
+0.       Overview                                                            47
 
-1.       Coding Practice                                                     51
-1.2      Program File Structure                                              74
-1.3      Style                                                               88
-1.3      Error Handling                                                     150
-1.4      I/O                                                                163
-1.5      Type Safety                                                        173
-1.6      Regression                                                         215
+1.       Coding Practice                                                     54
+1.2      Program File Structure                                              77
+1.3      Style                                                               91
+1.3      Error Handling                                                     153
+1.4      I/O                                                                166
+1.5      Type Safety                                                        176
+1.6      Regression                                                         218
 
-2.       Dynamic Types                                                      224
-2.1      Two Kinds of Values                                                231
-2.1      Pointer Bitfield                                                   242
-2.2      Heap Objects                                                       265
-2.3      The COBJ type                                                      279
-2.4      Strings                                                            296
-2.4.1    Encapsulated C Strings                                             311
-2.4.2    Representation Hacks for 2 Byte wchar_t                            355
+2.       Dynamic Types                                                      227
+2.1      Two Kinds of Values                                                234
+2.1      Pointer Bitfield                                                   245
+2.2      Heap Objects                                                       268
+2.3      The COBJ type                                                      288
+2.4      Strings                                                            305
+2.4.1    Encapsulated C Strings                                             320
+2.4.2    Representation Hacks for 2 Byte wchar_t                            364
 
-3.       Garbage Collection                                                 414
-3.1      Root Pointers                                                      431
-3.2      GC-safe Code                                                       454
-3.2.1    Rule One: Full Initialization                                      480
-3.2.2    Rule Two: Make it Reachable                                        509
-3.3      Weak Reference Support                                             644
-3.4      Generational GC                                                    687
-3.4.2    Representation of Generations                                      696
-3.4.3    Basic Algorithm                                                    716
-3.4.4    Handling Backpointers                                              751
+3.       Garbage Collection                                                 423
+3.1      Root Pointers                                                      441
+3.2      GC-safe Code                                                       464
+3.2.1    Rule One: Full Initialization                                      490
+3.2.2    Rule Two: Make it Reachable                                        519
+3.3      Weak Reference Support                                             654
+3.4      Finalization                                                       697
+3.5      Generational GC                                                    721
+3.5.2    Representation of Generations                                      730
+3.5.3    Basic Algorithm                                                    766
+3.5.4    Handling Backpointers                                              801
+3.5.5    Generational GC and Finalization                                   879
 
-4.       Debugging                                                          828
-4.2.     Debugging the Yacc-generated Parser                                959
-4.3.     Debugging GC Issues                                                972
-4.4.     Valgrind: Your Friend                                              995
+4.       Debugging                                                          908
+4.2.     Debugging the Yacc-generated Parser                               1039
+4.3.     Debugging GC Issues                                               1052
+4.4      Object Breakpoint                                                 1075
+4.5      Valgrind: Your Friend                                             1094
 
 
 0. Overview
@@ -274,6 +277,12 @@ Though the type tag is defined by a enumeration, for memory management
 purposes, the type field is overloaded with additional bitmasked values.
 The FREE flag in a type field marks an object on the free list.
 The REACHABLE flag is the marking bit used during garbage collection.
+There is also a MAKEFRESH flag, which is used to in conjunction with
+REACHABLE to indicate that an object, though reachable, should be
+kept in, or demoted to to the baby  object generation.  The implementation of
+user-defined finalization handlers uses this to prevent finalized objects from
+becoming mature, just because they were made reachable for the purposes of the
+finalization callback.
 
 
 2.3 The COBJ type
@@ -427,6 +436,7 @@ the effect of ``poisoning'' free objects: if an object is prematurely
 reclaimed (indicating a bug in the garbage collection system), uses
 of that object will see a bad type tag, so that there is a good chance
 the program will throw an exception due to a failed type check.
+
 
 3.1  Root Pointers
 
@@ -684,16 +694,40 @@ due to the lapsing of weak keys thus stay unmarked and are reclaimed during
 the sweep phase of the gc, which soon follows.
 
 
-3.4  Generational GC
+3.4  Finalization
 
-3.4.1 Preprocessor Delimitation
+Finalization (user-defined finalization hooks associated with objects) is
+implemented in a fairly straightforward way, with a slight complication
+having to do with generational GC (see below).
+
+Finalization uses a simple global list of registrations which is processed
+during every garbage collection pass, in two phases. First, just after
+the regular garbage collection marking phase and weak hash table processing,
+the finalization registration list is walked twice. First, those entries in it whose
+registered objects are still unreachable are flagged for later processing,
+then in the second pass over the list, all objects are given "new lease on
+life" by being marked as reachable. The registered functions in all entries are
+marked as reachable also. Next, the garbage collection sweep pass takes place
+to reclaim all unreachable objects and reset the GC-related flags in all
+objects. When this is done, it becomes safe to call the finalization functions.
+The list of registrations is walked once again, and the previously flagged
+entires are called out and expunged. The list is walked in a safe way which
+allows the called handlers to register new finalizations. The newly registered
+finalizations are combined with the unflagged, unexpunged previous
+registrations into a new list, which will be processed at the next garbage
+collection pass.
+
+
+3.5  Generational GC
+
+3.5.1 Preprocessor Delimitation
 
 Currently, the generational GC code is delimited by #ifdef CONFIG_GEN_GC.
 So to understand what the differences are between the regular GC and
 generational, one just has to read those sections dependent on that
 preprocessor symbol.
 
-3.4.2 Representation of Generations
+3.5.2 Representation of Generations
 
 Generational garbage collectors are typically copying collectors. In a copying
 system, objects can be segregated into generations by their physical location.
@@ -706,14 +740,30 @@ generation.
 
 There are only three generation values: -1, 0 and 1. Generation 0 indicate a
 "baby" object. The value 1 indicates a mature object.  A freshly allocated
-object is put into generation 0. The generation value -1 is used to mark baby
-objects which have been stored into the checkobj array, or generation 1
-objects which have been placed into the mutobj array, to prevent them
-from being added to these arrays twice. These arrays have to do with
-backreferences from old to young objects, and are described a few paragraphs
-below.
+object is put into generation 0. The generation value -1 has three different
+meanings:
+ 1. It is used to mark baby (generation 0) objects which have been stored into
+    the checkobj array, so that they are not placed there twice.
+ 2. It is used to mark mature (generation 1) objects which have been placed
+    into the mutobj array, also so they are not put there twice.
+ 3. It is used during marking to flag reachable objects which should not be
+    placed into, or remain in, generation 1.
+The checkobj and mutobj arrays have to do with handling backreferences from old
+to young objects, and are described a few paragraphs below. Meaning 3 has
+to do with interaction between finalization and generational GC, also described
+below.  These different uses of -1 don't interefere because when the checkobj
+and mutobj arrays are processed, which happens early the marking phase,
+those objects are changed from generation -1 to generation 0. (A temporary
+situation, done in the knowledge that all reachable objects in generation 0
+that are processed in the sweep phase will go to generation 1).  The
+third meaning of -1 is used in the last phase of marking having to do with
+finalization (the prepare_finals function), which applies this -1 generation
+only to objects that have been left unreachable by all previous marking, and
+are reachable only thorugh the finalizer registration list. After this phase,
+only these special objects can possibly have generation -1.
 
-3.4.3 Basic Algorithm
+
+3.5.3 Basic Algorithm
 
 When an object is newly allocated, it is not only assigned generation 0, but is
 appended into the freshobj array. This array allows the garbage collector to
@@ -748,7 +798,7 @@ GC saves time by avoiding doing full marking (terminating whenever it meets a
 generation 1 object) and avoiding a full sweep (processing only the freshobj
 array).
 
-3.4.4 Handling Backpointers
+3.5.4 Handling Backpointers
 
 Under generational GC, there is the problem that objects in generation 1 can
 be destructively changed (mutated) so that they point to baby objects. This is
@@ -824,6 +874,36 @@ array. The mut macro simply allows the vector as a whole to be suspected
 of now pointing to some babies via its newly assigned elements. The generational
 garbage collection pass then naturally deals with visiting the individual the
 elements to mark those which are babies.
+
+
+3.5.5 Generational GC and Finalization
+
+There is an interaction between generational GC and TXR's finalization
+support.  When objects registered for finalization are processed, they
+and their functions have to be reinstanted as reachable objects, so that the
+finalization handlers can safely execute. Under plain mark-and-sweep GC,
+these objects will be collected in the next garbage collection pass, since
+they will be found to be unreachable again (unless their finalization handler
+reinstated them into the reachability graph!) and this time they will not
+registered for finalization any more. Under generational GC, objects which
+are marked as reachable, however, pass into the mature generation.
+If this happens for objects which are being finalized, a silly situation
+occurs in which objects known to be unreachable, and which are only
+temporary made reachable for finalization, are being promoted to, or
+retained in, the mature generation, so that they won't be reclaimed until the
+next full garbage collection pass.  To prevent this silly situation, objects
+which are marked as reachable during finalization processing are assigned
+to generation -1.  During a generational GC, all such objects are generation
+0 objects, but during a full GC, this could include generation 1 objects
+also.  Then, during the sweep phase, objects which carry this flag are assigned
+to generation 0 and are placed into the freshobj array nursery, as if they were
+just freshly allocated.  Doing this is safe even for objects that were
+previously generation 1, because since the objects had just been found to be
+unreachable, this means that no references to them exist from any other live
+object, and that implies that no backreferences exist to them from the mature
+generation. (This takes place before the finalization handlers are called
+whcih could introduce such backreferences.)
+
 
 4. Debugging
 
@@ -992,7 +1072,26 @@ dynamic objects are registered with the garbage collector and are precisely
 traced. What isn't precisely traced is the call stack and machine context.
 
 
-4.4. Valgrind: Your Friend
+4.4  Object Breakpoint
+
+If TXR is compiled with -DEXTRA_DEBUGGING=1 then two global symbols are defined
+which make it possible to catch GC-related traversals of a particular object.
+
+When compiled with EXTRA_DEBUGGING defined as 1, TXR provides a function called
+breakpt.  The purpose of this function is to serve as a target of a debugger
+breakpoint; when interesting situations happen, TXR calls that function.
+
+An EXTRA_DEBUGGING build also provides a global variable called break_obj, of
+type val.  This normally holds the value nil, which is uninteresting.  The
+variable can be set, from within the debugger, to hold an arbitrary object.
+When that object is visited during garbage collection and in certain other
+interesting situations such as hash table weak processing, the breakpt
+function is called. Using this object breakpoint feature, it is possible
+to investigate various issues, such as spurious retention: how is a particular
+object being reached.
+
+
+4.5  Valgrind: Your Friend
 
 To get the most out running txr under valgrind, build it with valgrind support.
 Of course, you have to have the valgrind development stuff installed (so

@@ -25501,6 +25501,62 @@ of memory. It is for this reason that the garbage collector uses the GC delta.
 There is a default GC delta of 64 megabytes. This may be overridden in
 special builds of \*(TX for small systems.
 
+.coNP Function @ finalize
+.synb
+.mets (finalize < object << function )
+.syne
+
+.desc
+The
+.code finalize
+function registers
+.meta function
+to be invoked in the situation when
+.meta object
+is identified by the garbage collector as unreachable.
+This function is called a finalizer.
+
+If and when this situation occurs, the finalizer
+.meta function
+will be called with
+.meta object
+as its only argument.
+
+Finalizers are called in the same order in which they are registered:
+newer registrations are called after older registrations.
+
+If
+.meta object
+is registered multiple times by multiple calls to
+.codn finalize ,
+then if those finalizers are called, they are all called, in the order
+of registration.
+
+After a finalization call takes place, its registration is removed;
+.meta object
+and
+.meta function
+are no longer associated.  However, neither
+.meta object
+nor
+.meta function
+are reclaimed immediately; they are treated as if they were reachable objects
+until at least the next garbage collection pass.
+It is therefore safe for
+.meta function
+to store somewhere a persistent reference to
+.meta object
+or to itself, thereby reinstanting these objects as reachable.
+
+.meta function
+is itself permitted to call
+.code finalize
+to register the original
+.code object
+or any other object for finalization. Such registrations made during
+finalization execution are not eligible for the current phase of finalization
+processing; they will be processed in a later garbage collection pass.
+
 .SS* Modularization
 .coNP Special variable @ *self-path*
 .desc
