@@ -1746,6 +1746,22 @@ mem_t *chk_realloc(mem_t *old, size_t size)
   return newptr;
 }
 
+mem_t *chk_grow_vec(mem_t *old, size_t oldelems, size_t newelems,
+                    size_t elsize)
+{
+  static const size_t no_oflow = convert(size_t, -1) >> (CHAR_BIT * sizeof(size_t) / 2);
+  size_t bytes = newelems * elsize;
+
+  if (elsize == 0)
+    internal_error("elsize == 0");
+
+  if (newelems <= oldelems ||
+      ((bytes > no_oflow || elsize > no_oflow) && bytes / elsize != newelems))
+    uw_throw(error_s, lit("array size overflow"));
+
+  return chk_realloc(old, bytes);
+}
+
 wchar_t *chk_strdup(const wchar_t *str)
 {
   size_t nchar = wcslen(str) + 1;
@@ -2260,7 +2276,7 @@ val string_extend(val str, val tail)
   type_check(str, STR);
   {
     cnum len = c_num(length_str(str));
-    cnum alloc = c_num(str->st.alloc);
+    cnum oalloc = c_num(str->st.alloc), alloc = oalloc;
     val needed;
     val room = zero;
 
@@ -2285,11 +2301,15 @@ val string_extend(val str, val tail)
     }
 
     if (gt(needed, room))
-      uw_throwf(error_s, lit("string-extend: overflow"), nao);
+      uw_throw(error_s, lit("string-extend: overflow"));
 
-    str->st.str = coerce(wchar_t *, chk_realloc(coerce(mem_t *, str->st.str),
-                                                alloc * sizeof *str->st.str));
-    set(mkloc(str->st.alloc, str), num(alloc));
+    if (alloc != oalloc) {
+      str->st.str = coerce(wchar_t *, chk_grow_vec(coerce(mem_t *, str->st.str),
+                                                   oalloc, alloc,
+                                                   sizeof *str->st.str));
+      set(mkloc(str->st.alloc, str), num(alloc));
+    }
+
     set(mkloc(str->st.len, str), plus(str->st.len, needed));
 
     if (stringp(tail)) {
@@ -4638,14 +4658,12 @@ val vec_set_length(val vec, val length)
     cnum new_length = c_num(length);
     cnum old_length = c_num(vec->v.vec[vec_length]);
     cnum old_alloc = c_num(vec->v.vec[vec_alloc]);
-    cnum length_delta = new_length - old_length;
-    cnum alloc_delta = new_length - old_alloc;
 
     if (new_length > convert(cnum, (convert(size_t, -1)/sizeof (val) - 2)))
       uw_throwf(error_s, lit("vec-set-length: cannot extend to length ~s"),
                 length, nao);
 
-    if (alloc_delta > 0) {
+    if (new_length > old_alloc) {
       cnum new_alloc = max(new_length, 2*old_alloc);
       val *newvec = coerce(val *, chk_realloc(coerce(mem_t *, vec->v.vec - 2),
                                               (new_alloc + 2) * sizeof *newvec));
@@ -4656,7 +4674,7 @@ val vec_set_length(val vec, val length)
 #endif
     }
 
-    if (length_delta > 0) {
+    if (new_length > old_length) {
       cnum i;
       for (i = old_length; i < new_length; i++)
         vec->v.vec[i] = nil;

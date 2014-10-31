@@ -313,8 +313,8 @@ static wchar_t *snarf_line(struct stdio_handle *h)
 
     if (fill >= size) {
       size_t newsize = size ? size * 2 : min_size;
-      buf = coerce(wchar_t *, chk_realloc(coerce(mem_t *, buf),
-                                          newsize * sizeof *buf));
+      buf = coerce(wchar_t *, chk_grow_vec(coerce(mem_t *, buf),
+                                           size, newsize, sizeof *buf));
       size = newsize;
     }
 
@@ -325,6 +325,7 @@ static wchar_t *snarf_line(struct stdio_handle *h)
     buf[fill++] = ch;
   }
 
+  /* Trim to actual size */
   if (buf)
     buf = coerce(wchar_t *, chk_realloc(coerce(mem_t *, buf),
                                         fill * sizeof *buf));
@@ -943,8 +944,9 @@ static val string_out_put_string(val stream, val str)
     }
 
     if (so->size != old_size)
-      so->buf = coerce(wchar_t *, chk_realloc(coerce(mem_t *, so->buf),
-                                              so->size * sizeof *so->buf));
+      so->buf = coerce(wchar_t *, chk_grow_vec(coerce(mem_t *, so->buf),
+                                               old_size, so->size,
+                                               sizeof *so->buf));
     wmemcpy(so->buf + so->fill, s, len + 1);
     so->fill += len;
     return t;
@@ -1238,6 +1240,7 @@ val get_string_from_stream(val stream)
 
     stream->co.handle = 0;
 
+    /* Trim to actual size */
     so->buf = coerce(wchar_t *, chk_realloc(coerce(mem_t *, so->buf),
                                             (so->fill + 1) * sizeof *so->buf));
     out = string_own(so->buf);

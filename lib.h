@@ -501,6 +501,8 @@ mem_t *chk_malloc(size_t size);
 mem_t *chk_malloc_gc_more(size_t size);
 mem_t *chk_calloc(size_t n, size_t size);
 mem_t *chk_realloc(mem_t *, size_t size);
+mem_t *chk_grow_vec(mem_t *old, size_t oldelems, size_t newelems,
+                    size_t elsize);
 wchar_t *chk_strdup(const wchar_t *str);
 val cons(val car, val cdr);
 val make_lazy_cons(val func);

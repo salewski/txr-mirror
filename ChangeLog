@@ -1,5 +1,15 @@
 2014-10-30  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (chk_grow_vec): New function.
+	(string_extend): Use chk_grow_vec.
+	(vec_set_length): Avoid subtractions for comparing numbers.
+
+	* lib.h (chk_grow_vec): Declared.
+
+	* stream.c (snarf_line, string_out_put_string): Use chk_grow_vec.
+
+2014-10-30  Kaz Kylheku  <kaz@kylheku.com>
+
 	Implementing finalization hooks.
 
 	* gc.c (struct fin_reg): New struct type.
