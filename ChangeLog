@@ -1,3 +1,12 @@
+2014-10-31  Kaz Kylheku  <kaz@kylheku.com>
+
+	New macros tb and tc.
+
+	* eval.c (me_tb, me_tc): New static functions.
+	(eval_init): Registered tb and tc macros.
+
+	* txr.1: Documented tb and tc.
+
 2014-10-30  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (chk_grow_vec): New function.

@@ -25306,6 +25306,78 @@ is important: even more so than the order of cases in a
 or
 .codn caseql .
 
+.coNP Macro @ tb
+.synb
+.mets (tb < macro-style-params << form *)
+.syne
+.desc
+The
+.code tb
+macro is similar to the
+.code lambda
+operator but its argument binding is based on a macro-style parameter list.
+The name is an abbreviation of
+.codn tree-bind .
+
+A
+.code tb
+form evaluates to a function which takes a variable number of
+arguments.
+
+When that function is called, those arguments are taken as a list object which
+is matched against
+.meta macro-style-params
+as if by
+.metn tree-bind .
+If the match is successful, then the parameters are bound to the
+corresponding elements from the argument structure and each successive
+.meta form
+is evaluated an environment in which those bindings are visible.
+The value of the last
+.meta form
+is the return value of the function. If there are no forms,
+the function's return value is
+.codn nil .
+
+The following equivalence holds, where
+.code args
+should be understood to be a globally unique symbol:
+
+.cblk
+  (tb pattern body ...) <--> (lambda (. args)
+                               (tree-bind pattern args body ...))
+.cble
+
+.coNP Macro @ tc
+.synb
+.mets (tc >> {( macro-style-params  << form *)}*)
+.syne
+.desc
+The
+.code tc
+macro produces an anonymous function whose behavior is closely
+based on the
+.code tree-case
+operator. Its name is an abbreviation of
+.codn tree-case .
+
+The anonymous function takes a variable number of arguments.
+Its argument list is taken to be the value macro is tested
+against the multiple pattern clauses of an implicit
+.codn tree-bind .
+The return value of the function is that of the implied
+.codn tree-bind .
+
+The following equivalence holds, where
+.code args
+should be understood to be a globally unique symbol:
+
+.cblk
+  (tc clause1 clause2 ...) <--> (lambda (. args)
+                                   (tree-bind args
+                                      clause1 clause2 ...))
+.cble
+
 .SS* Debugging Functions
 .coNP Functions source-loc and source-loc-str
 .synb

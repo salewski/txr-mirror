@@ -2595,6 +2595,34 @@ static val me_case(val form, val menv)
               cons(cond_s, condpairs), nao);
 }
 
+static val me_tb(val form, val menv)
+{
+  val opsym = pop(&form);
+  val pat = pop(&form);
+  val body = form;
+  val args = gensym(lit("args-"));
+
+  (void) opsym;
+  (void) menv;
+
+  return list(lambda_s, args,
+              cons(tree_bind_s, cons(pat, cons(args, body))), nao);
+}
+
+static val me_tc(val form, val menv)
+{
+  val opsym = pop(&form);
+  val cases = form;
+  val args = gensym(lit("args-"));
+
+  (void) opsym;
+  (void) menv;
+
+  return list(lambda_s, args,
+              cons(tree_case_s, cons(args, cases)), nao);
+}
+
+
 static val expand_catch_clause(val form, val menv)
 {
   val sym = first(form);
@@ -3506,6 +3534,8 @@ void eval_init(void)
   reg_mac(caseq_s, me_case);
   reg_mac(caseql_s, me_case);
   reg_mac(casequal_s, me_case);
+  reg_mac(intern(lit("tb"), user_package), me_tb);
+  reg_mac(intern(lit("tc"), user_package), me_tc);
 
   reg_fun(cons_s, func_n2(cons));
   reg_fun(intern(lit("make-lazy-cons"), user_package), func_n1(make_lazy_cons));
