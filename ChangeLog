@@ -1,3 +1,12 @@
+2014-11-05  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (iff): Bugfix: forgotten handling of default
+	argument, resulting in : symbol being called as a function.
+
+	* txr.1: Removing description of situation when the then-function
+	argument of iff or iffi is specified as nil. This is deprecated
+	behavior which can be obtained by using the false function.
+
 2014-10-31  Kaz Kylheku  <kaz@kylheku.com>
 
 	New macros tb and tc.

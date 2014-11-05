@@ -4612,6 +4612,7 @@ static val do_iff(val env, val args)
 
 val iff(val condfun, val thenfun, val elsefun)
 {
+  elsefun = default_bool_arg(elsefun);
   return func_f0v(cons(condfun, cons(thenfun, elsefun)), do_iff);
 }
 
