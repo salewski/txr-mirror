@@ -1,5 +1,16 @@
 2014-11-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Register chand intrinsic.
+
+	* lib.c (do_chand): New static function.
+	(chandv): New function.
+
+	* lib.h (chandv): Declared.
+
+	* txr.1: Documented chand.
+
+2014-11-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	Allow then-func to be omitted in iff. Cleanup.
 
 	* eval.c (eval_init): Register iff as requiring only one arg.

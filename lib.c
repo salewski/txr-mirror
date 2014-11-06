@@ -4498,6 +4498,29 @@ val chainv(val funlist)
   return func_f0v(nullify(funlist), do_chain);
 }
 
+static val do_chand(val fun1_list, val args)
+{
+  val arg = nil;
+
+  fun1_list = nullify(fun1_list);
+
+  if (fun1_list) {
+    arg = apply(car(fun1_list), args, nil);
+    fun1_list = cdr(fun1_list);
+  }
+
+  for (; arg && fun1_list; fun1_list = cdr(fun1_list))
+    arg = funcall1(car(fun1_list), arg);
+
+  return arg;
+}
+
+
+val chandv(val funlist)
+{
+  return func_f0v(nullify(funlist), do_chand);
+}
+
 static val do_juxt(val funcs, val args)
 {
   return mapcar(curry_123_1(func_n3(apply), args, nil), funcs);

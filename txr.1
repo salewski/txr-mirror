@@ -20443,9 +20443,10 @@ and the expression
 returns a function similar to
 .codn (lambda (. rest) 42) .
 
-.coNP Function @ chain
+.coNP Functions @ chain and @ chand
 .synb
 .mets (chain << func *)
+.mets (chand << func *)
 .syne
 .desc
 The
@@ -20468,6 +20469,22 @@ to the first function. Those arguments are in fact passed to the first
 function. The return value of that call is then passed to the second
 function, and the return value of that call is passed to the third function
 and so on. The final return value is returned to the caller.
+
+The
+.code chand
+function is similar, except that it combines the functionality of
+.code andf
+into chaining. The difference between
+.code chain
+and
+.code chand
+is that
+.code chand
+immediately terminates and returns
+.code nil
+whenever any of the functions returns
+.codn nil ,
+without evaluating the remainder of the functions.
 
 .TP* Example:
 

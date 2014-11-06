@@ -3745,6 +3745,7 @@ void eval_init(void)
   reg_fun(intern(lit("env-fbind"), user_package), func_n3(env_fbind));
   reg_fun(intern(lit("env-vbind"), user_package), func_n3(env_vbind));
   reg_fun(intern(lit("chain"), user_package), func_n0v(chainv));
+  reg_fun(intern(lit("chand"), user_package), func_n0v(chandv));
   reg_fun(intern(lit("juxt"), user_package), func_n0v(juxtv));
   reg_fun(intern(lit("andf"), user_package), func_n0v(andv));
   reg_fun(intern(lit("orf"), user_package), func_n0v(orv));

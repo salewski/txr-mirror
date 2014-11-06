@@ -728,6 +728,7 @@ val curry_123_23(val fun3, val arg1);
 val curry_1234_34(val fun3, val arg1, val arg2);
 val chain(val first_fun, ...);
 val chainv(val funlist);
+val chandv(val funlist);
 val juxtv(val funlist);
 val andf(val first_fun, ...);
 val andv(val funlist);
