@@ -4606,12 +4606,13 @@ static val do_iff(val env, val args)
   cons_bind (thenfun, elsefun, choices);
 
   return if3(apply(condfun, args, nil),
-             if2(thenfun, apply(thenfun, args, nil)),
+             apply(thenfun, args, nil),
              if2(elsefun, apply(elsefun, args, nil)));
 }
 
 val iff(val condfun, val thenfun, val elsefun)
 {
+  thenfun = default_arg(thenfun, identity_f);
   elsefun = default_bool_arg(elsefun);
   return func_f0v(cons(condfun, cons(thenfun, elsefun)), do_iff);
 }

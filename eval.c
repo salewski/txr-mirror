@@ -3749,7 +3749,7 @@ void eval_init(void)
   reg_fun(intern(lit("andf"), user_package), func_n0v(andv));
   reg_fun(intern(lit("orf"), user_package), func_n0v(orv));
   reg_fun(intern(lit("notf"), user_package), func_n1(notf));
-  reg_fun(intern(lit("iff"), user_package), func_n3o(iff, 2));
+  reg_fun(intern(lit("iff"), user_package), func_n3o(iff, 1));
   reg_fun(intern(lit("iffi"), user_package), func_n3o(iffi, 2));
   reg_fun(intern(lit("if"), user_package), func_n3o(if_fun, 2));
   reg_fun(intern(lit("or"), user_package), func_n0v(or_fun));

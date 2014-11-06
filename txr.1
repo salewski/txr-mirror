@@ -20628,7 +20628,7 @@ and then inverts the result as if by application of the
 
 .coNP Functions @ iff and @ iffi
 .synb
-.mets (iff < cond-func < then-func <> [ else-func ])
+.mets (iff < cond-func >> [ then-func <> [ else-func ]])
 .mets (iffi < cond-func < then-func <> [ else-func ])
 .syne
 .desc
@@ -20639,7 +20639,7 @@ function is the functional equivalent of the
 operator. It accepts
 functional arguments and returns a function.
 
-The resulting function takes its arguments and applies them to
+The resulting function takes its arguments, if any, and applies them to
 .metn cond-func .
 If
 .meta cond-func
@@ -20649,6 +20649,15 @@ and the
 resulting value is returned. Otherwise the arguments are passed to
 .meta else-func
 and the resulting value is returned.
+
+If
+.meta then-func
+is omitted then
+.code identity
+is used as default. This omission is not permitted by
+.codn iffi ,
+only
+.codn iff .
 
 If
 .meta else-func
@@ -20663,26 +20672,38 @@ function differs from
 only in the defaulting behavior with respect
 to the
 .meta else-func
-argument. The following equivalences hold:
-
-.cblk
-  (iffi a b c)   <--> (iff a b c)
-
-  (iffi a b)     <--> (iff a b identity)
-
-  (iffi a b nil) <--> (iff a b identity)
-.cble
-
-The
-.code iffi
-function defaults to the identity function when
+argument. If
 .meta else-func
-is
-omitted or
-.codn nil ,
-and therefore is useful in situations when one value is to be
+is omitted in a call to
+.code iffi
+then the deafult function is
+.codn identity .
+This is useful in situations when one value is to be
 replaced with another one when the condition is true, otherwise
 preserved.
+
+The following equivalences hold between
+.code iffi
+and
+.codn iff :
+
+.cblk
+  (iffi a b c)            <--> (iff a b c)
+
+  (iffi a b)              <--> (iff a b identity)
+
+  (iffi a b false)        <--> (iff a b)
+
+  (iffi a identity false) <--> (iff a)
+.cble
+
+The following equivalence illustrates
+.code iff
+with both optional arguments omitted:
+
+.cblk
+  (iff a)  <--->  (iff a identity false)
+.cble
 
 .coNP Functions @ tf and @ nilf
 .synb

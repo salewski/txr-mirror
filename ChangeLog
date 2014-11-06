@@ -1,3 +1,14 @@
+2014-11-06  Kaz Kylheku  <kaz@kylheku.com>
+
+	Allow then-func to be omitted in iff. Cleanup.
+
+	* eval.c (eval_init): Register iff as requiring only one arg.
+
+	* lib.c (do_iff): Do not check thenfun for nil. Just call it.
+	(iff): Default thenfun to identity.
+
+	* txr.1: Documentation updated.
+
 2014-11-05  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (iff): Bugfix: forgotten handling of default
