@@ -5992,7 +5992,7 @@ val sub(val seq, val from, val to)
   case VEC:
     return sub_vec(seq, from, to);
   default:
-    type_mismatch(lit("sub: ~s is not a sequence"), cons, nao);
+    type_mismatch(lit("sub: ~s is not a sequence"), seq, nao);
   }
 }
 
@@ -6011,7 +6011,7 @@ val ref(val seq, val ind)
   case VEC:
     return vecref(seq, ind);
   default:
-    type_mismatch(lit("ref: ~s is not a sequence"), cons, nao);
+    type_mismatch(lit("ref: ~s is not a sequence"), seq, nao);
   }
 }
 
@@ -6029,7 +6029,7 @@ val refset(val seq, val ind, val newval)
   case VEC:
     return set(vecref_l(seq, ind), newval);
   default:
-    type_mismatch(lit("ref: ~s is not a sequence"), cons, nao);
+    type_mismatch(lit("ref: ~s is not a sequence"), seq, nao);
   }
   return newval;
 }
@@ -6048,7 +6048,7 @@ val replace(val seq, val items, val from, val to)
   case VEC:
     return replace_vec(seq, items, from, to);
   default:
-    type_mismatch(lit("replace: ~s is not a sequence"), cons, nao);
+    type_mismatch(lit("replace: ~s is not a sequence"), seq, nao);
   }
 }
 
@@ -6084,7 +6084,7 @@ val update(val seq, val fun)
       return hash_update(seq, fun);
     /* fallthrough */
   default:
-    type_mismatch(lit("replace: ~s is not a sequence"), cons, nao);
+    type_mismatch(lit("replace: ~s is not a sequence"), seq, nao);
   }
 
   return seq;
@@ -6127,7 +6127,7 @@ static val search_list(val seq, val key, val testfun, val keyfun)
     }
     break;
   default:
-    type_mismatch(lit("search: ~s is not a sequence"), cons, nao);
+    type_mismatch(lit("search: ~s is not a sequence"), seq, nao);
   }
 
   return nil;

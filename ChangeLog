@@ -1,5 +1,12 @@
 2014-11-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (sub, ref, refset, replace, update, search_list):
+	Fix cut and paste problem: type_mismatch argument expression
+	referring to the C function cons rather than the intended
+	object seq.
+
+2014-11-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Register chand intrinsic.
 
 	* lib.c (do_chand): New static function.
