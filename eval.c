@@ -82,6 +82,7 @@ val vector_lit_s, vector_list_s;
 val macro_time_s, with_saved_vars_s, macrolet_s;
 val defsymacro_s, symacrolet_s, prof_s;
 val fbind_s, lbind_s, flet_s, labels_s;
+val opip_s, oand_s, chain_s, chand_s;
 
 val special_s, whole_k;
 
@@ -2622,6 +2623,38 @@ static val me_tc(val form, val menv)
               cons(tree_case_s, cons(args, cases)), nao);
 }
 
+static val macro_form_p(val form, val menv);
+
+static val me_opip(val form, val menv)
+{
+  val opsym = pop(&form);
+  val clauses = form;
+  val chain_chand = if3(opsym == opip_s, chain_s, chand_s);
+  list_collect_decl (transformed_forms, ptail);
+
+  for (; clauses; clauses = cdr(clauses)) {
+    val clause = car(clauses);
+
+    if (consp(clause)) {
+      uses_or2;
+      val sym = car(clause);
+
+      if (sym == dwim_s) {
+        list_collect(ptail, clause);
+      } else {
+        val opdo = if3(or2(macro_form_p(clause, menv),
+                           gethash(op_table, sym)),
+                       do_s, op_s);
+        list_collect(ptail, cons(opdo, clause));
+      }
+    } else {
+      list_collect(ptail, clause);
+    }
+  }
+
+  return cons(dwim_s, cons(chain_chand, transformed_forms));
+}
+
 
 static val expand_catch_clause(val form, val menv)
 {
@@ -3459,6 +3492,10 @@ void eval_init(void)
   whole_k = intern(lit("whole"), keyword_package);
   special_s = intern(lit("special"), system_package);
   prof_s = intern(lit("prof"), user_package);
+  opip_s = intern(lit("opip"), user_package);
+  oand_s = intern(lit("oand"), user_package);
+  chain_s = intern(lit("chain"), user_package);
+  chand_s = intern(lit("chand"), user_package);
 
   reg_op(quote_s, op_quote);
   reg_op(qquote_s, op_qquote_error);
@@ -3536,6 +3573,8 @@ void eval_init(void)
   reg_mac(casequal_s, me_case);
   reg_mac(intern(lit("tb"), user_package), me_tb);
   reg_mac(intern(lit("tc"), user_package), me_tc);
+  reg_mac(opip_s, me_opip);
+  reg_mac(oand_s, me_opip);
 
   reg_fun(cons_s, func_n2(cons));
   reg_fun(intern(lit("make-lazy-cons"), user_package), func_n1(make_lazy_cons));
@@ -3744,8 +3783,8 @@ void eval_init(void)
   reg_fun(intern(lit("make-env"), user_package), func_n3o(make_env_intrinsic, 0));
   reg_fun(intern(lit("env-fbind"), user_package), func_n3(env_fbind));
   reg_fun(intern(lit("env-vbind"), user_package), func_n3(env_vbind));
-  reg_fun(intern(lit("chain"), user_package), func_n0v(chainv));
-  reg_fun(intern(lit("chand"), user_package), func_n0v(chandv));
+  reg_fun(chain_s, func_n0v(chainv));
+  reg_fun(chand_s, func_n0v(chandv));
   reg_fun(intern(lit("juxt"), user_package), func_n0v(juxtv));
   reg_fun(intern(lit("andf"), user_package), func_n0v(andv));
   reg_fun(intern(lit("orf"), user_package), func_n0v(orv));

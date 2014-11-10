@@ -1,3 +1,16 @@
+2014-11-10  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (opip_s, oand_s, chain_s, chand_s): New global variables.
+	(macro_form_p): Forward declaration added.
+	(me_opip): New static function.
+	(eval_init): Intern new symbols, register opip and oand macros
+	to me_opip function. Use chain_s and chand_s in registration
+	for chain and chand.
+
+	* txr.1: Document opip and oand
+
+	* tl.vim, txr.vim: Regenerated.
+
 2014-11-06  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (sub, ref, refset, replace, update, search_list):

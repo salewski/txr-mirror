@@ -20401,6 +20401,96 @@ and
 .code ipf
 functions.
 
+.coNP Macros @ opip and @ oand
+.synb
+.mets (opip << clause *)
+.mets (oand << clause *)
+.syne
+.desc
+The
+.code opip
+and
+.code oand
+operators make it possible to chain together functions which are expressed
+using the
+.code op
+syntax. (See the
+.code op
+operator for more information).
+
+Both macros perform the same transformation except that
+.code opip
+translates its arguments to a call to the
+.code chain
+function, whereas
+.code oand
+transaltes its arguments in the same way to a call to the
+.code chand
+function.
+
+More precisely, these macros perform the following rewrites:
+.cblk
+  (opip arg1 arg2 ... argn) -> [chain {arg1} {arg2} ... {argn}]
+  (oand arg1 arg2 ... argn) -> [chand {arg1} {arg2} ... {argn}]
+.cble
+where the above
+.code {arg}
+notation denotes the following transformation applied to each argument:
+.cblk
+  (function ...) -> (op function ...)
+  (operator ...) -> (do operator ...)
+  (macro ...)    -> (do macro ...)
+  (dwim ...)     -> (dwim ...)
+  [...]          -> [...]
+  atom           -> atom
+.cble
+In other words, compound forms whose leftmost symbol is a macro or operator
+are translated to the
+.code do
+notation. Compound forms denoting function calls are translated to the
+.code op
+notation. Compound forms which are
+.code dwim
+invocations, either explicit or via the DWIM brackets notation, are
+preserved, as are any forms which are atoms.
+
+Note: the
+.code opip
+and
+.code oand
+macros use their macro environment in determining whether a form is a
+macro call, thereby respecting lexical scoping.
+
+.TP* Example:
+Take each element from the list
+.code (1 2 3 4)
+and multiply it by three, then add 1.
+If the result is odd, collect that into the resulting list:
+.cblk
+(mappend (opip (* 3)
+               (+ 1)
+               [iff oddp list])
+         (range 1 4))
+.cble
+The above is equivalent to:
+.cblk
+(mappend (chain (op * 3)
+                (op + 1)
+                [iff oddp list])
+         (range 1 4))
+.cble
+The
+.code (* 3)
+and
+.code (+ 1)
+terms are rewriten to
+.code (op * 3)
+and
+.codn (op + 1) ,
+respectively, whereas
+.code [iff oddp list]
+is passed through untransformed.
+
 .coNP Macro @ ret
 .synb
 .mets (ret << form )
