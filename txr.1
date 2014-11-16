@@ -18492,20 +18492,23 @@ and
 functions determine and return the highest or lowest
 value from among their arguments.
 
-The arguments must be numbers or characters.
-
 If only
 .meta first-arg
 is given, that value is returned.
 
+These functions are type generic, since they compare arguments
+using the same semantics as the
+.code less
+function.
+
 If two or more arguments are given, then
 .code (max a b)
 is equivalent to
-.codn (if (>= a b) a b) ,
+.codn (if (less a b) b a) ,
 and
 .code (min a b)
 is equivalent to
-.codn (if (<= a b) a b) .
+.codn (if (less a b) a b) .
 If the operands do not
 have the same type, then one of them is converted to the type of the other;
 however, the original unconverted values are returned. For instance

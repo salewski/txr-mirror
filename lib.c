@@ -2139,14 +2139,14 @@ val numneqv(val list)
   return t;
 }
 
-val max2(val anum, val bnum)
+val max2(val a, val b)
 {
-  return if3(ge(anum, bnum), anum, bnum);
+  return if3(less(a, b), b, a);
 }
 
-val min2(val anum, val bnum)
+val min2(val a, val b)
 {
-  return if3(le(anum, bnum), anum, bnum);
+  return if3(less(a, b), a, b);
 }
 
 val maxv(val first, val rest)

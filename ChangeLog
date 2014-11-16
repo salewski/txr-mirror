@@ -1,3 +1,13 @@
+2014-11-15  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (max2, min2): Use the less comparison function
+	for generic semantics.
+
+	* lib.h (max2, min2): Parameter names changed to avoid suggesting
+	that the operands are numbers.
+
+	* txr.1: Documentation for min and max updated.
+
 2014-11-10  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (opip_s, oand_s, chain_s, chand_s): New global variables.
