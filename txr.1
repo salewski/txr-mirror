@@ -14501,7 +14501,7 @@ The transposed list is then passed to
 as an argument.
 
 The
-.meta functio
+.meta function
 is expected to produce a list of tuples, which are transposed
 again to produce a list of lists which is then returned.
 
@@ -17726,8 +17726,8 @@ are lists, and not lazy lists.
   (tuples 3 #(1 2 3 4 5 6 7 8) 0) -> (#(1 2 3) #(4 5 6) #(7 8 0))
   (tuples 3 "abc") -> ("abc")
   (tuples 3 "abcd") -> ("abc" "d")
-  (tuples 3 "abcd" #\z) -> ("abc" "dzz")
-  (tuples 3 (list 1 2) #\z) -> ((1 2 #\z))
+  (tuples 3 "abcd" #\ez) -> ("abc" "dzz")
+  (tuples 3 (list 1 2) #\ez) -> ((1 2 #\ez))
 .cble
 
 .coNP Function @ partition-by
