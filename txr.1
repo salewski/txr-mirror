@@ -15874,6 +15874,15 @@ The string is broken into pieces
 according to the gaps left behind by the removed separators, and a list
 of the remaining pieces is returned.
 
+If
+.meta sep
+is the empty string, then the separator pieces removed from the
+string are considered to be the empty strings between its
+characters. In this case, if
+.meta string
+is of length one or zero, then it is considered to have no such pieces, and a
+list of one element is returned containing the original string.
+
 If a match for
 .meta sep
 is not found in the string at all, then the string is not
@@ -15894,6 +15903,17 @@ cuts with an empty piece between them.
 This operation is nondestructive:
 .meta string
 is not modified in any way.
+
+Note: To split a string into pieces of length one such that an empty string
+produces
+.code nil
+rather than
+.codn ("") ,
+use the
+.cblk
+.meti (tok-str < string #/./)
+.cble
+pattern.
 
 .coNP Function @ split-str-set
 .synb
@@ -26036,6 +26056,17 @@ can be emulated is \*(TX 97.
 Here are values which have a special meaning as arguments to the
 .code -C
 option, along with a description of what behaviors are affected:
+.IP 100
+Up to \*(TX 100, the
+.code split-str
+function had an undocumented behavior. When the
+.code sep
+argument was an empty string, it split the string into
+individual characters as if by calling
+.codn list-str .
+This behavior changed to the currently
+documented behavior starting in \*(TX 101.
+
 .IP 99
 Up to \*(TX 99, the substitution of TXR Lisp expressions in
 .code @(output)

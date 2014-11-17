@@ -57,6 +57,7 @@
 #include "eval.h"
 #include "sysif.h"
 #include "regex.h"
+#include "txr.h"
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
@@ -2778,7 +2779,29 @@ val split_str(val str, val sep)
     size_t len_sep = c_num(length_str(sep));
 
     if (len_sep == 0) {
-      return list_str(str);
+      if (opt_compat && opt_compat <= 100) {
+        return list_str(str);
+      } else {
+        const wchar_t *cstr = c_str(str);
+
+        if (*cstr) {
+          list_collect_decl (out, iter);
+
+          prot1(&str);
+
+          for (; *cstr; cstr++) {
+            val piece = mkustring(one);
+            init_str(piece, cstr);
+            iter = list_collect(iter, piece);
+          }
+
+          rel1(&str);
+
+          return out;
+        } else {
+          return cons(str, nil);
+        }
+      }
     } else {
       const wchar_t *cstr = c_str(str);
       const wchar_t *csep = c_str(sep);

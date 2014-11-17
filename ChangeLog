@@ -1,3 +1,14 @@
+2014-11-17  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (split_str): If the separator string is empty,
+	then unless opt_compat is 100 or less, provide a more
+	consistent behavior, rather than splitting the string
+	into characters. This latter behavior was never documented.
+
+	* txr.1: Documented.
+
+	* dep.mk: Updated.
+
 2014-11-15  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (max2, min2): Use the less comparison function
