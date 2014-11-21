@@ -1,5 +1,12 @@
 2014-11-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (partition_star_func): Bugfix: doing rplaca(env, seq)
+	too early, before the loop which adjusts its value.
+	Restructuring this slightly to avoid duplicated code, by moving the
+	!first check later.
+
+2014-11-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (partition_by_func): Rename one local variable for clarity.
 	Remove unessential variable last, and move the next variable
 	into loop scope.

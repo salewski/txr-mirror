@@ -1498,14 +1498,7 @@ static val partition_star_func(val env, val lcons)
 
       seq = nullify(sub(seq, plus(index_rebased, one), t));
 
-      rplaca(env, seq);
-      rplaca(indices_base, indices);
-      rplacd(indices_base, base = plus(index, one));
-
-      if (!first)
-        continue;
-
-      rplaca(lcons, first);
+      base = plus(index, one);
 
       while (seq && eql(car(indices), base)) {
         seq = nullify(cdr(seq));
@@ -1513,8 +1506,14 @@ static val partition_star_func(val env, val lcons)
         pop(&indices);
       }
 
+      rplaca(env, seq);
       rplaca(indices_base, indices);
       rplacd(indices_base, base);
+
+      if (!first)
+        continue;
+
+      rplaca(lcons, first);
 
       if (seq)
         rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
