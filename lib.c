@@ -6209,7 +6209,9 @@ val sel(val seq_in, val where_in)
 {
   list_collect_decl (out, ptail);
   val seq = nullify(seq_in);
-  val where = nullify(where_in);
+  val where = if3(functionp(where_in),
+                  funcall1(where_in, seq),
+                  nullify(where_in));
 
   switch (type(seq)) {
   case NIL:

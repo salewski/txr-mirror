@@ -1,3 +1,9 @@
+2014-11-20  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (sel): Accept a function in place of the index list.
+
+	* txr.1: Documented.
+
 2014-11-17  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (split_str): If the separator string is empty,

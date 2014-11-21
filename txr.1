@@ -13312,7 +13312,7 @@ that element is added to a list. Finally, the list is returned.
 
 .coNP Function @ select
 .synb
-.mets (select < object << index-list )
+.mets (select < object >> { index-list <> | function })
 .syne
 .desc
 
@@ -13325,6 +13325,19 @@ which consists of those elements of
 which are identified by
 the indices in
 .metn index-list .
+
+If
+.meta function
+is given instead of
+.metn index-list ,
+then
+.meta function
+is invoked with
+.meta object
+as its argument. The return value is then taken as
+if it were the
+.meta index-list
+argument .
 
 If
 .meta object
