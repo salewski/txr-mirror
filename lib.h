@@ -810,7 +810,7 @@ val refset(val seq, val ind, val newval);
 val replace(val seq, val items, val from, val to);
 val update(val seq, val fun);
 val search(val seq, val key, val from, val to);
-val where(val seq, val func);
+val where(val func, val seq);
 val sel(val seq, val where);
 val env(void);
 val obj_print(val obj, val stream);

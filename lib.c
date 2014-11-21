@@ -6180,9 +6180,15 @@ val search(val seq, val key, val testfun, val keyfun)
   return seq;
 }
 
-val where(val seq_in, val func)
+val where(val func, val seq_in)
 {
   list_collect_decl (out, ptail);
+
+  if (opt_compat && opt_compat <= 100) {
+    val f = seq_in, s = func;
+    func = s;
+    seq_in = f;
+  }
 
   if (hashp(seq_in)) {
     val hiter = hash_begin(seq_in);

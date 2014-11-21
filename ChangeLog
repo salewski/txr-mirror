@@ -1,5 +1,13 @@
 2014-11-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (where): Argument order reversed, with compat support.
+
+	* lib.h (where): Declaration updated.
+
+	* txr.1: Documented.
+
+2014-11-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (sel): Accept a function in place of the index list.
 
 	* txr.1: Documented.
