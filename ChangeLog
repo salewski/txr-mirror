@@ -1,3 +1,9 @@
+2014-11-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (partition_by_func): Rename one local variable for clarity.
+	Remove unessential variable last, and move the next variable
+	into loop scope.
+
 2014-11-20  Kaz Kylheku  <kaz@kylheku.com>
 
 	* arith.c (wrap_star, wrap): New functions.
