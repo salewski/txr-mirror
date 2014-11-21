@@ -18035,6 +18035,65 @@ then generalized into the floating point domain. For instance the expression
 yields a residue of 0.25 because 0.5 "goes into" 0.75 only
 once, with a "remainder" of 0.25.
 
+.coNP Functions @ wrap and @ wrap*
+.synb
+.mets (wrap < start < end << number )
+.mets (wrap < start < end << number )
+.syne
+.desc
+The
+.code wrap
+and
+.code wrap*
+functions reduce
+.meta number
+into the range specified by
+.meta start
+and
+.metn end .
+
+Under
+.code wrap
+the range is inclusive of the
+.meta end
+value, whereas under
+.code wrap*
+it is exclusive.
+
+The following equivalence holds
+
+.cblk
+  (wrap a b c) <--> (wrap* a (succ b) c)
+.cble
+
+The expression
+.code (wrap* x0 x1 x)
+performs the following calculation:
+
+.cblk
+.meti (+ (mod (- x x0) (- x1 x0)) x0)
+.cble
+
+In other words, first
+.meta start
+is subtracted from
+.metn number .
+Then the result is reduced modulo the displacement
+between
+.code start
+and
+.codn end .
+Finally,
+.meta start
+is added back to that result, which is returned.
+
+.TP* Example:
+
+.cblk
+  ;; perform ROT13 on the string "nop"
+  [mapcar (opip (+ 13) (wrap #\ea #\ez)) "nop"] -> "abc"
+.cble
+
 .coNP Functions @ gcd and @ lcm
 .synb
 .mets (gcd << number *)

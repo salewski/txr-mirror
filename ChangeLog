@@ -1,5 +1,15 @@
 2014-11-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (wrap_star, wrap): New functions.
+
+	* eval.c (eval_init): Registered wrap and wrap* intrinsics.
+
+	* lib.h (wrap_star, wrap): Declared.
+
+	* txr.1: wrap and wrap* documented.
+
+2014-11-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (succ, ssucc, sssucc, pred, ppred, pppred): New functions.
 
 	* eval.c (eval_init): Register new functions as intrinsics.

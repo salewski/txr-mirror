@@ -938,6 +938,19 @@ divzero:
   uw_throw(numeric_error_s, lit("mod: division by zero"));
 }
 
+val wrap_star(val start, val end, val num)
+{
+  val modulus = minus(end, start);
+  val num_off = minus(num, start);
+  val num_mod = mod(num_off, modulus);
+  return plus(start, num_mod);
+}
+
+val wrap(val start, val end, val num)
+{
+  return wrap_star(start, succ(end), num);
+}
+
 static val to_float(val func, val num)
 {
   switch (type(num)) {
