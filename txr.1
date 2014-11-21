@@ -18434,6 +18434,38 @@ is not divisible by two (odd), otherwise
 it returns
 .codn nil .
 
+.coNP Functions @, succ @, ssucc @, sssucc @, pred @, ppred @ and pppred
+.synb
+.mets (succ << number )
+.mets (ssucc << number )
+.mets (sssucc << number )
+.mets (pred << number )
+.mets (ppred << number )
+.mets (pppred << number )
+.syne
+.desc
+The
+.code succ
+function adds 1 to its argument and returns the resulting value.
+If the argument is an integer, then the return value is the successor
+of that integer, and if it is a character, then the return value
+is the successor of that character according to Unicode.
+
+The
+.code pred
+function subtracts 1 from its argument, and under similar considerations
+as above, the result represents the predecessor.
+
+The
+.code ssucc
+and
+.code sssucc
+functions add 2 and 3, respectively. Similarly,
+.code ppred
+and
+.code pppred
+subtract 2 and 3 from their argument.
+
 .coNP Functions @, > @, < @, >= @ <= and @ =
 .synb
 .mets (> < number << number *)

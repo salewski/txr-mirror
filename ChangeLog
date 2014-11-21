@@ -1,5 +1,15 @@
 2014-11-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (succ, ssucc, sssucc, pred, ppred, pppred): New functions.
+
+	* eval.c (eval_init): Register new functions as intrinsics.
+
+	* lib.h (succ, ssucc, sssucc, pred, ppred, pppred): Declared.
+
+	* txr.1: Documented.
+
+2014-11-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (where): Argument order reversed, with compat support.
 
 	* lib.h (where): Declaration updated.

@@ -1011,6 +1011,36 @@ val oddp(val num)
   }
 }
 
+val succ(val num)
+{
+  return plus(num, one);
+}
+
+val ssucc(val num)
+{
+  return plus(num, two);
+}
+
+val sssucc(val num)
+{
+  return plus(num, three);
+}
+
+val pred(val num)
+{
+  return minus(num, one);
+}
+
+val ppred(val num)
+{
+  return minus(num, two);
+}
+
+val pppred(val num)
+{
+  return minus(num, three);
+}
+
 val gt(val anum, val bnum)
 {
 tail:

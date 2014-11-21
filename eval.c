@@ -3709,6 +3709,12 @@ void eval_init(void)
   reg_fun(intern(lit("zerop"), user_package), func_n1(zerop));
   reg_fun(intern(lit("evenp"), user_package), func_n1(evenp));
   reg_fun(intern(lit("oddp"), user_package), func_n1(oddp));
+  reg_fun(intern(lit("succ"), user_package), func_n1(succ));
+  reg_fun(intern(lit("ssucc"), user_package), func_n1(ssucc));
+  reg_fun(intern(lit("sssucc"), user_package), func_n1(sssucc));
+  reg_fun(intern(lit("pred"), user_package), func_n1(pred));
+  reg_fun(intern(lit("ppred"), user_package), func_n1(ppred));
+  reg_fun(intern(lit("pppred"), user_package), func_n1(pppred));
   reg_fun(intern(lit(">"), user_package), func_n1v(gtv));
   reg_fun(intern(lit("<"), user_package), func_n1v(ltv));
   reg_fun(intern(lit(">="), user_package), func_n1v(gev));
