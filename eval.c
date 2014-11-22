@@ -3774,6 +3774,7 @@ void eval_init(void)
   reg_fun(intern(lit("hash-diff"), user_package), func_n2(hash_diff));
   reg_fun(intern(lit("hash-isec"), user_package), func_n3o(hash_isec, 2));
   reg_fun(intern(lit("group-by"), user_package), func_n2v(group_by));
+  reg_fun(intern(lit("sort-group"), user_package), func_n3o(sort_group, 1));
   reg_fun(intern(lit("uniq"), user_package), func_n1(uniq));
   reg_fun(intern(lit("hash-update"), user_package), func_n2(hash_update));
   reg_fun(intern(lit("hash-update-1"), user_package),

@@ -17676,6 +17676,38 @@ For strings and vectors,
 .code sort
 is not stable.
 
+.coNP Function sort-group
+.synb
+.mets (sort-group < sequence >> [ keyfun <> [ lessfun ]])
+.syne
+.desc
+The
+.code sort-group
+function sorts
+.meta sequence
+according to the
+.meta keyfun
+and
+.meta lessfun
+arguments, and then breaks the resulting sequence into groups,
+based on the equivalence of the elements under
+.metn keyfun .
+
+The following equivalence holds:
+
+.cblk
+  (sort-group sq lf kf) <--> (partition-by kf (sort (copy sq) kf lf))
+.cble
+
+Note the reversed order of
+.meta keyfun
+and
+.meta lessfun
+arguments between
+.code sort
+and
+.codn sort-group .
+
 .coNP Function @ uniq
 .synb
 .mets (uniq << sequence )

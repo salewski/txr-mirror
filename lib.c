@@ -5695,6 +5695,15 @@ val multi_sort(val lists, val funcs, val key_funcs)
   return mapcarv(list_f, tuples);
 }
 
+val sort_group(val seq, val keyfun, val lessfun)
+{
+  val kf = default_arg(keyfun, identity_f);
+  val lf = default_arg(lessfun, less_f);
+  val seq_copy = copy(seq);
+  val sorted = sort(seq_copy, lf, kf);
+  return partition_by(kf, sorted);
+}
+
 val uniq(val seq)
 {
   val hash = make_hash(nil, nil, t);
@@ -5726,7 +5735,6 @@ val uniq(val seq)
 
   return make_like(out, seq);
 }
-
 
 val find(val item, val list, val testfun, val keyfun)
 {

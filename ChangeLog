@@ -1,5 +1,15 @@
 2014-11-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Register sort-group.
+
+	* lib.c (sort_group): New function.
+
+	* lib.h (sort_group): Declared.
+
+	* txr.1: Documented.
+
+2014-11-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (partition_star_func): Bugfix: doing rplaca(env, seq)
 	too early, before the loop which adjusts its value.
 	Restructuring this slightly to avoid duplicated code, by moving the
