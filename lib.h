@@ -638,6 +638,8 @@ val int_flo(val f);
 val flo_int(val i);
 val less(val left, val right);
 val greater(val left, val right);
+val lessv(val first, val rest);
+val greaterv(val first, val rest);
 val chrp(val chr);
 wchar_t c_chr(val chr);
 val chr_isalnum(val ch);

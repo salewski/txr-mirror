@@ -3209,6 +3209,34 @@ val greater(val left, val right)
   return less(right, left);
 }
 
+val lessv(val first, val rest)
+{
+  val iter;
+
+  for (iter = rest; iter; iter = cdr(iter)) {
+    val elem = car(iter);
+    if (!less(first, elem))
+      return nil;
+    first = elem;
+  }
+
+  return t;
+}
+
+val greaterv(val first, val rest)
+{
+  val iter;
+
+  for (iter = rest; iter; iter = cdr(iter)) {
+    val elem = car(iter);
+    if (!less(elem, first))
+      return nil;
+    first = elem;
+  }
+
+  return t;
+}
+
 val chrp(val chr)
 {
   return (is_chr(chr)) ? t : nil;

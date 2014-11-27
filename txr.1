@@ -17466,18 +17466,38 @@ The sequence or hash table is returned.
 
 .coNP Function @ less
 .synb
-.mets (less < left-obj << right-obj )
+.mets (less < left-obj << right-obj  )
+.mets (less < obj << obj *)
 .syne
 .desc
 The
 .code less
-function determines whether
+function, when called with two arguments, determines whether
 .meta left-obj
 compares less than
 .meta right-obj
 in a generic way which handles arguments of various types.
 
-The function is used as the default for the
+The argument syntax of
+.code less
+is generalized. It can accept one argument, in which case it unconditionally
+returns
+.code t
+regardless of that argument's value. If more than two arguments are
+given, then
+.code less
+generalizes in a way which can be described by the following equivalence
+pattern, with the understanding that each argument expression
+is evaluated exactly once:
+
+.cblk
+  (less a b c) <--> (and (less a b) (less b c))
+  (less a b c d) <--> (and (less a b) (less b c) (less c d))
+.cble
+
+The
+.code less
+function is used as the default for the
 .meta lessfun
 argument of the functions
 .code sort
@@ -17600,6 +17620,7 @@ types, the situation is an error.
 .coNP Function @ greater
 .synb
 .mets (greater < left-obj << right-obj )
+.mets (greater < obj << obj *)
 .syne
 .desc
 The
@@ -17608,10 +17629,12 @@ greater
 function is equivalent to
 .code less
 with the arguments reversed. That is to say, the following
-equivalence holds:
+equivalences hold:
 
 .cblk
+  (greater a <--> (less a) <--> t
   (greater a b) <--> (less b a)
+  (greater a b c ...) <--> (less ... c b a)
 .cble
 
 The

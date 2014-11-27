@@ -1,3 +1,14 @@
+2014-11-27  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): Register less and greater to
+	the lessv and greaterv functions instead of less and greater.
+
+	* lib.c (lessv, greaterv): New functions.
+
+	* lib.h (lessv, greaterv): Declared.
+
+	* txr.1: Document variadic nature of less and greater.
+
 2014-11-21  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): Register sort-group.
