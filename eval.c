@@ -3874,6 +3874,8 @@ void eval_init(void)
   reg_fun(intern(lit("toint"), user_package), func_n2o(toint, 1));
   reg_fun(intern(lit("less"), user_package), func_n1v(lessv));
   reg_fun(intern(lit("greater"), user_package), func_n1v(greaterv));
+  reg_fun(intern(lit("lequal"), user_package), func_n1v(lequalv));
+  reg_fun(intern(lit("gequal"), user_package), func_n1v(gequalv));
   reg_fun(intern(lit("chrp"), user_package), func_n1(chrp));
   reg_fun(intern(lit("chr-isalnum"), user_package), func_n1(chr_isalnum));
   reg_fun(intern(lit("chr-isalpha"), user_package), func_n1(chr_isalpha));

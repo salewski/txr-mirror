@@ -17647,6 +17647,38 @@ and
 .code find-max
 functions.
 
+.coNP Functions @ lequal and @ gequal
+.synb
+.mets (lequal < obj << obj *)
+.mets (gequal < obj << obj *)
+.syne
+.desc
+The functions
+.code lequal
+and
+.code gequal
+are similar to
+.code less
+and
+.code greater
+respectively, but differ in the following respect:
+when called with two arguments which compare true under the
+.code equal
+function, the
+.code lequal
+and
+.code gequal
+functions return
+.codn t .
+
+When called with only one argument, both functions return
+.code t
+and both functions generalize to three or more arguments
+in the same way as do
+.code less
+and
+.codn greater .
+
 .coNP Function @ sort
 .synb
 .mets (sort < sequence >> [ lessfun <> [ keyfun ]])

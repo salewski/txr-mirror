@@ -1,5 +1,17 @@
 2014-11-27  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Register lequal and gequal.
+
+	* lib.c (lequal, gequal, lequalv, gequalv): New functions.
+
+	* lib.h (lequal, gequal, lequalv, gequalv): Declared.
+
+	* txr.1: Documented lequal and gequal.
+
+	* txr.vim, tl.vim: Regenerated.
+
+2014-11-27  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Register less and greater to
 	the lessv and greaterv functions instead of less and greater.
 

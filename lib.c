@@ -3209,6 +3209,18 @@ val greater(val left, val right)
   return less(right, left);
 }
 
+val lequal(val left, val right)
+{
+  uses_or2;
+  return or2(equal(left, right), less(left, right));
+}
+
+val gequal(val left, val right)
+{
+  uses_or2;
+  return or2(equal(left, right), less(right, left));
+}
+
 val lessv(val first, val rest)
 {
   val iter;
@@ -3236,6 +3248,35 @@ val greaterv(val first, val rest)
 
   return t;
 }
+
+val lequalv(val first, val rest)
+{
+  val iter;
+
+  for (iter = rest; iter; iter = cdr(iter)) {
+    val elem = car(iter);
+    if (!equal(first, elem) && !less(first, elem))
+      return nil;
+    first = elem;
+  }
+
+  return t;
+}
+
+val gequalv(val first, val rest)
+{
+  val iter;
+
+  for (iter = rest; iter; iter = cdr(iter)) {
+    val elem = car(iter);
+    if (!equal(first, elem) && !less(elem, first))
+      return nil;
+    first = elem;
+  }
+
+  return t;
+}
+
 
 val chrp(val chr)
 {
