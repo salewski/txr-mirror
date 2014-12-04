@@ -52,6 +52,7 @@ MPI_OBJS := $(addprefix mpi-$(mpi_version)/,$(MPI_OBJ_BASE))
 OBJS += $(MPI_OBJS)
 
 PROG := txr
+TXR := ./$(PROG)
 
 .SUFFIXES:
 MAKEFLAGS += --no-builtin-rules
@@ -97,7 +98,7 @@ rebuild: clean repatch $(PROG)
 .PHONY: clean
 clean: conftest.clean
 	rm -f $(PROG)$(EXE) $(OBJS) $(OBJS-y) \
-	  y.tab.c lex.yy.c y.tab.h y.output $(TESTS:.ok=.out)
+	  y.tab.c lex.yy.c y.tab.h y.output $(TESTS_OUT) $(TESTS_OK)
 
 .PHONY: repatch
 repatch:
@@ -113,48 +114,56 @@ distclean: clean
 depend:
 	txr $(top_srcdir)/depend.txr $(OBJS) $(OBJS-y) > $(top_srcdir)/dep.mk
 
-TESTS := $(patsubst $(top_srcdir)/%.txr,./%.ok,\
-                    $(shell find $(top_srcdir)/tests -name '*.txr' | sort))
+TESTS_OUT := $(patsubst $(top_srcdir)/%.txr,./%.out,\
+		          $(shell find $(top_srcdir)/tests -name '*.txr' | sort))
+TESTS_OK := $(TESTS_OUT:.out=.ok)
 
-.PHONY: tests $(TEST)
-tests: $(TESTS)
+$(TESTS_OK): $(PROG)
+
+.PHONY: tests
+tests: $(TESTS_OK)
+	@rm -f $(TESTS_OUT) $(TESTS_OK)
 	@echo "** tests passed!"
 
 tests/001/%: TXR_ARGS := $(top_srcdir)/tests/001/data
-tests/001/query-1.ok: TXR_OPTS := -B
-tests/001/query-2.ok: TXR_OPTS := -B
-tests/001/query-4.ok: TXR_OPTS := -B
+tests/001/query-1.out: TXR_OPTS := -B
+tests/001/query-2.out: TXR_OPTS := -B
+tests/001/query-4.out: TXR_OPTS := -B
 tests/002/%: TXR_OPTS := -DTESTDIR=$(top_srcdir)/tests/002
 tests/004/%: TXR_ARGS := -a 123 -b -c
 tests/005/%: TXR_ARGS := $(top_srcdir)/tests/005/data
 tests/005/%: TXR_OPTS := -B
 tests/006/%: TXR_ARGS := $(top_srcdir)/tests/006/data
 tests/006/%: TXR_OPTS := -B
-tests/006/freeform-3.ok: TXR_ARGS := $(top_srcdir)/tests/006/passwd
-tests/008/tokenize.ok: TXR_ARGS := $(top_srcdir)/tests/008/data
-tests/008/configfile.ok: TXR_ARGS := $(top_srcdir)/tests/008/configfile
-tests/008/students.ok: TXR_ARGS := $(top_srcdir)/tests/008/students.xml
-tests/008/soundex.ok: TXR_ARGS := soundex sowndex lloyd lee jackson robert
-tests/008/filtenv.ok: TXR_OPTS := -B
-tests/009/json.ok: TXR_ARGS = $(addprefix $(top_srcdir)/tests/009/,webapp.json pass1.json)
-tests/010/align-columns.ok: TXR_ARGS := $(top_srcdir)/tests/010/align-columns.dat
-tests/010/block.ok: TXR_OPTS := -B
-tests/010/reghash.ok: TXR_OPTS := -B
+tests/006/freeform-3.out: TXR_ARGS := $(top_srcdir)/tests/006/passwd
+tests/008/tokenize.out: TXR_ARGS := $(top_srcdir)/tests/008/data
+tests/008/configfile.out: TXR_ARGS := $(top_srcdir)/tests/008/configfile
+tests/008/students.out: TXR_ARGS := $(top_srcdir)/tests/008/students.xml
+tests/008/soundex.out: TXR_ARGS := soundex sowndex lloyd lee jackson robert
+tests/008/filtenv.out: TXR_OPTS := -B
+tests/009/json.out: TXR_ARGS = $(addprefix $(top_srcdir)/tests/009/,webapp.json pass1.json)
+tests/010/align-columns.out: TXR_ARGS := $(top_srcdir)/tests/010/align-columns.dat
+tests/010/block.out: TXR_OPTS := -B
+tests/010/reghash.out: TXR_OPTS := -B
 
 tests/002/%: TXR_SCRIPT_ON_CMDLINE := y
 
 tests/011/%: TXR_DBG_OPTS :=
 
-%.ok: %.txr
+.PRECIOUS: %.out
+%.out: %.txr
 	mkdir -p $(dir $@)
 	$(if $(TXR_SCRIPT_ON_CMDLINE),\
-	  ./$(PROG) $(TXR_DBG_OPTS) $(TXR_OPTS) -c "$$(cat $^)" \
-	    $(TXR_ARGS) > $(@:.ok=.out),\
-	  ./$(PROG) $(TXR_DBG_OPTS) $(TXR_OPTS) $^ $(TXR_ARGS) > $(@:.ok=.out))
-	diff -u $(^:.txr=.expected) $(@:.ok=.out)
+	  $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) -c "$$(cat $<)" \
+	    $(TXR_ARGS) > $@,\
+	  $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) $< $(TXR_ARGS) > $@)
 
-%.expected: %.txr
-	./$(PROG) $(TXR_OPTS) $^ $(TXR_ARGS) > $@
+%.ok: %.out
+	diff -u $(top_srcdir)/$(<:.out=.expected) $<
+	@touch $@
+
+%.expected: %.out
+	cp $< $@
 
 define GREP_CHECK
 	@if [ $$(grep -E $(1) $(SRCS) | wc -l) -ne $(3) ] ; then \
@@ -225,7 +234,7 @@ install-tests:
 	(echo "#!/bin/sh" ; \
 	 echo "set -ex" ; \
 	 echo "cd $(datadir)" ; \
-	 make -s -n tests top_srcdir=. PROG=$(bindir)/txr) \
+	 make -s -n tests top_srcdir=. TXR=$(bindir)/txr) \
 	 > run.sh
 	$(call INSTALL,0755,run.sh,$(DESTDIR)$(datadir)/tests)
 
@@ -233,7 +242,7 @@ install-tests:
 # Generate web page from man page
 #
 txr-manpage.html: txr.1 genman.txr
-	man2html $< | ./$(PROG) genman.txr - > $@
+	man2html $< | $(TXR) genman.txr - > $@
 
 txr-manpage.pdf: txr.1
 	tbl $< | pdfroff -man --no-toc - > $@

@@ -1,5 +1,29 @@
 2014-12-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	* Makefile (TXR): New variable. We use this to run txr
+	rather than ./$(PROG). This way we can override the variable
+	from the command line if necessary.
+	(TESTS): Variable removed.
+	(TESTS_OUT, TESTS_OK): New variables, replace TESTS.
+	(tests): Prerequisites is now $(TESTS_OK), which are
+	actual timestamp files. Also depends on $(PROG).
+	(tests/%/%): Target specific assignments are now for .out
+	targets rather than .ok targets.
+	(%.out): New pattern target, made from half of previous %.ok rule.
+	(%.ok): Smaller rule, only performs diff between .out and .expected,
+	and touches the .ok stamp.
+	(%.expected): Bugfix: this rule now just copies .out to .expected,
+	and its prerequisite is %.out rather than %.txr.
+	Previously it tried to run txr, but it wouldn't use the correct
+	options, which depended on the target-specific assignments for
+	various .ok files.
+	(install-tests): Bugfix: in the "make -s -n" call use the new TXR
+	variable to specify the program's path. This fixes the issue that ./
+	was prepended to the txr commands, resulting in nonworking run.sh.
+	(txr-manpage.html): Use TXR to invoke txr rather than PROG.
+
+2014-12-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	* Makefile: Adding empty .SUFFIXES: to disable built-in suffixes.
 	Also set MAKEFLAGS to disable all built-in rules.
 	The only one rule we used is .c to .o, so we provide it ourselves.
