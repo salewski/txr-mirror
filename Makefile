@@ -96,9 +96,9 @@ $(MPI_OBJS): CFLAGS += -DXCALLOC=chk_calloc -DXFREE=free
 rebuild: clean repatch $(PROG)
 
 .PHONY: clean
-clean: conftest.clean
+clean: conftest.clean tests.clean
 	rm -f $(PROG)$(EXE) $(OBJS) $(OBJS-y) \
-	  y.tab.c lex.yy.c y.tab.h y.output $(TESTS_OUT) $(TESTS_OK)
+	  y.tab.c lex.yy.c y.tab.h y.output
 
 .PHONY: repatch
 repatch:
@@ -121,9 +121,11 @@ TESTS_OK := $(TESTS_OUT:.out=.ok)
 $(TESTS_OK): $(PROG)
 
 .PHONY: tests
-tests: $(TESTS_OK)
-	@rm -f $(TESTS_OUT) $(TESTS_OK)
+tests: $(TESTS_OK) tests.clean
 	@echo "** tests passed!"
+
+.PHONY: retest
+retest: tests.clean tests
 
 tests/001/%: TXR_ARGS := $(top_srcdir)/tests/001/data
 tests/001/query-1.out: TXR_OPTS := -B
@@ -164,6 +166,10 @@ tests/011/%: TXR_DBG_OPTS :=
 
 %.expected: %.out
 	cp $< $@
+
+.PHONY: tests.clean
+tests.clean:
+	@rm -f $(TESTS_OUT) $(TESTS_OK)
 
 define GREP_CHECK
 	@if [ $$(grep -E $(1) $(SRCS) | wc -l) -ne $(3) ] ; then \

@@ -1,5 +1,11 @@
 2014-12-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	* Makefile (clean): add tests.clean as prerequisite.
+	(tests): Add tests.clean as prerequiste, remove rm command.
+	(retest, tests.clean): New rules.
+
+2014-12-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	* Makefile (tests/009/json.out): Use eager assignment
 	intead of lazy assignment to set TXR_ARGS.
 
