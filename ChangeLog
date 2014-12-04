@@ -1,3 +1,9 @@
+2014-12-04  Kaz Kylheku  <kaz@kylheku.com>
+
+	* Makefile: Adding empty .SUFFIXES: to disable built-in suffixes.
+	Also set MAKEFLAGS to disable all built-in rules.
+	The only one rule we used is .c to .o, so we provide it ourselves.
+
 2014-11-27  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): Register lequal and gequal.

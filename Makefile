@@ -53,6 +53,12 @@ OBJS += $(MPI_OBJS)
 
 PROG := txr
 
+.SUFFIXES:
+MAKEFLAGS += --no-builtin-rules
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
 $(PROG): $(OBJS) $(OBJS-y)
 	$(CC) $(CFLAGS) -o $@ $^ -lm
 
