@@ -1,5 +1,10 @@
 2014-12-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	* Makefile (tests/009/json.out): Use eager assignment
+	intead of lazy assignment to set TXR_ARGS.
+
+2014-12-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	* Makefile (TXR): New variable. We use this to run txr
 	rather than ./$(PROG). This way we can override the variable
 	from the command line if necessary.
