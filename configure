@@ -543,6 +543,8 @@ esac
 if [ "$source_dir" != "." ] ; then
   printf "Symlinking Makefile -> $source_dir/Makefile\n"
   ln -sf "$source_dir/Makefile" .
+  printf "Symlinking share -> $source_dir/share\n"
+  ln -sf "$source_dir/share" .
 else
   printf "Warning: its recommended to build in a separate directory\n"
 fi

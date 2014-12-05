@@ -1,3 +1,9 @@
+2014-12-05  Kaz Kylheku  <kaz@kylheku.com>
+
+	* configure: Bugfix: the "share" directory has to be
+	symbolically linked. Without this, tests which require txr to have
+	access to its library do not work.
+
 2014-12-04  Kaz Kylheku  <kaz@kylheku.com>
 
 	TXR now builds optimized and debug at the same time.
