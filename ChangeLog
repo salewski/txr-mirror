@@ -1,5 +1,16 @@
 2014-12-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	* Makefile (TESTS_TMP): New variable.
+	(TESTS_OUT): Depends on $(PROG).
+	(TESTS_OK): Does not dependon $(PROG).
+	(tests): Does not depend on tests.clean.
+	(retest): Target removed.
+	(%.out : %.txr): Generate to temporary file,
+	then move to .out.
+	(tests.clean): Remove $(TESTS_TMP).
+
+2014-12-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	* Makefile (SRCS): Compute from top_srcdir, so we don't get a warning
 	from git, and "make enforce" works from out of three builds.
 

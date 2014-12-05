@@ -137,18 +137,16 @@ distclean: clean
 depend:
 	txr $(top_srcdir)/depend.txr $(OPT_OBJS) $(DBG_OBJS) > $(top_srcdir)/dep.mk
 
+TESTS_TMP := txr.test.out
 TESTS_OUT := $(patsubst $(top_srcdir)/%.txr,./%.out,\
 		          $(shell find $(top_srcdir)/tests -name '*.txr' | sort))
 TESTS_OK := $(TESTS_OUT:.out=.ok)
 
-$(TESTS_OK): $(PROG)
+$(TESTS_OUT): $(PROG)
 
 .PHONY: tests
-tests: $(TESTS_OK) tests.clean
+tests: $(TESTS_OK)
 	@echo "** tests passed!"
-
-.PHONY: retest
-retest: tests.clean tests
 
 tests/001/%: TXR_ARGS := $(top_srcdir)/tests/001/data
 tests/001/query-1.out: TXR_OPTS := -B
@@ -180,8 +178,9 @@ tests/011/%: TXR_DBG_OPTS :=
 	mkdir -p $(dir $@)
 	$(if $(TXR_SCRIPT_ON_CMDLINE),\
 	  $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) -c "$$(cat $<)" \
-	    $(TXR_ARGS) > $@,\
-	  $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) $< $(TXR_ARGS) > $@)
+	    $(TXR_ARGS) > $(TESTS_TMP),\
+	  $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) $< $(TXR_ARGS) > $(TESTS_TMP))
+	mv $(TESTS_TMP) $@
 
 %.ok: %.out
 	diff -u $(top_srcdir)/$(<:.out=.expected) $<
@@ -192,7 +191,7 @@ tests/011/%: TXR_DBG_OPTS :=
 
 .PHONY: tests.clean
 tests.clean:
-	@rm -f $(TESTS_OUT) $(TESTS_OK)
+	@rm -f $(TESTS_TMP) $(TESTS_OUT) $(TESTS_OK)
 
 define GREP_CHECK
 	@if [ $$(grep -E $(1) $(SRCS) | wc -l) -ne $(3) ] ; then \
