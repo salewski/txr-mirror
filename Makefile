@@ -26,7 +26,7 @@
 include config.make
 
 CFLAGS := -iquote $(top_srcdir) $(LANG_FLAGS) $(DIAG_FLAGS) \
-          $(OPT_FLAGS) $(DBG_FLAGS) $(PLATFORM_FLAGS) $(EXTRA_FLAGS)
+          $(DBG_FLAGS) $(PLATFORM_FLAGS) $(EXTRA_FLAGS)
 CFLAGS += -iquote mpi-$(mpi_version)
 CFLAGS := $(filter-out $(REMOVE_FLAGS),$(CFLAGS))
 
@@ -35,6 +35,9 @@ CFLAGS := $(filter-out -Wmissing-prototypes -Wstrict-prototypes,$(CFLAGS))
 endif
 
 # TXR objects
+ADD_CONF = $(addprefix $(1)/,$(2))
+EACH_CONF = $(foreach conf,opt dbg,$(call ADD_CONF,$(conf),$(1)))
+
 OBJS-y := # make sure OBJ-y is a value variable, not a macro variable
 OBJS := txr.o lex.yy.o y.tab.o match.o lib.o regex.o gc.o unwind.o stream.o
 OBJS += arith.o hash.o utf8.o filter.o eval.o rand.o combi.o sysif.o
@@ -51,23 +54,39 @@ MPI_OBJS := $(addprefix mpi-$(mpi_version)/,$(MPI_OBJ_BASE))
 
 OBJS += $(MPI_OBJS)
 
+DBG_OBJS = $(call ADD_CONF,dbg,$(OBJS) $(OBJS-y))
+OPT_OBJS = $(call ADD_CONF,opt,$(OBJS) $(OBJS-y))
+
 PROG := txr
 TXR := ./$(PROG)
 
 .SUFFIXES:
 MAKEFLAGS += --no-builtin-rules
 
-%.o: %.c
+dbg/%.o: %.c
+	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-$(PROG): $(OBJS) $(OBJS-y)
+opt/%.o: %.c
+	@mkdir -p $(dir $@)
+	$(CC) $(OPT_FLAGS) $(CFLAGS) -c -o $@ $<
+
+%.o: %.c
+	$(CC) $(OPT_FLAGS) $(CFLAGS) -c -o $@ $<
+
+all: $(PROG) $(PROG)-dbg
+
+$(PROG): $(OPT_OBJS)
+	$(CC) $(OPT_FLAGS) $(CFLAGS) -o $@ $^ -lm
+
+$(PROG)-dbg: $(DBG_OBJS)
 	$(CC) $(CFLAGS) -o $@ $^ -lm
 
 VPATH := $(top_srcdir)
 
 -include $(top_srcdir)/dep.mk
 
-$(OBJS) $(OBJS-y): config.make
+$(OPT_OBJS) $(DBG_OBJS): config.make
 
 lex.yy.c: parser.l config.make
 	rm -f $@
@@ -80,25 +99,26 @@ y.tab.c y.tab.h: parser.y config.make
 
 # Suppress useless sccs id array and unused label warning in byacc otuput.
 # Bison-generated parser also tests for this lint define.
-y.tab.o: CFLAGS += -Dlint
+$(call EACH_CONF,y.tab.o): CFLAGS += -Dlint
 
 # txr.c needs to know the relative datadir path to do some sysroot
 # calculations.
 
-txr.o: CFLAGS += -DTXR_REL_PATH=\"$(bindir_rel)/$(PROG)$(EXE)\"
-txr.o: CFLAGS += -DEXE_SUFF=\"$(EXE)\" -DPROG_NAME=\"$(PROG)\"
-txr.o: CFLAGS += -DTXR_VER=\"$(txr_ver)\"
+opt/txr.o: CFLAGS += -DPROG_NAME=\"$(PROG)\" -DTXR_REL_PATH=\"$(bindir_rel)/$(PROG)$(EXE)\"
+dbg/txr.o: CFLAGS += -DPROG_NAME=\"$(PROG)-dbg\" -DTXR_REL_PATH=\"$(bindir_rel)/$(PROG)-dbg$(EXE)\"
+$(call EACH_CONF,txr.o): CFLAGS += -DEXE_SUFF=\"$(EXE)\"
+$(call EACH_CONF,txr.o): CFLAGS += -DTXR_VER=\"$(txr_ver)\"
 
-$(MPI_OBJS): CFLAGS += -DXMALLOC=chk_malloc -DXREALLOC=chk_realloc
-$(MPI_OBJS): CFLAGS += -DXCALLOC=chk_calloc -DXFREE=free
+$(call EACH_CONF,$(MPI_OBJS)): CFLAGS += -DXMALLOC=chk_malloc -DXREALLOC=chk_realloc
+$(call EACH_CONF,$$(MPI_OBJS)): CFLAGS += -DXCALLOC=chk_calloc -DXFREE=free
 
 .PHONY: rebuild
 rebuild: clean repatch $(PROG)
 
 .PHONY: clean
 clean: conftest.clean tests.clean
-	rm -f $(PROG)$(EXE) $(OBJS) $(OBJS-y) \
-	  y.tab.c lex.yy.c y.tab.h y.output
+	rm -f $(PROG)$(EXE) $(PROG)-dbg$(EXE) y.tab.c lex.yy.c y.tab.h y.output
+	rm -rf opt dbg
 
 .PHONY: repatch
 repatch:
@@ -112,7 +132,7 @@ distclean: clean
 
 .PHONY: depend
 depend:
-	txr $(top_srcdir)/depend.txr $(OBJS) $(OBJS-y) > $(top_srcdir)/dep.mk
+	txr $(top_srcdir)/depend.txr $(OPT_OBJS) $(DBG_OBJS) > $(top_srcdir)/dep.mk
 
 TESTS_OUT := $(patsubst $(top_srcdir)/%.txr,./%.out,\
 		          $(shell find $(top_srcdir)/tests -name '*.txr' | sort))

@@ -1,5 +1,30 @@
 2014-12-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	TXR now builds optimized and debug at the same time.
+	Optimized object files are under opt/ and debug
+	object files are under dbg/. The debug txr executable
+	is called txr-dbg.
+
+	* Makefile (CFLAGS): $(OPT_FLAGS) is omitted from CFLAGS,
+	so we can expand it where appropriate.
+	(ADD_CONF, EACH_CONF): New variables, used as macros.
+	(DBG_OBJS, OPT_OBJS): New variables.
+	(dbg/%.o, opt/%.o): New rules.
+	(all): New target.
+	($(PROG)-dbg): New target.
+	(clean): Remove the object directories with rm -rf.
+	Remove $(PROG)-dbg.
+	(depend): Pass $(OPT_OBJS) and $(DBG_OBJS) to depend.txr
+	Also: various target-specific assignments for object files
+	had to be split for rel and dbg.
+
+	* depend.txr: Updated to handle dbg/ or rel/ prefix on
+	object file paths.
+
+	* dep.mk: Regenerated.
+
+2014-12-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	* Makefile (clean): add tests.clean as prerequisite.
 	(tests): Add tests.clean as prerequiste, remove rm command.
 	(retest, tests.clean): New rules.

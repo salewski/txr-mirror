@@ -1,10 +1,12 @@
 @(next :args)
 @(collect)
 @(cases)
-@dir/@file.o
+@conf/@dir/@file.o
+@(bind pfx `@conf/@dir`)
 @(or)
-@file.o
+@conf/@file.o
 @(bind dir ".")
+@(bind pfx conf)
 @(end)
 @(next `@dir/@file.c`)
 @(collect)
@@ -17,6 +19,6 @@
 @(end)
 @(end)
 @(output)
-@dir/@file.o:@(rep) @header@(end)
+@pfx/@file.o:@(rep) @header@(end)
 @(end)
 @(end)
