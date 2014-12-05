@@ -44,8 +44,11 @@ OBJS += arith.o hash.o utf8.o filter.o eval.o rand.o combi.o sysif.o
 OBJS-$(debug_support) += debug.o
 OBJS-$(have_syslog) += syslog.o
 OBJS-$(have_posix_sigs) += signal.o
-SRCS := $(filter-out lex.yy.c y.tab.c y.tab.h,\
-           $(shell git ls-files "*.c" "*.h" "*.l" "*.y"))
+SRCS := $(addprefix $(top_srcdir)/,\
+                    $(filter-out lex.yy.c y.tab.c y.tab.h,\
+                                 $(shell git --work-tree=$(top_srcdir) \
+				             --git-dir=$(top_srcdir)/.git \
+					      ls-files "*.c" "*.h" "*.l" "*.y")))
 
 # MPI objects
 MPI_OBJ_BASE=mpi.o mplogic.o
