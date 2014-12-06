@@ -1,5 +1,10 @@
 2014-12-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (set_diff): Bugfix: use member rather than find,
+	so that a nil set element is handled properly.
+
+2014-12-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	* Makefile (INSTALL): Bugfix: touch -r $(2) does not work
 	right when $(2) is a wildcard like path/to/*.txr.  It touches files in
 	the source tree to the timestamp of the argument after -r.  Putting in

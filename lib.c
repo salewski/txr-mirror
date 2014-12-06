@@ -5998,7 +5998,7 @@ val set_diff(val list1, val list2, val testfun, val keyfun)
       val item = car(list1);
       val list1_key = funcall1(keyfun, item);
 
-      if (!find(list1_key, list2, testfun, keyfun))
+      if (!member(list1_key, list2, testfun, keyfun))
         ptail = list_collect(ptail, item);
     }
   }
