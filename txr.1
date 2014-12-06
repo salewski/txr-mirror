@@ -13385,6 +13385,59 @@ is processed, even if it contains
 keys which are not in
 .metn object .
 
+.coNP Funtion @ in
+.synb
+.mets (in < sequence < key >> [ testfun <> [ keyfun ]])
+.mets (in < hash << key )
+.syne
+.desc
+The
+.code in
+function tests whether
+.meta key
+is found inside
+.meta sequence
+or
+.metn hash .
+
+If the
+.meta testfun
+argument is specified, it specifies the function
+which is used to comparison keys from the sequence
+to
+.metn key .
+Otherwise the
+.code equal
+function is used.
+
+If the
+.meta keyfun
+argument is specified, it specifies a function which
+is applied to the elements of
+.meta sequence
+to produce the comparison keys. Without this
+argument, the elements themselves are taken
+as the comparison keys.
+
+If the object being searched is a hash, then the
+.meta keyfun
+and
+.meta testfun
+arguments are ignored.
+
+The
+.code in
+function returns
+.code t
+if it finds
+.meta key
+in
+.meta sequence
+or
+.metn hash,
+otherwise
+.codn nil .
+
 .coNP Funtion @ partition
 .synb
 .mets (partition < sequence >> { index-list >> | index <> | function })

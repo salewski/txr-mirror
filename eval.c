@@ -3727,6 +3727,7 @@ void eval_init(void)
   reg_fun(intern(lit("min"), user_package), func_n1v(minv));
   reg_fun(intern(lit("pos-max"), user_package), func_n3o(pos_max, 1));
   reg_fun(intern(lit("pos-min"), user_package), func_n3o(pos_min, 1));
+  reg_fun(intern(lit("in"), user_package), func_n4o(in, 2));
   reg_fun(intern(lit("logand"), user_package), func_n0v(logandv));
   reg_fun(intern(lit("logior"), user_package), func_n0v(logiorv));
   reg_fun(intern(lit("logxor"), user_package), func_n2(logxor));

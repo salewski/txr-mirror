@@ -1,5 +1,17 @@
 2014-12-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Register in function as intrinsic.
+
+	* lib.c (in): New function.
+
+	* lib.h (in): Declared.
+
+	* txr.1: Documented in.
+
+	* txr.vim, tl.vim: Regenerated.
+
+2014-12-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (set_diff): Bugfix: use member rather than find,
 	so that a nil set element is handled properly.
 

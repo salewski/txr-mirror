@@ -815,6 +815,7 @@ val pos(val list, val key, val testfun, val keyfun);
 val pos_if(val pred, val list, val key);
 val pos_max(val seq, val testfun, val keyfun);
 val pos_min(val seq, val testfun, val keyfun);
+val in(val seq, val key, val testfun, val keyfun);
 val set_diff(val list1, val list2, val testfun, val keyfun);
 val copy(val seq);
 val length(val seq);

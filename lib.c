@@ -5978,6 +5978,76 @@ val pos_min(val seq, val testfun, val keyfun)
   return pos_max(seq, default_arg(testfun, less_f), keyfun);
 }
 
+val in(val seq, val item, val testfun, val keyfun)
+{
+  switch (type(seq)) {
+  case NIL:
+    return nil;
+  case CONS:
+  case LCONS:
+    {
+      testfun = default_arg(testfun, equal_f);
+      keyfun = default_arg(keyfun, identity_f);
+      val list = nullify(seq);
+
+      for (; list; list = cdr(list)) {
+        val elem = car(list);
+        val key = funcall1(keyfun, elem);
+
+        if (funcall2(testfun, item, key))
+          return t;
+      }
+
+      return nil;
+    }
+  case LIT:
+  case STR:
+  case LSTR:
+    {
+      testfun = default_arg(testfun, equal_f);
+      keyfun = default_arg(keyfun, identity_f);
+      val len = length_str(seq);
+      val ind;
+
+      for (ind = zero; lt(ind, len); ind = plus(ind, one)) {
+        val elem = chr_str(seq, ind);
+        val key = funcall1(keyfun, elem);
+
+        if (funcall2(testfun, item, key))
+          return t;
+      }
+
+      return nil;
+    }
+  case VEC:
+    {
+      testfun = default_arg(testfun, equal_f);
+      keyfun = default_arg(keyfun, identity_f);
+      val len = length_vec(seq);
+      val ind;
+
+      for (ind = zero; lt(ind, len); ind = plus(ind, one)) {
+        val elem = vecref(seq, ind);
+        val key = funcall1(keyfun, elem);
+
+        if (funcall2(testfun, item, key))
+          return t;
+      }
+
+      return nil;
+    }
+  case COBJ:
+    if (seq->co.cls == hash_s) {
+      val found;
+      gethash_f(seq, item, mkcloc(found));
+      return if3(found, t, nil);
+    }
+    /* fallthrough */
+  default:
+    type_mismatch(lit("in: ~s is not a sequence or hash"), seq, nao);
+  }
+}
+
 val set_diff(val list1, val list2, val testfun, val keyfun)
 {
   list_collect_decl (out, ptail);
