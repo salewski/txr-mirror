@@ -213,14 +213,14 @@ enforce:
 # Installation macro.
 #
 # $1 - chmod perms
-# $2 - source file
+# $2 - source file(s)
 # $3 - dest directory
 #
 define INSTALL
 	mkdir -p $(3)
 	cp -f $(2) $(3)
 	chmod $(1) $(3)/$(notdir $(2))
-	touch -r $(2) $(3)/$(notdir $(2))
+	for x in $(2) ; do touch -r $$x $(3)/$$(basename $$x) ; done
 endef
 
 PREINSTALL := :

@@ -1,5 +1,12 @@
 2014-12-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	* Makefile (INSTALL): Bugfix: touch -r $(2) does not work
+	right when $(2) is a wildcard like path/to/*.txr.  It touches files in
+	the source tree to the timestamp of the argument after -r.  Putting in
+	a shell loop to handle this.
+
+2014-12-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	* Makefile (TESTS_TMP): New variable.
 	(TESTS_OUT): Depends on $(PROG).
 	(TESTS_OK): Does not dependon $(PROG).
