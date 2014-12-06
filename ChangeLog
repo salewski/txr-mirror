@@ -1,5 +1,12 @@
 2014-12-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (tofloat, toint): Handle characters.
+	Fix error message in toint wrongly identifying itself as tofloat.
+
+	* txr.1: Document handling of characters.
+
+2014-12-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Register in function as intrinsic.
 
 	* lib.c (in): New function.

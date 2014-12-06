@@ -2083,6 +2083,13 @@ val tofloat(val obj)
   switch (tag(obj)) {
   case TAG_NUM:
     return flo_int(obj);
+  case TAG_CHR:
+    {
+      cnum ch = c_num(obj);
+      if (isdigit(ch))
+        return flo(ch - '0');
+      return nil;
+    }
   case TAG_LIT:
     return flo_str(obj);
   case TAG_PTR:
@@ -2111,6 +2118,22 @@ val toint(val obj, val base)
     return obj;
   case TAG_LIT:
     return int_str(obj, base);
+  case TAG_CHR:
+    {
+      cnum ch = c_num(obj);
+
+      if (ch >= '0' && ch <= '9')
+        return num(ch - '0');
+
+      if (isalpha(ch)) {
+        cnum n = 10 + toupper(ch) - 'A';
+        cnum b = c_num(default_arg(base, num_fast(10)));
+
+        if (n < b)
+          return num(n);
+      }
+      return nil;
+    }
   case TAG_PTR:
     switch (type(obj)) {
     case BGNUM:
@@ -2126,7 +2149,7 @@ val toint(val obj, val base)
     }
     /* fallthrough */
   default:
-    uw_throwf(error_s, lit("tofloat: ~s is not convertible to float"), obj, nao);
+    uw_throwf(error_s, lit("toint: ~s is not convertible to integer"), obj, nao);
   }
 }
 
