@@ -60,7 +60,6 @@ OBJS += $(MPI_OBJS)
 DBG_OBJS = $(call ADD_CONF,dbg,$(OBJS) $(OBJS-y))
 OPT_OBJS = $(call ADD_CONF,opt,$(OBJS) $(OBJS-y))
 
-PROG := txr
 TXR := ./$(PROG)
 
 .SUFFIXES:
@@ -77,7 +76,7 @@ opt/%.o: %.c
 %.o: %.c
 	$(CC) $(OPT_FLAGS) $(CFLAGS) -c -o $@ $<
 
-all: $(PROG) $(PROG)-dbg
+all: $(BUILD_TARGETS)
 
 $(PROG): $(OPT_OBJS)
 	$(CC) $(OPT_FLAGS) $(CFLAGS) -o $@ $^ -lm

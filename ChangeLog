@@ -1,3 +1,14 @@
+2014-12-07  Kaz Kylheku  <kaz@kylheku.com>
+
+	Debug builds optional with --debug-also config option.
+
+	* Makefile (PROG): Variable removed, now set in config.make.
+	(all): Target now depends on $(BUILD_TARGETS) variable, set
+	in config.make.
+
+	* configure (debug_also) New variable.
+	(gen_config_make): Generate PROG and BUILD_TARGETS variables.
+
 2014-12-05  Kaz Kylheku  <kaz@kylheku.com>
 
 	* arith.c (tofloat, toint): Handle characters.

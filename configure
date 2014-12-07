@@ -99,6 +99,7 @@ opt_flags=-O2
 lang_flags='-ansi -D_XOPEN_SOURCE=600'
 diag_flags='-Wall -Werror=implicit-function-declaration -Werror=missing-prototypes -Werror=strict-prototypes'
 debug_flags=-g
+debug_also=
 inline=
 platform_flags=
 remove_flags=
@@ -352,6 +353,13 @@ debug-flags [$debug_flags]
 
   Specifies flags for requesting that debugging information be
   retained in the compile and link.
+
+debug-also [$debug_also]
+
+  Specifies that a debugging version of TXR is to be built at the
+  same time. This means that "make" will always update two sets
+  of object files compiled with different optimization flags,
+  and produce two binaries: txr and txr-dbg.
 
 platform-flags [$platform_flags]
 
@@ -624,10 +632,16 @@ LEX := $lex
 YACC := $yacc
 NM := $nm
 
+PROG := txr
+
 OPT_FLAGS := $opt_flags
 LANG_FLAGS := $lang_flags
 DIAG_FLAGS := $diag_flags
 DBG_FLAGS := $debug_flags
+BUILD_TARGETS := $(if [ $debug_also ] ; then
+                     echo '$(PROG) $(PROG)-dbg'
+                   else
+                     echo '$(PROG)'; fi)
 PLATFORM_FLAGS := $platform_flags
 REMOVE_FLAGS := $remove_flags
 LEX_DBG_FLAGS := $lex_dbg_flags
