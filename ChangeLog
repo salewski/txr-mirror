@@ -1,5 +1,9 @@
 2014-12-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	* Makefile (all): Mark as phony target.
+
+2014-12-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	Condensed make output.
 
 	* Makefile (VERBOSE): New variable.

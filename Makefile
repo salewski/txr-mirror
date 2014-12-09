@@ -86,6 +86,7 @@ opt/%.o: %.c
 	$(call ABBREV2,CC,$<)
 	$(V)$(CC) $(OPT_FLAGS) $(CFLAGS) -c -o $@ $<
 
+.PHONY: all
 all: $(BUILD_TARGETS)
 
 $(PROG): $(OPT_OBJS)
