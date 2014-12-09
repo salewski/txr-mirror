@@ -1,5 +1,13 @@
 2014-12-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	* Makefile (($TESTS_OUT)): Do not depend on $(PROG).
+	This adds superfluous commands to run.sh under make install-tests,
+	and is also inappropriate if a different txr binary is being tested.
+	(install-tests): Do not override top_srcdir in the recursive make
+	call; instead use -C to change to $(top_srcdir).
+
+2014-12-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	* Makefile (all): Mark as phony target.
 
 2014-12-09  Kaz Kylheku  <kaz@kylheku.com>

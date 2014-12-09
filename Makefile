@@ -156,8 +156,6 @@ TESTS_OUT := $(patsubst $(top_srcdir)/%.txr,./%.out,\
 		          $(shell find $(top_srcdir)/tests -name '*.txr' | sort))
 TESTS_OK := $(TESTS_OUT:.out=.ok)
 
-$(TESTS_OUT): $(PROG)
-
 .PHONY: tests
 tests: $(TESTS_OK)
 	$(V)echo "** tests passed!"
@@ -279,7 +277,7 @@ install-tests:
 	$(V)(echo "#!/bin/sh" ; \
 	     echo "set -ex" ; \
 	     echo "cd $(datadir)" ; \
-	     make -s -n tests VERBOSE=y top_srcdir=. TXR=$(bindir)/txr) \
+	     make -C $(top_srcdir) -s -n tests VERBOSE=y TXR=$(bindir)/txr) \
 	     > run.sh
 	$(call INSTALL,0755,run.sh,$(DESTDIR)$(datadir)/tests)
 
