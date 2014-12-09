@@ -1,3 +1,21 @@
+2014-12-09  Kaz Kylheku  <kaz@kylheku.com>
+
+	Condensed make output.
+
+	* Makefile (VERBOSE): New variable.
+	(V, ABBREV, ABBREV1, ABBREV3): New macro variables.
+	(dbg/%.o, opt/%.o): Use V, ABBREV1 for concensed output.
+	($(PROG), $(PROG)-dbg, lex.yy.c, y.tab.c, %.out,
+	%.ok, INSTALL): Likewise, but use ABBREV.
+	(tests, GREP_CHECK, config.make, conftest.yacc,
+	conftest.clean): Use $(V) instead of @.
+	(tests.clean): Remove @; do not hide remove commands.
+	(INSTALL): Use $(V) instead of @ and use ABBREV3 to
+	provide condensed output.
+	(install): Use $(V) on $(PREINSTALL) so we don't see :
+	in the output.
+	(install-tests): Put $(V) on all steps.
+
 2014-12-07  Kaz Kylheku  <kaz@kylheku.com>
 
 	Debug builds optional with --debug-also config option.

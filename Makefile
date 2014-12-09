@@ -25,6 +25,7 @@
 
 include config.make
 
+VERBOSE :=
 CFLAGS := -iquote $(top_srcdir) $(LANG_FLAGS) $(DIAG_FLAGS) \
           $(DBG_FLAGS) $(PLATFORM_FLAGS) $(EXTRA_FLAGS)
 CFLAGS += -iquote mpi-$(mpi_version)
@@ -65,24 +66,35 @@ TXR := ./$(PROG)
 .SUFFIXES:
 MAKEFLAGS += --no-builtin-rules
 
+V = $(if $(VERBOSE),,@)
+
+ABBREV = $(if $(VERBOSE),@:,@printf "%s %s -> %s\n" $(1) "$^" $@)
+ABBREV2 = $(if $(VERBOSE),@:,@printf "%s %s -> %s\n" $(1) "$(2)" $@)
+ABBREV3 = $(if $(VERBOSE),@:,@printf "%s %s -> %s\n" $(1) "$(3)" $(2))
+
 dbg/%.o: %.c
-	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(call ABBREV2,CC,$<)
+	$(V)mkdir -p $(dir $@)
+	$(V)$(CC) $(CFLAGS) -c -o $@ $<
 
 opt/%.o: %.c
-	@mkdir -p $(dir $@)
-	$(CC) $(OPT_FLAGS) $(CFLAGS) -c -o $@ $<
+	$(call ABBREV2,CC,$<)
+	$(V)mkdir -p $(dir $@)
+	$(V)$(CC) $(OPT_FLAGS) $(CFLAGS) -c -o $@ $<
 
 %.o: %.c
-	$(CC) $(OPT_FLAGS) $(CFLAGS) -c -o $@ $<
+	$(call ABBREV2,CC,$<)
+	$(V)$(CC) $(OPT_FLAGS) $(CFLAGS) -c -o $@ $<
 
 all: $(BUILD_TARGETS)
 
 $(PROG): $(OPT_OBJS)
-	$(CC) $(OPT_FLAGS) $(CFLAGS) -o $@ $^ -lm
+	$(call ABBREV,LINK)
+	$(V)$(CC) $(OPT_FLAGS) $(CFLAGS) -o $@ $^ -lm
 
 $(PROG)-dbg: $(DBG_OBJS)
-	$(CC) $(CFLAGS) -o $@ $^ -lm
+	$(call ABBREV,LINK)
+	$(V)$(CC) $(CFLAGS) -o $@ $^ -lm
 
 VPATH := $(top_srcdir)
 
@@ -91,13 +103,15 @@ VPATH := $(top_srcdir)
 $(OPT_OBJS) $(DBG_OBJS): config.make
 
 lex.yy.c: parser.l config.make
-	rm -f $@
-	$(LEX) $(LEX_DBG_FLAGS) $<
-	chmod a-w $@
+	$(call ABBREV,LEX)
+	$(V)rm -f $@
+	$(V)$(LEX) $(LEX_DBG_FLAGS) $<
+	$(V)chmod a-w $@
 
 y.tab.c y.tab.h: parser.y config.make
-	rm -f y.tab.c
-	if $(YACC) -v -d $< ; then chmod a-w y.tab.c ; true ; else rm y.tab.c ; false ; fi
+	$(call ABBREV,YACC)
+	$(V)rm -f y.tab.c
+	$(V)if $(YACC) -v -d $< ; then chmod a-w y.tab.c ; true ; else rm y.tab.c ; false ; fi
 
 # Suppress useless sccs id array and unused label warning in byacc otuput.
 # Bison-generated parser also tests for this lint define.
@@ -145,7 +159,7 @@ $(TESTS_OUT): $(PROG)
 
 .PHONY: tests
 tests: $(TESTS_OK)
-	@echo "** tests passed!"
+	$(V)echo "** tests passed!"
 
 tests/001/%: TXR_ARGS := $(top_srcdir)/tests/001/data
 tests/001/query-1.out: TXR_OPTS := -B
@@ -174,32 +188,33 @@ tests/011/%: TXR_DBG_OPTS :=
 
 .PRECIOUS: %.out
 %.out: %.txr
-	mkdir -p $(dir $@)
-	$(if $(TXR_SCRIPT_ON_CMDLINE),\
-	  $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) -c "$$(cat $<)" \
-	    $(TXR_ARGS) > $(TESTS_TMP),\
-	  $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) $< $(TXR_ARGS) > $(TESTS_TMP))
-	mv $(TESTS_TMP) $@
+	$(call ABBREV,TXR)
+	$(V)mkdir -p $(dir $@)
+	$(V)$(if $(TXR_SCRIPT_ON_CMDLINE),\
+	       $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) -c "$$(cat $<)" \
+	          $(TXR_ARGS) > $(TESTS_TMP),\
+	       $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) $< $(TXR_ARGS) > $(TESTS_TMP))
+	$(V)mv $(TESTS_TMP) $@
 
 %.ok: %.out
-	diff -u $(top_srcdir)/$(<:.out=.expected) $<
-	@touch $@
+	$(V)diff -u $(top_srcdir)/$(<:.out=.expected) $<
+	$(V)touch $@
 
 %.expected: %.out
 	cp $< $@
 
 .PHONY: tests.clean
 tests.clean:
-	@rm -f $(TESTS_TMP) $(TESTS_OUT) $(TESTS_OK)
+	rm -f $(TESTS_TMP) $(TESTS_OUT) $(TESTS_OK)
 
 define GREP_CHECK
-	@if [ $$(grep -E $(1) $(SRCS) | wc -l) -ne $(3) ] ; then \
-	  echo "New '$(2)' occurrences have been found:" ; \
-	  grep -n -E $(1) $(SRCS) \
-	    | sed -e 's/\(.*:.*:\).*/\1 $(2)/' \
-	    | grep $(4) ; \
-	  exit 1 ; \
-	fi
+	$(V)if [ $$(grep -E $(1) $(SRCS) | wc -l) -ne $(3) ] ; then \
+	      echo "New '$(2)' occurrences have been found:" ; \
+	      grep -n -E $(1) $(SRCS) \
+	        | sed -e 's/\(.*:.*:\).*/\1 $(2)/' \
+	        | grep $(4) ; \
+	      exit 1 ; \
+	    fi
 endef
 
 .PHONY: enforce
@@ -216,17 +231,18 @@ enforce:
 # $3 - dest directory
 #
 define INSTALL
-	mkdir -p $(3)
-	cp -f $(2) $(3)
-	chmod $(1) $(3)/$(notdir $(2))
-	for x in $(2) ; do touch -r $$x $(3)/$$(basename $$x) ; done
+	$(call ABBREV3,INSTALL,$(3),$(2))
+	$(V)mkdir -p $(3)
+	$(V)cp -f $(2) $(3)
+	$(V)chmod $(1) $(3)/$(notdir $(2))
+	$(V)for x in $(2) ; do touch -r $$x $(3)/$$(basename $$x) ; done
 endef
 
 PREINSTALL := :
 
 .PHONY: install
 install: $(PROG)
-	$(PREINSTALL)
+	$(V)$(PREINSTALL)
 	$(call INSTALL,0755,txr$(EXE),$(DESTDIR)$(bindir))
 	$(call INSTALL,0444,$(top_srcdir)/LICENSE,$(DESTDIR)$(datadir))
 	$(call INSTALL,0444,$(top_srcdir)/METALICENSE,$(DESTDIR)$(datadir))
@@ -254,15 +270,16 @@ zip: install
 # Install the tests as well as the script to run them
 #
 install-tests:
-	mkdir -p $(DESTDIR)$(datadir)
-	(cd $(top_srcdir) ; \
-	 find tests -name '*.out' -prune -o -print | cpio -co) \
-	| (cd $(DESTDIR)$(datadir) ; cpio -idu)
-	(echo "#!/bin/sh" ; \
-	 echo "set -ex" ; \
-	 echo "cd $(datadir)" ; \
-	 make -s -n tests top_srcdir=. TXR=$(bindir)/txr) \
-	 > run.sh
+	$(V)mkdir -p $(DESTDIR)$(datadir)
+	$(V)(cd $(top_srcdir) ; \
+	      find tests -name '*.out' -prune -o -print \
+	        | cpio -co 2> /dev/null) \
+	      | (cd $(DESTDIR)$(datadir) ; cpio -idu 2> /dev/null)
+	$(V)(echo "#!/bin/sh" ; \
+	     echo "set -ex" ; \
+	     echo "cd $(datadir)" ; \
+	     make -s -n tests VERBOSE=y top_srcdir=. TXR=$(bindir)/txr) \
+	     > run.sh
 	$(call INSTALL,0755,run.sh,$(DESTDIR)$(datadir)/tests)
 
 #
@@ -275,8 +292,8 @@ txr-manpage.pdf: txr.1
 	tbl $< | pdfroff -man --no-toc - > $@
 
 config.make config.h:
-	@echo "$@ missing: you didn't run ./configure"
-	@exit 1
+	$(V)echo "$@ missing: you didn't run ./configure"
+	$(V)exit 1
 
 #
 # Special targets used by ./configure
@@ -293,14 +310,14 @@ conftest.syms: conftest.o
 
 .PHONY: conftest.yacc
 conftest.yacc:
-	@echo $(YACC)
+	$(V)echo $(YACC)
 
 .PHONY: conftest.ccver
 conftest.ccver:
-	@$(CC) --version
+	$(V)$(CC) --version
 
 .PHONY: conftest.clean
 conftest.clean:
-	@rm -f conftest$(EXE) conftest.[co] \
+	$(V)rm -f conftest$(EXE) conftest.[co] \
 	conftest2$(EXE) conftest[12].[oc] \
 	conftest.err conftest.syms
