@@ -152,41 +152,42 @@ depend:
 	txr $(top_srcdir)/depend.txr $(OPT_OBJS) $(DBG_OBJS) > $(top_srcdir)/dep.mk
 
 TESTS_TMP := txr.test.out
-TESTS_OUT := $(patsubst $(top_srcdir)/%.txr,./%.out,\
-		          $(shell find $(top_srcdir)/tests -name '*.txr' | sort))
+TESTS_OUT := $(addprefix tst/,\
+		  $(patsubst %.txr,%.out,\
+		             $(shell find -H tests -name '*.txr' | sort)))
 TESTS_OK := $(TESTS_OUT:.out=.ok)
 
 .PHONY: tests
 tests: $(TESTS_OK)
 	$(V)echo "** tests passed!"
 
-tests/001/%: TXR_ARGS := $(top_srcdir)/tests/001/data
-tests/001/query-1.out: TXR_OPTS := -B
-tests/001/query-2.out: TXR_OPTS := -B
-tests/001/query-4.out: TXR_OPTS := -B
-tests/002/%: TXR_OPTS := -DTESTDIR=$(top_srcdir)/tests/002
-tests/004/%: TXR_ARGS := -a 123 -b -c
-tests/005/%: TXR_ARGS := $(top_srcdir)/tests/005/data
-tests/005/%: TXR_OPTS := -B
-tests/006/%: TXR_ARGS := $(top_srcdir)/tests/006/data
-tests/006/%: TXR_OPTS := -B
-tests/006/freeform-3.out: TXR_ARGS := $(top_srcdir)/tests/006/passwd
-tests/008/tokenize.out: TXR_ARGS := $(top_srcdir)/tests/008/data
-tests/008/configfile.out: TXR_ARGS := $(top_srcdir)/tests/008/configfile
-tests/008/students.out: TXR_ARGS := $(top_srcdir)/tests/008/students.xml
-tests/008/soundex.out: TXR_ARGS := soundex sowndex lloyd lee jackson robert
-tests/008/filtenv.out: TXR_OPTS := -B
-tests/009/json.out: TXR_ARGS := $(addprefix $(top_srcdir)/tests/009/,webapp.json pass1.json)
-tests/010/align-columns.out: TXR_ARGS := $(top_srcdir)/tests/010/align-columns.dat
-tests/010/block.out: TXR_OPTS := -B
-tests/010/reghash.out: TXR_OPTS := -B
+tst/tests/001/%: TXR_ARGS := tests/001/data
+tst/tests/001/query-1.out: TXR_OPTS := -B
+tst/tests/001/query-2.out: TXR_OPTS := -B
+tst/tests/001/query-4.out: TXR_OPTS := -B
+tst/tests/002/%: TXR_OPTS := -DTESTDIR=tests/002
+tst/tests/004/%: TXR_ARGS := -a 123 -b -c
+tst/tests/005/%: TXR_ARGS := tests/005/data
+tst/tests/005/%: TXR_OPTS := -B
+tst/tests/006/%: TXR_ARGS := tests/006/data
+tst/tests/006/%: TXR_OPTS := -B
+tst/tests/006/freeform-3.out: TXR_ARGS := tests/006/passwd
+tst/tests/008/tokenize.out: TXR_ARGS := tests/008/data
+tst/tests/008/configfile.out: TXR_ARGS := tests/008/configfile
+tst/tests/008/students.out: TXR_ARGS := tests/008/students.xml
+tst/tests/008/soundex.out: TXR_ARGS := soundex sowndex lloyd lee jackson robert
+tst/tests/008/filtenv.out: TXR_OPTS := -B
+tst/tests/009/json.out: TXR_ARGS := $(addprefix tests/009/,webapp.json pass1.json)
+tst/tests/010/align-columns.out: TXR_ARGS := tests/010/align-columns.dat
+tst/tests/010/block.out: TXR_OPTS := -B
+tst/tests/010/reghash.out: TXR_OPTS := -B
 
-tests/002/%: TXR_SCRIPT_ON_CMDLINE := y
+tst/tests/002/%: TXR_SCRIPT_ON_CMDLINE := y
 
-tests/011/%: TXR_DBG_OPTS :=
+tst/tests/011/%: TXR_DBG_OPTS :=
 
-.PRECIOUS: %.out
-%.out: %.txr
+.PRECIOUS: tst/%.out
+tst/%.out: %.txr
 	$(call ABBREV,TXR)
 	$(V)mkdir -p $(dir $@)
 	$(V)$(if $(TXR_SCRIPT_ON_CMDLINE),\
@@ -196,7 +197,7 @@ tests/011/%: TXR_DBG_OPTS :=
 	$(V)mv $(TESTS_TMP) $@
 
 %.ok: %.out
-	$(V)diff -u $(top_srcdir)/$(<:.out=.expected) $<
+	$(V)diff -u $(patsubst tst/%.out,%.expected,$<) $<
 	$(V)touch $@
 
 %.expected: %.out
@@ -204,7 +205,7 @@ tests/011/%: TXR_DBG_OPTS :=
 
 .PHONY: tests.clean
 tests.clean:
-	rm -f $(TESTS_TMP) $(TESTS_OUT) $(TESTS_OK)
+	rm -rf tst
 
 define GREP_CHECK
 	$(V)if [ $$(grep -E $(1) $(SRCS) | wc -l) -ne $(3) ] ; then \
@@ -269,15 +270,15 @@ zip: install
 # Install the tests as well as the script to run them
 #
 install-tests:
+	$(V)rm -rf tst
 	$(V)mkdir -p $(DESTDIR)$(datadir)
-	$(V)(cd $(top_srcdir) ; \
-	      find tests -name '*.out' -prune -o -print \
-	        | cpio -co 2> /dev/null) \
-	      | (cd $(DESTDIR)$(datadir) ; cpio -idu 2> /dev/null)
+	$(call ABBREV3,INSTALL,$(DESTDIR)$(datadir),tests)
+	$(V)(find tests | cpio -co 2> /dev/null) \
+	    | (cd $(DESTDIR)$(datadir) ; cpio -idu 2> /dev/null)
 	$(V)(echo "#!/bin/sh" ; \
 	     echo "set -ex" ; \
 	     echo "cd $(datadir)" ; \
-	     make -C $(top_srcdir) -s -n tests VERBOSE=y TXR=$(bindir)/txr) \
+	     make -s -n tests VERBOSE=y TXR=$(bindir)/txr) \
 	     > run.sh
 	$(call INSTALL,0755,run.sh,$(DESTDIR)$(datadir)/tests)
 

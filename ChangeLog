@@ -1,5 +1,32 @@
 2014-12-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	Test output goes to tst/ now.
+
+	* Makefile (TESTS_OUT): We don't need to refer to top_srcdir.
+	Add the tst/ prefix to .out paths. Find must be used with -H
+	because tests is a symlink for out-of-tree build directories.
+	(tests/*): All target-specific assignments are moved to tst/tests/*
+	paths, and top_srcdir is no longer used in the right hand side
+	values.
+	(%.out): Becomes (tst/%.out).
+	(%.ok): need to compute .expected name from .out differently to
+	account for tst/ prefix.
+	(tests.clean): Just remove the tst directory.
+	(install-tests): Remove the tst directory first so test commands
+	are forced to run (though it is a dry run).
+	We no longer need to switch to top_srcdir to find the .txr
+	files, nor do we have to filter out .out files from the tests
+	tree. We no longer have to switch to top_srcdir in the recursive
+	make. Also, show the installation of tests using ABBREV3.
+
+	* configure: When configuring in a separate directory, symlink
+	the tests directory back to the source tree. Since there
+	are now three things being symlinked, rewrote that as a loop.
+	The recommendation to build in a separate directory is just a note, not
+	a warning.
+
+2014-12-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	* Makefile (($TESTS_OUT)): Do not depend on $(PROG).
 	This adds superfluous commands to run.sh under make install-tests,
 	and is also inappropriate if a different txr binary is being tested.
