@@ -273,8 +273,8 @@ install-tests:
 	$(V)rm -rf tst
 	$(V)mkdir -p $(DESTDIR)$(datadir)
 	$(call ABBREV3,INSTALL,$(DESTDIR)$(datadir),tests)
-	$(V)(find tests | cpio -co 2> /dev/null) \
-	    | (cd $(DESTDIR)$(datadir) ; cpio -idu 2> /dev/null)
+	$(V)(find tests | cpio -o 2> /dev/null) \
+	    | (cd $(DESTDIR)$(datadir) ; cpio -idum 2> /dev/null)
 	$(V)(echo "#!/bin/sh" ; \
 	     echo "set -ex" ; \
 	     echo "cd $(datadir)" ; \

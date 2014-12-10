@@ -1,5 +1,12 @@
 2014-12-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	* Makefile (install-tests): Do not use option -c of
+	cpio (use old ASCII format). This was unintentional.
+	On extract, use -m option to preserve timestamps,
+	like we do in INSTALL.
+
+2014-12-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	Test output goes to tst/ now.
 
 	* Makefile (TESTS_OUT): We don't need to refer to top_srcdir.
