@@ -1479,7 +1479,7 @@ fi
 # Check for fields inside struct tm
 #
 
-printf "Printf detecting timezone fields in struct tm ... "
+printf "detecting timezone fields in struct tm ... "
 
 tm_gmtoff=
 tm_tmzone=
