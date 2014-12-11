@@ -19,6 +19,7 @@
 @(end)
 @(end)
 @(output)
-@pfx/@file.o:@(rep) @header@(end)
+DEP_@pfx/@file.o :=@(rep) @header@(end) config.make
+@pfx/@file.o: $(DEP_@pfx/@file.o)
 @(end)
 @(end)

@@ -1,3 +1,17 @@
+2014-12-10  Kaz Kylheku  <kaz@kylheku.com>
+
+	* Makefile (ABBREV): Rewrite to take advantage of DEP_
+	variables to remove the dependencies from the output.
+	(ABBREV2): No longer needed, removed.
+	(dbg/%.o, opt/%.o, %.o): Just use ABBREV instead of ABBREV2; it does
+	the right thing.  Dependency of objects on config.make removed.
+
+	* dep.mk: Regenerated. Now provides variable assignments
+	in addition to rules, and each object is made dependent
+	on config.make.
+
+	* depend.txr: Adjusted to generate dep.mk in new format.
+
 2014-12-09  Kaz Kylheku  <kaz@kylheku.com>
 
 	* Makefile (install-tests): Do not use option -c of

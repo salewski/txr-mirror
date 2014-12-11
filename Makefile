@@ -68,22 +68,25 @@ MAKEFLAGS += --no-builtin-rules
 
 V = $(if $(VERBOSE),,@)
 
-ABBREV = $(if $(VERBOSE),@:,@printf "%s %s -> %s\n" $(1) "$^" $@)
-ABBREV2 = $(if $(VERBOSE),@:,@printf "%s %s -> %s\n" $(1) "$(2)" $@)
+# Filtering out $(DEP_$@) allows the abbreviated output to show just the direct
+# prerequisites without the long laundry list of additional dependencies.
+ABBREV = $(if $(VERBOSE),\
+           @:,\
+	    @printf "%s %s -> %s\n" $(1) "$(filter-out $(DEP_$@),$^)" $@)
 ABBREV3 = $(if $(VERBOSE),@:,@printf "%s %s -> %s\n" $(1) "$(3)" $(2))
 
 dbg/%.o: %.c
-	$(call ABBREV2,CC,$<)
+	$(call ABBREV,CC)
 	$(V)mkdir -p $(dir $@)
 	$(V)$(CC) $(CFLAGS) -c -o $@ $<
 
 opt/%.o: %.c
-	$(call ABBREV2,CC,$<)
+	$(call ABBREV,CC)
 	$(V)mkdir -p $(dir $@)
 	$(V)$(CC) $(OPT_FLAGS) $(CFLAGS) -c -o $@ $<
 
 %.o: %.c
-	$(call ABBREV2,CC,$<)
+	$(call ABBREV,CC,$<)
 	$(V)$(CC) $(OPT_FLAGS) $(CFLAGS) -c -o $@ $<
 
 .PHONY: all
@@ -100,8 +103,6 @@ $(PROG)-dbg: $(DBG_OBJS)
 VPATH := $(top_srcdir)
 
 -include $(top_srcdir)/dep.mk
-
-$(OPT_OBJS) $(DBG_OBJS): config.make
 
 lex.yy.c: parser.l config.make
 	$(call ABBREV,LEX)
