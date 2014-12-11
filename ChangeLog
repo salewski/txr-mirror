@@ -1,3 +1,10 @@
+2014-12-11  Kaz Kylheku  <kaz@kylheku.com>
+
+	* configure (have_git): New variable and configure test for git.
+
+	* Makefile (SRCS): Only set if git is available.
+	(enforce): Fail if we don't have git.
+
 2014-12-10  Kaz Kylheku  <kaz@kylheku.com>
 
 	Throwing away old dependency system.

@@ -120,6 +120,7 @@ have_syslog=
 have_windows_h=
 have_posix_sigs=
 need_darwin_c_source=
+have_git=
 
 #
 # Parse configuration variables
@@ -627,6 +628,8 @@ mpi_version := $mpi_version
 # EXE suffix
 EXE := $exe
 
+have_git := $have_git
+
 CC := $cc
 LEX := $lex
 YACC := $yacc
@@ -699,6 +702,17 @@ conftest_syms()
   $make conftest.syms ${@+"$@"} > conftest.err 2>&1
 }
 
+#
+# Check for git because we use it out of the Makefile
+#
+printf "Checking whether we have git ... "
+
+if git --version > /dev/null 2> /dev/null ; then
+  have_git=y
+  printf "yes\n"
+else
+  printf "missing\n"
+fi
 
 #
 # Check C compiler sanity

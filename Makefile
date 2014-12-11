@@ -45,11 +45,14 @@ OBJS += arith.o hash.o utf8.o filter.o eval.o rand.o combi.o sysif.o
 OBJS-$(debug_support) += debug.o
 OBJS-$(have_syslog) += syslog.o
 OBJS-$(have_posix_sigs) += signal.o
+
+ifneq ($(have_git),)
 SRCS := $(addprefix $(top_srcdir)/,\
                     $(filter-out lex.yy.c y.tab.c y.tab.h,\
                                  $(shell git --work-tree=$(top_srcdir) \
 				             --git-dir=$(top_srcdir)/.git \
 					      ls-files "*.c" "*.h" "*.l" "*.y")))
+endif
 
 # MPI objects
 MPI_OBJ_BASE=mpi.o mplogic.o
@@ -233,9 +236,14 @@ endef
 
 .PHONY: enforce
 enforce:
+ifneq ($(have_git),)
 	$(call GREP_CHECK,'\<void[	 ]*\*',void *,1,-v 'typedef void \*yyscan_t')
 	$(call GREP_CHECK,'	',tabs,0,'.')
 	$(call GREP_CHECK,' $$',trailing spaces,0,'.')
+else
+	echo "enforce requires git"
+	exit 1
+endif
 
 #
 # Installation macro.
