@@ -1,16 +1,34 @@
 2014-12-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	Throwing away old dependency system.
+
+	* Makefile (DEPGEN): New macro variable.
+	(OPT_OBJS, DBG_OBJS): Define with := assignment.
+	(OBJS): New variable.
+	(dbg/%.o, opt/*.o): Use -MMD and -MT options of gcc to generate
+	dependencies. Also use DEPGEN macro to rewrite each dependency
+	makefile's rule into a DEP_ variable assignment.
+	(DEP_INSTANTIATE): New macro variable.
+	(include dep.mk): Removed, replaced by eval hack that
+	includes all the .d files and instantiates the rule from
+	the DEP_ variable in each one.
+	(opt/lex.yy.o, dbg/lex.yy.o): We need to hard code the dependency
+	of these on y.tab.h, to force that header to generate.
+	(DEP_opt/lex.yy.o, DEP_dbg/lex.yy.o): New variables, related
+	to above.
+	(depend): Target removed.
+
+	* dep.mk: File removed.
+
+	* depend.txr: File removed.
+
+2014-12-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	* Makefile (ABBREV): Rewrite to take advantage of DEP_
 	variables to remove the dependencies from the output.
 	(ABBREV2): No longer needed, removed.
 	(dbg/%.o, opt/%.o, %.o): Just use ABBREV instead of ABBREV2; it does
 	the right thing.  Dependency of objects on config.make removed.
-
-	* dep.mk: Regenerated. Now provides variable assignments
-	in addition to rules, and each object is made dependent
-	on config.make.
-
-	* depend.txr: Adjusted to generate dep.mk in new format.
 
 2014-12-09  Kaz Kylheku  <kaz@kylheku.com>
 

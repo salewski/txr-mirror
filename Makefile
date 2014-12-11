@@ -58,8 +58,9 @@ MPI_OBJS := $(addprefix mpi-$(mpi_version)/,$(MPI_OBJ_BASE))
 
 OBJS += $(MPI_OBJS)
 
-DBG_OBJS = $(call ADD_CONF,dbg,$(OBJS) $(OBJS-y))
-OPT_OBJS = $(call ADD_CONF,opt,$(OBJS) $(OBJS-y))
+DBG_OBJS := $(call ADD_CONF,dbg,$(OBJS) $(OBJS-y))
+OPT_OBJS := $(call ADD_CONF,opt,$(OBJS) $(OBJS-y))
+OBJS := $(DBG_OBJS) $(OPT_OBJS)
 
 TXR := ./$(PROG)
 
@@ -75,16 +76,23 @@ ABBREV = $(if $(VERBOSE),\
 	    @printf "%s %s -> %s\n" $(1) "$(filter-out $(DEP_$@),$^)" $@)
 ABBREV3 = $(if $(VERBOSE),@:,@printf "%s %s -> %s\n" $(1) "$(3)" $(2))
 
+define DEPGEN
+$(V)sed -e '1s/^/DEP_/' -e '1s/: [^ ]\+/ :=/' < $(1) > $(1:.d=.v)
+endef
+
 dbg/%.o: %.c
 	$(call ABBREV,CC)
 	$(V)mkdir -p $(dir $@)
-	$(V)$(CC) $(CFLAGS) -c -o $@ $<
+	$(V)$(CC) -MMD -MT $@ $(CFLAGS) -c -o $@ $<
+	$(call DEPGEN,${@:.o=.d})
 
 opt/%.o: %.c
 	$(call ABBREV,CC)
 	$(V)mkdir -p $(dir $@)
-	$(V)$(CC) $(OPT_FLAGS) $(CFLAGS) -c -o $@ $<
+	$(V)$(CC) -MMD -MT $@ $(OPT_FLAGS) $(CFLAGS) -c -o $@ $<
+	$(call DEPGEN,${@:.o=.d})
 
+# The following pattern rule is used for test targets built by configure
 %.o: %.c
 	$(call ABBREV,CC,$<)
 	$(V)$(CC) $(OPT_FLAGS) $(CFLAGS) -c -o $@ $<
@@ -102,9 +110,18 @@ $(PROG)-dbg: $(DBG_OBJS)
 
 VPATH := $(top_srcdir)
 
--include $(top_srcdir)/dep.mk
+# Pull in dependencies
+-include $(OBJS:.o=.d) $(OBJS:.o=.v)
 
-lex.yy.c: parser.l config.make
+opt/lex.yy.o: y.tab.h
+dbg/lex.yy.o: y.tab.h
+DEP_opt/lex.yy.o += y.tab.h
+DEP_dbg/lex.yy.o += y.tab.h
+
+$(eval $(foreach dep,$(OPT_OBJS:.o=.d) $(DBG_OBJS:.o=.d),\
+          $(call DEP_INSTANTIATE,$(dep))))
+
+lex.yy.c: parser.l
 	$(call ABBREV,LEX)
 	$(V)rm -f $@
 	$(V)$(LEX) $(LEX_DBG_FLAGS) $<
@@ -147,10 +164,6 @@ repatch:
 distclean: clean
 	rm -f config.h config.make config.log
 	rm -rf mpi-$(mpi_version)
-
-.PHONY: depend
-depend:
-	txr $(top_srcdir)/depend.txr $(OPT_OBJS) $(DBG_OBJS) > $(top_srcdir)/dep.mk
 
 TESTS_TMP := txr.test.out
 TESTS_OUT := $(addprefix tst/,\
