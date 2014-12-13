@@ -23,10 +23,11 @@
 # AND UNDER ANY THEORY OF LIABILITY, ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-include config.make
+-include config/config.make
 
 VERBOSE :=
-CFLAGS := -iquote $(top_srcdir) $(LANG_FLAGS) $(DIAG_FLAGS) \
+CFLAGS := -iquote $(conf_dir) -iquote $(top_srcdir) \
+          $(LANG_FLAGS) $(DIAG_FLAGS) \
           $(DBG_FLAGS) $(PLATFORM_FLAGS) $(EXTRA_FLAGS)
 CFLAGS += -iquote mpi-$(mpi_version)
 CFLAGS := $(filter-out $(REMOVE_FLAGS),$(CFLAGS))
@@ -100,6 +101,13 @@ opt/%.o: %.c
 	$(call ABBREV,CC,$<)
 	$(V)$(CC) $(OPT_FLAGS) $(CFLAGS) -c -o $@ $<
 
+ifeq ($(PROG),)
+.PHONY: notconfigured
+notconfigured:
+	$(V)echo "configuration missing: you didn't run the configure script!"
+	$(V)exit 1
+endif
+
 .PHONY: all
 all: $(BUILD_TARGETS)
 
@@ -113,13 +121,25 @@ $(PROG)-dbg: $(DBG_OBJS)
 
 VPATH := $(top_srcdir)
 
+# Newline constant
+define NL
+
+
+endef
+
+define DEP
+$(1): $(2)
+
+$(eval $(foreach item,$(1),DEP_$(item) += $(2)$(NL)))
+endef
+
 # Pull in dependencies
 -include $(OBJS:.o=.d) $(OBJS:.o=.v)
 
-opt/lex.yy.o: y.tab.h
-dbg/lex.yy.o: y.tab.h
-DEP_opt/lex.yy.o += y.tab.h
-DEP_dbg/lex.yy.o += y.tab.h
+# Add dependencies
+$(call DEP,$(OBJS),$(conf_dir)/config.make $(conf_dir)/config.h)
+$(call DEP,opt/lex.yy.o dbg/lex.yy.o,y.tab.h)
+
 
 $(eval $(foreach dep,$(OPT_OBJS:.o=.d) $(DBG_OBJS:.o=.d),\
           $(call DEP_INSTANTIATE,$(dep))))
@@ -130,7 +150,14 @@ lex.yy.c: parser.l
 	$(V)$(LEX) $(LEX_DBG_FLAGS) $<
 	$(V)chmod a-w $@
 
-y.tab.c y.tab.h: parser.y config.make
+y.tab.h: y.tab.c
+	$(V)if ! [ -e y.tab.h ] ; then                            \
+	  echo "Someone removed y.tab.h but left y.tab.c" ;       \
+	  echo "Remove y.tab.c and re-run make" ;                 \
+	  exit 1;                                                 \
+	fi
+
+y.tab.c: parser.y
 	$(call ABBREV,YACC)
 	$(V)rm -f y.tab.c
 	$(V)if $(YACC) -v -d $< ; then chmod a-w y.tab.c ; true ; else rm y.tab.c ; false ; fi
@@ -165,7 +192,7 @@ repatch:
 
 .PHONY: distclean
 distclean: clean
-	rm -f config.h config.make config.log
+	rm -rf $(conf_dir)
 	rm -rf mpi-$(mpi_version)
 
 TESTS_TMP := txr.test.out
@@ -312,10 +339,6 @@ txr-manpage.html: txr.1 genman.txr
 
 txr-manpage.pdf: txr.1
 	tbl $< | pdfroff -man --no-toc - > $@
-
-config.make config.h:
-	$(V)echo "$@ missing: you didn't run ./configure"
-	$(V)exit 1
 
 #
 # Special targets used by ./configure
