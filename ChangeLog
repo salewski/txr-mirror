@@ -1,3 +1,12 @@
+2014-12-13  Kaz Kylheku  <kaz@kylheku.com>
+
+	Factor out some compiling commands into macros.
+
+	* Makefile (COMPILE_C, COMPILE_C_WITH_DEPS, LINK_PROG): New
+	macro strings.
+	(dbg/%.o, opt/*.o, %.o, $(PROG), $(PROG)-dbg, conftest,
+	conftest2): These targets now use these commands.
+
 2014-12-11  Kaz Kylheku  <kaz@kylheku.com>
 
 	Build bugfix: if a config.h header exists in $(top_srcdir),

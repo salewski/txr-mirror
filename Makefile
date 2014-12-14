@@ -84,22 +84,32 @@ define DEPGEN
 $(V)sed -e '1s/^/DEP_/' -e '1s/: [^ ]\+/ :=/' < $(1) > $(1:.d=.v)
 endef
 
+define COMPILE_C
+$(call ABBREV,CC)
+$(V)$(CC) $(OPT_FLAGS) $(CFLAGS) -c -o $@ $<
+endef
+
+define COMPILE_C_WITH_DEPS
+$(call ABBREV,CC)
+$(V)mkdir -p $(dir $@)
+$(V)$(CC) -MMD -MT $@ $(1) $(CFLAGS) -c -o $@ $<
+$(call DEPGEN,${@:.o=.d})
+endef
+
+define LINK_PROG
+$(call ABBREV,LINK)
+$(V)$(CC) $(1) $(CFLAGS) -o $@ $^ -lm
+endef
+
 dbg/%.o: %.c
-	$(call ABBREV,CC)
-	$(V)mkdir -p $(dir $@)
-	$(V)$(CC) -MMD -MT $@ $(CFLAGS) -c -o $@ $<
-	$(call DEPGEN,${@:.o=.d})
+	$(call COMPILE_C_WITH_DEPS,)
 
 opt/%.o: %.c
-	$(call ABBREV,CC)
-	$(V)mkdir -p $(dir $@)
-	$(V)$(CC) -MMD -MT $@ $(OPT_FLAGS) $(CFLAGS) -c -o $@ $<
-	$(call DEPGEN,${@:.o=.d})
+	$(call COMPILE_C_WITH_DEPS,$(OPT_FLAGS))
 
 # The following pattern rule is used for test targets built by configure
 %.o: %.c
-	$(call ABBREV,CC,$<)
-	$(V)$(CC) $(OPT_FLAGS) $(CFLAGS) -c -o $@ $<
+	$(call COMPILE_C)
 
 ifeq ($(PROG),)
 .PHONY: notconfigured
@@ -112,12 +122,10 @@ endif
 all: $(BUILD_TARGETS)
 
 $(PROG): $(OPT_OBJS)
-	$(call ABBREV,LINK)
-	$(V)$(CC) $(OPT_FLAGS) $(CFLAGS) -o $@ $^ -lm
+	$(call LINK_PROG,$(OPT_FLAGS))
 
 $(PROG)-dbg: $(DBG_OBJS)
-	$(call ABBREV,LINK)
-	$(V)$(CC) $(CFLAGS) -o $@ $^ -lm
+	$(call LINK_PROG,)
 
 VPATH := $(top_srcdir)
 
@@ -345,10 +353,10 @@ txr-manpage.pdf: txr.1
 #
 
 conftest: conftest.c
-	$(CC) $(CFLAGS) -o $@ $^ -lm
+	$(call LINK_PROG,)
 
 conftest2: conftest1.c conftest2.c
-	$(CC) $(CFLAGS) -o $@ $^ -lm
+	$(call LINK_PROG,)
 
 conftest.syms: conftest.o
 	$(NM) -n -t o -P $^ > $@
