@@ -1,3 +1,9 @@
+2014-12-16  Kaz Kylheku  <kaz@kylheku.com>
+
+	* rand.c (rstate): New inline function.
+	(rand32): Use inline function instead of macro.
+	I compared gcc -O2 output on Intel: no difference.
+
 2014-12-13  Kaz Kylheku  <kaz@kylheku.com>
 
 	Factor out some compiling commands into macros.

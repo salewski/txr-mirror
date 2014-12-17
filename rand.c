@@ -83,25 +83,28 @@ val random_state_p(val obj)
   return typeof(obj) == random_state_s ? t : nil;
 }
 
+INLINE rand32_t *rstate(struct rand_state *r, int offs)
+{
+  return &r->state[(r->cur + offs) % 16];
+}
+
 static rand32_t rand32(struct rand_state *r)
 {
-  #define RSTATE(r,i) ((r)->state[((r)->cur + i) % 16])
-  rand32_t s0 = RSTATE(r, 0);
-  rand32_t s9 = RSTATE(r, 9);
-  rand32_t s13 = RSTATE(r, 13);
-  rand32_t s15 = RSTATE(r, 15);
+  rand32_t s0 = *rstate(r, 0);
+  rand32_t s9 = *rstate(r, 9);
+  rand32_t s13 = *rstate(r, 13);
+  rand32_t s15 = *rstate(r, 15);
 
   rand32_t r1 = s0 ^ (s0 << 16) ^ s13 ^ (s13 << 15);
   rand32_t r2 = s9 ^ (s9 >> 11);
 
-  rand32_t ns0 = RSTATE(r, 0) = r1 ^ r2;
+  rand32_t ns0 = *rstate(r, 0) = r1 ^ r2;
   rand32_t ns15 = s15 ^ (s15 << 2) ^ r1 ^ (r1 << 18) ^ r2 ^ (r2 << 28) ^
                   ((ns0 ^ (ns0 << 5)) & 0xda442d24ul);
 
-  RSTATE(r, 15) = ns15;
+  *rstate(r, 15) = ns15;
   r->cur = (r->cur + 15) % 16;
   return ns15;
-  #undef RSTATE
 }
 
 val make_random_state(val seed)
