@@ -1,5 +1,16 @@
 2014-12-18  Kaz Kylheku  <kaz@kylheku.com>
 
+	Syntax highlighting issue: keywords in braced variable syntax
+	not being recognized.
+
+	* genvim.txr (txr_braced_ident): New match kind, specifically
+	for a keyword.
+	(txr_bracevar): Bracevar region contains txr_braced_indent.
+
+	* txr.vim, tl.vim: Regenerated.
+
+2014-12-18  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (copy): Support copying random state objects
 	vi make_random_state.
 
