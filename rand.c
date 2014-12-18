@@ -110,11 +110,9 @@ static rand32_t rand32(struct rand_state *r)
 val make_random_state(val seed)
 {
   val rs = make_state();
-  int i;
+  int i, copy = 0;
   struct rand_state *r = coerce(struct rand_state *,
                                 cobj_handle(rs, random_state_s));
-
-  r->cur = 0;
 
   seed = default_bool_arg(seed);
 
@@ -159,13 +157,17 @@ val make_random_state(val seed)
     struct rand_state *rseed = coerce(struct rand_state *,
                                       cobj_handle(seed, random_state_s));
     *r = *rseed;
+    copy = 1;
   } else {
     uw_throwf(error_s, lit("make-random-state: seed ~s is not a number"),
               seed, nao);
   }
 
-  for (i = 0; i < 8; i++)
-    (void) rand32(r);
+  if (!copy) {
+    r->cur = 0;
+    for (i = 0; i < 8; i++)
+      (void) rand32(r);
+  }
 
   return rs;
 }

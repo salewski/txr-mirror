@@ -22992,7 +22992,8 @@ an object of the same kind as what is stored in the
 .code *random-state*
 variable.
 
-The seed, if specified, must be an integer value.
+The seed, if specified, must be either an integer value, or an
+existing random state object.
 
 Note that the sign of the seed is ignored, so that negative seed
 values are equivalent to their additive inverses.
@@ -23009,6 +23010,14 @@ different seeds.  The minimum time increment depends on the platform.
 On a platform with a millisecond-resolution real-time clock, the minimum
 time increment is a millisecond. Calls to make-random-state less than
 a millisecond apart may predictably produce the same seed.
+
+If an integer seed is specified, then the integer value is mapped to a
+pseudo-random sequence, in a platform-independent way.
+
+If a random state is specified as a seed, then it is duplicated. The
+returned random state object is a distinct object which is in the same
+state as the input object. It will produce the same remaining pseudo-random
+number sequence, as will the input object.
 
 .coNP Function @ random-state-p
 .synb

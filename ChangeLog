@@ -1,5 +1,15 @@
 2014-12-17  Kaz Kylheku  <kaz@kylheku.com>
 
+	* rand.c (rand32): Bugfix: if the seed object is a random
+	state, we do not want to make the 8 calls to rand32 to
+	mix up the state; we need are making a straight copy.
+
+	* txr.1: Document the possibility that the seed object
+	is a random state. Document the platform-independence of the
+	integer seed.
+
+2014-12-17  Kaz Kylheku  <kaz@kylheku.com>
+
 	* rand.c (struct rand_state): Change cur member to unsigned.
 	This generates better code for rand32.
 
