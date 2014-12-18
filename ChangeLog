@@ -1,3 +1,8 @@
+2014-12-17  Kaz Kylheku  <kaz@kylheku.com>
+
+	* rand.c (struct rand_state): Change cur member to unsigned.
+	This generates better code for rand32.
+
 2014-12-16  Kaz Kylheku  <kaz@kylheku.com>
 
 	* rand.c (rstate): New inline function.

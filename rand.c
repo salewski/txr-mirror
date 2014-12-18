@@ -59,7 +59,7 @@ typedef unsigned long rand32_t;
  */
 struct rand_state {
   rand32_t state[16];
-  int cur;
+  unsigned cur;
 };
 
 val random_state_s;
