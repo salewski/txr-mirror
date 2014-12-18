@@ -1,3 +1,10 @@
+2014-12-18  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (copy): Support copying random state objects
+	vi make_random_state.
+
+	* txr.1: Updated.
+
 2014-12-17  Kaz Kylheku  <kaz@kylheku.com>
 
 	* rand.c (rand32): Bugfix: if the seed object is a random

@@ -17141,41 +17141,47 @@ is zero, otherwise
 
 .coNP Function @ copy
 .synb
-.mets (copy << sequence )
+.mets (copy << object )
 .syne
 .desc
 The
 .code copy
-function duplicates a sequence. If
-.meta sequence
+function duplicates objects of various supported types: sequences, hashes and random states. If
+.meta object
 is
 .codn nil ,
 it
 returns
 .codn nil .
 If
-.meta sequence
+.meta object
 is a list, it returns
 .cblk
-.meti (copy-list << sequence ).
+.meti (copy-list << object ).
 .cble
 If
-.meta sequence
+.meta object
 is a string, it returns
 .cblk
-.meti (copy-str << sequence ).
+.meti (copy-str << object ).
 .cble
 If
-.meta sequence
+.meta object
 is a vector, it returns
 .cblk
-.meti (copy-vec << sequence ).
+.meti (copy-vec << object ).
 .cble
 If
-.meta sequence
+.meta object
 is a hash, it returns
 .cblk
-.meti (copy-hash << sequence ).
+.meti (copy-hash << object )
+.cble
+Lastly, if
+.meta object
+is a random state, it returns
+.cblk
+.meti (make-random-state << object ).
 .cble
 
 Except in the case when

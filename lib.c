@@ -6093,9 +6093,12 @@ val copy(val seq)
   case COBJ:
     if (seq->co.cls == hash_s)
       return copy_hash(seq);
+    if (seq->co.cls == random_state_s)
+      return make_random_state(seq);
     /* fallthrough */
   default:
-    type_mismatch(lit("copy: ~s is not a sequence"), seq, nao);
+    type_mismatch(lit("copy: cannot copy object of type ~s"),
+                  typeof(seq), nao);
   }
 }
 
