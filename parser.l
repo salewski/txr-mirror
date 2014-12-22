@@ -951,7 +951,7 @@ val source_loc_str(val form)
              lit("source location n/a"));
 }
 
-void parse_init(void)
+void parser_l_init(void)
 {
   prot1(&form_to_ln_hash);
   form_to_ln_hash = make_hash(t, nil, nil);

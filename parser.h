@@ -43,6 +43,7 @@ typedef void *yyscan_t;
 
 extern const wchar_t *spec_file;
 extern val form_to_ln_hash;
+extern val parser_s;
 void yyerror(scanner_t *scanner, parser_t *, const char *s);
 void yyerr(scanner_t *scanner, const char *s);
 void yyerrorf(scanner_t *scanner, val s, ...);
@@ -53,7 +54,7 @@ int yylex_init(yyscan_t *pscanner);
 int yylex_destroy(yyscan_t scanner);
 parser_t *yyget_extra(yyscan_t scanner);
 void yyset_extra(parser_t *, yyscan_t);
-void parse_init(void);
+void parser_l_init(void);
 void open_txr_file(val spec_file, val *name, val *stream);
 int parse(val stream, val name, parser_t *parser);
 val source_loc(val form);
@@ -66,3 +67,5 @@ INLINE val rlcp(val to, val from)
 val rlcp_tree(val to, val from);
 val regex_parse(val string, val error_stream);
 val lisp_parse(val source, val error_stream, val error_return_val);
+val parser(val stream, val lineno);
+void parse_init(void);

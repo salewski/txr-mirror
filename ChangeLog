@@ -1,5 +1,17 @@
 2015-02-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* Makefile (OBJS): Add parser.o.
+
+	* parser.h (parser_s): Declared.
+	(parse_init): Declaration removed.
+	(parser_l_init): Declared.
+
+	* parser.l (parse_init): Function renamed to parser_l_init.
+
+	* parser.c: New file.
+
+2015-02-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	New ignerr macro.
 
 	* eval.c (me_ignerr): New static function.
