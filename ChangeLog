@@ -1,5 +1,13 @@
 2015-02-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.c (open_txr_file, regex_parse, lisp_parse): Functions
+	moved here from parser.l.
+
+	* parser.l (open_txr_file, regex_parse, lisp_parse): Functions
+	moved from here to parser.c.
+
+2015-02-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	* Makefile (OBJS): Add parser.o.
 
 	* parser.h (parser_s): Declared.
