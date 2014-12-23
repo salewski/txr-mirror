@@ -1,5 +1,11 @@
 2014-12-23  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (func_n1ov, func_n2ov, func_n3ov): New functions.
+
+	* lib.h (func_n1ov, func_n2ov, func_n3ov): Declared.
+
+2014-12-23  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (func_n0o): Useless, unused function removed.
 
 	* lib.h (func_n0o): Declaration removed.
