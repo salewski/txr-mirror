@@ -1,3 +1,9 @@
+2014-12-23  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (func_n0o): Useless, unused function removed.
+
+	* lib.h (func_n0o): Declaration removed.
+
 2014-12-18  Kaz Kylheku  <kaz@kylheku.com>
 
 	Syntax highlighting issue: keywords in braced variable syntax

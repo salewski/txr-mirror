@@ -3961,13 +3961,6 @@ val func_n7v(val (*fun)(val, val, val, val, val, val, val, val rest))
   return obj;
 }
 
-val func_n0o(val (*fun)(void), int reqargs)
-{
-  val obj = func_n0(fun);
-  obj->f.optargs = 0 - reqargs;
-  return obj;
-}
-
 val func_n1o(val (*fun)(val), int reqargs)
 {
   val obj = func_n1(fun);

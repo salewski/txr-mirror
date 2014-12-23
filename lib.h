@@ -710,7 +710,6 @@ val func_n4v(val (*fun)(val, val, val, val, val rest));
 val func_n5v(val (*fun)(val, val, val, val, val, val rest));
 val func_n6v(val (*fun)(val, val, val, val, val, val, val rest));
 val func_n7v(val (*fun)(val, val, val, val, val, val, val, val rest));
-val func_n0o(val (*fun)(void), int reqargs);
 val func_n1o(val (*fun)(val), int reqargs);
 val func_n2o(val (*fun)(val, val), int reqargs);
 val func_n3o(val (*fun)(val, val, val), int reqargs);
