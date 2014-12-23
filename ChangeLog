@@ -1,5 +1,18 @@
 2014-12-23  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (ap_s, ret_s, aret_s): New symbol variables.
+	(me_ret): Static function renamed to me_ret_aret.
+	Handles ret and aret macro expansion.
+	(eval_init): Initialize ap_s, ret_s and aret_s.
+	Re-register ret macro using ret_s and bind to me_ret_aret.
+	Register aret macro.
+
+	* txr.1: Documented aret.
+
+	* tl.vim, txr.vim: Regenerated.
+
+2014-12-23  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Registered intrinsic function unique.
 
 	* lib.c (unique): New function.

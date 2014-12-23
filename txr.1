@@ -20880,6 +20880,48 @@ and the expression
 returns a function similar to
 .codn (lambda (. rest) 42) .
 
+.coNP Macro @ aret
+.synb
+.mets (aret << form )
+.syne
+.desc
+The
+.code ret
+macro's
+.meta form
+argument is treated similarly to the second and subsequent arguments of the
+.code op
+operator.
+
+The
+.code aret
+macro produces a function which takes any number of arguments,
+and returns the value specified by
+.metn form .
+
+.meta form
+can contain
+.code ap
+meta syntax like
+.meta @n
+and
+.codn @rest .
+
+The following equivalence holds:
+
+.cblk
+  (aret x) <--> (ap identity x))
+.cble
+
+Thus the expression
+.code (aret @2)
+returns a function similar to
+.codn (lambda (. rest) (second rest)) ,
+and the expression
+.code (aret 42)
+returns a function similar to
+.codn (lambda (. rest) 42) .
+
 .coNP Functions @ chain and @ chand
 .synb
 .mets (chain << func *)
