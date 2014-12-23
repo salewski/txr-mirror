@@ -17841,6 +17841,75 @@ function. The first occurrence of each element is retained,
 and the subsequent duplicates of that element, of any, are suppressed,
 such that the order of the elements is otherwise preserved.
 
+The following equivalence holds between
+.code uniq
+and
+.codn unique :
+
+.cblk
+  (uniq s) <--> [unique s : :equal-based]
+.cble
+
+That is,
+.code uniq
+is like
+.code unique
+with the default
+.meta keyfun
+argument (the
+.code identity
+function) and an
+.codn equal -based
+hash table.
+
+.coNP Function @ unique
+.synb
+.mets (uniq < sequence >> [ keyfun <> { hash-arg }* ])
+.syne
+.desc
+The
+.code unique
+function is a generalization of
+.codn uniq .
+It returns a sequence of the same kind as
+.metn sequence ,
+but with duplicates removed.
+
+If neither
+.meta keyfun
+nor
+.metn hash-arg -s
+are specified, then elements of sequence are considered equal under the
+.code eql
+function. The first occurrence of each element is retained,
+and the subsequent duplicates of that element, of any, are suppressed,
+such that the order of the elements is otherwise preserved.
+
+If
+.meta keyfun
+is specified, then that function is applied to each element,
+and the resulting values are compared for equality.
+In other words, the behavior is as if
+.meta keyfun
+were the
+.code identity
+function.
+
+If one or more
+.meta hash-arg -s
+are present, these specify the arguments for the construction of
+the internal hash table used by
+.codn unique .
+The arguments are like those of the
+.code hash
+function. In particular, the argument
+.code :equal-based
+causes
+.code unique
+to use
+.code equal
+equality.
+
 .coNP Function @ tuples
 .synb
 .mets (tuples < length < sequence <> [ fill-value ])

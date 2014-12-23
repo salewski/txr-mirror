@@ -805,6 +805,7 @@ val merge(val list1, val list2, val lessfun, val keyfun);
 val sort(val seq, val lessfun, val keyfun);
 val multi_sort(val lists, val funcs, val key_funcs);
 val sort_group(val seq, val keyfun, val lessfun);
+val unique(val seq, val keyfun, val hashargs);
 val uniq(val seq);
 val find(val list, val key, val testfun, val keyfun);
 val find_if(val pred, val list, val key);

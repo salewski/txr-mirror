@@ -1,5 +1,18 @@
 2014-12-23  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Registered intrinsic function unique.
+
+	* lib.c (unique): New function.
+	(uniq): Becomes wrapper around unique.
+
+	* lib.h (unique): Declared.
+
+	* txr.1: Documented unique, and equivalence between uniq and unique.
+
+	* tl.vim, txr.vim: Regenerated.
+
+2014-12-23  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (func_n1ov, func_n2ov, func_n3ov): New functions.
 
 	* lib.h (func_n1ov, func_n2ov, func_n3ov): Declared.

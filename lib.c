@@ -5787,9 +5787,11 @@ val sort_group(val seq, val keyfun, val lessfun)
   return partition_by(kf, sorted);
 }
 
-val uniq(val seq)
+val unique(val seq, val keyfun, val hashargs)
 {
-  val hash = make_hash(nil, nil, t);
+  val hash = hashv(default_bool_arg(hashargs));
+  val kf = default_arg(keyfun, identity_f);
+
   list_collect_decl (out, ptail);
 
   if (vectorp(seq) || stringp(seq)) {
@@ -5799,7 +5801,7 @@ val uniq(val seq)
       val new_p;
       val v = ref(seq, num_fast(i));
 
-      (void) gethash_c(hash, v, mkcloc(new_p));
+      (void) gethash_c(hash, funcall1(kf, v), mkcloc(new_p));
 
       if (new_p)
         ptail = list_collect(ptail, v);
@@ -5809,7 +5811,7 @@ val uniq(val seq)
       val new_p;
       val v = car(seq);
 
-      (void) gethash_c(hash, v, mkcloc(new_p));
+      (void) gethash_c(hash, funcall1(kf, v), mkcloc(new_p));
 
       if (new_p)
         ptail = list_collect(ptail, v);
@@ -5817,6 +5819,11 @@ val uniq(val seq)
   }
 
   return make_like(out, seq);
+}
+
+val uniq(val seq)
+{
+  return unique(seq, identity_f, cons(equal_based_k, nil));
 }
 
 val find(val item, val list, val testfun, val keyfun)

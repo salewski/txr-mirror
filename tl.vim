@@ -177,13 +177,13 @@ syn keyword txl_keyword contained tree-find trie-add trie-compress trie-lookup-b
 syn keyword txl_keyword contained trie-lookup-feed-char trie-value-at trim-str true
 syn keyword txl_keyword contained trunc tuples txr-case txr-if
 syn keyword txl_keyword contained txr-when typeof unget-byte unget-char
-syn keyword txl_keyword contained uniq unless unquote until
-syn keyword txl_keyword contained upcase-str update url-decode url-encode
-syn keyword txl_keyword contained usleep uw-protect vec vec-push
-syn keyword txl_keyword contained vec-set-length vecref vector vector-list
-syn keyword txl_keyword contained vectorp when where while
-syn keyword txl_keyword contained with-saved-vars wrap wrap* zerop
-syn keyword txl_keyword contained zip
+syn keyword txl_keyword contained uniq unique unless unquote
+syn keyword txl_keyword contained until upcase-str update url-decode
+syn keyword txl_keyword contained url-encode usleep uw-protect vec
+syn keyword txl_keyword contained vec-push vec-set-length vecref vector
+syn keyword txl_keyword contained vector-list vectorp when where
+syn keyword txl_keyword contained while with-saved-vars wrap wrap*
+syn keyword txl_keyword contained zerop zip
 syn match txr_metanum "@[0-9]\+"
 syn match txr_nested_error "[^\t `]\+" contained
 
