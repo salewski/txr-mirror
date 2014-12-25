@@ -7,6 +7,17 @@
 
 	* tl.vim, txr.vim: Regenerated.
 
+2014-12-25  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (simple_lazy_stream_func): Bugfix: close the stream
+	if get_line returns nil.
+
+	* stream.c (cat_get_line, cat_get_char, cat_get_byte): The catenated
+	stream read operations close an exhausted stream before popping
+	to the next one.
+
+	* txr.1: Document closing behavior of catenated streams.
+
 2014-12-23  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (ap_s, ret_s, aret_s): New symbol variables.

@@ -2386,9 +2386,11 @@ static val cat_get_line(val stream)
   val streams = coerce(val, stream->co.handle);
 
   while (streams) {
-    val line = get_line(first(streams));
+    val fs = first(streams);
+    val line = get_line(fs);
     if (line)
       return line;
+    close_stream(fs, t);
     if ((streams = rest(streams)) != nil)
       stream->co.handle = coerce(mem_t *, streams);
   }
@@ -2401,9 +2403,11 @@ static val cat_get_char(val stream)
   val streams = coerce(val, stream->co.handle);
 
   while (streams) {
-    val ch = get_char(first(streams));
+    val fs = first(streams);
+    val ch = get_char(fs);
     if (ch)
       return ch;
+    close_stream(fs, t);
     if ((streams = rest(streams)) != nil)
       stream->co.handle = coerce(mem_t *, streams);
   }
@@ -2416,9 +2420,11 @@ static val cat_get_byte(val stream)
   val streams = coerce(val, stream->co.handle);
 
   while (streams) {
-    val byte = get_byte(first(streams));
+    val fs = first(streams);
+    val byte = get_byte(fs);
     if (byte)
       return byte;
+    close_stream(fs, t);
     if ((streams = rest(streams)) != nil)
       stream->co.handle = coerce(mem_t *, streams);
   }

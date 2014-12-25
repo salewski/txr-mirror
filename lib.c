@@ -5083,10 +5083,12 @@ toobig:
 
 static val simple_lazy_stream_func(val stream, val lcons)
 {
-  if (set(mkloc(lcons->lc.car, lcons), get_line(stream)) != nil)
+  if (set(mkloc(lcons->lc.car, lcons), get_line(stream)) != nil) {
     set(mkloc(lcons->lc.cdr, lcons), make_lazy_cons(lcons->lc.func));
-  else
+  } else {
+    close_stream(stream, t);
     lcons->lc.cdr = nil;
+  }
 
   return nil;
 }

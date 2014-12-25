@@ -22342,11 +22342,10 @@ or
 .code get-line
 operation on the head stream yields
 .codn nil ,
-and there are more lists in the stream, then the stream is removed from the
-list, and the next stream, if any, becomes the head list. The operation is then
-tried again.  If any of these operations fail on the last list, it is not
-removed from the list, so that a stream remains in place which can take
-the
+and there are more lists in the stream, then the stream is closed, removed from
+the list, and the next stream, if any, becomes the head list. The operation is
+then tried again.  If any of these operations fail on the last list, it is not
+removed from the list, so that a stream remains in place which can take the
 .code unget-char
 or
 .code unget-byte
