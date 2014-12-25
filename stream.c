@@ -2621,7 +2621,7 @@ void stream_init(void)
   reg_fun(intern(lit("stream-set-prop"), user_package), func_n3(stream_set_prop));
   reg_fun(intern(lit("stream-get-prop"), user_package), func_n2(stream_get_prop));
   reg_fun(intern(lit("make-catenated-stream"), user_package), func_n0v(make_catenated_stream));
-
+  reg_fun(intern(lit("cat-streams"), user_package), func_n1(make_catenated_stream));
   reg_fun(intern(lit("open-directory"), user_package), func_n1(open_directory));
   reg_fun(intern(lit("open-file"), user_package), func_n2o(open_file, 1));
   reg_fun(intern(lit("open-tail"), user_package), func_n3o(open_tail, 1));

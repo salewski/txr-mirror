@@ -22299,15 +22299,22 @@ is a catenated stream (see the function
 then these functions transparently operate on the current head stream of the
 catenation.
 
-.coNP Function @ make-catenated-stream
+.coNP Functions @ make-catenated-stream and @ cat-streams
 .synb
 .mets (make-catenated-stream << stream *)
+.mets (cat-streams << stream-list )
 .syne
 .desc
 The
 .code make-catenated-stream
 function takes zero or more arguments which
-are input streams of the same type.
+are input streams of the same type, and combines
+them into a single virtual stream called a catenated stream.
+
+The
+.code cat-streams
+function takes a single list of input streams of
+the same type, and similarly combines them into a catenated stream.
 
 A catenated stream does not support seeking operations or output,
 regardless of the capabilities of the streams in the list.
