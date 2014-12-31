@@ -1,3 +1,8 @@
+2014-12-31  Kaz Kylheku  <kaz@kylheku.com>
+
+	* txr.1: Fix error. (set [seq index-list] new) corresponds to
+	replace not to refset.
+
 2014-12-25  Kaz Kylheku  <kaz@kylheku.com>
 
 	* stream.c (stream_init): Register make_catenated_stream in

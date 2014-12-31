@@ -10484,12 +10484,17 @@ This form is equivalent to
 .cble
 except when the target of an assignment operation.
 
-The following equivalences hold:
+The following equivalences hold between index-list-based indexing
+and the
+.code select
+and
+.code replace
+functions:
 
 .cblk
-  [seq list] <--> (select seq list)
+  [seq idx-list] <--> (select seq idx-list)
 
-  (set [seq list] new) <--> (refset seq new list)
+  (set [seq idx-list] new) <--> (replace seq new idx-list)
 .cble
 
 This form does not accept update operators like
