@@ -1,5 +1,12 @@
 2014-12-31  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (replace_str, replace_vec): Bugfix. The replacement item
+	sequence may be an infinite list in the case that the from argument
+	specifies a list of indices. We must avoid trying to calculate its
+	length before we have detected this case.
+
+2014-12-31  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: Fix error. (set [seq index-list] new) corresponds to
 	replace not to refset.
 

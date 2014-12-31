@@ -2607,8 +2607,6 @@ val replace_str(val str_in, val items, val from, val to)
 {
   val itseq = toseq(items);
   val len = length_str(str_in);
-  val len_it = length(itseq);
-  val len_rep;
 
   if (type(str_in) != STR) {
     uw_throwf(error_s, lit("replace-str: ~s of type ~s is not "
@@ -2651,52 +2649,56 @@ val replace_str(val str_in, val items, val from, val to)
   from = max2(zero, min2(from, len));
   to = max2(zero, min2(to, len));
 
-  len_rep = minus(to, from);
 
-  if (gt(len_rep, len_it)) {
-    val len_diff = minus(len_rep, len_it);
-    cnum t = c_num(to);
-    cnum l = c_num(len);
+  {
+    val len_rep = minus(to, from);
+    val len_it = length(itseq);
 
-    wmemmove(str_in->st.str + t - c_num(len_diff),
-             str_in->st.str + t, (l - t) + 1);
-    set(mkloc(str_in->st.len, str_in), minus(len, len_diff));
-    to = plus(from, len_it);
-  } else if (lt(len_rep, len_it)) {
-    val len_diff = minus(len_it, len_rep);
-    cnum t = c_num(to);
-    cnum l = c_num(len);
+    if (gt(len_rep, len_it)) {
+      val len_diff = minus(len_rep, len_it);
+      cnum t = c_num(to);
+      cnum l = c_num(len);
 
-    string_extend(str_in, plus(len, len_diff));
-    wmemmove(str_in->st.str + t + c_num(len_diff),
-             str_in->st.str + t, (l - t) + 1);
-    to = plus(from, len_it);
-  }
+      wmemmove(str_in->st.str + t - c_num(len_diff),
+               str_in->st.str + t, (l - t) + 1);
+      set(mkloc(str_in->st.len, str_in), minus(len, len_diff));
+      to = plus(from, len_it);
+    } else if (lt(len_rep, len_it)) {
+      val len_diff = minus(len_it, len_rep);
+      cnum t = c_num(to);
+      cnum l = c_num(len);
 
-  if (zerop(len_it))
-    return str_in;
-  if (stringp(itseq)) {
-    wmemcpy(str_in->st.str + c_num(from), c_str(itseq), c_num(len_it));
-  } else {
-    val iter;
-    cnum f = c_num(from);
-    cnum t = c_num(to);
-    cnum s;
+      string_extend(str_in, plus(len, len_diff));
+      wmemmove(str_in->st.str + t + c_num(len_diff),
+               str_in->st.str + t, (l - t) + 1);
+      to = plus(from, len_it);
+    }
 
-    if (listp(itseq)) {
-      for (iter = itseq; iter && f != t; iter = cdr(iter), f++)
-        str_in->st.str[f] = c_chr(car(iter));
-    } else if (vectorp(itseq)) {
-      for (s = 0; f != t; f++, s++)
-        str_in->st.str[f] = c_chr(vecref(itseq, num(s)));
+    if (zerop(len_it))
+      return str_in;
+    if (stringp(itseq)) {
+      wmemcpy(str_in->st.str + c_num(from), c_str(itseq), c_num(len_it));
     } else {
-      uw_throwf(error_s, lit("replace-str: source object ~s not supported"),
-                itseq, nao);
+      val iter;
+      cnum f = c_num(from);
+      cnum t = c_num(to);
+      cnum s;
+
+      if (listp(itseq)) {
+        for (iter = itseq; iter && f != t; iter = cdr(iter), f++)
+          str_in->st.str[f] = c_chr(car(iter));
+      } else if (vectorp(itseq)) {
+        for (s = 0; f != t; f++, s++)
+          str_in->st.str[f] = c_chr(vecref(itseq, num(s)));
+      } else {
+        uw_throwf(error_s, lit("replace-str: source object ~s not supported"),
+                  itseq, nao);
+      }
     }
   }
+
   return str_in;
 }
-
 
 val cat_str(val list, val sep)
 {
@@ -4950,8 +4952,6 @@ val replace_vec(val vec_in, val items, val from, val to)
 {
   val it_seq = toseq(items);
   val len = length_vec(vec_in);
-  val len_it = length(it_seq);
-  val len_rep;
 
   if (consp(from)) {
     val where = from;
@@ -4988,55 +4988,59 @@ val replace_vec(val vec_in, val items, val from, val to)
   from = max2(zero, min2(from, len));
   to = max2(zero, min2(to, len));
 
-  len_rep = minus(to, from);
+  {
+    val len_rep = minus(to, from);
+    val len_it = length(it_seq);
 
-  if (gt(len_rep, len_it)) {
-    val len_diff = minus(len_rep, len_it);
-    cnum t = c_num(to);
-    cnum l = c_num(len);
+    if (gt(len_rep, len_it)) {
+      val len_diff = minus(len_rep, len_it);
+      cnum t = c_num(to);
+      cnum l = c_num(len);
 
-    memmove(vec_in->v.vec + t - c_num(len_diff),
-            vec_in->v.vec + t,
-            (l - t) * sizeof vec_in->v.vec);
+      memmove(vec_in->v.vec + t - c_num(len_diff),
+              vec_in->v.vec + t,
+              (l - t) * sizeof vec_in->v.vec);
 
-    vec_in->v.vec[vec_length] = minus(len, len_diff);
-    to = plus(from, len_it);
-  } else if (lt(len_rep, len_it)) {
-    val len_diff = minus(len_it, len_rep);
-    cnum t = c_num(to);
-    cnum l = c_num(len);
+      vec_in->v.vec[vec_length] = minus(len, len_diff);
+      to = plus(from, len_it);
+    } else if (lt(len_rep, len_it)) {
+      val len_diff = minus(len_it, len_rep);
+      cnum t = c_num(to);
+      cnum l = c_num(len);
 
-    vec_set_length(vec_in, plus(len, len_diff));
+      vec_set_length(vec_in, plus(len, len_diff));
 
-    memmove(vec_in->v.vec + t + c_num(len_diff),
-            vec_in->v.vec + t,
-            (l - t) * sizeof vec_in->v.vec);
-    to = plus(from, len_it);
+      memmove(vec_in->v.vec + t + c_num(len_diff),
+              vec_in->v.vec + t,
+              (l - t) * sizeof vec_in->v.vec);
+      to = plus(from, len_it);
+    }
+
+    if (zerop(len_it))
+      return vec_in;
+    if (vectorp(it_seq)) {
+      memcpy(vec_in->v.vec + c_num(from), it_seq->v.vec,
+             sizeof *vec_in->v.vec * c_num(len_it));
+      mut(vec_in);
+    } else if (stringp(it_seq)) {
+      cnum f = c_num(from);
+      cnum t = c_num(to);
+      cnum s;
+      const wchar_t *str = c_str(it_seq);
+
+      for (s = 0; f != t; f++, s++)
+        vec_in->v.vec[f] = chr(str[s]);
+    } else {
+      val iter;
+      cnum f = c_num(from);
+      cnum t = c_num(to);
+
+      for (iter = it_seq; iter && f != t; iter = cdr(iter), f++)
+        vec_in->v.vec[f] = car(iter);
+      mut(vec_in);
+    }
   }
 
-  if (zerop(len_it))
-    return vec_in;
-  if (vectorp(it_seq)) {
-    memcpy(vec_in->v.vec + c_num(from), it_seq->v.vec,
-           sizeof *vec_in->v.vec * c_num(len_it));
-    mut(vec_in);
-  } else if (stringp(it_seq)) {
-    cnum f = c_num(from);
-    cnum t = c_num(to);
-    cnum s;
-    const wchar_t *str = c_str(it_seq);
-
-    for (s = 0; f != t; f++, s++)
-      vec_in->v.vec[f] = chr(str[s]);
-  } else {
-    val iter;
-    cnum f = c_num(from);
-    cnum t = c_num(to);
-
-    for (iter = it_seq; iter && f != t; iter = cdr(iter), f++)
-      vec_in->v.vec[f] = car(iter);
-    mut(vec_in);
-  }
   return vec_in;
 }
 
