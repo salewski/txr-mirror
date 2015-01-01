@@ -1,3 +1,94 @@
+                                    TXR 101
+                                   2015-01-01
+
+
+  Features
+
+  - Finalization support in the garbage collector. Use the finalize
+    function to associate a function with an object which is called
+    when that object is found to be unreachable.
+
+  - iff function can now be called with just one argument.
+
+  - New function chand.
+
+  - New macros opip and oand.
+
+  - The min and max functions are more generic by using the less function
+    instead of the < function.
+
+  - The less and greater functions are variadic now.
+
+  - Select accepts a function in place of the index list.
+
+  - Arguments of where function reversed, with backward compatibility support.
+
+  - New functions succ, ssucc, sssucc, pred, ppred, pppred for calculating
+    small deltas.
+
+  - New functions wrap and wrap* for clamping a number into a given range,
+    with modular wrapping semantics.
+
+  - New function sort-group for sorting and partitioning a sequence in
+    a single operation.
+
+  - New function in for generic membership testing over any kind of sequence
+    or hash.
+
+  - copy function extended to copy random state objects.
+
+  - New function unique, which generalizes uniq.
+
+  - New function aret: apply version of ret.
+
+  - Build system improvements: debug and optimized TXR built at the same time,
+    dependencies handled in a cleaner way, tidy make output.
+
+  Bugs
+
+  - Fixed incorrect registration of repeat function, lacking support
+    for its optional argument.
+
+  - Removed dependency on useless Flex library (libfl).
+
+  - Overflow arithmetic fixes in some array resizing logic.
+
+  - Incorrect argument defaulting in iff function
+
+  - Garbage printed in type mismatch diagnostic in sub, ref,
+    refset, replace, update and search_list.
+
+  - Behavior of splitr-str was undocumented for the case of the empty
+    separator string and was inconsistent.
+
+  - The set-diff function was not handling nil elements.
+
+  - The toint function identified itself as tofloat in error messages.
+
+  - The toint and tofloat conversions conveniently treat a character as a
+    string of length one.
+
+  - Added missing documentation that make-random-state can take an existing
+    random state and clone it.
+
+  - Also, make-random-state was incorrectly doing additional scrambling after
+    copying an existing random state.
+
+  - Simple lazy streams now close a stream when it runs out of data.
+
+  - Catenated streams close each stream that is popped from the list due
+    to running out of data.
+
+  - Fixed bug in replace-str and replace-vec: when the argument was an
+    index list that was lazy and infinite, it was being forced, causing
+    an infinite loop and exhaustion of memory.
+
+  - The partition* function was found to be buggy.
+
+  - Separate directory build issues fixed.
+
+
+
                                     TXR 100
                                    2014-10-22
 
