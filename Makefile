@@ -185,23 +185,32 @@ $(call EACH_CONF,txr.o): CFLAGS += -DTXR_VER=\"$(txr_ver)\"
 $(call EACH_CONF,$(MPI_OBJS)): CFLAGS += -DXMALLOC=chk_malloc -DXREALLOC=chk_realloc
 $(call EACH_CONF,$$(MPI_OBJS)): CFLAGS += -DXCALLOC=chk_calloc -DXFREE=free
 
-.PHONY: rebuild
+.PHONY: rebuild clean repatch distclean
+
+ifeq ($(PROG),)
+rebuild clean repatch: notconfigured
+
+distclean:
+	$(V)echo "executing generic cleanup for non-configured directory"
+	rm -f txr txr.exe txr-dbg txr-dbg.exe y.tab.c lex.yy.c y.tab.h y.output
+	rm -rf config
+	rm -rf config.*
+	rm -rf mpi-1.?.?
+else
 rebuild: clean repatch $(PROG)
 
-.PHONY: clean
 clean: conftest.clean tests.clean
 	rm -f $(PROG)$(EXE) $(PROG)-dbg$(EXE) y.tab.c lex.yy.c y.tab.h y.output
 	rm -rf opt dbg
 
-.PHONY: repatch
 repatch:
 	cd mpi-$(mpi_version); quilt pop -af
 	cd mpi-$(mpi_version); quilt push -a
 
-.PHONY: distclean
 distclean: clean
 	rm -rf $(conf_dir)
 	rm -rf mpi-$(mpi_version)
+endif
 
 TESTS_TMP := txr.test.out
 TESTS_OUT := $(addprefix tst/,\
