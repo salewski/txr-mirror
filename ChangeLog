@@ -1,3 +1,8 @@
+2015-01-05  Kaz Kylheku  <kaz@kylheku.com>
+
+	* match.c (h_trailer): Bugfix: not returning new variable
+	bindings captured in trailer section. Ouch!
+
 2015-01-01  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 101

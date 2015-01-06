@@ -1045,7 +1045,7 @@ static val h_parallel(match_line_ctx *c)
 static val h_trailer(match_line_ctx *c)
 {
   val result = match_line(ml_specline(*c, rest(c->specline)));
-  val new_pos = cdr(result);
+  cons_bind (new_bindings, new_pos, result);
   val elem = first(c->specline);
 
   if (!new_pos) {
@@ -1054,7 +1054,7 @@ static val h_trailer(match_line_ctx *c)
   }
 
   LOG_MATCH("trailer", new_pos);
-  return cons(c->bindings, plus(c->pos, c->base));
+  return cons(new_bindings, plus(c->pos, c->base));
 }
 
 static val h_fun(match_line_ctx *c)
