@@ -26443,6 +26443,18 @@ can be emulated is \*(TX 97.
 Here are values which have a special meaning as arguments to the
 .code -C
 option, along with a description of what behaviors are affected:
+.IP 101
+Up to \*(TX 101, the
+.code make-like
+function incorrectly returned
+.code nil
+when converting the empty list
+.code nil
+to string type. This affects numerous generic sequence functions,
+causing their result to be
+.code nil
+instead of an empty string.
+
 .IP 100
 Up to \*(TX 100, the
 .code split-str
