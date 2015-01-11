@@ -268,6 +268,9 @@ tst/%.out: %.txr
 tests.clean:
 	rm -rf tst
 
+.PHONY: retest
+retest: tests.clean tests
+
 define GREP_CHECK
 	$(V)if [ $$(grep -E $(1) $(SRCS) | wc -l) -ne $(3) ] ; then \
 	      echo "New '$(2)' occurrences have been found:" ; \

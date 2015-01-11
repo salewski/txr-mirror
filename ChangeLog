@@ -1,5 +1,9 @@
 2015-01-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	* Makefile (retest): New phony target for convenience.
+
+2015-01-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (make_like): Bugfix. (make-like nil "abc")
 	must return the empty string, not nil. Only
 	lists of non-characters fail to convert to a string.
