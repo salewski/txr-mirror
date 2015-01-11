@@ -14786,26 +14786,27 @@ value.
 .SS* List Sorting
 .coNP Function @ merge
 .synb
-.mets (merge < list1 < list2 >> [ lessfun <> [ keyfun ]])
+.mets (merge < seq1 < seq2  >> [ lessfun <> [ keyfun ]])
 .syne
 .desc
 The
 .code merge
-function merges two sorted lists
-.meta list1
+function merges two sorted sequences
+.meta seq1
 and
-.meta list2
+.meta seq2
 into a single
-sorted list. The semantics and defaulting behavior of the
+sorted sequence. The semantics and defaulting behavior of the
 .meta lessfun
 and
 .meta keyfun
-arguments are the same as those of the sort function. The input lists
-are assumed to be sorted according to these functions.
+arguments are the same as those of the sort function.
 
-This function is destructive. The application should not retain references to
-the input lists, since the output list is formed out of the structure of the
-input lists.
+The sequence which is returned is of the same kind as
+.metn seq1 .
+
+This function is destructive of any inputs that are lists. If the output
+is a list, it is formed out of the structure of the input lists.
 
 .coNP Function @ multi-sort
 .synb

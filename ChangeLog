@@ -1,3 +1,9 @@
+2015-01-11  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (merge_wrap): Make generic over sequences.
+
+	* txr.1: Update documentation for merge function.
+
 2015-01-05  Kaz Kylheku  <kaz@kylheku.com>
 
 	* match.c (h_trailer): Bugfix: not returning new variable

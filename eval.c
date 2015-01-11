@@ -3399,12 +3399,25 @@ static val pprinl(val obj, val stream)
   return ret;
 }
 
-static val merge_wrap(val list1, val list2, val lessfun, val keyfun)
+static val merge_wrap(val seq1, val seq2, val lessfun, val keyfun)
 {
-  keyfun = default_arg(keyfun, identity_f);
-  lessfun = default_arg(lessfun, less_f);
+  if (!nullify(seq1)) {
+    if (type(seq1) == type(seq2))
+      return seq2;
+    return make_like(tolist(seq2), seq1);
+  } else if (!nullify(seq2)) {
+    if (type(seq1) == type(seq2))
+      return seq1;
+    return make_like(tolist(seq1), seq1);
+  } else {
+    val list1 = tolist(seq1);
+    val list2 = tolist(seq2);
 
-  return merge(list1, list2, lessfun, keyfun);
+    keyfun = default_arg(keyfun, identity_f);
+    lessfun = default_arg(lessfun, less_f);
+
+    return make_like(merge(list1, list2, lessfun, keyfun), seq1);
+  }
 }
 
 void eval_init(void)
