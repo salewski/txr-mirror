@@ -24167,6 +24167,89 @@ C function is currently not supported.
 
 Note that syslog messages are not newline-terminated.
 
+.SS* Unix Path Globbing
+
+On platforms where the POSIX
+.code glob
+function is available \*(TX provides this functionality in
+the form of a like-named function, and some numeric constants.
+
+.coNP Special variables @, glob-err @, glob-mark @, glob-nosort @, glob-nocheck @, glob-noescape @, glob-period @, glob-altdirfunc @, glob-brace @, glob-nomagic @, glob-tilde @ glob-tilde-check and @ glob-onlydir
+
+These variables take on the values of the corresponding C preprocessor
+constants from the
+.code <glob.h>
+header:
+.codn GLOB_ERR ,
+.codn GLOB_MARK ,
+.codn GLOB_NOSORT ,
+etc.
+
+These values are passed as the optional second argument of the
+.code glob
+function. They are bitmasks and so multiple values can be combined
+using the
+.code logior
+function.
+
+Note that the
+.codn glob-period ,
+.codn glob-altdirfunc ,
+.codn glob-brace ,
+.codn glob-nomagic ,
+.codn glob-tilde ,
+.code glob-tilde-check
+and
+.code glob-onlydir
+variables may not be avaiable. They are extensions in the GNU C library
+implementation of
+.codn glob .
+
+.coNP Function @ glob
+.synb
+.mets (glob < pattern >> [ flags <> [ error-func ]])
+.syne
+.desc
+The
+.code glob
+function is a interface to the Unix function of the same name.
+The
+.meta pattern
+argument must be a string, which holds a glob pattern: a pattern which
+matches zero or more path names, similar to a regular expression.
+The function tries to expand the pattern and return a list of strings
+representing the matching path names in the file system.
+
+If there are no matches, then an empty list is returned.
+
+The optional
+.meta flags
+argument defaults to zero. If given, it may be a bitwise combination of the
+values of the variables
+.codn glob-err ,
+.codn glob-mark ,
+.code glob-nosort
+and others.
+
+If the
+.meta error-func
+argument is specified, it gives a callback function which is invoked
+when
+.code glob
+encounters errors accessing paths. The function takes two arguments:
+the pathname and the
+.code errno
+value which occurred for that pathname. The function's return value is
+boolean. If the function returns true, then
+.code glob
+will terminate.
+
+Details of the semantics of the
+.code glob
+function, and the meaning of all the
+.meta flags
+arguments are given in the documentation for the C function.
+
 .SS* Web Programming Support
 
 .coNP Functions @ url-encode and @ url-decode

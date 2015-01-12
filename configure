@@ -117,6 +117,7 @@ have_unistd=
 have_sys_time=
 have_timegm=
 have_syslog=
+have_glob=
 have_windows_h=
 have_posix_sigs=
 need_darwin_c_source=
@@ -622,6 +623,9 @@ conf_dir := $conf_dir
 
 # do we compile in syslog support?
 have_syslog := $have_syslog
+
+# do we compile in glob support?
+have_glob := $have_glob
 
 # do we modern posix signal handling?
 have_posix_sigs := $have_posix_sigs
@@ -1908,6 +1912,32 @@ int main(void)
 if conftest ; then
   printf "yes\n"
   printf "#define HAVE_LOG2 1\n" >> $config_h
+else
+  printf "no\n"
+fi
+
+printf "Checking for glob ... "
+
+cat > conftest.c <<!
+#include <glob.h>
+
+static int errfunc(const char *path, int err)
+{
+  return 0;
+}
+
+int main(void)
+{
+  glob_t gl;
+  int result = glob("*", GLOB_ERR, errfunc, &gl);
+  globfree(&gl);
+  return result;
+}
+!
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_GLOB 1\n" >> $config_h
+  have_glob=y
 else
   printf "no\n"
 fi

@@ -1,5 +1,26 @@
 2015-01-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	* glob.c: New file.
+	(glob_wrap, glob_init): New functions.
+	(errfunc_thunk): New static function.
+
+	* glob.h: New file.
+
+	* txr.c (main): call glob_init if HAVE_GLOB is defined.
+
+	* configure (have_glob): New variable.
+	(gen_config_make): Add have_glob to config/config.make.
+	Detect glob function and set have_glob, and add
+	HAVE_GLOB to config/config.h.
+
+	* Makefile (OBJS): Include glob.h if have_glob is "y".
+
+	* genvim.txr: Scan glob.c for functions and variables also.
+
+	* txr.1: Documented glob and glob-related variables.
+
+2015-01-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* Makefile (retest): New phony target for convenience.
 
 2015-01-11  Kaz Kylheku  <kaz@kylheku.com>
