@@ -1,3 +1,12 @@
+2015-01-12  Kaz Kylheku  <kaz@kylheku.com>
+
+	* signal.h (sig_save_enable, sig_save_disable):
+	Use do;while(0) trick instead of local typedef
+	to cause terminating semicolon to be required.
+	(sig_restore_enable, sig_restore_disable):
+	Remove superfluous do { } while (0).
+	Closing a brace is good enough.
+
 2015-01-11  Kaz Kylheku  <kaz@kylheku.com>
 
 	* glob.c: New file.

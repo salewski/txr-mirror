@@ -34,10 +34,9 @@
       sig_check();                              \
     async_sig_enabled = 1;                      \
     {                                           \
-      typedef void v_o_i_d
+      do ; while (0)
 
 #define sig_restore_enable                      \
-      do { } while (0);                         \
     }                                           \
     async_sig_enabled = sig_save;               \
   } while(0)
@@ -47,10 +46,9 @@
     int sig_save = async_sig_enabled;           \
     async_sig_enabled = 1;                      \
     {                                           \
-      typedef void v_o_i_d
+      do ; while (0)
 
 #define sig_restore_disable                     \
-      do { } while (0);                         \
     }                                           \
     async_sig_enabled = sig_save;               \
     if (sig_save)                               \
@@ -90,11 +88,11 @@ extern volatile sig_atomic_t async_sig_enabled;
 
 #else
 
-#define sig_save_enable do {
-#define sig_save_disable do {
+#define sig_save_enable do { do ; while (0)
+#define sig_save_disable do { do ; while (0)
 
-#define sig_restore_enable do { } while (0); } while (0)
-#define sig_restore_disable do { } while (0); } while (0)
+#define sig_restore_enable } while (0)
+#define sig_restore_disable } while (0)
 
 typedef struct {
   jmp_buf jb;
