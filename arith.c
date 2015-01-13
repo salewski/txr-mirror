@@ -993,8 +993,42 @@ val zerop(val num)
     return nil;
   case FLNUM:
     return if2(c_flo(num) == 0.0, t);
+  case CHR:
+    return if2(num == chr(0), t);
   default:
     uw_throwf(error_s, lit("zerop: ~s is not a number"), num, nao);
+  }
+}
+
+val plusp(val num)
+{
+  switch (type(num)) {
+  case NUM:
+    return if2(c_num(num) > 0, t);
+  case BGNUM:
+    return if2(mp_cmp_z(mp(num)) == MP_GT, t);
+  case FLNUM:
+    return if2(c_flo(num) > 0.0, t);
+  case CHR:
+    return if2(num != chr(0), t);
+  default:
+    uw_throwf(error_s, lit("plusp: ~s is not a number"), num, nao);
+  }
+}
+
+val minusp(val num)
+{
+  switch (type(num)) {
+  case NUM:
+    return if2(c_num(num) < 0, t);
+  case BGNUM:
+    return if2(mp_cmp_z(mp(num)) == MP_LT, t);
+  case FLNUM:
+    return if2(c_flo(num) < 0.0, t);
+  case CHR:
+    return nil;
+  default:
+    uw_throwf(error_s, lit("minusp: ~s is not a number"), num, nao);
   }
 }
 

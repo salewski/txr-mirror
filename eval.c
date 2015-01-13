@@ -3728,6 +3728,8 @@ void eval_init(void)
   reg_fun(intern(lit("numberp"), user_package), func_n1(numberp));
 
   reg_fun(intern(lit("zerop"), user_package), func_n1(zerop));
+  reg_fun(intern(lit("plusp"), user_package), func_n1(plusp));
+  reg_fun(intern(lit("minusp"), user_package), func_n1(minusp));
   reg_fun(intern(lit("evenp"), user_package), func_n1(evenp));
   reg_fun(intern(lit("oddp"), user_package), func_n1(oddp));
   reg_fun(intern(lit("succ"), user_package), func_n1(succ));

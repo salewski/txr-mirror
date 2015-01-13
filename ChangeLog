@@ -1,5 +1,17 @@
 2015-01-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (zerop): Handle character arguments.
+	(plusp, minusp): New functions.
+
+	* eval.c (eval_init): Register plusp and minusp.
+
+	* lib.h (plusp, minusp): Declared.
+
+	* txr.1: Documented plusp and minusp, and the
+	handling of characters by zerop.
+
+2015-01-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	Fix for LLVM wchar_t literals not being four byte
 	aligned, affecting OS X port.
 

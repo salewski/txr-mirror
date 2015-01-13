@@ -18677,7 +18677,7 @@ The
 function tests
 .meta number
 for equivalence to zero. The argument must be
-a number. It returns
+a number or character. It returns
 .code t
 for the integer value
 .code 0
@@ -18686,6 +18686,31 @@ value
 .codn 0.0 .
 For other numbers, it returns
 .codn nil .
+It returns
+.code t
+for the null character
+.code #\enul
+and
+.code nil
+for all other characters.
+
+.coNP Functions @ plusp and @ minusp
+.synb
+.mets (plusp << number )
+.mets (minusp << number )
+.syne
+.desc
+These functions test whether a number is positive or negative,
+returning
+.code t
+or
+.codn nil ,
+as the case may be.
+
+The argument may also be a character. All characters other than
+the null character
+.code #\enul
+are positive. No character is negative.
 
 .coNP Functions @ evenp and @ oddp
 .synb
