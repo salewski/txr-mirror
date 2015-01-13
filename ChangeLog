@@ -1,5 +1,23 @@
 2015-01-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	Fix for LLVM wchar_t literals not being four byte
+	aligned, affecting OS X port.
+
+	* configure: Detect a SIZEOF_WCHAR_T when detecting integer
+	type that will hold a pointer. In the lit_align test,
+	if we are on Apple Mac OSX, use a lit_align of 2,
+	so the logic kicks in for padding literals and handling
+	misalignment.
+
+	* lib.h (litptr): Add a case for LIT_ALIGN < 4 and
+	SIZEOF_WCHAR_T == 4. In this case we do the arithmetic
+	on the pointer using short *, and then convert to
+	wchar_t.
+
+	* HACKING: New section 2.4.3 about new wchar_t hack.
+
+2015-01-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	* signal.h (sig_save_enable, sig_save_disable):
 	Use do;while(0) trick instead of local typedef
 	to cause terminating semicolon to be required.

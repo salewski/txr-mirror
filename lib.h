@@ -327,9 +327,12 @@ INLINE val static_str(const wchli_t *str)
 
 INLINE wchar_t *litptr(val obj)
 {
-#if LIT_ALIGN < 4
+#if LIT_ALIGN < 4 && SIZEOF_WCHAR_T < 4
  wchar_t *ret = coerce(wchar_t *, (coerce(cnum, obj) & ~TAG_MASK));
  return (*ret == 0) ? ret + 1 : ret;
+#elif LIT_ALIGN < 4 && SIZEOF_WCHAR_T == 4
+ short *ret = coerce(short *, (coerce(cnum, obj) & ~TAG_MASK));
+ return coerce(wchar_t *, (*ret == 0) ? ret + 1 : ret);
 #else
  return coerce(wchar_t *, coerce(cnum, obj) & ~TAG_MASK);
 #endif

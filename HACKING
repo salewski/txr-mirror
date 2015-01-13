@@ -1,8 +1,3 @@
-                              Txr Internals Guide
-                         Kaz Kylheku <kaz@kylheku.com>
-
-CONTENTS:
-
 SECTION                                                                    LINE
 
 0.       Overview                                                            47
@@ -22,26 +17,27 @@ SECTION                                                                    LINE
 2.3      The COBJ type                                                      288
 2.4      Strings                                                            305
 2.4.1    Encapsulated C Strings                                             320
-2.4.2    Representation Hacks for 2 Byte wchar_t                            364
+2.4.2    Representation Hacks for 2-byte wchar_t                            364
+2.4.3    Representation hacks for 4-byte wchar_t that is 2-byte aligned                  422
 
-3.       Garbage Collection                                                 423
-3.1      Root Pointers                                                      441
-3.2      GC-safe Code                                                       464
-3.2.1    Rule One: Full Initialization                                      490
-3.2.2    Rule Two: Make it Reachable                                        519
-3.3      Weak Reference Support                                             654
-3.4      Finalization                                                       697
-3.5      Generational GC                                                    721
-3.5.2    Representation of Generations                                      730
-3.5.3    Basic Algorithm                                                    766
-3.5.4    Handling Backpointers                                              801
-3.5.5    Generational GC and Finalization                                   879
+3.       Garbage Collection                                                 432
+3.1      Root Pointers                                                      450
+3.2      GC-safe Code                                                       473
+3.2.1    Rule One: Full Initialization                                      499
+3.2.2    Rule Two: Make it Reachable                                        528
+3.3      Weak Reference Support                                             663
+3.4      Finalization                                                       706
+3.5      Generational GC                                                    730
+3.5.2    Representation of Generations                                      739
+3.5.3    Basic Algorithm                                                    775
+3.5.4    Handling Backpointers                                              810
+3.5.5    Generational GC and Finalization                                   888
 
-4.       Debugging                                                          908
-4.2.     Debugging the Yacc-generated Parser                               1039
-4.3.     Debugging GC Issues                                               1052
-4.4      Object Breakpoint                                                 1075
-4.5      Valgrind: Your Friend                                             1094
+4.       Debugging                                                          917
+4.2.     Debugging the Yacc-generated Parser                               1048
+4.3.     Debugging GC Issues                                               1061
+4.4      Object Breakpoint                                                 1084
+4.5      Valgrind: Your Friend                                             1103
 
 
 0. Overview
@@ -361,7 +357,7 @@ string.  Note that it is okay if garbage objects contain auto_str values, which
 refer to strings that no longer exist, because the garbage collector will
 recognize these pointers by their type tag and not use them.
 
-2.4.2 Representation Hacks for 2 Byte wchar_t
+2.4.2 Representation Hacks for 2-byte wchar_t
 
 On some systems (notably Cygwin), the wide character type wchar_t is only
 two bytes wide, and the alignment of string literals and arrays is two
@@ -419,6 +415,15 @@ The wref macro hides the displacement of the first character:
 
 On a platform where this hack isn't needed, these w* macros are no-ops.
 
+2.4.3 Representation hacks for 4-byte wchar_t that is 2-byte aligned
+
+On the LLVM compiler on OS X, I ran into the issue that although wchar_t
+is four byte aligned, the compiler neglects to make wide string literals
+four byte aligned. Cases occur of misaligned literals.
+
+The solution is to borrow some of the logic that is used for handling
+two-byte wchar_t. The data is similarly padded, and an adjustment calculation
+takes place similarly to recover the pointer.
 
 3. Garbage Collection
 

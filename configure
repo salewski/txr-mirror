@@ -1083,6 +1083,7 @@ read_syms()
 
 if [ -z "$intptr" ] ; then
   cat > conftest.c <<!
+#include <stddef.h>
 #include "config.h"
 #ifdef HAVE_SUPERLONG_T
 char SIZEOF_SUPERLONG_T[sizeof (superlong_t)];
@@ -1094,6 +1095,7 @@ char SIZEOF_PTR[sizeof (char *)];
 char SIZEOF_LONG[sizeof (long)];
 char SIZEOF_INT[sizeof (int)];
 char SIZEOF_SHORT[sizeof (short)];
+char SIZEOF_WCHAR_T[sizeof (wchar_t)];
 char DUMMY;
 !
   if ! conftest_syms ; then
@@ -1176,30 +1178,16 @@ fi
 printf "Conservatively guessing the alignment of wide literals ... "
 
 if [ -z "$lit_align" ] ; then
-  cat > conftest.c <<!
-#include <wchar.h>
-char SIZEOF_WCHAR_T[sizeof (wchar_t)];
-char DUMMY;
-!
-  if ! conftest_syms ; then
-    printf "failed\n\n"
-
-    printf "Errors from compilation: \n\n"
-    cat conftest.err
-    exit 1
-  fi
-
-  SIZEOF_WCHAR_T=0
-  deferred_offset=
-
-  read_syms
-
   if [ $SIZEOF_WCHAR_T -eq 0 ] ; then
     printf "failed\n"
     exit 1
   fi
 
-  lit_align=$SIZEOF_WCHAR_T
+  if [ -n "$need_darwin_c_source" ] ; then
+    lit_align=2
+  else
+    lit_align=$SIZEOF_WCHAR_T
+  fi
 fi
 
 printf "%d\n" "$lit_align"
