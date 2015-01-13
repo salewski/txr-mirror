@@ -1,3 +1,38 @@
+                                    TXR 102
+                                   2015-01-13
+
+
+  Features
+
+  - merge function becomes generic: works over sequences rather
+    than just lists.
+
+  - New function glob is provided on platforms which have the Unix
+    C library function of the same name.
+
+  - New functions plusp and minusp. zerop accepts character argument.
+
+  Bugs
+
+  - Fixed incorrectly implemented horizontal flavor of the
+    @(trailer) directive.
+
+  - Fixed a bug in the make-like function which has consequences for
+    the results of numerous sequence functions. This bug causes functions
+    to return an empty list when the expected result is an empty string.
+    For instance [mapcar identity ""] now returns "", consistent with
+    [mapcar identity "abc"] returning "abc". Previously it returned nil.
+
+  - Fixed a serious bug affecting the OS X port. The llvm-gcc compiler
+    was discovered not to be consistently aligning wide character string
+    literals on four byte boundaries, even though wchar_t is four bytes wide.
+    As a workaround, a very similar trick is usd as what is used to handle
+    literals on Windows, based on the assumption that we *can* depend
+    on two-byte alignment. The bug leads to a failure of the OS X port
+    of TXR to support the -p and -e options, for instance: txr -p '(+ 2 2)'.
+
+
+
                                     TXR 101
                                    2015-01-01
 

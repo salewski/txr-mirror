@@ -417,7 +417,7 @@ fi
 #
 
 
-txr_ver=101
+txr_ver=102
 
 #
 # The all important banner.
