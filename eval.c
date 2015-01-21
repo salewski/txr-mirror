@@ -273,6 +273,40 @@ static val lookup_symac(val menv, val sym)
   }
 }
 
+static val lexical_var_p(val menv, val sym)
+{
+  if (nilp(menv)) {
+    return nil;
+  } else {
+    type_check(menv, ENV);
+
+    {
+      val binding = assoc(sym, menv->e.vbindings);
+
+      if (binding) /* special_s: see make_var_shadowing_env */
+        return c_true(cdr(binding) == special_s);
+      return lexical_var_p(menv->e.up_env, sym);
+    }
+  }
+}
+
+static val lexical_fun_p(val menv, val sym)
+{
+  if (nilp(menv)) {
+    return nil;
+  } else {
+    type_check(menv, ENV);
+
+    {
+      val binding = assoc(sym, menv->e.fbindings);
+
+      if (binding) /* special_s: see make_var_shadowing_env */
+        return c_true(cdr(binding) == special_s);
+      return lexical_fun_p(menv->e.up_env, sym);
+    }
+  }
+}
+
 static void mark_special(val sym)
 {
   sethash(special, sym, t);
@@ -3815,6 +3849,8 @@ void eval_init(void)
   reg_fun(intern(lit("make-env"), user_package), func_n3o(make_env_intrinsic, 0));
   reg_fun(intern(lit("env-fbind"), user_package), func_n3(env_fbind));
   reg_fun(intern(lit("env-vbind"), user_package), func_n3(env_vbind));
+  reg_fun(intern(lit("lexical-var-p"), user_package), func_n2(lexical_var_p));
+  reg_fun(intern(lit("lexical-fun-p"), user_package), func_n2(lexical_fun_p));
   reg_fun(chain_s, func_n0v(chainv));
   reg_fun(chand_s, func_n0v(chandv));
   reg_fun(intern(lit("juxt"), user_package), func_n0v(juxtv));

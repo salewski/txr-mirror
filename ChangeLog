@@ -1,3 +1,15 @@
+2015-01-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	Allow macros to tell what symbols have lexical function
+	or variable bindings.
+
+	* eval.c (lexical_var_p, lexical_fun_p): New local functions.
+	(eval_init): Registered as intrinsics.
+
+	* txr.1: Documented lexical-var-p and lexical-fun-p.
+
+	* tl.vim, txr.vim: Updated.
+
 2015-01-13  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 102

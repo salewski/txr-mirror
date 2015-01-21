@@ -25772,6 +25772,69 @@ and
 .code a
 respectively.
 
+.coNP Functions @ lexical-var-p and @ lexical-fun-p
+.synb
+.mets (lexical-var-p < env << form)
+.mets (lexical-fun-p < env << form)
+.syne
+.desc
+These two functions are useful to macro writers. They are intended
+to be called from the bodies of macro expanders, such as the bodies of
+.code defmacro
+or
+.code macrolet
+forms.  The
+.meta env
+argument is a macro-time environment, which is available to macros
+via the special
+.code :env
+parameter. Using these functions, a macro can enquire whether
+a given
+.meta form
+is a symbol which has a variable binding or a function binding
+in the lexical environment.
+This information is known during macro expansion. The macro expander
+recognizes lexical function and variable bindings, because these
+bindings can shadow macros.
+
+.TP* Example:
+
+.cblk
+  ;;
+  ;; this macro replaces itself with :lexical-var if its
+  ;; argument is a lexical variable, :lexical-fun if
+  ;; its argument is a lexical function, or with
+  ;; :not-lex-fun-var if neither is the case.
+  ;;
+  (defmacro classify (sym :env e)
+    (cond
+      ((lexical-var-p e expr) :lexical-var)
+      ((lexical-fun-p e expr) :lexical-fun)
+      (t :not-lex-fun-var)))
+
+  ;;
+  ;; This returns:
+  ;;
+  ;;   (:lexical-var :not-lex-fun-var :lexical-fun)
+  ;;
+  (let ((x 1) (y 2))
+    (symacrolet ((y x))
+      (flet ((f () (+ 2 2)))
+        (list (classify x) (classify y) (classify z)))))
+.cble
+
+.TP* Note:
+
+These functions do not call
+.code macroexpand
+on the form. In most cases, it is necessary for the macro writers
+to do so. Not that in the above example,  symbol
+.code y
+is classified as neither a lexical function nor variable.
+However, it can be macro-expanded to
+.code x
+which is a lexical variable.
+
 .coNP Operator @ defsymacro
 .synb
 .mets (defsymacro < sym << form )
