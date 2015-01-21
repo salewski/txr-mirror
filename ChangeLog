@@ -1,3 +1,15 @@
+2015-01-22  Kaz Kylheku  <kaz@kylheku.com>
+
+	Basic implementation of constantp. Does not
+	recognize forms like (+ 2 2) as constant.
+
+	* eval.c (constantp_noex, constantp): New functions.
+	(eval_init): Registered constantp as intrinsic.
+
+	* tl.vim, txr.vim: Updated.
+
+	* txr.1: Documented constantp.
+
 2015-01-21  Kaz Kylheku  <kaz@kylheku.com>
 
 	* stream.c (get_string): New argument, close_after_p.

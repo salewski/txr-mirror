@@ -2983,6 +2983,42 @@ static val macroexpand(val form, val menv)
   }
 }
 
+static val constantp_noex(val form)
+{
+  if (consp(form)) {
+    return eq(car(form), quote_s);
+  } else {
+    if (bindable(form))
+      return nil;
+    return t;
+  }
+}
+
+static val constantp(val form, val env_in)
+{
+  val env = default_bool_arg(env_in);
+
+  if (consp(form)) {
+    if (car(form) == quote_s) {
+      return t;
+    } else if (macro_form_p(form, env)) {
+      return constantp_noex(macroexpand(form, env));
+    } else {
+      return nil;
+    }
+  } else if (symbolp(form)) {
+    if (!bindable(form)) {
+      return t;
+    } else if (macro_form_p(form, env)) {
+      return constantp_noex(macroexpand(form, env));
+    } else {
+      return nil;
+    }
+  } else {
+    return t;
+  }
+}
+
 val mapcarv(val fun, val list_of_lists)
 {
   if (!cdr(list_of_lists)) {
@@ -3846,6 +3882,7 @@ void eval_init(void)
           func_n2o(macroexpand_1, 1));
   reg_fun(intern(lit("macroexpand"), user_package),
           func_n2o(macroexpand, 1));
+  reg_fun(intern(lit("constantp"), user_package), func_n2o(constantp, 1));
   reg_fun(intern(lit("make-env"), user_package), func_n3o(make_env_intrinsic, 0));
   reg_fun(intern(lit("env-fbind"), user_package), func_n3(env_fbind));
   reg_fun(intern(lit("env-vbind"), user_package), func_n3(env_vbind));

@@ -10750,6 +10750,43 @@ already exists in the environment, in the given space, then its
 value is updated with
 .codn value .
 
+.coNP Function @ constantp
+.synb
+.mets (constantp < form >> [ env ])
+.syne
+.desc
+The
+.code constantp
+function determines whether
+.mode form
+is a constant form, with respect to environment
+.mode env .
+
+If
+.mode env
+is absent, the global environment is used.
+The
+.mode env
+argument is used for macro-expanding
+.modn form .
+
+Currently,
+.code constantp
+returns true for any form, which, after macro-expansion is a compound
+form with the symbol
+.code quote
+in its first position, a non-symbolic atom, or one of the symbols
+which evaluate to themselves and cannot be bound as variables.
+These symbols are the keyword symbols, and the symbols
+.code t
+and
+.codn nil .
+
+In the future,
+.code constantp
+will be able to recognize more constant forms, such as calls to certain
+functions whose arguments are constant forms.
+
 .SS* Mutation
 
 .coNP Operators @ inc @ dec @ set @ push @ pop @ flip and @ del
