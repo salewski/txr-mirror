@@ -1,5 +1,9 @@
 2015-01-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Minor fix in split-str-set documentation.
+
+2015-01-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	Allow macros to tell what symbols have lexical function
 	or variable bindings.
 
