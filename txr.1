@@ -22055,7 +22055,7 @@ See also:
 
 .coNP Function @ get-string
 .synb
-.mets (get-string >> [ stream <> [ count ]])
+.mets (get-string >> [ stream >> [ count <> [ close-after-p ]]])
 .syne
 .desc
 The
@@ -22066,6 +22066,13 @@ a string, which is returned. If the
 argument is omitted, then the
 .code *stdin*
 stream is used.
+
+The stream is closed after extracting the data, unless
+.meta close-after-p
+is specified as
+.codn nil .
+The default value of this argument is
+.codn t .
 
 If the
 .meta count
@@ -26614,6 +26621,11 @@ can be emulated is \*(TX 97.
 Here are values which have a special meaning as arguments to the
 .code -C
 option, along with a description of what behaviors are affected:
+.IP 102
+Up to \*(TX 102, the
+.code get-string
+function did not close the stream. This old behavior is emulated.
+
 .IP 101
 Up to \*(TX 101, the
 .code make-like

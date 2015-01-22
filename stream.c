@@ -56,6 +56,7 @@
 #include "utf8.h"
 #include "eval.h"
 #include "regex.h"
+#include "txr.h"
 
 val stdin_s, stdout_s, stddebug_s, stderr_s, stdnull_s;
 
@@ -2041,7 +2042,7 @@ val seek_stream(val stream, val offset, val whence)
   }
 }
 
-val get_string(val stream, val nchars)
+val get_string(val stream, val nchars, val close_after_p)
 {
   val strstream = make_string_output_stream();
   nchars = default_bool_arg(nchars);
@@ -2055,6 +2056,10 @@ val get_string(val stream, val nchars)
     while ((ch = get_char(stream)))
       put_char(ch, strstream);
   }
+
+  if ((missingp(close_after_p) && (!opt_compat || opt_compat > 102)) ||
+      default_arg(close_after_p, t))
+    close_stream(stream, t);
 
   return get_string_from_stream(strstream);
 }
@@ -2611,7 +2616,7 @@ void stream_init(void)
   reg_fun(intern(lit("get-line"), user_package), func_n1o(get_line, 0));
   reg_fun(intern(lit("get-char"), user_package), func_n1o(get_char, 0));
   reg_fun(intern(lit("get-byte"), user_package), func_n1o(get_byte, 0));
-  reg_fun(intern(lit("get-string"), user_package), func_n2o(get_string, 0));
+  reg_fun(intern(lit("get-string"), user_package), func_n3o(get_string, 0));
   reg_fun(intern(lit("put-string"), user_package), func_n2o(put_string, 1));
   reg_fun(intern(lit("put-line"), user_package), func_n2o(put_line, 0));
   reg_fun(intern(lit("put-char"), user_package), func_n2o(put_char, 1));

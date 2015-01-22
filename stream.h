@@ -96,7 +96,7 @@ val put_strings(val strings, val stream);
 val put_lines(val lines, val stream);
 val flush_stream(val stream);
 val seek_stream(val stream, val offset, val whence);
-val get_string(val stream, val nchars);
+val get_string(val stream, val nchars, val close_after_p);
 val statf(val path);
 val open_directory(val path);
 val open_file(val path, val mode_str);

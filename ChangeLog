@@ -1,5 +1,17 @@
 2015-01-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (get_string): New argument, close_after_p.
+	Close the stream unless close_after_p is specified and is nil,
+	or when it is missing, an there is no compatibility or it's
+	newer than version 102.
+
+	* stream.h (get_string): Updated declartion.
+
+	* txr.1: Documented default closing behavior of get-string
+	and the new optional argument for overriding it.
+
+2015-01-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: Minor fix in split-str-set documentation.
 
 2015-01-21  Kaz Kylheku  <kaz@kylheku.com>
