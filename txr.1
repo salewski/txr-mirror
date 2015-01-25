@@ -21414,6 +21414,38 @@ macro.
   (call [apf +] '(1 2 3)) -> 6
 .cble
 
+.coNP Function @ callf
+.synb
+.mets (callf < main-function << arg-function *)
+.syne
+.desc
+The
+.code callf
+function returns a function which applies its arguments to each
+.metn arg-function ,
+juxtaposing the return values of these calls to form arguments
+which are then passed to
+.metn main-function .
+The return value of
+.meta main-function
+is returned.
+
+The following equivalence holds, except for the order of evaluation of
+arguments:
+
+.cblk
+  (callf fm f0 f1 f2 ...) <--> (chain (juxt f0 f1 f2 ...) (apf fm))
+.cble
+
+.TP* Example:
+
+.cblk
+  ;; Keep those pairs which are two of a kind
+
+  (keep-if [callf eql first second] '((1 1) (2 3) (4 4) (5 6)))
+  -> ((1 1) (4 4))
+.cble
+
 .SS* Input and Output (Streams)
 \*(TL supports input and output streams of various kinds, with
 generic operations that work across the stream types.

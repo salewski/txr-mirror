@@ -1,3 +1,10 @@
+2015-01-24  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (callf): New static function.
+	(eval_init): callf registered.
+
+	* txr.1: Documented callf.
+
 2015-01-22  Kaz Kylheku  <kaz@kylheku.com>
 
 	Basic implementation of constantp. Does not

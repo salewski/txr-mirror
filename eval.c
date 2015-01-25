@@ -3455,6 +3455,13 @@ static val ipf(val fun)
   return func_f0v(fun, do_ipf);
 }
 
+static val callf(val func, val funlist)
+{
+  val juxt_fun = juxtv(funlist);
+  val apf_fun = apf(func);
+  return chain(juxt_fun, apf_fun, nao);
+}
+
 static val prinl(val obj, val stream)
 {
   val ret = obj_print(obj, stream);
@@ -3902,6 +3909,7 @@ void eval_init(void)
   reg_fun(intern(lit("retf"), user_package), func_n1(retf));
   reg_fun(apf_s, func_n1(apf));
   reg_fun(ipf_s, func_n1(ipf));
+  reg_fun(intern(lit("callf"), user_package), func_n1v(callf));
   reg_fun(intern(lit("tf"), user_package), func_n0v(tf));
   reg_fun(intern(lit("nilf"), user_package), func_n0v(nilf));
 
