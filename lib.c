@@ -4756,6 +4756,16 @@ val iffi(val condfun, val thenfun, val elsefun)
   return func_f0v(cons(condfun, cons(thenfun, elsefun)), do_iff);
 }
 
+static val do_dup(val fun, val arg)
+{
+  return funcall2(fun, arg, arg);
+}
+
+val dupl(val fun)
+{
+  return func_f1(fun, do_dup);
+}
+
 val vector(val length, val initval)
 {
   int i;

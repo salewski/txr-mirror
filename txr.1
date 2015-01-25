@@ -20990,6 +20990,37 @@ and the expression
 returns a function similar to
 .codn (lambda (. rest) 42) .
 
+.coNP Function @ dup
+.synb
+.mets (dup << func )
+.syne
+.desc
+The
+.code dup
+function returns a one-argument function which calls the two-argument
+function
+.metn func
+by duplicating its argument.
+
+.TP* Example:
+
+.cblk
+  ;; square the elements of a list
+  (mapcar [dup *] '(1 2 3)) -> (1 4 9)
+.cble
+
+.coNP Function @ flip
+.synb
+.mets (flip << func )
+.syne
+.desc
+The
+.code flip
+function returns a two-argument function which calls the two-argument
+function
+.metn func
+with reversed arguments.
+
 .coNP Functions @ chain and @ chand
 .synb
 .mets (chain << func *)

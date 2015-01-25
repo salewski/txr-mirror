@@ -1,3 +1,15 @@
+2015-01-25  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): Register dupl and swap_12_21 as
+	the dup and flip intrinsics.
+
+	* lib.c (do_dup): New static function.
+	(dupl): New function.
+
+	* lib.h (dupl): Declared.
+
+	* txr.1: Documented dup and flip.
+
 2015-01-24  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (callf): New static function.
