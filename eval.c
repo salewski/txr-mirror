@@ -89,6 +89,8 @@ val special_s, whole_k;
 
 val last_form_evaled;
 
+val call_f;
+
 val make_env(val vbindings, val fbindings, val up_env)
 {
   val env = make_obj();
@@ -3462,6 +3464,18 @@ static val callf(val func, val funlist)
   return chain(juxt_fun, apf_fun, nao);
 }
 
+static val do_mapf(val env, val args)
+{
+  cons_bind (fun, funlist, env);
+  val mapped_args = mapcarv(call_f, cons(funlist, cons(args, nil)));
+  return apply(fun, mapped_args, nil);
+}
+
+static val mapf(val fun, val funlist)
+{
+  return func_f0v(cons(fun, funlist), do_mapf);
+}
+
 static val prinl(val obj, val stream)
 {
   val ret = obj_print(obj, stream);
@@ -3500,13 +3514,15 @@ static val merge_wrap(val seq1, val seq2, val lessfun, val keyfun)
 void eval_init(void)
 {
   protect(&top_vb, &top_fb, &top_mb, &top_smb, &special, &dyn_env,
-          &op_table, &last_form_evaled, convert(val *, 0));
+          &op_table, &last_form_evaled, &call_f, convert(val *, 0));
   top_fb = make_hash(t, nil, nil);
   top_vb = make_hash(t, nil, nil);
   top_mb = make_hash(t, nil, nil);
   top_smb = make_hash(t, nil, nil);
   special = make_hash(t, nil, nil);
   op_table = make_hash(nil, nil, nil);
+
+  call_f = func_n1v(call);
 
   dwim_s = intern(lit("dwim"), user_package);
   progn_s = intern(lit("progn"), user_package);
@@ -3709,7 +3725,7 @@ void eval_init(void)
   reg_fun(intern(lit("mapdo"), user_package), func_n1v(mapdov));
   reg_fun(apply_s, func_n1v(apply_intrinsic));
   reg_fun(iapply_s, func_n1v(iapply));
-  reg_fun(call_s, func_n1v(call));
+  reg_fun(call_s, call_f);
   reg_fun(intern(lit("reduce-left"), user_package), func_n4o(reduce_left, 2));
   reg_fun(intern(lit("reduce-right"), user_package), func_n4o(reduce_right, 2));
   reg_fun(intern(lit("transpose"), user_package), func_n1(transpose));
@@ -3912,6 +3928,7 @@ void eval_init(void)
   reg_fun(apf_s, func_n1(apf));
   reg_fun(ipf_s, func_n1(ipf));
   reg_fun(intern(lit("callf"), user_package), func_n1v(callf));
+  reg_fun(intern(lit("mapf"), user_package), func_n1v(mapf));
   reg_fun(intern(lit("tf"), user_package), func_n0v(tf));
   reg_fun(intern(lit("nilf"), user_package), func_n0v(nilf));
 

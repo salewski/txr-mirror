@@ -21477,6 +21477,51 @@ arguments:
   -> ((1 1) (4 4))
 .cble
 
+.coNP Function @ mapf
+.synb
+.mets (mapf < main-function << arg-function *)
+.syne
+.desc
+The
+.code mapf
+function returns a function which distributes its arguments
+into the
+.metn arg-function -s.
+That is to say, each successive argument of the returned
+function is associated with a successive
+.metn arg-function .
+
+Each
+.metn arg-function
+is called, passed the corresponding argument. The return
+values of these functions are then passd as arguments
+to
+.meta main function
+and the resulting value is returned.
+
+If the returned function is calle with fewer arguments than there
+are
+.metn arg-function -s,
+then only that many functions are used. Conversely, if the function is
+called with more arguments than there are
+.metn arg-function -s, then those arguments are ignored.
+
+The following equivalence holds:
+
+.cblk
+  (mapf fm f0 f1 ...) <--> (lambda (. rest)
+                              [apply fm [mapcar call (list f0 f1 ...) rest]])
+.cble
+
+.TP* Example:
+
+.cblk
+  ;; Keep those pairs which are two of a kind
+
+  (keep-if [callf eql first second] '((1 1) (2 3) (4 4) (5 6)))
+  -> ((1 1) (4 4))
+.cble
+
 .SS* Input and Output (Streams)
 \*(TL supports input and output streams of various kinds, with
 generic operations that work across the stream types.

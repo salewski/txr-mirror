@@ -1,5 +1,15 @@
 2015-01-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (call_f): New global variable.
+	(do_mapf, mapf): New static functions.
+	(eval_init): Protect call_f from gc, and initialize it.
+	Re-register call function using call_f.
+	Register mapf intrinsic.
+
+	* txr.1: Documented mapf.
+
+2015-01-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Register dupl and swap_12_21 as
 	the dup and flip intrinsics.
 
