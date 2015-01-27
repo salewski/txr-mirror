@@ -1,3 +1,13 @@
+2015-01-27  Kaz Kylheku  <kaz@kylheku.com>
+
+	* arith.c (width): New function.
+
+	* arith.h (width): Declared.
+
+	* eval.c (eval_init): Width registered as intrisinc.
+
+	* txr.1: Documented width.
+
 2015-01-25  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (call_f): New global variable.

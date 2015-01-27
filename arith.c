@@ -2187,6 +2187,46 @@ val toint(val obj, val base)
   }
 }
 
+val width(val obj)
+{
+  switch (tag(obj)) {
+  case TAG_NUM:
+  case TAG_CHR:
+    {
+      cnum n = c_num(obj);
+
+      if (n < 0) {
+        n &= INT_PTR_MAX;
+        n ^= INT_PTR_MAX;
+        return num_fast(highest_bit(n));
+      }
+      return num_fast(highest_bit(n));
+    }
+  case TAG_PTR:
+    if (type(obj) == BGNUM) {
+      int count;
+      if (mp_cmp_z(mp(obj)) == MP_LT) {
+        mp_int tmp;
+        int i;
+
+        mp_2comp(mp(obj), &tmp, mp(obj)->used);
+
+        for (i = 0; i < tmp.used; i++)
+          tmp.dp[i] ^= MP_DIGIT_MAX;
+
+        count = mp_count_bits(&tmp);
+        mp_clear(&tmp);
+      } else {
+        count = mp_count_bits(mp(obj));
+      }
+      return num(count);
+    }
+  default:
+    break;
+  }
+  uw_throwf(error_s, lit("integer-length: ~s isn't an integer"), obj, nao);
+}
+
 void arith_init(void)
 {
   mp_init(&NUM_MAX_MP);

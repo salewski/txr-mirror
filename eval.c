@@ -3851,6 +3851,7 @@ void eval_init(void)
   reg_fun(intern(lit("ash"), user_package), func_n2(ash));
   reg_fun(intern(lit("bit"), user_package), func_n2(bit));
   reg_fun(intern(lit("mask"), user_package), func_n0v(maskv));
+  reg_fun(intern(lit("width"), user_package), func_n1(width));
 
   reg_fun(intern(lit("regex-compile"), user_package), func_n2o(regex_compile, 1));
   reg_fun(intern(lit("regexp"), user_package), func_n1(regexp));

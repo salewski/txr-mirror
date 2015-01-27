@@ -19395,6 +19395,34 @@ In other words, the following equivalences hold:
   (mask a b c ...) <--> (logior (mask a) (mask b) (mask c) ...)
 .cble
 
+.coNP Function @ width
+.synb
+.mets (width << integer *)
+.syne
+.desc
+A two's complement representation of an integer consists of a sign bit and a
+manitssa field.
+The
+.code width
+function computes the minimum number of bits required for the mantissa portion
+of the two's complement representation of the
+.meta integer
+argument.
+
+For a nonnegative argument, the width also corresponds to the number of bits
+required for a natural binary representation of that value.
+
+Two integer values have a width of zero, namely 0 and -1. This means that these
+two values can be represented in a one-bit two's complement, consisting of only
+a sign bit: the one-bit two's complement bitfield 1 denotes -1, and 0 denotes
+0.
+
+Similarly, two integer values have a width of 1: 1 and -2. The two-bit
+two's complement bitfield 01 denotes 1, and 10 denotes -2.
+
+The argument may be a character.
+
+
 .SS* Exceptions
 .coNP Functions @, throw @ throwf and @ error
 .synb
