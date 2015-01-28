@@ -505,7 +505,7 @@ val make_like(val list, val thatobj)
     case LIT:
     case LSTR:
       if (!opt_compat || opt_compat > 101) {
-        if (!cdr(list))
+        if (!list)
           return null_string;
       }
       if (is_chr(car(list)))

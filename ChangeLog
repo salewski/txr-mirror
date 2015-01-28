@@ -1,5 +1,11 @@
 2015-01-27  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (make_like): Fix regression introduced in 102.
+	A one element list being converted to a string
+	treated as an empty list, leading to empty string.
+
+2015-01-27  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (width): New function.
 
 	* arith.h (width): Declared.
