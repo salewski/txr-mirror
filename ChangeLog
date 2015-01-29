@@ -1,3 +1,9 @@
+2015-01-28  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (bind_macro_params): Bugfix: the colon argument's special
+	meaning "treat the argument as missing" must apply only to optional
+	parameters.
+
 2015-01-27  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (make_like): Fix regression introduced in 102.
