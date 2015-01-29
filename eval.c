@@ -513,6 +513,7 @@ static val expand_params(val params, val menv)
              params_ex);
 }
 
+static val get_param_syms(val params);
 
 static val get_opt_param_syms(val params)
 {
@@ -521,18 +522,16 @@ static val get_opt_param_syms(val params)
   } else if (atom(params)) {
     return nil;
   } else {
-    val form = car(params);
+    val spec = car(params);
 
-    if (atom(form) || !consp(cdr(form))) { /* sym, or no init form */
+    if (atom(spec)) {
       val rest_syms = get_opt_param_syms(cdr(params));
-      if (bindable(form))
-        return cons(form, rest_syms);
-      if (bindable(car(form)))
-        return cons(car(form), rest_syms);
+      if (bindable(spec))
+        return cons(spec, rest_syms);
       return rest_syms;
-    } else { /* has initform */
-      val sym = car(form);
-      return cons(sym, get_opt_param_syms(cdr(params)));
+    } else {
+      val pat = car(spec);
+      return nappend2(get_param_syms(pat), get_opt_param_syms(cdr(params)));
     }
   }
 }
