@@ -1,3 +1,8 @@
+2015-01-29  Kaz Kylheku  <kaz@kylheku.com>
+
+	* txr.1: fixed use of nonexistent str-int in @(require) example;
+	fixed bad formatting under logtrunc and partition.
+
 2015-01-28  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (get_opt_param_syms): Fix broken function. This

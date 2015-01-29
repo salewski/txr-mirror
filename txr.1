@@ -8932,7 +8932,7 @@ Trigger a failure unless previously bound variable
 is greater than 42:
 
 .cblk
-  @(require (> (str-int answer) 42)
+  @(require (> (int-str answer) 42)
 .cble
 
 .SS* Overview
@@ -13555,7 +13555,6 @@ of one element.
 .mets (partition* < sequence >> { index-list >> | index <> | function })
 .syne
 .desc
-
 If
 .meta sequence
 is empty, then
@@ -13584,7 +13583,6 @@ the deleted elements.
 If
 .meta index-list
 is empty then a one-element list containing the entire
-
 .meta sequence
 is returned.
 
@@ -19209,8 +19207,8 @@ common. The following equivalence holds:
 
 .coNP Functions @ lognot and @ logtrunc
 .synb
-.mets (lognot > value <> [ bits ])
-.mets (logtrunc > value << bits )
+.mets (lognot < value <> [ bits ])
+.mets (logtrunc < value << bits )
 .syne
 .desc
 The
