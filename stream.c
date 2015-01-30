@@ -84,26 +84,14 @@ static val null_get_prop(val stream, val ind)
   return nil;
 }
 
-static struct strm_ops null_ops = {
-  { eq,
-    null_stream_print,
-    cobj_destroy_stub_op,
-    cobj_mark_op,
-    cobj_hash_op },
-  0, /* put_string */
-  0, /*_put_char */
-  0, /* put_byte, */
-  0, /* get_line, */
-  0, /* get_char, */
-  0, /* get_byte, */
-  0, /* unget_char, */
-  0, /* unget_byte, */
-  0, /* close, */
-  0, /* flush, */
-  0, /* seek, */
-  null_get_prop,
-  0, /* set_prop */
-};
+static struct strm_ops null_ops =
+  strm_ops_init(cobj_ops_init(eq,
+                              null_stream_print,
+                              cobj_destroy_stub_op,
+                              cobj_mark_op,
+                              cobj_hash_op),
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                null_get_prop, 0);
 
 val make_null_stream(void)
 {
@@ -412,26 +400,25 @@ static val stdio_close(val stream, val throw_on_error)
   return nil;
 }
 
-static struct strm_ops stdio_ops = {
-  { eq,
-    stdio_stream_print,
-    stdio_stream_destroy,
-    stdio_stream_mark,
-    cobj_hash_op },
-  stdio_put_string,
-  stdio_put_char,
-  stdio_put_byte,
-  stdio_get_line,
-  stdio_get_char,
-  stdio_get_byte,
-  stdio_unget_char,
-  stdio_unget_byte,
-  stdio_close,
-  stdio_flush,
-  stdio_seek,
-  stdio_get_prop,
-  stdio_set_prop
-};
+static struct strm_ops stdio_ops =
+  strm_ops_init(cobj_ops_init(eq,
+                              stdio_stream_print,
+                              stdio_stream_destroy,
+                              stdio_stream_mark,
+                              cobj_hash_op),
+                stdio_put_string,
+                stdio_put_char,
+                stdio_put_byte,
+                stdio_get_line,
+                stdio_get_char,
+                stdio_get_byte,
+                stdio_unget_char,
+                stdio_unget_byte,
+                stdio_close,
+                stdio_flush,
+                stdio_seek,
+                stdio_get_prop,
+                stdio_set_prop);
 
 static void tail_calc(unsigned long *state, int *sec, int *mod)
 {
@@ -592,27 +579,25 @@ static val tail_get_byte(val stream)
 }
 
 
-static struct strm_ops tail_ops = {
-  { eq,
-    stdio_stream_print,
-    stdio_stream_destroy,
-    stdio_stream_mark,
-    cobj_hash_op },
-  stdio_put_string,
-  stdio_put_char,
-  stdio_put_byte,
-  tail_get_line,
-  tail_get_char,
-  tail_get_byte,
-  stdio_unget_char,
-  stdio_unget_byte,
-  stdio_close,
-  stdio_flush,
-  stdio_seek,
-  stdio_get_prop,
-  stdio_set_prop
-};
-
+static struct strm_ops tail_ops =
+  strm_ops_init(cobj_ops_init(eq,
+                              stdio_stream_print,
+                              stdio_stream_destroy,
+                              stdio_stream_mark,
+                              cobj_hash_op),
+                stdio_put_string,
+                stdio_put_char,
+                stdio_put_byte,
+                tail_get_line,
+                tail_get_char,
+                tail_get_byte,
+                stdio_unget_char,
+                stdio_unget_byte,
+                stdio_close,
+                stdio_flush,
+                stdio_seek,
+                stdio_get_prop,
+                stdio_set_prop);
 
 #if HAVE_FORK_STUFF
 static int pipevp_close(FILE *f, pid_t pid)
@@ -683,26 +668,25 @@ static val pipe_close(val stream, val throw_on_error)
   return nil;
 }
 
-static struct strm_ops pipe_ops = {
-  { eq,
-    stdio_stream_print,
-    stdio_stream_destroy,
-    stdio_stream_mark,
-    cobj_hash_op },
-  stdio_put_string,
-  stdio_put_char,
-  stdio_put_byte,
-  stdio_get_line,
-  stdio_get_char,
-  stdio_get_byte,
-  stdio_unget_char,
-  stdio_unget_byte,
-  pipe_close,
-  stdio_flush,
-  0, /* seek: not on pipes */
-  stdio_get_prop,
-  stdio_set_prop
-};
+static struct strm_ops pipe_ops =
+  strm_ops_init(cobj_ops_init(eq,
+                              stdio_stream_print,
+                              stdio_stream_destroy,
+                              stdio_stream_mark,
+                              cobj_hash_op),
+                stdio_put_string,
+                stdio_put_char,
+                stdio_put_byte,
+                stdio_get_line,
+                stdio_get_char,
+                stdio_get_byte,
+                stdio_unget_char,
+                stdio_unget_byte,
+                pipe_close,
+                stdio_flush,
+                0, /* seek: not on pipes */
+                stdio_get_prop,
+                stdio_set_prop);
 
 static void string_in_stream_mark(val stream)
 {
@@ -785,26 +769,20 @@ static val string_in_get_prop(val stream, val ind)
   return nil;
 }
 
-static struct strm_ops string_in_ops = {
-  { eq,
-    cobj_print_op,
-    cobj_destroy_stub_op,
-    string_in_stream_mark,
-    cobj_hash_op },
-  0, /* put_string */
-  0, /* put_char */
-  0, /* put_byte */
-  string_in_get_line,
-  string_in_get_char,
-  0, /* get_byte */
-  string_in_unget_char,
-  0, /* unget_byte, */
-  0, /* close */
-  0, /* flush */
-  0, /* TODO: seek */
-  string_in_get_prop,
-  0  /* set_prop */
-};
+static struct strm_ops string_in_ops =
+  strm_ops_init(cobj_ops_init(eq,
+                              cobj_print_op,
+                              cobj_destroy_stub_op,
+                              string_in_stream_mark,
+                              cobj_hash_op),
+                0, 0, 0,
+                string_in_get_line,
+                string_in_get_char,
+                0,
+                string_in_unget_char,
+                0, 0, 0,
+                0, /* TODO: seek */
+                string_in_get_prop, 0);
 
 struct byte_input {
   unsigned char *buf;
@@ -846,27 +824,17 @@ static val byte_in_unget_byte(val stream, int byte)
   return num_fast(byte);
 }
 
-static struct strm_ops byte_in_ops = {
-  { eq,
-    cobj_print_op,
-    byte_in_stream_destroy,
-    cobj_mark_op,
-    cobj_hash_op },
-  0, /* put_string */
-  0, /* put_char */
-  0, /* put_byte */
-  0, /* get_line */
-  0, /* get_char */
-  byte_in_get_byte,
-  0, /* unget_char, */
-  byte_in_unget_byte,
-  0, /* close */
-  0, /* flush */
-  0, /* TODO: support seek */
-  0, /* get_prop */
-  0  /* set_prop */
-};
-
+static struct strm_ops byte_in_ops =
+  strm_ops_init(cobj_ops_init(eq,
+                              cobj_print_op,
+                              byte_in_stream_destroy,
+                              cobj_mark_op,
+                              cobj_hash_op),
+                0, 0, 0, 0, 0,
+                byte_in_get_byte,
+                0,
+                byte_in_unget_byte,
+                0, 0, 0, 0, 0);
 
 struct string_output {
   wchar_t *buf;
@@ -977,26 +945,18 @@ static val string_out_put_byte(val stream, int ch)
   return t;
 }
 
-static struct strm_ops string_out_ops = {
-  { eq,
-    cobj_print_op,
-    string_out_stream_destroy,
-    cobj_mark_op,
-    cobj_hash_op },
-  string_out_put_string,
-  string_out_put_char,
-  string_out_put_byte,
-  0, /* get_line */
-  0, /* get_char */
-  0, /* get_byte */
-  0, /* unget_char, */
-  0, /* unget_byte, */
-  0, /* close */
-  0, /* flush */
-  0, /* TODO: seek, with fill-with-spaces semantics if past end. */
-  0, /* get_prop */
-  0  /* set_prop */
-};
+static struct strm_ops string_out_ops =
+  strm_ops_init(cobj_ops_init(eq,
+                              cobj_print_op,
+                              string_out_stream_destroy,
+                              cobj_mark_op,
+                              cobj_hash_op),
+                string_out_put_string,
+                string_out_put_char,
+                string_out_put_byte,
+                0, 0, 0, 0, 0, 0, 0,
+                0, /* TODO: seek; fill-with-spaces semantics if past end. */
+                0, 0);
 
 static void strlist_mark(val stream)
 {
@@ -1050,26 +1010,15 @@ static val strlist_out_put_char(val stream, val ch)
   return t;
 }
 
-static struct strm_ops strlist_out_ops = {
-  { eq,
-    cobj_print_op,
-    cobj_destroy_stub_op,
-    strlist_mark,
-    cobj_hash_op },
-  strlist_out_put_string,
-  strlist_out_put_char,
-  0, /* TODO: put_byte */
-  0, /* get_line */
-  0, /* get_char */
-  0, /* get_byte */
-  0, /* unget_char, */
-  0, /* unget_byte, */
-  0, /* close */
-  0, /* flush */
-  0, /* seek */
-  0, /* get_prop */
-  0  /* set_prop */
-};
+static struct strm_ops strlist_out_ops =
+  strm_ops_init(cobj_ops_init(eq,
+                              cobj_print_op,
+                              cobj_destroy_stub_op,
+                              strlist_mark,
+                              cobj_hash_op),
+                strlist_out_put_string,
+                strlist_out_put_char,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
 val make_strlist_output_stream(void)
 {
@@ -1124,26 +1073,17 @@ static val dir_close(val stream, val throw_on_error)
   return nil;
 }
 
-static struct strm_ops dir_ops = {
-  { eq,
-    cobj_print_op,
-    common_destroy,
-    cobj_mark_op,
-    cobj_hash_op },
-  0, /* put_string */
-  0, /* put_char */
-  0, /* put_byte */
-  dir_get_line,
-  0, /* get_char */
-  0, /* get_byte */
-  0, /* unget_char, */
-  0, /* unget_byte, */
-  dir_close,
-  0, /* flush */
-  0, /* seek */
-  0, /* get_prop */
-  0  /* set_prop */
-};
+static struct strm_ops dir_ops =
+  strm_ops_init(cobj_ops_init(eq,
+                              cobj_print_op,
+                              common_destroy,
+                              cobj_mark_op,
+                              cobj_hash_op),
+                0, 0, 0,
+                dir_get_line,
+                0, 0, 0, 0,
+                dir_close,
+                0, 0, 0, 0);
 
 static val make_stdio_stream_common(FILE *f, val descr, struct cobj_ops *ops)
 {
@@ -2481,26 +2421,21 @@ static void cat_mark(val stream)
   gc_mark(obj);
 }
 
-static struct strm_ops cat_stream_ops = {
-  { eq,
-    cat_stream_print,
-    cobj_destroy_stub_op,
-    cat_mark,
-    cobj_hash_op },
-  0, /* put_string */
-  0, /*_put_char */
-  0, /* put_byte, */
-  cat_get_line,
-  cat_get_char,
-  cat_get_byte,
-  cat_unget_char,
-  cat_unget_byte,
-  0, /* close, */
-  0, /* flush, */
-  0, /* seek, */
-  cat_get_prop,
-  0, /* set_prop */
-};
+static struct strm_ops cat_stream_ops =
+  strm_ops_init(cobj_ops_init(eq,
+                              cat_stream_print,
+                              cobj_destroy_stub_op,
+                              cat_mark,
+                              cobj_hash_op),
+                0, 0, 0,
+                cat_get_line,
+                cat_get_char,
+                cat_get_byte,
+                cat_unget_char,
+                cat_unget_byte,
+                0, 0, 0,
+                cat_get_prop,
+                0);
 
 val make_catenated_stream(val stream_list)
 {

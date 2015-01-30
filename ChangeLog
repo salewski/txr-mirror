@@ -1,5 +1,17 @@
 2015-01-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	Use macro to initialize strm_ops.
+
+	* stream.h (strm_ops_init): New macro.
+
+	* stream.c (null_ops, stdio_ops, tail_ops, pipe_ops, string_in_ops,
+	byte_in_ops, string_out_ops, strlist_out_ops, dir_ops,
+	cat_stream_ops): Initialize using macro.
+
+	* syslog.c (syslog_strm_ops): Likewise.
+
+2015-01-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	Use macro to initialize cobj_ops.
 
 	* lib.h (cobj_ops_init): New macro.

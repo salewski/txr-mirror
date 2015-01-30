@@ -47,6 +47,15 @@ struct strm_ops {
   val (*set_prop)(val, val ind, val);
 };
 
+#define strm_ops_init(cobj_init_macro, put_string, put_char, put_byte,      \
+                      get_line, get_char, get_byte, unget_char, unget_byte, \
+                      close, flush, seek, get_prop, set_prop)               \
+{                                                                           \
+    cobj_init_macro, put_string, put_char, put_byte, get_line,              \
+    get_char, get_byte, unget_char, unget_byte,                             \
+    close, flush, seek, get_prop, set_prop                                  \
+}
+
 #define std_input (deref(lookup_var_l(nil, stdin_s)))
 #define std_output (deref(lookup_var_l(nil, stdout_s)))
 #define std_debug (deref(lookup_var_l(nil, stddebug_s)))
