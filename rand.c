@@ -64,13 +64,11 @@ struct rand_state {
 
 val random_state_s;
 
-static struct cobj_ops random_state_ops = {
-  eq,
-  cobj_print_op,
-  cobj_destroy_free_op,
-  cobj_mark_op,
-  cobj_hash_op
-};
+static struct cobj_ops random_state_ops = cobj_ops_init(eq,
+                                                        cobj_print_op,
+                                                        cobj_destroy_free_op,
+                                                        cobj_mark_op,
+                                                        cobj_hash_op);
 
 static val make_state(void)
 {

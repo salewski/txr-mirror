@@ -204,6 +204,9 @@ struct cobj_ops {
   cnum (*hash)(val self);
 };
 
+#define cobj_ops_init(equal, print, destroy, mark, hash) \
+  { equal, print, destroy, mark, hash }
+
 /* Default operations for above structure.
  * Default equal is eq
  */

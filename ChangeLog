@@ -1,5 +1,17 @@
 2015-01-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	Use macro to initialize cobj_ops.
+
+	* lib.h (cobj_ops_init): New macro.
+
+	* hash.c (hash_ops, hash_iter_ops): Initialize with cobj_ops_init.
+
+	* rand.c (random_state_ops): Likewise.
+
+	* regex.c (char_set_obj_ops, regex_obj_ops): Likewise.
+
+2015-01-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	* arith.c (make_ubignum): New static function.
 	(sign_extend): New function.
 

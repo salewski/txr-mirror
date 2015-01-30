@@ -426,13 +426,11 @@ static void hash_mark(val hash)
   }
 }
 
-static struct cobj_ops hash_ops = {
-  hash_equal_op,
-  hash_print_op,
-  cobj_destroy_free_op,
-  hash_mark,
-  hash_hash_op,
-};
+static struct cobj_ops hash_ops = cobj_ops_init(hash_equal_op,
+                                                hash_print_op,
+                                                cobj_destroy_free_op,
+                                                hash_mark,
+                                                hash_hash_op);
 
 static void hash_grow(struct hash *h, val hash)
 {
@@ -655,13 +653,11 @@ static void hash_iter_mark(val hash_iter)
   reachable_iters = hi;
 }
 
-static struct cobj_ops hash_iter_ops = {
-  eq,
-  cobj_print_op,
-  cobj_destroy_free_op,
-  hash_iter_mark,
-  cobj_hash_op
-};
+static struct cobj_ops hash_iter_ops = cobj_ops_init(eq,
+                                                     cobj_print_op,
+                                                     cobj_destroy_free_op,
+                                                     hash_iter_mark,
+                                                     cobj_hash_op);
 
 val hash_begin(val hash)
 {
