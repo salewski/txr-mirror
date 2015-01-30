@@ -3847,6 +3847,7 @@ void eval_init(void)
   reg_fun(intern(lit("logtest"), user_package), func_n2(logtest));
   reg_fun(intern(lit("lognot"), user_package), func_n2o(lognot, 1));
   reg_fun(intern(lit("logtrunc"), user_package), func_n2(logtrunc));
+  reg_fun(intern(lit("sign-extend"), user_package), func_n2(sign_extend));
   reg_fun(intern(lit("ash"), user_package), func_n2(ash));
   reg_fun(intern(lit("bit"), user_package), func_n2(bit));
   reg_fun(intern(lit("mask"), user_package), func_n0v(maskv));

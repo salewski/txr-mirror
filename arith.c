@@ -58,6 +58,13 @@ val make_bignum(void)
   return n;
 }
 
+static val make_ubignum(void)
+{
+  val n = make_obj();
+  n->bn.type = BGNUM;
+  return n;
+}
+
 val bignum(cnum cn)
 {
   val n = make_bignum();
@@ -1891,6 +1898,33 @@ bad2:
 
 bad3:
   uw_throwf(error_s, lit("logtrunc: non-integral operand ~s"), a, nao);
+}
+
+val sign_extend(val n, val nbits)
+{
+  val msb = minus(nbits, one);
+  val ntrunc = logtrunc(n, nbits);
+
+  if (bit(ntrunc, msb)) {
+    switch (type(ntrunc)) {
+    case NUM:
+      {
+        cnum cn = c_num(ntrunc);
+        cnum nb = c_num(nbits);
+        return num(cn | (INT_PTR_MAX << nb));
+      }
+    case BGNUM:
+      {
+        val out = make_ubignum();
+        mp_2comp(mp(ntrunc), mp(out), mp(ntrunc)->used);
+        mp_neg(mp(out), mp(out));
+        return normalize(out);
+      }
+    default:
+      internal_error("impossible case");
+    }
+  }
+  return ntrunc;
 }
 
 val ash(val a, val bits)

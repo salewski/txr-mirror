@@ -19252,6 +19252,35 @@ is truncated. The return value of
 .code logtrunc
 is always a non-negative integer.
 
+.coNP Function @ sign-extend
+.synb
+.mets (sign-extend < value << bits )
+.syne
+.desc
+The
+.code sign-extend
+function first truncates the infinite-bit two's complement representation of
+the integer
+.meta value
+to the specified number of bits, similarly to the
+.code logtrunc
+function. Then, this truncated value is regarded as a
+.meta bits
+wide two's complement integer. The value of this integer is
+calculated and returned.
+
+.TP* Examples:
+
+.cblk
+  (sign-extend 127 8) -> 127
+  (sign-extend 128 8) -> -128
+  (sign-extend 129 8) -> -127
+  (sign-extend 255 8) -> -1
+  (sign-extend 256 8) -> 0
+  (sign-extend -1  8) -> -1
+  (sign-extend -255 8) -> 0
+.cble
+
 .coNP Function @ ash
 .synb
 .mets (ash < value << bits )

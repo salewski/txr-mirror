@@ -600,6 +600,7 @@ val logxor(val, val);
 val logtest(val, val);
 val lognot(val, val);
 val logtrunc(val a, val bits);
+val sign_extend(val num, val nbits);
 val ash(val a, val bits);
 val bit(val a, val bit);
 val maskv(val bits);

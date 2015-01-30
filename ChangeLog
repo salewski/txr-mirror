@@ -1,5 +1,18 @@
 2015-01-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (make_ubignum): New static function.
+	(sign_extend): New function.
+
+	* eval.c (eval_init): Register sign-extend intrinsic.
+
+	* lib.h (sign_extend): Declared.
+
+	* txr.1: Documented sign-extend.
+
+	* tl.vim, txr.vim: Updated.
+
+2015-01-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: fixed use of nonexistent str-int in @(require) example;
 	fixed bad formatting under logtrunc and partition.
 
