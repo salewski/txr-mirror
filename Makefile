@@ -41,12 +41,15 @@ ADD_CONF = $(addprefix $(1)/,$(2))
 EACH_CONF = $(foreach conf,opt dbg,$(call ADD_CONF,$(conf),$(1)))
 
 OBJS-y := # make sure OBJ-y is a value variable, not a macro variable
+EXTRA_OBJS-y :=
+
 OBJS := txr.o lex.yy.o y.tab.o match.o lib.o regex.o gc.o unwind.o stream.o
 OBJS += arith.o hash.o utf8.o filter.o eval.o rand.o combi.o sysif.o
 OBJS-$(debug_support) += debug.o
 OBJS-$(have_syslog) += syslog.o
 OBJS-$(have_glob) += glob.o
 OBJS-$(have_posix_sigs) += signal.o
+EXTRA_OBJS-$(add_win_res) += win/txr.res
 
 ifneq ($(have_git),)
 SRCS := $(addprefix $(top_srcdir)/,\
@@ -102,11 +105,23 @@ $(call ABBREV,LINK)
 $(V)$(CC) $(1) $(CFLAGS) -o $@ $^ -lm
 endef
 
+define WINDRES
+$(call ABBREV,RES)
+$(V)mkdir -p $(dir $@)
+$(V)windres -O coff -DTXR_VER=$(txr_ver) $< $@
+endef
+
 dbg/%.o: %.c
 	$(call COMPILE_C_WITH_DEPS,)
 
 opt/%.o: %.c
 	$(call COMPILE_C_WITH_DEPS,$(OPT_FLAGS))
+
+opt/%.res: win/%.rc
+	$(call WINDRES)
+
+%.res: %.rc
+	$(call WINDRES)
 
 # The following pattern rule is used for test targets built by configure
 %.o: %.c
@@ -122,10 +137,10 @@ endif
 .PHONY: all
 all: $(BUILD_TARGETS)
 
-$(PROG): $(OPT_OBJS)
+$(PROG): $(OPT_OBJS) $(EXTRA_OBJS-y)
 	$(call LINK_PROG,$(OPT_FLAGS))
 
-$(PROG)-dbg: $(DBG_OBJS)
+$(PROG)-dbg: $(DBG_OBJS) $(EXTRA_OBJS-y)
 	$(call LINK_PROG,)
 
 VPATH := $(top_srcdir)

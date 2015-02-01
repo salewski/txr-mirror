@@ -1,3 +1,20 @@
+2015-01-31  Kaz Kylheku  <kaz@kylheku.com>
+
+	On Windows, add icon and identifying meta-data to executable.
+
+	* Makefile (EXTRA_OBJS-y): New variable.
+	(WINDRES): New recipe.
+
+	* configure: Check for presence of windres,
+	and generate add_win_res variable in config.make.
+
+	* win/txr.xcf: New file: GIMP project for icon.
+
+	* win/txr.ico: New file: icon with three sizes generated
+	from GIMP project.
+
+	* win/txr.rc: New file.
+
 2015-01-29  Kaz Kylheku  <kaz@kylheku.com>
 
 	Use macro to initialize strm_ops.

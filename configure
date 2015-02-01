@@ -119,6 +119,7 @@ have_timegm=
 have_syslog=
 have_glob=
 have_windows_h=
+have_windres=
 have_posix_sigs=
 need_darwin_c_source=
 have_git=
@@ -555,7 +556,7 @@ case "$top_srcdir" in
 esac
 
 if [ "$source_dir" != "." ] ; then
-  for x in Makefile share tests; do
+  for x in Makefile share tests win; do
     printf "Symlinking %s -> $source_dir/%s\n" $x $x
     ln -sf "$source_dir/$x" .
   done
@@ -640,6 +641,8 @@ mpi_version := $mpi_version
 EXE := $exe
 
 have_git := $have_git
+
+add_win_res := $([ -n "$have_windows_h" -a -n "$have_windres" ] && echo "y")
 
 CC := $cc
 LEX := $lex
@@ -1926,6 +1929,15 @@ if conftest ; then
   printf "yes\n"
   printf "#define HAVE_GLOB 1\n" >> $config_h
   have_glob=y
+else
+  printf "no\n"
+fi
+
+printf "Checking for windres ... "
+
+if output=$(windres -V 2> /dev/null) ; then
+  printf "yes\n"
+  have_windres=y
 else
   printf "no\n"
 fi

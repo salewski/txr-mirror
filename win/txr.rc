@@ -1,0 +1,28 @@
+#define XSTR(X) #X
+#define STR(X) XSTR(X)
+
+icon ICON "txr.ico"
+
+1 VERSIONINFO
+FILEVERSION     TXR_VER,0,0,0
+PRODUCTVERSION  TXR_VER,0,0,0
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "080904E4"
+    BEGIN
+      VALUE "CompanyName", "Kaz Kylheku"
+      VALUE "FileDescription", "TXR Language"
+      VALUE "InternalName", "txr"
+      VALUE "LegalCopyright", "Kaz Kylheku"
+      VALUE "OriginalFilename", "txr.exe"
+      VALUE "ProductName", "TXR Language"
+      VALUE "ProductVersion", STR(TXR_VER)
+    END
+  END
+
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x809, 1252
+  END
+END
