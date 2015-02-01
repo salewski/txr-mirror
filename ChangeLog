@@ -1,3 +1,11 @@
+2015-02-01  Kaz Kylheku  <kaz@kylheku.com>
+
+	Windows installer.
+
+	* inst.nsi: New file.
+
+	* win/env.nsh: New file.
+
 2015-01-31  Kaz Kylheku  <kaz@kylheku.com>
 
 	On Windows, add icon and identifying meta-data to executable.
