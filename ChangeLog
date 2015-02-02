@@ -1,5 +1,18 @@
 2015-02-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	Update copyright notices from 2014 to 2015.
+
+	* arith.c, arith.h, combi.c, combi.h, debug.c, debug.h, eval.c, eval.h,
+	filter.c, filter.h, gc.c, gc.h, hash.c, hash.h, lib.c, lib.h,
+	match.c, match.h, parser.h, rand.c, rand.h, regex.c, regex.h,
+	signal.c, signal.h, stream.c, stream.h, sysif.c, sysif.h, syslog.c,
+	syslog.h, txr.c, txr.h, unwind.c, unwind.h, utf8.c, utf8.h:
+	Update.
+
+	* LICENSE, METALICENSE: Likewise.
+
+2015-02-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	Windows installer.
 
 	* inst.nsi: New file.

@@ -1,4 +1,4 @@
-/* Copyright 2009-2014
+/* Copyright 2009-2015
  * Kaz Kylheku <kaz@kylheku.com>
  * Vancouver, Canada
  * All rights reserved.
@@ -80,7 +80,7 @@ static void help(void)
 "\n"
 "txr version ~a\n"
 "\n"
-"copyright 2014, Kaz Kylheku <kaz@kylheku.com>\n"
+"copyright 2015, Kaz Kylheku <kaz@kylheku.com>\n"
 "\n"
 "usage:\n"
 "\n"
