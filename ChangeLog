@@ -1,5 +1,15 @@
 2015-02-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 103
+
+	* RELNOTES: Updated.
+
+	* configure, txr.1: Bumped version.
+
+	* share/txr/stdlib/ver.txr: Likewise
+
+2015-02-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	Update copyright notices from 2014 to 2015.
 
 	* arith.c, arith.h, combi.c, combi.h, debug.c, debug.h, eval.c, eval.h,

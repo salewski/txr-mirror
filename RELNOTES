@@ -1,3 +1,51 @@
+                                    TXR 103
+                                   2015-02-02
+
+
+  Features
+
+  - New functions lexical-var-p and lexical-fun-p allow macros to
+    inquire whether symbols are known to the macro-expander as
+    lexical variable or function binding.
+
+  - get-string now closes the stream after obtaining a string.
+    It has a new optional argument which can defeat the behavior.
+    The -C option can be used to request the old behavior.
+
+  - New function, constantp.
+
+  - New functions callf, mapf, dup and flip for more power and flexibility
+    in function-combining expressions.
+
+  - New function width, for computing the bit width of signed and
+    unsigned integers.
+
+  - New function sign-extend, for converting an a two's complement
+    bit field of any width into the corresponding integer value.
+
+  - Windows executable (MinGW and Cygwin) now has an icon and
+    meta-data like ProductVersion and FileVersion.
+
+  - MinGW-based Windows build is now distributed via an executable installer
+    instead of a ZIP file.
+
+  Bugs
+
+  - Fixed regression introduced in 102, in the fix to the make-like
+    function.  A one element list being converted to a string was treated
+    as an empty list, leading to empty string.
+
+  - Fixed small bug in macro argument list processing. The colon symbol
+    was treated as "this argument is missing" for required arguments also,
+    rather than just for optional arguments.
+
+  - Fixed a bug in the code expander's handling of macro parameter lists.
+    It was not recursing properly over nested patterns occuring in optional
+    arguments, and throwing errors on keywords like :env present in
+    the optional argument parts of macro parameter lists.
+
+
+
                                     TXR 102
                                    2015-01-13
 
