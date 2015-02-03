@@ -10385,30 +10385,34 @@ and vice versa.
 If a symbol is bound to both a function and variable in the global namespace,
 then the variable binding is favored.
 
-Macros do not participate in the special scope conflation. This is apparent
-in two ways. Firstly, the space of symbol macros is not folded together with
-the space of regular macros. An argument of
+Macros do not participate in the special scope conflation, with one
+exception. What this means is that the space of symbol macros is not folded
+together with the space of regular macros. An argument of
 .code dwim
 that is a symbol might be
 symbol macro, variable or function, but it cannot be interpreted as the name of
-a regular macro. Secondly, function bindings cannot shadow symbol macros. If a
-function is defined in an inner scope relative to a symbol macro for the
-same symbol, that symbol macro still hides the function when it appears in
-a
+a regular macro.
+
+The exception is this: from the perspective of a
 .code dwim
-form. Symbol macros are expanded without any consideration for the
+form, function bindings can shadow symbol macros. If a
+function binding is defined in an inner scope relative to a symbol macro for
+the same symbol,
+using
+.code flet
+or
+.codn labels ,
+the function hides the symbol macro. In other words, when
+macro expansion processes an argument of a
 .code dwim
-operator, which is not treated specially by the expansion phase.
-
-Thus, the following is invalid:
-
-.cblk
-[let ((f (+ 2 2))) f]
-.cble
-
-the expression looks for a function or variable called
-.codn let ,
-which does not exist.
+form, and that argument is a symbol, it is treated specially
+in order to provide a consistent name lookup behavior. If the innermost
+binding for that symbol is a function binding, it refers to that
+function binding, even if a more outer symbol macro binding exists,
+and so the symbol is not expanded using the symbol macro.
+By contrast, in an ordinary form, a symbolic argument never resolves
+to a function binding. The symbol refers to either a symbol macro or a
+variable, whichever is nested closer.
 
 How many arguments are required by the
 .code dwim
@@ -11692,10 +11696,21 @@ Note that
 and
 .code flet
 are properly scoped with regard to macros.
-During macro expansion, they shadow, macros defined by
+During macro expansion, function bindings introduced by these
+macro operators shadow macros defined by
 .code macrolet
 and
 .codn defmacro .
+
+Furthermore, function bindings introduced by
+.code labels
+and
+.code flet
+also shadow symbol macros defined by
+.codn symacrolet ,
+when those symbol macros occur as arguments of a
+.code dwim
+form.
 
 See also: the
 .code macrolet
@@ -26116,6 +26131,15 @@ then the scope enclosed by both
 constructs will see whichever of the two bindings is more inner,
 even though the bindings are active in completely separate phases of
 processing.
+
+From the perspective of the arguments of a
+.code dwim
+form, lexical function bindings also shadow symbol macros.
+This is consistent with the Lisp-1-style name resolution which
+applies inside a
+.code dwim
+form. Of course, lexical operator macros do not shadow
+symbol macros under any circumstances.
 
 .coNP Operator @ tree-bind
 .synb

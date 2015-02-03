@@ -275,6 +275,32 @@ static val lookup_symac(val menv, val sym)
   }
 }
 
+static val lookup_symac_lisp1(val menv, val sym)
+{
+  if (nilp(menv)) {
+    return gethash(top_smb, sym);
+  } else  {
+    type_check(menv, ENV);
+
+    /* Of course, we are not looking for symbol macros in the operator macro
+     * name space.  Rather, the object of the lookup rule implemented by this
+     * function is to allow lexical function bindings to shadow symbol macros.
+     */
+    {
+      val vbinding = assoc(sym, menv->e.vbindings);
+      if (vbinding) {
+        return (cdr(vbinding) == special_s) ? nil : vbinding;
+      } else {
+        val fbinding = assoc(sym, menv->e.fbindings);
+        if (fbinding && cdr(fbinding) == special_s)
+          return nil;
+      }
+
+      return lookup_symac(menv->e.up_env, sym);
+    }
+  }
+}
+
 static val lexical_var_p(val menv, val sym)
 {
   if (nilp(menv)) {
@@ -2188,6 +2214,41 @@ val expand_forms(val form, val menv)
   }
 }
 
+static val expand_lisp1(val form, val menv)
+{
+tail:
+  if (bindable(form)) {
+    val symac_bind = lookup_symac_lisp1(menv, form);
+
+    if (symac_bind) {
+      val symac = cdr(symac_bind);
+      if (symac == form)
+        return form;
+      form = rlcp_tree(symac, form);
+      goto tail;
+    }
+    return form;
+  }
+
+  return expand(form, menv);
+}
+
+static val expand_forms_lisp1(val form, val menv)
+{
+  if (atom(form)) {
+    return form;
+  } else {
+    val f = car(form);
+    val r = cdr(form);
+    val ex_f = expand_lisp1(f, menv);
+    val ex_r = expand_forms_lisp1(r, menv);
+
+    if (ex_f == f && ex_r == r)
+      return form;
+    return rlcp(cons(ex_f, ex_r), form);
+  }
+}
+
 static val expand_cond_pairs(val form, val menv)
 {
   if (atom(form)) {
@@ -2918,6 +2979,13 @@ tail:
       return expand_macrolet(form, menv);
     } else if (sym == symacrolet_s) {
       return expand_symacrolet(form, menv);
+    } else if (sym == dwim_s) {
+      val args = rest(form);
+      val args_ex = expand_forms_lisp1(args, menv);
+
+      if (args == args_ex)
+        return form;
+      return rlcp(cons(sym, args_ex), form);
     } else if ((macro = lookup_mac(menv, sym))) {
       val mac_expand = expand_macro(form, macro, menv);
       if (mac_expand == form)

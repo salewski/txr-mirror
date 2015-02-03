@@ -1,3 +1,16 @@
+2015-02-04  Kaz Kylheku  <kaz@kylheku.com>
+
+	Symbol macros shadowed by functions under dwim.
+
+	* eval.c (lookup_symac_lisp1, expand_lisp1,
+	expand_forms_lisp1): New static functions.
+	(expand): Handle dwim's arguments via
+	expand_forms_lisp1, rather than as a generic
+	compound form.
+
+	* txr.1: Revised text in several places to clarify
+	this expansion rule.
+
 2015-02-01  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 103
