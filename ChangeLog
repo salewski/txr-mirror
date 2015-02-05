@@ -1,5 +1,10 @@
 2015-02-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	* win/env.nsh: Before the potentially length SendMessage,
+	print an informative message.
+
+2015-02-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	* win/env.nsh: Improve messages about environment
 	variable modification.
 
