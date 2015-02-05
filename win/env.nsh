@@ -271,37 +271,37 @@ Function ${UN}EnvVarUpdate
   ;
   ${If} $2 != "R"                          ; If Append or Prepend
     ${If} $6 == 1                          ; And if we found the target
-      DetailPrint "Target is already present in $1. It will be removed and"
+      DetailPrint "$4 is already present in $1. It will be removed and"
     ${EndIf}
     ${If} $0 == ""                         ; If EnvVar is (now) empty
       StrCpy $0 $4                         ;   just copy PathString to EnvVar
       ${If} $6 == 0                        ; If found flag is either 0
       ${OrIf} $6 == ""                     ; or blank (if EnvVarName is empty)
-        DetailPrint "$1 was empty and has been updated with the target"
+        DetailPrint "$1 was empty and was set to $4."
       ${EndIf}
     ${ElseIf} $2 == "A"                    ;  If Append (and EnvVar is not empty),
       StrCpy $0 $0;$4                      ;     append PathString
       ${If} $6 == 1
-        DetailPrint "appended to $1"
+        DetailPrint "appended to $1."
       ${Else}
-        DetailPrint "Target was appended to $1"
+        DetailPrint "$4 was appended to $1."
       ${EndIf}
     ${Else}                                ;  If Prepend (and EnvVar is not empty),
       StrCpy $0 $4;$0                      ;     prepend PathString
       ${If} $6 == 1
-        DetailPrint "prepended to $1"
+        DetailPrint "prepended to $1."
       ${Else}
-        DetailPrint "Target was prepended to $1"
+        DetailPrint "$4 was prepended to $1."
       ${EndIf}
     ${EndIf}
   ${Else}                                  ; If Action = Remove
     ${If} $6 == 1                          ;   and we found the target
-      DetailPrint "Target was found and removed from $1"
+      DetailPrint "$4 was found and removed from $1."
     ${Else}
-      DetailPrint "Target was NOT found in $1 (nothing to remove)"
+      DetailPrint "$4 was NOT found in $1 (nothing to remove)."
     ${EndIf}
     ${If} $0 == ""
-      DetailPrint "$1 is now empty"
+      DetailPrint " $1 is now empty."
     ${EndIf}
   ${EndIf}
 
