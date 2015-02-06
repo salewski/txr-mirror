@@ -1,5 +1,13 @@
 2015-02-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (transform_op): When expanding @rest and metanums
+	like @1, @2, preserve the (sys:var X args ..) structure
+	if there are args (but of course with X replaced by the appropriate
+	gensym). This allows syntax like `@{1 10}` to work in quasiliterals: in
+	other words, modifiers on interpolated metas, on par with @{a 10}.
+
+2015-02-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	* sysif.c (abort_wrap): New static function.
 	(sysif_init): Registered abort intrinsic.
 

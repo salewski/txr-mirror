@@ -2515,11 +2515,15 @@ static val transform_op(val forms, val syms, val rg)
         val sym = cdr(if3(new_p,
                           rplacd(cell, gensym(format_op_arg(vararg))),
                           cell));
+        val sym_form = if3(cdr(cdr(fi)),
+                           cons(var_s, cons(sym, cdr(cdr(fi)))), sym);
         cons_bind (outsyms, outforms, transform_op(re, newsyms, rg));
-        return cons(outsyms, rlcp(cons(sym, outforms), outforms));
+        return cons(outsyms, rlcp(cons(sym_form, outforms), outforms));
       } else if (vararg == rest_s) {
+        val sym_form = if3(cdr(cdr(fi)),
+                           cons(var_s, cons(rg, cdr(cdr(fi)))), rg);
         cons_bind (outsyms, outforms, transform_op(re, syms, rg));
-        return cons(outsyms, rlcp(cons(rg, outforms), outforms));
+        return cons(outsyms, rlcp(cons(sym_form, outforms), outforms));
       }
     }
 
