@@ -1,5 +1,17 @@
 2015-02-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	Serious bugfix in the op macro, and derived macro, in
+	the handling of missing meta-numbers (for
+	instance (op ... @1 .. @3): 1 and 3 occur, but not 2.
+
+	* eval.c (supplement_op_syms): Bugfix: loop was testing
+	and updating the wrong variable, causing it to be looking at the first
+	element of the syms list in every iteration.
+	Not a regression: this was implemented wrong when the function
+	was introduced on October 6, 2013.
+
+2015-02-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (subst_vars): Bugfix. When an ordinary variable
 	occurs in the quasi syntax (which is the result of substitution
 	of metanums like @1 by the op macro), if that variable

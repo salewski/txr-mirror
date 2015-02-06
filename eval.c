@@ -2542,9 +2542,7 @@ static val supplement_op_syms(val ssyms, val max)
   list_collect_decl (outsyms, tl);
   val si, ni;
 
-  for (si = ssyms, ni = one;
-       ssyms;
-       ni = plus(ni, one), ssyms = cdr(ssyms))
+  for (si = ssyms, ni = one; si; ni = plus(ni, one), si = cdr(si))
   {
     val entry = car(si);
     val num = car(entry);
