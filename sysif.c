@@ -93,6 +93,11 @@ static val exit_wrap(val status)
   return nil;
 }
 
+static val abort_wrap(void)
+{
+  abort();
+}
+
 static val usleep_wrap(val usec)
 {
   val retval;
@@ -365,6 +370,7 @@ void sysif_init(void)
 {
   reg_fun(intern(lit("errno"), user_package), func_n1o(errno_wrap, 0));
   reg_fun(intern(lit("exit"), user_package), func_n1(exit_wrap));
+  reg_fun(intern(lit("abort"), user_package), func_n0(abort_wrap));
   reg_fun(intern(lit("usleep"), user_package), func_n1(usleep_wrap));
 #if HAVE_UNISTD_H
   reg_fun(intern(lit("getpid"), user_package), func_n0(getpid_wrap));

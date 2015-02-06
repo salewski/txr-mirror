@@ -19596,7 +19596,9 @@ Otherwise, if the variable is
 some informational messages are printed about the exception, and the process
 exits with a failed termination status.
 In the same situation, if the variable contains an object which is not a
-function, the process aborts.
+function, the process terminates abnormally as if by a call to the
+.code abort
+function.
 
 Prior to the function being called, the
 .code *unhandled-hook*
@@ -23692,7 +23694,7 @@ function constructs and returns an
 hash.  The hash is
 populated with the environment variables, represented as key-value pairs. 
 
-.SS* Unix Programming
+.SS* System Programming
 .coNP Function @ errno
 .synb
 .mets (errno <> [ new-errno ])
@@ -23735,6 +23737,27 @@ corresponds to
 These are platform-independent
 indicators of failed or successful termination. The numeric value 0 also
 indicates success.
+
+.coNP Function @ abort
+.synb
+.mets (abort)
+.syne
+.desc
+The
+.code abort
+function terminates the entire process (running \*(TX image), specifying
+an abnormal termination status to the process.
+
+Note:
+.code abort
+calls the C library function
+.code abort
+which works by raising the
+.code SIG_ABRT
+signal, known in \*(TX as the
+.code sig-abrt
+variable. Abnormal termination of the process is this signal's
+default action.
 
 .coNP Function @ usleep
 .synb

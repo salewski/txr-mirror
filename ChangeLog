@@ -1,5 +1,16 @@
 2015-02-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	* sysif.c (abort_wrap): New static function.
+	(sysif_init): Registered abort intrinsic.
+
+	* txr.1: Documented abort. Changed Unix Programming heading
+	to System Programming, since exit, abort and errno are not
+	Unix-specific, but C-specific.
+
+	* tl.vim, txr.vim: Updated.
+
+2015-02-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	* unwind.c (unhandled_hook_s): New static variable.
 	(uw_throw): In the unhandled case, check if *unhandled-hook* variable
 	has a function, and use it instead of the default logic. If it's not a
