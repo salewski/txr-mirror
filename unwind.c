@@ -47,6 +47,8 @@ static uw_frame_t *uw_env_stack;
 static uw_frame_t *uw_exit_point;
 static uw_frame_t toplevel_env;
 
+static val unhandled_hook_s;
+
 /* C99 inline instantiations. */
 #if __STDC_VERSION__ >= 199901L
 val uw_block_return(val tag, val result);
@@ -280,6 +282,25 @@ val uw_throw(val sym, val exception)
       abort();
     }
 
+    {
+      loc pfun = lookup_var_l(nil, unhandled_hook_s);
+      val fun = deref(pfun);
+
+      set(pfun, nil);
+
+      if (fun) {
+        if (functionp(fun)) {
+          funcall3(fun, sym, exception, last_form_evaled);
+        } else {
+          format(std_error, lit("~a: *unhandled-hook* ~s isn't a function\n"),
+                            prog_string, fun, nao);
+          abort();
+        }
+
+        exit(EXIT_FAILURE);
+      }
+    }
+
     if (opt_loglevel >= 1) {
       val s = stringp(exception);
       val info = if2(source_loc(last_form_evaled),
@@ -298,9 +319,9 @@ val uw_throw(val sym, val exception)
         uw_exception_subtype_p(sym, file_error_s)) {
       if (opt_print_bindings)
         put_line(lit("false"), std_output);
-      exit(EXIT_FAILURE);
     }
-    abort();
+
+    exit(EXIT_FAILURE);
   }
 
   ex->ca.sym = sym;
@@ -438,4 +459,10 @@ void uw_init(void)
   uw_register_subtype(process_error_s, error_s);
   uw_register_subtype(assert_s, error_s);
   uw_register_subtype(syntax_error_s, error_s);
+}
+
+void uw_late_init(void)
+{
+  reg_var(unhandled_hook_s = intern(lit("*unhandled-hook*"),
+          user_package), nil);
 }

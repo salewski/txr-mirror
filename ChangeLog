@@ -1,3 +1,23 @@
+2015-02-06  Kaz Kylheku  <kaz@kylheku.com>
+
+	* unwind.c (unhandled_hook_s): New static variable.
+	(uw_throw): In the unhandled case, check if *unhandled-hook* variable
+	has a function, and use it instead of the default logic. If it's not a
+	function, abort with an error message. Clear it so that if the hook
+	function re-enters this code, it will not be used. Always exit now on
+	unhandled exceptions; do not abort.
+	(uw_late_init): New function.
+
+	* unwind.h (uw_late_init): Declared.
+
+	* lib.c (init): Call uw_late_init.
+
+	* txr.1: Documented *unhandled-hook*.
+
+	* genvim.txr: Scan the unwind.c file, since it has a reg_var now.
+
+	* tl.vim, txr.vim: Updated.
+
 2015-02-05  Kaz Kylheku  <kaz@kylheku.com>
 
 	* win/env.nsh: Before the potentially length SendMessage,

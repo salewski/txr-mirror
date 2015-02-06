@@ -114,6 +114,7 @@ void uw_pop_until(uw_frame_t *);
 uw_frame_t *uw_current_frame(void);
 uw_frame_t *uw_current_exit_point(void);
 void uw_init(void);
+void uw_late_init(void);
 
 noreturn val type_mismatch(val, ...);
 

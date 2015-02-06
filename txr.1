@@ -19574,6 +19574,47 @@ operator, and the functions
 and
 .codn error .
 
+.coNP Variable @ *unhandled-hook*
+
+The
+.code *unhandled-hook*
+variable is initialized with
+.code nil
+by default.
+
+It may instead be assigned a function which is capable of taking
+three arguments.
+
+When an exception occurs which has no handler, this function is called,
+with the following arguments: the exception type symbol, the exception object,
+and a third value which is either
+.code nil
+or else the form which was being evaluated the exception was thrown.
+
+Otherwise, if the variable is
+.code nil
+some informational messages are printed about the exception, and the process
+exits with a failed termination status.
+In the same situation, if the variable contains an object which is not a
+function, the process aborts.
+
+Prior to the function being called, the
+.code *unhandled-hook*
+variable is reset to
+.codn nil .
+
+If the function registered in
+.code *unhandled-hook*
+returns, the process exits with a failed termination status.
+
+Note: the functions
+.code source-loc
+or
+.code source-loc-str
+may be applied to the third argument of the
+.code *unhandled-hook*
+function to obtain more information about the form.
+
 .SS* Regular Expression Library
 .coNP Functions @ search-regex and @ range-regex
 .synb

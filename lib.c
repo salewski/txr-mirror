@@ -7209,6 +7209,7 @@ void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),
   hash_init();
   regex_init();
   gc_late_init();
+  uw_late_init();
   less_tab_init();
 
   gc_state(gc_save);
