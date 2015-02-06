@@ -1,5 +1,17 @@
 2015-02-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (subst_vars): Bugfix. When an ordinary variable
+	occurs in the quasi syntax (which is the result of substitution
+	of metanums like @1 by the op macro), if that variable
+	evaluated to a list form, it was not being converted to
+	a string. The resulting form was then examined for variable
+	substitutions as if it were part of the quasi syntax.
+	This was introduced at the same time as the feature of being
+	able to use metanums in a quasiliteral (Feb 13, 2012:
+	last change before Version 57).
+
+2015-02-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (transform_op): When expanding @rest and metanums
 	like @1, @2, preserve the (sys:var X args ..) structure
 	if there are args (but of course with X replaced by the appropriate

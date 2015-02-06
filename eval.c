@@ -2071,18 +2071,8 @@ static val subst_vars(val forms, val env)
         continue;
       }
     } else if (bindable(form)) {
-      val pair = lookup_var(env, form);
-
-      if (pair) {
-        val str = cdr(pair);
-
-        if (!stringp(str) && !listp(str))
-          str = format(nil, lit("~a"), str, nao);
-
-        forms = cons(str, rest(forms));
-        continue;
-      }
-      eval_error(forms, lit("unbound variable ~s"), form, nao);
+      forms = cons(cons(var_s, cons(form, nil)), cdr(forms));
+      continue;
     }
 
     iter = list_collect(iter, form);
