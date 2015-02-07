@@ -1,5 +1,11 @@
 2015-02-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	* unwind.c (uw_throw): Detect invalid re-entry and bail.
+	Cautiously, we use fprintf rather than our streams system, in case some
+	problem with the streams is involved in this mess.
+
+2015-02-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	* unwind.c (uw_throw): Put a txr: prefix on the unhandled
 	exception in early initialization message.
 

@@ -260,6 +260,12 @@ val uw_exception_subtype_p(val sub, val sup)
 val uw_throw(val sym, val args)
 {
   uw_frame_t *ex;
+  static int reentry_count = 0;
+
+  if (++reentry_count > 1) {
+    fprintf(stderr, "txr: invalid re-entry of exception handling logic\n");
+    abort();
+  }
 
   if (!listp(args))
     args = cons(args, nil);
@@ -334,6 +340,7 @@ val uw_throw(val sym, val args)
   ex->ca.sym = sym;
   ex->ca.args = args;
   uw_exit_point = ex;
+  reentry_count--;
   uw_unwind_to_exit_point();
   abort();
 }
