@@ -1,5 +1,32 @@
 2015-02-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	Slight internal representation change of string-only exceptions.
+
+	One upshot of all this is that (throw 'foo "msg") now
+	does exactly the same thing as (throwf 'foo "msg").
+	A message-only exception really is a one-string exception argument
+	list ("message ..."), like the documentation says.
+
+	* unwind.h (struct uw_catch): exception member renamed to args.
+	(uw_catch): Macro follows structure member rename.
+
+	* eval.c (op_catch): Removed now unnecessary kludge of turning non-list
+	exception argument list into a one-element argument list.
+
+	* match.c (v_try): Similar hack to the one in op_catch
+	removed here.
+
+	* unwind.c (uw_unwind_to_exit_point, uw_push_catch): Follows rename of
+	exception member.
+	(uw_throw): The exception parameter is renamed to args.  The kludge
+	removed from op_catch re-appears here, because numerous calls
+	to uw_throw just pass a string as args. It's less of a kludge here
+	because this is the master entry point to exception processing,
+	and it straightens out the representation right away.
+	The exception arguments or message are printed in a clearer way.
+
+2015-02-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	Serious bugfix in the op macro, and derived macro, in
 	the handling of missing meta-numbers (for
 	instance (op ... @1 .. @3): 1 and 3 occur, but not 2.

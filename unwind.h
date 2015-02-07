@@ -60,7 +60,7 @@ struct uw_catch {
   uw_frtype_t type;
   val matches;
   val sym;
-  val exception;
+  val args;
   uw_frame_t *cont;
   int visible;
   extended_jmp_buf jb;
@@ -172,7 +172,7 @@ noreturn val type_mismatch(val, ...);
     goto uw_unwind_label;               \
       break;                            \
     case 2:                             \
-      EXCVAR = uw_catch.ca.exception;   \
+      EXCVAR = uw_catch.ca.args;        \
       SYMVAR = uw_catch.ca.sym;         \
       (void) SYMVAR;                    \
       /* prevent looping */             \

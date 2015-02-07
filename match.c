@@ -3299,16 +3299,13 @@ static val v_try(match_files_ctx *c)
           val type = first(second(clause));
           val params = second(second(clause));
           val body = third(clause);
-          val vals = if3(listp(exvals),
-                         exvals,
-                         cons(exvals, nil));
 
           if (first(clause) == catch_s) {
             if (uw_exception_subtype_p(exsym, type)) {
               val all_bind = t;
               val piter, viter;
 
-              for (piter = params, viter = vals;
+              for (piter = params, viter = exvals;
                    piter && viter;
                    piter = cdr(piter), viter = cdr(viter))
               {

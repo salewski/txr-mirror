@@ -2002,9 +2002,7 @@ static val op_catch(val form, val env)
       if (uw_exception_subtype_p(exsym, type)) {
         val params = second(clause);
         val saved_de = set_dyn_env(make_env(nil, nil, dyn_env));
-        val clause_env = bind_args(env, params, if3(listp(exvals),
-                                                    exvals, cons(exvals, nil)),
-                                   clause);
+        val clause_env = bind_args(env, params, exvals, clause);
         result = eval_progn(rest(rest(clause)), clause_env, clause);
         set_dyn_env(saved_de);
         break;

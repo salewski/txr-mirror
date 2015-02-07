@@ -75,7 +75,7 @@ static void uw_unwind_to_exit_point(void)
          continue the unwinding by calling uw_continue,
          passing it the ca.cont value. */
       uw_stack->ca.sym = nil;
-      uw_stack->ca.exception = nil;
+      uw_stack->ca.args = nil;
       uw_stack->ca.cont = uw_exit_point;
       /* 1 means unwind only. */
       extended_longjmp(uw_stack->ca.jb, 1);
@@ -238,7 +238,7 @@ void uw_push_catch(uw_frame_t *fr, val matches)
   memset(fr, 0, sizeof *fr);
   fr->ca.type = UW_CATCH;
   fr->ca.matches = matches;
-  fr->ca.exception = nil;
+  fr->ca.args = nil;
   fr->ca.cont = 0;
   fr->ca.visible = 1;
   fr->ca.up = uw_stack;
@@ -257,9 +257,12 @@ val uw_exception_subtype_p(val sub, val sup)
   }
 }
 
-val uw_throw(val sym, val exception)
+val uw_throw(val sym, val args)
 {
   uw_frame_t *ex;
+
+  if (!listp(args))
+    args = cons(args, nil);
 
   for (ex = uw_stack; ex != 0; ex = ex->uw.up) {
     if (ex->uw.type == UW_CATCH && ex->ca.visible) {
@@ -290,7 +293,7 @@ val uw_throw(val sym, val exception)
 
       if (fun) {
         if (functionp(fun)) {
-          funcall3(fun, sym, exception, last_form_evaled);
+          funcall3(fun, sym, args, last_form_evaled);
         } else {
           format(std_error, lit("~a: *unhandled-hook* ~s isn't a function\n"),
                             prog_string, fun, nao);
@@ -302,7 +305,8 @@ val uw_throw(val sym, val exception)
     }
 
     if (opt_loglevel >= 1) {
-      val s = stringp(exception);
+      val is_msg = and2(stringp(car(args)), null(cdr(args)));
+      val msg_or_args = if3(is_msg, car(args), args);
       val info = if2(source_loc(last_form_evaled),
                      source_loc_str(last_form_evaled));
       format(std_error, lit("~a: unhandled exception of type ~a:\n"),
@@ -312,8 +316,11 @@ val uw_throw(val sym, val exception)
         format(std_error, lit("~a: possibly triggered by ~a\n"),
                prog_string, info, nao);
 
-      format(std_error, s ? lit("~a: ~a\n") : lit("~a: ~s\n"),
-             prog_string, exception, nao);
+      format(std_error,
+             if3(is_msg,
+                 lit("~a: message: ~a\n"),
+                 lit("~a: exception args: ~s\n")),
+             prog_string, msg_or_args, nao);
     }
     if (uw_exception_subtype_p(sym, query_error_s) ||
         uw_exception_subtype_p(sym, file_error_s)) {
@@ -325,7 +332,7 @@ val uw_throw(val sym, val exception)
   }
 
   ex->ca.sym = sym;
-  ex->ca.exception = exception;
+  ex->ca.args = args;
   uw_exit_point = ex;
   uw_unwind_to_exit_point();
   abort();
