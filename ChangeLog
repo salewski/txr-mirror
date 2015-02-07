@@ -1,5 +1,10 @@
 2015-02-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	* unwind.c (uw_throw): Put a txr: prefix on the unhandled
+	exception in early initialization message.
+
+2015-02-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	Slight internal representation change of string-only exceptions.
 
 	One upshot of all this is that (throw 'foo "msg") now

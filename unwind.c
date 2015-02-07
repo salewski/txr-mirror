@@ -281,7 +281,7 @@ val uw_throw(val sym, val args)
 
   if (ex == 0) {
     if (std_error == 0) {
-      fprintf(stderr, "unhandled exception in early initialization\n");
+      fprintf(stderr, "txr: unhandled exception in early initialization\n");
       abort();
     }
 
