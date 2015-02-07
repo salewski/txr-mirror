@@ -1,5 +1,9 @@
 2015-02-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: fixed flurry of phrasing, formatting fumbles.
+
+2015-02-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* tests/011/macros-1.txr: Add test for lexical function
 	shadowing symbol macro.
 

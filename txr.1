@@ -2340,7 +2340,7 @@ Example:
   #"abc   def
   ghi"            --> notates ("abc" "def" "ghi")
 
-  #"abc\ def ghi" --> notates ("abc def" "ghi")
+  #"abc\e def ghi" --> notates ("abc def" "ghi")
 .cble
 
 A splicing word literal differs from a word literal in that it does not
@@ -2431,7 +2431,7 @@ Examples:
   #`abc   @d@e@f
   ghi`            --> notates (`abc` `@d@e@f` `ghi`)
 
-  #`@a\ @b @c` --> notates (`@a @b` `@c`)
+  #`@a\e @b @c` --> notates (`@a @b` `@c`)
 .cble
 
 A splicing QLL differs from an ordinary QLL in that it does not produce a list
@@ -9394,8 +9394,6 @@ The first position of an ordinary Lisp-2 style compound form, is expected to
 have a function or operator name.  Then arguments follow. There may
 also be an expression in the dotted position, if the form is a function call.
 
-The following are Lisp functions and variables built-in to \*(TX.
-
 If the form is a function call then the arguments are evaluated. If any of the
 arguments are symbols, they are treated according to Lisp-2 namespacing rules.
 
@@ -9636,8 +9634,12 @@ were called.
 Similarly to Common Lisp, \*(TL is lexically scoped by default, but
 also has dynamically scoped (a.k.a "special") variables.
 
-When a variable is defined with defvar, it is introduced as a global
-(global) binding, regardless of where in the scope the defvar form occurs.
+When a variable is defined with
+.codn defvar ,
+a binding for the symbol is
+introduced in the global name space, regardless of in what scope the
+.code defvar
+form occurs.
 
 Furthermore, at the time the defvar form is evaluated, the symbol which
 names the variable is tagged as special.
@@ -16113,7 +16115,7 @@ and after the
 .strn "c" .
 
 If the
-.meta keep-betwee
+.meta keep-between
 argument is specified, and is not
 .codn nil ,
 then the behavior
@@ -18342,7 +18344,7 @@ The expression
 performs the following calculation:
 
 .cblk
-.meti (+ (mod (- x x0) (- x1 x0)) x0)
+.mets (+ (mod (- x x0) (- x1 x0)) x0)
 .cble
 
 In other words, first
@@ -19148,9 +19150,9 @@ interpretation.
 
 In fact \*(TL's bignum integers do not use a two's complement
 representation internally. Numbers are represented as an array which holds a
-pure binary number. A separate field indicates the sign, positive or
-non-negative.  That negative numbers appear as two's-complement under the bit
-operations is merely a carefully maintained illusion (which makes bit
+pure binary number. A separate field indicates the sign: negative,
+or non-negative.  That negative numbers appear as two's-complement under the
+bit operations is merely a carefully maintained illusion (which makes bit
 operations on negative numbers more expensive).
 
 The
@@ -20957,13 +20959,16 @@ transaltes its arguments in the same way to a call to the
 function.
 
 More precisely, these macros perform the following rewrites:
+
 .cblk
   (opip arg1 arg2 ... argn) -> [chain {arg1} {arg2} ... {argn}]
   (oand arg1 arg2 ... argn) -> [chand {arg1} {arg2} ... {argn}]
 .cble
+
 where the above
 .code {arg}
 notation denotes the following transformation applied to each argument:
+
 .cblk
   (function ...) -> (op function ...)
   (operator ...) -> (do operator ...)
@@ -20972,6 +20977,7 @@ notation denotes the following transformation applied to each argument:
   [...]          -> [...]
   atom           -> atom
 .cble
+
 In other words, compound forms whose leftmost symbol is a macro or operator
 are translated to the
 .code do
@@ -20994,19 +21000,23 @@ Take each element from the list
 .code (1 2 3 4)
 and multiply it by three, then add 1.
 If the result is odd, collect that into the resulting list:
+
 .cblk
 (mappend (opip (* 3)
                (+ 1)
                [iff oddp list])
          (range 1 4))
 .cble
+
 The above is equivalent to:
+
 .cblk
 (mappend (chain (op * 3)
                 (op + 1)
                 [iff oddp list])
          (range 1 4))
 .cble
+
 The
 .code (* 3)
 and
@@ -25160,7 +25170,7 @@ the binding for the corresponding argument.
 .cblk
   @(include `@stdlib/txr-case`)
   @(define date (year month day))
-  @{year /\d\d\d\d/}-@{month /\d\d/}-@{day /\d\d/}
+  @{year /\ed\ed\ed\ed/}-@{month /\ed\ed/}-@{day /\ed\ed/}
   @(end)
   @(do
      (each ((date '("09-10-20" "2009-10-20" "July-15-2014" "foo")))
