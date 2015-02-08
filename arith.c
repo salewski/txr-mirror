@@ -945,6 +945,13 @@ divzero:
   uw_throw(numeric_error_s, lit("mod: division by zero"));
 }
 
+val trunc_rem(val anum, val bnum)
+{
+  val quot = trunc(anum, bnum);
+  val rem = minus(anum, mul(quot, bnum));
+  return list(quot, rem, nao);
+}
+
 val wrap_star(val start, val end, val num)
 {
   val modulus = minus(end, start);

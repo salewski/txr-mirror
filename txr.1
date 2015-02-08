@@ -18250,11 +18250,12 @@ A character may not be an operand of multiplication.
 
 .PP
 
-.coNP Functions @, / @ trunc and @ mod
+.coNP Functions @, / @ trunc, @ mod and @ trunc-rem
 .synb
 .mets (/ <> [ dividend ] << divisor )
 .mets (trunc < dividend << divisor )
 .mets (mod < dividend << divisor )
+.mets (trunc-rem < dividend << divisor )
 .syne
 .desc
 The arguments to these functions are numbers. Characters are not permitted.
@@ -18307,6 +18308,25 @@ then generalized into the floating point domain. For instance the expression
 .code (mod 0.75 0.5)
 yields a residue of 0.25 because 0.5 "goes into" 0.75 only
 once, with a "remainder" of 0.25.
+
+The
+.code trunc-rem
+function returns a list of two values: a
+.meta quotient
+and a
+.metn remainder.
+The
+.meta quotient
+is exactly the same value as what
+.code trunc
+would return for the same inputs.
+The
+.meta remainder
+obeys the following identity:
+
+.cblk
+.mets (eql < remainder (- < dividend >> (* divisor << quotient )))
+.cble
 
 .coNP Functions @ wrap and @ wrap*
 .synb

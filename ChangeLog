@@ -1,5 +1,17 @@
 2015-02-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	* arith.c (trunc_rem): New function.
+
+	* eval.c (eval_init): Register trunc-rem intrinsic.
+
+	* lib.h (trunc_rem): Declared.
+
+	* txr.1: Documented trunc-rem.
+
+	* tl.vim, txr.vim: Updated.
+
+2015-02-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* Makefile (CFLAGS): Removed puzzling, unnecessary definitions
 	of XMALLOC, XCALLOC, XREALLOC and XFREE for $(MPI_OBJS). MPI
 	does not use such macros and the allocator is already retargetted

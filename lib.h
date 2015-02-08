@@ -544,6 +544,7 @@ val mul(val anum, val bnum);
 val mulv(val nlist);
 val trunc(val anum, val bnum);
 val mod(val anum, val bnum);
+val trunc_rem(val anum, val bnum);
 val wrap_star(val start, val end, val num);
 val wrap(val start, val end, val num);
 val divi(val anum, val bnum);

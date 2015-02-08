@@ -181,16 +181,16 @@ syn keyword txl_keyword contained time-usec tofloat toint tok-str
 syn keyword txl_keyword contained tok-where tostring tostringp transpose
 syn keyword txl_keyword contained tree-bind tree-case tree-find trie-add
 syn keyword txl_keyword contained trie-compress trie-lookup-begin trie-lookup-feed-char trie-value-at
-syn keyword txl_keyword contained trim-str true trunc tuples
-syn keyword txl_keyword contained txr-case txr-if txr-when typeof
-syn keyword txl_keyword contained unget-byte unget-char uniq unique
-syn keyword txl_keyword contained unless unquote until upcase-str
-syn keyword txl_keyword contained update url-decode url-encode usleep
-syn keyword txl_keyword contained uw-protect vec vec-push vec-set-length
-syn keyword txl_keyword contained vecref vector vector-list vectorp
-syn keyword txl_keyword contained when where while width
-syn keyword txl_keyword contained with-saved-vars wrap wrap* zerop
-syn keyword txl_keyword contained zip
+syn keyword txl_keyword contained trim-str true trunc trunc-rem
+syn keyword txl_keyword contained tuples txr-case txr-if txr-when
+syn keyword txl_keyword contained typeof unget-byte unget-char uniq
+syn keyword txl_keyword contained unique unless unquote until
+syn keyword txl_keyword contained upcase-str update url-decode url-encode
+syn keyword txl_keyword contained usleep uw-protect vec vec-push
+syn keyword txl_keyword contained vec-set-length vecref vector vector-list
+syn keyword txl_keyword contained vectorp when where while
+syn keyword txl_keyword contained width with-saved-vars wrap wrap*
+syn keyword txl_keyword contained zerop zip
 syn match txr_metanum "@[0-9]\+"
 syn match txr_nested_error "[^\t `]\+" contained
 
