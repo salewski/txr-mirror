@@ -1,20 +1,18 @@
 Index: mpi-1.8.6/mpi.c
 ===================================================================
---- mpi-1.8.6.orig/mpi.c	2011-12-08 22:17:15.000000000 -0800
-+++ mpi-1.8.6/mpi.c	2011-12-08 22:27:07.000000000 -0800
-@@ -15,6 +15,11 @@
+--- mpi-1.8.6.orig/mpi.c	2015-02-03 08:18:36.625505588 -0800
++++ mpi-1.8.6/mpi.c	2015-02-07 19:32:14.481303143 -0800
+@@ -15,6 +15,9 @@
  #include <string.h>
  #include <ctype.h>
  
 +typedef unsigned char mem_t;
-+extern mem_t *chk_malloc(size_t size);
 +extern mem_t *chk_calloc(size_t n, size_t size);
-+extern mem_t *chk_realloc(mem_t *, size_t size);
 +
  #if MP_DEBUG
  #include <stdio.h>
  
-@@ -154,7 +159,7 @@
+@@ -154,7 +157,7 @@
    #define  s_mp_copy(sp, dp, count) memcpy(dp, sp, (count) * sizeof(mp_digit))
   #endif /* MP_MEMCPY */
  
@@ -23,7 +21,7 @@ Index: mpi-1.8.6/mpi.c
   #define  s_mp_free(ptr) {if(ptr) free(ptr);}
  #endif /* MP_MACRO */
  
-@@ -282,7 +287,7 @@
+@@ -282,7 +285,7 @@
  {
    ARGCHK(mp != NULL && prec > 0, MP_BADARG);
  
@@ -32,7 +30,7 @@ Index: mpi-1.8.6/mpi.c
      return MP_MEM;
  
    SIGN(mp) = MP_ZPOS;
-@@ -312,7 +317,7 @@
+@@ -312,7 +315,7 @@
    if(mp == from)
      return MP_OKAY;
  
@@ -41,7 +39,7 @@ Index: mpi-1.8.6/mpi.c
      return MP_MEM;
  
    s_mp_copy(DIGITS(from), DIGITS(mp), USED(from));
-@@ -358,7 +363,7 @@
+@@ -358,7 +361,7 @@
        s_mp_copy(DIGITS(from), DIGITS(to), USED(from));
        
      } else {
@@ -50,7 +48,7 @@ Index: mpi-1.8.6/mpi.c
  	return MP_MEM;
  
        s_mp_copy(DIGITS(from), tmp, USED(from));
-@@ -2670,7 +2675,7 @@
+@@ -2670,7 +2673,7 @@
      /* Set min to next nearest default precision block size */
      min = ((min + (s_mp_defprec - 1)) / s_mp_defprec) * s_mp_defprec;
  
@@ -59,7 +57,7 @@ Index: mpi-1.8.6/mpi.c
        return MP_MEM;
  
      s_mp_copy(DIGITS(mp), tmp, USED(mp));
-@@ -2757,7 +2762,7 @@
+@@ -2757,7 +2760,7 @@
  /* Allocate ni records of nb bytes each, and return a pointer to that     */
  void    *s_mp_alloc(size_t nb, size_t ni)
  {

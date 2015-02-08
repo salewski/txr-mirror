@@ -1,7 +1,7 @@
 Index: mpi-1.8.6/mpi.c
 ===================================================================
---- mpi-1.8.6.orig/mpi.c	2014-06-16 11:22:15.632802821 -0700
-+++ mpi-1.8.6/mpi.c	2014-06-28 07:42:26.140352649 -0700
+--- mpi-1.8.6.orig/mpi.c	2015-02-07 19:33:17.280186661 -0800
++++ mpi-1.8.6/mpi.c	2015-02-07 19:33:19.412149446 -0800
 @@ -16,6 +16,9 @@
  #include <ctype.h>
  #include <math.h>
@@ -10,9 +10,9 @@ Index: mpi-1.8.6/mpi.c
 +#define MIN(A, B) ((A) < (B) ? (A) : (B))
 +
  typedef unsigned char mem_t;
- extern mem_t *chk_malloc(size_t size);
  extern mem_t *chk_calloc(size_t n, size_t size);
-@@ -159,6 +162,7 @@
+ 
+@@ -157,6 +160,7 @@
  mp_err   s_mp_grow(mp_int *mp, mp_size min);   /* increase allocated size */
  mp_err   s_mp_pad(mp_int *mp, mp_size min);    /* left pad with zeroes    */
  
@@ -20,7 +20,7 @@ Index: mpi-1.8.6/mpi.c
  int      s_highest_bit_mp(mp_int *a);
  mp_err   s_mp_set_bit(mp_int *a, int bit);
  
-@@ -2336,6 +2340,430 @@
+@@ -2334,6 +2338,430 @@
  
  /* }}} */
  
@@ -453,8 +453,8 @@ Index: mpi-1.8.6/mpi.c
    int ix;
 Index: mpi-1.8.6/mpi.h
 ===================================================================
---- mpi-1.8.6.orig/mpi.h	2014-06-16 11:22:15.620803044 -0700
-+++ mpi-1.8.6/mpi.h	2014-06-28 08:46:48.354193482 -0700
+--- mpi-1.8.6.orig/mpi.h	2015-02-07 19:33:14.612233293 -0800
++++ mpi-1.8.6/mpi.h	2015-02-07 19:33:19.412149446 -0800
 @@ -54,6 +54,7 @@
  
  /* Macros for accessing the mp_int internals           */

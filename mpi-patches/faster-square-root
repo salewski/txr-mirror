@@ -1,8 +1,8 @@
 Index: mpi-1.8.6/mpi.c
 ===================================================================
---- mpi-1.8.6.orig/mpi.c	2014-02-17 22:25:46.042680203 -0800
-+++ mpi-1.8.6/mpi.c	2014-02-19 19:00:21.279452088 -0800
-@@ -158,6 +158,9 @@
+--- mpi-1.8.6.orig/mpi.c	2015-02-07 19:33:04.528410164 -0800
++++ mpi-1.8.6/mpi.c	2015-02-07 19:33:11.780282866 -0800
+@@ -156,6 +156,9 @@
  mp_err   s_mp_grow(mp_int *mp, mp_size min);   /* increase allocated size */
  mp_err   s_mp_pad(mp_int *mp, mp_size min);    /* left pad with zeroes    */
  
@@ -12,7 +12,7 @@ Index: mpi-1.8.6/mpi.c
  void     s_mp_clamp(mp_int *mp);               /* clip leading zeroes     */
  
  void     s_mp_exch(mp_int *a, mp_int *b);      /* swap a and b in place   */
-@@ -1535,77 +1538,61 @@
+@@ -1533,77 +1536,61 @@
  
  /* {{{ mp_sqrt(a, b) */
  
@@ -136,7 +136,7 @@ Index: mpi-1.8.6/mpi.c
  
  /* }}} */
  
-@@ -2554,21 +2541,9 @@
+@@ -2552,21 +2539,9 @@
  
  int    mp_count_bits(mp_int *mp)
  {
@@ -159,7 +159,7 @@ Index: mpi-1.8.6/mpi.c
  } /* end mp_count_bits() */
  
  /* }}} */
-@@ -3132,6 +3107,27 @@
+@@ -3130,6 +3105,27 @@
    abort();
  }
  

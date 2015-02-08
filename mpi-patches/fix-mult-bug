@@ -1,8 +1,8 @@
 Index: mpi-1.8.6/mpi.c
 ===================================================================
---- mpi-1.8.6.orig/mpi.c	2012-03-04 11:49:39.720925007 -0800
-+++ mpi-1.8.6/mpi.c	2012-03-04 11:49:47.661389007 -0800
-@@ -3268,7 +3268,7 @@
+--- mpi-1.8.6.orig/mpi.c	2015-02-07 19:32:48.892686392 -0800
++++ mpi-1.8.6/mpi.c	2015-02-07 19:32:53.524604501 -0800
+@@ -3266,7 +3266,7 @@
      unless absolutely necessary.
     */
    max = USED(a);
@@ -11,7 +11,7 @@ Index: mpi-1.8.6/mpi.c
    if(CARRYOUT(w) != 0) {
      if((res = s_mp_pad(a, max + 1)) != MP_OKAY)
        return res;
-@@ -3276,7 +3276,7 @@
+@@ -3274,7 +3274,7 @@
    }
  
    for(ix = 0; ix < max; ix++) {
@@ -20,7 +20,7 @@ Index: mpi-1.8.6/mpi.c
      dp[ix] = ACCUM(w);
      k = CARRYOUT(w);
    }
-@@ -3493,7 +3493,7 @@
+@@ -3491,7 +3491,7 @@
      pa = DIGITS(a);
      for(jx = 0; jx < ua; ++jx, ++pa) {
        pt = pbt + ix + jx;
@@ -29,7 +29,7 @@ Index: mpi-1.8.6/mpi.c
        *pt = ACCUM(w);
        k = CARRYOUT(w);
      }
-@@ -3575,7 +3575,7 @@
+@@ -3573,7 +3573,7 @@
      if(*pa1 == 0)
        continue;
  
@@ -38,7 +38,7 @@ Index: mpi-1.8.6/mpi.c
  
      pbt[ix + ix] = ACCUM(w);
      k = CARRYOUT(w);
-@@ -3597,7 +3597,7 @@
+@@ -3595,7 +3595,7 @@
        pt = pbt + ix + jx;
  
        /* Compute the multiplicative step */
@@ -47,7 +47,7 @@ Index: mpi-1.8.6/mpi.c
  
        /* If w is more than half MP_WORD_MAX, the doubling will
  	 overflow, and we need to record a carry out into the next
-@@ -3641,7 +3641,7 @@
+@@ -3639,7 +3639,7 @@
       */
      kx = 1;
      while(k) {

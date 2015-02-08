@@ -1,5 +1,42 @@
 2015-02-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	* Makefile (CFLAGS): Removed puzzling, unnecessary definitions
+	of XMALLOC, XCALLOC, XREALLOC and XFREE for $(MPI_OBJS). MPI
+	does not use such macros and the allocator is already retargetted
+	to use the TXR one.
+
+	* mpi-patches/use-txr-allocator: In this patch, we don't need
+	external declaration for chk_malloc or chk_realloc because they
+	are not used. Only chk_calloc is used.
+
+	* mpi-patches/add-bitops: Refreshed.
+
+	* mpi-patches/add-mp-hash: Likewise.
+
+	* mpi-patches/add-mp-set-intptr: Likewise.
+
+	* mpi-patches/add-mpi-toradix-with-case: Likewise.
+
+	* mpi-patches/bit-search-optimizations: Likewise.
+
+	* mpi-patches/export-mp-eq: Likewise.
+
+	* mpi-patches/faster-square-root: Likewise.
+
+	* mpi-patches/fix-bad-shifts: Likewise.
+
+	* mpi-patches/fix-ctype-warnings: Likewise.
+
+	* mpi-patches/fix-mult-bug: Likewise.
+
+	* mpi-patches/mpi-set-double-intptr: Likewise.
+
+	* mpi-patches/mpi-set-mpi-word: Likewise.
+
+	* mpi-patches/mpi-to-double: Likewise.
+
+2015-02-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	Support txr-win.exe target which has no console window.
 
 	* Makefile (EACH_CONF): Iterate over arguments.
