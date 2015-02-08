@@ -1,5 +1,17 @@
 2015-02-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	Support txr-win.exe target which has no console window.
+
+	* Makefile (EACH_CONF): Iterate over arguments.
+	(opt/txr-win.o, dbg/txr-win.o): New special object files.
+	(opt/%-win.o, dbg/%-win.o): New pattern rule to build special object
+	files.
+	($(PROG)-win, $(PROG)-win-dbg): New program targets.
+
+	* inst.nsi: Install txr-win.exe.
+
+2015-02-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: fixed flurry of phrasing, formatting fumbles.
 
 2015-02-07  Kaz Kylheku  <kaz@kylheku.com>

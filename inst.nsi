@@ -40,6 +40,7 @@ section "TXR"
   SetShellVarContext current
   SetOutPath $INSTDIR\txr\bin
   File txr.exe
+  File txr-win.exe
   SetOutPath $INSTDIR\txr\doc
   File txr-manpage.html
   File txr-manpage.pdf

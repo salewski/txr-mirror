@@ -38,7 +38,8 @@ endif
 
 # TXR objects
 ADD_CONF = $(addprefix $(1)/,$(2))
-EACH_CONF = $(foreach conf,opt dbg,$(call ADD_CONF,$(conf),$(1)))
+EACH_CONF = $(foreach conf,opt dbg,\
+               $(foreach tgt,$(1),$(call ADD_CONF,$(conf),$(tgt))))
 
 OBJS-y := # make sure OBJ-y is a value variable, not a macro variable
 EXTRA_OBJS-y :=
@@ -117,6 +118,12 @@ dbg/%.o: %.c
 opt/%.o: %.c
 	$(call COMPILE_C_WITH_DEPS,$(OPT_FLAGS))
 
+dbg/%-win.o: %.c
+	$(call COMPILE_C_WITH_DEPS,-DCONFIG_WIN_MAIN=1)
+
+opt/%-win.o: %.c
+	$(call COMPILE_C_WITH_DEPS,-DCONFIG_WIN_MAIN=1 $(OPT_FLAGS))
+
 opt/%.res: win/%.rc
 	$(call WINDRES)
 
@@ -142,6 +149,12 @@ $(PROG): $(OPT_OBJS) $(EXTRA_OBJS-y)
 
 $(PROG)-dbg: $(DBG_OBJS) $(EXTRA_OBJS-y)
 	$(call LINK_PROG,)
+
+$(PROG)-win: $(patsubst %/txr.o,%/txr-win.o,$(OPT_OBJS)) $(EXTRA_OBJS-y)
+	$(call LINK_PROG,-mwindows $(OPT_FLAGS))
+
+$(PROG)-win-dbg: $(patsubst %/txr.o,%/txr-win.o,$(DBG_OBJS)) $(EXTRA_OBJS-y)
+	$(call LINK_PROG,-mwindows)
 
 VPATH := $(top_srcdir)
 
@@ -193,10 +206,16 @@ $(call EACH_CONF,y.tab.o): CFLAGS += -Dlint
 # txr.c needs to know the relative datadir path to do some sysroot
 # calculations.
 
-opt/txr.o: CFLAGS += -DPROG_NAME=\"$(PROG)\" -DTXR_REL_PATH=\"$(bindir_rel)/$(PROG)$(EXE)\"
-dbg/txr.o: CFLAGS += -DPROG_NAME=\"$(PROG)-dbg\" -DTXR_REL_PATH=\"$(bindir_rel)/$(PROG)-dbg$(EXE)\"
-$(call EACH_CONF,txr.o): CFLAGS += -DEXE_SUFF=\"$(EXE)\"
-$(call EACH_CONF,txr.o): CFLAGS += -DTXR_VER=\"$(txr_ver)\"
+opt/txr.o: CFLAGS += -DPROG_NAME=\"$(PROG)\" \
+                     -DTXR_REL_PATH=\"$(bindir_rel)/$(PROG)$(EXE)\"
+dbg/txr.o: CFLAGS += -DPROG_NAME=\"$(PROG)-dbg\" \
+                     -DTXR_REL_PATH=\"$(bindir_rel)/$(PROG)-dbg$(EXE)\"
+opt/txr-win.o: CFLAGS += -DPROG_NAME=\"$(PROG)-win\" \
+                         -DTXR_REL_PATH=\"$(bindir_rel)/$(PROG)-win$(EXE)\"
+dbg/txr-win.o: CFLAGS += -DPROG_NAME=\"$(PROG)-win-dbg\" \
+                         -DTXR_REL_PATH=\"$(bindir_rel)/$(PROG)-win-dbg$(EXE)\"
+$(call EACH_CONF,txr.o txr-win.o): CFLAGS += -DEXE_SUFF=\"$(EXE)\"
+$(call EACH_CONF,txr.o txr-win.o): CFLAGS += -DTXR_VER=\"$(txr_ver)\"
 
 $(call EACH_CONF,$(MPI_OBJS)): CFLAGS += -DXMALLOC=chk_malloc -DXREALLOC=chk_realloc
 $(call EACH_CONF,$$(MPI_OBJS)): CFLAGS += -DXCALLOC=chk_calloc -DXFREE=free
