@@ -1,3 +1,13 @@
+2015-02-08  Kaz Kylheku  <kaz@kylheku.com>
+
+	Version 104.
+
+	* RELNOTES: Updated.
+
+	* configure, txr.1: Bumped version.
+
+	* share/txr/stdlib/ver.txr: Likewise
+
 2015-02-07  Kaz Kylheku  <kaz@kylheku.com>
 
 	* arith.c (trunc_rem): New function.

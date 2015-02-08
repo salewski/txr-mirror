@@ -1,3 +1,58 @@
+                                    TXR 104
+                                   2015-02-08
+
+
+  Features
+
+  - Symbol macros are now shadowed by lexically scoped functions, when
+    referenced from the interior of a form which uses Lisp-1 semantics (a []
+    bracketed form, a form based on the op family of operators, or explicit use
+    of the dwim operator).
+
+  - New function, abort.
+
+  - TXR now doesn't terminate abnormally (abort) on unhandled exceptions, but
+    only terminates unsuccessfully. This provides a better experience on
+    the MinGW-based Windows target, where we get an annoying dialog box on
+    abort.
+
+  - New *uhandled-hook* variable can be used to register a user-defined
+    function which is called when an unhandled exception occurs.
+
+  - New arithmetic function, trunc-rem.
+
+  - When the numbered arguments of partial application under the op family of
+    operators are interpolated into a string quasiliteral, modifiers may
+    now be applied. For instance (op prinl `@{1 20} @{2 20}`) denotes
+    a function which prints its two arguments in twenty-character-wide fields
+    separated by a space.
+
+  - Improvements in Windows installer: reduced broadcast delay in registerting
+    environment variable. Improved messages in this area.
+
+  - A txr-win.exe can be built now which avoids creating a console window.
+    This is included in the installer.
+
+  Bugs
+
+  - Fixed bug in quasiliteral string evaluation in TXR Lisp, in conjunction
+    with op arguments like @1, @2, ...  When a value interpolated from
+    one of these arguments looked like a form, it was mistakenly subject to
+    recursive processing and variable substitution as if it were part of
+    the quasiliteral target syntax.
+
+  - Fixed a serious bug in the op macro and all related operators like do
+    and ap, in the handling of situations with missing argument numbers
+    was broken: such as when @3 is referenced, but not @1 or @2
+    (which must generate a function of at least three arguments, which
+    ignores its first two). This key feature was discovered to be utterly
+    broken.
+
+  - Fix in internal representation of exceptions: (throw 'x "foo") is now
+    the same as (throwf x "foo").
+
+
+
                                     TXR 103
                                    2015-02-02
 
