@@ -26151,6 +26151,42 @@ However, it can be macro-expanded to
 .code x
 which is a lexical variable.
 
+.coNP Function @ lexical-lisp1-binding
+.synb
+.mets (lexical-lisp1-binding < env << symbol)
+.syne
+.desc
+The
+.code lexical-lisp1-binding
+function inspects the macro-time environment
+.meta env
+to determine what kind of binding, if any, does
+.meta symbol
+have in that environment, from a Lisp-1 perspective.
+
+That is to say, it considers function bindings, variable bindings
+and symbol macro bindings to be in a single name space and finds
+the innermost binding of one of these types for
+.metn symbol .
+
+If such a binding is found, then the function returns one of
+the three keyword symbols
+.codn :var ,
+.codn :fun ,
+or
+.codn :symacro .
+
+If no such lexical binding is found, then the function
+returns
+.codn nil .
+
+Note that a
+.code nil
+return doesn't mean that the symbol doesn't have a lexical binding.  It could
+have an operator macro lexical binding (a macro binding in the function
+namespace established by
+.codn macrolet ).
+
 .coNP Operator @ defsymacro
 .synb
 .mets (defsymacro < sym << form )

@@ -85,7 +85,7 @@ val defsymacro_s, symacrolet_s, prof_s;
 val fbind_s, lbind_s, flet_s, labels_s;
 val opip_s, oand_s, chain_s, chand_s;
 
-val special_s, whole_k;
+val special_s, whole_k, symacro_k, fun_k;
 
 val last_form_evaled;
 
@@ -331,6 +331,31 @@ static val lexical_fun_p(val menv, val sym)
       if (binding) /* special_s: see make_var_shadowing_env */
         return c_true(cdr(binding) == special_s);
       return lexical_fun_p(menv->e.up_env, sym);
+    }
+  }
+}
+
+static val lexical_lisp1_binding(val menv, val sym)
+{
+  if (nilp(menv)) {
+    return nil;
+  } else {
+    type_check(menv, ENV);
+
+    {
+      val binding = assoc(sym, menv->e.vbindings);
+
+      if (binding) /* special_s: see make_var_shadowing_env */
+        return if3(cdr(binding) == special_s,
+                   var_k, symacro_k);
+    }
+
+    {
+      val binding = assoc(sym, menv->e.fbindings);
+
+      if (binding && cdr(binding) == special_s)
+        return fun_k;
+      return lexical_lisp1_binding(menv->e.up_env, sym);
     }
   }
 }
@@ -3659,6 +3684,8 @@ void eval_init(void)
   with_saved_vars_s = intern(lit("with-saved-vars"), system_package);
   whole_k = intern(lit("whole"), keyword_package);
   special_s = intern(lit("special"), system_package);
+  symacro_k = intern(lit("symacro"), keyword_package);
+  fun_k = intern(lit("fun"), keyword_package);
   prof_s = intern(lit("prof"), user_package);
   opip_s = intern(lit("opip"), user_package);
   oand_s = intern(lit("oand"), user_package);
@@ -3971,6 +3998,8 @@ void eval_init(void)
   reg_fun(intern(lit("env-vbind"), user_package), func_n3(env_vbind));
   reg_fun(intern(lit("lexical-var-p"), user_package), func_n2(lexical_var_p));
   reg_fun(intern(lit("lexical-fun-p"), user_package), func_n2(lexical_fun_p));
+  reg_fun(intern(lit("lexical-lisp1-binding"), user_package),
+          func_n2(lexical_lisp1_binding));
   reg_fun(chain_s, func_n0v(chainv));
   reg_fun(chand_s, func_n0v(chandv));
   reg_fun(intern(lit("juxt"), user_package), func_n0v(juxtv));

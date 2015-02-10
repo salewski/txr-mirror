@@ -1,3 +1,14 @@
+2015-02-10  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (symacro_k, fun_k): New keyword variables.
+	(lexical_lisp1_binding): New static function.
+	(eval_init): Initialize symacro_k and fun_k; register
+	new intrinsic function lexical-lisp1-binding.
+
+	* match.h (var_k): Existing external name declared.
+
+	* txr.1: Documented lexical-lisp1-binding.
+
 2015-02-09  Kaz Kylheku  <kaz@kylheku.com>
 
 	* Makefile: Add dependency froml $(EXTRA_OBJS-y) to header
