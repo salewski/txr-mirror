@@ -1,5 +1,11 @@
 2015-02-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	* Makefile: Add dependency froml $(EXTRA_OBJS-y) to header
+	file and config.h, so windows resource file is rebuilt
+	when the version changes.
+
+2015-02-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	* Makefile: Removing bogus eval which refers to nonexistent
 	DEP_INSTANTIATE macro.
 

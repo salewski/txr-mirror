@@ -174,7 +174,9 @@ endef
 -include $(OBJS:.o=.d) $(OBJS:.o=.v)
 
 # Add dependencies
-$(call DEP,$(OBJS),$(conf_dir)/config.make $(conf_dir)/config.h)
+$(call DEP,$(OBJS) $(EXTRA_OBJS-y),\
+           $(conf_dir)/config.make $(conf_dir)/config.h)
+
 $(call DEP,opt/lex.yy.o dbg/lex.yy.o,y.tab.h)
 
 lex.yy.c: parser.l
