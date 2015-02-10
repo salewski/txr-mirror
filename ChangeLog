@@ -1,5 +1,10 @@
 2015-02-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	* Makefile: Removing bogus eval which refers to nonexistent
+	DEP_INSTANTIATE macro.
+
+2015-02-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	* Makefile (clean): Remove $(EXTRA_OBJS-y) so the Windows .res
 	file is removed.
 

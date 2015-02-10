@@ -177,10 +177,6 @@ endef
 $(call DEP,$(OBJS),$(conf_dir)/config.make $(conf_dir)/config.h)
 $(call DEP,opt/lex.yy.o dbg/lex.yy.o,y.tab.h)
 
-
-$(eval $(foreach dep,$(OPT_OBJS:.o=.d) $(DBG_OBJS:.o=.d),\
-          $(call DEP_INSTANTIATE,$(dep))))
-
 lex.yy.c: parser.l
 	$(call ABBREV,LEX)
 	$(V)rm -f $@
