@@ -233,7 +233,7 @@ rebuild: clean repatch $(PROG)
 
 clean: conftest.clean tests.clean
 	rm -f $(PROG)$(EXE) $(PROG)-dbg$(EXE) y.tab.c lex.yy.c y.tab.h y.output
-	rm -rf opt dbg
+	rm -rf opt dbg $(EXTRA_OBJS-y)
 
 repatch:
 	cd mpi-$(mpi_version); quilt pop -af
