@@ -888,10 +888,14 @@ static val lazy_appendv_func(val env, val lcons)
 
   rplaca(lcons, last);
 
-  if (atom(nonempty)) {
+  if (nilp(lists)) {
     rplacd(lcons, nonempty);
     return nil;
   }
+
+  if (atom(nonempty))
+    uw_throwf(error_s, lit("append*: cannot append to atom ~s"),
+              nonempty, nao);
 
   rplacd(env, lists);
 
@@ -914,8 +918,12 @@ val lazy_appendv(val lists)
       break;
   }
 
-  if (atom(nonempty))
+  if (nilp(lists))
     return nonempty;
+
+  if (atom(nonempty))
+    uw_throwf(error_s, lit("append*: cannot append to atom ~s"),
+              nonempty, nao);
 
   {
     loc ptail = ltail(mkcloc(nonempty));

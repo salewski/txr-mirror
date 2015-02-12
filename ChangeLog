@@ -1,3 +1,13 @@
+2015-02-12  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (lazy_appendv_func, lazy_appendv): Bugfix: append*
+	was silently ignoring lists after the first atom, instead of
+	throwing an error. Also, it was not detecting the case that
+	the last argument is a list which should just be returned,
+	and instead trying to find its tail in preparation for the
+	next call to lazy_appendv_func, the consequences being runaway
+	iteration over an infinite list.
+
 2015-02-10  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (symacro_k, fun_k): New keyword variables.
