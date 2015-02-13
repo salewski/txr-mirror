@@ -611,7 +611,7 @@ loc list_collect(loc ptail, val obj)
     replace_str(deref(ptail), cons(obj, nil), t, t);
     return ptail;
   default:
-    uw_throwf(error_s, lit("cannot append ~s to ~s"), obj, deref(ptail), nao);
+    uw_throwf(error_s, lit("cannot append ~s"), deref(ptail), nao);
   }
 }
 
@@ -666,7 +666,7 @@ loc list_collect_append(loc ptail, val obj)
     replace_str(deref(ptail), obj, t, t);
     return ptail;
   default:
-    uw_throwf(error_s, lit("cannot append ~s to ~s"), obj, deref(ptail), nao);
+    uw_throwf(error_s, lit("cannot append to ~s"), deref(ptail), nao);
   }
 }
 

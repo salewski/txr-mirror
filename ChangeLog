@@ -1,5 +1,12 @@
 2015-02-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (list_collect, list_collect_append): In error
+	messages about bad appends, do not show the list being
+	appended because it may be an infinite lazy list.
+	For instance (append* 3 lazy-list).
+
+2015-02-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	New functions pad and weave.
 
 	* eval.c (pad_func, pad, weave_while, weave_gen, weavev):
