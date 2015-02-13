@@ -3429,6 +3429,85 @@ static val repeat(val list, val count)
   return make_lazy_cons(func_f1(cons(list, list), repeat_infinite_func));
 }
 
+static val pad_func(val env, val lcons)
+{
+  cons_bind (list, item_count, env);
+  val next = cdr(list);
+
+  rplaca(lcons, car(list));
+
+  if (next && seqp(next)) {
+    rplaca(env, next);
+    rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+    return nil;
+  } else if (!next) {
+    val count = cdr(item_count);
+    rplacd(item_count, nil);
+    rplacd(lcons, repeat(item_count, count));
+  } else {
+    uw_throwf(error_s, lit("pad: cannot pad improper list terminated by ~s"),
+              next, nao);
+  }
+
+  return nil;
+}
+
+static val pad(val list, val item_in, val count)
+{
+  val item = default_bool_arg(item_in);
+
+  switch (type(list)) {
+  case NIL:
+    return repeat(cons(item, nil), count);
+  case CONS:
+    return append2(list, repeat(cons(item, nil), count));
+  case LCONS:
+  case VEC:
+  case LIT:
+  case STR:
+  case LSTR:
+    return make_lazy_cons(func_f1(cons(list, cons(item, count)), pad_func));
+  default:
+    uw_throwf(error_s, lit("pad: cannot pad ~s, only sequences"), list, nao);
+  }
+}
+
+static val weave_while(val env)
+{
+  cons_bind (uniq, tuples, env);
+  val tuple;
+
+  if (!tuples)
+    return nil;
+
+  tuple = remq(uniq, car(tuples));
+
+  if (!tuple)
+    return nil;
+
+  rplaca(tuples, tuple);
+  return t;
+}
+
+static val weave_gen(val env)
+{
+  val tuples = cdr(env);
+  val ret = car(tuples);
+  rplacd(env, cdr(tuples));
+  return ret;
+}
+
+static val weavev(val lists)
+{
+  val uniq = cons(nil, nil);
+  val padded_lists = mapcar(curry_123_1(func_n3(pad), uniq, colon_k), lists);
+  val tuples = lazy_mapcarv(list_f, padded_lists);
+  val env = cons(uniq, tuples);
+  val whil = func_f0(env, weave_while);
+  val gen = func_f0(env, weave_gen);
+  return lazy_appendv(generate(whil, gen));
+}
+
 static val force(val promise)
 {
   if (car(promise) != promise_s)
@@ -4196,6 +4275,8 @@ void eval_init(void)
   reg_fun(generate_s, func_n2(generate));
   reg_fun(intern(lit("giterate"), user_package), func_n3o(giterate, 2));
   reg_fun(intern(lit("repeat"), user_package), func_n2o(repeat, 1));
+  reg_fun(intern(lit("pad"), user_package), func_n3o(pad, 1));
+  reg_fun(intern(lit("weave"), user_package), func_n0v(weavev));
   reg_fun(intern(lit("force"), user_package), func_n1(force));
   reg_fun(intern(lit("rperm"), user_package), func_n2(rperm));
   reg_fun(intern(lit("perm"), user_package), func_n2o(perm, 1));

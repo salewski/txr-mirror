@@ -1,5 +1,15 @@
 2015-02-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	New functions pad and weave.
+
+	* eval.c (pad_func, pad, weave_while, weave_gen, weavev):
+	New static functions.
+	(eval_init): Registered pad and weave intrisics.
+
+	* txr.1: Documented pad and weave.
+
+2015-02-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (lazy_appendv_func, lazy_appendv): Bugfix: append*
 	was silently ignoring lists after the first atom, instead of
 	throwing an error. Also, it was not detecting the case that

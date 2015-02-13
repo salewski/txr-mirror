@@ -15294,6 +15294,67 @@ repetitions of
 .meta list
 catenated together.
 
+.coNP Function @ pad
+.synb
+.mets (pad < sequence < object <> [ count ])
+.syne
+.desc
+The
+.code pad
+function produces a lazy list which consists of all of the
+elements of
+.meta sequence
+followed by repetitions of
+.meta object .
+
+If
+.meta count
+is omitted, then the repetition of
+.meta object
+is infinite. Otherwise the specified number of repetitions
+occur.
+
+Note that
+.meta sequence
+may be a lazy list which is infinite. In that case, the repetitions
+of
+.meta object
+will never occur.
+
+.coNP Function @ weave
+.synb
+.mets (weave >> { sequence }*)
+.syne
+The
+.code weave
+function interleaves elements from the sequences given as arguments.
+
+If called with no arguments, it returns the empty list.
+
+If called with a single sequence, it returns the elements of that sequence
+as a new lazy list.
+
+When called with two or more sequences,
+.code
+weave
+returns a lazy list which draws elements from the sequeces in a round-robin
+fashion, repeatedly scanning the sequences from left to right, and
+taking an item from each one, removing it from the sequence.
+Whenever a sequence runs out of items, it is deleted; the weaving then
+continues with the remaining sequences. The weaved sequence terminates
+when all sequences are eliminated. (If at least one of the sequences
+is an infinite lazy list, then the weaved sequence is infinite.)
+
+.TP* Examples:
+
+.cblk
+  ;; Weave negative integers with positive ones:
+  (weave (range 1) (range -1 : -1)) -> (1 -1 2 -2 3 -3 ...)
+
+  (weave "abcd" (range 1 3) '(x x x x x x x))
+  --> (#\ea 1 x #\eb 2 x #\ec 3 x #\ed x x x x)
+.cble
+
 .coNP Macros @ gen and @ gun
 .synb
 .mets (gen < while-expression << produce-item-expression )
