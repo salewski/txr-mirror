@@ -1,3 +1,8 @@
+2015-02-15  Kaz Kylheku  <kaz@kylheku.com>
+
+	* regex.c (print_rec): A compound must use parentheses for
+	elements which have a higher precedence than catenation.
+
 2015-02-12  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (list_collect, list_collect_append): In error

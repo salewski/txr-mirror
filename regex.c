@@ -1773,8 +1773,14 @@ static void print_rec(val exp, val stream)
       }
       put_char(chr(']'), stream);
     } else if (sym == compound_s) {
-      while (args)
-        print_rec(pop(&args), stream);
+      for (; args; args = cdr(args)) {
+        val arg = car(args);
+        if (consp(arg) && car(arg) != zeroplus_s && car(arg) != oneplus_s &&
+            car(arg) != optional_s && car (arg) != compound_s)
+          paren_print_rec(arg, stream);
+        else
+          print_rec(arg, stream);
+      }
     } else if (sym == zeroplus_s || sym == oneplus_s || sym == optional_s) {
       val arg = pop(&args);
       if (consp(arg) && car(arg) != set_s && car(arg) != cset_s)
