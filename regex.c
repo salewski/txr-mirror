@@ -2131,6 +2131,27 @@ val regsub(val regex, val repl, val str)
   return cat_str(out, nil);
 }
 
+val search_regst(val haystack, val needle_regex, val start_num, val from_end)
+{
+  val range = range_regex(haystack, needle_regex, start_num, from_end);
+  return if2(range, sub_str(haystack, car(range), cdr(range)));
+}
+
+val match_regst(val str, val regex, val pos_in)
+{
+  val pos = default_arg(pos_in, zero);
+  val len = match_regex(str, regex, pos);
+  return if2(len, sub_str(str, pos, plus(pos, len)));
+}
+
+val match_regst_right(val str, val regex, val end)
+{
+  val len = match_regex_right(str, regex, end);
+  return if2(len, if3(null_or_missing_p(end),
+                      sub_str(str, neg(len), t),
+                      sub_str(str, minus(end, len), end)));
+}
+
 val space_k, digit_k, word_char_k;
 val cspace_k, cdigit_k, cword_char_k;
 

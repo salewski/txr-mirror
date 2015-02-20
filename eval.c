@@ -4022,9 +4022,13 @@ void eval_init(void)
   reg_fun(intern(lit("regexp"), user_package), func_n1(regexp));
   reg_fun(intern(lit("search-regex"), user_package), func_n4o(search_regex, 2));
   reg_fun(intern(lit("range-regex"), user_package), func_n4o(range_regex, 2));
+  reg_fun(intern(lit("search-regst"), user_package), func_n4o(search_regst, 2));
   reg_fun(intern(lit("match-regex"), user_package), func_n3o(match_regex, 2));
+  reg_fun(intern(lit("match-regst"), user_package), func_n3o(match_regst, 2));
   reg_fun(intern(lit("match-regex-right"), user_package),
           func_n3o(match_regex_right, 2));
+  reg_fun(intern(lit("match-regst-right"), user_package),
+          func_n3o(match_regst_right, 2));
   reg_fun(intern(lit("regsub"), user_package), func_n3(regsub));
   reg_fun(intern(lit("regex-parse"), user_package), func_n2o(regex_parse, 1));
 

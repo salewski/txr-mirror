@@ -1,3 +1,16 @@
+2015-02-20  Kaz Kylheku  <kaz@kylheku.com>
+
+	String-returning wrappers for some regex matching functions.
+
+	* eval.c (eval_init): Register search-regst, match-regst
+	and match-regst-right intrinsics.
+
+	* regex.c (search_regst, match_regst, match_regst_right): New functions.
+
+	* regex.h (search_regst, match_regst, match_regst_right): Declared.
+
+	* txr.1: Documented new variants.
+
 2015-02-15  Kaz Kylheku  <kaz@kylheku.com>
 
 	* regex.c (print_rec): A compound must use parentheses for

@@ -19705,6 +19705,7 @@ function to obtain more information about the form.
 .synb
 .mets (search-regex < string < regex >> [ start <> [ from-end ]])
 .mets (range-regex < string < regex >> [ start <> [ from-end ]])
+.mets (range-regst < string < regex >> [ start <> [ from-end ]])
 .syne
 .desc
 The
@@ -19749,9 +19750,19 @@ indicates the position one element past the
 last character of the match. If the match is empty, the two integers
 are equal.
 
-.coNP Function @ match-regex
+The
+.code search-regst
+differs from
+.code search-regex
+in the representation of the return value in the matching case.
+Rather than returning the position and length of the match,
+it returns the matching substring of
+.metn string .
+
+.coNP Functions @ match-regex and @ match-regst
 .synb
 .mets (match-regex < string < regex <> [ position ])
+.mets (match-regst < string < regex <> [ position ])
 .syne
 .desc
 The
@@ -19770,9 +19781,19 @@ If it does not match, then
 .code nil
 is returned.
 
-.coNP Function @ match-regex-right
+The
+.code match-regst
+differs from
+.code match-regex
+in the representation of the return value in the matching case.
+Rather than returning the length of the match, it returns
+matching substring of
+.metn string .
+
+.coNP Functions @ match-regex-right and @ match-regst-right
 .synb
 .mets (match-regex-right < string < regex <> [ end-position ])
+.mets (match-regst-right < string < regex <> [ end-position ])
 .syne
 .desc
 The
@@ -19787,8 +19808,7 @@ If
 is not specified, it defaults to the length of the string, and the function
 performs a right-anchored regex match.
 
-If a match is found, then the length of the match is returned, and
-the matching substring is then returned.
+If a match is found, then the length of the match is returned.
 
 The match must terminate just before
 .meta end-position
@@ -19805,6 +19825,15 @@ is returned.
 If no such a match is found, then
 .code nil
 is returned.
+
+The
+.code match-regst-right
+differs from
+.code match-regst-right
+in the representation of the return value in the matching case.
+Rather than returning the length of the match, it returns
+matching substring of
+.metn string .
 
 .TP* Examples:
 

@@ -35,6 +35,9 @@ val search_regex(val haystack, val needle_regex, val start_num, val from_end);
 val range_regex(val haystack, val needle_regex, val start_num, val from_end);
 val match_regex(val str, val regex, val pos);
 val match_regex_right(val str, val regex, val end);
+val search_regst(val haystack, val needle_regex, val start_num, val from_end);
+val match_regst(val str, val regex, val pos);
+val match_regst_right(val str, val regex, val end);
 val regsub(val regex, val repl, val str);
 
 void regex_init(void);
