@@ -2084,7 +2084,7 @@ val match_regex_right(val str, val regex, val end)
   if (null_or_missing_p(end) || gt(end, slen))
     end = slen;
 
-  while (lt(pos, end)) {
+  while (le(pos, end)) {
     cons_bind (from, len, search_regex(str, regex, pos, nil));
 
     if (!from)

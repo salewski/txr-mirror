@@ -1,5 +1,11 @@
 2015-02-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	* regex.c (match_regex_right): Bugfix: zero length matches
+	should return zero length, rather than nil. This is achieved by trying
+	the match at one past the last character.
+
+2015-02-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	String-returning wrappers for some regex matching functions.
 
 	* eval.c (eval_init): Register search-regst, match-regst
