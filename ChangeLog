@@ -1,3 +1,24 @@
+2015-02-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	Improved error reporting, particularly for macro expansion.
+
+	* eval.c (last_form_expanded): New variable.
+	(do_expand): New static function; contains previous expand
+	function.
+	(expand): Becomes a wrapper for do_expand, with re-entry
+	counting.
+	(eval_init): GC-protect last_form_expanded.
+
+	* eval.h (last_form_expanded): Declared.
+
+	* parser.l (regex_parse, lisp_parse): Just use a simple word for
+	the name of the regex or string parse location, not the entire
+	expression itself.
+
+	* unwind.c (uw_throw): Check whether expansion was going on
+	when the unhandled exception was thrown and print additional
+	information.
+
 2015-02-20  Kaz Kylheku  <kaz@kylheku.com>
 
 	* regex.c (match_regex_right): Bugfix: zero length matches

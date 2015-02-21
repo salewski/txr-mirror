@@ -985,9 +985,7 @@ val regex_parse(val string, val error_stream)
 
   {
     int gc = gc_state(0);
-    val name = if3(std_error != std_null,
-                   format(nil, lit("regex --> ~a"), string, nao),
-                   lit(""));
+    val name = if3(std_error != std_null, lit("regex"), lit(""));
     parse(stream, name, &parser);
     gc_state(gc);
   }
@@ -1004,7 +1002,7 @@ val lisp_parse(val source_in, val error_stream, val error_return_val)
                          or2(source, std_input));
   val secret_token_stream = make_string_byte_input_stream(lit("@\x01" "E"));
   val name = if3(stringp(source),
-                 format(nil, lit("expr --> ~a"), source, nao),
+                 lit("string"),
                  stream_get_prop(input_stream, name_k));
   val stream = make_catenated_stream(list(secret_token_stream, input_stream, nao));
   val saved_dyn = dyn_env;

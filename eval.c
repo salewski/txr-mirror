@@ -87,7 +87,7 @@ val opip_s, oand_s, chain_s, chand_s;
 
 val special_s, whole_k, symacro_k, fun_k;
 
-val last_form_evaled;
+val last_form_evaled, last_form_expanded;
 
 val call_f;
 
@@ -2806,7 +2806,7 @@ static val expand_save_specials(val form, val specials)
   return rlcp(cons(with_saved_vars_s, cons(form, nil)), form);
 }
 
-val expand(val form, val menv)
+static val do_expand(val form, val menv)
 {
   val macro = nil;
 
@@ -3021,6 +3021,28 @@ tail:
     }
     abort();
   }
+}
+
+val expand(val form, val menv)
+{
+  val ret = nil;
+  static int reentry_count;
+
+  uw_simple_catch_begin;
+
+  reentry_count++;
+
+  last_form_expanded = form;
+  ret = do_expand(form, menv);
+
+  uw_unwind {
+    if (--reentry_count == 0)
+      last_form_expanded = nil;
+  }
+
+  uw_catch_end;
+
+  return ret;
 }
 
 static val macro_form_p(val form, val menv)
@@ -3675,7 +3697,8 @@ static val merge_wrap(val seq1, val seq2, val lessfun, val keyfun)
 void eval_init(void)
 {
   protect(&top_vb, &top_fb, &top_mb, &top_smb, &special, &dyn_env,
-          &op_table, &last_form_evaled, &call_f, convert(val *, 0));
+          &op_table, &last_form_evaled, &last_form_expanded,
+          &call_f, convert(val *, 0));
   top_fb = make_hash(t, nil, nil);
   top_vb = make_hash(t, nil, nil);
   top_mb = make_hash(t, nil, nil);
