@@ -22386,6 +22386,64 @@ function throws an exception if an error occurs during the close operation
 instead of returning
 .codn nil .
 
+.coNP Functions @, get-error @ get-error-str and @ clear-error
+.synb
+.mets (get-error < stream )
+.mets (get-error-str < stream )
+.mets (clear-error < stream )
+.syne
+.desc
+When a stream operation fails, the
+.code get-error
+and
+.code get-error-str
+functions may be used to inquire about a more detailed cause of the error.
+
+Not all streams support these functions to the same extent. For instance,
+string input streams have no persistent state. The only error which occurs
+is the condition when the string has no more data.
+
+The
+.code get-error
+inquires
+.meta stream
+about its error condition.
+
+The function returns
+.code nil
+to indicate there is no error condition,
+.code t
+to indicate an end-of-data condition,
+or else a value which is specific to the stream type indicating the
+specific error type.
+
+Note: for some streams, it is possible for the
+.code t
+value to be returned even though no operation has failed; that is to say, the
+streams "know" they are at the end of the data even though no read operation
+has failed. Code which depends on this will not work with streams which
+do not thus indicate the end-of-data
+.I a priori,
+but by means of a read operation which fails.
+
+The
+.code get-error-str
+function returns a text representation of the error code. The
+.code nil
+error code is represented as the string
+.codn "no error" ;
+the
+.code t
+error code as
+.code "eof"
+and other codes have a stream-specific representation.
+
+The
+.code clear-error
+function removes the error situation from a stream. On some streams, it does
+nothing. If an error has occurred on a stream, this function should be called
+prior to re-trying any I/O or positioning operations.
+
 .coNP Functions @, get-line @ get-char and @ get-byte
 .synb
 .mets (get-line <> [ stream ])

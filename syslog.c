@@ -209,7 +209,8 @@ static struct strm_ops syslog_strm_ops =
                 syslog_put_byte,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 syslog_get_prop,
-                syslog_set_prop);
+                syslog_set_prop,
+                0, 0, 0);
 
 val make_syslog_stream(val prio)
 {

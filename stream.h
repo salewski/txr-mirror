@@ -45,15 +45,20 @@ struct strm_ops {
   val (*seek)(val, cnum, enum strm_whence);
   val (*get_prop)(val, val ind);
   val (*set_prop)(val, val ind, val);
+  val (*get_error)(val);
+  val (*get_error_str)(val);
+  void (*clear_error)(val);
 };
 
 #define strm_ops_init(cobj_init_macro, put_string, put_char, put_byte,      \
                       get_line, get_char, get_byte, unget_char, unget_byte, \
-                      close, flush, seek, get_prop, set_prop)               \
+                      close, flush, seek, get_prop, set_prop,               \
+                      get_error, get_error_str, clear_error)                \
 {                                                                           \
     cobj_init_macro, put_string, put_char, put_byte, get_line,              \
     get_char, get_byte, unget_char, unget_byte,                             \
-    close, flush, seek, get_prop, set_prop                                  \
+    close, flush, seek, get_prop, set_prop,                                 \
+    get_error, get_error_str, clear_error                                   \
 }
 
 #define std_input (deref(lookup_var_l(nil, stdin_s)))
@@ -88,6 +93,9 @@ val real_time_stream_p(val obj);
 val stream_set_prop(val stream, val ind, val prop);
 val stream_get_prop(val stream, val ind);
 val close_stream(val stream, val throw_on_error);
+val get_error(val stream);
+val get_error_str(val stream);
+val clear_error(val stream);
 val get_line(val);
 val get_char(val);
 val get_byte(val);

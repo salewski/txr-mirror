@@ -1,3 +1,55 @@
+2015-02-25  Kaz Kylheku  <kaz@kylheku.com>
+
+	Introducing persistent error state on streams.
+
+	* lib.c (cobj_ops): New function.
+
+	* lib.h (cobj_ops): Declared.
+
+	* stream.c (null_ops): Initializer updated.
+	(struct stdio_handle): New member, err.
+	(stdio_stream_mark): Mark the err member.
+	(errno_to_string): New static function.
+	(stdio_maybe_read_error, stdio_maybe_error): Set persistent error
+	state. Use errno_to_string_function.
+	(stdio_put_string, stdio_put_char, stdio_put_byte, stdio_seek,
+	stdio_get_line): Set errno to zero, so that if the underlying
+	operations do not set errno on err, we don't misinterpret some pervious
+	errno value as pertaining to the failed stream operation.
+	(stdio_get_error, stdio_get_error_str, stdio_clear_error): New static
+	functions.
+	(stdio_ops, tail_ops, pipe_ops): Update initializer with new functions.
+	(string_in_get_error, string_in_get_error_str): New static functions.
+	(string_in_ops): Update initializer with new functions.
+	(byte_in_get_error, byte_in_get_error_str): New static functions.
+	(byte_in_ops): Update initializer with new functions.
+	(string_out_ops, strlist_out_ops): Update initializer with null
+	pointers for new functions.
+	(struct dir_handle): New struct type.
+	(dir_destroy, dir_mark): New functions.
+	(dir_get_line): Refactor for struct dir_handle context rather than DIR.
+	Persist error state.
+	(dir_close): Refactor for struct dir_handle.
+	(dir_get_error, dir_get_error_str, dir_clear_error): New static functions.
+	(dir_ops): Update initializer with new functions.
+	(make_stdio_stream_common): Initialize new err member.
+	(make_dir_stream): Refactor for struct dir_handle.
+	(get_error, get_error_str, clear_error): New functions.
+	(cat_get_error, cat_get_error_str, cat_clear_error): New static
+	functions.
+	(cat_stream_ops): Update initializer with new functions.
+	(stream_init): Register get-error, get-error-str, clear-error intrinsics.
+
+	* stream.h (struct strm_ops): New function pointer members, get_error,
+	get_error_str and clear_error.
+	(strm_ops_init): Macro extended with new arguments for new function pointers.
+	(get_error, get_error_str, clear_error): Declared.
+
+	* syslog.c (syslog_strm_ops): Update initializer with null
+	pointers for new functions.
+
+	* txr.1: Documented get-error, get-error-str and clear-error.
+
 2015-02-21  Kaz Kylheku  <kaz@kylheku.com>
 
 	Improved error reporting, particularly for macro expansion.

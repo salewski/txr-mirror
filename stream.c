@@ -91,7 +91,7 @@ static struct strm_ops null_ops =
                               cobj_mark_op,
                               cobj_hash_op),
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                null_get_prop, 0);
+                null_get_prop, 0, 0, 0, 0);
 
 val make_null_stream(void)
 {
@@ -103,6 +103,7 @@ struct stdio_handle {
   val descr;
   val unget_c;
   utf8_decoder_t ud;
+  val err;
 #if HAVE_FORK_STUFF
   pid_t pid;
 #else
@@ -134,6 +135,21 @@ static void stdio_stream_mark(val stream)
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
   gc_mark(h->descr);
   gc_mark(h->mode);
+  gc_mark(h->err);
+}
+
+static val errno_to_string(val err)
+{
+  if (err == zero)
+    return lit("unspecified error");
+  else if (is_num(err))
+    return string_utf8(strerror(c_num(err)));
+  else if (err)
+    return lit("no error");
+  else if (err == t)
+    return lit("eof");
+  else
+    return lit("invalid error code");
 }
 
 static val stdio_maybe_read_error(val stream)
@@ -142,21 +158,25 @@ static val stdio_maybe_read_error(val stream)
   if (h->f == 0)
     uw_throwf(file_error_s, lit("error reading ~a: file closed"), stream, nao);
   if (ferror(h->f)) {
-    clearerr(h->f);
+    val err = num(errno);
+    h->err = err;
     uw_throwf(file_error_s, lit("error reading ~a: ~a/~s"),
-              stream, num(errno), string_utf8(strerror(errno)), nao);
+              stream, err, errno_to_string(err), nao);
   }
+  if (feof(h->f))
+    h->err = t;
   return nil;
 }
 
 static val stdio_maybe_error(val stream, val action)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
+  val err = num(errno);
   if (h->f == 0)
     uw_throwf(file_error_s, lit("error ~a ~a: file closed"), stream, action, nao);
-  clearerr(h->f);
+  h->err = err;
   uw_throwf(file_error_s, lit("error ~a ~a: ~a/~s"),
-            stream, action, num(errno), string_utf8(strerror(errno)), nao);
+            stream, action, err, errno_to_string(err), nao);
 }
 
 static int se_putc(int ch, FILE *f)
@@ -201,6 +221,8 @@ static val stdio_put_string(val stream, val str)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
 
+  errno = 0;
+
   if (h->f != 0) {
     const wchar_t *s = c_str(str);
 
@@ -216,7 +238,7 @@ static val stdio_put_string(val stream, val str)
 static val stdio_put_char(val stream, val ch)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
-
+  errno = 0;
   return h->f != 0 && utf8_encode(c_chr(ch), stdio_put_char_callback,
                                   coerce(mem_t *, h->f))
          ? t : stdio_maybe_error(stream, lit("writing"));
@@ -225,7 +247,7 @@ static val stdio_put_char(val stream, val ch)
 static val stdio_put_byte(val stream, int b)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
-
+  errno = 0;
   return h->f != 0 && se_putc(b, coerce(FILE *, h->f)) != EOF
          ? t : stdio_maybe_error(stream, lit("writing"));
 }
@@ -233,6 +255,7 @@ static val stdio_put_byte(val stream, int b)
 static val stdio_flush(val stream)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
+  errno = 0;
   return (h->f != 0 && se_fflush(h->f) == 0)
          ? t : stdio_maybe_error(stream, lit("flushing"));
 }
@@ -240,6 +263,8 @@ static val stdio_flush(val stream)
 static val stdio_seek(val stream, cnum offset, enum strm_whence whence)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
+
+  errno = 0;
 
   if (h->f != 0) {
     if (offset == 0 && whence == strm_cur) {
@@ -278,6 +303,32 @@ static val stdio_set_prop(val stream, val ind, val prop)
     return t;
   }
   return nil;
+}
+
+static val stdio_get_error(val stream)
+{
+  struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
+  if (h->f != 0 && feof(h->f))
+    return t;
+  return h->err;
+}
+
+static val stdio_get_error_str(val stream)
+{
+  struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
+
+  if (h->f != 0 && feof(h->f))
+    return lit("eof");
+
+  return errno_to_string(h->err);
+}
+
+static void stdio_clear_error(val stream)
+{
+  struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
+  if (h->f != 0)
+    clearerr(h->f);
+  h->err = nil;
 }
 
 static wchar_t *snarf_line(struct stdio_handle *h)
@@ -324,6 +375,7 @@ static wchar_t *snarf_line(struct stdio_handle *h)
 
 static val stdio_get_line(val stream)
 {
+  errno = 0;
   if (stream->co.handle == 0) {
     return stdio_maybe_read_error(stream);
   } else {
@@ -418,7 +470,10 @@ static struct strm_ops stdio_ops =
                 stdio_flush,
                 stdio_seek,
                 stdio_get_prop,
-                stdio_set_prop);
+                stdio_set_prop,
+                stdio_get_error,
+                stdio_get_error_str,
+                stdio_clear_error);
 
 static void tail_calc(unsigned long *state, int *sec, int *mod)
 {
@@ -597,7 +652,10 @@ static struct strm_ops tail_ops =
                 stdio_flush,
                 stdio_seek,
                 stdio_get_prop,
-                stdio_set_prop);
+                stdio_set_prop,
+                stdio_get_error,
+                stdio_get_error_str,
+                stdio_clear_error);
 
 #if HAVE_FORK_STUFF
 static int pipevp_close(FILE *f, pid_t pid)
@@ -686,7 +744,10 @@ static struct strm_ops pipe_ops =
                 stdio_flush,
                 0, /* seek: not on pipes */
                 stdio_get_prop,
-                stdio_set_prop);
+                stdio_set_prop,
+                stdio_get_error,
+                stdio_get_error_str,
+                stdio_clear_error);
 
 static void string_in_stream_mark(val stream)
 {
@@ -769,6 +830,20 @@ static val string_in_get_prop(val stream, val ind)
   return nil;
 }
 
+static val string_in_get_error(val stream)
+{
+  val pair = coerce(val, stream->co.handle);
+  val string = car(pair);
+  val pos = cdr(pair);
+
+  return if2(ge(pos, length_str(string)), t);
+}
+
+static val string_in_get_error_str(val stream)
+{
+  return if3(string_in_get_error(stream), lit("eof"), lit("no error"));
+}
+
 static struct strm_ops string_in_ops =
   strm_ops_init(cobj_ops_init(eq,
                               cobj_print_op,
@@ -782,7 +857,11 @@ static struct strm_ops string_in_ops =
                 string_in_unget_char,
                 0, 0, 0,
                 0, /* TODO: seek */
-                string_in_get_prop, 0);
+                string_in_get_prop,
+                0,
+                string_in_get_error,
+                string_in_get_error_str,
+                0);
 
 struct byte_input {
   unsigned char *buf;
@@ -824,6 +903,17 @@ static val byte_in_unget_byte(val stream, int byte)
   return num_fast(byte);
 }
 
+static val byte_in_get_error(val stream)
+{
+  struct byte_input *bi = coerce(struct byte_input *, stream->co.handle);
+  return if3(bi->index < bi->size, nil, t);
+}
+
+static val byte_in_get_error_str(val stream)
+{
+  return if3(byte_in_get_error(stream), lit("eof"), lit("no error"));
+}
+
 static struct strm_ops byte_in_ops =
   strm_ops_init(cobj_ops_init(eq,
                               cobj_print_op,
@@ -834,7 +924,10 @@ static struct strm_ops byte_in_ops =
                 byte_in_get_byte,
                 0,
                 byte_in_unget_byte,
-                0, 0, 0, 0, 0);
+                0, 0, 0, 0, 0,
+                byte_in_get_error,
+                byte_in_get_error_str,
+                0);
 
 struct string_output {
   wchar_t *buf;
@@ -956,7 +1049,7 @@ static struct strm_ops string_out_ops =
                 string_out_put_byte,
                 0, 0, 0, 0, 0, 0, 0,
                 0, /* TODO: seek; fill-with-spaces semantics if past end. */
-                0, 0);
+                0, 0, 0, 0, 0);
 
 static void strlist_mark(val stream)
 {
@@ -1018,7 +1111,7 @@ static struct strm_ops strlist_out_ops =
                               cobj_hash_op),
                 strlist_out_put_string,
                 strlist_out_put_char,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
 val make_strlist_output_stream(void)
 {
@@ -1044,17 +1137,37 @@ val get_list_from_stream(val stream)
   type_mismatch(lit("~s is not a string list stream"), stream);
 }
 
+struct dir_handle {
+  DIR *d;
+  val err;
+};
+
+static void dir_destroy(val stream)
+{
+  struct dir_handle *h = coerce(struct dir_handle *, stream->co.handle);
+  common_destroy(stream);
+  free(h);
+}
+
+static void dir_mark(val stream)
+{
+  struct dir_handle *h = coerce(struct dir_handle *, stream->co.handle);
+  gc_mark(h->err);
+}
+
 static val dir_get_line(val stream)
 {
-  DIR *handle = coerce(DIR *, stream->co.handle);
+  struct dir_handle *h = coerce(struct dir_handle *, stream->co.handle);
 
-  if (handle == 0) {
+  if (h->d == 0) {
     return nil;
   } else {
     for (;;) {
-      struct dirent *e = readdir(handle);
-      if (!e)
+      struct dirent *e = readdir(h->d);
+      if (!e) {
+        h->err = num(errno);
         return nil;
+      }
       if (!strcmp(e->d_name, ".") || !strcmp(e->d_name, ".."))
         continue;
       return string_utf8(e->d_name);
@@ -1064,26 +1177,48 @@ static val dir_get_line(val stream)
 
 static val dir_close(val stream, val throw_on_error)
 {
-  if (stream->co.handle != 0) {
-    closedir(coerce(DIR *, stream->co.handle));
-    stream->co.handle = 0;
-    return t;
+  struct dir_handle *h = coerce(struct dir_handle *, stream->co.handle);
+
+  if (h->d != 0) {
+    closedir(coerce(DIR *, h->d));
+    h->d = 0;
   }
 
   return nil;
 }
 
+static val dir_get_error(val stream)
+{
+  struct dir_handle *h = coerce(struct dir_handle *, stream->co.handle);
+  return h->err;
+}
+
+static val dir_get_error_str(val stream)
+{
+  struct dir_handle *h = coerce(struct dir_handle *, stream->co.handle);
+  return errno_to_string(h->err);
+}
+
+static void dir_clear_error(val stream)
+{
+  struct dir_handle *h = coerce(struct dir_handle *, stream->co.handle);
+  h->err = nil;
+}
+
 static struct strm_ops dir_ops =
   strm_ops_init(cobj_ops_init(eq,
                               cobj_print_op,
-                              common_destroy,
-                              cobj_mark_op,
+                              dir_destroy,
+                              dir_mark,
                               cobj_hash_op),
                 0, 0, 0,
                 dir_get_line,
                 0, 0, 0, 0,
                 dir_close,
-                0, 0, 0, 0);
+                0, 0, 0, 0,
+                dir_get_error,
+                dir_get_error_str,
+                dir_clear_error);
 
 static val make_stdio_stream_common(FILE *f, val descr, struct cobj_ops *ops)
 {
@@ -1093,6 +1228,7 @@ static val make_stdio_stream_common(FILE *f, val descr, struct cobj_ops *ops)
   h->descr = descr;
   h->unget_c = nil;
   utf8_decoder_init(&h->ud);
+  h->err = nil;
   h->pid = 0;
   h->mode = nil;
   h->is_rotated = 0;
@@ -1199,7 +1335,10 @@ val get_string_from_stream(val stream)
 
 val make_dir_stream(DIR *dir)
 {
-  return cobj(coerce(mem_t *, dir), stream_s, &dir_ops.cobj_ops);
+  struct dir_handle *h = coerce(struct dir_handle *, chk_malloc(sizeof *h));
+  h->d = dir;
+  h->err = nil;
+  return cobj(coerce(mem_t *, h), stream_s, &dir_ops.cobj_ops);
 }
 
 val streamp(val obj)
@@ -1251,6 +1390,24 @@ val close_stream(val stream, val throw_on_error)
     struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
     return ops->close ? ops->close(stream, throw_on_error) : nil;
   }
+}
+
+val get_error(val stream)
+{
+  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
+  return ops->get_error ? ops->get_error(stream) : nil;
+}
+
+val get_error_str(val stream)
+{
+  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
+  return ops->get_error_str ? ops->get_error_str(stream) : lit("no error");
+}
+
+val clear_error(val stream)
+{
+  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
+  return ops->clear_error ? (ops->clear_error(stream), t) : nil;
 }
 
 val get_line(val stream)
@@ -2421,6 +2578,24 @@ static void cat_mark(val stream)
   gc_mark(obj);
 }
 
+static val cat_get_error(val stream)
+{
+  val streams = coerce(val, stream->co.handle);
+  return if3(streams, get_error(first(streams)), t);
+}
+
+static val cat_get_error_str(val stream)
+{
+  val streams = coerce(val, stream->co.handle);
+  return if3(streams, get_error_str(first(streams)), lit("eof"));
+}
+
+static void cat_clear_error(val stream)
+{
+  val streams = coerce(val, stream->co.handle);
+  if2(streams, clear_error(first(streams)));
+}
+
 static struct strm_ops cat_stream_ops =
   strm_ops_init(cobj_ops_init(eq,
                               cat_stream_print,
@@ -2435,7 +2610,10 @@ static struct strm_ops cat_stream_ops =
                 cat_unget_byte,
                 0, 0, 0,
                 cat_get_prop,
-                0);
+                0,
+                cat_get_error,
+                cat_get_error_str,
+                cat_clear_error);
 
 val make_catenated_stream(val stream_list)
 {
@@ -2548,6 +2726,9 @@ void stream_init(void)
   reg_fun(intern(lit("make-strlist-output-stream"), user_package), func_n0(make_strlist_output_stream));
   reg_fun(intern(lit("get-list-from-stream"), user_package), func_n1(get_list_from_stream));
   reg_fun(intern(lit("close-stream"), user_package), func_n2o(close_stream, 1));
+  reg_fun(intern(lit("get-error"), user_package), func_n1(get_error));
+  reg_fun(intern(lit("get-error-str"), user_package), func_n1(get_error_str));
+  reg_fun(intern(lit("clear-error"), user_package), func_n1(clear_error));
   reg_fun(intern(lit("get-line"), user_package), func_n1o(get_line, 0));
   reg_fun(intern(lit("get-char"), user_package), func_n1o(get_char, 0));
   reg_fun(intern(lit("get-byte"), user_package), func_n1o(get_byte, 0));
