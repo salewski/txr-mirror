@@ -1,5 +1,16 @@
 2015-02-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	New ignerr macro.
+
+	* eval.c (me_ignerr): New static function.
+	(eval_init): Registered ignerr macro.
+
+	* txr.1: Documented.
+
+	* tl.vim, txr.vim: Regenerated.
+
+2015-02-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	Introducing persistent error state on streams.
 
 	* lib.c (cobj_ops): New function.

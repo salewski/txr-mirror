@@ -2768,6 +2768,11 @@ static val me_opip(val form, val menv)
   return cons(dwim_s, cons(chain_chand, transformed_forms));
 }
 
+static val me_ignerr(val form, val menv)
+{
+  return list(catch_s, cons(progn_s, rest(form)),
+              list(error_s, error_s, nao), nao);
+}
 
 static val expand_catch_clause(val form, val menv)
 {
@@ -3873,6 +3878,7 @@ void eval_init(void)
   reg_mac(intern(lit("tc"), user_package), me_tc);
   reg_mac(opip_s, me_opip);
   reg_mac(oand_s, me_opip);
+  reg_mac(intern(lit("ignerr"), user_package), me_ignerr);
 
   reg_fun(cons_s, func_n2(cons));
   reg_fun(intern(lit("make-lazy-cons"), user_package), func_n1(make_lazy_cons));
