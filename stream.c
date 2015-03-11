@@ -2457,8 +2457,6 @@ static val run(val command, val args)
 
   status = _wspawnvp(_P_WAIT, c_str(command), wargv);
 
-  for (i = 0; i < nargs; i++)
-    free(strip_qual(wchar_t *, wargv[i]));
   free(strip_qual(wchar_t **, wargv));
 
   rel1(&args);

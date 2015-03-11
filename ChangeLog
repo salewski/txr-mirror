@@ -1,5 +1,11 @@
 2015-03-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (run): In Windows version, fix nasty corruption bug:
+	we were freeing C strings that were not duplicated, but only borrowed
+	from string objects.
+
+2015-03-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (open_process, run): Eliminate utf8name local variable
 	and associated memory leak. Correctly allocate only nargs + 1 elements
 	for argv array, not nargs + 2.
