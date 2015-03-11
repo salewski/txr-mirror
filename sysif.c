@@ -58,6 +58,7 @@
 #include "signal.h"
 #include "utf8.h"
 #include "unwind.h"
+#include "gc.h"
 #include "eval.h"
 #include "sysif.h"
 
@@ -177,6 +178,68 @@ static val mkdir_wrap(val path, val mode)
               path, num(errno), string_utf8(strerror(errno)), nao);
 
   return t;
+}
+#endif
+
+#if HAVE_MKDIR || HAVE_WINDOWS_H
+static val mkdir_nothrow_exists(val path, val mode)
+{
+  val ret = t;
+
+  uw_catch_begin(cons(file_error_s, nil), esym, eobj);
+
+  ret = mkdir_wrap(path, mode);
+
+  uw_catch (esym, eobj) {
+    switch (errno) {
+    case EACCES:
+    case EPERM:
+      ret = num(errno);
+      break;
+    case EEXIST:
+      break;
+    default:
+      uw_throw(esym, eobj);
+    }
+  }
+
+  uw_unwind;
+
+  uw_catch_end;
+
+  return ret;
+}
+
+static val ensure_dir(val path, val mode)
+{
+#if HAVE_WINDOWS_H
+  val sep = lit("\\");
+  val sep_set = lit("\\/");
+#else
+  val sep = lit("/");
+  val sep_set = lit("/");
+#endif
+  val split_path = split_str_set(path, sep_set);
+  val partial_path = pop(&split_path);
+  val ret = t;
+
+  for (;;) {
+    if (length(partial_path) != zero)
+      ret = mkdir_nothrow_exists(partial_path, mode);
+
+    if (!split_path)
+      break;
+
+    partial_path = format(nil, lit("~a~a~a"),
+                          partial_path, sep, pop(&split_path), nao);
+  }
+
+  if (ret != t)
+    uw_throwf(file_error_s,
+              lit("ensure-dir: ~a: ~a/~s"), path, ret,
+              string_utf8(strerror(c_num(ret))), nao);
+
+  return ret;
 }
 #endif
 
@@ -388,6 +451,7 @@ void sysif_init(void)
 
 #if HAVE_MKDIR || HAVE_WINDOWS_H
   reg_fun(intern(lit("mkdir"), user_package), func_n2o(mkdir_wrap, 1));
+  reg_fun(intern(lit("ensure-dir"), user_package), func_n2o(ensure_dir, 1));
 #endif
 
 #if HAVE_UNISTD_H

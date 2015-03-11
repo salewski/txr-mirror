@@ -1,3 +1,11 @@
+2015-03-10  Kaz Kylheku  <kaz@kylheku.com>
+
+	* sysif.c (mkdir_nothrow_exists): New static function.
+	(ensure_dir): New function.
+	(sysif_init): ensure_dir registered as intrinsic.
+
+	* txr.1: ensure_dir documented.
+
 2015-02-25  Kaz Kylheku  <kaz@kylheku.com>
 
 	* parser.c (open_txr_file, regex_parse, lisp_parse): Functions

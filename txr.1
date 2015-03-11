@@ -23989,9 +23989,10 @@ of the system timer.  Actual sleep times may be rounded up to the nearest 10
 millisecond multiple on a system where timed suspensions are triggered by a 100
 Hz tick.
 
-.coNP Function @ mkdir
+.coNP Functions @ mkdir and @ ensure-dir
 .synb
 .mets (mkdir < path <> [ mode ])
+.mets (ensure-dir < path <> [ mode ])
 .syne
 .desc
 .code mkdir
@@ -24014,6 +24015,13 @@ for the newly created directory. If omitted, the requested permissions are
 (511): readable and writable to everyone. The requested permissions
 are subject to the system
 .codn umask .
+
+The function
+.code ensure-dir
+is similar to
+.code mkdir
+except that it attempts to create all the missing parent directories
+as necessary, and does not throw an error if the directory exists.
 
 .coNP Function @ chdir
 .synb
