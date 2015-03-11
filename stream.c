@@ -2230,7 +2230,7 @@ val open_process(val name, val mode_str, val args)
   int input = equal(mode_str, lit("r")) || equal(mode_str, lit("rb"));
   int fd[2];
   pid_t pid;
-  char **argv = 0, *utf8name = 0;
+  char **argv = 0;
   val iter;
   int i, nargs;
 
@@ -2242,15 +2242,13 @@ val open_process(val name, val mode_str, val args)
               name, num(errno), string_utf8(strerror(errno)), nao);
   }
 
-  argv = coerce(char **, chk_malloc((nargs + 2) * sizeof *argv));
+  argv = coerce(char **, chk_malloc((nargs + 1) * sizeof *argv));
 
   for (i = 0, iter = cons(name, args); iter; i++, iter = cdr(iter)) {
     val arg = car(iter);
     argv[i] = utf8_dup_to(c_str(arg));
   }
   argv[i] = 0;
-
-  utf8name = utf8_dup_to(c_str(name));
 
   pid = fork();
 
@@ -2275,7 +2273,7 @@ val open_process(val name, val mode_str, val args)
       close(fd[1]);
     }
 
-    execvp(utf8name, argv);
+    execvp(argv[0], argv);
     _exit(errno);
   } else {
     int whichfd;
@@ -2393,22 +2391,20 @@ static val sh(val command)
 static val run(val name, val args)
 {
   pid_t pid;
-  char **argv = 0, *utf8name = 0;
+  char **argv = 0;
   val iter;
   int i, nargs;
 
   args = default_bool_arg(args);
   nargs = c_num(length(args)) + 1;
 
-  argv = coerce(char **, chk_malloc((nargs + 2) * sizeof *argv));
+  argv = coerce(char **, chk_malloc((nargs + 1) * sizeof *argv));
 
   for (i = 0, iter = cons(name, args); iter; i++, iter = cdr(iter)) {
     val arg = car(iter);
     argv[i] = utf8_dup_to(c_str(arg));
   }
   argv[i] = 0;
-
-  utf8name = utf8_dup_to(c_str(name));
 
   pid = fork();
 
@@ -2421,7 +2417,7 @@ static val run(val name, val args)
   }
 
   if (pid == 0) {
-    execvp(utf8name, argv);
+    execvp(argv[0], argv);
     _exit(errno);
   } else {
     int status;

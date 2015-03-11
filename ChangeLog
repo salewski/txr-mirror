@@ -1,3 +1,9 @@
+2015-03-11  Kaz Kylheku  <kaz@kylheku.com>
+
+	* stream.c (open_process, run): Eliminate utf8name local variable
+	and associated memory leak. Correctly allocate only nargs + 1 elements
+	for argv array, not nargs + 2.
+
 2015-03-10  Kaz Kylheku  <kaz@kylheku.com>
 
 	* sysif.c (mkdir_nothrow_exists): New static function.
