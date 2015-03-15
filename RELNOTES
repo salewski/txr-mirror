@@ -1,3 +1,44 @@
+                                    TXR 105
+                                   2015-03-14
+
+
+  Features
+
+  - New function lexical-lisp1-binding for improved macro-time introspection of
+    environments.
+
+  - New functions pad and weave.
+
+  - New regex functions search-regst, match-regst and match-regst-right,
+    to complement search-regex, match-regex and match-regex right.
+
+  - Improved error reporting, particularly for errors ocurring during
+    the expansion of a macro.
+
+  - Streams have persistent error state. New functions: get-error,
+    get-error-str and clear-error.
+
+  - New ignerr macro for trapping exceptions of type error, and converting
+    them to a nil return value.
+
+  - New function ensure-dir: creates a directory in the filesystem,
+    with all parent directories also created as necessary, and doesn't
+    complain if the directory already exists.
+
+  Bugs
+
+  - Bugfixes in append* function: lack of error handling and inappropriate
+    forcing of infinite lists in some circumstances.
+
+  - Bugfix in match-regex-right: zero length matches must return zero rather
+    than nil.
+
+  - Fixed memory leak in open-process and run on POSIX platforms.
+
+  - Fixed memory corruption bug in run function on Windows platform.
+
+
+
                                     TXR 104
                                    2015-02-08
 
