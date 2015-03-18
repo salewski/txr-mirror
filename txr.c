@@ -122,6 +122,11 @@ static void help(void)
 "                       option, instead of the query-file argument.\n"
 "                       This allows #! scripts to pass options through\n"
 "                       to the utility.\n"
+"-e expression          Evaluate TXR Lisp expression. Can be specified\n"
+"                       multiple times. The query-file arg becomes optional.\n"
+"-p expression          Like -e, but prints the result of the expression\n"
+"                       using the prinl function.\n"
+"-P expression          Like -p, but prints using pprinl.\n"
 "-C N                   Request backward-compatible behavior to the\n"
 "                       specified version of TXR.\n"
 "--help                 You already know!\n"
@@ -498,7 +503,7 @@ int txr_main(int argc, char **argv)
 
 
     /* Single letter options with args: non-clumping. */
-    if (length(arg) == two && find(ref(arg, one), lit("acfepC"), nil, nil))
+    if (length(arg) == two && find(ref(arg, one), lit("acfepPC"), nil, nil))
     {
       val opt = chr_str(arg, one);
 
@@ -530,10 +535,15 @@ int txr_main(int argc, char **argv)
         evaled = t;
         break;
       case 'p':
-        obj_print(eval_intrinsic(lisp_parse(arg, std_error, colon_k),
-                                 make_env(bindings, nil, nil)), std_output);
-        put_char(chr('\n'), std_output);
-        evaled = t;
+      case 'P':
+        {
+          val (*pf)(val obj, val out) = if3(c_chr(opt) == 'p',
+                                            obj_print, obj_pprint);
+          pf(eval_intrinsic(lisp_parse(arg, std_error, colon_k),
+                            make_env(bindings, nil, nil)), std_output);
+          put_char(chr('\n'), std_output);
+          evaled = t;
+        }
         break;
       }
 
@@ -577,6 +587,7 @@ int txr_main(int argc, char **argv)
         case 'c':
         case 'e':
         case 'p':
+        case 'P':
         case 'f':
         case 'C':
         case 'D':

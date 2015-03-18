@@ -596,15 +596,27 @@ its value. Can be specified more than once. The
 .meta query-file
 argument becomes optional if
 .code -e
-is used at least once.
+is used at least once. If the evaluation of every
+.meta expression
+evaluated this way terminates normally, and there is no
+.meta query-file
+argument, then \(TX terminates with a successful status.
 
 .meIP -p < expression
-Evaluates a \*(TL expression and prints its value.  Can be specified more
-than once. The
-.meta query-file
-argument becomes optional if
+Just like
+.code -e
+but prints the value of
+.meta expression
+using the
+.code prinl
+function.
+
+.meIP -P < expression
+Like
 .code -p
-is used at least once.
+but prints using the
+.code pprinl
+function.
 
 .meIP -C < number
 .meIP >> --compat= number

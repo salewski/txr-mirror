@@ -1,3 +1,11 @@
+2015-03-17  Kaz Kylheku  <kaz@kylheku.com>
+
+	* txr.c (help): Added missing documentation for -e and -p.
+	Also documented -P.
+	(txr_main): New option implemented, -P.
+
+	* txr.1: Document -P, and clean up -e and -p documentation.
+
 2015-03-11  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 105.
