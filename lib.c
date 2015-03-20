@@ -3036,10 +3036,36 @@ val int_str(val str, val base)
 {
   const wchar_t *wcs = c_str(str);
   wchar_t *ptr;
+  long value;
   cnum b = c_num(default_arg(base, num_fast(10)));
 
+  /* Standard C idiocy: if base is 16, strtoul and its siblings
+     still recognize the 0x prefix. */
+  if (b == 16) {
+    switch (wcs[0]) {
+    case '+':
+    case '-':
+      switch (wcs[1]) {
+      case '0':
+        switch (wcs[2]) {
+        case 'x': case 'X':
+          return zero;
+        }
+      }
+      break;
+    case '0':
+      switch (wcs[1]) {
+      case 'x': case 'X':
+        return zero;
+      }
+      break;
+    }
+  } else if (b < 2 || b > 36) {
+     uw_throwf(error_s, lit("int-str: invalid base ~s"), base, nao);
+  }
+
   /* TODO: detect if we have wcstoll */
-  long value = wcstol(wcs, &ptr, b ? b : 10);
+  value = wcstol(wcs, &ptr, b ? b : 10);
 
   if (value == 0 && ptr == wcs)
     return nil;

@@ -1,3 +1,11 @@
+2015-03-20  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (int_str): Workaround for wcstol recognizing the 0x prefix when
+	radix is 16. Also, thrown an error if radix is not in the range
+	0 to 36.
+
+	* txr.1: Document int-str's radix range restriction.
+
 2015-03-17  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.c (help): Added missing documentation for -e and -p.
