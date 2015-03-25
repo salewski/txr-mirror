@@ -318,8 +318,8 @@ ifneq ($(have_git),)
 	$(call GREP_CHECK,'	',tabs,0,'.')
 	$(call GREP_CHECK,' $$',trailing spaces,0,'.')
 else
-	echo "enforce requires git"
-	exit 1
+	$(V)echo "enforce requires the git program and a git repository"
+	$(V)exit 1
 endif
 
 #

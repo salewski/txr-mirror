@@ -1,3 +1,11 @@
+2015-03-24  Kaz Kylheku  <kaz@kylheku.com>
+
+	* Makefile (enforce): Update error error message.
+
+	* configure (have_git): Don't set this variable if
+	the TXR repository is missing, even if git is installed.
+	I.e. have_git means have have the tool and the repo.
+
 2015-03-20  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (int_str): Workaround for wcstol recognizing the 0x prefix when

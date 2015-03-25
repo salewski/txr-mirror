@@ -719,14 +719,18 @@ conftest_syms()
 
 #
 # Check for git because we use it out of the Makefile
+# But this is pointless if we have no git repo.
+# "have_git" means we have a repo, and git.
 #
-printf "Checking whether we have git ... "
+if [ -d $top_srcdir/.git ] ; then 
+  printf "Checking whether we have git ... "
 
-if git --version > /dev/null 2> /dev/null ; then
-  have_git=y
-  printf "yes\n"
-else
-  printf "missing\n"
+  if git --version > /dev/null 2> /dev/null ; then
+    have_git=y
+    printf "yes\n"
+  else
+    printf "missing\n"
+  fi
 fi
 
 #
