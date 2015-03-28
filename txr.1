@@ -15034,14 +15034,20 @@ another lazy cons (as in the example under
 .coNP Functions @ lazy-stream-cons and @ get-lines
 .synb
 .mets (lazy-stream-cons << stream )
-.mets (get-lines << stream )
+.mets (get-lines <> [ stream ])
 .syne
 .desc
 The
 .code lazy-stream-cons
 and
 .code get-lines
-functions are synonyms. Thus, the following
+functions are synonyms, except that the
+.meta stream
+argument is optional in
+.code get-lines
+and defaults to
+.codn *stdin* .
+Thus, the following
 description of
 .code lazy-stream-cons
 also applies to

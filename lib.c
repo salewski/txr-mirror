@@ -5171,6 +5171,8 @@ static val lazy_stream_func(val env, val lcons)
 
 val lazy_stream_cons(val stream)
 {
+  stream = default_arg(stream, std_input);
+
   if (real_time_stream_p(stream)) {
     return make_lazy_cons(func_f1(stream, simple_lazy_stream_func));
   } else {

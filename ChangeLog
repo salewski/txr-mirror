@@ -1,3 +1,12 @@
+2015-03-28  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): register get-lines as having one optional
+	argument.
+
+	* lib.c (lazy_stream_cons): Default the argument to std_input.
+
+	* txr.1: Document that the stream is optional in get-lines.
+
 2015-03-24  Kaz Kylheku  <kaz@kylheku.com>
 
 	* Makefile (enforce): Update error error message.
