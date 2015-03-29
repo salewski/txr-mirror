@@ -127,6 +127,7 @@ static void help(void)
 "-p expression          Like -e, but prints the result of the expression\n"
 "                       using the prinl function.\n"
 "-P expression          Like -p, but prints using pprinl.\n"
+"-t expression          Like -p, but prints using tprint.\n"
 "-C N                   Request backward-compatible behavior to the\n"
 "                       specified version of TXR.\n"
 "--help                 You already know!\n"
@@ -503,7 +504,7 @@ int txr_main(int argc, char **argv)
 
 
     /* Single letter options with args: non-clumping. */
-    if (length(arg) == two && find(ref(arg, one), lit("acfepPC"), nil, nil))
+    if (length(arg) == two && find(ref(arg, one), lit("acfepPtC"), nil, nil))
     {
       val opt = chr_str(arg, one);
 
@@ -536,12 +537,15 @@ int txr_main(int argc, char **argv)
         break;
       case 'p':
       case 'P':
+      case 't':
         {
           val (*pf)(val obj, val out) = if3(c_chr(opt) == 'p',
-                                            obj_print, obj_pprint);
+                                            prinl,
+                                            if3(c_chr(opt) == 'P',
+                                                pprinl,
+                                                tprint));
           pf(eval_intrinsic(lisp_parse(arg, std_error, colon_k),
                             make_env(bindings, nil, nil)), std_output);
-          put_char(chr('\n'), std_output);
           evaled = t;
         }
         break;
@@ -590,6 +594,7 @@ int txr_main(int argc, char **argv)
         case 'P':
         case 'f':
         case 'C':
+        case 't':
         case 'D':
           format(std_error, lit("~a: option -~a does not clump\n"),
                  prog_string, opch, nao);

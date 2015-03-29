@@ -49,5 +49,8 @@ val bindable(val obj);
 val mapcarv(val fun, val list_of_lists);
 val lazy_mapcar(val fun, val list);
 val generate(val while_pred, val gen_fun);
+val prinl(val obj, val stream);
+val pprinl(val obj, val stream);
+val tprint(val obj, val out);
 
 void eval_init(void);

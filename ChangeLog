@@ -1,5 +1,17 @@
 2015-03-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (prinl, pprinl): Become external functions.
+	(tprint): New function.
+	(eval_init): Register tprint as intrinsic.
+
+	* eval.h (prinl, pprinl, tprint): Declared.
+
+	* txr.c (txr_main): New option, -t.
+
+	* txr.1: Documented tprint and -t option.
+
+2015-03-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): register get-lines as having one optional
 	argument.
 

@@ -618,6 +618,13 @@ but prints using the
 .code pprinl
 function.
 
+.meIP -t < expression
+Like
+.code -p
+but prints using the
+.code tprint
+function.
+
 .meIP -C < number
 .meIP >> --compat= number
 
@@ -22255,6 +22262,40 @@ they extend that number. If hex digits are printed after the character
 which is rendered as
 .codn #\ex ,
 they look like a hex character code.
+
+.coNP Function @ tprint
+.synb
+.mets (tprint < obj <> [ stream ])
+.syne
+.desc
+
+The
+.codn tprint
+function prints a represntation of
+.meta obj
+on
+.metn stream .
+
+If the stream argument is not supplied, then
+the destination is the stream currently stored in the
+.code *stdout*
+variable.
+
+For all object types except lists and vectors,
+.code tprint
+behaves like
+.codn pprinl .
+
+If
+.code obj
+is a list or vector, then
+.code tprint
+recurses: the
+.code tprint
+function is applied to each element.  An empty list or vector
+results in no output at all.  This effectively means that an arbitrarily nested
+structure of lists and vectors is printed flattened, with one element on each
+line.
 
 .coNP Function @ streamp
 .synb

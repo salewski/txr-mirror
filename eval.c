@@ -3664,18 +3664,41 @@ static val mapf(val fun, val funlist)
   return func_f0v(cons(fun, funlist), do_mapf);
 }
 
-static val prinl(val obj, val stream)
+val prinl(val obj, val stream)
 {
   val ret = obj_print(obj, stream);
   put_char(chr('\n'), stream);
   return ret;
 }
 
-static val pprinl(val obj, val stream)
+val pprinl(val obj, val stream)
 {
   val ret = obj_pprint(obj, stream);
   put_char(chr('\n'), stream);
   return ret;
+}
+
+val tprint(val obj, val out)
+{
+  switch (type(obj)) {
+  case NIL:
+    break;
+  case CONS:
+  case LCONS:
+  case VEC:
+    mapdo(curry_12_1(func_n2(tprint), out), obj);
+    break;
+  case LIT:
+  case STR:
+  case LSTR:
+    put_line(obj, out);
+    break;
+  default:
+    pprinl(obj, out);
+    break;
+  }
+
+  return nil;
 }
 
 static val merge_wrap(val seq1, val seq2, val lessfun, val keyfun)
@@ -4139,6 +4162,7 @@ void eval_init(void)
   reg_fun(intern(lit("tostringp"), user_package), func_n1(tostringp));
   reg_fun(intern(lit("prinl"), user_package), func_n2o(prinl, 1));
   reg_fun(intern(lit("pprinl"), user_package), func_n2o(pprinl, 1));
+  reg_fun(intern(lit("tprint"), user_package), func_n2o(tprint, 1));
 
   reg_var(user_package_s = intern(lit("*user-package*"), user_package_var),
           user_package_var);
