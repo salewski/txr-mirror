@@ -60,6 +60,7 @@ const wchli_t *version = wli(TXR_VER);
 const wchar_t *progname = L"txr";
 static const char *progname_u8;
 static val progpath = nil;
+int opt_noninteractive;
 int opt_compat;
 
 /*
@@ -111,6 +112,8 @@ static void help(void)
 "                       if termination is unsuccessful.\n"
 "-l                     If dumping bindings, use TXR Lisp format.\n"
 "-d                     Debugger mode.\n"
+"-n                     Noninteractive input mode for standard input stream,\n"
+"                       even if its connected to a terminal device.\n"
 "-a N                   Generate array variables up to N dimensions.\n"
 "                       N is a decimal integer. The default value is 1.\n"
 "                       Additional dimensions beyond N are fudged\n"
@@ -137,6 +140,7 @@ static void help(void)
 "                       section at the bottom of the license.\n"
 "--lisp-bindings        Synonym for -l\n"
 "--debugger             Synonym for -d\n"
+"--noninteractive       Synonym for -n\n"
 "--compat=N             Synonym for -C N\n"
 "--gc-delta=N           Invoke garbage collection when malloc activity\n"
 "                       increments by N megabytes since last collection.\n"
@@ -499,6 +503,10 @@ int txr_main(int argc, char **argv)
                prog_string, arg, nao);
         return EXIT_FAILURE;
 #endif
+      } else if (equal(opt, lit("noninteractive"))) {
+        opt_noninteractive = 1;
+        stream_set_prop(std_input, real_time_k, nil);
+        continue;
       }
     }
 
@@ -586,6 +594,10 @@ int txr_main(int argc, char **argv)
                  prog_string, opch, nao);
           return EXIT_FAILURE;
 #endif
+          break;
+        case 'n':
+          opt_noninteractive = 1;
+          stream_set_prop(std_input, real_time_k, nil);
           break;
         case 'a':
         case 'c':

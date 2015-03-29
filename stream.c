@@ -1220,6 +1220,122 @@ static struct strm_ops dir_ops =
                 dir_get_error_str,
                 dir_clear_error);
 
+struct stdio_mode {
+  int malformed;
+  int read;
+  int write;
+  int create;
+  int append;
+  int binary;
+  int interactive;
+};
+
+#define stdio_mode_init_trivial(read) { 0, read, 0, 0, 0, 0, 0 }
+
+static struct stdio_mode parse_mode(val mode_str)
+{
+  struct stdio_mode m = stdio_mode_init_trivial(0);
+  const wchar_t *ms = c_str(mode_str);
+
+  switch (*ms) {
+  case 'r':
+    ms++;
+    m.read = 1;
+    break;
+  case 'w':
+    ms++;
+    m.write = 1;
+    m.create = 1;
+    break;
+  case 'a':
+    ms++;
+    m.write = 1;
+    m.append = 1;
+    break;
+  default:
+    m.malformed = 1;
+    return m;
+  }
+
+  if (*ms == '+') {
+    ms++;
+    if (m.read)
+      m.write = 1;
+    m.read = 1;
+  }
+
+  for (; *ms; ms++) {
+    switch (*ms) {
+    case 'b':
+      m.binary = 1;
+      break;
+    case 'i':
+      m.interactive = 1;
+      break;
+    default:
+      m.malformed = 1;
+      return m;
+    }
+  }
+
+  return m;
+}
+
+static val format_mode(const struct stdio_mode m)
+{
+  wchar_t buf[8], *ptr = buf;
+
+  if (m.malformed)
+    return lit("###");
+
+  if (m.append) {
+    *ptr++ = 'a';
+    if (m.read)
+      *ptr++ = '+';
+  } else if (m.create) {
+    *ptr++ = 'w';
+    if (m.read)
+      *ptr++ = '+';
+  } else {
+    *ptr++ = 'r';
+    if (m.write)
+      *ptr++ = '+';
+  }
+
+  if (m.binary)
+    *ptr++ = 'b';
+
+  *ptr = 0;
+  return string(buf);
+}
+
+static val normalize_mode(struct stdio_mode *m, val mode_str)
+{
+  struct stdio_mode blank = stdio_mode_init_trivial(1);
+
+  if (null_or_missing_p(mode_str)) {
+    *m = blank;
+    return lit("r");
+  } else {
+    *m = parse_mode(mode_str);
+
+    if (m->malformed)
+      uw_throwf(file_error_s, lit("invalid file open mode ~a"), mode_str, nao);
+
+    if (!m->interactive)
+      return mode_str;
+
+    return format_mode(*m);
+  }
+}
+
+static val set_mode_props(const struct stdio_mode m, val stream)
+{
+  if (m.interactive)
+    stream_set_prop(stream, real_time_k, t);
+  return stream;
+}
+
 static val make_stdio_stream_common(FILE *f, val descr, struct cobj_ops *ops)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, chk_malloc(sizeof *h));
@@ -1233,7 +1349,8 @@ static val make_stdio_stream_common(FILE *f, val descr, struct cobj_ops *ops)
   h->mode = nil;
   h->is_rotated = 0;
 #if HAVE_ISATTY
-  h->is_real_time = (h->f != 0 && isatty(fileno(h->f)) == 1);
+  h->is_real_time = if3(opt_compat && opt_compat <= 105,
+                        (h->f != 0 && isatty(fileno(h->f)) == 1), 0);
 #else
   h->is_real_time = 0;
 #endif
@@ -2183,18 +2300,20 @@ val open_directory(val path)
 
 val open_file(val path, val mode_str)
 {
-  FILE *f = w_fopen(c_str(path), c_str(default_arg(mode_str, lit("r"))));
+  struct stdio_mode m;
+  FILE *f = w_fopen(c_str(path), c_str(normalize_mode(&m, mode_str)));
 
   if (!f)
     uw_throwf(file_error_s, lit("error opening ~a: ~a/~s"),
               path, num(errno), string_utf8(strerror(errno)), nao);
 
-  return make_stdio_stream(f, path);
+  return set_mode_props(m, make_stdio_stream(f, path));
 }
 
 val open_tail(val path, val mode_str, val seek_end_p)
 {
-  val mode = default_arg(mode_str, lit("r"));
+  struct stdio_mode m;
+  val mode = normalize_mode(&m, mode_str);
   FILE *f = w_fopen(c_str(path), c_str(mode));
   struct stdio_handle *h;
   val stream;
@@ -2210,24 +2329,27 @@ val open_tail(val path, val mode_str, val seek_end_p)
   h->mode = mode;
   if (!f)
     tail_strategy(stream, &state);
-  return stream;
+  return set_mode_props(m, stream);
 }
 
 val open_command(val path, val mode_str)
 {
-  FILE *f = w_popen(c_str(path), c_str(default_arg(mode_str, lit("r"))));
+  struct stdio_mode m;
+  FILE *f = w_popen(c_str(path), c_str(normalize_mode(&m, mode_str)));
 
   if (!f)
     uw_throwf(file_error_s, lit("error opening pipe ~a: ~a/~s"),
               path, num(errno), string_utf8(strerror(errno)), nao);
 
-  return make_pipe_stream(f, path);
+  return set_mode_props(m, make_pipe_stream(f, path));
 }
 
 #if HAVE_FORK_STUFF
 val open_process(val name, val mode_str, val args)
 {
-  int input = equal(mode_str, lit("r")) || equal(mode_str, lit("rb"));
+  struct stdio_mode m;
+  val mode = normalize_mode(&m, mode_str);
+  int input = m.read != 0;
   int fd[2];
   pid_t pid;
   char **argv = 0;
@@ -2277,7 +2399,7 @@ val open_process(val name, val mode_str, val args)
     _exit(errno);
   } else {
     int whichfd;
-    char *utf8mode = utf8_dup_to(c_str(mode_str));
+    char *utf8mode = utf8_dup_to(c_str(mode));
     FILE *f;
 
     if (input) {
@@ -2309,7 +2431,7 @@ val open_process(val name, val mode_str, val args)
 
     free(utf8mode);
     /* TODO: catch potential OOM exception here and kill process. */
-    return make_pipevp_stream(f, name, pid);
+    return set_mode_props(m, make_pipevp_stream(f, name, pid));
   }
 }
 #else
@@ -2711,6 +2833,11 @@ void stream_init(void)
           make_stdio_stream(stderr, lit("stderr")));
   reg_var(stdnull_s = intern(lit("*stdnull*"), user_package),
           make_null_stream());
+
+#if HAVE_ISATTY
+  if (isatty(fileno(stdin)) == 1)
+    stream_set_prop(std_input, real_time_k, t);
+#endif
 
   reg_fun(format_s, func_n2v(formatv));
   reg_fun(intern(lit("make-string-input-stream"), user_package), func_n1(make_string_input_stream));

@@ -446,8 +446,31 @@ of the query, only during its execution.
 
 .coIP -d
 .coIP --debugger
-
 Invoke the interactive \*(TX debugger. See the DEBUGGER section.
+
+.coIP -n
+.coIP --noninteractive
+This option affects behavior related to \*(TX's
+.code *std-input*
+stream.  Normally, if this stream is connected to a terminal device, it is
+automatically marked as having the real-time property when \*(TX starts up (see
+the functions .code stream-set-prop and
+.codn real-time-stream-p ).
+The
+.code -n
+option suppresses this behavior; the
+.code *std-input*
+stream remains ordinary.
+
+The \*(TX pattern language reads standard input via
+a lazy list, created by applying the
+.code lazy-stream-cons
+function to the
+.code *std-input*
+stream. If that stream is marked real-time, then the lazy list which is
+returned by that function has behaviors that are better suited for scanning
+interactive input. A more detailed explanation is given under the description
+of this function.
 
 .coIP -v
 Verbose operation. Detailed logging is enabled.
@@ -22344,12 +22367,15 @@ item.
 The ordinary lazy streams read ahead by one line and suppress this extra
 item, so their representation is more accurate.
 
-Streams connected to TTY devices (devices which for which the
+When \*(TX starts up, it automatically marks the
+.code *std-input*
+stream as real-time, if it is connected to a TTY device (a device for which
+the POSIX function
 .code isatty
-POSIX function reports true) are automatically marked as real-time. This is
-only supported on platforms that have an
-.code isatty
-function.
+reports true). This is only supported on platforms that have this function.
+The behvior is overridden by the
+.code -n
+command line option.
 
 .coNP Function @ make-string-input-stream
 .synb
@@ -22849,7 +22875,7 @@ also returned if the property exists, but its value happens to be
 
 Properties are currently used for marking certain streams as "real-time" (see
 the
-.code stream-real-time-p
+.code real-time-stream-p
 function above), and also for setting the priority at
 which messages are reported to syslog by the
 .code *stdlog*
@@ -23182,11 +23208,11 @@ The
 argument is a string which uses the same
 conventions as the mode argument of the C language
 .code fopen
-function.
+function, with some extensions.
 The mode string determines whether the stream is an input stream
 or output stream. Note that the
 .str b
-mode is not supported.
+mode is passed through to the C library, but has no special meaning to \*(TX.
 Whether a stream is text or binary depends on which operations
 are invoked on it.
 
@@ -23196,9 +23222,14 @@ argument is omitted, mode
 .str r
 is used.
 
+The option letter
+.str i
+is supported. If present, it will create a stream which has the real-time
+property set.
+
 .coNP Function @ open-tail
 .synb
-.mets (open-tail < path <> [[ mode-string ] << seek-to-end-p ])
+.mets (open-tail < path >> [ mode-string <> [ seek-to-end-p ]])
 .syne
 .desc
 The
@@ -23211,14 +23242,12 @@ The
 argument is a string which uses
 the same conventions as the mode argument of the C language
 .code fopen
-function.
-If it is missing, it defaults to
-.strn r .
-Note that the
-.str b
-mode is not supported.
-Whether a stream is text or binary depends on which operations are invoked on
-it.
+function. If this argument is omitted, then
+.str r
+is used.
+See the
+.code open-file
+function for a discussion of modes.
 
 The
 .code seek-to-end-p
@@ -23307,7 +23336,9 @@ the
 argument is optional, defaulting to
 the value
 .str r
-if it is missing.
+if it is missing.  See the
+.code open-file
+function for a discussion of modes.
 
 The
 .code open-command
@@ -27219,9 +27250,23 @@ option can be used to request emulation of old behavior.
 The option was introduced in \*(TX 98, and so the oldest \*(TX version which
 can be emulated is \*(TX 97.
 
-Here are values which have a special meaning as arguments to the
+Here are version values which have a special meaning as arguments to the
 .code -C
-option, along with a description of what behaviors are affected:
+option, along with a description of what behaviors are affected. For each
+of these version values, the described behaviors are provided if
+.code -C
+is given an argument which is equal or lower. For instance
+.code -C 103
+selects the behaviors described below for verison 105, but not those for 102.
+
+.IP 105
+Provides the behavior that the
+.code open-file
+function automatically marks a stream open on a TTY devices as a real-time stream
+(subject to the availability of the POSIX
+.code isatty
+function).
+
 .IP 102
 Up to \*(TX 102, the
 .code get-string

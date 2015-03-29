@@ -1,3 +1,29 @@
+2015-03-29  Kaz Kylheku  <kaz@kylheku.com>
+
+	New -n option. New "i" mode letter in file opening functions.
+
+	* stream.c (struct stdio_mode): New struct type.
+	(stdio_mode_init_trivial): New initializer macro.
+	(parse_mode, format_mode, normalize_mode, set_mode_props):
+	New static functions.
+	(make_stdio_stream_common): the isatty check, and automatic marking
+	of tty device streams as real-time is no longer done, unless
+	backward compatibility 105 or earlier is requested.
+	(open_file, open_tail,  open_command, open_process): Use new
+	mode parsing, which supports the "i" flag.
+	(stream_init): If we have isatty, and standard input is a tty,
+	then mark the *std-input* stream as real-time.
+
+	* txr.1: Document -n/--noninteractive option. Fix typo where
+	real-time-stream-p is referred to as stream-real-time-p.
+	Document "i" flag on open-file and others.
+
+	* txr.c (opt_noninteractive): New global.
+	(help): Help text for -n/--noninteractive.
+	(txr_main): Handle new options.
+
+	* txr.h (opt_noninteractive): Declared.
+
 2015-03-28  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (prinl, pprinl): Become external functions.
