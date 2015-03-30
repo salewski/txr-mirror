@@ -1862,7 +1862,7 @@ val vformat(val stream, val fmtstr, va_list vl)
             int nchars = mp_radix_size(mp(obj), 16);
             if (nchars >= convert(int, sizeof (num_buf)))
               pnum = coerce(char *, chk_malloc(nchars + 1));
-            mp_toradix_case(mp(obj), coerce(unsigned char *, pnum), 16, 1);
+            mp_toradix_case(mp(obj), coerce(unsigned char *, pnum), 16, ch == 'x');
           } else {
             const char *fmt = ch == 'x' ? num_fmt->hex : num_fmt->HEX;
             value = c_num(obj);

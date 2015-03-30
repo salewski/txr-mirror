@@ -1,3 +1,8 @@
+2015-03-30  Kaz Kylheku  <kaz@kylheku.com>
+
+	* stream.c (vformat): Bugfix: ~X printing in lower case, like ~x,
+	when argument is a bignum integer.
+
 2015-03-29  Kaz Kylheku  <kaz@kylheku.com>
 
 	* mpi-patches/eliminate-locale-dependencies: New patch.
