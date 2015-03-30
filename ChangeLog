@@ -1,5 +1,12 @@
 2015-03-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	* mpi-patches/eliminate-locale-dependencies: New patch.
+	(s_mp_tovalue): Eliminate use of isupper, islower.
+
+	* mpi-patches/series: Add patch.
+
+2015-03-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	New -n option. New "i" mode letter in file opening functions.
 
 	* stream.c (struct stdio_mode): New struct type.

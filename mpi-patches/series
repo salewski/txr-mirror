@@ -16,3 +16,4 @@ faster-square-root
 mpi-to-double
 fix-ctype-warnings
 add-bitops
+eliminate-locale-dependencies
