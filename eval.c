@@ -50,6 +50,8 @@
 #include "combi.h"
 #include "eval.h"
 
+#define APPLY_ARGS 32
+
 typedef val (*opfun_t)(val, val);
 typedef val (*mefun_t)(val, val);
 
@@ -607,8 +609,8 @@ static val get_param_syms(val params)
 
 val apply(val fun, val arglist, val ctx_form)
 {
-  val arg[32], *p = arg;
-  int variadic, fixparam, reqargs, nargs;
+  val arg[APPLY_ARGS], *p = arg;
+  int fixparam, reqargs, nargs;
   val ctx = if3(ctx_form, car(ctx_form), apply_s);
 
   if (fun && symbolp(fun)) {
@@ -620,7 +622,7 @@ val apply(val fun, val arglist, val ctx_form)
 
   if (!functionp(fun)) {
     for (nargs = 0;
-         (p < arg + 32) && consp(arglist);
+         (p < arg + APPLY_ARGS) && consp(arglist);
          nargs++, p++, arglist = cdr(arglist))
     {
       *p = car(arglist);
@@ -638,22 +640,19 @@ val apply(val fun, val arglist, val ctx_form)
     arglist = arglist_conv;
   }
 
-  variadic = fun->f.variadic;
   fixparam = fun->f.fixparam;
   reqargs = fixparam - fun->f.optargs;
 
-  if (!variadic) {
-    for (; arglist; arglist = cdr(arglist))
+  if (!fun->f.variadic) {
+    for (; arglist && p < arg + APPLY_ARGS; arglist = cdr(arglist))
       *p++ = car(arglist);
 
-    nargs = p - arg;
-
-    if (nargs < reqargs)
-      eval_error(ctx_form, lit("~s: missing required arguments"),
+    if (arglist)
+      eval_error(ctx_form, lit("~s: too many arguments"),
                  ctx, nao);
 
-    if (nargs > fixparam)
-      eval_error(ctx_form, lit("~s: too many arguments"),
+    if ((nargs = p - arg) < reqargs)
+      eval_error(ctx_form, lit("~s: missing required arguments"),
                  ctx, nao);
 
     for (; nargs < fixparam; nargs++)

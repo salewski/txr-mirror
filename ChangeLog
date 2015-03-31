@@ -1,5 +1,16 @@
 2015-03-31  Kaz Kylheku  <kaz@kylheku.com>
 
+	Array overrun fix in apply.
+
+	* eval.c (APPLY_ARGS): New preprocessor symbol, replaces
+	hard-coded 32 inside apply.
+	(apply): Use APPLY_ARGS for argument array.
+	Fix overrun of args array in non-variadic function case when
+	list has more than APPLY_ARGS elements.
+	Eliminate superflous "variadic" local variable.
+
+2015-03-31  Kaz Kylheku  <kaz@kylheku.com>
+
 	Deal with spurious retention in function application.
 
 	* gc.h (zap): New inline function.
