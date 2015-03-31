@@ -663,29 +663,29 @@ val apply(val fun, val arglist, val ctx_form)
     case F0:
       return fun->f.f.f0(fun->f.env);
     case F1:
-      return fun->f.f.f1(fun->f.env, arg[0]);
+      return fun->f.f.f1(fun->f.env, z(arg[0]));
     case F2:
-      return fun->f.f.f2(fun->f.env, arg[0], arg[1]);
+      return fun->f.f.f2(fun->f.env, z(arg[0]), z(arg[1]));
     case F3:
-      return fun->f.f.f3(fun->f.env, arg[0], arg[1], arg[2]);
+      return fun->f.f.f3(fun->f.env, z(arg[0]), z(arg[1]), z(arg[2]));
     case F4:
-      return fun->f.f.f4(fun->f.env, arg[0], arg[1], arg[2], arg[3]);
+      return fun->f.f.f4(fun->f.env, z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]));
     case N0:
       return fun->f.f.n0();
     case N1:
-      return fun->f.f.n1(arg[0]);
+      return fun->f.f.n1(z(arg[0]));
     case N2:
-      return fun->f.f.n2(arg[0], arg[1]);
+      return fun->f.f.n2(z(arg[0]), z(arg[1]));
     case N3:
-      return fun->f.f.n3(arg[0], arg[1], arg[2]);
+      return fun->f.f.n3(z(arg[0]), z(arg[1]), z(arg[2]));
     case N4:
-      return fun->f.f.n4(arg[0], arg[1], arg[2], arg[3]);
+      return fun->f.f.n4(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]));
     case N5:
-      return fun->f.f.n5(arg[0], arg[1], arg[2], arg[3], arg[4]);
+      return fun->f.f.n5(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]));
     case N6:
-      return fun->f.f.n6(arg[0], arg[1], arg[2], arg[3], arg[4], arg[5]);
+      return fun->f.f.n6(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arg[5]));
     case N7:
-      return fun->f.f.n7(arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6]);
+      return fun->f.f.n7(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arg[5]), z(arg[6]));
     case FINTERP:
       internal_error("unsupported function type");
     }
@@ -703,33 +703,33 @@ val apply(val fun, val arglist, val ctx_form)
 
     switch (fun->f.functype) {
     case FINTERP:
-      return interp_fun(fun->f.env, fun->f.f.interp_fun, arglist);
+      return interp_fun(fun->f.env, fun->f.f.interp_fun, z(arglist));
     case F0:
-      return fun->f.f.f0v(fun->f.env, arglist);
+      return fun->f.f.f0v(fun->f.env, z(arglist));
     case F1:
-      return fun->f.f.f1v(fun->f.env, arg[0], arglist);
+      return fun->f.f.f1v(fun->f.env, z(arg[0]), z(arglist));
     case F2:
-      return fun->f.f.f2v(fun->f.env, arg[0], arg[1], arglist);
+      return fun->f.f.f2v(fun->f.env, z(arg[0]), z(arg[1]), z(arglist));
     case F3:
-      return fun->f.f.f3v(fun->f.env, arg[0], arg[1], arg[2], arglist);
+      return fun->f.f.f3v(fun->f.env, z(arg[0]), z(arg[1]), z(arg[2]), z(arglist));
     case F4:
-      return fun->f.f.f4v(fun->f.env, arg[0], arg[1], arg[2], arg[3], arglist);
+      return fun->f.f.f4v(fun->f.env, z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arglist));
     case N0:
-      return fun->f.f.n0v(arglist);
+      return fun->f.f.n0v(z(arglist));
     case N1:
-      return fun->f.f.n1v(arg[0], arglist);
+      return fun->f.f.n1v(z(arg[0]), z(arglist));
     case N2:
-      return fun->f.f.n2v(arg[0], arg[1], arglist);
+      return fun->f.f.n2v(z(arg[0]), z(arg[1]), z(arglist));
     case N3:
-      return fun->f.f.n3v(arg[0], arg[1], arg[2], arglist);
+      return fun->f.f.n3v(z(arg[0]), z(arg[1]), z(arg[2]), z(arglist));
     case N4:
-      return fun->f.f.n4v(arg[0], arg[1], arg[2], arg[3], arglist);
+      return fun->f.f.n4v(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arglist));
     case N5:
-      return fun->f.f.n5v(arg[0], arg[1], arg[2], arg[3], arg[4], arglist);
+      return fun->f.f.n5v(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arglist));
     case N6:
-      return fun->f.f.n6v(arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arglist);
+      return fun->f.f.n6v(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arg[5]), z(arglist));
     case N7:
-      return fun->f.f.n7v(arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arglist);
+      return fun->f.f.n7v(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arg[5]), z(arg[6]), z(arglist));
     }
   }
 
@@ -753,7 +753,7 @@ static val apply_frob_args(val args)
 
 val apply_intrinsic(val fun, val args)
 {
-  return apply(fun, apply_frob_args(args), nil);
+  return apply(fun, apply_frob_args(z(args)), nil);
 }
 
 static val iapply(val fun, val args)
@@ -779,12 +779,12 @@ static val iapply(val fun, val args)
     }
   }
 
-  return apply(fun, mod_args, nil);
+  return apply(fun, z(mod_args), nil);
 }
 
 static val call(val fun, val args)
 {
-  return apply(fun, args, cons(apply_s, nil));
+  return apply(fun, z(args), cons(apply_s, nil));
 }
 
 static val list_star_intrinsic(val args)
@@ -1043,7 +1043,7 @@ static val do_eval(val form, val env, val ctx_form,
         val args = do_eval_args(rest(form), env, form, &lookup_var);
         debug_frame(oper, args, nil, env, nil, nil, nil);
         last_form_evaled = form;
-        debug_return (apply(cdr(fbinding), args, form));
+        debug_return (apply(cdr(fbinding), z(args), form));
         debug_end;
       }
     }
@@ -2003,7 +2003,9 @@ static val op_return_from(val form, val env)
 static val op_dwim(val form, val env)
 {
   val args = eval_args_lisp1(cdr(form), env, form);
-  return apply(car(args), cdr(args), form);
+  val fi = car(args);
+  val re = cdr(z(args));
+  return apply(z(fi), z(re), form);
 }
 
 static val op_catch(val form, val env)
@@ -3151,7 +3153,7 @@ val mapcarv(val fun, val list_of_lists)
         deref(car_l(iter)) = cdr(list);
       }
 
-      otail = list_collect(otail, apply(fun, args, nil));
+      otail = list_collect(otail, apply(fun, z(args), nil));
     }
   }
 }
@@ -3177,7 +3179,7 @@ static val mappendv(val fun, val list_of_lists)
         deref(car_l(iter)) = cdr(list);
       }
 
-      otail = list_collect_append(otail, apply(fun, args, nil));
+      otail = list_collect_append(otail, apply(fun, z(args), nil));
     }
   }
 }
@@ -3210,7 +3212,7 @@ static val lazy_mapcarv_func(val env, val lcons)
   val args = mapcar(car_f, lofl);
   val next = mapcar(cdr_f, lofl);
 
-  rplaca(lcons, apply(fun, args, nil));
+  rplaca(lcons, apply(fun, z(args), nil));
   rplacd(env, next);
 
   if (all_satisfy(next, identity_f, identity_f))
@@ -3256,7 +3258,7 @@ static val mapdov(val fun, val list_of_lists)
         deref(car_l(iter)) = cdr(list);
       }
 
-      apply(fun, args, nil);
+      apply(fun, z(args), nil);
     }
   }
 }
@@ -3627,7 +3629,7 @@ static val retf(val ret)
 
 static val do_apf(val fun, val args)
 {
-  return apply_intrinsic(fun, args);
+  return apply_intrinsic(fun, z(args));
 }
 
 static val apf(val fun)
@@ -3637,7 +3639,7 @@ static val apf(val fun)
 
 static val do_ipf(val fun, val args)
 {
-  return iapply(fun, args);
+  return iapply(fun, z(args));
 }
 
 static val ipf(val fun)
@@ -3655,8 +3657,8 @@ static val callf(val func, val funlist)
 static val do_mapf(val env, val args)
 {
   cons_bind (fun, funlist, env);
-  val mapped_args = mapcarv(call_f, cons(funlist, cons(args, nil)));
-  return apply(fun, mapped_args, nil);
+  val mapped_args = mapcarv(call_f, cons(funlist, cons(z(args), nil)));
+  return apply(fun, z(mapped_args), nil);
 }
 
 static val mapf(val fun, val funlist)

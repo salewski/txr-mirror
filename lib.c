@@ -4174,29 +4174,29 @@ val generic_funcall(val fun, val arg[], int nargs)
     case F0:
       return fun->f.f.f0(fun->f.env);
     case F1:
-      return fun->f.f.f1(fun->f.env, arg[0]);
+      return fun->f.f.f1(fun->f.env, z(arg[0]));
     case F2:
-      return fun->f.f.f2(fun->f.env, arg[0], arg[1]);
+      return fun->f.f.f2(fun->f.env, z(arg[0]), z(arg[1]));
     case F3:
-      return fun->f.f.f3(fun->f.env, arg[0], arg[1], arg[2]);
+      return fun->f.f.f3(fun->f.env, z(arg[0]), z(arg[1]), z(arg[2]));
     case F4:
-      return fun->f.f.f4(fun->f.env, arg[0], arg[1], arg[2], arg[3]);
+      return fun->f.f.f4(fun->f.env, z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]));
     case N0:
       return fun->f.f.n0();
     case N1:
-      return fun->f.f.n1(arg[0]);
+      return fun->f.f.n1(z(arg[0]));
     case N2:
-      return fun->f.f.n2(arg[0], arg[1]);
+      return fun->f.f.n2(z(arg[0]), z(arg[1]));
     case N3:
-      return fun->f.f.n3(arg[0], arg[1], arg[2]);
+      return fun->f.f.n3(z(arg[0]), z(arg[1]), z(arg[2]));
     case N4:
-      return fun->f.f.n4(arg[0], arg[1], arg[2], arg[3]);
+      return fun->f.f.n4(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]));
     case N5:
-      return fun->f.f.n5(arg[0], arg[1], arg[2], arg[3], arg[4]);
+      return fun->f.f.n5(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]));
     case N6:
-      return fun->f.f.n6(arg[0], arg[1], arg[2], arg[3], arg[4], arg[5]);
+      return fun->f.f.n6(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arg[5]));
     case N7:
-      return fun->f.f.n7(arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6]);
+      return fun->f.f.n7(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arg[5]), z(arg[6]));
     case FINTERP:
       internal_error("unsupported function type");
     }
@@ -4214,33 +4214,33 @@ val generic_funcall(val fun, val arg[], int nargs)
 
     switch (fun->f.functype) {
     case FINTERP:
-      return interp_fun(fun->f.env, fun->f.f.interp_fun, arglist);
+      return interp_fun(fun->f.env, fun->f.f.interp_fun, z(arglist));
     case F0:
-      return fun->f.f.f0v(fun->f.env, arglist);
+      return fun->f.f.f0v(fun->f.env, z(arglist));
     case F1:
-      return fun->f.f.f1v(fun->f.env, arg[0], arglist);
+      return fun->f.f.f1v(fun->f.env, z(arg[0]), z(arglist));
     case F2:
-      return fun->f.f.f2v(fun->f.env, arg[0], arg[1], arglist);
+      return fun->f.f.f2v(fun->f.env, arg[0], arg[1], z(arglist));
     case F3:
-      return fun->f.f.f3v(fun->f.env, arg[0], arg[1], arg[2], arglist);
+      return fun->f.f.f3v(fun->f.env, arg[0], arg[1], arg[2], z(arglist));
     case F4:
-      return fun->f.f.f4v(fun->f.env, arg[0], arg[1], arg[2], arg[3], arglist);
+      return fun->f.f.f4v(fun->f.env, arg[0], arg[1], arg[2], arg[3], z(arglist));
     case N0:
-      return fun->f.f.n0v(arglist);
+      return fun->f.f.n0v(z(arglist));
     case N1:
-      return fun->f.f.n1v(arg[0], arglist);
+      return fun->f.f.n1v(z(arg[0]), z(arglist));
     case N2:
-      return fun->f.f.n2v(arg[0], arg[1], arglist);
+      return fun->f.f.n2v(z(arg[0]), z(arg[1]), z(arglist));
     case N3:
-      return fun->f.f.n3v(arg[0], arg[1], arg[2], arglist);
+      return fun->f.f.n3v(z(arg[0]), z(arg[1]), z(arg[2]), z(arglist));
     case N4:
-      return fun->f.f.n4v(arg[0], arg[1], arg[2], arg[3], arglist);
+      return fun->f.f.n4v(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arglist));
     case N5:
-      return fun->f.f.n5v(arg[0], arg[1], arg[2], arg[3], arg[4], arglist);
+      return fun->f.f.n5v(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arglist));
     case N6:
-      return fun->f.f.n6v(arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arglist);
+      return fun->f.f.n6v(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arg[5]), z(arglist));
     case N7:
-      return fun->f.f.n7v(arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arglist);
+      return fun->f.f.n7v(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arg[5]), z(arg[6]), z(arglist));
     }
   }
 
@@ -4282,7 +4282,7 @@ val funcall1(val fun, val arg)
 {
   if (type(fun) != FUN || fun->f.optargs) {
     val args[32];
-    args[0] = arg;
+    args[0] = z(arg);
     return generic_funcall(fun, args, 1);
   }
 
@@ -4295,18 +4295,18 @@ val funcall1(val fun, val arg)
     case N0:
       return fun->f.f.n0v(cons(arg, nil));
     case F1:
-      return fun->f.f.f1v(fun->f.env, arg, nil);
+      return fun->f.f.f1v(fun->f.env, z(arg), nil);
     case N1:
-      return fun->f.f.n1v(arg, nil);
+      return fun->f.f.n1v(z(arg), nil);
     default:
       break;
     }
   } else {
     switch (fun->f.functype) {
     case F1:
-      return fun->f.f.f1(fun->f.env, arg);
+      return fun->f.f.f1(fun->f.env, z(arg));
     case N1:
-      return fun->f.f.n1(arg);
+      return fun->f.f.n1(z(arg));
     default:
       break;
     }
@@ -4318,8 +4318,8 @@ val funcall2(val fun, val arg1, val arg2)
 {
   if (type(fun) != FUN || fun->f.optargs) {
     val arg[32];
-    arg[0] = arg1;
-    arg[1] = arg2;
+    arg[0] = z(arg1);
+    arg[1] = z(arg2);
     return generic_funcall(fun, arg, 2);
   }
 
@@ -4327,28 +4327,28 @@ val funcall2(val fun, val arg1, val arg2)
     switch (fun->f.functype) {
     case FINTERP:
       return interp_fun(fun->f.env, fun->f.f.interp_fun,
-                        cons(arg1, cons(arg2, nil)));
+                        cons(z(arg1), cons(z(arg2), nil)));
     case F0:
-      return fun->f.f.f0v(fun->f.env, cons(arg1, cons(arg2, nil)));
+      return fun->f.f.f0v(fun->f.env, cons(z(arg1), cons(z(arg2), nil)));
     case N0:
-      return fun->f.f.n0v(cons(arg1, cons(arg2, nil)));
+      return fun->f.f.n0v(cons(z(arg1), cons(z(arg2), nil)));
     case F1:
-      return fun->f.f.f1v(fun->f.env, arg1, cons(arg2, nil));
+      return fun->f.f.f1v(fun->f.env, z(arg1), cons(z(arg2), nil));
     case N1:
-      return fun->f.f.n1v(arg1, cons(arg2, nil));
+      return fun->f.f.n1v(z(arg1), cons(z(arg2), nil));
     case F2:
-      return fun->f.f.f2v(fun->f.env, arg1, arg2, nil);
+      return fun->f.f.f2v(fun->f.env, z(arg1), z(arg2), nil);
     case N2:
-      return fun->f.f.n2v(arg1, arg2, nil);
+      return fun->f.f.n2v(z(arg1), z(arg2), nil);
     default:
       break;
     }
   } else {
     switch (fun->f.functype) {
     case F2:
-      return fun->f.f.f2(fun->f.env, arg1, arg2);
+      return fun->f.f.f2(fun->f.env, z(arg1), z(arg2));
     case N2:
-      return fun->f.f.n2(arg1, arg2);
+      return fun->f.f.n2(z(arg1), z(arg2));
     default:
       break;
     }
@@ -4360,9 +4360,9 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
 {
   if (type(fun) != FUN || fun->f.optargs) {
     val arg[32];
-    arg[0] = arg1;
-    arg[1] = arg2;
-    arg[2] = arg3;
+    arg[0] = z(arg1);
+    arg[1] = z(arg2);
+    arg[2] = z(arg3);
     return generic_funcall(fun, arg, 3);
   }
 
@@ -4370,32 +4370,32 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
     switch (fun->f.functype) {
     case FINTERP:
       return interp_fun(fun->f.env, fun->f.f.interp_fun,
-                        cons(arg1, cons(arg2, cons(arg3, nil))));
+                        cons(z(arg1), cons(z(arg2), cons(z(arg3), nil))));
     case F0:
-      return fun->f.f.f0v(fun->f.env, cons(arg1, cons(arg2, cons(arg3, nil))));
+      return fun->f.f.f0v(fun->f.env, cons(z(arg1), cons(z(arg2), cons(z(arg3), nil))));
     case N0:
-      return fun->f.f.n0v(cons(arg1, cons(arg2, cons(arg3, nil))));
+      return fun->f.f.n0v(cons(z(arg1), cons(z(arg2), cons(z(arg3), nil))));
     case F1:
-      return fun->f.f.f1v(fun->f.env, arg1, cons(arg2, cons(arg3, nil)));
+      return fun->f.f.f1v(fun->f.env, z(arg1), cons(z(arg2), cons(z(arg3), nil)));
     case N1:
-      return fun->f.f.n1v(arg1, cons(arg2, cons(arg3, nil)));
+      return fun->f.f.n1v(z(arg1), cons(z(arg2), cons(z(arg3), nil)));
     case F2:
-      return fun->f.f.f2v(fun->f.env, arg1, arg2, cons(arg3, nil));
+      return fun->f.f.f2v(fun->f.env, z(arg1), z(arg2), cons(z(arg3), nil));
     case N2:
-      return fun->f.f.n2v(arg1, arg2, cons(arg3, nil));
+      return fun->f.f.n2v(z(arg1), z(arg2), cons(z(arg3), nil));
     case F3:
-      return fun->f.f.f3v(fun->f.env, arg1, arg2, arg3, nil);
+      return fun->f.f.f3v(fun->f.env, z(arg1), z(arg2), z(arg3), nil);
     case N3:
-      return fun->f.f.n3v(arg1, arg2, arg3, nil);
+      return fun->f.f.n3v(z(arg1), z(arg2), z(arg3), nil);
     default:
       break;
     }
   } else {
     switch (fun->f.functype) {
     case F3:
-      return fun->f.f.f3(fun->f.env, arg1, arg2, arg3);
+      return fun->f.f.f3(fun->f.env, z(arg1), z(arg2), z(arg3));
     case N3:
-      return fun->f.f.n3(arg1, arg2, arg3);
+      return fun->f.f.n3(z(arg1), z(arg2), z(arg3));
     default:
       break;
     }
@@ -4407,10 +4407,10 @@ val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
 {
   if (type(fun) != FUN || fun->f.optargs) {
     val arg[32];
-    arg[0] = arg1;
-    arg[1] = arg2;
-    arg[2] = arg3;
-    arg[3] = arg4;
+    arg[0] = z(arg1);
+    arg[1] = z(arg2);
+    arg[2] = z(arg3);
+    arg[3] = z(arg4);
     return generic_funcall(fun, arg, 4);
   }
 
@@ -4418,36 +4418,36 @@ val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
     switch (fun->f.functype) {
     case FINTERP:
       return interp_fun(fun->f.env, fun->f.f.interp_fun,
-                        cons(arg1, cons(arg2, cons(arg3, cons(arg4, nil)))));
+                        cons(z(arg1), cons(z(arg2), cons(z(arg3), cons(z(arg4), nil)))));
     case F0:
-      return fun->f.f.f0v(fun->f.env, cons(arg1, cons(arg2, cons(arg3, cons(arg4, nil)))));
+      return fun->f.f.f0v(fun->f.env, cons(z(arg1), cons(z(arg2), cons(z(arg3), cons(z(arg4), nil)))));
     case N0:
-      return fun->f.f.n0v(cons(arg1, cons(arg2, cons(arg3, cons(arg4, nil)))));
+      return fun->f.f.n0v(cons(z(arg1), cons(z(arg2), cons(z(arg3), cons(z(arg4), nil)))));
     case F1:
-      return fun->f.f.f1v(fun->f.env, arg1, cons(arg2, cons(arg3, cons(arg4, nil))));
+      return fun->f.f.f1v(fun->f.env, z(arg1), cons(z(arg2), cons(z(arg3), cons(z(arg4), nil))));
     case N1:
-      return fun->f.f.n1v(arg1, cons(arg2, cons(arg3, cons(arg4, nil))));
+      return fun->f.f.n1v(z(arg1), cons(z(arg2), cons(z(arg3), cons(z(arg4), nil))));
     case F2:
-      return fun->f.f.f2v(fun->f.env, arg1, arg2, cons(arg3, cons(arg4, nil)));
+      return fun->f.f.f2v(fun->f.env, z(arg1), z(arg2), cons(z(arg3), cons(z(arg4), nil)));
     case N2:
-      return fun->f.f.n2v(arg1, arg2, cons(arg3, cons(arg4, nil)));
+      return fun->f.f.n2v(z(arg1), z(arg2), cons(z(arg3), cons(z(arg4), nil)));
     case F3:
-      return fun->f.f.f3v(fun->f.env, arg1, arg2, arg3, cons(arg4, nil));
+      return fun->f.f.f3v(fun->f.env, z(arg1), z(arg2), z(arg3), cons(z(arg4), nil));
     case N3:
-      return fun->f.f.n3v(arg1, arg2, arg3, cons(arg4, nil));
+      return fun->f.f.n3v(z(arg1), z(arg2), z(arg3), cons(z(arg4), nil));
     case F4:
-      return fun->f.f.f4v(fun->f.env, arg1, arg2, arg3, arg4, nil);
+      return fun->f.f.f4v(fun->f.env, z(arg1), z(arg2), z(arg3), z(arg4), nil);
     case N4:
-      return fun->f.f.n4v(arg1, arg2, arg3, arg4, nil);
+      return fun->f.f.n4v(z(arg1), z(arg2), z(arg3), z(arg4), nil);
     default:
       break;
     }
   } else {
     switch (fun->f.functype) {
     case F4:
-      return fun->f.f.f4(fun->f.env, arg1, arg2, arg3, arg4);
+      return fun->f.f.f4(fun->f.env, z(arg1), z(arg2), z(arg3), z(arg4));
     case N4:
-      return fun->f.f.n4(arg1, arg2, arg3, arg4);
+      return fun->f.f.n4(z(arg1), z(arg2), z(arg3), z(arg4));
     default:
       break;
     }
@@ -4759,7 +4759,7 @@ val orv(val funlist)
 
 static val do_not(val fun, val args)
 {
-  return null(apply(fun, args, nil));
+  return null(apply(fun, z(args), nil));
 }
 
 val notf(val fun)
@@ -4773,8 +4773,8 @@ static val do_iff(val env, val args)
   cons_bind (thenfun, elsefun, choices);
 
   return if3(apply(condfun, args, nil),
-             apply(thenfun, args, nil),
-             if2(elsefun, apply(elsefun, args, nil)));
+             apply(thenfun, z(args), nil),
+             if2(elsefun, apply(elsefun, z(args), nil)));
 }
 
 val iff(val condfun, val thenfun, val elsefun)
@@ -4792,7 +4792,9 @@ val iffi(val condfun, val thenfun, val elsefun)
 
 static val do_dup(val fun, val arg)
 {
-  return funcall2(fun, arg, arg);
+  val arg1 = z(arg);
+  val arg2 = arg1;
+  return funcall2(fun, z(arg1), z(arg2));
 }
 
 val dupl(val fun)

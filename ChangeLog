@@ -1,3 +1,17 @@
+2015-03-31  Kaz Kylheku  <kaz@kylheku.com>
+
+	Deal with spurious retention in function application.
+
+	* gc.h (zap): New inline function.
+	(z): New macro.
+
+	* lib.c (generic_funcall, funcall1, funcall2, funcall4, do_not,
+	do_dup, do_iff): Use z macro to burn funargs with no next use.
+
+	* eval.c (apply, apply_frob_args, iapply, call, do_eval,
+	op_dwim, mapcarv, mappendv, lazy_mapcarv_func, mapdov, do_apf,
+	do_ipf, callf): Use z macro to burn funargs with no next use.
+
 2015-03-30  Kaz Kylheku  <kaz@kylheku.com>
 
 	* stream.c (vformat): Bugfix: ~X printing in lower case, like ~x,
