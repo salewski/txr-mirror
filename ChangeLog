@@ -1,3 +1,13 @@
+2015-04-01  Kaz Kylheku  <kaz@kylheku.com>
+
+	New zap operator.
+
+	* eval.c (zap_s): New global variable.
+	(op_modplace): Support zap.
+	(eval_init): Initialize zap_s, and register as operator.
+
+	* txr.1: Documented zap.
+
 2015-03-31  Kaz Kylheku  <kaz@kylheku.com>
 
 	Array overrun fix in apply.

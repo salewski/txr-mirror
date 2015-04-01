@@ -10837,7 +10837,7 @@ functions whose arguments are constant forms.
 
 .SS* Mutation
 
-.coNP Operators @ inc @ dec @ set @ push @ pop @ flip and @ del
+.coNP Operators @, inc @, dec @, set @, push @, pop @, flip @, zap and @ del
 .synb
 .mets (inc < place <> [ delta ])
 .mets (dec < place <> [ delta ])
@@ -10845,6 +10845,7 @@ functions whose arguments are constant forms.
 .mets (push < item << place )
 .mets (pop << place )
 .mets (flip << place )
+.mets (zap << place <> [ new-value ])
 .mets (del << place )
 .syne
 .desc
@@ -10939,6 +10940,27 @@ If it contains
 .codn nil ,
 it is replaced with
 .codn t .
+
+The
+.code zap
+operator is similar to
+.code set
+except that
+.meta new-value
+is optional, defaulting to
+.codn nil ,
+and the operator returns the previous value of the place.
+This operator is useful in avoiding spurious retention of memory in the
+face of garbage collection. The idiom
+.code (function (zap variable))
+passes the value of
+.code variable
+to
+.code function
+while at the same time clearing it to
+.codn nil . This means that the caller no longer has a reference to the
+contents of the variable as far as the garbage collector is concerned.
+This approach is essential in some uses of infinite, lazy objects.
 
 The
 .code del

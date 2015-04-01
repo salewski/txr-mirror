@@ -70,7 +70,7 @@ val cond_s, if_s, defvar_s, defun_s, defmacro_s, tree_case_s, tree_bind_s;
 val caseq_s, caseql_s, casequal_s;
 val memq_s, memql_s, memqual_s;
 val eq_s, eql_s, equal_s;
-val inc_s, dec_s, push_s, pop_s, flip_s, gethash_s, car_s, cdr_s, not_s;
+val inc_s, dec_s, push_s, pop_s, flip_s, zap_s, gethash_s, car_s, cdr_s, not_s;
 val del_s, vecref_s;
 val for_s, for_star_s, each_s, each_star_s, collect_each_s, collect_each_star_s;
 val append_each_s, append_each_star_s;
@@ -1886,6 +1886,10 @@ static val op_modplace(val form, val env)
     return pop(valptr(ptr));
   } else if (op == flip_s) {
     return deref(ptr) = null(deref(ptr));
+  } else if (op == zap_s) {
+    val oldval = deref(ptr);
+    set(ptr, eval(newform, env, form));
+    return oldval;
   } else if (op == del_s) {
     eval_error(form, lit("~s: cannot delete ~a"), op, place, nao);
   }
@@ -3770,6 +3774,7 @@ void eval_init(void)
   push_s = intern(lit("push"), user_package);
   pop_s = intern(lit("pop"), user_package);
   flip_s = intern(lit("flip"), user_package);
+  zap_s = intern(lit("zap"), user_package);
   del_s = intern(lit("del"), user_package);
   for_s = intern(lit("for"), user_package);
   for_star_s = intern(lit("for*"), user_package);
@@ -3860,6 +3865,7 @@ void eval_init(void)
   reg_op(push_s, op_modplace);
   reg_op(pop_s, op_modplace);
   reg_op(flip_s, op_modplace);
+  reg_op(zap_s, op_modplace);
   reg_op(del_s, op_modplace);
   reg_op(for_s, op_for);
   reg_op(for_star_s, op_for);
