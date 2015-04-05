@@ -73,7 +73,7 @@ val eq_s, eql_s, equal_s;
 val inc_s, dec_s, push_s, pop_s, flip_s, zap_s, gethash_s, car_s, cdr_s, not_s;
 val del_s, vecref_s;
 val for_s, for_star_s, each_s, each_star_s, collect_each_s, collect_each_star_s;
-val append_each_s, append_each_star_s;
+val append_each_s, append_each_star_s, while_s;
 val dohash_s;
 val uw_protect_s, return_s, return_from_s;
 val list_s, append_s, apply_s, iapply_s;
@@ -2779,6 +2779,25 @@ static val me_ignerr(val form, val menv)
               list(error_s, error_s, nao), nao);
 }
 
+static val me_whilet(val form, val env)
+{
+  val body = form;
+  val sym = pop(&body);
+  val lets = pop(&body);
+  val lastlet = last(lets);
+  val not_done = gensym(lit("not-done"));
+
+  if (nilp(lastlet))
+    eval_error(form, lit("~s: empty binding list"), sym, nao);
+
+  return list(let_s, cons(list(not_done, t, nao), nil),
+              list(while_s, not_done,
+                   list(let_star_s, lets,
+                        list(if_s, car(car(lastlet)),
+                             cons(progn_s, body),
+                             list(set_s, not_done, nil, nao), nao), nao), nao), nao);
+}
+
 static val expand_catch_clause(val form, val menv)
 {
   val sym = first(form);
@@ -3785,6 +3804,7 @@ void eval_init(void)
   append_each_s = intern(lit("append-each"), user_package);
   append_each_star_s = intern(lit("append-each*"), user_package);
   dohash_s = intern(lit("dohash"), user_package);
+  while_s = intern(lit("while"), user_package);
   uw_protect_s = intern(lit("unwind-protect"), user_package);
   return_s = intern(lit("return"), user_package);
   return_from_s = intern(lit("return-from"), user_package);
@@ -3896,7 +3916,7 @@ void eval_init(void)
   reg_mac(intern(lit("pprof"), user_package), me_pprof);
   reg_mac(intern(lit("when"), user_package), me_when);
   reg_mac(intern(lit("unless"), user_package), me_unless);
-  reg_mac(intern(lit("while"), user_package), me_while);
+  reg_mac(while_s, me_while);
   reg_mac(intern(lit("until"), user_package), me_until);
   reg_mac(quasilist_s, me_quasilist);
   reg_mac(flet_s, me_flet_labels);
@@ -3909,6 +3929,7 @@ void eval_init(void)
   reg_mac(opip_s, me_opip);
   reg_mac(oand_s, me_opip);
   reg_mac(intern(lit("ignerr"), user_package), me_ignerr);
+  reg_mac(intern(lit("whilet"), user_package), me_whilet);
 
   reg_fun(cons_s, func_n2(cons));
   reg_fun(intern(lit("make-lazy-cons"), user_package), func_n1(make_lazy_cons));

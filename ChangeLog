@@ -1,3 +1,16 @@
+2015-04-05  Kaz Kylheku  <kaz@kylheku.com>
+
+	New whilet macro.
+
+	* eval.c (while_s): New symbol variable.
+	(me_whilet): New static function.
+	(eval_init): Initialize while_s. Use while_s in registration
+	of while macro. Register new whilet macro.
+
+	* txr.1: whilet is documented.
+
+	* tl.vim, txr.vim: Regenerated.
+
 2015-04-01  Kaz Kylheku  <kaz@kylheku.com>
 
 	New zap operator.

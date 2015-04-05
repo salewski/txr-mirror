@@ -181,19 +181,19 @@ syn keyword txl_keyword contained tc tf third throw
 syn keyword txl_keyword contained throwf time time-fields-local time-fields-utc
 syn keyword txl_keyword contained time-string-local time-string-utc time-usec tofloat
 syn keyword txl_keyword contained toint tok-str tok-where tostring
-syn keyword txl_keyword contained tostringp transpose tree-bind tree-case
-syn keyword txl_keyword contained tree-find trie-add trie-compress trie-lookup-begin
-syn keyword txl_keyword contained trie-lookup-feed-char trie-value-at trim-str true
-syn keyword txl_keyword contained trunc trunc-rem tuples txr-case
-syn keyword txl_keyword contained txr-if txr-when typeof unget-byte
-syn keyword txl_keyword contained unget-char uniq unique unless
-syn keyword txl_keyword contained unquote until upcase-str update
-syn keyword txl_keyword contained url-decode url-encode usleep uw-protect
-syn keyword txl_keyword contained vec vec-push vec-set-length vecref
-syn keyword txl_keyword contained vector vector-list vectorp weave
-syn keyword txl_keyword contained when where while width
-syn keyword txl_keyword contained with-saved-vars wrap wrap* zerop
-syn keyword txl_keyword contained zip
+syn keyword txl_keyword contained tostringp tprint transpose tree-bind
+syn keyword txl_keyword contained tree-case tree-find trie-add trie-compress
+syn keyword txl_keyword contained trie-lookup-begin trie-lookup-feed-char trie-value-at trim-str
+syn keyword txl_keyword contained true trunc trunc-rem tuples
+syn keyword txl_keyword contained txr-case txr-if txr-when typeof
+syn keyword txl_keyword contained unget-byte unget-char uniq unique
+syn keyword txl_keyword contained unless unquote until upcase-str
+syn keyword txl_keyword contained update url-decode url-encode usleep
+syn keyword txl_keyword contained uw-protect vec vec-push vec-set-length
+syn keyword txl_keyword contained vecref vector vector-list vectorp
+syn keyword txl_keyword contained weave when where while
+syn keyword txl_keyword contained whilet width with-saved-vars wrap
+syn keyword txl_keyword contained wrap* zap zerop zip
 
 syn keyword txr_keyword contained accept all and assert
 syn keyword txr_keyword contained bind block cases cat
