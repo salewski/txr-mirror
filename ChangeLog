@@ -1,3 +1,15 @@
+2015-04-06  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (iflet_s, when_s): New global variables.
+	(me_iflet_whenlet): New static function.
+	(eval_init): Initialize when_s, iflet_s. Use
+	when_s for registering me_when.
+	Register me_iflet_whenlet.
+
+	* txr.1: Documented iflet and whenlet.
+
+	* tl.vim, txr.vim: Regenerated.
+
 2015-04-05  Kaz Kylheku  <kaz@kylheku.com>
 
 	New whilet macro.

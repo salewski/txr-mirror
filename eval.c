@@ -66,7 +66,8 @@ val dyn_env;
 
 val eval_error_s;
 val dwim_s, progn_s, prog1_s, let_s, let_star_s, lambda_s, call_s;
-val cond_s, if_s, defvar_s, defun_s, defmacro_s, tree_case_s, tree_bind_s;
+val cond_s, if_s, iflet_s, when_s;
+val defvar_s, defun_s, defmacro_s, tree_case_s, tree_bind_s;
 val caseq_s, caseql_s, casequal_s;
 val memq_s, memql_s, memqual_s;
 val eq_s, eql_s, equal_s;
@@ -2798,6 +2799,21 @@ static val me_whilet(val form, val env)
                              list(set_s, not_done, nil, nao), nao), nao), nao), nao);
 }
 
+static val me_iflet_whenlet(val form, val env)
+{
+  val args = form;
+  val sym = pop(&args);
+  val lets = pop(&args);
+  val lastlet = last(lets);
+
+  if (nilp(lastlet))
+    eval_error(form, lit("~s: empty binding list"), sym, nao);
+
+  return list(let_star_s, lets,
+              cons(if3(sym == iflet_s, if_s, when_s),
+                   cons(car(car(lastlet)), args)), nao);
+}
+
 static val expand_catch_clause(val form, val menv)
 {
   val sym = first(form);
@@ -3782,6 +3798,8 @@ void eval_init(void)
   eql_s = intern(lit("eql"), user_package);
   equal_s = intern(lit("equal"), user_package);
   if_s = intern(lit("if"), user_package);
+  when_s = intern(lit("when"), user_package);
+  iflet_s = intern(lit("iflet"), user_package);
   defvar_s = intern(lit("defvar"), user_package);
   defun_s = intern(lit("defun"), user_package);
   defmacro_s = intern(lit("defmacro"), user_package);
@@ -3914,7 +3932,7 @@ void eval_init(void)
   reg_mac(qquote_s, me_qquote);
   reg_mac(sys_qquote_s, me_qquote);
   reg_mac(intern(lit("pprof"), user_package), me_pprof);
-  reg_mac(intern(lit("when"), user_package), me_when);
+  reg_mac(when_s, me_when);
   reg_mac(intern(lit("unless"), user_package), me_unless);
   reg_mac(while_s, me_while);
   reg_mac(intern(lit("until"), user_package), me_until);
@@ -3930,6 +3948,8 @@ void eval_init(void)
   reg_mac(oand_s, me_opip);
   reg_mac(intern(lit("ignerr"), user_package), me_ignerr);
   reg_mac(intern(lit("whilet"), user_package), me_whilet);
+  reg_mac(iflet_s, me_iflet_whenlet);
+  reg_mac(intern(lit("whenlet"), user_package), me_iflet_whenlet);
 
   reg_fun(cons_s, func_n2(cons));
   reg_fun(intern(lit("make-lazy-cons"), user_package), func_n1(make_lazy_cons));

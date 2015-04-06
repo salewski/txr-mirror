@@ -10263,6 +10263,83 @@ a return value can be specified. Under normal termination, the return value is
     (put-line line))
 .cble
 
+.coNP Macros @ iflet and @ whenlet
+.synb
+.mets (iflet ({ sym | >> ( sym << init-form )}+)
+.mets \ \  < then-form <> [ else-form ])
+.mets (whenlet ({ sym | >> ( sym << init-form )}+)
+.mets \ \  < body-form *])
+.syne
+.desc
+The
+.code iflet
+and
+.code whenlet
+macros combine the variable binding of
+.code let*
+with conditional evaluation of
+.code if
+and
+.codn when ,
+respectively.
+
+The evaluation of these forms takes place as follows. First, fresh bindings are
+established for
+.metn sym -s
+as if by the
+.code let*
+operator.
+It is an error for the list of variable bindings to be empty.
+
+Then, the last variable's value is tested. If it is not
+.code nil
+then the test is true, otherwise false.
+
+In the case of the
+.code iflet
+operator, if the test is true, the operator evaluates
+.meta then-form
+and yields its value. Otherwise the test is false, and if the
+optional
+.meta else-form
+is present, that is evaluated instead and its value is returned.
+If this form is missing, then
+.code nil
+is returned.
+
+In the case of the
+.code whenlet
+operator, if the test is true, then the
+.metn body-form -s,
+if any, are evaluated. The value of the last one is
+returned, otherwise
+.code nil
+if the forms are missing.
+If the test is false, then evaluation of
+.metn body-form -s
+is skipped, and
+.code nil
+is returned.
+
+.TP* Examples:
+.cblk
+  ;; dispose of foo-resource if present
+  (whenlet ((foo-res (get-foo-resource obj)))
+    (foo-shutdown foo-res)
+    (set-foo-resource obj nil))
+
+  ;; Contrast with: above, using when and let
+  (let ((foo-res (get-foo-resource obj)))
+    (when foo-res
+      (foo-shutdown foo-res)
+      (set-foo-resource obj nil)))
+
+  ;; print frobosity value if it exceeds 150
+  (whenlet ((fv (get-frobosity-value))
+            (exceeds-p (> fv 150)))
+    (format t "frobosity value ~a exceeds 150\en" fv))
+.cble
+
 .coNP Operator @ unwind-protect
 .synb
 .mets (unwind-protect < protected-form << cleanup-form *)
