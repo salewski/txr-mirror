@@ -9953,145 +9953,6 @@ uses
     ...)
 .cble
 
-.coNP Macros @ when and @ unless
-.synb
-.mets (when < expression << form *)
-.mets (unless < expression << form *)
-.syne
-.desc
-The when macro operator evaluates
-.metn expression .
-If
-.meta expression
-yields
-true, and there are additional forms, then each
-.meta form
-is evaluated.
-The value of the last form is becomes the result value of the when form.
-If there are no forms, then the result is
-.codn nil .
-
-The
-.code unless
-operator is similar to when, except that it reverses the
-logic of the test. The forms, if any, are evaluated if, and only if
-.meta expression
-is false.
-
-.coNP Macros @ while and @ until
-.synb
-.mets (while < expression << form *)
-.mets (until < expression << form *)
-.syne
-.desc
-The
-.code while
-macro operator provides a looping construct.  It evaluates
-.metn expression .
-If
-.meta expression
-yields
-.codn nil ,
-then the evaluation of the
-.code while
-form
-terminates, producing the value
-.codn nil .
-Otherwise, if there are additional forms,
-then each
-.meta form
-is evaluated.  Next, evaluation returns to
-.metn expression ,
-repeating all of the previous steps.
-
-The
-.code until
-macro operator is similar to while, except that the until form
-terminates when
-.meta expression
-evaluates true, rather than false.
-
-These operators arrange for the evaluation of all their enclosed forms
-in an anonymous block. Any of the
-.metn form s,
-or
-.metn expression ,
-may use
-the
-.code return
-operator to terminate the loop, and optionally to specify
-a result value for the form.
-
-The only way these forms can yield a value other than
-.code nil
-is if the
-.code return
-operator is used to terminate the implicit anonymous block,
-and is given an argument, which becomes the result value.
-
-.coNP Macro @ whilet
-.synb
-.mets (whilet ({ sym | >> ( sym << init-form )}+)
-.mets \ \  < body-form *)
-.syne
-.desc
-The
-.code whilet
-macro provides a construct which combines iteration with variable
-binding.
-
-The evaluation of the form takes place as follows. First, fresh bindings are
-established for
-.metn sym -s
-as if by the
-.code let*
-operator.
-It is an error for the list of variable bindings to be empty.
-
-After the establishment of the bindings, the the value of the
-.meta sym
-is tested. If the value is
-.codn nil ,
-then
-.code whilet
-terminates. Otherwise,
-.metn body-form -s
-are evaluated in the scope of the variable bindings, and then
-.code whilet
-iterates from the beginning, again establishing fresh bindings for the
-.metn sym -s,
-and testing the value of the last
-.metn sym .
-
-
-All evaluation takes place in an anonymous block, which can be
-terminated with the
-.code return
-operator. Doing so terminates the loop.
-If the
-.code whilet
-loop is thus terminated by an explicit
-.codn return ,
-a return value can be specified. Under normal termination, the return value is
-.codn nil .
-
-.TP* Examples:
-.cblk
-  ;; read lines of text from *std-input* and print them,
-  ;; until the end-of-stream condition:
-
-  (whilet ((line (get-line)))
-    (put-line line))
-
-  ;; read lines of text from *std-input* and print them,
-  ;; until the end-of-stream condition occurs or
-  ;; a line is identical to the character string "end".
-
-  (whilet ((line (get-line))
-           (more (and line (not (equal line "end")))))
-    (put-line line))
-.cble
-
 .coNP Operator/function @ if
 .synb
 .mets (if < cond < t-form <> [ e-form ])
@@ -10262,6 +10123,144 @@ returns the value of the first argument which isn't
   (or 1 2) -> 1
   (or nil 2) -> 2
   (or (> 10 20) (stringp "foo")) -> t
+.cble
+
+.coNP Macros @ when and @ unless
+.synb
+.mets (when < expression << form *)
+.mets (unless < expression << form *)
+.syne
+.desc
+The when macro operator evaluates
+.metn expression .
+If
+.meta expression
+yields
+true, and there are additional forms, then each
+.meta form
+is evaluated.
+The value of the last form is becomes the result value of the when form.
+If there are no forms, then the result is
+.codn nil .
+
+The
+.code unless
+operator is similar to when, except that it reverses the
+logic of the test. The forms, if any, are evaluated if, and only if
+.meta expression
+is false.
+
+.coNP Macros @ while and @ until
+.synb
+.mets (while < expression << form *)
+.mets (until < expression << form *)
+.syne
+.desc
+The
+.code while
+macro operator provides a looping construct.  It evaluates
+.metn expression .
+If
+.meta expression
+yields
+.codn nil ,
+then the evaluation of the
+.code while
+form
+terminates, producing the value
+.codn nil .
+Otherwise, if there are additional forms,
+then each
+.meta form
+is evaluated.  Next, evaluation returns to
+.metn expression ,
+repeating all of the previous steps.
+
+The
+.code until
+macro operator is similar to while, except that the until form
+terminates when
+.meta expression
+evaluates true, rather than false.
+
+These operators arrange for the evaluation of all their enclosed forms
+in an anonymous block. Any of the
+.metn form s,
+or
+.metn expression ,
+may use
+the
+.code return
+operator to terminate the loop, and optionally to specify
+a result value for the form.
+
+The only way these forms can yield a value other than
+.code nil
+is if the
+.code return
+operator is used to terminate the implicit anonymous block,
+and is given an argument, which becomes the result value.
+
+.coNP Macro @ whilet
+.synb
+.mets (whilet ({ sym | >> ( sym << init-form )}+)
+.mets \ \  < body-form *)
+.syne
+.desc
+The
+.code whilet
+macro provides a construct which combines iteration with variable
+binding.
+
+The evaluation of the form takes place as follows. First, fresh bindings are
+established for
+.metn sym -s
+as if by the
+.code let*
+operator.
+It is an error for the list of variable bindings to be empty.
+
+After the establishment of the bindings, the the value of the
+.meta sym
+is tested. If the value is
+.codn nil ,
+then
+.code whilet
+terminates. Otherwise,
+.metn body-form -s
+are evaluated in the scope of the variable bindings, and then
+.code whilet
+iterates from the beginning, again establishing fresh bindings for the
+.metn sym -s,
+and testing the value of the last
+.metn sym .
+
+All evaluation takes place in an anonymous block, which can be
+terminated with the
+.code return
+operator. Doing so terminates the loop.
+If the
+.code whilet
+loop is thus terminated by an explicit
+.codn return ,
+a return value can be specified. Under normal termination, the return value is
+.codn nil .
+
+.TP* Examples:
+.cblk
+  ;; read lines of text from *std-input* and print them,
+  ;; until the end-of-stream condition:
+
+  (whilet ((line (get-line)))
+    (put-line line))
+
+  ;; read lines of text from *std-input* and print them,
+  ;; until the end-of-stream condition occurs or
+  ;; a line is identical to the character string "end".
+
+  (whilet ((line (get-line))
+           (more (and line (not (equal line "end")))))
+    (put-line line))
 .cble
 
 .coNP Operator @ unwind-protect
