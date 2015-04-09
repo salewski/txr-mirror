@@ -384,6 +384,78 @@ static val readlink_wrap(val path)
 
 #endif
 
+#if HAVE_SYS_WAIT
+static val fork_wrap(void)
+{
+  pid_t pid = fork();
+
+  if (pid < 0)
+    return nil;
+  return num(pid);
+}
+
+static val wait_wrap(val pid, val flags)
+{
+  cnum p = c_num(default_arg(pid, negone));
+  cnum f = c_num(default_arg(flags, zero));
+  int status = 0, result = waitpid(p, &status, f);
+  return if2(result >= 0, cons(num(result), num(status)));
+}
+
+static val wifexited(val status)
+{
+  int s = c_num(if3(consp(status), cdr(status), status));
+  return c_true(WIFEXITED(s));
+}
+
+static val wexitstatus(val status)
+{
+  int s = c_num(if3(consp(status), cdr(status), status));
+  return num(WEXITSTATUS(s));
+}
+
+static val wifsignaled(val status)
+{
+  int s = c_num(if3(consp(status), cdr(status), status));
+  return c_true(WIFSIGNALED(s));
+}
+
+static val wtermsig(val status)
+{
+  int s = c_num(if3(consp(status), cdr(status), status));
+  return num(WTERMSIG(s));
+}
+
+#ifdef WCOREDUMP
+static val wcoredump(val status)
+{
+  int s = c_num(if3(consp(status), cdr(status), status));
+  return c_true(WCOREDUMP(s));
+}
+#endif
+
+static val wifstopped(val status)
+{
+  int s = c_num(if3(consp(status), cdr(status), status));
+  return c_true(WIFSTOPPED(s));
+}
+
+static val wstopsig(val status)
+{
+  int s = c_num(if3(consp(status), cdr(status), status));
+  return num(WSTOPSIG(s));
+}
+
+#ifdef WIFCONTINUED
+static val wifcontinued(val status)
+{
+  int s = c_num(if3(consp(status), cdr(status), status));
+  return c_true(WIFCONTINUED(s));
+}
+#endif
+
+#endif
+
 #if HAVE_SYS_STAT
 static int w_stat(const wchar_t *wpath, struct stat *buf)
 {
@@ -553,5 +625,31 @@ void sysif_init(void)
   reg_var(intern(lit("s-iroth"), user_package), num_fast(S_IROTH));
   reg_var(intern(lit("s-iwoth"), user_package), num_fast(S_IWOTH));
   reg_var(intern(lit("s-ixoth"), user_package), num_fast(S_IXOTH));
+#endif
+
+#if HAVE_SYS_WAIT
+  reg_fun(intern(lit("fork"), user_package), func_n0(fork_wrap));
+  reg_fun(intern(lit("wait"), user_package), func_n2o(wait_wrap, 0));
+  reg_fun(intern(lit("w-ifexited"), user_package), func_n1(wifexited));
+  reg_fun(intern(lit("w-exitstatus"), user_package), func_n1(wexitstatus));
+  reg_fun(intern(lit("w-ifsignaled"), user_package), func_n1(wifsignaled));
+  reg_fun(intern(lit("w-termsig"), user_package), func_n1(wtermsig));
+#ifdef WCOREDUMP
+  reg_fun(intern(lit("w-coredump"), user_package), func_n1(wcoredump));
+#endif
+  reg_fun(intern(lit("w-ifstopped"), user_package), func_n1(wifstopped));
+  reg_fun(intern(lit("w-stopsig"), user_package), func_n1(wstopsig));
+#ifdef WIFCONTINUED
+  reg_fun(intern(lit("w-ifcontinued"), user_package), func_n1(wifcontinued));
+#endif
+#ifdef WNOHANG
+  reg_var(intern(lit("w-nohang"), user_package), num_fast(WNOHANG));
+#endif
+#ifdef WUNTRACED
+  reg_var(intern(lit("w-untraced"), user_package), num_fast(WUNTRACED));
+#endif
+#ifdef WCONTINUED
+  reg_var(intern(lit("w-continued"), user_package), num_fast(WCONTINUED));
+#endif
 #endif
 }

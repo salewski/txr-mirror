@@ -1,3 +1,19 @@
+2015-04-09  Kaz Kylheku  <kaz@kylheku.com>
+
+	Fork and wait support.
+
+	* sysif.c (work_wrap, wait_wrap, wifexited, wexitstatus,
+	wifsignaled, wtermsig, wcoredump, wifstopped, wstopsig,
+	wifcontinued): New static functions.
+	(sysif_init): Register new intrinsics: functions fork, wait,
+	w-ifexited, w-exitstatus, w-ifsignaled, w-termsig,
+	w-coredump, w-ifstopped, w-stopsig, w-ifcontinued; and
+	variables w-nohang, w-untraced, w-continued.
+
+	* txr.1: Documented.
+
+	* tl.vim, txr.vim: Regenerated.
+
 2015-04-06  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (iflet_s, when_s): New global variables.

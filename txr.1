@@ -24684,6 +24684,138 @@ If the
 argument is omitted, it defaults to the same value as
 .codn sig-term .
 
+.SS* Unix Processes
+
+.coNP Functions @ fork and @ wait
+.synb
+.mets (fork)
+.mets (wait >> [ pid <> [ flags ]])
+.syne
+.desc
+The
+.code fork
+and
+.code wait
+functions are interfaces to the Unix functions
+.code fork
+and
+.codn waitpid .
+
+The
+.code fork
+function creates a child process which is a replica of the parent. Both
+processes return from the function. In the child process, the return value is
+zero. In the parent, it is an integer representing the process ID of the child.
+If the function fails to create a child, it returns
+.code nil
+rather than an integer. In this case, the
+.code errno
+function can be used to inquire about the cause.
+
+The
+.code wait
+function, if successful, returns a cons cell consisting of a pair of integers.
+The
+.code car
+of the cons is the process ID of the process or group which was successfully
+waited on, and the
+.code cdr
+is the status. If
+.code wait
+fails, it returns
+.codn nil .
+The
+.code errno
+function can be used to inquire about the cause.
+
+The
+.meta process-id
+argument, if not supplied, defaults to -1, which means that
+.code wait
+waits for any process, rather than a specific process. Certain other
+values have special meaning, as documented in the POSIX standard
+for the
+.code waitpid
+function.
+
+The
+.meta flags
+argument defaults to zero. If it is specified as nonzero, it should be
+a bitwise combination (via the
+.code logior
+function) of the constants
+.codn w-nohang ,
+.codn w-untraced
+and
+.codn w-continued .
+If
+.code w-nohang
+is used, then
+.code wait
+returns a cons cell whose
+.code car
+specifies a process ID value of zero in the situation that at least
+one of the processes designated by
+.code process-id
+exist and are children of the calling process, but have not changed state.
+In this case, the status value in the
+.code cdr
+is unspecified.
+
+Status values may be inspected with the functions
+.codn w-ifexited ,
+.codn w-exitstatus ,
+.codn w-ifsignaled ,
+.codn w-termsig ,
+.codn w-coredump ,
+.codn w-ifstopped ,
+.code w-stopsig
+and
+.codn w-ifcontinued .
+
+.coNP Functions @, w-ifexited @, w-exitstatus @, w-ifsignaled @, w-termsig @, w-coredump @ w-ifstopped and @ w-stopsig
+.synb
+.mets (w-ifexited << status )
+.mets (w-exitstatus << status )
+.mets (w-ifsignaled << status )
+.mets (w-termsig << status )
+.mets (w-coredump << status )
+.mets (w-ifstopped << status )
+.mets (w-stopsig << status )
+.mets (w-ifcontinued << status )
+.syne
+.desc
+These functions analyze process exit values produced by the
+.code wait
+function.
+
+They are closely based on the
+POSIX macros
+.codn WIFEXITED ,
+.code WEXITSTATUS ,
+and so on.
+
+The
+.meta status
+value is either an integer, or a cons cell. In this case, the cons
+cell is expected to have an integer in its
+.code cdr
+which is used as the status.
+
+The
+.codn w-ifexited ,
+.codn w-ifsignaled ,
+.codn w-coredump ,
+.code w-ifstopped
+and
+.code w-ifcontinued
+functions have Lisp boolean return semantics, unlike their C language
+counterparts: they return
+.code t
+or
+.codn nil ,
+rather than zero or nonzero. The others return integer values.
+
 .SS* Unix Itimers
 Itimers ("interval timers") can be used in combination with signal handling to
 execute asynchronous actions. Itimers deliver delayed, one-time signals,
