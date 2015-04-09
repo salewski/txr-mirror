@@ -623,7 +623,7 @@ is used at least once. If the evaluation of every
 .meta expression
 evaluated this way terminates normally, and there is no
 .meta query-file
-argument, then \(TX terminates with a successful status.
+argument, then \*(TX terminates with a successful status.
 
 .meIP -p < expression
 Just like
@@ -11894,7 +11894,7 @@ and
 .codn flet ,
 the local functions that are defined are
 lexically visible to the main
-.metn xbody-form .
+.metn body-form -s.
 
 Note that
 .code labels
@@ -15690,8 +15690,8 @@ stands for Generate Until Null.
 
 .coNP Functions @ range and @ range*
 .synb
-.mets (range <> [[[ from ] << to ] << step ])
-.mets (range* <> [[[ from ] << to ] << step ])
+.mets (range >> [ from >> [ to <> [ step ]]])
+.mets (range* >> [ from >> [ to <> [ step ]]])
 .syne
 .desc
 The
@@ -23481,7 +23481,7 @@ A failure results in an exception of type
 .coNP Functions @ open-command and @ open-process
 .synb
 .mets (open-command < system-command <> [ mode-string ])
-.mets (open-process < program < mode-string <> [ argument-string *])
+.mets (open-process < program < mode-string <> [ argument-list ])
 .syne
 .desc
 These functions spawn external programs which execute concurrently
@@ -23532,7 +23532,7 @@ argument follows the convention used by the POSIX
 function.
 
 The
-.meta argument-strings
+.meta argument-list
 argument is a list of strings which specifies additional
 optional arguments to be passed passed to the program. The
 .meta program
