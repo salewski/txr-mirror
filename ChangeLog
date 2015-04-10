@@ -1,3 +1,8 @@
+2015-04-10  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): There is an until_s global variable, so
+	no need to intern the symbol when registering me_until.
+
 2015-04-09  Kaz Kylheku  <kaz@kylheku.com>
 
 	Fork and wait support.

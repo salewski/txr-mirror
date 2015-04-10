@@ -3935,7 +3935,7 @@ void eval_init(void)
   reg_mac(when_s, me_when);
   reg_mac(intern(lit("unless"), user_package), me_unless);
   reg_mac(while_s, me_while);
-  reg_mac(intern(lit("until"), user_package), me_until);
+  reg_mac(until_s, me_until);
   reg_mac(quasilist_s, me_quasilist);
   reg_mac(flet_s, me_flet_labels);
   reg_mac(labels_s, me_flet_labels);
