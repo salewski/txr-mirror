@@ -551,7 +551,7 @@ static int_ptr_t sweep(void)
     int i;
     int limit = freshobj_idx;
 
-    freshobj_idx = 0; /* sweep_one can put NOPROMOTE objects into freshobj */
+    freshobj_idx = 0; /* sweep_one rebuilds freshobj array */
 
     /* No need to mark block defined via Valgrind API; everything
        in the freshobj is an allocated node! */
