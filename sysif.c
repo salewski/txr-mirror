@@ -384,7 +384,7 @@ static val readlink_wrap(val path)
 
 #endif
 
-#if HAVE_SYS_WAIT
+#if HAVE_FORK_STUFF
 static val fork_wrap(void)
 {
   pid_t pid = fork();
@@ -634,7 +634,7 @@ void sysif_init(void)
   reg_var(intern(lit("s-ixoth"), user_package), num_fast(S_IXOTH));
 #endif
 
-#if HAVE_SYS_WAIT
+#if HAVE_FORK_STUFF
   reg_fun(intern(lit("fork"), user_package), func_n0(fork_wrap));
   reg_fun(intern(lit("wait"), user_package), func_n2o(wait_wrap, 0));
   reg_fun(intern(lit("w-ifexited"), user_package), func_n1(wifexited));

@@ -1,5 +1,9 @@
 2015-04-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	* sysif.c: Use HAVE_FORK_STUFF to wrap fork, waitpid and dup/dup2.
+
+2015-04-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	Exposing dup and dup2.
 
 	* sysif.c (dup_wrap): New static function.
