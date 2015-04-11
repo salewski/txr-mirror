@@ -117,6 +117,7 @@ val get_string(val stream, val nchars, val close_after_p);
 val statf(val path);
 val open_directory(val path);
 val open_file(val path, val mode_str);
+val open_fileno(val fd, val mode_str);
 val open_tail(val path, val mode_str, val seek_end_p);
 val open_command(val path, val mode_str);
 val open_process(val path, val mode_str, val args);

@@ -1,5 +1,23 @@
 2015-04-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	Functions open-fileno and fileno.
+
+	* stream.c (fd_k): New keyword variable.
+	(stdio_get_prop): Handle the :fd property by returning
+	the file descriptor.
+	(open_fileno): New function.
+	(stream_init): Initialize fd_k, and register fileno and open-fileno.
+
+	* stream.h (open_fileno): Declared.
+
+	* txr.1: Documented open-fileno and fileno.
+
+	* utf8.c (w_fdopen): New function.
+
+	* utf8.h (w_fdopen): Declared.
+
+2015-04-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	* gc.c (sweep): Fix comment referring to nonexistent identifier.
 
 2015-04-10  Kaz Kylheku  <kaz@kylheku.com>

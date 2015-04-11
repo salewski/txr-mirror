@@ -24816,6 +24816,42 @@ or
 .codn nil ,
 rather than zero or nonzero. The others return integer values.
 
+.SS* Unix File Descriptors
+
+.coNP Function @ open-fileno
+.synb
+.mets (open-fileno < file-descriptor <> [ mode-string ])
+.syne
+The
+.code open-fileno
+function creates a \*(TX stream over a file descriptor. The
+.meta file-descriptor
+argument must be an integer denoting a valid file descriptor.
+
+For a description of
+.metn mode-string ,
+see the
+.code open-file
+function.
+
+.coNP Function @ fileno
+.synb
+.mets (fileno << stream )
+.syne
+.desc
+The
+.code fileno
+function returns the underlying file descriptor of
+.metn stream ,
+if it has one. Otherwise, it returns
+.codn nil.
+
+This is equivalent to querying the stream using
+.code stream-get-prop
+for the
+.code :fd
+property.
+
 .SS* Unix Itimers
 Itimers ("interval timers") can be used in combination with signal handling to
 execute asynchronous actions. Itimers deliver delayed, one-time signals,

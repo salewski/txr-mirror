@@ -64,7 +64,7 @@ val dev_k, ino_k, mode_k, nlink_k, uid_k;
 val gid_k, rdev_k, size_k, blksize_k, blocks_k;
 val atime_k, mtime_k, ctime_k;
 val from_start_k, from_current_k, from_end_k;
-val real_time_k, name_k;
+val real_time_k, name_k, fd_k;
 val format_s;
 
 static void common_destroy(val obj)
@@ -291,6 +291,8 @@ static val stdio_get_prop(val stream, val ind)
     return h->is_real_time ? t : nil;
   } else if (ind == name_k) {
     return h->descr;
+  } else if (ind == fd_k) {
+    return h->f ? num(fileno(h->f)) : nil;
   }
   return nil;
 }
@@ -2310,6 +2312,20 @@ val open_file(val path, val mode_str)
   return set_mode_props(m, make_stdio_stream(f, path));
 }
 
+val open_fileno(val fd, val mode_str)
+{
+  struct stdio_mode m;
+  FILE *f = w_fdopen(c_num(fd), c_str(normalize_mode(&m, mode_str)));
+
+  if (!f)
+    uw_throwf(file_error_s, lit("error opening descriptor ~a: ~a/~s"),
+              fd, num(errno), string_utf8(strerror(errno)), nao);
+
+  return set_mode_props(m, make_stdio_stream(f, format(nil,
+                                                       lit("fd ~a"),
+                                                       fd, nao)));
+}
+
 val open_tail(val path, val mode_str, val seek_end_p)
 {
   struct stdio_mode m;
@@ -2821,6 +2837,7 @@ void stream_init(void)
   from_end_k = intern(lit("from-end"), keyword_package);
   real_time_k = intern(lit("real-time"), keyword_package);
   name_k = intern(lit("name"), keyword_package);
+  fd_k = intern(lit("fd"), keyword_package);
   format_s = intern(lit("format"), user_package);
 
   reg_var(stdin_s = intern(lit("*stdin*"), user_package),
@@ -2868,10 +2885,12 @@ void stream_init(void)
   reg_fun(intern(lit("real-time-stream-p"), user_package), func_n1(real_time_stream_p));
   reg_fun(intern(lit("stream-set-prop"), user_package), func_n3(stream_set_prop));
   reg_fun(intern(lit("stream-get-prop"), user_package), func_n2(stream_get_prop));
+  reg_fun(intern(lit("fileno"), user_package), curry_12_1(func_n2(stream_get_prop), fd_k));
   reg_fun(intern(lit("make-catenated-stream"), user_package), func_n0v(make_catenated_stream));
   reg_fun(intern(lit("cat-streams"), user_package), func_n1(make_catenated_stream));
   reg_fun(intern(lit("open-directory"), user_package), func_n1(open_directory));
   reg_fun(intern(lit("open-file"), user_package), func_n2o(open_file, 1));
+  reg_fun(intern(lit("open-fileno"), user_package), func_n2o(open_fileno, 1));
   reg_fun(intern(lit("open-tail"), user_package), func_n3o(open_tail, 1));
   reg_fun(intern(lit("open-command"), user_package), func_n2o(open_command, 1));
   reg_fun(intern(lit("open-pipe"), user_package), func_n2(open_command));

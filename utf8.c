@@ -387,6 +387,14 @@ FILE *w_freopen(const wchar_t *wname, const wchar_t *wmode, FILE *fold)
   return f;
 }
 
+FILE *w_fdopen(int fd, const wchar_t *wmode)
+{
+  char *mode = utf8_dup_to(wmode);
+  FILE *f = fdopen(fd, mode);
+  free(mode);
+  return f;
+}
+
 int w_remove(const wchar_t *wpath)
 {
   char *path = utf8_dup_to(wpath);
