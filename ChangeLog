@@ -1,3 +1,15 @@
+2015-04-11  Kaz Kylheku  <kaz@kylheku.com>
+
+	Exposing dup and dup2.
+
+	* sysif.c (dup_wrap): New static function.
+	(sysif_init): Register dup_wrap as dupfd. The name dup
+	conflicts with an existing function.
+
+	* txr.1: Documented dupfd.
+
+	* txr.vim, tl.vim: Regenerated.
+
 2015-04-10  Kaz Kylheku  <kaz@kylheku.com>
 
 	Functions open-fileno and fileno.

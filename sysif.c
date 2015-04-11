@@ -454,6 +454,13 @@ static val wifcontinued(val status)
 }
 #endif
 
+static val dup_wrap(val old, val new)
+{
+  if (missingp(new))
+    return num(dup(c_num(old)));
+  return num(dup2(c_num(old), c_num(new)));
+}
+
 #endif
 
 #if HAVE_SYS_STAT
@@ -651,5 +658,6 @@ void sysif_init(void)
 #ifdef WCONTINUED
   reg_var(intern(lit("w-continued"), user_package), num_fast(WCONTINUED));
 #endif
+  reg_fun(intern(lit("dupfd"), user_package), func_n2o(dup_wrap, 1));
 #endif
 }

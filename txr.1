@@ -24852,6 +24852,19 @@ for the
 .code :fd
 property.
 
+.coNP Function @ dupfd
+.synb
+.mets (dupfd < old-fileno <> [ new-fileno ])
+.syne
+.desc
+The
+.code dupfd
+function provides an interface to the POSIX functions
+.code dup
+or
+.codn dup2 ,
+when called with one or two arguments, respectively.
+
 .SS* Unix Itimers
 Itimers ("interval timers") can be used in combination with signal handling to
 execute asynchronous actions. Itimers deliver delayed, one-time signals,
