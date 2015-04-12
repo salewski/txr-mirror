@@ -15916,6 +15916,16 @@ This requirement is not applicable when
 .meta seq
 is a hash table.
 
+.TP* Example:
+.cblk
+   ;; powerset function, in terms of comb.
+   ;; Yields a lazy list of all subsets of s,
+   ;; expressed as sequences of the same type as s.
+
+   (defun powerset (s)
+     (mappend* (op comb s) (range 0 (length s))))
+.cble
+
 .coNP Function @ rcomb
 .synb
 .mets (rcomb < seq << len )
