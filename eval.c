@@ -74,7 +74,7 @@ val eq_s, eql_s, equal_s;
 val inc_s, dec_s, push_s, pop_s, flip_s, zap_s, gethash_s, car_s, cdr_s, not_s;
 val del_s, vecref_s;
 val for_s, for_star_s, each_s, each_star_s, collect_each_s, collect_each_star_s;
-val append_each_s, append_each_star_s, while_s;
+val append_each_s, append_each_star_s, while_s, while_star_s, until_star_s;
 val dohash_s;
 val uw_protect_s, return_s, return_from_s;
 val list_s, append_s, apply_s, iapply_s;
@@ -2204,6 +2204,16 @@ static val me_while(val form, val menv)
                               rest(rest(form)), nao));
 }
 
+static val me_while_star(val form, val menv)
+{
+  val once = gensym(lit("once-"));
+  (void) menv;
+  return apply_frob_args(list(for_s, cons(list(once, t, nao), nil),
+                              list(or_s, once, second(form), nao),
+                              cons(list(zap_s, once, nao), nil),
+                              rest(rest(form)), nao));
+}
+
 static val me_until(val form, val menv)
 {
   val inv = cons(not_s, cons(second(form), nil));
@@ -2211,6 +2221,18 @@ static val me_until(val form, val menv)
   return apply_frob_args(list(for_s, nil, cons(inv, nil), nil,
                               rest(rest(form)), nao));
 }
+
+static val me_until_star(val form, val menv)
+{
+  val once = gensym(lit("once-"));
+  val inv = cons(not_s, cons(second(form), nil));
+  (void) menv;
+  return apply_frob_args(list(for_s, cons(list(once, t, nao), nil),
+                              list(or_s, once, inv, nao),
+                              cons(list(zap_s, once, nao), nil),
+                              rest(rest(form)), nao));
+}
+
 
 static val me_quasilist(val form, val menv)
 {
@@ -3823,6 +3845,8 @@ void eval_init(void)
   append_each_star_s = intern(lit("append-each*"), user_package);
   dohash_s = intern(lit("dohash"), user_package);
   while_s = intern(lit("while"), user_package);
+  while_star_s = intern(lit("while*"), user_package);
+  until_star_s = intern(lit("until*"), user_package);
   uw_protect_s = intern(lit("unwind-protect"), user_package);
   return_s = intern(lit("return"), user_package);
   return_from_s = intern(lit("return-from"), user_package);
@@ -3935,7 +3959,9 @@ void eval_init(void)
   reg_mac(when_s, me_when);
   reg_mac(intern(lit("unless"), user_package), me_unless);
   reg_mac(while_s, me_while);
+  reg_mac(while_star_s, me_while_star);
   reg_mac(until_s, me_until);
+  reg_mac(until_star_s, me_until_star);
   reg_mac(quasilist_s, me_quasilist);
   reg_mac(flet_s, me_flet_labels);
   reg_mac(labels_s, me_flet_labels);

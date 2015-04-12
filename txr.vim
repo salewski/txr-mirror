@@ -189,16 +189,16 @@ syn keyword txl_keyword contained trim-str true trunc trunc-rem
 syn keyword txl_keyword contained tuples txr-case txr-if txr-when
 syn keyword txl_keyword contained typeof unget-byte unget-char uniq
 syn keyword txl_keyword contained unique unless unquote until
-syn keyword txl_keyword contained upcase-str update url-decode url-encode
-syn keyword txl_keyword contained usleep uw-protect vec vec-push
-syn keyword txl_keyword contained vec-set-length vecref vector vector-list
-syn keyword txl_keyword contained vectorp w-continued w-coredump w-exitstatus
-syn keyword txl_keyword contained w-ifcontinued w-ifexited w-ifsignaled w-ifstopped
-syn keyword txl_keyword contained w-nohang w-stopsig w-termsig w-untraced
-syn keyword txl_keyword contained wait weave when whenlet
-syn keyword txl_keyword contained where while whilet width
-syn keyword txl_keyword contained with-saved-vars wrap wrap* zap
-syn keyword txl_keyword contained zerop zip
+syn keyword txl_keyword contained until* upcase-str update url-decode
+syn keyword txl_keyword contained url-encode usleep uw-protect vec
+syn keyword txl_keyword contained vec-push vec-set-length vecref vector
+syn keyword txl_keyword contained vector-list vectorp w-continued w-coredump
+syn keyword txl_keyword contained w-exitstatus w-ifcontinued w-ifexited w-ifsignaled
+syn keyword txl_keyword contained w-ifstopped w-nohang w-stopsig w-termsig
+syn keyword txl_keyword contained w-untraced wait weave when
+syn keyword txl_keyword contained whenlet where while while*
+syn keyword txl_keyword contained whilet width with-saved-vars wrap
+syn keyword txl_keyword contained wrap* zap zerop zip
 
 syn keyword txr_keyword contained accept all and assert
 syn keyword txr_keyword contained bind block cases cat

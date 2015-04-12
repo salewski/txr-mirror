@@ -1,5 +1,18 @@
 2015-04-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	Implementing while* and until* loops.
+
+	* eval.c (while_star_s, until_star_s): New symbol variables.
+	(me_while_star, me_until_star): New static functions.
+	(eval_init): Initialize new variables. Register while* and
+	until* macros.
+
+	* txr.1: Documented while* and until*.
+
+	* txr.vim, tl.vim: Regenerated.
+
+2015-04-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* sysif.c: Use HAVE_FORK_STUFF to wrap fork, waitpid and dup/dup2.
 
 2015-04-11  Kaz Kylheku  <kaz@kylheku.com>

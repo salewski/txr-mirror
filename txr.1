@@ -10201,6 +10201,36 @@ is if the
 operator is used to terminate the implicit anonymous block,
 and is given an argument, which becomes the result value.
 
+.coNP Macros @ while* and @ until*
+.synb
+.mets (while* < expression << form *)
+.mets (until* < expression << form *)
+.syne
+.desc
+The
+.code while*
+and
+.code until*
+macros are similar, respectively, to the macros
+.code while
+and
+.codn until .
+
+They differ in one respect: they begin by evaluating the
+.metn form -s
+one time unconditionally, without first evaluating
+.metn expression .
+After this evaluation, the subsequent behavior is
+like that of
+.code while
+or
+.codn until .
+
+Another way to regard the behavior is that that these forms execute
+one iteration unconditionally, without evaluating the termination test prior to
+the first iteration. Yet another view is that these constructs relocate the
+test from the "top of the loop" to the "bottom of the loop".
+
 .coNP Macro @ whilet
 .synb
 .mets (whilet ({ sym | >> ( sym << init-form )}+)
