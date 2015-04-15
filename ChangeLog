@@ -1,3 +1,14 @@
+2015-04-15  Kaz Kylheku  <kaz@kylheku.com>
+
+	Allow quasiquotes in braces and quasiliterals, and quotes in braces.
+
+	* parser.l: Consolidate rules for recognizing quote, unquote, and
+	quasiquote. An effect of this is that quasiquotes can now occur in
+	braces and in string quasiliterals.
+
+	* parser.y (quasi_item): Support quotes and quasiquotes as quasi items:
+	that is to say, i.e. objects denoted by @ in a quasiliteral.
+
 2015-04-14  Kaz Kylheku  <kaz@kylheku.com>
 
 	Diagnose trailing junk in numeric literals.

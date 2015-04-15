@@ -949,6 +949,8 @@ quasi_item : litchars           { $$ = lit_char_helper($1); }
            | METANUM            { $$ = cons(var_s, cons($1, nil));
                                   rl($$, num(parser->lineno)); }
            | list               { $$ = rlcp(cons(expr_s, $1), $1); }
+           | '\'' n_expr        { $$ = rlcp(cons(expr_s, list(quote_s, $2, nao)), $2); }
+           | '^' n_expr         { $$ = rlcp(cons(expr_s, list(sys_qquote_s, $2, nao)), $2); }
            | ',' n_expr         { $$ = rlcp(cons(expr_s, list(sys_unquote_s, $2, nao)), $2); }
            | SPLICE n_expr      { $$ = rlcp(cons(expr_s, list(sys_splice_s, $2, nao)), $2); }
            ;
