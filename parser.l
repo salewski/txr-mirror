@@ -225,39 +225,44 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return NUMBER;
 }
 
-<SPECIAL,QSPECIAL,NESTED,BRACED>{XNUM} {
+<SPECIAL,QSPECIAL,NESTED,BRACED>({XNUM}|{ONUM}|{BNUM}) {
   val str = string_own(utf8_dup_from(yytext + 2));
+  int base;
+
+  switch (yytext[1]) {
+  case 'x': base = 16; break;
+  case 'o': base = 8; break;
+  case 'b': default: base = 2; break;
+  }
 
   if (yy_top_state(yyscanner) == INITIAL
       || yy_top_state(yyscanner) == QSILIT
       || yy_top_state(yyscanner) == QWLIT)
     yy_pop_state(yyscanner);
 
-  yylval->val = int_str(str, num(16));
+  yylval->val = int_str(str, num_fast(base));
   return NUMBER;
 }
 
-<SPECIAL,QSPECIAL,NESTED,BRACED>{ONUM} {
+<SPECIAL,QSPECIAL,NESTED,BRACED>({BNUM}|{ONUM}|{XNUM}){TOK} {
+  int base = 0;
   val str = string_own(utf8_dup_from(yytext + 2));
+
+  switch (yytext[1]) {
+  case 'x': base = 16; break;
+  case 'o': base = 8; break;
+  case 'b': default: base = 2; break;
+  }
+
+  yyerrorf(yyg, lit("trailing junk in numeric literal: ~a~a~a"),
+           chr(yytext[0]), chr(yytext[1]), str, nao);
 
   if (yy_top_state(yyscanner) == INITIAL
       || yy_top_state(yyscanner) == QSILIT
       || yy_top_state(yyscanner) == QWLIT)
     yy_pop_state(yyscanner);
 
-  yylval->val = int_str(str, num(8));
-  return NUMBER;
-}
-
-<SPECIAL,QSPECIAL,NESTED,BRACED>{BNUM} {
-  val str = string_own(utf8_dup_from(yytext + 2));
-
-  if (yy_top_state(yyscanner) == INITIAL
-      || yy_top_state(yyscanner) == QSILIT
-      || yy_top_state(yyscanner) == QWLIT)
-    yy_pop_state(yyscanner);
-
-  yylval->val = int_str(str, num(2));
+  yylval->val = int_str(str, num_fast(base));
   return NUMBER;
 }
 

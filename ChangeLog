@@ -1,3 +1,12 @@
+2015-04-14  Kaz Kylheku  <kaz@kylheku.com>
+
+	Diagnose trailing junk in numeric literals.
+
+	* parser.l: Combining the handling of hex, octal and binary numeric
+	literals into a single rule. Implementing an additional rule which
+	diagnoses such tokens that have trailing junk. Thus, something
+	like #x1F2AZ is now invalid syntax.
+
 2015-04-11  Kaz Kylheku  <kaz@kylheku.com>
 
 	Implementing while* and until* loops.
