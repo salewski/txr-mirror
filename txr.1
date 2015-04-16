@@ -23330,82 +23330,6 @@ is not present, then an exception of type
 is thrown.
 
 .SS* Filesystem Access
-.coNP Function @ stat
-.synb
-.mets (stat << path )
-.syne
-.desc
-The
-.code stat
-function inquires the filesystem about the existence of an object
-denoted by the string
-.metn path .
-If the object is not found or cannot be
-accessed, an exception is thrown.
-
-Otherwise, information is retrieved about the object. The information takes the
-form of a property list in which keyword symbols denote numerous properties.
-An example such property list is:
-
-.cblk
-  (:dev 2049 :ino 669944 :mode 16832 :nlink 23
-   :uid 500 :gid 500 :rdev 0
-   :size 12288 :blksize 4096 :blocks 24
-   :atime 1347933533 :mtime 1347933534 :ctime 1347933534)
-.cble
-
-These properties correspond to the similarly-named entries of the
-.code struct stat
-structure in POSIX. For instance, the
-.code :dev
-property has the same value as the
-.code st_dev
-field.
-
-.coNP Special variables @, s-ifmt @, s-iflnk @, s-ifreg @, s-ifblk ... , @ s-ixoth
-
-The following variables exist, having integer values. These are bitmasks
-which can be applied against the value given by the
-.code :mode
-property
-in the property list returned by the function stat:
-.codn s-ifmt ,
-.codn s-ifsock ,
-.codn s-iflnk ,
-.codn s-ifreg ,
-.codn s-ifblk ,
-.codn s-ifdir ,
-.codn s-ifchr ,
-.codn s-ififo ,
-.codn s-isuid ,
-.codn s-isgid ,
-.codn s-isvtx ,
-.codn s-irwxu ,
-.codn s-irusr ,
-.codn s-iwusr ,
-.codn s-ixusr ,
-.codn s-irwxg ,
-.codn s-irgrp ,
-.codn s-iwgrp ,
-.codn s-ixgrp ,
-.codn s-irwxo ,
-.codn s-iroth ,
-.code s-iwoth
-and
-.codn s-ixoth .
-
-These variables correspond to the C language constants from POSIX:
-.codn S_IFMT ,
-.codn S_IFLNK ,
-.code S_IFREG
-and so forth.
-
-The
-.code logtest
-function can be used to test these against values of mode.
-For example
-.code (logtest mode s-irgrp)
-tests for the group read permission.
 
 .coNP Function @ open-directory
 .synb
@@ -24386,34 +24310,119 @@ other than
 .codn ERANGE ,
 an exception will be thrown.
 
-.coNP Functions @ getpid and @ getppid
+.coNP Functions @ sh and @ run
 .synb
-  (getpid)
-  (getppid)
+.mets (sh << system-command )
+.mets (run < program <> [ argument-list ])
 .syne
 .desc
-These functions retrieve the current proces ID and the parent process ID
-respectively. They are wrappers for the POSIX functions
-.code getpid
-and
-.codn getppid .
+The
+.code sh
+function executes
+.meta system-command
+using the system command interpreter.
+The run function spawns a
+.metn program ,
+searching for it using the
+system PATH.  Using either method, the executed process receives environment
+variables from the parent.
 
-.coNP Function @ daemon
-.synb
-.mets (daemon < nochdir-p << noclose-p )
-.syne
-.desc
-This is a wrapper for the function
-.code daemon
-which originated in BSD Unix.
+\*(TX blocks until the process finishes executing. If the program terminates
+normally, then its integer exit status is returned. The value zero indicates
+successful termination.
 
-It returns
-.code t
-if successful,
+The return value
 .code nil
-otherwise, and the
+indicates an abnormal termination, or the inability
+to run the process at all.
+
+In the case of the
+.code run
+function, if the child process is created successfully
+but the program cannot be executed, then the exit status will be an
 .code errno
-variable is set in that case.
+value from the failed
+.code exec
+attempt.
+
+.SS* Unix Filesystem Manipulation
+
+.coNP Function @ stat
+.synb
+.mets (stat << path )
+.syne
+.desc
+The
+.code stat
+function inquires the filesystem about the existence of an object
+denoted by the string
+.metn path .
+If the object is not found or cannot be
+accessed, an exception is thrown.
+
+Otherwise, information is retrieved about the object. The information takes the
+form of a property list in which keyword symbols denote numerous properties.
+An example such property list is:
+
+.cblk
+  (:dev 2049 :ino 669944 :mode 16832 :nlink 23
+   :uid 500 :gid 500 :rdev 0
+   :size 12288 :blksize 4096 :blocks 24
+   :atime 1347933533 :mtime 1347933534 :ctime 1347933534)
+.cble
+
+These properties correspond to the similarly-named entries of the
+.code struct stat
+structure in POSIX. For instance, the
+.code :dev
+property has the same value as the
+.code st_dev
+field.
+
+.coNP Special variables @, s-ifmt @, s-iflnk @, s-ifreg @, s-ifblk ... , @ s-ixoth
+
+The following variables exist, having integer values. These are bitmasks
+which can be applied against the value given by the
+.code :mode
+property
+in the property list returned by the function stat:
+.codn s-ifmt ,
+.codn s-ifsock ,
+.codn s-iflnk ,
+.codn s-ifreg ,
+.codn s-ifblk ,
+.codn s-ifdir ,
+.codn s-ifchr ,
+.codn s-ififo ,
+.codn s-isuid ,
+.codn s-isgid ,
+.codn s-isvtx ,
+.codn s-irwxu ,
+.codn s-irusr ,
+.codn s-iwusr ,
+.codn s-ixusr ,
+.codn s-irwxg ,
+.codn s-irgrp ,
+.codn s-iwgrp ,
+.codn s-ixgrp ,
+.codn s-irwxo ,
+.codn s-iroth ,
+.code s-iwoth
+and
+.codn s-ixoth .
+
+These variables correspond to the C language constants from POSIX:
+.codn S_IFMT ,
+.codn S_IFLNK ,
+.code S_IFREG
+and so forth.
+
+The
+.code logtest
+function can be used to test these against values of mode.
+For example
+.code (logtest mode s-irgrp)
+tests for the group read permission.
 
 .coNP Functions @, makedev @ minor and @ major
 .synb
@@ -24540,41 +24549,6 @@ names a filesystem object which is a symbolic link, the
 function reads the contents of that symbolic link and returns it
 as a string.  Otherwise, it fails by throwing an exception of type
 .codn file-error .
-
-.coNP Functions @ sh and @ run
-.synb
-.mets (sh << system-command )
-.mets (run < program <> [ argument-list ])
-.syne
-.desc
-The
-.code sh
-function executes
-.meta system-command
-using the system command interpreter.
-The run function spawns a
-.metn program ,
-searching for it using the
-system PATH.  Using either method, the executed process receives environment
-variables from the parent.
-
-\*(TX blocks until the process finishes executing. If the program terminates
-normally, then its integer exit status is returned. The value zero indicates
-successful termination.
-
-The return value
-.code nil
-indicates an abnormal termination, or the inability
-to run the process at all.
-
-In the case of the
-.code run
-function, if the child process is created successfully
-but the program cannot be executed, then the exit status will be an
-.code errno
-value from the failed
-.code exec
-attempt.
 
 .SS* Unix Signal Handling
 
@@ -24896,6 +24870,35 @@ counterparts: they return
 or
 .codn nil ,
 rather than zero or nonzero. The others return integer values.
+
+.coNP Functions @ getpid and @ getppid
+.synb
+  (getpid)
+  (getppid)
+.syne
+.desc
+These functions retrieve the current proces ID and the parent process ID
+respectively. They are wrappers for the POSIX functions
+.code getpid
+and
+.codn getppid .
+
+.coNP Function @ daemon
+.synb
+.mets (daemon < nochdir-p << noclose-p )
+.syne
+.desc
+This is a wrapper for the function
+.code daemon
+which originated in BSD Unix.
+
+It returns
+.code t
+if successful,
+.code nil
+otherwise, and the
+.code errno
+variable is set in that case.
 
 .SS* Unix File Descriptors
 
