@@ -24459,6 +24459,46 @@ from a combined device number.
 
 .coNP Function @ mknod
 .synb
+.mets (chmod < path << mode )
+.syne
+.desc
+The
+.code chmod
+function changes the permissions of the filesystem objects
+specified by
+.metn path.
+It is a direct wrapper for the POSIX C library function of the same name.
+
+The permissions are specified by
+.metn mode ,
+an integer argument.
+
+The existing permissions may be obtained using the
+.code stat
+function.
+
+The function throws a
+.code file-error
+exception if an error occurs, otherwise it returns
+.codn t.
+
+.TP* Example:
+.cblk
+  ;; Set permissions of foo.txt to "rw-r--r--"
+  ;; (owner can read and write; group owner
+  ;; and other users can only read).
+
+  ;; numerically:
+  (chmod "foo.txt" #o644)
+
+  ;; symbolically:
+  (chmod "foo.txt" (logior s-irusr s-iwusr
+                           s-irgrp
+                           s-iroth))
+.cble
+
+.coNP Function @ mknod
+.synb
 .mets (mknod < path < mode <> [ dev ])
 .syne
 .desc

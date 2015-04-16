@@ -325,6 +325,22 @@ static val mknod_wrap(val path, val mode, val dev)
 
 #endif
 
+#if HAVE_CHMOD
+
+static val chmod_wrap(val path, val mode)
+{
+  char *u8path = utf8_dup_to(c_str(path));
+  int err = chmod(u8path, c_num(mode));
+  free(u8path);
+
+  if (err < 0)
+    uw_throwf(file_error_s, lit("chmod ~a ~a: ~a/~s"),
+              path, mode, num(errno), string_utf8(strerror(errno)), nao);
+  return t;
+}
+
+#endif
+
 #if HAVE_SYMLINK
 
 static val symlink_wrap(val target, val to)
@@ -546,6 +562,10 @@ void sysif_init(void)
 
 #if HAVE_MKNOD
   reg_fun(intern(lit("mknod"), user_package), func_n3(mknod_wrap));
+#endif
+
+#if HAVE_CHMOD
+  reg_fun(intern(lit("chmod"), user_package), func_n2(chmod_wrap));
 #endif
 
 #if HAVE_SYMLINK

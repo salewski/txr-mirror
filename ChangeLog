@@ -1,5 +1,18 @@
 2015-04-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	Adding chmod.
+
+	* configure: Detect chmod.
+
+	* sysif.c (chmod_wrap): New function.
+	(sysif_init): Register chmod intrinsic.
+
+	* txr.1: Documented.
+
+	* tl.vim, txr.vim: Regenerated.
+
+2015-04-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	Adding dotimes macro.
 
 	* eval.c (me_dotimes): New function.
