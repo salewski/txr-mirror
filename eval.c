@@ -2836,6 +2836,26 @@ static val me_iflet_whenlet(val form, val env)
                    cons(car(car(lastlet)), args)), nao);
 }
 
+static val me_dotimes(val form, val env)
+{
+  val count = gensym(lit("count-"));
+  val args = rest(form);
+  val spec = pop(&args);
+  val counter = pop(&spec);
+  val count_form = pop(&spec);
+  val result = pop(&spec);
+  val body = args;
+  val lt = intern(lit("<"), user_package);
+  val raw = list(for_s, list(list(counter, zero, nao),
+                             list(count, count_form, nao),
+                             nao),
+                 list(list(lt, counter, count, nao), result, nao),
+                 list(list(inc_s, counter, nao), nao),
+                 body, nao);
+
+  return apply_frob_args(raw);
+}
+
 static val expand_catch_clause(val form, val menv)
 {
   val sym = first(form);
@@ -3976,6 +3996,7 @@ void eval_init(void)
   reg_mac(intern(lit("whilet"), user_package), me_whilet);
   reg_mac(iflet_s, me_iflet_whenlet);
   reg_mac(intern(lit("whenlet"), user_package), me_iflet_whenlet);
+  reg_mac(intern(lit("dotimes"), user_package), me_dotimes);
 
   reg_fun(cons_s, func_n2(cons));
   reg_fun(intern(lit("make-lazy-cons"), user_package), func_n1(make_lazy_cons));

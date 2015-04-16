@@ -1,3 +1,12 @@
+2015-04-16  Kaz Kylheku  <kaz@kylheku.com>
+
+	Adding dotimes macro.
+
+	* eval.c (me_dotimes): New function.
+	(eval_init): Registering dotimes macro.
+
+	* txr.1: Documented dotimes.
+
 2015-04-15  Kaz Kylheku  <kaz@kylheku.com>
 
 	Fix escaping issues in open-process on Windows.

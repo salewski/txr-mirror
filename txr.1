@@ -10370,6 +10370,47 @@ is returned.
     (format t "frobosity value ~a exceeds 150\en" fv))
 .cble
 
+.coNP Macro @ dotimes
+.synb
+.mets (dotimes >> ( var < count-form <> [ result-form ]) << body-form *)
+.syne
+.desc
+The
+.code dotimes
+macro implements a simple counting loop.
+.meta var
+is established as a variable, and initialized to zero.
+.meta count-form
+is evaluated one time to produce a limiting value, which should be a number.
+Then, if the value of
+.meta var
+is less than the limiting value, the
+.metn body-form -s
+are evaluated,
+.meta var
+is incremented by one, and the process repeats with a new comparison
+of
+.meta var
+against the limiting value possibly leading to another evaluation of
+the forms.
+
+If
+.meta var
+is found to equal or exceed the limiting value, then the loop terminates.
+
+When the loop terminates, its return value is
+.code nil
+unless a
+.meta result-form
+is present, in which case the value of that form specifies the return value.
+
+.metn body-form -s
+as well as
+.meta result-form
+are evaluated in the scope in which the binding of
+.meta var
+is visible.
+
 .coNP Operator @ unwind-protect
 .synb
 .mets (unwind-protect < protected-form << cleanup-form *)
