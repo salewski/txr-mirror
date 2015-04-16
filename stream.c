@@ -2452,6 +2452,33 @@ val open_process(val name, val mode_str, val args)
 }
 #else
 
+static void string_extend_count(int count, val out, val tail)
+{
+  int i;
+  for (i = 0; i < count; i++)
+    string_extend(out, tail);
+}
+
+static val win_escape_cmd(val str)
+{
+  const wchar_t *s;
+  val out = string(L"");
+
+  for (s = c_str(str); *s; s++) {
+    switch (*s) {
+    case ' ': case '\t':
+      string_extend(out, lit("\""));
+      string_extend(out, chr(*s));
+      string_extend(out, lit("\""));
+      break;
+    default:
+      string_extend(out, chr(*s));
+    }
+  }
+
+  return out;
+}
+
 static val win_escape_arg(val str)
 {
   int bscount = 0, i;
@@ -2461,17 +2488,25 @@ static val win_escape_arg(val str)
   for (s = c_str(str); *s; s++) {
     switch (*s) {
     case '"':
-      for (i = 0; i < bscount; i++)
-        string_extend(out, lit("\\\\"));
-      string_extend(out, lit("\\\""));
+      string_extend_count(bscount, out, lit("\\\\"));
+      string_extend(out, lit("\\^\""));
       bscount = 0;
       break;
     case '\\':
       bscount++;
       break;
+    case '^': case '%': case '!':
+    case '\n': case '&': case '|':
+    case '<': case '>':
+    case '(': case ')':
+      for (i = 0; i < bscount; i++)
+        string_extend_count(bscount, out, lit("\\"));
+      string_extend(out, chr('^'));
+      string_extend(out, chr(*s));
+      break;
     default:
       for (i = 0; i < bscount; i++)
-        string_extend(out, lit("\\"));
+        string_extend_count(bscount, out, lit("\\"));
       string_extend(out, chr(*s));
       bscount = 0;
       break;
@@ -2488,16 +2523,16 @@ static val win_make_cmdline(val args)
 {
   val out = string(L"");
 
-  string_extend(out, pop(&args));
-  string_extend(out, lit(" "));
+  string_extend(out, win_escape_cmd(pop(&args)));
+  string_extend(out, chr(' '));
 
-  for (; args; args = cdr(args)) {
-    string_extend(out, lit("\""));
-    string_extend(out, win_escape_arg(car(args)));
-    if (cdr(args))
-      string_extend(out, lit("\" "));
+  while (args) {
+    string_extend(out, lit("^\""));
+    string_extend(out, win_escape_arg(pop(&args)));
+    if (args)
+      string_extend(out, lit("^\" "));
     else
-      string_extend(out, lit("\""));
+      string_extend(out, lit("^\""));
   }
 
   return out;

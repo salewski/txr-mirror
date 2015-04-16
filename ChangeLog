@@ -1,5 +1,22 @@
 2015-04-15  Kaz Kylheku  <kaz@kylheku.com>
 
+	Fix escaping issues in open-process on Windows.
+
+	This can now execute programs with spaces in their path names.
+	Arguments can contain embedded double quotes, and other characters
+	that are special to cmd.exe, like &, |, (, ), ^ and others.
+
+	* stream.c (string_extend_count, win_escape_cmd): New static functions.
+	(win_escape_arg): Fix and extend escaping scheme to cover not only
+	the argument processing scheme implemented by programs which use Microsoft's
+	C library, but also to smuggle the command line through cmd.exe.
+	(win_make_cmdline): Use win_escape_cmd to wrap the command.
+	Escape the quotes which are placed around arguments, so cmd.exe
+	doesn't interpret them, which will cause it to suppress its processing
+	of the caret escapes.
+
+2015-04-15  Kaz Kylheku  <kaz@kylheku.com>
+
 	Allow quasiquotes in braces and quasiliterals, and quotes in braces.
 
 	* parser.l: Consolidate rules for recognizing quote, unquote, and
