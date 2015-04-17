@@ -497,6 +497,22 @@ static val exec_wrap(val file, val args_opt)
   uw_throwf(file_error_s, lit("execvp ~a returned"), file, nao);
 }
 
+static val exit_star_wrap(val status)
+{
+  int stat;
+
+  if (status == nil)
+    stat = EXIT_FAILURE;
+  else if (status == t)
+    stat = EXIT_SUCCESS;
+  else
+    stat = c_num(status);
+
+  _exit(stat);
+  /* notreached */
+  return nil;
+}
+
 #endif
 
 #if HAVE_SYS_STAT
@@ -690,6 +706,7 @@ void sysif_init(void)
   reg_fun(intern(lit("fork"), user_package), func_n0(fork_wrap));
   reg_fun(intern(lit("wait"), user_package), func_n2o(wait_wrap, 0));
   reg_fun(intern(lit("exec"), user_package), func_n2o(exec_wrap, 1));
+  reg_fun(intern(lit("exit*"), user_package), func_n1(exit_star_wrap));
   reg_fun(intern(lit("w-ifexited"), user_package), func_n1(wifexited));
   reg_fun(intern(lit("w-exitstatus"), user_package), func_n1(wexitstatus));
   reg_fun(intern(lit("w-ifsignaled"), user_package), func_n1(wifsignaled));

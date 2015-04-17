@@ -1,5 +1,16 @@
 2015-04-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	Adding exit* function which calls _exit.
+
+	* sysif.c (exit_star_wrap): New static function.
+	(sysif_init): Registered exit* intrinsic.
+
+	* txr.1: Documented exit*.
+
+	* tl.vim, txr.vim: Regenerated.
+
+2015-04-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	Add exec and pipe functions.
 
 	* configure: Check for pipe.

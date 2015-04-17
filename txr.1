@@ -24936,6 +24936,27 @@ fails, an exception of type
 .code file-error
 is thrown.
 
+.coNP Function @ exit*
+.synb
+.mets (exit* << status )
+.syne
+.desc
+The
+.code exit*
+function terminates the entire process (running \*(TX image), specifying
+the termination status to the operating system. The
+.meta status
+argument is treated exactly like that of the
+.code exit
+function. Unlike that function, this one exits the process immediately,
+cleaning up only low-level operating system resources such as closing file
+descriptors and releasing memory mappings, without performing user-space
+cleanup.
+
+.code exit*
+is implemented using a call to the POSIX function
+.codn _exit .
+
 .coNP Functions @ getpid and @ getppid
 .synb
   (getpid)
