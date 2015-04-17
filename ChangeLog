@@ -1,5 +1,18 @@
 2015-04-16  Kaz Kylheku  <kaz@kylheku.com>
 
+	Add exec and pipe functions.
+
+	* configure: Check for pipe.
+
+	* sysif.c (exec_wrap, pipe_wrap): New static functions.
+	(sysif_init): Register exec and pipe intrinsics.
+
+	* txr.1: Documented exec and pipe.
+
+	* tl.vim, txr.vim: Regenerated.
+
+2015-04-16  Kaz Kylheku  <kaz@kylheku.com>
+
 	Adding chmod.
 
 	* configure: Detect chmod.

@@ -1889,6 +1889,25 @@ else
   printf "no\n"
 fi
 
+printf "Checking for pipe ... "
+cat > conftest.c <<!
+#include <unistd.h>
+
+int main(void)
+{
+  int p[2];
+  int r = pipe(p);
+  return 0;
+}
+!
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_PIPE 1\n" >> $config_h
+else
+  printf "no\n"
+fi
+
+
 printf "Checking for _wspawnlp ... "
 
 cat > conftest.c <<!

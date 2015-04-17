@@ -477,6 +477,26 @@ static val dup_wrap(val old, val new)
   return num(dup2(c_num(old), c_num(new)));
 }
 
+static val exec_wrap(val file, val args_opt)
+{
+  val args = default_bool_arg(args_opt);
+  int nargs = c_num(length(args)) + 1;
+  char **argv = coerce(char **, chk_malloc((nargs + 1) * sizeof *argv));
+  val iter;
+  int i;
+
+  for (i = 0, iter = cons(file, args); iter; i++, iter = cdr(iter)) {
+    val arg = car(iter);
+    argv[i] = utf8_dup_to(c_str(arg));
+  }
+  argv[i] = 0;
+
+  if (execvp(argv[0], argv) < 0)
+    uw_throwf(file_error_s, lit("execvp ~a: ~a/~s"),
+                file, num(errno), string_utf8(strerror(errno)), nao);
+  uw_throwf(file_error_s, lit("execvp ~a returned"), file, nao);
+}
+
 #endif
 
 #if HAVE_SYS_STAT
@@ -523,6 +543,18 @@ val statf(val path)
 #endif
 }
 
+#if HAVE_PIPE
+
+static val pipe_wrap(void)
+{
+  int fd[2];
+  if (pipe(fd) < 0)
+    uw_throwf(file_error_s, lit("pipe failed: ~a/~s"),
+              num(errno), string_utf8(strerror(errno)), nao);
+  return cons(num(fd[0]), num(fd[1]));
+}
+
+#endif
 
 void sysif_init(void)
 {
@@ -657,6 +689,7 @@ void sysif_init(void)
 #if HAVE_FORK_STUFF
   reg_fun(intern(lit("fork"), user_package), func_n0(fork_wrap));
   reg_fun(intern(lit("wait"), user_package), func_n2o(wait_wrap, 0));
+  reg_fun(intern(lit("exec"), user_package), func_n2o(exec_wrap, 1));
   reg_fun(intern(lit("w-ifexited"), user_package), func_n1(wifexited));
   reg_fun(intern(lit("w-exitstatus"), user_package), func_n1(wexitstatus));
   reg_fun(intern(lit("w-ifsignaled"), user_package), func_n1(wifsignaled));
@@ -679,5 +712,8 @@ void sysif_init(void)
   reg_var(intern(lit("w-continued"), user_package), num_fast(WCONTINUED));
 #endif
   reg_fun(intern(lit("dupfd"), user_package), func_n2o(dup_wrap, 1));
+#endif
+#if HAVE_PIPE
+  reg_fun(intern(lit("pipe"), user_package), func_n0(pipe_wrap));
 #endif
 }

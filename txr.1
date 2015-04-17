@@ -24911,6 +24911,31 @@ or
 .codn nil ,
 rather than zero or nonzero. The others return integer values.
 
+.coNP Function @ exec
+.synb
+.mets (exec < file <> [ args ])
+.syne
+.desc
+The exec function replaces the process image with the executable specified
+by string argument
+.metn file .
+The executable is found by searching the system path.
+
+The
+.meta file
+argument becomes the first argument of the executable, argument zero.
+
+If
+.meta args
+is specified, it is a list of strings. These are passed as the additional
+arguments of the executable.
+
+If
+.code exec
+fails, an exception of type
+.code file-error
+is thrown.
+
 .coNP Functions @ getpid and @ getppid
 .synb
   (getpid)
@@ -24988,6 +25013,24 @@ function provides an interface to the POSIX functions
 or
 .codn dup2 ,
 when called with one or two arguments, respectively.
+
+.coNP Function @ pipe
+.synb
+  (pipe)
+.syne
+.desc
+The
+.code pipe
+function, if successful, returns a pair of integer file descriptors
+as a cons cell pair. The descriptor in the
+.code car
+field of the pair is the read end of the pipe.
+The
+.code cdr
+holds the write end.
+
+If the function fails, it throws an exception of type
+.codn file-error .
 
 .SS* Unix Itimers
 Itimers ("interval timers") can be used in combination with signal handling to
