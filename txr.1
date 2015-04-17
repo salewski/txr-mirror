@@ -24743,7 +24743,7 @@ In the current implementation, signals do not queue. If a signal is delivered
 to the process again, while it is marked as deferred, it simply stays deferred;
 there is no counter associated with a signal, only a boolean flag.
 
-.coNP The @ sig-check function
+.coNP Function @ sig-check
 .synb
   (sig-check)
 .syne
@@ -24762,7 +24762,7 @@ function may be inserted into CPU-intensive code that
 has no opportunity to be interrupted by signals, because it doesn't invoke any
 I/O functions.
 
-.coNP The @ kill function
+.coNP Function @ kill
 .synb
 .mets (kill < process-id <> [ signal ])
 .syne
@@ -25182,7 +25182,7 @@ Messages sent to
 are delimited by newline characters. That is to say, each line of
 text written to the stream is a new log.
 
-.coNP The @ openlog function
+.coNP Function @ openlog
 .synb
 .mets (openlog < id-string >> [ options <> [ facility ]])
 .syne
@@ -25228,7 +25228,7 @@ If it is missing, then
 .code log-user
 is assumed.
 
-.coNP The @ closelog function
+.coNP Function @ closelog
 .synb
   (closelog)
 .syne
@@ -25238,7 +25238,7 @@ The
 function is a wrapper for the C function
 .codn closelog .
 
-.coNP The @ setlogmask function
+.coNP Function @ setlogmask
 .synb
 .mets (setlogmask << bitmask-integer )
 .syne
@@ -25271,7 +25271,7 @@ function should be used on these values.
   (setlogmask (mask log-emerg log-alert))
 .cble
 
-.coNP The @ syslog function
+.coNP Function @ syslog
 .synb
 .mets (syslog < priority < format << format-arg *)
 .syne
