@@ -572,6 +572,34 @@ static val pipe_wrap(void)
 
 #endif
 
+static val getenv_wrap(val name)
+{
+  char *nameu8 = utf8_dup_to(c_str(name));
+  char *lookup = getenv(nameu8);
+  val result = lookup ? string_utf8(lookup) : nil;
+  free(nameu8);
+  return result;
+}
+
+static val setenv_wrap(val name, val value, val overwrite)
+{
+  char *nameu8 = utf8_dup_to(c_str(name));
+  char *valu8 = utf8_dup_to(c_str(value));
+  setenv(nameu8, valu8, default_arg(overwrite, t) != nil);
+  free(valu8);
+  free(nameu8);
+  return value;
+}
+
+static val unsetenv_wrap(val name)
+{
+  char *nameu8 = utf8_dup_to(c_str(name));
+  unsetenv(nameu8);
+  free(nameu8);
+  return name;
+}
+
+
 void sysif_init(void)
 {
   reg_fun(intern(lit("errno"), user_package), func_n1o(errno_wrap, 0));
@@ -733,4 +761,7 @@ void sysif_init(void)
 #if HAVE_PIPE
   reg_fun(intern(lit("pipe"), user_package), func_n0(pipe_wrap));
 #endif
+  reg_fun(intern(lit("getenv"), user_package), func_n1(getenv_wrap));
+  reg_fun(intern(lit("setenv"), user_package), func_n3o(setenv_wrap, 2));
+  reg_fun(intern(lit("unsetenv"), user_package), func_n1(unsetenv_wrap));
 }

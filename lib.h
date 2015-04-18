@@ -848,6 +848,10 @@ val obj_print(val obj, val stream);
 val obj_pprint(val obj, val stream);
 val tostring(val obj);
 val tostringp(val obj);
+#if !HAVE_SETENV
+void setenv(const char *name, const char *value, int overwrite);
+void unsetenv(const char *name);
+#endif
 val time_sec(void);
 val time_sec_usec(void);
 val time_string_local(val time, val format);

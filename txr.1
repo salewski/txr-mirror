@@ -24106,6 +24106,11 @@ on the output (since the UTC zone by definition doesn't have daylight
 savings time).
 
 .SS* Environment Variables and Command Line
+
+Note that environment variable names, their values, and command line
+arguments are all regarded as being externally encoded in UTF-8. \*(TX performs
+the encoding and decoding automatically.
+
 .coNP Special variables @ *args* and @ *args-full*
 .desc
 The
@@ -24159,6 +24164,67 @@ function constructs and returns an
 .code :equal-based
 hash.  The hash is
 populated with the environment variables, represented as key-value pairs. 
+
+.coNP Functions @, getenv @, setenv and @ unsetenv
+.synb
+.mets (getenv << name )
+.mets (setenv < name < value <> [ overwrite-p ])
+.mets (unsetenv << name )
+.syne
+.desc
+These functions provide access to, as well as manipulation of, environment
+variables. Of these three,
+.code setenv
+and
+.code unsetenv
+might not be available on some platforms, or
+.code unsetenv
+might be be present in a simulated form which sets the variable
+.meta name
+to the empty string rather than deleting it.
+
+The
+.code getenv
+function searches the environment for the environment variable whose name
+is
+.metn name .
+If the variable is found, its value is returned. Otherwise
+.code nil
+is returned.
+
+The
+.code setenv
+function creates or modifies the environment variable indicated by
+.metn name .
+The
+.meta value
+string argument specifies the new value for the variable.
+
+If the
+.meta overwrite-p
+argument is specified, and is true,
+then the variable is overwritten if it already exists.
+If the argument is false, then the variable is not modified if it
+already exists.  If the argument is not specified, it defaults
+to the value
+.metn t,
+effectively giving rise to a two-argument form of
+.code setenv
+which creates or overwrites environment variables.
+
+The
+.code setenv
+function unconditionally returns
+.meta value
+regardless of whether or not it overwrites an existing variable.
+
+The
+.code unsetenv
+function removes the enviornment variable
+specified by
+.metn name ,
+if it exists. On some platforms, it instead sets the environment variable
+to the empty string.
 
 .SS* System Programming
 .coNP Function @ errno

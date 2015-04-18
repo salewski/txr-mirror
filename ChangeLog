@@ -1,5 +1,21 @@
 2015-04-18  Kaz Kylheku  <kaz@kylheku.com>
 
+	Adding getenv, setenv and unsetenv.
+
+	* lib.c (setenv, unsetenv): Changed static functions to external.
+	Moved them out of the #if !HAVE_TIMEGM block.
+
+	* lib.h (setenv, unsetenv): Declared.
+
+	* sysif.c (getenv_wrap, setenv_wrap, unsetenv_wrap): New functions.
+	(sysif_init): Registered getenv, setenv and unsetenv.
+
+	* txr.1: Documented getenv, setenv and unsetenv.
+
+	* tl.vim, txr.vim: Regenerated.
+
+2015-04-18  Kaz Kylheku  <kaz@kylheku.com>
+
 	Fix quasistring regression introduced in TXR 81.
 
 	* parser.y (expand_meta): This function must recognize
