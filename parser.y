@@ -1206,6 +1206,22 @@ static val expand_meta(val form, val menv)
 
   menv = default_arg(menv, make_env(nil, nil, nil));
 
+  if ((sym = car(form)) == quasi_s) {
+    list_collect_decl (out, ptail);
+
+    for (; consp(form); form = cdr(form)) {
+      val subform = car(form);
+      if (consp(subform) && car(subform) == expr_s)
+        ptail = list_collect(ptail, expand_meta(subform, menv));
+      else
+        ptail = list_collect(ptail, subform);
+    }
+
+    ptail = list_collect_nconc(ptail, form);
+
+    return rlcp(out, form);
+  }
+
   if ((sym = car(form)) == expr_s) {
     val exp_x = expand(rest(form), menv);
     if (!bindable(exp_x))

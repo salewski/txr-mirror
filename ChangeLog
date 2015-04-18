@@ -1,3 +1,13 @@
+2015-04-18  Kaz Kylheku  <kaz@kylheku.com>
+
+	Fix quasistring regression introduced in TXR 81.
+
+	* parser.y (expand_meta): This function must recognize
+	quasistrings, inside (sys:quasi ...) forms, (sys:var ...) forms
+	do not denote TXR Lisp variables. These must not be expanded.
+	Doing so is not only wrong, but the way it was done broke
+	brace variables by stripping their arguments.
+
 2015-04-16  Kaz Kylheku  <kaz@kylheku.com>
 
 	Adding exit* function which calls _exit.
