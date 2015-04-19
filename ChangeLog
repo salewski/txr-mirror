@@ -1,5 +1,19 @@
 2015-04-19  Kaz Kylheku  <kaz@kylheku.com>
 
+	Do not allow unrecognized escapes in regex.
+
+	* parser.l (REGOP): New regex alias for matching all regex
+	special characters.
+	(grammar): Several rules for regex special characters merged
+	together. New rule introduced to match a special character
+	after a backslash, making it literal. The old rule which makes
+	literal any character after a backslash now throws an error,
+	unless version 105 comaptibility is selected.
+
+	* txr.1: Documented this behavior change.
+
+2015-04-19  Kaz Kylheku  <kaz@kylheku.com>
+
 	Improvement in error reporting.
 
 	This fix prevents certain situations when an inappropriate form

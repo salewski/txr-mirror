@@ -49,6 +49,7 @@
 #include "hash.h"
 #include "parser.h"
 #include "eval.h"
+#include "txr.h"
 #include "y.tab.h"
 
 #define YY_INPUT(buf, result, max_size)           \
@@ -197,6 +198,8 @@ NTOK    {NTREG}|{NTKEY}
 WS      [\t ]*
 HEX     [0-9A-Fa-f]
 OCT     [0-7]
+
+REGOP   [/()|.*?+~&%\[\]\-]
 
 ASC     [\x00-\x7f]
 ASCN    [\x00-\t\v-\x7f]
@@ -741,24 +744,24 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return ERRTOK;
 }
 
-<REGEX>[.*?+~&%] {
+<REGEX>{REGOP} {
   yylval->chr = yytext[0];
   return yytext[0];
 }
 
-<REGEX>[\[\]\-] {
-  yylval->chr = yytext[0];
-  return yytext[0];
-}
-
-<REGEX>[()|] {
-  yylval->chr = yytext[0];
-  return yytext[0];
+<REGEX>[\\]{REGOP} {
+  yylval->chr = yytext[1];
+  return REGCHAR;
 }
 
 <REGEX>[\\]. {
-  yylval->chr = yytext[1];
-  return REGCHAR;
+  if (opt_compat && opt_compat <= 105) {
+    yylval->chr = yytext[1];
+    return REGCHAR;
+  }
+    
+  yyerrprepf(yyg, lit("unrecognized escape in regex"), nao);
+  return ERRTOK;
 }
 
 <REGEX>[\\] {

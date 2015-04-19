@@ -2052,14 +2052,13 @@ and the set matched by
 This operator is called intersection, logical and, or conjunction.
 
 .PP
-Any escaped character which does not fall into the above escaping conventions,
-or any unescaped character which is not a regular expression operator, denotes
-one-position match of that character itself.
+Any character which is not a regular expression operator, a backslash escape,
+or the slash delimiter, denotes one-position match of that character itself.
 
 Any of the special characters, including the delimiting
 .codn / ,
-can be escaped with a backslash to suppress its meaning and denote the
-character itself.
+and the backslash, can be escaped with a backslash to suppress its
+meaning and denote the character itself.
 
 Furthermore, all of the same escapes as are described in the section Special
 Characters in Text above are supported - the difference is that in regular
@@ -2072,6 +2071,12 @@ rather than
 Octal and hex character escapes can be optionally
 terminated by a semicolon, which is useful if the following characters are
 octal or hex digits not intended to be part of the escape.
+
+Only the above escapes are supported. Unlike in some other regular expression
+implementations, if a backlash appears before a character which isn't a regex
+special character or one of the supported escape sequences, it is an error.
+This wasn't true of historic versions of \*(TX. See the Compatibility section.
+
 .IP "Precedence table, highest to lowest:"
 .TS
 tab(!);
@@ -27923,6 +27928,14 @@ function automatically marks a stream open on a TTY devices as a real-time strea
 (subject to the availability of the POSIX
 .code isatty
 function).
+
+Also allows unrecognized backslash escape sequences in regular
+expression syntax to simply denote the escaped character literally,
+as was historically the case prior to \*(TX 106, so that
+.code \ez
+for instance denotes
+.codn z .
+As of \*(TX 106, these are diagnosed as errors.
 
 .IP 102
 Up to \*(TX 102, the
