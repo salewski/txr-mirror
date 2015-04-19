@@ -1,3 +1,17 @@
+2015-04-19  Kaz Kylheku  <kaz@kylheku.com>
+
+	Improvement in error reporting.
+
+	This fix prevents certain situations when an inappropriate form
+	is reported, in the default unhandled exception handler, as pertaining
+	to an error.
+
+	* eval.c (do_eval): Save and restore the last_form_evaled,
+	in an exception-unsafe way.  If we successfully evaluate a form or
+	subform, we can restore the previous one.
+	(expand): Save and restore last_form_expanded similarly. We don't
+	need the unwind block and counter.
+
 2015-04-18  Kaz Kylheku  <kaz@kylheku.com>
 
 	Adding lcons macro.

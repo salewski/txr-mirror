@@ -1031,8 +1031,10 @@ static val do_eval(val form, val env, val ctx_form,
 
     if (entry) {
       opfun_t fp = coerce(opfun_t, cptr_get(entry));
-      last_form_evaled = form;
-      debug_return (fp(form, env));
+      val ret, lfe_save = last_form_evaled;
+      ret = fp(form, env);
+      last_form_evaled = lfe_save;
+      debug_return (ret);
     } else {
       val fbinding = lookup_fun(env, oper);
       if (!fbinding) {
@@ -1041,9 +1043,12 @@ static val do_eval(val form, val env, val ctx_form,
         abort();
       } else {
         val args = do_eval_args(rest(form), env, form, &lookup_var);
+        val ret, lfe_save = last_form_evaled;
         debug_frame(oper, args, nil, env, nil, nil, nil);
         last_form_evaled = form;
-        debug_return (apply(cdr(fbinding), z(args), form));
+        ret = apply(cdr(fbinding), z(args), form);
+        last_form_evaled = lfe_save;
+        debug_return (ret);
         debug_end;
       }
     }
@@ -3129,21 +3134,11 @@ tail:
 val expand(val form, val menv)
 {
   val ret = nil;
-  static int reentry_count;
-
-  uw_simple_catch_begin;
-
-  reentry_count++;
+  val lfe_save = last_form_expanded;
 
   last_form_expanded = form;
   ret = do_expand(form, menv);
-
-  uw_unwind {
-    if (--reentry_count == 0)
-      last_form_expanded = nil;
-  }
-
-  uw_catch_end;
+  last_form_expanded = lfe_save;
 
   return ret;
 }
