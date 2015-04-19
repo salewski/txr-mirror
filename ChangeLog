@@ -1,5 +1,16 @@
 2015-04-18  Kaz Kylheku  <kaz@kylheku.com>
 
+	Adding lcons macro.
+
+	* eval.c (me_lcons): New function.
+	(eval_init): Registered lcons macro.
+
+	* txr.1: Documented lcons.
+
+	* tl.vim, txr.vim: Regenerated.
+
+2015-04-18  Kaz Kylheku  <kaz@kylheku.com>
+
 	Adding getenv, setenv and unsetenv.
 
 	* lib.c (setenv, unsetenv): Changed static functions to external.

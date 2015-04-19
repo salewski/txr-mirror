@@ -2856,6 +2856,22 @@ static val me_dotimes(val form, val env)
   return apply_frob_args(raw);
 }
 
+static val me_lcons(val form, val menv)
+{
+  val car_form = second(form);
+  val cdr_form = third(form);
+  val lc_sym = gensym(lit("lcons-"));
+  val make_lazy_cons = intern(lit("make-lazy-cons"), user_package);
+  val rplaca = intern(lit("rplaca"), user_package);
+  val rplacd = intern(lit("rplacd"), user_package);
+  (void) menv;
+
+  return list(make_lazy_cons,
+              list(lambda_s, cons(lc_sym, nil),
+                   list(rplaca, lc_sym, car_form, nao),
+                   list(rplacd, lc_sym, cdr_form, nao), nao), nao);
+}
+
 static val expand_catch_clause(val form, val menv)
 {
   val sym = first(form);
@@ -3997,6 +4013,7 @@ void eval_init(void)
   reg_mac(iflet_s, me_iflet_whenlet);
   reg_mac(intern(lit("whenlet"), user_package), me_iflet_whenlet);
   reg_mac(intern(lit("dotimes"), user_package), me_dotimes);
+  reg_mac(intern(lit("lcons"), user_package), me_lcons);
 
   reg_fun(cons_s, func_n2(cons));
   reg_fun(intern(lit("make-lazy-cons"), user_package), func_n1(make_lazy_cons));

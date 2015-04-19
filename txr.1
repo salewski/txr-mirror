@@ -12456,7 +12456,9 @@ one or more conses.
 Note that a lazy cons is a cons and satisfies the
 .code consp
 test.  See the function
-.codn make-lazy-cons .
+.code make-lazy-cons
+and the macro
+.codn lcons .
 
 .TP* Examples:
 .cblk
@@ -15292,6 +15294,65 @@ executing, it is still accessible. This allows the update function
 to retrieve a reference to itself and propagate itself into
 another lazy cons (as in the example under
 .codn make-lazy-cons ).
+
+.coNP Macro @ lcons
+.synb
+.mets (lcons < car-expression << cdr-expression )
+.syne
+.desc
+The
+.code lcons
+macro simplifies the construction of structures based on lazy conses.
+Syntactically, it resembles the
+.code cons
+function. However, the arguments are expressions rather than values.
+The macro generates code which, when evaluated, immediately produces
+a lazy cons. The expressions
+.meta car-expression
+and
+.meta cdr-expression 
+are not immediately evaluated. Rather, when either the
+.code car
+or
+.code cdr
+field of the lazy cons cell is accessed, these expressions are both
+evaluated at that time, in the order that they appear in the
+.code lcons
+expression, and in the original lexical scope in which that
+expression was evaluated. The return values of these expressions
+are used, respectively, to initialize the corresponding fields
+of the lazy cons.
+
+Note: the
+.code lcons
+macro may be understood in terms of the following reference
+implementation, as a syntactic sugar combining the
+.code make-lazy-cons
+constructor with a lexical closure provided by a
+.code lambda
+function:
+
+.cblk
+  (defmacro lcon (car-form cdr-form)
+    (let ((lc (gensym)))
+       ^(make-lazy-cons (lambda (,lc)
+                          (rplaca ,lc ,car-form)
+                          (rplacd ,lc ,cdr-form)))))
+.cble
+
+.TP* Example:
+
+.cblk
+  ;; Given the following function ...
+
+  (defun fib-generator (a b)
+    (lcons a (fib-generator b (+ a b))))
+
+  ;; ... the following function call generates the Fibonacci
+  ;; sequence as an infinite lazy list.
+
+  (fib-generator 1 1) -> (1 1 2 3 5 8 13 ...)
+.cble
 
 .coNP Functions @ lazy-stream-cons and @ get-lines
 .synb
