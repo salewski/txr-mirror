@@ -1,5 +1,13 @@
 2015-04-19  Kaz Kylheku  <kaz@kylheku.com>
 
+	Bugfix: throwing error when trying to print valid regexps.
+
+	* regex.c (print_rec): Only dianose "bad object in regex syntax"
+	for some atom other than nil, which denotes an empty (sub)expression,
+	like what results from #// or #/a|/ and such.
+
+2015-04-19  Kaz Kylheku  <kaz@kylheku.com>
+
 	Do not allow unrecognized escapes in regex.
 
 	* parser.l (REGOP): New regex alias for matching all regex

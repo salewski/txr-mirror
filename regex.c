@@ -1831,7 +1831,7 @@ static void print_rec(val exp, val stream)
     } else {
       uw_throwf(error_s, lit("bad operator in regex syntax: ~s"), sym, nao);
     }
-  } else {
+  } else if (exp != nil) {
     uw_throwf(error_s, lit("bad object in regex syntax: ~s"), exp, nao);
   }
 }
