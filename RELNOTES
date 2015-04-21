@@ -1,3 +1,96 @@
+                                    TXR 106
+                                   2015-04-21
+
+
+  Features
+
+  - New function tprint; like pprint but prints lists of strings as
+    lines of text.
+
+  - New stream opening option letter "i" for marking streams interactive.
+
+  - New command line option -n which makes standard input noninteractive
+    even if it is a TTY.
+
+  - New command line option -P which is like -p but based on pprint.
+
+  - New command line option -t for printing Lisp value using tprint.
+
+  - Stream argument in get-lines is optional, and defaults to *stdin*.
+
+  - The Unix fork and wait functions are exposed for use.
+
+  - New function open-fileno for opening a stream on a Unix file descriptor,
+    and fileno for retrieving a file descriptor from a stream which has one.
+
+  - New functions dup (interface to Unix dup and dup2), chmod, exec
+    and pipe.
+
+  - New exit* function which calls _exit.
+
+  - Added getenv, setenv and unsetenv functions for environment manipulation.
+
+  - New operator zap for overwriting a place with nil, and returning its
+    prior value: good for losing a reference to an object while passing
+    it to a function, and other uses.
+
+  - New whilet (while + let) macro for variable binding plus iteration.
+
+  - New iflet and whenlet (if + let, when + let) macros for variable binding
+    plus conditional evaluation.
+
+  - New while* and until* loops which unconditionally execute one
+    iteration.
+
+  - New dotimes macro for simple iteration.
+
+  - New lcons macro for writing expressive, concise code around lazy conses.
+
+  - Brace variable notation can now contain quotes and quasiquotes.
+
+  - Quasistrings can contain quasiquotes: `prefix @^(,x ,y) suffix`.
+
+  - Fixed regression introduced in TXR 81, causing the argument parts of
+    brace variables embedded in quasistrings to disappear.
+
+  - The backslash in regular expressions can now only be used for recognized
+    escape sequences, or for making regex special characters literal. If it is
+    applied to any other character, it is diagnosed as an error.
+
+  Bugs
+
+  - Fixed stack array overrun in apply function.
+
+  - The int-str function was recognizing the 0x C language convention in base
+    16 conversions. Also, an error is now thrown on bases outside of the
+    range 2-36.
+
+  - Eliminated nuisance error message issue from the Makefile about git not
+    being found; git is properly detected in configure.
+
+  - Streams opened on TTY devices are not automatically marked as interactive.
+    This is done only for the *stdin* stream on startup.
+
+  - The ~X specifier in format was printing in lower case just like ~x,
+    for bignum arguments.
+
+  - Addressed spurious retention (garbage-collection-related issue) in
+    function application.
+
+  - Parser now diagnoses trailing junk in hex, octal and binary literals,
+    like #xAD0Z, #o7778 or #b011003.
+
+  - Fixed character escaping issues in open-process on Windows.
+
+  - Fixed bug in error reporting, causing TXR sometimes to report that
+    an error was thrown out of a form, when it wasn't in fact that form.
+
+  - Fixed bug in the printing of regular expressions: empty expressions
+    like #// or expressins with empty subexpressions like #/a|/ would
+    result in an exception.
+
+
+
                                     TXR 105
                                    2015-03-14
 
