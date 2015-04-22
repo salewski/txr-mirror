@@ -1,5 +1,7 @@
 2015-04-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 106
+
 	* RELNOTES: Updated.
 
 	* configure, txr.1: Bumped version.
