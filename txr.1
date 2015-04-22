@@ -10238,8 +10238,8 @@ test from the "top of the loop" to the "bottom of the loop".
 
 .coNP Macro @ whilet
 .synb
-.mets (whilet ({ sym | >> ( sym << init-form )}+)
-.mets \ \  < body-form *)
+.mets (whilet >> ({ sym | >> ( sym << init-form )}+)
+.mets \ \  << body-form *)
 .syne
 .desc
 The
@@ -10300,10 +10300,10 @@ a return value can be specified. Under normal termination, the return value is
 
 .coNP Macros @ iflet and @ whenlet
 .synb
-.mets (iflet ({ sym | >> ( sym << init-form )}+)
+.mets (iflet >> ({ sym | >> ( sym << init-form )}+)
 .mets \ \  < then-form <> [ else-form ])
-.mets (whenlet ({ sym | >> ( sym << init-form )}+)
-.mets \ \  < body-form *])
+.mets (whenlet >> ({ sym | >> ( sym << init-form )}+)
+.mets \ \  << body-form *])
 .syne
 .desc
 The
@@ -11060,7 +11060,7 @@ functions whose arguments are constant forms.
 .mets (push < item << place )
 .mets (pop << place )
 .mets (flip << place )
-.mets (zap << place <> [ new-value ])
+.mets (zap < place <> [ new-value ])
 .mets (del << place )
 .syne
 .desc
@@ -11357,10 +11357,10 @@ The list of variables may be empty.
 
 .coNP Operators @ for and @ for*
 .synb
-.mets ({ for | for* } >> ({ sym | >> ( sym << init-form )}*)
-.mets \ \ \ \ \ \ \ \ \ \ \ \ \ \ \  >> ([ test-form << result-form *])
-.mets \ \ \ \ \ \ \ \ \ \ \ \ \ \ \  <> ( inc-form *)
-.mets \ \ \ \  << body-form *)
+.mets ({for | for*} >> ({ sym | >> ( sym << init-form )}*)
+.mets \ \ \ \ \ \ \ \ \ \ \ \ \  >> ([ test-form << result-form *])
+.mets \ \ \ \ \ \ \ \ \ \ \ \ \  <> ( inc-form *)
+.mets \ \  << body-form *)
 .syne
 .desc
 
