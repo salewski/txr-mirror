@@ -79,7 +79,8 @@ val dohash_s;
 val uw_protect_s, return_s, return_from_s;
 val list_s, append_s, apply_s, iapply_s;
 val gen_s, gun_s, generate_s, rest_s, plus_s;
-val promise_s, op_s, ap_s, identity_s, apf_s, ipf_s;
+val promise_s, promise_forced_s, promise_inprogress_s;
+val op_s, ap_s, identity_s, apf_s, ipf_s;
 val ret_s, aret_s;
 val hash_lit_s, hash_construct_s;
 val vector_lit_s, vector_list_s;
@@ -2163,9 +2164,12 @@ static val me_gun(val form, val menv)
 static val me_delay(val form, val menv)
 {
   (void) menv;
+  rlcp_tree(rest(form), second(form));
   return list(cons_s,
               cons(quote_s, cons(promise_s, nil)),
-              cons(lambda_s, cons(nil, rest(form))), nao);
+              list(cons_s, cons(lambda_s, cons(nil, rest(form))),
+                   cons(quote_s, cons(form, nil)), nao),
+              nao);
 }
 
 static val me_pprof(val form, val menv)
@@ -3630,11 +3634,28 @@ static val weavev(val lists)
 
 static val force(val promise)
 {
-  if (car(promise) != promise_s)
-    return cdr(promise);
+  loc pstate = car_l(promise);
+  val cd = cdr(promise);
+  loc pval = car_l(cd);
 
-  rplaca(promise, nil);
-  return cdr(rplacd(promise, funcall(cdr(promise))));
+  if (deref(pstate) == promise_forced_s) {
+    return deref(pval);
+  } else if (deref(pstate) == promise_s) {
+    val ret;
+    /* Safe: promise symbols are older generation */
+    deref(pstate) = promise_inprogress_s;
+    ret = funcall(deref(pval));
+    deref(pstate) = promise_forced_s;
+    deref(pval) = ret;
+    return ret;
+  } else if (deref(pstate) == promise_inprogress_s) {
+    val form = second(cdr(cd));
+    val sloc = source_loc_str(form);
+    eval_error(nil, lit("force: recursion forcing delayed form ~s (~a)"),
+               form, sloc, nao);
+  } else {
+    uw_throwf(error_s, lit("force: ~s is not a promise"), promise, nao);
+  }
 }
 
 static void reg_op(val sym, opfun_t fun)
@@ -3894,6 +3915,8 @@ void eval_init(void)
   gun_s = intern(lit("gun"), user_package);
   generate_s = intern(lit("generate"), user_package);
   promise_s = intern(lit("promise"), system_package);
+  promise_forced_s = intern(lit("promise-forced"), system_package);
+  promise_inprogress_s = intern(lit("promise-inprogress"), system_package);
   op_s = intern(lit("op"), user_package);
   ap_s = intern(lit("ap"), user_package);
   do_s = intern(lit("do"), user_package);

@@ -1,3 +1,18 @@
+2015-04-22  Kaz Kylheku  <kaz@kylheku.com>
+
+	delay/force overhaul.
+
+	* eval.c (promise_forced_s, promise_inprogress_s): New symbol
+	variables.
+	(me_delay): Change representation of promises so that the
+	original delay form is stashed there for better reporting
+	in the force function. Also, propagate the debug info
+	from the second argument of the form to the entire form;
+	otherwise it will inherit it from elsewhere.
+	(force): Rewritten to follow new three-state representation
+	to detect the recursive case and diagnose it.
+	(eval_init): Register new symbol variables.
+
 2015-04-21  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 106
