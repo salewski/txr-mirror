@@ -9,6 +9,7 @@
     $Id: mpi.c,v 1.1 2004/02/08 04:29:29 sting Exp $
  */
 
+#include "config.h"
 #include "mpi.h"
 #include <stdlib.h>
 #include <string.h>

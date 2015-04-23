@@ -9,6 +9,7 @@
     $Id: mplogic.c,v 1.1 2004/02/08 04:29:29 sting Exp $
  */
 
+#include "config.h"
 #include "mplogic.h"
 #include <stdlib.h>
 
