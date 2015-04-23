@@ -54,6 +54,7 @@
 
 /* Macros for accessing the mp_int internals           */
 #define  SIGN(MP)     ((MP)->sign)
+#define  ISNEG(MP)    ((MP)->sign == MP_NEG)
 #define  USED(MP)     ((MP)->used)
 #define  ALLOC(MP)    ((MP)->alloc)
 #define  DIGITS(MP)   ((MP)->dp)
@@ -185,6 +186,18 @@ mp_err mp_lcm(mp_int *a, mp_int *b, mp_int *c);
 mp_err mp_xgcd(mp_int *a, mp_int *b, mp_int *g, mp_int *x, mp_int *y);
 mp_err mp_invmod(mp_int *a, mp_int *m, mp_int *c);
 #endif /* end MP_NUMTH */
+
+/*------------------------------------------------------------------------*/
+/* Bit ops                                                                */
+mp_err mp_2comp(mp_int *a, mp_int *b, mp_size dig); /* peculiar semantics */
+mp_err mp_and(mp_int *a, mp_int *b, mp_int *c);
+mp_err mp_or(mp_int *a, mp_int *b, mp_int *c);
+mp_err mp_xor(mp_int *a, mp_int *b, mp_int *c);
+mp_err mp_comp(mp_int *a, mp_int *b);
+mp_err mp_trunc_comp(mp_int *a, mp_int *b, mp_digit bits);
+mp_err mp_trunc(mp_int *a, mp_int *b, mp_digit bits);
+mp_err mp_shift(mp_int *a, mp_int *b, int bits); /* + left, - right */
+mp_err mp_bit(mp_int *a, mp_digit bit);
 
 /*------------------------------------------------------------------------*/
 /* Conversions                                                            */
