@@ -571,6 +571,36 @@ mp_err mp_get_intptr(mp_int *mp, int_ptr_t *z)
   return MP_OKAY;
 }
 
+#ifdef HAVE_DOUBLE_INTPTR_T
+mp_err mp_set_double_intptr(mp_int *mp, double_intptr_t z)
+{
+  int            ix, shift;
+  double_intptr_t v = z > 0 ? z : -z;
+  const int      nd = (sizeof v + sizeof (mp_digit) - 1) / sizeof (mp_digit);
+
+  ARGCHK(mp != NULL, MP_BADARG);
+
+  mp_zero(mp);
+
+  if(z == 0)
+    return MP_OKAY;  /* shortcut for zero */
+
+  s_mp_grow(mp, nd);
+
+  USED(mp) = nd;
+
+  for (ix = 0, shift = 0; ix < nd; ix++, shift += MP_DIGIT_BIT)
+  {
+    DIGIT(mp, ix) = (v >> shift) & MP_DIGIT_MAX;
+  }
+
+  if(z < 0)
+    SIGN(mp) = MP_NEG;
+
+  return MP_OKAY;
+}
+#endif
+
 mp_err mp_set_word(mp_int *mp, mp_word w, int sign)
 {
   USED(mp) = 2;
