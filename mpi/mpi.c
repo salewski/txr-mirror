@@ -198,7 +198,7 @@ int      s_mp_cmp_d(mp_int *a, mp_digit d);    /* magnitude digit compare */
 int      s_mp_ispow2(mp_int *v);               /* is v a power of 2?      */
 int      s_mp_ispow2d(mp_digit d);             /* is d a power of 2?      */
 
-int      s_mp_tovalue(char ch, int r);          /* convert ch to value    */
+int      s_mp_tovalue(int ch, int r);           /* convert ch to value    */
 char     s_mp_todigit(int val, int r, int low); /* convert val to digit   */
 int      s_mp_outlen(int bits, int r);          /* output length in bytes */
 
@@ -4262,7 +4262,7 @@ int      s_mp_ispow2d(mp_digit d)
   The results will be odd if you use a radix < 2 or > 62, you are
   expected to know what you're up to.
  */
-int      s_mp_tovalue(char ch, int r)
+int      s_mp_tovalue(int ch, int r)
 {
   int    val, xch;
   
@@ -4306,7 +4306,7 @@ int      s_mp_tovalue(char ch, int r)
   
 char     s_mp_todigit(int val, int r, int low)
 {
-  char   ch;
+  int   ch;
 
   if(val < 0 || val >= r)
     return 0;
