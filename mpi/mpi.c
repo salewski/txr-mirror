@@ -15,6 +15,9 @@
 #include <string.h>
 #include <ctype.h>
 
+typedef unsigned char mem_t;
+extern mem_t *chk_calloc(size_t n, size_t size);
+
 #if MP_DEBUG
 #include <stdio.h>
 
@@ -154,7 +157,7 @@ static const char *s_dmap_2 =
   #define  s_mp_copy(sp, dp, count) memcpy(dp, sp, (count) * sizeof(mp_digit))
  #endif /* MP_MEMCPY */
 
- #define  s_mp_alloc(nb, ni)  calloc(nb, ni)
+ #define  s_mp_alloc(nb, ni)  chk_calloc(nb, ni)
  #define  s_mp_free(ptr) {if(ptr) free(ptr);}
 #endif /* MP_MACRO */
 
@@ -282,7 +285,7 @@ mp_err mp_init_size(mp_int *mp, mp_size prec)
 {
   ARGCHK(mp != NULL && prec > 0, MP_BADARG);
 
-  if((DIGITS(mp) = s_mp_alloc(prec, sizeof(mp_digit))) == NULL)
+  if((DIGITS(mp) = (mp_digit *) s_mp_alloc(prec, sizeof(mp_digit))) == NULL)
     return MP_MEM;
 
   SIGN(mp) = MP_ZPOS;
@@ -312,7 +315,7 @@ mp_err mp_init_copy(mp_int *mp, mp_int *from)
   if(mp == from)
     return MP_OKAY;
 
-  if((DIGITS(mp) = s_mp_alloc(USED(from), sizeof(mp_digit))) == NULL)
+  if((DIGITS(mp) = (mp_digit *) s_mp_alloc(USED(from), sizeof(mp_digit))) == NULL)
     return MP_MEM;
 
   s_mp_copy(DIGITS(from), DIGITS(mp), USED(from));
@@ -358,7 +361,7 @@ mp_err mp_copy(mp_int *from, mp_int *to)
       s_mp_copy(DIGITS(from), DIGITS(to), USED(from));
       
     } else {
-      if((tmp = s_mp_alloc(USED(from), sizeof(mp_digit))) == NULL)
+      if((tmp = (mp_digit *) s_mp_alloc(USED(from), sizeof(mp_digit))) == NULL)
 	return MP_MEM;
 
       s_mp_copy(DIGITS(from), tmp, USED(from));
@@ -2670,7 +2673,7 @@ mp_err   s_mp_grow(mp_int *mp, mp_size min)
     /* Set min to next nearest default precision block size */
     min = ((min + (s_mp_defprec - 1)) / s_mp_defprec) * s_mp_defprec;
 
-    if((tmp = s_mp_alloc(min, sizeof(mp_digit))) == NULL)
+    if((tmp = (mp_digit *) s_mp_alloc(min, sizeof(mp_digit))) == NULL)
       return MP_MEM;
 
     s_mp_copy(DIGITS(mp), tmp, USED(mp));
@@ -2757,7 +2760,7 @@ void s_mp_copy(mp_digit *sp, mp_digit *dp, mp_size count)
 /* Allocate ni records of nb bytes each, and return a pointer to that     */
 void    *s_mp_alloc(size_t nb, size_t ni)
 {
-  return calloc(nb, ni);
+  return chk_calloc(nb, ni);
 
 } /* end s_mp_alloc() */
 #endif
