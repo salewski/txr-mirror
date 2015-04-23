@@ -762,7 +762,7 @@ mp_err mp_div_d(mp_int *a, mp_digit d, mp_int *q, mp_digit *r)
   if((pow = s_mp_ispow2d(d)) >= 0) {
     mp_digit  mask;
 
-    mask = (1 << pow) - 1;
+    mask = ((mp_digit) 1 << pow) - 1;
     rem = DIGIT(a, 0) & mask;
 
     if(q) {
@@ -3079,7 +3079,7 @@ void     s_mp_mod_2d(mp_int *mp, mp_digit d)
     return;
 
   /* Flush all the bits above 2^d in its digit */
-  dmask = (1 << nbit) - 1;
+  dmask = ((mp_digit) 1 << nbit) - 1;
   dp[ndig] &= dmask;
 
   /* Flush all digits above the one with 2^d in it */
@@ -3112,7 +3112,7 @@ mp_err    s_mp_mul_2d(mp_int *mp, mp_digit d)
   dp = DIGITS(mp); used = USED(mp);
   d %= DIGIT_BIT;
 
-  mask = (1 << d) - 1;
+  mask = ((mp_digit) 1 << d) - 1;
 
   /* If the shift requires another digit, make sure we've got one to
      work with */
@@ -3160,7 +3160,7 @@ void     s_mp_div_2d(mp_int *mp, mp_digit d)
   s_mp_rshd(mp, d / DIGIT_BIT);
   d %= DIGIT_BIT;
 
-  mask = (1 << d) - 1;
+  mask = ((mp_digit) 1 << d) - 1;
 
   save = 0;
   for(ix = USED(mp) - 1; ix >= 0; ix--) {
@@ -3840,7 +3840,7 @@ mp_err   s_mp_2expt(mp_int *a, mp_digit k)
   if((res = s_mp_pad(a, dig + 1)) != MP_OKAY)
     return res;
   
-  DIGIT(a, dig) |= (1 << bit);
+  DIGIT(a, dig) |= ((mp_digit) 1 << bit);
 
   return MP_OKAY;
 
