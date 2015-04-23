@@ -1958,6 +1958,34 @@ int    mp_iseven(mp_int *a)
 
 /* }}} */
 
+unsigned long mp_hash(mp_int *a)
+{
+#if SIZEOF_LONG > MP_DIGIT_SIZE
+  unsigned long hash;
+  int ix;
+
+  if (USED(a) >= 2 * SIZEOF_LONG / MP_DIGIT_SIZE) {
+    unsigned long omega = 0;
+    unsigned long alpha = 0;
+    for (ix = 0; ix < SIZEOF_LONG / MP_DIGIT_SIZE; ix++)
+	omega = (omega << MP_DIGIT_BIT) | DIGIT(a, ix);
+    for (ix = USED(a) - SIZEOF_LONG / MP_DIGIT_SIZE; ix < USED(a); ix++)
+	alpha = (alpha << MP_DIGIT_BIT) | DIGIT(a, ix);
+    hash = alpha + omega;
+  } else {
+    hash = 0;
+
+    for (ix = 0; ix < USED(a); ix++)
+	hash = (hash << MP_DIGIT_BIT) | DIGIT(a, ix);
+  }
+#else
+  mp_digit omega = DIGIT(a, 0);
+  mp_digit alpha = DIGIT(a, USED(a) - 1);
+  unsigned long hash = alpha + omega;
+#endif
+  return SIGN(a) == MP_NEG ? ~hash : hash;
+}
+
 /*------------------------------------------------------------------------*/
 /* {{{ Number theoretic functions */
 

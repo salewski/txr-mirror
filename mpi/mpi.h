@@ -165,6 +165,8 @@ int    mp_cmp_int(mp_int *a, long z);
 int    mp_isodd(mp_int *a);
 int    mp_iseven(mp_int *a);
 
+unsigned long mp_hash(mp_int *a);
+
 /*------------------------------------------------------------------------*/
 /* Number theoretic                                                       */
 
