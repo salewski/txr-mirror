@@ -2401,7 +2401,7 @@ mp_err mp_to_unsigned_bin(mp_int *mp, unsigned char *str)
     int      ix;
 
     d = *dp;
-    for(ix = 0; ix < sizeof(mp_digit); ++ix) {
+    for(ix = 0; ix < (int) sizeof(mp_digit); ++ix) {
       *spos = d & UCHAR_MAX;
       d >>= CHAR_BIT;
       ++spos;
@@ -2598,10 +2598,10 @@ mp_err mp_toradix(mp_int *mp, unsigned char *str, int radix)
     /* Reverse the digits and sign indicator     */
     ix = 0;
     while(ix < pos) {
-      char tmp = str[ix];
+      char tmp2 = str[ix];
 
       str[ix] = str[pos];
-      str[pos] = tmp;
+      str[pos] = tmp2;
       ++ix;
       --pos;
     }
@@ -2952,10 +2952,10 @@ mp_err s_mp_mul_2(mp_int *mp)
 void     s_mp_mod_2d(mp_int *mp, mp_digit d)
 {
   unsigned int  ndig = (d / DIGIT_BIT), nbit = (d % DIGIT_BIT);
-  unsigned int  ix;
+  int           ix;
   mp_digit      dmask, *dp = DIGITS(mp);
 
-  if(ndig >= USED(mp))
+  if((int) ndig >= USED(mp))
     return;
 
   /* Flush all the bits above 2^d in its digit */
