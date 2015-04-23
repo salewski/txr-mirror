@@ -42,6 +42,10 @@
 #define  MP_UNDEF        -5 /* answer is undefined   */
 #define  MP_LAST_CODE    MP_UNDEF
 
+#define  MP_LT       -1
+#define  MP_EQ        0
+#define  MP_GT        1
+
 #include "mpi-types.h"
 
 /* Included for compatibility... */

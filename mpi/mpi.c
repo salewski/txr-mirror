@@ -84,14 +84,6 @@ static unsigned int s_mp_defprec = MP_DEFPREC;
 
 /* }}} */
 
-/* {{{ Comparison constants */
-
-#define  MP_LT       -1
-#define  MP_EQ        0
-#define  MP_GT        1
-
-/* }}} */
-
 /* {{{ Constant strings */
 
 /* Constant strings returned by mp_strerror() */
