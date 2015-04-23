@@ -110,9 +110,6 @@ lit_align=
 extra_debugging=
 debug_support=y
 gen_gc=y
-mpi_version=1.8.6
-have_quilt=
-have_patch=
 have_unistd=
 have_sys_time=
 have_timegm=
@@ -633,9 +630,6 @@ have_posix_sigs := $have_posix_sigs
 
 # do we compile in debug support?
 debug_support := $debug_support
-
-# MPI version
-mpi_version := $mpi_version
 
 # EXE suffix
 EXE := $exe
@@ -2014,30 +2008,6 @@ fi
 $make conftest.clean
 
 #
-# What do we have for patch management.
-#
-
-printf "Checking for quilt ... "
-
-if ! quilt --version > /dev/null 2>&1 ; then
-  printf "not found\n"
-else
-  printf "found\n"
-  have_quilt=y
-fi
-
-printf "Checking for patch ... "
-
-if ! patch --version > /dev/null 2>&1 ; then
-  printf "not found\n"
-  printf "\npatch tool required!\n\n"
-  exit 1
-else
-  printf "found\n"
-  have_patch=y
-fi
-
-#
 # Function to apply patches.
 #
 apply_patches()
@@ -2054,29 +2024,6 @@ apply_patches()
     esac
   done < patches/series
 }
-
-#
-# Try to extract MPI if not already.
-#
-
-printf "Extracting MPI ... "
-
-if [ -e mpi-${mpi_version} ] ; then
-  printf "already extracted\n"
-else
-  tar -xzf $top_srcdir/mpi-${mpi_version}.tar.gz
-  printf "\n"
-  printf "Symlinking MPI patches ...\n"
-  ln -sf $top_srcdir/mpi-patches mpi-${mpi_version}/patches
-  printf "Applying MPI patches ...\n"
-  if [ -n "$have_quilt" ] ; then
-    ( cd mpi-${mpi_version}/patches ;
-      if [ -e series ] ; then quilt push -a ; else echo "no patches" ; fi )
-  else
-    ( cd mpi-${mpi_version} ;
-      apply_patches )
-  fi
-fi
 
 #
 # Some final blurbs into config.h

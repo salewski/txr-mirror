@@ -29,7 +29,7 @@ VERBOSE :=
 CFLAGS := -iquote $(conf_dir) -iquote $(top_srcdir) \
           $(LANG_FLAGS) $(DIAG_FLAGS) \
           $(DBG_FLAGS) $(PLATFORM_FLAGS) $(EXTRA_FLAGS)
-CFLAGS += -iquote mpi-$(mpi_version)
+CFLAGS += -iquote mpi
 CFLAGS := $(filter-out $(REMOVE_FLAGS),$(CFLAGS))
 
 ifneq ($(subst g++,@,$(notdir $(CC))),$(notdir $(CC)))
@@ -63,7 +63,7 @@ endif
 # MPI objects
 MPI_OBJ_BASE=mpi.o mplogic.o
 
-MPI_OBJS := $(addprefix mpi-$(mpi_version)/,$(MPI_OBJ_BASE))
+MPI_OBJS := $(addprefix mpi/,$(MPI_OBJ_BASE))
 
 OBJS += $(MPI_OBJS)
 
@@ -233,13 +233,8 @@ clean: conftest.clean tests.clean
 	rm -f $(PROG)$(EXE) $(PROG)-dbg$(EXE) y.tab.c lex.yy.c y.tab.h y.output
 	rm -rf opt dbg $(EXTRA_OBJS-y)
 
-repatch:
-	cd mpi-$(mpi_version); quilt pop -af
-	cd mpi-$(mpi_version); quilt push -a
-
 distclean: clean
 	rm -rf $(conf_dir)
-	rm -rf mpi-$(mpi_version)
 endif
 
 TESTS_TMP := txr.test.out

@@ -1,5 +1,23 @@
 2015-04-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	Switch to in-tree mpi directory.
+
+	* Makefile (CFLAGS, MPI_OBJS): Refer to mpi directory without version
+	number.
+	(repatch): Target removed.
+	(distclean): Don't try to remove old unpacked tarball mpi directory.
+
+	* configure (mpi_version, have_quilt, have_patch): Variables removed.
+	(gen_config_make): Do not generate mpi_version make variable.
+	Do not test for quilt or patch. No longer extract MPI tarball or
+	try to apply patches.
+
+	* mpi-1.8.6.tar.gz: File removed.
+
+	* mpi-patches: Directory and all files under it removed.
+
+2015-04-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	delay/force overhaul.
 
 	* eval.c (promise_forced_s, promise_inprogress_s): New symbol
