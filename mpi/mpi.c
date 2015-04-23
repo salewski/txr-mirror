@@ -3266,7 +3266,7 @@ mp_err   s_mp_mul_d(mp_int *a, mp_digit d)
     unless absolutely necessary.
    */
   max = USED(a);
-  w = dp[max - 1] * d;
+  w = dp[max - 1] * (mp_word) d;
   if(CARRYOUT(w) != 0) {
     if((res = s_mp_pad(a, max + 1)) != MP_OKAY)
       return res;
@@ -3274,7 +3274,7 @@ mp_err   s_mp_mul_d(mp_int *a, mp_digit d)
   }
 
   for(ix = 0; ix < max; ix++) {
-    w = (dp[ix] * d) + k;
+    w = (dp[ix] * (mp_word) d) + k;
     dp[ix] = ACCUM(w);
     k = CARRYOUT(w);
   }
@@ -3491,7 +3491,7 @@ mp_err   s_mp_mul(mp_int *a, mp_int *b)
     pa = DIGITS(a);
     for(jx = 0; jx < ua; ++jx, ++pa) {
       pt = pbt + ix + jx;
-      w = *pb * *pa + k + *pt;
+      w = *pb * (mp_word) *pa + k + *pt;
       *pt = ACCUM(w);
       k = CARRYOUT(w);
     }
@@ -3573,7 +3573,7 @@ mp_err   s_mp_sqr(mp_int *a)
     if(*pa1 == 0)
       continue;
 
-    w = DIGIT(&tmp, ix + ix) + (*pa1 * *pa1);
+    w = DIGIT(&tmp, ix + ix) + (*pa1 * (mp_word) *pa1);
 
     pbt[ix + ix] = ACCUM(w);
     k = CARRYOUT(w);
@@ -3595,7 +3595,7 @@ mp_err   s_mp_sqr(mp_int *a)
       pt = pbt + ix + jx;
 
       /* Compute the multiplicative step */
-      w = *pa1 * *pa2;
+      w = *pa1 * (mp_word) *pa2;
 
       /* If w is more than half MP_WORD_MAX, the doubling will
 	 overflow, and we need to record a carry out into the next
@@ -3639,7 +3639,7 @@ mp_err   s_mp_sqr(mp_int *a)
      */
     kx = 1;
     while(k) {
-      k = pbt[ix + jx + kx] + 1;
+      k = (mp_word) pbt[ix + jx + kx] + 1;
       pbt[ix + jx + kx] = ACCUM(k);
       k = CARRYOUT(k);
       ++kx;
