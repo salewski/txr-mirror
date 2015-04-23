@@ -526,6 +526,59 @@ mp_err mp_set_int(mp_int *mp, long z)
 
 /* }}} */
 
+mp_err mp_set_intptr(mp_int *mp, int_ptr_t z)
+{
+  int_ptr_t v = z > 0 ? z : -z;
+
+  if (sizeof z > sizeof (mp_digit)) {
+    int            ix, shift;
+    const int      nd = (sizeof v + sizeof (mp_digit) - 1) / sizeof (mp_digit);
+
+    ARGCHK(mp != NULL, MP_BADARG);
+
+    mp_zero(mp);
+
+    if(z == 0)
+      return MP_OKAY;  /* shortcut for zero */
+
+    s_mp_grow(mp, nd);
+
+    USED(mp) = nd;
+
+    for (ix = 0, shift = 0; ix < nd; ix++, shift += MP_DIGIT_BIT)
+    {
+	DIGIT(mp, ix) = (v >> shift) & MP_DIGIT_MAX;
+    }
+  } else {
+    mp_set(mp, v);
+  }
+
+  if(z < 0)
+    SIGN(mp) = MP_NEG;
+
+  return MP_OKAY;
+}
+
+/*
+ * No checks here: assumes that the mp is in range!
+ */
+mp_err mp_get_intptr(mp_int *mp, int_ptr_t *z)
+{
+  int_ptr_t out = 0;
+
+#if MP_DIGIT_SIZE < SIZEOF_PTR
+  int ix;
+  int nd = USED(mp);
+  for (ix = 0; ix < nd; ix++, out <<= MP_DIGIT_BIT)
+    out = DIGIT(mp, ix);
+#else
+  out = DIGIT(mp, 0);
+#endif
+
+  *z = (SIGN(mp) == MP_NEG) ? -out : out;
+  return MP_OKAY;
+}
+
 /*------------------------------------------------------------------------*/
 /* {{{ Digit arithmetic */
 

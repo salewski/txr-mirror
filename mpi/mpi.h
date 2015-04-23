@@ -94,6 +94,8 @@ void   mp_clear_array(mp_int mp[], int count);
 void   mp_zero(mp_int *mp);
 void   mp_set(mp_int *mp, mp_digit d);
 mp_err mp_set_int(mp_int *mp, long z);
+mp_err mp_set_intptr(mp_int *mp, int_ptr_t z);
+mp_err mp_get_intptr(mp_int *mp, int_ptr_t *z);
 
 /*------------------------------------------------------------------------*/
 /* Single digit arithmetic                                                */
