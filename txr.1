@@ -15338,7 +15338,7 @@ constructor with a lexical closure provided by a
 function:
 
 .cblk
-  (defmacro lcon (car-form cdr-form)
+  (defmacro lcons (car-form cdr-form)
     (let ((lc (gensym)))
        ^(make-lazy-cons (lambda (,lc)
                           (rplaca ,lc ,car-form)
