@@ -187,6 +187,11 @@ mp_err mp_invmod(mp_int *a, mp_int *m, mp_int *c);
 #endif /* end MP_NUMTH */
 
 /*------------------------------------------------------------------------*/
+/* Conversions                                                            */
+
+mp_err mp_to_double(mp_int *mp, double *d);
+
+/*------------------------------------------------------------------------*/
 /* Input and output                                                       */
 
 #if MP_IOFUNC

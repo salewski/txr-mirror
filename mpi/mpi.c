@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <math.h>
 
 typedef unsigned char mem_t;
 extern mem_t *chk_calloc(size_t n, size_t size);
@@ -2332,6 +2333,29 @@ X:
 #endif /* if MP_NUMTH */
 
 /* }}} */
+
+mp_err mp_to_double(mp_int *mp, double *d)
+{
+  int ix;
+  mp_size used = USED(mp);
+  mp_digit *dp = DIGITS(mp);
+  static double mult;
+  double out = dp[used - 1];
+
+  if (!mult)
+    mult = pow(2.0, MP_DIGIT_BIT);
+
+  for (ix = (int) used - 2; ix >= 0; ix--) {
+    out = out * mult;
+    out += (double) dp[ix];
+  }
+
+  if (SIGN(mp) == MP_NEG)
+    out = -out;
+
+  *d = out;
+  return MP_OKAY;
+}
 
 /*------------------------------------------------------------------------*/
 /* {{{ mp_print(mp, ofp) */
