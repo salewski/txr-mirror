@@ -4693,17 +4693,22 @@ int      s_mp_ispow2d(mp_digit d)
 int      s_mp_tovalue(int ch, int r)
 {
   int    val, xch;
-  
-  if(r > 36)
-    xch = ch;
-  else
-    xch = toupper(ch);
 
-  if(isdigit(xch))
+  /* For bases up to 36, the letters of the alphabet are
+     case-insensitive and denote digits valued 10 through 36.
+     For bases greater than 36, the lower case letters have
+     their own meaning and denote values past 36. */
+
+  if (r <= 36 && ch >= 'a' && ch <= 'z')
+    xch = ch - 'a' + 'A';
+  else
+    xch = ch;
+
+  if(xch >= '0' && xch <= '9')
     val = xch - '0';
-  else if(isupper(xch))
+  else if(xch >= 'A' && xch <= 'Z')
     val = xch - 'A' + 10;
-  else if(islower(xch))
+  else if(xch >= 'a' && xch <= 'z')
     val = xch - 'a' + 36;
   else if(xch == '+')
     val = 62;
@@ -4741,8 +4746,8 @@ char     s_mp_todigit(int val, int r, int low)
 
   ch = s_dmap_1[val];
 
-  if(r <= 36 && low)
-    ch = tolower(ch);
+  if(low && val > 9 && r <= 36)
+    ch = ch - 'A' + 'a';
 
   return ch;
 
