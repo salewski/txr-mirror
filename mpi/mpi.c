@@ -571,6 +571,15 @@ mp_err mp_get_intptr(mp_int *mp, int_ptr_t *z)
   return MP_OKAY;
 }
 
+mp_err mp_set_word(mp_int *mp, mp_word w, int sign)
+{
+  USED(mp) = 2;
+  DIGIT(mp, 0) = w & MP_DIGIT_MAX;
+  DIGIT(mp, 1) = w >> MP_DIGIT_BIT;
+  SIGN(mp) = sign;
+  return MP_OKAY;
+}
+
 /*------------------------------------------------------------------------*/
 /* {{{ Digit arithmetic */
 
