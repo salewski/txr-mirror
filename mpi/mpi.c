@@ -2626,9 +2626,9 @@ int    mp_value_radix_size(int num, int qty, int radix)
 
 /* }}} */
 
-/* {{{ mp_toradix(mp, str, radix) */
+/* {{{ mp_toradix_case(mp, str, radix, low) */
 
-mp_err mp_toradix(mp_int *mp, unsigned char *str, int radix)
+mp_err mp_toradix_case(mp_int *mp, unsigned char *str, int radix, int low)
 {
   int  ix, pos = 0;
 
@@ -2659,7 +2659,7 @@ mp_err mp_toradix(mp_int *mp, unsigned char *str, int radix)
       }
 
       /* Generate digits, use capital letters */
-      ch = s_mp_todigit(rem, radix, 0);
+      ch = s_mp_todigit(rem, radix, low);
 
       str[pos++] = ch;
     }
@@ -2687,9 +2687,14 @@ mp_err mp_toradix(mp_int *mp, unsigned char *str, int radix)
 
   return MP_OKAY;
 
-} /* end mp_toradix() */
+} /* end mp_toradix_case() */
 
 /* }}} */
+
+mp_err mp_toradix(mp_int *mp, unsigned char *str, int radix)
+{
+  return mp_toradix_case(mp, str, radix, 0);
+}
 
 /* {{{ mp_char2value(ch, r) */
 
