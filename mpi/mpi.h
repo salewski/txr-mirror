@@ -72,8 +72,13 @@
 #define MAX_RADIX         64
 
 typedef struct {
+#if SIZEOF_INT >= SIZEOF_PTR
+  unsigned int  sign : 1;
+  unsigned int  alloc : sizeof(int)*CHAR_BIT - 1;
+#else
   mp_sign       sign;    /* sign of this quantity      */
   mp_size       alloc;   /* how many digits allocated  */
+#endif
   mp_size       used;    /* how many digits used       */
   mp_digit     *dp;      /* the digits themselves      */
 } mp_int;
