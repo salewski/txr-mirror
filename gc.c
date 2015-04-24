@@ -173,8 +173,6 @@ val make_obj(void)
       malloc_delta >= opt_gc_delta)
   {
     gc();
-    if (freshobj_idx >= FRESHOBJ_VEC_SIZE)
-      full_gc = 1;
     prev_malloc_bytes = malloc_bytes;
   }
 #else
@@ -665,10 +663,13 @@ void gc(void)
     printf("sweep: freed %d full_gc == %d exhausted == %d\n",
            (int) swept, full_gc, exhausted);
 #endif
-    if (++gc_counter >= FULL_GC_INTERVAL) {
+    if (++gc_counter >= FULL_GC_INTERVAL ||
+        freshobj_idx >= FRESHOBJ_VEC_SIZE)
+    {
       full_gc_next_time = 1;
       gc_counter = 0;
     }
+
     if (exhausted && full_gc && swept < 3 * HEAP_SIZE / 4)
       more();
 #else

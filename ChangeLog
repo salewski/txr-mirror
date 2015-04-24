@@ -1,5 +1,10 @@
 2015-04-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	* gc.c (make_obj, gc): The check for insufficient space in freshobj
+	array after a gc is moved into the gc function.
+
+2015-04-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	* gc.c (gc): Minor off-by-one: compare gc_counter to FULL_GC_INTERVAL
 	rather than FULL_GC_INTERVAL - 1, since it is pre-incremented.
 
