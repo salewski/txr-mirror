@@ -665,7 +665,7 @@ void gc(void)
     printf("sweep: freed %d full_gc == %d exhausted == %d\n",
            (int) swept, full_gc, exhausted);
 #endif
-    if (++gc_counter >= FULL_GC_INTERVAL - 1) {
+    if (++gc_counter >= FULL_GC_INTERVAL) {
       full_gc_next_time = 1;
       gc_counter = 0;
     }
