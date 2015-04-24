@@ -204,7 +204,7 @@ val make_obj(void)
     }
 
 #if CONFIG_GEN_GC
-    if (freshobj_idx < FRESHOBJ_VEC_SIZE) {
+    if (!full_gc && freshobj_idx < FRESHOBJ_VEC_SIZE) {
       more();
       continue;
     }

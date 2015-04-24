@@ -1,5 +1,17 @@
 2015-04-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	Regression: runaway allocation of heaps.
+
+	* gc.c (make_obj): Fix regression introduced on 2014-10-18,
+	released in TXR 100. Because make_obj discontinues
+	placing objects into the freshobj_array when the full_gc
+	flag has been set, it is incorrect to allocate another heap
+	when the free list is exhausted and the freshobj_array
+	has room remaining. It has room remaining because it is
+	disused.
+
+2015-04-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	* gc.c (make_obj, gc): The check for insufficient space in freshobj
 	array after a gc is moved into the gc function.
 
