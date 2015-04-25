@@ -1,5 +1,11 @@
 2015-04-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (symbol_package): If the argument is nil, return
+	the user package directly, not the value of the *user-package*
+	variable.
+
+2015-04-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	Remove silly package lookup from keywordp.
 
 	This tiny change yields a 165% (2.65X) speedup in the

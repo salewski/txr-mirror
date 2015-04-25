@@ -3511,7 +3511,7 @@ static void symbol_setname(val sym, val name)
 val symbol_package(val sym)
 {
   if (sym == nil)
-    return user_package;
+    return user_package_var;
   type_check(sym, SYM);
   return sym->s.package;
 }
