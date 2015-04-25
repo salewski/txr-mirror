@@ -2881,6 +2881,64 @@ static val me_lcons(val form, val menv)
                    list(rplacd, lc_sym, cdr_form, nao), nao), nao);
 }
 
+static val me_mlet(val form, val menv)
+{
+  uses_or2;
+  val body = cdr(form);
+  val bindings = pop(&body);
+  val symacrolet = intern(lit("symacrolet"), user_package);
+  val delay = intern(lit("delay"), user_package);
+  val force = intern(lit("force"), user_package);
+
+  list_collect_decl (ordinary_syms, ptail_osyms);
+  list_collect_decl (syms, ptail_syms);
+  list_collect_decl (inits, ptail_inits);
+  list_collect_decl (gensyms, ptail_gensyms);
+  list_collect_decl (smacs, ptail_smacs);
+  list_collect_decl (sets, ptail_sets);
+
+  for (; consp(bindings); bindings = cdr(bindings)) {
+    val binding = car(bindings);
+
+    if (atom(binding)) {
+      if (!bindable(binding))
+        uw_throwf(error_s, lit("mlet: ~s isn't a bindable symbol"),
+                  binding, nao);
+      ptail_osyms = list_collect(ptail_osyms, binding);
+    } else {
+      val sym = car(binding);
+
+      if (!bindable(sym))
+        uw_throwf(error_s, lit("mlet: ~s isn't a bindable symbol"),
+                  sym, nao);
+
+      if (cdr(binding)) {
+        val init = car(cdr(binding));
+        val gen = gensym(nil);
+        ptail_syms = list_collect(ptail_syms, sym);
+        ptail_inits = list_collect(ptail_inits, init);
+        ptail_gensyms = list_collect(ptail_gensyms, gen);
+        ptail_smacs = list_collect(ptail_smacs,
+                                   list(sym, list(force, gen, nao), nao));
+        ptail_sets = list_collect(ptail_sets,
+                                  list(set_s, gen,
+                                       list(delay, init, nao), nao));
+      } else {
+        ptail_osyms = list_collect(ptail_osyms, sym);
+      }
+    }
+  }
+
+  if (bindings)
+    uw_throwf(error_s, lit("mlet: misplaced atom ~s in binding syntax"),
+              bindings, nao);
+
+  return list(let_s, append2(ordinary_syms, gensyms),
+              apply_frob_args(list(symacrolet, smacs,
+                                   append2(sets, or2(body, cons(nil, nil))),
+                                   nao)), nao);
+}
+
 static val expand_catch_clause(val form, val menv)
 {
   val sym = first(form);
@@ -4032,6 +4090,7 @@ void eval_init(void)
   reg_mac(intern(lit("whenlet"), user_package), me_iflet_whenlet);
   reg_mac(intern(lit("dotimes"), user_package), me_dotimes);
   reg_mac(intern(lit("lcons"), user_package), me_lcons);
+  reg_mac(intern(lit("mlet"), user_package), me_mlet);
 
   reg_fun(cons_s, func_n2(cons));
   reg_fun(intern(lit("make-lazy-cons"), user_package), func_n1(make_lazy_cons));

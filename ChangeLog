@@ -1,5 +1,14 @@
 2015-04-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	Introducing mlet macro.
+
+	* eval.c (me_mlet): New static function.
+	(eval_init): Registered mlet macro.
+
+	* txr.1: Documented mlet.
+
+2015-04-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (symbol_package): If the argument is nil, return
 	the user package directly, not the value of the *user-package*
 	variable.

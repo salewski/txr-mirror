@@ -15519,7 +15519,113 @@ function call.  If the
 function is invoked additional times on
 the same promise, the cached value is retrieved.
 
-.SS* Lazy Sequences, Ranges, Permutations and Combinations
+.coNP Macro @ mlet
+.synb
+.mets (mlet >> ({ sym | >> ( sym << init-form )}*) << body-form *)
+.syne
+.desc
+The
+.code mlet
+macro ("magic let" or "mutual let") implements a variable binding construct
+similar to
+.code let
+and
+.codn let* .
+
+Under
+.codn mlet ,
+the scope of the bindings of the
+.meta sym
+variables extends over the
+.metn init-form -s,
+as well as the
+.metn body-form -s.
+
+Unlike the
+.code let*
+construct, each
+.meta init-form
+has each
+.meta sym
+in scope. That is to say, an
+.metn init-form
+can refer not only to previous variables, but also to later variables
+as well as to its own variable.
+
+The variables are not initialized until their values are accessed for
+the first time. Any
+.meta sym
+whose value is not accessed is not initialized.
+
+Furthermore, the evaluation of each
+.meta init-form
+does not take place until the time when its value is needed
+to initialize the associated
+.metn sym .
+This evaluation takes place once. If a given
+.meta sym
+is not accessed during the evaluation of the
+.code mlet
+construct, then its
+.meta init-form
+is never evaluated.
+
+Any
+.meta sym
+which has no initializer is an ordinary variable. It is initialized
+immediately with the value
+.code nil
+and may be assigned. Those
+.metn sym -s
+which have initializers may not be assigned.
+
+Direct circular references erroneous and are diagnosed.
+
+.TP* Examples:
+
+.cblk
+  ;; Dependent calculations in arbitrary order
+  (mlet ((x (+ y 3))
+         (z (+ x 1))
+         (y 4))
+    (+ z 4))  -->  12
+
+  ;; Error: circular reference:
+  ;; x depends on y, y on z, but z on x again.
+  (mlet ((x (+ y 1))
+         (y (+ z 1))
+         (z (+ x 1)))
+    z)
+
+  ;; Okay: lazy circular reference because lcons is used
+  (mlet ((list (lcons 1 list)))
+    list)  -->  (1 1 1 1 1 ...) ;; circular list
+.cble
+
+In the last example, the
+.code list
+variable is accessed for the first time in the body of the 
+.code mlet
+form. This causes the evaluation of the
+.code lcons
+form. This form evaluates its arguments lazily, which means that it
+is not a problem that
+.code list
+is not yet initialized. The form produces a lazy cons, which is then used
+to initialize
+.code list.
+When the
+.code car
+or
+.code cdr
+fields of the lazy cons are accessed, the
+.code list
+expression in the
+.code lcons
+argument is accessed. By that time, the variable is initialized
+and holds the lazy cons itself, which creates the circular reference,
+and a circular list.
+
 .coNP Functions @ generate and @ giterate
 .synb
 .mets (generate < while-fun << gen-fun )
