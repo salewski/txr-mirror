@@ -1041,7 +1041,7 @@ static val sym_helper(scanner_t *scnr, wchar_t *lexeme, val meta_allowed)
     *colon = 0;
 
   if (colon == lexeme) {
-    package = keyword_package;
+    package = keyword_package_var;
     sym_name = string(colon + 1);
     free(tokfree);
   } else if (colon != 0) {

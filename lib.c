@@ -3639,7 +3639,7 @@ val symbolp(val sym)
 
 val keywordp(val sym)
 {
-  return (symbolp(sym) && symbol_package(sym) == keyword_package) ? t : nil;
+  return c_true(sym && symbolp(sym) && sym->s.package == keyword_package_var);
 }
 
 loc get_user_package(void)

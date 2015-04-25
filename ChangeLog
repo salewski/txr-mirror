@@ -1,3 +1,15 @@
+2015-04-25  Kaz Kylheku  <kaz@kylheku.com>
+
+	Remove silly package lookup from keywordp.
+
+	This tiny change yields a 165% (2.65X) speedup in the
+	tst/tests/011/mandel.txr test case.
+
+	* lib.c (keywordp): Use keyword_package_var instead of the
+	keyword_package macro which looks up the global environment.
+
+	* parser.y (sym_helper): Likewise.
+
 2015-04-24  Kaz Kylheku  <kaz@kylheku.com>
 
 	Regression: runaway allocation of heaps.
