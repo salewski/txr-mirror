@@ -79,7 +79,7 @@ val dohash_s;
 val uw_protect_s, return_s, return_from_s;
 val list_s, append_s, apply_s, iapply_s;
 val gen_s, gun_s, generate_s, rest_s, plus_s;
-val promise_s, promise_forced_s, promise_inprogress_s;
+val promise_s, promise_forced_s, promise_inprogress_s, force_s;
 val op_s, ap_s, identity_s, apf_s, ipf_s;
 val ret_s, aret_s;
 val hash_lit_s, hash_construct_s;
@@ -1809,6 +1809,8 @@ static loc dwim_loc(val form, val env, val op, val newform, val *retval)
   return nulloc;
 }
 
+static loc force_l(val promise);
+
 static val op_modplace(val form, val env)
 {
   uses_or2;
@@ -1864,6 +1866,9 @@ static val op_modplace(val form, val env)
       val vec = eval(second(place), env, form);
       val ind = eval(third(place), env, form);
       ptr = vecref_l(vec, ind);
+    } else if (sym == force_s) {
+      val promise = eval(second(place), env, form);
+      ptr = force_l(promise);
     } else {
       eval_error(form, lit("~s: ~s is not a recognized place form"),
                  op, place, nao);
@@ -2888,7 +2893,6 @@ static val me_mlet(val form, val menv)
   val bindings = pop(&body);
   val symacrolet = intern(lit("symacrolet"), user_package);
   val delay = intern(lit("delay"), user_package);
-  val force = intern(lit("force"), user_package);
 
   list_collect_decl (ordinary_syms, ptail_osyms);
   list_collect_decl (syms, ptail_syms);
@@ -2919,7 +2923,7 @@ static val me_mlet(val form, val menv)
         ptail_inits = list_collect(ptail_inits, init);
         ptail_gensyms = list_collect(ptail_gensyms, gen);
         ptail_smacs = list_collect(ptail_smacs,
-                                   list(sym, list(force, gen, nao), nao));
+                                   list(sym, list(force_s, gen, nao), nao));
         ptail_sets = list_collect(ptail_sets,
                                   list(set_s, gen,
                                        list(delay, init, nao), nao));
@@ -3716,6 +3720,18 @@ static val force(val promise)
   }
 }
 
+static loc force_l(val promise)
+{
+  loc pstate = car_l(promise);
+  val cd = cdr(promise);
+  loc pval = car_l(cd);
+
+  if (deref(pstate) != promise_forced_s)
+    force(promise);
+
+  return pval;
+}
+
 static void reg_op(val sym, opfun_t fun)
 {
   assert (sym != 0);
@@ -3975,6 +3991,7 @@ void eval_init(void)
   promise_s = intern(lit("promise"), system_package);
   promise_forced_s = intern(lit("promise-forced"), system_package);
   promise_inprogress_s = intern(lit("promise-inprogress"), system_package);
+  force_s = intern(lit("force"), user_package);
   op_s = intern(lit("op"), user_package);
   ap_s = intern(lit("ap"), user_package);
   do_s = intern(lit("do"), user_package);
@@ -4523,7 +4540,7 @@ void eval_init(void)
   reg_fun(intern(lit("repeat"), user_package), func_n2o(repeat, 1));
   reg_fun(intern(lit("pad"), user_package), func_n3o(pad, 1));
   reg_fun(intern(lit("weave"), user_package), func_n0v(weavev));
-  reg_fun(intern(lit("force"), user_package), func_n1(force));
+  reg_fun(force_s, func_n1(force));
   reg_fun(intern(lit("rperm"), user_package), func_n2(rperm));
   reg_fun(intern(lit("perm"), user_package), func_n2o(perm, 1));
   reg_fun(intern(lit("comb"), user_package), func_n2(comb));

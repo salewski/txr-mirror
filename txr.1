@@ -15570,14 +15570,11 @@ construct, then its
 .meta init-form
 is never evaluated.
 
-Any
-.meta sym
-which has no initializer is an ordinary variable. It is initialized
-immediately with the value
-.code nil
-and may be assigned. Those
-.metn sym -s
-which have initializers may not be assigned.
+The bound variables may be assigned. If, before initialization, a variable is
+updated in such a way that its prior value is not needed, it is unspecified
+whether initialization takes place, and thus whether its
+.meta init-form
+is evaluated.
 
 Direct circular references erroneous and are diagnosed.
 

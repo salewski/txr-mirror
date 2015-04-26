@@ -1,5 +1,21 @@
 2015-04-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	Allow (force ...) to be an assignable place.
+
+	This allows mlet variables to be assignable.
+
+	* eval.c (force_s): New global variable.
+	(op_modplace): Handle force form.
+	(me_mlet): Use force_s symbol.
+	(force_l): New static function.
+	(eval_init): Initialize force_s variable. Use it in registration
+	of force function.
+
+	* txr.1: Remove text in mlet definition that variables
+	are not assignable. Replace with note about an unspecified behavior.
+
+2015-04-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	Introducing mlet macro.
 
 	* eval.c (me_mlet): New static function.
