@@ -1,3 +1,25 @@
+                                    TXR 107
+                                   2015-04-26
+
+
+  Features
+
+  - Change in representation of promise objects. The force function
+    now detects recursion and throws an error.
+
+  - New mlet macro: a step beyond Scheme's letrec.
+
+  - A trivial optimization in the keywordp function more than doubles
+    the interpretation speed of TXR Lisp.
+
+  Bugs
+
+  - Fixed regression in the garbage collector introduced in October 2014,
+    TXR 100. This would cause runaway memory growth, due to the garbage
+    collector creating unnecessary new heaps.
+
+
+
                                     TXR 106
                                    2015-04-21
 

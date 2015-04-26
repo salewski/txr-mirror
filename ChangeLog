@@ -1,3 +1,15 @@
+2015-04-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	Version 107.
+
+	* RELNOTES: Updated.
+
+	* configure, txr.1: Bumped version.
+
+	* share/txr/stdlib/ver.txr: Likewise.
+
+	* tl.vim, txr.vim: Regenerated.
+
 2015-04-25  Kaz Kylheku  <kaz@kylheku.com>
 
 	Allow (force ...) to be an assignable place.
