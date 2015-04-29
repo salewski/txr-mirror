@@ -1477,6 +1477,32 @@ else
 fi
 
 #
+# poll
+#
+
+printf "Checking for poll ... "
+
+cat > conftest.c <<!
+#include <poll.h>
+#include "config.h"
+
+int main(int argc, char **argv)
+{
+  struct pollfd fds[42] = { 0 };
+  nfds_t n = 42;
+  int err = poll(&fds, 42, 1000);
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_POLL 1\n" >> $config_h
+else
+  printf "no\n"
+fi
+
+#
 # Check for fields inside struct tm
 #
 

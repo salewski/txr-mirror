@@ -52,6 +52,9 @@
 #if HAVE_MAKEDEV
 #include <sys/types.h>
 #endif
+#if HAVE_POLL
+#include <poll.h>
+#endif
 #include "lib.h"
 #include "stream.h"
 #include "hash.h"
@@ -599,6 +602,76 @@ static val unsetenv_wrap(val name)
   return name;
 }
 
+#if HAVE_POLL
+
+static val poll_wrap(val poll_list, val timeout_in)
+{
+  nfds_t i, len = c_num(length(poll_list));
+  val iter;
+  struct pollfd *pfd = convert(struct pollfd *,
+                               chk_calloc(len, sizeof *pfd));
+  val timeout = default_arg(timeout_in, negone);
+  int res;
+
+  for (i = 0, iter = poll_list; iter; iter = cdr(iter), i++) {
+    cons_bind (obj, events, car(iter));
+
+    pfd[i].events = c_num(events);
+
+    switch (type(obj)) {
+    case NUM:
+      pfd[i].fd = c_num(obj);
+      break;
+    case COBJ:
+      if (obj->co.cls == stream_s) {
+        val fdval = stream_get_prop(obj, fd_k);
+        if (!fdval) {
+          free(pfd);
+          uw_throwf(file_error_s,
+                    lit("poll: stream ~s doesn't have a file descriptor"),
+                    obj, nao);
+        }
+        pfd[i].fd = c_num(fdval);
+        break;
+      }
+      /* fallthrough */
+    default:
+      free(pfd);
+      uw_throwf(file_error_s,
+                lit("poll: ~s isn't a stream or file descriptor"),
+                obj, nao);
+      break;
+    }
+  }
+
+  res = poll(pfd, len, c_num(timeout));
+
+  if (res < 0) {
+    free(pfd);
+    uw_throwf(file_error_s, lit("poll failed: ~a/~s"),
+              num(errno), string_utf8(strerror(errno)), nao);
+  }
+
+  if (res == 0) {
+    free(pfd);
+    return nil;
+  }
+
+  {
+    list_collect_decl (out, ptail);
+
+    for (i = 0, iter = poll_list; iter; iter = cdr(iter), i++) {
+      val pair = car(iter);
+      if (pfd[i].revents)
+        ptail = list_collect(ptail, cons(car(pair), num(pfd[i].revents)));
+    }
+
+    free(pfd);
+    return out;
+  }
+}
+
+#endif
 
 void sysif_init(void)
 {
@@ -729,6 +802,26 @@ void sysif_init(void)
   reg_var(intern(lit("s-iwoth"), user_package), num_fast(S_IWOTH));
   reg_var(intern(lit("s-ixoth"), user_package), num_fast(S_IXOTH));
 #endif
+#if HAVE_POLL
+  reg_var(intern(lit("poll-in"), user_package), num_fast(POLLIN));
+  reg_var(intern(lit("poll-out"), user_package), num_fast(POLLOUT));
+  reg_var(intern(lit("poll-err"), user_package), num_fast(POLLERR));
+#ifdef POLLPRI
+  reg_var(intern(lit("poll-pri"), user_package), num_fast(POLLPRI));
+#endif
+#ifdef POLLRDHUP
+  reg_var(intern(lit("poll-rdhup"), user_package), num_fast(POLLRDHUP));
+#endif
+#ifdef POLLNVAL
+  reg_var(intern(lit("poll-nval"), user_package), num_fast(POLLNVAL));
+#endif
+#ifdef POLLRDBAND
+  reg_var(intern(lit("poll-rdband"), user_package), num_fast(POLLRDBAND));
+#endif
+#ifdef POLLWRBAND
+  reg_var(intern(lit("poll-wrband"), user_package), num_fast(POLLWRBAND));
+#endif
+#endif
 
 #if HAVE_FORK_STUFF
   reg_fun(intern(lit("fork"), user_package), func_n0(fork_wrap));
@@ -764,4 +857,8 @@ void sysif_init(void)
   reg_fun(intern(lit("getenv"), user_package), func_n1(getenv_wrap));
   reg_fun(intern(lit("setenv"), user_package), func_n3o(setenv_wrap, 2));
   reg_fun(intern(lit("unsetenv"), user_package), func_n1(unsetenv_wrap));
+
+#if HAVE_POLL
+  reg_fun(intern(lit("poll"), user_package), func_n2o(poll_wrap, 1));
+#endif
 }

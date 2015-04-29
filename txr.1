@@ -25289,6 +25289,57 @@ holds the write end.
 If the function fails, it throws an exception of type
 .codn file-error .
 
+.coNP Function @ poll
+.synb
+.mets (poll < poll-list <> [ timeout ])
+.syne
+.desc
+The
+.code poll
+function suspends execution while monitoring one or more file descriptors
+for specified events. It is a wrapper for the same-named POSIX function.
+
+The
+.meta poll-list
+argument is a list of
+.code cons
+pairs. The
+.code car
+of each pair is either an integer file descriptor, or else a stream
+object which has a file descriptor (the
+.code fileno
+function can be applied to that stream to retrieve a descriptor).
+The
+.code cdr
+of each pair is an integer bit mask specifying the events, whose
+occurrence the file descriptor is to be monitored for. The variables
+.codn poll-in ,
+.codn poll-out ,
+.code poll-err
+and several others are available which hold bitmask values corresponding
+to the constants
+.codn POLLIN ,
+.codn POLLOUT ,
+.code POLLERR
+used with the C language
+.code poll
+function.
+
+The
+.meta timeout
+argument, if absent, defaults to the value -1, which specifies an indefinite
+wait. A nonnegative value specifies a wait with a timeout, measured in
+milliseconds.
+
+The function returns a list of pairs representing the descriptors or streams
+which were successfully polled. If the function times out, it returns an
+empty list. If an error occurs, an exception is thrown.
+
+The returned list is similar in structure to the input list. However, it holds
+only entries which polled positive. The
+.code cdr
+of every pair now holds a bitmask of the events which were to have occurred.
+
 .SS* Unix Itimers
 Itimers ("interval timers") can be used in combination with signal handling to
 execute asynchronous actions. Itimers deliver delayed, one-time signals,

@@ -1,3 +1,19 @@
+2015-04-28  Kaz Kylheku  <kaz@kylheku.com>
+
+	Adding poll function.
+
+	* configure: Check for the poll function and set
+	HAVE_POLL accordingly in config.h.
+
+	* stream.h (fd_k): External declaration added.
+
+	* sysif.c (poll_wrap): New function.
+	(sysif_init): Registered poll-in, poll-out, poll-err,
+	poll-pri, poll-rdhup, poll-nval, poll-rdband, poll-wrband
+	variables and poll function.
+
+	* txr.1: Documented poll.
+
 2015-04-21  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 107.
