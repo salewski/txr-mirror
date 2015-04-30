@@ -1265,6 +1265,36 @@ out:
   return result;
 }
 
+static void check_lambda_list(val form, val sym, val params)
+{
+  val iter;
+  val colon = nil;
+
+  for (iter = params; consp(iter); iter = cdr(iter)) {
+    val param = car(iter);
+    if (param == colon_k) {
+      if (colon)
+        eval_error(form, lit("~s: multiple colons in parameter list"),
+                   sym, nao);
+      else
+        colon = t;
+      continue;
+    }
+    if (colon && consp(param))
+      continue;
+    if (!bindable(param)) {
+      if (consp(param) && car(param) == special_s)
+        continue; /* special vars list */
+      eval_error(form, lit("~s: parameter ~s is not a bindable symbol"),
+                 sym, param, nao);
+    }
+  }
+
+  if (iter && !bindable(iter))
+    eval_error(form, lit("~s: dot parameter ~s is not a bindable symbol"),
+               sym, iter, nao);
+}
+
 static val op_lambda(val form, val env)
 {
   return func_interp(env, form);
@@ -1373,37 +1403,8 @@ static val op_defun(val form, val env)
   val body = rest(rest(args));
   val block = cons(block_s, cons(name, body));
   val fun = cons(name, cons(params, cons(block, nil)));
-  val iter;
-  val colon = nil;
-
-  if (!bindable(name))
-    eval_error(form, lit("defun: ~s is not a bindable symbol"), name, nao);
-
-  if (gethash(op_table, name))
-    eval_error(form, lit("defun: ~s is a special operator"), name, nao);
 
   remhash(top_mb, name);
-
-  for (iter = params; consp(iter); iter = cdr(iter)) {
-    val param = car(iter);
-    if (param == colon_k) {
-      if (colon)
-        eval_error(form, lit("defun: multiple colons in parameter list"), nao);
-      else
-          colon = t;
-      continue;
-    }
-    if (colon && consp(param))
-      continue;
-    if (!bindable(param)) {
-      if (consp(param) && car(param) == special_s)
-        continue; /* special vars list */
-      eval_error(form, lit("defun: parameter ~s is not a bindable symbol"), param, nao);
-    }
-  }
-
-  if (iter && !bindable(iter))
-    eval_error(form, lit("defun: dot parameter ~s is not a bindable symbol"), iter, nao);
 
   /* defun captures lexical environment, so env is passed */
   sethash(top_fb, name, cons(name, func_interp(env, fun)));
@@ -2697,6 +2698,9 @@ static val me_flet_labels(val form, val menv)
     val name = pop(&func);
     val params = pop(&func);
     val lambda = cons(lambda_s, cons(params, func));
+
+    check_lambda_list(form, sym, params);
+
     ptail = list_collect (ptail, cons(name, cons(lambda, nil)));
   }
 
@@ -3068,32 +3072,55 @@ tail:
 
       return form_ex;
     } else if (sym == lambda_s) {
-      val params = second(form);
-      val body = rest(rest(form));
-      val new_menv = make_var_shadowing_env(menv, get_param_syms(params));
-      val params_ex = expand_params(params, menv);
-      val body_ex = expand_forms(body, new_menv);
+      if (!cdr(form))
+        eval_error(form, lit("~s: missing argument list"), sym, nao);
 
-      if (body == body_ex && params == params_ex)
-        return form;
-      return rlcp(cons(sym, cons(params_ex, body_ex)), form);
+      if (atom(cdr(form)))
+        eval_error(form, lit("~s: bad syntax"), sym, nao);
+
+      check_lambda_list(form, sym, second(form));
+
+      {
+        val params = second(form);
+        val body = rest(rest(form));
+        val new_menv = make_var_shadowing_env(menv, get_param_syms(params));
+        val params_ex = expand_params(params, menv);
+        val body_ex = expand_forms(body, new_menv);
+
+        if (body == body_ex && params == params_ex)
+          return form;
+        return rlcp(cons(sym, cons(params_ex, body_ex)), form);
+      }
     } else if (sym == defun_s || sym == defmacro_s) {
       val name = second(form);
       val params = third(form);
-      val new_menv = make_var_shadowing_env(menv, get_param_syms(params));
-      val params_ex = expand_params(params, menv);
-      val body = rest(rest(rest(form)));
-      val body_ex = expand_forms(body, new_menv);
-      val form_ex = form;
 
-      if (body != body_ex || params != params_ex)
-        form_ex = rlcp(cons(sym, cons(name, cons(params_ex, body_ex))), form);
+      if (!bindable(name))
+        eval_error(form, lit("~s: ~s is not a bindable symbol"), sym, name, nao);
 
-      if (sym == defmacro_s) {
-        val result = eval(form_ex, make_env(nil, nil, nil), form);
-        return cons(quote_s, cons(result, nil));
+      if (gethash(op_table, name))
+        eval_error(form, lit("~s: ~s is a special operator"), sym, name, nao);
+
+      if (sym == defun_s)
+        check_lambda_list(form, sym, params);
+
+      {
+        val new_menv = make_var_shadowing_env(menv, get_param_syms(params));
+        val params_ex = expand_params(params, menv);
+        val body = rest(rest(rest(form)));
+        val body_ex = expand_forms(body, new_menv);
+        val form_ex = form;
+
+
+        if (body != body_ex || params != params_ex)
+          form_ex = rlcp(cons(sym, cons(name, cons(params_ex, body_ex))), form);
+
+        if (sym == defmacro_s) {
+          val result = eval(form_ex, make_env(nil, nil, nil), form);
+          return cons(quote_s, cons(result, nil));
+        }
+        return form_ex;
       }
-      return form_ex;
     } else if (sym == tree_case_s) {
       return expand_tree_case(form, menv);
     } else if (sym == tree_bind_s) {

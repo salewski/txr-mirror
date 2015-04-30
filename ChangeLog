@@ -1,5 +1,21 @@
 2015-04-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	Improved syntax checking: defun, flet, labels, lambda.
+
+	* eval.c (check_lambda_list): New static function.
+	(op_defun): Argument list checking moved into
+	check_lambda_list, which is called for defun out of
+	do_expand. Name checks moved into do_expand.
+	Thus, defun is checked earlier, at expansion time.
+	(me_flet_labels): Check the lambda list of each lexical function
+	with check_lambda_list.
+	(do_expand): Check the syntax of the lambda form, and
+	the validity of its argument list.
+	Check the name of a defun or defmacro for validity.
+	Check the validity of the defun argument list.
+
+2015-04-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	Bugfix: cannot print (lambda . 42) structure.
 
 	* lib.c (obj_print, obj_pprint): Fix mistake in the test for
