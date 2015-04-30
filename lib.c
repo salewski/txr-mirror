@@ -6734,7 +6734,7 @@ val obj_print(val obj, val out)
           put_char(chr('('), out);
         }
 
-        if (sym == lambda_s && cdr(obj) && symbolp(second(obj))) {
+        if (sym == lambda_s && consp(cdr(obj)) && symbolp(second(obj))) {
           obj_print(sym, out);
           if (second(obj)) {
             put_string(lit(" (. "), out);
@@ -6928,7 +6928,7 @@ val obj_pprint(val obj, val out)
           put_char(chr('('), out);
         }
 
-        if (sym == lambda_s && cdr(obj) && symbolp(second(obj))) {
+        if (sym == lambda_s && consp(cdr(obj)) && symbolp(second(obj))) {
           obj_print(sym, out);
           if (second(obj)) {
             put_string(lit(" (. "), out);

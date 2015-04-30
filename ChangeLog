@@ -1,3 +1,10 @@
+2015-04-29  Kaz Kylheku  <kaz@kylheku.com>
+
+	Bugfix: cannot print (lambda . 42) structure.
+
+	* lib.c (obj_print, obj_pprint): Fix mistake in the test for
+	properly formed lambda syntax whcih is printed specially.
+
 2015-04-28  Kaz Kylheku  <kaz@kylheku.com>
 
 	Adding poll function.
