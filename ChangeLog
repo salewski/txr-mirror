@@ -1,3 +1,15 @@
+2015-04-30  Kaz Kylheku  <kaz@kylheku.com>
+
+	Fix source location for dangling unquotes and splices.
+
+	* parser.y (grammar): Propagate the parser line number to the unquote
+	or splice form, if it has not received location info from its operand
+	(because its operand is an atom). In the quasi_item case, we also use
+	rlcp_tree to make sure the info is propagated through the list being
+	consed up.
+	(rlcp_tree): Bugfix: propagate the source location info to every cons
+	in the list itself, not just into their cars.
+
 2015-04-29  Kaz Kylheku  <kaz@kylheku.com>
 
 	Improved syntax checking: defun, flet, labels, lambda.

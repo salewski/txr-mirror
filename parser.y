@@ -792,10 +792,14 @@ n_expr : SYMTOK                 { $$ = symhlpr($1, t); }
        | quasilit               { $$ = $1; }
        | WORDS wordslit         { $$ = rl($2, num($1)); }
        | QWORDS wordsqlit       { $$ = rl(cons(quasilist_s, $2), num($1)); }
-       | '\'' n_expr            { $$ = rlcp(list(quote_s, $2, nao), $2); }
-       | '^' n_expr             { $$ = rlcp(list(sys_qquote_s, $2, nao), $2); }
-       | ',' n_expr             { $$ = rlcp(list(sys_unquote_s, $2, nao), $2); }
-       | SPLICE n_expr          { $$ = rlcp(list(sys_splice_s, $2, nao), $2); }
+       | '\'' n_expr            { $$ = rl(rlcp(list(quote_s, $2, nao), $2),
+                                          num(parser->lineno)); }
+       | '^' n_expr             { $$ = rl(rlcp(list(sys_qquote_s, $2, nao), $2),
+                                          num(parser->lineno)); }
+       | ',' n_expr             { $$ = rl(rlcp(list(sys_unquote_s, $2, nao), $2),
+                                          num(parser->lineno)); }
+       | SPLICE n_expr          { $$ = rl(rlcp(list(sys_splice_s, $2, nao), $2),
+                                          num(parser->lineno)); }
        ;
 
 n_exprs_opt : n_exprs           { $$ = $1; }
@@ -949,10 +953,18 @@ quasi_item : litchars           { $$ = lit_char_helper($1); }
            | METANUM            { $$ = cons(var_s, cons($1, nil));
                                   rl($$, num(parser->lineno)); }
            | list               { $$ = rlcp(cons(expr_s, $1), $1); }
-           | '\'' n_expr        { $$ = rlcp(cons(expr_s, list(quote_s, $2, nao)), $2); }
-           | '^' n_expr         { $$ = rlcp(cons(expr_s, list(sys_qquote_s, $2, nao)), $2); }
-           | ',' n_expr         { $$ = rlcp(cons(expr_s, list(sys_unquote_s, $2, nao)), $2); }
-           | SPLICE n_expr      { $$ = rlcp(cons(expr_s, list(sys_splice_s, $2, nao)), $2); }
+           | '\'' n_expr        { $$ = rl(rlcp(cons(expr_s, list(quote_s, $2, nao)), $2),
+                                          num(parser->lineno));
+                                  rlcp_tree($$, $$); }
+           | '^' n_expr         { $$ = rl(rlcp(cons(expr_s, list(sys_qquote_s, $2, nao)), $2),
+                                          num(parser->lineno));
+                                  rlcp_tree($$, $$); }
+           | ',' n_expr         { $$ = rl(rlcp(cons(expr_s, list(sys_unquote_s, $2, nao)), $2),
+                                          num(parser->lineno));
+                                  rlcp_tree($$, $$); }
+           | SPLICE n_expr      { $$ = rl(rlcp(cons(expr_s, list(sys_splice_s, $2, nao)), $2),
+                                          num(parser->lineno));
+                                  rlcp_tree($$, $$); }
            ;
 
 litchars : LITCHAR              { $$ = rl(cons(chr($1), nil), num(parser->lineno)); }
@@ -1270,10 +1282,10 @@ val rlcp_tree(val to, val from)
 {
   val ret = to;
   if (consp(to)) {
-    if (!source_loc(to))
+    for (; consp(to); to = cdr(to)) {
       rlcp(to, from);
-    for (; consp(to); to = cdr(to))
       rlcp_tree(car(to), from);
+    }
   }
   return ret;
 }
