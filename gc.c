@@ -169,14 +169,18 @@ val make_obj(void)
   assert (!async_sig_enabled);
 
 #if CONFIG_GEN_GC
-  if (opt_gc_debug || freshobj_idx >= FRESHOBJ_VEC_SIZE ||
-      malloc_delta >= opt_gc_delta)
+  if ((opt_gc_debug || freshobj_idx >= FRESHOBJ_VEC_SIZE ||
+       malloc_delta >= opt_gc_delta) &&
+      gc_enabled)
   {
     gc();
     prev_malloc_bytes = malloc_bytes;
   }
+
+  if (freshobj_idx >= FRESHOBJ_VEC_SIZE)
+    full_gc = 1;
 #else
-  if (opt_gc_debug || malloc_delta >= opt_gc_delta) {
+  if ((opt_gc_debug || malloc_delta >= opt_gc_delta) && gc_enabled) {
     gc();
     prev_malloc_bytes = malloc_bytes;
   }
@@ -211,8 +215,15 @@ val make_obj(void)
 #endif
 
     switch (tries) {
-    case 0: gc(); break;
-    case 1: more(); break;
+    case 0:
+      if (gc_enabled) {
+        gc();
+        break;
+      }
+      /* fallthrough */
+    case 1:
+      more();
+      break;
     }
   }
 
@@ -647,44 +658,43 @@ void gc(void)
   int full_gc_next_time = 0;
   static int gc_counter;
 #endif
+  int swept;
+  mach_context_t mc;
 
-  if (gc_enabled) {
-    int swept;
+  assert (gc_enabled);
 
-    mach_context_t mc;
-    save_context(mc);
-    gc_enabled = 0;
-    mark(&mc, &gc_stack_top);
-    hash_process_weak();
-    prepare_finals();
-    swept = sweep();
+  save_context(mc);
+  gc_enabled = 0;
+  mark(&mc, &gc_stack_top);
+  hash_process_weak();
+  prepare_finals();
+  swept = sweep();
 #if CONFIG_GEN_GC
 #if 0
-    printf("sweep: freed %d full_gc == %d exhausted == %d\n",
-           (int) swept, full_gc, exhausted);
+  printf("sweep: freed %d full_gc == %d exhausted == %d\n",
+         (int) swept, full_gc, exhausted);
 #endif
-    if (++gc_counter >= FULL_GC_INTERVAL ||
-        freshobj_idx >= FRESHOBJ_VEC_SIZE)
-    {
-      full_gc_next_time = 1;
-      gc_counter = 0;
-    }
+  if (++gc_counter >= FULL_GC_INTERVAL ||
+      freshobj_idx >= FRESHOBJ_VEC_SIZE)
+  {
+    full_gc_next_time = 1;
+    gc_counter = 0;
+  }
 
-    if (exhausted && full_gc && swept < 3 * HEAP_SIZE / 4)
-      more();
+  if (exhausted && full_gc && swept < 3 * HEAP_SIZE / 4)
+    more();
 #else
-    if (swept < 3 * HEAP_SIZE / 4)
-      more();
+  if (swept < 3 * HEAP_SIZE / 4)
+    more();
 #endif
 
 #if CONFIG_GEN_GC
-    checkobj_idx = 0;
-    mutobj_idx = 0;
-    full_gc = full_gc_next_time;
+  checkobj_idx = 0;
+  mutobj_idx = 0;
+  full_gc = full_gc_next_time;
 #endif
-    call_finals();
-    gc_enabled = 1;
-  }
+  call_finals();
+  gc_enabled = 1;
 }
 
 int gc_state(int enabled)
@@ -731,9 +741,13 @@ val gc_set(loc lo, val obj)
     if (checkobj_idx < CHECKOBJ_VEC_SIZE) {
       obj->t.gen = -1;
       checkobj[checkobj_idx++] = obj;
-    } else {
+    } else if (gc_enabled) {
       gc();
-        /* obj can't be in gen 0 because there are no baby objects after gc */
+      /* obj can't be in gen 0 because there are no baby objects after gc */
+    } else {
+      /* We have no space to in checkobj record this backreference, and gc is
+         not available to promote obj to gen 0. We must schedule a full gc. */
+      full_gc = 1;
     }
   }
 
@@ -747,12 +761,17 @@ val gc_mutated(val obj)
      already been noted. And if a full gc is coming, don't bother. */
   if (full_gc || obj->t.gen <= 0)
     return obj;
-  obj->t.gen = -1;
   /* Store in mutobj array *before* triggering gc, otherwise
      baby objects referenced by obj could be reclaimed! */
-  mutobj[mutobj_idx++] = obj;
-  if (mutobj_idx >= MUTOBJ_VEC_SIZE)
+  if (mutobj_idx < MUTOBJ_VEC_SIZE) {
+    obj->t.gen = -1;
+    mutobj[mutobj_idx++] = obj;
+  } else if (gc_enabled) {
     gc();
+  } else {
+    full_gc = 1;
+  }
+
   return obj;
 }
 
@@ -772,7 +791,10 @@ static val gc_set_delta(val delta)
 
 static val gc_wrap(void)
 {
-  gc();
+  if (gc_enabled) {
+    gc();
+    return t;
+  }
   return nil;
 }
 

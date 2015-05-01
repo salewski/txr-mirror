@@ -1,3 +1,34 @@
+2015-05-01  Kaz Kylheku  <kaz@kylheku.com>
+
+	Fix corruption triggered by extended gc disabling.
+
+	The issue is that when gc is disabled, the gc function
+	does nothing. But various code depends on calls to gc()
+	doing something, like making space available in various
+	static arrays.
+
+	When gc is disabled for long periods, there are issues,
+	like array overruns.
+
+	* gc.c (gc): Must no longer be called at all if gc_enabled is false,
+	and asserts that it is true. Callers must check the gc_enabled
+	flag and implement appropriate cases.
+	(make_obj): Only call gc when gc_enabled is true.
+	If there is no space in the freshobj array after trying gc,
+	or gc couldn't be tried because it is disabled, then
+	schedule a full gc.
+	(gc_set): If the checkobj array is full, only call gc if gc
+	is enabled, otherwise schedule a full_gc.
+	(gc_mutated): Do not assume that the mutobj array has room
+	for another object; only set the object's generation to -1
+	and put it into the array if there is room. Similarly to
+	gc_set, do a gc if there is no room, but if gc is not enabled, then
+	schedule a full gc.
+	(gc_wrap): Only call gc if gc_enabled is true, and return t in
+	that case rathe than nil.
+
+	* txr.1: Document return value of sys:gc function.
+
 2015-04-30  Kaz Kylheku  <kaz@kylheku.com>
 
 	Fix source location for dangling unquotes and splices.

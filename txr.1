@@ -27698,6 +27698,11 @@ function triggers garbage collection.  Garbage collection means
 that unreachable objects are identified and reclaimed, so that their
 storage can be re-used.
 
+The function returns
+.code nil
+if garbage collection is disabled (and consequently nothing is done), otherwise
+.codn t .
+
 .coNP Function @ sys:gc-set-delta
 .synb
 .mets (sys:gc-set-delta << bytes )
