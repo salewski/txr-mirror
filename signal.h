@@ -44,7 +44,7 @@
 #define sig_save_disable                        \
   do {                                          \
     int sig_save = async_sig_enabled;           \
-    async_sig_enabled = 1;                      \
+    async_sig_enabled = 0;                      \
     {                                           \
       do ; while (0)
 
