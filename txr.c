@@ -49,8 +49,6 @@
 #include "match.h"
 #include "utf8.h"
 #include "debug.h"
-#include "syslog.h"
-#include "glob.h"
 #include "eval.h"
 #include "regex.h"
 #include "arith.h"
@@ -303,14 +301,7 @@ int main(int argc, char **argv)
   progname_u8 = argv[0];
   init(progname, oom_realloc_handler, &stack_bottom);
   match_init();
-  parse_init();
   debug_init();
-#if HAVE_SYSLOG
-  syslog_init();
-#endif
-#if HAVE_GLOB
-  glob_init();
-#endif
   sysroot_init();
   return txr_main(argc, argv);
 }

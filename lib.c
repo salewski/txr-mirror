@@ -57,6 +57,9 @@
 #include "eval.h"
 #include "sysif.h"
 #include "regex.h"
+#include "parser.h"
+#include "syslog.h"
+#include "glob.h"
 #include "txr.h"
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
@@ -7254,8 +7257,15 @@ void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),
   hash_init();
   regex_init();
   gc_late_init();
+  parse_init();
   uw_late_init();
   less_tab_init();
+#if HAVE_SYSLOG
+  syslog_init();
+#endif
+#if HAVE_GLOB
+  glob_init();
+#endif
 
   gc_state(gc_save);
 }

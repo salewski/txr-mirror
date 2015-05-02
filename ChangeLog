@@ -1,5 +1,15 @@
 2015-05-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	Move initialization calls to more suitable place.
+
+	* lib.c (init): Initialize parser, syslog and glob modules
+	here.
+
+	* txr.c (main): Remove initialization of parser, syslog and glob
+	modules from here.
+
+2015-05-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	* signal.h (sig_save_disable): Bugfix: macro enabling
 	rather than disabling async signals.
 
