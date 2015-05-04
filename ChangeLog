@@ -1,3 +1,12 @@
+2015-05-03  Kaz Kylheku  <kaz@kylheku.com>
+
+	Deal with bad quote syntax.
+
+	* eval.c (op_quote): Throw error on bad syntax.
+
+	* lib.c (obj_print, obj_pprint): Do not hide bad quote syntax
+	using ' notation; print it using ordinary notation.
+
 2015-05-01  Kaz Kylheku  <kaz@kylheku.com>
 
 	Move initialization calls to more suitable place.

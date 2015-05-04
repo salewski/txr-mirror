@@ -6700,7 +6700,7 @@ val obj_print(val obj, val out)
     {
       val sym = car(obj);
 
-      if (sym == quote_s) {
+      if (sym == quote_s && consp(cdr(obj)) && !(cdr(cdr(obj)))) {
         put_char(chr('\''), out);
         obj_print(second(obj), out);
       } else if (sym == sys_qquote_s) {
@@ -6894,7 +6894,7 @@ val obj_pprint(val obj, val out)
     {
       val sym = car(obj);
 
-      if (sym == quote_s) {
+      if (sym == quote_s && consp(cdr(obj)) && !(cdr(cdr(obj)))) {
         put_char(chr('\''), out);
         obj_print(second(obj), out);
       } else if (sym == sys_qquote_s) {
