@@ -48,6 +48,7 @@
 #include "rand.h"
 #include "txr.h"
 #include "combi.h"
+#include "lisplib.h"
 #include "eval.h"
 
 #define APPLY_ARGS 32
@@ -71,8 +72,8 @@ val defvar_s, defun_s, defmacro_s, tree_case_s, tree_bind_s;
 val caseq_s, caseql_s, casequal_s;
 val memq_s, memql_s, memqual_s;
 val eq_s, eql_s, equal_s;
-val inc_s, dec_s, push_s, pop_s, flip_s, zap_s, gethash_s, car_s, cdr_s, not_s;
-val del_s, vecref_s;
+val gethash_s, car_s, cdr_s, not_s, vecref_s;
+val setq_s, inc_s, zap_s;
 val for_s, for_star_s, each_s, each_star_s, collect_each_s, collect_each_star_s;
 val append_each_s, append_each_star_s, while_s, while_star_s, until_star_s;
 val dohash_s;
@@ -163,6 +164,8 @@ noreturn static val eval_error(val form, val fmt, ...)
 
 val lookup_var(val env, val sym)
 {
+  uses_or2;
+
   if (env) {
     type_check(env, ENV);
 
@@ -179,7 +182,8 @@ val lookup_var(val env, val sym)
       return binding;
   }
 
-  return(gethash(top_vb, sym));
+  return or2(gethash(top_vb, sym),
+             if2(lisplib_try_load(sym), gethash(top_vb, sym)));
 }
 
 static val lookup_sym_lisp1(val env, val sym)
@@ -204,7 +208,10 @@ static val lookup_sym_lisp1(val env, val sym)
       return binding;
   }
 
-  return or2(gethash(top_vb, sym), gethash(top_fb, sym));
+  return or3(gethash(top_vb, sym),
+             if2(lisplib_try_load(sym),
+                 gethash(top_vb, sym)),
+             gethash(top_fb, sym));
 }
 
 loc lookup_var_l(val env, val sym)
@@ -227,14 +234,23 @@ loc lookup_var_l(val env, val sym)
 
   {
     val binding = gethash(top_vb, sym);
-    return (binding) ? cdr_l(binding) : nulloc;
+    if (binding)
+      return cdr_l(binding);
+    lisplib_try_load(sym);
+    binding = gethash(top_vb, sym);
+    if (binding)
+      return cdr_l(binding);
+    return nulloc;
   }
 }
 
 val lookup_fun(val env, val sym)
 {
+  uses_or2;
+
   if (nilp(env)) {
-    return gethash(top_fb, sym);
+    return or2(gethash(top_fb, sym),
+               if2(lisplib_try_load(sym), gethash(top_fb, sym)));
   } else  {
     type_check(env, ENV);
 
@@ -249,8 +265,11 @@ val lookup_fun(val env, val sym)
 
 static val lookup_mac(val menv, val sym)
 {
+  uses_or2;
+
   if (nilp(menv)) {
-    return gethash(top_mb, sym);
+    return or2(gethash(top_mb, sym),
+               if2(lisplib_try_load(sym), gethash(top_mb, sym)));
   } else  {
     type_check(menv, ENV);
 
@@ -265,8 +284,11 @@ static val lookup_mac(val menv, val sym)
 
 static val lookup_symac(val menv, val sym)
 {
+  uses_or2;
+
   if (nilp(menv)) {
-    return gethash(top_smb, sym);
+    return or2(gethash(top_smb, sym),
+               if2(lisplib_try_load(sym), gethash(top_smb, sym)));
   } else  {
     type_check(menv, ENV);
 
@@ -281,8 +303,11 @@ static val lookup_symac(val menv, val sym)
 
 static val lookup_symac_lisp1(val menv, val sym)
 {
+  uses_or2;
+
   if (nilp(menv)) {
-    return gethash(top_smb, sym);
+    return or2(gethash(top_smb, sym),
+               if2(lisplib_try_load(sym), gethash(top_smb, sym)));
   } else  {
     type_check(menv, ENV);
 
@@ -371,7 +396,9 @@ static void mark_special(val sym)
 
 static val special_p(val sym)
 {
-  return gethash(special, sym);
+  uses_or2;
+  return or2(gethash(special, sym),
+             if2(lisplib_try_load(sym), gethash(special, sym)));
 }
 
 static val env_vbind_special(val env, val sym, val obj,
@@ -1631,287 +1658,20 @@ static val op_tree_bind(val form, val env)
   return eval_progn(body, new_env, body);
 }
 
-static val op_modplace(val form, val env);
-
-static loc dwim_loc(val form, val env, val op, val newform, val *retval)
+static val op_setq(val form, val env)
 {
-  val evargs = eval_args_lisp1(rest(form), env, form);
-  val obj = first(evargs);
-  val args = rest(evargs);
+  val args = rest(form);
+  val var = pop(&args);
+  val newval = pop(&args);
 
-  switch (type(obj)) {
-  case LIT:
-  case STR:
-  case LSTR:
-    if (rest(args))
-      eval_error(form, lit("[~s ...]: string indexing needs one arg"),
-                 obj, nao);
-    {
-      val index = first(args);
-
-      if (consp(index)) {
-        cons_bind (from, to, index);
-
-        if (listp(to)) {
-          from = index;
-          to = colon_k;
-        }
-
-        if (op == set_s) {
-          val newval = eval(newform, env, form);
-          replace_str(obj, newval, from, to);
-          *retval = newval;
-        } else if (op == del_s) {
-          *retval = sub_str(obj, from, to);
-          replace_str(obj, nil, from, to);
-        } else {
-          eval_error(form, lit("[~s ~s]: ranges and index lists allow only set and del operators"),
-                     obj, index, nao);
-        }
-
-        return nulloc;
-      } else {
-        uses_or2;
-
-        if (op == set_s) {
-          val newval = eval(newform, env, form);
-          chr_str_set(obj, index, eval(newform, env, form));
-          *retval = newval;
-        } else if (op == inc_s) {
-          val newval = plus(chr_str(obj, index),
-                            or2(eval(newform, env, form), one));
-          chr_str_set(obj, index, newval);
-          *retval = newval;
-        } else if (op == dec_s) {
-          val newval = minus(chr_str(obj, index),
-                             or2(eval(newform, env, form), one));
-          chr_str_set(obj, index, newval);
-          *retval = newval;
-        } else if (op == del_s) {
-          *retval = chr_str(obj, index);
-          replace_str(obj, nil, index, plus(index, one));
-        } else {
-          eval_error(form, lit("[~s ~s]: only set, inc, dec and del can be "
-                               "used for string indices"), obj, index, nao);
-        }
-        return nulloc;
-      }
-    }
-  case SYM:
-  case FUN:
-    eval_error(form, lit("[~s ...]: assigning through function not implemented!"),
-               obj, nao);
-  case VEC:
-    if (rest(args))
-      eval_error(form, lit("[~s ...]: vector indexing needs one arg"),
-                 obj, nao);
-    {
-      val index = first(args);
-
-      if (consp(index)) {
-        cons_bind (from, to, index);
-
-        if (listp(to)) {
-          from = index;
-          to = colon_k;
-        }
-
-        if (op == set_s) {
-          val newval = eval(newform, env, form);
-          replace_vec(obj, newval, from, to);
-          *retval = newval;
-        } else if (op == del_s) {
-          *retval = sub_vec(obj, from, to);
-          replace_vec(obj, nil, from, to);
-        } else {
-          eval_error(form, lit("[~s ~s]: ranges allow only set and del operators"),
-                     obj, index, nao);
-        }
-        return nulloc;
-      } else {
-        if (op == del_s) {
-          *retval = vecref(obj, index);
-          replace_vec(obj, nil, index, plus(index, one));
-          return nulloc;
-        }
-        return vecref_l(obj, index);
-      }
-    }
-  case NIL:
-  case CONS:
-  case LCONS:
-    if (rest(args))
-      eval_error(form, lit("[~s ...]: list indexing needs one arg"),
-                 obj, nao);
-    {
-      val index = first(args);
-      val cell = obj;
-      if (bignump(index) || fixnump(index)) {
-        if (op == del_s) {
-          *retval = vecref(obj, index);
-          replace_list(obj, nil, index, plus(index, one));
-          return nulloc;
-        }
-        return listref_l(obj, index);
-      } else if (consp(index)) {
-        val newlist;
-        val tempform;
-        cons_bind (from, to, index);
-
-        if (listp(to)) {
-          from = index;
-          to = colon_k;
-        }
-
-        if (op == set_s) {
-          val newval = eval(newform, env, form);
-          newlist = replace_list(obj, newval, from, to);
-          tempform = list(op, second(form),
-                          cons(quote_s, cons(newlist, nil)), nao);
-          op_modplace(tempform, env);
-          *retval = newval;
-        } else if (op == del_s) {
-          *retval = sub_list(obj, from, to);
-          newlist = replace_list(obj, nil, from, to);
-          tempform = list(op, second(form),
-                          cons(quote_s, cons(newlist, nil)), nao);
-          op_modplace(tempform, env);
-        } else {
-          eval_error(form, lit("[~s ~s]: ranges allow only set and del operators"),
-                     obj, index, nao);
-        }
-        return nulloc;
-      } else {
-        eval_error(form, lit("[~s ~s]: index must be integer, or pair"),
-                   cell, index, nao);
-      }
-    }
-  case COBJ:
-    {
-      if (hashp(obj)) {
-        val new_p;
-        loc place;
-        if (lt(length(args), one))
-          eval_error(form, lit("[~s ...]: hash indexing needs at least one arg"),
-                     obj, nao);
-
-        if (op == del_s) {
-          *retval = gethash(obj, first(args));
-          remhash(obj, first(args));
-          return nulloc;
-        }
-
-        place = gethash_l(obj, first(args), mkcloc(new_p));
-        if (new_p)
-          set(place, second(args));
-        return place;
-      }
-    }
-  default:
-    eval_error(form, lit("object ~s not supported by [] notation"), obj, nao);
-  }
-
-  return nulloc;
-}
-
-static loc force_l(val promise);
-
-static val op_modplace(val form, val env)
-{
-  uses_or2;
-  val op = first(form);
-  val place = second(form);
-  val third_arg_p = rest(rest(form));
-  val newform = if3(car(third_arg_p), third(form), nil);
-  val newval = nil;
-  loc ptr = nulloc;
-
-  if (op == push_s) {
-    val tmp = place;
-    if (!third_arg_p)
-      eval_error(form, lit("~s: missing argument"), op, place, nao);
-    place = third(form);
-    newform = tmp;
-    newval = eval(newform, env, form);
-  }
-
-  if (symbolp(place)) {
-    if (!bindable(place))
-      eval_error(form, lit("~s: ~s is not a bindable symbol"), op, place, nao);
-    ptr = lookup_var_l(env, place);
-    if (nullocp(ptr))
-      eval_error(form, lit("unbound variable ~s"), place, nao);
-  } else if (consp(place)) {
-    /* TODO: dispatch these with hash table. */
-    val sym = car(place);
-    if (sym == dwim_s) {
-      val ret = nil;
-      ptr = dwim_loc(place, env, op, newform, &ret);
-      if (nullocp(ptr))
-        return ret;
-    } else if (sym == gethash_s) {
-      val hash = eval(second(place), env, form);
-      val key = eval(third(place), env, form);
-      val new_p;
-      if (op == del_s) {
-        val ret = gethash(hash, key);
-        remhash(hash, key);
-        return ret;
-      }
-      ptr = gethash_l(hash, key, mkcloc(new_p));
-      if (new_p)
-        set(ptr, eval(fourth(place), env, form));
-    } else if (sym == car_s) {
-      val cons = eval(second(place), env, form);
-      ptr = car_l(cons);
-    } else if (sym == cdr_s) {
-      val cons = eval(second(place), env, form);
-      ptr = cdr_l(cons);
-    } else if (sym == vecref_s) {
-      val vec = eval(second(place), env, form);
-      val ind = eval(third(place), env, form);
-      ptr = vecref_l(vec, ind);
-    } else if (sym == force_s) {
-      val promise = eval(second(place), env, form);
-      ptr = force_l(promise);
-    } else {
-      eval_error(form, lit("~s: ~s is not a recognized place form"),
-                 op, place, nao);
-    }
+  if (!bindable(var)) {
+    eval_error(form, lit("setvar: ~s is not a bindable symbol"), var, nao);
   } else {
-    eval_error(form, lit("~s: ~s is not a place"), op, place, nao);
+    loc ptr = lookup_var_l(env, var);
+    if (nullocp(ptr))
+      eval_error(form, lit("unbound variable ~s"), var, nao);
+    return set(ptr, eval(newval, env, form));
   }
-
-  if (nullocp(ptr))
-    eval_error(form, lit("~s: place ~s doesn't exist"), op, place, nao);
-
-  if (op == set_s) {
-    if (!third_arg_p)
-      eval_error(form, lit("~s: missing argument"), op, nao);
-    return set(ptr, eval(newform, env, form));
-  } else if (op == inc_s) {
-    val inc = or2(eval(newform, env, form), one);
-    return set(ptr, plus(deref(ptr), inc));
-  } else if (op == dec_s) {
-    val inc = or2(eval(newform, env, form), one);
-    return set(ptr, minus(deref(ptr), inc));
-  } else if (op == push_s) {
-    return mpush(newval, ptr);
-  } else if (op == pop_s) {
-    if (third_arg_p)
-      eval_error(form, lit("~s: superfluous argument"), op, nao);
-    return pop(valptr(ptr));
-  } else if (op == flip_s) {
-    return deref(ptr) = null(deref(ptr));
-  } else if (op == zap_s) {
-    val oldval = deref(ptr);
-    set(ptr, eval(newform, env, form));
-    return oldval;
-  } else if (op == del_s) {
-    eval_error(form, lit("~s: cannot delete ~a"), op, place, nao);
-  }
-
-  internal_error("unhandled place modifier");
 }
 
 static val op_for(val form, val env)
@@ -3787,18 +3547,6 @@ static val force(val promise)
   }
 }
 
-static loc force_l(val promise)
-{
-  loc pstate = car_l(promise);
-  val cd = cdr(promise);
-  loc pval = car_l(cd);
-
-  if (deref(pstate) != promise_forced_s)
-    force(promise);
-
-  return pval;
-}
-
 static void reg_op(val sym, opfun_t fun)
 {
   assert (sym != 0);
@@ -4021,13 +3769,9 @@ void eval_init(void)
   defsymacro_s = intern(lit("defsymacro"), user_package);
   tree_case_s = intern(lit("tree-case"), user_package);
   tree_bind_s = intern(lit("tree-bind"), user_package);
+  setq_s = intern(lit("setq"), system_package);
   inc_s = intern(lit("inc"), user_package);
-  dec_s = intern(lit("dec"), user_package);
-  push_s = intern(lit("push"), user_package);
-  pop_s = intern(lit("pop"), user_package);
-  flip_s = intern(lit("flip"), user_package);
   zap_s = intern(lit("zap"), user_package);
-  del_s = intern(lit("del"), user_package);
   for_s = intern(lit("for"), user_package);
   for_star_s = intern(lit("for*"), user_package);
   each_s = intern(lit("each"), user_package);
@@ -4117,14 +3861,7 @@ void eval_init(void)
   reg_op(defsymacro_s, op_defsymacro);
   reg_op(tree_case_s, op_tree_case);
   reg_op(tree_bind_s, op_tree_bind);
-  reg_op(inc_s, op_modplace);
-  reg_op(dec_s, op_modplace);
-  reg_op(set_s, op_modplace);
-  reg_op(push_s, op_modplace);
-  reg_op(pop_s, op_modplace);
-  reg_op(flip_s, op_modplace);
-  reg_op(zap_s, op_modplace);
-  reg_op(del_s, op_modplace);
+  reg_op(setq_s, op_setq);
   reg_op(for_s, op_for);
   reg_op(for_star_s, op_for);
   reg_op(dohash_s, op_dohash);
@@ -4183,6 +3920,8 @@ void eval_init(void)
   reg_fun(cdr_s, cdr_f);
   reg_fun(intern(lit("rplaca"), user_package), func_n2(rplaca));
   reg_fun(intern(lit("rplacd"), user_package), func_n2(rplacd));
+  reg_fun(intern(lit("rplaca"), system_package), func_n2(sys_rplaca));
+  reg_fun(intern(lit("rplacd"), system_package), func_n2(sys_rplacd));
   reg_fun(intern(lit("first"), user_package), func_n1(car));
   reg_fun(rest_s, func_n1(cdr));
   reg_fun(intern(lit("sub-list"), user_package), func_n3o(sub_list, 1));
@@ -4576,6 +4315,8 @@ void eval_init(void)
   reg_fun(intern(lit("ref"), user_package), func_n2(ref));
   reg_fun(intern(lit("refset"), user_package), func_n3(refset));
   reg_fun(intern(lit("replace"), user_package), func_n4o(replace, 2));
+  reg_fun(intern(lit("dwim-set"), system_package), func_n3(dwim_set));
+  reg_fun(intern(lit("dwim-del"), system_package), func_n2(dwim_del));
   reg_fun(intern(lit("update"), user_package), func_n2(update));
   reg_fun(intern(lit("search"), user_package), func_n4o(search, 2));
   reg_fun(intern(lit("where"), user_package), func_n2(where));
@@ -4634,4 +4375,6 @@ void eval_init(void)
 
   eval_error_s = intern(lit("eval-error"), user_package);
   uw_register_subtype(eval_error_s, error_s);
+
+  lisplib_init();
 }

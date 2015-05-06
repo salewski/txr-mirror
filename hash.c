@@ -613,6 +613,7 @@ val remhash(val hash, val key)
     set(pchain, nappend2(ldiff(deref(pchain), cell), cdr(cell)));
     h->count--;
     bug_unless (h->count >= 0);
+    return cdr(existing);
   }
 
   return nil;

@@ -1,4 +1,6 @@
 @(do
+   (set *gensym-counter* 0)
+
    (defmacro while ((condition : result) . body)
      (let ((cblk (gensym "cnt-blk-"))
            (bblk (gensym "brk-blk-")))

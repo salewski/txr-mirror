@@ -288,7 +288,6 @@ val rplaca(val cons, val new_car)
   }
 }
 
-
 val rplacd(val cons, val new_cdr)
 {
   switch (type(cons)) {
@@ -301,6 +300,18 @@ val rplacd(val cons, val new_cdr)
   default:
     type_mismatch(lit("~s is not a cons"), cons, nao);
   }
+}
+
+val sys_rplaca(val cons, val new_car)
+{
+  (void) rplaca(cons, new_car);
+  return new_car;
+}
+
+val sys_rplacd(val cons, val new_car)
+{
+  (void) rplacd(cons, new_car);
+  return new_car;
 }
 
 loc car_l(val cons)
@@ -6269,6 +6280,9 @@ val ref(val seq, val ind)
     return chr_str(seq, ind);
   case VEC:
     return vecref(seq, ind);
+  case COBJ:
+    if (seq->co.cls == hash_s)
+      return gethash(seq, ind);
   default:
     type_mismatch(lit("ref: ~s is not a sequence"), seq, nao);
   }
@@ -6287,6 +6301,9 @@ val refset(val seq, val ind, val newval)
     return chr_str_set(seq, ind, newval);
   case VEC:
     return set(vecref_l(seq, ind), newval);
+  case COBJ:
+    if (seq->co.cls == hash_s)
+      return sethash(seq, ind, newval);
   default:
     type_mismatch(lit("ref: ~s is not a sequence"), seq, nao);
   }
@@ -6308,6 +6325,38 @@ val replace(val seq, val items, val from, val to)
     return replace_vec(seq, items, from, to);
   default:
     type_mismatch(lit("replace: ~s is not a sequence"), seq, nao);
+  }
+}
+
+val dwim_set(val seq, val ind_range, val newval)
+{
+  if (consp(ind_range)) {
+    cons_bind (x, y, ind_range);
+
+    if (atom(y))
+      return replace(seq, newval, x, y);
+    return replace(seq, newval, ind_range, colon_k);
+  } else if (vectorp(ind_range)) {
+    return replace(seq, newval, ind_range, colon_k);
+  } else{
+    (void) refset(seq, ind_range, newval);
+    return seq;
+  }
+
+  return newval;
+}
+
+val dwim_del(val seq, val ind_range)
+{
+  if (consp(ind_range)) {
+    return replace(seq, nil, car(ind_range), cdr(ind_range));
+  } else {
+    if (hashp(seq)) {
+      (void) remhash(seq, ind_range);
+      return seq;
+    } else {
+      return replace(seq, nil, ind_range, succ(ind_range));
+    }
   }
 }
 

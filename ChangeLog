@@ -1,5 +1,58 @@
 2015-05-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	New macro-based framework for assignment places.
+
+	The operators set, inc, dec, pop and others are now macros
+	which generate code, rather than built-in special forms
+	that use "C magic".  Moreover, new such macros are easy to write, and
+	several new ones are already available.  Moreover, new kinds of
+	assignable places are easy to create.
+
+	* place.tl: New file.
+
+	* lisplib.c, lisplib.h: New files.
+
+	* Makefile (OBJS): New target, lisplib.o.
+	(GEN_HDRS): New variable.
+	(LISP_TO_C_STRING): New recipe macro, with rule.
+	(clean): Remove generated headers named in $(GEN_HDRS).
+
+	* eval.c (dec_s, push_s, pop_s, flip_s, del_s): Variables removed.
+	(setq_s): New variable.
+	(lookup_var, lokup_sym_lisp_1, lookup_var_l, lookup_fun, lookup_mac,
+	lookup_symac, lookup_symac_lisp1): Trigger the delayed loading of
+	libraries for undefined global symbols, and re-try the lookup.
+	(op_modplace, dwim_loc, force_l): Static functions removed.
+	(op_setq): New static function.
+	(eval_init): Initialize setq_s; remove initializations of
+	removed variables; remove registrations for op_modplace;
+	add registration for sys:setq, sys:rplaca, sys:rplacd,
+	sys:dwim-set and sys:dwim-del intrinsics.
+	Call lisplib_init to initialize the dynamic library loading module.
+
+	* lib.c (sys_rplaca, sys_rplacd): New functions, differing
+	in return value from rplaca and rplacd.
+	(ref, refset): Handle hash table.
+	(dwim_set, dwim_del): New functions.
+
+	* lib.h (sys_rplaca, sys_rplacd, dwim_set, dwim_del): Declared.
+
+	* genvim.txr: Include place.tl in scan.
+
+	* tests/010/seq.txr: The del operator test
+	case no longer throws at run-time but at macro-expansion time, so the
+	test case is simply removed.
+
+	* tests/010/seq.expected: Updated output.
+
+	* tests/011/macros-2.txr: Reset *gensym-counter* to zero, because
+	the textual output of the test case includes gensyms, whose numberings
+	fluctuate with the content of the new Lisp library material.
+
+	* tests/011/macros-2.expected: Updated output.
+
+2015-05-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	* gc.c (make_obj, gc): Move resetting of prev_malloc_bytes
 	out of make_obj into gc.
 
