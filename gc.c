@@ -174,7 +174,6 @@ val make_obj(void)
       gc_enabled)
   {
     gc();
-    prev_malloc_bytes = malloc_bytes;
   }
 
   if (freshobj_idx >= FRESHOBJ_VEC_SIZE)
@@ -182,7 +181,6 @@ val make_obj(void)
 #else
   if ((opt_gc_debug || malloc_delta >= opt_gc_delta) && gc_enabled) {
     gc();
-    prev_malloc_bytes = malloc_bytes;
   }
 #endif
 
@@ -695,6 +693,7 @@ void gc(void)
 #endif
   call_finals();
   gc_enabled = 1;
+  prev_malloc_bytes = malloc_bytes;
 }
 
 int gc_state(int enabled)
