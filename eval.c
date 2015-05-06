@@ -2270,6 +2270,35 @@ val expand_forms(val form, val menv)
 
     if (ex_f == f && ex_r == r)
       return form;
+
+    return rlcp(cons(ex_f, ex_r), form);
+  }
+}
+
+static val constantp(val form, val env_in);
+
+static val expand_progn(val form, val menv)
+{
+  if (atom(form)) {
+    return form;
+  } else {
+    val f = car(form);
+    val r = cdr(form);
+    val ex_f = expand(f, menv);
+    val ex_r = expand_progn(r, menv);
+
+    if (consp(ex_f) && car(ex_f) == progn_s) {
+      if (ex_r)
+        return expand_progn(rlcp_tree(append2(cdr(ex_f), ex_r), form), menv);
+      return rlcp(cdr(ex_f), form);
+    }
+
+    if ((symbolp(ex_f) || constantp(ex_f, nil)) && ex_r)
+      return rlcp(ex_r, form);
+
+    if (ex_f == f && ex_r == r)
+      return form;
+
     return rlcp(cons(ex_f, ex_r), form);
   }
 }
@@ -3023,7 +3052,7 @@ tail:
       int seq_p = sym == let_star_s || sym == each_star_s ||
                   sym == collect_each_star_s || sym == append_each_star_s;
       val new_menv = make_var_shadowing_env(menv, vars);
-      val body_ex = expand_forms(body, new_menv);
+      val body_ex = expand_progn(body, new_menv);
       val specials_p = nil;
       val vars_ex = expand_vars(vars, menv, form, &specials_p, seq_p);
       if (body == body_ex && vars == vars_ex && !specials_p) {
@@ -3036,7 +3065,7 @@ tail:
       val body = rest(rest(form));
       val funcs = second(form);
       val new_menv = make_fun_shadowing_env(menv, funcs);
-      val body_ex = expand_forms(body, new_menv);
+      val body_ex = expand_progn(body, new_menv);
       val funcs_ex = expand_fbind_vars(funcs,
                                        sym == lbind_s ? new_menv : menv, form);
       if (body == body_ex && funcs == funcs_ex) {
@@ -3047,7 +3076,7 @@ tail:
     } else if (sym == block_s || sym == return_from_s) {
       val name = second(form);
       val body = rest(rest(form));
-      val body_ex = expand_forms(body, menv);
+      val body_ex = expand_progn(body, menv);
       if (body == body_ex)
         return form;
       return rlcp(cons(sym, cons(name, body_ex)), form);
@@ -3089,7 +3118,7 @@ tail:
         val body = rest(rest(form));
         val new_menv = make_var_shadowing_env(menv, get_param_syms(params));
         val params_ex = expand_params(params, menv);
-        val body_ex = expand_forms(body, new_menv);
+        val body_ex = expand_progn(body, new_menv);
 
         if (body == body_ex && params == params_ex)
           return form;
@@ -3112,7 +3141,7 @@ tail:
         val new_menv = make_var_shadowing_env(menv, get_param_syms(params));
         val params_ex = expand_params(params, menv);
         val body = rest(rest(rest(form)));
-        val body_ex = expand_forms(body, new_menv);
+        val body_ex = expand_progn(body, new_menv);
         val form_ex = form;
 
 
@@ -3134,7 +3163,7 @@ tail:
       val new_menv = make_var_shadowing_env(menv, get_param_syms(params));
       val params_ex = expand_params(params, menv);
       val expr_ex = expand(expr, new_menv);
-      val body_ex = expand_forms(body, new_menv);
+      val body_ex = expand_progn(body, new_menv);
 
       if (params_ex == params && expr_ex == expr && body_ex == body)
         return form;
@@ -3152,7 +3181,7 @@ tail:
       val new_menv = make_var_shadowing_env(menv, vars);
       val cond_ex = expand_forms(cond, new_menv);
       val incs_ex = expand_forms(incs, new_menv);
-      val forms_ex = expand_forms(forms, new_menv);
+      val forms_ex = expand_progn(forms, new_menv);
 
       if (vars == vars_ex && cond == cond_ex &&
           incs == incs_ex && forms == forms_ex && !specials_p) {
@@ -3173,7 +3202,7 @@ tail:
       val body = rest(rest(form));
       val hashform_ex = expand(hashform, menv);
       val resform_ex = expand(resform, menv);
-      val body_ex = expand_forms(body, menv);
+      val body_ex = expand_progn(body, menv);
 
       if (hashform == hashform_ex && resform == resform_ex && body == body_ex)
         return form;
@@ -3212,9 +3241,16 @@ tail:
         return form;
       form = rlcp_tree(mac_expand, form);
       goto tail;
+    } else if (sym == progn_s) {
+      val args = rest(form);
+      val args_ex = expand_progn(args, menv);
+
+      if (args == args_ex)
+        return form;
+      return rlcp(cons(sym, args_ex), form);
     } else {
       /* funtion call
-         also handles: progn, prog1, call, if, and, or,
+         also handles: prog1, call, if, and, or,
          unwind-protect, return, dwim, set, inc, dec,
          push, pop, flip, and with-saved-vars. */
       val args = rest(form);

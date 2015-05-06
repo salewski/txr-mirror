@@ -1,3 +1,11 @@
+2015-05-05  Kaz Kylheku  <kaz@kylheku.com>
+
+	Do some cleanup in progn-like form sequences.
+
+	* eval.c (expand_progn): New function.
+	(do_expand): Use expand_progn for constructs
+	which have an implicit progn body.
+
 2015-05-03  Kaz Kylheku  <kaz@kylheku.com>
 
 	Deal with bad quote syntax.
