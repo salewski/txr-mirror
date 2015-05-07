@@ -66,6 +66,6 @@ INLINE val rlcp(val to, val from)
 }
 val rlcp_tree(val to, val from);
 val regex_parse(val string, val error_stream);
-val lisp_parse(val source, val error_stream, val error_return_val);
+val lisp_parse(val source, val error_stream, val error_return_val, val name);
 val parser(val stream, val lineno);
 void parse_init(void);

@@ -23464,7 +23464,7 @@ Examples of strings which are not absolute paths.
 
 .coNP Function @ read
 .synb
-.mets (read >> [ source >> [ error-stream <> [ error-return-value ]]])
+.mets (read >> [ source >> [ error-stream >> [ error-return-value <> [ name ]]]])
 .syne
 .desc
 The
@@ -23487,6 +23487,18 @@ The optional
 .meta error-stream
 argument can be used to specify a stream to which
 parse errors diagnostics are sent. If absent, the diagnostics are suppressed.
+
+The optional
+.meta name
+argument can be used to specify the file name which is used for reporting
+errors. If this argument is missing, the name is taken from the name
+property of the
+.meta source
+argument if it is a stream, or else the word
+.code string
+is used as the name if
+.meta source
+is a string.
 
 If there are no parse errors, the function returns the parsed data
 structure. If there are parse errors, and the

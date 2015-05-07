@@ -1,3 +1,22 @@
+2015-05-07  Kaz Kylheku  <kaz@kylheku.com>
+
+	* Makefile (LISP_TO_C_STRING): Strip comments, but not comment lines,
+	so line numbers don't change.
+
+	* eval.c (eval_init): Fix registrations of lisp-parse and read.
+
+	* lisplib.c (place_instantiate): Give name to parsed string stream
+	using new lisp_parse argument.
+
+	* parser.c (lisp_parse): Takes new argument to override name.
+
+	* parser.h (lisp_parse): Declaration updated.
+
+	* txr.c (txr_main): Call lisp_parse with four args, defaulting
+	the new one.
+
+	* txr.1: Documented new argument.
+
 2015-05-06  Kaz Kylheku  <kaz@kylheku.com>
 
 	New macro-based framework for assignment places.

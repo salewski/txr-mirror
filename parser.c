@@ -118,7 +118,7 @@ val regex_parse(val string, val error_stream)
   return parser.errors ? nil : parser.syntax_tree;
 }
 
-val lisp_parse(val source_in, val error_stream, val error_return_val)
+val lisp_parse(val source_in, val error_stream, val error_return_val, val name_in)
 {
   uses_or2;
   val source = default_bool_arg(source_in);
@@ -126,9 +126,10 @@ val lisp_parse(val source_in, val error_stream, val error_return_val)
                          make_string_byte_input_stream(source),
                          or2(source, std_input));
   val secret_token_stream = make_string_byte_input_stream(lit("@\x01" "E"));
-  val name = if3(stringp(source),
-                 lit("string"),
-                 stream_get_prop(input_stream, name_k));
+  val name = or2(default_bool_arg(name_in),
+                 if3(stringp(source),
+                     lit("string"),
+                     stream_get_prop(input_stream, name_k)));
   val stream = make_catenated_stream(list(secret_token_stream, input_stream, nao));
   val saved_dyn = dyn_env;
   parser_t parser;
