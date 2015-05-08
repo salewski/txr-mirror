@@ -54,3 +54,4 @@ val pprinl(val obj, val stream);
 val tprint(val obj, val out);
 
 void eval_init(void);
+void eval_compat_fixup(int compat_ver);

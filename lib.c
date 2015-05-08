@@ -7334,6 +7334,7 @@ int compat_fixup(int compat_ver)
     symbol_setname(process_error_s, lit("process_error"));
   }
 
+  eval_compat_fixup(compat_ver);
   return 0;
 }
 

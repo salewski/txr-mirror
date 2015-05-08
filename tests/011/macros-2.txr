@@ -1,7 +1,7 @@
 @(do
    (set *gensym-counter* 0)
 
-   (defmacro while ((condition : result) . body)
+   (defmacro whilst ((condition : result) . body)
      (let ((cblk (gensym "cnt-blk-"))
            (bblk (gensym "brk-blk-")))
        ^(macrolet ((break (value) ^(return-from ,',bblk ,value)))
@@ -12,7 +12,7 @@
                 (block ,cblk ,*body)))))))
 
    (let ((i 0))
-     (while ((< i 100))
+     (whilst ((< i 100))
        (if (< (inc i) 20)
          continue)
        (if (> i 30)
@@ -21,7 +21,7 @@
 
    (prinl
      (sys:expand
-       '(while ((< i 100))
+       '(whilst ((< i 100))
           (if (< (inc i) 20)
             continue)
           (if (> i 30)
@@ -29,8 +29,8 @@
           (prinl i))))
 
    (let ((i 0))
-     (while ((< i 5))
+     (whilst ((< i 5))
        (inc i)
-       (labels ((while () 'while))
+       (labels ((whilst () 'whilst))
          (let ((break 'break))
-           (prinl (list (while) break)))))))
+           (prinl (list (whilst) break)))))))

@@ -61,9 +61,10 @@ struct c_var {
   val bind;
 };
 
-val top_vb, top_fb, top_mb, top_smb, special;
+val top_vb, top_fb, top_mb, top_smb, special, builtin;
 val op_table;
 val dyn_env;
+val eval_initing;
 
 val eval_error_s;
 val dwim_s, progn_s, prog1_s, let_s, let_star_s, lambda_s, call_s;
@@ -1439,6 +1440,8 @@ static val op_defun(val form, val env)
 
   /* defun captures lexical environment, so env is passed */
   sethash(top_fb, name, cons(name, func_interp(env, fun)));
+  if (eval_initing)
+    sethash(builtin, name, defun_s);
   return name;
 }
 
@@ -1459,6 +1462,8 @@ static val op_defmacro(val form, val env)
   remhash(top_fb, name);
   /* defmacro captures lexical environment, so env is passed */
   sethash(top_mb, name, cons(name, cons(env, cons(params, cons(block, nil)))));
+  if (eval_initing)
+    sethash(builtin, name, defmacro_s);
   return name;
 }
 
@@ -1510,8 +1515,26 @@ static val maybe_quote(val form)
   return cons(quote_s, cons(form, nil));
 }
 
+static void builtin_reject_test(val op, val sym, val form)
+{
+    val builtin_kind = gethash(builtin, sym);
+    val is_operator = gethash(op_table, sym);
+
+    if (!bindable(sym)) {
+      eval_error(form, lit("~s: cannot bind ~s, which is not a bindable symbol"),
+                 is_operator, sym, nao);
+    } else if (builtin_kind) {
+      eval_error(form, lit("~s: cannot bind ~s, which is a built-in ~s"),
+                 op, sym, builtin_kind, nao);
+    } else if (is_operator) {
+      eval_error(form, lit("~s: cannot bind ~s, which is a built-in operator"),
+                 op, sym, nao);
+    }
+}
+
 static val expand_macrolet(val form, val menv)
 {
+  val op = car(form);
   val body = cdr(form);
   val macs = pop(&body);
   val new_env = make_env(nil, nil, menv);
@@ -1522,6 +1545,8 @@ static val expand_macrolet(val form, val menv)
     val params = expand_params(pop(&macro), menv);
     val macro_ex = expand_forms(macro, menv);
     val block = cons(block_s, cons(name, macro_ex));
+
+    builtin_reject_test(op, name, form);
 
     /* We store the macrolet in the same form as a top level defmacro,
      * so they can be treated uniformly. The nil after the name is
@@ -2268,6 +2293,8 @@ static val expand_fbind_vars(val vars, val menv, val form)
     val rest_vars_ex = rlcp(expand_fbind_vars(rest_vars, menv, form),
                             rest_vars);
 
+    builtin_reject_test(car(form), var, form);
+
     if (init == init_ex && rest_vars == rest_vars_ex)
       return vars;
     return rlcp(cons(cons(var, init_ex), rest_vars_ex), vars);
@@ -2888,11 +2915,7 @@ tail:
       val name = second(form);
       val params = third(form);
 
-      if (!bindable(name))
-        eval_error(form, lit("~s: ~s is not a bindable symbol"), sym, name, nao);
-
-      if (gethash(op_table, name))
-        eval_error(form, lit("~s: ~s is a special operator"), sym, name, nao);
+      builtin_reject_test(sym, name, form);
 
       if (sym == defun_s)
         check_lambda_list(form, sym, params);
@@ -3557,12 +3580,14 @@ void reg_fun(val sym, val fun)
 {
   assert (sym != 0);
   sethash(top_fb, sym, cons(sym, fun));
+  sethash(builtin, sym, defun_s);
 }
 
 static void reg_mac(val sym, mefun_t fun)
 {
   assert (sym != 0);
   sethash(top_mb, sym, cptr(coerce(mem_t *, fun)));
+  sethash(builtin, sym, defmacro_s);
 }
 
 void reg_var(val sym, val val)
@@ -3727,7 +3752,7 @@ static val merge_wrap(val seq1, val seq2, val lessfun, val keyfun)
 
 void eval_init(void)
 {
-  protect(&top_vb, &top_fb, &top_mb, &top_smb, &special, &dyn_env,
+  protect(&top_vb, &top_fb, &top_mb, &top_smb, &special, &builtin, &dyn_env,
           &op_table, &last_form_evaled, &last_form_expanded,
           &call_f, convert(val *, 0));
   top_fb = make_hash(t, nil, nil);
@@ -3735,7 +3760,10 @@ void eval_init(void)
   top_mb = make_hash(t, nil, nil);
   top_smb = make_hash(t, nil, nil);
   special = make_hash(t, nil, nil);
+  builtin = make_hash(t, nil, nil);
   op_table = make_hash(nil, nil, nil);
+
+  eval_initing = t;
 
   call_f = func_n1v(call);
 
@@ -4156,7 +4184,7 @@ void eval_init(void)
   reg_fun(intern(lit("iff"), user_package), func_n3o(iff, 1));
   reg_fun(intern(lit("iffi"), user_package), func_n3o(iffi, 2));
   reg_fun(intern(lit("dup"), user_package), func_n1(dupl));
-  reg_fun(intern(lit("flip"), user_package), func_n1(swap_12_21));
+  reg_fun(intern(lit("flipargs"), user_package), func_n1(swap_12_21));
   reg_fun(intern(lit("if"), user_package), func_n3o(if_fun, 2));
   reg_fun(intern(lit("or"), user_package), func_n0v(or_fun));
   reg_fun(intern(lit("and"), user_package), func_n0v(and_fun));
@@ -4377,4 +4405,12 @@ void eval_init(void)
   uw_register_subtype(eval_error_s, error_s);
 
   lisplib_init();
+
+  eval_initing = nil;
+}
+
+void eval_compat_fixup(int compat_ver)
+{
+  if (compat_ver <= 107)
+    reg_fun(intern(lit("flip"), user_package), func_n1(swap_12_21));
 }

@@ -9,9 +9,9 @@
 28
 29
 30
-(block #:brk-blk-0002 (for nil ((< i 100) nil) nil (block #:cnt-blk-0001 (if (< (sys:setq i (+ i 1)) 20) (return-from #:cnt-blk-0001)) (if (> i 30) (return-from #:brk-blk-0002)) (prinl i))))
-(while break)
-(while break)
-(while break)
-(while break)
-(while break)
+(block #:brk-blk-0002 (for nil ((< i 100) nil) nil (block #:cnt-blk-0001 (if (< (sys:setq i (succ i)) 20) (return-from #:cnt-blk-0001)) (if (> i 30) (return-from #:brk-blk-0002)) (prinl i))))
+(whilst break)
+(whilst break)
+(whilst break)
+(whilst break)
+(whilst break)

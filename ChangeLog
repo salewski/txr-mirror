@@ -1,3 +1,32 @@
+2015-05-08  Kaz Kylheku  <kaz@kylheku.com>
+
+	Crack down on redefinitions of built-ins.
+
+	* eval.c (builtin, eval_initing): New global variable.
+	(op_defun, op_defmacro): During initialization, record functions
+	and macros in builtin hash.
+	(builtin_reject_test): New static function.
+	(expand_macrolet): Perform builtin reject test for fbind, lbind,
+	and macrolet.
+	(regfun, reg_mac): Add symbol to builtin hash.
+	(eval_init): GC-protect new hash table variable and initialize it.
+	Set eval_initing to true over eval initialization.
+	The flip function is renamed fo flipargs.
+	(eval_compat_fixup): New function, for dealing with the
+	operator/function conflict over flip.
+
+	* eval.h (eval_compat_fixup): Declared.
+
+	* lib.c (compat_fixup): Call eval_compat_fixup.
+
+	* tests/011/macros-2.txr: This test was defining a macro called
+	while which is now illegal. Renamed to whilst.
+
+	* tests/011/macros-2.expected: Regenerated.
+
+	* txr.1:  Function flip renamed to flipargs and documented in
+	Compatibility section.
+
 2015-05-07  Kaz Kylheku  <kaz@kylheku.com>
 
 	* Makefile (LISP_TO_C_STRING): Strip comments, but not comment lines,

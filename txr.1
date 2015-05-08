@@ -21734,13 +21734,13 @@ by duplicating its argument.
   (mapcar [dup *] '(1 2 3)) -> (1 4 9)
 .cble
 
-.coNP Function @ flip
+.coNP Function @ flipargs
 .synb
-.mets (flip << func )
+.mets (flipargs << func )
 .syne
 .desc
 The
-.code flip
+.code flipargs
 function returns a two-argument function which calls the two-argument
 function
 .metn func
@@ -28092,6 +28092,14 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code -C 103
 selects the behaviors described below for verison 105, but not those for 102.
+
+.IP 107
+Up through \*(TX 107, by accident, there was a function called
+.code flip
+as well as an operator by the same name. The function was renamed to
+.codn flipargs .
+Version 107 compatibility or earlier provides the
+function under the original name also.
 
 .IP 105
 Provides the behavior that the
