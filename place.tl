@@ -119,6 +119,26 @@
         ^(progn ,*assign-forms)
         (car assign-forms))))
 
+  (defmacro pset (:env env . place-value-pairs)
+    (let ((len (length place-value-pairs)))
+      (cond
+        ((oddp len) (sys:eval-err "pset: arguments must be pairs"))
+        ((<= len 2) ^(set ,*place-value-pairs))
+        (t (let* ((pvtgs (mapcar (tb ((a b))
+                                   (list a b (gensym) (gensym) (gensym)))
+                                 (tuples 2 place-value-pairs)))
+                  (ls (reduce-left (tb ((lets stores) (place value temp getter setter))
+                                       (list ^((,temp ,value) ,*lets)
+                                             ^((,setter ,temp) ,*stores)))
+                                   pvtgs '(nil nil)))
+                  (lets (first ls))
+                  (stores (second ls))
+                  (body-form ^(let (,*lets) ,*stores)))
+             (reduce-left (tb (accum-form (place value temp getter setter))
+                            (call-update-expander getter setter
+                                                  place env accum-form))
+                          pvtgs body-form))))))
+
   (defmacro zap (place :env env)
     (with-update-expander (getter setter) place env
       ^(prog1 (,getter) (,setter nil))))

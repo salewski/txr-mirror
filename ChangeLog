@@ -1,5 +1,13 @@
 2015-05-09  Kaz Kylheku  <kaz@kylheku.com>
 
+	Adding pset operator.
+
+	* place.tl (pset): New macro.
+
+	* lisplib.c (set_place_dlt_entries): Add pset.
+
+2015-05-09  Kaz Kylheku  <kaz@kylheku.com>
+
 	* place.tl (set): Take multiple place/value pairs. Allow zero
 	arguments.
 

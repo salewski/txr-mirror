@@ -53,7 +53,7 @@ static void set_place_dlt_entries(val dlt, val fun)
     lit("call-delete-expander)"),
     lit("with-update-expander"), lit("with-clobber-expander"),
     lit("with-delete-expander"),
-    lit("set"), lit("zap"), lit("flip"), lit("inc"), lit("dec"),
+    lit("set"), lit("pset"), lit("zap"), lit("flip"), lit("inc"), lit("dec"),
     lit("push"), lit("pop"), lit("swap"), lit("shift"), lit("rotate"),
     lit("del"),
     nil
