@@ -2151,9 +2151,9 @@ static val expand_qquote(val qquoted_form, val menv,
 
     if (sym == spl) {
       val error_msg = if3(spl == sys_splice_s,
-                          lit("the splice ,*~s cannot occur as an atom "
+                          lit("the splice ,*~s cannot occur outside of a list "
                               "or in the dotted position of a list"),
-                          lit("(splice ~s) cannot occur as an atom "
+                          lit("(splice ~s) cannot occur outside of a list "
                               "or in the dotted position of a list"));
         eval_error(qquoted_form, error_msg,
                    second(qquoted_form), nao);
