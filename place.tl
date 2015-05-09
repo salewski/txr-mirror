@@ -108,9 +108,16 @@
     ^(with-gensyms (,deleter)
        (call-delete-expander ,deleter ,unex-place ,env ,body)))
 
-  (defmacro set (place value :env env)
-    (with-clobber-expander (ssetter) place env
-      ^(,ssetter ,value)))
+  (defmacro set (:env env . place-value-pairs)
+    (let ((assign-forms (mapcar (tb ((place : (value nil value-present-p)))
+                                  (unless value-present-p
+                                    (sys:eval-err "set: arguments must be pairs"))
+                                  (with-clobber-expander (ssetter) place env
+                                     ^(,ssetter ,value)))
+                                (tuples 2 place-value-pairs))))
+      (if (cdr assign-forms)
+        ^(progn ,*assign-forms)
+        (car assign-forms))))
 
   (defmacro zap (place :env env)
     (with-update-expander (getter setter) place env
