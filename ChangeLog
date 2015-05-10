@@ -1,3 +1,7 @@
+2015-05-10  Kaz Kylheku  <kaz@kylheku.com>
+
+	* place.tl (errno): Support (errno) form as place.
+
 2015-05-09  Kaz Kylheku  <kaz@kylheku.com>
 
 	Improve error message related to splice misuse.
