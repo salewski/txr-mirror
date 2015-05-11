@@ -1,5 +1,13 @@
 2015-05-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	Handle vectors and strings in rplaca and rplacd.
+
+	* lib.c (rplaca, rplacd): Use refset and replace
+	respectively to handle vectors and strings.
+	Adjust type mismatch error message.
+
+2015-05-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (chr_str_set): Check for literal strings.
 
 2015-05-11  Kaz Kylheku  <kaz@kylheku.com>

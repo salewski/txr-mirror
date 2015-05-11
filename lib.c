@@ -283,8 +283,13 @@ val rplaca(val cons, val new_car)
   case LCONS:
     set(mkloc(cons->lc.car, cons), new_car);
     return cons;
+  case VEC:
+  case STR:
+  case LSTR:
+    refset(cons, zero, new_car);
+    return cons;
   default:
-    type_mismatch(lit("~s is not a cons"), cons, nao);
+    type_mismatch(lit("rplaca: cannot modify ~s"), cons, nao);
   }
 }
 
@@ -297,8 +302,13 @@ val rplacd(val cons, val new_cdr)
   case LCONS:
     set(mkloc(cons->lc.cdr, cons), new_cdr);
     return cons;
+  case VEC:
+  case STR:
+  case LSTR:
+    replace(cons, new_cdr, one, t);
+    return cons;
   default:
-    type_mismatch(lit("~s is not a cons"), cons, nao);
+    type_mismatch(lit("rplacd: cannot modify ~s"), cons, nao);
   }
 }
 
