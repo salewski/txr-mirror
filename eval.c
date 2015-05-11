@@ -677,12 +677,14 @@ val apply(val fun, val arglist, val ctx_form)
     for (; arglist && p < arg + APPLY_ARGS; arglist = cdr(arglist))
       *p++ = car(arglist);
 
-    if (arglist)
-      eval_error(ctx_form, lit("~s: too many arguments"),
+    nargs = p - arg;
+
+    if (nargs < reqargs)
+      eval_error(ctx_form, lit("~s: missing required arguments"),
                  ctx, nao);
 
-    if ((nargs = p - arg) < reqargs)
-      eval_error(ctx_form, lit("~s: missing required arguments"),
+    if (nargs > fixparam)
+      eval_error(ctx_form, lit("~s: too many arguments"),
                  ctx, nao);
 
     for (; nargs < fixparam; nargs++)
