@@ -1,5 +1,9 @@
 2015-05-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (chr_str_set): Check for literal strings.
+
+2015-05-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	Fix argument count checking regression.
 
 	* eval.c (apply): Revert some changes from 2015-03-13

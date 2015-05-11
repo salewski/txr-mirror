@@ -3463,6 +3463,11 @@ val chr_str_set(val str, val ind, val chr)
 {
   cnum index = c_num(ind);
 
+  if (is_lit(str)) {
+    uw_throwf(error_s, lit("chr-str-set: cannot modify literal string ~s"),
+              str, nao);
+  }
+
   if (index < 0) {
     ind = plus(length_str(str), ind);
     index = c_num(ind);
