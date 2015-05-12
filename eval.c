@@ -1677,6 +1677,37 @@ static val op_setq(val form, val env)
   }
 }
 
+static val op_lisp1_setq(val form, val env)
+{
+  val args = rest(form);
+  val var = pop(&args);
+  val newval = pop(&args);
+
+  if (!bindable(var)) {
+    eval_error(form, lit("sys:lisp1-setq: ~s is not a bindable symbol"), var, nao);
+  } else {
+    val binding = lookup_sym_lisp1(env, var);
+    if (nilp(binding))
+      eval_error(form, lit("unbound variable ~s"), var, nao);
+    return sys_rplacd(binding, eval(newval, env, form));
+  }
+}
+
+static val op_lisp1_value(val form, val env)
+{
+  val args = rest(form);
+  val arg = car(args);
+
+  if (!bindable(arg)) {
+    return eval(arg, env, form);
+  } else {
+    val binding = lookup_sym_lisp1(env, arg);
+    if (nilp(binding))
+      eval_error(form, lit("unbound variable ~s"), arg, nao);
+    return cdr(binding);
+  }
+}
+
 static val op_for(val form, val env)
 {
   val forsym = first(form);
@@ -3868,6 +3899,8 @@ void eval_init(void)
   reg_op(tree_case_s, op_tree_case);
   reg_op(tree_bind_s, op_tree_bind);
   reg_op(setq_s, op_setq);
+  reg_op(intern(lit("lisp1-setq"), system_package), op_lisp1_setq);
+  reg_op(intern(lit("lisp1-value"), system_package), op_lisp1_value);
   reg_op(for_s, op_for);
   reg_op(for_star_s, op_for);
   reg_op(dohash_s, op_dohash);

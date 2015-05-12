@@ -28,20 +28,48 @@
     (defvar *place-clobber-expander* (hash))
     (defvar *place-update-expander* (hash))
     (defvar *place-delete-expander* (hash))
+    (defvar sys:*lisp1* nil)
 
     (defun sys:eval-err (. params)
       (throwf 'eval-error . params))
 
+    (defmacro sys:l1-setq (sym new-val :env e)
+      (caseq (lexical-lisp1-binding e sym)
+        (:var ^(sys:setq ,sym ,new-val))
+        (:symacro (sys:eval-err "sys:l1-setq: invalid use on symbol macro"))
+        (t (if (boundp sym)
+             ^(sys:setq ,sym ,new-val)
+             ^(sys:lisp1-setq ,sym ,new-val)))))
+
+    (defmacro sys:l1-val (u-expr :env e)
+      (let ((e-expr (macroexpand u-expr e)))
+        (if (and (symbolp e-expr) (not (constantp e-expr)))
+          (caseq (lexical-lisp1-binding e e-expr)
+            (:fun ^(fun ,u-expr))
+            (:var u-expr)
+            (nil (if (boundp e-expr)
+                   u-expr
+                   ^(sys:lisp1-value ,u-expr)))
+            (t (sys:eval-err "sys:l1-val: invalid case")))
+          u-expr)))
+
     (defun sys:sym-update-expander (getter-name setter-name
                                     place-expr op-body)
-      ^(macrolet ((,getter-name () ',place-expr)
-                  (,setter-name (val-expr) ^(sys:setq ,',place-expr ,val-expr)))
-         ,op-body))
+      (if sys:*lisp1*
+        ^(macrolet ((,getter-name () ^(sys:l1-val ,',place-expr))
+                    (,setter-name (val-expr) ^(sys:l1-setq ,',place-expr
+                                                           ,val-expr)))
+           ,op-body)
+        ^(macrolet ((,getter-name () ',place-expr)
+                    (,setter-name (val-expr) ^(sys:setq ,',place-expr
+                                                        ,val-expr)))
+           ,op-body)))
 
     (defun sys:sym-clobber-expander (simple-setter-name
                                      place-expr op-body)
-      ^(macrolet ((,simple-setter-name (val-expr) ^(sys:setq ,',place-expr
-                                                             ,val-expr)))
+      ^(macrolet ((,simple-setter-name (val-expr)
+                     ^(,(if sys:*lisp1* 'sys:l1-setq 'sys:setq)
+                        ,',place-expr ,val-expr)))
          ,op-body))
 
     (defun get-update-expander (place)
@@ -350,62 +378,67 @@
                        ^(remhash ,',hash ,',key))))
           ,body)))
 
-   (defplace (dwim obj-place index : (default nil have-default-p)) body
+   (defplace (dwim obj-place index : (default nil have-default-p) :env env) body
      (getter setter
        (with-gensyms (ogetter-sym osetter-sym obj-sym
                       oldval-sym newval-sym
                       index-sym index-sym
                       oldval-sym dflval-sym)
-         (with-update-expander (ogetter-sym osetter-sym) obj-place nil
-           ^(rlet ((,obj-sym (,ogetter-sym))
-                   (,index-sym ,index)
-                   ,*(if have-default-p
-                       ^((,dflval-sym ,default))))
-              (let ((,oldval-sym [,obj-sym
-                                 ,index-sym
-                                 ,*(if have-default-p ^(,dflval-sym))]))
-                (macrolet ((,getter () ',oldval-sym)
-                           (,setter (val)
-                              ^(rlet ((,',newval-sym ,val))
-                                 (,',osetter-sym
-                                   (sys:dwim-set ,',obj-sym
-                                                 ,',index-sym ,',newval-sym))
-                                 ,',newval-sym)))
-                   ,body))))))
+         (let ((sys:*lisp1* (or (symbolp obj-place) sys:*lisp1*)))
+           (with-update-expander (ogetter-sym osetter-sym) obj-place nil
+             ^(rlet ((,obj-sym (,ogetter-sym))
+                     (,index-sym (sys:l1-val ,index))
+                     ,*(if have-default-p
+                         ^((,dflval-sym (sys:l1-val ,default)))))
+                (let ((,oldval-sym [,obj-sym
+                                   ,index-sym
+                                   ,*(if have-default-p ^(,dflval-sym))]))
+                  (macrolet ((,getter () ',oldval-sym)
+                             (,setter (val)
+                                ^(rlet ((,',newval-sym ,val))
+                                   (,',osetter-sym
+                                     (sys:dwim-set ,',obj-sym
+                                                   ,',index-sym ,',newval-sym))
+                                   ,',newval-sym)))
+                     ,body)))))))
      (ssetter
        (with-gensyms (osetter-sym ogetter-sym
                       obj-sym newval-sym index-sym)
-         (with-update-expander (ogetter-sym osetter-sym) obj-place nil
-           ^(macrolet ((,ssetter (val)
-                        ^(rlet ((,',obj-sym (,',ogetter-sym))
-                                (,',index-sym ,',index)
-                                (,',newval-sym ,val))
-                           (,',osetter-sym
-                             (sys:dwim-set ,',obj-sym
-                                           ,*(if ,have-default-p
-                                               ^((prog1 ,',index-sym ,',default))
-                                               ^(,',index-sym))
-                                           ,',newval-sym))
-                           ,',newval-sym)))
-                ,body))))
+         (let ((sys:*lisp1* (or (symbolp obj-place) sys:*lisp1*)))
+           (with-update-expander (ogetter-sym osetter-sym) obj-place nil
+             ^(macrolet ((,ssetter (val)
+                          ^(rlet ((,',obj-sym (,',ogetter-sym))
+                                  (,',index-sym (sys:l1-val ,',index))
+                                  (,',newval-sym ,val))
+                             (,',osetter-sym
+                               (sys:dwim-set ,',obj-sym
+                                             ,*(if ,have-default-p
+                                                 ^((prog1
+                                                     ,',index-sym
+                                                     (sys:l1-val ,',default)))
+                                                 ^(,',index-sym))
+                                             ,',newval-sym))
+                             ,',newval-sym)))
+                  ,body)))))
 
      (deleter
        (with-gensyms (osetter-sym ogetter-sym
                       obj-sym index-sym oldval-sym
                       dflval-sym)
-         (with-update-expander (ogetter-sym osetter-sym) obj-place nil
-           ^(macrolet ((,deleter ()  ;; todo: place must not have optional val
-                        ^(rlet ((,',obj-sym (,',ogetter-sym)))
-                           (let* ((,',index-sym ,',index)
-                                  (,',oldval-sym [,',obj-sym
-                                                  ,',index-sym
-                                                  ,*(if ,have-default-p
-                                                      ^(,',default))]))
-                             (progn
-                               (,',osetter-sym
-                                 (sys:dwim-del ,',obj-sym ,',index-sym))
-                               ,',oldval-sym)))))
-                ,body)))))
+         (let ((sys:*lisp1* (or (symbolp obj-place) sys:*lisp1*)))
+           (with-update-expander (ogetter-sym osetter-sym) obj-place nil
+             ^(macrolet ((,deleter ()  ;; todo: place must not have optional val
+                          ^(rlet ((,',obj-sym (,',ogetter-sym)))
+                             (let* ((,',index-sym (sys:l1-val ,',index))
+                                    (,',oldval-sym [,',obj-sym
+                                                    ,',index-sym
+                                                    ,*(if ,have-default-p
+                                                        ^(,',default))]))
+                               (progn
+                                 (,',osetter-sym
+                                   (sys:dwim-del ,',obj-sym ,',index-sym))
+                                 ,',oldval-sym)))))
+                  ,body))))))
 
    (defplace (force promise) body
      (getter setter

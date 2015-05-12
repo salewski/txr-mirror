@@ -1,5 +1,29 @@
 2015-05-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	DWIM places must use Lisp-1 semantics.
+
+	This really only affects code which does something like
+	(set [f x] y) and f resolves as a function. (The TXR Program
+	bent over backwards to install a mutable object into a function
+	binding.) In this situation, we need to update the function binding
+	f, rather than some variable f.
+
+	* eval.c (op_lisp1_setq, op_lisp1_value): New static functions.
+	(eval_init): Register sys:lisp1-setq and sys:lisp1-value
+	special forms.
+
+	* place.tl (sys:*lisp1*): New special variable.
+	(sys:l1-setq, sys:l1-val): New macros, optimizing
+	versions of sys:lisp1-setq and sys:lisp1-value special operators.
+	(sys:sym-place-update-expander, sys:sym-place-clobber-expander):
+	React to sys:*lisp1* variable by doing symbol access using Lisp-1
+	semantics, with help of newly introduced macros and special forms.
+	(dwim): Bind sys:*lisp1* to true, if main argument is a symbolic place,
+	so that the update is done using Lisp-1 semantics. Use the
+	sys:l1-val operator when evaluating arguments.
+
+2015-05-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (lookup_var_l): Gut this function of its silly
 	reimplementation of lookup_var.
 	(op_setq): Use lookup_var instead of lookup_var_l.
