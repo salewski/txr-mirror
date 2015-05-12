@@ -139,9 +139,11 @@ val env_vbind(val env, val sym, val obj)
 
 static void env_vb_to_fb(val env)
 {
-  type_check(env, ENV);
-  env->e.fbindings = env->e.vbindings;
-  env->e.vbindings = nil;
+  if (env) {
+    type_check(env, ENV);
+    env->e.fbindings = env->e.vbindings;
+    env->e.vbindings = nil;
+  }
 }
 
 noreturn static val eval_error(val form, val fmt, ...)

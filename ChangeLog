@@ -1,5 +1,10 @@
 2015-05-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (env_vb_to_fb): Allow null env argument. This
+	case occurs when (flet () ...) is expanded.
+
+2015-05-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	DWIM places must use Lisp-1 semantics.
 
 	This really only affects code which does something like
