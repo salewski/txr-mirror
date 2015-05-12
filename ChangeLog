@@ -1,5 +1,11 @@
 2015-05-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	* place.tl (rlet): For the sake of sane evaluation order
+	in the face of unknown side effects, do not thread symbolic references;
+	only propagate constants.
+
+2015-05-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (env_vb_to_fb): Allow null env argument. This
 	case occurs when (flet () ...) is expanded.
 

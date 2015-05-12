@@ -96,8 +96,8 @@
 
   (defmacro rlet (bindings :env e . body)
     (let ((exp-bindings (mapcar (aret ^(,@1 ,(macroexpand @2 e))) bindings)))
-      (let ((renames [keep-if [orf symbolp constantp] exp-bindings second])
-            (regular [remove-if [orf symbolp constantp] exp-bindings second]))
+      (let ((renames [keep-if constantp exp-bindings second])
+            (regular [remove-if constantp exp-bindings second]))
         (cond ((and renames regular)
                 ^(symacrolet ,renames
                    (let ,regular ,*body)))
