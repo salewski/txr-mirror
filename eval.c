@@ -217,32 +217,8 @@ static val lookup_sym_lisp1(val env, val sym)
 
 loc lookup_var_l(val env, val sym)
 {
-  if (env) {
-    type_check(env, ENV);
-
-    for (; env; env = env->e.up_env) {
-      val binding = assoc(sym, env->e.vbindings);
-      if (binding)
-        return cdr_l(binding);
-    }
-  }
-
-  for (env = dyn_env; env; env = env->e.up_env) {
-    val binding = assoc(sym, env->e.vbindings);
-    if (binding)
-      return cdr_l(binding);
-  }
-
-  {
-    val binding = gethash(top_vb, sym);
-    if (binding)
-      return cdr_l(binding);
-    lisplib_try_load(sym);
-    binding = gethash(top_vb, sym);
-    if (binding)
-      return cdr_l(binding);
-    return nulloc;
-  }
+  val binding = lookup_var(env, sym);
+  return if3(binding, cdr_l(binding), nulloc);
 }
 
 val lookup_fun(val env, val sym)
@@ -1692,12 +1668,12 @@ static val op_setq(val form, val env)
   val newval = pop(&args);
 
   if (!bindable(var)) {
-    eval_error(form, lit("setvar: ~s is not a bindable symbol"), var, nao);
+    eval_error(form, lit("sys:setq: ~s is not a bindable symbol"), var, nao);
   } else {
-    loc ptr = lookup_var_l(env, var);
-    if (nullocp(ptr))
+    val binding = lookup_var(env, var);
+    if (nilp(binding))
       eval_error(form, lit("unbound variable ~s"), var, nao);
-    return set(ptr, eval(newval, env, form));
+    return sys_rplacd(binding, eval(newval, env, form));
   }
 }
 
