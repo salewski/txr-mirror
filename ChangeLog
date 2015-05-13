@@ -1,3 +1,7 @@
+2015-05-13  Kaz Kylheku  <kaz@kylheku.com>
+
+	* place.tl (push): Ensure left-to-right eval order.
+
 2015-05-12  Kaz Kylheku  <kaz@kylheku.com>
 
 	* place.tl (rlet): For the sake of sane evaluation order

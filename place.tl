@@ -202,8 +202,10 @@
              (,setter-1 ,tmp))))))
 
   (defmacro push (new-item place :env env)
-    (with-update-expander (getter setter) place env
-      ^(,setter (cons ,new-item (,getter)))))
+    (with-gensyms (new-sym)
+      ^(let ((,new-sym ,new-item))
+         ,(with-update-expander (getter setter) place env
+            ^(,setter (cons ,new-sym (,getter)))))))
 
   (defmacro pop (place :env env)
     (with-gensyms (tmp)
