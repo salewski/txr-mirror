@@ -849,6 +849,29 @@ val replace_list(val list, val items, val from, val to)
     }
 
     return list;
+  } else if (vectorp(from)) {
+    val where = from;
+    val seq = list;
+    val idx = zero;
+    val wlen = length_vec(where);
+    val widx = zero;
+
+    if (!missingp(to))
+      uw_throwf(error_s,
+                lit("replace-str: to-arg not applicable when from-arg is a vector"),
+                nao);
+
+    for (; seq && items && lt(widx, wlen); seq = cdr(seq), idx = plus(idx, one)) {
+      val wh = nil;
+
+      for (; lt(widx, wlen) && lt(wh = vecref(where, widx), idx); widx = plus(widx, one))
+        ; /* empty */
+
+      if (eql(wh, idx))
+        rplaca(seq, pop(&items));
+    }
+
+    return list;
   } else if (null_or_missing_p(from)) {
     from = zero;
   } else if (from == t) {
@@ -2663,6 +2686,25 @@ val replace_str(val str_in, val items, val from, val to)
 
     for (; where && items; where = cdr(where)) {
       val wh = car(where);
+      if (ge(wh, len))
+        break;
+      chr_str_set(str_in, wh, pop(&items));
+    }
+
+    return str_in;
+  } else if (vectorp(from)) {
+    val where = from;
+    val len = length_str(str_in);
+    val wlen = length_vec(from);
+    val i;
+
+    if (!missingp(to))
+      uw_throwf(error_s,
+                lit("replace-str: to-arg not applicable when from-arg is a vector"),
+                nao);
+
+    for (i = zero; lt(i, wlen) && items; i = plus(i, one)) {
+      val wh = vecref(where, i);
       if (ge(wh, len))
         break;
       chr_str_set(str_in, wh, pop(&items));
@@ -5045,6 +5087,25 @@ val replace_vec(val vec_in, val items, val from, val to)
 
     for (; where && items; where = cdr(where)) {
       val wh = car(where);
+      if (ge(wh, len))
+        break;
+      set(vecref_l(vec_in, wh), pop(&items));
+    }
+
+    return vec_in;
+  } else if (vectorp(from)) {
+    val where = from;
+    val len = length_vec(vec_in);
+    val wlen = length_vec(from);
+    val i;
+
+    if (!missingp(to))
+      uw_throwf(error_s,
+                lit("replace-vec: to-arg not applicable when from-arg is a vector"),
+                nao);
+
+    for (i = zero; lt(i, wlen) && items; i = plus(i, one)) {
+      val wh = vecref(where, i);
       if (ge(wh, len))
         break;
       set(vecref_l(vec_in, wh), pop(&items));

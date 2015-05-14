@@ -13664,7 +13664,8 @@ which consists of those elements of
 .meta object
 which are identified by
 the indices in
-.metn index-list .
+.metn index-list ,
+which may be a list or a vector.
 
 If
 .meta function
@@ -17849,7 +17850,8 @@ with the input sequence.
 The
 .code replace
 function has two invocation styles, distinguished by the
-type of the third argument. If the third argument is a list, then it is deemed to be the
+type of the third argument. If the third argument is a list or vector, then it
+is deemed to be the
 .meta index-list
 parameter of the second form.
 Otherwise, if the third argument is missing, or is not a list, then

@@ -1,3 +1,12 @@
+2015-05-14  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (replace_list, replace_str, replace_vec): Handle
+	the case when from is a vector, for consistency with the sel
+	function and the dwim operator.
+
+	* txr.1: Document that the third argument of select and replace may be
+	a vector.
+
 2015-05-13  Kaz Kylheku  <kaz@kylheku.com>
 
 	Recursive lcons force bug (keep-if*, remove-if*).
