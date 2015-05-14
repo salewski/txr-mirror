@@ -56,6 +56,7 @@ static void set_place_dlt_entries(val dlt, val fun)
     lit("set"), lit("pset"), lit("zap"), lit("flip"), lit("inc"), lit("dec"),
     lit("push"), lit("pop"), lit("swap"), lit("shift"), lit("rotate"),
     lit("del"),
+    lit("define-modify-macro"),
     nil
   };
 

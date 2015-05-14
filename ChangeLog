@@ -1,5 +1,11 @@
 2015-05-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	* place.tl (define-modify-macro): New macro.
+
+	* lisplib.c (set_place_dlt_entries): Add define-modify-macro.
+
+2015-05-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	* place.tl (push): Ensure left-to-right eval order.
 
 2015-05-12  Kaz Kylheku  <kaz@kylheku.com>

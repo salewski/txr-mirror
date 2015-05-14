@@ -475,4 +475,12 @@
        (each ((table (list *place-update-expander*
                            *place-clobber-expander*
                            *place-delete-expander*)))
-         (set [table to] [table from])))))
+         (set [table to] [table from]))))
+
+   (defmacro define-modify-macro (name lambda-list function)
+     (let ((cleaned-lambda-list (mapcar [iffi consp car]
+                                        (remql : lambda-list))))
+       (with-gensyms (place-sym args-sym)
+         ^(defmacro ,name (:env env ,place-sym ,*lambda-list)
+            (with-update-expander (getter setter) ,place-sym env
+              ^(,setter (,',function (,getter) ,,*cleaned-lambda-list))))))))
