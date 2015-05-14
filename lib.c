@@ -1153,7 +1153,9 @@ static val rem_lazy_rec(val obj, val list, val env, val func);
 static val rem_lazy_func(val env, val lcons)
 {
   cons_bind (pred, list, env);
-  return cdr(rplacd(lcons, rem_lazy_rec(pred, list, env, lcons_fun(lcons))));
+  val rest = rem_lazy_rec(pred, list, env, lcons_fun(lcons));
+  rplacd(lcons, rem_lazy_rec(pred, list, env, lcons_fun(lcons)));
+  return rest;
 }
 
 static val rem_lazy_rec(val pred, val list, val env, val func)

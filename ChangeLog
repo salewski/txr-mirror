@@ -1,5 +1,12 @@
 2015-05-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	Recursive lcons force bug (keep-if*, remove-if*).
+
+	* lib.c (rem_lazy_func): Do not access the cdr field of
+	the lcons that we are in the middle of forcing!
+
+2015-05-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	* place.tl (define-modify-macro): New macro.
 
 	* lisplib.c (set_place_dlt_entries): Add define-modify-macro.
