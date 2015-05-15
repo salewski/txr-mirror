@@ -72,6 +72,17 @@
                         ,',place-expr ,val-expr)))
          ,op-body))
 
+    (defun sys:sym-delete-expander (deleter-name
+                                    place-expr . op-body)
+      ^(macrolet ((,deleter-name (:env env)
+                    (when (lexical-var-p env ',place-expr)
+                      (sys:eval-err "~s is a lexical variable, thus not deletable"
+                                    ',place-expr))
+                    ^(prog1
+                       (symbol-value ',',place-expr)
+                       (makunbound ',',place-expr))))
+         ,*op-body))
+
     (defun get-update-expander (place)
       (cond
         ((symbolp place) (fun sys:sym-update-expander))
@@ -89,10 +100,11 @@
         (t (sys:eval-err "form ~s is not syntax denoting an assignable place" place))))
 
     (defun get-delete-expander (place)
-      (if (consp place)
-        (or [*place-delete-expander* (car place)]
-            (sys:eval-err "~s is not a deletable place" place))
-        (sys:eval-err "form ~s is not syntax denoting a deletable place" place))))
+      (cond
+        ((symbolp place) (fun sys:sym-delete-expander))
+        ((consp place) (or [*place-delete-expander* (car place)]
+                           (sys:eval-err "~s is not a deletable place" place)))
+        (t (sys:eval-err "form ~s is not syntax denoting a deletable place" place)))))
 
   (defmacro rlet (bindings :env e . body)
     (let ((exp-bindings (mapcar (aret ^(,@1 ,(macroexpand @2 e))) bindings)))

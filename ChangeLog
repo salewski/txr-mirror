@@ -1,5 +1,13 @@
 2015-05-15  Kaz Kylheku  <kaz@kylheku.com>
 
+	Variables are now deletable places, if they are global.
+
+	* place.tl (sys:sym-delete-expander): New function.
+	(get-delete-expander): Retrieve delete expander for
+	symbols.
+
+2015-05-15  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (symbol_value): Retrieve the binding of a symbol
 	macro also.
 	(boundp): Return t for symbol macros.
