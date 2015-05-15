@@ -62,7 +62,7 @@
 \f[5]\\$*\f[]
 .  \}
 ..
-.\" like .meta but tack on second agument with no space.
+.\" like .meta but tack on second argument with no space.
 .de metn
 .  ie n \{\
 <\\$1>\\$2
@@ -338,7 +338,7 @@
 .  gets \\$*
 .  SS* \\*s
 ..
-.\" like coSS but targetting NP*
+.\" like coSS but targeting NP*
 .de coNP
 .  gets \\$*
 .  NP* \\*s
@@ -1260,7 +1260,7 @@ denotes the value true. An attempt to use the variable
 .code @t
 will result in an exception.  The symbol
 .code nil
-can be used where a variable name is required syntacticaly,
+can be used where a variable name is required syntactically,
 but it has special semantics, described in a section below.
 
 A
@@ -1287,7 +1287,7 @@ which is different from
 .codn Foo .
 
 The braces around an identifier can be used when material which follows would
-otherwise be interpreted as being part of the identifer. When a name is
+otherwise be interpreted as being part of the identifier. When a name is
 enclosed in braces it is a
 .metn bident .
 
@@ -2248,7 +2248,7 @@ constitute an entire identifier. In fact a symbol inside a
 directive is a
 .metn lident .
 This is discussed in the Symbol Tokens section under TXR LISP.
-A symbolmust not be a number; tokens that look like numbers are treated as
+A symbol must not be a number; tokens that look like numbers are treated as
 numbers and not symbols.
 
 .SS* Character Literals
@@ -4949,13 +4949,13 @@ is not consumed.
 
 This repetition can, of course, be avoided by using
 .code @(last)
-instad of
+instead of
 .code @(until)
 since
 .code @(last)
 consumes the terminating material.
 
-Instead of the above regular-expresion-based approach, this extraction problem
+Instead of the above regular-expression-based approach, this extraction problem
 can also be solved with
 .codn cases :
 .IP code:
@@ -6249,7 +6249,7 @@ permitted, and they can even be bound to different values.  However, when the
 function terminates, the local binding of A simply disappears (because
 the symbol
 .code A
-is not among the paramters of the function).
+is not among the parameters of the function).
 Only the value bound to
 .code P
 emerges, and is bound to
@@ -6260,7 +6260,7 @@ binding disappears also, and the net effect is that
 .code A
 is now bound. The "proxy" binding of
 .code A
-thorugh the parameter
+through the parameter
 .code P
 "wins" the conflict with the direct binding.
 
@@ -7640,7 +7640,7 @@ will turn to
 .code &QUOT;
 which no longer be recognized by the
 .code :from_html
-filter, sonce the entity names in HTML codes
+filter, since the entity names in HTML codes
 are case-sensitive.
 
 Capture some numeric variables and convert to numbers:
@@ -8642,7 +8642,7 @@ parameter
 .code a
 can take
 whatever value the corresponding throw argument provides, so it ends up with
-.strn lci .
+.strn lc .
 
 .dir defex
 
@@ -9003,7 +9003,7 @@ is also the empty list, which terminates nonempty lists.
 similarly to Common Lisp, including the convention that
 .code defvar
 marks symbols for dynamic binding in local scopes. Lexical closures
-are supported.  Funtions are lexically scoped in \*(TL; they can be
+are supported.  Functions are lexically scoped in \*(TL; they can be
 defined in pervasive global environment using
 .code defun
 or in local scopes using
@@ -9250,7 +9250,7 @@ A vector can be quasiquoted, for example:
   ^#(1 2 3)
 .cble
 
-Of ourse, unquotes can occur within it.
+Of course, unquotes can occur within it.
 
 .cblk
   (let ((a 42))
@@ -11999,7 +11999,7 @@ operator.
 
 .TP* Examples:
 .cblk
-  ;; Wastefully slow algorithm for determining even-ness.
+  ;; Wastefully slow algorithm for determining evenness.
   ;; Note:
   ;; - mutual recursion between labels-defined functions
   ;; - inner is-even bound by labels shadows the outer
@@ -12365,7 +12365,7 @@ and whose
 .code cdr
 is the list
 .codn (b c) .
-This is eactly the same thing as
+This is exactly the same thing as
 .codn (a b c) .
 In other words
 .code (a b ... l m . (n o ... w . (x y z)))
@@ -13726,7 +13726,7 @@ is processed, even if it contains
 keys which are not in
 .metn object .
 
-.coNP Funtion @ in
+.coNP Function @ in
 .synb
 .mets (in < sequence < key >> [ testfun <> [ keyfun ]])
 .mets (in < hash << key )
@@ -13779,7 +13779,7 @@ or
 otherwise
 .codn nil .
 
-.coNP Funtion @ partition
+.coNP Function @ partition
 .synb
 .mets (partition < sequence >> { index-list >> | index <> | function })
 .syne
@@ -14773,7 +14773,7 @@ and
 .code none
 functions apply a predicate test function
 .meta predicate-fun
-over a list of elements.  If the argumenti
+over a list of elements.  If the argument
 .meta key-fun
 is
 specified, then elements of
@@ -15690,7 +15690,7 @@ list returned is
 .meti >> ( value >> [ gen-fun << value ] >> [ gen-fun >> [ gen-fun  << value ]] ...).
 .cble
 
-The lazy list terminates when a value fails to satsify
+The lazy list terminates when a value fails to satisfy
 .metn while-fun .
 That is to say, prior to generating each value, the lazy list tests
 the value using
@@ -15789,7 +15789,7 @@ as a new lazy list.
 When called with two or more sequences,
 .code
 weave
-returns a lazy list which draws elements from the sequeces in a round-robin
+returns a lazy list which draws elements from the sequences in a round-robin
 fashion, repeatedly scanning the sequences from left to right, and
 taking an item from each one, removing it from the sequence.
 Whenever a sequence runs out of items, it is deleted; the weaving then
@@ -17908,7 +17908,7 @@ This form of the replace function does not insert
 or delete; it simply overwrites elements. If
 .meta replacement-sequence
 and
-.meta idex-list
+.meta index-list
 are of different lengths, then the shorter of the two determines
 the maximum number of elements which are overwritten.
 Furthermore, similar restrictions apply on
@@ -19663,7 +19663,7 @@ example
 is
 .codn ...00001 ).
 A negative number
-in infinite two's complement is the biwise negation of its positive counterpart,
+in infinite two's complement is the bitwise negation of its positive counterpart,
 plus one: it carries an infinite prefix of 1 digits. So for instance the number
 .code -1
 is represented by
@@ -19990,7 +19990,7 @@ In other words, the following equivalences hold:
 .syne
 .desc
 A two's complement representation of an integer consists of a sign bit and a
-manitssa field.
+mantissa field.
 The
 .code width
 function computes the minimum number of bits required for the mantissa portion
@@ -21057,7 +21057,7 @@ an open traversal of the hash table.
 
 .coNP Operator @ dohash
 .synb
-.mets (dohash ( < key-var < value-var < hash-form <> [ result-form ])
+.mets (dohash >> ( key-var < value-var < hash-form <> [ result-form ])
 .mets \ \  << body-form *)
 .syne
 .desc
@@ -21270,7 +21270,7 @@ the anonymous function is to be substituted in place of the
 generates a function which has a number of required arguments equal to the
 highest value of
 .meta num
-apearing in a
+appearing in a
 .cblk
 .mati >> @ num
 .cble
@@ -21401,7 +21401,7 @@ belongs with the inner op.
 There is a way for an inner
 .code op
 to refer to an outer op metanumber argument. This is
-expresed by adding an extra
+expressed by adding an extra
 .code @
 prefix for every level of escape. For example in
 .code (op (op @@1))
@@ -21558,7 +21558,7 @@ translates its arguments to a call to the
 .code chain
 function, whereas
 .code oand
-transaltes its arguments in the same way to a call to the
+translates its arguments in the same way to a call to the
 .code chand
 function.
 
@@ -21625,7 +21625,7 @@ The
 .code (* 3)
 and
 .code (+ 1)
-terms are rewriten to
+terms are rewritten to
 .code (op * 3)
 and
 .codn (op + 1) ,
@@ -21998,7 +21998,7 @@ argument. If
 .meta else-func
 is omitted in a call to
 .code iffi
-then the deafult function is
+then the default function is
 .codn identity .
 This is useful in situations when one value is to be
 replaced with another one when the condition is true, otherwise
@@ -22221,12 +22221,12 @@ function is associated with a successive
 Each
 .metn arg-function
 is called, passed the corresponding argument. The return
-values of these functions are then passd as arguments
+values of these functions are then passed as arguments
 to
 .meta main function
 and the resulting value is returned.
 
-If the returned function is calle with fewer arguments than there
+If the returned function is called with fewer arguments than there
 are
 .metn arg-function -s,
 then only that many functions are used. Conversely, if the function is
@@ -22383,7 +22383,7 @@ character is present in the width
 specifier, then the field is left adjusted.
 
 .meIP < precision
-The precision specifier is introduced by a leading comma. If this comma appaers
+The precision specifier is introduced by a leading comma. If this comma appears
 immediately after the directive's
 .code ~
 character, then it means that
@@ -22708,7 +22708,7 @@ they look like a hex character code.
 
 The
 .codn tprint
-function prints a represntation of
+function prints a representation of
 .meta obj
 on
 .metn stream .
@@ -22787,7 +22787,7 @@ stream as real-time, if it is connected to a TTY device (a device for which
 the POSIX function
 .code isatty
 reports true). This is only supported on platforms that have this function.
-The behvior is overridden by the
+The behavior is overridden by the
 .code -n
 command line option.
 
@@ -23763,8 +23763,8 @@ A package is an object which serves as a container of symbols.
 A symbol which exists inside a package is said to be interned in that package.
 A symbol can be interned in at most one package at a time.
 
-Eacy symbol has a name, which is a string. It is not necessarily unique:
-two distinct symbols can have the sama name.  However, a symbol name is unique
+Each symbol has a name, which is a string. It is not necessarily unique:
+two distinct symbols can have the same name.  However, a symbol name is unique
 within a package, because it serves as the key which associates the
 symbol with the package. Two symbols cannot be in the same package if they
 have the same name.  Moreover, a symbol cannot exist in more than one package
@@ -24404,7 +24404,7 @@ regardless of whether or not it overwrites an existing variable.
 
 The
 .code unsetenv
-function removes the enviornment variable
+function removes the environment variable
 specified by
 .metn name ,
 if it exists. On some platforms, it instead sets the environment variable
@@ -25213,7 +25213,7 @@ is implemented using a call to the POSIX function
   (getppid)
 .syne
 .desc
-These functions retrieve the current proces ID and the parent process ID
+These functions retrieve the current process ID and the parent process ID
 respectively. They are wrappers for the POSIX functions
 .code getpid
 and
@@ -25651,7 +25651,7 @@ Note that the
 .code glob-tilde-check
 and
 .code glob-onlydir
-variables may not be avaiable. They are extensions in the GNU C library
+variables may not be available. They are extensions in the GNU C library
 implementation of
 .codn glob .
 
@@ -25936,7 +25936,7 @@ The
 function performs a one character step in a trie
 lookup. The
 .meta trie-context
-argument must be a trie contxt returned
+argument must be a trie context returned
 by
 .metn trie-lookup-begin ,
 or by some previous call to
@@ -26281,7 +26281,7 @@ The function may or may not produce a binding for that variable.
 Also, every argument which is a symbol also denotes a local variable
 that is established around
 .meta then-expr
-if the function suceeds. For any such pattern variable for which the function
+if the function succeeds. For any such pattern variable for which the function
 produces a binding, the corresponding local variable will be initialized
 with the value of that pattern variable. For any such pattern variable
 which is left unbound by the function, the corresponding local variable
@@ -26346,7 +26346,7 @@ form is that of the last
 .metn form .
 
 If the pattern function fails then the forms are not evaluated,
-adn the result value is
+and the result value is
 .codn nil .
 
 .coNP Macro @ txr-case
@@ -26522,7 +26522,7 @@ yield
 .codn [value-of-value-of-x] ,
 the value of
 .code [value-of-x]
-when treated as a Lisp expresion and evaluated.
+when treated as a Lisp expression and evaluated.
 
 .TP* Examples:
 
@@ -27640,7 +27640,7 @@ or
 .code nil
 if there are no forms,
 .meta malloc-bytes
-is the total number of bytes of all memroy allocation
+is the total number of bytes of all memory allocation
 requests (or at least those known to the \*(TX runtime, such as those of all
 internal objects),
 .meta gc-bytes
@@ -27794,7 +27794,7 @@ It is therefore safe for
 .meta function
 to store somewhere a persistent reference to
 .meta object
-or to itself, thereby reinstanting these objects as reachable.
+or to itself, thereby reinstating these objects as reachable.
 
 .meta function
 is itself permitted to call
@@ -28093,7 +28093,7 @@ of these version values, the described behaviors are provided if
 .code -C
 is given an argument which is equal or lower. For instance
 .code -C 103
-selects the behaviors described below for verison 105, but not those for 102.
+selects the behaviors described below for version 105, but not those for 102.
 
 .IP 107
 Up through \*(TX 107, by accident, there was a function called
