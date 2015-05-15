@@ -9711,7 +9711,7 @@ Certain variables in \*(TX's library break this convention; however, they at
 least have distinct prefixes, examples being example s-ifmt, log-emerg and
 sig-hup.
 
-Example:
+.TP* "Example:"
 
 .cblk
   (defvar *x* 42)     ;; *x* has a value of 42
@@ -9724,6 +9724,31 @@ Example:
 
   (print-x)           ;; *x* is 42 again and so "42" is printed
 .cble
+
+.TP* "Dialect Note:"
+
+The terms
+.I bind
+and
+.I binding
+are used differently in \*(TL compared to ANSI Common Lisp.
+In \*(TL binding is an association between a symbol and an abstract storage
+location. The association is registered in some namespace, such as the global
+namespace or a lexical scope.  That storage location, in turn, contains a
+value. In ANSI Lisp, a binding of a dynamic variable is the association between
+the symbol and a value.  It is possible for a dynamic variable to exist, and
+not have a value.  A value can be assigned, which creates a binding.
+In \*(TL, an assignment is an operation which transfers a value into
+a binding, not one which creates a binding.
+
+In ANSI Lisp, a dynamic variable can exist which has no value. Accessing
+the value signals a condition, but storing a value is permitted; doing so
+creates a binding. By contrast, in \*(TL a global variable cannot exist without
+a value. If a
+.code defvar
+form doesn't specify a value, and the variable doesn't exist, it is
+created with a value of
+.codn nil .
 
 .SH* TXR LISP OPERATOR AND FUNCTION LIBRARY
 A compound expression with a symbol as its first element, if
@@ -11815,14 +11840,8 @@ operator binding is returned, and if that doesn't exist, then
 .code nil
 is returned.
 
-The
-.code symbol-value
-function retrieves the value of a global variable, if it exists,
-otherwise
-.codn nil .
-
-Note: a function binding is a function, but a macro or special operator binding
-binding isn't.  The value of a macro binding is a list of the following form:
+The value of a macro binding isn't a functio object, but a list of the
+following form:
 
 .cblk
 .mets (#<environment object> < macro-parameter-list << body-form *)
@@ -11836,6 +11855,14 @@ printed representation looks like:
 .cble
 
 These details may change in future version of \*(TX.
+
+The
+.code symbol-value
+function retrieves the value of a either a global variable or a global
+symbol macro, whichever exists.  Otherwise it returns
+.codn nil .
+
+The value of a symbol macro binding is simply the replacement form.
 
 .TP* "Dialect note:"
 Forms which call
@@ -11855,7 +11882,7 @@ operator defines functions.
 .code boundp
 returns
 .code t
-if the symbol has a variable binding in the global
+if the symbol is bound as a variable or symbol macro in the global
 environment, otherwise
 .codn nil .
 
@@ -11865,6 +11892,57 @@ returns
 if the symbol has a function or macro binding in the global
 environment, or if it is an operator, otherwise
 .codn nil .
+
+.coNP Functions @ makunbound and @ fmakunbound
+.synb
+.mets (makunbound << symbol )
+.mets (fmakunbound << symbol )
+.syne
+.desc
+The function
+.code makunbound
+removes any binding for
+.meta symbol
+from the variable namespace of the global environment. If
+.meta symbol
+has no such binding, it does nothing.
+In either case, it returns
+.metn symbol .
+
+Both variables and symbol macros are bindings in the variable namespace.
+
+Additionally, if
+.meta symbol
+was previously marked as special, for instance
+by
+.codn defvar ,
+this marking is removed by
+.codn makunbound .
+
+The function
+.code fmakunbound
+removes any binding for
+.meta symbol
+from the function namespace of the global environment. If
+.meta symbol
+has no such binding, it does nothing.
+In either case, it returns
+.metn symbol .
+
+Both functions and macros are bindings in the function namespace.
+
+.TP* "Dialect Note:"
+
+The behavior of these functions differs from ANSI Common Lisp.
+The
+.code makunbound
+function in ANSI Lisp only removes a value from a dynamic variable. The
+dynamic variable does not cease to exist, it only ceases to have a value
+(because a binding is a value).  The special property from a symbol is also not
+removed.  In \*(TL, the variable ceases to exist. The binding
+of a variable isn't its value, it is the variable itself: the association
+between a name and an abstract storage location, in some environment.
+If the binding is undone, the variable disappears.
 
 .coNP Function @ func-get-form
 .synb

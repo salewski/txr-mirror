@@ -3283,7 +3283,10 @@ static val mapdov(val fun, val list_of_lists)
 
 static val symbol_value(val sym)
 {
-  return cdr(lookup_var(nil, sym));
+  uses_or2;
+
+  return cdr(or2(lookup_var(nil, sym),
+                 lookup_symac(nil, sym)));
 }
 
 static val symbol_function(val sym)
@@ -3296,13 +3299,30 @@ static val symbol_function(val sym)
 
 static val boundp(val sym)
 {
-  return if3(lookup_var(nil, sym), t, nil);
+  return if2(lookup_var(nil, sym) || lookup_symac(nil, sym), t);
 }
 
 static val fboundp(val sym)
 {
   return if2(lookup_fun(nil, sym) || lookup_mac(nil, sym) ||
              gethash(op_table, sym), t);
+}
+
+static val makunbound(val sym)
+{
+  lisplib_try_load(sym),
+  remhash(top_vb, sym);
+  remhash(top_smb, sym);
+  remhash(special, sym);
+  return sym;
+}
+
+static val fmakunbound(val sym)
+{
+  lisplib_try_load(sym),
+  remhash(top_fb, sym);
+  remhash(top_mb, sym);
+  return sym;
 }
 
 static val rangev_func(val env, val lcons)
@@ -4370,6 +4390,8 @@ void eval_init(void)
   reg_fun(intern(lit("symbol-function"), user_package), func_n1(symbol_function));
   reg_fun(intern(lit("boundp"), user_package), func_n1(boundp));
   reg_fun(intern(lit("fboundp"), user_package), func_n1(fboundp));
+  reg_fun(intern(lit("makunbound"), user_package), func_n1(makunbound));
+  reg_fun(intern(lit("fmakunbound"), user_package), func_n1(fmakunbound));
   reg_fun(intern(lit("func-get-form"), user_package), func_n1(func_get_form));
   reg_fun(intern(lit("func-get-env"), user_package), func_n1(func_get_env));
   reg_fun(intern(lit("func-set-env"), user_package), func_n2(func_set_env));
