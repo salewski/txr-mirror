@@ -110,9 +110,9 @@ endef
 
 define LISP_TO_C_STRING
 $(call ABBREV,L2C)
-$(V)echo "const wchli_t *${@:.h=}_code = wli(" > $@
+$(V)echo "const char *${@:.h=}_code =" > $@
 $(V)sed -e 's/;.*//' -e 's/["\\]/\\&/g' -e 's/$$/\\n/' -e 's/.*/"&"/' $< >> $@
-$(V)echo ");" >> $@
+$(V)echo ";" >> $@
 endef
 
 define WINDRES

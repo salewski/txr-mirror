@@ -1,3 +1,14 @@
+2015-05-19  Kaz Kylheku  <kaz@kylheku.com>
+
+	Represent place.tl more compactly in image.
+
+	The contents of place.tl are now stored as a UTF-8 ordinary literal
+	instead of a wide char literal.
+
+	* Makefile (LISP_TO_C_STRING): Generate plain literal.
+
+	* lisplib.c: Convert plain literal to string.
+
 2015-05-15  Kaz Kylheku  <kaz@kylheku.com>
 
 	Variables are now deletable places, if they are global.

@@ -67,7 +67,7 @@ static void set_place_dlt_entries(val dlt, val fun)
 static val place_instantiate(val dlt)
 {
   set_place_dlt_entries(dlt, nil);
-  return eval_intrinsic(lisp_parse(static_str(place_code), std_error,
+  return eval_intrinsic(lisp_parse(string_utf8(place_code), std_error,
                                    colon_k, lit("place.tl")), nil);
 }
 
