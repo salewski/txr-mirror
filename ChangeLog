@@ -1,3 +1,13 @@
+2015-05-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	Introduce defparm operator.
+
+	* eval.c (me_defparm): New function.
+	(eval_init): Register defparm.
+
+	* txr.1: Documented defparm together with defvar.
+	defvar documentation is revised.
+
 2015-05-19  Kaz Kylheku  <kaz@kylheku.com>
 
 	Represent place.tl more compactly in image.

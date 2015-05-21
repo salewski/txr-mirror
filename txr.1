@@ -11262,16 +11262,23 @@ table, depending on the type of
 .metn obj .
 
 .SS* Binding and Iteration
-.coNP Operator @ defvar
+.coNP Operators @ defvar and @ defparm
 .synb
-.mets (defvar < sym << value )
+.mets (defvar < sym <> [ value ])
+.mets (defparm < sym << value )
 .syne
 
 .desc
 
 The
 .code defvar
-operator binds a variable in the global environment.
+operator binds a name in the variable namespace of the global environment.
+Binding a name means creating a binding: recording, in some namespace of some
+environment, an association between a name and some named entity. In the
+case of a variable binding, that entity is a storage location for a value.
+The value of a variable is that which has most recently been written into the
+storage location, and is also said to be a value of the binding, or stored
+in the binding.
 
 If the variable named
 .meta sym
@@ -11281,10 +11288,14 @@ form has no effect; the
 form is not evaluated, and the value of the
 variable is unchanged.
 
-If the variable does not exist, then it is introduced, with a value given by
-evaluating the
+If the variable does not exist, then a new binding is introduced, with a value
+given by evaluating the
 .meta value
-form. The
+form. If the form is absent, the variable is initialized
+to
+.codn nil .
+
+The
 .meta value
 form is evaluated in the environment
 in which the
@@ -11307,6 +11318,35 @@ that symbol in a lexical binding construct such as the
 .code let
 operator, or a function parameter list. See the section "Special Variables" far
 above.
+
+The
+.code defparm
+operator behaves like
+.code defvar
+when a variable named
+.meta sym
+doesn't already exist.
+
+If
+.meta sym
+already denotes a variable binding in the global namespace,
+.code defparm
+evaluates the
+.meta value
+form and assigns the resulting value to the variable.
+
+The following equivalence holds:
+
+.cblk
+  (defparm x y)  <-->  (prog1 (defvar x) (set x y))
+.cble
+
+The
+.code defvar
+and
+.code defparm
+operators return
+.metn sym .
 
 .coNP Operators @ let and @ let*
 .synb

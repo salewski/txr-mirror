@@ -1950,6 +1950,23 @@ static val op_prof(val form, val env)
               nao);
 }
 
+static val me_defparm(val form, val menv)
+{
+  val args = rest(form);
+  val op = first(form);
+  val sym = first(args);
+  val initform = second(args);
+
+  (void) menv;
+
+  if (length(args) != two)
+    eval_error(form, lit("~s: two arguments expected"), op, nao);
+
+  return list(prog1_s,
+              cons(defvar_s, cons(sym, nil)),
+              list(set_s, sym, initform, nao), nao);
+}
+
 static val me_gen(val form, val menv)
 {
   (void) menv;
@@ -3936,6 +3953,7 @@ void eval_init(void)
   reg_op(with_saved_vars_s, op_with_saved_vars);
   reg_op(prof_s, op_prof);
 
+  reg_mac(intern(lit("defparm"), user_package), me_defparm);
   reg_mac(gen_s, me_gen);
   reg_mac(gun_s, me_gun);
   reg_mac(intern(lit("delay"), user_package), me_delay);
