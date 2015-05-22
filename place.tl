@@ -225,6 +225,18 @@
         ^(let ((,tmp (,getter)))
            (prog1 (car ,tmp) (,setter (cdr ,tmp)))))))
 
+  (defmacro pushnew (new-item place :env env :
+                              (testfun :)
+                              (keyfun :))
+    (with-update-expander (getter setter) place env
+      (with-gensyms (new-item-sym old-list-sym)
+        ^(let ((,new-item-sym ,new-item))
+           ,(with-update-expander (getter setter) place env
+              ^(let ((,old-list-sym (,getter)))
+                 (if (member ,new-item-sym ,old-list-sym ,testfun ,keyfun)
+                   ,old-list-sym
+                   (,setter (cons ,new-item-sym ,old-list-sym)))))))))
+
   (defmacro shift (:env env . places)
     (tree-case places
       (() (sys:eval-err "shift: need at least two arguments"))

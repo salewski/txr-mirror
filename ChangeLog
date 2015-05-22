@@ -1,5 +1,11 @@
 2015-05-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	* place.tl (pushnew): New macro.
+
+	* lisplib.c (set_place_dlt_entries): Add pushnew.
+
+2015-05-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	symbol-function, symbol-value and fun become places.
 
 	* eval.c (op_setqf): New function.
