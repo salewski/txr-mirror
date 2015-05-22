@@ -1710,6 +1710,22 @@ static val op_lisp1_value(val form, val env)
   }
 }
 
+static val op_setqf(val form, val env)
+{
+  val args = rest(form);
+  val var = pop(&args);
+  val newval = pop(&args);
+
+  if (!bindable(var)) {
+    eval_error(form, lit("sys:setqf: ~s is not a bindable symbol"), var, nao);
+  } else {
+    val binding = lookup_fun(env, var);
+    if (nilp(binding))
+      eval_error(form, lit("unbound function ~s"), var, nao);
+    return sys_rplacd(binding, eval(newval, env, form));
+  }
+}
+
 static val op_for(val form, val env)
 {
   val forsym = first(form);
@@ -3940,6 +3956,7 @@ void eval_init(void)
   reg_op(setq_s, op_setq);
   reg_op(intern(lit("lisp1-setq"), system_package), op_lisp1_setq);
   reg_op(intern(lit("lisp1-value"), system_package), op_lisp1_value);
+  reg_op(intern(lit("setqf"), system_package), op_setqf);
   reg_op(for_s, op_for);
   reg_op(for_star_s, op_for);
   reg_op(dohash_s, op_dohash);
@@ -4404,6 +4421,8 @@ void eval_init(void)
   reg_fun(intern(lit("make-like"), user_package), func_n2(make_like));
   reg_fun(intern(lit("nullify"), user_package), func_n1(nullify));
 
+  reg_var(intern(lit("top-vb"), system_package), top_vb);
+  reg_var(intern(lit("top-fb"), system_package), top_fb);
   reg_fun(intern(lit("symbol-value"), user_package), func_n1(symbol_value));
   reg_fun(intern(lit("symbol-function"), user_package), func_n1(symbol_function));
   reg_fun(intern(lit("boundp"), user_package), func_n1(boundp));

@@ -1,3 +1,14 @@
+2015-05-22  Kaz Kylheku  <kaz@kylheku.com>
+
+	symbol-function, symbol-value and fun become places.
+
+	* eval.c (op_setqf): New function.
+	(eval_init): Register sys:setqf operator. Also expose
+	global variable hash tables via sys:top-vb and sys:top-fb.
+
+	* place.tl (sys:get-fb, sys:get-vb): New functions.
+	(fun, symbol-function, symbol-value): New places defined.
+
 2015-05-21  Kaz Kylheku  <kaz@kylheku.com>
 
 	Introduce defparm operator.

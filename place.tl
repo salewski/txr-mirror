@@ -481,6 +481,53 @@
                             (progn (errno ,val-sym) ,val-sym)))))
           ,body)))
 
+   (defplace (fun sym) body
+     (getter setter
+       ^(macrolet ((,getter () ^(fun ,',sym))
+                   (,setter (val) ^(sys:setqf ,',sym ,val)))
+          ,*body))
+     :
+     (deleter
+       ^(macrolet ((,deleter (:env env)
+                      (when (lexical-fun-p env ',sym)
+                        (sys:eval-err "~s is a lexical function, \
+                                      \ thus not deletable"
+                                    ',sym))
+                       ^(fmakunbound ',',sym)))
+          ,*body)))
+
+   (defun sys:get-fb (sym)
+     (or (gethash sys:top-fb sym)
+         (sys:eval-err "unbound function ~s" sym)))
+
+   (defplace (symbol-function sym-expr) body
+     (getter setter
+       (with-gensyms (binding-sym)
+         ^(let ((,binding-sym (sys:get-fb ,sym-expr)))
+             (macrolet ((,getter () ^(cdr ,',binding-sym))
+                        (,setter (val) ^(sys:rplacd ,',binding-sym ,val)))
+               ,*body))))
+     :
+     (deleter
+       ^(macrolet ((,deleter () ^(fmakunbound ,',sym-expr)))
+          ,*body)))
+
+   (defun sys:get-vb (sym)
+     (or (gethash sys:top-vb sym)
+         (sys:eval-err "unbound variable ~s" sym)))
+
+   (defplace (symbol-value sym-expr) body
+     (getter setter
+       (with-gensyms (binding-sym)
+         ^(let ((,binding-sym (sys:get-vb ,sym-expr)))
+             (macrolet ((,getter () ^(cdr ,',binding-sym))
+                        (,setter (val) ^(sys:rplacd ,',binding-sym ,val)))
+               ,*body))))
+     :
+     (deleter
+       ^(macrolet ((,deleter () ^(makunbound ,',sym-expr)))
+          ,*body)))
+
    (macro-time
      (each ((from '(car cdr))
             (to '(first rest)))
