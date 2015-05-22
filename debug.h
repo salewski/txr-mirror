@@ -26,30 +26,28 @@
 
 extern int opt_debugger;
 extern int debug_depth;
-extern val debug_block_s;
 
 val debug(val form, val bindings, val data, val line, val pos, val base);
 
 #if CONFIG_DEBUG_SUPPORT
 
-#define debug_enter                                     \
-  {                                                     \
-    int debug_depth_save = debug_depth++;               \
-    uw_block_begin(debug_block_s, debug_result);        \
-    uw_simple_catch_begin {
+#define debug_enter                             \
+  {                                             \
+    int debug_depth_save = debug_depth++;       \
+    val debug_result = nil;                     \
+    (void) 0
 
-#define debug_leave                                     \
-    }                                                   \
-    uw_unwind {                                         \
-      debug_depth = debug_depth_save;                   \
-    }                                                   \
-    uw_catch_end;                                       \
-    uw_block_end;                                       \
-    return debug_result;                                \
+#define debug_leave                             \
+  debug_return_out:                             \
+    debug_depth = debug_depth_save;             \
+    return debug_result;                        \
   }
 
-#define debug_return(VAL)                               \
-  uw_block_return(debug_block_s, VAL)
+#define debug_return(VAL)               \
+  do {                                  \
+    debug_result = VAL;                 \
+    goto debug_return_out;              \
+  } while (0)
 
 INLINE val debug_check(val form, val bindings, val data, val line,
                        val pos, val base)

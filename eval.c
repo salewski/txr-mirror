@@ -1057,8 +1057,8 @@ static val do_eval(val form, val env, val ctx_form,
         last_form_evaled = form;
         ret = apply(cdr(fbinding), z(args), form);
         last_form_evaled = lfe_save;
-        debug_return (ret);
         debug_end;
+        debug_return (ret);
       }
     }
   } else {
@@ -1461,10 +1461,12 @@ static val expand_macro(val form, val expander, val menv)
     val body = cdr(cdr(cdr(expander)));
     val saved_de = set_dyn_env(make_env(nil, nil, dyn_env));
     val exp_env = bind_macro_params(env, menv, params, args, nil, form);
+    val result;
     debug_frame(name, args, nil, env, nil, nil, nil);
-    debug_return(eval_progn(body, exp_env, body));
+    result = eval_progn(body, exp_env, body);
     debug_end;
-    set_dyn_env(saved_de); /* not reached but shuts up compiler */
+    set_dyn_env(saved_de);
+    debug_return(result);
     debug_leave;
   }
 }

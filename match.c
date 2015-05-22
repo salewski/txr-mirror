@@ -3859,16 +3859,16 @@ static void open_data_source(match_files_ctx *c)
         debuglf(spec, lit("opening data source ~a"), name, nao);
 
         if (complex_open_failed(fp)) {
-          if (consp(source_spec) && car(source_spec) == nothrow_k) {
+          if (consp(source_spec) && car(source_spec) == nothrow_k)
             debuglf(spec, lit("could not open ~a: "
                               "treating as failed match due to nothrow"), name, nao);
-            debug_return (nil);
-          } else if (errno != 0)
+          else if (errno != 0)
             file_err(spec, lit("could not open ~a (error ~a/~a)"), name,
                      num(errno), string_utf8(strerror(errno)), nao);
           else
             file_err(spec, lit("could not open ~a"), name, nao);
-          debug_return (nil);
+          c->data = nil;
+          return;
         }
 
         c->files = cons(name, cdr(c->files)); /* Get rid of cons and nothrow */

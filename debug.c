@@ -45,7 +45,6 @@
 
 int opt_debugger;
 int debug_depth;
-val debug_block_s;
 static int step_mode;
 static int next_depth = -1;
 static val breakpoints;
@@ -246,7 +245,6 @@ void debug_init(void)
 {
   step_mode = 1;
   protect(&breakpoints, &last_command, convert(val *, 0));
-  debug_block_s = intern(lit("debug-block"), system_package);
   {
     char *columns = getenv("COLUMNS");
     if (columns)

@@ -1,5 +1,43 @@
 2015-05-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	Ligher weight debug instrumentation.
+
+	This speeds up the TXR Lisp interpreter, because do_eval
+	sets up a debug frame and uses debug_return.
+
+	* debug.c (debug_block_s): Symbol removed.
+	(debug_init): Remove initialization of debug_block_s.
+
+	* debug.h (debug_block_s): Declaration removed.
+	(debug_enter): Do not establish a named block or a catch block;
+	no time-wasting unwind stack manipulation at all.
+	The debug_depth variable is managed by the extended setjmp
+	context now.  Provide a return value variable, and a well-defined name to
+	branch to to exit from the debug block.
+	(debug_return): Do not use heavy-weight uw_block_return;
+	simply set the return variable and branch to debug_return_out
+	label.
+
+	* signal.h (EJ_DBG_MEMB, EJ_DBG_SAVE, EJ_DBG_REST,
+	EJ_OPT_MEMB, EJ_OPT_SAVE, EJ_OPT_REST): New macros.
+	(extended_jmp_buf): Define optional global state
+	variables using EJ_OPT_MEMB.
+	(extended_setjmp): Save and restore optional
+	globals using EJ_OPT_SAVE and EJ_OPT_RESTORE.
+	Now debug_depth is saved and restored if
+	debugging support is compiled in.
+
+	* match.c (open_data_source): Remove bogus debug_return
+	invocations which were uncovered here by changes to the macro.
+
+	* eval.c (do_eval, expand_macro): debug_return must now be after
+	debug_end, because it won't dynamically clean up frames that it doesn't
+	know about. The set_dyn_env is no longer unreachable in expand_macro;
+	it is now necessary because debug_return isn't doing the longjmp
+	that previously restored dyn_env.
+
+2015-05-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* place.tl (pushnew): New macro.
 
 	* lisplib.c (set_place_dlt_entries): Add pushnew.

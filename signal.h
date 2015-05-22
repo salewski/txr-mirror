@@ -25,6 +25,21 @@
  */
 
 
+#if CONFIG_DEBUG_SUPPORT
+extern int debug_depth;
+#define EJ_DBG_MEMB int dbg_depth;
+#define EJ_DBG_SAVE(EJB) (EJB).dbg_depth = debug_depth,
+#define EJ_DBG_REST(EJB) debug_depth = (EJB).dbg_depth,
+#else
+#define EJ_DBG_MEMB
+#define EJ_DBG_SAVE(EJB)
+#define EJ_DBG_REST(EJB)
+#endif
+
+#define EJ_OPT_MEMB EJ_DBG_MEMB
+#define EJ_OPT_SAVE(EJB) EJ_DBG_SAVE(EJB)
+#define EJ_OPT_REST(EJB) EJ_DBG_REST(EJB)
+
 #if HAVE_POSIX_SIGS
 
 #define sig_save_enable                         \
@@ -62,6 +77,7 @@ typedef struct {
   val de;
   int gc;
   val **gc_pt;
+  EJ_OPT_MEMB
   int rv;
 } extended_jmp_buf;
 
@@ -72,12 +88,14 @@ typedef struct {
       gc_enabled = (EJB).gc,                    \
       gc_prot_top = (EJB).gc_pt,                \
       sig_mask(SIG_SETMASK, &(EJB).blocked, 0), \
+      EJ_OPT_REST(EJB)                          \
       (EJB).rv)                                 \
    : ((EJB).se = async_sig_enabled,             \
       (EJB).de = dyn_env,                       \
       (EJB).gc = gc_enabled,                    \
       (EJB).gc_pt = gc_prot_top,                \
       (EJB).blocked = sig_blocked_cache,        \
+      EJ_OPT_SAVE(EJB)                          \
       0))
 
 #define extended_longjmp(EJB, ARG)              \
@@ -99,6 +117,7 @@ typedef struct {
   val de;
   int gc;
   val **gc_pt;
+  EJ_OPT_MEMB
   int rv;
 } extended_jmp_buf;
 
@@ -107,10 +126,12 @@ typedef struct {
    ? (dyn_env = (EJB).de,                       \
       gc_enabled = ((EJB).gc),                  \
       gc_prot_top = (EJB).gc_pt,                \
+      EJ_OPT_REST(EJB)                          \
       (EJB).rv)                                 \
    : ((EJB).de = dyn_env,                       \
       (EJB).gc = gc_enabled,                    \
       (EJB).gc_pt = gc_prot_top,                \
+      EJ_OPT_SAVE(EJB)                          \
       0))
 
 #define extended_longjmp(EJB, ARG)              \
