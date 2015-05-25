@@ -1135,7 +1135,7 @@ static val bindings_helper(val vars, val env, val sequential,
                            val ctx_form)
 {
   val iter;
-  val de = if3(sequential, dyn_env, make_env(nil, nil, dyn_env));
+  val de = if3(sequential, dyn_env, nil);
   val ne = if3(sequential, env, make_env(nil, nil, env));
   list_collect_decl (new_bindings, ptail);
 
@@ -1152,7 +1152,8 @@ static val bindings_helper(val vars, val env, val sequential,
 
     if (var == special_s) {
       val special = car(item);
-      val binding = env_vbind(de, special, value);
+      val binding = env_vbind(de = (de ? de : make_env(nil, nil, dyn_env)),
+                              special, value);
       if (ret_new_bindings)
         ptail = list_collect (ptail, binding);
     } else if (bindable(var)) {
@@ -1167,7 +1168,7 @@ static val bindings_helper(val vars, val env, val sequential,
     }
   }
 
-  if (de != dyn_env)
+  if (de && de != dyn_env)
     dyn_env = de;
   if (env_out)
     *env_out = ne;

@@ -1,3 +1,15 @@
+2015-05-25  Kaz Kylheku  <kaz@kylheku.com>
+
+	Fix mismanaged dyn_env variable.
+
+	* eval.c (bindings_helper): In the parallel binding case, only allocate
+	a new dynamic env when it is needed (because a special variable is
+	being bound), rather than unconditionally.
+	Consequently, only modify dyn_env when the dynamic environment actually
+	needs to be extended.  Constructs that use bindings_helper are only
+	wrapped in the dynamic environment save/restore form
+	sys:with-saved-vars if they bind special variables.
+
 2015-05-22  Kaz Kylheku  <kaz@kylheku.com>
 
 	Ligher weight debug instrumentation.
