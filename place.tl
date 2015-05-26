@@ -33,16 +33,16 @@
       (throwf 'eval-error . params))
 
     (defun sys:sym-update-expander (getter-name setter-name
-                                    place-expr . op-body)
+                                    place-expr op-body)
       ^(macrolet ((,getter-name () ',place-expr)
                   (,setter-name (val-expr) ^(sys:setq ,',place-expr ,val-expr)))
-         ,*op-body))
+         ,op-body))
 
     (defun sys:sym-clobber-expander (simple-setter-name
-                                     place-expr . op-body)
+                                     place-expr op-body)
       ^(macrolet ((,simple-setter-name (val-expr) ^(sys:setq ,',place-expr
                                                              ,val-expr)))
-         ,*op-body))
+         ,op-body))
 
     (defun get-update-expander (place)
       (cond
@@ -81,32 +81,32 @@
     ^(let ,(zip syms (repeat '((gensym)))) ,*body))
 
   (macro-time
-    (defun call-update-expander (getter setter unex-place env . body)
+    (defun call-update-expander (getter setter unex-place env body)
       (let* ((place (sys:expand unex-place env))
              (expander (get-update-expander place)))
-        [expander getter setter place . body]))
+        [expander getter setter place body]))
 
-    (defun call-clobber-expander (ssetter unex-place env . body)
+    (defun call-clobber-expander (ssetter unex-place env body)
       (let* ((place (sys:expand unex-place env))
              (expander (get-clobber-expander place)))
-        [expander ssetter place . body]))
+        [expander ssetter place body]))
 
-    (defun call-delete-expander (deleter unex-place env . body)
+    (defun call-delete-expander (deleter unex-place env body)
       (let* ((place (sys:expand unex-place env))
              (expander (get-delete-expander place)))
-        [expander deleter place . body])))
+        [expander deleter place body])))
 
-  (defmacro with-update-expander ((getter setter) unex-place env . body)
+  (defmacro with-update-expander ((getter setter) unex-place env body)
     ^(with-gensyms (,getter ,setter)
-       (call-update-expander ,getter ,setter ,unex-place ,env . ,body)))
+       (call-update-expander ,getter ,setter ,unex-place ,env ,body)))
 
-  (defmacro with-clobber-expander ((ssetter) unex-place env . body)
+  (defmacro with-clobber-expander ((ssetter) unex-place env body)
     ^(with-gensyms (,ssetter)
-       (call-clobber-expander ,ssetter ,unex-place ,env . ,body)))
+       (call-clobber-expander ,ssetter ,unex-place ,env ,body)))
 
-  (defmacro with-delete-expander ((deleter) unex-place env . body)
+  (defmacro with-delete-expander ((deleter) unex-place env body)
     ^(with-gensyms (,deleter)
-       (call-delete-expander ,deleter ,unex-place ,env . ,body)))
+       (call-delete-expander ,deleter ,unex-place ,env ,body)))
 
   (defmacro set (place value :env env)
     (with-clobber-expander (ssetter) place env
@@ -183,9 +183,9 @@
       ^(,deleter)))
 
   (defmacro defplace (place-destructuring-args body-sym
-                      (getter-sym setter-sym . update-body) :
-                      ((ssetter-sym . clobber-body))
-                      ((deleter-sym . delete-body)))
+                      (getter-sym setter-sym update-body) :
+                      ((ssetter-sym clobber-body))
+                      ((deleter-sym delete-body)))
     (symacrolet ((name (car place-destructuring-args))
                  (args (cdr place-destructuring-args)))
       (unless (and name
@@ -197,19 +197,19 @@
       (with-gensyms (place)
         ^(macro-time
            (sethash *place-update-expander* ',name
-             (lambda (,getter-sym ,setter-sym ,place . ,body-sym)
+             (lambda (,getter-sym ,setter-sym ,place ,body-sym)
                (tree-bind ,args (cdr ,place)
-                  ,*update-body)))
+                  ,update-body)))
            ,*(if ssetter-sym
               ^((sethash *place-clobber-expander* ',name
-                  (lambda (,ssetter-sym ,place . ,body-sym)
+                  (lambda (,ssetter-sym ,place ,body-sym)
                     (tree-bind ,args (cdr ,place)
-                       ,*clobber-body)))))
+                       ,clobber-body)))))
            ,*(if deleter-sym
                ^((sethash *place-delete-expander* ',name
-                   (lambda (,deleter-sym ,place . ,body-sym)
+                   (lambda (,deleter-sym ,place ,body-sym)
                      (tree-bind ,args (cdr ,place)
-                        ,*delete-body)))))))))
+                        ,delete-body)))))))))
 
   (defplace (car cell) body
     (getter setter
@@ -217,13 +217,13 @@
         ^(rlet ((,cell-sym ,cell))
            (macrolet ((,getter () ^(car ,',cell-sym))
                       (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
-             ,*body))))
+             ,body))))
     (ssetter
       ^(macrolet ((,ssetter (val) ^(sys:rplaca ,',cell ,val)))
-        ,*body))
+        ,body))
     (deleter
       ^(macrolet ((,deleter () ^(pop ,',cell)))
-         ,*body)))
+         ,body)))
 
   (defplace (cdr cell) body
     (getter setter
@@ -231,13 +231,13 @@
         ^(rlet ((,cell-sym ,cell))
            (macrolet ((,getter () ^(cdr ,',cell-sym))
                       (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
-             ,*body))))
+             ,body))))
     (ssetter
       ^(macrolet ((,ssetter (val) ^(sys:rplacd ,',cell ,val)))
-         ,*body))
+         ,body))
     (deleter
       ^(macrolet ((,deleter () ^(zap (cdr ,',cell))))
-         ,*body)))
+         ,body)))
 
    (defplace (vecref vector index :whole args) body
      (getter setter
@@ -246,10 +246,10 @@
                  (,ind-sym ,index))
             (macrolet ((,getter () ^(vecref ,',vec-sym ,',ind-sym))
                        (,setter (val) ^(refset ,',vec-sym ,',ind-sym ,val)))
-               ,*body))))
+               ,body))))
      (ssetter
        ^(macrolet ((,ssetter (val) ^(refset ,*',args ,val)))
-          ,*body))
+          ,body))
      (deleter
        (with-gensyms (vec-sym ind-sym)
          ^(rlet ((,vec-sym ,vector)
@@ -258,7 +258,7 @@
                           ^(prog1 (vecref ,',vec-sym ,',ind-sym)
                                   (replace-vec ,',vec-sym nil
                                                ,',ind-sym (succ ,',ind-sym)))))
-              ,*body)))))
+              ,body)))))
 
    (defplace (chr-str string index :whole args) body
      (getter setter
@@ -267,10 +267,10 @@
                  (,ind-sym ,index))
             (macrolet ((,getter () ^(chr-str ,',str-sym ,',ind-sym))
                        (,setter (val) ^(chr-str-set ,',str-sym ,',ind-sym ,val)))
-               ,*body))))
+               ,body))))
      (ssetter
        ^(macrolet ((,ssetter (val) ^(chr-str-set ,*',args ,val)))
-          ,*body))
+          ,body))
      (deleter
        (with-gensyms (str-sym ind-sym)
          ^(rlet ((,str-sym ,string)
@@ -279,7 +279,7 @@
                           ^(prog1 (chr-str ,',str-sym ,',ind-sym)
                                   (replace-str ,',str-sym nil
                                                ,',ind-sym (succ ,',ind-sym)))))
-              ,*body)))))
+              ,body)))))
 
    (defplace (ref seq index :whole args) body
      (getter setter
@@ -288,10 +288,10 @@
                  (,ind-sym ,index))
             (macrolet ((,getter () ^(ref ,',seq-sym ,',ind-sym))
                        (,setter (val) ^(refset ,',seq-sym ,',ind-sym ,val)))
-               ,*body))))
+               ,body))))
      (ssetter
        ^(macrolet ((,ssetter (val) ^(refset ,*',args ,val)))
-          ,*body))
+          ,body))
      (deleter
        (with-gensyms (seq-sym ind-sym)
          ^(rlet ((,seq-sym ,seq)
@@ -300,7 +300,7 @@
                           ^(prog1 (ref ,',seq-sym ,',ind-sym)
                                   (replace ,',seq-sym nil
                                            ,',ind-sym (succ ,',ind-sym)))))
-              ,*body)))))
+              ,body)))))
 
    (defplace (gethash hash key : (default nil have-default-p)) body
      (getter setter
@@ -308,7 +308,7 @@
          ^(let ((,entry-sym (inhash ,hash ,key ,default)))
             (macrolet ((,getter () ^(cdr ,',entry-sym))
                        (,setter (val) ^(sys:rplacd ,',entry-sym ,val)))
-               ,*body))))
+               ,body))))
      :
      (deleter
        ^(macrolet ((,deleter ()
@@ -321,7 +321,7 @@
                               (remhash ,',hash ,',key)
                               ,dfl-sym)))
                        ^(remhash ,',hash ,',key))))
-          ,*body)))
+          ,body)))
 
    (defplace (dwim obj-place index : (default nil have-default-p)) body
      (getter setter
@@ -344,7 +344,7 @@
                                    (sys:dwim-set ,',obj-sym
                                                  ,',index-sym ,',newval-sym))
                                  ,',newval-sym)))
-                   ,*body))))))
+                   ,body))))))
      (ssetter
        (with-gensyms (osetter-sym ogetter-sym
                       obj-sym newval-sym index-sym)
@@ -360,7 +360,7 @@
                                                ^(,',index-sym))
                                            ,',newval-sym))
                            ,',newval-sym)))
-                ,*body))))
+                ,body))))
 
      (deleter
        (with-gensyms (osetter-sym ogetter-sym
@@ -378,7 +378,7 @@
                                (,',osetter-sym
                                  (sys:dwim-del ,',obj-sym ,',index-sym))
                                ,',oldval-sym)))))
-                ,*body)))))
+                ,body)))))
 
    (defplace (force promise) body
      (getter setter
@@ -388,7 +388,7 @@
                            ^(force ,',promise-sym))
                         (,setter (val)
                            ^(set (car (cdr ,',promise-sym)) ,val)))
-               ,*body))))
+               ,body))))
      (ssetter
        (with-gensyms (promise-sym)
          ^(rlet ((,promise-sym ,promise))
@@ -396,7 +396,7 @@
                          ^(prog1
                             (set (car (cdr ,',promise-sym)) ,val)
                             (set (car ,',promise-sym) 'sys:promise-forced))))
-              ,*body)))))
+              ,body)))))
 
    (defplace (errno) body
      (getter setter
@@ -405,7 +405,7 @@
                       (with-gensyms (val-sym)
                         ^(rlet ((,val-sym ,val-expr))
                             (progn (errno ,val-sym) ,val-sym)))))
-          ,*body)))
+          ,body)))
 
    (macro-time
      (each ((from '(car cdr))
