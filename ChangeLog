@@ -1,5 +1,9 @@
 2015-05-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Document new syntactic places framework and place-mutating macros.
+
+2015-05-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	Fix mismanaged dyn_env variable.
 
 	* eval.c (bindings_helper): In the parallel binding case, only allocate
