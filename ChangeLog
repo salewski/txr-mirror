@@ -1,5 +1,14 @@
 2015-07-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	Bugfix: allow @1 in brace variables.
+
+	* parser.l (grammar): Scan a METANUM token in the
+	BRACED state also. This allows us to correctly
+	reference op arguments in a quasiliteral, as in
+	`foo @{@1 [1..2] ","} bar`.
+
+2015-07-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	Improved printing of stream objects.
 
 	* stream.c (null_stream_print): Static function removed.

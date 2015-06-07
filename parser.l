@@ -310,7 +310,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return NUMBER;
 }
 
-<NESTED,QSILIT,QWLIT,QSPECIAL>@{NUM} {
+<NESTED,BRACED,QSILIT,QWLIT,QSPECIAL>@{NUM} {
   val str = string_own(utf8_dup_from(yytext + 1));
 
   if (yy_top_state(yyscanner) == INITIAL
