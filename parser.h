@@ -27,12 +27,14 @@
 typedef struct yyguts_t scanner_t;
 
 typedef struct {
+  val parser;
   cnum lineno;
   int errors;
   val stream;
   val name;
   val prepared_msg;
   val syntax_tree;
+  val primer;
   scanner_t *scanner;
 } parser_t;
 
@@ -56,6 +58,7 @@ parser_t *yyget_extra(yyscan_t scanner);
 void yyset_extra(parser_t *, yyscan_t);
 void parser_l_init(void);
 void open_txr_file(val spec_file, val *name, val *stream);
+val prime_parser(val parser);
 int parse_once(val stream, val name, parser_t *parser);
 int parse(parser_t *parser);
 val source_loc(val form);
@@ -68,5 +71,5 @@ INLINE val rlcp(val to, val from)
 val rlcp_tree(val to, val from);
 val regex_parse(val string, val error_stream);
 val lisp_parse(val source, val error_stream, val error_return_val, val name);
-val parser(val stream, val lineno);
+val parser(val stream, val lineno, val primer);
 void parse_init(void);

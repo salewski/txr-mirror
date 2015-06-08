@@ -1,5 +1,24 @@
 2015-06-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.c (stream_parser_hash): New static variable.
+	(parser_mark): Mark parser and primer members.
+	(parser, ensure_parser): new argument: primer.
+	(get_parser_impl, ensure_parser): New static
+	functions.
+	(prime_parser): New function.
+	(lisp_parse): Multiple calls to this function on the same stream
+	now logically continue the parse, not resetting the line
+	number to 1.
+	(parse_init): Initialize and gc-protect stream_parser_hash.
+
+	* parser.h (parser_t): New members, primer and parser.
+	(prime_parser): Declared.
+	(parser): Declaration updated.
+
+	* parser.y (parse): Now responsible for calling prime_parser.
+
+2015-06-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* match.c (v_load): Call parse_once rater than parse.
 
 	* parser.c (regex_parse, lisp_parse): Likewise.

@@ -48,13 +48,18 @@
 
 val parser_s;
 
+static val stream_parser_hash;
+
 static void parser_mark(val obj)
 {
   parser_t *p = coerce(parser_t *, obj->co.handle);
+
+  assert (p->parser == nil || p->parser == obj);
   gc_mark(p->stream);
   gc_mark(p->name);
   gc_mark(p->prepared_msg);
   gc_mark(p->syntax_tree);
+  gc_mark(p->primer);
 }
 
 static struct cobj_ops parser_ops = {
@@ -65,20 +70,53 @@ static struct cobj_ops parser_ops = {
   cobj_hash_op,
 };
 
-val parser(val stream, val lineno)
+val parser(val stream, val lineno, val primer)
 {
   parser_t *p = coerce(parser_t *, chk_malloc(sizeof *p));
   val parser;
+  p->parser = nil;
   p->lineno = 0;
   p->errors = 0;
   p->stream = nil;
   p->name = nil;
   p->prepared_msg = nil;
   p->syntax_tree = nil;
+  p->primer = nil;
   p->scanner = 0;
   parser = cobj(coerce(mem_t *, p), parser_s, &parser_ops);
+  p->parser = parser;
   p->lineno = c_num(default_arg(lineno, one));
   p->stream = stream;
+  p->primer = primer;
+  return parser;
+}
+
+static parser_t *get_parser_impl(val parser)
+{
+  return coerce(parser_t *, cobj_handle(parser, parser_s));
+}
+
+static val ensure_parser(val stream, val primer)
+{
+  val cell = gethash_c(stream_parser_hash, stream, nulloc);
+  val pars = cdr(cell);
+  if (pars)
+    return pars;
+  return set(cdr_l(cell), parser(stream, one, primer));
+}
+
+val prime_parser(val parser)
+{
+  parser_t *p = get_parser_impl(parser);
+  val secret_token_stream = make_string_byte_input_stream(lit("@\x01" "E"));
+
+  if (catenated_stream_p(p->stream)) {
+    catenated_stream_push(secret_token_stream, p->stream);
+  } else {
+    set(mkloc(p->stream, parser),
+        make_catenated_stream(list(secret_token_stream, p->stream, nao)));
+  }
+
   return parser;
 }
 
@@ -125,14 +163,13 @@ val lisp_parse(val source_in, val error_stream, val error_return_val, val name_i
   val input_stream = if3(stringp(source),
                          make_string_byte_input_stream(source),
                          or2(source, std_input));
-  val secret_token_stream = make_string_byte_input_stream(lit("@\x01" "E"));
   val name = or2(default_bool_arg(name_in),
                  if3(stringp(source),
                      lit("string"),
                      stream_get_prop(input_stream, name_k)));
-  val stream = make_catenated_stream(list(secret_token_stream, input_stream, nao));
+  val parser = ensure_parser(input_stream, lit("@\x01" "E"));
   val saved_dyn = dyn_env;
-  parser_t parser;
+  parser_t *pi = get_parser_impl(parser);
 
   dyn_env = make_env(nil, nil, dyn_env);
 
@@ -145,23 +182,26 @@ val lisp_parse(val source_in, val error_stream, val error_return_val, val name_i
   {
     int gc = gc_state(0);
     name = if3(std_error != std_null, name, lit(""));
-    parse_once(stream, name, &parser);
+    set(mkloc(pi->name, parser), name);
+    parse(pi);
     gc_state(gc);
   }
 
   dyn_env = saved_dyn;
 
-  if (parser.errors) {
+  if (pi->errors) {
     if (missingp(error_return_val))
       uw_throwf(syntax_error_s, lit("read: syntax error"), nao);
     return error_return_val;
   }
 
-  return parser.syntax_tree;
+  return pi->syntax_tree;
 }
 
 void parse_init(void)
 {
   parser_s = intern(lit("parser"), user_package);
+  prot1(&stream_parser_hash);
+  stream_parser_hash = make_hash(t, t, nil);
   parser_l_init();
 }

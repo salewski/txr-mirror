@@ -1459,6 +1459,7 @@ int parse(parser_t *parser)
   parser->errors = 0;
   parser->prepared_msg = nil;
   parser->syntax_tree = nil;
+  prime_parser(parser->parser);
   yylex_init(&scanner);
   parser->scanner = convert(scanner_t *, scanner);
 
