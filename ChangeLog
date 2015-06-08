@@ -1,5 +1,9 @@
 2015-06-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.h (mkloc): Rename misleading argument from fun to obj.
+
+2015-06-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.c (stream_parser_hash): New static variable.
 	(parser_mark): Mark parser and primer members.
 	(parser, ensure_parser): new argument: primer.

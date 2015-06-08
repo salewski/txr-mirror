@@ -264,7 +264,7 @@ INLINE loc mkloc_fun(val *ptr, val obj)
   return l;
 }
 
-#define mkloc(expr, fun) mkloc_fun(&(expr), fun)
+#define mkloc(expr, obj) mkloc_fun(&(expr), obj)
 #define mkcloc(expr) mkloc_fun(&(expr), 0)
 #define nulloc mkloc_fun(0, 0)
 #define nullocp(lo) (!(lo).ptr)
