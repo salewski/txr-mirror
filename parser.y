@@ -1428,7 +1428,7 @@ void yybadtoken(parser_t *parser, int tok, val context)
         yyerrorf(scnr, lit("unexpected ~s"), chr(tok), nao);
 }
 
-int parse(val stream, val name, parser_t *parser)
+int parse_once(val stream, val name, parser_t *parser)
 {
   int res;
   yyscan_t scanner;
@@ -1437,6 +1437,26 @@ int parse(val stream, val name, parser_t *parser)
   parser->errors = 0;
   parser->stream = stream;
   parser->name = name;
+  parser->prepared_msg = nil;
+  parser->syntax_tree = nil;
+  yylex_init(&scanner);
+  parser->scanner = convert(scanner_t *, scanner);
+
+  yyset_extra(parser, parser->scanner);
+
+  res = yyparse(parser->scanner, parser);
+
+  yylex_destroy(parser->scanner);
+
+  return res;
+}
+
+int parse(parser_t *parser)
+{
+  int res;
+  yyscan_t scanner;
+
+  parser->errors = 0;
   parser->prepared_msg = nil;
   parser->syntax_tree = nil;
   yylex_init(&scanner);

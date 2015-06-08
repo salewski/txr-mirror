@@ -3725,7 +3725,7 @@ static val v_load(match_files_ctx *c)
     parser_t parser;
 
     open_txr_file(path, &name, &stream);
-    parse(stream, name, &parser);
+    parse_once(stream, name, &parser);
     gc_state(gc);
 
     if (parser.errors)

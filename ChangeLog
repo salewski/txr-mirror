@@ -1,5 +1,20 @@
 2015-06-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	* match.c (v_load): Call parse_once rater than parse.
+
+	* parser.c (regex_parse, lisp_parse): Likewise.
+
+	* txr.c (txr_main): Likewise.
+
+	* parser.h (parse): Declaration updated.
+	(parse_once): Declared.
+
+	* parser.y (parse_once): New function, same as old parse implementation.
+	(parse): Becomes one argument function which works with a previously
+	initialized parser and continues the parse.
+
+2015-06-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (catenated_stream_p, catenated_stream_push): New functions.
 	(stream_init): Registered new functions as intrinsics.
 

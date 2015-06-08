@@ -665,7 +665,7 @@ int txr_main(int argc, char **argv)
   {
     int gc = gc_state(0);
     parser_t parser;
-    parse(parse_stream, spec_file_str, &parser);
+    parse_once(parse_stream, spec_file_str, &parser);
     gc_state(gc);
 
     if (parser.errors)

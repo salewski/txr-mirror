@@ -111,7 +111,7 @@ val regex_parse(val string, val error_stream)
   {
     int gc = gc_state(0);
     val name = if3(std_error != std_null, lit("regex"), lit(""));
-    parse(stream, name, &parser);
+    parse_once(stream, name, &parser);
     gc_state(gc);
   }
   std_error = save_stream;
@@ -145,7 +145,7 @@ val lisp_parse(val source_in, val error_stream, val error_return_val, val name_i
   {
     int gc = gc_state(0);
     name = if3(std_error != std_null, name, lit(""));
-    parse(stream, name, &parser);
+    parse_once(stream, name, &parser);
     gc_state(gc);
   }
 
