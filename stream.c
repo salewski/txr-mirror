@@ -2787,6 +2787,28 @@ val make_catenated_stream(val stream_list)
   return cobj(coerce(mem_t *, stream_list), stream_s, &cat_stream_ops.cobj_ops);
 }
 
+val catenated_stream_p(val obj)
+{
+  return if2(streamp(obj),
+             c_true(obj->co.ops == &cat_stream_ops.cobj_ops));
+}
+
+val catenated_stream_push(val new_stream, val cat_stream)
+{
+  type_assert (streamp(new_stream),
+               (lit("~a is not a stream"), new_stream, nao));
+  type_assert (catenated_stream_p(cat_stream),
+               (lit("~a is not a stream"), cat_stream, nao));
+
+  {
+    val streams = coerce(val, cat_stream->co.handle);
+    loc l = mkloc(streams, cat_stream);
+    set(l, cons(new_stream, streams));
+    cat_stream->co.handle = coerce(mem_t *, deref(l));
+    return nil;
+  }
+}
+
 val remove_path(val path)
 {
   if (w_remove(c_str(path)) < 0)
@@ -2923,6 +2945,8 @@ void stream_init(void)
   reg_fun(intern(lit("fileno"), user_package), curry_12_1(func_n2(stream_get_prop), fd_k));
   reg_fun(intern(lit("make-catenated-stream"), user_package), func_n0v(make_catenated_stream));
   reg_fun(intern(lit("cat-streams"), user_package), func_n1(make_catenated_stream));
+  reg_fun(intern(lit("catenated-stream-p"), user_package), func_n1(catenated_stream_p));
+  reg_fun(intern(lit("catenated-stream-push"), user_package), func_n2(catenated_stream_push));
   reg_fun(intern(lit("open-directory"), user_package), func_n1(open_directory));
   reg_fun(intern(lit("open-file"), user_package), func_n2o(open_file, 1));
   reg_fun(intern(lit("open-fileno"), user_package), func_n2o(open_fileno, 1));

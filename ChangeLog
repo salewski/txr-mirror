@@ -1,3 +1,12 @@
+2015-06-07  Kaz Kylheku  <kaz@kylheku.com>
+
+	* stream.c (catenated_stream_p, catenated_stream_push): New functions.
+	(stream_init): Registered new functions as intrinsics.
+
+	* stream.h (catenated_stream_p, catenated_stream_push): Declared.
+
+	* txr.1: Documented catenated-stream-p and catenated-stream-push.
+
 2015-05-25  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.1: Document new syntactic places framework and place-mutating macros.

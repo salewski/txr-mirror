@@ -24304,6 +24304,47 @@ and
 .code unget-byte
 operations throw an exception.
 
+.coNP Function @ catenated-stream-p
+.synb
+.mets (catenated-stream-p << obj )
+.syne
+.desc
+The
+.code catenated-stream-p
+function returns
+.code t
+if
+.meta obj
+is a catenated stream. Otherwise it returns
+.codn nil .
+
+.coNP Function @ catenated-stream-push
+.synb
+.mets (catenated-stream-push < new-stream << cat-stream )
+.syne
+.desc
+The
+.code catenated-stream-push
+function pushes
+.meta new-stream
+to the front of the stream list inside
+.metn cat-stream .
+
+If an
+.code unget-byte
+or
+.code unget-char
+operation was successfully performed on
+.meta cat-stream
+previously to a call to
+.codn catenated-stream-push ,
+those operations were forwarded to the front stream.
+If those bytes or characters are still pending,
+they are pending inside that stream, and thus
+are logically preceded by the contents
+of
+.metn new-stream .
+
 .coNP Functions @ open-files and @ open-files*
 .synb
 .mets (open-files < path-list <> [ alternative-stream ])
