@@ -1,5 +1,14 @@
 2015-06-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	Critical bugfix for weak hashes.
+
+	* hash.c (hash_mark): Hash tables which have both weak keys
+	and values were not added to the reachable_weak_hashes list,
+	and thus not subject to complete hash processing, leading
+	to corruption.
+
+2015-06-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.h (mkloc): Rename misleading argument from fun to obj.
 
 2015-06-07  Kaz Kylheku  <kaz@kylheku.com>

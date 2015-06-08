@@ -422,6 +422,8 @@ static void hash_mark(val hash)
     break;
   case hash_weak_both:
     /* Values and keys are weak: don't mark anything. */
+    h->next = reachable_weak_hashes;
+    reachable_weak_hashes = h;
     break;
   }
 }
