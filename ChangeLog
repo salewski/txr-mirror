@@ -1,3 +1,10 @@
+2015-06-08  Kaz Kylheku  <kaz@kylheku.com>
+
+	Code simplification.
+
+	* txr.c (txr_main): Replacing two code blocks with single
+	call to existing open_txr_file function.
+
 2015-06-07  Kaz Kylheku  <kaz@kylheku.com>
 
 	Critical bugfix for weak hashes.

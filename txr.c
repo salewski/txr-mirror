@@ -631,11 +631,7 @@ int txr_main(int argc, char **argv)
       arg_list = arg_undo;
   } else if (spec_file) {
     if (wcscmp(c_str(spec_file), L"-") != 0) {
-      FILE *in = w_fopen(c_str(spec_file), L"r");
-      if (in == 0)
-        uw_throwf(file_error_s, lit("unable to open ~a"), spec_file, nao);
-      parse_stream = make_stdio_stream(in, spec_file);
-      spec_file_str = spec_file;
+      open_txr_file(spec_file, &spec_file_str, &parse_stream);
     } else {
       spec_file_str = lit("stdin");
     }
@@ -650,11 +646,7 @@ int txr_main(int argc, char **argv)
     }
 
     if (!equal(arg, lit("-"))) {
-      FILE *in = w_fopen(c_str(arg), L"r");
-      if (in == 0)
-        uw_throwf(file_error_s, lit("unable to open ~a"), arg, nao);
-      parse_stream = make_stdio_stream(in, arg);
-      spec_file_str = arg;
+      open_txr_file(arg, &spec_file_str, &parse_stream);
     } else {
       spec_file_str = lit("stdin");
     }
