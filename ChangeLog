@@ -1,5 +1,17 @@
 2015-06-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	Error handling improvement in read.
+
+	* parser.y (spec): New grammar production to handle the cases
+	that SECRET_ESCAPE_E is not followed by anything (the input
+	ends before any object is scanned, or there is no input
+	token which starts an object).
+
+	* parser.c (lisp_parse): Deal with EOF indication from parser
+	(the syntax_tree member of parser_t set to nao).
+
+2015-06-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.y (yybadtoken): Print unexpected character
 	literally rather than as a Lisp character literal.
 

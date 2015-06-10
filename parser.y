@@ -137,6 +137,13 @@ spec : clauses                  { parser->syntax_tree = $1; }
      | /* empty */              { parser->syntax_tree = nil; }
      | SECRET_ESCAPE_R regexpr  { parser->syntax_tree = $2; end_of_regex(scnr); }
      | SECRET_ESCAPE_E n_expr   { parser->syntax_tree = $2; YYACCEPT; }
+     | SECRET_ESCAPE_E          { if (yychar == YYEOF) {
+                                    parser->syntax_tree = nao;
+                                    YYACCEPT;
+                                  } else {
+                                    yybadtok(yychar, nil);
+                                    parser->syntax_tree = nil;
+                                  } }
      | error '\n'               { parser->syntax_tree = nil;
                                   if (parser->errors >= 8)
                                     YYABORT;

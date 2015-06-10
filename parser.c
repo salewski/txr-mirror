@@ -181,17 +181,19 @@ val lisp_parse(val source_in, val error_stream, val error_return_val, val name_i
 
   {
     int gc = gc_state(0);
-    name = if3(std_error != std_null, name, lit(""));
-    set(mkloc(pi->name, parser), name);
+    set(mkloc(pi->name, parser), if3(std_error != std_null, name, lit("")));
     parse(pi);
     gc_state(gc);
   }
 
   dyn_env = saved_dyn;
 
-  if (pi->errors) {
+  if (pi->errors || pi->syntax_tree == nao) {
     if (missingp(error_return_val))
-      uw_throwf(syntax_error_s, lit("read: syntax error"), nao);
+      uw_throwf(syntax_error_s, lit("read: ~a: ~a"), name,
+                if3(pi->syntax_tree == nao,
+                    lit("end of input reached without seeing object"),
+                    lit("errors encountered")), nao);
     return error_return_val;
   }
 
