@@ -1425,7 +1425,7 @@ void yybadtoken(parser_t *parser, int tok, val context)
       else if (tok == YYEMPTY)
         return;
       else
-        yyerrorf(scnr, lit("unexpected ~s"), chr(tok), nao);
+        yyerrorf(scnr, lit("unexpected character ~a"), chr(tok), nao);
 }
 
 int parse_once(val stream, val name, parser_t *parser)

@@ -1,3 +1,8 @@
+2015-06-10  Kaz Kylheku  <kaz@kylheku.com>
+
+	* parser.y (yybadtoken): Print unexpected character
+	literally rather than as a Lisp character literal.
+
 2015-06-08  Kaz Kylheku  <kaz@kylheku.com>
 
 	Code simplification.
