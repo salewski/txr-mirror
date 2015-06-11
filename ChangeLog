@@ -1,5 +1,20 @@
 2015-06-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	Preparing for lisp loading.
+
+	* parser.c (open_txr_file): Rewritten to take new argument
+	which indicates whether to treat an unsuffixed file as
+	TXR or TXR Lisp, and is updated to indicate which is the
+	case by looking at the suffix.
+
+	* parser.h (open_txr_file): Declaration updated.
+
+	* match.c (v_load): Follow change in open_txr_file.
+
+	* txr.c (txr_main): Likewise.
+
+2015-06-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	Error handling improvement in read.
 
 	* parser.y (spec): New grammar production to handle the cases

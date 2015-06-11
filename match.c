@@ -3723,8 +3723,9 @@ static val v_load(match_files_ctx *c)
     int gc = gc_state(0);
     val stream, name;
     parser_t parser;
+    val txr_lisp_p = nil;
 
-    open_txr_file(path, &name, &stream);
+    open_txr_file(path, &txr_lisp_p, &name, &stream);
     parse_once(stream, name, &parser);
     gc_state(gc);
 

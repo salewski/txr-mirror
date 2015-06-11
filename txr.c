@@ -371,6 +371,7 @@ int txr_main(int argc, char **argv)
   int match_loglevel = opt_loglevel;
   val arg_undo = nil, arg;
   val parse_stream = std_input;
+  val txr_lisp_p = nil;
   list_collect_decl(arg_list, arg_tail);
 
   setvbuf(stderr, 0, _IOLBF, 0);
@@ -631,7 +632,7 @@ int txr_main(int argc, char **argv)
       arg_list = arg_undo;
   } else if (spec_file) {
     if (wcscmp(c_str(spec_file), L"-") != 0) {
-      open_txr_file(spec_file, &spec_file_str, &parse_stream);
+      open_txr_file(spec_file, &txr_lisp_p, &spec_file_str, &parse_stream);
     } else {
       spec_file_str = lit("stdin");
     }
@@ -646,7 +647,7 @@ int txr_main(int argc, char **argv)
     }
 
     if (!equal(arg, lit("-"))) {
-      open_txr_file(arg, &spec_file_str, &parse_stream);
+      open_txr_file(arg, &txr_lisp_p, &spec_file_str, &parse_stream);
     } else {
       spec_file_str = lit("stdin");
     }

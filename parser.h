@@ -57,7 +57,7 @@ int yylex_destroy(yyscan_t scanner);
 parser_t *yyget_extra(yyscan_t scanner);
 void yyset_extra(parser_t *, yyscan_t);
 void parser_l_init(void);
-void open_txr_file(val spec_file, val *name, val *stream);
+void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream);
 val prime_parser(val parser);
 int parse_once(val stream, val name, parser_t *parser);
 int parse(parser_t *parser);

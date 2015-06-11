@@ -33,6 +33,7 @@
 #include <setjmp.h>
 #include <wchar.h>
 #include <signal.h>
+#include <errno.h>
 #include "config.h"
 #include "lib.h"
 #include "signal.h"
@@ -120,17 +121,67 @@ val prime_parser(val parser)
   return parser;
 }
 
-void open_txr_file(val spec_file, val *name, val *stream)
+void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream)
 {
+  enum { none, tl, txr } suffix;
+
+  if (match_str(spec_file, lit(".txr"), negone))
+    suffix = txr;
+  else if (match_str(spec_file, lit(".tl"), negone))
+    suffix = tl;
+  else
+    suffix = none;
+
+  errno = 0;
+
   {
-    FILE *in = w_fopen(c_str(spec_file), L"r");
-    if (in == 0) {
-      spec_file = cat_str(list(spec_file, lit("txr"), nao), lit("."));
-      in = w_fopen(c_str(spec_file), L"r");
-      if (in == 0)
-        uw_throwf(file_error_s, lit("unable to open ~a"), spec_file, nao);
+    val spec_file_try = spec_file;
+    FILE *in = w_fopen(c_str(spec_file_try), L"r");
+
+    if (in != 0) {
+      switch (suffix) {
+      case tl:
+        *txr_lisp_p = t;
+        break;
+      case txr:
+        *txr_lisp_p = nil;
+        break;
+      default:
+        break;
+      }
     }
-    *stream = make_stdio_stream(in, spec_file);
+
+#ifdef ENOENT
+    if (in == 0 && errno != ENOENT)
+      goto except;
+    errno = 0;
+#endif
+
+    if (suffix == none && in == 0 && !*txr_lisp_p) {
+      spec_file_try = cat_str(list(spec_file, lit("txr"), nao), lit("."));
+      in = w_fopen(c_str(spec_file_try), L"r");
+#ifdef ENOENT
+      if (in == 0 && errno != ENOENT)
+        goto except;
+      errno = 0;
+#endif
+    }
+
+
+    if (suffix == none && in == 0) {
+      spec_file_try = cat_str(list(spec_file, lit("tl"), nao), lit("."));
+      in = w_fopen(c_str(spec_file_try), L"r");
+      *txr_lisp_p = t;
+    }
+
+    if (in == 0) {
+#ifdef ENOENT
+except:
+#endif
+      uw_throwf(file_error_s, lit("unable to open ~a"), spec_file_try, nao);
+    }
+
+    *stream = make_stdio_stream(in, spec_file_try);
     *name = spec_file;
   }
 }
