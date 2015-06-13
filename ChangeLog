@@ -1,3 +1,12 @@
+2015-06-13  Kaz Kylheku  <kaz@kylheku.com>
+
+	Lisp load macro.
+
+	* eval.c (sys_load_s): New symbol variable.
+	(sys_load, me_load): New static functions.
+	(eval_init): Initialize sys_load_s, register
+	sys:load intrinsic function and load macro.
+
 2015-06-12  Kaz Kylheku  <kaz@kylheku.com>
 
 	@(load) and @(include) now load Lisp code.

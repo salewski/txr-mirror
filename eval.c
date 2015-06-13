@@ -90,6 +90,7 @@ val macro_time_s, with_saved_vars_s, macrolet_s;
 val defsymacro_s, symacrolet_s, prof_s;
 val fbind_s, lbind_s, flet_s, labels_s;
 val opip_s, oand_s, chain_s, chand_s;
+val sys_load_s;
 
 val special_s, whole_k, symacro_k, fun_k;
 
@@ -2814,6 +2815,46 @@ static val me_mlet(val form, val menv)
                                    nao)), nao);
 }
 
+static val sys_load(val target, val sloc)
+{
+  uses_or2;
+  val parent = or2(cdr(sloc), null_string);
+  val path = if3(abs_path_p(target),
+                 target,
+                 cat_str(nappend2(sub_list(split_str(parent, lit("/")),
+                                           zero, negone),
+                                  cons(target, nil)), lit("/")));
+  val name, stream;
+  val txr_lisp_p = t;
+
+  open_txr_file(path, &txr_lisp_p, &name, &stream);
+
+  if (!txr_lisp_p) {
+    rlset(sloc, sloc);
+    eval_error(sloc, lit("load doesn't process .txr files"), nao);
+  }
+
+  if (!read_eval_stream(stream, std_error)) {
+    rlset(sloc, sloc);
+    eval_error(sloc, lit("load: ~s contains errors"), path, nao);
+  }
+
+  return nil;
+}
+
+static val me_load(val form, val menv)
+{
+  val args = cdr(form);
+  val name = pop(&args);
+
+  (void) menv;
+
+  if (args)
+    uw_throwf(error_s, lit("load: too many arguments"), nao);
+
+  return list(sys_load_s, name, list(quote_s, source_loc(form), nao), nao);
+}
+
 static val expand_catch_clause(val form, val menv)
 {
   val sym = first(form);
@@ -3924,6 +3965,7 @@ void eval_init(void)
   oand_s = intern(lit("oand"), user_package);
   chain_s = intern(lit("chain"), user_package);
   chand_s = intern(lit("chand"), user_package);
+  sys_load_s = intern(lit("load"), system_package);
 
   reg_op(quote_s, op_quote);
   reg_op(qquote_s, op_qquote_error);
@@ -4011,6 +4053,7 @@ void eval_init(void)
   reg_mac(intern(lit("dotimes"), user_package), me_dotimes);
   reg_mac(intern(lit("lcons"), user_package), me_lcons);
   reg_mac(intern(lit("mlet"), user_package), me_mlet);
+  reg_mac(intern(lit("load"), user_package), me_load);
 
   reg_fun(cons_s, func_n2(cons));
   reg_fun(intern(lit("make-lazy-cons"), user_package), func_n1(make_lazy_cons));
@@ -4232,6 +4275,7 @@ void eval_init(void)
   reg_fun(intern(lit("eval"), user_package), func_n2o(eval_intrinsic, 1));
   reg_fun(intern(lit("lisp-parse"), user_package), func_n4o(lisp_parse, 0));
   reg_fun(intern(lit("read"), user_package), func_n4o(lisp_parse, 0));
+  reg_fun(intern(lit("load"), system_package), func_n2(sys_load));
   reg_fun(intern(lit("expand"), system_package), func_n2o(expand, 1));
   reg_fun(intern(lit("macro-form-p"), user_package), func_n2o(macro_form_p, 1));
   reg_fun(intern(lit("macroexpand-1"), user_package),
