@@ -136,6 +136,7 @@ static void help(void)
 "--license              Display software license\n"
 "                       Use of txr implies agreement with the disclaimer\n"
 "                       section at the bottom of the license.\n"
+"--lisp                 Treat unsuffixed query files as TXR Lisp.\n"
 "--lisp-bindings        Synonym for -l\n"
 "--debugger             Synonym for -d\n"
 "--noninteractive       Synonym for -n\n"
@@ -484,6 +485,9 @@ int txr_main(int argc, char **argv)
       } else if (equal(opt, lit("lisp-bindings"))) {
         opt_lisp_bindings = 1;
         opt_print_bindings = 1;
+        continue;
+      } else if (equal(opt, lit("lisp"))) {
+        txr_lisp_p = t;
         continue;
       } else if (equal(arg, lit("debugger"))) {
 #if CONFIG_DEBUG_SUPPORT

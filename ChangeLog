@@ -1,5 +1,12 @@
 2015-06-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	New --lisp option: treat unsuffixed files as Lisp.
+
+	* txr.c (help): Added help text.
+	(txr_main): Handle lisp option.
+
+2015-06-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.c (txr_main): Handle Lisp files.
 
 2015-06-13  Kaz Kylheku  <kaz@kylheku.com>
