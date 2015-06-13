@@ -3720,47 +3720,54 @@ static val v_load(match_files_ctx *c)
                    cat_str(nappend2(sub_list(split_str(parent, lit("/")),
                                          zero, negone),
                                     cons(target, nil)), lit("/")));
-    int gc = gc_state(0);
     val stream, name;
-    parser_t parser;
     val txr_lisp_p = nil;
 
     open_txr_file(path, &txr_lisp_p, &name, &stream);
-    parse_once(stream, name, &parser);
-    gc_state(gc);
 
-    if (parser.errors)
-      sem_error(specline, lit("~s: errors encountered in ~s"), sym, path, nao);
+    if (!txr_lisp_p) {
+      int gc = gc_state(0);
+      parser_t parser;
+      parse_once(stream, name, &parser);
+      gc_state(gc);
 
-    if (sym == include_s) {
-      return parser.syntax_tree;
-    } else {
-      val spec = parser.syntax_tree;
-      val result = match_files(mf_spec(*c, spec));
+      if (parser.errors)
+        sem_error(specline, lit("~s: errors encountered in ~s"), sym, path, nao);
 
-      if (!result) {
-        debuglf(specline, lit("load: ~s failed"), path, nao);
-        return nil;
+      if (sym == include_s) {
+        return parser.syntax_tree;
       } else {
-        cons_bind (new_bindings, success, result);
+        val spec = parser.syntax_tree;
+        val result = match_files(mf_spec(*c, spec));
 
-        c->bindings = new_bindings;
-
-        if (consp(success)) {
-          debuglf(specline,
-                  lit("load: ~s matched; "
-                      "advancing from line ~a to ~a"),
-                  path, c->data_lineno, cdr(success), nao);
-          c->data = car(success);
-          c->data_lineno = cdr(success);
+        if (!result) {
+          debuglf(specline, lit("load: ~s failed"), path, nao);
+          return nil;
         } else {
-          debuglf(specline, lit("load: ~s consumed entire file"), path,
-                  nao);
-          c->data = nil;
-        }
+          cons_bind (new_bindings, success, result);
 
-        return next_spec_k;
+          c->bindings = new_bindings;
+
+          if (consp(success)) {
+            debuglf(specline,
+                    lit("load: ~s matched; "
+                        "advancing from line ~a to ~a"),
+                    path, c->data_lineno, cdr(success), nao);
+            c->data = car(success);
+            c->data_lineno = cdr(success);
+          } else {
+            debuglf(specline, lit("load: ~s consumed entire file"), path,
+                    nao);
+            c->data = nil;
+          }
+
+          return next_spec_k;
+        }
       }
+    } else {
+      if (!read_eval_stream(stream, std_error))
+        sem_error(specline, lit("load: ~s contains errors"), path, nao);
+      return (sym == include_s) ? nil : next_spec_k;
     }
   }
 }

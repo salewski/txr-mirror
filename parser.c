@@ -251,6 +251,36 @@ val lisp_parse(val source_in, val error_stream, val error_return_val, val name_i
   return pi->syntax_tree;
 }
 
+val read_eval_stream(val stream, val error_stream)
+{
+  val error_val = gensym(nil);
+
+  for (;;) {
+    val form = lisp_parse(stream, error_stream, error_val, nil);
+
+    if (form == error_val) {
+      if (parser_errors(get_parser(stream)) == zero)
+        break;
+      return nil;
+    }
+
+    (void) eval_intrinsic(form, nil);
+  }
+
+  return t;
+}
+
+val get_parser(val stream)
+{
+  return gethash(stream_parser_hash, stream);
+}
+
+val parser_errors(val parser)
+{
+  parser_t *p = coerce(parser_t *, cobj_handle(parser, parser_s));
+  return num(p->errors);
+}
+
 void parse_init(void)
 {
   parser_s = intern(lit("parser"), user_package);

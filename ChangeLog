@@ -1,3 +1,16 @@
+2015-06-12  Kaz Kylheku  <kaz@kylheku.com>
+
+	@(load) and @(include) now load Lisp code.
+
+	* match.c (v_load): Check txr_lisp_p flag coming out of
+	open_txr_file and handle the Lisp case usin read_eval_stream.
+
+	* parser.c (read_eval_stream, get_parser, parser_errors):
+	New functions.
+
+	* parser.h (read_eval_stream, get_parser, parser_errors):
+	Declared.
+
 2015-06-10  Kaz Kylheku  <kaz@kylheku.com>
 
 	Preparing for lisp loading.

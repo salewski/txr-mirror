@@ -71,5 +71,8 @@ INLINE val rlcp(val to, val from)
 val rlcp_tree(val to, val from);
 val regex_parse(val string, val error_stream);
 val lisp_parse(val source, val error_stream, val error_return_val, val name);
+val read_eval_stream(val stream, val error_stream);
 val parser(val stream, val lineno, val primer);
+val get_parser(val stream);
+val parser_errors(val parser);
 void parse_init(void);
