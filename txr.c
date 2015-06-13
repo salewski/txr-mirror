@@ -655,6 +655,7 @@ int txr_main(int argc, char **argv)
 
   reg_var(intern(lit("*args*"), user_package), arg_list);
 
+  if (!txr_lisp_p)
   {
     int gc = gc_state(0);
     parser_t parser;
@@ -680,4 +681,6 @@ int txr_main(int argc, char **argv)
       return parser.errors ? EXIT_FAILURE : retval;
     }
   }
+
+  return read_eval_stream(parse_stream, std_error) ? 0 : EXIT_FAILURE;
 }

@@ -1,5 +1,9 @@
 2015-06-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.c (txr_main): Handle Lisp files.
+
+2015-06-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	Lisp load macro.
 
 	* eval.c (sys_load_s): New symbol variable.
