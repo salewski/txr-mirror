@@ -698,6 +698,38 @@ argument, which is useful on some systems which have limitations in
 their implementation of the "hash bang" mechanism. For details about
 its special syntax, See Hash Bang Support below.
 
+.coIP --lisp
+This option influences the treatment of query files which do not have
+a suffix indicating their type: they are treated as \*(TL source.
+Moreover, if
+.code --lisp
+is specified, and an unsuffixed file does not exist, then \*(TX
+will add the
+.str .tl
+suffix and try the file again. In the same situation, if
+.code --lisp
+is not present, \*(TX will first try adding the
+.str .txr
+suffix. If that fails,
+then
+.str .tl
+suffix will be tried. Note that
+.code --lisp
+influences how the argument of the
+.code -f
+option is treated, but only if it precedes that option.
+It has no effect on the
+.code -c
+option. The argument of
+.code -c
+is always \*(TX pattern language code. Lisp code can be evaluated using
+the
+.codn -e ,
+.code -p ,
+or
+.code -P
+options.
+
 .coIP --
 Signifies the end of the option list.
 
@@ -717,7 +749,9 @@ then specify more input which is interpreted as the second file, and so forth.
 
 .PP
 After the options, the remaining arguments are files. The first file argument
-specifies the query, and is mandatory.  A file argument consisting of a single
+specifies the query, and is mandatory if the
+.code -f
+option has not been specified.  A file argument consisting of a single
 .code -
 means to read the standard input instead of opening a file. A file argument
 which begins with an exclamation symbol means that the rest of the argument is
@@ -730,6 +764,37 @@ and then begins executing, if it is free of syntax errors.  The reading of
 data, on the other hand, is lazy.  A file isn't opened until the query demands
 material from that file, and then the contents are read on demand, not all at
 once.
+
+The suffix of the query file is significant. If the query file name has no
+suffix, or if it has a
+.str .txr
+suffix, then it is assumed to be in the \*(TX query language. If it has
+the
+.str .tl
+suffix, then it is assumed to be \*(TL.  The
+.code --lisp
+option changes the treatment of unsuffixed query file names, causing them
+to be interpreted as \*(TL .
+
+If an unsuffixed query file name is specified, and cannot be opened, then
+\*(TX will add the
+.str .txr
+suffix and try again. If that fails, it will be tried with the
+.str .tl
+suffix, and treated as \*(TL .
+If the
+.code --lisp
+option has been specified, then \*(TX tries only the
+.str .tl
+suffix.
+
+A \*(TL file is processed as if by the
+.code load
+macro: forms from the file are read and evaluated. If the forms do not terminate
+the \*(TX process or throw an exception, and there are no syntax errors, then
+\*(TX terminates successfully after evaluating the last form. If syntax errors
+are encountered in a form, then \*(TX terminates unsuccessfully.
+\*(TL is documented in the section TXR LISP.
 
 If no files arguments are specified on the command line, it is up to the
 query to open a file, pipe or standard input via the
@@ -30005,14 +30070,65 @@ The
 .code stdlib
 variable expands to the directory where the \*(TX standard library
 is installed. It can be referenced in
-.code @(load)
+.codn @(load)
 and
 .code @(include)
-directives via quasiliteral substitution, as in, for example:
+directives, as well as calls to the
+.code load
+Lisp macro via quasiliteral substitution, as in, for example:
 
 .cblk
   @(include `@stdlib/extract`)
 .cble
+
+.coNP Macro @ load
+.synb
+.mets (load << target )
+.syne
+.desc
+The
+.code load
+macro causes a file of \*(TL code to be read and evaluated.
+The
+.meta target
+argument is a string. If
+.meta target
+specifies a relative pathname, then it is assumed to be a reference relative
+to the directory of the file in which the
+.code load
+macro form occurs.
+
+If
+.meta target
+has no suffix, then
+.code load
+first tries to load the un-suffixed name. If that cannot be opened, the
+.str .tl
+suffix is added to the path and another attempt is made. If that fails,
+an exception is thrown.
+
+If
+.meta target
+has a
+.str .txr
+suffix, it is assumed to be a \*(TX query language file, and
+an exception of type
+.code eval-error
+is thrown, since this is not supported.
+
+If
+.meta target
+is successfully resolved and opened, \*(TL forms are read from the file
+in succession. Each form is evaluated as if by the
+.code eval
+function, before the next form is read.
+If a syntax error is encountered, an exception of type
+.code eval-error
+is thrown.
+
+Parser error messages are directed to the
+.code *stderr*
+stream.
 
 .SS* Debugger
 \*(TX has a simple, crude, built-in debugger. The debugger is invoked by adding
