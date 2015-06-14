@@ -1,5 +1,17 @@
 2015-06-13  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 108.
+
+	* RELNOTES: Updated.
+
+	* configure, txr.1: Bumped version and date.
+
+	* share/txr/stdlib/ver.txr: Likewise.
+
+	* tl.vim, txr.vim: Regenerated.
+
+2015-06-13  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.1: Documented Lisp loading.
 
 2015-06-13  Kaz Kylheku  <kaz@kylheku.com>

@@ -1,3 +1,84 @@
+                                    TXR 108
+                                   2015-06-13
+
+
+  Features
+
+  - POSIX poll function exposed.
+
+  - Entirely new macro-based framework for syntactic places (forms denoting
+    locations that can be assigned): better featured, extensible than
+    previous hard-coded hacks.
+
+  - New macro: define-modify-macro.
+
+  - New pset operator: assign to places in parallel.
+
+  - rplaca and rplacd handle vectors and strings.
+
+  - replacement sequence in replace function can now be a vector.
+
+  - symbol-value retrieves bindings of symbol macros.
+
+  - boundp returns true for symbol macros.
+
+  - New functions: makeunbound and fmakunbound.
+
+  - New concept: deletable places: locations that can not only be accessed, but
+    which can be deleted. Existing del operator which contained special case
+    hacks is now powerful, general macro that can delete any deletable place.
+
+  - New defparm operator to accompany defvar.
+
+  - symbol-function, symbol-value and fun forms are assignable places.
+
+  - Debug instrumentation code made light weight, leading to big improvement
+    in the execution speed of TXR Lisp.
+
+  - New functions catenated-stream-p and catenated-stream-push.
+
+  Bugs
+
+  - Fixed exception being thrown when trying to print (lambda . atom).
+
+  - Dangling unquotes and splices now receive source location info.
+
+  - Fixed memory corruption caused by disabling garbage collection
+    for too long.
+
+  - Better syntax checking in flet, labels, lambda, defun, quote.
+
+  - Addressed clash between flip operator and flip function by renaming
+    latter to flipargs.
+
+  - Fixed regression in Verison 106 causing apply calls not to diagnose
+    the too many arguments case, and allow a stack overrun.
+
+  - chr-str-set checks for literal strings, which cannot be modified.
+
+  - Fixed runaway recursion in keep-if* and remove-if*.
+
+  - Fixed mismanagement of dyn_env variable leading to spurious
+    retention of memory in TXR builds configured without debugger support.
+    (Bug exposed by the lighter weight debug support.)
+
+  - Critical bugfix in handling of hashes having both weak keys and values,
+    leading to memory corruption.
+
+  - New function: load for loading TXR Lisp files. TXR Lisp programming can
+    now take place using multiple files containing code that doesn't have
+    to be wrapped with @(do ...).
+
+  - @(load) and @(include) directives can also load TXR Lisp now.
+
+  - TXR files which have a .txr suffix can be invoked without the suffix now;
+    this is automatically resolved.
+
+  - New --lisp command line option makes TXR source files which have no
+    filename suffix be treated as TXR Lisp code rather than TXR Pattern Language.
+
+
+
                                     TXR 107
                                    2015-04-26
 
