@@ -28628,9 +28628,9 @@ this special evaluation.
 
 .NP* Place-Expander Functions
 
-The central design concept in \*(TL syntactic places are place-expander
-function. Each compound place is defined by up to three
-.IR "place-expander functions" ,
+The central design concept in \*(TL syntactic places are
+.IR "place-expander functions" .
+Each compound place is defined by up to three place-expander functions,
 which are associated with the place via the leftmost operator
 symbol of the place form. One place-expander, the
 .IR "update expander" ,
@@ -29090,7 +29090,7 @@ A full expansion, with the
 local macros expanded out:
 
 .cblk
-  (sys:expand '(swap a b))"
+  (sys:expand '(swap a b))
 
   -->
 
