@@ -9882,12 +9882,8 @@ Subject to certain usage restrictions, these operators work uniformly on all
 places. For instance, the expression
 .code (rotate (car x) [str 3] y)
 causes three different kinds of places to exchange contents,
-while the expressions
-.codn x ,
-.codn str ,
-and
-.code y
-are accessed only once. New kinds of place update macros like
+while the three expressions denoting those places
+are evaluated only once. New kinds of place update macros like
 .code rotate
 are quite easily defined, as are new kinds of compound places.
 
@@ -9909,7 +9905,7 @@ the
 .code x
 place can actually be a symbolic macro which expands to, say,
 .codn (cdr y) .
-And so then, the assignment is effectively
+This means that the assignment is effectively
 .codn (set (cdr y) 42) .
 
 .NP* User-Defined Syntactic Places and Place Operators
@@ -9937,11 +9933,12 @@ can be written compactly using
 .NP* Deletable Places
 
 Unlike generalized references in Common Lisp, \*(TL syntactic
-places support the concept of deletion. Some kinds of places (not all)
+places support the concept of deletion. Some kinds of places
 can be deleted, which is an action distinct from (but does not preclude) being
 overwritten with a value. What exactly it means for a place to be deleted,
 or whether that is even permitted, depends on the kind of place.
-For instance a place which denotes a variable may not be deleted.
+For instance a place which denotes a lexical variable may not be deleted,
+whereas a global variable may be.
 A place which denotes a hash table entry may be deleted, and results in the
 entry being removed from the hash table. Deleting a place in a list
 causes the trailing items, if any, or else the terminating atom, to
@@ -9998,7 +9995,7 @@ may be accessed and saved later, after the evaluation of
 .code b
 or after the evaluation of all the forms.  This issue affects the behavior of
 place-modifying forms whose subforms contain side effects. It is recommended
-that such forms not be included in programs.
+that such forms not be used in programs.
 
 .NP* Nested Places
 
@@ -10047,19 +10044,7 @@ the illusion of an encapsulated array-like container over several dis-similar
 types, including Lisp lists.  But Lisp lists do not behave as fully
 encapsulated containers.  Some mutations on Lisp lists return new objects,
 which then have to stored (or otherwise accepted) in place of the original
-objects in order to maintain the array-like illusion.
-
-Of course, this special double processing extends to an
-arbitrary nesting depth. For instance, consider an assignment
-such as
-.codn (set [[obj 'a] 0] 42) .
-Here, three places are affected by the operation: namely,
-.codn obj ,
-.cblk
-[obj 'a]
-.cble
-and
-.codn [[obj 'a] 0] .
+objects in order to maintain the array-like container illusion.
 
 .NP* Built-In Syntactic Places
 
