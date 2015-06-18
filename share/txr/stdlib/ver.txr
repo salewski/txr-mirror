@@ -1,1 +1,1 @@
-@(do (defvar *lib-version* 108))
+@(load "ver.tl")

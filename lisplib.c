@@ -83,6 +83,20 @@ static val place_instantiate(val set_fun)
                                    colon_k, lit("place.tl")), nil);
 }
 
+static val ver_set_entries(val dlt, val fun)
+{
+  val name[] = { lit("*lib-version*"), nil };
+  set_dlt_entries(dlt, name, fun);
+  return nil;
+}
+
+static val ver_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(format(nil, lit("~a/ver.tl"), stdlib_path, nao));
+  return nil;
+}
+
 static val ifa_set_entries(val dlt, val fun)
 {
   val name[] = { lit("ifa"), nil };
@@ -94,6 +108,20 @@ static val ifa_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
   load(format(nil, lit("~a/ifa.tl"), stdlib_path, nao));
+  return nil;
+}
+
+static val txr_case_set_entries(val dlt, val fun)
+{
+  val name[] = { lit("txr-if"), lit("txr-when"), lit("txr-case"), nil };
+  set_dlt_entries(dlt, name, fun);
+  return nil;
+}
+
+static val txr_case_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(format(nil, lit("~a/txr-case.tl"), stdlib_path, nao));
   return nil;
 }
 
@@ -109,7 +137,9 @@ void lisplib_init(void)
   prot1(&dl_table);
   dl_table = make_hash(nil, nil, nil);
   dlt_register(dl_table, place_instantiate, place_set_entries);
+  dlt_register(dl_table, ver_instantiate, ver_set_entries);
   dlt_register(dl_table, ifa_instantiate, ifa_set_entries);
+  dlt_register(dl_table, txr_case_instantiate, txr_case_set_entries);
 }
 
 val lisplib_try_load(val sym)

@@ -1,3 +1,22 @@
+2015-06-18  Kaz Kylheku  <kaz@kylheku.com>
+
+	Library .txr files become .tl and are autoloaded.
+
+	* lisplib.c (ver_set_entries, ver_instantiate,
+	txr_case_set_entries, txr_case_instantiate): New
+	static functions.
+	(lisplib_init): Register new functions.
+
+	* share/txr/stdlib/txr-case.txr: Reduced to a load for the
+	corresponding .tl file, retained for backward compatibility.
+
+	* share/txr/stdlib/ver.txr: Likewise.
+
+	* share/txr/stdlib/txr-case.tl: New file, based on previous
+	contents of corresponding .txr file.
+
+	* share/txr/stdlib/ver.tl: Likewise.
+
 2015-06-17  Kaz Kylheku  <kaz@kylheku.com>
 
 	Adding anaphoric ifa macro.
