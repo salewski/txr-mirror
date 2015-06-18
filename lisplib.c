@@ -40,10 +40,21 @@
 
 static val dl_table;
 
-static void set_place_dlt_entries(val dlt, val fun)
+static void set_dlt_entries(val dlt, val *name, val fun)
 {
-  int i;
-  val dl_sym[] = {
+  for (; *name; name++) {
+    val sym = intern(*name, user_package);
+
+    if (fun)
+      sethash(dlt, sym, fun);
+    else
+      remhash(dlt, sym);
+  }
+}
+
+static val place_set_entries(val dlt, val fun)
+{
+  val name[] = {
     lit("*place-clobber-expander*"), lit("*place-update-expander*"),
     lit("*place-delete-expander*"),
     lit("get-update-expander"), lit("get-clobber-expander"),
@@ -60,22 +71,29 @@ static void set_place_dlt_entries(val dlt, val fun)
     nil
   };
 
-  for (i = 0; dl_sym[i]; i++)
-    sethash(dlt, intern(dl_sym[i], user_package), fun);
+  set_dlt_entries(dlt, name, fun);
+  return nil;
 }
 
-static val place_instantiate(val dlt)
+static val place_instantiate(val set_fun)
 {
-  set_place_dlt_entries(dlt, nil);
+  funcall1(set_fun, nil);
   return eval_intrinsic(lisp_parse(string_utf8(place_code), std_error,
                                    colon_k, lit("place.tl")), nil);
+}
+
+static val dlt_register(val dlt,
+                        val (*instantiate)(val),
+                        val (*set_entries)(val, val))
+{
+  return set_entries(dl_table, func_f0(func_f1(dlt, set_entries), instantiate));
 }
 
 void lisplib_init(void)
 {
   prot1(&dl_table);
   dl_table = make_hash(nil, nil, nil);
-  set_place_dlt_entries(dl_table, func_f0(dl_table, place_instantiate));
+  dlt_register(dl_table, place_instantiate, place_set_entries);
 }
 
 val lisplib_try_load(val sym)

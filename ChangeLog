@@ -1,3 +1,16 @@
+2015-06-17  Kaz Kylheku  <kaz@kylheku.com>
+
+	Refactoring of lisplib.c
+
+	* lisplib.c (set_dlt_entries): New static function.
+	(set_place_dlt_entries): Renamed to place_set_entries.
+	Uses set_dlt_entries as subroutine.
+	(place_instantiate): Argument changes from table to function,
+	which is invoked to null out the hash entries.
+	(dlt_register): New static function.
+	(lisplib_init): Use dlt_register to register dynamic loading
+	of places_tl.
+
 2015-06-13  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 108.
