@@ -8999,6 +8999,13 @@ of the rightmost expression is examined. If it is nil, then the
 .code @(require)
 directive triggers a match failure. Otherwise, matching proceeds.
 
+Fourth, \*(TL code can be placed into files. On the command
+line, \*(TX treats files with a
+.str ".tl"
+suffix as \*(TL code, and the
+.code @(load)
+directive does also.
+
 Lastly, \*(TL expressions can be evaluated via the
 command line, using the
 .code -e
