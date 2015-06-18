@@ -1,5 +1,27 @@
 2015-06-17  Kaz Kylheku  <kaz@kylheku.com>
 
+	Adding anaphoric ifa macro.
+
+	* Makefile (install): Install .tl files present in stdlib directory.
+	(INSTALL): Handle argument 2 being a list.
+
+	* eval.c (load): New function.
+
+	* eval.h (load): Declared.
+
+	* lisplib.c (ifa_set_entries, ifa_instantiate): New functions
+	to lazily load ifa.tl.
+	(lisplib_init): Register new functions.
+
+	* txr.c (stdlib_path): New variable.
+	(sysroot_init): Store the stdlib path in stdlib_path.
+
+	* txr.h (stdlib_path): Declared.
+
+	* share/txr/stdlib/ifa.tl: New file.
+
+2015-06-17  Kaz Kylheku  <kaz@kylheku.com>
+
 	Refactoring of lisplib.c
 
 	* lisplib.c (set_dlt_entries): New static function.

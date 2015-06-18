@@ -2855,6 +2855,11 @@ static val me_load(val form, val menv)
   return list(sys_load_s, name, list(quote_s, source_loc(form), nao), nao);
 }
 
+val load(val target)
+{
+  return sys_load(target, nil);
+}
+
 static val expand_catch_clause(val form, val menv)
 {
   val sym = first(form);

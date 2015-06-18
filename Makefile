@@ -345,8 +345,11 @@ define INSTALL
 	$(call ABBREV3,INSTALL,$(3),$(2))
 	$(V)mkdir -p $(3)
 	$(V)cp -f $(2) $(3)
-	$(V)chmod $(1) $(3)/$(notdir $(2))
-	$(V)for x in $(2) ; do touch -r $$x $(3)/$$(basename $$x) ; done
+	$(V)for x in $(2) ; do \
+	  y=$(strip $(3))/$$(basename $$x) ; \
+	  touch -r $$x $$y ; \
+	  chmod $(1) $$y ; \
+	done
 endef
 
 PREINSTALL := :
@@ -358,7 +361,10 @@ install: $(PROG)
 	$(call INSTALL,0444,$(top_srcdir)/LICENSE,$(DESTDIR)$(datadir))
 	$(call INSTALL,0444,$(top_srcdir)/METALICENSE,$(DESTDIR)$(datadir))
 	$(call INSTALL,0444,$(top_srcdir)/txr.1,$(DESTDIR)$(mandir)/man1)
-	$(call INSTALL,0444,$(top_srcdir)/share/txr/stdlib/*.txr,$(DESTDIR)$(datadir)/stdlib)
+	$(call INSTALL,0444,\
+	   $(addprefix $(top_srcdir)/share/txr/stdlib/,\
+	                  *.txr *.tl),\
+	   $(DESTDIR)$(datadir)/stdlib)
 
 .PHONY: unixtar gnutar zip
 

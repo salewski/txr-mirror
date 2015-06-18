@@ -43,6 +43,7 @@ val apply_intrinsic(val fun, val args);
 val eval_progn(val forms, val env, val ctx_form);
 val eval(val form, val env, val ctx_form);
 val eval_intrinsic(val form, val env);
+val load(val target);
 val expand(val form, val menv);
 val expand_forms(val forms, val menv);
 val bindable(val obj);

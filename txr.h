@@ -38,3 +38,4 @@ extern int opt_compat;
 extern alloc_bytes_t opt_gc_delta;
 extern const wchli_t *version;
 extern const wchar_t *progname;
+extern val stdlib_path;

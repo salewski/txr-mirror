@@ -36,6 +36,7 @@
 #include "hash.h"
 #include "gc.h"
 #include "place.h"
+#include "txr.h"
 #include "lisplib.h"
 
 static val dl_table;
@@ -82,6 +83,20 @@ static val place_instantiate(val set_fun)
                                    colon_k, lit("place.tl")), nil);
 }
 
+static val ifa_set_entries(val dlt, val fun)
+{
+  val name[] = { lit("ifa"), nil };
+  set_dlt_entries(dlt, name, fun);
+  return nil;
+}
+
+static val ifa_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(format(nil, lit("~a/ifa.tl"), stdlib_path, nao));
+  return nil;
+}
+
 static val dlt_register(val dlt,
                         val (*instantiate)(val),
                         val (*set_entries)(val, val))
@@ -94,6 +109,7 @@ void lisplib_init(void)
   prot1(&dl_table);
   dl_table = make_hash(nil, nil, nil);
   dlt_register(dl_table, place_instantiate, place_set_entries);
+  dlt_register(dl_table, ifa_instantiate, ifa_set_entries);
 }
 
 val lisplib_try_load(val sym)

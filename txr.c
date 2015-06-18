@@ -60,6 +60,7 @@ static const char *progname_u8;
 static val progpath = nil;
 int opt_noninteractive;
 int opt_compat;
+val stdlib_path;
 
 /*
  * Can implement an emergency allocator here from a fixed storage
@@ -250,12 +251,14 @@ static void sysroot_init(void)
   val slash = regex_compile(lit("\\\\"), nil);
 #endif
   prot1(&progpath);
+  prot1(&stdlib_path);
   progpath = get_self_path();
 #if HAVE_WINDOWS_H
   progpath = regsub(slash, lit("/"), progpath);
 #endif
-  reg_var(intern(lit("stdlib"), user_package),
-          sysroot(lit("share/txr/stdlib")));
+  stdlib_path = sysroot(lit("share/txr/stdlib"));
+
+  reg_var(intern(lit("stdlib"), user_package), stdlib_path);
   reg_var(intern(lit("*txr-version*"), user_package),
           toint(lit(TXR_VER), nil));
 }
