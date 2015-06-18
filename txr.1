@@ -30454,6 +30454,29 @@ These error symbols existed:
 and
 .codn process_error .
 
+.coNP Variables @ *txr-version* and @ *lib-version*
+.desc
+The
+.code *txr-version*
+variable gives the version of the \*(TX executable. Programs can express
+conditional variable based on detecting the version.
+
+The
+.code *lib-version*
+variable gives the version of the installed library of \*(TX code accompanying
+the executable.
+
+It is expected that these two variables have an identical value. Any
+discrepancy in their value indicates an installation whose library or \*(TX
+executable were upgraded independently. Should such a situation arise in any
+system and cause a problem, \*(TX programs can be defensively coded against it
+with the help of these variables.
+
+Some features of the \*(TX library are built into the executable, whereas
+others are in the library directory. This aspect of library symbols isn't
+specified in this manual; knowing which of these two variables is relevant
+to a library feature requires familiarity with the implementation.
+
 .SH* Appendix
 .SS* A. NOTES ON EXOTIC REGULAR EXPRESSIONS
 Users familiar with regular expressions may not be familiar with the complement
