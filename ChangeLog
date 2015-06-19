@@ -1,5 +1,9 @@
 2015-06-18  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (mkstring): Fix neglect to null terminate.
+
+2015-06-18  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (cat_str): Detect overflow in the total length
 	calculation.
 

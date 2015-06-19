@@ -2274,10 +2274,11 @@ val string_utf8(const char *str)
 
 val mkstring(val len, val ch)
 {
-  size_t nchar = c_num(len) + 1;
-  wchar_t *str = coerce(wchar_t *, chk_malloc(nchar * sizeof *str));
+  size_t l = c_num(len);
+  wchar_t *str = coerce(wchar_t *, chk_malloc((l + 1) * sizeof *str));
   val s = string_own(str);
-  wmemset(str, c_chr(ch), nchar);
+  wmemset(str, c_chr(ch), l);
+  str[l] = 0;
   s->st.len = len;
   s->st.alloc = plus(len, one);
   return s;
