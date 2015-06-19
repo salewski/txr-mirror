@@ -58,8 +58,8 @@ ifneq ($(have_git),)
 SRCS := $(addprefix $(top_srcdir)/,\
                     $(filter-out lex.yy.c y.tab.c y.tab.h,\
                                  $(shell git --work-tree=$(top_srcdir) \
-				             --git-dir=$(top_srcdir)/.git \
-					      ls-files "*.c" "*.h" "*.l" "*.y")))
+                                             --git-dir=$(top_srcdir)/.git \
+                                              ls-files "*.c" "*.h" "*.l" "*.y")))
 endif
 
 # MPI objects
@@ -84,7 +84,7 @@ V = $(if $(VERBOSE),,@)
 # prerequisites without the long laundry list of additional dependencies.
 ABBREV = $(if $(VERBOSE),\
            @:,\
-	    @printf "%s %s -> %s\n" $(1) "$(filter-out $(DEP_$@),$^)" $@)
+           @printf "%s %s -> %s\n" $(1) "$(filter-out $(DEP_$@),$^)" $@)
 ABBREV3 = $(if $(VERBOSE),@:,@printf "%s %s -> %s\n" $(1) "$(3)" $(2))
 
 define DEPGEN
