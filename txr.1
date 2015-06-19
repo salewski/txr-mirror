@@ -253,14 +253,6 @@
 .de syne
 .  cble
 ..
-.\" Require section markup
-.de reqb
-.  TP* Requires:
-.  cblk
-..
-.de reqe
-.  cble
-..
 .\" Used for meta-variables in syntax blocks
 .de mets
 .  nr fsav \\n[.f]
@@ -27104,16 +27096,12 @@ function has a cumbersome interface which requires the \*(TL program to
 explicitly deal with the variable bindings emerging from the pattern match
 in the form of an association list.
 
-To make it the interface easier to use, \*(TX provides a library of macros:
+To make it the interface easier to use, \*(TX provides
 the macros
 .codn txr-if ,
 .codn txr-when
 and
 .codn txr-case .
-
-These macros are not in the \*(TX image; they must be included from the
-.code stdlib
-directory.
 
 .coNP Function match-fun
 .synb
@@ -27236,9 +27224,6 @@ out of the pattern function
 it is local inside it.
 
 .coNP Macro txr-if
-.reqb
-.mets @(include `@stdlib/txr-case`)
-.reqe
 .synb
 .mets (txr-if < name <> ( argument *) < input < then-expr <> [ else-expr ])
 .syne
@@ -27310,7 +27295,6 @@ the binding for the corresponding argument.
 .TP* Example:
 
 .cblk
-  @(include `@stdlib/txr-case`)
   @(define date (year month day))
   @{year /\ed\ed\ed\ed/}-@{month /\ed\ed/}-@{day /\ed\ed/}
   @(end)
@@ -27329,9 +27313,6 @@ the binding for the corresponding argument.
 .cble
 
 .coNP Macro @ txr-when
-.reqb
-.mets @(include `@stdlib/txr-case`)
-.reqe
 .synb
 .mets (txr-when < name <> ( argument *) < input << form *)
 .syne
@@ -27363,9 +27344,6 @@ and the result value is
 .codn nil .
 
 .coNP Macro @ txr-case
-.reqb
-.mets @(include `@stdlib/txr-case`)
-.reqe
 .synb
 .mets (txr-case < input-form
 .mets \ \  >> {( name <> ( argument *) << form *)}*
@@ -30037,17 +30015,16 @@ This variable holds the invocation path name of the \*(TX program.
 The
 .code stdlib
 variable expands to the directory where the \*(TX standard library
-is installed. It can be referenced in
-.codn @(load)
-and
-.code @(include)
-directives, as well as calls to the
-.code load
-Lisp macro via quasiliteral substitution, as in, for example:
+is installed.
 
-.cblk
-  @(include `@stdlib/extract`)
-.cble
+Note: there is no need to use the value of this variable to load library
+modules. Library modules are keyed to specific symbols, and lazily loaded. When
+a \*(TL library function, macro or variable is referenced for the first time,
+the library module which defines it is loaded.  This automatic loading happens
+during the code expansion phase, or "macro time", so it works for macros. In
+the middle of a syntax tree of code, code expander can encounters a symbol
+which triggers a library load which defines a macro.  When that load completes,
+the code expander can expand that macro using the newly created definition.
 
 .coNP Macro @ load
 .synb
