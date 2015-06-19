@@ -256,8 +256,10 @@ endif
 
 TESTS_TMP := txr.test.out
 TESTS_OUT := $(addprefix tst/,\
-		  $(patsubst %.txr,%.out,\
-		             $(shell find -H tests -name '*.txr' | sort)))
+                  $(patsubst %.tl,%.out,\
+                    $(patsubst %.txr,%.out,\
+                       $(shell find -H tests \
+                               \( -name '*.txr' -o -name '*.tl' \) | sort))))
 TESTS_OK := $(TESTS_OUT:.out=.ok)
 
 .PHONY: tests
@@ -297,6 +299,12 @@ tst/%.out: %.txr
 	       $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) -c "$$(cat $<)" \
 	          $(TXR_ARGS) > $(TESTS_TMP),\
 	       $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) $< $(TXR_ARGS) > $(TESTS_TMP))
+	$(V)mv $(TESTS_TMP) $@
+
+tst/%.out: %.tl
+	$(call ABBREV,TXR)
+	$(V)mkdir -p $(dir $@)
+	$(V)$(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) $< $(TXR_ARGS) > $(TESTS_TMP)
 	$(V)mv $(TESTS_TMP) $@
 
 %.ok: %.out

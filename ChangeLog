@@ -1,5 +1,16 @@
 2015-06-19  Kaz Kylheku  <kaz@kylheku.com>
 
+	Test ifa macro.
+
+	* Makefile (TEST_OUT): Include .tl files.
+	(tst/%.out): New rule variant, from .tl prerequisite.
+
+	* tests/012/ifa.expected: New file.
+
+	* tests/012/ifa.tl: New file.
+
+2015-06-19  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.c (parser_mark): Do not mark p->syntax_tree if
 	its value is nao. Introduced on 2015-06-10, "Error handling improvement
 	in read".
