@@ -2792,15 +2792,29 @@ val cat_str(val list, val sep)
     if (!item)
       continue;
     if (stringp(item)) {
-      total += c_num(length_str(item));
+      cnum ntotal = total + c_num(length_str(item));
+
       if (len_sep && cdr(iter))
-        total += len_sep;
+        ntotal += len_sep;
+
+      if (ntotal < total)
+        goto oflow;
+
+      total = ntotal;
+
       continue;
     }
     if (chrp(item)) {
-      total += 1;
+      cnum ntotal = total + 1;
+
       if (len_sep && cdr(iter))
-        total += len_sep;
+        ntotal += len_sep;
+
+      if (ntotal < total)
+        goto oflow;
+
+      total = ntotal;
+
       continue;
     }
     uw_throwf(error_s, lit("cat-str: ~s is not a character or string"),
@@ -2830,6 +2844,9 @@ val cat_str(val list, val sep)
   *ptr = 0;
 
   return string_own(str);
+
+oflow:
+  uw_throwf(error_s, lit("cat-str: string length overflow"), nao);
 }
 
 val split_str(val str, val sep)

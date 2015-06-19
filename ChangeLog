@@ -1,5 +1,10 @@
 2015-06-18  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (cat_str): Detect overflow in the total length
+	calculation.
+
+2015-06-18  Kaz Kylheku  <kaz@kylheku.com>
+
 	Improvements in equal hashing function.
 
 	* hash.c (equal_hash): For conses and vectors, ensure that
