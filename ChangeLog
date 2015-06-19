@@ -1,5 +1,14 @@
 2015-06-18  Kaz Kylheku  <kaz@kylheku.com>
 
+	Improvements in equal hashing function.
+
+	* hash.c (equal_hash): For conses and vectors, ensure that
+	distinct permutations lead to different hash codes.  This is done by
+	accumulating the partial hash with a multiplier, rather than just
+	adding subhashes.
+
+2015-06-18  Kaz Kylheku  <kaz@kylheku.com>
+
 	Library .txr files become .tl and are autoloaded.
 
 	* lisplib.c (ver_set_entries, ver_instantiate,

@@ -126,7 +126,8 @@ static cnum equal_hash(val obj)
   case LIT:
     return hash_c_str(litptr(obj)) & NUM_MAX;
   case CONS:
-    return (equal_hash(obj->c.car) + equal_hash(obj->c.cdr)) & NUM_MAX;
+    return (equal_hash(obj->c.car)
+            + 32 * (equal_hash(obj->c.cdr) & (NUM_MAX / 16))) & NUM_MAX;
   case STR:
     return hash_c_str(obj->st.str) & NUM_MAX;
   case CHR:
@@ -151,13 +152,17 @@ static cnum equal_hash(val obj)
       cnum i, h = equal_hash(obj->v.vec[vec_length]);
       cnum len = c_num(length);
 
-      for (i = 0; i < len; i++)
-        h = (h + equal_hash(obj->v.vec[i])) & NUM_MAX;
+      for (i = 0; i < len; i++) {
+        h = 32 * (h & (NUM_MAX / 16));
+        h += equal_hash(obj->v.vec[i]);
+        h &= NUM_MAX;
+      }
 
       return h;
     }
   case LCONS:
-    return (equal_hash(car(obj)) + equal_hash(cdr(obj))) & NUM_MAX;
+    return (equal_hash(car(obj))
+            + 32 * (equal_hash(cdr(obj)) & (NUM_MAX / 16))) & NUM_MAX;
   case LSTR:
     lazy_str_force(obj);
     return equal_hash(obj->ls.prefix);
