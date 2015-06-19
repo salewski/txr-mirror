@@ -59,7 +59,8 @@ static void parser_mark(val obj)
   gc_mark(p->stream);
   gc_mark(p->name);
   gc_mark(p->prepared_msg);
-  gc_mark(p->syntax_tree);
+  if (p->syntax_tree != nao)
+    gc_mark(p->syntax_tree);
   gc_mark(p->primer);
 }
 

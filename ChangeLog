@@ -1,3 +1,9 @@
+2015-06-19  Kaz Kylheku  <kaz@kylheku.com>
+
+	* parser.c (parser_mark): Do not mark p->syntax_tree if
+	its value is nao. Introduced on 2015-06-10, "Error handling improvement
+	in read".
+
 2015-06-18  Kaz Kylheku  <kaz@kylheku.com>
 
 	* lib.c (mkstring): Fix neglect to null terminate.
