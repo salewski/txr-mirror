@@ -29,15 +29,23 @@
     (cond
       ((or (atom test) (null (cdr test))) ^(let ((it ,test))
                                              (if it ,then ,else)))
-      ((member (first test) '(not null)) ^(ifa ,(second test) ,else ,then))
+      ((member (first test) '(not null false))
+       (unless (eql (length test) 2)
+         (throwf 'eval-error "ifa: wrong number of arguments to ~s"
+                 (first test)))
+       ^(ifa ,(second test) ,else ,then))
       (t (let* ((sym (first test))
                 (args (rest test))
                 (n-candidate-args [count-if candidate-p args])
                 (pos-candidate (or [pos-if candidate-p args] 0)))
-           (unless (fboundp sym)
-             (error "ifa: only works with global functions."))
+           (unless (or (lexical-fun-p e sym)
+                       (and (or (functionp (symbol-function sym))
+                                (null (symbol-function sym)))))
+             (throwf 'eval-error "ifa: test expression must be \
+                                 \ a simple function call"))
            (when (> n-candidate-args 1)
-             (error "ifa: ambiguous situation: not clear what can be \"it\"."))
+             (throwf 'eval-error "ifa: ambiguous situation: \
+                                 \ not clear what can be \"it\""))
            (let* ((temps (mapcar (ret (gensym)) args))
                   (it-temp [temps pos-candidate]))
              ^(let* (,*(zip temps args) (it ,it-temp))

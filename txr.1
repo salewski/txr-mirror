@@ -10796,6 +10796,151 @@ is returned.
     (format t "frobosity value ~a exceeds 150\en" fv))
 .cble
 
+.coNP Macro @ ifa
+.synb
+.mets (ifa < cond < then <> [ else ])
+.syne
+.desc
+The
+.code ifa
+macro provides a anaphoric conditional operator resembling the
+.code if
+operator. Around the evaluation of the
+.meta then
+and
+.meta else
+forms, the symbol
+.code it
+is implicitly bound to the value of a subexpression of
+.metn cond ,
+providing a reference to that value, similar to the word
+"it" in the English language, and similar anaphoric pronouns
+in other languages.
+
+The
+.code ifa
+macro imposes several restrictions on the
+.meta cond
+expression. Firstly, the
+.meta cond
+expression must be either an atom, or a function call form:
+a compound expression with a symbol in the leftmost position
+which resolves to a function. Otherwise the
+.code ifa
+macro invocation is ill-formed.
+
+Secondly, if the
+.meta cond
+expression is a function call with more than two arguments,
+at most one of them may be an it-candidate: an expression
+viable for having its value bound to the
+.code it
+symbol. If there are two or more it-candidates, the
+.code ifa
+expression is ill-formed.
+
+If
+.meta cond
+is an atom, or a function call expression with no arguments,
+then the
+.code it
+symbol is not bound. Effectively,
+.code ifa
+macro behaves like the ordinary
+.code if
+operator.
+
+If
+.meta cond
+is an invocation of the functions
+.code not
+or
+.codn null ,
+
+If
+.meta cond
+is a function call with exactly one argument, then the
+.code it
+variable is bound to the value of that argument, except when
+the function being called is
+.codn not ,
+.code null ,
+or
+.codn false .
+That special situation is rewritten according to the following pattern:
+
+.cblk
+.mets (ifa (not << expr ) < then << else ) -> (ifa < expr < else << then )
+.cble
+
+Note the reversal of
+.meta then
+and
+.metn else .
+
+If
+.meta cond
+is a function call with two or more arguments, then it is only
+well-formed if zero or one of those arguments are it-candidates.
+If there is an argument which is an it-candidate, then the
+.code it
+variable is bound to its value. Otherwise the variable is bound
+to the value of the leftmost argument expression, regardless of whether that
+argument expression is an it-candidate.
+
+An it-candidate is any expression which is not a constant expression
+according to the
+.code constantp
+function, and not a symbol.
+
+In all other regards, the
+.code ifa
+macro behaves similarly to
+.codn if .
+
+The
+.meta cond
+expression is evaluated, and, if applicable,
+the value of the appropriate argument is captured and bound to
+the variable
+.code it
+whose scope extends over the
+.meta then
+form, as well as over
+.metn else ,
+if present.
+
+If
+.meta cond
+yields a true value, then
+.meta then
+is evaluated and the resulting value is returned, otherwise
+.meta else
+is evaluated if present and its value is returned.
+A missing
+.meta else
+is treated as if it were the
+.code nil
+form.
+
+.TP* Examples:
+.cblk
+  (ifa t 1 0)  ->  1
+
+  (let ((x 6) (y 49))
+    (ifa (> y (* x x)) ;; it binds to (* x x)
+      (list it)))
+  -> (36)
+
+  (ifa (evenp 4)
+    (list it))
+  -> (4)
+
+  (ifa (not (oddp 4))
+    (list it))
+  -> (4)
+.cble
+
 .coNP Macro @ dotimes
 .synb
 .mets (dotimes >> ( var < count-form <> [ result-form ]) << body-form *)

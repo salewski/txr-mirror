@@ -1,5 +1,14 @@
 2015-06-19  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: Documented ifa.
+
+	* share/txr/stdlib/ifa.tl: Tightened up the tests for
+	situations when the macro is ill-formed, following
+	the improved specification. Also, eval-error is thrown
+	instead of just error.
+
+2015-06-19  Kaz Kylheku  <kaz@kylheku.com>
+
 	Test ifa macro.
 
 	* Makefile (TEST_OUT): Include .tl files.
