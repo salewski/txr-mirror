@@ -52,7 +52,6 @@ OBJS-$(have_syslog) += syslog.o
 OBJS-$(have_glob) += glob.o
 OBJS-$(have_posix_sigs) += signal.o
 EXTRA_OBJS-$(add_win_res) += win/txr.res
-GEN_HDRS := place.h
 
 ifneq ($(have_git),)
 SRCS := $(addprefix $(top_srcdir)/,\
@@ -108,13 +107,6 @@ $(call ABBREV,LINK)
 $(V)$(CC) $(1) $(CFLAGS) -o $@ $^ -lm
 endef
 
-define LISP_TO_C_STRING
-$(call ABBREV,L2C)
-$(V)echo "const char *${@:.h=}_code =" > $@
-$(V)sed -e 's/;.*//' -e 's/["\\]/\\&/g' -e 's/$$/\\n/' -e 's/.*/"&"/' $< >> $@
-$(V)echo ";" >> $@
-endef
-
 define WINDRES
 $(call ABBREV,RES)
 $(V)mkdir -p $(dir $@)
@@ -138,9 +130,6 @@ opt/%.res: win/%.rc
 
 %.res: %.rc
 	$(call WINDRES)
-
-%.h: %.tl
-	$(call LISP_TO_C_STRING)
 
 # The following pattern rule is used for test targets built by configure
 %.o: %.c
@@ -167,10 +156,6 @@ $(PROG)-win: $(patsubst %/txr.o,%/txr-win.o,$(OPT_OBJS)) $(EXTRA_OBJS-y)
 
 $(PROG)-win-dbg: $(patsubst %/txr.o,%/txr-win.o,$(DBG_OBJS)) $(EXTRA_OBJS-y)
 	$(call LINK_PROG,-mwindows)
-
-$(call ADD_CONF,dbg,lisplib.o): $(GEN_HDRS)
-
-$(call ADD_CONF,opt,lisplib.o): $(GEN_HDRS)
 
 VPATH := $(top_srcdir)
 
@@ -242,13 +227,12 @@ distclean:
 	rm -rf config
 	rm -rf config.*
 	rm -rf mpi-1.?.?
-	rm -rf $(GEN_HDRS)
 else
 rebuild: clean repatch $(PROG)
 
 clean: conftest.clean tests.clean
 	rm -f $(PROG)$(EXE) $(PROG)-dbg$(EXE) y.tab.c lex.yy.c y.tab.h y.output
-	rm -rf opt dbg $(EXTRA_OBJS-y) $(GEN_HDRS)
+	rm -rf opt dbg $(EXTRA_OBJS-y)
 
 distclean: clean
 	rm -rf $(conf_dir)

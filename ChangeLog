@@ -1,5 +1,21 @@
 2015-06-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	Remove places.h generation hack.
+
+	* Makefile (GEN_HDRS, LISP_TO_C_STRING): Variables removed.
+	(%.h: %.tl): Rule removed. The place.h header is no longer
+	generated from place.tl.
+
+	* lisplib.c (place_instantiate): Load place.tl from stdlib directory,
+	rather than obtaining it from a string literal in generated header
+	place.h.
+
+	* place.tl: Moved to share/txr/stdlib directory.
+
+	* genvim.txr: Refer to place.tl in stdlib.
+
+2015-06-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Register have function, synonym of true.
 
 	* txr.1: Document have.

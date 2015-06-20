@@ -35,7 +35,6 @@
 #include "stream.h"
 #include "hash.h"
 #include "gc.h"
-#include "place.h"
 #include "txr.h"
 #include "lisplib.h"
 
@@ -79,8 +78,8 @@ static val place_set_entries(val dlt, val fun)
 static val place_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  return eval_intrinsic(lisp_parse(string_utf8(place_code), std_error,
-                                   colon_k, lit("place.tl")), nil);
+  load(format(nil, lit("~a/place.tl"), stdlib_path, nao));
+  return nil;
 }
 
 static val ver_set_entries(val dlt, val fun)
