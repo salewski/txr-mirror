@@ -12993,9 +12993,10 @@ otherwise.
       (format t "list ~s does not contain the symbol a\en")))
 .cble
 
-.coNP Function @ true
+.coNP Functions @ true and @ have
 .synb
 .mets (true << value )
+.mets (have << value )
 .syne
 .desc
 
@@ -13006,7 +13007,10 @@ function is the complement of the
 .code not
 and
 .code false
-functions.
+functions. The
+.code have
+function is a synonym for
+.codn true .
 
 It return
 .code t
@@ -13026,6 +13030,19 @@ For instance
 .code (if x ...)
 should be favored over
 .codn (if (true x) ...) .
+However, the latter is useful with the
+.code ifa
+macro because
+.meti (ifa (true << expr ) ...)
+binds the
+.code it
+variable to the value of
+.metn expr ,
+no matter what kind of form
+.meta expr
+is, which is not true in the
+.meti (ifa < expr ...)
+form.
 
 .TP* Example:
 .cblk

@@ -3865,6 +3865,8 @@ static val merge_wrap(val seq1, val seq2, val lessfun, val keyfun)
 
 void eval_init(void)
 {
+  val not_null_f = func_n1(not_null);
+
   protect(&top_vb, &top_fb, &top_mb, &top_smb, &special, &builtin, &dyn_env,
           &op_table, &last_form_evaled, &last_form_expanded,
           &call_f, convert(val *, 0));
@@ -4084,7 +4086,8 @@ void eval_init(void)
   reg_fun(intern(lit("atom"), user_package), func_n1(atom));
   reg_fun(intern(lit("null"), user_package), null_f);
   reg_fun(intern(lit("false"), user_package), null_f);
-  reg_fun(intern(lit("true"), user_package), func_n1(not_null));
+  reg_fun(intern(lit("true"), user_package), not_null_f);
+  reg_fun(intern(lit("have"), user_package), not_null_f);
   reg_fun(not_s, null_f);
   reg_fun(intern(lit("consp"), user_package), func_n1(consp));
   reg_fun(intern(lit("lconsp"), user_package), func_n1(lconsp));

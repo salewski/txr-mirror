@@ -1,3 +1,9 @@
+2015-06-20  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): Register have function, synonym of true.
+
+	* txr.1: Document have.
+
 2015-06-19  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.1: Documented ifa.
