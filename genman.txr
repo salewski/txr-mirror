@@ -2,10 +2,6 @@
 @# and is now part of manutils.
 @# See here: http://primates.ximian.com/~flucifredi/man/
 @# It does not work with that other man2html written in Perl.
-@(deffilter month-name
-  ("01" "Jan") ("02" "Feb") ("03" "Mar") ("04" "Apr")
-  ("05" "May") ("06" "Jun") ("07" "Jul") ("08" "Aug")
-  ("09" "Sep") ("10" "Oct") ("11" "Nov") ("12" "Dec"))
 @(bind txrhash @(hash :equal-based))
 @(bind txlhash @(hash :equal-based))
 @(bind tgthash txrhash)
@@ -13,6 +9,8 @@ Content-type: text/html
 @(skip 15)
 <H1>TXR</H1>
 @(skip)Updated: @YEAR-@MONTH-@DAY<BR><A HREF="#index">Index</A>
+@(bind TIME @(make-time-utc (int-str YEAR) (int-str MONTH) (int-str DAY)
+                            0 0 0 nil))
 @(collect)
 @PREAMBLE
 @(until)
@@ -69,7 +67,7 @@ This document was created by
 <HEAD><TITLE>Manpage for TXR @VERSION</TITLE>
 </HEAD><BODY>
 <H2>Manpage for <A HREF="#lbAB">TXR </a>@VERSION</H2>
-<H2>@{MONTH :filter month-name} @DAY, @YEAR</H2>
+<H2>@(time-string-utc TIME "%b %d, %Y")</H2>
 <p>
 <form action="https://www.paypal.com/cgi-bin/webscr" method="post">
 <input type="hidden" name="cmd" value="_s-xclick">

@@ -1,5 +1,10 @@
 2015-06-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	* genman.txr (month-name): Filter removed.
+	Page date is converted to a time value, and later formatted.
+
+2015-06-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	Remove places.h generation hack.
 
 	* Makefile (GEN_HDRS, LISP_TO_C_STRING): Variables removed.
