@@ -5,44 +5,77 @@
 @(bind txrhash @(hash :equal-based))
 @(bind txlhash @(hash :equal-based))
 @(bind tgthash txrhash)
+@(bind tagmap @(hash :equal-based))
+@(do
+   (defvar dupes (hash))
+
+   (defun hash-title (title)
+     (let* ((h (logtrunc (hash-equal title) 32))
+            (existing [dupes h]))
+       (when existing
+         (unless (equal title existing)
+           (error "~a ~a hash collision!" existing title)))
+       (set [dupes h] title)
+       (format nil "N-~,08X" h)))
+
+   (set [tagmap "lbAB"] (hash-title "NAME")))
 Content-type: text/html
 @(skip 15)
 <H1>TXR</H1>
 @(skip)Updated: @YEAR-@MONTH-@DAY<BR><A HREF="#index">Index</A>
 @(bind TIME @(make-time-utc (int-str YEAR) (int-str MONTH) (int-str DAY)
                             0 0 0 nil))
-@(collect)
-@PREAMBLE
-@(until)
-<B>TXR</B> - text processing language @(skip)
-@(end)
 @(bind lookup @[orf txrhash txlhash])
-@(all)
-<B>TXR</B> - text processing language @VERSION
-@  (and)
-@  (collect :vars (BODY LOOKUP))
-@    (some)
+@(bind VERSION nil)
+@(collect :vars (BODY LOOKUP))
+@  (some)
+@    (cases)
+<A NAME="@tag">&nbsp;</A>
+@      (some)
+<H@level>@sec @title</H@level>
+@      (or)
+<H@level>@sec @title
+</H@level>
+@      (end)
+@      (bind newtag @(hash-title title))
+@      (do (set [tagmap tag] newtag))
+@      (output :into BODY)
+<A NAME="@newtag">&nbsp;</A>
+<H@level>@sec @title</H@level>
+@      (end)
+@      (cat BODY "\n")
+@    (or)
 @BODY
-@    (and)
-<H2>13 TXR LISP</H2>
-@      (set lookup @[orf txlhash txrhash])
 @    (end)
-@    (bind LOOKUP lookup)
-@  (until)
+@  (and)
+<H2>@nil TXR LISP</H2>
+@    (set lookup @[orf txlhash txrhash])
+@  (and)
+<B>TXR</B> - text processing language (version @ver)
+@    (set VERSION ver)
+@  (end)
+@  (bind LOOKUP lookup)
+@(until)
 <HR>
 <A NAME="index">&nbsp;</A><H2>Index</H2>
-@  (end)
 @(end)
 <HR>
 @(collect :vars (TOC))
 @  (some)
+@    (cases)
+<DT><A HREF="#@tag">@rest
+@      (output :into TOC)
+<DT><A HREF="#@[tagmap tag]">@rest
+@      (end)
+@    (or)
 @TOC
+@    (end)
 @  (and)
 <DT><A HREF="@nil">@nil TXR LISP</A><DD>
 @  (set tgthash txlhash)
 @  (and)
-<DT><A HREF="@tag">@(coll :vars (sym))<TT>@sym</TT>@(end)
-@    (do (mapdo (do unless [tgthash @1] (set [tgthash @1] tag))
+<DT><A HREF="#@tag">@(coll :vars (sym))<TT>@sym</TT>@(end)
+@    (do (mapdo (do unless [tgthash @1] (set [tgthash @1] [tagmap tag]))
                 sym))
 @  (end)
 @(until)
@@ -57,7 +90,7 @@ This document was created by
                                             (set tag [txrhash sym]))
                                           (set tag [@@2 tok]))
                                         (if tag
-                                          `<A HREF="@tag">@1</A>`
+                                          `<A HREF="#@tag">@1</A>`
                                           @1))
                                   @1))
                     BODY
@@ -66,7 +99,7 @@ This document was created by
 <HTML>
 <HEAD><TITLE>Manpage for TXR @VERSION</TITLE>
 </HEAD><BODY>
-<H2>Manpage for <A HREF="#lbAB">TXR </a>@VERSION</H2>
+<H2>Manpage for <A HREF="#@[tagmap "lbAB"]">TXR </a>@VERSION</H2>
 <H2>@(time-string-utc TIME "%b %d, %Y")</H2>
 <p>
 <form action="https://www.paypal.com/cgi-bin/webscr" method="post">
@@ -81,11 +114,8 @@ This document was created by
 @TOC
 @(end)
 @(repeat)
-@PREAMBLE
-@(first)
-@(end)
-@(repeat)
 @BODY
+@(first)
 @(end)
 </BODY>
 </HTML>

@@ -1,5 +1,12 @@
 2015-06-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	* genman.txr: Rewrite the man2html-generated inner name links with hash
+	values derived from the title text, so that when sections are inserted
+	or deleted, the URL's remain stable. The PREAMBLE is gone, and
+	VERSION is collected when processsing the body.
+
+2015-06-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	* genman.txr (month-name): Filter removed.
 	Page date is converted to a time value, and later formatted.
 
