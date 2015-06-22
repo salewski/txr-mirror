@@ -1,3 +1,10 @@
+2015-06-22  Kaz Kylheku  <kaz@kylheku.com>
+
+	* share/txr/stdlib/place.tl: Get rid of big progn around the
+	whole module.
+
+	* genvim.txr: Handle (def's not preceded by spaces.
+
 2015-06-21  Kaz Kylheku  <kaz@kylheku.com>
 
 	Version 109.
