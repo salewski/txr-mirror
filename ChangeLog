@@ -1,5 +1,11 @@
 2015-06-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	* genvim.txr: Add ifa.tl library file.
+
+	* tl.vim, txr.vim: Regenerated.
+
+2015-06-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* share/txr/stdlib/place.tl: Get rid of big progn around the
 	whole module.
 
