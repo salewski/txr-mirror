@@ -22,6 +22,18 @@
 
 2015-06-20  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 109.
+
+	* RELNOTES: Updated.
+
+	* configure, txr.1: Bumped version and date.
+
+	* share/txr/stdlib/ver.tl: Likewise.
+
+	* tl.vim, txr.vim: Regenerated.
+
+2015-06-20  Kaz Kylheku  <kaz@kylheku.com>
+
 	* genman.txr: Rewrite the man2html-generated inner name links with hash
 	values derived from the title text, so that when sections are inserted
 	or deleted, the URL's remain stable. The PREAMBLE is gone, and

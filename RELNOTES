@@ -1,3 +1,28 @@
+                                    TXR 109
+                                   2015-06-21
+
+
+  Features
+
+  - New anaphoric macros ifa and conda.
+
+  - New function have, synonym of true. Usefully expressive with anaphoric ifa.
+
+  Bugs
+
+  - equal-based hashing function is improved so list and vector permutations
+    do not collide to the same value.
+
+  - cat-str function detects overflow in the calculation of the total
+    string length to allocate, and throws an exception.
+
+  - Fixed neglected null termination in mkstring function.
+
+  - Fixed garbage collector crash introduced in TXR 108, when traversing
+    syntax_tree member of the parser_t structure.
+
+
+
                                     TXR 108
                                    2015-06-13
 
@@ -37,6 +62,18 @@
 
   - New functions catenated-stream-p and catenated-stream-push.
 
+  - New function: load for loading TXR Lisp files. TXR Lisp programming can
+    now take place using multiple files containing code that doesn't have
+    to be wrapped with @(do ...).
+
+  - @(load) and @(include) directives can also load TXR Lisp now.
+
+  - TXR files which have a .txr suffix can be invoked without the suffix now;
+    this is automatically resolved.
+
+  - New --lisp command line option makes TXR source files which have no
+    filename suffix be treated as TXR Lisp code rather than TXR Pattern Language.
+
   Bugs
 
   - Fixed exception being thrown when trying to print (lambda . atom).
@@ -64,18 +101,6 @@
 
   - Critical bugfix in handling of hashes having both weak keys and values,
     leading to memory corruption.
-
-  - New function: load for loading TXR Lisp files. TXR Lisp programming can
-    now take place using multiple files containing code that doesn't have
-    to be wrapped with @(do ...).
-
-  - @(load) and @(include) directives can also load TXR Lisp now.
-
-  - TXR files which have a .txr suffix can be invoked without the suffix now;
-    this is automatically resolved.
-
-  - New --lisp command line option makes TXR source files which have no
-    filename suffix be treated as TXR Lisp code rather than TXR Pattern Language.
 
 
 
