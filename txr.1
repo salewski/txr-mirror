@@ -10941,6 +10941,40 @@ form.
   -> (4)
 .cble
 
+.coNP Macro @ conda
+.synb
+.mets (conda >> {( test << form *)}*)
+.syne
+.desc
+The
+.code conda
+operator provides a multi-branching conditional evaluation of
+forms, similarly to the
+.code cond
+operator. Enclosed in the cond form are groups of forms expressed as lists.
+Each group must be a list of at least one form.
+
+The
+.code conda
+operator is anaphoric: it expands into a nested structure of zero or more
+.code ifa
+invocations, according to these patterns:
+
+.cble
+  (conda) -> nil
+  (conda (x y ...) ...) -> (ifa x (progn y ...) (conda z ...))
+.cblk
+
+Thus,
+.code conda
+inherits all the restrictions on the
+.meta test
+expressions from
+.codn ifa ,
+as well as the anaphoric
+.code it
+variable feature.
+
 .coNP Macro @ dotimes
 .synb
 .mets (dotimes >> ( var < count-form <> [ result-form ]) << body-form *)

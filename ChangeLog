@@ -1,3 +1,25 @@
+2015-06-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	Version 109.
+
+	* RELNOTES: Updated.
+
+	* configure, txr.1: Bumped version and date.
+
+	* share/txr/stdlib/ver.tl: Likewise.
+
+	* tl.vim, txr.vim: Regenerated.
+
+2015-06-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lisplib.c (ifa_set_entries): Add conda.
+
+	* share/txr/stdlib/ifa.tl (conda): New macro.
+
+	* tests/012/ifa.tl: Adding test for conda.
+
+	* txr.1: Documenting conda.
+
 2015-06-20  Kaz Kylheku  <kaz@kylheku.com>
 
 	* genman.txr: Rewrite the man2html-generated inner name links with hash

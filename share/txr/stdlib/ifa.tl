@@ -50,3 +50,10 @@
                   (it-temp [temps pos-candidate]))
              ^(let* (,*(zip temps args) (it ,it-temp))
                 (if (,sym ,*temps) ,then ,else))))))))
+
+(defmacro conda (. pairs)
+  (tree-case pairs
+    (((test . forms) . rest) ^(ifa ,test (progn ,*forms)
+                                   (conda ,*rest)))
+    (() ())
+    (else (throwf 'eval-error "conda: bad syntax: ~s" pairs))))
