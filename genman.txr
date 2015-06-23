@@ -1,7 +1,5 @@
-@# This requires the man2html which was originally known as vh-man2html
-@# and is now part of manutils.
-@# See here: http://primates.ximian.com/~flucifredi/man/
-@# It does not work with that other man2html written in Perl.
+@# This requires a hacked version of man2html
+@# See here: http://www.kylheku.com/cgit/man
 @(bind txrhash @(hash :equal-based))
 @(bind txlhash @(hash :equal-based))
 @(bind tgthash txrhash)
