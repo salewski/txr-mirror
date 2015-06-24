@@ -1065,6 +1065,27 @@ val hash_isec(val hash1, val hash2, val join_func)
   }
 }
 
+val hash_subset(val hash1, val hash2)
+{
+  val hiter, entry;
+
+  for (hiter = hash_begin(hash1), entry = hash_next(hiter);
+       entry;
+       entry = hash_next(hiter))
+  {
+    if (!inhash(hash2, car(entry), colon_k))
+      return nil;
+  }
+
+  return t;
+}
+
+val hash_proper_subset(val hash1, val hash2)
+{
+  return and2(hash_subset(hash1, hash2),
+              null(numeq(hash_count(hash1), hash_count(hash2))));
+}
+
 val hash_update(val hash, val fun)
 {
   val iter = hash_begin(hash);

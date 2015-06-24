@@ -1,3 +1,16 @@
+2015-06-23  Kaz Kylheku  <kaz@kylheku.com>
+
+	Hash subset testing.
+
+	* eval.c (eval_init): Register hash-subset and hash-proper-subset
+	intrinsics.
+
+	* hash.c (hash_subset, hash_proper_subset): New functions.
+
+	* hash.h (hash_subset, hash_proper_subset): Declared.
+
+	* txr.1: New functions documented.
+
 2015-06-22  Kaz Kylheku  <kaz@kylheku.com>
 
 	* genvim.txr: Add ifa.tl library file.

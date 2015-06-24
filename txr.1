@@ -22348,6 +22348,54 @@ and
 it is called with two arguments: the respective data items. The return
 value is then used as the data item in the intersection hash.
 
+.coNP Functions @ hash-subset and @ hash-proper-subset
+.synb
+.mets (hash-subset < hash1 << hash2 )
+.mets (hash-proper-subset < hash1 << hash2 )
+.syne
+.desc
+The
+.code hash-subset
+function returns
+.code t
+if the keys in
+.meta hash1
+are a subset of the keys in
+.metn hash2 .
+
+The
+.code hash-proper-subset
+function returns
+.code t
+if the keys in
+.meta hash1
+are a proper subset of the keys in
+.metn hash2 .
+This means that
+.meta hash2
+has all the keys which are in
+.meta hash1
+and at least one which isn't.
+
+Note: the return value may not be mathematically meaningful if
+.meta hash1
+and
+.meta hash2
+use different equality. In any case, the actual behavior
+may be understood as follows. The implementation of
+.code hash-subset
+tests whether each of the keys in
+.meta hash1
+occurs in
+.meta hash2
+using their respective equalities.
+The implementation of
+.code hash-proper-subset
+applies
+.code hash-subset
+first, as above. If that is true, and the two hashes have the same number of
+elements, the result is falsified.
+
 .SS* Partial Evaluation and Combinators
 .coNP Macros @ op and @ do
 .synb
