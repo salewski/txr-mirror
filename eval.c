@@ -4251,6 +4251,8 @@ void eval_init(void)
   reg_fun(intern(lit("copy-hash"), user_package), func_n1(copy_hash));
   reg_fun(intern(lit("hash"), user_package), func_n0v(hashv));
   reg_fun(intern(lit("hash-construct"), user_package), func_n2(hash_construct));
+  reg_fun(intern(lit("hash-from-pairs"), user_package), func_n1v(hash_from_pairs));
+  reg_fun(intern(lit("hash-list"), user_package), func_n1v(hash_list));
   reg_fun(gethash_s, func_n3o(gethash_n, 2));
   reg_fun(intern(lit("inhash"), user_package), func_n3o(inhash, 2));
   reg_fun(intern(lit("sethash"), user_package), func_n3(sethash));

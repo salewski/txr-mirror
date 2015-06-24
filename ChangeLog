@@ -1,5 +1,16 @@
 2015-06-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	* hash.c (hash_from_pairs, hash_list): New functions.
+
+	* hash.h (hash_from_pairs, hash_list): Declared.
+
+	* eval.c (eval_init): Registered hash-from-pairs and hash-list
+	intrinsic.
+
+	* txr.1: Documented new functions.
+
+2015-06-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	Refactoring n-ary functions to use a single helper.
 
 	* lib.c (nary_op): New function.

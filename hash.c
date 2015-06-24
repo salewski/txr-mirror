@@ -880,6 +880,25 @@ val hash_construct(val hashv_args, val pairs)
   return hash;
 }
 
+val hash_from_pairs(val pairs, val hashv_args)
+{
+  return hash_construct(default_bool_arg(hashv_args), pairs);
+}
+
+val hash_list(val keys, val hashv_args)
+{
+  val hash = hashv(default_bool_arg(hashv_args));
+
+  keys = nullify(keys);
+
+  for (; keys; keys = cdr(keys)) {
+    val key = car(keys);
+    sethash(hash, key, key);
+  }
+
+  return hash;
+}
+
 val group_by(val func, val seq, val hashv_args)
 {
   val hash = hashv(hashv_args);

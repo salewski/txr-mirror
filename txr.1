@@ -21723,9 +21723,10 @@ is fully instantiated. In the meanwhile, the
 \*(TX program can mutate the hash table from which the lazy list
 is being generated.
 
-.coNP Function @ hash-construct
+.coNP Functions @ hash-construct and @ hash-from-pairs
 .synb
 .mets (hash-construct < hash-args << key-val-pairs )
+.mets (hash-from-pairs < key-val-pairs << hash-arg *)
 .syne
 .desc
 The
@@ -21740,10 +21741,41 @@ lists representing key-value pairs.
 
 A hash is constructed as if by a call to
 .cblk
-.meti [apply hash << hash-args ],
+.meti (apply hash << hash-args ),
 .cble
 then populated
 with the specified pairs, and returned.
+
+The
+.code hash-from-pairs
+function is an alternative interface to the same semantics. The
+.meta key-val-pairs
+argument is first, and the
+.meta hash-args
+are passed as trailing variadic arguments, rather than a single list argument.
+
+.coNP Function @ hash-list
+.synb
+.mets (hash-list < key-list << hash-arg *)
+.syne
+.desc
+The
+.code hash-list
+function constructs a hash as if by a call to
+.cblk
+.meti (apply hash << hash-args ),
+.cble
+where
+.meta hash-args
+is a list of the individual
+.meta hash-arg
+variadic arguments.
+
+The hash is then populated with keys taken from
+.meta key-list
+and returned.
+
+The value associated with each key is that key itself.
 
 .coNP Function @ hash-update
 .synb
