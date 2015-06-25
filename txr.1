@@ -10960,10 +10960,10 @@ operator is anaphoric: it expands into a nested structure of zero or more
 .code ifa
 invocations, according to these patterns:
 
-.cble
+.cblk
   (conda) -> nil
   (conda (x y ...) ...) -> (ifa x (progn y ...) (conda z ...))
-.cblk
+.cble
 
 Thus,
 .code conda
@@ -11656,6 +11656,7 @@ functions whose arguments are constant forms.
 .coNP Macro @ set
 .synb
 .mets (set >> { place << new-value }*)
+.syne
 .desc
 The
 .code set operator stores the values of expressions in places. It must
@@ -13067,7 +13068,9 @@ should be favored over
 However, the latter is useful with the
 .code ifa
 macro because
+.cblk
 .meti (ifa (true << expr ) ...)
+.cble
 binds the
 .code it
 variable to the value of
@@ -13075,7 +13078,9 @@ variable to the value of
 no matter what kind of form
 .meta expr
 is, which is not true in the
+.cblk
 .meti (ifa < expr ...)
+.cble
 form.
 
 .TP* Example:
@@ -13691,6 +13696,7 @@ If the list is shorter than implied, these functions return
 .mets (append <> [ list * << last-arg ])
 .mets (nconc <> [ list * << last-arg ])
 .mets (append* <> [ list * << last-arg ])
+.syne
 .desc
 The
 .code append
@@ -14859,7 +14865,8 @@ of one element.
 If
 .meta sequence
 is empty, then
-.code partition* returns an empty list, and the
+.code partition*
+returns an empty list, and the
 second argument is ignored; if it is
 .metn function ,
 it is not called.
@@ -16122,7 +16129,7 @@ value.
 .SS* List Sorting
 .coNP Function @ merge
 .synb
-.mets (merge < seq1 < seq2  >> [ lessfun <> [ keyfun ]])
+.mets (merge < seq1 < seq2 >> [ lessfun <> [ keyfun ]])
 .syne
 .desc
 The
@@ -18786,8 +18793,10 @@ function returns the number of items in
 and
 returns it.
 .meta sequence
-may be a hash, in which case (hash-count
-.metn sequence )
+may be a hash, in which case
+.cblk
+.meti (hash-count << sequence )
+.cble
 is returned.
 
 .coNP Function @ empty
@@ -19211,7 +19220,7 @@ The sequence or hash table is returned.
 
 .coNP Function @ less
 .synb
-.mets (less < left-obj << right-obj  )
+.mets (less < left-obj << right-obj )
 .mets (less < obj << obj *)
 .syne
 .desc
