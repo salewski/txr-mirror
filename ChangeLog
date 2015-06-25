@@ -1,5 +1,9 @@
 2015-06-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.1: partition example: wrong use of where function.
+
+2015-06-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	* hash.c (hash_from_pairs, hash_list): New functions.
 
 	* hash.h (hash_from_pairs, hash_list): Declared.

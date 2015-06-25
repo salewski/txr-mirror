@@ -14853,8 +14853,8 @@ of one element.
   (partition '(1 2 3) 1) -> ((1) (2 3))
 
   ;; split the string where there is a "b"
-  (partition "abcbcbd" (op where @1 (op eql #\eb))) -> ("a" "bc"
-                                                       "bc" "bd")
+  (partition "abcbcbd" (op where (op eql #\eb))) -> ("a" "bc"
+                                                    "bc" "bd")
 .cble
 
 .coNP Function @ partition*
