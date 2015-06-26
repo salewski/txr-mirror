@@ -9847,7 +9847,7 @@ to have the integer value 42.
 
 A compound expression can be a syntactic place, if its leftmost constituent is
 as symbol which is specially registered, and if the form has the correct syntax
-for hat kind of place, and suitable semantics. Such an expression is a compound
+for that kind of place, and suitable semantics. Such an expression is a compound
 place.
 
 An example of a compound place is a
@@ -9948,7 +9948,7 @@ which support deletion semantics.
 
 To bring about their effect, place operators must evaluate one or
 more places. Moreover, some of them evaluate additional forms which are not
-places. Which the arguments of a place operator form are places and which are
+places. Which arguments of a place operator form are places and which are
 ordinary forms depends on its specific syntax. For all the built-in place
 operators, the position of an argument in the syntax determines whether it is
 treated as (and consequently required to be) a syntactic place, or whether it is
@@ -10070,7 +10070,7 @@ defined by \*(TX programs.
 
 .NP* Built-In Place-Mutating Operators
 
-The following is a summery of the built-in place mutating macros.
+The following is a summary of the built-in place mutating macros.
 They are described in detail in their own sections.
 
 .meIP (set >> { place << new-value }*)
@@ -12137,7 +12137,7 @@ operators return
 .mets (let* >> ({ sym | >> ( sym << init-form )}*) << body-form *)
 .syne
 .desc
-The.
+The
 .code let
 and
 .code let*
@@ -13140,7 +13140,7 @@ even if all their corresponding elements are
 .code eq
 and two strings might not be eq even if they hold identical text.
 
-The.
+The
 .code eql
 function is slightly less strict than
 .codn eq .
@@ -14876,7 +14876,7 @@ If the second argument is of the form
 which is a sequence
 of strictly increasing non-negative integers, then
 .code partition*
-produces
+produces a
 lazy list of pieces taken from
 .metn sequence .
 The pieces are formed by
@@ -22466,7 +22466,7 @@ which means that argument evaluation follows Lisp-1 rules.  (See the
 .code dwim
 operator).
 
-The.
+The
 .code do
 operator is like the
 .code op
@@ -23033,7 +23033,7 @@ immediately terminates and returns
 .code nil
 whenever any of the functions returns
 .codn nil ,
-without evaluating the remainder of the functions.
+without calling the remaining functions.
 
 .TP* Example:
 
