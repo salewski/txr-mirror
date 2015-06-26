@@ -80,17 +80,17 @@ Content-type: text/html
 This document was created by
 @(end)
 @(set BODY @(mapcar (do if (search-regex @1 #/<H[1-9]>/)
-                          @1
-                          (regsub #/<TT>.%<\/TT>/
-                                  (do let ((tok [@1 4 -5]) tag)
-                                        (if (match-str tok "@(")
-                                          (let ((sym [tok 2 -1]))
-                                            (set tag [txrhash sym]))
-                                          (set tag [@@2 tok]))
-                                        (if tag
-                                          `<A HREF="#@tag">@1</A>`
-                                          @1))
+                      @1
+                      (regsub #/<TT>.%<\/TT>/
+                              (do let ((tok [@1 4 -5]) tag)
+                                (if (match-str tok "@(")
+                                  (let ((sym [tok 2 -1]))
+                                    (set tag [txrhash sym]))
+                                  (set tag [@@2 tok]))
+                                (if tag
+                                  `<A HREF="#@tag">@1</A>`
                                   @1))
+                              @1))
                     BODY
                     LOOKUP))
 @(output)
