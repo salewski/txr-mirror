@@ -93,6 +93,32 @@ This document was created by
                               @1))
                     BODY
                     LOOKUP))
+@(set BODY @(let ((inside-tt nil)
+                  (inside-syntax nil))
+              (mapcar (do cond
+                        ((equal @1 "<TT>") (set inside-tt t) @1)
+                        ((equal @1 "</TT>") (set inside-tt nil)
+                                            (set inside-syntax nil)
+                                            @1)
+                        ((equal @1 "<DT>Syntax:<DD>") (set inside-syntax t) @1)
+                        ((or (and inside-tt (not inside-syntax))
+                             (match-regex @1 #/<DT><TT>/))
+                          (let* ((out0 (regsub #/@\([a-z0-9\-]+/
+                                               (do let* ((tok [@1 2..:])
+                                                         (tag (or [txlhash tok]
+                                                                  [@@2 tok])))
+                                                 (if tag
+                                                   `@[@1 0](<A HREF="#@tag">@tok</A>`
+                                                   @1)) @1)))
+                             (regsub #/[\(\[][^ )&]+/
+                                     (do let* ((tok [@1 1..:])
+                                               (tag [txlhash tok]))
+                                       (if tag
+                                         `(<A HREF="#@tag">@tok</A>`
+                                         @1)) out0)))
+                        (t @1))
+                      BODY
+                      LOOKUP)))
 @(output)
 <HTML>
 <HEAD><TITLE>Manpage for TXR @VERSION</TITLE>

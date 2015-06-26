@@ -1,3 +1,8 @@
+2015-06-26  Kaz Kylheku  <kaz@kylheku.com>
+
+	* genman.txr: New filter to add hyperlinks within code in
+	more places such as examples and summary lists.
+
 2015-06-24  Kaz Kylheku  <kaz@kylheku.com>
 
 	* txr.1: partition example: wrong use of where function.
