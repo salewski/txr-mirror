@@ -1,5 +1,28 @@
 2015-06-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	First round of quasiliteral-related fixes.
+
+	* parser.l: Do not try to recognize floating-point literals
+	in QSPECIAL state; that is not possible because @134.3
+	in a quasiliteral parses as a METANUM followed by ".3".
+	On the other hand, recognize METANUM literals in QSPECIAL state,
+	so that @@123 scans. Recognize @ as a token in QSPECIAL state,
+	so @@abc will scan. When transitioning from QSILIT and QWLIT
+	states to QSPECIAL upon scanning @, return a @ token, which
+	is now parsed in the grammar.
+
+	* parser.y (quasi_meta_helper): New static function.
+	(q_var): Do not handle SYMTOK any more, only the braced
+	variable syntax. SYMTOK is handled as a n_expr.
+	Braced vars are handled with explicit '@' token, which
+	is now produced by the scanner when it shifts from QSILIT
+	to QSPECIAL.
+	(quasi_item): No longer necessary to recognize various
+	forms here such as quotes and splices. Just recognize a n_expr,
+	preceded by '@'.
+
+2015-06-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	* genman.txr: New filter to add hyperlinks within code in
 	more places such as examples and summary lists.
 

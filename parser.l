@@ -269,7 +269,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return NUMBER;
 }
 
-<SPECIAL,QSPECIAL,NESTED,BRACED>{FLO} {
+<SPECIAL,NESTED,BRACED>{FLO} {
   val str = string_own(utf8_dup_from(yytext));
 
   if (yy_top_state(yyscanner) == INITIAL
@@ -293,7 +293,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return NUMBER;
 }
 
-<SPECIAL,QSPECIAL>({FLO}|{FLODOT}){TOK} |
+<SPECIAL>({FLO}|{FLODOT}){TOK} |
 <BRACED>({FLO}|{FLODOT}){BTOK} |
 <NESTED>({FLO}|{FLODOT}){NTOK} {
   val str = string_utf8(yytext);
@@ -309,7 +309,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return NUMBER;
 }
 
-<NESTED,QSILIT,QWLIT>@{NUM} {
+<NESTED,QSILIT,QWLIT,QSPECIAL>@{NUM} {
   val str = string_own(utf8_dup_from(yytext + 1));
 
   if (yy_top_state(yyscanner) == INITIAL
@@ -320,7 +320,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return METANUM;
 }
 
-<NESTED,QSILIT,QWLIT>@{XNUM} {
+<NESTED,QSILIT,QWLIT,QSPECIAL>@{XNUM} {
   val str = string_own(utf8_dup_from(yytext + 3));
 
   if (yy_top_state(yyscanner) == INITIAL
@@ -331,7 +331,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return METANUM;
 }
 
-<NESTED,QSILIT,QWLIT>@{ONUM} {
+<NESTED,QSILIT,QWLIT,QSPECIAL>@{ONUM} {
   val str = string_own(utf8_dup_from(yytext + 3));
 
   if (yy_top_state(yyscanner) == INITIAL
@@ -342,7 +342,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return METANUM;
 }
 
-<NESTED,QSILIT,QWLIT>@{BNUM} {
+<NESTED,QSILIT,QWLIT,QSPECIAL>@{BNUM} {
   val str = string_own(utf8_dup_from(yytext + 3));
 
   if (yy_top_state(yyscanner) == INITIAL
@@ -558,7 +558,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
  return yytext[0];
 }
 
-<NESTED,BRACED>@ {
+<NESTED,BRACED,QSPECIAL>@ {
   yylval->lineno = yyextra->lineno;
   return yytext[0];
 }
@@ -897,6 +897,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
 <QSILIT,QWLIT>@ {
   yy_push_state(QSPECIAL, yyscanner);
+  return yytext[0];
 }
 
 <WLIT,QWLIT>{WS} {

@@ -58,6 +58,7 @@ static val rlrec(parser_t *, val form, val line);
 static wchar_t char_from_name(const wchar_t *name);
 static val make_expr(parser_t *, val sym, val rest, val lineno);
 static val check_for_include(val spec_rev);
+static val quasi_meta_helper(val obj);
 
 #if YYBISON
 union YYSTYPE;
@@ -685,12 +686,10 @@ o_var : SYMTOK                  { $$ = list(var_s, symhlpr($1, nil), nao);
                                   yybadtok(yychar, lit("variable spec")); }
       ;
 
-q_var : SYMTOK                  { $$ = list(var_s, symhlpr($1, nil), nao);
+q_var : '@' '{' n_expr n_exprs_opt '}'
+                                { $$ = list(var_s, $3, $4, nao);
                                   rl($$, num(parser->lineno)); }
-      | '{' n_expr n_exprs_opt '}'
-                                { $$ = list(var_s, $2, $3, nao);
-                                  rl($$, num(parser->lineno)); }
-      | SYMTOK error            { $$ = nil;
+      | '@' '{' error           { $$ = nil;
                                   yybadtok(yychar, lit("variable spec")); }
       ;
 
@@ -959,19 +958,7 @@ quasi_item : litchars           { $$ = lit_char_helper($1); }
            | q_var              { $$ = $1; }
            | METANUM            { $$ = cons(var_s, cons($1, nil));
                                   rl($$, num(parser->lineno)); }
-           | list               { $$ = rlcp(cons(expr_s, $1), $1); }
-           | '\'' n_expr        { $$ = rl(rlcp(cons(expr_s, list(quote_s, $2, nao)), $2),
-                                          num(parser->lineno));
-                                  rlcp_tree($$, $$); }
-           | '^' n_expr         { $$ = rl(rlcp(cons(expr_s, list(sys_qquote_s, $2, nao)), $2),
-                                          num(parser->lineno));
-                                  rlcp_tree($$, $$); }
-           | ',' n_expr         { $$ = rl(rlcp(cons(expr_s, list(sys_unquote_s, $2, nao)), $2),
-                                          num(parser->lineno));
-                                  rlcp_tree($$, $$); }
-           | SPLICE n_expr      { $$ = rl(rlcp(cons(expr_s, list(sys_splice_s, $2, nao)), $2),
-                                          num(parser->lineno));
-                                  rlcp_tree($$, $$); }
+           | '@' n_expr         { $$ = quasi_meta_helper($2); }
            ;
 
 litchars : LITCHAR              { $$ = rl(cons(chr($1), nil), num(parser->lineno)); }
@@ -1355,6 +1342,24 @@ static val check_for_include(val spec_rev)
     }
   }
   return spec_rev;
+}
+
+static val quasi_meta_helper(val obj)
+{
+  if (integerp(obj) || symbolp(obj))
+    goto var;
+
+  if (atom(obj) || length(obj) != two)
+    goto expr;
+
+  if (first(obj) == var_s && integerp(second(obj)))
+    goto var;
+
+var:
+  return rlcp_tree(cons(var_s, cons(obj, nil)), obj);
+
+expr:
+  return rlcp(cons(expr_s, obj), obj);
 }
 
 #ifndef YYEOF
