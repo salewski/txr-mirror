@@ -6,6 +6,9 @@
 	(grammar): Add a rule for a \@ escape in quasiliterals,
 	and quasi word list literals.
 
+	* txr.1: Document \@, and remove the lie that @@
+	encodes for a single @ in quasiliterals.
+
 2015-06-26  Kaz Kylheku  <kaz@kylheku.com>
 
 	Second round of quasiliteral-related fixes.
