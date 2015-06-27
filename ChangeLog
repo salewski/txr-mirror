@@ -1,3 +1,14 @@
+2015-06-27  Kaz Kylheku  <kaz@kylheku.com>
+
+	Fix TXR 97 regression in quasiliterals.
+
+	* eval.c (expand_quasi): When the modifiers argument of a var
+	item is expanded, the expansion incorrectly places it as the
+	fourth item rather than third. This is effectively a continuation
+	of the incomplete regression fix that was applied on 2014-08-29.
+	The breakage is that `@{(expr) modifier}` ignores modifier
+	whenever (expr) is an expression that undergoes expansion.
+
 2015-06-26  Kaz Kylheku  <kaz@kylheku.com>
 
 	Third round of quasiliteral-related fixes.

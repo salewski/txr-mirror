@@ -2371,7 +2371,7 @@ static val expand_quasi(val quasi_forms, val menv)
         val mods_ex = expand_forms(mods, menv);
 
         if (param_ex != param || mods_ex != mods)
-          form_ex = rlcp(list(sym, param_ex, nil, mods_ex, nao), form);
+          form_ex = rlcp(list(sym, param_ex, mods_ex, nao), form);
       }
     }
 
