@@ -142,6 +142,7 @@ static wchar_t char_esc(int letter)
   case '\'': return L'\'';
   case '`': return L'`';
   case '/': return L'/';
+  case '@': return L'@';
   case '\\': return L'\\';
   }
 
@@ -837,6 +838,11 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 }
 
 <STRLIT,QSILIT,WLIT,QWLIT>[\\][abtnvfre "`'\\ ] {
+  yylval->chr = char_esc(yytext[1]);
+  return LITCHAR;
+}
+
+<QSILIT,QWLIT>[\\]@ {
   yylval->chr = char_esc(yytext[1]);
   return LITCHAR;
 }
