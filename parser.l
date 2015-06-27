@@ -895,9 +895,14 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return ' ';
 }
 
-<QSILIT,QWLIT>@ {
+<QSILIT,QWLIT>@/([[({'^,@]|{TOK}) {
   yy_push_state(QSPECIAL, yyscanner);
   return yytext[0];
+}
+
+<QSILIT,QWLIT>@ {
+  yyerrprepf(yyg, lit("malformed @ expression in quasiliteral"), nao);
+  return ERRTOK;
 }
 
 <WLIT,QWLIT>{WS} {

@@ -1,5 +1,16 @@
 2015-06-26  Kaz Kylheku  <kaz@kylheku.com>
 
+	Second round of quasiliteral-related fixes.
+
+	* parser.l: Only shift to QSPECIAL state when @ is followed
+	by a trailing context consisting of certain characters.
+	Not every kind of Lisp object syntax can be introduced
+	with @ in a quasiliteral. Adding a rule to produce an
+	error when @ appears that is not followed by an allowed
+	character.
+
+2015-06-26  Kaz Kylheku  <kaz@kylheku.com>
+
 	First round of quasiliteral-related fixes.
 
 	* parser.l: Do not try to recognize floating-point literals
