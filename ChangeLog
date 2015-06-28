@@ -1,5 +1,15 @@
 2015-06-27  Kaz Kylheku  <kaz@kylheku.com>
 
+	Fix issues in configure found by ShellCheck.
+
+	* configure (have_timegm, tm_gmtoff, tm_tmzone): Unused
+	variables removed.
+	(SIZEOF_LONG_LONG_T): Reference to nonexistent variable fixed.
+	Also, fixed two instances of arithmetic expressions using
+	unnecessary $ prefixes on variables.
+
+2015-06-27  Kaz Kylheku  <kaz@kylheku.com>
+
 	Fix TXR 97 regression in quasiliterals.
 
 	* eval.c (expand_quasi): When the modifiers argument of a var

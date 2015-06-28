@@ -112,7 +112,6 @@ debug_support=y
 gen_gc=y
 have_unistd=
 have_sys_time=
-have_timegm=
 have_syslog=
 have_glob=
 have_windows_h=
@@ -1130,7 +1129,7 @@ char DUMMY;
   elif [ $SIZEOF_PTR -eq $SIZEOF_LONG ] ; then
     intptr="long"
     uintptr=y
-  elif [ $SIZEOF_PTR -eq $SIZEOF_LONG_LONG_T ] ; then
+  elif [ $SIZEOF_PTR -eq $SIZEOF_LONGLONG_T ] ; then
     intptr="longlong_t"
     uintptr=$ulonglong
   fi
@@ -1151,11 +1150,11 @@ intptr_max_expr="((((convert($intptr, 1) << $((SIZEOF_PTR * 8 - 2))) - 1) << 1) 
 printf "#define INT_PTR_MAX %s\n" "$intptr_max_expr" >> $config_h
 printf "#define INT_PTR_MIN (-INT_PTR_MAX)\n" >> $config_h
 
-if [ -n "$longlong" ] && [ $SIZEOF_LONGLONG_T -eq $(( 2 * $SIZEOF_PTR )) ] 
+if [ -n "$longlong" ] && [ $SIZEOF_LONGLONG_T -eq $(( 2 * SIZEOF_PTR )) ]
 then
   printf "#define HAVE_DOUBLE_INTPTR_T 1\n" >> $config_h
   printf "typedef longlong_t double_intptr_t;\n" >> $config_h
-elif [ -n "$superlong" ] && [ $SIZEOF_SUPERLONG_T -eq $(( 2 * $SIZEOF_PTR )) ]
+elif [ -n "$superlong" ] && [ $SIZEOF_SUPERLONG_T -eq $(( 2 * SIZEOF_PTR )) ]
 then
   printf "#define HAVE_DOUBLE_INTPTR_T 1\n" >> $config_h
   printf "typedef superlong_t double_intptr_t;\n" >> $config_h
@@ -1508,9 +1507,6 @@ fi
 
 printf "detecting timezone fields in struct tm ... "
 
-tm_gmtoff=
-tm_tmzone=
-
 for try_field in tm_gmtoff __tm_gmtoff ; do
   cat > conftest.c <<!
 #include <time.h>
@@ -1551,7 +1547,6 @@ int main(void)
 if conftest ; then
   printf "yes\n"
   printf "#define HAVE_TIMEGM 1\n" >> $config_h
-  have_timegm=y
 else
   printf "no\n"
 fi
