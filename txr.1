@@ -11253,11 +11253,11 @@ then the variable binding is favored.
 
 Macros do not participate in the special scope conflation, with one
 exception. What this means is that the space of symbol macros is not folded
-together with the space of regular macros. An argument of
+together with the space of operator macros. An argument of
 .code dwim
 that is a symbol might be
 symbol macro, variable or function, but it cannot be interpreted as the name of
-a regular macro.
+a operator macro.
 
 The exception is this: from the perspective of a
 .code dwim
