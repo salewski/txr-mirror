@@ -1,3 +1,14 @@
+2015-07-02  Kaz Kylheku  <kaz@kylheku.com>
+
+	Handle escapes accurately in Vim syntax highlighting.
+
+	* genvim.txr (txr_badesc, txr_stresc, txr_numesc, txr_regesc): New
+	match categories.
+	(txr_string, txr_quasilit, txr_regex, txl_regex): No longer use skip=
+	argument, but rather contain escape categories.
+	All escapes are colored as Special rather than String, and
+	unknown or malformed escapes are colored as errors.
+
 2015-07-01  Kaz Kylheku  <kaz@kylheku.com>
 
 	* genman.txr: Take advantage of \@ escape in quasilit.
