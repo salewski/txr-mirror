@@ -112,9 +112,10 @@ This document was created by
                                                    @1)) @1)))
                              (regsub #/[\(\[][^ )&]+/
                                      (do let* ((tok [@1 1..:])
+                                               (bkt [@1 0])
                                                (tag [txlhash tok]))
                                        (if tag
-                                         `(<A HREF="#@tag">@tok</A>`
+                                         `@bkt<A HREF="#@tag">@tok</A>`
                                          @1)) out0)))
                         (t @1))
                       BODY
