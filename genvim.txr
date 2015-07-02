@@ -88,6 +88,7 @@ syn match txr_hashbang "^#!.*"
 @  (end)
 @  (output :continue out)
 syn match txr_metanum "@@[0-9]\+"
+syn match txr_escat "\\@@" contained
 syn match txr_nested_error "[^\t `]\+" contained
 
 syn match txr_chr "#\\x[A-Fa-f0-9]\+"@(if txr-p " contained")
@@ -131,7 +132,7 @@ syn region txr_bracket @(if txr-p "contained ")matchgroup=Delimiter start="\[" m
 syn region txr_mlist @(if txr-p "contained ")matchgroup=Delimiter start="@@[ \t]*(" matchgroup=Delimiter end=")" contains=txl_keyword,txr_string,txl_regex,txr_num,txr_badnum,txl_ident,txr_metanum,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_ncomment,txr_nested_error
 syn region txr_mbracket matchgroup=Delimiter start="@@[ \t]*\[" matchgroup=Delimiter end="\]" contains=txl_keyword,txr_string,txl_regex,txr_num,txr_badnum,txl_ident,txr_metanum,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_ncomment,txr_nested_error
 syn region txr_string @(if txr-p "contained ")start=+#\?\*\?"+ skip=+\\\\\|\\"\|\\\n+ end=+"\|\n+
-syn region txr_quasilit @(if txr-p "contained ")start=+#\?\*\?`+ skip=+\\\\\|\\`\|\\\n+ end=+`\|\n+ contains=txr_splicevar,txr_metanum,txr_bracevar,txr_mlist,txr_mbracket
+syn region txr_quasilit @(if txr-p "contained ")start=+#\?\*\?`+ skip=+\\\\\|\\`\|\\\n+ end=+`\|\n+ contains=txr_splicevar,txr_metanum,txr_bracevar,txr_mlist,txr_mbracket,txr_escat
 syn region txr_regex @(if txr-p "contained ")start="/" skip="\\\\\|\\/\|\\\n" end="/\|\n"
 syn region txl_regex @(if txr-p "contained ")start="#/" skip="\\\\\|\\/\|\\\n" end="/\|\n"
 
@@ -154,6 +155,7 @@ hi def link txr_regdir String
 hi def link txr_variable Identifier
 hi def link txr_splicevar Identifier
 hi def link txr_metanum Identifier
+hi def link txr_escat String
 hi def link txr_ident Identifier
 hi def link txl_ident Identifier
 hi def link txr_num Number

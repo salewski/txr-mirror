@@ -1,5 +1,14 @@
 2015-07-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	* genman.txr: Take advantage of \@ escape in quasilit.
+
+	* genvim.txr (txr_escat): New match category containing \@.
+	Colorized a String.
+	(txr_quasilit): Contains txr_escat. Thus, \@ looks like any
+	other escape inside a quasilit.
+
+2015-07-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	* genman.txr: Bugfix: reproduce the correct opening bracket
 	before a function link.
 
