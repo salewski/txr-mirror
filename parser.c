@@ -252,9 +252,18 @@ val lisp_parse(val source_in, val error_stream, val error_return_val, val name_i
   return pi->syntax_tree;
 }
 
-val read_eval_stream(val stream, val error_stream)
+val read_eval_stream(val stream, val error_stream, val hash_bang_support)
 {
   val error_val = gensym(nil);
+
+  if (hash_bang_support) {
+    val firstline = get_line(stream);
+
+    if (!match_str(firstline, lit("#!"), nil)) {
+      val string_stream = make_string_byte_input_stream(firstline);
+      stream = make_catenated_stream(list(string_stream, stream, nao));
+    }
+  }
 
   for (;;) {
     val form = lisp_parse(stream, error_stream, error_val, nil);

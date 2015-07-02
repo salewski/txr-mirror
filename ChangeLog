@@ -1,5 +1,23 @@
 2015-07-02  Kaz Kylheku  <kaz@kylheku.com>
 
+	Hash-bang support for .tl files.
+
+	* parser.c (read_eval_stream): New boolean argument
+	to request hash bang support.
+
+	* parser.h (read_eval_stream): Declaration updated.
+
+	* eval.c (sys_load): Pass new thid argument to read_eval_stream,
+	to decline hash bang support.
+
+	* match.c (v_load): Likewise.
+
+	* txr.c (txr_main): Request hash bang support from
+	read_eval_stream. Thus files referenced from the txr
+	command line can have a #! line, which is ignored.
+
+2015-07-02  Kaz Kylheku  <kaz@kylheku.com>
+
 	Handle escapes accurately in Vim syntax highlighting.
 
 	* genvim.txr (txr_badesc, txr_stresc, txr_numesc, txr_regesc): New

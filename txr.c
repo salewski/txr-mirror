@@ -689,5 +689,5 @@ int txr_main(int argc, char **argv)
     }
   }
 
-  return read_eval_stream(parse_stream, std_error) ? 0 : EXIT_FAILURE;
+  return read_eval_stream(parse_stream, std_error, t) ? 0 : EXIT_FAILURE;
 }
