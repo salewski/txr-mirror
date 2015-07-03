@@ -1,3 +1,12 @@
+2015-07-03  Kaz Kylheku  <kaz@kylheku.com>
+
+	Allow op arguments like @1 to be places.
+
+	* share/txr/stdlib/place.tl: Introducing new defplace
+	for (sys:var ...) which is treated as if it were a symbol,
+	in anticipation of the op/do macro placing that syntax
+	with a symbol.
+
 2015-07-02  Kaz Kylheku  <kaz@kylheku.com>
 
 	Support trailing semicolon after hex/octal characters.

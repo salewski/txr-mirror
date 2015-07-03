@@ -291,6 +291,12 @@
                    (tree-bind ,args (cdr ,place)
                       ,delete-body)))))))))
 
+(defplace (sys:var arg) body
+  (getter setter
+    ^(macrolet ((,getter () ^(sys:var ,',arg))
+                (,setter (val) ^(sys:setq ,'(sys:var ,arg) ,val)))
+       ,body)))
+
 (defplace (car cell) body
   (getter setter
     (with-gensyms (cell-sym)
