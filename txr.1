@@ -1155,7 +1155,9 @@ A
 immediately followed by a sequence of hex digits is interpreted as a hexadecimal
 numeric character code. For instance
 .code @\ex41
-is the ASCII character A.
+is the ASCII character A.  If a semicolon character immediately follows the
+hex digits, it is consumed, and characters which follow are not considered
+part of the hex escape even if they are hex digits.
 .meIP @\e < octal-digits
 
 A
@@ -1165,6 +1167,9 @@ as an octal character code. For instance
 .code @\e010
 is character 8, same as
 .codn @\eb .
+If a semicolon character immediately follows the octal digits, it is consumed,
+and subsequent characters are not treated as part of the octal escape,
+even if they are octal digits.
 .PP
 
 Note that if a newline is embedded into a query line with
@@ -30635,6 +30640,16 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code -C 103
 selects the behaviors described below for version 105, but not those for 102.
+
+.IP 109
+The optional trailing semicolon on hex and octal codes in the \*(TX
+pattern language was introduced in 110. The feature is disabled
+with 109 or lower compatibility, so that
+.code @\ex21;a
+encodes
+.code !;a
+rather than the current behavior of encoding
+.codn !a .
 
 .IP 107
 Up through \*(TX 107, by accident, there was a function called

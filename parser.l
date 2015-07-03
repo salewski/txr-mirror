@@ -166,7 +166,7 @@ static wchar_t num_esc(scanner_t *scn, char *num)
 
 %}
 
-%option stack nounput noinput reentrant bison-bridge extra-type="parser_t *"
+%option stack noinput reentrant bison-bridge extra-type="parser_t *"
 
 SYM     [a-zA-Z0-9_]+
 SGN     [+\-]
@@ -685,11 +685,18 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return TEXT;
 }
 
-<SPECIAL>[\\](x{HEX}+|{OCT}+) {
+<SPECIAL>[\\](x{HEX}+|{OCT}+);? {
   wchar_t lexeme[2];
   lexeme[0] = num_esc(yyg, yytext + 1);
   lexeme[1] = 0;
   yylval->lexeme = chk_strdup(lexeme);
+
+  {
+    char lastchar = yytext[yyleng-1];
+    if (lastchar == ';' && opt_compat && opt_compat <= 109)
+      unput(lastchar);
+  }
+
   yy_pop_state(yyscanner);
   return TEXT;
 }

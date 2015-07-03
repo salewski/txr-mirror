@@ -78,8 +78,9 @@ syn match txr_atat "@@[ \t]*@@"
 syn match txr_comment "@@[ \t]*[#;].*"
 syn match txr_contin "@@[ \t]*\\$"
 syn match txr_char "@@[ \t]*\\."
-syn match txr_char "@@[ \t]*\\x[0-9A-Fa-f]\+"
-syn match txr_char "@@[ \t]*\\[0-9]\+"
+syn match txr_error "@@[ \t]*\\[xo]"
+syn match txr_char "@@[ \t]*\\x[0-9A-Fa-f]\+;\?"
+syn match txr_char "@@[ \t]*\\[0-7]\+;\?"
 syn match txr_variable "@@[ \t]*[*]\?[ \t]*[A-Za-z_][A-Za-z0-9_]*"
 syn match txr_splicevar "@@[ \t,*]*[A-Za-z_][A-Za-z0-9_]*"
 syn match txr_regdir "@@[ \t]*/\(\\/\|[^/]\|\\\n\)*/"
@@ -97,7 +98,7 @@ syn match txr_regesc "\\[abtnvfre\\ \n/sSdDwW()\|.*?+~&%\[\]\-]" contained
 syn match txr_nested_error "[^\t `]\+" contained
 
 syn match txr_chr "#\\x[A-Fa-f0-9]\+"@(if txr-p " contained")
-syn match txr_chr "#\\o[0-9]\+"@(if txr-p " contained")
+syn match txr_chr "#\\o[0-7]\+"@(if txr-p " contained")
 syn match txr_chr "#\\[^ \t\nA-Za-z0-9_]"@(if txr-p " contained")
 syn match txr_chr "#\\[A-Za-z0-9_]\+"@(if txr-p " contained")
 syn match txr_ncomment ";.*"@(if txr-p " contained")
