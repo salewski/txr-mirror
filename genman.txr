@@ -47,7 +47,7 @@ Content-type: text/html
 @    (end)
 @  (and)
 <H2>@nil TXR LISP</H2>
-@    (set lookup @[orf txlhash txrhash])
+@    (set lookup txrhash)
 @  (and)
 <B>TXR</B> - text processing language (version @ver)
 @    (set VERSION ver)
@@ -79,20 +79,6 @@ Content-type: text/html
 @(until)
 This document was created by
 @(end)
-@(set BODY @(mapcar (do if (search-regex @1 #/<H[1-9]>/)
-                      @1
-                      (regsub #/<TT>.%<\/TT>/
-                              (do let ((tok [@1 4 -5]) tag)
-                                (if (match-str tok "@(")
-                                  (let ((sym [tok 2 -1]))
-                                    (set tag [txrhash sym]))
-                                  (set tag [@@2 tok]))
-                                (if tag
-                                  `<A HREF="#@tag">@1</A>`
-                                  @1))
-                              @1))
-                    BODY
-                    LOOKUP))
 @(set BODY @(let ((inside-tt nil)
                   (inside-syntax nil))
               (mapcar (do cond
@@ -103,21 +89,33 @@ This document was created by
                         ((equal @1 "<DT>Syntax:<DD>") (set inside-syntax t) @1)
                         ((or (and inside-tt (not inside-syntax))
                              (match-regex @1 #/<DT><TT>/))
-                          (let* ((out0 (regsub #/@\([a-z0-9\-]+/
-                                               (do let* ((tok [@1 2..:])
-                                                         (tag (or [txlhash tok]
-                                                                  [@@2 tok])))
-                                                 (if tag
-                                                   `\@(<A HREF="#@tag">@tok</A>`
-                                                   @1)) @1)))
-                             (regsub #/[\(\[][^ )&]+/
-                                     (do let* ((tok [@1 1..:])
-                                               (bkt [@1 0])
-                                               (tag [txlhash tok]))
-                                       (if tag
-                                         `@bkt<A HREF="#@tag">@tok</A>`
-                                         @1)) out0)))
-                        (t @1))
+                          (regsub #/@?[\(\[][^ )&]+/
+                                  (do let* ((at (if (eql [@1 0] #\@)
+                                                 (pop @1)))
+                                            (tok [@1 1..:])
+                                            (bkt [@1 0])
+                                            (tag [(if at txrhash txlhash)
+                                                  tok]))
+                                    (if tag
+                                      `@at@bkt<A HREF="#@tag">@tok</A>`
+                                      `@at@1`)) @1))
+                        ((search-regex @1 #/<H[1-9]>/) @1)
+                        (t (regsub #/<TT>.%<\/TT>/
+                             (do let* ((tok [@1 4 -5])
+                                       (tend (break-str tok ") "))
+                                       pfx sym sfx tag)
+                               (cond
+                                 ((match-str tok "@(")
+                                  (set pfx "@("
+                                       sym [tok 2 tend]
+                                       sfx [tok tend .. :]
+                                       tag [txrhash sym]))
+                                 (t (set tag [@@2 tok]
+                                         sym tok)))
+                               (if tag
+                                 `<TT>@pfx<A HREF="#@tag">@sym</A>@sfx</TT>`
+                                 @1))
+                             @1)))
                       BODY
                       LOOKUP)))
 @(output)

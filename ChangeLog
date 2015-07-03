@@ -1,5 +1,9 @@
 2015-07-03  Kaz Kylheku  <kaz@kylheku.com>
 
+	* genman.txr: Simplify double plass over BODY into single pass.
+
+2015-07-03  Kaz Kylheku  <kaz@kylheku.com>
+
 	Allow op arguments like @1 to be places.
 
 	* share/txr/stdlib/place.tl: Introducing new defplace
