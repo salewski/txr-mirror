@@ -1,3 +1,14 @@
+2015-07-04  Kaz Kylheku  <kaz@kylheku.com>
+
+	Reduce regex duplication in genvim.txr.
+
+	* genvim.txr (bs, hex, at, alpha, alnum, dig, oct, chesc, glyph):
+	New variables.
+	*(txr_error, txr_atat, txr_comment, txr_contin, txr_char,
+	txr_regdir, txr_variable, txr_splicevar, txr_stresc, txr_numesc,
+	txr_regesc, txr_chr, txr_num, txr_badnum,txr_ident,
+	txr_braced_ident): Use regex definitions.
+
 2015-07-03  Kaz Kylheku  <kaz@kylheku.com>
 
 	Syntax highlighting fixes: characters, variables, identifers.
