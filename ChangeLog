@@ -1,5 +1,14 @@
 2015-07-03  Kaz Kylheku  <kaz@kylheku.com>
 
+	Syntax highlighting fixes: characters, variables, identifers.
+
+	* genvim.txr (txr_variable, txr_splicevar, txr_bracevar): Weren't being
+	generated into tl.vim. Moved to a common section.
+	(txr_nested_error): Relocate above other matches.
+	(txr_ident): Fixed not to match tokens starting with #.
+
+2015-07-03  Kaz Kylheku  <kaz@kylheku.com>
+
 	* genman.txr: Simplify double plass over BODY into single pass.
 
 2015-07-03  Kaz Kylheku  <kaz@kylheku.com>
