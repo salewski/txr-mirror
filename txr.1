@@ -24228,6 +24228,9 @@ The
 function removes the error situation from a stream. On some streams, it does
 nothing. If an error has occurred on a stream, this function should be called
 prior to re-trying any I/O or positioning operations.
+The return value is the previous error code, or
+.code nil
+if there was no error, or the operation is not supported on the stream.
 
 .coNP Functions @, get-line @ get-char and @ get-byte
 .synb
@@ -24452,7 +24455,8 @@ causes all accumulated data inside
 .meta stream
 to be passed
 to the operating system. If called on streams for which this function is not
-meaningful, it does nothing.
+meaningful, it does nothing, and returns
+.codn nil .
 
 .coNP Function @ seek-stream
 .synb

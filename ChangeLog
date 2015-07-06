@@ -1,5 +1,18 @@
 2015-07-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	Clarify clear-error and flush return value.
+
+	* stream.c (stdio_clear_error): Return the prior value of h->err.
+	Do not inspect feof(h->f) or ferror(h->f); just clear the error
+	status of the stream.
+	(stdio_close): Set h->err from errno if fclose failed.
+	(dir_clear_error): Return prior value of h->err.
+
+	* txr.1: Document return value convetion for clear-error,
+	and flush-stream.
+
+2015-07-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	Tightening behavior for unimplemented stream ops.
 
 	In many cases, if a stream operation is not applicable to a stream, it

@@ -486,18 +486,10 @@ static val stdio_get_error_str(val stream)
 static val stdio_clear_error(val stream)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
-  val ret = nil;
-
-  if (h->err) {
-    h->err = nil;
-    ret = t;
-  }
-
-  if (h->f != 0 && (feof(h->f) || ferror(h->f))) {
+  val ret = h->err;
+  if (h->f != 0)
     clearerr(h->f);
-    ret = t;
-  }
-
+  h->err = nil;
   return ret;
 }
 
@@ -614,6 +606,7 @@ static val stdio_close(val stream, val throw_on_error)
     int result = fclose(h->f);
     h->f = 0;
     if (result == EOF && throw_on_error) {
+      h->err = num(errno);
       uw_throwf(file_error_s, lit("error closing ~a: ~a/~s"),
                 stream, num(errno), string_utf8(strerror(errno)), nao);
     }
@@ -1372,11 +1365,9 @@ static val dir_get_error_str(val stream)
 static val dir_clear_error(val stream)
 {
   struct dir_handle *h = coerce(struct dir_handle *, stream->co.handle);
-  if (h->err) {
-    h->err = nil;
-    return t;
-  }
-  return nil;
+  val ret = h->err;
+  h->err = nil;
+  return ret;
 }
 
 static struct strm_ops dir_ops =
