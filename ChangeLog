@@ -1,3 +1,36 @@
+2015-07-06  Kaz Kylheku  <kaz@kylheku.com>
+
+	Tightening behavior for unimplemented stream ops.
+
+	In many cases, if a stream operation is not applicable to a stream, it
+	is not appropriate to just do nothing and return nil. An error
+	must be thrown.
+
+	* stream.c (unimpl, unimpl_put_string, unimpl_put_char,
+	unimpl_put_byte, unimpl_get_line, unimpl_get_char, unimpl_get_byte,
+	unimpl_unget_char, unimpl_unget_byte, unimpl_seek, null_put_string,
+	null_put_char, null_put_byte, null_get_line, null_get_char,
+	null_get_byte, null_close, null_flush, null_seek, null_set_prop,
+	null_get_error, null_get_error_str, null_clear_error): New
+	static functions.
+	(fill_stream_ops): New function.
+	(null_ops): Use null_put_string, etc., instead of null pointers.
+	(stdio_clear_error, dir_clear_error, cat_clear_error): Return value now
+	indicating whether an error was cleared.
+	(stream_set_prop, stream_get_prop, real_time_stream_p, close_stream,
+	get_error, get_error_str, clear_error, get_line, get_char, get_byte,
+	unget_char, unget_byte, put_string, put_char, put_byte,
+	flush_stream): Do not test whether a function in the ops table
+	is defined; just call it, and return its value.
+	(stream_init): Call fill_stream_ops on all stream operation
+	structures so any null pointers are defaulted to appropriate
+	functions.
+
+	* stream.h (struct strm_ops): clear_error gets return value.
+	(fill_stream_ops): Declared.
+
+	* syslog.c (syslog_init): Call fill_stream_ops on syslog_strm_ops.
+
 2015-07-04  Kaz Kylheku  <kaz@kylheku.com>
 
 	Reduce regex duplication in genvim.txr.

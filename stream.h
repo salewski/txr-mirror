@@ -47,7 +47,7 @@ struct strm_ops {
   val (*set_prop)(val, val ind, val);
   val (*get_error)(val);
   val (*get_error_str)(val);
-  void (*clear_error)(val);
+  val (*clear_error)(val);
 };
 
 #define strm_ops_init(cobj_init_macro, put_string, put_char, put_byte,      \
@@ -77,6 +77,7 @@ extern val format_s;
 
 extern val stdin_s, stdout_s, stddebug_s, stderr_s, stdnull_s;
 
+void fill_stream_ops(struct strm_ops *ops);
 val make_null_stream(void);
 val make_stdio_stream(FILE *, val descr);
 val make_tail_stream(FILE *, val descr);

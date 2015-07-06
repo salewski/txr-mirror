@@ -77,11 +77,165 @@ static void null_stream_print(val stream, val out)
   format(out, lit("#<~s null>"), stream->co.cls, nao);
 }
 
+static noreturn void unimpl(val stream, val op)
+{
+  uw_throwf(file_error_s, lit("~a: not supported by stream ~s\n"),
+            op, stream, nao);
+  abort();
+}
+
+static noreturn val unimpl_put_string(val stream, val str)
+{
+  unimpl(stream, lit("put-string"));
+}
+
+static noreturn val unimpl_put_char(val stream, val ch)
+{
+  unimpl(stream, lit("put-char"));
+}
+
+static noreturn val unimpl_put_byte(val stream, int byte)
+{
+  unimpl(stream, lit("put-byte"));
+}
+
+static noreturn val unimpl_get_line(val stream)
+{
+  unimpl(stream, lit("get-line"));
+}
+
+static noreturn val unimpl_get_char(val stream)
+{
+  unimpl(stream, lit("get-char"));
+}
+
+static noreturn val unimpl_get_byte(val stream)
+{
+  unimpl(stream, lit("get-byte"));
+}
+
+static noreturn val unimpl_unget_char(val stream, val ch)
+{
+  unimpl(stream, lit("unget-char"));
+}
+
+static noreturn val unimpl_unget_byte(val stream, int byte)
+{
+  unimpl(stream, lit("unget-byte"));
+}
+
+static noreturn val unimpl_seek(val stream, cnum off, enum strm_whence whence)
+{
+  unimpl(stream, lit("seek"));
+}
+
+static val null_put_string(val stream, val str)
+{
+  return nil;
+}
+
+static val null_put_char(val stream, val ch)
+{
+  return nil;
+}
+
+static val null_put_byte(val stream, int byte)
+{
+  return nil;
+}
+
+static val null_get_line(val stream)
+{
+  return nil;
+}
+
+static val null_get_char(val stream)
+{
+  return nil;
+}
+
+static val null_get_byte(val stream)
+{
+  return nil;
+}
+
+static val null_close(val stream, val throw_on_error)
+{
+  return nil;
+}
+
+static val null_flush(val stream)
+{
+  return nil;
+}
+
+static val null_seek(val stream, cnum off, enum strm_whence whence)
+{
+  return nil;
+}
+
+
 static val null_get_prop(val stream, val ind)
 {
   if (ind == name_k)
     return lit("null-stream");
   return nil;
+}
+
+static val null_set_prop(val stream, val ind, val value)
+{
+  return nil;
+}
+
+static val null_get_error(val stream)
+{
+  return nil;
+}
+
+static val null_get_error_str(val stream)
+{
+  return nil;
+}
+
+static val null_clear_error(val stream)
+{
+  return nil;
+}
+
+void fill_stream_ops(struct strm_ops *ops)
+{
+  if (!ops->put_string)
+    ops->put_string = unimpl_put_string;
+  if (!ops->put_char)
+    ops->put_char = unimpl_put_char;
+  if (!ops->put_byte)
+    ops->put_byte = unimpl_put_byte;
+  if (!ops->get_line)
+    ops->get_line = unimpl_get_line;
+  if (!ops->get_char)
+    ops->get_char = unimpl_get_char;
+  if (!ops->get_byte)
+    ops->get_byte = unimpl_get_byte;
+  if (!ops->unget_char)
+    ops->unget_char = unimpl_unget_char;
+  if (!ops->unget_byte)
+    ops->unget_byte = unimpl_unget_byte;
+  if (!ops->close)
+    ops->close = null_close;
+  if (!ops->flush)
+    ops->flush = null_flush;
+  if (!ops->seek)
+    ops->seek = unimpl_seek;
+  if (!ops->get_prop)
+    ops->get_prop = null_get_prop;
+  if (!ops->set_prop)
+    ops->set_prop = null_set_prop;
+  if (!ops->get_error)
+    ops->get_error = null_get_error;
+  if (!ops->get_error_str)
+    ops->get_error_str = null_get_error_str;
+  if (!ops->clear_error)
+    ops->clear_error = null_clear_error;
 }
 
 static struct strm_ops null_ops =
@@ -90,8 +244,12 @@ static struct strm_ops null_ops =
                               cobj_destroy_stub_op,
                               cobj_mark_op,
                               cobj_hash_op),
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                null_get_prop, 0, 0, 0, 0);
+                null_put_string, null_put_char, null_put_byte, null_get_line,
+                null_get_char, null_get_byte,
+                unimpl_unget_char, unimpl_unget_byte,
+                null_close, null_flush, null_seek, null_get_prop,
+                null_set_prop, null_get_error, null_get_error_str,
+                null_clear_error);
 
 val make_null_stream(void)
 {
@@ -325,12 +483,22 @@ static val stdio_get_error_str(val stream)
   return errno_to_string(h->err);
 }
 
-static void stdio_clear_error(val stream)
+static val stdio_clear_error(val stream)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
-  if (h->f != 0)
+  val ret = nil;
+
+  if (h->err) {
+    h->err = nil;
+    ret = t;
+  }
+
+  if (h->f != 0 && (feof(h->f) || ferror(h->f))) {
     clearerr(h->f);
-  h->err = nil;
+    ret = t;
+  }
+
+  return ret;
 }
 
 static wchar_t *snarf_line(struct stdio_handle *h)
@@ -1201,10 +1369,14 @@ static val dir_get_error_str(val stream)
   return errno_to_string(h->err);
 }
 
-static void dir_clear_error(val stream)
+static val dir_clear_error(val stream)
 {
   struct dir_handle *h = coerce(struct dir_handle *, stream->co.handle);
-  h->err = nil;
+  if (h->err) {
+    h->err = nil;
+    return t;
+  }
+  return nil;
 }
 
 static struct strm_ops dir_ops =
@@ -1473,7 +1645,7 @@ val stream_set_prop(val stream, val ind, val prop)
 
   {
     struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
-    return ops->set_prop ? ops->set_prop(stream, ind, prop) : nil;
+    return ops->set_prop(stream, ind, prop);
   }
 }
 
@@ -1485,7 +1657,7 @@ val stream_get_prop(val stream, val ind)
 
   {
     struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
-    return ops->get_prop ? ops->get_prop(stream, ind) : nil;
+    return ops->get_prop(stream, ind);
   }
 }
 
@@ -1493,7 +1665,7 @@ val real_time_stream_p(val obj)
 {
   if (streamp(obj)) {
     struct strm_ops *ops = coerce(struct strm_ops *, obj->co.ops);
-    return ops->get_prop ? ops->get_prop(obj, real_time_k) : nil;
+    return ops->get_prop(obj, real_time_k);
   }
 
   return nil;
@@ -1507,26 +1679,26 @@ val close_stream(val stream, val throw_on_error)
 
   {
     struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
-    return ops->close ? ops->close(stream, throw_on_error) : nil;
+    return ops->close(stream, throw_on_error);
   }
 }
 
 val get_error(val stream)
 {
   struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
-  return ops->get_error ? ops->get_error(stream) : nil;
+  return ops->get_error(stream);
 }
 
 val get_error_str(val stream)
 {
   struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
-  return ops->get_error_str ? ops->get_error_str(stream) : lit("no error");
+  return ops->get_error_str(stream);
 }
 
 val clear_error(val stream)
 {
   struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
-  return ops->clear_error ? (ops->clear_error(stream), t) : nil;
+  return ops->clear_error(stream);
 }
 
 val get_line(val stream)
@@ -1539,7 +1711,7 @@ val get_line(val stream)
 
   {
     struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
-    return ops->get_line ? ops->get_line(stream) : nil;
+    return ops->get_line(stream);
   }
 }
 
@@ -1553,7 +1725,7 @@ val get_char(val stream)
 
   {
     struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
-    return ops->get_char ? ops->get_char(stream) : nil;
+    return ops->get_char(stream);
   }
 }
 
@@ -1567,7 +1739,7 @@ val get_byte(val stream)
 
   {
     struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
-    return ops->get_byte ? ops->get_byte(stream) : nil;
+    return ops->get_byte(stream);
   }
 }
 
@@ -1581,7 +1753,7 @@ val unget_char(val ch, val stream)
 
   {
     struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
-    return ops->unget_char ? ops->unget_char(stream, ch) : nil;
+    return ops->unget_char(stream, ch);
   }
 }
 
@@ -1601,7 +1773,7 @@ val unget_byte(val byte, val stream)
 
   {
     struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
-    return ops->unget_byte ? ops->unget_byte(stream, b) : nil;
+    return ops->unget_byte(stream, b);
   }
 }
 
@@ -2160,7 +2332,7 @@ val put_string(val string, val stream)
 
   {
     struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
-    return ops->put_string ? ops->put_string(stream, string) : nil;
+    return ops->put_string(stream, string);
   }
 }
 
@@ -2174,7 +2346,7 @@ val put_char(val ch, val stream)
 
   {
     struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
-    return ops->put_char ? ops->put_char(stream, ch) : nil;
+    return ops->put_char(stream, ch);
   }
 }
 
@@ -2194,7 +2366,7 @@ val put_byte(val byte, val stream)
 
   {
     struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
-    return ops->put_byte ? ops->put_byte(stream, b) : nil;
+    return ops->put_byte(stream, b);
   }
 }
 
@@ -2229,7 +2401,7 @@ val flush_stream(val stream)
 
   {
     struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
-    return ops->flush ? ops->flush(stream) : t;
+    return ops->flush(stream);
   }
 }
 
@@ -2757,10 +2929,10 @@ static val cat_get_error_str(val stream)
   return if3(streams, get_error_str(first(streams)), lit("eof"));
 }
 
-static void cat_clear_error(val stream)
+static val cat_clear_error(val stream)
 {
   val streams = coerce(val, stream->co.handle);
-  if2(streams, clear_error(first(streams)));
+  return if2(streams, clear_error(first(streams)));
 }
 
 static struct strm_ops cat_stream_ops =
@@ -2961,4 +3133,15 @@ void stream_init(void)
   reg_fun(intern(lit("open-files"), user_package), func_n2o(open_files, 1));
   reg_fun(intern(lit("open-files*"), user_package), func_n2o(open_files_star, 1));
   reg_fun(intern(lit("abs-path-p"), user_package), func_n1(abs_path_p));
+
+  fill_stream_ops(&null_ops);
+  fill_stream_ops(&stdio_ops);
+  fill_stream_ops(&tail_ops);
+  fill_stream_ops(&pipe_ops);
+  fill_stream_ops(&string_in_ops);
+  fill_stream_ops(&byte_in_ops);
+  fill_stream_ops(&string_out_ops);
+  fill_stream_ops(&strlist_out_ops);
+  fill_stream_ops(&dir_ops);
+  fill_stream_ops(&cat_stream_ops);
 }

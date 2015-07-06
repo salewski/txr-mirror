@@ -45,6 +45,8 @@
 
 val prio_k;
 
+static struct strm_ops syslog_strm_ops;
+
 void syslog_init(void)
 {
   reg_var(intern(lit("log-pid"), user_package), num_fast(LOG_PID));
@@ -77,6 +79,8 @@ void syslog_init(void)
   prio_k = intern(lit("prio"), keyword_package);
 
   reg_var(intern(lit("*stdlog*"), user_package), make_syslog_stream(num_fast(LOG_INFO)));
+
+  fill_stream_ops(&syslog_strm_ops);
 }
 
 val openlog_wrap(val wident, val optmask, val facility)
