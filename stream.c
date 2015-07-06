@@ -276,9 +276,10 @@ static void stdio_stream_print(val stream, val out)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
   if (h->pid)
-    format(out, lit("#<~s ~s>"), stream->co.cls, h->descr, nao);
+    format(out, lit("#<~s ~s ~s>"), stream->co.cls, h->descr,
+           num(h->pid), nao);
   else
-    format(out, lit("#<~s ~s ~s>"), stream->co.cls, h->descr, h->pid, nao);
+    format(out, lit("#<~s ~s>"), stream->co.cls, h->descr, nao);
 }
 
 static void stdio_stream_destroy(val stream)

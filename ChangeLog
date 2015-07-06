@@ -1,5 +1,13 @@
 2015-07-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	Bugfix in printed rep of stdio stream.
+
+	* stream.c (stdio_stream_print): Wrong way test on h->pid;
+	if it is nonzero it must be printed. Was printed wrong:
+	argument of integer type passed to ~s which expects a val.
+
+2015-07-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	Clarify clear-error and flush return value.
 
 	* stream.c (stdio_clear_error): Return the prior value of h->err.
