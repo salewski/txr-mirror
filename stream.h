@@ -32,6 +32,7 @@ enum strm_whence {
 
 struct strm_ops {
   struct cobj_ops cobj_ops;
+  const wchli_t *name;
   val (*put_string)(val, val);
   val (*put_char)(val, val);
   val (*put_byte)(val, int);
@@ -50,15 +51,15 @@ struct strm_ops {
   val (*clear_error)(val);
 };
 
-#define strm_ops_init(cobj_init_macro, put_string, put_char, put_byte,      \
-                      get_line, get_char, get_byte, unget_char, unget_byte, \
-                      close, flush, seek, get_prop, set_prop,               \
-                      get_error, get_error_str, clear_error)                \
-{                                                                           \
-    cobj_init_macro, put_string, put_char, put_byte, get_line,              \
-    get_char, get_byte, unget_char, unget_byte,                             \
-    close, flush, seek, get_prop, set_prop,                                 \
-    get_error, get_error_str, clear_error                                   \
+#define strm_ops_init(cobj_init_macro, name, put_string, put_char, put_byte, \
+                      get_line, get_char, get_byte, unget_char, unget_byte,  \
+                      close, flush, seek, get_prop, set_prop,                \
+                      get_error, get_error_str, clear_error)                 \
+{                                                                            \
+    cobj_init_macro, name, put_string, put_char, put_byte, get_line,         \
+    get_char, get_byte, unget_char, unget_byte,                              \
+    close, flush, seek, get_prop, set_prop,                                  \
+    get_error, get_error_str, clear_error                                    \
 }
 
 #define std_input (deref(lookup_var_l(nil, stdin_s)))
@@ -78,6 +79,7 @@ extern val format_s;
 extern val stdin_s, stdout_s, stddebug_s, stderr_s, stdnull_s;
 
 void fill_stream_ops(struct strm_ops *ops);
+void stream_print_op(val stream, val out);
 val make_null_stream(void);
 val make_stdio_stream(FILE *, val descr);
 val make_tail_stream(FILE *, val descr);

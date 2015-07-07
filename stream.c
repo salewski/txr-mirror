@@ -72,9 +72,10 @@ static void common_destroy(val obj)
   (void) close_stream(obj, nil);
 }
 
-static void null_stream_print(val stream, val out)
+void stream_print_op(val stream, val out)
 {
-  format(out, lit("#<~s null>"), stream->co.cls, nao);
+  val name = stream_get_prop(stream, name_k);
+  format(out, lit("#<~a ~p>"), name, stream, nao);
 }
 
 static noreturn void unimpl(val stream, val op)
@@ -174,11 +175,13 @@ static val null_seek(val stream, cnum off, enum strm_whence whence)
   return nil;
 }
 
-
 static val null_get_prop(val stream, val ind)
 {
-  if (ind == name_k)
-    return lit("null-stream");
+  if (ind == name_k) {
+    struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
+    return static_str(ops->name);
+  }
+
   return nil;
 }
 
@@ -240,10 +243,11 @@ void fill_stream_ops(struct strm_ops *ops)
 
 static struct strm_ops null_ops =
   strm_ops_init(cobj_ops_init(eq,
-                              null_stream_print,
+                              stream_print_op,
                               cobj_destroy_stub_op,
                               cobj_mark_op,
                               cobj_hash_op),
+                wli("null-stream"),
                 null_put_string, null_put_char, null_put_byte, null_get_line,
                 null_get_char, null_get_byte,
                 unimpl_unget_char, unimpl_unget_byte,
@@ -275,11 +279,13 @@ struct stdio_handle {
 static void stdio_stream_print(val stream, val out)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
+  struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
+  val name = static_str(ops->name);
+
   if (h->pid)
-    format(out, lit("#<~s ~s ~s>"), stream->co.cls, h->descr,
-           num(h->pid), nao);
+    format(out, lit("#<~a ~s ~s ~p>"), name, h->descr, num(h->pid), stream, nao);
   else
-    format(out, lit("#<~s ~s>"), stream->co.cls, h->descr, nao);
+    format(out, lit("#<~a ~s ~p>"), name, h->descr, stream, nao);
 }
 
 static void stdio_stream_destroy(val stream)
@@ -622,6 +628,7 @@ static struct strm_ops stdio_ops =
                               stdio_stream_destroy,
                               stdio_stream_mark,
                               cobj_hash_op),
+                wli("file-stream"),
                 stdio_put_string,
                 stdio_put_char,
                 stdio_put_byte,
@@ -804,6 +811,7 @@ static struct strm_ops tail_ops =
                               stdio_stream_destroy,
                               stdio_stream_mark,
                               cobj_hash_op),
+                wli("tail-stream"),
                 stdio_put_string,
                 stdio_put_char,
                 stdio_put_byte,
@@ -896,6 +904,7 @@ static struct strm_ops pipe_ops =
                               stdio_stream_destroy,
                               stdio_stream_mark,
                               cobj_hash_op),
+                wli("pipe-stream"),
                 stdio_put_string,
                 stdio_put_char,
                 stdio_put_byte,
@@ -987,9 +996,13 @@ static val string_in_unget_char(val stream, val ch)
 
 static val string_in_get_prop(val stream, val ind)
 {
+
   if (ind == name_k) {
     val pair = coerce(val, stream->co.handle);
-    return format(nil, lit("string-stream (~s)"), car(pair), nao);
+    struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
+    val name = static_str(ops->name);
+
+    return format(nil, lit("~a ~s ~p"), name, car(pair), stream, nao);
   }
   return nil;
 }
@@ -1010,10 +1023,11 @@ static val string_in_get_error_str(val stream)
 
 static struct strm_ops string_in_ops =
   strm_ops_init(cobj_ops_init(eq,
-                              cobj_print_op,
+                              stream_print_op,
                               cobj_destroy_stub_op,
                               string_in_stream_mark,
                               cobj_hash_op),
+                wli("string-input-stream"),
                 0, 0, 0,
                 string_in_get_line,
                 string_in_get_char,
@@ -1080,10 +1094,11 @@ static val byte_in_get_error_str(val stream)
 
 static struct strm_ops byte_in_ops =
   strm_ops_init(cobj_ops_init(eq,
-                              cobj_print_op,
+                              stream_print_op,
                               byte_in_stream_destroy,
                               cobj_mark_op,
                               cobj_hash_op),
+                wli("byte-input-stream"),
                 0, 0, 0, 0, 0,
                 byte_in_get_byte,
                 0,
@@ -1204,10 +1219,11 @@ static val string_out_put_byte(val stream, int ch)
 
 static struct strm_ops string_out_ops =
   strm_ops_init(cobj_ops_init(eq,
-                              cobj_print_op,
+                              stream_print_op,
                               string_out_stream_destroy,
                               cobj_mark_op,
                               cobj_hash_op),
+                wli("string-output-stream"),
                 string_out_put_string,
                 string_out_put_char,
                 string_out_put_byte,
@@ -1269,10 +1285,11 @@ static val strlist_out_put_char(val stream, val ch)
 
 static struct strm_ops strlist_out_ops =
   strm_ops_init(cobj_ops_init(eq,
-                              cobj_print_op,
+                              stream_print_op,
                               cobj_destroy_stub_op,
                               strlist_mark,
                               cobj_hash_op),
+                wli("strlist-output-stream"),
                 strlist_out_put_string,
                 strlist_out_put_char,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
@@ -1373,10 +1390,11 @@ static val dir_clear_error(val stream)
 
 static struct strm_ops dir_ops =
   strm_ops_init(cobj_ops_init(eq,
-                              cobj_print_op,
+                              stream_print_op,
                               dir_destroy,
                               dir_mark,
                               cobj_hash_op),
+                wli("dir-stream"),
                 0, 0, 0,
                 dir_get_line,
                 0, 0, 0, 0,
@@ -2811,7 +2829,10 @@ static val run(val command, val args)
 static void cat_stream_print(val stream, val out)
 {
   val streams = coerce(val, stream->co.handle);
-  format(out, lit("#<~s catenated ~s>"), stream->co.cls, streams, nao);
+  struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
+  val name = static_str(ops->name);
+
+  format(out, lit("#<~a ~s>"), name, streams, nao);
 }
 
 static val cat_get_line(val stream)
@@ -2933,6 +2954,7 @@ static struct strm_ops cat_stream_ops =
                               cobj_destroy_stub_op,
                               cat_mark,
                               cobj_hash_op),
+                wli("catenated-stream"),
                 0, 0, 0,
                 cat_get_line,
                 cat_get_char,

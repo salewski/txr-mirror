@@ -1,3 +1,26 @@
+2015-07-07  Kaz Kylheku  <kaz@kylheku.com>
+
+	Improved printing of stream objects.
+
+	* stream.c (null_stream_print): Static function removed.
+	(stream_print_op): New function. Prints stream's name and address.
+	(null_get_prop): Pull stream name from strm_ops structure
+	rather than hard-coding to "null-stream".
+	(null_ops, stdio_ops, tail_ops, pipe_ops, string_in_ops,
+	byte_in_ops, string_out_ops, strlist_out_ops, dir_ops,
+	cat_stream_ops): Use stream_print_op in place of cobj_print_op.
+	Initialize name.
+	(stdio_stream_print): Use name from ops structure,
+	and include object address.
+	(string_in_get_prop): Likewise.
+	(cat_stream_print): Likewise.
+
+	* stream.h (struct strm_ops): New member, name.
+	(strm_ops_init): Initialize name.
+	(stream_print_op): Declared.
+
+	* syslog.c (syslog_strm_ops): Use stream_print_op. Initialize name.
+
 2015-07-06  Kaz Kylheku  <kaz@kylheku.com>
 
 	Bugfix in printed rep of stdio stream.
