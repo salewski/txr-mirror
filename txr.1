@@ -23497,10 +23497,9 @@ The following equivalence holds:
 .TP* Example:
 
 .cblk
-  ;; Keep those pairs which are two of a kind
+  ;; Add the squares of 2 and 3
+  [[mapf + [dup *] [dup *]] 2 3] -> 13
 
-  (keep-if [callf eql first second] '((1 1) (2 3) (4 4) (5 6)))
-  -> ((1 1) (4 4))
 .cble
 
 .SS* Input and Output (Streams)
