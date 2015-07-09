@@ -1443,22 +1443,15 @@ void yybadtoken(parser_t *parser, int tok, val context)
 int parse_once(val stream, val name, parser_t *parser)
 {
   int res;
-  yyscan_t scanner;
 
-  parser->lineno = 1;
-  parser->errors = 0;
+  parser_common_init(parser);
+
   parser->stream = stream;
   parser->name = name;
-  parser->prepared_msg = nil;
-  parser->syntax_tree = nil;
-  yylex_init(&scanner);
-  parser->scanner = convert(scanner_t *, scanner);
-
-  yyset_extra(parser, parser->scanner);
 
   res = yyparse(parser->scanner, parser);
 
-  yylex_destroy(parser->scanner);
+  parser_cleanup(parser);
 
   return res;
 }
@@ -1466,20 +1459,14 @@ int parse_once(val stream, val name, parser_t *parser)
 int parse(parser_t *parser)
 {
   int res;
-  yyscan_t scanner;
 
   parser->errors = 0;
   parser->prepared_msg = nil;
   parser->syntax_tree = nil;
   prime_parser(parser->parser);
-  yylex_init(&scanner);
-  parser->scanner = convert(scanner_t *, scanner);
-
-  yyset_extra(parser, parser->scanner);
+  reset_scanner(parser->scanner);
 
   res = yyparse(parser->scanner, parser);
-
-  yylex_destroy(parser->scanner);
 
   return res;
 }

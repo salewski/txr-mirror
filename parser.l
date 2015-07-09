@@ -960,6 +960,14 @@ void end_of_char(scanner_t *yyg)
   yy_pop_state(yyg);
 }
 
+void reset_scanner(scanner_t *yyg)
+{
+  while (YYSTATE != INITIAL)
+    yy_pop_state(yyg);
+
+  yy_flush_buffer(YY_CURRENT_BUFFER, yyg);
+}
+
 val source_loc(val form)
 {
   return gethash(form_to_ln_hash, form);

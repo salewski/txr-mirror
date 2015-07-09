@@ -1,3 +1,28 @@
+2015-07-09  Kaz Kylheku  <kaz@kylheku.com>
+
+	Parser cleanup: embed scanner in parser.
+
+	* parser.c (parser_destroy): New GC finalizer static function.
+	(parser_ops): Register parser_destroy.
+	(parser_common_init): New function, shared by parse and parse_once.
+	Initializes embedded scanner.
+	(parser_cleanup): New function, shared by parse_once and
+	parser_destroy.
+	(parser): Use parser_common_init.
+
+	* parser.h (parser_t): New member, yyscan.
+	(reset_scanner, parser_common_init): Declared.
+
+	* parser.l (reset_scanner): New function.
+
+	* parser.y (parse_once): Use parser_common_init, and
+	thus perform only a few initializations. Do not
+	define scanner as a local variable.
+	(parse): Call reset_scanner instead of
+	yylex_init since the scanner is being reused,
+	and for the same reason do not call yylex_destroy.
+	GC will do that now.
+
 2015-07-08  Kaz Kylheku  <kaz@kylheku.com>
 
 	Bugfix: define-modify-macro not registered for auto-loading.

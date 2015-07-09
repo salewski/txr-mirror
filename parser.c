@@ -64,32 +64,52 @@ static void parser_mark(val obj)
   gc_mark(p->primer);
 }
 
+static void parser_destroy(val obj)
+{
+  parser_t *p = coerce(parser_t *, obj->co.handle);
+  parser_cleanup(p);
+}
+
 static struct cobj_ops parser_ops = {
   eq,
   cobj_print_op,
-  cobj_destroy_free_op,
+  parser_destroy,
   parser_mark,
   cobj_hash_op,
 };
 
-val parser(val stream, val lineno, val primer)
+void parser_common_init(parser_t *p)
 {
-  parser_t *p = coerce(parser_t *, chk_malloc(sizeof *p));
-  val parser;
   p->parser = nil;
-  p->lineno = 0;
+  p->lineno = 1;
   p->errors = 0;
   p->stream = nil;
   p->name = nil;
   p->prepared_msg = nil;
   p->syntax_tree = nil;
   p->primer = nil;
-  p->scanner = 0;
+  yylex_init(&p->yyscan);
+  p->scanner = convert(scanner_t *, p->yyscan);
+  yyset_extra(p, p->scanner);
+}
+
+void parser_cleanup(parser_t *p)
+{
+  if (p->scanner != 0)
+    yylex_destroy(p->scanner);
+}
+
+val parser(val stream, val lineno, val primer)
+{
+  parser_t *p = coerce(parser_t *, chk_malloc(sizeof *p));
+  val parser;
+  parser_common_init(p);
   parser = cobj(coerce(mem_t *, p), parser_s, &parser_ops);
   p->parser = parser;
   p->lineno = c_num(default_arg(lineno, one));
   p->stream = stream;
   p->primer = primer;
+
   return parser;
 }
 

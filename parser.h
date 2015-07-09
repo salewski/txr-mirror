@@ -26,6 +26,11 @@
 
 typedef struct yyguts_t scanner_t;
 
+#ifndef YY_TYPEDEF_YY_SCANNER_T
+#define YY_TYPEDEF_YY_SCANNER_T
+typedef void *yyscan_t;
+#endif
+
 typedef struct {
   val parser;
   cnum lineno;
@@ -35,13 +40,9 @@ typedef struct {
   val prepared_msg;
   val syntax_tree;
   val primer;
+  yyscan_t yyscan;
   scanner_t *scanner;
 } parser_t;
-
-#ifndef YY_TYPEDEF_YY_SCANNER_T
-#define YY_TYPEDEF_YY_SCANNER_T
-typedef void *yyscan_t;
-#endif
 
 extern const wchar_t *spec_file;
 extern val form_to_ln_hash;
@@ -52,6 +53,7 @@ void yyerrorf(scanner_t *scanner, val s, ...);
 void yybadtoken(parser_t *, int tok, val context);
 void end_of_regex(scanner_t *scanner);
 void end_of_char(scanner_t *scanner);
+void reset_scanner(scanner_t *scanner);
 int yylex_init(yyscan_t *pscanner);
 int yylex_destroy(yyscan_t scanner);
 parser_t *yyget_extra(yyscan_t scanner);
@@ -72,6 +74,8 @@ val rlcp_tree(val to, val from);
 val regex_parse(val string, val error_stream);
 val lisp_parse(val source, val error_stream, val error_return_val, val name);
 val read_eval_stream(val stream, val error_stream, val hash_bang_support);
+void parser_common_init(parser_t *);
+void parser_cleanup(parser_t *);
 val parser(val stream, val lineno, val primer);
 val get_parser(val stream);
 val parser_errors(val parser);
