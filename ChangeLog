@@ -1,5 +1,9 @@
 2015-07-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (byte_in_unget_byte): Wrong function name in error message.
+
+2015-07-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	Fix unget-byte and unget-char on catenated streams.
 
 	* stream.c (cat_unget_byte, cat_unget_char): Recursive

@@ -1074,7 +1074,7 @@ static val byte_in_unget_byte(val stream, int byte)
 
   if (bi->index == 0)
     uw_throwf(file_error_s,
-              lit("unget-char: cannot push past beginning of byte stream"),
+              lit("unget-byte: cannot push past beginning of byte stream"),
               nao);
 
   bi->buf[--bi->index] = byte;
