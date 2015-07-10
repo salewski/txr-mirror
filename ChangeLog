@@ -1,5 +1,12 @@
 2015-07-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	Fix wrong name reported for errors in first top-level form.
+
+	* parser.c (read_eval_stream): Get name of original stream,
+	and pass that down to lisp_parse as the name argument.
+
+2015-07-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	Fix off by one error line numbers for .tl files.
 
 	* parser.c (read_eval_stream): Add terminating newline to
