@@ -127,19 +127,24 @@ static val ensure_parser(val stream, val primer)
   return set(cdr_l(cell), parser(stream, one, primer));
 }
 
-val prime_parser(val parser)
+void prime_parser(parser_t *p, int hold_byte)
 {
-  parser_t *p = get_parser_impl(parser);
-  val secret_token_stream = make_string_byte_input_stream(lit("@\x01" "E"));
+  val secret_token_stream;
+
+  if (hold_byte) {
+      val secret_token_string = format(nil, lit("@\x01" "E~a"),
+                                       chr(hold_byte + 0xDC00), nao);
+      secret_token_stream = make_string_byte_input_stream(secret_token_string);
+  } else {
+    secret_token_stream = make_string_byte_input_stream(lit("@\x01" "E"));
+  }
 
   if (catenated_stream_p(p->stream)) {
     catenated_stream_push(secret_token_stream, p->stream);
   } else {
-    set(mkloc(p->stream, parser),
+    set(mkloc(p->stream, p->parser),
         make_catenated_stream(list(secret_token_stream, p->stream, nao)));
   }
-
-  return parser;
 }
 
 void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream)

@@ -1463,8 +1463,7 @@ int parse(parser_t *parser)
   parser->errors = 0;
   parser->prepared_msg = nil;
   parser->syntax_tree = nil;
-  prime_parser(parser->parser);
-  reset_scanner(parser->scanner);
+  prime_parser(parser, reset_scanner(parser->scanner));
 
   res = yyparse(parser->scanner, parser);
 

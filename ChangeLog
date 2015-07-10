@@ -1,5 +1,25 @@
 2015-07-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	Bugfix: lexer loses unmatched "hold char" between top-level forms.
+
+	Test case: file containing 4(prinl 3). Scanner consumes 4 and (.
+	The ( is lost when the scanner is reset for the next call to yyparse,
+	resulting in jut prinl being read and interpreted as a variable.
+
+	* parser.c (prime_parser): If present, append hold byte to priming
+	string. Takes parser_t * instead of parser, and returns void now.
+
+	* parser.l (reset_scanner): Now returns int value, the value
+	of the scanner's yy_hold_char variable which is nonzero when
+	the scanner is hanging on to an unmatched byte of input.
+
+	* parser.h (reset_scanner, prime_parser): Declarations updated.
+
+	* parser.y (parse): Pass hold byte returned by reset_scanner to
+	prime_parser.
+
+2015-07-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (byte_in_unget_byte): Wrong function name in error message.
 
 2015-07-10  Kaz Kylheku  <kaz@kylheku.com>

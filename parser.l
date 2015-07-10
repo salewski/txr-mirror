@@ -960,12 +960,16 @@ void end_of_char(scanner_t *yyg)
   yy_pop_state(yyg);
 }
 
-void reset_scanner(scanner_t *yyg)
+int reset_scanner(scanner_t *yyg)
 {
+  int hold_byte = yyg->yy_hold_char;
+
   while (YYSTATE != INITIAL)
     yy_pop_state(yyg);
 
   yy_flush_buffer(YY_CURRENT_BUFFER, yyg);
+
+  return hold_byte;
 }
 
 val source_loc(val form)
