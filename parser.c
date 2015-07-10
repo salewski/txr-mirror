@@ -124,7 +124,7 @@ static val ensure_parser(val stream)
   return set(cdr_l(cell), parser(stream, one));
 }
 
-void prime_parser(parser_t *p, int hold_byte)
+void prime_parser(parser_t *p, int hold_byte, val name)
 {
   val secret_token_stream;
 
@@ -142,6 +142,8 @@ void prime_parser(parser_t *p, int hold_byte)
     set(mkloc(p->stream, p->parser),
         make_catenated_stream(list(secret_token_stream, p->stream, nao)));
   }
+
+  set(mkloc(p->name, p->parser), name);
 }
 
 void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream)
@@ -255,8 +257,7 @@ val lisp_parse(val source_in, val error_stream, val error_return_val, val name_i
 
   {
     int gc = gc_state(0);
-    set(mkloc(pi->name, parser), if3(std_error != std_null, name, lit("")));
-    parse(pi);
+    parse(pi, if3(std_error != std_null, name, lit("")));
     gc_state(gc);
   }
 

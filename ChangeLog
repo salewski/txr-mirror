@@ -1,5 +1,19 @@
 2015-07-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	Handle setting of parse name through prime_parser.
+
+	* parser.c (prime_parser): Take name as argument,
+	and install it into parser.
+	(lisp_parser): Pass name to parse, instead of setting it
+	in the parser object.
+
+	* parser.y (parse): Take name as argument and pass
+	down to prime_parser.
+
+	* parser.h (prime_parser, parse): Declarations updated.
+
+2015-07-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	Fix wrong name reported for errors in first top-level form.
 
 	* parser.c (read_eval_stream): Get name of original stream,
