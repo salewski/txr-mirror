@@ -1,5 +1,18 @@
 2015-07-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	Remove unused "primer" member from parser_t.
+
+	* parser.c (parser_mark, parser_common_init): Remove reference to primer.
+	(parser): Don't take primer argument, remove reference to member.
+	(ensure_parser): Don't take primer argument, don't pass to parser
+	function.
+	(lisp_parse): Don't pass primer string to ensure_parser.
+
+	* parser.h (primer_t): Remove primer member.
+	(parser): Declaration updated.
+
+2015-07-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	Bugfix: lexer loses unmatched "hold char" between top-level forms.
 
 	Test case: file containing 4(prinl 3). Scanner consumes 4 and (.

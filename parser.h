@@ -39,7 +39,6 @@ typedef struct {
   val name;
   val prepared_msg;
   val syntax_tree;
-  val primer;
   yyscan_t yyscan;
   scanner_t *scanner;
 } parser_t;
@@ -76,7 +75,7 @@ val lisp_parse(val source, val error_stream, val error_return_val, val name);
 val read_eval_stream(val stream, val error_stream, val hash_bang_support);
 void parser_common_init(parser_t *);
 void parser_cleanup(parser_t *);
-val parser(val stream, val lineno, val primer);
+val parser(val stream, val lineno);
 val get_parser(val stream);
 val parser_errors(val parser);
 void parse_init(void);

@@ -61,7 +61,6 @@ static void parser_mark(val obj)
   gc_mark(p->prepared_msg);
   if (p->syntax_tree != nao)
     gc_mark(p->syntax_tree);
-  gc_mark(p->primer);
 }
 
 static void parser_destroy(val obj)
@@ -87,7 +86,6 @@ void parser_common_init(parser_t *p)
   p->name = nil;
   p->prepared_msg = nil;
   p->syntax_tree = nil;
-  p->primer = nil;
   yylex_init(&p->yyscan);
   p->scanner = convert(scanner_t *, p->yyscan);
   yyset_extra(p, p->scanner);
@@ -99,7 +97,7 @@ void parser_cleanup(parser_t *p)
     yylex_destroy(p->scanner);
 }
 
-val parser(val stream, val lineno, val primer)
+val parser(val stream, val lineno)
 {
   parser_t *p = coerce(parser_t *, chk_malloc(sizeof *p));
   val parser;
@@ -108,7 +106,6 @@ val parser(val stream, val lineno, val primer)
   p->parser = parser;
   p->lineno = c_num(default_arg(lineno, one));
   p->stream = stream;
-  p->primer = primer;
 
   return parser;
 }
@@ -118,13 +115,13 @@ static parser_t *get_parser_impl(val parser)
   return coerce(parser_t *, cobj_handle(parser, parser_s));
 }
 
-static val ensure_parser(val stream, val primer)
+static val ensure_parser(val stream)
 {
   val cell = gethash_c(stream_parser_hash, stream, nulloc);
   val pars = cdr(cell);
   if (pars)
     return pars;
-  return set(cdr_l(cell), parser(stream, one, primer));
+  return set(cdr_l(cell), parser(stream, one));
 }
 
 void prime_parser(parser_t *p, int hold_byte)
@@ -244,7 +241,7 @@ val lisp_parse(val source_in, val error_stream, val error_return_val, val name_i
                  if3(stringp(source),
                      lit("string"),
                      stream_get_prop(input_stream, name_k)));
-  val parser = ensure_parser(input_stream, lit("@\x01" "E"));
+  val parser = ensure_parser(input_stream);
   val saved_dyn = dyn_env;
   parser_t *pi = get_parser_impl(parser);
 
