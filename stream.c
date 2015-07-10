@@ -2896,7 +2896,7 @@ static val cat_unget_byte(val stream, int byte)
               stream, nao);
   } else {
     val stream = car(streams);
-    return unget_byte(stream, num_fast(byte));
+    return unget_byte(num_fast(byte), stream);
   }
 
   return nil;
@@ -2912,7 +2912,7 @@ static val cat_unget_char(val stream, val ch)
               stream, nao);
   } else {
     val stream = car(streams);
-    return unget_char(stream, ch);
+    return unget_char(ch, stream );
   }
 }
 

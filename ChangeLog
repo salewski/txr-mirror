@@ -1,3 +1,10 @@
+2015-07-10  Kaz Kylheku  <kaz@kylheku.com>
+
+	Fix unget-byte and unget-char on catenated streams.
+
+	* stream.c (cat_unget_byte, cat_unget_char): Recursive
+	call to unget_byte and unget_char with reversed arguments.
+
 2015-07-09  Kaz Kylheku  <kaz@kylheku.com>
 
 	Parser cleanup: embed scanner in parser.
