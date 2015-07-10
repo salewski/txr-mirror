@@ -281,9 +281,13 @@ val read_eval_stream(val stream, val error_stream, val hash_bang_support)
   if (hash_bang_support) {
     val firstline = get_line(stream);
 
-    if (!match_str(firstline, lit("#!"), nil)) {
-      val string_stream = make_string_byte_input_stream(firstline);
-      stream = make_catenated_stream(list(string_stream, stream, nao));
+    if (firstline) {
+      val flwnl = cat_str(list(firstline, lit("\n"), nao), nil);
+
+      if (!match_str(flwnl, lit("#!"), nil)) {
+        val string_stream = make_string_byte_input_stream(flwnl);
+        stream = make_catenated_stream(list(string_stream, stream, nao));
+      }
     }
   }
 

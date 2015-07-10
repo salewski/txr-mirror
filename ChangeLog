@@ -1,5 +1,12 @@
 2015-07-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	Fix off by one error line numbers for .tl files.
+
+	* parser.c (read_eval_stream): Add terminating newline to
+	the first line that was examined for hash bang.
+
+2015-07-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	Remove unused "primer" member from parser_t.
 
 	* parser.c (parser_mark, parser_common_init): Remove reference to primer.
