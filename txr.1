@@ -28659,6 +28659,89 @@ applies inside a
 form. Of course, lexical operator macros do not shadow
 symbol macros under any circumstances.
 
+.coNP Operator @ placelet
+.synb
+.mets (placelet >> ({( sym << place )}*) << body-form *)
+.syne
+.desc
+The
+.code placelet
+macro binds lexically scoped symbol macros in such
+a way that they behave as aliases for places
+denoted by place forms.
+
+Each
+.meta place
+must be an expression denoting a syntactic place. The
+corresponding
+.meta sym
+is established as an alias for the storage location which that place denotes,
+over the scope of the
+.metn body-form -s.
+
+This binding takes place in such a way that each
+.meta place
+is evaluated exactly once, only in order to determine its
+storage location.  The corresponding
+.meta sym
+then serves as an alias for that location, over the
+scope of the
+.metn body-form -s.
+This means that whenever
+.meta sym
+is evaluated, it stands for the value of the storage
+location, and whenever a value is apprently stored into
+.metn sym ,
+it is actually the storage location which receives it.
+
+Note: certain kinds of places, notably
+.cblk
+.meti (force << promise )
+.cble
+expressions, must be accessed before they can be stored,
+and this restriction continues to hold when those
+places are accessed through
+.code placelet
+aliases.
+
+Note:
+.code placelet
+differs from
+.code symacrolet
+in that the forms themselves are not aliased, but the storage
+locations which they denote.
+.code (symacrolet ((x y) z)
+performs the syntactic substitution of symbol
+.code x
+by form
+.codn y ,
+whereever
+.code x
+appears inside
+.code z
+as an evaluated form, and is not shadowed by any inner binding.
+Whereas
+.code (placelet ((x y)) z)
+generates code which arranges for
+.code y
+to be evaluated to a storage location, and syntactically replaces occurrences
+of
+.code x
+with a form which directly denotes that storage location,
+wherever
+.code x
+appears inside
+.code z
+as an evaluated form, and is not shadowed by any inner binding.
+Also,
+.code x
+is not necessarily substituted by a single, fixed form,
+as in the case of
+.codn symacrolet .
+Rather it may be substituted by one kind of form when it
+is treated as a pure value, and another kind of form
+when it is treated as a place.
+
 .coNP Operator @ tree-bind
 .synb
 .mets (tree-bind < macro-style-params < expr << form *)

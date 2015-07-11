@@ -421,17 +421,16 @@
                   (,index-sym (sys:l1-val ,index))
                   ,*(if have-default-p
                       ^((,dflval-sym (sys:l1-val ,default)))))
-             (let ((,oldval-sym [,obj-sym
-                                ,index-sym
-                                ,*(if have-default-p ^(,dflval-sym))]))
-               (macrolet ((,getter () ',oldval-sym)
-                          (,setter (val)
-                             ^(rlet ((,',newval-sym ,val))
-                                (,',osetter-sym
-                                  (sys:dwim-set ,',obj-sym
-                                                ,',index-sym ,',newval-sym))
-                                ,',newval-sym)))
-                  ,body)))))))
+             (macrolet ((,getter ()
+                         '[,obj-sym ,index-sym
+                                    ,*(if have-default-p ^(,dflval-sym))])
+                        (,setter (val)
+                           ^(rlet ((,',newval-sym ,val))
+                              (,',osetter-sym
+                                (sys:dwim-set ,',obj-sym
+                                              ,',index-sym ,',newval-sym))
+                              ,',newval-sym)))
+                ,body))))))
   (ssetter
     (with-gensyms (osetter-sym ogetter-sym
                    obj-sym newval-sym index-sym)
@@ -560,3 +559,27 @@
       ^(defmacro ,name (:env env ,place-sym ,*lambda-list)
          (with-update-expander (getter setter) ,place-sym env
            ^(,setter (,',function (,getter) ,,*cleaned-lambda-list)))))))
+
+(defmacro sys:placelet-1 (((sym place)) . body :env env)
+  (with-gensyms (tmp-place pl-getter pl-setter steal-getter)
+    (unwind-protect
+      (progn
+        (sethash *place-update-expander* tmp-place
+                 (lambda (tmp-getter tmp-setter tmp-place tmp-body)
+                   ^(macrolet ((,tmp-getter () ^(,',pl-getter))
+                               (,tmp-setter (val) ^(,',pl-setter ,val)))
+                      ,tmp-body)))
+        (call-update-expander pl-getter pl-setter place env
+          ^(macrolet ((,tmp-place () ^(,',pl-getter)))
+             ,(sys:expand
+                ^(symacrolet ((,sym (,tmp-place))) ,*body)
+                env))))
+      (remhash *place-update-expander* tmp-place))))
+
+(defmacro placelet (sym-place-pairs . body)
+  (tree-case sym-place-pairs
+    (() ^(progn ,*body))
+    (((sym place)) ^(sys:placelet-1 ((,sym ,place)) ,*body))
+    (((sym place) . rest-pairs) ^(sys:placelet-1 ((,sym ,place))
+                                   (placelet (,*rest-pairs) ,*body)))
+    (obj (throwf 'eval-error "placelet: bad syntax: ~s" obj))))

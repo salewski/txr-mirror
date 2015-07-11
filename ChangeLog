@@ -1,5 +1,21 @@
 2015-07-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	New placelet macro.
+
+	* lisplib.c (place_set_entries): Add placelet to list of names.
+
+	* share/txr/stdlib/place.tl (sys:placelet1, placelet): New macros.
+	(defplace dwim): Do not retrieve the
+	place's value into a local variable and have the getter
+	expand to that variable. Rather, have the getter retrieve the
+	value. A getter that refers to a cached copy breaks
+	the semantics of placelet, and any place operator which can
+	evaluate the location after it is stored.
+
+	* txr.1: Documented placelet.
+
+2015-07-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	Handle setting of parse name through prime_parser.
 
 	* parser.c (prime_parser): Take name as argument,
