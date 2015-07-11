@@ -1,5 +1,15 @@
 2015-07-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	Let's have placelet and placelet*.
+
+	* share/txr/stdlib/place.tl (placelet*): New macro.
+
+	* lisplib.c (place_set_entries): Add placelet* to list of names.
+
+	* txr.1: Updated to document placelet* and fix mistakes.
+
+2015-07-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	* share/txr/stdlib/place.tl (defplace dwim): Eliminate
 	ogetter-sym variable for caching the sequence; use the getter
 	for the sequence place to access it. Again, this is for placelet,

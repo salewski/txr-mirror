@@ -28679,9 +28679,10 @@ applies inside a
 form. Of course, lexical operator macros do not shadow
 symbol macros under any circumstances.
 
-.coNP Operator @ placelet
+.coNP Macros @ placelet and @ placelet*
 .synb
 .mets (placelet >> ({( sym << place )}*) << body-form *)
+.mets (placelet* >> ({( sym << place )}*) << body-form *)
 .syne
 .desc
 The
@@ -28710,9 +28711,25 @@ scope of the
 This means that whenever
 .meta sym
 is evaluated, it stands for the value of the storage
-location, and whenever a value is apprently stored into
+location, and whenever a value is apparently stored into
 .metn sym ,
 it is actually the storage location which receives it.
+
+The
+.code placelet*
+variant implements an alternative scoping rule, which allows a later
+.meta place
+form to refer to a
+.meta sym
+bound to an earlier
+.meta place
+form. In other words, a given
+.meta sym
+binding is visible not only to the
+.metn body-form -s
+but also to
+.meta place
+forms which occur later.
 
 Note: certain kinds of places, notably
 .cblk
@@ -28735,7 +28752,7 @@ performs the syntactic substitution of symbol
 .code x
 by form
 .codn y ,
-whereever
+wherever
 .code x
 appears inside
 .code z

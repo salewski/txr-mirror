@@ -570,14 +570,25 @@
         (call-update-expander pl-getter pl-setter place env
           ^(macrolet ((,tmp-place () ^(,',pl-getter)))
              ,(sys:expand
-                ^(symacrolet ((,sym (,tmp-place))) ,*body)
+                ^(symacrolet ((,sym (,tmp-place)))
+                   ,*body)
                 env))))
       (remhash *place-update-expander* tmp-place))))
 
-(defmacro placelet (sym-place-pairs . body)
+(defmacro placelet* (sym-place-pairs . body)
   (tree-case sym-place-pairs
     (() ^(progn ,*body))
     (((sym place)) ^(sys:placelet-1 ((,sym ,place)) ,*body))
     (((sym place) . rest-pairs) ^(sys:placelet-1 ((,sym ,place))
-                                   (placelet (,*rest-pairs) ,*body)))
-    (obj (throwf 'eval-error "placelet: bad syntax: ~s" obj))))
+                                   (placelet* (,*rest-pairs) ,*body)))
+    (obj (throwf 'eval-error "placelet*: bad syntax: ~s" obj))))
+
+(defmacro placelet (sym-place-pairs . body)
+  (unless (all sym-place-pairs
+               [andf consp (opip length (= 2)) (oand first bindable)])
+    (throwf 'eval-error "placelet: bad syntax: ~s" sym-place-pairs))
+  (tree-bind (: syms places) (transpose sym-place-pairs)
+     (let ((temps (mapcar (ret (gensym)) syms)))
+       ^(placelet* (,*(zip temps places))
+          (symacrolet (,*(zip syms temps))
+            ,*body)))))
