@@ -1,5 +1,11 @@
 2015-07-10  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (eval_init): Register bindable as intrinsic.
+
+	* txr.1: Documented.
+
+2015-07-10  Kaz Kylheku  <kaz@kylheku.com>
+
 	New placelet macro.
 
 	* lisplib.c (place_set_entries): Add placelet to list of names.
