@@ -1,5 +1,14 @@
 2015-07-11  Kaz Kylheku  <kaz@kylheku.com>
 
+	Expand away sys:lisp1-value based on lexical info.
+
+	* eval.c (sys_lisp1_value_s): New global symbol variable.
+	(expand_lisp1_value): New static function.
+	(do_expand): Use expand_lisp1_value.
+	(eval_init): Initialize sys_lisp1_value_s.
+
+2015-07-11  Kaz Kylheku  <kaz@kylheku.com>
+
 	Let's have placelet and placelet*.
 
 	* share/txr/stdlib/place.tl (placelet*): New macro.

@@ -90,7 +90,7 @@ val macro_time_s, with_saved_vars_s, macrolet_s;
 val defsymacro_s, symacrolet_s, prof_s;
 val fbind_s, lbind_s, flet_s, labels_s;
 val opip_s, oand_s, chain_s, chand_s;
-val sys_load_s;
+val sys_load_s, sys_lisp1_value_s;
 
 val special_s, whole_k, symacro_k, fun_k;
 
@@ -1699,6 +1699,29 @@ static val op_lisp1_setq(val form, val env)
   }
 }
 
+static val expand_lisp1_value(val form, val menv)
+{
+  if (length(form) != two)
+    eval_error(form, lit("~s: invalid syntax"), first(form), nao);
+
+  {
+    val sym = second(form);
+    val binding_type = lexical_lisp1_binding(menv, sym);
+
+    if (nilp(binding_type))
+      return form;
+
+    if (binding_type == var_k)
+      return sym;
+
+    if (binding_type == fun_k)
+      return rlcp(cons(fun_s, cons(sym, nil)), form);
+
+    eval_error(form, lit("~s: misapplied to symbol macro ~s"),
+               first(form), sym, nao);
+  }
+}
+
 static val op_lisp1_value(val form, val env)
 {
   val args = rest(form);
@@ -3124,6 +3147,8 @@ tail:
       if (args == args_ex)
         return form;
       return rlcp(cons(sym, args_ex), form);
+    } else if (sym == sys_lisp1_value_s) {
+      return expand_lisp1_value(form, menv);
     } else {
       /* funtion call
          also handles: prog1, call, if, and, or,
@@ -3973,6 +3998,7 @@ void eval_init(void)
   chain_s = intern(lit("chain"), user_package);
   chand_s = intern(lit("chand"), user_package);
   sys_load_s = intern(lit("load"), system_package);
+  sys_lisp1_value_s = intern(lit("lisp1-value"), system_package);
 
   reg_op(quote_s, op_quote);
   reg_op(qquote_s, op_qquote_error);
@@ -4007,7 +4033,7 @@ void eval_init(void)
   reg_op(tree_bind_s, op_tree_bind);
   reg_op(setq_s, op_setq);
   reg_op(intern(lit("lisp1-setq"), system_package), op_lisp1_setq);
-  reg_op(intern(lit("lisp1-value"), system_package), op_lisp1_value);
+  reg_op(sys_lisp1_value_s, op_lisp1_value);
   reg_op(intern(lit("setqf"), system_package), op_setqf);
   reg_op(for_s, op_for);
   reg_op(for_star_s, op_for);
