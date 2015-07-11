@@ -1,3 +1,11 @@
+2015-07-11  Kaz Kylheku  <kaz@kylheku.com>
+
+	* share/txr/stdlib/place.tl (defplace dwim): Eliminate
+	ogetter-sym variable for caching the sequence; use the getter
+	for the sequence place to access it. Again, this is for placelet,
+	where the caching is visible. Another way to fix this is to
+	clobber the cache variable when updating the sequence place.
+
 2015-07-10  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (eval_init): Register bindable as intrinsic.
