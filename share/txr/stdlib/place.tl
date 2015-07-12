@@ -82,6 +82,11 @@
                      (makunbound ',',place-expr))))
        ,*op-body))
 
+  (defun place-form-p (place)
+    (when (or (bindable place)
+              (and (consp place) [*place-update-expander* (car place)]))
+      t))
+
   (defun get-update-expander (place)
     (cond
       ((symbolp place) (fun sys:sym-update-expander))

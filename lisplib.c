@@ -59,6 +59,7 @@ static val place_set_entries(val dlt, val fun)
     lit("*place-delete-expander*"),
     lit("get-update-expander"), lit("get-clobber-expander"),
     lit("get-delete-expander"),
+    lit("place-form-p"),
     lit("rlet"), lit("with-gensyms"),
     lit("call-update-expander"), lit("call-clobber-expander"),
     lit("call-delete-expander)"),

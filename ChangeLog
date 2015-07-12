@@ -1,3 +1,9 @@
+2015-07-12  Kaz Kylheku  <kaz@kylheku.com>
+
+	* share/txr/stdlib/place.tl (place-form-p): New function.
+
+	* lisplib.c (place_set_entries): Add place-form-p to list of names.
+
 2015-07-11  Kaz Kylheku  <kaz@kylheku.com>
 
 	Expand away sys:lisp1-value based on lexical info.
