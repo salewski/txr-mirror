@@ -1,5 +1,10 @@
 2015-07-12  Kaz Kylheku  <kaz@kylheku.com>
 
+	* share/txr/stdlib/ifa.tl (ifa): Use placelet to
+	allow "it" to be mutable when it denotes a place form.
+
+2015-07-12  Kaz Kylheku  <kaz@kylheku.com>
+
 	* share/txr/stdlib/place.tl (place-form-p): New function.
 
 	* lisplib.c (place_set_entries): Add place-form-p to list of names.
