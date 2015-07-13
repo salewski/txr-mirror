@@ -207,7 +207,7 @@ except:
     }
 
     *stream = make_stdio_stream(in, spec_file_try);
-    *name = spec_file;
+    *name = spec_file_try;
   }
 }
 

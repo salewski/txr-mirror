@@ -1,3 +1,9 @@
+2015-07-13  Kaz Kylheku  <kaz@kylheku.com>
+
+	* parser.c (open_txr_file): Bugfix: the name of the parsed
+	stream should be the resolved name, not the abstract original,
+	so that error messages correlate to the file.
+
 2015-07-12  Kaz Kylheku  <kaz@kylheku.com>
 
 	* share/txr/stdlib/ifa.tl (ifa): Use placelet to
