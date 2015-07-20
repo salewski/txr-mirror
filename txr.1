@@ -10821,11 +10821,19 @@ and
 .meta else
 forms, the symbol
 .code it
-is implicitly bound to the value of a subexpression of
+is implicitly bound to a subexpression of
 .metn cond ,
 providing a reference to that value, similar to the word
 "it" in the English language, and similar anaphoric pronouns
-in other languages.
+in other languages. If
+.code it
+is bound to a place form, the binding is established
+as if using the
+.code placelet
+operator. Otherwise,
+.code it
+is bound as an ordinary lexical variable to
+the form's value.
 
 The
 .code ifa
@@ -10843,7 +10851,7 @@ Secondly, if the
 .meta cond
 expression is a function call with more than two arguments,
 at most one of them may be an it-candidate: an expression
-viable for having its value bound to the
+viable for having its value or storage location bound to the
 .code it
 symbol. If there are two or more it-candidates, the
 .code ifa
@@ -10911,8 +10919,8 @@ macro behaves similarly to
 The
 .meta cond
 expression is evaluated, and, if applicable,
-the value of the appropriate argument is captured and bound to
-the variable
+the value of, or storage location denoted by the appropriate argument is
+captured and bound to the variable
 .code it
 whose scope extends over the
 .meta then
