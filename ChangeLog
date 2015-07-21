@@ -1,3 +1,17 @@
+2015-07-21  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (eval_init): Register new split function.
+
+	* lib.c (split_func): New static function.
+	(partition_split_common): New static function, based on
+	on contents of partition function.
+	(partition): Now a wrapper around partition_split_common.
+	(split): New function.
+
+	* lib.h (split): Documented.
+
+	* txr.1: Documented split.
+
 2015-07-13  Kaz Kylheku  <kaz@kylheku.com>
 
 	* parser.c (open_txr_file): Bugfix: the name of the parsed

@@ -478,6 +478,7 @@ val lazy_flatten(val list);
 val tuples(val n, val seq, val fill);
 val partition_by(val func, val seq);
 val partition(val seq, val indices);
+val split(val seq, val indices);
 val partition_star(val seq, val indices);
 val memq(val obj, val list);
 val memql(val obj, val list);

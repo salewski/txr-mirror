@@ -14877,6 +14877,97 @@ of one element.
                                                     "bc" "bd")
 .cble
 
+.coNP Function @ split
+.synb
+.mets (split < sequence >> { index-list >> | index <> | function })
+.syne
+.desc
+
+If
+.meta sequence
+is empty, then
+.code split
+returns an empty list, and the
+second argument is ignored; if it is
+.metn function ,
+it is not called.
+
+Otherwise,
+.code split
+returns a lazy list of pieces of
+.metn sequence :
+consecutive, non-overlapping, possibly empty sub-strings of
+.metn sequence ,
+of the same kind as
+.metn sequence .
+A catenation of these pieces in the order they appear would produce
+a sequence that is
+.code equal
+to the original sequence.
+
+If the second argument is of the form
+.metn index-list ,
+it shall be a sequence of increasing integers.
+The
+.code split
+function divides
+.meta sequence
+according to the
+indices in index list. The first piece always begins with the first
+element of
+.metn sequence .
+Each subsequent piece begins with the position indicated by
+an element of
+.metn index-list .
+Negative indices are ignored. Repeated values give rise to empty
+pieces.
+If
+.meta index-list
+includes index zero,
+then an empty first piece is generated.
+If
+.meta index-list
+includes an index greater than or equal to the length of
+.meta sequence
+(equivalently, an index beyond the last element of the sequence)
+then an additional empty last piece is generated.
+
+If
+.meta index-list
+is empty then a one-element list containing the entire
+.meta sequence
+is returned.
+
+If the second argument is a function, then this function is applied
+to
+.metn sequence ,
+and the return value of this call is then used in place of the
+second argument, which must be an
+.meta index
+or
+.metn index-list .
+
+If the second argument is an atom other than a function, it is assumed to be
+an integer index, and is turned into an
+.meta index-list
+of one element.
+
+.TP* Examples:
+.cblk
+  (split '(1 2 3) 1) -> ((1) (2 3))
+
+  (split "abc" 0) -> ("" "abc")
+  (split "abc" 3) -> ("abc" "")
+  (split "abc" 1) -> ("a" "bc")
+  (split "abc" 0 1 2 3) -> ("" "a" "b" "c" "")
+  (split "abc" 1 2) -> ("a" "b" "c")
+
+  (split "abc" -1 1 2 15) -> ("a" "b" "c")
+
+  ;; triple split at makes two additional empty pieces
+  (split "abc" '(1 1 1)) -> ("a" "" "" "bc")
+.cble
+
 .coNP Function @ partition*
 .synb
 .mets (partition* < sequence >> { index-list >> | index <> | function })
