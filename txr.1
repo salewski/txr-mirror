@@ -14822,20 +14822,22 @@ it is not called.
 
 Otherwise,
 .code partition
-returns a lazy list of partitions of the sequence
-
+returns a lazy list of partitions of
 .metn sequence .
-Partitions are consecutive, non-empty sub-strings of
+Partitions are consecutive, non-overlapping, non-empty sub-strings of
 .metn sequence ,
 of the same kind as
-.metn sequence .
-
+.metn sequence ,
+such that if these sub-strings are catenated together in their order
+of appearance, a sequence
+.code equal
+to the original is produced.
 
 If the second argument is of the form
 .metn index-list ,
-it is a sequence of
-strictly increasing, positive integers. First, any leading zeros in this sequence
-are dropped. The
+it shall be a sequence of
+strictly non-decreasing, integers. First, any leading negative or zero values
+in this sequence are dropped. The
 .code partition
 function then divides
 .meta sequence
