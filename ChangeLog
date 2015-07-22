@@ -1,3 +1,9 @@
+2015-07-22  Kaz Kylheku  <kaz@kylheku.com>
+
+	* lib.c (obj_print, obj_pprint): Bugfix: incorrect
+	value returned when printing dwim forms, due to
+	mutating the obj variable.
+
 2015-07-21  Kaz Kylheku  <kaz@kylheku.com>
 
 	Implementing caar, cadr, cdar and friends.

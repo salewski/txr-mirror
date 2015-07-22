@@ -6883,6 +6883,7 @@ val obj_print(val obj, val out)
   case CONS:
   case LCONS:
     {
+      val obj_in = obj;
       val sym = car(obj);
 
       if (sym == quote_s && consp(cdr(obj)) && !(cdr(cdr(obj)))) {
@@ -6949,8 +6950,8 @@ finish:
           }
         }
       }
+      return obj_in;
     }
-    return obj;
   case LIT:
   case STR:
     {
@@ -7077,6 +7078,7 @@ val obj_pprint(val obj, val out)
   case CONS:
   case LCONS:
     {
+      val obj_in = obj;
       val sym = car(obj);
 
       if (sym == quote_s && consp(cdr(obj)) && !(cdr(cdr(obj)))) {
@@ -7143,8 +7145,8 @@ finish:
           }
         }
       }
+      return obj_in;
     }
-    return obj;
   case LIT:
   case STR:
     put_string(obj, out);
