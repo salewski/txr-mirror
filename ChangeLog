@@ -1,5 +1,12 @@
 2015-07-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	* share/txr/stdlib/place.tl (defplace cdr): Change deletion
+	semantics so that (del (cdr x)) is symmetric with (del (car x)).
+
+	* txr.1: Update documentation.
+
+2015-07-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (eval_init): Register new split function.
 
 	* lib.c (split_func): New static function.

@@ -327,7 +327,11 @@
     ^(macrolet ((,ssetter (val) ^(sys:rplacd ,',cell ,val)))
        ,body))
   (deleter
-    ^(macrolet ((,deleter () ^(zap (cdr ,',cell))))
+    ^(macrolet ((,deleter ()
+                  (with-gensyms (tmp)
+                    (with-update-expander (cgetter csetter) ',cell nil
+                      ^(let ((,tmp (,cgetter)))
+                         (prog1 (cdr ,tmp) (,csetter (car ,tmp))))))))
        ,body)))
 
  (defplace (vecref vector index :whole args) body

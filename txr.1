@@ -13499,6 +13499,20 @@ because
 .code pop
 is defined on an empty list.
 
+The abstract concept behind deleting a
+.code car
+is that physically deleting this field from a cons,
+thereby breaking it in half, would result in just the
+.code cdr
+remaining. Though fragmenting a cons in this manner is impossible,
+deletion simulates it by replacing the place which previously held the
+cons, with that cons'
+.code cdr
+field. This semantics happens to coincide with deleting the first element
+of a list by a
+.code pop
+operation.
+
 .coNP Accessors @ cdr and @ rest
 .synb
 .mets (cdr << object )
@@ -13563,18 +13577,26 @@ and is modifiable.
 
 A
 .code cdr
-place supports deletion, according to the following equivalence:
+place supports deletion, according to the following near equivalence:
 
 .cblk
-  (del (cdr obj)) <--> (zap (cdr obj))
+  (del (cdr place)) <--> (prog1 (cdr place)
+                                (set place (car place)))
 .cble
 
-Note that this is different from the delete semantics of
+Of course,
+.code place
+is evaluated only once.
+
+Note that this is symmetric with the delete semantics of
 .code car
-in that
-.code obj
-is not required to be a place, and must not be
-.codn nil .
+in that the cons stored in
+.code place
+goes away, as does the
+.code cdr
+field, leaving just the
+.codn car ,
+which takes the place of the original cons.
 
 .TP*
 Example:
