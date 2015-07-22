@@ -9924,10 +9924,14 @@ are both open-ended. Code can be written quite easily in \*(TL to introduce
 new kinds of places, as well as new place-mutating operators.
 New places can be introduced with the help of the
 .code defplace
-macro.  New place update macros (place operators) are written using the
+macro, or possibly the
+.code define-place-macro
+macro in simple cases when a new syntactic place can be expressed as a
+transformation to the syntax of an existing place.
+New place update macros (place operators) are written using the
 ordinary macro definer
-.code defmacro
-but with the help of special utility macros called
+.codn defmacro ,
+with the help of special utility macros called
 .codn with-update-expander ,
 .codn with-clobber-expander ,
 and
@@ -30250,6 +30254,43 @@ cells:
       ^(macrolet ((,deleter () ^(pop ,',cell)))
          ,body)))
 .cble
+
+.coNP Macro @ define-place-macro
+.synb
+.mets (define-place-macro < name < macro-style-params
+.mets \ \  << body-form *)
+.syne
+.desc
+In some situations, an equivalence exists between two forms, only one
+of which is recognized as a place. The
+.code define-place-macro
+macro can be used to establish a form as a place in terms of a translation to
+an equivalent form which is already a place.
+
+The
+.code define-place-macro
+has the same syntax as
+.codn defmacro .
+It specifies a macro transformation for a compound form which has the
+.meta name
+symbol in its leftmost position.
+This macro expansion is applied when such a form is used as a place.
+It is applied after all other expansions, and no other macro-expansions
+are applied afterward.
+
+.TP* "Example:"
+
+Implementation of
+.code first
+in terms of
+.codn car :
+
+.cblk
+  (define-place-macro first (obj)
+    ^(car ,obj))
+.cble
+
+.coNP Operator @ defmacro
 
 .coNP Macro @ rlet
 .synb

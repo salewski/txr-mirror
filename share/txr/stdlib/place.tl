@@ -27,6 +27,7 @@
   (defvar *place-clobber-expander* (hash))
   (defvar *place-update-expander* (hash))
   (defvar *place-delete-expander* (hash))
+  (defvar *place-macro* (hash))
   (defvar sys:*lisp1* nil)
 
   (defun sys:eval-err (. params)
@@ -125,18 +126,30 @@
   ^(let ,(zip syms (repeat '((gensym)))) ,*body))
 
 (macro-time
+  (defun sys:trigger-load (form)
+    (when (consp form) (symbol-function (car form)))
+    form)
+
+  (defun sys:pl-expand (unex-place env)
+    (let ((ex-place (sys:expand unex-place env)))
+      (sys:trigger-load
+        (iflet ((pm-expander [*place-macro* (and (consp ex-place)
+                                                 (car ex-place))]))
+          [pm-expander ex-place]
+          ex-place))))
+
   (defun call-update-expander (getter setter unex-place env body)
-    (let* ((place (sys:expand unex-place env))
+    (let* ((place (sys:pl-expand unex-place env))
            (expander (get-update-expander place)))
       [expander getter setter place body]))
 
   (defun call-clobber-expander (ssetter unex-place env body)
-    (let* ((place (sys:expand unex-place env))
+    (let* ((place (sys:pl-expand unex-place env))
            (expander (get-clobber-expander place)))
       [expander ssetter place body]))
 
   (defun call-delete-expander (deleter unex-place env body)
-    (let* ((place (sys:expand unex-place env))
+    (let* ((place (sys:pl-expand unex-place env))
            (expander (get-delete-expander place)))
       [expander deleter place body])))
 
@@ -295,6 +308,11 @@
                  (lambda (,deleter-sym ,place ,body-sym)
                    (tree-bind ,args (cdr ,place)
                       ,delete-body)))))))))
+
+(defmacro define-place-macro (name place-destructuring-args . body)
+  (with-gensyms (name-dummy)
+    ^(sethash *place-macro* ',name
+              (tb ((,name-dummy ,*place-destructuring-args)) ,*body))))
 
 (defplace (sys:var arg) body
   (getter setter
@@ -551,14 +569,6 @@
     ^(macrolet ((,deleter () ^(makunbound ,',sym-expr)))
        ,*body)))
 
-(macro-time
-  (each ((from '(car cdr))
-         (to '(first rest)))
-    (each ((table (list *place-update-expander*
-                        *place-clobber-expander*
-                        *place-delete-expander*)))
-      (set [table to] [table from]))))
-
 (defmacro define-modify-macro (name lambda-list function)
   (let ((cleaned-lambda-list (mapcar [iffi consp car]
                                      (remql : lambda-list))))
@@ -601,3 +611,6 @@
        ^(placelet* (,*(zip temps places))
           (symacrolet (,*(zip syms temps))
             ,*body)))))
+
+(define-place-macro first (obj) ^(car ,obj))
+(define-place-macro rest (obj) ^(cdr ,obj))

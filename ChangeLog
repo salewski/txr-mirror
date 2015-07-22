@@ -1,5 +1,20 @@
 2015-07-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lisplib.c (place_set_entries): Add *place-macro* and
+	define-place-macro to list of names.
+
+	* share/txr/stdlib/place.tl (*place-macro*): New global hash.
+	(sys:tigger-load, sys:pl-expand): New functions.
+	(call-update-expander, call-clobber-expander, call-delete-expander):
+	Recognize and expand place macros.
+	(define-place-macro): New macro.
+	(first, rest): Places redefined using define-place-macro, replacing
+	the old hack of copying the expanders from one table entry to another.
+
+	* txr.1: Documented place macros.
+
+2015-07-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (obj_print, obj_pprint): Bugfix: incorrect
 	value returned when printing dwim forms, due to
 	mutating the obj variable.

@@ -56,7 +56,7 @@ static val place_set_entries(val dlt, val fun)
 {
   val name[] = {
     lit("*place-clobber-expander*"), lit("*place-update-expander*"),
-    lit("*place-delete-expander*"),
+    lit("*place-delete-expander*"), lit("*place-macro*"),
     lit("get-update-expander"), lit("get-clobber-expander"),
     lit("get-delete-expander"),
     lit("place-form-p"),
@@ -68,7 +68,7 @@ static val place_set_entries(val dlt, val fun)
     lit("set"), lit("pset"), lit("zap"), lit("flip"), lit("inc"), lit("dec"),
     lit("push"), lit("pop"), lit("swap"), lit("shift"), lit("rotate"),
     lit("pushnew"), lit("del"),
-    lit("defplace"), lit("define-modify-macro"),
+    lit("defplace"), lit("define-place-macro"), lit("define-modify-macro"),
     lit("placelet"), lit("placelet*"),
     nil
   };
