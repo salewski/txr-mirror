@@ -1667,6 +1667,18 @@ static val op_tree_bind(val form, val env)
   return eval_progn(body, new_env, body);
 }
 
+static val op_mac_param_bind(val form, val env)
+{
+  val body = cdr(form);
+  val ctx_form = pop(&body);
+  val params = pop(&body);
+  val expr = pop(&body);
+  val ctx_val = eval(ctx_form, env, ctx_form);
+  val expr_val = eval(expr, env, expr);
+  val new_env = bind_macro_params(env, nil, params, expr_val, nil, ctx_val);
+  return eval_progn(body, new_env, body);
+}
+
 static val op_setq(val form, val env)
 {
   val args = rest(form);
@@ -4031,6 +4043,7 @@ void eval_init(void)
   reg_op(defsymacro_s, op_defsymacro);
   reg_op(tree_case_s, op_tree_case);
   reg_op(tree_bind_s, op_tree_bind);
+  reg_op(intern(lit("mac-param-bind"), user_package), op_mac_param_bind);
   reg_op(setq_s, op_setq);
   reg_op(intern(lit("lisp1-setq"), system_package), op_lisp1_setq);
   reg_op(sys_lisp1_value_s, op_lisp1_value);

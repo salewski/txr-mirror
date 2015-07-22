@@ -1,5 +1,17 @@
 2015-07-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	Improve bad argument diagnosis for place macros.
+
+	* eval.c (op_mac_param_bind): New static function.
+	(eval_init): Register mac-param-bind operator.
+
+	* share/txr/stdlib/place.tl (define-place-macro): Use
+	mac-param-bind inside a lambda instead of tb macro.
+
+	* txr.1: Document mac-param-bind.
+
+2015-07-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	Implementing second through tenth as places.
 
 	* eval.c (eval_init): Register second through tenth as intrinsic.

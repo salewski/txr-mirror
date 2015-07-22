@@ -310,9 +310,12 @@
                       ,delete-body)))))))))
 
 (defmacro define-place-macro (name place-destructuring-args . body)
-  (with-gensyms (name-dummy)
+  (with-gensyms (name-dummy args)
     ^(sethash *place-macro* ',name
-              (tb ((,name-dummy ,*place-destructuring-args)) ,*body))))
+              (lambda (,args)
+                (mac-param-bind ,args
+                                (,name-dummy ,*place-destructuring-args)
+                                ,args ,*body)))))
 
 (defplace (sys:var arg) body
   (getter setter

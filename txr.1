@@ -29003,9 +29003,10 @@ Rather it may be substituted by one kind of form when it
 is treated as a pure value, and another kind of form
 when it is treated as a place.
 
-.coNP Operator @ tree-bind
+.coNP Operators @ tree-bind and @ mac-param-bind
 .synb
 .mets (tree-bind < macro-style-params < expr << form *)
+.mets (mac-param-bind < context-expr < macro-style-params < expr << form *)
 .syne
 .desc
 The
@@ -29030,6 +29031,22 @@ structural mismatch between the parameters and the value of
 
 One way to avoid this exception is to use
 .codn tree-case .
+
+The
+.code mac-param-bind
+operator is similar to
+.code tree-bind
+except that it takes an extra argument,
+.metn context-expr.
+This argument is an expression which is evaluated. It is expected to
+evaluate to a compound form. If an error occurs during binding, the error
+diagnostic message is based on information obtained from this form.
+By contrast, the
+.code tree-bind
+operator's error diagnostic refers to the
+.code tree-bind
+form, which is cryptic if the binding is used for the implementation
+of some other construct, hidden from the user of that construct.
 
 .coNP Operator @ tree-case
 .synb
