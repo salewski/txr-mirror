@@ -334,26 +334,26 @@
                          (prog1 (cdr ,tmp) (,csetter (car ,tmp))))))))
        ,body)))
 
- (defplace (vecref vector index :whole args) body
-   (getter setter
-     (with-gensyms (vec-sym ind-sym)
-       ^(rlet ((,vec-sym ,vector)
-               (,ind-sym ,index))
-          (macrolet ((,getter () ^(vecref ,',vec-sym ,',ind-sym))
-                     (,setter (val) ^(refset ,',vec-sym ,',ind-sym ,val)))
-             ,body))))
-   (ssetter
-     ^(macrolet ((,ssetter (val) ^(refset ,*',args ,val)))
-        ,body))
-   (deleter
-     (with-gensyms (vec-sym ind-sym)
-       ^(rlet ((,vec-sym ,vector)
-               (,ind-sym ,index))
-          (macrolet ((,deleter ()
-                        ^(prog1 (vecref ,',vec-sym ,',ind-sym)
-                                (replace-vec ,',vec-sym nil
-                                             ,',ind-sym (succ ,',ind-sym)))))
-            ,body)))))
+(defplace (vecref vector index :whole args) body
+  (getter setter
+    (with-gensyms (vec-sym ind-sym)
+      ^(rlet ((,vec-sym ,vector)
+              (,ind-sym ,index))
+         (macrolet ((,getter () ^(vecref ,',vec-sym ,',ind-sym))
+                    (,setter (val) ^(refset ,',vec-sym ,',ind-sym ,val)))
+            ,body))))
+  (ssetter
+    ^(macrolet ((,ssetter (val) ^(refset ,*',args ,val)))
+       ,body))
+  (deleter
+    (with-gensyms (vec-sym ind-sym)
+      ^(rlet ((,vec-sym ,vector)
+              (,ind-sym ,index))
+         (macrolet ((,deleter ()
+                       ^(prog1 (vecref ,',vec-sym ,',ind-sym)
+                               (replace-vec ,',vec-sym nil
+                                            ,',ind-sym (succ ,',ind-sym)))))
+           ,body)))))
 
 (defplace (chr-str string index :whole args) body
   (getter setter
