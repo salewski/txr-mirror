@@ -367,29 +367,49 @@ val rest(val cons)
   return cdr(cons);
 }
 
-val second(val cons)
+val second(val obj)
 {
-  return car(cdr(cons));
+  return ref(obj, one);
 }
 
-val third(val cons)
+val third(val obj)
 {
-  return car(cdr(cdr(cons)));
+  return ref(obj, two);
 }
 
-val fourth(val cons)
+val fourth(val obj)
 {
-  return car(cdr(cdr(cdr(cons))));
+  return ref(obj, three);
 }
 
-val fifth(val cons)
+val fifth(val obj)
 {
-  return car(cdr(cdr(cdr(cdr(cons)))));
+  return ref(obj, four);
 }
 
-val sixth(val cons)
+val sixth(val obj)
 {
-  return car(cdr(cdr(cdr(cdr(cdr(cons))))));
+  return ref(obj, num_fast(5));
+}
+
+val seventh(val obj)
+{
+  return ref(obj, num_fast(6));
+}
+
+val eighth(val obj)
+{
+  return ref(obj, num_fast(7));
+}
+
+val ninth(val obj)
+{
+  return ref(obj, num_fast(8));
+}
+
+val tenth(val obj)
+{
+  return ref(obj, num_fast(9));
 }
 
 val conses(val list)

@@ -1,5 +1,25 @@
 2015-07-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	Implementing second through tenth as places.
+
+	* eval.c (eval_init): Register second through tenth as intrinsic.
+
+	* gencadr.txr: New cadr.c changes encoded.
+
+	* lib.c (second, third, fourth, fifth, sixth): Functions
+	reimplemented using ref, so they are much more efficient
+	for vectors and strings.
+	(seventh, eighth, ninth, tenth): New functions.
+
+	* lib.h (seventh, eighth, ninth, tenth): Declared.
+
+	* share/txr/stdlib/place.tl: place macros defined for
+	second through tenth.
+
+	* txr.1: Documented.
+
+2015-07-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lisplib.c (place_set_entries): Add *place-macro* and
 	define-place-macro to list of names.
 

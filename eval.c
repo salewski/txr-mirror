@@ -4140,6 +4140,10 @@ void eval_init(void)
   reg_fun(intern(lit("fourth"), user_package), func_n1(fourth));
   reg_fun(intern(lit("fifth"), user_package), func_n1(fifth));
   reg_fun(intern(lit("sixth"), user_package), func_n1(sixth));
+  reg_fun(intern(lit("seventh"), user_package), func_n1(seventh));
+  reg_fun(intern(lit("eighth"), user_package), func_n1(eighth));
+  reg_fun(intern(lit("ninth"), user_package), func_n1(ninth));
+  reg_fun(intern(lit("tenth"), user_package), func_n1(tenth));
   reg_fun(intern(lit("conses"), user_package), func_n1(conses));
   reg_fun(intern(lit("conses*"), user_package), func_n1(lazy_conses));
   reg_fun(intern(lit("copy-list"), user_package), func_n1(copy_list));

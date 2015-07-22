@@ -13713,26 +13713,43 @@ specifies the contents of the entire string or vector, as if the operation
 were done on a non-empty vector or string, followed by the deletion of the
 first element.
 
-.coNP Functions @, second @, third @, fourth @ fifth and @ sixth
+.coNP Accessors @, second @, third @, fourth @, fifth @, sixth @, seventh @, eighth @ ninth and @ tenth
 .synb
-.mets (first << list )
-.mets (second << list )
-.mets (third << list )
-.mets (fourth << list )
-.mets (fifth << list )
-.mets (sixth << list )
+.mets (first << object )
+.mets (second << object )
+.mets (third << object )
+.mets (fourth << object )
+.mets (fifth << object )
+.mets (sixth << object )
+.mets (seventh << object )
+.mets (eighth << object )
+.mets (ninth << object )
+.mets (tenth << object )
+.mets (set (first << object ) << new-value )
+.mets (set (second << object ) << new-value )
+.mets ...
+.mets (set (tenth << object ) << new-value )
 .syne
 .desc
-These functions access the elements of a proper list by position.
-
-If the list is shorter than implied, these functions return
+Used as functions, these accessors retrieve the elements of a sequence by
+position.  If the sequence is shorter than implied by the position, these
+functions return
 .codn nil .
+
+When used as syntactic places, these accessors denote the storage locations
+by position. The location must exist, otherwise an error exception results.
+The places support deletion.
+
 
 .TP* Examples:
 .cblk
   (third '(1 2)) -> nil
-  (second '(1 2)) -> 2
-  (third '(1 2 . 3)) -> **error**
+  (second "ab") -> #\eb
+  (third '(1 2 . 3)) -> **error, improper list*
+
+  (let ((x (copy "abcd")))
+    (inc (third x))
+    x) -> "abce"
 .cble
 
 .coNP Functions @, append @ nconc and @ append*

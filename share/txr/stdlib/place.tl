@@ -614,3 +614,12 @@
 
 (define-place-macro first (obj) ^(car ,obj))
 (define-place-macro rest (obj) ^(cdr ,obj))
+(define-place-macro second (obj) ^(ref ,obj 1))
+(define-place-macro third (obj) ^(ref ,obj 2))
+(define-place-macro fourth (obj) ^(ref ,obj 3))
+(define-place-macro fifth (obj) ^(ref ,obj 4))
+(define-place-macro sixth (obj) ^(ref ,obj 5))
+(define-place-macro seventh (obj) ^(ref ,obj 6))
+(define-place-macro eighth (obj) ^(ref ,obj 7))
+(define-place-macro ninth (obj) ^(ref ,obj 8))
+(define-place-macro tenth (obj) ^(ref ,obj 9))
