@@ -60,6 +60,7 @@
 #include "parser.h"
 #include "syslog.h"
 #include "glob.h"
+#include "cadr.h"
 #include "txr.h"
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
@@ -7450,6 +7451,7 @@ void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),
 #if HAVE_GLOB
   glob_init();
 #endif
+  cadr_init();
 
   gc_state(gc_save);
 }

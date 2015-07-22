@@ -1,0 +1,109 @@
+@(bind ad @(append-each* ((i (range 2 5))) (rperm "ad" i)))
+@(do
+   (defun compile-ad (string arg)
+     (casequal string
+       ("" arg)
+       (t `c@[string 0]r(@(compile-ad [string 1..:] arg))`))))
+@(next "lib.c")
+@(collect)
+@{c-copyright}
+@(until)
+
+@(end)
+@(next "share/txr/stdlib/place.tl")
+@(collect)
+@{tl-copyright}
+@(until)
+
+@(end)
+@(output "cadr.c")
+@{c-copyright "\n"}
+
+#include <stdio.h>
+#include <string.h>
+#include <dirent.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include <setjmp.h>
+#include <limits.h>
+#include <signal.h>
+#include "config.h"
+#include "lib.h"
+#include "gc.h"
+#include "signal.h"
+#include "unwind.h"
+#include "eval.h"
+#include "stream.h"
+#include "lisplib.h"
+#include "txr.h"
+#include "cadr.h"
+@  (repeat)
+
+val c@{ad}r(val cons)
+{
+  return @(compile-ad ad 'cons);
+}
+@  (end)
+
+static val cadr_register(val set_fun)
+{
+  funcall1(set_fun, nil);
+@  (repeat)
+  reg_fun(intern(lit("c@{ad}r"), user_package), func_n1(c@{ad}r));
+@  (end)
+  load(format(nil, lit("~a/cadr.tl"), stdlib_path, nao));
+  return nil;
+}
+
+static val cadr_set_entries(val dlt, val fun)
+{
+  val name[] = {
+@  (repeat)
+    lit("c@{ad}r"),
+@  (end)
+    nil
+  };
+
+  set_dlt_entries(dlt, name, fun);
+  return nil;
+}
+
+void cadr_init(void)
+{
+  dlt_register(dl_table, cadr_register, cadr_set_entries);
+}
+@(end)
+@(output "cadr.h")
+@{c-copyright "\n"}
+
+@  (repeat)
+val c@{ad}r(val);
+@  (end)
+
+void cadr_init(void);
+@(end)
+@(output "share/txr/stdlib/cadr.tl")
+@{tl-copyright "\n"}
+@  (repeat)
+
+(defplace (c@{ad}r cell) body
+  (getter setter
+    (with-gensyms (cell-sym)
+      ^(rlet ((,cell-sym (c@{ad [1..:]}r ,cell)))
+         (macrolet ((,getter () ^(c@{ad [0]}r ,',cell-sym))
+                    (,setter (val) ^(sys:rplac@{ad [0]} ,',cell-sym ,val)))
+           ,body))))
+  (ssetter
+    ^(macrolet ((,ssetter (val) ^(sys:rplac@{ad [0]} (c@{ad [1..:]}r ,',cell) ,val)))
+      ,body))
+  (deleter
+    ^(macrolet ((,deleter ()
+                  (with-gensyms (tmp)
+                    (with-update-expander (cgetter csetter) '(c@{ad [1..:]}r ,cell) nil
+                      ^(let ((,tmp (,cgetter)))
+                         @(if (equal [ad 0] #\a)
+                            `(prog1 (car ,tmp) (,csetter (cdr ,tmp)))`
+                            `(prog1 (cdr ,tmp) (,csetter (car ,tmp)))`))))))
+       ,body)))
+@  (end)
+@(end)

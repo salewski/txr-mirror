@@ -38,9 +38,9 @@
 #include "txr.h"
 #include "lisplib.h"
 
-static val dl_table;
+val dl_table;
 
-static void set_dlt_entries(val dlt, val *name, val fun)
+void set_dlt_entries(val dlt, val *name, val fun)
 {
   for (; *name; name++) {
     val sym = intern(*name, user_package);
@@ -126,9 +126,9 @@ static val txr_case_instantiate(val set_fun)
   return nil;
 }
 
-static val dlt_register(val dlt,
-                        val (*instantiate)(val),
-                        val (*set_entries)(val, val))
+val dlt_register(val dlt,
+                 val (*instantiate)(val),
+                 val (*set_entries)(val, val))
 {
   return set_entries(dl_table, func_f0(func_f1(dlt, set_entries), instantiate));
 }

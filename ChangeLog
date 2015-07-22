@@ -1,5 +1,27 @@
 2015-07-21  Kaz Kylheku  <kaz@kylheku.com>
 
+	Implementing caar, cadr, cdar and friends.
+
+	* lib.c (init): Call cadr_init.
+
+	* lisplib.c (dl_table, set_dlt_entries, dlt_register): Externalize.
+
+	* lisplib.h (dl_table, set_dlt_entries, dlt_register): Declared.
+
+	* Makefile (OBJS): Add cadr.o.
+
+	* cadr.c: New file.
+
+	* cadr.h: New file.
+
+	* gencadr.txr: New file.
+
+	* share/txr/stdlib/cadr.tl: New file.
+
+	* txr.1: Document cadr accessors.
+
+2015-07-21  Kaz Kylheku  <kaz@kylheku.com>
+
 	* share/txr/stdlib/place.tl (defplace cdr): Change deletion
 	semantics so that (del (cdr x)) is symmetric with (del (car x)).
 

@@ -14171,6 +14171,86 @@ then
 .code nil
 is returned.
 
+.coNP Accessors @, caar @, cadr @, cdar @, cddr ... @ cdddddr
+.synb
+.mets (caar << object )
+.mets (cadr << object )
+.mets (cdar << object )
+.mets (cddr << object )
+.mets ...
+.mets (cdddr << object )
+.mets (set (caar << object ) << new-value )
+.mets (set (cadr << object ) << new-value )
+.mets ...
+.syne
+.desc
+The
+.I a-d accessors
+provide a shorthand notation for accessing two to five
+levels deep into a cons-cell-based tree structure. For instance, the
+the equivalent of the nested function call expression
+.cblk
+.meti (car (car (cdr << object )))
+.cble
+can be achieved using the single function call
+.cblk
+.meti (caadr << object ).
+The symbol names of the a-d accessors are a generalization of the words
+"car" and "cdr". They encodes the pattern of
+.code car
+and
+.code cdr
+traversal of the structure using a sequence of the the letters
+.code a
+and
+.code d
+placed between
+.code c
+and
+.codn r .
+The traversal is encoded in right-to-left order, so that
+.code cadr
+indicates a traversal of the
+.code cdr
+link, followed by the
+.codn car .
+This order corresponds to the nested function call notation, which also
+encodes the traversal right-to-left. The following diagram illustrates
+the straightforward relationship:
+.cblk
+  (cdr (car (cdr x)))
+    ^    ^    ^
+    |   /     |
+    |  /     /
+    | / ____/
+    || /
+  (cdadr x)
+.cble
+
+\*(TL provides all possible a-d accessors up to five levels deep, from
+.code caar
+all the way through
+.codn cdddddr .
+
+Expressions involving a-d accessors are places. For example,
+.code (caddr x)
+denotes the same place as
+.codn (car (cddr x)) ,
+and
+.code (cdadr x)
+denotes the same place as
+.codn (cdr (cadr x)) .
+
+The a-d accessor places support deletion, with semantics derived from
+the deletion semantics of the
+.code car
+and
+.code cdr
+places. For example,
+.code (del (caddr x))
+means the same as
+.code (del (car (cddr x))) .
+
 .coNP Functions @ flatten and @ flatten*
 .synb
 .mets (flatten << list )
