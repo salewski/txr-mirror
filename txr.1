@@ -2436,20 +2436,27 @@ as
 in order to include it as a character. All the escaping conventions
 used in string literals can be used in word literals.
 
-Unlike in string literals, whitespace (tabs, spaces and newlines) is not
+Unlike in string literals, whitespace (tabs and spaces) is not
 significant in word literals: it separates words.  Whitespace may be
 escaped with a backslash in order to include it as a literal character.
 
+Just like in string literals, an unescaped newline character is not allowed.
+A newline preceded by a backslash is permitted. Such an escaped backslash,
+together with any leading and trailing unescaped whitespace, is removed
+and replaced with a single space.
 
 Example:
 
 .cblk
-  #"abc def ghi"  --> notates ("abc" "def" "ghi")
+  #"abc def ghi"   --> notates ("abc" "def" "ghi")
 
-  #"abc   def
-  ghi"            --> notates ("abc" "def" "ghi")
+  #"abc   def \e
+      ghi"         --> notates ("abc" "def" "ghi")
 
   #"abc\e def ghi" --> notates ("abc def" "ghi")
+
+  #"abc\e def\e \e
+   \e ghi"         --> notates ("abc def " " ghi")
 .cble
 
 A splicing word literal differs from a word literal in that it does not
@@ -2526,9 +2533,12 @@ as
 \ in order to include it as a character. All the escaping conventions
 used in quasiliterals can be used in QLL.
 
-Unlike in quasiliterals, whitespace (tabs, spaces and newlines) is not
+Unlike in quasiliterals, whitespace (tabs and spaces) is not
 significant in QLL: it separates words.  Whitespace may be
 escaped with a backslash in order to include it as a literal character.
+
+A newline is not permitted unless escaped. An escaped newline works exactly the
+same way as it does in word list literals (WLL-s).
 
 Note that the delimiting into words is done before the variable
 substitution. If the variable a contains spaces, then
@@ -2542,7 +2552,7 @@ Examples:
 .cblk
   #`abc @a ghi`  --> notates (`abc` `@a` `ghi`)
 
-  #`abc   @d@e@f
+  #`abc   @d@e@f \e
   ghi`            --> notates (`abc` `@d@e@f` `ghi`)
 
   #`@a\e @b @c` --> notates (`@a @b` `@c`)
@@ -31180,6 +31190,11 @@ encodes
 .code !;a
 rather than the current behavior of encoding
 .codn !a .
+Also, in 109 and earlier, newlines were allowed in word list literals and
+word list quasiliterals. They were treated as a word-separating space.
+A backslash-escaped newline, and all whitespace around it, was deleted
+just like in ordinary literals, and did not separate words. The old
+behavior is emulated.
 
 .IP 107
 Up through \*(TX 107, by accident, there was a function called

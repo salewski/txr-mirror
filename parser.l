@@ -854,9 +854,17 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return LITCHAR;
 }
 
-<STRLIT,QSILIT,WLIT,QWLIT>{WS}[\\]\n{WS} {
+<STRLIT,QSILIT>{WS}[\\]\n{WS} {
   yyextra->lineno++;
 }
+
+<STRLIT,QSILIT,WLIT,QWLIT>{WS}[\\]\n{WS} {
+  yyextra->lineno++;
+
+  if (!opt_compat || opt_compat > 109)
+    return ' ';
+}
+
 
 <STRLIT,QSILIT,WLIT,QWLIT>[\\](x{HEX}+|{OCT}+);?  {
   yylval->chr = num_esc(yyg, yytext+1);
@@ -905,7 +913,13 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
 <WLIT,QWLIT>\n {
   yyextra->lineno++;
-  return ' ';
+
+  if (opt_compat && opt_compat <= 109)
+    return ' ';
+
+  yyerrprepf(yyg, lit("newline in word list literal"), nao);
+  yylval->chr = yytext[0];
+  return ERRTOK;
 }
 
 <QSILIT,QWLIT>@/([[({'^,@]|{TOK}) {

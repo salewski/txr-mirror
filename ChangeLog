@@ -1,5 +1,17 @@
 2015-07-23  Kaz Kylheku  <kaz@kylheku.com>
 
+	* parser.l (grammar): Do not allow unescaped newline in
+	word list literals and word list quasiliterals, except
+	in <= 109 compatibility mode. An escaped newline in
+	these literals, together with surrounding whitespace,
+	now produces a single space, except in <= 109
+	compatibility mode.
+
+	* txr.1: Documented new rules for WLL's and QLL's,
+	and added compatibility notes.
+
+2015-07-23  Kaz Kylheku  <kaz@kylheku.com>
+
 	* genvim.txr: Scan cadr.c, cadr.tl, with-resources.tl, txr-case.tl.
 	Remove hard-coded txr-case symbols. Recognize operators registered
 	with in-line intern.
