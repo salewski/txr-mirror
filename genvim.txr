@@ -8,8 +8,10 @@ static void dir_tables_init(void)
 }
 @(end)
 @(next @(open-files ^(#*"eval.c rand.c signal.c stream.c gc.c glob.c"
-                      #*"syslog.c filter.c txr.c arith.c unwind.c"
-                      ,*#`sysif.c @stdlib/place.tl @stdlib/ifa.tl`)))
+                      #*"syslog.c filter.c txr.c arith.c unwind.c cadr.c"
+                      ,*#`sysif.c @stdlib/place.tl @stdlib/ifa.tl`
+                      ,*#`@stdlib/cadr.tl @stdlib/with-resources.tl`
+                      ,*#`@stdlib/txr-case.tl`)))
 @(collect)
 @  (block)
 @    (cases)
@@ -21,9 +23,7 @@ static void dir_tables_init(void)
 @    (or)
   reg_@/op|mac/(@{txl-sym}_s,@(skip)
 @    (or)
-  reg_mac(intern(lit("@{txl-sym}")@(skip)
-@    (or)
-  reg_fun(@(skip)intern(lit("@{txl-sym}")@(skip)
+  reg_@/op|mac|fun/(@(skip)intern(lit("@{txl-sym}")@(skip)
 @    (or)
   reg_fun(@{txl-sym}_s,@(skip)
 @    (or)
@@ -42,8 +42,7 @@ static void dir_tables_init(void)
                            "until" "last"
                            "if" "else" "elif"
                            "include")))
-@(do (set [txl-sym 0..0] '("macro-time" "macrolet" "symacrolet"
-                           "txr-if" "txr-when" "txr-case")))
+@(do (set [txl-sym 0..0] '("macro-time" "macrolet" "symacrolet")))
 @(set (txr-sym txl-sym) (@(sort (uniq txr-sym)) @(sort (uniq txl-sym))))
 @(bind bs "\\\\")
 @(bind hex "0-9A-Fa-f")

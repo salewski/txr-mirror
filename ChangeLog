@@ -1,5 +1,11 @@
 2015-07-23  Kaz Kylheku  <kaz@kylheku.com>
 
+	* genvim.txr: Scan cadr.c, cadr.tl, with-resources.tl, txr-case.tl.
+	Remove hard-coded txr-case symbols. Recognize operators registered
+	with in-line intern.
+
+2015-07-23  Kaz Kylheku  <kaz@kylheku.com>
+
 	Adding with-resources macro.
 
 	* share/txr/stdlib/with-resources.tl: New file.
