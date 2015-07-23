@@ -242,10 +242,9 @@ endif
 
 TESTS_TMP := txr.test.out
 TESTS_OUT := $(addprefix tst/,\
-                  $(patsubst %.tl,%.out,\
-                    $(patsubst %.txr,%.out,\
-                       $(shell find -H tests \
-                               \( -name '*.txr' -o -name '*.tl' \) | sort))))
+                $(patsubst %.tl,%.out,\
+                   $(patsubst %.txr,%.out,\
+                      $(wildcard $(addprefix tests/*/*.,txr tl)))))
 TESTS_OK := $(TESTS_OUT:.out=.ok)
 
 .PHONY: tests

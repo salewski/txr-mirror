@@ -1,5 +1,18 @@
 2015-07-23  Kaz Kylheku  <kaz@kylheku.com>
 
+	Split off test macros from ifa.tl into common file.
+
+	* Makefile (TESTS_OUT): Don't use find to hunt down tests;
+	but rather wildcard. This way common.tl is not mistakenly
+	identified as an independent test file.
+
+	* tests/012/ifa.tl: Removed test code, placed in new file
+	which is loaded.
+
+	* tests/common.tl: New file.
+
+2015-07-23  Kaz Kylheku  <kaz@kylheku.com>
+
 	Fixes for building in separate dir.
 
 	* Makefile (CFLAGS): Search for mpi header in $(top_srcdir).
