@@ -30830,6 +30830,76 @@ Parser error messages are directed to the
 .code *stderr*
 stream.
 
+.SS* Scoped Resource Management
+.coNP Macro @ with-resources
+.synb
+.mets (with-resources >> ({ sym >> [ init-form <> [ cleanup-form ])}*)
+.mets \ \  << body-form *)
+.syne
+.desc
+The
+.code with-resources
+macro provides a sequential binding construct similar to
+.codn let* .
+Every
+.meta sym
+is established as a variable which is visible to the
+.metn init-form -s
+of subsequent variables, to all subsequent
+.metn cleanup-form -s
+including that of the same variable,
+and to the
+.metn body-form -s.
+
+If no
+.meta init-form
+is supplied, then
+.meta sym
+is bound to the value
+.codn nil .
+
+If an
+.meta init-form
+is supplied, but no
+.metn cleanup-form ,
+then
+.meta sym
+is bound to the value of the
+.metn init-form .
+
+If a
+.meta cleanup-form
+is supplied in addition to
+.metn init-form ,
+it specifies code to be executed upon the termination of the
+entire
+.code with-resources
+construct.
+
+When an instance of
+.code with-resources
+terminates, all of the
+.metn cleanup-form -s
+specified in its binding clauses are evaluated, in reverse (right-to-left)
+order. The value of the last
+.meta body-form
+is returned, or else
+.code nil
+if no
+.metn body-form -s
+are present.
+
+.TP* "Example:"
+
+The following opens a text file and reads a line from it, returning that line,
+while ensuring that the stream is closed immediately:
+
+.cblk
+(with-resources ((f (open-file "/etc/motd") (close-stream f)))
+  (whilet ((l (get-line f)))
+    (put-line l)))
+.cble
+
 .SS* Debugger
 \*(TX has a simple, crude, built-in debugger. The debugger is invoked by adding
 the

@@ -126,6 +126,20 @@ static val txr_case_instantiate(val set_fun)
   return nil;
 }
 
+static val with_resources_set_entries(val dlt, val fun)
+{
+  val name[] = { lit("with-resources"), nil };
+  set_dlt_entries(dlt, name, fun);
+  return nil;
+}
+
+static val with_resources_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(format(nil, lit("~a/with-resources.tl"), stdlib_path, nao));
+  return nil;
+}
+
 val dlt_register(val dlt,
                  val (*instantiate)(val),
                  val (*set_entries)(val, val))
@@ -141,6 +155,7 @@ void lisplib_init(void)
   dlt_register(dl_table, ver_instantiate, ver_set_entries);
   dlt_register(dl_table, ifa_instantiate, ifa_set_entries);
   dlt_register(dl_table, txr_case_instantiate, txr_case_set_entries);
+  dlt_register(dl_table, with_resources_instantiate, with_resources_set_entries);
 }
 
 val lisplib_try_load(val sym)

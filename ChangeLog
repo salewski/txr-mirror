@@ -1,3 +1,15 @@
+2015-07-23  Kaz Kylheku  <kaz@kylheku.com>
+
+	Adding with-resources macro.
+
+	* share/txr/stdlib/with-resources.tl: New file.
+
+	* lisplib.c (with_resource_set_entries, with_resources_instantiate):
+	New static functions.
+	(lisplib_init): Register new functions under dlt_register.
+
+	* txr.1: Document with-resources.
+
 2015-07-22  Kaz Kylheku  <kaz@kylheku.com>
 
 	Adding nthcdr as accessor.
