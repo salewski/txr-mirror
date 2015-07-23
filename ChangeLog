@@ -1,5 +1,20 @@
 2015-07-23  Kaz Kylheku  <kaz@kylheku.com>
 
+	Fixes for building in separate dir.
+
+	* Makefile (CFLAGS): Search for mpi header in $(top_srcdir).
+	(ABBREV): Remove top_srcdir prefix from source names.
+	(dbg/%.o, opt/%.o): Extra set of pattern rules for searching
+	for prerequisites in $(top_srcdir) where primary C sources
+	are found and in the local dir where some generated C is found.
+	This way we don't rely on VPATH.
+	(opt/%.res): Bogus target removed.
+	(VPATH): Removed in favor of explicitly referencing $(top_srcdir).
+	Was causing problems for tests.
+	(lex.yy.c, y.tab.c): Prerequisites referenced in $(top_srcdir).
+
+2015-07-23  Kaz Kylheku  <kaz@kylheku.com>
+
 	* parser.l (grammar): Do not allow unescaped newline in
 	word list literals and word list quasiliterals, except
 	in <= 109 compatibility mode. An escaped newline in

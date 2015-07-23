@@ -29,7 +29,7 @@ VERBOSE :=
 CFLAGS := -iquote $(conf_dir) -iquote $(top_srcdir) \
           $(LANG_FLAGS) $(DIAG_FLAGS) \
           $(DBG_FLAGS) $(PLATFORM_FLAGS) $(EXTRA_FLAGS)
-CFLAGS += -iquote mpi
+CFLAGS += -iquote $(top_srcdir)/mpi
 CFLAGS := $(filter-out $(REMOVE_FLAGS),$(CFLAGS))
 
 ifneq ($(subst g++,@,$(notdir $(CC))),$(notdir $(CC)))
@@ -83,7 +83,8 @@ V = $(if $(VERBOSE),,@)
 # prerequisites without the long laundry list of additional dependencies.
 ABBREV = $(if $(VERBOSE),\
            @:,\
-           @printf "%s %s -> %s\n" $(1) "$(filter-out $(DEP_$@),$^)" $@)
+           @printf "%s %s -> %s\n" $(1) \
+	      "$(patsubst $(top_srcdir)/%,%,$(filter-out $(DEP_$@),$^))" $@)
 ABBREV3 = $(if $(VERBOSE),@:,@printf "%s %s -> %s\n" $(1) "$(3)" $(2))
 
 define DEPGEN
@@ -113,20 +114,23 @@ $(V)mkdir -p $(dir $@)
 $(V)windres -O coff -DTXR_VER=$(txr_ver) $< $@
 endef
 
+dbg/%.o: $(top_srcdir)/%.c
+	$(call COMPILE_C_WITH_DEPS,)
+
+opt/%.o: $(top_srcdir)/%.c
+	$(call COMPILE_C_WITH_DEPS,$(OPT_FLAGS))
+
 dbg/%.o: %.c
 	$(call COMPILE_C_WITH_DEPS,)
 
 opt/%.o: %.c
 	$(call COMPILE_C_WITH_DEPS,$(OPT_FLAGS))
 
-dbg/%-win.o: %.c
+dbg/%-win.o: $(top_srcdir)/%.c
 	$(call COMPILE_C_WITH_DEPS,-DCONFIG_WIN_MAIN=1)
 
-opt/%-win.o: %.c
+opt/%-win.o: $(top_srcdir)/%.c
 	$(call COMPILE_C_WITH_DEPS,-DCONFIG_WIN_MAIN=1 $(OPT_FLAGS))
-
-opt/%.res: win/%.rc
-	$(call WINDRES)
 
 %.res: %.rc
 	$(call WINDRES)
@@ -157,8 +161,6 @@ $(PROG)-win: $(patsubst %/txr.o,%/txr-win.o,$(OPT_OBJS)) $(EXTRA_OBJS-y)
 $(PROG)-win-dbg: $(patsubst %/txr.o,%/txr-win.o,$(DBG_OBJS)) $(EXTRA_OBJS-y)
 	$(call LINK_PROG,-mwindows)
 
-VPATH := $(top_srcdir)
-
 # Newline constant
 define NL
 
@@ -180,7 +182,7 @@ $(call DEP,$(OBJS) $(EXTRA_OBJS-y),\
 
 $(call DEP,opt/lex.yy.o dbg/lex.yy.o,y.tab.h)
 
-lex.yy.c: parser.l
+lex.yy.c: $(top_srcdir)/parser.l
 	$(call ABBREV,LEX)
 	$(V)rm -f $@
 	$(V)$(LEX) $(LEX_DBG_FLAGS) $<
@@ -193,7 +195,7 @@ y.tab.h: y.tab.c
 	  exit 1;                                                 \
 	fi
 
-y.tab.c: parser.y
+y.tab.c: $(top_srcdir)/parser.y
 	$(call ABBREV,YACC)
 	$(V)rm -f y.tab.c
 	$(V)if $(YACC) -v -d $< ; then chmod a-w y.tab.c ; true ; else rm y.tab.c ; false ; fi
