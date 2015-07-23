@@ -14191,6 +14191,66 @@ then
 .code nil
 is returned.
 
+.coNP Accessor @ nthcdr
+.synb
+.mets (nthcdr < index << list )
+.mets (set (nthcdr < index << list ) << new-value )
+.syne
+.desc
+The
+.code nthcdr
+function retrieves the n-th cons cell of a list, indexed from zero.
+The
+.meta index
+parameter must be a non-negative integer. If
+.meta index
+specifies a nonexistent cons beyond the end of the list,
+then
+.code nthcdr
+yields nil.
+The following equivalences hold:
+
+.cblk
+  (nthcdr 0 list) <--> list
+  (nthcdr 1 list) <--> (cdr list)
+  (nthcdr 2 list) <--> (cddr list)
+.cble
+
+An
+.code nthcdr
+place designates the storage location which holds the n-th cell,
+as indicated by the value of
+.metn index .
+Indices beyond the last cell of
+.meta list
+do not designate a valid place.
+If
+.meta list
+is itself a place, then the zeroth index is permitted and the
+resulting place denotes
+.metn list .
+Storing a value to
+.cblk
+.meti (nthcdr < 0 << list)
+.cble
+overwrites
+.metn list .
+Otherwise if
+.meta list
+isn't a syntactic place, then the zeroth index does not designate a valid
+place;
+.meta index
+must have a positive value. A
+.code nthcdr
+place does not support deletion.
+
+.TP* "Dialect Note:"
+In Common Lisp,
+.code nthcdr
+is only a function, not an accessor;
+.code nthcdr
+forms do not denote places.
+
 .coNP Accessors @, caar @, cadr @, cdar @, cddr ... @ cdddddr
 .synb
 .mets (caar << object )

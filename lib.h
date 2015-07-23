@@ -457,6 +457,7 @@ loc tail(val cons);
 loc term(loc head);
 loc lastcons(val list);
 val last(val list);
+val nthcdr(val pos, val list);
 loc ltail(loc cons);
 val pop(val *plist);
 val upop(val *plist, val *pundo);

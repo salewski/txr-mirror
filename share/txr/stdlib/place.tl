@@ -355,6 +355,26 @@
                          (prog1 (cdr ,tmp) (,csetter (car ,tmp))))))))
        ,body)))
 
+(defplace (nthcdr index list) body
+  (getter setter
+    (with-gensyms (index-sym sentinel-head-sym parent-cell-sym)
+      (if (place-form-p list)
+        (with-update-expander (lgetter lsetter) list nil
+          ^(rlet ((,index-sym ,index))
+             (let* ((,sentinel-head-sym (cons nil (,lgetter)))
+                    (,parent-cell-sym (nthcdr ,index-sym ,sentinel-head-sym)))
+               (macrolet ((,getter () ^(cdr ,',parent-cell-sym))
+                          (,setter (val)
+                            ^(progn (sys:rplacd ,',parent-cell-sym ,val)
+                                    (,',lsetter (cdr ,',sentinel-head-sym)))))
+                 ,body))))
+        ^(rlet ((,index-sym ,index))
+           (let* ((,parent-cell-sym (nthcdr (pred ,index-sym) ,list)))
+             (macrolet ((,getter () ^(cdr ,',parent-cell-sym))
+                        (,setter (val)
+                          ^(sys:rplacd ,',parent-cell-sym ,val)))
+               ,body)))))))
+
 (defplace (vecref vector index :whole args) body
   (getter setter
     (with-gensyms (vec-sym ind-sym)

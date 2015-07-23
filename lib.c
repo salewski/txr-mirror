@@ -498,6 +498,19 @@ val last(val list)
   return nullocp(p) ? list : deref(p);
 }
 
+val nthcdr(val pos, val list)
+{
+  cnum n = c_num(pos);
+
+  if (n < 0)
+    uw_throwf(error_s, lit("nthcdr: negative index ~s given"), pos, nao);
+
+  while (n-- > 0)
+    list = cdr(list);
+
+  return list;
+}
+
 loc ltail(loc cons)
 {
   while (cdr(deref(cons)))

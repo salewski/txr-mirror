@@ -1,5 +1,19 @@
 2015-07-22  Kaz Kylheku  <kaz@kylheku.com>
 
+	Adding nthcdr as accessor.
+
+	* eval.c (eval_init): Register nthcdr function.
+
+	* lib.c (nthcdr): New function.
+
+	* lib.h (nthcdr): Declared.
+
+	* share/txr/stdlib/place.tl (nthcdr): New defplace.
+
+	* txr.1: Documented.
+
+2015-07-22  Kaz Kylheku  <kaz@kylheku.com>
+
 	Improve bad argument diagnosis for place macros.
 
 	* eval.c (op_mac_param_bind): New static function.
