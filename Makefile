@@ -26,10 +26,10 @@
 -include config/config.make
 
 VERBOSE :=
-CFLAGS := -iquote $(conf_dir) -iquote $(top_srcdir) \
+CFLAGS := -iquote $(conf_dir) $(if $(top_srcdir),-iquote $(top_srcdir)) \
           $(LANG_FLAGS) $(DIAG_FLAGS) \
           $(DBG_FLAGS) $(PLATFORM_FLAGS) $(EXTRA_FLAGS)
-CFLAGS += -iquote $(top_srcdir)/mpi
+CFLAGS += -iquote $(top_srcdir)mpi
 CFLAGS := $(filter-out $(REMOVE_FLAGS),$(CFLAGS))
 
 ifneq ($(subst g++,@,$(notdir $(CC))),$(notdir $(CC)))
@@ -54,10 +54,10 @@ OBJS-$(have_posix_sigs) += signal.o
 EXTRA_OBJS-$(add_win_res) += win/txr.res
 
 ifneq ($(have_git),)
-SRCS := $(addprefix $(top_srcdir)/,\
+SRCS := $(addprefix $(top_srcdir),\
                     $(filter-out lex.yy.c y.tab.c y.tab.h,\
                                  $(shell git --work-tree=$(top_srcdir) \
-                                             --git-dir=$(top_srcdir)/.git \
+                                             --git-dir=$(top_srcdir).git \
                                               ls-files "*.c" "*.h" "*.l" "*.y")))
 endif
 
@@ -84,7 +84,7 @@ V = $(if $(VERBOSE),,@)
 ABBREV = $(if $(VERBOSE),\
            @:,\
            @printf "%s %s -> %s\n" $(1) \
-	      "$(patsubst $(top_srcdir)/%,%,$(filter-out $(DEP_$@),$^))" $@)
+	      "$(patsubst $(top_srcdir)%,%,$(filter-out $(DEP_$@),$^))" $@)
 ABBREV3 = $(if $(VERBOSE),@:,@printf "%s %s -> %s\n" $(1) "$(3)" $(2))
 
 define DEPGEN
@@ -114,11 +114,13 @@ $(V)mkdir -p $(dir $@)
 $(V)windres -O coff -DTXR_VER=$(txr_ver) $< $@
 endef
 
-dbg/%.o: $(top_srcdir)/%.c
+ifneq ($(top_srcdir),)
+dbg/%.o: $(top_srcdir)%.c
 	$(call COMPILE_C_WITH_DEPS,)
 
-opt/%.o: $(top_srcdir)/%.c
+opt/%.o: $(top_srcdir)%.c
 	$(call COMPILE_C_WITH_DEPS,$(OPT_FLAGS))
+endif
 
 dbg/%.o: %.c
 	$(call COMPILE_C_WITH_DEPS,)
@@ -126,10 +128,10 @@ dbg/%.o: %.c
 opt/%.o: %.c
 	$(call COMPILE_C_WITH_DEPS,$(OPT_FLAGS))
 
-dbg/%-win.o: $(top_srcdir)/%.c
+dbg/%-win.o: $(top_srcdir)%.c
 	$(call COMPILE_C_WITH_DEPS,-DCONFIG_WIN_MAIN=1)
 
-opt/%-win.o: $(top_srcdir)/%.c
+opt/%-win.o: $(top_srcdir)%.c
 	$(call COMPILE_C_WITH_DEPS,-DCONFIG_WIN_MAIN=1 $(OPT_FLAGS))
 
 %.res: %.rc
@@ -182,7 +184,7 @@ $(call DEP,$(OBJS) $(EXTRA_OBJS-y),\
 
 $(call DEP,opt/lex.yy.o dbg/lex.yy.o,y.tab.h)
 
-lex.yy.c: $(top_srcdir)/parser.l
+lex.yy.c: $(top_srcdir)parser.l
 	$(call ABBREV,LEX)
 	$(V)rm -f $@
 	$(V)$(LEX) $(LEX_DBG_FLAGS) $<
@@ -195,7 +197,7 @@ y.tab.h: y.tab.c
 	  exit 1;                                                 \
 	fi
 
-y.tab.c: $(top_srcdir)/parser.y
+y.tab.c: $(top_srcdir)parser.y
 	$(call ABBREV,YACC)
 	$(V)rm -f y.tab.c
 	$(V)if $(YACC) -v -d $< ; then chmod a-w y.tab.c ; true ; else rm y.tab.c ; false ; fi
@@ -351,11 +353,11 @@ PREINSTALL := :
 install: $(PROG)
 	$(V)$(PREINSTALL)
 	$(call INSTALL,0755,txr$(EXE),$(DESTDIR)$(bindir))
-	$(call INSTALL,0444,$(top_srcdir)/LICENSE,$(DESTDIR)$(datadir))
-	$(call INSTALL,0444,$(top_srcdir)/METALICENSE,$(DESTDIR)$(datadir))
-	$(call INSTALL,0444,$(top_srcdir)/txr.1,$(DESTDIR)$(mandir)/man1)
+	$(call INSTALL,0444,$(top_srcdir)LICENSE,$(DESTDIR)$(datadir))
+	$(call INSTALL,0444,$(top_srcdir)METALICENSE,$(DESTDIR)$(datadir))
+	$(call INSTALL,0444,$(top_srcdir)txr.1,$(DESTDIR)$(mandir)/man1)
 	$(call INSTALL,0444,\
-	   $(addprefix $(top_srcdir)/share/txr/stdlib/,\
+	   $(addprefix $(top_srcdir)share/txr/stdlib/,\
 	                  *.txr *.tl),\
 	   $(DESTDIR)$(datadir)/stdlib)
 

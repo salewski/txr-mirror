@@ -535,11 +535,18 @@ done
 source_dir="$(dirname $0)"
 
 #
-# Compute an absolute path to the source directory.
+# If building in a separate directory, establish top_srcdir as
+# an absolute path to the source directory, with a trailing slash.
+# Otherwise top_srcdir is blank.
 #
-top_srcdir="$(cd "$source_dir" ; pwd -P)"
 
-printf "Checking source directory %s ..." "$top_srcdir"
+if [ "$source_dir" = "." ] ; then
+  top_srcdir=""
+else
+  top_srcdir="$(cd "$source_dir" ; pwd -P)"/
+fi
+
+printf "Checking source directory \"%s\" ..." "$top_srcdir"
 
 case "$top_srcdir" in
 " "* | *" "* | *" " )
@@ -715,7 +722,7 @@ conftest_syms()
 # But this is pointless if we have no git repo.
 # "have_git" means we have a repo, and git.
 #
-if [ -d $top_srcdir/.git ] ; then 
+if [ -d $top_srcdir.git ] ; then 
   printf "Checking whether we have git ... "
 
   if git --version > /dev/null 2> /dev/null ; then

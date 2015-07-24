@@ -1,5 +1,25 @@
 2015-07-23  Kaz Kylheku  <kaz@kylheku.com>
 
+	Set up blank top_srcdir if building in source directory.
+
+	This means short, relative names are used for C source files when
+	compiling in the source directory.
+
+	* Makefile (CFLAGS): Exclude -iquote $(top_srcdir) arguments
+	if top_srcdir is blank. Remove slash after $(top_srcdir),
+	since the variable includes it now, if its value is not blank.
+	(SRCS, ABBREV, opt/%-win.o, lex.yy.c, y.tab.c, install): Remove slash
+	after $(top_srcdir).
+	(dbg/%.o, opt/%.o): Only include rules for depending
+	on $(top_srcdir)%.c prerequisite if top_srcdir is not blank.
+	In the blank case, the rules are redundant.
+
+	* configure: if configuring in the root of the source tree,
+	establish top_srcdir as blank, otherwise establish is as
+	an absolute path with a trailing slash.
+
+2015-07-23  Kaz Kylheku  <kaz@kylheku.com>
+
 	Split off test macros from ifa.tl into common file.
 
 	* Makefile (TESTS_OUT): Don't use find to hunt down tests;
