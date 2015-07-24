@@ -1,3 +1,7 @@
+2015-07-24  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (op_quote): Improved diagnostic.
+
 2015-07-23  Kaz Kylheku  <kaz@kylheku.com>
 
 	Set up blank top_srcdir if building in source directory.

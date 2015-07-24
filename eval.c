@@ -1114,7 +1114,7 @@ static val op_quote(val form, val env)
   val d = cdr(form);
 
   if (!consp(d) || cdr(d))
-    eval_error(form, lit("bad quote syntax"), nao);
+    eval_error(form, lit("bad quote syntax: ~s"), form, nao);
   return second(form);
 }
 
