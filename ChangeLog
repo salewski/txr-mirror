@@ -1,3 +1,12 @@
+2015-06-24  Kaz Kylheku  <kaz@kylheku.com>
+
+	Refactoring n-ary functions to use a single helper.
+
+	* lib.c (nary_op): New function.
+	(plusv, mulv, logandv, logiorv): Use nary_op.
+
+	* lib.h (nary_op): Declared.
+
 2015-06-23  Kaz Kylheku  <kaz@kylheku.com>
 
 	Hash subset testing.

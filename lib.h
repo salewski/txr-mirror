@@ -536,6 +536,7 @@ val bignump(val num);
 val floatp(val num);
 val integerp(val num);
 val numberp(val num);
+val nary_op(val (*cfunc)(val, val), val args, val emptyval);
 val plus(val anum, val bnum);
 val plusv(val nlist);
 val minus(val anum, val bnum);

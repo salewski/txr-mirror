@@ -2074,13 +2074,18 @@ val numberp(val num)
   }
 }
 
+val nary_op(val (*cfunc)(val, val), val args, val emptyval)
+{
+  if (!args)
+    return emptyval;
+  else if (!cdr(args))
+    return car(args);
+  return reduce_left(func_n2(cfunc), cdr(args), car(args), nil);
+}
+
 val plusv(val nlist)
 {
-  if (!nlist)
-    return num(0);
-  else if (!cdr(nlist))
-    return car(nlist);
-  return reduce_left(func_n2(plus), cdr(nlist), car(nlist), nil);
+  return nary_op(plus, nlist, zero);
 }
 
 val minusv(val minuend, val nlist)
@@ -2092,29 +2097,17 @@ val minusv(val minuend, val nlist)
 
 val mulv(val nlist)
 {
-  if (!nlist)
-    return one;
-  else if (!cdr(nlist))
-    return car(nlist);
-  return reduce_left(func_n2(mul), cdr(nlist), car(nlist), nil);
+  return nary_op(mul, nlist, one);
 }
 
 val logandv(val nlist)
 {
-  if (!nlist)
-    return negone;
-  else if (!cdr(nlist))
-    return car(nlist);
-  return reduce_left(func_n2(logand), cdr(nlist), car(nlist), nil);
+  return nary_op(logand, nlist, negone);
 }
 
 val logiorv(val nlist)
 {
-  if (!nlist)
-    return zero;
-  else if (!cdr(nlist))
-    return car(nlist);
-  return reduce_left(func_n2(logior), cdr(nlist), car(nlist), nil);
+  return nary_op(logior, nlist, zero);
 }
 
 val gtv(val first, val rest)
