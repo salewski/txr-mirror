@@ -277,6 +277,7 @@ tst/tests/010/reghash.out: TXR_OPTS := -B
 tst/tests/002/%: TXR_SCRIPT_ON_CMDLINE := y
 
 tst/tests/011/%: TXR_DBG_OPTS :=
+tst/tests/012/%: TXR_DBG_OPTS :=
 
 .PRECIOUS: tst/%.out
 tst/%.out: %.txr
