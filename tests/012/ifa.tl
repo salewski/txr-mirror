@@ -37,3 +37,8 @@
           ((oddp (+ 2 x)) (list it))))
       (7))
 
+(test (let ((l (list 1 2 3)))
+        (ifa (evenp (second l))
+          (inc it))
+        l)
+      (1 3 3))

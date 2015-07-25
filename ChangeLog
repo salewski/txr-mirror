@@ -1,5 +1,9 @@
 2015-07-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	* tests/012/ifa.tl: New test for it being bound to a place.
+
+2015-07-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	Bugfix: place-form-p must expand place macros.
 
 	* share/txr/stdlib/place.tl (place-form-p): Take
