@@ -1,5 +1,10 @@
 2015-07-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* genvim.txr: Do not refer to installed code via stdlib.
+	Refer to source tree.
+
+2015-07-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	Quasiliteral tests.
 
 	* tests/012/quasi.expected: New file.

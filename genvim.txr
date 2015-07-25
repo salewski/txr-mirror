@@ -7,11 +7,12 @@ static void dir_tables_init(void)
 @(until)
 }
 @(end)
+@(bind lib "share/txr/stdlib")
 @(next @(open-files ^(#*"eval.c rand.c signal.c stream.c gc.c glob.c"
                       #*"syslog.c filter.c txr.c arith.c unwind.c cadr.c"
-                      ,*#`sysif.c @stdlib/place.tl @stdlib/ifa.tl`
-                      ,*#`@stdlib/cadr.tl @stdlib/with-resources.tl`
-                      ,*#`@stdlib/txr-case.tl`)))
+                      ,*#`sysif.c @lib/place.tl @lib/ifa.tl`
+                      ,*#`@lib/cadr.tl @lib/with-resources.tl`
+                      ,*#`@lib/txr-case.tl`)))
 @(collect)
 @  (block)
 @    (cases)
