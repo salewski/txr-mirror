@@ -10862,7 +10862,7 @@ macro invocation is ill-formed.
 
 Secondly, if the
 .meta cond
-expression is a function call with more than two arguments,
+expression is a function call with two or more arguments,
 at most one of them may be an it-candidate: an expression
 viable for having its value or storage location bound to the
 .code it
@@ -10912,11 +10912,11 @@ and
 If
 .meta cond
 is a function call with two or more arguments, then it is only
-well-formed if zero or one of those arguments are it-candidates.
-If there is an argument which is an it-candidate, then the
+well-formed if at most one of those arguments is an it-candidates.
+If there is one such argument, then the
 .code it
-variable is bound to its value. Otherwise the variable is bound
-to the value of the leftmost argument expression, regardless of whether that
+variable is bound to it. Otherwise the variable is bound
+to the leftmost argument expression, regardless of whether that
 argument expression is an it-candidate.
 
 An it-candidate is any expression which is not a constant expression
