@@ -22930,7 +22930,8 @@ occurs in an
 .code op
 that is nested
 within an
-.codn op , what is the meaning?
+.codn op ,
+what is the meaning?
 
 A metanumber always belongs with the inner-most op or do operator. So for
 instance
@@ -22993,6 +22994,69 @@ into the innermost
   ;; are reversed.
 
   (mapcar (op list @2 @1) '((1 2) (a b)))   ->   ((2 1) (b a))
+.cble
+
+The
+.code op
+syntax interacts with quasiliterals which are nested within it.
+The metanumber notation as well as
+.code @rest
+are recognized without requiring an additional
+.code @
+escape:
+
+.cblk
+  (apply (op list `@1-@rest`) '(1 2 3)) -> "1-2 3"
+
+  (apply (op list `@@1-@@rest`) '(1 2 3)) -> "1-2 3"
+.cble
+
+This is because the
+.code op
+macro traverses the code structure produced by the literal without recognizing
+it specially, and there imposes its own meaning on these elements.
+
+Though they produce the same result, the above two examples differ in that
+.code @rest
+embeds a metasymbol into the quasiliteral structure, whereas
+.code @@rest
+embeds the Lisp expression
+.code @rest
+into the quasiliteral. In ordinary circumstances, the former refers to the
+variable
+.codn rest .
+Contrast the previous example with:
+
+.cblk
+  (let ((rest "0"))
+    `rest: @rest`) -> "rest: 0"
+
+  (let ((rest "0"))
+    `rest: @@rest`) -> ;; error: no such function or operator: sys:var
+.cblk
+
+Under the
+.code op
+macro and its relatives, occurrences of
+.code @rest
+are replaced with syntax which refers to the trailing arguments
+of the anonymous function. This happens before the interior of the
+.code op
+syntax undergoes expansion. Therefore the quasiliteral expander never
+sees the
+.codn @rest .
+
+This convenient omission of the
+.codn @
+character isn't supported for reaching the arguments of an outer
+.code op
+from a quasiliteral within a nested
+.codn op :
+
+.cblk
+  ;; To reach @@1, @@@1 must be written.
+  ;; @@1 Lisp expression introduced by @.
+  (op ... (op ... `@@@1`))
 .cble
 
 .coNP Macros @, ap @, ip @ ado and @ ido.
