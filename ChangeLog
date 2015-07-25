@@ -1,5 +1,11 @@
 2015-07-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	* genvim.txr: Improved highlighting of items in quasiquote.
+	Lists can be spliced and quoted. Metanums and metavars can
+	be prefixed by multiple @'s.
+
+2015-07-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	* genvim.txr: Do not refer to installed code via stdlib.
 	Refer to source tree.
 
