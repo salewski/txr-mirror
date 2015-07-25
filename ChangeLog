@@ -1,5 +1,16 @@
 2015-07-24  Kaz Kylheku  <kaz@kylheku.com>
 
+	Bugfix: place-form-p must expand place macros.
+
+	* share/txr/stdlib/place.tl (place-form-p): Take
+	environment parameter. Expand the place form using sys:pl-expand.
+
+	* share/txr/stdlib/ifa.tl (ifa): Pass environment
+	to place-form-p.
+	(nthcdr): Pass environment down to place-form-p.
+
+2015-07-24  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (op_quote): Improved diagnostic.
 
 2015-07-23  Kaz Kylheku  <kaz@kylheku.com>

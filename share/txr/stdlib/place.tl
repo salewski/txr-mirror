@@ -83,10 +83,10 @@
                      (makunbound ',',place-expr))))
        ,*op-body))
 
-  (defun place-form-p (place)
-    (when (or (bindable place)
-              (and (consp place) [*place-update-expander* (car place)]))
-      t))
+  (defun place-form-p (unex-place env)
+    (let ((place (sys:pl-expand unex-place env)))
+      (or (bindable place)
+          (and (consp place) [*place-update-expander* (car place)] t))))
 
   (defun get-update-expander (place)
     (cond
@@ -355,10 +355,10 @@
                          (prog1 (cdr ,tmp) (,csetter (car ,tmp))))))))
        ,body)))
 
-(defplace (nthcdr index list) body
+(defplace (nthcdr index list :env env) body
   (getter setter
     (with-gensyms (index-sym sentinel-head-sym parent-cell-sym)
-      (if (place-form-p list)
+      (if (place-form-p list env)
         (with-update-expander (lgetter lsetter) list nil
           ^(rlet ((,index-sym ,index))
              (let* ((,sentinel-head-sym (cons nil (,lgetter)))

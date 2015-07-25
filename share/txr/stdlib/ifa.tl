@@ -47,7 +47,7 @@
              (throwf 'eval-error "ifa: ambiguous situation: \
                                  \ not clear what can be \"it\""))
            (iflet ((it-form (macroexpand [args pos-candidate] e))
-                   (is-place (place-form-p it-form)))
+                   (is-place (place-form-p it-form e)))
              (let ((before-it [args 0..pos-candidate])
                    (after-it [args (succ pos-candidate)..:]))
                (let* ((btemps (mapcar (ret (gensym) before-it)))
