@@ -23,43 +23,59 @@ setlocal iskeyword=a-z,A-Z,48-57,!,$,&,*,+,-,<,=,>,?,\\,_,~,/
 syn keyword txl_keyword contained * *args* *e* *flo-dig*
 syn keyword txl_keyword contained *flo-epsilon* *flo-max* *flo-min* *full-args*
 syn keyword txl_keyword contained *gensym-counter* *keyword-package* *pi* *place-clobber-expander*
-syn keyword txl_keyword contained *place-delete-expander* *place-update-expander* *random-state* *self-path*
-syn keyword txl_keyword contained *stddebug* *stderr* *stdin* *stdlog*
-syn keyword txl_keyword contained *stdnull* *stdout* *txr-version* *unhandled-hook*
-syn keyword txl_keyword contained *user-package* + - /
-syn keyword txl_keyword contained /= < <= =
-syn keyword txl_keyword contained > >= abort abs
-syn keyword txl_keyword contained abs-path-p acons acons-new aconsql-new
-syn keyword txl_keyword contained acos ado alist-nremove alist-remove
-syn keyword txl_keyword contained all and andf ap
-syn keyword txl_keyword contained apf append append* append-each
-syn keyword txl_keyword contained append-each* apply aret ash
-syn keyword txl_keyword contained asin assoc assql atan
-syn keyword txl_keyword contained atan2 atom bignump bit
-syn keyword txl_keyword contained block boundp break-str call
+syn keyword txl_keyword contained *place-delete-expander* *place-macro* *place-update-expander* *random-state*
+syn keyword txl_keyword contained *self-path* *stddebug* *stderr* *stdin*
+syn keyword txl_keyword contained *stdlog* *stdnull* *stdout* *txr-version*
+syn keyword txl_keyword contained *unhandled-hook* *user-package* + -
+syn keyword txl_keyword contained / /= < <=
+syn keyword txl_keyword contained = > >= abort
+syn keyword txl_keyword contained abs abs-path-p acons acons-new
+syn keyword txl_keyword contained aconsql-new acos ado alist-nremove
+syn keyword txl_keyword contained alist-remove all and andf
+syn keyword txl_keyword contained ap apf append append*
+syn keyword txl_keyword contained append-each append-each* apply aret
+syn keyword txl_keyword contained ash asin assoc assql
+syn keyword txl_keyword contained atan atan2 atom bignump
+syn keyword txl_keyword contained bindable bit block boundp
+syn keyword txl_keyword contained break-str caaaaar caaaadr caaaar
+syn keyword txl_keyword contained caaadar caaaddr caaadr caaar
+syn keyword txl_keyword contained caadaar caadadr caadar caaddar
+syn keyword txl_keyword contained caadddr caaddr caadr caar
+syn keyword txl_keyword contained cadaaar cadaadr cadaar cadadar
+syn keyword txl_keyword contained cadaddr cadadr cadar caddaar
+syn keyword txl_keyword contained caddadr caddar cadddar caddddr
+syn keyword txl_keyword contained cadddr caddr cadr call
 syn keyword txl_keyword contained call-clobber-expander call-delete-expander call-update-expander callf
 syn keyword txl_keyword contained car caseq caseql casequal
 syn keyword txl_keyword contained cat-str cat-streams cat-vec catch
-syn keyword txl_keyword contained catenated-stream-p catenated-stream-push cdr ceil
-syn keyword txl_keyword contained chain chand chdir chmod
-syn keyword txl_keyword contained chr-isalnum chr-isalpha chr-isascii chr-isblank
-syn keyword txl_keyword contained chr-iscntrl chr-isdigit chr-isgraph chr-islower
-syn keyword txl_keyword contained chr-isprint chr-ispunct chr-isspace chr-isunisp
-syn keyword txl_keyword contained chr-isupper chr-isxdigit chr-num chr-str
-syn keyword txl_keyword contained chr-str-set chr-tolower chr-toupper chrp
-syn keyword txl_keyword contained clear-error close-stream closelog cmp-str
-syn keyword txl_keyword contained collect-each collect-each* comb compl-span-str
-syn keyword txl_keyword contained cond conda cons conses
-syn keyword txl_keyword contained conses* consp constantp copy
-syn keyword txl_keyword contained copy-alist copy-cons copy-hash copy-list
-syn keyword txl_keyword contained copy-str copy-vec cos count-if
-syn keyword txl_keyword contained countq countql countqual cum-norm-dist
-syn keyword txl_keyword contained daemon dec define-modify-macro defmacro
-syn keyword txl_keyword contained defparm defplace defsymacro defun
-syn keyword txl_keyword contained defvar del delay delete-package
-syn keyword txl_keyword contained do dohash dotimes downcase-str
-syn keyword txl_keyword contained dup dupfd dwim each
-syn keyword txl_keyword contained each* empty ensure-dir env
+syn keyword txl_keyword contained catenated-stream-p catenated-stream-push cdaaaar cdaaadr
+syn keyword txl_keyword contained cdaaar cdaadar cdaaddr cdaadr
+syn keyword txl_keyword contained cdaar cdadaar cdadadr cdadar
+syn keyword txl_keyword contained cdaddar cdadddr cdaddr cdadr
+syn keyword txl_keyword contained cdar cddaaar cddaadr cddaar
+syn keyword txl_keyword contained cddadar cddaddr cddadr cddar
+syn keyword txl_keyword contained cdddaar cdddadr cdddar cddddar
+syn keyword txl_keyword contained cdddddr cddddr cdddr cddr
+syn keyword txl_keyword contained cdr ceil chain chand
+syn keyword txl_keyword contained chdir chmod chr-isalnum chr-isalpha
+syn keyword txl_keyword contained chr-isascii chr-isblank chr-iscntrl chr-isdigit
+syn keyword txl_keyword contained chr-isgraph chr-islower chr-isprint chr-ispunct
+syn keyword txl_keyword contained chr-isspace chr-isunisp chr-isupper chr-isxdigit
+syn keyword txl_keyword contained chr-num chr-str chr-str-set chr-tolower
+syn keyword txl_keyword contained chr-toupper chrp clear-error close-stream
+syn keyword txl_keyword contained closelog cmp-str collect-each collect-each*
+syn keyword txl_keyword contained comb compl-span-str cond conda
+syn keyword txl_keyword contained cons conses conses* consp
+syn keyword txl_keyword contained constantp copy copy-alist copy-cons
+syn keyword txl_keyword contained copy-hash copy-list copy-str copy-vec
+syn keyword txl_keyword contained cos count-if countq countql
+syn keyword txl_keyword contained countqual cum-norm-dist daemon dec
+syn keyword txl_keyword contained define-modify-macro define-place-macro defmacro defparm
+syn keyword txl_keyword contained defplace defsymacro defun defvar
+syn keyword txl_keyword contained del delay delete-package do
+syn keyword txl_keyword contained dohash dotimes downcase-str dup
+syn keyword txl_keyword contained dupfd dwim each each*
+syn keyword txl_keyword contained eighth empty ensure-dir env
 syn keyword txl_keyword contained env-fbind env-hash env-vbind eq
 syn keyword txl_keyword contained eql equal errno error
 syn keyword txl_keyword contained eval evenp exec exit
@@ -85,7 +101,8 @@ syn keyword txl_keyword contained glob-noescape glob-nomagic glob-nosort glob-on
 syn keyword txl_keyword contained glob-period glob-tilde glob-tilde-check greater
 syn keyword txl_keyword contained group-by gun hash hash-alist
 syn keyword txl_keyword contained hash-construct hash-count hash-diff hash-eql
-syn keyword txl_keyword contained hash-equal hash-isec hash-keys hash-pairs
+syn keyword txl_keyword contained hash-equal hash-from-pairs hash-isec hash-keys
+syn keyword txl_keyword contained hash-list hash-pairs hash-proper-subset hash-subset
 syn keyword txl_keyword contained hash-uni hash-update hash-update-1 hash-values
 syn keyword txl_keyword contained hashp have html-decode html-encode
 syn keyword txl_keyword contained iapply identity ido if
@@ -111,76 +128,78 @@ syn keyword txl_keyword contained log-err log-info log-ndelay log-notice
 syn keyword txl_keyword contained log-nowait log-odelay log-perror log-pid
 syn keyword txl_keyword contained log-user log-warning log10 log2
 syn keyword txl_keyword contained logand logior lognot logtest
-syn keyword txl_keyword contained logtrunc logxor macro-form-p macro-time
-syn keyword txl_keyword contained macroexpand macroexpand-1 macrolet major
-syn keyword txl_keyword contained make-catenated-stream make-env make-hash make-lazy-cons
-syn keyword txl_keyword contained make-like make-package make-random-state make-similar-hash
-syn keyword txl_keyword contained make-string-byte-input-stream make-string-input-stream make-string-output-stream make-strlist-output-stream
-syn keyword txl_keyword contained make-sym make-time make-time-utc make-trie
-syn keyword txl_keyword contained makedev makunbound mapcar mapcar*
-syn keyword txl_keyword contained mapdo mapf maphash mappend
-syn keyword txl_keyword contained mappend* mask match-fun match-regex
-syn keyword txl_keyword contained match-regex-right match-regst match-regst-right match-str
-syn keyword txl_keyword contained match-str-tree max member member-if
-syn keyword txl_keyword contained memq memql memqual merge
-syn keyword txl_keyword contained min minor minusp mkdir
-syn keyword txl_keyword contained mknod mkstring mlet mod
-syn keyword txl_keyword contained multi multi-sort n-choose-k n-perm-k
-syn keyword txl_keyword contained nconc nilf none not
-syn keyword txl_keyword contained notf nreverse null nullify
-syn keyword txl_keyword contained num-chr num-str numberp oand
-syn keyword txl_keyword contained oddp op open-command open-directory
-syn keyword txl_keyword contained open-file open-fileno open-files open-files*
-syn keyword txl_keyword contained open-pipe open-process open-tail openlog
-syn keyword txl_keyword contained opip or orf packagep
-syn keyword txl_keyword contained pad partition partition* partition-by
-syn keyword txl_keyword contained perm pipe plusp poll
-syn keyword txl_keyword contained poll-err poll-in poll-nval poll-out
-syn keyword txl_keyword contained poll-pri poll-rdband poll-rdhup poll-wrband
-syn keyword txl_keyword contained pop pos pos-if pos-max
-syn keyword txl_keyword contained pos-min posq posql posqual
-syn keyword txl_keyword contained pppred ppred pprinl pprint
-syn keyword txl_keyword contained pprof pred prinl print
-syn keyword txl_keyword contained prof prog1 progn prop
-syn keyword txl_keyword contained proper-listp pset push pushhash
-syn keyword txl_keyword contained pushnew put-byte put-char put-line
-syn keyword txl_keyword contained put-lines put-string put-strings pwd
-syn keyword txl_keyword contained qquote quasi quasilist quote
-syn keyword txl_keyword contained rand random random-fixnum random-state-p
-syn keyword txl_keyword contained range range* range-regex rcomb
-syn keyword txl_keyword contained read readlink real-time-stream-p reduce-left
-syn keyword txl_keyword contained reduce-right ref refset regex-compile
-syn keyword txl_keyword contained regex-parse regexp regsub rehome-sym
-syn keyword txl_keyword contained remhash remove-if remove-if* remove-path
-syn keyword txl_keyword contained remq remq* remql remql*
-syn keyword txl_keyword contained remqual remqual* rename-path repeat
-syn keyword txl_keyword contained replace replace-list replace-str replace-vec
-syn keyword txl_keyword contained rest ret retf return
-syn keyword txl_keyword contained return-from reverse rlcp rlet
-syn keyword txl_keyword contained rotate rperm rplaca rplacd
-syn keyword txl_keyword contained run s-ifblk s-ifchr s-ifdir
-syn keyword txl_keyword contained s-ififo s-iflnk s-ifmt s-ifreg
-syn keyword txl_keyword contained s-ifsock s-irgrp s-iroth s-irusr
-syn keyword txl_keyword contained s-irwxg s-irwxo s-irwxu s-isgid
-syn keyword txl_keyword contained s-isuid s-isvtx s-iwgrp s-iwoth
-syn keyword txl_keyword contained s-iwusr s-ixgrp s-ixoth s-ixusr
-syn keyword txl_keyword contained search search-regex search-regst search-str
-syn keyword txl_keyword contained search-str-tree second seek-stream select
-syn keyword txl_keyword contained seqp set set-diff set-hash-userdata
-syn keyword txl_keyword contained set-sig-handler setenv sethash setitimer
-syn keyword txl_keyword contained setlogmask setq sh shift
-syn keyword txl_keyword contained sig-abrt sig-alrm sig-bus sig-check
-syn keyword txl_keyword contained sig-chld sig-cont sig-fpe sig-hup
-syn keyword txl_keyword contained sig-ill sig-int sig-io sig-iot
-syn keyword txl_keyword contained sig-kill sig-lost sig-pipe sig-poll
-syn keyword txl_keyword contained sig-prof sig-pwr sig-quit sig-segv
-syn keyword txl_keyword contained sig-stkflt sig-stop sig-sys sig-term
-syn keyword txl_keyword contained sig-trap sig-tstp sig-ttin sig-ttou
-syn keyword txl_keyword contained sig-urg sig-usr1 sig-usr2 sig-vtalrm
-syn keyword txl_keyword contained sig-winch sig-xcpu sig-xfsz sign-extend
-syn keyword txl_keyword contained sin sixth size-vec some
-syn keyword txl_keyword contained sort sort-group source-loc source-loc-str
-syn keyword txl_keyword contained span-str splice split-str split-str-set
+syn keyword txl_keyword contained logtrunc logxor mac-param-bind macro-form-p
+syn keyword txl_keyword contained macro-time macroexpand macroexpand-1 macrolet
+syn keyword txl_keyword contained major make-catenated-stream make-env make-hash
+syn keyword txl_keyword contained make-lazy-cons make-like make-package make-random-state
+syn keyword txl_keyword contained make-similar-hash make-string-byte-input-stream make-string-input-stream make-string-output-stream
+syn keyword txl_keyword contained make-strlist-output-stream make-sym make-time make-time-utc
+syn keyword txl_keyword contained make-trie makedev makunbound mapcar
+syn keyword txl_keyword contained mapcar* mapdo mapf maphash
+syn keyword txl_keyword contained mappend mappend* mask match-fun
+syn keyword txl_keyword contained match-regex match-regex-right match-regst match-regst-right
+syn keyword txl_keyword contained match-str match-str-tree max member
+syn keyword txl_keyword contained member-if memq memql memqual
+syn keyword txl_keyword contained merge min minor minusp
+syn keyword txl_keyword contained mkdir mknod mkstring mlet
+syn keyword txl_keyword contained mod multi multi-sort n-choose-k
+syn keyword txl_keyword contained n-perm-k nconc nilf ninth
+syn keyword txl_keyword contained none not notf nreverse
+syn keyword txl_keyword contained nthcdr null nullify num-chr
+syn keyword txl_keyword contained num-str numberp oand oddp
+syn keyword txl_keyword contained op open-command open-directory open-file
+syn keyword txl_keyword contained open-fileno open-files open-files* open-pipe
+syn keyword txl_keyword contained open-process open-tail openlog opip
+syn keyword txl_keyword contained or orf packagep pad
+syn keyword txl_keyword contained partition partition* partition-by perm
+syn keyword txl_keyword contained pipe place-form-p placelet placelet*
+syn keyword txl_keyword contained plusp poll poll-err poll-in
+syn keyword txl_keyword contained poll-nval poll-out poll-pri poll-rdband
+syn keyword txl_keyword contained poll-rdhup poll-wrband pop pos
+syn keyword txl_keyword contained pos-if pos-max pos-min posq
+syn keyword txl_keyword contained posql posqual pppred ppred
+syn keyword txl_keyword contained pprinl pprint pprof pred
+syn keyword txl_keyword contained prinl print prof prog1
+syn keyword txl_keyword contained progn prop proper-listp pset
+syn keyword txl_keyword contained push pushhash pushnew put-byte
+syn keyword txl_keyword contained put-char put-line put-lines put-string
+syn keyword txl_keyword contained put-strings pwd qquote quasi
+syn keyword txl_keyword contained quasilist quote rand random
+syn keyword txl_keyword contained random-fixnum random-state-p range range*
+syn keyword txl_keyword contained range-regex rcomb read readlink
+syn keyword txl_keyword contained real-time-stream-p reduce-left reduce-right ref
+syn keyword txl_keyword contained refset regex-compile regex-parse regexp
+syn keyword txl_keyword contained regsub rehome-sym remhash remove-if
+syn keyword txl_keyword contained remove-if* remove-path remq remq*
+syn keyword txl_keyword contained remql remql* remqual remqual*
+syn keyword txl_keyword contained rename-path repeat replace replace-list
+syn keyword txl_keyword contained replace-str replace-vec rest ret
+syn keyword txl_keyword contained retf return return-from reverse
+syn keyword txl_keyword contained rlcp rlet rotate rperm
+syn keyword txl_keyword contained rplaca rplacd run s-ifblk
+syn keyword txl_keyword contained s-ifchr s-ifdir s-ififo s-iflnk
+syn keyword txl_keyword contained s-ifmt s-ifreg s-ifsock s-irgrp
+syn keyword txl_keyword contained s-iroth s-irusr s-irwxg s-irwxo
+syn keyword txl_keyword contained s-irwxu s-isgid s-isuid s-isvtx
+syn keyword txl_keyword contained s-iwgrp s-iwoth s-iwusr s-ixgrp
+syn keyword txl_keyword contained s-ixoth s-ixusr search search-regex
+syn keyword txl_keyword contained search-regst search-str search-str-tree second
+syn keyword txl_keyword contained seek-stream select seqp set
+syn keyword txl_keyword contained set-diff set-hash-userdata set-sig-handler setenv
+syn keyword txl_keyword contained sethash setitimer setlogmask setq
+syn keyword txl_keyword contained seventh sh shift sig-abrt
+syn keyword txl_keyword contained sig-alrm sig-bus sig-check sig-chld
+syn keyword txl_keyword contained sig-cont sig-fpe sig-hup sig-ill
+syn keyword txl_keyword contained sig-int sig-io sig-iot sig-kill
+syn keyword txl_keyword contained sig-lost sig-pipe sig-poll sig-prof
+syn keyword txl_keyword contained sig-pwr sig-quit sig-segv sig-stkflt
+syn keyword txl_keyword contained sig-stop sig-sys sig-term sig-trap
+syn keyword txl_keyword contained sig-tstp sig-ttin sig-ttou sig-urg
+syn keyword txl_keyword contained sig-usr1 sig-usr2 sig-vtalrm sig-winch
+syn keyword txl_keyword contained sig-xcpu sig-xfsz sign-extend sin
+syn keyword txl_keyword contained sixth size-vec some sort
+syn keyword txl_keyword contained sort-group source-loc source-loc-str span-str
+syn keyword txl_keyword contained splice split split-str split-str-set
 syn keyword txl_keyword contained sqrt sssucc ssucc stat
 syn keyword txl_keyword contained stdlib str< str<= str=
 syn keyword txl_keyword contained str> str>= stream-get-prop stream-set-prop
@@ -188,53 +207,63 @@ syn keyword txl_keyword contained streamp string-extend string-lt stringp
 syn keyword txl_keyword contained sub sub-list sub-str sub-vec
 syn keyword txl_keyword contained succ swap symacrolet symbol-function
 syn keyword txl_keyword contained symbol-name symbol-package symbol-value symbolp
-syn keyword txl_keyword contained symlink sys-qquote sys-splice sys-unquote
-syn keyword txl_keyword contained sys:*lisp1* sys:eval-err sys:get-fb sys:get-vb
-syn keyword txl_keyword contained sys:l1-setq sys:l1-val sys:sym-clobber-expander sys:sym-delete-expander
-syn keyword txl_keyword contained sys:sym-update-expander syslog tan tb
-syn keyword txl_keyword contained tc tf third throw
-syn keyword txl_keyword contained throwf time time-fields-local time-fields-utc
-syn keyword txl_keyword contained time-string-local time-string-utc time-usec tofloat
-syn keyword txl_keyword contained toint tok-str tok-where tostring
-syn keyword txl_keyword contained tostringp tprint transpose tree-bind
-syn keyword txl_keyword contained tree-case tree-find trie-add trie-compress
-syn keyword txl_keyword contained trie-lookup-begin trie-lookup-feed-char trie-value-at trim-str
-syn keyword txl_keyword contained true trunc trunc-rem tuples
-syn keyword txl_keyword contained txr-case txr-if txr-when typeof
-syn keyword txl_keyword contained unget-byte unget-char uniq unique
-syn keyword txl_keyword contained unless unquote unsetenv until
-syn keyword txl_keyword contained until* upcase-str update url-decode
-syn keyword txl_keyword contained url-encode usleep uw-protect vec
-syn keyword txl_keyword contained vec-push vec-set-length vecref vector
-syn keyword txl_keyword contained vector-list vectorp w-continued w-coredump
-syn keyword txl_keyword contained w-exitstatus w-ifcontinued w-ifexited w-ifsignaled
-syn keyword txl_keyword contained w-ifstopped w-nohang w-stopsig w-termsig
-syn keyword txl_keyword contained w-untraced wait weave when
-syn keyword txl_keyword contained whenlet where while while*
-syn keyword txl_keyword contained whilet width with-clobber-expander with-delete-expander
-syn keyword txl_keyword contained with-gensyms with-saved-vars with-update-expander wrap
-syn keyword txl_keyword contained wrap* zap zerop zip
-syn match txr_metanum "@[0-9]\+"
-syn match txr_nested_error "[^\t `]\+" contained
+syn keyword txl_keyword contained symlink sys-lisp1-value sys-qquote sys-splice
+syn keyword txl_keyword contained sys-unquote sys:*lisp1* sys:eval-err sys:get-fb
+syn keyword txl_keyword contained sys:get-vb sys:l1-setq sys:l1-val sys:pl-expand
+syn keyword txl_keyword contained sys:placelet-1 sys:sym-clobber-expander sys:sym-delete-expander sys:sym-update-expander
+syn keyword txl_keyword contained sys:trigger-load syslog tan tb
+syn keyword txl_keyword contained tc tenth tf third
+syn keyword txl_keyword contained throw throwf time time-fields-local
+syn keyword txl_keyword contained time-fields-utc time-string-local time-string-utc time-usec
+syn keyword txl_keyword contained tofloat toint tok-str tok-where
+syn keyword txl_keyword contained tostring tostringp tprint transpose
+syn keyword txl_keyword contained tree-bind tree-case tree-find trie-add
+syn keyword txl_keyword contained trie-compress trie-lookup-begin trie-lookup-feed-char trie-value-at
+syn keyword txl_keyword contained trim-str true trunc trunc-rem
+syn keyword txl_keyword contained tuples txr-case txr-case-impl txr-if
+syn keyword txl_keyword contained txr-when typeof unget-byte unget-char
+syn keyword txl_keyword contained uniq unique unless unquote
+syn keyword txl_keyword contained unsetenv until until* upcase-str
+syn keyword txl_keyword contained update url-decode url-encode usleep
+syn keyword txl_keyword contained uw-protect vec vec-push vec-set-length
+syn keyword txl_keyword contained vecref vector vector-list vectorp
+syn keyword txl_keyword contained w-continued w-coredump w-exitstatus w-ifcontinued
+syn keyword txl_keyword contained w-ifexited w-ifsignaled w-ifstopped w-nohang
+syn keyword txl_keyword contained w-stopsig w-termsig w-untraced wait
+syn keyword txl_keyword contained weave when whenlet where
+syn keyword txl_keyword contained while while* whilet width
+syn keyword txl_keyword contained with-clobber-expander with-delete-expander with-gensyms with-resources
+syn keyword txl_keyword contained with-saved-vars with-update-expander wrap wrap*
+syn keyword txl_keyword contained zap zerop zip
+syn match txr_nested_error "[^\t ]\+" contained
+syn match txr_variable "\(@[ \t]*\)[*]\?[ \t]*[A-Za-z_][A-Za-z_0-9]*"
+syn match txr_splicevar "@[ \t,*@]*[A-Za-z_][A-Za-z_0-9]*"
+syn match txr_metanum "@\+[0-9]\+"
+syn match txr_badesc "\\." contained
+syn match txr_escat "\\@" contained
+syn match txr_stresc "\\[abtnvfre\\ \n"`']" contained
+syn match txr_numesc "\\x[0-9A-Fa-f]\+;\?" contained
+syn match txr_numesc "\\[0-7]\+;\?" contained
+syn match txr_regesc "\\[abtnvfre\\ \n/sSdDwW()\|.*?+~&%\[\]\-]" contained
 
-syn match txr_chr "#\\x[A-Fa-f0-9]\+"
-syn match txr_chr "#\\o[0-9]\+"
-syn match txr_chr "#\\[^ \t\nA-Za-z0-9_]"
-syn match txr_chr "#\\[A-Za-z0-9_]\+"
+syn match txr_chr "#\\x[0-9A-Fa-f]\+"
+syn match txr_chr "#\\o[0-7]\+"
+syn match txr_chr "#\\[^ \t\nA-Za-z_0-9]"
+syn match txr_chr "#\\[A-Za-z_0-9]\+"
 syn match txr_ncomment ";.*"
 
 syn match txr_dot "\." contained
 syn match txr_num "#x[+\-]\?[0-9A-Fa-f]\+"
 syn match txr_num "#o[+\-]\?[0-7]\+"
-syn match txr_num "#b[+\-]\?[0-1]\+"
-syn match txr_ident "[A-Za-z0-9!$%&*+\-<=>?\\_~]*[A-Za-z!$#%&*+\-<=>?\\^_~][A-Za-z0-9!$#%&*+\-<=>?\\^_~]*" contained
-syn match txl_ident "[:@][A-Za-z0-9!$%&*+\-<=>?\\\^_~/]\+"
-syn match txr_braced_ident "[:][A-Za-z0-9!$%&*+\-<=>?\\\^_~/]\+" contained
-syn match txl_ident "[A-Za-z0-9!$%&*+\-<=>?\\_~/]*[A-Za-z!$#%&*+\-<=>?\\^_~/][A-Za-z0-9!$#%&*+\-<=>?\\^_~/]*"
-syn match txr_num "[+\-]\?[0-9]\+\([^A-Za-z0-9!$#%&*+\-<=>?\\^_~/]\|\n\)"me=e-1
-syn match txr_badnum "[+\-]\?[0-9]*[.][0-9]\+\([eE][+\-]\?[0-9]\+\)\?[A-Za-z!$#%&*+\-<=>?\\^_~/]\+"
-syn match txr_num "[+\-]\?[0-9]*[.][0-9]\+\([eE][+\-]\?[0-9]\+\)\?\([^A-Za-z0-9!$#%&*+\-<=>?\\^_~/]\|\n\)"me=e-1
-syn match txr_num "[+\-]\?[0-9]\+\([eE][+\-]\?[0-9]\+\)\([^A-Za-z0-9!$#%&*+\-<=>?\\^_~/]\|\n\)"me=e-1
+syn match txr_num "#b[+\-]\?[01]\+"
+syn match txr_ident "[A-Za-z_0-9!$%&*+\-<=>?\\_~]*[A-Za-z_!$%&*+\-<=>?\\_~^][A-Za-z_0-9!$%&*+\-<=>?\\_~^]*" contained
+syn match txl_ident "[:@][A-Za-z_0-9!$%&*+\-<=>?\\_~^/]\+"
+syn match txr_braced_ident "[:][A-Za-z_0-9!$%&*+\-<=>?\\_~^/]\+" contained
+syn match txl_ident "[A-Za-z_0-9!$%&*+\-<=>?\\_~/]*[A-Za-z_!$%&*+\-<=>?\\_~^/#][A-Za-z_0-9!$%&*+\-<=>?\\_~^/#]*"
+syn match txr_num "[+\-]\?[0-9]\+\([^A-Za-z_0-9!$%&*+\-<=>?\\_~^/#]\|\n\)"me=e-1
+syn match txr_badnum "[+\-]\?[0-9]*[.][0-9]\+\([eE][+\-]\?[0-9]\+\)\?[A-Za-z_!$%&*+\-<=>?\\_~^/#]\+"
+syn match txr_num "[+\-]\?[0-9]*[.][0-9]\+\([eE][+\-]\?[0-9]\+\)\?\([^A-Za-z_0-9!$%&*+\-<=>?\\_~^/#]\|\n\)"me=e-1
+syn match txr_num "[+\-]\?[0-9]\+\([eE][+\-]\?[0-9]\+\)\([^A-Za-z_0-9!$%&*+\-<=>?\\_~^/#]\|\n\)"me=e-1
 syn match txl_ident ":"
 syn match txl_splice "[ \t,]\|,[*]"
 
@@ -245,14 +274,15 @@ syn match txr_quote "\^" contained
 syn match txr_dotdot "\.\." contained
 syn match txr_metaat "@" contained
 
+syn region txr_bracevar matchgroup=Delimiter start="@[ \t]*[*]\?{" matchgroup=Delimiter end="}" contains=txr_num,txl_ident,txl_splice,txl_metanum,txr_metaat,txr_braced_ident,txr_string,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_regex,txr_quasilit,txr_chr,txl_splice,txr_nested_error
 syn region txr_list matchgroup=Delimiter start="#\?H\?(" matchgroup=Delimiter end=")" contains=txl_keyword,txr_string,txl_regex,txr_num,txr_badnum,txl_ident,txr_metanum,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_ncomment,txr_nested_error
 syn region txr_bracket matchgroup=Delimiter start="\[" matchgroup=Delimiter end="\]" contains=txl_keyword,txr_string,txl_regex,txr_num,txr_badnum,txl_ident,txr_metanum,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_ncomment,txr_nested_error
-syn region txr_mlist matchgroup=Delimiter start="@[ \t]*(" matchgroup=Delimiter end=")" contains=txl_keyword,txr_string,txl_regex,txr_num,txr_badnum,txl_ident,txr_metanum,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_ncomment,txr_nested_error
-syn region txr_mbracket matchgroup=Delimiter start="@[ \t]*\[" matchgroup=Delimiter end="\]" contains=txl_keyword,txr_string,txl_regex,txr_num,txr_badnum,txl_ident,txr_metanum,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_ncomment,txr_nested_error
-syn region txr_string start=+#\?\*\?"+ skip=+\\\\\|\\"\|\\\n+ end=+"\|\n+
-syn region txr_quasilit start=+#\?\*\?`+ skip=+\\\\\|\\`\|\\\n+ end=+`\|\n+ contains=txr_splicevar,txr_metanum,txr_bracevar,txr_mlist,txr_mbracket
-syn region txr_regex start="/" skip="\\\\\|\\/\|\\\n" end="/\|\n"
-syn region txl_regex start="#/" skip="\\\\\|\\/\|\\\n" end="/\|\n"
+syn region txr_mlist matchgroup=Delimiter start="@[ \t^',]*(" matchgroup=Delimiter end=")" contains=txl_keyword,txr_string,txl_regex,txr_num,txr_badnum,txl_ident,txr_metanum,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_ncomment,txr_nested_error
+syn region txr_mbracket matchgroup=Delimiter start="@[ \t^',]*\[" matchgroup=Delimiter end="\]" contains=txl_keyword,txr_string,txl_regex,txr_num,txr_badnum,txl_ident,txr_metanum,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_ncomment,txr_nested_error
+syn region txr_string start=+#\?\*\?"+ end=+["\n]+ contains=txr_stresc,txr_numesc,txr_badesc
+syn region txr_quasilit start=+#\?\*\?`+ end=+[`\n]+ contains=txr_splicevar,txr_metanum,txr_bracevar,txr_mlist,txr_mbracket,txr_escat,txr_stresc,txr_numesc,txr_badesc
+syn region txr_regex start="/" end="[/\n]" contains=txr_regesc,txr_numesc,txr_badesc
+syn region txl_regex start="#/" end="[/\n]" contains=txr_regesc,txr_numesc,txr_badesc
 
 hi def link txr_at Special
 hi def link txr_atstar Special
@@ -273,6 +303,11 @@ hi def link txr_regdir String
 hi def link txr_variable Identifier
 hi def link txr_splicevar Identifier
 hi def link txr_metanum Identifier
+hi def link txr_escat Special
+hi def link txr_stresc Special
+hi def link txr_numesc Special
+hi def link txr_regesc Special
+hi def link txr_badesc Error
 hi def link txr_ident Identifier
 hi def link txl_ident Identifier
 hi def link txr_num Number

@@ -1,5 +1,17 @@
 2015-07-25  Kaz Kylheku  <kaz@kylheku.com>
 
+	Version 110.
+
+	* RELNOTES: Updated.
+
+	* configure, txr.1: Bumped version and date.
+
+	* share/txr/stdlib/ver.tl: Likewise.
+
+	* tl.vim, txr.vim: Regenerated.
+
+2015-07-25  Kaz Kylheku  <kaz@kylheku.com>
+
 	* genvim.txr: Improved highlighting of items in quasiquote.
 	Lists can be spliced and quoted. Metanums and metavars can
 	be prefixed by multiple @'s.
@@ -721,18 +733,6 @@
 	* tests/012/ifa.tl: Adding test for conda.
 
 	* txr.1: Documenting conda.
-
-2015-06-20  Kaz Kylheku  <kaz@kylheku.com>
-
-	Version 109.
-
-	* RELNOTES: Updated.
-
-	* configure, txr.1: Bumped version and date.
-
-	* share/txr/stdlib/ver.tl: Likewise.
-
-	* tl.vim, txr.vim: Regenerated.
 
 2015-06-20  Kaz Kylheku  <kaz@kylheku.com>
 

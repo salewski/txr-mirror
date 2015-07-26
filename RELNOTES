@@ -1,3 +1,86 @@
+                                    TXR 110
+                                   2015-07-25
+
+
+  Features
+
+  - New relational predicate functions hash-subset and hash-proper-subset.
+
+  - New functions hash-from-pairs and hash-list.
+
+  - Improvements in quasiliterals:
+    - compound @@ now supported on numbers and symbols, improving utility of
+      quasiliterals in multiply nested op syntax.
+    - \@ escape introduced for encoding literal @ in quasiliterals.
+    - @<num> notation allowed in brace variables (more of a bugfix).
+
+  - Optional trailing semicolon punctuator supported on hex and octal
+    characters in string and quasiliterals, like it already is on hex and octal
+    characters in the TXR pattern language.
+
+  - The op syntax positional arguments @1, @2 ... and @rest are now
+    syntactic places: they can be assigned, etc.
+
+  - Powerful new binding macros placelet and placelet* for creating lexical
+    aliases for syntactic places with once-evaluation semantics.
+
+  - The "it" variable in the anaphoric ifa is now a place if the form that
+    it denotes is a place. The place is evaluated exactly once no matter how
+    many times the it variable is accessed or updated in its scope.
+
+  - Hash-bang support in .tl files.
+
+  - With only a few sensible exceptions, most unimplemented stream operations
+    now throw exceptions, rather than silently doing nothing.
+
+  - Improved printed representation of stream objects.
+
+  - New split function similar to partition, but keeps empty subsequences.
+
+  - Deletion of a (cdr ...) place now has different semantics, symmetric
+    with deletion of a (car ...) place.
+
+  - The accessors caar, cadr, cdar, cddr, ... are all provided now, in
+    all combinations down to five levels deep.
+
+  - The functions second, third, fourth, ... are all accessors now,
+    and are provided up through tenth. They work with vectors and strings.
+
+  - New feature, "place macros": special macro expansions which apply
+    only to syntactic place forms, making it a cinch to define
+    to define new places in situations when they are expressible as a
+    syntactic transformation to existing places.
+
+  - The nthcdr function from Common Lisp is introduced, with the
+    added functionality that it behaves like an accessor.
+
+  - New with-resources macro for block-scoped acquisition and release
+    of multiple resources.
+
+  - Backslash-newline continuation in word list listerals (WLL-s) and
+    quasiword list literals (QLL-s) now separates words. An unescaped
+    newline is not allowed.
+
+  Bugs
+
+  - TXR 97 regression in quasiliterals fixed: `@{(expr) modifier}` ignores
+    modifier whenever (expr) is an expression that undergoes expansion.
+
+  - Fix in printed representation of a stdio stream.
+
+  - define-modify-macro was not registered for auto-loading.
+
+  - Fixed broken unget-char and unget-byte on catenated streams.
+
+  - Fixed broken lexical analysis of consecutive top-level forms,
+    like 4(x) where one call to the parser consumes 4(, so the
+    next call sees x).
+
+  - Fixed bug in print and pprint: wrong return value when printing a dwim
+    form. These functions must always return their leftmost argument.
+
+
+
                                     TXR 109
                                    2015-06-21
 
