@@ -4569,7 +4569,7 @@ established in the main clause. This is true even in the terminating
 case when the until clause matches, and the bindings of the main clause
 are discarded.
 
-.coNP Keyword Parameters in @ collect
+.coNP Keyword parameters in @ collect
 By default,
 .code collect
 searches the rest of the input indefinitely,
@@ -4683,7 +4683,7 @@ There is one more keyword,
 .codn :vars ,
 discussed in the following section.
 
-.coNP Specifying Variables in @ collect
+.coNP Specifying variables in @ collect
 Normally, any variable for which a new binding occurs in a
 .code collect
 block is collected. A collect clause may be "sloppy": it can neglect to collect
@@ -19048,7 +19048,7 @@ For a description of the arguments, semantics and return value, refer to the
 .code replace
 function.
 
-.coNP Function cat-vec
+.coNP Function @ cat-vec
 .synb
 .mets (cat-vec << vec-list )
 .syne
@@ -23720,7 +23720,7 @@ is even, then iff passes it into the
 function, which ignores the value and returns
 .codn nil .
 
-.coNP Function retf
+.coNP Function @ retf
 .synb
 .mets (retf << value )
 .syne
@@ -27659,7 +27659,7 @@ indicating that
 .str cat
 is only a prefix of one or more entries in the trie.
 
-.coNP Function tree-value-at
+.coNP Function @ tree-value-at
 .synb
 .mets (trie-value-at << trie-context )
 .syne
@@ -27778,7 +27778,7 @@ the macros
 and
 .codn txr-case .
 
-.coNP Function match-fun
+.coNP Function @ match-fun
 .synb
 .mets (match-fun < name < args < input << files )
 .syne
@@ -27898,7 +27898,7 @@ out of the pattern function
 .codn foo ;
 it is local inside it.
 
-.coNP Macro txr-if
+.coNP Macro @ txr-if
 .synb
 .mets (txr-if < name <> ( argument *) < input < then-expr <> [ else-expr ])
 .syne
@@ -28351,7 +28351,7 @@ and
 .code unquote
 "cancel out".
 
-.coNP Operator splice
+.coNP Operator @ splice
 .synb
 .mets (qquote (... (splice << form ) ...))
 .syne
@@ -29104,7 +29104,7 @@ differs from
 .code symacrolet
 in that the forms themselves are not aliased, but the storage
 locations which they denote.
-.code (symacrolet ((x y) z)
+.code (symacrolet ((x y)) z)
 performs the syntactic substitution of symbol
 .code x
 by form
@@ -30456,8 +30456,6 @@ in terms of
   (define-place-macro first (obj)
     ^(car ,obj))
 .cble
-
-.coNP Operator @ defmacro
 
 .coNP Macro @ rlet
 .synb
