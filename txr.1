@@ -9937,7 +9937,8 @@ macro, or possibly the
 .code define-place-macro
 macro in simple cases when a new syntactic place can be expressed as a
 transformation to the syntax of an existing place.
-New place update macros (place operators) are written using the
+Three ways exist for developing new place update macros (place operators).
+They can be written using the ordinary macro definer
 ordinary macro definer
 .codn defmacro ,
 with the help of special utility macros called
@@ -9945,6 +9946,12 @@ with the help of special utility macros called
 .codn with-clobber-expander ,
 and
 .codn with-delete-expander .
+They can also be written using
+.code defmacro
+in conjunction with the operators
+.code placelet
+or
+.codn placelet* .
 Simple update macros similar to
 .code inc
 and
@@ -25512,7 +25519,9 @@ This variable is initialized to 0. Each time the
 .code gensym
 function is called,
 it is incremented. The incremented value forms the basis of the numeric
-suffix which gensym uses to form the name of the new symbol.
+suffix which
+.code gensym
+uses to form the name of the new symbol.
 
 .coNP Function @ make-package
 .synb
@@ -29135,6 +29144,27 @@ as in the case of
 Rather it may be substituted by one kind of form when it
 is treated as a pure value, and another kind of form
 when it is treated as a place.
+
+.TP* "Example:"
+
+Implementation of
+.code inc
+using
+.codn placelet :
+
+.cblk
+  (defmacro inc (place : (delta 1))
+    (with-gensyms (p)
+      ^(placelet ((,p ,place))
+         (set ,p (+ ,p ,delta)))))
+.cble
+
+The gensym
+.code p
+is used to avoid accidental capture of references
+emanating from the
+.code delta
+form.
 
 .coNP Operators @ tree-bind and @ mac-param-bind
 .synb
