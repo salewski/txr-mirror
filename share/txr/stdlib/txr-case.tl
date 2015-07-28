@@ -32,6 +32,7 @@
          (error "txr-case: clauses after (t ...) clause ignored")
          ^(progn ,*rest))
        (error "txr-case: bad syntax: ~s" (car clauses))))
+    (() ())
     (atom
        (error "txr-case: unexpected atom in syntax: ~s" atom))))
 
