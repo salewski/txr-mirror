@@ -1,3 +1,10 @@
+2015-07-29  Kaz Kylheku  <kaz@kylheku.com>
+
+	* stream.c: Rearranging definitions and declarations so that
+	code for each stream type is together. Moving catenated
+	streams above utility functions, so they are together with
+	other stream definitions.
+
 2015-07-28  Kaz Kylheku  <kaz@kylheku.com>
 
 	Centered fields in format.
