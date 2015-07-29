@@ -1825,8 +1825,54 @@ static void detect_format_string(void)
   }
 }
 
+enum align { al_left, al_center, al_right };
+
+static val vformat_align_pre(val stream, enum align align, int slack)
+{
+  int i;
+
+  switch (align) {
+  case al_right:
+    for (i = 0; i < slack; i++)
+      if (!put_char(chr(' '), stream))
+        return nil;
+    break;
+  case al_left:
+    break;
+  case al_center:
+    for (i = 0; i < slack/2; i++)
+      if (!put_char(chr(' '), stream))
+        return nil;
+    break;
+  }
+
+  return t;
+}
+
+static val vformat_align_post(val stream, enum align align, int slack)
+{
+  int i;
+
+  switch (align) {
+  case al_right:
+    break;
+  case al_left:
+    for (i = 0; i < slack; i++)
+      if (!put_char(chr(' '), stream))
+        return nil;
+    break;
+  case al_center:
+    for (i = 0; i < (slack+1)/2; i++)
+      if (!put_char(chr(' '), stream))
+        return nil;
+    break;
+  }
+
+  return t;
+}
+
 static val vformat_num(val stream, const char *str,
-                       int width, int left, int zeropad,
+                       int width, enum align align, int zeropad,
                        int precision, int sign)
 {
   int sign_char = (str[0] == '-' || str[0] == '+') ? str[0] : 0;
@@ -1836,10 +1882,8 @@ static val vformat_num(val stream, const char *str,
   int slack = (total_len < width) ? width - total_len : 0;
   int i;
 
-  if (!left)
-    for (i = 0; i < slack; i++)
-      if (!put_char(chr(' '), stream))
-        return nil;
+  if (!vformat_align_pre(stream, align, slack))
+    return nil;
 
   if (!zeropad)
     for (i = 0; i < padlen; i++)
@@ -1862,15 +1906,10 @@ static val vformat_num(val stream, const char *str,
     if (!put_char(chr(*str++), stream))
       return nil;
 
-  if (left)
-    for (i = 0; i < slack; i++)
-      if (!put_char(chr(' '), stream))
-        return nil;
-
-  return t;
+  return vformat_align_post(stream, align, slack);
 }
 
-static val vformat_str(val stream, val str, int width, int left,
+static val vformat_str(val stream, val str, int width, enum align align,
                        int precision)
 {
   const wchar_t *cstr = c_str(str);
@@ -1881,7 +1920,10 @@ static val vformat_str(val stream, val str, int width, int left,
 
   prot1(&str);
 
-  if (!left)
+  if (!vformat_align_pre(stream, align, slack))
+    goto nilout;
+
+  if (!al_left)
     for (i = 0; i < slack; i++)
       if (!put_char(chr(' '), stream))
         goto nilout;
@@ -1890,10 +1932,8 @@ static val vformat_str(val stream, val str, int width, int left,
     if (!put_char(chr(cstr[i]), stream))
       goto nilout;
 
-  if (left)
-    for (i = 0; i < slack; i++)
-      if (!put_char(chr(' '), stream))
-        goto nilout;
+  if (!vformat_align_post(stream, align, slack))
+    goto nilout;
 
   rel1(&str);
   return t;
@@ -1917,7 +1957,8 @@ val vformat(val stream, val fmtstr, va_list vl)
       vf_init, vf_width, vf_digits, vf_star, vf_precision, vf_spec
     } state = vf_init, saved_state = vf_init;
     int width = 0, precision = 0, precision_p = 0, digits = 0;
-    int left = 0, sign = 0, zeropad = 0;
+    enum align align = al_right;
+    int sign = 0, zeropad = 0;
     cnum value;
 
     for (;;) {
@@ -1933,7 +1974,7 @@ val vformat(val stream, val fmtstr, va_list vl)
         case '~':
           state = vf_width;
           width = 0;
-          left = 0;
+          align = al_right;
           zeropad = 0;
           precision = 0;
           precision_p = 0;
@@ -1951,7 +1992,10 @@ val vformat(val stream, val fmtstr, va_list vl)
           state = vf_init;
           continue;
         case '<':
-          left = 1;
+          align = al_left;
+          continue;
+        case '^':
+          align = al_center;
           continue;
         case ',':
           state = vf_precision;
@@ -2010,7 +2054,7 @@ val vformat(val stream, val fmtstr, va_list vl)
           case vf_width:
             if (width < 0) {
               width = -digits;
-              left = 1;
+              align = al_left;
             } else {
               width = digits;
             }
@@ -2134,7 +2178,7 @@ val vformat(val stream, val fmtstr, va_list vl)
             }
             if (!isdigit(num_buf[0]) && !isdigit(num_buf[1])) {
               if (!vformat_str(stream, lit("#<bad-float>"),
-                               width, left, 0))
+                               width, align, 0))
                 goto nilout;
               continue;
             }
@@ -2195,7 +2239,7 @@ val vformat(val stream, val fmtstr, va_list vl)
 
             if (!isdigit(num_buf[0]) && !isdigit(num_buf[1])) {
               if (!vformat_str(stream, lit("#<bad-float>"),
-                               width, left, 0))
+                               width, align, 0))
                 goto nilout;
               continue;
             }
@@ -2206,7 +2250,7 @@ val vformat(val stream, val fmtstr, va_list vl)
             if (width != 0 || precision_p) {
               val str = format(nil, ch == 'a' ? lit("~a") : lit("~s"),
                                obj, nao);
-              if (!vformat_str(stream, str, width, left, precision))
+              if (!vformat_str(stream, str, width, align, precision))
                 goto nilout;
               continue;
             }
@@ -2228,7 +2272,7 @@ val vformat(val stream, val fmtstr, va_list vl)
                     chr(ch), nao);
         output_num:
           {
-            val res = vformat_num(stream, pnum, width, left,
+            val res = vformat_num(stream, pnum, width, align,
                                   zeropad, precision, sign);
             if (pnum != num_buf)
               free(pnum);

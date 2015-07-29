@@ -1,5 +1,19 @@
 2015-07-28  Kaz Kylheku  <kaz@kylheku.com>
 
+	Centered fields in format.
+
+	* stream.c (enum align): New enum.
+	(vformat_align_pre, vformat_align_post): New static functions.
+	(vformat_num, vformat_str): Argument left renamed to align, and changed
+	to enum align. vformat_align_pre and vformat_align_post are called to
+	generate the correct padding for left, center and right alignment.
+	(vformat): Two-valued local variable left turned into three-valued
+	align. The ^ prefix on the width field is recognized.
+
+	* txr.1: Documented ^ width prefix.
+
+2015-07-28  Kaz Kylheku  <kaz@kylheku.com>
+
 	* share/txr/stdlib/txr-case.tl (txr-case-impl): Bugfix,
 	handle nil case in recursion.
 

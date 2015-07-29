@@ -23979,13 +23979,18 @@ are specified as follows:
 .meIP < width
 The width specifier consists of an optional
 .code <
-(left angle bracket) character,
-followed by an optional width specification.
+(left angle bracket) character or
+.code ^
+(caret)
+character followed by an optional width specification.
 
 If the leading
 .code <
 character is present, then the printing will be left-adjusted within
-this field. Otherwise it will be right-adjusted by default.
+this field. If the
+.code ^
+character is present, the printing will be centered within the field.
+Otherwise it will be right-adjusted by default.
 
 The width can be specified as a decimal integer, or as the character
 .codn * .
@@ -23994,10 +23999,12 @@ The
 notation means that instead of digits, the value of the next argument is
 consumed, and expected to be an integer which specifies the width. If that
 integer value is negative, then the field will be left-adjusted.
-If the value is positive, but the
+If the value is positive, but either the
 .code <
-character is present in the width
-specifier, then the field is left adjusted.
+or
+.code ^
+prefix character is present in the width
+specifier, then the field is adjusted according to that character.
 
 .meIP < precision
 The precision specifier is introduced by a leading comma. If this comma appears
