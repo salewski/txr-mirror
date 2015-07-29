@@ -1,5 +1,10 @@
 2015-07-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (common_destroy): Function removed.
+	(stdio_stream_destroy, dir_destroy): Call close_stream directly.
+
+2015-07-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c: Rearranging definitions and declarations so that
 	code for each stream type is together. Moving catenated
 	streams above utility functions, so they are together with

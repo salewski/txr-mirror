@@ -67,11 +67,6 @@ val from_start_k, from_current_k, from_end_k;
 val real_time_k, name_k, fd_k;
 val format_s;
 
-static void common_destroy(val obj)
-{
-  (void) close_stream(obj, nil);
-}
-
 void stream_print_op(val stream, val out)
 {
   val name = stream_get_prop(stream, name_k);
@@ -291,7 +286,7 @@ static void stdio_stream_print(val stream, val out)
 static void stdio_stream_destroy(val stream)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
-  common_destroy(stream);
+  close_stream(stream, nil);
   free(h);
 }
 
@@ -1093,7 +1088,7 @@ struct dir_handle {
 static void dir_destroy(val stream)
 {
   struct dir_handle *h = coerce(struct dir_handle *, stream->co.handle);
-  common_destroy(stream);
+  close_stream(stream, nil);
   free(h);
 }
 
