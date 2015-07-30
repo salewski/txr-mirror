@@ -254,6 +254,7 @@ static void finalize(val obj)
     return;
   case COBJ:
     obj->co.ops->destroy(obj);
+    obj->co.handle = 0;
     return;
   case BGNUM:
     mp_clear(mp(obj));

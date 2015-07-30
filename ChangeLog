@@ -1,5 +1,10 @@
 2015-07-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	* gc.c (finalize): Null out cobj handle after calling the
+	destructor. This can catch some use-after-free errors.
+
+2015-07-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (common_destroy): Function removed.
 	(stdio_stream_destroy, dir_destroy): Call close_stream directly.
 
