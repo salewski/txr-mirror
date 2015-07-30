@@ -147,7 +147,7 @@ size_t utf8_from_uc(wchar_t *wdst, const unsigned char *src)
 
 size_t utf8_from(wchar_t *wdst, const char *src)
 {
-   return utf8_from_uc(wdst, coerce(const unsigned char *, src));
+  return utf8_from_uc(wdst, coerce(const unsigned char *, src));
 }
 
 size_t utf8_to_uc(unsigned char *dst, const wchar_t *wsrc)

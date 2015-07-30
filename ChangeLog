@@ -1,5 +1,10 @@
 2015-07-30  Kaz Kylheku  <kaz@kylheku.com>
 
+	* filter.c, utf8.c: Fix bad indentation introduced in whitespace
+	fix on 2013-08-09.
+
+2015-07-30  Kaz Kylheku  <kaz@kylheku.com>
+
 	Correction to COBJ initialization pattern.
 
 	In fact, the previosuly documented process is not correct and still

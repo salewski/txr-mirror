@@ -162,7 +162,7 @@ val get_filter(val spec)
       val filter_list = mapcar(func_n1(get_filter), spec);
 
       if (memqual(nil, filter_list))
-    return nil;
+        return nil;
 
       return curry_12_2(func_n2(compound_filter), filter_list);
     }
