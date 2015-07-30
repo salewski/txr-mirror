@@ -1,5 +1,56 @@
 2015-07-29  Kaz Kylheku  <kaz@kylheku.com>
 
+	Deriving streams from the same base, so
+	we can give streams some common slots.
+
+	* stream.c (strm_base_init, strm_base_cleanup, strm_base_mark,
+	stream_destroy_op, stream_mark_op): New functions.
+	(null_ops): Switch to stream_destroy_op and stream_mark_op.
+	(make_null_stream): Associate a strm_base instance with the
+	cobj handle rather than a null pointer.
+	(struct stdio_handle): Inherit struct strm_base.
+	(stdio_stream_destroy): Clean up the strm_base part.
+	(stdio_stream_mark): Mark the strm_base part.
+	(make_stdio_stream_common): Initialize the strm_base part.
+	(struct dir_handle): Inherit struct strm_base.
+	(dir_destroy): Clean up the strm_base part.
+	(dir_mark): Mark the strm_base part.
+	(make_dir_stream): Initialize the strm_base part.
+	(struct string_in): New structure. Replaces ad-hoc cons
+	cell used for string input streams.
+	(string_in_stream_mark): Mark new structure.
+	(string_in_get_line, string_in_get_char, string_in_unget_char,
+	string_in_get_prop, string_in_get_error, make_string_input_stream):
+	Convert to new structure.
+	(string_in_ops): Switch to stream_destroy_op.
+	(struct byte_input): Inherit struct strm_base.
+	(byte_in_stream_destroy): No need to check handle for null.
+	No need to set handle to null after freeing: gc does it.
+	Clean up the strm_base part.
+	(byte_in_ops): Switch to stream_mark_op.
+	(make_string_byte_input_stream): Initialize the strm_base part.
+	(struct string_output): Inherit struct strm_base.
+	(string_out_stream_destroy): No need to check handle for null
+	since the logic elsewhere has changed.
+	Clean up the strm_base part.
+	No need to set handle to null.
+	(string_out_ops): Switch to stream_mark_op.
+	(make_string_output_stream): Initialize the strm_base part.
+	(get_string_from_stream): Don't free the handle.
+	Null out the buffer so->buf whose ownership passes to the string.
+	(struct strlist_out): New structure. Replaces ad-hoc cons cell
+	used for string list output stream.
+	(strlist_mark): Renamed to strlist_out_mark. Mark the strm_base
+	part.
+	(strlist_out_put_string, strlist_out_put_char,
+	make_strlist_output_stream, get_list_from_stream):
+	Convert to new structure.
+	(strlist_out_ops): Switch to stream_destroy_op.
+	Follow rename of strlist_mark.
+	(struct cat_strm): New structure, replacing ad-hoc list pointer
+
+2015-07-29  Kaz Kylheku  <kaz@kylheku.com>
+
 	* gc.c (finalize): Null out cobj handle after calling the
 	destructor. This can catch some use-after-free errors.
 

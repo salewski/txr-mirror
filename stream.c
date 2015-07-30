@@ -67,10 +67,39 @@ val from_start_k, from_current_k, from_end_k;
 val real_time_k, name_k, fd_k;
 val format_s;
 
+void strm_base_init(struct strm_base *s)
+{
+  static struct strm_base init = { 0, 0, 0 };
+  *s = init;
+}
+
+void strm_base_cleanup(struct strm_base *s)
+{
+  (void) s;
+}
+
+void strm_base_mark(struct strm_base *s)
+{
+  (void) s;
+}
+
 void stream_print_op(val stream, val out)
 {
   val name = stream_get_prop(stream, name_k);
   format(out, lit("#<~a ~p>"), name, stream, nao);
+}
+
+void stream_destroy_op(val stream)
+{
+  struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
+  strm_base_cleanup(s);
+  free(s);
+}
+
+void stream_mark_op(val stream)
+{
+  struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
+  strm_base_mark(s);
 }
 
 static noreturn void unimpl(val stream, val op)
@@ -239,8 +268,8 @@ void fill_stream_ops(struct strm_ops *ops)
 static struct strm_ops null_ops =
   strm_ops_init(cobj_ops_init(eq,
                               stream_print_op,
-                              cobj_destroy_stub_op,
-                              cobj_mark_op,
+                              stream_destroy_op,
+                              stream_mark_op,
                               cobj_hash_op),
                 wli("null-stream"),
                 null_put_string, null_put_char, null_put_byte, null_get_line,
@@ -252,10 +281,13 @@ static struct strm_ops null_ops =
 
 val make_null_stream(void)
 {
-  return cobj(convert(mem_t *, 0), stream_s, &null_ops.cobj_ops);
+  struct strm_base *s = coerce(struct strm_base *, chk_malloc(sizeof *s));
+  strm_base_init(s);
+  return cobj(convert(mem_t *, s), stream_s, &null_ops.cobj_ops);
 }
 
 struct stdio_handle {
+  struct strm_base a;
   FILE *f;
   val descr;
   val unget_c;
@@ -287,12 +319,14 @@ static void stdio_stream_destroy(val stream)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
   close_stream(stream, nil);
+  strm_base_cleanup(&h->a);
   free(h);
 }
 
 static void stdio_stream_mark(val stream)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
+  strm_base_mark(&h->a);
   gc_mark(h->descr);
   gc_mark(h->mode);
   gc_mark(h->err);
@@ -1036,6 +1070,7 @@ static val make_stdio_stream_common(FILE *f, val descr, struct cobj_ops *ops)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, chk_malloc(sizeof *h));
   val stream = cobj(coerce(mem_t *, h), stream_s, ops);
+  strm_base_init(&h->a);
   h->f = f;
   h->descr = descr;
   h->unget_c = nil;
@@ -1081,6 +1116,7 @@ static val make_pipevp_stream(FILE *f, val descr, pid_t pid)
 #endif
 
 struct dir_handle {
+  struct strm_base a;
   DIR *d;
   val err;
 };
@@ -1088,6 +1124,7 @@ struct dir_handle {
 static void dir_destroy(val stream)
 {
   struct dir_handle *h = coerce(struct dir_handle *, stream->co.handle);
+  strm_base_cleanup(&h->a);
   close_stream(stream, nil);
   free(h);
 }
@@ -1095,6 +1132,7 @@ static void dir_destroy(val stream)
 static void dir_mark(val stream)
 {
   struct dir_handle *h = coerce(struct dir_handle *, stream->co.handle);
+  strm_base_mark(&h->a);
   gc_mark(h->err);
 }
 
@@ -1169,15 +1207,24 @@ static struct strm_ops dir_ops =
 val make_dir_stream(DIR *dir)
 {
   struct dir_handle *h = coerce(struct dir_handle *, chk_malloc(sizeof *h));
+  strm_base_init(&h->a);
   h->d = dir;
   h->err = nil;
   return cobj(coerce(mem_t *, h), stream_s, &dir_ops.cobj_ops);
 }
 
+struct string_in {
+  struct strm_base a;
+  val string;
+  val pos;
+};
+
 static void string_in_stream_mark(val stream)
 {
-  val stuff = coerce(val, stream->co.handle);
-  gc_mark(stuff);
+  struct string_in *s = coerce(struct string_in *, stream->co.handle);
+  strm_base_mark(&s->a);
+  gc_mark(s->string);
+  gc_mark(s->pos);
 }
 
 static val find_char(val string, val start, val ch)
@@ -1197,14 +1244,12 @@ static val find_char(val string, val start, val ch)
 
 static val string_in_get_line(val stream)
 {
-  val pair = coerce(val, stream->co.handle);
-  val string = car(pair);
-  val pos = cdr(pair);
+  struct string_in *s = coerce(struct string_in *, stream->co.handle);
 
-  if (lt(pos, length_str(string))) {
-    val nlpos = find_char(string, pos, chr('\n'));
-    val result = sub_str(string, pos, nlpos);
-    set(cdr_l(pair), nlpos ? plus(nlpos, one) : length_str(string));
+  if (lt(s->pos, length_str(s->string))) {
+    val nlpos = find_char(s->string, s->pos, chr('\n'));
+    val result = sub_str(s->string, s->pos, nlpos);
+    set(mkloc(s->pos, stream), nlpos ? plus(nlpos, one) : length_str(s->string));
     return result;
   }
 
@@ -1213,13 +1258,11 @@ static val string_in_get_line(val stream)
 
 static val string_in_get_char(val stream)
 {
-  val pair = coerce(val, stream->co.handle);
-  val string = car(pair);
-  val pos = cdr(pair);
+  struct string_in *s = coerce(struct string_in *, stream->co.handle);
 
-  if (lt(pos, length_str(string))) {
-    set(cdr_l(pair), plus(pos, one));
-    return chr_str(string, pos);
+  if (lt(s->pos, length_str(s->string))) {
+    set(mkloc(s->pos, stream), plus(s->pos, one));
+    return chr_str(s->string, s->pos);
   }
 
   return nil;
@@ -1227,9 +1270,8 @@ static val string_in_get_char(val stream)
 
 static val string_in_unget_char(val stream, val ch)
 {
-  val pair = coerce(val, stream->co.handle);
-  val string = car(pair);
-  val pos = cdr(pair);
+  struct string_in *s = coerce(struct string_in *, stream->co.handle);
+  val pos = s->pos;
 
   if (pos == zero)
     uw_throwf(file_error_s,
@@ -1237,35 +1279,31 @@ static val string_in_unget_char(val stream, val ch)
 
   pos = minus(pos, one);
 
-  if (chr_str(string, pos) != ch)
+  if (chr_str(s->string, pos) != ch)
     uw_throwf(file_error_s,
               lit("unget-char: ~s doesn't match the character that was read"),
               nao);
 
-  set(cdr_l(pair), plus(pos, one));
+  set(mkloc(s->pos, stream), plus(pos, one));
   return ch;
 }
 
 static val string_in_get_prop(val stream, val ind)
 {
-
   if (ind == name_k) {
-    val pair = coerce(val, stream->co.handle);
+    struct string_in *s = coerce(struct string_in *, stream->co.handle);
     struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
     val name = static_str(ops->name);
-
-    return format(nil, lit("~a ~s ~p"), name, car(pair), stream, nao);
+    return format(nil, lit("~a ~s ~p"), name, s->string, stream, nao);
   }
+
   return nil;
 }
 
 static val string_in_get_error(val stream)
 {
-  val pair = coerce(val, stream->co.handle);
-  val string = car(pair);
-  val pos = cdr(pair);
-
-  return if2(ge(pos, length_str(string)), t);
+  struct string_in *s = coerce(struct string_in *, stream->co.handle);
+  return if2(ge(s->pos, length_str(s->string)), t);
 }
 
 static val string_in_get_error_str(val stream)
@@ -1276,7 +1314,7 @@ static val string_in_get_error_str(val stream)
 static struct strm_ops string_in_ops =
   strm_ops_init(cobj_ops_init(eq,
                               stream_print_op,
-                              cobj_destroy_stub_op,
+                              stream_destroy_op,
                               string_in_stream_mark,
                               cobj_hash_op),
                 wli("string-input-stream"),
@@ -1295,10 +1333,15 @@ static struct strm_ops string_in_ops =
 
 val make_string_input_stream(val string)
 {
-  return cobj(coerce(mem_t *, cons(string, zero)), stream_s, &string_in_ops.cobj_ops);
+  struct string_in *s = coerce(struct string_in *, chk_malloc(sizeof *s));
+  strm_base_init(&s->a);
+  s->string = string;
+  s->pos = zero;
+  return cobj(coerce(mem_t *, s), stream_s, &string_in_ops.cobj_ops);
 }
 
 struct byte_input {
+  struct strm_base a;
   unsigned char *buf;
   size_t size;
   size_t index;
@@ -1307,13 +1350,10 @@ struct byte_input {
 static void byte_in_stream_destroy(val stream)
 {
   struct byte_input *bi = coerce(struct byte_input *, stream->co.handle);
-
-  if (bi) {
-    free(bi->buf);
-    bi->buf = 0;
-    free(bi);
-    stream->co.handle = 0;
-  }
+  strm_base_cleanup(&bi->a);
+  free(bi->buf);
+  bi->buf = 0;
+  free(bi);
 }
 
 static val byte_in_get_byte(val stream)
@@ -1353,7 +1393,7 @@ static struct strm_ops byte_in_ops =
   strm_ops_init(cobj_ops_init(eq,
                               stream_print_op,
                               byte_in_stream_destroy,
-                              cobj_mark_op,
+                              stream_mark_op,
                               cobj_hash_op),
                 wli("byte-input-stream"),
                 0, 0, 0, 0, 0,
@@ -1372,6 +1412,7 @@ val make_string_byte_input_stream(val string)
   {
     struct byte_input *bi = coerce(struct byte_input *, chk_malloc(sizeof *bi));
     unsigned char *utf8 = utf8_dup_to_uc(c_str(string));
+    strm_base_init(&bi->a);
     bi->buf = utf8;
     bi->size = strlen(coerce(char *, utf8));
     bi->index = 0;
@@ -1380,6 +1421,7 @@ val make_string_byte_input_stream(val string)
 }
 
 struct string_output {
+  struct strm_base a;
   wchar_t *buf;
   size_t size;
   size_t fill;
@@ -1392,12 +1434,10 @@ static void string_out_stream_destroy(val stream)
 {
   struct string_output *so = coerce(struct string_output *, stream->co.handle);
 
-  if (so) {
-    free(so->buf);
-    so->buf = 0;
-    free(so);
-    stream->co.handle = 0;
-  }
+  strm_base_cleanup(&so->a);
+  free(so->buf);
+  so->buf = 0;
+  free(so);
 }
 
 static int string_out_byte_callback(mem_t *ctx)
@@ -1492,7 +1532,7 @@ static struct strm_ops string_out_ops =
   strm_ops_init(cobj_ops_init(eq,
                               stream_print_op,
                               string_out_stream_destroy,
-                              cobj_mark_op,
+                              stream_mark_op,
                               cobj_hash_op),
                 wli("string-output-stream"),
                 string_out_put_string,
@@ -1505,6 +1545,7 @@ static struct strm_ops string_out_ops =
 val make_string_output_stream(void)
 {
   struct string_output *so = coerce(struct string_output *, chk_malloc(sizeof *so));
+  strm_base_init(&so->a);
   so->size = 128;
   so->buf = coerce(wchar_t *, chk_malloc(so->size * sizeof so->buf));
   so->fill = 0;
@@ -1525,40 +1566,47 @@ val get_string_from_stream(val stream)
     struct string_output *so = coerce(struct string_output *, stream->co.handle);
     val out = nil;
 
-    if (!so)
+    if (!so->buf)
       return out;
 
     while (so->head != so->tail)
       out = string_out_byte_flush(so, stream);
 
-    stream->co.handle = 0;
-
     /* Trim to actual size */
     so->buf = coerce(wchar_t *, chk_realloc(coerce(mem_t *, so->buf),
                                             (so->fill + 1) * sizeof *so->buf));
     out = string_own(so->buf);
-    free(so);
+    so->buf = 0;
     return out;
   } else {
     type_assert (stream->co.ops == &string_in_ops.cobj_ops,
                  (lit("~a is not a string stream"), stream, nao));
     {
-      val pair = coerce(val, stream->co.handle);
-      return pair ? car(pair) : nil;
+      struct string_in *si = coerce(struct string_in *, stream->co.handle);
+      return si->string;
     }
   }
 }
 
-static void strlist_mark(val stream)
+struct strlist_out {
+  struct strm_base a;
+  val lines;
+  val strstream;
+};
+
+static void strlist_out_mark(val stream)
 {
-  val stuff = coerce(val, stream->co.handle);
-  gc_mark(stuff);
+  struct strlist_out *s = coerce(struct strlist_out *, stream->co.handle);
+  strm_base_mark(&s->a);
+  gc_mark(s->lines);
+  gc_mark(s->strstream);
 }
 
 static val strlist_out_put_string(val stream, val str)
 {
-  val cell = coerce(val, stream->co.handle);
-  cons_bind (lines, strstream, cell);
+  struct strlist_out *s = coerce(struct strlist_out *, stream->co.handle);
+  val lines = s->lines;
+  val strstream = s->strstream;
 
   for (;;) {
     val length = length_str(str);
@@ -1577,26 +1625,28 @@ static val strlist_out_put_string(val stream, val str)
     strstream = make_string_output_stream();
   }
 
-  set(car_l(cell), lines);
-  set(cdr_l(cell), strstream);
+  if (s->lines != lines) {
+    set(mkloc(s->lines, stream), lines);
+    set(mkloc(s->strstream, stream), strstream);
+  }
 
   return t;
 }
 
 static val strlist_out_put_char(val stream, val ch)
 {
-  val cell = coerce(val, stream->co.handle);
-  cons_bind (lines, strstream, cell);
+  struct strlist_out *s = coerce(struct strlist_out *, stream->co.handle);
+  val lines = s->lines;
+  val strstream = s->strstream;
 
   if (ch == chr('\n')) {
     push(get_string_from_stream(strstream), &lines);
     strstream = make_string_output_stream();
+    set(mkloc(s->lines, stream), lines);
+    set(mkloc(s->strstream, stream), strstream);
   } else {
     put_char(ch, strstream);
   }
-
-  set(car_l(cell), lines);
-  set(cdr_l(cell), strstream);
 
   return t;
 }
@@ -1604,8 +1654,8 @@ static val strlist_out_put_char(val stream, val ch)
 static struct strm_ops strlist_out_ops =
   strm_ops_init(cobj_ops_init(eq,
                               stream_print_op,
-                              cobj_destroy_stub_op,
-                              strlist_mark,
+                              stream_destroy_op,
+                              strlist_out_mark,
                               cobj_hash_op),
                 wli("strlist-output-stream"),
                 strlist_out_put_string,
@@ -1614,8 +1664,15 @@ static struct strm_ops strlist_out_ops =
 
 val make_strlist_output_stream(void)
 {
-  return cobj(coerce(mem_t *, cons(nil, make_string_output_stream())),
-              stream_s, &strlist_out_ops.cobj_ops);
+  struct strlist_out *s = coerce(struct strlist_out *, chk_malloc(sizeof *s));
+  val stream;
+  val strstream = make_string_output_stream();
+  strm_base_init(&s->a);
+  s->lines = nil;
+  s->strstream = nil;
+  stream = cobj(coerce(mem_t *, s), stream_s, &strlist_out_ops.cobj_ops);
+  s->strstream = strstream;
+  return stream;
 }
 
 val get_list_from_stream(val stream)
@@ -1625,9 +1682,9 @@ val get_list_from_stream(val stream)
                (lit("~a is not a stream"), stream, nao));
 
   if (stream->co.ops == &strlist_out_ops.cobj_ops) {
-    val cell = coerce(val, stream->co.handle);
-    cons_bind (lines, strstream, cell);
-    val stray = get_string_from_stream(strstream);
+    struct strlist_out *s = coerce(struct strlist_out *, stream->co.handle);
+    val stray = get_string_from_stream(s->strstream);
+    val lines = s->lines;
     if (!zerop(length_str(stray)))
       push(stray, &lines);
     return nreverse(lines);
@@ -1636,18 +1693,24 @@ val get_list_from_stream(val stream)
   type_mismatch(lit("~s is not a string list stream"), stream);
 }
 
+struct cat_strm {
+  struct strm_base a;
+  val streams;
+};
+
 static void cat_stream_print(val stream, val out)
 {
-  val streams = coerce(val, stream->co.handle);
+  struct cat_strm *s = coerce(struct cat_strm *, stream->co.handle);
   struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
   val name = static_str(ops->name);
 
-  format(out, lit("#<~a ~s>"), name, streams, nao);
+  format(out, lit("#<~a ~s>"), name, s->streams, nao);
 }
 
 static val cat_get_line(val stream)
 {
-  val streams = coerce(val, stream->co.handle);
+  struct cat_strm *s = coerce(struct cat_strm *, stream->co.handle);
+  val streams = s->streams;
 
   while (streams) {
     val fs = first(streams);
@@ -1656,7 +1719,7 @@ static val cat_get_line(val stream)
       return line;
     close_stream(fs, t);
     if ((streams = rest(streams)) != nil)
-      stream->co.handle = coerce(mem_t *, streams);
+      set(mkloc(s->streams, stream), streams);
   }
 
   return nil;
@@ -1664,7 +1727,8 @@ static val cat_get_line(val stream)
 
 static val cat_get_char(val stream)
 {
-  val streams = coerce(val, stream->co.handle);
+  struct cat_strm *s = coerce(struct cat_strm *, stream->co.handle);
+  val streams = s->streams;
 
   while (streams) {
     val fs = first(streams);
@@ -1673,7 +1737,7 @@ static val cat_get_char(val stream)
       return ch;
     close_stream(fs, t);
     if ((streams = rest(streams)) != nil)
-      stream->co.handle = coerce(mem_t *, streams);
+      set(mkloc(s->streams, stream), streams);
   }
 
   return nil;
@@ -1681,7 +1745,8 @@ static val cat_get_char(val stream)
 
 static val cat_get_byte(val stream)
 {
-  val streams = coerce(val, stream->co.handle);
+  struct cat_strm *s = coerce(struct cat_strm *, stream->co.handle);
+  val streams = s->streams;
 
   while (streams) {
     val fs = first(streams);
@@ -1690,7 +1755,7 @@ static val cat_get_byte(val stream)
       return byte;
     close_stream(fs, t);
     if ((streams = rest(streams)) != nil)
-      stream->co.handle = coerce(mem_t *, streams);
+      set(mkloc(s->streams, stream), streams);
   }
 
   return nil;
@@ -1698,14 +1763,14 @@ static val cat_get_byte(val stream)
 
 static val cat_unget_byte(val stream, int byte)
 {
-  val streams = coerce(val, stream->co.handle);
+  struct cat_strm *s = coerce(struct cat_strm *, stream->co.handle);
 
-  if (!streams) {
+  if (!s->streams) {
     uw_throwf(file_error_s,
               lit("unget-byte on catenated stream ~a: stream list empty"),
               stream, nao);
   } else {
-    val stream = car(streams);
+    val stream = car(s->streams);
     return unget_byte(num_fast(byte), stream);
   }
 
@@ -1714,54 +1779,57 @@ static val cat_unget_byte(val stream, int byte)
 
 static val cat_unget_char(val stream, val ch)
 {
-  val streams = coerce(val, stream->co.handle);
+  struct cat_strm *s = coerce(struct cat_strm *, stream->co.handle);
 
-  if (!streams) {
+  if (!s->streams) {
     uw_throwf(file_error_s,
               lit("unget-char on catenated stream ~a: stream list empty"),
               stream, nao);
   } else {
-    val stream = car(streams);
-    return unget_char(ch, stream );
+    val stream = car(s->streams);
+    return unget_char(ch, stream);
   }
 }
 
 static val cat_get_prop(val stream, val ind)
 {
-  val streams = coerce(val, stream->co.handle);
-  if (streams)
-    return stream_get_prop(first(streams), ind);
+  struct cat_strm *s = coerce(struct cat_strm *, stream->co.handle);
+
+  if (s->streams)
+    return stream_get_prop(first(s->streams), ind);
+
   return nil;
 }
 
 static void cat_mark(val stream)
 {
-  val obj = coerce(val, stream->co.handle);
-  gc_mark(obj);
+  struct cat_strm *s = coerce(struct cat_strm *, stream->co.handle);
+  strm_base_mark(&s->a);
+  gc_mark(s->streams);
 }
 
 static val cat_get_error(val stream)
 {
-  val streams = coerce(val, stream->co.handle);
-  return if3(streams, get_error(first(streams)), t);
+  struct cat_strm *s = coerce(struct cat_strm *, stream->co.handle);
+  return if3(s->streams, get_error(first(s->streams)), t);
 }
 
 static val cat_get_error_str(val stream)
 {
-  val streams = coerce(val, stream->co.handle);
-  return if3(streams, get_error_str(first(streams)), lit("eof"));
+  struct cat_strm *s = coerce(struct cat_strm *, stream->co.handle);
+  return if3(s->streams, get_error_str(first(s->streams)), lit("eof"));
 }
 
 static val cat_clear_error(val stream)
 {
-  val streams = coerce(val, stream->co.handle);
-  return if2(streams, clear_error(first(streams)));
+  struct cat_strm *s = coerce(struct cat_strm *, stream->co.handle);
+  return if2(s->streams, clear_error(first(s->streams)));
 }
 
 static struct strm_ops cat_stream_ops =
   strm_ops_init(cobj_ops_init(eq,
                               cat_stream_print,
-                              cobj_destroy_stub_op,
+                              stream_destroy_op,
                               cat_mark,
                               cobj_hash_op),
                 wli("catenated-stream"),
@@ -1780,7 +1848,10 @@ static struct strm_ops cat_stream_ops =
 
 val make_catenated_stream(val stream_list)
 {
-  return cobj(coerce(mem_t *, stream_list), stream_s, &cat_stream_ops.cobj_ops);
+  struct cat_strm *s = coerce(struct cat_strm *, chk_malloc(sizeof *s));
+  strm_base_init(&s->a);
+  s->streams = stream_list;
+  return cobj(coerce(mem_t *, s), stream_s, &cat_stream_ops.cobj_ops);
 }
 
 val catenated_stream_p(val obj)
@@ -1797,10 +1868,8 @@ val catenated_stream_push(val new_stream, val cat_stream)
                (lit("~a is not a stream"), cat_stream, nao));
 
   {
-    val streams = coerce(val, cat_stream->co.handle);
-    loc l = mkloc(streams, cat_stream);
-    set(l, cons(new_stream, streams));
-    cat_stream->co.handle = coerce(mem_t *, deref(l));
+    struct cat_strm *s = coerce(struct cat_strm *, cat_stream->co.handle);
+    mpush(new_stream, mkloc(s->streams, cat_stream));
     return nil;
   }
 }

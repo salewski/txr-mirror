@@ -30,6 +30,12 @@ enum strm_whence {
   strm_end = SEEK_SET
 };
 
+struct strm_base {
+  unsigned int indent_on;
+  cnum indent_chars;
+  cnum column;
+};
+
 struct strm_ops {
   struct cobj_ops cobj_ops;
   const wchli_t *name;
@@ -78,8 +84,13 @@ extern val format_s;
 
 extern val stdin_s, stdout_s, stddebug_s, stderr_s, stdnull_s;
 
+void strm_base_init(struct strm_base *s);
+void strm_base_cleanup(struct strm_base *s);
+void strm_base_mark(struct strm_base *s);
 void fill_stream_ops(struct strm_ops *ops);
 void stream_print_op(val stream, val out);
+void stream_mark_op(val stream);
+void stream_destroy_op(val stream);
 val make_null_stream(void);
 val make_stdio_stream(FILE *, val descr);
 val make_tail_stream(FILE *, val descr);
