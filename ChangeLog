@@ -1,3 +1,7 @@
+2015-07-30  Kaz Kylheku  <kaz@kylheku.com>
+
+	* HACKING: Restore accidentally deleted document title.
+
 2015-07-29  Kaz Kylheku  <kaz@kylheku.com>
 
 	Deriving streams from the same base, so
