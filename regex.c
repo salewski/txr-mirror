@@ -1668,11 +1668,11 @@ val regex_compile(val regex_sexp, val error_stream)
   } else if (opt_derivative_regex || regex_requires_dv(regex_sexp)) {
     regex_t *regex = coerce(regex_t *, chk_malloc(sizeof *regex));
     val ret;
+    val dv = dv_compile_regex(regex_sexp);
     regex->kind = REGEX_DV;
-    regex->r.dv = nil;
     regex->source = nil;
     ret = cobj(coerce(mem_t *, regex), regex_s, &regex_obj_ops);
-    regex->r.dv = dv_compile_regex(regex_sexp);
+    regex->r.dv = dv;
     regex->source = regex_sexp;
     return ret;
   } else {

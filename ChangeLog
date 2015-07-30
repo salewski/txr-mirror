@@ -1,5 +1,20 @@
 2015-07-30  Kaz Kylheku  <kaz@kylheku.com>
 
+	Correction to COBJ initialization pattern.
+
+	In fact, the previosuly documented process is not correct and still
+	leaves a corruption problem under generational GC (which has been the
+	default for some time).
+
+	* HACKING: Document flaw in the initialization pattern previously
+	thought to be correct, and show fix.
+
+	* hash.c (copy_hash): Fix instance of incorrect pattern.
+
+	* regex.c (regex_compile): Likewise.
+
+2015-07-30  Kaz Kylheku  <kaz@kylheku.com>
+
 	* HACKING: Restore accidentally deleted document title.
 
 2015-07-29  Kaz Kylheku  <kaz@kylheku.com>

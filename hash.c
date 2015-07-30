@@ -523,13 +523,14 @@ val copy_hash(val existing)
 {
   struct hash *ex = coerce(struct hash *, cobj_handle(existing, hash_s));
   struct hash *h = coerce(struct hash *, chk_malloc(sizeof *h));
-  val hash = cobj(coerce(mem_t *, h), hash_s, &hash_ops);
   val mod = num_fast(ex->modulus);
+  val table = vector(mod, nil);
+  val hash = cobj(coerce(mem_t *, h), hash_s, &hash_ops);
   val iter;
 
   h->modulus = ex->modulus;
   h->count = ex->count;
-  h->table = vector(mod, nil);
+  h->table = table;
   h->userdata = ex->userdata;
 
   h->flags = ex->flags;
