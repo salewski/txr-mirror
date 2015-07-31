@@ -1557,13 +1557,10 @@ val make_string_output_stream(void)
 
 val get_string_from_stream(val stream)
 {
-  type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_s,
-               (lit("~a is not a stream"),
-                stream, nao));
+  struct string_output *so = coerce(struct string_output *,
+                                    cobj_handle(stream, stream_s));
 
   if (stream->co.ops == &string_out_ops.cobj_ops) {
-    struct string_output *so = coerce(struct string_output *, stream->co.handle);
     val out = nil;
 
     if (!so->buf)
@@ -1677,12 +1674,10 @@ val make_strlist_output_stream(void)
 
 val get_list_from_stream(val stream)
 {
-  type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_s,
-               (lit("~a is not a stream"), stream, nao));
+  struct strlist_out *s = coerce(struct strlist_out *,
+                                 cobj_handle(stream, stream_s));
 
   if (stream->co.ops == &strlist_out_ops.cobj_ops) {
-    struct strlist_out *s = coerce(struct strlist_out *, stream->co.handle);
     val stray = get_string_from_stream(s->strstream);
     val lines = s->lines;
     if (!zerop(length_str(stray)))
@@ -1856,8 +1851,7 @@ val make_catenated_stream(val stream_list)
 
 val catenated_stream_p(val obj)
 {
-  return if2(streamp(obj),
-             c_true(obj->co.ops == &cat_stream_ops.cobj_ops));
+  return if2(streamp(obj), c_true(obj->co.ops == &cat_stream_ops.cobj_ops));
 }
 
 val catenated_stream_push(val new_stream, val cat_stream)
@@ -1881,26 +1875,14 @@ val streamp(val obj)
 
 val stream_set_prop(val stream, val ind, val prop)
 {
-  type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
-                                            stream, nao));
-
-  {
-    struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
-    return ops->set_prop(stream, ind, prop);
-  }
+  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
+  return ops->set_prop(stream, ind, prop);
 }
 
 val stream_get_prop(val stream, val ind)
 {
-  type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
-                                            stream, nao));
-
-  {
-    struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
-    return ops->get_prop(stream, ind);
-  }
+  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
+  return ops->get_prop(stream, ind);
 }
 
 val real_time_stream_p(val obj)
@@ -1915,14 +1897,8 @@ val real_time_stream_p(val obj)
 
 val close_stream(val stream, val throw_on_error)
 {
-  type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
-                                            stream, nao));
-
-  {
-    struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
-    return ops->close(stream, throw_on_error);
-  }
+  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
+  return ops->close(stream, throw_on_error);
 }
 
 val get_error(val stream)
@@ -1943,80 +1919,45 @@ val clear_error(val stream)
   return ops->clear_error(stream);
 }
 
-val get_line(val stream)
+val get_line(val stream_in)
 {
-  stream = default_arg(stream, std_input);
-
-  type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
-                                            stream, nao));
-
-  {
-    struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
-    return ops->get_line(stream);
-  }
+  val stream = default_arg(stream_in, std_input);
+  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
+  return ops->get_line(stream);
 }
 
-val get_char(val stream)
+val get_char(val stream_in)
 {
-  stream = default_arg(stream, std_input);
-
-  type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
-                                            stream, nao));
-
-  {
-    struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
-    return ops->get_char(stream);
-  }
+  val stream = default_arg(stream_in, std_input);
+  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
+  return ops->get_char(stream);
 }
 
-val get_byte(val stream)
+val get_byte(val stream_in)
 {
-  stream = default_arg(stream, std_input);
-
-  type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
-                                            stream, nao));
-
-  {
-    struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
-    return ops->get_byte(stream);
-  }
+  val stream = default_arg(stream_in, std_input);
+  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
+  return ops->get_byte(stream);
 }
 
-val unget_char(val ch, val stream)
+val unget_char(val ch, val stream_in)
 {
-  stream = default_arg(stream, std_input);
-
-  type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
-                                            stream, nao));
-
-  {
-    struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
-    return ops->unget_char(stream, ch);
-  }
+  val stream = default_arg(stream_in, std_input);
+  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
+  return ops->unget_char(stream, ch);
 }
 
-val unget_byte(val byte, val stream)
+val unget_byte(val byte, val stream_in)
 {
   cnum b = c_num(byte);
-
-  stream = default_arg(stream, std_input);
-
-  type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
-                                            stream, nao));
+  val stream = default_arg(stream_in, std_input);
+  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
 
   if (b < 0 || b > 255)
     uw_throwf(file_error_s, lit("unget-byte on ~a: byte value ~a out of range"),
               stream, byte, nao);
 
-  {
-    struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
-    return ops->unget_byte(stream, b);
-  }
+  return ops->unget_byte(stream, b);
 }
 
 struct fmt {
@@ -2177,9 +2118,7 @@ nilout:
 
 val vformat(val stream, val fmtstr, va_list vl)
 {
-  type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
-                                            stream, nao));
+  class_check(stream, stream_s);
 
   prot1(&fmtstr);
 
@@ -2548,8 +2487,7 @@ val format(val stream, val str, ...)
   val st = if3(stream == t,
                std_output,
                or2(stream, make_string_output_stream()));
-  type_check (st, COBJ);
-  type_assert (st->co.cls == stream_s, (lit("~a is not a stream"), st, nao));
+  class_check(st, stream_s);
 
   {
     va_list vl;
@@ -2644,84 +2582,63 @@ static val indent_mode_put_string(val stream, val string,
   return ret;
 }
 
-val put_string(val string, val stream)
+val put_string(val string, val stream_in)
 {
-  stream = default_arg(stream, std_output);
+  val stream = default_arg(stream_in, std_output);
+  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
+  struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
 
-  type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
-                                            stream, nao));
+  if (s->indent_mode == indent_off)
+    return ops->put_string(stream, string);
 
-  {
-    struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
-    struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
-
-    if (s->indent_mode == indent_off)
-      return ops->put_string(stream, string);
-
-    return indent_mode_put_string(stream, string, ops, s);
-  }
+  return indent_mode_put_string(stream, string, ops, s);
 }
 
-val put_char(val ch, val stream)
+val put_char(val ch, val stream_in)
 {
-  stream = default_arg(stream, std_output);
+  val stream = default_arg(stream_in, std_output);
+  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
+  struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
+  wint_t cch = c_chr(ch);
 
-  type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
-                                            stream, nao));
+  if (s->indent_mode == indent_off)
+    return ops->put_char(stream, ch);
 
-  {
-    struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
-    struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
-    wint_t cch = c_chr(ch);
-
-    if (s->indent_mode == indent_off)
-      return ops->put_char(stream, ch);
-
-    switch (cch) {
-    case L'\n':
-      if (ops->put_char(stream, ch) &&
-          put_indent(stream, ops, s->indent_chars)) {
-        s->column = s->indent_chars;
-        return t;
-      }
-      return nil;
-    case L'\t':
-      if (ops->put_char(stream, ch)) {
-        s->column = (s->column + 1) | 7;
-        return t;
-      }
-      return nil;
-    default:
-      if (ops->put_char(stream, ch)) {
-        if (iswprint(cch))
-          s->column++;
-        return t;
-      }
-      return nil;
+  switch (cch) {
+  case L'\n':
+    if (ops->put_char(stream, ch) &&
+        put_indent(stream, ops, s->indent_chars)) {
+      s->column = s->indent_chars;
+      return t;
     }
+    return nil;
+  case L'\t':
+    if (ops->put_char(stream, ch)) {
+      s->column = (s->column + 1) | 7;
+      return t;
+    }
+    return nil;
+  default:
+    if (ops->put_char(stream, ch)) {
+      if (iswprint(cch))
+        s->column++;
+      return t;
+    }
+    return nil;
   }
 }
 
-val put_byte(val byte, val stream)
+val put_byte(val byte, val stream_in)
 {
+  val stream = default_arg(stream_in, std_output);
+  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
   cnum b = c_num(byte);
-
-  stream = default_arg(stream, std_output);
-
-  type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
-                                            stream, nao));
 
   if (b < 0 || b > 255)
     uw_throwf(file_error_s, lit("put-byte on ~a: byte value ~a out of range"),
               stream, byte, nao);
 
-  {
-    struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
-    return ops->put_byte(stream, b);
-  }
+  return ops->put_byte(stream, b);
 }
 
 val put_line(val string, val stream)
@@ -2749,50 +2666,40 @@ val put_lines(val lines, val stream)
 
 val flush_stream(val stream)
 {
-  type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
-                                            stream, nao));
-
-  {
-    struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
-    return ops->flush(stream);
-  }
+  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
+  return ops->flush(stream);
 }
 
 val seek_stream(val stream, val offset, val whence)
 {
-  type_check (stream, COBJ);
-  type_assert (stream->co.cls == stream_s, (lit("~a is not a stream"),
-                                            stream, nao));
+  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
+  enum strm_whence w;
+  cnum off = c_num(offset);
 
-  {
-    struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
-    enum strm_whence w;
-    cnum off = c_num(offset);
+  if (whence == from_start_k)
+    w = strm_start;
+  else if (whence == from_current_k)
+    w = strm_cur;
+  else if (whence == from_end_k)
+    w = strm_end;
+  else
+    uw_throwf(file_error_s, lit("seek: ~a is not a valid whence argument"),
+              whence, nao);
 
-    if (whence == from_start_k)
-      w = strm_start;
-    else if (whence == from_current_k)
-      w = strm_cur;
-    else if (whence == from_end_k)
-      w = strm_end;
-    else
-      uw_throwf(file_error_s, lit("seek: ~a is not a valid whence argument"),
-                whence, nao);
-
-    return ops->seek(stream, off, w);
-  }
+  return ops->seek(stream, off, w);
 }
 
 val get_indent_mode(val stream)
 {
-  struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
+  struct strm_base *s = coerce(struct strm_base *,
+                               cobj_handle(stream, stream_s));
   return num_fast(s->indent_mode);
 }
 
 val test_set_indent_mode(val stream, val compare, val mode)
 {
-  struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
+  struct strm_base *s = coerce(struct strm_base *,
+                               cobj_handle(stream, stream_s));
   val oldval = num_fast(s->indent_mode);
   if (oldval == compare)
     s->indent_mode = (enum indent_mode) c_num(mode);
@@ -2801,7 +2708,8 @@ val test_set_indent_mode(val stream, val compare, val mode)
 
 val set_indent_mode(val stream, val mode)
 {
-  struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
+  struct strm_base *s = coerce(struct strm_base *,
+                               cobj_handle(stream, stream_s));
   val oldval = num_fast(s->indent_mode);
   if ((s->indent_mode = (enum indent_mode) c_num(mode)) == indent_off)
     s->column = 0;
@@ -2810,13 +2718,15 @@ val set_indent_mode(val stream, val mode)
 
 val get_indent(val stream)
 {
-  struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
+  struct strm_base *s = coerce(struct strm_base *,
+                               cobj_handle(stream, stream_s));
   return num(s->indent_chars);
 }
 
 val set_indent(val stream, val indent)
 {
-  struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
+  struct strm_base *s = coerce(struct strm_base *,
+                               cobj_handle(stream, stream_s));
   val oldval = num(s->indent_chars);
   s->indent_chars = c_num(indent);
   return oldval;
@@ -2824,7 +2734,8 @@ val set_indent(val stream, val indent)
 
 val inc_indent(val stream, val delta)
 {
-  struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
+  struct strm_base *s = coerce(struct strm_base *,
+                               cobj_handle(stream, stream_s));
   val oldval = num(s->indent_chars);
   val col = num(s->column);
   s->indent_chars = c_num(plus(delta, col));
@@ -2833,9 +2744,8 @@ val inc_indent(val stream, val delta)
 
 val width_check(val stream, val alt)
 {
-  struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
+  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
   struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
-
 
   if ((s->indent_mode == indent_code &&
        s->column >= s->indent_chars + s->code_width) ||
@@ -2856,7 +2766,6 @@ val width_check(val stream, val alt)
 
   return t;
 }
-
 
 val get_string(val stream, val nchars, val close_after_p)
 {

@@ -1,5 +1,22 @@
 2015-07-31  Kaz Kylheku  <kaz@kylheku.com>
 
+	Simplify type check code in stream module.
+
+	* stream.c (get_string_from_stream, get_list_from_stream,
+	stream_set_prop, stream_get_prop, close_stream, get_line,
+	get_char, get_byte, unget_char, unget_byte, put_string,
+	put_char, put_byte, flush_stream, seek_stream): Use cobj_handle and
+	cobj_ops instead of type_check and type_assert.
+	(get_indent_mode, test_set_indent_mode, set_indent_mode,
+	get_indent, set_indent, inc_indent, width_check): Use cobj_handle
+	and cobj_ops instead of stream->co.handle and stream->co.ops
+	for safety.
+
+	(vformat, format): Use class_check instead of type_check and
+	type_assert.
+
+2015-07-31  Kaz Kylheku  <kaz@kylheku.com>
+
 	Multi-line, indented printing of structure.
 
 	* eval.c (op_error): New static function.
