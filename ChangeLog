@@ -1,3 +1,49 @@
+2015-07-31  Kaz Kylheku  <kaz@kylheku.com>
+
+	Multi-line, indented printing of structure.
+
+	* eval.c (op_error): New static function.
+	(macro_form_p, fboundp): Static to external.
+	(special_operator_p): New function.
+	(eval_init): Register macrolet and symacrolet to op_error.
+	These are recognized and processed by expand, but we want
+	them in the op table so they are reported by special_operator_p.
+
+	* eval.h (fboundp, macro_form_p, special_operator_p): Declared.
+
+	* hash.c (print_key_val): Break long lines on spaces
+	between pairs with stream_width_check.
+	(hash_print_op): Implement split and indented printing.
+
+	* lib.c (obj_print_impl): New static function, resulting
+	from a merge of obj_print and obj_pprint. Fixes some
+	wrong-way recursion bugs: obj_pprint recursed into obj_print
+	in some places. Adds support for multi-line printing of
+	vectors and lists, with indentation using the new
+	interfaces in streams.
+
+	* stream.c (strm_base_init): Update initializer.
+	(put_indent, indent_mode_put_string): New static functions.
+	(put_string): Use indent_mode_put_string in either of the
+	two indent modes.
+	(put_char): Implement indent mode.
+	(get_indent_mode, test_set_indent_mode,
+	set_indent_mode, get_indent, set_indent,
+	inc_indent, width_check): New functions.
+
+	* stream.h (enum indent_mode): New.
+	(struct strm_base): indent_on member becomes indent_mode.
+	New members data_width and code_width.
+	(get_indent_mode, test_set_indent_mode,
+	set_indent_mode, get_indent, set_indent,
+	inc_indent, width_check): Declared.
+
+	* tests/009/json.expected: Updated.
+
+	* tests/010/seq.expected: Likewise.
+
+	* tests/011/macros-2.expected: Likewise.
+
 2015-07-30  Kaz Kylheku  <kaz@kylheku.com>
 
 	* filter.c, utf8.c: Fix bad indentation introduced in whitespace

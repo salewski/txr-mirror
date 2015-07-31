@@ -30,8 +30,16 @@ enum strm_whence {
   strm_end = SEEK_SET
 };
 
+enum indent_mode {
+  indent_off,
+  indent_data,
+  indent_code
+};
+
 struct strm_base {
-  unsigned int indent_on;
+  enum indent_mode indent_mode;
+  cnum data_width;
+  cnum code_width;
   cnum indent_chars;
   cnum column;
 };
@@ -127,6 +135,13 @@ val put_strings(val strings, val stream);
 val put_lines(val lines, val stream);
 val flush_stream(val stream);
 val seek_stream(val stream, val offset, val whence);
+val get_indent_mode(val stream);
+val test_set_indent_mode(val stream, val compare, val mode);
+val set_indent_mode(val stream, val mode);
+val get_indent(val stream);
+val set_indent(val stream, val indent);
+val inc_indent(val stream, val delta);
+val width_check(val stream, val alt);
 val get_string(val stream, val nchars, val close_after_p);
 val statf(val path);
 val open_directory(val path);

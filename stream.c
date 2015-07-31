@@ -69,7 +69,7 @@ val format_s;
 
 void strm_base_init(struct strm_base *s)
 {
-  static struct strm_base init = { 0, 0, 0 };
+  static struct strm_base init = { indent_off, 60, 10, 0, 0 };
   *s = init;
 }
 
@@ -2608,6 +2608,42 @@ val formatv(val stream, val string, val args)
   abort();
 }
 
+static val put_indent(val stream, struct strm_ops *ops, cnum chars)
+{
+  while (chars--)
+    if (!ops->put_char(stream, chr(' ')))
+      return nil;
+  return t;
+}
+
+static val indent_mode_put_string(val stream, val string,
+                                  struct strm_ops *ops, struct strm_base *s)
+{
+  cnum col = s->column;
+  const wchar_t *str = c_str(string), *p = str;
+  val ret;
+
+  for (; *p; p++) {
+    switch (*p) {
+    case '\n':
+      col = 0;
+      break;
+    case '\t':
+      col = (col + 1) | 7;
+      break;
+    default:
+      if (iswprint(*p))
+        col++;
+      break;
+    }
+  }
+
+  if ((ret = ops->put_string(stream, string)) != nil)
+    s->column = col;
+
+  return ret;
+}
+
 val put_string(val string, val stream)
 {
   stream = default_arg(stream, std_output);
@@ -2618,7 +2654,12 @@ val put_string(val string, val stream)
 
   {
     struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
-    return ops->put_string(stream, string);
+    struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
+
+    if (s->indent_mode == indent_off)
+      return ops->put_string(stream, string);
+
+    return indent_mode_put_string(stream, string, ops, s);
   }
 }
 
@@ -2632,7 +2673,34 @@ val put_char(val ch, val stream)
 
   {
     struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
-    return ops->put_char(stream, ch);
+    struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
+    wint_t cch = c_chr(ch);
+
+    if (s->indent_mode == indent_off)
+      return ops->put_char(stream, ch);
+
+    switch (cch) {
+    case L'\n':
+      if (ops->put_char(stream, ch) &&
+          put_indent(stream, ops, s->indent_chars)) {
+        s->column = s->indent_chars;
+        return t;
+      }
+      return nil;
+    case L'\t':
+      if (ops->put_char(stream, ch)) {
+        s->column = (s->column + 1) | 7;
+        return t;
+      }
+      return nil;
+    default:
+      if (ops->put_char(stream, ch)) {
+        if (iswprint(cch))
+          s->column++;
+        return t;
+      }
+      return nil;
+    }
   }
 }
 
@@ -2715,6 +2783,80 @@ val seek_stream(val stream, val offset, val whence)
     return ops->seek(stream, off, w);
   }
 }
+
+val get_indent_mode(val stream)
+{
+  struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
+  return num_fast(s->indent_mode);
+}
+
+val test_set_indent_mode(val stream, val compare, val mode)
+{
+  struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
+  val oldval = num_fast(s->indent_mode);
+  if (oldval == compare)
+    s->indent_mode = (enum indent_mode) c_num(mode);
+  return oldval;
+}
+
+val set_indent_mode(val stream, val mode)
+{
+  struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
+  val oldval = num_fast(s->indent_mode);
+  if ((s->indent_mode = (enum indent_mode) c_num(mode)) == indent_off)
+    s->column = 0;
+  return oldval;
+}
+
+val get_indent(val stream)
+{
+  struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
+  return num(s->indent_chars);
+}
+
+val set_indent(val stream, val indent)
+{
+  struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
+  val oldval = num(s->indent_chars);
+  s->indent_chars = c_num(indent);
+  return oldval;
+}
+
+val inc_indent(val stream, val delta)
+{
+  struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
+  val oldval = num(s->indent_chars);
+  val col = num(s->column);
+  s->indent_chars = c_num(plus(delta, col));
+  return oldval;
+}
+
+val width_check(val stream, val alt)
+{
+  struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
+  struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
+
+
+  if ((s->indent_mode == indent_code &&
+       s->column >= s->indent_chars + s->code_width) ||
+      (s->indent_mode == indent_data &&
+       s->column >= s->indent_chars + s->data_width))
+  {
+    if (ops->put_char(stream, chr('\n')) &&
+        put_indent(stream, ops, s->indent_chars)) {
+      s->column = s->indent_chars;
+      return t;
+    }
+    return nil;
+  } else if (alt) {
+    ops->put_char(stream, alt);
+    s->column++;
+    return t;
+  }
+
+  return t;
+}
+
 
 val get_string(val stream, val nchars, val close_after_p)
 {

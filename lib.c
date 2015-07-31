@@ -6905,49 +6905,54 @@ static void obj_init(void)
   prog_string = string(progname);
 }
 
-val obj_print(val obj, val out)
+static val obj_print_impl(val obj, val out, val pretty)
 {
-  out = default_arg(out, std_output);
+  val ret = obj;
 
   switch (type(obj)) {
   case NIL:
-    put_string(lit("nil"), out);
-    return obj;
+    put_string(if3(get_indent_mode(out) == num_fast(indent_code),
+                   lit("()"), lit("nil")), out);
+    break;
   case CONS:
   case LCONS:
     {
-      val obj_in = obj;
       val sym = car(obj);
+      val save_mode = test_set_indent_mode(out, num_fast(indent_off),
+                                           num_fast(indent_data));
+      val save_indent = nil;
 
       if (sym == quote_s && consp(cdr(obj)) && !(cdr(cdr(obj)))) {
         put_char(chr('\''), out);
-        obj_print(second(obj), out);
+        obj_print_impl(second(obj), out, pretty);
       } else if (sym == sys_qquote_s) {
         put_char(chr('^'), out);
-        obj_print(second(obj), out);
+        obj_print_impl(second(obj), out, pretty);
       } else if (sym == sys_unquote_s) {
         put_char(chr(','), out);
-        obj_print(second(obj), out);
+        obj_print_impl(second(obj), out, pretty);
       } else if (sym == sys_splice_s) {
         put_string(lit(",*"), out);
-        obj_print(second(obj), out);
+        obj_print_impl(second(obj), out, pretty);
       } else if (sym == vector_lit_s) {
         put_string(lit("#"), out);
-        obj_print(second(obj), out);
+        obj_print_impl(second(obj), out, pretty);
       } else if (sym == hash_lit_s) {
         put_string(lit("#H"), out);
-        obj_print(rest(obj), out);
+        obj_print_impl(rest(obj), out, pretty);
       } else if (sym == var_s && (symbolp(second(obj)) || integerp(second(obj)))
                  && !cdr(cdr(obj)))
       {
         put_char(chr('@'), out);
-        obj_print(second(obj), out);
+        obj_print_impl(second(obj), out, pretty);
       } else if (sym == expr_s) {
         put_char(chr('@'), out);
-        obj_print(rest(obj), out);
+        obj_print_impl(rest(obj), out, pretty);
       } else {
         val iter;
         val closepar = chr(')');
+        val indent = zero;
+
         if (sym == dwim_s && consp(cdr(obj))) {
           put_char(chr('['), out);
           obj = cdr(obj);
@@ -6957,37 +6962,58 @@ val obj_print(val obj, val out)
         }
 
         if (sym == lambda_s && consp(cdr(obj)) && symbolp(second(obj))) {
-          obj_print(sym, out);
+          indent = one;
+          save_indent = inc_indent(out, indent);
+          set_indent_mode(out, num_fast(indent_code));
+          obj_print_impl(sym, out, pretty);
           if (second(obj)) {
             put_string(lit(" (. "), out);
-            obj_print(second(obj), out);
+            obj_print_impl(second(obj), out, pretty);
             put_char(chr(')'), out);
           } else {
             put_string(lit(" ()"), out);
           }
-          iter = (cdr(obj));
+          iter = cdr(obj);
+          goto finish;
+        } else if (special_operator_p(sym) || macro_form_p(obj, nil)) {
+          indent = one;
+          set_indent_mode(out, num_fast(indent_code));
+        } else if (fboundp(sym)) {
+          obj_print_impl(sym, out, pretty);
+          indent = one;
+          save_indent = inc_indent(out, indent);
+          set_indent_mode(out, num_fast(indent_code));
+          iter = obj;
           goto finish;
         }
 
+        save_indent = inc_indent(out, indent);
+
         for (iter = obj; consp(iter); iter = cdr(iter)) {
-          obj_print(car(iter), out);
+          obj_print_impl(car(iter), out, pretty);
 finish:
           if (nilp(cdr(iter))) {
             put_char(closepar, out);
           } else if (consp(cdr(iter))) {
-            put_char(chr(' '), out);
+            width_check(out, chr(' '));
           } else {
             put_string(lit(" . "), out);
-            obj_print(cdr(iter), out);
+            obj_print_impl(cdr(iter), out, pretty);
             put_char(closepar, out);
           }
         }
       }
-      return obj_in;
+
+      if (save_indent)
+        set_indent(out, save_indent);
+      set_indent_mode(out, save_mode);
+      break;
     }
   case LIT:
   case STR:
-    {
+    if (pretty) {
+      put_string(obj, out);
+    } else {
       const wchar_t *ptr;
       int semi_flag = 0;
       put_char(chr('"'), out);
@@ -7018,9 +7044,11 @@ finish:
       }
       put_char(chr('"'), out);
     }
-    return obj;
+    break;
   case CHR:
-    {
+    if (pretty) {
+      put_char(obj, out);
+    } else {
       wchar_t ch = c_chr(obj);
 
       put_string(lit("#\\"), out);
@@ -7047,189 +7075,115 @@ finish:
           put_char(chr(ch), out);
       }
     }
-    return obj;
+    break;
   case NUM:
   case BGNUM:
   case FLNUM:
     format(out, lit("~s"), obj, nao);
-    return obj;
+    break;
   case SYM:
-    if (obj->s.package != user_package) {
-      if (!obj->s.package)
-        put_char(chr('#'), out);
-      else if (obj->s.package != keyword_package)
-        put_string(obj->s.package->pk.name, out);
-      put_char(chr(':'), out);
+    if (!pretty) {
+      if (obj->s.package != user_package) {
+        if (!obj->s.package)
+          put_char(chr('#'), out);
+        else if (obj->s.package != keyword_package)
+          put_string(obj->s.package->pk.name, out);
+        put_char(chr(':'), out);
+      }
     }
     put_string(symbol_name(obj), out);
-    return obj;
+    break;
   case PKG:
     format(out, lit("#<package: ~s>"), obj->pk.name, nao);
-    return obj;
+    break;
   case FUN:
     format(out, lit("#<function: type ~a>"), num(obj->f.functype), nao);
-    return obj;
+    break;
   case VEC:
     {
       cnum i, length = c_num(obj->v.vec[vec_length]);
+      val save_mode = test_set_indent_mode(out, num_fast(indent_off),
+                                           num_fast(indent_data));
+      val save_indent;
+
       put_string(lit("#("), out);
+
+      save_indent = inc_indent(out, zero);
+
       for (i = 0; i < length; i++) {
-        obj_print(obj->v.vec[i], out);
+        val elem = obj->v.vec[i];
+        obj_print_impl(elem, out, pretty);
         if (i < length - 1)
-          put_char(chr(' '), out);
+          width_check(out, chr(' '));
       }
+
       put_char(chr(')'), out);
+
+      set_indent(out, save_indent);
+      set_indent_mode(out, save_mode);
     }
-    return obj;
+    break;
   case LSTR:
     if (obj->ls.list)
       format(out, lit("#<lazy-string: ~s (~s ...)>"), obj->ls.prefix,
              obj->ls.list, nao);
     else
-      obj_print(obj->ls.prefix, out);
-    return obj;
+      obj_print_impl(obj->ls.prefix, out, pretty);
+    break;
   case COBJ:
     obj->co.ops->print(obj, out);
-    return obj;
+    break;
   case ENV:
     format(out, lit("#<environment: ~p>"), obj, nao);
-    return obj;
+    break;
+  default:
+    format(out, lit("#<garbage: ~p>"), obj, nao);
+    break;
   }
 
-  format(out, lit("#<garbage: ~p>"), obj, nao);
-  return obj;
+  return ret;
 }
 
-val obj_pprint(val obj, val out)
+val obj_print(val obj, val stream)
 {
-  out = default_arg(out, std_output);
+  volatile val ret = nil;
+  val out = default_arg(stream, std_output);
+  val save_mode = get_indent_mode(out);
+  val save_indent = get_indent(out);
 
-  switch (type(obj)) {
-  case NIL:
-    put_string(lit("nil"), out);
-    return obj;
-  case CONS:
-  case LCONS:
-    {
-      val obj_in = obj;
-      val sym = car(obj);
+  uw_simple_catch_begin;
 
-      if (sym == quote_s && consp(cdr(obj)) && !(cdr(cdr(obj)))) {
-        put_char(chr('\''), out);
-        obj_print(second(obj), out);
-      } else if (sym == sys_qquote_s) {
-        put_char(chr('^'), out);
-        obj_print(second(obj), out);
-      } else if (sym == sys_unquote_s) {
-        put_char(chr(','), out);
-        obj_pprint(second(obj), out);
-      } else if (sym == sys_splice_s) {
-        put_string(lit(",*"), out);
-        obj_pprint(second(obj), out);
-      } else if (sym == vector_lit_s) {
-        put_string(lit("#"), out);
-        obj_print(second(obj), out);
-      } else if (sym == hash_lit_s) {
-        put_string(lit("#H"), out);
-        obj_print(rest(obj), out);
-      } else if (sym == var_s && (symbolp(second(obj)) || integerp(second(obj)))
-                 && !cdr(cdr(obj)))
-      {
-        put_char(chr('@'), out);
-        obj_print(second(obj), out);
-      } else if (sym == expr_s) {
-        put_char(chr('@'), out);
-        obj_print(rest(obj), out);
-      } else {
-        val iter;
-        val closepar = chr(')');
-        if (sym == dwim_s && consp(cdr(obj))) {
-          put_char(chr('['), out);
-          obj = cdr(obj);
-          closepar = chr(']');
-        } else {
-          put_char(chr('('), out);
-        }
+  ret = obj_print_impl(obj, out, nil);
 
-        if (sym == lambda_s && consp(cdr(obj)) && symbolp(second(obj))) {
-          obj_print(sym, out);
-          if (second(obj)) {
-            put_string(lit(" (. "), out);
-            obj_pprint(second(obj), out);
-            put_char(chr(')'), out);
-          } else {
-            put_string(lit(" ()"), out);
-          }
-          iter = (cdr(obj));
-          goto finish;
-        }
-
-        for (iter = obj; consp(iter); iter = cdr(iter)) {
-          obj_pprint(car(iter), out);
-finish:
-          if (nilp(cdr(iter))) {
-            put_char(closepar, out);
-          } else if (consp(cdr(iter))) {
-            put_char(chr(' '), out);
-          } else {
-            put_string(lit(" . "), out);
-            obj_pprint(cdr(iter), out);
-            put_char(closepar, out);
-          }
-        }
-      }
-      return obj_in;
-    }
-  case LIT:
-  case STR:
-    put_string(obj, out);
-    return obj;
-  case CHR:
-    put_char(obj, out);
-    return obj;
-  case NUM:
-  case BGNUM:
-  case FLNUM:
-    format(out, lit("~s"), obj, nao);
-    return obj;
-  case SYM:
-    put_string(symbol_name(obj), out);
-    return obj;
-  case PKG:
-    format(out, lit("#<package: ~s>"), obj->pk.name, nao);
-    return obj;
-  case FUN:
-    format(out, lit("#<function: type ~a>"), num(obj->f.functype), nao);
-    return obj;
-  case VEC:
-    {
-      cnum i, length = c_num(obj->v.vec[vec_length]);
-      put_string(lit("#("), out);
-      for (i = 0; i < length; i++) {
-        obj_pprint(obj->v.vec[i], out);
-        if (i < length - 1)
-          put_char(chr(' '), out);
-      }
-      put_char(chr(')'), out);
-    }
-    return obj;
-  case LSTR:
-    if (obj->ls.list)
-      format(out, lit("#<lazy-string: ~s (~s ...)>"), obj->ls.prefix,
-             obj->ls.list, nao);
-    else
-      obj_pprint(obj->ls.prefix, out);
-    return obj;
-  case COBJ:
-    obj->co.ops->print(obj, out);
-    return obj;
-  case ENV:
-    format(out, lit("#<environment: ~p>"), obj, nao);
-    return obj;
+  uw_unwind {
+    set_indent_mode(out, save_mode);
+    set_indent(out, save_indent);
   }
 
-  format(out, lit("#<garbage: ~p>"), obj, nao);
-  return obj;
+  uw_catch_end;
+
+  return ret;
+}
+
+val obj_pprint(val obj, val stream)
+{
+  volatile val ret = nil;
+  val out = default_arg(stream, std_output);
+  val save_mode = get_indent_mode(out);
+  val save_indent = get_indent(out);
+
+  uw_simple_catch_begin;
+
+  ret = obj_print_impl(obj, out, t);
+
+  uw_unwind {
+    set_indent_mode(out, save_mode);
+    set_indent(out, save_indent);
+  }
+
+  uw_catch_end;
+
+  return ret;
 }
 
 val tostring(val obj)

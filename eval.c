@@ -1109,6 +1109,12 @@ static val eval_prog1(val forms, val env, val ctx_form)
   return retval;
 }
 
+static val op_error(val form, val env)
+{
+  eval_error(form, lit("unexpanded ~s encountered"), car(form), nao);
+  abort();
+}
+
 static val op_quote(val form, val env)
 {
   val d = cdr(form);
@@ -2685,8 +2691,6 @@ static val me_tc(val form, val menv)
               cons(tree_case_s, cons(args, cases)), nao);
 }
 
-static val macro_form_p(val form, val menv);
-
 static val me_opip(val form, val menv)
 {
   val opsym = pop(&form);
@@ -3189,7 +3193,7 @@ val expand(val form, val menv)
   return ret;
 }
 
-static val macro_form_p(val form, val menv)
+val macro_form_p(val form, val menv)
 {
   menv = default_bool_arg(menv);
 
@@ -3421,10 +3425,15 @@ static val boundp(val sym)
   return if2(lookup_var(nil, sym) || lookup_symac(nil, sym), t);
 }
 
-static val fboundp(val sym)
+val fboundp(val sym)
 {
   return if2(lookup_fun(nil, sym) || lookup_mac(nil, sym) ||
              gethash(op_table, sym), t);
+}
+
+val special_operator_p(val sym)
+{
+  return if2(gethash(op_table, sym), t);
 }
 
 static val makunbound(val sym)
@@ -4012,6 +4021,9 @@ void eval_init(void)
   sys_load_s = intern(lit("load"), system_package);
   sys_lisp1_value_s = intern(lit("lisp1-value"), system_package);
 
+  with_saved_vars_s = intern(lit("with-saved-vars"), system_package);
+  reg_op(macrolet_s, op_error);
+  reg_op(symacrolet_s, op_error);
   reg_op(quote_s, op_quote);
   reg_op(qquote_s, op_qquote_error);
   reg_op(sys_qquote_s, op_qquote_error);
