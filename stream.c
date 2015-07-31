@@ -1420,7 +1420,7 @@ val make_string_byte_input_stream(val string)
   }
 }
 
-struct string_output {
+struct string_out {
   struct strm_base a;
   wchar_t *buf;
   size_t size;
@@ -1432,7 +1432,7 @@ struct string_output {
 
 static void string_out_stream_destroy(val stream)
 {
-  struct string_output *so = coerce(struct string_output *, stream->co.handle);
+  struct string_out *so = coerce(struct string_out *, stream->co.handle);
 
   strm_base_cleanup(&so->a);
   free(so->buf);
@@ -1442,7 +1442,7 @@ static void string_out_stream_destroy(val stream)
 
 static int string_out_byte_callback(mem_t *ctx)
 {
-  struct string_output *so = coerce(struct string_output *, ctx);
+  struct string_out *so = coerce(struct string_out *, ctx);
   if (so->tail >= so->head)
     return EOF;
   return so->byte_buf[so->tail++];
@@ -1450,7 +1450,7 @@ static int string_out_byte_callback(mem_t *ctx)
 
 static val string_out_put_char(val stream, val ch);
 
-static val string_out_byte_flush(struct string_output *so, val stream)
+static val string_out_byte_flush(struct string_out *so, val stream)
 {
   val result = nil;
 
@@ -1472,7 +1472,7 @@ static val string_out_byte_flush(struct string_output *so, val stream)
 
 static val string_out_put_string(val stream, val str)
 {
-  struct string_output *so = coerce(struct string_output *, stream->co.handle);
+  struct string_out *so = coerce(struct string_out *, stream->co.handle);
 
   if (so == 0)
     return nil;
@@ -1515,7 +1515,7 @@ static val string_out_put_char(val stream, val ch)
 
 static val string_out_put_byte(val stream, int ch)
 {
-  struct string_output *so = coerce(struct string_output *, stream->co.handle);
+  struct string_out *so = coerce(struct string_out *, stream->co.handle);
 
   if (so == 0)
     return nil;
@@ -1544,7 +1544,7 @@ static struct strm_ops string_out_ops =
 
 val make_string_output_stream(void)
 {
-  struct string_output *so = coerce(struct string_output *, chk_malloc(sizeof *so));
+  struct string_out *so = coerce(struct string_out *, chk_malloc(sizeof *so));
   strm_base_init(&so->a);
   so->size = 128;
   so->buf = coerce(wchar_t *, chk_malloc(so->size * sizeof so->buf));
@@ -1557,7 +1557,7 @@ val make_string_output_stream(void)
 
 val get_string_from_stream(val stream)
 {
-  struct string_output *so = coerce(struct string_output *,
+  struct string_out *so = coerce(struct string_out *,
                                     cobj_handle(stream, stream_s));
 
   if (stream->co.ops == &string_out_ops.cobj_ops) {

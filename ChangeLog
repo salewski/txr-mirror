@@ -1,5 +1,14 @@
 2015-07-31  Kaz Kylheku  <kaz@kylheku.com>
 
+	string_output renamed to string_out
+
+	* stream.c (struct string_output): Renamed to string_out.
+	(string_out_stream_destroy, string_out_byte_callback,
+	string_out_put_char, strnig_out_put_string, string_out_put_byte,
+	make_string_output_stream, get_string_from_stream): Follow rename.
+
+2015-07-31  Kaz Kylheku  <kaz@kylheku.com>
+
 	Simplify type check code in stream module.
 
 	* stream.c (get_string_from_stream, get_list_from_stream,
