@@ -374,7 +374,7 @@ static void mark_special(val sym)
   sethash(special, sym, t);
 }
 
-static val special_p(val sym)
+static val special_var_p(val sym)
 {
   uses_or2;
   return or2(gethash(special, sym),
@@ -514,14 +514,14 @@ twocol:
 static val expand_opt_params_rec(val params, val menv, val *pspecials)
 {
   if (atom(params)) {
-    if (special_p(params))
+    if (special_var_p(params))
       push(params, pspecials);
     return params;
   } else {
     val form = car(params);
     if (atom(form) || !consp(cdr(form))) { /* sym, or no init form */
       val params_ex = expand_opt_params_rec(cdr(params), menv, pspecials);
-      if (special_p(form))
+      if (special_var_p(form))
         push(form, pspecials);
       if (params_ex == cdr(params))
         return params;
@@ -532,7 +532,7 @@ static val expand_opt_params_rec(val params, val menv, val *pspecials)
       val initform_ex = rlcp(expand(initform, menv), initform);
       val form_ex = rlcp(cons(car(form), cons(initform_ex, cdr(cdr(form)))),
                          form);
-      if (special_p(sym))
+      if (special_var_p(sym))
         push(sym, pspecials);
       return rlcp(cons(form_ex, expand_opt_params_rec(rest(params),
                                                       menv, pspecials)),
@@ -544,7 +544,7 @@ static val expand_opt_params_rec(val params, val menv, val *pspecials)
 static val expand_params_rec(val params, val menv, val *pspecials)
 {
   if (atom(params)) {
-    if (special_p(params))
+    if (special_var_p(params))
       push(params, pspecials);
     return params;
   } else if (car(params) == colon_k) {
@@ -2322,7 +2322,7 @@ static val expand_vars(val vars, val menv, val form,
     eval_error(form, lit("~a is an invalid variable binding syntax"),
                vars, nao);
     return vars;
-  } else if (special_p(sym = car(vars))) {
+  } else if (special_var_p(sym = car(vars))) {
     val rest_vars = rest(vars);
     val rest_vars_ex = rlcp(expand_vars(rest_vars, menv, form, spec_p, seq_p),
                             rest_vars);
@@ -2347,7 +2347,7 @@ static val expand_vars(val vars, val menv, val form,
                                         spec_p, seq_p),
                             rest_vars);
 
-    if (special_p(var)) {
+    if (special_var_p(var)) {
       val var_ex = cons(special_s, cons(car(init_ex), cons(var, nil)));
       *spec_p = t;
       return rlcp(cons(var_ex, rest_vars_ex), vars);
@@ -4545,6 +4545,8 @@ void eval_init(void)
   reg_fun(intern(lit("fboundp"), user_package), func_n1(fboundp));
   reg_fun(intern(lit("makunbound"), user_package), func_n1(makunbound));
   reg_fun(intern(lit("fmakunbound"), user_package), func_n1(fmakunbound));
+  reg_fun(intern(lit("special-operator-p"), user_package), func_n1(special_operator_p));
+  reg_fun(intern(lit("special-var-p"), user_package), func_n1(special_var_p));
   reg_fun(intern(lit("func-get-form"), user_package), func_n1(func_get_form));
   reg_fun(intern(lit("func-get-env"), user_package), func_n1(func_get_env));
   reg_fun(intern(lit("func-set-env"), user_package), func_n2(func_set_env));

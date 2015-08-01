@@ -12693,6 +12693,40 @@ if
 is an interpreted function, otherwise it returns
 .codn nil .
 
+.coNP Function @ special-var-p
+.synb
+.mets (special-var-p << obj )
+.syne
+.desc
+
+The
+.code special-var-p
+function returns
+.code t
+if
+.meta obj
+is a symbol marked for special variable binding, otherwise it returns
+.codn nil .
+Symbols are marked special by
+.code defvar
+and
+.codn defparm .
+
+.coNP Function @ special-operator-p
+.synb
+.mets (special-operator-p << obj )
+.syne
+.desc
+
+The
+.code special-operator-p
+function returns
+.code t
+if
+.meta obj
+is a symbol which names a special operator, otherwise it returns
+.codn nil .
+
 .SS* Object Type And Equivalence
 .coNP Function @ typeof
 .synb

@@ -1,5 +1,14 @@
 2015-08-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (special_p): Function renamed to special_var_p.
+	(expand_opt_params_rec, expand_vars): Follow rename of special_p.
+	(eval_init): Register special-operator-p and special-var-p
+	intrinsics.
+
+	* txr.1: Document special-operator-p and special-var-p.
+
+2015-08-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	Big TXR Lisp documentation rearrangement.
 
 	* txr.1: Numerous sections moved around. Miscellaneous formatting
