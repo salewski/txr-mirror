@@ -1,3 +1,10 @@
+2015-08-01  Kaz Kylheku  <kaz@kylheku.com>
+
+	Big TXR Lisp documentation rearrangement.
+
+	* txr.1: Numerous sections moved around. Miscellaneous formatting
+	and wording fixes. New sections under TXR Lisp intro section.
+
 2015-07-31  Kaz Kylheku  <kaz@kylheku.com>
 
 	string_output renamed to string_out
