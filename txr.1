@@ -29074,9 +29074,11 @@ attempt.
 
 .SS* Unix Filesystem Manipulation
 
-.coNP Function @ stat
+.coNP Functions @, stat @, lstat and @ fstat
 .synb
 .mets (stat << path )
+.mets (lstat << path )
+.mets (fstat << stream )
 .syne
 .desc
 The
@@ -29105,6 +29107,32 @@ structure in POSIX. For instance, the
 property has the same value as the
 .code st_dev
 field.
+
+If
+.meta path
+refers to a symbolic link, the
+.code stat
+function retrieves information about the target of the link, if it exists,
+or else throws an exception of type
+.codn file-error .
+
+The
+.code lstat
+function behaves the same as
+.code stat
+or objects which are not symbolic links. For a symbolic link, it retrieves
+information about the link itself, rather than its target.
+
+The
+.code fstat
+function retrieves information about the file system object associated with
+the open stream
+.metn stream .
+The stream must be of a kind from which the
+.code fileno
+function can retrieve a file descriptor, otherwise an exception of type
+.code file-error
+is thrown.
 
 .coNP Special variables @, s-ifmt @, s-iflnk @, s-ifreg @, s-ifblk ... , @ s-ixoth
 

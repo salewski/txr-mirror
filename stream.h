@@ -143,7 +143,6 @@ val set_indent(val stream, val indent);
 val inc_indent(val stream, val delta);
 val width_check(val stream, val alt);
 val get_string(val stream, val nchars, val close_after_p);
-val statf(val path);
 val open_directory(val path);
 val open_file(val path, val mode_str);
 val open_fileno(val fd, val mode_str);

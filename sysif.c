@@ -519,25 +519,40 @@ static val exit_star_wrap(val status)
 #endif
 
 #if HAVE_SYS_STAT
-static int w_stat(const wchar_t *wpath, struct stat *buf)
+static int w_stat(val wpath, struct stat *buf)
 {
-  char *path = utf8_dup_to(wpath);
+  char *path = utf8_dup_to(c_str(wpath));
   int res = stat(path, buf);
   free(path);
   return res;
 }
+
+static int w_lstat(val wpath, struct stat *buf)
+{
+  char *path = utf8_dup_to(c_str(wpath));
+  int res = lstat(path, buf);
+  free(path);
+  return res;
+}
+
+static int w_fstat(val stream, struct stat *buf)
+{
+  val fd = stream_get_prop(stream, fd_k);
+
+  if (fd) {
+    int res = fstat(c_num(fd), buf);
+    return res;
+  }
+
+  uw_throwf(file_error_s,
+            lit("cannot fstat stream ~s: it has no :fd property"),
+            stream, nao);
+}
 #endif
 
-val statf(val path)
-{
 #if HAVE_SYS_STAT
-  struct stat st;
-  int res = w_stat(c_str(path), &st);
-
-  if (res == -1)
-    uw_throwf(file_error_s, lit("unable to stat ~a: ~a/~s"),
-              path, num(errno), string_utf8(strerror(errno)), nao);
-
+static val stat_to_list(struct stat st)
+{
   return list(dev_k, num(st.st_dev),
               ino_k, num(st.st_ino),
               mode_k, num(st.st_mode),
@@ -557,9 +572,40 @@ val statf(val path)
               mtime_k, num(st.st_mtime),
               ctime_k, num(st.st_ctime),
               nao);
-#else
-  uw_throwf(file_error_s, lit("stat is not implemented"), nao);
+}
+
 #endif
+
+static val stat_impl(val obj, int (*statfn)(val, struct stat *),
+                     val name)
+{
+#if HAVE_SYS_STAT
+  struct stat st;
+  int res = statfn(obj, &st);
+
+  if (res == -1)
+    uw_throwf(file_error_s, lit("unable to ~a ~a: ~a/~s"),
+              name, obj, num(errno), string_utf8(strerror(errno)), nao);
+
+  return stat_to_list(st);
+#else
+  uw_throwf(file_error_s, lit("~a is not implemented"), name, nao);
+#endif
+}
+
+static val statp(val path)
+{
+  return stat_impl(path, w_stat, lit("stat"));
+}
+
+static val statl(val path)
+{
+  return stat_impl(path, w_lstat, lit("lstat"));
+}
+
+static val statf(val stream)
+{
+  return stat_impl(stream, w_fstat, lit("lstat"));
 }
 
 #if HAVE_PIPE
@@ -723,7 +769,9 @@ void sysif_init(void)
   reg_fun(intern(lit("readlink"), user_package), func_n1(readlink_wrap));
 #endif
 
-  reg_fun(intern(lit("stat"), user_package), func_n1(statf));
+  reg_fun(intern(lit("stat"), user_package), func_n1(statp));
+  reg_fun(intern(lit("lstat"), user_package), func_n1(statl));
+  reg_fun(intern(lit("fstat"), user_package), func_n1(statf));
 
 #if HAVE_SYS_STAT
 #ifndef S_IFSOCK

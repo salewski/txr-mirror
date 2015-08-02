@@ -1,3 +1,20 @@
+2015-08-02  Kaz Kylheku  <kaz@kylheku.com>
+
+	Support lstat and fstat.
+
+	* stream.h (statf): Declaration removed.
+
+	* sysif.c (w_stat): Function takes val instead of const wchar_t *
+	as leftmost argument.
+	(w_lstat, w_fstat): New static functions, with same interface as w_stat.
+	(stat_to_list, stat_impl): New static functions.
+	(statp, statl): New static functions.
+	(statf): Function removed, name re-used for new static function.
+	(sysif_init): stat intrinsic registered to statp function, not statf.
+	lstat and fstat intrinsics registered to statl and statf.
+
+	* txr.1: Documented lstat and fstat.
+
 2015-08-01  Kaz Kylheku  <kaz@kylheku.com>
 
 	Pass pretty flag to cobj print operation.
