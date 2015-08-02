@@ -96,7 +96,7 @@ void strm_base_init(struct strm_base *s);
 void strm_base_cleanup(struct strm_base *s);
 void strm_base_mark(struct strm_base *s);
 void fill_stream_ops(struct strm_ops *ops);
-void stream_print_op(val stream, val out);
+void stream_print_op(val stream, val out, val pretty);
 void stream_mark_op(val stream);
 void stream_destroy_op(val stream);
 val make_null_stream(void);

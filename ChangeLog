@@ -1,5 +1,28 @@
 2015-08-01  Kaz Kylheku  <kaz@kylheku.com>
 
+	Pass pretty flag to cobj print operation.
+
+	* hash.c (hash_print_op): Take third argument,
+	and call cobj_print_impl rather than cobj_print.
+
+	* lib.c (cobj_print_op): Take third argument.  The object class is
+	* printed with obj_print_impl.
+	(obj_print_impl): Static function becomes extern.  Passes its pretty
+	flag argument to cobj print virtual function.
+
+	* lib.h (cobj_ops): print takes third argument.
+	(cobj_print_op): Declaration updated.
+	(obj_print_impl): Declared.
+
+	* regex.c (regex_print): Takes third argument, and ignores it.
+
+	* stream.c (stream_print_op, stdio_stream_print, cat_stream_print):
+	Take third argument, and ignore it.
+
+	* stream.h (stream_print_op): Declaration updated.
+
+2015-08-01  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (special_p): Function renamed to special_var_p.
 	(expand_opt_params_rec, expand_vars): Follow rename of special_p.
 	(eval_init): Register special-operator-p and special-var-p

@@ -347,7 +347,7 @@ static cnum hash_hash_op(val obj)
   return out;
 }
 
-static void hash_print_op(val hash, val out)
+static void hash_print_op(val hash, val out, val pretty)
 {
   struct hash *h = coerce(struct hash *, hash->co.handle);
   int need_space = 0;
@@ -370,13 +370,13 @@ static void hash_print_op(val hash, val out)
       put_char(chr(' '), out);
     switch (h->flags) {
     case hash_weak_both:
-      obj_print(weak_keys_k, out);
+      obj_print_impl(weak_keys_k, out, pretty);
       /* fallthrough */
     case hash_weak_vals:
-      obj_print(weak_vals_k, out);
+      obj_print_impl(weak_vals_k, out, pretty);
       break;
     case hash_weak_keys:
-      obj_print(weak_keys_k, out);
+      obj_print_impl(weak_keys_k, out, pretty);
       break;
     default:
       break;

@@ -5575,10 +5575,10 @@ struct cobj_ops *cobj_ops(val cobj, val cls_sym)
   return cobj->co.ops;
 }
 
-void cobj_print_op(val obj, val out)
+void cobj_print_op(val obj, val out, val pretty)
 {
   put_string(lit("#<"), out);
-  obj_print(obj->co.cls, out);
+  obj_print_impl(obj->co.cls, out, pretty);
   format(out, lit(": ~p>"), coerce(val, obj->co.handle), nao);
 }
 
@@ -6905,7 +6905,7 @@ static void obj_init(void)
   prog_string = string(progname);
 }
 
-static val obj_print_impl(val obj, val out, val pretty)
+val obj_print_impl(val obj, val out, val pretty)
 {
   val ret = obj;
 
@@ -7131,7 +7131,7 @@ finish:
       obj_print_impl(obj->ls.prefix, out, pretty);
     break;
   case COBJ:
-    obj->co.ops->print(obj, out);
+    obj->co.ops->print(obj, out, pretty);
     break;
   case ENV:
     format(out, lit("#<environment: ~p>"), obj, nao);

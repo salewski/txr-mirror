@@ -198,7 +198,7 @@ struct cobj {
 
 struct cobj_ops {
   val (*equal)(val self, val other);
-  void (*print)(val self, val stream);
+  void (*print)(val self, val stream, val pretty);
   void (*destroy)(val self);
   void (*mark)(val self);
   cnum (*hash)(val self);
@@ -211,7 +211,7 @@ struct cobj_ops {
  * Default equal is eq
  */
 
-void cobj_print_op(val, val);
+void cobj_print_op(val, val, val);
 void cobj_destroy_stub_op(val);
 void cobj_destroy_free_op(val);
 void cobj_mark_op(val);
@@ -855,6 +855,7 @@ val search(val seq, val key, val from, val to);
 val where(val func, val seq);
 val sel(val seq, val where);
 val env(void);
+val obj_print_impl(val obj, val out, val pretty);
 val obj_print(val obj, val stream);
 val obj_pprint(val obj, val stream);
 val tostring(val obj);

@@ -1307,7 +1307,7 @@ static void regex_mark(val obj)
   gc_mark(regex->source);
 }
 
-static void regex_print(val obj, val stream);
+static void regex_print(val obj, val stream, val pretty);
 
 static struct cobj_ops regex_obj_ops = cobj_ops_init(eq,
                                                      regex_print,
@@ -1836,10 +1836,11 @@ static void print_rec(val exp, val stream)
   }
 }
 
-static void regex_print(val obj, val stream)
+static void regex_print(val obj, val stream, val pretty)
 {
   regex_t *regex = coerce(regex_t *, cobj_handle(obj, regex_s));
 
+  (void) pretty;
   put_string(lit("#/"), stream);
   print_rec(regex->source, stream);
   put_char(chr('/'), stream);

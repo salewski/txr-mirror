@@ -83,9 +83,10 @@ void strm_base_mark(struct strm_base *s)
   (void) s;
 }
 
-void stream_print_op(val stream, val out)
+void stream_print_op(val stream, val out, val pretty)
 {
   val name = stream_get_prop(stream, name_k);
+  (void) pretty;
   format(out, lit("#<~a ~p>"), name, stream, nao);
 }
 
@@ -303,11 +304,13 @@ struct stdio_handle {
   unsigned is_real_time;
 };
 
-static void stdio_stream_print(val stream, val out)
+static void stdio_stream_print(val stream, val out, val pretty)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
   struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
   val name = static_str(ops->name);
+
+  (void) pretty;
 
   if (h->pid)
     format(out, lit("#<~a ~s ~s ~p>"), name, h->descr, num(h->pid), stream, nao);
@@ -1693,11 +1696,13 @@ struct cat_strm {
   val streams;
 };
 
-static void cat_stream_print(val stream, val out)
+static void cat_stream_print(val stream, val out, val pretty)
 {
   struct cat_strm *s = coerce(struct cat_strm *, stream->co.handle);
   struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
   val name = static_str(ops->name);
+
+  (void) pretty;
 
   format(out, lit("#<~a ~s>"), name, s->streams, nao);
 }
