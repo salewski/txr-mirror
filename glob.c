@@ -75,30 +75,30 @@ void glob_init(void)
 {
   prot1(&s_errfunc);
   reg_fun(intern(lit("glob"), user_package), func_n3o(glob_wrap, 1));
-  reg_var(intern(lit("glob-err"), user_package), num_fast(GLOB_ERR));
-  reg_var(intern(lit("glob-mark"), user_package), num_fast(GLOB_MARK));
-  reg_var(intern(lit("glob-nosort"), user_package), num_fast(GLOB_NOSORT));
-  reg_var(intern(lit("glob-nocheck"), user_package), num_fast(GLOB_NOCHECK));
-  reg_var(intern(lit("glob-noescape"), user_package), num_fast(GLOB_NOESCAPE));
+  reg_varl(intern(lit("glob-err"), user_package), num_fast(GLOB_ERR));
+  reg_varl(intern(lit("glob-mark"), user_package), num_fast(GLOB_MARK));
+  reg_varl(intern(lit("glob-nosort"), user_package), num_fast(GLOB_NOSORT));
+  reg_varl(intern(lit("glob-nocheck"), user_package), num_fast(GLOB_NOCHECK));
+  reg_varl(intern(lit("glob-noescape"), user_package), num_fast(GLOB_NOESCAPE));
 #ifdef GLOB_PERIOD
-  reg_var(intern(lit("glob-period"), user_package), num_fast(GLOB_PERIOD));
+  reg_varl(intern(lit("glob-period"), user_package), num_fast(GLOB_PERIOD));
 #endif
 #ifdef GLOB_ALTDIRFUNC
-  reg_var(intern(lit("glob-altdirfunc"), user_package), num_fast(GLOB_ALTDIRFUNC));
+  reg_varl(intern(lit("glob-altdirfunc"), user_package), num_fast(GLOB_ALTDIRFUNC));
 #endif
 #ifdef GLOB_BRACE
-  reg_var(intern(lit("glob-brace"), user_package), num_fast(GLOB_BRACE));
+  reg_varl(intern(lit("glob-brace"), user_package), num_fast(GLOB_BRACE));
 #endif
 #ifdef GLOB_NOMAGIC
-  reg_var(intern(lit("glob-nomagic"), user_package), num_fast(GLOB_NOMAGIC));
+  reg_varl(intern(lit("glob-nomagic"), user_package), num_fast(GLOB_NOMAGIC));
 #endif
 #ifdef GLOB_TILDE
-  reg_var(intern(lit("glob-tilde"), user_package), num_fast(GLOB_TILDE));
+  reg_varl(intern(lit("glob-tilde"), user_package), num_fast(GLOB_TILDE));
 #endif
 #ifdef GLOB_TILDE_CHECK
-  reg_var(intern(lit("glob-tilde-check"), user_package), num_fast(GLOB_TILDE_CHECK));
+  reg_varl(intern(lit("glob-tilde-check"), user_package), num_fast(GLOB_TILDE_CHECK));
 #endif
 #ifdef GLOB_ONLYDIR
-  reg_var(intern(lit("glob-onlydir"), user_package), num_fast(GLOB_ONLYDIR));
+  reg_varl(intern(lit("glob-onlydir"), user_package), num_fast(GLOB_ONLYDIR));
 #endif
 }

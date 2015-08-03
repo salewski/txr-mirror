@@ -10,7 +10,7 @@ static void dir_tables_init(void)
 @(bind lib "share/txr/stdlib")
 @(next @(open-files ^(#*"eval.c rand.c signal.c stream.c gc.c glob.c"
                       #*"syslog.c filter.c txr.c arith.c unwind.c cadr.c"
-                      ,*#`sysif.c @lib/place.tl @lib/ifa.tl`
+                      ,*#`sysif.c @lib/place.tl @lib/ifa.tl @lib/ver.tl`
                       ,*#`@lib/cadr.tl @lib/with-resources.tl`
                       ,*#`@lib/txr-case.tl`)))
 @(collect)
@@ -28,12 +28,12 @@ static void dir_tables_init(void)
 @    (or)
   reg_fun(@{txl-sym}_s,@(skip)
 @    (or)
-  reg_var(@{txl-sym-special}_s,@(skip)
+  reg_var@/l?/(@{txl-sym-special}_s,@(skip)
 @      (bind txl-sym `*@{txl-sym-special}*`)
 @    (or)
-  @/ */reg_var(@(skip)intern(lit("@{txl-sym}")@(skip)
+  @/ *reg_varl?/(@(skip)intern(lit("@{txl-sym}")@(skip)
 @    (or)
-@/ *\((defun|defvar|defmacro)/ @{txl-sym} @(skip)
+@/ *\((defun|defvarl?|defmacro)/ @{txl-sym} @(skip)
 @    (end)
 @    (set txl-sym @(regsub #/_/ #\- txl-sym))
 @  (end)

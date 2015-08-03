@@ -3810,21 +3810,21 @@ loc get_user_package(void)
 {
   if (nilp(user_package_s))
     return mkcloc(user_package_var);
-  return lookup_var_l(nil, user_package_s);
+  return lookup_global_var_l(user_package_s);
 }
 
 loc get_system_package(void)
 {
   if (nilp(system_package_s))
     return mkcloc(system_package_var);
-  return lookup_var_l(nil, system_package_s);
+  return lookup_global_var_l(system_package_s);
 }
 
 loc get_keyword_package(void)
 {
   if (nilp(keyword_package_s))
     return mkcloc(keyword_package_var);
-  return lookup_var_l(nil, keyword_package_s);
+  return lookup_global_var_l(keyword_package_s);
 }
 
 val func_f0(val env, val (*fun)(val))

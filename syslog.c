@@ -55,28 +55,28 @@ static struct strm_ops syslog_strm_ops;
 
 void syslog_init(void)
 {
-  reg_var(intern(lit("log-pid"), user_package), num_fast(LOG_PID));
-  reg_var(intern(lit("log-cons"), user_package), num_fast(LOG_CONS));
-  reg_var(intern(lit("log-ndelay"), user_package), num_fast(LOG_NDELAY));
-  reg_var(intern(lit("log-odelay"), user_package), num_fast(LOG_ODELAY));
-  reg_var(intern(lit("log-nowait"), user_package), num_fast(LOG_NOWAIT));
+  reg_varl(intern(lit("log-pid"), user_package), num_fast(LOG_PID));
+  reg_varl(intern(lit("log-cons"), user_package), num_fast(LOG_CONS));
+  reg_varl(intern(lit("log-ndelay"), user_package), num_fast(LOG_NDELAY));
+  reg_varl(intern(lit("log-odelay"), user_package), num_fast(LOG_ODELAY));
+  reg_varl(intern(lit("log-nowait"), user_package), num_fast(LOG_NOWAIT));
 #ifdef LOG_PERROR
-  reg_var(intern(lit("log-perror"), user_package), num_fast(LOG_PERROR));
+  reg_varl(intern(lit("log-perror"), user_package), num_fast(LOG_PERROR));
 #endif
-  reg_var(intern(lit("log-user"), user_package), num_fast(LOG_USER));
-  reg_var(intern(lit("log-daemon"), user_package), num_fast(LOG_DAEMON));
-  reg_var(intern(lit("log-auth"), user_package), num_fast(LOG_AUTH));
+  reg_varl(intern(lit("log-user"), user_package), num_fast(LOG_USER));
+  reg_varl(intern(lit("log-daemon"), user_package), num_fast(LOG_DAEMON));
+  reg_varl(intern(lit("log-auth"), user_package), num_fast(LOG_AUTH));
 #ifdef LOG_AUTHPRIV
-  reg_var(intern(lit("log-authpriv"), user_package), num_fast(LOG_AUTHPRIV));
+  reg_varl(intern(lit("log-authpriv"), user_package), num_fast(LOG_AUTHPRIV));
 #endif
-  reg_var(intern(lit("log-emerg"), user_package), num_fast(LOG_EMERG));
-  reg_var(intern(lit("log-alert"), user_package), num_fast(LOG_ALERT));
-  reg_var(intern(lit("log-crit"), user_package), num_fast(LOG_CRIT));
-  reg_var(intern(lit("log-err"), user_package), num_fast(LOG_ERR));
-  reg_var(intern(lit("log-warning"), user_package), num_fast(LOG_WARNING));
-  reg_var(intern(lit("log-notice"), user_package), num_fast(LOG_NOTICE));
-  reg_var(intern(lit("log-info"), user_package), num_fast(LOG_INFO));
-  reg_var(intern(lit("log-debug"), user_package), num_fast(LOG_DEBUG));
+  reg_varl(intern(lit("log-emerg"), user_package), num_fast(LOG_EMERG));
+  reg_varl(intern(lit("log-alert"), user_package), num_fast(LOG_ALERT));
+  reg_varl(intern(lit("log-crit"), user_package), num_fast(LOG_CRIT));
+  reg_varl(intern(lit("log-err"), user_package), num_fast(LOG_ERR));
+  reg_varl(intern(lit("log-warning"), user_package), num_fast(LOG_WARNING));
+  reg_varl(intern(lit("log-notice"), user_package), num_fast(LOG_NOTICE));
+  reg_varl(intern(lit("log-info"), user_package), num_fast(LOG_INFO));
+  reg_varl(intern(lit("log-debug"), user_package), num_fast(LOG_DEBUG));
   reg_fun(intern(lit("openlog"), user_package), func_n3o(openlog_wrap, 1));
   reg_fun(intern(lit("closelog"), user_package), func_n0(closelog_wrap));
   reg_fun(intern(lit("setlogmask"), user_package), func_n1(setlogmask_wrap));

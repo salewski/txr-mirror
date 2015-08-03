@@ -114,59 +114,59 @@ void sig_init(void)
     prot1(&sig_lambda[i]);
   }
 
-  reg_var(intern(lit("sig-hup"), user_package), num_fast(SIGHUP));
-  reg_var(intern(lit("sig-int"), user_package), num_fast(SIGINT));
-  reg_var(intern(lit("sig-quit"), user_package), num_fast(SIGQUIT));
-  reg_var(intern(lit("sig-ill"), user_package), num_fast(SIGILL));
-  reg_var(intern(lit("sig-trap"), user_package), num_fast(SIGTRAP));
-  reg_var(intern(lit("sig-abrt"), user_package), num_fast(SIGABRT));
-  reg_var(intern(lit("sig-bus"), user_package), num_fast(SIGBUS));
-  reg_var(intern(lit("sig-fpe"), user_package), num_fast(SIGFPE));
-  reg_var(intern(lit("sig-kill"), user_package), num_fast(SIGKILL));
-  reg_var(intern(lit("sig-usr1"), user_package), num_fast(SIGUSR1));
-  reg_var(intern(lit("sig-segv"), user_package), num_fast(SIGSEGV));
-  reg_var(intern(lit("sig-usr2"), user_package), num_fast(SIGUSR2));
-  reg_var(intern(lit("sig-pipe"), user_package), num_fast(SIGPIPE));
-  reg_var(intern(lit("sig-alrm"), user_package), num_fast(SIGALRM));
-  reg_var(intern(lit("sig-term"), user_package), num_fast(SIGTERM));
-  reg_var(intern(lit("sig-chld"), user_package), num_fast(SIGCHLD));
-  reg_var(intern(lit("sig-cont"), user_package), num_fast(SIGCONT));
-  reg_var(intern(lit("sig-stop"), user_package), num_fast(SIGSTOP));
-  reg_var(intern(lit("sig-tstp"), user_package), num_fast(SIGTSTP));
-  reg_var(intern(lit("sig-ttin"), user_package), num_fast(SIGTTIN));
-  reg_var(intern(lit("sig-ttou"), user_package), num_fast(SIGTTOU));
-  reg_var(intern(lit("sig-urg"), user_package), num_fast(SIGURG));
-  reg_var(intern(lit("sig-xcpu"), user_package), num_fast(SIGXCPU));
-  reg_var(intern(lit("sig-xfsz"), user_package), num_fast(SIGXFSZ));
-  reg_var(intern(lit("sig-vtalrm"), user_package), num_fast(SIGVTALRM));
-  reg_var(intern(lit("sig-prof"), user_package), num_fast(SIGPROF));
+  reg_varl(intern(lit("sig-hup"), user_package), num_fast(SIGHUP));
+  reg_varl(intern(lit("sig-int"), user_package), num_fast(SIGINT));
+  reg_varl(intern(lit("sig-quit"), user_package), num_fast(SIGQUIT));
+  reg_varl(intern(lit("sig-ill"), user_package), num_fast(SIGILL));
+  reg_varl(intern(lit("sig-trap"), user_package), num_fast(SIGTRAP));
+  reg_varl(intern(lit("sig-abrt"), user_package), num_fast(SIGABRT));
+  reg_varl(intern(lit("sig-bus"), user_package), num_fast(SIGBUS));
+  reg_varl(intern(lit("sig-fpe"), user_package), num_fast(SIGFPE));
+  reg_varl(intern(lit("sig-kill"), user_package), num_fast(SIGKILL));
+  reg_varl(intern(lit("sig-usr1"), user_package), num_fast(SIGUSR1));
+  reg_varl(intern(lit("sig-segv"), user_package), num_fast(SIGSEGV));
+  reg_varl(intern(lit("sig-usr2"), user_package), num_fast(SIGUSR2));
+  reg_varl(intern(lit("sig-pipe"), user_package), num_fast(SIGPIPE));
+  reg_varl(intern(lit("sig-alrm"), user_package), num_fast(SIGALRM));
+  reg_varl(intern(lit("sig-term"), user_package), num_fast(SIGTERM));
+  reg_varl(intern(lit("sig-chld"), user_package), num_fast(SIGCHLD));
+  reg_varl(intern(lit("sig-cont"), user_package), num_fast(SIGCONT));
+  reg_varl(intern(lit("sig-stop"), user_package), num_fast(SIGSTOP));
+  reg_varl(intern(lit("sig-tstp"), user_package), num_fast(SIGTSTP));
+  reg_varl(intern(lit("sig-ttin"), user_package), num_fast(SIGTTIN));
+  reg_varl(intern(lit("sig-ttou"), user_package), num_fast(SIGTTOU));
+  reg_varl(intern(lit("sig-urg"), user_package), num_fast(SIGURG));
+  reg_varl(intern(lit("sig-xcpu"), user_package), num_fast(SIGXCPU));
+  reg_varl(intern(lit("sig-xfsz"), user_package), num_fast(SIGXFSZ));
+  reg_varl(intern(lit("sig-vtalrm"), user_package), num_fast(SIGVTALRM));
+  reg_varl(intern(lit("sig-prof"), user_package), num_fast(SIGPROF));
 #ifdef SIGPOLL
-  reg_var(intern(lit("sig-poll"), user_package), num_fast(SIGPOLL));
+  reg_varl(intern(lit("sig-poll"), user_package), num_fast(SIGPOLL));
 #endif
-  reg_var(intern(lit("sig-sys"), user_package), num_fast(SIGSYS));
+  reg_varl(intern(lit("sig-sys"), user_package), num_fast(SIGSYS));
 #ifdef SIGWINCH
-  reg_var(intern(lit("sig-winch"), user_package), num_fast(SIGWINCH));
+  reg_varl(intern(lit("sig-winch"), user_package), num_fast(SIGWINCH));
 #endif
 #ifdef SIGIOT
-  reg_var(intern(lit("sig-iot"), user_package), num_fast(SIGIOT));
+  reg_varl(intern(lit("sig-iot"), user_package), num_fast(SIGIOT));
 #endif
 #ifdef SIGSTKFLT
-  reg_var(intern(lit("sig-stkflt"), user_package), num_fast(SIGSTKFLT));
+  reg_varl(intern(lit("sig-stkflt"), user_package), num_fast(SIGSTKFLT));
 #endif
 #ifdef SIGIO
-  reg_var(intern(lit("sig-io"), user_package), num_fast(SIGIO));
+  reg_varl(intern(lit("sig-io"), user_package), num_fast(SIGIO));
 #endif
 #ifdef SIGLOST
-  reg_var(intern(lit("sig-lost"), user_package), num_fast(SIGLOST));
+  reg_varl(intern(lit("sig-lost"), user_package), num_fast(SIGLOST));
 #endif
 #ifdef SIGPWR
-  reg_var(intern(lit("sig-pwr"), user_package), num_fast(SIGPWR));
+  reg_varl(intern(lit("sig-pwr"), user_package), num_fast(SIGPWR));
 #endif
 
 #if HAVE_ITIMER
-  reg_var(intern(lit("itimer-real"), user_package), num_fast(ITIMER_REAL));
-  reg_var(intern(lit("itimer-virtual"), user_package), num_fast(ITIMER_VIRTUAL));
-  reg_var(intern(lit("itimer-prov"), user_package), num_fast(ITIMER_PROF));
+  reg_varl(intern(lit("itimer-real"), user_package), num_fast(ITIMER_REAL));
+  reg_varl(intern(lit("itimer-virtual"), user_package), num_fast(ITIMER_VIRTUAL));
+  reg_varl(intern(lit("itimer-prov"), user_package), num_fast(ITIMER_PROF));
   reg_fun(intern(lit("getitimer"), user_package), func_n1(getitimer_wrap));
   reg_fun(intern(lit("setitimer"), user_package), func_n3(setitimer_wrap));
 #endif

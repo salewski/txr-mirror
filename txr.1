@@ -6853,7 +6853,7 @@ takes place prior to evaluation time, whereas
 doesn't execute until evaluation time.
 
 See also: the
-.code *self-path*
+.code self-path
 and
 .code stdlib
 variables in \*(TL.
@@ -23735,26 +23735,26 @@ is a floating-point number, then it is converted by
 as if by the function
 .codn int-flo .
 
-.coNP Variables @, *flo-min* @, *flo-max* and @ *flo-epsilon*
+.coNP Variables @, flo-min @, flo-max and @ flo-epsilon
 .desc
 These variables hold, respectively: the smallest positive floating-point
 value; the largest positive floating-point value; and the difference
 between 1.0 and the smallest representable value greater than 1.0.
 
-.code *flo-min*
+.code flo-min
 and
-.code *flo-max*
+.code flo-max
 define the floating-point range, which consists
 of three regions: values from
-.code (- *flo-max*)
+.code (- flo-max)
 to
-.codn (- *flo-min*) ;
+.codn (- flo-min) ;
 the value 0.0, and values from
-.code *flo-min*
+.code flo-min
 to
-.codn *flo-max* .
+.codn flo-max .
 
-.coNP Variable @ *flo-dig*
+.coNP Variable @ flo-dig
 .desc
 This variable holds an integer representing the number of decimal digits
 in a decimal floating-point number such that this number can be converted
@@ -23762,15 +23762,15 @@ to a \*(TX floating-point number, and back to decimal, without a change in any o
 the digits. This holds regardless of the value of the number, provided that it
 does not exceed the floating-point range.
 
-.coNP Variables @ *pi* and @ *e*
+.coNP Variables @ %pi% and @ %e%
 .desc
 These variables hold an approximation of the mathematical constants \(*p and e.
 To four digits of precision, \(*p is 3.142 and e is 2.718. The
-.code *pi*
+.code %pi%
 and
-.code *e*
+.code %e%
 approximations are accurate to
-.code *flo-dig*
+.code flo-dig
 decimal digits.
 
 .SS* Bit Operations
@@ -24397,7 +24397,7 @@ while ensuring that the stream is closed immediately:
 
 
 
-.coNP Variable @ *unhandled-hook*
+.coNP Special variable @ *unhandled-hook*
 The
 .code *unhandled-hook*
 variable is initialized with
@@ -28272,17 +28272,17 @@ deleted from the list with the
 function, but it continues
 to exist until the program loses the last reference to that package.
 
-.coNP Special variables @, *user-package* @, *keyword-package* and @ *system-package*
+.coNP Variables @, user-package @, keyword-package and @ system-package
 .desc
 These variables hold predefined packages. The
-.code *user-package*
+.code user-package
 is the one
 in which symbols are read when a \*(TX program is being scanned.
 The
-.code *keyword-package*
+.code keyword-package
 holds keyword symbols, which are printed with
 a leading colon. The
-.code *system-package*
+.code system-package
 is for internal symbols, helping
 the implementation avoid name clashes with user code in some situations.
 
@@ -29175,7 +29175,7 @@ function can retrieve a file descriptor, otherwise an exception of type
 .code file-error
 is thrown.
 
-.coNP Special variables @, s-ifmt @, s-iflnk @, s-ifreg @, s-ifblk ... , @ s-ixoth
+.coNP Variables @, s-ifmt @, s-iflnk @, s-ifreg @, s-ifblk ... , @ s-ixoth
 
 The following variables exist, having integer values. These are bitmasks
 which can be applied against the value given by the
@@ -29410,7 +29410,7 @@ signals. These handlers are then safely called if they were subroutines of
 .codn sig-check ,
 and not asynchronous interrupts.
 
-.coNP Special variables @, sig-hup @, sig-int @, sig-quit @, sig-ill @, sig-trap @, sig-abrt @, sig-bus @, sig-fpe @, sig-kill @, sig-usr1 @, sig-segv @, sig-usr2 @, sig-pipe @, sig-alrm @, sig-term @, sig-chld @, sig-cont @, sig-stop @, sig-tstp @, sig-ttin @, sig-ttou @, sig-urg @, sig-xcpu @, sig-xfsz @, sig-vtalrm @, sig-prof @, sig-poll @, sig-sys @, sig-winch @, sig-iot @, sig-stkflt @, sig-io @ sig-lost and @ sig-pwr
+.coNP Variables @, sig-hup @, sig-int @, sig-quit @, sig-ill @, sig-trap @, sig-abrt @, sig-bus @, sig-fpe @, sig-kill @, sig-usr1 @, sig-segv @, sig-usr2 @, sig-pipe @, sig-alrm @, sig-term @, sig-chld @, sig-cont @, sig-stop @, sig-tstp @, sig-ttin @, sig-ttou @, sig-urg @, sig-xcpu @, sig-xfsz @, sig-vtalrm @, sig-prof @, sig-poll @, sig-sys @, sig-winch @, sig-iot @, sig-stkflt @, sig-io @ sig-lost and @ sig-pwr
 .desc
 These variables correspond to the C signal constants
 .codn SIGHUP ,
@@ -29634,7 +29634,7 @@ The
 argument defaults to zero. If it is specified as nonzero, it should be
 a bitwise combination (via the
 .code logior
-function) of the constants
+function) of the variables
 .codn w-nohang ,
 .codn w-untraced
 and
@@ -29960,7 +29960,7 @@ and generate logs via
 .codn syslog ,
 or using special syslog streams.
 
-.coNP Special variables @, log-pid @, log-cons @, log-ndelay @, log-odelay @ log-nowait and @ log-perror
+.coNP Variables @, log-pid @, log-cons @, log-ndelay @, log-odelay @ log-nowait and @ log-perror
 .desc
 These variables take on the values of the corresponding C preprocessor
 constants from the
@@ -31193,11 +31193,11 @@ finalization execution are not eligible for the current phase of finalization
 processing; they will be processed in a later garbage collection pass.
 
 .SS* Modularization
-.coNP Special variable @ *self-path*
+.coNP Variable @ self-path
 .desc
 This variable holds the invocation path name of the \*(TX program.
 
-.coNP Special variable @ stdlib
+.coNP Variable @ stdlib
 The
 .code stdlib
 variable expands to the directory where the \*(TX standard library
@@ -31632,15 +31632,15 @@ These error symbols existed:
 and
 .codn process_error .
 
-.coNP Variables @ *txr-version* and @ *lib-version*
+.coNP Variables @ txr-version and @ lib-version
 .desc
 The
-.code *txr-version*
+.code txr-version
 variable gives the version of the \*(TX executable. Programs can express
 conditional variable based on detecting the version.
 
 The
-.code *lib-version*
+.code lib-version
 variable gives the version of the installed library of \*(TX code accompanying
 the executable.
 

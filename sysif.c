@@ -826,48 +826,48 @@ void sysif_init(void)
 #define S_IXOTH 0
 #endif
 
-  reg_var(intern(lit("s-ifmt"), user_package), num_fast(S_IFMT));
-  reg_var(intern(lit("s-ifsock"), user_package), num_fast(S_IFSOCK));
-  reg_var(intern(lit("s-iflnk"), user_package), num_fast(S_IFLNK));
-  reg_var(intern(lit("s-ifreg"), user_package), num_fast(S_IFREG));
-  reg_var(intern(lit("s-ifblk"), user_package), num_fast(S_IFBLK));
-  reg_var(intern(lit("s-ifdir"), user_package), num_fast(S_IFDIR));
-  reg_var(intern(lit("s-ifchr"), user_package), num_fast(S_IFCHR));
-  reg_var(intern(lit("s-ififo"), user_package), num_fast(S_IFIFO));
-  reg_var(intern(lit("s-isuid"), user_package), num_fast(S_ISUID));
-  reg_var(intern(lit("s-isgid"), user_package), num_fast(S_ISGID));
-  reg_var(intern(lit("s-isvtx"), user_package), num_fast(S_ISVTX));
-  reg_var(intern(lit("s-irwxu"), user_package), num_fast(S_IRWXU));
-  reg_var(intern(lit("s-irusr"), user_package), num_fast(S_IRUSR));
-  reg_var(intern(lit("s-iwusr"), user_package), num_fast(S_IWUSR));
-  reg_var(intern(lit("s-ixusr"), user_package), num_fast(S_IXUSR));
-  reg_var(intern(lit("s-irwxg"), user_package), num_fast(S_IRWXG));
-  reg_var(intern(lit("s-irgrp"), user_package), num_fast(S_IRGRP));
-  reg_var(intern(lit("s-iwgrp"), user_package), num_fast(S_IWGRP));
-  reg_var(intern(lit("s-ixgrp"), user_package), num_fast(S_IXGRP));
-  reg_var(intern(lit("s-irwxo"), user_package), num_fast(S_IRWXO));
-  reg_var(intern(lit("s-iroth"), user_package), num_fast(S_IROTH));
-  reg_var(intern(lit("s-iwoth"), user_package), num_fast(S_IWOTH));
-  reg_var(intern(lit("s-ixoth"), user_package), num_fast(S_IXOTH));
+  reg_varl(intern(lit("s-ifmt"), user_package), num_fast(S_IFMT));
+  reg_varl(intern(lit("s-ifsock"), user_package), num_fast(S_IFSOCK));
+  reg_varl(intern(lit("s-iflnk"), user_package), num_fast(S_IFLNK));
+  reg_varl(intern(lit("s-ifreg"), user_package), num_fast(S_IFREG));
+  reg_varl(intern(lit("s-ifblk"), user_package), num_fast(S_IFBLK));
+  reg_varl(intern(lit("s-ifdir"), user_package), num_fast(S_IFDIR));
+  reg_varl(intern(lit("s-ifchr"), user_package), num_fast(S_IFCHR));
+  reg_varl(intern(lit("s-ififo"), user_package), num_fast(S_IFIFO));
+  reg_varl(intern(lit("s-isuid"), user_package), num_fast(S_ISUID));
+  reg_varl(intern(lit("s-isgid"), user_package), num_fast(S_ISGID));
+  reg_varl(intern(lit("s-isvtx"), user_package), num_fast(S_ISVTX));
+  reg_varl(intern(lit("s-irwxu"), user_package), num_fast(S_IRWXU));
+  reg_varl(intern(lit("s-irusr"), user_package), num_fast(S_IRUSR));
+  reg_varl(intern(lit("s-iwusr"), user_package), num_fast(S_IWUSR));
+  reg_varl(intern(lit("s-ixusr"), user_package), num_fast(S_IXUSR));
+  reg_varl(intern(lit("s-irwxg"), user_package), num_fast(S_IRWXG));
+  reg_varl(intern(lit("s-irgrp"), user_package), num_fast(S_IRGRP));
+  reg_varl(intern(lit("s-iwgrp"), user_package), num_fast(S_IWGRP));
+  reg_varl(intern(lit("s-ixgrp"), user_package), num_fast(S_IXGRP));
+  reg_varl(intern(lit("s-irwxo"), user_package), num_fast(S_IRWXO));
+  reg_varl(intern(lit("s-iroth"), user_package), num_fast(S_IROTH));
+  reg_varl(intern(lit("s-iwoth"), user_package), num_fast(S_IWOTH));
+  reg_varl(intern(lit("s-ixoth"), user_package), num_fast(S_IXOTH));
 #endif
 #if HAVE_POLL
-  reg_var(intern(lit("poll-in"), user_package), num_fast(POLLIN));
-  reg_var(intern(lit("poll-out"), user_package), num_fast(POLLOUT));
-  reg_var(intern(lit("poll-err"), user_package), num_fast(POLLERR));
+  reg_varl(intern(lit("poll-in"), user_package), num_fast(POLLIN));
+  reg_varl(intern(lit("poll-out"), user_package), num_fast(POLLOUT));
+  reg_varl(intern(lit("poll-err"), user_package), num_fast(POLLERR));
 #ifdef POLLPRI
-  reg_var(intern(lit("poll-pri"), user_package), num_fast(POLLPRI));
+  reg_varl(intern(lit("poll-pri"), user_package), num_fast(POLLPRI));
 #endif
 #ifdef POLLRDHUP
-  reg_var(intern(lit("poll-rdhup"), user_package), num_fast(POLLRDHUP));
+  reg_varl(intern(lit("poll-rdhup"), user_package), num_fast(POLLRDHUP));
 #endif
 #ifdef POLLNVAL
-  reg_var(intern(lit("poll-nval"), user_package), num_fast(POLLNVAL));
+  reg_varl(intern(lit("poll-nval"), user_package), num_fast(POLLNVAL));
 #endif
 #ifdef POLLRDBAND
-  reg_var(intern(lit("poll-rdband"), user_package), num_fast(POLLRDBAND));
+  reg_varl(intern(lit("poll-rdband"), user_package), num_fast(POLLRDBAND));
 #endif
 #ifdef POLLWRBAND
-  reg_var(intern(lit("poll-wrband"), user_package), num_fast(POLLWRBAND));
+  reg_varl(intern(lit("poll-wrband"), user_package), num_fast(POLLWRBAND));
 #endif
 #endif
 
@@ -889,13 +889,13 @@ void sysif_init(void)
   reg_fun(intern(lit("w-ifcontinued"), user_package), func_n1(wifcontinued));
 #endif
 #ifdef WNOHANG
-  reg_var(intern(lit("w-nohang"), user_package), num_fast(WNOHANG));
+  reg_varl(intern(lit("w-nohang"), user_package), num_fast(WNOHANG));
 #endif
 #ifdef WUNTRACED
-  reg_var(intern(lit("w-untraced"), user_package), num_fast(WUNTRACED));
+  reg_varl(intern(lit("w-untraced"), user_package), num_fast(WUNTRACED));
 #endif
 #ifdef WCONTINUED
-  reg_var(intern(lit("w-continued"), user_package), num_fast(WCONTINUED));
+  reg_varl(intern(lit("w-continued"), user_package), num_fast(WCONTINUED));
 #endif
   reg_fun(intern(lit("dupfd"), user_package), func_n2o(dup_wrap, 1));
 #endif

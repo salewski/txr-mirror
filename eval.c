@@ -168,10 +168,15 @@ noreturn static val eval_error(val form, val fmt, ...)
   abort();
 }
 
-val lookup_var(val env, val sym)
+val lookup_global_var(val sym)
 {
   uses_or2;
+  return or2(gethash(top_vb, sym),
+             if2(lisplib_try_load(sym), gethash(top_vb, sym)));
+}
 
+val lookup_var(val env, val sym)
+{
   if (env) {
     type_check(env, ENV);
 
@@ -188,8 +193,7 @@ val lookup_var(val env, val sym)
       return binding;
   }
 
-  return or2(gethash(top_vb, sym),
-             if2(lisplib_try_load(sym), gethash(top_vb, sym)));
+  return lookup_global_var(sym);
 }
 
 static val lookup_sym_lisp1(val env, val sym)
@@ -223,6 +227,12 @@ static val lookup_sym_lisp1(val env, val sym)
 loc lookup_var_l(val env, val sym)
 {
   val binding = lookup_var(env, sym);
+  return if3(binding, cdr_l(binding), nulloc);
+}
+
+loc lookup_global_var_l(val sym)
+{
+  val binding = lookup_global_var(sym);
   return if3(binding, cdr_l(binding), nulloc);
 }
 
@@ -3761,10 +3771,15 @@ static void reg_mac(val sym, mefun_t fun)
   sethash(builtin, sym, defmacro_s);
 }
 
-void reg_var(val sym, val val)
+void reg_varl(val sym, val val)
 {
   assert (sym != nil);
   sethash(top_vb, sym, cons(sym, val));
+}
+
+void reg_var(val sym, val val)
+{
+  reg_varl(sym, val);
   mark_special(sym);
 }
 
@@ -4406,12 +4421,16 @@ void eval_init(void)
   reg_fun(intern(lit("pprinl"), user_package), func_n2o(pprinl, 1));
   reg_fun(intern(lit("tprint"), user_package), func_n2o(tprint, 1));
 
-  reg_var(user_package_s = intern(lit("*user-package*"), user_package_var),
-          user_package_var);
-  reg_var(system_package_s = intern(lit("*system-package*"), user_package_var),
-          system_package_var);
-  reg_var(keyword_package_s = intern(lit("*keyword-package*"), user_package_var),
-          keyword_package_var);
+  reg_varl(user_package_s = intern(lit("user-package"), user_package_var),
+           user_package_var);
+  reg_varl(system_package_s = intern(lit("system-package"), user_package_var),
+           system_package_var);
+  reg_varl(keyword_package_s = intern(lit("keyword-package"), user_package_var),
+           keyword_package_var);
+
+  reg_varl(intern(lit("*user-package*"), user_package), user_package_var);
+  reg_varl(intern(lit("*system-package*"), user_package), system_package_var);
+  reg_varl(intern(lit("*keyword-package*"), user_package), keyword_package_var);
 
   reg_fun(intern(lit("make-sym"), user_package), func_n1(make_sym));
   reg_fun(intern(lit("gensym"), user_package), func_n1o(gensym, 0));
@@ -4555,8 +4574,8 @@ void eval_init(void)
   reg_fun(intern(lit("make-like"), user_package), func_n2(make_like));
   reg_fun(intern(lit("nullify"), user_package), func_n1(nullify));
 
-  reg_var(intern(lit("top-vb"), system_package), top_vb);
-  reg_var(intern(lit("top-fb"), system_package), top_fb);
+  reg_varl(intern(lit("top-vb"), system_package), top_vb);
+  reg_varl(intern(lit("top-fb"), system_package), top_fb);
   reg_fun(intern(lit("symbol-value"), user_package), func_n1(symbol_value));
   reg_fun(intern(lit("symbol-function"), user_package), func_n1(symbol_function));
   reg_fun(intern(lit("boundp"), user_package), func_n1(boundp));

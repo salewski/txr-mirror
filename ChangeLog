@@ -1,5 +1,55 @@
 2015-08-03  Kaz Kylheku  <kaz@kylheku.com>
 
+	Switching some globals to lexical and changing some names.
+
+	* arith.c (arith-init): Changing *flo-...* from special to
+	lexical, and adding un-earmuffed variants. The earmuffed
+	versions are obsolescent.
+	Adding %pi% and %e% global lexicals. Earmuffed versions are
+	also made global lexical, and obsolescent.
+
+	* eval.c (lookup_global_var, lookup_global_var_l): New functions.
+	(lookup_var): Uses lookup_global_var.
+	(reg_varl): New function.
+	(reg_var): Uses reg_var.
+	(eval_init): Register global lexicals user-package, system-package
+	and keyword-package. Old symbols with earmuffs are obsoleted,
+	and also turned into global lexicals.
+	(top-vb, top-fb): Changed to lexical.
+
+	* eval.h (lookup_global_var, lookup_global_var_l, reg_varl):
+	Declared.
+
+	* genvim.txr: Scan ver.tl so that the lib-version variable
+	is included. Extract reg_varl calls.
+
+	* glob.c (glob_init): glob-err and other variables made lexical.
+
+	* lib.c (get_user_package, get_system_package, get_keyword_package):
+	Use lookup_global_var_l to avoid searching dynamic scope for
+	lexicals which cannot be dynamically rebound.
+
+	* share/txr/stdlib/ver.tl (lib-version): New global lexical variable.
+	(*lib-version*): Turned lexical. Obsolescent.
+
+	* signal.c (sig-init): sig-* variables turned lexical.
+
+	* sysif.c (sysif-init): s-*, poll-* and w-* variables turned lexical.
+
+	* syslog.c (syslog-init): log-* variables turned lexical.
+
+	* txr.c (sysroot-init): stdlib and *txr-version* variables turned
+	lexical. txr-version variable added, and *txr-version* is
+	obsolescent.
+	(txr-main): self-path variable added. *self-path* turns lexical
+	and is obsolescent.
+
+	* txr.1: Documentation updated. Lexical variables not referred
+	to as special. Special variables referred to as special.
+
+
+2015-08-03  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.c (txr_main): Bugfix: register *args-full*, the variable
 	described in the documentation! We keep *full-args* for backward
 	compatibility, as an obsolescent feature.

@@ -258,9 +258,11 @@ static void sysroot_init(void)
 #endif
   stdlib_path = sysroot(lit("share/txr/stdlib"));
 
-  reg_var(intern(lit("stdlib"), user_package), stdlib_path);
-  reg_var(intern(lit("*txr-version*"), user_package),
-          toint(lit(TXR_VER), nil));
+  reg_varl(intern(lit("stdlib"), user_package), stdlib_path);
+  reg_varl(intern(lit("*txr-version*"), user_package),
+           toint(lit(TXR_VER), nil));
+  reg_varl(intern(lit("txr-version"), user_package),
+           toint(lit(TXR_VER), nil));
 }
 
 static int license(void)
@@ -682,7 +684,8 @@ int txr_main(int argc, char **argv)
       format(std_error, lit("bindings:\n~s\n"), bindings, nao);
     }
 
-    reg_var(intern(lit("*self-path*"), user_package), spec_file_str);
+    reg_varl(intern(lit("*self-path*"), user_package), spec_file_str);
+    reg_var(intern(lit("self-path"), user_package), spec_file_str);
 
     {
       int retval = extract(spec, arg_list, bindings);
