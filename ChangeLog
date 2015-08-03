@@ -1,5 +1,11 @@
 2015-08-03  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.c (txr_main): Bugfix: register *args-full*, the variable
+	described in the documentation! We keep *full-args* for backward
+	compatibility, as an obsolescent feature.
+
+2015-08-03  Kaz Kylheku  <kaz@kylheku.com>
+
 	Introducing global lexicals: defvarl, defparml.
 
 	* eval.c (defvarl_s, defparm_s, defparml_s, sys_mark_special_s): New

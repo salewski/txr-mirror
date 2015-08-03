@@ -389,6 +389,7 @@ int txr_main(int argc, char **argv)
     arg_tail = list_collect(arg_tail, string_utf8(*argv++));
 
   reg_var(intern(lit("*full-args*"), user_package), arg_list);
+  reg_var(intern(lit("*args-full*"), user_package), arg_list);
 
   arg_list = cdr(arg_list);
 
