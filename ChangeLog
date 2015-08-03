@@ -1,3 +1,26 @@
+2015-08-03  Kaz Kylheku  <kaz@kylheku.com>
+
+	Introducing global lexicals: defvarl, defparml.
+
+	* eval.c (defvarl_s, defparm_s, defparml_s, sys_mark_special_s): New
+	symbol variables.
+	(mark_special): Return val rather than void, since it's hoisted
+	into Lisp domain now with func_n1.
+	(op_defvar): Renamed to op_defvarl, and doesn't call mark_special.
+	defvarl is now the special form for defining variables, and special
+	marking is an embellishment added by macros.
+	(me_defparm): Renamed to me_def_variable. Handles defvar, defparm
+	and defparml.
+	(do_expand): Expand defvarl, rather than defvar.
+	(eval_init): Intern defvarl, defparm, defparml and mark-special
+	symbols, and initialize corresponding globals.
+	Register defvarl special operator, retiring defvar.
+	Register defparm to me_def_variable, and register defvar and
+	defparml to the same.
+
+	* txr.1: Document support for global lexical scopes and the
+	new macros.
+
 2015-08-02  Kaz Kylheku  <kaz@kylheku.com>
 
 	Support lstat and fstat.

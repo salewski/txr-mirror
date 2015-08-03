@@ -9086,7 +9086,10 @@ is also the empty list, which terminates nonempty lists.
 similarly to Common Lisp, including the convention that
 .code defvar
 marks symbols for dynamic binding in local scopes. Lexical closures
-are supported.  Functions are lexically scoped in \*(TL; they can be
+are supported. \*(TL also supports global lexical variables via
+.codn defvarl .
+
+Functions are lexically scoped in \*(TL; they can be
 defined in pervasive global environment using
 .code defun
 or in local scopes using
@@ -10429,14 +10432,12 @@ a form are fully expanded prior to the evaluation of a form, therefore
 evaluation does not consider the possibility of a symbol being
 a symbol macro.
 
-.coNP Operators @ defvar and @ defparm
+.coNP Operator @ defvar and macro @ defparm
 .synb
 .mets (defvar < sym <> [ value ])
 .mets (defparm < sym << value )
 .syne
-
 .desc
-
 The
 .code defvar
 operator binds a name in the variable namespace of the global environment.
@@ -10488,7 +10489,7 @@ above.
 
 The
 .code defparm
-operator behaves like
+macro behaves like
 .code defvar
 when a variable named
 .meta sym
@@ -10512,8 +10513,48 @@ The
 .code defvar
 and
 .code defparm
-operators return
+forms return
 .metn sym .
+
+.coNP Macros @ defvarl and @ defparml
+.synb
+.mets (defvarl < sym <> [ value ])
+.mets (defparml < sym << value )
+.syne
+.desc
+The
+.code defvarl
+and
+.code defparml
+macros behave, respectively, almost exactly like
+.code defvar
+and
+.codn defparm .
+
+The difference is that these operators do not mark
+.meta sym
+as special.
+
+If a global variable
+.meta sym
+does not previously exist, then after the evaluation of
+either of these forms
+.cblk
+.meti (boundp << sym )
+.cble
+is true, but
+.cblk
+.meti (special-var-p << sym )
+.cble
+isn't.
+
+If
+.meta sym
+had been already introduced as a special variable, it stays that way
+after the evaluation of
+.code defvarl
+or
+.codn defparml .
 
 .coNP Operators @ let and @ let*
 .synb

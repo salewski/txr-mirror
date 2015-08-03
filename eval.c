@@ -69,7 +69,9 @@ val eval_initing;
 val eval_error_s;
 val dwim_s, progn_s, prog1_s, let_s, let_star_s, lambda_s, call_s;
 val cond_s, if_s, iflet_s, when_s;
-val defvar_s, defun_s, defmacro_s, tree_case_s, tree_bind_s;
+val defvar_s, defvarl_s, defparm_s, defparml_s, defun_s, defmacro_s;
+val tree_case_s, tree_bind_s;
+val sys_mark_special_s;
 val caseq_s, caseql_s, casequal_s;
 val memq_s, memql_s, memqual_s;
 val eq_s, eql_s, equal_s;
@@ -369,9 +371,10 @@ static val lexical_lisp1_binding(val menv, val sym)
   }
 }
 
-static void mark_special(val sym)
+static val mark_special(val sym)
 {
-  sethash(special, sym, t);
+  assert (sym != nil);
+  return sethash(special, sym, t);
 }
 
 static val special_var_p(val sym)
@@ -1380,7 +1383,7 @@ static val op_or(val form, val env)
   return nil;
 }
 
-static val op_defvar(val form, val env)
+static val op_defvarl(val form, val env)
 {
   val args = rest(form);
   val sym = first(args);
@@ -1394,7 +1397,6 @@ static val op_defvar(val form, val env)
       remhash(top_smb, sym);
       sethash(top_vb, sym, cons(sym, value));
     }
-    mark_special(sym);
   }
 
   return sym;
@@ -2011,21 +2013,31 @@ static val op_prof(val form, val env)
               nao);
 }
 
-static val me_defparm(val form, val menv)
+static val me_def_variable(val form, val menv)
 {
   val args = rest(form);
   val op = first(form);
   val sym = first(args);
   val initform = second(args);
+  val setval = if2(op == defparm_s || op == defparml_s,
+                   cons(list(set_s, sym, initform, nao), nil));
 
   (void) menv;
 
-  if (length(args) != two)
+  if (op != defvar_s && length(args) != two)
     eval_error(form, lit("~s: two arguments expected"), op, nao);
 
-  return list(prog1_s,
-              cons(defvar_s, cons(sym, nil)),
-              list(set_s, sym, initform, nao), nao);
+  return apply_frob_args(list(prog1_s,
+                              cons(defvarl_s,
+                                   cons(sym, if2(op == defvar_s,
+                                                 cons(initform, nil)))),
+                              if3(op == defparm_s || op == defvar_s,
+                                  cons(list(sys_mark_special_s,
+                                            list(quote_s, sym, nao),
+                                            nao),
+                                       setval),
+                                  setval),
+                              nao));
 }
 
 static val me_gen(val form, val menv)
@@ -3006,7 +3018,7 @@ tail:
       if (pairs == pairs_ex)
         return form;
       return rlcp(cons(cond_s, pairs_ex), form);
-    } else if (sym == defvar_s || sym == defsymacro_s) {
+    } else if (sym == defvarl_s || sym == defsymacro_s) {
       val name = second(form);
       val init = third(form);
       val init_ex = expand(init, menv);
@@ -3953,6 +3965,10 @@ void eval_init(void)
   when_s = intern(lit("when"), user_package);
   iflet_s = intern(lit("iflet"), user_package);
   defvar_s = intern(lit("defvar"), user_package);
+  defvarl_s = intern(lit("defvarl"), user_package);
+  defparm_s = intern(lit("defparm"), user_package);
+  defparml_s = intern(lit("defparml"), user_package);
+  sys_mark_special_s = intern(lit("mark-special"), system_package);
   defun_s = intern(lit("defun"), user_package);
   defmacro_s = intern(lit("defmacro"), user_package);
   defsymacro_s = intern(lit("defsymacro"), user_package);
@@ -4049,7 +4065,7 @@ void eval_init(void)
   reg_op(if_s, op_if);
   reg_op(and_s, op_and);
   reg_op(or_s, op_or);
-  reg_op(defvar_s, op_defvar);
+  reg_op(defvarl_s, op_defvarl);
   reg_op(defun_s, op_defun);
   reg_op(defmacro_s, op_defmacro);
   reg_op(defsymacro_s, op_defsymacro);
@@ -4073,7 +4089,9 @@ void eval_init(void)
   reg_op(with_saved_vars_s, op_with_saved_vars);
   reg_op(prof_s, op_prof);
 
-  reg_mac(intern(lit("defparm"), user_package), me_defparm);
+  reg_mac(defvar_s, me_def_variable);
+  reg_mac(defparm_s, me_def_variable);
+  reg_mac(defparml_s, me_def_variable);
   reg_mac(gen_s, me_gen);
   reg_mac(gun_s, me_gun);
   reg_mac(intern(lit("delay"), user_package), me_delay);
@@ -4547,6 +4565,7 @@ void eval_init(void)
   reg_fun(intern(lit("fmakunbound"), user_package), func_n1(fmakunbound));
   reg_fun(intern(lit("special-operator-p"), user_package), func_n1(special_operator_p));
   reg_fun(intern(lit("special-var-p"), user_package), func_n1(special_var_p));
+  reg_fun(sys_mark_special_s, func_n1(mark_special));
   reg_fun(intern(lit("func-get-form"), user_package), func_n1(func_get_form));
   reg_fun(intern(lit("func-get-env"), user_package), func_n1(func_get_env));
   reg_fun(intern(lit("func-set-env"), user_package), func_n2(func_set_env));
