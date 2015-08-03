@@ -101,9 +101,10 @@ diag_flags='-Wall -Werror=implicit-function-declaration -Werror=missing-prototyp
 debug_flags=-g
 debug_also=
 inline=
-platform_flags=
+platform_cflags=
 remove_flags=
 lex_dbg_flags=
+platform_ldflags=
 txr_dbg_opts=--gc-debug
 valgrind=
 lit_align=
@@ -364,10 +365,15 @@ debug-also [$debug_also]
   of object files compiled with different optimization flags,
   and produce two binaries: txr and txr-dbg.
 
-platform-flags [$platform_flags]
+platform-cflags [$platform_cflags]
 
   Specify additional compiler flags for anything else, such as CPU tuning,
   target ABI selection, code generation options, et cetera.
+
+platform-ldflags [$platform_ldflags]
+
+  Specify additional linker flags for anything else, such as hardening,
+  linking as needed, et cetera.
 
 remove-flags [$remove_flags]
 
@@ -659,7 +665,8 @@ BUILD_TARGETS := $(if [ $debug_also ] ; then
                      echo '$(PROG) $(PROG)-dbg'
                    else
                      echo '$(PROG)'; fi)
-PLATFORM_FLAGS := $platform_flags
+PLATFORM_CFLAGS := $platform_cflags
+PLATFORM_LDFLAGS := $platform_ldflags
 REMOVE_FLAGS := $remove_flags
 LEX_DBG_FLAGS := $lex_dbg_flags
 TXR_DBG_OPTS := $txr_dbg_opts

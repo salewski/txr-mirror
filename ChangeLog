@@ -1,3 +1,17 @@
+2015-08-03  Christopher Meng  <i@cicku.me>
+
+	Custom linker flags support.
+
+	* Makefile (PLATFORM_FLAGS): Rename to PLATFORM_CFLAGS.
+	(LDFLAGS): New variable. Includes -lm and PLATFORM_CFLAGS.
+	(LINK_PROG): Use $(LDFLAGS) instead of -lm.
+
+	* configure (platform_flags): Renamed to platform_cflags.
+	(platform_ldflags): New variable.
+	(gen_config_make): Rename PLATFORM_CFLAGS and generate
+	PLATFORM_LDFLAGS.
+	Usage help text updated.
+
 2015-08-03  Kaz Kylheku  <kaz@kylheku.com>
 
 	Switching some globals to lexical and changing some names.

@@ -28,9 +28,10 @@
 VERBOSE :=
 CFLAGS := -iquote $(conf_dir) $(if $(top_srcdir),-iquote $(top_srcdir)) \
           $(LANG_FLAGS) $(DIAG_FLAGS) \
-          $(DBG_FLAGS) $(PLATFORM_FLAGS) $(EXTRA_FLAGS)
+          $(DBG_FLAGS) $(PLATFORM_CFLAGS) $(EXTRA_FLAGS)
 CFLAGS += -iquote $(top_srcdir)mpi
 CFLAGS := $(filter-out $(REMOVE_FLAGS),$(CFLAGS))
+LDFLAGS := -lm $(PLATFORM_LDFLAGS)
 
 ifneq ($(subst g++,@,$(notdir $(CC))),$(notdir $(CC)))
 CFLAGS := $(filter-out -Wmissing-prototypes -Wstrict-prototypes,$(CFLAGS))
@@ -105,7 +106,7 @@ endef
 
 define LINK_PROG
 $(call ABBREV,LINK)
-$(V)$(CC) $(1) $(CFLAGS) -o $@ $^ -lm
+$(V)$(CC) $(1) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 endef
 
 define WINDRES
