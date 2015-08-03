@@ -99,6 +99,7 @@ opt_flags=-O2
 lang_flags='-ansi -D_XOPEN_SOURCE=600'
 diag_flags='-Wall -Werror=implicit-function-declaration -Werror=missing-prototypes -Werror=strict-prototypes'
 debug_flags=-g
+debug_only_flags=-DTXR_DEBUG
 debug_also=
 inline=
 platform_cflags=
@@ -356,7 +357,13 @@ diag-flags [$diag_flags]
 debug-flags [$debug_flags]
 
   Specifies flags for requesting that debugging information be
-  retained in the compile and link.
+  retained in the compile and link. These flags are applied
+  to optimized and debugging targets.
+
+debug-only-flags [$debug_only_flags]
+
+  Specifies compiler flags which only apply to debugging
+  targets.
 
 debug-also [$debug_also]
 
@@ -661,6 +668,7 @@ OPT_FLAGS := $opt_flags
 LANG_FLAGS := $lang_flags
 DIAG_FLAGS := $diag_flags
 DBG_FLAGS := $debug_flags
+DBG_ONLY_FLAGS := $debug_only_flags
 BUILD_TARGETS := $(if [ $debug_also ] ; then
                      echo '$(PROG) $(PROG)-dbg'
                    else

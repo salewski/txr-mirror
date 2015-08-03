@@ -117,14 +117,14 @@ endef
 
 ifneq ($(top_srcdir),)
 dbg/%.o: $(top_srcdir)%.c
-	$(call COMPILE_C_WITH_DEPS,)
+	$(call COMPILE_C_WITH_DEPS,$(DBG_ONLY_FLAGS))
 
 opt/%.o: $(top_srcdir)%.c
 	$(call COMPILE_C_WITH_DEPS,$(OPT_FLAGS))
 endif
 
 dbg/%.o: %.c
-	$(call COMPILE_C_WITH_DEPS,)
+	$(call COMPILE_C_WITH_DEPS,$(DBG_ONLY_FLAGS))
 
 opt/%.o: %.c
 	$(call COMPILE_C_WITH_DEPS,$(OPT_FLAGS))

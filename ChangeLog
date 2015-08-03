@@ -1,3 +1,14 @@
+2015-08-03  Kaz Kylheku  <kaz@kylheku.com>
+
+	Define TXR_DBG macro when compiling debug build.
+
+	* Makefile (dbg/%.o): Pass $(DBG_ONLY_FLAGS) to COMPILE_C_WITH_DEPS
+	recipe macro.
+
+	* configure (debug_only_flags): New macro.
+	(gen_config_make): Generate DBG_ONLY_FLAGS.
+	Add debug-only-flags to usage help text.
+
 2015-08-03  Christopher Meng  <i@cicku.me>
 
 	Custom linker flags support.
