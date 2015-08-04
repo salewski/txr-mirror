@@ -2559,9 +2559,11 @@ static val put_indent(val stream, struct strm_ops *ops, cnum chars)
   return t;
 }
 
-static val indent_mode_put_string(val stream, val string,
-                                  struct strm_ops *ops, struct strm_base *s)
+val put_string(val string, val stream_in)
 {
+  val stream = default_arg(stream_in, std_output);
+  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
+  struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
   cnum col = s->column;
   const wchar_t *str = c_str(string), *p = str;
   val ret;
@@ -2587,27 +2589,12 @@ static val indent_mode_put_string(val stream, val string,
   return ret;
 }
 
-val put_string(val string, val stream_in)
-{
-  val stream = default_arg(stream_in, std_output);
-  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
-  struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
-
-  if (s->indent_mode == indent_off)
-    return ops->put_string(stream, string);
-
-  return indent_mode_put_string(stream, string, ops, s);
-}
-
 val put_char(val ch, val stream_in)
 {
   val stream = default_arg(stream_in, std_output);
   struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
   struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
   wint_t cch = c_chr(ch);
-
-  if (s->indent_mode == indent_off)
-    return ops->put_char(stream, ch);
 
   switch (cch) {
   case L'\n':

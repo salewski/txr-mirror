@@ -1,3 +1,11 @@
+2015-08-04  Kaz Kylheku  <kaz@kylheku.com>
+
+	* stream.c (indent_mode_put_string): Function removed,
+	logic hoisted into put_string.
+	(put_string, put_char): Always count column, indent mode or not.
+
+	* tests/009/json.expected: Updated.
+
 2015-08-03  Kaz Kylheku  <kaz@kylheku.com>
 
 	Define TXR_DBG macro when compiling debug build.
