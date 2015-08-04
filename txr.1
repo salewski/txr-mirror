@@ -25301,6 +25301,50 @@ to
 The function returns
 .codn nil .
 
+.coNP Function @ hash-revget
+.synb
+.mets (hash-revget < hash < value >> [ testfun <> [ keyfun ]])
+.syne
+.desc
+The
+.code hash-revget
+function performs a reverse lookup on
+.metn hash .
+
+It searches through the entries stored in
+.meta hash
+for an entry whose value matches
+.metn value .
+
+If such an entry is found, that entry's key is returned.
+Otherwise
+.code nil
+is returned.
+
+If multiple matching entries exist, it is not specified which entry's
+key is returned.
+
+The
+.meta keyfun
+function is applied to each value in
+.meta hash
+and the resulting value is compared with
+.metn value .
+The default
+.meta keyfun
+is the
+.code identity
+function.
+
+The comparison is performed using
+.metn testfun .
+
+The default
+.meta testfun
+is the
+.code eql
+function.
+
 .coNP Functions @ hash-eql and @ hash-equal
 .synb
 .mets (hash-eql << object )

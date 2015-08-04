@@ -1149,6 +1149,22 @@ val hash_update_1(val hash, val key, val fun, val init)
   }
 }
 
+val hash_revget(val hash, val value, val test, val keyfun)
+{
+  val iter = hash_begin(hash);
+  val cell;
+
+  test = default_arg(test, eql_f);
+  keyfun = default_arg(keyfun, identity_f);
+
+  while ((cell = hash_next(iter)) != nil) {
+    if (funcall2(test, value, funcall1(keyfun, cdr(cell))))
+      return car(cell);
+  }
+
+  return nil;
+}
+
 void hash_init(void)
 {
   weak_keys_k = intern(lit("weak-keys"), keyword_package);

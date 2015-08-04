@@ -62,6 +62,7 @@ val hash_subset(val hash1, val hash2);
 val hash_proper_subset(val hash1, val hash2);
 val hash_update(val hash, val fun);
 val hash_update_1(val hash, val key, val fun, val init);
+val hash_revget(val hash, val value, val test, val keyfun);
 
 void hash_process_weak(void);
 

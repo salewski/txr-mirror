@@ -1,5 +1,15 @@
 2015-08-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	* hash.c (hash_revget): New function.
+
+	* hash.h (hash_revget): Declared.
+
+	* eval.c (eval_init): Registered hash-revget intrinsic.
+
+	* txr.1: Documented hash-revget.
+
+2015-08-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (indent_mode_put_string): Function removed,
 	logic hoisted into put_string.
 	(put_string, put_char): Always count column, indent mode or not.
