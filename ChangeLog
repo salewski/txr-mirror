@@ -1,5 +1,18 @@
 2015-08-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (func_get_name): New function.
+	(bind_args): Include the entire context form in argument
+	mismatch errors.
+	(apply): Include the function name, or else source code
+	if it has no name, in argument mismatch erors.
+	(eval_init): Register func-get-name intrinsic.
+
+	* eval.h (func_get_name): Declared.
+
+	* txr.1: Documented func-get-name.
+
+2015-08-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (force): Default the new second argument of source_loc_str.
 	(eval_error): Derive location of error from
 	the last_form_evaled, if form doesn't have it.

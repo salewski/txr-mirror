@@ -41,6 +41,7 @@ val interp_fun(val env, val fun, val args);
 val fboundp(val sym);
 val special_operator_p(val sym);
 val macro_form_p(val form, val menv);
+val func_get_name(val fun, val env);
 void reg_varl(val sym, val val);
 void reg_var(val sym, val val);
 void reg_fun(val sym, val fun);

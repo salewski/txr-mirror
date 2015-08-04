@@ -12691,6 +12691,35 @@ which must be an interpreted function. The source code form has the syntax
 .meti >> ( name < arglist << body-form *) .
 .cble
 
+.coNP Function @ func-get-name
+.synb
+.mets (func-get-form << func <> [ env ])
+.syne
+.desc
+The
+.code func-get-name
+tries to resolve the function object
+.meta func
+to a name. If that is not possible, it tries to resolve it to
+a lambda expression denoting the source code form of the function.
+If neither a name nor code can be found, then
+.code nil
+is returned.
+
+The name or code information is searched in the environment
+specified by
+.meta env
+and if it is not found there, it similarly searches through the chain
+of parent environments, and finally the global environment.
+If
+.meta env
+is omitted, then only the global environment is searched.
+
+If a function binding is found which associates a symbol
+with
+.meta function
+then that symbol is returned. Variable bindings are not considered.
+
 .coNP Function @ func-get-env
 .synb
 .mets (func-get-env << func )

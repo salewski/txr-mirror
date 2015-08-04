@@ -256,6 +256,36 @@ val lookup_fun(val env, val sym)
   }
 }
 
+val func_get_name(val fun, val env)
+{
+  env = default_bool_arg(env);
+
+  if (env) {
+    type_check(env, ENV);
+
+    {
+      val iter;
+      for (iter = env->e.fbindings; iter; iter = cdr(iter)) {
+        val binding = car(iter);
+        if (cdr(binding) == fun)
+          return car(binding);
+      }
+
+      return func_get_name(fun, env->e.up_env);
+    }
+  } else {
+    val name = hash_revget(top_fb, fun, eq_f, cdr_f);
+
+    if (name)
+      return name;
+
+    if (interp_fun_p(fun))
+      return func_get_form(fun);
+
+    return nil;
+  }
+}
+
 static val lookup_mac(val menv, val sym)
 {
   uses_or2;
@@ -482,7 +512,8 @@ static val bind_args(val env, val params, val args, val ctx_form)
       params = cdr(params);
     }
     if (!optargs)
-      eval_error(ctx_form, lit("~s: too few arguments"), car(ctx_form), nao);
+      eval_error(ctx_form, lit("~s: too few arguments for ~s\n"),
+                 car(ctx_form), ctx_form, nao);
     while (consp(params)) {
       val param = car(params);
       if (param == colon_k)
@@ -515,7 +546,8 @@ static val bind_args(val env, val params, val args, val ctx_form)
     eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
                car(ctx_form), params, nao);
   } else if (args) {
-    eval_error(ctx_form, lit("~s: too many arguments"), car(ctx_form), nao);
+    eval_error(ctx_form, lit("~s: too many arguments for ~s"),
+               car(ctx_form), ctx_form, nao);
   }
 
 
@@ -673,12 +705,12 @@ val apply(val fun, val arglist, val ctx_form)
     nargs = p - arg;
 
     if (nargs < reqargs)
-      eval_error(ctx_form, lit("~s: missing required arguments"),
-                 ctx, nao);
+      eval_error(ctx_form, lit("~s: missing required arguments for ~s"),
+                 ctx, func_get_name(fun, nil), nao);
 
     if (nargs > fixparam)
-      eval_error(ctx_form, lit("~s: too many arguments"),
-                 ctx, nao);
+      eval_error(ctx_form, lit("~s: too many arguments for ~s"),
+                 ctx, func_get_name(fun, nil), nao);
 
     for (; nargs < fixparam; nargs++)
       *p++ = colon_k;
@@ -720,7 +752,8 @@ val apply(val fun, val arglist, val ctx_form)
     nargs = p - arg;
 
     if (nargs < reqargs)
-      eval_error(ctx_form, lit("~s: missing required arguments"), ctx, nao);
+      eval_error(ctx_form, lit("~s: missing required arguments for ~s"),
+                 ctx, func_get_name(fun, nil), nao);
 
     for (; nargs < fixparam; nargs++)
       *p++ = colon_k;
@@ -4588,6 +4621,7 @@ void eval_init(void)
   reg_fun(intern(lit("special-var-p"), user_package), func_n1(special_var_p));
   reg_fun(sys_mark_special_s, func_n1(mark_special));
   reg_fun(intern(lit("func-get-form"), user_package), func_n1(func_get_form));
+  reg_fun(intern(lit("func-get-name"), user_package), func_n2o(func_get_name, 1));
   reg_fun(intern(lit("func-get-env"), user_package), func_n1(func_get_env));
   reg_fun(intern(lit("func-set-env"), user_package), func_n2(func_set_env));
   reg_fun(intern(lit("functionp"), user_package), func_n1(functionp));
