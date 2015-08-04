@@ -1,5 +1,25 @@
 2015-08-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (force): Default the new second argument of source_loc_str.
+	(eval_error): Derive location of error from
+	the last_form_evaled, if form doesn't have it.
+	(eval_init): Re-register source-loc-str as binary with an optional arg.
+
+	* match.c (debuglf, sem_error, file_err, typed_error): Default new
+	argument of source_loc_str.
+
+	* parser.h (source_loc_str): Declaration updated.
+
+	* parser.l (source_loc_str): Take second argument which specifies
+	alternative value if the source loc info is not found.
+
+	* unwind.c (uw_throw): Simplify code thanks to source_loc_str
+	default argument.
+
+	* txr.1: Document new argument of source-loc-str.
+
+2015-08-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	* hash.c (hash_revget): New function.
 
 	* hash.h (hash_revget): Declared.

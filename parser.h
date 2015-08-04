@@ -63,7 +63,7 @@ void prime_parser(parser_t *, int hold_byte, val name);
 int parse_once(val stream, val name, parser_t *parser);
 int parse(parser_t *parser, val name);
 val source_loc(val form);
-val source_loc_str(val form);
+val source_loc_str(val form, val alt);
 val rlset(val form, val info);
 INLINE val rlcp(val to, val from)
 {

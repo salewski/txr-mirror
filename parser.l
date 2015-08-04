@@ -991,12 +991,12 @@ val source_loc(val form)
   return gethash(form_to_ln_hash, form);
 }
 
-val source_loc_str(val form)
+val source_loc_str(val form, val alt)
 {
   cons_bind (line, file, gethash(form_to_ln_hash, form));
-  return if3(line,
-             format(nil, lit("~a:~a"), file, line, nao),
-             lit("source location n/a"));
+  if (missingp(alt))
+    alt = lit("source location n/a");
+  return if3(line, format(nil, lit("~a:~a"), file, line, nao), alt);
 }
 
 void parser_l_init(void)

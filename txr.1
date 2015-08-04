@@ -30985,7 +30985,7 @@ one specifies the result of
 .coNP Functions @ source-loc and @ source-loc-str
 .synb
 .mets (source-loc << form )
-.mets (source-loc-str << form )
+.mets (source-loc-str << form <> [ alternative ])
 .syne
 .desc
 These functions map an expression in a \*(TX program to the file name and
@@ -31009,9 +31009,14 @@ is not a piece of the program source code that was constructed by the
 .code source-loc
 returns
 .codn nil ,
-and
+and, in the absence of the
+.meta alternative
+argument,
 .code source-loc-str
-returns a string whose text says that source location is not available.
+returns a string whose text says that source location is not available, 
+otherwise it returns the
+.meta alternative
+argument.
 
 .coNP Function @ rlcp
 .synb

@@ -313,10 +313,8 @@ val uw_throw(val sym, val args)
     if (opt_loglevel >= 1) {
       val is_msg = and2(stringp(car(args)), null(cdr(args)));
       val msg_or_args = if3(is_msg, car(args), args);
-      val info = if2(source_loc(last_form_evaled),
-                     source_loc_str(last_form_evaled));
-      val ex_info = if2(source_loc(last_form_expanded),
-                        source_loc_str(last_form_expanded));
+      val info = source_loc_str(last_form_evaled, nil);
+      val ex_info = source_loc_str(last_form_expanded, nil);
       format(std_error, lit("~a: unhandled exception of type ~a:\n"),
              prog_string, sym, nao);
 

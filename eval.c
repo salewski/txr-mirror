@@ -151,16 +151,17 @@ static void env_vb_to_fb(val env)
 
 noreturn static val eval_error(val form, val fmt, ...)
 {
+  uses_or2;
   va_list vl;
   val stream = make_string_output_stream();
+  val loc = or2(source_loc_str(form, nil),
+                source_loc_str(last_form_evaled, nil));
 
   va_start (vl, fmt);
 
-  if (!form)
-    form = last_form_evaled;
+  if (loc)
+    format(stream, lit("(~a) "), loc, nao);
 
-  if (form)
-    format(stream, lit("(~a) "), source_loc_str(form), nao);
   (void) vformat(stream, fmt, vl);
   va_end (vl);
 
@@ -3743,7 +3744,7 @@ static val force(val promise)
     return ret;
   } else if (deref(pstate) == promise_inprogress_s) {
     val form = second(cdr(cd));
-    val sloc = source_loc_str(form);
+    val sloc = source_loc_str(form, colon_k);
     eval_error(nil, lit("force: recursion forcing delayed form ~s (~a)"),
                form, sloc, nao);
   } else {
@@ -4627,7 +4628,7 @@ void eval_init(void)
   reg_fun(intern(lit("make-time-utc"), user_package), func_n7(make_time_utc));
 
   reg_fun(intern(lit("source-loc"), user_package), func_n1(source_loc));
-  reg_fun(intern(lit("source-loc-str"), user_package), func_n1(source_loc_str));
+  reg_fun(intern(lit("source-loc-str"), user_package), func_n2o(source_loc_str, 1));
   reg_fun(intern(lit("rlcp"), user_package), func_n2(rlcp));
 
   eval_error_s = intern(lit("eval-error"), user_package);

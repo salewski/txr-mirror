@@ -75,7 +75,8 @@ static void debuglf(val form, val fmt, ...)
   if (opt_loglevel >= 2) {
     va_list vl;
     va_start (vl, fmt);
-    format(std_error, lit("~a: (~a) "), prog_string, source_loc_str(form), nao);
+    format(std_error, lit("~a: (~a) "), prog_string,
+           source_loc_str(form, colon_k), nao);
     vformat(std_error, fmt, vl);
     put_char(chr('\n'), std_error);
     va_end (vl);
@@ -89,7 +90,7 @@ static void sem_error(val form, val fmt, ...)
 
   va_start (vl, fmt);
   if (form)
-    format(stream, lit("(~a) "), source_loc_str(form), nao);
+    format(stream, lit("(~a) "), source_loc_str(form, colon_k), nao);
   (void) vformat(stream, fmt, vl);
   va_end (vl);
 
@@ -104,7 +105,7 @@ static void file_err(val form, val fmt, ...)
 
   va_start (vl, fmt);
   if (form)
-    format(stream, lit("(~a) "), source_loc_str(form), nao);
+    format(stream, lit("(~a) "), source_loc_str(form, colon_k), nao);
   (void) vformat(stream, fmt, vl);
   va_end (vl);
 
@@ -119,7 +120,7 @@ static void typed_error(val type, val form, val fmt, ...)
 
   va_start (vl, fmt);
   if (form)
-    format(stream, lit("(~a) "), source_loc_str(form), nao);
+    format(stream, lit("(~a) "), source_loc_str(form, colon_k), nao);
   (void) vformat(stream, fmt, vl);
   va_end (vl);
 
