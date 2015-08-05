@@ -1,5 +1,12 @@
 2015-08-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (vormat): Bugfix: when width specified as *
+	meets a negative argument, the width should be treated
+	as positive and the field left aligned. Instead, the
+	width is treated as zero.
+
+2015-08-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (string_out_put_string): Do not return nil when
 	buffer calculations overflow, but throw exception.
 

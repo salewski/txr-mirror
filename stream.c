@@ -2209,7 +2209,7 @@ val vformat(val stream, val fmtstr, va_list vl)
   do_digits:
           switch (saved_state) {
           case vf_width:
-            if (width < 0) {
+            if (digits < 0) {
               width = -digits;
               align = al_left;
             } else {
