@@ -2747,24 +2747,17 @@ val inc_indent(val stream, val delta)
 
 val width_check(val stream, val alt)
 {
-  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
-  struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
+  struct strm_base *s = coerce(struct strm_base *,
+                               cobj_handle(stream, stream_s));
 
   if ((s->indent_mode == indent_code &&
        s->column >= s->indent_chars + s->code_width) ||
       (s->indent_mode == indent_data &&
        s->column >= s->indent_chars + s->data_width))
   {
-    if (ops->put_char(stream, chr('\n')) &&
-        put_indent(stream, ops, s->indent_chars)) {
-      s->column = s->indent_chars;
-      return t;
-    }
-    return nil;
+    put_char(chr('\n'), stream);
   } else if (alt) {
-    ops->put_char(stream, alt);
-    s->column++;
-    return t;
+    put_char(alt, stream);
   }
 
   return t;

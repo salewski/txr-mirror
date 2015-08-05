@@ -1,5 +1,11 @@
 2015-08-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (width_check): Just use the public
+	put_char function; no need to manipulate column
+	or call put_indent.
+
+2015-08-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	Better diagnostic in funcall family of functions.
 
 	* lib.c (wrongargs): New static function.
