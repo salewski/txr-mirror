@@ -1490,12 +1490,12 @@ static val string_out_put_string(val stream, val str)
     size_t required_size = len + so->fill + 1;
 
     if (required_size < len)
-      return nil;
+      goto oflow;
 
     while (so->size <= required_size) {
       so->size *= 2;
       if (so->size < old_size)
-        return nil;
+        goto oflow;
     }
 
     if (so->size != old_size)
@@ -1505,6 +1505,8 @@ static val string_out_put_string(val stream, val str)
     wmemcpy(so->buf + so->fill, s, len + 1);
     so->fill += len;
     return t;
+oflow:
+    uw_throw(error_s, lit("string output stream overflow"));
   }
 }
 

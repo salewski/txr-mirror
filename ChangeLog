@@ -1,5 +1,10 @@
 2015-08-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (string_out_put_string): Do not return nil when
+	buffer calculations overflow, but throw exception.
+
+2015-08-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	Remove useless return values and checks.
 
 	* stream.c (vformat_align_pre, vformat_align_post): Change to void
