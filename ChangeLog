@@ -1,5 +1,14 @@
 2015-08-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (stream_init): Register get-indent-mode, set-indent-mode,
+	test-set-indent-mode, get-indent, set-indent, inc-indent
+	and width-check intrinsic functions. Register indent-off,
+	indent-data and indent-code variables.
+
+	* txr.1: Documented stream output indentation API.
+
+2015-08-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (width_check): Just use the public
 	put_char function; no need to manipulate column
 	or call put_indent.

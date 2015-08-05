@@ -3302,6 +3302,17 @@ void stream_init(void)
   reg_fun(intern(lit("open-files*"), user_package), func_n2o(open_files_star, 1));
   reg_fun(intern(lit("abs-path-p"), user_package), func_n1(abs_path_p));
 
+  reg_fun(intern(lit("get-indent-mode"), user_package), func_n1(get_indent_mode));
+  reg_fun(intern(lit("test-set-indent-mode"), user_package), func_n3(test_set_indent_mode));
+  reg_fun(intern(lit("set-indent-mode"), user_package), func_n2(set_indent_mode));
+  reg_fun(intern(lit("get-indent"), user_package), func_n1(get_indent));
+  reg_fun(intern(lit("set-indent"), user_package), func_n2(set_indent));
+  reg_fun(intern(lit("inc-indent"), user_package), func_n2(inc_indent));
+  reg_fun(intern(lit("width-check"), user_package), func_n2(width_check));
+  reg_varl(intern(lit("indent-off"), user_package), num_fast(indent_off));
+  reg_varl(intern(lit("indent-data"), user_package), num_fast(indent_data));
+  reg_varl(intern(lit("indent-code"), user_package), num_fast(indent_code));
+
   fill_stream_ops(&null_ops);
   fill_stream_ops(&stdio_ops);
   fill_stream_ops(&tail_ops);

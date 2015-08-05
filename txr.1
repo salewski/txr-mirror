@@ -27703,7 +27703,7 @@ if
 supports a byte write operation. The byte
 value is specified as an integer value in the range 0 to 255.
 
-All these runctions return
+All these functions return
 .codn t .
 On failure, they do not return, but throw exceptions of type
 .codn file-error .
@@ -28113,6 +28113,148 @@ parameter
 is not present, then an exception of type
 .code syntax-error
 is thrown.
+
+.SS* Stream Output Indentation
+\*(TL streams provide support for establishing hanging indentations
+in text output. Each stream which supports output has a built-in state variable
+called indentation mode, and another variable indicating the current
+indentation amount. When indentation mode is enabled, then prior to the
+first character of every line, the stream prepends the indentation: space
+characters equal in number to the current indentation value.
+This logic is implemented by the
+.code put-char
+and
+.code put-string
+functions, and all functions based on these. The
+.code put-byte
+function does not interact with indentation. The column position tracking
+will be incorrect if byte and character output are mixed, affecting
+the placement of indentation.
+
+Indentation mode takes on three numeric values, given by the three
+variables
+.codn indent-off ,
+.codn indent-data ,
+and
+.codn indent-code .
+As far as stream output is concerned, the code and data modes behave
+the same way: both represent the "indentation turned on" state.
+The difference between them influences the behavior of the
+.code width-check
+function. This function isn't used by any stream output routines.
+It is used by the object printing functions like
+.code print
+and
+.code pprint
+to break up long lines.
+
+.coNP Variables @, indent-off @ indent-data and @ indent-code
+.desc
+These variables hold integer values representing output stream
+indentation modes. The value of
+.code indent-off
+is zero.
+
+.coNP Functions @, get-indent-mode @, set-indent-mode and @ test-set-indent-mode
+.synb
+.mets (get-indent-mode << stream )
+.mets (set-indent-mode < stream << new-mode )
+.mets (test-set-indent-mode < stream < compare-mode << new-mode )
+.syne
+.desc
+These functions retrieve and manipulate the stream indent mode.
+The
+.code get-indent-mode
+retrieves the current indent mode of
+.metn stream .
+
+The
+.code set-indent-mode
+function sets the indent mode of
+.meta stream
+to
+.meta new-mode
+and returns the previous mode.
+
+The
+.code test-set-indent-mode
+function sets the indent mode of
+.meta stream
+to
+.meta new-mode
+if, and only if,
+its current mode is equal to
+.metn compare-mode .
+Whether or not it changes the mode, it returns the previous mode.
+
+Note: it is encouraged to save and restore the indentation mode,
+and in a way that is exception safe.
+If a block of code sets up indentation on a stream such as
+.code *stdout*
+and is terminated by an exception, the indentation will remain in
+effect and affect subsequent output. The
+.code with-resources
+macro or
+.code unwind-protect
+operator may be used.
+
+.coNP Functions @, get-indent @, set-indent and @ inc-indent
+.synb
+.mets (get-indent << stream )
+.mets (set-indent < stream << new-indent )
+.mets (inc-indent < stream << indent-delta )
+.syne
+.desc
+These functions manipulate the indentation value of the stream.
+The indentation takes effect the next time a character is output
+following a newline character.
+
+The
+.code get-indent
+function retrieves the current indentation amount.
+
+The
+.code set-indent
+function sets
+.metn stream 's
+indentation to the value
+.meta new-indent
+and returns the previous value.
+Negative values are clamped to zero.
+
+The
+.code inc-indent
+function sets
+.metn stream 's
+indentation relative to the current printing column position,
+and returns the old value.
+The indentation is calculated by adding
+.meta indent-delta
+to the current column position.
+If a negative indentation results, it is clamped to zero.
+
+.coNP Function @ width-check
+.synb
+.mets (width-check < stream << alt-char )
+.syne
+.desc
+The
+.code width-check
+function examines the state of the stream, taking into consideration
+the current printing column position, the indentation state, and
+indentation amount. It makes a decision either to introduce a line
+break by printing a newline character, or else to print the
+.meta alt-char
+character.
+
+If a decision is made not to emit a line break, but
+.meta alt-char
+is
+.codn nil ,
+then the function has no effect at all.
+
+The return value is always
+.codn t .
 
 .SS* Filesystem Access
 
