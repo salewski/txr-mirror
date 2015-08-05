@@ -512,7 +512,7 @@ static val bind_args(val env, val params, val args, val ctx_form)
       params = cdr(params);
     }
     if (!optargs)
-      eval_error(ctx_form, lit("~s: too few arguments for ~s\n"),
+      eval_error(ctx_form, lit("~s: too few arguments for ~!~s\n"),
                  car(ctx_form), ctx_form, nao);
     while (consp(params)) {
       val param = car(params);
@@ -546,7 +546,7 @@ static val bind_args(val env, val params, val args, val ctx_form)
     eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
                car(ctx_form), params, nao);
   } else if (args) {
-    eval_error(ctx_form, lit("~s: too many arguments for ~s"),
+    eval_error(ctx_form, lit("~s: too many arguments for ~!~s"),
                car(ctx_form), ctx_form, nao);
   }
 
@@ -705,11 +705,11 @@ val apply(val fun, val arglist, val ctx_form)
     nargs = p - arg;
 
     if (nargs < reqargs)
-      eval_error(ctx_form, lit("~s: missing required arguments for ~s"),
+      eval_error(ctx_form, lit("~s: missing required arguments for ~!~s"),
                  ctx, func_get_name(fun, nil), nao);
 
     if (nargs > fixparam)
-      eval_error(ctx_form, lit("~s: too many arguments for ~s"),
+      eval_error(ctx_form, lit("~s: too many arguments for ~!~s"),
                  ctx, func_get_name(fun, nil), nao);
 
     for (; nargs < fixparam; nargs++)
@@ -752,7 +752,7 @@ val apply(val fun, val arglist, val ctx_form)
     nargs = p - arg;
 
     if (nargs < reqargs)
-      eval_error(ctx_form, lit("~s: missing required arguments for ~s"),
+      eval_error(ctx_form, lit("~s: missing required arguments for ~!~s"),
                  ctx, func_get_name(fun, nil), nao);
 
     for (; nargs < fixparam; nargs++)

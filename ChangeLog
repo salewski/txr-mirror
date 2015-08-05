@@ -1,5 +1,13 @@
 2015-08-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	* eval.c (bind_args): Use new ~! for proper indentation
+	of multi-line context form.
+	(apply): Use ~! for proper indentation of function code.
+
+	* unwind.c (uw_throw): Use ~! for proper indentation of code.
+
+2015-08-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (put_string): In indent mode, put_string has
 	to process all the characters as if by put_char,
 	(which we now do literally that way).

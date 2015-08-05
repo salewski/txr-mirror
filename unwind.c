@@ -319,17 +319,17 @@ val uw_throw(val sym, val args)
              prog_string, sym, nao);
 
       if (info && sym != eval_error_s)
-        format(std_error, lit("~a: possibly triggered at ~a by form ~s\n"),
+        format(std_error, lit("~a: possibly triggered at ~a by form ~!~s\n"),
                prog_string, info, last_form_evaled, nao);
 
       if (ex_info)
-        format(std_error, lit("~a: during expansion at ~a of form ~s\n"),
+        format(std_error, lit("~a: during expansion at ~a of form ~!~s\n"),
                prog_string, ex_info, last_form_expanded, nao);
 
       format(std_error,
              if3(is_msg,
-                 lit("~a: message: ~a\n"),
-                 lit("~a: exception args: ~s\n")),
+                 lit("~a: message: ~!~a\n"),
+                 lit("~a: exception args: ~!~s\n")),
              prog_string, msg_or_args, nao);
     }
     if (uw_exception_subtype_p(sym, query_error_s) ||
