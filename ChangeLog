@@ -1,3 +1,9 @@
+2015-08-05  Kaz Kylheku  <kaz@kylheku.com>
+
+	* eval.c (do_eval): Bugfix: though last_form_evaled is
+	saved and restored around the execution of a special operator,
+	it is never set the current form.
+
 2015-08-04  Kaz Kylheku  <kaz@kylheku.com>
 
 	* eval.c (bind_args): Use new ~! for proper indentation

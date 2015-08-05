@@ -1089,6 +1089,7 @@ static val do_eval(val form, val env, val ctx_form,
     if (entry) {
       opfun_t fp = coerce(opfun_t, cptr_get(entry));
       val ret, lfe_save = last_form_evaled;
+      last_form_evaled = form;
       ret = fp(form, env);
       last_form_evaled = lfe_save;
       debug_return (ret);
