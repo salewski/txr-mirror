@@ -4411,6 +4411,15 @@ val generic_funcall(val fun, val arg[], int nargs)
   internal_error("corrupt function type field");
 }
 
+static noreturn void wrongargs(val fun)
+{
+  uses_or2;
+  prinl(last_form_evaled, nil);
+  uw_throwf(error_s, lit("~s: wrong number of arguments"),
+            or2(func_get_name(fun, nil), fun), nao);
+  abort();
+}
+
 val funcall(val fun)
 {
   if (type(fun) != FUN || fun->f.optargs) {
@@ -4439,7 +4448,7 @@ val funcall(val fun)
       break;
     }
   }
-  uw_throw(error_s, lit("call: wrong number of arguments"));
+  wrongargs(fun);
 }
 
 val funcall1(val fun, val arg)
@@ -4475,7 +4484,7 @@ val funcall1(val fun, val arg)
       break;
     }
   }
-  uw_throw(error_s, lit("call: wrong number of arguments"));
+  wrongargs(fun);
 }
 
 val funcall2(val fun, val arg1, val arg2)
@@ -4517,7 +4526,7 @@ val funcall2(val fun, val arg1, val arg2)
       break;
     }
   }
-  uw_throw(error_s, lit("call: wrong number of arguments"));
+  wrongargs(fun);
 }
 
 val funcall3(val fun, val arg1, val arg2, val arg3)
@@ -4564,7 +4573,7 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
       break;
     }
   }
-  uw_throw(error_s, lit("call: wrong number of arguments"));
+  wrongargs(fun);
 }
 
 val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
@@ -4616,7 +4625,7 @@ val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
       break;
     }
   }
-  uw_throw(error_s, lit("call: wrong number of arguments"));
+  wrongargs(fun);
 }
 
 val reduce_left(val fun, val list, val init, val key)
