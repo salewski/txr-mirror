@@ -2544,9 +2544,13 @@ val put_string(val string, val stream_in)
       col = 0;
       break;
     case '\t':
+      if (s->indent_mode != indent_off && col == 0)
+        col = s->indent_chars;
       col = (col + 1) | 7;
       break;
     default:
+      if (s->indent_mode != indent_off && col == 0)
+        col = s->indent_chars;
       if (iswprint(*p))
         col++;
       break;
@@ -2568,14 +2572,21 @@ val put_char(val ch, val stream_in)
   switch (cch) {
   case L'\n':
     ops->put_char(stream, ch);
-    put_indent(stream, ops, s->indent_chars);
-    s->column = s->indent_chars;
+    s->column = 0;
     break;
   case L'\t':
+    if (s->column == 0 && s->indent_mode != indent_off) {
+      put_indent(stream, ops, s->indent_chars);
+      s->column = s->indent_chars;
+    }
     ops->put_char(stream, ch);
     s->column = (s->column + 1) | 7;
     break;
   default:
+    if (s->column == 0 && s->indent_mode != indent_off) {
+      put_indent(stream, ops, s->indent_chars);
+      s->column = s->indent_chars;
+    }
     ops->put_char(stream, ch);
     if (iswprint(cch))
       s->column++;
