@@ -26887,13 +26887,14 @@ this field. If the
 character is present, the printing will be centered within the field.
 Otherwise it will be right-adjusted by default.
 
-The width can be specified as a decimal integer, or as the character
+The width can be specified as a decimal integer with an optional leading
+minus sign, or as the character
 .codn * .
 The
 .code *
 notation means that instead of digits, the value of the next argument is
-consumed, and expected to be an integer which specifies the width. If that
-integer value is negative, then the field will be left-adjusted.
+consumed, and expected to be an integer which specifies the width. If the
+width, specified either way, is negative, then the field will be left-adjusted.
 If the value is positive, but either the
 .code <
 or
@@ -27089,6 +27090,37 @@ of the object, which is meaningful to someone familiar with the internals
 of \*(TX.  If the object is a pointer to heaped data, that value
 has a correspondence to its address.
 .RE
+
+.coIP !
+The
+.code !
+directive establishes hanging indentation, and turns on the stream's
+indentation mode. Subsequent lines printed within the execution of the
+same
+.code format
+call will be automatically indented. If no width is specified, then
+the directive sets the hanging indentation to the current printing
+column position. If a width is specified, then it represents an offset
+(positive or negative). If the
+.code <
+prefix character is present, the hanging indentation is set to the
+specified offset relative to the current printing column.
+If the
+.code <
+prefix is present on the width field, then the offset is applied
+relative to the indentation which was saved on entry into the
+.code format
+function.
+
+The indentation mode and indentation column are automatically restored to their
+previous values when
+.code format
+function terminates, naturally or via an exception or non-local jump.
+
+The effect of a precision field (even if zero) combined with the
+.code !
+directive is currently not specified, and reserved for future extension.
+The precision field is processed syntactically, and no error occurs, however.
 
 .PP
 

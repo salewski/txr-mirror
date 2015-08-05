@@ -2104,7 +2104,10 @@ static void vformat_str(val stream, val str, int width, enum align align,
 
 val vformat(val stream, val fmtstr, va_list vl)
 {
-  class_check(stream, stream_s);
+  val save_indent = get_indent(stream);
+  val save_mode = nil;
+
+  uw_simple_catch_begin;
 
   prot1(&fmtstr);
 
@@ -2113,7 +2116,7 @@ val vformat(val stream, val fmtstr, va_list vl)
     enum {
       vf_init, vf_width, vf_digits, vf_star, vf_precision, vf_spec
     } state = vf_init, saved_state = vf_init;
-    int width = 0, precision = 0, precision_p = 0, digits = 0;
+    int width = 0, precision = 0, precision_p = 0, digits = 0, lt = 0, neg = 0;
     enum align align = al_right;
     int sign = 0, zeropad = 0;
     cnum value;
@@ -2136,6 +2139,8 @@ val vformat(val stream, val fmtstr, va_list vl)
           precision = 0;
           precision_p = 0;
           digits = 0;
+          lt = 0;
+          neg = 0;
           continue;
         default:
           put_char(chr(ch), stream);
@@ -2149,6 +2154,7 @@ val vformat(val stream, val fmtstr, va_list vl)
           state = vf_init;
           continue;
         case '<':
+          lt = 1;
           align = al_left;
           continue;
         case '^':
@@ -2162,6 +2168,9 @@ val vformat(val stream, val fmtstr, va_list vl)
           saved_state = state;
           state = vf_digits;
           digits = ch - '0';
+          continue;
+        case '-':
+          neg = 1;
           continue;
         case '*':
           saved_state = state;
@@ -2215,6 +2224,8 @@ val vformat(val stream, val fmtstr, va_list vl)
             } else {
               width = digits;
             }
+            if (neg)
+              align = al_left;
             if (ch == ',') {
               state = vf_precision;
             } else {
@@ -2419,6 +2430,14 @@ val vformat(val stream, val fmtstr, va_list vl)
             sprintf(num_buf, num_fmt->hex, value);
           }
           goto output_num;
+        case '!':
+          save_mode = test_set_indent_mode(stream, num_fast(indent_off),
+                                           num_fast(indent_data));
+          if (lt)
+            set_indent(stream, plus(save_indent, num(width)));
+          else
+            inc_indent(stream, num(width));
+          continue;
         default:
           uw_throwf(error_s, lit("unknown format directive character ~s\n"),
                     chr(ch), nao);
@@ -2438,16 +2457,27 @@ val vformat(val stream, val fmtstr, va_list vl)
     }
   }
 
+  if (0) {
+premature:
+    internal_error("insufficient arguments for format");
+toobig:
+    internal_error("ridiculous precision or field width in format");
+  }
+
   if (va_arg(vl, val) != nao)
     internal_error("unterminated format argument list");
 
-  rel1(&fmtstr);
-  return t;
+  uw_unwind {
+    set_indent(stream, save_indent);
+    if (save_mode)
+      set_indent_mode(stream, save_mode);
+  }
 
-premature:
-  internal_error("insufficient arguments for format");
-toobig:
-  internal_error("ridiculous precision or field width in format");
+  rel1(&fmtstr);
+
+  uw_catch_end;
+
+  return t;
 }
 
 val vformat_to_string(val fmtstr, va_list vl)

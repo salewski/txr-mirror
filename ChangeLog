@@ -1,5 +1,13 @@
 2015-08-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (vformat): Implement ~! format directive for indentation.
+	Allow negative widths to be specified with a leading minus sign,
+	so that we can indent to the left.
+
+	* txr.1: Document ~! format directive.
+
+2015-08-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (put_string, put_char): Do not put out the indentation
 	immediately after outputting a newline. Rather, delay the output of the
 	indentation until some output occurs at column zero.
