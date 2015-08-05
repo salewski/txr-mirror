@@ -2568,19 +2568,21 @@ val put_string(val string, val stream_in)
   cnum col = s->column;
   const wchar_t *str = c_str(string), *p = str;
 
+  if (s->indent_mode != indent_off) {
+    while (*str)
+      put_char(chr(*str++), stream);
+    return t;
+  }
+
   for (; *p; p++) {
     switch (*p) {
     case '\n':
       col = 0;
       break;
     case '\t':
-      if (s->indent_mode != indent_off && col == 0)
-        col = s->indent_chars;
       col = (col + 1) | 7;
       break;
     default:
-      if (s->indent_mode != indent_off && col == 0)
-        col = s->indent_chars;
       if (iswprint(*p))
         col++;
       break;
@@ -2709,8 +2711,7 @@ val set_indent_mode(val stream, val mode)
   struct strm_base *s = coerce(struct strm_base *,
                                cobj_handle(stream, stream_s));
   val oldval = num_fast(s->indent_mode);
-  if ((s->indent_mode = (enum indent_mode) c_num(mode)) == indent_off)
-    s->column = 0;
+  s->indent_mode = (enum indent_mode) c_num(mode);
   return oldval;
 }
 

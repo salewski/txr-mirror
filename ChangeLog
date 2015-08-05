@@ -1,5 +1,14 @@
 2015-08-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (put_string): In indent mode, put_string has
+	to process all the characters as if by put_char,
+	(which we now do literally that way).
+	(set_indent_mode): Bugfix: no longer reset the column
+	to zero when turning off indent mode. This is wrong since
+	streams do column counting all the time.
+
+2015-08-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (vformat): Implement ~! format directive for indentation.
 	Allow negative widths to be specified with a leading minus sign,
 	so that we can indent to the left.
