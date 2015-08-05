@@ -2686,6 +2686,8 @@ val set_indent(val stream, val indent)
                                cobj_handle(stream, stream_s));
   val oldval = num(s->indent_chars);
   s->indent_chars = c_num(indent);
+  if (s->indent_chars < 0)
+    s->indent_chars = 0;
   return oldval;
 }
 
@@ -2696,6 +2698,8 @@ val inc_indent(val stream, val delta)
   val oldval = num(s->indent_chars);
   val col = num(s->column);
   s->indent_chars = c_num(plus(delta, col));
+  if (s->indent_chars < 0)
+    s->indent_chars = 0;
   return oldval;
 }
 

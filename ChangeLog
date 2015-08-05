@@ -1,5 +1,11 @@
 2015-08-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c (inc_indent): If a negative indentation increment goes below
+	zero, clamp it at zero.
+	(set_indent): Clamp indentation value to zero.
+
+2015-08-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (vormat): Bugfix: when width specified as *
 	meets a negative argument, the width should be treated
 	as positive and the field left aligned. Instead, the
