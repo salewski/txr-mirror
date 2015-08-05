@@ -27671,6 +27671,11 @@ if
 supports a byte write operation. The byte
 value is specified as an integer value in the range 0 to 255.
 
+All these runctions return
+.codn t .
+On failure, they do not return, but throw exceptions of type
+.codn file-error .
+
 .coNP Functions @ put-strings and @ put-lines
 .synb
 .mets (put-strings < sequence <> [ stream ]])

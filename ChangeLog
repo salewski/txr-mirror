@@ -1,5 +1,22 @@
 2015-08-04  Kaz Kylheku  <kaz@kylheku.com>
 
+	Remove useless return values and checks.
+
+	* stream.c (vformat_align_pre, vformat_align_post): Change to void
+	return.  Do not check return value of put_char.
+	(vformat_num, vformat_str): Change to void return. Do not check return
+	value of vformat_align_pre, vformat_aign_post or put_char.
+	(vformat): Do not check return value of vformat_str or vformat_num.
+	nilout exit point no longer needed.
+	(put_string): Do not intercept return value of ops->put_string.
+	Return t.
+	(put_char): Do not intercept return value of ops->put_char.
+	Do not check return value of put_indent. Return t.
+
+	* txr.1: Document t return of put-char, put-byte and put-string.
+
+2015-08-04  Kaz Kylheku  <kaz@kylheku.com>
+
 	* eval.c (func_get_name): New function.
 	(bind_args): Include the entire context form in argument
 	mismatch errors.
