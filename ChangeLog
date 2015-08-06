@@ -1,3 +1,18 @@
+2015-08-06  Kaz Kylheku  <kaz@kylheku.com>
+
+	Better diagnosis for loose @ forms.
+
+	* eval.c (op_meta_error): New static function.
+	(eval_init): Register sys:var and sys:expr as operators
+	that throw error.
+
+	* parser.y (sym_helper): Take parser_t instead of scanner_t
+	argument so we have access to the name and line number.
+	Obtain scanner internally from parser. Add source location
+	info to (sys:var ...) form.
+	(symhlpr): Retarget macro to pass parser rather than scanner to
+	sm_helper.
+
 2015-08-05  Kaz Kylheku  <kaz@kylheku.com>
 
 	New filesystem object testing functions.

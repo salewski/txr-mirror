@@ -47,7 +47,7 @@
 #include "stream.h"
 #include "parser.h"
 
-static val sym_helper(scanner_t *scnr, wchar_t *lexeme, val meta_allowed);
+static val sym_helper(parser_t *parser, wchar_t *lexeme, val meta_allowed);
 static val repeat_rep_helper(val sym, val args, val main, val parts);
 static val define_transform(parser_t *parser, val define_form);
 static val lit_char_helper(val litchars);
@@ -67,7 +67,7 @@ int yylex(union YYSTYPE *, yyscan_t scanner);
 
 #define rl(form, line) rlrec(parser, form, line)
 #define mkexp(sym, rest, lineno) make_expr(parser, sym, rest, lineno)
-#define symhlpr(lexeme, meta_allowed) sym_helper(scnr, lexeme, meta_allowed)
+#define symhlpr(lexeme, meta_allowed) sym_helper(parser, lexeme, meta_allowed)
 #define yyerr(msg) yyerror(scnr, parser, msg)
 #define yybadtok(tok, context) yybadtoken(parser, tok, context)
 
@@ -1027,8 +1027,9 @@ int yylex(YYSTYPE *, yyscan_t scanner);
 val rlcp(val to, val from);
 #endif
 
-static val sym_helper(scanner_t *scnr, wchar_t *lexeme, val meta_allowed)
+static val sym_helper(parser_t *parser, wchar_t *lexeme, val meta_allowed)
 {
+  scanner_t *scnr = parser->scanner;
   int leading_at = *lexeme == L'@';
   wchar_t *tokfree = lexeme;
   wchar_t *colon = wcschr(lexeme, L':');
@@ -1066,7 +1067,7 @@ static val sym_helper(scanner_t *scnr, wchar_t *lexeme, val meta_allowed)
 
   sym = intern(sym_name, package);
 
-  return leading_at ? list(var_s, sym, nao) : sym;
+  return leading_at ? rl(list(var_s, sym, nao), num(parser->lineno)) : sym;
 }
 
 static val repeat_rep_helper(val sym, val args, val main, val parts)

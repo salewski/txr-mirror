@@ -1163,6 +1163,11 @@ static val op_error(val form, val env)
   abort();
 }
 
+static val op_meta_error(val form, val env)
+{
+  eval_error(form, lit("meta with no meaning: ~s"), form, nao);
+}
+
 static val op_quote(val form, val env)
 {
   val d = cdr(form);
@@ -4090,6 +4095,8 @@ void eval_init(void)
   with_saved_vars_s = intern(lit("with-saved-vars"), system_package);
   reg_op(macrolet_s, op_error);
   reg_op(symacrolet_s, op_error);
+  reg_op(var_s, op_meta_error);
+  reg_op(expr_s, op_meta_error);
   reg_op(quote_s, op_quote);
   reg_op(qquote_s, op_qquote_error);
   reg_op(sys_qquote_s, op_qquote_error);
