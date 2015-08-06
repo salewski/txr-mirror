@@ -1,5 +1,17 @@
 2015-08-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	New filesystem object testing functions.
+
+	* lisplib.c (path_test_set_entries, path_test_instantiate):
+	New static functions.
+	(dlt_register): Registered new functions to dl_table.
+
+	* txr.1: Documented new functions.
+
+	* share/txr/stdlib/path-test.tl: New file.
+
+2015-08-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	Adding support for uid and gid manipulation.
 
 	* configure: Added check for geteuid and related functions.

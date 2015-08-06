@@ -29638,6 +29638,210 @@ function reads the contents of that symbolic link and returns it
 as a string.  Otherwise, it fails by throwing an exception of type
 .codn file-error .
 
+.SS* Unix Filesystem Object Existence, Type and Access Tests
+
+The following functions all accept, as the
+.meta path
+argument, either a character string, or a list object returned by the
+.code stat
+or
+.code lstat
+functions.
+
+If the
+.meta path
+argument is a string, then
+.code stat
+is used to retrieve information about it, except in the case of
+the
+.code path-symlink-p
+function, which uses
+.codn lstat .
+The subsequent test is then based on the result of this call.
+
+If the
+.meta path
+argument is the result of a
+.code stat
+or
+.code lstat
+call, then the testing is based on that object.
+
+.coNP Function @ path-exists-p
+.synb
+.mets (path-exists-p << path )
+.syne
+.desc
+The
+.code path-exists-p
+function returns
+.code t
+if
+.meta path
+is a string which resolves to a filesystem object.
+Otherwise it returns
+.codn nil .
+If the
+.meta path
+names a dangling symbolic link, it is considered nonexistent.
+
+If
+.meta path
+is an object returned by
+.code stat
+or
+.codn lstat ,
+.code path-exists-p
+unconditionally returns
+.codn t .
+
+.coNP Functions @, path-file-p @, path-dir-p @, path-symlink-p @, path-blkdev-p @, path-chrdev-p @ path-sock-p and @ path-pipe-p
+.synb
+.mets (path-file-p << path )
+.mets (path-dir-p << path )
+.mets (path-symlink-p << path )
+.mets (path-blkdev-p << path )
+.mets (path-chrdev-p << path )
+.mets (path-sock-p << path )
+.mets (path-pipe-p << path )
+.syne
+.desc
+.code path-file-p
+tests whether
+.meta path
+exists and is a regular file.
+
+.code path-dir-p
+tests whether
+.meta path
+exists and is a directory.
+
+.code path-symlink-p
+tests whether
+.meta path
+exists and is a symbolic link.
+
+Similarly,
+.code path-blkdev-p
+tests for a block device,
+.code path-chrdev-p
+for a character device,
+.code path-sock-p
+for a socket and
+.code path-pipe-p
+for a named pipe.
+
+.coNP Functions @, path-setgid-p @ path-setuid-p and @ path-sticky-p
+.synb
+.mets (path-setgid-p << path )
+.mets (path-setuid-p << path )
+.mets (path-sticky-p << path )
+.syne
+.desc
+
+.code path-setgid-p
+tests whether
+.meta path
+exists and has the set-group-ID permission set.
+
+.code path-setuid-p
+tests whether
+.meta path
+exists and has the set-user-ID permission set.
+
+.code path-sticky-p
+tests whether
+.meta path
+exists and has the "sticky" permission bit set.
+
+.coNP Functions @ path-mine-p and @ path-my-group-p
+.synb
+.mets (path-mine-p << path )
+.mets (path-my-group-p << path )
+.syne
+.desc
+.code path-mine-p
+tests whether
+.meta path
+exists, and is effectively owned by the calling process; that is,
+has a user ID equal to the effective user ID of the process.
+
+.code path-my-group-p
+tests whether
+.meta path
+exists, and is effectively owned by a group to which the calling process
+belongs. This means that the group owner is either the same as the
+effective group ID of the calling process, or else is among the
+supplementary group IDs of the calling process.
+
+.coNP Functions @ path-executable-to-me-p and @ path-writable-to-me-p
+.synb
+.mets (path-executable-to-me-p << path )
+.mets (path-writable-to-me-p << path )
+.syne
+.desc
+.code path-executable-to-me-p
+tests whether the calling process can execute the
+object named by
+.metn path .
+This test is
+carried out using the effective user ID.
+
+.code path-writable-to-me-p
+tests whether the calling process can write the
+object named by
+.metn path .
+This test is
+carried out using the effective user ID.
+
+These tests may not be perfectly accurate, since they are based strictly
+on portable information available via
+.codn stat ,
+ignoring any special permissions which may exist such as operating system
+and file system specific extended attributes (for example, file immutability
+connected to a "secure level" and such).
+
+.coNP Functions @ path-newer and @ path-older
+.synb
+.mets (path-newer < left-path << right-path )
+.mets (path-older < left-path << right-path )
+.syne
+.desc
+The
+.code path-newer
+function compares two paths or stat results by modification time.
+It returns
+.code t
+if
+.meta left-path
+exists, and either
+.meta right-path
+does not exist, or has a modification time stamp in the past
+relative to
+.metn left-path .
+
+The
+.code path-older
+function is equivalent to
+.code path-newer
+with the arguments reversed.
+
+.coNP Functions @ path-same-object
+.synb
+.mets (path-same-object < left-path << right-path )
+.syne
+.desc
+The
+.code path-same-object
+function returns
+.code t
+if
+.meta left-path
+and
+.meta right-path
+resolve to the same filesystem object: the same inode number on the same
+device.
+
 .SS* Unix Credentials
 
 .coNP Functions @, getuid @, geteuid @ getgid and @ getegid

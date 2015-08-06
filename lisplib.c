@@ -140,6 +140,30 @@ static val with_resources_instantiate(val set_fun)
   return nil;
 }
 
+static val path_test_set_entries(val dlt, val fun)
+{
+  val name[] = {
+    lit("path-exists-p"), lit("path-file-p"), lit("path-dir-p"),
+    lit("path-symlink-p"), lit("path-blkdev-p"), lit("path-chrdev-p"),
+    lit("path-sock-p"), lit("path-pipe-p"), lit("path-pipe-p"),
+    lit("path-setgid-p"), lit("path-setuid-p"), lit("path-sticky-p"),
+    lit("path-mine-p"), lit("path-my-group-p"), lit("path-executable-to-me-p"),
+    lit("path-writable-to-me-p"), lit("path-newer"), lit("path-older"),
+    lit("path-same-object"),
+    nil
+  };
+
+  set_dlt_entries(dlt, name, fun);
+  return nil;
+}
+
+static val path_test_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(format(nil, lit("~a/path-test.tl"), stdlib_path, nao));
+  return nil;
+}
+
 val dlt_register(val dlt,
                  val (*instantiate)(val),
                  val (*set_entries)(val, val))
@@ -156,6 +180,7 @@ void lisplib_init(void)
   dlt_register(dl_table, ifa_instantiate, ifa_set_entries);
   dlt_register(dl_table, txr_case_instantiate, txr_case_set_entries);
   dlt_register(dl_table, with_resources_instantiate, with_resources_set_entries);
+  dlt_register(dl_table, path_test_instantiate, path_test_set_entries);
 }
 
 val lisplib_try_load(val sym)
