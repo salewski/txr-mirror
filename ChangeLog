@@ -1,5 +1,14 @@
 2015-08-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	* lib.c (system_error_s): New symbol variable.
+	(obj_init): Initialize new variable.
+
+	* lib.h (system_error_s): Declared.
+
+	* unwind.c (uw_init): Register system-error exception type.
+
+2015-08-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c (stream_init): Register get-indent-mode, set-indent-mode,
 	test-set-indent-mode, get-indent, set-indent, inc-indent
 	and width-check intrinsic functions. Register indent-off,
