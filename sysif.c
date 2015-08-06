@@ -719,6 +719,91 @@ static val poll_wrap(val poll_list, val timeout_in)
 
 #endif
 
+#if HAVE_GETEUID
+
+static val getuid_wrap(void)
+{
+  return num(getuid());
+}
+
+static val geteuid_wrap(void)
+{
+  return num(geteuid());
+}
+
+static val getgid_wrap(void)
+{
+  return num(getgid());
+}
+
+static val getegid_wrap(void)
+{
+  return num(getegid());
+}
+
+static val getgroups_wrap(void)
+{
+  gid_t dummy[1];
+  int needed = getgroups(0, dummy);
+
+  if (needed == 0) {
+    return nil;
+  } else if (needed >  0) {
+    gid_t *arr = coerce(gid_t *, chk_malloc(needed *sizeof *arr));
+    int obtained = getgroups(needed, arr);
+    int i;
+    list_collect_decl (out, ptail);
+
+    if (obtained <= needed) {
+      for (i = 0; i < obtained; i++)
+        ptail = list_collect (ptail, num(arr[i]));
+
+      free(arr);
+      return out;
+    }
+
+    free(arr);
+  }
+
+  uw_throwf(system_error_s, lit("getgroups failed: ~a/~s"),
+            num(errno), string_utf8(strerror(errno)), nao);
+  abort();
+}
+
+static val setuid_wrap(val nval)
+{
+  if (setuid(c_num(nval)) == -1)
+    uw_throwf(system_error_s, lit("setuid failed: ~a/~s"),
+              num(errno), string_utf8(strerror(errno)), nao);
+  return t;
+}
+
+static val seteuid_wrap(val nval)
+{
+  if (seteuid(c_num(nval)) == -1)
+    uw_throwf(system_error_s, lit("seteuid failed: ~a/~s"),
+              num(errno), string_utf8(strerror(errno)), nao);
+  return t;
+}
+
+static val setgid_wrap(val nval)
+{
+  if (setgid(c_num(nval)) == -1)
+    uw_throwf(system_error_s, lit("setgid failed: ~a/~s"),
+              num(errno), string_utf8(strerror(errno)), nao);
+  return t;
+}
+
+static val setegid_wrap(val nval)
+{
+  if (setegid(c_num(nval)) == -1)
+    uw_throwf(system_error_s, lit("setegid failed: ~a/~s"),
+              num(errno), string_utf8(strerror(errno)), nao);
+  return t;
+}
+
+#endif
+
 void sysif_init(void)
 {
   reg_fun(intern(lit("errno"), user_package), func_n1o(errno_wrap, 0));
@@ -905,6 +990,18 @@ void sysif_init(void)
   reg_fun(intern(lit("getenv"), user_package), func_n1(getenv_wrap));
   reg_fun(intern(lit("setenv"), user_package), func_n3o(setenv_wrap, 2));
   reg_fun(intern(lit("unsetenv"), user_package), func_n1(unsetenv_wrap));
+
+#if HAVE_GETEUID
+  reg_fun(intern(lit("getuid"), user_package), func_n0(getuid_wrap));
+  reg_fun(intern(lit("geteuid"), user_package), func_n0(geteuid_wrap));
+  reg_fun(intern(lit("getgid"), user_package), func_n0(getgid_wrap));
+  reg_fun(intern(lit("getegid"), user_package), func_n0(getegid_wrap));
+  reg_fun(intern(lit("getgroups"), user_package), func_n0(getgroups_wrap));
+  reg_fun(intern(lit("setuid"), user_package), func_n1(setuid_wrap));
+  reg_fun(intern(lit("seteuid"), user_package), func_n1(seteuid_wrap));
+  reg_fun(intern(lit("setgid"), user_package), func_n1(setgid_wrap));
+  reg_fun(intern(lit("setegid"), user_package), func_n1(setegid_wrap));
+#endif
 
 #if HAVE_POLL
   reg_fun(intern(lit("poll"), user_package), func_n2o(poll_wrap, 1));

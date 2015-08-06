@@ -29638,6 +29638,53 @@ function reads the contents of that symbolic link and returns it
 as a string.  Otherwise, it fails by throwing an exception of type
 .codn file-error .
 
+.SS* Unix Credentials
+
+.coNP Functions @, getuid @, geteuid @ getgid and @ getegid
+.synb
+.mets (getuid)
+.mets (geteuid)
+.mets (getgid)
+.mets (getegid)
+.syne
+.desc
+These functions directly correspond to the POSIX C library functions
+of the same name. They retrieve the real user ID, effective user ID,
+real group ID and effective group ID, respectively, of the calling
+process.
+
+.coNP Function @ getgroups
+.synb
+.mets (getgroups)
+.syne
+.desc
+The
+.code getgroups
+function retrieves the list of supplementary group IDs of the calling
+process by calling the same-named POSIX C library function.
+
+Whether or not the effective group ID retrieved by
+.code getegid
+is included in this list is system-dependent. Programs should not
+depend on its presence or absence.
+
+.coNP Functions @, setuid @, seteuid @ setgid and @ setegid
+.synb
+.mets (setuid << uid )
+.mets (seteuid << uid )
+.mets (setgid << gid )
+.mets (setegid << gid )
+.syne
+.desc
+These functions directly correspond to the POSIX C library functions
+of the same name. They set the real user ID, effective user ID,
+real group ID and effective group ID, respectively, of the calling
+process.
+On success, they return
+.code t .
+On failure, they throw an exception of type
+.codn system-error .
+
 .SS* Unix Signal Handling
 
 On platforms where certain advanced features of POSIX signal handling are

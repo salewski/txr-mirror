@@ -1,5 +1,19 @@
 2015-08-05  Kaz Kylheku  <kaz@kylheku.com>
 
+	Adding support for uid and gid manipulation.
+
+	* configure: Added check for geteuid and related functions.
+
+	* sysif.c (getuid_wrap, geteuid_wrap, getgid_wrap, getegid_wrap,
+	getgroups_wrap, setuid_wrap, seteuid_wrap, setgid_wrap, setegid_wrap):
+	New static functions.
+	(sysif_init): Register intrinsics getuid, geteuid, getgid,
+	getegid, getgroups, setuid, seteuid, setgid, setegid.
+
+	* txr.1: Documented new functions.
+
+2015-08-05  Kaz Kylheku  <kaz@kylheku.com>
+
 	* lib.c (system_error_s): New symbol variable.
 	(obj_init): Initialize new variable.
 

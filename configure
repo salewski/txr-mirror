@@ -2019,6 +2019,35 @@ else
   printf "no\n"
 fi
 
+printf "Checking for POSIX geteuid function family ... "
+
+cat > conftest.c <<!
+#include <sys/types.h>
+#include <unistd.h>
+
+int main(int argc, char **argv)
+{
+  uid_t u = getuid();
+  uid_t e = geteuid();
+  gid_t g = getgid();
+  gid_t h = getegid();
+  setuid(u);
+  seteuid(e);
+  setgid(g);
+  setegid(h);
+  getgroups(0, NULL);
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_GETEUID 1\n" >> $config_h
+  have_unistd=y
+else
+  printf "no\n"
+fi
+
 #
 # Dependent variables
 #
