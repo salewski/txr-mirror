@@ -1,3 +1,11 @@
+2015-08-07  Kaz Kylheku  <kaz@kylheku.com>
+
+	Change to different exception for debugger quit.
+
+	* debug.c (debug_quit_s): New global variable.
+	(debug): Throw debug-quit, not query-error.
+	(debug_init): Initialize debug_quit_s.
+
 2015-08-06  Kaz Kylheku  <kaz@kylheku.com>
 
 	* debug.c (help): Rearrange menu. Show missing quit command.

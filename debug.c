@@ -51,6 +51,8 @@ static val breakpoints;
 static val last_command;
 static int cols = 80;
 
+val debug_quit_s;
+
 /* C99 inline instantiations. */
 #if __STDC_VERSION__ >= 199901L
 val debug_check(val form, val bindings, val data, val line,
@@ -230,7 +232,7 @@ val debug(val form, val bindings, val data, val line, val pos, val base)
           }
         }
       } else if (equal(command, lit("q"))) {
-        uw_throwf(query_error_s, lit("terminated via debugger"), nao);
+        uw_throwf(debug_quit_s, lit("terminated via debugger"), nao);
       } else {
         format(std_debug, lit("unrecognized command: ~a\n"), command, nao);
       }
@@ -258,6 +260,7 @@ void debug_init(void)
 {
   step_mode = 1;
   protect(&breakpoints, &last_command, convert(val *, 0));
+  debug_quit_s = intern(lit("debug-quit"), user_package);
   {
     char *columns = getenv("COLUMNS");
     if (columns)
