@@ -1,5 +1,9 @@
 2015-08-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	* txr.c (txr_main): Bugfix: debugger long option nonfunctional.
+
+2015-08-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	Better diagnosis for loose @ forms.
 
 	* eval.c (op_meta_error): New static function.

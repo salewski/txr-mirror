@@ -495,7 +495,7 @@ int txr_main(int argc, char **argv)
       } else if (equal(opt, lit("lisp"))) {
         txr_lisp_p = t;
         continue;
-      } else if (equal(arg, lit("debugger"))) {
+      } else if (equal(opt, lit("debugger"))) {
 #if CONFIG_DEBUG_SUPPORT
         opt_debugger = 1;
         continue;
