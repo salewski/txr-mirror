@@ -52,6 +52,7 @@
 #include "eval.h"
 #include "regex.h"
 #include "arith.h"
+#include "lisplib.h"
 #include "txr.h"
 
 const wchli_t *version = wli(TXR_VER);
@@ -144,6 +145,7 @@ static void help(void)
 "--compat=N             Synonym for -C N\n"
 "--gc-delta=N           Invoke garbage collection when malloc activity\n"
 "                       increments by N megabytes since last collection.\n"
+"--debug-autoload       Allow debugger to step through library auto-loading.\n"
 "\n"
 "Options that take no argument can be combined. The -q and -v options\n"
 "are mutually exclusive; the right-most one dominates.\n"
@@ -366,6 +368,15 @@ static int gc_delta(val optval)
   return 1;
 }
 
+#ifndef CONFIG_DEBUG_SUPPORT
+static void no_dbg_support(val arg)
+{
+  format(std_error,
+         lit("~a: option ~a requires debug support compiled in\n"),
+         prog_string, arg, nao);
+}
+#endif
+
 int txr_main(int argc, char **argv)
 {
   val specstring = nil;
@@ -500,9 +511,16 @@ int txr_main(int argc, char **argv)
         opt_debugger = 1;
         continue;
 #else
-        format(std_error,
-               lit("~a: option ~a requires debug support compiled in\n"),
-               prog_string, arg, nao);
+        no_dbg_support(arg);
+        return EXIT_FAILURE;
+#endif
+      } else if (equal(opt, lit("debug-autoload"))) {
+#if CONFIG_DEBUG_SUPPORT
+        opt_debugger = 1;
+        opt_dbg_autoload = 1;
+        continue;
+#else
+        no_dbg_support(opt);
         return EXIT_FAILURE;
 #endif
       } else if (equal(opt, lit("noninteractive"))) {
@@ -591,9 +609,7 @@ int txr_main(int argc, char **argv)
 #if CONFIG_DEBUG_SUPPORT
           opt_debugger = 1;
 #else
-          format(std_error,
-                 lit("~a: option ~a requires debug support compiled in\n"),
-                 prog_string, opch, nao);
+          no_dbg_support(opch);
           return EXIT_FAILURE;
 #endif
           break;

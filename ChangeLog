@@ -1,5 +1,28 @@
 2015-08-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	Suppress debug stepping into auto-loaded library code.
+
+	* debug.c (debug_set_state, debug_restore_state): New functions.
+
+	* debug.h (debug_state_t): New type.
+	(debug_set_state, debug_restore_state): Declared, and defined
+	as dummy macros in non-debug-support build.
+
+	* lisplib.c (opt_dbg_autoload): New global variable.
+	(lisplib_try_load): Disable or enable debugging around
+	library loading based on opt_dbg_autoload option.
+
+	* lisplib.h (opt_dbg_autoload): Declared.
+
+	* txr.c (help): List --debug-autoload option.
+	(no_dbg_support): New static function to avoid repeated code.
+	(txr_main): Add debugger-autoload option. Change duplicate no debug
+	support error messages into calls to no_dbg_support.
+
+	* txr.1: Document --debug-autoload
+
+2015-08-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	* txr.c (txr_main): Bugfix: debugger long option nonfunctional.
 
 2015-08-06  Kaz Kylheku  <kaz@kylheku.com>

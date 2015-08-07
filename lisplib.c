@@ -35,10 +35,12 @@
 #include "stream.h"
 #include "hash.h"
 #include "gc.h"
+#include "debug.h"
 #include "txr.h"
 #include "lisplib.h"
 
 val dl_table;
+int opt_dbg_autoload;
 
 void set_dlt_entries(val dlt, val *name, val fun)
 {
@@ -186,5 +188,9 @@ void lisplib_init(void)
 val lisplib_try_load(val sym)
 {
   val fun = gethash(dl_table, sym);
-  return if3(fun, (funcall(fun), t), nil);
+  debug_state_t ds;
+  return if3(fun, (ds = debug_set_state(opt_dbg_autoload ? 0 : -1,
+                                        opt_dbg_autoload),
+                   funcall(fun),
+                   debug_restore_state(ds), t), nil);
 }

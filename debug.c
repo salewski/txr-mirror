@@ -241,6 +241,20 @@ val debug(val form, val bindings, val data, val line, val pos, val base)
   }
 }
 
+debug_state_t debug_set_state(int depth, int step)
+{
+  debug_state_t old = { next_depth, step_mode };
+  next_depth = depth;
+  step_mode = step;
+  return old;
+}
+
+void debug_restore_state(debug_state_t state)
+{
+  next_depth = state.next_depth;
+  step_mode = state.step_mode;
+}
+
 void debug_init(void)
 {
   step_mode = 1;

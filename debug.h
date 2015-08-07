@@ -31,6 +31,11 @@ val debug(val form, val bindings, val data, val line, val pos, val base);
 
 #if CONFIG_DEBUG_SUPPORT
 
+typedef struct {
+  int next_depth;
+  int step_mode;
+} debug_state_t;
+
 #define debug_enter                             \
   {                                             \
     int debug_depth_save = debug_depth++;       \
@@ -55,6 +60,8 @@ INLINE val debug_check(val form, val bindings, val data, val line,
   return (opt_debugger) ? debug(form, bindings, data, line, pos, base) : nil;
 }
 
+debug_state_t debug_set_state(int depth, int step);
+void debug_restore_state(debug_state_t);
 void debug_init(void);
 
 #define debug_frame(FUNC, ARGS, UBP,    \
@@ -77,6 +84,8 @@ void debug_init(void);
 
 #else
 
+typedef int debug_state_t;
+
 #define debug_enter {
 
 #define debug_leave }
@@ -97,6 +106,9 @@ INLINE val debug_check(val form, val bindings, val data, val line,
 
 #define debug_end                       \
   } while (0)
+
+#define debug_set_state(D, S) (0)
+#define debug_restore_state(S) ((void) 0)
 
 INLINE void debug_init(void)
 {
