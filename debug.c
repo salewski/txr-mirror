@@ -61,9 +61,8 @@ void debug_init(void);
 static void help(val stream)
 {
   put_string(lit("commands:\n"
-                 "? - help                               s - step into form\n"
-                 "h - help                               n - step over form\n"
-                 "c - continue                           f - finish form\n"
+                 "? - help     q - quit    c - continue  s - step into form\n"
+                 "h - help     f - finish form           n - step over form\n"
                  "v - show variable binding environment  o - show current form\n"
                  "b - set breakpoint by line number      i - show current data\n"
                  "d - delete breakpoint                  w - backtrace\n"

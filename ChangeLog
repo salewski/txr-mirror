@@ -1,5 +1,9 @@
 2015-08-06  Kaz Kylheku  <kaz@kylheku.com>
 
+	* debug.c (help): Rearrange menu. Show missing quit command.
+
+2015-08-06  Kaz Kylheku  <kaz@kylheku.com>
+
 	Suppress debug stepping into auto-loaded library code.
 
 	* debug.c (debug_set_state, debug_restore_state): New functions.
