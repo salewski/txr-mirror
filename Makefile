@@ -57,7 +57,8 @@ EXTRA_OBJS-$(add_win_res) += win/txr.res
 ifneq ($(have_git),)
 SRCS := $(addprefix $(top_srcdir),\
                     $(filter-out lex.yy.c y.tab.c y.tab.h,\
-                                 $(shell git --work-tree=$(top_srcdir) \
+                                 $(shell git $(if $(top_srcdir), \
+						--work-tree=$(top_srcdir)) \
                                              --git-dir=$(top_srcdir).git \
                                               ls-files "*.c" "*.h" "*.l" "*.y")))
 endif

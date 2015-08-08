@@ -1,5 +1,11 @@
 2015-08-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	* Makefile (SRCS): When top_srcdir is blank, elide the entire
+	--work-tree argument to git. On Cygwin, git throws a strange error
+	message when --work-tree is given a blank argument.
+
+2015-08-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* stream.c: Include <wctype.h> header for iswprint.
 	Needed on Cygwin.
 
