@@ -285,7 +285,7 @@ val make_null_stream(void)
 {
   struct strm_base *s = coerce(struct strm_base *, chk_malloc(sizeof *s));
   strm_base_init(s);
-  return cobj(convert(mem_t *, s), stream_s, &null_ops.cobj_ops);
+  return cobj(coerce(mem_t *, s), stream_s, &null_ops.cobj_ops);
 }
 
 struct stdio_handle {

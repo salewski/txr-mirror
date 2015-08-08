@@ -1,5 +1,16 @@
 2015-08-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	C++ upkeep: conversions, clashes, warnings.
+
+	* glob.c (glob_wrap): Fix signed/unsigned comparison.
+
+	* stream.c (make_null_stream): Fix convert beign used
+	where coerce is needed.
+
+	* sysif.c (dup_wrap): Fix use of C++ new keyword.
+
+2015-08-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	C++ static forward issue.
 
 	* lib.h (static_forward, static_def): New macros

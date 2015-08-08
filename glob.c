@@ -60,7 +60,7 @@ val glob_wrap(val pattern, val flags, val errfunc)
               s_errfunc ? errfunc_thunk : 0, &gl);
 
   {
-    int i;
+    size_t i;
     list_collect_decl (out, ptail);
 
     for (i = 0; i < gl.gl_pathc; i++)

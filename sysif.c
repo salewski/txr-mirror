@@ -473,11 +473,11 @@ static val wifcontinued(val status)
 }
 #endif
 
-static val dup_wrap(val old, val new)
+static val dup_wrap(val old, val neu)
 {
-  if (missingp(new))
+  if (missingp(neu))
     return num(dup(c_num(old)));
-  return num(dup2(c_num(old), c_num(new)));
+  return num(dup2(c_num(old), c_num(neu)));
 }
 
 static val exec_wrap(val file, val args_opt)
