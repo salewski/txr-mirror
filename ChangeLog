@@ -1,3 +1,10 @@
+2015-07-08  Kaz Kylheku  <kaz@kylheku.com>
+
+	Bugfix: define-modify-macro not registered for auto-loading.
+
+	* lisplib.c (place_set_entries): Add define-modify-macro to
+	list of names.
+
 2015-07-07  Kaz Kylheku  <kaz@kylheku.com>
 
 	Bugfix: allow @1 in brace variables.
