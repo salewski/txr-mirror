@@ -26,7 +26,7 @@
 
 extern val filters;
 extern val filter_k, lfilt_k, rfilt_k, to_html_k, from_html_k;
-extern val upcase_k, downcase_k, fun_k;
+extern val upcase_k, downcase_k;
 extern val topercent_k, frompercent_k, tourl_k, fromurl_k;
 extern val tonumber_k, tointeger_k, tofloat_k, hextoint_k;
 

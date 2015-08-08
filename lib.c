@@ -97,7 +97,7 @@ val query_error_s, file_error_s, process_error_s, syntax_error_s;
 val system_error_s;
 val gensym_counter_s;
 
-val nothrow_k, args_k, colon_k, auto_k;
+val nothrow_k, args_k, colon_k, auto_k, fun_k;
 
 val null_string;
 val nil_string;
@@ -6902,6 +6902,7 @@ static void obj_init(void)
   nothrow_k = intern(lit("nothrow"), keyword_package);
   colon_k = intern(lit(""), keyword_package);
   auto_k = intern(lit("auto"), keyword_package);
+  fun_k = intern(lit("fun"), keyword_package);
 
   equal_f = func_n2(equal);
   eq_f = func_n2(eq);

@@ -1,5 +1,22 @@
 2015-08-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	C++ upkeep: resolve multiple definitions of fun_k.
+
+	* eval.c (fun_k): Global definition removed.
+	(eval_init): Do not initialize fun_k here.
+
+	* filter.c (fun_k): Definition removed.
+	(filter_init): Do not initialize fun_k.
+
+	* filter.h (fun_k): Declaration removed.
+
+	* lib.c (fun_k): Defined in this file now.
+	(obj_init): Initialize fun_k here.
+
+	* lib.h (fun_k): Declare here.
+
+2015-08-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* Makefile (SRCS): When top_srcdir is blank, elide the entire
 	--work-tree argument to git. On Cygwin, git throws a strange error
 	message when --work-tree is given a blank argument.

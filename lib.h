@@ -397,7 +397,7 @@ extern val gensym_counter_s;
 
 #define gensym_counter (deref(lookup_var_l(nil, gensym_counter_s)))
 
-extern val nothrow_k, args_k, colon_k, auto_k;
+extern val nothrow_k, args_k, colon_k, auto_k, fun_k;
 
 extern val null_string;
 extern val null_list; /* (nil) */

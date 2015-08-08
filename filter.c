@@ -46,7 +46,7 @@
 
 val filters;
 val filter_k, lfilt_k, rfilt_k, to_html_k, from_html_k;
-val upcase_k, downcase_k, fun_k;
+val upcase_k, downcase_k;
 val topercent_k, frompercent_k, tourl_k, fromurl_k;
 val tonumber_k, tointeger_k, tofloat_k, hextoint_k;
 
@@ -692,7 +692,6 @@ void filter_init(void)
   from_html_k = intern(lit("from_html"), keyword_package);
   upcase_k = intern(lit("upcase"), keyword_package);
   downcase_k = intern(lit("downcase"), keyword_package);
-  fun_k = intern(lit("fun"), keyword_package);
   topercent_k = intern(lit("topercent"), keyword_package);
   frompercent_k = intern(lit("frompercent"), keyword_package);
   tourl_k = intern(lit("tourl"), keyword_package);

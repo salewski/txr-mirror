@@ -94,7 +94,7 @@ val fbind_s, lbind_s, flet_s, labels_s;
 val opip_s, oand_s, chain_s, chand_s;
 val sys_load_s, sys_lisp1_value_s;
 
-val special_s, whole_k, symacro_k, fun_k;
+val special_s, whole_k, symacro_k;
 
 val last_form_evaled, last_form_expanded;
 
@@ -4083,7 +4083,6 @@ void eval_init(void)
   whole_k = intern(lit("whole"), keyword_package);
   special_s = intern(lit("special"), system_package);
   symacro_k = intern(lit("symacro"), keyword_package);
-  fun_k = intern(lit("fun"), keyword_package);
   prof_s = intern(lit("prof"), user_package);
   opip_s = intern(lit("opip"), user_package);
   oand_s = intern(lit("oand"), user_package);
