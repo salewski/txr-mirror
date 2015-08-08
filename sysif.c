@@ -527,6 +527,7 @@ static int w_stat(val wpath, struct stat *buf)
   return res;
 }
 
+#ifdef S_IFLNK
 static int w_lstat(val wpath, struct stat *buf)
 {
   char *path = utf8_dup_to(c_str(wpath));
@@ -534,6 +535,9 @@ static int w_lstat(val wpath, struct stat *buf)
   free(path);
   return res;
 }
+#else
+#define w_lstat w_stat
+#endif
 
 static int w_fstat(val stream, struct stat *buf)
 {
