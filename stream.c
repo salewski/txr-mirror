@@ -33,6 +33,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include <wchar.h>
+#include <wctype.h>
 #include <signal.h>
 #include "config.h"
 #if HAVE_UNISTD_H

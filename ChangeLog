@@ -1,5 +1,10 @@
 2015-08-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	* stream.c: Include <wctype.h> header for iswprint.
+	Needed on Cygwin.
+
+2015-08-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	* sysif.c (w_lstat): If we don't have S_IFLINK, implement
 	w_lstat as an alias to w_stat. This helps build on MinGW.
 
