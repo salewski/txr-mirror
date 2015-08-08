@@ -1,5 +1,15 @@
 2015-08-07  Kaz Kylheku  <kaz@kylheku.com>
 
+	C++ static forward issue.
+
+	* lib.h (static_forward, static_def): New macros
+	for dealing with C++ static forward declaration problem.
+
+	* syslog.c (syslog_strm_ops): Use static
+	forward macros.
+
+2015-08-07  Kaz Kylheku  <kaz@kylheku.com>
+
 	C++ upkeep: resolve multiple definitions of fun_k.
 
 	* eval.c (fun_k): Global definition removed.

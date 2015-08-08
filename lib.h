@@ -954,3 +954,11 @@ loc list_collect_append(loc pptail, val obj);
 #define negone num_fast(-1)
 #define maxint num_fast(NUM_MAX)
 #define minint num_fast(NUM_MIN)
+
+#ifdef __cplusplus
+#define static_forward(decl) namespace { extern decl; }
+#define static_def(def) namespace { def; }
+#else
+#define static_forward(decl) static decl;
+#define static_def(def) static def;
+#endif

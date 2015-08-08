@@ -51,7 +51,7 @@ struct syslog_strm {
 
 val prio_k;
 
-static struct strm_ops syslog_strm_ops;
+static_forward(struct strm_ops syslog_strm_ops)
 
 void syslog_init(void)
 {
@@ -212,7 +212,7 @@ static val syslog_set_prop(val stream, val ind, val prop)
   return nil;
 }
 
-static struct strm_ops syslog_strm_ops =
+static_def(struct strm_ops syslog_strm_ops =
   strm_ops_init(cobj_ops_init(eq,
                               stream_print_op,
                               cobj_destroy_stub_op,
@@ -225,7 +225,7 @@ static struct strm_ops syslog_strm_ops =
                 0, 0, 0, 0, 0, 0, 0, 0,
                 syslog_get_prop,
                 syslog_set_prop,
-                0, 0, 0);
+                0, 0, 0))
 
 val make_syslog_stream(val prio)
 {
