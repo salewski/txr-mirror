@@ -1,5 +1,13 @@
 2015-08-08  Kaz Kylheku  <kaz@kylheku.com>
 
+	Discontinuing ChangeLog.
+
+	* ChangeLog: renamed to ChangeLog-2009-2015, and discontinued.
+	Changes will be tracked only in the git commit messages
+	from now on and not duplicated into the ChangeLog.
+
+2015-08-08  Kaz Kylheku  <kaz@kylheku.com>
+
 	Version 111.
 
 	* RELNOTES: Updated.
