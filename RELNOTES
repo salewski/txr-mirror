@@ -1,3 +1,70 @@
+                                    TXR 111
+                                   2015-08-08
+
+
+  Features
+
+  - Nested structural objects (list structure, vectors, hashes) are now printed
+    with line breaks and indentation.
+
+  - Introducing global lexical variables, introduced with defvar
+    and defparml. Global lexicals are not marked special, and so local
+    bindings of the same symbols are ordinary lexicals and not dynamic.
+
+  - Numerous variables in the library are now global lexical rather than special.
+
+  - pi and e are now provided as %pi% and %e%, global lexical.
+    The *pi* and *e* specials are retained, and obsolescent.
+
+  - New hash-revget function for reverse lookup through hash tables.
+
+  - New function func-get-name for obtaining name from function.
+
+  - New ~! format directive for controlling hanging indentation.
+
+  - format conversions now support ^ character for centering within
+    a field.
+
+  - Output streams now support indentation. This is used by the object
+    printer and by the ~! format directive, and also exposed by
+    a group of new functions like set-indent-mode.
+
+  - TXR Lisp documentation sections re-arranged for better organization,
+    and other improvements in documentation.
+
+  - Improvements in matching error exceptions to source code location,
+    and some other diagnostic improvements.
+
+  - New wrapper functions for Unix lstat and fstat for inquiring about the
+    properties of symbolic links, and open files.
+
+  - New Unix wrappers for uid/gid functions: getuid, setuid, etc.
+
+  - New functions for conveniently testing for file existence, type, ownership
+    and permission, and relative age.
+
+  - Debugger won't step into auto-loaded library code now, unless
+    requested with new --debug-autoload command line option.
+
+  Bugs
+
+  - Fixed parsing bug in txr-case macro: throwing error on correct syntax.
+
+  - Discovered that an object initialization pattern believed to be
+    correct is flawed in the face of generational GC. Fixed instances
+    in hashing and regex module.
+
+  - Documented special variable *args-full* is now actually implemented.
+    It was implemented as *full-args*, which is retained, but obsolescent.
+
+  - Operations on an output string stream which overflow throw
+    exception instead of returning nil.
+
+  - Fixed incorrect handling of negative field widths in format,
+    when specified dynamically via *.
+
+
+
                                     TXR 110
                                    2015-07-25
 
