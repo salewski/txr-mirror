@@ -59,6 +59,7 @@ static wchar_t char_from_name(const wchar_t *name);
 static val make_expr(parser_t *, val sym, val rest, val lineno);
 static val check_for_include(val spec_rev);
 static val quasi_meta_helper(val obj);
+static void misplaced_consing_dot_check(scanner_t *scanner, val term_atom_cons);
 
 #if YYBISON
 union YYSTYPE;
@@ -739,26 +740,30 @@ exprs_opt : exprs               { $$ = $1; }
           ;
 
 n_exprs : r_exprs               { val term_atom = pop(&$1);
-                                   val tail_cons = $1;
-                                   $$ = nreverse($1);
-                                   rplacd(tail_cons, term_atom); }
+                                  val tail_cons = $1;
+                                  $$ = nreverse($1);
+                                  if (term_atom != unique_s)
+                                    rplacd(tail_cons, term_atom); }
         ;
 
 r_exprs : n_expr                { val exprs = cons($1, nil);
                                   rlcp(exprs, $1);
-                                  $$ = rlcp(cons(nil, exprs), exprs); }
+                                  $$ = rlcp(cons(unique_s, exprs), exprs); }
         | r_exprs n_expr        { uses_or2;
                                   val term_atom_cons = $1;
                                   val exprs = cdr($1);
+                                  misplaced_consing_dot_check(scnr, term_atom_cons);
                                   rplacd(term_atom_cons,
                                          rlcp(cons($2, exprs), or2($2, exprs)));
                                   $$ = term_atom_cons; }
-        | r_exprs '.' n_expr     { val term_atom_cons = $1;
-                                   rplaca(term_atom_cons, $3);
-                                   $$ = $1; }
+        | r_exprs '.' n_expr    { val term_atom_cons = $1;
+                                  misplaced_consing_dot_check(scnr, term_atom_cons);
+                                  rplaca(term_atom_cons, $3);
+                                  $$ = $1; }
         | r_exprs DOTDOT n_expr { uses_or2;
                                   val term_atom_cons = $1;
                                   val exprs = cdr($1);
+                                  misplaced_consing_dot_check(scnr, term_atom_cons);
                                   rplacd(term_atom_cons,
                                          rlcp(cons(list(cons_s, car(exprs),
                                                         $3, nao),
@@ -770,6 +775,7 @@ r_exprs : n_expr                { val exprs = cons($1, nil);
         | r_exprs WSPLICE
           wordslit              { val term_atom_cons = $1;
                                   val exprs = cdr($1);
+                                  misplaced_consing_dot_check(scnr, term_atom_cons);
                                   rplacd(term_atom_cons,
                                          nappend2(rl(nreverse($3), num($2)),
                                                   exprs));
@@ -779,6 +785,7 @@ r_exprs : n_expr                { val exprs = cons($1, nil);
         | r_exprs QWSPLICE
           wordsqlit             { val term_atom_cons = $1;
                                   val exprs = cdr($1);
+                                  misplaced_consing_dot_check(scnr, term_atom_cons);
                                   rplacd(term_atom_cons,
                                          nappend2(rl(nreverse($3), num($2)),
                                                   exprs));
@@ -1361,6 +1368,14 @@ var:
 
 expr:
   return rlcp(cons(expr_s, obj), obj);
+}
+
+static void misplaced_consing_dot_check(scanner_t *scanner, val term_atom_cons)
+{
+  if (car(term_atom_cons) != unique_s) {
+    yyerrorf(scanner, lit("misplaced consing dot"), nao);
+    rplaca(term_atom_cons, unique_s);
+  }
 }
 
 #ifndef YYEOF

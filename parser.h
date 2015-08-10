@@ -46,6 +46,7 @@ typedef struct {
 extern const wchar_t *spec_file;
 extern val form_to_ln_hash;
 extern val parser_s;
+extern val unique_s;
 void yyerror(scanner_t *scanner, parser_t *, const char *s);
 void yyerr(scanner_t *scanner, const char *s);
 void yyerrorf(scanner_t *scanner, val s, ...);

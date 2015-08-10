@@ -600,7 +600,7 @@
          (with-update-expander (getter setter) ,place-sym env
            ^(,setter (,',function (,getter) ,,*cleaned-lambda-list)))))))
 
-(defmacro sys:placelet-1 (((sym place)) . body :env env)
+(defmacro sys:placelet-1 (((sym place)) :env env . body)
   (with-gensyms (tmp-place pl-getter pl-setter steal-getter)
     (unwind-protect
       (progn

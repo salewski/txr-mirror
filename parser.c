@@ -47,7 +47,7 @@
 #include "stream.h"
 #include "parser.h"
 
-val parser_s;
+val parser_s, unique_s;
 
 static val stream_parser_hash;
 
@@ -322,7 +322,9 @@ val parser_errors(val parser)
 void parse_init(void)
 {
   parser_s = intern(lit("parser"), user_package);
+  unique_s = gensym(nil);
   prot1(&stream_parser_hash);
+  prot1(&unique_s);
   stream_parser_hash = make_hash(t, t, nil);
   parser_l_init();
 }
