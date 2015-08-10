@@ -187,13 +187,13 @@ TOK     {SYM}
 BT0     {BSCHR}({BSCHR}|{EXTRA})*
 BT1     @{BT0}+
 BT2     ({BSCHR}|{EXTRA})+
-BTREG   (({BT0}|{BT1})?:{BT2}|({BT0}|{BT1})(:{BT2})?|:)
+BTREG   ({BT0}|{BT1})?:{BT2}?|({BT0}|{BT1})(:{BT2})?
 BTKEY   @?:{BT2}?
 BTOK    {BTREG}|{BTKEY}
 NT0     {NSCHR}({NSCHR}|{EXTRA})*
 NT1     @{NT0}+
 NT2     ({NSCHR}|{EXTRA})+
-NTREG   (({NT0}|{NT1})?:{NT2}|({NT0}|{NT1})(:{NT2})?|:)
+NTREG   ({NT0}|{NT1})?:{NT2}?|({NT0}|{NT1})(:{NT2})?
 NTKEY   @?:{NT2}?
 NTOK    {NTREG}|{NTKEY}
 WS      [\t ]*
