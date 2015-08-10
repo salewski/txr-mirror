@@ -330,7 +330,6 @@ tail_call:
     mark_obj_tail(obj->st.alloc);
   case SYM:
     mark_obj(obj->s.name);
-    mark_obj(obj->s.value);
     mark_obj_tail(obj->s.package);
   case PKG:
     mark_obj(obj->pk.name);

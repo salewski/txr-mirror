@@ -3687,7 +3687,6 @@ val make_sym(val name)
   obj->s.type = SYM;
   obj->s.name = name;
   obj->s.package = nil;
-  obj->s.value = nil;
   return obj;
 }
 

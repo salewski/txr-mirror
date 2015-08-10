@@ -103,7 +103,6 @@ struct sym {
   obj_common;
   val name;
   val package;
-  val value;
 };
 
 struct package {
