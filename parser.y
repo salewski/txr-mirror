@@ -98,7 +98,7 @@ int yylex(union YYSTYPE *, yyscan_t scanner);
 
 %token <val> NUMBER METANUM
 
-%token <chr> REGCHAR REGTOKEN LITCHAR SPLICE
+%token <chr> REGCHAR REGTOKEN LITCHAR SPLICE CONSDOT LAMBDOT
 
 %type <val> spec clauses_rev clauses clauses_opt clause
 %type <val> all_clause some_clause none_clause maybe_clause block_clause
@@ -130,7 +130,7 @@ int yylex(union YYSTYPE *, yyscan_t scanner);
 %left '|' '/'
 %left '&'
 %right '~' '*' '?' '+' '%'
-%right '.' REGCHAR REGTOKEN LITCHAR
+%right '.' CONSDOT LAMBDOT REGCHAR REGTOKEN LITCHAR
 %right DOTDOT
 
 %%
@@ -713,7 +713,8 @@ hash : HASH_H list              { if (unquotes_occur($2, 0))
 
 list : '(' n_exprs ')'          { $$ = rl($2, num($1)); }
      | '(' ')'                  { $$ = nil; }
-     | '(' '.' n_expr ')'       { $$ = $3; }
+     | '(' LAMBDOT n_expr ')'   { $$ = $3; }
+     | '(' CONSDOT n_expr ')'   { $$ = $3; }
      | '[' n_exprs ']'          { $$ = rl(cons(dwim_s, $2), num($1)); }
      | '[' ']'                  { $$ = rl(cons(dwim_s, nil), num($1)); }
      | '@' n_expr               { if (consp($2))
@@ -756,7 +757,8 @@ r_exprs : n_expr                { val exprs = cons($1, nil);
                                   rplacd(term_atom_cons,
                                          rlcp(cons($2, exprs), or2($2, exprs)));
                                   $$ = term_atom_cons; }
-        | r_exprs '.' n_expr    { val term_atom_cons = $1;
+        | r_exprs CONSDOT n_expr
+                                { val term_atom_cons = $1;
                                   misplaced_consing_dot_check(scnr, term_atom_cons);
                                   rplaca(term_atom_cons, $3);
                                   $$ = $1; }
@@ -813,6 +815,14 @@ n_expr : SYMTOK                 { $$ = symhlpr($1, t); }
                                           num(parser->lineno)); }
        | SPLICE n_expr          { $$ = rl(rlcp(list(sys_splice_s, $2, nao), $2),
                                           num(parser->lineno)); }
+       | n_expr '.' n_expr      { uses_or2;
+                                  if (consp($3) && car($3) == qref_s) {
+                                    rplacd($3, rlcp(cons($1, cdr($3)), $1));
+                                    $$ = $3;
+                                  } else {
+                                    $$ = rlcp(list(qref_s, $1, $3, nao),
+                                              or2($1, $3));
+                                  } }
        ;
 
 n_exprs_opt : n_exprs           { $$ = $1; }
@@ -1424,6 +1434,8 @@ void yybadtoken(parser_t *parser, int tok, val context)
   case REGCHAR: problem = lit("regular expression character"); break;
   case REGTOKEN: problem = lit("regular expression token"); break;
   case LITCHAR: problem = lit("string literal character"); break;
+  case CONSDOT: problem = lit("consing dot"); break;
+  case LAMBDOT: problem = lit("consing dot"); break;
   case DOTDOT: problem = lit(".."); break;
   case HASH_BACKSLASH: problem = lit("#\\"); break;
   case HASH_SLASH:     problem = lit("#/"); break;

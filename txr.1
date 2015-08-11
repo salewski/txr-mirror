@@ -9181,6 +9181,47 @@ or an atom
 as
 .codn "(. sym)" .
 
+.NP* Referencing Dot
+
+A dot token which is flanked by expressions on both sides, without any
+intervening whitespace, is the referencing dot, and not the consing dot.
+The referencing dot is a syntactic sugar which translated to the
+.code qref
+syntax ("quoted ref"), which currently has no assigned meaning and is reserved
+for a future language extension. The referencing dot obeys these
+correspondences:
+
+.cblk
+  ;; a.b may be almost any expressions
+  a.b           <-->  (qref a b)
+  a.b.c         <-->  (qref a b c)
+  a.(qref b c)  <-->  (qref a b c)
+  (qref a b).c  <-->  (qref (qref a b) c)
+.cble
+
+That is to say, this dot operator constructs a
+.code qref
+expression out of its left and right arguments. If the right argument
+of the dot is already a qref expression (whether produced by another instance
+of the dot operator, or expressed directly) it is merged. And the qref dot
+operator is right-to-left associative, so that
+.code a.b.c
+first produces
+.code (qref b c)
+via the right dot, and then
+.code a
+is adjoined into the syntax via the right dot.
+
+Integer tokens cannot be involved in this syntax, because they
+form floating-point constants when juxtaposed with a dot.
+Such ambiguous uses of floating-point tokens are diagnosed as syntax errors:
+
+.cblk
+  (a.4)   ;; error: cramped floating-point literal
+  (a .4)  ;; good: a followed by 0.4
+.cble
+
+
 .NP* Quote and Quasiquote
 
 .meIP >> ' expr

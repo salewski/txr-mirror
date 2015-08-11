@@ -197,6 +197,7 @@ NTREG   ({NT0}|{NT1})?:{NT2}?|({NT0}|{NT1})(:{NT2})?
 NTKEY   @?:{NT2}?
 NTOK    {NTREG}|{NTKEY}
 WS      [\t ]*
+REQWS   [\t ]+
 HEX     [0-9A-Fa-f]
 OCT     [0-7]
 
@@ -663,6 +664,16 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 <SPECIAL,BRACED>[/] {
   yy_push_state(REGEX, yyscanner);
   return '/';
+}
+
+<SPECIAL,QSPECIAL,NESTED>{REQWS}\.{REQWS} {
+  yylval->chr = '.';
+  return CONSDOT;
+}
+
+<SPECIAL,QSPECIAL,NESTED>\.{REQWS} {
+  yylval->chr = '.';
+  return LAMBDOT;
 }
 
 <SPECIAL,QSPECIAL,NESTED>\. {
