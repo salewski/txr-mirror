@@ -176,6 +176,7 @@ XDIG    [0-9A-Fa-f]
 NUM     {SGN}?{DIG}+
 FLO     {SGN}?({DIG}*[.]{DIG}+{EXP}?|{DIG}+[.]?{EXP})
 FLODOT  {SGN}?{DIG}+[.]
+DOTFLO  [.]{DIG}+
 XNUM    #x{SGN}?{XDIG}+
 ONUM    #o{SGN}?[0-7]+
 BNUM    #b{SGN}?[0-1]+
@@ -354,6 +355,22 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   yylval->val = int_str(str, num(2));
   return METANUM;
 }
+
+<SPECIAL,QSPECIAL>{TOK}/{DOTFLO} |
+<BRACED>{BTOK}/{DOTFLO} |
+<NESTED>{NTOK}/{DOTFLO} {
+  yyerrorf(yyg, lit("cramped floating-point literal: "
+                    "add 0 or whitespace"), nao);
+
+  if (yy_top_state(yyscanner) == INITIAL
+      || yy_top_state(yyscanner) == QSILIT
+      || yy_top_state(yyscanner) == QWLIT)
+    yy_pop_state(yyscanner);
+
+  yylval->lexeme = utf8_dup_from(yytext);
+  return SYMTOK;
+}
+
 
 <SPECIAL,QSPECIAL>{TOK} |
 <BRACED>{BTOK} |
@@ -583,6 +600,19 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
     yy_pop_state(yyscanner);
   return yytext[0];
 }
+
+<SPECIAL,QSPECIAL,NESTED>[)\]]/{DOTFLO} {
+  yyerrorf(yyg, lit("cramped floating-point literal: "
+                    "add 0 or whitespace"), nao);
+
+  yy_pop_state(yyscanner);
+  if (yy_top_state(yyscanner) == INITIAL
+      || yy_top_state(yyscanner) == QSILIT
+      || yy_top_state(yyscanner) == QWLIT)
+    yy_pop_state(yyscanner);
+  return yytext[0];
+}
+
 
 <SPECIAL,QSPECIAL,NESTED>[)\]] {
   yy_pop_state(yyscanner);
