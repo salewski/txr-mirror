@@ -46,8 +46,8 @@ AST: #("JSON Test Pattern pass1" #H((:equal-based) ("object with 1 member" #("ar
                                                           ("address" "50 St. James Street") ("compact" #(1.0 2.0 3.0 4.0 5.0 6.0 7.0))
                                                           ("object" #H((:equal-based))) ("quote" "\"") ("jsontext" "{\"object with 1 member\":[\"array with 1 element\"]}")
                                                           ("true" :true) ("integer" 1234567890.0) ("ALPHA" "ABCDEFGHIJKLMNOPQRSTUVWYZ")
-                                                          ("quotes" "&#34; \" %22 0x22 034 &#x22;") ("hex" "ģ䕧覫췯ꯍ") ("0123456789" "digit")
-                                                          ("controls" "\b\f\n\r\t") ("alpha" "abcdefghijklmnopqrstuvwyz")
+                                                          ("quotes" "&#34; \" %22 0x22 034 &#x22;") ("hex" "ģ䕧覫췯ꯍ")
+                                                          ("0123456789" "digit") ("controls" "\b\f\n\r\t") ("alpha" "abcdefghijklmnopqrstuvwyz")
                                                           (" s p a c e d " #(1.0 2.0 3.0 4.0 5.0 6.0 7.0)))
        0.5 98.6 99.44 1066.0 10.0 1.0 0.1 1.0 2.0 2.0 "rosebud")
 

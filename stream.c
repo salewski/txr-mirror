@@ -2584,8 +2584,8 @@ val put_string(val string, val stream_in)
       col = (col + 1) | 7;
       break;
     default:
-      if (iswprint(*p))
-        col++;
+      if (!iswcntrl(*p))
+        col += 1 + wide_display_char_p(*p);
       break;
     }
   }
@@ -2621,8 +2621,9 @@ val put_char(val ch, val stream_in)
       s->column = s->indent_chars;
     }
     ops->put_char(stream, ch);
-    if (iswprint(cch))
-      s->column++;
+
+    if (!iswcntrl(cch))
+      s->column += 1 + wide_display_char_p(cch);
     break;
   }
 

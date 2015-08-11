@@ -2153,6 +2153,72 @@ val match_regst_right(val str, val regex, val end)
                       sub_str(str, minus(end, len), end)));
 }
 
+static char_set_t *create_wide_cs(void)
+{
+#ifdef FULL_UNICODE
+  chset_type_t cst = CHSET_XLARGE;
+#else
+  chset_type_t cst = CHSET_LARGE;
+#endif
+
+  char_set_t *cs = char_set_create(cst, 0, 1);
+
+  char_set_add_range(cs, 0x1100, 0x115F);
+  char_set_add_range(cs, 0x2329, 0x232A);
+  char_set_add_range(cs, 0x2E80, 0x2E99);
+  char_set_add_range(cs, 0x2E9B, 0x2EF3);
+  char_set_add_range(cs, 0x2F00, 0x2FD5);
+  char_set_add_range(cs, 0x2FF0, 0x2FFB);
+  char_set_add_range(cs, 0x3000, 0x303E);
+  char_set_add_range(cs, 0x3000, 0x303E);
+  char_set_add_range(cs, 0x3041, 0x3096);
+  char_set_add_range(cs, 0x3099, 0x30FF);
+  char_set_add_range(cs, 0x3105, 0x312D);
+  char_set_add_range(cs, 0x3131, 0x318E);
+  char_set_add_range(cs, 0x3190, 0x31BA);
+  char_set_add_range(cs, 0x31C0, 0x31E3);
+  char_set_add_range(cs, 0x31F0, 0x321E);
+  char_set_add_range(cs, 0x3220, 0x3247);
+  char_set_add_range(cs, 0x3250, 0x32FE);
+  char_set_add_range(cs, 0x3300, 0x4DB5);
+  char_set_add_range(cs, 0x4E00, 0x9FFF);
+  char_set_add_range(cs, 0xA000, 0xA48C);
+  char_set_add_range(cs, 0xA490, 0xA4C6);
+  char_set_add_range(cs, 0xA960, 0xA97C);
+  char_set_add_range(cs, 0xAC00, 0xD7A3);
+  char_set_add_range(cs, 0xF900, 0xFAFF);
+  char_set_add_range(cs, 0xFE10, 0xFE19);
+  char_set_add_range(cs, 0xFE30, 0xFE52);
+  char_set_add_range(cs, 0xFE54, 0xFE6B);
+  char_set_add_range(cs, 0xFF01, 0xFF60);
+  char_set_add_range(cs, 0xFFE0, 0xFFE6);
+
+#ifdef FULL_UNICODE
+  char_set_add_range(cs, 0x1B000, 0x1B001);
+  char_set_add_range(cs, 0x1F200, 0x1F202);
+  char_set_add_range(cs, 0x1F210, 0x1F23A);
+  char_set_add_range(cs, 0x1F240, 0x1F248);
+  char_set_add_range(cs, 0x1F250, 0x1F251);
+  char_set_add_range(cs, 0x20000, 0x2FFFD);
+  char_set_add_range(cs, 0x30000, 0x3FFFD);
+#endif
+
+  return cs;
+}
+
+int wide_display_char_p(wchar_t ch)
+{
+  static char_set_t *wide_cs;
+
+  if (ch < 0x1100)
+    return 0;
+
+  if (!wide_cs)
+    wide_cs = create_wide_cs();
+
+  return char_set_contains(wide_cs, ch);
+}
+
 val space_k, digit_k, word_char_k;
 val cspace_k, cdigit_k, cword_char_k;
 
