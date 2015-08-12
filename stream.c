@@ -1720,9 +1720,10 @@ static val cat_get_line(val stream)
     val line = get_line(fs);
     if (line)
       return line;
-    close_stream(fs, t);
-    if ((streams = rest(streams)) != nil)
+    if ((streams = rest(streams)) != nil) {
+      close_stream(fs, t);
       set(mkloc(s->streams, stream), streams);
+    }
   }
 
   return nil;
@@ -1738,9 +1739,10 @@ static val cat_get_char(val stream)
     val ch = get_char(fs);
     if (ch)
       return ch;
-    close_stream(fs, t);
-    if ((streams = rest(streams)) != nil)
+    if ((streams = rest(streams)) != nil) {
+      close_stream(fs, t);
       set(mkloc(s->streams, stream), streams);
+    }
   }
 
   return nil;
@@ -1756,9 +1758,10 @@ static val cat_get_byte(val stream)
     val byte = get_byte(fs);
     if (byte)
       return byte;
-    close_stream(fs, t);
-    if ((streams = rest(streams)) != nil)
+    if ((streams = rest(streams)) != nil) {
+      close_stream(fs, t);
       set(mkloc(s->streams, stream), streams);
+    }
   }
 
   return nil;
