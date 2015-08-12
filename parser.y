@@ -763,16 +763,6 @@ r_exprs : n_expr                { val exprs = cons($1, nil);
                                   misplaced_consing_dot_check(scnr, term_atom_cons);
                                   rplaca(term_atom_cons, $3);
                                   $$ = $1; }
-        | r_exprs DOTDOT n_expr { uses_or2;
-                                  val term_atom_cons = $1;
-                                  val exprs = cdr($1);
-                                  misplaced_consing_dot_check(scnr, term_atom_cons);
-                                  rplacd(term_atom_cons,
-                                         rlcp(cons(list(cons_s, car(exprs),
-                                                        $3, nao),
-                                                   cdr(exprs)),
-                                              or2($3, exprs)));
-                                  $$ = term_atom_cons; }
         | WSPLICE wordslit      { $$ = cons(nil, nreverse(rl($2, num($1))));
                                   rlcp($$, cdr($$)); }
         | r_exprs WSPLICE
@@ -816,6 +806,9 @@ n_expr : SYMTOK                 { $$ = symhlpr($1, t); }
                                           num(parser->lineno)); }
        | SPLICE n_expr          { $$ = rl(rlcp(list(sys_splice_s, $2, nao), $2),
                                           num(parser->lineno)); }
+       | n_expr DOTDOT n_expr   { uses_or2;
+                                  $$ = rlcp(list(cons_s, $1, $3, nao),
+                                            or2($1, $3)); }
        | n_expr '.' n_expr      { uses_or2;
                                   if (consp($3) && car($3) == qref_s) {
                                     rplacd($3, rlcp(cons($1, cdr($3)), $1));

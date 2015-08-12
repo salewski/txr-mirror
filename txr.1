@@ -9509,28 +9509,22 @@ computes a sublist of
 consisting of
 elements 1 through 2 (counting from zero).
 
-Restrictions:
-
-The notation must be enclosed in a list. For instance
-.code a..b
-is not, by itself, an
-expression, but
-.code (a..b)
-is. This is important if Lisp data is being parsed from
-a string or stream using the read function. If the data
-.str "a..b"
-is parsed, the symbol
-.code a
-will be extracted, leaving
-.strn ..a ,
-which, if parsed,
-produces a syntax error since it consists of a "dotdot" token followed by
-a symbol, which is not valid syntax.
-
-The notation cannot occur in the dot position; that is, the syntax
+Note that if this notation is used in the dot position of an improper
+list, the transformation still applies. That is, the syntax
 .code (a . b .. c)
-is invalid. The dotdot operator can only be used between the non-dot-position
-elements of a list.
+is valid and produces the object
+.code (a . (cons b c))
+which is another way of writing
+.codn (a cons b c) .
+
+The notation's
+.code ..
+operator associates right to left, so that
+.code a..b..c
+denotes
+.code (cons a (cons b c))
+or
+.codn (a b . c) .
 
 .NP* The DWIM Brackets
 \*(TL has a square bracket notation. The syntax
