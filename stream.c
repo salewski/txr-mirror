@@ -2094,10 +2094,6 @@ static void vformat_str(val stream, val str, int width, enum align align,
 
   vformat_align_pre(stream, align, slack);
 
-  if (!al_left)
-    for (i = 0; i < slack; i++)
-      put_char(chr(' '), stream);
-
   for (i = 0; i < truelen; i++)
     put_char(chr(cstr[i]), stream);
 
