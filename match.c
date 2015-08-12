@@ -40,6 +40,7 @@
 #include "unwind.h"
 #include "regex.h"
 #include "stream.h"
+#include "y.tab.h"
 #include "parser.h"
 #include "txr.h"
 #include "utf8.h"

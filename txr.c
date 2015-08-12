@@ -45,6 +45,7 @@
 #include "gc.h"
 #include "signal.h"
 #include "unwind.h"
+#include "y.tab.h"
 #include "parser.h"
 #include "match.h"
 #include "utf8.h"

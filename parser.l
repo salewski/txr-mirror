@@ -47,10 +47,10 @@
 #include "signal.h"
 #include "unwind.h"
 #include "hash.h"
+#include "y.tab.h"
 #include "parser.h"
 #include "eval.h"
 #include "txr.h"
-#include "y.tab.h"
 
 #define YY_INPUT(buf, result, max_size)           \
   do {                                            \
@@ -60,6 +60,9 @@
       buf[n++] = convert(char, c_num(c));         \
     result = n;                                   \
   } while (0)
+
+#define YY_DECL \
+  static int yylex_impl(YYSTYPE *yylval_param, yyscan_t yyscanner)
 
 int opt_loglevel = 1;   /* 0 - quiet; 1 - normal; 2 - verbose */
 
@@ -860,12 +863,6 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return SECRET_ESCAPE_R;
 }
 
-<INITIAL>@\x01E {
-  yy_push_state(SPECIAL, yyscanner);
-  yy_push_state(NESTED, yyscanner);
-  return SECRET_ESCAPE_E;
-}
-
 <INITIAL>^@[#;].*\n {
   /* eat whole line comment */
   yyextra->lineno++;
@@ -1015,18 +1012,6 @@ void end_of_char(scanner_t *yyg)
   yy_pop_state(yyg);
 }
 
-int reset_scanner(scanner_t *yyg)
-{
-  int hold_byte = yyg->yy_hold_char;
-
-  while (YYSTATE != INITIAL)
-    yy_pop_state(yyg);
-
-  yy_flush_buffer(YY_CURRENT_BUFFER, yyg);
-
-  return hold_byte;
-}
-
 val source_loc(val form)
 {
   return gethash(form_to_ln_hash, form);
@@ -1038,6 +1023,33 @@ val source_loc_str(val form, val alt)
   if (missingp(alt))
     alt = lit("source location n/a");
   return if3(line, format(nil, lit("~a:~a"), file, line, nao), alt);
+}
+
+int yylex(YYSTYPE *yylval_param, yyscan_t yyscanner)
+{
+  struct yyguts_t * yyg = convert(struct yyguts_t *, yyscanner);
+  int yy_char;
+
+  if (yyextra->tok_idx > 0) {
+    struct yy_token *tok = &yyextra->tok_pushback[--yyextra->tok_idx];
+    yyextra->recent_tok = *tok;
+    *yylval_param = tok->yy_lval;
+    return tok->yy_char;
+  }
+
+  yy_char = yyextra->recent_tok.yy_char = yylex_impl(yylval_param, yyscanner);
+  yyextra->recent_tok.yy_lval = *yylval_param;
+
+  return yy_char;
+}
+
+void prime_scanner(scanner_t *yyg)
+{
+  if (YYSTATE == INITIAL) {
+    yy_push_state(SPECIAL, yyg);
+    yy_push_state(NESTED, yyg);
+    yy_push_state(NESTED, yyg);
+  }
 }
 
 void parser_l_init(void)

@@ -31,7 +31,16 @@ typedef struct yyguts_t scanner_t;
 typedef void *yyscan_t;
 #endif
 
-typedef struct {
+typedef struct parser parser_t;
+
+#ifdef SPACE
+
+struct yy_token {
+  int yy_char;
+  YYSTYPE yy_lval;
+};
+
+struct parser {
   val parser;
   cnum lineno;
   int errors;
@@ -41,7 +50,11 @@ typedef struct {
   val syntax_tree;
   yyscan_t yyscan;
   scanner_t *scanner;
-} parser_t;
+  struct yy_token recent_tok;
+  struct yy_token tok_pushback[4];
+  int tok_idx;
+};
+#endif
 
 extern const wchar_t *spec_file;
 extern val form_to_ln_hash;
@@ -53,14 +66,18 @@ void yyerrorf(scanner_t *scanner, val s, ...);
 void yybadtoken(parser_t *, int tok, val context);
 void end_of_regex(scanner_t *scanner);
 void end_of_char(scanner_t *scanner);
-int reset_scanner(scanner_t *scanner);
+#ifdef SPACE
+int yylex(YYSTYPE *yylval_param, yyscan_t yyscanner);
+#endif
 int yylex_init(yyscan_t *pscanner);
 int yylex_destroy(yyscan_t scanner);
 parser_t *yyget_extra(yyscan_t scanner);
 void yyset_extra(parser_t *, yyscan_t);
+void yyset_hold_char(yyscan_t, int);
 void parser_l_init(void);
 void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream);
-void prime_parser(parser_t *, int hold_byte, val name);
+void prime_parser(parser_t *, val name);
+void prime_scanner(scanner_t *);
 int parse_once(val stream, val name, parser_t *parser);
 int parse(parser_t *parser, val name);
 val source_loc(val form);

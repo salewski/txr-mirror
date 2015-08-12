@@ -45,6 +45,7 @@
 #include "hash.h"
 #include "eval.h"
 #include "stream.h"
+#include "y.tab.h"
 #include "parser.h"
 
 static val sym_helper(parser_t *parser, wchar_t *lexeme, val meta_allowed);
@@ -1491,7 +1492,7 @@ int parse(parser_t *parser, val name)
   parser->errors = 0;
   parser->prepared_msg = nil;
   parser->syntax_tree = nil;
-  prime_parser(parser, reset_scanner(parser->scanner), name);
+  prime_parser(parser, name);
 
   res = yyparse(parser->scanner, parser);
 

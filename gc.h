@@ -34,6 +34,7 @@ void gc(void);
 int gc_state(int);
 void gc_mark(val);
 int gc_is_reachable(val);
+int gc_is_heap_obj(union obj *ptr);
 
 #if CONFIG_GEN_GC
 val gc_set(loc, val);

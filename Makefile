@@ -184,7 +184,8 @@ endef
 $(call DEP,$(OBJS) $(EXTRA_OBJS-y),\
            $(conf_dir)/config.make $(conf_dir)/config.h)
 
-$(call DEP,opt/lex.yy.o dbg/lex.yy.o,y.tab.h)
+$(eval $(foreach item,lex.yy.o txr.o match.o parser.o,\
+	   $(call DEP,opt/$(item) dbg/$(item),y.tab.h)))
 
 lex.yy.c: $(top_srcdir)parser.l
 	$(call ABBREV,LEX)

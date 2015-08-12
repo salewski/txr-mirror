@@ -395,6 +395,11 @@ static int in_heap(val ptr)
   return 0;
 }
 
+int gc_is_heap_obj(union obj *ptr)
+{
+  return in_heap(ptr);
+}
+
 static void mark_mem_region(val *low, val *high)
 {
   if (low > high) {

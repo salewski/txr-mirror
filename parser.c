@@ -45,14 +45,24 @@
 #include "hash.h"
 #include "eval.h"
 #include "stream.h"
+#include "y.tab.h"
 #include "parser.h"
 
 val parser_s, unique_s;
 
 static val stream_parser_hash;
 
+static void yy_tok_mark(struct yy_token *tok)
+{
+  obj_t *ptr = tok->yy_lval.val;
+
+  if (gc_is_heap_obj(ptr))
+    gc_mark(ptr);
+}
+
 static void parser_mark(val obj)
 {
+  int i;
   parser_t *p = coerce(parser_t *, obj->co.handle);
 
   assert (p->parser == nil || p->parser == obj);
@@ -61,6 +71,9 @@ static void parser_mark(val obj)
   gc_mark(p->prepared_msg);
   if (p->syntax_tree != nao)
     gc_mark(p->syntax_tree);
+  yy_tok_mark(&p->recent_tok);
+  for (i = 0; i < 4; i++)
+    yy_tok_mark(&p->tok_pushback[i]);
 }
 
 static void parser_destroy(val obj)
@@ -79,6 +92,8 @@ static struct cobj_ops parser_ops = {
 
 void parser_common_init(parser_t *p)
 {
+  int i;
+
   p->parser = nil;
   p->lineno = 1;
   p->errors = 0;
@@ -89,6 +104,13 @@ void parser_common_init(parser_t *p)
   yylex_init(&p->yyscan);
   p->scanner = convert(scanner_t *, p->yyscan);
   yyset_extra(p, p->scanner);
+  p->recent_tok.yy_char = 0;
+  p->recent_tok.yy_lval.val = 0;
+  for (i = 0; i < 4; i++) {
+    p->tok_pushback[i].yy_char = 0;
+    p->tok_pushback[i].yy_lval.val = 0;
+  }
+  p->tok_idx = 0;
 }
 
 void parser_cleanup(parser_t *p)
@@ -124,25 +146,20 @@ static val ensure_parser(val stream)
   return set(cdr_l(cell), parser(stream, one));
 }
 
-void prime_parser(parser_t *p, int hold_byte, val name)
+static void pushback_token(parser_t *p, struct yy_token *tok)
 {
-  val secret_token_stream;
+  assert (p->tok_idx < 4);
+  p->tok_pushback[p->tok_idx++] = *tok;
+}
 
-  if (hold_byte) {
-      val secret_token_string = format(nil, lit("@\x01" "E~a"),
-                                       chr(hold_byte + 0xDC00), nao);
-      secret_token_stream = make_string_byte_input_stream(secret_token_string);
-  } else {
-    secret_token_stream = make_string_byte_input_stream(lit("@\x01" "E"));
-  }
+void prime_parser(parser_t *p, val name)
+{
+  struct yy_token secret_escape_e = { SECRET_ESCAPE_E };
 
-  if (catenated_stream_p(p->stream)) {
-    catenated_stream_push(secret_token_stream, p->stream);
-  } else {
-    set(mkloc(p->stream, p->parser),
-        make_catenated_stream(list(secret_token_stream, p->stream, nao)));
-  }
-
+  if (p->recent_tok.yy_char)
+    pushback_token(p, &p->recent_tok);
+  pushback_token(p, &secret_escape_e);
+  prime_scanner(p->scanner);
   set(mkloc(p->name, p->parser), name);
 }
 
