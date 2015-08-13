@@ -215,7 +215,7 @@ val class_check(val cobj, val class_sym)
 {
   type_assert (is_ptr(cobj) && cobj->t.type == COBJ &&
                cobj->co.cls == class_sym,
-               (lit("~a is not of type ~a"), cobj, class_sym, nao));
+               (lit("~s is not of type ~s"), cobj, class_sym, nao));
   return t;
 }
 
