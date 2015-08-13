@@ -152,14 +152,23 @@ static void pushback_token(parser_t *p, struct yy_token *tok)
   p->tok_pushback[p->tok_idx++] = *tok;
 }
 
-void prime_parser(parser_t *p, val name)
+void prime_parser(parser_t *p, val name, enum prime_parser prim)
 {
-  struct yy_token secret_escape_e = { SECRET_ESCAPE_E };
+  struct yy_token sec_tok = { 0 };
+
+  switch (prim) {
+  case prime_lisp:
+    sec_tok.yy_char = SECRET_ESCAPE_E;
+    break;
+  case prime_regex:
+    sec_tok.yy_char = SECRET_ESCAPE_R;
+    break;
+  }
 
   if (p->recent_tok.yy_char)
     pushback_token(p, &p->recent_tok);
-  pushback_token(p, &secret_escape_e);
-  prime_scanner(p->scanner);
+  pushback_token(p, &sec_tok);
+  prime_scanner(p->scanner, prim);
   set(mkloc(p->name, p->parser), name);
 }
 
@@ -231,20 +240,23 @@ except:
 val regex_parse(val string, val error_stream)
 {
   uses_or2;
-  val parse_string = cat_str(list(lit("@\x01R"), string, nao), nil);
   val save_stream = std_error;
-  val stream = make_string_byte_input_stream(parse_string);
+  val stream = make_string_byte_input_stream(string);
   parser_t parser;
 
   error_stream = default_bool_arg(error_stream);
   std_error = if3(error_stream == t, std_output, or2(error_stream, std_null));
 
+  parser_common_init(&parser);
+  parser.stream = stream;
+
   {
     int gc = gc_state(0);
-    val name = if3(std_error != std_null, lit("regex"), lit(""));
-    parse_once(stream, name, &parser);
+    parse(&parser, if3(std_error != std_null, lit("regex"), lit("")), prime_regex);
     gc_state(gc);
   }
+
+  parser_cleanup(&parser);
   std_error = save_stream;
   return parser.errors ? nil : parser.syntax_tree;
 }
@@ -274,7 +286,7 @@ val lisp_parse(val source_in, val error_stream, val error_return_val, val name_i
 
   {
     int gc = gc_state(0);
-    parse(pi, if3(std_error != std_null, name, lit("")));
+    parse(pi, if3(std_error != std_null, name, lit("")), prime_lisp);
     gc_state(gc);
   }
 

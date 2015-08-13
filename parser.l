@@ -858,11 +858,6 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   yy_push_state(SPECIAL, yyscanner);
 }
 
-<INITIAL>@\x01R {
-  yy_push_state(REGEX, yyscanner);
-  return SECRET_ESCAPE_R;
-}
-
 <INITIAL>^@[#;].*\n {
   /* eat whole line comment */
   yyextra->lineno++;
@@ -1043,12 +1038,20 @@ int yylex(YYSTYPE *yylval_param, yyscan_t yyscanner)
   return yy_char;
 }
 
-void prime_scanner(scanner_t *yyg)
+void prime_scanner(scanner_t *yyg, enum prime_parser prim)
 {
-  if (YYSTATE == INITIAL) {
+  while (YYSTATE != INITIAL)
+    yy_pop_state(yyg);
+
+  switch (prim) {
+  case prime_lisp:
     yy_push_state(SPECIAL, yyg);
     yy_push_state(NESTED, yyg);
     yy_push_state(NESTED, yyg);
+    break;
+  case prime_regex:
+    yy_push_state(REGEX, yyg);
+    break;
   }
 }
 

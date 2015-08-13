@@ -56,6 +56,8 @@ struct parser {
 };
 #endif
 
+enum prime_parser { prime_lisp, prime_regex };
+
 extern const wchar_t *spec_file;
 extern val form_to_ln_hash;
 extern val parser_s;
@@ -76,10 +78,10 @@ void yyset_extra(parser_t *, yyscan_t);
 void yyset_hold_char(yyscan_t, int);
 void parser_l_init(void);
 void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream);
-void prime_parser(parser_t *, val name);
-void prime_scanner(scanner_t *);
+void prime_parser(parser_t *, val name, enum prime_parser);
+void prime_scanner(scanner_t *, enum prime_parser);
 int parse_once(val stream, val name, parser_t *parser);
-int parse(parser_t *parser, val name);
+int parse(parser_t *parser, val name, enum prime_parser);
 val source_loc(val form);
 val source_loc_str(val form, val alt);
 val rlset(val form, val info);

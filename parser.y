@@ -1478,14 +1478,14 @@ int parse_once(val stream, val name, parser_t *parser)
   return res;
 }
 
-int parse(parser_t *parser, val name)
+int parse(parser_t *parser, val name, enum prime_parser prim)
 {
   int res;
 
   parser->errors = 0;
   parser->prepared_msg = nil;
   parser->syntax_tree = nil;
-  prime_parser(parser, name);
+  prime_parser(parser, name, prim);
 
   res = yyparse(parser->scanner, parser);
 
