@@ -4463,6 +4463,7 @@ void eval_init(void)
   reg_fun(intern(lit("prinl"), user_package), func_n2o(prinl, 1));
   reg_fun(intern(lit("pprinl"), user_package), func_n2o(pprinl, 1));
   reg_fun(intern(lit("tprint"), user_package), func_n2o(tprint, 1));
+  reg_fun(intern(lit("display-width"), user_package), func_n1(display_width));
 
   reg_varl(user_package_s = intern(lit("user-package"), user_package_var),
            user_package_var);

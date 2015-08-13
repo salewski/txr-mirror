@@ -7211,6 +7211,28 @@ val tostringp(val obj)
   return get_string_from_stream(ss);
 }
 
+val display_width(val obj)
+{
+  if (stringp(obj)) {
+    const wchar_t *s = c_str(obj);
+    cnum width = 0;
+    for (; *s; s++) {
+      if (iswcntrl(*s))
+        continue;
+      width += 1 + wide_display_char_p(*s);
+    }
+    return num(width);
+  } else if (chrp(obj)) {
+    wchar_t ch = c_chr(obj);
+    if (iswcntrl(ch))
+      return zero;
+    return num_fast(1 + wide_display_char_p(ch));
+  }
+
+  uw_throwf(type_error_s, lit("display-width: ~s isn't a character or string"),
+            obj, nao);
+}
+
 val time_sec(void)
 {
   struct timeval tv;

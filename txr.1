@@ -27328,6 +27328,33 @@ results in no output at all.  This effectively means that an arbitrarily nested
 structure of lists and vectors is printed flattened, with one element on each
 line.
 
+.coNP Function @ display-width
+.synb
+.mets (display-width << char )
+.mets (display-width << string )
+.syne
+.desc
+The
+.code display-width
+function calculates the number of places occupied by the printed representation
+of
+.meta char
+or
+.metn string
+on a monospace display which renders certain characters, such as the East Asian
+kanji and other characters, using two places.
+
+For a
+.meta string
+argument, this value is the sum of the individual display width of the
+string's constituent characters. The display width of an empty string is zero.
+
+Control characters are assigned a display width of zero, regardless of
+their display control semantics, if any.
+
+Characters marked by Unicode as being wide or full width, have a display
+width of two. Other characters have a display width of one.
+
 .coNP Function @ streamp
 .synb
 .mets (streamp << obj )
