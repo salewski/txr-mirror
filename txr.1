@@ -26945,6 +26945,20 @@ or
 prefix character is present in the width
 specifier, then the field is adjusted according to that character.
 
+The padding calculations for alignment and centering take into account
+character display width, as defined by the
+.code display-width
+function. For instance, a character string containing four Chinese
+characters (kanji) has a display width of 8, not 4.
+
+The width specification does not restrict the printed portion of a datum.
+Rather, for some kinds of conversions, it is the precision specification that
+performs such truncation.  A datum's display width (or that of its printed
+portion, after such truncation is applied) can equal or exceed the specified
+field width.  In this situation it overflows the field: the printed portion is
+rendered in its entirety without any padding applied on either side for
+alignment or centering.
+
 .meIP < precision
 The precision specifier is introduced by a leading comma. If this comma appears
 immediately after the directive's
@@ -27007,9 +27021,15 @@ numbers are unconditionally prefixed with a
 .code -
 sign.
 
-For all other objects, the precision specifies the maximum number of characters
-to print.  The object's printed representation is crudely truncated at that
-number of characters.
+For all other objects, the precision specifies the maximum number of
+print positions to occupy, taking into account the display width of each
+character of the printed representation of the object, as according
+to the
+.code display-width
+function.  The object's printed representation is truncated, if necessary, to
+the maximum number of characters which will not exceed the specified number of
+print positions.
+
 .RE
 
 .TP* "Format directives:"

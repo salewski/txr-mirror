@@ -2081,21 +2081,51 @@ static void vformat_num(val stream, const char *str,
   vformat_align_post(stream, align, slack);
 }
 
+static cnum calc_fitlen(const wchar_t *cstr, int precision, int width)
+{
+  cnum i, fitlen;
+  wchar_t ch;
+
+  if (width == 0 && precision == 0)
+    return INT_PTR_MAX;
+
+  for (i = 0, fitlen = 0; (ch = cstr[i]) != 0; i++) {
+    int chw = iswcntrl(ch) ? 0 : 1 + wide_display_char_p(ch);
+
+    if (precision && fitlen + chw > precision)
+      break;
+
+    if (width && fitlen + chw > width)
+      return INT_PTR_MAX;
+
+    fitlen += chw;
+  }
+
+  return fitlen;
+}
+
 static void vformat_str(val stream, val str, int width, enum align align,
                         int precision)
 {
   const wchar_t *cstr = c_str(str);
-  int len = c_num(length_str(str));
-  int truelen = (precision && precision < len) ? precision : len;
-  int slack = (truelen < width) ? width - truelen : 0;
-  int i;
+  cnum fitlen = calc_fitlen(cstr, precision, width);
+  cnum slack = (fitlen < width) ? width - fitlen : 0;
+  cnum i, w;
+  wchar_t wc;
 
   prot1(&str);
 
   vformat_align_pre(stream, align, slack);
 
-  for (i = 0; i < truelen; i++)
-    put_char(chr(cstr[i]), stream);
+  if (fitlen == INT_PTR_MAX) {
+    put_string(str, stream);
+  } else for (i = 0, w = 0; (wc = cstr[i]) != 0; i++) {
+    int cw = iswcntrl(wc) ? 0 : 1 + wide_display_char_p(wc);
+    if (w + cw > fitlen)
+      break;
+    put_char(chr(wc), stream);
+    w += cw;
+  }
 
   vformat_align_post(stream, align, slack);
 
