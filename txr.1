@@ -2652,17 +2652,18 @@ Examples:
   9.E19
   -.5
   +3E+3
+  1.E5
 .cble
 
 Examples which are not floating-point constant tokens:
 
 .cblk
-  .      ;; consing dot
+  .      ;; dot token, not a number
   123E   ;; the symbol 123E
   1.0E-  ;; syntax error: invalid floating point constant
   1.0E   ;; syntax error: invalid floating point constant
-  1.E    ;; 1; consing dot; symbol E
-  .e     ;; consing dot followed by symbol e
+  1.E    ;; syntax error: invalid floating point literal
+  .e     ;; syntax error: dot token followed by symbol
 .cble
 
 In \*(TX there is a special "dotdot" token consisting of two consecutive periods.
