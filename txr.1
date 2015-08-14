@@ -23686,6 +23686,44 @@ Thus
 means
 .codn (max (max a b) c) .
 
+.coNP Function @ clamp
+.synb
+.mets (clamp < low < high << val )
+.syne
+.desc
+The
+.code clamp
+function clamps value
+.meta val
+into the range
+.meta low
+to
+.metn high .
+
+The
+.code clamp
+function returns
+.meta low
+if
+.meta val
+is less than
+.metn low .
+If
+.meta val
+is greater than or equal to
+.metn low ,
+but less than
+.metn high ,
+then it returns
+.metn val .
+Otherwise it returns
+.meta high .
+
+More precisely,
+.code (clamp a b c)
+is equivalent to
+.codn (max a (min b c)) .
+
 .coNP Functions @, int-str @ flo-str and @ num-str
 .synb
 .mets (int-str < string <> [ radix ])

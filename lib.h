@@ -583,6 +583,7 @@ val max2(val a, val b);
 val min2(val a, val b);
 val maxv(val first, val rest);
 val minv(val first, val rest);
+val clamp(val low, val high, val num);
 val expt(val base, val exp);
 val exptv(val nlist);
 val exptmod(val base, val exp, val mod);

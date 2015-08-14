@@ -2293,6 +2293,11 @@ val minv(val first, val rest)
   return reduce_left(func_n2(min2), rest, first, nil);
 }
 
+val clamp(val low, val high, val num)
+{
+  return max2(low, min2(high, num));
+}
+
 val exptv(val nlist)
 {
   return reduce_right(func_n2(expt), nlist, one, nil);
