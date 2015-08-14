@@ -763,7 +763,7 @@ r_exprs : n_expr                { val exprs = cons($1, nil);
                                   misplaced_consing_dot_check(scnr, term_atom_cons);
                                   rplaca(term_atom_cons, $3);
                                   $$ = $1; }
-        | WSPLICE wordslit      { $$ = cons(nil, nreverse(rl($2, num($1))));
+        | WSPLICE wordslit      { $$ = cons(unique_s, nreverse(rl($2, num($1))));
                                   rlcp($$, cdr($$)); }
         | r_exprs WSPLICE
           wordslit              { val term_atom_cons = $1;
@@ -773,7 +773,7 @@ r_exprs : n_expr                { val exprs = cons($1, nil);
                                          nappend2(rl(nreverse($3), num($2)),
                                                   exprs));
                                   $$ = term_atom_cons; }
-        | QWSPLICE wordsqlit    { $$ = cons(nil, rl($2, num($1)));
+        | QWSPLICE wordsqlit    { $$ = cons(unique_s, rl($2, num($1)));
                                   rlcp($$, cdr($$)); }
         | r_exprs QWSPLICE
           wordsqlit             { val term_atom_cons = $1;
