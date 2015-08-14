@@ -65,6 +65,7 @@ static void misplaced_consing_dot_check(scanner_t *scanner, val term_atom_cons);
 #if YYBISON
 union YYSTYPE;
 int yylex(union YYSTYPE *, yyscan_t scanner);
+int yyparse(scanner_t *, parser_t *);
 #endif
 
 #define rl(form, line) rlrec(parser, form, line)

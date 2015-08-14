@@ -203,7 +203,14 @@ y.tab.h: y.tab.c
 y.tab.c: $(top_srcdir)parser.y
 	$(call ABBREV,YACC)
 	$(V)rm -f y.tab.c
-	$(V)if $(YACC) -v -d $< ; then chmod a-w y.tab.c ; true ; else rm y.tab.c ; false ; fi
+	$(V)if $(YACC) -v -d $< ; then                            \
+	  chmod a-w y.tab.c ;                                     \
+	  sed -e '/yyparse/d' < y.tab.h > y.tab.h.tmp &&          \
+	    mv y.tab.h.tmp y.tab.h ;                              \
+	else                                                      \
+	  rm y.tab.c ;                                            \
+	  false ;                                                 \
+	fi
 
 # Suppress useless sccs id array and unused label warning in byacc otuput.
 # Bison-generated parser also tests for this lint define.
