@@ -1,3 +1,56 @@
+                                    TXR 112
+                                   2015-08-14
+
+
+  Features
+
+  ! Note: the ChangeLog is discontinued. Description of changes, going
+    forward, is maintained in git commit messages only, in a hybrid format
+    which conforms to ChangeLog and git conventions at the same time.
+
+  ! Note: txr doesn't work correctly if parse.y is built with Byacc.
+    GNU Bison must be used. This will be addressed in the next release,
+    hopefully.
+
+  - Support for display width concept: identifying Unicode characters which
+    occupy two print positions on tty-like display and printing devices.
+    - Indentation, and field formatting in the format function obey display
+      width, rather than naive string length.
+    - The new display-width function calculates the display width of
+      characters and strings.
+
+  - The a..b syntax is slightly revised; it can occur outside of a list now,
+    and in the terminating position of a dotted list. It correctly associates,
+    so that a..b..c denotes (cons a (cons b c)).
+
+  - New function clamp for clamping numeric and other values to a range.
+
+  - New "qref dot" syntax: a dot flanked by expressions and no whitespace
+    denotes a new syntatic sugar such that a.b.c.d denotes the form
+    (qref a b c d), and a.b.(x y).z denotes (qref a b (x y) z).
+    However, this qref syntax has no assigned meaning yet (coming soon).
+
+  Bugs
+
+  - Regression in format function introduced in 111 is addressed: geneating
+    superfluous left padding when formatting non-numeric fields.
+
+  - Bad consing dot syntax like (a . b c) and (a . b . c)
+    is properly diagnosed instead of silently producing
+    strange (though consistent) results.
+
+  - Tokens with a package prefix but empty name like abc: are correctly
+    handled now by interning a symbol with the name "" (empty string)
+    in the given package.
+
+  - Fixed some minor bugs in lexical analysis of floating-point constants:
+    actual behavior was interpreting as valid certain forms that were
+    documented as erroneous.
+
+  - Fixed stream close bug in catenated streams.
+
+
+
                                     TXR 111
                                    2015-08-08
 
