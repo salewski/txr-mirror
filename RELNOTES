@@ -1,3 +1,43 @@
+                                    TXR 113
+                                   2015-08-20
+
+
+  Features
+
+  ! Note: txr builds and works with Berkeley Yacc again.
+
+  ! Note: txr is starting to make use of the alloca function.
+
+  * regex-parse function allows unescaped slashes and treats them
+    as verbatim characters, in recognition of slash delimiting being
+    needed only by regex literals.
+
+  * Better argument number mismatch reporting in certain indirect
+    function call situations.
+
+  Bugs
+
+  * Serious quasiquote regression fixed (from TXR 110): function call
+    syntax interpolated into a quasiliteral not working for TXR pattern
+    language quasiliterals, when the function is called with exactly
+    one argument; e.g. @(bind x `abc @(list 1)`).
+
+  * Serious parser problem fixed affecting Lisp code being read from
+    streams. The wrong kind of weak hash table was used to associate
+    parsers and streams, causing a disruption when garbage collection
+    kicks in, precipitating a false syntax error.
+
+  * Nested meta-variable references now work in quasiliterals.  If a
+    quasiliteral is nested in two layers of op syntax, it can use notation
+    like @@@1 and @@@rest to reach the outer parameters, and so on.
+
+  * Minor spurious retention issues addressed (garbage collection).
+
+  * Numerous markup errors fixed in documentation (thanks to
+    Dave Love of Fedora Project).
+
+
+
                                     TXR 112
                                    2015-08-14
 
