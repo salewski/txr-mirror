@@ -39,6 +39,7 @@
 #endif
 #if HAVE_WINDOWS_H
 #include <windows.h>
+#undef TEXT
 #endif
 #include "lib.h"
 #include "stream.h"
