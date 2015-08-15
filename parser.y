@@ -120,6 +120,7 @@ int yyparse(scanner_t *, parser_t *);
 %type <val> strlit chrlit quasilit quasi_items quasi_item litchars wordslit
 %type <val> wordsqlit not_a_clause
 %type <chr> regchar
+%type <val> byacc_fool
 %type <lineno> '(' '[' '@'
 
 %nonassoc LOW /* used for precedence assertion */
@@ -141,6 +142,7 @@ spec : clauses                  { parser->syntax_tree = $1; }
      | /* empty */              { parser->syntax_tree = nil; }
      | SECRET_ESCAPE_R regexpr  { parser->syntax_tree = $2; end_of_regex(scnr); }
      | SECRET_ESCAPE_E n_expr   { parser->syntax_tree = $2; YYACCEPT; }
+       byacc_fool               { internal_error("notreached"); }
      | SECRET_ESCAPE_E          { if (yychar == YYEOF) {
                                     parser->syntax_tree = nao;
                                     YYACCEPT;
@@ -155,6 +157,11 @@ spec : clauses                  { parser->syntax_tree = $1; }
                                   yybadtok(yychar, nil); }
 
      ;
+
+/* Hack needed for Berkeley Yacc */
+byacc_fool : n_expr { internal_error("notreached"); }
+           | { internal_error("notreached"); }
+           ;
 
 clauses : clauses_rev           { $$ = nreverse($1); }
 
