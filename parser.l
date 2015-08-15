@@ -218,7 +218,7 @@ UANY    {ASC}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 UANYN   {ASCN}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
-%x      SPECIAL BRACED NESTED REGEX STRLIT CHRLIT QSILIT QSPECIAL WLIT QWLIT
+%x      SPECIAL BRACED NESTED REGEX SREGEX STRLIT CHRLIT QSILIT QSPECIAL WLIT QWLIT
 
 %%
 
@@ -765,48 +765,47 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return ERRTOK;
 }
 
-<REGEX>[/] {
+<REGEX,SREGEX>[/] {
   yylval->chr = '/';
-  return '/';
+  return (YYSTATE == SREGEX) ? REGCHAR : '/';
 }
 
-
-<REGEX>[\\][abtnvfre\\ ] {
+<REGEX,SREGEX>[\\][abtnvfre\\ ] {
   yylval->chr = char_esc(yytext[1]);
   return REGCHAR;
 }
 
-<REGEX>[\\](x{HEX}+|{OCT}+);? {
+<REGEX,SREGEX>[\\](x{HEX}+|{OCT}+);? {
   yylval->chr = num_esc(yyg, yytext + 1);
   return REGCHAR;
 }
 
-<REGEX>[\\][sSdDwW] {
+<REGEX,SREGEX>[\\][sSdDwW] {
   yylval->chr = yytext[1];
   return REGTOKEN;
 }
 
-<REGEX>{WS}[\\]\n{WS} {
+<REGEX,SREGEX>{WS}[\\]\n{WS} {
   yyextra->lineno++;
 }
 
-<REGEX>\n {
+<REGEX,SREGEX>\n {
   yyextra->lineno++;
   yyerrprepf(yyg, lit("newline in regex"), nao);
   return ERRTOK;
 }
 
-<REGEX>{REGOP} {
+<REGEX,SREGEX>{REGOP} {
   yylval->chr = yytext[0];
   return yytext[0];
 }
 
-<REGEX>[\\]{REGOP} {
+<REGEX,SREGEX>[\\]{REGOP} {
   yylval->chr = yytext[1];
   return REGCHAR;
 }
 
-<REGEX>[\\]. {
+<REGEX,SREGEX>[\\]. {
   if (opt_compat && opt_compat <= 105) {
     yylval->chr = yytext[1];
     return REGCHAR;
@@ -816,12 +815,12 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return ERRTOK;
 }
 
-<REGEX>[\\] {
+<REGEX,SREGEX>[\\] {
   yyerrprepf(yyg, lit("dangling backslash in regex"), nao);
   return ERRTOK;
 }
 
-<REGEX>{UANYN}  {
+<REGEX,SREGEX>{UANYN}  {
   wchar_t buf[8];
   utf8_from(buf, yytext);
   yylval->chr = buf[0];
@@ -986,7 +985,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
 void end_of_regex(scanner_t *yyg)
 {
-  if (YYSTATE != REGEX)
+  if (YYSTATE != REGEX && YYSTATE != SREGEX)
     internal_error("end_of_regex called in wrong scanner state");
 
   yy_pop_state(yyg);
@@ -1050,7 +1049,7 @@ void prime_scanner(scanner_t *yyg, enum prime_parser prim)
     yy_push_state(NESTED, yyg);
     break;
   case prime_regex:
-    yy_push_state(REGEX, yyg);
+    yy_push_state(SREGEX, yyg);
     break;
   }
 }

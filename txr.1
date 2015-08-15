@@ -24836,9 +24836,9 @@ stream.
 .desc
 The
 .code regex-parse
-function parses a character string which contains a regular expression
-(without any surrounding / characters) and turns it into a Lisp data structure
-(the abstract syntax tree representation of the regular expression).
+function parses a character string which contains a regular expression and
+turns it into a Lisp data structure (the abstract syntax tree representation of
+the regular expression).
 
 The regular expression syntax
 .code #/RE/
@@ -24870,6 +24870,35 @@ returns a
 value, that structure is then something
 which is suitable as input to
 .codn regex-compile .
+
+There is a small difference in the syntax accepted by
+.code regex-parse
+and the syntax of regular expression literals. Any
+.code /
+(slash) characters occurring in any position within
+.meta string
+are treated as ordinary characters, not as regular expression delimiters.
+The call
+.code (regex-parse "/a/")
+matches three characters: a slash, followed by the letter "a", followed
+by another slash. Note that the slashes are not escaped.
+
+Note: if a
+.code regex-parse
+call is written using a string literal as the
+.meta string
+argument, then note that any backslashes which are to be processed
+by the regular expression must be doubled up, otherwise they belong
+to the string literal:
+
+.cblk
+  (regex-parse "\e*")  ;; error, invalid string literal escape
+  (regex-parse "\e\e*") ;; correct: the \e* literal match for *
+.cble
+
+The double backslash in the string literal produces a single backslash
+in the resulting string object that is processed by
+.codn regex-parse .
 
 .SS* Hashing Library
 .coNP Functions @, make-hash and @ hash
