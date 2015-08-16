@@ -187,20 +187,23 @@ $(call DEP,$(OBJS) $(EXTRA_OBJS-y),\
 $(eval $(foreach item,lex.yy.o txr.o match.o parser.o,\
           $(call DEP,opt/$(item) dbg/$(item),y.tab.h)))
 
-lex.yy.c: $(top_srcdir)parser.l $(conf_dir)/config.make $(conf_dir)/config.h
+$(eval $(foreach item,y.tab.c y.tab.h lex.yy.c,\
+          $(call DEP,$(item),$(conf_dir)/config.make $(conf_dir)/config.h)))
+
+lex.yy.c: $(top_srcdir)parser.l
 	$(call ABBREV,LEX)
 	$(V)rm -f $@
 	$(V)$(LEX) $(LEX_DBG_FLAGS) $<
 	$(V)chmod a-w $@
 
-y.tab.h: y.tab.c $(conf_dir)/config.make $(conf_dir)/config.h
+y.tab.h: y.tab.c
 	$(V)if ! [ -e y.tab.h ] ; then                            \
 	  echo "Someone removed y.tab.h but left y.tab.c" ;       \
 	  echo "Remove y.tab.c and re-run make" ;                 \
 	  exit 1;                                                 \
 	fi
 
-y.tab.c: $(top_srcdir)parser.y $(conf_dir)/config.make $(conf_dir)/config.h
+y.tab.c: $(top_srcdir)parser.y
 	$(call ABBREV,YACC)
 	$(V)rm -f y.tab.c
 	$(V)if $(YACC) -v -d $< ; then                            \
