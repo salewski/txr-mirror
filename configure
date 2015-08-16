@@ -121,6 +121,7 @@ have_windres=
 have_posix_sigs=
 need_darwin_c_source=
 have_git=
+have_alloca=
 conf_dir=config
 config_h=$conf_dir/config.h
 config_make=$conf_dir/config.make
@@ -2045,6 +2046,32 @@ if conftest ; then
   printf "#define HAVE_GETEUID 1\n" >> $config_h
   have_unistd=y
 else
+  printf "no\n"
+fi
+
+printf "Checking for alloca ... "
+
+for try_header in alloca.h malloc.h ; do
+  cat > conftest.c <<!
+#include <$try_header>
+
+int main(int argc, char **argv)
+{
+  void *bytes = alloca(42);
+  return 0;
+}
+!
+
+  if conftest ; then
+    printf "yes\n"
+    printf "#define HAVE_ALLOCA 1\n" >> $config_h
+    printf "#define ALLOCA_H <%s>\n" $try_header >> $config_h
+    have_alloca=y
+    break;
+  fi
+done
+
+if [ -z "$have_alloca" ] ; then
   printf "no\n"
 fi
 
