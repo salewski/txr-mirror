@@ -9,9 +9,6 @@
     $Id: mpi.h,v 1.1 2004/02/08 04:29:29 sting Exp $
  */
 
-#ifndef _H_MPI_
-#define _H_MPI_
-
 #include "mpi-config.h"
 
 #if MP_DEBUG
@@ -253,5 +250,3 @@ int    mp_char2value(char ch, int r);
 /* Error strings                                                          */
 
 const  char  *mp_strerror(mp_err ec);
-
-#endif /* end _H_MPI_ */

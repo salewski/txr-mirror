@@ -1,9 +1,6 @@
 /* Default configuration for MPI library */
 /* $Id: mpi-config.h,v 1.1 2004/02/08 04:29:29 sting Exp $ */
 
-#ifndef MPI_CONFIG_H_
-#define MPI_CONFIG_H_
-
 /*
   For boolean options, 
   0 = no
@@ -79,7 +76,3 @@
 #ifndef MP_COMPAT_MACROS
 #define MP_COMPAT_MACROS 0   /* define compatibility macros?    */
 #endif
-
-#endif /* ifndef MPI_CONFIG_H_ */
-
-
