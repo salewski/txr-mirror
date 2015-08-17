@@ -31871,11 +31871,12 @@ is installed.
 Note: there is no need to use the value of this variable to load library
 modules. Library modules are keyed to specific symbols, and lazily loaded. When
 a \*(TL library function, macro or variable is referenced for the first time,
-the library module which defines it is loaded.  This automatic loading happens
-during the code expansion phase, or "macro time", so it works for macros. In
-the middle of a syntax tree of code, code expander can encounters a symbol
-which triggers a library load which defines a macro.  When that load completes,
-the code expander can expand that macro using the newly created definition.
+the library module which defines it is loaded.  This includes references
+which occur during the code expansion phase, at "macro time", so it works for
+macros. In the middle of processing a syntax tree, the expander may encounter a
+symbol that is registered for auto-loading, and trigger the load. When the load
+completes, the symbol might now be defined as a macro, which the expander
+can immediately use to expand the given form that is being traversed.
 
 .coNP Macro @ load
 .synb
