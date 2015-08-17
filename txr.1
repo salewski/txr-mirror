@@ -4463,7 +4463,7 @@ Example:
 The line
 .code 42
 is not collected, even though it matches
-.con @a .
+.codn @a .
 Furthermore,
 the
 .code @(until)
@@ -4564,7 +4564,7 @@ establishes a binding for some material preceding an equal sign.
 The right
 .code @x
 refers to that binding. The value of
-.cod @x
+.code @x
 is different in each
 iteration, and these values are collected. What finally comes out of the
 collect clause is a single variable called
@@ -4802,7 +4802,7 @@ match, the
 .code :vars
 .code a
 and
-.cod b
+.code b
 should be bound to empty lists. But
 .code a
 is bound by the last clause to some text, so this takes precedence. Only
@@ -8155,7 +8155,7 @@ the enclosing block named
 .code foo
 to terminate, as a successful match.
 Since the
-.cod try
+.code try
 is nested within this block, it too must terminate
 in order for the block to terminate. But the try has a
 .code finally
@@ -8282,7 +8282,7 @@ In this example, the main clause of the
 .code try
 fails to match, because
 the input is not prefixed with
-.srn "hello " .
+.strn "hello " .
 However, the
 .code finally
 clause
@@ -8448,7 +8448,7 @@ So the success or failure of the
 block depends on the behavior of the
 .code catch
 clause or the
-.ocde finally
+.code finally
 clause, if there is one. If either of them succeed, then the try
 block is considered a successful match.
 
@@ -12495,17 +12495,17 @@ function.
 The
 .code constantp
 function determines whether
-.mode form
+.meta form
 is a constant form, with respect to environment
-.mode env .
+.metn env .
 
 If
-.mode env
+.meta env
 is absent, the global environment is used.
 The
-.mode env
+.meta env
 argument is used for macro-expanding
-.modn form .
+.metn form .
 
 Currently,
 .code constantp
@@ -14560,7 +14560,7 @@ which is, respectively,
 .codn eq ,
 .code eql
 or
-.coe equal
+.code equal
 to
 .metn object .
 (See the
@@ -16188,7 +16188,7 @@ function searches
 .meta string
 for tokens, which are defined as
 substrings of
-.mta string
+.meta string
 which match the regular expression
 .meta regex
 in the
@@ -19316,7 +19316,7 @@ Otherwise, if
 yields
 .code nil
 for any value, the
-.cod all
+.code all
 function immediately
 returns without invoking
 .meta predicate-fun
@@ -23913,7 +23913,7 @@ is represented as
 its complement is
 .codn ...11111110 .
 Each one of the
-.cod 0
+.code 0
 digits in the infinite sequence is replaced by
 .codn 1 ,
 And this leading sequence means that the number
@@ -24294,7 +24294,7 @@ The
 .code catch
 operator establishes an exception catching block around
 the
-.metan try-expression .
+.metn try-expression .
 The
 .meta try-expression
 is followed by zero or more
@@ -24356,7 +24356,7 @@ and
 .syne
 .desc
 The
-.cod unwind-protect
+.code unwind-protect
 operator evaluates
 .meta protected-form
 in such a way that no matter how the execution of
@@ -25831,7 +25831,7 @@ highest value of
 .meta num
 appearing in a
 .cblk
-.mati >> @ num
+.meti >> @ num
 .cble
 construct in the body. For instance
 .code (op car @3)
@@ -26117,7 +26117,7 @@ in any combination, in regard to the
 notation.
 
 The
-.ode ip
+.code ip
 macro is very similar to the
 .code ap
 macro, except that it is based
@@ -27079,7 +27079,7 @@ sign is printed for positive numbers. If
 the precision specifier has a leading space instead of a
 .code +
 sign, then the
-.ocde +
+.code +
 sign is rendered as a space for positive numbers. If there is no leading space
 or
 .codn + ,
@@ -28782,7 +28782,7 @@ is a string. It is an error if a package by that name exists already.
 The
 .code packagep
 function returns
-.codet
+.code t
 if
 .meta obj
 is a package, otherwise it returns
@@ -29648,7 +29648,7 @@ calling the Unix
 .code makedev
 function).  This device number is suitable as an
 argument to the
-.codee mknod
+.code mknod
 function (see below). Device numbers also appear the
 .code :dev
 property returned by the
