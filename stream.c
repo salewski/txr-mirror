@@ -26,6 +26,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stddef.h>
 #include <dirent.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -53,6 +54,8 @@
 #include "gc.h"
 #include "signal.h"
 #include "unwind.h"
+#include ALLOCA_H
+#include "args.h"
 #include "stream.h"
 #include "utf8.h"
 #include "eval.h"
@@ -2132,10 +2135,11 @@ static void vformat_str(val stream, val str, int width, enum align align,
   rel1(&str);
 }
 
-val vformat(val stream, val fmtstr, va_list vl)
+static val aformat(val stream, val fmtstr, struct args *al)
 {
   val save_indent = get_indent(stream);
   val save_mode = nil;
+  val name = lit("format");
 
   uw_simple_catch_begin;
 
@@ -2150,6 +2154,7 @@ val vformat(val stream, val fmtstr, va_list vl)
     enum align align = al_right;
     int sign = 0, zeropad = 0;
     cnum value;
+    cnum arg_ix = 0;
 
     for (;;) {
       val obj;
@@ -2242,7 +2247,8 @@ val vformat(val stream, val fmtstr, va_list vl)
         case '5': case '6': case '7': case '8': case '9':
           digits = (digits * 10) + (ch - '0');
           if (digits > 999999)
-            goto toobig;
+            uw_throwf(assert_s, lit("~a: ridiculous precision or field"),
+                      name, nao);
           continue;
         default:
   do_digits:
@@ -2275,7 +2281,7 @@ val vformat(val stream, val fmtstr, va_list vl)
         }
         break;
       case vf_star:
-        obj = va_arg(vl, val);
+        obj = args_get_checked(name, al, &arg_ix);
         digits = c_num(obj);
         goto do_digits;
         break;
@@ -2283,7 +2289,7 @@ val vformat(val stream, val fmtstr, va_list vl)
         state = vf_init;
         switch (ch) {
         case 'x': case 'X':
-          obj = va_arg(vl, val);
+          obj = args_get_checked(name, al, &arg_ix);
           if (bignump(obj)) {
             int nchars = mp_radix_size(mp(obj), 16);
             if (nchars >= convert(int, sizeof (num_buf)))
@@ -2301,7 +2307,7 @@ val vformat(val stream, val fmtstr, va_list vl)
           }
           goto output_num;
         case 'o':
-          obj = va_arg(vl, val);
+          obj = args_get_checked(name, al, &arg_ix);
           if (bignump(obj)) {
             int nchars = mp_radix_size(mp(obj), 8);
             if (nchars >= convert(int, sizeof (num_buf)))
@@ -2313,10 +2319,7 @@ val vformat(val stream, val fmtstr, va_list vl)
           }
           goto output_num;
         case 'f': case 'e':
-          obj = va_arg(vl, val);
-
-          if (obj == nao)
-            goto premature;
+          obj = args_get_checked(name, al, &arg_ix);
 
           {
             double n;
@@ -2382,9 +2385,8 @@ val vformat(val stream, val fmtstr, va_list vl)
             goto output_num;
           }
         case 'a': case 's':
-          obj = va_arg(vl, val);
-          if (obj == nao)
-            goto premature;
+          obj = args_get_checked(name, al, &arg_ix);
+
           switch (type(obj)) {
           case NUM:
             value = c_num(obj);
@@ -2455,7 +2457,7 @@ val vformat(val stream, val fmtstr, va_list vl)
           continue;
         case 'p':
           {
-            val ptr = va_arg(vl, val);
+            val ptr = args_get_checked(name, al, &arg_ix);
             value = coerce(cnum, ptr);
             sprintf(num_buf, num_fmt->hex, value);
           }
@@ -2485,17 +2487,11 @@ val vformat(val stream, val fmtstr, va_list vl)
 
       break;
     }
+
+    if (args_more(al, arg_ix))
+      uw_throwf(assert_s, lit("~a: excess arguments"), name, nao);
   }
 
-  if (0) {
-premature:
-    internal_error("insufficient arguments for format");
-toobig:
-    internal_error("ridiculous precision or field width in format");
-  }
-
-  if (va_arg(vl, val) != nao)
-    internal_error("unterminated format argument list");
 
   uw_unwind {
     set_indent(stream, save_indent);
@@ -2508,6 +2504,18 @@ toobig:
   uw_catch_end;
 
   return t;
+}
+
+val vformat(val stream, val fmtstr, va_list vl)
+{
+  struct args *args = args_alloc(ARGS_MAX);
+  val arg;
+  args_init(args, ARGS_MAX);
+
+  while ((arg = va_arg(vl, val)) != nao)
+    args_add_checked(lit("format"), args, arg);
+
+  return aformat(stream, fmtstr, args);
 }
 
 val vformat_to_string(val fmtstr, va_list vl)
@@ -2535,51 +2543,25 @@ val format(val stream, val str, ...)
   }
 }
 
-val formatv(val stream, val string, val args)
+val formatv(val stream, val string, val arglist)
 {
-  val arg[32], *p = arg;
+  uses_or2;
+  val st = if3(stream == t,
+               std_output,
+               or2(stream, make_string_output_stream()));
+  cnum argc = args_limit(lit("format"), c_num(length_list(arglist)));
+  struct args *args = args_alloc(argc);
+  val ret;
 
-  for (; args && p - arg < 32; args = cdr(args), p++)
-    *p = car(args);
+  class_check(st, stream_s);
+  args_init(args, argc);
 
-  switch (p - arg) {
-  case  0: return format(stream, string,  nao);
-  case  1: return format(stream, string, arg[0], nao);
-  case  2: return format(stream, string, arg[0], arg[1], nao);
-  case  3: return format(stream, string, arg[0], arg[1], arg[2], nao);
-  case  4: return format(stream, string, arg[0], arg[1], arg[2], arg[3], nao);
-  case  5: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], nao);
-  case  6: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], nao);
-  case  7: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], nao);
-  case  8: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], nao);
-  case  9: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], nao);
-  case 10: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], nao);
-  case 11: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], nao);
-  case 12: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], nao);
-  case 13: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], nao);
-  case 14: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], nao);
-  case 15: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], nao);
-  case 16: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], nao);
-  case 17: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], nao);
-  case 18: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], nao);
-  case 19: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], arg[18], nao);
-  case 20: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], arg[18], arg[19], nao);
-  case 21: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], arg[18], arg[19], arg[20], nao);
-  case 22: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], arg[18], arg[19], arg[20], arg[21], nao);
-  case 23: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], arg[18], arg[19], arg[20], arg[21], arg[22], nao);
-  case 24: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], arg[18], arg[19], arg[20], arg[21], arg[22], arg[23], nao);
-  case 25: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], arg[18], arg[19], arg[20], arg[21], arg[22], arg[23], arg[24], nao);
-  case 26: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], arg[18], arg[19], arg[20], arg[21], arg[22], arg[23], arg[24], arg[25], nao);
-  case 27: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], arg[18], arg[19], arg[20], arg[21], arg[22], arg[23], arg[24], arg[25], arg[26], nao);
-  case 28: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], arg[18], arg[19], arg[20], arg[21], arg[22], arg[23], arg[24], arg[25], arg[26], arg[27], nao);
-  case 29: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], arg[18], arg[19], arg[20], arg[21], arg[22], arg[23], arg[24], arg[25], arg[26], arg[27], arg[28], nao);
-  case 30: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], arg[18], arg[19], arg[20], arg[21], arg[22], arg[23], arg[24], arg[25], arg[26], arg[27], arg[28], arg[29], nao);
-  case 31: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], arg[18], arg[19], arg[20], arg[21], arg[22], arg[23], arg[24], arg[25], arg[26], arg[27], arg[28], arg[29], arg[30], nao);
-  case 32: return format(stream, string, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11], arg[12], arg[13], arg[14], arg[15], arg[16], arg[17], arg[18], arg[19], arg[20], arg[21], arg[22], arg[23], arg[24], arg[25], arg[26], arg[27], arg[28], arg[29], arg[30], arg[31], nao);
-  }
+  for (; arglist; arglist = cdr(arglist))
+    args_add(args, car(arglist));
 
-  uw_throwf(file_error_s, lit("too many arguments to format"), nao);
-  abort();
+  ret = aformat(st, string, args);
+
+  return (stream) ? ret : get_string_from_stream(st);
 }
 
 static val put_indent(val stream, struct strm_ops *ops, cnum chars)
