@@ -4389,11 +4389,11 @@ val generic_funcall(val fun, val arg[], int nargs)
     case F1:
       return fun->f.f.f1v(fun->f.env, z(arg[0]), z(arglist));
     case F2:
-      return fun->f.f.f2v(fun->f.env, arg[0], arg[1], z(arglist));
+      return fun->f.f.f2v(fun->f.env, z(arg[0]), z(arg[1]), z(arglist));
     case F3:
-      return fun->f.f.f3v(fun->f.env, arg[0], arg[1], arg[2], z(arglist));
+      return fun->f.f.f3v(fun->f.env, z(arg[0]), z(arg[1]), z(arg[2]), z(arglist));
     case F4:
-      return fun->f.f.f4v(fun->f.env, arg[0], arg[1], arg[2], arg[3], z(arglist));
+      return fun->f.f.f4v(fun->f.env, z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arglist));
     case N0:
       return fun->f.f.n0v(z(arglist));
     case N1:
