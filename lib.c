@@ -4264,6 +4264,19 @@ val interp_fun_p(val obj)
   return (functionp(obj) && obj->f.functype == FINTERP) ? t : nil;
 }
 
+static noreturn void callerror(val fun, val msg)
+{
+  uses_or2;
+  prinl(last_form_evaled, nil);
+  if (functionp(fun))
+    fun = format(nil, lit("~s"), or2(func_get_name(fun, nil), fun), nao);
+  else
+    fun = format(nil, lit("object ~s called as function"), fun, nao);
+
+  uw_throwf(error_s, lit("~a: ~a"), fun, msg, nao);
+  abort();
+}
+
 val generic_funcall(val fun, val arg[], int nargs)
 {
   int variadic, fixparam, reqargs;
@@ -4280,7 +4293,7 @@ val generic_funcall(val fun, val arg[], int nargs)
   case LSTR:
     switch (nargs) {
     case 0:
-      uw_throw(error_s, lit("call: missing required arguments"));
+      callerror(fun, lit("missing required arguments"));
     case 1:
       if (consp(arg[0])) {
         cons_bind (x, y, arg[0]);
@@ -4294,16 +4307,13 @@ val generic_funcall(val fun, val arg[], int nargs)
     case 2:
       return sub(fun, arg[0], arg[1]);
     default:
-      uw_throw(error_s, lit("call: too many arguments"));
+      callerror(fun, lit("too many arguments"));
     }
   case SYM:
     {
       val binding = lookup_fun(nil, fun);
-      if (!binding) {
-        uw_throwf(error_s, lit("call: symbol ~s has no function binding"),
-                  fun, nao);
-        abort();
-      }
+      if (!binding)
+        callerror(fun, lit("has no function binding"));
       fun = cdr(binding);
     }
     break;
@@ -4311,18 +4321,18 @@ val generic_funcall(val fun, val arg[], int nargs)
     if (fun->co.cls == hash_s) {
       switch (nargs) {
       case 0:
-        uw_throw(error_s, lit("call: missing required arguments"));
+        callerror(fun, lit("missing required arguments"));
       case 1:
         return gethash(fun, arg[0]);
       case 2:
         return gethash_n(fun, arg[0], arg[1]);
       default:
-        uw_throw(error_s, lit("call: too many arguments"));
+        callerror(fun, lit("too many arguments"));
       }
     }
     /* fallthrough */
   default:
-    type_mismatch(lit("call: ~s is not callable"), fun, nao);
+    callerror(fun, lit("is not callable"));
   }
 
   variadic = fun->f.variadic;
@@ -4331,10 +4341,10 @@ val generic_funcall(val fun, val arg[], int nargs)
 
   if (!variadic) {
     if (nargs < reqargs)
-      uw_throw(error_s, lit("call: missing required arguments"));
+      callerror(fun, lit("missing required arguments"));
 
     if (nargs > fixparam)
-      uw_throw(error_s, lit("call: too many arguments"));
+      callerror(fun, lit("too many arguments"));
 
     for (; nargs < fixparam; )
       arg[nargs++] = colon_k;
@@ -4373,7 +4383,7 @@ val generic_funcall(val fun, val arg[], int nargs)
     val arglist = nil;
 
     if (nargs < reqargs)
-      uw_throw(error_s, lit("call: missing required arguments"));
+      callerror(fun, lit("missing required arguments"));
 
     for (; nargs < fixparam; )
       arg[nargs++] = colon_k;
@@ -4418,11 +4428,7 @@ val generic_funcall(val fun, val arg[], int nargs)
 
 static noreturn void wrongargs(val fun)
 {
-  uses_or2;
-  prinl(last_form_evaled, nil);
-  uw_throwf(error_s, lit("~s: wrong number of arguments"),
-            or2(func_get_name(fun, nil), fun), nao);
-  abort();
+  callerror(fun, lit("wrong number of arguments"));
 }
 
 val funcall(val fun)
