@@ -48,7 +48,6 @@ struct parser {
   val name;
   val prepared_msg;
   val syntax_tree;
-  yyscan_t yyscan;
   scanner_t *scanner;
   struct yy_token recent_tok;
   struct yy_token tok_pushback[4];

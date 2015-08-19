@@ -90,6 +90,7 @@ static struct cobj_ops parser_ops = {
 void parser_common_init(parser_t *p)
 {
   int i;
+  yyscan_t yyscan;
 
   p->parser = nil;
   p->lineno = 1;
@@ -98,8 +99,8 @@ void parser_common_init(parser_t *p)
   p->name = nil;
   p->prepared_msg = nil;
   p->syntax_tree = nil;
-  yylex_init(&p->yyscan);
-  p->scanner = convert(scanner_t *, p->yyscan);
+  yylex_init(&yyscan);
+  p->scanner = convert(scanner_t *, yyscan);
   yyset_extra(p, p->scanner);
   p->recent_tok.yy_char = 0;
   p->recent_tok.yy_lval.val = 0;
