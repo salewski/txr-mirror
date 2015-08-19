@@ -54,10 +54,7 @@ static val stream_parser_hash;
 
 static void yy_tok_mark(struct yy_token *tok)
 {
-  obj_t *ptr = tok->yy_lval.val;
-
-  if (gc_is_heap_obj(ptr))
-    gc_mark(ptr);
+  gc_conservative_mark(tok->yy_lval.val);
 }
 
 static void parser_mark(val obj)

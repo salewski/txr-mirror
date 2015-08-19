@@ -33,8 +33,8 @@ val make_obj(void);
 void gc(void);
 int gc_state(int);
 void gc_mark(val);
+void gc_conservative_mark(val);
 int gc_is_reachable(val);
-int gc_is_heap_obj(union obj *ptr);
 
 #if CONFIG_GEN_GC
 val gc_set(loc, val);

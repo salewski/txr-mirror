@@ -395,9 +395,26 @@ static int in_heap(val ptr)
   return 0;
 }
 
-int gc_is_heap_obj(union obj *ptr)
+static void mark_obj_maybe(val maybe_obj)
 {
-  return in_heap(ptr);
+#if HAVE_VALGRIND
+  VALGRIND_MAKE_MEM_DEFINED(&maybe_obj, sizeof maybe_obj);
+#endif
+  if (in_heap(maybe_obj)) {
+#if HAVE_VALGRIND
+    if (opt_vg_debug)
+      VALGRIND_MAKE_MEM_DEFINED(maybe_obj, SIZEOF_PTR);
+#endif
+    type_t t = maybe_obj->t.type;
+    if ((t & FREE) == 0) {
+      mark_obj(maybe_obj);
+    } else {
+#if HAVE_VALGRIND
+      if (opt_vg_debug)
+        VALGRIND_MAKE_MEM_NOACCESS(maybe_obj, sizeof *maybe_obj);
+#endif
+    }
+  }
 }
 
 static void mark_mem_region(val *low, val *high)
@@ -408,28 +425,8 @@ static void mark_mem_region(val *low, val *high)
     low = tmp;
   }
 
-  while (low < high) {
-    val maybe_obj = *low;
-#if HAVE_VALGRIND
-    VALGRIND_MAKE_MEM_DEFINED(&maybe_obj, sizeof maybe_obj);
-#endif
-    if (in_heap(maybe_obj)) {
-#if HAVE_VALGRIND
-      if (opt_vg_debug)
-        VALGRIND_MAKE_MEM_DEFINED(maybe_obj, SIZEOF_PTR);
-#endif
-      type_t t = maybe_obj->t.type;
-      if ((t & FREE) == 0) {
-        mark_obj(maybe_obj);
-      } else {
-#if HAVE_VALGRIND
-        if (opt_vg_debug)
-          VALGRIND_MAKE_MEM_NOACCESS(maybe_obj, sizeof *maybe_obj);
-#endif
-      }
-    }
-    low++;
-  }
+  for (; low < high; low++)
+    mark_obj_maybe(*low);
 }
 
 static void mark(mach_context_t *pmc, val *gc_stack_top)
@@ -716,6 +713,11 @@ void gc_init(val *stack_bottom)
 void gc_mark(val obj)
 {
   mark_obj(obj);
+}
+
+void gc_conservative_mark(val maybe_obj)
+{
+  mark_obj_maybe(maybe_obj);
 }
 
 int gc_is_reachable(val obj)
