@@ -348,6 +348,6 @@ void parse_init(void)
   unique_s = gensym(nil);
   prot1(&stream_parser_hash);
   prot1(&unique_s);
-  stream_parser_hash = make_hash(t, t, nil);
+  stream_parser_hash = make_hash(t, nil, nil);
   parser_l_init();
 }
