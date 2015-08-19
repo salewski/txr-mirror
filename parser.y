@@ -1372,8 +1372,8 @@ static val quasi_meta_helper(val obj)
   if (atom(obj))
     goto expr;
 
-  if (first(obj) == var_s)
-    goto var;
+  if (first(obj) == var_s || first(obj) == expr_s)
+    return obj;
 
 expr:
   return rlcp(cons(expr_s, obj), obj);
