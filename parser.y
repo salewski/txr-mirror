@@ -1369,17 +1369,17 @@ static val quasi_meta_helper(val obj)
   if (integerp(obj) || symbolp(obj))
     goto var;
 
-  if (atom(obj) || length(obj) != two)
+  if (atom(obj))
     goto expr;
 
-  if (first(obj) == var_s && integerp(second(obj)))
+  if (first(obj) == var_s)
     goto var;
-
-var:
-  return rlcp_tree(cons(var_s, cons(obj, nil)), obj);
 
 expr:
   return rlcp(cons(expr_s, obj), obj);
+
+var:
+  return rlcp_tree(cons(var_s, cons(obj, nil)), obj);
 }
 
 static void misplaced_consing_dot_check(scanner_t *scanner, val term_atom_cons)
