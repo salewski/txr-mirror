@@ -235,11 +235,11 @@
 ..
 .\" .cod1 a b c ->  abc  where a is typeset as code
 .de cod1
-\\$1\f[4]\\$2\f[]\$3
+\&\\$1\f[4]\\$2\f[]\$3
 ..
 .\" .cod2 a b ->  ab  where b is typeset as code
 .de cod2
-\\$1\f[4]\\$2\f[]
+\&\\$1\f[4]\\$2\f[]
 ..
 .\" .cod3 a b c ->  abc  where a and c are typeset as code
 .de cod3
@@ -268,7 +268,7 @@
 .  getm \\$*
 .  \"workaround for man2html:
 .  as s \\f\\n[fsav]
-\\*s
+\&\\*s
 .  ft \\n[fsav]
 ..
 .\" Used for meta-variables in .coIP
@@ -310,7 +310,7 @@
 .  ds s \\$1
 .  shift
 .  TP \\$*
-\\*s
+\&\\*s
 .  sp \*[vspc]
 .  ns
 ..
