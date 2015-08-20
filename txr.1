@@ -9811,7 +9811,9 @@ Similarly to Common Lisp, \*(TL is lexically scoped by default, but
 also has dynamically scoped (a.k.a "special") variables.
 
 When a variable is defined with
-.codn defvar ,
+.code defvar
+or
+.codn defparm ,
 a binding for the symbol is
 introduced in the global name space, regardless of in what scope the
 .code defvar
@@ -9836,10 +9838,6 @@ used as the name of a global variable, a good practice is to make global
 variables have visually distinct names via the "earmuffs" convention:
 beginning and ending the name with an asterisk.
 
-Certain variables in \*(TX's library break this convention; however, they at
-least have distinct prefixes, examples being example s-ifmt, log-emerg and
-sig-hup.
-
 .TP* "Example:"
 
 .cblk
@@ -9854,7 +9852,7 @@ sig-hup.
   (print-x)           ;; *x* is 42 again and so "42" is printed
 .cble
 
-.TP* "Dialect Note:"
+.TP* "Dialect Note 1:"
 
 The terms
 .I bind
@@ -9878,6 +9876,35 @@ a value. If a
 form doesn't specify a value, and the variable doesn't exist, it is
 created with a value of
 .codn nil .
+
+.TP* "Dialect Note 2:"
+
+Unlike ANSI Common Lisp, \*(TL has global lexical variables in addition to
+special variables. These are defined using
+.code defvarl
+and
+.codn defparml .
+The only difference is that when variables are introduced by these macros,
+the symbols are not marked special, so their binding in lexical scopes
+is not altered to dynamic binding.
+
+Many variables in \*(TL's standard library are global lexicals.
+Those which are special variables obey the "earmuffs" convention
+in their naming. For instance
+.codn s-ifmt ,
+.code log-emerg and
+.code sig-hup are global lexicals, because they provide constant values
+for which overriding doesn't make sense. On the other hand the standard
+output stream variable
+.codn *stdout*
+is special. Overriding it over a dynamic scope is very useful.
+
+.TP* "Dialect Note 3:"
+
+In Common Lisp,
+.code defparm
+is known as
+.codn defparameter .
 
 .SS* Syntactic Places and Accessors
 
@@ -10239,11 +10266,11 @@ modified using the
 .code symbol-function
 accessor.
 
-.NP* Dynamic Variables
+.NP* Global and Dynamic Variables
 
 There is a global namespace for variables also.
 The operators
-.code defun
+.code defvar
 and
 .code defparm
 introduce bindings into this namespace. These operators have the
@@ -10254,6 +10281,14 @@ rebinding is called the dynamic environment.
 The dynamic environment can be inspected and modified using the
 .code symbol-value
 accessor.
+
+The operators
+.code defvarl
+and
+.code defparml
+introduce bindings into the global namespace without marking
+symbols as special variables. Such bindings are called global lexical
+variables.
 
 .NP* Global Symbol Macros
 
