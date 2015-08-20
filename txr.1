@@ -9305,8 +9305,8 @@ used for quasi string literals.
 
 The comma character is used within a
 .meta qq-template
-to denote an unquote.  Whereas
-the quote suppresses evaluation, the comma introduces an exception: an element
+to denote an unquote.  Whereas the quasiquote suppresses evaluation,
+similarly to the quote, the comma introduces an exception: an element
 of a form which is evaluated. For example, list
 .code ^(a b c ,(+ 2 2) (+ 2 2))
 is the list
