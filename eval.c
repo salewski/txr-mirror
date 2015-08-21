@@ -3515,7 +3515,7 @@ static val fmakunbound(val sym)
   return sym;
 }
 
-static val rangev_func(val env, val lcons)
+static val range_func(val env, val lcons)
 {
   cons_bind (from, to_step, env);
   cons_bind (to, step, to_step);
@@ -3539,17 +3539,17 @@ static val rangev_func(val env, val lcons)
   return nil;
 }
 
-static val rangev(val args)
+static val range(val from_in, val to_in, val step_in)
 {
-  val from = default_arg(first(args), zero);
-  val to = default_bool_arg(second(args));
-  val step = default_arg(third(args), if3(to && gt(from, to), negone, one));
+  val from = default_arg(from_in, zero);
+  val to = default_bool_arg(to_in);
+  val step = default_arg(step_in, if3(to && gt(from, to), negone, one));
   val env = cons(from, cons(to, step));
 
-  return make_lazy_cons(func_f1(env, rangev_func));
+  return make_lazy_cons(func_f1(env, range_func));
 }
 
-static val range_star_v_func(val env, val lcons)
+static val range_star_func(val env, val lcons)
 {
   cons_bind (from, to_step, env);
   cons_bind (to, step, to_step);
@@ -3573,19 +3573,18 @@ static val range_star_v_func(val env, val lcons)
   return nil;
 }
 
-static val range_star_v(val args)
+static val range_star(val from_in, val to_in, val step_in)
 {
-  uses_or2;
-  val from = default_arg(first(args), zero);
-  val to = default_bool_arg(second(args));
+  val from = default_arg(from_in, zero);
+  val to = default_bool_arg(to_in);
 
   if (eql(from, to)) {
     return nil;
   } else {
-    val step = or2(third(args), if3(to && gt(from, to), negone, one));
+    val step = default_arg(step_in, if3(to && gt(from, to), negone, one));
     val env = cons(from, cons(to, step));
 
-    return make_lazy_cons(func_f1(env, range_star_v_func));
+    return make_lazy_cons(func_f1(env, range_star_func));
   }
 }
 
@@ -4643,8 +4642,8 @@ void eval_init(void)
   reg_fun(intern(lit("random"), user_package), func_n2(random));
   reg_fun(intern(lit("rand"), user_package), func_n2o(rnd, 1));
 
-  reg_fun(intern(lit("range"), user_package), func_n0v(rangev));
-  reg_fun(intern(lit("range*"), user_package), func_n0v(range_star_v));
+  reg_fun(intern(lit("range"), user_package), func_n3o(range, 0));
+  reg_fun(intern(lit("range*"), user_package), func_n3o(range_star, 0));
   reg_fun(generate_s, func_n2(generate));
   reg_fun(intern(lit("giterate"), user_package), func_n3o(giterate, 2));
   reg_fun(intern(lit("repeat"), user_package), func_n2o(repeat, 1));
