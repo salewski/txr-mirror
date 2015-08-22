@@ -3185,9 +3185,7 @@ static val open_files(val file_list, val substitute_stream)
   if (nilp(file_list) && substitute_stream) {
     return substitute_stream;
   } else {
-    return apply_intrinsic(func_n0v(make_catenated_stream),
-                           cons(mapcar(func_n2o(open_file, 1), file_list), nil));
-
+    return make_catenated_stream(mapcar(func_n2o(open_file, 1), file_list));
   }
 }
 
@@ -3198,8 +3196,7 @@ static val open_files_star(val file_list, val substitute_stream)
   if (nilp(file_list) && substitute_stream) {
     return substitute_stream;
   } else {
-    return apply_intrinsic(func_n0v(make_catenated_stream),
-                           cons(lazy_mapcar(func_n2o(open_file, 1), file_list), nil));
+    return make_catenated_stream(lazy_mapcar(func_n2o(open_file, 1), file_list));
   }
 }
 
