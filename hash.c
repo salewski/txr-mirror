@@ -24,6 +24,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 #include <dirent.h>
@@ -33,8 +34,10 @@
 #include <limits.h>
 #include <signal.h>
 #include "config.h"
+#include ALLOCA_H
 #include "lib.h"
 #include "gc.h"
+#include "args.h"
 #include "signal.h"
 #include "unwind.h"
 #include "stream.h"
@@ -872,17 +875,25 @@ void hash_process_weak(void)
   do_iters();
 }
 
-val hashv(val args)
+val hashv(struct args *args)
 {
-  val wkeys = memq(weak_keys_k, args);
-  val wvals = memq(weak_vals_k, args);
-  val equal = memq(equal_based_k, args);
+  val arglist = args_get_list(args);
+  val wkeys = memq(weak_keys_k, arglist);
+  val wvals = memq(weak_vals_k, arglist);
+  val equal = memq(equal_based_k, arglist);
   return make_hash(wkeys, wvals, equal);
 }
 
-val hash_construct(val hashv_args, val pairs)
+val hashl(val arglist)
 {
-  val hash = hashv(hashv_args);
+  struct args *args = args_alloc(ARGS_MIN);
+  args_init_list(args, ARGS_MIN, arglist);
+  return hashv(args);
+}
+
+val hash_construct(val hashl_args, val pairs)
+{
+  val hash = hashl(hashl_args);
 
   pairs = nullify(pairs);
 
@@ -894,14 +905,14 @@ val hash_construct(val hashv_args, val pairs)
   return hash;
 }
 
-val hash_from_pairs(val pairs, val hashv_args)
+val hash_from_pairs_v(val pairs, struct args *hashv_args)
 {
-  return hash_construct(default_bool_arg(hashv_args), pairs);
+  return hash_construct(args_get_list(hashv_args), pairs);
 }
 
-val hash_list(val keys, val hashv_args)
+val hash_list(val keys, struct args *hashv_args)
 {
-  val hash = hashv(default_bool_arg(hashv_args));
+  val hash = hashv(hashv_args);
 
   keys = nullify(keys);
 
@@ -913,7 +924,7 @@ val hash_list(val keys, val hashv_args)
   return hash;
 }
 
-val group_by(val func, val seq, val hashv_args)
+val group_by(val func, val seq, struct args *hashv_args)
 {
   val hash = hashv(hashv_args);
 

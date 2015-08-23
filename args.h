@@ -33,20 +33,14 @@ struct args {
 
 typedef int arg_index;
 
-#define ARGS_MAX 1024
+#define ARGS_MAX 32
+#define ARGS_MIN 4
 
 #define args_alloc(N)                                                   \
   (coerce(struct args *,                                                \
           alloca(offsetof(struct args, arg) + (N)*sizeof (val))))
 
 cnum args_limit(val name, cnum in);
-
-INLINE void args_init(struct args *args, cnum argc)
-{
-  args->argc = argc;
-  args->fill = 0;
-  args->list = nil;
-}
 
 INLINE void args_init_list(struct args *args, cnum argc, val list)
 {
@@ -55,29 +49,104 @@ INLINE void args_init_list(struct args *args, cnum argc, val list)
   args->list = list;
 }
 
+INLINE void args_init(struct args *args, cnum argc)
+{
+  args_init_list(args, argc, nil);
+}
+
 INLINE val args_add(struct args *args, val arg)
 {
   return args->arg[args->fill++] = arg;
 }
 
-void args_add_list(struct args *args, val list);
+INLINE void args_add2(struct args *args, val arg1, val arg2)
+{
+  val *arg = args->arg + args->fill;
+  args->fill += 2;
+  *arg++ = arg1;
+  *arg++ = arg2;
+}
+
+INLINE void args_add3(struct args *args, val arg1, val arg2, val arg3)
+{
+  val *arg = args->arg + args->fill;
+  args->fill += 3;
+  *arg++ = arg1;
+  *arg++ = arg2;
+  *arg++ = arg3;
+}
+
+INLINE void args_add4(struct args *args, val arg1, val arg2, val arg3, val arg4)
+{
+  val *arg = args->arg + args->fill;
+  args->fill += 4;
+  *arg++ = arg1;
+  *arg++ = arg2;
+  *arg++ = arg3;
+  *arg++ = arg4;
+}
 
 val args_add_checked(val name, struct args *args, val arg);
 
 INLINE int args_more(struct args *args, cnum index)
 {
-  return index < args->fill;
+  return index < args->fill || args->list;
 }
+
+INLINE int args_two_more(struct args *args, cnum index)
+{
+  return
+    index + 1 < args->fill ||
+    (index + 1 == args->fill && args->list) ||
+    cdr(args->list);
+}
+
+void args_normalize(struct args *args, cnum fill);
+void args_normalize_fill(struct args *args, cnum minfill, cnum maxfill);
 
 INLINE val args_get_list(struct args *args)
 {
-  extern val args_cons_list(struct args *args);
-  return (args->fill == 0 || args->list) ? args->list : args_cons_list(args);
+  if (args->fill == 0)
+    return z(args->list);
+  args_normalize(args, 0);
+  return z(args->list);
+}
+
+INLINE val args_get_rest(struct args *args, cnum index)
+{
+  if (args->fill == index)
+    return z(args->list);
+  args_normalize(args, index);
+  return z(args->list);
+}
+
+
+INLINE val args_at(struct args *args, cnum arg_index)
+{
+  if (arg_index < args->fill)
+    return args->arg[arg_index];
+  return car(args->list);
+}
+
+INLINE val args_atz(struct args *args, cnum arg_index)
+{
+  if (arg_index < args->fill)
+    return z(args->arg[arg_index]);
+  return car(z(args->list));
 }
 
 INLINE val args_get(struct args *args, cnum *arg_index)
 {
-  return args->arg[(*arg_index)++];
+  if (*arg_index < args->fill)
+    return z(args->arg[(*arg_index)++]);
+  return pop(&args->list);
+}
+
+INLINE void args_clear(struct args *args)
+{
+  args->fill = 0;
 }
 
 val args_get_checked(val name, struct args *args, cnum *arg_index);
+struct args *args_copy(struct args *to, struct args *from);
+struct args *args_copy_zap(struct args *to, struct args *from);

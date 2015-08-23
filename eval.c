@@ -24,6 +24,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,8 +35,10 @@
 #include <signal.h>
 #include <time.h>
 #include "config.h"
+#include ALLOCA_H
 #include "lib.h"
 #include "gc.h"
+#include "args.h"
 #include "arith.h"
 #include "signal.h"
 #include "unwind.h"
@@ -50,8 +53,6 @@
 #include "combi.h"
 #include "lisplib.h"
 #include "eval.h"
-
-#define APPLY_ARGS 32
 
 typedef val (*opfun_t)(val, val);
 typedef val (*mefun_t)(val, val);
@@ -437,14 +438,16 @@ static val env_vbind_special(val env, val sym, val obj,
   }
 }
 
-static val bind_args(val env, val params, val args, val ctx_form)
+static val bind_args(val env, val params, struct args *args, val ctx_form)
 {
   val new_env = make_env(nil, nil, env);
   val optargs = nil;
   val special_list = nil;
+  cnum index = 0;
 
-  for (; args && consp(params); params = cdr(params)) {
+  for (; args_more(args, index) && consp(params); params = cdr(params)) {
     val param = car(params);
+    val arg;
     val initform = nil;
     val presentsym = nil;
 
@@ -478,8 +481,9 @@ static val bind_args(val env, val params, val args, val ctx_form)
       eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
                  car(ctx_form), presentsym, nao);
 
+    arg = args_get_checked(ctx_form, args, &index);
+
     if (optargs) {
-      val arg = car(args);
       val initval = nil;
       val present = nil;
 
@@ -496,14 +500,13 @@ static val bind_args(val env, val params, val args, val ctx_form)
       if (presentsym)
         env_vbind_special(new_env, presentsym, present, special_list, ctx_form);
     } else {
-      env_vbind_special(new_env, param, car(args), special_list, ctx_form);
+      env_vbind_special(new_env, param, arg, special_list, ctx_form);
     }
-
-    args = cdr(args);
   }
 
   if (bindable(params)) {
-    env_vbind_special(new_env, params, args, special_list, ctx_form);
+    env_vbind_special(new_env, params, args_get_rest(args, index),
+                      special_list, ctx_form);
   } else if (consp(params)) {
     if (car(params) == colon_k) {
       if (optargs)
@@ -545,7 +548,7 @@ static val bind_args(val env, val params, val args, val ctx_form)
   } else if (params) {
     eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
                car(ctx_form), params, nao);
-  } else if (args) {
+  } else if (args_more(args, index)) {
     eval_error(ctx_form, lit("~s: too many arguments for ~!~s"),
                car(ctx_form), ctx_form, nao);
   }
@@ -664,133 +667,9 @@ static val get_param_syms(val params)
 
 val apply(val fun, val arglist, val ctx_form)
 {
-  val arg[APPLY_ARGS], *p = arg;
-  int fixparam, reqargs, nargs;
-  val ctx = if3(ctx_form, car(ctx_form), apply_s);
-
-  if (fun && symbolp(fun)) {
-    val binding = gethash(top_fb, fun);
-    if (!binding)
-      eval_error(ctx_form, lit("~s: no such function ~s"), ctx, fun, nao);
-    fun = cdr(binding);
-  }
-
-  if (!functionp(fun)) {
-    for (nargs = 0;
-         (p < arg + APPLY_ARGS) && consp(arglist);
-         nargs++, p++, arglist = cdr(arglist))
-    {
-      *p = car(arglist);
-    }
-    return generic_funcall(fun, arg, nargs);
-  }
-
-  type_check (fun, FUN);
-
-  if (!listp(arglist)) {
-    val arglist_conv = tolist(arglist);
-    type_assert (listp(arglist_conv),
-                 (lit("~s: arglist ~s is not a list"), ctx,
-                  arglist, nao));
-    arglist = arglist_conv;
-  }
-
-  fixparam = fun->f.fixparam;
-  reqargs = fixparam - fun->f.optargs;
-
-  if (!fun->f.variadic) {
-    for (; arglist && p < arg + APPLY_ARGS; arglist = cdr(arglist))
-      *p++ = car(arglist);
-
-    nargs = p - arg;
-
-    if (nargs < reqargs)
-      eval_error(ctx_form, lit("~s: missing required arguments for ~!~s"),
-                 ctx, func_get_name(fun, nil), nao);
-
-    if (nargs > fixparam)
-      eval_error(ctx_form, lit("~s: too many arguments for ~!~s"),
-                 ctx, func_get_name(fun, nil), nao);
-
-    for (; nargs < fixparam; nargs++)
-      *p++ = colon_k;
-
-    switch (fun->f.functype) {
-    case F0:
-      return fun->f.f.f0(fun->f.env);
-    case F1:
-      return fun->f.f.f1(fun->f.env, z(arg[0]));
-    case F2:
-      return fun->f.f.f2(fun->f.env, z(arg[0]), z(arg[1]));
-    case F3:
-      return fun->f.f.f3(fun->f.env, z(arg[0]), z(arg[1]), z(arg[2]));
-    case F4:
-      return fun->f.f.f4(fun->f.env, z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]));
-    case N0:
-      return fun->f.f.n0();
-    case N1:
-      return fun->f.f.n1(z(arg[0]));
-    case N2:
-      return fun->f.f.n2(z(arg[0]), z(arg[1]));
-    case N3:
-      return fun->f.f.n3(z(arg[0]), z(arg[1]), z(arg[2]));
-    case N4:
-      return fun->f.f.n4(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]));
-    case N5:
-      return fun->f.f.n5(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]));
-    case N6:
-      return fun->f.f.n6(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arg[5]));
-    case N7:
-      return fun->f.f.n7(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arg[5]), z(arg[6]));
-    case FINTERP:
-      internal_error("unsupported function type");
-    }
-  } else {
-    for (; arglist && p - arg < fixparam; arglist = cdr(arglist))
-      *p++ = car(arglist);
-
-    nargs = p - arg;
-
-    if (nargs < reqargs)
-      eval_error(ctx_form, lit("~s: missing required arguments for ~!~s"),
-                 ctx, func_get_name(fun, nil), nao);
-
-    for (; nargs < fixparam; nargs++)
-      *p++ = colon_k;
-
-    switch (fun->f.functype) {
-    case FINTERP:
-      return interp_fun(fun->f.env, fun->f.f.interp_fun, z(arglist));
-    case F0:
-      return fun->f.f.f0v(fun->f.env, z(arglist));
-    case F1:
-      return fun->f.f.f1v(fun->f.env, z(arg[0]), z(arglist));
-    case F2:
-      return fun->f.f.f2v(fun->f.env, z(arg[0]), z(arg[1]), z(arglist));
-    case F3:
-      return fun->f.f.f3v(fun->f.env, z(arg[0]), z(arg[1]), z(arg[2]), z(arglist));
-    case F4:
-      return fun->f.f.f4v(fun->f.env, z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arglist));
-    case N0:
-      return fun->f.f.n0v(z(arglist));
-    case N1:
-      return fun->f.f.n1v(z(arg[0]), z(arglist));
-    case N2:
-      return fun->f.f.n2v(z(arg[0]), z(arg[1]), z(arglist));
-    case N3:
-      return fun->f.f.n3v(z(arg[0]), z(arg[1]), z(arg[2]), z(arglist));
-    case N4:
-      return fun->f.f.n4v(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arglist));
-    case N5:
-      return fun->f.f.n5v(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arglist));
-    case N6:
-      return fun->f.f.n6v(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arg[5]), z(arglist));
-    case N7:
-      return fun->f.f.n7v(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arg[5]), z(arg[6]), z(arglist));
-    }
-  }
-
-  internal_error("corrupt function type field");
+  struct args *args = args_alloc(ARGS_MAX);
+  args_init_list(args, ARGS_MAX, arglist);
+  return generic_funcall(fun, args);
 }
 
 static val apply_frob_args(val args)
@@ -813,17 +692,27 @@ val apply_intrinsic(val fun, val args)
   return apply(fun, apply_frob_args(z(args)), nil);
 }
 
-static val iapply(val fun, val args)
+static val applyv(val fun, struct args *args)
 {
+  return apply_intrinsic(fun, args_get_list(args));
+}
+
+static val iapply(val fun, struct args *args)
+{
+  cnum index = 0;
   list_collect_decl (mod_args, ptail);
   loc saved_ptail;
+  val last_arg = nil;
 
-  for (; cdr(args); args = cdr(args))
-    ptail = list_collect(ptail, car(args));
+  while (args_two_more(args, index))
+    ptail = list_collect(ptail, args_get(args, &index));
 
   saved_ptail = ptail;
 
-  ptail = list_collect_nconc(ptail, car(args));
+  if (args_more(args, index)) {
+    last_arg = args_get(args, &index);
+    ptail = list_collect_nconc(ptail, last_arg);
+  }
 
   {
     loc pterm = term(ptail);
@@ -831,7 +720,7 @@ static val iapply(val fun, val args)
 
     if (tatom) {
       deref(ptail) = nil;
-      ptail = list_collect_nconc(saved_ptail, copy_list(car(args)));
+      ptail = list_collect_nconc(saved_ptail, copy_list(last_arg));
       set(term(ptail), cons(tatom, nil));
     }
   }
@@ -839,14 +728,9 @@ static val iapply(val fun, val args)
   return apply(fun, z(mod_args), nil);
 }
 
-static val call(val fun, val args)
+static val list_star_intrinsic(struct args *args)
 {
-  return apply(fun, z(args), cons(apply_s, nil));
-}
-
-static val list_star_intrinsic(val args)
-{
-  return apply_frob_args(args);
+  return apply_frob_args(args_get_list(args));
 }
 
 static val bind_macro_params(val env, val menv, val params, val form,
@@ -1037,7 +921,7 @@ static val set_dyn_env(val de)
   return old;
 }
 
-val interp_fun(val env, val fun, val args)
+val interp_fun(val env, val fun, struct args *args)
 {
   val def = cdr(fun);
   val params = car(def);
@@ -1948,8 +1832,11 @@ static val op_catch(val form, val env)
   result = eval(try_form, env, try_form);
 
   uw_catch(exsym, exvals) {
+    struct args *args = args_alloc(ARGS_MIN);
     val catches = rest(rest(rest(form)));
     val iter;
+
+    args_init_list(args, ARGS_MIN, exvals);
 
     for (iter = catches; iter; iter = cdr(iter)) {
       val clause = car(iter);
@@ -1958,7 +1845,7 @@ static val op_catch(val form, val env)
       if (uw_exception_subtype_p(exsym, type)) {
         val params = second(clause);
         val saved_de = set_dyn_env(make_env(nil, nil, dyn_env));
-        val clause_env = bind_args(env, params, exvals, clause);
+        val clause_env = bind_args(env, params, args, clause);
         result = eval_progn(rest(rest(clause)), clause_env, clause);
         set_dyn_env(saved_de);
         break;
@@ -2600,8 +2487,8 @@ static val me_op(val form, val menv)
   cons_bind (syms, body_trans, transform_op(body_ex, nil, rest_gensym));
   val ssyms = sort(syms, func_n2(lt), car_f);
   val nums = mapcar(car_f, ssyms);
-  val max = if3(nums, maxv(car(nums), cdr(nums)), zero);
-  val min = if3(nums, minv(car(nums), cdr(nums)), zero);
+  val max = if3(nums, maxl(car(nums), cdr(nums)), zero);
+  val min = if3(nums, minl(car(nums), cdr(nums)), zero);
   val has_rest = cons_find(rest_gensym, body_trans, eq_f);
   val is_op = and3(sym == do_s, consp(body_trans),
                    gethash(op_table, car(body_trans)));
@@ -3335,11 +3222,14 @@ static val constantp(val form, val env_in)
   }
 }
 
-val mapcarv(val fun, val list_of_lists)
+val mapcarv(val fun, struct args *lists)
 {
-  if (!cdr(list_of_lists)) {
-    return mapcar(fun, nullify(car(list_of_lists)));
+  if (!args_more(lists, 0)) {
+    return nil;
+  } else if (!args_two_more(lists, 0)) {
+    return mapcar(fun, nullify(args_atz(lists, 0)));
   } else {
+    val list_of_lists = args_get_list(lists);
     val lofl = mapcar_listout(func_n1(nullify), list_of_lists);
     val list_orig = car(list_of_lists);
     list_collect_decl (out, otail);
@@ -3361,11 +3251,21 @@ val mapcarv(val fun, val list_of_lists)
   }
 }
 
-static val mappendv(val fun, val list_of_lists)
+val mapcarl(val fun, val list_of_lists)
 {
-  if (!cdr(list_of_lists)) {
-    return mappend(fun, car(list_of_lists));
+  struct args *args = args_alloc(ARGS_MIN);
+  args_init_list(args, ARGS_MIN, list_of_lists);
+  return mapcarv(fun, args);
+}
+
+static val mappendv(val fun, struct args *lists)
+{
+  if (!args_more(lists, 0)) {
+    return nil;
+  } else if (!args_two_more(lists, 0)) {
+    return mappend(fun, args_atz(lists, 0));
   } else {
+    val list_of_lists = args_get_list(lists);
     val lofl = mapcar(func_n1(nullify), list_of_lists);
     val list_orig = car(list_of_lists);
     list_collect_decl (out, otail);
@@ -3425,28 +3325,43 @@ static val lazy_mapcarv_func(val env, val lcons)
   return nil;
 }
 
-static val lazy_mapcarv(val fun, val list_of_lists)
+static val lazy_mapcarv(val fun, struct args *lists)
 {
-  if (!cdr(list_of_lists)) {
-    return lazy_mapcar(fun, car(list_of_lists));
-  } else if (some_satisfy(list_of_lists, null_f, identity_f)) {
+  if (!args_more(lists, 0)) {
     return nil;
+  } else if (!args_two_more(lists, 0)) {
+    return lazy_mapcar(fun, args_atz(lists, 0));
   } else {
-    val lofl = mapcar(func_n1(nullify), list_of_lists);
-    return make_lazy_cons(func_f1(cons(fun, lofl), lazy_mapcarv_func));
+    val list_of_lists = args_get_list(lists);
+    if (some_satisfy(list_of_lists, null_f, identity_f)) {
+      return nil;
+    } else {
+      val lofl = mapcar(func_n1(nullify), list_of_lists);
+      return make_lazy_cons(func_f1(cons(fun, lofl), lazy_mapcarv_func));
+    }
   }
 }
 
-static val lazy_mappendv(val fun, val list_of_lists)
+static val lazy_mapcarl(val fun, val list_of_lists)
 {
-  return lazy_appendv(lazy_mapcarv(fun, list_of_lists));
+  struct args *args = args_alloc(ARGS_MIN);
+  args_init_list(args, ARGS_MIN, list_of_lists);
+  return lazy_mapcarv(fun, args);
 }
 
-static val mapdov(val fun, val list_of_lists)
+static val lazy_mappendv(val fun, struct args *lists)
 {
-  if (!cdr(list_of_lists)) {
-    return mapdo(fun, car(list_of_lists));
+  return lazy_appendl(lazy_mapcarv(fun, lists));
+}
+
+static val mapdov(val fun, struct args *lists)
+{
+  if (!args_more(lists, 0)) {
+    return nil;
+  } else if (!args_two_more(lists, 0)) {
+    return mapdo(fun, args_atz(lists, 0));
   } else {
+    val list_of_lists = args_get_list(lists);
     val lofl = mapcar_listout(func_n1(nullify), list_of_lists);
 
     for (;;) {
@@ -3753,15 +3668,16 @@ static val weave_gen(val env)
   return ret;
 }
 
-static val weavev(val lists)
+static val weavev(struct args *args)
 {
+  val lists = args_get_list(args);
   val uniq = cons(nil, nil);
   val padded_lists = mapcar(curry_123_1(func_n3(pad), uniq, colon_k), lists);
-  val tuples = lazy_mapcarv(list_f, padded_lists);
+  val tuples = lazy_mapcarl(list_f, padded_lists);
   val env = cons(uniq, tuples);
   val whil = func_f0(env, weave_while);
   val gen = func_f0(env, weave_gen);
-  return lazy_appendv(generate(whil, gen));
+  return lazy_appendl(generate(whil, gen));
 }
 
 static val force(val promise)
@@ -3827,22 +3743,25 @@ static val if_fun(val cond, val then, val alt)
   return if3(cond, then, default_bool_arg(alt));
 }
 
-static val or_fun(val vals)
+static val or_fun(struct args *vals)
 {
-  for (; vals != nil; vals = cdr(vals)) {
-    val item = car(vals);
+  cnum index = 0;
+
+  while (args_more(vals, index)) {
+    val item = args_get(vals, &index);
     if (item)
       return item;
   }
   return nil;
 }
 
-static val and_fun(val vals)
+static val and_fun(struct args *vals)
 {
   val item = t;
+  cnum index = 0;
 
-  for (; vals != nil; vals = cdr(vals)) {
-    item = car(vals);
+  while (args_more(vals, index)) {
+    item = args_get(vals, &index);
     if (!item)
       return nil;
   }
@@ -3855,19 +3774,19 @@ static val not_null(val obj)
   return if3(nilp(obj), nil, t);
 }
 
-static val tf(val args)
+static val tf(struct args *args)
 {
   (void) args;
   return t;
 }
 
-static val nilf(val args)
+static val nilf(struct args *args)
 {
   (void) args;
   return nil;
 }
 
-static val do_retf(val ret, val args)
+static val do_retf(val ret, struct args *args)
 {
   (void) args;
   return ret;
@@ -3878,9 +3797,9 @@ static val retf(val ret)
   return func_f0v(ret, do_retf);
 }
 
-static val do_apf(val fun, val args)
+static val do_apf(val fun, struct args *args)
 {
-  return apply_intrinsic(fun, z(args));
+  return apply_intrinsic(fun, args_get_list(args));
 }
 
 static val apf(val fun)
@@ -3888,9 +3807,9 @@ static val apf(val fun)
   return func_f0v(fun, do_apf);
 }
 
-static val do_ipf(val fun, val args)
+static val do_ipf(val fun, struct args *args)
 {
-  return iapply(fun, z(args));
+  return iapply(fun, args);
 }
 
 static val ipf(val fun)
@@ -3898,23 +3817,23 @@ static val ipf(val fun)
   return func_f0v(fun, do_ipf);
 }
 
-static val callf(val func, val funlist)
+static val callf(val func, struct args *funlist)
 {
   val juxt_fun = juxtv(funlist);
   val apf_fun = apf(func);
   return chain(juxt_fun, apf_fun, nao);
 }
 
-static val do_mapf(val env, val args)
+static val do_mapf(val env, struct args *args)
 {
   cons_bind (fun, funlist, env);
-  val mapped_args = mapcarv(call_f, cons(funlist, cons(z(args), nil)));
+  val mapped_args = mapcarl(call_f, cons(funlist, cons(args_get_list(args), nil)));
   return apply(fun, z(mapped_args), nil);
 }
 
-static val mapf(val fun, val funlist)
+static val mapf(val fun, struct args *funlist)
 {
-  return func_f0v(cons(fun, funlist), do_mapf);
+  return func_f0v(cons(fun, args_get_list(funlist)), do_mapf);
 }
 
 val prinl(val obj, val stream)
@@ -3992,7 +3911,7 @@ void eval_init(void)
 
   eval_initing = t;
 
-  call_f = func_n1v(call);
+  call_f = func_n1v(generic_funcall);
 
   dwim_s = intern(lit("dwim"), user_package);
   progn_s = intern(lit("progn"), user_package);
@@ -4225,13 +4144,13 @@ void eval_init(void)
   reg_fun(intern(lit("mappend"), user_package), func_n1v(mappendv));
   reg_fun(intern(lit("mappend*"), user_package), func_n1v(lazy_mappendv));
   reg_fun(intern(lit("mapdo"), user_package), func_n1v(mapdov));
-  reg_fun(apply_s, func_n1v(apply_intrinsic));
+  reg_fun(apply_s, func_n1v(applyv));
   reg_fun(iapply_s, func_n1v(iapply));
   reg_fun(call_s, call_f);
   reg_fun(intern(lit("reduce-left"), user_package), func_n4o(reduce_left, 2));
   reg_fun(intern(lit("reduce-right"), user_package), func_n4o(reduce_right, 2));
   reg_fun(intern(lit("transpose"), user_package), func_n1(transpose));
-  reg_fun(intern(lit("zip"), user_package), func_n0v(transpose));
+  reg_fun(intern(lit("zip"), user_package), func_n0v(transposev));
   reg_fun(intern(lit("interpose"), user_package), func_n2(interpose));
 
   reg_fun(intern(lit("second"), user_package), func_n1(second));
@@ -4383,7 +4302,7 @@ void eval_init(void)
   reg_fun(intern(lit("copy-hash"), user_package), func_n1(copy_hash));
   reg_fun(intern(lit("hash"), user_package), func_n0v(hashv));
   reg_fun(intern(lit("hash-construct"), user_package), func_n2(hash_construct));
-  reg_fun(intern(lit("hash-from-pairs"), user_package), func_n1v(hash_from_pairs));
+  reg_fun(intern(lit("hash-from-pairs"), user_package), func_n1v(hash_from_pairs_v));
   reg_fun(intern(lit("hash-list"), user_package), func_n1v(hash_list));
   reg_fun(gethash_s, func_n3o(gethash_n, 2));
   reg_fun(intern(lit("inhash"), user_package), func_n3o(inhash, 2));
@@ -4567,7 +4486,7 @@ void eval_init(void)
   reg_fun(intern(lit("length-str-<="), user_package), func_n2(length_str_le));
 
   reg_fun(intern(lit("vector"), user_package), func_n2o(vector, 1));
-  reg_fun(intern(lit("vec"), user_package), func_n0v(vector_list));
+  reg_fun(intern(lit("vec"), user_package), func_n0v(vectorv));
   reg_fun(intern(lit("vectorp"), user_package), func_n1(vectorp));
   reg_fun(intern(lit("vec-set-length"), user_package), func_n2(vec_set_length));
   reg_fun(vecref_s, func_n2(vecref));
@@ -4586,8 +4505,8 @@ void eval_init(void)
   reg_fun(intern(lit("acons"), user_package), func_n3(acons));
   reg_fun(intern(lit("acons-new"), user_package), func_n3(acons_new));
   reg_fun(intern(lit("aconsql-new"), user_package), func_n3(aconsql_new));
-  reg_fun(intern(lit("alist-remove"), user_package), func_n1v(alist_remove));
-  reg_fun(intern(lit("alist-nremove"), user_package), func_n1v(alist_nremove));
+  reg_fun(intern(lit("alist-remove"), user_package), func_n1v(alist_removev));
+  reg_fun(intern(lit("alist-nremove"), user_package), func_n1v(alist_nremovev));
   reg_fun(intern(lit("copy-cons"), user_package), func_n1(copy_cons));
   reg_fun(intern(lit("copy-alist"), user_package), func_n1(copy_alist));
   reg_fun(intern(lit("prop"), user_package), func_n2(getplist));
@@ -4655,7 +4574,7 @@ void eval_init(void)
   reg_fun(intern(lit("comb"), user_package), func_n2(comb));
   reg_fun(intern(lit("rcomb"), user_package), func_n2(rcomb));
 
-  reg_fun(throw_s, func_n1v(uw_throw));
+  reg_fun(throw_s, func_n1v(uw_throwv));
   reg_fun(intern(lit("throwf"), user_package), func_n2v(uw_throwfv));
   reg_fun(error_s, func_n1v(uw_errorfv));
 

@@ -40,6 +40,7 @@
 #include "signal.h"
 #include "unwind.h"
 #include "gc.h"
+#include "args.h"
 #include "eval.h"
 #include "arith.h"
 
@@ -2049,12 +2050,13 @@ bad4:
   uw_throwf(error_s, lit("bit: operation failed on ~s, bit ~s"), a, bit, nao);
 }
 
-val maskv(val bits)
+val maskv(struct args *bits)
 {
+  cnum index = 0;
   val accum = zero;
 
-  for (; bits; bits = cdr(bits)) {
-    val num = car(bits);
+  while (args_more(bits, index)) {
+    val num = args_get(bits, &index);
     val mask = ash(one, num);
     accum = logior(accum, mask);
   }

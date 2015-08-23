@@ -24,6 +24,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,6 +36,7 @@
 #include "config.h"
 #include "lib.h"
 #include "gc.h"
+#include "args.h"
 #include "stream.h"
 #include "txr.h"
 #include "signal.h"
@@ -349,6 +351,11 @@ val uw_throw(val sym, val args)
   abort();
 }
 
+val uw_throwv(val sym, struct args *arglist)
+{
+  uw_throw(sym, args_get_list(arglist));
+}
+
 val uw_throwf(val sym, val fmt, ...)
 {
   va_list vl;
@@ -362,7 +369,7 @@ val uw_throwf(val sym, val fmt, ...)
   abort();
 }
 
-val uw_throwfv(val sym, val fmt, val args)
+val uw_throwfv(val sym, val fmt, struct args *args)
 {
   val stream = make_string_output_stream();
   (void) formatv(stream, fmt, args);
@@ -383,7 +390,7 @@ val uw_errorf(val fmt, ...)
   abort();
 }
 
-val uw_errorfv(val fmt, val args)
+val uw_errorfv(val fmt, struct args *args)
 {
   val stream = make_string_output_stream();
   (void) formatv(stream, fmt, args);

@@ -50,11 +50,11 @@
 #if HAVE_WINDOWS_H
 #include <windows.h>
 #endif
+#include ALLOCA_H
 #include "lib.h"
 #include "gc.h"
 #include "signal.h"
 #include "unwind.h"
-#include ALLOCA_H
 #include "args.h"
 #include "stream.h"
 #include "utf8.h"
@@ -1863,6 +1863,11 @@ val make_catenated_stream(val stream_list)
   return cobj(coerce(mem_t *, s), stream_s, &cat_stream_ops.cobj_ops);
 }
 
+val make_catenated_stream_v(struct args *streams)
+{
+  return make_catenated_stream(args_get_list(streams));
+}
+
 val catenated_stream_p(val obj)
 {
   return if2(streamp(obj), c_true(obj->co.ops == &cat_stream_ops.cobj_ops));
@@ -2135,8 +2140,12 @@ static void vformat_str(val stream, val str, int width, enum align align,
   rel1(&str);
 }
 
-static val aformat(val stream, val fmtstr, struct args *al)
+val formatv(val stream_in, val fmtstr, struct args *al)
 {
+  uses_or2;
+  val stream = if3(stream_in == t,
+                   std_output,
+                   or2(stream_in, make_string_output_stream()));
   val save_indent = get_indent(stream);
   val save_mode = nil;
   val name = lit("format");
@@ -2503,7 +2512,7 @@ static val aformat(val stream, val fmtstr, struct args *al)
 
   uw_catch_end;
 
-  return t;
+  return (stream_in) ? t : get_string_from_stream(stream);
 }
 
 val vformat(val stream, val fmtstr, va_list vl)
@@ -2515,7 +2524,7 @@ val vformat(val stream, val fmtstr, va_list vl)
   while ((arg = va_arg(vl, val)) != nao)
     args_add_checked(lit("format"), args, arg);
 
-  return aformat(stream, fmtstr, args);
+  return formatv(stream, fmtstr, args);
 }
 
 val vformat_to_string(val fmtstr, va_list vl)
@@ -2541,27 +2550,6 @@ val format(val stream, val str, ...)
     va_end (vl);
     return (stream) ? ret : get_string_from_stream(st);
   }
-}
-
-val formatv(val stream, val string, val arglist)
-{
-  uses_or2;
-  val st = if3(stream == t,
-               std_output,
-               or2(stream, make_string_output_stream()));
-  cnum argc = args_limit(lit("format"), c_num(length_list(arglist)));
-  struct args *args = args_alloc(argc);
-  val ret;
-
-  class_check(st, stream_s);
-  args_init(args, argc);
-
-  for (; arglist; arglist = cdr(arglist))
-    args_add(args, car(arglist));
-
-  ret = aformat(st, string, args);
-
-  return (stream) ? ret : get_string_from_stream(st);
 }
 
 static val put_indent(val stream, struct strm_ops *ops, cnum chars)
@@ -3293,7 +3281,7 @@ void stream_init(void)
   reg_fun(intern(lit("stream-set-prop"), user_package), func_n3(stream_set_prop));
   reg_fun(intern(lit("stream-get-prop"), user_package), func_n2(stream_get_prop));
   reg_fun(intern(lit("fileno"), user_package), curry_12_1(func_n2(stream_get_prop), fd_k));
-  reg_fun(intern(lit("make-catenated-stream"), user_package), func_n0v(make_catenated_stream));
+  reg_fun(intern(lit("make-catenated-stream"), user_package), func_n0v(make_catenated_stream_v));
   reg_fun(intern(lit("cat-streams"), user_package), func_n1(make_catenated_stream));
   reg_fun(intern(lit("catenated-stream-p"), user_package), func_n1(catenated_stream_p));
   reg_fun(intern(lit("catenated-stream-push"), user_package), func_n2(catenated_stream_push));

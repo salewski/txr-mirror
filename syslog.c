@@ -24,6 +24,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -33,10 +34,12 @@
 #include <dirent.h>
 #include <syslog.h>
 #include "config.h"
+#include ALLOCA_H
 #include "lib.h"
 #include "stream.h"
 #include "hash.h"
 #include "gc.h"
+#include "args.h"
 #include "signal.h"
 #include "unwind.h"
 #include "utf8.h"
@@ -80,7 +83,7 @@ void syslog_init(void)
   reg_fun(intern(lit("openlog"), user_package), func_n3o(openlog_wrap, 1));
   reg_fun(intern(lit("closelog"), user_package), func_n0(closelog_wrap));
   reg_fun(intern(lit("setlogmask"), user_package), func_n1(setlogmask_wrap));
-  reg_fun(intern(lit("syslog"), user_package), func_n2v(syslog_wrap));
+  reg_fun(intern(lit("syslog"), user_package), func_n2v(syslog_wrapv));
 
   prio_k = intern(lit("prio"), keyword_package);
 
@@ -109,12 +112,19 @@ val setlogmask_wrap(val mask)
   return num(setlogmask(c_num(mask)));
 }
 
-val syslog_wrap(val prio, val fmt, val args)
+val syslog_wrapv(val prio, val fmt, struct args *args)
 {
   val text = formatv(nil, fmt, args);
   char *u8text = utf8_dup_to(c_str(text));
   syslog(c_num(prio), "%s", u8text);
   return nil;
+}
+
+val syslog_wrap(val prio, val fmt, val arglist)
+{
+  struct args *args = args_alloc(ARGS_MIN);
+  args_init_list(args, ARGS_MIN, arglist);
+  return syslog_wrapv(prio, fmt, args);
 }
 
 val closelog_wrap(void)

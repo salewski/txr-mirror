@@ -27,11 +27,12 @@
 #include <stddef.h>
 #include <setjmp.h>
 #include <signal.h>
+#include <string.h>
 #include "config.h"
 #include "lib.h"
 #include "signal.h"
 #include "unwind.h"
-#include ALLOCA_H
+#include "gc.h"
 #include "args.h"
 
 val args_cons_list(struct args *args);
@@ -44,12 +45,6 @@ cnum args_limit(val name, cnum in)
             name, num(ARGS_MAX), nao);
 }
 
-void args_add_list(struct args *args, val list)
-{
-  for (; list; list = cdr(list))
-    args_add(args, car(list));
-}
-
 val args_add_checked(val name, struct args *args, val arg)
 {
   if (args->fill >= args->argc)
@@ -57,22 +52,45 @@ val args_add_checked(val name, struct args *args, val arg)
   return args_add(args, arg);
 }
 
-val args_cons_list(struct args *args)
+void args_normalize(struct args *args, cnum fill)
 {
-  cnum i;
-  list_collect_decl (out, ptail);
+  bug_unless (fill <= args->argc);
 
-  for (i = 0; i < args->argc; i++)
-    ptail = list_collect(ptail, args->arg[i]);
+  while (args->fill > fill)
+    args->list = cons(args->arg[--args->fill], args->list);
 
-  return args->list = out;
+  while (args->fill < fill && args->list)
+    args_add(args, pop(&args->list));
+
+}
+
+void args_normalize_fill(struct args *args, cnum minfill, cnum maxfill)
+{
+  args_normalize(args, maxfill);
+
+  if (args->fill >= minfill)
+    while (args->fill < maxfill)
+      args_add(args, colon_k);
 }
 
 val args_get_checked(val name, struct args *args, cnum *arg_index)
 {
-  if (args->fill == 0 && args->list)
-    args_add_list(args, args->list);
-  if (*arg_index >= args->fill)
+  if (*arg_index >= args->fill && !args->list)
     uw_throwf(assert_s, lit("~a: insufficient arguments"), name, nao);
   return args_get(args, arg_index);
+}
+
+struct args *args_copy(struct args *to, struct args *from)
+{
+  to->fill = from->fill;
+  to->list = from->list;
+  memcpy(to->arg, from->arg, sizeof *to->arg * to->fill);
+  return to;
+}
+
+struct args *args_copy_zap(struct args *to, struct args *from)
+{
+  args_copy(to, from);
+  memset(from->arg, 0, sizeof *to->arg * to->fill);
+  return to;
 }

@@ -99,10 +99,11 @@ INLINE val uw_block_return(val tag, val result)
 }
 void uw_push_catch(uw_frame_t *, val matches);
 noreturn val uw_throw(val sym, val exception);
+noreturn val uw_throwv(val sym, struct args *);
 noreturn val uw_throwf(val sym, val fmt, ...);
-noreturn val uw_throwfv(val sym, val fmt, val args);
+noreturn val uw_throwfv(val sym, val fmt, struct args *);
 noreturn val uw_errorf(val fmt, ...);
-noreturn val uw_errorfv(val fmt, val args);
+noreturn val uw_errorfv(val fmt, struct args *args);
 val uw_register_subtype(val sub, val super);
 val uw_exception_subtype_p(val sub, val sup);
 void uw_continue(uw_frame_t *curr, uw_frame_t *target);
