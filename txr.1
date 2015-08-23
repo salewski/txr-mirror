@@ -25912,6 +25912,17 @@ it is actually a shorthand for
 .codn (op foo . @rest) :
 a function which applies all of its arguments to
 .codn foo .
+If the body does contain at least one
+.meta @num
+or
+.metn @rest ,
+then
+.meta @rest
+isn't implicitly inserted. The notation
+.code (op foo @1)
+denotes a function which takes any number of arguments, and ignores
+all but the first one, which is passed to
+.codn foo .
 
 The actions of
 .code op
@@ -26034,15 +26045,6 @@ a parameter from the outermost
 into the innermost
 .codn op .
 
-.TP* Examples:
-
-.cblk
-  ;; Take a list of pairs and produce a list in which those pairs
-  ;; are reversed.
-
-  (mapcar (op list @2 @1) '((1 2) (a b)))   ->   ((2 1) (b a))
-.cble
-
 The
 .code op
 syntax interacts with quasiliterals which are nested within it.
@@ -26104,6 +26106,15 @@ from a quasiliteral within a nested
   ;; To reach @@1, @@@1 must be written.
   ;; @@1 Lisp expression introduced by @.
   (op ... (op ... `@@@1`))
+.cble
+
+.TP* Example:
+
+.cblk
+  ;; Take a list of pairs and produce a list in which those pairs
+  ;; are reversed.
+
+  (mapcar (op list @2 @1) '((1 2) (a b)))   ->   ((2 1) (b a))
 .cble
 
 .coNP Macros @, ap @, ip @ ado and @ ido.
