@@ -40,8 +40,6 @@ typedef int arg_index;
   (coerce(struct args *,                                                \
           alloca(offsetof(struct args, arg) + (N)*sizeof (val))))
 
-cnum args_limit(val name, cnum in);
-
 INLINE void args_init_list(struct args *args, cnum argc, val list)
 {
   args->argc = argc;

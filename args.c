@@ -37,14 +37,6 @@
 
 val args_cons_list(struct args *args);
 
-cnum args_limit(val name, cnum in)
-{
-  if (in <= ARGS_MAX)
-    return in;
-  uw_throwf(assert_s, lit("~a: too many trailing arguments (limit is ~s)"),
-            name, num(ARGS_MAX), nao);
-}
-
 val args_add_checked(val name, struct args *args, val arg)
 {
   if (args->fill >= args->argc)
