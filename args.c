@@ -94,3 +94,16 @@ struct args *args_copy_zap(struct args *to, struct args *from)
   memset(from->arg, 0, sizeof *to->arg * to->fill);
   return to;
 }
+
+val args_copy_to_list(struct args *args)
+{
+  list_collect_decl (out, ptail);
+  cnum i;
+
+  for (i = 0; i < args->fill; i++)
+    ptail = list_collect(ptail, args->arg[i]);
+
+  list_collect_nconc(ptail, args->list);
+
+  return out;
+}

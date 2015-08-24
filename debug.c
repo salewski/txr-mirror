@@ -37,6 +37,7 @@
 #include "lib.h"
 #include "debug.h"
 #include "gc.h"
+#include "args.h"
 #include "signal.h"
 #include "unwind.h"
 #include "stream.h"
@@ -224,10 +225,11 @@ val debug(val form, val bindings, val data, val line, val pos, val base)
             if (iter->uw.type == UW_DBG) {
               if (iter->db.ub_p_a_pairs)
                 format(std_debug, lit("(~s ~s ~s)\n"), iter->db.func,
-                       iter->db.args, iter->db.ub_p_a_pairs, nao);
+                       args_copy_to_list(iter->db.args),
+                       iter->db.ub_p_a_pairs, nao);
               else
                 format(std_debug, lit("(~s ~s)\n"), iter->db.func,
-                       iter->db.args, nao);
+                       args_copy_to_list(iter->db.args), nao);
             }
           }
         }

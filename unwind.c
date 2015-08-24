@@ -173,7 +173,7 @@ val uw_set_match_context(val context)
   return context;
 }
 
-void uw_push_debug(uw_frame_t *fr, val func, val args,
+void uw_push_debug(uw_frame_t *fr, val func, struct args *args,
                    val ub_p_a_pairs, val env, val data,
                    val line, val chr)
 {

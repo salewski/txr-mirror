@@ -88,6 +88,11 @@ INLINE void args_add4(struct args *args, val arg1, val arg2, val arg3, val arg4)
 
 val args_add_checked(val name, struct args *args, val arg);
 
+INLINE void args_add_list(struct args *args, val list)
+{
+  args->list = list;
+}
+
 INLINE int args_more(struct args *args, cnum index)
 {
   return index < args->fill || args->list;
@@ -120,7 +125,6 @@ INLINE val args_get_rest(struct args *args, cnum index)
   return z(args->list);
 }
 
-
 INLINE val args_at(struct args *args, cnum arg_index)
 {
   if (arg_index < args->fill)
@@ -150,3 +154,4 @@ INLINE void args_clear(struct args *args)
 val args_get_checked(val name, struct args *args, cnum *arg_index);
 struct args *args_copy(struct args *to, struct args *from);
 struct args *args_copy_zap(struct args *to, struct args *from);
+val args_copy_to_list(struct args *args);

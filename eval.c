@@ -54,6 +54,9 @@
 #include "lisplib.h"
 #include "eval.h"
 
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#define min(a, b) ((a) < (b) ? (a) : (b))
+
 typedef val (*opfun_t)(val, val);
 typedef val (*mefun_t)(val, val);
 
@@ -900,18 +903,17 @@ twocol:
 static val do_eval(val form, val env, val ctx_form,
                    val (*lookup)(val env, val sym));
 
-static val do_eval_args(val form, val env, val ctx_form,
-                        val (*lookup)(val env, val sym))
+static void do_eval_args(val form, val env, val ctx_form,
+                         val (*lookup)(val env, val sym),
+                         struct args *args)
 {
-  list_collect_decl (values, ptail);
   for (; consp(form); form = cdr(form))
-    ptail = list_collect(ptail, do_eval(car(form), env, ctx_form, lookup));
+    args_add(args, do_eval(car(form), env, ctx_form, lookup));
+
   if (form) {
     val dotpos = do_eval(form, env, ctx_form, lookup);
-    ptail = list_collect_append(ptail, if3(listp(dotpos),
-                                           dotpos, tolist(dotpos)));
+    args_add_list(args, if3(listp(dotpos), dotpos, tolist(dotpos)));
   }
-  return values;
 }
 
 static val set_dyn_env(val de)
@@ -984,11 +986,22 @@ static val do_eval(val form, val env, val ctx_form,
         eval_error(form, lit("no such function or operator: ~s"), oper, nao);
         abort();
       } else {
-        val args = do_eval_args(rest(form), env, form, &lookup_var);
+        val arglist = rest(form);
+        cnum alen = if3(consp(arglist), c_num(length(arglist)), 0);
+        cnum argc = max(alen, ARGS_MAX);
         val ret, lfe_save = last_form_evaled;
-        debug_frame(oper, args, nil, env, nil, nil, nil);
+        struct args *args = args_alloc(argc);
+
+        args_init(args, argc);
+
+        do_eval_args(rest(form), env, form, &lookup_var, args);
+
         last_form_evaled = form;
-        ret = apply(cdr(fbinding), z(args), form);
+
+        debug_frame(oper, args, nil, env, nil, nil, nil);
+
+        ret = generic_funcall(cdr(fbinding), args);
+
         last_form_evaled = lfe_save;
         debug_end;
         debug_return (ret);
@@ -1006,9 +1019,14 @@ val eval(val form, val env, val ctx_form)
   return do_eval(form, env, ctx_form, &lookup_var);
 }
 
-static val eval_args_lisp1(val form, val env, val ctx_form)
+static void eval_args_lisp1(val form, val env, val ctx_form, struct args *args)
 {
-  return do_eval_args(form, env, ctx_form, &lookup_sym_lisp1);
+  do_eval_args(form, env, ctx_form, &lookup_sym_lisp1, args);
+}
+
+static val eval_lisp1(val form, val env, val ctx_form)
+{
+  return do_eval(form, env, ctx_form, &lookup_sym_lisp1);
 }
 
 val bindable(val obj)
@@ -1399,13 +1417,15 @@ static val expand_macro(val form, val expander, val menv)
   } else {
     debug_enter;
     val name = car(form);
-    val args = rest(form);
+    val arglist = rest(form);
     val env = car(cdr(expander));
     val params = car(cdr(cdr(expander)));
     val body = cdr(cdr(cdr(expander)));
     val saved_de = set_dyn_env(make_env(nil, nil, dyn_env));
-    val exp_env = bind_macro_params(env, menv, params, args, nil, form);
+    val exp_env = bind_macro_params(env, menv, params, arglist, nil, form);
     val result;
+    struct args *args = args_alloc(ARGS_MIN);
+    args_init_list(args, ARGS_MIN, arglist);
     debug_frame(name, args, nil, env, nil, nil, nil);
     result = eval_progn(body, exp_env, body);
     debug_end;
@@ -1815,10 +1835,21 @@ static val op_return_from(val form, val env)
 
 static val op_dwim(val form, val env)
 {
-  val args = eval_args_lisp1(cdr(form), env, form);
-  val fi = car(args);
-  val re = cdr(z(args));
-  return apply(z(fi), z(re), form);
+  val argexps = rest(form);
+  val objexpr = pop(&argexps);
+  cnum alen = if3(consp(argexps), c_num(length(argexps)), 0);
+  cnum argc = max(alen, ARGS_MIN);
+  struct args *args = args_alloc(argc);
+  args_init(args, argc);
+
+  if (!consp(cdr(form)))
+    eval_error(form, lit("~s: missing argument"), car(form), nao);
+
+  {
+    val func = eval_lisp1(objexpr, env, form);
+    eval_args_lisp1(argexps, env, form, args);
+    return generic_funcall(func, args);
+  }
 }
 
 static val op_catch(val form, val env)

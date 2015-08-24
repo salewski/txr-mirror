@@ -24,6 +24,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,8 +35,10 @@
 #include <wchar.h>
 #include <signal.h>
 #include "config.h"
+#include ALLOCA_H
 #include "lib.h"
 #include "gc.h"
+#include "args.h"
 #include "signal.h"
 #include "unwind.h"
 #include "regex.h"
@@ -1098,9 +1101,11 @@ static val h_fun(match_line_ctx *c)
     }
 
     {
+      struct args *args = args_alloc(ARGS_MIN);
+      args_init_list(args, ARGS_MIN, bindings_cp);
       uw_block_begin(nil, result);
       uw_env_begin;
-      debug_frame(sym, bindings_cp, ub_p_a_pairs, c->bindings, c->dataline, c->data_lineno, c->pos);
+      debug_frame(sym, args, ub_p_a_pairs, c->bindings, c->dataline, c->data_lineno, c->pos);
 
       result = match_line(ml_bindings_specline(*c, bindings_cp, body));
 
@@ -3584,9 +3589,11 @@ static val v_fun(match_files_ctx *c)
     }
 
     {
+      struct args *args = args_alloc(ARGS_MIN);
+      args_init_list(args, ARGS_MIN, bindings_cp);
       uw_block_begin(nil, result);
       uw_env_begin;
-      debug_frame(sym, bindings_cp, ub_p_a_pairs, c->bindings, if2(consp(c->data), car(c->data)),
+      debug_frame(sym, args, ub_p_a_pairs, c->bindings, if2(consp(c->data), car(c->data)),
                   c->data_lineno, nil);
       result = match_files(mf_spec_bindings(*c, body, bindings_cp));
       debug_end;

@@ -70,7 +70,7 @@ struct uw_debug {
   uw_frame_t *up;
   uw_frtype_t type;
   val func;
-  val args;
+  struct args *args;
   val ub_p_a_pairs;
   val env;
   val data;
@@ -107,7 +107,7 @@ noreturn val uw_errorfv(val fmt, struct args *args);
 val uw_register_subtype(val sub, val super);
 val uw_exception_subtype_p(val sub, val sup);
 void uw_continue(uw_frame_t *curr, uw_frame_t *target);
-void uw_push_debug(uw_frame_t *, val func, val args,
+void uw_push_debug(uw_frame_t *, val func, struct args *,
                    val ub_p_a_pairs, val env, val data,
                    val line, val chr);
 void uw_pop_frame(uw_frame_t *);

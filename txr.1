@@ -9573,16 +9573,45 @@ also be an expression in the dotted position, if the form is a function call.
 If the form is a function call then the arguments are evaluated. If any of the
 arguments are symbols, they are treated according to Lisp-2 namespacing rules.
 
-Additionally, if there is an expression in the dotted position, it is also
-evaluated. It should evaluate to a sequence: a list, vector or string.  The
-elements of the sequence generate additional arguments for the function
-call. Note, however, that a compound form cannot be used in the dot position,
+.NP* Dot Position in Function Calls
+
+If there is an expression in the dotted position of a function call
+expression, it is also evaluated, and the resulting value is involved in the
+function call in a special way.
+
+Firstly, note that a compound form cannot be used in the dot position,
 for obvious reasons, namely that
 .code (a b c . (foo z))
 does not mean that there is
 a compound form in the dot position, but denotes an alternate spelling for
 .codn "(a b c foo z)" ,
-where foo behaves as a variable.
+where foo behaves as a variable. (There exists a special exception to this,
+namely that the meta-numbers and meta-symbols of the
+.code op
+operator can be used in the dot position).
+
+The value of the expression in the dot position is converted to a list, if it
+is a sequence. Otherwise if it is an non-sequence atom, no conversion is
+applied.  In either case, the resulting list's elements constitute
+additional arguments to the function.
+
+If the value emerging from the dot position is an atom (referred to as
+the "sole atom" below) other than
+.codn nil ,
+or an improper list (a list ending in a terminating atom
+other than
+.codn nil ),
+then the function being invoked must be a variadic function, otherwise
+the call is erroneous. Furthermore, all required argument positions of a
+function must be filled before encountering the sole atom or terminating
+atom: such an atom doesn't count as an argument, whether or not it is
+.codn nil ,
+and indicates that no more arguments follow.
+Only the trailing list argument of a variadic function (denoted in the
+.code lambda
+operator's syntax as the optional
+.metn rest-param )
+may take a sole atom or terminating atom as a value.
 
 The DWIM brackets are similar, except that the first position is an arbitrary
 expression which is evaluated according to the same rules as the remaining
@@ -9600,21 +9629,31 @@ Examples:
   ;; c contains #(5 6 7)
   ;; s contains "xyz"
 
-  (foo a b . c) ;; calls (foo 3 4 5 6 7)
-  (foo a)       ;; calls (foo 3)
-  (foo . s)     ;; calls (foo #\ex #\ey #\ez)
+  (foo a b . c)  ;; calls (foo 3 4 5 6 7)
+  (foo a)        ;; calls (foo 3)
+  (foo . s)      ;; calls (foo #\ex #\ey #\ez)
+
+  (list . a)     ;; yields 3
+  (list a . b)   ;; yields (3 . 4)
+  (list a . c)   ;; yields (3 5 6 7)
+  (list* a c)    ;; yields (3 . #(5 6 7))
+
+  (cons a . b)   ;; error: cons isn't variadic.
+  (cons a b . c) ;; error: cons requires exactly two arguments.
 
   [foo a b . c] ;; calls (foo 3 4 5 6 7)
 
   [c 1]         ;; indexes into vector #(5 6 7) to yield 6
+
+  (call (op list 1 . @1) 2) ;; yields 2
 .cble
 
 Dialect Note:
 
-In some other Lisp dialects, the improper list syntax is not supported;
-a function called apply (or similar) must be used for application even if
-the expression which gives the trailing arguments is a symbol. Moreover,
-applying sequences other than lists is not supported.
+In some other Lisp dialects like ANSI Common Lisp, the improper list syntax may
+not be used as a function call; a function called apply (or similar) must be
+used for application even if the expression which gives the trailing arguments
+is a symbol. Moreover, applying sequences other than lists is not supported.
 
 .NP* Regular Expression Literals
 In \*(TL, the
@@ -26044,6 +26083,23 @@ a parameter from the outermost
 .code op
 into the innermost
 .codn op .
+
+Note that meta-numbers and meta-symbols belonging to an
+.code op
+can be used in the dot position of a function call, such as:
+
+.cblk
+  [(op list 1 . @1) 2] -> (1 . 2)
+.cble
+
+Even though the notation
+.code @1
+produces a compound form, which the dot notation then splices into
+the surrounding form, the expander for the
+.code op
+and
+.code do
+macro takes recognizes and takes care of this special case.
 
 The
 .code op
