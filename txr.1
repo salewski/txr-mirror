@@ -32342,7 +32342,12 @@ Up through \*(TX 107, by accident, there was a function called
 as well as an operator by the same name. The function was renamed to
 .codn flipargs .
 Version 107 compatibility or earlier provides the
-function under the original name also.
+function under the original name also. Also, up until this version,
+\*(TX allowed functions and macros to be defined with the same names
+as built-in operators, and macros. Newer versions reject this as an error.
+Requesting compatibility to 107 or earlier suppresses the rejection,
+though without introducing any requirement that redefinition will work as
+expected.
 
 .IP 105
 Provides the behavior that the

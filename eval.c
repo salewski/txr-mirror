@@ -1469,6 +1469,8 @@ static void builtin_reject_test(val op, val sym, val form)
     if (!bindable(sym)) {
       eval_error(form, lit("~s: cannot bind ~s, which is not a bindable symbol"),
                  is_operator, sym, nao);
+    } else if (opt_compat && opt_compat <= 107) {
+      /* empty */
     } else if (builtin_kind) {
       eval_error(form, lit("~s: cannot bind ~s, which is a built-in ~s"),
                  op, sym, builtin_kind, nao);
