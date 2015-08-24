@@ -286,11 +286,13 @@ tst/tests/009/json.out: TXR_ARGS := $(addprefix tests/009/,webapp.json pass1.jso
 tst/tests/010/align-columns.out: TXR_ARGS := tests/010/align-columns.dat
 tst/tests/010/block.out: TXR_OPTS := -B
 tst/tests/010/reghash.out: TXR_OPTS := -B
+tst/tests/013/maze.out: TXR_ARGS := 20 20
 
 tst/tests/002/%: TXR_SCRIPT_ON_CMDLINE := y
 
 tst/tests/011/%: TXR_DBG_OPTS :=
 tst/tests/012/%: TXR_DBG_OPTS :=
+tst/tests/013/%: TXR_DBG_OPTS :=
 
 .PRECIOUS: tst/%.out
 tst/%.out: %.txr
