@@ -6681,7 +6681,7 @@ val replace(val seq, val items, val from, val to)
 
 val dwim_set(val seq, val ind_range, val newval)
 {
-  if (consp(ind_range)) {
+  if (consp(ind_range) && !hashp(seq)) {
     cons_bind (x, y, ind_range);
 
     if (atom(y))
@@ -6689,7 +6689,7 @@ val dwim_set(val seq, val ind_range, val newval)
     return replace(seq, newval, ind_range, colon_k);
   } else if (vectorp(ind_range)) {
     return replace(seq, newval, ind_range, colon_k);
-  } else{
+  } else {
     (void) refset(seq, ind_range, newval);
     return seq;
   }
@@ -6699,15 +6699,13 @@ val dwim_set(val seq, val ind_range, val newval)
 
 val dwim_del(val seq, val ind_range)
 {
-  if (consp(ind_range)) {
+  if (hashp(seq)) {
+    (void) remhash(seq, ind_range);
+    return seq;
+  } else if (consp(ind_range)) {
     return replace(seq, nil, car(ind_range), cdr(ind_range));
   } else {
-    if (hashp(seq)) {
-      (void) remhash(seq, ind_range);
-      return seq;
-    } else {
-      return replace(seq, nil, ind_range, succ(ind_range));
-    }
+    return replace(seq, nil, ind_range, succ(ind_range));
   }
 }
 
