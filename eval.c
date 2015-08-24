@@ -4543,6 +4543,7 @@ void eval_init(void)
   reg_fun(intern(lit("prop"), user_package), func_n2(getplist));
   reg_fun(intern(lit("merge"), user_package), func_n4o(merge_wrap, 2));
   reg_fun(intern(lit("sort"), user_package), func_n3o(sort, 1));
+  reg_fun(intern(lit("shuffle"), user_package), func_n1(shuffle));
   reg_fun(intern(lit("find"), user_package), func_n4o(find, 2));
   reg_fun(intern(lit("multi-sort"), user_package), func_n3o(multi_sort, 2));
   reg_fun(intern(lit("find-if"), user_package), func_n3o(find_if, 2));

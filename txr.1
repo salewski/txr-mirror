@@ -19544,6 +19544,27 @@ For strings and vectors,
 .code sort
 is not stable.
 
+.coNP Function @ shuffle
+.synb
+.mets (shuffle << sequence )
+.syne
+.desc
+The
+.code shuffle
+function pseudo-randomly rearranges the elements of
+.metn sequence .
+This is performed in place:
+.meta sequence
+object is modified.
+
+The return value is
+.meta sequence
+itself.
+
+The rearrangement depends on pseudo-random numbers obtained from the
+.code rand
+function.
+
 .coNP Function @ sort-group
 .synb
 .mets (sort-group < sequence >> [ keyfun <> [ lessfun ]])

@@ -835,6 +835,7 @@ val mapdo(val fun, val list);
 val interpose(val sep, val seq);
 val merge(val list1, val list2, val lessfun, val keyfun);
 val sort(val seq, val lessfun, val keyfun);
+val shuffle(val seq);
 val multi_sort(val lists, val funcs, val key_funcs);
 val sort_group(val seq, val keyfun, val lessfun);
 val unique(val seq, val keyfun, struct args *hashv_args);

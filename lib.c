@@ -6166,6 +6166,49 @@ val sort(val seq_in, val lessfun, val keyfun)
   return seq;
 }
 
+val shuffle(val seq)
+{
+  switch (type(seq)) {
+  case NIL:
+    return nil;
+  case CONS:
+  case LCONS:
+    if (cdr(seq))
+    {
+      val v = shuffle(vector_list(seq));
+      val i, l;
+
+      for (l = seq, i = zero; l; i = succ(i), l = cdr(l))
+        rplaca(l, ref(v, i));
+    }
+    return seq;
+  case LIT:
+    uw_throwf(error_s, lit("shuffle: ~s is a literal"), seq, nao);
+  case STR:
+  case LSTR:
+  case VEC:
+    {
+      val rs = random_state;
+      val n = length(seq);
+      val i;
+
+      if (n == zero || n == one)
+        return seq;
+
+      for (i = pred(n); ge(i, one); i = pred(i)) {
+        val j = random(rs, succ(i));
+        val t = ref(seq, i);
+        refset(seq, i, ref(seq, j));
+        refset(seq, j, t);
+      }
+
+      return seq;
+    }
+  default:
+    type_mismatch(lit("shuffle: ~s is not a sequence"), seq, nao);
+  }
+}
+
 static val multi_sort_less(val funcs_cons, val llist, val rlist)
 {
   cons_bind (funcs, key_funcs, funcs_cons);
