@@ -148,6 +148,7 @@ static void help(void)
 "--gc-delta=N           Invoke garbage collection when malloc activity\n"
 "                       increments by N megabytes since last collection.\n"
 "--debug-autoload       Allow debugger to step through library auto-loading.\n"
+"--yydebug              Debug Yacc parser, if compiled with YYDEBUG support.\n"
 "\n"
 "Options that take no argument can be combined. The -q and -v options\n"
 "are mutually exclusive; the right-most one dominates.\n"
@@ -525,6 +526,19 @@ int txr_main(int argc, char **argv)
         no_dbg_support(opt);
         return EXIT_FAILURE;
 #endif
+      } else if (equal(opt, lit("yydebug"))) {
+        if (have_yydebug) {
+          yydebug_onoff(1);
+          format(std_error,
+                 lit("~a: option --~a takes no argument, ~a given\n"),
+                 prog_string, opt, org, nao);
+          continue;
+        } else {
+          format(std_error,
+                 lit("~a: option ~a requires YYDEBUG support compiled in\n"),
+                 prog_string, arg, nao);
+          return EXIT_FAILURE;
+        }
       } else if (equal(opt, lit("noninteractive"))) {
         opt_noninteractive = 1;
         stream_set_prop(std_input, real_time_k, nil);

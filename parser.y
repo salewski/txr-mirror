@@ -1039,12 +1039,21 @@ not_a_clause : ALL              { $$ = mkexp(all_s, nil, num(parser->lineno)); }
 
 %%
 
+const int have_yydebug = YYDEBUG;
+
 int yylex(YYSTYPE *, yyscan_t scanner);
 
 /* C99 inline instantiations. */
 #if __STDC_VERSION__ >= 199901L
 val rlcp(val to, val from);
 #endif
+
+void yydebug_onoff(int val)
+{
+#if YYDEBUG
+  yydebug = val;
+#endif
+}
 
 static val sym_helper(parser_t *parser, wchar_t *lexeme, val meta_allowed)
 {
