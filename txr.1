@@ -729,6 +729,27 @@ or
 .code -P
 options.
 
+.coIP --gc-debug
+This option enables a behavior which stresses the garbage collector with
+frequent garbage collection requests. The purpose is to make it more likely
+to reproduce certain kinds of bugs. It makes \*(TX run very slowly.
+
+.coIP --vg-debug
+If \*(TX is enabled with Valgrind support, then this option is available.
+It enables code which uses the Valgrind API to integrate with the Valgrind
+debugger, for more accurate tracking of garbage collected objects. For
+example, objects which have been reclaimed by the garbage collector
+are marked as inaccessible, and marked as uninitialized when they are
+allocated again.
+
+.coIP --dv-regex
+If this option is used, then regular expressions are all treated using the
+derivative-based back-end.  The NFA-based regex implementation is disabled.
+Normally, only regular expressions which require the intersection and
+complement operators are handled using the derivative back-end.
+This option makes it possible to test that back-end on test cases that it
+wouldn't normally receive.
+
 .coIP --
 Signifies the end of the option list.
 
