@@ -1101,8 +1101,7 @@ static val h_fun(match_line_ctx *c)
     }
 
     {
-      struct args *args = args_alloc(ARGS_MIN);
-      args_init_list(args, ARGS_MIN, bindings_cp);
+      args_decl_list(args, ARGS_MIN, bindings_cp);
       uw_block_begin(nil, result);
       uw_env_begin;
       debug_frame(sym, args, ub_p_a_pairs, c->bindings, c->dataline, c->data_lineno, c->pos);
@@ -3589,8 +3588,7 @@ static val v_fun(match_files_ctx *c)
     }
 
     {
-      struct args *args = args_alloc(ARGS_MIN);
-      args_init_list(args, ARGS_MIN, bindings_cp);
+      args_decl_list(args, ARGS_MIN, bindings_cp);
       uw_block_begin(nil, result);
       uw_env_begin;
       debug_frame(sym, args, ub_p_a_pairs, c->bindings, if2(consp(c->data), car(c->data)),

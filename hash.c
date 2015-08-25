@@ -886,8 +886,7 @@ val hashv(struct args *args)
 
 val hashl(val arglist)
 {
-  struct args *args = args_alloc(ARGS_MIN);
-  args_init_list(args, ARGS_MIN, arglist);
+  args_decl_list(args, ARGS_MIN, arglist);
   return hashv(args);
 }
 

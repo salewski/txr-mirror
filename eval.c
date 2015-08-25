@@ -670,7 +670,7 @@ static val get_param_syms(val params)
 
 val apply(val fun, val arglist, val ctx_form)
 {
-  struct args *args = args_alloc(ARGS_MAX);
+  args_decl(args, ARGS_MAX);
   args_init_list(args, ARGS_MAX, arglist);
   return generic_funcall(fun, args);
 }
@@ -990,9 +990,7 @@ static val do_eval(val form, val env, val ctx_form,
         cnum alen = if3(consp(arglist), c_num(length(arglist)), 0);
         cnum argc = max(alen, ARGS_MAX);
         val ret, lfe_save = last_form_evaled;
-        struct args *args = args_alloc(argc);
-
-        args_init(args, argc);
+        args_decl(args, argc);
 
         do_eval_args(rest(form), env, form, &lookup_var, args);
 
@@ -1424,8 +1422,8 @@ static val expand_macro(val form, val expander, val menv)
     val saved_de = set_dyn_env(make_env(nil, nil, dyn_env));
     val exp_env = bind_macro_params(env, menv, params, arglist, nil, form);
     val result;
-    struct args *args = args_alloc(ARGS_MIN);
-    args_init_list(args, ARGS_MIN, arglist);
+    args_decl_list(args, ARGS_MIN, arglist);
+
     debug_frame(name, args, nil, env, nil, nil, nil);
     result = eval_progn(body, exp_env, body);
     debug_end;
@@ -1841,8 +1839,7 @@ static val op_dwim(val form, val env)
   val objexpr = pop(&argexps);
   cnum alen = if3(consp(argexps), c_num(length(argexps)), 0);
   cnum argc = max(alen, ARGS_MIN);
-  struct args *args = args_alloc(argc);
-  args_init(args, argc);
+  args_decl(args, argc);
 
   if (!consp(cdr(form)))
     eval_error(form, lit("~s: missing argument"), car(form), nao);
@@ -1865,11 +1862,9 @@ static val op_catch(val form, val env)
   result = eval(try_form, env, try_form);
 
   uw_catch(exsym, exvals) {
-    struct args *args = args_alloc(ARGS_MIN);
+    args_decl_list(args, ARGS_MIN, exvals);
     val catches = rest(rest(rest(form)));
     val iter;
-
-    args_init_list(args, ARGS_MIN, exvals);
 
     for (iter = catches; iter; iter = cdr(iter)) {
       val clause = car(iter);
@@ -3286,8 +3281,7 @@ val mapcarv(val fun, struct args *lists)
 
 val mapcarl(val fun, val list_of_lists)
 {
-  struct args *args = args_alloc(ARGS_MIN);
-  args_init_list(args, ARGS_MIN, list_of_lists);
+  args_decl_list(args, ARGS_MIN, list_of_lists);
   return mapcarv(fun, args);
 }
 
@@ -3377,8 +3371,7 @@ static val lazy_mapcarv(val fun, struct args *lists)
 
 static val lazy_mapcarl(val fun, val list_of_lists)
 {
-  struct args *args = args_alloc(ARGS_MIN);
-  args_init_list(args, ARGS_MIN, list_of_lists);
+  args_decl_list(args, ARGS_MIN, list_of_lists);
   return lazy_mapcarv(fun, args);
 }
 

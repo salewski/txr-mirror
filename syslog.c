@@ -122,8 +122,7 @@ val syslog_wrapv(val prio, val fmt, struct args *args)
 
 val syslog_wrap(val prio, val fmt, val arglist)
 {
-  struct args *args = args_alloc(ARGS_MIN);
-  args_init_list(args, ARGS_MIN, arglist);
+  args_decl_list(args, ARGS_MIN, arglist);
   return syslog_wrapv(prio, fmt, args);
 }
 

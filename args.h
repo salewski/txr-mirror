@@ -40,17 +40,28 @@ typedef int arg_index;
   (coerce(struct args *,                                                \
           alloca(offsetof(struct args, arg) + (N)*sizeof (val))))
 
-INLINE void args_init_list(struct args *args, cnum argc, val list)
+INLINE struct args *args_init_list(struct args *args, cnum argc, val list)
 {
   args->argc = argc;
   args->fill = 0;
   args->list = list;
+  return args;
 }
 
-INLINE void args_init(struct args *args, cnum argc)
+INLINE struct args *args_init(struct args *args, cnum argc)
 {
-  args_init_list(args, argc, nil);
+  return args_init_list(args, argc, nil);
 }
+
+#define args_decl_list(NAME, N, L)                                      \
+  mem_t *NAME ## _mem =                                                 \
+    coerce(mem_t *,                                                     \
+           alloca(offsetof(struct args, arg) + (N)*sizeof (val)));      \
+  struct args *NAME = args_init_list(coerce(struct args *,              \
+                                            NAME ## _mem), N, L)
+
+#define args_decl(NAME, N) args_decl_list(NAME, N, nil)
+
 
 INLINE val args_add(struct args *args, val arg)
 {

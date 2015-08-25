@@ -1022,8 +1022,7 @@ val lazy_appendv(struct args *args)
 
 val lazy_appendl(val lists)
 {
-  struct args *args = args_alloc(ARGS_MIN);
-  args_init_list(args, ARGS_MIN, lists);
+  args_decl_list(args, ARGS_MIN, lists);
   return lazy_appendv(args);
 }
 
@@ -2320,15 +2319,13 @@ val minv(val first, struct args *rest)
 
 val maxl(val first, val rest)
 {
-  struct args *args = args_alloc(ARGS_MIN);
-  args_init_list(args, ARGS_MIN, rest);
+  args_decl_list(args, ARGS_MIN, rest);
   return maxv(first, args);
 }
 
 val minl(val first, val rest)
 {
-  struct args *args = args_alloc(ARGS_MIN);
-  args_init_list(args, ARGS_MIN, rest);
+  args_decl_list(args, ARGS_MIN, rest);
   return minv(first, args);
 }
 
@@ -4389,10 +4386,12 @@ val generic_funcall(val fun, struct args *args_in)
     val *arg = 0;
 
     if (args->argc < fixparam) {
-      args = args_alloc(fixparam);
-      args_init(args, fixparam);
-      args_copy_zap(args, args_in);
+      args_decl(args_copy, fixparam);
+      args_copy_zap(args_copy, args_in);
+      args = args_copy;
     }
+
+    arg = args->arg;
 
     args_normalize_fill(args, reqargs, fixparam);
 
@@ -4401,8 +4400,6 @@ val generic_funcall(val fun, struct args *args_in)
 
     if (args->list)
       callerror(fun, lit("too many arguments"));
-
-    arg = args->arg;
 
     switch (fun->f.functype) {
     case F0:
@@ -4438,17 +4435,18 @@ val generic_funcall(val fun, struct args *args_in)
     val *arg = 0;
 
     if (args->argc < fixparam) {
-      args = args_alloc(fixparam);
-      args_init(args, fixparam);
-      args_copy_zap(args, args_in);
+      args_decl(args_copy, fixparam);
+      args_copy_zap(args_copy, args_in);
+      args = args_copy;
     }
+
+    arg = args->arg;
 
     args_normalize_fill(args, reqargs, fixparam);
 
     if (args->fill < reqargs)
       callerror(fun, lit("missing required arguments"));
 
-    arg = args->arg;
     args_clear(args);
 
     switch (fun->f.functype) {
@@ -4493,17 +4491,13 @@ static noreturn void wrongargs(val fun)
 
 val funcall(val fun)
 {
-  struct args *args;
-
   if (type(fun) != FUN || fun->f.optargs) {
-    args = args_alloc(ARGS_MIN);
-    args_init(args, ARGS_MIN);
+    args_decl(args, ARGS_MIN);
     return generic_funcall(fun, args);
   }
 
   if (fun->f.variadic) {
-    args = args_alloc(ARGS_MIN);
-    args_init(args, ARGS_MIN);
+    args_decl(args, ARGS_MIN);
 
     switch (fun->f.functype) {
     case FINTERP:
@@ -4530,18 +4524,14 @@ val funcall(val fun)
 
 val funcall1(val fun, val arg)
 {
-  struct args *args;
-
   if (type(fun) != FUN || fun->f.optargs) {
-    args = args_alloc(ARGS_MIN);
-    args_init(args, ARGS_MIN);
+    args_decl(args, ARGS_MIN);
     args_add(args, arg);
     return generic_funcall(fun, args);
   }
 
   if (fun->f.variadic) {
-    args = args_alloc(ARGS_MIN);
-    args_init(args, ARGS_MIN);
+    args_decl(args, ARGS_MIN);
 
     switch (fun->f.functype) {
     case FINTERP:
@@ -4575,18 +4565,14 @@ val funcall1(val fun, val arg)
 
 val funcall2(val fun, val arg1, val arg2)
 {
-  struct args *args;
-
   if (type(fun) != FUN || fun->f.optargs) {
-    args = args_alloc(ARGS_MIN);
-    args_init(args, ARGS_MIN);
+    args_decl(args, ARGS_MIN);
     args_add2(args, arg1, arg2);
     return generic_funcall(fun, args);
   }
 
   if (fun->f.variadic) {
-    args = args_alloc(ARGS_MIN);
-    args_init(args, ARGS_MIN);
+    args_decl(args, ARGS_MIN);
 
     switch (fun->f.functype) {
     case FINTERP:
@@ -4626,18 +4612,14 @@ val funcall2(val fun, val arg1, val arg2)
 
 val funcall3(val fun, val arg1, val arg2, val arg3)
 {
-  struct args *args;
-
   if (type(fun) != FUN || fun->f.optargs) {
-    args = args_alloc(ARGS_MIN);
-    args_init(args, ARGS_MIN);
+    args_decl(args, ARGS_MIN);
     args_add3(args, arg1, arg2, arg3);
     return generic_funcall(fun, args);
   }
 
   if (fun->f.variadic) {
-    args = args_alloc(ARGS_MIN);
-    args_init(args, ARGS_MIN);
+    args_decl(args, ARGS_MIN);
 
     switch (fun->f.functype) {
     case FINTERP:
@@ -4683,18 +4665,14 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
 
 val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
 {
-  struct args *args;
-
   if (type(fun) != FUN || fun->f.optargs) {
-    args = args_alloc(ARGS_MIN);
-    args_init(args, ARGS_MIN);
+    args_decl(args, ARGS_MIN);
     args_add4(args, arg1, arg2, arg3, arg4);
     return generic_funcall(fun, args);
   }
 
   if (fun->f.variadic) {
-    args = args_alloc(ARGS_MIN);
-    args_init(args, ARGS_MIN);
+    args_decl(args, ARGS_MIN);
 
     switch (fun->f.functype) {
     case FINTERP:
@@ -4901,8 +4879,7 @@ val transposev(struct args *list)
 
 val transpose(val list)
 {
-  struct args *args = args_alloc(ARGS_MIN);
-  args_init_list(args, ARGS_MIN, list);
+  args_decl_list(args, ARGS_MIN, list);
   return make_like(transposev(args), list);
 }
 
@@ -4983,11 +4960,10 @@ val juxtv(struct args *funlist)
 static val do_and(val fun1_list, struct args *args_in)
 {
   cnum argc = args_in->argc;
-  struct args *args = args_alloc(argc);
+  args_decl(args, argc);
   val ret = t;
 
   fun1_list = nullify(fun1_list);
-  args_init(args, argc);
 
   for (; fun1_list; fun1_list = cdr(fun1_list)) {
     args_copy(args, args_in);
@@ -5035,11 +5011,10 @@ val swap_12_21(val fun)
 static val do_or(val fun1_list, struct args *args_in)
 {
   cnum argc = args_in->argc;
-  struct args *args = args_alloc(argc);
+  args_decl(args, argc);
   val ret = nil;
 
   fun1_list = nullify(fun1_list);
-  args_init(args, argc);
 
   for (; fun1_list; fun1_list = cdr(fun1_list)) {
     args_copy(args, args_in);
@@ -5088,10 +5063,8 @@ static val do_iff(val env, struct args *args_in)
 {
   cons_bind (condfun, choices, env);
   cons_bind (thenfun, elsefun, choices);
-  cnum argc = args_in->argc;
-  struct args *args = args_alloc(argc);
+  args_decl(args, args_in->argc);
 
-  args_init(args, argc);
   args_copy(args, args_in);
 
   return if3(generic_funcall(condfun, args_in),
@@ -6292,8 +6265,7 @@ val unique(val seq, val keyfun, struct args *hashv_args)
 
 val uniq(val seq)
 {
-  struct args *hashv_args = args_alloc(1);
-  args_init(hashv_args, 1);
+  args_decl(hashv_args, ARGS_MIN);
   args_add(hashv_args, equal_based_k);
   return unique(seq, identity_f, hashv_args);
 }
