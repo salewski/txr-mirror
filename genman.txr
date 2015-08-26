@@ -6,6 +6,7 @@
 @(bind tagmap @(hash :equal-based))
 @(do
    (defvar dupes (hash))
+   (defvar tagnum (hash :equal-based))
 
    (defun hash-title (title)
      (let* ((h (logtrunc (hash-equal title) 32))
@@ -16,7 +17,11 @@
        (set [dupes h] title)
        (format nil "N-~,08X" h)))
 
-   (set [tagmap "lbAB"] (hash-title "NAME")))
+   (set [tagmap "lbAB"] (hash-title "NAME"))
+
+   (defun enumerate (title)
+     (let ((num (inc [tagnum title 0])))
+       `@title@(if (> num 1) `-@num` "")`)))
 Content-type: text/html
 @(skip 15)
 <H1>TXR</H1>
@@ -35,7 +40,7 @@ Content-type: text/html
 <H@level>@sec @title
 </H@level>
 @      (end)
-@      (bind newtag @(hash-title title))
+@      (bind newtag @(hash-title (enumerate title)))
 @      (do (set [tagmap tag] newtag))
 @      (output :into BODY)
 <A NAME="@newtag">&nbsp;</A>
