@@ -927,7 +927,7 @@ INLINE int null_or_missing_p(val v) { return (nilp(v) || missingp(v)); }
 
 #define and3(a, b, c) ((a) && (b) ? (c) : nil)
 
-#define c_true(c_cond) ((c_cond) ? t : nil)
+#define tnil(c_cond) ((c_cond) ? t : nil)
 
 INLINE val default_arg(val arg, val dfl)
 {

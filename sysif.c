@@ -424,7 +424,7 @@ static val wait_wrap(val pid, val flags)
 static val wifexited(val status)
 {
   int s = c_num(if3(consp(status), cdr(status), status));
-  return c_true(WIFEXITED(s));
+  return tnil(WIFEXITED(s));
 }
 
 static val wexitstatus(val status)
@@ -436,7 +436,7 @@ static val wexitstatus(val status)
 static val wifsignaled(val status)
 {
   int s = c_num(if3(consp(status), cdr(status), status));
-  return c_true(WIFSIGNALED(s));
+  return tnil(WIFSIGNALED(s));
 }
 
 static val wtermsig(val status)
@@ -449,14 +449,14 @@ static val wtermsig(val status)
 static val wcoredump(val status)
 {
   int s = c_num(if3(consp(status), cdr(status), status));
-  return c_true(WCOREDUMP(s));
+  return tnil(WCOREDUMP(s));
 }
 #endif
 
 static val wifstopped(val status)
 {
   int s = c_num(if3(consp(status), cdr(status), status));
-  return c_true(WIFSTOPPED(s));
+  return tnil(WIFSTOPPED(s));
 }
 
 static val wstopsig(val status)
@@ -469,7 +469,7 @@ static val wstopsig(val status)
 static val wifcontinued(val status)
 {
   int s = c_num(if3(consp(status), cdr(status), status));
-  return c_true(WIFCONTINUED(s));
+  return tnil(WIFCONTINUED(s));
 }
 #endif
 

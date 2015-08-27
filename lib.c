@@ -3432,7 +3432,7 @@ val less(val left, val right)
           return nil;
       }
 
-      return c_true (lenl < lenr);
+      return tnil(lenl < lenr);
     }
   case FUN:
   case PKG:
@@ -3533,72 +3533,72 @@ wchar_t c_chr(val chr)
 
 val chr_isalnum(val ch)
 {
-  return c_true(iswalnum(c_chr(ch)));
+  return tnil(iswalnum(c_chr(ch)));
 }
 
 val chr_isalpha(val ch)
 {
-  return c_true(iswalpha(c_chr(ch)));
+  return tnil(iswalpha(c_chr(ch)));
 }
 
 val chr_isascii(val ch)
 {
-  return c_true(c_chr(ch) >= 0 && c_chr(ch) < 128);
+  return tnil(c_chr(ch) >= 0 && c_chr(ch) < 128);
 }
 
 val chr_iscntrl(val ch)
 {
-  return c_true(iswcntrl(c_chr(ch)));
+  return tnil(iswcntrl(c_chr(ch)));
 }
 
 val chr_isdigit(val ch)
 {
-  return c_true(iswdigit(c_chr(ch)));
+  return tnil(iswdigit(c_chr(ch)));
 }
 
 val chr_isgraph(val ch)
 {
-  return c_true(iswgraph(c_chr(ch)));
+  return tnil(iswgraph(c_chr(ch)));
 }
 
 val chr_islower(val ch)
 {
-  return c_true(iswlower(c_chr(ch)));
+  return tnil(iswlower(c_chr(ch)));
 }
 
 val chr_isprint(val ch)
 {
-  return c_true(iswprint(c_chr(ch)));
+  return tnil(iswprint(c_chr(ch)));
 }
 
 val chr_ispunct(val ch)
 {
-  return c_true(iswpunct(c_chr(ch)));
+  return tnil(iswpunct(c_chr(ch)));
 }
 
 val chr_isspace(val ch)
 {
-  return c_true(iswspace(c_chr(ch)));
+  return tnil(iswspace(c_chr(ch)));
 }
 
 val chr_isblank(val ch)
 {
-  return c_true(ch == chr(' ') || ch == chr('\t'));
+  return tnil(ch == chr(' ') || ch == chr('\t'));
 }
 
 val chr_isunisp(val ch)
 {
-  return c_true(wcschr(spaces, c_chr(ch)));
+  return tnil(wcschr(spaces, c_chr(ch)));
 }
 
 val chr_isupper(val ch)
 {
-  return c_true(iswupper(c_chr(ch)));
+  return tnil(iswupper(c_chr(ch)));
 }
 
 val chr_isxdigit(val ch)
 {
-  return c_true(iswxdigit(c_chr(ch)));
+  return tnil(iswxdigit(c_chr(ch)));
 }
 
 val chr_toupper(val ch)
@@ -3844,7 +3844,7 @@ val symbolp(val sym)
 
 val keywordp(val sym)
 {
-  return c_true(sym && symbolp(sym) && sym->s.package == keyword_package_var);
+  return tnil(sym && symbolp(sym) && sym->s.package == keyword_package_var);
 }
 
 loc get_user_package(void)

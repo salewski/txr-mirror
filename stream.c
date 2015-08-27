@@ -1870,7 +1870,7 @@ val make_catenated_stream_v(struct args *streams)
 
 val catenated_stream_p(val obj)
 {
-  return if2(streamp(obj), c_true(obj->co.ops == &cat_stream_ops.cobj_ops));
+  return if2(streamp(obj), tnil(obj->co.ops == &cat_stream_ops.cobj_ops));
 }
 
 val catenated_stream_push(val new_stream, val cat_stream)

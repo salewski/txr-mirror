@@ -368,7 +368,7 @@ static val lexical_var_p(val menv, val sym)
       val binding = assoc(sym, menv->e.vbindings);
 
       if (binding) /* special_s: see make_var_shadowing_env */
-        return c_true(cdr(binding) == special_s);
+        return tnil(cdr(binding) == special_s);
       return lexical_var_p(menv->e.up_env, sym);
     }
   }
@@ -385,7 +385,7 @@ static val lexical_fun_p(val menv, val sym)
       val binding = assoc(sym, menv->e.fbindings);
 
       if (binding) /* special_s: see make_var_shadowing_env */
-        return c_true(cdr(binding) == special_s);
+        return tnil(cdr(binding) == special_s);
       return lexical_fun_p(menv->e.up_env, sym);
     }
   }
