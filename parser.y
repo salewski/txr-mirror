@@ -1481,30 +1481,52 @@ void yybadtoken(parser_t *parser, int tok, val context)
 
 int parse_once(val stream, val name, parser_t *parser)
 {
-  int res;
+  int res = 0;
 
   parser_common_init(parser);
 
   parser->stream = stream;
   parser->name = name;
 
+  uw_catch_begin(cons(error_s, nil), esym, eobj);
+
   res = yyparse(parser->scanner, parser);
 
-  parser_cleanup(parser);
+  uw_catch(esym, eobj) {
+    yyerrorf(parser->scanner, lit("exception during parse"), nao);
+    uw_throw(esym, eobj);
+  }
+
+  uw_unwind {
+    parser_cleanup(parser);
+  }
+
+  uw_catch_end;
 
   return res;
 }
 
 int parse(parser_t *parser, val name, enum prime_parser prim)
 {
-  int res;
+  int res = 0;
 
   parser->errors = 0;
   parser->prepared_msg = nil;
   parser->syntax_tree = nil;
   prime_parser(parser, name, prim);
 
+  uw_catch_begin(cons(error_s, nil), esym, eobj);
+
   res = yyparse(parser->scanner, parser);
+
+  uw_catch(esym, eobj) {
+    yyerrorf(parser->scanner, lit("exception during parse"), nao);
+    uw_throw(esym, eobj);
+  }
+
+  uw_unwind;
+
+  uw_catch_end;
 
   return res;
 }
