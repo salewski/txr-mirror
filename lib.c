@@ -7643,6 +7643,8 @@ void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),
   obj_init();
   uw_init();
   eval_init();
+  hash_init();
+  struct_init();
   sysif_init();
   arith_init();
   rand_init();
@@ -7651,7 +7653,6 @@ void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),
   sig_init();
 #endif
   filter_init();
-  hash_init();
   regex_init();
   gc_late_init();
   parse_init();
@@ -7664,7 +7665,6 @@ void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),
   glob_init();
 #endif
   cadr_init();
-  struct_init();
 
   gc_state(gc_save);
 }

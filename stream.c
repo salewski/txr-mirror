@@ -64,9 +64,6 @@
 
 val stdin_s, stdout_s, stddebug_s, stderr_s, stdnull_s;
 
-val dev_k, ino_k, mode_k, nlink_k, uid_k;
-val gid_k, rdev_k, size_k, blksize_k, blocks_k;
-val atime_k, mtime_k, ctime_k;
 val from_start_k, from_current_k, from_end_k;
 val real_time_k, name_k, fd_k;
 val format_s;
@@ -3213,19 +3210,6 @@ void stream_init(void)
 
   detect_format_string();
 
-  dev_k = intern(lit("dev"), keyword_package);
-  ino_k = intern(lit("ino"), keyword_package);
-  mode_k = intern(lit("mode"), keyword_package);
-  nlink_k = intern(lit("nlink"), keyword_package);
-  uid_k = intern(lit("uid"), keyword_package);
-  gid_k = intern(lit("gid"), keyword_package);
-  rdev_k = intern(lit("rdev"), keyword_package);
-  size_k = intern(lit("size"), keyword_package);
-  blksize_k = intern(lit("blksize"), keyword_package);
-  blocks_k = intern(lit("blocks"), keyword_package);
-  atime_k = intern(lit("atime"), keyword_package);
-  mtime_k = intern(lit("mtime"), keyword_package);
-  ctime_k = intern(lit("ctime"), keyword_package);
   from_start_k = intern(lit("from-start"), keyword_package);
   from_current_k = intern(lit("from-current"), keyword_package);
   from_end_k = intern(lit("from-end"), keyword_package);

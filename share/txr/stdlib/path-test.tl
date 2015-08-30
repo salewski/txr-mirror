@@ -7,8 +7,7 @@
 
 (defun sys:path-test-mode (statfun path mask)
   (sys:path-test (s statfun path)
-    (let ((m (prop s :mode)))
-      (if (plusp (logand m mask)) t))))
+    (plusp (logand s.mode mask))))
 
 (defun path-exists-p (path)
   (sys:path-test (s stat path) t))
@@ -45,24 +44,23 @@
 
 (defun path-mine-p (path)
   (sys:path-test (s stat path)
-    (let ((u (prop s :uid)))
-      (= u (geteuid)))))
+    (= s.uid (geteuid))))
 
 (defun path-my-group-p (path)
   (sys:path-test (s stat path)
-    (let ((g (prop s :gid)))
+    (let ((g s.gid))
       (or (= g (getegid))
           (find g (getgroups))))))
 
 (defun sys:path-access (path umask gmask omask)
   (sys:path-test (s stat path)
-    (let ((m (prop s :mode))
+    (let ((m s.mode)
           (euid (geteuid)))
       (cond
         ((zerop euid) (or (zerop (logior umask s-ixusr))
                           (plusp (logand m (logior umask gmask omask)))))
-        ((= euid (prop s :uid)) (plusp (logand m umask)))
-        ((let ((g (prop s :gid)))
+        ((= euid s.uid) (plusp (logand m umask)))
+        ((let ((g s.gid))
            (or (= g (getegid))
                (find g (getgroups))))
          (plusp (logand m gmask)))
@@ -81,9 +79,7 @@
 (defun path-newer (path-0 path-1)
   (sys:path-examine (s0 stat path-0)
     (sys:path-examine (s1 stat path-1)
-      (and s0 (or (not s1)
-                  (> (prop s0 :mtime)
-                     (prop s1 :mtime)))))))
+      (and s0 (or (not s1) (> s0.mtime s1.mtime))))))
 
 (defun path-older (path-0 path-1)
   (path-newer path-1 path-0))
@@ -92,7 +88,5 @@
   (sys:path-examine (s0 stat path-0)
     (sys:path-examine (s1 stat path-1)
       (and s0 s1
-           (eql (prop s0 :dev)
-                (prop s1 :dev))
-           (eql (prop s0 :ino)
-                (prop s1 :ino))))))
+           (eql s0.dev s1.dev)
+           (eql s0.ino s1.ino)))))

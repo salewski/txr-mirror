@@ -24,6 +24,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -55,6 +56,10 @@
 #if HAVE_POLL
 #include <poll.h>
 #endif
+#if HAVE_PWUID
+#include <pwd.h>
+#endif
+#include ALLOCA_H
 #include "lib.h"
 #include "stream.h"
 #include "hash.h"
@@ -63,7 +68,18 @@
 #include "unwind.h"
 #include "gc.h"
 #include "eval.h"
+#include "args.h"
+#include "struct.h"
+#include "txr.h"
 #include "sysif.h"
+
+val stat_s;
+val dev_k, ino_k, mode_k, nlink_k, uid_k;
+val gid_k, rdev_k, size_k, blksize_k, blocks_k;
+val atime_k, mtime_k, ctime_k;
+val dev_s, ino_s, mode_s, nlink_s, uid_s;
+val gid_s, rdev_s, size_s, blksize_s, blocks_s;
+val atime_s, mtime_s, ctime_s;
 
 static val errno_wrap(val newval)
 {
@@ -578,6 +594,31 @@ static val stat_to_list(struct stat st)
               nao);
 }
 
+static val stat_to_struct(struct stat st)
+{
+  args_decl(args, ARGS_MIN);
+  val strct = make_struct(stat_s, nil, args);
+  slotset(strct, dev_s, num(st.st_dev));
+  slotset(strct, ino_s, num(st.st_ino));
+  slotset(strct, mode_s, num(st.st_mode));
+  slotset(strct, nlink_s, num(st.st_nlink));
+  slotset(strct, uid_s, num(st.st_uid));
+  slotset(strct, gid_s, num(st.st_gid));
+  slotset(strct, rdev_s, num(st.st_rdev));
+  slotset(strct, size_s, num(st.st_size));
+#if !HAVE_WINDOWS_H
+  slotset(strct, blksize_s, num(st.st_blksize));
+  slotset(strct, blocks_s, num(st.st_blocks));
+#else
+  slotset(strct, blksize_s, zero);
+  slotset(strct, blocks_s, zero);
+#endif
+  slotset(strct, atime_s, num(st.st_atime));
+  slotset(strct, mtime_s, num(st.st_mtime));
+  slotset(strct, ctime_s, num(st.st_ctime));
+
+  return strct;
+}
 #endif
 
 static val stat_impl(val obj, int (*statfn)(val, struct stat *),
@@ -591,7 +632,8 @@ static val stat_impl(val obj, int (*statfn)(val, struct stat *),
     uw_throwf(file_error_s, lit("unable to ~a ~a: ~a/~s"),
               name, obj, num(errno), string_utf8(strerror(errno)), nao);
 
-  return stat_to_list(st);
+  return if3(opt_compat && opt_compat <= 113,
+             stat_to_list(st), stat_to_struct(st));
 #else
   uw_throwf(file_error_s, lit("~a is not implemented"), name, nao);
 #endif
@@ -810,6 +852,39 @@ static val setegid_wrap(val nval)
 
 void sysif_init(void)
 {
+  stat_s = intern(lit("stat"), user_package);
+  dev_k = intern(lit("dev"), keyword_package);
+  ino_k = intern(lit("ino"), keyword_package);
+  mode_k = intern(lit("mode"), keyword_package);
+  nlink_k = intern(lit("nlink"), keyword_package);
+  uid_k = intern(lit("uid"), keyword_package);
+  gid_k = intern(lit("gid"), keyword_package);
+  rdev_k = intern(lit("rdev"), keyword_package);
+  size_k = intern(lit("size"), keyword_package);
+  blksize_k = intern(lit("blksize"), keyword_package);
+  blocks_k = intern(lit("blocks"), keyword_package);
+  atime_k = intern(lit("atime"), keyword_package);
+  mtime_k = intern(lit("mtime"), keyword_package);
+  ctime_k = intern(lit("ctime"), keyword_package);
+  dev_s = intern(lit("dev"), user_package);
+  ino_s = intern(lit("ino"), user_package);
+  mode_s = intern(lit("mode"), user_package);
+  nlink_s = intern(lit("nlink"), user_package);
+  uid_s = intern(lit("uid"), user_package);
+  gid_s = intern(lit("gid"), user_package);
+  rdev_s = intern(lit("rdev"), user_package);
+  size_s = intern(lit("size"), user_package);
+  blksize_s = intern(lit("blksize"), user_package);
+  blocks_s = intern(lit("blocks"), user_package);
+  atime_s = intern(lit("atime"), user_package);
+  mtime_s = intern(lit("mtime"), user_package);
+  ctime_s = intern(lit("ctime"), user_package);
+
+  make_struct_type(stat_s, nil,
+                   list(dev_s, ino_s, mode_s, nlink_s, uid_s, gid_s,
+                        rdev_s, size_s, blksize_s, blocks_s, atime_s,
+                        mtime_s, ctime_s, nao), nil, nil);
+
   reg_fun(intern(lit("errno"), user_package), func_n1o(errno_wrap, 0));
   reg_fun(intern(lit("exit"), user_package), func_n1(exit_wrap));
   reg_fun(intern(lit("abort"), user_package), func_n0(abort_wrap));

@@ -24,4 +24,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+extern val stat_s;
+extern val dev_k, ino_k, mode_k, nlink_k, uid_k;
+extern val gid_k, rdev_k, size_k, blksize_k, blocks_k;
+extern val atime_k, mtime_k, ctime_k;
+extern val dev_s, ino_s, mode_s, nlink_s, uid_s;
+extern val gid_s, rdev_s, size_s, blksize_s, blocks_s;
+extern val atime_s, mtime_s, ctime_s;
+
 void sysif_init(void);
