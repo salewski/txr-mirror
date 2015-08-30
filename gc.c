@@ -236,13 +236,16 @@ static void finalize(val obj)
   case CHR:
   case NUM:
   case LIT:
-  case SYM:
   case PKG:
   case FUN:
   case LCONS:
   case LSTR:
   case ENV:
   case FLNUM:
+    return;
+  case SYM:
+    free(obj->s.slot_cache);
+    obj->s.slot_cache = 0;
     return;
   case STR:
     free(obj->st.str);

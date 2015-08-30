@@ -26,6 +26,7 @@
 
 %{
 
+#include <stddef.h>
 #include <stdio.h>
 #include <assert.h>
 #include <limits.h>
@@ -36,6 +37,7 @@
 #include <wchar.h>
 #include <signal.h>
 #include "config.h"
+#include ALLOCA_H
 #include "lib.h"
 #include "signal.h"
 #include "unwind.h"
@@ -43,9 +45,13 @@
 #include "utf8.h"
 #include "match.h"
 #include "hash.h"
+#include "struct.h"
 #include "eval.h"
 #include "stream.h"
 #include "y.tab.h"
+#include "gc.h"
+#include "args.h"
+#include "cadr.h"
 #include "parser.h"
 
 static val sym_helper(parser_t *parser, wchar_t *lexeme, val meta_allowed);
@@ -94,7 +100,7 @@ int yyparse(scanner_t *, parser_t *);
 %token <lineno> UNTIL COLL OUTPUT REPEAT REP SINGLE FIRST LAST EMPTY
 %token <lineno> MOD MODLAST DEFINE TRY CATCH FINALLY
 %token <lineno> ERRTOK /* deliberately not used in grammar */
-%token <lineno> HASH_BACKSLASH HASH_SLASH DOTDOT HASH_H
+%token <lineno> HASH_BACKSLASH HASH_SLASH DOTDOT HASH_H HASH_S
 %token <lineno> WORDS WSPLICE QWORDS QWSPLICE
 %token <lineno> SECRET_ESCAPE_R SECRET_ESCAPE_E
 
@@ -110,7 +116,7 @@ int yyparse(scanner_t *, parser_t *);
 %type <val> output_clause define_clause try_clause catch_clauses_opt
 %type <val> if_clause elif_clauses_opt else_clause_opt
 %type <val> line elems_opt elems clause_parts_h additional_parts_h
-%type <val> text texts elem var var_op modifiers vector hash
+%type <val> text texts elem var var_op modifiers vector hash struct
 %type <val> list exprs exprs_opt expr n_exprs r_exprs n_expr n_exprs_opt
 %type <val> out_clauses out_clauses_opt out_clause
 %type <val> repeat_clause repeat_parts_opt o_line
@@ -720,6 +726,17 @@ hash : HASH_H list              { if (unquotes_occur($2, 0))
                                               num($1)); }
      ;
 
+struct : HASH_S list            { if (unquotes_occur($2, 0))
+                                    $$ = rlcp(cons(struct_lit_s, $2),
+                                              num($1));
+                                  else
+                                  { args_decl(args, 0);
+                                    val strct = make_struct(first($2),
+                                                            rest($2),
+                                                            args);
+                                    $$ = rlcp(strct, num($1)); } }
+       ;
+
 list : '(' n_exprs ')'          { $$ = rl($2, num($1)); }
      | '(' ')'                  { $$ = nil; }
      | '(' LAMBDOT n_expr ')'   { $$ = $3; }
@@ -800,6 +817,7 @@ n_expr : SYMTOK                 { $$ = symhlpr($1, t); }
        | list                   { $$ = $1; }
        | vector                 { $$ = $1; }
        | hash                   { $$ = $1; }
+       | struct                 { $$ = $1; }
        | lisp_regex             { $$ = $1; }
        | chrlit                 { $$ = $1; }
        | strlit                 { $$ = $1; }
@@ -1451,6 +1469,7 @@ void yybadtoken(parser_t *parser, int tok, val context)
   case HASH_BACKSLASH: problem = lit("#\\"); break;
   case HASH_SLASH:     problem = lit("#/"); break;
   case HASH_H:         problem = lit("#H"); break;
+  case HASH_S:         problem = lit("#S"); break;
   case WORDS:   problem = lit("#\""); break;
   case WSPLICE: problem = lit("#*\""); break;
   case QWORDS:         problem = lit("#`"); break;

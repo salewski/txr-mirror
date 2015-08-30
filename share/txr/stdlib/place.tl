@@ -592,6 +592,17 @@
     ^(macrolet ((,deleter () ^(makunbound ,',sym-expr)))
        ,*body)))
 
+(defplace (slot struct sym) body
+  (getter setter
+    (with-gensyms (struct-sym)
+      ^(rlet ((,struct-sym ,struct))
+         (macrolet ((,getter () ^(slot ,',struct-sym ,',sym))
+                    (,setter (val) ^(slotset ,',struct-sym ,',sym ,val)))
+           ,body))))
+  (ssetter
+    ^(macrolet ((,ssetter (val) ^(slotset ,',struct ,',sym ,val)))
+      ,body)))
+
 (defmacro define-modify-macro (name lambda-list function)
   (let ((cleaned-lambda-list (mapcar [iffi consp car]
                                      (remql : lambda-list))))

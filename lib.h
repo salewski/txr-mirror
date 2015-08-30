@@ -99,10 +99,16 @@ struct string {
   val alloc;
 };
 
+#define SLOT_CACHE_SIZE 32
+
+typedef cnum slot_cache_line_t[2];
+typedef slot_cache_line_t *slot_cache_t;
+
 struct sym {
   obj_common;
   val name;
   val package;
+  slot_cache_t slot_cache;
 };
 
 struct package {

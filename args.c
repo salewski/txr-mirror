@@ -87,6 +87,15 @@ struct args *args_copy_zap(struct args *to, struct args *from)
   return to;
 }
 
+struct args *args_cat_zap(struct args *to, struct args *from)
+{
+  to->list = from->list;
+  memcpy(to->arg + to->fill, from->arg, sizeof *from->arg * from->fill);
+  to->fill += from->fill;
+  memset(from->arg, 0, sizeof *to->arg * to->fill);
+  return to;
+}
+
 val args_copy_to_list(struct args *args)
 {
   list_collect_decl (out, ptail);

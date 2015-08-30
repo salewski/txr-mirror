@@ -166,6 +166,29 @@ static val path_test_instantiate(val set_fun)
   return nil;
 }
 
+static val struct_set_entries(val dlt, val fun)
+{
+  val name[] = {
+    lit("defstruct"), lit("qref"), lit("new"), nil
+  };
+
+  set_dlt_entries(dlt, name, fun);
+
+  if (fun)
+    sethash(dlt, struct_lit_s, fun);
+  else
+    remhash(dlt, struct_lit_s);
+
+  return nil;
+}
+
+static val struct_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(format(nil, lit("~a/struct.tl"), stdlib_path, nao));
+  return nil;
+}
+
 val dlt_register(val dlt,
                  val (*instantiate)(val),
                  val (*set_entries)(val, val))
@@ -183,6 +206,7 @@ void lisplib_init(void)
   dlt_register(dl_table, txr_case_instantiate, txr_case_set_entries);
   dlt_register(dl_table, with_resources_instantiate, with_resources_set_entries);
   dlt_register(dl_table, path_test_instantiate, path_test_set_entries);
+  dlt_register(dl_table, struct_instantiate, struct_set_entries);
 }
 
 val lisplib_try_load(val sym)

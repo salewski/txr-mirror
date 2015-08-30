@@ -64,6 +64,7 @@
 #include "syslog.h"
 #include "glob.h"
 #include "cadr.h"
+#include "struct.h"
 #include "txr.h"
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
@@ -3728,6 +3729,7 @@ val make_sym(val name)
   obj->s.type = SYM;
   obj->s.name = name;
   obj->s.package = nil;
+  obj->s.slot_cache = 0;
   return obj;
 }
 
@@ -6560,6 +6562,8 @@ val copy(val seq)
       return copy_hash(seq);
     if (seq->co.cls == random_state_s)
       return make_random_state(seq);
+    if (structp(seq))
+      return copy_struct(seq);
     /* fallthrough */
   default:
     type_mismatch(lit("copy: cannot copy object of type ~s"),
@@ -7660,6 +7664,7 @@ void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),
   glob_init();
 #endif
   cadr_init();
+  struct_init();
 
   gc_state(gc_save);
 }
