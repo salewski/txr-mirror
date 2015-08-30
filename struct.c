@@ -291,32 +291,77 @@ val copy_struct(val strct)
   return copy;
 }
 
+static int cache_set_lookup(slot_cache_entry_t *set, cnum id)
+{
+  if (set[0].id == id)
+    return set[0].slot;
+
+  if (set[1].id == id) {
+    slot_cache_entry_t tmp = set[0];
+    set[0] = set[1];
+    set[1] = tmp;
+    return set[0].slot;
+  }
+
+  if (set[2].id == id) {
+    slot_cache_entry_t tmp = set[1];
+    set[1] = set[2];
+    set[2] = tmp;
+    return set[1].slot;
+  }
+
+  if (set[3].id == id) {
+    slot_cache_entry_t tmp = set[2];
+    set[2] = set[3];
+    set[3] = tmp;
+    return set[2].slot;
+  }
+
+  return 0;
+}
+
+static void cache_set_insert(slot_cache_entry_t *set, cnum id, cnum slot)
+{
+  int entry;
+
+  if (set[0].id == 0)
+    entry = 0;
+  else if (set[1].id == 0)
+    entry = 1;
+  else if (set[2].id == 0)
+    entry = 2;
+  else
+    entry = 3;
+
+  set[entry].id = id;
+  set[entry].slot = slot;
+}
+
 static val *lookup_slot(struct struct_inst *si, val sym)
 {
   slot_cache_t slot_cache = sym->s.slot_cache;
   cnum id = si->id;
 
   if (slot_cache != 0) {
-    cnum *cacheline = slot_cache[id % SLOT_CACHE_SIZE];
-    cnum clid = cacheline[0];
+    slot_cache_set_t *set = &slot_cache[id % SLOT_CACHE_SIZE];
+    cnum slot = cache_set_lookup(*set, id);
 
-    if (clid == id) {
-      return &si->slot[cacheline[1]];
+    if (slot) {
+      return &si->slot[slot];
     } else {
       val key = cons(sym, num_fast(id));
       val sl = gethash(slot_hash, key);
       cnum slnum = coerce(cnum, sl) >> TAG_SHIFT;
       if (sl) {
-        cacheline[0] = si->id;
-        cacheline[1] = slnum;
+        cache_set_insert(*set, id, slnum);
         return &si->slot[slnum];
       }
     }
   } else {
     slot_cache = coerce(slot_cache_t,
                         chk_calloc(SLOT_CACHE_SIZE,
-                                   sizeof (slot_cache_line_t)));
-    cnum *cacheline = slot_cache[id % SLOT_CACHE_SIZE];
+                                   sizeof (slot_cache_set_t)));
+    slot_cache_set_t *set = &slot_cache[id % SLOT_CACHE_SIZE];
     val key = cons(sym, num_fast(id));
     val sl = gethash(slot_hash, key);
     cnum slnum = coerce(cnum, sl) >> TAG_SHIFT;
@@ -324,8 +369,7 @@ static val *lookup_slot(struct struct_inst *si, val sym)
     sym->s.slot_cache = slot_cache;
 
     if (sl) {
-      cacheline[0] = si->id;
-      cacheline[1] = slnum;
+      cache_set_insert(*set, id, slnum);
       return &si->slot[slnum];
     }
   }
