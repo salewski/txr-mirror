@@ -4614,6 +4614,8 @@ void eval_init(void)
   reg_fun(intern(lit("time-string-utc"), user_package), func_n2(time_string_utc));
   reg_fun(intern(lit("time-fields-local"), user_package), func_n1(time_fields_local));
   reg_fun(intern(lit("time-fields-utc"), user_package), func_n1(time_fields_utc));
+  reg_fun(intern(lit("time-struct-local"), user_package), func_n1(time_struct_local));
+  reg_fun(intern(lit("time-struct-utc"), user_package), func_n1(time_struct_utc));
   reg_fun(intern(lit("make-time"), user_package), func_n7(make_time));
   reg_fun(intern(lit("make-time-utc"), user_package), func_n7(make_time_utc));
 

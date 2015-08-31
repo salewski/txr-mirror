@@ -893,6 +893,8 @@ val time_string_local(val time, val format);
 val time_string_utc(val time, val format);
 val time_fields_local(val time);
 val time_fields_utc(val time);
+val time_struct_local(val time);
+val time_struct_utc(val time);
 val make_time(val year, val month, val day,
               val hour, val minute, val second,
               val isdst);

@@ -112,6 +112,8 @@ val list_f, less_f, greater_f;
 
 val prog_string;
 
+val time_s, year_s, month_s, day_s, hour_s, min_s, sec_s, dst_s;
+
 static val env_list;
 
 mem_t *(*oom_realloc)(mem_t *, size_t);
@@ -7517,6 +7519,22 @@ static val broken_time_list(struct tm *tms)
               nao);
 }
 
+static val broken_time_struct(struct tm *tms)
+{
+  args_decl(args, ARGS_MIN);
+  val ts = make_struct(time_s, nil, args);
+
+  slotset(ts, year_s, num(tms->tm_year + 1900));
+  slotset(ts, month_s, num_fast(tms->tm_mon + 1));
+  slotset(ts, day_s, num_fast(tms->tm_mday));
+  slotset(ts, hour_s, num_fast(tms->tm_hour));
+  slotset(ts, min_s, num_fast(tms->tm_min));
+  slotset(ts, sec_s, num_fast(tms->tm_sec));
+  slotset(ts, dst_s, tnil(tms->tm_isdst));
+
+  return ts;
+}
+
 val time_fields_local(val time)
 {
   struct tm tms;
@@ -7538,6 +7556,29 @@ val time_fields_utc(val time)
 
   return broken_time_list(&tms);
 }
+
+val time_struct_local(val time)
+{
+  struct tm tms;
+  time_t secs = c_num(time);
+
+  if (localtime_r(&secs, &tms) == 0)
+    return nil;
+
+  return broken_time_struct(&tms);
+}
+
+val time_struct_utc(val time)
+{
+  struct tm tms;
+  time_t secs = c_num(time);
+
+  if (gmtime_r(&secs, &tms) == 0)
+    return nil;
+
+  return broken_time_struct(&tms);
+}
+
 
 static val make_time_impl(time_t (*pmktime)(struct tm *),
                           val year, val month, val day,
@@ -7631,6 +7672,22 @@ val make_time_utc(val year, val month, val day,
   return make_time_impl(pmktime, year, month, day, hour, minute, second, isdst);
 }
 
+static void time_init(void)
+{
+  time_s = intern(lit("time"), user_package);
+  year_s = intern(lit("year"), user_package);
+  month_s = intern(lit("month"), user_package);
+  day_s = intern(lit("day"), user_package);
+  hour_s = intern(lit("hour"), user_package);
+  min_s = intern(lit("min"), user_package);
+  sec_s = intern(lit("sec"), user_package);
+  dst_s = intern(lit("dst"), user_package);
+
+  make_struct_type(time_s, nil,
+                   list(year_s, month_s, day_s,
+                        hour_s, min_s, sec_s, dst_s, nao), nil, nil);
+}
+
 void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),
           val *stack_bottom)
 {
@@ -7665,6 +7722,7 @@ void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),
   glob_init();
 #endif
   cadr_init();
+  time_init();
 
   gc_state(gc_save);
 }
