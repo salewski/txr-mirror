@@ -9209,9 +9209,8 @@ A dot token which is flanked by expressions on both sides, without any
 intervening whitespace, is the referencing dot, and not the consing dot.
 The referencing dot is a syntactic sugar which translated to the
 .code qref
-syntax ("quoted ref"), which currently has no assigned meaning and is reserved
-for a future language extension. The referencing dot obeys these
-correspondences:
+syntax ("quoted ref"). This syntax denotes structure access;
+see Structures.
 
 .cblk
   ;; a.b may be almost any expressions
@@ -9483,6 +9482,31 @@ and
 .codn 2 ,
 and the symbol
 .codn a .
+
+.NP* Struct Literals
+
+.meIP >> #H( name >> { slot << value }*)
+
+The notation
+.code #S
+followed by a nested list syntax denotes a struct literal.
+The first item in the syntax is a symbol denoting the struct type
+name. This must be the name of a struct type, otherwise the
+literal is erroneous.  Followed by the struct type are slot names
+interleaved with their values. Each slot name which is present in the
+literal must name a slot in the struct type, though not
+all slots in the struct type must be present in the literal.
+When a struct literal is read, the denoted struct type is
+constructed as if by a call to
+.code make-struct
+whose
+.meta plist
+argument is formed from the
+.meta slot
+and
+.meta value
+elements of the literal, individually quoted to suppress their
+evaluation as forms.
 
 .NP* Hash Literals
 
@@ -17412,6 +17436,720 @@ It returns
 a single large vector formed by catenating those vectors together in
 order.
 
+.SS* Structures
+
+\*(TX supports a structure data type. Structures are objects which
+hold multiple storage locations called slots, which are named by symbols.
+Structures can be related to each other by inheritance.
+
+The type of a structure is itself an object, of type
+.codn struct-type .
+
+When the program defines a new structure type, it does so by creating a new
+.code struct-type
+instance, with properties which describe the new structure type: its
+name, its list of slots, its initialization and "boa constructor" functions,
+and the structure type it inherits from (the "super").
+
+The
+.code
+struct-type
+object is then used to generate instances.
+
+Structures instances are not only containers which hold named slots, but they
+also indicate their struct type. Two structures which have the same number of
+slots having the same names are not necessarily of the same type.
+
+Structure types and structures may be created and manipulated using
+a programming interface based on functions.
+
+For more convenient and clutter-free expression of structure-based
+program code, macros are also provided.
+
+Furthermore, concise and expressive slot access syntax is provided courtesy of
+the referencing dot syntax, a syntactic sugar for the
+.code qref
+macro.
+
+Structure types have a name, which is a symbol. The
+.code typeof
+function, when applied to a any struct type, returns the symbol
+.codn struct-type .
+When
+.code typeof
+is applied to a struct instance, it returns the name of
+the struct type. Effectively, struct names are types.
+
+The consequences are unspecified if an existing struct name is re-used for a
+different struct type, or an existing type name is used for a struct type.
+
+.coNP Macro @ defstruct
+.synb
+.mets (defstruct >> { name | >> ( name << arg *)} < super
+.mets \ \  >> { slot | >> ( slot << init-form )}*)
+.syne
+
+The
+.code defstruct
+macro defined a new structure type and registers it under
+.metn name ,
+which must be a bindable symbol, according to the
+.code bindable
+function. Likewise, every
+.meta slot
+must also be a bindable symbol.
+
+The
+.meta super
+argument must either be
+.code nil
+or a symbol which names an existing struct type.
+The newly defined struct type will inherit all slots,
+as well as initialization behaviors from this type.
+
+The
+.code defstruct
+macro is implemented using the
+.code make-struct-type
+function. It is less powerful than
+this function.
+
+Slots are specified using the
+.meta slot
+or
+.cblk
+.meti >> ( slot << init-form )
+.cble
+arguments, where the simpler first form is
+.meta slot
+form is equivalent to the second form, with an
+.meta init-form
+specified as
+.codn nil .
+
+whenever a structure of type
+.meta name
+is instantiated, the slot
+.meta init-form -s
+are evaluated in the original lexical environment where the struct
+was defined, and their values are used to initialize the corresponding
+slots.
+
+The slot names given in a
+.code defstruct
+must all be unique among themselves, but they
+may match the names of existing slots in the
+.meta super
+base type. In this case, the effect is that those slots are (still) inherited
+.meta super
+and not introduces as new slots. However, the newly specified
+.metn init-form -s
+apply to these inherited slots. When the a struct of type
+.meta name
+is instantiated, its inherited slots will be first initialized as if it
+were of type
+.metn super .
+Then its own
+.metn init-form -s
+take effect. Any of these forms which are specified for inherited slots
+simply overwrite the values of those inherited slots.
+Finally, regardless of how they are initialized, slots are overwritten with
+arguments from the initialization itself
+(passed via the
+.code new
+macro or the
+.code make-struct
+function).
+
+The structure name is specified using two forms, plain
+.meta name
+or the syntax
+.cblk
+.meti >> ( name << arg *)
+.cble
+If the second form is used, then the structure type will support
+"boa construction", where "boa" stands for "by order of arguments".
+The
+.metn arg -s
+specify the list of slot names which are to be initialized in the
+by-order-of-arguments style. For instance, if three slot names
+are given, then those slots can be optionally initialized by giving three
+arguments in the
+.code new
+macro or the
+.code make-struct
+function. A slot initialized in this style still has a
+.meta init-form
+which is evaluated unconditionally.
+
+.TP* Examples:
+.cblk
+  (defvar *counter* 0)
+
+  ;; New struct type foo with no super type:
+  ;; Slots a and b initialize to nil.
+  ;; Slot c is initialized by value of (inc *counter*).
+  (defstruct foo nil (a b (c (inc *counter*))))
+
+  (new foo) -> #S(foo a nil b nil c 1)
+  (new foo) -> #S(foo a nil b nil c 2)
+
+  ;; New struct bar inheriting from foo.
+  (defstruct bar foo (c 0) (d 100))
+
+  (new bar) -> #S(bar a nil b nil c 0 d 100)
+  (new bar) -> #S(bar a nil b nil c 0 d 100)
+
+  ;; counter was still incremented during
+  ;; construction of d:
+  *counter* -> 4
+
+  ;; override slots with new arguments
+  (new foo a "str" c 17) -> #S(foo a "str" b nil c 17)
+
+  *counter* -> 5
+
+  ;; boa initialization
+  (defstruct (point x y) nil (x 0) (y 0))
+
+  (new point) -> #S(point x 0 y 0)
+  (new (point 1 1)) -> #S(point x 1 y 1)
+
+  ;; property list style initialization
+  ;; can always be used:
+  (new point x 4 y 5) -> #S(point x 4 y 5)
+
+  ;; boa applies last:
+  (new (point 1 1) x 4 y 5) -> #S(point x 1 y 1)
+.cble
+
+.coNP Macro @ new
+.synb
+.mets (new >> { name | >> ( name << arg *)} >> { slot << init-form }*)
+.syne
+The
+.code new
+macro creates a new instance of the structure type named by
+.metn name .
+
+If the structure supports "boa construction", then, optionally, the
+arguments may be given using the syntax
+.cblk
+.meti >> (name << arg *)
+.cble
+instead of
+.metn name .
+
+Slot values may also be specified by the
+.meta slot
+and
+.meta init-form
+arguments.
+
+Note: the evaluation order in
+.code new
+is surprising: namely,
+.metn init-form -s
+are evaluated before
+.metn arg -s
+if both are present.
+
+When the object is constructed, all default initializations take place
+first. If the object's structure type has a supertype, then the supertype
+initializations take place. Then the type's initializations take
+place, followed by the
+.meta slot
+.meta init-form
+overrides from the
+.code new
+macro, and lastly the "boa constructor" overrides.
+
+.coNP Macro @ qref
+.synb
+.mets (qref < object-form
+.mets \ \   >> { slot | >> ( slot << arg *) | >> [ slot << arg *]}+)
+.syne
+
+The
+.code qref
+macro performs structure slot access.  Structure slot access is more
+conveniently expressed using the referencing dot notation, which works
+by translating to qref
+.code qref
+syntax, according to the following equivalence:
+
+.cblk
+  a.b.c.d <--> (qref a b c d)  ;; a b c d must not be numbers
+.cble
+
+(See the Referencing Dot section under Additional Syntax.)
+
+The leftmost argument of
+.code qref
+is an expression which is evaluated. This argument is followed by one or more
+reference designators.
+If there are two or more designators, the following equivalence applies:
+
+.cblk
+  (qref obj d1 d2 ...)  <---> (qref (qref obj d1) d2 ...)
+.cblk
+
+That is to say,
+.code qref
+is applied to the object and a single designator. This must yield
+an object, which to which the next designator is applied as if by
+another
+.code qref
+operation, and so forth.
+
+Thus,
+.code qref
+can be understood entirely in terms of the semantics of the
+binary form
+.cblk
+.meti (qref < object-form << designator )
+.cble
+
+Designators come in three forms: a lone symbol, an ordinary compound expression
+consisting of a symbol followed by arguments, or a DWIM expression
+consisting of a symbol followed by arguments.
+
+A lone symbol designator indicates the slot of that name. That is to say, the
+following equivalence applies:
+
+.cblk
+  (qref o n)  <-->  (slot o 'n)
+.cble
+
+Where
+.code slot
+is the structure slot accessor function. Because
+.code slot
+is an accessor, this form denotes the slot as a syntactic place;
+slots can be modified via assignment to the
+.code qref
+form and the referencing dot syntax.
+
+A compound designator indicates that the named slot is a function,
+and arguments are to be applied to it. The following equivalence applies
+in this case, except that
+.code o
+is evaluated only once:
+
+.cblk
+  (qref o (n arg ...)) <--> (call (slot o 'n) o arg ...)
+.cble
+
+A DWIM designator indicates that the named slot is a function or an
+indexable or callable object. The following equivalence applies:
+
+.cblk
+  (qref obj [name arg ...])  <-->  [(slot obj 'name) arg ...]
+.cble
+
+.TP* Example:
+
+.cblk
+  (defstruct foo nil
+    (array (vec 1 2 3))
+    (increment (lambda (self index delta)
+                 (inc [self.array index] delta))))
+
+  (defvarl s (new foo))
+
+  ;; access third element of s.array:
+  s.[array 2]  -->  3
+
+  ;; increment first element of array by 42
+  s.(increment 0 42)  -->  43
+
+  ;; access array member
+  s.array  -->  #(43 2 3)
+.cble
+
+Note how
+.code increment
+behaves much like a single-argument-dispatch object-oriented method.
+Firstly, the syntax
+.cblk
+s.(increment 0 42)
+.cble
+effectively selects the
+.code increment
+function which is particular to the
+.code s
+object.  Secondly, the object is passed to the selected function as the
+leftmost argument, so that the function has access to the object.
+
+.coNP Macro @ meth
+.synb
+.mets (meth struct slot)
+.syne
+.desc
+The
+.code meth
+macro binds
+.meta struct
+as the leftmost argument of the function stored in
+.metn slot ,
+returning a function which takes the remaining arguments.
+That is to say, it returns a function
+.meta f
+such that
+.cblk
+.meti >> ( f < arg ... )
+.cble
+calls
+.cblk
+.meti >> ( struct.slot < struct < arg ... )
+.cble
+except that
+.meta struct
+is evaluated only once.
+
+The argument
+.meta struct
+must be an expression which evaluates to a struct.
+The
+.meta slot
+argument is not evaluated, and must be a symbol denoting a slot.
+The syntax can be understood as a translation to a call of the
+.code method
+function:
+
+.cblk
+  (meth a b)  <-->  (method a 'b)
+.cble
+
+The
+.code meth
+macro allows indirection upon a method-like function stored
+in a function slot.
+
+.TP* Example:
+
+.cblk
+  ;; struct for counting atoms eq to key
+  (defstruct (counter key) nil
+    key
+    (count 0)
+    (increment (lambda (self key)
+                 (if (eq self.key key)
+                   (inc self.count)))))
+
+  ;; pass all atoms in tree to func
+  (defun map-tree (tree func)
+    (if (atom tree)
+      [func tree]
+      (progn (map-tree (car tree) func)
+             (map-tree (cdr tree) func))))
+
+  ;; count occurrences of symbol a
+  ;; using increment method of counter,
+  ;; passed as func argument to map-tree.
+  (let ((c (new (counter 'a)))
+        (tr '(a (b (a a)) c a d)))
+    (map-tree tr (meth c increment))
+    c)
+  --> #S(counter key a count 4
+                 increment #<function: type 0>)
+.cble
+
+.coNP Function @ make-struct-type
+.synb
+.meti (make-struct-type < name < super < slots < initfun << boactor )
+.syne
+.desc
+The
+.code make-struct-type
+function creates a new struct type.
+
+The
+.meta name
+argument must be a bindable symbol, according to the
+.code bindable
+function. It specifies the name property of the struct
+type as well as the name under which the struct type
+is globally registered.
+
+The
+.meta super
+argument indicates the supertype for the struct type.
+It must be either a value of type
+.codn struct-type ,
+a symbol which names a struct type, or else
+.codn nil ,
+indicating that the newly created struct type has no supertype.
+
+The
+.meta slots
+argument is a list of symbols which specifies the slots.
+The symbols must be bindable and the list must not contain
+duplicates. The new struct type's effective list of slots is formed by appending
+.meta slots
+to the list of the supertype's slots, and de-duplicating the resulting list as
+if by the
+.code uniq
+function. Thus, any slots which are already present in the supertype are
+removed. If the structure has no supertype, then the list of supertype
+slots is taken to be empty. When a structure is instantiated, it shall have all
+the slots specified in the effective list of slots, each slot initialized to
+the value
+.codn nil ,
+prior to the invocation of
+.meta initfun
+and
+.metn boactor .
+
+The
+.meta initfun
+argument either specifies an initialization function, or is
+.codn nil ,
+which is equivalent to specifying a default function which does nothing.
+If specified, this function must
+accept one argument. When a structure is instantiated, every
+.meta initfun
+in its chain of supertype ancestry is invoked, in order of inheritance,
+so that the root supertype's
+.meta initfun
+is called first and the structure's own specific
+.meta initfun
+is called last. Each function is passed the newly created structure
+object, and may alter its slots.
+
+The
+.meta boactor
+argument either specifies a by-order-of-arguments initialization
+function ("boa constructor") or is
+.codn nil ,
+which is equivalent to specifying a constructor which does nothing.
+If specified, it must be a function which takes at least one argument.
+When a structure is instantiated, and boa arguments are given, the
+.meta boactor
+is invoked, with the structure as the leftmost argument, and
+the boa arguments as additional arguments. This takes place
+after the processing of
+.meta initfun
+functions. The
+.meta boactor
+functions of the supertypes are not called.
+
+.coNP Function @ find-struct-type
+.synb
+.mets (find-struct-type << name )
+.syne
+.desc
+The
+.code find-struct-type
+returns a
+.code struct-type
+object corresponding to the symbol
+.metn name .
+
+If no struct type is registered under
+.metn name ,
+then it returns
+.codn nil .
+
+.coNP Function @ struct-type-p
+.synb
+.mets (struct-type-p << obj )
+.syne
+.desc
+The
+.code struct-type-p
+function returns t if
+.meta obj
+is a structure type, otherwise it returns
+.codn nil .
+
+.coNP Function @ super
+.synb
+.mets (super << type )
+.syne
+.desc
+The
+.code super
+function returns the struct type object which is the
+supertype of
+.metn type ,
+or returns
+.code nil
+if
+.meta type
+has no supertype.
+
+The
+.meta type
+must be either a struct type object, or else
+a symbol which names a struct type.
+
+.coNP Function @ make-struct
+.synb
+.mets (make-struct < type < slot-init-plist << arg*)
+.syne
+.desc
+The
+.code make-struct
+function returns a new object which is an instance of the
+structure type
+.metn type .
+
+The
+.meta type
+argument must either be a
+.code struct-type
+object, or else a symbol which is the name of a structure.
+
+The
+.meta slot-init-plist
+argument gives a list of slot initializations in the
+style of a property list, as defined by the
+.code prop
+function. It may be empty, in which case
+it has no effect. Otherwise, it specifies slot names
+and their values. Each slot name which is given must
+be a slot of the structure type. The corresponding value
+will be stored into the slot of the newly created object. If a slot is
+repeated, it is unspecified which value takes effect.
+
+The optional
+.metn arg -s
+specify arguments to the structure type's boa constructor.
+If the arguments are omitted, the boa constructor is not invoked.
+Otherwise the boa constructor is invoked on the structure object
+and those arguments.  The argument list must match the trailing parameters of
+the boa constructor (the remaining parameters which follow the leftmost
+argument which passes the structure to the boa constructor).
+
+When a new structure is instantiated by
+.codn make-struct ,
+its slot values are first initialized by the structure type's registered
+functions as described under
+.codn make-struct-type .
+Then, the
+.meta slot-init-plist
+is processed, if not empty, and finally, the
+.metn arg -s
+are processed, if present, and passed to the boa constructor.
+
+.coNP Function @ copy-struct
+.synb
+.mets (copy-struct << struct-obj )
+.syne
+.desc
+The
+.code copy-struct
+function creates and returns a new object which is a duplicate of
+.metn struct-obj ,
+which must be a structure.
+
+The duplicate object is a structure of the same type as
+.meta struct-obj
+and has the same slot values.
+
+The creation of a duplicate does not involve calling any of the
+struct type's initialization functions.
+
+.coNP Accessor @ slot
+.synb
+.mets (slot < struct-obj << slot-name )
+.mets (set (slot < struct-obj << slot-name ) << new-value )
+.syne
+.desc
+The
+.code slot
+function retrieves a structure's slot. The
+.meta struct-obj
+argument must be a structure, and
+.meta slot-name
+must be a symbol which names a slot in that structure.
+
+Because
+.code slot
+is an accessor, a
+.code slot
+form is a syntactic place which denotes the
+slot's storage location.
+
+A syntactic place expressed by
+.code slot
+does not support deletion.
+
+.coNP Function @ slotset
+.synb
+.mets (slotset < struct-obj < slot-name << new-value )
+.syne
+.desc
+The
+.code slotset
+function stores a value in a structure's slot.
+ The
+.meta struct-obj
+argument must be a structure, and
+.meta slot-name
+must be a symbol which names a slot in that structure.
+
+The
+.meta new-value
+argument specifies the value to be stored in the slot.
+
+.coNP Function @ structp
+.synb
+.mets (structp << obj )
+.syne
+.desc
+The
+.code structp
+function returns t if
+.meta obj
+is a structure, otherwise it returns
+.codn nil .
+
+.coNP Function @ struct-type
+.synb
+.mets (structp << struct-obj )
+.syne
+.desc
+The
+.code struct-type
+function returns the structure type object which
+defines the type of the structure object
+.metn struct-obj .
+
+.coNP Function @ method
+.synb
+.mets (method < struct-obj << slot-name )
+.syne
+.desc
+The
+.code method
+function retrieves a function from a structure's slot
+and binds that function's left argument to the
+structure.
+
+The
+.meta struct-obj
+argument must be a structure, and
+.meta slot-name
+must be a symbol denoting a slot in that structure.
+The slot must hold a function of at least one
+argument.
+
+The
+.code method
+function returns a function which, when invoked,
+calls the function previously retrieved from the object's
+slot, passing to that function
+.meta struct-obj
+as the leftmost argument, followed by the function's
+own arguments.
+
+Note: the
+.code meth
+macro is an alternative interface which is suitable if
+the slot name isn't a computed value.
+
 .SS* Sequence Manipulation
 .coNP Function @ seqp
 .synb
@@ -17471,7 +18209,8 @@ is zero, otherwise
 .desc
 The
 .code copy
-function duplicates objects of various supported types: sequences, hashes and random states. If
+function duplicates objects of various supported types: sequences, hashes,
+structures and random states.  If
 .meta object
 is
 .codn nil ,
@@ -17500,7 +18239,13 @@ If
 .meta object
 is a hash, it returns
 .cblk
-.meti (copy-hash << object )
+.meti (copy-hash << object ).
+.cble
+If
+.meta object
+is a structure, it returns
+.cblk
+.meti (copy-struct << object ).
 .cble
 Lastly, if
 .meta object
