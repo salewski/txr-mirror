@@ -7442,10 +7442,6 @@ val time_sec_usec(void)
 }
 
 #if !HAVE_GMTIME_R
-/*
- * Ugly hacks for MingW, which uses the Microsft C Run Time Library,
- * whic in turn is stuck in the Dark Ages * without _r functions.
- */
 struct tm *gmtime_r(const time_t *timep, struct tm *result);
 struct tm *localtime_r(const time_t *timep, struct tm *result);
 
