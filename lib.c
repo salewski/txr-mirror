@@ -4379,7 +4379,7 @@ val generic_funcall(val fun, struct args *args_in)
     }
     /* fallthrough */
   default:
-    callerror(fun, lit("is not callable"));
+    callerror(fun, lit("object is not callable"));
   }
 
   variadic = fun->f.variadic;
