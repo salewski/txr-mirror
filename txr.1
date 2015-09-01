@@ -20943,14 +20943,44 @@ The parameter list
 will bind parameter
 .code x
 to the entire
-macro form, and bind parameter
+macro parameter list, and bind parameter
 .code y
 to the macro environment.
 The
 .code :whole
 and
 .code :env
-notation can occur anywhere in a macro parameter list.
+notation can occur anywhere in a macro parameter list, other than
+to the right of the consing dot.
+
+.TP* "Dialect Note:"
+
+In ANSI Common Lisp, the lambda list keyword
+.code &whole
+binds its corresponding variable to the entire macro form, whereas
+\*(TL's
+.code :whole
+binds its variable only to the arguments of the macro form.
+
+Note, however, that ANSI CL distinguishes destructuring lambda lists
+and macro lambda lists and the
+.code &whole
+parameter has a different behavior between the two.  Under
+.codn destructuring-bind ,
+the
+.code &whole
+parameter receives just the arguments, just like the behavior
+of \*(TL's
+.code :whole
+parameter.
+
+\*(TL does not distinguish destructuring and macro lambda lists;
+they are the same and behave the same way. Thus
+.code :whole
+is treated the same way in macros as in
+.code tree-bind
+and related binding operators: it binds just the arguments
+to the parameter.
 
 .coNP Operator @ macro-time
 .synb
