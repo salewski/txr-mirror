@@ -477,6 +477,40 @@ static void struct_inst_mark(val obj)
   gc_mark(si->type);
 }
 
+static val struct_inst_equal(val left, val right)
+{
+  struct struct_inst *ls = coerce(struct struct_inst *, left->co.handle);
+  struct struct_inst *rs = coerce(struct struct_inst *, right->co.handle);
+  struct struct_type *st = coerce(struct struct_type *, ls->type->co.handle);
+  cnum nslots = st->nslots, sl;
+
+  if (rs->type != ls->type)
+    return nil;
+
+  for (sl = 0; sl < nslots; sl++)
+    if (!equal(ls->slot[sl], rs->slot[sl]))
+      return nil;
+
+  gc_hint(left);
+  gc_hint(right);
+  return t;
+}
+
+static cnum struct_inst_hash(val obj)
+{
+  struct struct_inst *si = coerce(struct struct_inst *, obj->co.handle);
+  struct struct_type *st = coerce(struct struct_type *, si->type->co.handle);
+  cnum nslots = st->nslots, sl, out = c_num(hash_equal(si->type));
+
+  for (sl = 0; sl < nslots; sl++) {
+    val hash = hash_equal(si->slot[sl]);
+    out += c_num(hash);
+    out &= NUM_MAX;
+  }
+
+  return out;
+}
+
 static struct cobj_ops struct_type_ops = {
   eq,
   struct_type_print,
@@ -486,9 +520,9 @@ static struct cobj_ops struct_type_ops = {
 };
 
 static struct cobj_ops struct_inst_ops = {
-  eq,
+  struct_inst_equal,
   struct_inst_print,
   cobj_destroy_free_op,
   struct_inst_mark,
-  cobj_hash_op
+  struct_inst_hash,
 };
