@@ -639,7 +639,7 @@ static void call_finals(void)
   for (f = old_list; f; f = next) {
     next = f->next;
 
-    if ((f->obj_type & REACHABLE) != 0) {
+    if ((f->obj_type & REACHABLE) == 0) {
       funcall1(f->fun, f->obj);
       free(f);
     } else {
