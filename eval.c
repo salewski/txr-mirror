@@ -4016,7 +4016,7 @@ void eval_init(void)
   aret_s = intern(lit("aret"), user_package);
   identity_s = intern(lit("identity"), user_package);
   rest_s = intern(lit("rest"), user_package);
-  hash_lit_s = intern(lit("hash-construct"), system_package);
+  hash_lit_s = intern(lit("hash-lit"), system_package);
   hash_construct_s = intern(lit("hash-construct"), user_package);
   struct_lit_s = intern(lit("struct-lit"), system_package);
   qref_s = intern(lit("qref"), user_package);
