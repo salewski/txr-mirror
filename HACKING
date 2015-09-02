@@ -30,19 +30,19 @@ SECTION                                                                    LINE
 3.2      GC-safe Code                                                       474
 3.2.1    Rule One: Full Initialization                                      500
 3.2.2    Rule Two: Make it Reachable                                        529
-3.3      Weak Reference Support                                             691
-3.4      Finalization                                                       734
-3.5      Generational GC                                                    758
-3.5.2    Representation of Generations                                      767
-3.5.3    Basic Algorithm                                                    803
-3.5.4    Handling Backpointers                                              838
-3.5.5    Generational GC and Finalization                                   916
+3.3      Weak Reference Support                                             717
+3.4      Finalization                                                       760
+3.5      Generational GC                                                    784
+3.5.2    Representation of Generations                                      793
+3.5.3    Basic Algorithm                                                    829
+3.5.4    Handling Backpointers                                              864
+3.5.5    Generational GC and Finalization                                   942
 
-4.       Debugging                                                          945
-4.2.     Debugging the Yacc-generated Parser                               1076
-4.3.     Debugging GC Issues                                               1089
-4.4      Object Breakpoint                                                 1112
-4.5      Valgrind: Your Friend                                             1131
+4.       Debugging                                                          971
+4.2.     Debugging the Yacc-generated Parser                               1102
+4.3.     Debugging GC Issues                                               1115
+4.4      Object Breakpoint                                                 1138
+4.5      Valgrind: Your Friend                                             1157
 
 
 0. Overview
@@ -660,6 +660,10 @@ that an object may have been allocated which is not visible to gc,
   /* Looks harmless: allocate structure, stick the argument object
      into it and make a COBJ! */
 
+  typedef struct {
+    val mem;
+  } foo;
+
   val make_foo(val member)
   {
     foo *f = (foo *) chk_malloc(sizeof *foo);
@@ -682,11 +686,33 @@ The make_foo function can be corrected like this:
   {
     cobj co;
     foo *f = (foo *) chk_malloc(sizeof *foo);
+    f->mem = nil; /* do not forget Rule One */
     co = cobj((mem_t *) f, ...);
     f->mem = member;
     return co;
   }
 
+Another possible approach is to use the gc_hint function to ensure
+liveness:
+
+  val make_foo(val member)
+  {
+    foo *f = (foo *) chk_malloc(sizeof *foo);
+    val out;
+    f->mem = member; /* Oops, member is no longer live. */
+    out = cobj((mem_t *) f, ...);
+    gc_hint(member);
+    return out;
+  }
+
+gc_hint provides a data sink for the member, ensuring that this variable stays
+live across the call to cobj.  The variable is no longer live at the "return
+out" statement, but at that point it doesn't matter because it has been safely
+stored in f->mem, which has been firmly installed as the handle of a cobj, and
+is visible to the garbage collector.
+
+The tradeoff is that the first approach generates two writes
+to f->mem, whereas the second makes an external function call.
 
 3.3 Weak Reference Support
 
