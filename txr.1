@@ -30437,6 +30437,29 @@ attempt.
 
 .SS* Unix Filesystem Manipulation
 
+.coNP Structure @ stat
+.synb
+.mets (defstruct stat nil
+.mets \ \  dev ino mod nlink uid gid
+.mets \ \  rdev size blksize blocks atime
+.mets \ \  mtime ctime)
+.syne
+.desc
+The
+.code stat
+structure defines the type of object which is returned
+by the
+.codn stat ,
+.codn lstat ,
+and
+.code fstat functions.  The slots are the direct counterparts of the
+members of POSIX C structure
+.codn struct stat .
+For instance the slot
+.code dev
+corresponds to
+.codn st_dev .
+
 .coNP Functions @, stat @, lstat and @ fstat
 .synb
 .mets (stat << path )
@@ -30452,24 +30475,9 @@ denoted by the string
 If the object is not found or cannot be
 accessed, an exception is thrown.
 
-Otherwise, information is retrieved about the object. The information takes the
-form of a property list in which keyword symbols denote numerous properties.
-An example such property list is:
-
-.cblk
-  (:dev 2049 :ino 669944 :mode 16832 :nlink 23
-   :uid 500 :gid 500 :rdev 0
-   :size 12288 :blksize 4096 :blocks 24
-   :atime 1347933533 :mtime 1347933534 :ctime 1347933534)
-.cble
-
-These properties correspond to the similarly-named entries of the
-.code struct stat
-structure in POSIX. For instance, the
-.code :dev
-property has the same value as the
-.code st_dev
-field.
+Otherwise, information is retrieved about the object. The information takes
+the form of a structure of type
+.codn stat .
 
 If
 .meta path
@@ -30501,9 +30509,11 @@ is thrown.
 
 The following variables exist, having integer values. These are bitmasks
 which can be applied against the value given by the
-.code :mode
-property
-in the property list returned by the function stat:
+.code mode
+slot of the
+.code stat
+structure returned by the function
+.codn stat :
 .codn s-ifmt ,
 .codn s-ifsock ,
 .codn s-iflnk ,
@@ -30562,11 +30572,11 @@ calling the Unix
 function).  This device number is suitable as an
 argument to the
 .code mknod
-function (see below). Device numbers also appear the
-.code :dev
-property returned by the
+function (see below). Device numbers also appear as values of the
+.code dev
+slot of the
 .code stat
-function.
+structure.
 
 The
 .code minor
@@ -33110,6 +33120,18 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code -C 103
 selects the behaviors described below for version 105, but not those for 102.
+
+.IP 113
+Version 113 is the last version in which the
+.codn stat ,
+.codn lstat ,
+and
+.code fstat functions returned a property list rather than a structure.
+Requesting 113 compatibility restores the behavior of returning
+a property list. However, the filesystem testing functions like
+.code path-exists-p
+will not work, because they rely on these functions returning
+a structure.
 
 .IP 109
 The optional trailing semicolon on hex and octal codes in the \*(TX
