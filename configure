@@ -121,6 +121,7 @@ have_windres=
 have_posix_sigs=
 need_darwin_c_source=
 have_git=
+have_pwuid=
 have_alloca=
 conf_dir=config
 config_h=$conf_dir/config.h
@@ -2047,6 +2048,58 @@ if conftest ; then
   have_unistd=y
 else
   printf "no\n"
+fi
+
+printf "Checking for old school getpwent, getpwuid and getpwnam ... "
+
+cat > conftest.c <<!
+#include <sys/types.h>
+#include <pwd.h>
+
+int main(void)
+{
+  struct passwd *p = getpwent();
+  struct passwd *q = getpwnam("root");
+  struct passwd *r = getpwuid(0);
+  setpwent();
+  endpwent();
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_PWUID 1\n" >> $config_h
+  have_pwuid=y
+else
+  printf "no\n"
+fi
+
+if [ "$have_pwuid" ]; then
+  printf "Checking for getpwent_r, getpwuid_r, and getpwnam_r ... "
+
+  cat > conftest.c <<!
+#include <sys/types.h>
+#include <pwd.h>
+
+int main(void)
+{
+  struct passwd pw;
+  struct passwd *p;
+  char buf[1024];
+  int r0 = getpwent_r(&pw, buf, sizeof buf, &p);
+  int r1 = getpwuid_r(0, &pw, buf, sizeof buf, &p);
+  int r2 = getpwnam_r("root", &pw, buf, sizeof buf, &p);
+  return 0;
+}
+!
+
+  if conftest ; then
+    printf "yes\n"
+    printf "#define HAVE_PWUID_R 1\n" >> $config_h
+  else
+    printf "no\n"
+  fi
 fi
 
 printf "Checking for alloca ... "

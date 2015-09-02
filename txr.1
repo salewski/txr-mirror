@@ -31034,6 +31034,85 @@ On success, they return
 On failure, they throw an exception of type
 .codn system-error .
 
+.SS* Unix Password Database
+
+.coNP Structure * passwd
+.synb
+.mets (defstruct passwd nil
+.mets \ \  name passwd uid gid
+.mets \ \  gecos dir shell)
+.syne
+.desc
+The
+.code passwd
+structure corresponds to the C type
+.codn struct passwd .
+Objects of this struct are produced by the password database
+query functions
+.codn getpwent ,
+.codn getpwuid ,
+and
+.codn getpwnam .
+
+.coNP Functions @, getpwent @ setpwent and @ endpwent
+.synb
+.mets (getpwent)
+.mets (setpwent)
+.mets (endpwent)
+.syne
+.desc
+The first time
+.code getpwent
+function is called, it returns the first password database entry.
+On subsequent calls it returns successive entries.
+Entries are returned as instances of the
+.code passwd
+structure.  If the function cannot retrieve an entry for any reason,
+it returns
+.codn nil .
+
+The
+.code setpwent
+function rewinds the database scan.
+
+The
+.code endpwent
+function releases the resources associated with the scan.
+
+.coNP Function @ getpwuid
+.synb
+.mets (getpwuid << uid )
+.syne
+.desc
+The
+.code getpwuid
+searches the password database for an entry whose user ID field
+is equal to the numeric
+.metn uid .
+If the search is successful, then a
+.code passwd
+structure representing the database entry is returned.
+If the search fails,
+.code nil
+is returned.
+
+.coNP Function @ getpwnam
+.synb
+.mets (getpwnam << name )
+.syne
+.desc
+The
+.code getpwuid
+searches the password database for an entry whose user name
+is equal to
+.metn name .
+If the search is successful, then a
+.code passwd
+structure representing the database entry is returned.
+If the search fails,
+.code nil
+is returned.
+
 .SS* Unix Signal Handling
 
 On platforms where certain advanced features of POSIX signal handling are

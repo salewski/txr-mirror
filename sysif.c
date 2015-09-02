@@ -81,6 +81,10 @@ val dev_s, ino_s, mode_s, nlink_s, uid_s;
 val gid_s, rdev_s, size_s, blksize_s, blocks_s;
 val atime_s, mtime_s, ctime_s;
 
+#if HAVE_PWUID
+val passwd_s, name_s, gecos_s, dir_s, shell_s;
+#endif
+
 static val errno_wrap(val newval)
 {
   val oldval = num(errno);
@@ -850,6 +854,96 @@ static val setegid_wrap(val nval)
 
 #endif
 
+#if HAVE_PWUID
+
+static val setpwent_wrap(void)
+{
+  setpwent();
+  return nil;
+}
+
+static val endpwent_wrap(void)
+{
+  endpwent();
+  return nil;
+}
+
+static void fill_passwd(val to, struct passwd *from)
+{
+  slotset(to, name_s, string_utf8(from->pw_name));
+  slotset(to, passwd_s, string_utf8(from->pw_passwd));
+  slotset(to, uid_s, num(from->pw_uid));
+  slotset(to, gid_s, num(from->pw_gid));
+  slotset(to, gecos_s, string_utf8(from->pw_gecos));
+  slotset(to, dir_s, string_utf8(from->pw_dir));
+  slotset(to, shell_s, string_utf8(from->pw_shell));
+}
+
+static val make_pwstruct(struct passwd *p)
+{
+  args_decl(args, ARGS_MIN);
+  val out = make_struct(passwd_s, nil, args);
+  fill_passwd(out, p);
+  return out;
+}
+
+#endif
+
+#if HAVE_PWUID_R
+
+static val getpwent_wrap(void)
+{
+  char buf[1024];
+  struct passwd pw, *p;
+  int res = getpwent_r(&pw, buf, sizeof buf, &p);
+
+  return (res == 0 && p != 0) ? make_pwstruct(&pw) : nil;
+}
+
+static val getpwuid_wrap(val uid)
+{
+  char buf[1024];
+  struct passwd pw, *p;
+  int res = getpwuid_r(c_num(uid), &pw, buf, sizeof buf, &p);
+
+  return (res == 0 && p != 0) ? make_pwstruct(&pw) : nil;
+}
+
+static val getpwnam_wrap(val wname)
+{
+  char buf[1024];
+  struct passwd pw, *p;
+  char *name = utf8_dup_to(c_str(wname));
+  int res = getpwnam_r(name, &pw, buf, sizeof buf, &p);
+
+  free(name);
+  return (res == 0 && p != 0) ? make_pwstruct(&pw) : nil;
+}
+
+#elif HAVE_PWUID
+
+static val getpwent_wrap(void)
+{
+  struct passwd *p = getpwent();
+  return (p != 0) ? make_pwstruct(p) : nil;
+}
+
+static val getpwuid_wrap(val uid)
+{
+  struct passwd *p = getpwuid(c_num(uid));
+  return (p != 0) ? make_pwstruct(p) : nil;
+}
+
+static val getpwnam_wrap(val wname)
+{
+  char *name = utf8_dup_to(c_str(wname));
+  struct passwd *p = getpwnam(name);
+  free(name);
+  return (p != 0) ? make_pwstruct(p) : nil;
+}
+
+#endif
+
 void sysif_init(void)
 {
   stat_s = intern(lit("stat"), user_package);
@@ -879,11 +973,23 @@ void sysif_init(void)
   atime_s = intern(lit("atime"), user_package);
   mtime_s = intern(lit("mtime"), user_package);
   ctime_s = intern(lit("ctime"), user_package);
+#if HAVE_PWUID
+  passwd_s = intern(lit("passwd"), user_package);
+  name_s = intern(lit("name"), user_package);
+  gecos_s = intern(lit("gecos"), user_package);
+  dir_s = intern(lit("dir"), user_package);
+  shell_s = intern(lit("shell"), user_package);
+#endif
 
   make_struct_type(stat_s, nil,
                    list(dev_s, ino_s, mode_s, nlink_s, uid_s, gid_s,
                         rdev_s, size_s, blksize_s, blocks_s, atime_s,
                         mtime_s, ctime_s, nao), nil, nil);
+#if HAVE_PWUID
+  make_struct_type(passwd_s, nil,
+                   list(name_s, passwd_s, uid_s, gid_s,
+                        gecos_s, dir_s, shell_s, nao), nil, nil);
+#endif
 
   reg_fun(intern(lit("errno"), user_package), func_n1o(errno_wrap, 0));
   reg_fun(intern(lit("exit"), user_package), func_n1(exit_wrap));
@@ -1080,6 +1186,14 @@ void sysif_init(void)
   reg_fun(intern(lit("seteuid"), user_package), func_n1(seteuid_wrap));
   reg_fun(intern(lit("setgid"), user_package), func_n1(setgid_wrap));
   reg_fun(intern(lit("setegid"), user_package), func_n1(setegid_wrap));
+#endif
+
+#if HAVE_PWUID
+  reg_fun(intern(lit("setpwent"), user_package), func_n0(setpwent_wrap));
+  reg_fun(intern(lit("endpwent"), user_package), func_n0(endpwent_wrap));
+  reg_fun(intern(lit("getpwent"), user_package), func_n0(getpwent_wrap));
+  reg_fun(intern(lit("getpwuid"), user_package), func_n1(getpwuid_wrap));
+  reg_fun(intern(lit("getpwnam"), user_package), func_n1(getpwnam_wrap));
 #endif
 
 #if HAVE_POLL
