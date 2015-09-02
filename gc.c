@@ -807,7 +807,7 @@ static val gc_wrap(void)
   return nil;
 }
 
-static val gc_finalize(val obj, val fun)
+val gc_finalize(val obj, val fun)
 {
   type_check(fun, FUN);
 

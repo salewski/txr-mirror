@@ -70,16 +70,20 @@ val struct_type_s;
 static cnum struct_id_counter;
 static val struct_type_hash;
 static val slot_hash;
+static val struct_type_finalize_f;
 
+static val struct_type_finalize(val obj);
 static struct cobj_ops struct_type_ops;
 static struct cobj_ops struct_inst_ops;
 
 void struct_init(void)
 {
-  protect(&struct_type_hash, &slot_hash, convert(val *, 0));
+  protect(&struct_type_hash, &slot_hash, &struct_type_finalize_f,
+          convert(val *, 0));
   struct_type_s = intern(lit("struct-type"), user_package);
   struct_type_hash = make_hash(nil, nil, nil);
   slot_hash = make_hash(nil, nil, t);
+  struct_type_finalize_f = func_n1(struct_type_finalize);
   reg_fun(intern(lit("make-struct-type"), user_package),
           func_n5(make_struct_type));
   reg_fun(intern(lit("find-struct-type"), user_package),
@@ -99,6 +103,18 @@ static noreturn void no_such_struct(val ctx, val sym)
 {
   uw_throwf(error_s, lit("~a: ~s does not name a struct type"),
             ctx, sym, nao);
+}
+
+static val struct_type_finalize(val obj)
+{
+  struct struct_type *st = coerce(struct struct_type *, obj->co.handle);
+  val id = num(st->id);
+  val slot;
+
+  for (slot = st->slots; slot; slot = cdr(slot))
+    remhash(slot_hash, cons(car(slot), id));
+
+  return nil;
 }
 
 val make_struct_type(val name, val super, val slots, val initfun, val boactor)
@@ -152,6 +168,8 @@ val make_struct_type(val name, val super, val slots, val initfun, val boactor)
     for (sl = 0, slot = all_slots; slot; sl++, slot = cdr(slot))
       sethash(slot_hash, cons(car(slot), id), num_fast(sl));
 
+    gc_finalize(stype, struct_type_finalize_f);
+
     return stype;
   }
 }
@@ -184,18 +202,6 @@ static void struct_type_print(val obj, val out, val pretty)
 {
   struct struct_type *st = coerce(struct struct_type *, obj->co.handle);
   format(out, lit("#<struct-type ~s>"), st->name, nao);
-}
-
-static void struct_type_free(val obj)
-{
-  struct struct_type *st = coerce(struct struct_type *, obj->co.handle);
-  val id = num(st->id);
-  val slot;
-
-  for (slot = st->slots; slot; slot = cdr(slot))
-    remhash(slot_hash, cons(car(slot), id));
-
-  free(st);
 }
 
 static void struct_type_mark(val obj)
@@ -514,7 +520,7 @@ static cnum struct_inst_hash(val obj)
 static struct cobj_ops struct_type_ops = {
   eq,
   struct_type_print,
-  struct_type_free,
+  cobj_destroy_free_op,
   struct_type_mark,
   cobj_hash_op
 };
