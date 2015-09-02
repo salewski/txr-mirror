@@ -30056,6 +30056,71 @@ function or from the
 .code time-usec
 function.
 
+.coNP Structure @ time
+.synb
+  (defstruct time nil
+    year month day hour min sec dst)
+.syne
+.desc
+The
+.code time
+structure represents a time broken down into individual fields.
+The structure almost directly corresponds to the
+.code struct tm
+type in the ISO C language.  There are differences.
+Whereas the
+.code struct tm
+member
+.code tm_year
+represents a year since 1900, the
+.code year
+slot of the
+.code time
+structure represents the absolute year, not relative to 1900.
+Furthermore, the
+.code month
+slot represents a one-based numeric month, such that 1 represents
+January, whereas the C member
+.code tm_mon
+uses a zero-based month.  The
+.code dst
+slot is a \*(TL boolean value. The remaining slots
+.codn hour ,
+.codn min ,
+and
+.code sec
+correspond directly to
+.codn tm_hour ,
+.codn tm_min ,
+and
+.codn tm_sec .
+
+.coNP Functions @ time-struct-local and @ time-struct-utc
+.synb
+.mets (time-struct-local << time )
+.mets (time-struct-utc << time )
+.syne
+.desc
+These functions take the numeric time returned by the time function,
+and convert it to an instance of the
+.code time
+structure.
+
+The
+.code time-string-local
+function converts the time to the local timezone of
+the host system. The
+.code time-string-utc
+function produces time in UTC.
+
+The
+.meta time
+argument is an integer representing seconds obtained from the
+.code time
+function or from the
+.code time-usec
+function.
+
 .coNP Functions @ make-time and @ make-time-utc
 .synb
 .mets (make-time < year < month < day < hour < minute < second << dst-advice )
