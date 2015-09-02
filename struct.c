@@ -323,7 +323,7 @@ static int cache_set_lookup(slot_cache_entry_t *set, cnum id)
     return set[2].slot;
   }
 
-  return 0;
+  return -1;
 }
 
 static void cache_set_insert(slot_cache_entry_t *set, cnum id, cnum slot)
@@ -352,7 +352,7 @@ static val *lookup_slot(struct struct_inst *si, val sym)
     slot_cache_set_t *set = &slot_cache[id % SLOT_CACHE_SIZE];
     cnum slot = cache_set_lookup(*set, id);
 
-    if (slot) {
+    if (slot >= 0) {
       return &si->slot[slot];
     } else {
       val key = cons(sym, num_fast(id));
