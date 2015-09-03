@@ -10,9 +10,9 @@ static void dir_tables_init(void)
 @(bind lib "share/txr/stdlib")
 @(next @(open-files ^(#*"eval.c rand.c signal.c stream.c gc.c glob.c"
                       #*"syslog.c filter.c txr.c arith.c unwind.c cadr.c"
-                      ,*#`sysif.c @lib/place.tl @lib/ifa.tl @lib/ver.tl`
-                      ,*#`@lib/cadr.tl @lib/with-resources.tl`
-                      ,*#`@lib/txr-case.tl`)))
+                      ,*#`sysif.c struct.c @lib/place.tl @lib/ifa.tl`
+                      ,*#`@lib/ver.tl @lib/cadr.tl @lib/with-resources.tl`
+                      ,*#`@lib/txr-case.tl @lib/path-test.tl @lib/struct.tl`)))
 @(collect)
 @  (block)
 @    (cases)

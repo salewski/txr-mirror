@@ -1,3 +1,39 @@
+                                    TXR 114
+                                   2015-09-03
+
+
+  Features:
+
+  ! Note: TXR code base converted to new way of handling variadic function
+    (variable-length struct args, defined on stack).
+
+  * New function shuffle: Fisher-Yates/Knuth on lists and vectors.
+
+  * Numerous documentation improvements.
+
+  * Improved diagnostic in situations when an error exception is
+    thrown at code parse time, pinpointing file and line number.
+
+  * New feature: structs! TXR now has typed data structures with named
+    slots. Structures can be related by single inheritance, and
+    single-dispatch OOP is easily expressed.
+
+  * stat, lstat and fstat functions return a stat structure now.
+
+  * New functions: time-struct-local and time-struct-utc return
+    a structure instead of a list of fields.
+
+  * Unix password database functions: getpwent, getpwuid, getpwnam.
+
+  Bugs:
+
+  * Fixed regression: broken treatment of [hash x..y] place.
+
+  * Fixed finalize function, which was found to be fundamentally broken.
+    Advertized as a new feature in TXR 101, it now actually works.
+
+
+
                                     TXR 113
                                    2015-08-20
 
