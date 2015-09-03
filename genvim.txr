@@ -134,7 +134,7 @@ syn match txr_quote "\^" contained
 syn match txr_dotdot "\.\." contained
 syn match txr_metaat "@@" contained
 
-syn region txr_bracevar matchgroup=Delimiter start="@@[ \t]*[*]\?{" matchgroup=Delimiter end="}" contains=txr_num,txl_ident,txl_splice,txl_metanum,txr_metaat,txr_braced_ident,txr_string,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_regex,txr_quasilit,txr_chr,txl_splice,txr_nested_error
+syn region txr_bracevar matchgroup=Delimiter start="@@[ \t]*[*]\?{" matchgroup=Delimiter end="}" contains=txr_num,txl_ident,txl_splice,txl_metanum,txr_metaat,txr_braced_ident,txr_dot,txr_dotdot,txr_string,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_regex,txr_quasilit,txr_chr,txl_splice,txr_nested_error
 @  (end)
 @  (if txr-p)
 @    (output :continue out)

@@ -714,7 +714,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return LAMBDOT;
 }
 
-<SPECIAL,QSPECIAL,NESTED>\. {
+<SPECIAL,QSPECIAL,NESTED,BRACED>\. {
   yylval->chr = '.';
   return '.';
 }
