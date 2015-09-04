@@ -73,8 +73,8 @@ static val slot_hash;
 static val struct_type_finalize_f;
 
 static val struct_type_finalize(val obj);
-static struct cobj_ops struct_type_ops;
-static struct cobj_ops struct_inst_ops;
+static_forward(struct cobj_ops struct_type_ops);
+static_forward(struct cobj_ops struct_inst_ops);
 
 void struct_init(void)
 {
@@ -517,18 +517,11 @@ static cnum struct_inst_hash(val obj)
   return out;
 }
 
-static struct cobj_ops struct_type_ops = {
-  eq,
-  struct_type_print,
-  cobj_destroy_free_op,
-  struct_type_mark,
-  cobj_hash_op
-};
+static_def(struct cobj_ops struct_type_ops =
+           cobj_ops_init(eq, struct_type_print, cobj_destroy_free_op,
+                         struct_type_mark, cobj_hash_op))
 
-static struct cobj_ops struct_inst_ops = {
-  struct_inst_equal,
-  struct_inst_print,
-  cobj_destroy_free_op,
-  struct_inst_mark,
-  struct_inst_hash,
-};
+static_def(struct cobj_ops struct_inst_ops =
+           cobj_ops_init(struct_inst_equal, struct_inst_print,
+                         cobj_destroy_free_op, struct_inst_mark,
+                         struct_inst_hash))
