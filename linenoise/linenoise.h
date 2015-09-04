@@ -36,13 +36,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __LINENOISE_H
-#define __LINENOISE_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef struct linenoiseCompletions {
   size_t len;
   char **cvec;
@@ -60,9 +53,3 @@ int linenoiseHistoryLoad(const char *filename);
 void linenoiseClearScreen(void);
 void linenoiseSetMultiLine(int ml);
 void linenoisePrintKeyCodes(void);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* __LINENOISE_H */
