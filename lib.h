@@ -24,7 +24,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mpi.h"
+#include "mpi/mpi.h"
 
 typedef int_ptr_t cnum;
 

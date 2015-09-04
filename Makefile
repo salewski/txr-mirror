@@ -29,7 +29,6 @@ VERBOSE :=
 CFLAGS := -iquote $(conf_dir) $(if $(top_srcdir),-iquote $(top_srcdir)) \
           $(LANG_FLAGS) $(DIAG_FLAGS) \
           $(DBG_FLAGS) $(PLATFORM_CFLAGS) $(EXTRA_FLAGS)
-CFLAGS += -iquote $(top_srcdir)mpi
 CFLAGS := $(filter-out $(REMOVE_FLAGS),$(CFLAGS))
 LDFLAGS := -lm $(PLATFORM_LDFLAGS)
 
