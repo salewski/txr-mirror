@@ -263,7 +263,8 @@ val regex_parse(val string, val error_stream)
   return parser.errors ? nil : parser.syntax_tree;
 }
 
-val lisp_parse(val source_in, val error_stream, val error_return_val, val name_in)
+val lisp_parse(val source_in, val error_stream, val error_return_val,
+               val name_in, val lineno)
 {
   uses_or2;
   val source = default_bool_arg(source_in);
@@ -283,6 +284,9 @@ val lisp_parse(val source_in, val error_stream, val error_return_val, val name_i
   error_stream = default_bool_arg(error_stream);
   error_stream = if3(error_stream == t, std_output, or2(error_stream, std_null));
   class_check (error_stream, stream_s);
+
+  if (lineno && !missingp(lineno))
+    pi->lineno = c_num(lineno);
 
   env_vbind(dyn_env, stderr_s, error_stream);
 
@@ -322,7 +326,7 @@ val read_eval_stream(val stream, val error_stream, val hash_bang_support)
   }
 
   for (;;) {
-    val form = lisp_parse(stream, error_stream, error_val, name);
+    val form = lisp_parse(stream, error_stream, error_val, name, colon_k);
 
     if (form == error_val) {
       if (parser_errors(get_parser(stream)) == zero)
@@ -359,6 +363,7 @@ val repl(val bindings, val in_stream, val out_stream)
 
   while (!done) {
     val prompt = format(nil, lit("~a> "), counter, nao);
+    val prev_counter = counter;
     val var_counter = mod(counter, num_fast(100));
     char *prompt_u8 = utf8_dup_to(c_str(prompt));
 
@@ -380,7 +385,8 @@ val repl(val bindings, val in_stream, val out_stream)
 
     {
       val line = string_utf8(line_u8);
-      val form = lisp_parse(line, out_stream, colon_k, colon_k);
+      val form = lisp_parse(line, out_stream, colon_k,
+                            lit("line"), prev_counter);
       val value = eval_intrinsic(form, repl_env);
       if (value == quit_k) {
         done = t;

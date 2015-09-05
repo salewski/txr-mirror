@@ -4238,6 +4238,14 @@ val func_n4o(val (*fun)(val, val, val, val), int reqargs)
   return obj;
 }
 
+val func_n5o(val (*fun)(val, val, val, val, val), int reqargs)
+{
+  val obj = func_n5(fun);
+  obj->f.optargs = 5 - reqargs;
+  return obj;
+}
+
+
 val func_n1ov(val (*fun)(val, varg), int reqargs)
 {
   val obj = func_n1v(fun);
