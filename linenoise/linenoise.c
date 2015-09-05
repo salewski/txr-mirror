@@ -775,8 +775,11 @@ static int edit(int stdin_fd, int stdout_fd, char *buf, size_t buflen, const cha
 
         switch(c) {
         case ENTER:    /* enter */
-            history_len--;
-            free(history[history_len]);
+            if (history_len > 0) {
+                history_len--;
+                free(history[history_len]);
+                history[history_len] = 0;
+            }
             if (mlmode) edit_move_end(&l);
             return (int)l.len;
         case CTRL_C:     /* ctrl-c */
@@ -791,8 +794,11 @@ static int edit(int stdin_fd, int stdout_fd, char *buf, size_t buflen, const cha
             if (l.len > 0) {
                 edit_delete(&l);
             } else {
-                history_len--;
-                free(history[history_len]);
+                if (history_len > 0) {
+                    history_len--;
+                    free(history[history_len]);
+                    history[history_len] = 0;
+                }
                 return -1;
             }
             break;
@@ -994,9 +1000,12 @@ static void free_hist(void) {
     if (history) {
         int j;
 
-        for (j = 0; j < history_len; j++)
+        for (j = 0; j < history_len; j++) {
             free(history[j]);
+            history[j] = 0;
+        }
         free(history);
+        history = 0;
     }
 }
 
@@ -1067,10 +1076,9 @@ int lino_hist_set_max_len(int len) {
         memcpy(nsv,history+(history_len-tocopy), sizeof(char*)*tocopy);
         free(history);
         history = nsv;
+        history_len = tocopy;
     }
     history_max_len = len;
-    if (history_len > history_max_len)
-        history_len = history_max_len;
     return 1;
 }
 
