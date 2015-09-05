@@ -113,6 +113,8 @@ static void help(void)
 "-B                     Force list of bindings to be dumped, or false\n"
 "                       if termination is unsuccessful.\n"
 "-l                     If dumping bindings, use TXR Lisp format.\n"
+"-i                     Interactive TXR Lisp listener mode.\n"
+"                       (Requires compiled-in support.)\n"
 "-d                     Debugger mode.\n"
 "-n                     Noninteractive input mode for standard input stream,\n"
 "                       even if its connected to a terminal device.\n"
@@ -624,6 +626,16 @@ int txr_main(int argc, char **argv)
           opt_lisp_bindings = 1;
           opt_print_bindings = 1;
           break;
+        case 'i':
+#if HAVE_TERMIOS
+          repl(bindings, std_input, std_output);
+          return 0;
+#else
+          format(std_error,
+                 lit("~a: option ~a requires a platform with termios\n"),
+                 prog_string, arg, nao);
+          return EXIT_FAILURE;
+#endif
         case 'd':
 #if CONFIG_DEBUG_SUPPORT
           opt_debugger = 1;

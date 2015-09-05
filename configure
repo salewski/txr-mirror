@@ -123,6 +123,7 @@ need_darwin_c_source=
 have_git=
 have_pwuid=
 have_alloca=
+have_termios=
 conf_dir=config
 config_h=$conf_dir/config.h
 config_make=$conf_dir/config.make
@@ -648,6 +649,8 @@ have_glob := $have_glob
 
 # do we modern posix signal handling?
 have_posix_sigs := $have_posix_sigs
+
+have_termios := $have_termios
 
 # do we compile in debug support?
 debug_support := $debug_support
@@ -2126,6 +2129,24 @@ done
 
 if [ -z "$have_alloca" ] ; then
   printf "no\n"
+fi
+
+printf "Checking for termios ... "
+
+cat > conftest.c <<!
+#include <termios.h>
+
+int main(int argc, char **argv)
+{
+  struct termios t;
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_TERMIOS 1\n" >> $config_h
+  have_termios=y
 fi
 
 #

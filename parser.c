@@ -29,6 +29,7 @@
 #include <limits.h>
 #include <dirent.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdarg.h>
 #include <setjmp.h>
 #include <wchar.h>
@@ -47,6 +48,9 @@
 #include "stream.h"
 #include "y.tab.h"
 #include "parser.h"
+#if HAVE_TERMIOS
+#include "linenoise/linenoise.h"
+#endif
 
 val parser_s, unique_s;
 
@@ -331,6 +335,84 @@ val read_eval_stream(val stream, val error_stream, val hash_bang_support)
 
   return t;
 }
+
+#if HAVE_TERMIOS
+
+val repl(val bindings, val in_stream, val out_stream)
+{
+  val ifd = stream_get_prop(in_stream, fd_k);
+  val ofd = stream_get_prop(out_stream, fd_k);
+  lino_t *ls = lino_make(c_num(ifd), c_num(ofd));
+  char *line_u8 = 0;
+  char *prompt_u8 = 0;
+  val repl_env = make_env(bindings, nil, nil);
+  val quit_k = intern(lit("quit"), keyword_package);
+  val catch_all = list(t, nao);
+  val done = nil;
+  val counter = one;
+
+  while (!done) {
+    val prompt = format(nil, lit("~a> "), counter, nao);
+    char *prompt_u8 = utf8_dup_to(c_str(prompt));
+
+    line_u8 = linenoise(ls, prompt_u8);
+    free (prompt_u8);
+    prompt_u8 = 0;
+
+    if (line_u8 == 0)
+      break;
+
+    if (strspn(line_u8, " \t") == strlen(line_u8))
+      continue;
+
+    counter = succ(counter);
+
+    uw_catch_begin (catch_all, exsym, exvals);
+
+    {
+      val line = string_utf8(line_u8);
+      val form = lisp_parse(line, out_stream, colon_k, colon_k);
+      val value = eval_intrinsic(form, repl_env);
+      if (value == quit_k) {
+        done = t;
+      } else {
+        prinl(value, out_stream);
+        lino_hist_add(ls, line_u8); /* Add to the history. */
+      }
+    }
+
+    uw_catch (exsym, exvals) {
+      if (uw_exception_subtype_p(exsym, error_s)) {
+        obj_pprint(car(exvals), out_stream);
+        if (cdr(exvals)) {
+          put_string(lit(" "), out_stream);
+          pprinl(cdr(exvals), out_stream);
+        } else {
+          put_line(nil, nil);
+        }
+      } else {
+        format(out_stream, lit("caught exception: ~s ~s\n"),
+               exsym, exvals, nao);
+      }
+    }
+
+    uw_unwind {
+      free(line_u8);
+      line_u8 = 0;
+    }
+
+    uw_catch_end;
+
+    gc_hint(prompt);
+  }
+
+  free(prompt_u8);
+  free(line_u8);
+  lino_free(ls);
+  return nil;
+}
+
+#endif
 
 val get_parser(val stream)
 {

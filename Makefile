@@ -47,11 +47,11 @@ EXTRA_OBJS-y :=
 OBJS := txr.o lex.yy.o y.tab.o match.o lib.o regex.o gc.o unwind.o stream.o
 OBJS += arith.o hash.o utf8.o filter.o eval.o parser.o rand.o combi.o sysif.o
 OBJS += args.o lisplib.o cadr.o struct.o
-OBJS += linenoise/linenoise.o
 OBJS-$(debug_support) += debug.o
 OBJS-$(have_syslog) += syslog.o
 OBJS-$(have_glob) += glob.o
 OBJS-$(have_posix_sigs) += signal.o
+OBJS-$(have_termios) += linenoise/linenoise.o
 EXTRA_OBJS-$(add_win_res) += win/txr.res
 
 ifneq ($(have_git),)
