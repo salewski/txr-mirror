@@ -347,14 +347,23 @@ val repl(val bindings, val in_stream, val out_stream)
   char *prompt_u8 = 0;
   val repl_env = make_env(bindings, nil, nil);
   val quit_k = intern(lit("quit"), keyword_package);
+  val counter_sym = intern(lit("*n"), user_package);
+  val var_counter_sym = intern(lit("*v"), user_package);
+  val result_hash_sym = intern(lit("*r"), user_package);
   val catch_all = list(t, nao);
+  val result_hash = make_hash(nil, nil, nil);
   val done = nil;
   val counter = one;
 
+  reg_varl(result_hash_sym, result_hash);
+
   while (!done) {
     val prompt = format(nil, lit("~a> "), counter, nao);
+    val var_counter = mod(counter, num_fast(100));
     char *prompt_u8 = utf8_dup_to(c_str(prompt));
 
+    reg_varl(counter_sym, counter);
+    reg_varl(var_counter_sym, var_counter);
     line_u8 = linenoise(ls, prompt_u8);
     free (prompt_u8);
     prompt_u8 = 0;
@@ -376,8 +385,13 @@ val repl(val bindings, val in_stream, val out_stream)
       if (value == quit_k) {
         done = t;
       } else {
+        val var_name = format(nil, lit("*~a"), var_counter, nao);
+        val sym = intern(var_name, user_package);
+
+        reg_varl(sym, value);
+        sethash(result_hash, var_counter, value);
         prinl(value, out_stream);
-        lino_hist_add(ls, line_u8); /* Add to the history. */
+        lino_hist_add(ls, line_u8);
       }
     }
 
