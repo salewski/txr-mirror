@@ -36,20 +36,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+typedef struct lino_state lino_t;
+
 typedef struct lino_completions {
   size_t len;
   char **cvec;
 } lino_completions_t;
 
-typedef void (lino_compl_cb_t)(const char *, lino_completions_t *);
-void lino_set_completion_cb(lino_compl_cb_t *);
+typedef void lino_compl_cb_t(const char *, lino_completions_t *, void *ctx);
+void lino_set_completion_cb(lino_t *, lino_compl_cb_t *, void *ctx);
 void lino_add_completion(lino_completions_t *, const char *);
 
-char *linenoise(const char *prompt);
-int lino_hist_add(const char *line);
-int lino_hist_set_max_len(int len);
-int lino_hist_save(const char *filename);
-int lino_hist_load(const char *filename);
-void lino_clear_screen(void);
-void lino_set_multiline(int ml);
-void lino_print_keycodes(void);
+lino_t *lino_make(int ifd, int ofd);
+void lino_free(lino_t *);
+
+char *linenoise(lino_t *, const char *prompt);
+int lino_hist_add(lino_t *, const char *line);
+int lino_hist_set_max_len(lino_t *, int len);
+int lino_hist_save(lino_t *, const char *filename);
+int lino_hist_load(lino_t *, const char *filename);
+int lino_clear_screen(lino_t *);
+void lino_set_multiline(lino_t *, int ml);
+void lino_print_keycodes(lino_t *);
