@@ -333,9 +333,8 @@ int lino_clear_screen(lino_t *ls) {
 
 /* Beep, used for completion when there is nothing to complete or when all
  * the choices were already shown. */
-static void generate_beep(void) {
-    fprintf(stderr, "\x7");
-    fflush(stderr);
+static int generate_beep(lino_t *ls) {
+    return write(ls->ofd, "\x7", 1) > 0;
 }
 
 /* ============================== Completion ================================ */
@@ -364,7 +363,7 @@ static int complete_line(struct lino_state *ls) {
 
     ls->completion_callback(ls->buf, &lc, ls->cb_ctx);
     if (lc.len == 0) {
-        generate_beep();
+        generate_beep(ls);
     } else {
         size_t stop = 0, i = 0;
 
@@ -392,7 +391,7 @@ static int complete_line(struct lino_state *ls) {
             switch(c) {
                 case 9: /* tab */
                     i = (i+1) % (lc.len+1);
-                    if (i == lc.len) generate_beep();
+                    if (i == lc.len) generate_beep(ls);
                     break;
                 case 27: /* escape */
                     /* Re-show original buffer */
