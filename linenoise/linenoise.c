@@ -171,6 +171,7 @@ enum key_action {
     CTRL_P = 16,
     CTRL_T = 20,
     CTRL_U = 21,
+    CTRL_V = 22,
     CTRL_W = 23,
     ESC = 27,
     BACKSPACE =  127
@@ -777,6 +778,8 @@ static void edit_delete_prev_word(struct lino_state *l) {
  * The function returns the length of the current buffer. */
 static int edit(lino_t *l, const char *prompt)
 {
+    int verbatim = 0;
+
     /* Populate the linenoise state that we pass to functions implementing
      * specific editing functionalities. */
     l->prompt = prompt;
@@ -803,6 +806,12 @@ static int edit(lino_t *l, const char *prompt)
         nread = read(l->ifd,&c,1);
         if (nread <= 0)
             return l->len ? (int) l->len : -1;
+
+        if (verbatim) {
+            if (edit_insert(l,c)) return -1;
+            verbatim = 0;
+            continue;
+        }
 
         /* Only autocomplete when the callback is set. It returns < 0 when
          * there was an error reading from fd. Otherwise it will return the
@@ -927,6 +936,9 @@ static int edit(lino_t *l, const char *prompt)
             l->data[0] = '\0';
             l->dpos = l->dlen = 0;
             refresh_line(l);
+            break;
+        case CTRL_V: /* insert next char verbatim */
+            verbatim = 1;
             break;
         case CTRL_K: /* delete from current to end of line. */
             l->data[l->dpos] = '\0';
