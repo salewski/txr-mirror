@@ -153,6 +153,7 @@ struct lino_state {
     size_t cols;        /* Number of columns in terminal. */
     size_t maxrows;     /* Maximum num of rows used so far (multiline mode) */
     int history_index;  /* The history index we are currently editing. */
+    lino_error_t error; /* Most recent error. */
 };
 
 enum key_action {
@@ -260,7 +261,7 @@ static int enable_raw_mode(lino_t *ls) {
     return 0;
 
 fatal:
-    errno = ENOTTY;
+    ls->error = lino_notty;
     return -1;
 }
 
@@ -390,6 +391,7 @@ static int complete_line(lino_t *ls) {
             nread = read(ls->ifd,&c,1);
             if (nread <= 0) {
                 free_completions(&lc);
+                ls->error = (nread < 0 ? lino_ioerr : lino_eof);
                 return -1;
             }
 
@@ -797,7 +799,10 @@ static int edit(lino_t *l, const char *prompt)
      * initially is just an empty string. */
     lino_hist_add(l, "");
 
-    if (write(l->ofd,prompt,l->plen) == -1) return -1;
+    if (write(l->ofd,prompt,l->plen) == -1) {
+        l->error = lino_ioerr;
+        return -1;
+    }
     while(1) {
         char c;
         int nread;
@@ -808,7 +813,10 @@ static int edit(lino_t *l, const char *prompt)
             return l->len ? (int) l->len : -1;
 
         if (verbatim) {
-            if (edit_insert(l,c)) return -1;
+            if (edit_insert(l,c)) {
+                l->error = lino_ioerr;
+                return -1;
+            }
             verbatim = 0;
             continue;
         }
@@ -834,7 +842,7 @@ static int edit(lino_t *l, const char *prompt)
             if (l->mlmode) edit_move_end(l);
             return (int)l->len;
         case CTRL_C:
-            errno = EAGAIN;
+            l->error = lino_intr;
             return -1;
         case BACKSPACE:   /* backspace */
         case CTRL_H:
@@ -850,6 +858,7 @@ static int edit(lino_t *l, const char *prompt)
                     free(l->history[l->history_len]);
                     l->history[l->history_len] = 0;
                 }
+                l->error = lino_eof;
                 return -1;
             }
             break;
@@ -930,7 +939,10 @@ static int edit(lino_t *l, const char *prompt)
             }
             break;
         default:
-            if (edit_insert(l,c)) return -1;
+            if (edit_insert(l,c)) {
+                l->error = lino_ioerr;
+                return -1;
+            }
             break;
         case CTRL_U: /* delete the whole line. */
             l->data[0] = '\0';
@@ -1000,7 +1012,10 @@ static int go_raw(lino_t *ls, const char *prompt)
     if (!isatty(STDIN_FILENO)) {
         char buf[LINENOISE_MAX_LINE];
         /* Not a tty: read from file / pipe. */
-        if (fgets(buf, sizeof buf, stdin) == NULL) return -1;
+        if (fgets(buf, sizeof buf, stdin) == NULL) {
+            ls->error = (ferror(stdin) ? lino_ioerr : lino_eof);
+            return -1;
+        }
         count = strlen(buf);
         if (count && buf[count-1] == '\n') {
             count--;
@@ -1011,7 +1026,8 @@ static int go_raw(lino_t *ls, const char *prompt)
         if (enable_raw_mode(ls) == -1) return -1;
         count = edit(ls, prompt);
         disable_raw_mode(ls);
-        printf("\n");
+        if (count != -1 || ls->error == lino_eof)
+            printf("\n");
     }
     return count;
 }
@@ -1077,6 +1093,18 @@ char *linenoise(lino_t *ls, const char *prompt) {
         if (count == -1) return NULL;
         return strdup(ls->data);
     }
+}
+
+lino_error_t lino_get_error(lino_t *l)
+{
+    return l->error;
+}
+
+lino_error_t lino_set_error(lino_t *l, lino_error_t set)
+{
+    lino_error_t old = l->error;
+    l->error = set;
+    return old;
 }
 
 /* ================================ History ================================= */
@@ -1178,7 +1206,11 @@ int lino_hist_save(lino_t *ls, const char *filename) {
     FILE *fp = fopen(filename,"w");
     int j;
 
-    if (fp == NULL) return -1;
+    if (fp == NULL) {
+        ls->error = lino_error;
+        return -1;
+    }
+
     for (j = 0; j < ls->history_len; j++)
         fprintf(fp,"%s\n",ls->history[j]);
     fclose(fp);
@@ -1194,7 +1226,10 @@ int lino_hist_load(lino_t *ls, const char *filename) {
     FILE *fp = fopen(filename,"r");
     char buf[LINENOISE_MAX_LINE];
 
-    if (fp == NULL) return -1;
+    if (fp == NULL) {
+        ls->error = lino_error;
+        return -1;
+    }
 
     while (fgets(buf,LINENOISE_MAX_LINE,fp) != NULL) {
         char *p;

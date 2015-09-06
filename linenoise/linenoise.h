@@ -36,6 +36,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+typedef enum lino_error {
+    lino_no_error,      /* No error has occurred. */
+    lino_error,         /* Unspecified error */
+    lino_eof,           /* Line input terminated by Ctrl-D or EOF. */
+    lino_ioerr,         /* Line input terminated by I/O error. */
+    lino_notty,         /* Input is not a terminal. */
+    lino_intr           /* Line innput terminated by Ctrl-C or interrupt */
+} lino_error_t;
+
 typedef struct lino_state lino_t;
 
 typedef struct lino_completions {
@@ -51,6 +60,8 @@ lino_t *lino_make(int ifd, int ofd);
 void lino_free(lino_t *);
 
 char *linenoise(lino_t *, const char *prompt);
+lino_error_t lino_get_error(lino_t *);
+lino_error_t lino_set_error(lino_t *, lino_error_t); /* returns old */
 int lino_hist_add(lino_t *, const char *line);
 int lino_hist_set_max_len(lino_t *, int len);
 int lino_hist_save(lino_t *, const char *filename);
