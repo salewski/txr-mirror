@@ -118,6 +118,10 @@
 #include <unistd.h>
 #include "linenoise.h"
 
+#define LINENOISE_DEFAULT_HISTORY_MAX_LEN 100
+#define LINENOISE_MAX_LINE 4096
+#define LINENOISE_MAX_DISP (LINENOISE_MAX_LINE * 2)
+
 /* The lino_state structure represents the state during line editing.
  * We pass this state to functions implementing specific editing
  * functionalities. */
@@ -137,13 +141,15 @@ struct lino_state {
     int ofd;            /* Terminal stdout file descriptor. */
 
     /* Volatile state pertaining to just one linenoise call */
-    char *buf;          /* Edited line buffer. */
-    size_t buflen;      /* Edited line buffer size. */
+    char buf[LINENOISE_MAX_DISP];       /* Displayed line bufer. */
+    char data[LINENOISE_MAX_LINE];      /* True data corresponding to display */
     const char *prompt; /* Prompt to display. */
     size_t plen;        /* Prompt length. */
     size_t pos;         /* Current cursor position. */
     size_t oldpos;      /* Previous refresh cursor position. */
-    size_t len;         /* Current edited line length. */
+    size_t len;         /* Current edited line display length. */
+    size_t dlen;        /* True underlying length. */
+    size_t dpos;        /* True underlying position. */
     size_t cols;        /* Number of columns in terminal. */
     size_t maxrows;     /* Maximum num of rows used so far (multiline mode) */
     int history_index;  /* The history index we are currently editing. */
@@ -176,8 +182,6 @@ typedef unsigned char mem_t;
 mem_t *chk_malloc(size_t n);
 mem_t *chk_realloc(mem_t *old, size_t size);
 
-#define LINENOISE_DEFAULT_HISTORY_MAX_LEN 100
-#define LINENOISE_MAX_LINE 4096
 static const char *unsupported_term[] = {"dumb","cons25","emacs",NULL};
 static lino_t lino_list = { &lino_list, &lino_list };
 static int atexit_registered = 0; /* Register atexit just 1 time. */
@@ -348,6 +352,7 @@ static void free_completions(lino_completions_t *lc) {
         free(lc->cvec);
 }
 
+static void sync_data_to_buf(struct lino_state *l);
 static void refresh_line(struct lino_state *l);
 
 /* This is an helper function for edit() and is called when the
@@ -361,7 +366,7 @@ static int complete_line(struct lino_state *ls) {
     int nread, nwritten;
     char c = 0;
 
-    ls->completion_callback(ls->buf, &lc, ls->cb_ctx);
+    ls->completion_callback(ls->data, &lc, ls->cb_ctx);
     if (lc.len == 0) {
         generate_beep(ls);
     } else {
@@ -372,12 +377,12 @@ static int complete_line(struct lino_state *ls) {
             if (i < lc.len) {
                 struct lino_state saved = *ls;
 
-                ls->len = ls->pos = strlen(lc.cvec[i]);
-                ls->buf = lc.cvec[i];
+                ls->dpos = ls->dlen = strlen(lc.cvec[i]);
+                strncpy(ls->data, lc.cvec[i], sizeof ls->data);
+                ls->data[sizeof ls->data - 1] = 0;
+                sync_data_to_buf(ls);
                 refresh_line(ls);
-                ls->len = saved.len;
-                ls->pos = saved.pos;
-                ls->buf = saved.buf;
+                *ls = saved;
             } else {
                 refresh_line(ls);
             }
@@ -401,8 +406,10 @@ static int complete_line(struct lino_state *ls) {
                 default:
                     /* Update buffer and return */
                     if (i < lc.len) {
-                        nwritten = snprintf(ls->buf,ls->buflen,"%s",lc.cvec[i]);
-                        ls->len = ls->pos = nwritten;
+                        nwritten = snprintf(ls->data, sizeof ls->data, "%s", lc.cvec[i]);
+                        ls->dpos = ls->dlen = nwritten;
+                        sync_data_to_buf(ls);
+                        refresh_line(ls);
                     }
                     stop = 1;
                     break;
@@ -468,6 +475,37 @@ static void ab_append(struct abuf *ab, const char *s, int len) {
 
 static void ab_free(struct abuf *ab) {
     free(ab->b);
+}
+
+/* Convert raw data to display data, and recalculate
+   display length and position. */
+static void sync_data_to_buf(struct lino_state *l)
+{
+    char *dptr = l->data, *bptr = l->buf;
+
+    for (;;) {
+        if (dptr - l->data == l->dpos)
+            l->pos = bptr - l->buf;
+
+        if (*dptr)  {
+            char ch = *dptr++;
+
+            if (ch < 32) {
+                *bptr++ = '^';
+                *bptr++ = 64 + ch;
+            } else if (ch == 127) {
+                *bptr++ = '^';
+                *bptr++ = '?';
+            } else {
+                *bptr++ = ch;
+            }
+
+            continue;
+        }
+        break;
+    }
+
+    l->len = bptr - l->buf;
 }
 
 /* Single line low level line refresh.
@@ -596,6 +634,8 @@ static void refresh_multiline(struct lino_state *l) {
 /* Calls the two low level functions refresh_singleline() or
  * refresh_multiline() according to the selected mode. */
 static void refresh_line(struct lino_state *ls) {
+    sync_data_to_buf(ls);
+
     if (ls->mlmode)
         refresh_multiline(ls);
     else
@@ -606,13 +646,14 @@ static void refresh_line(struct lino_state *ls) {
  *
  * On error writing to the terminal -1 is returned, otherwise 0. */
 static int edit_insert(struct lino_state *l, char c) {
-    if (l->len < l->buflen) {
-        if (l->len == l->pos) {
-            l->buf[l->pos] = c;
-            l->pos++;
-            l->len++;
-            l->buf[l->len] = '\0';
-            if ((!l->mlmode && l->plen+l->len < l->cols) /* || mlmode */) {
+    if (l->dlen < sizeof l->data - 1) {
+        if (l->len == l->dpos) {
+            l->data[l->dpos] = c;
+            l->dpos++;
+            l->dlen++;
+            l->data[l->dlen] = '\0';
+            sync_data_to_buf(l);
+            if ((!l->mlmode && l->len == l->dlen && l->plen+l->len < l->cols) /* || mlmode */) {
                 /* Avoid a full update of the line in the
                  * trivial case. */
                 if (write(l->ofd,&c,1) == -1) return -1;
@@ -620,11 +661,11 @@ static int edit_insert(struct lino_state *l, char c) {
                 refresh_line(l);
             }
         } else {
-            memmove(l->buf+l->pos+1,l->buf+l->pos,l->len-l->pos);
-            l->buf[l->pos] = c;
-            l->len++;
-            l->pos++;
-            l->buf[l->len] = '\0';
+            memmove(l->data + l->dpos+1, l->data + l->dpos, l->dlen-l->dpos);
+            l->data[l->dpos] = c;
+            l->dlen++;
+            l->dpos++;
+            l->data[l->dlen] = '\0';
             refresh_line(l);
         }
     }
@@ -633,32 +674,32 @@ static int edit_insert(struct lino_state *l, char c) {
 
 /* Move cursor on the left. */
 static void edit_move_left(struct lino_state *l) {
-    if (l->pos > 0) {
-        l->pos--;
+    if (l->dpos > 0) {
+        l->dpos--;
         refresh_line(l);
     }
 }
 
 /* Move cursor on the right. */
 static void edit_move_right(struct lino_state *l) {
-    if (l->pos != l->len) {
-        l->pos++;
+    if (l->dpos != l->dlen) {
+        l->dpos++;
         refresh_line(l);
     }
 }
 
 /* Move cursor to the start of the line. */
 static void edit_move_home(struct lino_state *l) {
-    if (l->pos != 0) {
-        l->pos = 0;
+    if (l->dpos != 0) {
+        l->dpos = 0;
         refresh_line(l);
     }
 }
 
 /* Move cursor to the end of the line. */
 static void edit_move_end(struct lino_state *l) {
-    if (l->pos != l->len) {
-        l->pos = l->len;
+    if (l->dpos != l->dlen) {
+        l->dpos = l->dlen;
         refresh_line(l);
     }
 }
@@ -672,7 +713,7 @@ static void edit_history_next(struct lino_state *l, int dir) {
         /* Update the current history entry before to
          * overwrite it with the next one. */
         free(l->history[l->history_len - 1 - l->history_index]);
-        l->history[l->history_len - 1 - l->history_index] = strdup(l->buf);
+        l->history[l->history_len - 1 - l->history_index] = strdup(l->data);
         /* Show the new entry */
         l->history_index += (dir == LINENOISE_HISTORY_PREV) ? 1 : -1;
         if (l->history_index < 0) {
@@ -682,9 +723,9 @@ static void edit_history_next(struct lino_state *l, int dir) {
             l->history_index = l->history_len-1;
             return;
         }
-        strncpy(l->buf,l->history[l->history_len - 1 - l->history_index],l->buflen);
-        l->buf[l->buflen-1] = '\0';
-        l->len = l->pos = strlen(l->buf);
+        strncpy(l->data,l->history[l->history_len - 1 - l->history_index], sizeof l->data);
+        l->data[sizeof l->data - 1] = 0;
+        l->dpos = l->dlen = strlen(l->data);
         refresh_line(l);
     }
 }
@@ -692,21 +733,21 @@ static void edit_history_next(struct lino_state *l, int dir) {
 /* Delete the character at the right of the cursor without altering the cursor
  * position. Basically this is what happens with the "Delete" keyboard key. */
 static void edit_delete(struct lino_state *l) {
-    if (l->len > 0 && l->pos < l->len) {
-        memmove(l->buf+l->pos,l->buf+l->pos+1,l->len-l->pos-1);
-        l->len--;
-        l->buf[l->len] = '\0';
+    if (l->dlen > 0 && l->dpos < l->dlen) {
+        memmove(l->data + l->dpos, l->data + l->dpos + 1, l->dlen - l->dpos - 1);
+        l->dlen--;
+        l->data[l->dlen] = '\0';
         refresh_line(l);
     }
 }
 
 /* Backspace implementation. */
 static void edit_backspace(struct lino_state *l) {
-    if (l->pos > 0 && l->len > 0) {
-        memmove(l->buf+l->pos-1,l->buf+l->pos,l->len-l->pos);
-        l->pos--;
-        l->len--;
-        l->buf[l->len] = '\0';
+    if (l->dpos > 0 && l->dlen > 0) {
+        memmove(l->data + l->dpos - 1, l->data + l->dpos, l->dlen - l->dpos);
+        l->dpos--;
+        l->dlen--;
+        l->data[l->dlen] = '\0';
         refresh_line(l);
     }
 }
@@ -714,16 +755,16 @@ static void edit_backspace(struct lino_state *l) {
 /* Delete the previosu word, maintaining the cursor at the start of the
  * current word. */
 static void edit_delete_prev_word(struct lino_state *l) {
-    size_t old_pos = l->pos;
+    size_t odpos = l->dpos;
     size_t diff;
 
-    while (l->pos > 0 && l->buf[l->pos-1] == ' ')
-        l->pos--;
-    while (l->pos > 0 && l->buf[l->pos-1] != ' ')
-        l->pos--;
-    diff = old_pos - l->pos;
-    memmove(l->buf+l->pos,l->buf+old_pos,l->len-old_pos+1);
-    l->len -= diff;
+    while (l->dpos > 0 && l->data[l->dpos - 1] == ' ')
+        l->dpos--;
+    while (l->dpos > 0 && l->data[l->dpos - 1] != ' ')
+        l->dpos--;
+    diff = odpos - l->dpos;
+    memmove(l->data + l->dpos, l->data + odpos, l->dlen - odpos + 1);
+    l->dlen -= diff;
     refresh_line(l);
 }
 
@@ -735,23 +776,20 @@ static void edit_delete_prev_word(struct lino_state *l) {
  * when ctrl+d is typed.
  *
  * The function returns the length of the current buffer. */
-static int edit(lino_t *l, char *buf, size_t buflen, const char *prompt)
+static int edit(lino_t *l, const char *prompt)
 {
     /* Populate the linenoise state that we pass to functions implementing
      * specific editing functionalities. */
-    l->buf = buf;
-    l->buflen = buflen;
     l->prompt = prompt;
     l->plen = strlen(prompt);
-    l->oldpos = l->pos = 0;
-    l->len = 0;
+    l->oldpos = l->pos = l->len = 0;
+    l->dpos = l->dlen = 0;
     l->cols = get_columns(l->ifd, l->ofd);
     l->maxrows = 0;
     l->history_index = 0;
 
     /* Buffer starts empty. */
-    l->buf[0] = '\0';
-    l->buflen--; /* Make sure there is always space for the nulterm */
+    l->data[0] = '\0';
 
     /* The latest history entry is always our current buffer, that
      * initially is just an empty string. */
@@ -808,11 +846,11 @@ static int edit(lino_t *l, char *buf, size_t buflen, const char *prompt)
             }
             break;
         case CTRL_T:    /* ctrl-t, swaps current character with previous. */
-            if (l->pos > 0 && l->pos < l->len) {
-                int aux = buf[l->pos-1];
-                buf[l->pos-1] = buf[l->pos];
-                buf[l->pos] = aux;
-                if (l->pos != l->len-1) l->pos++;
+            if (l->dpos > 0 && l->dpos < l->dlen) {
+                int aux = l->data[l->dpos - 1];
+                l->data[l->dpos-1] = l->data[l->dpos];
+                l->data[l->dpos] = aux;
+                if (l->dpos != l->dlen - 1) l->dpos++;
                 refresh_line(l);
             }
             break;
@@ -887,13 +925,13 @@ static int edit(lino_t *l, char *buf, size_t buflen, const char *prompt)
             if (edit_insert(l,c)) return -1;
             break;
         case CTRL_U: /* Ctrl+u, delete the whole line. */
-            buf[0] = '\0';
-            l->pos = l->len = 0;
+            l->data[0] = '\0';
+            l->dpos = l->dlen = 0;
             refresh_line(l);
             break;
         case CTRL_K: /* Ctrl+k, delete from current to end of line. */
-            buf[l->pos] = '\0';
-            l->len = l->pos;
+            l->data[l->dpos] = '\0';
+            l->dlen = l->dpos;
             refresh_line(l);
             break;
         case CTRL_A: /* Ctrl+a, go to the start of the line */
@@ -944,16 +982,14 @@ void lino_print_keycodes(lino_t *l) {
 
 /* This function calls the line editing function edit() using
  * the object's file descriptor set in raw mode. */
-static int go_raw(lino_t *ls, char *buf, size_t buflen, const char *prompt) {
+static int go_raw(lino_t *ls, const char *prompt)
+{
     int count;
 
-    if (buflen == 0) {
-        errno = EINVAL;
-        return -1;
-    }
     if (!isatty(STDIN_FILENO)) {
+        char buf[LINENOISE_MAX_LINE];
         /* Not a tty: read from file / pipe. */
-        if (fgets(buf, buflen, stdin) == NULL) return -1;
+        if (fgets(buf, sizeof buf, stdin) == NULL) return -1;
         count = strlen(buf);
         if (count && buf[count-1] == '\n') {
             count--;
@@ -962,7 +998,7 @@ static int go_raw(lino_t *ls, char *buf, size_t buflen, const char *prompt) {
     } else {
         /* Interactive editing. */
         if (enable_raw_mode(ls) == -1) return -1;
-        count = edit(ls, buf, buflen, prompt);
+        count = edit(ls, prompt);
         disable_raw_mode(ls);
         printf("\n");
     }
@@ -1012,11 +1048,9 @@ void lino_free(lino_t *ls)
  * editing function or uses dummy fgets() so that you will be able to type
  * something even in the most desperate of the conditions. */
 char *linenoise(lino_t *ls, const char *prompt) {
-    char buf[LINENOISE_MAX_LINE];
-    int count;
-
     if (is_unsupported_term()) {
         size_t len;
+        char buf[LINENOISE_MAX_LINE];
 
         printf("%s",prompt);
         fflush(stdout);
@@ -1028,9 +1062,9 @@ char *linenoise(lino_t *ls, const char *prompt) {
         }
         return strdup(buf);
     } else {
-        count = go_raw(ls, buf,LINENOISE_MAX_LINE,prompt);
+        int count = go_raw(ls, prompt);
         if (count == -1) return NULL;
-        return strdup(buf);
+        return strdup(ls->data);
     }
 }
 
