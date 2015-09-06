@@ -498,6 +498,9 @@ val repl(val bindings, val in_stream, val out_stream)
     val prompt = format(nil, lit("~a> "), counter, nao);
     val prev_counter = counter;
     val var_counter = mod(counter, num_fast(100));
+    val var_name = format(nil, lit("*~a"), var_counter, nao);
+    val var_sym = intern(var_name, user_package);
+
     char *prompt_u8 = utf8_dup_to(c_str(prompt));
 
     reg_varl(counter_sym, counter);
@@ -524,10 +527,7 @@ val repl(val bindings, val in_stream, val out_stream)
       if (value == quit_k) {
         done = t;
       } else {
-        val var_name = format(nil, lit("*~a"), var_counter, nao);
-        val sym = intern(var_name, user_package);
-
-        reg_varl(sym, value);
+        reg_varl(var_sym, value);
         sethash(result_hash, var_counter, value);
         prinl(value, out_stream);
         lino_hist_add(ls, line_u8);
@@ -535,6 +535,10 @@ val repl(val bindings, val in_stream, val out_stream)
     }
 
     uw_catch (exsym, exvals) {
+      reg_varl(var_sym, nil);
+      sethash(result_hash, var_counter, nil);
+      lino_hist_add(ls, line_u8);
+
       if (uw_exception_subtype_p(exsym, syntax_error_s)) {
         /* suppress syntax error exceptions: uninformative in the repl */
       } else if (uw_exception_subtype_p(exsym, error_s)) {
