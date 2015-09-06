@@ -352,8 +352,8 @@ static void free_completions(lino_completions_t *lc) {
         free(lc->cvec);
 }
 
-static void sync_data_to_buf(struct lino_state *l);
-static void refresh_line(struct lino_state *l);
+static void sync_data_to_buf(lino_t *l);
+static void refresh_line(lino_t *l);
 
 /* This is an helper function for edit() and is called when the
  * user types the <tab> key in order to complete the string currently in the
@@ -361,7 +361,7 @@ static void refresh_line(struct lino_state *l);
  *
  * The state of the editing is encapsulated into the pointed lino_state
  * structure as described in the structure definition. */
-static int complete_line(struct lino_state *ls) {
+static int complete_line(lino_t *ls) {
     lino_completions_t lc = { 0, NULL };
     int nread, nwritten;
     char c = 0;
@@ -375,7 +375,7 @@ static int complete_line(struct lino_state *ls) {
         while(!stop) {
             /* Show completion or original buffer */
             if (i < lc.len) {
-                struct lino_state saved = *ls;
+                lino_t saved = *ls;
 
                 ls->dpos = ls->dlen = strlen(lc.cvec[i]);
                 strncpy(ls->data, lc.cvec[i], sizeof ls->data);
@@ -479,7 +479,7 @@ static void ab_free(struct abuf *ab) {
 
 /* Convert raw data to display data, and recalculate
    display length and position. */
-static void sync_data_to_buf(struct lino_state *l)
+static void sync_data_to_buf(lino_t *l)
 {
     char *dptr = l->data, *bptr = l->buf;
 
@@ -512,7 +512,7 @@ static void sync_data_to_buf(struct lino_state *l)
  *
  * Rewrite the currently edited line accordingly to the buffer content,
  * cursor position, and number of columns of the terminal. */
-static void refresh_singleline(struct lino_state *l) {
+static void refresh_singleline(lino_t *l) {
     char seq[64];
     size_t plen = strlen(l->prompt);
     int fd = l->ofd;
@@ -551,7 +551,7 @@ static void refresh_singleline(struct lino_state *l) {
  *
  * Rewrite the currently edited line accordingly to the buffer content,
  * cursor position, and number of columns of the terminal. */
-static void refresh_multiline(struct lino_state *l) {
+static void refresh_multiline(lino_t *l) {
     char seq[64];
     int plen = strlen(l->prompt);
     int rows = (plen+l->len+l->cols-1)/l->cols; /* rows used by current buf. */
@@ -633,7 +633,7 @@ static void refresh_multiline(struct lino_state *l) {
 
 /* Calls the two low level functions refresh_singleline() or
  * refresh_multiline() according to the selected mode. */
-static void refresh_line(struct lino_state *ls) {
+static void refresh_line(lino_t *ls) {
     sync_data_to_buf(ls);
 
     if (ls->mlmode)
@@ -645,7 +645,7 @@ static void refresh_line(struct lino_state *ls) {
 /* Insert the character 'c' at cursor current position.
  *
  * On error writing to the terminal -1 is returned, otherwise 0. */
-static int edit_insert(struct lino_state *l, char c) {
+static int edit_insert(lino_t *l, char c) {
     if (l->dlen < sizeof l->data - 1) {
         if (l->len == l->dpos) {
             l->data[l->dpos] = c;
@@ -673,7 +673,7 @@ static int edit_insert(struct lino_state *l, char c) {
 }
 
 /* Move cursor on the left. */
-static void edit_move_left(struct lino_state *l) {
+static void edit_move_left(lino_t *l) {
     if (l->dpos > 0) {
         l->dpos--;
         refresh_line(l);
@@ -681,7 +681,7 @@ static void edit_move_left(struct lino_state *l) {
 }
 
 /* Move cursor on the right. */
-static void edit_move_right(struct lino_state *l) {
+static void edit_move_right(lino_t *l) {
     if (l->dpos != l->dlen) {
         l->dpos++;
         refresh_line(l);
@@ -689,7 +689,7 @@ static void edit_move_right(struct lino_state *l) {
 }
 
 /* Move cursor to the start of the line. */
-static void edit_move_home(struct lino_state *l) {
+static void edit_move_home(lino_t *l) {
     if (l->dpos != 0) {
         l->dpos = 0;
         refresh_line(l);
@@ -697,7 +697,7 @@ static void edit_move_home(struct lino_state *l) {
 }
 
 /* Move cursor to the end of the line. */
-static void edit_move_end(struct lino_state *l) {
+static void edit_move_end(lino_t *l) {
     if (l->dpos != l->dlen) {
         l->dpos = l->dlen;
         refresh_line(l);
@@ -708,7 +708,7 @@ static void edit_move_end(struct lino_state *l) {
  * entry as specified by 'dir'. */
 #define LINENOISE_HISTORY_NEXT 0
 #define LINENOISE_HISTORY_PREV 1
-static void edit_history_next(struct lino_state *l, int dir) {
+static void edit_history_next(lino_t *l, int dir) {
     if (l->history_len > 1) {
         /* Update the current history entry before to
          * overwrite it with the next one. */
@@ -732,7 +732,7 @@ static void edit_history_next(struct lino_state *l, int dir) {
 
 /* Delete the character at the right of the cursor without altering the cursor
  * position. Basically this is what happens with the "Delete" keyboard key. */
-static void edit_delete(struct lino_state *l) {
+static void edit_delete(lino_t *l) {
     if (l->dlen > 0 && l->dpos < l->dlen) {
         memmove(l->data + l->dpos, l->data + l->dpos + 1, l->dlen - l->dpos - 1);
         l->dlen--;
@@ -742,7 +742,7 @@ static void edit_delete(struct lino_state *l) {
 }
 
 /* Backspace implementation. */
-static void edit_backspace(struct lino_state *l) {
+static void edit_backspace(lino_t *l) {
     if (l->dpos > 0 && l->dlen > 0) {
         memmove(l->data + l->dpos - 1, l->data + l->dpos, l->dlen - l->dpos);
         l->dpos--;
@@ -754,7 +754,7 @@ static void edit_backspace(struct lino_state *l) {
 
 /* Delete the previosu word, maintaining the cursor at the start of the
  * current word. */
-static void edit_delete_prev_word(struct lino_state *l) {
+static void edit_delete_prev_word(lino_t *l) {
     size_t odpos = l->dpos;
     size_t diff;
 
