@@ -535,7 +535,9 @@ val repl(val bindings, val in_stream, val out_stream)
     }
 
     uw_catch (exsym, exvals) {
-      if (uw_exception_subtype_p(exsym, error_s)) {
+      if (uw_exception_subtype_p(exsym, syntax_error_s)) {
+        /* suppress syntax error exceptions: uninformative in the repl */
+      } else if (uw_exception_subtype_p(exsym, error_s)) {
         obj_pprint(car(exvals), out_stream);
         if (cdr(exvals)) {
           put_string(lit(" "), out_stream);
