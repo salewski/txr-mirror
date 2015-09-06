@@ -3423,7 +3423,7 @@ static val symbol_function(val sym)
              gethash(op_table, sym));
 }
 
-static val boundp(val sym)
+val boundp(val sym)
 {
   return if2(lookup_var(nil, sym) || lookup_symac(nil, sym), t);
 }

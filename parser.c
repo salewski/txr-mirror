@@ -345,7 +345,8 @@ val read_eval_stream(val stream, val error_stream, val hash_bang_support)
 
 static void find_matching_syms(lino_completions_t *cpl,
                                val package, val prefix,
-                               val line_prefix, val force_qualify)
+                               val line_prefix, char par,
+                               val force_qualify)
 {
   val qualify = tnil(force_qualify || package != user_package);
   val pkg_name = if2(qualify,
@@ -360,6 +361,19 @@ static void find_matching_syms(lino_completions_t *cpl,
 
     if (match_str(name, prefix, zero)) {
       val compl;
+
+      switch (par) {
+      case '(':
+        if (!fboundp(sym))
+          continue;
+        break;
+      case '[':
+        if (!boundp(sym) && !lookup_fun(nil, sym))
+          continue;
+        break;
+      default:
+        break;
+      }
 
       if (qualify)
         compl = format(nil, lit("~a~a:~a"), line_prefix, pkg_name, name, nao);
@@ -431,7 +445,7 @@ static void provide_completions(const char *data,
   }
 
   {
-    val sym_prefix = string_utf8(sym);
+    val sym_pfx = string_utf8(sym);
     size_t lsz = end - data + 1;
     char *line_pfxu8 = alloca(lsz);
     memcpy(line_pfxu8, data, lsz);
@@ -439,15 +453,20 @@ static void provide_completions(const char *data,
 
     {
       val line_pfx = string_utf8(line_pfxu8);
+      char prev = (end > data) ? end[-1] : 0;
+      char pprev = (end > data + 1) ? end[-2] : 0;
+      int quote = (pprev == '^' || pprev == '\'' || pprev == '#');
+      int dwim = (prev == '[');
+      char par = (!pprev || !quote || dwim) ? prev : 0;
 
       if (package) {
-        find_matching_syms(cpl, package, sym_prefix, line_pfx, null(keyword));
+        find_matching_syms(cpl, package, sym_pfx, line_pfx, par, null(keyword));
       } else {
         val pa;
 
         for (pa = package_alist(); pa; pa = cdr(pa)) {
           val pair = car(pa);
-          find_matching_syms(cpl, cdr(pair), sym_prefix, line_pfx, nil);
+          find_matching_syms(cpl, cdr(pair), sym_pfx, line_pfx, par, nil);
         }
       }
     }
