@@ -34,6 +34,7 @@
 #include <setjmp.h>
 #include <wchar.h>
 #include <signal.h>
+#include <ctype.h>
 #include <errno.h>
 #include "config.h"
 #include "lib.h"
@@ -342,6 +343,117 @@ val read_eval_stream(val stream, val error_stream, val hash_bang_support)
 
 #if HAVE_TERMIOS
 
+static void find_matching_syms(lino_completions_t *cpl,
+                               val package, val prefix,
+                               val line_prefix, val force_qualify)
+{
+  val qualify = tnil(force_qualify || package != user_package);
+  val pkg_name = if2(qualify,
+                     if3(package == keyword_package && !force_qualify,
+                         lit(""),
+                         package_name(package)));
+  val syms;
+
+  for (syms = package_symbols(package); syms; syms = cdr(syms)) {
+    val sym = car(syms);
+    val name = symbol_name(sym);
+
+    if (match_str(name, prefix, zero)) {
+      val compl;
+
+      if (qualify)
+        compl = format(nil, lit("~a~a:~a"), line_prefix, pkg_name, name, nao);
+      else
+        compl = format(nil, lit("~a~a"), line_prefix, name, nao);
+
+      {
+        char *completion = utf8_dup_to(c_str(compl));
+        lino_add_completion(cpl, completion);
+        free(completion);
+      }
+
+      gc_hint(compl);
+    }
+  }
+}
+
+static void provide_completions(const char *data,
+                                lino_completions_t *cpl,
+                                void *ctx)
+{
+  const char *gly = "!$%&*+-<=>?\\_~/";
+  const char *ptr = data + strlen(data) - 1;
+  const char *sym = 0, *pkg = 0;
+  const char *end;
+  val keyword = nil;
+  val package = nil;
+
+  (void) ctx;
+
+  while ((isalnum(*ptr) || strchr(gly, *ptr)) && (sym = ptr) && ptr > data)
+    ptr--;
+
+  if (!sym)
+    return;
+
+  end = sym;
+
+  if (*ptr == ':') {
+    if (ptr == data) {
+      keyword = t;
+    } else {
+      ptr--;
+
+      while ((isalnum(*ptr) || strchr(gly, *ptr)) && (pkg = ptr) && ptr > data)
+        ptr--;
+
+      if (!pkg)
+        keyword = t;
+    }
+  }
+
+  if (keyword) {
+    package = keyword_package;
+    end = sym - 1;
+  } else if (pkg) {
+    size_t sz = sym - pkg;
+    char *pkg_copy = alloca(sz);
+
+    memcpy(pkg_copy, pkg, sz);
+    pkg_copy[sz - 1] = 0;
+
+    {
+      val package_name = string_utf8(pkg_copy);
+      package = find_package(package_name);
+    }
+
+    end = pkg;
+  }
+
+  {
+    val sym_prefix = string_utf8(sym);
+    size_t lsz = end - data + 1;
+    char *line_pfxu8 = alloca(lsz);
+    memcpy(line_pfxu8, data, lsz);
+    line_pfxu8[lsz - 1] = 0;
+
+    {
+      val line_pfx = string_utf8(line_pfxu8);
+
+      if (package) {
+        find_matching_syms(cpl, package, sym_prefix, line_pfx, null(keyword));
+      } else {
+        val pa;
+
+        for (pa = package_alist(); pa; pa = cdr(pa)) {
+          val pair = car(pa);
+          find_matching_syms(cpl, cdr(pair), sym_prefix, line_pfx, nil);
+        }
+      }
+    }
+  }
+}
+
 val repl(val bindings, val in_stream, val out_stream)
 {
   val ifd = stream_get_prop(in_stream, fd_k);
@@ -360,6 +472,8 @@ val repl(val bindings, val in_stream, val out_stream)
   val counter = one;
 
   reg_varl(result_hash_sym, result_hash);
+
+  lino_set_completion_cb(ls, provide_completions, 0);
 
   while (!done) {
     val prompt = format(nil, lit("~a> "), counter, nao);

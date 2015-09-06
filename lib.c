@@ -3784,6 +3784,23 @@ val delete_package(val package)
   return nil;
 }
 
+val package_alist(void)
+{
+  return packages;
+}
+
+val package_name(val package)
+{
+  type_check (package, PKG);
+  return package->pk.name;
+}
+
+val package_symbols(val package)
+{
+  type_check (package, PKG);
+  return hash_values(package->pk.symhash);
+}
+
 val intern(val str, val package)
 {
   val new_p;
