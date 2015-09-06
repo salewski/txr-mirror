@@ -509,8 +509,12 @@ val repl(val bindings, val in_stream, val out_stream)
     free (prompt_u8);
     prompt_u8 = 0;
 
-    if (line_u8 == 0)
-      break;
+    if (line_u8 == 0) {
+      if (lino_get_error(ls) == lino_eof)
+        break;
+      put_line(lit("** intr"), out_stream);
+      continue;
+    }
 
     if (strspn(line_u8, " \t") == strlen(line_u8))
       continue;
