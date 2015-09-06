@@ -156,25 +156,24 @@ struct lino_state {
 };
 
 enum key_action {
-    KEY_NULL = 0,       /* NULL */
-    CTRL_A = 1,         /* Ctrl+a */
-    CTRL_B = 2,         /* Ctrl-b */
-    CTRL_C = 3,         /* Ctrl-c */
-    CTRL_D = 4,         /* Ctrl-d */
-    CTRL_E = 5,         /* Ctrl-e */
-    CTRL_F = 6,         /* Ctrl-f */
-    CTRL_H = 8,         /* Ctrl-h */
-    TAB = 9,            /* Tab */
-    CTRL_K = 11,        /* Ctrl+k */
-    CTRL_L = 12,        /* Ctrl+l */
-    ENTER = 13,         /* Enter */
-    CTRL_N = 14,        /* Ctrl-n */
-    CTRL_P = 16,        /* Ctrl-p */
-    CTRL_T = 20,        /* Ctrl-t */
-    CTRL_U = 21,        /* Ctrl+u */
-    CTRL_W = 23,        /* Ctrl+w */
-    ESC = 27,           /* Escape */
-    BACKSPACE =  127    /* Backspace */
+    CTRL_A = 1,
+    CTRL_B = 2,
+    CTRL_C = 3,
+    CTRL_D = 4,
+    CTRL_E = 5,
+    CTRL_F = 6,
+    CTRL_H = 8,
+    TAB = 9,
+    CTRL_K = 11,
+    CTRL_L = 12,
+    ENTER = 13,
+    CTRL_N = 14,
+    CTRL_P = 16,
+    CTRL_T = 20,
+    CTRL_U = 21,
+    CTRL_W = 23,
+    ESC = 27,
+    BACKSPACE =  127
 };
 
 
@@ -817,7 +816,7 @@ static int edit(lino_t *l, const char *prompt)
         }
 
         switch(c) {
-        case ENTER:    /* enter */
+        case ENTER:
             if (l->history_len > 0) {
                 l->history_len--;
                 free(l->history[l->history_len]);
@@ -825,14 +824,14 @@ static int edit(lino_t *l, const char *prompt)
             }
             if (l->mlmode) edit_move_end(l);
             return (int)l->len;
-        case CTRL_C:     /* ctrl-c */
+        case CTRL_C:
             errno = EAGAIN;
             return -1;
         case BACKSPACE:   /* backspace */
-        case 8:     /* ctrl-h */
+        case CTRL_H:
             edit_backspace(l);
             break;
-        case CTRL_D:     /* ctrl-d, remove char at right of cursor, or if the
+        case CTRL_D:     /* remove char at right of cursor, or if the
                             line is empty, act as end-of-file. */
             if (l->len > 0) {
                 edit_delete(l);
@@ -845,7 +844,7 @@ static int edit(lino_t *l, const char *prompt)
                 return -1;
             }
             break;
-        case CTRL_T:    /* ctrl-t, swaps current character with previous. */
+        case CTRL_T:    /* swaps current character with previous. */
             if (l->dpos > 0 && l->dpos < l->dlen) {
                 int aux = l->data[l->dpos - 1];
                 l->data[l->dpos-1] = l->data[l->dpos];
@@ -854,19 +853,19 @@ static int edit(lino_t *l, const char *prompt)
                 refresh_line(l);
             }
             break;
-        case CTRL_B:     /* ctrl-b */
+        case CTRL_B:
             edit_move_left(l);
             break;
-        case CTRL_F:     /* ctrl-f */
+        case CTRL_F:
             edit_move_right(l);
             break;
-        case CTRL_P:    /* ctrl-p */
+        case CTRL_P:
             edit_history_next(l, LINENOISE_HISTORY_PREV);
             break;
-        case CTRL_N:    /* ctrl-n */
+        case CTRL_N:
             edit_history_next(l, LINENOISE_HISTORY_NEXT);
             break;
-        case ESC:    /* escape sequence */
+        case ESC:
             /* Read the next two bytes representing the escape sequence.
              * Use two calls to handle slow terminals returning the two
              * chars at different times. */
@@ -924,27 +923,27 @@ static int edit(lino_t *l, const char *prompt)
         default:
             if (edit_insert(l,c)) return -1;
             break;
-        case CTRL_U: /* Ctrl+u, delete the whole line. */
+        case CTRL_U: /* delete the whole line. */
             l->data[0] = '\0';
             l->dpos = l->dlen = 0;
             refresh_line(l);
             break;
-        case CTRL_K: /* Ctrl+k, delete from current to end of line. */
+        case CTRL_K: /* delete from current to end of line. */
             l->data[l->dpos] = '\0';
             l->dlen = l->dpos;
             refresh_line(l);
             break;
-        case CTRL_A: /* Ctrl+a, go to the start of the line */
+        case CTRL_A:
             edit_move_home(l);
             break;
-        case CTRL_E: /* ctrl+e, go to the end of the line */
+        case CTRL_E:
             edit_move_end(l);
             break;
-        case CTRL_L: /* ctrl+l, clear screen */
+        case CTRL_L:
             lino_clear_screen(l);
             refresh_line(l);
             break;
-        case CTRL_W: /* ctrl+w, delete previous word */
+        case CTRL_W:
             edit_delete_prev_word(l);
             break;
         }
