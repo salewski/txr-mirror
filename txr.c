@@ -580,7 +580,8 @@ int txr_main(int argc, char **argv)
         spec_file = arg;
         break;
       case 'e':
-        eval_intrinsic(lisp_parse(arg, std_error, colon_k, colon_k, colon_k),
+        eval_intrinsic(lisp_parse(arg, std_error, colon_k,
+                                  lit("cmdline-expr"), colon_k),
                        make_env(bindings, nil, nil));
         evaled = t;
         break;
@@ -594,7 +595,7 @@ int txr_main(int argc, char **argv)
                                                 pprinl,
                                                 tprint));
           pf(eval_intrinsic(lisp_parse(arg, std_error, colon_k,
-                                       colon_k, colon_k),
+                                       lit("cmdline-expr"), colon_k),
                             make_env(bindings, nil, nil)), std_output);
           evaled = t;
         }
