@@ -33265,6 +33265,16 @@ is given an argument which is equal or lower. For instance
 .code -C 103
 selects the behaviors described below for version 105, but not those for 102.
 
+.IP 114
+\*(TX until version 114 reported parse errors in this format:
+
+.cblk
+  ./txr: (file.txr:123): syntax error
+.cble
+
+The new format omits the program name prefix and parentheses.
+
+
 .IP 113
 Version 113 is the last version in which the
 .codn stat ,

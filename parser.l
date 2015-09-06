@@ -108,8 +108,13 @@ void yyerrorf(scanner_t *scanner, val fmt, ...)
   if (opt_loglevel >= 1) {
     va_list vl;
     va_start (vl, fmt);
-    format(std_error, lit("~a: (~a:~a): "), prog_string,
-           parser->name, num(parser->lineno), nao);
+    if (opt_compat && opt_compat <= 114)
+      format(std_error, lit("~a: (~a:~a): "), prog_string,
+             parser->name, num(parser->lineno), nao);
+    else
+      format(std_error, lit("~a:~a: "),
+             parser->name, num(parser->lineno), nao);
+
     vformat(std_error, fmt, vl);
     put_char(chr('\n'), std_error);
     va_end (vl);
