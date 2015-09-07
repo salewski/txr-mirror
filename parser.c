@@ -583,7 +583,7 @@ val repl(val bindings, val in_stream, val out_stream)
           put_line(nil, nil);
         }
       } else {
-        format(out_stream, lit("caught exception: ~s ~s\n"),
+        format(out_stream, lit("** ~s exception, args: ~s\n"),
                exsym, exvals, nao);
       }
     }
