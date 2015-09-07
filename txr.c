@@ -397,6 +397,7 @@ int txr_main(int argc, char **argv)
   val arg_undo = nil, arg;
   val parse_stream = std_input;
   val txr_lisp_p = nil;
+  val enter_repl = nil;
   list_collect_decl(arg_list, arg_tail);
 
   setvbuf(stderr, 0, _IOLBF, 0);
@@ -630,8 +631,8 @@ int txr_main(int argc, char **argv)
           break;
         case 'i':
 #if HAVE_TERMIOS
-          repl(bindings, std_input, std_output);
-          return 0;
+          enter_repl = t;
+          break;
 #else
           format(std_error,
                  lit("~a: option ~a requires a platform with termios\n"),
@@ -699,6 +700,8 @@ int txr_main(int argc, char **argv)
       arg_list = arg_undo;
   } else {
     if (!arg) {
+      if (enter_repl)
+        goto repl;
       if (evaled)
         return EXIT_SUCCESS;
       hint();
@@ -742,5 +745,14 @@ int txr_main(int argc, char **argv)
     }
   }
 
-  return read_eval_stream(parse_stream, std_error, t) ? 0 : EXIT_FAILURE;
+  {
+    val result = read_eval_stream(parse_stream, std_error, t);
+
+    if (!enter_repl)
+      return result ? 0 : EXIT_FAILURE;
+
+repl:
+    repl(bindings, std_input, std_output);
+    return 0;
+  }
 }
