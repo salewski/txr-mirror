@@ -1981,8 +1981,6 @@ val search_regex(val haystack, val needle_regex, val start,
       cnum s = c_num(start);
       const wchar_t *h = c_str(haystack);
 
-      prot1(&haystack);
-
       for (i = c_num(length_str(haystack)) - 1; i >= s; i--) {
         cnum span = regex_run(needle_regex, h + i);
         if (span >= 0) {
@@ -1991,7 +1989,7 @@ val search_regex(val haystack, val needle_regex, val start,
         }
       }
 
-      rel1(&haystack);
+      gc_hint(haystack);
     } else {
       regex_machine_t regm;
       val i, pos = start, retval;

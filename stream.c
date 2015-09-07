@@ -2118,8 +2118,6 @@ static void vformat_str(val stream, val str, int width, enum align align,
   cnum i, w;
   wchar_t wc;
 
-  prot1(&str);
-
   vformat_align_pre(stream, align, slack);
 
   if (fitlen == INT_PTR_MAX) {
@@ -2134,7 +2132,7 @@ static void vformat_str(val stream, val str, int width, enum align align,
 
   vformat_align_post(stream, align, slack);
 
-  rel1(&str);
+  gc_hint(str);
 }
 
 val formatv(val stream_in, val fmtstr, struct args *al)
@@ -2148,8 +2146,6 @@ val formatv(val stream_in, val fmtstr, struct args *al)
   val name = lit("format");
 
   uw_simple_catch_begin;
-
-  prot1(&fmtstr);
 
   {
     const wchar_t *fmt = c_str(fmtstr);
@@ -2505,9 +2501,9 @@ val formatv(val stream_in, val fmtstr, struct args *al)
       set_indent_mode(stream, save_mode);
   }
 
-  rel1(&fmtstr);
-
   uw_catch_end;
+
+  gc_hint(fmtstr);
 
   return (stream_in) ? t : get_string_from_stream(stream);
 }
@@ -3122,8 +3118,6 @@ static val run(val command, val args)
   args = default_bool_arg(args);
   nargs = c_num(length(args)) + 1;
 
-  prot1(&args);
-
   wargv = coerce(const wchar_t **, chk_malloc((nargs + 2) * sizeof *wargv));
 
   for (i = 0, iter = cons(command, args); iter; i++, iter = cdr(iter))
@@ -3134,7 +3128,7 @@ static val run(val command, val args)
 
   free(strip_qual(wchar_t **, wargv));
 
-  rel1(&args);
+  gc_hint(args);
 
   return (status < 0) ? nil : num(status);
 }

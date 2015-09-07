@@ -3011,15 +3011,13 @@ val split_str(val str, val sep)
         if (*cstr) {
           list_collect_decl (out, iter);
 
-          prot1(&str);
-
           for (; *cstr; cstr++) {
             val piece = mkustring(one);
             init_str(piece, cstr);
             iter = list_collect(iter, piece);
           }
 
-          rel1(&str);
+          gc_hint(str);
 
           return out;
         } else {
@@ -3031,9 +3029,6 @@ val split_str(val str, val sep)
       const wchar_t *csep = c_str(sep);
 
       list_collect_decl (out, iter);
-
-      prot1(&str);
-      prot1(&sep);
 
       for (;;) {
         const wchar_t *psep = wcsstr(cstr, csep);
@@ -3049,8 +3044,8 @@ val split_str(val str, val sep)
         break;
       }
 
-      rel1(&sep);
-      rel1(&str);
+      gc_hint(sep);
+      gc_hint(str);
 
       return out;
     }
@@ -3062,9 +3057,6 @@ val split_str_set(val str, val set)
   const wchar_t *cstr = c_str(str);
   const wchar_t *cset = c_str(set);
   list_collect_decl (out, iter);
-
-  prot1(&str);
-  prot1(&set);
 
   for (;;) {
     size_t span = wcscspn(cstr, cset);
@@ -3079,8 +3071,8 @@ val split_str_set(val str, val set)
     break;
   }
 
-  rel1(&set);
-  rel1(&str);
+  gc_hint(set);
+  gc_hint(str);
 
   return out;
 }
@@ -3146,12 +3138,10 @@ val list_str(val str)
   const wchar_t *cstr = c_str(str);
   list_collect_decl (out, iter);
 
-  prot1(&str);
-
   while (*cstr)
     iter = list_collect(iter, chr(*cstr++));
 
-  rel1(&str);
+  gc_hint(str);
 
   return out;
 }
@@ -3283,12 +3273,12 @@ val int_str(val str, val base)
     return nil;
 
   if ((value == LONG_MAX || value == LONG_MIN) && errno == ERANGE) {
-    val bignum = (prot1(&str), make_bignum());
+    val bignum = make_bignum();
     unsigned char *ucs = utf8_dup_to_uc(wcs);
     mp_err err = mp_read_radix(mp(bignum), ucs, b);
 
     free(ucs); /* TODO: make wchar_t version of mp_read_radix. */
-    rel1(&str);
+    gc_hint(str);
 
     if (err != MP_OKAY)
       return nil;
