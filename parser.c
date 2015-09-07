@@ -550,7 +550,7 @@ val repl(val bindings, val in_stream, val out_stream)
       lino_hist_add(ls, line_u8);
 
       if (uw_exception_subtype_p(exsym, syntax_error_s)) {
-        /* suppress syntax error exceptions: uninformative in the repl */
+        put_line(lit("** syntax error"), out_stream);
       } else if (uw_exception_subtype_p(exsym, error_s)) {
         put_string(lit("** "), out_stream);
         obj_pprint(car(exvals), out_stream);
