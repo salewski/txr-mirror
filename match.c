@@ -4051,15 +4051,16 @@ val include(val specline)
   return v_load(&c);
 }
 
-int extract(val spec, val files, val predefined_bindings)
+val extract(val spec, val files, val predefined_bindings)
 {
-  cons_bind (bindings, success, match_files(mf_all(spec, files,
-                                                   predefined_bindings,
-                                                   t, nil)));
+  val result = match_files(mf_all(spec, files, predefined_bindings,
+                                  t, nil));
+  cons_bind (bindings, success, result);
 
   if (opt_print_bindings) {
     if (bindings) {
       bindings = nreverse(bindings);
+      rplaca(result, bindings);
       dump_bindings(bindings);
     }
 
@@ -4067,7 +4068,7 @@ int extract(val spec, val files, val predefined_bindings)
       put_line(lit("false"), std_output);
   }
 
-  return success ? 0 : EXIT_FAILURE;
+  return result;
 }
 
 static void syms_init(void)

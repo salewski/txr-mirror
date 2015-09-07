@@ -740,8 +740,15 @@ int txr_main(int argc, char **argv)
     reg_var(intern(lit("self-path"), user_package), spec_file_str);
 
     {
-      int retval = extract(spec, arg_list, bindings);
-      return parser.errors ? EXIT_FAILURE : retval;
+      val result = extract(spec, arg_list, bindings);
+      cons_bind (new_bindings, success, result);
+
+      if (enter_repl) {
+        bindings = new_bindings;
+        goto repl;
+      }
+
+      return (parser.errors || !success) ? EXIT_FAILURE : 0;
     }
   }
 
