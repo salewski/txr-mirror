@@ -566,8 +566,9 @@ val repl(val bindings, val in_stream, val out_stream)
     }
 
     uw_catch (exsym, exvals) {
-      reg_varl(var_sym, nil);
-      sethash(result_hash, var_counter, nil);
+      val exinfo = cons(exsym, exvals);
+      reg_varl(var_sym, exinfo);
+      sethash(result_hash, var_counter, exinfo);
       lino_hist_add(ls, line_u8);
 
       if (uw_exception_subtype_p(exsym, syntax_error_s)) {
