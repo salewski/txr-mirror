@@ -1576,17 +1576,18 @@ static val txeval_allow_ub(val spec, val form, val bindings)
   return do_txeval(spec, form, bindings, t);
 }
 
-enum fpip_close { fpip_fclose, fpip_pclose, fpip_closedir };
+enum fpip_close { fpip_fclose, fpip_pclose, fpip_closedir, fpip_close_stream };
 
 typedef struct fpip {
   FILE *f;
   DIR *d;
+  val s;
   enum fpip_close close;
 } fpip_t;
 
 static fpip_t complex_open(val name, val output, val append)
 {
-  fpip_t ret = { 0, 0 };
+  fpip_t ret = { 0, 0, nil, 0 };
   const wchar_t *namestr = c_str(name);
   cnum len = c_num(length_str(name));
 
@@ -1594,8 +1595,8 @@ static fpip_t complex_open(val name, val output, val append)
     return ret;
 
   if (!wcscmp(namestr, L"-")) {
-    ret.close = fpip_fclose;
-    ret.f = output ? stdout : stdin;
+    ret.close = fpip_close_stream;
+    ret.s = output ? std_output : std_input;
   } else if (namestr[0] == '!') {
     ret.close = fpip_pclose;
     ret.f = w_popen(namestr+1, output ? L"w" : L"r");
@@ -1617,7 +1618,7 @@ static fpip_t complex_open(val name, val output, val append)
 
 static int complex_open_failed(fpip_t fp)
 {
-  return fp.f == 0 && fp.d == 0;
+  return fp.f == 0 && fp.d == 0 && fp.s == nil;
 }
 
 static val complex_snarf(fpip_t fp, val name)
@@ -1629,6 +1630,8 @@ static val complex_snarf(fpip_t fp, val name)
     return lazy_stream_cons(make_pipe_stream(fp.f, name));
   case fpip_closedir:
     return lazy_stream_cons(make_dir_stream(fp.d));
+  case fpip_close_stream:
+    return lazy_stream_cons(fp.s);
   }
 
   internal_error("bad input source type");
@@ -1643,9 +1646,11 @@ static val complex_stream(fpip_t fp, val name)
     return make_pipe_stream(fp.f, name);
   case fpip_closedir:
     uw_throwf(query_error_s, lit("cannot output to directory: ~a"), name, nao);
+  case fpip_close_stream:
+    return fp.s;
   }
 
-  internal_error("bad input source type");
+  internal_error("bad output destination type");
 }
 
 static val robust_length(val obj)
