@@ -31319,6 +31319,11 @@ If the
 argument is omitted, it defaults to the same value as
 .codn sig-term .
 
+The return value is
+.code t
+if the function succeeds, otherwise
+.codn nil .
+
 .SS* Unix Processes
 
 .coNP Functions @ fork and @ wait
@@ -33290,7 +33295,12 @@ selects the behaviors described below for version 105, but not those for 102.
 .cble
 
 The new format omits the program name prefix and parentheses.
-
+Also, the
+.code kill
+function returned an integer, obtained from the return
+value of the underlying C function, rather than converting
+that value to a boolean. The old behavior was not documented,
+and 114 compatibility restores it.
 
 .IP 113
 Version 113 is the last version in which the

@@ -42,6 +42,7 @@
 #include "signal.h"
 #include "unwind.h"
 #include "eval.h"
+#include "txr.h"
 
 #define MAX_SIG 32
 
@@ -113,7 +114,10 @@ static void sig_handler(int sig)
 static val kill_wrap(val pid, val sig)
 {
   cnum p = c_num(pid), s = c_num(default_arg(sig, num_fast(SIGTERM)));
-  return num(kill(p, s));
+  int res = kill(p, s);
+  if (opt_compat && opt_compat <= 114)
+    return num(res);
+  return tnil(res == 0);
 }
 
 static val raise_wrap(val sig)
