@@ -4330,7 +4330,7 @@ val interp_fun_p(val obj)
 static noreturn void callerror(val fun, val msg)
 {
   uses_or2;
-  prinl(last_form_evaled, nil);
+
   if (functionp(fun))
     fun = format(nil, lit("~s"), or2(func_get_name(fun, nil), fun), nao);
   else
