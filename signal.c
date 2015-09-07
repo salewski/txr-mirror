@@ -75,7 +75,8 @@ static void sig_handler(int sig)
   int gc = 0;
   int as = 0;
   int exc = is_cpu_exception(sig);
-  int in_interrupt = interrupt_count++ > 0;
+  int ic = interrupt_count++;
+  int in_interrupt = ic > 0;
 
   if (exc) {
     gc = gc_state(0);
@@ -87,10 +88,15 @@ static void sig_handler(int sig)
 
   if (lambda) {
     if (!in_interrupt && async_sig_enabled) {
+      uw_simple_catch_begin;
       async_sig_enabled = 0;
       if (funcall2(lambda, num_fast(sig), t))
         sig_deferred |= (1UL << sig);
+      uw_unwind {
+        interrupt_count = ic;
+      }
       async_sig_enabled = 1;
+      uw_catch_end;
     } else {
       sig_deferred |= (1UL << sig);
     }
@@ -101,7 +107,7 @@ static void sig_handler(int sig)
     gc_state(gc);
   }
 
-  interrupt_count--;
+  interrupt_count = ic;
 }
 
 static val kill_wrap(val pid, val sig)
