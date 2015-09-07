@@ -116,6 +116,12 @@ static val kill_wrap(val pid, val sig)
   return num(kill(p, s));
 }
 
+static val raise_wrap(val sig)
+{
+  int res = raise(c_num(sig));
+  return tnil(res == 0);
+}
+
 void sig_init(void)
 {
   int i;
@@ -188,6 +194,7 @@ void sig_init(void)
   reg_fun(intern(lit("get-sig-handler"), user_package), func_n1(get_sig_handler));
   reg_fun(intern(lit("sig-check"), user_package), func_n0(sig_check));
   reg_fun(intern(lit("kill"), user_package), func_n2o(kill_wrap, 1));
+  reg_fun(intern(lit("raise"), user_package), func_n1(raise_wrap));
 
   sig_reload_cache();
 }

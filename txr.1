@@ -31285,6 +31285,23 @@ function may be inserted into CPU-intensive code that
 has no opportunity to be interrupted by signals, because it doesn't invoke any
 I/O functions.
 
+.coNP Function @ raise
+.synb
+.mets (raise << signal )
+.syne
+.desc
+The
+.code raise
+function sends
+.meta signal
+to the process.
+It is a wrapper for the C function of the same name.
+
+The return value is
+.code t
+if the function succeeds, otherwise
+.codn nil .
+
 .coNP Function @ kill
 .synb
 .mets (kill < process-id <> [ signal ])
