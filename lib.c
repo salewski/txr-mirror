@@ -1926,6 +1926,14 @@ wchar_t *chk_strdup(const wchar_t *str)
   return copy;
 }
 
+char *chk_strdup_utf8(const char *str)
+{
+  size_t nchar = strlen(str) + 1;
+  char *copy = coerce(char *, chk_malloc(nchar));
+  assert (!async_sig_enabled);
+  memcpy(copy, str, nchar);
+  return copy;
+}
 
 val cons(val car, val cdr)
 {

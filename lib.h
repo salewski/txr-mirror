@@ -531,6 +531,7 @@ mem_t *chk_realloc(mem_t *, size_t size);
 mem_t *chk_grow_vec(mem_t *old, size_t oldelems, size_t newelems,
                     size_t elsize);
 wchar_t *chk_strdup(const wchar_t *str);
+char *chk_strdup_utf8(const char *str);
 val cons(val car, val cdr);
 val make_lazy_cons(val func);
 val make_half_lazy_cons(val func, val car);

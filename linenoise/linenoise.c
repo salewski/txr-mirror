@@ -182,6 +182,7 @@ enum key_action {
 typedef unsigned char mem_t;
 mem_t *chk_malloc(size_t n);
 mem_t *chk_realloc(mem_t *old, size_t size);
+char *chk_strdup_utf8(const char *str);
 
 static lino_t lino_list = { &lino_list, &lino_list };
 static int atexit_registered = 0; /* Register atexit just 1 time. */
@@ -702,7 +703,7 @@ static void edit_history_next(lino_t *l, int dir) {
         /* Update the current history entry before to
          * overwrite it with the next one. */
         free(l->history[l->history_len - 1 - l->history_index]);
-        l->history[l->history_len - 1 - l->history_index] = strdup(l->data);
+        l->history[l->history_len - 1 - l->history_index] = chk_strdup_utf8(l->data);
         /* Show the new entry */
         l->history_index += (dir == LINENOISE_HISTORY_PREV) ? 1 : -1;
         if (l->history_index < 0) {
@@ -1019,7 +1020,7 @@ char *linenoise(lino_t *ls, const char *prompt)
 
         if (count && ls->data[count-1] == '\n')
             ls->data[count-1] = '\0';
-        return strdup(ls->data);
+        return chk_strdup_utf8(ls->data);
     } else {
         /* Interactive editing. */
         if (enable_raw_mode(ls) == -1)
@@ -1030,7 +1031,7 @@ char *linenoise(lino_t *ls, const char *prompt)
             printf("\n");
         if (count == -1)
             return 0;
-        return strdup(ls->data);
+        return chk_strdup_utf8(ls->data);
     }
 }
 
@@ -1132,7 +1133,7 @@ int lino_hist_add(lino_t *ls, const char *line) {
 
     /* Add an heap allocated copy of the line in the history.
      * If we reached the max length, remove the older line. */
-    linecopy = strdup(line);
+    linecopy = chk_strdup_utf8(line);
     if (!linecopy) return 0;
     if (ls->history_len == ls->history_max_len) {
         free(ls->history[0]);
