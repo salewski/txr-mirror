@@ -64,6 +64,11 @@ static int is_cpu_exception(int sig)
   }
 }
 
+static int sig_reload_cache(void)
+{
+  return sigprocmask(SIG_BLOCK, 0, &sig_blocked_cache);
+}
+
 static void sig_handler(int sig)
 {
   val lambda = sig_lambda[sig];
@@ -77,6 +82,8 @@ static void sig_handler(int sig)
     as = async_sig_enabled;
     async_sig_enabled = 1;
   }
+
+  sig_reload_cache();
 
   if (lambda) {
     if (!in_interrupt && async_sig_enabled) {
@@ -175,6 +182,8 @@ void sig_init(void)
   reg_fun(intern(lit("get-sig-handler"), user_package), func_n1(get_sig_handler));
   reg_fun(intern(lit("sig-check"), user_package), func_n0(sig_check));
   reg_fun(intern(lit("kill"), user_package), func_n2o(kill_wrap, 1));
+
+  sig_reload_cache();
 }
 
 #if HAVE_SIGALTSTACK
@@ -340,7 +349,7 @@ int sig_mask(int how, const sigset_t *set, sigset_t *oldset)
 
   if (memcmp(&sig_blocked_cache, pnew, sizeof *pnew) != 0) {
     sig_blocked_cache = *pnew;
-    return sig_mask(SIG_BLOCK, pnew, oldset);
+    return sigprocmask(SIG_SETMASK, &sig_blocked_cache, oldset);
   }
 
   if (oldset != 0)
