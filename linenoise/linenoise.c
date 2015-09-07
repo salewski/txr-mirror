@@ -183,7 +183,6 @@ typedef unsigned char mem_t;
 mem_t *chk_malloc(size_t n);
 mem_t *chk_realloc(mem_t *old, size_t size);
 
-static const char *unsupported_term[] = {"dumb","cons25","emacs",NULL};
 static lino_t lino_list = { &lino_list, &lino_list };
 static int atexit_registered = 0; /* Register atexit just 1 time. */
 
@@ -211,18 +210,6 @@ FILE *lndebug_fp = NULL;
 /* Set if to use or not the multi line mode. */
 void lino_set_multiline(lino_t *ls, int ml) {
     ls->mlmode = ml;
-}
-
-/* Return true if the terminal name is in the list of terminals we know are
- * not able to understand basic escape sequences. */
-static int is_unsupported_term(void) {
-    char *term = getenv("TERM");
-    int j;
-
-    if (term == NULL) return 0;
-    for (j = 0; unsupported_term[j]; j++)
-        if (!strcasecmp(term,unsupported_term[j])) return 1;
-    return 0;
 }
 
 static void atexit_handler(void);
@@ -1003,33 +990,48 @@ void lino_print_keycodes(lino_t *l) {
     disable_raw_mode(l);
 }
 
-/* This function calls the line editing function edit() using
- * the object's file descriptor set in raw mode. */
-static int go_raw(lino_t *ls, const char *prompt)
+/* The main function of the linenoise library
+ * handles a non-TTY input file descriptor by opening
+ * a standard I/O stream on it and reading lines
+ * without any prompting. TTY input is handled using
+ * the edit function.  */
+char *linenoise(lino_t *ls, const char *prompt)
 {
     int count;
 
-    if (!isatty(STDIN_FILENO)) {
-        char buf[LINENOISE_MAX_LINE];
+    if (!isatty(ls->ifd)) {
+        FILE *fi = fdopen(ls->ifd, "r");
+
+        if (!fi) {
+            ls->error = lino_error;
+            return 0;
+        }
+
         /* Not a tty: read from file / pipe. */
-        if (fgets(buf, sizeof buf, stdin) == NULL) {
-            ls->error = (ferror(stdin) ? lino_ioerr : lino_eof);
-            return -1;
+        if (fgets(ls->data, sizeof ls->data, fi) == NULL) {
+            ls->error = (ferror(fi) ? lino_ioerr : lino_eof);
+            fclose(fi);
+            return 0;
         }
-        count = strlen(buf);
-        if (count && buf[count-1] == '\n') {
-            count--;
-            buf[count] = '\0';
-        }
+
+        fclose(fi);
+        count = strlen(ls->data);
+
+        if (count && ls->data[count-1] == '\n')
+            ls->data[count-1] = '\0';
+        return strdup(ls->data);
     } else {
         /* Interactive editing. */
-        if (enable_raw_mode(ls) == -1) return -1;
+        if (enable_raw_mode(ls) == -1)
+            return 0;
         count = edit(ls, prompt);
         disable_raw_mode(ls);
         if (count != -1 || ls->error == lino_eof)
             printf("\n");
+        if (count == -1)
+            return 0;
+        return strdup(ls->data);
     }
-    return count;
 }
 
 lino_t *lino_make(int ifd, int ofd)
@@ -1066,33 +1068,6 @@ void lino_free(lino_t *ls)
     ls->next = ls->prev = 0;
     lino_cleanup(ls);
     free(ls);
-}
-
-
-/* The high level function that is the main API of the linenoise library.
- * This function checks if the terminal has basic capabilities, just checking
- * for a blacklist of stupid terminals, and later either calls the line
- * editing function or uses dummy fgets() so that you will be able to type
- * something even in the most desperate of the conditions. */
-char *linenoise(lino_t *ls, const char *prompt) {
-    if (is_unsupported_term()) {
-        size_t len;
-        char buf[LINENOISE_MAX_LINE];
-
-        printf("%s",prompt);
-        fflush(stdout);
-        if (fgets(buf,LINENOISE_MAX_LINE,stdin) == NULL) return NULL;
-        len = strlen(buf);
-        while(len && (buf[len-1] == '\n' || buf[len-1] == '\r')) {
-            len--;
-            buf[len] = '\0';
-        }
-        return strdup(buf);
-    } else {
-        int count = go_raw(ls, prompt);
-        if (count == -1) return NULL;
-        return strdup(ls->data);
-    }
 }
 
 lino_error_t lino_get_error(lino_t *l)
