@@ -971,13 +971,13 @@ void lino_print_keycodes(lino_t *l) {
 
     printf("Linenoise key codes debugging mode.\n"
             "Press keys to see scan codes. Type 'quit' at any time to exit.\n");
-    if (enable_raw_mode(STDIN_FILENO) == -1) return;
+    if (enable_raw_mode(l) == -1) return;
     memset(quit,' ',4);
     while(1) {
         char c;
         int nread;
 
-        nread = read(STDIN_FILENO,&c,1);
+        nread = read(l->ifd,&c,1);
         if (nread <= 0) continue;
         memmove(quit,quit+1,sizeof(quit)-1); /* shift string to left. */
         quit[sizeof(quit)-1] = c; /* Insert current char on the right. */
