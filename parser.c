@@ -120,6 +120,16 @@ void parser_cleanup(parser_t *p)
 {
   if (p->scanner != 0)
     yylex_destroy(p->scanner);
+  p->scanner = 0;
+}
+
+void parser_reset(parser_t *p)
+{
+  yyscan_t yyscan;
+  parser_cleanup(p);
+  yylex_init(&yyscan);
+  p->scanner = convert(scanner_t *, yyscan);
+  yyset_extra(p, p->scanner);
 }
 
 val parser(val stream, val lineno)
@@ -279,6 +289,9 @@ val lisp_parse(val source_in, val error_stream, val error_return_val,
   val parser = ensure_parser(input_stream);
   val saved_dyn = dyn_env;
   parser_t *pi = get_parser_impl(parser);
+  volatile val parsed = nil;
+
+  uw_simple_catch_begin;
 
   dyn_env = make_env(nil, nil, dyn_env);
 
@@ -295,9 +308,17 @@ val lisp_parse(val source_in, val error_stream, val error_return_val,
     int gc = gc_state(0);
     parse(pi, if3(std_error != std_null, name, lit("")), prime_lisp);
     gc_state(gc);
+    parsed = t;
   }
 
-  dyn_env = saved_dyn;
+  uw_unwind {
+    dyn_env = saved_dyn;
+    if (!parsed) {
+      parser_reset(pi);
+    }
+  }
+
+  uw_catch_end;
 
   if (pi->errors || pi->syntax_tree == nao) {
     if (missingp(error_return_val))
