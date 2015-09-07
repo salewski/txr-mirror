@@ -955,6 +955,7 @@ static val do_eval(val form, val env, val ctx_form,
   debug_enter;
 
   debug_check(consp(form) ? form : ctx_form, env, nil, nil, nil, nil);
+  sig_check_fast();
 
   if (nilp(form)) {
     debug_return (nil);

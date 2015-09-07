@@ -70,6 +70,14 @@ extern int debug_depth;
       sig_check();                              \
   } while(0)
 
+val sig_check(void);
+
+INLINE val sig_check_fast(void)
+{
+  extern volatile unsigned long sig_deferred;
+  return if2(sig_deferred, sig_check());
+}
+
 typedef struct {
   jmp_buf jb;
   sig_atomic_t se;
@@ -112,6 +120,8 @@ extern volatile sig_atomic_t async_sig_enabled;
 #define sig_restore_enable } while (0)
 #define sig_restore_disable } while (0)
 
+#define sig_check_fast() ((void) 0)
+
 typedef struct {
   jmp_buf jb;
   val de;
@@ -146,7 +156,6 @@ extern val dyn_env; /* eval.c */
 void sig_init(void);
 val set_sig_handler(val signo, val lambda);
 val get_sig_handler(val signo);
-val sig_check(void);
 #if HAVE_POSIX_SIGS
 int sig_mask(int how, const sigset_t *set, sigset_t *oldset);
 #endif

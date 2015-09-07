@@ -473,6 +473,11 @@ static void provide_completions(const char *data,
   }
 }
 
+static val repl_intr(val signo, val async_p)
+{
+  uw_throw(error_s, lit("intr"));
+}
+
 val repl(val bindings, val in_stream, val out_stream)
 {
   val ifd = stream_get_prop(in_stream, fd_k);
@@ -489,6 +494,7 @@ val repl(val bindings, val in_stream, val out_stream)
   val result_hash = make_hash(nil, nil, nil);
   val done = nil;
   val counter = one;
+  val old_sig_handler = set_sig_handler(num(SIGINT), func_n2(repl_intr));
 
   reg_varl(result_hash_sym, result_hash);
 
@@ -570,6 +576,7 @@ val repl(val bindings, val in_stream, val out_stream)
     gc_hint(prompt);
   }
 
+  set_sig_handler(num(SIGINT), old_sig_handler);
   free(prompt_u8);
   free(line_u8);
   lino_free(ls);
