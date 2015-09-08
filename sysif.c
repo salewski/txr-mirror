@@ -671,7 +671,7 @@ static val pipe_wrap(void)
 
 #endif
 
-static val getenv_wrap(val name)
+val getenv_wrap(val name)
 {
   char *nameu8 = utf8_dup_to(c_str(name));
   char *lookup = getenv(nameu8);

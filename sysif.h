@@ -32,4 +32,5 @@ extern val dev_s, ino_s, mode_s, nlink_s, uid_s;
 extern val gid_s, rdev_s, size_s, blksize_s, blocks_s;
 extern val atime_s, mtime_s, ctime_s;
 
+val getenv_wrap(val name);
 void sysif_init(void);

@@ -48,6 +48,7 @@
 #include "eval.h"
 #include "stream.h"
 #include "y.tab.h"
+#include "sysif.h"
 #include "parser.h"
 #if HAVE_TERMIOS
 #include "linenoise/linenoise.h"
@@ -515,11 +516,17 @@ val repl(val bindings, val in_stream, val out_stream)
   val result_hash = make_hash(nil, nil, nil);
   val done = nil;
   val counter = one;
+  val home = getenv_wrap(lit("HOME"));
+  val histfile = if2(home, format(nil, lit("~a/.txr_history"), home, nao));
+  char *histfile_u8 = utf8_dup_to(c_str(histfile));
   val old_sig_handler = set_sig_handler(num(SIGINT), func_n2(repl_intr));
 
   reg_varl(result_hash_sym, result_hash);
 
   lino_set_completion_cb(ls, provide_completions, 0);
+
+  if (histfile)
+    lino_hist_load(ls, histfile_u8);
 
   while (!done) {
     val prompt = format(nil, lit("~a> "), counter, nao);
@@ -597,9 +604,16 @@ val repl(val bindings, val in_stream, val out_stream)
   }
 
   set_sig_handler(num(SIGINT), old_sig_handler);
+
+
+  if (histfile)
+    lino_hist_save(ls, histfile_u8);
+
+  free(histfile_u8);
   free(prompt_u8);
   free(line_u8);
   lino_free(ls);
+  gc_hint(histfile);
   return nil;
 }
 
