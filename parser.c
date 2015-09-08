@@ -574,16 +574,14 @@ val repl(val bindings, val in_stream, val out_stream)
       if (uw_exception_subtype_p(exsym, syntax_error_s)) {
         put_line(lit("** syntax error"), out_stream);
       } else if (uw_exception_subtype_p(exsym, error_s)) {
-        put_string(lit("** "), out_stream);
-        obj_pprint(car(exvals), out_stream);
-        if (cdr(exvals)) {
-          put_string(lit(" "), out_stream);
-          pprinl(cdr(exvals), out_stream);
-        } else {
-          put_line(nil, nil);
-        }
+        if (cdr(exvals))
+          format(out_stream, lit("** ~!~a ~!~s\n"),
+                 car(exvals), cdr(exvals), nao);
+        else
+          format(out_stream, lit("** ~!~a\n"), car(exvals), nao);
+
       } else {
-        format(out_stream, lit("** ~s exception, args: ~s\n"),
+        format(out_stream, lit("** ~!~s exception, args: ~!~s\n"),
                exsym, exvals, nao);
       }
     }
