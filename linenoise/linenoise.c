@@ -93,25 +93,11 @@ struct lino_state {
     lino_error_t error; /* Most recent error. */
 };
 
+#define CTL(LETTER) ((LETTER) - '@')
+
 enum key_action {
-    CTRL_A = 1,
-    CTRL_B = 2,
-    CTRL_C = 3,
-    CTRL_D = 4,
-    CTRL_E = 5,
-    CTRL_F = 6,
-    CTRL_H = 8,
     TAB = 9,
-    CTRL_K = 11,
-    CTRL_L = 12,
     ENTER = 13,
-    CTRL_N = 14,
-    CTRL_P = 16,
-    CTRL_T = 20,
-    CTRL_U = 21,
-    CTRL_V = 22,
-    CTRL_W = 23,
-    CTRL_Z = 26,
     ESC = 27,
     BACKSPACE =  127
 };
@@ -783,14 +769,14 @@ static int edit(lino_t *l, const char *prompt)
             }
             if (l->mlmode) edit_move_end(l);
             return (int)l->len;
-        case CTRL_C:
+        case CTL('C'):
             l->error = lino_intr;
             return -1;
         case BACKSPACE:   /* backspace */
-        case CTRL_H:
+        case CTL('H'):
             edit_backspace(l);
             break;
-        case CTRL_D:     /* remove char at right of cursor, or if the
+        case CTL('D'):   /* remove char at right of cursor, or if the
                             line is empty, act as end-of-file. */
             if (l->len > 0) {
                 edit_delete(l);
@@ -804,7 +790,7 @@ static int edit(lino_t *l, const char *prompt)
                 return -1;
             }
             break;
-        case CTRL_T:    /* swaps current character with previous. */
+        case CTL('T'):   /* swaps current character with previous. */
             if (l->dpos > 0 && l->dpos < l->dlen) {
                 int aux = l->data[l->dpos - 1];
                 l->data[l->dpos-1] = l->data[l->dpos];
@@ -813,16 +799,16 @@ static int edit(lino_t *l, const char *prompt)
                 refresh_line(l);
             }
             break;
-        case CTRL_B:
+        case CTL('B'):
             edit_move_left(l);
             break;
-        case CTRL_F:
+        case CTL('F'):
             edit_move_right(l);
             break;
-        case CTRL_P:
+        case CTL('P'):
             edit_history_next(l, LINENOISE_HISTORY_PREV);
             break;
-        case CTRL_N:
+        case CTL('N'):
             edit_history_next(l, LINENOISE_HISTORY_NEXT);
             break;
         case ESC:
@@ -886,31 +872,31 @@ static int edit(lino_t *l, const char *prompt)
                 return -1;
             }
             break;
-        case CTRL_U:
+        case CTL('U'):
             edit_delete_prev_all(l);
             break;
-        case CTRL_V: /* insert next char verbatim */
+        case CTL('V'): /* insert next char verbatim */
             verbatim = 1;
             break;
-        case CTRL_K: /* delete from current to end of line. */
+        case CTL('K'): /* delete from current to end of line. */
             l->data[l->dpos] = '\0';
             l->dlen = l->dpos;
             refresh_line(l);
             break;
-        case CTRL_A:
+        case CTL('A'):
             edit_move_home(l);
             break;
-        case CTRL_E:
+        case CTL('E'):
             edit_move_end(l);
             break;
-        case CTRL_L:
+        case CTL('L'):
             lino_clear_screen(l);
             refresh_line(l);
             break;
-        case CTRL_W:
+        case CTL('W'):
             edit_delete_prev_word(l);
             break;
-        case CTRL_Z:
+        case CTL('Z'):
             disable_raw_mode(l);
             raise(SIGTSTP);
             enable_raw_mode(l);
