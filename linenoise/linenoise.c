@@ -56,8 +56,8 @@
 #include "linenoise.h"
 
 #define LINENOISE_DEFAULT_HISTORY_MAX_LEN 100
-#define LINENOISE_MAX_LINE 4096
-#define LINENOISE_MAX_DISP (LINENOISE_MAX_LINE * 2)
+#define LINENOISE_MAX_LINE 1024
+#define LINENOISE_MAX_DISP (LINENOISE_MAX_LINE * 8)
 
 /* The lino_state structure represents the state during line editing.
  * We pass this state to functions implementing specific editing
@@ -419,9 +419,15 @@ static void sync_data_to_buf(lino_t *l)
         if (*dptr)  {
             char ch = *dptr++;
 
-            if (ch < 32) {
+            if (ch == TAB) {
+                int pos = bptr - l->buf;
+                do {
+                    *bptr++ = ' ';
+                    pos++;
+                } while (pos % 8 != 0);
+            } else if (ch < ' ') {
                 *bptr++ = '^';
-                *bptr++ = 64 + ch;
+                *bptr++ = '@' + ch;
             } else if (ch == 127) {
                 *bptr++ = '^';
                 *bptr++ = '?';
