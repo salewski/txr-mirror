@@ -687,6 +687,15 @@ static void edit_backspace(lino_t *l) {
     }
 }
 
+/* Delete all characters to left of cursor. */
+static void edit_delete_prev_all(lino_t *l)
+{
+    memmove(l->data, l->data + l->dpos, l->dlen - l->dpos + 1);
+    l->dlen -= l->dpos;
+    l->dpos = 0;
+    refresh_line(l);
+}
+
 /* Delete the previosu word, maintaining the cursor at the start of the
  * current word. */
 static void edit_delete_prev_word(lino_t *l) {
@@ -877,10 +886,8 @@ static int edit(lino_t *l, const char *prompt)
                 return -1;
             }
             break;
-        case CTRL_U: /* delete the whole line. */
-            l->data[0] = '\0';
-            l->dpos = l->dlen = 0;
-            refresh_line(l);
+        case CTRL_U:
+            edit_delete_prev_all(l);
             break;
         case CTRL_V: /* insert next char verbatim */
             verbatim = 1;
