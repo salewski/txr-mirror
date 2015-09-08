@@ -952,8 +952,11 @@ val interp_fun(val env, val fun, struct args *args)
 
 val eval_intrinsic(val form, val env)
 {
-  form = expand(form, nil);
-  return eval(form, default_bool_arg(env), form);
+  val lfe_save = last_form_evaled;
+  val form_ex = (last_form_evaled = nil, expand(form, nil));
+  val ret = eval(form_ex, default_bool_arg(env), form);
+  last_form_evaled = lfe_save;
+  return ret;
 }
 
 static val do_eval(val form, val env, val ctx_form,
