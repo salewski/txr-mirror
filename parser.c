@@ -418,13 +418,16 @@ static void provide_completions(const char *data,
                                 void *ctx)
 {
   const char *gly = "!$%&*+-<=>?\\_~/";
-  const char *ptr = data + strlen(data) - 1;
+  const char *ptr = data[0] ? data + strlen(data) - 1 : 0;
   const char *sym = 0, *pkg = 0;
   const char *end;
   val keyword = nil;
   val package = nil;
 
   (void) ctx;
+
+  if (!ptr)
+    return;
 
   while ((isalnum(*ptr) || strchr(gly, *ptr)) && (sym = ptr) && ptr > data)
     ptr--;
