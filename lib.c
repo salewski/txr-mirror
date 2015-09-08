@@ -284,6 +284,7 @@ val car(val cons)
     if (cons->lc.func == nil) {
       return cons->lc.car;
     } else {
+      sig_check_fast();
       funcall1(cons->lc.func, cons);
       cons->lc.func = nil;
       return cons->lc.car;
@@ -314,6 +315,7 @@ val cdr(val cons)
     if (cons->lc.func == nil) {
       return cons->lc.cdr;
     } else {
+      sig_check_fast();
       funcall1(cons->lc.func, cons);
       cons->lc.func = nil;
       return cons->lc.cdr;
@@ -387,6 +389,7 @@ loc car_l(val cons)
     return mkloc(cons->c.car, cons);
   case LCONS:
     if (cons->lc.func) {
+      sig_check_fast();
       funcall1(cons->lc.func, cons);
       cons->lc.func = nil;
     }
@@ -403,6 +406,7 @@ loc cdr_l(val cons)
     return mkloc(cons->c.cdr, cons);
   case LCONS:
     if (cons->lc.func) {
+      sig_check_fast();
       funcall1(cons->lc.func, cons);
       cons->lc.func = nil;
     }
