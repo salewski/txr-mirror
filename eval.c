@@ -441,6 +441,13 @@ static val env_vbind_special(val env, val sym, val obj,
   }
 }
 
+static val abbrev_ctx(val ctx_form)
+{
+  if (car(ctx_form) == lambda_s)
+    return format(nil, lit(" for ~!~s"), ctx_form, nao);
+  return lit("");
+}
+
 static val bind_args(val env, val params, struct args *args, val ctx_form)
 {
   val new_env = make_env(nil, nil, env);
@@ -518,8 +525,8 @@ static val bind_args(val env, val params, struct args *args, val ctx_form)
       params = cdr(params);
     }
     if (!optargs)
-      eval_error(ctx_form, lit("~s: too few arguments for ~!~s\n"),
-                 car(ctx_form), ctx_form, nao);
+      eval_error(ctx_form, lit("~s: too few arguments~!~a"),
+                 car(ctx_form), abbrev_ctx(ctx_form), nao);
     while (consp(params)) {
       val param = car(params);
       if (param == colon_k)
@@ -552,8 +559,8 @@ static val bind_args(val env, val params, struct args *args, val ctx_form)
     eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
                car(ctx_form), params, nao);
   } else if (args_more(args, index)) {
-    eval_error(ctx_form, lit("~s: too many arguments for ~!~s"),
-               car(ctx_form), ctx_form, nao);
+    eval_error(ctx_form, lit("~s: too many arguments~!~a"),
+               car(ctx_form), abbrev_ctx(ctx_form), nao);
   }
 
 
