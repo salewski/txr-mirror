@@ -386,6 +386,7 @@ extern val keyword_package_s, system_package_s, user_package_s;
 extern val null_s, t, cons_s, str_s, chr_s, fixnum_sl;
 extern val sym_s, pkg_s, fun_s, vec_s;
 extern val stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s, cptr_s;
+extern val atom_s, integer_s, number_s, sequence_s, string_s;
 extern val env_s, bignum_s, float_s;
 extern val var_s, expr_s, regex_s, chset_s, set_s, cset_s, wild_s, oneplus_s;
 extern val nongreedy_s;
@@ -432,6 +433,8 @@ extern alloc_bytes_t gc_bytes;
 
 val identity(val obj);
 val typeof(val obj);
+val subtypep(val sub, val sup);
+val typep(val obj, val type);
 val throw_mismatch(val obj, type_t);
 INLINE val type_check(val obj, type_t typecode)
 {

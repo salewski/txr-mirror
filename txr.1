@@ -12968,6 +12968,106 @@ is a symbol which names a special operator, otherwise it returns
 .codn nil .
 
 .SS* Object Type And Equivalence
+
+In \*(TL, objects obey the following type hierarchy. In this type hierarchy,
+the internal nodes denote abstract types: no object is an instance of
+an abstract type:
+
+.cblk
+  t ----+--- <cobj types> ---+--- hash
+        |                    |
+        |                    +--- stream
+        |                    |
+        |                    +--- random-state
+        |                    |
+        |                    .
+        |                    +... <others>
+        |
+        +--- <structures>
+        |
+        +--- sequence ---+--- string ---+--- str
+        |                |              |
+        |                |              +--- lstr
+        |                |              |
+        |                |              +--- lit
+        |                |
+        |                +--- list ---+--- null
+        |                |            |
+        |                |            +--- cons
+        |                |            |
+        |                |            +--- lcons
+        |                |
+        |                +--- vec
+        |
+        +--- number ---+--- float
+        |              |
+        |              +--- integer ---+--- fixnum
+        |                              |
+        |                              +--- bignum
+        |
+        +--- sym
+        |
+        +--- env
+        |
+        +--- pkg
+        |
+        +--- fun
+.cble
+
+In addition to the above hierarchy, the following relationships also exist:
+
+.cblk
+  t ---+--- atom --- <any type other than cons> --- nil
+       |
+       +--- cons ---+--- lcons --- nil
+                    |
+                    +--- nil
+
+  sym --- null
+.cble
+
+That is to say, the types are exhaustively partitioned into atoms and conses;
+an object is either a
+.code cons
+or else it isn't, in which case it is the abstract
+type
+.codn atom .
+
+The
+.code cons
+type is odd in that it is both an abstract type,
+serving as a supertype for the type
+.code lcons
+and it is also a concrete type in that regular conses are of
+this type.
+
+The type
+.code nil
+is an abstract type which is empty. That is to say, no object is of
+type
+.codn nil .
+This type is considered the abstract subtype of every other type,
+including itself.
+
+The type
+.code nil
+is not to be confused with the type
+.code null
+which is the type of the
+.code nil
+symbol.
+
+Lastly, because the type of
+.code nil
+is the type
+.code null
+and
+.code nil
+is also a symbol, the
+.codn null
+type is a subtype of
+.codn sym .
+
 .coNP Function @ typeof
 .synb
 .mets (typeof << value )
@@ -13022,6 +13122,50 @@ A bignum integer: arbitrary precision integer that is heap-allocated.
 .PP
 
 There are additional kinds of objects, such as streams.
+
+.coNP Function @ subtypep
+.synb
+.mets (subtypep < left-type-symbol << right-type-symbol )
+.syne
+.desc
+The
+.code subtypep
+function tests whether
+.meta left-type-symbol
+and
+.meta right-type-symbol
+name a pair of types, such that the left type is a subtype of the right
+type.
+
+Each type is a subtype of itself. Most other type relationships can be inferred
+from the type hierarchy diagrams given in the introduction to this section.
+
+In addition, there are inheritance relationships among structures. If
+.meta left-type-symbol
+and
+.meta right-type-symbol
+both name structure types, then
+.code subtypep
+yields true if the types are the same struct type, or if the right
+type is a direct or indirect supertype of the left.
+
+.coNP Function @ typep
+.synb
+.mets (typep < object << type-symbol )
+.syne
+.desc
+The
+.code typep
+function tests whether the type of
+.meta object
+is a subtype of the type named by
+.meta type-symbol .
+
+The following equivalence holds:
+
+.cblk
+  (typep a b) --> (subtypep (typeof a) b)
+.cble
 
 .coNP Function @ identity
 .synb

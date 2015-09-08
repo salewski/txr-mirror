@@ -81,6 +81,7 @@ val system_package_s, keyword_package_s, user_package_s;
 
 val null_s, t, cons_s, str_s, chr_s, fixnum_s, sym_s, pkg_s, fun_s, vec_s;
 val lit_s, stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s, cptr_s;
+val atom_s, integer_s, number_s, sequence_s, string_s;
 val env_s, bignum_s, float_s;
 val var_s, expr_s, regex_s, chset_s, set_s, cset_s, wild_s, oneplus_s;
 val nongreedy_s;
@@ -193,6 +194,53 @@ val typeof(val obj)
   default:
     internal_error("invalid type tag");
   }
+}
+
+val subtypep(val sub, val sup)
+{
+  if (sub == nil || sup == t) {
+    return t;
+  } else if (sub == sup) {
+    return t;
+  } else if (sup == atom_s) {
+    return tnil(sub != cons_s && sub != lcons_s);
+  } else if (sup == integer_s) {
+    return tnil(sub == fixnum_s || sub == bignum_s);
+  } else if (sup == number_s) {
+    return tnil(sub == fixnum_s || sub == bignum_s ||
+                sub == integer_s || sub == float_s);
+  } else if (sup == cons_s) {
+    return tnil(sub == lcons_s);
+  } else if (sup == sym_s) {
+    return tnil(sub == null_s);
+  } else if (sup == list_s) {
+    return tnil(sub == null_s || sub == cons_s || sub == lcons_s);
+  } else if (sup == sequence_s) {
+    return tnil(sub == str_s || sub == lit_s || sub == lstr_s ||
+                sub == vec_s || sub == null_s || sub == cons_s ||
+                sub == list_s);
+  } else if (sup == string_s) {
+    return tnil(sub == str_s || sub == lit_s || sub == lstr_s);
+  } else {
+    val sub_struct = find_struct_type(sub);
+    val sup_struct = find_struct_type(sup);
+
+    if (sub_struct && sup_struct) {
+      do {
+        sub_struct = super(sub_struct);
+        if (sub_struct == sup_struct)
+          return t;
+      } while (sub_struct);
+      return nil;
+    }
+
+    return eq(sub, sup);
+  }
+}
+
+val typep(val obj, val type)
+{
+  return subtypep(typeof(obj), type);
 }
 
 val throw_mismatch(val obj, type_t t)
@@ -7035,6 +7083,11 @@ static void obj_init(void)
   lstr_s = intern(lit("lstr"), user_package);
   cobj_s = intern(lit("cobj"), user_package);
   cptr_s = intern(lit("cptr"), user_package);
+  atom_s = intern(lit("atom"), user_package);
+  integer_s = intern(lit("integer"), user_package);
+  number_s = intern(lit("number"), user_package);
+  sequence_s = intern(lit("sequence"), user_package);
+  string_s = intern(lit("string"), user_package);
   env_s = intern(lit("env"), user_package);
   bignum_s = intern(lit("bignum"), user_package);
   float_s = intern(lit("float"), user_package);
