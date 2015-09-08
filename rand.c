@@ -44,6 +44,7 @@
 #include "signal.h"
 #include "unwind.h"
 #include "arith.h"
+#include "txr.h"
 #include "rand.h"
 #include "eval.h"
 
@@ -62,7 +63,7 @@ struct rand_state {
   unsigned cur;
 };
 
-val random_state_s;
+val random_state_s, random_state_var_s;
 
 static struct cobj_ops random_state_ops = cobj_ops_init(eq,
                                                         cobj_print_op,
@@ -261,8 +262,18 @@ val rnd(val modulus, val state)
   return random(state, modulus);
 }
 
+void rand_compat_fixup(int compat_ver)
+{
+  if (compat_ver <= 114) {
+    loc l = lookup_var_l(nil, random_state_var_s);
+    random_state_s = random_state_var_s;
+    set(l, make_random_state(num_fast(42)));
+  }
+}
+
 void rand_init(void)
 {
-  random_state_s = intern(lit("*random-state*"), user_package);
-  reg_var(random_state_s, make_random_state(num_fast(42)));
+  random_state_var_s = intern(lit("*random-state*"), user_package);
+  random_state_s = intern(lit("random-state"), user_package);
+  reg_var(random_state_var_s, make_random_state(num_fast(42)));
 }

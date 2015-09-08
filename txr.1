@@ -33297,12 +33297,20 @@ selects the behaviors described below for version 105, but not those for 102.
 .cble
 
 The new format omits the program name prefix and parentheses.
+
 Also, the
 .code kill
 function returned an integer, obtained from the return
 value of the underlying C function, rather than converting
 that value to a boolean. The old behavior was not documented,
 and 114 compatibility restores it.
+
+Lastly, prior to 115, random state objects were of type
+.code *random-state*
+(the same symbol as the special variable name)
+rather than of type
+.codn random-state .
+This is a bug whose behavior is simulated by 114 compatibility.
 
 .IP 113
 Version 113 is the last version in which the

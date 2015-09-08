@@ -24,11 +24,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define random_state (deref(lookup_var_l(nil, random_state_s)))
-extern val random_state_s;
+#define random_state (deref(lookup_var_l(nil, random_state_var_s)))
+extern val random_state_s, random_state_var_s;
 val make_random_state(val seed);
 val random_state_p(val obj);
 val random_fixnum(val state);
 val random(val state, val modulus);
 val rnd(val modulus, val state);
+void rand_compat_fixup(int compat_ver);
 void rand_init(void);
