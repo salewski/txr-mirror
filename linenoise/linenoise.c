@@ -116,6 +116,7 @@ enum key_action {
     BACKSPACE =  127
 };
 
+#define SPACE "\t "
 
 typedef unsigned char mem_t;
 mem_t *chk_malloc(size_t n);
@@ -686,9 +687,9 @@ static void edit_delete_prev_word(lino_t *l) {
     size_t odpos = l->dpos;
     size_t diff;
 
-    while (l->dpos > 0 && l->data[l->dpos - 1] == ' ')
+    while (l->dpos > 0 && strchr(SPACE, l->data[l->dpos - 1]))
         l->dpos--;
-    while (l->dpos > 0 && l->data[l->dpos - 1] != ' ')
+    while (l->dpos > 0 && strchr(SPACE, l->data[l->dpos - 1]) == 0)
         l->dpos--;
     diff = odpos - l->dpos;
     memmove(l->data + l->dpos, l->data + odpos, l->dlen - odpos + 1);
