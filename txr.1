@@ -33016,7 +33016,7 @@ Parser error messages are directed to the
 .code *stderr*
 stream.
 
-.SS* Debugger
+.SH* DEBUGGER
 \*(TX has a simple, crude, built-in debugger. The debugger is invoked by adding
 the
 .code -d
@@ -33050,9 +33050,7 @@ nodes in the abstract syntax tree node of the
 .code next
 directive, whereas the surface syntax appears flat.
 
-.coNP Sample Session
-
-Here is an example of the debugger being applied to a web scraping program
+The following is an example of the debugger being applied to a web scraping program
 which connects to a US NAVY clock server to retrieve a dynamically-generated
 web page, from which the current time is extracted, in various time zones.
 The handling of the web request is done by the wget command; the
@@ -33261,7 +33259,9 @@ Then a continue command, which finishes the program, whose output appears:
   Mar-30 01:22:52 PM HAST
 .cble
 
-.SS* Compatibility
+.SH* COMPATIBILITY
+
+.SS* Overview
 
 New \*(TX versions are usually intended to be backward-compatible with prior
 releases in the sense that documented features will continue to work in
@@ -33270,6 +33270,8 @@ behaviors where old versions of \*(TX would have produced an error, such as a
 syntax error. Though, strictly speaking, this means that something is working
 differently in a new version, replacing an error situation with functionality
 is usually not considered a deviation from backward-compatibility.
+
+.coNP The @ -C compatibility option
 
 When a change is introduced which is not backward compatible, \*(TX's 
 .code -C
