@@ -116,6 +116,7 @@
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+#include <signal.h>
 #include "linenoise.h"
 
 #define LINENOISE_DEFAULT_HISTORY_MAX_LEN 100
@@ -174,6 +175,7 @@ enum key_action {
     CTRL_U = 21,
     CTRL_V = 22,
     CTRL_W = 23,
+    CTRL_Z = 26,
     ESC = 27,
     BACKSPACE =  127
 };
@@ -957,6 +959,12 @@ static int edit(lino_t *l, const char *prompt)
             break;
         case CTRL_W:
             edit_delete_prev_word(l);
+            break;
+        case CTRL_Z:
+            disable_raw_mode(l);
+            raise(SIGTSTP);
+            enable_raw_mode(l);
+            refresh_line(l);
             break;
         }
     }
