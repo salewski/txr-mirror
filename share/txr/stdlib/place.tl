@@ -594,10 +594,11 @@
 
 (defplace (slot struct sym) body
   (getter setter
-    (with-gensyms (struct-sym)
-      ^(rlet ((,struct-sym ,struct))
-         (macrolet ((,getter () ^(slot ,',struct-sym ,',sym))
-                    (,setter (val) ^(slotset ,',struct-sym ,',sym ,val)))
+    (with-gensyms (struct-sym slot-sym)
+      ^(rlet ((,struct-sym ,struct)
+              (,slot-sym ,sym))
+         (macrolet ((,getter () ^(slot ,',struct-sym ,',slot-sym))
+                    (,setter (val) ^(slotset ,',struct-sym ,',slot-sym ,val)))
            ,body))))
   (ssetter
     ^(macrolet ((,ssetter (val) ^(slotset ,',struct ,',sym ,val)))
