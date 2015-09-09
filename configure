@@ -2129,6 +2129,8 @@ done
 
 if [ -z "$have_alloca" ] ; then
   printf "no\n"
+  printf "TXR requires the alloca function.\n"
+  exit 1
 fi
 
 printf "Checking for termios ... "
@@ -2147,6 +2149,8 @@ if conftest ; then
   printf "yes\n"
   printf "#define HAVE_TERMIOS 1\n" >> $config_h
   have_termios=y
+else
+  printf "no\n"
 fi
 
 #
