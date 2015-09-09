@@ -169,7 +169,7 @@ static int enable_raw_mode(lino_t *ls) {
     raw.c_cc[VMIN] = 1; raw.c_cc[VTIME] = 0; /* 1 byte, no timer */
 
     /* put terminal in raw mode after flushing */
-    if (tcsetattr(ls->ifd,TCSAFLUSH,&raw) < 0) goto fatal;
+    if (tcsetattr(ls->ifd,TCSANOW,&raw) < 0) goto fatal;
     ls->rawmode = 1;
     return 0;
 
@@ -180,7 +180,7 @@ fatal:
 
 static void disable_raw_mode(lino_t *ls) {
     /* Don't even check the return value as it's too late. */
-    if (ls->rawmode && tcsetattr(ls->ifd,TCSAFLUSH,&ls->orig_termios) != -1)
+    if (ls->rawmode && tcsetattr(ls->ifd,TCSANOW,&ls->orig_termios) != -1)
         ls->rawmode = 0;
 }
 
