@@ -98,7 +98,6 @@ static int mutobj_idx;
 static val freshobj[FRESHOBJ_VEC_SIZE];
 static int freshobj_idx;
 int full_gc;
-static int mark_makefresh;
 #endif
 
 #if EXTRA_DEBUGGING
@@ -304,9 +303,7 @@ tail_call:
     abort();
 
 #if CONFIG_GEN_GC
-  if (mark_makefresh)
-    obj->t.gen = -1; /* Will be put into freshobj by sweep_one */
-  else if (obj->t.gen == -1)
+  if (obj->t.gen == -1)
     obj->t.gen = 0;  /* Will be promoted to generation 1 by sweep_one */
 #endif
 
@@ -622,10 +619,6 @@ static void prepare_finals(void)
   if (!final_list)
     return;
 
-#if CONFIG_GEN_GC
-  mark_makefresh = 1;
-#endif
-
   for (f = final_list; f; f = f->next)
     f->reachable = is_reachable(f->obj);
 
@@ -645,10 +638,6 @@ static void call_finals(void)
 
   final_list = 0;
   final_tail = &final_list;
-
-#if CONFIG_GEN_GC
-  mark_makefresh = 0;
-#endif
 
   for (f = old_list; f; f = next) {
     next = f->next;
