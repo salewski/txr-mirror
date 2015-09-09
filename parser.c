@@ -547,10 +547,17 @@ val repl(val bindings, val in_stream, val out_stream)
     prompt_u8 = 0;
 
     if (line_u8 == 0) {
-      if (lino_get_error(ls) == lino_eof)
+      switch (lino_get_error(ls)) {
+      case lino_intr:
+        put_line(lit("** intr"), out_stream);
+        continue;
+      case lino_eof:
         break;
-      put_line(lit("** intr"), out_stream);
-      continue;
+      default:
+        put_line(lit("** error reading interactive input"), out_stream);
+        break;
+      }
+      break;
     }
 
     if (strspn(line_u8, " \t") == strlen(line_u8))
