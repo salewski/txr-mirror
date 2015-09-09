@@ -157,8 +157,7 @@ static int enable_raw_mode(lino_t *ls) {
     /* input modes: no break, no CR to NL, no parity check, no strip char,
      * no start/stop output control. */
     raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
-    /* output modes - disable post processing */
-    raw.c_oflag &= ~(OPOST);
+    /* we don't change any output modes (c_oflag) */
     /* control modes - set 8 bit chars */
     raw.c_cflag |= (CS8);
     /* local modes - choing off, canonical off, no extended functions,
