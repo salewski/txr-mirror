@@ -7380,7 +7380,24 @@ finish:
     format(out, lit("#<package: ~s>"), obj->pk.name, nao);
     break;
   case FUN:
-    format(out, lit("#<function: type ~a>"), num(obj->f.functype), nao);
+    {
+      struct func *f = &obj->f;
+      if (f->functype == FINTERP) {
+        val fun = f->f.interp_fun;
+        format(out, lit("#<interpreted fun: ~s ~s>"),
+               car(fun), cadr(fun), nao);
+      } else {
+        format(out, lit("#<intrinsic fun: ~a param"),
+               num_fast(f->fixparam - f->optargs), nao);
+        if (f->optargs)
+          format(out, lit(" + ~a optional"),
+               num_fast(f->optargs), nao);
+        if (obj->f.variadic)
+          put_string(lit(" + variadic>"), out);
+        else
+          put_char(chr('>'), out);
+      }
+    }
     break;
   case VEC:
     {

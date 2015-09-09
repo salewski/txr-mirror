@@ -103,7 +103,7 @@
 (defvarl bz (new baz))
 
 (stest bz
-       "#S(baz array #(1 2 3) increment #<function: type 0>)")
+       "#S(baz array #(1 2 3) increment #<interpreted fun: lambda (self which delta)>)")
 
 (test bz.[array 2] 3)
 (test bz.(increment 0 42) 43)
