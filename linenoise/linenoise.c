@@ -974,8 +974,11 @@ char *linenoise(lino_t *ls, const char *prompt)
             return 0;
         count = edit(ls, prompt);
         disable_raw_mode(ls);
-        if (count != -1 || ls->error == lino_eof)
-            printf("\n");
+        if (count != -1 || ls->error == lino_eof) {
+            char nl = '\n';
+            if (write(ls->ofd, &nl, 1) < 0)
+                return 0;
+        }
         if (count == -1)
             return 0;
         return chk_strdup_utf8(ls->data);
