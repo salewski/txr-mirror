@@ -945,10 +945,13 @@ char *linenoise(lino_t *ls, const char *prompt)
     int count;
 
     if (!isatty(ls->ifd)) {
-        FILE *fi = fdopen(ls->ifd, "r");
+        int fd = dup(ls->ifd);
+        FILE *fi = (fd > 0) ? fdopen(fd, "r") : 0;
 
         if (!fi) {
             ls->error = lino_error;
+            if (fd > 0)
+                close(fd);
             return 0;
         }
 
