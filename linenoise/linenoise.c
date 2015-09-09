@@ -53,6 +53,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <signal.h>
+#include "config.h"
 #include "linenoise.h"
 
 #define LINENOISE_DEFAULT_HISTORY_MAX_LEN 100
@@ -211,10 +212,16 @@ static int get_cursor_position(int ifd, int ofd) {
 /* Try to get the number of columns in the current terminal, or assume 80
  * if it fails. */
 static int get_columns(int ifd, int ofd) {
+#if HAVE_WINSIZE
     struct winsize ws;
 
-    if (ioctl(1, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0) {
-        /* ioctl() failed. Try to query the terminal itself. */
+    if (ioctl(1, TIOCGWINSZ, &ws) == 0 && ws.ws_col != 0)
+        return ws.ws_col;
+#endif
+
+    {
+        /* ioctl() failed or we don't have struct winsize.
+           Try to query the terminal itself. */
         int start, cols;
 
         /* Get the initial position so we can restore it later. */
@@ -235,8 +242,6 @@ static int get_columns(int ifd, int ofd) {
             }
         }
         return cols;
-    } else {
-        return ws.ws_col;
     }
 
 failed:

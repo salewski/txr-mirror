@@ -124,6 +124,8 @@ have_git=
 have_pwuid=
 have_alloca=
 have_termios=
+have_winsize=
+termios_define=
 conf_dir=config
 config_h=$conf_dir/config.h
 config_make=$conf_dir/config.make
@@ -651,6 +653,7 @@ have_glob := $have_glob
 have_posix_sigs := $have_posix_sigs
 
 have_termios := $have_termios
+termios_define := $termios_define
 
 # do we compile in debug support?
 debug_support := $debug_support
@@ -2150,6 +2153,32 @@ if conftest ; then
   printf "#define HAVE_TERMIOS 1\n" >> $config_h
   have_termios=y
 else
+  printf "no\n"
+fi
+
+printf "Checking for struct winsize ... "
+
+for termios_define in NOTHING __EXTENSIONS__ ; do
+  cat > conftest.c <<!
+#define $termios_define
+#include <sys/ioctl.h>
+#include <termios.h>
+
+int main(int argc, char **argv)
+{
+  struct winsize ws;
+  return 0;
+}
+!
+  if conftest ; then
+    printf "yes\n"
+    printf "#define HAVE_WINSIZE 1\n" >> $config_h
+    have_winsize=y
+    break;
+  fi
+done
+
+if [ -z "$have_winsize" ] ; then
   printf "no\n"
 fi
 

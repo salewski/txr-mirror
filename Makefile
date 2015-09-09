@@ -233,6 +233,7 @@ dbg/txr-win.o: CFLAGS += -DPROG_NAME=\"$(PROG)-win-dbg\" \
 $(call EACH_CONF,txr.o txr-win.o): CFLAGS += -DEXE_SUFF=\"$(EXE)\"
 $(call EACH_CONF,txr.o txr-win.o): CFLAGS += -DTXR_VER=\"$(txr_ver)\"
 
+$(call EACH_CONF,linenoise/linenoise.o): CFLAGS += -D$(termios_define)
 .PHONY: rebuild clean repatch distclean
 
 ifeq ($(PROG),)
