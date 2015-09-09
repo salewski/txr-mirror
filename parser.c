@@ -37,6 +37,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include "config.h"
+#include ALLOCA_H
 #include "lib.h"
 #include "signal.h"
 #include "unwind.h"
