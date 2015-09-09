@@ -623,7 +623,12 @@ static void prepare_finals(void)
     f->reachable = is_reachable(f->obj);
 
   for (f = final_list; f; f = f->next) {
-    mark_obj(f->obj);
+    if (!f->reachable) {
+#if CONFIG_GEN_GC
+      f->obj->t.gen = 0;
+#endif
+      mark_obj(f->obj);
+    }
     mark_obj(f->fun);
   }
 }
