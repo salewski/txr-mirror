@@ -87,7 +87,7 @@ static struct fin_reg {
   struct fin_reg *next;
   val obj;
   val fun;
-  type_t obj_type;
+  int reachable;
 } *final_list, **final_tail = &final_list;
 
 #if CONFIG_GEN_GC
@@ -601,6 +601,20 @@ static int_ptr_t sweep(void)
   return free_count;
 }
 
+static int is_reachable(val obj)
+{
+  type_t t;
+
+#if CONFIG_GEN_GC
+  if (!full_gc && obj->t.gen > 0)
+    return 1;
+#endif
+
+  t = obj->t.type;
+
+  return (t & REACHABLE) != 0;
+}
+
 static void prepare_finals(void)
 {
   struct fin_reg *f;
@@ -613,7 +627,7 @@ static void prepare_finals(void)
 #endif
 
   for (f = final_list; f; f = f->next)
-    f->obj_type = f->obj->t.type;
+    f->reachable = is_reachable(f->obj);
 
   for (f = final_list; f; f = f->next) {
     mark_obj(f->obj);
@@ -639,7 +653,7 @@ static void call_finals(void)
   for (f = old_list; f; f = next) {
     next = f->next;
 
-    if ((f->obj_type & REACHABLE) == 0) {
+    if (!f->reachable) {
       funcall1(f->fun, f->obj);
       free(f);
     } else {
@@ -725,19 +739,7 @@ void gc_conservative_mark(val maybe_obj)
 
 int gc_is_reachable(val obj)
 {
-  type_t t;
-
-  if (!is_ptr(obj))
-    return 1;
-
-#if CONFIG_GEN_GC
-  if (!full_gc && obj->t.gen > 0)
-    return 1;
-#endif
-
-  t = obj->t.type;
-
-  return (t & REACHABLE) != 0;
+  return is_ptr(obj) ? is_reachable(obj) : 1;
 }
 
 #if CONFIG_GEN_GC
@@ -815,7 +817,7 @@ val gc_finalize(val obj, val fun)
     struct fin_reg *f = coerce(struct fin_reg *, chk_malloc(sizeof *f));
     f->obj = obj;
     f->fun = fun;
-    f->obj_type = NIL;
+    f->reachable = 0;
     f->next = 0;
     *final_tail = f;
     final_tail = &f->next;
