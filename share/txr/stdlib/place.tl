@@ -549,7 +549,7 @@
   (getter setter
     ^(macrolet ((,getter () ^(fun ,',sym))
                 (,setter (val) ^(sys:setqf ,',sym ,val)))
-       ,*body))
+       ,body))
   :
   (deleter
     ^(macrolet ((,deleter (:env env)
@@ -558,7 +558,7 @@
                                    \ thus not deletable"
                                  ',sym))
                     ^(fmakunbound ',',sym)))
-       ,*body)))
+       ,body)))
 
 (defun sys:get-fb (sym)
   (or (gethash sys:top-fb sym)
@@ -570,11 +570,11 @@
       ^(let ((,binding-sym (sys:get-fb ,sym-expr)))
           (macrolet ((,getter () ^(cdr ,',binding-sym))
                      (,setter (val) ^(sys:rplacd ,',binding-sym ,val)))
-            ,*body))))
+            ,body))))
   :
   (deleter
     ^(macrolet ((,deleter () ^(fmakunbound ,',sym-expr)))
-       ,*body)))
+       ,body)))
 
 (defun sys:get-vb (sym)
   (or (gethash sys:top-vb sym)
@@ -586,7 +586,7 @@
       ^(let ((,binding-sym (sys:get-vb ,sym-expr)))
           (macrolet ((,getter () ^(cdr ,',binding-sym))
                      (,setter (val) ^(sys:rplacd ,',binding-sym ,val)))
-            ,*body))))
+            ,body))))
   :
   (deleter
     ^(macrolet ((,deleter () ^(makunbound ,',sym-expr)))
