@@ -906,34 +906,6 @@ static int edit(lino_t *l, const char *prompt)
     return l->len;
 }
 
-/* This special mode is used by linenoise in order to print scan codes
- * on screen for debugging / development purposes. It is implemented
- * by the linenoise_example program using the --keycodes option. */
-void lino_print_keycodes(lino_t *l) {
-    char quit[4];
-
-    printf("Linenoise key codes debugging mode.\n"
-            "Press keys to see scan codes. Type 'quit' at any time to exit.\n");
-    if (enable_raw_mode(l) == -1) return;
-    memset(quit,' ',4);
-    while(1) {
-        char c;
-        int nread;
-
-        nread = read(l->ifd,&c,1);
-        if (nread <= 0) continue;
-        memmove(quit,quit+1,sizeof(quit)-1); /* shift string to left. */
-        quit[sizeof(quit)-1] = c; /* Insert current char on the right. */
-        if (memcmp(quit,"quit",sizeof(quit)) == 0) break;
-
-        printf("'%c' %02x (%d) (type quit to exit)\n",
-            isprint(c) ? c : '?', (int)c, (int)c);
-        printf("\r"); /* Go left edge manually, we are in raw mode. */
-        fflush(stdout);
-    }
-    disable_raw_mode(l);
-}
-
 /* The main function of the linenoise library
  * handles a non-TTY input file descriptor by opening
  * a standard I/O stream on it and reading lines

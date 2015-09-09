@@ -35,9 +35,6 @@ int main(int argc, char **argv) {
         if (!strcmp(*argv,"--multiline")) {
             lino_set_multiline(ls, 1);
             printf("Multi-line mode enabled.\n");
-        } else if (!strcmp(*argv,"--keycodes")) {
-            lino_print_keycodes(ls);
-            exit(0);
         } else {
             fprintf(stderr, "Usage: %s [--multiline] [--keycodes]\n", prgname);
             exit(1);

@@ -68,4 +68,3 @@ int lino_hist_save(lino_t *, const char *filename);
 int lino_hist_load(lino_t *, const char *filename);
 int lino_clear_screen(lino_t *);
 void lino_set_multiline(lino_t *, int ml);
-void lino_print_keycodes(lino_t *);
