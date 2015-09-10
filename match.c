@@ -1587,7 +1587,7 @@ typedef struct fpip {
 
 static fpip_t complex_open(val name, val output, val append)
 {
-  fpip_t ret = { 0, 0, nil, 0 };
+  fpip_t ret = { 0, 0, nil, fpip_fclose };
   const wchar_t *namestr = c_str(name);
   cnum len = c_num(length_str(name));
 
