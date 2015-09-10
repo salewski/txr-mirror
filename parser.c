@@ -457,7 +457,7 @@ static void provide_completions(const char *data,
     end = sym - 1;
   } else if (pkg) {
     size_t sz = sym - pkg;
-    char *pkg_copy = alloca(sz);
+    char *pkg_copy = convert(char *, alloca(sz));
 
     memcpy(pkg_copy, pkg, sz);
     pkg_copy[sz - 1] = 0;
@@ -473,7 +473,7 @@ static void provide_completions(const char *data,
   {
     val sym_pfx = string_utf8(sym);
     size_t lsz = end - data + 1;
-    char *line_pfxu8 = alloca(lsz);
+    char *line_pfxu8 = convert(char *, alloca(lsz));
     memcpy(line_pfxu8, data, lsz);
     line_pfxu8[lsz - 1] = 0;
 
