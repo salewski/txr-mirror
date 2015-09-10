@@ -274,6 +274,22 @@ static void free_completions(lino_completions_t *lc) {
 static void sync_data_to_buf(lino_t *l);
 static void refresh_line(lino_t *l);
 
+static int compare_completions(const void *larg, const void *rarg)
+{
+    const char **lelem = (const char **) larg;
+    const char **relem = (const char **) rarg;
+    const char *lstr = *lelem, *rstr = *relem;
+    size_t llen = strlen(lstr);
+    size_t rlen = strlen(rstr);
+
+    if (llen < rlen)
+        return -1;
+    if (llen > rlen)
+        return 1;
+
+    return strcmp(lstr, rstr);
+}
+
 /* This is an helper function for edit() and is called when the
  * user types the <tab> key in order to complete the string currently in the
  * input.
@@ -286,6 +302,9 @@ static int complete_line(lino_t *ls) {
     char c = 0;
 
     ls->completion_callback(ls->data, &lc, ls->cb_ctx);
+
+    qsort(lc.cvec, lc.len, sizeof *lc.cvec, compare_completions);
+
     if (lc.len == 0) {
         generate_beep(ls);
     } else {
