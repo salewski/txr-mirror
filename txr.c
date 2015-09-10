@@ -757,11 +757,11 @@ int txr_main(int argc, char **argv)
 
     if (!enter_repl)
       return result ? 0 : EXIT_FAILURE;
+  }
 
 repl:
 #if HAVE_TERMIOS
-    repl(bindings, std_input, std_output);
+  repl(bindings, std_input, std_output);
 #endif
-    return 0;
-  }
+  return 0;
 }
