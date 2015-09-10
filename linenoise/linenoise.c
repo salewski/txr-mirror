@@ -43,6 +43,7 @@
 
 #include <termios.h>
 #include <unistd.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
@@ -403,7 +404,7 @@ static void sync_data_to_buf(lino_t *l)
     char *dptr = l->data, *bptr = l->buf;
 
     for (;;) {
-        if (dptr - l->data == l->dpos)
+        if (dptr - l->data == (ptrdiff_t) l->dpos)
             l->pos = bptr - l->buf;
 
         if (*dptr)  {
