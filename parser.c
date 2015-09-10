@@ -480,6 +480,7 @@ static void provide_completions(const char *data,
     line_pfxu8[lsz - 1] = 0;
 
     {
+      uses_or2;
       val line_pfx = string_utf8(line_pfxu8);
       char prev = (end > data) ? end[-1] : 0;
       char pprev = (end > data + 1) ? end[-2] : 0;
@@ -487,16 +488,8 @@ static void provide_completions(const char *data,
       int dwim = (prev == '[');
       char par = (!pprev || !quote || dwim) ? prev : 0;
 
-      if (package) {
-        find_matching_syms(cpl, package, sym_pfx, line_pfx, par, null(keyword));
-      } else {
-        val pa;
-
-        for (pa = package_alist(); pa; pa = cdr(pa)) {
-          val pair = car(pa);
-          find_matching_syms(cpl, cdr(pair), sym_pfx, line_pfx, par, nil);
-        }
-      }
+      find_matching_syms(cpl, or2(package, user_package),
+                         sym_pfx, line_pfx, par, if2(package, null(keyword)));
     }
   }
 }
