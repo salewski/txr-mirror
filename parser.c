@@ -465,6 +465,8 @@ static void provide_completions(const char *data,
     {
       val package_name = string_utf8(pkg_copy);
       package = find_package(package_name);
+      if (!package)
+        return;
     }
 
     end = pkg;
