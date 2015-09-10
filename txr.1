@@ -29880,6 +29880,44 @@ then it is returned. Otherwise
 .code nil
 is returned.
 
+.coNP Function @ package-alist
+.synb
+.mets (package-alist)
+.syne
+.desc
+The
+.code package-alist
+function returns an association list
+which contains an entry about each existing
+package.
+
+Each element of the list is a cons cell
+whose
+.code car
+field is the name of a package and whose
+.code cdr
+is a package object.
+
+.coNP Function @ package-name
+.synb
+.mets (package-name << package )
+.syne
+.desc
+The
+.code package-name
+function retrieves the name of a package.
+
+.coNP Function @ package-symbols
+.synb
+.mets (package-symbols << package )
+.syne
+.desc
+The
+.code package-symbols
+function returns a list of all the symbols
+which are interned in
+.metn package .
+
 .coNP Function @ intern
 .synb
 .mets (intern < name <> [ package ])

@@ -7,43 +7,27 @@ static void dir_tables_init(void)
 @(until)
 }
 @(end)
-@(bind lib "share/txr/stdlib")
-@(next @(open-files ^(#*"eval.c rand.c signal.c stream.c gc.c glob.c"
-                      #*"syslog.c filter.c txr.c arith.c unwind.c cadr.c"
-                      ,*#`sysif.c struct.c @lib/place.tl @lib/ifa.tl`
-                      ,*#`@lib/ver.tl @lib/cadr.tl @lib/with-resources.tl`
-                      ,*#`@lib/txr-case.tl @lib/path-test.tl @lib/struct.tl`)))
-@(collect)
-@  (block)
-@    (cases)
-@/.*system_package.*/
-@      (accept)
-@    (or)
-  reg_@/op|mac/(@{txl-sym-nostar}_star_s,@(skip)
-@      (bind txl-sym `@{txl-sym-nostar}*`)
-@    (or)
-  reg_@/op|mac/(@{txl-sym}_s,@(skip)
-@    (or)
-  reg_@/op|mac|fun/(@(skip)intern(lit("@{txl-sym}")@(skip)
-@    (or)
-  reg_fun(@{txl-sym}_s,@(skip)
-@    (or)
-  reg_var@/l?/(@{txl-sym-special}_s,@(skip)
-@      (bind txl-sym `*@{txl-sym-special}*`)
-@    (or)
-  @/ *reg_varl?/(@(skip)intern(lit("@{txl-sym}")@(skip)
-@    (or)
-@/ *\((defun|defvarl?|defmacro)/ @{txl-sym} @(skip)
-@    (end)
-@    (set txl-sym @(regsub #/_/ #\- txl-sym))
-@  (end)
-@(end)
+@(do (each ((s '(*place-clobber-expander* *lib-version*
+                 ifa txr-if with-resources path-exists-p
+                 defstruct)))
+       (boundp s)))
+@(bind txl-sym
+       @(append-each* ((entry (package-alist))
+                       (pkg-name [mapcar car entry])
+                       (pkg [mapcar cdr entry]))
+          (append-each ((sym (package-symbols pkg)))
+            (when (or (boundp sym) (fboundp sym) (constantp sym))
+              (let ((qualif (casequal pkg-name
+                              ("keyword" ":")
+                              ("usr" "")
+                              (t `@{pkg-name}:`))))
+                (list `@qualif@(symbol-name sym)`))))))
 @(do (set [txr-sym 0..0] '("rep" "end" "and" "or"
                            "catch" "finally"
                            "until" "last"
                            "if" "else" "elif"
                            "include")))
-@(do (set [txl-sym 0..0] '("macro-time" "macrolet" "symacrolet")))
+@(do (set [txl-sym 0..0] '("macro-time")))
 @(set (txr-sym txl-sym) (@(sort (uniq txr-sym)) @(sort (uniq txl-sym))))
 @(bind bs "\\\\")
 @(bind hex "0-9A-Fa-f")
@@ -76,7 +60,7 @@ static void dir_tables_init(void)
 syn case match
 syn spell toplevel
 
-setlocal iskeyword=a-z,A-Z,48-57,!,$,&,*,+,-,<,=,>,?,\\,_,~,/
+setlocal iskeyword=a-z,A-Z,48-57,!,$,&,*,+,-,:,<,=,>,?,\\,_,~,/
 @  (rep) @{txl-sym}@(mod 0 4)@\nsyn keyword txl_keyword contained @{txl-sym}@(end)
 @  (end)
 @  (if txr-p)

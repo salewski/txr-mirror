@@ -4441,6 +4441,9 @@ void eval_init(void)
   reg_fun(intern(lit("make-package"), user_package), func_n1(make_package));
   reg_fun(intern(lit("find-package"), user_package), func_n1(find_package));
   reg_fun(intern(lit("delete-package"), user_package), func_n1(delete_package));
+  reg_fun(intern(lit("package-alist"), user_package), func_n0(package_alist));
+  reg_fun(intern(lit("package-name"), user_package), func_n1(package_name));
+  reg_fun(intern(lit("package-symbols"), user_package), func_n1(package_symbols));
   reg_fun(intern(lit("intern"), user_package), func_n2o(intern, 1));
   reg_fun(intern(lit("rehome-sym"), user_package), func_n2o(rehome_sym, 1));
   reg_fun(intern(lit("symbolp"), user_package), func_n1(symbolp));
