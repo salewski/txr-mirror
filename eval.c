@@ -4048,7 +4048,6 @@ void eval_init(void)
   sys_load_s = intern(lit("load"), system_package);
   sys_lisp1_value_s = intern(lit("lisp1-value"), system_package);
 
-  with_saved_vars_s = intern(lit("with-saved-vars"), system_package);
   reg_op(macrolet_s, op_error);
   reg_op(symacrolet_s, op_error);
   reg_op(var_s, op_meta_error);
