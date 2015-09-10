@@ -383,7 +383,7 @@ static void find_matching_syms(lino_completions_t *cpl,
     val name = symbol_name(sym);
 
     if (match_str(name, prefix, zero)) {
-      val compl;
+      val comple;
 
       switch (par) {
       case '(':
@@ -399,17 +399,17 @@ static void find_matching_syms(lino_completions_t *cpl,
       }
 
       if (qualify)
-        compl = format(nil, lit("~a~a:~a"), line_prefix, pkg_name, name, nao);
+        comple = format(nil, lit("~a~a:~a"), line_prefix, pkg_name, name, nao);
       else
-        compl = format(nil, lit("~a~a"), line_prefix, name, nao);
+        comple = format(nil, lit("~a~a"), line_prefix, name, nao);
 
       {
-        char *completion = utf8_dup_to(c_str(compl));
+        char *completion = utf8_dup_to(c_str(comple));
         lino_add_completion(cpl, completion);
         free(completion);
       }
 
-      gc_hint(compl);
+      gc_hint(comple);
     }
   }
 }
