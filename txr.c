@@ -398,6 +398,7 @@ int txr_main(int argc, char **argv)
   val parse_stream = std_input;
   val txr_lisp_p = nil;
   val enter_repl = nil;
+  val self_path_s = intern(lit("self-path"), user_package);
   list_collect_decl(arg_list, arg_tail);
 
   setvbuf(stderr, 0, _IOLBF, 0);
@@ -581,6 +582,7 @@ int txr_main(int argc, char **argv)
         spec_file = arg;
         break;
       case 'e':
+        reg_varl(self_path_s, lit("cmdline-expr"));
         eval_intrinsic(lisp_parse(arg, std_error, colon_k,
                                   lit("cmdline-expr"), colon_k),
                        make_env(bindings, nil, nil));
@@ -595,6 +597,7 @@ int txr_main(int argc, char **argv)
                                             if3(c_chr(opt) == 'P',
                                                 pprinl,
                                                 tprint));
+          reg_varl(self_path_s, lit("cmdline-expr"));
           pf(eval_intrinsic(lisp_parse(arg, std_error, colon_k,
                                        lit("cmdline-expr"), colon_k),
                             make_env(bindings, nil, nil)), std_output);
@@ -716,6 +719,7 @@ int txr_main(int argc, char **argv)
   }
 
   reg_var(intern(lit("*args*"), user_package), arg_list);
+  reg_varl(intern(lit("self-path"), user_package), spec_file_str);
 
   if (!txr_lisp_p)
   {
@@ -736,8 +740,7 @@ int txr_main(int argc, char **argv)
       format(std_error, lit("bindings:\n~s\n"), bindings, nao);
     }
 
-    reg_varl(intern(lit("*self-path*"), user_package), spec_file_str);
-    reg_var(intern(lit("self-path"), user_package), spec_file_str);
+    reg_var(intern(lit("*self-path*"), user_package), spec_file_str);
 
     {
       val result = extract(spec, arg_list, bindings);

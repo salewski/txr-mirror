@@ -33101,6 +33101,27 @@ processing; they will be processed in a later garbage collection pass.
 .coNP Variable @ self-path
 .desc
 This variable holds the invocation path name of the \*(TX program.
+The value of
+.code self-path
+when \*(TL expressions are being evaluated in command line arguments
+is the string
+.strn cmdline-expr .
+The value of
+.code self-path
+when a \*(TX query is supplied on the command line via the
+.code -c
+command line option is the string
+.strn cmdline .
+
+Note that for programs read from a file,
+.code self-path
+holds the resolved name, and not the invocation name. For instance if
+.code foo.tl
+is invoked using the name
+.codn foo ,
+whereby \*(TX infers the suffix, then
+.code self-path
+holds the suffixed name.
 
 .coNP Variable @ stdlib
 The
