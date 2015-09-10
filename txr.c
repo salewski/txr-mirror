@@ -398,6 +398,7 @@ int txr_main(int argc, char **argv)
   val parse_stream = std_input;
   val txr_lisp_p = nil;
   val enter_repl = nil;
+  val args_s = intern(lit("*args*"), user_package);
   val self_path_s = intern(lit("self-path"), user_package);
   list_collect_decl(arg_list, arg_tail);
 
@@ -553,7 +554,6 @@ int txr_main(int argc, char **argv)
       }
     }
 
-
     /* Single letter options with args: non-clumping. */
     if (length(arg) == two && find(ref(arg, one), lit("acfepPtC"), nil, nil))
     {
@@ -583,10 +583,13 @@ int txr_main(int argc, char **argv)
         break;
       case 'e':
         reg_varl(self_path_s, lit("cmdline-expr"));
+        reg_var(args_s, arg_list);
+
         eval_intrinsic(lisp_parse(arg, std_error, colon_k,
                                   lit("cmdline-expr"), colon_k),
                        make_env(bindings, nil, nil));
         evaled = t;
+        arg_list = cdr(lookup_global_var(args_s));
         break;
       case 'p':
       case 'P':
@@ -598,10 +601,12 @@ int txr_main(int argc, char **argv)
                                                 pprinl,
                                                 tprint));
           reg_varl(self_path_s, lit("cmdline-expr"));
+          reg_var(args_s, arg_list);
           pf(eval_intrinsic(lisp_parse(arg, std_error, colon_k,
                                        lit("cmdline-expr"), colon_k),
                             make_env(bindings, nil, nil)), std_output);
           evaled = t;
+          arg_list = cdr(lookup_global_var(args_s));
         }
         break;
       }
@@ -718,7 +723,7 @@ int txr_main(int argc, char **argv)
     }
   }
 
-  reg_var(intern(lit("*args*"), user_package), arg_list);
+  reg_var(args_s, arg_list);
   reg_varl(intern(lit("self-path"), user_package), spec_file_str);
 
   if (!txr_lisp_p)

@@ -30397,16 +30397,22 @@ The
 variable holds the original, complete list of arguments passed
 from the operating system.
 
-Note: the
+The
 .code *args*
-variable is
-.code nil
-during the processing of the command line,
-so \*(TL expressions invoked using the
-.code -p
-or
+variable is available to to \*(TL expressions invoked from the
+command line via the
+.codn -p ,
 .code -e
-option cannot use it.
+and other such options. During these evaluations,
+.code *args*
+holds all the remaining options, after the invoking option and its
+argument expression. In other words, code executed from the command line
+has access to the remaining arguments which follow it.
+Furthermore, this code may modify the value of
+.codn *args* .
+Such a modification is visible to the option processing code.
+That is to say code executed from the command line can rewrite the remaining
+list of arguments, and that list takes effect.
 
 .coNP Function @ env
 .synb
