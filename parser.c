@@ -430,7 +430,8 @@ static void provide_completions(const char *data,
   if (!ptr)
     return;
 
-  while ((isalnum(*ptr) || strchr(gly, *ptr)) && (sym = ptr) && ptr > data)
+  while ((isalnum((unsigned char) *ptr) || strchr(gly, *ptr)) &&
+         (sym = ptr) && ptr > data)
     ptr--;
 
   if (!sym)
@@ -444,7 +445,8 @@ static void provide_completions(const char *data,
     } else {
       ptr--;
 
-      while ((isalnum(*ptr) || strchr(gly, *ptr)) && (pkg = ptr) && ptr > data)
+      while ((isalnum((unsigned char) *ptr) || strchr(gly, *ptr)) &&
+             (pkg = ptr) && ptr > data)
         ptr--;
 
       if (!pkg)
