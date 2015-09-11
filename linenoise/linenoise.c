@@ -756,13 +756,15 @@ static int edit(lino_t *l, const char *prompt)
         return -1;
     }
     while(1) {
-        char c;
+        unsigned char byte;
+        int c;
         int nread;
         char seq[3];
 
-        nread = read(l->ifd,&c,1);
+        nread = read(l->ifd,&byte,1);
         if (nread <= 0)
             return l->len ? (int) l->len : -1;
+        c = byte;
 
         if (verbatim) {
             if (edit_insert(l,c)) {
@@ -776,13 +778,17 @@ static int edit(lino_t *l, const char *prompt)
         /* Only autocomplete when the callback is set. It returns < 0 when
          * there was an error reading from fd. Otherwise it will return the
          * character that should be handled next. */
-        if (c == 9 && l->completion_callback != NULL) {
-            c = complete_line(l);
-            /* Return on errors */
-            if (c < 0) return l->len;
-            /* Read next character when 0 */
-            if (c == 0) continue;
+        switch (c) {
+        case TAB:
+            if (l->completion_callback != NULL)
+                c = complete_line(l);
+            break;
         }
+
+        if (c < 0)
+            return l->len;
+        if (c == 0)
+            continue;
 
         switch(c) {
         case ENTER:
