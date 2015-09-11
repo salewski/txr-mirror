@@ -33565,9 +33565,21 @@ The first available completion is placed into the line as if it had been typed
 in.  The other completions may be viewed one by one using the Tab key.
 When the completions are exhausted, the original uncompleted line is shown
 again, and Tab can continue to be used to cycle through the completions again.
-In completion mode, the ESC key acts as a command to cancel completion mode
-and return to editing the original uncompleted line. Any other input causes the
-the listener to keep the currently shown completion, and return to edit mode.
+In completion mode, the Ctrl-C character acts as a command to cancel completion mode
+and return to editing the original uncompleted line.  The ESC character
+similarly cancels completion, restoring the original line, but unlike Ctrl-C,
+it is then processed in regular editing mode.  Any other input character causes
+the listener to keep the currently shown completion, and return to edit mode,
+where that that character is processed again as a command.
+
+Note: the peculiar behavior for the ESC character in completion mode is
+intended to handles situations in which an arrow key is used while in
+completion mode. When any arrow key is pressed, the line is restored and then
+the arrow key is processed in ordinary mode (translating to an editing
+movement or history navigation). The connection between ESC and arrow keys
+is that arrow keys (and other special command keys) are represented, by a
+VT100-compatible terminal or terminal emulator, as special sequences of
+bytes beginning with ESC (known as "escape sequences").
 
 .SH* DEBUGGER
 \*(TX has a simple, crude, built-in debugger. The debugger is invoked by adding

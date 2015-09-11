@@ -337,6 +337,9 @@ static int complete_line(lino_t *ls) {
                     i = (i+1) % (lc.len+1);
                     if (i == lc.len) generate_beep(ls);
                     break;
+                case CTL('C'):
+                    c = 0;
+                    /* fallthrough */
                 case ESC:
                     /* Re-show original buffer */
                     if (i < lc.len) refresh_line(ls);
