@@ -1,3 +1,93 @@
+                                    TXR 115
+                                   2015-09-11
+
+
+  Features:
+
+  * Sixth anniversary edition!
+
+  * New REPL on Unix platforms: an interactive listener with line editing,
+    history recall, completion and exception/interrupt trapping.
+    This is started with "txr -i".
+
+  * Improvements in error reporting.
+
+  * New function, raise, for raising a signal, eliminating
+    the (kill (getpid) sig) workaround.
+
+  * New functions subtypep and typep for testing subtype relationships
+    between types, and between an object and a type.
+
+  * New abstract types usable in conjunction with subtypep and typep.
+    For instance, integer and number are types. A fixnum is a subtype
+    of integer, which is a subtype of number. Type hiearchy documented in
+    detail.
+
+  * The printed representation of function objects is much more
+    informative than before.
+
+  * The variable *args* is now not only bound when evaluating Lisp
+    expressions from the command line (with -e and related options)
+    but it is also modifiable.  Command line expressions can rewrite the
+    remaining arguments by updating *args* and these arguments
+    instantly take effect.
+
+  * Some section restructuring in the documentation.
+
+  * New functions for working with package objects: package-alist,
+    package-name, package-symbols.
+
+  Bugs:
+
+  - Fixed serious problem in implementation of signal handling:
+    the function to manipulate the signal mask in a cached way
+    wasn't actually calling into the OS to set the real signal mask.
+
+  - Fixed another serious problem in signal handling: a Lisp function
+    throwing an exception out of a signal handler would cause an
+    imbalance in an internal signal reentry counter, causing later
+    signal handling to stop working properly.
+
+  - Fixed an assertion occurring in the Flex-generated scanner if the parsing
+    of a stream is aborted by an exception, and then the parser is called
+    again.
+
+  - Fixed regression dating back to TXR 105: the TXR pattern language
+    failing to use a "real-time" stream for standard input, when it
+    is a TTY, thus breaking the specials upport for pattern matching
+    into interactive input.
+
+  - Removed an accidentally committed debug print, producing output
+    in situations when a function is called with the wrong number of arguments.
+
+  - Fixed (eval 'sym) reporting the unbound variable sym against the wrong
+    source code location.
+
+  - Fixed random state objects being of type *random-state* rather than
+    of random-state. The earmuffed symbol was never intended.
+
+  - The accessors fun, symbol-function and symbol-value were completely
+    broken for use as syntactic places.
+
+  - Fixed multiple evaluation of the slot argument when slot used as
+    syntactic place accessor: (inc (slot x y)) now evaluates y only once,
+    just like x.
+
+  - Fixed another gaping bug in the finalization hook mechanism: objects
+    being promoted into the tenured generation had their finalizers
+    called while still remaining reachable.
+
+  - Fixed the self-path variable not being bound when evaluating Lisp code from
+    a .tl file or command line arguments like -e.
+
+  - Fixed *args* not being bound when evaluating Lisp expressions from
+    the command line with -e and related options.
+
+  - Fixed missing :tointeger filter. It was actually registered under the
+    misspelled keyword symbol :toinger, and never existed as :tointeger.
+    It has actually been renamed to :toint.
+
+
                                     TXR 114
                                    2015-09-03
 
