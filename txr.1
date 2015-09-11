@@ -33417,7 +33417,8 @@ addition, Ctrl-B ("back") and Ctrl-F ("forward") perform this movement.
 The Ctrl-A command moves to the beginning of the line. ("A" is the beginning
 of the alphabet). The Ctrl-E ("end") command jumps to the end of the line,
 such that the last character of the line is to the left of the cursor
-position.
+position. On terminals which have the Home and End keys, these may also
+be used instead of Ctrl-A and Ctrl-E.
 
 .NP* Character Swap
 
@@ -33437,7 +33438,9 @@ also performs the same action, since it corresponds to ASCII BS.
 
 The Ctrl-D command is overloaded with two meanings. If the line is empty, it is
 a quit indication. Otherwise, it deletes the character under the cursor
-without changing the cursor position.
+without changing the cursor position.  On terminals which have a Delete key,
+the deleting action may also be performed with that key. The Delete key doesn't
+have the quit indication meaning of Ctrl-D.
 
 .NP* Delete Word Left
 
