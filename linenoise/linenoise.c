@@ -981,6 +981,21 @@ char *linenoise(lino_t *ls, const char *prompt)
     }
 }
 
+static void link_into_list(lino_t *list, lino_t *ls)
+{
+    ls->prev = list;
+    ls->next = list->next;
+    list->next->prev = ls;
+    list->next = ls;
+}
+
+static void unlink_from_list(lino_t *ls)
+{
+    ls->prev->next = ls->next;
+    ls->next->prev = ls->prev;
+    ls->next = ls->prev = 0;
+}
+
 lino_t *lino_make(int ifd, int ofd)
 {
     lino_t *ls = (lino_t *) chk_malloc(sizeof *ls);
@@ -991,14 +1006,28 @@ lino_t *lino_make(int ifd, int ofd)
         ls->ifd = ifd;
         ls->ofd = ofd;
 
-        ls->prev = &lino_list;
-        ls->next = lino_list.next;
-        lino_list.next->prev = ls;
-        lino_list.next = ls;
+        link_into_list(&lino_list, ls);
     }
 
     return ls;
 }
+
+lino_t *lino_copy(lino_t *le)
+{
+    lino_t *ls = (lino_t *) chk_malloc(sizeof *ls);
+
+    if (ls != 0) {
+        *ls = *le;
+        ls->history_len = 0;
+        ls->history = 0;
+        ls->rawmode = 0;
+
+        link_into_list(&lino_list, ls);
+    }
+
+    return ls;
+}
+
 
 static void free_hist(lino_t *ls);
 
@@ -1010,9 +1039,7 @@ static void lino_cleanup(lino_t *ls)
 
 void lino_free(lino_t *ls)
 {
-    ls->prev->next = ls->next;
-    ls->next->prev = ls->prev;
-    ls->next = ls->prev = 0;
+    unlink_from_list(ls);
     lino_cleanup(ls);
     free(ls);
 }

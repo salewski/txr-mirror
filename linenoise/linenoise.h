@@ -57,6 +57,7 @@ void lino_set_completion_cb(lino_t *, lino_compl_cb_t *, void *ctx);
 void lino_add_completion(lino_completions_t *, const char *);
 
 lino_t *lino_make(int ifd, int ofd);
+lino_t *lino_copy(lino_t *);
 void lino_free(lino_t *);
 
 char *linenoise(lino_t *, const char *prompt);
