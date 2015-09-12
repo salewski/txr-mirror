@@ -104,4 +104,5 @@ void parser_cleanup(parser_t *);
 val parser(val stream, val lineno);
 val get_parser(val stream);
 val parser_errors(val parser);
+val parser_eof(val parser);
 void parse_init(void);

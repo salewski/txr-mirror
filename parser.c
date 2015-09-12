@@ -351,14 +351,17 @@ val read_eval_stream(val stream, val error_stream, val hash_bang_support)
 
   for (;;) {
     val form = lisp_parse(stream, error_stream, error_val, name, colon_k);
+    val parser = get_parser(stream);
 
     if (form == error_val) {
-      if (parser_errors(get_parser(stream)) == zero)
+      if (parser_errors(parser) == zero)
         break;
       return nil;
     }
 
     (void) eval_intrinsic(form, nil);
+    if (parser_eof(parser))
+      break;
   }
 
   return t;
@@ -636,6 +639,12 @@ val parser_errors(val parser)
 {
   parser_t *p = coerce(parser_t *, cobj_handle(parser, parser_s));
   return num(p->errors);
+}
+
+val parser_eof(val parser)
+{
+  parser_t *p = coerce(parser_t *, cobj_handle(parser, parser_s));
+  return tnil(p->recent_tok.yy_char == 0);
 }
 
 void parse_init(void)
