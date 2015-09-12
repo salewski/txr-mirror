@@ -33584,6 +33584,31 @@ is that arrow keys (and other special command keys) are represented, by a
 VT100-compatible terminal or terminal emulator, as special sequences of
 bytes beginning with ESC (known as "escape sequences").
 
+.SS* Reading Forms Directly from the Terminal
+
+The listener is currently line oriented. There is, however, support for
+accepting input which may span multiple lines and come in a large
+quantity.
+
+If the
+.code :read
+keyword is entered into the listener, it will temporarily suspend
+interactive editing and allow the \*(TL parser to read
+directly from standard input. The reading stops when an error occurs,
+or EOF is indicated by entering Ctrl-D.
+
+In direct parsing mode, each expression which is read is evaluated, but its
+value is not printed. However, the value of the last form evaluated is returned
+to the interactive listener, which prints the value and accepts it as if
+it as the result value of the
+.code :read
+command.
+
+Note that none of the material read from the terminal is entered into the
+interactive history. Only the
+.code :read
+command which triggers this parsing mode appears in the history.
+
 .SH* DEBUGGER
 \*(TX has a simple, crude, built-in debugger. The debugger is invoked by adding
 the

@@ -504,6 +504,25 @@ static val repl_intr(val signo, val async_p)
   uw_throw(error_s, lit("intr"));
 }
 
+static val read_eval_ret_last(val env, val in_stream, val out_stream)
+{
+  val lineno = one;
+
+  for (;; lineno = succ(lineno)) {
+    val form = lisp_parse(in_stream, out_stream, colon_k,
+                          lit("paste"), lineno);
+    val parser = get_parser(in_stream);
+    val value = eval_intrinsic(form, nil);
+
+    if (parser_eof(parser)) {
+      prinl(value, out_stream);
+      break;
+    }
+  }
+
+  return t;
+}
+
 val repl(val bindings, val in_stream, val out_stream)
 {
   val ifd = stream_get_prop(in_stream, fd_k);
@@ -513,6 +532,7 @@ val repl(val bindings, val in_stream, val out_stream)
   char *prompt_u8 = 0;
   val repl_env = make_env(bindings, nil, nil);
   val quit_k = intern(lit("quit"), keyword_package);
+  val read_k = intern(lit("read"), keyword_package);
   val counter_sym = intern(lit("*n"), user_package);
   val var_counter_sym = intern(lit("*v"), user_package);
   val result_hash_sym = intern(lit("*r"), user_package);
@@ -575,7 +595,9 @@ val repl(val bindings, val in_stream, val out_stream)
       if (form == quit_k) {
         done = t;
       } else {
-        val value = eval_intrinsic(form, repl_env);
+        val value = if3(form != read_k,
+                        eval_intrinsic(form, repl_env),
+                        read_eval_ret_last(repl_env, in_stream, out_stream));
         reg_varl(var_sym, value);
         sethash(result_hash, var_counter, value);
         prinl(value, out_stream);
