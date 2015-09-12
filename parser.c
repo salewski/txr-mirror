@@ -581,8 +581,20 @@ val repl(val bindings, val in_stream, val out_stream)
       break;
     }
 
-    if (strspn(line_u8, " \t") == strlen(line_u8))
-      continue;
+    {
+      size_t wsp = strspn(line_u8, " \t\n\r");
+
+      if (line_u8[wsp] == 0) {
+        free(line_u8);
+        continue;
+      }
+
+      if (line_u8[wsp] == ';') {
+        lino_hist_add(ls, line_u8);
+        free(line_u8);
+        continue;
+      }
+    }
 
     counter = succ(counter);
 

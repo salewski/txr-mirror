@@ -33259,8 +33259,16 @@ intercepts the exception and prints information about it preceded by
 two asterisks and a space. These asterisks distinguish an exception from a
 result value.
 
-If an empty line is entered, or a line containing only spaces and tabs,
-the prompt is repeated without incrementing the number.
+If an empty line is entered, or a line containing only spaces, tabs
+or embedded carriage returns or linefeeds, the prompt is repeated without
+incrementing the number. Such a line is not entered into the history.
+
+A line which only contains a \*(TL comment (optional spaces, tabs or embedded
+carriage returns or linefeeds, followed by a semicolon), also causes
+the prompt to be repeated without incrementing the number. However,
+such a line
+.B is
+entered into the history.
 
 .SS* Ways to Quit
 
