@@ -569,10 +569,10 @@ val repl(val bindings, val in_stream, val out_stream)
       val line = string_utf8(line_u8);
       val form = lisp_parse(line, out_stream, colon_k,
                             lit("line"), prev_counter);
-      val value = eval_intrinsic(form, repl_env);
-      if (value == quit_k) {
+      if (form == quit_k) {
         done = t;
       } else {
+        val value = eval_intrinsic(form, repl_env);
         reg_varl(var_sym, value);
         sethash(result_hash, var_counter, value);
         prinl(value, out_stream);
