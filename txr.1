@@ -33535,6 +33535,51 @@ from the most recent line already in history. This is true whether it
 is a freshly composed line, a recalled history line, or an edited
 history line.
 
+.NP* History Search
+It is possible to search backwards through the history interactively
+for a line containing a substring. The Ctrl-R command is used to initiate
+search.  The command prompt is replaced with the prefix
+.code search:
+next to which a pair of empty square brackets appears, indicating
+that the listener is in search mode. The square brackets are the
+search box, enclosing the search text, which is initially empty.
+
+In search mode, characters may be typed. They accumulate inside the search
+box, and constitute the string to search for. The listener instantly
+navigates to the most recent line which contains a substring match for the
+search string, and places the cursor on the first character of the
+match. Control characters entered directly are ignored. The Ctrl-V command be
+used to add a character verbatim, as in edit mode.
+
+To remove characters from the search box, Backspace can be used. The
+search is not repeated with the shortened search text: the same line
+continues to show until a character is added, at which point
+a new search is issued.
+
+Search mode has a "home position": a starting point for searches.
+The initial home position is whatever line of history is selected
+when search mode is initiated. Searches work backward in history from
+that line. If search text is edited by deleting characters and then
+adding new ones, the new search proceeds from the home position.
+
+The Ctrl-R command can be used in search mode. It registers the currently
+showing line as the new home position, and then repeats the search using the
+existing search text backwards from the new position. If the search text
+is empty, Ctrl-R has no effect.
+
+The Ctrl-C command leaves search mode at any time and causes the
+listener to resume editing the original input at the original character
+position. The Enter key accepts the result of a search and submits it
+as if it were a newly composed line.
+
+Navigation keys may be used in search mode. A navigation key immediately
+cancels search mode, and is processed in edit mode, using whatever line was
+located by the search, at the matching character position.
+
+Navigating to a history line manually using the up and down arrow keys (or
+Ctrl-P/Ctrl-N) has the same net effect same as locating that line using
+Ctrl-R search.
+
 .NP* History Persistence
 
 The history is maintained in a text file called

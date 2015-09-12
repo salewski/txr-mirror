@@ -390,6 +390,133 @@ void lino_add_completion(lino_completions_t *lc, const char *str) {
     lc->cvec[lc->len++] = copy;
 }
 
+static int next_hist_match(lino_t *l, char *pat, int cur, size_t *offs)
+{
+    int i;
+
+    if (cur >= l->history_len)
+        cur = l->history_len - 1;
+
+    for (i = cur; i >= 0; i--) {
+        char *hline = l->history[i];
+        char *pmatch = strstr(hline, pat);
+        if (pmatch != 0) {
+            *offs = pmatch - hline;
+            return i;
+        }
+    }
+    return -1;
+}
+
+static int history_search(lino_t *l)
+{
+    char hpat[128] = "";
+    int hi = l->history_len - l->history_index - 2 + (l->history_index == 0);
+    int hp = hi, hl = 0, stop = 0;
+    size_t dp = l->dpos;
+    const char *fmt = "[%s]%s";
+    size_t ex = strlen(fmt) - 2*strlen("%s");
+    lino_t *lc = lino_copy(l), *ld = lino_copy(l);
+    int c = -1;
+
+    if (lc == 0 || ld == 0)
+        goto out;
+
+    lc->prompt = "search:";
+
+    while (!stop) {
+        size_t nw = snprintf(lc->data, sizeof lc->data, fmt, hpat, l->data);
+        int vb = 0;
+        lc->dlen = nw;
+        lc->dpos = dp + hl + ex;
+
+        if (lc->dpos > lc->dlen)
+            lc->dpos = lc->dlen;
+
+        refresh_line(lc);
+
+        for (;;) {
+            unsigned char byte;
+            int nread = read(lc->ifd, &byte, 1);
+
+            if (nread <= 0) {
+                c = nread;
+                stop = 1;
+            } else {
+                c = byte;
+
+                if (vb)
+                    goto verbatim;
+
+                switch (c) {
+                default:
+                    if (c < 32)
+                        continue;
+                verbatim:
+                    if (hl >= sizeof hpat)
+                        break;
+                    hpat[hl++] = c;
+                    /* fallthrough */
+                    if (0) {
+                case CTL('R'):
+                        if (hl == 0) {
+                            generate_beep(lc);
+                            break;
+                        }
+                        hp = hi - 1;
+                    }
+
+                    {
+                        int ni = next_hist_match(l, hpat, hp, &dp);
+
+                        if (ni < 0)
+                            break;
+
+                        hi = ni;
+                        strcpy(l->data, l->history[hi]);
+                        l->dpos = l->dlen = strlen(l->data);
+                    }
+                    break;
+                case BACKSPACE: case CTL('H'):
+                    if (hl == 0)
+                        break;
+
+                    hpat[--hl] = 0;
+                    break;
+                case ENTER:
+                    stop = 1;
+                    break;
+                case CTL('C'):
+                    strcpy(l->data, ld->data);
+                    l->dpos = ld->dpos;
+                    l->dlen = ld->dlen;
+                    stop = 1;
+                    c = 0;
+                    break;
+                case CTL('F'): case CTL('B'):
+                case CTL('N'): case CTL('P'):
+                case ESC:
+                    if (hi < l->history_len)
+                        l->history_index = l->history_len - hi - 1;
+                    l->dpos = dp;
+                    stop = 1;
+                    break;
+                case CTL('V'):
+                    vb = 1;
+                    continue;
+                }
+            }
+            break;
+        }
+    }
+
+out:
+    lino_free(lc);
+    lino_free(ld);
+    refresh_line(l);
+    return c;
+}
+
 /* =========================== Line editing ================================= */
 
 /* We define a very simple "append buffer" structure, that is an heap
@@ -786,6 +913,9 @@ static int edit(lino_t *l, const char *prompt)
             if (l->completion_callback != NULL)
                 c = complete_line(l);
             break;
+        case CTL('R'):
+            c = history_search(l);
+            break;
         }
 
         if (c < 0)
@@ -1048,9 +1178,11 @@ static void lino_cleanup(lino_t *ls)
 
 void lino_free(lino_t *ls)
 {
-    unlink_from_list(ls);
-    lino_cleanup(ls);
-    free(ls);
+    if (ls != 0) {
+        unlink_from_list(ls);
+        lino_cleanup(ls);
+        free(ls);
+    }
 }
 
 lino_error_t lino_get_error(lino_t *l)
