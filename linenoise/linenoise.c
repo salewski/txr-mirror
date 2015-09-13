@@ -506,7 +506,10 @@ static int history_search(lino_t *l)
                     c = 0;
                     break;
                 case CTL('F'): case CTL('B'):
+                case CTL('A'): case CTL('E'):
                 case CTL('N'): case CTL('P'):
+                case CTL('D'): case CTL('U'): case CTL('W'): case CTL('K'):
+                case CTL('T'):
                 case ESC:
                     if (hi < l->history_len)
                         l->history_index = l->history_len - hi - 1;
@@ -516,6 +519,13 @@ static int history_search(lino_t *l)
                 case CTL('V'):
                     vb = 1;
                     continue;
+                case CTL('L'):
+                    lino_clear_screen(l);
+                    break;
+                case CTL('Z'):
+                    disable_raw_mode(l);
+                    raise(SIGTSTP);
+                    enable_raw_mode(l);
                 }
             }
             break;

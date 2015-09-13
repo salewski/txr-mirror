@@ -33574,9 +33574,13 @@ listener to resume editing the original input at the original character
 position. The Enter key accepts the result of a search and submits it
 as if it were a newly composed line.
 
-Navigation keys may be used in search mode. A navigation key immediately
-cancels search mode, and is processed in edit mode, using whatever line was
-located by the search, at the matching character position.
+Navigation and editing keys may be used in search mode. A navigation or editing
+key immediately cancels search mode, and is processed in edit mode, using
+whatever line was located by the search, at the matching character position.
+
+The Ctrl-L (Clear Screen and Refresh), as well as Ctrl-Z
+(Suspend to Background) commands are available in search mode. Their effects
+takes place without leaving search mode.
 
 Navigating to a history line manually using the up and down arrow keys (or
 Ctrl-P/Ctrl-N) has the same net effect same as locating that line using
