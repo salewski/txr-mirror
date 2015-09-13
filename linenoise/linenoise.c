@@ -473,8 +473,14 @@ static int history_search(lino_t *l)
                     }
 
                     {
-                        int ni = next_hist_match(l, hpat, hp, &dp);
+                        int ni, sp = hp;
 
+                        do {
+                            ni = next_hist_match(l, hpat, sp, &dp);
+                            sp = ni - 1;
+                        } while (ni >= 0 && hi < l->history_len &&
+                                 ni != hi &&
+                                 strcmp(l->history[hi], l->history[ni]) == 0);
                         if (ni < 0)
                             break;
 
