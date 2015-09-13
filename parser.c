@@ -401,6 +401,9 @@ static void find_matching_syms(lino_completions_t *cpl,
         break;
       }
 
+      if (equal(name, prefix))
+        continue;
+
       if (qualify)
         comple = format(nil, lit("~a~a:~a"), line_prefix, pkg_name, name, nao);
       else
