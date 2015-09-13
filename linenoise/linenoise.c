@@ -1030,6 +1030,8 @@ static int edit(lino_t *l, const char *prompt)
             }
             break;
         default:
+            if (c < 32)
+                break;
             if (edit_insert(l,c)) {
                 l->error = lino_ioerr;
                 return -1;
