@@ -298,10 +298,17 @@ static int compare_completions(const void *larg, const void *rarg)
  * structure as described in the structure definition. */
 static int complete_line(lino_t *ls) {
     lino_completions_t lc = { 0, NULL };
-    int nread, nwritten;
+    int nread;
     char c = 0;
+    char save = ls->data[ls->dpos];
+    lino_t *lt = lino_copy(ls);
 
+    if (lt == 0)
+        return -1;
+
+    ls->data[ls->dpos] = 0;
     ls->completion_callback(ls->data, &lc, ls->cb_ctx);
+    ls->data[ls->dpos] = save;
 
     qsort(lc.cvec, lc.len, sizeof *lc.cvec, compare_completions);
 
@@ -313,14 +320,12 @@ static int complete_line(lino_t *ls) {
         while(!stop) {
             /* Show completion or original buffer */
             if (i < lc.len) {
-                lino_t saved = *ls;
-
-                ls->dpos = ls->dlen = strlen(lc.cvec[i]);
-                strncpy(ls->data, lc.cvec[i], sizeof ls->data);
-                ls->data[sizeof ls->data - 1] = 0;
-                sync_data_to_buf(ls);
-                refresh_line(ls);
-                *ls = saved;
+                size_t n = snprintf(lt->data, sizeof lt->data,
+                                    "%s%s", lc.cvec[i], ls->data + ls->dpos);
+                lt->dlen = n;
+                lt->dpos = strlen(lc.cvec[i]);
+                sync_data_to_buf(lt);
+                refresh_line(lt);
             } else {
                 refresh_line(ls);
             }
@@ -328,11 +333,12 @@ static int complete_line(lino_t *ls) {
             nread = read(ls->ifd,&c,1);
             if (nread <= 0) {
                 free_completions(&lc);
+                free(lt);
                 ls->error = (nread < 0 ? lino_ioerr : lino_eof);
                 return -1;
             }
 
-            switch(c) {
+            switch (c) {
                 case TAB:
                     i = (i+1) % (lc.len+1);
                     if (i == lc.len) generate_beep(ls);
@@ -346,8 +352,9 @@ static int complete_line(lino_t *ls) {
                 default:
                     /* Update buffer and return */
                     if (i < lc.len) {
-                        nwritten = snprintf(ls->data, sizeof ls->data, "%s", lc.cvec[i]);
-                        ls->dpos = ls->dlen = nwritten;
+                        ls->dpos = lt->dpos;
+                        ls->dlen = lt->dlen;
+                        strcpy(ls->data, lt->data);
                         sync_data_to_buf(ls);
                         refresh_line(ls);
                     }
@@ -358,6 +365,7 @@ static int complete_line(lino_t *ls) {
     }
 
     free_completions(&lc);
+    lino_free(lt);
     return c; /* Return last read character */
 }
 

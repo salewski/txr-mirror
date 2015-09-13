@@ -33601,13 +33601,11 @@ in that directory, then the history isn't saved.
 .NP* Symbolic Completion
 
 If the Tab key is pressed while editing a line, it is interpreted as a
-request for completion. This only happens if the cursor is at the end
-of the line (to the right of the rightmost character); completion in
-the middle of a line is not supported.
+request for completion.
 
 When completion is invoked with the Tab key, the listener looks at a few of the
-trailing characters of the line in order to determine the applicable list of
-completions. Completions are determined from among the \*(TL symbols which have
+trailing characters to the left of the cursor position to determine the
+applicable list of completions. Completions are determined from among the \*(TL symbols which have
 global variable, function, macro and symbolic macro bindings.  Symbols which
 have operator binding are also taken into consideration.  If a
 package-qualified symbol is completed, then completion is restricted to that
