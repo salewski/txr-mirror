@@ -369,6 +369,36 @@ val read_eval_stream(val stream, val error_stream, val hash_bang_support)
 
 #if HAVE_TERMIOS
 
+static void load_rcfile(val name)
+{
+  val resolved_name;
+  val lisp_p = t;
+  val stream = nil;
+  val stat = nil; 
+  val catch_syms = cons(error_s, nil);
+
+  uw_catch_begin (catch_syms, sy, va);
+
+  stat = statp(name);
+
+  open_txr_file(name, &lisp_p, &resolved_name, &stream);
+
+  if (stream)
+      read_eval_stream(stream, std_output, nil);
+
+  uw_catch(sy, va)
+  {
+    (void) va;
+    if (stat)
+      format(std_output, lit("** type ~s exception while loading ~s\n"),
+             sy, name, nao);
+  }
+
+  uw_unwind;
+
+  uw_catch_end;
+}
+
 static void find_matching_syms(lino_completions_t *cpl,
                                val package, val prefix,
                                val line_prefix, char par,
@@ -546,6 +576,7 @@ val repl(val bindings, val in_stream, val out_stream)
   val home = getenv_wrap(lit("HOME"));
   val histfile = if2(home, format(nil, lit("~a/.txr_history"), home, nao));
   char *histfile_u8 = utf8_dup_to(c_str(histfile));
+  val rcfile = if2(home, format(nil, lit("~a/.txr_profile"), home, nao));
   val old_sig_handler = set_sig_handler(num(SIGINT), func_n2(repl_intr));
 
   reg_varl(result_hash_sym, result_hash);
@@ -554,6 +585,9 @@ val repl(val bindings, val in_stream, val out_stream)
 
   if (histfile)
     lino_hist_load(ls, histfile_u8);
+
+  if (rcfile)
+    load_rcfile(rcfile);
 
   while (!done) {
     val prompt = format(nil, lit("~a> "), counter, nao);

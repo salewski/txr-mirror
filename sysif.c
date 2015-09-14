@@ -643,7 +643,7 @@ static val stat_impl(val obj, int (*statfn)(val, struct stat *),
 #endif
 }
 
-static val statp(val path)
+val statp(val path)
 {
   return stat_impl(path, w_stat, lit("stat"));
 }

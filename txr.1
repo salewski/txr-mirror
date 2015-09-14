@@ -33655,6 +33655,28 @@ interactive history. Only the
 .code :read
 command which triggers this parsing mode appears in the history.
 
+.SS* Interactive Profile File
+
+When the listener starts up, it looks for file called
+.code .txr_profile
+in the user's home directory, as determined by the
+.code HOME
+environment variable. If that variable doesn't exist, no further attempt is
+made to locate this file.
+
+If it exists, the file is expected to be readable and to contain
+\*(TL forms, which are read and evaluated.
+Syntax errors encountered while reading the profile file are displayed
+on standard output, and any exceptions thrown that are derived from
+.code error
+are caught and displayed.  The interactive listener starts in spite of these
+situations.  Exceptions not derived from error will terminate the process.
+
+The profile file is not read by non-interactive invocations of \*(TX:
+that is, when the
+.code -i
+option isn't present.
+
 .SH* DEBUGGER
 \*(TX has a simple, crude, built-in debugger. The debugger is invoked by adding
 the
