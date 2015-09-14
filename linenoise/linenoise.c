@@ -92,6 +92,7 @@ struct lino_state {
     size_t cols;        /* Number of columns in terminal. */
     size_t maxrows;     /* Maximum num of rows used so far (multiline mode) */
     int history_index;  /* The history index we are currently editing. */
+    int need_resize;    /* Need resize flag. */
     lino_error_t error; /* Most recent error. */
 };
 
@@ -112,6 +113,7 @@ mem_t *chk_realloc(mem_t *old, size_t size);
 char *chk_strdup_utf8(const char *str);
 
 static lino_t lino_list = { &lino_list, &lino_list };
+volatile sig_atomic_t lino_list_busy;
 static int atexit_registered = 0; /* Register atexit just 1 time. */
 
 /* Debugging macro. */
@@ -254,6 +256,21 @@ int lino_clear_screen(lino_t *ls) {
     return (write(ls->ofd,"\x1b[H\x1b[2J",7) > 0);
 }
 
+static void refresh_line(lino_t *l);
+
+static void handle_resize(lino_t *ls, lino_t *lc)
+{
+    if (ls->need_resize) {
+        ls->need_resize = 0;
+        if (lc != 0)
+            lc->need_resize = 0;
+        ls->cols = get_columns(ls->ifd, ls->ofd);
+        if (lc)
+            lc->cols = ls->cols;
+        refresh_line(ls);
+    }
+}
+
 /* Beep, used for completion when there is nothing to complete or when all
  * the choices were already shown. */
 static int generate_beep(lino_t *ls) {
@@ -272,7 +289,6 @@ static void free_completions(lino_completions_t *lc) {
 }
 
 static void sync_data_to_buf(lino_t *l);
-static void refresh_line(lino_t *l);
 
 static int compare_completions(const void *larg, const void *rarg)
 {
@@ -331,7 +347,12 @@ static int complete_line(lino_t *ls) {
             }
 
             nread = read(ls->ifd,&c,1);
+
             if (nread <= 0) {
+                if (errno == EINTR) {
+                    handle_resize(ls, lt);
+                    continue;
+                }
                 free_completions(&lc);
                 free(lt);
                 ls->error = (nread < 0 ? lino_ioerr : lino_eof);
@@ -446,6 +467,10 @@ static int history_search(lino_t *l)
             int nread = read(lc->ifd, &byte, 1);
 
             if (nread <= 0) {
+                if (errno == EINTR) {
+                    handle_resize(lc, l);
+                    continue;
+                }
                 c = nread;
                 stop = 1;
             } else {
@@ -914,8 +939,15 @@ static int edit(lino_t *l, const char *prompt)
         char seq[3];
 
         nread = read(l->ifd,&byte,1);
+
+        if (nread < 0 && errno == EINTR) {
+            handle_resize(l, 0);
+            continue;
+        }
+
         if (nread <= 0)
             return l->len ? (int) l->len : -1;
+
         c = byte;
 
         if (verbatim) {
@@ -1094,6 +1126,19 @@ static int edit(lino_t *l, const char *prompt)
     return l->len;
 }
 
+#ifdef SIGWINCH
+static void sigwinch_handler(int sig)
+{
+    lino_t *li;
+
+    if (lino_list_busy)
+        return;
+
+    for (li = lino_list.next; li != &lino_list; li = li->next)
+        li->need_resize = 1;
+}
+#endif
+
 /* The main function of the linenoise library
  * handles a non-TTY input file descriptor by opening
  * a standard I/O stream on it and reading lines
@@ -1128,6 +1173,14 @@ char *linenoise(lino_t *ls, const char *prompt)
             ls->data[count-1] = '\0';
         return chk_strdup_utf8(ls->data);
     } else {
+        char *ret = 0;
+#ifdef SIGWINCH
+        static struct sigaction blank;
+        struct sigaction sa = blank, oa;
+        sa.sa_handler = sigwinch_handler;
+        sigaction(SIGWINCH, &sa, &oa);
+#endif
+
         /* Interactive editing. */
         if (enable_raw_mode(ls) == -1)
             return 0;
@@ -1140,23 +1193,32 @@ char *linenoise(lino_t *ls, const char *prompt)
         }
         if (count == -1)
             return 0;
-        return chk_strdup_utf8(ls->data);
+        ret = chk_strdup_utf8(ls->data);
+
+#ifdef SIGWINCH
+        sigaction(SIGWINCH, &oa, 0);
+#endif
+        return ret;
     }
 }
 
 static void link_into_list(lino_t *list, lino_t *ls)
 {
+    lino_list_busy = 1;
     ls->prev = list;
     ls->next = list->next;
     list->next->prev = ls;
     list->next = ls;
+    lino_list_busy = 0;
 }
 
 static void unlink_from_list(lino_t *ls)
 {
+    lino_list_busy = 1;
     ls->prev->next = ls->next;
     ls->next->prev = ls->prev;
     ls->next = ls->prev = 0;
+    lino_list_busy = 0;
 }
 
 lino_t *lino_make(int ifd, int ofd)
