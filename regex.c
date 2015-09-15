@@ -36,6 +36,7 @@
 #include <signal.h>
 #include <stdarg.h>
 #include "config.h"
+#include ALLOCA_H
 #include "lib.h"
 #include "parser.h"
 #include "signal.h"
@@ -1096,7 +1097,7 @@ static void nfa_collect_one(nfa_state_t *s, mem_t *ctx)
 
 static void nfa_free(nfa_t nfa, int nstates)
 {
-  nfa_state_t **all = coerce(nfa_state_t **, chk_malloc(nstates * sizeof *all));
+  nfa_state_t **all = coerce(nfa_state_t **, alloca(nstates * sizeof *all));
   nfa_state_t **pelem = all, *s = nfa.start;
   unsigned visited = s->a.visited + 1;
   int i;
@@ -1107,8 +1108,6 @@ static void nfa_free(nfa_t nfa, int nstates)
 
   for (i = 0; i < nstates; i++)
     nfa_state_free(all[i]);
-
-  free(all);
 }
 
 /*
@@ -1242,9 +1241,9 @@ static cnum nfa_run(nfa_t nfa, int nstates, const wchar_t *str)
 {
   const wchar_t *last_accept_pos = 0, *ptr = str;
   unsigned visited = nfa.start->a.visited + 1;
-  nfa_state_t **move = coerce(nfa_state_t **, chk_malloc(nstates * sizeof *move));
-  nfa_state_t **clos = coerce(nfa_state_t **, chk_malloc(nstates * sizeof *clos));
-  nfa_state_t **stack = coerce(nfa_state_t **, chk_malloc(nstates * sizeof *stack));
+  nfa_state_t **move = coerce(nfa_state_t **, alloca(nstates * sizeof *move));
+  nfa_state_t **clos = coerce(nfa_state_t **, alloca(nstates * sizeof *clos));
+  nfa_state_t **stack = coerce(nfa_state_t **, alloca(nstates * sizeof *stack));
   int nmove = 1, nclos;
   int accept = 0;
 
@@ -1273,11 +1272,6 @@ static cnum nfa_run(nfa_t nfa, int nstates, const wchar_t *str)
   }
 
   nfa.start->a.visited = visited;
-
-  free(stack);
-  free(clos);
-  free(move);
-
   return last_accept_pos ? last_accept_pos - str : -1;
 }
 
