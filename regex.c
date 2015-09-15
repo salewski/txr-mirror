@@ -1089,6 +1089,17 @@ static int nfa_count_states(nfa_state_t *s)
   return count;
 }
 
+static void nfa_handle_wraparound(nfa_state_t *s, unsigned *pvisited)
+{
+  if (*pvisited == UINT_MAX) {
+    s->a.visited = UINT_MAX - 1;
+    (void) nfa_count_states(s);
+    s->a.visited = UINT_MAX;
+    (void) nfa_count_states(s);
+    *pvisited = 1;
+  }
+}
+
 static void nfa_collect_one(nfa_state_t *s, mem_t *ctx)
 {
   nfa_state_t ***ppel = coerce(nfa_state_t ***, ctx);
@@ -1102,6 +1113,9 @@ static void nfa_free(nfa_t nfa, int nstates)
   unsigned visited = s->a.visited + 1;
   int i;
 
+  /* We don't care if visited has reached UINT_MAX here, because the regex is
+   * going away, so we don't bother with nfa_handle_wraparound.
+   */
   nfa_map_states(s, coerce(mem_t *, &pelem), nfa_collect_one, visited);
 
   assert (pelem - all == nstates);
@@ -1247,6 +1261,8 @@ static cnum nfa_run(nfa_t nfa, int nstates, const wchar_t *str)
   int nmove = 1, nclos;
   int accept = 0;
 
+  nfa_handle_wraparound(nfa.start, &visited);
+
   move[0] = nfa.start;
 
   nclos = nfa_closure(stack, move, nmove, clos,
@@ -1259,6 +1275,8 @@ static cnum nfa_run(nfa_t nfa, int nstates, const wchar_t *str)
     wchar_t ch = *ptr;
 
     accept = 0;
+
+    nfa_handle_wraparound(nfa.start, &visited);
 
     nmove = nfa_move(clos, nclos, move, ch);
     nclos = nfa_closure(stack, move, nmove, clos,
@@ -1860,14 +1878,20 @@ static void regex_machine_reset(regex_machine_t *regm)
   regm->n.count = 0;
 
   if (regm->n.is_nfa) {
-    regm->n.visited = regm->n.nfa.start->a.visited + 1;
+    nfa_state_t *s = regm->n.nfa.start;
+
     regm->n.nmove = 1;
+
+    regm->n.visited = regm->n.nfa.start->a.visited + 1;
+    nfa_handle_wraparound(s, &regm->n.visited);
 
     regm->n.move[0] = regm->n.nfa.start;
 
     regm->n.nclos = nfa_closure(regm->n.stack, regm->n.move, regm->n.nmove,
                                 regm->n.clos, regm->n.nstates,
                                 regm->n.visited++, &accept);
+
+    regm->n.nfa.start->a.visited = regm->n.visited;
   } else {
     regm->d.deriv = regm->d.regex;
     accept = (reg_nullable(regm->d.regex) != nil);
@@ -1888,6 +1912,7 @@ static void regex_machine_init(regex_machine_t *regm, val reg)
     regm->n.is_nfa = 1;
     regm->n.nfa = regex->r.nfa;
     regm->n.nstates = regex->nstates;
+    regm->n.visited = 0;
     regm->n.move = coerce(nfa_state_t **,
                           chk_malloc(regex->nstates * sizeof *regm->n.move));
     regm->n.clos = coerce(nfa_state_t **,
@@ -1918,6 +1943,8 @@ static regm_result_t regex_machine_feed(regex_machine_t *regm, wchar_t ch)
   int accept = 0;
 
   if (regm->n.is_nfa) {
+    nfa_handle_wraparound(regm->n.nfa.start, &regm->n.visited);
+
     if (ch != 0) {
       regm->n.count++;
 
