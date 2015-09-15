@@ -64,6 +64,7 @@ typedef struct regex {
     struct nfa nfa;
     val dv;
   } r;
+  int nstates;
   val source;
 } regex_t;
 
@@ -186,8 +187,6 @@ typedef union char_set {
 #endif
 } char_set_t;
 
-#define NFA_SET_SIZE 512
-
 typedef enum {
   nfa_accept, nfa_empty, nfa_wild, nfa_single, nfa_set
 } nfa_kind_t;
@@ -233,6 +232,7 @@ struct nfa_machine {
   nfa_state_t **move, **clos, **stack;
   int nmove, nclos;
   nfa_t nfa;
+  int nstates;
 };
 
 struct dv_machine {
@@ -1048,63 +1048,62 @@ static nfa_t nfa_compile_regex(val exp)
   }
 }
 
-static int nfa_all_states(nfa_state_t **inout, int num, unsigned visited)
+static void nfa_map_states(nfa_state_t *s,
+                           mem_t *ctx, void (*fun)(nfa_state_t *,
+                                                   mem_t *ctx),
+                           unsigned visited)
 {
-  int i;
-
-  for (i = 0; i < num; i++)
-    inout[i]->a.visited = visited;
-
-  for (i = 0; i < num; i++) {
-    nfa_state_t *s = inout[i];
-
-    if (num >= NFA_SET_SIZE)
-      internal_error("NFA set size exceeded");
+  if (s != 0 && s->a.visited != visited) {
+    s->a.visited = visited;
+    fun(s, ctx);
 
     switch (s->a.kind) {
     case nfa_accept:
       break;
     case nfa_empty:
-      {
-        nfa_state_t *e0 = s->e.trans0;
-        nfa_state_t *e1 = s->e.trans1;
-
-        if (e0 && e0->a.visited != visited) {
-          e0->a.visited = visited;
-          inout[num++] = e0;
-        }
-        if (e1 && e1->a.visited != visited) {
-          e1->a.visited = visited;
-          inout[num++] = e1;
-        }
-      }
+      nfa_map_states(s->e.trans0, ctx, fun, visited);
+      nfa_map_states(s->e.trans1, ctx, fun, visited);
       break;
     case nfa_wild:
     case nfa_single:
     case nfa_set:
-      if (s->o.trans->a.visited != visited) {
-        s->o.trans->a.visited = visited;
-        inout[num++] = s->o.trans;
-      }
+      nfa_map_states(s->o.trans, ctx, fun, visited);
       break;
     }
   }
-
-  if (num > NFA_SET_SIZE)
-    internal_error("NFA set size exceeded");
-
-  return num;
 }
 
-static void nfa_free(nfa_t nfa)
+static void nfa_count_one(nfa_state_t *s, mem_t *ctx)
 {
-  nfa_state_t **all = coerce(nfa_state_t **, chk_malloc(NFA_SET_SIZE * sizeof *all));
-  int nstates, i;
+  (void) s;
+  int *pcount = coerce(int *, ctx);
+  (*pcount)++;
+}
 
-  all[0] = nfa.start;
-  all[1] = nfa.accept;
+static int nfa_count_states(nfa_state_t *s)
+{
+  int count = 0;
+  unsigned visited = s->a.visited + 1;
+  nfa_map_states(s, coerce(mem_t *, &count), nfa_count_one, visited);
+  return count;
+}
 
-  nstates = nfa_all_states(all, 2, nfa.start->a.visited + 1);
+static void nfa_collect_one(nfa_state_t *s, mem_t *ctx)
+{
+  nfa_state_t ***ppel = coerce(nfa_state_t ***, ctx);
+  *(*ppel)++ = s;
+}
+
+static void nfa_free(nfa_t nfa, int nstates)
+{
+  nfa_state_t **all = coerce(nfa_state_t **, chk_malloc(nstates * sizeof *all));
+  nfa_state_t **pelem = all, *s = nfa.start;
+  unsigned visited = s->a.visited + 1;
+  int i;
+
+  nfa_map_states(s, coerce(mem_t *, &pelem), nfa_collect_one, visited);
+
+  assert (pelem - all == nstates);
 
   for (i = 0; i < nstates; i++)
     nfa_state_free(all[i]);
@@ -1127,7 +1126,8 @@ static void nfa_free(nfa_t nfa)
  * (Transitions that don't do not consume and match an input character).
  */
 static int nfa_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
-                       nfa_state_t **out, unsigned visited, int *accept)
+                       nfa_state_t **out, int nstates,
+                       unsigned visited, int *accept)
 {
   int i, nout = 0;
   int stackp = 0;
@@ -1135,8 +1135,8 @@ static int nfa_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
   /* First, add all states in the input set to the closure,
      push them on the stack, and mark them as visited. */
   for (i = 0; i < nin; i++) {
-    if (stackp >= NFA_SET_SIZE)
-      internal_error("NFA set size exceeded");
+    bug_unless (stackp < nstates);
+
     in[i]->a.visited = visited;
     stack[stackp++] = in[i];
     out[nout++] = in[i];
@@ -1146,9 +1146,6 @@ static int nfa_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
 
   while (stackp) {
     nfa_state_t *top = stack[--stackp];
-
-    if (nout >= NFA_SET_SIZE)
-      internal_error("NFA set size exceeded");
 
     /* Only states of type nfa_empty are interesting.
        Each such state at most two epsilon transitions. */
@@ -1175,8 +1172,7 @@ static int nfa_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
     }
   }
 
-  if (nout > NFA_SET_SIZE)
-    internal_error("NFA set size exceeded");
+  bug_unless (nout <= nstates);
 
   return nout;
 }
@@ -1215,8 +1211,6 @@ static int nfa_move(nfa_state_t **in, int nin, nfa_state_t **out, wchar_t ch)
        pointer to the next state in the same position,
        among a common set of leading struct members in the union. */
 
-    if (nmove >= NFA_SET_SIZE)
-      internal_error("NFA set size exceeded");
     out[nmove++] = s->o.trans;
   }
 
@@ -1244,19 +1238,20 @@ static int nfa_move(nfa_state_t **in, int nin, nfa_state_t **out, wchar_t ch)
  * determines the match length (defaulting to zero
  * if no acceptance states were encountered).
  */
-static cnum nfa_run(nfa_t nfa, const wchar_t *str)
+static cnum nfa_run(nfa_t nfa, int nstates, const wchar_t *str)
 {
   const wchar_t *last_accept_pos = 0, *ptr = str;
   unsigned visited = nfa.start->a.visited + 1;
-  nfa_state_t **move = coerce(nfa_state_t **, chk_malloc(NFA_SET_SIZE * sizeof *move));
-  nfa_state_t **clos = coerce(nfa_state_t **, chk_malloc(NFA_SET_SIZE * sizeof *clos));
-  nfa_state_t **stack = coerce(nfa_state_t **, chk_malloc(NFA_SET_SIZE * sizeof *stack));
+  nfa_state_t **move = coerce(nfa_state_t **, chk_malloc(nstates * sizeof *move));
+  nfa_state_t **clos = coerce(nfa_state_t **, chk_malloc(nstates * sizeof *clos));
+  nfa_state_t **stack = coerce(nfa_state_t **, chk_malloc(nstates * sizeof *stack));
   int nmove = 1, nclos;
   int accept = 0;
 
   move[0] = nfa.start;
 
-  nclos = nfa_closure(stack, move, nmove, clos, visited++, &accept);
+  nclos = nfa_closure(stack, move, nmove, clos,
+                      nstates, visited++, &accept);
 
   if (accept)
     last_accept_pos = ptr;
@@ -1267,7 +1262,8 @@ static cnum nfa_run(nfa_t nfa, const wchar_t *str)
     accept = 0;
 
     nmove = nfa_move(clos, nclos, move, ch);
-    nclos = nfa_closure(stack, move, nmove, clos, visited++, &accept);
+    nclos = nfa_closure(stack, move, nmove, clos,
+                        nstates, visited++, &accept);
 
     if (accept)
       last_accept_pos = ptr + 1;
@@ -1294,7 +1290,7 @@ static void regex_destroy(val obj)
 {
   regex_t *regex = coerce(regex_t *, obj->co.handle);
   if (regex->kind == REGEX_NFA)
-    nfa_free(regex->r.nfa);
+    nfa_free(regex->r.nfa, regex->nstates);
   free(regex);
   obj->co.handle = 0;
 }
@@ -1670,6 +1666,7 @@ val regex_compile(val regex_sexp, val error_stream)
     val ret;
     val dv = dv_compile_regex(regex_sexp);
     regex->kind = REGEX_DV;
+    regex->nstates = 0;
     regex->source = nil;
     ret = cobj(coerce(mem_t *, regex), regex_s, &regex_obj_ops);
     regex->r.dv = dv;
@@ -1682,6 +1679,7 @@ val regex_compile(val regex_sexp, val error_stream)
     regex->source = nil;
     ret = cobj(coerce(mem_t *, regex), regex_s, &regex_obj_ops);
     regex->r.nfa = nfa_compile_regex(regex_sexp);
+    regex->nstates = nfa_count_states(regex->r.nfa.start);
     regex->source = regex_sexp;
     return ret;
   }
@@ -1852,7 +1850,7 @@ static cnum regex_run(val compiled_regex, const wchar_t *str)
 
   return if3(regex->kind == REGEX_DV,
              dv_run(regex->r.dv, str),
-             nfa_run(regex->r.nfa, str));
+             nfa_run(regex->r.nfa, regex->nstates, str));
 }
 
 /*
@@ -1874,7 +1872,8 @@ static void regex_machine_reset(regex_machine_t *regm)
     regm->n.move[0] = regm->n.nfa.start;
 
     regm->n.nclos = nfa_closure(regm->n.stack, regm->n.move, regm->n.nmove,
-                                regm->n.clos, regm->n.visited++, &accept);
+                                regm->n.clos, regm->n.nstates,
+                                regm->n.visited++, &accept);
   } else {
     regm->d.deriv = regm->d.regex;
     accept = (reg_nullable(regm->d.regex) != nil);
@@ -1894,12 +1893,13 @@ static void regex_machine_init(regex_machine_t *regm, val reg)
   } else {
     regm->n.is_nfa = 1;
     regm->n.nfa = regex->r.nfa;
+    regm->n.nstates = regex->nstates;
     regm->n.move = coerce(nfa_state_t **,
-                          chk_malloc(NFA_SET_SIZE * sizeof *regm->n.move));
+                          chk_malloc(regex->nstates * sizeof *regm->n.move));
     regm->n.clos = coerce(nfa_state_t **,
-                          chk_malloc(NFA_SET_SIZE * sizeof *regm->n.clos));
+                          chk_malloc(regex->nstates * sizeof *regm->n.clos));
     regm->n.stack = coerce(nfa_state_t **,
-                           chk_malloc(NFA_SET_SIZE * sizeof *regm->n.stack));
+                           chk_malloc(regex->nstates * sizeof *regm->n.stack));
   }
 
   regex_machine_reset(regm);
@@ -1930,7 +1930,8 @@ static regm_result_t regex_machine_feed(regex_machine_t *regm, wchar_t ch)
       regm->n.nmove = nfa_move(regm->n.clos, regm->n.nclos, regm->n.move, ch);
       regm->n.nclos = nfa_closure(regm->n.stack, regm->n.move,
                                   regm->n.nmove, regm->n.clos,
-                                  regm->n.visited++, &accept);
+                                  regm->n.nstates, regm->n.visited++,
+                                  &accept);
 
       regm->n.nfa.start->a.visited = regm->n.visited;
 
