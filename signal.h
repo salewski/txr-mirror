@@ -27,7 +27,7 @@
 
 #if CONFIG_DEBUG_SUPPORT
 extern int debug_depth;
-#define EJ_DBG_MEMB int dbg_depth;
+#define EJ_DBG_MEMB volatile int dbg_depth;
 #define EJ_DBG_SAVE(EJB) (EJB).dbg_depth = debug_depth,
 #define EJ_DBG_REST(EJB) debug_depth = (EJB).dbg_depth,
 #else
@@ -80,13 +80,13 @@ INLINE val sig_check_fast(void)
 
 typedef struct {
   jmp_buf jb;
-  sig_atomic_t se;
-  sigset_t blocked;
-  val de;
-  int gc;
-  val **gc_pt;
+  volatile sig_atomic_t se;
+  volatile sigset_t blocked;
+  volatile val de;
+  volatile int gc;
+  val **volatile gc_pt;
   EJ_OPT_MEMB
-  int rv;
+  volatile int rv;
 } extended_jmp_buf;
 
 #define extended_setjmp(EJB)                    \
@@ -95,7 +95,9 @@ typedef struct {
       dyn_env = (EJB).de,                       \
       gc_enabled = (EJB).gc,                    \
       gc_prot_top = (EJB).gc_pt,                \
-      sig_mask(SIG_SETMASK, &(EJB).blocked, 0), \
+      sig_mask(SIG_SETMASK,                     \
+               strip_qual(sigset_t *,           \
+                          &(EJB).blocked), 0),  \
       EJ_OPT_REST(EJB)                          \
       (EJB).rv)                                 \
    : ((EJB).se = async_sig_enabled,             \
@@ -124,11 +126,11 @@ extern volatile sig_atomic_t async_sig_enabled;
 
 typedef struct {
   jmp_buf jb;
-  val de;
-  int gc;
-  val **gc_pt;
+  volatile val de;
+  volatile int gc;
+  val **volatile gc_pt;
   EJ_OPT_MEMB
-  int rv;
+  volatile int rv;
 } extended_jmp_buf;
 
 #define extended_setjmp(EJB)                    \
