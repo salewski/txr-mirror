@@ -37,6 +37,9 @@
 #if HAVE_SYS_TIME
 #include <sys/time.h>
 #endif
+#if HAVE_VALGRIND
+#include <valgrind/memcheck.h>
+#endif
 #include "lib.h"
 #include "gc.h"
 #include "signal.h"
@@ -366,6 +369,9 @@ int sig_mask(int how, const sigset_t *set, sigset_t *oldset)
 
   if (memcmp(&sig_blocked_cache, pnew, sizeof *pnew) != 0) {
     sig_blocked_cache = *pnew;
+#if HAVE_VALGRIND
+    VALGRIND_MAKE_MEM_DEFINED(oldset, sizeof *oldset);
+#endif
     return sigprocmask(SIG_SETMASK, &sig_blocked_cache, oldset);
   }
 
