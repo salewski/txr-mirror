@@ -1104,7 +1104,7 @@ static void nfa_free(nfa_t nfa)
   all[0] = nfa.start;
   all[1] = nfa.accept;
 
-  nstates = nfa_all_states(all, 2, nfa.start->a.visited);
+  nstates = nfa_all_states(all, 2, nfa.start->a.visited + 1);
 
   for (i = 0; i < nstates; i++)
     nfa_state_free(all[i]);
