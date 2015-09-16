@@ -293,7 +293,7 @@ static void free_completions(lino_completions_t *lc) {
         free(lc->cvec);
 }
 
-static void sync_data_to_buf(lino_t *l);
+static void sync_data_to_buf(lino_t *l, int prompt);
 
 static int compare_completions(const void *larg, const void *rarg)
 {
@@ -345,7 +345,7 @@ static int complete_line(lino_t *ls) {
                                     "%s%s", lc.cvec[i], ls->data + ls->dpos);
                 lt->dlen = n;
                 lt->dpos = strlen(lc.cvec[i]);
-                sync_data_to_buf(lt);
+                sync_data_to_buf(lt, lt->mlmode);
                 refresh_line(lt);
             } else {
                 refresh_line(ls);
@@ -381,7 +381,7 @@ static int complete_line(lino_t *ls) {
                         ls->dpos = lt->dpos;
                         ls->dlen = lt->dlen;
                         strcpy(ls->data, lt->data);
-                        sync_data_to_buf(ls);
+                        sync_data_to_buf(ls, ls->mlmode);
                         refresh_line(ls);
                     }
                     stop = 1;
@@ -600,11 +600,15 @@ static void ab_free(struct abuf *ab) {
 
 /* Convert raw data to display data, and recalculate
    display length and position. */
-static void sync_data_to_buf(lino_t *l)
+static void sync_data_to_buf(lino_t *l, int mlmode)
 {
     char *dptr = l->data, *bptr = l->buf;
 
-    for (;;) {
+    if (mlmode)
+        bptr += snprintf(l->buf, sizeof l->buf, "%s",
+                         l->prompt);
+
+    while (bptr - l->buf < sizeof l->buf - 1) {
         if (dptr - l->data == (ptrdiff_t) l->dpos)
             l->pos = bptr - l->buf;
 
@@ -617,6 +621,9 @@ static void sync_data_to_buf(lino_t *l)
                     *bptr++ = ' ';
                     pos++;
                 } while (pos % 8 != 0);
+            } else if (mlmode && ch == '\r') {
+                *bptr++ = '\r';
+                *bptr++ = '\n';
             } else if (ch < ' ') {
                 *bptr++ = '^';
                 *bptr++ = '@' + ch;
@@ -675,16 +682,58 @@ static void refresh_singleline(lino_t *l) {
     ab_free(&ab);
 }
 
+struct row_values {
+    int rows[3];
+};
+
+static struct row_values screen_rows(const char *str,
+                                     size_t oldpos, size_t pos,
+                                     int cols)
+{
+    const char *start = str;
+    int ch = *str;
+    struct row_values out = { { 1, 1, 1 } };
+    int col = 1;
+
+    if (!ch)
+        return out;
+
+    for (; ; ch = *++str, col++) {
+        if (str - start == oldpos)
+            out.rows[1] = out.rows[0];
+        if (str - start == pos)
+            out.rows[2] = out.rows[0];
+        if (ch == 0)
+            break;
+        if (ch == '\r')
+            continue;
+        if (ch == '\n' || col == cols) {
+            col = 0;
+            out.rows[0]++;
+        }
+    }
+
+    return out;
+}
+
+static int col_offset_in_str(const char *str, size_t pos)
+{
+    int offs = 0;
+    while (pos > 0 && str[--pos] != '\n')
+        offs++;
+    return offs;
+}
+
 /* Multi line low level line refresh.
  *
  * Rewrite the currently edited line accordingly to the buffer content,
  * cursor position, and number of columns of the terminal. */
 static void refresh_multiline(lino_t *l) {
     char seq[64];
-    int plen = strlen(l->prompt);
-    int rows = (plen+l->len+l->cols-1)/l->cols; /* rows used by current buf. */
-    int rpos = (plen+l->oldpos+l->cols)/l->cols; /* cursor relative row. */
-    int rpos2; /* rpos after refresh. */
+    struct row_values r = screen_rows(l->buf, l->oldpos, l->pos, l->cols);
+    int rows = r.rows[0]; /* rows used by current buf. */
+    int rpos = r.rows[1]; /* cursor relative row. */
+    int rpos2 = r.rows[2]; /* rpos after refresh. */
     int col; /* colum position, zero-based. */
     int old_rows = l->maxrows;
     int fd = l->ofd, j;
@@ -714,15 +763,15 @@ static void refresh_multiline(lino_t *l) {
     snprintf(seq,64,"\r\x1b[0K");
     ab_append(&ab,seq,strlen(seq));
 
-    /* Write the prompt and the current buffer content */
-    ab_append(&ab,l->prompt,strlen(l->prompt));
+    /* Write the current buffer content which includes the prompt */
     ab_append(&ab,l->buf,l->len);
 
     /* If we are at the very end of the screen with our prompt, we need to
-     * emit a newline and move the prompt to the first column. */
-    if (l->pos &&
-        l->pos == l->len &&
-        (l->pos+plen) % l->cols == 0)
+     * emit a newline and move the cursor to the first column. */
+
+    col = col_offset_in_str(l->buf, l->pos);
+
+    if (l->pos && l->pos == l->len && col % l->cols == l->cols - 1)
     {
         lndebug("<newline>");
         ab_append(&ab,"\n",1);
@@ -732,8 +781,6 @@ static void refresh_multiline(lino_t *l) {
         if (rows > (int)l->maxrows) l->maxrows = rows;
     }
 
-    /* Move cursor to right position. */
-    rpos2 = (plen+l->pos+l->cols)/l->cols; /* current cursor relative row. */
     lndebug("rpos2 %d", rpos2);
 
     /* Go up till we reach the expected positon. */
@@ -744,7 +791,6 @@ static void refresh_multiline(lino_t *l) {
     }
 
     /* Set column. */
-    col = (plen+(int)l->pos) % (int)l->cols;
     lndebug("set col %d", 1+col);
     if (col)
         snprintf(seq,64,"\r\x1b[%dC", col);
@@ -762,7 +808,8 @@ static void refresh_multiline(lino_t *l) {
 /* Calls the two low level functions refresh_singleline() or
  * refresh_multiline() according to the selected mode. */
 static void refresh_line(lino_t *ls) {
-    sync_data_to_buf(ls);
+
+    sync_data_to_buf(ls, ls->mlmode);
 
     if (ls->mlmode)
         refresh_multiline(ls);
@@ -862,7 +909,7 @@ static int edit_insert(lino_t *l, char c) {
             l->dpos++;
             l->dlen++;
             l->data[l->dlen] = '\0';
-            sync_data_to_buf(l);
+            sync_data_to_buf(l, l->mlmode);
             if ((!l->mlmode && l->len == l->dlen && l->plen+l->len < l->cols) /* || mlmode */) {
                 /* Avoid a full update of the line in the
                  * trivial case. */
@@ -1211,6 +1258,12 @@ static int edit(lino_t *l, const char *prompt)
             edit_delete_prev_word(l);
             break;
         case CTL('J'):
+            if (l->mlmode) {
+                snprintf(l->buf, sizeof l->buf, "%s", l->prompt);
+                l->pos = l->len = strlen(l->buf);
+                refresh_multiline(l);
+            }
+
             l->mlmode ^= 1;
             refresh_line(l);
             break;

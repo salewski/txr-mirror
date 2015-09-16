@@ -33630,11 +33630,41 @@ and return to editing the original uncompleted line. Any other input character c
 the listener to keep the currently shown completion, and return to edit mode,
 where that that character is processed again as a command.
 
+.SS* Multi-Line Mode
+
+The listener operates in one of two modes: line mode and multi-line mode.  The
+default operation on start-up is line mode. It is possible to toggle between
+line mode and multi-line mode using the Ctrl-J command.
+
+In line mode, all input given to a single prompt appears to be on a single
+line. When the line becomes longer than the screen width, it scrolls
+horizontally.   In line mode, carriage return characters embedded in a line
+are displayed as
+.codn ^M .
+
+In multi-line mode, when the input exceeds the screen width, it simply wraps to
+take up additional lines rather than scrolling horizontally. Furthermore,
+multi-line mode not only wraps long lines of input onto multiple lines of
+the display, but also supports true multi-line input. In multi-line
+mode, carriage return characters embedded in input are treated as line
+breaks rather than being rendered as
+.codn ^M .
+
+To insert a line break character, use the sequence: Ctrl-V, Ctrl-M.
+Or, equivalently: Ctrl-V, Enter.
+
+Note that the Ctrl-K and Ctrl-U commands regard the entire input to be one
+logical line, ignoring the line breaks.
+
+Because carriage returns are not line terminators in text files,
+lines which contain embedded carriage returns are correctly saved
+into and retrieved from the persistent history file.
+
 .SS* Reading Forms Directly from the Terminal
 
-The listener is currently line oriented. There is, however, support for
-accepting input which may span multiple lines and come in a large
-quantity.
+In addition to multi-line mode, the listener provides support
+for directly parsing input from the terminal, suitable for processing
+large amounts of pasted material.
 
 If the
 .code :read
