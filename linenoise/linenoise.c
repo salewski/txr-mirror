@@ -121,25 +121,6 @@ static lino_t lino_list = { &lino_list, &lino_list };
 volatile sig_atomic_t lino_list_busy;
 static int atexit_registered = 0; /* Register atexit just 1 time. */
 
-/* Debugging macro. */
-#if 0
-FILE *lndebug_fp = NULL;
-#define lndebug(...) \
-    do { \
-        if (lndebug_fp == NULL) { \
-            lndebug_fp = fopen("/tmp/lndebug.txt","a"); \
-            fprintf(lndebug_fp, \
-            "[%d %d %d] p: %d, rows: %d, rpos: %d, max: %d, oldmax: %d\n", \
-            (int)l->len,(int)l->pos,(int)l->oldpos,plen,rows,rpos, \
-            (int)l->maxrows,old_rows); \
-        } \
-        fprintf(lndebug_fp, ", " __VA_ARGS__); \
-        fflush(lndebug_fp); \
-    } while (0)
-#else
-#define lndebug(fmt, ...)
-#endif
-
 /* ======================= Low level terminal handling ====================== */
 
 /* Set if to use or not the multi line mode. */
@@ -746,20 +727,17 @@ static void refresh_multiline(lino_t *l) {
      * going to the last row. */
     ab_init(&ab);
     if (old_rows-rpos > 0) {
-        lndebug("go down %d", old_rows-rpos);
         snprintf(seq,64,"\x1b[%dB", old_rows-rpos);
         ab_append(&ab,seq,strlen(seq));
     }
 
     /* Now for every row clear it, go up. */
     for (j = 0; j < old_rows-1; j++) {
-        lndebug("clear+up");
         snprintf(seq,64,"\r\x1b[0K\x1b[1A");
         ab_append(&ab,seq,strlen(seq));
     }
 
     /* Clean the top line. */
-    lndebug("clear");
     snprintf(seq,64,"\r\x1b[0K");
     ab_append(&ab,seq,strlen(seq));
 
@@ -773,7 +751,6 @@ static void refresh_multiline(lino_t *l) {
 
     if (l->pos && l->pos == l->len && col % l->cols == l->cols - 1)
     {
-        lndebug("<newline>");
         ab_append(&ab,"\n",1);
         snprintf(seq,64,"\r");
         ab_append(&ab,seq,strlen(seq));
@@ -781,24 +758,19 @@ static void refresh_multiline(lino_t *l) {
         if (rows > (int)l->maxrows) l->maxrows = rows;
     }
 
-    lndebug("rpos2 %d", rpos2);
-
     /* Go up till we reach the expected positon. */
     if (rows-rpos2 > 0) {
-        lndebug("go-up %d", rows-rpos2);
         snprintf(seq,64,"\x1b[%dA", rows-rpos2);
         ab_append(&ab,seq,strlen(seq));
     }
 
     /* Set column. */
-    lndebug("set col %d", 1+col);
     if (col)
         snprintf(seq,64,"\r\x1b[%dC", col);
     else
         snprintf(seq,64,"\r");
     ab_append(&ab,seq,strlen(seq));
 
-    lndebug("\n");
     l->oldpos = l->pos;
 
     if (write(fd,ab.b,ab.len) == -1) {} /* Can't recover from write error. */
