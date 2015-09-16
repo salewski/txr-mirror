@@ -207,6 +207,7 @@ NTKEY   @?:{NT2}?
 NTOK    {NTREG}|{NTKEY}
 WS      [\t ]*
 REQWS   [\t ]+
+NL      (\n|\r|\r\n)
 HEX     [0-9A-Fa-f]
 OCT     [0-7]
 
@@ -700,7 +701,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return TEXT;
 }
 
-<SPECIAL,QSPECIAL,NESTED,BRACED>\n {
+<SPECIAL,QSPECIAL,NESTED,BRACED>{NL} {
   yyextra->lineno++;
 }
 
@@ -724,7 +725,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return '.';
 }
 
-<SPECIAL,QSPECIAL,NESTED,BRACED>[\\]\n{WS} {
+<SPECIAL,QSPECIAL,NESTED,BRACED>[\\]{NL}{WS} {
   if (YYSTATE == SPECIAL)
     yy_pop_state(yyscanner);  /* @\ continuation */
   yyextra->lineno++;
@@ -759,7 +760,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   yyerrorf(yyg, lit("unrecognized escape: \\~a"), chr(yytext[1]), nao);
 }
 
-<SPECIAL,QSPECIAL,NESTED,BRACED>[;].* {
+<SPECIAL,QSPECIAL,NESTED,BRACED>[;][^\n\r]* {
   /* comment */
 }
 
@@ -795,11 +796,11 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return REGTOKEN;
 }
 
-<REGEX,SREGEX>{WS}[\\]\n{WS} {
+<REGEX,SREGEX>{WS}[\\]{NL}{WS} {
   yyextra->lineno++;
 }
 
-<REGEX,SREGEX>\n {
+<REGEX,SREGEX>{NL} {
   yyextra->lineno++;
   yyerrprepf(yyg, lit("newline in regex"), nao);
   return ERRTOK;
@@ -848,12 +849,12 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return SPACE;
 }
 
-<INITIAL>({UONLY}|[^@\n ])+ {
+<INITIAL>({UONLY}|[^@\n\r ])+ {
   yylval->lexeme = utf8_dup_from(yytext);
   return TEXT;
 }
 
-<INITIAL>\n {
+<INITIAL>{NL} {
   yyextra->lineno++;
   return '\n';
 }
@@ -867,7 +868,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   yy_push_state(SPECIAL, yyscanner);
 }
 
-<INITIAL>^@[#;].*\n {
+<INITIAL>^@[#;].*{NL} {
   /* eat whole line comment */
   yyextra->lineno++;
 }
@@ -896,11 +897,11 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return LITCHAR;
 }
 
-<STRLIT,QSILIT>{WS}[\\]\n{WS} {
+<STRLIT,QSILIT>{WS}[\\]{NL}{WS} {
   yyextra->lineno++;
 }
 
-<STRLIT,QSILIT,WLIT,QWLIT>{WS}[\\]\n{WS} {
+<STRLIT,QSILIT,WLIT,QWLIT>{WS}[\\]{NL}{WS} {
   yyextra->lineno++;
 
   if (!opt_compat || opt_compat > 109)
@@ -927,33 +928,33 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return SYMTOK;
 }
 
-<CHRLIT>[^ \t\n] {
+<CHRLIT>[^ \t\n\r] {
   yylval->lexeme = utf8_dup_from(yytext);
   return SYMTOK; /* hack */
 }
 
-<STRLIT>\n {
+<STRLIT>{NL} {
   yyerrprepf(yyg, lit("newline in string literal"), nao);
   yyextra->lineno++;
   yylval->chr = yytext[0];
   return ERRTOK;
 }
 
-<CHRLIT>\n {
+<CHRLIT>{NL} {
   yyerrprepf(yyg, lit("newline in character literal"), nao);
   yyextra->lineno++;
   yylval->chr = yytext[0];
   return ERRTOK;
 }
 
-<QSILIT>\n {
+<QSILIT>{NL} {
   yyerrprepf(yyg, lit("newline in string quasiliteral"), nao);
   yyextra->lineno++;
   yylval->chr = yytext[0];
   return ERRTOK;
 }
 
-<WLIT,QWLIT>\n {
+<WLIT,QWLIT>{NL} {
   yyextra->lineno++;
 
   if (opt_compat && opt_compat <= 109)
