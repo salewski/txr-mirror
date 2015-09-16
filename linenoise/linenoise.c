@@ -54,12 +54,17 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <signal.h>
+#include <time.h>
 #include "config.h"
+#if HAVE_POLL
+#include <poll.h>
+#endif
 #include "linenoise.h"
 
 #define LINENOISE_DEFAULT_HISTORY_MAX_LEN 100
 #define LINENOISE_MAX_LINE 1024
 #define LINENOISE_MAX_DISP (LINENOISE_MAX_LINE * 8)
+#define LINENOISE_PAREN_DELAY 400000
 
 /* The lino_state structure represents the state during line editing.
  * We pass this state to functions implementing specific editing
@@ -764,6 +769,88 @@ static void refresh_line(lino_t *ls) {
         refresh_singleline(ls);
 }
 
+static size_t scan_match_rev(const char *s, size_t i, int mch)
+{
+    while (i > 0) {
+        int ch = s[--i];
+
+        if (ch == mch)
+            return i;
+
+        switch (ch) {
+        case ')':
+            if ((i = scan_match_rev(s, i, '(')) == -1)
+                return -1;
+            break;
+        case ']':
+            if ((i = scan_match_rev(s, i, '[')) == -1)
+                return -1;
+            break;
+        case '}':
+            if ((i = scan_match_rev(s, i, '{')) == -1)
+                return -1;
+            break;
+        case '(': case '[': case '{':
+            return -1;
+        default:
+            break;
+        }
+    }
+
+    return -1;
+}
+
+static size_t scan_rev(const char *s, size_t i)
+{
+    switch (s[i]) {
+    case ')':
+        return scan_match_rev(s, i, '(');
+    case ']':
+        return scan_match_rev(s, i, '[');
+    case '}':
+        return scan_match_rev(s, i, '{');
+    default:
+        return -1;
+    }
+}
+
+static void usec_delay(lino_t *l, long usec)
+{
+#if HAVE_POLL
+    struct pollfd pfd;
+    pfd.fd = l->ifd;
+    pfd.events = POLLIN;
+    poll(&pfd, 1, usec/1000);
+#elif HAVE_POSIX_NANOSLEEP
+    struct timespec ts;
+    (void) l;
+    ts.tv_sec = usec / 1000000;
+    ts.tv_nsec = (usec % 1000000) * 1000;
+    nanosleep(&ts, 0);
+#elif HAVE_POSIX_USLEEP
+    (void) l;
+    if (u >= 1000000)
+        sleep(u / 1000000);
+    usleep(u % 1000000);
+#else
+#error portme
+#endif
+}
+
+static void paren_jump(lino_t *l)
+{
+    size_t pos = scan_rev(l->data, l->dpos - 1);
+
+    if (pos != -1) {
+        size_t dp = l->dpos;
+        l->dpos = pos;
+        refresh_line(l);
+        usec_delay(l, LINENOISE_PAREN_DELAY);
+        l->dpos = dp;
+        refresh_line(l);
+    }
+}
+
 /* Insert the character 'c' at cursor current position.
  *
  * On error writing to the terminal -1 is returned, otherwise 0. */
@@ -1082,6 +1169,13 @@ static int edit(lino_t *l, const char *prompt)
                     break;
                 }
             }
+            break;
+        case ')': case ']': case '}':
+            if (edit_insert(l,c)) {
+                l->error = lino_ioerr;
+                return -1;
+            }
+            paren_jump(l);
             break;
         default:
             if (c < 32)
