@@ -1209,6 +1209,10 @@ static int edit(lino_t *l, const char *prompt)
         case CTL('W'):
             edit_delete_prev_word(l);
             break;
+        case CTL('J'):
+            l->mlmode ^= 1;
+            refresh_line(l);
+            break;
         case CTL('Z'):
             disable_raw_mode(l);
             raise(SIGTSTP);
