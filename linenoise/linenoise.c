@@ -1507,10 +1507,7 @@ int lino_hist_load(lino_t *ls, const char *filename) {
     }
 
     while (fgets(buf,LINENOISE_MAX_LINE,fp) != NULL) {
-        char *p;
-
-        p = strchr(buf,'\r');
-        if (!p) p = strchr(buf,'\n');
+        char *p = strchr(buf,'\n');
         if (p) *p = '\0';
         lino_hist_add(ls, buf);
     }
