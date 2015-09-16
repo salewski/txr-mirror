@@ -90,11 +90,11 @@ struct lino_state {
     const char *prompt; /* Prompt to display. */
     size_t plen;        /* Prompt length. */
     size_t pos;         /* Current cursor position. */
-    size_t oldpos;      /* Previous refresh cursor position. */
     size_t len;         /* Current edited line display length. */
     size_t dlen;        /* True underlying length. */
     size_t dpos;        /* True underlying position. */
     size_t cols;        /* Number of columns in terminal. */
+    size_t oldrow;      /* Row of previous cursor position (multiline mode) */
     size_t maxrows;     /* Maximum num of rows used so far (multiline mode) */
     int history_index;  /* The history index we are currently editing. */
     int need_resize;    /* Need resize flag. */
@@ -664,26 +664,22 @@ static void refresh_singleline(lino_t *l) {
 }
 
 struct row_values {
-    int rows[3];
+    int rows[2];
 };
 
-static struct row_values screen_rows(const char *str,
-                                     size_t oldpos, size_t pos,
-                                     int cols)
+static struct row_values screen_rows(const char *str, size_t pos, int cols)
 {
     const char *start = str;
     int ch = *str;
-    struct row_values out = { { 1, 1, 1 } };
+    struct row_values out = { { 1, 1 } };
     int col = 1;
 
     if (!ch)
         return out;
 
     for (; ; ch = *++str, col++) {
-        if (str - start == oldpos)
-            out.rows[1] = out.rows[0];
         if (str - start == pos)
-            out.rows[2] = out.rows[0];
+            out.rows[1] = out.rows[0];
         if (ch == 0)
             break;
         if (ch == '\r')
@@ -711,12 +707,11 @@ static int col_offset_in_str(const char *str, size_t pos)
  * cursor position, and number of columns of the terminal. */
 static void refresh_multiline(lino_t *l) {
     char seq[64];
-    struct row_values r = screen_rows(l->buf, l->oldpos, l->pos, l->cols);
+    struct row_values r = screen_rows(l->buf, l->pos, l->cols);
     int rows = r.rows[0]; /* rows used by current buf. */
-    int rpos = r.rows[1]; /* cursor relative row. */
-    int rpos2 = r.rows[2]; /* rpos after refresh. */
+    int nrow = r.rows[1]; /* cursor row after refresh. */
     int col; /* colum position, zero-based. */
-    int old_rows = l->maxrows;
+    int oldmaxrows = l->maxrows;
     int fd = l->ofd, j;
     struct abuf ab;
 
@@ -726,13 +721,13 @@ static void refresh_multiline(lino_t *l) {
     /* First step: clear all the lines used before. To do so start by
      * going to the last row. */
     ab_init(&ab);
-    if (old_rows-rpos > 0) {
-        snprintf(seq,64,"\x1b[%dB", old_rows-rpos);
+    if (oldmaxrows - l->oldrow > 0) {
+        snprintf(seq,64,"\x1b[%dB", oldmaxrows - l->oldrow);
         ab_append(&ab,seq,strlen(seq));
     }
 
     /* Now for every row clear it, go up. */
-    for (j = 0; j < old_rows-1; j++) {
+    for (j = 0; j < oldmaxrows - 1; j++) {
         snprintf(seq,64,"\r\x1b[0K\x1b[1A");
         ab_append(&ab,seq,strlen(seq));
     }
@@ -759,8 +754,8 @@ static void refresh_multiline(lino_t *l) {
     }
 
     /* Go up till we reach the expected positon. */
-    if (rows-rpos2 > 0) {
-        snprintf(seq,64,"\x1b[%dA", rows-rpos2);
+    if (rows - nrow > 0) {
+        snprintf(seq,64,"\x1b[%dA", rows - nrow);
         ab_append(&ab,seq,strlen(seq));
     }
 
@@ -771,7 +766,8 @@ static void refresh_multiline(lino_t *l) {
         snprintf(seq,64,"\r");
     ab_append(&ab,seq,strlen(seq));
 
-    l->oldpos = l->pos;
+    /* Remember current cursor row for next time */
+    l->oldrow = nrow;
 
     if (write(fd,ab.b,ab.len) == -1) {} /* Can't recover from write error. */
     ab_free(&ab);
@@ -1022,10 +1018,10 @@ static int edit(lino_t *l, const char *prompt)
      * specific editing functionalities. */
     l->prompt = prompt;
     l->plen = strlen(prompt);
-    l->oldpos = l->pos = l->len = 0;
+    l->pos = l->len = 0;
     l->dpos = l->dlen = 0;
     l->cols = get_columns(l->ifd, l->ofd);
-    l->maxrows = 0;
+    l->oldrow = l->maxrows = 0;
     l->history_index = 0;
 
     /* Buffer starts empty. */
