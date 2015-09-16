@@ -1082,7 +1082,7 @@ static int edit(lino_t *l, const char *prompt)
             break;
         case CTL('D'):   /* remove char at right of cursor, or if the
                             line is empty, act as end-of-file. */
-            if (l->len > 0) {
+            if (l->dlen > 0) {
                 edit_delete(l);
             } else {
                 if (l->history_len > 0) {
