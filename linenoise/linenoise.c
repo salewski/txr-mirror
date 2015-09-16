@@ -633,6 +633,7 @@ static void sync_data_to_buf(lino_t *l)
     }
 
     l->len = bptr - l->buf;
+    *bptr++ = 0;
 }
 
 /* Single line low level line refresh.
