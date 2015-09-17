@@ -1072,7 +1072,7 @@ static void edit_in_editor(lino_t *l) {
  * The function returns the length of the current buffer. */
 static int edit(lino_t *l, const char *prompt)
 {
-    int verbatim = 0, extended = 0;
+    int verbatim = 0, extended = 0, paste = 0;
 
     /* Populate the linenoise state that we pass to functions implementing
      * specific editing functionalities. */
@@ -1113,7 +1113,14 @@ static int edit(lino_t *l, const char *prompt)
 
         c = byte;
 
-        if (verbatim) {
+        if (paste && (c == CTL('X'))) {
+            paste = 0;
+            continue;
+        }
+
+        if (verbatim ||
+            (paste && c != ESC && c != BACKSPACE && c != CTL('H')))
+        {
             if (edit_insert(l,c)) {
                 l->error = lino_ioerr;
                 return -1;
@@ -1128,6 +1135,9 @@ static int edit(lino_t *l, const char *prompt)
             switch (c) {
             case CTL('E'):
                 edit_in_editor(l);
+                break;
+            case CTL('V'):
+                paste = 1;
                 break;
             default:
                 generate_beep(l);
@@ -1157,6 +1167,13 @@ static int edit(lino_t *l, const char *prompt)
 
         switch(c) {
         case ENTER:
+            if (paste) {
+                if (edit_insert(l,c)) {
+                    l->error = lino_ioerr;
+                    return -1;
+                }
+                break;
+            }
             if (l->history_len > 0) {
                 l->history_len--;
                 free(l->history[l->history_len]);

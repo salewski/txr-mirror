@@ -33485,6 +33485,17 @@ a mode in which the next character is interpreted literally and inserted
 into the line, even if that character is a special character such as Enter,
 or a command character.
 
+.NP* Verbatim Insert Mode
+The two-character sequence Ctrl-X, Ctrl-V ("extended verbatim", "super paste")
+enters into an verbatim insert mode useful for entry of free-form text. It is
+particularly useful in multi-line mode. In this mode, almost every character
+is inserted verbatim, including Enter.  The only commands recognized are:
+Ctrl-X, which terminates this mode, Backspace (both ASCII BS and DEL
+variants) and arrow key navigation. Enter inserts a line break, which
+appears as such in multi-line mode, or as
+.code ^M
+in line mode.
+
 .NP* History Recall
 
 By default, the most recent 500 lines submitted to the interactive listener are
