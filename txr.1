@@ -33478,26 +33478,6 @@ a mode in which the next character is interpreted literally and inserted
 into the line, even if that character is a special character such as Enter,
 or a command character.
 
-.NP* Clear Screen and Refresh
-
-The Ctrl-L command clears the screen and re-draws the line being edited.
-This is useful when the display is disturbed by the output of some
-background process, or serial line noise.
-
-.NP* Suspend to Background
-
-The Ctrl-Z ("Zzzz... (sleep)") command causes \*(TX to be placed into the
-background in a suspended, and control returned to the system shell.
-This feature depends on the use of a POSIX job control shell.
-
-Bringing the suspended \*(TX back into the foreground is achieved with a shell
-command such as the
-.code fg
-command in GNU Bash.
-
-When \*(TX is resumed, the interactive listener will re-display the edited
-line and restore the previous cursor position.
-
 .NP* History Recall
 
 The most recent one hundred lines submitted to the interactive listener are
@@ -33585,22 +33565,6 @@ takes place without leaving search mode.
 Navigating to a history line manually using the up and down arrow keys (or
 Ctrl-P/Ctrl-N) has the same net effect same as locating that line using
 Ctrl-R search.
-
-.NP* History Persistence
-
-The history is maintained in a text file called
-.code .txr_history
-in the user's home directory. Whenever the interactive listener terminates,
-this file is overwritten with the history contents stored in the listener's
-memory.  The next time the listener starts, it first re-loads the history from
-this file, making the commands of a previous session available for recall.
-
-The home directory is determined from the
-contents of the
-.code HOME
-environment variable. If this variable doesn't exist, or the user doesn't
-have permissions to write to this directory or to an existing history file
-in that directory, then the history isn't saved.
 
 .NP* Symbolic Completion
 
@@ -33709,6 +33673,26 @@ interactive history. Only the
 .code :read
 command which triggers this parsing mode appears in the history.
 
+.SS* Clear Screen and Refresh
+
+The Ctrl-L command clears the screen and re-draws the line being edited.
+This is useful when the display is disturbed by the output of some
+background process, or serial line noise.
+
+.SS* Suspend to Background
+
+The Ctrl-Z ("Zzzz... (sleep)") command causes \*(TX to be placed into the
+background in a suspended, and control returned to the system shell.
+This feature depends on the use of a POSIX job control shell.
+
+Bringing the suspended \*(TX back into the foreground is achieved with a shell
+command such as the
+.code fg
+command in GNU Bash.
+
+When \*(TX is resumed, the interactive listener will re-display the edited
+line and restore the previous cursor position.
+
 .SS* Interactive Profile File
 
 When the listener starts up, it looks for file called
@@ -33730,6 +33714,23 @@ The profile file is not read by non-interactive invocations of \*(TX:
 that is, when the
 .code -i
 option isn't present.
+
+.SS* History Persistence
+
+The history is maintained in a text file called
+.code .txr_history
+in the user's home directory. Whenever the interactive listener terminates,
+this file is overwritten with the history contents stored in the listener's
+memory.  The next time the listener starts, it first re-loads the history from
+this file, making the commands of a previous session available for recall.
+
+The home directory is determined from the
+contents of the
+.code HOME
+environment variable. If this variable doesn't exist, or the user doesn't
+have permissions to write to this directory or to an existing history file
+in that directory, then the history isn't saved.
+
 
 .SS* Parenthesis Matching
 
