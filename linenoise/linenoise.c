@@ -128,6 +128,10 @@ void lino_set_multiline(lino_t *ls, int ml) {
     ls->mlmode = ml;
 }
 
+int lino_get_multiline(lino_t *ls) {
+    return ls->mlmode;
+}
+
 static void atexit_handler(void);
 
 /* Raw mode: 1960 magic shit. */

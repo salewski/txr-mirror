@@ -69,3 +69,4 @@ int lino_hist_save(lino_t *, const char *filename);
 int lino_hist_load(lino_t *, const char *filename);
 int lino_clear_screen(lino_t *);
 void lino_set_multiline(lino_t *, int ml);
+int lino_get_multiline(lino_t *);

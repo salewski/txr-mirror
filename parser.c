@@ -56,6 +56,7 @@
 #endif
 
 val parser_s, unique_s;
+val listener_hist_len_s, listener_multi_line_p_s;
 
 static val stream_parser_hash;
 
@@ -578,6 +579,8 @@ val repl(val bindings, val in_stream, val out_stream)
   char *histfile_u8 = utf8_dup_to(c_str(histfile));
   val rcfile = if2(home, format(nil, lit("~a/.txr_profile"), home, nao));
   val old_sig_handler = set_sig_handler(num(SIGINT), func_n2(repl_intr));
+  val hist_len_var = lookup_global_var(listener_hist_len_s);
+  val multi_line_var = lookup_global_var(listener_multi_line_p_s);
 
   reg_varl(result_hash_sym, result_hash);
 
@@ -598,11 +601,16 @@ val repl(val bindings, val in_stream, val out_stream)
 
     char *prompt_u8 = utf8_dup_to(c_str(prompt));
 
+    lino_hist_set_max_len(ls, c_num(cdr(hist_len_var)));
+    lino_set_multiline(ls, cdr(multi_line_var) != nil);
+
     reg_varl(counter_sym, counter);
     reg_varl(var_counter_sym, var_counter);
     line_u8 = linenoise(ls, prompt_u8);
     free (prompt_u8);
     prompt_u8 = 0;
+
+    rplacd(multi_line_var, tnil(lino_get_multiline(ls)));
 
     if (line_u8 == 0) {
       switch (lino_get_error(ls)) {
@@ -721,9 +729,13 @@ val parser_eof(val parser)
 void parse_init(void)
 {
   parser_s = intern(lit("parser"), user_package);
+  listener_hist_len_s = intern(lit("*listener-hist-len*"), user_package);
+  listener_multi_line_p_s = intern(lit("*listener-multi-line-p*"), user_package);
   unique_s = gensym(nil);
   prot1(&stream_parser_hash);
   prot1(&unique_s);
   stream_parser_hash = make_hash(t, nil, nil);
   parser_l_init();
+  reg_var(listener_hist_len_s, num_fast(500));
+  reg_var(listener_multi_line_p_s, nil);
 }

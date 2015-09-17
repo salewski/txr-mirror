@@ -33487,11 +33487,13 @@ or a command character.
 
 .NP* History Recall
 
-The most recent one hundred lines submitted to the interactive listener are
+By default, the most recent 500 lines submitted to the interactive listener are
 remembered in a history.  This history is available for recall, making it
-convenient to repair mistakes, or compose new lines which are based on
-previous lines.  Note that the the history suppresses consecutive duplicate
-lines.
+convenient to repair mistakes, or compose new lines which are based on previous
+lines.  Note that the the history suppresses consecutive duplicate lines.
+The number of lines retained may be customized using the
+.code *listener-hist-len*
+variable.
 
 If the up arrow is used while editing a line, the contents of the line are
 placed into a temporary save area.  The line display is then updated to
@@ -33627,8 +33629,12 @@ content is handled properly. (See the following section, Multi-Line Mode).
 
 .SS* Multi-Line Mode
 
-The listener operates in one of two modes: line mode and multi-line mode.  The
-default operation on start-up is line mode. It is possible to toggle between
+The listener operates in one of two modes: line mode and multi-line mode.
+This is determined by the special variable
+.code *listener-multi-line-p*
+whose default value is
+.code nil
+(line mode).  It is possible to toggle between
 line mode and multi-line mode using the Ctrl-J command.
 
 In line mode, all input given to a single prompt appears to be on a single
@@ -33738,7 +33744,6 @@ environment variable. If this variable doesn't exist, or the user doesn't
 have permissions to write to this directory or to an existing history file
 in that directory, then the history isn't saved.
 
-
 .SS* Parenthesis Matching
 
 A feature of the listener is visual parenthesis matching in the form of a
@@ -33760,6 +33765,33 @@ Note that the backward matching is unsophisticated; it doesn't observe the
 lexical conventions and syntax of the \*(TL programming language.  For
 instance, a closing parenthesis outside a string literal may match
 match an opening one inside a string literal.
+
+.SS* Listener Configuration Variables
+
+The listener's behavior can be influenced through values of certain
+global variables. The settings can be made persistent by means
+of setting these variables in the interactive profile file.
+
+.coNP Special variable @ *listener-hist-len*
+.desc
+This special variable determines how many lines of history are
+retained by the listener. Changing this variable from within the listener
+has an instant effect. If the number is reduced from its current value,
+history lines are immediately discarded. The default value is 500.
+.code
+
+.coNP Special variable @ *listener-multi-line-p*
+.desc
+This is a boolean variable which indicates whether the listener is
+in multi-line mode. The default value is
+.codn nil .
+
+Changing this variable from within the listener takes effect
+immediately for the next line of input.
+
+If multi-line mode is toggled interactively from within the listener,
+the variable is updated to reflect the latest state. This happens
+when the command is submitted for evaluation.
 
 .SH* DEBUGGER
 \*(TX has a simple, crude, built-in debugger. The debugger is invoked by adding
