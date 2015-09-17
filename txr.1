@@ -33630,6 +33630,30 @@ and return to editing the original uncompleted line. Any other input character c
 the listener to keep the currently shown completion, and return to edit mode,
 where that that character is processed again as a command.
 
+.NP* Edit with External Editor
+
+The two character command Ctrl-X, Ctrl-E launches an external editor to
+edit the current command line. The command line is stored in a temporary
+file first, and the editor is invoked on this file. When the editor
+terminates, the file is read into the editing buffer.
+
+The editor is determined from the
+.code EDITOR
+environment variable. If this variable doesn't exist,
+the command does nothing.
+
+If the
+.code HOME
+environment variable exists, then the temporary file is created in the home
+directory. Otherwise it is created in the current working directory. If the
+creation of the file fails, then the command silently returns to edit mode.
+
+If the command line contains embedded carriage returns (which denote
+line breaks in multi-line mode) these are replaced with newline characters
+when written out to the file. Conversely, when the edited file is read
+back, its newlines are converted to carriage returns, so that multi-line
+content is handled properly. (See the following section, Multi-Line Mode).
+
 .SS* Multi-Line Mode
 
 The listener operates in one of two modes: line mode and multi-line mode.  The

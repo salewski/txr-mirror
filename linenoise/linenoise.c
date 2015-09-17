@@ -1002,6 +1002,62 @@ static void edit_delete_prev_word(lino_t *l) {
     refresh_line(l);
 }
 
+static void tr(char *s, int find, int rep)
+{
+    for (; *s; s++)
+        if (*s == find)
+            *s = rep;
+}
+
+static void edit_in_editor(lino_t *l) {
+    char *template = ".linotmpXXXXXX";
+    FILE *fo = 0;
+    char *ed = getenv("EDITOR");
+    char path[128];
+
+    if (ed) {
+        char *ho = getenv("HOME");
+        int fd;
+
+        if (ho)
+            snprintf(path, sizeof path, "%s/%s", ho, template);
+        else
+            snprintf(path, sizeof path, "%s", template);
+
+        if ((fd = mkstemp(path)) != -1)
+            fo = fdopen(fd, "w");
+
+        if (!fo && fd != -1)
+            close(fd);
+    }
+
+    if (fo) {
+        char cmd[256];
+        snprintf(cmd, sizeof cmd, "%s %s", ed, path);
+        tr(l->data, '\r', '\n');
+        if (fputs(l->data, fo) != EOF && putc('\n', fo) != EOF &&
+            fflush(fo) == 0)
+        {
+            FILE *fi;
+            int nread;
+
+            if (system(cmd) == 0 && (fi = fopen(path, "r")) != 0) {
+                nread = fread(l->data, 1, sizeof l->data - 1, fi);
+                fclose(fi);
+                l->data[nread] = 0;
+                if (nread > 0 && l->data[nread - 1] == '\n')
+                    l->data[--nread] = 0;
+                l->dpos = l->dlen = nread;
+                tr(l->data, '\n', '\r');
+                refresh_line(l);
+            }
+        }
+
+        fclose(fo);
+        remove(path);
+    }
+}
+
 /* This function is the core of the line editing capability of linenoise.
  * It expects 'fd' to be already in "raw mode" so that every key pressed
  * will be returned ASAP to read().
@@ -1066,6 +1122,9 @@ static int edit(lino_t *l, const char *prompt)
             extended = 0;
 
             switch (c) {
+            case CTL('E'):
+                edit_in_editor(l);
+                break;
             default:
                 generate_beep(l);
                 break;
