@@ -1012,7 +1012,7 @@ static void edit_delete_prev_word(lino_t *l) {
  * The function returns the length of the current buffer. */
 static int edit(lino_t *l, const char *prompt)
 {
-    int verbatim = 0;
+    int verbatim = 0, extended = 0;
 
     /* Populate the linenoise state that we pass to functions implementing
      * specific editing functionalities. */
@@ -1061,6 +1061,18 @@ static int edit(lino_t *l, const char *prompt)
             verbatim = 0;
             continue;
         }
+
+        if (extended) {
+            extended = 0;
+
+            switch (c) {
+            default:
+                generate_beep(l);
+                break;
+            }
+            continue;
+        }
+
 
         /* Only autocomplete when the callback is set. It returns < 0 when
          * there was an error reading from fd. Otherwise it will return the
@@ -1207,6 +1219,9 @@ static int edit(lino_t *l, const char *prompt)
         case CTL('V'): /* insert next char verbatim */
             verbatim = 1;
             break;
+        case CTL('X'):
+            extended = 1;
+            continue;
         case CTL('K'): /* delete from current to end of line. */
             l->data[l->dpos] = '\0';
             l->dlen = l->dpos;
