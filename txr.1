@@ -33272,6 +33272,13 @@ such a line
 .B is
 entered into the history.
 
+.SS* Limitations
+
+The interactive listener can only accept up to 1023 characters of input
+in a single command line. The command line must contain exactly one complete
+\*(TL expression, or a comment. Multiple expressions will not be evaluated.
+Expressions cannot be continued across multiple lines of entry.
+
 .SS* Ways to Quit
 
 Pressing Ctrl-D in a completely empty command line terminates the listener.
