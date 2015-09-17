@@ -1,3 +1,52 @@
+                                    TXR 116
+                                   2015-09-17
+
+
+  Features:
+
+  * Interactive listener improvements:
+    * Ctrl-R reverse search has been implemented.
+    * Tab completion now works anywhere in a line, not only
+      at the very end.
+    * Parenthesis matching: cursor jumps briefly to matching bracket,
+      brace or parenthesis.
+    * Multi-line mode, with proper history support for
+      lines containing embedded line breaks.
+    * Ctrl-C cleanly cancels completion, and navigation keys
+      smoothly transition from completion to edit mode.
+    * Ctrl-X Ctrl-E edits line in external editor.
+    * Ctrl-Z suspend and Ctrl-L clear work in completion mode.
+    * New :read command for parsing pasted material from terminal.
+    * Dynamic resizing of the terminal is now obeyed (SIGWINCH signal).
+    * A ~/.txr_profile file is now read on interactive start-up,
+      and Lisp forms are evaluated from it.
+    * multi-line mode and history length are configurable via special
+      variables.
+
+  * Removed arbitrary limit on regular expression size (number of states).
+
+  * Small regexes are processed with a smaller memory footprint due to
+    exact allocation of certain arrays and stack allocation is used
+    in some cases instead of malloc.
+
+  Bugs:
+
+  * Fixed memory leak of blank lines in listener.
+
+  * Comment lines entered into the listener do not produce a syntax
+    error and are entered into history.
+
+  * Fixed memory leak in NFA regular expressions.
+
+  * Fixed a counter wraparound bug in NFA regular expressions, resulting
+    in incorrect operation after 4.2 billion state transitions (2**32
+    characters fed to the same regular expression, whether in a single
+    job or across multiple jobs.)
+
+  * Addressed some minor issues in unwinding and signal handling.
+
+
+
                                     TXR 115
                                    2015-09-11
 
