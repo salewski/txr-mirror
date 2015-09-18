@@ -646,9 +646,9 @@ val repl(val bindings, val in_stream, val out_stream)
     uw_catch_begin (catch_all, exsym, exvals);
 
     {
+      val name = format(nil, lit("expr-~a"), prev_counter);
       val line = string_utf8(line_u8);
-      val form = lisp_parse(line, out_stream, colon_k,
-                            lit("line"), prev_counter);
+      val form = lisp_parse(line, out_stream, colon_k, name, colon_k);
       if (form == quit_k) {
         done = t;
       } else {
