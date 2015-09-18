@@ -375,7 +375,7 @@ static void load_rcfile(val name)
   val resolved_name;
   val lisp_p = t;
   val stream = nil;
-  val stat = nil; 
+  val stat = nil;
   val catch_syms = cons(error_s, nil);
 
   uw_catch_begin (catch_syms, sy, va);
