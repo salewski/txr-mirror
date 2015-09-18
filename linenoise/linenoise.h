@@ -61,6 +61,7 @@ lino_t *lino_copy(lino_t *);
 void lino_free(lino_t *);
 
 char *linenoise(lino_t *, const char *prompt);
+void lino_set_tempfile_suffix(lino_t *, const char *);
 lino_error_t lino_get_error(lino_t *);
 lino_error_t lino_set_error(lino_t *, lino_error_t); /* returns old */
 int lino_hist_add(lino_t *, const char *line);

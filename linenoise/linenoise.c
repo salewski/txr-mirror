@@ -88,6 +88,7 @@ struct lino_state {
     char buf[LINENOISE_MAX_DISP];       /* Displayed line bufer. */
     char data[LINENOISE_MAX_LINE];      /* True data corresponding to display */
     const char *prompt; /* Prompt to display. */
+    const char *suffix; /* Suffix when creating temp file. */
     size_t plen;        /* Prompt length. */
     size_t pos;         /* Current cursor position. */
     size_t len;         /* Current edited line display length. */
@@ -1022,14 +1023,24 @@ static void edit_in_editor(lino_t *l) {
     if (ed) {
         char *ho = getenv("HOME");
         int fd;
+#if HAVE_MKSTEMPS
+        const char *suffix = l->suffix ? l->suffix : "";
+#else
+        const char *suffix = "";
+#endif
 
         if (ho)
-            snprintf(path, sizeof path, "%s/%s", ho, template);
+            snprintf(path, sizeof path, "%s/%s%s", ho, template, suffix);
         else
-            snprintf(path, sizeof path, "%s", template);
+            snprintf(path, sizeof path, "%s%s", template, suffix);
 
+#if HAVE_MKSTEMPS
+        if ((fd = mkstemps(path, strlen(suffix))) != -1)
+            fo = fdopen(fd, "w");
+#else
         if ((fd = mkstemp(path)) != -1)
             fo = fdopen(fd, "w");
+#endif
 
         if (!fo && fd != -1)
             close(fd);
@@ -1484,6 +1495,11 @@ void lino_free(lino_t *ls)
         lino_cleanup(ls);
         free(ls);
     }
+}
+
+void lino_set_tempfile_suffix(lino_t *l, const char *suffix)
+{
+    l->suffix = suffix;
 }
 
 lino_error_t lino_get_error(lino_t *l)
