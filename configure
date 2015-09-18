@@ -122,6 +122,7 @@ have_posix_sigs=
 need_darwin_c_source=
 have_git=
 have_pwuid=
+have_grgid=
 have_alloca=
 have_termios=
 have_winsize=
@@ -2103,6 +2104,57 @@ int main(void)
   if conftest ; then
     printf "yes\n"
     printf "#define HAVE_PWUID_R 1\n" >> $config_h
+  else
+    printf "no\n"
+  fi
+fi
+
+printf "Checking for old school getgrent, getgrgid and getgrnam ... "
+
+cat > conftest.c <<!
+#include <sys/types.h>
+#include <grp.h>
+
+int main(void)
+{
+  struct group *g = getgrent();
+  struct group *h = getgrnam("root");
+  struct group *i = getgrgid(0);
+  setgrent();
+  endgrent();
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_GRGID 1\n" >> $config_h
+  have_grgid=y
+else
+  printf "no\n"
+fi
+
+if [ "$have_grgid" ]; then
+  printf "Checking for getgrgid_r and getgrnam_r ... "
+
+  cat > conftest.c <<!
+#include <sys/types.h>
+#include <grp.h>
+
+int main(void)
+{
+  struct group gr;
+  struct group *g;
+  char buf[1024];
+  int r1 = getgrgid_r(0, &gr, buf, sizeof buf, &g);
+  int r2 = getgrnam_r("root", &gr, buf, sizeof buf, &g);
+  return 0;
+}
+!
+
+  if conftest ; then
+    printf "yes\n"
+    printf "#define HAVE_GRGID_R 1\n" >> $config_h
   else
     printf "no\n"
   fi

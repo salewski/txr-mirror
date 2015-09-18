@@ -31308,6 +31308,84 @@ If the search fails,
 .code nil
 is returned.
 
+.SS* Unix Group Database
+
+.coNP Structure * group
+.synb
+.mets (defstruct group nil
+.mets \ \  name passwd gid mem)
+.syne
+.desc
+The
+.code group
+structure corresponds to the C type
+.codn struct group .
+Objects of this struct are produced by the password database
+query functions
+.codn getgrent ,
+.codn getgrgid ,
+and
+.codn getgrnam .
+
+.coNP Functions @, getgrent @ setgrent and @ endgrent
+.synb
+.mets (getgrent)
+.mets (setgrent)
+.mets (endgrent)
+.syne
+.desc
+The first time
+.code getgrent
+function is called, it returns the first group database entry.
+On subsequent calls it returns successive entries.
+Entries are returned as instances of the
+.code passwd
+structure.  If the function cannot retrieve an entry for any reason,
+it returns
+.codn nil .
+
+The
+.code setgrent
+function rewinds the database scan.
+
+The
+.code endgrent
+function releases the resources associated with the scan.
+
+.coNP Function @ getgrgid
+.synb
+.mets (getgrgid << gid )
+.syne
+.desc
+The
+.code getgrgid
+searches the group database for an entry whose group ID field
+is equal to the numeric
+.metn gid .
+If the search is successful, then a
+.code group
+structure representing the database entry is returned.
+If the search fails,
+.code nil
+is returned.
+
+.coNP Function @ getgrnam
+.synb
+.mets (getgrnam << name )
+.syne
+.desc
+The
+.code getgrnam
+searches the group database for an entry whose group name
+is equal to
+.metn name .
+If the search is successful, then a
+.code group
+structure representing the database entry is returned.
+If the search fails,
+.code nil
+is returned.
+
 .SS* Unix Signal Handling
 
 On platforms where certain advanced features of POSIX signal handling are

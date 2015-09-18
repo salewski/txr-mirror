@@ -59,6 +59,9 @@
 #if HAVE_PWUID
 #include <pwd.h>
 #endif
+#if HAVE_GRGID
+#include <grp.h>
+#endif
 #include ALLOCA_H
 #include "lib.h"
 #include "stream.h"
@@ -83,6 +86,10 @@ val atime_s, mtime_s, ctime_s;
 
 #if HAVE_PWUID
 val passwd_s, name_s, gecos_s, dir_s, shell_s;
+#endif
+
+#if HAVE_GRGID
+val group_s, mem_s;
 #endif
 
 static val errno_wrap(val newval)
@@ -944,6 +951,93 @@ static val getpwnam_wrap(val wname)
 
 #endif
 
+#if HAVE_GRGID
+
+static val setgrent_wrap(void)
+{
+  setgrent();
+  return nil;
+}
+
+static val endgrent_wrap(void)
+{
+  endgrent();
+  return nil;
+}
+
+static void fill_group(val to, struct group *from)
+{
+  list_collect_decl (out, ptail);
+  int i;
+
+  slotset(to, name_s, string_utf8(from->gr_name));
+  slotset(to, passwd_s, string_utf8(from->gr_passwd));
+  slotset(to, gid_s, num(from->gr_gid));
+
+  for (i = 0; from->gr_mem[i] != 0; i++)
+    ptail = list_collect(ptail, string_utf8(from->gr_mem[i]));
+
+  slotset(to, mem_s, out);
+}
+
+static val make_grstruct(struct group *g)
+{
+  args_decl(args, ARGS_MIN);
+  val out = make_struct(group_s, nil, args);
+  fill_group(out, g);
+  return out;
+}
+
+
+static val getgrent_wrap(void)
+{
+  struct group *g = getgrent();
+  return (g != 0) ? make_grstruct(g) : nil;
+}
+
+
+#endif
+
+#if HAVE_GRGID_R
+
+static val getgrgid_wrap(val uid)
+{
+  char buf[1024];
+  struct group gr, *g;
+  int res = getgrgid_r(c_num(uid), &gr, buf, sizeof buf, &g);
+
+  return (res == 0 && g != 0) ? make_grstruct(&gr) : nil;
+}
+
+static val getgrnam_wrap(val wname)
+{
+  char buf[1024];
+  struct group gr, *g;
+  char *name = utf8_dup_to(c_str(wname));
+  int res = getgrnam_r(name, &gr, buf, sizeof buf, &g);
+
+  free(name);
+  return (res == 0 && g != 0) ? make_grstruct(&gr) : nil;
+}
+
+#elif HAVE_GRGID
+
+static val getgrgid_wrap(val uid)
+{
+  struct group *g = getgrgid(c_num(uid));
+  return (g != 0) ? make_grstruct(g) : nil;
+}
+
+static val getgrnam_wrap(val wname)
+{
+  char *name = utf8_dup_to(c_str(wname));
+  struct group *g = getgrnam(name);
+  free(name);
+  return (g != 0) ? make_grstruct(g) : nil;
+}
+
+#endif
+
 void sysif_init(void)
 {
   stat_s = intern(lit("stat"), user_package);
@@ -980,6 +1074,10 @@ void sysif_init(void)
   dir_s = intern(lit("dir"), user_package);
   shell_s = intern(lit("shell"), user_package);
 #endif
+#if HAVE_GRGID
+  group_s = intern(lit("group"), user_package);
+  mem_s = intern(lit("mem"), user_package);
+#endif
 
   make_struct_type(stat_s, nil,
                    list(dev_s, ino_s, mode_s, nlink_s, uid_s, gid_s,
@@ -989,6 +1087,10 @@ void sysif_init(void)
   make_struct_type(passwd_s, nil,
                    list(name_s, passwd_s, uid_s, gid_s,
                         gecos_s, dir_s, shell_s, nao), nil, nil);
+#endif
+#if HAVE_GRGID
+  make_struct_type(group_s, nil,
+                   list(name_s, passwd_s, gid_s, mem_s, nao), nil, nil);
 #endif
 
   reg_fun(intern(lit("errno"), user_package), func_n1o(errno_wrap, 0));
@@ -1194,6 +1296,14 @@ void sysif_init(void)
   reg_fun(intern(lit("getpwent"), user_package), func_n0(getpwent_wrap));
   reg_fun(intern(lit("getpwuid"), user_package), func_n1(getpwuid_wrap));
   reg_fun(intern(lit("getpwnam"), user_package), func_n1(getpwnam_wrap));
+#endif
+
+#if HAVE_GRGID
+  reg_fun(intern(lit("setgrent"), user_package), func_n0(setgrent_wrap));
+  reg_fun(intern(lit("endgrent"), user_package), func_n0(endgrent_wrap));
+  reg_fun(intern(lit("getgrent"), user_package), func_n0(getgrent_wrap));
+  reg_fun(intern(lit("getgrgid"), user_package), func_n1(getgrgid_wrap));
+  reg_fun(intern(lit("getgrnam"), user_package), func_n1(getgrnam_wrap));
 #endif
 
 #if HAVE_POLL
