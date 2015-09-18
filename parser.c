@@ -375,12 +375,21 @@ static void load_rcfile(val name)
   val resolved_name;
   val lisp_p = t;
   val stream = nil;
-  val stat = nil;
   val catch_syms = cons(error_s, nil);
+  val path_private_to_me_p =  intern(lit("path-private-to-me-p"), user_package);
+  val path_exists_p =  intern(lit("path-exists-p"), user_package);
+
+  if (!funcall1(path_exists_p, name))
+    return;
+
+  if (!funcall1(path_private_to_me_p, name)) {
+    format(std_output,
+           lit("** possible security problem: ~a is writable to others\n"),
+           name, nao);
+    return;
+  }
 
   uw_catch_begin (catch_syms, sy, va);
-
-  stat = statp(name);
 
   open_txr_file(name, &lisp_p, &resolved_name, &stream);
 
@@ -390,9 +399,9 @@ static void load_rcfile(val name)
   uw_catch(sy, va)
   {
     (void) va;
-    if (stat)
-      format(std_output, lit("** type ~s exception while loading ~s\n"),
-             sy, name, nao);
+    format(std_output, lit("** type ~s exception while loading ~a\n"),
+           sy, name, nao);
+    format(std_output, lit("** details: ~a\n"), car(va), nao);
   }
 
   uw_unwind;

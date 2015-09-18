@@ -33839,13 +33839,23 @@ in the user's home directory, as determined by the
 environment variable. If that variable doesn't exist, no further attempt is
 made to locate this file.
 
-If it exists, the file is expected to be readable and to contain
+If the file exists, it is subject to a security check.
+The function
+.code path-private-to-me-p
+is applied to the file. If it returns
+.code nil
+then an error message is displayed and the file is not loaded.
+
+If the file passes the security check, it is expected to be readable and
+to contain
 \*(TL forms, which are read and evaluated.
 Syntax errors encountered while reading the profile file are displayed
 on standard output, and any exceptions thrown that are derived from
 .code error
 are caught and displayed.  The interactive listener starts in spite of these
-situations.  Exceptions not derived from error will terminate the process.
+situations.  Exceptions not derived from
+.code error
+will terminate the process.
 
 The profile file is not read by non-interactive invocations of \*(TX:
 that is, when the
