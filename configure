@@ -2234,6 +2234,26 @@ if [ -z "$have_winsize" ] ; then
   printf "no\n"
 fi
 
+printf "Checking for mkstemps ... "
+
+cat > conftest.c <<!
+#include <stdlib.h>
+
+int main(int argc, char **argv)
+{
+  char template[] = "abcXXXXXX.xyz";
+  int fd = mkstemps(template, 4);
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_MKSTEMPS 1\n" >> $config_h
+else
+  printf "no\n"
+fi
+
 #
 # Dependent variables
 #
