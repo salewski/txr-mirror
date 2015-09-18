@@ -31141,6 +31141,41 @@ ignoring any special permissions which may exist such as operating system
 and file system specific extended attributes (for example, file immutability
 connected to a "secure level" and such).
 
+.coNP Function @ path-private-to-me-p
+.synb
+.mets (path-private-to-me-p << path )
+.syne
+.desc
+The
+.code path-private-to-me-p
+function reports whether the calling process can rely on the
+object indicated by
+.code path
+to be private to the security context implied by its effective user ID.
+
+"Private" means that no other user has write access to the file, and
+so its contents may be trusted.
+
+The rules which the function applies are as follows:
+
+If the file is not owned by the effective user ID of the caller, then
+it is not private.
+
+If the file grants write permission to "others", then it is not private.
+
+If the file grants write permission to the group owner, then it is not
+private, unless either the group is empty, or else the group has exactly one
+member, who is the owner of the file.
+
+Otherwise, the file is reported as private.
+
+Note that this interpretation of private is vulnerable to the following
+time-of-check to time-of-use race condition with regard to the group check.  At
+the time of the check, the group might be empty or contain only the caller as a
+member. But by the time the file is subsequently accessed, the group might have
+been innocently extended by the system administrator to include additional
+users, who can maliciously modify the file.
+
 .coNP Functions @ path-newer and @ path-older
 .synb
 .mets (path-newer < left-path << right-path )

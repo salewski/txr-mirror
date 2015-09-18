@@ -72,6 +72,18 @@
 (defun path-writable-to-me-p (path)
   (sys:path-access path s-iwusr s-iwgrp s-iwoth))
 
+(defun path-private-to-me-p (path)
+  (sys:path-test (s stat path)
+    (let ((m s.mode)
+          (euid (geteuid))
+          (g (getgrgid s.gid)))
+      (and (eql euid s.uid)
+           (zerop (logand m s-iwoth))
+           (or (zerop (logand m s-iwgrp))
+               (null g.mem)
+               (and (not (rest g.mem))
+                    (equal (getpwuid euid).name (first g.mem))))))))
+
 (defmacro sys:path-examine ((var statfun path) . body)
   ^[sys:do-path-test ,statfun ,path
      (lambda (,var) ,*body)])

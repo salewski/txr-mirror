@@ -151,7 +151,7 @@ static val path_test_set_entries(val dlt, val fun)
     lit("path-setgid-p"), lit("path-setuid-p"), lit("path-sticky-p"),
     lit("path-mine-p"), lit("path-my-group-p"), lit("path-executable-to-me-p"),
     lit("path-writable-to-me-p"), lit("path-newer"), lit("path-older"),
-    lit("path-same-object"),
+    lit("path-same-object"), lit("path-private-to-me-p"),
     nil
   };
 
