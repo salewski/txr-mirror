@@ -594,6 +594,7 @@ val repl(val bindings, val in_stream, val out_stream)
   reg_varl(result_hash_sym, result_hash);
 
   lino_set_completion_cb(ls, provide_completions, 0);
+  lino_set_tempfile_suffix(ls, ".tl");
 
   if (histfile)
     lino_hist_load(ls, histfile_u8);
