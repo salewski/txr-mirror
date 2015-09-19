@@ -14762,6 +14762,40 @@ structure is itself lazy.
   (flatten '(((()) ()))) -> nil
 .cble
 
+.coNP Function @ flatcar
+.synb
+.mets (flatcar << tree )
+.syne
+.desc
+The
+.code flatcar
+function produces a list of all the atoms contained in the
+tree structure
+.metn tree ,
+in the order in which they appear, when the structure is traversed
+left to right.
+
+This list includes those
+.code nil
+atoms which appear in
+.code car
+fields.
+
+The list excludes
+.code nil
+atoms which appear in
+.code cdr
+fields.
+
+.TP* Examples:
+.cblk
+  (flatcar '(1 2 () (3 4))) -> (1 2 nil 3 4)
+
+  (flatcar '(a (b . c) d (e) (((f)) . g) (nil . z) nil . h))
+
+  --> (a b c d e f g nil z nil h)
+.cble
+
 .coNP Function @ tree-find
 .synb
 .mets (tree-find < obj < tree << test-function )

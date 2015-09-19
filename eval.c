@@ -4211,6 +4211,7 @@ void eval_init(void)
   reg_fun(intern(lit("nthcdr"), user_package), func_n2(nthcdr));
   reg_fun(intern(lit("flatten"), user_package), func_n1(flatten));
   reg_fun(intern(lit("flatten*"), user_package), func_n1(lazy_flatten));
+  reg_fun(intern(lit("flatcar"), user_package), func_n1(flatcar));
   reg_fun(intern(lit("tuples"), user_package), func_n3o(tuples, 2));
   reg_fun(intern(lit("partition-by"), user_package), func_n2(partition_by));
   reg_fun(intern(lit("partition"), user_package), func_n2(partition));

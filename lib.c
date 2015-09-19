@@ -1512,6 +1512,15 @@ val lazy_flatten(val list)
   }
 }
 
+val flatcar(val tree)
+{
+  if (atom(tree))
+    return cons(tree, nil);
+  if (cdr(tree))
+    return nappend2(flatcar(car(tree)), flatcar(cdr(tree)));
+  return flatcar(car(tree));
+}
+
 static val tuples_func(val env, val lcons)
 {
   list_collect_decl (out, ptail);
