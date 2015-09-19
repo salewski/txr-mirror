@@ -542,6 +542,44 @@ static void provide_completions(const char *data,
   }
 }
 
+static char *provide_atom(lino_t *l, const char *str, int n, void *ctx)
+{
+  val catch_all = list(t, nao);
+  val obj = nao;
+  val form;
+  val line = string_utf8(str);
+  char *out = 0;
+
+  (void) l;
+  (void) ctx;
+
+  uw_catch_begin (catch_all, exsym, exvals);
+
+  form = lisp_parse(line, std_null, colon_k, lit("atomcb"), colon_k);
+
+  if (atom(form)) {
+    if (n == 1)
+      obj = form;
+  } else {
+    val fform = flatcar(form);
+    obj = ref(fform, num(-n));
+  }
+
+  if (obj != nao)
+      out = utf8_dup_to(c_str(tostring(obj)));
+
+  uw_catch (exsym, exvals) {
+    (void) exsym;
+    (void) exvals;
+  }
+
+  uw_unwind;
+
+  uw_catch_end;
+
+  return out;
+}
+
 static val repl_intr(val signo, val async_p)
 {
   uw_throw(error_s, lit("intr"));
@@ -594,6 +632,7 @@ val repl(val bindings, val in_stream, val out_stream)
   reg_varl(result_hash_sym, result_hash);
 
   lino_set_completion_cb(ls, provide_completions, 0);
+  lino_set_atom_cb(ls, provide_atom, 0);
   lino_set_tempfile_suffix(ls, ".tl");
 
   if (histfile)

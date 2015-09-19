@@ -33746,6 +33746,25 @@ Only the most recent three decimal digits are retained, so the number can range
 from 0 to 999. A value of 0, or a value which exceeds the number of words
 causes the Ctrl-W or w to do nothing.
 
+.NP* Insert Previous Atom
+
+The equivalent command sequences Ctrl-X, a and Ctrl-X, Ctrl-A insert
+an atom from the previous line at the cursor position. A line only
+makes atoms available if it expresses a valid \*(TX form, free of syntax
+errors. A line containing only whitespace or a comment makes no atoms
+available. For the purposes of this editing feature, an atom is defined
+as the printed representation of a Lisp atom taken from the Lisp form
+specified in the previous line. The line is flattened into atoms
+as if by the
+.code flatcar
+function. By default, the last atom is extracted. A numeric argument
+typed between the Ctrl-X and Ctrl-A or a can be used to select a
+atoms by position from the end. The number 1 specifies the last atom,
+2 the second last and so on.
+Only the most recent three decimal digits are retained, so the number can range
+from 0 to 999. A value of 0, or a value which exceeds the number of words
+causes the Ctrl-A or a to do nothing.
+
 .NP* Symbolic Completion
 
 If the Tab key is pressed while editing a line, it is interpreted as a
