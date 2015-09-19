@@ -33699,6 +33699,19 @@ Navigating to a history line manually using the up and down arrow keys (or
 Ctrl-P/Ctrl-N) has the same net effect same as locating that line using
 Ctrl-R search.
 
+.NP* Insert Previous Word
+
+The equivalent command sequences Ctrl-X, w and Ctrl-X, Ctrl-W insert
+a word from the previous line at the cursor position. A word is defined
+as a sequence of non-whitespace characters, separated from other words
+by whitespace. By default, the last word of the previous line is inserted.
+Between the Ctrl-X and Ctrl-W or w, a decimal number can be entered.
+The number 1 specifies that the last word is to be inserted, 2 specifies
+the second last word, 3 the third word from the right and so on.
+Only the most recent three decimal digits are retained, so the number can range
+from 0 to 999. A value of 0, or a value which exceeds the number of words
+causes the Ctrl-W or w to do nothing.
+
 .NP* Symbolic Completion
 
 If the Tab key is pressed while editing a line, it is interpreted as a

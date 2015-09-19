@@ -1083,7 +1083,7 @@ static void edit_in_editor(lino_t *l) {
  * The function returns the length of the current buffer. */
 static int edit(lino_t *l, const char *prompt)
 {
-    int verbatim = 0, extended = 0, paste = 0;
+    int verbatim = 0, extended = 0, paste = 0, extend_num = -1;
 
     /* Populate the linenoise state that we pass to functions implementing
      * specific editing functionalities. */
@@ -1141,16 +1141,56 @@ static int edit(lino_t *l, const char *prompt)
         }
 
         if (extended) {
-            extended = 0;
-
             switch (c) {
             case CTL('E'):
+                extended = 0;
                 edit_in_editor(l);
                 break;
             case CTL('V'):
+                extended = 0;
                 paste = 1;
                 break;
+            case CTL('W'): case 'w':
+                extended = 0;
+                if (l->history_len > 1 && extend_num != 0) {
+                    char *prev_line = l->history[l->history_len - 2];
+                    char *word_end = prev_line + strlen(prev_line);
+                    char *word_start = word_end;
+
+                    if (extend_num < 0)
+                        extend_num = 1;
+
+                    for (; extend_num--; word_end = word_start) {
+                        while (word_end > prev_line && isspace((unsigned char) word_end[-1]))
+                            word_end--;
+
+                        word_start = word_end;
+
+                        while (word_start > prev_line && !isspace((unsigned char) word_start[-1]))
+                            word_start--;
+
+                        if (extend_num == 0)
+                            break;
+                    }
+
+                    while (word_start < word_end)
+                        if (edit_insert(l, *word_start++)) {
+                            l->error = lino_ioerr;
+                            return -1;
+                        }
+
+                }
+                break;
             default:
+                if (isdigit((unsigned char) c)) {
+                    if (extend_num < 0)
+                        extend_num = 0;
+                    extend_num %= 100;
+                    extend_num *= 10;
+                    extend_num += (c - '0');
+                    break;
+                }
+                extended = 0;
                 generate_beep(l);
                 break;
             }
@@ -1312,6 +1352,7 @@ static int edit(lino_t *l, const char *prompt)
             break;
         case CTL('X'):
             extended = 1;
+            extend_num = -1;
             continue;
         case CTL('K'): /* delete from current to end of line. */
             l->data[l->dpos] = '\0';
