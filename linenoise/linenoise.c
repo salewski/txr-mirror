@@ -74,7 +74,9 @@ struct lino_state {
 
     /* Lifetime enduring state */
     lino_compl_cb_t *completion_callback;
-    void *cb_ctx;               /* User context for callback */
+    void *cb_ctx;               /* User context for completion callback */
+    lino_atom_cb_t *atom_callback;
+    void *ca_ctx;               /* User context for atom callback */
     struct termios orig_termios;        /* In order to restore at exit.*/
     int rawmode;        /* For atexit() function to check if restore is needed*/
     int mlmode;         /* Multi line mode. Default is single line. */
@@ -131,6 +133,12 @@ void lino_set_multiline(lino_t *ls, int ml) {
 
 int lino_get_multiline(lino_t *ls) {
     return ls->mlmode;
+}
+
+void lino_set_atom_cb(lino_t *l, lino_atom_cb_t *cb, void *ctx)
+{
+    l->atom_callback = cb;
+    l->ca_ctx = ctx;
 }
 
 static void atexit_handler(void);
@@ -1179,6 +1187,32 @@ static int edit(lino_t *l, const char *prompt)
                             return -1;
                         }
 
+                }
+                break;
+            case CTL('A'): case 'a':
+                extended = 0;
+                if (extend_num < 0)
+                    extend_num = 1;
+                if (l->history_len > 1 && l->atom_callback)
+                {
+                    char *prev_line = l->history[l->history_len - 2];
+                    char *word = l->atom_callback(l, prev_line,
+                                                  extend_num, l->ca_ctx);
+                    const char *p = word;
+                    int res = 0;
+
+                    if (word != 0) {
+                        while (*p)
+                            if ((res = edit_insert(l, *p++)) != 0)
+                                break;
+
+                        free(word);
+                    }
+
+                    if (res) {
+                        l->error = lino_ioerr;
+                        return -1;
+                    }
                 }
                 break;
             default:
