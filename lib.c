@@ -1521,6 +1521,53 @@ val flatcar(val tree)
   return flatcar(car(tree));
 }
 
+static val lazy_flatcar_scan(val tree, val *cont)
+{
+  for (;;) {
+    val a = car(tree);
+    val d = cdr(tree);
+
+    if (d != nil)
+      *cont = cons(d, *cont);
+
+    if (atom(a))
+      return a;
+
+    tree = a;
+  }
+}
+
+static val lazy_flatcar_func(val env, val lcons)
+{
+  val tree = car(env);
+  val cont = nil;
+  val atom = lazy_flatcar_scan(tree, &cont);
+
+  rplaca(lcons, atom);
+  rplaca(env, cont);
+
+  if (cont)
+    rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+
+  return nil;
+}
+
+val lazy_flatcar(val tree)
+{
+  if (atom(tree)) {
+    return cons(tree, nil);
+  } else {
+    val cont = nil;
+    val nextatom = lazy_flatcar_scan(tree, &cont);
+
+    if (!cont)
+      return cons(nextatom, nil);
+
+    return make_lazy_cons(func_f1(cons(tree, nil), lazy_flatcar_func));
+  }
+}
+
+
 static val tuples_func(val env, val lcons)
 {
   list_collect_decl (out, ptail);

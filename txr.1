@@ -14735,19 +14735,14 @@ function produces a list whose elements are all of the
 .cod2 non- nil
 atoms contained in the structure of
 .metn list .
+
 The
 .code flatten*
 function
 works like
 .code flatten
-except that
-.code flatten
-creates and returns a complete
-flattened list, whereas
-.code flatten*
-produces a lazy list which is
-instantiated on demand. This is particularly useful when the input
-structure is itself lazy.
+except that it produces a lazy list. It can be used to lazily flatten an
+infinite lazy structure.
 
 .TP* Examples:
 .cblk
@@ -14762,9 +14757,10 @@ structure is itself lazy.
   (flatten '(((()) ()))) -> nil
 .cble
 
-.coNP Function @ flatcar
+.coNP Functions @ flatcar and @ flatcar*
 .synb
 .mets (flatcar << tree )
+.mets (flatcar* << tree )
 .syne
 .desc
 The
@@ -14786,6 +14782,14 @@ The list excludes
 atoms which appear in
 .code cdr
 fields.
+
+The
+.code flatcar*
+function
+works like
+.code flatcar
+except that it produces a lazy list. It can be used to lazily flatten an
+infinite lazy structure.
 
 .TP* Examples:
 .cblk
