@@ -287,7 +287,7 @@ static void free_completions(lino_completions_t *lc) {
         free(lc->cvec);
 }
 
-static void sync_data_to_buf(lino_t *l, int prompt);
+static void sync_data_to_buf(lino_t *l);
 
 static int compare_completions(const void *larg, const void *rarg)
 {
@@ -339,7 +339,7 @@ static int complete_line(lino_t *ls) {
                                     "%s%s", lc.cvec[i], ls->data + ls->dpos);
                 lt->dlen = n;
                 lt->dpos = strlen(lc.cvec[i]);
-                sync_data_to_buf(lt, lt->mlmode);
+                sync_data_to_buf(lt);
                 refresh_line(lt);
             } else {
                 refresh_line(ls);
@@ -375,7 +375,7 @@ static int complete_line(lino_t *ls) {
                         ls->dpos = lt->dpos;
                         ls->dlen = lt->dlen;
                         strcpy(ls->data, lt->data);
-                        sync_data_to_buf(ls, ls->mlmode);
+                        sync_data_to_buf(ls);
                         refresh_line(ls);
                     }
                     stop = 1;
@@ -594,11 +594,11 @@ static void ab_free(struct abuf *ab) {
 
 /* Convert raw data to display data, and recalculate
    display length and position. */
-static void sync_data_to_buf(lino_t *l, int mlmode)
+static void sync_data_to_buf(lino_t *l)
 {
     char *dptr = l->data, *bptr = l->buf;
 
-    if (mlmode)
+    if (l->mlmode)
         bptr += snprintf(l->buf, sizeof l->buf, "%s",
                          l->prompt);
 
@@ -615,7 +615,7 @@ static void sync_data_to_buf(lino_t *l, int mlmode)
                     *bptr++ = ' ';
                     pos++;
                 } while (pos % 8 != 0);
-            } else if (mlmode && ch == '\r') {
+            } else if (l->mlmode && ch == '\r') {
                 *bptr++ = '\r';
                 *bptr++ = '\n';
             } else if (ch < ' ') {
@@ -790,7 +790,7 @@ static void refresh_multiline(lino_t *l) {
  * refresh_multiline() according to the selected mode. */
 static void refresh_line(lino_t *ls) {
 
-    sync_data_to_buf(ls, ls->mlmode);
+    sync_data_to_buf(ls);
 
     if (ls->mlmode)
         refresh_multiline(ls);
@@ -890,7 +890,7 @@ static int edit_insert(lino_t *l, char c) {
             l->dpos++;
             l->dlen++;
             l->data[l->dlen] = '\0';
-            sync_data_to_buf(l, l->mlmode);
+            sync_data_to_buf(l);
             if ((!l->mlmode && l->len == l->dlen && l->plen+l->len < l->cols) /* || mlmode */) {
                 /* Avoid a full update of the line in the
                  * trivial case. */
