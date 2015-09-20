@@ -83,6 +83,7 @@ struct lino_state {
     int history_max_len;
     int history_len;
     char **history;
+    char *clip;         /* Selection */
     int ifd;            /* Terminal stdin file descriptor. */
     int ofd;            /* Terminal stdout file descriptor. */
 
@@ -93,14 +94,20 @@ struct lino_state {
     const char *suffix; /* Suffix when creating temp file. */
     size_t plen;        /* Prompt length. */
     size_t pos;         /* Current cursor position. */
+    size_t sel;         /* Selection start in terms of display. */
+    size_t end;         /* Selection end in terms of display. */
     size_t len;         /* Current edited line display length. */
     size_t dlen;        /* True underlying length. */
     size_t dpos;        /* True underlying position. */
+    size_t dsel;        /* Start of selection */
+    size_t dend;        /* End of selection */
     size_t cols;        /* Number of columns in terminal. */
     size_t oldrow;      /* Row of previous cursor position (multiline mode) */
     size_t maxrows;     /* Maximum num of rows used so far (multiline mode) */
     int history_index;  /* The history index we are currently editing. */
     int need_resize;    /* Need resize flag. */
+    int need_refresh;   /* Need refresh. */
+    int selmode;        /* Visual selection being made. */
     lino_error_t error; /* Most recent error. */
 };
 
@@ -603,8 +610,15 @@ static void sync_data_to_buf(lino_t *l)
                          l->prompt);
 
     while (bptr - l->buf < sizeof l->buf - 1) {
-        if (dptr - l->data == (ptrdiff_t) l->dpos)
-            l->pos = bptr - l->buf;
+        size_t dpos = dptr - l->data;
+        size_t pos = bptr - l->buf;
+
+        if (l->dpos == dpos)
+            l->pos = pos;
+        if (l->dsel == dpos)
+            l->sel = pos;
+        if (l->dend == dpos)
+            l->end = pos;
 
         if (*dptr)  {
             char ch = *dptr++;
@@ -649,15 +663,31 @@ static void refresh_singleline(lino_t *l) {
     size_t len = l->len;
     size_t pos = l->pos;
     struct abuf ab;
+    size_t sel = l->sel;
+    size_t end = l->end;
+
+    if (sel > end) {
+        size_t tmp = end;
+        end = sel;
+        sel = tmp;
+    }
 
     while((plen+pos) >= l->cols) {
         buf++;
         len--;
         pos--;
+        if (end > 0)
+            end--;
+        if (sel > 0)
+            sel--;
     }
     while (plen+len > l->cols) {
         len--;
     }
+    if (end > len)
+        end = len;
+    if (sel > len)
+        sel = len;
 
     ab_init(&ab);
     /* Cursor to left edge */
@@ -665,7 +695,20 @@ static void refresh_singleline(lino_t *l) {
     ab_append(&ab,seq,strlen(seq));
     /* Write the prompt and the current buffer content */
     ab_append(&ab,l->prompt,strlen(l->prompt));
-    ab_append(&ab,buf,len);
+    if (!l->selmode) {
+        ab_append(&ab, buf, len);
+    } else {
+        if (sel > 0)
+            ab_append(&ab, buf, sel);
+        if (end - sel > 0) {
+            ab_append(&ab, "\x1b[7m", 4);
+            ab_append(&ab, buf + sel, end - sel);
+            ab_append(&ab, "\x1b[m", 3);
+        }
+        if (len - end > 0)
+            ab_append(&ab, buf + end, len - end);
+    }
+
     /* Erase to right */
     snprintf(seq,64,"\x1b[0K");
     ab_append(&ab,seq,strlen(seq));
@@ -750,7 +793,29 @@ static void refresh_multiline(lino_t *l) {
     ab_append(&ab,seq,strlen(seq));
 
     /* Write the current buffer content which includes the prompt */
-    ab_append(&ab,l->buf,l->len);
+    if (!l->selmode) {
+        ab_append(&ab,l->buf,l->len);
+    } else {
+        size_t sel = l->sel;
+        size_t end = l->end;
+        size_t len = l->len;
+
+        if (sel > end) {
+            size_t tmp = end;
+            end = sel;
+            sel = tmp;
+        }
+
+        if (sel > 0)
+            ab_append(&ab, l->buf, sel);
+        if (end - sel > 0) {
+            ab_append(&ab, "\x1b[7m", 4);
+            ab_append(&ab, l->buf + sel, end - sel);
+            ab_append(&ab, "\x1b[m", 3);
+        }
+        if (len - end > 0)
+            ab_append(&ab, l->buf + end, len - end);
+    }
 
     /* If we are at the very end of the screen with our prompt, we need to
      * emit a newline and move the cursor to the first column. */
@@ -876,27 +941,83 @@ static void paren_jump(lino_t *l)
         refresh_line(l);
         usec_delay(l, LINENOISE_PAREN_DELAY);
         l->dpos = dp;
-        refresh_line(l);
+        l->need_refresh = 1;
     }
 }
+
+static void update_sel(lino_t *l)
+{
+    if (l->selmode) {
+        size_t oend = l->dend;
+        l->dend = l->dpos;
+        l->need_refresh |= (oend != l->dend);
+    }
+}
+
+static void clear_sel(lino_t *l)
+{
+    if (l->selmode) {
+        l->selmode = 0;
+        l->dsel = l->dend = 0;
+        l->need_refresh = 1;
+    }
+}
+
+static void yank_sel(lino_t *l)
+{
+    if (l->selmode) {
+        int notrev = l->dsel <= l->dend;
+        size_t sel = notrev ? l->dsel : l->dend;
+        size_t end = notrev ? l->dend : l->dsel;
+
+        if (end - sel > 0) {
+            free(l->clip);
+            l->clip = (char *) chk_malloc(end - sel + 1);
+            memcpy(l->clip, l->data + sel, end - sel);
+            l->clip[end - sel] = 0;
+            l->dpos = sel;
+        }
+    }
+}
+
+static void delete_sel(lino_t *l)
+{
+    if (l->selmode) {
+        int notrev = l->dsel <= l->dend;
+        size_t sel = notrev ? l->dsel : l->dend;
+        size_t end = notrev ? l->dend : l->dsel;
+        size_t len = l->dlen;
+
+        if (len - end > 0)
+            memmove(l->data + sel, l->data + end, len - end);
+
+        len -= (end - sel);
+        l->data[len] = 0;
+        l->dlen = len;
+        l->dpos = sel;
+
+        clear_sel(l);
+    }
+}
+
 
 /* Insert the character 'c' at cursor current position.
  *
  * On error writing to the terminal -1 is returned, otherwise 0. */
 static int edit_insert(lino_t *l, char c) {
     if (l->dlen < sizeof l->data - 1) {
-        if (l->len == l->dpos) {
+        delete_sel(l);
+        if (l->dpos == l->dlen) {
             l->data[l->dpos] = c;
             l->dpos++;
             l->dlen++;
             l->data[l->dlen] = '\0';
-            sync_data_to_buf(l);
             if ((!l->mlmode && l->len == l->dlen && l->plen+l->len < l->cols) /* || mlmode */) {
                 /* Avoid a full update of the line in the
                  * trivial case. */
                 if (write(l->ofd,&c,1) == -1) return -1;
             } else {
-                refresh_line(l);
+                l->need_refresh = 1;
             }
         } else {
             memmove(l->data + l->dpos+1, l->data + l->dpos, l->dlen-l->dpos);
@@ -904,8 +1025,25 @@ static int edit_insert(lino_t *l, char c) {
             l->dlen++;
             l->dpos++;
             l->data[l->dlen] = '\0';
-            refresh_line(l);
+            l->need_refresh = 1;
         }
+    }
+    return 0;
+}
+
+static int edit_insert_str(lino_t *l, const char *s, size_t nchar)
+{
+    if (l->dlen < sizeof l->data - nchar) {
+        delete_sel(l);
+
+        if (l->dpos < l->dlen)
+            memmove(l->data + l->dpos + nchar, l->data + l->dpos, l->dlen - l->dpos);
+        memcpy(l->data + l->dpos, s, nchar);
+        l->dpos += nchar;
+        l->dlen += nchar;
+        l->data[l->dlen] = 0;
+        l->need_refresh = 1;
+        clear_sel(l);
     }
     return 0;
 }
@@ -914,7 +1052,7 @@ static int edit_insert(lino_t *l, char c) {
 static void edit_move_left(lino_t *l) {
     if (l->dpos > 0) {
         l->dpos--;
-        refresh_line(l);
+        l->need_refresh = 1;
     }
 }
 
@@ -922,7 +1060,7 @@ static void edit_move_left(lino_t *l) {
 static void edit_move_right(lino_t *l) {
     if (l->dpos != l->dlen) {
         l->dpos++;
-        refresh_line(l);
+        l->need_refresh = 1;
     }
 }
 
@@ -930,7 +1068,7 @@ static void edit_move_right(lino_t *l) {
 static void edit_move_home(lino_t *l) {
     if (l->dpos != 0) {
         l->dpos = 0;
-        refresh_line(l);
+        l->need_refresh = 1;
     }
 }
 
@@ -938,7 +1076,7 @@ static void edit_move_home(lino_t *l) {
 static void edit_move_end(lino_t *l) {
     if (l->dpos != l->dlen) {
         l->dpos = l->dlen;
-        refresh_line(l);
+        l->need_refresh = 1;
     }
 }
 
@@ -947,6 +1085,7 @@ static void edit_move_end(lino_t *l) {
 #define LINENOISE_HISTORY_NEXT 0
 #define LINENOISE_HISTORY_PREV 1
 static void edit_history_next(lino_t *l, int dir) {
+    clear_sel(l);
     if (l->history_len > 1) {
         /* Update the current history entry before to
          * overwrite it with the next one. */
@@ -964,47 +1103,63 @@ static void edit_history_next(lino_t *l, int dir) {
         strncpy(l->data,l->history[l->history_len - 1 - l->history_index], sizeof l->data);
         l->data[sizeof l->data - 1] = 0;
         l->dpos = l->dlen = strlen(l->data);
-        refresh_line(l);
+        l->need_refresh = 1;
     }
 }
 
 /* Delete the character at the right of the cursor without altering the cursor
  * position. Basically this is what happens with the "Delete" keyboard key. */
 static void edit_delete(lino_t *l) {
+    if (l->selmode) {
+        delete_sel(l);
+        return;
+    }
+
     if (l->dlen > 0 && l->dpos < l->dlen) {
         memmove(l->data + l->dpos, l->data + l->dpos + 1, l->dlen - l->dpos - 1);
         l->dlen--;
         l->data[l->dlen] = '\0';
-        refresh_line(l);
+        l->need_refresh = 1;
     }
 }
 
 /* Backspace implementation. */
 static void edit_backspace(lino_t *l) {
+    if (l->selmode && l->dend > l->dsel) {
+        delete_sel(l);
+        return;
+    }
+
+    delete_sel(l);
+
     if (l->dpos > 0 && l->dlen > 0) {
         memmove(l->data + l->dpos - 1, l->data + l->dpos, l->dlen - l->dpos);
         l->dpos--;
         l->dlen--;
         l->data[l->dlen] = '\0';
-        refresh_line(l);
+        l->need_refresh = 1;
     }
 }
 
 /* Delete all characters to left of cursor. */
 static void edit_delete_prev_all(lino_t *l)
 {
+    delete_sel(l);
+
     memmove(l->data, l->data + l->dpos, l->dlen - l->dpos + 1);
     l->dlen -= l->dpos;
     l->dpos = 0;
-    refresh_line(l);
+    l->need_refresh = 1;
 }
 
 /* Delete the previosu word, maintaining the cursor at the start of the
  * current word. */
 static void edit_delete_prev_word(lino_t *l) {
-    size_t odpos = l->dpos;
-    size_t diff;
+    size_t odpos, diff;
 
+    delete_sel(l);
+
+    odpos = l->dpos;
     while (l->dpos > 0 && strchr(SPACE, l->data[l->dpos - 1]))
         l->dpos--;
     while (l->dpos > 0 && strchr(SPACE, l->data[l->dpos - 1]) == 0)
@@ -1012,7 +1167,7 @@ static void edit_delete_prev_word(lino_t *l) {
     diff = odpos - l->dpos;
     memmove(l->data + l->dpos, l->data + odpos, l->dlen - odpos + 1);
     l->dlen -= diff;
-    refresh_line(l);
+    l->need_refresh = 1;
 }
 
 static void tr(char *s, int find, int rep)
@@ -1072,12 +1227,13 @@ static void edit_in_editor(lino_t *l) {
                     l->data[--nread] = 0;
                 l->dpos = l->dlen = nread;
                 tr(l->data, '\n', '\r');
-                refresh_line(l);
+                l->need_refresh = 1;
             }
         }
 
         fclose(fo);
         remove(path);
+        clear_sel(l);
     }
 }
 
@@ -1102,6 +1258,7 @@ static int edit(lino_t *l, const char *prompt)
     l->cols = get_columns(l->ifd, l->ofd);
     l->oldrow = l->maxrows = 0;
     l->history_index = 0;
+    clear_sel(l);
 
     /* Buffer starts empty. */
     l->data[0] = '\0';
@@ -1119,6 +1276,13 @@ static int edit(lino_t *l, const char *prompt)
         int c;
         int nread;
         char seq[3];
+
+        update_sel(l);
+
+        if (l->need_refresh) {
+            l->need_refresh = 0;
+            refresh_line(l);
+        }
 
         nread = read(l->ifd,&byte,1);
 
@@ -1181,12 +1345,10 @@ static int edit(lino_t *l, const char *prompt)
                             break;
                     }
 
-                    while (word_start < word_end)
-                        if (edit_insert(l, *word_start++)) {
-                            l->error = lino_ioerr;
-                            return -1;
-                        }
-
+                    if (edit_insert_str(l, word_start, word_end - word_start)) {
+                        l->error = lino_ioerr;
+                        return -1;
+                    }
                 }
                 break;
             case CTL('A'): case 'a':
@@ -1198,14 +1360,10 @@ static int edit(lino_t *l, const char *prompt)
                     char *prev_line = l->history[l->history_len - 2];
                     char *word = l->atom_callback(l, prev_line,
                                                   extend_num, l->ca_ctx);
-                    const char *p = word;
                     int res = 0;
 
                     if (word != 0) {
-                        while (*p)
-                            if ((res = edit_insert(l, *p++)) != 0)
-                                break;
-
+                        res = edit_insert_str(l, word, strlen(word));
                         free(word);
                     }
 
@@ -1213,6 +1371,19 @@ static int edit(lino_t *l, const char *prompt)
                         l->error = lino_ioerr;
                         return -1;
                     }
+                }
+                break;
+            case CTL('Q'):
+                extended = 0;
+                {
+                    char *clip = l->clip;
+                    l->clip = 0;
+                    yank_sel(l);
+                    if (clip != 0) {
+                        edit_insert_str(l, clip, strlen(clip));
+                        free(clip);
+                    }
+                    clear_sel(l);
                 }
                 break;
             default:
@@ -1237,10 +1408,13 @@ static int edit(lino_t *l, const char *prompt)
          * character that should be handled next. */
         switch (c) {
         case TAB:
-            if (l->completion_callback != NULL)
+            if (l->completion_callback != NULL) {
+                clear_sel(l);
                 c = complete_line(l);
+            }
             break;
         case CTL('R'):
+            clear_sel(l);
             c = history_search(l);
             break;
         }
@@ -1265,6 +1439,8 @@ static int edit(lino_t *l, const char *prompt)
                 l->history[l->history_len] = 0;
             }
             if (l->mlmode) edit_move_end(l);
+            if (l->need_refresh)
+                refresh_line(l);
             return (int)l->len;
         case CTL('C'):
             l->error = lino_intr;
@@ -1276,6 +1452,7 @@ static int edit(lino_t *l, const char *prompt)
         case CTL('D'):   /* remove char at right of cursor, or if the
                             line is empty, act as end-of-file. */
             if (l->dlen > 0) {
+                yank_sel(l);
                 edit_delete(l);
             } else {
                 if (l->history_len > 0) {
@@ -1293,7 +1470,7 @@ static int edit(lino_t *l, const char *prompt)
                 l->data[l->dpos-1] = l->data[l->dpos];
                 l->data[l->dpos] = aux;
                 if (l->dpos != l->dlen - 1) l->dpos++;
-                refresh_line(l);
+                l->need_refresh = 1;
             }
             break;
         case CTL('B'):
@@ -1388,10 +1565,24 @@ static int edit(lino_t *l, const char *prompt)
             extended = 1;
             extend_num = -1;
             continue;
+        case CTL('S'):
+            l->selmode ^= 1;
+            if (l->selmode)
+                l->dsel = l->dend = l->dpos;
+            l->need_refresh = 1;
+            break;
+        case CTL('Y'):
+            yank_sel(l);
+            clear_sel(l);
+            break;
+        case CTL('Q'):
+            if (l->clip != 0)
+                edit_insert_str(l, l->clip, strlen(l->clip));
+            break;
         case CTL('K'): /* delete from current to end of line. */
             l->data[l->dpos] = '\0';
             l->dlen = l->dpos;
-            refresh_line(l);
+            l->need_refresh = 1;
             break;
         case CTL('A'):
             edit_move_home(l);
@@ -1401,7 +1592,7 @@ static int edit(lino_t *l, const char *prompt)
             break;
         case CTL('L'):
             lino_clear_screen(l);
-            refresh_line(l);
+            l->need_refresh = 1;
             break;
         case CTL('W'):
             edit_delete_prev_word(l);
@@ -1414,13 +1605,13 @@ static int edit(lino_t *l, const char *prompt)
             }
 
             l->mlmode ^= 1;
-            refresh_line(l);
+            l->need_refresh = 1;
             break;
         case CTL('Z'):
             disable_raw_mode(l);
             raise(SIGTSTP);
             enable_raw_mode(l);
-            refresh_line(l);
+            l->need_refresh = 1;
             break;
         }
     }
@@ -1547,6 +1738,7 @@ lino_t *lino_copy(lino_t *le)
         ls->history_len = 0;
         ls->history = 0;
         ls->rawmode = 0;
+        ls->clip = 0;
 
         link_into_list(&lino_list, ls);
     }
@@ -1561,6 +1753,8 @@ static void lino_cleanup(lino_t *ls)
 {
     disable_raw_mode(ls);
     free_hist(ls);
+    free(ls->clip);
+    ls->clip = 0;
 }
 
 void lino_free(lino_t *ls)

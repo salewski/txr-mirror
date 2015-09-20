@@ -33821,6 +33821,107 @@ when written out to the file. Conversely, when the edited file is read
 back, its newlines are converted to carriage returns, so that multi-line
 content is handled properly. (See the following section, Multi-Line Mode).
 
+.SS* Visual Selection Mode
+
+The interactive listener supports visual copy and paste operation.
+Text may be visually selected for copying into a clipboard (copy)
+or deletion. In visual selection mode, the actions of some editing
+commands are modified so that they act upon the selection instead
+of their usual target, or upon both the target and the selection.
+
+.NP* Making a Selection
+
+The Ctrl-S command enters into visual selection mode and marks the
+starting point of the selection, which is considered the position
+immediately to the left of the current character.
+
+While in visual selection mode, it is possible to move around using
+the usual movement commands. The ending point of the selection
+tracks the movement. The ending point of the selection is also
+the position immediately to the left of the current character.
+Thus the selection excludes the rightmost character. The selection
+consists of the text between these two positions, whether or not
+they are reversed. The selected text is displayed in reverse video.
+
+Typing Ctrl-S again while in visual selection mode cancels
+the mode.
+
+Tab completion, history navigation, history search and editing in an external
+editor all cancel visual selection mode.
+
+.NP* Visual Copy
+
+The Ctrl-Y command ("yank") copies the selected text into a clipboard buffer.
+The previous contents of the clipboard buffer, if any, are discarded.
+
+Unlike the history, the clipboard buffer is not persisted.
+If \*(TX terminates, it is lost.
+
+.NP* Visual Cut
+
+If the Ctrl-D command is invoked while a selection is in effect, then
+instead of deleting the character under the cursor, it deletes the
+selection, and copies it to the clipboard.
+
+.NP* Clipboard Paste
+
+The Ctrl-Q command ("quote the clipboard") inserts text from the clipboard
+at the current cursor position. The cursor position is updated to
+be immediately after the inserted text.  The clipboard text remains available
+for further pasting.
+
+If nothing has been yet been copied to the clipboard in the current
+session, then this command has no effect.
+
+.NP* Clipboard Swap Paste
+
+The Ctrl-X, Ctrl-Q command sequence ("exchange quote") exchanges the
+selected text with the contents of the clipboard. The selection is
+copied into the clipboard as if by Ctrl-Y and replaced by the
+previous contents of the clipboard.
+
+If the clipboard has not yet been used in the current session,
+
+If nothing has been yet been copied to the clipboard in the current
+session, then this command behaves like Ctrl-Y:
+text is yanked into the clipboard, but not deleted.
+
+.NP* Visual Replace
+
+In visual selection mode, an editing commands may be used which insert new
+text, or a character may be typed in order to insert it. When this happens, the
+selection is first deleted and visual mode is canceled. Then the insertion
+takes place and visual mode is canceled. The effect is that the newly inserted
+text replaces the selected text.
+
+This applies to the Clipboard Paste (Ctrl-Q) command also. If a
+selection is effect when Ctrl-Q is invoked, the selected text
+is replaced with the clipboard buffer contents.
+
+When a selection is replaced, nothing is copied to the clipboard.
+
+.NP* Delete in Selection Mode
+
+In visual mode, it is possible to issue commands which delete text.
+Ctrl-D has special behavior, Visual Cut, described above.
+
+The Backspace key and Ctrl-H also have a special behavior in select mode. If
+the cursor is at the rightmost endpoint of the selection, then these commands
+delete the selection and nothing else.  If the cursor is at the leftmost
+endpoint of the selection, then these commands delete the selection, and take
+their usual effect of deleting a character also.  In both cases, selection mode
+is canceled.
+
+The Ctrl-W command to delete the previous word, wen used in visual
+selection mode, deletes the selection and cancels selection mode,
+and then deletes the word before the selection.
+
+All other deletion commands such as Ctrl-K simply cancel visual
+selection mode and take their usual effect.
+
+Nothing is copied to the clipboard when deletion commands are used while a
+selection is in effect.
+
 .SS* Multi-Line Mode
 
 The listener operates in one of two modes: line mode and multi-line mode.
