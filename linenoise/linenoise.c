@@ -65,6 +65,7 @@
 #define LINENOISE_MAX_LINE 1024
 #define LINENOISE_MAX_DISP (LINENOISE_MAX_LINE * 8)
 #define LINENOISE_PAREN_DELAY 400000
+#define LINENOISE_MAX_UNDO 32
 
 /* The lino_state structure represents the state during line editing.
  * We pass this state to functions implementing specific editing
@@ -108,7 +109,16 @@ struct lino_state {
     int need_resize;    /* Need resize flag. */
     int need_refresh;   /* Need refresh. */
     int selmode;        /* Visual selection being made. */
+    struct lino_undo *undo_stack;
     lino_error_t error; /* Most recent error. */
+};
+
+struct lino_undo {
+    struct lino_undo *next;
+    int triv;
+    char *data;
+    size_t dpos;
+    int hist_index;
 };
 
 #define CTL(LETTER) ((LETTER) - '@')
@@ -281,6 +291,95 @@ static void handle_resize(lino_t *ls, lino_t *lc)
  * the choices were already shown. */
 static int generate_beep(lino_t *ls) {
     return write(ls->ofd, "\x7", 1) > 0;
+}
+
+static void free_undo(lino_t *l)
+{
+    struct lino_undo *top = l->undo_stack;
+
+    if (top != 0) {
+        l->undo_stack = top->next;
+        free(top->data);
+        top->data = 0;
+        free(top);
+        free_undo(l);
+        l->undo_stack = 0;
+    }
+}
+
+static void record_undo(lino_t *l)
+{
+    struct lino_undo *rec = (struct lino_undo *) chk_malloc(sizeof *rec), *iter;
+    char *data = (char *) chk_strdup_utf8(l->data);
+    int count;
+
+    if (rec == 0 || data == 0) {
+        free(rec);
+        free(data);
+        return;
+    }
+
+    rec->next = l->undo_stack;
+    rec->triv = 0;
+    rec->dpos = l->dpos;
+    rec->hist_index = l->history_index;
+    rec->data = data;
+
+    l->undo_stack = rec;
+
+    for (iter = l->undo_stack, count = 0;
+         iter != 0 && count < LINENOISE_MAX_UNDO;
+         iter = iter->next, count++)
+        /* empty */;
+
+    if (iter != 0) {
+        struct lino_undo *save = l->undo_stack;
+        l->undo_stack = iter->next;
+        iter->next = 0;
+        free_undo(l);
+        l->undo_stack = save;
+    }
+}
+
+static void record_triv_undo(lino_t *l)
+{
+    struct lino_undo *top = l->undo_stack;
+
+    if (top != 0 && top->triv && top->dpos < l->dpos)
+        return;
+
+    record_undo(l);
+    l->undo_stack->triv = 1;
+}
+
+static void restore_undo(lino_t *l)
+{
+    struct lino_undo *top = l->undo_stack;
+
+    if (top == 0)
+        return;
+
+    l->undo_stack = top->next;
+
+    strcpy(l->data, top->data);
+    l->dlen = strlen(top->data);
+    l->dpos = top->dpos;
+    l->history_index = top->hist_index;
+
+    {
+        int history_pos = l->history_len - 1 - l->history_index;
+
+        if (history_pos >= 0 && history_pos < l->history_len - 1) {
+            free(l->history[history_pos]);
+            l->history[history_pos] = chk_strdup_utf8(l->data);
+        }
+    }
+
+    l->need_refresh = 1;
+
+    free(top->data);
+    top->data = 0;
+    free(top);
 }
 
 /* ============================== Completion ================================ */
@@ -1006,6 +1105,7 @@ static void delete_sel(lino_t *l)
  * On error writing to the terminal -1 is returned, otherwise 0. */
 static int edit_insert(lino_t *l, char c) {
     if (l->dlen < sizeof l->data - 1) {
+        record_triv_undo(l);
         delete_sel(l);
         if (l->dpos == l->dlen) {
             l->data[l->dpos] = c;
@@ -1034,6 +1134,7 @@ static int edit_insert(lino_t *l, char c) {
 static int edit_insert_str(lino_t *l, const char *s, size_t nchar)
 {
     if (l->dlen < sizeof l->data - nchar) {
+        record_undo(l);
         delete_sel(l);
 
         if (l->dpos < l->dlen)
@@ -1085,6 +1186,7 @@ static void edit_move_end(lino_t *l) {
 #define LINENOISE_HISTORY_NEXT 0
 #define LINENOISE_HISTORY_PREV 1
 static void edit_history_next(lino_t *l, int dir) {
+    record_undo(l);
     clear_sel(l);
     if (l->history_len > 1) {
         /* Update the current history entry before to
@@ -1111,11 +1213,13 @@ static void edit_history_next(lino_t *l, int dir) {
  * position. Basically this is what happens with the "Delete" keyboard key. */
 static void edit_delete(lino_t *l) {
     if (l->selmode) {
+        record_undo(l);
         delete_sel(l);
         return;
     }
 
     if (l->dlen > 0 && l->dpos < l->dlen) {
+        record_undo(l);
         memmove(l->data + l->dpos, l->data + l->dpos + 1, l->dlen - l->dpos - 1);
         l->dlen--;
         l->data[l->dlen] = '\0';
@@ -1126,10 +1230,12 @@ static void edit_delete(lino_t *l) {
 /* Backspace implementation. */
 static void edit_backspace(lino_t *l) {
     if (l->selmode && l->dend > l->dsel) {
+        record_undo(l);
         delete_sel(l);
         return;
     }
 
+    record_undo(l);
     delete_sel(l);
 
     if (l->dpos > 0 && l->dlen > 0) {
@@ -1144,6 +1250,7 @@ static void edit_backspace(lino_t *l) {
 /* Delete all characters to left of cursor. */
 static void edit_delete_prev_all(lino_t *l)
 {
+    record_undo(l);
     delete_sel(l);
 
     memmove(l->data, l->data + l->dpos, l->dlen - l->dpos + 1);
@@ -1157,6 +1264,7 @@ static void edit_delete_prev_all(lino_t *l)
 static void edit_delete_prev_word(lino_t *l) {
     size_t odpos, diff;
 
+    record_undo(l);
     delete_sel(l);
 
     odpos = l->dpos;
@@ -1222,6 +1330,9 @@ static void edit_in_editor(lino_t *l) {
             if (system(cmd) == 0 && (fi = fopen(path, "r")) != 0) {
                 nread = fread(l->data, 1, sizeof l->data - 1, fi);
                 fclose(fi);
+
+                record_undo(l);
+
                 l->data[nread] = 0;
                 if (nread > 0 && l->data[nread - 1] == '\n')
                     l->data[--nread] = 0;
@@ -1409,11 +1520,13 @@ static int edit(lino_t *l, const char *prompt)
         switch (c) {
         case TAB:
             if (l->completion_callback != NULL) {
+                record_undo(l);
                 clear_sel(l);
                 c = complete_line(l);
             }
             break;
         case CTL('R'):
+            record_undo(l);
             clear_sel(l);
             c = history_search(l);
             break;
@@ -1441,8 +1554,10 @@ static int edit(lino_t *l, const char *prompt)
             if (l->mlmode) edit_move_end(l);
             if (l->need_refresh)
                 refresh_line(l);
+            record_undo(l);
             return (int)l->len;
         case CTL('C'):
+            record_undo(l);
             l->error = lino_intr;
             return -1;
         case BACKSPACE:   /* backspace */
@@ -1465,6 +1580,8 @@ static int edit(lino_t *l, const char *prompt)
             }
             break;
         case CTL('T'):   /* swaps current character with previous. */
+            record_undo(l);
+            clear_sel(l);
             if (l->dpos > 0 && l->dpos < l->dlen) {
                 int aux = l->data[l->dpos - 1];
                 l->data[l->dpos-1] = l->data[l->dpos];
@@ -1580,6 +1697,8 @@ static int edit(lino_t *l, const char *prompt)
                 edit_insert_str(l, l->clip, strlen(l->clip));
             break;
         case CTL('K'): /* delete from current to end of line. */
+            record_undo(l);
+            clear_sel(l);
             l->data[l->dpos] = '\0';
             l->dlen = l->dpos;
             l->need_refresh = 1;
@@ -1613,8 +1732,12 @@ static int edit(lino_t *l, const char *prompt)
             enable_raw_mode(l);
             l->need_refresh = 1;
             break;
+        case CTL('O'):
+            restore_undo(l);
+            break;
         }
     }
+    record_undo(l);
     return l->len;
 }
 
@@ -1739,6 +1862,7 @@ lino_t *lino_copy(lino_t *le)
         ls->history = 0;
         ls->rawmode = 0;
         ls->clip = 0;
+        ls->undo_stack = 0;
 
         link_into_list(&lino_list, ls);
     }
@@ -1753,6 +1877,7 @@ static void lino_cleanup(lino_t *ls)
 {
     disable_raw_mode(ls);
     free_hist(ls);
+    free_undo(ls);
     free(ls->clip);
     ls->clip = 0;
 }

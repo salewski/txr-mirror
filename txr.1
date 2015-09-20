@@ -33821,6 +33821,32 @@ when written out to the file. Conversely, when the edited file is read
 back, its newlines are converted to carriage returns, so that multi-line
 content is handled properly. (See the following section, Multi-Line Mode).
 
+.NP* Undo
+
+The listener provides an undo feature. The Ctrl-O editing command will
+restore the edit buffer contents and cursor position to the state in which
+it was before a previous edit, or previous history navigation.
+
+Undo history is retained between lines. That is, after a line is submitted
+with Enter, it is still possible to undo previous edits. Moreover, if a line
+is canceled with Ctrl-C, such that it is not recorded in the recall history, it
+is still available from the undo history.
+
+Undo is limited to 32 states.  Furthermore, the undo history is lost
+when \*(TX terminates.
+
+Undo doesn't restore previous contents of the clipboard buffer.
+
+Undo will restore edits made to history lines. It does so unconditionally,
+which means that it can introduce edits in the following situation.
+When a history line is edited and then sumbitted without navigating to
+a different history line, the edit isn't permanent. However, when the
+edits are retraced via undo, the restored states
+.I are
+stored in the history.
+
+There is no redo; undoing is permanent.
+
 .SS* Visual Selection Mode
 
 The interactive listener supports visual copy and paste operation.
