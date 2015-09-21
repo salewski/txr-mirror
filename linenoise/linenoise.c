@@ -366,18 +366,23 @@ static void restore_undo(lino_t *l)
         int hidx = top->hist_index;
 
         if (hidx == INT_MAX || hidx == l->history_index) {
-            strcpy(l->data, top->data);
-            l->dlen = strlen(top->data);
-            l->dpos = top->dpos;
-            l->need_refresh = 1;
+            size_t dlen = strlen(top->data);
 
-            if (hidx == l->history_index) {
-                int history_pos = l->history_len - 1 - l->history_index;
-                free(l->history[history_pos]);
-                l->history[history_pos] = chk_strdup_utf8(l->data);
+            if (dlen) {
+                strcpy(l->data, top->data);
+                l->dlen = dlen;
+                l->dpos = top->dpos;
+                l->need_refresh = 1;
+
+                if (hidx == l->history_index) {
+                    int history_pos = l->history_len - 1 - l->history_index;
+                    free(l->history[history_pos]);
+                    l->history[history_pos] = chk_strdup_utf8(l->data);
+                }
+                delete_undo(ptop);
+                break;
             }
             delete_undo(ptop);
-            break;
         } else if (hidx >= l->history_len - 1) {
             delete_undo(ptop);
         } else {
