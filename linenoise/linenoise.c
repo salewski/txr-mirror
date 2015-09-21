@@ -55,6 +55,8 @@
 #include <unistd.h>
 #include <signal.h>
 #include <time.h>
+#include <limits.h>
+#include <assert.h>
 #include "config.h"
 #if HAVE_POLL
 #include <poll.h>
@@ -65,7 +67,7 @@
 #define LINENOISE_MAX_LINE 1024
 #define LINENOISE_MAX_DISP (LINENOISE_MAX_LINE * 8)
 #define LINENOISE_PAREN_DELAY 400000
-#define LINENOISE_MAX_UNDO 32
+#define LINENOISE_MAX_UNDO 200
 
 /* The lino_state structure represents the state during line editing.
  * We pass this state to functions implementing specific editing
@@ -293,18 +295,22 @@ static int generate_beep(lino_t *ls) {
     return write(ls->ofd, "\x7", 1) > 0;
 }
 
-static void free_undo(lino_t *l)
+static void delete_undo(struct lino_undo **pundo)
 {
-    struct lino_undo *top = l->undo_stack;
+    struct lino_undo *u = *pundo;
 
-    if (top != 0) {
-        l->undo_stack = top->next;
-        free(top->data);
-        top->data = 0;
-        free(top);
-        free_undo(l);
-        l->undo_stack = 0;
+    if (u) {
+        *pundo = u->next;
+        free(u->data);
+        u->data = 0;
+        free(u);
     }
+}
+
+static void free_undo_stack(lino_t *l)
+{
+    while (l->undo_stack != 0)
+        delete_undo(&l->undo_stack);
 }
 
 static void record_undo(lino_t *l)
@@ -322,7 +328,7 @@ static void record_undo(lino_t *l)
     rec->next = l->undo_stack;
     rec->triv = 0;
     rec->dpos = l->dpos;
-    rec->hist_index = l->history_index;
+    rec->hist_index = INT_MAX;
     rec->data = data;
 
     l->undo_stack = rec;
@@ -333,11 +339,8 @@ static void record_undo(lino_t *l)
         /* empty */;
 
     if (iter != 0) {
-        struct lino_undo *save = l->undo_stack;
-        l->undo_stack = iter->next;
-        iter->next = 0;
-        free_undo(l);
-        l->undo_stack = save;
+        while (iter->next)
+            delete_undo(&iter->next);
     }
 }
 
@@ -345,61 +348,60 @@ static void record_triv_undo(lino_t *l)
 {
     struct lino_undo *top = l->undo_stack;
 
-    if (top != 0 && top->triv && top->dpos < l->dpos)
+    if (top != 0 && top->triv &&
+        (top->hist_index == INT_MAX || top->hist_index == l->history_index) &&
+        top->dpos < l->dpos)
         return;
 
     record_undo(l);
     l->undo_stack->triv = 1;
 }
 
-static void undo_pop(lino_t *l)
-{
-    struct lino_undo *top = l->undo_stack;
-    if (top == 0)
-        return;
-    l->undo_stack = top->next;
-    free(top->data);
-    top->data = 0;
-    free(top);
-}
-
 static void restore_undo(lino_t *l)
 {
-    struct lino_undo *top = l->undo_stack;
+    struct lino_undo **ptop = &l->undo_stack;
 
-    if (top == 0)
-        return;
+    while (*ptop) {
+        struct lino_undo *top = *ptop;
+        int hidx = top->hist_index;
 
-    if (top->hist_index >= l->history_len - 1) {
-        undo_pop(l);
-        restore_undo(l);
-        return;
-    }
+        if (hidx == INT_MAX || hidx == l->history_index) {
+            strcpy(l->data, top->data);
+            l->dlen = strlen(top->data);
+            l->dpos = top->dpos;
+            l->need_refresh = 1;
 
-    strcpy(l->data, top->data);
-    l->dlen = strlen(top->data);
-    l->dpos = top->dpos;
-    l->history_index = top->hist_index;
-
-    {
-        int history_pos = l->history_len - 1 - l->history_index;
-
-        if (history_pos >= 0 && history_pos < l->history_len) {
-            free(l->history[history_pos]);
-            l->history[history_pos] = chk_strdup_utf8(l->data);
+            if (hidx == l->history_index) {
+                int history_pos = l->history_len - 1 - l->history_index;
+                free(l->history[history_pos]);
+                l->history[history_pos] = chk_strdup_utf8(l->data);
+            }
+            delete_undo(ptop);
+            break;
+        } else if (hidx >= l->history_len - 1) {
+            delete_undo(ptop);
+        } else {
+            ptop = &top->next;
         }
     }
-
-    l->need_refresh = 1;
-
-    undo_pop(l);
 }
 
-static void renumber_undo_hist(lino_t *l, int delta)
+static void undo_subst_hist_idx(lino_t *l, int from_hist, int to_hist)
 {
     struct lino_undo *iter;
-    for (iter = l->undo_stack; iter != 0; iter = iter->next)
+    for (iter = l->undo_stack; iter != 0; iter = iter->next) {
+        if (iter->hist_index == from_hist)
+            iter->hist_index = to_hist;
+    }
+}
+
+static void undo_renumber_hist_idx(lino_t *l, int delta)
+{
+    struct lino_undo *iter;
+    for (iter = l->undo_stack; iter != 0; iter = iter->next) {
+        assert (iter->hist_index != INT_MAX);
         iter->hist_index += delta;
+    }
 }
 
 /* ============================== Completion ================================ */
@@ -1206,8 +1208,9 @@ static void edit_move_end(lino_t *l) {
 #define LINENOISE_HISTORY_NEXT 0
 #define LINENOISE_HISTORY_PREV 1
 static void edit_history_next(lino_t *l, int dir) {
-    record_undo(l);
     clear_sel(l);
+    undo_subst_hist_idx(l, INT_MAX, l->history_index);
+
     if (l->history_len > 1) {
         /* Update the current history entry before to
          * overwrite it with the next one. */
@@ -1573,7 +1576,6 @@ static int edit(lino_t *l, const char *prompt)
                 edit_move_end(l);
             if (l->need_refresh)
                 refresh_line(l);
-            record_undo(l);
             ret = l->len;
             goto out;
         case CTL('C'):
@@ -1770,7 +1772,8 @@ out:
         l->history_len--;
         free(l->history[l->history_len]);
         l->history[l->history_len] = 0;
-        renumber_undo_hist(l, -1);
+        undo_subst_hist_idx(l, INT_MAX, 0);
+        undo_renumber_hist_idx(l, -1);
     }
     return ret;
 }
@@ -1911,7 +1914,7 @@ static void lino_cleanup(lino_t *ls)
 {
     disable_raw_mode(ls);
     free_hist(ls);
-    free_undo(ls);
+    free_undo_stack(ls);
     free(ls->clip);
     ls->clip = 0;
 }
@@ -2001,7 +2004,7 @@ int lino_hist_add(lino_t *ls, const char *line) {
     }
     ls->history[ls->history_len] = linecopy;
     ls->history_len++;
-    renumber_undo_hist(ls, 1);
+    undo_renumber_hist_idx(ls, 1);
     return 1;
 }
 

@@ -33821,31 +33821,40 @@ when written out to the file. Conversely, when the edited file is read
 back, its newlines are converted to carriage returns, so that multi-line
 content is handled properly. (See the following section, Multi-Line Mode).
 
-.NP* Undo
+.NP* Undo Editing
 
-The listener provides an undo feature. The Ctrl-O editing command will
-restore the edit buffer contents and cursor position to the state in which
-it was before a previous edit, or previous history navigation.
+The listener provides an undo feature.  The Ctrl-O command ("old", "oops")
+restores the edit buffer contents and cursor position to a previous state.
 
-Undo history is retained between lines. That is, after a line is submitted
-with Enter, it is still possible to undo previous edits. Moreover, if a line
-is canceled with Ctrl-C, such that it is not recorded in the recall history, it
-is still available from the undo history.
+There is a single undo history which records up the 200 most recent edit
+states. However, the states are associated with history lines, so that it
+appears that that undo history has its own, independent undo history.
+Undoing the edits in one line has no effect on the undo history of another
+line.
 
-Undo is limited to 32 states.  Furthermore, the undo history is lost
-when \*(TX terminates.
+Undo also records edits for lines that has been canceled with Ctrl-C, and are
+not entered into the history, making it possible to recall canceled lines.
 
-Undo doesn't restore previous contents of the clipboard buffer.
+The undo history is lost when \*(TX terminates.
 
-Undo will restore edits made to history lines. It does so unconditionally,
-which means that it can introduce edits in the following situation.
-When a history line is edited and then sumbitted without navigating to
-a different history line, the edit isn't permanent. However, when the
-edits are retraced via undo, the restored states
-.I are
-stored in the history.
+Undo doesn't save and restore previous contents of the clipboard buffer.
 
-There is no redo; undoing is permanent.
+There is no redo. When undo removes an edit to restore to a prior edit state,
+the removed edit is permanently discarded.
+
+Note that if undo is invoked on a historic line, each undo step updates that
+history entry instantly to the restored state. This is in contrast
+to the way new edits work. New edits are not committed to history until
+navigation takes place to a different history line.
+
+Also note that when new edits are performed on a historic line and it is
+submitted with Enter without navigating to another line, the undo information
+for those edits is retained, and belongs to the newly submitted line.  The
+historic line hasn't actually been modified, and so it has no new undo
+information.  However, if a historic line is edited, and then navigation takes
+place to a different historic line, then the undo information is committed to
+that line, because the modifications to the line have been placed back
+in the history entry.
 
 .SS* Visual Selection Mode
 
