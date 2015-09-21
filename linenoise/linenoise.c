@@ -1557,6 +1557,11 @@ static int edit(lino_t *l, const char *prompt)
             record_undo(l);
             return (int)l->len;
         case CTL('C'):
+            if (l->mlmode) {
+                edit_move_end(l);
+                if (l->need_refresh)
+                    refresh_line(l);
+            }
             record_undo(l);
             l->error = lino_intr;
             return -1;
@@ -1727,10 +1732,18 @@ static int edit(lino_t *l, const char *prompt)
             l->need_refresh = 1;
             break;
         case CTL('Z'):
-            disable_raw_mode(l);
-            raise(SIGTSTP);
-            enable_raw_mode(l);
-            l->need_refresh = 1;
+            {
+                size_t dpos = l->dpos;
+                if (l->mlmode)
+                    edit_move_end(l);
+                if (l->need_refresh)
+                    refresh_line(l);
+                disable_raw_mode(l);
+                raise(SIGTSTP);
+                enable_raw_mode(l);
+                l->dpos = dpos;
+                l->need_refresh = 1;
+            }
             break;
         case CTL('O'):
             restore_undo(l);
