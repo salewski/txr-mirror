@@ -352,6 +352,17 @@ static void record_triv_undo(lino_t *l)
     l->undo_stack->triv = 1;
 }
 
+static void undo_pop(lino_t *l)
+{
+    struct lino_undo *top = l->undo_stack;
+    if (top == 0)
+        return;
+    l->undo_stack = top->next;
+    free(top->data);
+    top->data = 0;
+    free(top);
+}
+
 static void restore_undo(lino_t *l)
 {
     struct lino_undo *top = l->undo_stack;
@@ -359,7 +370,11 @@ static void restore_undo(lino_t *l)
     if (top == 0)
         return;
 
-    l->undo_stack = top->next;
+    if (top->hist_index >= l->history_len - 1) {
+        undo_pop(l);
+        restore_undo(l);
+        return;
+    }
 
     strcpy(l->data, top->data);
     l->dlen = strlen(top->data);
@@ -369,7 +384,7 @@ static void restore_undo(lino_t *l)
     {
         int history_pos = l->history_len - 1 - l->history_index;
 
-        if (history_pos >= 0 && history_pos < l->history_len - 1) {
+        if (history_pos >= 0 && history_pos < l->history_len) {
             free(l->history[history_pos]);
             l->history[history_pos] = chk_strdup_utf8(l->data);
         }
@@ -377,9 +392,14 @@ static void restore_undo(lino_t *l)
 
     l->need_refresh = 1;
 
-    free(top->data);
-    top->data = 0;
-    free(top);
+    undo_pop(l);
+}
+
+static void renumber_undo_hist(lino_t *l, int delta)
+{
+    struct lino_undo *iter;
+    for (iter = l->undo_stack; iter != 0; iter = iter->next)
+        iter->hist_index += delta;
 }
 
 /* ============================== Completion ================================ */
@@ -1750,6 +1770,7 @@ out:
         l->history_len--;
         free(l->history[l->history_len]);
         l->history[l->history_len] = 0;
+        renumber_undo_hist(l, -1);
     }
     return ret;
 }
@@ -1980,6 +2001,7 @@ int lino_hist_add(lino_t *ls, const char *line) {
     }
     ls->history[ls->history_len] = linecopy;
     ls->history_len++;
+    renumber_undo_hist(ls, 1);
     return 1;
 }
 
