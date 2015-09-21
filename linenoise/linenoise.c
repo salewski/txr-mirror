@@ -1359,6 +1359,7 @@ static void edit_in_editor(lino_t *l) {
 static int edit(lino_t *l, const char *prompt)
 {
     int verbatim = 0, extended = 0, paste = 0, extend_num = -1;
+    int ret = -1;
 
     /* Populate the linenoise state that we pass to functions implementing
      * specific editing functionalities. */
@@ -1380,7 +1381,7 @@ static int edit(lino_t *l, const char *prompt)
 
     if (write(l->ofd,prompt,l->plen) == -1) {
         l->error = lino_ioerr;
-        return -1;
+        return ret;
     }
     while(1) {
         unsigned char byte;
@@ -1402,8 +1403,10 @@ static int edit(lino_t *l, const char *prompt)
             continue;
         }
 
-        if (nread <= 0)
-            return l->len ? (int) l->len : -1;
+        if (nread <= 0) {
+            ret = l->len ? (int) l->len : -1;
+            goto out;
+        }
 
         c = byte;
 
@@ -1417,7 +1420,7 @@ static int edit(lino_t *l, const char *prompt)
         {
             if (edit_insert(l,c)) {
                 l->error = lino_ioerr;
-                return -1;
+                goto out;
             }
             verbatim = 0;
             continue;
@@ -1458,7 +1461,7 @@ static int edit(lino_t *l, const char *prompt)
 
                     if (edit_insert_str(l, word_start, word_end - word_start)) {
                         l->error = lino_ioerr;
-                        return -1;
+                        goto out;
                     }
                 }
                 break;
@@ -1480,7 +1483,7 @@ static int edit(lino_t *l, const char *prompt)
 
                     if (res) {
                         l->error = lino_ioerr;
-                        return -1;
+                        goto out;
                     }
                 }
                 break;
@@ -1533,7 +1536,7 @@ static int edit(lino_t *l, const char *prompt)
         }
 
         if (c < 0)
-            return l->len;
+            goto out;
         if (c == 0)
             continue;
 
@@ -1542,29 +1545,26 @@ static int edit(lino_t *l, const char *prompt)
             if (paste) {
                 if (edit_insert(l,c)) {
                     l->error = lino_ioerr;
-                    return -1;
+                    goto out;
                 }
                 break;
             }
-            if (l->history_len > 0) {
-                l->history_len--;
-                free(l->history[l->history_len]);
-                l->history[l->history_len] = 0;
-            }
-            if (l->mlmode) edit_move_end(l);
+            if (l->mlmode)
+                edit_move_end(l);
             if (l->need_refresh)
                 refresh_line(l);
             record_undo(l);
-            return (int)l->len;
+            ret = l->len;
+            goto out;
         case CTL('C'):
             if (l->mlmode) {
                 edit_move_end(l);
                 if (l->need_refresh)
                     refresh_line(l);
             }
-            record_undo(l);
             l->error = lino_intr;
-            return -1;
+            record_undo(l);
+            goto out;
         case BACKSPACE:   /* backspace */
         case CTL('H'):
             edit_backspace(l);
@@ -1575,13 +1575,8 @@ static int edit(lino_t *l, const char *prompt)
                 yank_sel(l);
                 edit_delete(l);
             } else {
-                if (l->history_len > 0) {
-                    l->history_len--;
-                    free(l->history[l->history_len]);
-                    l->history[l->history_len] = 0;
-                }
                 l->error = lino_eof;
-                return -1;
+                goto out;
             }
             break;
         case CTL('T'):   /* swaps current character with previous. */
@@ -1665,7 +1660,7 @@ static int edit(lino_t *l, const char *prompt)
         case ')': case ']': case '}':
             if (edit_insert(l,c)) {
                 l->error = lino_ioerr;
-                return -1;
+                goto out;
             }
             paren_jump(l);
             break;
@@ -1674,7 +1669,7 @@ static int edit(lino_t *l, const char *prompt)
                 break;
             if (edit_insert(l,c)) {
                 l->error = lino_ioerr;
-                return -1;
+                goto out;
             }
             break;
         case CTL('U'):
@@ -1750,8 +1745,13 @@ static int edit(lino_t *l, const char *prompt)
             break;
         }
     }
-    record_undo(l);
-    return l->len;
+out:
+    if (l->history_len > 0) {
+        l->history_len--;
+        free(l->history[l->history_len]);
+        l->history[l->history_len] = 0;
+    }
+    return ret;
 }
 
 #ifdef SIGWINCH
