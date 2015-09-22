@@ -1118,6 +1118,9 @@ static void paren_jump(lino_t *l)
 {
     size_t pos = scan_rev(l->data, l->dpos - 1);
 
+    if (pos == -1)
+        pos = scan_fwd(l->data, l->dpos - 1);
+
     if (pos != -1) {
         size_t dp = l->dpos;
         l->dpos = pos;
@@ -1840,6 +1843,7 @@ static int edit(lino_t *l, const char *prompt)
             }
             break;
         case ')': case ']': case '}':
+        case '(': case '[': case '{':
             if (edit_insert(l,c)) {
                 l->error = lino_ioerr;
                 goto out;

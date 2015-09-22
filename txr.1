@@ -34126,12 +34126,20 @@ When any of the three closing characters
 or
 .code }
 is inserted, the listener scans backward for the matching opening
-character. If the matching character is found, the cursor jumps to that
+character. Likewise, if any of the three opening characters
+.codn ( ,
+.codn [
+or
+.code {
+is inserted in the middle of text, the listener scans forward for the matching
+closing character.
+
+If the matching character is found, the cursor jumps to that
 character and then returns to the original position a brief moment later. If a
 new character is typed during the brief time delay, the delay is immediately
 canceled, so as not to hinder rapid typing.
 
-Note that the backward matching is unsophisticated; it doesn't observe the
+Note that the matching is unsophisticated; it doesn't observe the
 lexical conventions and syntax of the \*(TL programming language.  For
 instance, a closing parenthesis outside a string literal may match
 match an opening one inside a string literal.
