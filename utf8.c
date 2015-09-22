@@ -203,7 +203,7 @@ size_t utf8_to(char *dst, const wchar_t *wsrc)
 wchar_t *utf8_dup_from_uc(const unsigned char *str)
 {
   size_t nchar = utf8_from_uc(0, str);
-  wchar_t *wstr = coerce(wchar_t *, chk_malloc(nchar * sizeof *wstr));
+  wchar_t *wstr = chk_wmalloc(nchar);
   utf8_from_uc(wstr, str);
   return wstr;
 }
@@ -211,7 +211,7 @@ wchar_t *utf8_dup_from_uc(const unsigned char *str)
 wchar_t *utf8_dup_from(const char *str)
 {
   size_t nchar = utf8_from(0, str);
-  wchar_t *wstr = coerce(wchar_t *, chk_malloc(nchar * sizeof *wstr));
+  wchar_t *wstr = chk_wmalloc(nchar);
   utf8_from(wstr, str);
   return wstr;
 }

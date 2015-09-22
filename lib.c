@@ -2025,10 +2025,18 @@ mem_t *chk_grow_vec(mem_t *old, size_t oldelems, size_t newelems,
   return chk_realloc(old, bytes);
 }
 
+wchar_t *chk_wmalloc(size_t nwchar)
+{
+  size_t size = nwchar * sizeof (wchar_t);
+  if (size < nwchar)
+    uw_throw(error_s, lit("string size overflow"));
+  return coerce(wchar_t *, chk_malloc(sizeof (wchar_t) * nwchar));
+}
+
 wchar_t *chk_strdup(const wchar_t *str)
 {
   size_t nchar = wcslen(str) + 1;
-  wchar_t *copy = coerce(wchar_t *, chk_malloc(nchar * sizeof *copy));
+  wchar_t *copy = chk_wmalloc(nchar);
   assert (!async_sig_enabled);
   wmemcpy(copy, str, nchar);
   return copy;
@@ -2509,7 +2517,7 @@ val string_utf8(const char *str)
 val mkstring(val len, val ch)
 {
   size_t l = c_num(len);
-  wchar_t *str = coerce(wchar_t *, chk_malloc((l + 1) * sizeof *str));
+  wchar_t *str = chk_wmalloc(l + 1);
   val s = string_own(str);
   wmemset(str, c_chr(ch), l);
   str[l] = 0;
@@ -2521,7 +2529,7 @@ val mkstring(val len, val ch)
 val mkustring(val len)
 {
   cnum l = c_num(len);
-  wchar_t *str = coerce(wchar_t *, chk_malloc((l + 1) * sizeof *str));
+  wchar_t *str = chk_wmalloc(l + 1);
   val s = string_own(str);
   str[l] = 0;
   s->st.len = len;
@@ -2543,7 +2551,7 @@ val copy_str(val str)
 val upcase_str(val str)
 {
   val len = length_str(str);
-  wchar_t *dst = coerce(wchar_t *, chk_malloc((c_num(len) + 1) * sizeof *dst));
+  wchar_t *dst = chk_wmalloc(c_num(len) + 1);
   const wchar_t *src = c_str(str);
   val out = string_own(dst);
 
@@ -2556,7 +2564,7 @@ val upcase_str(val str)
 val downcase_str(val str)
 {
   val len = length_str(str);
-  wchar_t *dst = coerce(wchar_t *, chk_malloc((c_num(len) + 1) * sizeof *dst));
+  wchar_t *dst = chk_wmalloc(c_num(len) + 1);
   const wchar_t *src = c_str(str);
   val out = string_own(dst);
 
@@ -2891,7 +2899,7 @@ val sub_str(val str_in, val from, val to)
     return null_string;
   } else {
     size_t nchar = c_num(to) - c_num(from) + 1;
-    wchar_t *sub = coerce(wchar_t *, chk_malloc(nchar * sizeof *sub));
+    wchar_t *sub = chk_wmalloc(nchar);
     const wchar_t *str = c_str(str_in);
     wcsncpy(sub, str + c_num(from), nchar);
     sub[nchar-1] = 0;
@@ -3056,7 +3064,7 @@ val cat_str(val list, val sep)
               item, nao);
   }
 
-  str = coerce(wchar_t *, chk_malloc((total + 1) * sizeof *str));
+  str = chk_wmalloc(total + 1);
 
   for (ptr = str, iter = list; iter != nil; iter = cdr(iter)) {
     val item = car(iter);
@@ -3269,7 +3277,7 @@ val trim_str(val str)
     return null_string;
   } else {
     size_t len = end - start;
-    wchar_t *buf = coerce(wchar_t *, chk_malloc((len + 1) * sizeof *buf));
+    wchar_t *buf = chk_wmalloc(len + 1);
     wmemcpy(buf, start, len);
     buf[len] = 0;
     return string_own(buf);

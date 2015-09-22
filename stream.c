@@ -1553,7 +1553,7 @@ val make_string_output_stream(void)
   struct string_out *so = coerce(struct string_out *, chk_malloc(sizeof *so));
   strm_base_init(&so->a);
   so->size = 128;
-  so->buf = coerce(wchar_t *, chk_malloc(so->size * sizeof so->buf));
+  so->buf = chk_wmalloc(so->size);
   so->fill = 0;
   so->buf[0] = 0;
   utf8_decoder_init(&so->ud);
