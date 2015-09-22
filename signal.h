@@ -42,6 +42,15 @@ extern int debug_depth;
 
 #if HAVE_POSIX_SIGS
 
+INLINE void copy_sigset(volatile sigset_t *dest, const sigset_t *src)
+{
+#ifdef __cplusplus
+  *strip_qual(sigset_t *, dest) = *src;
+#else
+  *dest = *src;
+#endif
+}
+
 #define sig_save_enable                         \
   do {                                          \
     int sig_save = async_sig_enabled;           \
@@ -104,7 +113,8 @@ typedef struct {
       (EJB).de = dyn_env,                       \
       (EJB).gc = gc_enabled,                    \
       (EJB).gc_pt = gc_prot_top,                \
-      (EJB).blocked = sig_blocked_cache,        \
+      copy_sigset(&(EJB).blocked,               \
+                  &sig_blocked_cache),          \
       EJ_OPT_SAVE(EJB)                          \
       0))
 
