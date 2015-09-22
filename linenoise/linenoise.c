@@ -1293,13 +1293,59 @@ static void edit_backspace(lino_t *l) {
 /* Delete all characters to left of cursor. */
 static void edit_delete_prev_all(lino_t *l)
 {
-    record_undo(l);
-    delete_sel(l);
+    clear_sel(l);
 
-    memmove(l->data, l->data + l->dpos, l->dlen - l->dpos + 1);
-    l->dlen -= l->dpos;
-    l->dpos = 0;
-    l->need_refresh = 1;
+    if (!l->mlmode) {
+        if (l->dpos > 0) {
+            record_undo(l);
+            memmove(l->data, l->data + l->dpos, l->dlen - l->dpos + 1);
+            l->dlen -= l->dpos;
+            l->dpos = 0;
+            l->need_refresh = 1;
+        }
+    } else {
+        char *e = l->data + l->dpos, *s = e;
+        size_t delta;
+
+        while (s > l->data && s[-1] != '\r')
+            s--;
+
+        delta = e - s;
+
+        if (delta > 0) {
+            record_undo(l);
+            memmove(s, e, l->data + l->dlen - e);
+            l->dlen -= delta;
+            l->dpos -= delta;
+            l->data[l->dlen] = 0;
+            l->need_refresh = 1;
+        }
+    }
+}
+
+static void edit_delete_to_eol(lino_t *l)
+{
+    clear_sel(l);
+
+    if (l->dlen != l->dpos) {
+        if (!l->mlmode) {
+            record_undo(l);
+            l->data[l->dpos] = '\0';
+            l->dlen = l->dpos;
+            l->need_refresh = 1;
+        } else {
+            size_t delsize = strcspn(l->data + l->dpos, "\r");
+            if (delsize != 0) {
+                record_undo(l);
+                if (l->dlen - delsize)
+                    memmove(l->data + l->dpos, l->data + l->dpos + delsize,
+                            l->dlen - l->dpos - delsize);
+                l->dlen -= delsize;
+                l->data[l->dlen] = 0;
+                l->need_refresh = 1;
+            }
+        }
+    }
 }
 
 /* Delete the previosu word, maintaining the cursor at the start of the
@@ -1742,12 +1788,8 @@ static int edit(lino_t *l, const char *prompt)
             if (l->clip != 0)
                 edit_insert_str(l, l->clip, strlen(l->clip));
             break;
-        case CTL('K'): /* delete from current to end of line. */
-            record_undo(l);
-            clear_sel(l);
-            l->data[l->dpos] = '\0';
-            l->dlen = l->dpos;
-            l->need_refresh = 1;
+        case CTL('K'):
+            edit_delete_to_eol(l);
             break;
         case CTL('A'):
             edit_move_home(l);

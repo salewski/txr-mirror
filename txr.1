@@ -33624,10 +33624,16 @@ The Ctrl-U ("undo typing") command is a "super backspace" operation: it deletes
 all characters to the left of the cursor position. The cursor is moved to
 the leftmost position.
 
+In multi-line mode, Ctrl-U deletes only to the beginning of the current
+physical line, not all the way to the first position of the buffer.
+
 .NP* Delete to End of Line
 
 The Ctrl-K ("kill") command deletes the character under the cursor position
 and all subsequent characters. The cursor position doesn't change.
+
+In multi-line mode, Ctrl-K deletes only until the end of the current
+physical line, not the entire buffer.
 
 .NP* Verbatim Character Insert
 
@@ -33983,9 +33989,6 @@ breaks rather than being rendered as
 
 To insert a line break character, use the sequence: Ctrl-V, Ctrl-M.
 Or, equivalently: Ctrl-V, Enter.
-
-Note that the Ctrl-K and Ctrl-U commands regard the entire input to be one
-logical line, ignoring the line breaks.
 
 Because carriage returns are not line terminators in text files,
 lines which contain embedded carriage returns are correctly saved
