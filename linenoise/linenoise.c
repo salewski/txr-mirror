@@ -628,7 +628,7 @@ static int history_search(lino_t *l)
                     if (c < 32)
                         continue;
                 verbatim:
-                    if (hl >= sizeof hpat)
+                    if (hl >= (int) sizeof hpat)
                         break;
                     hpat[hl++] = c;
                     /* fallthrough */
@@ -747,7 +747,7 @@ static void sync_data_to_buf(lino_t *l)
         bptr += snprintf(l->buf, sizeof l->buf, "%s",
                          l->prompt);
 
-    while (bptr - l->buf < sizeof l->buf - 1) {
+    while (bptr - l->buf < (ptrdiff_t) sizeof l->buf - 1) {
         size_t dpos = dptr - l->data;
         size_t pos = bptr - l->buf;
 
@@ -872,7 +872,7 @@ static struct row_values screen_rows(const char *str, size_t pos, int cols)
         return out;
 
     for (; ; ch = *++str, col++) {
-        if (str - start == pos)
+        if (str - start == (ptrdiff_t) pos)
             out.rows[1] = out.rows[0];
         if (ch == 0)
             break;
@@ -1118,10 +1118,10 @@ static void paren_jump(lino_t *l)
 {
     size_t pos = scan_rev(l->data, l->dpos - 1);
 
-    if (pos == -1)
+    if (pos == (size_t) -1)
         pos = scan_fwd(l->data, l->dpos - 1);
 
-    if (pos != -1) {
+    if (pos != (size_t) -1) {
         size_t dp = l->dpos;
         l->dpos = pos;
         refresh_line(l);
@@ -1273,10 +1273,10 @@ static void edit_move_matching_paren(lino_t *l)
     size_t fw = scan_fwd(l->data, l->dpos);
     size_t re = scan_rev(l->data, l->dpos);
 
-    if (fw != -1) {
+    if (fw != (size_t) -1) {
         l->dpos = fw;
         l->need_refresh = 1;
-    } else if (re != -1) {
+    } else if (re != (size_t) -1) {
         l->dpos = re;
         l->need_refresh = 1;
     }
@@ -1466,7 +1466,7 @@ static void tr(char *s, int find, int rep)
 }
 
 static void edit_in_editor(lino_t *l) {
-    char *template = ".linotmpXXXXXX";
+    const char *templ = ".linotmpXXXXXX";
     FILE *fo = 0;
     char *ed = getenv("EDITOR");
     char path[128];
@@ -1481,9 +1481,9 @@ static void edit_in_editor(lino_t *l) {
 #endif
 
         if (ho)
-            snprintf(path, sizeof path, "%s/%s%s", ho, template, suffix);
+            snprintf(path, sizeof path, "%s/%s%s", ho, templ, suffix);
         else
-            snprintf(path, sizeof path, "%s%s", template, suffix);
+            snprintf(path, sizeof path, "%s%s", templ, suffix);
 
 #if HAVE_MKSTEMPS
         if ((fd = mkstemps(path, strlen(suffix))) != -1)
