@@ -33588,6 +33588,18 @@ such that the last character of the line is to the left of the cursor
 position. On terminals which have the Home and End keys, these may also
 be used instead of Ctrl-A and Ctrl-E.
 
+.NP* Jump to Matching Parenthesis
+
+If the cursor is on an opening or closing parenthesis, brace or bracket,
+the Ctrl-] command will jump to the matching character. The logic for
+finding the matching character is identical to that of the Parenthesis Matching
+feature.
+
+Note: the Ctrl-] character can be produced on some terminals using Ctrl-5
+(using the keyboard home row 5, not the numeric keypad 5). This the same
+key which produces the % character when Shift is used. The % character is
+used in the Vi editor for parenthesis matching.
+
 .NP* Character Swap
 
 The Ctrl-T (twiddle) command exchanges the character under the cursor with the

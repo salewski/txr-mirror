@@ -1046,6 +1046,51 @@ static size_t scan_rev(const char *s, size_t i)
     }
 }
 
+static size_t scan_match_fwd(const char *s, size_t i, int mch)
+{
+    while (s[++i]) {
+        int ch = s[i];
+
+        if (ch == mch)
+            return i;
+
+        switch (ch) {
+        case '(':
+            if ((i = scan_match_fwd(s, i, ')')) == -1)
+                return -1;
+            break;
+        case '[':
+            if ((i = scan_match_fwd(s, i, ']')) == -1)
+                return -1;
+            break;
+        case '{':
+            if ((i = scan_match_fwd(s, i, '}')) == -1)
+                return -1;
+            break;
+        case ')': case ']': case '}':
+            return -1;
+        default:
+            break;
+        }
+    }
+
+    return -1;
+}
+
+static size_t scan_fwd(const char *s, size_t i)
+{
+    switch (s[i]) {
+    case '(':
+        return scan_match_fwd(s, i, ')');
+    case '[':
+        return scan_match_fwd(s, i, ']');
+    case '{':
+        return scan_match_fwd(s, i, '}');
+    default:
+        return -1;
+    }
+}
+
 static void usec_delay(lino_t *l, long usec)
 {
 #if HAVE_POLL
@@ -1216,6 +1261,20 @@ static void edit_move_home(lino_t *l) {
 static void edit_move_end(lino_t *l) {
     if (l->dpos != l->dlen) {
         l->dpos = l->dlen;
+        l->need_refresh = 1;
+    }
+}
+
+static void edit_move_matching_paren(lino_t *l)
+{
+    size_t fw = scan_fwd(l->data, l->dpos);
+    size_t re = scan_rev(l->data, l->dpos);
+
+    if (fw != -1) {
+        l->dpos = fw;
+        l->need_refresh = 1;
+    } else if (re != -1) {
+        l->dpos = re;
         l->need_refresh = 1;
     }
 }
@@ -1827,6 +1886,9 @@ static int edit(lino_t *l, const char *prompt)
             break;
         case CTL('E'):
             edit_move_end(l);
+            break;
+        case CTL(']'):
+            edit_move_matching_paren(l);
             break;
         case CTL('L'):
             lino_clear_screen(l);
