@@ -1870,6 +1870,15 @@ static int edit(lino_t *l, const char *prompt)
                 l->dsel = l->dend = l->dpos;
             l->need_refresh = 1;
             break;
+        case CTL('^'):
+            if (l->selmode)
+            {
+                size_t tmp = l->dsel;
+                l->dsel = l->dend;
+                l->dend = l->dpos = tmp;
+                l->need_refresh = 1;
+            }
+            break;
         case CTL('Y'):
             yank_sel(l);
             clear_sel(l);

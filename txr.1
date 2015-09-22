@@ -33909,6 +33909,14 @@ the mode.
 Tab completion, history navigation, history search and editing in an external
 editor all cancel visual selection mode.
 
+.NP* Selection Endpoint Toggle
+
+In visual selection, the starting point of the selection remains fixed, while
+the ending point tracks the movement of the cursor. The Ctrl-^ command will
+exchange the two points. The effect is that the cursor jumps to the opposite
+end of the selection. That end is now the ending point which tracks the cursor
+movement.
+
 .NP* Visual Copy
 
 The Ctrl-Y command ("yank") copies the selected text into a clipboard buffer.
