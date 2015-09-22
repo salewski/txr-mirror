@@ -357,6 +357,18 @@ static void record_triv_undo(lino_t *l)
     l->undo_stack->triv = 1;
 }
 
+static void remove_noop_undo(lino_t *l)
+{
+    struct lino_undo *top = l->undo_stack;
+
+    if (top != 0 &&
+        (top->hist_index == INT_MAX || top->hist_index == l->history_index) &&
+        strcmp(l->data, top->data) == 0)
+    {
+        delete_undo(&l->undo_stack);
+    }
+}
+
 static void restore_undo(lino_t *l)
 {
     struct lino_undo **ptop = &l->undo_stack;
@@ -1253,6 +1265,7 @@ static void edit_delete(lino_t *l) {
         l->data[l->dlen] = '\0';
         l->need_refresh = 1;
     }
+    remove_noop_undo(l);
 }
 
 /* Backspace implementation. */
@@ -1273,6 +1286,8 @@ static void edit_backspace(lino_t *l) {
         l->data[l->dlen] = '\0';
         l->need_refresh = 1;
     }
+
+    remove_noop_undo(l);
 }
 
 /* Delete all characters to left of cursor. */
@@ -1292,7 +1307,6 @@ static void edit_delete_prev_all(lino_t *l)
 static void edit_delete_prev_word(lino_t *l) {
     size_t odpos, diff;
 
-    record_undo(l);
     delete_sel(l);
 
     odpos = l->dpos;
@@ -1301,9 +1315,12 @@ static void edit_delete_prev_word(lino_t *l) {
     while (l->dpos > 0 && strchr(SPACE, l->data[l->dpos - 1]) == 0)
         l->dpos--;
     diff = odpos - l->dpos;
-    memmove(l->data + l->dpos, l->data + odpos, l->dlen - odpos + 1);
-    l->dlen -= diff;
-    l->need_refresh = 1;
+    if (diff != 0) {
+        record_undo(l);
+        memmove(l->data + l->dpos, l->data + odpos, l->dlen - odpos + 1);
+        l->dlen -= diff;
+        l->need_refresh = 1;
+    }
 }
 
 static void tr(char *s, int find, int rep)
@@ -1367,6 +1384,7 @@ static void edit_in_editor(lino_t *l) {
                 l->dpos = l->dlen = nread;
                 tr(l->data, '\n', '\r');
                 l->need_refresh = 1;
+                remove_noop_undo(l);
             }
         }
 
@@ -1607,10 +1625,11 @@ static int edit(lino_t *l, const char *prompt)
             }
             break;
         case CTL('T'):   /* swaps current character with previous. */
-            record_undo(l);
             clear_sel(l);
             if (l->dpos > 0 && l->dpos < l->dlen) {
                 int aux = l->data[l->dpos - 1];
+
+                record_undo(l);
                 l->data[l->dpos-1] = l->data[l->dpos];
                 l->data[l->dpos] = aux;
                 if (l->dpos != l->dlen - 1) l->dpos++;
