@@ -1369,6 +1369,33 @@ static void edit_delete_prev_word(lino_t *l) {
     }
 }
 
+static void edit_delete_line(lino_t *l)
+{
+    clear_sel(l);
+
+    if (l->mlmode) {
+        char *e = l->data + l->dpos, *s = e;
+        size_t delta;
+
+        while (s > l->data && s[-1] != '\r')
+            s--;
+        e += strcspn(e, "\r");
+        if (*e == '\r')
+            e++;
+
+        delta = e - s;
+
+        if (delta > 0) {
+            record_undo(l);
+            memmove(s, e, l->data + l->dlen - e);
+            l->dlen -= delta;
+            l->dpos = s - l->data;
+            l->data[l->dlen] = 0;
+            l->need_refresh = 1;
+        }
+    }
+}
+
 static void tr(char *s, int find, int rep)
 {
     for (; *s; s++)
@@ -1523,6 +1550,10 @@ static int edit(lino_t *l, const char *prompt)
             case CTL('E'):
                 extended = 0;
                 edit_in_editor(l);
+                break;
+            case CTL('K'):
+                extended = 0;
+                edit_delete_line(l);
                 break;
             case CTL('V'):
                 extended = 0;

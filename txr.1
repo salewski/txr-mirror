@@ -33653,6 +33653,13 @@ appears as such in multi-line mode, or as
 .code ^M
 in line mode.
 
+.NP* Delete Current Line
+
+The Ctrl-X, Ctrl-K command sequence may be used in multi-line mode
+to delete the entire physical line under the cursor. Any lines below that
+line move up to close the gap. In line mode, the command has no effect,
+other than canceling select mode.
+
 .NP* History Recall
 
 By default, the most recent 500 lines submitted to the interactive listener are
