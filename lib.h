@@ -81,7 +81,10 @@ typedef union obj obj_t;
 
 typedef obj_t *val;
 
+#ifndef MEM_T_DEFINED
 typedef unsigned char mem_t;
+#define MEM_T_DEFINED
+#endif
 
 #if CONFIG_GEN_GC
 #define obj_common \
@@ -621,6 +624,7 @@ mem_t *chk_grow_vec(mem_t *old, size_t oldelems, size_t newelems,
 mem_t *chk_manage_vec(mem_t *old, size_t oldfilled, size_t newfilled,
                       size_t elsize, mem_t *fillval);
 wchar_t *chk_wmalloc(size_t nwchar);
+wchar_t *chk_wrealloc(wchar_t *, size_t nwchar);
 wchar_t *chk_strdup(const wchar_t *str);
 char *chk_strdup_utf8(const char *str);
 unsigned char *chk_strdup_8bit(const wchar_t *str);

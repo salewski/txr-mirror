@@ -35,6 +35,7 @@
 #include <wchar.h>
 #include <signal.h>
 #include <ctype.h>
+#include <wctype.h>
 #include <errno.h>
 #include "config.h"
 #include ALLOCA_H
@@ -55,6 +56,7 @@
 #include "cadr.h"
 #include "struct.h"
 #include "parser.h"
+#include "regex.h"
 #include "itypes.h"
 #include "buf.h"
 #include "vm.h"
@@ -792,25 +794,20 @@ static void find_matching_syms(lino_completions_t *cpl,
       else
         comple = format(nil, lit("~a~a"), line_prefix, name, nao);
 
-      {
-        char *completion = utf8_dup_to(c_str(comple));
-        lino_add_completion(cpl, completion);
-        free(completion);
-      }
-
+      lino_add_completion(cpl, c_str(comple));
       gc_hint(comple);
     }
   }
 }
 
-static void provide_completions(const char *data,
+static void provide_completions(const wchar_t *data,
                                 lino_completions_t *cpl,
                                 void *ctx)
 {
-  const char *gly = "!$%&*+-<=>?\\_~/";
-  const char *ptr = data[0] ? data + strlen(data) - 1 : 0;
-  const char *sym = 0, *pkg = 0;
-  const char *end;
+  const wchar_t *gly = L"!$%&*+-<=>?\\_~/";
+  const wchar_t *ptr = data[0] ? data + wcslen(data) - 1 : 0;
+  const wchar_t *sym = 0, *pkg = 0;
+  const wchar_t *end;
   val keyword = nil;
   val package = nil;
 
@@ -819,7 +816,7 @@ static void provide_completions(const char *data,
   if (!ptr)
     return;
 
-  while ((isalnum(convert(unsigned char, *ptr)) || strchr(gly, *ptr)) &&
+  while ((iswalnum(convert(wint_t, *ptr)) || wcschr(gly, *ptr)) &&
          (sym = ptr) && ptr > data)
     ptr--;
 
@@ -834,7 +831,7 @@ static void provide_completions(const char *data,
     } else {
       ptr--;
 
-      while ((isalnum(convert(unsigned char, *ptr)) || strchr(gly, *ptr)) &&
+      while ((iswalnum(convert(wint_t, *ptr)) || wcschr(gly, *ptr)) &&
              (pkg = ptr) && ptr > data)
         ptr--;
 
@@ -848,13 +845,13 @@ static void provide_completions(const char *data,
     end = sym - 1;
   } else if (pkg) {
     size_t sz = sym - pkg;
-    char *pkg_copy = convert(char *, alloca(sz));
+    wchar_t *pkg_copy = convert(wchar_t *, alloca(sizeof *pkg_copy * sz));
 
-    memcpy(pkg_copy, pkg, sz);
+    wmemcpy(pkg_copy, pkg, sz);
     pkg_copy[sz - 1] = 0;
 
     {
-      val package_name = string_utf8(pkg_copy);
+      val package_name = string(pkg_copy);
       package = find_package(package_name);
       if (!package)
         return;
@@ -864,15 +861,15 @@ static void provide_completions(const char *data,
   }
 
   {
-    val sym_pfx = string_utf8(sym);
+    val sym_pfx = string(sym);
     size_t lsz = end - data + 1;
-    char *line_pfxu8 = convert(char *, alloca(lsz));
-    memcpy(line_pfxu8, data, lsz);
-    line_pfxu8[lsz - 1] = 0;
+    wchar_t *line_pfxs = convert(wchar_t *, alloca(sizeof *line_pfxs * lsz));
+    wmemcpy(line_pfxs, data, lsz);
+    line_pfxs[lsz - 1] = 0;
 
     {
       uses_or2;
-      val line_pfx = string_utf8(line_pfxu8);
+      val line_pfx = string(line_pfxs);
       char prev = (end > data) ? end[-1] : 0;
       char pprev = (end > data + 1) ? end[-2] : 0;
       int quote = (pprev == '^' || pprev == '\'' || pprev == '#');
@@ -893,13 +890,13 @@ static void provide_completions(const char *data,
   }
 }
 
-static char *provide_atom(lino_t *l, const char *str, int n, void *ctx)
+static wchar_t *provide_atom(lino_t *l, const wchar_t *str, int n, void *ctx)
 {
   val catch_all = list(t, nao);
   val obj = nao;
   val form;
-  val line = string_utf8(str);
-  char *out = 0;
+  val line = string(str);
+  wchar_t *out = 0;
 
   (void) l;
   (void) ctx;
@@ -917,7 +914,7 @@ static char *provide_atom(lino_t *l, const char *str, int n, void *ctx)
   }
 
   if (obj != nao)
-      out = utf8_dup_to(c_str(tostring(obj)));
+    out = chk_strdup(c_str(tostring(obj)));
 
   uw_catch (exsym, exvals) {
     (void) exsym;
@@ -997,7 +994,7 @@ static val repl_warning(val out_stream, val exc, struct args *rest)
   uw_throw(continue_s, nil);
 }
 
-static int is_balanced_line(const char *line, void *ctx)
+static int is_balanced_line(const wchar_t *line, void *ctx)
 {
   enum state {
     ST_START, ST_CMNT, ST_PAR, ST_BKT, ST_BRC, ST_HASH,
@@ -1008,7 +1005,7 @@ static int is_balanced_line(const char *line, void *ctx)
   enum state state[32];
   count[sp] = 0;
   state[sp] = ST_START;
-  char ch;
+  wchar_t ch;
 
   while ((ch = *line++) != 0) {
   again:
@@ -1200,13 +1197,13 @@ static int is_balanced_line(const char *line, void *ctx)
   return sp == 0 && state[sp] == ST_START && count[sp] == 0;
 }
 
+static_forward(lino_os_t linenoise_txr_binding);
+
 val repl(val bindings, val in_stream, val out_stream)
 {
-  val ifd = stream_get_prop(in_stream, fd_k);
-  val ofd = stream_get_prop(out_stream, fd_k);
-  lino_t *ls = lino_make(c_num(ifd), c_num(ofd));
-  char *line_u8 = 0;
-  char *prompt_u8 = 0;
+  lino_t *ls = lino_make(coerce(mem_t *, in_stream),
+                         coerce(mem_t *, out_stream));
+  wchar_t *line_w = 0;
   val quit_k = intern(lit("quit"), keyword_package);
   val read_k = intern(lit("read"), keyword_package);
   val prompt_k = intern(lit("prompt"), keyword_package);
@@ -1220,7 +1217,7 @@ val repl(val bindings, val in_stream, val out_stream)
   val counter = one;
   val home = get_home_path();
   val histfile = if2(home, format(nil, lit("~a/.txr_history"), home, nao));
-  char *histfile_u8 = if3(home, utf8_dup_to(c_str(histfile)), NULL);
+  wchar_t *histfile_w = if3(home, chk_strdup(c_str(histfile)), NULL);
   val rcfile = if2(home, format(nil, lit("~a/.txr_profile"), home, nao));
   val old_sig_handler = set_sig_handler(num(SIGINT), func_n2(repl_intr));
   val hist_len_var = lookup_global_var(listener_hist_len_s);
@@ -1250,8 +1247,8 @@ val repl(val bindings, val in_stream, val out_stream)
 
   lino_hist_set_max_len(ls, c_num(cdr(hist_len_var)));
 
-  if (histfile_u8)
-    lino_hist_load(ls, histfile_u8);
+  if (histfile_w)
+    lino_hist_load(ls, histfile_w);
 
   lino_set_noninteractive(ls, opt_noninteractive);
 
@@ -1263,20 +1260,16 @@ val repl(val bindings, val in_stream, val out_stream)
     val var_sym = intern(var_name, user_package);
     uw_frame_t uw_handler;
 
-    char *prompt_u8 = utf8_dup_to(c_str(prompt));
-
     lino_hist_set_max_len(ls, c_num(cdr(hist_len_var)));
     lino_set_multiline(ls, cdr(multi_line_var) != nil);
     lino_set_selinclusive(ls, cdr(sel_inclusive_var) != nil);
     reg_varl(counter_sym, counter);
     reg_varl(var_counter_sym, var_counter);
-    line_u8 = linenoise(ls, prompt_u8);
-    free (prompt_u8);
-    prompt_u8 = 0;
+    line_w = linenoise(ls, c_str(prompt));
 
     rplacd(multi_line_var, tnil(lino_get_multiline(ls)));
 
-    if (line_u8 == 0) {
+    if (line_w == 0) {
       switch (lino_get_error(ls)) {
       case lino_intr:
         put_line(lit("** intr"), out_stream);
@@ -1291,16 +1284,16 @@ val repl(val bindings, val in_stream, val out_stream)
     }
 
     {
-      size_t wsp = strspn(line_u8, " \t\n\r");
+      size_t wsp = wcsspn(line_w, L" \t\n\r");
 
-      if (line_u8[wsp] == 0) {
-        free(line_u8);
+      if (line_w[wsp] == 0) {
+        free(line_w);
         continue;
       }
 
-      if (line_u8[wsp] == ';') {
-        lino_hist_add(ls, line_u8);
-        free(line_u8);
+      if (line_w[wsp] == ';') {
+        lino_hist_add(ls, line_w);
+        free(line_w);
         continue;
       }
     }
@@ -1313,7 +1306,7 @@ val repl(val bindings, val in_stream, val out_stream)
 
     {
       val name = format(nil, lit("expr-~d"), prev_counter, nao);
-      val line = string_utf8(line_u8);
+      val line = string(line_w);
       val form = lisp_parse(line, out_stream, colon_k, name, colon_k);
       if (form == quit_k) {
         done = t;
@@ -1333,8 +1326,8 @@ val repl(val bindings, val in_stream, val out_stream)
         reg_varl(var_sym, value);
         sethash(result_hash, var_counter, value);
         pfun(value, out_stream);
-        lino_set_result(ls, utf8_dup_to(c_str(tostring(value))));
-        lino_hist_add(ls, line_u8);
+        lino_set_result(ls, chk_strdup(c_str(tostring(value))));
+        lino_hist_add(ls, line_w);
         if (cdr(greedy_eval)) {
           val error_p = nil;
           while (bindable(value) || consp(value))
@@ -1354,7 +1347,7 @@ val repl(val bindings, val in_stream, val out_stream)
       val exinfo = cons(exsym, exvals);
       reg_varl(var_sym, exinfo);
       sethash(result_hash, var_counter, exinfo);
-      lino_hist_add(ls, line_u8);
+      lino_hist_add(ls, line_w);
 
       if (uw_exception_subtype_p(exsym, syntax_error_s)) {
         put_line(lit("** syntax error"), out_stream);
@@ -1367,8 +1360,8 @@ val repl(val bindings, val in_stream, val out_stream)
     }
 
     uw_unwind {
-      free(line_u8);
-      line_u8 = 0;
+      free(line_w);
+      line_w = 0;
     }
 
     uw_catch_end;
@@ -1380,12 +1373,11 @@ val repl(val bindings, val in_stream, val out_stream)
 
   dyn_env = saved_dyn_env;
 
-  if (histfile_u8)
-    lino_hist_save(ls, histfile_u8);
+  if (histfile_w)
+    lino_hist_save(ls, histfile_w);
 
-  free(histfile_u8);
-  free(prompt_u8);
-  free(line_u8);
+  free(histfile_w);
+  free(line_w);
   lino_free(ls);
   gc_hint(histfile);
   return nil;
@@ -1416,6 +1408,120 @@ static val circref(val n)
             n, nao);
 }
 
+static int lino_fileno(mem_t *stream_in)
+{
+  val stream = coerce(val, stream_in);
+  return c_num(stream_fd(stream));
+}
+
+static int lino_puts(mem_t *stream_in, const wchar_t *str_in)
+{
+  val stream = coerce(val, stream_in);
+  wchar_t ch;
+  while ((ch = *str_in++))
+    if (ch != LINO_PAD_CHAR)
+      if (put_char(chr(ch), stream) != t)
+        return 0;
+  flush_stream(stream);
+  return 1;
+}
+
+static wint_t lino_getch(mem_t *stream_in)
+{
+  val stream = coerce(val, stream_in);
+  val ch = get_char(stream);
+  return if3(ch, c_num(ch), WEOF);
+}
+
+static wchar_t *lino_getl(mem_t *stream_in, wchar_t *buf, size_t nchar)
+{
+  wchar_t *ptr = buf;
+  val stream = coerce(val, stream_in);
+
+  if (nchar == 0)
+    return buf;
+
+  while (nchar > 1) {
+    val ch = get_char(stream);
+    if (!ch)
+      break;
+    if ((*ptr++ = c_num(ch)) == '\n')
+      break;
+  }
+
+  if (ptr == buf) {
+    *ptr++ = 0;
+    return 0;
+  }
+
+  *ptr++ = 0;
+  return buf;
+}
+
+static wchar_t *lino_gets(mem_t *stream_in, wchar_t *buf, size_t nchar)
+{
+  wchar_t *ptr = buf;
+  val stream = coerce(val, stream_in);
+
+  if (nchar == 0)
+    return buf;
+
+  while (nchar > 1) {
+    val ch = get_char(stream);
+    if (!ch)
+      break;
+    *ptr++ = c_num(ch);
+  }
+
+  if (ptr == buf) {
+    *ptr++ = 0;
+    return 0;
+  }
+
+  *ptr++ = 0;
+  return buf;
+}
+
+
+static int lino_feof(mem_t *stream_in)
+{
+  val stream = coerce(val, stream_in);
+  return get_error(stream) == t;
+}
+
+static mem_t *lino_open(const wchar_t *name_in, const wchar_t *mode_in)
+{
+  val name = string(name_in);
+  val mode = static_str(coerce(const wchli_t *, mode_in));
+  return coerce(mem_t *, open_file(name, mode));
+}
+
+static mem_t *lino_open8(const char *name_in, const wchar_t *mode_in)
+{
+  val name = string_utf8(name_in);
+  val mode = static_str(coerce(const wchli_t *, mode_in));
+  return coerce(mem_t *, open_file(name, mode));
+}
+
+static mem_t *lino_fdopen(int fd, const wchar_t *mode_in)
+{
+  val mode = static_str(coerce(const wchli_t *, mode_in));
+  return coerce(mem_t *, open_fileno(num(fd), mode));
+}
+
+static void lino_close(mem_t *stream)
+{
+  (void) close_stream(coerce(val, stream), nil);
+}
+
+static_def(lino_os_t linenoise_txr_binding =
+           lino_os_init(chk_malloc, chk_realloc, chk_wmalloc,
+                        chk_wrealloc, chk_strdup, free,
+                        lino_fileno, lino_puts, lino_getch,
+                        lino_getl, lino_gets, lino_feof,
+                        lino_open, lino_open8, lino_fdopen, lino_close,
+                        wide_display_char_p));
+
 void parse_init(void)
 {
   parser_s = intern(lit("parser"), user_package);
@@ -1432,6 +1538,7 @@ void parse_init(void)
   prot1(&unique_s);
   stream_parser_hash = make_hash(t, nil, nil);
   parser_l_init();
+  lino_init(&linenoise_txr_binding);
   reg_var(listener_hist_len_s, num_fast(500));
   reg_var(listener_multi_line_p_s, t);
   reg_var(listener_sel_inclusive_p_s, nil);

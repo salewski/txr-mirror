@@ -45,31 +45,68 @@ typedef enum lino_error {
     lino_intr           /* Line innput terminated by Ctrl-C or interrupt */
 } lino_error_t;
 
+#define LINO_PAD_CHAR 0xFFFF
+
 typedef struct lino_state lino_t;
 
+#ifndef MEM_T_DEFINED
+typedef unsigned char mem_t;
+#define MEM_T_DEFINED
+#endif
+
+typedef struct lino_os {
+    mem_t *(*alloc_fn)(size_t n);
+    mem_t *(*realloc_fn)(mem_t *old, size_t size);
+    wchar_t *(*wmalloc_fn)(size_t nwchar);
+    wchar_t *(*wrealloc_fn)(wchar_t *, size_t nwchar);
+    wchar_t *(*wstrdup_fn)(const wchar_t *str);
+    void (*free_fn)(void *);
+    int (*fileno_fn)(mem_t *stream);
+    int (*puts_fn)(mem_t *stream, const wchar_t *str);
+    wint_t (*getch_fn)(mem_t *stream);
+    wchar_t *(*getl_fn)(mem_t *stream, wchar_t *buf, size_t nchar);
+    wchar_t *(*gets_fn)(mem_t *stream, wchar_t *buf, size_t nchar);
+    int (*eof_fn)(mem_t *stream);
+    mem_t *(*open_fn)(const wchar_t *name, const wchar_t *mode);
+    mem_t *(*open8_fn)(const char *name, const wchar_t *mode);
+    mem_t *(*fdopen_fn)(int fd, const wchar_t *mode);
+    void (*close_fn)(mem_t *stream);
+    int (*wide_display_fn)(wchar_t);
+} lino_os_t;
+
+#define lino_os_init(alloc, realloc, wmalloc, wrealloc, wstrdup, free,  \
+                     fileno, puts, getch, getl, gets, eof,              \
+                     open, open8, fdopen, close, wide_disp)             \
+{                                                                       \
+  alloc, realloc, wmalloc, wrealloc, wstrdup, free,                     \
+  fileno, puts, getch, getl, gets, eof, open, open8, fdopen, close,     \
+  wide_disp                                                             \
+}
+
 typedef struct lino_completions {
-  size_t len;
-  char **cvec;
-  int substring;
+    size_t len;
+    wchar_t **cvec;
+    int substring;
 } lino_completions_t;
 
-typedef void lino_compl_cb_t(const char *, lino_completions_t *, void *ctx);
+typedef void lino_compl_cb_t(const wchar_t *, lino_completions_t *, void *ctx);
 void lino_set_completion_cb(lino_t *, lino_compl_cb_t *, void *ctx);
-void lino_add_completion(lino_completions_t *, const char *);
+void lino_add_completion(lino_completions_t *, const wchar_t *);
 
-lino_t *lino_make(int ifd, int ofd);
+void lino_init(lino_os_t *);
+lino_t *lino_make(mem_t *istream, mem_t *ostream);
 lino_t *lino_copy(lino_t *);
 void lino_free(lino_t *);
 
-char *linenoise(lino_t *, const char *prompt);
+wchar_t *linenoise(lino_t *, const wchar_t *prompt);
 void lino_set_tempfile_suffix(lino_t *, const char *);
 lino_error_t lino_get_error(lino_t *);
 lino_error_t lino_set_error(lino_t *, lino_error_t); /* returns old */
-int lino_hist_add(lino_t *, const char *line);
+int lino_hist_add(lino_t *, const wchar_t *line);
 int lino_hist_set_max_len(lino_t *, int len);
-int lino_hist_save(lino_t *, const char *filename);
-int lino_hist_load(lino_t *, const char *filename);
-void lino_set_result(lino_t *, char *); /* takes ownership of malloced mem; modifies it */
+int lino_hist_save(lino_t *, const wchar_t *filename);
+int lino_hist_load(lino_t *, const wchar_t *filename);
+void lino_set_result(lino_t *, wchar_t *); /* takes ownership of malloced mem; modifies it */
 int lino_clear_screen(lino_t *);
 void lino_set_multiline(lino_t *, int ml);
 int lino_get_multiline(lino_t *);
@@ -78,8 +115,8 @@ int lino_get_selinculsive(lino_t *);
 void lino_set_noninteractive(lino_t *, int ni);
 int lino_get_noninteractive(lino_t *);
 
-typedef char *lino_atom_cb_t(lino_t *, const char *line, int n, void *ctx);
+typedef wchar_t *lino_atom_cb_t(lino_t *, const wchar_t *line, int n, void *ctx);
 void lino_set_atom_cb(lino_t *, lino_atom_cb_t *, void *ctx);
 
-typedef int lino_enter_cb_t(const char *line, void *ctx);
+typedef int lino_enter_cb_t(const wchar_t *line, void *ctx);
 void lino_set_enter_cb(lino_t *, lino_enter_cb_t *, void *ctx);

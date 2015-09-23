@@ -2791,6 +2791,15 @@ wchar_t *chk_wmalloc(size_t nwchar)
                                       lit("string operation")));
 }
 
+wchar_t *chk_wrealloc(wchar_t *old, size_t nwchar)
+{
+  size_t size = nwchar * sizeof (wchar_t);
+  if (size < nwchar)
+    uw_throw(error_s, lit("string size overflow"));
+  return coerce(wchar_t *, chk_realloc(convert(mem_t *, old),
+                                       sizeof (wchar_t) * nwchar));
+}
+
 wchar_t *chk_strdup(const wchar_t *str)
 {
   size_t nchar = wcslen(str) + 1;
