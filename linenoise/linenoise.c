@@ -742,10 +742,12 @@ static void ab_free(struct abuf *ab) {
 static void sync_data_to_buf(lino_t *l)
 {
     char *dptr = l->data, *bptr = l->buf;
+    int col = strlen(l->prompt);
 
-    if (l->mlmode)
+    if (l->mlmode) {
         bptr += snprintf(l->buf, sizeof l->buf, "%s",
                          l->prompt);
+    }
 
     while (bptr - l->buf < (ptrdiff_t) sizeof l->buf - 1) {
         size_t dpos = dptr - l->data;
@@ -762,22 +764,25 @@ static void sync_data_to_buf(lino_t *l)
             char ch = *dptr++;
 
             if (ch == TAB) {
-                int pos = bptr - l->buf;
                 do {
                     *bptr++ = ' ';
-                    pos++;
-                } while (pos % 8 != 0);
+                    col++;
+                } while (col % 8 != 0);
             } else if (l->mlmode && ch == '\r') {
                 *bptr++ = '\r';
                 *bptr++ = '\n';
+                col = 0;
             } else if (ch < ' ') {
                 *bptr++ = '^';
                 *bptr++ = '@' + ch;
+                col += 2;
             } else if (ch == 127) {
                 *bptr++ = '^';
                 *bptr++ = '?';
+                col += 2;
             } else {
                 *bptr++ = ch;
+                col++;
             }
 
             continue;
