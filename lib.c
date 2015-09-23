@@ -2819,7 +2819,7 @@ static val lazy_sub_str(val lstr, val from, val to)
   val len = nil;
   val len_pfx = length_str(lstr->ls.prefix);
 
-  if (from == nil) {
+  if (null_or_missing_p(from)) {
     from = zero;
   } else if (from == t) {
     return null_string;
@@ -2838,7 +2838,7 @@ static val lazy_sub_str(val lstr, val from, val to)
     }
   }
 
-  if (to == nil || to == t) {
+  if (null_or_missing_p(to) || to == t) {
     to = t;
   } else {
     if (lt(to, zero)) {
