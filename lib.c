@@ -6769,6 +6769,7 @@ val sub(val seq, val from, val to)
     return sub_list(seq, from, to);
   case LIT:
   case STR:
+  case LSTR:
     return sub_str(seq, from, to);
   case VEC:
     return sub_vec(seq, from, to);
