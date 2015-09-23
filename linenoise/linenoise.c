@@ -921,7 +921,7 @@ static void refresh_multiline(lino_t *l) {
      * going to the last row. */
     ab_init(&ab);
     if (oldmaxrows - l->oldrow > 0) {
-        snprintf(seq,64,"\x1b[%dB", oldmaxrows - l->oldrow);
+        snprintf(seq,64,"\x1b[%dB", oldmaxrows - (int) l->oldrow);
         ab_append(&ab,seq,strlen(seq));
     }
 
