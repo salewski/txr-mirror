@@ -660,9 +660,9 @@ static val statl(val path)
   return stat_impl(path, w_lstat, lit("lstat"));
 }
 
-static val statf(val stream)
+val statf(val stream)
 {
-  return stat_impl(stream, w_fstat, lit("lstat"));
+  return stat_impl(stream, w_fstat, lit("fstat"));
 }
 
 #if HAVE_PIPE

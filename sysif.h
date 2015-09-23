@@ -34,4 +34,5 @@ extern val atime_s, mtime_s, ctime_s;
 
 val getenv_wrap(val name);
 val statp(val path);
+val statf(val path);
 void sysif_init(void);
