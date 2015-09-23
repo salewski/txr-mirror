@@ -720,12 +720,22 @@ val repl(val bindings, val in_stream, val out_stream)
       if (uw_exception_subtype_p(exsym, syntax_error_s)) {
         put_line(lit("** syntax error"), out_stream);
       } else if (uw_exception_subtype_p(exsym, error_s)) {
+        val info = source_loc_str(last_form_evaled, nil);
+        val ex_info = source_loc_str(last_form_expanded, nil);
+
         if (cdr(exvals))
           format(out_stream, lit("** ~!~a ~!~s\n"),
                  car(exvals), cdr(exvals), nao);
         else
           format(out_stream, lit("** ~!~a\n"), car(exvals), nao);
 
+        if (info && exsym != eval_error_s)
+          format(std_error, lit("** possibly triggered at ~a by form ~!~s\n"),
+                 info, last_form_evaled, nao);
+
+        if (ex_info)
+          format(std_error, lit("** during expansion at ~a of form ~!~s\n"),
+                 ex_info, last_form_expanded, nao);
       } else {
         format(out_stream, lit("** ~!~s exception, args: ~!~s\n"),
                exsym, exvals, nao);
