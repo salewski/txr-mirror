@@ -31207,12 +31207,24 @@ member, who is the owner of the file.
 
 Otherwise, the file is reported as private.
 
-Note that this interpretation of private is vulnerable to the following
+Note that this interpretation of "private" is vulnerable to the following
 time-of-check to time-of-use race condition with regard to the group check.  At
 the time of the check, the group might be empty or contain only the caller as a
 member. But by the time the file is subsequently accessed, the group might have
 been innocently extended by the system administrator to include additional
 users, who can maliciously modify the file.
+
+Also note that the function is vulnerable to a time-of-check to time-of-use
+race if
+.meta path
+is a string rather than a
+.code stat
+structure. If the directory which contains the file is writable to others, the
+file can pass the check at the time the function is called, but before it is
+used, the file can be replaced by another file with different permissions.
+To guard against this race, one must open the file, and then use
+.code fstat
+on the stream.
 
 .coNP Functions @ path-newer and @ path-older
 .synb
