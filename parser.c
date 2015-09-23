@@ -382,19 +382,19 @@ static void load_rcfile(val name)
   if (!funcall1(path_exists_p, name))
     return;
 
-  if (!funcall1(path_private_to_me_p, name)) {
-    format(std_output,
-           lit("** possible security problem: ~a is writable to others\n"),
-           name, nao);
-    return;
-  }
-
   uw_catch_begin (catch_syms, sy, va);
 
   open_txr_file(name, &lisp_p, &resolved_name, &stream);
 
-  if (stream)
+  if (stream) {
+    if (!funcall1(path_private_to_me_p, statf(stream))) {
+      format(std_output,
+             lit("** possible security problem: ~a is writable to others\n"),
+             name, nao);
+    } else {
       read_eval_stream(stream, std_output, nil);
+    }
+  }
 
   uw_catch(sy, va)
   {
