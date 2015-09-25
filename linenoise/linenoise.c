@@ -869,24 +869,35 @@ struct row_values {
 static struct row_values screen_rows(const char *str, size_t pos, int cols)
 {
     const char *start = str;
-    int ch = *str;
+    int col;
     struct row_values out = { { 1, 1 } };
-    int col = 1;
 
-    if (!ch)
-        return out;
+    for (col = 0; ; str++) {
+        int ch = *str;
+        int atpos = (str - start == (ptrdiff_t) pos);
 
-    for (; ; ch = *++str, col++) {
-        if (str - start == (ptrdiff_t) pos)
-            out.rows[1] = out.rows[0];
-        if (ch == 0)
-            break;
-        if (ch == '\r')
-            continue;
-        if (ch == '\n' || col == cols) {
+        switch (ch) {
+        case '\n':
             col = 0;
             out.rows[0]++;
+            /* fallthrough */
+        case '\r': case 0:
+            if (atpos)
+                out.rows[1] = out.rows[0] + (col == cols);
+            break;
+        default:
+            col++;
+            if (col > cols) {
+                col = 1;
+                out.rows[0]++;
+            }
+            if (atpos)
+                out.rows[1] = out.rows[0];
+            break;
         }
+
+        if (ch == 0)
+            break;
     }
 
     return out;
@@ -909,7 +920,6 @@ static void refresh_multiline(lino_t *l) {
     struct row_values r = screen_rows(l->buf, l->pos, l->cols);
     int rows = r.rows[0]; /* rows used by current buf. */
     int nrow = r.rows[1]; /* cursor row after refresh. */
-    int col; /* colum position, zero-based. */
     int oldmaxrows = l->maxrows;
     int fd = l->ofd, j;
     struct abuf ab;
@@ -960,32 +970,32 @@ static void refresh_multiline(lino_t *l) {
             ab_append(&ab, l->buf + end, len - end);
     }
 
-    /* If we are at the very end of the screen with our prompt, we need to
-     * emit a newline and move the cursor to the first column. */
-
-    col = col_offset_in_str(l->buf, l->pos);
-
-    if (l->pos && l->pos == l->len && col % l->cols == l->cols - 1)
-    {
-        ab_append(&ab,"\n",1);
-        snprintf(seq,64,"\r");
-        ab_append(&ab,seq,strlen(seq));
+    /* Cursor has wrapped to new row beyond rows. */
+    if (nrow > rows) {
+        ab_append(&ab, "\r\n", 2);
         rows++;
-        if (rows > (int)l->maxrows) l->maxrows = rows;
+        if (rows > (int) l->maxrows)
+            l->maxrows = rows;
     }
 
-    /* Go up till we reach the expected positon. */
-    if (rows - nrow > 0) {
-        snprintf(seq,64,"\x1b[%dA", rows - nrow);
+    /* Move cursor to the correct column */
+    {
+        int ccol = col_offset_in_str(l->buf, l->pos) % l->cols;
+
+        /* Go up till we reach the expected positon. */
+        if (rows - nrow > 0) {
+            snprintf(seq,64,"\x1b[%dA", rows - nrow);
+            ab_append(&ab,seq,strlen(seq));
+        }
+
+        /* Set column. */
+        if (ccol)
+            snprintf(seq,64,"\r\x1b[%dC", ccol);
+        else
+            snprintf(seq,64,"\r");
+
         ab_append(&ab,seq,strlen(seq));
     }
-
-    /* Set column. */
-    if (col)
-        snprintf(seq,64,"\r\x1b[%dC", col);
-    else
-        snprintf(seq,64,"\r");
-    ab_append(&ab,seq,strlen(seq));
 
     /* Remember current cursor row for next time */
     l->oldrow = nrow;
