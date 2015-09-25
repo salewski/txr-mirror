@@ -1450,6 +1450,46 @@ static val reg_nullable(val exp)
   }
 }
 
+static val reg_matches_all(val exp)
+{
+  if (atom(exp)) {
+    return nil;
+  } else {
+    val sym = first(exp), args = rest(exp);
+
+    if (sym == set_s || sym == cset_s) {
+      return nil;
+    } else if (sym == compound_s) {
+      val am = nil;
+      for (; args; args = cdr(args)) {
+        val arg = car(args);
+        if (!reg_nullable(arg))
+          return nil;
+        if (!am && reg_matches_all(arg))
+          am = t;
+      }
+      return am;
+    } else if (sym == oneplus_s) {
+      return reg_matches_all(car(args));
+    } else if (sym == zeroplus_s) {
+      val arg = car(args);
+      if (arg == wild_s || reg_matches_all(arg))
+        return t;
+      return nil;
+    } else if (sym == optional_s) {
+      return reg_matches_all(car(args));
+    } else if (sym == compl_s) {
+      return tnil(car(args));
+    } else if (sym == or_s) {
+      return tnil(reg_matches_all(pop(&args)) || reg_matches_all(pop(&args)));
+    } else if (sym == and_s) {
+      return tnil(reg_matches_all(pop(&args)) && reg_matches_all(pop(&args)));
+    } else {
+      internal_error("bad operator in regex");
+    }
+  }
+}
+
 static val flatten_or(val or_expr)
 {
   if (atom(or_expr) || car(or_expr) != or_s) {
@@ -1588,7 +1628,12 @@ static val reg_derivative(val exp, val ch)
         return exp;
       return cons(compound_s, cons(d_arg, cons(exp, nil)));
     } else if (sym == compl_s) {
-      return cons(sym, cons(reg_derivative(first(args), ch), nil));
+      val d_arg = reg_derivative(first(args), ch);
+      if (reg_matches_all(d_arg))
+        return t;
+      if (d_arg == t)
+        return nil;
+      return cons(sym, cons(d_arg, nil));
     } else if (sym == or_s) {
       val d_arg1 = reg_derivative(first(args), ch);
       val d_arg2 = reg_derivative(second(args), ch);
