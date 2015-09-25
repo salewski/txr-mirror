@@ -132,8 +132,6 @@ enum key_action {
     BACKSPACE =  127
 };
 
-#define SPACE "\t "
-
 typedef unsigned char mem_t;
 mem_t *chk_malloc(size_t n);
 mem_t *chk_realloc(mem_t *old, size_t size);
@@ -1429,13 +1427,14 @@ static void edit_delete_to_eol(lino_t *l)
  * current word. */
 static void edit_delete_prev_word(lino_t *l) {
     size_t odpos, diff;
+    static const char *space = "\r\t ";
 
     delete_sel(l);
 
     odpos = l->dpos;
-    while (l->dpos > 0 && strchr(SPACE, l->data[l->dpos - 1]))
+    while (l->dpos > 0 && strchr(space, l->data[l->dpos - 1]))
         l->dpos--;
-    while (l->dpos > 0 && strchr(SPACE, l->data[l->dpos - 1]) == 0)
+    while (l->dpos > 0 && strchr(space, l->data[l->dpos - 1]) == 0)
         l->dpos--;
     diff = odpos - l->dpos;
     if (diff != 0) {
