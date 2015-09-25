@@ -33600,6 +33600,10 @@ such that the last character of the line is to the left of the cursor
 position. On terminals which have the Home and End keys, these may also
 be used instead of Ctrl-A and Ctrl-E.
 
+In multi-line mode, these commands jump to the beginning or end of the
+current physical line. In line mode, they move to the beginning or end of the
+edit buffer.
+
 .NP* Jump to Matching Parenthesis
 
 If the cursor is on an opening or closing parenthesis, brace or bracket,

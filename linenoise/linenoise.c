@@ -1267,17 +1267,41 @@ static void edit_move_right(lino_t *l) {
 
 /* Move cursor to the start of the line. */
 static void edit_move_home(lino_t *l) {
-    if (l->dpos != 0) {
-        l->dpos = 0;
-        l->need_refresh = 1;
+    if (!l->mlmode) {
+        if (l->dpos != 0) {
+            l->dpos = 0;
+            l->need_refresh = 1;
+        }
+    } else {
+        size_t dpos = l->dpos;
+
+        while (dpos > 0 && l->data[dpos-1] != '\r')
+            dpos--;
+
+        if (l->dpos != dpos) {
+            l->dpos = dpos;
+            l->need_refresh = 1;
+        }
     }
 }
 
 /* Move cursor to the end of the line. */
 static void edit_move_end(lino_t *l) {
-    if (l->dpos != l->dlen) {
-        l->dpos = l->dlen;
-        l->need_refresh = 1;
+    if (!l->mlmode) {
+        if (l->dpos != l->dlen) {
+            l->dpos = l->dlen;
+            l->need_refresh = 1;
+        }
+    } else {
+        size_t dpos = l->dpos;
+
+        dpos += strspn(l->data + dpos, "\r");
+        dpos += strcspn(l->data + dpos, "\r");
+
+        if (l->dpos != dpos) {
+            l->dpos = dpos;
+            l->need_refresh = 1;
+        }
     }
 }
 
