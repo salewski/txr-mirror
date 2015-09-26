@@ -1833,6 +1833,7 @@ static val op_return(val form, val env)
 {
   val retval = eval(second(form), env, form);
   uw_block_return(nil, retval);
+  eval_error(form, lit("return: no anonymous block is visible"), nao);
   abort();
 }
 
@@ -1841,6 +1842,8 @@ static val op_return_from(val form, val env)
   val name = second(form);
   val retval = eval(third(form), env, form);
   uw_block_return(name, retval);
+  eval_error(form, lit("return-from: no block named ~s is visible"),
+             name, nao);
   abort();
 }
 
