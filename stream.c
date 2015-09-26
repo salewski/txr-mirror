@@ -1233,15 +1233,9 @@ static void string_in_stream_mark(val stream)
 
 static val find_char(val string, val start, val ch)
 {
-  const wchar_t *str = c_str(string);
-  cnum pos = c_num(start);
-  cnum len = c_num(length_str(string));
-  wchar_t c = c_chr(ch);
-
-  for (; pos < len; pos++) {
-    if (str[pos] == c)
-      return num(pos);
-  }
+  for (; length_str_gt(string, start); start = succ(start))
+    if (chr_str(string, start) == ch)
+      return start;
 
   return nil;
 }
@@ -1250,7 +1244,7 @@ static val string_in_get_line(val stream)
 {
   struct string_in *s = coerce(struct string_in *, stream->co.handle);
 
-  if (lt(s->pos, length_str(s->string))) {
+  if (length_str_gt(s->string, s->pos)) {
     val nlpos = find_char(s->string, s->pos, chr('\n'));
     val result = sub_str(s->string, s->pos, nlpos);
     set(mkloc(s->pos, stream), nlpos ? plus(nlpos, one) : length_str(s->string));
@@ -1264,7 +1258,7 @@ static val string_in_get_char(val stream)
 {
   struct string_in *s = coerce(struct string_in *, stream->co.handle);
 
-  if (lt(s->pos, length_str(s->string))) {
+  if (length_str_gt(s->string, s->pos)) {
     set(mkloc(s->pos, stream), plus(s->pos, one));
     return chr_str(s->string, s->pos);
   }
