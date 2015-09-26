@@ -269,6 +269,7 @@ failed:
 
 /* Clear the screen. Used to handle ctrl+l */
 int lino_clear_screen(lino_t *ls) {
+    ls->maxrows = 0;
     return (write(ls->ofd,"\x1b[H\x1b[2J",7) > 0);
 }
 
