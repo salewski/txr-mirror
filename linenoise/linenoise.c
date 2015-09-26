@@ -1265,13 +1265,17 @@ static void edit_move_right(lino_t *l) {
     }
 }
 
-/* Move cursor to the start of the line. */
-static void edit_move_home(lino_t *l) {
+static void edit_move_home(lino_t *l)
+{
+    if (l->dpos != 0) {
+        l->dpos = 0;
+        l->need_refresh = 1;
+    }
+}
+
+static void edit_move_sol(lino_t *l) {
     if (!l->mlmode) {
-        if (l->dpos != 0) {
-            l->dpos = 0;
-            l->need_refresh = 1;
-        }
+        edit_move_home(l);
     } else {
         size_t dpos = l->dpos;
 
@@ -1285,13 +1289,17 @@ static void edit_move_home(lino_t *l) {
     }
 }
 
-/* Move cursor to the end of the line. */
-static void edit_move_end(lino_t *l) {
+static void edit_move_end(lino_t *l)
+{
+    if (l->dpos != l->dlen) {
+        l->dpos = l->dlen;
+        l->need_refresh = 1;
+    }
+}
+
+static void edit_move_eol(lino_t *l) {
     if (!l->mlmode) {
-        if (l->dpos != l->dlen) {
-            l->dpos = l->dlen;
-            l->need_refresh = 1;
-        }
+        edit_move_end(l);
     } else {
         size_t dpos = l->dpos;
 
@@ -1859,10 +1867,10 @@ static int edit(lino_t *l, const char *prompt)
                         edit_move_left(l);
                         break;
                     case 'H': /* Home */
-                        edit_move_home(l);
+                        edit_move_sol(l);
                         break;
                     case 'F': /* End*/
-                        edit_move_end(l);
+                        edit_move_eol(l);
                         break;
                     }
                 }
@@ -1872,10 +1880,10 @@ static int edit(lino_t *l, const char *prompt)
             else if (seq[0] == 'O') {
                 switch(seq[1]) {
                 case 'H': /* Home */
-                    edit_move_home(l);
+                    edit_move_sol(l);
                     break;
                 case 'F': /* End*/
-                    edit_move_end(l);
+                    edit_move_eol(l);
                     break;
                 }
             }
@@ -1933,10 +1941,10 @@ static int edit(lino_t *l, const char *prompt)
             edit_delete_to_eol(l);
             break;
         case CTL('A'):
-            edit_move_home(l);
+            edit_move_sol(l);
             break;
         case CTL('E'):
-            edit_move_end(l);
+            edit_move_eol(l);
             break;
         case CTL(']'):
             edit_move_matching_paren(l);
