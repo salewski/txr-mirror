@@ -1976,6 +1976,7 @@ static int edit(lino_t *l, const char *prompt)
                 disable_raw_mode(l);
                 raise(SIGTSTP);
                 enable_raw_mode(l);
+                l->maxrows = 0;
                 l->dpos = dpos;
                 l->need_refresh = 1;
             }
