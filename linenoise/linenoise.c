@@ -1105,6 +1105,48 @@ static size_t scan_fwd(const char *s, size_t i)
     }
 }
 
+static size_t find_nearest_paren(const char *s, size_t i)
+{
+    static const char *ope = "([{";
+    static const char *clo = ")]}";
+    size_t pre = (size_t) -1, nxt = (size_t) -1;
+    size_t j;
+
+    for (j = i; j != (size_t) -1; j--) {
+        if (s[j] && (strchr(ope, s[j]) || strchr(clo, s[j]))) {
+            pre = j;
+            break;
+        }
+    }
+
+    for (j = i; s[j] != 0; j++) {
+        if (strchr(ope, s[j]) || strchr(clo, s[j])) {
+            nxt = j;
+            break;
+        }
+    }
+
+    if (pre == (size_t) -1)
+        return nxt;
+
+    if (nxt == (size_t) -1)
+        return pre;
+
+    if (i - pre > nxt - i)
+        return nxt;
+
+    if (i - pre < nxt - i)
+        return pre;
+
+    if (strchr(ope, s[pre]) && strchr(ope, s[nxt]))
+        return nxt;
+
+    if (strchr(clo, s[pre]) && strchr(clo, s[nxt]))
+        return pre;
+
+    return nxt;
+}
+
 static void usec_delay(lino_t *l, long usec)
 {
 #if HAVE_POLL
@@ -1316,15 +1358,22 @@ static void edit_move_eol(lino_t *l) {
 
 static void edit_move_matching_paren(lino_t *l)
 {
-    size_t fw = scan_fwd(l->data, l->dpos);
-    size_t re = scan_rev(l->data, l->dpos);
+    size_t p = find_nearest_paren(l->data, l->dpos);
 
-    if (fw != (size_t) -1) {
-        l->dpos = fw;
-        l->need_refresh = 1;
-    } else if (re != (size_t) -1) {
-        l->dpos = re;
-        l->need_refresh = 1;
+    if (p != (size_t) -1) {
+        size_t fw = scan_fwd(l->data, p);
+        size_t re = scan_rev(l->data, p);
+
+        if (fw != (size_t) -1) {
+            l->dpos = fw;
+            l->need_refresh = 1;
+        } else if (re != (size_t) -1) {
+            l->dpos = re;
+            l->need_refresh = 1;
+        } else {
+            l->dpos = p;
+            l->need_refresh = 1;
+        }
     }
 }
 

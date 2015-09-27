@@ -33607,9 +33607,22 @@ edit buffer.
 .NP* Jump to Matching Parenthesis
 
 If the cursor is on an opening or closing parenthesis, brace or bracket,
-the Ctrl-] command will jump to the matching character. The logic for
+the Ctrl-] command tries to jump to the matching character. The logic for
 finding the matching character is identical to that of the Parenthesis Matching
-feature.
+feature. If no matching character is found, then no movement takes place.
+
+If the cursor is not on an opening or closing parenthesis, brace or bracket,
+then the closest such character is found. The cursor is moved to that character
+and then an attempt is made to jump to the matching one from that new
+position.
+
+If the cursor is equidistant to two such characters, then one of them
+is chosen as follows. If the two characters are oriented in the same way (both
+are opening and closing), then that one is chosen whose convex side faces the
+cursor position.  Thus, effectively, an inner enclosure is favored over an
+outer one.  Otherwise, if the two characters have opposite orientation (one is
+opening and the other closing), then the one which is to the right of the
+cursor position is chosen.
 
 Note: the Ctrl-] character can be produced on some terminals using Ctrl-5
 (using the keyboard home row 5, not the numeric keypad 5). This the same
