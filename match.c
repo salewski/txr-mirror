@@ -1550,8 +1550,10 @@ static val do_txeval(val spec, val form, val bindings, val allow_unbound)
     }
 
     uw_catch (exc_sym, exc) {
-      if (stringp(exc) && !equal(exc, lit("")) &&
-          chr_str(exc, zero) == chr('('))
+      val msg = if3(consp(exc), car(exc), exc);
+
+      if (stringp(msg) && !equal(msg, lit("")) &&
+          chr_str(msg, zero) == chr('('))
       {
         uw_throw (exc_sym, exc);
       }
