@@ -42,3 +42,18 @@
           (inc it))
         l)
       (1 3 3))
+
+(test (let ((l (list 1 2 3 4 5)))
+        (conda
+          ((< 2 (third l) 4)
+           (inc it)))
+        l)
+      (1 2 4 4 5))
+
+(test (let* ((x 2) (y 4)
+             (l (list 1 2 3 4 5)))
+        (conda
+          ((< x (third l) y)
+           (inc it)))
+        l)
+      (1 2 4 4 5))
