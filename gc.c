@@ -674,6 +674,11 @@ void gc(void)
 
   assert (gc_enabled);
 
+#if CONFIG_GEN_GC
+  if (malloc_bytes - prev_malloc_bytes >= opt_gc_delta)
+    full_gc = 1;
+#endif
+
   save_context(mc);
   gc_enabled = 0;
   mark(&mc, &gc_stack_top);
