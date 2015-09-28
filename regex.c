@@ -189,7 +189,7 @@ typedef union char_set {
 } char_set_t;
 
 typedef enum {
-  nfa_accept, nfa_empty, nfa_wild, nfa_single, nfa_set
+  nfa_accept, nfa_reject, nfa_empty, nfa_wild, nfa_single, nfa_set
 } nfa_kind_t;
 
 struct nfa_state_accept {
@@ -812,6 +812,14 @@ static nfa_state_t *nfa_state_accept(void)
   return st;
 }
 
+static nfa_state_t *nfa_state_reject(void)
+{
+  nfa_state_t *st = coerce(nfa_state_t *, chk_malloc(sizeof *st));
+  st->a.kind = nfa_reject;
+  st->a.visited = 0;
+  return st;
+}
+
 static nfa_state_t *nfa_state_empty(nfa_state_t *t0, nfa_state_t *t1)
 {
   nfa_state_t *st = coerce(nfa_state_t *, chk_malloc(sizeof *st));
@@ -1044,6 +1052,10 @@ static nfa_t nfa_compile_regex(val exp)
     } else {
       uw_throwf(error_s, lit("bad operator in regex syntax: ~s"), sym, nao);
     }
+  } else if (exp == t) {
+    nfa_state_t *acc = nfa_state_accept();
+    nfa_state_t *s = nfa_state_reject();
+    return nfa_make(s, acc);
   } else {
     uw_throwf(error_s, lit("bad object in regex syntax: ~s"), exp, nao);
   }
@@ -1060,6 +1072,7 @@ static void nfa_map_states(nfa_state_t *s,
 
     switch (s->a.kind) {
     case nfa_accept:
+    case nfa_reject:
       break;
     case nfa_empty:
       nfa_map_states(s->e.trans0, ctx, fun, visited);
@@ -1887,6 +1900,8 @@ static void print_rec(val exp, val stream)
     } else {
       uw_throwf(error_s, lit("bad operator in regex syntax: ~s"), sym, nao);
     }
+  } else if (exp == t) {
+    put_string(lit("[]"), stream);
   } else if (exp != nil) {
     uw_throwf(error_s, lit("bad object in regex syntax: ~s"), exp, nao);
   }
