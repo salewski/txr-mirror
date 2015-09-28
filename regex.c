@@ -1479,7 +1479,8 @@ static val reg_matches_all(val exp)
     } else if (sym == optional_s) {
       return reg_matches_all(car(args));
     } else if (sym == compl_s) {
-      return tnil(car(args));
+      val arg = car(args);
+      return if2(arg == t, t);
     } else if (sym == or_s) {
       return tnil(reg_matches_all(pop(&args)) || reg_matches_all(pop(&args)));
     } else if (sym == and_s) {
