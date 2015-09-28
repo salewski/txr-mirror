@@ -1848,6 +1848,7 @@ static int edit(lino_t *l, const char *prompt)
         case BACKSPACE:   /* backspace */
         case CTL('H'):
             edit_backspace(l);
+            paren_jump(l);
             break;
         case CTL('D'):   /* remove char at right of cursor, or if the
                             line is empty, act as end-of-file. */

@@ -34168,6 +34168,10 @@ character and then returns to the original position a brief moment later. If a
 new character is typed during the brief time delay, the delay is immediately
 canceled, so as not to hinder rapid typing.
 
+This back-and-forth jump behavior also occurs when a character is erased using
+Backspace, and the the cursor ends up immediately to the right of a
+parenthesis.
+
 Note that the matching is unsophisticated; it doesn't observe the
 lexical conventions and syntax of the \*(TL programming language.  For
 instance, a closing parenthesis outside a string literal may match
