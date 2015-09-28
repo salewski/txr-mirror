@@ -44,6 +44,7 @@
 #include "stream.h"
 #include "gc.h"
 #include "eval.h"
+#include "cadr.h"
 #include "regex.h"
 #include "txr.h"
 
@@ -1781,6 +1782,33 @@ static val reg_optimize(val exp)
         return t;
       if (arg == nil)
         return cons(oneplus_s, cons(wild_s, nil));
+      if (chrp(arg))
+        arg = list(set_s, arg, nao);
+      if (consp(arg)) {
+        val sym2 = first(arg);
+        if (sym2 == cset_s)
+          return list(or_s,
+                      list(optional_s, cons(set_s, rest(arg)), nao),
+                      list(compound_s, wild_s,
+                           list(oneplus_s, wild_s, nao), nao), nao);
+        if (sym2 == set_s)
+          return list(or_s,
+                      list(optional_s, cons(cset_s, rest(arg)), nao),
+                      list(compound_s, wild_s,
+                           list(oneplus_s, wild_s, nao), nao), nao);
+        if (sym2 == compound_s) {
+          val args2 = rest(arg);
+          if (cddr(args2) && !cdddr(args2)) {
+            if (reg_matches_all(first(args2)) &&
+                chrp(second(args2)) &&
+                reg_matches_all(third(args2)))
+            {
+              return cons(zeroplus_s,
+                          cons(cons(cset_s, cons(second(args2), nil)), nil));
+            }
+          }
+        }
+      }
       return cons(sym, cons(arg, nil));
     } else if (sym == or_s) {
       val arg1 = reg_optimize(pop(&args));
