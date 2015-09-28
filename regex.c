@@ -43,6 +43,7 @@
 #include "unwind.h"
 #include "stream.h"
 #include "gc.h"
+#include "eval.h"
 #include "regex.h"
 #include "txr.h"
 
@@ -1338,13 +1339,62 @@ static struct cobj_ops regex_obj_ops = cobj_ops_init(eq,
 
 static val reg_nullable(val);
 
-/*
- * ``Compile'' raw regular expression to a form that is easier to simulate by
- * the derivative method.  Here we currently replace character set regexps with
- * character set objects, and also transform the nongreedy syntax into the more
- * complex expression it represents.
- */
-static val dv_compile_regex(val exp)
+static val reg_expand_nongreedy(val exp)
+{
+  if (atom(exp)) {
+    return exp;
+  } else if (consp(exp)) {
+    val sym = first(exp);
+    val args = rest(exp);
+
+    if (sym == set_s || sym == cset_s) {
+      return exp;
+    } else if (sym == compound_s) {
+      list_collect_decl (out, iter);
+      iter = list_collect(iter, compound_s);
+      for (; args; args = cdr(args))
+        iter = list_collect(iter, reg_expand_nongreedy(first(args)));
+      return out;
+    } else if (sym == zeroplus_s || sym == oneplus_s ||
+               sym == optional_s || sym == compl_s) {
+      return cons(sym, cons(reg_expand_nongreedy(first(args)), nil));
+    } else if (sym == or_s || sym == and_s) {
+      val xfirst = reg_expand_nongreedy(first(args));
+      val xsecond = reg_expand_nongreedy(second(args));
+      return cons(sym, cons(xfirst, cons(xsecond, nil)));
+    } else if (sym == nongreedy_s) {
+      val xfirst = reg_expand_nongreedy(first(args));
+      val xsecond = reg_expand_nongreedy(second(args));
+      val zplus = cons(zeroplus_s, cons(xfirst, nil));
+
+      if (xsecond == nil) {
+        return zplus;
+      } else {
+        val any = list(zeroplus_s, wild_s, nao);
+        val notempty = list(oneplus_s, wild_s, nao);
+
+        return list(compound_s,
+                    list(and_s,
+                         zplus,
+                         list(compl_s,
+                              list(compound_s,
+                                   any,
+                                   if3(reg_nullable(xsecond),
+                                       list(and_s, xsecond, notempty, nao),
+                                       xsecond),
+                                   any, nao),
+                              nao),
+                         nao),
+                    xsecond, nao);
+      }
+    } else {
+      uw_throwf(error_s, lit("bad operator in regex syntax: ~s"), sym, nao);
+    }
+  } else {
+    uw_throwf(error_s, lit("bad object in regex syntax: ~s"), exp, nao);
+  }
+}
+static val reg_compile_csets(val exp)
 {
   if (exp == space_k) {
     return cobj(coerce(mem_t *, space_cs), chset_s, &char_set_obj_ops);
@@ -1373,40 +1423,15 @@ static val dv_compile_regex(val exp)
       list_collect_decl (out, iter);
       iter = list_collect(iter, compound_s);
       for (; args; args = cdr(args))
-        iter = list_collect(iter, dv_compile_regex(first(args)));
+        iter = list_collect(iter, reg_compile_csets(first(args)));
       return out;
     } else if (sym == zeroplus_s || sym == oneplus_s ||
-               sym == optional_s || sym == compl_s) {
-      return cons(sym, cons(dv_compile_regex(first(args)), nil));
+               sym == optional_s || sym == compl_s || sym == nongreedy_s) {
+      return cons(sym, cons(reg_compile_csets(first(args)), nil));
     } else if (sym == or_s || sym == and_s) {
-      val xfirst = dv_compile_regex(first(args));
-      val xsecond = dv_compile_regex(second(args));
+      val xfirst = reg_compile_csets(first(args));
+      val xsecond = reg_compile_csets(second(args));
       return cons(sym, cons(xfirst, cons(xsecond, nil)));
-    } else if (sym == nongreedy_s) {
-      val xfirst = dv_compile_regex(first(args));
-      val xsecond = dv_compile_regex(second(args));
-      val zplus = cons(zeroplus_s, cons(xfirst, nil));
-
-      if (xsecond == nil) {
-        return zplus;
-      } else {
-        val any = list(zeroplus_s, wild_s, nao);
-        val notempty = list(oneplus_s, wild_s, nao);
-
-        return list(compound_s,
-                    list(and_s,
-                         zplus,
-                         list(compl_s,
-                              list(compound_s,
-                                   any,
-                                   if3(reg_nullable(xsecond),
-                                       list(and_s, xsecond, notempty, nao),
-                                       xsecond),
-                                   any, nao),
-                              nao),
-                         nao),
-                    xsecond, nao);
-      }
     } else {
       uw_throwf(error_s, lit("bad operator in regex syntax: ~s"), sym, nao);
     }
@@ -1699,6 +1724,98 @@ static cnum dv_run(val regex, const wchar_t *str)
   return last_accept_pos ? last_accept_pos - str : -1;
 }
 
+static val reg_optimize(val exp)
+{
+  if (atom(exp)) {
+    return exp;
+  } else if (reg_matches_all(exp)) {
+    return cons(zeroplus_s, cons(wild_s, nil));
+  } else {
+    val sym = first(exp);
+    val args = rest(exp);
+
+    if (sym == set_s) {
+      return if3(rest(exp), exp, t);
+    } else if (sym == cset_s) {
+      return if3(rest(exp), exp, wild_s);
+    } else if (sym == compound_s) {
+      val xargs = mapcar(func_n1(reg_optimize), args);
+      while (rest(xargs)) {
+        if (reg_matches_all(first(xargs)) &&
+            reg_matches_all(second(xargs)))
+        {
+          pop(&xargs);
+          continue;
+        }
+        break;
+      }
+      if (!xargs)
+        return nil;
+      if (!cdr(xargs))
+        return car(xargs);
+      if (memq(t, xargs))
+        return t;
+      return cons(sym, xargs);
+    } else if (sym == zeroplus_s) {
+      val arg = reg_optimize(first(args));
+      if (consp(arg) && car(arg) == zeroplus_s)
+        return arg;
+      if (reg_matches_all(arg))
+        return arg;
+      return cons(sym, cons(arg, nil));
+    } else if (sym == oneplus_s) {
+      val arg = reg_optimize(first(args));
+      if (reg_matches_all(arg))
+        return cons(zeroplus_s, cons(wild_s, nil));
+      if (consp(arg) && car(arg) == zeroplus_s)
+        return arg;
+      return cons(sym, cons(arg, nil));
+    } else if (sym == optional_s) {
+      val arg = reg_optimize(first(args));
+      if (reg_matches_all(arg))
+        return arg;
+      return cons(sym, cons(arg, nil));
+    } else if (sym == compl_s) {
+      val arg = reg_optimize(first(args));
+      if (reg_matches_all(arg))
+        return t;
+      if (arg == nil)
+        return cons(oneplus_s, cons(wild_s, nil));
+      return cons(sym, cons(arg, nil));
+    } else if (sym == or_s) {
+      val arg1 = reg_optimize(pop(&args));
+      val arg2 = reg_optimize(pop(&args));
+
+      if (arg1 == t || reg_matches_all(arg2))
+        return arg2;
+
+      if (arg2 == t || reg_matches_all(arg1))
+        return arg1;
+
+      return cons(sym, cons(arg1, cons(arg2, nil)));
+    } else if (sym == and_s) {
+      val arg1 = reg_optimize(pop(&args));
+      val arg2 = reg_optimize(pop(&args));
+
+      if (arg1 == t || arg2 == t)
+        return t;
+
+      if (reg_matches_all(arg1)) {
+        if (reg_matches_all(arg2))
+          return cons(zeroplus_s, cons(wild_s, nil));
+        return arg2;
+      }
+
+      if (reg_matches_all(arg2))
+        return arg2;
+
+      return cons(sym, cons(arg1, cons(arg2, nil)));
+    } else {
+      uw_throwf(error_s, lit("bad operator in regex syntax: ~s"), sym, nao);
+    }
+  }
+}
+
 static val regex_requires_dv(val exp)
 {
   if (atom(exp)) {
@@ -1732,10 +1849,14 @@ val regex_compile(val regex_sexp, val error_stream)
   if (stringp(regex_sexp)) {
     regex_sexp = regex_parse(regex_sexp, default_bool_arg(error_stream));
     return if2(regex_sexp, regex_compile(regex_sexp, error_stream));
-  } else if (opt_derivative_regex || regex_requires_dv(regex_sexp)) {
+  }
+
+  regex_sexp = reg_optimize(reg_expand_nongreedy(regex_sexp));
+
+  if (opt_derivative_regex || regex_requires_dv(regex_sexp)) {
     regex_t *regex = coerce(regex_t *, chk_malloc(sizeof *regex));
     val ret;
-    val dv = dv_compile_regex(regex_sexp);
+    val dv = reg_compile_csets(regex_sexp);
     regex->kind = REGEX_DV;
     regex->nstates = 0;
     regex->source = nil;
@@ -2312,5 +2433,8 @@ void regex_init(void)
   cdigit_k = intern(lit("cdigit"), keyword_package);
   cword_char_k = intern(lit("cword-char"), keyword_package);
 
+  reg_fun(intern(lit("reg-expand-nongreedy"), system_package),
+          func_n1(reg_expand_nongreedy));
+  reg_fun(intern(lit("reg-optimize"), system_package), func_n1(reg_optimize));
   init_special_char_sets();
 }
