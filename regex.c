@@ -1042,7 +1042,7 @@ static nfa_t nfa_compile_regex(val exp)
       nfa_state_empty_convert(nfa_second.accept, acc, 0);
       return nfa_make(s, acc);
     } else {
-      internal_error("bad operator in regex");
+      uw_throwf(error_s, lit("bad operator in regex syntax: ~s"), sym, nao);
     }
   } else {
     uw_throwf(error_s, lit("bad object in regex syntax: ~s"), exp, nao);
@@ -1395,7 +1395,7 @@ static val dv_compile_regex(val exp)
                     xsecond, nao);
       }
     } else {
-      internal_error("bad operator in regex");
+      uw_throwf(error_s, lit("bad operator in regex syntax: ~s"), sym, nao);
     }
   } else {
     uw_throwf(error_s, lit("bad object in regex syntax: ~s"), exp, nao);
@@ -1445,7 +1445,7 @@ static val reg_nullable(val exp)
     } else if (sym == and_s) {
       return if2((reg_nullable(first(args)) && reg_nullable(second(args))), t);
     } else {
-      internal_error("bad operator in regex");
+      uw_throwf(error_s, lit("bad operator in regex syntax: ~s"), sym, nao);
     }
   }
 }
@@ -1486,7 +1486,7 @@ static val reg_matches_all(val exp)
     } else if (sym == and_s) {
       return tnil(reg_matches_all(pop(&args)) && reg_matches_all(pop(&args)));
     } else {
-      internal_error("bad operator in regex");
+      uw_throwf(error_s, lit("bad operator in regex syntax: ~s"), sym, nao);
     }
   }
 }
@@ -1605,7 +1605,7 @@ static val reg_derivative(val exp, val ch)
     val args = rest(exp);
 
     if (sym == set_s || sym == cset_s) {
-      internal_error("uncompiled regex passed to reg_derivative");
+      uw_throwf(error_s, lit("uncompiled regex passed to reg_derivative"));
     } else if (sym == compound_s) {
       return reg_derivative_list(args, ch);
     } else if (sym == optional_s) {
@@ -1660,7 +1660,7 @@ static val reg_derivative(val exp, val ch)
 
       return cons(and_s, cons(d_arg1, cons(d_arg2, nil)));
     } else {
-      internal_error("bad operator in regex");
+      uw_throwf(error_s, lit("bad operator in regex syntax: ~s"), sym, nao);
     }
   }
 }
@@ -1709,7 +1709,7 @@ static val regex_requires_dv(val exp)
     } else if (sym == and_s || sym == nongreedy_s) {
       return t;
     } else {
-      internal_error("bad operator in regex");
+      uw_throwf(error_s, lit("bad operator in regex syntax: ~s"), sym, nao);
     }
   }
 }
