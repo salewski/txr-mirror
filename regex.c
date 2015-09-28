@@ -1736,7 +1736,11 @@ static val reg_optimize(val exp)
     val args = rest(exp);
 
     if (sym == set_s) {
-      return if3(rest(exp), exp, t);
+      if (!args)
+        return t;
+      if (!rest(args) && chrp(first(args)))
+        return first(args);
+      return exp;
     } else if (sym == cset_s) {
       return if3(rest(exp), exp, wild_s);
     } else if (sym == compound_s) {
@@ -1788,7 +1792,8 @@ static val reg_optimize(val exp)
         val sym2 = first(arg);
         if (sym2 == cset_s)
           return list(or_s,
-                      list(optional_s, cons(set_s, rest(arg)), nao),
+                      list(optional_s, reg_optimize(cons(set_s, rest(arg))),
+                           nao),
                       list(compound_s, wild_s,
                            list(oneplus_s, wild_s, nao), nao), nao);
         if (sym2 == set_s)
