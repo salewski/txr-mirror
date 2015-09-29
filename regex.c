@@ -1945,11 +1945,8 @@ static val reg_optimize(val exp)
       if (arg1 == t || arg2 == t)
         return t;
 
-      if (reg_matches_all(arg1)) {
-        if (reg_matches_all(arg2))
-          return cons(zeroplus_s, cons(wild_s, nil));
+      if (reg_matches_all(arg1))
         return arg2;
-      }
 
       if (reg_matches_all(arg2))
         return arg2;
