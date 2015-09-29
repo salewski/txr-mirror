@@ -711,8 +711,7 @@ static val poll_wrap(val poll_list, val timeout_in)
 {
   nfds_t i, len = c_num(length(poll_list));
   val iter;
-  struct pollfd *pfd = convert(struct pollfd *,
-                               chk_calloc(len, sizeof *pfd));
+  struct pollfd *pfd = coerce(struct pollfd *, chk_calloc(len, sizeof *pfd));
   val timeout = default_arg(timeout_in, negone);
   int res;
 
