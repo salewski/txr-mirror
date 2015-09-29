@@ -5712,7 +5712,7 @@ val lazy_str_force(val lstr)
 val lazy_str_force_upto(val lstr, val index)
 {
   uses_or2;
-  val lim, term, ltrm, len;
+  val lim, term, ltrm, len, effidx = index;
   list_collect_decl (strlist, ptail);
   type_check(lstr, LSTR);
   lim = cdr(lstr->ls.opts);
@@ -5720,7 +5720,13 @@ val lazy_str_force_upto(val lstr, val index)
   ltrm = length_str(term);
   len = length_str(lstr->ls.prefix);
 
-  while (ge(index, len) && lstr->ls.list &&
+  if (lt(effidx, len))
+    return t;
+
+  if (minus(effidx, len) < num_fast(1024))
+    effidx = plus(len, num_fast(1024));
+
+  while (ge(effidx, len) && lstr->ls.list &&
          or2(null(lim),gt(lim,zero)))
   {
     val next = pop(&lstr->ls.list);
