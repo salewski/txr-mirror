@@ -1518,9 +1518,9 @@ cat > conftest.c <<!
 
 int main(int argc, char **argv)
 {
-  struct pollfd fds[42] = { 0 };
+  static struct pollfd fds[42];
   nfds_t n = 42;
-  int err = poll(&fds, 42, 1000);
+  int err = poll(fds, 42, 1000);
   return 0;
 }
 !
@@ -2241,8 +2241,8 @@ cat > conftest.c <<!
 
 int main(int argc, char **argv)
 {
-  char template[] = "abcXXXXXX.xyz";
-  int fd = mkstemps(template, 4);
+  char templ[] = "abcXXXXXX.xyz";
+  int fd = mkstemps(templ, 4);
   return 0;
 }
 !
