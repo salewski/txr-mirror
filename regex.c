@@ -1804,8 +1804,13 @@ static val reg_optimize(val exp)
       return cons(sym, xargs);
     } else if (sym == zeroplus_s) {
       val arg = reg_optimize(first(args));
-      if (consp(arg) && car(arg) == zeroplus_s)
-        return arg;
+      if (consp(arg)) {
+        val arg2 = first(arg);
+        if (arg2 == zeroplus_s)
+          return arg;
+        if (arg2 == oneplus_s || arg2 == optional_s)
+          return cons(zeroplus_s, cdr(arg));
+      }
       if (reg_matches_all(arg))
         return arg;
       return cons(sym, cons(arg, nil));
@@ -1813,13 +1818,25 @@ static val reg_optimize(val exp)
       val arg = reg_optimize(first(args));
       if (reg_matches_all(arg))
         return cons(zeroplus_s, cons(wild_s, nil));
-      if (consp(arg) && car(arg) == zeroplus_s)
-        return arg;
+      if (consp(arg)) {
+        val arg2 = first(arg);
+        if (arg2 == zeroplus_s || arg2 == oneplus_s)
+          return arg;
+        if (arg2 == optional_s)
+          return cons(zeroplus_s, cdr(arg));
+      }
       return cons(sym, cons(arg, nil));
     } else if (sym == optional_s) {
       val arg = reg_optimize(first(args));
       if (reg_matches_all(arg))
         return arg;
+      if (consp(arg)) {
+        val arg2 = first(arg);
+        if (arg2 == zeroplus_s || arg2 == optional_s)
+          return arg;
+        if (arg2 == oneplus_s)
+          return cons(zeroplus_s, cdr(arg));
+      }
       return cons(sym, cons(arg, nil));
     } else if (sym == compl_s) {
       val arg = reg_optimize(first(args));
