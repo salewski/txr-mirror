@@ -1725,6 +1725,47 @@ static cnum dv_run(val regex, const wchar_t *str)
   return last_accept_pos ? last_accept_pos - str : -1;
 }
 
+static val reg_single_char_p(val exp)
+{
+  if (chrp(exp))
+    return t;
+  if (consp(exp) && (car(exp) == set_s || car(exp) == cset_s))
+    return t;
+  if (exp == space_k || exp == word_char_k || exp == digit_k)
+    return t;
+  if (exp == cspace_k || exp == cword_char_k || exp == cdigit_k)
+    return t;
+  return nil;
+}
+
+static val reg_optimize(val exp);
+
+static val invert_single(val exp)
+{
+  if (chrp(exp))
+    return cons(cset_s, cons(exp, nil));
+  if (consp(exp)) {
+    if (car(exp) == set_s)
+      return cons(cset_s, cdr(exp));
+    if (car(exp) == cset_s)
+      return reg_optimize(cons(set_s, cdr(exp)));
+  }
+  if (exp == space_k)
+    return cspace_k;
+  if (exp == cspace_k)
+    return space_k;
+  if (exp == word_char_k)
+    return cword_char_k;
+  if (exp == cword_char_k)
+    return word_char_k;
+  if (exp == digit_k)
+    return cdigit_k;
+  if (exp == cdigit_k)
+    return digit_k;
+
+  abort();
+}
+
 static val reg_optimize(val exp)
 {
   if (atom(exp)) {
@@ -1786,30 +1827,22 @@ static val reg_optimize(val exp)
         return t;
       if (arg == nil)
         return cons(oneplus_s, cons(wild_s, nil));
-      if (chrp(arg))
-        arg = list(set_s, arg, nao);
+      if (reg_single_char_p(arg))
+        return list(or_s,
+                    list(optional_s, invert_single(arg), nao),
+                    list(compound_s, wild_s,
+                         list(oneplus_s, wild_s, nao), nao), nao);
       if (consp(arg)) {
         val sym2 = first(arg);
-        if (sym2 == cset_s)
-          return list(or_s,
-                      list(optional_s, reg_optimize(cons(set_s, rest(arg))),
-                           nao),
-                      list(compound_s, wild_s,
-                           list(oneplus_s, wild_s, nao), nao), nao);
-        if (sym2 == set_s)
-          return list(or_s,
-                      list(optional_s, cons(cset_s, rest(arg)), nao),
-                      list(compound_s, wild_s,
-                           list(oneplus_s, wild_s, nao), nao), nao);
         if (sym2 == compound_s) {
           val args2 = rest(arg);
           if (cddr(args2) && !cdddr(args2)) {
             if (reg_matches_all(first(args2)) &&
-                chrp(second(args2)) &&
+                reg_single_char_p(second(args2)) &&
                 reg_matches_all(third(args2)))
             {
               return cons(zeroplus_s,
-                          cons(cons(cset_s, cons(second(args2), nil)), nil));
+                          cons(invert_single(second(args2)), nil));
             }
           }
         }
