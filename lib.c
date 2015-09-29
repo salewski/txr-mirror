@@ -5685,20 +5685,26 @@ val lazy_str(val lst, val term, val limit)
 
 val lazy_str_force(val lstr)
 {
-  val lim;
+  val lim, term;
+  list_collect_decl (strlist, ptail);
   type_check(lstr, LSTR);
   lim = cdr(lstr->ls.opts);
+  term = car(lstr->ls.opts);
 
   while ((!lim || gt(lim, zero)) && lstr->ls.list) {
-    val next = pop(&lstr->ls.list);
-    val term = car(lstr->ls.opts);
-    set(mkloc(lstr->ls.prefix, lstr), cat_str(list(lstr->ls.prefix, next, term, nao), nil));
+    ptail = list_collect(ptail, pop(&lstr->ls.list));
+    ptail = list_collect(ptail, term);
     if (lim)
       lim = minus(lim, one);
   }
 
   if (lim)
     set(cdr_l(lstr->ls.opts), lim);
+
+  if (strlist) {
+    push(lstr->ls.prefix, &strlist); 
+    set(mkloc(lstr->ls.prefix, lstr), cat_str(strlist, nil));
+  }
 
   return lstr->ls.prefix;
 }
@@ -5706,23 +5712,35 @@ val lazy_str_force(val lstr)
 val lazy_str_force_upto(val lstr, val index)
 {
   uses_or2;
-  val lim;
+  val lim, term, ltrm, len;
+  list_collect_decl (strlist, ptail);
   type_check(lstr, LSTR);
   lim = cdr(lstr->ls.opts);
+  term = car(lstr->ls.opts);
+  ltrm = length_str(term);
+  len = length_str(lstr->ls.prefix);
 
-  while (ge(index, length_str(lstr->ls.prefix)) && lstr->ls.list &&
+  while (ge(index, len) && lstr->ls.list &&
          or2(null(lim),gt(lim,zero)))
   {
     val next = pop(&lstr->ls.list);
-    val term = car(lstr->ls.opts);
-    set(mkloc(lstr->ls.prefix, lstr), cat_str(list(lstr->ls.prefix, next, term, nao), nil));
+    ptail = list_collect(ptail, next);
+    ptail = list_collect(ptail, term);
     if (lim)
       lim = minus(lim, one);
+    len = plus(len, length_str(next));
+    len = plus(len, ltrm);
   }
 
   if (lim)
     set(cdr_l(lstr->ls.opts), lim);
-  return lt(index, length_str(lstr->ls.prefix));
+
+  if (strlist) {
+    push(lstr->ls.prefix, &strlist);
+    set(mkloc(lstr->ls.prefix, lstr), cat_str(strlist, nil));
+  }
+
+  return lt(index, len);
 }
 
 val length_str_gt(val str, val len)
