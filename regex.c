@@ -1738,6 +1738,15 @@ static val reg_single_char_p(val exp)
   return nil;
 }
 
+static val reg_compl_char_p(val exp)
+{
+  if (consp(exp) && car(exp) == cset_s)
+    return t;
+  if (exp == cspace_k || exp == cword_char_k || exp == cdigit_k)
+    return t;
+  return nil;
+}
+
 static val reg_optimize(val exp);
 
 static val invert_single(val exp)
@@ -1893,6 +1902,40 @@ static val reg_optimize(val exp)
 
       if (arg2 == t || reg_matches_all(arg1))
         return arg1;
+
+      if (arg1 == nil)
+        return cons(optional_s, cons(arg2, nil));
+
+      if (arg2 == nil)
+        return cons(optional_s, cons(arg1, nil));
+
+      if (reg_single_char_p(arg1) && reg_single_char_p(arg2)) {
+        if (!reg_compl_char_p(arg1) && !reg_compl_char_p(arg2)) {
+          if (atom(arg1) && atom(arg2))
+            return list(set_s, arg1, arg2, nao);
+          if (consp(arg1) && car(arg1) == set_s && atom(arg2))
+            return cons(set_s, cons(arg2, cdr(arg1)));
+          if (consp(arg2) && car(arg2) == set_s && atom(arg1))
+            return cons(set_s, cons(arg1, cdr(arg2)));
+          if (consp(arg1) && car(arg1) == set_s &&
+              consp(arg1) && car(arg1) == set_s)
+            return cons(set_s, append2(cdr(arg1), cdr(arg2)));
+        }
+        if (reg_compl_char_p(arg1) && reg_compl_char_p(arg2)) {
+          arg1 = invert_single(arg1);
+          arg2 = invert_single(arg2);
+
+          if (atom(arg1) && atom(arg2))
+            return list(cset_s, arg1, arg2, nao);
+          if (consp(arg1) && car(arg1) == set_s && atom(arg2))
+            return cons(cset_s, cons(arg2, cdr(arg1)));
+          if (consp(arg2) && car(arg2) == set_s && atom(arg1))
+            return cons(cset_s, cons(arg1, cdr(arg2)));
+          if (consp(arg1) && car(arg1) == set_s &&
+              consp(arg1) && car(arg1) == set_s)
+            return cons(cset_s, append2(cdr(arg1), cdr(arg2)));
+        }
+      }
 
       return cons(sym, cons(arg1, cons(arg2, nil)));
     } else if (sym == and_s) {
