@@ -2041,6 +2041,8 @@ static void print_rec(val exp, val stream)
           print_class_char(car(arg), first_p, stream);
           put_char(chr('-'), stream);
           print_class_char(cdr(arg), nil, stream);
+        } else if (symbolp(arg)) {
+          print_rec(arg, stream);
         } else {
           print_class_char(arg, first_p, stream);
         }
