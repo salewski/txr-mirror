@@ -1845,6 +1845,25 @@ static val reg_optimize(val exp)
                           cons(invert_single(second(args2)), nil));
             }
           }
+
+          if (cdr(args2) && !cddr(args2)) {
+            if (reg_matches_all(first(args2)) &&
+                reg_single_char_p(second(args2)))
+            {
+              return list(optional_s,
+                          list(compound_s,
+                               cons(zeroplus_s, cons(wild_s, nil)),
+                               invert_single(second(args2)), nao), nao);
+            }
+
+            if (reg_single_char_p(first(args2)) &&
+                reg_matches_all(second(args2))) {
+              return list(optional_s,
+                          list(compound_s,
+                               invert_single(first(args2)),
+                               cons(zeroplus_s, cons(wild_s, nil)), nao), nao);
+            }
+          }
         }
       }
       return cons(sym, cons(arg, nil));
