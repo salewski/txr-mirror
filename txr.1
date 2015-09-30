@@ -17671,19 +17671,63 @@ the struct type. Effectively, struct names are types.
 The consequences are unspecified if an existing struct name is re-used for a
 different struct type, or an existing type name is used for a struct type.
 
+.NP* Static Slots
+
+Structure slots can be of two kinds: they can be the ordinary instance slots or
+they can be static slots.  The instances of a given structure type have their
+own instance of a given instance slot. However, they all share a single
+instance of a static slot.
+
+Static slots are allocated in a global area associated with a structure type
+and are initialized when the structure type is created. They are useful for
+efficiently representing properties which have the same value for all instances
+of a struct. These properties don't have to occupy space in each instance, and
+time doesn't have to be wasted initializing them each time a new instance is
+created.  Static slots are also useful for struct-specific global variables.
+Lastly, static slots are also useful for holding methods and functions.
+Although structures can have methods and functions in their instances, usually,
+all structures of the same type share the same functions. The
+.code defstruct
+macro supports a special syntax for defining methods and struct-specific
+functions.
+
+Static slots may be assigned just like instance slots. Changing a static
+slot, of course, changes that slot in every structure of the same type.
+
+Static slots are not listed in the
+.code #S(...)
+notation when a structure is printed. When the structure notation is
+read from a stream, if static slots are present, they will be processed
+and their values stored in the static locations they represent, thus
+changing their values for all instances.
+
+Static slots are inherited just like instance slots. However, when one
+structure type inherits a static slot from another, that structure type
+has its own storage location for that slot.
+
+The slot type can be overridden. A structure type deriving from another
+type can introduce slots which have the same names as the supertype,
+but are of a different kind: an instance slot in the supertype
+can be replaced by a static slot in the derived type or vice versa.
+
+A structure type is associated with a static initialization function
+which may be used to store initial values into static slots. It is
+invoked when the type is created.
+
+
 .coNP Macro @ defstruct
 .synb
 .mets (defstruct >> { name | >> ( name << arg *)} < super
-.mets \ \  >> { slot | >> ( slot << init-form )}*)
+.mets \ \  << slot-specifier *)
 .syne
 
 The
 .code defstruct
-macro defined a new structure type and registers it under
+macro defines a new structure type and registers it under
 .metn name ,
 which must be a bindable symbol, according to the
 .code bindable
-function. Likewise, every
+function. Likewise, the name of every
 .meta slot
 must also be a bindable symbol.
 
@@ -17699,55 +17743,138 @@ The
 .code defstruct
 macro is implemented using the
 .code make-struct-type
-function. It is less powerful than
-this function.
+function, which is more general. The macro analyzes the
+.code defstruct
+argument syntax, and synthesizes arguments which are then
+used to call the function. Some remarks in the description of
+.code defstruct
+only apply to structure types defined using that macro.
 
-Slots are specified using the
-.meta slot
-or
+Slots are specified using zero or more
+.IR "slot specifiers" .
+Slot specifiers come in the following variety:
+.RS
+.meIP < name
+The simplest slot specifier is just a name, which must be a bindable
+symbol, as defined by the
+.code bindable
+function. This form is a short form for the
 .cblk
-.meti >> ( slot << init-form )
+.meti (:instance < name nil)
 .cble
-arguments, where the simpler first form is
-.meta slot
-form is equivalent to the second form, with an
-.meta init-form
-specified as
-.codn nil .
+syntax.
 
-whenever a structure of type
+.meIP >> ( symbol << init-form )
+This syntax is a short form for the
+.cblk
+.meti (:instance < name << init-form )
+.cble
+syntax.
+
+.meIP (:instance < name << init-form )
+This syntax specifies an instance slot called
 .meta name
-is instantiated, the slot
-.meta init-form -s
-are evaluated in the original lexical environment where the struct
-was defined, and their values are used to initialize the corresponding
-slots.
+whose initial value is obtained by evaluating
+.meta init-form
+whenever a new instance of the structure is created.
+This evaluation takes place in the original lexical environment in which the
+.code defstruct
+form occurs.
+
+.meIP (:static < name << init-form )
+This syntax specifies a static slot called
+.meta name
+whose initial value is obtained by evaluating
+.meta init-form
+once, during the evaluation of the
+.code defstruct
+form in which it occurs.
+
+.meIP (:method < name <> ( param +) << body-form *)
+This syntax creates a static slot called
+.meta name
+which is initialized with an anonymous function.
+The anonymous function is created during the
+evaluation of the
+.code defstruct
+form. The function takes the arguments specified
+by the
+.meta param
+symbols, and its body consists of the
+.metn body-form -s.
+There must be at least one
+.metn param .
+When the function is invoked as a method, as intended,
+the leftmost
+.meta param
+receives the structure instance. Methods are invoked
+using the
+.code instance.(name arg ...)
+syntax, which implicitly inserts the instance into the argument list.
+
+.meIP (:function < name <> ( param *) << body-form *)
+This syntax creates a static slot called
+.meta name
+which is initialized with an anonymous function.
+The anonymous function is created during the
+evaluation of the
+.code defstruct
+form. The function takes the arguments specified
+by the
+.meta param
+symbols, and its body consists of the
+.metn body-form -s.
+This specifier differs from
+.code :method
+only in one respect: there may be zero
+parameters. A structure function defined this way is
+intended to be used as a utility function which doesn't
+receive the structure instance as an argument.
+Such functions are called using the
+.code instance.[name arg ...]
+syntax which doesn't insert the instance name into
+the argument list.
+
+.RE
+.PP
 
 The slot names given in a
 .code defstruct
 must all be unique among themselves, but they
 may match the names of existing slots in the
 .meta super
-base type. In this case, the effect is that those slots are (still) inherited
+base type.
+
+A given structure type can have only one slot under a given
+symbolic name.  If a newly specified  slot matches the name of an existing slot
+in the
 .meta super
-and not introduces as new slots. However, the newly specified
-.metn init-form -s
-apply to these inherited slots. When the a struct of type
-.meta name
-is instantiated, its inherited slots will be first initialized as if it
-were of type
-.metn super .
-Then its own
-.metn init-form -s
-take effect. Any of these forms which are specified for inherited slots
-simply overwrite the values of those inherited slots.
-Finally, regardless of how they are initialized, slots are overwritten with
-arguments from the initialization itself
-(passed via the
-.code new
-macro or the
-.code make-struct
-function).
+type or that type's chain of ancestors, it is called a
+.IR "repeated slot" .
+
+A repeated slot inherits initialization forms from all of its ancestors.
+
+The kind of the repeated slot (static or instance) is not inherited; it
+is established by the
+.code defstruct
+and may be different from the type of the same-named slot in the
+supertype or its ancestors.
+
+A repeated slot only inherits the initializations which correspond to
+its kind. If a repeated slot is introduced as a static slot, then
+all of the static initializations in the ancestry chain are performed
+on that slot, which takes place during the evaluation of the
+.code defstruct
+form. If that slot is an instance slot in any of the
+ancestor structure types, their initializations do not apply and are not
+evaluated.
+
+If a repeated slot is introduced as an instance slot then none of the static
+initializations in the ancestry chain are performed on it; none of the forms
+are evaluated. Those initializations target a static slot, which the derived
+type doesn't have.  When an instance of the structure is created, then the
+instance initializations are performed on that slot from all of the ancestor
+structure types in which that slot is also an instance slot.
 
 The structure name is specified using two forms, plain
 .meta name
@@ -18022,9 +18149,9 @@ in a function slot.
   (defstruct (counter key) nil
     key
     (count 0)
-    (increment (lambda (self key)
-                 (if (eq self.key key)
-                   (inc self.count)))))
+    (:method increment (self key)
+      (if (eq self.key key)
+        (inc self.count))))
 
   ;; pass all atoms in tree to func
   (defun map-tree (tree func)
@@ -18046,7 +18173,8 @@ in a function slot.
 
 .coNP Function @ make-struct-type
 .synb
-.meti (make-struct-type < name < super < slots < initfun << boactor )
+.meti (make-struct-type < name < super < static-slots < slots
+.meti \ \   < static-initfun < initfun << boactor )
 .syne
 .desc
 The
@@ -18071,13 +18199,25 @@ a symbol which names a struct type, or else
 indicating that the newly created struct type has no supertype.
 
 The
+.meta static-slots
+argument is a list of symbol which specify static slots.
+The symbols must be bindable and the list must not contain duplicates.
+
+The
 .meta slots
-argument is a list of symbols which specifies the slots.
-The symbols must be bindable and the list must not contain
-duplicates. The new struct type's effective list of slots is formed by appending
-.meta slots
-to the list of the supertype's slots, and de-duplicating the resulting list as
-if by the
+argument is a list of symbols which specifies the instance slots.
+The symbols must be bindable and there must not be any duplicates
+within the list, or against entries in the
+.meta static-slots
+list.
+
+The new struct type's effective list of slots is formed by appending
+together
+.meta static-slots
+and
+.metn slots,
+and then appending that to the list of the supertype's slots, and
+de-duplicating the resulting list as if by the
 .code uniq
 function. Thus, any slots which are already present in the supertype are
 removed. If the structure has no supertype, then the list of supertype
@@ -18091,10 +18231,26 @@ and
 .metn boactor .
 
 The
+.meta static-initfun
+argument either specifies an initialization function, or is
+.codn nil ,
+which is equivalent to specifying a function which does nothing.
+
+If specified, this function must
+accept one argument. When the structure type is created (before
+the
+.code make-struct-type
+function returns) all of the
+.meta static-initfun
+functions in the chain of supertype ancestry are invoked, in
+order of inheritance. Each is passed the structure type as an argument. The
+purpose is to initialize the static slots.
+
+The
 .meta initfun
 argument either specifies an initialization function, or is
 .codn nil ,
-which is equivalent to specifying a default function which does nothing.
+which is equivalent to specifying a function which does nothing.
 If specified, this function must
 accept one argument. When a structure is instantiated, every
 .meta initfun
@@ -18240,6 +18396,10 @@ and has the same slot values.
 The creation of a duplicate does not involve calling any of the
 struct type's initialization functions.
 
+Only instance slots participate in the duplication. Since
+the original structure and copy are of the same structure type,
+they already share static slots.
+
 .coNP Accessor @ slot
 .synb
 .mets (slot < struct-obj << slot-name )
@@ -18338,6 +18498,145 @@ Note: the
 .code meth
 macro is an alternative interface which is suitable if
 the slot name isn't a computed value.
+
+.coNP Function @ slot-p
+.synb
+.mets (slot-p < type << name )
+.syne
+.desc
+The
+.code slot-p
+function returns
+.code t
+if name
+.meta name
+is a symbol which names a slot in the structure type
+.metn type .
+Otherwise it returns
+.codn nil .
+
+The
+.meta type
+argument must be a structure type, or else a symbol
+which names a structure type.
+
+.coNP Function @ static-slot-p
+.synb
+.mets (static-slot-p < type << name )
+.syne
+.desc
+The
+.code static-slot-p
+function returns
+.code t
+if name
+.meta name
+is a symbol which names a slot in the structure type
+.metn type ,
+and if that slot is a static slot.
+Otherwise it returns
+.codn nil .
+
+The
+.meta type
+argument must be a structure type, or else a symbol
+which names a structure type.
+
+.coNP Function @ static-slot
+.synb
+.mets (static-slot < type << name )
+.syne
+.desc
+The
+.code static-slot
+function retrieves the value of the static slot
+named by symbol
+.meta name
+of the structure type
+.metn type .
+
+The
+.meta type
+argument must be a structure type, and
+.meta name
+must be a static slot of this type.
+
+.coNP Function @ static-slot-set
+.synb
+.mets (static-slot-set < type < name << new-value )
+.syne
+.desc
+The
+.code static-slot-set
+function stores
+.meta new-value
+into the static slot named by symbol
+.meta name
+of the structure type
+.metn type .
+
+It returns
+.metn new-value .
+
+The
+.meta type
+argument must be a structure type, and
+.meta name
+must be a static slot of this type.
+
+.coNP Function @ call-super-method
+.synb
+.mets (call-super-method < struct-obj < name << argument *)
+.syne
+.desc
+The
+.code call-super-method
+retrieves the function stored in the slot
+.meta name
+of the supertype of
+.meta struct-obj
+and invokes it, passing to that function
+.meta struct-obj
+as the leftmost argument, followed by the given
+.metn argument -s,
+if any.
+
+The
+.meta struct-obj
+argument must be of structure type. Moreover,
+that structure type must be derived from another structure type,
+and
+.meta name
+must name a static slot of that structure type.
+
+The object retrieved from that static slot must be
+callable as a function, and accept the arguments.
+
+.coNP Function @ call-super-fun
+.synb
+.mets (call-super-fun < type < name << argument *)
+.syne
+.desc
+The
+.code call-super-method
+retrieves the function stored in the slot
+.meta name
+of the supertype of
+.meta type
+and invokes it, passing to that function the given
+.metn argument -s,
+if any.
+
+The
+.meta type
+argument must be a structure type. Moreover,
+that structure type must be derived from another structure type,
+and
+.meta name
+must name a static slot of that structure type.
+
+The object retrieved from that static slot must be
+callable as a function, and accept the arguments.
 
 .SS* Sequence Manipulation
 .coNP Function @ seqp

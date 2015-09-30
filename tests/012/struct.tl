@@ -70,18 +70,23 @@
 (set *gensym-counter* 0)
 (stest (sys:expand '(defstruct (boa x y) nil
                       (x 0) (y 0)))
-       "(make-struct-type 'boa '() '(x y)\n             \
-       \                  (lambda (#:g0004)\n           \
-       \                    (slotset #:g0004 'x\n       \
-       \                             0)\n               \
-       \                    (slotset #:g0004 'y\n       \
-       \                             0))\n              \
-       \                  (lambda (#:g0004 #:g0005\n    \
-       \                           #:g0006)\n           \
-       \                    (slotset #:g0004 'x\n       \
-       \                             #:g0005)\n         \
-       \                    (slotset #:g0004 'y\n       \
-       \                             #:g0006)))")
+       "(sys:make-struct-type 'boa '() '()\n                            \
+       \                      '(x y) (lambda (#:g0004))\n               \
+       \                      (lambda (#:g0004)\n                       \
+       \                        (let ((#:g0005 (struct-type #:g0004)))\n\
+       \                          (if (static-slot-p #:g0005 'x)\n      \
+       \                            () (progn (slotset #:g0004 'x\n     \
+       \                                               0)))\n           \
+       \                          (if (static-slot-p #:g0005 'y)\n      \
+       \                            () (progn (slotset #:g0004 'y\n     \
+       \                                               0)))))\n         \
+       \                      (lambda (#:g0004 #:g0006\n                \
+       \                               #:g0007)\n                       \
+       \                        (slotset #:g0004 'x\n                   \
+       \                                 #:g0006)\n                     \
+       \                        (slotset #:g0004 'y\n                   \
+       \                                 #:g0007)))")
+
 
 (defstruct (boa x y) nil
   (x 0) (y 0))

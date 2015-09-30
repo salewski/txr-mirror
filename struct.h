@@ -25,7 +25,9 @@
  */
 
 extern val struct_type_s;
-val make_struct_type(val name, val super, val slots, val initfun, val boactor);
+val make_struct_type(val name, val super,
+                     val static_slots, val slots,
+                     val static_initfun, val initfun, val boactor);
 val struct_type_p(val obj);
 val super(val type);
 val make_struct(val type, val plist, struct args *);
@@ -33,6 +35,10 @@ val copy_struct(val strct);
 val find_struct_type(val sym);
 val slot(val strct, val sym);
 val slotset(val strct, val sym, val newval);
+val static_slot(val stype, val sym);
+val static_slot_set(val stype, val sym, val newval);
+val slot_p(val type, val sym);
+val static_slot_p(val type, val sym);
 val structp(val obj);
 val struct_type(val strct);
 val method(val strct, val obj);

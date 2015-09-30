@@ -7865,9 +7865,9 @@ static void time_init(void)
   sec_s = intern(lit("sec"), user_package);
   dst_s = intern(lit("dst"), user_package);
 
-  make_struct_type(time_s, nil,
+  make_struct_type(time_s, nil, nil,
                    list(year_s, month_s, day_s,
-                        hour_s, min_s, sec_s, dst_s, nao), nil, nil);
+                        hour_s, min_s, sec_s, dst_s, nao), nil, nil, nil);
 }
 
 void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),

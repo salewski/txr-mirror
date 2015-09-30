@@ -23,6 +23,10 @@
 ;; AND UNDER ANY THEORY OF LIABILITY, ARISING IN ANY WAY OUT OF THE USE OF THIS
 ;; SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+(macro-time
+  (defun sys:bad-slot-syntax (arg)
+    (throwf 'eval-error "~s: bad slot syntax: ~s" 'defstruct arg)))
+
 (defmacro defstruct (name-spec super . slot-specs)
   (tree-bind (name args) (tree-case name-spec
                            ((atom . args) (list atom args))
@@ -31,17 +35,54 @@
       (throwf 'eval-error "~s: ~s isn't a bindable symbol" 'defstruct name))
     (unless (proper-listp slot-specs)
       (throwf 'eval-error "~s: bad slot syntax" 'defstruct))
-    (let ((slot-init-forms (collect-each ((slot slot-specs))
-                             (tree-case slot
-                               ((sym init-form) slot)
-                               (sym (list sym nil))))))
-      (whenlet ((bad [find-if [notf bindable] slot-init-forms car]))
+    (let* ((slot-init-forms (collect-each ((slot slot-specs))
+                              (tree-case slot
+                                ((word name args . body)
+                                 (caseq word
+                                   (:method
+                                     (when (not args)
+                                       (throwf 'eval-error
+                                               "~s: method ~s needs \
+                                               \ at least one parameter"
+                                               'defstruct name))
+                                     ^(:static ,name (lambda ,args ,*body)))
+                                   (:function ^(:static ,name
+                                                        (lambda ,args ,*body)))
+                                   ((:static :instance)
+                                     (when body
+                                       (sys:bad-slot-syntax slot))
+                                     ^(,word ,name ,args))
+                                   (t (sys:bad-slot-syntax slot))))
+                                ((word name)
+                                   (caseq word
+                                     ((:static :instance)
+                                      ^(,word ,name nil))
+                                     (t ^(:instance ,word ,name))))
+                                ((name)
+                                  ^(:instance ,name nil))
+                                (name
+                                  ^(:instance ,name nil)))))
+           (stat-si-forms [keep-if (op eq :static) slot-init-forms car])
+           (inst-si-forms [keep-if (op eq :instance) slot-init-forms car])
+           (stat-slots [mapcar second stat-si-forms])
+           (inst-slots [mapcar second inst-si-forms]))
+      (whenlet ((bad [find-if [notf bindable]
+                              (append stat-slots inst-slots)]))
         (throwf 'eval-error "~s: slot name ~s isn't a bindable symbol"
-                'defstruct (car bad)))
-      (let ((arg-sym (gensym)))
-        ^(make-struct-type ',name ',super ',[mapcar car slot-init-forms]
+                'defstruct bad))
+      (let ((arg-sym (gensym))
+            (type-sym (gensym)))
+        ^(sys:make-struct-type
+           ',name ',super ',stat-slots ',inst-slots
            (lambda (,arg-sym)
-             ,*(mapcar (aret ^(slotset ,arg-sym ',@1 ,@2)) slot-init-forms))
+             ,*(mapcar (aret ^(when (static-slot-p ,arg-sym ',@2)
+                                (static-slot-set ,arg-sym ',@2 ,@3)))
+                       stat-si-forms))
+           (lambda (,arg-sym)
+             (let ((,type-sym (struct-type ,arg-sym)))
+               ,*(mapcar (aret ^(unless (static-slot-p ,type-sym ',@2)
+                                  (slotset ,arg-sym ',@2 ,@3)))
+                         inst-si-forms)))
            ,(if args
               (let ((gens (mapcar (ret (gensym)) args)))
                 ^(lambda (,arg-sym ,*gens)
