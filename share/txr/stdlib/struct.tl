@@ -35,7 +35,8 @@
       (throwf 'eval-error "~s: ~s isn't a bindable symbol" 'defstruct name))
     (unless (proper-listp slot-specs)
       (throwf 'eval-error "~s: bad slot syntax" 'defstruct))
-    (let* ((slot-init-forms (collect-each ((slot slot-specs))
+    (let* ((instance-init-form nil) (instance-fini-form nil)
+           (slot-init-forms (collect-each ((slot slot-specs))
                               (tree-case slot
                                 ((word name args . body)
                                  (caseq word
@@ -52,7 +53,32 @@
                                      (when body
                                        (sys:bad-slot-syntax slot))
                                      ^(,word ,name ,args))
-                                   (t (sys:bad-slot-syntax slot))))
+                                   (t :)))
+                                ((word (arg) . body)
+                                 (caseq word
+                                   (:init
+                                     (unless (bindable arg)
+                                       (sys:bad-slot-syntax slot))
+                                     (when instance-init-form
+                                       (uw-throwf 'eval-error
+                                                  "~s: duplicate :init"
+                                                  'defstruct))
+                                     (set instance-init-form
+                                          (cons arg body))
+                                     ^(,word nil nil))
+                                   (:fini
+                                     (unless (bindable arg)
+                                       (sys:bad-slot-syntax slot))
+                                     (when instance-fini-form
+                                       (uw-throwf 'eval-error
+                                                  "~s: duplicate :fini"
+                                                  'defstruct))
+                                     (set instance-fini-form
+                                          (cons arg body))
+                                     ^(,word nil nil))
+                                   (t (when body
+                                        (sys:bad-slot-syntax slot))
+                                      :)))
                                 ((word name)
                                    (caseq word
                                      ((:static :instance)
@@ -82,7 +108,13 @@
              (let ((,type-sym (struct-type ,arg-sym)))
                ,*(mapcar (aret ^(unless (static-slot-p ,type-sym ',@2)
                                   (slotset ,arg-sym ',@2 ,@3)))
-                         inst-si-forms)))
+                         inst-si-forms))
+             ,*(if (cdr instance-init-form)
+                 ^((let ((,(car instance-init-form) ,arg-sym))
+                     ,*(cdr instance-init-form))))
+             ,*(if (cdr instance-fini-form)
+                 ^((finalize ,arg-sym (lambda (,(car instance-fini-form))
+                                        ,*(cdr instance-fini-form))))))
            ,(if args
               (let ((gens (mapcar (ret (gensym)) args)))
                 ^(lambda (,arg-sym ,*gens)
