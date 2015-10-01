@@ -263,8 +263,12 @@ val super(val type)
     val stype = find_struct_type(type);
     if (!stype)
       no_such_struct(lit("super"), type);
-    return super(stype);
-  } else {
+    type = stype;
+  } else if (structp(type)) {
+    type = struct_type(type);
+  }
+
+  {
     struct struct_type *st = coerce(struct struct_type *,
                                     cobj_handle(type, struct_type_s));
     return st->super;
