@@ -578,6 +578,8 @@ static int next_hist_match(lino_t *l, char *pat, int cur, size_t *offs)
     return -1;
 }
 
+static void copy_display_params(lino_t *, const lino_t *);
+
 static int history_search(lino_t *l)
 {
     char hpat[128] = "";
@@ -688,7 +690,7 @@ static int history_search(lino_t *l)
                     vb = 1;
                     continue;
                 case CTL('L'):
-                    lino_clear_screen(l);
+                    lino_clear_screen(lc);
                     break;
                 case CTL('Z'):
                     disable_raw_mode(l);
@@ -701,6 +703,7 @@ static int history_search(lino_t *l)
     }
 
 out:
+    copy_display_params(l, lc);
     lino_free(lc);
     lino_free(ld);
     refresh_line(l);
@@ -791,6 +794,14 @@ static void sync_data_to_buf(lino_t *l)
 
     l->len = bptr - l->buf;
     *bptr++ = 0;
+}
+
+static void copy_display_params(lino_t *to, const lino_t *from)
+{
+    to->mlmode = from->mlmode;
+    to->cols = from->cols;
+    to->oldrow = from->oldrow;
+    to->maxrows = from->maxrows;
 }
 
 /* Single line low level line refresh.
