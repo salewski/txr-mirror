@@ -33997,9 +33997,16 @@ such that the last character of the line is to the left of the cursor
 position. On terminals which have the Home and End keys, these may also
 be used instead of Ctrl-A and Ctrl-E.
 
-In multi-line mode, these commands jump to the beginning or end of the
-current physical line. In line mode, they move to the beginning or end of the
+In line mode, these commands move the cursor to the beginning or end of the
 edit buffer.
+
+In multi-line mode, if the cursor is not already at the beginning of a physical
+line, then Ctrl-A moves it to the first character of the physical line.
+Otherwise, Ctrl-A moves the cursor to the beginning of the edit buffer.
+
+Similarly, in multi-line mode, if the cursor not already at the end of a
+physical line, Ctrl-E moves it there. Otherwise, the cursor moves to the
+end of the edit buffer.
 
 .NP* Jump to Matching Parenthesis
 

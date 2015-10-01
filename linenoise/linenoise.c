@@ -1339,6 +1339,8 @@ static void edit_move_sol(lino_t *l) {
         if (l->dpos != dpos) {
             l->dpos = dpos;
             l->need_refresh = 1;
+        } else {
+            edit_move_home(l);
         }
     }
 }
@@ -1357,12 +1359,13 @@ static void edit_move_eol(lino_t *l) {
     } else {
         size_t dpos = l->dpos;
 
-        dpos += strspn(l->data + dpos, "\r");
         dpos += strcspn(l->data + dpos, "\r");
 
         if (l->dpos != dpos) {
             l->dpos = dpos;
             l->need_refresh = 1;
+        } else {
+            edit_move_end(l);
         }
     }
 }
