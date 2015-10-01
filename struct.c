@@ -205,7 +205,7 @@ val make_struct_type(val name, val super,
     st->initfun = initfun;
     st->boactor = boactor;
 
-    gc_finalize(stype, struct_type_finalize_f);
+    gc_finalize(stype, struct_type_finalize_f, nil);
 
     for (sl = 0, stsl = STATIC_SLOT_BASE, iter = all_slots;
          iter;

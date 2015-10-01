@@ -117,7 +117,8 @@
                           ,*(cdr instance-init-form))))
                   ,*(if (cdr instance-fini-form)
                       ^((finalize ,arg-sym (lambda (,(car instance-fini-form))
-                                             ,*(cdr instance-fini-form)))))))
+                                             ,*(cdr instance-fini-form))
+                                  t)))))
            ,(if args
               (let ((gens (mapcar (ret (gensym)) args)))
                 ^(lambda (,arg-sym ,*gens)

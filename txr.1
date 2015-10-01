@@ -17887,12 +17887,16 @@ the
 code, if any, has been executed. The registration
 takes place as if by the evaluation of the form
 .cblk
-.meti (finalize << obj (lambda <> (param) << body-form ...))
+.meti (finalize << obj (lambda <> (param) << body-form ...) t)
 .cble
 where
 .meta obj
-denotes the structure instance.
-
+denotes the structure instance. Note the
+.code t
+argument which requests reverse order of registration, ensuring that if an
+object has multiple finalizers registered at different levels of inheritance
+hierarchy, the finalizers specified for a derived structure type are called
+before inherited finalizers.
 .RE
 .PP
 
@@ -33608,7 +33612,7 @@ special builds of \*(TX for small systems.
 
 .coNP Function @ finalize
 .synb
-.mets (finalize < object << function )
+.mets (finalize < object < function <> [ reverse-order-p ])
 .syne
 .desc
 The
@@ -33626,21 +33630,26 @@ will be called with
 .meta object
 as its only argument.
 
-Finalizers are called in the same order in which they are registered:
-newer registrations are called after older registrations.
+Multiple finalizer functions can be registered for the same object.
+They are all called when the object becomes unreachable.
+
+If the
+.meta reverse-order-p
+argument isn't specified, or is
+.codn nil ,
+then finalizer is registered at the end of the list.
 
 If
-.meta object
-is registered multiple times by multiple calls to
-.codn finalize ,
-then if those finalizers are called, they are all called, in the order
-of registration.
+.meta reverse-order-p
+is true, then the finalizer is registered at the front of
+the list.
 
-After a finalization call takes place, its registration is removed;
-.meta object
-and
-.meta function
-are no longer associated.  However, neither
+Finalizers which are activated in the same finalization processing phase
+are called in the order in which they appear in the
+registration list.
+
+After a finalization call takes place, its registration is removed.  However,
+neither
 .meta object
 nor
 .meta function
@@ -33652,8 +33661,7 @@ to store somewhere a persistent reference to
 .meta object
 or to itself, thereby reinstating these objects as reachable.
 
-.meta function
-is itself permitted to call
+A finalizer is itself permitted to call
 .code finalize
 to register the original
 .code object

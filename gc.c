@@ -808,18 +808,28 @@ static val gc_wrap(void)
   return nil;
 }
 
-val gc_finalize(val obj, val fun)
+val gc_finalize(val obj, val fun, val rev_order_p)
 {
   type_check(fun, FUN);
+
+  rev_order_p = default_bool_arg(rev_order_p);
 
   if (is_ptr(obj)) {
     struct fin_reg *f = coerce(struct fin_reg *, chk_malloc(sizeof *f));
     f->obj = obj;
     f->fun = fun;
     f->reachable = 0;
-    f->next = 0;
-    *final_tail = f;
-    final_tail = &f->next;
+
+    if (rev_order_p) {
+      if (!final_list)
+        final_tail = &f->next;
+      f->next = final_list;
+      final_list = f;
+    } else {
+      f->next = 0;
+      *final_tail = f;
+      final_tail = &f->next;
+    }
   }
   return obj;
 }
@@ -828,7 +838,7 @@ void gc_late_init(void)
 {
   reg_fun(intern(lit("gc"), system_package), func_n0(gc_wrap));
   reg_fun(intern(lit("gc-set-delta"), system_package), func_n1(gc_set_delta));
-  reg_fun(intern(lit("finalize"), user_package), func_n2(gc_finalize));
+  reg_fun(intern(lit("finalize"), user_package), func_n3o(gc_finalize, 2));
 }
 
 /*
