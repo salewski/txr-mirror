@@ -149,6 +149,9 @@
     (obj (throwf 'eval-error "~s: bad syntax: ~s" 'qref refs))))
 
 (defmacro new (spec . pairs)
+  (if (oddp (length pairs))
+    (throwf 'eval-error "~s: slot initform arguments must occur pairwise"
+            'new))
   (let ((qpairs (mappend (aret ^(',@1 ,@2)) (tuples 2 pairs))))
     (tree-case spec
       ((atom . args) ^(make-struct ',atom (list ,*qpairs) ,*args))
