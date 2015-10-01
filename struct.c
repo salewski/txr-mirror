@@ -125,6 +125,7 @@ void struct_init(void)
   reg_fun(intern(lit("structp"), user_package), func_n1(structp));
   reg_fun(intern(lit("struct-type"), user_package), func_n1(struct_type));
   reg_fun(intern(lit("method"), user_package), func_n2(method));
+  reg_fun(intern(lit("super-method"), user_package), func_n2(super_method));
 }
 
 static noreturn void no_such_struct(val ctx, val sym)
@@ -677,6 +678,12 @@ static val method_fun(val env, varg args)
 val method(val strct, val slotsym)
 {
   return func_f0v(cons(slot(strct, slotsym), strct), method_fun);
+}
+
+val super_method(val strct, val slotsym)
+{
+  val super_slot = static_slot(super(struct_type(strct)), slotsym);
+  return func_f0v(cons(super_slot, strct), method_fun);
 }
 
 static void struct_inst_print(val obj, val out, val pretty)

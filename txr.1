@@ -18561,6 +18561,37 @@ Note: the
 macro is an alternative interface which is suitable if
 the slot name isn't a computed value.
 
+.coNP Function @ super-method
+.synb
+.mets (super-method < struct-obj << slot-name )
+.syne
+.desc
+The
+.code super-method
+function retrieves a function from a static
+slot belonging to the supertype of the structure type of
+.metn struct-obj .
+
+It then returns a function which binds
+that function's left argument to the structure.
+
+The
+.meta struct-obj
+argument must be a structure which has a supertype, and
+.meta slot-name
+must be a symbol denoting a static slot in that supertype.
+The slot must hold a function of at least one
+argument.
+
+The
+.code super-method
+function returns a function which, when invoked,
+calls the function previously retrieved from
+the supertype's static slot, passing to that function
+.meta struct-obj
+as the leftmost argument, followed by the function's
+own arguments.
+
 .coNP Function @ slot-p
 .synb
 .mets (slot-p < type << name )
