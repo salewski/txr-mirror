@@ -1,3 +1,76 @@
+                                    TXR 118
+                                   2015-10-01
+
+
+  Features
+
+  - Interactive listener:
+    - Parentheses matching jump (Ctrl-]) now finds the closest parenthesis,
+      bracket or brace if the cursor isn't on one already.
+    - Tab completion recognizes .( and (( context in front of symbol
+      being completed, and doesn't restrict to function names.
+    - Parenthesis-matching "jump" is now performed on backspace also,
+      if cursor lands on or next to a parenthesis.
+    - Ctrl-A and Ctrl-E (or Home and End) keys have now have a useful behavior
+      in multi-line mode, allowing a jump to the start/end of the current line
+      as well as start/end of the edit buffer.
+
+  - Optimizations in regular expressions:
+    - In particular, prefix matches involving the complement operator now
+      indicate termination rather than wastefully consuming the remainder of
+      the string.
+    - Algebraic reductions performed on regexes. In some cases, these
+      reduce an expression which contains exotic operators such that it
+      can be compiled to NFA.
+
+  - Structures:
+    - Structures can now have static slots: slots shared among all instances
+      of the same type (but not other types, not even derived types).
+    - Static slots are now the preferred the basis for implementing functions
+      and methods.
+    - The defstruct syntax has a richer syntax which lets static slots
+      be expressed, as well as methods.
+    - Construction and finalization code can be specified in defstruct.
+    - Many new functions related to structures.
+
+  - Optimization in lazy strings: forcing lazy strings is more efficient.
+
+  - String input streams do not force lazy strings now.
+
+  - The "matches nothing" regular expression represented in the
+    abstract syntax by the object t now handled by regex printer,
+    and rendered as [].
+
+  Bugs:
+
+  - Fixed a silly delete-previous-word behavior in multi-line mode:
+    not treating the line-break as a whitespace character that separates words.
+
+  - Fixed various problems in screen update and cursor positioning behavior in
+    interactive listener, affecting multi-line mode.
+
+  - Fixed two bugs in the ifa/conda macros.
+
+  - The return and return-from operators do not abort TXR when a label is not
+    found, but properly throw an exception.
+
+  - Garbage collection: if GC is triggered in response to a malloc
+    delta, a full GC is now performed. This prevents runaway memory
+    allocation behavior in code which manipulates large arrays, strings
+    or integers.
+
+  - Fixed strangely compounded error message issued in the situation that
+    unbound variables occur in the TXR pattern language.
+
+  - Various "internal error" situations in the regex module now throw
+    exceptions. Consequently, TXR will not die if a bad abstract syntax
+    tree is passed to the regex compiler.
+
+  - Regex printer was throwing an exception when printing a character
+    class containing \w, \s or \d.
+
+
+
                                     TXR 117
                                    2015-09-23
 
