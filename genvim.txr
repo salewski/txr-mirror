@@ -11,24 +11,31 @@ static void dir_tables_init(void)
                  ifa txr-if with-resources path-exists-p
                  defstruct)))
        (boundp s)))
-@(bind txl-sym
+@(bind txl-orig-sym
        @(append-each* ((entry (package-alist))
                        (pkg-name [mapcar car entry])
                        (pkg [mapcar cdr entry]))
           (append-each ((sym (package-symbols pkg)))
             (when (or (boundp sym) (fboundp sym) (constantp sym))
-              (let ((qualif (casequal pkg-name
-                              ("keyword" ":")
-                              ("usr" "")
-                              (t `@{pkg-name}:`))))
-                (list `@qualif@(symbol-name sym)`))))))
+              (list sym)))))
+@(do (set [txl-orig-sym 0..0] '(macro-time)))
+@(bind txl-sym
+       @(append-each ((sym txl-orig-sym))
+           (let* ((pkg (symbol-package sym))
+                  (pkg-name (package-name pkg))
+                  (qualif (casequal pkg-name
+                            ("keyword" ":")
+                            ("usr" "")
+                            (t `@{pkg-name}:`))))
+              (list `@qualif@(symbol-name sym)`))))
 @(do (set [txr-sym 0..0] '("rep" "end" "and" "or"
                            "catch" "finally"
                            "until" "last"
                            "if" "else" "elif"
                            "include")))
-@(do (set [txl-sym 0..0] '("macro-time")))
-@(set (txr-sym txl-sym) (@(sort (uniq txr-sym)) @(sort (uniq txl-sym))))
+@(set txr-sym @(sort (uniq txr-sym)))
+@(set (txl-sym txl-orig-sym) @(multi-sort (list txl-sym txl-orig-sym)
+                                          [list less]))
 @(bind bs "\\\\")
 @(bind hex "0-9A-Fa-f")
 @(bind at "\\(@[ \\t]*\\)")
@@ -38,6 +45,12 @@ static void dir_tables_init(void)
 @(bind oct "0-7")
 @(bind chesc `abtnvfre@bs \\n`)
 @(bind glyph `!$%&*+\\-<=>?@{bs}_~`)
+@(bind lispwords @(append-each ((sym txl-orig-sym)
+                                (text txl-sym))
+                    (let ((fb (symbol-function sym)))
+                      (if (or (special-operator-p sym)
+                              (and fb (not (functionp fb))))
+                        (list text)))))
 @(define generate (txr-p))
 @  (output @(if txr-p "txr.vim" "tl.vim") :named out)
 " VIM Syntax file for txr
@@ -175,6 +188,8 @@ hi def link txr_error Error
 hi def link txr_nested_error Error
 
 let b:current_syntax = "lisp"
+
+set lispwords=@{lispwords ","},:method,:function,:init,:fini
 @  (end)
 @(end)
 @(generate t)
