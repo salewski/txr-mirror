@@ -34223,7 +34223,10 @@ The number 1 specifies that the last word is to be inserted, 2 specifies
 the second last word, 3 the third word from the right and so on.
 Only the most recent three decimal digits are retained, so the number can range
 from 0 to 999. A value of 0, or a value which exceeds the number of words
-causes the Ctrl-W or w to do nothing.
+causes the Ctrl-W or w to do nothing. Note that "previous line" means
+relative to the current location in the history. If the 42nd most recent
+history line is currently recalled, this command takes material from the 43rd
+history line.
 
 .NP* Insert Previous Atom
 
@@ -34242,7 +34245,8 @@ atoms by position from the end. The number 1 specifies the last atom,
 2 the second last and so on.
 Only the most recent three decimal digits are retained, so the number can range
 from 0 to 999. A value of 0, or a value which exceeds the number of words
-causes the Ctrl-A or a to do nothing.
+causes the Ctrl-A or a to do nothing.  Note that "previous line"
+has the same meaning as for the Ctrl-X, Ctrl-W (insert previous word) command.
 
 .NP* Insert Previous Line
 
@@ -34251,6 +34255,8 @@ equivalent, insert an entire line of history into the current buffer. By
 default, the previous line is inserted. A less recent line can be selected by
 typing a numeric argument between the Ctrl-X and the Ctrl-R/r. The immediately
 previous history line is numbered 1, the one before it 2 and so on.
+If this command is used during history navigation, it references previous
+lines relative to the currently recalled history line.
 
 .NP* Symbolic Completion
 

@@ -1733,8 +1733,9 @@ static int edit(lino_t *l, const char *prompt)
                 break;
             case CTL('W'): case 'w':
                 extended = 0;
-                if (l->history_len > 1 && extend_num != 0) {
-                    char *prev_line = l->history[l->history_len - 2];
+                if (l->history_len > 1 + l->history_index && extend_num != 0) {
+                    char *prev_line = l->history[l->history_len - 2
+                                                 - l->history_index];
                     char *word_end = prev_line + strlen(prev_line);
                     char *word_start = word_end;
 
@@ -1764,9 +1765,10 @@ static int edit(lino_t *l, const char *prompt)
                 extended = 0;
                 if (extend_num < 0)
                     extend_num = 1;
-                if (l->history_len > 1 && l->atom_callback)
+                if (l->history_len > 1 + l->history_index && l->atom_callback)
                 {
-                    char *prev_line = l->history[l->history_len - 2];
+                    char *prev_line = l->history[l->history_len - 2
+                                                 - l->history_index];
                     char *word = l->atom_callback(l, prev_line,
                                                   extend_num, l->ca_ctx);
                     int res = 0;
@@ -1786,9 +1788,10 @@ static int edit(lino_t *l, const char *prompt)
                 extended = 0;
                 if (extend_num < 0)
                     extend_num = 1;
-                if (l->history_len > extend_num) {
+                if (l->history_len > extend_num + l->history_index) {
                     char *prev_line = l->history[l->history_len - 1
-                                                 - extend_num];
+                                                 - extend_num
+                                                 - l->history_index];
                     int res = edit_insert_str(l, prev_line, strlen(prev_line));
                     if (res) {
                         l->error = lino_ioerr;
