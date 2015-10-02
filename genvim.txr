@@ -18,7 +18,6 @@ static void dir_tables_init(void)
           (append-each ((sym (package-symbols pkg)))
             (when (or (boundp sym) (fboundp sym) (constantp sym))
               (list sym)))))
-@(do (set [txl-orig-sym 0..0] '(macro-time)))
 @(bind txl-sym
        @(append-each ((sym txl-orig-sym))
            (let* ((pkg (symbol-package sym))

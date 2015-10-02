@@ -4056,6 +4056,7 @@ void eval_init(void)
 
   reg_op(macrolet_s, op_error);
   reg_op(symacrolet_s, op_error);
+  reg_op(macro_time_s, op_error);
   reg_op(var_s, op_meta_error);
   reg_op(expr_s, op_meta_error);
   reg_op(quote_s, op_quote);
