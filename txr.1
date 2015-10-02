@@ -17887,7 +17887,7 @@ the
 code, if any, has been executed. The registration
 takes place as if by the evaluation of the form
 .cblk
-.meti (finalize << obj (lambda <> (param) << body-form ...) t)
+.meti (finalize < obj (lambda <> ( param ) << body-form ...) t)
 .cble
 where
 .meta obj
@@ -18013,7 +18013,7 @@ macro creates a new instance of the structure type named by
 If the structure supports "boa construction", then, optionally, the
 arguments may be given using the syntax
 .cblk
-.meti >> (name << arg *)
+.meti >> ( name << arg *)
 .cble
 instead of
 .metn name .
@@ -18045,7 +18045,7 @@ macro, and lastly the "boa constructor" overrides.
 .coNP Macro @ qref
 .synb
 .mets (qref < object-form
-.mets \ \   >> { slot | >> ( slot << arg *) | >> [ slot << arg *]}+)
+.mets \ \  >> { slot | >> ( slot << arg *) | >> [ slot << arg *]}+)
 .syne
 
 The
@@ -18235,8 +18235,8 @@ in a function slot.
 
 .coNP Function @ make-struct-type
 .synb
-.meti (make-struct-type < name < super < static-slots < slots
-.meti \ \   < static-initfun < initfun << boactor )
+.mets (make-struct-type < name < super < static-slots < slots
+.mets \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \  < static-initfun < initfun << boactor )
 .syne
 .desc
 The
@@ -18277,7 +18277,7 @@ The new struct type's effective list of slots is formed by appending
 together
 .meta static-slots
 and
-.metn slots,
+.metn slots ,
 and then appending that to the list of the supertype's slots, and
 de-duplicating the resulting list as if by the
 .code uniq
