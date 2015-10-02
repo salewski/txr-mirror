@@ -17807,7 +17807,16 @@ There must be at least one
 When the function is invoked as a method, as intended,
 the leftmost
 .meta param
-receives the structure instance. Methods are invoked
+receives the structure instance.
+The
+.metn body-form -s
+are evaluated in a context in which a block named
+.meta name
+is visible. Consequently,
+.code return-from
+may be used to terminate the execution of a method
+and return a value.
+Methods are invoked
 using the
 .code instance.(name arg ...)
 syntax, which implicitly inserts the instance into the argument list.
@@ -17830,6 +17839,14 @@ only in one respect: there may be zero
 parameters. A structure function defined this way is
 intended to be used as a utility function which doesn't
 receive the structure instance as an argument.
+The
+.metn body-form -s
+are evaluated in a context in which a block named
+.meta name
+is visible. Consequently,
+.code return-from
+may be used to terminate the execution of the function
+and return a value.
 Such functions are called using the
 .code instance.[name arg ...]
 syntax which doesn't insert the instance name into

@@ -46,9 +46,13 @@
                                                "~s: method ~s needs \
                                                \ at least one parameter"
                                                'defstruct name))
-                                     ^(:static ,name (lambda ,args ,*body)))
+                                     ^(:static ,name
+                                               (lambda ,args
+                                                 (block ,name ,*body))))
                                    (:function ^(:static ,name
-                                                        (lambda ,args ,*body)))
+                                                        (lambda ,args
+                                                          (block ,name
+                                                            ,*body))))
                                    ((:static :instance)
                                      (when body
                                        (sys:bad-slot-syntax slot))
