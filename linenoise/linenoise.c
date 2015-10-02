@@ -1782,6 +1782,20 @@ static int edit(lino_t *l, const char *prompt)
                     }
                 }
                 break;
+            case CTL('R'): case 'r':
+                extended = 0;
+                if (extend_num < 0)
+                    extend_num = 1;
+                if (l->history_len > extend_num) {
+                    char *prev_line = l->history[l->history_len - 1
+                                                 - extend_num];
+                    int res = edit_insert_str(l, prev_line, strlen(prev_line));
+                    if (res) {
+                        l->error = lino_ioerr;
+                        goto out;
+                    }
+                }
+                break;
             case CTL('Q'):
                 extended = 0;
                 {

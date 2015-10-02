@@ -34227,6 +34227,14 @@ Only the most recent three decimal digits are retained, so the number can range
 from 0 to 999. A value of 0, or a value which exceeds the number of words
 causes the Ctrl-A or a to do nothing.
 
+.NP* Insert Previous Line
+
+The command sequences Ctrl-X, Ctrl-R ("repeat") and Ctrl-X, r, which are
+equivalent, insert an entire line of history into the current buffer. By
+default, the previous line is inserted. A less recent line can be selected by
+typing a numeric argument between the Ctrl-X and the Ctrl-R/r. The immediately
+previous history line is numbered 1, the one before it 2 and so on.
+
 .NP* Symbolic Completion
 
 If the Tab key is pressed while editing a line, it is interpreted as a
