@@ -3435,8 +3435,8 @@ static val symbol_value(val sym)
 static val symbol_function(val sym)
 {
   uses_or2;
-  return or2(cdr(or2(lookup_fun(nil, sym),
-                     lookup_mac(nil, sym))),
+  return or2(or2(cdr(lookup_fun(nil, sym)),
+                 lookup_mac(nil, sym)),
              gethash(op_table, sym));
 }
 
