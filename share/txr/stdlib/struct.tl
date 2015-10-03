@@ -25,7 +25,15 @@
 
 (macro-time
   (defun sys:bad-slot-syntax (arg)
-    (throwf 'eval-error "~s: bad slot syntax: ~s" 'defstruct arg)))
+    (throwf 'eval-error "~s: bad slot syntax: ~s" 'defstruct arg))
+
+  (defun sys:prune-nil-inits (slot-init-forms super-type)
+    (remove-if (tb ((kind name init-form))
+                 (and (member kind '(:static :instance))
+                      (null init-form)
+                      (or (not super-type)
+                          (not (slot-p super-type name)))))
+               slot-init-forms)))
 
 (defmacro defstruct (name-spec super . slot-specs)
   (tree-bind (name args) (tree-case name-spec
@@ -95,11 +103,14 @@
            (stat-si-forms [keep-if (op eq :static) slot-init-forms car])
            (inst-si-forms [keep-if (op eq :instance) slot-init-forms car])
            (stat-slots [mapcar second stat-si-forms])
-           (inst-slots [mapcar second inst-si-forms]))
+           (inst-slots [mapcar second inst-si-forms])
+           (super-type (find-struct-type super)))
       (whenlet ((bad [find-if [notf bindable]
                               (append stat-slots inst-slots)]))
         (throwf 'eval-error "~s: slot name ~s isn't a bindable symbol"
                 'defstruct bad))
+      (set stat-si-forms (sys:prune-nil-inits stat-si-forms super-type))
+      (set inst-si-forms (sys:prune-nil-inits inst-si-forms super-type))
       (let ((arg-sym (gensym))
             (type-sym (gensym)))
         ^(sys:make-struct-type
