@@ -369,7 +369,8 @@ static struct struct_inst *struct_handle(val obj, val ctx)
 {
   if (cobjp(obj) && obj->co.ops == &struct_inst_ops)
     return coerce(struct struct_inst *, obj->co.handle);
-  no_such_struct(ctx, obj);
+  uw_throwf(error_s, lit("~a: ~s isn't a structure"),
+            ctx, obj, nao);
 }
 
 val copy_struct(val strct)
