@@ -1050,6 +1050,11 @@ val eval_progn(val forms, val env, val ctx_form)
 {
   val retval = nil;
 
+  if (!forms) {
+    sig_check_fast();
+    return retval;
+  }
+
   for (; forms; forms = cdr(forms))
     retval = eval(car(forms), env, ctx_form);
 
