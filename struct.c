@@ -326,8 +326,10 @@ val make_struct(val type, val plist, struct args *args)
     if (!typeobj)
       uw_throwf(error_s, lit("~a: ~s doesn't name a struct type"),
                 self, type, nao);
-    return make_struct(typeobj, plist, args);
-  } else {
+    type = typeobj;
+  }
+
+  {
     struct struct_type *st = coerce(struct struct_type *,
                                     cobj_handle(type, struct_type_s));
     cnum nslots = st->nslots, sl;
