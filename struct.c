@@ -356,15 +356,15 @@ val make_struct(val type, val plist, struct args *args)
 
     call_initfun_chain(st, sinst);
 
+    for (; plist; plist = cddr(plist))
+      slotset(sinst, car(plist), cadr(plist));
+
     if (args_more(args, 0)) {
       args_decl(args_copy, max(args->fill + 1, ARGS_MIN));
       args_add(args_copy, sinst);
       args_cat_zap(args_copy, args);
       generic_funcall(st->boactor, args_copy);
     }
-
-    for (; plist; plist = cddr(plist))
-      slotset(sinst, car(plist), cadr(plist));
 
     return sinst;
   }
