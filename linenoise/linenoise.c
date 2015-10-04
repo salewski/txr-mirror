@@ -455,12 +455,14 @@ static int compare_completions(const void *larg, const void *rarg)
  *
  * The state of the editing is encapsulated into the pointed lino_state
  * structure as described in the structure definition. */
-static int complete_line(lino_t *ls) {
-    lino_completions_t lc = { 0, NULL };
+static int complete_line(lino_t *ls, int substring) {
+    lino_completions_t lc = { 0, NULL, 0 };
     int nread;
     char c = 0;
     char save = ls->data[ls->dpos];
     lino_t *lt = lino_copy(ls);
+
+    lc.substring = substring;
 
     if (lt == 0)
         return -1;
@@ -1717,7 +1719,7 @@ static int edit(lino_t *l, const char *prompt)
             continue;
         }
 
-        if (extended) {
+        if (extended && c != TAB) {
             switch (c) {
             case CTL('E'):
                 extended = 0;
@@ -1837,8 +1839,9 @@ static int edit(lino_t *l, const char *prompt)
             if (l->completion_callback != NULL) {
                 record_undo(l);
                 clear_sel(l);
-                c = complete_line(l);
+                c = complete_line(l, extended);
             }
+            extended = 0;
             break;
         case CTL('R'):
             record_undo(l);

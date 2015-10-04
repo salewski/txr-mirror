@@ -50,6 +50,7 @@ typedef struct lino_state lino_t;
 typedef struct lino_completions {
   size_t len;
   char **cvec;
+  int substring;
 } lino_completions_t;
 
 typedef void lino_compl_cb_t(const char *, lino_completions_t *, void *ctx);
