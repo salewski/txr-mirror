@@ -120,7 +120,9 @@ void struct_init(void)
           func_n2v(call_super_method));
   reg_fun(intern(lit("call-super-fun"), user_package),
           func_n2v(call_super_fun));
-  reg_fun(intern(lit("slot-p"), user_package), func_n2(slot_p));
+  reg_fun(intern(lit("slotp"), user_package), func_n2(slotp));
+  if (opt_compat && opt_compat <= 118)
+    reg_fun(intern(lit("slot-p"), user_package), func_n2(slotp));
   reg_fun(intern(lit("static-slot-p"), user_package), func_n2(static_slot_p));
   reg_fun(intern(lit("structp"), user_package), func_n1(structp));
   reg_fun(intern(lit("struct-type"), user_package), func_n1(struct_type));
@@ -623,13 +625,13 @@ static val call_super_fun(val type, val sym, struct args *args)
             type, nao);
 }
 
-val slot_p(val type, val sym)
+val slotp(val type, val sym)
 {
   if (type && symbolp(type)) {
     val stype = find_struct_type(type);
     if (!stype)
       no_such_struct(lit("slot-p"), type);
-    return slot_p(stype, sym);
+    return slotp(stype, sym);
   } else {
     struct struct_type *st = coerce(struct struct_type *,
                                     cobj_handle(type, struct_type_s));

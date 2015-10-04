@@ -18691,13 +18691,13 @@ function,
 doesn't return a method whose leftmost argument is already bound to
 an object; the binding occurs at call time.
 
-.coNP Function @ slot-p
+.coNP Function @ slotp
 .synb
-.mets (slot-p < type << name )
+.mets (slotp < type << name )
 .syne
 .desc
 The
-.code slot-p
+.code slotp
 function returns
 .code t
 if name
@@ -34992,6 +34992,15 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code -C 103
 selects the behaviors described below for version 105, but not those for 102.
+
+.IP 118
+The
+.code slot-p
+function's name changed to
+.code slotp
+after 118. The compatibility option causes
+.code slot-p
+to be defined also.
 
 .IP 117
 The arguments of the

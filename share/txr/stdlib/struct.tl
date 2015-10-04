@@ -32,7 +32,7 @@
                  (and (member kind '(:static :instance))
                       (null init-form)
                       (or (not super-type)
-                          (not (slot-p super-type name)))))
+                          (not (slotp super-type name)))))
                slot-init-forms)))
 
 (defmacro defstruct (name-spec super . slot-specs)
