@@ -126,6 +126,7 @@ void struct_init(void)
   reg_fun(intern(lit("struct-type"), user_package), func_n1(struct_type));
   reg_fun(intern(lit("method"), user_package), func_n2(method));
   reg_fun(intern(lit("super-method"), user_package), func_n2(super_method));
+  reg_fun(intern(lit("umethod"), user_package), func_n1(umethod));
 }
 
 static noreturn void no_such_struct(val ctx, val sym)
@@ -689,6 +690,32 @@ val super_method(val strct, val slotsym)
 {
   val super_slot = static_slot(super(struct_type(strct)), slotsym);
   return func_f0v(cons(super_slot, strct), method_fun);
+}
+
+static val umethod_fun(val sym, struct args *args)
+{
+  val self = lit("umethod");
+
+  if (args->argc == 0) {
+    uw_throwf(error_s, lit("~a: object argument required to call ~s"),
+              self, env, nao);
+  } else {
+    val strct = args->arg[0];
+    struct struct_inst *si = struct_handle(strct, self);
+
+    if (symbolp(sym)) {
+      loc ptr = lookup_slot(strct, si, sym);
+      if (!nullocp(ptr))
+        return generic_funcall(deref(ptr), args);
+    }
+
+    no_such_slot(self, si->type, sym);
+  }
+}
+
+val umethod(val slot)
+{
+  return func_f0v(slot, umethod_fun);
 }
 
 static void struct_inst_print(val obj, val out, val pretty)

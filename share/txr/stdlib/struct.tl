@@ -175,3 +175,6 @@
 
 (defmacro meth (obj slot)
   ^(method ,obj ',slot))
+
+(defmacro umeth (slot)
+  ^(umethod ',slot))

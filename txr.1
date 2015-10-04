@@ -18250,6 +18250,56 @@ in a function slot.
                  increment #<function: type 0>)
 .cble
 
+.coNP Macro @ umeth
+.synb
+.mets (umeth << slot )
+.syne
+.desc
+The
+.code umeth
+macro binds the symbol
+.meta slot
+to a function and returns that function.
+
+When that function is called, it expects at least one argument.
+The leftmost argument must be an object of struct type.
+
+The slot named
+.meta slot
+is retrieved from that object, and is expected to be a function.
+That function is called with the same arguments.
+
+The syntax can be understood as a translation to a call of the
+.code umethod
+function:
+
+.cblk
+  (umeth s)  <-->  (umethod 's)
+.cble
+
+The macro merely provides the syntactic sugar of not having to quote the
+symbol.
+
+.TP* Example:
+
+.cblk
+   ;; seal and dog are variables which hold structures of
+   ;; different types. Both have a method called bark.
+
+   (let ((bark-fun (umeth bark)))
+     (bark-fun dog)     ;; same effect as dog.(bark)
+     (bark-fun seal))   ;; same effect as seal.(bark)
+.cble
+
+The
+.code u
+in
+.code umeth
+stands for "unbound". The function produced by
+.code umeth
+is not bound to any specific object; it binds to an object whenever it is
+invoked by retrieving the actual method from the object's slot at call time.
+
 .coNP Function @ make-struct-type
 .synb
 .mets (make-struct-type < name < super < static-slots < slots
@@ -18609,6 +18659,37 @@ the supertype's static slot, passing to that function
 .meta struct-obj
 as the leftmost argument, followed by the function's
 own arguments.
+
+.coNP Function @ umethod
+.synb
+.mets (umethod << slot-name )
+.syne
+.desc
+The
+.code umethod
+returns a function which represents the set of all methods named by
+the slot
+.meta slot-name
+in all structure types, including ones not yet defined.
+The
+.meta slot-name
+argument must be a symbol.
+
+This function must be called with at least one argument. The leftmost
+argument must be an object of structure type, which has a slot named
+.meta slot-name .
+The function will retrieve the value of the slot from that object,
+expecting it to be a function, and calls it, passing to it all of its
+arguments.
+
+Note: the
+.code umethod
+name stands for "unbound method". Unlike the
+.code method
+function,
+.code umethod
+doesn't return a method whose leftmost argument is already bound to
+an object; the binding occurs at call time.
 
 .coNP Function @ slot-p
 .synb
