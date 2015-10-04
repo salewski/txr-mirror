@@ -134,11 +134,26 @@
                       ^((finalize ,arg-sym (lambda (,(car instance-fini-form))
                                              ,*(cdr instance-fini-form))
                                   t)))))
-           ,(if args
-              (let ((gens (mapcar (ret (gensym)) args)))
-                ^(lambda (,arg-sym ,*gens)
-                   ,*(mapcar (ret ^(slotset ,arg-sym ',@1 ,@2))
-                             args gens)))))))))
+           ,(when args
+              (when (> (countql : args) 1)
+                (throwf 'eval-error "~s: multiple colons in boa syntax"
+                        'defstruct))
+              (let ((col-pos (posq : args)))
+                (let ((req-args [args 0..col-pos])
+                      (opt-args (if col-pos [args (succ col-pos)..:])))
+                  (let ((r-gens (mapcar (ret (gensym)) req-args))
+                        (o-gens (mapcar (ret (gensym)) opt-args))
+                        (p-gens (mapcar (ret (gensym)) opt-args)))
+                    ^(lambda (,arg-sym ,*r-gens
+                              ,*(if opt-args '(:))
+                              ,*(if opt-args
+                                  (mapcar (ret ^(,@1 nil ,@2))
+                                          o-gens p-gens)))
+                       ,*(mapcar (ret ^(slotset ,arg-sym ',@1 ,@2))
+                                 req-args r-gens)
+                       ,*(mapcar (ret ^(if ,@3
+                                         (slotset ,arg-sym ',@1 ,@2)))
+                                 opt-args o-gens p-gens)))))))))))
 
 (defmacro sys:struct-lit (name . plist)
   ^(make-struct ',name ',plist))

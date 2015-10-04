@@ -17972,9 +17972,33 @@ arguments in the
 .code new
 macro or the
 .code make-struct
-function. A slot initialized in this style still has a
+function.
+
+Slots are first initialized according to their
+.metn init-form -s,
+regardless of whether they are involved in boa construction
+
+A slot initialized in this style still has a
 .meta init-form
-which is evaluated unconditionally.
+which is processed independently of the existence of, and prior to,
+boa construction.
+
+The boa constructor syntax can specify optional arguments, delimited
+by a colon, similarly to the
+.code lambda
+syntax. However, the optional arguments may only be symbols which name
+slots. The
+.cblk
+.meti >> ( name < init-form <> [ present-p ])
+.cble
+optional argument syntax isn't supported.
+
+When boa construction is invoked with optional arguments missing,
+the default values for those arguments come from the
+.metn init-form -s
+in the remaining
+.code defstruct
+syntax.
 
 .TP* Examples:
 .cblk
@@ -18004,7 +18028,7 @@ which is evaluated unconditionally.
   *counter* -> 5
 
   ;; boa initialization
-  (defstruct (point x y) nil (x 0) (y 0))
+  (defstruct (point x : y) nil (x 0) (y 0))
 
   (new point) -> #S(point x 0 y 0)
   (new (point 1 1)) -> #S(point x 1 y 1)
@@ -18015,6 +18039,13 @@ which is evaluated unconditionally.
 
   ;; boa applies last:
   (new (point 1 1) x 4 y 5) -> #S(point x 1 y 1)
+
+  ;; boa with optional argument omitted:
+  (new (point 1)) -> #S(point x 1 y 0)
+
+  ;; boa with optional argument omitted and
+  ;; with property list style initialization:
+  (new (point 1) x 5 y 5) -> #S(point x 1 y 5)
 .cble
 
 .coNP Macro @ new

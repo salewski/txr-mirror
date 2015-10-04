@@ -94,8 +94,8 @@
 (test (new (boa 1 2))
       #S(boa x 1 y 2))
 (test (new (boa 1 2) x 10 y (+ 10 10))
-      #S(boa x 10 y 20))
-(test (new boa x 10 y 20)
+      #S(boa x 1 y 2))
+(test (new boa x 10 y (+ 10 10))
       #S(boa x 10 y 20))
 
 (defstruct baz nil
