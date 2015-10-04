@@ -34342,16 +34342,40 @@ lines relative to the currently recalled history line.
 .NP* Symbolic Completion
 
 If the Tab key is pressed while editing a line, it is interpreted as a
-request for completion.
+request for completion. There is a second completion command: the
+sequence Ctrl-X Tab.
 
-When completion is invoked with the Tab key, the listener looks at a few of the
-trailing characters to the left of the cursor position to determine the
+When completion is invoked with Tab or Ctrl-X Tab, the listener looks at a few
+of the trailing characters to the left of the cursor position to determine the
 applicable list of completions. Completions are determined from among the \*(TL symbols which have
 global variable, function, macro and symbolic macro bindings.  Symbols which
 have operator binding are also taken into consideration.  If a
 package-qualified symbol is completed, then completion is restricted to that
 package. Keyword symbol completion is restricted to the contents of the keyword
 package.
+
+The difference between Tab and Ctrl-X Tab is that Tab completion looks only for
+prefix matches among the eligible identifiers. Thus it is a pure completion in
+the sense that it suggests additional material that may follow what has been
+typed. If the buffer contains
+.code (list
+it will only suggest completions which can be endings for
+.code list
+such as
+.codn list* ,
+.codn listp ,
+and
+.codn list-str .
+It will not suggest identifiers which rewrite the
+.code list
+prefix.  By contrast, the Ctrl-X Tab completion suggests not only pure
+completions but also alternatives to the partial identifier, by looking for
+substring matches. For instance
+.code copy-list
+is a possible completion for
+.codn list ,
+as is
+.codn proper-listp .
 
 If no completions are found, then the BEL character is sent to the terminal
 to generate a beep or a visual alert indication. The listener returns to
@@ -34360,6 +34384,8 @@ editing mode.
 If completions are found, listener enters into completion selection mode.
 The first available completion is placed into the line as if it had been typed
 in.  The other completions may be viewed one by one using the Tab key.
+(Note that the Ctrl-X is not used, only Tab, even if completion mode had been
+entered via Ctrl-X Tab).
 When the completions are exhausted, the original uncompleted line is shown
 again, and Tab can continue to be used to cycle through the completions again.
 In completion mode, the Ctrl-C character acts as a command to cancel completion mode

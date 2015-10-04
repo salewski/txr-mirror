@@ -424,8 +424,11 @@ static void find_matching_syms(lino_completions_t *cpl,
   for (syms = package_symbols(package); syms; syms = cdr(syms)) {
     val sym = car(syms);
     val name = symbol_name(sym);
+    val found = if3(cpl->substring,
+                    search_str(name, prefix, zero, nil),
+                    match_str(name, prefix, zero));
 
-    if (match_str(name, prefix, zero)) {
+    if (found) {
       val comple;
 
       switch (par) {
