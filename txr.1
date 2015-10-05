@@ -15728,10 +15728,11 @@ argument is accessed. By that time, the variable is initialized
 and holds the lazy cons itself, which creates the circular reference,
 and a circular list.
 
-.coNP Functions @ generate and @ giterate
+.coNP Functions @ generate @, giterate and @ ginterate
 .synb
 .mets (generate < while-fun << gen-fun )
 .mets (giterate < while-fun < gen-fun <> [ value ])
+.mets (ginterate < while-fun < gen-fun <> [ value ])
 .syne
 .desc
 The
@@ -15815,10 +15816,25 @@ like this:
                (lambda () (prog1 v (set v [g v])))))
 .cble
 
+The
+.code ginterate
+function is a variant of
+.code giterate
+which includes the test-failing item in the generated sequence.
+That is to say
+.code ginterate
+generates the next value and adds it to the lazy list.
+The value is then tested using
+.metn while-fun .
+If that function returns
+.codn nil ,
+then the list is terminated, and no more items are produced.
+
 .TP* Example:
 
 .cblk
   (giterate (op > 5) (op + 1) 0) -> (0 1 2 3 4)
+  (ginterate (op > 5) (op + 1) 0) -> (0 1 2 3 4 5)
 .cble
 
 .coNP Function @ repeat
