@@ -19167,6 +19167,187 @@ is a list, then
 must
 be monotonically increasing.
 
+.coNP Function @ take
+.synb
+.mets (take < count << sequence )
+.syne
+.desc
+The
+.code take
+function returns
+.meta sequence
+with all except the first
+.meta count
+items removed.
+
+If
+.meta sequence
+is a list, then
+.code take
+returns a lazy list which produces the first
+.meta count
+items of sequence.
+
+For other kinds of sequences, including lazy strings,
+.code drop
+works eagerly.
+
+If
+.meta count
+exceeds the length of
+.meta sequence
+then a sequence is returned which has all the items.
+This object may be
+.meta sequence
+itself, or a copy.
+
+If
+.meta count
+is negative, it is treated as zero.
+
+.coNP Functions @ take-while and @ take-until
+.synb
+.mets (take-while < predfun < sequence <> [ keyfun ])
+.mets (take-until < predfun < sequence <> [ keyfun ])
+.syne
+.desc
+The
+.code take-while
+and
+.code take-until
+functions return a prefix of
+.meta sequence
+whose items satisfy certain conditions.
+
+The
+.code take-while
+function returns the longest prefix of
+.meta sequence
+whose elements, accessed through
+.meta keyfun
+satisfy the function
+.metn predfun .
+
+The
+.meta keyfun
+argument defaults to the identity function: the elements
+of
+.meta sequence
+are examined themselves.
+
+The
+.code take-until
+function returns the longest prefix of
+.meta sequence
+which consists of elements, accessed through
+.metn keyfun ,
+that do
+.B not
+satisfy
+.meta predfun
+followed by an element which does satisfy
+.metn predfun .
+If
+.meta sequence
+has no such prefix, then an empty sequence
+is returned of the same kind as
+.metn sequence .
+
+If
+.meta sequence
+is a list, then these functions return a lazy list.
+
+.coNP Function @ drop
+.synb
+.mets (drop < count << sequence )
+.syne
+.desc
+The
+.code drop
+function returns
+.meta sequence
+with the first
+.meta count
+items removed.
+
+If
+.meta count
+is negative, it is treated as zero.
+
+If
+.meta count
+is zero, then
+.meta sequence
+is returned.
+
+If
+.meta count
+exceeds the length of
+.meta sequence
+then an empty sequence is returned
+of the same kind as
+.metn sequence .
+
+.coNP Functions @ drop-while and @ drop-until
+.synb
+.mets (drop-while < predfun < sequence <> [ keyfun ])
+.mets (drop-until < predfun < sequence <> [ keyfun ])
+.syne
+.desc
+The
+.code drop-while
+and
+.code drop-until
+functions return
+.meta sequence
+with a prefix of that sequence removed,
+according to conditions involving
+.meta predfun
+and
+.metn keyfun .
+
+
+The
+.code drop-while
+function removes the longest prefix of
+.meta sequence
+whose elements, accessed through
+.meta keyfun
+satisfy the function
+.metn predfun ,
+and returns the remaining sequence.
+
+The
+.meta keyfun
+argument defaults to the identity function: the elements
+of
+.meta sequence
+are examined themselves.
+
+The
+.code drop-until
+function removes the longest prefix of
+.meta sequence
+which consists of elements, accessed through
+.metn keyfun ,
+that do
+.B not
+satisfy
+.meta predfun
+followed by an element which does satisfy
+.metn predfun .
+A sequence of the remaining elements is
+returned.
+
+If
+.meta sequence
+has no such prefix, then a sequence
+same as
+.meta sequence
+is returned, which may be
+.meta sequence
+itself or a copy.
+
 .coNP Function @ search
 .synb
 .mets (search < haystack < needle >> [ testfun <> [ keyfun ])

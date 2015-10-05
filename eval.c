@@ -4323,6 +4323,12 @@ void eval_init(void)
   reg_fun(intern(lit("clamp"), user_package), func_n3(clamp));
   reg_fun(intern(lit("pos-max"), user_package), func_n3o(pos_max, 1));
   reg_fun(intern(lit("pos-min"), user_package), func_n3o(pos_min, 1));
+  reg_fun(intern(lit("take"), user_package), func_n2(take));
+  reg_fun(intern(lit("take-while"), user_package), func_n3o(take_while, 2));
+  reg_fun(intern(lit("take-until"), user_package), func_n3o(take_until, 2));
+  reg_fun(intern(lit("drop"), user_package), func_n2(drop));
+  reg_fun(intern(lit("drop-while"), user_package), func_n3o(drop_while, 2));
+  reg_fun(intern(lit("drop-until"), user_package), func_n3o(drop_until, 2));
   reg_fun(intern(lit("in"), user_package), func_n4o(in, 2));
   reg_fun(intern(lit("logand"), user_package), func_n0v(logandv));
   reg_fun(intern(lit("logior"), user_package), func_n0v(logiorv));

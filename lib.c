@@ -6625,6 +6625,193 @@ val pos_min(val seq, val testfun, val keyfun)
   return pos_max(seq, default_arg(testfun, less_f), keyfun);
 }
 
+static val take_list_fun(val env, val lcons)
+{
+  cons_bind (list, count, env);
+
+  rplaca(lcons, pop(&list));
+
+  if3(le((count = pred(count)), zero) || list == nil,
+      rplacd(lcons, nil),
+      rplacd(lcons, make_lazy_cons(lcons_fun(lcons))));
+
+  rplaca(env, list);
+  rplacd(env, count);
+  return nil;
+}
+
+val take(val count, val seq)
+{
+  switch (type(seq)) {
+  case NIL:
+    return nil;
+  case CONS:
+  case LCONS:
+    if (le(count, zero))
+      return nil;
+    return make_lazy_cons(func_f1(cons(seq, count), take_list_fun));
+  case LSTR:
+  case LIT:
+  case STR:
+  case VEC:
+    return sub(seq, zero, count);
+  default:
+    type_mismatch(lit("take: ~s is not a sequence"), seq, nao);
+  }
+}
+
+static val take_while_list_fun(val env, val lcons)
+{
+  cons_bind (list, cell, env);
+  cons_bind (pred, keyfun, cell);
+
+  rplaca(lcons, pop(&list));
+
+  if (!funcall1(pred, funcall1(keyfun, car(list))))
+    rplacd(lcons, nil);
+  else
+    rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+
+  rplaca(env, list);
+  return nil;
+}
+
+val take_while(val pred, val seq, val keyfun)
+{
+  switch (type(seq)) {
+  case NIL:
+    return nil;
+  case CONS:
+  case LCONS:
+    keyfun = default_arg(keyfun, identity_f);
+    if (!funcall1(pred, funcall1(keyfun, (car(seq)))))
+      return nil;
+    return make_lazy_cons(func_f1(cons(seq, cons(pred, keyfun)),
+                                  take_while_list_fun));
+  case LSTR:
+  case LIT:
+  case STR:
+  case VEC:
+    {
+      val pos = pos_if(notf(pred), seq, keyfun);
+      if (!pos)
+        return seq;
+      return sub(seq, zero, pos);
+    }
+  default:
+    type_mismatch(lit("take-while: ~s is not a sequence"), seq, nao);
+  }
+}
+
+static val take_until_list_fun(val env, val lcons)
+{
+  cons_bind (list, cell, env);
+  cons_bind (pred, keyfun, cell);
+  val item = pop(&list);
+
+  rplaca(lcons, item);
+
+  if (funcall1(pred, funcall1(keyfun, item)))
+    rplacd(lcons, nil);
+  else
+    rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+
+  rplaca(env, list);
+  return nil;
+}
+
+val take_until(val pred, val seq, val keyfun)
+{
+  switch (type(seq)) {
+  case NIL:
+    return nil;
+  case CONS:
+  case LCONS:
+    return make_lazy_cons(func_f1(cons(seq, cons(pred, keyfun)),
+                                  take_until_list_fun));
+  case LSTR:
+  case LIT:
+  case STR:
+  case VEC:
+    {
+      val key = default_arg(keyfun, identity_f);
+      val pos = pos_if(pred, seq, key);
+      if (!pos)
+        return seq;
+      return sub(seq, zero, succ(pos));
+    }
+  default:
+    type_mismatch(lit("take-until: ~s is not a sequence"), seq, nao);
+  }
+}
+
+val drop(val count, val seq)
+{
+  if (le(count, zero))
+    return seq;
+  return sub(seq, count, t);
+}
+
+val drop_while(val pred, val seq, val keyfun)
+{
+  switch (type(seq)) {
+  case NIL:
+    return nil;
+  case CONS:
+  case LCONS:
+    keyfun = default_arg(keyfun, identity_f);
+    while (seq && funcall1(pred, funcall1(keyfun, car(seq))))
+      pop(&seq);
+    return seq;
+  case LSTR:
+  case LIT:
+  case STR:
+  case VEC:
+    {
+      val key = default_arg(keyfun, identity_f);
+      val pos = pos_if(notf(pred), seq, key);
+      if (!pos)
+        return make_like(nil, seq);
+      return sub(seq, pos, t);
+    }
+  default:
+    type_mismatch(lit("drop-while: ~s is not a sequence"), seq, nao);
+  }
+}
+
+val drop_until(val pred, val seq, val keyfun)
+{
+  switch (type(seq)) {
+  case NIL:
+    return nil;
+  case CONS:
+  case LCONS:
+    {
+      val key = default_arg(keyfun, identity_f);
+      val item;
+
+      do {
+        item = pop(&seq);
+      } while (!funcall1(pred, funcall1(key, item)));
+
+      return seq;
+    }
+  case LSTR:
+  case LIT:
+  case STR:
+  case VEC:
+    {
+      val key = default_arg(keyfun, identity_f);
+      val pos = pos_if(pred, seq, key);
+      if (!pos)
+        return seq;
+      return sub(seq, succ(pos), t);
+    }
+  default:
+    type_mismatch(lit("drop-until: ~s is not a sequence"), seq, nao);
+  }
+}
+
 val in(val seq, val item, val testfun, val keyfun)
 {
   switch (type(seq)) {
