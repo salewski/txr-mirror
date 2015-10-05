@@ -2543,9 +2543,13 @@ val init_str(val str, const wchar_t *data)
   return str;
 }
 
+static val copy_lazy_str(val lstr);
+
 val copy_str(val str)
 {
-  return string(c_str(str));
+  return if3(lazy_stringp(str),
+             copy_lazy_str(str),
+             string(c_str(str)));
 }
 
 val upcase_str(val str)
@@ -5680,6 +5684,17 @@ val lazy_str(val lst, val term, val limit)
 
   set(mkloc(obj->ls.opts, obj), cons(term, limit));
 
+  return obj;
+}
+
+static val copy_lazy_str(val lstr)
+{
+  val obj = make_obj();
+  obj->ls.type = LSTR;
+  obj->ls.opts = obj->ls.list = obj->ls.prefix = nil;
+  obj->ls.prefix = copy_str(lstr->ls.prefix);
+  obj->ls.list = lstr->ls.list;
+  obj->ls.opts = lstr->ls.opts;
   return obj;
 }
 

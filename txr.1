@@ -16133,6 +16133,18 @@ function constructs a new string whose contents are identical
 to
 .metn string .
 
+If
+.meta string
+is a lazy string, then a lazy string is constructed with the
+same attributes as
+.metn string .
+The new lazy string has its own copy of the prefix portion of
+.meta string
+which has been forced so far. The unforced list and separator
+string are shared between
+.meta string
+and the newly constructed lazy string.
+
 .coNP Function @ upcase-str
 .synb
 .mets (upcase-str << string )
