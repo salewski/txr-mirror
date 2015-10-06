@@ -475,8 +475,12 @@ val conses(val list)
 {
   list_collect_decl (out, ptail);
 
-  for (; consp(list); list = cdr(list))
-    ptail = list_collect(ptail, list);
+  if (listp(list))
+    for (; consp(list); list = cdr(list))
+      ptail = list_collect(ptail, list);
+  else
+    for (; list; list = cdr(list))
+      ptail = list_collect(ptail, list);
 
   return out;
 }
