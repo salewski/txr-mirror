@@ -15837,6 +15837,78 @@ then the list is terminated, and no more items are produced.
   (ginterate (op > 5) (op + 1) 0) -> (0 1 2 3 4 5)
 .cble
 
+.coNP Function @ expand-right
+.synb
+.mets (expand-right < gen-fun << value )
+.syne
+.desc
+The
+.code expand-right
+is a complement to
+.codn reduce-right ,
+with lazy semantics.
+
+The
+.meta gen-fun
+parameter is a function, which must accept a single argument,
+and return either a cons pair
+or
+.codn nil .
+
+The
+.meta value
+parameter is any value.
+
+The first call to
+.meta gen-fun
+receives
+.metn value .
+
+The return value is interpreted as follows. If
+.meta gen-fun
+returns a cons cell pair
+.cblk
+.meti >> ( elem . << next )
+.cble
+then
+.meta elem
+specifies the element to be added to the lazy list,
+and
+.meta next
+specifies the value to be passed to the next call
+to
+.metn gen-fun .
+If
+.meta gen-fun
+returns
+.code nil
+then the lazy list ends.
+
+.TP* Examples:
+
+.cblk
+  ;; Count down from 5 to 1 using explicit lambda
+  ;; for gen-fun:
+
+  (expand-right
+    (lambda (item)
+      (if (zerop item) nil
+        (cons item (pred item))))
+    5)
+  --> (5 4 3 2 1)
+
+  ;; Using functional combinators:
+  [expand-right [iff zerop nilf [callf cons identity pred]] 5]
+  --> (5 4 3 2 1)
+
+  ;; Include zero:
+  [expand-right
+    [iff null
+       nilf
+       [callf cons identity [iff zerop nilf pred]]] 5]
+  --> (5 4 3 2 1 0)
+.cble
+
 .coNP Function @ repeat
 .synb
 .mets (repeat < list <> [ count ])

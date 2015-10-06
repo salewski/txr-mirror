@@ -3633,6 +3633,34 @@ static val ginterate(val while_pred, val gen_fun, val init_val)
   }
 }
 
+static val expand_right_fun(val env, val lcons)
+{
+  cons_bind (pair, gen_fun, env);
+  cons_bind (elem, init_val, pair);
+
+  val next_pair = funcall1(gen_fun, init_val);
+
+  rplaca(lcons, elem);
+
+  if (next_pair) {
+    rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+    rplaca(env, next_pair);
+  } else {
+    rplacd(lcons, nil);
+  }
+
+  return nil;
+}
+
+static val expand_right(val gen_fun, val init_val)
+{
+  val pair = funcall1(gen_fun, init_val);
+
+  if (!pair)
+    return nil;
+
+  return make_lazy_cons(func_f1(cons(pair, gen_fun), expand_right_fun));
+}
 
 static val repeat_infinite_func(val env, val lcons)
 {
@@ -4659,6 +4687,7 @@ void eval_init(void)
   reg_fun(generate_s, func_n2(generate));
   reg_fun(intern(lit("giterate"), user_package), func_n3o(giterate, 2));
   reg_fun(intern(lit("ginterate"), user_package), func_n3o(ginterate, 2));
+  reg_fun(intern(lit("expand-right"), user_package), func_n2(expand_right));
   reg_fun(intern(lit("repeat"), user_package), func_n2o(repeat, 1));
   reg_fun(intern(lit("pad"), user_package), func_n3o(pad, 1));
   reg_fun(intern(lit("weave"), user_package), func_n0v(weavev));
