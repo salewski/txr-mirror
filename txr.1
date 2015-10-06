@@ -28556,17 +28556,17 @@ and
 
   (iffi a b)              <--> (iff a b identity)
 
-  (iffi a b false)        <--> (iff a b)
+  [iffi a b nilf]         <--> [iff a b]
 
-  (iffi a identity false) <--> (iff a)
+  [iffi a identity nilf]  <--> [iff a]
 .cble
 
-The following equivalence illustrates
+The following equivalences illustrate
 .code iff
 with both optional arguments omitted:
 
 .cblk
-  (iff a)  <--->  (iff a identity false)
+  [iff a]  <--->  [iff a identity nilf]  <--->  a
 .cble
 
 .coNP Functions @ tf and @ nilf
