@@ -368,8 +368,11 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 <SPECIAL,QSPECIAL>{TOK}/{DOTFLO} |
 <BRACED>{BTOK}/{DOTFLO} |
 <NESTED>{NTOK}/{DOTFLO} {
+  printf("yytext: %s\n", yytext);
   yyerrorf(yyg, lit("cramped floating-point literal: "
-                    "add 0 or whitespace"), nao);
+                    "space needed between ~a and dot."),
+                    string_own(utf8_dup_from(yytext)),
+                    nao);
 
   if (yy_top_state(yyscanner) == INITIAL
       || yy_top_state(yyscanner) == QSILIT
@@ -612,7 +615,9 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
 <SPECIAL,QSPECIAL,NESTED>[)\]]/{DOTFLO} {
   yyerrorf(yyg, lit("cramped floating-point literal: "
-                    "add 0 or whitespace"), nao);
+                    "space or 0 needed between ~a and dot."),
+                    string_own(utf8_dup_from(yytext)),
+                    nao);
 
   yy_pop_state(yyscanner);
   if (yy_top_state(yyscanner) == INITIAL
