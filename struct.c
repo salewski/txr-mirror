@@ -111,6 +111,7 @@ void struct_init(void)
   reg_fun(intern(lit("super"), user_package), func_n1(super));
   reg_fun(intern(lit("make-struct"), user_package), func_n2v(make_struct));
   reg_fun(intern(lit("copy-struct"), user_package), func_n1(copy_struct));
+  reg_fun(intern(lit("clear-struct"), user_package), func_n2o(clear_struct, 1));
   reg_fun(intern(lit("slot"), user_package), func_n2(slot));
   reg_fun(intern(lit("slotset"), user_package), func_n3(slotset));
   reg_fun(intern(lit("static-slot"), user_package), func_n2(static_slot));
@@ -391,6 +392,20 @@ val copy_struct(val strct)
   copy = cobj(coerce(mem_t *, si_copy), st->name, &struct_inst_ops);
   gc_hint(strct);
   return copy;
+}
+
+val clear_struct(val strct, val value)
+{
+  const val self = lit("clear-struct");
+  struct struct_inst *si = struct_handle(strct, self);
+  struct struct_type *st = coerce(struct struct_type *, si->type->co.handle);
+  val clear_val = default_bool_arg(value);
+  cnum i;
+
+  for (i = 0; i < st->nslots; i++)
+    si->slot[i] = clear_val;
+
+  return strct;
 }
 
 static int cache_set_lookup(slot_cache_entry_t *set, cnum id)

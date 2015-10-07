@@ -32,6 +32,7 @@ val struct_type_p(val obj);
 val super(val type);
 val make_struct(val type, val plist, struct args *);
 val copy_struct(val strct);
+val clear_struct(val strct, val value);
 val find_struct_type(val sym);
 val slot(val strct, val sym);
 val slotset(val strct, val sym, val newval);

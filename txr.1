@@ -18727,6 +18727,24 @@ function returns the structure type object which
 defines the type of the structure object
 .metn struct-obj .
 
+.coNP Function @ clear-struct
+.synb
+.mets (clear-struct < struct-obj <> [ value ])
+.syne
+.desc
+The
+.code clear-struct
+replaces all instance slots of
+.meta struct-obj
+with
+.metn value ,
+which defaults to
+.code nil
+if omitted.
+
+Note that finalizers are not executed prior to replacing
+the slot values.
+
 .coNP Function @ method
 .synb
 .mets (method < struct-obj << slot-name )
