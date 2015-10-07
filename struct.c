@@ -111,6 +111,7 @@ void struct_init(void)
   reg_fun(intern(lit("super"), user_package), func_n1(super));
   reg_fun(intern(lit("make-struct"), user_package), func_n2v(make_struct));
   reg_fun(intern(lit("copy-struct"), user_package), func_n1(copy_struct));
+  reg_fun(intern(lit("replace-struct"), user_package), func_n2(replace_struct));
   reg_fun(intern(lit("clear-struct"), user_package), func_n2o(clear_struct, 1));
   reg_fun(intern(lit("slot"), user_package), func_n2(slot));
   reg_fun(intern(lit("slotset"), user_package), func_n3(slotset));
@@ -406,6 +407,22 @@ val clear_struct(val strct, val value)
     si->slot[i] = clear_val;
 
   return strct;
+}
+
+val replace_struct(val target, val source)
+{
+  const val self = lit("replace-struct");
+  struct struct_inst *tsi = struct_handle(target, self);
+  struct struct_inst *ssi = struct_handle(source, self);
+  struct struct_type *sst = coerce(struct struct_type *, ssi->type->co.handle);
+  cnum nslots = sst->nslots;
+  size_t size = offsetof(struct struct_inst, slot) + sizeof (val) * nslots;
+  struct struct_inst *ssi_copy = coerce(struct struct_inst *, chk_malloc(size));
+  memcpy(ssi_copy, ssi, size);
+  free(tsi);
+  target->co.handle = coerce(mem_t *, ssi_copy);
+  target->co.cls = source->co.cls;
+  return target;
 }
 
 static int cache_set_lookup(slot_cache_entry_t *set, cnum id)

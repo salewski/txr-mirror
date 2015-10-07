@@ -18745,6 +18745,48 @@ if omitted.
 Note that finalizers are not executed prior to replacing
 the slot values.
 
+.coNP Function @ replace-struct
+.synb
+.mets (replace-struct < target-obj << source-obj )
+.syne
+.desc
+The
+.code replace-struct
+function causes
+.meta target-obj
+to take on the attributes of
+.meta source-obj
+without changing its identity.
+
+The type of
+.code target-obj
+is changed to that of
+.codn source-obj .
+
+All instance slots of
+.code target-obj
+are discarded, and it is given new slots,
+which are copies of the instance slots of
+.codn source-obj .
+
+Because of the type change,
+.code target-obj
+implicitly loses all of its original static slots,
+and acquires those of
+.codn source obj .
+
+Note that finalizers registered against
+.meta target-obj
+are not invoked, and remain registered.
+If
+.meta target-obj
+has state which is cleaned up by
+finalizers, it is advisable to invoke them using
+.code call-finalizers
+prior to using
+.codn replace-struct ,
+or to take other measures to handle the situation.
+
 .coNP Function @ method
 .synb
 .mets (method < struct-obj << slot-name )
