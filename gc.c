@@ -834,11 +834,44 @@ val gc_finalize(val obj, val fun, val rev_order_p)
   return obj;
 }
 
+val gc_call_finalizers(val obj)
+{
+  struct fin_reg *new_list = 0, *old_list = final_list;
+  struct fin_reg **tail = &new_list, *f, *next;
+  val ret = nil;
+
+  if (!final_list)
+    return ret;
+
+  final_list = 0;
+  final_tail = &final_list;
+
+  for (f = old_list; f; f = next) {
+    next = f->next;
+
+    if (f->obj == obj) {
+      funcall1(f->fun, f->obj);
+      free(f);
+      ret = t;
+    } else {
+      *tail = f;
+      tail = &f->next;
+    }
+  }
+
+  *tail = 0;
+  *final_tail = new_list;
+  final_tail = tail;
+  return ret;
+}
+
 void gc_late_init(void)
 {
   reg_fun(intern(lit("gc"), system_package), func_n0(gc_wrap));
   reg_fun(intern(lit("gc-set-delta"), system_package), func_n1(gc_set_delta));
   reg_fun(intern(lit("finalize"), user_package), func_n3o(gc_finalize, 2));
+  reg_fun(intern(lit("call-finalizers"), user_package),
+          func_n1(gc_call_finalizers));
 }
 
 /*

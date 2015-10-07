@@ -34111,6 +34111,23 @@ or any other object for finalization. Such registrations made during
 finalization execution are not eligible for the current phase of finalization
 processing; they will be processed in a later garbage collection pass.
 
+.coNP Function @ call-finalizers
+.synb
+.mets (call-finalizers << object )
+.syne
+.desc
+The
+.code call-finalizers
+function invokes and removes the finalizers, if any, registered against
+.metn object .
+If any finalizers are called, it returns
+.codn t ,
+otherwise
+.code nil .
+
+Note: the behavior is unspecified if a finalizer function calls
+.codn call-finalizers .
+
 .SS* Modularization
 .coNP Variable @ self-path
 .desc

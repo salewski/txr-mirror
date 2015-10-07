@@ -36,6 +36,7 @@ void gc_mark(val);
 void gc_conservative_mark(val);
 int gc_is_reachable(val);
 val gc_finalize(val obj, val fun, val rev_order_p);
+val gc_call_finalizers(val obj);
 
 #if CONFIG_GEN_GC
 val gc_set(loc, val);
