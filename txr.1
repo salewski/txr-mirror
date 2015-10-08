@@ -34834,7 +34834,8 @@ again, and Tab can continue to be used to cycle through the completions again.
 In completion mode, the Ctrl-C character acts as a command to cancel completion mode
 and return to editing the original uncompleted line. Any other input character causes
 the listener to keep the currently shown completion, and return to edit mode,
-where that that character is processed again as a command.
+where that character is immediately processed as if it had been typed in
+edit mode.
 
 .NP* Edit with External Editor
 
@@ -34867,7 +34868,7 @@ restores the edit buffer contents and cursor position to a previous state.
 
 There is a single undo history which records up the 200 most recent edit
 states. However, the states are associated with history lines, so that it
-appears that that undo history has its own, independent undo history.
+appears that each line has its own, independent undo history.
 Undoing the edits in one line has no effect on the undo history of another
 line.
 
@@ -34994,7 +34995,7 @@ endpoint of the selection, then these commands delete the selection, and take
 their usual effect of deleting a character also.  In both cases, selection mode
 is canceled.
 
-The Ctrl-W command to delete the previous word, wen used in visual
+The Ctrl-W command to delete the previous word, when used in visual
 selection mode, deletes the selection and cancels selection mode,
 and then deletes the word before the selection.
 
