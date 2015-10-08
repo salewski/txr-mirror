@@ -3786,6 +3786,17 @@ static val weavev(struct args *args)
   return lazy_appendl(generate(whil, gen));
 }
 
+static val promisep(val obj)
+{
+  if (consp(obj)) {
+    val sym = car(obj);
+    if (sym == promise_s || sym == promise_forced_s)
+      return t;
+  }
+
+  return nil;
+}
+
 static val force(val promise)
 {
   loc pstate = car_l(promise);
@@ -4692,6 +4703,7 @@ void eval_init(void)
   reg_fun(intern(lit("pad"), user_package), func_n3o(pad, 1));
   reg_fun(intern(lit("weave"), user_package), func_n0v(weavev));
   reg_fun(force_s, func_n1(force));
+  reg_fun(intern(lit("promisep"), user_package), func_n1(promisep));
   reg_fun(intern(lit("rperm"), user_package), func_n2(rperm));
   reg_fun(intern(lit("perm"), user_package), func_n2o(perm, 1));
   reg_fun(intern(lit("comb"), user_package), func_n2(comb));
