@@ -2898,6 +2898,17 @@ val load(val target)
   return sys_load(target, nil);
 }
 
+static val me_defex(val form, val menv)
+{
+  val types = cdr(form);
+
+  if (!all_satisfy(types, func_n1(symbolp), nil))
+    eval_error(form, lit("defex: arguments must all be symbols"), nao);
+
+  return cons(intern(lit("register-exception-subtypes"), user_package),
+              mapcar(curry_12_2(list_f, quote_s), types));
+}
+
 static val expand_catch_clause(val form, val menv)
 {
   val sym = first(form);
@@ -3823,6 +3834,13 @@ static val force(val promise)
   }
 }
 
+static val register_exception_subtypes(struct args *args)
+{
+  val types = args_copy_to_list(args);
+  reduce_left(func_n2(uw_register_subtype), types, nil, nil);
+  return nil;
+}
+
 static void reg_op(val sym, opfun_t fun)
 {
   assert (sym != 0);
@@ -4223,6 +4241,7 @@ void eval_init(void)
   reg_mac(intern(lit("lcons"), user_package), me_lcons);
   reg_mac(intern(lit("mlet"), user_package), me_mlet);
   reg_mac(intern(lit("load"), user_package), me_load);
+  reg_mac(intern(lit("defex"), user_package), me_defex);
 
   reg_fun(cons_s, func_n2(cons));
   reg_fun(intern(lit("make-lazy-cons"), user_package), func_n1(make_lazy_cons));
@@ -4712,6 +4731,10 @@ void eval_init(void)
   reg_fun(throw_s, func_n1v(uw_throwv));
   reg_fun(intern(lit("throwf"), user_package), func_n2v(uw_throwfv));
   reg_fun(error_s, func_n1v(uw_errorfv));
+  reg_fun(intern(lit("register-exception-subtypes"), user_package),
+          func_n0v(register_exception_subtypes));
+  reg_fun(intern(lit("exception-subtype-p"), user_package),
+          func_n2(uw_exception_subtype_p));
 
   reg_fun(intern(lit("match-fun"), user_package), func_n4(match_fun));
 

@@ -26554,6 +26554,131 @@ may be applied to the third argument of the
 .code *unhandled-hook*
 function to obtain more information about the form.
 
+.coNP Macro @ defex
+.synb
+.mets (defex <> { symbol }*)
+.syne
+.desc
+The macro
+.code defex
+records hierarchical relationships among symbols, for the purposes
+of the use of those symbols as exceptions. It is closely related to the
+.code @(defex)
+directive in the \*(TX pattern language, performing the same function.
+
+All symbols are considered to be exception subtypes, and every symbol
+is implicitly its own exception subtype. This macro does not introduce
+symbols as exception types; it only introduces subtype-supertype
+relationships.
+
+If
+.code defex
+is invoked with no arguments, it has no effect.
+
+If arguments are present, they must be symbols.
+
+If
+.code defex
+is invoked with only one symbol as its argument, it has no effect.
+
+At least two
+symbols must be specified for a useful effect to take place.  If exactly two
+symbols are specified, then, subject to error checks,
+.code defex
+makes the left symbol an
+.I exception subtype
+of the right symbol.
+
+This behavior generalizes to three or more arguments: if three or more symbols
+are specified, then each symbol other than the last is registered as a subtype of
+the symbol which follows.
+
+If a
+.code defex
+has three or more arguments, they are processed from left to right.
+If errors are encountered during the processing, the correct registrations
+already made for prior arguments remain in place.
+
+It is erroneous to register a duplicate relationship. If symbol
+.code a
+is already a direct or indirect subtype of
+.code b
+then
+.code (defex a b)
+and
+.code (defex a x b)
+are erroneous.
+
+Every symbol is implicitly considered to be its own exception subtype,
+therefore it is erroneous to explicitly register a symbol as its
+own subtype.
+
+The foregoing rules eliminate the possibility of creating cycles in the
+exception subtype inheritance graph.
+
+The symbol
+.code nil
+is implicitly a subtype of every exception type. Therefore, it is erroneous
+to attempt to specify it as a supertype in a registration.
+Using
+.code nil
+as a subtype in a registration is silently permitted, but has no effect.
+No explicit registration is recorded between
+.code nil
+and its successor in the argument list.
+
+The symbol
+.code t
+is implicitly the supertype of every exception type. Therefore, it
+is erroneous to attempt to register it as an exception subtype.
+Using
+.code t
+as a supertype in a registration is also erroneous.
+
+Keyword symbols may be used as exception types.
+
+.coNP Function @ register-exception-subtypes
+.synb
+.mets (register-exception-subtypes <> { symbol }*)
+.syne
+.desc
+The
+.code register-exception-subtypes
+function constitutes the underlying implementation for the
+.code defex
+macro.
+
+The following equivalence applies:
+
+.cblk
+  (defex a b ...)  <-->  (register-exception-subtypes 'a 'b ...)
+.cble
+
+That is, the
+.code defex
+macro works as if by generating a call to the function, with
+the arguments quoted.
+
+The semantics of the function is precisely that of the macro.
+
+.coNP Function @ exception-subtype-p
+.synb
+.mets (exception-subtype-p < left-symbol << right-symbol )
+.syne
+.desc
+The
+.code exception-subtype-p
+function tests whether two symbols are in a relationship as exception types,
+such that
+.meta left-symbol
+is a direct or indirect exception subtype of
+.metn right-symbol .
+
+If that is the case, then
+.code t
+is returned, otherwise
+.codn nil .
+
 .SS* Regular Expression Library
 .coNP Functions @ search-regex and @ range-regex
 .synb
