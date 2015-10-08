@@ -34380,6 +34380,9 @@ in a single command line. The command line must contain exactly one complete
 \*(TL expression, or a comment. Multiple expressions will not be evaluated.
 Expressions cannot be continued across multiple lines of entry.
 
+The interactive listener is based on 8 bit character processing. Its editing
+functions do not recognize UTF-8 multi-byte characters.
+
 .SS* Ways to Quit
 
 Pressing Ctrl-D in a completely empty command line terminates the listener.
