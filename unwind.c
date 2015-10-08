@@ -426,22 +426,22 @@ val uw_register_subtype(val sub, val sup)
     if (sup == t)
       return sup;
     uw_throwf(type_error_s,
-              lit("cannot define ~a as an exception subtype of ~a"),
+              lit("cannot define ~s as an exception subtype of ~s"),
               sub, sup, nao);
   }
 
   if (sup == nil) {
     uw_throwf(type_error_s,
-              lit("cannot define ~a as an exception subtype of ~a"),
+              lit("cannot define ~s as an exception subtype of ~s"),
               sub, sup, nao);
   }
 
   if (uw_exception_subtype_p(sub, sup))
-    uw_throwf(type_error_s, lit("~a is already an exception subtype of ~a"),
+    uw_throwf(type_error_s, lit("~s is already an exception subtype of ~s"),
               sub, sup, nao);
 
   if (uw_exception_subtype_p(sup, sub))
-    uw_throwf(type_error_s, lit("~a is already an exception supertype of ~a"),
+    uw_throwf(type_error_s, lit("~s is already an exception supertype of ~s"),
               sub, sup, nao);
 
   /* If sup symbol not registered, then we make it
