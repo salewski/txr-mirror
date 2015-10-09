@@ -29744,6 +29744,135 @@ a string output stream given by
 The string output stream is
 finalized, so that further output is no longer possible.
 
+.coNP Macro @ with-in-string-stream
+.synb
+.mets (with-in-string-stream >> ( stream-var << string )
+.mets \ \  << body-form *)
+.syne
+.desc
+The
+.code with-in-string-stream
+macro binds the symbol
+.meta stream-var
+as a variable, initializing it with a newly created
+string input stream. The string input stream is
+constructed from
+.meta string
+as if by the
+.cblk
+.meti (make-string-input-stream << string )
+.cble
+expression.
+
+Then it evaluates the
+.metn body-form -s
+in the scope of the variable.
+
+The value of the last
+.meta body-form
+is returned, or else
+.code nil
+if no forms are present.
+
+The
+.meta stream-var
+argument must be a bindable symbol,
+as defined by the
+.code bindable
+function.
+
+The
+.meta string
+argument must be a form
+which evaluates to a character string value.
+
+.coNP Macro @ with-in-string-byte-stream
+.synb
+.mets (with-in-string-byte-stream >> ( stream-var << string )
+.mets \ \  << body-form *)
+.syne
+.desc
+The
+.code with-in-string-byte-stream
+macro binds the symbol
+.meta stream-var
+as a variable, initializing it with a newly created
+string byte input stream. The string input stream is
+constructed from
+.meta string
+as if by the
+.cblk
+.meti (make-string-byte-input-stream << string )
+.cble
+expression.
+
+Then it evaluates the
+.metn body-form -s
+in the scope of the variable.
+
+The value of the last
+.meta body-form
+is returned, or else
+.code nil
+if no forms are present.
+
+The
+.meta string
+argument must be a form
+which evaluates to a character string value.
+
+.coNP Macro @ with-out-string-stream
+.synb
+.mets (with-out-string-stream <> ( stream-var ) << body-form *)
+.syne
+.desc
+The
+.code with-out-string-stream
+macro binds the symbol specified
+by the
+.meta stream-var
+argument as a variable, initializing it
+with a newly created string output stream. The output
+stream is created as if by the
+.code make-string-output-stream
+function.
+
+Then it evaluates
+.metn body-form -s
+in the scope of that variable.
+
+After these forms are evaluated, the string is extracted
+from the string output stream, as if by the
+.code get-string-from-stream
+function, and returned as the result value
+of the form.
+
+.coNP Macro @ with-out-strlist-stream
+.synb
+.mets (with-out-strlist-stream <> ( stream-var ) << body-form *)
+.syne
+.desc
+The
+.code with-out-strlist-stream
+macro binds the symbol specified
+by the
+.meta stream-var
+argument as a variable, initializing it
+with a newly created string list output stream. The output
+stream is created as if by the
+.code make-strlist-output-stream
+function.
+
+Then it evaluates
+.metn body-form -s
+in the scope of that variable.
+
+After these forms are evaluated, the string list is extracted
+from the string output stream, as if by the
+.code get-strlist-from-stream
+function, and returned as the result value
+of the form.
+
 .coNP Function @ close-stream
 .synb
 .mets (close-stream < stream <> [ throw-on-error-p ])
@@ -29782,6 +29911,48 @@ then the
 function throws an exception if an error occurs during the close operation
 instead of returning
 .codn nil .
+
+.coNP Macro @ with-stream
+.synb
+.mets (with-stream >> ( stream-var << init-form )
+.mets \ \  << body-form *)
+.syne
+.desc
+The
+.code with-stream
+binds the variable whose name is given by the
+.meta stream-var
+argument, and macro arranges for the evaluation of
+.metn body-form -s
+in the scope of that variable.
+
+The variable is initialized with the value produced
+by the evaluation of
+.meta init-form
+which must be an expression which evaluates to a stream.
+
+After each
+.meta body-form
+is evaluated, the stream is closed, as if by the
+.cblk
+.meti (close-stream << stream-var )
+.cble
+expression.
+
+The value of the last
+.meta body-form
+then becomes the result value of the form,
+or else
+.code nil
+if these forms are absent.
+
+If the evaluation of the
+.metn body-form -s
+is abandoned, the stream is still closed. That is to say,
+the closure of the stream is a protected action, as if by
+the
+.code unwind-protect
+operator.
 
 .coNP Functions @, get-error @ get-error-str and @ clear-error
 .synb
