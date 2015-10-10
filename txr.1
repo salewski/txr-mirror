@@ -18010,6 +18010,13 @@ applied to the slot.
 .code defstruct
 for initializing instance slots performs this kind of check).
 
+The
+.metn body-form -s
+of an
+.code :init
+specifier are not surrounded by an implicit
+.codn block .
+
 .meIP (:fini <> ( param ) << body-form *)
 The
 .code :fini
@@ -18035,6 +18042,13 @@ argument which requests reverse order of registration, ensuring that if an
 object has multiple finalizers registered at different levels of inheritance
 hierarchy, the finalizers specified for a derived structure type are called
 before inherited finalizers.
+
+The
+.metn body-form -s
+of a
+.code :fini
+specifier are not surrounded by an implicit
+.codn block .
 .RE
 .PP
 
