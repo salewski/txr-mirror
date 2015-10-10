@@ -130,7 +130,11 @@ static val txr_case_instantiate(val set_fun)
 
 static val with_resources_set_entries(val dlt, val fun)
 {
-  val name[] = { lit("with-resources"), nil };
+  val name[] = {
+    lit("with-resources"),
+    lit("with-objects"),
+    nil
+  };
   set_dlt_entries(dlt, name, fun);
   return nil;
 }

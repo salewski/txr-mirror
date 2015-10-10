@@ -40,3 +40,11 @@
     (nil
       ^(progn ,*body))
     (other (error "with-resources: bad syntax"))))
+
+(defmacro with-objects (var-init-forms . body)
+  (let ((gens (mapcar (ret (gensym)) var-init-forms)))
+    ^(let ,gens
+       (unwind-protect
+         (let* ,(mapcar (aret ^(,@2 (set ,@1 ,@3))) gens var-init-forms)
+           ,*body)
+         ,*(reverse (mapcar (ret ^(call-finalizers ,@1)) gens))))))

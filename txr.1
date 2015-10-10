@@ -18052,6 +18052,13 @@ specifier are not surrounded by an implicit
 .RE
 .PP
 
+Note that an object's finalizers can be called explicitly with
+.codn call-finalizers .
+The
+.code with-objects
+macro arranges for finalizers to be called on objects when the execution
+of a scope terminates by any means.
+
 The slot names given in a
 .code defstruct
 must all be unique among themselves, but they
@@ -19088,6 +19095,48 @@ must name a static slot of that structure type.
 
 The object retrieved from that static slot must be
 callable as a function, and accept the arguments.
+
+.coNP Macro @ with-objects
+.synb
+.mets (with-objects >> ({( sym << init-form )}*) << body-form *)
+.syne
+The
+.code with-objects
+macro provides a binding construct very similar to
+.codn let* .
+
+Each
+.meta sym
+must be a symbol suitable for use as a variable name.
+
+Each
+.meta init-form
+is evaluated in sequence, and a binding is established for its
+corresponding
+.meta sym
+which is initialized with the value of that form. The binding
+is visible to subsequent
+.metn init-form -s.
+
+Additionally, the values of the
+.meta init-form -s
+are noted as they are produced.  When the
+.code with-objects
+form terminates, by any means, the
+.code call-finalizers
+function is invoked on each value which was returned by an
+.meta init-form
+and had been noted. These calls are performed in the
+reverse order relative to the original evaluation of the forms.
+
+After the variables are established and initialized, the
+.metn body-form -s
+are evaluated in the scope of the variables. The value of the
+last form is returned, or else
+.code nil
+if there are no forms. The invocations of
+.code call-finalizers
+take place just before the value of the last form is returned.
 
 .SS* Sequence Manipulation
 .coNP Function @ seqp
