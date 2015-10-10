@@ -1,3 +1,60 @@
+                                    TXR 119
+                                   2015-10-10
+
+
+  Features
+
+  - Interactive listener:
+    - New Ctrl-X Ctrl-R to insert entire previous line.
+    - Word/Atom from previous line works relative to recalled history line.
+    - New Ctrl-X Tab for substring-searching completion.
+  - Empty loops can be interrupted by signals: (for () () ()) is now
+    interruptible at the interactive prompt.
+  - New umethod and umeth function for indirecting on a method in a way
+    that is detached from an object instance.
+  - Boa construction of structures can have optional arguments now.
+  - copy and copy-str now copy lazy strings as lazy strings, rather
+    than forcing to regular string.
+  - New functions for sequence manipulation: take, take-while, take-until,
+    drop, drop-while, drop-until.
+  - New function ginterate for lazy generation which includes the terminating
+    item.
+  - New function expand-right for lazily generating a sequence in a roughly
+    opposite way to a reduce-right reduction.
+  - New function call-finalizers for explicitly invoking and clearing the
+    registered GC finalizers for an object.
+  - New functions clear-struct and reset-struct for clearing all slots
+    of a structure to nil, or reinitializing a struct to default values,
+    respective.
+  - New function replace-struct for changing and slot contents and type
+    of a struct to match an example object.
+  - Missing promisep function added to test whether an object is a promise
+    created by the delay macro.
+  - New defex macro, to define exception subtype relationships out of TXR Lisp.
+    (Previously available only in the TXR pattern language).
+    - Also useful surrounding functions: exception-subtype-p,
+    register-exception-subtype.
+  - New macros for working with streams in lexical scopes:
+    with-out-string-stream, with-out-strlist-stream with-in-string-stream,
+    with-in-string-byte-stream, with-stream.
+  - New with-objects macro for scoped finalization of objects,
+    somewhat like destruction in C++.
+  - Vim syntax highlighting file sets "lispwords" option for
+    more accurate indentation of TXR Lisp.
+
+  Bugs
+
+  - Fixed symbol-function throwing error on builtin macros.
+  - macro-time is now special-operator-p.
+  - Named block around bodies of methods and functions declared
+    in defstruct.
+  - slot-p renamed to slotp (old name supported in compatibility mode).
+  - Bug in structure initialization: boa arguments were applied first,
+    before other initialiations, rather than last.
+  - The conses function works on vectors and strings.
+
+
+
                                     TXR 118
                                    2015-10-01
 
