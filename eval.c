@@ -3176,11 +3176,20 @@ tail:
       goto tail;
     } else if (sym == progn_s) {
       val args = rest(form);
-      val args_ex = expand_progn(args, menv);
 
-      if (args == args_ex)
-        return form;
-      return rlcp(cons(sym, args_ex), form);
+      if (cdr(args)) {
+        val args_ex = expand_progn(args, menv);
+
+        if (args == args_ex)
+          return form;
+
+        if (cdr(args_ex))
+          return rlcp(cons(sym, args_ex), form);
+
+        return car(args_ex);
+      }
+      form = first(args);
+      goto tail;
     } else if (sym == sys_lisp1_value_s) {
       return expand_lisp1_value(form, menv);
     } else {
