@@ -52,6 +52,7 @@
 #include "txr.h"
 #include "combi.h"
 #include "lisplib.h"
+#include "cadr.h"
 #include "eval.h"
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
@@ -2080,13 +2081,20 @@ static val me_pprof(val form, val menv)
 static val me_when(val form, val menv)
 {
   (void) menv;
-  return cons(cond_s, cons(rest(form), nil));
+
+  return if3(cdddr(form),
+             cons(cond_s, cons(cdr(form), nil)),
+             cons(if_s, cdr(form)));
 }
 
 static val me_unless(val form, val menv)
 {
+  val test = cadr(form);
+  val body = cddr(form);
+
   (void) menv;
-  return list(if_s, second(form), nil, cons(progn_s, rest(rest(form))), nao);
+
+  return list(if_s, test, nil, maybe_progn(body), nao);
 }
 
 static val me_while(val form, val menv)

@@ -74,11 +74,11 @@
        \                      '(x y) () (lambda (#:g0004)\n                             \
        \                                  (let ((#:g0005 (struct-type #:g0004)))\n      \
        \                                    (if (static-slot-p #:g0005 'x)\n            \
-       \                                      () (progn (slotset #:g0004 'x\n           \
-       \                                                         0)))\n                 \
+       \                                      () (slotset #:g0004 'x\n                  \
+       \                                                  0))\n                         \
        \                                    (if (static-slot-p #:g0005 'y)\n            \
-       \                                      () (progn (slotset #:g0004 'y\n           \
-       \                                                         0)))))\n               \
+       \                                      () (slotset #:g0004 'y\n                  \
+       \                                                  0))))\n                       \
        \                      (lambda (#:g0004 #:g0006\n                                \
        \                               #:g0007)\n                                       \
        \                        (slotset #:g0004 'x\n                                   \
