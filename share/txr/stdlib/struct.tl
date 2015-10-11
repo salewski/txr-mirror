@@ -72,9 +72,9 @@
                                      (unless (bindable arg)
                                        (sys:bad-slot-syntax slot))
                                      (when instance-init-form
-                                       (uw-throwf 'eval-error
-                                                  "~s: duplicate :init"
-                                                  'defstruct))
+                                       (throw 'eval-error
+                                              "~s: duplicate :init"
+                                              'defstruct))
                                      (set instance-init-form
                                           (cons arg body))
                                      ^(,word nil nil))
@@ -82,9 +82,9 @@
                                      (unless (bindable arg)
                                        (sys:bad-slot-syntax slot))
                                      (when instance-fini-form
-                                       (uw-throwf 'eval-error
-                                                  "~s: duplicate :fini"
-                                                  'defstruct))
+                                       (throw 'eval-error
+                                              "~s: duplicate :fini"
+                                              'defstruct))
                                      (set instance-fini-form
                                           (cons arg body))
                                      ^(,word nil nil))
