@@ -27955,6 +27955,89 @@ applies
 first, as above. If that is true, and the two hashes have the same number of
 elements, the result is falsified.
 
+.coNP Function @ hash-begin and @ hash-next
+.synb
+.mets (hash-begin << hash )
+.mets (hash-next << hash-iter )
+.syne
+The
+.code hash-begin
+function returns a an iterator object capable of retrieving the
+entries in stored in
+.meta hash
+one by one.
+
+The
+.code hash-next
+function applies to a hash iterator returned by
+.codn hash-begin .
+
+If unvisited entries remain, it returns the next one as a cons cell
+whose
+.code car
+holds the key and whose
+.code cdr
+holds the value.
+
+If no more entries remain to be visited, it returns
+.codn nil .
+
+.coNP Macro @ with-hash-iter
+.synb
+.mets (with-hash-iter >> ( isym < hash-form >> [ ksym <> [ vsym ]])
+.mets \ \  << body-form *)
+.syne
+The
+.code with-hash-table-iter
+macro evaluates
+.metn body-form -s
+in an environment in which a lexically scoped function is visible.
+
+The function is named by
+.meta isym
+which must be a symbol suitable for naming functions with
+.codn flet .
+
+The
+.meta hash-form
+argument must be a form which evaluates to a hash table object.
+
+Invocations of the function retrieve successive entries of the hash table
+as cons cell pairs of keys and values. The function returns
+.code nil
+to indicate no more entries remain.
+
+If either of the
+.meta ksym
+or
+.meta vsym
+arguments are present, they must be symbols suitable as variable names. They
+are bound as variables visible to
+.metn body-form -s,
+initialized to the value
+.codn nil .
+
+If
+.meta ksym
+is specified, then whenever the function
+.meta isym
+macro is invoked and retrieves a hash table entry, the
+.meta ksym
+variable is set to the key. If the function returns
+.code nil
+then the value of
+.meta ksym
+is set to
+.codn nil .
+
+Similarly, if
+.meta vsym
+is specified, then the function stores the retrieved
+hash value in that variable, or else sets the variable
+to
+.code nil
+if there is no next value.
+
 .SS* Partial Evaluation and Combinators
 .coNP Macros @ op and @ do
 .synb

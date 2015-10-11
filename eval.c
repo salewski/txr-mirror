@@ -4499,6 +4499,8 @@ void eval_init(void)
   reg_fun(intern(lit("hash-update-1"), user_package),
           func_n4o(hash_update_1, 3));
   reg_fun(intern(lit("hash-revget"), user_package), func_n4o(hash_revget, 2));
+  reg_fun(intern(lit("hash-begin"), user_package), func_n1(hash_begin));
+  reg_fun(intern(lit("hash-next"), user_package), func_n1(hash_next));
 
   reg_fun(intern(lit("eval"), user_package), func_n2o(eval_intrinsic, 1));
   reg_fun(intern(lit("lisp-parse"), user_package), func_n5o(lisp_parse, 0));
