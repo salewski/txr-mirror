@@ -18232,6 +18232,11 @@ overrides from the
 .code new
 macro, and lastly the "boa constructor" overrides.
 
+If any of the initializations abandon the evaluation of
+.code new
+by a non-local exit such as an exception throw, the object's
+finalizers, if any, are invoked.
+
 .coNP Macro @ qref
 .synb
 .mets (qref < object-form
@@ -18680,6 +18685,11 @@ Then, the
 is processed, if not empty, and finally, the
 .metn arg -s
 are processed, if present, and passed to the boa constructor.
+
+If any of the initializations abandon the evaluation of
+.code make-struct
+by a non-local exit such as an exception throw, the object's
+finalizers, if any, are invoked.
 
 .coNP Function @ copy-struct
 .synb

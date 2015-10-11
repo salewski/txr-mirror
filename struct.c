@@ -339,6 +339,7 @@ val make_struct(val type, val plist, struct args *args)
     size_t size = offsetof(struct struct_inst, slot) + sizeof (val) * nslots;
     struct struct_inst *si = coerce(struct struct_inst *, chk_malloc(size));
     val sinst;
+    volatile val inited = nil;
 
     if (args_more(args, 0) && !st->boactor) {
       free(si);
@@ -357,6 +358,8 @@ val make_struct(val type, val plist, struct args *args)
 
     si->type = type;
 
+    uw_simple_catch_begin;
+
     call_initfun_chain(st, sinst);
 
     for (; plist; plist = cddr(plist))
@@ -368,6 +371,15 @@ val make_struct(val type, val plist, struct args *args)
       args_cat_zap(args_copy, args);
       generic_funcall(st->boactor, args_copy);
     }
+
+    inited = t;
+
+    uw_unwind {
+      if (!inited)
+        gc_call_finalizers(sinst);
+    }
+
+    uw_catch_end;
 
     return sinst;
   }
