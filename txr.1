@@ -18025,8 +18025,8 @@ a finalization function which is associated with the
 structure instance, as if by use of the
 .code finalize
 function. This finalization registration takes place
-as the last step when an instance of the structure
-is created, after the slots are initialized and
+as the first step when an instance of the structure
+is created, before the slots are initialized and
 the
 .code :init
 code, if any, has been executed. The registration
