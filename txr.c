@@ -89,6 +89,10 @@ static void help(void)
 "\n"
 "  ~a [ options ] query-file { data-file }*\n"
 "\n"
+#if HAVE_TERMIOS
+"If no arguments are present, TXR will enter into interactive listener mode.\n"
+"\n"
+#endif
 "The query-file or data-file arguments may be specified as -, in which case\n"
 "standard input is used. All data-file arguments which begin with a !\n"
 "character are treated as command pipes. Those which begin with a $\n"
@@ -162,11 +166,21 @@ static void help(void)
   format(std_output, text, auto_str(version), prog_string, nao);
 }
 
+#if HAVE_TERMIOS
+static void banner(void)
+{
+  format(std_output,
+         lit("This is the TXR Lisp interactive listener of TXR ~a.\n"
+             "Use the :quit command or type Ctrl-D on empty line to exit.\n"),
+         static_str(version), nao);
+}
+#else
 static void hint(void)
 {
   format(std_error, lit("~a: incorrect arguments: try --help\n"),
          prog_string, nao);
 }
+#endif
 
 static val remove_hash_bang_line(val spec)
 {
@@ -405,8 +419,13 @@ int txr_main(int argc, char **argv)
   setvbuf(stderr, 0, _IOLBF, 0);
 
   if (argc <= 1) {
+#if HAVE_TERMIOS
+    banner();
+    goto repl;
+#else
     hint();
     return EXIT_FAILURE;
+#endif
   }
 
   while (*argv)
@@ -712,8 +731,13 @@ int txr_main(int argc, char **argv)
         goto repl;
       if (evaled)
         return EXIT_SUCCESS;
+#if HAVE_TERMIOS
+      banner();
+      goto repl;
+#else
       hint();
       return EXIT_FAILURE;
+#endif
     }
 
     if (!equal(arg, lit("-"))) {
