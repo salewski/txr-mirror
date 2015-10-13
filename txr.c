@@ -81,11 +81,11 @@ static void help(void)
 {
   val text = lit(
 "\n"
-"txr version ~a\n"
+"TXR Version ~a\n"
 "\n"
-"copyright 2015, Kaz Kylheku <kaz@kylheku.com>\n"
+"Copyright 2015, Kaz Kylheku <kaz@kylheku.com>\n"
 "\n"
-"usage:\n"
+"Usage:\n"
 "\n"
 "  ~a [ options ] query-file { data-file }*\n"
 "\n"
