@@ -31,7 +31,9 @@
 #endif
 
 typedef union uw_frame uw_frame_t;
-typedef enum uw_frtype { UW_BLOCK, UW_ENV, UW_CATCH, UW_DBG } uw_frtype_t;
+typedef enum uw_frtype {
+  UW_BLOCK, UW_ENV, UW_CATCH, UW_HANDLE, UW_DBG
+} uw_frtype_t;
 
 struct uw_common {
   uw_frame_t *up;
@@ -59,11 +61,19 @@ struct uw_catch {
   uw_frame_t *up;
   uw_frtype_t type;
   val matches;
+  int visible;
   val sym;
   val args;
   uw_frame_t *cont;
-  int visible;
   extended_jmp_buf jb;
+};
+
+struct uw_handler {
+  uw_frame_t *up;
+  uw_frtype_t type;
+  val matches; /* Same position as in uw_catch! */
+  int visible; /* Likewise. */
+  val fun;
 };
 
 struct uw_debug {
@@ -83,6 +93,7 @@ union uw_frame {
   struct uw_block bl;
   struct uw_dynamic_env ev;
   struct uw_catch ca;
+  struct uw_handler ha;
   struct uw_debug db;
 };
 
@@ -98,6 +109,7 @@ INLINE val uw_block_return(val tag, val result)
    return uw_block_return_proto(tag, result, nil);
 }
 void uw_push_catch(uw_frame_t *, val matches);
+void uw_push_handler(uw_frame_t *, val matches, val fun);
 noreturn val uw_throw(val sym, val exception);
 noreturn val uw_throwv(val sym, struct args *);
 noreturn val uw_throwf(val sym, val fmt, ...);

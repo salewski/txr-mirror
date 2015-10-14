@@ -57,6 +57,7 @@
 
 val parser_s, unique_s;
 val listener_hist_len_s, listener_multi_line_p_s;
+val intr_s;
 
 static val stream_parser_hash;
 
@@ -587,7 +588,7 @@ static char *provide_atom(lino_t *l, const char *str, int n, void *ctx)
 
 static val repl_intr(val signo, val async_p)
 {
-  uw_throw(error_s, lit("intr"));
+  uw_throw(intr_s, lit("intr"));
 }
 
 static val read_eval_ret_last(val env, val in_stream, val out_stream)
@@ -793,6 +794,7 @@ val parser_eof(val parser)
 void parse_init(void)
 {
   parser_s = intern(lit("parser"), user_package);
+  intr_s = intern(lit("intr"), user_package);
   listener_hist_len_s = intern(lit("*listener-hist-len*"), user_package);
   listener_multi_line_p_s = intern(lit("*listener-multi-line-p*"), user_package);
   unique_s = gensym(nil);

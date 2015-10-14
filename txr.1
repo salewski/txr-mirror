@@ -26319,7 +26319,83 @@ two's complement bitfield 01 denotes 1, and 10 denotes -2.
 
 The argument may be a character.
 
-.SS* Exceptions
+.SS* Exception Handling
+
+An
+.I exception
+in \*(TX is a special event in the execution of the program which
+results in transfer of control. An exception is identified by a symbol,
+known as the
+.IR "exception type" ,
+and it carries zero or more arguments, called the
+.IR "exception arguments" .
+
+When an exception is initiated, it is said to be
+.IR thrown .
+When an exception is thrown, \*(TX enters into exception processing
+mode. Exception processing mode terminates in one of several ways:
+.IP -
+A
+.I catch
+is found which matches the exception, and control is transferred
+to the catch. Catches are defined by the
+.code catch
+operator.
+.IP -
+A handler accepts the exception by performing a non-local transfer.
+Handlers are defined by the
+.code handler-bind
+operator or
+.code handle
+macro.
+.IP -
+If no catch or accepting handler is found, control is transferred
+to the function stored in the
+.code *unhandled-hook*
+variable. If that function returns, the process terminates.
+.IP -
+If no catch or accepting handler is found and
+.code *unhandled-hook*
+is
+.codn nil ,
+then a built-in strategy for handling the exception is invoked,
+consisting of printing some informational messages and terminating.
+.PP
+
+From the above it should be evident that there are two ways by which exceptions
+are handled: catches and handlers. Catches and handlers are similar, but different.
+A catch is an exit point associated with an active scope. When an exception is
+handled by a catch, the form which threw the exception is abandoned, and unwinding
+takes place to the catch site, which receives the exception type and arguments.
+A handler is also associated with an active scope. However, it is a function,
+and not a dynamic exit point.  When an exception is passed to handler,
+unwinding does not take place; rather, the function is called. The function then
+either completes the exception handling by performing a non-local transfer,
+or else declines the exception by performing an ordinary return.
+
+Catches and handlers are identified by exception type symbols. A catch or
+handler is eligible to process an exception if it handles a type which is
+a supertype of the exception which is being processed. Handles and catches
+are located in a combined search which proceeds from the innermost nesting
+to the outermost. When an eligible handle is encountered, it is called. If
+it returns, the search continues. When an eligible catch is encountered,
+the search stops and a control transfer takes place to the catch site.
+
+Exception types are arranged
+in an inheritance hierarchy, at whose top the symbol
+.code t
+is is the supertype of every exception type, and the
+.code nil
+symbol is at the bottom, the subtype of every exception type.
+
+Keyword symbols may be used as exception types.
+
+Every symbol is its own supertype and subtype. Thus whenever X is known to be a
+subtype of Y, it is possible that X is exactly Y.
+The
+.code defex
+macro registers exception supertype/subtype relationships among symbols.
+
 .coNP Functions @, throw @ throwf and @ error
 .synb
 .mets (throw < symbol << arg *)
@@ -26426,7 +26502,12 @@ operator, and the functions
 .codn throw ,
 .code throwf
 and
-.codn error .
+.codn error ,
+as well as the
+.code handler-bind
+operator and
+.code handler
+macro.
 
 .coNP Operator @ unwind-protect
 .synb
@@ -26514,6 +26595,114 @@ form terminates without evaluating the remaining
 forms, and yields
 .codn nil .
 
+.coNP Operator @ handler-bind
+.synb
+.mets (handler-bind < function-form < symbol-list << body-form *)
+.syne
+.desc
+The
+.code handler-bind
+operator establishes a handler for one or more
+exception types, and evaluates zero or more
+.metn body-form -s
+in a dynamic scope in which that handler is visible.
+
+When the
+.code handler-bind
+form terminates normally, the handler is removed. The value of the
+last
+.meta body-form
+is returned, or else
+.code nil
+if there are no forms.
+
+The
+.meta function-form
+argument is an expression which must evaluate to a function. The function
+must be capable of accepting the exception arguments. All exceptions functions
+require at least one argument, since the leftmost argument in an exception handler
+call is the exception type symbol.
+
+The
+.meta symbol-list
+argument is a list of symbols, not evaluated. If it is empty, then the handler
+isn't eligible for any exceptions. Otherwise it is eligible for any exception
+whose exception type is a subtype of any of the symbols.
+
+If the evaluation of any
+.meta body-form
+throws an exception which is not handled within that form, and the handler
+is eligible for that exception, then the function is invoked. It receives
+the exception's type symbol as the leftmost argument. If the exception has
+arguments, they appear as additional arguments in the function call.
+If the function returns normally, then the exception search continues.
+The handler remains established until the exception is handled in such a way
+that a dynamic control transfer abandons the
+.code handler-bind
+form.
+
+Note: while a handler's function is executing, the handler is disabled.
+If the function throws an exception for which the handler is eligible,
+the handler will not receive that exception; it will be skipped by the
+exception search as if it didn't exist.  When the handler function terminates,
+either via a normal return or a nonlocal control transfer, then the handler is
+re-enabled.
+
+.coNP Macro @ handle
+.synb
+.mets (handle < try-expression
+.mets \ \  >> {( symbol <> ( arg *) << body-form *)}*)
+.syne
+.desc
+The
+.code handle
+macro is a syntactic sugar for the
+.code handler-bind
+operator. Its syntax is exactly like that of
+.codn catch .
+The difference between
+.code handle
+and
+.code catch
+is that the clauses in
+.code handle
+are invoked without unwinding. That is to say,
+.code handle
+does not establish an exit point for an exception. When control passes to
+a clause, it is by means of an ordinary function call and not a dynamic
+control transfer. No evaluation frames are yet unwound when this takes place.
+
+The
+.code handle
+macro establishes a handler, by
+.code handler-bind
+whose
+.meta symbol-list
+consists of every
+.meta symbol
+gathered from every clause.
+
+The handler function established in the generated
+.code handler-bind
+is synthesized from of all of the clauses, together with dispatch logic which
+which passes the exception and its arguments to the first
+eligible clause.
+
+The
+.meta try-expression
+is evaluated in the context of this handler.
+
+The clause of the
+.code handle
+syntax can return normally, like a function, in which case the handler
+is understood to have declined the exception, and exception processing
+continues. To handle an exception, the clause of the
+.code handle
+macro must perform a dynamic control transfer, such returning from a block
+via
+.code return
+or throwing an exception.
+
 .coNP Macro @ with-resources
 .synb
 .mets (with-resources >> ({ sym >> [ init-form <> [ cleanup-form ])}*)
@@ -26599,7 +26788,7 @@ When an exception occurs which has no handler, this function is called,
 with the following arguments: the exception type symbol, the exception object,
 and a third value which is either
 .code nil
-or else the form which was being evaluated the exception was thrown.
+or else the form which was being evaluated when the exception was thrown.
 
 Otherwise, if the variable is
 .code nil

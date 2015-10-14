@@ -73,7 +73,7 @@ val eval_initing;
 
 val eval_error_s;
 val dwim_s, progn_s, prog1_s, let_s, let_star_s, lambda_s, call_s;
-val cond_s, if_s, iflet_s, when_s;
+val handler_bind_s, cond_s, if_s, iflet_s, when_s;
 val defvar_s, defvarl_s, defparm_s, defparml_s, defun_s, defmacro_s;
 val tree_case_s, tree_bind_s;
 val sys_mark_special_s;
@@ -1911,6 +1911,24 @@ static val op_catch(val form, val env)
   return result;
 }
 
+static val op_handler_bind(val form, val env)
+{
+  val args = rest(form);
+  val fun = pop(&args);
+  val handle_syms = pop(&args);
+  val body = args;
+  val result;
+  uw_frame_t uw_handler;
+
+  uw_push_handler(&uw_handler, handle_syms, eval(fun, env, form));
+
+  result = eval_progn(body, env, form);
+
+  uw_pop_frame(&uw_handler);
+
+  return result;
+}
+
 static val subst_vars(val forms, val env)
 {
   list_collect_decl(out, iter);
@@ -3152,6 +3170,25 @@ tail:
       return rlcp(cons(sym, quasi_ex), form);
     } else if (sym == catch_s) {
       return expand_catch(rest(form), menv);
+    } else if (sym == handler_bind_s) {
+      val args = rest(form);
+      val fun = pop(&args);
+      val handle_syms = pop(&args);
+      val body = args;
+      val fun_ex = expand(fun, menv);
+      val body_ex = expand_forms(body, menv);
+
+      if (!cddr(form))
+        eval_error(form, lit("~s: missing arguments"), sym, nao);
+
+      if (fun == fun_ex && body == body_ex)
+        return form;
+
+      return rlcp(cons(sym, cons(if3(fun == fun_ex,
+                                     fun, fun_ex),
+                                 cons(handle_syms,
+                                      if3(body == body_ex,
+                                          body, body_ex)))), form);
     } else if (sym == macro_time_s) {
       val args = rest(form);
       val args_ex = expand_forms(args, menv);
@@ -4076,6 +4113,7 @@ void eval_init(void)
   flet_s = intern(lit("flet"), user_package);
   labels_s = intern(lit("labels"), user_package);
   call_s = intern(lit("call"), user_package);
+  handler_bind_s = intern(lit("handler-bind"), user_package);
   cond_s = intern(lit("cond"), user_package);
   caseq_s = intern(lit("caseq"), user_package);
   caseql_s = intern(lit("caseql"), user_package);
@@ -4214,6 +4252,7 @@ void eval_init(void)
   reg_op(dwim_s, op_dwim);
   reg_op(quasi_s, op_quasi_lit);
   reg_op(catch_s, op_catch);
+  reg_op(handler_bind_s, op_handler_bind);
   reg_op(with_saved_vars_s, op_with_saved_vars);
   reg_op(prof_s, op_prof);
 

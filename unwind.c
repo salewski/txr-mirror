@@ -247,6 +247,17 @@ void uw_push_catch(uw_frame_t *fr, val matches)
   uw_stack = fr;
 }
 
+void uw_push_handler(uw_frame_t *fr, val matches, val fun)
+{
+  memset(fr, 0, sizeof *fr);
+  fr->ha.type = UW_HANDLE;
+  fr->ha.matches = matches;
+  fr->ha.fun = fun;
+  fr->ha.visible = 1;
+  fr->ha.up = uw_stack;
+  uw_stack = fr;
+}
+
 static val exception_subtypes;
 
 val uw_exception_subtype_p(val sub, val sup)
@@ -257,6 +268,21 @@ val uw_exception_subtype_p(val sub, val sup)
     val entry = assoc(sub, exception_subtypes);
     return memq(sup, entry) ? t : nil;
   }
+}
+
+static void invoke_handler(uw_frame_t *fr, struct args *args)
+{
+  fr->ha.visible = 0;
+
+  uw_simple_catch_begin;
+
+  generic_funcall(fr->ha.fun, args);
+
+  uw_unwind {
+    fr->ha.visible = 1;
+  }
+
+  uw_catch_end;
 }
 
 val uw_throw(val sym, val args)
@@ -284,6 +310,20 @@ val uw_throw(val sym, val args)
           break;
       if (match)
         break;
+    }
+    if (ex->uw.type == UW_HANDLE && ex->ha.visible) {
+      val matches = ex->ha.matches;
+      val match;
+      for (match = matches; match; match = cdr(match))
+        if (uw_exception_subtype_p(sym, car(match)))
+          break;
+      if (match) {
+        args_decl(gf_args, ARGS_MAX);
+        args_init_list(gf_args, ARGS_MAX, cons(sym, args));
+        --reentry_count;
+        invoke_handler(ex, gf_args);
+        ++reentry_count;
+      }
     }
   }
 
