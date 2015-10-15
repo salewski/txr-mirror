@@ -13173,6 +13173,49 @@ The following equivalence holds:
   (typep a b) --> (subtypep (typeof a) b)
 .cble
 
+.coNP Macro @ typecase
+.synb
+.mets (typecase < test-form >> {( type-sym << clause-form *)}*)
+.syne
+.desc
+The
+.code typecase
+macro evaluates
+.meta test-form
+and then successively tests its type against each clause.
+
+Each clause consists of a type symbol
+.meta type-sym
+and zero or more
+.metn clause-form -s.
+
+The first clause whose
+.meta type-sym
+is a supertype of the type of
+.metn test-form 's
+value is considered to be the matching clause.
+That clause's
+.metn clause-form -s
+are evaluated, and the value of the last form is returned.
+
+If there is no matching clause, or there are no clauses present,
+or the matching clause has no
+.metn clause-form -s,
+then
+.code nil
+is returned.
+
+Note: since
+.code t
+is the supertype of every type, a clause whose
+.meta type-sym
+is the symbol
+.code t
+always matches.  If such a clause is placed as the last clause of a
+.codn typecase ,
+it provides a fallback case, whose forms are evaluated if none of the
+previous clauses match.
+
 .coNP Function @ identity
 .synb
 .mets (identity << value )
