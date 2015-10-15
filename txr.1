@@ -12973,7 +12973,7 @@ if
 is a symbol which names a special operator, otherwise it returns
 .codn nil .
 
-.SS* Object Type And Equivalence
+.SS* Object Type
 
 In \*(TL, objects obey the following type hierarchy. In this type hierarchy,
 the internal nodes denote abstract types: no object is an instance of
@@ -13215,6 +13215,8 @@ always matches.  If such a clause is placed as the last clause of a
 .codn typecase ,
 it provides a fallback case, whose forms are evaluated if none of the
 previous clauses match.
+
+.SS* Object Equivalence
 
 .coNP Function @ identity
 .synb
