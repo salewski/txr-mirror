@@ -35069,6 +35069,12 @@ Expressions cannot be continued across multiple lines of entry.
 The interactive listener is based on 8 bit character processing. Its editing
 functions do not recognize UTF-8 multi-byte characters.
 
+The screen updating logic in the listener is based on the assumption that
+the display terminal uses DEC VT100 emulation. No other terminal emulation
+is supported. The
+.cod TERM
+environment variable is ignored.
+
 .SS* Ways to Quit
 
 Pressing Ctrl-D in a completely empty command line terminates the listener.
