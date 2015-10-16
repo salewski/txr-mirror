@@ -32561,6 +32561,31 @@ value from the failed
 .code exec
 attempt.
 
+Note: as of \*(TX 120, the
+.code sh
+function is implemented using
+.code run
+and not by means of the
+.code system
+C library function, as previously. The
+.code run
+function is used to invoke the system interpreter by name. On Unix-like
+systems, the string
+.code /bin/sh
+is assumed to denote the system interpreter, which is expected to
+support a pair of arguments
+.cblk
+.meti -c < command
+.cble
+to specify the command to be executed. On MS Windows, the interpreter
+is assumed to be the relative path name
+.code cmd.exe
+and expected to support
+.cblk
+.meti /C < command
+.cble
+as a way of specifying a command to execute.
+
 .SS* Unix Filesystem Manipulation
 
 .coNP Structure @ stat

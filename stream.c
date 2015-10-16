@@ -3037,21 +3037,6 @@ val open_process(val name, val mode_str, val args)
 }
 #endif
 
-static val sh(val command)
-{
-  char *cmd = utf8_dup_to(c_str(command));
-  int status = system(cmd);
-  if (status < 0)
-    return nil;
-#if HAVE_SYS_WAIT
-  if (WIFEXITED(status)) {
-    int exitstatus = WEXITSTATUS(status);
-    return num(exitstatus);
-  }
-#endif
-  return status == 0 ? zero : nil;
-}
-
 #if HAVE_FORK_STUFF
 static val run(val name, val args)
 {
@@ -3102,6 +3087,11 @@ static val run(val name, val args)
     return status == 0 ? zero : nil;
   }
 }
+
+static val sh(val command)
+{
+  return run(lit("/bin/sh"), list(lit("-c"), command, nao));
+}
 #elif HAVE_WSPAWN
 static val run(val command, val args)
 {
@@ -3126,12 +3116,13 @@ static val run(val command, val args)
 
   return (status < 0) ? nil : num(status);
 }
-#else
-static val run(val command, val args)
+
+static val sh(val command)
 {
-  val win_cmdline = win_make_cmdline(cons(command, default_bool_arg(args)));
-  return sh(win_cmdline);
+  return run(lit("cmd.exe"), list(lit("/C"), command, nao));
 }
+#else
+#error port me!
 #endif
 
 val remove_path(val path)
