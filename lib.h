@@ -968,6 +968,11 @@ INLINE val default_bool_arg(val arg)
   return if3(missingp(arg), nil, arg);
 }
 
+INLINE val default_arg_strict(val arg, val dfl)
+{
+  return if3(missingp(arg), dfl, arg);
+}
+
 #define list_collect_decl(OUT, PTAIL)           \
   val OUT = nil;                                \
   loc PTAIL = mkcloc(OUT)

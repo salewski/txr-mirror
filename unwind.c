@@ -252,6 +252,52 @@ val uw_get_frames(void)
   return out;
 }
 
+val uw_find_frame(val extype, val frtype)
+{
+  uw_frame_t *ex;
+  uw_frtype_t et;
+
+  extype = default_bool_arg(extype);
+  frtype = default_arg_strict(frtype, catch_frame_type);
+
+  if (symbolp(frtype)) {
+    frtype = find_struct_type(frtype);
+    if (!frtype)
+      return nil;
+  }
+
+  if (frtype == catch_frame_type)
+    et = UW_CATCH;
+  else if (frtype == handle_frame_type)
+    et = UW_HANDLE;
+  else
+    return nil;
+
+  if (frtype != catch_frame_type && frtype != handle_frame_type)
+    return nil;
+
+  for (ex = uw_stack; ex != 0; ex = ex->uw.up) {
+    if (ex->uw.type == et && ex->ca.visible) {
+      val match;
+      for (match = ex->ca.matches; match; match = cdr(match))
+        if (uw_exception_subtype_p(extype, car(match)))
+          break;
+      if (match) {
+        args_decl(args, ARGS_MIN);
+        val fr = make_struct(frtype, nil, args);
+        slotset(fr, types_s, ex->ca.matches);
+        if (et == UW_CATCH)
+          slotset(fr, jump_s, cptr(coerce(mem_t *, ex)));
+        else
+          slotset(fr, fun_s, ex->ha.fun);
+        return fr;
+      }
+    }
+  }
+
+  return nil;
+}
+
 val uw_invoke_catch(val catch_frame, val sym, struct args *args)
 {
   uw_frame_t *ex, *ex_point;
@@ -609,6 +655,7 @@ void uw_late_init(void)
   reg_var(unhandled_hook_s = intern(lit("*unhandled-hook*"),
           user_package), nil);
   reg_fun(intern(lit("get-frames"), user_package), func_n0(uw_get_frames));
+  reg_fun(intern(lit("find-frame"), user_package), func_n2o(uw_find_frame, 0));
   reg_fun(intern(lit("invoke-catch"), user_package),
           func_n2v(uw_invoke_catch));
 }

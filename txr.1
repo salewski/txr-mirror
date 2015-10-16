@@ -27000,7 +27000,9 @@ and
 .code handle-frame
 are used by the
 .code get-frames
-function to represent information about the currently established
+and
+.code find-frame
+functions to represent information about the currently established
 exception catches (see the
 .code catch
 macro) and handlers
@@ -27093,6 +27095,57 @@ structure may be passed as an argument to the
 .code invoke-catch
 function.
 
+.coNP Function @ find-frame
+.synb
+.mets (find-frame >> [ exception-symbol <> [ frame-type ]])
+.syne
+.desc
+The
+.code find-frame
+function locates the first (innermost) instance of a specific kind of
+exception frame (a catch frame or a handler frame) which is eligible
+for processing an exception of a specific type. If such a frame
+is found, it is returned.  The returned frame object is of the same kind as the
+objects which comprise the list returned by the function
+.codn get-frames .
+If such a frame is not found,
+.code nil
+is returned.
+
+The
+.meta exception-symbol
+argument specifies a match by exception type: the candidate frame
+must specify in its list of matches at least one type which is an exception
+supertype of
+.metn exception-symbol .
+If this argument is omitted, it defaults to
+.code nil
+which finds any handler that matches at least one type. There is no way to
+search for handlers which match an empty set of types; the
+.code find-frame
+function skips such frames.
+
+The
+.meta frame-type
+argument specifies which frame type to find. Useful values for this
+argument are the structure type names
+.code catch-frame
+and
+.code handle-frame
+or the actual structure type objects which these type names denote.
+If any other value is specified, the function returns
+.code nil .
+If the argument is omitted, it defaults to the type of the
+.code catch-frame
+structure. That is to say, by default, the function looks for catch
+frames.
+
+Thus, if
+.code find-frame
+is called with no arguments at all it finds the innermost catch frame,
+if any exists, or else returns
+.codn nil .
+
 .coNP Function @ invoke-catch
 .synb
 .mets (invoke-catch < catch-frame < symbol << argument *)
@@ -27107,7 +27160,9 @@ described by the
 argument, which must be a structure of type
 .code catch-frame
 returned by a call to
-.codn get-frames .
+.code get-frame
+or
+.codn find-frame .
 
 The control transfer is possible only if the catch
 frame represented by
