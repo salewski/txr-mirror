@@ -42,6 +42,8 @@
 #include "signal.h"
 #include "eval.h"
 #include "parser.h"
+#include "struct.h"
+#include ALLOCA_H
 #include "unwind.h"
 
 static uw_frame_t *uw_stack;
@@ -49,7 +51,9 @@ static uw_frame_t *uw_env_stack;
 static uw_frame_t *uw_exit_point;
 static uw_frame_t toplevel_env;
 
-static val unhandled_hook_s;
+static val unhandled_hook_s, types_s, jump_s;
+
+static val frame_type, catch_frame_type, handle_frame_type;
 
 /* C99 inline instantiations. */
 #if __STDC_VERSION__ >= 199901L
@@ -214,6 +218,63 @@ uw_frame_t *uw_current_frame(void)
 uw_frame_t *uw_current_exit_point(void)
 {
   return uw_exit_point;
+}
+
+val uw_get_frames(void)
+{
+  uw_frame_t *ex;
+  list_collect_decl (out, ptail);
+
+  for (ex = uw_stack; ex != 0; ex = ex->uw.up) {
+    switch (ex->uw.type) {
+    case UW_CATCH:
+      if (ex->ca.matches && ex->ca.visible) {
+        args_decl(args, ARGS_MIN);
+        val cf = make_struct(catch_frame_type, nil, args);
+        slotset(cf, types_s, ex->ca.matches);
+        slotset(cf, jump_s, cptr(coerce(mem_t *, ex)));
+        ptail = list_collect(ptail, cf);
+      }
+      break;
+    case UW_HANDLE:
+      if (ex->ha.visible) {
+        args_decl(args, ARGS_MIN);
+        val hf = make_struct(handle_frame_type, nil, args);
+        slotset(hf, types_s, ex->ha.matches);
+        slotset(hf, fun_s, ex->ha.fun);
+        ptail = list_collect(ptail, hf);
+      }
+    default:
+      break;
+    }
+  }
+
+  return out;
+}
+
+val uw_invoke_catch(val catch_frame, val sym, struct args *args)
+{
+  uw_frame_t *ex, *ex_point;
+
+  if (struct_type(catch_frame) != catch_frame_type)
+    uw_throwf(type_error_s, lit("invoke-catch: ~s isn't a catch frame"),
+              catch_frame, nao);
+
+  ex_point = coerce(uw_frame_t *, cptr_get(slot(catch_frame, jump_s)));
+
+  for (ex = uw_stack; ex != 0; ex = ex->uw.up)
+    if (ex == ex_point && ex->uw.type == UW_CATCH)
+      break;
+
+  if (!ex)
+    uw_throwf(type_error_s, lit("invoke-catch: ~s no longer exists"),
+              catch_frame, nao);
+
+  ex->ca.sym = sym;
+  ex->ca.args = args_get_list(args);
+  uw_exit_point = ex;
+  uw_unwind_to_exit_point();
+  abort();
 }
 
 val uw_block_return_proto(val tag, val result, val protocol)
@@ -529,6 +590,25 @@ void uw_init(void)
 
 void uw_late_init(void)
 {
+  protect(&frame_type, &catch_frame_type, &handle_frame_type,
+          convert(val *, 0));
+  types_s = intern(lit("types"), user_package);
+  jump_s = intern(lit("jump"), user_package);
+  frame_type = make_struct_type(intern(lit("frame"), user_package),
+                                nil, nil, nil, nil, nil, nil);
+  catch_frame_type = make_struct_type(intern(lit("catch-frame"),
+                                             user_package),
+                                      frame_type, nil,
+                                      list(types_s, jump_s, nao),
+                                      nil, nil, nil);
+  handle_frame_type = make_struct_type(intern(lit("handle-frame"),
+                                              user_package),
+                                       frame_type, nil,
+                                       list(types_s, fun_s, nao),
+                                       nil, nil, nil);
   reg_var(unhandled_hook_s = intern(lit("*unhandled-hook*"),
           user_package), nil);
+  reg_fun(intern(lit("get-frames"), user_package), func_n0(uw_get_frames));
+  reg_fun(intern(lit("invoke-catch"), user_package),
+          func_n2v(uw_invoke_catch));
 }

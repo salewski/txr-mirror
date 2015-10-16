@@ -26986,6 +26986,165 @@ If that is the case, then
 is returned, otherwise
 .codn nil .
 
+.coNP Structures @, frame @ catch-frame and @ handle-frame
+.synb
+  (defstruct frame nil)
+  (defstruct catch-frame frame types jump)
+  (defstruct handle-frame frame types fun)
+.syne
+.desc
+The structure types
+.codn frame ,
+.code catch-frame
+and
+.code handle-frame
+are used by the
+.code get-frames
+function to represent information about the currently established
+exception catches (see the
+.code catch
+macro) and handlers
+(see
+.code handler-bind
+and
+.codn handler ).
+
+The
+.code frame
+type serves as the common base for
+.code catch-frame
+and
+.codn handle-frame .
+
+Modifying any of the slots of these structures has no effect on the
+actual frame from which they are derived; the frame structures are only
+representation which provides information about frames. They are not
+the actual frames themselves.
+
+Both
+.code catch-frame
+and
+.code handle-frame
+have a
+.code types
+slot. This holds the list of exception type symbols which are matched
+by the catch or handler.
+
+The
+.code jump
+slot of a
+.code catch-frame
+is an opaque
+.code cptr
+("C pointer")
+object which is related to the stack address of the catch
+frame. If it is altered, the catch frame object becomes invalid
+for the purposes of
+.codn invoke-catch .
+
+The
+.code fun
+slot of a
+.code handle-frame
+is the registered handler function. Note that all the clauses of a
+.code handler
+macro are compiled to a single function, which is established via
+.codn handler-bind ,
+so an instance of the
+.code handler
+macro corresponds to a single
+.codn handle-frame .
+
+.coNP Function @ get-frames
+.synb
+.mets (get-frames)
+.syne
+.desc
+The
+.code get-frames
+function inquires the current dynamic environment in order to retrieve
+information about established exception catch and handler frames.
+The function returns a list, ordered from the inner-most nesting
+level to the outer-most nesting, of structure objects derived from the
+.code frame
+structure type. The list contains two kinds of objects: structures
+of type
+.code catch-frame
+and of type
+.codn handle-frame .
+
+These objects are not the frames themselves, but only provide information
+about frames. Modifying the slots in these structures has no effect on
+the original frames. Also, these structures have their own lifetime and
+can endure after the original frames have disappeared. This has implications
+for the use of the
+.code invoke-catch
+function.
+
+The
+.code handle-frame
+structures have a
+.code fun
+slot, which holds a function. It may be invoked directly.
+
+A
+.code catch-frame
+structure may be passed as an argument to the
+.code invoke-catch
+function.
+
+.coNP Function @ invoke-catch
+.synb
+.mets (invoke-catch < catch-frame < symbol << argument *)
+.syne
+.desc
+The
+.code invoke-catch
+function abandons the current evaluation context to perform
+a non-local control transfer directly to the catch
+described by the
+.meta catch-frame
+argument, which must be a structure of type
+.code catch-frame
+returned by a call to
+.codn get-frames .
+
+The control transfer is possible only if the catch
+frame represented by
+.meta catch-frame
+structure is still established, and if the structure
+hasn't been tampered with.
+
+If a given
+.code catch-frame
+structure is usable with
+.codn invoke-catch ,
+then a copy of that structure made with
+.code copy-struct
+is also usable, denoting the same catch frame.
+
+The
+.meta symbol
+argument should be an exception symbol. It is passed to the
+exception frame, as if it had appeared as the first argument of the
+.code throw
+function. Similarly, the
+.metn argument -s
+are passed to the catch frame as if they were the trailing arguments
+of a
+.codn throw .
+The difference between
+.code invoke-catch
+and
+.code throw
+is that
+.code invoke-catch
+targets a specific catch frame as its exit point, rather than searching for a
+matching catch or handler frame. That specific frame receives the control.
+The frame receives control even if it it is not otherwise eligible for
+catching the exception type denoted by
+.metn symbol .
+
 .SS* Regular Expression Library
 .coNP Functions @ search-regex and @ range-regex
 .synb

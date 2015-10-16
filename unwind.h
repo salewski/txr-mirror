@@ -126,6 +126,8 @@ void uw_pop_frame(uw_frame_t *);
 void uw_pop_until(uw_frame_t *);
 uw_frame_t *uw_current_frame(void);
 uw_frame_t *uw_current_exit_point(void);
+val uw_get_frames(void);
+val uw_invoke_catch(val catch_frame, val sym, struct args *);
 void uw_init(void);
 void uw_late_init(void);
 
