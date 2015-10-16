@@ -621,7 +621,7 @@ val make_like(val list, val thatobj)
   if (list != thatobj) {
     switch (type(thatobj)) {
     case VEC:
-      return vector_list(list);
+      return vec_list(list);
     case STR:
     case LIT:
     case LSTR:
@@ -663,7 +663,7 @@ val tolist(val seq)
 {
   switch (type(seq)) {
   case VEC:
-    return list_vector(seq);
+    return list_vec(seq);
   case STR:
   case LIT:
   case LSTR:
@@ -916,7 +916,7 @@ val replace_list(val list, val items, val from, val to)
   val len = nil;
 
   if (vectorp(items))
-    items = list_vector(items);
+    items = list_vec(items);
   else if (stringp(items))
     items = list_str(items);
   else if (!listp(items))
@@ -986,7 +986,7 @@ val replace_list(val list, val items, val from, val to)
 
   if (!to || (len && ge(to, len)))  {
     if (from && zerop(from)) {
-      return (listp(items)) ? items : list_vector(items);
+      return (listp(items)) ? items : list_vec(items);
     } else {
       val iter, i;
       list_collect_decl (out, ptail);
@@ -998,7 +998,7 @@ val replace_list(val list, val items, val from, val to)
       }
 
       ptail = list_collect_nconc(ptail, if3(listp(items),
-                                            items, list_vector(items)));
+                                            items, list_vec(items)));
       return out;
     }
   } else {
@@ -1013,7 +1013,7 @@ val replace_list(val list, val items, val from, val to)
     }
 
     ptail = list_collect_nconc(ptail, append2(if3(listp(items), items,
-                                                  list_vector(items)),
+                                                  list_vec(items)),
                                       iter));
     return out;
   }
@@ -3736,12 +3736,12 @@ val chr_tolower(val ch)
   return chr(towlower(c_chr(ch)));
 }
 
-val num_chr(val ch)
+val int_chr(val ch)
 {
   return num_fast(c_chr(ch));
 }
 
-val chr_num(val num)
+val chr_int(val num)
 {
   cnum n = c_num(num);
   if (n < 0 || n > 0x10FFFF)
@@ -5368,7 +5368,7 @@ val vectorv(struct args *args)
   return vec;
 }
 
-val vector_list(val list)
+val vec_list(val list)
 {
   val vec = vector(zero, nil);
 
@@ -5381,7 +5381,7 @@ val vector_list(val list)
   return vec;
 }
 
-val list_vector(val vec)
+val list_vec(val vec)
 {
   list_collect_decl (list, ptail);
   int i, len;
@@ -6191,7 +6191,7 @@ val interpose(val sep, val seq)
   case LSTR:
     return cat_str(interpose(sep, tolist(seq)), nil);
   case VEC:
-    return vector_list(interpose(sep, tolist(seq)));
+    return vec_list(interpose(sep, tolist(seq)));
   default:
     type_mismatch(lit("interpose: ~s is not a sequence"), seq, nao);
   }
@@ -6334,7 +6334,7 @@ val shuffle(val seq)
   case LCONS:
     if (cdr(seq))
     {
-      val v = shuffle(vector_list(seq));
+      val v = shuffle(vec_list(seq));
       val i, l;
 
       for (l = seq, i = zero; l; i = succ(i), l = cdr(l))

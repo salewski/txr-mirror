@@ -92,7 +92,7 @@ val promise_s, promise_forced_s, promise_inprogress_s, force_s;
 val op_s, ap_s, identity_s, apf_s, ipf_s;
 val ret_s, aret_s;
 val hash_lit_s, hash_construct_s, struct_lit_s, qref_s;
-val vector_lit_s, vector_list_s;
+val vector_lit_s, vec_list_s;
 val macro_time_s, with_saved_vars_s, macrolet_s;
 val defsymacro_s, symacrolet_s, prof_s;
 val fbind_s, lbind_s, flet_s, labels_s;
@@ -2284,7 +2284,7 @@ static val expand_qquote(val qquoted_form, val menv,
       return rlcp(list(hash_construct_s, args, pairs, nao), qquoted_form);
     } else if (sym == vector_lit_s) {
       val args = expand_qquote(second(qquoted_form), menv, qq, unq, spl);
-      return rlcp(list(vector_list_s, args, nao), qquoted_form);
+      return rlcp(list(vec_list_s, args, nao), qquoted_form);
     } else {
       val f = sym;
       val r = cdr(qquoted_form);
@@ -4185,7 +4185,7 @@ void eval_init(void)
   struct_lit_s = intern(lit("struct-lit"), system_package);
   qref_s = intern(lit("qref"), user_package);
   vector_lit_s = intern(lit("vector-lit"), system_package);
-  vector_list_s = intern(lit("vector-list"), user_package);
+  vec_list_s = intern(lit("vec-list"), user_package);
   macro_time_s = intern(lit("macro-time"), user_package);
   macrolet_s = intern(lit("macrolet"), user_package);
   symacrolet_s = intern(lit("symacrolet"), user_package);
@@ -4673,8 +4673,16 @@ void eval_init(void)
   reg_fun(intern(lit("chr-isxdigit"), user_package), func_n1(chr_isxdigit));
   reg_fun(intern(lit("chr-toupper"), user_package), func_n1(chr_toupper));
   reg_fun(intern(lit("chr-tolower"), user_package), func_n1(chr_tolower));
-  reg_fun(intern(lit("num-chr"), user_package), func_n1(num_chr));
-  reg_fun(intern(lit("chr-num"), user_package), func_n1(chr_num));
+  {
+    val fun = func_n1(int_chr);
+    reg_fun(intern(lit("num-chr"), user_package), fun); /* OBS */
+    reg_fun(intern(lit("int-chr"), user_package), fun);
+  }
+  {
+    val fun = func_n1(chr_int);
+    reg_fun(intern(lit("chr-num"), user_package), fun); /* OBS */
+    reg_fun(intern(lit("chr-int"), user_package), fun);
+  }
   reg_fun(intern(lit("chr-str"), user_package), func_n2(chr_str));
   reg_fun(intern(lit("chr-str-set"), user_package), func_n3(chr_str_set));
   reg_fun(intern(lit("span-str"), user_package), func_n2(span_str));
@@ -4701,8 +4709,16 @@ void eval_init(void)
   reg_fun(intern(lit("vec-push"), user_package), func_n2(vec_push));
   reg_fun(intern(lit("length-vec"), user_package), func_n1(length_vec));
   reg_fun(intern(lit("size-vec"), user_package), func_n1(size_vec));
-  reg_fun(vector_list_s, func_n1(vector_list));
-  reg_fun(intern(lit("list-vector"), user_package), func_n1(list_vector));
+  {
+    val fun = func_n1(vec_list);
+    reg_fun(intern(lit("vector-list"), user_package), fun); /* OBS */
+    reg_fun(vec_list_s, fun);
+  }
+  {
+    val fun = func_n1(list_vec);
+    reg_fun(intern(lit("list-vector"), user_package), fun); /* OBS */
+    reg_fun(intern(lit("list-vec"), user_package), fun);
+  }
   reg_fun(intern(lit("copy-vec"), user_package), func_n1(copy_vec));
   reg_fun(intern(lit("sub-vec"), user_package), func_n3o(sub_vec, 1));
   reg_fun(intern(lit("replace-vec"), user_package), func_n4o(replace_vec, 2));

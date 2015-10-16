@@ -625,7 +625,7 @@ val url_encode(val str, val space_plus)
     else if (is_url_reserved(c))
       format(out, lit("%~1X~1X"), num_fast(c >> 4), num_fast(c & 0xf), nao);
     else
-      put_char(chr_num(ch), out);
+      put_char(chr_int(ch), out);
   }
 
   return get_string_from_stream(out);

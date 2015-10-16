@@ -164,7 +164,7 @@ static val perm_list(val p, val k)
   if (k == zero || (!k && !p)) {
     return cons(nil, nil);
   } else {
-    val state = perm_init_common(vector_list(p), k);
+    val state = perm_init_common(vec_list(p), k);
     if (!state)
       return nil;
     return generate(func_f0(state, perm_while_fun),
@@ -193,7 +193,7 @@ static val perm_str(val p, val k)
   if (k == zero) {
     return cons(string(L""), nil);
   } else {
-    val state = perm_init_common(vector_list(list_str(p)), k);
+    val state = perm_init_common(vec_list(list_str(p)), k);
     if (!state)
       return nil;
     return generate(func_f0(state, perm_while_fun),
@@ -268,12 +268,12 @@ static val rperm_list(val list, val k)
 static val rperm_vec_gen_fun(val env)
 {
   val list = rperm_gen_fun(env);
-  return vector_list(list);
+  return vec_list(list);
 }
 
 static val rperm_vec(val ve, val k)
 {
-  val list = list_vector(ve);
+  val list = list_vec(ve);
   val vec = vector(k, list);
   val env = cons(list, vec);
   return generate(func_f0(env, rperm_while_fun),
@@ -400,7 +400,7 @@ static val comb_vec_gen_fun(val state)
 
 static val comb_vec(val vec, val k)
 {
-  val state = nreverse(k_conses(list_vector(vec), k));
+  val state = nreverse(k_conses(list_vec(vec), k));
   return generate(func_f0(state, comb_while_fun),
                   func_f0(state, comb_vec_gen_fun));
 }
@@ -537,7 +537,7 @@ static val rcomb_list_gen_fun(val state)
 
 static val rcomb_list(val list, val k)
 {
-  val state = nreverse(list_vector(vector(k, list)));
+  val state = nreverse(list_vec(vector(k, list)));
   return generate(func_f0(state, rcomb_while_fun),
                   func_f0(state, rcomb_list_gen_fun));
 }
@@ -557,7 +557,7 @@ static val rcomb_vec_gen_fun(val state)
 
 static val rcomb_vec(val vec, val k)
 {
-  val state = nreverse(list_vector(vector(k, list_vector(vec))));
+  val state = nreverse(list_vec(vector(k, list_vec(vec))));
   return generate(func_f0(state, rcomb_while_fun),
                   func_f0(state, rcomb_vec_gen_fun));
 }
@@ -579,7 +579,7 @@ static val rcomb_str_gen_fun(val state)
 
 static val rcomb_str(val str, val k)
 {
-  val state = nreverse(list_vector(vector(k, list_str(str))));
+  val state = nreverse(list_vec(vector(k, list_str(str))));
   return generate(func_f0(state, rcomb_while_fun),
                   func_f0(state, rcomb_str_gen_fun));
 }

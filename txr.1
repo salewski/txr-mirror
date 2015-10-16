@@ -17031,10 +17031,10 @@ returns the lower case equivalent character. If it is some other
 character, then it just returns
 .metn char .
 
-.coNP Functions @ num-chr and @ chr-num
+.coNP Functions @ int-chr and @ chr-int
 .synb
-.mets (num-chr << char )
-.mets (chr-num << num )
+.mets (int-chr << char )
+.mets (chr-int << num )
 .syne
 .desc
 The argument
@@ -17052,6 +17052,11 @@ to
 .codn #\ex10FFFF .
 The argument is taken to be a Unicode code point value and the
 corresponding character object is returned.
+
+Note: these functions are also known by the obsolescent names
+.code num-chr
+and
+.codn chr-num .
 
 .coNP Accessor @ chr-str
 .synb
@@ -17711,24 +17716,30 @@ The
 of the vector can be extended up to this size without any memory
 allocation operations having to be performed.
 
-.coNP Function @ vector-list
+.coNP Function @ vec-list
 .synb
-.mets (vector-list << list )
+.mets (vec-list << list )
 .syne
 .desc
 This function returns a vector which contains all of the same elements
 and in the same order as list
 .metn list .
 
-.coNP Function @ list-vector
+Note: this function is also known by the obsolescent name
+.codn vector-list .
+
+.coNP Function @ list-vec
 .synb
-.mets (list-vector << vec )
+.mets (list-vec << vec )
 .syne
 .desc
 The
-.code list-vector
+.code list-vec
 function returns a list of the elements of vector
 .metn vec .
+
+Note: this function is also known by the obsolescent name
+.codn list-vector .
 
 .coNP Function @ copy-vec
 .synb

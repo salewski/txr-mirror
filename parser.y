@@ -714,7 +714,7 @@ vector : '#' list               { if (unquotes_occur($2, 0))
                                     $$ = rlcp(cons(vector_lit_s,
                                                    cons($2, nil)), $2);
                                   else
-                                    $$ = rlcp(vector_list($2), $2); }
+                                    $$ = rlcp(vec_list($2), $2); }
        ;
 
 hash : HASH_H list              { if (unquotes_occur($2, 0))
