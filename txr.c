@@ -163,7 +163,7 @@ static void help(void)
 "are mutually exclusive; the right-most one dominates.\n"
 "\n"
 );
-  format(std_output, text, auto_str(version), prog_string, nao);
+  format(std_output, text, static_str(version), prog_string, nao);
 }
 
 #if HAVE_TERMIOS
@@ -369,7 +369,7 @@ static int compat(val optval)
   if (min) {
     format(std_error, lit("~a: compatibility with versions "
                           "lower than ~a not supported by version ~a\n"),
-           prog_string, num(min), auto_str(version), nao);
+           prog_string, num(min), static_str(version), nao);
     return 0;
   }
 
@@ -501,7 +501,7 @@ int txr_main(int argc, char **argv)
 
       if (equal(opt, lit("version"))) {
         format(std_output, lit("~a: version ~a\n"),
-               prog_string, auto_str(version), nao);
+               prog_string, static_str(version), nao);
         return 0;
       }
 
