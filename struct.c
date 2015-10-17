@@ -62,6 +62,7 @@ struct struct_type {
   val stinitfun;
   val initfun;
   val boactor;
+  val dvtypes;
   val *stslot;
 };
 
@@ -119,6 +120,8 @@ void struct_init(void)
   reg_fun(intern(lit("static-slot"), user_package), func_n2(static_slot));
   reg_fun(intern(lit("static-slot-set"), user_package),
           func_n3(static_slot_set));
+  reg_fun(intern(lit("static-slot-ensure"), user_package),
+          func_n4o(static_slot_ensure, 3));
   reg_fun(intern(lit("call-super-method"), user_package),
           func_n2v(call_super_method));
   reg_fun(intern(lit("call-super-fun"), user_package),
@@ -211,6 +214,7 @@ val make_struct_type(val name, val super,
     st->stinitfun = static_initfun;
     st->initfun = initfun;
     st->boactor = boactor;
+    st->dvtypes = nil;
 
     gc_finalize(stype, struct_type_finalize_f, nil);
 
@@ -240,6 +244,9 @@ val make_struct_type(val name, val super,
     st->nstslots = stsl;
 
     sethash(struct_type_hash, name, stype);
+
+    if (super)
+      mpush(stype, mkloc(su->dvtypes, super));
 
     call_stinitfun_chain(st, stype);
 
@@ -305,6 +312,7 @@ static void struct_type_mark(val obj)
   gc_mark(st->stinitfun);
   gc_mark(st->initfun);
   gc_mark(st->boactor);
+  gc_mark(st->dvtypes);
 
   for (stsl = 0; stsl < st->nstslots; stsl++)
     gc_mark(st->stslot[stsl]);
@@ -655,6 +663,44 @@ val static_slot_set(val stype, val sym, val newval)
   }
 
   no_such_slot(lit("static-slot-set"), stype, sym);
+}
+
+val static_slot_ensure(val stype, val sym, val newval, val no_error_p)
+{
+  val self = lit("static-slot-ensure");
+  struct struct_type *st = coerce(struct struct_type *,
+                                  cobj_handle(stype, struct_type_s));
+
+  if (!bindable(sym))
+    uw_throwf(error_s, lit("~a: ~s isn't a valid slot name"),
+              self, sym, nao);
+
+  no_error_p = default_bool_arg(no_error_p);
+
+  {
+    loc ptr = lookup_static_slot(stype, st, sym);
+    if (!nullocp(ptr))
+      return set(ptr, newval);
+  }
+
+  if (!no_error_p && memq(sym, st->slots))
+    uw_throwf(error_s, lit("~a: ~s is an instance slot of ~s"),
+              self, sym, stype, nao);
+
+  st->stslot = coerce(val *, chk_realloc(coerce(mem_t *, st->stslot),
+                                         sizeof *st->stslot * (st->nstslots + 1)));
+  st->stslot[st->nstslots] = newval;
+  set(mkloc(st->slots, stype), append2(st->slots, cons(sym, nil)));
+  sethash(slot_hash, cons(sym, num_fast(st->id)),
+          num(st->nstslots++ + STATIC_SLOT_BASE));
+
+  {
+    val iter;
+    for (iter = st->dvtypes; iter; iter = cdr(iter))
+      static_slot_ensure(car(iter), sym, newval, t);
+  }
+
+  return newval;
 }
 
 static val call_super_method(val inst, val sym, struct args *args)

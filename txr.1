@@ -18246,6 +18246,40 @@ syntax.
   (new (point 1) x 5 y 5) -> #S(point x 1 y 5)
 .cble
 
+.coNP Macro @ defmeth
+.synb
+.mets (defmeth < type-name < name <> param-list << body-form *)
+.syne
+.desc
+The
+.code defmeth
+macro installs a function into the static slot named by the symbol
+.meta name
+in the struct type indicated by
+.metn type-name .
+
+If the structure type doesn't already have such a static slot, it is
+first added, as if by the
+.code static-slot-ensure
+function, subject to the same checks.
+
+If the function has at least one argument, it can be used as a method. In that
+situation, the leftmost argument passes the structure instance on which the
+method is being invoked.
+
+The function takes the arguments specified
+by the
+.meta param-list
+symbols, and its body consists of the
+.metn body-form -s.
+
+The
+.metn body-form -s
+are placed into a
+.code block
+named
+.codn name .
+
 .coNP Macro @ new
 .synb
 .mets (new >> { name | >> ( name << arg *)} >> { slot << init-form }*)
@@ -19107,6 +19141,53 @@ The
 argument must be a structure type, and
 .meta name
 must be a static slot of this type.
+
+.coNP Function @ static-slot-ensure
+.synb
+.mets (static-slot-ensure < type < name < new-value <> [ no-error-p ])
+.syne
+.desc
+The
+.code static-slot-ensure
+function is similar to
+.codn static-slot-set .
+
+It
+.meta new-value
+into the static slot named by symbol
+.meta name
+of the structure type
+.metn type ,
+if there already exists such a static slot.
+
+If the slot does not exist, it is first added to
+the struct type, provided that
+.meta name
+is a bindable symbol. Moreover,
+the struct type must not already have
+an instance slot by that name,
+unless the
+.meta no-error-p
+parameter is specified and true.
+If the
+.meta no-error-p
+parameter is true, then the function does
+not throw an error and does not create a
+static slot.
+
+The function returns
+.metn new-value .
+
+Note: if structure types already exist which are derived from
+.metn type ,
+.code static-slot-ensure
+is recursively invoked on each derived type to ensure that these
+types also have this static slot and it is given the specified value. The
+.meta no-error-p
+parameter is
+.code nil
+in these recursive calls, so that the static slot is only added
+to those structures which do not already have an instance slot.
 
 .coNP Function @ call-super-method
 .synb

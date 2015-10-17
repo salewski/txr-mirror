@@ -193,3 +193,10 @@
 
 (defmacro umeth (slot)
   ^(umethod ',slot))
+
+(defmacro defmeth (type-sym name arglist . body)
+  ^(progn
+     (static-slot-ensure (find-struct-type ',type-sym) ',name
+                         (lambda ,arglist
+                         (block ,name ,*body)))
+     ',name))
