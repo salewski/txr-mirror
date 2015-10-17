@@ -165,6 +165,30 @@ static void call_stinitfun_chain(struct struct_type *st, val stype)
   }
 }
 
+static struct struct_type *stype_handle(val *pobj, val ctx)
+{
+  val obj = *pobj;
+
+  switch (type(obj)) {
+  case SYM:
+    {
+      val stype = find_struct_type(obj);
+      if (!stype)
+        no_such_struct(ctx, obj);
+      *pobj = stype;
+      return coerce(struct struct_type *, cobj_handle(stype, struct_type_s));
+    }
+  case COBJ:
+    if (obj->co.cls == struct_type_s)
+      return coerce(struct struct_type *, obj->co.handle);
+    /* fallthrough */
+  default:
+    uw_throwf(error_s, lit("~a: ~s isn't a struct type"),
+              ctx, obj, nao);
+  }
+}
+
+
 val make_struct_type(val name, val super,
                      val static_slots, val slots,
                      val static_initfun, val initfun, val boactor)
@@ -194,9 +218,7 @@ val make_struct_type(val name, val super,
   } else {
     struct struct_type *st = coerce(struct struct_type *,
                                     chk_malloc(sizeof *st));
-    struct struct_type *su = if3(super,
-                                 coerce(struct struct_type *,
-                                        cobj_handle(super, struct_type_s)), 0);
+    struct struct_type *su = if3(super, stype_handle(&super, self), 0);
     val super_slots = if2(su, su->slots);
     val all_slots = uniq(append2(super_slots, append2(static_slots, slots)));
     val stype = cobj(coerce(mem_t *, st), struct_type_s, &struct_type_ops);
@@ -272,18 +294,11 @@ val struct_type_p(val obj)
 
 val super(val type)
 {
-  if (type && symbolp(type)) {
-    val stype = find_struct_type(type);
-    if (!stype)
-      no_such_struct(lit("super"), type);
-    type = stype;
-  } else if (structp(type)) {
-    type = struct_type(type);
-  }
-
-  {
-    struct struct_type *st = coerce(struct struct_type *,
-                                    cobj_handle(type, struct_type_s));
+  if (structp(type)) {
+    struct struct_inst *si = coerce(struct struct_inst *, type->co.handle);
+    return si->type;
+  } else {
+    struct struct_type *st = stype_handle(&type, lit("super"));
     return st->super;
   }
 }
@@ -331,66 +346,54 @@ static void call_initfun_chain(struct struct_type *st, val strct)
 val make_struct(val type, val plist, struct args *args)
 {
   val self = lit("make-struct");
+  struct struct_type *st = stype_handle(&type, self);
+  cnum nslots = st->nslots, sl;
+  size_t size = offsetof(struct struct_inst, slot) + sizeof (val) * nslots;
+  struct struct_inst *si = coerce(struct struct_inst *, chk_malloc(size));
+  val sinst;
+  volatile val inited = nil;
 
-  if (symbolp(type)) {
-    val typeobj = gethash(struct_type_hash, type);
-    if (!typeobj)
-      uw_throwf(error_s, lit("~a: ~s doesn't name a struct type"),
-                self, type, nao);
-    type = typeobj;
+  if (args_more(args, 0) && !st->boactor) {
+    free(si);
+    uw_throwf(error_s,
+              lit("~a: args present, but ~s has no boa constructor"),
+              self, type, nao);
   }
 
-  {
-    struct struct_type *st = coerce(struct struct_type *,
-                                    cobj_handle(type, struct_type_s));
-    cnum nslots = st->nslots, sl;
-    size_t size = offsetof(struct struct_inst, slot) + sizeof (val) * nslots;
-    struct struct_inst *si = coerce(struct struct_inst *, chk_malloc(size));
-    val sinst;
-    volatile val inited = nil;
-
-    if (args_more(args, 0) && !st->boactor) {
-      free(si);
-      uw_throwf(error_s,
-                lit("~a: args present, but ~s has no boa constructor"),
-                self, type, nao);
-    }
-
-    for (sl = 0; sl < nslots; sl++)
-      si->slot[sl] = nil;
-    si->type = nil;
-    si->id = st->id;
+  for (sl = 0; sl < nslots; sl++)
+    si->slot[sl] = nil;
+  si->type = nil;
+  si->id = st->id;
 
 
-    sinst = cobj(coerce(mem_t *, si), st->name, &struct_inst_ops);
+  sinst = cobj(coerce(mem_t *, si), st->name, &struct_inst_ops);
 
-    si->type = type;
+  si->type = type;
 
-    uw_simple_catch_begin;
+  uw_simple_catch_begin;
 
-    call_initfun_chain(st, sinst);
+  call_initfun_chain(st, sinst);
 
-    for (; plist; plist = cddr(plist))
-      slotset(sinst, car(plist), cadr(plist));
+  for (; plist; plist = cddr(plist))
+    slotset(sinst, car(plist), cadr(plist));
 
-    if (args_more(args, 0)) {
-      args_decl(args_copy, max(args->fill + 1, ARGS_MIN));
-      args_add(args_copy, sinst);
-      args_cat_zap(args_copy, args);
-      generic_funcall(st->boactor, args_copy);
-    }
-
-    inited = t;
-
-    uw_unwind {
-      if (!inited)
-        gc_call_finalizers(sinst);
-    }
-
-    uw_catch_end;
-
-    return sinst;
+  if (args_more(args, 0)) {
+    args_decl(args_copy, max(args->fill + 1, ARGS_MIN));
+    args_add(args_copy, sinst);
+    args_cat_zap(args_copy, args);
+    generic_funcall(st->boactor, args_copy);
   }
+
+  inited = t;
+
+  uw_unwind {
+    if (!inited)
+      gc_call_finalizers(sinst);
+  }
+
+  uw_catch_end;
+
+  return sinst;
 }
 
 static struct struct_inst *struct_handle(val obj, val ctx)
@@ -639,8 +642,8 @@ val slotset(val strct, val sym, val newval)
 
 val static_slot(val stype, val sym)
 {
-  struct struct_type *st = coerce(struct struct_type *,
-                                  cobj_handle(stype, struct_type_s));
+  val self = lit("static-slot");
+  struct struct_type *st = stype_handle(&stype, self);
 
   if (symbolp(sym)) {
     loc ptr = lookup_static_slot(stype, st, sym);
@@ -648,13 +651,13 @@ val static_slot(val stype, val sym)
       return deref(ptr);
   }
 
-  no_such_slot(lit("static-slot"), stype, sym);
+  no_such_slot(self, stype, sym);
 }
 
 val static_slot_set(val stype, val sym, val newval)
 {
-  struct struct_type *st = coerce(struct struct_type *,
-                                  cobj_handle(stype, struct_type_s));
+  val self = lit("static-slot-set");
+  struct struct_type *st = stype_handle(&stype, self);
 
   if (symbolp(sym)) {
     loc ptr = lookup_static_slot(stype, st, sym);
@@ -662,14 +665,13 @@ val static_slot_set(val stype, val sym, val newval)
       return set(ptr, newval);
   }
 
-  no_such_slot(lit("static-slot-set"), stype, sym);
+  no_such_slot(self, stype, sym);
 }
 
 val static_slot_ensure(val stype, val sym, val newval, val no_error_p)
 {
   val self = lit("static-slot-ensure");
-  struct struct_type *st = coerce(struct struct_type *,
-                                  cobj_handle(stype, struct_type_s));
+  struct struct_type *st = stype_handle(&stype, self);
 
   if (!bindable(sym))
     uw_throwf(error_s, lit("~a: ~s isn't a valid slot name"),
@@ -735,39 +737,24 @@ static val call_super_fun(val type, val sym, struct args *args)
 
 val slotp(val type, val sym)
 {
-  if (type && symbolp(type)) {
-    val stype = find_struct_type(type);
-    if (!stype)
-      no_such_struct(lit("slot-p"), type);
-    return slotp(stype, sym);
-  } else {
-    struct struct_type *st = coerce(struct struct_type *,
-                                    cobj_handle(type, struct_type_s));
-    return tnil(memq(sym, st->slots));
-  }
+  struct struct_type *st = stype_handle(&type, lit("slotp"));
+  return tnil(memq(sym, st->slots));
 }
 
 val static_slot_p(val type, val sym)
 {
-  if (type && symbolp(type)) {
-    val stype = find_struct_type(type);
-    if (!stype)
-      no_such_struct(lit("type-slot-p"), type);
-    return static_slot_p(stype, sym);
-  } else {
-    struct struct_type *st = coerce(struct struct_type *,
-                                    cobj_handle(type, struct_type_s));
-    if (memq(sym, st->slots)) {
-      val key = cons(sym, num_fast(st->id));
-      val sl = gethash(slot_hash, key);
-      cnum slnum = coerce(cnum, sl) >> TAG_SHIFT;
+  struct struct_type *st = stype_handle(&type, lit("static-slot-p"));
 
-      if (sl && slnum >= STATIC_SLOT_BASE)
-        return t;
-    }
+  if (memq(sym, st->slots)) {
+    val key = cons(sym, num_fast(st->id));
+    val sl = gethash(slot_hash, key);
+    cnum slnum = coerce(cnum, sl) >> TAG_SHIFT;
 
-    return nil;
+    if (sl && slnum >= STATIC_SLOT_BASE)
+      return t;
   }
+
+  return nil;
 }
 
 val structp(val obj)
