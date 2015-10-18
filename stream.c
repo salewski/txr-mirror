@@ -2302,16 +2302,37 @@ val formatv(val stream_in, val fmtstr, struct args *al)
             }
           }
           goto output_num;
-        case 'o':
+        case 'o': case 'b':
           obj = args_get_checked(name, al, &arg_ix);
           if (bignump(obj)) {
-            int nchars = mp_radix_size(mp(obj), 8);
+            int rad = ch == '0' ? 8 : 2;
+            int nchars = mp_radix_size(mp(obj), rad);
             if (nchars >= convert(int, sizeof (num_buf)))
               pnum = coerce(char *, chk_malloc(nchars + 1));
-            mp_toradix(mp(obj), coerce(unsigned char *, pnum), 8);
-          } else {
-            value = c_num(obj);
+            mp_toradix(mp(obj), coerce(unsigned char *, pnum), rad);
+          } else if (ch == 'o') {
+            cnum value = c_num(obj);
             sprintf(num_buf, num_fmt->oct, value);
+          } else {
+            cnum val = c_num(obj);
+            int s = (val < 0);
+            int i = sizeof num_buf;
+
+            value = s ? -val : val;
+
+            num_buf[--i] = 0;
+
+            while (i > 0) {
+              num_buf[--i] = ((value & 1) ? '1' : '0');
+              value >>= 1;
+              if (!value)
+                break;
+            }
+
+            if (s && i > 0)
+              num_buf[--i] = '-';
+
+            memmove(num_buf, num_buf + i, sizeof num_buf - i);
           }
           goto output_num;
         case 'f': case 'e':
