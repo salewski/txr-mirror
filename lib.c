@@ -2023,7 +2023,7 @@ mem_t *chk_grow_vec(mem_t *old, size_t oldelems, size_t newelems,
     internal_error("elsize == 0");
 
   if (newelems <= oldelems ||
-      ((bytes > no_oflow || elsize > no_oflow) && bytes / elsize != newelems))
+      ((newelems > no_oflow || elsize > no_oflow) && bytes / elsize != newelems))
     uw_throw(error_s, lit("array size overflow"));
 
   return chk_realloc(old, bytes);
