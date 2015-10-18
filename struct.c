@@ -225,6 +225,7 @@ val make_struct_type(val name, val super,
     val id = num_fast(++struct_id_counter);
     val iter;
     cnum sl, stsl;
+    val nullptr = 0;
 
     st->name = name;
     st->id = c_num(id);
@@ -261,7 +262,8 @@ val make_struct_type(val name, val super,
     }
 
     stsl -= STATIC_SLOT_BASE;
-    st->stslot = coerce(val *, chk_calloc(stsl, sizeof *st->stslot));
+    st->stslot = coerce(val *, chk_manage_vec(0, 0, stsl, sizeof (val),
+                                              coerce(mem_t *, &nullptr)));
     st->nslots = sl;
     st->nstslots = stsl;
 
@@ -689,9 +691,10 @@ val static_slot_ensure(val stype, val sym, val newval, val no_error_p)
     uw_throwf(error_s, lit("~a: ~s is an instance slot of ~s"),
               self, sym, stype, nao);
 
-  st->stslot = coerce(val *, chk_realloc(coerce(mem_t *, st->stslot),
-                                         sizeof *st->stslot * (st->nstslots + 1)));
-  st->stslot[st->nstslots] = newval;
+  st->stslot = coerce(val *, chk_manage_vec(coerce(mem_t *, st->stslot),
+                                            st->nstslots, st->nstslots + 1,
+                                            sizeof (val),
+                                            coerce(mem_t *, &newval)));
   set(mkloc(st->slots, stype), append2(st->slots, cons(sym, nil)));
   sethash(slot_hash, cons(sym, num_fast(st->id)),
           num(st->nstslots++ + STATIC_SLOT_BASE));
