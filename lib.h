@@ -535,6 +535,8 @@ mem_t *chk_calloc(size_t n, size_t size);
 mem_t *chk_realloc(mem_t *, size_t size);
 mem_t *chk_grow_vec(mem_t *old, size_t oldelems, size_t newelems,
                     size_t elsize);
+mem_t *chk_manage_vec(mem_t *old, size_t oldfilled, size_t newfilled,
+                      size_t elsize, mem_t *fillval);
 wchar_t *chk_wmalloc(size_t nwchar);
 wchar_t *chk_strdup(const wchar_t *str);
 char *chk_strdup_utf8(const char *str);

@@ -2029,6 +2029,55 @@ mem_t *chk_grow_vec(mem_t *old, size_t oldelems, size_t newelems,
   return chk_realloc(old, bytes);
 }
 
+static size_t bounding_pow_two(size_t s)
+{
+  s -= 1;
+
+  s |= (s >> 1);
+  s |= (s >> 2);
+  s |= (s >> 4);
+  s |= (s >> 8);
+  s |= (s >> 16);
+
+  if (sizeof (size_t) * CHAR_BIT > 32) {
+    size_t t = s >> 16; /* suppress warning about s >> 32 */
+    s |= (t >> 16);
+  }
+
+  return s ? s + 1 : s;
+}
+
+mem_t *chk_manage_vec(mem_t *old, size_t oldfilled, size_t newfilled,
+                      size_t elsize, mem_t *fillval)
+{
+  if (newfilled == 0) {
+    free(old);
+    return 0;
+  } else {
+    static const size_t no_oflow = convert(size_t, -1) >> (CHAR_BIT * sizeof(size_t) / 2);
+    size_t oldbytes = oldfilled * elsize;
+    size_t newbytes = newfilled * elsize;
+    size_t oldsize = bounding_pow_two(oldbytes);
+    size_t newsize = bounding_pow_two(newbytes);
+
+    if (((newfilled > no_oflow || elsize > no_oflow) &&
+         newbytes / elsize != newfilled) ||
+        (newsize < newbytes))
+      uw_throw(error_s, lit("array size overflow"));
+
+    if (oldsize != newsize)
+      old = chk_realloc(old, newsize);
+
+    if (fillval)
+      while (oldbytes < newbytes) {
+        memcpy(old + oldbytes, fillval, elsize);
+        oldbytes += elsize;
+      }
+
+    return old;
+  }
+}
+
 wchar_t *chk_wmalloc(size_t nwchar)
 {
   size_t size = nwchar * sizeof (wchar_t);
