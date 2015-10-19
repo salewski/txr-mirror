@@ -1,3 +1,51 @@
+                                    TXR 120
+                                   2015-10-18
+
+
+  Features
+
+  - Structs:
+    - Finalizers (specified by :fini) are now registered early in the
+      object initialization (at a given inheritance level). This allows
+      finalizers to clean up abandoned initializations.
+    - If initialization of a struct is abandoned, the finalizers are invoked
+      immediately, as part of unwinding.
+    - New defmeth macro for defining methods outside of a defstruct.
+    - New static-slot-ensure function for adding a new static slot to
+      a struct (and its inheritance descendants).
+    - static-slot and static-slot-set can take struct type name in place of
+      struct type.
+  - New functions hash-begin and hash-next, for iterating hash table,
+    and with-hash-iter macro.
+  - Listener:
+    - TXR now launches listener if no arguments are given.
+  - Exceptions:
+    - New way of handling exceptions without unwinding: handler-bind and
+      handle operators.
+    - Introspection over exception frames: get-frames and find-frame
+      functions can inquire about frames, and invoke-catch can transfer
+      control to a chosen catch frame.
+  - New ~b conversion specifier in format function for printing integers
+    in binary.
+  - The typecase macro has been added, similar to Common Lisp's.
+  - Some functions have been renamed for consistency, but remain available
+    under old names: list-vector -> list-vec, vector-list -> vec->list,
+    chr-num -> chr-int, num-chr -> int-chr.
+  - The sh function isn't implemented using the C library function
+    system any more.
+
+  Bugs
+
+  - Fixed use of nonexistent functions in error handling cases
+    of defstruct macro.
+  - Fixed bug in the overflow check in the chk_grow_vec function,
+    used by string-extend, the get-line function of many stream types,
+    and string output streams.
+  - Fixed unterminated format argument list issue affecting interactive
+    listener. (Reproduced on Mac OS/X).
+
+
+
                                     TXR 119
                                    2015-10-10
 
