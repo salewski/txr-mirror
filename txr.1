@@ -17867,7 +17867,11 @@ Although structures can have methods and functions in their instances, usually,
 all structures of the same type share the same functions. The
 .code defstruct
 macro supports a special syntax for defining methods and struct-specific
-functions.
+functions at the same time when a new structure type is defined.
+The
+.code defmeth
+macro can be used for adding new methods and functions to an existing
+structure and its descendants.
 
 Static slots may be assigned just like instance slots. Changing a static
 slot, of course, changes that slot in every structure of the same type.
@@ -18027,13 +18031,13 @@ may be used to terminate the execution of the function
 and return a value.
 Such functions are called using the
 .code instance.[name arg ...]
-syntax which doesn't insert the instance name into
+syntax which doesn't insert the instance into
 the argument list.
 
 .meIP (:init <> ( param ) << body-form *)
 The
 .code :init
-descriptor doesn't describe a slot. Rather, it specifies code
+specifier doesn't describe a slot. Rather, it specifies code
 which is executed when a structure is instantiated, after
 the slot initializations specific to the structure type
 are performed. The code consists of
@@ -18077,7 +18081,7 @@ specifier are not surrounded by an implicit
 .meIP (:fini <> ( param ) << body-form *)
 The
 .code :fini
-descriptor doesn't describe a slot. Rather, it specifies
+specifier doesn't describe a slot. Rather, it specifies
 a finalization function which is associated with the
 structure instance, as if by use of the
 .code finalize
@@ -18106,11 +18110,12 @@ of a
 .code :fini
 specifier are not surrounded by an implicit
 .codn block .
-.RE
-.PP
 
 Note that an object's finalizers can be called explicitly with
 .codn call-finalizers .
+.RE
+.PP
+
 The
 .code with-objects
 macro arranges for finalizers to be called on objects when the execution
@@ -18182,15 +18187,16 @@ A slot initialized in this style still has a
 which is processed independently of the existence of, and prior to,
 boa construction.
 
-The boa constructor syntax can specify optional arguments, delimited
+The boa constructor syntax can specify optional parameters, delimited
 by a colon, similarly to the
 .code lambda
-syntax. However, the optional arguments may only be symbols which name
-slots. The
+syntax. However, the optional parameters may not be arbitrary symbols;
+they must be symbols which name
+slots. Moreover, the
 .cblk
 .meti >> ( name < init-form <> [ present-p ])
 .cble
-optional argument syntax isn't supported.
+optional parameter syntax isn't supported.
 
 When boa construction is invoked with optional arguments missing,
 the default values for those arguments come from the
