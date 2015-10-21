@@ -153,7 +153,7 @@ static noreturn val unimpl_unget_byte(val stream, int byte)
 
 static noreturn val unimpl_seek(val stream, cnum off, enum strm_whence whence)
 {
-  unimpl(stream, lit("seek"));
+  unimpl(stream, lit("seek-stream"));
 }
 
 static val null_put_string(val stream, val str)
