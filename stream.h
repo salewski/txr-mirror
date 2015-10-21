@@ -58,6 +58,7 @@ struct strm_ops {
   val (*close)(val, val);
   val (*flush)(val);
   val (*seek)(val, cnum, enum strm_whence);
+  val (*truncate)(val, val);
   val (*get_prop)(val, val ind);
   val (*set_prop)(val, val ind, val);
   val (*get_error)(val);
@@ -67,12 +68,12 @@ struct strm_ops {
 
 #define strm_ops_init(cobj_init_macro, name, put_string, put_char, put_byte, \
                       get_line, get_char, get_byte, unget_char, unget_byte,  \
-                      close, flush, seek, get_prop, set_prop,                \
+                      close, flush, seek, truncate, get_prop, set_prop,      \
                       get_error, get_error_str, clear_error)                 \
 {                                                                            \
     cobj_init_macro, name, put_string, put_char, put_byte, get_line,         \
     get_char, get_byte, unget_char, unget_byte,                              \
-    close, flush, seek, get_prop, set_prop,                                  \
+    close, flush, seek, truncate, get_prop, set_prop,                        \
     get_error, get_error_str, clear_error                                    \
 }
 
@@ -132,6 +133,7 @@ val put_strings(val strings, val stream);
 val put_lines(val lines, val stream);
 val flush_stream(val stream);
 val seek_stream(val stream, val offset, val whence);
+val truncate_stream(val stream, val len);
 val get_indent_mode(val stream);
 val test_set_indent_mode(val stream, val compare, val mode);
 val set_indent_mode(val stream, val mode);

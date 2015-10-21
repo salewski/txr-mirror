@@ -156,6 +156,11 @@ static noreturn val unimpl_seek(val stream, cnum off, enum strm_whence whence)
   unimpl(stream, lit("seek-stream"));
 }
 
+static noreturn val unimpl_truncate(val stream, val len)
+{
+  unimpl(stream, lit("truncate-stream"));
+}
+
 static val null_put_string(val stream, val str)
 {
   return nil;
@@ -255,6 +260,8 @@ void fill_stream_ops(struct strm_ops *ops)
     ops->flush = null_flush;
   if (!ops->seek)
     ops->seek = unimpl_seek;
+  if (!ops->truncate)
+    ops->truncate = unimpl_truncate;
   if (!ops->get_prop)
     ops->get_prop = null_get_prop;
   if (!ops->set_prop)
@@ -277,9 +284,9 @@ static struct strm_ops null_ops =
                 null_put_string, null_put_char, null_put_byte, null_get_line,
                 null_get_char, null_get_byte,
                 unimpl_unget_char, unimpl_unget_byte,
-                null_close, null_flush, null_seek, null_get_prop,
-                null_set_prop, null_get_error, null_get_error_str,
-                null_clear_error);
+                null_close, null_flush, null_seek, unimpl_truncate,
+                null_get_prop, null_set_prop,
+                null_get_error, null_get_error_str, null_clear_error);
 
 val make_null_stream(void)
 {
@@ -655,6 +662,30 @@ static val stdio_close(val stream, val throw_on_error)
   return nil;
 }
 
+#if HAVE_FTRUNCATE || HAVE_CHSIZE
+static val stdio_truncate(val stream, val len)
+{
+  struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
+  cnum l = c_num(len);
+#if HAVE_FTRUNCATE
+  typedef off_t trunc_off_t;
+  int (*truncfun)(int, off_t) = ftruncate;
+#else
+  typedef long trunc_off_t;
+  int (*truncfun)(int, long) = chsize;
+#endif
+
+  if ((cnum) (trunc_off_t) l != l)
+    uw_throwf(error_s, lit("truncate-stream: ~s is too large"), len, nao);
+
+  return (h->f != 0 && truncfun(fileno(h->f), l) == 0)
+         ? t
+         : stdio_maybe_error(stream, lit("truncating"));
+}
+#else
+#define stdio_truncate unimpl_truncate
+#endif
+
 static struct strm_ops stdio_ops =
   strm_ops_init(cobj_ops_init(eq,
                               stdio_stream_print,
@@ -673,6 +704,7 @@ static struct strm_ops stdio_ops =
                 stdio_close,
                 stdio_flush,
                 stdio_seek,
+                stdio_truncate,
                 stdio_get_prop,
                 stdio_set_prop,
                 stdio_get_error,
@@ -855,6 +887,7 @@ static struct strm_ops tail_ops =
                 stdio_close,
                 stdio_flush,
                 stdio_seek,
+                stdio_truncate,
                 stdio_get_prop,
                 stdio_set_prop,
                 stdio_get_error,
@@ -948,6 +981,7 @@ static struct strm_ops pipe_ops =
                 pipe_close,
                 stdio_flush,
                 0, /* seek: not on pipes */
+                0, /* truncate: not on pipes */
                 stdio_get_prop,
                 stdio_set_prop,
                 stdio_get_error,
@@ -1203,7 +1237,7 @@ static struct strm_ops dir_ops =
                 dir_get_line,
                 0, 0, 0, 0,
                 dir_close,
-                0, 0, 0, 0,
+                0, 0, 0, 0, 0,
                 dir_get_error,
                 dir_get_error_str,
                 dir_clear_error);
@@ -1323,6 +1357,7 @@ static struct strm_ops string_in_ops =
                 string_in_unget_char,
                 0, 0, 0,
                 0, /* TODO: seek */
+                0, /* TODO: truncate */
                 string_in_get_prop,
                 0,
                 string_in_get_error,
@@ -1398,7 +1433,7 @@ static struct strm_ops byte_in_ops =
                 byte_in_get_byte,
                 0,
                 byte_in_unget_byte,
-                0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0,
                 byte_in_get_error,
                 byte_in_get_error_str,
                 0);
@@ -1540,6 +1575,7 @@ static struct strm_ops string_out_ops =
                 string_out_put_byte,
                 0, 0, 0, 0, 0, 0, 0,
                 0, /* TODO: seek; fill-with-spaces semantics if past end. */
+                0,
                 0, 0, 0, 0, 0);
 
 val make_string_output_stream(void)
@@ -1657,7 +1693,7 @@ static struct strm_ops strlist_out_ops =
                 wli("strlist-output-stream"),
                 strlist_out_put_string,
                 strlist_out_put_char,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
 val make_strlist_output_stream(void)
 {
@@ -1839,7 +1875,7 @@ static struct strm_ops cat_stream_ops =
                 cat_get_byte,
                 cat_unget_char,
                 cat_unget_byte,
-                0, 0, 0,
+                0, 0, 0, 0,
                 cat_get_prop,
                 0,
                 cat_get_error,
@@ -2697,6 +2733,12 @@ val seek_stream(val stream, val offset, val whence)
   return ops->seek(stream, off, w);
 }
 
+val truncate_stream(val stream, val len)
+{
+  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
+  return ops->truncate(stream, len);
+}
+
 val get_indent_mode(val stream)
 {
   struct strm_base *s = coerce(struct strm_base *,
@@ -3259,6 +3301,7 @@ void stream_init(void)
   reg_fun(intern(lit("unget-byte"), user_package), func_n2o(unget_byte, 1));
   reg_fun(intern(lit("flush-stream"), user_package), func_n1(flush_stream));
   reg_fun(intern(lit("seek-stream"), user_package), func_n3(seek_stream));
+  reg_fun(intern(lit("truncate-stream"), user_package), func_n2(truncate_stream));
   reg_fun(intern(lit("streamp"), user_package), func_n1(streamp));
   reg_fun(intern(lit("real-time-stream-p"), user_package), func_n1(real_time_stream_p));
   reg_fun(intern(lit("stream-set-prop"), user_package), func_n3(stream_set_prop));

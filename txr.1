@@ -31010,6 +31010,21 @@ and the previous position wasn't zero, then the position is decremented by one.
 On failure, it throws an exception of type
 .codn stream-error .
 
+.coNP Function @ truncate-stream
+.synb
+.mets (truncate-stream < stream << length )
+.syne
+.desc
+The
+.code truncate-stream
+causes the length of the underlying file associated with
+.meta stream
+to be set to
+.meta length
+bytes.
+
+The stream must be a file stream, and must be open for writing.
+
 .coNP Functions @ stream-get-prop and @ stream-set-prop
 .synb
 .mets (stream-get-prop < stream << indicator )

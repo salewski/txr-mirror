@@ -1953,6 +1953,22 @@ else
   printf "no\n"
 fi
 
+printf "Checking for ftruncate ... "
+cat > conftest.c <<!
+#include <unistd.h>
+
+int main(void)
+{
+  int e = ftruncate(0, 42);
+  return 0;
+}
+!
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_FTRUNCATE 1\n" >> $config_h
+else
+  printf "no\n"
+fi
 
 printf "Checking for _wspawnlp ... "
 
@@ -1974,6 +1990,24 @@ if conftest ; then
 else
   printf "no\n"
 fi
+
+printf "Checking for chsize ... "
+cat > conftest.c <<!
+#include <unistd.h>
+
+int main(void)
+{
+  int e = chsize(0, 42);
+  return 0;
+}
+!
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_CHSIZE 1\n" >> $config_h
+else
+  printf "no\n"
+fi
+
 
 printf "Checking for log2 ... "
 
