@@ -735,6 +735,11 @@ void gc_conservative_mark(val maybe_obj)
   mark_obj_maybe(maybe_obj);
 }
 
+void gc_mark_mem(val *low, val *high)
+{
+  mark_mem_region(low, high);
+}
+
 int gc_is_reachable(val obj)
 {
   return is_ptr(obj) ? is_reachable(obj) : 1;

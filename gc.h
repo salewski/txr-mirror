@@ -34,6 +34,7 @@ void gc(void);
 int gc_state(int);
 void gc_mark(val);
 void gc_conservative_mark(val);
+void gc_mark_mem(val *low, val *high);
 int gc_is_reachable(val);
 val gc_finalize(val obj, val fun, val rev_order_p);
 val gc_call_finalizers(val obj);
