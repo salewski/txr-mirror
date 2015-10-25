@@ -678,8 +678,7 @@ static val get_param_syms(val params)
 
 val apply(val fun, val arglist, val ctx_form)
 {
-  args_decl(args, ARGS_MAX);
-  args_init_list(args, ARGS_MAX, arglist);
+  args_decl_list(args, ARGS_MIN, arglist);
   return generic_funcall(fun, args);
 }
 
@@ -1003,7 +1002,7 @@ static val do_eval(val form, val env, val ctx_form,
       } else {
         val arglist = rest(form);
         cnum alen = if3(consp(arglist), c_num(length(arglist)), 0);
-        cnum argc = max(alen, ARGS_MAX);
+        cnum argc = max(alen, ARGS_MIN);
         val ret, lfe_save = last_form_evaled;
         args_decl(args, argc);
 

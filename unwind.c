@@ -425,8 +425,7 @@ val uw_throw(val sym, val args)
         if (uw_exception_subtype_p(sym, car(match)))
           break;
       if (match) {
-        args_decl(gf_args, ARGS_MAX);
-        args_init_list(gf_args, ARGS_MAX, cons(sym, args));
+        args_decl_list(gf_args, ARGS_MIN, cons(sym, args));
         --reentry_count;
         invoke_handler(ex, gf_args);
         ++reentry_count;
