@@ -28,7 +28,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-#include <setjmp.h>
 #include <errno.h>
 #include <wchar.h>
 #include <dirent.h>

@@ -40,6 +40,75 @@ extern int debug_depth;
 #define EJ_OPT_SAVE(EJB) EJ_DBG_SAVE(EJB)
 #define EJ_OPT_REST(EJB) EJ_DBG_REST(EJB)
 
+#if __i386__
+
+struct jmp {
+   unsigned eip;
+   unsigned esp;
+   unsigned ebp;
+   unsigned ebx;
+   unsigned esi;
+   unsigned edi;
+};
+
+#elif __x86_64__
+
+struct jmp {
+   unsigned long rip;
+   unsigned long rsp;
+   unsigned long rbp;
+   unsigned long rbx;
+   unsigned long r12;
+   unsigned long r13;
+   unsigned long r14;
+   unsigned long r15;
+};
+
+#elif __arm__ && !__thumb__
+
+struct jmp {
+  unsigned long r4;
+  unsigned long r5;
+  unsigned long r6;
+  unsigned long r7;
+  unsigned long r8;
+  unsigned long r9;
+  unsigned long r10;
+  unsigned long fp;
+  unsigned long sp;
+  unsigned long lr;
+};
+
+#elif __arm__ && __thumb__
+
+struct jmp {
+  unsigned long lr;
+  unsigned long r4;
+  unsigned long r5;
+  unsigned long r6;
+  unsigned long r7;
+  unsigned long r8;
+  unsigned long r9;
+  unsigned long r10;
+  unsigned long fp;
+  unsigned long sp;
+};
+
+#else
+#error port me!
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int jmp_save(struct jmp *);
+void jmp_restore(struct jmp *, int);
+
+#ifdef __cplusplus
+}
+#endif
+
 #if HAVE_POSIX_SIGS
 
 INLINE void copy_sigset(volatile sigset_t *dest, const sigset_t *src)
@@ -88,7 +157,7 @@ INLINE val sig_check_fast(void)
 }
 
 typedef struct {
-  jmp_buf jb;
+  struct jmp jb;
   volatile sig_atomic_t se;
   volatile sigset_t blocked;
   volatile val de;
@@ -99,7 +168,7 @@ typedef struct {
 } extended_jmp_buf;
 
 #define extended_setjmp(EJB)                    \
-  (setjmp((EJB).jb)                             \
+  (jmp_save(&(EJB).jb)                          \
    ? (async_sig_enabled = (EJB).se,             \
       dyn_env = (EJB).de,                       \
       gc_enabled = (EJB).gc,                    \
@@ -119,7 +188,7 @@ typedef struct {
       0))
 
 #define extended_longjmp(EJB, ARG)              \
-  ((EJB).rv = (ARG), longjmp((EJB).jb, 1))
+  ((EJB).rv = (ARG), jmp_restore(&(EJB).jb, 1))
 
 extern sigset_t sig_blocked_cache;
 extern volatile sig_atomic_t async_sig_enabled;
@@ -135,7 +204,7 @@ extern volatile sig_atomic_t async_sig_enabled;
 #define sig_check_fast() ((void) 0)
 
 typedef struct {
-  jmp_buf jb;
+  struct jmp jb;
   volatile val de;
   volatile int gc;
   val **volatile gc_pt;
@@ -144,7 +213,7 @@ typedef struct {
 } extended_jmp_buf;
 
 #define extended_setjmp(EJB)                    \
-  (setjmp((EJB).jb)                             \
+  (jmp_save(&(EJB).jb)                          \
    ? (dyn_env = (EJB).de,                       \
       gc_enabled = ((EJB).gc),                  \
       gc_prot_top = (EJB).gc_pt,                \
@@ -157,7 +226,7 @@ typedef struct {
       0))
 
 #define extended_longjmp(EJB, ARG)              \
-  ((EJB).rv = (ARG), longjmp((EJB).jb, 1))
+  ((EJB).rv = (ARG), jmp_restore(&(EJB).jb, 1))
 
 extern int async_sig_enabled;
 

@@ -27,7 +27,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <setjmp.h>
 #include <wchar.h>
 #include <signal.h>
 #include <glob.h>

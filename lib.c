@@ -32,7 +32,6 @@
 #include <limits.h>
 #include <stdarg.h>
 #include <dirent.h>
-#include <setjmp.h>
 #include <errno.h>
 #include <wchar.h>
 #include <math.h>

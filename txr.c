@@ -29,7 +29,6 @@
 #include <string.h>
 #include <limits.h>
 #include <dirent.h>
-#include <setjmp.h>
 #include <stdarg.h>
 #include <wchar.h>
 #include <signal.h>

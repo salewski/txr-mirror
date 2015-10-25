@@ -31,7 +31,6 @@
 #include <limits.h>
 #include <stdarg.h>
 #include <dirent.h>
-#include <setjmp.h>
 #include <wchar.h>
 #include <limits.h>
 #include <time.h>

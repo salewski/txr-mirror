@@ -30,7 +30,6 @@
 #include <dirent.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include <setjmp.h>
 #include <limits.h>
 #include <signal.h>
 #include "config.h"

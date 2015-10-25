@@ -25,7 +25,6 @@
  */
 
 #include <stddef.h>
-#include <setjmp.h>
 #include <string.h>
 #include <wctype.h>
 #include <wchar.h>

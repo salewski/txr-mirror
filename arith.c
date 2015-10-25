@@ -29,7 +29,6 @@
 #include <string.h>
 #include <wctype.h>
 #include <stdarg.h>
-#include <setjmp.h>
 #include <wchar.h>
 #include <math.h>
 #include <signal.h>

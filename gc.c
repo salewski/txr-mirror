@@ -28,7 +28,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <assert.h>
-#include <setjmp.h>
 #include <dirent.h>
 #include <wchar.h>
 #include <signal.h>
@@ -58,10 +57,10 @@ typedef struct heap {
 } heap_t;
 
 typedef struct mach_context {
-  jmp_buf buf;
+  struct jmp buf;
 } mach_context_t;
 
-#define save_context(X) setjmp((X).buf)
+#define save_context(X) jmp_save(&(X).buf)
 
 int opt_gc_debug;
 #if HAVE_VALGRIND

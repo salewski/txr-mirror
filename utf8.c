@@ -28,7 +28,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <wchar.h>
-#include <setjmp.h>
 #include <signal.h>
 #include "config.h"
 #include "lib.h"

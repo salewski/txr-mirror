@@ -46,7 +46,7 @@ EXTRA_OBJS-y :=
 
 OBJS := txr.o lex.yy.o y.tab.o match.o lib.o regex.o gc.o unwind.o stream.o
 OBJS += arith.o hash.o utf8.o filter.o eval.o parser.o rand.o combi.o sysif.o
-OBJS += args.o lisplib.o cadr.o struct.o
+OBJS += args.o lisplib.o cadr.o struct.o jmp.o
 OBJS-$(debug_support) += debug.o
 OBJS-$(have_syslog) += syslog.o
 OBJS-$(have_glob) += glob.o
@@ -122,6 +122,12 @@ dbg/%.o: $(top_srcdir)%.c
 
 opt/%.o: $(top_srcdir)%.c
 	$(call COMPILE_C_WITH_DEPS,$(OPT_FLAGS))
+
+dbg/%.o: $(top_srcdir)%.S
+	$(call COMPILE_C_WITH_DEPS,)
+
+opt/%.o: $(top_srcdir)%.S
+	$(call COMPILE_C_WITH_DEPS,)
 endif
 
 dbg/%.o: %.c
@@ -129,6 +135,12 @@ dbg/%.o: %.c
 
 opt/%.o: %.c
 	$(call COMPILE_C_WITH_DEPS,$(OPT_FLAGS))
+
+dbg/%.o: %.S
+	$(call COMPILE_C_WITH_DEPS,)
+
+opt/%.o: %.S
+	$(call COMPILE_C_WITH_DEPS,)
 
 dbg/%-win.o: $(top_srcdir)%.c
 	$(call COMPILE_C_WITH_DEPS,-DCONFIG_WIN_MAIN=1)

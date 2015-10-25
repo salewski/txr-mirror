@@ -25,7 +25,6 @@
  */
 
 #include <stddef.h>
-#include <setjmp.h>
 #include <signal.h>
 #include <string.h>
 #include "config.h"
