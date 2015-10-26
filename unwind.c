@@ -716,8 +716,10 @@ static val capture_cont(val tag, uw_frame_t *block)
   bug_unless (uw_stack < block);
 
   {
+    const int capture_extra = 16 * sizeof (val);
+    mem_t *lim = coerce(mem_t *, block + 1) + capture_extra;
     cnum bloff = coerce(mem_t *, block) - coerce(mem_t *, uw_stack);
-    cnum size = bloff + sizeof *block;
+    cnum size = coerce(mem_t *, lim) - coerce(mem_t *, uw_stack);
     mem_t *stack = chk_malloc(size);
     uw_frame_t *blcopy = coerce(uw_frame_t *, stack + bloff);
     struct cont *cont = coerce(struct cont *, chk_malloc(sizeof *cont));
