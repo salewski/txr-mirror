@@ -12506,6 +12506,23 @@ and
 A block named by the symbol nil is slightly special: it is
 understood to be an anonymous block.
 
+A named or anonymous block establishes an exit point for the
+.code return-from
+or
+.code return
+operator, respectively. These operators can be invoked within a block
+to cause its immediate termination with a specified return value.
+
+A block also establishes a prompt for a
+.IR "delimited continuation" .
+Anywhere in a block, a continuation can be captured using the
+.code sys:capture-cont
+function. Delimited continuations are described in the section
+Delimited Continuations. A delimited continuation allows an apparently
+abandoned block to be restarted at the capture point, with the
+entire call chain and dynamic environment between the prompt and the capture
+point intact.
+
 Blocks in \*(TL have dynamic scope. This means that the following
 situation is allowed:
 
@@ -12546,6 +12563,8 @@ Note that foo is quoted in CL. This underscores the dynamic nature of
 the construct.
 .code throw
 itself is a function and not an operator.
+
+Common Lisp blocks also do not support delimited continuations.
 
 .coNP Operators @ return and @ return-from
 .synb
@@ -27300,6 +27319,170 @@ matching catch or handler frame. That specific frame receives the control.
 The frame receives control even if it it is not otherwise eligible for
 catching the exception type denoted by
 .metn symbol .
+
+.SS* Delimited Continuations
+
+\*(TL supports delimited continuations, which are integrated with the
+.code block
+feature. Any named or anonymous block, including the implicit blocks
+created around function bodies, can be used as the delimiting
+.I prompt
+for the capture of a continuation.
+
+A delimited continuation consists of a copy
+of entire activation chain ("call stack") segment between the delimiting
+prompt and the capture point,
+.I reified
+as a first-class function. The function takes one argument. When the
+continuation function is called, the copy of the evaluation context is
+reinstated and its execution is restarted. Within the reinstated context,
+control resumes at the point where the continuation was originally captured.
+
+The argument passed to the continuation function appears as a return value from
+the capture form. Thus the capture form appears to return multiple times: the
+first time it returns, it returns the continuation.  Then each time the
+continuation is called, and thereby resumed, the capture form appears to return
+again, this time returning the value which was passed in.
+
+A restarted continuation can terminate normally: that is, by simply continuing
+to execute and then finally terminating the block which served as its
+delimiting prompt. When this happens, the continuation function terminates
+and returns the block's value.
+
+Thus, a delimited continuation is an ordinary function. It can be invoked
+multiple times, composed with other functions and so forth.
+
+.TP* Notes:
+
+Delimited continuations resemble lexical closures in some ways. Both
+constructs provide a way to return to some context whose evaluation
+has already been abandoned, and to access some aspects of that context.
+However, lexical closures are statically scoped. Closures capture the lexically
+apparent scope at a given point, and produce a function whose body has access
+to that scope, as well as to some arbitrary arguments. Thus, a lexical scope
+is reified as a first-class function. By contrast, a delimited continuation
+is dynamic. It captures an an entire segment of a program activation chain,
+up to the delimiting prompt. This segment includes scopes which are not
+lexically visible at the capture point: the scopes of parent functions.
+Moreover, the segment includes not only scopes, but also other aspects of
+the evaluation context, such as the possibility of returning to callers,
+and the (captured portion of) the original dynamic environment, such as
+exception handlers.  That is to say, a lexical closure's body cannot return to
+the surrounding code or see any of its original dynamic environment; it can
+only inspect the environment, and then return to its own caller.  Whereas a
+restarted delimited continuation can continue evaluation of the surrounding
+code, return to surrounding forms and parent functions, and access the dynamic
+environment. The continuation function returns to its caller when that entire
+restarted context terminates, whereas a closure returns to its caller as soon
+as the closure body terminates.
+
+.coNP Function @ sys:capture-cont
+.synb
+.mets (sys:capture-cont < name << error-report-sym )
+.syne
+.desc
+The
+.code sys:capture-cont
+function captures a continuation, and also serves as the resume point
+for the resulting continuation. Which of these two situations is the
+case (capture or resumption) is distinguished by the return value.
+
+A block named
+.meta name
+must be visible; the continuation is delimited by the closest
+enclosing block of this name.
+
+The
+.meta error-report-sym
+argument should be a symbol. It is used in the error message if
+.code sys:capture-cont
+is incorrectly used. The intent is that higher level constructs built
+on this function can pass their own name, so the resulting diagnostic
+pertains to these constructs, rather than the lower level interface.
+
+The
+.code sys:capture-cont
+function returns a cons cell. The
+.code car
+field of the cell distinguishes the capture and resume situations.
+If the
+.code car
+is the object
+.codn t ,
+then it indicates capture, and in this case, the
+.code cdr
+field contains the continuation function.  When the continuation
+function is called, the
+.code sys:capture-cont
+function appears to return again. This time the
+.code car
+of the returned cell is
+.code nil
+indicating that the
+.code cdr
+field holds the argument value which was passed to the continuation
+function.
+
+The invoked continuation function will terminate when the resumed context
+terminates. If that context terminates normally (by returning from the
+delimiting block named by
+.metn name ),
+then the result value of that block will appear as the return value
+of the continuation function.
+
+.TP* Note:
+
+The continuation function may be used any time after it is produced, and may be
+called more than once, regardless of whether the originally captured dynamic
+context is still executing. The underlying continuation stores a copy of the
+captured dynamic context.  Whenever the continuation function is invoked, a
+copy of the captured context is made again and reinstated as if it were a new
+context.  Thus the apparent additional returns from
+.code sys:capture-cont
+are not actually made in the original context, but a copy. The copy of the
+context is not complete; it only extends up to the enclosing block which was
+named in the capturing call.
+
+.TP* "Example:"
+
+The following example shows an implementation of the
+.meta shift
+and
+.meta reset
+operators which often appear in literature about delimited continuations.
+To avoid a clash with the
+.code shift
+macro, the
+.meta shift
+operator is named
+.codn shft .
+Note that the example shows the extended
+.meta shift
+and
+.meta reset
+with named prompts.
+
+.cblk
+  ;; Definition:
+
+  (defmacro reset (name . body)
+    ^(block ,name ,*body))
+
+  (defun shft-helper (name fun)
+    (let ((val (sys:capture-cont name 'shft)))
+      (if (car val)
+        (call fun (lambda (arg)
+                    (call (cdr val) arg)))
+        (cdr val))))
+
+  (defmacro shft (name var . body)
+    ^(shft-helper ',name
+       (lambda (,var) (return-from ,name ,*body))))
+
+  ;; Usage:
+  (reset foo (* 2 (shft foo k [k 3]) (shft foo l [l 4])))
+  --> 24
+.cble
 
 .SS* Regular Expression Library
 .coNP Functions @ search-regex and @ range-regex

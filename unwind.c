@@ -50,7 +50,7 @@ static uw_frame_t *uw_env_stack;
 static uw_frame_t *uw_exit_point;
 static uw_frame_t toplevel_env;
 
-static val unhandled_hook_s, types_s, jump_s;
+static val unhandled_hook_s, types_s, jump_s, sys_cont_s;
 
 static val frame_type, catch_frame_type, handle_frame_type;
 
@@ -201,6 +201,20 @@ void uw_pop_frame(uw_frame_t *fr)
     assert (fr == uw_env_stack);
     uw_env_stack = fr->ev.up_env;
   }
+}
+
+void uw_pop_block(uw_frame_t *fr, val *pret)
+{
+  if (uw_stack->uw.type == UW_CAPTURED_BLOCK) {
+    assert (fr->uw.type == UW_BLOCK || fr->uw.type == UW_CAPTURED_BLOCK);
+    assert (uw_stack->bl.tag == fr->bl.tag);
+
+    uw_stack = fr->uw.up;
+    uw_block_return(uw_stack->bl.tag, *pret);
+    abort();
+  }
+
+  uw_pop_frame(fr);
 }
 
 void uw_pop_until(uw_frame_t *fr)
@@ -614,6 +628,144 @@ void uw_continue(uw_frame_t *current, uw_frame_t *cont)
   uw_unwind_to_exit_point();
 }
 
+struct cont {
+  uw_frame_t *orig;
+  cnum size;
+  val tag;
+  mem_t *stack;
+};
+
+static void cont_destroy(val obj)
+{
+  struct cont *cont = coerce(struct cont *, obj->co.handle);
+  free(cont->stack);
+  free(cont);
+}
+
+static void cont_mark(val obj)
+{
+  struct cont *cont = coerce(struct cont *, obj->co.handle);
+  val *mem = coerce(val *, cont->stack);
+  gc_mark_mem(mem, mem + cont->size / sizeof *mem);
+  gc_mark(cont->tag);
+}
+
+static struct cobj_ops cont_ops = cobj_ops_init(eq,
+                                                cobj_print_op,
+                                                cont_destroy,
+                                                cont_mark,
+                                                cobj_hash_op);
+
+static val revive_cont(val dc, val arg)
+{
+  const int frame_slack = 32 * sizeof (val);
+  struct cont *cont = coerce(struct cont *, cobj_handle(dc, sys_cont_s));
+  mem_t *space = coerce(mem_t *, alloca(cont->size + frame_slack)) + frame_slack;
+  uint_ptr_t orig_start = coerce(uint_ptr_t, cont->orig);
+  uint_ptr_t orig_end = orig_start + cont->size;
+  cnum delta = space - coerce(mem_t *, cont->orig);
+  mem_t *ptr;
+  uw_frame_t *new_uw_stack = coerce(uw_frame_t *, space), *fr;
+  int env_set = 0;
+
+  memcpy(space, cont->stack, cont->size);
+
+  for (ptr = space; ptr < space + cont->size; ptr += sizeof (cnum))
+  {
+    uint_ptr_t *wordptr = coerce(uint_ptr_t *, ptr);
+    uint_ptr_t word = *wordptr;
+
+    if (word >= orig_start - frame_slack &&
+        word < orig_end && is_ptr(coerce(val, word)))
+      *wordptr = word + delta;
+  }
+
+  uw_block_begin (cont->tag, result);
+
+  for (fr = new_uw_stack; ; fr = fr->uw.up) {
+    if (!env_set && fr->uw.type == UW_ENV) {
+      uw_env_stack = fr;
+      env_set = 1;
+    }
+    if (fr->uw.up == 0) {
+      bug_unless (fr->uw.type == UW_CAPTURED_BLOCK);
+      bug_unless (fr->bl.tag == cont->tag);
+      fr->uw.up = uw_stack;
+      break;
+    }
+  }
+
+  uw_stack = new_uw_stack;
+
+  bug_unless (uw_stack->uw.type == UW_BLOCK);
+
+  uw_stack->bl.result = cons(nil, arg);
+  uw_exit_point = uw_stack;
+  uw_unwind_to_exit_point();
+  abort();
+
+  uw_block_end;
+
+  return result;
+}
+
+static val capture_cont(val tag, uw_frame_t *block)
+{
+  uw_block_begin (nil, result);
+
+  bug_unless (uw_stack < block);
+
+  {
+    cnum bloff = coerce(mem_t *, block) - coerce(mem_t *, uw_stack);
+    cnum size = bloff + sizeof *block;
+    mem_t *stack = chk_malloc(size);
+    uw_frame_t *blcopy = coerce(uw_frame_t *, stack + bloff);
+    struct cont *cont = coerce(struct cont *, chk_malloc(sizeof *cont));
+
+    cont->orig = uw_stack;
+    cont->size = size;
+    cont->stack = stack;
+    cont->tag = nil;
+
+    memcpy(stack, uw_stack, size);
+
+    blcopy->uw.up = 0;
+    blcopy->uw.type = UW_CAPTURED_BLOCK;
+
+    result = cobj(coerce(mem_t *, cont), sys_cont_s, &cont_ops);
+
+    cont->tag = tag;
+
+    result = cons(t, func_f1(result, revive_cont));
+  }
+
+  uw_block_end;
+
+  return result;
+}
+
+val uw_capture_cont(val tag, val ctx)
+{
+  uw_frame_t *fr;
+
+  for (fr = uw_stack; fr != 0; fr = fr->uw.up) {
+    if (fr->uw.type == UW_BLOCK && fr->bl.tag == tag)
+      break;
+  }
+
+  if (!fr) {
+    if (tag)
+      uw_throwf(error_s, lit("~s: no block ~s is visible"),
+                ctx, tag, nao);
+    else
+      uw_throwf(error_s, lit("~s: no anonymous block is visible"),
+                ctx, nao);
+    abort();
+  }
+
+  return capture_cont(tag, fr);
+}
+
 void uw_init(void)
 {
   protect(&toplevel_env.ev.func_bindings,
@@ -638,6 +790,7 @@ void uw_late_init(void)
           convert(val *, 0));
   types_s = intern(lit("types"), user_package);
   jump_s = intern(lit("jump"), user_package);
+  sys_cont_s = intern(lit("cont"), system_package);
   frame_type = make_struct_type(intern(lit("frame"), user_package),
                                 nil, nil, nil, nil, nil, nil);
   catch_frame_type = make_struct_type(intern(lit("catch-frame"),
@@ -656,4 +809,5 @@ void uw_late_init(void)
   reg_fun(intern(lit("find-frame"), user_package), func_n2o(uw_find_frame, 0));
   reg_fun(intern(lit("invoke-catch"), user_package),
           func_n2v(uw_invoke_catch));
+  reg_fun(intern(lit("capture-cont"), system_package), func_n2(uw_capture_cont));
 }

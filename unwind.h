@@ -32,7 +32,7 @@
 
 typedef union uw_frame uw_frame_t;
 typedef enum uw_frtype {
-  UW_BLOCK, UW_ENV, UW_CATCH, UW_HANDLE, UW_DBG
+  UW_BLOCK, UW_CAPTURED_BLOCK, UW_ENV, UW_CATCH, UW_HANDLE, UW_DBG
 } uw_frtype_t;
 
 struct uw_common {
@@ -123,12 +123,14 @@ void uw_push_debug(uw_frame_t *, val func, struct args *,
                    val ub_p_a_pairs, val env, val data,
                    val line, val chr);
 void uw_pop_frame(uw_frame_t *);
+void uw_pop_block(uw_frame_t *, val *pret);
 void uw_pop_until(uw_frame_t *);
 uw_frame_t *uw_current_frame(void);
 uw_frame_t *uw_current_exit_point(void);
 val uw_get_frames(void);
 val uw_find_frame(val extype, val frtype);
 val uw_invoke_catch(val catch_frame, val sym, struct args *);
+val uw_capture_cont(val tag, val ctx);
 void uw_init(void);
 void uw_late_init(void);
 
@@ -147,15 +149,16 @@ noreturn val type_mismatch(val, ...);
   obj_t *RESULTVAR = nil;                       \
   do {                                          \
     uw_frame_t uw_blk;                          \
+    obj_t **uw_rslt = &RESULTVAR;               \
     uw_push_block(&uw_blk, TAG);                \
     if (extended_setjmp(uw_blk.bl.jb)) {        \
       RESULTVAR = uw_blk.bl.result;             \
     } else {                                    \
       do { } while (0)
 
-#define uw_block_end                    \
-    }                                   \
-    uw_pop_frame(&uw_blk);              \
+#define uw_block_end                            \
+    }                                           \
+    uw_pop_block(&uw_blk, uw_rslt);             \
   } while (0)
 
 #define uw_env_begin                    \
