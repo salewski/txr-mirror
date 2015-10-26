@@ -196,9 +196,9 @@
                                                 place env accum-form))
                         pvtgs body-form))))))
 
-(defmacro zap (place :env env)
+(defmacro zap (place : (new-val nil) :env env)
   (with-update-expander (getter setter) place env
-    ^(prog1 (,getter) (,setter nil))))
+    ^(prog1 (,getter) (,setter ,new-val))))
 
 (defmacro flip (place :env env)
   (with-update-expander (getter setter) place env
