@@ -640,11 +640,13 @@ val repl(val bindings, val in_stream, val out_stream)
   lino_set_atom_cb(ls, provide_atom, 0);
   lino_set_tempfile_suffix(ls, ".tl");
 
-  if (histfile)
-    lino_hist_load(ls, histfile_u8);
-
   if (rcfile)
     load_rcfile(rcfile);
+
+  lino_hist_set_max_len(ls, c_num(cdr(hist_len_var)));
+
+  if (histfile)
+    lino_hist_load(ls, histfile_u8);
 
   while (!done) {
     val prompt = format(nil, lit("~a> "), counter, nao);
