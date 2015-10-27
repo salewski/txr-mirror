@@ -337,18 +337,6 @@ val sig_check(void)
   return t;
 }
 
-static void mem_set_bits(mem_t *target, const mem_t *bits, size_t size)
-{
-  while (size--)
-    *target++ |= *bits++;
-}
-
-static void mem_clr_bits(mem_t *target, const mem_t *bits, size_t size)
-{
-  while (size--)
-    *target++ &= ~*bits++;
-}
-
 int sig_mask(int how, const small_sigset_t *set, small_sigset_t *oldset)
 {
   small_sigset_t newset;
@@ -360,20 +348,18 @@ int sig_mask(int how, const small_sigset_t *set, small_sigset_t *oldset)
     break;
   case SIG_BLOCK:
     pnew = &newset;
-    newset = sig_blocked_cache;
-    mem_set_bits(coerce(mem_t *, &newset), coerce(const mem_t *, set), sizeof newset);
+    newset.set = sig_blocked_cache.set | set->set;
     break;
   case SIG_UNBLOCK:
     pnew = &newset;
-    newset = sig_blocked_cache;
-    mem_clr_bits(coerce(mem_t *, &newset), coerce(const mem_t *, set), sizeof newset);
+    newset.set = sig_blocked_cache.set & ~set->set;
     break;
   default:
     errno = EINVAL;
     return -1;
   }
 
-  if (memcmp(&sig_blocked_cache, pnew, sizeof *pnew) != 0) {
+  if (sig_blocked_cache.set != pnew->set) {
     static sigset_t blank;
     sigset_t real_newset = blank, real_oldset;
     sig_blocked_cache = *pnew;
