@@ -50,7 +50,7 @@
 
 volatile sig_atomic_t async_sig_enabled = 0;
 static volatile sig_atomic_t interrupt_count = 0;
-sigset_t sig_blocked_cache;
+small_sigset_t sig_blocked_cache;
 
 static val sig_lambda[MAX_SIG];
 volatile unsigned long sig_deferred;
@@ -69,7 +69,9 @@ static int is_cpu_exception(int sig)
 
 static int sig_reload_cache(void)
 {
-  return sigprocmask(SIG_BLOCK, 0, &sig_blocked_cache);
+  sigset_t set;
+  return sigprocmask(SIG_BLOCK, 0, &set);
+  memcpy(&sig_blocked_cache, &set, sizeof sig_blocked_cache);
 }
 
 static void sig_handler(int sig)
@@ -246,14 +248,19 @@ static void teardown_alt_stack(void)
 
 #endif
 
+static void small_sigfillset(small_sigset_t *ss)
+{
+  ss->set = (uint_ptr_t) -1;
+}
+
 val set_sig_handler(val signo, val lambda)
 {
   static struct sigaction blank;
   cnum sig = c_num(signo);
   val old_lambda;
-  sigset_t block, saved;
+  small_sigset_t block, saved;
 
-  sigfillset(&block);
+  small_sigfillset(&block);
   sig_mask(SIG_BLOCK, &block, &saved);
 
   if (sig < 0 || sig >= MAX_SIG)
@@ -342,10 +349,10 @@ static void mem_clr_bits(mem_t *target, const mem_t *bits, size_t size)
     *target++ &= ~*bits++;
 }
 
-int sig_mask(int how, const sigset_t *set, sigset_t *oldset)
+int sig_mask(int how, const small_sigset_t *set, small_sigset_t *oldset)
 {
-  sigset_t newset;
-  const sigset_t *pnew;
+  small_sigset_t newset;
+  const small_sigset_t *pnew;
 
   switch (how) {
   case SIG_SETMASK:
@@ -367,11 +374,18 @@ int sig_mask(int how, const sigset_t *set, sigset_t *oldset)
   }
 
   if (memcmp(&sig_blocked_cache, pnew, sizeof *pnew) != 0) {
+    static sigset_t blank;
+    sigset_t real_newset = blank, real_oldset;
     sig_blocked_cache = *pnew;
+    int ret;
 #if HAVE_VALGRIND
-    VALGRIND_MAKE_MEM_DEFINED(oldset, sizeof *oldset);
+    VALGRIND_MAKE_MEM_DEFINED(real_oldset, sizeof real_oldset);
 #endif
-    return sigprocmask(SIG_SETMASK, &sig_blocked_cache, oldset);
+    memcpy(&real_newset, &sig_blocked_cache, sizeof sig_blocked_cache);
+    ret = sigprocmask(SIG_SETMASK, &real_newset, &real_oldset);
+    if (ret == 0 && oldset != 0)
+      memcpy(oldset, &real_oldset, sizeof *oldset);
+    return ret;
   }
 
   if (oldset != 0)

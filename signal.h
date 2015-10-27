@@ -111,14 +111,9 @@ void jmp_restore(struct jmp *, int);
 
 #if HAVE_POSIX_SIGS
 
-INLINE void copy_sigset(volatile sigset_t *dest, const sigset_t *src)
-{
-#ifdef __cplusplus
-  *strip_qual(sigset_t *, dest) = *src;
-#else
-  *dest = *src;
-#endif
-}
+typedef struct {
+  uint_ptr_t set;
+} small_sigset_t;
 
 #define sig_save_enable                         \
   do {                                          \
@@ -159,7 +154,7 @@ INLINE val sig_check_fast(void)
 typedef struct {
   struct jmp jb;
   volatile sig_atomic_t se;
-  volatile sigset_t blocked;
+  volatile small_sigset_t blocked;
   volatile val de;
   volatile int gc;
   val **volatile gc_pt;
@@ -174,7 +169,7 @@ typedef struct {
       gc_enabled = (EJB).gc,                    \
       gc_prot_top = (EJB).gc_pt,                \
       sig_mask(SIG_SETMASK,                     \
-               strip_qual(sigset_t *,           \
+               strip_qual(small_sigset_t *,     \
                           &(EJB).blocked), 0),  \
       EJ_OPT_REST(EJB)                          \
       (EJB).rv)                                 \
@@ -182,15 +177,14 @@ typedef struct {
       (EJB).de = dyn_env,                       \
       (EJB).gc = gc_enabled,                    \
       (EJB).gc_pt = gc_prot_top,                \
-      copy_sigset(&(EJB).blocked,               \
-                  &sig_blocked_cache),          \
+      (EJB).blocked.set = sig_blocked_cache.set,\
       EJ_OPT_SAVE(EJB)                          \
       0))
 
 #define extended_longjmp(EJB, ARG)              \
   ((EJB).rv = (ARG), jmp_restore(&(EJB).jb, 1))
 
-extern sigset_t sig_blocked_cache;
+extern small_sigset_t sig_blocked_cache;
 extern volatile sig_atomic_t async_sig_enabled;
 
 #else
@@ -238,7 +232,7 @@ void sig_init(void);
 val set_sig_handler(val signo, val lambda);
 val get_sig_handler(val signo);
 #if HAVE_POSIX_SIGS
-int sig_mask(int how, const sigset_t *set, sigset_t *oldset);
+int sig_mask(int how, const small_sigset_t *set, small_sigset_t *oldset);
 #endif
 
 #if HAVE_ITIMER
