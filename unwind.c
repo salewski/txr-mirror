@@ -751,7 +751,8 @@ val uw_capture_cont(val tag, val ctx)
   uw_frame_t *fr;
 
   for (fr = uw_stack; fr != 0; fr = fr->uw.up) {
-    if (fr->uw.type == UW_BLOCK && fr->bl.tag == tag)
+    if ((fr->uw.type == UW_BLOCK || fr->uw.type == UW_CAPTURED_BLOCK)
+        && fr->bl.tag == tag)
       break;
   }
 
