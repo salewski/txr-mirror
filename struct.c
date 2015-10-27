@@ -224,7 +224,7 @@ val make_struct_type(val name, val super,
     val id = num_fast(++struct_id_counter);
     val iter;
     cnum sl, stsl;
-    val nullptr = 0;
+    val null_ptr = 0;
 
     st->name = name;
     st->id = c_num(id);
@@ -262,7 +262,7 @@ val make_struct_type(val name, val super,
 
     stsl -= STATIC_SLOT_BASE;
     st->stslot = coerce(val *, chk_manage_vec(0, 0, stsl, sizeof (val),
-                                              coerce(mem_t *, &nullptr)));
+                                              coerce(mem_t *, &null_ptr)));
     st->nslots = sl;
     st->nstslots = stsl;
 
