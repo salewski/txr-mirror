@@ -11003,7 +11003,8 @@ and
 is that a function defined by
 .code labels
 can see itself, and therefore recurse directly by name. Moreover, if multiple
-functions are defined by the same labels construct, they all see each other.
+functions are defined by the same labels construct, they all have each other's
+names in scope of their bodies.
 By contrast, a
 .codn flet -defined
 function does not have itself in scope and cannot recurse.
@@ -11054,6 +11055,19 @@ form.
 See also: the
 .code macrolet
 operator.
+
+.TP* "Dialect Note:"
+
+The
+.code flet
+and
+.code labels
+macros do not establish named blocks around the body forms
+of the local functions which they bind. This differs from
+ANSI Common Lisp, whose local function have implicit named blocks,
+allowing for
+.code return-from
+to be used.
 
 .TP* Examples:
 .cblk
