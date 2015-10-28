@@ -216,7 +216,7 @@ static val with_stream_instantiate(val set_fun)
 
 static val hash_set_entries(val dlt, val fun)
 {
-  val name[] = { lit("with-hash-table-iter"), nil };
+  val name[] = { lit("with-hash-iter"), nil };
   set_dlt_entries(dlt, name, fun);
   return nil;
 }
