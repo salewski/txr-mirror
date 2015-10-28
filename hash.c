@@ -703,7 +703,10 @@ val hash_next(val iter)
 {
   struct hash_iter *hi = coerce(struct hash_iter *, cobj_handle(iter, hash_iter_s));
   val hash = hi->hash;
-  struct hash *h = coerce(struct hash *, hash->co.handle);
+  struct hash *h = hash ? coerce(struct hash *, hash->co.handle) : 0;
+
+  if (!h)
+    return nil;
   if (hi->cons)
     hi->cons = cdr(hi->cons);
   while (nilp(hi->cons)) {
