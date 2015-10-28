@@ -256,7 +256,22 @@ static val type_instantiate(val set_fun)
   return nil;
 }
 
+static val yield_set_entries(val dlt, val fun)
+{
+  val name[] = {
+    lit("obtain"), lit("obtain-block"), lit("yield-from"), lit("yield"),
+    nil
+  };
+  set_dlt_entries(dlt, name, fun);
+  return nil;
+}
 
+static val yield_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(format(nil, lit("~a/yield.tl"), stdlib_path, nao));
+  return nil;
+}
 
 val dlt_register(val dlt,
                  val (*instantiate)(val),
@@ -280,6 +295,7 @@ void lisplib_init(void)
   dlt_register(dl_table, hash_instantiate, hash_set_entries);
   dlt_register(dl_table, except_instantiate, except_set_entries);
   dlt_register(dl_table, type_instantiate, type_set_entries);
+  dlt_register(dl_table, yield_instantiate, yield_set_entries);
 }
 
 val lisplib_try_load(val sym)

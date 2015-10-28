@@ -27387,6 +27387,18 @@ and returns the block's value.
 Thus, a delimited continuation is an ordinary function. It can be invoked
 multiple times, composed with other functions and so forth.
 
+The low-level operator for capturing a continuation is
+.codn sys:capture-cont .
+More expressive and convenient programming with continuations is
+provided by the macros
+.codn obtain ,
+.codn obtain-block ,
+.code yield-from
+and
+.codn yield ,
+which create an abstraction which models the continuation as a suspended
+procedure supporting two-way communication of data.
+
 .TP* Notes:
 
 Delimited continuations resemble lexical closures in some ways. Both
@@ -27520,6 +27532,247 @@ with named prompts.
   ;; Usage:
   (reset foo (* 2 (shft foo k [k 3]) (shft foo l [l 4])))
   --> 24
+.cble
+
+.coNP Macros @ obtain and @ yield-from
+.synb
+.mets (obtain << forms *)
+.mets (yield-from < name << form )
+.syne
+.desc
+The
+.code obtain
+and
+.code yield-from
+macros closely inter-operate.
+
+The
+.code yield-from
+macro captures a continuation up to the closest enclosing block named
+.metn name .
+Then it evaluates
+.metn form .
+Both the continuation and the value of
+.meta form
+are encapsulated in a special
+.IR "yield object" .
+Finally,
+.code yield-from
+performs a non-local transfer to the same block, so that the yield object
+appears as the result value of that block.
+
+An
+.code obtain
+form returns a function of one optional argument, whose value defaults to
+.codn nil .
+
+When the function is invoked, its argument is ignored and
+.meta forms
+are evaluated. If
+.meta forms
+produce any object other than a yield object, the function returns
+that object.
+
+If
+.meta forms
+produce a yield object, then the function returns the value that is
+encapsulated in the yield object.  Prior to returning this value,
+the function updates its internal state such that the next time it is
+called, instead of evaluating
+.meta forms
+it will invoke the continuation function stored in the yield object. Moreover,
+instead of ignoring its argument, it will pass that argument to the
+continuation function. In the continuation, the argument will emerge
+out of the
+.meta yield-from
+form as its result value.
+
+The return value of the continuation is then
+treated exactly like the result value of
+.metn forms :
+if it is an ordinary value, it is returned; otherwise, if it is
+a yield object, its stored value is returned and the state is updated
+with the new yield object's continuation.
+
+.TP* Notes:
+
+These macros provide a simple abstraction for the use of continuations.
+A module of code can be written which uses
+.code yield-from
+to suspend its execution, passing control back to specific top-level block,
+along with a yielded item.  The
+.code obtain
+macro converts that block to a function which can be iteratively called
+to retrieve each successively yielded item, and resume the execution
+of the suspended code so it can continue and yield the next one.
+When the continuation completes, whatever value the block returns is
+also produced as if it were a yielded item. Moreover, each
+.code yield-from
+call produces, as its return value, the argument of the function call which
+resumes the continuation. Thus for each item which is yielded,
+
+.TP* Examples:
+
+The following example shows a function which recursively
+traverses a
+.code cons
+cell structure, yielding all the
+.cod2 non- nil
+atoms it encounters. Finally, it returns the object
+.codn nil .
+The function is invoked on a list,
+and the invocation is wrapped in an
+.code obtain
+block to convert it to a generating function.
+
+The generating function is then called six times
+to retrieve the five atoms from the list,
+and the final
+.code nil
+value. These are collected into a list.
+
+This example demonstrates the power of delimited
+continuations to suspend and resume a recursive
+procedure.
+
+.cblk
+  (defun yflatten (obj)
+    (labels ((flatten-rec (obj)
+               (cond
+                 ((null obj))
+                 ((atom obj) (yield-from yflatten obj))
+                 (t (flatten-rec (car obj))
+                    (flatten-rec (cdr obj))))))
+      (flatten-rec obj)
+      nil))
+
+  (let ((f (obtain (yflatten '(a (b (c . d)) e)))))
+    (list [f] [f] [f] [f] [f] [f]))
+  --> (a b c d e nil)
+.cble
+
+The following interactive session log exemplifies two-way communication between
+the main code and a suspending function.
+
+Here,
+.code mappend
+is invoked on a list of symbols representing fruit and vegetable names.
+The objective is to return a list containing only fruits.
+The
+.code lambda
+function suspends execution and yields a question out of the
+.code map
+block. It then classifies
+the item as a fruit or not according to the reply it receives. The reply
+emerges as a the result value of the
+.code yield-from
+call.
+
+The
+.code obtain
+macro converts the block to a generating function. The first call to the
+function is made with no argument, because the argument would be ignored
+anyway. The function returns a question, asking whether the first item
+in the list, the potato, is a fruit.
+To answer negatively, the user calls the function again, passing in
+.codn nil .
+The function returns the next question, which is answered in the
+same manner.
+
+When the question for the last item is answered, the function
+call yields the final item: the ordinary result of the block, which is the list
+of fruit names.
+
+.cblk
+  1> (obtain
+       (block map
+         (mappend (lambda (item)
+                    (if (yield-from map `is @item a fruit?`)
+                      (list item)))
+                  '(potato apple banana lettuce orange carrot))))
+  #<interpreted fun: lambda (: reply)>
+  2> (call *1)
+  "is potato a fruit?"
+  3> (call *1 nil)
+  "is apple a fruit?"
+  4> (call *1 t)
+  "is banana a fruit?"
+  5> (call *1 t)
+  "is lettuce a fruit?"
+  6> (call *1 nil)
+  "is orange a fruit?"
+  7> (call *1 t)
+  "is carrot a fruit?"
+  8> (call *1 nil)
+  (apple banana orange)
+.cble
+
+.coNP Macro @ obtain-from
+.synb
+.mets (obtain-block < name << forms *)
+.syne
+.desc
+The
+.code obtain-block
+macro combines
+.code block
+and
+.code obtain
+into a single expression.
+The
+.metn form -s
+are evaluated in a block named
+.codn name .
+
+That is to say, the following equivalence holds:
+
+.cblk
+  (obtain-block n f ...)  <-->  (obtain (block n f ...))
+.cble
+
+.coNP Macro @ yield
+.synb
+.mets (yield << form )
+.syne
+.desc
+The
+.code yield
+macro is to
+.code yield-from
+as
+.code return
+is to
+.codn return-from :
+it yields from an anonymous block.
+
+It is equivalent to calling
+.code yield-from
+using
+.code nil
+as the block name.
+
+In other words, the following equivalence holds:
+
+.cblk
+  (yield x)  <-->  (yield-from nil x)
+.cble
+
+.TP* Example:
+
+.cblk
+  ;; Yield the integers 0 to 4 from a for loop, taking
+  ;; advantage of its implicit anonymous block:
+
+  (defvarl f (obtain (for ((i 0)) ((< i 5)) ((inc i))
+                       (yield i))))
+
+  [f] -> 0
+  [f] -> 1
+  [f] -> 2
+  [f] -> 3
+  [f] -> 4
+  [f] -> nil
+  [f] -> nil
 .cble
 
 .SS* Regular Expression Library
