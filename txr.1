@@ -27413,7 +27413,7 @@ as the closure body terminates.
 
 .coNP Function @ sys:capture-cont
 .synb
-.mets (sys:capture-cont < name << error-report-sym )
+.mets (sys:capture-cont < name <> [ context-form ])
 .syne
 .desc
 The
@@ -27427,13 +27427,15 @@ A block named
 must be visible; the continuation is delimited by the closest
 enclosing block of this name.
 
-The
-.meta error-report-sym
-argument should be a symbol. It is used in the error message if
+The optional
+.meta context-form
+argument should be a compound form. If
 .code sys:capture-cont
-is incorrectly used. The intent is that higher level constructs built
-on this function can pass their own name, so the resulting diagnostic
-pertains to these constructs, rather than the lower level interface.
+reports an error, it reports it against this form,
+and uses the form's operator symbol as the name of the function which
+encountered the error.  If the argument is omitted,
+.code sys:capture-cont
+uses its own name.
 
 The
 .code sys:capture-cont
@@ -27503,16 +27505,17 @@ with named prompts.
   (defmacro reset (name . body)
     ^(block ,name ,*body))
 
-  (defun shft-helper (name fun)
-    (let ((val (sys:capture-cont name 'shft)))
+  (defun shft-helper (name fun ctx)
+    (let ((val (sys:capture-cont name ctx)))
       (if (car val)
         (call fun (lambda (arg)
                     (call (cdr val) arg)))
         (cdr val))))
 
-  (defmacro shft (name var . body)
+  (defmacro shft (:form ctx name var . body)
     ^(shft-helper ',name
-       (lambda (,var) (return-from ,name ,*body))))
+       (lambda (,var) (return-from ,name ,*body))
+       ',ctx))
 
   ;; Usage:
   (reset foo (* 2 (shft foo k [k 3]) (shft foo l [l 4])))

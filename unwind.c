@@ -51,6 +51,7 @@ static uw_frame_t *uw_exit_point;
 static uw_frame_t toplevel_env;
 
 static val unhandled_hook_s, types_s, jump_s, sys_cont_s;
+static val sys_capture_cont_s;
 
 static val frame_type, catch_frame_type, handle_frame_type;
 
@@ -746,7 +747,7 @@ static val capture_cont(val tag, uw_frame_t *block)
   return result;
 }
 
-val uw_capture_cont(val tag, val ctx)
+val uw_capture_cont(val tag, val ctx_form)
 {
   uw_frame_t *fr;
 
@@ -757,12 +758,13 @@ val uw_capture_cont(val tag, val ctx)
   }
 
   if (!fr) {
+    uses_or2;
+    val sym = or2(car(default_bool_arg(ctx_form)), sys_capture_cont_s);
+
     if (tag)
-      uw_throwf(error_s, lit("~s: no block ~s is visible"),
-                ctx, tag, nao);
+      eval_error(ctx_form, lit("~s: no block ~s is visible"), sym, tag, nao);
     else
-      uw_throwf(error_s, lit("~s: no anonymous block is visible"),
-                ctx, nao);
+      eval_error(ctx_form, lit("~s: no anonymous block is visible"), sym, nao);
     abort();
   }
 
@@ -812,5 +814,6 @@ void uw_late_init(void)
   reg_fun(intern(lit("find-frame"), user_package), func_n2o(uw_find_frame, 0));
   reg_fun(intern(lit("invoke-catch"), user_package),
           func_n2v(uw_invoke_catch));
-  reg_fun(intern(lit("capture-cont"), system_package), func_n2(uw_capture_cont));
+  reg_fun(sys_capture_cont_s = intern(lit("capture-cont"), system_package),
+          func_n2o(uw_capture_cont, 1));
 }
