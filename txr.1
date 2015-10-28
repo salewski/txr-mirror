@@ -22277,24 +22277,30 @@ and
 receive
 .codn nil .
 
-Macro parameter lists also support two special keywords, namely
-.code :env
+Macro parameter lists also supports two special keywords, namely
+.codn :env ,
+.code :whole
 and
-.codn :whole .
+.codn :form .
 
 The parameter list
-.code (:whole x :env y)
+.code (:whole x :env y :form z)
 will bind parameter
 .code x
 to the entire
-macro parameter list, and bind parameter
+macro parameter list, bind parameter
 .code y
-to the macro environment.
+to the macro environment and bind parameter
+.code z
+to the entire macro form (the original compound form used to invoke the
+macro).
+
 The
+.codn :env ,
 .code :whole
 and
-.code :env
-notation can occur anywhere in a macro parameter list, other than
+.code :form
+notations can occur anywhere in a macro parameter list, other than
 to the right of the consing dot.
 
 .TP* "Dialect Note:"
@@ -22324,7 +22330,14 @@ they are the same and behave the same way. Thus
 is treated the same way in macros as in
 .code tree-bind
 and related binding operators: it binds just the arguments
-to the parameter.
+to the parameter. \*(TL has the special parameter
+.code :form
+by means of which macros can access their invoking form.
+This parameter is also supported in
+.code tree-bind
+and binds to the entire
+.code tree-bind
+form.
 
 .coNP Operator @ macro-time
 .synb
