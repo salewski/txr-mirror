@@ -153,7 +153,7 @@ static void env_vb_to_fb(val env)
   }
 }
 
-noreturn static val eval_error(val form, val fmt, ...)
+noreturn val eval_error(val form, val fmt, ...)
 {
   uses_or2;
   va_list vl;

@@ -29,6 +29,7 @@ extern val hash_lit_s, hash_construct_s, struct_lit_s, qref_s;
 extern val eval_error_s;
 extern val last_form_evaled, last_form_expanded;
 
+noreturn val eval_error(val form, val fmt, ...);
 val make_env(val fbindings, val vbindings, val up_env);
 val env_fbind(val env, val sym, val fun);
 val env_vbind(val env, val sym, val obj);
