@@ -126,17 +126,22 @@
   ^(let ,(zip syms (repeat '((gensym)))) ,*body))
 
 (macro-time
-  (defun sys:trigger-load (form)
-    (when (consp form) (symbol-function (car form)))
-    form)
-
   (defun sys:pl-expand (unex-place env)
-    (let ((ex-place (sys:expand unex-place env)))
-      (sys:trigger-load
-        (iflet ((pm-expander [*place-macro* (and (consp ex-place)
-                                                 (car ex-place))]))
-          [pm-expander ex-place]
-          ex-place))))
+    (while t
+      (let ((place unex-place))
+        (let ((pm-expander [*place-macro* (if (consp unex-place)
+                                            (car unex-place))]))
+          (when pm-expander
+            (sys:setq place [pm-expander unex-place])))
+        (sys:setq place (macroexpand place env))
+        (when (or (eq place unex-place)
+                  (null place)
+                  (and (atom place) (not (symbolp place)))
+                  (and (consp place)
+                       (consp unex-place)
+                       (eq (car place) (car unex-place))))
+          (return place))
+        (sys:setq unex-place place))))
 
   (defun call-update-expander (getter setter unex-place env body)
     (let* ((place (sys:pl-expand unex-place env))
