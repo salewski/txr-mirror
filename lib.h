@@ -49,6 +49,12 @@ typedef int_ptr_t cnum;
 
 #define PTR_BIT (SIZEOF_PTR * CHAR_BIT)
 
+#ifdef __GNUC__
+#define noreturn __attribute__((noreturn))
+#else
+#define noreturn
+#endif
+
 typedef enum type {
   NIL, NUM = TAG_NUM, CHR = TAG_CHR, LIT = TAG_LIT, CONS,
   STR, SYM, PKG, FUN, VEC, LCONS, LSTR, COBJ, ENV,

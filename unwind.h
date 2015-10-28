@@ -24,12 +24,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef __GNUC__
-#define noreturn __attribute__((noreturn))
-#else
-#define noreturn
-#endif
-
 typedef union uw_frame uw_frame_t;
 typedef enum uw_frtype {
   UW_BLOCK, UW_CAPTURED_BLOCK, UW_ENV, UW_CATCH, UW_HANDLE, UW_DBG
