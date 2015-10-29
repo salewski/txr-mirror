@@ -26,13 +26,16 @@
 (defstruct (sys:yld-item val cont) nil val cont)
 
 (defun sys:obtain-impl (fun)
-  (lambda (: reply)
-    (let ((yi (call fun reply)))
-      (cond
-        ((eq (typeof yi) 'sys:yld-item)
-         (set fun yi.cont)
-         yi.val)
-        (t yi)))))
+  (finalize
+    (lambda (: reply)
+      (let ((yi (call fun reply)))
+        (cond
+          ((eq (typeof yi) 'sys:yld-item)
+           (set fun yi.cont)
+           yi.val)
+          (t yi))))
+    (lambda (cont)
+      (call cont 'sys:cont-poison))))
 
 (defun sys:yield-impl (name fun ctx-form)
   (let ((cont (sys:capture-cont name ctx-form)))

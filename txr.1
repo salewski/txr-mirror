@@ -27669,6 +27669,16 @@ if it is an ordinary value, it is returned; otherwise, if it is
 a yield object, its stored value is returned and the state is updated
 with the new yield object's continuation.
 
+The
+.code obtain
+macro registers a finalizer against the returned function.
+The finalizer invokes the function, passing it the symbol
+.codn sys:cont-poison ,
+thereby triggering unwinding in the most recently captured
+continuation. Thus, abandoned
+.code obtain
+blocks are subject to unwinding when they become garbage.
+
 .TP* Notes:
 
 These macros provide a simple abstraction for the use of continuations.
