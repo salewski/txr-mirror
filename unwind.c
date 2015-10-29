@@ -114,6 +114,34 @@ static void uw_unwind_to_exit_point(void)
   }
 }
 
+static void uw_abscond_to_exit_point(void)
+{
+  assert (uw_exit_point);
+
+  for (; uw_stack && uw_stack != uw_exit_point; uw_stack = uw_stack->uw.up) {
+    switch (uw_stack->uw.type) {
+    case UW_ENV:
+      uw_env_stack = uw_env_stack->ev.up_env;
+      break;
+    default:
+      break;
+    }
+  }
+
+  if (!uw_stack)
+    abort();
+
+  uw_exit_point = 0;
+
+  switch (uw_stack->uw.type) {
+  case UW_BLOCK:
+    extended_longjmp(uw_stack->bl.jb, 1);
+    abort();
+  default:
+    abort();
+  }
+}
+
 void uw_push_block(uw_frame_t *fr, val tag)
 {
   memset(fr, 0, sizeof *fr);
@@ -353,6 +381,25 @@ val uw_block_return_proto(val tag, val result, val protocol)
   ex->bl.protocol = protocol;
   uw_exit_point = ex;
   uw_unwind_to_exit_point();
+  abort();
+}
+
+val uw_block_abscond(val tag, val result)
+{
+  uw_frame_t *ex;
+
+  for (ex = uw_stack; ex != 0; ex = ex->uw.up) {
+    if (ex->uw.type == UW_BLOCK && ex->bl.tag == tag)
+      break;
+  }
+
+  if (ex == 0)
+    return nil;
+
+  ex->bl.result = result;
+  ex->bl.protocol = nil;
+  uw_exit_point = ex;
+  uw_abscond_to_exit_point();
   abort();
 }
 

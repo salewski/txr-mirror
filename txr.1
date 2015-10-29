@@ -27413,6 +27413,25 @@ and
 which create an abstraction which models the continuation as a suspended
 procedure supporting two-way communication of data.
 
+Continuations raise the issue of what to do about unwinding.
+The language Scheme provides the much criticized
+.code dynamic-wind
+operator which can execute initialization and clean-up code as
+a continuation is entered and abandoned. \*(TX takes a simpler,
+albeit risky approach. It provides a non-unwinding escape operator
+.code sys:abscond-from
+for use with continuations. Code which has captured a continuation
+can use this operator to escape from the delimiting block without
+triggering any unwinding among the frames between the capture point and the
+delimiter. When the continuation is restarted, it will then do so
+with all of the resources associated with it frames intact.
+When the continuation executes normal returns within its context,
+the unwinding takes place then.  Thus tidy, "thread-like" use
+of continuations is possible with a small measure of coding discipline.
+Unfortunately, the absconding operator is dangerous: its use
+breaks the language guarantee that clean-up associated with a form is done no
+matter how a form terminates.
+
 .TP* Notes:
 
 Delimited continuations resemble lexical closures in some ways. Both
@@ -27548,6 +27567,37 @@ with named prompts.
   --> 24
 .cble
 
+.coNP Operator @ sys:abscond-from
+.synb
+.mets (sys:abscond-from < name <> [ value ])
+.syne
+.desc
+The
+.code sys:abscond-from
+operator closely resembles
+.code return-from
+and performs the same thing: it causes an enclosing block
+.meta name
+to terminate with
+.meta value
+which defaults to
+.codn nil .
+
+However, unlike
+.codn return-from ,
+.code sys:abscond-from
+does not perform any unwinding.
+
+This operator should never be used for any purpose other than
+implementing primitives for the use of delimited continuations.
+It is used by the
+.code yield-from
+and
+.code yield
+operators to escape out of a block in which a continuation has
+been captured. Neglecting to unwind is valid due to the expectation
+that control will return into a restarted copy of that context.
+
 .coNP Macros @ obtain and @ yield-from
 .synb
 .mets (obtain << forms *)
@@ -27573,7 +27623,10 @@ are encapsulated in a special
 Finally,
 .code yield-from
 performs a non-local transfer to the same block, so that the yield object
-appears as the result value of that block.
+appears as the result value of that block. The non-local transfer is
+performed abruptly, by the
+.code sys:abscond-from
+operator.
 
 An
 .code obtain

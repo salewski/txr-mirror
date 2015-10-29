@@ -84,7 +84,7 @@ val setq_s, inc_s, zap_s;
 val for_s, for_star_s, each_s, each_star_s, collect_each_s, collect_each_star_s;
 val append_each_s, append_each_star_s, while_s, while_star_s, until_star_s;
 val dohash_s;
-val uw_protect_s, return_s, return_from_s;
+val uw_protect_s, return_s, return_from_s, sys_abscond_from_s;
 val list_s, append_s, apply_s, iapply_s;
 val gen_s, gun_s, generate_s, rest_s, plus_s;
 val promise_s, promise_forced_s, promise_inprogress_s, force_s;
@@ -1858,6 +1858,16 @@ static val op_return_from(val form, val env)
   abort();
 }
 
+static val op_abscond_from(val form, val env)
+{
+  val name = second(form);
+  val retval = eval(third(form), env, form);
+  uw_block_abscond(name, retval);
+  eval_error(form, lit("sys:abscond-from: no block named ~s is visible"),
+             name, nao);
+  abort();
+}
+
 static val op_dwim(val form, val env)
 {
   val argexps = rest(form);
@@ -3030,7 +3040,9 @@ tail:
       } else {
         return rlcp(cons(sym, cons(funcs_ex, body_ex)), form);
       }
-    } else if (sym == block_s || sym == return_from_s) {
+    } else if (sym == block_s || sym == return_from_s ||
+               sym == sys_abscond_from_s)
+    {
       val name = second(form);
       val body = rest(rest(form));
       val body_ex = expand_progn(body, menv);
@@ -4157,6 +4169,7 @@ void eval_init(void)
   uw_protect_s = intern(lit("unwind-protect"), user_package);
   return_s = intern(lit("return"), user_package);
   return_from_s = intern(lit("return-from"), user_package);
+  sys_abscond_from_s = intern(lit("abscond-from"), system_package);
   gethash_s = intern(lit("gethash"), user_package);
   car_s = intern(lit("car"), user_package);
   cdr_s = intern(lit("cdr"), user_package);
@@ -4252,6 +4265,7 @@ void eval_init(void)
   reg_op(block_s, op_block);
   reg_op(return_s, op_return);
   reg_op(return_from_s, op_return_from);
+  reg_op(sys_abscond_from_s, op_abscond_from);
   reg_op(dwim_s, op_dwim);
   reg_op(quasi_s, op_quasi_lit);
   reg_op(catch_s, op_catch);

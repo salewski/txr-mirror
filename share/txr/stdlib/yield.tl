@@ -51,8 +51,9 @@
   (let ((cont-sym (gensym)))
     ^(sys:yield-impl ',name
                     (lambda (,cont-sym)
-                      (return-from ,name (new (sys:yld-item
-                                                ,form (cdr ,cont-sym)))))
+                      (sys:abscond-from ,name
+                                        (new (sys:yld-item
+                                               ,form (cdr ,cont-sym)))))
                     ',ctx-form)))
 
 (defmacro yield (form)

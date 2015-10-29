@@ -102,6 +102,7 @@ INLINE val uw_block_return(val tag, val result)
 {
    return uw_block_return_proto(tag, result, nil);
 }
+val uw_block_abscond(val tag, val result);
 void uw_push_catch(uw_frame_t *, val matches);
 void uw_push_handler(uw_frame_t *, val matches, val fun);
 noreturn val uw_throw(val sym, val exception);
