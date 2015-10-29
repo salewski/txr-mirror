@@ -31,6 +31,7 @@
       (let ((yi (call fun reply)))
         (cond
           ((eq (typeof yi) 'sys:yld-item)
+           (call fun 'sys:cont-free)
            (set fun yi.cont)
            yi.val)
           (t yi))))
@@ -44,8 +45,10 @@
       (cdr cont))))
 
 (defmacro obtain (. body)
-  (let ((ignored (gensym "ign")))
-    ^(sys:obtain-impl (lambda (,ignored) ,*body))))
+  (let ((arg (gensym "arg")))
+    ^(sys:obtain-impl (lambda (,arg)
+                        (unless (eq ,arg 'sys:cont-free)
+                          ,*body)))))
 
 (defmacro obtain-block (name . body)
   ^(obtain (block ,name ,*body)))

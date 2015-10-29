@@ -51,7 +51,7 @@ static uw_frame_t *uw_exit_point;
 static uw_frame_t toplevel_env;
 
 static val unhandled_hook_s, types_s, jump_s, sys_cont_s, sys_cont_poison_s;
-static val sys_capture_cont_s;
+static val sys_cont_free_s, sys_capture_cont_s;
 
 static val frame_type, catch_frame_type, handle_frame_type;
 
@@ -694,7 +694,8 @@ static void cont_mark(val obj)
 {
   struct cont *cont = coerce(struct cont *, obj->co.handle);
   val *mem = coerce(val *, cont->stack);
-  gc_mark_mem(mem, mem + cont->size / sizeof *mem);
+  if (mem)
+    gc_mark_mem(mem, mem + cont->size / sizeof *mem);
   gc_mark(cont->tag);
 }
 
@@ -708,53 +709,62 @@ static val revive_cont(val dc, val arg)
 {
   const int frame_slack = 32 * sizeof (val);
   struct cont *cont = coerce(struct cont *, cobj_handle(dc, sys_cont_s));
-  mem_t *space = coerce(mem_t *, alloca(cont->size + frame_slack)) + frame_slack;
-  uint_ptr_t orig_start = coerce(uint_ptr_t, cont->orig);
-  uint_ptr_t orig_end = orig_start + cont->size;
-  cnum delta = space - coerce(mem_t *, cont->orig);
-  mem_t *ptr;
-  uw_frame_t *new_uw_stack = coerce(uw_frame_t *, space), *fr;
-  int env_set = 0;
 
-  memcpy(space, cont->stack, cont->size);
+  if (arg == sys_cont_free_s) {
+    free(cont->stack);
+    cont->stack = 0;
+    return nil;
+  } else if (cont->stack) {
+    mem_t *space = coerce(mem_t *, alloca(cont->size + frame_slack)) + frame_slack;
+    uint_ptr_t orig_start = coerce(uint_ptr_t, cont->orig);
+    uint_ptr_t orig_end = orig_start + cont->size;
+    cnum delta = space - coerce(mem_t *, cont->orig);
+    mem_t *ptr;
+    uw_frame_t *new_uw_stack = coerce(uw_frame_t *, space), *fr;
+    int env_set = 0;
 
-  for (ptr = space; ptr < space + cont->size; ptr += sizeof (cnum))
-  {
-    uint_ptr_t *wordptr = coerce(uint_ptr_t *, ptr);
-    uint_ptr_t word = *wordptr;
+    memcpy(space, cont->stack, cont->size);
 
-    if (word >= orig_start - frame_slack &&
-        word < orig_end && is_ptr(coerce(val, word)))
-      *wordptr = word + delta;
-  }
+    for (ptr = space; ptr < space + cont->size; ptr += sizeof (cnum))
+    {
+      uint_ptr_t *wordptr = coerce(uint_ptr_t *, ptr);
+      uint_ptr_t word = *wordptr;
 
-  uw_block_begin (cont->tag, result);
-
-  for (fr = new_uw_stack; ; fr = fr->uw.up) {
-    if (!env_set && fr->uw.type == UW_ENV) {
-      uw_env_stack = fr;
-      env_set = 1;
+      if (word >= orig_start - frame_slack &&
+          word < orig_end && is_ptr(coerce(val, word)))
+        *wordptr = word + delta;
     }
-    if (fr->uw.up == 0) {
-      bug_unless (fr->uw.type == UW_CAPTURED_BLOCK);
-      bug_unless (fr->bl.tag == cont->tag);
-      fr->uw.up = uw_stack;
-      break;
+
+    uw_block_begin (cont->tag, result);
+
+    for (fr = new_uw_stack; ; fr = fr->uw.up) {
+      if (!env_set && fr->uw.type == UW_ENV) {
+        uw_env_stack = fr;
+        env_set = 1;
+      }
+      if (fr->uw.up == 0) {
+        bug_unless (fr->uw.type == UW_CAPTURED_BLOCK);
+        bug_unless (fr->bl.tag == cont->tag);
+        fr->uw.up = uw_stack;
+        break;
+      }
     }
+
+    uw_stack = new_uw_stack;
+
+    bug_unless (uw_stack->uw.type == UW_BLOCK);
+
+    uw_stack->bl.result = cons(nil, arg);
+    uw_exit_point = if3(arg == sys_cont_poison_s, &uw_blk, uw_stack);
+    uw_unwind_to_exit_point();
+    abort();
+
+    uw_block_end;
+
+    return result;
+  } else {
+    uw_throwf(error_s, lit("cannot revive freed continuation"), nao);
   }
-
-  uw_stack = new_uw_stack;
-
-  bug_unless (uw_stack->uw.type == UW_BLOCK);
-
-  uw_stack->bl.result = cons(nil, arg);
-  uw_exit_point = if3(arg == sys_cont_poison_s, &uw_blk, uw_stack);
-  uw_unwind_to_exit_point();
-  abort();
-
-  uw_block_end;
-
-  return result;
 }
 
 static val capture_cont(val tag, uw_frame_t *block)
@@ -844,6 +854,7 @@ void uw_late_init(void)
   jump_s = intern(lit("jump"), user_package);
   sys_cont_s = intern(lit("cont"), system_package);
   sys_cont_poison_s = intern(lit("cont-poison"), system_package);
+  sys_cont_free_s = intern(lit("cont-free"), system_package);
   frame_type = make_struct_type(intern(lit("frame"), user_package),
                                 nil, nil, nil, nil, nil, nil);
   catch_frame_type = make_struct_type(intern(lit("catch-frame"),

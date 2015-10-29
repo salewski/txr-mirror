@@ -27518,7 +27518,17 @@ is passed to the continuation function, the continuation will be
 resumed in a different manner: its context will be restored as in the
 ordinary resume case, whereupon it will be immediately abandoned by
 a nonlocal exit, causing unwinding to take place across all of the
-evaluation's continuation frames.
+evaluation's continuation frames. The function then returns
+.codn nil .
+
+If the symbol
+.code sys:cont-free
+is passed to the continuation function, the continuation isn't
+be resumed at all; rather, the buffer which holds the saved context
+of the continuation is released. Thereafter, an attempt to resume
+the continuation results in an error exception being thrown.
+After releasing the buffer, the function returns
+.code nil .
 
 .TP* Note:
 
