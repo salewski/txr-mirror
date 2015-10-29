@@ -50,7 +50,7 @@ static uw_frame_t *uw_env_stack;
 static uw_frame_t *uw_exit_point;
 static uw_frame_t toplevel_env;
 
-static val unhandled_hook_s, types_s, jump_s, sys_cont_s;
+static val unhandled_hook_s, types_s, jump_s, sys_cont_s, sys_cont_poison_s;
 static val sys_capture_cont_s;
 
 static val frame_type, catch_frame_type, handle_frame_type;
@@ -748,7 +748,7 @@ static val revive_cont(val dc, val arg)
   bug_unless (uw_stack->uw.type == UW_BLOCK);
 
   uw_stack->bl.result = cons(nil, arg);
-  uw_exit_point = uw_stack;
+  uw_exit_point = if3(arg == sys_cont_poison_s, &uw_blk, uw_stack);
   uw_unwind_to_exit_point();
   abort();
 
@@ -843,6 +843,7 @@ void uw_late_init(void)
   types_s = intern(lit("types"), user_package);
   jump_s = intern(lit("jump"), user_package);
   sys_cont_s = intern(lit("cont"), system_package);
+  sys_cont_poison_s = intern(lit("cont-poison"), system_package);
   frame_type = make_struct_type(intern(lit("frame"), user_package),
                                 nil, nil, nil, nil, nil, nil);
   catch_frame_type = make_struct_type(intern(lit("catch-frame"),

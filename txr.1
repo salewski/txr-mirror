@@ -27512,6 +27512,14 @@ delimiting block named by
 then the result value of that block will appear as the return value
 of the continuation function.
 
+If the symbol
+.code sys:cont-poison
+is passed to the continuation function, the continuation will be
+resumed in a different manner: its context will be restored as in the
+ordinary resume case, whereupon it will be immediately abandoned by
+a nonlocal exit, causing unwinding to take place across all of the
+evaluation's continuation frames.
+
 .TP* Note:
 
 The continuation function may be used any time after it is produced, and may be
