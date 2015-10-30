@@ -1,3 +1,31 @@
+                                    TXR 121
+                                   2015-10-30
+
+
+
+  Features
+
+  - TXR Lisp now has delimited continuations.
+    - easy to use via obtain/yield macro operators.
+  - New function truncate-stream for truncating files.
+  - Reduced stack usage on glibc systems by shrinking unwind
+    frames, achieved by replacing the 128 byte wide sigset_t
+    type with a much smaller type.
+  - The way place macros are expanded has improved, making
+    them more useful.
+  - Macro parameter lists have a :form keyword now for capturing
+    the whole form.
+
+  Bugs
+
+  - Implemented missing second argument of zap macro.
+  - Assignment to *listener-hist-len* in ~/.txr_profile was not
+    correctly taking effect prior to loading history, causing
+    truncation to 100 lines.
+  - Fixed typo causing with-hash-iter macro not to autoload.
+  - Fixed crash in hash-next.
+
+
                                     TXR 120
                                    2015-10-18
 
