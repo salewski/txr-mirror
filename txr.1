@@ -27412,6 +27412,13 @@ and
 .codn yield ,
 which create an abstraction which models the continuation as a suspended
 procedure supporting two-way communication of data.
+A
+.code suspend
+operator is provided, which is more general. It is identical to the
+.code shift
+operator described in various computer science literature about
+delimited continuations, except that it refers to a specific delimiting
+prompt by name.
 
 Continuations raise the issue of what to do about unwinding.
 The language Scheme provides the much criticized
@@ -27546,43 +27553,17 @@ named in the capturing call.
 .TP* "Example:"
 
 The following example shows an implementation of the
-.meta shift
-and
-.meta reset
-operators which often appear in literature about delimited continuations.
-To avoid a clash with the
-.code shift
-macro, the
-.meta shift
-operator is named
-.codn shft .
-Note that the example shows the extended
-.meta shift
-and
-.meta reset
-with named prompts.
+.meta suspend
+operator.
 
 .cblk
-  ;; Definition:
-
-  (defmacro reset (name . body)
-    ^(block ,name ,*body))
-
-  (defun shft-helper (name fun ctx)
-    (let ((val (sys:capture-cont name ctx)))
-      (if (car val)
-        (call fun (lambda (arg)
-                    (call (cdr val) arg)))
-        (cdr val))))
-
-  (defmacro shft (:form ctx name var . body)
-    ^(shft-helper ',name
-       (lambda (,var) (return-from ,name ,*body))
-       ',ctx))
-
-  ;; Usage:
-  (reset foo (* 2 (shft foo k [k 3]) (shft foo l [l 4])))
-  --> 24
+  (defmacro suspend (:form form name var . body)
+    (with-gensyms (cap val)
+      ^(tree-bind (,cap . ,val) (sys:capture-cont ',name ',form)
+         (if ,cap
+           (let ((,var ,val))
+             (sys:abscond-from ,name ,*body))
+           ,val))))
 .cble
 
 .coNP Operator @ sys:abscond-from
@@ -27868,6 +27849,85 @@ In other words, the following equivalence holds:
   [f] -> 4
   [f] -> nil
   [f] -> nil
+.cble
+
+.coNP Macro @ suspend
+.synb
+.synb (suspend < block-name < var-name << body-form *)
+.syne
+.desc
+The
+.code suspend
+operator captures a continuation up to the prompt given by the
+symbol
+.meta block-name
+and binds it to the variable name given by
+.metn var-name ,
+which must be a symbol suitable for binding variables with
+.codn let .
+
+Each
+.meta body-form
+is then evaluated in the scope of the variable
+.metn var-name .
+
+When the last
+.meta body-form
+is evaluated, a non-local exit takes place to the block
+named by
+.metn block-name (using
+the
+.code sys:abscond-from
+operator, so that unwinding isn't performed).
+
+When the continuation bound to
+.meta var-name
+is invoked, a copy of the entire block
+.meta block-name
+is re-started, and in that copy, the
+.code suspend
+call appears to return normally, yielding the value which had been
+passed to the continuation.
+
+.TP* Example
+
+Define John McCarthy's
+.code amb
+function using
+.code block
+and
+.codn suspend :
+
+.cblk
+  (defmacro amb-scope (. forms)
+    ^(block amb-scope ,*forms))
+
+  (defun amb (. args)
+    (suspend amb-scope cont
+      (each ((a args))
+        (when (and a (call cont a))
+          (return-from amb a)))))
+.cble
+
+Use
+.code amb
+to bind the of
+.code x
+and
+.code y
+which satisfy the predicate
+.cblk
+.meti (eql (* x y) 8)
+.cble
+non-deterministically:
+
+.cblk
+  (amb-scope
+    (let ((x (amb 1 2 3))
+          (y (amb 4 5 6)))
+      (amb (eql (* x y) 8)
+      (list x y))))
+  -> (2 4)
 .cble
 
 .SS* Regular Expression Library

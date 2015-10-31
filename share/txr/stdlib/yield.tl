@@ -64,3 +64,11 @@
 
 (defmacro yield (form)
   ^(yield-from nil ,form))
+
+(defmacro suspend (:form form name var . body)
+  (with-gensyms (cap val)
+    ^(tree-bind (,cap . ,val) (sys:capture-cont ',name ',form)
+       (if ,cap
+         (let ((,var ,val))
+           (sys:abscond-from ,name ,*body))
+         ,val))))
