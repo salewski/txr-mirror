@@ -13,7 +13,8 @@
   (if list [list (rand (length list))]))
 
 (defun neigh (loc)
-  (tree-bind (x . y) loc
+  (let ((x (from loc))
+        (y (to loc)))
     (list (- x 1)..y (+ x 1)..y
           x..(- y 1) x..(+ y 1))))
 

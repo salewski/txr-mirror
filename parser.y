@@ -100,7 +100,7 @@ int yyparse(scanner_t *, parser_t *);
 %token <lineno> UNTIL COLL OUTPUT REPEAT REP SINGLE FIRST LAST EMPTY
 %token <lineno> MOD MODLAST DEFINE TRY CATCH FINALLY
 %token <lineno> ERRTOK /* deliberately not used in grammar */
-%token <lineno> HASH_BACKSLASH HASH_SLASH DOTDOT HASH_H HASH_S
+%token <lineno> HASH_BACKSLASH HASH_SLASH DOTDOT HASH_H HASH_S HASH_R
 %token <lineno> WORDS WSPLICE QWORDS QWSPLICE
 %token <lineno> SECRET_ESCAPE_R SECRET_ESCAPE_E
 
@@ -116,7 +116,7 @@ int yyparse(scanner_t *, parser_t *);
 %type <val> output_clause define_clause try_clause catch_clauses_opt
 %type <val> if_clause elif_clauses_opt else_clause_opt
 %type <val> line elems_opt elems clause_parts_h additional_parts_h
-%type <val> text texts elem var var_op modifiers vector hash struct
+%type <val> text texts elem var var_op modifiers vector hash struct range
 %type <val> list exprs exprs_opt expr n_exprs r_exprs n_expr n_exprs_opt
 %type <val> out_clauses out_clauses_opt out_clause
 %type <val> repeat_clause repeat_parts_opt o_line
@@ -737,6 +737,16 @@ struct : HASH_S list            { if (unquotes_occur($2, 0))
                                     $$ = rlcp(strct, num($1)); } }
        ;
 
+range : HASH_R list             { if (length($2) != two)
+                                    yyerr("range literal needs two elements");
+
+                                  if (unquotes_occur($2, 0))
+                                    $$ = rlcp(cons(rcons_s, $2), num($1));
+                                  else
+                                  { val range = rcons(first($2), second($2));
+                                    $$ = rlcp(range, num($1)); } }
+       ;
+
 list : '(' n_exprs ')'          { $$ = rl($2, num($1)); }
      | '(' ')'                  { $$ = nil; }
      | '(' LAMBDOT n_expr ')'   { $$ = $3; }
@@ -818,6 +828,7 @@ n_expr : SYMTOK                 { $$ = symhlpr($1, t); }
        | vector                 { $$ = $1; }
        | hash                   { $$ = $1; }
        | struct                 { $$ = $1; }
+       | range                  { $$ = $1; }
        | lisp_regex             { $$ = $1; }
        | chrlit                 { $$ = $1; }
        | strlit                 { $$ = $1; }
@@ -833,7 +844,7 @@ n_expr : SYMTOK                 { $$ = symhlpr($1, t); }
        | SPLICE n_expr          { $$ = rl(rlcp(list(sys_splice_s, $2, nao), $2),
                                           num(parser->lineno)); }
        | n_expr DOTDOT n_expr   { uses_or2;
-                                  $$ = rlcp(list(cons_s, $1, $3, nao),
+                                  $$ = rlcp(list(rcons_s, $1, $3, nao),
                                             or2($1, $3)); }
        | n_expr '.' n_expr      { uses_or2;
                                   if (consp($3) && car($3) == qref_s) {

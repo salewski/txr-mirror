@@ -240,6 +240,7 @@ static void finalize(val obj)
   case LSTR:
   case ENV:
   case FLNUM:
+  case RNG:
     return;
   case SYM:
     free(obj->s.slot_cache);
@@ -366,6 +367,9 @@ tail_call:
     mark_obj(obj->e.vbindings);
     mark_obj(obj->e.fbindings);
     mark_obj_tail(obj->e.up_env);
+  case RNG:
+    mark_obj(obj->rn.from);
+    mark_obj_tail(obj->rn.to);
   }
 
   assert (0 && "corrupt type field");

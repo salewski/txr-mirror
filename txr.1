@@ -9537,22 +9537,36 @@ hash table based on the
 .code eql
 function, with no weak semantics.
 
+.NP* Range Literals
+
+.meIP >> #R( from << to )
+
+The notation
+.code #R
+followed by a two-element list syntax denotes a range literal.
+
 .coNP The @ .. notation
 In \*(TL, there is a special "dotdot" notation consisting of a pair of dots.
 This can be written between successive atoms or compound expressions, and is a
-shorthand for cons.
+shorthand for
+.codn rcons .
 
 That is to say,
 .code A .. B
 translates to
-.codn "(cons A B)" ,
+.codn "(rcons A B)" ,
 and so for instance
 .code (a b .. (c d) e .. f . g)
 means
-.codn "(a (cons b (c d)) (cons e f) . g)" .
+.codn "(a (rcons b (c d)) (rcons e f) . g)" .
 
-This is a syntactic sugar useful in certain situations in which a cons is used
-to represent a pair of numbers or other objects. For instance, if
+The
+.code rcons
+function constructs a range object, which denotes a pair of values.
+Range objects are most commonly used for referencing subranges of
+sequences.
+
+For instance, if
 .code L
 is a list, then
 .code [L 1 .. 3]
@@ -9565,18 +9579,33 @@ Note that if this notation is used in the dot position of an improper
 list, the transformation still applies. That is, the syntax
 .code (a . b .. c)
 is valid and produces the object
-.code (a . (cons b c))
+.code (a . (rcons b c))
 which is another way of writing
-.codn (a cons b c) .
+.codn (a rcons b c) ,
+which is quite probably nonsense.
 
 The notation's
 .code ..
 operator associates right to left, so that
 .code a..b..c
 denotes
-.code (cons a (cons b c))
-or
-.codn (a b . c) .
+.codn (rcons a (rcons b c)) .
+
+Note that range objects are not printed using the dotdot notation.
+A range literal has the syntax of a two-element list, prefixed by
+.codn #R .
+(See Range Literals above).
+
+In any context where the dotdot notation may be used, and where
+it is evaluated to its value, a range literal may also be specified.
+If an evaluated dotdot notation specifies two constant expressions, then
+an equivalent range literal can replace it. For instance the
+form
+.code [L 1 .. 3]
+can also be written
+.codn [L #R(1 3)] .
+The two are syntactically different, and so if these expressions are being
+considered for their syntax rather than value, they are not the same.
 
 .NP* The DWIM Brackets
 \*(TL has a square bracket notation. The syntax
@@ -13048,6 +13077,8 @@ an abstract type:
         |
         +--- env
         |
+        +--- range
+        |
         +--- pkg
         |
         +--- fun
@@ -13441,6 +13472,16 @@ yields
 .codn nil ;
 the comparison operation which finds these numbers equal is the
 .codn (= 0.0 0) .
+The
+.code eql
+function also specially treats range objects. Two distinct range objects are
+.code eql
+if their corresponding
+.meta from
+and
+.meta to
+fields are
+.codn eql .
 For all other object types,
 .code eql
 behaves like
@@ -13505,6 +13546,14 @@ if their sets of keys are identical, and if the data items associated with
 corresponding keys from each respective hash are
 .code equal
 objects.
+
+Two ranges are
+.code equal
+if their corresponding
+.meta to
+and
+.meta from
+fields are equal.
 
 For some aggregate objects, there is no special semantics.  Two arguments
 which are symbols, packages, or streams are
@@ -16293,6 +16342,60 @@ or less than
 might step over the endpoint value, and
 therefore never attain it. In this situation, the sequence also stops, and the
 excess value which surpasses the endpoint is excluded from the sequence.
+
+.SS* Ranges
+.coNP Function @ rcons
+.synb
+.mets (rcons < from << to )
+.syne
+The
+.code rcons
+function constructs a range object which holds the values
+.meta from
+and
+.metn to .
+
+Though range objects are effectively binary cells like conses, they are atoms.
+They also aren't considered sequences, nor are they structures.
+
+Range objects are used for indicating numeric ranges, such as substrings of
+lists, arrays and strings. The dotdot notation serves as a syntactic sugar for
+.codn rcons .
+The syntax
+.code a..b
+denotes the expression
+.codn (rcons a b) .
+
+Note that ranges are immutable, meaning that it is not possible to
+replace the values in a range.
+
+.coNP Function @ rangep
+.synb
+.mets (rangep << value )
+.syne
+The
+.code rangep
+function returns
+.code t
+if
+.meta value
+is a range. Otherwise it returns
+.codn nil .
+
+.coNP Functions @ from and @ to
+.synb
+.mets (from << range )
+.mets (to << range )
+.syne
+The
+.code from
+and
+.code to
+functions retrieve, respectively, the from and to fields
+of a range.
+
+Note that these functions are not accessors, which is because
+ranges are immutable.
 
 .SS* Characters and Strings
 .coNP Function @ mkstring

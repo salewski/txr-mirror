@@ -81,7 +81,7 @@ val system_package_s, keyword_package_s, user_package_s;
 val null_s, t, cons_s, str_s, chr_s, fixnum_s, sym_s, pkg_s, fun_s, vec_s;
 val lit_s, stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s, cptr_s;
 val atom_s, integer_s, number_s, sequence_s, string_s;
-val env_s, bignum_s, float_s;
+val env_s, bignum_s, float_s, range_s, rcons_s;
 val var_s, expr_s, regex_s, chset_s, set_s, cset_s, wild_s, oneplus_s;
 val nongreedy_s;
 val quote_s, qquote_s, unquote_s, splice_s;
@@ -164,6 +164,7 @@ static val code2type(int code)
   case ENV: return env_s;
   case BGNUM: return bignum_s;
   case FLNUM: return float_s;
+  case RNG: return range_s;
   }
   return nil;
 }
@@ -1833,9 +1834,12 @@ cnum c_num(val num);
 val eql(val left, val right)
 {
   /* eql is the same as eq except that numbers
-     are compared by value. This means that bignum and
-     floatinmg point objects which are distinct are
-     treated through the equal function. */
+     are compared by value, and ranges are
+     specially treated also. This means that bignum and
+     floating point objects which are distinct are
+     treated through the equal function.
+     Two ranges are eql if they are the same object,
+     or if their corresponding parts are eql. */
   if (left == right)
     return t;
 
@@ -1843,6 +1847,12 @@ val eql(val left, val right)
   case BGNUM:
   case FLNUM:
     return equal(left, right);
+  case RNG:
+    if (type(right) == RNG &&
+        eql(from(left), from(right)) &&
+        eql(to(left), to(right)))
+      return t;
+    /* fallthrough */
   default:
     return nil;
   }
@@ -1951,6 +1961,12 @@ val equal(val left, val right)
     return nil;
   case FLNUM:
     if (type(right) == FLNUM && left->fl.n == right->fl.n)
+      return t;
+    return nil;
+  case RNG:
+    if (type(right) == RNG &&
+        equal(from(left), from(right)) &&
+        equal(to(left), to(right)))
       return t;
     return nil;
   case COBJ:
@@ -3516,6 +3532,7 @@ static void less_tab_init(void)
     7, /* ENV */
     0, /* BGNUM */
     0, /* FLNUM */
+    0, /* RNG */
   };
 
   for (l = 0; l <= MAXTYPE; l++)
@@ -3607,6 +3624,10 @@ val less(val left, val right)
 
       return tnil(lenl < lenr);
     }
+  case RNG:
+    if (less(from(left), from(right)))
+      return t;
+    return less(to(left), to(right));
   case FUN:
   case PKG:
   case ENV:
@@ -4534,15 +4555,17 @@ val generic_funcall(val fun, struct args *args_in)
     case 0:
       callerror(fun, lit("missing required arguments"));
     case 1:
-      if (consp(args->arg[0])) {
-        cons_bind (x, y, args->arg[0]);
-        if (atom(y))
-          return sub(fun, x, y);
+      switch (type(args->arg[0])) {
+      case NIL:
+      case CONS:
+      case LCONS:
+      case VEC:
         return sel(fun, args->arg[0]);
+      case RNG:
+        return sub(fun, args->arg[0]->rn.from, args->arg[0]->rn.to);
+      default:
+        return ref(fun, args->arg[0]);
       }
-      if (vectorp(args->arg[0]))
-        return sel(fun, args->arg[0]);
-      return ref(fun, args->arg[0]);
     case 2:
       return sub(fun, args->arg[0], args->arg[1]);
     default:
@@ -7120,20 +7143,23 @@ val replace(val seq, val items, val from, val to)
 
 val dwim_set(val seq, val ind_range, val newval)
 {
-  if (consp(ind_range) && !hashp(seq)) {
-    cons_bind (x, y, ind_range);
-
-    if (atom(y))
+  switch (type(ind_range)) {
+  case NIL:
+  case CONS:
+  case LCONS:
+  case VEC:
+    return replace(seq, newval, ind_range, colon_k);
+  case RNG:
+    if (!hashp(seq))
+    {
+      range_bind (x, y, ind_range);
       return replace(seq, newval, x, y);
-    return replace(seq, newval, ind_range, colon_k);
-  } else if (vectorp(ind_range)) {
-    return replace(seq, newval, ind_range, colon_k);
-  } else {
+    }
+    /* fallthrough */
+  default:
     (void) refset(seq, ind_range, newval);
     return seq;
   }
-
-  return newval;
 }
 
 val dwim_del(val seq, val ind_range)
@@ -7141,8 +7167,8 @@ val dwim_del(val seq, val ind_range)
   if (hashp(seq)) {
     (void) remhash(seq, ind_range);
     return seq;
-  } else if (consp(ind_range)) {
-    return replace(seq, nil, car(ind_range), cdr(ind_range));
+  } else if (rangep(ind_range)) {
+    return replace(seq, nil, from(ind_range), to(ind_range));
   } else {
     return replace(seq, nil, ind_range, succ(ind_range));
   }
@@ -7180,7 +7206,7 @@ val update(val seq, val fun)
       return hash_update(seq, fun);
     /* fallthrough */
   default:
-    type_mismatch(lit("replace: ~s is not a sequence"), seq, nao);
+    type_mismatch(lit("update: ~s is not a sequence"), seq, nao);
   }
 
   return seq;
@@ -7344,6 +7370,32 @@ val sel(val seq_in, val where_in)
   return make_like(out, seq_in);
 }
 
+val rcons(val from, val to)
+{
+  val obj = make_obj();
+  obj->rn.type = RNG;
+  obj->rn.from = from;
+  obj->rn.to = to;
+  return obj;
+}
+
+val rangep(val obj)
+{
+  return type(obj) == RNG ? t : nil;
+}
+
+val from(val range)
+{
+  type_check(range, RNG);
+  return range->rn.from;
+}
+
+val to(val range)
+{
+  type_check(range, RNG);
+  return range->rn.to;
+}
+
 val env(void)
 {
   if (env_list) {
@@ -7438,6 +7490,8 @@ static void obj_init(void)
   env_s = intern(lit("env"), user_package);
   bignum_s = intern(lit("bignum"), user_package);
   float_s = intern(lit("float"), user_package);
+  range_s = intern(lit("range"), user_package);
+  rcons_s = intern(lit("rcons"), user_package);
   var_s = intern(lit("var"), system_package);
   expr_s = intern(lit("expr"), system_package);
   regex_s = intern(lit("regex"), system_package);
@@ -7778,6 +7832,10 @@ finish:
     break;
   case ENV:
     format(out, lit("#<environment: ~p>"), obj, nao);
+    break;
+  case RNG:
+    format(out, if3(pretty, lit("#R(~a ~a)"), lit("#R(~s ~s)")),
+           from(obj), to(obj), nao);
     break;
   default:
     format(out, lit("#<garbage: ~p>"), obj, nao);

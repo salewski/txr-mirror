@@ -174,6 +174,9 @@ static cnum equal_hash(val obj)
     return hash_double(obj->fl.n);
   case COBJ:
     return obj->co.ops->hash(obj) & NUM_MAX;
+  case RNG:
+    return (equal_hash(obj->rn.from)
+            + 32 * (equal_hash(obj->rn.to) & (NUM_MAX / 16))) & NUM_MAX;
   }
 
   internal_error("unhandled case in equal function");
@@ -190,6 +193,9 @@ static cnum eql_hash(val obj)
       return mp_hash(mp(obj)) & NUM_MAX;
     case FLNUM:
       return hash_double(obj->fl.n);
+    case RNG:
+      return (eql_hash(obj->rn.from)
+              + 32 * (eql_hash(obj->rn.to) & (NUM_MAX / 16))) & NUM_MAX;
     default:
       switch (sizeof (mem_t *)) {
       case 4:

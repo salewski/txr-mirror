@@ -56,13 +56,13 @@ typedef int_ptr_t cnum;
 #endif
 
 typedef enum type {
-  NIL, NUM = TAG_NUM, CHR = TAG_CHR, LIT = TAG_LIT, CONS,
+  NIL = TAG_PTR, NUM = TAG_NUM, CHR = TAG_CHR, LIT = TAG_LIT, CONS,
   STR, SYM, PKG, FUN, VEC, LCONS, LSTR, COBJ, ENV,
-  BGNUM, FLNUM, MAXTYPE = FLNUM
+  BGNUM, FLNUM, RNG, MAXTYPE = RNG
   /* If extending, check TYPE_SHIFT */
 } type_t;
 
-#define TYPE_SHIFT 4
+#define TYPE_SHIFT 5
 #define TYPE_PAIR(A, B) ((A) << TYPE_SHIFT | (B))
 
 typedef enum functype
@@ -251,6 +251,11 @@ struct flonum {
   double n;
 };
 
+struct range {
+  obj_common;
+  val from, to;
+};
+
 union obj {
   struct any t;
   struct cons c;
@@ -265,6 +270,7 @@ union obj {
   struct env e;
   struct bignum bn;
   struct flonum fl;
+  struct range rn;
 };
 
 #if CONFIG_GEN_GC
@@ -393,7 +399,7 @@ extern val null_s, t, cons_s, str_s, chr_s, fixnum_sl;
 extern val sym_s, pkg_s, fun_s, vec_s;
 extern val stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s, cptr_s;
 extern val atom_s, integer_s, number_s, sequence_s, string_s;
-extern val env_s, bignum_s, float_s;
+extern val env_s, bignum_s, float_s, range_s, rcons_s;
 extern val var_s, expr_s, regex_s, chset_s, set_s, cset_s, wild_s, oneplus_s;
 extern val nongreedy_s;
 extern val quote_s, qquote_s, unquote_s, splice_s;
@@ -901,6 +907,10 @@ val update(val seq, val fun);
 val search(val seq, val key, val from, val to);
 val where(val func, val seq);
 val sel(val seq, val where);
+val rcons(val from, val to);
+val rangep(val obj);
+val from(val range);
+val to(val range);
 val env(void);
 val obj_print_impl(val obj, val out, val pretty);
 val obj_print(val obj, val stream);
@@ -999,6 +1009,11 @@ loc list_collect_append(loc pptail, val obj);
      CAR = car(c_o_n_s ## CAR ## CDR);          \
      CDR = cdr(c_o_n_s ## CAR ## CDR);          \
   } while (0)
+
+#define range_bind(FROM, TO, RANGE)             \
+  obj_t *r_n_g ## FROM ## TO = RANGE;           \
+  obj_t *FROM = from(r_n_g ## FROM ## TO);      \
+  obj_t *TO = ((r_n_g ## FROM ## TO)->rn.to)
 
 #define zero num_fast(0)
 #define one num_fast(1)

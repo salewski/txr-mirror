@@ -1353,7 +1353,7 @@ val format_field(val obj, val modifier, val filter, val eval_fun)
     } else if (consp(item) && car(item) == dwim_s) {
       val arg_expr = second(item);
 
-      if (consp(arg_expr) && car(arg_expr) == cons_s) {
+      if (consp(arg_expr) && car(arg_expr) == range_s) {
         val from = funcall1(eval_fun, second(arg_expr));
         val to = funcall1(eval_fun, third(arg_expr));
 
@@ -1362,6 +1362,8 @@ val format_field(val obj, val modifier, val filter, val eval_fun)
          val arg = funcall1(eval_fun, arg_expr);
          if (bignump(arg) || fixnump(arg)) {
            obj = ref(obj, arg);
+         } else if (rangep(arg)) {
+           obj = sub(obj, from(arg), to(arg));
          } else {
            uw_throwf(query_error_s, lit("format_field: bad index: ~s"),
                      arg, nao);
