@@ -125,7 +125,7 @@ uw_frame_t *uw_current_exit_point(void);
 val uw_get_frames(void);
 val uw_find_frame(val extype, val frtype);
 val uw_invoke_catch(val catch_frame, val sym, struct args *);
-val uw_capture_cont(val tag, val ctx_form);
+val uw_capture_cont(val tag, val fun, val ctx_form);
 void uw_init(void);
 void uw_late_init(void);
 

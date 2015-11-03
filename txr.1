@@ -27568,14 +27568,17 @@ as the closure body terminates.
 
 .coNP Function @ sys:capture-cont
 .synb
-.mets (sys:capture-cont < name <> [ context-form ])
+.mets (sys:capture-cont < name < receive-fun <> [ context-form ])
 .syne
 .desc
 The
 .code sys:capture-cont
 function captures a continuation, and also serves as the resume point
 for the resulting continuation. Which of these two situations is the
-case (capture or resumption) is distinguished by the return value.
+case (capture or resumption) is distinguished by the use of the
+.meta receive-fun
+argument, which must be a function capable of being called with one
+argument.
 
 A block named
 .meta name
@@ -27594,33 +27597,29 @@ uses its own name.
 
 The
 .code sys:capture-cont
-function returns a cons cell. The
-.code car
-field of the cell distinguishes the capture and resume situations.
-If the
-.code car
-is the object
-.codn t ,
-then it indicates capture, and in this case, the
-.code cdr
-field contains the continuation function.  When the continuation
-function is called, the
+function captures a continuation, represented as a function.
+It immediately calls
+.metn receive-fun ,
+passing it it the continuation function as an argument.
+If
+.meta receive-fun
+returns normally, then
 .code sys:capture-cont
-function appears to return again. This time the
-.code car
-of the returned cell is
-.code nil
-indicating that the
-.code cdr
-field holds the argument value which was passed to the continuation
-function.
+returns whatever value
+.meta receive-fun
+returns.
 
-The invoked continuation function will terminate when the resumed context
-terminates. If that context terminates normally (by returning from the
-delimiting block named by
-.metn name ),
-then the result value of that block will appear as the return value
-of the continuation function.
+When the continuation function is called (thereby resuming the captured
+continuation), inside that resumed continuation,
+.code sys:capture-cont
+function appears to return.  Its return value is the argument
+which was passed to the continuation function.  The continuation function
+appears suspended while the resumed continuation executes.
+If the resumed continuation context terminates normally (by terminating
+the continuation's delimiting block named by
+.metn name )
+the continuation function terminates, and yields the value which emerged
+from the terminated block.
 
 If the symbol
 .code sys:cont-poison
@@ -27661,12 +27660,9 @@ operator.
 
 .cblk
   (defmacro suspend (:form form name var . body)
-    (with-gensyms (cap val)
-      ^(tree-bind (,cap . ,val) (sys:capture-cont ',name ',form)
-         (if ,cap
-           (let ((,var ,val))
-             (sys:abscond-from ,name ,*body))
-           ,val))))
+    ^(sys:capture-cont ',name (lambda (,var)
+                                (sys:abscond-from ,name ,*body))
+                       ',form))
 .cble
 
 .coNP Operator @ sys:abscond-from

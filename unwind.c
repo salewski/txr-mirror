@@ -754,7 +754,7 @@ static val revive_cont(val dc, val arg)
 
     bug_unless (uw_stack->uw.type == UW_BLOCK);
 
-    uw_stack->bl.result = cons(nil, arg);
+    uw_stack->bl.result = arg;
     uw_exit_point = if3(arg == sys_cont_poison_s, &uw_blk, uw_stack);
     uw_unwind_to_exit_point();
     abort();
@@ -767,8 +767,9 @@ static val revive_cont(val dc, val arg)
   }
 }
 
-static val capture_cont(val tag, uw_frame_t *block)
+static val capture_cont(val tag, val fun, uw_frame_t *block)
 {
+  volatile val cont_obj = nil;
   uw_block_begin (nil, result);
 
   bug_unless (uw_stack < block);
@@ -792,19 +793,22 @@ static val capture_cont(val tag, uw_frame_t *block)
     blcopy->uw.up = 0;
     blcopy->uw.type = UW_CAPTURED_BLOCK;
 
-    result = cobj(coerce(mem_t *, cont), sys_cont_s, &cont_ops);
+    cont_obj = cobj(coerce(mem_t *, cont), sys_cont_s, &cont_ops);
 
     cont->tag = tag;
 
-    result = cons(t, func_f1(result, revive_cont));
+    result = nil;
   }
 
   uw_block_end;
 
+  if (cont_obj)
+    result = funcall1(fun, func_f1(cont_obj, revive_cont));
+
   return result;
 }
 
-val uw_capture_cont(val tag, val ctx_form)
+val uw_capture_cont(val tag, val fun, val ctx_form)
 {
   uw_frame_t *fr;
 
@@ -825,7 +829,7 @@ val uw_capture_cont(val tag, val ctx_form)
     abort();
   }
 
-  return capture_cont(tag, fr);
+  return capture_cont(tag, fun, fr);
 }
 
 void uw_init(void)
@@ -874,5 +878,5 @@ void uw_late_init(void)
   reg_fun(intern(lit("invoke-catch"), user_package),
           func_n2v(uw_invoke_catch));
   reg_fun(sys_capture_cont_s = intern(lit("capture-cont"), system_package),
-          func_n2o(uw_capture_cont, 1));
+          func_n3o(uw_capture_cont, 2));
 }

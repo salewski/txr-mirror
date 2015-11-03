@@ -38,12 +38,6 @@
     (lambda (cont)
       (call cont 'sys:cont-poison))))
 
-(defun sys:yield-impl (name fun ctx-form)
-  (let ((cont (sys:capture-cont name ctx-form)))
-    (if (car cont)
-      (call fun cont)
-      (cdr cont))))
-
 (defmacro obtain (. body)
   (let ((arg (gensym "arg")))
     ^(sys:obtain-impl (lambda (,arg)
@@ -55,20 +49,17 @@
 
 (defmacro yield-from (:form ctx-form name form)
   (let ((cont-sym (gensym)))
-    ^(sys:yield-impl ',name
-                    (lambda (,cont-sym)
-                      (sys:abscond-from ,name
-                                        (new (sys:yld-item
-                                               ,form (cdr ,cont-sym)))))
-                    ',ctx-form)))
+    ^(sys:capture-cont ',name
+                       (lambda (,cont-sym)
+                         (sys:abscond-from ,name
+                                           (new (sys:yld-item
+                                                  ,form ,cont-sym))))
+                     ',ctx-form)))
 
 (defmacro yield (form)
   ^(yield-from nil ,form))
 
 (defmacro suspend (:form form name var . body)
-  (with-gensyms (cap val)
-    ^(tree-bind (,cap . ,val) (sys:capture-cont ',name ',form)
-       (if ,cap
-         (let ((,var ,val))
-           (sys:abscond-from ,name ,*body))
-         ,val))))
+  ^(sys:capture-cont ',name (lambda (,var)
+                              (sys:abscond-from ,name ,*body))
+                     ',form))
