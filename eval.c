@@ -926,7 +926,7 @@ static void do_eval_args(val form, val env, val ctx_form,
   }
 }
 
-static val set_dyn_env(val de)
+val set_dyn_env(val de)
 {
   val old = dyn_env;
   dyn_env = de;

@@ -283,20 +283,45 @@ static val eval_with_bindings(val form, val spec,
                               val bindings, val ctx_form)
 {
   val ret;
+
   uw_env_begin;
-  uw_set_match_context(cons(spec, bindings));
-  ret = eval(form, make_env(bindings, nil, nil), ctx_form);
+
+  if (opt_compat && opt_compat <= 121) {
+    uw_set_match_context(cons(spec, bindings));
+    ret = eval(form, make_env(bindings, nil, nil), ctx_form);
+  } else {
+    val saved_de = set_dyn_env(make_env(bindings, nil, nil));
+
+    uw_set_match_context(cons(spec, bindings));
+    ret = eval(form, nil, ctx_form);
+
+    set_dyn_env(saved_de);
+  }
+
   uw_env_end;
   return ret;
 }
+
 
 static val eval_progn_with_bindings(val forms, val spec,
                                     val bindings, val ctx_form)
 {
   val ret;
+
   uw_env_begin;
-  uw_set_match_context(cons(spec, bindings));
-  ret = eval_progn(forms, make_env(bindings, nil, nil), ctx_form);
+
+  if (opt_compat && opt_compat <= 121) {
+    uw_set_match_context(cons(spec, bindings));
+    ret = eval_progn(forms, make_env(bindings, nil, nil), ctx_form);
+  } else {
+    val saved_de = set_dyn_env(make_env(bindings, nil, nil));
+
+    uw_set_match_context(cons(spec, bindings));
+    ret = eval_progn(forms, nil, ctx_form);
+
+    set_dyn_env(saved_de);
+  }
+
   uw_env_end;
   return ret;
 }

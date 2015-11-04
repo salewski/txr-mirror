@@ -38,6 +38,7 @@ val lookup_global_var(val sym);
 loc lookup_var_l(val env, val sym);
 loc lookup_global_var_l(val sym);
 val lookup_fun(val env, val sym);
+val set_dyn_env(val de);
 val interp_fun(val env, val fun, struct args *);
 val boundp(val sym);
 val fboundp(val sym);

@@ -10442,6 +10442,34 @@ is provided by
 and
 .codn lexical-lisp1-binding .
 
+.NP* Pattern Language and Lisp Scope Nesting
+
+\*(TL expressions can be embedded in the \*(TX pattern language in various
+ways. Likewise, the pattern language can be invoked from \*(TL. This
+creates the possibility that Lisp code makes references to variables
+bound in the pattern language. The pattern language can also reference
+Lisp variables indirectly using the
+.code @
+escape to evaluate a variable reference as Lisp code. Plain variable
+references in the pattern language do not refer to Lisp variables.
+
+The rules are as follows, but they haven't always been that way.
+See the COMPATIBILITY section.
+
+A Lisp expression evaluated from the \*(TX pattern language executes
+in a null lexical environment. The current set of pattern variables captured
+up to that point by the pattern language are installed as dynamic variables.
+They shadow any Lisp global variables (whether those are defined
+by
+.code defvar
+or
+.codn defvarl ).
+
+The variable bindings are also stored in a dynamic environment frame.
+When \*(TX pattern code is re-entered from Lisp, these bindings are picked
+up from the closest environment frame, allowing the pattern code to
+continue with those bindings.
+
 .SH* LISP OPERATOR, FUNCTION AND MACRO REFERENCE
 
 .SS* Conventions
@@ -37246,6 +37274,20 @@ is given an argument which is equal or lower. For instance
 .code -C 103
 selects the behaviors described below for version 105, but not those for 102.
 
+.IP 121
+In \*(TX 121 and earlier versions, \*(TL expressions evaluated in the
+pattern language were placed in a lexical environment in which the
+pattern variables were visible as lexical variables. The meant that
+these variables could be directly captured in lexical closures. On the other
+hand, it meant that a Lisp function defined in a
+.code @(do)
+block could not access a variable established by a later
+.codn @(bind) .
+It doesn't make sense for dynamically captured variables to be lexical,
+so the rule was changed. The backward compatibility switch will enable
+the old scoping behavior. Capturing the values of pattern variables in
+closures is possible indirectly under the new rule: simply bind new lexical
+variables with their values.
 .IP 118
 The
 .code slot-p
