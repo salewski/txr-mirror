@@ -279,6 +279,28 @@ static val dest_set(val spec, val bindings, val pattern, val value)
   return nil;
 }
 
+static val eval_with_bindings(val form, val spec,
+                              val bindings, val ctx_form)
+{
+  val ret;
+  uw_env_begin;
+  uw_set_match_context(cons(spec, bindings));
+  ret = eval(form, make_env(bindings, nil, nil), ctx_form);
+  uw_env_end;
+  return ret;
+}
+
+static val eval_progn_with_bindings(val forms, val spec,
+                                    val bindings, val ctx_form)
+{
+  val ret;
+  uw_env_begin;
+  uw_set_match_context(cons(spec, bindings));
+  ret = eval_progn(forms, make_env(bindings, nil, nil), ctx_form);
+  uw_env_end;
+  return ret;
+}
+
 static val dest_bind(val spec, val bindings, val pattern,
                      val value, val testfun)
 {
@@ -304,19 +326,13 @@ static val dest_bind(val spec, val bindings, val pattern,
     val ret;
 
     if (first(pattern) == var_s) {
-      uw_env_begin;
-      uw_set_match_context(cons(spec, bindings));
-      ret = eval(second(pattern), make_env(bindings, nil, nil), pattern);
+      ret = eval_with_bindings(second(pattern), spec, bindings, pattern);
       lisp_evaled = t;
-      uw_env_end;
     }
 
     if (first(pattern) == expr_s) {
-      uw_env_begin;
-      uw_set_match_context(cons(spec, bindings));
-      ret = eval(rest(pattern), make_env(bindings, nil, nil), pattern);
+      ret = eval_with_bindings(rest(pattern), spec, bindings, pattern);
       lisp_evaled = t;
-      uw_env_end;
     }
 
     if (lisp_evaled)
@@ -1169,10 +1185,7 @@ static val h_chr(match_line_ctx *c)
   if (!args || rest(args))
       sem_error(elem, lit("chr directive takes one argument"), nao);
 
-  uw_env_begin;
-  uw_set_match_context(cons(cons(c->specline, nil), c->bindings));
   c->bindings = dest_bind(elem, c->bindings, pat, c->pos, eql_f);
-  uw_env_end;
 
   if (c->bindings == t) {
     debuglf(elem, lit("chr mismatch (position ~a vs. ~a)"), c->pos, pat, nao);
@@ -1428,6 +1441,9 @@ val format_field(val obj, val modifier, val filter, val eval_fun)
 static val subst_vars(val spec, val bindings, val filter)
 {
   list_collect_decl(out, iter);
+  uw_env_begin;
+
+  uw_set_match_context(cons(spec, bindings));
 
   while (spec) {
     val elem = first(spec);
@@ -1465,11 +1481,11 @@ static val subst_vars(val spec, val bindings, val filter)
         continue;
       } else if (sym == expr_s) {
         if (opt_compat && opt_compat < 100) {
-          val result = eval(rest(elem), make_env(bindings, nil, nil), elem);
+          val result = eval_with_bindings(rest(elem), spec, bindings, elem);
           spec = cons(filter_string_tree(filter, tostringp(result)), rest(spec));
           continue;
         } else {
-          val str = eval(rest(elem), make_env(bindings, nil, nil), elem);
+          val str = eval_with_bindings(rest(elem), spec, bindings, elem);
           if (listp(str))
             str = cat_str(mapcar(func_n1(tostringp), str), lit(" "));
           else if (!stringp(str))
@@ -1489,6 +1505,7 @@ static val subst_vars(val spec, val bindings, val filter)
     spec = cdr(spec);
   }
 
+  uw_env_end;
   return out;
 }
 
@@ -1518,29 +1535,17 @@ static val do_txeval(val spec, val form, val bindings, val allow_unbound)
     } else if (consp(form)) {
       val sym = first(form);
       if (sym == quasi_s) {
-        uw_env_begin;
-        uw_set_match_context(cons(spec, bindings));
         ret = cat_str(subst_vars(rest(form), bindings, nil), nil);
-        uw_env_end;
       } else if (sym == quasilist_s) {
-        uw_env_begin;
         val iter;
         list_collect_decl (out, tail);
-        uw_set_match_context(cons(spec, bindings));
         for (iter = rest(form); iter != nil; iter = cdr(iter))
           tail = list_collect(tail, subst_vars(cdr(car(iter)), bindings, nil));
         ret = out;
-        uw_env_end;
       } else if (sym == var_s) {
-        uw_env_begin;
-        uw_set_match_context(cons(spec, bindings));
-        ret = eval(second(form), make_env(bindings, nil, nil), form);
-        uw_env_end;
+        ret = eval_with_bindings(second(form), spec, bindings, form);
       } else if (sym == expr_s) {
-        uw_env_begin;
-        uw_set_match_context(cons(spec, bindings));
-        ret = eval(rest(form), make_env(bindings, nil, nil), form);
-        uw_env_end;
+        ret = eval_with_bindings(rest(form), spec, bindings, form);
       } else {
         ret =  mapcar(curry_123_2(func_n3(txeval), spec, bindings), form);
       }
@@ -1835,7 +1840,7 @@ static void do_output_line(val bindings, val specline, val filter, val out)
         } else if (directive == expr_s) {
           if (opt_compat && opt_compat < 100) {
             format(out, lit("~a"),
-                   eval(rest(elem), make_env(bindings, nil, nil), elem), nao);
+                   eval_with_bindings(rest(elem), elem, bindings, elem), nao);
           } else {
             val str = cat_str(subst_vars(cons(elem, nil),
                                          bindings, filter), nil);
@@ -3215,11 +3220,8 @@ static val v_output(match_files_ctx *c)
         sem_error(specline, lit(":into incompatible with :continue"), nao);
 
       debuglf(specline, lit("opening string list stream"), nao);
-      uw_env_begin;
-      uw_set_match_context(cons(c->spec, c->bindings));
       do_output(c->bindings, specs, filter, stream);
       flush_stream(stream);
-      uw_env_end;
 
       {
         val existing = assoc(into_var, c->bindings);
@@ -3248,13 +3250,12 @@ static val v_output(match_files_ctx *c)
     if (!streamp(stream))
       sem_error(specline, lit("~s evaluated to ~s which is not a stream"), which, stream, nao);
 
-    uw_env_begin;
-    uw_set_match_context(cons(c->spec, c->bindings));
     do_output(c->bindings, specs, filter, stream);
     flush_stream(stream);
-    uw_env_end;
+
     if (finish_expr)
       close_stream(stream, t);
+
     return next_spec_k;
   }
 
@@ -3275,11 +3276,9 @@ static val v_output(match_files_ctx *c)
     }
   } else {
     val stream = complex_stream(fp, dest);
-    uw_env_begin;
-    uw_set_match_context(cons(c->spec, c->bindings));
+
     do_output(c->bindings, specs, filter, stream);
     flush_stream(stream);
-    uw_env_end;
 
     if (named_var)
       c->bindings = acons(named_var, stream, c->bindings);
@@ -3658,10 +3657,7 @@ static val v_do(match_files_ctx *c)
 {
   spec_bind (specline, first_spec, c->spec);
   val args = rest(first_spec);
-  uw_env_begin;
-  uw_set_match_context(cons(c->spec, c->bindings));
-  (void) eval_progn(args, make_env(c->bindings, nil, nil), specline);
-  uw_env_end;
+  (void) eval_progn_with_bindings(args, c->spec, c->bindings, specline);
   return next_spec_k;
 }
 
@@ -3670,10 +3666,8 @@ static val v_require(match_files_ctx *c)
   spec_bind (specline, first_spec, c->spec);
   val args = rest(first_spec);
   val ret;
-  uw_env_begin;
-  uw_set_match_context(cons(c->spec, c->bindings));
+  (void) eval_progn_with_bindings(args, c->spec, c->bindings, specline);
   ret = eval_progn(args, make_env(c->bindings, nil, nil), specline);
-  uw_env_end;
   if (!ret)
     return ret;
   return next_spec_k;
@@ -3812,10 +3806,7 @@ static val v_line(match_files_ctx *c)
   if (!args || rest(args))
       sem_error(specline, lit("line directive takes one argument"), nao);
 
-  uw_env_begin;
-  uw_set_match_context(cons(c->spec, c->bindings));
   c->bindings = dest_bind(specline, c->bindings, pat, c->data_lineno, eql_f);
-  uw_env_end;
 
   if (c->bindings == t) {
     debuglf(specline, lit("line mismatch (line ~a vs. ~a)"), c->data_lineno, pat, nao);
@@ -3830,10 +3821,8 @@ static val h_do(match_line_ctx *c)
 {
   val elem = first(c->specline);
   val args = rest(elem);
-  uw_env_begin;
-  uw_set_match_context(cons(cons(c->specline, nil), c->bindings));
-  (void) eval_progn(args, make_env(c->bindings, nil, nil), elem);
-  uw_env_end;
+  (void) eval_progn_with_bindings(args, cons(c->specline, nil),
+                                  c->bindings, elem);
   return next_spec_k;
 }
 
