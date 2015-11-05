@@ -365,6 +365,17 @@ val uw_invoke_catch(val catch_frame, val sym, struct args *args)
   abort();
 }
 
+void uw_push_cont_copy(uw_frame_t *fr, mem_t *ptr,
+                       void (*copy)(mem_t *ptr, int parent))
+{
+  memset(fr, 0, sizeof *fr);
+  fr->cp.type = UW_CONT_COPY;
+  fr->cp.ptr = ptr;
+  fr->cp.copy = copy;
+  fr->cp.up = uw_stack;
+  uw_stack = fr;
+}
+
 val uw_block_return_proto(val tag, val result, val protocol)
 {
   uw_frame_t *ex;
@@ -705,6 +716,16 @@ static struct cobj_ops cont_ops = cobj_ops_init(eq,
                                                 cont_mark,
                                                 cobj_hash_op);
 
+static void call_copy_handlers(uw_frame_t *upto, int parent)
+{
+  uw_frame_t *fr;
+
+  for (fr = uw_stack; fr != 0 && fr != upto; fr = fr->uw.up) {
+    if (fr->uw.type == UW_CONT_COPY)
+      fr->cp.copy(fr->cp.ptr, parent);
+  }
+}
+
 static val revive_cont(val dc, val arg)
 {
   const int frame_slack = 32 * sizeof (val);
@@ -754,6 +775,9 @@ static val revive_cont(val dc, val arg)
 
     bug_unless (uw_stack->uw.type == UW_BLOCK);
 
+    if (arg != sys_cont_poison_s)
+      call_copy_handlers(&uw_blk, 0);
+
     uw_stack->bl.result = arg;
     uw_exit_point = if3(arg == sys_cont_poison_s, &uw_blk, uw_stack);
     uw_unwind_to_exit_point();
@@ -802,8 +826,10 @@ static val capture_cont(val tag, val fun, uw_frame_t *block)
 
   uw_block_end;
 
-  if (cont_obj)
+  if (cont_obj) {
+    call_copy_handlers(block, 0);
     result = funcall1(fun, func_f1(cont_obj, revive_cont));
+  }
 
   return result;
 }

@@ -26,7 +26,8 @@
 
 typedef union uw_frame uw_frame_t;
 typedef enum uw_frtype {
-  UW_BLOCK, UW_CAPTURED_BLOCK, UW_ENV, UW_CATCH, UW_HANDLE, UW_DBG
+  UW_BLOCK, UW_CAPTURED_BLOCK, UW_ENV, UW_CATCH, UW_HANDLE,
+  UW_CONT_COPY, UW_DBG
 } uw_frtype_t;
 
 struct uw_common {
@@ -70,6 +71,13 @@ struct uw_handler {
   val fun;
 };
 
+struct uw_cont_copy {
+  uw_frame_t *up;
+  uw_frtype_t type;
+  mem_t *ptr;
+  void (*copy)(mem_t *ptr, int parent);
+};
+
 struct uw_debug {
   uw_frame_t *up;
   uw_frtype_t type;
@@ -88,6 +96,7 @@ union uw_frame {
   struct uw_dynamic_env ev;
   struct uw_catch ca;
   struct uw_handler ha;
+  struct uw_cont_copy cp;
   struct uw_debug db;
 };
 
@@ -126,6 +135,8 @@ val uw_get_frames(void);
 val uw_find_frame(val extype, val frtype);
 val uw_invoke_catch(val catch_frame, val sym, struct args *);
 val uw_capture_cont(val tag, val fun, val ctx_form);
+void uw_push_cont_copy(uw_frame_t *, mem_t *ptr,
+                       void (*copy)(mem_t *ptr, int parent));
 void uw_init(void);
 void uw_late_init(void);
 

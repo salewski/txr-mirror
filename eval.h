@@ -31,6 +31,7 @@ extern val last_form_evaled, last_form_expanded;
 
 noreturn val eval_error(val form, val fmt, ...);
 val make_env(val fbindings, val vbindings, val up_env);
+val copy_env(val oenv);
 val env_fbind(val env, val sym, val fun);
 val env_vbind(val env, val sym, val obj);
 val lookup_var(val env, val sym);

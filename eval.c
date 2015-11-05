@@ -114,6 +114,21 @@ val make_env(val vbindings, val fbindings, val up_env)
   return env;
 }
 
+val copy_env(val oenv)
+{
+  type_check(oenv, ENV);
+
+  {
+    val nenv = make_obj();
+
+    nenv->e.type = ENV;
+    nenv->e.fbindings = copy_alist(oenv->e.fbindings);
+    nenv->e.vbindings = copy_alist(oenv->e.vbindings);
+    nenv->e.up_env = oenv->e.up_env;
+    return nenv;
+  }
+}
+
 /*
  * Wrapper for performance reasons: don't make make_env
  * process default arguments.
@@ -448,12 +463,21 @@ static val abbrev_ctx(val ctx_form)
   return lit("");
 }
 
+static void copy_env_handler(mem_t *ptr, int parent)
+{
+  val *penv = coerce(val *, ptr);
+  *penv = copy_env(*penv);
+}
+
 static val bind_args(val env, val params, struct args *args, val ctx_form)
 {
   val new_env = make_env(nil, nil, env);
   val optargs = nil;
   val special_list = nil;
   cnum index = 0;
+  uw_frame_t uw_cc;
+
+  uw_push_cont_copy(&uw_cc, coerce(mem_t *, &new_env), copy_env_handler);
 
   for (; args_more(args, index) && consp(params); params = cdr(params)) {
     val param = car(params);
@@ -563,6 +587,8 @@ static val bind_args(val env, val params, struct args *args, val ctx_form)
                car(ctx_form), abbrev_ctx(ctx_form), nao);
   }
 
+
+  uw_pop_frame(&uw_cc);
 
   return new_env;
 twocol:
@@ -750,6 +776,9 @@ static val bind_macro_params(val env, val menv, val params, val form,
   val whole = form;
   val optargs = nil;
   val specials = nil;
+  uw_frame_t uw_cc;
+
+  uw_push_cont_copy(&uw_cc, coerce(mem_t *, &new_env), copy_env_handler);
 
   if (consp(params)) {
     val head = car(params);
@@ -825,7 +854,7 @@ static val bind_macro_params(val env, val menv, val params, val form,
                                       param, car(form),
                                       loose_p, ctx_form);
           if (!new_env)
-            return nil;
+            goto nil_out;
         }
       } else {
         err_sym = param;
@@ -838,7 +867,7 @@ static val bind_macro_params(val env, val menv, val params, val form,
 
     if (form) {
       if (loose_p == colon_k)
-        return nil;
+        goto nil_out;
       eval_error(ctx_form, lit("~s: atom ~s not matched by parameter list"),
                  car(ctx_form), form, nao);
     }
@@ -848,7 +877,7 @@ static val bind_macro_params(val env, val menv, val params, val form,
         eval_error(ctx_form, lit("~s: insufficient number of arguments"),
                    car(ctx_form), nao);
       if (loose_p == colon_k)
-        return nil;
+        goto nil_out;
     }
 
 noarg:
@@ -889,18 +918,24 @@ noarg:
       goto nbind;
     }
     env_vbind_special(new_env, params, form, specials, ctx_form);
-    return new_env;
+    goto out;
   }
 
   if (form) {
     if (loose_p == colon_k)
-      return nil;
+      goto nil_out;
     eval_error(ctx_form,
                lit("~s: extra form part ~s not matched by parameter list"),
                car(ctx_form), form, nao);
   }
 
+out:
+  uw_pop_frame(&uw_cc);
   return new_env;
+
+nil_out:
+  uw_pop_frame(&uw_cc);
+  return nil;
 
 nbind:
   eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
@@ -1111,15 +1146,31 @@ static val op_unquote_error(val form, val env)
   return second(form);
 }
 
+struct bindings_helper_vars {
+  val de;
+  val ne;
+};
+
+static void copy_bh_env_handler(mem_t *ptr, int parent)
+{
+  struct bindings_helper_vars *pv = coerce(struct bindings_helper_vars *, ptr);
+  if (pv->de)
+    pv->de = copy_env(pv->de);
+  pv->ne = copy_env(pv->ne);
+}
 
 static val bindings_helper(val vars, val env, val sequential,
                            val *env_out, val ret_new_bindings,
                            val ctx_form)
 {
   val iter;
-  val de = if3(sequential, dyn_env, nil);
-  val ne = if3(sequential, env, make_env(nil, nil, env));
+  struct bindings_helper_vars v;
   list_collect_decl (new_bindings, ptail);
+  uw_frame_t uw_cc;
+  v.de = if3(sequential, dyn_env, nil);
+  v.ne = if3(sequential, env, make_env(nil, nil, env));
+
+  uw_push_cont_copy(&uw_cc, coerce(mem_t *, &v), copy_bh_env_handler);
 
   for (iter = vars; iter; iter = cdr(iter)) {
     val item = car(iter);
@@ -1127,33 +1178,36 @@ static val bindings_helper(val vars, val env, val sequential,
 
     if (consp(item)) {
       var = pop(&item);
-      value = eval(pop(&item), if3(sequential, ne, env), ctx_form);
+      value = eval(pop(&item), if3(sequential, v.ne, env), ctx_form);
     } else {
       var = item;
     }
 
     if (var == special_s) {
       val special = car(item);
-      val binding = env_vbind(de = (de ? de : make_env(nil, nil, dyn_env)),
+      val binding = env_vbind(v.de = (v.de ? v.de
+                                           : make_env(nil, nil, dyn_env)),
                               special, value);
       if (ret_new_bindings)
         ptail = list_collect (ptail, binding);
     } else if (bindable(var)) {
-      val le = if3(sequential, make_env(nil, nil, ne), ne);
+      val le = if3(sequential, make_env(nil, nil, v.ne), v.ne);
       val binding = env_vbind(le, var, value);
       if (ret_new_bindings)
         ptail = list_collect (ptail, binding);
-      ne = le;
+      v.ne = le;
     } else {
       eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
                  car(ctx_form), var, nao);
     }
   }
 
-  if (de && de != dyn_env)
-    dyn_env = de;
+  if (v.de && v.de != dyn_env)
+    dyn_env = v.de;
   if (env_out)
-    *env_out = ne;
+    *env_out = v.ne;
+
+  uw_pop_frame(&uw_cc);
   return new_bindings;
 }
 
