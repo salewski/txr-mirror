@@ -744,6 +744,7 @@ static val revive_cont(val dc, val arg)
     uw_frame_t *new_uw_stack = coerce(uw_frame_t *, space), *fr;
     int env_set = 0;
 
+    memset(space - frame_slack, 0, frame_slack);
     memcpy(space, cont->stack, cont->size);
 
     for (ptr = space; ptr < space + cont->size; ptr += sizeof (cnum))
