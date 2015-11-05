@@ -25,16 +25,23 @@
 
 (defstruct (sys:yld-item val cont) nil val cont)
 
+(defstruct (sys:rcv-item val cont) nil val cont)
+
 (defun sys:obtain-impl (fun)
   (finalize
-    (lambda (: reply)
-      (let ((yi (call fun reply)))
-        (cond
-          ((eq (typeof yi) 'sys:yld-item)
-           (call fun 'sys:cont-free)
-           (set fun yi.cont)
-           yi.val)
-          (t yi))))
+    (lambda (: resume-val)
+      (let ((yi (call fun resume-val)))
+        (while t
+          (cond
+            ((eq (typeof yi) 'sys:yld-item)
+             (call fun 'sys:cont-free)
+             (set fun yi.cont)
+             (return yi.val))
+            ((eq (typeof yi) 'sys:rcv-item)
+             (call fun 'sys:cont-free)
+             (set fun yi.cont)
+             (set yi (call fun resume-val)))
+            (t (return yi))))))
     (lambda (cont)
       (call cont 'sys:cont-poison))))
 
@@ -47,17 +54,22 @@
 (defmacro obtain-block (name . body)
   ^(obtain (block ,name ,*body)))
 
-(defmacro yield-from (:form ctx-form name form)
+(defmacro yield-from (:form ctx-form name : (form nil have-form-p))
   (let ((cont-sym (gensym)))
     ^(sys:capture-cont ',name
                        (lambda (,cont-sym)
                          (sys:abscond-from ,name
-                                           (new (sys:yld-item
-                                                  ,form ,cont-sym))))
+                                           ,(if have-form-p
+                                              ^(new (sys:yld-item
+                                                      ,form ,cont-sym))
+                                              ^(new (sys:rcv-item
+                                                      nil ,cont-sym)))))
                      ',ctx-form)))
 
-(defmacro yield (form)
-  ^(yield-from nil ,form))
+(defmacro yield (: (form nil have-form-p))
+  (if have-form-p
+    ^(yield-from nil ,form)
+    ^(yield-from nil)))
 
 (defmacro suspend (:form form name var . body)
   ^(sys:capture-cont ',name (lambda (,var)

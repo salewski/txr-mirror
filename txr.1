@@ -27727,7 +27727,7 @@ that control will return into a restarted copy of that context.
 .coNP Macros @ obtain and @ yield-from
 .synb
 .mets (obtain << forms *)
-.mets (yield-from < name << form )
+.mets (yield-from < name <> [ form ])
 .syne
 .desc
 The
@@ -27737,59 +27737,66 @@ and
 macros closely inter-operate.
 
 The
-.code yield-from
-macro captures a continuation up to the closest enclosing block named
-.metn name .
-Then it evaluates
-.metn form .
-Both the continuation and the value of
-.meta form
-are encapsulated in a special
-.IR "yield object" .
-Finally,
-.code yield-from
-performs a non-local transfer to the same block, so that the yield object
-appears as the result value of that block. The non-local transfer is
-performed abruptly, by the
-.code sys:abscond-from
-operator.
-
-An
 .code obtain
-form returns a function of one optional argument, whose value defaults to
-.codn nil .
+macro treats zero or more
+.metn form -s
+as a suspendable execution context called the
+.IR "obtain block" .
+It is expected that
+.metn form -s
+establish a block named
+.meta name
+and return its result value to
+.codn obtain .
 
-When the function is invoked, its argument is ignored and
-.meta forms
-are evaluated. If
-.meta forms
-produce any object other than a yield object, the function returns
-that object.
+Without evaluating any of the forms in the obtain block,
+.code obtain
+returns a function, which takes one optional argument.
+This argument, called the
+.IR "resume value" ,
+defaults to
+.code nil
+if it is omitted.
 
-If
-.meta forms
-produce a yield object, then the function returns the value that is
-encapsulated in the yield object.  Prior to returning this value,
-the function updates its internal state such that the next time it is
-called, instead of evaluating
-.meta forms
-it will invoke the continuation function stored in the yield object. Moreover,
-instead of ignoring its argument, it will pass that argument to the
-continuation function. In the continuation, the argument will emerge
-out of the
-.meta yield-from
-form as its result value.
+The function represents the suspended execution context.
 
-The return value of the continuation is then
-treated exactly like the result value of
-.metn forms :
-if it is an ordinary value, it is returned; otherwise, if it is
-a yield object, its stored value is returned and the state is updated
-with the new yield object's continuation.
+The context is resumed whenever the function is called, and executes
+until the next
+.code yield-from
+statement which references the block named
+.metn name .
+The function's reply argument is noted.
+
+If the
+.code yield-from
+specifies a
+.meta form
+argument, then the execution context suspends, and the resume function
+terminates and returns the value of that form. When the function is called
+again to resume the context, the
+.code yield-from
+returns the previously noted resume value (and the new resume
+value just passed is noted in its place).
+
+If the
+.code yield-from
+specifies no
+.meta form
+argument, then it briefly suspends the execution context only
+to retrieve the resume value, without producing an item. Since
+no item is produced, the resume function does not return.
+The execution context implicitly resumes.
+
+When execution reaches the last form in the obtain block, the
+resume value is discarded. The execution context terminates, and
+the most recent call to the resume function returns the value of
+that last form.
+
+.TP* Notes:
 
 The
 .code obtain
-macro registers a finalizer against the returned function.
+macro registers a finalizer against the returned resume function.
 The finalizer invokes the function, passing it the symbol
 .codn sys:cont-poison ,
 thereby triggering unwinding in the most recently captured
@@ -27797,22 +27804,15 @@ continuation. Thus, abandoned
 .code obtain
 blocks are subject to unwinding when they become garbage.
 
-.TP* Notes:
-
-These macros provide a simple abstraction for the use of continuations.
-A module of code can be written which uses
+The
 .code yield-from
-to suspend its execution, passing control back to specific top-level block,
-along with a yielded item.  The
+macro works by capturing a continuation and performing a nonlocal
+exit to the nearest block called
+.metn name .
+It passes a special yield object to that block. The
 .code obtain
-macro converts that block to a function which can be iteratively called
-to retrieve each successively yielded item, and resume the execution
-of the suspended code so it can continue and yield the next one.
-When the continuation completes, whatever value the block returns is
-also produced as if it were a yielded item. Moreover, each
-.code yield-from
-call produces, as its return value, the argument of the function call which
-resumes the continuation. Thus for each item which is yielded,
+macro generates code which knows what to do with this special yield
+object.
 
 .TP* Examples:
 
@@ -27910,6 +27910,44 @@ of fruit names.
   (apple banana orange)
 .cble
 
+The following example demonstrates an accumulator. Values passed to the
+resume function are added to a counter which is initially zero.
+Each call to the function returns the updated value of the accumulator.
+Note the use of
+.code (yield-from acc)
+with no arguments to receive the value passed to the first
+call to the resume function, without yielding an item.
+The very first return value
+.code 1
+is produced by the
+.code (yield-from acc sum)
+form, not by
+.codn (yield-from acc) .
+The latter only obtains the initial value
+.code 1
+and uses it to establish the seed value of the accumulator. Without causing
+the resume function to terminate and return, control passes into the loop,
+which yields the first item, causing the resume function call
+.code (call *1 1)
+to return
+.codn 1 :
+
+.cblk
+  1> (obtain
+       (block acc
+         (let ((sum (yield-from acc)))
+            (while t (inc sum (yield-from acc sum))))))
+  #<interpreted fun: lambda (: resume-val)>
+  2> (call *1 1)
+  1
+  3> (call *1 2)
+  3
+  4> (call *1 3)
+  6
+  5> (call *1 4)
+  10
+.cble
+
 .coNP Macro @ obtain-from
 .synb
 .mets (obtain-block < name << forms *)
@@ -27935,7 +27973,7 @@ That is to say, the following equivalence holds:
 
 .coNP Macro @ yield
 .synb
-.mets (yield << form )
+.mets (yield <> [ form ])
 .syne
 .desc
 The
