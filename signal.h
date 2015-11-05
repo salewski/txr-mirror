@@ -140,7 +140,7 @@ void jmp_restore(struct jmp *, int);
 #if HAVE_POSIX_SIGS
 
 typedef struct {
-  uint_ptr_t set;
+  unsigned int set;
 } small_sigset_t;
 
 #define sig_save_enable                         \

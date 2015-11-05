@@ -250,7 +250,7 @@ static void teardown_alt_stack(void)
 
 static void small_sigfillset(small_sigset_t *ss)
 {
-  ss->set = (uint_ptr_t) -1;
+  ss->set = (unsigned int) -1;
 }
 
 val set_sig_handler(val signo, val lambda)
