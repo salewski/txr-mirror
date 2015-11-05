@@ -1,3 +1,34 @@
+                                    TXR 122
+                                   2015-11-05
+
+
+  Features
+
+  - New type: range.
+    - range is similar to a cons cell, but is an atom.
+    - has two fields called from and to.
+    - the dotdot syntax a..b  now produces a range, not a cons.
+    - printed notation looks like #R(0 10)
+    - related functions: rcons, rangep, from, to.
+
+  - sys:capture-cont API altered to call/cc style: passes
+    continuation to specified function when capturing,
+    returns value when resuming.
+
+  - New interface to delimited continuations: suspend macro.
+
+  - TXR pattern variables now appear dynamic to embedded Lisp
+    expressions, rather than lexical. The scoping rule is
+    documented.
+
+  - The yield and yield-from operators can omit the argument
+    form, in which case they retrieve the value passed in from
+    the resume function without yielding an item.
+
+  - Architecture support: Power PC 64.
+
+
+
                                     TXR 121
                                    2015-10-30
 
