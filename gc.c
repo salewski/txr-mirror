@@ -111,13 +111,6 @@ val prot1(val *loc)
   return nil; /* for use in macros */
 }
 
-void rel1(val *loc)
-{
-  /* protect and release calls must nest. */
-  if (*--gc_prot_top != loc)
-    abort();
-}
-
 void protect(val *first, ...)
 {
   val *next = first;
