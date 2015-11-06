@@ -1,3 +1,14 @@
+                                    TXR 123
+                                   2015-11-06
+
+
+  Bugs
+
+  - Fixed regression introduced in TXR 115, in the search_regex
+    function and functionality built on it.
+
+
+
                                     TXR 122
                                    2015-11-05
 
