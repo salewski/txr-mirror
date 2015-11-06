@@ -2336,10 +2336,8 @@ val search_regex(val haystack, val needle_regex, val start,
 
       for (i = c_num(length_str(haystack)) - 1; i >= s; i--) {
         cnum span = regex_run(needle_regex, h + i);
-        if (span >= 0) {
-          rel1(&haystack);
+        if (span >= 0)
           return cons(num(i), num(span));
-        }
       }
 
       gc_hint(haystack);
