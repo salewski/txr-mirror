@@ -55,7 +55,7 @@ struct parser {
 };
 #endif
 
-enum prime_parser { prime_lisp, prime_regex };
+enum prime_parser { prime_lisp, prime_interactive, prime_regex };
 
 extern const int have_yydebug;
 extern const wchar_t *spec_file;
@@ -80,7 +80,9 @@ void yyset_hold_char(yyscan_t, int);
 void parser_l_init(void);
 void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream);
 void prime_parser(parser_t *, val name, enum prime_parser);
+void prime_parser_post(parser_t *, enum prime_parser);
 void prime_scanner(scanner_t *, enum prime_parser);
+void scrub_scanner(scanner_t *, int yy_char, wchar_t *lexeme);
 int parse_once(val stream, val name, parser_t *parser);
 int parse(parser_t *parser, val name, enum prime_parser);
 val source_loc(val form);
@@ -95,6 +97,8 @@ val rlcp_tree(val to, val from);
 val regex_parse(val string, val error_stream);
 val lisp_parse(val source_in, val error_stream, val error_return_val,
                val name_in, val lineno);
+val iread(val source_in, val error_stream, val error_return_val,
+          val name_in, val lineno);
 val read_eval_stream(val stream, val error_stream, val hash_bang_support);
 #if HAVE_TERMIOS
 val repl(val bindings, val in_stream, val out_stream);

@@ -32070,9 +32070,10 @@ Examples of strings which are not absolute paths.
   $:\eabc
 .cble
 
-.coNP Function @ read
+.coNP Functions @ read and @ iread
 .synb
-.mets (read >> [ source >> [ error-stream >> [ error-return-value <> [ name ]]]])
+.mets (read >> [ source >> [ error-stream >> [ error-retval <> [ name ]]]])
+.mets (iread >> [ source >> [ error-stream >> [ error-retval <> [ name ]]]])
 .syne
 .desc
 The
@@ -32110,14 +32111,43 @@ is a string.
 
 If there are no parse errors, the function returns the parsed data
 structure. If there are parse errors, and the
-.meta error-return-value
+.meta error-retval
 parameter is
 present, its value is returned. If the
-.meta error-return-value
+.meta error-retval
 parameter
 is not present, then an exception of type
 .code syntax-error
 is thrown.
+
+The
+.code iread
+function ("interactive read") is similar to
+.code read
+except that it parses a modified version of the syntax. The modified
+syntax does not support the application of the dot and dotdot operators
+on a toplevel expression. For instance, if the input is
+.code a.b
+or
+.code a .. b
+then
+.code iread
+will only read the
+.code a
+token whereas
+.code read
+will read the entire expression.
+
+This modified syntax allows
+.code iread
+to return immediately when an expression is recognized, which is the
+expected behavior if the input is being read from an interactive terminal.
+By contrast,
+.code read
+waits for more input after seeing a complete expression, because of the
+possibility that the expression will be further extended by means of the dot or
+dotdot operators. An explicit end-of-input signal must be given from the
+terminal to terminate the expression.
 
 .SS* Stream Output Indentation
 \*(TL streams provide support for establishing hanging indentations

@@ -176,6 +176,9 @@ void prime_parser(parser_t *p, val name, enum prime_parser prim)
   case prime_lisp:
     sec_tok.yy_char = SECRET_ESCAPE_E;
     break;
+  case prime_interactive:
+    sec_tok.yy_char = SECRET_ESCAPE_I;
+    break;
   case prime_regex:
     sec_tok.yy_char = SECRET_ESCAPE_R;
     break;
@@ -186,6 +189,12 @@ void prime_parser(parser_t *p, val name, enum prime_parser prim)
   pushback_token(p, &sec_tok);
   prime_scanner(p->scanner, prim);
   set(mkloc(p->name, p->parser), name);
+}
+
+void prime_parser_post(parser_t *p, enum prime_parser prim)
+{
+  if (prim == prime_interactive)
+    p->recent_tok.yy_char = 0;
 }
 
 void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream)
@@ -277,8 +286,8 @@ val regex_parse(val string, val error_stream)
   return parser.errors ? nil : parser.syntax_tree;
 }
 
-val lisp_parse(val source_in, val error_stream, val error_return_val,
-               val name_in, val lineno)
+static val lisp_parse_impl(val interactive, val source_in, val error_stream,
+                           val error_return_val, val name_in, val lineno)
 {
   uses_or2;
   val source = default_bool_arg(source_in);
@@ -309,7 +318,8 @@ val lisp_parse(val source_in, val error_stream, val error_return_val,
 
   {
     int gc = gc_state(0);
-    parse(pi, if3(std_error != std_null, name, lit("")), prime_lisp);
+    enum prime_parser prime = if3(interactive, prime_interactive, prime_lisp);
+    parse(pi, if3(std_error != std_null, name, lit("")), prime);
     gc_state(gc);
     parsed = t;
   }
@@ -333,6 +343,20 @@ val lisp_parse(val source_in, val error_stream, val error_return_val,
   }
 
   return pi->syntax_tree;
+}
+
+val lisp_parse(val source_in, val error_stream, val error_return_val,
+               val name_in, val lineno)
+{
+  return lisp_parse_impl(nil, source_in, error_stream, error_return_val,
+                         name_in, lineno);
+}
+
+val iread(val source_in, val error_stream, val error_return_val,
+          val name_in, val lineno)
+{
+  return lisp_parse_impl(t, source_in, error_stream, error_return_val,
+                         name_in, lineno);
 }
 
 val read_eval_stream(val stream, val error_stream, val hash_bang_support)

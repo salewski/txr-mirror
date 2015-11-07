@@ -1065,6 +1065,7 @@ void prime_scanner(scanner_t *yyg, enum prime_parser prim)
 
   switch (prim) {
   case prime_lisp:
+  case prime_interactive:
     yy_push_state(SPECIAL, yyg);
     yy_push_state(NESTED, yyg);
     yy_push_state(NESTED, yyg);
@@ -1072,6 +1073,16 @@ void prime_scanner(scanner_t *yyg, enum prime_parser prim)
   case prime_regex:
     yy_push_state(SREGEX, yyg);
     break;
+  }
+}
+
+void scrub_scanner(scanner_t *yyg, int yy_char, wchar_t *lexeme)
+{
+  struct yy_token *rtok = &yyextra->recent_tok;
+
+  if (rtok->yy_char == yy_char && rtok->yy_lval.lexeme == lexeme) {
+    rtok->yy_char = 0;
+    rtok->yy_lval.lexeme = 0;
   }
 }
 

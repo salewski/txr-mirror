@@ -102,7 +102,7 @@ int yyparse(scanner_t *, parser_t *);
 %token <lineno> ERRTOK /* deliberately not used in grammar */
 %token <lineno> HASH_BACKSLASH HASH_SLASH DOTDOT HASH_H HASH_S HASH_R
 %token <lineno> WORDS WSPLICE QWORDS QWSPLICE
-%token <lineno> SECRET_ESCAPE_R SECRET_ESCAPE_E
+%token <lineno> SECRET_ESCAPE_R SECRET_ESCAPE_E SECRET_ESCAPE_I
 
 %token <val> NUMBER METANUM
 
@@ -117,7 +117,7 @@ int yyparse(scanner_t *, parser_t *);
 %type <val> if_clause elif_clauses_opt else_clause_opt
 %type <val> line elems_opt elems clause_parts_h additional_parts_h
 %type <val> text texts elem var var_op modifiers vector hash struct range
-%type <val> list exprs exprs_opt expr n_exprs r_exprs n_expr n_exprs_opt
+%type <val> list exprs exprs_opt expr n_exprs r_exprs i_expr n_expr n_exprs_opt
 %type <val> out_clauses out_clauses_opt out_clause
 %type <val> repeat_clause repeat_parts_opt o_line
 %type <val> o_elems_opt o_elems o_elem o_var q_var rep_elem rep_parts_opt
@@ -149,7 +149,16 @@ spec : clauses                  { parser->syntax_tree = $1; }
      | SECRET_ESCAPE_R regexpr  { parser->syntax_tree = $2; end_of_regex(scnr); }
      | SECRET_ESCAPE_E n_expr   { parser->syntax_tree = $2; YYACCEPT; }
        byacc_fool               { internal_error("notreached"); }
+     | SECRET_ESCAPE_I i_expr   { parser->syntax_tree = $2; YYACCEPT; }
+       byacc_fool               { internal_error("notreached"); }
      | SECRET_ESCAPE_E          { if (yychar == YYEOF) {
+                                    parser->syntax_tree = nao;
+                                    YYACCEPT;
+                                  } else {
+                                    yybadtok(yychar, nil);
+                                    parser->syntax_tree = nil;
+                                  } }
+     | SECRET_ESCAPE_I          { if (yychar == YYEOF) {
                                     parser->syntax_tree = nao;
                                     YYACCEPT;
                                   } else {
@@ -820,6 +829,31 @@ r_exprs : n_expr                { val exprs = cons($1, nil);
                                   $$ = term_atom_cons; }
         ;
 
+i_expr : SYMTOK                 { $$ = symhlpr($1, t); }
+       | METANUM                { $$ = cons(var_s, cons($1, nil));
+                                  rl($$, num(parser->lineno)); }
+       | NUMBER                 { $$ = $1; }
+       | list                   { $$ = $1; }
+       | vector                 { $$ = $1; }
+       | hash                   { $$ = $1; }
+       | struct                 { $$ = $1; }
+       | range                  { $$ = $1; }
+       | lisp_regex             { $$ = $1; }
+       | chrlit                 { $$ = $1; }
+       | strlit                 { $$ = $1; }
+       | quasilit               { $$ = $1; }
+       | WORDS wordslit         { $$ = rl($2, num($1)); }
+       | QWORDS wordsqlit       { $$ = rl(cons(quasilist_s, $2), num($1)); }
+       | '\'' i_expr            { $$ = rl(rlcp(list(quote_s, $2, nao), $2),
+                                          num(parser->lineno)); }
+       | '^' i_expr             { $$ = rl(rlcp(list(sys_qquote_s, $2, nao), $2),
+                                          num(parser->lineno)); }
+       | ',' i_expr             { $$ = rl(rlcp(list(sys_unquote_s, $2, nao), $2),
+                                          num(parser->lineno)); }
+       | SPLICE i_expr          { $$ = rl(rlcp(list(sys_splice_s, $2, nao), $2),
+                                          num(parser->lineno)); }
+       ;
+
 n_expr : SYMTOK                 { $$ = symhlpr($1, t); }
        | METANUM                { $$ = cons(var_s, cons($1, nil));
                                   rl($$, num(parser->lineno)); }
@@ -1107,11 +1141,13 @@ static val sym_helper(parser_t *parser, wchar_t *lexeme, val meta_allowed)
   if (colon == lexeme) {
     package = keyword_package_var;
     sym_name = string(colon + 1);
+    scrub_scanner(parser->scanner, SYMTOK, tokfree);
     free(tokfree);
   } else if (colon != 0) {
     pkg_name = string(lexeme);
     package = find_package(pkg_name);
     sym_name = string(colon + 1);
+    scrub_scanner(parser->scanner, SYMTOK, tokfree);
     free(tokfree);
     if (!package) {
       yyerrorf(scnr, lit("~a:~a: package ~a not found"), pkg_name, sym_name, pkg_name, nao);
@@ -1119,6 +1155,7 @@ static val sym_helper(parser_t *parser, wchar_t *lexeme, val meta_allowed)
     }
   } else {
     sym_name = string(lexeme);
+    scrub_scanner(parser->scanner, SYMTOK, tokfree);
     free(tokfree);
   }
 
@@ -1543,11 +1580,14 @@ int parse(parser_t *parser, val name, enum prime_parser prim)
   parser->errors = 0;
   parser->prepared_msg = nil;
   parser->syntax_tree = nil;
+
   prime_parser(parser, name, prim);
 
   uw_catch_begin(cons(error_s, nil), esym, eobj);
 
   res = yyparse(parser->scanner, parser);
+
+  prime_parser_post(parser, prim);
 
   uw_catch(esym, eobj) {
     yyerrorf(parser->scanner, lit("exception during parse"), nao);

@@ -4615,6 +4615,7 @@ void eval_init(void)
   reg_fun(intern(lit("eval"), user_package), func_n2o(eval_intrinsic, 1));
   reg_fun(intern(lit("lisp-parse"), user_package), func_n5o(lisp_parse, 0));
   reg_fun(intern(lit("read"), user_package), func_n5o(lisp_parse, 0));
+  reg_fun(intern(lit("iread"), user_package), func_n5o(iread, 0));
   reg_fun(intern(lit("load"), system_package), func_n2(sys_load));
   reg_fun(intern(lit("expand"), system_package), func_n2o(expand, 1));
   reg_fun(intern(lit("macro-form-p"), user_package), func_n2o(macro_form_p, 1));
