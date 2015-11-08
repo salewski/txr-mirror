@@ -6393,7 +6393,7 @@ static cnum middle_pivot(val vec, val lessfun, val keyfun, cnum from, cnum to,
 
 static void quicksort(val vec, val lessfun, val keyfun, cnum from, cnum to)
 {
-  if (to - from >= 2) {
+  while (to - from >= 2) {
     val pkval;
     cnum i, j;
     cnum pivot = if3(to - from > 15,
@@ -6408,8 +6408,13 @@ static void quicksort(val vec, val lessfun, val keyfun, cnum from, cnum to)
 
     swap(vec, num_fast(j), num_fast(to - 1));
 
-    quicksort(vec, lessfun, keyfun, from, j);
-    quicksort(vec, lessfun, keyfun, j + 1, to);
+    if (j - from > to - j) {
+      quicksort(vec, lessfun, keyfun, j + 1, to);
+      to = j;
+    } else {
+      quicksort(vec, lessfun, keyfun, from, j);
+      from = j + 1;
+    }
   }
 }
 
