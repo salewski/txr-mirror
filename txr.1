@@ -12502,6 +12502,11 @@ and
 operators execute these steps:
 .RS
 .IP 1.
+Establish an anonymous block over the entire form, allowing
+the
+.code return
+operator to be used to terminate the loop.
+.IP 2.
 Establish bindings for the specified variables similarly to
 .code let
 and
@@ -12514,11 +12519,6 @@ each
 .meta inc-form
 and each
 .metn body-form .
-.IP 2.
-Establish an anonymous block over the remaining forms, allowing
-the
-.code return
-operator to be used to terminate the loop.
 .IP 3.
 Evaluate
 .metn test-form .
@@ -37341,7 +37341,15 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code -C 103
 selects the behaviors described below for version 105, but not those for 102.
-
+.IP 123
+In \*(TX 123 and earlier, the variable initialization forms of a
+.code for
+or
+.code for*
+loop were evaluated outside of the scope of the implicit
+.code nil
+block. They are now inside the block. The compatibility option will
+restore the old behavior.
 .IP 121
 In \*(TX 121 and earlier versions, \*(TL expressions evaluated in the
 pattern language were placed in a lexical environment in which the

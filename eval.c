@@ -1811,11 +1811,15 @@ static val op_for(val form, val env)
   val incs = fourth(form);
   val forms = rest(rest(rest(rest(form))));
   val new_env;
-  val new_bindings = bindings_helper(vars, env, eq(forsym, for_star_s),
-                                     &new_env, t, form);
+  int oldscope = opt_compat && opt_compat <= 123;
+
+  if (oldscope)
+    (void) bindings_helper(vars, env, eq(forsym, for_star_s), &new_env, t, form);
+
   uw_block_begin (nil, result);
 
-  (void) new_bindings;
+  if (!oldscope)
+    (void) bindings_helper(vars, env, eq(forsym, for_star_s), &new_env, t, form);
 
   for (; cond == nil || eval(car(cond), new_env, form);
        eval_progn(incs, new_env, form))
