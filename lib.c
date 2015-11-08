@@ -6346,13 +6346,59 @@ static void swap(val vec, val i, val j)
   }
 }
 
+static cnum med_of_three(val vec, val lessfun, val keyfun, cnum from, cnum to,
+                         val *pkval)
+{
+  cnum mid = from + (to - from) / 2;
+  val fval = ref(vec, num_fast(from));
+  val mval = ref(vec, num_fast(mid));
+  val tval = ref(vec, num_fast(to - 1));
+  val fkval = funcall1(keyfun, fval);
+  val mkval = funcall1(keyfun, mval);
+  val tkval = funcall1(keyfun, tval);
+
+  if (funcall2(lessfun, fkval, mkval)) {
+    if (funcall2(lessfun, mkval, tval)) {
+      *pkval = mkval;
+      return mid;
+    } else if (funcall2(lessfun, fkval, tkval)) {
+      *pkval = tkval;
+      return to - 1;
+    } else {
+      *pkval = fkval;
+      return from;
+    }
+  } else {
+    if (funcall2(lessfun, fkval, tval)) {
+      *pkval = fkval;
+      return from;
+    } else if (funcall2(lessfun, mkval, tkval)) {
+      *pkval = tkval;
+      return to - 1;
+    } else {
+      *pkval = mkval;
+      return mid;
+    }
+  }
+}
+
+static cnum middle_pivot(val vec, val lessfun, val keyfun, cnum from, cnum to,
+                         val *pkval)
+{
+    cnum pivot = from + (to - from) / 2;
+    val pval = ref(vec, num_fast(pivot));
+    *pkval = funcall1(keyfun, pval);
+    return pivot;
+}
+
 static void quicksort(val vec, val lessfun, val keyfun, cnum from, cnum to)
 {
   if (to - from >= 2) {
-    cnum pivot = from + (to - from) / 2;
+    val pkval;
     cnum i, j;
-    val pval = ref(vec, num_fast(pivot));
-    val pkval = funcall1(keyfun, pval);
+    cnum pivot = if3(to - from > 15,
+                     med_of_three(vec, lessfun, keyfun, from, to, &pkval),
+                     middle_pivot(vec, lessfun, keyfun, from, to, &pkval));
 
     swap(vec, num_fast(pivot), num_fast(to - 1));
 
