@@ -84,7 +84,7 @@ val setq_s, inc_s, zap_s;
 val for_s, for_star_s, each_s, each_star_s, collect_each_s, collect_each_star_s;
 val append_each_s, append_each_star_s, while_s, while_star_s, until_star_s;
 val dohash_s;
-val uw_protect_s, return_s, return_from_s, sys_abscond_from_s;
+val uw_protect_s, return_s, return_from_s, sys_abscond_from_s, block_star_s;
 val list_s, append_s, apply_s, iapply_s;
 val gen_s, gun_s, generate_s, rest_s, plus_s;
 val promise_s, promise_forced_s, promise_inprogress_s, force_s;
@@ -1898,6 +1898,19 @@ static val op_block(val form, val env)
   return result;
 }
 
+static val op_block_star(val form, val env)
+{
+  val sym_form = second(form);
+  val body = rest(rest(form));
+  val sym = eval(sym_form, env, form);
+
+  uw_block_begin (sym, result);
+  result = eval_progn(body, env, form);
+  uw_block_end;
+
+  return result;
+}
+
 static val op_return(val form, val env)
 {
   val retval = eval(second(form), env, form);
@@ -3099,7 +3112,7 @@ tail:
         return rlcp(cons(sym, cons(funcs_ex, body_ex)), form);
       }
     } else if (sym == block_s || sym == return_from_s ||
-               sym == sys_abscond_from_s)
+               sym == sys_abscond_from_s || sym == block_star_s)
     {
       val name = second(form);
       val body = rest(rest(form));
@@ -3407,6 +3420,21 @@ static val constantp(val form, val env_in)
   } else {
     return t;
   }
+}
+
+static val return_star(val name, val retval)
+{
+  uw_block_return(name, retval);
+  eval_error(nil, lit("return*: no block named ~s is visible"), name, nao);
+  abort();
+}
+
+static val abscond_star(val name, val retval)
+{
+  uw_block_abscond(name, retval);
+  eval_error(nil, lit("sys:abscond*: no block named ~s is visible"),
+             name, nao);
+  abort();
 }
 
 val mapcarv(val fun, struct args *lists)
@@ -4228,6 +4256,7 @@ void eval_init(void)
   return_s = intern(lit("return"), user_package);
   return_from_s = intern(lit("return-from"), user_package);
   sys_abscond_from_s = intern(lit("abscond-from"), system_package);
+  block_star_s = intern(lit("block*"), user_package);
   gethash_s = intern(lit("gethash"), user_package);
   car_s = intern(lit("car"), user_package);
   cdr_s = intern(lit("cdr"), user_package);
@@ -4321,6 +4350,7 @@ void eval_init(void)
   reg_op(dohash_s, op_dohash);
   reg_op(uw_protect_s, op_unwind_protect);
   reg_op(block_s, op_block);
+  reg_op(block_star_s, op_block_star);
   reg_op(return_s, op_return);
   reg_op(return_from_s, op_return_from);
   reg_op(sys_abscond_from_s, op_abscond_from);
@@ -4890,6 +4920,8 @@ void eval_init(void)
           func_n0v(register_exception_subtypes));
   reg_fun(intern(lit("exception-subtype-p"), user_package),
           func_n2(uw_exception_subtype_p));
+  reg_fun(intern(lit("return*"), user_package), func_n2o(return_star, 1));
+  reg_fun(intern(lit("abscond*"), system_package), func_n2o(abscond_star, 1));
 
   reg_fun(intern(lit("match-fun"), user_package), func_n4(match_fun));
 

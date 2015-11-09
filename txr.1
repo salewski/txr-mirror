@@ -12559,9 +12559,10 @@ allowing the
 operator to be used to terminate at any point.
 
 
-.coNP Operator @ block
+.coNP Operators @ block and @ block*
 .synb
 .mets (block < name << body-form *)
+.mets (block* < name-form << body-form *)
 .syne
 .desc
 The
@@ -12576,6 +12577,15 @@ and
 .codn nil .
 A block named by the symbol nil is slightly special: it is
 understood to be an anonymous block.
+
+The
+.code block*
+operator differs from
+.code block
+in that it evaluates
+.metn name-form ,
+which is expected to produce a symbol. The resulting symbol
+is used for the name of the block.
 
 A named or anonymous block establishes an exit point for the
 .code return-from
@@ -12610,6 +12620,11 @@ block
 does not lexically surround
 .codn foo .
 
+It is because blocks are dynamic that the
+.code block*
+variant exists; for lexically scoped blocks, it would make little
+sense to have support a dynamically computed name.
+
 Thus blocks in \*(TL provide dynamic non-local returns, as well
 as returns out of lexical nesting.
 
@@ -12633,7 +12648,21 @@ is not allowed in Common Lisp, but can be transliterated to:
 Note that foo is quoted in CL. This underscores the dynamic nature of
 the construct.
 .code throw
-itself is a function and not an operator.
+itself is a function and not an operator. Also note that the CL
+example, in turn, is even more closely transcribed back into \*(TL
+simply by replacing its
+.code throw
+and
+.code catch
+with
+.code return*
+and
+.code block* :
+
+.cblk
+  (defun func () (return* 'foo 42))
+  (block* 'foo (func))
+.cble
 
 Common Lisp blocks also do not support delimited continuations.
 
@@ -12684,6 +12713,37 @@ because.
 terminates block
 .codn foo ,
 and so the second pprint form is not evaluated.
+
+.coNP Function @ return*
+.synb
+.mets (return* < name <> [ value ])
+.syne
+.desc
+The
+.code return*
+function is similar to the the
+.code return-from
+operator, except that
+.code name
+is an ordinary function parameter, and so when
+.code return*
+is used, an argument expression must be specified which evaluates
+to a symbol. Thus
+.code return*
+allows the target block of a return to be dynamically computed.
+
+The following equivalence holds between the operator and function:
+
+.cblk
+  (return-from a b)  <-->  (return* 'a b)
+.cble
+
+Expressions used as
+.meta name
+arguments to
+.code return*
+which do not simply quote a symbol have no equivalent in
+.codn return-from .
 
 .SS* Evaluation
 
@@ -27723,6 +27783,37 @@ and
 operators to escape out of a block in which a continuation has
 been captured. Neglecting to unwind is valid due to the expectation
 that control will return into a restarted copy of that context.
+
+.coNP Function @ sys:abscond*
+.synb
+.mets (sys:abscond* < name <> [ value ])
+.syne
+.desc
+The
+.code sys:return*
+function is similar to the the
+.code sys:abscond-from
+operator, except that
+.code name
+is an ordinary function parameter, and so when
+.code return*
+is used, an argument expression must be specified which evaluates
+to a symbol. Thus
+.code sys:abscond*
+allows the target block of a return to be dynamically computed.
+
+The following equivalence holds between the operator and function:
+
+.cblk
+  (sys:abscond-from a b)  <-->  (sys:abscond* 'a b)
+.cble
+
+Expressions used as
+.meta name
+arguments to
+.code abscond*
+which do not simply quote a symbol have no equivalent in
+.codn abscond-from .
 
 .coNP Macros @ obtain and @ yield-from
 .synb
