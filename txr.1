@@ -28797,6 +28797,77 @@ according to the modulo 3 congruence:
   -> #H(() (0 (0 3 6 9)) (1 (1 4 7 10)) (2 (2 5 8)))
 .cble
 
+.coNP Function @ group-reduce
+.synb
+.mets (group-reduce < hash < classify-fun < binary-fun < seq
+.mets \ \  >> [ init-value <> [ filter-fun ]])
+.syne
+.desc
+The
+.code group-reduce
+updates hash table
+.meta hash
+by grouping and reducing sequence
+.metn seq .
+
+The function regards the hash table as being populated with
+keys denoting accumulator values. Missing accumulators which
+need to be created in the hash table are initialized with
+.meta init-value
+which defaults to
+.codn nil .
+
+The function iterates over
+.meta seq
+and treats each element according to the following steps:
+.RS
+.IP 1.
+Each element is mapped to a hash key through
+.metn classify-fun .
+.IP 2.
+The value associated with the hash key (the accumulator for that
+key) is retrieved. If it doesn't exist,
+.meta init-value
+is used.
+.IP 3.
+The function
+.meta binary-fun
+is invoked with two arguments: the accumulator from step 2, and the
+original element from
+.metn seq .
+.IP 4.
+The resulting value is stored back into the hash table under the
+same key.
+.RE
+
+.IP
+If
+.code group-reduce
+is invoked on an empty hash table, its net result closely resembles a
+.code group-by
+operation followed by separately performing a
+.code reduce-left
+on each value in the hash.
+
+.TP* Examples:
+
+Frequency histogram:
+
+.cblk
+  [group-reduce (hash) identity (do inc @1)
+    "fourscoreandsevenyearsago" 0]
+  --> #H(() (#\ea 3) (#\ec 1) (#\ed 1) (#\ee 4) (#\ef 1)
+        (#\eg 1) (#\en 2) (#\eo 3) (#\er 3) (#\es 3)
+        (#\eu 1) (#\ev 1) (#\ey 1))
+.cble
+
+Separate the integers 1-10 into even and odd, and sum these groups:
+
+.cblk
+  [group-reduce (hash) evenp + (range 1 10) 0]
+  -> #H(() (t 30) (nil 25))
+.cble
+
 .coNP Functions @ make-similar-hash and @ copy-hash
 .synb
 .mets (make-similar-hash << hash )

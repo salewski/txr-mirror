@@ -960,6 +960,51 @@ val group_by(val func, val seq, struct args *hashv_args)
   }
 }
 
+val group_reduce(val hash, val by_fun, val reduce_fun, val seq,
+                 val initval, val filter_fun)
+{
+  initval = default_bool_arg(initval);
+  filter_fun = default_arg(filter_fun, identity_f);
+
+  if (vectorp(seq)) {
+    cnum i, len;
+
+    for (i = 0, len = c_num(length(seq)); i < len; i++) {
+      val v = vecref(seq, num_fast(i));
+      val key = funcall1(by_fun, v);
+      val new_p;
+      val cell = gethash_c(hash, key, mkcloc(new_p));
+
+      if (new_p)
+        rplacd(cell, funcall2(reduce_fun, initval, v));
+      else
+        rplacd(cell, funcall2(reduce_fun, cdr(cell), v));
+    }
+  } else {
+    for (; seq; seq = cdr(seq)) {
+      val v = car(seq);
+      val key = funcall1(by_fun, v);
+      val new_p;
+      val cell = gethash_c(hash, key, mkcloc(new_p));
+
+      if (new_p)
+        rplacd(cell, funcall2(reduce_fun, initval, v));
+      else
+        rplacd(cell, funcall2(reduce_fun, cdr(cell), v));
+    }
+  }
+
+  if (filter_fun != identity_f) {
+    val iter = hash_begin(hash);
+    val cell;
+
+    while ((cell = hash_next(iter)) != nil)
+      rplacd(cell, funcall1(filter_fun, cdr(cell)));
+  }
+
+  return hash;
+}
+
 static val hash_keys_lazy(val iter, val lcons)
 {
   val cell = hash_next(iter);
