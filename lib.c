@@ -793,31 +793,83 @@ loc list_collect_append(loc ptail, val obj)
 
 val nreverse(val in)
 {
-  val rev = nil;
+  switch (type(in)) {
+  case NIL:
+    return nil;
+  case CONS:
+  case LCONS:
+    {
+      val rev = nil;
 
-  while (in) {
-    val temp = cdr(in);
-    set(cdr_l(in), rev);
-    rev = in;
-    in = temp;
+      while (in) {
+        val temp = cdr(in);
+        set(cdr_l(in), rev);
+        rev = in;
+        in = temp;
+      }
+
+      return rev;
+    }
+  case VEC:
+  case STR:
+    {
+      cnum len = c_num(length(in));
+      cnum i;
+
+      for (i = 0; i < len / 2; i++) {
+        cnum j = len - i - 1;
+        val tmp = ref(in, num_fast(i));
+        refset(in, num_fast(i), ref(in, num_fast(j)));
+        refset(in, num_fast(j), tmp);
+      }
+
+      return in;
+    }
+  default:
+    uw_throwf(error_s, lit("nreverse: cannot reverse ~s"), in, nao);
   }
-
-  return rev;
 }
 
 val reverse(val in)
 {
-  val in_orig = in;
-  val rev = nil;
+  switch (type(in)) {
+  case NIL:
+    return nil;
+  case CONS:
+  case LCONS:
+    {
+      val rev = nil;
 
-  in = nullify(in);
+      while (in) {
+        rev = cons(car(in), rev);
+        in = cdr(in);
+      }
 
-  while (in) {
-    rev = cons(car(in), rev);
-    in = cdr(in);
+      return rev;
+    }
+  case LSTR:
+    in = lazy_str_force(in);
+    /* fallthrough */
+  case VEC:
+  case STR:
+  case LIT:
+    {
+      val obj = copy(in);
+      cnum len = c_num(length(in));
+      cnum i;
+
+      for (i = 0; i < len / 2; i++) {
+        cnum j = len - i - 1;
+        val tmp = ref(obj, num_fast(i));
+        refset(obj, num_fast(i), ref(obj, num_fast(j)));
+        refset(obj, num_fast(j), tmp);
+      }
+
+      return obj;
+    }
+  default:
+    uw_throwf(error_s, lit("reverse: cannot reverse ~s"), in, nao);
   }
-
-  return make_like(rev, in_orig);
 }
 
 val append2(val list1, val list2)
