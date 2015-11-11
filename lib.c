@@ -791,6 +791,96 @@ loc list_collect_append(loc ptail, val obj)
   }
 }
 
+loc list_collect_nreconc(loc ptail, val obj)
+{
+  val rev = nreverse(nullify(obj));
+
+  switch (type(deref(ptail))) {
+  case CONS:
+  case LCONS:
+    ptail = tail(deref(ptail));
+    /* fallthrough */
+  case NIL:
+    set(ptail, rev);
+    switch (type(obj)) {
+    case CONS:
+    case LCONS:
+      return cdr_l(obj);
+    default:
+      return ptail;
+    }
+  case VEC:
+    replace_vec(deref(ptail), rev, t, t);
+    return ptail;
+  case STR:
+  case LIT:
+  case LSTR:
+    replace_str(deref(ptail), rev, t, t);
+    return ptail;
+  default:
+    uw_throwf(error_s, lit("cannot nconc ~s to ~s"), obj, deref(ptail), nao);
+  }
+}
+
+static val revlist(val in, val *tail)
+{
+  val rev = nil;
+
+  *tail = nil;
+
+  if (in) {
+    *tail = rev = cons(car(in), rev);
+    in = cdr(in);
+  }
+
+  while (in) {
+    rev = cons(car(in), rev);
+    in = cdr(in);
+  }
+
+  return rev;
+}
+
+loc list_collect_revappend(loc ptail, val obj)
+{
+  val last;
+  obj = nullify(obj);
+
+  switch (type(deref(ptail))) {
+  case CONS:
+  case LCONS:
+    set(ptail, copy_list(deref(ptail)));
+    ptail = tail(deref(ptail));
+    /* fallthrough */
+  case NIL:
+    switch (type(obj)) {
+    case CONS:
+    case LCONS:
+      set(ptail, revlist(obj, &last));
+      return cdr_l(last);
+    case NIL:
+      return ptail;
+    default:
+      set(ptail, reverse(obj));
+      return ptail;
+    }
+    set(ptail, obj);
+    return ptail;
+  case VEC:
+    set(ptail, copy_vec(deref(ptail)));
+    replace_vec(deref(ptail), reverse(obj), t, t);
+    return ptail;
+  case STR:
+  case LIT:
+  case LSTR:
+    set(ptail, copy_str(deref(ptail)));
+    replace_str(deref(ptail), reverse(obj), t, t);
+    return ptail;
+  default:
+    uw_throwf(error_s, lit("cannot append to ~s"), deref(ptail), nao);
+  }
+}
+
 val nreverse(val in)
 {
   switch (type(in)) {
@@ -901,6 +991,26 @@ val nappend2(val list1, val list2)
 
   ptail = list_collect_nconc (ptail, list1);
   ptail = list_collect_nconc (ptail, list2);
+
+  return out;
+}
+
+val revappend(val list1, val list2)
+{
+  list_collect_decl (out, ptail);
+
+  ptail = list_collect_revappend(ptail, list1);
+  ptail = list_collect_nconc(ptail, list2);
+
+  return out;
+}
+
+val nreconc(val list1, val list2)
+{
+  list_collect_decl (out, ptail);
+
+  ptail = list_collect_nreconc(ptail, list1);
+  ptail = list_collect_nconc(ptail, list2);
 
   return out;
 }

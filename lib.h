@@ -499,6 +499,8 @@ val nreverse(val in);
 val reverse(val in);
 val append2(val list1, val list2);
 val nappend2(val list1, val list2);
+val revappend(val list1, val list2);
+val nreconc(val list1, val list2);
 val appendv(struct args *lists);
 val nconcv(struct args *lists);
 val sub_list(val list, val from, val to);
@@ -999,6 +1001,8 @@ INLINE val default_arg_strict(val arg, val dfl)
 loc list_collect(loc pptail, val obj);
 loc list_collect_nconc(loc pptail, val obj);
 loc list_collect_append(loc pptail, val obj);
+loc list_collect_nreconc(loc pptail, val obj);
+loc list_collect_revappend(loc pptail, val obj);
 
 #define cons_bind(CAR, CDR, CONS)               \
   obj_t *c_o_n_s ## CAR ## CDR = CONS;          \

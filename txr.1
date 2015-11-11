@@ -14447,6 +14447,33 @@ traverse the last argument.)
   (append '(a . b) 3 '(1 2 3)) -> **error**
 .cble
 
+.coNP Functions @ revappend and @ nreconc
+.synb
+.mets (revappend < list1 << list2 )
+.mets (nreconc < list1 << list2 )
+.syne
+.desc
+The
+.code revappend
+function returns a list consisting of
+.code list2
+appended to a reversed copy of
+.metn list1 .
+The returned object shares structure
+with
+.metn list2 ,
+which is unmodified.
+
+The
+.code nreconc
+function behaves similarly, except
+that the the returned object may share
+structure with not only
+.meta list2
+but also
+.metn list1 ,
+which is modified.
+
 .coNP Function @ list
 .synb
 .mets (list << value *)
