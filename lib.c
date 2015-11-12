@@ -7820,27 +7820,28 @@ val obj_print_impl(val obj, val out, val pretty)
       val save_mode = test_set_indent_mode(out, num_fast(indent_off),
                                            num_fast(indent_data));
       val save_indent = nil;
+      int two_elem = consp(cdr(obj)) && !cddr(obj);
 
-      if (sym == quote_s && consp(cdr(obj)) && !(cdr(cdr(obj)))) {
+      if (sym == quote_s && two_elem) {
         put_char(chr('\''), out);
         obj_print_impl(second(obj), out, pretty);
-      } else if (sym == sys_qquote_s) {
+      } else if (sym == sys_qquote_s && two_elem) {
         put_char(chr('^'), out);
         obj_print_impl(second(obj), out, pretty);
-      } else if (sym == sys_unquote_s) {
+      } else if (sym == sys_unquote_s && two_elem) {
         put_char(chr(','), out);
         obj_print_impl(second(obj), out, pretty);
-      } else if (sym == sys_splice_s) {
+      } else if (sym == sys_splice_s && two_elem) {
         put_string(lit(",*"), out);
         obj_print_impl(second(obj), out, pretty);
-      } else if (sym == vector_lit_s) {
+      } else if (sym == vector_lit_s && two_elem) {
         put_string(lit("#"), out);
         obj_print_impl(second(obj), out, pretty);
       } else if (sym == hash_lit_s) {
         put_string(lit("#H"), out);
         obj_print_impl(rest(obj), out, pretty);
-      } else if (sym == var_s && (symbolp(second(obj)) || integerp(second(obj)))
-                 && !cdr(cdr(obj)))
+      } else if (sym == var_s && two_elem &&
+                 (symbolp(second(obj)) || integerp(second(obj))))
       {
         put_char(chr('@'), out);
         obj_print_impl(second(obj), out, pretty);
