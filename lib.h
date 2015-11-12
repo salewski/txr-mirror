@@ -998,11 +998,11 @@ INLINE val default_arg_strict(val arg, val dfl)
   val OUT = nil;                                \
   loc PTAIL = mkcloc(OUT)
 
-loc list_collect(loc pptail, val obj);
-loc list_collect_nconc(loc pptail, val obj);
-loc list_collect_append(loc pptail, val obj);
-loc list_collect_nreconc(loc pptail, val obj);
-loc list_collect_revappend(loc pptail, val obj);
+loc list_collect(loc ptail, val obj);
+loc list_collect_nconc(loc ptail, val obj);
+loc list_collect_append(loc ptail, val obj);
+loc list_collect_nreconc(loc ptail, val obj);
+loc list_collect_revappend(loc ptail, val obj);
 
 #define cons_bind(CAR, CDR, CONS)               \
   obj_t *c_o_n_s ## CAR ## CDR = CONS;          \
