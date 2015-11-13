@@ -15945,7 +15945,10 @@ whether initialization takes place, and thus whether its
 .meta init-form
 is evaluated.
 
-Direct circular references erroneous and are diagnosed.
+Direct circular references are erroneous and are diagnosed. This takes
+place when the macro-expanded form is evaluated, not during the
+expansion of
+.codn mlet .
 
 .TP* Examples:
 
