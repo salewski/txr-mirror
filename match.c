@@ -461,14 +461,14 @@ static val match_line(match_line_ctx c);
 typedef val (*h_match_func)(match_line_ctx *c);
 
 #define LOG_MISMATCH(KIND)                                              \
-  debuglf(elem, lit(KIND " mismatch, position ~a (~a:~a)"),             \
+  debuglf(elem, lit(KIND " mismatch, position ~a (~a:~d)"),             \
           plus(c->pos, c->base), c->file, c->data_lineno, nao);         \
   debuglf(elem, lit("  ~a"), c->dataline, nao);                         \
   if (c_num(c->pos) < 77)                                               \
     debuglf(elem, lit("  ~*a^"), c->pos, lit(""), nao)
 
 #define LOG_MATCH(KIND, EXTENT)                                         \
-  debuglf(elem, lit(KIND " matched, position ~a-~a (~a:~a)"),           \
+  debuglf(elem, lit(KIND " matched, position ~a-~a (~a:~d)"),           \
           plus(c->pos, c->base), EXTENT, c->file, c->data_lineno, nao); \
   debuglf(elem, lit("  ~a"), c->dataline, nao);                         \
   if (c_num(EXTENT) < 77)                                               \
@@ -749,7 +749,7 @@ static val h_skip(match_line_ctx *c)
 
   if (!rest(c->specline)) {
     debuglf(elem,
-            lit("skip to end of line ~a:~a"), c->file, c->data_lineno, nao);
+            lit("skip to end of line ~a:~d"), c->file, c->data_lineno, nao);
     return cons(c->bindings, t);
   }
 
@@ -765,13 +765,13 @@ static val h_skip(match_line_ctx *c)
     if (min) {
       if (reps_min != cmin) {
         debuglf(elem,
-                lit("skipped only ~a/~a chars to ~a:~a:~a"),
+                lit("skipped only ~d/~d chars to ~a:~d:~d"),
                 num(reps_min), num(cmin),
                 c->file, c->data_lineno, c->pos, nao);
         return nil;
       }
 
-      debuglf(elem, lit("skipped ~a chars to ~a:~a:~a"),
+      debuglf(elem, lit("skipped ~d chars to ~a:~d:~d"),
               num(reps_min), c->file, c->data_lineno, c->pos, nao);
     }
 
@@ -937,7 +937,7 @@ next_coll:
   }
 
   if ((times || mintimes) && timescounter < ctimin) {
-    debuglf(elem, lit("fewer than ~a iterations collected"),
+    debuglf(elem, lit("fewer than ~d iterations collected"),
             num(ctimin), nao);
     return nil;
   }
@@ -1117,7 +1117,7 @@ static val h_fun(match_line_ctx *c)
     val bindings_cp = copy_list(c->bindings);
 
     if (!equal(length(args), length_list(params)))
-      sem_error(elem, lit("function ~a takes ~a argument(s)"),
+      sem_error(elem, lit("function ~a takes ~d argument(s)"),
                 sym, length_list(params), nao);
 
     for (piter = params, aiter = args; piter;
@@ -1213,7 +1213,7 @@ static val h_chr(match_line_ctx *c)
   c->bindings = dest_bind(elem, c->bindings, pat, c->pos, eql_f);
 
   if (c->bindings == t) {
-    debuglf(elem, lit("chr mismatch (position ~a vs. ~a)"), c->pos, pat, nao);
+    debuglf(elem, lit("chr mismatch (position ~d vs. ~d)"), c->pos, pat, nao);
     return nil;
   }
 
@@ -1365,7 +1365,7 @@ static val match_line_completely(match_line_ctx c)
     val new_pos = cdr(result);
 
     if (new_pos != t && length_str_gt(c.dataline, minus(new_pos, c.base))) {
-      debuglf(c.specline, lit("spec only matches line to position ~a: ~a"),
+      debuglf(c.specline, lit("spec only matches line to position ~d: ~a"),
               new_pos, c.dataline, nao);
       return nil;
     }
@@ -2109,13 +2109,13 @@ static val v_skip(match_files_ctx *c)
 
       if (min) {
         if (reps_min != cmin) {
-          debuglf(skipspec, lit("skipped only ~a/~a lines to ~a:~a"),
+          debuglf(skipspec, lit("skipped only ~d/~d lines to ~a:~d"),
                   num(reps_min), num(cmin),
                   c->curfile, c->data_lineno, nao);
           uw_block_return(nil, nil);
         }
 
-        debuglf(skipspec, lit("skipped ~a lines to ~a:~a"),
+        debuglf(skipspec, lit("skipped ~d lines to ~a:~d"),
                 num(reps_min), c->curfile,
                 c->data_lineno, nao);
       }
@@ -2128,19 +2128,19 @@ static val v_skip(match_files_ctx *c)
             last_good_result = result;
             last_good_line = c->data_lineno;
           } else {
-            debuglf(skipspec, lit("skip matched ~a:~a"), c->curfile,
+            debuglf(skipspec, lit("skip matched ~a:~d"), c->curfile,
                     c->data_lineno, nao);
             break;
           }
         } else {
-          debuglf(skipspec, lit("skip didn't match ~a:~a"),
+          debuglf(skipspec, lit("skip didn't match ~a:~d"),
                   c->curfile, c->data_lineno, nao);
         }
 
         if (!c->data)
           break;
 
-        debuglf(skipspec, lit("skip didn't match ~a:~a"), c->curfile,
+        debuglf(skipspec, lit("skip didn't match ~a:~d"), c->curfile,
                 c->data_lineno, nao);
 
         c->data = rest(c->data);
@@ -2152,7 +2152,7 @@ static val v_skip(match_files_ctx *c)
       if (result)
         return result;
       if (last_good_result) {
-        debuglf(skipspec, lit("greedy skip matched ~a:~a"),
+        debuglf(skipspec, lit("greedy skip matched ~a:~d"),
                 c->curfile, last_good_line, nao);
         return last_good_result;
       }
@@ -2191,11 +2191,11 @@ static val v_fuzz(match_files_ctx *c)
         val result = match_files(fuzz_ctx);
 
         if (result) {
-          debuglf(fuzz_spec, lit("fuzz matched ~a:~a"), c->curfile,
+          debuglf(fuzz_spec, lit("fuzz matched ~a:~d"), c->curfile,
                   c->data_lineno, nao);
           good++;
         } else {
-          debuglf(fuzz_spec, lit("fuzz didn't match ~a:~a"),
+          debuglf(fuzz_spec, lit("fuzz didn't match ~a:~d"),
                   c->curfile, c->data_lineno, nao);
         }
 
@@ -2207,14 +2207,14 @@ static val v_fuzz(match_files_ctx *c)
         if (!c->spec) {
           if (good >= cm)
             break;
-          debuglf(fuzz_spec, lit("fuzz failed ~a:~a"), c->curfile,
+          debuglf(fuzz_spec, lit("fuzz failed ~a:~d"), c->curfile,
                   c->data_lineno, nao);
           return nil;
         }
       }
 
       if (reps == cn && good < cm) {
-        debuglf(fuzz_spec, lit("fuzz failed ~a:~a"), c->curfile,
+        debuglf(fuzz_spec, lit("fuzz failed ~a:~d"), c->curfile,
                 c->data_lineno, nao);
         return nil;
       }
@@ -2720,7 +2720,7 @@ static val v_gather(match_files_ctx *c)
                  match_files(mf_spec(*c, ul_spec)));
 
       if (success) {
-        debuglf(specline, lit("until/last matched ~a:~a"),
+        debuglf(specline, lit("until/last matched ~a:~d"),
                 c->curfile, c->data_lineno, nao);
         /* Until discards bindings and position, last keeps them. */
         if (sym == last_s) {
@@ -2742,7 +2742,7 @@ static val v_gather(match_files_ctx *c)
     specs = new_specs;
 
     if (consp(max_data)) {
-      debuglf(specline, lit("gather advancing from line ~a to ~a"),
+      debuglf(specline, lit("gather advancing from line ~d to ~d"),
               c->data_lineno, max_line, nao);
       c->data_lineno = max_line;
       c->data = max_data;
@@ -2752,7 +2752,7 @@ static val v_gather(match_files_ctx *c)
     } else {
       c->data_lineno = plus(c->data_lineno, one);
       c->data = rest(c->data);
-      debuglf(specline, lit("gather advancing by one line to ~a"), c->data_lineno, nao);
+      debuglf(specline, lit("gather advancing by one line to ~d"), c->data_lineno, nao);
     }
   }
 
@@ -2855,7 +2855,7 @@ static val v_collect(match_files_ctx *c)
                    match_files(mf_spec_bindings(*c, ul_spec, new_bindings)));
 
         if (success) {
-          debuglf(specline, lit("until/last matched ~a:~a"),
+          debuglf(specline, lit("until/last matched ~a:~d"),
                   c->curfile, c->data_lineno, nao);
           /* Until discards bindings and position, last keeps them. */
           if (sym == last_s) {
@@ -2880,7 +2880,7 @@ static val v_collect(match_files_ctx *c)
                                              c->bindings, eq_f, nil);
         val have_new = strictly_new_bindings;
 
-        debuglf(specline, lit("collect matched ~a:~a"),
+        debuglf(specline, lit("collect matched ~a:~d"),
                 c->curfile, c->data_lineno, nao);
 
         for (iter = vars; iter; iter = cdr(iter)) {
@@ -2923,7 +2923,7 @@ static val v_collect(match_files_ctx *c)
             new_line = plus(new_line, one);
           }
 
-          debuglf(specline, lit("collect advancing from line ~a to ~a"),
+          debuglf(specline, lit("collect advancing from line ~d to ~d"),
                   c->data_lineno, new_line, nao);
 
           c->data = new_data;
@@ -2959,7 +2959,7 @@ next_collect:
   }
 
   if ((times || mintimes) && timescounter < ctimin) {
-    debuglf(specline, lit("fewer than ~a iterations collected"),
+    debuglf(specline, lit("fewer than ~d iterations collected"),
             num(ctimin), nao);
     return nil;
   }
@@ -3294,7 +3294,7 @@ static val v_output(match_files_ctx *c)
                             "treating as failed match due to nothrow"), dest, nao);
       return nil;
     } else if (errno != 0) {
-      file_err(specline, lit("could not open ~a (error ~a/~a)"), dest,
+      file_err(specline, lit("could not open ~a (error ~d/~s)"), dest,
                num(errno), string_utf8(strerror(errno)), nao);
     } else {
       file_err(specline, lit("could not open ~a"), dest, nao);
@@ -3575,7 +3575,7 @@ static val v_filter(match_files_ctx *c)
 static val v_eof(match_files_ctx *c)
 {
   if (c->data && car(c->data)) {
-    debuglf(c->spec, lit("eof failed to match at ~a"), c->data_lineno, nao);
+    debuglf(c->spec, lit("eof failed to match at ~d"), c->data_lineno, nao);
     return nil;
   }
   return next_spec_k;
@@ -3660,7 +3660,7 @@ static val v_fun(match_files_ctx *c)
         if (consp(success)) {
           debuglf(specline,
                   lit("function matched; "
-                      "advancing from line ~a to ~a"),
+                      "advancing from line ~d to ~d"),
                   c->data_lineno, cdr(success), nao);
           c->data = car(success);
           c->data_lineno = cdr(success);
@@ -3723,8 +3723,8 @@ static val v_assert(match_files_ctx *c)
       uw_throw(type, values);
     } else {
       if (c->curfile)
-        typed_error(assert_s, first_spec, lit("assertion (at ~s:~s)"), c->curfile, c->data_lineno, nao);
-      typed_error(assert_s, first_spec, lit("assertion (line ~s)"), c->data_lineno, nao);
+        typed_error(assert_s, first_spec, lit("assertion (at ~s:~d)"), c->curfile, c->data_lineno, nao);
+      typed_error(assert_s, first_spec, lit("assertion (line ~d)"), c->data_lineno, nao);
     }
   }
   abort();
@@ -3785,7 +3785,7 @@ static val v_load(match_files_ctx *c)
           if (consp(success)) {
             debuglf(specline,
                     lit("load: ~s matched; "
-                        "advancing from line ~a to ~a"),
+                        "advancing from line ~d to ~d"),
                     path, c->data_lineno, cdr(success), nao);
             c->data = car(success);
             c->data_lineno = cdr(success);
@@ -3834,7 +3834,7 @@ static val v_line(match_files_ctx *c)
   c->bindings = dest_bind(specline, c->bindings, pat, c->data_lineno, eql_f);
 
   if (c->bindings == t) {
-    debuglf(specline, lit("line mismatch (line ~a vs. ~a)"), c->data_lineno, pat, nao);
+    debuglf(specline, lit("line mismatch (line ~d vs. ~d)"), c->data_lineno, pat, nao);
     return nil;
   }
 
@@ -3865,8 +3865,8 @@ static val h_assert(match_line_ctx *c)
     uw_throw(type, values);
   } else {
     if (c->file)
-      typed_error(assert_s, elem, lit("assertion (at ~s:~s)"), c->file, c->data_lineno, nao);
-    typed_error(assert_s, elem, lit("assertion (line ~s)"), c->data_lineno, nao);
+      typed_error(assert_s, elem, lit("assertion (at ~s:~d)"), c->file, c->data_lineno, nao);
+    typed_error(assert_s, elem, lit("assertion (line ~d)"), c->data_lineno, nao);
   }
   abort();
 }
@@ -3900,7 +3900,7 @@ static void open_data_source(match_files_ctx *c)
             debuglf(spec, lit("could not open ~a: "
                               "treating as failed match due to nothrow"), name, nao);
           else if (errno != 0)
-            file_err(spec, lit("could not open ~a (error ~a/~a)"), name,
+            file_err(spec, lit("could not open ~a (error ~d/~s)"), name,
                      num(errno), string_utf8(strerror(errno)), nao);
           else
             file_err(spec, lit("could not open ~a"), name, nao);

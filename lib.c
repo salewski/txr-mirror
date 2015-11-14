@@ -4092,7 +4092,7 @@ val gensym(val prefix)
 {
   prefix = default_arg(prefix, lit("g"));
   loc gs_loc = lookup_var_l(nil, gensym_counter_s);
-  val name = format(nil, lit("~a~,04a"), prefix,
+  val name = format(nil, lit("~a~,04d"), prefix,
                     set(gs_loc, plus(deref(gs_loc), one)), nao);
   return make_sym(name);
 }

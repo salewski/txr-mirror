@@ -673,10 +673,10 @@ val repl(val bindings, val in_stream, val out_stream)
     lino_hist_load(ls, histfile_u8);
 
   while (!done) {
-    val prompt = format(nil, lit("~a> "), counter, nao);
+    val prompt = format(nil, lit("~d> "), counter, nao);
     val prev_counter = counter;
     val var_counter = mod(counter, num_fast(100));
-    val var_name = format(nil, lit("*~a"), var_counter, nao);
+    val var_name = format(nil, lit("*~d"), var_counter, nao);
     val var_sym = intern(var_name, user_package);
 
     char *prompt_u8 = utf8_dup_to(c_str(prompt));
@@ -726,7 +726,7 @@ val repl(val bindings, val in_stream, val out_stream)
     uw_catch_begin (catch_all, exsym, exvals);
 
     {
-      val name = format(nil, lit("expr-~a"), prev_counter, nao);
+      val name = format(nil, lit("expr-~d"), prev_counter, nao);
       val line = string_utf8(line_u8);
       val form = lisp_parse(line, out_stream, colon_k, name, colon_k);
       if (form == quit_k) {

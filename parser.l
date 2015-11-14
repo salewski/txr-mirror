@@ -109,10 +109,10 @@ void yyerrorf(scanner_t *scanner, val fmt, ...)
     va_list vl;
     va_start (vl, fmt);
     if (opt_compat && opt_compat <= 114)
-      format(std_error, lit("~a: (~a:~a): "), prog_string,
+      format(std_error, lit("~a: (~a:~d): "), prog_string,
              parser->name, num(parser->lineno), nao);
     else
-      format(std_error, lit("~a:~a: "),
+      format(std_error, lit("~a:~d: "),
              parser->name, num(parser->lineno), nao);
 
     vformat(std_error, fmt, vl);
@@ -1037,7 +1037,7 @@ val source_loc_str(val form, val alt)
   cons_bind (line, file, gethash(form_to_ln_hash, form));
   if (missingp(alt))
     alt = lit("source location n/a");
-  return if3(line, format(nil, lit("~a:~a"), file, line, nao), alt);
+  return if3(line, format(nil, lit("~a:~d"), file, line, nao), alt);
 }
 
 int yylex(YYSTYPE *yylval_param, yyscan_t yyscanner)

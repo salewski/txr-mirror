@@ -81,10 +81,10 @@ static void show_bindings(val env, val stream)
     if (nilp(env))
       break;
     else if (consp(env)) {
-      format(stream, lit("~s: ~s\n"), level, env, nao);
+      format(stream, lit("~d: ~s\n"), level, env, nao);
       break;
     } else if (type(env) == ENV) {
-      format(stream, lit("~s: ~s\n"), level, env->e.vbindings, nao);
+      format(stream, lit("~d: ~s\n"), level, env->e.vbindings, nao);
       env = env->e.up_env;
     } else {
       format(stream, lit("invalid environment object: ~s\n"), env, nao);
@@ -116,7 +116,7 @@ val debug(val form, val bindings, val data, val line, val pos, val base)
       val input, command;
 
       if (print_form) {
-        format(std_debug, lit("stopped at line ~a of ~a\n"),
+        format(std_debug, lit("stopped at line ~d of ~a\n"),
                lineno, file, nao);
         format(std_debug, lit("form: ~s\n"), form, nao);
         format(std_debug, lit("depth: ~s\n"), num(debug_depth), nao);
@@ -139,14 +139,14 @@ val debug(val form, val bindings, val data, val line, val pos, val base)
             suffix = sub_str(data, pos, plus(pos, half));
           }
 
-          format(std_debug, lit("data (~s:~s):\n~s . ~s\n"),
+          format(std_debug, lit("data (~d:~d):\n~s . ~s\n"),
                  line, plus(pos, base), prefix, suffix, nao);
         } else if (data && length_str_ge(data, num(lim - 2))) {
-          format(std_debug, lit("data (~s):\n~s...~s\n"), line,
+          format(std_debug, lit("data (~d):\n~s...~s\n"), line,
                  sub_str(data, zero, num(lim/2 - 4)),
                  sub_str(data, num(-(lim/2 - 3)), t), nao);
         } else {
-          format(std_debug, lit("data (~s):\n~s\n"), line, data, nao);
+          format(std_debug, lit("data (~d):\n~s\n"), line, data, nao);
         }
         print_data = nil;
       }

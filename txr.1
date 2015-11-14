@@ -30798,6 +30798,41 @@ to the value of the
 .code flo-max-dig
 variable.
 
+.coNP Special variable @ *print-base*
+.desc
+The
+.code *print-base*
+variable controls the base (radix) used for printing integer values.
+It applies when the functions
+.codn print ,
+.cond pprint ,
+.cond prinl ,
+.cond pprinl ,
+.code tostring
+and
+.codn tostringp
+process an integer value.
+It also applies when the
+.code ~a
+and
+.code ~s
+conversion specifiers of the
+.code format
+function are used for printing an integer value.
+
+The default value of the variable is
+.codn 10 .
+
+Meaningful values are:
+.codn 2 ,
+.codn 8 ,
+.code 10
+and
+.codn 16 .
+
+When base 16 is selected, hexadecimal digits are printed as upper-case
+characters.
+
 .coNP Function @ format
 .synb
 .mets (format < stream-designator < format-string << format-arg *)
@@ -31044,7 +31079,20 @@ for the sake of read-print
 consistency. Objects truncated by precision may not have read-print
 consistency. For instance, if a string object is truncated, it loses its
 trailing closing quote, so that the resulting representation is no longer
-a properly formed string object.
+a properly formed string object. For integer objects, the
+.code *print-base*
+variable is honored. Effectively, an integer is printed by the
+.code s
+directive as if by the
+.codn b ,
+.codn o ,
+.codn d ,
+or
+.code x directive, depending on the value of the variable.
+
+.coIP d
+Requires an argument of integer or character type type. The integer
+value or character code is printed in decimal.
 
 .coIP x
 Requires an argument of character or integer type. The integer value or

@@ -63,7 +63,7 @@
 
 val stdin_s, stdout_s, stddebug_s, stderr_s, stdnull_s;
 
-val print_flo_precision_s;
+val print_flo_precision_s, print_base_s;
 
 val from_start_k, from_current_k, from_end_k;
 val real_time_k, name_k, fd_k;
@@ -366,7 +366,7 @@ static val stdio_maybe_read_error(val stream)
   if (ferror(h->f)) {
     val err = num(errno);
     h->err = err;
-    uw_throwf(file_error_s, lit("error reading ~a: ~a/~s"),
+    uw_throwf(file_error_s, lit("error reading ~a: ~d/~s"),
               stream, err, errno_to_string(err), nao);
   }
   if (feof(h->f))
@@ -381,7 +381,7 @@ static val stdio_maybe_error(val stream, val action)
   if (h->f == 0)
     uw_throwf(file_error_s, lit("error ~a ~a: file closed"), stream, action, nao);
   h->err = err;
-  uw_throwf(file_error_s, lit("error ~a ~a: ~a/~s"),
+  uw_throwf(file_error_s, lit("error ~a ~a: ~d/~s"),
             stream, action, err, errno_to_string(err), nao);
 }
 
@@ -655,7 +655,7 @@ static val stdio_close(val stream, val throw_on_error)
     h->f = 0;
     if (result == EOF && throw_on_error) {
       h->err = num(errno);
-      uw_throwf(file_error_s, lit("error closing ~a: ~a/~s"),
+      uw_throwf(file_error_s, lit("error closing ~a: ~d/~s"),
                 stream, num(errno), string_utf8(strerror(errno)), nao);
     }
     return result != EOF ? t : nil;
@@ -932,7 +932,7 @@ static val pipe_close(val stream, val throw_on_error)
     if (status < 0) {
       if (throw_on_error)
         uw_throwf(process_error_s,
-                  lit("unable to obtain status of command ~a: ~a/~s"),
+                  lit("unable to obtain status of command ~a: ~d/~s"),
                   stream, num(errno), string_utf8(strerror(errno)), nao);
     } else {
 #ifdef HAVE_SYS_WAIT
@@ -2185,12 +2185,13 @@ val formatv(val stream_in, val fmtstr, struct args *al)
     } state = vf_init, saved_state = vf_init;
     int width = 0, precision = 0, precision_p = 0, digits = 0, lt = 0, neg = 0;
     enum align align = al_right;
-    int sign = 0, zeropad = 0, dfl_precision = 0;
+    int sign = 0, zeropad = 0, dfl_precision = 0, print_base = 0;
     cnum value;
     cnum arg_ix = 0;
 
     for (;;) {
       val obj;
+      type_t typ;
       wchar_t ch = *fmt++;
       char num_buf[512], *pnum = num_buf;
 
@@ -2323,7 +2324,9 @@ val formatv(val stream_in, val fmtstr, struct args *al)
         switch (ch) {
         case 'x': case 'X':
           obj = args_get_checked(name, al, &arg_ix);
-          if (bignump(obj)) {
+          typ = type(obj);
+        hex:
+          if (typ == BGNUM) {
             int nchars = mp_radix_size(mp(obj), 16);
             if (nchars >= convert(int, sizeof (num_buf)))
               pnum = coerce(char *, chk_malloc(nchars + 1));
@@ -2341,7 +2344,9 @@ val formatv(val stream_in, val fmtstr, struct args *al)
           goto output_num;
         case 'o': case 'b':
           obj = args_get_checked(name, al, &arg_ix);
-          if (bignump(obj)) {
+          typ = type(obj);
+        oct:
+          if (typ == BGNUM) {
             int rad = ch == '0' ? 8 : 2;
             int nchars = mp_radix_size(mp(obj), rad);
             if (nchars >= convert(int, sizeof (num_buf)))
@@ -2438,10 +2443,36 @@ val formatv(val stream_in, val fmtstr, struct args *al)
             precision = 0;
             goto output_num;
           }
+        case 'd':
+          obj = args_get_checked(name, al, &arg_ix);
+          typ = type(obj);
+          goto dec;
         case 'a': case 's':
           obj = args_get_checked(name, al, &arg_ix);
+          typ = type(obj);
 
-          switch (type(obj)) {
+          if (typ == NUM || typ == BGNUM) {
+            if (!print_base)
+              print_base = c_num(cdr(lookup_var(nil, print_base_s)));
+            switch (print_base) {
+            case 0:
+            case 2:
+              ch = 'b';
+              goto oct;
+            case 8:
+              ch = 'o';
+              goto oct;
+            case 16:
+              ch = 'X';
+              goto hex;
+            case 10:
+            default:
+              break;
+            }
+          }
+          /* fallthrough */
+        dec:
+          switch (typ) {
           case NUM:
             value = c_num(obj);
             sprintf(num_buf, num_fmt->dec, value);
@@ -2854,7 +2885,7 @@ val open_directory(val path)
   DIR *d = w_opendir(c_str(path));
 
   if (!d)
-    uw_throwf(file_error_s, lit("error opening directory ~a: ~a/~s"),
+    uw_throwf(file_error_s, lit("error opening directory ~a: ~d/~s"),
               path, num(errno), string_utf8(strerror(errno)), nao);
 
   return make_dir_stream(d);
@@ -2866,7 +2897,7 @@ val open_file(val path, val mode_str)
   FILE *f = w_fopen(c_str(path), c_str(normalize_mode(&m, mode_str)));
 
   if (!f)
-    uw_throwf(file_error_s, lit("error opening ~a: ~a/~s"),
+    uw_throwf(file_error_s, lit("error opening ~a: ~d/~s"),
               path, num(errno), string_utf8(strerror(errno)), nao);
 
   return set_mode_props(m, make_stdio_stream(f, path));
@@ -2878,11 +2909,11 @@ val open_fileno(val fd, val mode_str)
   FILE *f = w_fdopen(c_num(fd), c_str(normalize_mode(&m, mode_str)));
 
   if (!f)
-    uw_throwf(file_error_s, lit("error opening descriptor ~a: ~a/~s"),
+    uw_throwf(file_error_s, lit("error opening descriptor ~a: ~d/~s"),
               fd, num(errno), string_utf8(strerror(errno)), nao);
 
   return set_mode_props(m, make_stdio_stream(f, format(nil,
-                                                       lit("fd ~a"),
+                                                       lit("fd ~d"),
                                                        fd, nao)));
 }
 
@@ -2897,7 +2928,7 @@ val open_tail(val path, val mode_str, val seek_end_p)
 
   if (f && default_bool_arg(seek_end_p))
     if (fseek(f, 0, SEEK_END) < 0)
-      uw_throwf(file_error_s, lit("error seeking to end of ~a: ~a/~s"),
+      uw_throwf(file_error_s, lit("error seeking to end of ~a: ~d/~s"),
                 path, num(errno), string_utf8(strerror(errno)), nao);
 
   stream = make_tail_stream(f, path);
@@ -2914,7 +2945,7 @@ val open_command(val path, val mode_str)
   FILE *f = w_popen(c_str(path), c_str(normalize_mode(&m, mode_str)));
 
   if (!f)
-    uw_throwf(file_error_s, lit("error opening pipe ~a: ~a/~s"),
+    uw_throwf(file_error_s, lit("error opening pipe ~a: ~d/~s"),
               path, num(errno), string_utf8(strerror(errno)), nao);
 
   return set_mode_props(m, make_pipe_stream(f, path));
@@ -2936,7 +2967,7 @@ val open_process(val name, val mode_str, val args)
   nargs = c_num(length(args)) + 1;
 
   if (pipe(fd) == -1) {
-    uw_throwf(file_error_s, lit("opening pipe ~a, pipe syscall failed: ~a/~s"),
+    uw_throwf(file_error_s, lit("opening pipe ~a, pipe syscall failed: ~d/~s"),
               name, num(errno), string_utf8(strerror(errno)), nao);
   }
 
@@ -2954,7 +2985,7 @@ val open_process(val name, val mode_str, val args)
     for (i = 0; i < nargs; i++)
       free(argv[i]);
     free(argv);
-    uw_throwf(file_error_s, lit("opening pipe ~a, fork syscall failed: ~a/~s"),
+    uw_throwf(file_error_s, lit("opening pipe ~a, fork syscall failed: ~d/~s"),
               name, num(errno), string_utf8(strerror(errno)), nao);
   }
 
@@ -3001,7 +3032,7 @@ val open_process(val name, val mode_str, val args)
       while (waitpid(pid, &status, 0) == -1 && errno == EINTR)
         ;
       free(utf8mode);
-      uw_throwf(file_error_s, lit("opening pipe ~a, fdopen failed: ~a/~s"),
+      uw_throwf(file_error_s, lit("opening pipe ~a, fdopen failed: ~d/~s"),
                 name, num(errno), string_utf8(strerror(errno)), nao);
     }
 
@@ -3130,7 +3161,7 @@ static val run(val name, val args)
     for (i = 0; i < nargs; i++)
       free(argv[i]);
     free(argv);
-    uw_throwf(file_error_s, lit("opening process ~a, fork syscall failed: ~a/~s"),
+    uw_throwf(file_error_s, lit("opening process ~a, fork syscall failed: ~d/~s"),
               name, num(errno), string_utf8(strerror(errno)), nao);
   }
 
@@ -3196,7 +3227,7 @@ static val sh(val command)
 val remove_path(val path)
 {
   if (w_remove(c_str(path)) < 0)
-    uw_throwf(file_error_s, lit("trying to remove ~a: ~a/~s"),
+    uw_throwf(file_error_s, lit("trying to remove ~a: ~d/~s"),
                 path, num(errno), string_utf8(strerror(errno)), nao);
   return t;
 }
@@ -3204,7 +3235,7 @@ val remove_path(val path)
 val rename_path(val from, val to)
 {
   if (w_rename(c_str(from), c_str(to)) < 0)
-    uw_throwf(file_error_s, lit("trying to rename ~a to ~a: ~a/~s"),
+    uw_throwf(file_error_s, lit("trying to rename ~a to ~a: ~d/~s"),
                 from, to, num(errno), string_utf8(strerror(errno)), nao);
   return t;
 }
@@ -3279,6 +3310,8 @@ void stream_init(void)
   reg_var(print_flo_precision_s = intern(lit("*print-flo-precision*"),
                                          user_package),
           num_fast(DBL_DIG));
+  reg_var(print_base_s = intern(lit("*print-base*"), user_package),
+          num_fast(10));
 
 #if HAVE_ISATTY
   if (isatty(fileno(stdin)) == 1)
