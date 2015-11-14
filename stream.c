@@ -2347,7 +2347,7 @@ val formatv(val stream_in, val fmtstr, struct args *al)
           typ = type(obj);
         oct:
           if (typ == BGNUM) {
-            int rad = ch == '0' ? 8 : 2;
+            int rad = ch == 'o' ? 8 : 2;
             int nchars = mp_radix_size(mp(obj), rad);
             if (nchars >= convert(int, sizeof (num_buf)))
               pnum = coerce(char *, chk_malloc(nchars + 1));
