@@ -26385,6 +26385,15 @@ to a \*(TX floating-point number, and back to decimal, without a change in any o
 the digits. This holds regardless of the value of the number, provided that it
 does not exceed the floating-point range.
 
+.coNP Variable @ flo-max-dig
+.desc
+This variable holds an integer representing the maximum number of
+decimal digits required to capture the value of a floating-point number
+such that the resulting decimal form will convert back to the same
+floating-point number. See also the
+.code *print-flo-precision*
+variable.
+
 .coNP Variables @ %pi% and @ %e%
 .desc
 These variables hold an approximation of the mathematical constants \(*p and e.
@@ -30753,6 +30762,42 @@ the
 .code /dev/null
 device on Unix, but does not involve the operating system.
 
+.coNP Special variable @ *print-flo-precision*
+.desc
+The
+.code *print-flo-precision*
+special variable holds the precision which applies when
+floating-point values are converted to decimal text by the functions
+.codn print ,
+.cond pprint ,
+.cond prinl ,
+.cond pprinl ,
+.code tostring
+and
+.codn tostringp .
+It also applies when the
+.code ~a
+and
+.code ~s
+conversion specifiers of the
+.code format
+function are used for printing a floating-point value, and no precision
+is specified.
+
+The default value of
+.code *print-flo-precision*
+is that of the
+.code flo-dig
+variable.
+
+Note: to print floating-point values in such a way that their values
+can be precisely recovered from the printed representation, it is
+recommended to override
+.code *print-flo-precision*
+to the value of the
+.code flo-max-dig
+variable.
+
 .coNP Function @ format
 .synb
 .mets (format < stream-designator < format-string << format-arg *)
@@ -30974,11 +31019,13 @@ When this specifier is used for floating-point values, the precision specifies
 the maximum number of total significant figures, which do not include any
 digits in the exponent, if one is printed. Numbers are printed in exponential
 notation if their magnitude is small, or else if their exponent exceeds their
-precision. (If the precision is not specified, then it defaults to the
-system-dependent number of digits in a floating point value, derived from the C
-language
-.code DBL_DIG
-constant.) Floating point values which are integers are
+precision. If the precision is not specified, then it is obtained from
+the
+.code *print-flo-precision*
+special variable, whose default value is the same as that of the
+.code flo-dig
+variable.
+Floating point values which are integers are
 printed without a trailing
 .code .0
 (point zero).

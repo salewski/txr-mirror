@@ -63,6 +63,8 @@
 
 val stdin_s, stdout_s, stddebug_s, stderr_s, stdnull_s;
 
+val print_flo_precision_s;
+
 val from_start_k, from_current_k, from_end_k;
 val real_time_k, name_k, fd_k;
 val format_s;
@@ -2183,7 +2185,7 @@ val formatv(val stream_in, val fmtstr, struct args *al)
     } state = vf_init, saved_state = vf_init;
     int width = 0, precision = 0, precision_p = 0, digits = 0, lt = 0, neg = 0;
     enum align align = al_right;
-    int sign = 0, zeropad = 0;
+    int sign = 0, zeropad = 0, dfl_precision = 0;
     cnum value;
     cnum arg_ix = 0;
 
@@ -2453,8 +2455,12 @@ val formatv(val stream_in, val fmtstr, struct args *al)
             }
             goto output_num;
           case FLNUM:
-            if (!precision_p)
-              precision = DBL_DIG;
+            if (!precision_p) {
+              if (!dfl_precision)
+                dfl_precision = c_num(cdr(lookup_var(nil,
+                                                     print_flo_precision_s)));
+              precision = dfl_precision;
+            }
 
             if (precision > 500)
               uw_throwf(error_s, lit("excessive precision in format: ~s\n"),
@@ -3269,6 +3275,10 @@ void stream_init(void)
           make_stdio_stream(stderr, lit("stderr")));
   reg_var(stdnull_s = intern(lit("*stdnull*"), user_package),
           make_null_stream());
+
+  reg_var(print_flo_precision_s = intern(lit("*print-flo-precision*"),
+                                         user_package),
+          num_fast(DBL_DIG));
 
 #if HAVE_ISATTY
   if (isatty(fileno(stdin)) == 1)

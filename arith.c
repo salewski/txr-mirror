@@ -2282,9 +2282,11 @@ void arith_init(void)
   reg_varl(intern(lit("*flo-min*"), user_package), flo(DBL_MIN));
   reg_varl(intern(lit("*flo-epsilon*"), user_package), flo(DBL_EPSILON));
   reg_varl(intern(lit("flo-dig"), user_package), num_fast(DBL_DIG));
+  reg_varl(intern(lit("flo-max-dig"), user_package), num_fast(FLO_MAX_DIG));
   reg_varl(intern(lit("flo-max"), user_package), flo(DBL_MAX));
   reg_varl(intern(lit("flo-min"), user_package), flo(DBL_MIN));
   reg_varl(intern(lit("flo-epsilon"), user_package), flo(DBL_EPSILON));
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif

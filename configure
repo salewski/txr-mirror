@@ -112,6 +112,7 @@ lit_align=
 extra_debugging=
 debug_support=y
 gen_gc=y
+have_dbl_decimal_dig=
 have_unistd=
 have_sys_time=
 have_syslog=
@@ -1263,6 +1264,37 @@ fi
 
 printf '"%s"\n' "$inline"
 printf "#define INLINE $inline\n" >> $config_h
+
+#
+# DBL_DECIMAL_DIG
+#
+
+printf "Checking for DBL_DECIMAL_DIG ... "
+
+for try_sym in DBL_DECIMAL_DIG __DBL_DECIMAL_DIG__ ; do
+  cat > conftest.c <<!
+#include <float.h>
+
+#ifndef $try_sym
+#error $try_sym not defined
+#else
+int main(void)
+{
+  return 0;
+}
+#endif
+!
+  if conftest ; then
+    printf "yes (%s)\n" $try_sym
+    printf "#define FLO_MAX_DIG $try_sym\n" >> $config_h
+    have_dbl_decimal_dig=y
+  fi
+done
+
+if ! [ $have_dbl_decimal_dig ] ; then
+    printf "no\n"
+    printf "#define FLO_MAX_DIG (DBL_DIG + 2)\n" >> $config_h
+fi
 
 #
 # Valgrind
