@@ -1,3 +1,42 @@
+                                    TXR 124
+                                   2015-11-14
+
+
+  Features
+
+  - New iread function for reading an object from a stream
+    in an interactive-friendly way.
+  - Median-of-three pivot selection added to quicksort to
+    avoid degenerate cases.
+  - Scoping rule for implicit nil block in the for operator
+    has changed: the block now surrounds the variable
+    initialization forms.
+  - New block* operator and functions return* and sys:abscond*,
+    which allow blocks to be defined and referenced
+    using symbols computed at run-time.
+  - New function group-reduce for flexible decimation of a sequence
+    to a hash table.
+  - The (rcons x y) syntax is printed as x..y now.
+  - nreverse handles strings and vectors now, and reverses them in place.
+  - reverse handles vectors and strings in more efficient way,
+    and can reverse lazy strings.
+  - Functions revappend and nreconc added.
+  - New *print-flo-precision* special variable for controlling precision
+    applied when printing floating point objects.
+  - New *print-base* special variable for controlling base in which
+    integer objects are printed. (Only binary, octal, decimal and hex
+    are supported.)
+
+  Bugs
+
+  - Fixed object printer throwing exceptions when meeting unexpected syntax
+    in forms that have special printed notation like quote and whatnot.
+    The correct behavior is to avoid the notation and print the raw syntax.
+  - Fixed ~o format specifier, broken with respect to bignum operands
+    in TXR 120, when ~b was introduced.
+
+
+
                                     TXR 123
                                    2015-11-06
 
