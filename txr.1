@@ -18829,6 +18829,29 @@ stands for "unbound". The function produced by
 is not bound to any specific object; it binds to an object whenever it is
 invoked by retrieving the actual method from the object's slot at call time.
 
+.coNP Macro @ usl
+.synb
+.mets (usl << slot )
+.syne
+.desc
+The
+.code usl
+macro binds the symbol
+.meta slot
+to a function and returns that function.
+
+When that function is called, it expects exactly one argument.
+That argument must be an object of struct type.
+The slot named
+.meta slot
+is retrieved from that object and returned.
+
+The name
+.code usl
+stands for "unbound slot". The term "unbound" refers to the returned
+function not being bound to a particular object. The binding of the
+slot to an object takes place whenever the function is called.
+
 .coNP Function @ make-struct-type
 .synb
 .mets (make-struct-type < name < super < static-slots < slots
@@ -19317,6 +19340,33 @@ function,
 .code umethod
 doesn't return a method whose leftmost argument is already bound to
 an object; the binding occurs at call time.
+
+.coNP Function @ uslot
+.synb
+.mets (uslot << slot-name )
+.syne
+.desc
+The
+.code uslot
+returns a function which represents all slots named
+.meta slot-name
+in all structure types, including ones not yet defined.
+The
+.meta slot-name
+argument must be a symbol.
+
+The returned function must be called with exactly one argument.
+The argument must be a structure which has a slot named
+.metn slot-name .
+The function will retrieve the value of the slot from that object
+and return it.
+
+Note: the
+.code uslot
+name stands for "unbound slot". The returned function
+isn't bound to a particular object. The binding of
+.code slot-name
+to a slot in the structure object occurs when the function is called.
 
 .coNP Function @ slotp
 .synb

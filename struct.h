@@ -47,5 +47,6 @@ val structp(val obj);
 val struct_type(val strct);
 val method(val strct, val slotsym);
 val super_method(val strct, val slotsym);
+val uslot(val slot);
 val umethod(val slot);
 void struct_init(void);

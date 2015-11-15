@@ -133,6 +133,7 @@ void struct_init(void)
   reg_fun(intern(lit("struct-type"), user_package), func_n1(struct_type));
   reg_fun(intern(lit("method"), user_package), func_n2(method));
   reg_fun(intern(lit("super-method"), user_package), func_n2(super_method));
+  reg_fun(intern(lit("uslot"), user_package), func_n1(uslot));
   reg_fun(intern(lit("umethod"), user_package), func_n1(umethod));
 }
 
@@ -789,6 +790,25 @@ val super_method(val strct, val slotsym)
 {
   val super_slot = static_slot(super(struct_type(strct)), slotsym);
   return func_f0v(cons(super_slot, strct), method_fun);
+}
+
+static val uslot_fun(val sym, val strct)
+{
+  val self = lit("uslot");
+  struct struct_inst *si = struct_handle(strct, self);
+
+  if (symbolp(sym)) {
+    loc ptr = lookup_slot(strct, si, sym);
+    if (!nullocp(ptr))
+      return deref(ptr);
+  }
+
+  no_such_slot(self, si->type, sym);
+}
+
+val uslot(val slot)
+{
+  return func_f1(slot, uslot_fun);
 }
 
 static val umethod_fun(val sym, struct args *args)
