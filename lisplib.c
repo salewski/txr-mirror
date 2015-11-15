@@ -173,7 +173,8 @@ static val path_test_instantiate(val set_fun)
 static val struct_set_entries(val dlt, val fun)
 {
   val name[] = {
-    lit("defstruct"), lit("qref"), lit("new"), nil
+    lit("defstruct"), lit("qref"), lit("new"), lit("meth"),
+    lit("umeth"), lit("defmeth"), nil
   };
 
   set_dlt_entries(dlt, name, fun);
