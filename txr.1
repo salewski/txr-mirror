@@ -18150,6 +18150,28 @@ A structure type is associated with a static initialization function
 which may be used to store initial values into static slots. It is
 invoked when the type is created.
 
+.NP* Functors
+
+A structure object can be invoked as a function, if it supports an "anonymous"
+method. An anonymous method is one whose name is the
+.code lambda
+symbol. When arguments are applied to an object
+.codn s ,
+the object and those arguments are passed to the
+.code lambda
+method. If there is no such method, the call is erroneous.
+
+That is to say, the following equivalences apply, except that
+.code s
+is evaluated only once:
+
+.cblk
+  (call s args ...)  <-->  s.(lambda args ...)
+
+  [s args ...]  <-->  [s.lambda s args ...]
+
+  (mapcar s list)  <-->  (mapcar (meth s lambda) list)
+.cble
 
 .coNP Macro @ defstruct
 .synb
@@ -18540,6 +18562,14 @@ are placed into a
 .code block
 named
 .codn name .
+
+A method named
+.code lambda
+allows a structure to be used as if it were a function. When arguments
+are applied to the structure as if it were a function, the
+.code lambda
+method is invoked with those arguments, with the object itself inserted
+into the leftmost argument position.
 
 .coNP Macro @ new
 .synb

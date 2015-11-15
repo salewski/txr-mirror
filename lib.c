@@ -4762,6 +4762,9 @@ val generic_funcall(val fun, struct args *args_in)
       default:
         callerror(fun, lit("too many arguments"));
       }
+    } else if (structp(fun)) {
+      fun = method(fun, lambda_s);
+      break;
     }
     /* fallthrough */
   default:
