@@ -20103,6 +20103,30 @@ is returned, which may be
 .meta sequence
 itself or a copy.
 
+.coNP Function @ butlast
+.synb
+.mets (butlast << sequence )
+.syne
+.desc
+The
+.code butlast
+function returns the prefix of
+.meta sequence
+consisting of a copy of it, with the last item omitted.
+If
+.meta sequence
+is empty, an empty sequence is returned.
+
+Dialect note: the Common Lisp function
+.code nbutlast
+is not provided. The \*(TL
+.code take
+function provides the same functionality for lists (only with the
+arguments reversed relative to
+.codn nbutlast ),
+and additionally provides lazy semantics, and works with vectors
+and strings.
+
 .coNP Function @ search
 .synb
 .mets (search < haystack < needle >> [ testfun <> [ keyfun ])

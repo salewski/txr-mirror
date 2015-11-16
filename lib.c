@@ -7396,6 +7396,11 @@ val dwim_del(val seq, val ind_range)
   }
 }
 
+val butlast(val seq)
+{
+  return sub(seq, zero, negone);
+}
+
 val update(val seq, val fun)
 {
   switch (type(seq)) {
