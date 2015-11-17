@@ -808,6 +808,7 @@ static val h_skip(match_line_ctx *c)
 static val h_coll(match_line_ctx *c)
 {
   val elem = first(c->specline);
+  val op_sym = first(elem);
   val coll_specline = second(elem);
   val until_last_specline = third(elem);
   val args = fourth(elem);
@@ -832,6 +833,13 @@ static val h_coll(match_line_ctx *c)
   cnum cchars = fixnump(chars) ? c_num(chars) : 0;
   cnum timescounter = 0, charscounter = 0;
   val iter;
+
+  if (op_sym == rep_s) {
+    if (have_vars)
+      sem_error(elem, lit("~s: coll takes :vars, rep does not"),
+                op_sym, nao);
+    have_vars = t;
+  }
 
   vars = vars_to_bindings(elem, vars, c->bindings);
 
@@ -893,8 +901,8 @@ static val h_coll(match_line_ctx *c)
         }
 
         if (have_new && missing)
-          sem_error(elem, lit("collect failed to bind ~a"),
-                    missing, nao);
+          sem_error(elem, lit("~s failed to bind ~a"),
+                    op_sym, missing, nao);
 
         for (iter = strictly_new_bindings; iter; iter = cdr(iter))
         {
@@ -4192,6 +4200,7 @@ static void dir_tables_init(void)
   sethash(h_directive_table, var_s, cptr(coerce(mem_t *, h_var)));
   sethash(h_directive_table, skip_s, cptr(coerce(mem_t *, h_skip)));
   sethash(h_directive_table, coll_s, cptr(coerce(mem_t *, h_coll)));
+  sethash(h_directive_table, rep_s, cptr(coerce(mem_t *, h_coll)));
   sethash(h_directive_table, flatten_s, cptr(coerce(mem_t *, hv_trampoline)));
   sethash(h_directive_table, forget_s, cptr(coerce(mem_t *, hv_trampoline)));
   sethash(h_directive_table, local_s, cptr(coerce(mem_t *, hv_trampoline)));

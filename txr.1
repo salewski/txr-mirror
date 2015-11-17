@@ -3011,7 +3011,13 @@ understood in an output clause.
 A directive understood within an @(output) section, for repeating multi-line
 text, with successive substitutions pulled from lists. The directive
 .code @(rep)
-produces iteration over lists horizontally within one line.
+produces iteration over lists horizontally within one line. These directives
+have a different meaning in matching clauses, providing a shorthand
+notation for
+.code @(repeat :vars nil)
+and
+.codn "@(rep :vars nil)" ,
+respectively.
 
 .coIP @(deffilter)
 This directive is used for defining named filters, which are useful
@@ -5106,6 +5112,20 @@ keyword does not exist, but there is
 an analogous
 .code :chars
 keyword.
+
+The
+.code @(coll)
+directive takes the
+.code :vars
+keyword.
+
+The shorthand
+.code @(rep)
+may be used instead of
+.codn "@(coll :vars nil)" .
+.code @(rep)
+takes all keywords, except
+.codn :vars .
 
 .dir flatten
 

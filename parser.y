@@ -387,8 +387,6 @@ elems : elem                    { $$ = cons($1, nil);
                                   rlcp($$, $1); }
       | elem elems              { $$ = cons($1, $2);
                                   rlcp($$, $1); }
-      | rep_elem                { $$ = nil;
-                                  yyerr("rep outside of output"); }
       ;
 
 
@@ -429,8 +427,17 @@ elem : texts                    { $$ = rlcp(cons(text_s, $1), $1);
                                             $2, nao);
                                   rl($$, num($1));
                                   rl($6, car($5)); }
+     | REP exprs_opt ')' elems END     { $$ = list(rep_s, $4, nil, $2, nao);
+                                         rl($$, num($1)); }
+     | REP exprs_opt ')' elems
+       until_last elems END     { $$ = list(rep_s, $4, cons(cdr($5), $6),
+                                            $2, nao);
+                                  rl($$, num($1));
+                                  rl($6, car($5)); }
      | COLL error               { $$ = nil;
                                   yybadtok(yychar, lit("coll clause")); }
+     | REP error               { $$ = nil;
+                                 yybadtok(yychar, lit("rep clause")); }
      | ALL clause_parts_h       { $$ = rl(list(all_s, t, $2, nao), num($1)); }
      | ALL END                  { yyerr("empty all clause"); }
      | SOME exprs_opt ')'
