@@ -48,7 +48,7 @@ void args_normalize(struct args *args, cnum fill)
   bug_unless (fill <= args->argc);
 
   while (args->fill > fill)
-    args->list = cons(args->arg[--args->fill], args->list);
+    args->list = cons(z(args->arg[--args->fill]), args->list);
 
   while (args->fill < fill && args->list)
     args_add(args, pop(&args->list));

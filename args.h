@@ -143,9 +143,12 @@ INLINE val args_at(struct args *args, cnum arg_index)
 
 INLINE val args_atz(struct args *args, cnum arg_index)
 {
-  if (arg_index < args->fill)
+  if (arg_index < args->fill) {
     return z(args->arg[arg_index]);
-  return car(z(args->list));
+  } else {
+    loc l = car_l(args->list);
+    return zap(valptr(l));
+  }
 }
 
 INLINE val args_get(struct args *args, cnum *arg_index)
