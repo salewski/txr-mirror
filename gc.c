@@ -918,3 +918,15 @@ void gc_hint_func(val *val)
 {
   (void) val;
 }
+
+void gc_report_copies(val *pvar)
+{
+  val *opvar = pvar;
+  val obj = *pvar++;
+
+  for (; pvar < gc_stack_bottom; pvar++) {
+    if (*pvar == obj)
+      printf("%p found at %p (offset %d)\n",
+             (void *) obj, (void *) pvar, (int) (pvar - opvar));
+  }
+}

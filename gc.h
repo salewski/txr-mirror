@@ -47,6 +47,7 @@ extern int full_gc;
 
 void unmark(void);
 void gc_hint_func(val *);
+void gc_report_copies(val *pvar);
 
 extern int gc_enabled;
 extern val **gc_prot_top;
