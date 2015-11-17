@@ -2862,7 +2862,7 @@ static val v_collect(match_files_ctx *c)
             last_bindings = set_diff(until_last_bindings,
                                      new_bindings, eq_f, nil);
             if (success == t) {
-              debuglf(specline, lit("collect consumed entire file"), nao);
+              debuglf(specline, lit("~s: consumed entire file"), op_sym, nao);
               c->data = nil;
             } else {
               cons_bind (new_data, new_line, success);
@@ -2880,8 +2880,8 @@ static val v_collect(match_files_ctx *c)
                                              c->bindings, eq_f, nil);
         val have_new = strictly_new_bindings;
 
-        debuglf(specline, lit("collect matched ~a:~d"),
-                c->curfile, c->data_lineno, nao);
+        debuglf(specline, lit("~s matched ~a:~d"),
+                op_sym, c->curfile, c->data_lineno, nao);
 
         for (iter = vars; iter; iter = cdr(iter)) {
           cons_bind (var, dfl, car(iter));
@@ -2896,8 +2896,8 @@ static val v_collect(match_files_ctx *c)
         }
 
         if (have_new && missing)
-          sem_error(specline, lit("collect failed to bind ~a"),
-                    missing, nao);
+          sem_error(specline, lit("~s failed to bind ~a"),
+                    op_sym, missing, nao);
 
         for (iter = strictly_new_bindings; iter; iter = cdr(iter))
         {
@@ -2923,14 +2923,14 @@ static val v_collect(match_files_ctx *c)
             new_line = plus(new_line, one);
           }
 
-          debuglf(specline, lit("collect advancing from line ~d to ~d"),
-                  c->data_lineno, new_line, nao);
+          debuglf(specline, lit("~s advancing from line ~d to ~d"),
+                  op_sym, c->data_lineno, new_line, nao);
 
           c->data = new_data;
           c->data_lineno = new_line;
           deref(car_l(success)) = nil;
         } else {
-          debuglf(specline, lit("collect consumed entire file"), nao);
+          debuglf(specline, lit("~s consumed entire file"), op_sym, nao);
           c->data = nil;
         }
         mincounter = 0;
@@ -2954,7 +2954,7 @@ next_collect:
   uw_block_end;
 
   if (!result) {
-    debuglf(specline, lit("collect explicitly failed"), nao);
+    debuglf(specline, lit("~s explicitly failed"), op_sym, nao);
     return nil;
   }
 
