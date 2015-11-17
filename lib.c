@@ -507,6 +507,7 @@ val lazy_conses(val list)
 
 val listref(val list, val ind)
 {
+  gc_hint(list);
   if (lt(ind, zero))
     ind = plus(ind, length_list(list));
   for (; gt(ind, zero); ind = minus(ind, one))
@@ -548,6 +549,9 @@ loc term(loc head)
 loc lastcons(val list)
 {
   loc ret = nulloc;
+
+  gc_hint(list);
+
   while (consp(cdr(list))) {
     ret = cdr_l(list);
     list = cdr(list);
@@ -567,6 +571,8 @@ val nthcdr(val pos, val list)
 
   if (n < 0)
     uw_throwf(error_s, lit("nthcdr: negative index ~s given"), pos, nao);
+
+  gc_hint(list);
 
   while (n-- > 0)
     list = cdr(list);
@@ -1280,6 +1286,7 @@ val memq(val obj, val list)
 {
   val list_orig = list;
   list = nullify(list);
+  gc_hint(list);
   while (list && car(list) != obj)
     list = cdr(list);
   return make_like(list, list_orig);
@@ -1289,6 +1296,7 @@ val memql(val obj, val list)
 {
   val list_orig = list;
   list = nullify(list);
+  gc_hint(list);
   while (list && !eql(car(list), obj))
     list = cdr(list);
   return make_like(list, list_orig);
@@ -1298,6 +1306,7 @@ val memqual(val obj, val list)
 {
   val list_orig = list;
   list = nullify(list);
+  gc_hint(list);
   while (list && !equal(car(list), obj))
     list = cdr(list);
   return make_like(list, list_orig);
@@ -1309,6 +1318,8 @@ val member(val item, val list, val testfun, val keyfun)
   keyfun = default_arg(keyfun, identity_f);
 
   list = nullify(list);
+
+  gc_hint(list);
 
   for (; list; list = cdr(list)) {
     val elem = car(list);
@@ -1325,6 +1336,8 @@ val member_if(val pred, val list, val key)
 {
   key = default_arg(key, identity_f);
   list = nullify(list);
+
+  gc_hint(list);
 
   for (; list; list = cdr(list)) {
     val item = car(list);
@@ -1346,6 +1359,8 @@ val remq(val obj, val list)
 
   list = nullify(list);
 
+  gc_hint(list);
+
   for (; list; list = cdr(list)) {
     if (car(list) == obj) {
       ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
@@ -1364,6 +1379,8 @@ val remql(val obj, val list)
 
   list = nullify(list);
 
+  gc_hint(list);
+
   for (; list; list = cdr(list)) {
     if (eql(car(list), obj)) {
       ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
@@ -1381,6 +1398,8 @@ val remqual(val obj, val list)
   val lastmatch = cons(nil, list);
 
   list = nullify(list);
+
+  gc_hint(list);
 
   for (; list; list = cdr(list)) {
     if (equal(car(list), obj)) {
@@ -1401,6 +1420,8 @@ val remove_if(val pred, val list, val key)
   key = default_arg(key, identity_f);
 
   list = nullify(list);
+
+  gc_hint(list);
 
   for (; list; list = cdr(list)) {
     val subj = funcall1(key, car(list));
@@ -1424,6 +1445,8 @@ val keep_if(val pred, val list, val key)
   key = default_arg(key, identity_f);
 
   list = nullify(list);
+
+  gc_hint(list);
 
   for (; list; list = cdr(list)) {
     val subj = funcall1(key, car(list));
@@ -1504,6 +1527,8 @@ val countqual(val obj, val list)
 
   list = nullify(list);
 
+  gc_hint(list);
+
   for (; list; list = cdr(list))
     if (equal(car(list), obj))
       count = plus(count, one);
@@ -1516,6 +1541,8 @@ val countql(val obj, val list)
   val count = zero;
 
   list = nullify(list);
+
+  gc_hint(list);
 
   for (; list; list = cdr(list))
     if (eql(car(list), obj))
@@ -1530,6 +1557,8 @@ val countq(val obj, val list)
 
   list = nullify(list);
 
+  gc_hint(list);
+
   for (; list; list = cdr(list))
     if (car(list) == obj)
       count = plus(count, one);
@@ -1543,6 +1572,8 @@ val count_if(val pred, val list, val key)
 
   key = default_arg(key, identity_f);
   list = nullify(list);
+
+  gc_hint(list);
 
   for (; list; list = cdr(list)) {
     val subj = funcall1(key, car(list));
@@ -1561,6 +1592,8 @@ val some_satisfy(val list, val pred, val key)
   key = default_arg(key, identity_f);
   list = nullify(list);
 
+  gc_hint(list);
+
   for (; list; list = cdr(list)) {
     val item;
     if ((item = funcall1(pred, funcall1(key, car(list)))) != nil)
@@ -1578,6 +1611,8 @@ val all_satisfy(val list, val pred, val key)
   key = default_arg(key, identity_f);
   list = nullify(list);
 
+  gc_hint(list);
+
   for (; list; list = cdr(list)) {
     if ((item = funcall1(pred, funcall1(key, car(list)))) == nil)
       return nil;
@@ -1591,6 +1626,8 @@ val none_satisfy(val list, val pred, val key)
   pred = default_arg(pred, identity_f);
   key = default_arg(key, identity_f);
   list = nullify(list);
+
+  gc_hint(list);
 
   for (; list; list = cdr(list)) {
     if (funcall1(pred, funcall1(key, car(list))))
@@ -2379,6 +2416,9 @@ val proper_listp(val obj)
 val length_list(val list)
 {
   cnum len = 0;
+
+  gc_hint(list);
+
   while (consp(list)) {
     len++;
     list = cdr(list);
@@ -2388,6 +2428,8 @@ val length_list(val list)
 
 val getplist(val list, val key)
 {
+  gc_hint(list);
+
   for (; list; list = cdr(cdr(list))) {
     val ind = first(list);
     if (ind == key)
@@ -2399,6 +2441,8 @@ val getplist(val list, val key)
 
 val getplist_f(val list, val key, loc found)
 {
+  gc_hint(list);
+
   for (; list; list = cdr(cdr(list))) {
     val ind = first(list);
     if (ind == key) {
@@ -5358,6 +5402,8 @@ static val do_and(val fun1_list, struct args *args_in)
 
   fun1_list = nullify(fun1_list);
 
+  gc_hint(fun1_list);
+
   for (; fun1_list; fun1_list = cdr(fun1_list)) {
     args_copy(args, args_in);
     if (nilp((ret = generic_funcall(car(fun1_list), args))))
@@ -5408,6 +5454,8 @@ static val do_or(val fun1_list, struct args *args_in)
   val ret = nil;
 
   fun1_list = nullify(fun1_list);
+
+  gc_hint(fun1_list);
 
   for (; fun1_list; fun1_list = cdr(fun1_list)) {
     args_copy(args, args_in);
@@ -6367,6 +6415,8 @@ val mappend(val fun, val list)
 
   list = nullify(list);
 
+  gc_hint(list);
+
   for (; list; list = cdr(list))
     iter = list_collect_append(iter, funcall1(fun, car(list)));
 
@@ -6758,6 +6808,8 @@ val find(val item, val list, val testfun, val keyfun)
 
   list = nullify(list);
 
+  gc_hint(list);
+
   for (; list; list = cdr(list)) {
     val elem = car(list);
     val key = funcall1(keyfun, elem);
@@ -6769,11 +6821,12 @@ val find(val item, val list, val testfun, val keyfun)
   return nil;
 }
 
-val find_max(val seq_in, val testfun, val keyfun)
+val find_max(val seq, val testfun, val keyfun)
 {
-  val seq = nullify(seq_in);
   val maxkey;
   val maxelt;
+
+  seq = nullify(seq);
 
   if (!seq)
     return nil;
@@ -6781,8 +6834,10 @@ val find_max(val seq_in, val testfun, val keyfun)
   testfun = default_arg(testfun, greater_f);
   keyfun = default_arg(keyfun, identity_f);
 
-  maxelt = car(seq_in);
+  maxelt = car(seq);
   maxkey = funcall1(keyfun, maxelt);
+
+  gc_hint(seq);
 
   for (seq = cdr(seq); seq; seq = cdr(seq)) {
     val elt = car(seq);
@@ -6806,6 +6861,8 @@ val find_if(val pred, val list, val key)
   key = default_arg(key, identity_f);
   list = nullify(list);
 
+  gc_hint(list);
+
   for (; list; list = cdr(list)) {
     val item = car(list);
     val subj = funcall1(key, item);
@@ -6823,6 +6880,8 @@ val posqual(val obj, val list)
 
   list = nullify(list);
 
+  gc_hint(list);
+
   for (; list; list = cdr(list), pos = plus(pos, one))
     if (equal(car(list), obj))
       return pos;
@@ -6835,6 +6894,8 @@ val posql(val obj, val list)
   val pos = zero;
 
   list = nullify(list);
+
+  gc_hint(list);
 
   for (; list; list = cdr(list), pos = plus(pos, one))
     if (eql(car(list), obj))
@@ -6849,6 +6910,8 @@ val posq(val obj, val list)
 
   list = nullify(list);
 
+  gc_hint(list);
+
   for (; list; list = cdr(list), pos = plus(pos, one))
     if (car(list) == obj)
       return pos;
@@ -6862,6 +6925,8 @@ val pos(val item, val list, val testfun, val keyfun)
   testfun = default_arg(testfun, equal_f);
   keyfun = default_arg(keyfun, identity_f);
   list = nullify(list);
+
+  gc_hint(list);
 
   for (; list; list = cdr(list), pos = plus(pos, one)) {
     val elem = car(list);
@@ -6881,6 +6946,8 @@ val pos_if(val pred, val list, val key)
   key = default_arg(key, identity_f);
   list = nullify(list);
 
+  gc_hint(list);
+
   for (; list; list = cdr(list), pos = plus(pos, one)) {
     val item = car(list);
     val subj = funcall1(key, item);
@@ -6892,15 +6959,18 @@ val pos_if(val pred, val list, val key)
   return nil;
 }
 
-val pos_max(val seq_in, val testfun, val keyfun)
+val pos_max(val seq, val testfun, val keyfun)
 {
   val pos = zero;
-  val seq = nullify(seq_in);
   val maxkey;
   val maxpos = zero;
 
+  seq = nullify(seq);
+
   if (!seq)
     return nil;
+
+  gc_hint(seq);
 
   testfun = default_arg(testfun, greater_f);
   keyfun = default_arg(keyfun, identity_f);
@@ -7121,10 +7191,13 @@ val in(val seq, val item, val testfun, val keyfun)
     {
       testfun = default_arg(testfun, equal_f);
       keyfun = default_arg(keyfun, identity_f);
-      val list = nullify(seq);
 
-      for (; list; list = cdr(list)) {
-        val elem = car(list);
+      seq = nullify(seq);
+
+      gc_hint(seq);
+
+      for (; seq; seq = cdr(seq)) {
+        val elem = car(seq);
         val key = funcall1(keyfun, elem);
 
         if (funcall2(testfun, item, key))
@@ -7443,7 +7516,7 @@ val update(val seq, val fun)
 
 static val search_list(val seq, val key, val testfun, val keyfun)
 {
-  val iter, siter, kiter;
+  val siter, kiter;
   val pos = zero;
 
   switch (type(key)) {
@@ -7456,8 +7529,10 @@ static val search_list(val seq, val key, val testfun, val keyfun)
   case LSTR:
   case VEC:
     /* TODO: optimize me */
-    for (iter = seq; iter; iter = cdr(iter)) {
-      for (siter = iter, kiter = key;
+    gc_hint(seq);
+
+    for (; seq; seq = cdr(seq)) {
+      for (siter = seq, kiter = key;
            siter && kiter;
            siter = cdr(siter), kiter = cdr(kiter))
       {
@@ -7508,26 +7583,29 @@ val search(val seq, val key, val testfun, val keyfun)
   return seq;
 }
 
-val where(val func, val seq_in)
+val where(val func, val seq)
 {
   list_collect_decl (out, ptail);
 
   if (opt_compat && opt_compat <= 100) {
-    val f = seq_in, s = func;
+    val f = seq, s = func;
     func = s;
-    seq_in = f;
+    seq = f;
   }
 
-  if (hashp(seq_in)) {
-    val hiter = hash_begin(seq_in);
+  if (hashp(seq)) {
+    val hiter = hash_begin(seq);
     val cell;
 
     while ((cell = hash_next(hiter)))
       if (funcall1(func, cdr(cell)))
         ptail = list_collect(ptail, car(cell));
   } else {
-    val seq = nullify(seq_in);
     val idx = zero;
+
+    seq = nullify(seq);
+
+    gc_hint(seq);
 
     for (; seq; seq = cdr(seq), idx = plus(idx, one)) {
       val elt = car(seq);
