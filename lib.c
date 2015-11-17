@@ -6377,6 +6377,8 @@ val mapdo(val fun, val list)
 {
   list = nullify(list);
 
+  gc_hint(list);
+
   for (; list; list = cdr(list))
     funcall1(fun, car(list));
 
