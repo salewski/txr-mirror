@@ -44,8 +44,8 @@
 #include "stream.h"
 
 val filters;
-val filter_k, lfilt_k, rfilt_k, to_html_k, from_html_k;
-val to_html_relaxed_k;
+val filter_k, lfilt_k, rfilt_k, tohtml_k, fromhtml_k;
+val tohtml_star_k;
 val upcase_k, downcase_k;
 val topercent_k, frompercent_k, tourl_k, fromurl_k;
 val tonumber_k, toint_k, tofloat_k, hextoint_k;
@@ -276,7 +276,7 @@ val register_filter(val sym, val table)
   return sethash(filters, sym, build_filter_from_list(table));
 }
 
-static struct filter_pair to_html_table[] = {
+static struct filter_pair tohtml_table[] = {
   { wli("<"), wli("&lt;") },
   { wli(">"), wli("&gt;") },
   { wli("&"), wli("&amp;") },
@@ -285,14 +285,14 @@ static struct filter_pair to_html_table[] = {
   { 0, 0 }
 };
 
-static struct filter_pair to_html_relaxed_table[] = {
+static struct filter_pair tohtml_star_table[] = {
   { wli("<"), wli("&lt;") },
   { wli(">"), wli("&gt;") },
   { wli("&"), wli("&amp;") },
   { 0, 0 }
 };
 
-static struct filter_pair from_html_table[] = {
+static struct filter_pair fromhtml_table[] = {
   { wli("&quot;"),      wli("\"") },
   { wli("&amp;"),       wli("&") },
   { wli("&apos;"),      wli("'") },
@@ -680,17 +680,17 @@ val url_decode(val str, val space_plus)
 
 static val html_encode(val str)
 {
-  return trie_filter_string(get_filter(to_html_k), str);
+  return trie_filter_string(get_filter(tohtml_k), str);
 }
 
 static val html_encode_star(val str)
 {
-  return trie_filter_string(get_filter(to_html_relaxed_k), str);
+  return trie_filter_string(get_filter(tohtml_star_k), str);
 }
 
 static val html_decode(val str)
 {
-  return trie_filter_string(get_filter(from_html_k), str);
+  return trie_filter_string(get_filter(fromhtml_k), str);
 }
 
 void filter_init(void)
@@ -701,9 +701,9 @@ void filter_init(void)
   filter_k = intern(lit("filter"), keyword_package);
   lfilt_k = intern(lit("lfilt"), keyword_package);
   rfilt_k = intern(lit("rfilt"), keyword_package);
-  to_html_k = intern(lit("to_html"), keyword_package);
-  to_html_relaxed_k = intern(lit("to_html_relaxed"), keyword_package);
-  from_html_k = intern(lit("from_html"), keyword_package);
+  tohtml_k = intern(lit("tohtml"), keyword_package);
+  tohtml_star_k = intern(lit("tohtml*"), keyword_package);
+  fromhtml_k = intern(lit("fromhtml"), keyword_package);
   upcase_k = intern(lit("upcase"), keyword_package);
   downcase_k = intern(lit("downcase"), keyword_package);
   topercent_k = intern(lit("topercent"), keyword_package);
@@ -715,14 +715,18 @@ void filter_init(void)
   tofloat_k = intern(lit("tofloat"), keyword_package);
   hextoint_k = intern(lit("hextoint"), keyword_package);
 
-  sethash(filters, to_html_k, build_filter(to_html_table, t));
-  sethash(filters, to_html_relaxed_k, build_filter(to_html_relaxed_table, t));
+  sethash(filters, tohtml_k, build_filter(tohtml_table, t));
+  sethash(filters, tohtml_star_k, build_filter(tohtml_star_table, t));
   {
-    val trie = build_filter(from_html_table, nil);
+    val trie = build_filter(fromhtml_table, nil);
     trie_add(trie, lit("&#"), func_n1(html_numeric_handler));
     trie_compress(mkcloc(trie));
-    sethash(filters, from_html_k, trie);
+    sethash(filters, fromhtml_k, trie);
   }
+  sethash(filters, intern(lit("to_html"), keyword_package),
+          get_filter(tohtml_k));
+  sethash(filters, intern(lit("from_html"), keyword_package),
+          get_filter(fromhtml_k));
   sethash(filters, upcase_k, func_n1(upcase_str));
   sethash(filters, downcase_k, func_n1(downcase_str));
   sethash(filters, topercent_k, curry_12_1(func_n2(url_encode), nil));

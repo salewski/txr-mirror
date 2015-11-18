@@ -5523,7 +5523,7 @@ is equivalent to
 For a description of filters, see Output Filtering below.
 
 Of course, compound filters like
-.code (:from_html :upcase)
+.code (:fromhtml :upcase)
 are supported with all these keywords. The filters apply across arbitrary
 patterns and nested data.
 
@@ -7622,22 +7622,22 @@ This is discussed in the next section Function Filters below.
 
 Built-in filters named by keywords:
 
-.coIP :to_html
+.coIP :tohtml
 Filter text to HTML, representing special characters using HTML
 ampersand sequences. For instance
 .code >
 is replaced by
 .codn &gt; .
 
-.coIP :to_html_relaxed
+.coIP :tohtml*
 Filter text to HTML, representing special characters using HTML
 ampersand sequences. Unlike
-.codn :to_html ,
+.codn :tohtml ,
 this filter doesn't treat the single and double quote characters.
 It is not suitable for preparing HTML fragments which end up
 inserted into HTML tag attributes.
 
-.coIP :from_html
+.coIP :fromhtml
 Filter text with HTML codes into text in which the codes are replaced by the
 corresponding characters. For instance
 .code &gt;
@@ -7738,11 +7738,11 @@ Examples:
 
 To escape HTML characters in all variable substitutions occurring in an
 output clause, specify
-.code :filter :to_html
+.code :filter :tohtml
 in the directive:
 
 .cblk
-  @(output :filter :to_html)
+  @(output :filter :tohtml)
   ...
   @(end)
 .cble
@@ -7751,7 +7751,7 @@ To filter an individual variable, add the syntax to the variable spec:
 
 .cblk
   @(output)
-  @{x :filter :to_html}
+  @{x :filter :tohtml}
   @(end)
 .cble
 
@@ -7759,7 +7759,7 @@ Multiple filters can be applied at the same time. For instance:
 
 .cblk
   @(output)
-  @{x :filter (:upcase :to_html)}
+  @{x :filter (:upcase :tohtml)}
   @(end)
 .cble
 
@@ -7771,14 +7771,14 @@ For instance, suppose the original text is HTML, containing codes
 like
 .codn &quot; .
 The compound filter
-.code (:upcase :from_html)
+.code (:upcase :fromhtml)
 will not work
 because
 .code &quot;
 will turn to
 .code &QUOT;
 which no longer be recognized by the
-.code :from_html
+.code :fromhtml
 filter, since the entity names in HTML codes
 are case-sensitive.
 
@@ -8049,7 +8049,7 @@ and
 to upper case and HTML encode:
 
 .cblk
-  @(filter (:upcase :to_html) a b c)
+  @(filter (:upcase :tohtml) a b c)
 .cble
 
 .SH* EXCEPTIONS
