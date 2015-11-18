@@ -2398,6 +2398,7 @@ static val v_next(match_files_ctx *c)
   if (rest(first_spec)) {
     val args = rest(first_spec);
     val source = first(args);
+    val meta = nil;
 
     if (source == args_k) {
       if (rest(args)) {
@@ -2427,6 +2428,15 @@ static val v_next(match_files_ctx *c)
       }
     }
 
+    if (consp(source)) {
+      val sym = car(source);
+      if (sym == var_s || sym == expr_s)
+        meta = t;
+    }
+
+    if (opt_compat && opt_compat <= 124)
+      meta = t;
+
     if (keywordp(first(args))) {
       source = nil;
     } else {
@@ -2442,7 +2452,10 @@ static val v_next(match_files_ctx *c)
       val list_expr = cdr(assoc(list_k, alist));
       val string_expr = cdr(assoc(string_k, alist));
       val nothrow = cdr(assoc(nothrow_k, alist));
-      val str = txeval(specline, source, c->bindings);
+      val str = if3(meta,
+                    txeval(specline, source, c->bindings),
+                    eval_with_bindings(source, specline, c->bindings,
+                                       specline));
 
       if (!from_var && !source && !string_expr && !list_expr)
         sem_error(specline, lit("next: source required before keyword arguments"), nao);

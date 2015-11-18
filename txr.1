@@ -3071,7 +3071,7 @@ to \*(TX on the command line.
 
 If
 .meta source
-is given, it must be string-valued expression which denotes an
+is given, it must be string-valued Lisp expression which denotes an
 input source; it may be a string literal, quasiliteral or a string-valued
 variable.  For instance, if variable
 .code A
@@ -32444,7 +32444,7 @@ Collect lines from all files that are given as arguments on the command line. If
 there are no files, then read from standard input:
 
 .cblk
-   @(next @(open-files *args* *stdin*))
+   @(next (open-files *args* *stdin*))
    @(collect)
    @line
    @(end)
@@ -37770,6 +37770,26 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code -C 103
 selects the behaviors described below for version 105, but not those for 102.
+.IP 124
+In \*(TX 124 and earlier versions, the
+.code @(next)
+directive didn't evaluate the
+.meta source
+argument as a Lisp expression, but as a \*(TX Pattern Language
+expression. Lisp expressions thus had to be delimited by
+.codn @ .
+The current behavior is that the argument is treated as Lisp.
+If the compatibility option is set to 124 or lower, the old behavior
+is restored. However, even without the presence of the compatibility option,
+if the
+.meta source
+argument is a meta-expression or meta-variable (denotes by the
+.code @
+prefix in front of a compound expression or symbol, respectively)
+it is also treated in the old way. This latter behavior is obsolescent
+and will eventually disappear, and the compatibility option will be
+the only way to get the old behavior.
+
 .IP 123
 In \*(TX 123 and earlier, the variable initialization forms of a
 .code for
