@@ -280,6 +280,7 @@ static struct filter_pair to_html_table[] = {
   { wli(">"), wli("&gt;") },
   { wli("&"), wli("&amp;") },
   { wli("\""), wli("&quot;") },
+  { wli("'"), wli("&#39;") },
   { 0, 0 }
 };
 
