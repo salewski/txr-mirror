@@ -45,6 +45,7 @@
 
 val filters;
 val filter_k, lfilt_k, rfilt_k, to_html_k, from_html_k;
+val to_html_relaxed_k;
 val upcase_k, downcase_k;
 val topercent_k, frompercent_k, tourl_k, fromurl_k;
 val tonumber_k, toint_k, tofloat_k, hextoint_k;
@@ -281,6 +282,13 @@ static struct filter_pair to_html_table[] = {
   { wli("&"), wli("&amp;") },
   { wli("\""), wli("&quot;") },
   { wli("'"), wli("&#39;") },
+  { 0, 0 }
+};
+
+static struct filter_pair to_html_relaxed_table[] = {
+  { wli("<"), wli("&lt;") },
+  { wli(">"), wli("&gt;") },
+  { wli("&"), wli("&amp;") },
   { 0, 0 }
 };
 
@@ -675,6 +683,11 @@ static val html_encode(val str)
   return trie_filter_string(get_filter(to_html_k), str);
 }
 
+static val html_encode_star(val str)
+{
+  return trie_filter_string(get_filter(to_html_relaxed_k), str);
+}
+
 static val html_decode(val str)
 {
   return trie_filter_string(get_filter(from_html_k), str);
@@ -689,6 +702,7 @@ void filter_init(void)
   lfilt_k = intern(lit("lfilt"), keyword_package);
   rfilt_k = intern(lit("rfilt"), keyword_package);
   to_html_k = intern(lit("to_html"), keyword_package);
+  to_html_relaxed_k = intern(lit("to_html_relaxed"), keyword_package);
   from_html_k = intern(lit("from_html"), keyword_package);
   upcase_k = intern(lit("upcase"), keyword_package);
   downcase_k = intern(lit("downcase"), keyword_package);
@@ -702,6 +716,7 @@ void filter_init(void)
   hextoint_k = intern(lit("hextoint"), keyword_package);
 
   sethash(filters, to_html_k, build_filter(to_html_table, t));
+  sethash(filters, to_html_relaxed_k, build_filter(to_html_relaxed_table, t));
   {
     val trie = build_filter(from_html_table, nil);
     trie_add(trie, lit("&#"), func_n1(html_numeric_handler));
@@ -731,5 +746,7 @@ void filter_init(void)
   reg_fun(intern(lit("url-encode"), user_package), func_n2o(url_encode, 1));
   reg_fun(intern(lit("url-decode"), user_package), func_n2o(url_decode, 1));
   reg_fun(intern(lit("html-encode"), user_package), func_n1(html_encode));
+  reg_fun(intern(lit("html-encode*"), user_package),
+          func_n1(html_encode_star));
   reg_fun(intern(lit("html-decode"), user_package), func_n1(html_decode));
 }

@@ -7629,6 +7629,14 @@ ampersand sequences. For instance
 is replaced by
 .codn &gt; .
 
+.coIP :to_html_relaxed
+Filter text to HTML, representing special characters using HTML
+ampersand sequences. Unlike
+.codn :to_html ,
+this filter doesn't treat the single and double quote characters.
+It is not suitable for preparing HTML fragments which end up
+inserted into HTML tag attributes.
+
 .coIP :from_html
 Filter text with HTML codes into text in which the codes are replaced by the
 corresponding characters. For instance
@@ -35622,7 +35630,7 @@ encoded data are retained as
 characters in the decoded strings. Otherwise,
 plus characters are converted to spaces.
 
-.coNP Functions @ html-encode and @ html-decode
+.coNP Functions @, html-encode @, html-encode* and @ html-decode
 .synb
 .mets (html-encode << text-string )
 .mets (html-decode << html-string )
@@ -35672,6 +35680,16 @@ From this,
 .code html-encode
 produces
 .strn "&lt;p&gt;Hello, world!&lt;/p&gt;" .
+
+The
+.code html-encode*
+function is similar to
+.code html-encode
+except that it does not encode the single and double quote characters
+(ASCII 39 and 34, respectively). Text prepared by this function may not
+be suitable for insertion into a HTML template, depending on the
+context of its insertion. It is suitable as text placed between
+tags but not necessary as tag attribute material.
 
 .SS* Filter Module
 The filter module provides a trie (pronounced "try") data structure,
