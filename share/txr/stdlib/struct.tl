@@ -188,6 +188,18 @@
       ((atom . args) ^(make-struct ',atom (list ,*qpairs) ,*args))
       (atom ^(make-struct ',atom (list ,*qpairs))))))
 
+(defmacro lnew (spec . pairs)
+  (if (oddp (length pairs))
+    (throwf 'eval-error "~s: slot initform arguments must occur pairwise"
+            'lnew))
+  (let ((qpairs (mappend (aret ^(',@1 ,@2)) (tuples 2 pairs))))
+    (tree-case spec
+      ((atom . args) ^(make-lazy-struct ',atom
+                                        (lambda ()
+                                          (cons (list ,*qpairs)
+                                                (list ,*args)))))
+      (atom ^(make-lazy-struct ',atom (lambda () (list (list ,*qpairs))))))))
+
 (defmacro meth (obj slot)
   ^(method ,obj ',slot))
 

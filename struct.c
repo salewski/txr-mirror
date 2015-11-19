@@ -67,7 +67,8 @@ struct struct_type {
 
 struct struct_inst {
   val type;
-  cnum id;
+  cnum id : sizeof (cnum) * CHAR_BIT - 1 ;
+  unsigned lazy : 1;
   val slot[1];
 };
 
@@ -110,6 +111,8 @@ void struct_init(void)
   reg_fun(intern(lit("struct-type-p"), user_package), func_n1(struct_type_p));
   reg_fun(intern(lit("super"), user_package), func_n1(super));
   reg_fun(intern(lit("make-struct"), user_package), func_n2v(make_struct));
+  reg_fun(intern(lit("make-lazy-struct"), user_package),
+          func_n2(make_lazy_struct));
   reg_fun(intern(lit("copy-struct"), user_package), func_n1(copy_struct));
   reg_fun(intern(lit("replace-struct"), user_package), func_n2(replace_struct));
   reg_fun(intern(lit("clear-struct"), user_package), func_n2o(clear_struct, 1));
@@ -366,7 +369,7 @@ val make_struct(val type, val plist, struct args *args)
     si->slot[sl] = nil;
   si->type = nil;
   si->id = st->id;
-
+  si->lazy = 0;
 
   sinst = cobj(coerce(mem_t *, si), st->name, &struct_inst_ops);
 
@@ -398,6 +401,75 @@ val make_struct(val type, val plist, struct args *args)
   return sinst;
 }
 
+static void lazy_struct_init(val sinst, struct struct_inst *si)
+{
+  val self = lit("make-lazy-struct");
+  struct struct_type *st = coerce(struct struct_type *, si->type->co.handle);
+  volatile val inited = nil;
+  val cell = funcall(si->slot[0]);
+  cons_bind (plist, args, cell);
+
+  si->lazy = 0;
+  si->slot[0] = nil;
+
+  if (args && !st->boactor) {
+    uw_throwf(error_s,
+              lit("~a: args present, but ~s has no boa constructor"),
+              self, type, nao);
+  }
+
+  uw_simple_catch_begin;
+
+  call_initfun_chain(st, sinst);
+
+  for (; plist; plist = cddr(plist))
+    slotset(sinst, car(plist), cadr(plist));
+
+  if (args) {
+    args_decl_list(argv, ARGS_MIN, cons(sinst, args));
+    generic_funcall(st->boactor, argv);
+  }
+
+  inited = t;
+
+  uw_unwind {
+    if (!inited)
+      gc_call_finalizers(sinst);
+  }
+
+  uw_catch_end;
+}
+
+INLINE void check_init_lazy_struct(val sinst, struct struct_inst *si)
+{
+  if (si->lazy)
+    lazy_struct_init(sinst, si);
+}
+
+val make_lazy_struct(val type, val argfun)
+{
+  val self = lit("make-lazy-struct");
+  struct struct_type *st = stype_handle(&type, self);
+  cnum nslots = st->nslots, sl;
+  cnum nalloc = nslots ? nslots : 1;
+  size_t size = offsetof(struct struct_inst, slot) + sizeof (val) * nalloc;
+  struct struct_inst *si = coerce(struct struct_inst *, chk_malloc(size));
+  val sinst;
+
+  for (sl = 0; sl < nslots; sl++)
+    si->slot[sl] = nil;
+  si->type = nil;
+  si->id = st->id;
+  si->lazy = 1;
+
+  sinst = cobj(coerce(mem_t *, si), st->name, &struct_inst_ops);
+
+  si->type = type;
+  si->slot[0] = argfun;
+
+  return sinst;
+}
+
 static struct struct_inst *struct_handle(val obj, val ctx)
 {
   if (cobjp(obj) && obj->co.ops == &struct_inst_ops)
@@ -415,6 +487,7 @@ val copy_struct(val strct)
   cnum nslots = st->nslots;
   size_t size = offsetof(struct struct_inst, slot) + sizeof (val) * nslots;
   struct struct_inst *si_copy = coerce(struct struct_inst *, chk_malloc(size));
+  check_init_lazy_struct(strct, si);
   memcpy(si_copy, si, size);
   copy = cobj(coerce(mem_t *, si_copy), st->name, &struct_inst_ops);
   gc_hint(strct);
@@ -428,6 +501,8 @@ val clear_struct(val strct, val value)
   struct struct_type *st = coerce(struct struct_type *, si->type->co.handle);
   val clear_val = default_bool_arg(value);
   cnum i;
+
+  check_init_lazy_struct(strct, si);
 
   for (i = 0; i < st->nslots; i++)
     si->slot[i] = clear_val;
@@ -444,6 +519,10 @@ val replace_struct(val target, val source)
   cnum nslots = sst->nslots;
   size_t size = offsetof(struct struct_inst, slot) + sizeof (val) * nslots;
   struct struct_inst *ssi_copy = coerce(struct struct_inst *, chk_malloc(size));
+
+  check_init_lazy_struct(source, ssi);
+  check_init_lazy_struct(target, tsi);
+
   memcpy(ssi_copy, ssi, size);
   free(tsi);
   target->co.handle = coerce(mem_t *, ssi_copy);
@@ -457,6 +536,8 @@ val reset_struct(val strct)
   struct struct_inst *si = struct_handle(strct, self);
   struct struct_type *st = coerce(struct struct_type *, si->type->co.handle);
   cnum i;
+
+  check_init_lazy_struct(strct, si);
 
   for (i = 0; i < st->nslots; i++)
     si->slot[i] = nil;
@@ -516,6 +597,8 @@ static loc lookup_slot(val inst, struct struct_inst *si, val sym)
 {
   slot_cache_t slot_cache = sym->s.slot_cache;
   cnum id = si->id;
+
+  check_init_lazy_struct(inst, si);
 
   if (slot_cache != 0) {
     slot_cache_set_t *set = &slot_cache[id % SLOT_CACHE_SIZE];
@@ -874,6 +957,9 @@ static void struct_inst_mark(val obj)
   struct struct_type *st = coerce(struct struct_type *, si->type->co.handle);
   cnum sl, nslots = st->nslots;
 
+  if (si->lazy)
+    nslots = 1;
+
   for (sl = 0; sl < nslots; sl++)
     gc_mark(si->slot[sl]);
   gc_mark(si->type);
@@ -889,6 +975,9 @@ static val struct_inst_equal(val left, val right)
   if (rs->type != ls->type)
     return nil;
 
+  check_init_lazy_struct(left, ls);
+  check_init_lazy_struct(right, rs);
+
   for (sl = 0; sl < nslots; sl++)
     if (!equal(ls->slot[sl], rs->slot[sl]))
       return nil;
@@ -903,6 +992,8 @@ static cnum struct_inst_hash(val obj)
   struct struct_inst *si = coerce(struct struct_inst *, obj->co.handle);
   struct struct_type *st = coerce(struct struct_type *, si->type->co.handle);
   cnum nslots = st->nslots, sl, out = c_num(hash_equal(si->type));
+
+  check_init_lazy_struct(obj, si);
 
   for (sl = 0; sl < nslots; sl++) {
     val hash = hash_equal(si->slot[sl]);

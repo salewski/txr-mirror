@@ -18599,9 +18599,10 @@ are applied to the structure as if it were a function, the
 method is invoked with those arguments, with the object itself inserted
 into the leftmost argument position.
 
-.coNP Macro @ new
+.coNP Macros @ new and @ lnew
 .synb
 .mets (new >> { name | >> ( name << arg *)} >> { slot << init-form }*)
+.mets (lnew >> { name | >> ( name << arg *)} >> { slot << init-form }*)
 .syne
 .desc
 The
@@ -18643,6 +18644,32 @@ macro, and lastly the "boa constructor" overrides.
 
 If any of the initializations abandon the evaluation of
 .code new
+by a non-local exit such as an exception throw, the object's
+finalizers, if any, are invoked.
+
+The macro
+.code lnew
+differs from new in that it specifies the construction of a
+lazy struct, as if by the
+.code make-lazy-struct
+function.
+When
+.code lnew
+is used to construct an instance, a lazy struct is returned
+immediately, without evaluating any of the the
+.meta arg
+and
+.meta init-form
+expressions.
+The expressions are evaluated when any of the object's
+instance slots is accessed for the first time. At that time,
+these expressions are evaluated (in the same order as under
+.codn new )
+and initialization proceeds in the same way.
+
+If any of the initializations abandon the delayed initializations steps
+arranged by
+.code lnew
 by a non-local exit such as an exception throw, the object's
 finalizers, if any, are invoked.
 
@@ -19122,6 +19149,54 @@ If any of the initializations abandon the evaluation of
 .code make-struct
 by a non-local exit such as an exception throw, the object's
 finalizers, if any, are invoked.
+
+.coNP Function @ make-lazy-struct
+.synb
+.mets (make-lazy-struct < type << argfun )
+.syne
+.desc
+The
+.code make-lazy-struct
+function returns a new object which is an instance of the
+structure type
+.metn type .
+
+The
+.meta type
+argument must either be a
+.code struct-type
+object, or else a symbol which is the name of a structure.
+
+The
+.meta argfun
+argument should be a function which can be called with no parameters
+and returns a cons cell. More requirements are specified below.
+
+The object returned by
+.code make-lazy-struct
+is a lazily-initialized struct instance, or
+.IR "lazy struct" .
+
+A lazy struct remains uninitialized until just before the first access
+to any of its instance slots. Just before an instance slot is
+accessed, initialization
+takes place as follows. The
+.meta argfun
+function is invoked with no arguments. Its return value must be a cons
+cell. The
+.code car
+of the cons cell is taken to be a property list, as defined by the
+.code prop
+function.  The
+.code cdr
+field is taken to be a list of arguments. These values are treated
+as if they were, respectively, the
+.meta slot-init-plist
+and the boa constructor arguments given in a
+.code make-struct
+invocation. Initialization of the structure proceeds as described
+in the description of
+.codn make-struct .
 
 .coNP Function @ copy-struct
 .synb
