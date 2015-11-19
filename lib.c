@@ -2169,7 +2169,7 @@ val equal(val left, val right)
       return t;
     return nil;
   case COBJ:
-    if (type(right) == COBJ)
+    if (type(right) == COBJ && left->co.ops == right->co.ops)
       return left->co.ops->equal(left, right);
     return nil;
   }
