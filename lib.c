@@ -3716,29 +3716,36 @@ val num_str(val str)
   return flo_str(str);
 }
 
-static int less_tab[MAXTYPE+1][MAXTYPE+1];
+enum less_handling {
+  less_false,
+  less_true,
+  less_compare,
+  less_cannot,
+};
+
+static enum less_handling less_tab[MAXTYPE+1][MAXTYPE+1];
 
 static void less_tab_init(void)
 {
   int l, r;
   static int type_prec[MAXTYPE+1] = {
-    2, /* NIL */
-    0, /* NUM */
-    0, /* CHR */
-    1, /* LIT */
-    3, /* CONS */
-    1, /* STR */
-    2, /* SYM */
-    6, /* PKG */
-    5, /* FUN */
-    4, /* VEC */
-    3, /* LCONS */
-    1, /* LSTR */
-    8, /* COBJ */
-    7, /* ENV */
-    0, /* BGNUM */
-    0, /* FLNUM */
-    0, /* RNG */
+    4, /* NIL */
+    1, /* NUM */
+    1, /* CHR */
+    3, /* LIT */
+    5, /* CONS */
+    3, /* STR */
+    4, /* SYM */
+    0, /* PKG */
+    0, /* FUN */
+    6, /* VEC */
+    5, /* LCONS */
+    3, /* LSTR */
+    0, /* COBJ */
+    0, /* ENV */
+    1, /* BGNUM */
+    1, /* FLNUM */
+    2, /* RNG */
   };
 
   for (l = 0; l <= MAXTYPE; l++)
@@ -3746,10 +3753,12 @@ static void less_tab_init(void)
       int l_prec = type_prec[l];
       int r_prec = type_prec[r];
 
-      if (l_prec < r_prec)
-        less_tab[l][r] = 1;
+      if (l_prec == 0 || r_prec == 0)
+        less_tab[l][r] = less_cannot;
       else if (l_prec == r_prec)
-        less_tab[l][r] = 2;
+        less_tab[l][r] = less_compare;
+      else if (l_prec < r_prec)
+        less_tab[l][r] = less_true;
     }
 }
 
@@ -3764,12 +3773,15 @@ val less(val left, val right)
   r_type = type(right);
 
   switch (less_tab[l_type][r_type]) {
-  case 0:
+  case less_false:
     return nil;
-  case 1:
+  case less_true:
     return t;
-  default:
+  case less_compare:
     break;
+  case less_cannot:
+    uw_throwf(type_error_s, lit("less: cannot compare ~s and ~s"),
+              left, right, nao);
   }
 
   switch (l_type) {
@@ -3834,15 +3846,9 @@ val less(val left, val right)
     if (less(from(left), from(right)))
       return t;
     return less(to(left), to(right));
-  case FUN:
-  case PKG:
-  case ENV:
-  case COBJ:
-    uw_throwf(type_error_s, lit("less: cannot compare ~s and ~s"),
-              left, right, nao);
+  default:
+    internal_error("unhandled case in less function");
   }
-
-  internal_error("unhandled case in less function");
 }
 
 val greater(val left, val right)
