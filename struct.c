@@ -55,6 +55,7 @@ struct struct_type {
   cnum id;
   cnum nslots;
   cnum nstslots;
+  cnum eqmslot;
   val super;
   struct struct_type *super_handle;
   val slots;
@@ -232,7 +233,7 @@ val make_struct_type(val name, val super,
 
     st->name = name;
     st->id = c_num(id);
-    st->nslots = st->nstslots = 0;
+    st->nslots = st->nstslots = st->eqmslot = 0;
     st->slots = all_slots;
     st->super = super;
     st->stslot = 0;
@@ -746,8 +747,11 @@ val static_slot_set(val stype, val sym, val newval)
 
   if (symbolp(sym)) {
     loc ptr = lookup_static_slot(stype, st, sym);
-    if (!nullocp(ptr))
+    if (!nullocp(ptr)) {
+      if (st->eqmslot == -1)
+        st->eqmslot = 0;
       return set(ptr, newval);
+    }
   }
 
   no_such_slot(self, stype, sym);
@@ -763,6 +767,9 @@ val static_slot_ensure(val stype, val sym, val newval, val no_error_p)
               self, sym, nao);
 
   no_error_p = default_bool_arg(no_error_p);
+
+  if (st->eqmslot == -1)
+    st->eqmslot = 0;
 
   {
     loc ptr = lookup_static_slot(stype, st, sym);
@@ -1004,11 +1011,44 @@ static cnum struct_inst_hash(val obj)
   return out;
 }
 
+static val get_equal_method(val stype, struct struct_type *st)
+{
+  if (st->eqmslot == -1) {
+    return nil;
+  } else if (st->eqmslot) {
+    return st->stslot[st->eqmslot];
+  } else {
+    loc ptr = lookup_static_slot(stype, st, equal_s);
+    if (!nullocp(ptr)) {
+      st->eqmslot = valptr(ptr) - st->stslot;
+      return deref(ptr);
+    }
+    st->eqmslot = -1;
+    return nil;
+  }
+}
+
+static val struct_inst_equalsub(val obj)
+{
+  struct struct_inst *si = coerce(struct struct_inst *, obj->co.handle);
+  struct struct_type *st = coerce(struct struct_type *, si->type->co.handle);
+  val equal_method = get_equal_method(obj, st);
+  if (equal_method) {
+    val sub = funcall1(equal_method, obj);
+    if (nilp(sub)) {
+      uw_throwf(error_s, lit("equal method on type ~s returned nil"),
+                si->type, nao);
+    }
+    return sub;
+  }
+  return nil;
+}
+
 static_def(struct cobj_ops struct_type_ops =
            cobj_ops_init(eq, struct_type_print, struct_type_destroy,
                          struct_type_mark, cobj_hash_op))
 
 static_def(struct cobj_ops struct_inst_ops =
-           cobj_ops_init(struct_inst_equal, struct_inst_print,
-                         cobj_destroy_free_op, struct_inst_mark,
-                         struct_inst_hash))
+           cobj_ops_init_ex(struct_inst_equal, struct_inst_print,
+                            cobj_destroy_free_op, struct_inst_mark,
+                            struct_inst_hash, struct_inst_equalsub))

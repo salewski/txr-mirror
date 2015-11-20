@@ -173,6 +173,11 @@ static cnum equal_hash(val obj)
   case FLNUM:
     return hash_double(obj->fl.n);
   case COBJ:
+    if (obj->co.ops->equalsub) {
+      val sub = obj->co.ops->equalsub(obj);
+      if (sub)
+        return equal_hash(sub);
+    }
     return obj->co.ops->hash(obj) & NUM_MAX;
   case RNG:
     return (equal_hash(obj->rn.from)

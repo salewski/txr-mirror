@@ -13607,8 +13607,10 @@ The
 .code equal
 function is less strict still than
 .codn eql .
-In general, it recurses into some
-kinds of aggregate objects to perform a structural equivalence check.
+In general, it recurses into some kinds of aggregate objects to perform a
+structural equivalence check.  For struct types, it also supports customization
+via equality substitution.  See the Equality Substitution section under
+Structures.
 
 Firstly, if
 .meta left-obj
@@ -13829,6 +13831,15 @@ correct behavior when
 .code nil
 is regarded as an empty list, since the empty list is lexicographically prior to
 a nonempty list.
+
+If either argument is a structure for which the
+.code equal
+method is defined, the method is invoked on that argument, and the
+value returned is used in place of that argument for performing
+the comparison.  Structures with no
+.code equal
+method cannot participate in a comparison, resulting in an error.
+See the Equality Substitution section under Structures.
 
 Finally, if either of the arguments has a type other than the above discussed
 types, the situation is an error.
@@ -18200,6 +18211,47 @@ is evaluated only once:
 
   (mapcar s list)  <-->  (mapcar (meth s lambda) list)
 .cble
+
+.NP* Equality Substitution
+
+Normally, two struct values are not considered the same under the
+.code equal
+function unless they are the same objects.
+
+However, if a method named
+.code equal
+is defined for a structure type, via a static slot, then instances of
+that structure type support
+.IR "equality substitution" .
+
+The
+.code equal
+method must take exactly one argument: the structure object.
+Moreover, the method must never return
+.codn nil .
+
+When a struct which supports equality substitution is compared using
+.codn equal ,
+.codn less
+or
+.codn greater ,
+its
+.code equal
+method is invoked, and the return value is used in place of that
+structure for the purposes of the comparison.
+
+The same applies when an struct is hashed using the
+.code hash-equal
+function, or implicitly by an
+.code :equal-hash
+hash tables.
+
+Note: if an
+.code equal
+method is defined or redefined with different semantics for a struct
+type whose instances have already been inserted as keys in an
+.code :equal-based
+hash table, searches for those keys will not work reliably.
 
 .coNP Macro @ defstruct
 .synb
@@ -29472,6 +29524,11 @@ and
 each produce the same integer hash value.  In all other
 circumstances, the hash values of two distinct objects are unrelated, and
 may or may not be the same.
+
+Object of struct type may support custom hashing by way of defining
+an equality substitution via an
+.code equal
+method. See the Equality Substitution section under Structures.
 
 .coNP Functions @, hash_keys @, hash_values @ hash_pairs and @ hash_alist
 .synb

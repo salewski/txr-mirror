@@ -2066,16 +2066,16 @@ val equal(val left, val right)
   case NIL:
   case CHR:
   case NUM:
-    return nil;
+    break;
   case CONS:
   case LCONS:
-    if ((type(right) == CONS || type(right) == LCONS) &&
-        equal(car(left), car(right)) &&
-        equal(cdr(left), cdr(right)))
+    if (type(right) == CONS || type(right) == LCONS)
     {
-      return t;
+      if (equal(car(left), car(right)) && equal(cdr(left), cdr(right)))
+        return t;
+      return nil;
     }
-    return nil;
+    break;
   case LIT:
     switch (type(right)) {
     case LIT:
@@ -2085,10 +2085,12 @@ val equal(val left, val right)
     case LSTR:
       lazy_str_force(right);
       return equal(left, right->ls.prefix);
-    default:
+    case COBJ:
       break;
+    default:
+      return nil;
     }
-    return nil;
+    break;
   case STR:
     switch (type(right)) {
     case LIT:
@@ -2098,14 +2100,16 @@ val equal(val left, val right)
     case LSTR:
       lazy_str_force(right);
       return equal(left, right->ls.prefix);
-    default:
+    case COBJ:
       break;
+    default:
+      return nil;
     }
-    return nil;
+    break;
   case SYM:
   case PKG:
   case ENV:
-    return right == left ? t : nil;
+    break;
   case FUN:
     if (type(right) == FUN &&
         left->f.functype == right->f.functype &&
@@ -2129,7 +2133,7 @@ val equal(val left, val right)
       }
       return nil;
     }
-    return nil;
+    break;
   case VEC:
     if (type(right) == VEC) {
       cnum i, length;
@@ -2142,7 +2146,7 @@ val equal(val left, val right)
       }
       return t;
     }
-    return nil;
+    break;
   case LSTR:
     switch (type(right)) {
     case LIT:
@@ -2150,31 +2154,57 @@ val equal(val left, val right)
     case LSTR:
       lazy_str_force(left);
       return equal(left->ls.prefix, right);
-    default:
+    case COBJ:
       break;
+    default:
+      return nil;
     }
     return nil;
   case BGNUM:
-    if (type(right) == BGNUM && mp_cmp(mp(left), mp(right)) == MP_EQ)
-      return t;
-    return nil;
+    if (type(right) == BGNUM) {
+      if (mp_cmp(mp(left), mp(right)) == MP_EQ)
+        return t;
+      return nil;
+    }
+    break;
   case FLNUM:
-    if (type(right) == FLNUM && left->fl.n == right->fl.n)
-      return t;
-    return nil;
+    if (type(right) == FLNUM) {
+      if (left->fl.n == right->fl.n)
+        return t;
+      return nil;
+    }
+    break;
   case RNG:
-    if (type(right) == RNG &&
-        equal(from(left), from(right)) &&
-        equal(to(left), to(right)))
-      return t;
-    return nil;
+    if (type(right) == RNG) {
+      if (equal(from(left), from(right)) &&
+          equal(to(left), to(right)))
+        return t;
+      return nil;
+    }
+    break;
   case COBJ:
+    if (left->co.ops->equalsub) {
+      val lsub = left->co.ops->equalsub(left);
+      if (lsub)
+        return equal(lsub, right);
+    }
+
     if (type(right) == COBJ && left->co.ops == right->co.ops)
       return left->co.ops->equal(left, right);
+
     return nil;
   }
 
-  internal_error("unhandled case in equal function");
+  if (type(right) != COBJ)
+    return nil;
+
+  if (right->co.ops->equalsub) {
+    val rsub = right->co.ops->equalsub(right);
+    if (rsub)
+      return equal(left, rsub);
+  }
+
+  return nil;
 }
 
 alloc_bytes_t malloc_bytes;
@@ -3769,8 +3799,25 @@ val less(val left, val right)
   if (left == right)
     return nil;
 
+tail:
   l_type = type(left);
   r_type = type(right);
+
+  if (l_type == COBJ && left->co.ops->equalsub) {
+    val lsub = left->co.ops->equalsub(left);
+    if (lsub) {
+      left = lsub;
+      goto tail;
+    }
+  }
+
+  if (r_type == COBJ && right->co.ops->equalsub) {
+    val rsub = right->co.ops->equalsub(right);
+    if (rsub) {
+      right = rsub;
+      goto tail;
+    }
+  }
 
   switch (less_tab[l_type][r_type]) {
   case less_false:

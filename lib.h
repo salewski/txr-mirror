@@ -219,10 +219,15 @@ struct cobj_ops {
   void (*destroy)(val self);
   void (*mark)(val self);
   cnum (*hash)(val self);
+  val (*equalsub)(val self);
 };
 
 #define cobj_ops_init(equal, print, destroy, mark, hash) \
-  { equal, print, destroy, mark, hash }
+  { equal, print, destroy, mark, hash, 0 }
+
+#define cobj_ops_init_ex(equal, print, destroy, mark, hash, \
+                         equalsub) \
+  { equal, print, destroy, mark, hash, equalsub }
 
 /* Default operations for above structure.
  * Default equal is eq
