@@ -1057,25 +1057,27 @@ val sub_list(val list, val from, val to)
   else if (!null_or_missing_p(to) && lt(to, zero))
     to = plus(to, if3(len, len, len = length(list)));
 
+  gc_hint(list);
+
   if (to && from && gt(from, to)) {
     return nil;
   } else if (!to || (len && ge(to, len)))  {
-    val iter, i;
+    val i;
 
-    for (i = zero, iter = list; iter; iter = cdr(iter), i = plus(i, one)) {
+    for (i = zero; list; list = cdr(list), i = plus(i, one)) {
       if (from && ge(i, from))
         break;
     }
-    return iter;
+    return list;
   } else {
-    val iter, i;
+    val i;
     list_collect_decl (out, ptail);
 
-    for (i = zero, iter = list; iter; iter = cdr(iter), i = plus(i, one)) {
+    for (i = zero; list; list = cdr(list), i = plus(i, one)) {
       if (ge(i, to))
         break;
       if (from && ge(i, from))
-        ptail = list_collect(ptail, car(iter));
+        ptail = list_collect(ptail, car(list));
     }
 
     return out;
@@ -1155,17 +1157,19 @@ val replace_list(val list, val items, val from, val to)
   if (to && lt(to, zero))
     to = plus(to, len ? len : (len = length(list)));
 
+  gc_hint(list);
+
   if (!to || (len && ge(to, len)))  {
     if (from && zerop(from)) {
       return (listp(items)) ? items : list_vec(items);
     } else {
-      val iter, i;
+      val i;
       list_collect_decl (out, ptail);
 
-      for (i = zero, iter = list; iter; iter = cdr(iter), i = plus(i, one)) {
+      for (i = zero; list; list = cdr(list), i = plus(i, one)) {
         if (from && ge(i, from))
           break;
-        ptail = list_collect(ptail, car(iter));
+        ptail = list_collect(ptail, car(list));
       }
 
       ptail = list_collect_nconc(ptail, if3(listp(items),
@@ -1173,19 +1177,19 @@ val replace_list(val list, val items, val from, val to)
       return out;
     }
   } else {
-    val iter, i;
+    val i;
     list_collect_decl (out, ptail);
 
-    for (i = zero, iter = list; iter; iter = cdr(iter), i = plus(i, one)) {
+    for (i = zero; list; list = cdr(list), i = plus(i, one)) {
       if (ge(i, to))
         break;
       if (from && lt(i, from))
-        ptail = list_collect(ptail, car(iter));
+        ptail = list_collect(ptail, car(list));
     }
 
     ptail = list_collect_nconc(ptail, append2(if3(listp(items), items,
                                                   list_vec(items)),
-                                      iter));
+                                      list));
     return out;
   }
 }
