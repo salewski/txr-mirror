@@ -14850,11 +14850,11 @@ See the relevant examples below.
 
 .coNP Function @ last
 .synb
-.mets (last << list )
+.mets (last << seq )
 .syne
 .desc
 If
-.meta list
+.meta seq
 is a nonempty proper or improper list, the
 .code last
 function
@@ -14863,12 +14863,20 @@ returns the last cons cell in the list: that cons cell whose
 field is a terminating atom.
 
 If
-.meta list
+.meta seq
 is
 .codn nil ,
 then
 .code nil
 is returned.
+
+If
+.meta seq
+is a non-list sequence, then a one-element suffix of
+.code seq
+is returned, or an empty suffix if
+.code seq
+is an empty sequence.
 
 .coNP Accessor @ nthcdr
 .synb

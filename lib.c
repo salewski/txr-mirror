@@ -559,10 +559,13 @@ loc lastcons(val list)
   return ret;
 }
 
-val last(val list)
+val last(val seq)
 {
-  loc p = lastcons(list);
-  return nullocp(p) ? list : deref(p);
+  if (listp(seq)) {
+    loc p = lastcons(seq);
+    return nullocp(p) ? seq : deref(p);
+  }
+  return sub(seq, negone, t);
 }
 
 val nthcdr(val pos, val list)
