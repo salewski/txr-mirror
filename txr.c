@@ -54,6 +54,7 @@
 #include "regex.h"
 #include "arith.h"
 #include "lisplib.h"
+#include "sysif.h"
 #include "txr.h"
 
 const wchli_t *version = wli(TXR_VER);
@@ -413,9 +414,26 @@ int txr_main(int argc, char **argv)
   val enter_repl = nil;
   val args_s = intern(lit("*args*"), user_package);
   val self_path_s = intern(lit("self-path"), user_package);
+  val compat_var = lit("TXR_COMPAT");
+  val compat_val = getenv_wrap(compat_var);
   list_collect_decl(arg_list, arg_tail);
 
   setvbuf(stderr, 0, _IOLBF, 0);
+
+  if (compat_val && length(compat_val) != zero) {
+    val value = int_str(compat_val, nil);
+    if (!value) {
+      format(std_error,
+             lit("~a: environment variable ~a=~a must be decimal integer\n"),
+             prog_string, compat_var, compat_val, nao);
+      return EXIT_FAILURE;
+    }
+    if (!compat(value)) {
+      format(std_error, lit("~a: caused by environment variable ~a=~a\n"),
+             prog_string, compat_var, compat_val, nao);
+      return EXIT_FAILURE;
+    }
+  }
 
   if (argc <= 1) {
 #if HAVE_TERMIOS
@@ -792,6 +810,11 @@ int txr_main(int argc, char **argv)
 
 repl:
 #if HAVE_TERMIOS
+  if (compat_val)
+    format(std_output,
+           lit("Note: operating in TXR ~a compatibility mode "
+               "due to environment variable.\n"),
+           num(opt_compat), nao);
   repl(bindings, std_input, std_output);
 #endif
   return 0;

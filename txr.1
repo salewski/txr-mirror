@@ -664,6 +664,12 @@ supports that behavior, or even that exact version.
 
 If the option is specified more than once, the behavior is not specified.
 
+Compatibility can also be requested via the
+.code TXR_COMPAT
+environment variable instead of the
+.code -C
+option.
+
 For more information, see the COMPATIBILITY section.
 
 .meIP >> --gc-delta= number
@@ -37894,7 +37900,31 @@ option can be used to request emulation of old behavior.
 The option was introduced in \*(TX 98, and so the oldest \*(TX version which
 can be emulated is \*(TX 97.
 
-Here are version values which have a special meaning as arguments to the
+Side effects occur in the processing of the option.  If the option is specified
+multiple times, the behavior is unspecified.
+
+.coNP Environment variable @ TXR_COMPAT
+
+If the
+.code TXR_COMPAT
+environment variable exists, and its value is not en empty string,
+it must contain a decimal integer. Its value is taken by \*(TX  as a request
+to emulate old behaviors, just like the value of the
+.code -C
+option.
+
+If the variable has incorrect contents or an out-of-range value,
+\*(TX will print an error diagnostic and exit.
+
+If both
+.code -C
+and the
+.code TXR_COMPAT
+environment variable are supplied, the behavior is unspecified.
+
+.coNP Compatibility Version Values
+
+The following version values which have a special meaning as arguments to the
 .code -C
 option, along with a description of what behaviors are affected. For each
 of these version values, the described behaviors are provided if
