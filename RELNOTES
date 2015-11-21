@@ -1,3 +1,51 @@
+                                    TXR 125
+                                   2015-11-20
+
+
+  Features
+
+  - OOP improvements:
+    - New uslot function and usl macro for functional indirection
+      on struct slots.
+    - New functors feature: define a lambda method for struct types
+      which lets structs be invokd as function.
+    - Lazy structs feature:
+      - New lnew macro (and make-lazy-struct function) for lazily
+        instantiating a new structure.
+      - Self-referential, and mutually referential structures can
+        be instantiated in one step using the existing mlet and
+        lnew.
+    - New Equality Substitution feature:
+      - An equal method defined on a struct type allows objects to
+        to be compared with equal or less, and to be hashed with hash-equal
+        (and thus :equal-based hash tables).
+      - The method simply returns an object which is used in place of
+        the struct for the purpose of the comparison or hash.
+  - TXR Extraction Language:
+    - @(rep) now available as shorthand for @(coll :vars nil)
+    - In @(next source), source can be a Lisp expression without leading @.
+    - :to_html and :from_html filters now called :tohml and :fromhtml;
+      old names will continue to work.
+    - :tohtml filter now also translates ' (ASCII 39 apostrophe) to &#39;.
+    - New :tohtml* filter, leaves quotes alone.
+  - New butlast function.
+  - New html-encode* function.
+  - The last function is generic now, applying to strings and vectors.
+  - New TXR_COMPAT environment variable, alternative to -C option.
+
+  Bugs
+
+  - Fixed missing autoload registration for meth, umeth and defmeth symbols.
+  - Fixed spurious retention issues in various library functions like
+    mapdo, preventing them from processing lazy lists in constant memory.
+  - Fixed type hole in the equal function, which treated two COBJ objects of
+    different types using a comparison function which assumes they are both
+    of the same type.
+  - Fixed buggy less function, which was comparing and ranking objects that
+    should not be comparable according to the documentation.
+
+
+
                                     TXR 124
                                    2015-11-14
 
