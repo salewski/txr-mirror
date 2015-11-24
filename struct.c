@@ -51,6 +51,7 @@
 #define STATIC_SLOT_BASE 0x10000000
 
 struct struct_type {
+  val self;
   val name;
   cnum id;
   cnum nslots;
@@ -67,7 +68,7 @@ struct struct_type {
 };
 
 struct struct_inst {
-  val type;
+  struct struct_type *type;
   cnum id : sizeof (cnum) * CHAR_BIT - 1 ;
   unsigned lazy : 1;
   val slot[1];
@@ -231,6 +232,7 @@ val make_struct_type(val name, val super,
     cnum sl, stsl;
     val null_ptr = 0;
 
+    st->self = stype;
     st->name = name;
     st->id = c_num(id);
     st->nslots = st->nstslots = st->eqmslot = 0;
@@ -302,7 +304,7 @@ val super(val type)
 {
   if (structp(type)) {
     struct struct_inst *si = coerce(struct struct_inst *, type->co.handle);
-    return si->type;
+    return si->type->self;
   } else {
     struct struct_type *st = stype_handle(&type, lit("super"));
     return st->super;
@@ -368,13 +370,13 @@ val make_struct(val type, val plist, struct args *args)
 
   for (sl = 0; sl < nslots; sl++)
     si->slot[sl] = nil;
-  si->type = nil;
+  si->type = st;
   si->id = st->id;
   si->lazy = 0;
 
   sinst = cobj(coerce(mem_t *, si), st->name, &struct_inst_ops);
 
-  si->type = type;
+  bug_unless (type == st->self);
 
   uw_simple_catch_begin;
 
@@ -405,7 +407,7 @@ val make_struct(val type, val plist, struct args *args)
 static void lazy_struct_init(val sinst, struct struct_inst *si)
 {
   val self = lit("make-lazy-struct");
-  struct struct_type *st = coerce(struct struct_type *, si->type->co.handle);
+  struct struct_type *st = si->type;
   volatile val inited = nil;
   val cell = funcall(si->slot[0]);
   cons_bind (plist, args, cell);
@@ -459,13 +461,14 @@ val make_lazy_struct(val type, val argfun)
 
   for (sl = 0; sl < nslots; sl++)
     si->slot[sl] = nil;
-  si->type = nil;
+  si->type = st;
   si->id = st->id;
   si->lazy = 1;
 
   sinst = cobj(coerce(mem_t *, si), st->name, &struct_inst_ops);
 
-  si->type = type;
+  bug_unless (type == st->self);
+
   si->slot[0] = argfun;
 
   return sinst;
@@ -484,7 +487,7 @@ val copy_struct(val strct)
   const val self = lit("copy-struct");
   val copy;
   struct struct_inst *si = struct_handle(strct, self);
-  struct struct_type *st = coerce(struct struct_type *, si->type->co.handle);
+  struct struct_type *st = si->type;
   cnum nslots = st->nslots;
   size_t size = offsetof(struct struct_inst, slot) + sizeof (val) * nslots;
   struct struct_inst *si_copy = coerce(struct struct_inst *, chk_malloc(size));
@@ -499,7 +502,7 @@ val clear_struct(val strct, val value)
 {
   const val self = lit("clear-struct");
   struct struct_inst *si = struct_handle(strct, self);
-  struct struct_type *st = coerce(struct struct_type *, si->type->co.handle);
+  struct struct_type *st = si->type;
   val clear_val = default_bool_arg(value);
   cnum i;
 
@@ -516,7 +519,7 @@ val replace_struct(val target, val source)
   const val self = lit("replace-struct");
   struct struct_inst *tsi = struct_handle(target, self);
   struct struct_inst *ssi = struct_handle(source, self);
-  struct struct_type *sst = coerce(struct struct_type *, ssi->type->co.handle);
+  struct struct_type *sst = ssi->type;
   cnum nslots = sst->nslots;
   size_t size = offsetof(struct struct_inst, slot) + sizeof (val) * nslots;
   struct struct_inst *ssi_copy = coerce(struct struct_inst *, chk_malloc(size));
@@ -535,7 +538,7 @@ val reset_struct(val strct)
 {
   const val self = lit("reset-struct");
   struct struct_inst *si = struct_handle(strct, self);
-  struct struct_type *st = coerce(struct struct_type *, si->type->co.handle);
+  struct struct_type *st = si->type;
   cnum i;
 
   check_init_lazy_struct(strct, si);
@@ -606,9 +609,8 @@ static loc lookup_slot(val inst, struct struct_inst *si, val sym)
     cnum slot = cache_set_lookup(*set, id);
 
     if (slot >= STATIC_SLOT_BASE) {
-      val type = si->type;
-      struct struct_type *st = coerce(struct struct_type *, type->co.handle);
-      return mkloc(st->stslot[slot - STATIC_SLOT_BASE], type);
+      struct struct_type *st = si->type;
+      return mkloc(st->stslot[slot - STATIC_SLOT_BASE], st->self);
     } else if (slot >= 0) {
       return mkloc(si->slot[slot], inst);
     } else {
@@ -618,9 +620,8 @@ static loc lookup_slot(val inst, struct struct_inst *si, val sym)
       if (sl) {
         cache_set_insert(*set, id, slnum);
         if (slnum >= STATIC_SLOT_BASE) {
-          val type = si->type;
-          struct struct_type *st = coerce(struct struct_type *, type->co.handle);
-          return mkloc(st->stslot[slnum - STATIC_SLOT_BASE], type);
+          struct struct_type *st = si->type;
+          return mkloc(st->stslot[slnum - STATIC_SLOT_BASE], st->self);
         }
         return mkloc(si->slot[slnum], inst);
       }
@@ -639,9 +640,8 @@ static loc lookup_slot(val inst, struct struct_inst *si, val sym)
     if (sl) {
       cache_set_insert(*set, id, slnum);
       if (slnum >= STATIC_SLOT_BASE) {
-        val type = si->type;
-        struct struct_type *st = coerce(struct struct_type *, type->co.handle);
-        return mkloc(st->stslot[slnum - STATIC_SLOT_BASE], type);
+        struct struct_type *st = si->type;
+        return mkloc(st->stslot[slnum - STATIC_SLOT_BASE], st->self);
       }
       return mkloc(si->slot[slnum], inst);
     }
@@ -709,7 +709,7 @@ val slot(val strct, val sym)
       return deref(ptr);
   }
 
-  no_such_slot(self, si->type, sym);
+  no_such_slot(self, si->type->self, sym);
 }
 
 val slotset(val strct, val sym, val newval)
@@ -723,7 +723,7 @@ val slotset(val strct, val sym, val newval)
       return set(ptr, newval);
   }
 
-  no_such_slot(self, si->type, sym);
+  no_such_slot(self, si->type->self, sym);
 }
 
 val static_slot(val stype, val sym)
@@ -859,7 +859,7 @@ val struct_type(val strct)
 {
   const val self = lit("struct-type");
   struct struct_inst *si = struct_handle(strct, self);
-  return si->type;
+  return si->type->self;
 }
 
 static val method_fun(val env, varg args)
@@ -893,7 +893,7 @@ static val uslot_fun(val sym, val strct)
       return deref(ptr);
   }
 
-  no_such_slot(self, si->type, sym);
+  no_such_slot(self, si->type->self, sym);
 }
 
 val uslot(val slot)
@@ -918,7 +918,7 @@ static val umethod_fun(val sym, struct args *args)
         return generic_funcall(deref(ptr), args);
     }
 
-    no_such_slot(self, si->type, sym);
+    no_such_slot(self, si->type->self, sym);
   }
 }
 
@@ -930,7 +930,7 @@ val umethod(val slot)
 static void struct_inst_print(val obj, val out, val pretty)
 {
   struct struct_inst *si = coerce(struct struct_inst *, obj->co.handle);
-  struct struct_type *st = coerce(struct struct_type *, si->type->co.handle);
+  struct struct_type *st = si->type;
   val save_mode = test_set_indent_mode(out, num_fast(indent_off),
                                        num_fast(indent_data));
   val save_indent, iter, once;
@@ -941,7 +941,7 @@ static void struct_inst_print(val obj, val out, val pretty)
 
   for (iter = st->slots, once = t; iter; iter = cdr(iter)) {
     val sym = car(iter);
-    if (!static_slot_p(si->type, sym)) {
+    if (!static_slot_p(st->self, sym)) {
       if (once) {
         put_char(chr(' '), out);
         once = nil;
@@ -961,7 +961,7 @@ static void struct_inst_print(val obj, val out, val pretty)
 static void struct_inst_mark(val obj)
 {
   struct struct_inst *si = coerce(struct struct_inst *, obj->co.handle);
-  struct struct_type *st = coerce(struct struct_type *, si->type->co.handle);
+  struct struct_type *st = si->type;
   cnum sl, nslots = st->nslots;
 
   if (si->lazy)
@@ -969,17 +969,17 @@ static void struct_inst_mark(val obj)
 
   for (sl = 0; sl < nslots; sl++)
     gc_mark(si->slot[sl]);
-  gc_mark(si->type);
+  gc_mark(st->self);
 }
 
 static val struct_inst_equal(val left, val right)
 {
   struct struct_inst *ls = coerce(struct struct_inst *, left->co.handle);
   struct struct_inst *rs = coerce(struct struct_inst *, right->co.handle);
-  struct struct_type *st = coerce(struct struct_type *, ls->type->co.handle);
+  struct struct_type *st = ls->type;
   cnum nslots = st->nslots, sl;
 
-  if (rs->type != ls->type)
+  if (st != rs->type)
     return nil;
 
   check_init_lazy_struct(left, ls);
@@ -997,8 +997,8 @@ static val struct_inst_equal(val left, val right)
 static cnum struct_inst_hash(val obj)
 {
   struct struct_inst *si = coerce(struct struct_inst *, obj->co.handle);
-  struct struct_type *st = coerce(struct struct_type *, si->type->co.handle);
-  cnum nslots = st->nslots, sl, out = c_num(hash_equal(si->type));
+  struct struct_type *st = si->type;
+  cnum nslots = st->nslots, sl, out = c_num(hash_equal(st->self));
 
   check_init_lazy_struct(obj, si);
 
@@ -1031,13 +1031,13 @@ static val get_equal_method(val stype, struct struct_type *st)
 static val struct_inst_equalsub(val obj)
 {
   struct struct_inst *si = coerce(struct struct_inst *, obj->co.handle);
-  struct struct_type *st = coerce(struct struct_type *, si->type->co.handle);
+  struct struct_type *st = si->type;
   val equal_method = get_equal_method(obj, st);
   if (equal_method) {
     val sub = funcall1(equal_method, obj);
     if (nilp(sub)) {
       uw_throwf(error_s, lit("equal method on type ~s returned nil"),
-                si->type, nao);
+                st->self, nao);
     }
     return sub;
   }
