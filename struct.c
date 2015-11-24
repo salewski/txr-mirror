@@ -304,7 +304,7 @@ val super(val type)
 {
   if (structp(type)) {
     struct struct_inst *si = coerce(struct struct_inst *, type->co.handle);
-    return si->type->self;
+    return si->type->super;
   } else {
     struct struct_type *st = stype_handle(&type, lit("super"));
     return st->super;
