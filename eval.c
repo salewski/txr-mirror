@@ -4446,6 +4446,8 @@ void eval_init(void)
   reg_fun(intern(lit("mappend"), user_package), func_n1v(mappendv));
   reg_fun(intern(lit("mappend*"), user_package), func_n1v(lazy_mappendv));
   reg_fun(intern(lit("mapdo"), user_package), func_n1v(mapdov));
+  reg_fun(intern(lit("window-map"), user_package), func_n4(window_map));
+  reg_fun(intern(lit("window-mappend"), user_package), func_n4(window_mappend));
   reg_fun(apply_s, func_n1v(applyv));
   reg_fun(iapply_s, func_n1v(iapply));
   reg_fun(call_s, call_f);

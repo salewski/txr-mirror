@@ -53,6 +53,11 @@ INLINE struct args *args_init(struct args *args, cnum argc)
   return args_init_list(args, argc, nil);
 }
 
+INLINE void args_set_fill(struct args *args, cnum fill)
+{
+  args->fill = fill;
+}
+
 #define args_decl_list(NAME, N, L)                                      \
   mem_t *NAME ## _mem =                                                 \
     coerce(mem_t *,                                                     \

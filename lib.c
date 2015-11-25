@@ -102,6 +102,7 @@ val system_error_s;
 val gensym_counter_s;
 
 val nothrow_k, args_k, colon_k, auto_k, fun_k;
+val wrap_k, reflect_k;
 
 val null_string;
 val nil_string;
@@ -6495,6 +6496,116 @@ val mapdo(val fun, val list)
   return nil;
 }
 
+static cnum calc_win_size(cnum ra)
+{
+  cnum ws = 2 * ra + 1;
+  if (ra < 1)
+    uw_throwf(error_s, lit("window-map: range must be nonnegative"), nao);
+  if (ws > 1025)
+    uw_throwf(error_s, lit("window-map: window size exceeds 1025"), nao);
+  return ws;
+}
+
+static val window_map_list(val range, val boundary, val fun, val list, val app)
+{
+  cnum i, j, ra = c_num(range), ws = calc_win_size(ra);
+  val iter;
+  args_decl (args, ws);
+  list_collect_decl (out, ptail);
+
+  args_set_fill(args, ws);
+
+  if (boundary == wrap_k) {
+    val lcopy = take(range, list);
+    while (lt(length(lcopy), range))
+      lcopy = append2(lcopy, lcopy);
+    boundary = append2(sub(lcopy, num_fast(-ra), t), sub(lcopy, zero, range));
+  } else if (boundary == reflect_k) {
+    val lcopy = take(range, list);
+    while (lt(length(lcopy), range))
+      lcopy = append2(lcopy, lcopy);
+    boundary = nappend2(nreverse(sub(lcopy, zero, range)),
+                        nreverse(sub(lcopy, num_fast(-ra), t)));
+  }
+
+  for (i = 0; i < ra; i++)
+    args->arg[i] = ref(boundary, num_fast(i));
+
+  for (iter = list; iter && i < ws; iter = cdr(iter), i++)
+    args->arg[i] = car(iter);
+
+  for (j = ra; i < ws; i++)
+    args->arg[i] = ref(boundary, num_fast(j++));
+
+  for (;;) {
+    args_decl (args_cp, ws);
+
+    args_copy(args_cp, args);
+
+    ptail = if3(app,
+                list_collect_append,
+                list_collect)(ptail, generic_funcall(fun, args_cp));
+
+    if (nilp(list = cdr(list)))
+      break;
+
+    for (i = 0; i < ws - 1; i++)
+      args->arg[i] = args->arg[i + 1];
+
+    if (iter) {
+      args->arg[i] = car(iter);
+      iter = cdr(iter);
+    } else {
+      args->arg[i] = ref(boundary, num_fast(j++));
+    }
+  }
+
+  return out;
+}
+
+static val window_map_vec(val range, val boundary, val fun, val seq, val app)
+{
+  val list = tolist(seq);
+  val out = window_map_list(range, boundary, fun, list, app);
+  return make_like(out, seq);
+}
+
+val window_map(val range, val boundary, val fun, val seq)
+{
+  switch (type(seq)) {
+  case NIL:
+    return nil;
+  case CONS:
+  case LCONS:
+    return window_map_list(range, boundary, fun, seq, nil);
+  case VEC:
+  case LIT:
+  case STR:
+  case LSTR:
+    return window_map_vec(range, boundary, fun, seq, nil);
+  default:
+    type_mismatch(lit("window-map: ~s is not a sequence"), seq, nao);
+  }
+}
+
+val window_mappend(val range, val boundary, val fun, val seq)
+{
+  switch (type(seq)) {
+  case NIL:
+    return nil;
+  case CONS:
+  case LCONS:
+    return window_map_list(range, boundary, fun, seq, t);
+  case VEC:
+  case LIT:
+  case STR:
+  case LSTR:
+    return window_map_vec(range, boundary, fun, seq, t);
+  default:
+    type_mismatch(lit("window-map: ~s is not a sequence"), seq, nao);
+  }
+}
+
 static val lazy_interpose_func(val env, val lcons)
 {
   cons_bind (sep, list, env);
@@ -7938,6 +8049,8 @@ static void obj_init(void)
   colon_k = intern(lit(""), keyword_package);
   auto_k = intern(lit("auto"), keyword_package);
   fun_k = intern(lit("fun"), keyword_package);
+  wrap_k = intern(lit("wrap"), keyword_package);
+  reflect_k = intern(lit("reflect"), keyword_package);
 
   equal_f = func_n2(equal);
   eq_f = func_n2(eq);

@@ -21615,6 +21615,160 @@ on a list of the arguments. The following equivalences hold:
   (zip '(a b c) '(c d e)) ->  ((a c) (b d) (c e))
 .cble
 
+.coNP Functions @ window-map and @ window-mappend
+.synb
+.mets (window-map < range < boundary < function << sequence )
+.mets (window-mappend < range < boundary < function << sequence )
+.syne
+.desc
+The
+.code window-map
+and
+.code window-mappend
+functions process the elements of
+.meta sequence
+by passing arguments derived from each successive element to
+.metn function .
+Both functions return, if possible, a sequence of the same kind as
+.codn sequence ,
+otherwise a list.
+
+Under
+.codn window-map ,
+.meta function
+is expected to return a sequence. The sequences returned
+by the calls to
+.meta function
+are appended together to form the sequence that, possibly after a conversion to
+the same type as
+.meta sequence
+becomes the output sequence.  Under
+.codn window-mappend ,
+the values returned by the calls to
+.meta function
+are appended together.
+
+These functions respectively resemble
+.code mapcar
+and
+.code mappend
+respectively. However, they operate only on a single sequence.
+Moreover, they perform a
+.IR "window mapping" ,
+explained as follows.
+
+The argument to the
+.meta range
+parameter must be a positive integer, not exceeding 512.
+This parameter specified the amount of ahead/behind context on either
+side of each element which is processed. It indirectly determines
+the window size for the mapping. The window size is twice
+.metn range ,
+plus one. For instance if range is , then the window size is 5:
+the element being processed lies at the center of the window, flanked
+by two elements on either side, making five.
+
+The
+.meta function
+argument must specify a function which accepts a number of arguments
+corresponding to the window size. For instance if
+.meta range
+is 2,
+making the window size 5,
+then
+.meta function
+must accept 5 arguments. These arguments constitute the sliding
+window being processed. Each time
+.meta function
+is called, the middle argument is the element being processed,
+and the arguments surrounding it are its window.
+
+When an element is processed from somewhere in the interior of
+a sequence, where it is flanked on either side by at least
+.meta range
+elements, then the window is populated by those flanking elements
+taken from
+.metn sequence .
+
+The
+.meta boundary
+parameter specifies the window contents which are used for the
+processing of elements which are closer than
+.meta range
+to either end of the sequence.  The argument may be a sequence containing
+at least twice
+.meta range
+number of elements (one less than the window size): if it has additional
+elements, they are not used. If it is a list, it may be shorter than twice
+.metn range .
+The argument
+may also be one of the two keyword symbols
+.code :wrap
+or
+.codn :reflect ,
+described below.
+
+If
+.meta boundary
+is a sequence, it may be regarded as divided into two pieces of
+.meta range
+length. If it is a list of insufficient length, then missing elements
+are supplied as
+.code nil
+to make two
+.metn range 's
+worth of elements. These two pieces then flank
+.code sequence
+on either end. The left half of
+.meta boundary
+is effectively prepended to the sequence, and the right half
+effectively appended.
+When the sliding window extends beyond the boundary of
+.meta sequence
+near its start or end, the window is populated from these
+flanking elements obtained from
+.metn boundary .
+
+If
+.meta boundary
+is the keyword
+.codn :wrap ,
+then the sequence is effectively flanked by copies of itself on both
+ends, repeated enough times to satisfy the window. For instance if
+the sequence is
+.code (1 2 3)
+and the window size is 9 due to the value of
+.meta range
+being 7, then the behavior of
+.code :wrap
+is as if a
+.meta boundary
+were specified consisting of
+.codn (3 1 2 3 1 2 3 1) .
+The left flank is
+.code (3 1 2 3)
+and the right flank is
+.code (1 2 3 4)
+formed by repetitions of
+.code (1 2 3)
+surrounding it on either side, extending out to infinity, and chopped to
+.metn range .
+
+If
+.meta boundary
+is the keyword
+.codn :reflect ,
+then the sequence is effectively flanked by reversed copies of itself
+on both ends, repeated enough times to satisfy the window.
+For instance if the sequence is
+.code (1 2 3)
+and the window size is 9, then the behavior of
+.code :wrap
+is as if a
+.meta boundary
+were specified consisting of
+.codn (1 3 2 1 3 2 1 3) .
+
 .coNP Function @ interpose
 .synb
 .mets (interpose < sep << sequence )
