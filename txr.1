@@ -25482,6 +25482,78 @@ turning the expression
 into
 .codn (+ 1 y) .
 
+.coNP Macro @ define-accessor
+.synb
+.mets (define-accessor < get-function << set-function )
+.syne
+.desc
+The
+.code define-accessor
+macro is used for turning a function into an accessor,
+such that forms which call the function can be treated
+as places.
+
+Arguments to
+.code define-accessor
+are two symbols, which must name functions. When the
+.code define-accessor
+call is evaluated, the
+.meta get-function
+symbol is registered as a syntactic place. Stores to the
+place are handled via calls to
+.metn set-function .
+
+If
+.meta get-function
+names a function which takes N
+arguments,
+.meta set-function
+must name a function which takes N+1 arguments.
+
+Moreover, in order for the accessor semantics to be correct
+.meta set-function
+must treat its rightmost argument as the value being stored,
+and must also return that value.
+
+When a function call form targeting
+.meta get-function
+is treated as a place which is subject
+to an update operation (for instance an increment via the
+.code inc
+macro),
+the accessor definition created by
+.code define-accessor
+ensures that the arguments of
+.meta get-function
+are evaluated only once, even though the update involves
+a call to
+.meta get-function
+and
+.meta set-function
+with the same arguments. The argument forms are evaluated to
+temporary variables, and these temporaries are used as the
+arguments in the calls.
+
+No other assurances are provided by
+.codn define-accessor .
+
+In particular, if
+.meta get-function
+and
+.meta set-function
+internally each perform some redundant calculation over their arguments,
+this cannot be optimized. Moreover, if that calculation has a visible effect,
+that effect is observed multiple times in an update operation.
+
+If further optimization or suppression of multiple effects is required,
+the more general
+.code defplace
+macro must be used to define the accessor. It may also be possible to
+treat the situation  in a satisfactory way using a
+.code define-place-macro
+definition, which effectively then supplies inline code whenever a certain form
+is used as a place, and that code itself is treated as a place.
+
 .coNP Macro @ with-gensyms
 .synb
 .mets (with-gensyms <> ( sym *) << body-form *)

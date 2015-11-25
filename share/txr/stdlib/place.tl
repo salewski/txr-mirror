@@ -652,6 +652,25 @@
           (symacrolet (,*(zip syms temps))
             ,*body)))))
 
+(defun sys:register-simple-accessor (get-fun set-fun)
+  (sethash *place-update-expander* get-fun
+           (lambda (getter setter place body)
+             (let* ((args (cdr place))
+                    (temps (mapcar (ret (gensym)) args)))
+               ^(let (,(zip temps args))
+                  (macrolet ((,getter () ^(,',get-fun ,*',temps))
+                             (,setter (val)
+                               ^(,',set-fun ,*',temps ,val)))
+                    ,body)))))
+  (sethash *place-clobber-expander* get-fun
+           (lambda (ssetter place body)
+             ^(macrolet ((,ssetter (val)
+                               ^(,',set-fun ,*(cdr ',place) ,val)))
+                ,body))))
+
+(defmacro define-accessor (get-fun set-fun)
+  ^(sys:register-simple-accessor ',get-fun ',set-fun))
+
 (define-place-macro first (obj) ^(car ,obj))
 (define-place-macro rest (obj) ^(cdr ,obj))
 (define-place-macro second (obj) ^(ref ,obj 1))
