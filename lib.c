@@ -1936,11 +1936,11 @@ static val partition_split_common(val seq, val indices, val partition_p)
   if (!seq)
     return nil;
 
-  if (!indices)
-    return cons(seq, nil);
-
   if (functionp(indices))
     indices = funcall1(indices, seq);
+
+  if (!indices)
+    return cons(seq, nil);
 
   if (atom(indices))
     indices = cons(indices, nil);
