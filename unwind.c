@@ -535,12 +535,20 @@ val uw_throw(val sym, val args)
       val msg_or_args = if3(is_msg, car(args), args);
       val info = source_loc_str(last_form_evaled, nil);
       val ex_info = source_loc_str(last_form_expanded, nil);
+      val origin = last_form_evaled;
       format(std_error, lit("~a: unhandled exception of type ~a:\n"),
              prog_string, sym, nao);
 
-      if (info && sym != eval_error_s)
+      if (info && sym != eval_error_s) {
         format(std_error, lit("~a: possibly triggered at ~a by form ~!~s\n"),
                prog_string, info, last_form_evaled, nao);
+
+        while ((origin = lookup_origin(origin))) {
+          val oinfo = source_loc_str(origin, lit("(n/a)"));
+          format(std_error, lit("~a: which is an expansion at ~a of ~!~s\n"),
+                 prog_string, oinfo, origin, nao);
+        }
+      }
 
       if (ex_info)
         format(std_error, lit("~a: during expansion at ~a of form ~!~s\n"),

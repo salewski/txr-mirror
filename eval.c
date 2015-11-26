@@ -104,6 +104,8 @@ val last_form_evaled, last_form_expanded;
 
 val call_f;
 
+val origin_hash;
+
 val make_env(val vbindings, val fbindings, val up_env)
 {
   val env = make_obj();
@@ -186,6 +188,11 @@ noreturn val eval_error(val form, val fmt, ...)
 
   uw_throw(eval_error_s, get_string_from_stream(stream));
   abort();
+}
+
+val lookup_origin(val form)
+{
+  return gethash(origin_hash, form);
 }
 
 val lookup_global_var(val sym)
@@ -1487,7 +1494,9 @@ static val expand_macro(val form, val expander, val menv)
 {
   if (cobjp(expander)) {
     mefun_t fp = coerce(mefun_t, cptr_get(expander));
-    return fp(form, menv);
+    val expanded = fp(form, menv);
+    sethash(origin_hash, expanded, form);
+    return expanded;
   } else {
     debug_enter;
     val name = car(form);
@@ -1504,6 +1513,7 @@ static val expand_macro(val form, val expander, val menv)
     result = eval_progn(body, exp_env, body);
     debug_end;
     set_dyn_env(saved_de);
+    sethash(origin_hash, result, form);
     debug_return(result);
     debug_leave;
   }
@@ -4189,7 +4199,7 @@ void eval_init(void)
 
   protect(&top_vb, &top_fb, &top_mb, &top_smb, &special, &builtin, &dyn_env,
           &op_table, &last_form_evaled, &last_form_expanded,
-          &call_f, convert(val *, 0));
+          &call_f, &origin_hash, convert(val *, 0));
   top_fb = make_hash(t, nil, nil);
   top_vb = make_hash(t, nil, nil);
   top_mb = make_hash(t, nil, nil);
@@ -4201,6 +4211,8 @@ void eval_init(void)
   eval_initing = t;
 
   call_f = func_n1v(generic_funcall);
+
+  origin_hash = make_hash(t, nil, nil);
 
   dwim_s = intern(lit("dwim"), user_package);
   progn_s = intern(lit("progn"), user_package);
