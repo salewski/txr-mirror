@@ -312,15 +312,18 @@
              ^((sethash *place-delete-expander* ',name
                  (lambda (,deleter-sym ,place ,body-sym)
                    (tree-bind ,args (cdr ,place)
-                      ,delete-body)))))))))
+                      ,delete-body)))))
+         ',name))))
 
 (defmacro define-place-macro (name place-destructuring-args . body)
   (with-gensyms (name-dummy args)
-    ^(sethash *place-macro* ',name
-              (lambda (,args)
-                (mac-param-bind ,args
-                                (,name-dummy ,*place-destructuring-args)
-                                ,args ,*body)))))
+    ^(progn
+       (sethash *place-macro* ',name
+                (lambda (,args)
+                  (mac-param-bind ,args
+                                  (,name-dummy ,*place-destructuring-args)
+                                  ,args ,*body)))
+       ',name)))
 
 (defplace (sys:var arg) body
   (getter setter
@@ -666,7 +669,8 @@
            (lambda (ssetter place body)
              ^(macrolet ((,ssetter (val)
                                ^(,',set-fun ,*(cdr ',place) ,val)))
-                ,body))))
+                ,body)))
+  get-fun)
 
 (defmacro define-accessor (get-fun set-fun)
   ^(sys:register-simple-accessor ',get-fun ',set-fun))

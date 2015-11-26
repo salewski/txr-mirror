@@ -626,7 +626,7 @@ val sethash(val hash, val key, val value)
 {
   val new_p;
   rplacd(gethash_c(hash, key, mkcloc(new_p)), value);
-  return new_p;
+  return value;
 }
 
 val pushhash(val hash, val key, val value)
