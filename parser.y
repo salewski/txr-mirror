@@ -734,33 +734,32 @@ vector : '#' list               { if (unquotes_occur($2, 0))
        ;
 
 hash : HASH_H list              { if (unquotes_occur($2, 0))
-                                    $$ = rlcp(cons(hash_lit_s, $2),
-                                              num($1));
+                                    $$ = rl(cons(hash_lit_s, $2), num($1));
                                   else
-                                    $$ = rlcp(hash_construct(first($2),
+                                    $$ = rl(hash_construct(first($2),
                                                              rest($2)),
-                                              num($1)); }
+                                            num($1)); }
      ;
 
 struct : HASH_S list            { if (unquotes_occur($2, 0))
-                                    $$ = rlcp(cons(struct_lit_s, $2),
+                                    $$ = rl(cons(struct_lit_s, $2),
                                               num($1));
                                   else
                                   { args_decl(args, 0);
                                     val strct = make_struct(first($2),
                                                             rest($2),
                                                             args);
-                                    $$ = rlcp(strct, num($1)); } }
+                                    $$ = rl(strct, num($1)); } }
        ;
 
 range : HASH_R list             { if (length($2) != two)
                                     yyerr("range literal needs two elements");
 
                                   if (unquotes_occur($2, 0))
-                                    $$ = rlcp(cons(rcons_s, $2), num($1));
+                                    $$ = rl(cons(rcons_s, $2), num($1));
                                   else
                                   { val range = rcons(first($2), second($2));
-                                    $$ = rlcp(range, num($1)); } }
+                                    $$ = rl(range, num($1)); } }
        ;
 
 list : '(' n_exprs ')'          { $$ = rl($2, num($1)); }
