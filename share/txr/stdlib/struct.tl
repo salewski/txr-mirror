@@ -209,9 +209,12 @@
 (defmacro umeth (slot)
   ^(umethod ',slot))
 
+(defun sys:defmeth (type-sym name fun)
+  (let ((type (find-struct-type type-sym)))
+    (if type
+      (static-slot-ensure type-sym name fun)
+      (throwf 'eval-error "~s: ~s isn't a struct type" 'defmeth type-sym))))
+
 (defmacro defmeth (type-sym name arglist . body)
-  ^(progn
-     (static-slot-ensure (find-struct-type ',type-sym) ',name
-                         (lambda ,arglist
-                         (block ,name ,*body)))
-     ',name))
+  ^(sys:defmeth ',type-sym ',name (lambda ,arglist
+                                    (block ,name ,*body))))
