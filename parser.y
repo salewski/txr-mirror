@@ -1376,11 +1376,10 @@ val rlrec(parser_t *parser, val form, val line)
 val rlcp_tree(val to, val from)
 {
   val ret = to;
-  if (consp(to)) {
-    for (; consp(to); to = cdr(to)) {
-      rlcp(to, from);
-      rlcp_tree(car(to), from);
-    }
+
+  for (; consp(to); to = cdr(to)) {
+    rlcp(to, from);
+    rlcp_tree(car(to), from);
   }
   return ret;
 }
