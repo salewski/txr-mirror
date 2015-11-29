@@ -1521,7 +1521,7 @@ static val expand_macro(val form, val expander, val menv)
 
 static val maybe_progn(val forms)
 {
-  return if3(cdr(forms), cons(progn_s, forms), car(forms));
+  return if3(cdr(forms), rlcp(cons(progn_s, forms), forms), car(forms));
 }
 
 static val self_evaluating_p(val form)
