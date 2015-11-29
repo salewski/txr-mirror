@@ -5377,7 +5377,7 @@ val transposev(struct args *list)
 
 val transpose(val list)
 {
-  args_decl_list(args, ARGS_MIN, list);
+  args_decl_list(args, ARGS_MIN, copy(list));
   return make_like(transposev(args), list);
 }
 
