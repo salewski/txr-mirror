@@ -920,14 +920,14 @@ static val bind_macro_params(val env, val menv, val params, val form,
     if (form) {
       if (loose_p == colon_k)
         goto nil_out;
-      eval_error(ctx_form, lit("~s: atom ~s not matched by parameter list"),
-                 car(ctx_form), form, nao);
+      eval_error(ctx_form, lit("~s: atom ~s not matched by params ~s"),
+                 car(ctx_form), form, params, nao);
     }
 
     if (!optargs) {
       if (!loose_p)
-        eval_error(ctx_form, lit("~s: insufficient number of arguments"),
-                   car(ctx_form), nao);
+        eval_error(ctx_form, lit("~s: missing arguments for params ~s"),
+                   car(ctx_form), params, nao);
       if (loose_p == colon_k)
         goto nil_out;
     }
