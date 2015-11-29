@@ -1932,7 +1932,6 @@ static val split_func(val env, val lcons)
 static val partition_split_common(val seq, val indices, val partition_p)
 {
   seq = nullify(seq);
-  indices = nullify(indices);
 
   if (!seq)
     return nil;
@@ -1940,10 +1939,12 @@ static val partition_split_common(val seq, val indices, val partition_p)
   if (functionp(indices))
     indices = funcall1(indices, seq);
 
+  indices = nullify(indices);
+
   if (!indices)
     return cons(seq, nil);
 
-  if (atom(indices))
+  if (!seqp(indices))
     indices = cons(indices, nil);
 
   return make_lazy_cons(func_f1(cons(seq, cons(indices, zero)),
