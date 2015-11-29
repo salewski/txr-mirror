@@ -49,6 +49,7 @@
 #include "stream.h"
 #include "y.tab.h"
 #include "sysif.h"
+#include "cadr.h"
 #include "parser.h"
 #if HAVE_TERMIOS
 #include "linenoise/linenoise.h"
@@ -751,31 +752,7 @@ val repl(val bindings, val in_stream, val out_stream)
       if (uw_exception_subtype_p(exsym, syntax_error_s)) {
         put_line(lit("** syntax error"), out_stream);
       } else if (uw_exception_subtype_p(exsym, error_s)) {
-        val info = source_loc_str(last_form_evaled, nil);
-        val ex_info = source_loc_str(last_form_expanded, nil);
-        val origin = last_form_evaled;
-
-        if (cdr(exvals))
-          format(out_stream, lit("** ~!~a ~!~s\n"),
-                 car(exvals), cdr(exvals), nao);
-        else
-          format(out_stream, lit("** ~!~a\n"), car(exvals), nao);
-
-        if (info && exsym != eval_error_s) {
-          format(out_stream, lit("** possibly triggered at ~a by form ~!~s\n"),
-                 info, last_form_evaled, nao);
-
-          while ((origin = lookup_origin(origin))) {
-            val oinfo = source_loc_str(origin, lit("(n/a)"));
-            format(out_stream, lit("** which is an expansion at ~a of ~!~s\n"),
-                   oinfo, origin, nao);
-          }
-        }
-
-        if (ex_info)
-          format(out_stream, lit("** during expansion at ~a of form ~!~s\n"),
-                 ex_info, last_form_expanded, nao);
-
+        error_trace(exsym, exvals, std_error, lit("**"));
       } else {
         format(out_stream, lit("** ~!~s exception, args: ~!~s\n"),
                exsym, exvals, nao);

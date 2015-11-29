@@ -195,6 +195,51 @@ val lookup_origin(val form)
   return gethash(origin_hash, form);
 }
 
+void error_trace(val exsym, val exvals, val out_stream, val prefix)
+{
+  val last = last_form_evaled;
+  val info = source_loc_str(last, nil);
+  val ex_info = source_loc_str(last_form_expanded, nil);
+
+  if (cdr(exvals) || !stringp(car(exvals)))
+    format(out_stream, lit("~a exception args: ~!~s\n"),
+           prefix, exvals, nao);
+  else
+    format(out_stream, lit("~a ~!~a\n"), prefix, car(exvals), nao);
+
+  if (info && exsym != eval_error_s) {
+    val first = t;
+
+    while (last) {
+      val origin = lookup_origin(last);
+      val oinfo = source_loc_str(origin, nil);
+
+      if (first) {
+        if (origin)
+          format(out_stream, lit("~a possibly triggered by form ~!~s\n"),
+                 prefix, last, nao);
+        else
+          format(out_stream, lit("~a possibly triggered at ~a by form ~!~s\n"),
+                 prefix, info, last, nao);
+        first = nil;
+      }
+
+      if (origin)
+        format(out_stream, lit("~a ... an expansion at ~a of ~!~s\n"),
+               prefix, info, origin, nao);
+      else
+        format(out_stream, lit("~a which is located at ~a\n"), prefix, info, nao);
+
+      last = origin;
+      info = oinfo;
+    }
+  }
+
+  if (ex_info)
+    format(out_stream, lit("~a during expansion at ~a of form ~!~s\n"),
+           prefix, ex_info, last_form_expanded, nao);
+}
+
 val lookup_global_var(val sym)
 {
   uses_or2;
@@ -1474,7 +1519,7 @@ static val op_defmacro(val form, val env)
   val name = first(args);
   val params = second(args);
   val body = rest(rest(args));
-  val block = cons(block_s, cons(name, body));
+  val block = rlcp(cons(block_s, cons(name, body)), body);
 
   if (!bindable(name))
     eval_error(form, lit("defmacro: ~s is not a bindable symbol"), name, nao);
@@ -1484,7 +1529,9 @@ static val op_defmacro(val form, val env)
 
   remhash(top_fb, name);
   /* defmacro captures lexical environment, so env is passed */
-  sethash(top_mb, name, cons(name, cons(env, cons(params, cons(block, nil)))));
+  sethash(top_mb, name,
+          rlcp_tree(cons(name, cons(env, cons(params, cons(block, nil)))),
+                    block));
   if (eval_initing)
     sethash(builtin, name, defmacro_s);
   return name;
@@ -1495,7 +1542,6 @@ static val expand_macro(val form, val expander, val menv)
   if (cobjp(expander)) {
     mefun_t fp = coerce(mefun_t, cptr_get(expander));
     val expanded = fp(form, menv);
-    sethash(origin_hash, expanded, form);
     return expanded;
   } else {
     debug_enter;
@@ -1576,7 +1622,7 @@ static val expand_macrolet(val form, val menv)
     val name = pop(&macro);
     val params = expand_params(pop(&macro), menv);
     val macro_ex = expand_forms(macro, menv);
-    val block = cons(block_s, cons(name, macro_ex));
+    val block = rlcp_tree(cons(block_s, cons(name, macro_ex)), macro_ex);
 
     builtin_reject_test(op, name, form);
 
@@ -1584,10 +1630,11 @@ static val expand_macrolet(val form, val menv)
      * so they can be treated uniformly. The nil after the name is
      * the ordinary lexical environment: a macrolet doesn't capture that.
      */
-    env_fbind(new_env, name, cons(nil, cons(params, cons(block, nil))));
+    rlcp_tree(env_fbind(new_env, name,
+              cons(nil, cons(params, cons(block, nil)))), block);
   }
 
-  return maybe_progn(expand_forms(body, new_env));
+  return rlcp_tree(maybe_progn(expand_forms(body, new_env)), body);
 }
 
 static val expand_symacrolet(val form, val menv)
@@ -3304,7 +3351,7 @@ tail:
       val mac_expand = expand_macro(form, macro, menv);
       if (mac_expand == form)
         return form;
-      form = rlcp_tree(mac_expand, form);
+      form = rlcp_tree(rlcp_tree(mac_expand, macro), form);
       goto tail;
     } else if (sym == progn_s) {
       val args = rest(form);
@@ -3373,14 +3420,14 @@ static val macroexpand_1(val form, val menv)
     val mac_expand = expand_macro(form, macro, menv);
     if (mac_expand == form)
       return form;
-    return rlcp_tree(mac_expand, form);
+    return rlcp_tree(rlcp_tree(mac_expand, macro), form);
   }
 
   if (bindable(form) && (macro = lookup_symac(menv, form))) {
     val mac_expand = cdr(macro);
     if (mac_expand == form)
       return form;
-    return rlcp_tree(mac_expand, form);
+    return rlcp_tree(mac_expand, macro);
   }
 
   return form;

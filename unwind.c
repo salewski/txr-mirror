@@ -531,34 +531,12 @@ val uw_throw(val sym, val args)
     }
 
     if (opt_loglevel >= 1) {
-      val is_msg = and2(stringp(car(args)), null(cdr(args)));
-      val msg_or_args = if3(is_msg, car(args), args);
-      val info = source_loc_str(last_form_evaled, nil);
-      val ex_info = source_loc_str(last_form_expanded, nil);
-      val origin = last_form_evaled;
-      format(std_error, lit("~a: unhandled exception of type ~a:\n"),
-             prog_string, sym, nao);
+      val prefix = format(nil, lit("~a:"), prog_string, nao);
 
-      if (info && sym != eval_error_s) {
-        format(std_error, lit("~a: possibly triggered at ~a by form ~!~s\n"),
-               prog_string, info, last_form_evaled, nao);
+      format(std_error, lit("~a unhandled exception of type ~a:\n"),
+             prefix, sym, nao);
 
-        while ((origin = lookup_origin(origin))) {
-          val oinfo = source_loc_str(origin, lit("(n/a)"));
-          format(std_error, lit("~a: which is an expansion at ~a of ~!~s\n"),
-                 prog_string, oinfo, origin, nao);
-        }
-      }
-
-      if (ex_info)
-        format(std_error, lit("~a: during expansion at ~a of form ~!~s\n"),
-               prog_string, ex_info, last_form_expanded, nao);
-
-      format(std_error,
-             if3(is_msg,
-                 lit("~a: message: ~!~a\n"),
-                 lit("~a: exception args: ~!~s\n")),
-             prog_string, msg_or_args, nao);
+      error_trace(sym, args, std_error, prefix);
     }
     if (uw_exception_subtype_p(sym, query_error_s) ||
         uw_exception_subtype_p(sym, file_error_s)) {
