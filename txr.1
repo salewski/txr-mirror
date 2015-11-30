@@ -10932,6 +10932,30 @@ and
 .code nil
 may not be used as function names. Neither can keyword symbols.
 
+It is possible to define methods with
+.codn defun ,
+as an alternative to the
+.code defmeth
+macro.
+
+To define a method, the syntax
+.cblk
+.meti (meth < type << name )
+.cble
+should be used as the argument to the
+.meta name
+parameter.
+
+The syntax
+.cblk
+.meti (defun (meth type name) args forms)
+.cble
+is equivalent to the
+.cblk
+.meti (defmeth type name args forms)
+.cble
+syntax.
+
 .TP* "Dialect Note:"
 In ANSI Common Lisp, keywords may be used as function names.
 In TXR Lisp, they may not.

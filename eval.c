@@ -1522,16 +1522,29 @@ static val op_defun(val form, val env)
   val name = first(args);
   val params = second(args);
   val body = rest(rest(args));
-  val block = cons(block_s, cons(name, body));
-  val fun = cons(name, cons(params, cons(block, nil)));
 
-  remhash(top_mb, name);
+  if (!consp(name)) {
+    val block = cons(block_s, cons(name, body));
+    val fun = cons(name, cons(params, cons(block, nil)));
 
-  /* defun captures lexical environment, so env is passed */
-  sethash(top_fb, name, cons(name, func_interp(env, fun)));
-  if (eval_initing)
-    sethash(builtin, name, defun_s);
-  return name;
+    remhash(top_mb, name);
+
+    /* defun captures lexical environment, so env is passed */
+    sethash(top_fb, name, cons(name, func_interp(env, fun)));
+    if (eval_initing)
+      sethash(builtin, name, defun_s);
+    return name;
+  } else {
+    val binding = lookup_fun(nil, intern(lit("defmeth"), system_package));
+    val type_sym = second(name);
+    val meth_name = third(name);
+    val block = cons(block_s, cons(meth_name, body));
+    val fun = cons(meth_name, cons(params, cons(block, nil)));
+
+    bug_unless (binding);
+
+    return funcall3(cdr(binding), type_sym, meth_name, func_interp(env, fun));
+  }
 }
 
 static val op_defmacro(val form, val env)
@@ -1617,7 +1630,9 @@ static void builtin_reject_test(val op, val sym, val form)
     val builtin_kind = gethash(builtin, sym);
     val is_operator = gethash(op_table, sym);
 
-    if (!bindable(sym)) {
+    if (op == defun_s && consp(sym) && car(sym) == meth_s) {
+      return;
+    } else if (!bindable(sym)) {
       eval_error(form, lit("~s: cannot bind ~s, which is not a bindable symbol"),
                  is_operator, sym, nao);
     } else if (opt_compat && opt_compat <= 107) {

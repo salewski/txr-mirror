@@ -24,7 +24,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-extern val struct_type_s;
+extern val struct_type_s, meth_s;
 val make_struct_type(val name, val super,
                      val static_slots, val slots,
                      val static_initfun, val initfun, val boactor);
