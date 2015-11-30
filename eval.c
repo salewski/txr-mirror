@@ -1023,8 +1023,10 @@ val set_dyn_env(val de)
   return old;
 }
 
-val funcall_interp(val env, val fun, struct args *args)
+val funcall_interp(val interp_fun, struct args *args)
 {
+  val env = interp_fun->f.env;
+  val fun = interp_fun->f.f.interp_fun;
   val def = cdr(fun);
   val params = car(def);
   val body = cdr(def);
