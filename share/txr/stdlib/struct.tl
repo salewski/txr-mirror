@@ -211,9 +211,10 @@
 
 (defun sys:defmeth (type-sym name fun)
   (let ((type (find-struct-type type-sym)))
-    (if type
-      (static-slot-ensure type-sym name fun)
-      (throwf 'eval-error "~s: ~s isn't a struct type" 'defmeth type-sym))))
+    (unless type
+      (throwf 'eval-error "~s: ~s isn't a struct type" 'defmeth type-sym))
+    (static-slot-ensure type-sym name fun)
+    name))
 
 (defmacro defmeth (type-sym name arglist . body)
   ^(sys:defmeth ',type-sym ',name (lambda ,arglist
