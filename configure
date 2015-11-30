@@ -105,6 +105,7 @@ inline=
 platform_cflags=
 remove_flags=
 lex_dbg_flags=
+conf_ldflags=
 platform_ldflags=
 txr_dbg_opts=--gc-debug
 valgrind=
@@ -685,6 +686,7 @@ BUILD_TARGETS := $(if [ $debug_also ] ; then
                      echo '$(PROG)'; fi)
 PLATFORM_CFLAGS := $platform_cflags
 PLATFORM_LDFLAGS := $platform_ldflags
+CONF_LDFLAGS := $conf_ldflags
 REMOVE_FLAGS := $remove_flags
 LEX_DBG_FLAGS := $lex_dbg_flags
 TXR_DBG_OPTS := $txr_dbg_opts
@@ -2319,6 +2321,20 @@ if conftest ; then
 else
   printf "no\n"
 fi
+
+#
+# Low stack size on Windows fails the man or boy test case.
+#
+
+printf "Do we need to set stack size ... "
+
+if uname -a | grep -q -E 'MINGW|CYGWIN' ; then
+  conf_ldflags='-Wl,--stack,16777216'
+  printf "yes\n"
+else
+  printf "no\n"
+fi
+
 
 #
 # Dependent variables
