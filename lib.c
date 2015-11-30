@@ -4950,7 +4950,7 @@ val generic_funcall(val fun, struct args *args_in)
 
     switch (fun->f.functype) {
     case FINTERP:
-      return interp_fun(fun->f.env, fun->f.f.interp_fun, args);
+      return funcall_interp(fun->f.env, fun->f.f.interp_fun, args);
     case F0:
       return fun->f.f.f0v(fun->f.env, args);
     case F1:
@@ -5000,7 +5000,7 @@ val funcall(val fun)
 
     switch (fun->f.functype) {
     case FINTERP:
-      return interp_fun(fun->f.env, fun->f.f.interp_fun, args);
+      return funcall_interp(fun->f.env, fun->f.f.interp_fun, args);
     case F0:
       return fun->f.f.f0v(fun->f.env, args);
     case N0:
@@ -5035,7 +5035,7 @@ val funcall1(val fun, val arg)
     switch (fun->f.functype) {
     case FINTERP:
       args_add(args, arg);
-      return interp_fun(fun->f.env, fun->f.f.interp_fun, args);
+      return funcall_interp(fun->f.env, fun->f.f.interp_fun, args);
     case F0:
       args_add(args, arg);
       return fun->f.f.f0v(fun->f.env, args);
@@ -5076,7 +5076,7 @@ val funcall2(val fun, val arg1, val arg2)
     switch (fun->f.functype) {
     case FINTERP:
       args_add2(args, arg1, arg2);
-      return interp_fun(fun->f.env, fun->f.f.interp_fun, args);
+      return funcall_interp(fun->f.env, fun->f.f.interp_fun, args);
     case F0:
       args_add2(args, arg1, arg2);
       return fun->f.f.f0v(fun->f.env, args);
@@ -5123,7 +5123,7 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
     switch (fun->f.functype) {
     case FINTERP:
       args_add3(args, arg1, arg2, arg3);
-      return interp_fun(fun->f.env, fun->f.f.interp_fun, args);
+      return funcall_interp(fun->f.env, fun->f.f.interp_fun, args);
     case F0:
       args_add3(args, arg1, arg2, arg3);
       return fun->f.f.f0v(fun->f.env, args);
@@ -5176,8 +5176,8 @@ val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
     switch (fun->f.functype) {
     case FINTERP:
       args_add4(args, arg1, arg2, arg3, arg4);
-      return interp_fun(fun->f.env, fun->f.f.interp_fun,
-                        args);
+      return funcall_interp(fun->f.env, fun->f.f.interp_fun,
+                            args);
     case F0:
       args_add4(args, arg1, arg2, arg3, arg4);
       return fun->f.f.f0v(fun->f.env, args);
