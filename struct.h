@@ -50,4 +50,5 @@ val method(val strct, val slotsym);
 val super_method(val strct, val slotsym);
 val uslot(val slot);
 val umethod(val slot);
+val method_name(val fun);
 void struct_init(void);

@@ -74,7 +74,7 @@ struct struct_inst {
   val slot[1];
 };
 
-val struct_type_s;
+val struct_type_s, meth_s;
 
 static cnum struct_id_counter;
 static val struct_type_hash;
@@ -95,6 +95,7 @@ void struct_init(void)
   protect(&struct_type_hash, &slot_hash, &struct_type_finalize_f,
           convert(val *, 0));
   struct_type_s = intern(lit("struct-type"), user_package);
+  meth_s = intern(lit("meth"), user_package);
   struct_type_hash = make_hash(nil, nil, nil);
   slot_hash = make_hash(nil, nil, t);
   struct_type_finalize_f = func_n1(struct_type_finalize);
@@ -1041,6 +1042,29 @@ static val struct_inst_equalsub(val obj)
     }
     return sub;
   }
+  return nil;
+}
+
+val method_name(val fun)
+{
+  val sth_iter = hash_begin(struct_type_hash);
+  val sth_cell;
+
+  while ((sth_cell = hash_next(sth_iter))) {
+    val sym = car(sth_cell);
+    val stype = cdr(sth_cell);
+    val sl_iter;
+    struct struct_type *st = coerce(struct struct_type *, stype->co.handle);
+
+    for (sl_iter = st->slots; sl_iter; sl_iter = cdr(sl_iter)) {
+      val slot = car(sl_iter);
+      loc ptr = lookup_static_slot(stype, st, slot);
+
+      if (!nullocp(ptr) && deref(ptr) == fun)
+        return list(meth_s, sym, slot, nao);
+    }
+  }
+
   return nil;
 }
 

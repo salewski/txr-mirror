@@ -51,6 +51,7 @@
 #include "txr.h"
 #include "combi.h"
 #include "lisplib.h"
+#include "struct.h"
 #include "cadr.h"
 #include "eval.h"
 
@@ -345,7 +346,9 @@ val func_get_name(val fun, val env)
       return func_get_name(fun, env->e.up_env);
     }
   } else {
-    val name = hash_revget(top_fb, fun, eq_f, cdr_f);
+    uses_or2;
+    val name = or2(hash_revget(top_fb, fun, eq_f, cdr_f),
+                   method_name(fun));
 
     if (name)
       return name;

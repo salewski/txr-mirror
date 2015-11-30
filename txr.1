@@ -13053,32 +13053,57 @@ which must be an interpreted function. The source code form has the syntax
 
 .coNP Function @ func-get-name
 .synb
-.mets (func-get-form << func <> [ env ])
+.mets (func-get-name << func <> [ env ])
 .syne
 .desc
 The
 .code func-get-name
 tries to resolve the function object
 .meta func
-to a name. If that is not possible, it tries to resolve it to
-a lambda expression denoting the source code form of the function.
-If neither a name nor code can be found, then
+to a name. If that is not possible, it returns
+.codn nil .
+
+The resolution is performed by an exhaustive search through
+up to three spaces.
+
+If an environment is specified by
+.metn env ,
+then this is searched first. If a binding is found in that
+environment which resolves to the function, then the search
+terminates and the binding's symbol is returned as the
+function's name.
+
+If the search through environment
+.meta env
+fails, or if that argument is not specified, then the
+global environment is searched for a function binding
+which resolves to
+.metn func .
+If such a binding is found, then the search terminates,
+and the binding's symbol is returned. If two or more
+symbols in the global environment resolve to the function,
+it is not specified which one is returned.
+
+If the global function environment search fails,
+then the function is considered as a possible method.
+The static slot space of all struct types is searched for
+a slot which contains
+.metn func .
+If such a slot is found, then the method name is returned,
+consisting of the syntax
+.cblk
+.meti (meth < type << name )
+.cble
+where
+.meta type
+is a symbol denoting the struct type and
+.meta name
+is the static slot of the struct type which holds
+.metn func .
+
+If all the searches fail, then
 .code nil
 is returned.
-
-The name or code information is searched in the environment
-specified by
-.meta env
-and if it is not found there, it similarly searches through the chain
-of parent environments, and finally the global environment.
-If
-.meta env
-is omitted, then only the global environment is searched.
-
-If a function binding is found which associates a symbol
-with
-.meta function
-then that symbol is returned. Variable bindings are not considered.
 
 .coNP Function @ func-get-env
 .synb
