@@ -54,10 +54,10 @@ typedef struct {
     goto debug_return_out;              \
   } while (0)
 
-INLINE val debug_check(val form, val bindings, val data, val line,
+INLINE val debug_check(val ctx, val bindings, val data, val line,
                        val pos, val base)
 {
-  return (opt_debugger) ? debug(form, bindings, data, line, pos, base) : nil;
+  return (opt_debugger) ? debug(ctx, bindings, data, line, pos, base) : nil;
 }
 
 debug_state_t debug_set_state(int depth, int step);

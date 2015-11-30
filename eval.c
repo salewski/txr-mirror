@@ -171,10 +171,34 @@ static void env_vb_to_fb(val env)
   }
 }
 
-noreturn val eval_error(val form, val fmt, ...)
+val ctx_form(val obj)
+{
+  if (consp(obj))
+    return obj;
+  if (interp_fun_p(obj))
+    return obj->f.f.interp_fun;
+  return nil;
+}
+
+val ctx_name(val obj)
+{
+  if (consp(obj)) {
+    if (car(obj) == lambda_s)
+      return list(lambda_s, second(obj), nao);
+    else
+      return car(obj);
+  }
+
+  if (interp_fun_p(obj))
+    return func_get_name(obj, obj->f.env);
+  return nil;
+}
+
+noreturn val eval_error(val ctx, val fmt, ...)
 {
   uses_or2;
   va_list vl;
+  val form = ctx_form(ctx);
   val stream = make_string_output_stream();
   val loc = or2(source_loc_str(form, nil),
                 source_loc_str(last_form_evaled, nil));
@@ -511,20 +535,13 @@ static val env_vbind_special(val env, val sym, val obj,
   }
 }
 
-static val abbrev_ctx(val ctx_form)
-{
-  if (car(ctx_form) == lambda_s)
-    return format(nil, lit(" for ~!~s"), ctx_form, nao);
-  return lit("");
-}
-
 static void copy_env_handler(mem_t *ptr, int parent)
 {
   val *penv = coerce(val *, ptr);
   *penv = copy_env(*penv);
 }
 
-static val bind_args(val env, val params, struct args *args, val ctx_form)
+static val bind_args(val env, val params, struct args *args, val ctx)
 {
   val new_env = make_env(nil, nil, env);
   val optargs = nil;
@@ -557,20 +574,20 @@ static val bind_args(val env, val params, struct args *args, val ctx_form)
         special_list = param;
         continue;
       } else {
-        eval_error(ctx_form, lit("~s: bad object ~s in param list"),
-                   car(ctx_form), sym, nao);
+        eval_error(ctx, lit("~s: bad object ~s in param list"),
+                   ctx_name(ctx), sym, nao);
       }
     }
 
     if (!bindable(param))
-      eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
-                 car(ctx_form), param, nao);
+      eval_error(ctx, lit("~s: ~s is not a bindable symbol"),
+                 ctx_name(ctx), param, nao);
 
     if (presentsym && !bindable(presentsym))
-      eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
-                 car(ctx_form), presentsym, nao);
+      eval_error(ctx, lit("~s: ~s is not a bindable symbol"),
+                 ctx_name(ctx), presentsym, nao);
 
-    arg = args_get_checked(ctx_form, args, &index);
+    arg = args_get(args, &index);
 
     if (optargs) {
       val initval = nil;
@@ -578,7 +595,7 @@ static val bind_args(val env, val params, struct args *args, val ctx_form)
 
       if (arg == colon_k) {
         if (initform) {
-          initval = eval(initform, new_env, ctx_form);
+          initval = eval(initform, new_env, ctx);
           new_env = make_env(nil, nil, new_env);
         }
       } else {
@@ -604,8 +621,7 @@ static val bind_args(val env, val params, struct args *args, val ctx_form)
       params = cdr(params);
     }
     if (!optargs)
-      eval_error(ctx_form, lit("~s: too few arguments~!~a"),
-                 car(ctx_form), abbrev_ctx(ctx_form), nao);
+      eval_error(ctx, lit("~s: too few arguments"), ctx_name(ctx), nao);
     while (consp(params)) {
       val param = car(params);
       if (param == colon_k)
@@ -614,17 +630,17 @@ static val bind_args(val env, val params, struct args *args, val ctx_form)
         val sym = pop(&param);
         val initform = pop(&param);
         val presentsym = pop(&param);
-        val initval = eval(initform, new_env, ctx_form);
+        val initval = eval(initform, new_env, ctx);
         if (!bindable(sym))
-          eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
-                     car(ctx_form), sym, nao);
+          eval_error(ctx, lit("~s: ~s is not a bindable symbol"),
+                     ctx_name(ctx), sym, nao);
 
         new_env = make_env(nil, nil, new_env);
         env_vbind_special(new_env, sym, initval, special_list);
         if (presentsym) {
           if (!bindable(presentsym))
-            eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
-                       car(ctx_form), presentsym, nao);
+            eval_error(ctx, lit("~s: ~s is not a bindable symbol"),
+                       ctx_name(ctx), presentsym, nao);
           env_vbind_special(new_env, presentsym, nil, special_list);
         }
       } else {
@@ -635,11 +651,11 @@ static val bind_args(val env, val params, struct args *args, val ctx_form)
     if (bindable(params))
       env_vbind_special(new_env, params, nil, special_list);
   } else if (params) {
-    eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
-               car(ctx_form), params, nao);
+    eval_error(ctx, lit("~s: ~s is not a bindable symbol"),
+               ctx_name(ctx), params, nao);
   } else if (args_more(args, index)) {
-    eval_error(ctx_form, lit("~s: too many arguments~!~a"),
-               car(ctx_form), abbrev_ctx(ctx_form), nao);
+    eval_error(ctx, lit("~s: too many arguments"),
+               ctx_name(ctx), nao);
   }
 
 
@@ -647,8 +663,8 @@ static val bind_args(val env, val params, struct args *args, val ctx_form)
 
   return new_env;
 twocol:
-  eval_error(ctx_form, lit("~s: multiple colons in parameter list"),
-             car(ctx_form), nao);
+  eval_error(ctx, lit("~s: multiple colons in parameter list"),
+             ctx_name(ctx), nao);
 }
 
 static val expand_opt_params_rec(val params, val menv, val *pspecials)
@@ -1000,18 +1016,18 @@ twocol:
              car(ctx_form), nao);
 }
 
-static val do_eval(val form, val env, val ctx_form,
+static val do_eval(val form, val env, val ctx,
                    val (*lookup)(val env, val sym));
 
-static void do_eval_args(val form, val env, val ctx_form,
+static void do_eval_args(val form, val env, val ctx,
                          val (*lookup)(val env, val sym),
                          struct args *args)
 {
   for (; consp(form); form = cdr(form))
-    args_add(args, do_eval(car(form), env, ctx_form, lookup));
+    args_add(args, do_eval(car(form), env, ctx, lookup));
 
   if (form) {
-    val dotpos = do_eval(form, env, ctx_form, lookup);
+    val dotpos = do_eval(form, env, ctx, lookup);
     args_add_list(args, if3(listp(dotpos), dotpos, tolist(dotpos)));
   }
 }
@@ -1034,11 +1050,11 @@ val funcall_interp(val interp_fun, struct args *args)
 
   if (!consp(firstparam) || car(firstparam) != special_s)
   {
-    val fun_env = bind_args(env, params, args, fun);
+    val fun_env = bind_args(env, params, args, interp_fun);
     return eval_progn(body, fun_env, body);
   } else {
     val saved_de = set_dyn_env(make_env(nil, nil, dyn_env));
-    val fun_env = bind_args(env, params, args, fun);
+    val fun_env = bind_args(env, params, args, interp_fun);
     val ret = eval_progn(body, fun_env, body);
     set_dyn_env(saved_de);
     return ret;
@@ -1057,12 +1073,12 @@ val eval_intrinsic(val form, val env)
   return ret;
 }
 
-static val do_eval(val form, val env, val ctx_form,
+static val do_eval(val form, val env, val ctx,
                    val (*lookup)(val env, val sym))
 {
   debug_enter;
 
-  debug_check(consp(form) ? form : ctx_form, env, nil, nil, nil, nil);
+  debug_check(consp(form) ? form : ctx, env, nil, nil, nil, nil);
   sig_check_fast();
 
   if (nilp(form)) {
@@ -1074,7 +1090,7 @@ static val do_eval(val form, val env, val ctx_form,
       val binding = lookup(env, form);
       if (binding)
         debug_return (cdr(binding));
-      eval_error(ctx_form, lit("unbound variable ~s"), form, nao);
+      eval_error(ctx, lit("unbound variable ~s"), form, nao);
       abort();
     }
   } else if (consp(form)) {
@@ -1121,19 +1137,19 @@ static val do_eval(val form, val env, val ctx_form,
   debug_leave;
 }
 
-val eval(val form, val env, val ctx_form)
+val eval(val form, val env, val ctx)
 {
-  return do_eval(form, env, ctx_form, &lookup_var);
+  return do_eval(form, env, ctx, &lookup_var);
 }
 
-static void eval_args_lisp1(val form, val env, val ctx_form, struct args *args)
+static void eval_args_lisp1(val form, val env, val ctx, struct args *args)
 {
-  do_eval_args(form, env, ctx_form, &lookup_sym_lisp1, args);
+  do_eval_args(form, env, ctx, &lookup_sym_lisp1, args);
 }
 
-static val eval_lisp1(val form, val env, val ctx_form)
+static val eval_lisp1(val form, val env, val ctx)
 {
-  return do_eval(form, env, ctx_form, &lookup_sym_lisp1);
+  return do_eval(form, env, ctx, &lookup_sym_lisp1);
 }
 
 val bindable(val obj)
@@ -1141,7 +1157,7 @@ val bindable(val obj)
   return (obj && symbolp(obj) && obj != t && !keywordp(obj)) ? t : nil;
 }
 
-val eval_progn(val forms, val env, val ctx_form)
+val eval_progn(val forms, val env, val ctx)
 {
   val retval = nil;
 
@@ -1151,22 +1167,22 @@ val eval_progn(val forms, val env, val ctx_form)
   }
 
   for (; forms; forms = cdr(forms))
-    retval = eval(car(forms), env, ctx_form);
+    retval = eval(car(forms), env, ctx);
 
   return retval;
 }
 
-static val eval_prog1(val forms, val env, val ctx_form)
+static val eval_prog1(val forms, val env, val ctx)
 {
   val retval = nil;
 
   if (forms) {
-    retval = eval(car(forms), env, ctx_form);
+    retval = eval(car(forms), env, ctx);
     forms = cdr(forms);
   }
 
   for (; forms; forms = cdr(forms))
-    eval(car(forms), env, ctx_form);
+    eval(car(forms), env, ctx);
 
   return retval;
 }
@@ -1218,7 +1234,7 @@ static void copy_bh_env_handler(mem_t *ptr, int parent)
 
 static val bindings_helper(val vars, val env, val sequential,
                            val *env_out, val ret_new_bindings,
-                           val ctx_form)
+                           val ctx)
 {
   val iter;
   struct bindings_helper_vars v;
@@ -1235,7 +1251,7 @@ static val bindings_helper(val vars, val env, val sequential,
 
     if (consp(item)) {
       var = pop(&item);
-      value = eval(pop(&item), if3(sequential, v.ne, env), ctx_form);
+      value = eval(pop(&item), if3(sequential, v.ne, env), ctx);
     } else {
       var = item;
     }
@@ -1254,8 +1270,8 @@ static val bindings_helper(val vars, val env, val sequential,
         ptail = list_collect (ptail, binding);
       v.ne = le;
     } else {
-      eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
-                 car(ctx_form), var, nao);
+      eval_error(ctx, lit("~s: ~s is not a bindable symbol"),
+                 ctx_name(ctx), var, nao);
     }
   }
 
@@ -1268,7 +1284,7 @@ static val bindings_helper(val vars, val env, val sequential,
   return new_bindings;
 }
 
-static val fbindings_helper(val vars, val env, val lbind, val ctx_form)
+static val fbindings_helper(val vars, val env, val lbind, val ctx)
 {
   val iter;
   val nenv = make_env(nil, nil, env);
@@ -1277,13 +1293,13 @@ static val fbindings_helper(val vars, val env, val lbind, val ctx_form)
   for (iter = vars; iter; iter = cdr(iter)) {
     val item = car(iter);
     val var = pop(&item);
-    val value = eval(pop(&item), lenv, ctx_form);
+    val value = eval(pop(&item), lenv, ctx);
 
     if (bindable(var)) {
       (void) env_fbind(nenv, var, value);
     } else {
-      eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
-                 car(ctx_form), var, nao);
+      eval_error(ctx, lit("~s: ~s is not a bindable symbol"),
+                 ctx_name(ctx), var, nao);
     }
   }
 

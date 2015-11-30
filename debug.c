@@ -34,14 +34,15 @@
 #include <signal.h>
 #include "config.h"
 #include "lib.h"
-#include "debug.h"
 #include "gc.h"
 #include "args.h"
 #include "signal.h"
 #include "unwind.h"
 #include "stream.h"
 #include "parser.h"
+#include "eval.h"
 #include "txr.h"
+#include "debug.h"
 
 int opt_debugger;
 int debug_depth;
@@ -93,9 +94,10 @@ static void show_bindings(val env, val stream)
   }
 }
 
-val debug(val form, val bindings, val data, val line, val pos, val base)
+val debug(val ctx, val bindings, val data, val line, val pos, val base)
 {
   uses_or2;
+  val form = ctx_form(ctx);
   val rl = source_loc(form);
   cons_bind (lineno, file, rl);
 
