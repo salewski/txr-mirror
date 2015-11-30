@@ -52,7 +52,7 @@ val func_get_name(val fun, val env);
 void reg_varl(val sym, val val);
 void reg_var(val sym, val val);
 void reg_fun(val sym, val fun);
-val apply(val fun, val arglist, val ctx_form);
+val apply(val fun, val arglist);
 val apply_intrinsic(val fun, val args);
 val eval_progn(val forms, val env, val ctx_form);
 val eval(val form, val env, val ctx_form);

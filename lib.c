@@ -5447,7 +5447,7 @@ val chandv(struct args *funlist)
 
 static val do_juxt(val funcs, struct args *args)
 {
-  return mapcar(curry_123_1(func_n3(apply), args_get_list(args), nil), funcs);
+  return mapcar(curry_12_1(func_n2(apply), args_get_list(args)), funcs);
 }
 
 val juxtv(struct args *funlist)
@@ -5553,7 +5553,7 @@ val orv(struct args *funlist)
 
 static val do_not(val fun, struct args *args)
 {
-  return null(apply(fun, args_get_list(args), nil));
+  return null(apply(fun, args_get_list(args)));
 }
 
 val notf(val fun)

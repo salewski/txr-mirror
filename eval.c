@@ -500,7 +500,7 @@ static val special_var_p(val sym)
 }
 
 static val env_vbind_special(val env, val sym, val obj,
-                             val special_list, val ctx_form)
+                             val special_list)
 {
   if (special_list && memq(sym, special_list)) {
     if (dyn_env)
@@ -585,17 +585,17 @@ static val bind_args(val env, val params, struct args *args, val ctx_form)
         initval = arg;
         present = t;
       }
-      env_vbind_special(new_env, param, initval, special_list, ctx_form);
+      env_vbind_special(new_env, param, initval, special_list);
       if (presentsym)
-        env_vbind_special(new_env, presentsym, present, special_list, ctx_form);
+        env_vbind_special(new_env, presentsym, present, special_list);
     } else {
-      env_vbind_special(new_env, param, arg, special_list, ctx_form);
+      env_vbind_special(new_env, param, arg, special_list);
     }
   }
 
   if (bindable(params)) {
     env_vbind_special(new_env, params, args_get_rest(args, index),
-                      special_list, ctx_form);
+                      special_list);
   } else if (consp(params)) {
     if (car(params) == colon_k) {
       if (optargs)
@@ -620,20 +620,20 @@ static val bind_args(val env, val params, struct args *args, val ctx_form)
                      car(ctx_form), sym, nao);
 
         new_env = make_env(nil, nil, new_env);
-        env_vbind_special(new_env, sym, initval, special_list, ctx_form);
+        env_vbind_special(new_env, sym, initval, special_list);
         if (presentsym) {
           if (!bindable(presentsym))
             eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
                        car(ctx_form), presentsym, nao);
-          env_vbind_special(new_env, presentsym, nil, special_list, ctx_form);
+          env_vbind_special(new_env, presentsym, nil, special_list);
         }
       } else {
-        env_vbind_special(new_env, param, nil, special_list, ctx_form);
+        env_vbind_special(new_env, param, nil, special_list);
       }
       params = cdr(params);
     }
     if (bindable(params))
-      env_vbind_special(new_env, params, nil, special_list, ctx_form);
+      env_vbind_special(new_env, params, nil, special_list);
   } else if (params) {
     eval_error(ctx_form, lit("~s: ~s is not a bindable symbol"),
                car(ctx_form), params, nao);
@@ -756,7 +756,7 @@ static val get_param_syms(val params)
   }
 }
 
-val apply(val fun, val arglist, val ctx_form)
+val apply(val fun, val arglist)
 {
   args_decl_list(args, ARGS_MIN, arglist);
   return generic_funcall(fun, args);
@@ -779,7 +779,7 @@ static val apply_frob_args(val args)
 
 val apply_intrinsic(val fun, val args)
 {
-  return apply(fun, apply_frob_args(z(args)), nil);
+  return apply(fun, apply_frob_args(z(args)));
 }
 
 static val applyv(val fun, struct args *args)
@@ -815,7 +815,7 @@ static val iapply(val fun, struct args *args)
     }
   }
 
-  return apply(fun, z(mod_args), nil);
+  return apply(fun, z(mod_args));
 }
 
 static val list_star_intrinsic(struct args *args)
@@ -865,7 +865,7 @@ static val bind_macro_params(val env, val menv, val params, val form,
                             whole,
                             if3(param == form_k,
                                 ctx_form, menv)),
-                        specials, ctx_form);
+                        specials);
       params = cdr(next);
       continue;
     }
@@ -885,7 +885,7 @@ static val bind_macro_params(val env, val menv, val params, val form,
       }
 
       if (bindable(param)) {
-        env_vbind_special(new_env, param, car(form), specials, ctx_form);
+        env_vbind_special(new_env, param, car(form), specials);
       } else if (consp(param)) {
         if (optargs) {
           val nparam = pop(&param);
@@ -903,7 +903,7 @@ static val bind_macro_params(val env, val menv, val params, val form,
                                       nparam, car(form), t, ctx_form);
 
           if (presentsym)
-            env_vbind_special(new_env, presentsym, t, specials, ctx_form);
+            env_vbind_special(new_env, presentsym, t, specials);
         } else {
           new_env = bind_macro_params(new_env, menv,
                                       param, car(form),
@@ -937,7 +937,7 @@ static val bind_macro_params(val env, val menv, val params, val form,
 
 noarg:
     if (bindable(param)) {
-      env_vbind_special(new_env, param, nil, specials, ctx_form);
+      env_vbind_special(new_env, param, nil, specials);
     } else if (consp(param)) {
       val nparam = pop(&param);
       val initform = pop(&param);
@@ -958,7 +958,7 @@ noarg:
       }
 
       if (presentsym)
-        env_vbind_special(new_env, presentsym, nil, specials, ctx_form);
+        env_vbind_special(new_env, presentsym, nil, specials);
     } else {
       err_sym = param;
       goto nbind;
@@ -972,7 +972,7 @@ noarg:
       err_sym = params;
       goto nbind;
     }
-    env_vbind_special(new_env, params, form, specials, ctx_form);
+    env_vbind_special(new_env, params, form, specials);
     goto out;
   }
 
@@ -3523,7 +3523,7 @@ val mapcarv(val fun, struct args *lists)
         deref(car_l(iter)) = cdr(list);
       }
 
-      otail = list_collect(otail, apply(fun, z(args), nil));
+      otail = list_collect(otail, apply(fun, z(args)));
     }
   }
 }
@@ -3558,7 +3558,7 @@ static val mappendv(val fun, struct args *lists)
         deref(car_l(iter)) = cdr(list);
       }
 
-      otail = list_collect_append(otail, apply(fun, z(args), nil));
+      otail = list_collect_append(otail, apply(fun, z(args)));
     }
   }
 }
@@ -3591,7 +3591,7 @@ static val lazy_mapcarv_func(val env, val lcons)
   val args = mapcar(car_f, lofl);
   val next = mapcar(cdr_f, lofl);
 
-  rplaca(lcons, apply(fun, z(args), nil));
+  rplaca(lcons, apply(fun, z(args)));
   rplacd(env, next);
 
   if (all_satisfy(next, identity_f, identity_f))
@@ -3651,7 +3651,7 @@ static val mapdov(val fun, struct args *lists)
         deref(car_l(iter)) = cdr(list);
       }
 
-      apply(fun, z(args), nil);
+      apply(fun, z(args));
     }
   }
 }
@@ -4179,7 +4179,7 @@ static val do_mapf(val env, struct args *args)
 {
   cons_bind (fun, funlist, env);
   val mapped_args = mapcarl(call_f, cons(funlist, cons(args_get_list(args), nil)));
-  return apply(fun, z(mapped_args), nil);
+  return apply(fun, z(mapped_args));
 }
 
 static val mapf(val fun, struct args *funlist)
