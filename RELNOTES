@@ -1,3 +1,34 @@
+                                    TXR 126
+                                   2015-11-29
+
+
+  Features
+
+  - New functions window-map and window-mappend for filtering sequences
+    with a sliding window context surrounding the current element.
+  - New macro define-accessor for easily extending functions
+    to be accessors (supporting assignment).
+  - Diagnostics for unhandled exceptions, and those caught in the REPL,
+    now include a detail trace of the macro-expansion which created the
+    form in which they originate.
+  - Increased stack size on Windows (MinGW and Cygwin).
+
+  Bugs
+
+  - Regression in super function: when called with a struct instance, was
+    returning its type rather than supertype.
+  - Incorrect behavior (failure) in split and partition functions when index
+    argument is a function, and returns nil.
+  - Fixed regression in transpose function, causing it to be destructive.
+  - Fixed sethash: it was returning a boolean rather than the stored value,
+    as documented.
+  - Improved clarity of error messages which identify destructuring mismatches
+    in macro calls and macro-like binding constructs.
+  - Fixed poorly informative diagnostic when defmeth is used on a nonexistent
+    struct type.
+
+
+
                                     TXR 125
                                    2015-11-20
 
