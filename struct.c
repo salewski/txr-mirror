@@ -1060,8 +1060,24 @@ val method_name(val fun)
       val slot = car(sl_iter);
       loc ptr = lookup_static_slot(stype, st, slot);
 
-      if (!nullocp(ptr) && deref(ptr) == fun)
+      if (!nullocp(ptr) && deref(ptr) == fun) {
+        val sstype;
+
+        while ((sstype = super(stype)) != nil) {
+          struct struct_type *sst = coerce(struct struct_type *,
+                                           sstype->co.handle);
+          loc sptr = lookup_static_slot(sstype, sst, slot);
+          if (!nullocp(sptr) && deref(sptr) == fun) {
+            stype = sstype;
+            sym = sst->name;
+            continue;
+          }
+
+          break;
+        }
+
         return list(meth_s, sym, slot, nao);
+      }
     }
   }
 
