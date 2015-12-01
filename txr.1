@@ -18723,6 +18723,16 @@ are applied to the structure as if it were a function, the
 method is invoked with those arguments, with the object itself inserted
 into the leftmost argument position.
 
+If
+.code defmeth
+is used to redefine an existing method, the semantics can be inferred
+from that of
+.codn static-slot-ensure .
+In particular, the method will be imposed into all subtypes which do not
+override the method using an instance slot, overwriting any subtype-specific
+methods stored in static slots of the same name. These subtype methods
+have to be individually reinstated, if they are required.
+
 .coNP Macros @ new and @ lnew
 .synb
 .mets (new >> { name | >> ( name << arg *)} >> { slot << init-form }*)
@@ -19728,45 +19738,36 @@ must be a static slot of this type.
 .desc
 The
 .code static-slot-ensure
-function is similar to
-.codn static-slot-set .
+first ensures that the struct type
+.meta type
+and all struct types derived from it have a static slot called
+.metn name .
+The slot is added as a static slot to every eligible type which doesn't already
+have an instance or static slot by that name.
 
-It
+Then,
 .meta new-value
-into the static slot named by symbol
+is stored into all of the
 .meta name
-of the structure type
-.metn type ,
-if there already exists such a static slot.
+static slots of
+.meta type
+and all its derived types.
 
-If the slot does not exist, it is first added to
-the struct type, provided that
+If
+.meta type
+itself already has an instance slot called
 .meta name
-is a bindable symbol. Moreover,
-the struct type must not already have
-an instance slot by that name,
-unless the
+then an error is thrown, and the function has no effect.  If the same situation
+is true of the subtypes of
+.meta type
+then the situation is ignored: for those subtypes, no static slot is added, and
+.meta new-value
+is not stored. If the
 .meta no-error-p
-parameter is specified and true.
-If the
-.meta no-error-p
-parameter is true, then the function does
-not throw an error and does not create a
-static slot.
-
-The function returns
-.metn new-value .
-
-Note: if structure types already exist which are derived from
-.metn type ,
-.code static-slot-ensure
-is recursively invoked on each derived type to ensure that these
-types also have this static slot and it is given the specified value. The
-.meta no-error-p
-parameter is
-.code nil
-in these recursive calls, so that the static slot is only added
-to those structures which do not already have an instance slot.
+argument is present, and its value is true, then
+.meta type
+is treated just like the subtypes: if it has a conflicting instance slot,
+then the situation is ignored and the subtypes are processed anyway.
 
 .coNP Function @ call-super-method
 .synb

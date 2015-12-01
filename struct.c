@@ -764,6 +764,7 @@ val static_slot_ensure(val stype, val sym, val newval, val no_error_p)
 {
   val self = lit("static-slot-ensure");
   struct struct_type *st = stype_handle(&stype, self);
+  loc ptr;
 
   if (!bindable(sym))
     uw_throwf(error_s, lit("~a: ~s isn't a valid slot name"),
@@ -774,23 +775,23 @@ val static_slot_ensure(val stype, val sym, val newval, val no_error_p)
   if (st->eqmslot == -1)
     st->eqmslot = 0;
 
-  {
-    loc ptr = lookup_static_slot(stype, st, sym);
-    if (!nullocp(ptr))
-      return set(ptr, newval);
+  if (nullocp((ptr = lookup_static_slot(stype, st, sym)))) {
+    if (!memq(sym, st->slots)) {
+      st->stslot = coerce(val *, chk_manage_vec(coerce(mem_t *, st->stslot),
+                                                st->nstslots, st->nstslots + 1,
+                                                sizeof (val),
+                                                coerce(mem_t *, &newval)));
+      set(mkloc(st->slots, stype), append2(st->slots, cons(sym, nil)));
+      sethash(slot_hash, cons(sym, num_fast(st->id)),
+              num(st->nstslots++ + STATIC_SLOT_BASE));
+    } else {
+      if (!no_error_p)
+        uw_throwf(error_s, lit("~a: ~s is an instance slot of ~s"),
+                  self, sym, stype, nao);
+    }
+  } else {
+    set(ptr, newval);
   }
-
-  if (!no_error_p && memq(sym, st->slots))
-    uw_throwf(error_s, lit("~a: ~s is an instance slot of ~s"),
-              self, sym, stype, nao);
-
-  st->stslot = coerce(val *, chk_manage_vec(coerce(mem_t *, st->stslot),
-                                            st->nstslots, st->nstslots + 1,
-                                            sizeof (val),
-                                            coerce(mem_t *, &newval)));
-  set(mkloc(st->slots, stype), append2(st->slots, cons(sym, nil)));
-  sethash(slot_hash, cons(sym, num_fast(st->id)),
-          num(st->nstslots++ + STATIC_SLOT_BASE));
 
   {
     val iter;
