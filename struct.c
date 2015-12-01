@@ -276,8 +276,10 @@ val make_struct_type(val name, val super,
 
     sethash(struct_type_hash, name, stype);
 
-    if (super)
+    if (super) {
       mpush(stype, mkloc(su->dvtypes, super));
+      memcpy(st->stslot, su->stslot, sizeof (val) * su->nstslots);
+    }
 
     call_stinitfun_chain(st, stype);
 

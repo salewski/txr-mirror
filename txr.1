@@ -18249,8 +18249,17 @@ but are of a different kind: an instance slot in the supertype
 can be replaced by a static slot in the derived type or vice versa.
 
 A structure type is associated with a static initialization function
-which may be used to store initial values into static slots. It is
-invoked when the type is created.
+which may be used to store initial values into static slots. This function
+is invoked once in a type's life time, when the type is created.
+The function is also inherited by derived struct types and invoked when
+they are created.
+
+If a newly introduced (that is to say, non-inherited) static slot isn't
+initialized by the static initialization function, its value defaults to
+.codn nil .
+If an inherited slot isn't initialized by its supertype's initialization
+function, then its initial value in the new type is a copy of the current
+value of the supertype's corresponding slot.
 
 .NP* Functors
 
@@ -19103,8 +19112,8 @@ de-duplicating the resulting list as if by the
 function. Thus, any slots which are already present in the supertype are
 removed. If the structure has no supertype, then the list of supertype
 slots is taken to be empty. When a structure is instantiated, it shall have all
-the slots specified in the effective list of slots, each slot initialized to
-the value
+the slots specified in the effective list of slots. Each instance slot
+shall be initialized to the value
 .codn nil ,
 prior to the invocation of
 .meta initfun
@@ -19117,7 +19126,17 @@ argument either specifies an initialization function, or is
 .codn nil ,
 which is equivalent to specifying a function which does nothing.
 
-If specified, this function must
+Prior to the invocation of
+.metn static-initfun ,
+each new static slot shall be initialized to the value
+.code nil
+and each inherited static slot shall be initialized to
+the current value which the corresponding static slot
+holds in the supertype.
+
+If specified,
+.meta static-initfun
+function must
 accept one argument. When the structure type is created (before
 the
 .code make-struct-type
