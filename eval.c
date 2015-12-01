@@ -233,11 +233,11 @@ void error_trace(val exsym, val exvals, val out_stream, val prefix)
     format(out_stream, lit("~a ~!~a\n"), prefix, car(exvals), nao);
 
   if (info && exsym != eval_error_s) {
-    val first = t;
+    val first, origin, oinfo;
 
-    while (last) {
-      val origin = lookup_origin(last);
-      val oinfo = source_loc_str(origin, nil);
+    for (first = t; last; last = origin, info = oinfo, first = nil) {
+      origin = lookup_origin(last);
+      oinfo = source_loc_str(origin, nil);
 
       if (first) {
         if (origin)
@@ -246,17 +246,13 @@ void error_trace(val exsym, val exvals, val out_stream, val prefix)
         else
           format(out_stream, lit("~a possibly triggered at ~a by form ~!~s\n"),
                  prefix, info, last, nao);
-        first = nil;
       }
 
       if (origin)
         format(out_stream, lit("~a ... an expansion at ~a of ~!~s\n"),
                prefix, info, origin, nao);
-      else
+      else if (!first)
         format(out_stream, lit("~a which is located at ~a\n"), prefix, info, nao);
-
-      last = origin;
-      info = oinfo;
     }
   }
 
