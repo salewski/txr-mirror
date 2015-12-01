@@ -54,7 +54,8 @@ static void dir_tables_init(void)
                                             shift swap sys:l1-setq
                                             sys:lisp1-setq sys:qquote
                                             sys:quasi sys:quasilist sys:setq
-                                            sys:setqf))
+                                            sys:setqf new lnew
+                                            meth umeth usl))
                           (list text))))))
 @(define generate (txr-p))
 @  (output @(if txr-p "txr.vim" "tl.vim") :named out)
