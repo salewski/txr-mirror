@@ -1089,15 +1089,15 @@ read_syms()
       ;;
     S )
       if [ -n "$deferred_offset" ] ; then
-      size=$(( offset - deferred_offset ))
-      case "$deferred_sym" in
-      SIZEOF* )
-        eval $(printf "%s=%d\n" "$deferred_sym" "$size")
-          if [ -n "$print_into_config" ] ; then
-          printf "#define %s %s\n" "$deferred_sym" "$size" >> $config_h
-          fi
-        ;;
-      esac
+        size=$(( offset - deferred_offset ))
+        case "$deferred_sym" in
+        SIZEOF* )
+          eval $(printf "%s=%d\n" "$deferred_sym" "$size")
+            if [ -n "$print_into_config" ] ; then
+              printf "#define %s %s\n" "$deferred_sym" "$size" >> $config_h
+            fi
+          ;;
+        esac
       fi
       deferred_sym=$symbol
       deferred_offset=$offset
