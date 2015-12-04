@@ -57,7 +57,7 @@ struct strm_ops {
   val (*unget_byte)(val, int);
   val (*close)(val, val);
   val (*flush)(val);
-  val (*seek)(val, cnum, enum strm_whence);
+  val (*seek)(val, val, enum strm_whence);
   val (*truncate)(val, val);
   val (*get_prop)(val, val ind);
   val (*set_prop)(val, val ind, val);

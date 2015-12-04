@@ -55,6 +55,7 @@
 #include "signal.h"
 #include "unwind.h"
 #include "args.h"
+#include "sysif.h"
 #include "stream.h"
 #include "utf8.h"
 #include "eval.h"
@@ -152,7 +153,7 @@ static noreturn val unimpl_unget_byte(val stream, int byte)
   unimpl(stream, lit("unget-byte"));
 }
 
-static noreturn val unimpl_seek(val stream, cnum off, enum strm_whence whence)
+static noreturn val unimpl_seek(val stream, val off, enum strm_whence whence)
 {
   unimpl(stream, lit("seek-stream"));
 }
@@ -202,7 +203,7 @@ static val null_flush(val stream)
   return nil;
 }
 
-static val null_seek(val stream, cnum off, enum strm_whence whence)
+static val null_seek(val stream, val off, enum strm_whence whence)
 {
   return nil;
 }
@@ -466,19 +467,17 @@ static val stdio_flush(val stream)
          ? t : stdio_maybe_error(stream, lit("flushing"));
 }
 
-static val stdio_seek(val stream, cnum offset, enum strm_whence whence)
+static val stdio_seek(val stream, val offset, enum strm_whence whence)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
 
   errno = 0;
 
   if (h->f != 0) {
-    if (offset == 0 && whence == strm_cur) {
-      long where = ftell(h->f);
-      if (where >= 0)
-        return num(where);
+    if (offset == zero && whence == strm_cur) {
+      return stdio_ftell(h->f);
     } else {
-      if (fseek(h->f, offset, whence) == 0) {
+      if (stdio_fseek(h->f, offset, whence) != negone) {
         utf8_decoder_init(&h->ud);
         h->unget_c = nil;
         return t;
@@ -2754,7 +2753,6 @@ val seek_stream(val stream, val offset, val whence)
 {
   struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
   enum strm_whence w;
-  cnum off = c_num(offset);
 
   if (whence == from_start_k)
     w = strm_start;
@@ -2766,7 +2764,7 @@ val seek_stream(val stream, val offset, val whence)
     uw_throwf(file_error_s, lit("seek: ~a is not a valid whence argument"),
               whence, nao);
 
-  return ops->seek(stream, off, w);
+  return ops->seek(stream, offset, w);
 }
 
 val truncate_stream(val stream, val len)

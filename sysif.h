@@ -32,7 +32,21 @@ extern val dev_s, ino_s, mode_s, nlink_s, uid_s;
 extern val gid_s, rdev_s, size_s, blksize_s, blocks_s;
 extern val atime_s, mtime_s, ctime_s;
 
+#if !HAVE_FTRUNCATE
+typedef long off_t;
+#define OFF_T_MAX LONG_MAX
+#define OFF_T_MIN LONG_MIN
+#else
+#define OFF_T_MAX ((((convert(off_t, 1) << \
+                      ((sizeof(off_t) * CHAR_BIT) - 2)) - 1) << 1) + 1)
+#define OFF_T_MIN (-OFF_T_MAX)
+#endif
+
 val getenv_wrap(val name);
 val statp(val path);
 val statf(val path);
+off_t off_t_num(val num);
+val num_off_t(off_t offnum);
+val stdio_ftell(FILE *);
+val stdio_fseek(FILE *, val, int whence);
 void sysif_init(void);

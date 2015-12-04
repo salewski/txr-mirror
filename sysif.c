@@ -72,6 +72,7 @@
 #include "eval.h"
 #include "args.h"
 #include "struct.h"
+#include "arith.h"
 #include "txr.h"
 #include "sysif.h"
 
@@ -1035,6 +1036,98 @@ static val getgrnam_wrap(val wname)
 }
 
 #endif
+
+off_t off_t_num(val num)
+{
+  switch (type(num)) {
+  case NUM:
+    if (sizeof (cnum) <= sizeof (off_t)) {
+      return c_num(num);
+    } else {
+      cnum n = c_num(num);
+      if (n > OFF_T_MAX || n < OFF_T_MIN)
+        goto toobig;
+      return n;
+    }
+  case BGNUM:
+    {
+      const int odig = (sizeof (off_t) / sizeof (mp_digit));
+      int i;
+      off_t out;
+      mp_int *mpn = mp(num);
+
+      if (odig > 1) {
+        if (USED(mpn) > odig)
+          goto toobig;
+
+        if (USED(mpn) == odig &&
+            (DIGITS(mpn)[USED(mpn) - 1] >> (MP_DIGIT_BIT - 1)) != 0)
+          goto toobig;
+
+        for (out = 0, i = USED(mpn) - 1; i >= 0; i--) {
+          out <<= MP_DIGIT_BIT * (odig > 1);
+          out |= DIGITS(mpn)[i];
+        }
+
+        return (ISNEG(mpn)) ? -out : out;
+      } else {
+        mp_digit d = DIGITS(mpn)[0];
+
+        if (USED(mpn) > 1)
+          goto toobig;
+
+        if (d > OFF_T_MAX)
+          goto toobig;
+
+        return (ISNEG(mpn)) ? d : -d;
+      }
+    }
+  default:
+    uw_throwf(error_s, lit("~s isn't a file offset"), num, nao);
+  toobig:
+    uw_throwf(error_s, lit("~s cannot fit into a file offset"), num, nao);
+  }
+}
+
+val num_off_t(off_t off)
+{
+  if (sizeof (off_t) <= sizeof (cnum)) {
+    return num(off);
+  } else if (NUM_MIN <= off && off <= NUM_MAX) {
+      return num(off);
+  } else {
+#if HAVE_DOUBLE_INTPTR_T
+    if (sizeof (off_t) <= sizeof (double_intptr_t)) {
+      val n = make_bignum();
+      mp_set_double_intptr(mp(n), off);
+      return n;
+    } else {
+      abort();
+    }
+#else
+#error port me!
+#endif
+  }
+}
+
+val stdio_ftell(FILE *f)
+{
+#if HAVE_FSEEKO
+  return num_off_t(ftello(f));
+#else
+  return num_off_t(ftell(f));
+#endif
+}
+
+val stdio_fseek(FILE *f, val off, int whence)
+{
+#if HAVE_FSEEKO
+  return num_off_t(fseeko(f, off_t_num(off), whence));
+#else
+  int ret = fseek(f, off_t_num(off), whence);
+  return (ret == -1) ? num_fast(ret) : stdio_ftell(f);
+#endif
+}
 
 void sysif_init(void)
 {
