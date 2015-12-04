@@ -96,7 +96,7 @@ yacc='$(cross)$(tool_prefix)$(yaccname)'
 yacc_given=
 nm='$(cross)$(tool_prefix)nm'
 opt_flags=-O2
-lang_flags='-ansi -D_XOPEN_SOURCE=600'
+lang_flags='-ansi -D_XOPEN_SOURCE=700'
 diag_flags='-Wall -Werror=implicit-function-declaration -Werror=missing-prototypes -Werror=strict-prototypes'
 debug_flags=-g
 debug_only_flags=-DTXR_DEBUG
@@ -2335,6 +2335,75 @@ else
   printf "no\n"
 fi
 
+#
+# Do we have fseeko and ftello?
+#
+
+printf "Checking for fseeko and ftello ... "
+
+cat > conftest.c <<!
+#include <stdio.h>
+#include <sys/types.h>
+
+int main(int argc, char **argv)
+{
+  int res = fseeko(stdin, 0, SEEK_CUR);
+  off_t pos = ftello(stdin);
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_FSEEKO 1\n" >> $config_h
+else
+  printf "no\n"
+fi
+
+printf "Checking how to enable 64 bit file offsets ... "
+
+file_offset_define=none
+
+for try in NOTHING _LARGE_FILES=1 _FILE_OFFSET_BITS=64 ; do
+  cat > conftest.c <<!
+#include <sys/types.h>
+char SIZEOF_OFF_T[sizeof (off_t)];
+char DUMMY;
+!
+  if ! conftest_syms VERBOSE=y EXTRA_FLAGS=-D$try ; then
+    printf "failed\n\n"
+
+    printf "Errors from compilation: \n\n"
+    cat conftest.err
+    exit 1
+  fi
+
+  SIZEOF_OFF_T=0
+
+  read_syms
+
+  if [ $SIZEOF_OFF_T -eq 0 ] ; then
+    printf "failed\n"
+    exit 1
+  fi
+
+  if [ $SIZEOF_OFF_T -eq 8 ] ; then
+    if [ $try = NOTHING ] ; then
+      printf "default\n"
+      file_offset_define=
+    else
+      printf -- "-D%s\n" $try
+      file_offset_define=$try
+    fi
+    break;
+  fi
+done
+
+if [ "$file_offset_define" = none ] ; then
+  printf "unable\n"
+elif [ -n "$file_offset_define" ] ; then
+  lang_flags="$lang_flags -D$file_offset_define"
+fi
 
 #
 # Dependent variables
