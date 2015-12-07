@@ -4,6 +4,11 @@
 @(bind txlhash @(hash :equal-based))
 @(bind tgthash txrhash)
 @(bind tagmap @(hash :equal-based))
+@(bind closedtxt "<TT>[+]</TT>")
+@(bind opentxt "<TT>[-]</TT>")
+@(bind xpnall "[expand all]")
+@(bind clpsall "[collapse all]")
+@(bind closed t)
 @(do
    (defvar dupes (hash))
    (defvar tagnum (hash :equal-based))
@@ -66,9 +71,13 @@ Content-type: text/html
 @(collect :vars (TOC))
 @  (some)
 @    (cases)
-<DT><A HREF="#@tag">@rest
+<DT><A HREF="#@tag">@num @rest
+@      (bind TOC `<DT>@num <A HREF="#@[tagmap tag]">@rest`)
+@    (or)
+<A NAME="index">@(skip)
 @      (output :into TOC)
-<DT><A HREF="#@[tagmap tag]">@rest
+<H2>Contents</H2>
+<A HREF="#/" ONCLICK="toggleall(this)">@clpsall</A>
 @      (end)
 @    (or)
 @TOC
@@ -80,10 +89,23 @@ Content-type: text/html
 <DT><A HREF="#@tag">@(coll :vars (sym))<TT>@sym</TT>@(end)
 @    (do (mapdo (do unless [tgthash @1] (set [tgthash @1] [tagmap tag]))
                 sym))
+@  (and)
+<DT><A HREF="#@tag">@num @rest
+<DL>
+@    (cat TOC)
+@    (bind pos @(car (search-regex TOC #/<A/)))
+@    (bind id @(gensym))
+@    (do (set [TOC pos..pos]
+              `<A HREF="#/" ONCLICK="toggle(this, '@id')" CLASS="toggle">@(if closed closedtxt opentxt)</A>`))
+@    (output :into TOC)
+@TOC
+<DL ID="@id"@(if closed " STYLE=\"DISPLAY: NONE\"")>
+@    (end)
 @  (end)
 @(until)
 This document was created by
 @(end)
+@(flatten TOC)
 @(set BODY @(let ((inside-tt nil)
                   (inside-syntax nil))
               (mapcar (do cond
@@ -126,6 +148,34 @@ This document was created by
 @(output)
 <HTML>
 <HEAD><TITLE>Manpage for TXR @VERSION</TITLE>
+<script type="text/javascript">
+function toggle(link, id) {
+  var e = document.getElementById(id);
+  if (e.style.display == '') {
+    e.style.display = 'none';
+    link.innerHTML = '@closedtxt';
+  } else {
+    e.style.display = '';
+    link.innerHTML = '@opentxt';
+  }
+}
+function toggleall(link) {
+  var toc = document.getElementsByClassName("TOC");
+  var dls = toc[0].getElementsByTagName("DL");
+  var atoggles = toc[0].getElementsByClassName("toggle");
+  var disp = dls[0].style.display;
+  var ndisp = (disp == '') ? 'none' : '';
+  var nhtml = (disp == '') ? '@closedtxt' : '@opentxt'
+
+  for (var i = 0; i < dls.length; i++)
+    dls[i].style.display = ndisp;
+
+  for (var i = 0; i < atoggles.length; i++)
+    atoggles[i].innerHTML = nhtml;
+
+  link.innerHTML = (disp == '') ? '@xpnall' : '@clpsall';
+}
+</script>
 </HEAD><BODY>
 <H2>Manpage for <A HREF="#@[tagmap "lbAB"]">TXR </a>@VERSION</H2>
 <H2>@(time-string-utc TIME "%b %d, %Y")</H2>
@@ -138,9 +188,11 @@ This document was created by
 <img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
 </form>
 </p>
+<DIV CLASS="toc">
 @(repeat)
 @TOC
 @(end)
+</DIV>
 @(repeat)
 @BODY
 @(first)
