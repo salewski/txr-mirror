@@ -1070,7 +1070,7 @@ a previous newline-terminated line.
 Input streams which end without terminating their last line with a newline are
 tolerated, and are treated as if they had the terminator.
 
-Text which follows a variable has special semantics, discussed in the
+Text which follows a variable has special semantics, described in the
 section Variables below.
 
 A query may not leave a line of input partially matched. If any portion of a
@@ -1316,7 +1316,7 @@ match. A line containing no characters is not the same thing as the absence of
 a line, even though both abstractions imply an absence of characters.
 
 Like text which follows a variable, a regular expression directive which
-follows a variable has special semantics, discussed in the section Variables
+follows a variable has special semantics, described in the section Variables
 below.
 
 .SS* Variables
@@ -1455,7 +1455,7 @@ the trailing material did not occur.
 
 A variable may be followed by a piece of text, a regular expression directive,
 a function call, a directive, another variable, or nothing (i.e.  occurs at the
-end of a line). These cases are discussed in detail below.
+end of a line). These cases are described in detail below.
 
 .NP* Variable Followed by Nothing
 If the variable is followed by nothing, the negative match extends from the
@@ -2349,7 +2349,7 @@ introduced earlier. The
 constitute an entire identifier. In fact a symbol inside a
 directive is a
 .metn lident .
-This is discussed in the Symbol Tokens section under TXR LISP.
+This is described in the Symbol Tokens section under TXR LISP.
 A symbol must not be a number; tokens that look like numbers are treated as
 numbers and not symbols.
 
@@ -2800,7 +2800,7 @@ the
 and
 .code @(fail)
 directives.
-Blocks are discussed in the section BLOCKS below.
+Blocks are described in the section BLOCKS below.
 
 .coIP @(skip)
 Treat the remaining query as a subquery unit, and search the lines (or
@@ -2884,7 +2884,7 @@ clauses, in conjunction with
 .codn @(repeat) .
 
 .meIP @(define < name >> ( args ...))
-Introduces a function. Functions are discussed in the FUNCTIONS section below.
+Introduces a function. Functions are described in the FUNCTIONS section below.
 
 .coIP @(gather)
 Searches text for matches for multiple clauses which may occur in arbitrary
@@ -2947,16 +2947,16 @@ and
 
 .coIP @(fail)
 Terminate the processing of a block, as if it were a failed match.
-Blocks are discussed in the section BLOCKS below.
+Blocks are described in the section BLOCKS below.
 
 .coIP @(accept)
 Terminate the processing of a block, as if it were a successful match.
 What bindings emerge may depend on the kind of block: collect
-has special semantics.  Blocks are discussed in the section BLOCKS below.
+has special semantics.  Blocks are described in the section BLOCKS below.
 
 .coIP @(try)
 Indicates the start of a try block, which is related to exception
-handling, discussed in the EXCEPTIONS section below.
+handling, described in the EXCEPTIONS section below.
 
 .ccIP @ @(catch) and @ @(finally)
 Special clauses within
@@ -4728,7 +4728,7 @@ and one line down.
 
 There is one more keyword,
 .codn :vars ,
-discussed in the following section.
+described in the following section.
 
 .coNP Specifying variables in @ collect
 Normally, any variable for which a new binding occurs in a
@@ -7624,7 +7624,7 @@ can be used. This
 denotes that the function called
 .meta name
 is to be used as a filter.
-This is discussed in the next section Function Filters below.
+This is described in the next section Function Filters below.
 
 Built-in filters named by keywords:
 
@@ -9677,7 +9677,7 @@ operator.
 .NP* Compound Forms
 In \*(TL, there are two types of compound forms: the Lisp-2 style
 compound forms, denoted by ordinary lists that are expressed with parentheses.
-There are Lisp-1 style compound forms denoted by the DWIM Brackets, discussed
+There are Lisp-1 style compound forms denoted by the DWIM Brackets, described
 in the previous section.
 
 The first position of an ordinary Lisp-2 style compound form, is expected to
@@ -13894,7 +13894,7 @@ the comparison.  Structures with no
 method cannot participate in a comparison, resulting in an error.
 See the Equality Substitution section under Structures.
 
-Finally, if either of the arguments has a type other than the above discussed
+Finally, if either of the arguments has a type other than the above
 types, the situation is an error.
 
 .coNP Function @ greater
