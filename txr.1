@@ -28834,11 +28834,11 @@ function is similar to
 .codn search-regex ,
 except that when
 a match is found, it returns a position range, rather than a position
-and length. A cons is returned whose
-.code car
-indicates the position
+and length. A range object is returned whose
+.code from
+field indicates the position
 of the match, and whose
-.code cdr
+.code to
 indicates the position one element past the
 last character of the match. If the match is empty, the two integers
 are equal.

@@ -3550,7 +3550,7 @@ val tok_where(val str, val tok_regex)
 
   for (;;) {
     val range = range_regex(str, tok_regex, pos, nil);
-    cons_bind (match_start, match_end, range);
+    range_bind (match_start, match_end, range);
 
     if (!match_start)
       break;

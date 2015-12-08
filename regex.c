@@ -2388,7 +2388,7 @@ val range_regex(val haystack, val needle_regex, val start,
 
   if (result) {
     cons_bind (pos, len, result);
-    rplacd(result, plus(pos, len));
+    return rcons(pos, plus(pos, len));
   }
 
   return result;
@@ -2484,7 +2484,7 @@ val regsub(val regex, val repl, val str)
 val search_regst(val haystack, val needle_regex, val start_num, val from_end)
 {
   val range = range_regex(haystack, needle_regex, start_num, from_end);
-  return if2(range, sub_str(haystack, car(range), cdr(range)));
+  return if2(range, sub_str(haystack, from(range), to(range)));
 }
 
 val match_regst(val str, val regex, val pos_in)
