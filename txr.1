@@ -87,7 +87,7 @@
 ..
 .\" Directive heading
 .de dir
-.  SS* The \f[4]\\$1\f[] directive
+.  NP* The \f[4]\\$1\f[] directive
 ..
 .\" Multiple directive heading
 .de dirs
@@ -103,14 +103,14 @@
 .  if (\\n[.$]>0) \{\
 .    as s and \f[4]\\$1\f[]
 .  \}
-.  SS* The \\*s directives
+.  NP* The \\*s directives
 ..
 .\" heading with code in position 1
-.de c1SS
+.de c1NP
 .  ds s \\f[4]\\$1\\f[]
 .  shift
 .  as s " \\$*
-.  SS* \\*s
+.  NP* \\*s
 ..
 .\" utility macro for gathering material into "s" string.
 .\" a pair of arguments "@ arg" becomes arg set in code
@@ -869,7 +869,7 @@ if the query fails, and exits with a failed
 termination status. If the query succeeds, the variable bindings, if any,
 are output on standard output.
 
-.SH* BASIC QUERY SYNTAX AND SEMANTICS
+.SH* BASIC TXR SYNTAX
 .SS* Comments
 A query may contain comments which are delimited by the sequence
 .code @;
@@ -1535,7 +1535,7 @@ constitute the matching text which is bound to FOO.
 If the variable is followed by a function call, or a directive, the extent is
 determined by scanning the text for the first position where a match occurs
 for the entire remainder of the line. (For a description of functions,
-see FUNCTIONS.)
+see Functions.)
 
 For example:
 
@@ -1823,7 +1823,7 @@ text skipped over by
 .code @(y z w)
 is also bound to the variable
 .codn x .
-See FUNCTIONS below.
+See Functions below.
 
 In the
 .meta number
@@ -2886,7 +2886,7 @@ clauses, in conjunction with
 .codn @(repeat) .
 
 .meIP @(define < name >> ( args ...))
-Introduces a function. Functions are described in the FUNCTIONS section below.
+Introduces a function. Functions are described in the Functions section below.
 
 .coIP @(gather)
 Searches text for matches for multiple clauses which may occur in arbitrary
@@ -3049,7 +3049,9 @@ result values. See the TXR LISP section far below.
 
 .PP
 
-.SH* INPUT SCANNING AND DATA MANIPULATION
+.SH* DIRECTIVES
+
+.SS* Input Scanning and Data Manipulation
 
 .dir next
 
@@ -3475,7 +3477,7 @@ will stop when the
 .code @(eof)
 matches.
 
-.SS* Reducing Backtracking with Blocks
+.NP* Reducing Backtracking with Blocks
 
 .code skip
 can consume considerable CPU time when multiple skips are nested.  Consider:
@@ -5784,8 +5786,9 @@ Example:
   @(do (set [h a] b))
 .cble
 
-.SH* BLOCKS
-.SS* Overview
+.SS* Blocks
+
+.NP* Overview
 Blocks are sections of a query which are either denoted by a name,
 or are anonymous. They may nest: blocks can occur within blocks
 and other constructs.
@@ -5821,7 +5824,7 @@ and
 directives introduce implicit anonymous blocks,
 as do function bodies.
 
-.SS* Block Scope
+.NP* Block Scope
 
 The names of blocks are in a distinct namespace from the variable binding
 space. So
@@ -5867,7 +5870,7 @@ as the
 it extends over all of the material which follows the skip,
 to the end of the containing subquery.
 
-.SS* Block Nesting
+.NP* Block Nesting
 
 Blocks may nest, and nested blocks may have the same names as blocks in
 which they are nested. For instance:
@@ -5895,7 +5898,7 @@ a block scope in which the outer block is "shadowed"; that is to say,
 directives which refer to that block name within the nested block refer to the
 inner block, and not to the outer one.
 
-.SS* Block Semantics
+.NP* Block Semantics
 
 A block normally does nothing. The query material in the block is evaluated
 normally. However, a block serves as a termination point for
@@ -6028,7 +6031,7 @@ action of collecting the last
 binding into the list is not performed.
 .PP
 
-.SS* Data Extent of Terminated Blocks
+.NP* Data Extent of Terminated Blocks
 
 A query block may have matched some material prior to being terminated by
 .codn accept .
@@ -6194,7 +6197,7 @@ to the
 .code @second
 variable.
 
-.coSS Interaction Between the @ trailer and @ accept Directives
+.coNP Interaction Between the @ trailer and @ accept Directives
 
 If one of the clauses which follow a
 .code @(trailer)
@@ -6248,8 +6251,9 @@ Directives other than
 .code @(trailer)
 have no such special interaction with accept.
 
-.SH* FUNCTIONS
-.SS* Overview
+.SS* Functions
+
+.NP* Overview
 \*(TX functions allow a query to be structured to avoid repetition.
 On a theoretical note, because
 \*(TX functions support recursion, functions enable \*(TX to match some
@@ -6404,7 +6408,7 @@ through the parameter
 .code P
 "wins" the conflict with the direct binding.
 
-.SS* Definition Syntax
+.NP* Definition Syntax
 
 Function definition syntax comes in two flavors: vertical and horizontal.
 Horizontal definitions actually come in two forms, the distinction
@@ -6481,7 +6485,7 @@ and in any functions invoked from that body.
 
 The body of a function is an anonymous block. (See BLOCKS above).
 
-.SS* Two Forms of The Horizontal Function
+.NP* Two Forms of The Horizontal Function
 
 If a horizontal function is defined as the only element of a line,
 it may not be followed by additional material. The following
@@ -6522,14 +6526,14 @@ The main use of this form is for nested horizontal functions:
   @(define fun)@(define local_fun)...@(end)@(end)
 .cble
 
-.SS* Vertical-Horizontal Overloading
+.NP* Vertical-Horizontal Overloading
 
 A function of the same name may be defined as both vertical and horizontal.
 Both functions are available at the same time. Which one is used by
 a call is resolved by context. See the section Vertical Versus Horizontal Calls
 below.
 
-.SS* Call Syntax
+.NP* Call Syntax
 
 A function is invoked by compound directive whose first symbol is the name of
 that function. Additional elements in the directive are the arguments.
@@ -6622,7 +6626,7 @@ are effectively proxies for the same unbound variable
 and are bound to different values, creating a conflict which
 constitutes a match failure.
 
-.SS* Vertical Versus Horizontal Calls
+.NP* Vertical Versus Horizontal Calls
 
 A function call which is the only element of the query line in
 which it occurs is ambiguous. It can go either to a vertical
@@ -6727,7 +6731,7 @@ Example:
 .cble
 .PP
 
-.SS* Local Variables
+.NP* Local Variables
 
 As described earlier, variables bound in a function body which are not
 parameters of the function are discarded when the function returns. However,
@@ -6786,7 +6790,7 @@ but that invocation needs to have its own binding of
 .code x
 for local use.
 
-.SS* Nested Functions
+.NP* Nested Functions
 
 Function definitions may appear in a function. Such definitions
 are visible in all functions which are invoked from the body
@@ -6856,7 +6860,7 @@ is called directly from the top level, its
 .code fun
 call goes to the toplevel definition.
 
-.SH* MODULARIZATION
+.SS* Modularization
 
 .dirs load include
 
@@ -6921,9 +6925,9 @@ and
 .code stdlib
 variables in \*(TL.
 
-.SH* OUTPUT
+.SS* Output
 
-.SS* Introduction
+.NP* Introduction
 
 A \*(TX query may perform custom output. Output is performed by
 .code output
@@ -7057,12 +7061,12 @@ At the end of the output block, the stream is closed.
 An example is given in the documentation for the Close Directive
 below.
 
-.SS* Output Text
+.NP* Output Text
 
 Text in an output clause is not matched against anything, but is output
 verbatim to the destination file, device or command pipe.
 
-.SS* Output Variables
+.NP* Output Variables
 
 Variables occurring in an output clause do not match anything; instead
 their contents are output.
@@ -7110,7 +7114,7 @@ for the output clause. The syntax for this is
 The filter specification syntax is the same as in the output clause.
 See Output Filtering below.
 
-.SS* Output Variables: Indexing
+.NP* Output Variables: Indexing
 
 Additional syntax is supported in output variables that does not appear
 in pattern matching variables.
@@ -7165,7 +7169,7 @@ separator string, and
 .code 10
 specifies the field width.
 
-.SS* Output Substitutions
+.NP* Output Substitutions
 
 The brace syntax has another syntactic and semantic extension in
 .code output
@@ -7420,7 +7424,7 @@ Now the repeat block iterates over list and the output is:
   <c>
 .cble
 
-.coSS Nested @ repeat directives
+.coNP Nested @ repeat directives
 
 If a
 .code repeat
@@ -7479,7 +7483,7 @@ and
 .code :vars
 arguments.
 
-.coSS @ repeat and @ rep Examples
+.coNP @ repeat and @ rep Examples
 
 Example 1: show the list
 .code L
@@ -7599,7 +7603,7 @@ so that the stream is closed at the end of the second block:
   @(end)
 .cble
 
-.SS* Output Filtering
+.NP* Output Filtering
 
 Often it is necessary to transform the output to preserve its meaning
 under the convention of a given data format. For instance, if a piece of
@@ -7798,7 +7802,7 @@ Capture some numeric variables and convert to numbers:
   @;; temperature and pressure can now be used in calculations
 .cble
 
-.SS* Function Filters
+.NP* Function Filters
 
 A function can be used as a filter. For this to be possible, the function must
 conform to certain rules:
@@ -8060,9 +8064,9 @@ to upper case and HTML encode:
   @(filter (:upcase :tohtml) a b c)
 .cble
 
-.SH* EXCEPTIONS
+.SS* Exceptions
 
-.SS* Introduction
+.NP* Introduction
 
 The exceptions mechanism in \*(TX is another
 disciplined form of non-local transfer, in addition to the blocks
@@ -8228,7 +8232,7 @@ terminates. The
 .code finally
 clause performs some output, which is seen.
 
-.coSS The @ finally clause
+.coNP The @ finally clause
 
 A
 .code try
@@ -8454,7 +8458,7 @@ that also terminates successfully. The
 .str "file error caught"
 message is never printed.
 
-.c1SS catch clauses
+.c1NP catch clauses
 
 .code catch
 clauses establish their associated
@@ -8567,7 +8571,7 @@ block then terminates successfully, and so
 takes
 .strn "3" .
 
-.coSS @ catch Clauses with Parameters
+.coNP @ catch Clauses with Parameters
 
 A
 .code catch
@@ -38476,7 +38480,7 @@ others are in the library directory. This aspect of library symbols isn't
 specified in this manual; knowing which of these two variables is relevant
 to a library feature requires familiarity with the implementation.
 
-.SH* Appendix
+.SH* APPENDIX
 .SS* A. NOTES ON EXOTIC REGULAR EXPRESSIONS
 Users familiar with regular expressions may not be familiar with the complement
 and intersection operators, which are often absent from text processing tools
