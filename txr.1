@@ -36728,7 +36728,7 @@ one specifies the result of
 .coNP Functions @ source-loc and @ source-loc-str
 .synb
 .mets (source-loc << form )
-.mets (source-loc-str << form <> [ alternative ])
+.mets (source-loc-str < form <> [ alternative ])
 .syne
 .desc
 These functions map an expression in a \*(TX program to the file name and
@@ -36745,21 +36745,37 @@ The
 .code source-loc-str
 function formats the information as a string.
 
+Forms which were parsed from a file have source location info
+tracking to their origin in that file. Forms which are the result
+of macro-expansion are traced to the form whose evaluation produced
+them. That is to say, they inherit that form's source location info.
+
+More precisely, when a form is produced by macro-expansion,
+it usually consists of material which was passed to the macro as arguments,
+plus some original material allocated by the macro, and possibly
+literal structure material which is part of the macro code.
+After the expansion is produced, any of its constituent material
+which already has source location info keeps that info. Those nodes
+which are newly allocated by the macro-expansion process inherit
+their source location info from the form which yields the expansion.
+
 If
 .meta form
 is not a piece of the program source code that was constructed by the
-\*(TX parser, then
+\*(TX parser or by a macro, and thus it was neither attributed with
+source location info, nor has it inherited such info, then
 .code source-loc
 returns
-.codn nil ,
-and, in the absence of the
+.codn nil .
+
+In the same situation, and if its
 .meta alternative
-argument,
+argument is missing, the
 .code source-loc-str
-returns a string whose text says that source location is not available, 
-otherwise it returns the
+returns a string whose text conveys that the source location is not
+available. If the
 .meta alternative
-argument.
+argument is present, it is returned.
 
 .coNP Function @ rlcp
 .synb
