@@ -1572,16 +1572,16 @@ The entire sequence
 is considered.
 
 .NP* Consecutive Variables
-If an unbound variable specified a fixed-width match or a regular expression,
+If an unbound variable specifies a fixed-width match or a regular expression,
 then the issue of consecutive variables does not arise. Such a variable
 consumes text regardless of any context which follows it.
 
 However, what if an unbound variable with no modifier is followed by another
 variable? The behavior depends on the nature of the other variable.
 
-If the other variable also has no modifier, this is a semantic error which
-will cause the query to fail.  A diagnostic message will be issued, unless
-operating in quiet mode via
+If the other variable is also unbound, and also has no modifier, this is a
+semantic error which will cause the query to fail.  A diagnostic message will
+be issued, unless operating in quiet mode via
 .codn -q .
 The reason is that there is no way to bind two
 consecutive variables to an extent of text; this is an ambiguous situation,
@@ -1593,8 +1593,8 @@ only in the case when it contains an even number of characters.  This behavior
 seems to have dubious value).
 
 An unbound variable may be followed by one which is bound. The bound
-variable is replaced by the text which it denotes, and the logic proceeds
-accordingly.
+variable is effectively replaced by the text which it denotes, and the logic
+proceeds accordingly.
 
 It is possible for a variable to be bound to a regular expression.
 If
@@ -1680,7 +1680,9 @@ Examples:
 .PP
 
 .NP* Consecutive Variables Via Directive
-Two variables can be de facto consecutive in a manner shown in the
+Two variables can be
+.I de facto
+consecutive in a manner shown in the
 following example:
 
 .cblk
