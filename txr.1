@@ -11283,8 +11283,8 @@ is a shorthand which denotes
 The
 .code dwim
 operator takes a variable number of arguments, which are
-all evaluated in the same way: the first argument is not evaluated differently
-from the remaining arguments.
+treated as expressions to be individually macro-expanded
+and evaluated, using the same rules.
 
 This means that the first argument isn't a function name, but an ordinary
 expression which can simply compute a function object (or, more generally,
@@ -11292,11 +11292,11 @@ a callable object).
 
 Furthermore, for those arguments of
 .code dwim
-which are symbols (after all
-macro-expansion is performed on the arguments), the evaluation rules are
-altered. For the purposes of resolving symbols to values, the function and
-variable binding namespaces are considered to be merged into a single space,
-creating a situation that is very similar to a Lisp-1 style dialect.
+which are symbols (after all macro-expansion is performed), the evaluation
+rules are altered. For the purposes of resolving symbols to values, the
+function and variable binding namespaces are considered to be merged into a
+single space, creating a situation that is very similar to a Lisp-1 style
+dialect.
 
 This special Lisp-1 evaluation is not recursively applied.  All arguments of
 .code dwim
@@ -11304,15 +11304,6 @@ which, after macro expansion, are not symbols are evaluated using the
 normal Lisp-2 evaluation rules. Thus, the DWIM operator must be used
 in every expression where the Lisp-1 rules for reducing symbols to
 values are desired.
-
-After macro expansion, the first argument of
-.code dwim
-may not be an operator such
-as
-.codn let ,
-or the name of a macro. Prior to macroexpansion, any argument of
-.code dwim
-may be a symbol macro.
 
 If a symbol has bindings both in the variable and function namespace in scope,
 and is referenced by a dwim argument, this constitutes a conflict which is
@@ -11352,6 +11343,25 @@ and so the symbol is not expanded using the symbol macro.
 By contrast, in an ordinary form, a symbolic argument never resolves
 to a function binding. The symbol refers to either a symbol macro or a
 variable, whichever is nested closer.
+
+If, after macro expansion, the leftmost argument of the
+.code dwim
+is the name of a special operator or macro, the
+.code dwim
+form doesn't denote an invocation of that operator or macro.  A
+.code dwim
+form is an invocation of the
+.code dwim
+operator, and the leftmost argument of that operator, if it is a symbol, is
+treated as a binding to be resolved in the variable or function namespace,
+like any other argument.
+Thus
+.code [if x y]
+is an invocation of the
+.code if
+function, not the
+.code if
+operator.
 
 How many arguments are required by the
 .code dwim
@@ -11532,22 +11542,34 @@ are resolved to values in the same namespace. The form denotes a function call
 if the value of variable
 .code a
 is a function object.  Thus in a Lisp-1, named functions do not exist as
-such: they are just variable bindings.  In a Lisp-1
-.code (car 1 2)
+such: they are just variable bindings.  In a Lisp-1, the form
+.code (car 1)
 means that there
 is a variable called
 .codn car ,
-which holds a function. In a Lisp-2
-.code (car 1 2)
+which holds a function, which is retrieved from that
+variable and the argument
+.code 1
+is applied to it. In the expression
+.codn (car car) ,
+both occurrences of
+.code car
+refer to the variable, and so this form applies the
+.code car
+function to itself. It is almost certainly meaningless.
+In a Lisp-2
+.code (car 1)
 means that there is a function called
 .codn car ,
-and so
-.code (car car car)
-is possible, because there can be also a variable called
+in the function namespace. In the expression
+.code (car car)
+the two occurrences refer to different bindings:
+one is a function and the other a variable.
+Thus there can exist a variable
 .code car
 which holds a cons cell object, rather than the
 .code car
-function.
+function, and the form makes sense.
 
 The Lisp-1 approach is useful for functional programming, because it eliminates
 cluttering occurrences of the call and fun operators.  For instance:
