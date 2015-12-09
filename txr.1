@@ -36801,6 +36801,24 @@ source code location info also, so that when the \*(TL evaluator
 encounters errors in transformed code, it can give diagnostics which refer
 to the original untransformed source code.
 
+.coNP Function @ macro-ancestor
+.synb
+.mets (macro-ancestor << form )
+.syne
+.desc
+The
+.code macro-ancestor
+function returns information about the macro-expansion ancestor of
+.metn form .
+The ancestor is the original form whose expansion produced
+.metn form .
+
+If
+.meta form
+is not the result of macro-expansion, or the ancestor information
+is unavailable, the function returns
+.codn nil .
+
 .SS* Profiling
 .coNP Operator @ prof
 .synb

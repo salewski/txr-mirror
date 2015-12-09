@@ -5036,6 +5036,7 @@ void eval_init(void)
 
   reg_fun(intern(lit("source-loc"), user_package), func_n1(source_loc));
   reg_fun(intern(lit("source-loc-str"), user_package), func_n2o(source_loc_str, 1));
+  reg_fun(intern(lit("macro-ancestor"), user_package), func_n1(lookup_origin));
   reg_fun(intern(lit("rlcp"), user_package), func_n2(rlcp));
 
   eval_error_s = intern(lit("eval-error"), user_package);
