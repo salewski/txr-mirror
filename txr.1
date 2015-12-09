@@ -12271,12 +12271,24 @@ expression:
 .IP 1.
 The
 .meta cond
-expression must be either an atom, or a function call form:
-a compound expression with a symbol in the leftmost position
-which resolves to a function. Otherwise the
+expression must be either an atom, a function call form,
+or a
+.code dwim
+form.  Otherwise the
 .code ifa
 expression is ill-formed, and throws an exception at
-macro-expansion time.
+macro-expansion time. For the purposes of these rules,
+a
+.code dwim
+form is considered as a function call expression, whose first
+argument is the second element of the form. That is to say,
+.code [f x]
+which is equivalent to
+.code (dwim f x)
+is treated similarly to
+.code (f x)
+as a one-argument call.
+
 .IP 2.
 If the
 .meta cond
@@ -12301,7 +12313,9 @@ operator.
 .IP 4.
 If
 .meta cond
-is a function call with exactly one argument, then the
+is a function call or
+.code dwim
+expression with exactly one argument, then the
 .code it
 variable is bound to the argument expression, except when
 the function being called is
