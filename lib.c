@@ -3899,9 +3899,18 @@ tail:
       return tnil(lenl < lenr);
     }
   case RNG:
-    if (less(from(left), from(right)))
-      return t;
-    return less(to(left), to(right));
+    {
+      val fl = from(left);
+      val fr = from(right);
+
+      if (less(fl, fr))
+        return t;
+
+      if (equal(fl, fr))
+        return less(to(left), to(right));
+
+      return nil;
+    }
   default:
     internal_error("unhandled case in less function");
   }
