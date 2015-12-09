@@ -13012,10 +13012,11 @@ functions. If a nonexistent place is deleted, the prior value yielded
 by the deletion is deemed to be
 .codn nil .
 
-.coNP Functions @ boundp and @ fboundp
+.coNP Functions @, boundp @, fboundp and @ mboundp
 .synb
 .mets (boundp << symbol )
 .mets (fboundp << symbol )
+.mets (mboundp << symbol )
 .syne
 .desc
 .code boundp
@@ -13028,8 +13029,15 @@ environment, otherwise
 .code fboundp
 returns
 .code t
-if the symbol has a function or macro binding in the global
-environment, or if it is an operator, otherwise
+if the symbol has a function or operator macro binding in the global
+environment, or if it is a special operator, otherwise
+.codn nil .
+
+.code mboundp
+returns
+.code t
+if the symbol has an operator macro binding in the global environment,
+otherwise
 .codn nil .
 
 .coNP Functions @ makunbound and @ fmakunbound

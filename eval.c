@@ -3710,6 +3710,11 @@ val fboundp(val sym)
              gethash(op_table, sym), t);
 }
 
+static val mboundp(val sym)
+{
+  return tnil(lookup_mac(nil, sym));
+}
+
 val special_operator_p(val sym)
 {
   return if2(gethash(op_table, sym), t);
@@ -3728,6 +3733,13 @@ static val fmakunbound(val sym)
 {
   lisplib_try_load(sym),
   remhash(top_fb, sym);
+  remhash(top_mb, sym);
+  return sym;
+}
+
+static val mmakunbound(val sym)
+{
+  lisplib_try_load(sym),
   remhash(top_mb, sym);
   return sym;
 }
@@ -4977,8 +4989,10 @@ void eval_init(void)
   reg_fun(intern(lit("symbol-function"), user_package), func_n1(symbol_function));
   reg_fun(intern(lit("boundp"), user_package), func_n1(boundp));
   reg_fun(intern(lit("fboundp"), user_package), func_n1(fboundp));
+  reg_fun(intern(lit("mboundp"), user_package), func_n1(mboundp));
   reg_fun(intern(lit("makunbound"), user_package), func_n1(makunbound));
   reg_fun(intern(lit("fmakunbound"), user_package), func_n1(fmakunbound));
+  reg_fun(intern(lit("mmakunbound"), user_package), func_n1(mmakunbound));
   reg_fun(intern(lit("special-operator-p"), user_package), func_n1(special_operator_p));
   reg_fun(intern(lit("special-var-p"), user_package), func_n1(special_var_p));
   reg_fun(sys_mark_special_s, func_n1(mark_special));
