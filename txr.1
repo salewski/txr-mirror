@@ -12227,40 +12227,66 @@ forms, the symbol
 .code it
 is implicitly bound to a subexpression of
 .metn cond ,
-providing a reference to that value, similar to the word
-"it" in the English language, and similar anaphoric pronouns
-in other languages. If
+a subexpression which is thereby identified as the
+.IR it-form .
+This
+.code it
+alias provides a convenient reference to that place or value, similar to the
+word "it" in the English language, and similar anaphoric pronouns in other
+languages.
+
+If
 .code it
 is bound to a place form, the binding is established
 as if using the
 .code placelet
-operator. Otherwise,
+operator: the form is evaluated only once, even if the
+.code it
+alias is used multiple times in the
+.meta then
+or
+.meta else
+expressions.  Otherwise, if the form is not a syntactic place
 .code it
 is bound as an ordinary lexical variable to
 the form's value.
 
+An
+.I it-candidate
+is an an expression viable for having its value or storage location
+bound to the
+.code it
+symbol. An it-candidate is any expression which is not a constant expression
+according to the
+.code constantp
+function, and not a symbol.
+
 The
 .code ifa
-macro imposes several restrictions on the
+macro imposes applies several rules to the
 .meta cond
-expression. Firstly, the
+expression:
+.RS
+.IP 1.
+The
 .meta cond
 expression must be either an atom, or a function call form:
 a compound expression with a symbol in the leftmost position
 which resolves to a function. Otherwise the
 .code ifa
-macro invocation is ill-formed.
-
-Secondly, if the
+expression is ill-formed, and throws an exception at
+macro-expansion time.
+.IP 2.
+If the
 .meta cond
 expression is a function call with two or more arguments,
-at most one of them may be an it-candidate: an expression
-viable for having its value or storage location bound to the
-.code it
-symbol. If there are two or more it-candidates, the
+at most one of them may be an it-candidate.
+If two or more arguments are it-candidates, the situation
+is ambiguous. The
 .code ifa
-expression is ill-formed.
-
+expression is ill-formed and throws an exception at macro-expansion
+time.
+.IP 3.
 If
 .meta cond
 is an atom, or a function call expression with no arguments,
@@ -12271,50 +12297,60 @@ symbol is not bound. Effectively,
 macro behaves like the ordinary
 .code if
 operator.
-
+.IP 4.
 If
 .meta cond
 is a function call with exactly one argument, then the
 .code it
-variable is bound to the value of that argument, except when
+variable is bound to the argument expression, except when
 the function being called is
 .codn not ,
 .codn null ,
 or
 .codn false .
-That special situation is rewritten according to the following pattern:
+This binding occurs regardless of whether the expression is
+an it-candidate.
+.IP 5.
+If
+.meta cond
+is a function call with exactly one argument to the Boolean negation
+function which goes by one of the three names
+.codn not ,
+.codn null ,
+or
+.codn false ,
+then that situation is handled by a rewrite according to the following pattern:
 
 .cblk
 .mets (ifa (not << expr ) < then << else ) -> (ifa < expr < else << then )
 .cble
 
-and likewise for
+which applies likewise for
 .code null
 or
 .code false
 substituted for
 .codn not .
-
-Note the reversal of
+The Boolean inverse function is removed, and the 
 .meta then
 and
-.metn else .
-
+.meta else
+expressions are exchanged.
+.IP 6.
 If
 .meta cond
 is a function call with two or more arguments, then it is only
 well-formed if at most one of those arguments is an it-candidate.
 If there is one such argument, then the
 .code it
-variable is bound to it. Otherwise the variable is bound
+variable is bound to it.
+.IP 7.
+Otherwise the variable is bound
 to the leftmost argument expression, regardless of whether that
 argument expression is an it-candidate.
+.RE
 
-An it-candidate is any expression which is not a constant expression
-according to the
-.code constantp
-function, and not a symbol.
-
+.IP
 In all other regards, the
 .code ifa
 macro behaves similarly to
@@ -12349,18 +12385,35 @@ form.
 .cblk
   (ifa t 1 0)  ->  1
 
+  ;; Rule 7: it binds to (* x x), which is
+  ;; the only it-candidate.
   (let ((x 6) (y 49))
     (ifa (> y (* x x)) ;; it binds to (* x x)
       (list it)))
   -> (36)
 
+  ;; Rule 4: it binds to argument of evenp,
+  ;; even though 4 isn't an it-candidate.
   (ifa (evenp 4)
     (list it))
   -> (4)
 
+  ;; Rule 5:
   (ifa (not (oddp 4))
     (list it))
   -> (4)
+
+  ;; Violation of Rule 1:
+  ;; while is not a function
+  (ifa (while t (print 42))
+    (list it))
+  --> exception!
+
+  ;; Violation of Rule 2:
+  (let ((x 6) (y 49))
+    (ifa (> (* y y y) (* x x)))
+      (list it))
+  --> exception!
 .cble
 
 .coNP Macro @ conda
