@@ -214,7 +214,7 @@
     (unless type
       (throwf 'eval-error "~s: ~s isn't a struct type" 'defmeth type-sym))
     (static-slot-ensure type-sym name fun)
-    name))
+    ^(meth ,type-sym ,name)))
 
 (defmacro defmeth (type-sym name arglist . body)
   ^(sys:defmeth ',type-sym ',name (lambda ,arglist
