@@ -10964,6 +10964,13 @@ syntax.
 In ANSI Common Lisp, keywords may be used as function names.
 In TXR Lisp, they may not.
 
+.TP* "Dialect Note:"
+A function defined by
+.code defun
+may co-exist with a macro defined by
+.codn defmacro .
+This is not permitted in ANSI Common Lisp.
+
 .coNP Operator @ lambda
 .synb
 .mets (lambda <> ( param * [: << opt-param *] [. << rest-param ])
@@ -23201,6 +23208,13 @@ rather than the evaluation phase.
 The return value of the macro is the macro expansion. It is substituted in
 place of the entire macro call form. That form is then expanded again;
 it may itself be another macro call, or contain more macro calls.
+
+.TP* "Dialect Note:"
+A macro in the global namespace introduced by
+.code defmacro
+may co-exist with a function of the same name introduced by
+.codn defun .
+This is not permitted in ANSI Common Lisp.
 
 .TP* Example:
 

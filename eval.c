@@ -1523,8 +1523,6 @@ static val op_defun(val form, val env)
     val block = cons(block_s, cons(name, body));
     val fun = cons(name, cons(params, cons(block, nil)));
 
-    remhash(top_mb, name);
-
     /* defun captures lexical environment, so env is passed */
     sethash(top_fb, name, cons(name, func_interp(env, fun)));
     if (eval_initing)
@@ -1557,7 +1555,6 @@ static val op_defmacro(val form, val env)
   if (gethash(op_table, name))
     eval_error(form, lit("defmacro: ~s is a special operator"), name, nao);
 
-  remhash(top_fb, name);
   /* defmacro captures lexical environment, so env is passed */
   sethash(top_mb, name,
           rlcp_tree(cons(name, cons(env, cons(params, cons(block, nil)))),
