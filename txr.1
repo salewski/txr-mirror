@@ -12274,19 +12274,12 @@ operator.
 
 If
 .meta cond
-is an invocation of the functions
-.code not
-or
-.codn null ,
-
-If
-.meta cond
 is a function call with exactly one argument, then the
 .code it
 variable is bound to the value of that argument, except when
 the function being called is
 .codn not ,
-.code null ,
+.codn null ,
 or
 .codn false .
 That special situation is rewritten according to the following pattern:
@@ -12294,6 +12287,13 @@ That special situation is rewritten according to the following pattern:
 .cblk
 .mets (ifa (not << expr ) < then << else ) -> (ifa < expr < else << then )
 .cble
+
+and likewise for
+.code null
+or
+.code false
+substituted for
+.codn not .
 
 Note the reversal of
 .meta then
@@ -12303,7 +12303,7 @@ and
 If
 .meta cond
 is a function call with two or more arguments, then it is only
-well-formed if at most one of those arguments is an it-candidates.
+well-formed if at most one of those arguments is an it-candidate.
 If there is one such argument, then the
 .code it
 variable is bound to it. Otherwise the variable is bound
