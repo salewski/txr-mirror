@@ -584,16 +584,14 @@ static wchar_t *snarf_line(struct stdio_handle *h)
 
 static val stdio_get_line(val stream)
 {
-  errno = 0;
-  if (stream->co.handle == 0) {
-    return stdio_maybe_read_error(stream);
-  } else {
-    struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
+  struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
+  if (h->f) {
     wchar_t *line = snarf_line(h);
-    if (!line)
-      return stdio_maybe_read_error(stream);
-    return string_own(line);
+    if (line)
+      return string_own(line);
   }
+
+  return stdio_maybe_read_error(stream);
 }
 
 static val stdio_get_char(val stream)
