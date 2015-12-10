@@ -1,3 +1,47 @@
+                                    TXR 127
+                                   2015-12-10
+
+
+  Features
+
+  - OOP:
+    - defun can define methods now, using a compound naming syntax,
+      as alternative to defmeth.
+    - func-get-name function works on methods and produces compound name.
+    - defmeth returns compound name, and so does defun when defining a method.
+    - improved semantics in static-slot-ensure
+  - Large file support: TXR now uses 64 bit file offsets in functions like
+    seek-stream and truncate on Linux platforms where this is
+    a compile-time switch.
+  - regex-range now returns a range object.
+  - Macros:
+    - Improvements in macro expansion tracing for unhandled
+      exceptions, or those caught in the REPL.
+    - New macro-ancestor function for programmatically retrieving
+      the form from which a given form was derived by macro expansion.
+    - New mboundp and mmakunbound functions for inquiring
+      about and removing a global operator macro binding.
+    - Global operator macros can now coexist with functions of the
+      same name.
+  - Doc:
+    - HTML man page now has a collapsible table of contents, thanks
+      to Javascript embedded in the document.
+    - Sections have been reorganized.
+    - Smattering of corrections.
+
+  Bugs
+
+  - Fixed new struct types failing to inherit static slots that
+    were added to ancestor types using implicit or explicit use of
+    ensure-static-slot (such as methods defined outside of defstruct).
+  - Fixes to the anaphoric ifa macro: the condition can be a dwim form, and
+    with special handling.
+  - Fixed incorrectly implemented less comparison for range objects.
+  - Fixed crash in get-line when invoked on a closed file stream.
+  - Fixed ftruncate not being detected and used on Solaris.
+
+
+
                                     TXR 126
                                    2015-11-29
 
