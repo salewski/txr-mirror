@@ -2356,6 +2356,10 @@ int main(int argc, char **argv)
 if conftest ; then
   printf "yes\n"
   printf "#define HAVE_FSEEKO 1\n" >> $config_h
+elif conftest EXTRA_FLAGS=-D_LARGEFILE_SOURCE ; then
+  printf "yes\n"
+  printf "#define HAVE_FSEEKO 1\n" >> $config_h
+  lang_flags="$lang_flags -D_LARGEFILE_SOURCE"
 else
   printf "no\n"
 fi
