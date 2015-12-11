@@ -584,6 +584,22 @@
     ^(macrolet ((,deleter () ^(fmakunbound ,',sym-expr)))
        ,body)))
 
+(defun sys:get-mb (sym)
+  (or (gethash sys:top-mb sym)
+      (sys:eval-err "unbound macro ~s" sym)))
+
+(defplace (symbol-macro sym-expr) body
+  (getter setter
+    (with-gensyms (binding-sym)
+      ^(let ((,binding-sym (sys:get-mb ,sym-expr)))
+          (macrolet ((,getter () ^(cdr ,',binding-sym))
+                     (,setter (val) ^(sys:rplacd ,',binding-sym ,val)))
+            ,body))))
+  :
+  (deleter
+    ^(macrolet ((,deleter () ^(mmakunbound ,',sym-expr)))
+       ,body)))
+
 (defun sys:get-vb (sym)
   (or (gethash sys:top-vb sym)
       (sys:eval-err "unbound variable ~s" sym)))

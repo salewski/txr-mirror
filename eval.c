@@ -3693,9 +3693,17 @@ static val symbol_value(val sym)
 static val symbol_function(val sym)
 {
   uses_or2;
-  return or2(or2(cdr(lookup_fun(nil, sym)),
-                 cdr(lookup_mac(nil, sym))),
-             gethash(op_table, sym));
+
+  if (opt_compat && opt_compat <= 127)
+    return or2(or2(cdr(lookup_fun(nil, sym)),
+                   cdr(lookup_mac(nil, sym))),
+               gethash(op_table, sym));
+  return cdr(lookup_fun(nil, sym));
+}
+
+static val symbol_macro(val sym)
+{
+  return cdr(lookup_mac(nil, sym));
 }
 
 val boundp(val sym)
@@ -3705,8 +3713,10 @@ val boundp(val sym)
 
 val fboundp(val sym)
 {
-  return if2(lookup_fun(nil, sym) || lookup_mac(nil, sym) ||
-             gethash(op_table, sym), t);
+  if (opt_compat && opt_compat <= 127)
+    return if2(lookup_fun(nil, sym) || lookup_mac(nil, sym) ||
+               gethash(op_table, sym), t);
+  return tnil(lookup_fun(nil, sym));
 }
 
 static val mboundp(val sym)
@@ -3732,7 +3742,8 @@ static val fmakunbound(val sym)
 {
   lisplib_try_load(sym),
   remhash(top_fb, sym);
-  remhash(top_mb, sym);
+  if (opt_compat && opt_compat <= 127)
+    remhash(top_mb, sym);
   return sym;
 }
 
@@ -4984,8 +4995,10 @@ void eval_init(void)
 
   reg_varl(intern(lit("top-vb"), system_package), top_vb);
   reg_varl(intern(lit("top-fb"), system_package), top_fb);
+  reg_varl(intern(lit("top-mb"), system_package), top_mb);
   reg_fun(intern(lit("symbol-value"), user_package), func_n1(symbol_value));
   reg_fun(intern(lit("symbol-function"), user_package), func_n1(symbol_function));
+  reg_fun(intern(lit("symbol-macro"), user_package), func_n1(symbol_macro));
   reg_fun(intern(lit("boundp"), user_package), func_n1(boundp));
   reg_fun(intern(lit("fboundp"), user_package), func_n1(fboundp));
   reg_fun(intern(lit("mboundp"), user_package), func_n1(mboundp));
