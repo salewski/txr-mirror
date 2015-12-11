@@ -1564,8 +1564,10 @@ static val op_defmacro(val form, val env)
   return name;
 }
 
-static val expand_macro(val form, val expander, val menv)
+static val expand_macro(val form, val mac_binding, val menv)
 {
+  val expander = cdr(mac_binding);
+
   if (cobjp(expander)) {
     mefun_t fp = coerce(mefun_t, cptr_get(expander));
     val expanded = fp(form, menv);
@@ -1574,9 +1576,9 @@ static val expand_macro(val form, val expander, val menv)
     debug_enter;
     val name = car(form);
     val arglist = rest(form);
-    val env = car(cdr(expander));
-    val params = car(cdr(cdr(expander)));
-    val body = cdr(cdr(cdr(expander)));
+    val env = car(expander);
+    val params = cadr(expander);
+    val body = cddr(expander);
     val saved_de = set_dyn_env(make_env(nil, nil, dyn_env));
     val exp_env = bind_macro_params(env, menv, params, arglist, nil, form);
     val result;
@@ -3692,7 +3694,7 @@ static val symbol_function(val sym)
 {
   uses_or2;
   return or2(or2(cdr(lookup_fun(nil, sym)),
-                 lookup_mac(nil, sym)),
+                 cdr(lookup_mac(nil, sym))),
              gethash(op_table, sym));
 }
 
@@ -4109,7 +4111,7 @@ void reg_fun(val sym, val fun)
 static void reg_mac(val sym, mefun_t fun)
 {
   assert (sym != 0);
-  sethash(top_mb, sym, cptr(coerce(mem_t *, fun)));
+  sethash(top_mb, sym, cons(sym, cptr(coerce(mem_t *, fun))));
   sethash(builtin, sym, defmacro_s);
 }
 
