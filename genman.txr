@@ -22,6 +22,9 @@
        (set [dupes h] title)
        (format nil "N-~,08X" h)))
 
+   (defun toc-tag (sec)
+     `TOC-@sec`)
+
    (set [tagmap "lbAB"] (hash-title "NAME"))
 
    (defun enumerate (title)
@@ -49,7 +52,7 @@ Content-type: text/html
 @      (do (set [tagmap tag] newtag))
 @      (output :into BODY)
 <A NAME="@newtag">&nbsp;</A>
-<H@level>@sec @title</H@level>
+<H@level><A HREF="#@(toc-tag sec)">@sec</A> @title</H@level>
 @      (end)
 @      (cat BODY "\n")
 @    (or)
@@ -72,7 +75,7 @@ Content-type: text/html
 @  (some)
 @    (cases)
 <DT><A HREF="#@tag">@num @rest
-@      (bind TOC `<DT>@num <A HREF="#@[tagmap tag]">@rest`)
+@      (bind TOC `<DT><A NAME="@(toc-tag num)">@num</A> <A HREF="#@[tagmap tag]">@rest`)
 @    (or)
 <A NAME="index">@(skip)
 @      (output :into TOC)
