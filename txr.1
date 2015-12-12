@@ -13416,19 +13416,23 @@ is a symbol which names a special operator, otherwise it returns
 
 In \*(TL, objects obey the following type hierarchy. In this type hierarchy,
 the internal nodes denote abstract types: no object is an instance of
-an abstract type:
+an abstract type. Nodes in square brackets indicate an internal structure
+in the type graph, visible to programs, and angle
+brackets indicate a plurality of types which are not listed by name:
 
 .cblk
-  t ----+--- <cobj types> ---+--- hash
+  t ----+--- [cobj types] ---+--- hash
         |                    |
         |                    +--- stream
         |                    |
         |                    +--- random-state
         |                    |
-        |                    .
+        |                    +--- struct-type
+        |                    |
+        |                    +--- <structures>
+        |                    |
         |                    +... <others>
         |
-        +--- <structures>
         |
         +--- sequence ---+--- string ---+--- str
         |                |              |
