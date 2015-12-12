@@ -13543,6 +13543,12 @@ Character.
 Fixnum integer: an integer that fits into the value word, not having to
 be heap allocated.
 
+.coIP bignum
+A bignum integer: arbitrary precision integer that is heap-allocated.
+
+.coIP float
+Floating-point number.
+
 .coIP sym
 Symbol.
 
@@ -13558,17 +13564,27 @@ Vector.
 .coIP lcons
 Lazy cons.
 
+.coIP range
+Range object.
+
 .coIP lstr
 Lazy string.
 
 .coIP env
 Function/variable binding environment.
 
-.coIP bignum
-A bignum integer: arbitrary precision integer that is heap-allocated.
+.coIP hash
+Hash table.
+
+.coIP stream
+I/O stream of any kind.
+
+.coIP struct-type
+A structure type: the type of any one of the values which represents
+a structure type.
 .PP
 
-There are additional kinds of objects, such as streams.
+There are more kinds of objects, such as user-defined structures.
 
 .coNP Function @ subtypep
 .synb
