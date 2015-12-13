@@ -52,7 +52,7 @@ Content-type: text/html
 @      (do (set [tagmap tag] newtag))
 @      (output :into BODY)
 <A NAME="@newtag">&nbsp;</A>
-<H@level><A HREF="#@(toc-tag sec)">@sec</A> @title</H@level>
+<H@level><A HREF="#@(toc-tag sec)" ONCLICK="tocjump('@(toc-tag sec)')">@sec</A> @title</H@level>
 @      (end)
 @      (cat BODY "\n")
 @    (or)
@@ -75,7 +75,7 @@ Content-type: text/html
 @  (some)
 @    (cases)
 <DT><A HREF="#@tag">@num @rest
-@      (bind TOC `<DT><A NAME="@(toc-tag num)">@num</A> <A HREF="#@[tagmap tag]">@rest`)
+@      (bind TOC `<DT><A NAME="@(toc-tag num)" CLASS="tocanchor">@num</A> <A HREF="#@[tagmap tag]">@rest`)
 @    (or)
 <A NAME="index">@(skip)
 @      (output :into TOC)
@@ -179,6 +179,25 @@ function toggleall(link) {
     atoggles[i].innerHTML = nhtml;
 
   link.innerHTML = (disp == '') ? '@xpnall' : '@clpsall';
+}
+function tocjump(hash) {
+  var toc = document.getElementsByClassName("TOC");
+  var tanch = toc[0].getElementsByClassName("tocanchor");
+
+  for (var i = 0; i < tanch.length; i++) {
+     var ta = tanch[i];
+
+     if (ta.name == hash) {
+       for (var e = ta.parentNode; e !== null; e = e.parentElement) {
+         if (e.tagName == "DL") {
+           var atoggles = e.getElementsByClassName("toggle");
+           e.style.display = '';
+           if (atoggles.length > 0)
+             atoggles[0].innerHTML = '@opentxt';
+         }
+       }
+     }
+  }
 }
 </script>
 </HEAD><BODY>
