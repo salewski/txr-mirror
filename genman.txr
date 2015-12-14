@@ -152,7 +152,7 @@ This document was created by
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML>
 <HEAD><TITLE>Manpage for TXR @VERSION</TITLE>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>TXR Language</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <script type="text/javascript">
 function toggle(link, id) {
   var e = document.getElementById(id);
