@@ -10578,12 +10578,11 @@ and functions in \*(TL.
 
 In these sections Syntax is indicated using these conventions:
 
+.meIP < word
 .ie n \{\
-.  coIP <word>
 A symbol in angle brackets
 .\}
 .el \{\
-.  coIP \f[5]word\f[]
 A symbol in
 .meta fixed-width-italic
 font
@@ -10592,21 +10591,11 @@ denotes some syntactic unit: it
 may be a symbol or compound form. The syntactic unit is explained
 in the Description section.
 
-.ie n \{\
-.coIP {syntax}* <word>*
-.\}
-.el \{\
-.coIP {syntax}* \f[5]word\f[]*
-.\}
+.meIP {syntax}* << word *
 This indicates a repetition of zero or more of the given
 syntax enclosed in the braces or syntactic unit.
 
-.ie n \{\
-.coIP {syntax}+ <word>+
-.\}
-.el \{\
-.coIP {syntax}+ \f[5]word\f[]+
-.\}
+.meIP {syntax}+ << word +
 This indicates a repetition of one or more of the given
 syntax enclosed in the braces or syntactic unit.
 
@@ -10618,24 +10607,14 @@ or
 .code *
 repetition.
 
-.ie n \{\
-.coIP [syntax] [<word>]
-.\}
-.el \{\
-.coIP [syntax] [\f[5]word\f[]]
-.\}
+.meIP [syntax] <> [ word ]
 Square brackets indicate optional syntax.
 
 .coIP alternative1 | alternative2 | ... | alternativeN
 Multiple syntactic variations allowed in one place are
 indicated as bar-separated items.
 
-.ie n \{\
-.coIP syntax @ -> <result>
-.\}
-.el \{\
-.coIP syntax @ -> [\f[5]result\f[]]
-.\}
+.meIP syntax -> < result
 The arrow notation is used in examples to indicate that the evaluation
 of the given syntax produces a value, whose printed representation is
 .metn result .
