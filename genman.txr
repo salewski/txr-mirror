@@ -80,6 +80,9 @@ Content-type: text/html
 <A NAME="index">@(skip)
 @      (output :into TOC)
 <H2>Contents</H2>
+<noscript>
+<h3>Please turn on Javascript to use the collapsible contents.</h3>
+</noscript>
 <A HREF="#/" ONCLICK="toggleall(this)">@clpsall</A>
 @      (end)
 @    (or)
