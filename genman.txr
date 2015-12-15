@@ -32,8 +32,8 @@
        `@title@(if (> num 1) `-@num` "")`)))
 Content-type: text/html
 @(skip 15)
-<H1>TXR</H1>
-@(skip)Updated: @YEAR-@MONTH-@DAY<BR><A HREF="#index">Index</A>
+<h1>TXR</h1>
+@(skip)Updated: @YEAR-@MONTH-@DAY<br><a href="#index">Index</a>
 @(bind TIME @(make-time-utc (int-str YEAR) (int-str MONTH) (int-str DAY)
                             0 0 0 nil))
 @(bind lookup @[orf txrhash txlhash])
@@ -41,76 +41,76 @@ Content-type: text/html
 @(collect :vars (BODY LOOKUP))
 @  (some)
 @    (cases)
-<A NAME="@tag">&nbsp;</A>
+<a name="@tag">&nbsp;</a>
 @      (some)
-<H@level>@sec @title</H@level>
+<h@level>@sec @title</h@level>
 @      (or)
-<H@level>@sec @title
-</H@level>
+<h@level>@sec @title
+</h@level>
 @      (end)
 @      (bind newtag @(hash-title (enumerate title)))
 @      (do (set [tagmap tag] newtag))
 @      (output :into BODY)
-<A NAME="@newtag">&nbsp;</A>
-<H@level><A HREF="#@(toc-tag sec)" ONCLICK="tocjump('@(toc-tag sec)')">@sec</A> @title</H@level>
+<a name="@newtag">&nbsp;</a>
+<h@level><a href="#@(toc-tag sec)" onclick="tocjump('@(toc-tag sec)')">@sec</a> @title</h@level>
 @      (end)
 @      (cat BODY "\n")
 @    (or)
 @BODY
 @    (end)
 @  (and)
-<H2>@nil TXR LISP</H2>
+<h2>@nil TXR LISP</h2>
 @    (set lookup txrhash)
 @  (and)
-<B>TXR</B> - text processing language (version @ver)
+<b>TXR</b> - text processing language (version @ver)
 @    (set VERSION ver)
 @  (end)
 @  (bind LOOKUP lookup)
 @(until)
-<HR>
-<A NAME="index">&nbsp;</A><H2>Index</H2>
+<hr>
+<a name="index">&nbsp;</a><h2>Index</h2>
 @(end)
-<HR>
+<hr>
 @(collect :vars (TOC))
 @  (some)
 @    (cases)
 @      (cases)
-<DT><A HREF="#@tag">@num @rest</A><DD>
+<dt><a href="#@tag">@num @rest</a><dd>
 @      (or)
-<DT><A HREF="#@tag">@num @rest
-</A><DD>
+<dt><a href="#@tag">@num @rest
+</a><dd>
 @      (end)
-@      (bind TOC `<DT><A NAME="@(toc-tag num)" CLASS="tocanchor">@num</A> <A HREF="#@[tagmap tag]">@rest</A></DT>`)
+@      (bind TOC `<dt><a name="@(toc-tag num)" class="tocanchor">@num</a> <a href="#@[tagmap tag]">@rest</a></dt>`)
 @    (or)
-<A NAME="index">@(skip)
+<a name="index">@(skip)
 @      (output :into TOC)
-<H2>Contents</H2>
+<h2>Contents</h2>
 <noscript>
 <h3>Please turn on Javascript to use the collapsible contents.</h3>
 </noscript>
-<A HREF="#/" ONCLICK="toggleall(this)">@clpsall</A>
+<a href="#/" onclick="toggleall(this)">@clpsall</a>
 @      (end)
 @    (or)
 @TOC
 @    (end)
 @  (and)
-<DT><A HREF="@nil">@nil TXR LISP</A><DD>
+<dt><a href="@nil">@nil TXR LISP</a><dd>
 @  (set tgthash txlhash)
 @  (and)
-<DT><A HREF="#@tag">@(coll :vars (sym))<TT>@sym</TT>@(end)
+<dt><a href="#@tag">@(coll :vars (sym))<tt>@sym</tt>@(end)
 @    (do (mapdo (do unless [tgthash @1] (set [tgthash @1] [tagmap tag]))
                 sym))
 @  (and)
-<DT><A HREF="#@tag">@num @nil
-<DL>
+<dt><a href="#@tag">@num @nil
+<dl>
 @    (cat TOC)
-@    (bind pos @(car (search-regex TOC #/<A/)))
+@    (bind pos @(car (search-regex TOC #/<a/)))
 @    (bind id @(gensym))
 @    (do (set [TOC pos..pos]
-              `<A HREF="#/" ONCLICK="toggle(this, '@id')" CLASS="toggle">@(if closed closedtxt opentxt)</A>`))
+              `<a href="#/" onclick="toggle(this, '@id')" class="toggle">@(if closed closedtxt opentxt)</a>`))
 @    (output :into TOC)
 @TOC
-<DL ID="@id"@(if closed " STYLE=\"DISPLAY: NONE\"")>
+<dl id="@id"@(if closed " style=\"display: none\"")>
 @    (end)
 @  (end)
 @(until)
@@ -120,13 +120,13 @@ This document was created by
 @(set BODY @(let ((inside-tt nil)
                   (inside-syntax nil))
               (mapcar (do cond
-                        ((equal @1 "<TT>") (set inside-tt t) @1)
-                        ((equal @1 "</TT>") (set inside-tt nil)
+                        ((equal @1 "<tt>") (set inside-tt t) @1)
+                        ((equal @1 "</tt>") (set inside-tt nil)
                                             (set inside-syntax nil)
                                             @1)
-                        ((equal @1 "<DT>Syntax:<DD>") (set inside-syntax t) @1)
+                        ((equal @1 "<dt>Syntax:<dd>") (set inside-syntax t) @1)
                         ((or (and inside-tt (not inside-syntax))
-                             (match-regex @1 #/<DT><TT>/))
+                             (match-regex @1 #/<dt><tt>/))
                           (regsub #/@?[\(\[][^ )&]+/
                                   (do let* ((at (if (eql [@1 0] #\@)
                                                  (pop @1)))
@@ -135,10 +135,10 @@ This document was created by
                                             (tag [(if at txrhash txlhash)
                                                   tok]))
                                     (if tag
-                                      `@at@bkt<A HREF="#@tag">@tok</A>`
+                                      `@at@bkt<a href="#@tag">@tok</a>`
                                       `@at@1`)) @1))
-                        ((search-regex @1 #/<H[1-9]>/) @1)
-                        (t (regsub #/<TT>.%<\/TT>/
+                        ((search-regex @1 #/<h[1-9]>/) @1)
+                        (t (regsub #/<tt>.%<\/tt>/
                              (do let* ((tok [@1 4 -5])
                                        (tend (break-str tok ") "))
                                        pfx sym sfx tag)
@@ -151,15 +151,15 @@ This document was created by
                                  (t (set tag [@@2 tok]
                                          sym tok)))
                                (if tag
-                                 `<TT>@pfx<A HREF="#@tag">@sym</A>@sfx</TT>`
+                                 `<tt>@pfx<a href="#@tag">@sym</a>@sfx</tt>`
                                  @1))
                              @1)))
                       BODY
                       LOOKUP)))
 @(output)
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<HTML>
-<HEAD><TITLE>Manpage for TXR @VERSION</TITLE>
+<!doctype html public "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head><title>Manpage for TXR @VERSION</title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <script type="text/javascript">
 function toggle(link, id) {
@@ -211,9 +211,9 @@ function tocjump(hash) {
   }
 }
 </script>
-</HEAD><BODY>
-<H2>Manpage for <A HREF="#@[tagmap "lbAB"]">TXR </a>@VERSION</H2>
-<H2>@(time-string-utc TIME "%b %d, %Y")</H2>
+</head><body>
+<h2>Manpage for <a href="#@[tagmap "lbAB"]">TXR </a>@VERSION</h2>
+<h2>@(time-string-utc TIME "%b %d, %Y")</h2>
 <p>
 <form action="https://www.paypal.com/cgi-bin/webscr" method="post">
 <input type="hidden" name="cmd" value="_s-xclick">
@@ -223,15 +223,15 @@ function tocjump(hash) {
 <img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
 </form>
 </p>
-<DIV CLASS="toc">
+<div class="toc">
 @(repeat)
 @TOC
 @(end)
-</DIV>
+</div>
 @(repeat)
 @BODY
 @(first)
 @(end)
-</BODY>
-</HTML>
+</body>
+</html>
 @(end)
