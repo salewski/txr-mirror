@@ -864,20 +864,28 @@ static val bind_macro_params(val env, val menv, val params, val form,
     if (param == whole_k || param == form_k || param == env_k) {
       val nparam;
       val next = cdr(params);
+      val bform = if3(param == whole_k, whole,
+                      if3(param == form_k,
+                          ctx_form, menv));
       if (!next)
         eval_error(ctx_form, lit("~s: dangling ~s in param list"),
                    car(ctx_form), param, nao);
       nparam = car(next);
-      if (!bindable(nparam)) {
+
+      if (bindable(nparam)) {
+        env_vbind_special(new_env, nparam,
+                          bform,
+                          specials);
+      } else if (consp(nparam)) {
+        new_env = bind_macro_params(new_env, menv,
+                                    nparam, bform,
+                                    loose_p, ctx_form);
+        if (!new_env)
+          goto nil_out;
+      } else {
         err_sym = nparam;
         goto nbind;
       }
-      env_vbind_special(new_env, nparam,
-                        if3(param == whole_k,
-                            whole,
-                            if3(param == form_k,
-                                ctx_form, menv)),
-                        specials);
       params = cdr(next);
       continue;
     }
