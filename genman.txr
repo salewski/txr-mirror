@@ -74,8 +74,13 @@ Content-type: text/html
 @(collect :vars (TOC))
 @  (some)
 @    (cases)
+@      (cases)
+<DT><A HREF="#@tag">@num @rest</A><DD>
+@      (or)
 <DT><A HREF="#@tag">@num @rest
-@      (bind TOC `<DT><A NAME="@(toc-tag num)" CLASS="tocanchor">@num</A> <A HREF="#@[tagmap tag]">@rest`)
+</A><DD>
+@      (end)
+@      (bind TOC `<DT><A NAME="@(toc-tag num)" CLASS="tocanchor">@num</A> <A HREF="#@[tagmap tag]">@rest</A></DT>`)
 @    (or)
 <A NAME="index">@(skip)
 @      (output :into TOC)
@@ -96,7 +101,7 @@ Content-type: text/html
 @    (do (mapdo (do unless [tgthash @1] (set [tgthash @1] [tagmap tag]))
                 sym))
 @  (and)
-<DT><A HREF="#@tag">@num @rest
+<DT><A HREF="#@tag">@num @nil
 <DL>
 @    (cat TOC)
 @    (bind pos @(car (search-regex TOC #/<A/)))
@@ -193,10 +198,13 @@ function tocjump(hash) {
      if (ta.name == hash) {
        for (var e = ta.parentNode; e !== null; e = e.parentElement) {
          if (e.tagName == "DL") {
-           var atoggles = e.getElementsByClassName("toggle");
+           var dt = e.previousElementSibling;
            e.style.display = '';
-           if (atoggles.length > 0)
-             atoggles[0].innerHTML = '@opentxt';
+           if (dt !== null) {
+             var atoggles = dt.getElementsByClassName("toggle");
+             if (atoggles.length > 0)
+               atoggles[0].innerHTML = '@opentxt';
+           }
          }
        }
      }
