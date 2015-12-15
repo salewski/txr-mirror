@@ -23151,40 +23151,66 @@ in the evaluation phase.
 \*(TX macros support destructuring, similarly to Common Lisp macros.
 This means that macro parameter lists are like function argument lists,
 but support nesting. A macro parameter list can specify a nested parameter
-list in every place where a function argument list allows only a parameter
-name. For instance, consider this macro parameter list:
+list in every place where an argument symbol may appear.  For instance,
+consider this macro parameter list:
 
 .cblk
   ((a (b c)) : (c frm) ((d e) frm2 de-p) . g)
 .cble
 
-The top level of this list has four elements: the mandatory parameter
-.codn (a (b c)) ,
-the optional parameter
+The top-level of this nested form has the structure
+
+.cblk
+.meti \   >> ( I : < J < K . << L )
+.cble
+
+in which we can identify the major constituent positions as
+.metn I ,
+.metn J ,
+.meta K
+and
+.metn L .
+
+The constituent at position
+.meta I
+is the mandatory parameter
+.codn (a (b c)) .
+Position
+.meta J
+holds the optional parameter
 .code c
 (with default init form
-.codn frm ),
-the optional parameter
+.codn frm ).
+position.
+At
+.meta K
+is found the optional parameter
 .code (d e)
 (with default init form
 .code frm2
 and presence-indicating variable
-.codn de-p ),
-and the dot-position parameter
-.code g
+.codn de-p ).
+Finally, the parameter in the dot position
+.meta L
+is
+.codn g ,
 which captures trailing arguments.
 
-Note that some of the parameters are compounds:
+Obviously, some of the parameters are compound expressions rather
+than symbols:
 .code (a (b c))
 and
 .codn (d e) .
 These compounds express nested macro parameter lists.
 
-Macro parameter lists match a similar tree structure to their own.
-For instance a mandatory parameter
+Nested macro parameter lists recursively match the corresponding structure
+in the argument object.  For instance if a simple argument would capture
+the structure
+.code (1 (2 3))
+then we can replace the argument with the nested argument list
 .code (a (b c))
-matches a structure like
-.codn (1 (2 3)) ,
+which destructures the
+.code (1 (2 3))
 such that the parameters
 .codn a ,
 .code b
@@ -23198,7 +23224,16 @@ and
 .codn 3 ,
 respectively.
 
-The binding strictness is relaxed for optional parameters. If
+Nested macro parameter lists have all the features of the top-level
+macro parameter lists: they can have optional arguments with default
+values, use the dotted position, and contain the
+.codn :env ,
+.code :whole
+and
+.code :form
+special parameters, which are described below.  
+In nested parameter lists, the binding strictness is relaxed for optional
+parameters. If
 .code (a (b c))
 is optional, and the argument is, say,
 .codn (1) ,
@@ -23213,7 +23248,7 @@ and
 receive
 .codn nil .
 
-Macro parameter lists also supports two special keywords, namely
+Macro parameter lists also supports three special keywords, namely
 .codn :env ,
 .code :whole
 and
@@ -23237,7 +23272,18 @@ The
 and
 .code :form
 notations can occur anywhere in a macro parameter list, other than
-to the right of the consing dot.
+to the right of the consing dot. They can be used in nested
+macro parameter lists also.  Note that in a nested macro
+parameter list,
+.code :form
+and
+.code :env
+do not change meaning: they bind the same object as they would in
+the top-level of the macro parameter list.
+However the
+.code :whole parameter inside has a restricted scope in a nested parameter
+list: its parameter will capture just that part of the argument material which
+matches that parameter list, rather than the entire argument list.
 
 .TP* "Dialect Note:"
 
