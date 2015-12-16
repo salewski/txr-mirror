@@ -69,7 +69,7 @@ typedef enum functype
 {
    FINTERP,             /* Interpreted function. */
    F0, F1, F2, F3, F4,  /* Intrinsic functions with env. */
-   N0, N1, N2, N3, N4, N5, N6, N7   /* No-env intrinsics. */
+   N0, N1, N2, N3, N4, N5, N6, N7, N8   /* No-env intrinsics. */
 } functype_t;
 
 typedef union obj obj_t;
@@ -152,6 +152,7 @@ struct func {
     val (*n5)(val, val, val, val, val);
     val (*n6)(val, val, val, val, val, val);
     val (*n7)(val, val, val, val, val, val, val);
+    val (*n8)(val, val, val, val, val, val, val, val);
     val (*f0v)(val, varg);
     val (*f1v)(val, val, varg);
     val (*f2v)(val, val, val, varg);
@@ -165,6 +166,7 @@ struct func {
     val (*n5v)(val, val, val, val, val, varg);
     val (*n6v)(val, val, val, val, val, val, varg);
     val (*n7v)(val, val, val, val, val, val, val, varg);
+    val (*n8v)(val, val, val, val, val, val, val, val, varg);
   } f;
 };
 
@@ -764,6 +766,7 @@ val func_n4(val (*fun)(val, val, val, val));
 val func_n5(val (*fun)(val, val, val, val, val));
 val func_n6(val (*fun)(val, val, val, val, val, val));
 val func_n7(val (*fun)(val, val, val, val, val, val, val));
+val func_n8(val (*fun)(val, val, val, val, val, val, val, val));
 val func_f0v(val, val (*fun)(val env, varg));
 val func_f1v(val, val (*fun)(val env, val, varg));
 val func_f2v(val, val (*fun)(val env, val, val, varg));
@@ -777,12 +780,15 @@ val func_n4v(val (*fun)(val, val, val, val, varg));
 val func_n5v(val (*fun)(val, val, val, val, val, varg));
 val func_n6v(val (*fun)(val, val, val, val, val, val, varg));
 val func_n7v(val (*fun)(val, val, val, val, val, val, val, varg));
+val func_n8v(val (*fun)(val, val, val, val, val, val, val, val, varg));
 val func_n1o(val (*fun)(val), int reqargs);
 val func_n2o(val (*fun)(val, val), int reqargs);
 val func_n3o(val (*fun)(val, val, val), int reqargs);
 val func_n4o(val (*fun)(val, val, val, val), int reqargs);
 val func_n5o(val (*fun)(val, val, val, val, val), int reqargs);
 val func_n6o(val (*fun)(val, val, val, val, val, val), int reqargs);
+val func_n7o(val (*fun)(val, val, val, val, val, val, val), int reqargs);
+val func_n8o(val (*fun)(val, val, val, val, val, val, val, val), int reqargs);
 val func_n1ov(val (*fun)(val, varg), int reqargs);
 val func_n2ov(val (*fun)(val, val, varg), int reqargs);
 val func_n3ov(val (*fun)(val, val, val, varg), int reqargs);

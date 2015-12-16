@@ -2139,6 +2139,7 @@ val equal(val left, val right)
       case N5: return (left->f.f.n5 == right->f.f.n5) ? t : nil;
       case N6: return (left->f.f.n6 == right->f.f.n6) ? t : nil;
       case N7: return (left->f.f.n7 == right->f.f.n7) ? t : nil;
+      case N8: return (left->f.f.n8 == right->f.f.n8) ? t : nil;
       }
       return nil;
     }
@@ -4526,6 +4527,20 @@ val func_n7(val (*fun)(val, val, val, val, val, val, val))
   return obj;
 }
 
+val func_n8(val (*fun)(val, val, val, val, val, val, val, val))
+{
+  val obj = make_obj();
+  obj->f.type = FUN;
+  obj->f.functype = N8;
+  obj->f.env = nil;
+  obj->f.f.n8 = fun;
+  obj->f.variadic = 0;
+  obj->f.fixparam = 8;
+  obj->f.optargs = 0;
+  return obj;
+}
+
+
 val func_f0v(val env, val (*fun)(val, varg))
 {
   val obj = make_obj();
@@ -4695,6 +4710,19 @@ val func_n7v(val (*fun)(val, val, val, val, val, val, val, varg))
   return obj;
 }
 
+val func_n8v(val (*fun)(val, val, val, val, val, val, val, val, varg))
+{
+  val obj = make_obj();
+  obj->f.type = FUN;
+  obj->f.functype = N8;
+  obj->f.env = nil;
+  obj->f.f.n8v = fun;
+  obj->f.variadic = 1;
+  obj->f.fixparam = 8;
+  obj->f.optargs = 0;
+  return obj;
+}
+
 val func_n1o(val (*fun)(val), int reqargs)
 {
   val obj = func_n1(fun);
@@ -4734,6 +4762,20 @@ val func_n6o(val (*fun)(val, val, val, val, val, val), int reqargs)
 {
   val obj = func_n6(fun);
   obj->f.optargs = 6 - reqargs;
+  return obj;
+}
+
+val func_n7o(val (*fun)(val, val, val, val, val, val, val), int reqargs)
+{
+  val obj = func_n7(fun);
+  obj->f.optargs = 7 - reqargs;
+  return obj;
+}
+
+val func_n8o(val (*fun)(val, val, val, val, val, val, val, val), int reqargs)
+{
+  val obj = func_n8(fun);
+  obj->f.optargs = 8 - reqargs;
   return obj;
 }
 
@@ -4936,6 +4978,8 @@ val generic_funcall(val fun, struct args *args_in)
       return fun->f.f.n6(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arg[5]));
     case N7:
       return fun->f.f.n7(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arg[5]), z(arg[6]));
+    case N8:
+      return fun->f.f.n8(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arg[5]), z(arg[6]), z(arg[7]));
     case FINTERP:
       internal_error("unsupported function type");
     }
@@ -4986,6 +5030,8 @@ val generic_funcall(val fun, struct args *args_in)
       return fun->f.f.n6v(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arg[5]), args);
     case N7:
       return fun->f.f.n7v(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arg[5]), z(arg[6]), args);
+    case N8:
+      return fun->f.f.n8v(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arg[5]), z(arg[6]), z(arg[7]), args);
     }
   }
 
