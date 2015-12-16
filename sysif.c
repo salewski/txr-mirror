@@ -1173,15 +1173,16 @@ void sysif_init(void)
   make_struct_type(stat_s, nil, nil,
                    list(dev_s, ino_s, mode_s, nlink_s, uid_s, gid_s,
                         rdev_s, size_s, blksize_s, blocks_s, atime_s,
-                        mtime_s, ctime_s, nao), nil, nil, nil);
+                        mtime_s, ctime_s, nao), nil, nil, nil, nil);
 #if HAVE_PWUID
   make_struct_type(passwd_s, nil, nil,
                    list(name_s, passwd_s, uid_s, gid_s,
-                        gecos_s, dir_s, shell_s, nao), nil, nil, nil);
+                        gecos_s, dir_s, shell_s, nao), nil, nil, nil, nil);
 #endif
 #if HAVE_GRGID
   make_struct_type(group_s, nil, nil,
-                   list(name_s, passwd_s, gid_s, mem_s, nao), nil, nil, nil);
+                   list(name_s, passwd_s, gid_s, mem_s, nao),
+                   nil, nil, nil, nil);
 #endif
 
   reg_fun(intern(lit("errno"), user_package), func_n1o(errno_wrap, 0));

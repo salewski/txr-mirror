@@ -27,7 +27,8 @@
 extern val struct_type_s, meth_s;
 val make_struct_type(val name, val super,
                      val static_slots, val slots,
-                     val static_initfun, val initfun, val boactor);
+                     val static_initfun, val initfun, val boactor,
+                     val postinitfun);
 val struct_type_p(val obj);
 val super(val type);
 val make_struct(val type, val plist, struct args *);

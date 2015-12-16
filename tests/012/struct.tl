@@ -84,7 +84,8 @@
        \                        (slotset #:g0004 'x\n                                   \
        \                                 #:g0006)\n                                     \
        \                        (slotset #:g0004 'y\n                                   \
-       \                                 #:g0007)))")
+       \                                 #:g0007))\n                                    \
+       \                      ())")
 
 (defstruct (boa x y) nil
   (x 0) (y 0))

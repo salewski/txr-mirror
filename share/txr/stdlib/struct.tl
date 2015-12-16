@@ -43,7 +43,9 @@
       (throwf 'eval-error "~s: ~s isn't a bindable symbol" 'defstruct name))
     (unless (proper-listp slot-specs)
       (throwf 'eval-error "~s: bad slot syntax" 'defstruct))
-    (let* ((instance-init-form nil) (instance-fini-form nil)
+    (let* ((instance-init-form nil)
+           (instance-postinit-form nil)
+           (instance-fini-form nil)
            (slot-init-forms (collect-each ((slot slot-specs))
                               (tree-case slot
                                 ((word name args . body)
@@ -76,6 +78,16 @@
                                               "~s: duplicate :init"
                                               'defstruct))
                                      (set instance-init-form
+                                          (cons arg body))
+                                     ^(,word nil nil))
+                                   (:postinit
+                                     (unless (bindable arg)
+                                       (sys:bad-slot-syntax slot))
+                                     (when instance-postinit-form
+                                       (throw 'eval-error
+                                              "~s: duplicate :postinit"
+                                              'defstruct))
+                                     (set instance-postinit-form
                                           (cons arg body))
                                      ^(,word nil nil))
                                    (:fini
@@ -153,7 +165,12 @@
                                  req-args r-gens)
                        ,*(mapcar (ret ^(if ,@3
                                          (slotset ,arg-sym ',@1 ,@2)))
-                                 opt-args o-gens p-gens)))))))))))
+                                 opt-args o-gens p-gens))))))
+           ,(if instance-postinit-form
+              ^(lambda (,arg-sym)
+                 ,*(if (cdr instance-postinit-form)
+                     ^((let ((,(car instance-postinit-form) ,arg-sym))
+                         ,*(cdr instance-postinit-form)))))))))))
 
 (defmacro sys:struct-lit (name . plist)
   ^(make-struct ',name ',plist))

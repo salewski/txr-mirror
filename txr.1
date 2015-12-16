@@ -18693,6 +18693,20 @@ code of a base structure type, if any, is executed
 before any initializations specific to a derived
 structure type.
 
+The
+.code :init
+initializations are executed before any other
+slot initializations. The argument values passed to the
+.code new
+or
+.code lnew
+operator or the
+.code make-struct
+function are not yet stored in the object's slots,
+and are not accessible. Initialization code which needs
+these values to be stable can be defined with
+.codn :postinit .
+
 Initializers in base structures must be careful about assumptions about slot
 kinds, because derived structures can alter static slots to instance slots or
 vice versa. To avoid an unwanted initialization being applied to the
@@ -18710,6 +18724,35 @@ of an
 .code :init
 specifier are not surrounded by an implicit
 .codn block .
+
+.meIP (:postinit <> ( param ) << body-form *)
+The
+.code :postinit
+specifier is very similar to
+.codn :init .
+There are two differences. The first difference
+is that
+.codn body-form -s
+are evaluated after other initializations have taken
+place. The argument material from the
+.codn make-struct ,
+.code new
+or
+.code lnew
+invocation has already been processed and stored
+into slots.
+The second difference is that
+.code :postinit
+actions registered at different levels of the type's
+inheritance hierarchy are invoked in the opposite
+order compared to
+.code :init
+action. The
+.code :postinit
+specific to a derived struct type is called before
+the
+.code :postinit
+of its base type.
 
 .meIP (:fini <> ( param ) << body-form *)
 The
@@ -19280,6 +19323,7 @@ slot to an object takes place whenever the function is called.
 .synb
 .mets (make-struct-type < name < super < static-slots < slots
 .mets \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \  < static-initfun < initfun << boactor )
+.mets \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \  < boactor << postinitfun )
 .syne
 .desc
 The
@@ -19374,7 +19418,15 @@ so that the root supertype's
 .meta initfun
 is called first and the structure's own specific
 .meta initfun
-is called last. Each function is passed the newly created structure
+is called last. These calls occur before the slots are initialized
+from the
+.meta arg
+arguments
+or the
+.meta slot-init-plist
+of
+.codn make-struct .
+Each function is passed the newly created structure
 object, and may alter its slots.
 
 The
@@ -19390,9 +19442,38 @@ is invoked, with the structure as the leftmost argument, and
 the boa arguments as additional arguments. This takes place
 after the processing of
 .meta initfun
-functions. The
+functions, and after the processing of the
+.meta slot-init-plist
+specified in the
+.code make-struct
+call.  Note that the
 .meta boactor
-functions of the supertypes are not called.
+functions of the supertypes are not called, only the
+.meta boactor
+specific to the type being constructed.
+
+The
+.meta postinitfun
+argument either specifies an initialization function, or is
+.codn nil ,
+which is equivalent to specifying a function which does nothing.
+If specified, this function must accept one argument.
+The
+.meta postinitfun
+function is similar to
+.metn initfun .
+The difference is that
+.meta postinitfun
+functions are called after all other initialization processing,
+rather than before. Unlike
+.meta initfun
+functions, they are also called in the opposite
+in order of inheritance, so that the structure type's
+own specific
+.meta postinitfun
+is called first, and root supertype's
+.meta initfun
+is called last.
 
 .coNP Function @ find-struct-type
 .synb

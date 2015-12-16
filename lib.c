@@ -8725,7 +8725,7 @@ static void time_init(void)
 
   make_struct_type(time_s, nil, nil,
                    list(year_s, month_s, day_s,
-                        hour_s, min_s, sec_s, dst_s, nao), nil, nil, nil);
+                        hour_s, min_s, sec_s, dst_s, nao), nil, nil, nil, nil);
 }
 
 void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),

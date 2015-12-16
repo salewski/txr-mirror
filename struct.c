@@ -63,6 +63,7 @@ struct struct_type {
   val stinitfun;
   val initfun;
   val boactor;
+  val postinitfun;
   val dvtypes;
   val *stslot;
 };
@@ -105,10 +106,10 @@ void struct_init(void)
             func_n5(make_struct_type_compat));
   else
     reg_fun(intern(lit("make-struct-type"), user_package),
-            func_n7(make_struct_type));
+            func_n8o(make_struct_type, 7));
 
   reg_fun(intern(lit("make-struct-type"), system_package),
-          func_n7(make_struct_type));
+          func_n8(make_struct_type));
   reg_fun(intern(lit("find-struct-type"), user_package),
           func_n1(find_struct_type));
   reg_fun(intern(lit("struct-type-p"), user_package), func_n1(struct_type_p));
@@ -197,7 +198,8 @@ static struct struct_type *stype_handle(val *pobj, val ctx)
 
 val make_struct_type(val name, val super,
                      val static_slots, val slots,
-                     val static_initfun, val initfun, val boactor)
+                     val static_initfun, val initfun, val boactor,
+                     val postinitfun)
 {
   val self = lit("make-struct-type");
 
@@ -244,6 +246,7 @@ val make_struct_type(val name, val super,
     st->stinitfun = static_initfun;
     st->initfun = initfun;
     st->boactor = boactor;
+    st->postinitfun = default_bool_arg(postinitfun);
     st->dvtypes = nil;
 
     gc_finalize(stype, struct_type_finalize_f, nil);
@@ -290,7 +293,7 @@ val make_struct_type(val name, val super,
 static val make_struct_type_compat(val name, val super, val slots,
                                    val initfun, val boactor)
 {
-  return make_struct_type(name, super, nil, slots, nil, initfun, boactor);
+  return make_struct_type(name, super, nil, slots, nil, initfun, boactor, nil);
 }
 
 val find_struct_type(val sym)
@@ -338,6 +341,7 @@ static void struct_type_mark(val obj)
   gc_mark(st->stinitfun);
   gc_mark(st->initfun);
   gc_mark(st->boactor);
+  gc_mark(st->postinitfun);
   gc_mark(st->dvtypes);
 
   for (stsl = 0; stsl < st->nstslots; stsl++)
@@ -351,6 +355,16 @@ static void call_initfun_chain(struct struct_type *st, val strct)
       call_initfun_chain(st->super_handle, strct);
     if (st->initfun)
       funcall1(st->initfun, strct);
+  }
+}
+
+static void call_postinitfun_chain(struct struct_type *st, val strct)
+{
+  if (st) {
+    if (st->postinitfun)
+      funcall1(st->postinitfun, strct);
+    if (st->super)
+      call_postinitfun_chain(st->super_handle, strct);
   }
 }
 
@@ -395,6 +409,8 @@ val make_struct(val type, val plist, struct args *args)
     generic_funcall(st->boactor, args_copy);
   }
 
+  call_postinitfun_chain(st, sinst);
+
   inited = t;
 
   uw_unwind {
@@ -435,6 +451,8 @@ static void lazy_struct_init(val sinst, struct struct_inst *si)
     args_decl_list(argv, ARGS_MIN, cons(sinst, args));
     generic_funcall(st->boactor, argv);
   }
+
+  call_postinitfun_chain(st, sinst);
 
   inited = t;
 

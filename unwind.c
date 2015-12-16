@@ -873,17 +873,17 @@ void uw_late_init(void)
   sys_cont_poison_s = intern(lit("cont-poison"), system_package);
   sys_cont_free_s = intern(lit("cont-free"), system_package);
   frame_type = make_struct_type(intern(lit("frame"), user_package),
-                                nil, nil, nil, nil, nil, nil);
+                                nil, nil, nil, nil, nil, nil, nil);
   catch_frame_type = make_struct_type(intern(lit("catch-frame"),
                                              user_package),
                                       frame_type, nil,
                                       list(types_s, jump_s, nao),
-                                      nil, nil, nil);
+                                      nil, nil, nil, nil);
   handle_frame_type = make_struct_type(intern(lit("handle-frame"),
                                               user_package),
                                        frame_type, nil,
                                        list(types_s, fun_s, nao),
-                                       nil, nil, nil);
+                                       nil, nil, nil, nil);
   reg_var(unhandled_hook_s = intern(lit("*unhandled-hook*"),
           user_package), nil);
   reg_fun(intern(lit("get-frames"), user_package), func_n0(uw_get_frames));
