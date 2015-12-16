@@ -7625,6 +7625,10 @@ val dwim_set(val seq, val ind_range, val newval)
   case CONS:
   case LCONS:
   case VEC:
+    if (hashp(seq)) {
+      (void) sethash(seq, ind_range, newval);
+      return seq;
+    }
     return replace(seq, newval, ind_range, colon_k);
   case RNG:
     if (!hashp(seq))
