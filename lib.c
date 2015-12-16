@@ -1099,7 +1099,7 @@ val replace_list(val list, val items, val from, val to)
   if (!list)
     return items;
 
-  if (consp(from)) {
+  if (listp(from)) {
     val where = from;
     val seq = list;
     val idx = zero;
@@ -1143,7 +1143,7 @@ val replace_list(val list, val items, val from, val to)
     }
 
     return list;
-  } else if (null_or_missing_p(from)) {
+  } else if (missingp(from)) {
     from = zero;
   } else if (from == t) {
     from = nil;
@@ -3235,7 +3235,7 @@ val replace_str(val str_in, val items, val from, val to)
               str_in, typeof(str_in), nao);
   }
 
-  if (consp(from)) {
+  if (listp(from)) {
     val where = from;
     val len = length_str(str_in);
 
@@ -3271,7 +3271,7 @@ val replace_str(val str_in, val items, val from, val to)
     }
 
     return str_in;
-  } else if (null_or_missing_p(from)) {
+  } else if (missingp(from)) {
     from = zero;
   } else if (from == t) {
     from = len;
@@ -5820,7 +5820,7 @@ val replace_vec(val vec_in, val items, val from, val to)
   val it_seq = toseq(items);
   val len = length_vec(vec_in);
 
-  if (consp(from)) {
+  if (listp(from)) {
     val where = from;
     val len = length_vec(vec_in);
 
@@ -5856,7 +5856,7 @@ val replace_vec(val vec_in, val items, val from, val to)
     }
 
     return vec_in;
-  } else if (null_or_missing_p(from)) {
+  } else if (missingp(from)) {
     from = zero;
   } else if (from == t) {
     from = len;
