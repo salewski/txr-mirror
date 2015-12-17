@@ -26,9 +26,10 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #
-# Save command line in a way that can be re-run.
-# This takes care of spaces, but if there are shell-meta characters
-# in the arguments, oops.
+# The #!/bin/sh might be some legacy piece of crap,
+# not even up to 1990 POSIX.2 spec. So the first step
+# is to look for a better shell in some known places
+# and re-execute ourselves with that interpreter.
 #
 
 if test x$txr_shell = x ; then
@@ -47,6 +48,12 @@ if test x$txr_shell = x ; then
 fi
 
 set -u
+
+#
+# Save command line in a way that can be re-run.
+# This takes care of spaces, but if there are shell-meta characters
+# in the arguments, oops.
+#
 
 cmdline=
 for arg in "$0" ${@+"$@"} ; do
