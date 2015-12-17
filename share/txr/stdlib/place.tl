@@ -132,7 +132,9 @@
         (let ((pm-expander [*place-macro* (if (consp unex-place)
                                             (car unex-place))]))
           (when pm-expander
-            (sys:setq place [pm-expander unex-place])))
+            (sys:setq place (sys:set-macro-ancestor
+                              [pm-expander unex-place]
+                              unex-place))))
         (sys:setq place (macroexpand place env))
         (when (or (eq place unex-place)
                   (null place)
@@ -143,20 +145,28 @@
           (return place))
         (sys:setq unex-place place))))
 
+  (defun sys:cp-origin (to-tree from-form . syms)
+    (tree-case to-tree
+      ((a . d) (when (memq a syms)
+                 (sys:set-macro-ancestor to-tree from-form))
+               (sys:cp-origin a from-form . syms)
+               (sys:cp-origin d from-form . syms)))
+    to-tree)
+
   (defun call-update-expander (getter setter unex-place env body)
     (let* ((place (sys:pl-expand unex-place env))
            (expander (get-update-expander place)))
-      [expander getter setter place body]))
+      (sys:cp-origin [expander getter setter place body] place setter getter)))
 
   (defun call-clobber-expander (ssetter unex-place env body)
     (let* ((place (sys:pl-expand unex-place env))
            (expander (get-clobber-expander place)))
-      [expander ssetter place body]))
+      (sys:cp-origin [expander ssetter place body] place ssetter)))
 
   (defun call-delete-expander (deleter unex-place env body)
     (let* ((place (sys:pl-expand unex-place env))
            (expander (get-delete-expander place)))
-      [expander deleter place body])))
+      (sys:cp-origin [expander deleter place body] place deleter))))
 
 (defmacro with-update-expander ((getter setter) unex-place env body)
   ^(with-gensyms (,getter ,setter)

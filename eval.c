@@ -220,6 +220,12 @@ val lookup_origin(val form)
   return gethash(origin_hash, form);
 }
 
+static val set_origin(val form, val origin)
+{
+  (void) sethash(origin_hash, form, origin);
+  return form;
+}
+
 void error_trace(val exsym, val exvals, val out_stream, val prefix)
 {
   val last = last_form_evaled;
@@ -5071,6 +5077,7 @@ void eval_init(void)
   reg_fun(intern(lit("source-loc"), user_package), func_n1(source_loc));
   reg_fun(intern(lit("source-loc-str"), user_package), func_n2o(source_loc_str, 1));
   reg_fun(intern(lit("macro-ancestor"), user_package), func_n1(lookup_origin));
+  reg_fun(intern(lit("set-macro-ancestor"), system_package), func_n2(set_origin));
   reg_fun(intern(lit("rlcp"), user_package), func_n2(rlcp));
 
   eval_error_s = intern(lit("eval-error"), user_package);
