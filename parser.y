@@ -889,10 +889,12 @@ n_expr : SYMTOK                 { $$ = symhlpr($1, t); }
        | n_expr '.' n_expr      { uses_or2;
                                   if (consp($3) && car($3) == qref_s) {
                                     rplacd($3, rlcp(cons($1, cdr($3)), $1));
+                                    rl($$, num(parser->lineno));
                                     $$ = $3;
                                   } else {
-                                    $$ = rlcp(list(qref_s, $1, $3, nao),
-                                              or2($1, $3));
+                                    $$ = rl(rlcp(list(qref_s, $1, $3, nao),
+                                                 or2($1, $3)),
+                                                 num(parser->lineno));
                                   } }
        ;
 
