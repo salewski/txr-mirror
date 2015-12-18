@@ -687,9 +687,15 @@ function for a description.
 .meIP --debug-autoload
 This option turns on debugging, like
 .code --debugger
-but also arranges for stepping into the auto-load processing of
+but also requests stepping into the auto-load processing of
 \*(TL library code.  Normally, debugging through the evaluations
 triggered by auto-loading is suppressed.
+
+.meIP --debug-expansion
+This option turns on debugging, like
+.code --debugger
+but also requests stepping into the parse-time macro-expansion
+of \*(TL code embedded in \*(TX queries. Normally, this is suppressed.
 
 .coIP --help
 Prints usage summary on standard output, and terminates successfully.

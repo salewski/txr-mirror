@@ -52,6 +52,8 @@
 #include "gc.h"
 #include "args.h"
 #include "cadr.h"
+#include "debug.h"
+#include "txr.h"
 #include "parser.h"
 
 static val sym_helper(parser_t *parser, wchar_t *lexeme, val meta_allowed);
@@ -1556,11 +1558,16 @@ void yybadtoken(parser_t *parser, int tok, val context)
 int parse_once(val stream, val name, parser_t *parser)
 {
   int res = 0;
+#if CONFIG_DEBUG_SUPPORT
+  debug_state_t ds = debug_set_state(opt_dbg_expansion ? 0 : -1,
+                                     opt_dbg_expansion);
+#endif
 
   parser_common_init(parser);
 
   parser->stream = stream;
   parser->name = name;
+
 
   uw_catch_begin(cons(error_s, nil), esym, eobj);
 
@@ -1573,6 +1580,9 @@ int parse_once(val stream, val name, parser_t *parser)
 
   uw_unwind {
     parser_cleanup(parser);
+#if CONFIG_DEBUG_SUPPORT
+    debug_restore_state(ds);
+#endif
   }
 
   uw_catch_end;

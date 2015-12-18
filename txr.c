@@ -63,6 +63,7 @@ static const char *progname_u8;
 static val progpath = nil;
 int opt_noninteractive;
 int opt_compat;
+int opt_dbg_expansion;
 val stdlib_path;
 
 /*
@@ -154,6 +155,7 @@ static void help(void)
 "--gc-delta=N           Invoke garbage collection when malloc activity\n"
 "                       increments by N megabytes since last collection.\n"
 "--debug-autoload       Allow debugger to step through library auto-loading.\n"
+"--debug-expansion      Allow debugger to step through macro-expansion of query.\n"
 "--yydebug              Debug Yacc parser, if compiled with YYDEBUG support.\n"
 "--gc-debug             Enable a garbage collector stress test (slow).\n"
 "--vg-debug             Enable Valgrind integration, if compiled in.\n"
@@ -565,6 +567,15 @@ int txr_main(int argc, char **argv)
 #if CONFIG_DEBUG_SUPPORT
         opt_debugger = 1;
         opt_dbg_autoload = 1;
+        continue;
+#else
+        no_dbg_support(opt);
+        return EXIT_FAILURE;
+#endif
+      } else if (equal(opt, lit("debug-expansion"))) {
+#if CONFIG_DEBUG_SUPPORT
+        opt_debugger = 1;
+        opt_dbg_expansion = 1;
         continue;
 #else
         no_dbg_support(opt);

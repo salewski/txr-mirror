@@ -37,6 +37,7 @@ extern int opt_noninteractive;
 extern int opt_compat;
 extern int opt_debugger;
 extern int opt_dbg_autoload;
+extern int opt_dbg_expansion;
 extern alloc_bytes_t opt_gc_delta;
 extern const wchli_t *version;
 extern const wchar_t *progname;
