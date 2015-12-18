@@ -692,11 +692,12 @@ static val h_var(match_line_ctx *c)
       } else {
       /* Re-generate a new spec in which the next variable
          is replaced by its value, and repeat. */
-        c->specline = cons(elem, cons(cdr(pair), rest(c->specline)));
+        val r = rest(c->specline);
+        c->specline = rlcp(cons(elem, rlcp(cons(cdr(pair), r), r)), r);
         return repeat_spec_k;
       }
     } else if (op == text_s) {
-      val text_only_spec = cons(next, nil);
+      val text_only_spec = rlcp(cons(next, nil), next);
       val find = search_match(c, modifier, text_only_spec);
       val fpos = car(find);
       if (!find) {
@@ -1254,7 +1255,7 @@ static val do_match_line(match_line_ctx *c)
 
     elem = first(c->specline);
 
-    debug_check(elem, c->bindings, c->dataline, c->data_lineno,
+    debug_check(c->specline, c->bindings, c->dataline, c->data_lineno,
                 c->pos, c->base);
 
     switch (type(elem)) {
@@ -3961,7 +3962,7 @@ repeat_spec_same_data:
 
     open_data_source(&c);
 
-    debug_check(first_spec, c.bindings, c.data, c.data_lineno, nil, nil);
+    debug_check(specline, c.bindings, c.data, c.data_lineno, nil, nil);
 
     if (consp(first_spec) && !rest(specline)) {
       val sym = first(first_spec);
