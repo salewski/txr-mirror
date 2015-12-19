@@ -65,9 +65,16 @@
                   (if (,sym ,*(if (eq 'dwim sym) ^(,(second test)))
                             ,*temps) ,then ,else)))))))))
 
+(macro-time
+  (defun sys:if-to-cond (if-oper cond-oper pairs)
+    (tree-case pairs
+      (((test . forms) . rest) ^(,if-oper ,test (progn ,*forms)
+                                          (,cond-oper ,*rest)))
+      (() ())
+      (else (throwf 'eval-error "~s: bad syntax: ~s" cond-oper pairs)))))
+
 (defmacro conda (. pairs)
-  (tree-case pairs
-    (((test . forms) . rest) ^(ifa ,test (progn ,*forms)
-                                   (conda ,*rest)))
-    (() ())
-    (else (throwf 'eval-error "conda: bad syntax: ~s" pairs))))
+  (sys:if-to-cond 'ifa 'conda pairs))
+
+(defmacro condlet (. pairs)
+  (sys:if-to-cond 'iflet 'condlet pairs))

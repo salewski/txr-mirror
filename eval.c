@@ -2961,14 +2961,22 @@ static val me_iflet_whenlet(val form, val env)
   val args = form;
   val sym = pop(&args);
   val lets = pop(&args);
-  val lastlet = last(lets);
 
-  if (nilp(lastlet))
-    eval_error(form, lit("~s: empty binding list"), sym, nao);
+  if (atom(lets)) {
+    return apply_frob_args(list(if3(sym == iflet_s, if_s, when_s),
+                                lets, args, nao));
+  } else {
+    val lastlet = last(lets);
 
-  return list(let_star_s, lets,
-              cons(if3(sym == iflet_s, if_s, when_s),
-                   cons(car(car(lastlet)), args)), nao);
+    if (nilp(lastlet))
+      eval_error(form, lit("~s: empty binding list"), sym, nao);
+
+
+
+    return list(let_star_s, lets,
+                cons(if3(sym == iflet_s, if_s, when_s),
+                     cons(car(car(lastlet)), args)), nao);
+  }
 }
 
 static val me_dotimes(val form, val env)

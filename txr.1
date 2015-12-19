@@ -12184,10 +12184,10 @@ a return value can be specified. Under normal termination, the return value is
 
 .coNP Macros @ iflet and @ whenlet
 .synb
-.mets (iflet >> ({ sym | >> ( sym << init-form )}+)
+.mets (iflet >> {({ sym | >> ( sym << init-form )}+) | << atom-form }
 .mets \ \  < then-form <> [ else-form ])
-.mets (whenlet >> ({ sym | >> ( sym << init-form )}+)
-.mets \ \  << body-form *])
+.mets (whenlet >> {({ sym | >> ( sym << init-form )}+) | << atom-form }
+.mets \ \  << body-form *)
 .syne
 .desc
 The
@@ -12202,13 +12202,30 @@ and
 .codn when ,
 respectively.
 
-The evaluation of these forms takes place as follows. First, fresh bindings are
-established for
+In either construct's syntax, a non-compound form
+.meta atom-form
+may appear in place of the variable binding list. In this case,
+.meta atom-form
+is evaluated as a form, and the construct is equivalent to
+its respective ordinary
+.code if
+or
+.code when
+counterpart.
+
+If the list of variable bindings is empty, it is interpreted as the atom
+.code nil
+and treated as an
+.codn atom-form .
+
+If one or more bindings are specified rather than
+.metn atom-form ,
+then the evaluation of these forms takes
+place as follows. First, fresh bindings are established for
 .metn sym -s
 as if by the
 .code let*
 operator.
-It is an error for the list of variable bindings to be empty.
 
 Then, the last variable's value is tested. If it is not
 .code nil
@@ -12257,6 +12274,93 @@ is returned.
   (whenlet ((fv (get-frobosity-value))
             (exceeds-p (> fv 150)))
     (format t "frobosity value ~a exceeds 150\en" fv))
+
+  ;; yield 4: 3 interpreted as atom-form
+  (whenlet 3 4)
+
+  ;; yield 4: nil interpreted as atom-form
+  (iflet () 3 4)
+.cble
+
+.coNP Macro @ condlet
+.synb
+.mets (condlet
+.mets \ \  ([({ sym | >> ( sym << init-form )}+) | << atom-form ]
+.mets \ \ \  << body-form *)*)
+.syne
+.desc
+The
+.code condlet
+macro generalizes
+.codn iflet
+
+Arguments to
+.code condlet
+are are pairs.
+
+Each arguments is a compound consisting of at least one item: a list of
+bindings or
+.metn atom-form .
+This item is followed by zero or more
+.metn body-form -s.
+
+If the are are no
+.metn body-form -s
+then the situation is treated as if there were a single
+.meta body-form
+specified as
+.codn nil .
+
+The pairs of arguments are considered in sequence, starting with the
+leftmost.
+
+If the argument's left item is an
+.meta atom-form
+then the form is evaluated. If it yields true, then the
+.metn body-form -s
+next to it are evaluated in order, and the
+.code condlet
+form terminates, yielding the value obtained from the last
+.metn body-form .
+If
+.meta atom-form
+yields false, then the next argument is considered, if there is one.
+
+If the argument's left item is a list of bindings, then it is processed
+with exactly the same logic as under the
+.code iflet
+macro. If the last binding contains a true value, then the
+adjoining
+.metn body-form -s
+are evaluated in a scope in which all of the bindings are visible, and
+.code condlet
+terminates, yielding the value of the last
+.metn body-form .
+Otherwise, the next argument of
+.code condlet
+is considered (processed in a scope in which the bindings produced
+by the current item are no longer visible).
+
+If
+.code condlet
+runs out of arguments, it terminates and returns
+.codn nil .
+
+.TP* Example:
+.cblk
+  (let ((l '(1 2 3)))
+    (condlet
+       ;; first arg
+       (((a (first l)   ;; a binding gets 1
+         (b (second l)) ;; b binding gets 2
+         (g (> a b))))  ;; last variable g is nil
+        'foo)           ;; not evaluated
+       ;; second arg
+       (((b (second l)  ;; b gets 2
+         (c (third l))  ;; c gets 3
+         (g (> b c))))  ;; last variable g is true
+        'bar)))         ;; condlet terminates
+   --> bar              ;; result is bar
 .cble
 
 .coNP Macro @ ifa
