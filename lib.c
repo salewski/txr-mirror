@@ -8124,6 +8124,21 @@ static void obj_init(void)
   prog_string = string(progname);
 }
 
+static val simple_qref_args_p(val args, val pos)
+{
+  if (nilp(args)) {
+    return if2(ge(pos, two), t);
+  } else if (!consp(args)) {
+    return nil;
+  } else {
+    val arg = car(args);
+    if (symbolp(arg) || (consp(arg) && car(arg) != qref_s)) {
+      return simple_qref_args_p(cdr(args), succ(pos));
+    }
+    return nil;
+  }
+}
+
 val obj_print_impl(val obj, val out, val pretty)
 {
   val ret = obj;
@@ -8174,6 +8189,15 @@ val obj_print_impl(val obj, val out, val pretty)
         obj_print_impl(second(obj), out, pretty);
         put_string(lit(".."), out);
         obj_print_impl(third(obj), out, pretty);
+      } else if (sym == qref_s && simple_qref_args_p(cdr(obj), zero)) {
+        val iter, next;
+        for (iter = cdr(obj); iter; iter = next) {
+          next = cdr(iter);
+          obj_print_impl(car(iter), out, pretty);
+          if (next)
+            put_string(lit("."), out);
+          iter = next;
+        }
       } else {
         val iter;
         val closepar = chr(')');
