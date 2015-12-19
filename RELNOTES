@@ -1,3 +1,56 @@
+                                    TXR 128
+                                   2015-12-19
+
+
+  Features
+
+  - Further refinement of function and macro coexistence:
+    - symbol-function, fboundp and fmakunbound operate only on function
+      binding.
+    - new symbol-macro function.
+  - The :whole and :form parameters now accept a destructuring parameter
+    list as their argument, no longer insisting on nothing but a symbol.
+  - OOP:
+    - defstruct now supports a :postinit slot specifier, which allows
+      additional actions to be taken after an object is constructed, and the
+      slots are fully initialized.
+    - make-struct-type has a new argument related to the above change:
+      a <postinitfun> function.
+  - Place manipulation macros now propagate ancestry information from
+    the place forms on which they operate to the generate place-accessing
+    operations, as if those operations were macro-expansions of the places.
+    (Which they are not, at least not exactly). The benefit is that errors in
+    those place access operations can consequently be traced to the original
+    place forms, for more meaningful diagnosis.
+  - dot notation like a.b.c now prints back as a.b.c rather than
+    (qref a b c).
+  - Doc:
+    - HTML section numbers are now hyperlinks which jump back to the
+      right place in the table of contents.
+    - On jump-back, the table of contents expands sufficiently to
+      reveal the target entry, if that is not already showing.
+
+  Bugs
+
+  - Fixed incorrect behavior of (replace seq val nil), also affecting
+    replace-list, replace-vec and replace-str. The nil was wrongly
+    treated as as a zero <from> argument (acting in complement to a
+    missing <to> denoting the end of seq), instead of an empty <idx-list>.
+  - Fixed broken assignment to [h x] when h is a hash and x is a vector
+    or list.
+  - Fixed dot syntax like a.b not recording source location info into
+    the (qref ...) form when its constituents are atoms, such as symbols.
+  - Fixed neglect to propagate macro ancestry information across
+    non-macro code transformations.
+  - Fixed situations in which the debugger fails to report the
+    source file and line number.
+  - Fixed annoying debugger behavior of stepping through the macro expansion
+    time evaluations of a query by making that behavior subject to
+    a new option (--debug-expansions). Debugger will now stop on
+    the first line of the TXR language query like it used to.
+
+
+
                                     TXR 127
                                    2015-12-10
 
