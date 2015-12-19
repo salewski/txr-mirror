@@ -10595,15 +10595,21 @@ font
 .\}
 denotes some syntactic unit: it
 may be a symbol or compound form. The syntactic unit is explained
-in the Description section.
+in the corresponding Description section.
 
 .meIP {syntax}* << word *
 This indicates a repetition of zero or more of the given
 syntax enclosed in the braces or syntactic unit.
+The curly braces may be omitted if the scope of the
+.code *
+is clear.
 
 .meIP {syntax}+ << word +
 This indicates a repetition of one or more of the given
 syntax enclosed in the braces or syntactic unit.
+The curly braces may be omitted if the scope of the
+.code +
+is clear.
 
 .coIP {syntax | syntax | ...}
 This indicates a choice among alternatives.
@@ -10615,10 +10621,6 @@ repetition.
 
 .meIP [syntax] <> [ word ]
 Square brackets indicate optional syntax.
-
-.coIP alternative1 | alternative2 | ... | alternativeN
-Multiple syntactic variations allowed in one place are
-indicated as bar-separated items.
 
 .meIP syntax -> < result
 The arrow notation is used in examples to indicate that the evaluation
