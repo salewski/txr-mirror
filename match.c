@@ -4237,6 +4237,7 @@ static void dir_tables_init(void)
   sethash(h_directive_table, do_s, cptr(coerce(mem_t *, h_do)));
   sethash(h_directive_table, require_s, cptr(coerce(mem_t *, hv_trampoline)));
   sethash(h_directive_table, assert_s, cptr(coerce(mem_t *, h_assert)));
+  sethash(h_directive_table, line_s, cptr(coerce(mem_t *, hv_trampoline)));
 
   sethash(non_matching_directive_table, block_s, t);
   sethash(non_matching_directive_table, accept_s, t);
