@@ -16,7 +16,9 @@ static void dir_tables_init(void)
                        (pkg-name [mapcar car entry])
                        (pkg [mapcar cdr entry]))
           (append-each ((sym (package-symbols pkg)))
-            (when (or (boundp sym) (fboundp sym) (constantp sym))
+            (when (or (boundp sym) (fboundp sym)
+                      (mboundp sym) (special-operator-p sym)
+                      (constantp sym))
               (list sym)))))
 @(bind txl-sym
        @(append-each ((sym txl-orig-sym))
@@ -46,17 +48,16 @@ static void dir_tables_init(void)
 @(bind glyph `!$%&*+\\-<=>?@{bs}_~`)
 @(bind lispwords @(append-each ((sym txl-orig-sym)
                                 (text txl-sym))
-                    (let ((fb (symbol-function sym)))
-                      (if (or (special-operator-p sym)
-                              (and fb (not (functionp fb))))
-                        (unless (memq sym '(and dwim inc oand opip or pset
-                                            qquote quote qref rotate set
-                                            shift swap sys:l1-setq
-                                            sys:lisp1-setq sys:qquote
-                                            sys:quasi sys:quasilist sys:setq
-                                            sys:setqf new lnew
-                                            meth umeth usl))
-                          (list text))))))
+                    (if (or (special-operator-p sym)
+                            (mboundp sym))
+                      (unless (memq sym '(and dwim inc oand opip or pset
+                                              qquote quote qref rotate set
+                                              shift swap sys:l1-setq
+                                              sys:lisp1-setq sys:qquote
+                                              sys:quasi sys:quasilist sys:setq
+                                              sys:setqf new lnew
+                                              meth umeth usl))
+                        (list text)))))
 @(define generate (txr-p))
 @  (output @(if txr-p "txr.vim" "tl.vim") :named out)
 " VIM Syntax file for txr
@@ -195,7 +196,7 @@ hi def link txr_nested_error Error
 
 let b:current_syntax = "lisp"
 
-set lispwords=@{lispwords ","},:method,:function,:init,:fini
+set lispwords=@{lispwords ","},:method,:function,:init,:postinit,:fini
 @  (end)
 @(end)
 @(generate t)
