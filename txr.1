@@ -2833,6 +2833,12 @@ match for some lines.
 These directives match a variable or expression against the current line
 number or character position.
 
+.coIP @(name)
+Match a variable against the name of the current data source.
+
+.coIP @(data)
+Match a variable against the remaining data (lazy list of strings).
+
 .coIP @(some)
 Multiple clauses are each applied to the same input. Succeeds if at least one
 of the clauses matches the input. The bindings established by earlier
@@ -3880,6 +3886,109 @@ character positions:
 
 .cblk
   @(line @(+ a (* b c)))
+.cble
+
+.dir name
+
+The
+.code name
+directive performs a binding between the name of the current
+data source and a variable or expression:
+
+.cblk
+  @(name na)
+  @(name "data.txt")
+.cble
+
+If
+.code na
+is an unbound variable, it is bound and takes on the name
+of the data source, such as a file name. If
+.code na
+is bound, then it has to match the name of the data source,
+otherwise the directive fails.
+
+The directive
+.code @(name "data.txt")
+fails unless the current data source has that name.
+
+.dir data
+
+The
+.code data
+directive performs a binding between the unmatched data
+at the current position, and and a variable or expression.
+The unmatched data takes the form of a list of strings:
+
+.cblk
+  @(data d)
+.cble
+
+The binding is performed on object equality. If
+.code d
+is already bound, a matching failure occurs unless
+.code d
+contains the current unmatched data.
+
+Matching the current data has various uses.
+
+For instance, two branches of pattern matching can, at some point, bind the
+current data into different variables. When those paths join, the variables can
+be bound together to create the assertion that the current data had been the
+same at those points:
+
+.cblk
+  @(all)
+  @  (skip)
+  foo
+  @  (skip)
+  bar
+  @  (data x)
+  @(or)
+  @  (skip)
+  xyzzy
+  @  (skip)
+  bar
+  @  (data y)
+  @(end)
+  @(require (eq x y))
+.cblk
+
+Here, two branches of the
+.code @(all)
+match some material which ends in the line
+.codn "bar" .
+However, it is possible that this is a different line. The
+.code data
+directives are used to create an assertion that the data regions matched
+by the two branches are identical. That is to say, the unmatched data
+.code x
+captured after the first
+.code "bar"
+and the unmatched data
+.code y
+captured after the second
+.code "bar"
+must be the same object in order for
+.code @(require (eq x y))
+to succeed, which implies that the same
+.code "bar"
+was matched in both branches of the
+.codn @(all) .
+
+Another use of
+.code data
+is simply to gain access to the trailing remainder of the unmatched
+input in order to print it, or do some special processing on it.
+
+The
+.code tprint
+Lisp function is useful for printing the unmatched data as newline-terminated
+lines:
+
+.cblk
+  @(data remainder)
+  @(do (tprint remainder))
 .cble
 
 .dirs some all none maybe cases choose

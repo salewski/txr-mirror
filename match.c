@@ -59,7 +59,8 @@ int opt_arraydims = 1;
 val decline_k, next_spec_k, repeat_spec_k;
 val mingap_k, maxgap_k, gap_k, mintimes_k, maxtimes_k, times_k;
 val lines_k, chars_k;
-val text_s, choose_s, gather_s, do_s, mod_s, modlast_s, line_s, fuzz_s, load_s;
+val text_s, choose_s, gather_s, do_s, mod_s, modlast_s;
+val line_s, data_s, name_s, fuzz_s, load_s;
 val include_s, close_s, require_s;
 val longest_k, shortest_k, greedy_k;
 val vars_k, resolve_k;
@@ -3863,6 +3864,43 @@ static val v_line(match_files_ctx *c)
   return next_spec_k;
 }
 
+static val v_data(match_files_ctx *c)
+{
+  spec_bind (specline, first_spec, c->spec);
+  val args = rest(first_spec);
+  val pat = car(args);
+
+  if (!args || rest(args))
+    sem_error(specline, lit("data directive takes one argument"), nao);
+
+  c->bindings = dest_bind(specline, c->bindings, pat, c->data, eql_f);
+
+  if (c->bindings == t) {
+    debuglf(specline, lit("data mismatch (data vs. ~s)"), pat, nao);
+    return nil;
+  }
+
+  return next_spec_k;
+}
+
+static val v_name(match_files_ctx *c)
+{
+  spec_bind (specline, first_spec, c->spec);
+  val args = rest(first_spec);
+  val pat = car(args);
+
+  if (!args || rest(args))
+    sem_error(specline, lit("name directive takes one argument"), nao);
+
+  c->bindings = dest_bind(specline, c->bindings, pat, c->curfile, equal_f);
+
+  if (c->bindings == t) {
+    debuglf(specline, lit("name mismatch (~s vs. ~s)"), c->curfile, pat, nao);
+    return nil;
+  }
+
+  return next_spec_k;
+}
 
 static val h_do(match_line_ctx *c)
 {
@@ -4157,6 +4195,8 @@ static void syms_init(void)
   mod_s = intern(lit("mod"), user_package);
   modlast_s = intern(lit("modlast"), user_package);
   line_s = intern(lit("line"), user_package);
+  data_s = intern(lit("data"), user_package);
+  name_s = intern(lit("name"), user_package);
   fuzz_s = intern(lit("fuzz"), user_package);
   counter_k = intern(lit("counter"), keyword_package);
 }
@@ -4209,6 +4249,8 @@ static void dir_tables_init(void)
   sethash(v_directive_table, load_s, cptr(coerce(mem_t *, v_load)));
   sethash(v_directive_table, close_s, cptr(coerce(mem_t *, v_close)));
   sethash(v_directive_table, line_s, cptr(coerce(mem_t *, v_line)));
+  sethash(v_directive_table, data_s, cptr(coerce(mem_t *, v_data)));
+  sethash(v_directive_table, name_s, cptr(coerce(mem_t *, v_name)));
 
   sethash(h_directive_table, text_s, cptr(coerce(mem_t *, h_text)));
   sethash(h_directive_table, var_s, cptr(coerce(mem_t *, h_var)));
@@ -4238,6 +4280,8 @@ static void dir_tables_init(void)
   sethash(h_directive_table, require_s, cptr(coerce(mem_t *, hv_trampoline)));
   sethash(h_directive_table, assert_s, cptr(coerce(mem_t *, h_assert)));
   sethash(h_directive_table, line_s, cptr(coerce(mem_t *, hv_trampoline)));
+  sethash(h_directive_table, data_s, cptr(coerce(mem_t *, hv_trampoline)));
+  sethash(h_directive_table, name_s, cptr(coerce(mem_t *, hv_trampoline)));
 
   sethash(non_matching_directive_table, block_s, t);
   sethash(non_matching_directive_table, accept_s, t);
