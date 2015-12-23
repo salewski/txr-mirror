@@ -1222,7 +1222,7 @@ static val h_chr(match_line_ctx *c)
   c->bindings = dest_bind(elem, c->bindings, pat, c->pos, eql_f);
 
   if (c->bindings == t) {
-    debuglf(elem, lit("chr mismatch (position ~d vs. ~d)"), c->pos, pat, nao);
+    debuglf(elem, lit("chr mismatch (position ~d vs. ~s)"), c->pos, pat, nao);
     return nil;
   }
 
@@ -3856,7 +3856,7 @@ static val v_line(match_files_ctx *c)
   c->bindings = dest_bind(specline, c->bindings, pat, c->data_lineno, eql_f);
 
   if (c->bindings == t) {
-    debuglf(specline, lit("line mismatch (line ~d vs. ~d)"), c->data_lineno, pat, nao);
+    debuglf(specline, lit("line mismatch (line ~d vs. ~s)"), c->data_lineno, pat, nao);
     return nil;
   }
 
