@@ -4025,7 +4025,7 @@ val chr_iscntrl(val ch)
 
 val chr_isdigit(val ch)
 {
-  return tnil(iswdigit(c_chr(ch)));
+  return if2(iswdigit(c_chr(ch)), minus(ch, chr('0')));
 }
 
 val chr_isgraph(val ch)
@@ -4070,7 +4070,18 @@ val chr_isupper(val ch)
 
 val chr_isxdigit(val ch)
 {
-  return tnil(iswxdigit(c_chr(ch)));
+  wchar_t cc = c_chr(ch);
+
+  if ('0' <= cc && cc <= '9')
+    return num_fast(cc - '0');
+
+  if ('A' <= cc && cc <= 'F')
+    return num_fast(cc - 'A' + 10);
+
+  if ('a' <= cc && cc <= 'a')
+    return num_fast(cc - 'a' + 10);
+
+  return nil;
 }
 
 val chr_toupper(val ch)

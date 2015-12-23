@@ -17646,11 +17646,11 @@ character. For other characters, it returns
 .mets (chr-isdigit << char )
 .syne
 .desc
-This function returns
-.code t
-if the character
+If
 .meta char
-is is an ASCII digit.
+is is an ASCII digit character,
+.code chr-isdigit
+returns the integer value, 0 to 9, corresponding to that character.
 Otherwise, it returns
 .codn nil .
 
@@ -17803,19 +17803,28 @@ is an ASCII upper case letter. Otherwise it returns
 .mets (chr-isxdigit << char )
 .syne
 .desc
-This function returns
-.code t
-if
+If
 .meta char
-is a hexadecimal digit. One of the ASCII
-letters
-.code A
-through
-.codn F ,
-or their lower-case equivalents, or an ASCII digit
+is a hexadecimal digit character,
+.code chr-isxdigit
+returns its integer value 0 to 15.
+Otherwise it returns
+.codn nil  .
+
+A hexadecimal digit is one of the ASCII
+digit characters
 .code 0
 through
-.codn 9 .
+.codn 9 ,
+or else one of the letters
+.code A
+through
+.code F
+or their lower-case equivalents
+.code a
+through
+.code f
+denoting the values 10 to 15.
 
 .coNP Function @ chr-toupper
 .synb
