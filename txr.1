@@ -7488,7 +7488,9 @@ using the main clause.
 Repeat supports arguments.
 
 .cblk
-.mets @(repeat [:counter << symbol ] [:vars <> ( symbol *)])
+.mets @(repeat
+.mets \ \ \  [:counter >> { symbol | >> ( symbol << expr )}]
+.mets \ \ \  [:vars <> ( symbol *)])
 .cble
 
 The
@@ -7496,7 +7498,18 @@ The
 argument designates a symbol which will behave as an integer
 variable over the scope of the clauses inside the repeat. The variable provides
 access to the repetition count, starting at zero, incrementing with each
-repetition.
+repetition. If the the argument is given as
+.cblk
+.meti >> ( symbol << expr )
+.cblk
+then
+.meta expr
+is a Lisp expression whose value is taken as a displacement value which
+is added to each iteration of the counter. For instance
+.code :counter (c 1)
+specifies a counter
+.code c
+which counts from 1.
 
 The
 .code :vars

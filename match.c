@@ -1786,7 +1786,14 @@ static void do_output_line(val bindings, val specline, val filter, val out)
           val empty_clauses = pop(&clauses);
           val mod_clauses = pop(&clauses);
           val modlast_clauses = pop(&clauses);
-          val counter = getplist(args, counter_k);
+          val counter_spec = getplist(args, counter_k);
+          val consp_counter = consp(counter_spec);
+          val counter = if3(consp_counter, first(counter_spec), counter_spec);
+          val counter_base = if3(consp_counter,
+                                 eval_with_bindings(second(counter_spec),
+                                                    elem,
+                                                    bindings,
+                                                    counter_spec), zero);
           val vars = getplist(args, vars_k);
           val bind_cp = extract_bindings(bindings, elem, vars);
           val max_depth = reduce_left(func_n2(max2),
@@ -1814,7 +1821,7 @@ static void do_output_line(val bindings, val specline, val filter, val out)
               val bind_d = mapcar(func_n1(bind_cdr), bind_cp);
 
               if (counter) {
-                rplacd(counter_var, num_fast(i));
+                rplacd(counter_var, plus(num_fast(i), counter_base));
                 rplacd(counter_bind, bind_a);
                 bind_a = counter_bind;
               }
@@ -1923,7 +1930,14 @@ static void do_output(val bindings, val specs, val filter, val out)
         val empty_clauses = pop(&clauses);
         val mod_clauses = pop(&clauses);
         val modlast_clauses = pop(&clauses);
-        val counter = getplist(args, counter_k);
+        val counter_spec = getplist(args, counter_k);
+        val consp_counter = consp(counter_spec);
+        val counter = if3(consp_counter, first(counter_spec), counter_spec);
+        val counter_base = if3(consp_counter,
+                               eval_with_bindings(second(counter_spec),
+                                                  first_elem,
+                                                  bindings,
+                                                  counter_spec), zero);
         val vars = getplist(args, vars_k);
         val bind_cp = extract_bindings(bindings, first_elem, vars);
         val max_depth = reduce_left(func_n2(max2),
@@ -1947,7 +1961,7 @@ static void do_output(val bindings, val specs, val filter, val out)
             val bind_d = mapcar(func_n1(bind_cdr), bind_cp);
 
             if (counter) {
-              rplacd(counter_var, num_fast(i));
+              rplacd(counter_var, plus(num_fast(i), counter_base));
               rplacd(counter_bind, bind_a);
               bind_a = counter_bind;
             }
