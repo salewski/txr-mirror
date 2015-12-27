@@ -1384,164 +1384,86 @@ static val match_line_completely(match_line_ctx c)
   return result;
 }
 
-
-val format_field(val obj, val modifier, val filter, val eval_fun)
+static val tx_subst_vars(val spec, val bindings, val filter)
 {
-  val n = zero, sep = lit(" ");
-  val plist = nil;
-  val str;
+  if (opt_compat && opt_compat <= 128) {
+    list_collect_decl(out, iter);
+    uw_env_begin;
 
-  for (; modifier; pop(&modifier)) {
-    val item = first(modifier);
-    if (regexp(item)) {
-      uw_throw(query_error_s, lit("bad field format: regex modifier in output"));
-    } else if (keywordp(item)) {
-      plist = modifier;
-      break;
-    } else if (consp(item) && car(item) == dwim_s) {
-      val arg_expr = second(item);
+    uw_set_match_context(cons(spec, bindings));
 
-      if (consp(arg_expr) && car(arg_expr) == range_s) {
-        val from = funcall1(eval_fun, second(arg_expr));
-        val to = funcall1(eval_fun, third(arg_expr));
+    while (spec) {
+      val elem = first(spec);
 
-        obj = sub(obj, from, to);
-      } else {
-         val arg = funcall1(eval_fun, arg_expr);
-         if (bignump(arg) || fixnump(arg)) {
-           obj = ref(obj, arg);
-         } else if (rangep(arg)) {
-           obj = sub(obj, from(arg), to(arg));
-         } else {
-           uw_throwf(query_error_s, lit("format_field: bad index: ~s"),
-                     arg, nao);
-         }
-      }
-    } else {
-      val v = funcall1(eval_fun, item);
-      if (fixnump(v))
-        n = v;
-      else if (stringp(v))
-        sep = v;
-      else
-        uw_throwf(query_error_s,
-                  lit("bad field format: bad modifier object: ~s"),
-                  item, nao);
-    }
-  }
+      if (consp(elem)) {
+        val sym = first(elem);
 
-  if (listp(obj))
-    str = cat_str(mapcar(func_n1(tostringp), obj), sep);
-  else
-    str = if3(stringp(obj), obj, tostringp(obj));
+        if (sym == var_s) {
+          val expr = second(elem);
+          val modifiers = third(elem);
+          val str = txeval(spec, expr, bindings);
 
-  {
-    val filter_sym = getplist(plist, filter_k);
-
-    if (filter_sym) {
-      filter = get_filter(filter_sym);
-
-      if (!filter) {
-        uw_throwf(query_error_s,
-                  lit("bad field format: ~s specifies unknown filter"),
-                  filter_sym, nao);
-      }
-    }
-
-    if (filter)
-      str = filter_string_tree(filter, str);
-  }
-
-  {
-    val right = lt(n, zero);
-    val width = if3(lt(n, zero), neg(n), n);
-    val diff = minus(width, length_str(str));
-
-    if (le(diff, zero))
-      return str;
-
-    if (ge(length_str(str), width))
-      return str;
-
-    {
-      val padding = mkstring(diff, chr(' '));
-
-      return if3(right,
-                 cat_str(list(padding, str, nao), nil),
-                 cat_str(list(str, padding, nao), nil));
-    }
-  }
-}
-
-static val subst_vars(val spec, val bindings, val filter)
-{
-  list_collect_decl(out, iter);
-  uw_env_begin;
-
-  uw_set_match_context(cons(spec, bindings));
-
-  while (spec) {
-    val elem = first(spec);
-
-    if (consp(elem)) {
-      val sym = first(elem);
-
-      if (sym == var_s) {
-        val expr = second(elem);
-        val modifiers = third(elem);
-        val str = txeval(spec, expr, bindings);
-
-        /* If the object is a list, we let format_field deal with the
-           conversion to text, because the modifiers influence how
-           it is done. */
-        if (!stringp(str) && !listp(str))
-          str = tostringp(str);
-
-        if (modifiers) {
-          spec = cons(format_field(str, modifiers, filter,
-                                   curry_123_2(func_n3(txeval), spec, bindings)),
-                      rest(spec));
-        } else {
-          if (listp(str))
-            str = cat_str(mapcar(func_n1(tostringp), str), lit(" "));
-
-          spec = cons(filter_string_tree(filter, str), rest(spec));
-        }
-
-        continue;
-      } else if (sym == quasi_s) {
-        val nested = subst_vars(rest(elem), bindings, filter);
-        iter = list_collect_append(iter, nested);
-        spec = cdr(spec);
-        continue;
-      } else if (sym == expr_s) {
-        if (opt_compat && opt_compat < 100) {
-          val result = eval_with_bindings(rest(elem), spec, bindings, elem);
-          spec = cons(filter_string_tree(filter, tostringp(result)), rest(spec));
-          continue;
-        } else {
-          val str = eval_with_bindings(rest(elem), spec, bindings, elem);
-          if (listp(str))
-            str = cat_str(mapcar(func_n1(tostringp), str), lit(" "));
-          else if (!stringp(str))
+          /* If the object is a list, we let format_field deal with the
+             conversion to text, because the modifiers influence how
+             it is done. */
+          if (!stringp(str) && !listp(str))
             str = tostringp(str);
-          spec = cons(filter_string_tree(filter, tostringp(str)), rest(spec));
+
+          if (modifiers) {
+            spec = cons(format_field(str, modifiers, filter,
+                                     curry_123_2(func_n3(txeval), spec, bindings)),
+                        rest(spec));
+          } else {
+            if (listp(str))
+              str = cat_str(mapcar(func_n1(tostringp), str), lit(" "));
+
+            spec = cons(filter_string_tree(filter, str), rest(spec));
+          }
+
+          continue;
+        } else if (sym == quasi_s) {
+          val nested = tx_subst_vars(rest(elem), bindings, filter);
+          iter = list_collect_append(iter, nested);
+          spec = cdr(spec);
+          continue;
+        } else if (sym == expr_s) {
+          if (opt_compat && opt_compat < 100) {
+            val result = eval_with_bindings(rest(elem), spec, bindings, elem);
+            spec = cons(filter_string_tree(filter, tostringp(result)), rest(spec));
+            continue;
+          } else {
+            val str = eval_with_bindings(rest(elem), spec, bindings, elem);
+            if (listp(str))
+              str = cat_str(mapcar(func_n1(tostringp), str), lit(" "));
+            else if (!stringp(str))
+              str = tostringp(str);
+            spec = cons(filter_string_tree(filter, tostringp(str)), rest(spec));
+            continue;
+          }
+        } else {
+          val nested = tx_subst_vars(elem, bindings, filter);
+          iter = list_collect_append(iter, nested);
+          spec = cdr(spec);
           continue;
         }
-      } else {
-        val nested = subst_vars(elem, bindings, filter);
-        iter = list_collect_append(iter, nested);
-        spec = cdr(spec);
-        continue;
       }
+
+      iter = list_collect(iter, elem);
+      spec = cdr(spec);
     }
 
-    iter = list_collect(iter, elem);
-    spec = cdr(spec);
-  }
+    uw_env_end;
+    return out;
+  } else {
+    val saved_de = set_dyn_env(make_env(bindings, nil, nil));
+    val out;
 
-  uw_env_end;
-  return out;
+    uw_set_match_context(cons(spec, bindings));
+    out = subst_vars(spec, nil, filter);
+    set_dyn_env(saved_de);
+
+    return out;
+  }
 }
 
 static val do_txeval(val spec, val form, val bindings, val allow_unbound)
@@ -1570,12 +1492,12 @@ static val do_txeval(val spec, val form, val bindings, val allow_unbound)
     } else if (consp(form)) {
       val sym = first(form);
       if (sym == quasi_s) {
-        ret = cat_str(subst_vars(rest(form), bindings, nil), nil);
+        ret = cat_str(tx_subst_vars(rest(form), bindings, nil), nil);
       } else if (sym == quasilist_s) {
         val iter;
         list_collect_decl (out, tail);
         for (iter = rest(form); iter != nil; iter = cdr(iter))
-          tail = list_collect(tail, subst_vars(cdr(car(iter)), bindings, nil));
+          tail = list_collect(tail, tx_subst_vars(cdr(car(iter)), bindings, nil));
         ret = out;
       } else if (sym == var_s) {
         ret = eval_with_bindings(second(form), spec, bindings, form);
@@ -1770,8 +1692,8 @@ static void do_output_line(val bindings, val specline, val filter, val out)
         val directive = first(elem);
 
         if (directive == var_s) {
-          val str = cat_str(subst_vars(cons(elem, nil),
-                                       bindings, filter), nil);
+          val str = cat_str(tx_subst_vars(cons(elem, nil),
+                                          bindings, filter), nil);
           if (str == nil)
             sem_error(specline, lit("bad substitution: ~a"),
                       second(elem), nao);
@@ -1884,8 +1806,8 @@ static void do_output_line(val bindings, val specline, val filter, val out)
             format(out, lit("~a"),
                    eval_with_bindings(rest(elem), elem, bindings, elem), nao);
           } else {
-            val str = cat_str(subst_vars(cons(elem, nil),
-                                         bindings, filter), nil);
+            val str = cat_str(tx_subst_vars(cons(elem, nil),
+                                            bindings, filter), nil);
             if (str == nil)
               sem_error(specline, lit("bad substitution: ~a"),
                         second(elem), nao);

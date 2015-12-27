@@ -2555,8 +2555,7 @@ escape for encoding a literal
 .code @
 character.  Quasiliterals support the full output variable
 syntax. Expressions within variables substitutions follow the evaluation rules
-of \*(TL when the quasiliteral occurs in \*(TL, and the rules of
-the \*(TX pattern language when the quasiliteral occurs in the pattern language.
+of \*(TL.  This hasn't always been the case: see the COMPATIBILITY section.
 
 Quasiliterals can be split into multiple lines in the same way as ordinary
 string literals.
@@ -38863,6 +38862,13 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code -C 103
 selects the behaviors described below for version 105, but not those for 102.
+.IP 128
+Compatibility with \*(TX 128 or earlier brings back the behavior that
+expressions in quasiliterals are evaluated according to \*(TX evaluation
+rules for quasiliterals which occur in the \*(TX pattern language.
+Similarly, expressions in
+.code @(output)
+blocks are treated \*(TX pattern language expressions.
 .IP 127
 In versions of \*(TX until 127, the functions
 .codn symbol-function ,

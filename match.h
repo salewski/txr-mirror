@@ -27,7 +27,6 @@
 extern val text_s, choose_s, gather_s, do_s, require_s;
 extern val close_s, load_s, include_s, mod_s, modlast_s, line_s;
 extern val counter_k, env_k, var_k;
-val format_field(val string_or_list, val modifier, val filter, val eval_fun);
 val match_filter(val name, val arg, val other_args);
 val match_fun(val name, val args, val input, val files);
 val include(val specline);

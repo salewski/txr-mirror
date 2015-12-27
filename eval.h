@@ -59,6 +59,8 @@ val apply_intrinsic(val fun, val args);
 val eval_progn(val forms, val env, val ctx_form);
 val eval(val form, val env, val ctx_form);
 val eval_intrinsic(val form, val env);
+val format_field(val string_or_list, val modifier, val filter, val eval_fun);
+val subst_vars(val forms, val env, val filter);
 val load(val target);
 val expand(val form, val menv);
 val expand_forms(val forms, val menv);

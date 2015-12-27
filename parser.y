@@ -119,7 +119,7 @@ int yyparse(scanner_t *, parser_t *);
 %type <val> if_clause elif_clauses_opt else_clause_opt
 %type <val> line elems_opt elems clause_parts_h additional_parts_h
 %type <val> text texts elem var var_op modifiers vector hash struct range
-%type <val> list exprs exprs_opt expr n_exprs r_exprs i_expr n_expr n_exprs_opt
+%type <val> list exprs exprs_opt n_exprs r_exprs i_expr n_expr n_exprs_opt
 %type <val> out_clauses out_clauses_opt out_clause
 %type <val> repeat_clause repeat_parts_opt o_line
 %type <val> o_elems_opt o_elems o_elem o_var q_var rep_elem rep_parts_opt
@@ -711,10 +711,20 @@ modifiers : NUMBER              { $$ = cons($1, nil); }
                                                  nil), $1); }
           ;
 
-o_var : SYMTOK                  { $$ = list(var_s, symhlpr($1, nil), nao);
+o_var : SYMTOK                  { val expr = symhlpr($1, nil);
+                                  if (!opt_compat || opt_compat > 128)
+                                    expr = expand(expr, nil);
+                                  $$ = list(var_s, expr, nao);
                                   rl($$, num(parser->lineno)); }
-      | '{' expr exprs_opt '}'
-                                { $$ = list(var_s, $2, $3, nao);
+      | '{' n_expr n_exprs_opt '}'
+                                { if (opt_compat && opt_compat <= 128)
+                                  { $$ = list(var_s,
+                                              expand_meta($2, nil),
+                                              expand_meta($3, nil), nao); }
+                                  else
+                                  { $$ = list(var_s,
+                                              expand($2, nil),
+                                              expand($3, nil), nao); }
                                   rl($$, num(parser->lineno)); }
       | SYMTOK error            { $$ = nil;
                                   yybadtok(yychar, lit("variable spec")); }
@@ -785,9 +795,6 @@ list : '(' n_exprs ')'          { $$ = rl($2, num($1)); }
 
 exprs : n_exprs                 { $$ = rlcp(expand_meta($1, nil), $1); }
       ;
-
-expr : n_expr                   { $$ = rlcp(expand_meta($1, nil), $1); }
-     ;
 
 exprs_opt : exprs               { $$ = $1; }
           | /* empty */         { $$ = nil; }
@@ -1318,19 +1325,23 @@ static val expand_meta(val form, val menv)
   menv = default_arg(menv, make_env(nil, nil, nil));
 
   if ((sym = car(form)) == quasi_s) {
-    list_collect_decl (out, ptail);
+    if (opt_compat && opt_compat <= 128) {
+      list_collect_decl (out, ptail);
 
-    for (; consp(form); form = cdr(form)) {
-      val subform = car(form);
-      if (consp(subform) && car(subform) == expr_s)
-        ptail = list_collect(ptail, expand_meta(subform, menv));
-      else
-        ptail = list_collect(ptail, subform);
+      for (; consp(form); form = cdr(form)) {
+        val subform = car(form);
+        if (consp(subform) && car(subform) == expr_s)
+          ptail = list_collect(ptail, expand_meta(subform, menv));
+        else
+          ptail = list_collect(ptail, subform);
+      }
+
+      ptail = list_collect_nconc(ptail, form);
+
+      return rlcp(out, form);
     }
 
-    ptail = list_collect_nconc(ptail, form);
-
-    return rlcp(out, form);
+    return expand(form, nil);
   }
 
   if ((sym = car(form)) == expr_s) {

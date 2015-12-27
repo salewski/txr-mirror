@@ -53,6 +53,7 @@
 #include "lisplib.h"
 #include "struct.h"
 #include "cadr.h"
+#include "filter.h"
 #include "eval.h"
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
@@ -2114,7 +2115,101 @@ static val op_handler_bind(val form, val env)
   return result;
 }
 
-static val subst_vars(val forms, val env)
+val format_field(val obj, val modifier, val filter, val eval_fun)
+{
+  val n = zero, sep = lit(" ");
+  val plist = nil;
+  val str;
+
+  for (; modifier; pop(&modifier)) {
+    val item = first(modifier);
+    if (regexp(item)) {
+      uw_throw(query_error_s, lit("bad field format: regex modifier in output"));
+    } else if (keywordp(item)) {
+      plist = modifier;
+      break;
+    } else if ((!opt_compat || opt_compat > 128) &&
+               consp(item) && car(item) == expr_s)
+    {
+      item = cdr(item);
+      goto eval;
+    } else if (consp(item) && car(item) == dwim_s) {
+      val arg_expr = second(item);
+
+      if (consp(arg_expr) && car(arg_expr) == range_s) {
+        val from = funcall1(eval_fun, second(arg_expr));
+        val to = funcall1(eval_fun, third(arg_expr));
+
+        obj = sub(obj, from, to);
+      } else {
+         val arg = funcall1(eval_fun, arg_expr);
+         if (bignump(arg) || fixnump(arg)) {
+           obj = ref(obj, arg);
+         } else if (rangep(arg)) {
+           obj = sub(obj, from(arg), to(arg));
+         } else {
+           uw_throwf(query_error_s, lit("format_field: bad index: ~s"),
+                     arg, nao);
+         }
+      }
+    } else eval: {
+      val v = funcall1(eval_fun, item);
+      if (fixnump(v))
+        n = v;
+      else if (stringp(v))
+        sep = v;
+      else
+        uw_throwf(query_error_s,
+                  lit("bad field format: bad modifier object: ~s"),
+                  item, nao);
+    }
+  }
+
+  if (listp(obj))
+    str = cat_str(mapcar(func_n1(tostringp), obj), sep);
+  else
+    str = if3(stringp(obj), obj, tostringp(obj));
+
+  {
+    val filter_sym = getplist(plist, filter_k);
+
+    if (filter_sym) {
+      filter = get_filter(filter_sym);
+
+      if (!filter) {
+        uw_throwf(query_error_s,
+                  lit("bad field format: ~s specifies unknown filter"),
+                  filter_sym, nao);
+      }
+    }
+
+    if (filter)
+      str = filter_string_tree(filter, str);
+  }
+
+  {
+    val right = lt(n, zero);
+    val width = if3(lt(n, zero), neg(n), n);
+    val diff = minus(width, length_str(str));
+
+    if (le(diff, zero))
+      return str;
+
+    if (ge(length_str(str), width))
+      return str;
+
+    {
+      val padding = mkstring(diff, chr(' '));
+
+      return if3(right,
+                 cat_str(list(padding, str, nao), nil),
+                 cat_str(list(str, padding, nao), nil));
+    }
+  }
+}
+
+
+val subst_vars(val forms, val env, val filter)
 {
   list_collect_decl(out, iter);
 
@@ -2136,18 +2231,18 @@ static val subst_vars(val forms, val env)
           str = tostringp(str);
 
         if (modifiers) {
-          forms = cons(format_field(str, modifiers, nil,
+          forms = cons(format_field(str, modifiers, filter,
                                     curry_123_1(func_n3(eval), env, form)),
                        rest(forms));
         } else {
           if (listp(str))
             str = cat_str(mapcar(func_n1(tostringp), str), lit(" "));
-          forms = cons(str, rest(forms));
+          forms = cons(filter_string_tree(filter, str), rest(forms));
         }
 
         continue;
       } else if (sym == quasi_s) {
-        val nested = subst_vars(rest(form), env);
+        val nested = subst_vars(rest(form), env, filter);
         iter = list_collect_append(iter, nested);
         forms = cdr(forms);
         continue;
@@ -2157,10 +2252,10 @@ static val subst_vars(val forms, val env)
           str = cat_str(mapcar(func_n1(tostringp), str), lit(" "));
         else if (!stringp(str))
           str = tostringp(str);
-        forms = cons(str, rest(forms));
+        forms = cons(filter_string_tree(filter, tostringp(str)), rest(forms));
         continue;
       } else {
-        val nested = subst_vars(form, env);
+        val nested = subst_vars(form, env, filter);
         iter = list_collect_append(iter, nested);
         forms = cdr(forms);
         continue;
@@ -2179,7 +2274,7 @@ static val subst_vars(val forms, val env)
 
 static val op_quasi_lit(val form, val env)
 {
-  return cat_str(subst_vars(rest(form), env), nil);
+  return cat_str(subst_vars(rest(form), env, nil), nil);
 }
 
 static val op_with_saved_vars(val form, val env)
