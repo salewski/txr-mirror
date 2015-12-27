@@ -1675,6 +1675,17 @@ static val extract_bindings(val bindings, val output_spec, val vars)
       ptail = list_collect(ptail, binding);
   }
 
+  for (; var_list; var_list = cdr(var_list)) {
+    val sym = car(var_list);
+    if (assoc(sym, bindings_out)) {
+      continue;
+    } else {
+      val binding = lookup_var(nil, sym);
+      if (binding)
+        ptail = list_collect(ptail, binding);
+    }
+  }
+
   return bindings_out;
 }
 
