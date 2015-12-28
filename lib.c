@@ -6141,7 +6141,7 @@ val lazy_str_force(val lstr)
     set(cdr_l(lstr->ls.opts), lim);
 
   if (strlist) {
-    push(lstr->ls.prefix, &strlist); 
+    push(lstr->ls.prefix, &strlist);
     set(mkloc(lstr->ls.prefix, lstr), cat_str(strlist, nil));
   }
 
