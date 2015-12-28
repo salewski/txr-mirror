@@ -239,7 +239,7 @@ void error_trace(val exsym, val exvals, val out_stream, val prefix)
   else
     format(out_stream, lit("~a ~!~a\n"), prefix, car(exvals), nao);
 
-  if (info && exsym != eval_error_s) {
+  if (info && !uw_exception_subtype_p(exsym, eval_error_s)) {
     val first, origin, oinfo;
 
     for (first = t; last; last = origin, info = oinfo, first = nil) {
