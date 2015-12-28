@@ -236,3 +236,12 @@
 (defmacro defmeth (type-sym name arglist . body)
   ^(sys:defmeth ',type-sym ',name (lambda ,arglist
                                     (block ,name ,*body))))
+
+(defmacro with-slots ((. slot-specs) obj-expr . body)
+  (with-gensyms (obj-sym)
+    ^(let ((,obj-sym ,obj-expr))
+       (symacrolet (,*(mapcar [iff consp
+                                   (aret ^(,@1 (slot ,obj-sym ',@2)))
+                                   (ret ^(,@1 (slot ,obj-sym ',@1)))]
+                              slot-specs))
+         ,*body))))

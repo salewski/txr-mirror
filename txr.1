@@ -19311,6 +19311,94 @@ arranged by
 by a non-local exit such as an exception throw, the object's
 finalizers, if any, are invoked.
 
+.coNP Macro @ with-slots
+.synb
+.mets (with-slots >> ({ slot | >> ( sym << slot )}*) < struct-expr
+.mets \ \  << body-form *)
+.syne
+.desc
+The
+.code with-slots
+binds lexical macros to serve as aliases for the slots of a structure.
+
+The
+.meta struct-expr
+argument is expected to be an expression which evaluates to a struct
+object. It is evaluated once, and its value is retained. The aliases are then
+established to the slots of the resulting struct value.
+
+The aliases are specified as zero or more expressions which consist of either
+a single symbol
+.meta slot
+or a
+.cblk
+.meti >> ( sym << slot )
+.cble
+pair. The simple form binds a macro named
+.meta slot
+to a slot also named
+.metn slot .
+The pair form binds a macro named
+.meta sym
+to a slot named
+.metn slot .
+
+The lexical aliases are syntactic places: assigning to an alias causes
+the value to be stored into the slot which it denotes.
+
+After evaluating
+.meta struct-expr
+the
+.code with-slots
+macro arranges for the evaluation of
+.metn body-form -s
+in the lexical scope in which the aliases are visible.
+
+.TP* "Dialect Notes:"
+
+The intent of the
+.code with-slots
+macro is to help reduce the verbosity of code which makes multiple
+references to the same slot. Use of
+.code with-slots
+is less necessary in \*(TL than other Lisp dialects
+thanks to the dot operator for accessing struct slots.
+
+Lexical aliases to struct places can also be
+arranged with considerable convenience using the
+.code placelet
+operator. However,
+.code placelet
+will not bind multiple aliases to multiple slots of the same object
+such that the expression which produces the object is evaluated only
+once.
+
+.TP* Example:
+.cblk
+  (defstruct point nil x y)
+
+  ;; Here, with-slots introduces verbosity because
+  ;; each slot is accessed only once. The function
+  ;; is equivalent to:
+  ;;
+  ;; (defun point-delta (p0 p1)
+  ;;   (new point x (- p1.x p0.x) y (- p1.y p0.y)))
+  ;;
+  ;; Also contrast with the use of placelet:
+  ;;
+  ;; (defun point-delta (p0 p1)
+  ;;   (placelet ((x0 p0.x) (y0 p0.y)
+  ;;              (x1 p1.x) (y1 p1.y))
+  ;;     (new point x (- x1 x0) y (- y1 y0)))))
+
+  (defun point-delta (p0 p1)
+    (with-slots ((x0 x) (y0 y)) p0
+      (with-slots ((x1 x) (y1 y)) p1
+        (new point x (- x1 x0) y (- y1 y0)))))
+
+
+.cble
+
 .coNP Macro @ qref
 .synb
 .mets (qref < object-form
