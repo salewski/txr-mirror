@@ -862,9 +862,12 @@ static val h_coll(match_line_ctx *c)
                 match_line(ml_specline(*c, coll_specline)));
 
       if (until_last_specline) {
+        uses_or2;
         cons_bind (sym, spec, until_last_specline);
         cons_bind (until_last_bindings, until_pos,
-                   match_line(ml_bindings_specline(*c, new_bindings, spec)));
+                   match_line(ml_bindings_specline(*c,
+                                                   or2(new_bindings, c->bindings),
+                                                   spec)));
 
         if (until_pos) {
           until_pos = minus(until_pos, c->base);
@@ -2820,9 +2823,11 @@ static val v_collect(match_files_ctx *c)
       /* Until/last clause sees un-collated bindings from collect. */
       if (until_last_spec)
       {
+        uses_or2;
         cons_bind (sym, ul_spec, until_last_spec);
         cons_bind (until_last_bindings, success,
-                   match_files(mf_spec_bindings(*c, ul_spec, new_bindings)));
+                   match_files(mf_spec_bindings(*c, ul_spec,
+                                                or2(new_bindings, c->bindings))));
 
         if (success) {
           debuglf(specline, lit("until/last matched ~a:~d"),
