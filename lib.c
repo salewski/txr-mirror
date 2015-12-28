@@ -6128,7 +6128,10 @@ val lazy_str_force(val lstr)
   term = car(lstr->ls.opts);
 
   while ((!lim || gt(lim, zero)) && lstr->ls.list) {
-    ptail = list_collect(ptail, pop(&lstr->ls.list));
+    val next = pop(&lstr->ls.list);
+    if (!next)
+      break;
+    ptail = list_collect(ptail, next);
     ptail = list_collect(ptail, term);
     if (lim)
       lim = minus(lim, one);
@@ -6166,6 +6169,8 @@ val lazy_str_force_upto(val lstr, val index)
          or2(null(lim),gt(lim,zero)))
   {
     val next = pop(&lstr->ls.list);
+    if (!next)
+      break;
     ptail = list_collect(ptail, next);
     ptail = list_collect(ptail, term);
     if (lim)
