@@ -850,6 +850,7 @@ val lazy_stream_cons(val stream);
 val lazy_str(val list, val term, val limit);
 val lazy_str_force_upto(val lstr, val index);
 val lazy_str_force(val lstr);
+val lazy_str_put(val lstr, val stream);
 val lazy_str_get_trailing_list(val lstr, val index);
 val length_str_gt(val str, val len);
 val length_str_ge(val str, val len);

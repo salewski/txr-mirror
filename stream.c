@@ -2638,36 +2638,41 @@ static val put_indent(val stream, struct strm_ops *ops, cnum chars)
 
 val put_string(val string, val stream_in)
 {
-  val stream = default_arg(stream_in, std_output);
-  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
-  struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
-  cnum col = s->column;
-  const wchar_t *str = c_str(string), *p = str;
+  if (lazy_stringp(string)) {
+    return lazy_str_put(string, stream_in);
+  } else {
+    val stream = default_arg(stream_in, std_output);
+    struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
+    struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
+    cnum col = s->column;
 
-  if (s->indent_mode != indent_off) {
-    while (*str)
-      put_char(chr(*str++), stream);
+    const wchar_t *str = c_str(string), *p = str;
+
+    if (s->indent_mode != indent_off) {
+      while (*str)
+        put_char(chr(*str++), stream);
+      return t;
+    }
+
+    for (; *p; p++) {
+      switch (*p) {
+      case '\n':
+        col = 0;
+        break;
+      case '\t':
+        col = (col + 1) | 7;
+        break;
+      default:
+        if (!iswcntrl(*p))
+          col += 1 + wide_display_char_p(*p);
+        break;
+      }
+    }
+
+    ops->put_string(stream, string);
+    s->column = col;
     return t;
   }
-
-  for (; *p; p++) {
-    switch (*p) {
-    case '\n':
-      col = 0;
-      break;
-    case '\t':
-      col = (col + 1) | 7;
-      break;
-    default:
-      if (!iswcntrl(*p))
-        col += 1 + wide_display_char_p(*p);
-      break;
-    }
-  }
-
-  ops->put_string(stream, string);
-  s->column = col;
-  return t;
 }
 
 val put_char(val ch, val stream_in)

@@ -6148,6 +6148,28 @@ val lazy_str_force(val lstr)
   return lstr->ls.prefix;
 }
 
+val lazy_str_put(val lstr, val stream)
+{
+  val lim, term, iter;
+  type_check(lstr, LSTR);
+  lim = cdr(lstr->ls.opts);
+  term = car(lstr->ls.opts);
+
+  put_string(lstr->ls.prefix, stream);
+
+  for (iter = lstr->ls.list; (!lim || gt(lim, zero)) && iter;
+       iter = cdr(iter))
+  {
+    val str = car(iter);
+    if (!str)
+      break;
+    put_string(str, stream);
+    put_string(term, stream);
+  }
+
+  return t;
+}
+
 val lazy_str_force_upto(val lstr, val index)
 {
   uses_or2;
@@ -8155,6 +8177,68 @@ static val simple_qref_args_p(val args, val pos)
   }
 }
 
+static void out_str_char(wchar_t ch, val out, int *semi_flag)
+{
+  if (*semi_flag && iswxdigit(ch))
+    put_char(chr(';'), out);
+
+  *semi_flag = 0;
+
+  switch (ch) {
+  case '\a': put_string(lit("\\a"), out); break;
+  case '\b': put_string(lit("\\b"), out); break;
+  case '\t': put_string(lit("\\t"), out); break;
+  case '\n': put_string(lit("\\n"), out); break;
+  case '\v': put_string(lit("\\v"), out); break;
+  case '\f': put_string(lit("\\f"), out); break;
+  case '\r': put_string(lit("\\r"), out); break;
+  case '"': put_string(lit("\\\""), out); break;
+  case '\\': put_string(lit("\\\\"), out); break;
+  case 27: put_string(lit("\\e"), out); break;
+  default:
+    if (ch >= ' ') {
+      put_char(chr(ch), out);
+    } else {
+      format(out, lit("\\x~,02X"), num(ch), nao);
+      *semi_flag = 1;
+    }
+  }
+}
+
+static void out_str_pretty(const wchar_t *ptr, val out, int *semi_flag)
+{
+  for (; *ptr; ptr++)
+    out_str_char(*ptr, out, semi_flag);
+}
+
+static void out_lazy_str(val lstr, val out)
+{
+  int semi_flag = 0;
+  val lim, term, iter;
+  const wchar_t *wcterm;
+
+  type_check(lstr, LSTR);
+  lim = cdr(lstr->ls.opts);
+  term = car(lstr->ls.opts);
+  wcterm = c_str(term);
+
+  put_char(chr('"'), out);
+
+  out_str_pretty(c_str(lstr->ls.prefix), out, &semi_flag);
+
+  for (iter = lstr->ls.list; (!lim || gt(lim, zero)) && iter;
+       iter = cdr(iter))
+  {
+    val str = car(iter);
+    if (!str)
+      break;
+    out_str_pretty(c_str(str), out, &semi_flag);
+    out_str_pretty(wcterm, out, &semi_flag);
+  }
+
+  put_char(chr('"'), out);
+}
+
 val obj_print_impl(val obj, val out, val pretty)
 {
   val ret = obj;
@@ -8280,34 +8364,11 @@ finish:
     if (pretty) {
       put_string(obj, out);
     } else {
-      const wchar_t *ptr;
       int semi_flag = 0;
       put_char(chr('"'), out);
 
-      for (ptr = c_str(obj); *ptr; ptr++) {
-        if (semi_flag && iswxdigit(*ptr))
-          put_char(chr(';'), out);
-        semi_flag = 0;
-        switch (*ptr) {
-        case '\a': put_string(lit("\\a"), out); break;
-        case '\b': put_string(lit("\\b"), out); break;
-        case '\t': put_string(lit("\\t"), out); break;
-        case '\n': put_string(lit("\\n"), out); break;
-        case '\v': put_string(lit("\\v"), out); break;
-        case '\f': put_string(lit("\\f"), out); break;
-        case '\r': put_string(lit("\\r"), out); break;
-        case '"': put_string(lit("\\\""), out); break;
-        case '\\': put_string(lit("\\\\"), out); break;
-        case 27: put_string(lit("\\e"), out); break;
-        default:
-          if (*ptr >= ' ') {
-            put_char(chr(*ptr), out);
-          } else {
-            format(out, lit("\\x~,02X"), num(*ptr), nao);
-            semi_flag = 1;
-          }
-        }
-      }
+      out_str_pretty(c_str(obj), out, &semi_flag);
+
       put_char(chr('"'), out);
     }
     break;
@@ -8407,11 +8468,11 @@ finish:
     }
     break;
   case LSTR:
-    if (obj->ls.list)
-      format(out, lit("#<lazy-string: ~s (~s ...)>"), obj->ls.prefix,
-             obj->ls.list, nao);
-    else
-      obj_print_impl(obj->ls.prefix, out, pretty);
+    if (pretty) {
+      lazy_str_put(obj, out);
+    } else {
+      out_lazy_str(obj, out);
+    }
     break;
   case COBJ:
     obj->co.ops->print(obj, out, pretty);
