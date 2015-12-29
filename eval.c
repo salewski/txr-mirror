@@ -267,6 +267,9 @@ void error_trace(val exsym, val exvals, val out_stream, val prefix)
           format(out_stream, lit("~a whose location is unavailable\n"), prefix,
                  nao);
       }
+
+      if (origin == last)
+        break;
     }
   }
 
