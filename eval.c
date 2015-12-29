@@ -256,11 +256,17 @@ void error_trace(val exsym, val exvals, val out_stream, val prefix)
                  prefix, info, last, nao);
       }
 
-      if (origin)
+      if (origin) {
         format(out_stream, lit("~a ... an expansion at ~a of ~!~s\n"),
                prefix, info, origin, nao);
-      else if (!first)
-        format(out_stream, lit("~a which is located at ~a\n"), prefix, info, nao);
+      } else if (!first) {
+        if (info)
+          format(out_stream, lit("~a which is located at ~a\n"), prefix,
+                 info, nao);
+        else
+          format(out_stream, lit("~a whose location is unavailable\n"), prefix,
+                 nao);
+      }
     }
   }
 
