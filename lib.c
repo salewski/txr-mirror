@@ -8406,7 +8406,10 @@ finish:
   case NUM:
   case BGNUM:
   case FLNUM:
-    format(out, lit("~s"), obj, nao);
+    {
+      val fmt = cdr(lookup_var(nil, print_flo_format_s));
+      format(out, fmt, obj, nao);
+    }
     break;
   case SYM:
     if (!pretty) {

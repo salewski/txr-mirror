@@ -90,6 +90,9 @@ extern val format_s;
 
 extern val stdin_s, stdout_s, stddebug_s, stderr_s, stdnull_s;
 
+extern val print_flo_precision_s, print_flo_digits_s, print_flo_format_s;
+extern val print_base_s;
+
 void strm_base_init(struct strm_base *s);
 void strm_base_cleanup(struct strm_base *s);
 void strm_base_mark(struct strm_base *s);

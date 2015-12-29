@@ -32016,11 +32016,53 @@ the
 .code /dev/null
 device on Unix, but does not involve the operating system.
 
+.coNP Special variable @ *print-flo-format*
+.desc
+The
+.code *print-flo-format*
+variable determines the conversion format which is applied when
+a floating-point value is converted to decimal text by the
+functions
+.codn print ,
+.cond pprint ,
+.cond prinl ,
+.cond pprinl ,
+.code tostring
+and
+.codn tostringp .
+
+The default value is
+.codn "~s" .
+
+The format string must specify the consumption of exactly one argument.
+
+The conversion string may use embedded width and precision values:
+for instance,
+.code "~3,4f"
+is a valid value for
+.codn *print-flo-format* .
+
 .coNP Special variable @ *print-flo-precision*
 .desc
 The
 .code *print-flo-precision*
-special variable holds the precision which applies when
+special variable specifies the default floating-point printing
+precision which is used when the
+.code ~a
+or
+.code ~s
+conversion specifier of the
+.code format
+function is used for printing a floating-point value, and no precision
+is specified.
+
+Note that since the default value of the variable
+.code *print-flo-format*
+is the string
+.codn "~s" ,
+the
+.code *printf-flo-precision*
+variable, by default, also determines the precision which applies when
 floating-point values are converted to decimal text by the functions
 .codn print ,
 .cond pprint ,
@@ -32029,14 +32071,6 @@ floating-point values are converted to decimal text by the functions
 .code tostring
 and
 .codn tostringp .
-It also applies when the
-.code ~a
-and
-.code ~s
-conversion specifiers of the
-.code format
-function are used for printing a floating-point value, and no precision
-is specified.
 
 The default value of
 .code *print-flo-precision*
@@ -32051,6 +32085,23 @@ recommended to override
 to the value of the
 .code flo-max-dig
 variable.
+
+.coNP Special variable @ *print-flo-digits*
+.desc
+The
+.code *print-flo-precision*
+special variable specifies the default floating-point printing
+precision which is used when the
+.code ~f
+or
+.code ~e
+conversion specifier of the
+.code format
+function is used for printing a floating-point value, and no precision
+is specified.
+
+Its default value is
+.codn 3 .
 
 .coNP Special variable @ *print-base*
 .desc
@@ -32393,10 +32444,13 @@ it does not allow an argument of character type).
 The precision specifier gives the number of digits past the decimal point.
 The number is rounded off to the specified precision, if necessary.
 Furthermore, that many digits are always printed, regardless of the actual
-precision of the number or its type.  If it is omitted, then the default value
-is three: three digits past the decimal point. A precision of zero means no
-digits pas the decimal point, and in this case the decimal point is suppressed
-(regardless of whether the numeric argument is floating-point or integer).  
+precision of the number or its type.  If it is omitted, then the value
+is obtained from the special variable
+.codn *print-flo-digits* ,
+whose default value is three: three digits past the decimal point. A precision
+of zero means no digits pas the decimal point, and in this case the decimal
+point is suppressed (regardless of whether the numeric argument is
+floating-point or integer).
 
 .coIP e
 The
@@ -32412,8 +32466,10 @@ The precision specifier gives the number of digits past the decimal point
 printed in the exponential notation, not counting the digits in the exponent.
 Exactly that many digits are printed, regardless of the precision of the
 number.  If the precision is omitted, then the number of digits after the
-decimal point is three. If the precision is zero, then a decimal portion is
-truncated off entirely, including the decimal point.
+decimal point is obtained from the value of the special variable
+.codn *print-flo-digits* ,
+whose default value is three. If the precision is zero, then a decimal portion
+is truncated off entirely, including the decimal point.
 
 .coIP p
 The

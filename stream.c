@@ -64,7 +64,8 @@
 
 val stdin_s, stdout_s, stddebug_s, stderr_s, stdnull_s;
 
-val print_flo_precision_s, print_base_s;
+val print_flo_precision_s, print_flo_digits_s, print_flo_format_s;
+val print_base_s;
 
 val from_start_k, from_current_k, from_end_k;
 val real_time_k, name_k, fd_k;
@@ -2182,7 +2183,8 @@ val formatv(val stream_in, val fmtstr, struct args *al)
     } state = vf_init, saved_state = vf_init;
     int width = 0, precision = 0, precision_p = 0, digits = 0, lt = 0, neg = 0;
     enum align align = al_right;
-    int sign = 0, zeropad = 0, dfl_precision = 0, print_base = 0;
+    int sign = 0, zeropad = 0, dfl_precision = 0;
+    int dfl_digits = 0, print_base = 0;
     cnum value;
     cnum arg_ix = 0;
 
@@ -2396,8 +2398,11 @@ val formatv(val stream_in, val fmtstr, struct args *al)
                         chr(ch), obj, nao);
             }
 
-            if (!precision_p)
-              precision = 3;
+            if (!precision_p) {
+              if (!dfl_digits)
+                dfl_digits = c_num(cdr(lookup_var(nil, print_flo_digits_s)));
+              precision = dfl_digits;
+            }
 
             /* guard against num_buf overflow */
             if (precision > 128)
@@ -3311,6 +3316,12 @@ void stream_init(void)
   reg_var(print_flo_precision_s = intern(lit("*print-flo-precision*"),
                                          user_package),
           num_fast(DBL_DIG));
+  reg_var(print_flo_digits_s = intern(lit("*print-flo-digits*"),
+                                      user_package),
+          num_fast(3));
+  reg_var(print_flo_format_s = intern(lit("*print-flo-format*"),
+                                      user_package),
+          lit("~s"));
   reg_var(print_base_s = intern(lit("*print-base*"), user_package),
           num_fast(10));
 
