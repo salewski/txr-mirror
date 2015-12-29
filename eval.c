@@ -223,7 +223,8 @@ val lookup_origin(val form)
 
 static val set_origin(val form, val origin)
 {
-  (void) sethash(origin_hash, form, origin);
+  if (origin)
+    sethash(origin_hash, form, origin);
   return form;
 }
 
