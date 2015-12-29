@@ -240,7 +240,7 @@ void error_trace(val exsym, val exvals, val out_stream, val prefix)
   else
     format(out_stream, lit("~a ~!~a\n"), prefix, car(exvals), nao);
 
-  if (info && !uw_exception_subtype_p(exsym, eval_error_s)) {
+  if (info) {
     val first, origin, oinfo;
 
     for (first = t; last; last = origin, info = oinfo, first = nil) {
@@ -251,7 +251,7 @@ void error_trace(val exsym, val exvals, val out_stream, val prefix)
         if (origin)
           format(out_stream, lit("~a possibly triggered by form ~!~s\n"),
                  prefix, last, nao);
-        else
+        else if (!uw_exception_subtype_p(exsym, eval_error_s))
           format(out_stream, lit("~a possibly triggered at ~a by form ~!~s\n"),
                  prefix, info, last, nao);
       }
