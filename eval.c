@@ -1138,16 +1138,15 @@ static val do_eval(val form, val env, val ctx,
         val ret, lfe_save = last_form_evaled;
         args_decl(args, argc);
 
-        do_eval_args(rest(form), env, form, &lookup_var, args);
-
         last_form_evaled = form;
 
+        do_eval_args(rest(form), env, form, &lookup_var, args);
         debug_frame(oper, args, nil, env, nil, nil, nil);
-
         ret = generic_funcall(cdr(fbinding), args);
+        debug_end;
 
         last_form_evaled = lfe_save;
-        debug_end;
+
         debug_return (ret);
       }
     }
