@@ -1,3 +1,47 @@
+                                    TXR 129
+                                   2015-12-30
+
+
+  Features
+
+  - TXR pattern language:
+    - @(line) directive now works in horizontal mode
+    - New @(data) and @(name) directives for capturing/matching
+      raw data, and name of data source.
+    - :counter in @(repeat)/@(rep) can now be given a starting value.
+    - Quasiliterals in the pattern language are now evaluated as Lisp
+      quasiliterals.
+      - the compatibility mechanism provides the previous evaluation mode.
+    - The same applies to @(output): variables now follow Lisp rules,
+      similarly to variables in quasiliterals.
+    - @(repeat) and @(rep) now "see" Lisp globals; no need to list these
+      using :vars.
+  - Lisp library:
+    - chr-isdigit and chr-isxdigit now return the integer digit value
+      when the test is true, rather than just t.
+  - Object printing:
+    - Lazy strings are now printed in a reasonable way, not shortened
+      to the #<lazy-string ...> notation.
+    - New special variales for global control over how floating-point
+      objects are rendered: *print-flo-format* and *print-fo-format*.
+  - OOP:
+    - with-slots macro added.
+  - Yet improved location and macro ancestry tracing in unhandled
+    exception diagnostics.
+
+  Bugs
+
+  - Vim syntax highlighting files: fixed regression in genvim.txr
+    causing missing identifiers.
+  - Four-year-old bug in @(collect)/@(coll) fixed, causing the
+    @(last)/@(until) clauses to be evaluated with an empty list
+    of variable bindings whenever the main clause fails.
+  - Fixed exception in @(freeform) directive when scanning from
+    an interactive input stream.
+  - Bugfixes in pattern language debug tracing (-v).
+
+
+
                                     TXR 128
                                    2015-12-19
 
