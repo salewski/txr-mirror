@@ -458,7 +458,7 @@ static void find_matching_syms(lino_completions_t *cpl,
 
       switch (par) {
       case '(':
-        if (!fboundp(sym))
+        if (!fboundp(sym) && !mboundp(sym) && !special_operator_p(sym))
           continue;
         break;
       case '[':

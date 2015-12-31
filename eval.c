@@ -3848,7 +3848,7 @@ val fboundp(val sym)
   return tnil(lookup_fun(nil, sym));
 }
 
-static val mboundp(val sym)
+val mboundp(val sym)
 {
   return tnil(lookup_mac(nil, sym));
 }

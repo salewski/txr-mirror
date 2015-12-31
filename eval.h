@@ -48,6 +48,7 @@ val set_dyn_env(val de);
 val funcall_interp(val interp_fun, struct args *);
 val boundp(val sym);
 val fboundp(val sym);
+val mboundp(val sym);
 val special_operator_p(val sym);
 val macro_form_p(val form, val menv);
 val func_get_name(val fun, val env);
