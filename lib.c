@@ -94,7 +94,7 @@ val define_s, output_s, single_s, first_s, last_s, empty_s;
 val repeat_s, rep_s, flatten_s, forget_s;
 val local_s, merge_s, bind_s, rebind_s, cat_s;
 val try_s, catch_s, finally_s, throw_s, defex_s, deffilter_s;
-val eof_s, eol_s, assert_s;
+val eof_s, eol_s, assert_s, name_s;
 val error_s, type_error_s, internal_error_s;
 val numeric_error_s, range_error_s;
 val query_error_s, file_error_s, process_error_s, syntax_error_s;
@@ -8140,6 +8140,7 @@ static void obj_init(void)
   syntax_error_s = intern(lit("syntax-error"), user_package);
   system_error_s = intern(lit("system-error"), user_package);
   assert_s = intern(lit("assert"), user_package);
+  name_s = intern(lit("name"), user_package);
 
   args_k = intern(lit("args"), keyword_package);
   nothrow_k = intern(lit("nothrow"), keyword_package);

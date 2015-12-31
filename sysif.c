@@ -85,7 +85,7 @@ val gid_s, rdev_s, size_s, blksize_s, blocks_s;
 val atime_s, mtime_s, ctime_s;
 
 #if HAVE_PWUID
-val passwd_s, name_s, gecos_s, dir_s, shell_s;
+val passwd_s, gecos_s, dir_s, shell_s;
 #endif
 
 #if HAVE_GRGID
@@ -1160,7 +1160,6 @@ void sysif_init(void)
   ctime_s = intern(lit("ctime"), user_package);
 #if HAVE_PWUID
   passwd_s = intern(lit("passwd"), user_package);
-  name_s = intern(lit("name"), user_package);
   gecos_s = intern(lit("gecos"), user_package);
   dir_s = intern(lit("dir"), user_package);
   shell_s = intern(lit("shell"), user_package);

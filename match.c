@@ -60,7 +60,7 @@ val decline_k, next_spec_k, repeat_spec_k;
 val mingap_k, maxgap_k, gap_k, mintimes_k, maxtimes_k, times_k;
 val lines_k, chars_k;
 val text_s, choose_s, gather_s, do_s, mod_s, modlast_s;
-val line_s, data_s, name_s, fuzz_s, load_s;
+val line_s, data_s, fuzz_s, load_s;
 val include_s, close_s, require_s;
 val longest_k, shortest_k, greedy_k;
 val vars_k, resolve_k;
@@ -4148,7 +4148,6 @@ static void syms_init(void)
   modlast_s = intern(lit("modlast"), user_package);
   line_s = intern(lit("line"), user_package);
   data_s = intern(lit("data"), user_package);
-  name_s = intern(lit("name"), user_package);
   fuzz_s = intern(lit("fuzz"), user_package);
   counter_k = intern(lit("counter"), keyword_package);
 }
