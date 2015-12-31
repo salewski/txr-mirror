@@ -38256,6 +38256,20 @@ Navigating to a history line manually using the up and down arrow keys (or
 Ctrl-P/Ctrl-N) has the same net effect same as locating that line using
 Ctrl-R search.
 
+.NP* Submit and Stay in History
+
+Normally when the Enter key is used on a recalled history line,
+the next time the listener is re-entered, it jumps back to the
+newest history position where a new line is about to be composed.
+
+The alternative command sequence Ctrl-X, Enter provides a useful alternative
+behavior. After the submitted line is processed, the listener doesn't jump to
+the newest history position. Instead, it stays in the history, advancing
+forward by one position to the successor of the submitted line.
+
+Ctrl-X, Enter can be used to conveniently submit a range of lines
+from the history, one by one, in their original order.
+
 .NP* Insert Previous Word
 
 The equivalent command sequences Ctrl-X, w and Ctrl-X, Ctrl-W insert

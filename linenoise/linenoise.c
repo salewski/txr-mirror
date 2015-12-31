@@ -89,6 +89,7 @@ struct lino_state {
     char *clip;         /* Selection */
     int ifd;            /* Terminal stdin file descriptor. */
     int ofd;            /* Terminal stdout file descriptor. */
+    int save_hist_idx;  /* Jump to history position on entry into edit */
 
     /* Volatile state pertaining to just one linenoise call */
     char buf[LINENOISE_MAX_DISP];       /* Displayed line bufer. */
@@ -1676,6 +1677,16 @@ static int edit(lino_t *l, const char *prompt)
         l->error = lino_ioerr;
         return ret;
     }
+
+    if (l->save_hist_idx) {
+        int hi = l->history_len - l->save_hist_idx - 1;
+        l->history_index = l->save_hist_idx;
+        l->save_hist_idx = 0;
+        strcpy(l->data, l->history[hi]);
+        l->dpos = l->dlen = strlen(l->data);
+        l->need_refresh = 1;
+    }
+
     while(1) {
         unsigned char byte;
         int c;
@@ -1814,6 +1825,14 @@ static int edit(lino_t *l, const char *prompt)
                     clear_sel(l);
                 }
                 break;
+            case ENTER:
+                if (l->mlmode)
+                    edit_move_end(l);
+                if (l->need_refresh)
+                    refresh_line(l);
+                ret = l->len;
+                l->save_hist_idx = l->history_index;
+                goto out;
             default:
                 if (isdigit((unsigned char) c)) {
                     if (extend_num < 0)
