@@ -681,7 +681,7 @@ static int history_search(lino_t *l)
                 case CTL('A'): case CTL('E'):
                 case CTL('N'): case CTL('P'):
                 case CTL('D'): case CTL('U'): case CTL('W'): case CTL('K'):
-                case CTL('T'):
+                case CTL('T'): case CTL('X'):
                 case ESC:
                     if (hi < l->history_len)
                         l->history_index = l->history_len - hi - 1;
