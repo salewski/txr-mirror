@@ -2502,6 +2502,46 @@ val match_regst_right(val str, val regex, val end)
                       sub_str(str, minus(end, len), end)));
 }
 
+val read_until_match(val regex, val stream)
+{
+  regex_machine_t regm;
+  val out = nil;
+  val ch;
+
+  stream = default_arg(stream, std_input);
+
+  regex_machine_init(&regm, regex);
+
+  if ((ch = get_char(stream))) {
+    if (regex_machine_feed(&regm, c_chr(ch)) == REGM_FAIL) {
+      out = mkstring(one, ch);
+
+      while (ch && (ch = get_char(stream))) {
+        regex_machine_reset(&regm);
+
+        if (regex_machine_feed(&regm, c_chr(ch)) == REGM_FAIL) {
+          string_extend(out, ch);
+          continue;
+        }
+
+        break;
+      }
+    } else {
+      out = mkstring(zero, ch);
+    }
+  }
+
+  while (ch && (ch = get_char(stream))) {
+    if (regex_machine_feed(&regm, c_chr(ch)) == REGM_FAIL) {
+      unget_char(ch, stream);
+      break;
+    }
+  }
+
+  regex_machine_cleanup(&regm);
+  return out;
+}
+
 static char_set_t *create_wide_cs(void)
 {
 #ifdef FULL_UNICODE
@@ -2583,5 +2623,6 @@ void regex_init(void)
   reg_fun(intern(lit("reg-expand-nongreedy"), system_package),
           func_n1(reg_expand_nongreedy));
   reg_fun(intern(lit("reg-optimize"), system_package), func_n1(reg_optimize));
+  reg_fun(intern(lit("read-until-match"), user_package), func_n2o(read_until_match, 1));
   init_special_char_sets();
 }

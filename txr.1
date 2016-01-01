@@ -29825,6 +29825,49 @@ The double backslash in the string literal produces a single backslash
 in the resulting string object that is processed by
 .codn regex-parse .
 
+.coNP Function @ read-until-match
+.synb
+.mets (read-until-match < regex <> [ stream ])
+.syne
+.desc
+The
+.code read-until-match
+function reads characters from
+.metn stream ,
+accumulating them into a string, which is returned.
+
+If an argument is not specified for
+.metn stream ,
+then the
+.code *std-input*
+stream is used.
+
+The accumulation of characters is terminated by a match on
+.metn regex ,
+the end of the stream, or an error.
+
+This means that characters are read from the stream and accumulated while the
+stream has more characters available, and while its prefix does not match
+.metn regex .
+
+If
+.meta regex
+matches the stream before any characters are accumulated,
+then an empty string is returned.
+
+If the stream ends or an error occurs before any characters
+are accumulated, the function returns
+.codn nil .
+
+When the accumulation of characters terminates by a match on
+.metn regex ,
+reading characters from the stream continues. The longest
+possible prefix of the stream which matches
+.meta regex
+is read, and discarded. If an error is encountered, the
+matching procedure terminates and returns the previously
+accumulated string.
+
 .SS* Hashing Library
 .coNP Functions @, make-hash and @ hash
 .synb
@@ -33745,6 +33788,52 @@ waits for more input after seeing a complete expression, because of the
 possibility that the expression will be further extended by means of the dot or
 dotdot operators. An explicit end-of-input signal must be given from the
 terminal to terminate the expression.
+
+.coNP Function @ record-adapter
+.synb
+.mets (record-adapter < regex <> [ stream ])
+.syne
+.desc
+The
+.code record-adapter
+function returns a new stream object which acts as an
+.I adapter
+to the existing
+.metn stream .
+
+If an argument is not specified for
+.metn stream ,
+then the
+.code *std-input*
+stream is used.
+
+With the exception of
+.metn get-line ,
+all operations on the returned adapter transparently delegate to the original
+.meta stream
+object.
+
+When the
+.code get-line
+function is used on the adapter, it behaves differently. A string is
+extracted from
+.metn stream ,
+and returned. However, the string isn't a line delimited by a newline
+character, but a record delimited by
+.metn regex
+as if using the
+.code read-until-match
+function.
+
+All behavior which is built on the
+.code get-lines
+functions is affected by the record-delimiting semantics of a record adapter's
+.code get-line
+implementation. Notably, the
+.code get-lines
+and
+.code lazy-stream-cons
+functions return a lazy list of delimited records rather than of lines.
 
 .SS* Stream Output Indentation
 \*(TL streams provide support for establishing hanging indentations
