@@ -3826,7 +3826,6 @@ static void open_data_source(match_files_ctx *c)
     val nothrow = tnil(ss_consp && car(source_spec) == nothrow_k);
 
     if (stringp(name)) {
-      val stream = complex_open(name, nil, nil);
       spec_bind (specline, first_spec, c->spec);
 
       if (consp(first_spec) && (gethash(non_matching_directive_table,
@@ -3836,6 +3835,7 @@ static void open_data_source(match_files_ctx *c)
                                 "since query starts with non-matching "
                                 "directive."), name, nao);
       } else {
+        val stream = complex_open(name, nil, nil, nothrow);
         val spec = first(c->spec);
 
         debuglf(spec, lit("opening data source ~a"), name, nao);
