@@ -1544,81 +1544,35 @@ static val txeval_allow_ub(val spec, val form, val bindings)
   return do_txeval(spec, form, bindings, t);
 }
 
-enum fpip_close { fpip_fclose, fpip_pclose, fpip_closedir, fpip_close_stream };
-
-typedef struct fpip {
-  FILE *f;
-  DIR *d;
-  val s;
-  enum fpip_close close;
-} fpip_t;
-
-static fpip_t complex_open(val name, val output, val append)
+static val complex_open(val name, val output, val append)
 {
-  fpip_t ret = { 0, 0, nil, fpip_fclose };
-  const wchar_t *namestr = c_str(name);
-  cnum len = c_num(length_str(name));
+  val fc = car(name);
+  val result = nil;
 
-  if (len == 0)
-    return ret;
+  if (fc == chr('$') && output)
+    uw_throwf(query_error_s, lit("cannot output to directory: ~a"),
+              name, nao);
 
-  if (!wcscmp(namestr, L"-")) {
-    ret.close = fpip_close_stream;
-    ret.s = output ? std_output : std_input;
-  } else if (namestr[0] == '!') {
-    ret.close = fpip_pclose;
-    ret.f = w_popen(namestr+1, output ? L"w" : L"r");
-  } else if (namestr[0] == '$') {
-    char *name;
-    if (output)
-      return ret;
-    name = utf8_dup_to(namestr+1);
-    ret.close = fpip_closedir;
-    ret.d = opendir(name);
-    free(name);
+  uw_catch_begin (cons(error_s, nil), exc_sym, exc);
+
+  if (fc == chr('-')) {
+    result = output ? std_output : std_input;
+  } else if (fc == chr('!')) {
+    result = open_command(cdr(name), output ? lit("w") : lit("r"));
+  } else if (fc == chr('$')) {
+    result = open_directory(cdr(name));
   } else {
-    ret.close = fpip_fclose;
-    ret.f = w_fopen(namestr, output ? append ? L"a" : L"w" : L"r");
+    result = open_file(name,
+                       output ? append ? lit("a") : lit("w") : lit("r"));
   }
 
-  return ret;
-}
+  uw_catch (exc_sym, exc) { (void) exc; }
 
-static int complex_open_failed(fpip_t fp)
-{
-  return fp.f == 0 && fp.d == 0 && fp.s == nil;
-}
+  uw_unwind { }
 
-static val complex_snarf(fpip_t fp, val name)
-{
-  switch (fp.close) {
-  case fpip_fclose:
-    return lazy_stream_cons(make_stdio_stream(fp.f, name));
-  case fpip_pclose:
-    return lazy_stream_cons(make_pipe_stream(fp.f, name));
-  case fpip_closedir:
-    return lazy_stream_cons(make_dir_stream(fp.d));
-  case fpip_close_stream:
-    return lazy_stream_cons(fp.s);
-  }
+  uw_catch_end;
 
-  internal_error("bad input source type");
-}
-
-static val complex_stream(fpip_t fp, val name)
-{
-  switch (fp.close) {
-  case fpip_fclose:
-    return make_stdio_stream(fp.f, name);
-  case fpip_pclose:
-    return make_pipe_stream(fp.f, name);
-  case fpip_closedir:
-    uw_throwf(query_error_s, lit("cannot output to directory: ~a"), name, nao);
-  case fpip_close_stream:
-    return fp.s;
-  }
-
-  internal_error("bad output destination type");
+  return result;
 }
 
 static val robust_length(val obj)
@@ -3163,7 +3117,7 @@ static val v_output(match_files_ctx *c)
   val filter = nil;
   val named_var = nil, continue_expr = nil, finish_expr = nil;
   val alist;
-  fpip_t fp;
+  val stream = nil;
 
   if (first(dest_spec) == nothrow_k) {
     if (rest(dest_spec))
@@ -3259,11 +3213,11 @@ static val v_output(match_files_ctx *c)
     return next_spec_k;
   }
 
-  fp = (errno = 0, complex_open(dest, t, append));
+  stream = complex_open(dest, t, append);
 
   debuglf(specline, lit("opening data sink ~a"), dest, nao);
 
-  if (complex_open_failed(fp)) {
+  if (!stream) {
     if (nothrow) {
       debuglf(specline, lit("could not open ~a: "
                             "treating as failed match due to nothrow"), dest, nao);
@@ -3275,8 +3229,6 @@ static val v_output(match_files_ctx *c)
       file_err(specline, lit("could not open ~a"), dest, nao);
     }
   } else {
-    val stream = complex_stream(fp, dest);
-
     do_output(c->bindings, specs, filter, stream);
     flush_stream(stream);
 
@@ -3894,7 +3846,7 @@ static void open_data_source(match_files_ctx *c)
     val name = consp(source_spec) ? cdr(source_spec) : source_spec;
 
     if (stringp(name)) {
-      fpip_t fp = (errno = 0, complex_open(name, nil, nil));
+      val stream = complex_open(name, nil, nil);
       spec_bind (specline, first_spec, c->spec);
 
       if (consp(first_spec) && (gethash(non_matching_directive_table,
@@ -3907,7 +3859,7 @@ static void open_data_source(match_files_ctx *c)
         val spec = first(c->spec);
         debuglf(spec, lit("opening data source ~a"), name, nao);
 
-        if (complex_open_failed(fp)) {
+        if (!stream) {
           if (consp(source_spec) && car(source_spec) == nothrow_k)
             debuglf(spec, lit("could not open ~a: "
                               "treating as failed match due to nothrow"), name, nao);
@@ -3923,7 +3875,7 @@ static void open_data_source(match_files_ctx *c)
         c->files = cons(name, cdr(c->files)); /* Get rid of cons and nothrow */
         c->curfile = source_spec;
 
-        if ((c->data = complex_snarf(fp, name)) != nil)
+        if ((c->data = lazy_stream_cons(stream)) != nil)
           c->data_lineno = one;
       }
     } else if (streamp(name)) {
