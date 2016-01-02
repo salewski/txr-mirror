@@ -228,6 +228,13 @@ static val set_origin(val form, val origin)
   return form;
 }
 
+val set_last_form_evaled(val form)
+{
+  val prev = last_form_evaled;
+  last_form_evaled = form;
+  return prev;
+}
+
 void error_trace(val exsym, val exvals, val out_stream, val prefix)
 {
   val last = last_form_evaled;

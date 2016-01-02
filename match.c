@@ -1229,20 +1229,19 @@ static val v_fun(match_files_ctx *c);
 
 static val do_match_line(match_line_ctx *c)
 {
+  val lfe_save = set_last_form_evaled(nil);
+
   debug_enter;
 
-  for (;;) {
-    val elem;
+  while (c->specline) {
+    val elem = first(c->specline);
 
-    if (c->specline == nil)
-      break;
+    set_last_form_evaled(elem);
 
     if (c->pos == t)
       c->pos = length_str(c->dataline);
 
     consume_prefix(c);
-
-    elem = first(c->specline);
 
     debug_check(c->specline, c->bindings, c->dataline, c->data_lineno,
                 c->pos, c->base);
@@ -1348,6 +1347,8 @@ static val do_match_line(match_line_ctx *c)
 
   debug_return (cons(c->bindings, plus(c->pos, c->base)));
   debug_leave;
+
+  set_last_form_evaled(lfe_save);
 }
 
 static val match_line(match_line_ctx c)
@@ -3882,6 +3883,7 @@ repeat_spec_same_data:
     debug_check(specline, c.bindings, c.data, c.data_lineno, nil, nil);
 
     if (consp(first_spec) && !rest(specline)) {
+      val lfe_save = set_last_form_evaled(first_spec);
       val sym = first(first_spec);
       val entry = gethash(v_directive_table, sym);
 
@@ -3890,6 +3892,8 @@ repeat_spec_same_data:
         val result;
 
         result = vmf(&c);
+
+        set_last_form_evaled(lfe_save);
 
         if (result == next_spec_k) {
           if ((c.spec = rest(c.spec)) == nil)
@@ -3902,6 +3906,8 @@ repeat_spec_same_data:
         }
       } else {
         val result = v_fun(&c);
+
+        set_last_form_evaled(lfe_save);
 
         if (result == next_spec_k) {
           if ((c.spec = rest(c.spec)) == nil)

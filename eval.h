@@ -34,6 +34,7 @@ noreturn val eval_error(val ctx, val fmt, ...);
 val ctx_form(val obj);
 val ctx_name(val obj);
 val lookup_origin(val form);
+val set_last_form_evaled(val form);
 void error_trace(val exsym, val exvals, val out_stream, val prefix);
 val make_env(val fbindings, val vbindings, val up_env);
 val copy_env(val oenv);
