@@ -256,10 +256,10 @@ void error_trace(val exsym, val exvals, val out_stream, val prefix)
 
       if (first) {
         if (origin)
-          format(out_stream, lit("~a possibly triggered by form ~!~s\n"),
+          format(out_stream, lit("~a during evaluation of form ~!~s\n"),
                  prefix, last, nao);
         else if (!uw_exception_subtype_p(exsym, eval_error_s))
-          format(out_stream, lit("~a possibly triggered at ~a by form ~!~s\n"),
+          format(out_stream, lit("~a during evaluation at ~a of form ~!~s\n"),
                  prefix, info, last, nao);
       }
 
