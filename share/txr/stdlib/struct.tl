@@ -119,7 +119,10 @@
            (super-type (find-struct-type super)))
       (whenlet ((bad [find-if [notf bindable]
                               (append stat-slots inst-slots)]))
-        (throwf 'eval-error "~s: slot name ~s isn't a bindable symbol"
+        (throwf 'eval-error
+                (if (symbolp bad)
+                  "~s: slot name ~s isn't a bindable symbol"
+                  "~s: invalid slot specifier syntax: ~s")
                 'defstruct bad))
       (set stat-si-forms (sys:prune-nil-inits stat-si-forms super-type))
       (set inst-si-forms (sys:prune-nil-inits inst-si-forms super-type))
