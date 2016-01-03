@@ -19094,6 +19094,37 @@ type doesn't have.  When an instance of the structure is created, then the
 instance initializations are performed on that slot from all of the ancestor
 structure types in which that slot is also an instance slot.
 
+The initialization for slots which are specified using the
+.code :method
+or
+.code :function
+specifiers is re-ordered with regard to
+.code :static
+slots. Regardless of their placement in the
+.code defstruct
+form,
+.code :method
+and
+.code :function
+slots are initialized before
+.code :static
+slots. This ordering is useful, because it means that when the initialization
+expression for a given static slot constructs an instance of the struct type,
+any instance initialization code executing for that instance can use
+all functions and methods of the struct type.
+However, note the static slots which follow that slot in the
+.code defstruct
+syntax are not yet initialized. If it is necessary for a structure's
+initialization code to have access to all static slots, even when the
+structure is instantiated during the initialization of a static slot,
+a possible solution may be to use lazy instantiation using the
+.code lnew
+operator, rather than ordinary eager instantiation via
+.codn new .
+It is also necessary to ensure that that the instance isn't accessed until all
+static initializations are complete, since access to the instance slots of a
+lazily instantiated structure triggers its initialization.
+
 The structure name is specified using two forms, plain
 .meta name
 or the syntax

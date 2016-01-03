@@ -29,7 +29,7 @@
 
   (defun sys:prune-nil-inits (slot-init-forms super-type)
     (remove-if (tb ((kind name init-form))
-                 (and (member kind '(:static :instance))
+                 (and (member kind '(:static :instance :function))
                       (null init-form)
                       (or (not super-type)
                           (not (slotp super-type name)))))
@@ -56,13 +56,13 @@
                                                "~s: method ~s needs \
                                                \ at least one parameter"
                                                'defstruct name))
-                                     ^(:static ,name
-                                               (lambda ,args
-                                                 (block ,name ,*body))))
-                                   (:function ^(:static ,name
-                                                        (lambda ,args
-                                                          (block ,name
-                                                            ,*body))))
+                                     ^(:function ,name
+                                        (lambda ,args
+                                              (block ,name ,*body))))
+                                   (:function ^(,word ,name
+                                                 (lambda ,args
+                                                   (block ,name
+                                                     ,*body))))
                                    ((:static :instance)
                                      (when body
                                        (sys:bad-slot-syntax slot))
@@ -112,11 +112,15 @@
                                   ^(:instance ,name nil))
                                 (name
                                   ^(:instance ,name nil)))))
-           (stat-si-forms [keep-if (op eq :static) slot-init-forms car])
+           (super-type (find-struct-type super))
+           (stat-si-forms [keep-if (op member @1 '(:static :function))
+                                   slot-init-forms car])
+           (pruned-si-forms (sys:prune-nil-inits stat-si-forms super-type))
+           (func-si-forms [keep-if (op eq :function) pruned-si-forms car])
+           (val-si-forms [keep-if (op eq :static) pruned-si-forms car])
            (inst-si-forms [keep-if (op eq :instance) slot-init-forms car])
            (stat-slots [mapcar second stat-si-forms])
-           (inst-slots [mapcar second inst-si-forms])
-           (super-type (find-struct-type super)))
+           (inst-slots [mapcar second inst-si-forms]))
       (whenlet ((bad [find-if [notf bindable]
                               (append stat-slots inst-slots)]))
         (throwf 'eval-error
@@ -124,17 +128,15 @@
                   "~s: slot name ~s isn't a bindable symbol"
                   "~s: invalid slot specifier syntax: ~s")
                 'defstruct bad))
-      (set stat-si-forms (sys:prune-nil-inits stat-si-forms super-type))
-      (set inst-si-forms (sys:prune-nil-inits inst-si-forms super-type))
       (let ((arg-sym (gensym))
             (type-sym (gensym)))
         ^(sys:make-struct-type
            ',name ',super ',stat-slots ',inst-slots
-           ,(if stat-si-forms
+           ,(if (or func-si-forms val-si-forms)
                ^(lambda (,arg-sym)
                   ,*(mapcar (aret ^(when (static-slot-p ,arg-sym ',@2)
                                      (static-slot-set ,arg-sym ',@2 ,@3)))
-                            stat-si-forms)))
+                            (append func-si-forms val-si-forms))))
            ,(if (or inst-si-forms instance-init-form instance-fini-form)
               ^(lambda (,arg-sym)
                  ,*(if (cdr instance-fini-form)
