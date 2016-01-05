@@ -4025,6 +4025,11 @@ val chr_iscntrl(val ch)
 
 val chr_isdigit(val ch)
 {
+  return if2(iswdigit(c_chr(ch)), t);
+}
+
+val chr_digit(val ch)
+{
   return if2(iswdigit(c_chr(ch)), minus(ch, chr('0')));
 }
 
@@ -4069,6 +4074,11 @@ val chr_isupper(val ch)
 }
 
 val chr_isxdigit(val ch)
+{
+  return tnil(iswxdigit(c_chr(ch)));
+}
+
+val chr_xdigit(val ch)
 {
   wchar_t cc = c_chr(ch);
 

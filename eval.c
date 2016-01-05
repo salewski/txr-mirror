@@ -5024,6 +5024,7 @@ void eval_init(void)
   reg_fun(intern(lit("chr-isascii"), user_package), func_n1(chr_isascii));
   reg_fun(intern(lit("chr-iscntrl"), user_package), func_n1(chr_iscntrl));
   reg_fun(intern(lit("chr-isdigit"), user_package), func_n1(chr_isdigit));
+  reg_fun(intern(lit("chr-digit"), user_package), func_n1(chr_digit));
   reg_fun(intern(lit("chr-isgraph"), user_package), func_n1(chr_isgraph));
   reg_fun(intern(lit("chr-islower"), user_package), func_n1(chr_islower));
   reg_fun(intern(lit("chr-isprint"), user_package), func_n1(chr_isprint));
@@ -5033,6 +5034,7 @@ void eval_init(void)
   reg_fun(intern(lit("chr-isunisp"), user_package), func_n1(chr_isunisp));
   reg_fun(intern(lit("chr-isupper"), user_package), func_n1(chr_isupper));
   reg_fun(intern(lit("chr-isxdigit"), user_package), func_n1(chr_isxdigit));
+  reg_fun(intern(lit("chr-xdigit"), user_package), func_n1(chr_xdigit));
   reg_fun(intern(lit("chr-toupper"), user_package), func_n1(chr_toupper));
   reg_fun(intern(lit("chr-tolower"), user_package), func_n1(chr_tolower));
   {

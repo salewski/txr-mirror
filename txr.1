@@ -17643,17 +17643,22 @@ ranges from 0 to 31, or is 127. In other words, any non-printable ASCII
 character. For other characters, it returns
 .codn nil .
 
-.coNP Function @ chr-isdigit
+.coNP Functions @ chr-isdigit and @ chr-digit
 .synb
 .mets (chr-isdigit << char )
+.mets (chr-digit << char )
 .syne
 .desc
 If
 .meta char
-is is an ASCII digit character,
+is is an ASCII decimal digit character,
 .code chr-isdigit
-returns the integer value, 0 to 9, corresponding to that character.
-Otherwise, it returns
+returns the value
+.code t
+and
+.code chr-digit
+returns the integer value corresponding to that digit character,
+a value in the range 0 to 9.  Otherwise, both functions return
 .codn nil .
 
 .coNP Function @ chr-isgraph
@@ -17800,18 +17805,23 @@ if
 is an ASCII upper case letter. Otherwise it returns
 .codn nil .
 
-.coNP Function @ chr-isxdigit
+.coNP Function @ chr-isxdigit and @ chr-xdigit
 .synb
 .mets (chr-isxdigit << char )
+.mets (chr-xdigit << char )
 .syne
 .desc
 If
 .meta char
 is a hexadecimal digit character,
 .code chr-isxdigit
-returns its integer value 0 to 15.
-Otherwise it returns
-.codn nil  .
+returns the value
+.code t
+and
+.code chr-xdigit
+returns the integer value corresponding to that digit character,
+a value in the range 0 to 15.  Otherwise, both functions returns
+.codn nil .
 
 A hexadecimal digit is one of the ASCII
 digit characters
