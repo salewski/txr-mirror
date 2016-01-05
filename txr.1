@@ -24840,6 +24840,22 @@ The value stored in
 .meta right-place
 is also returned.
 
+If
+.meta left-place
+and
+.meta right-place
+are ranges of the same sequence, the behavior is not specified
+if the ranges overlap or are of unequal length.
+
+Note: the
+.code rotate
+macro's behavior is somewhat more specified in this regard.
+Thus, although any correct
+.code swap
+expression can be expressed using
+.code rotate ,
+but the reverse isn't true.
+
 .coNP Macro @ push
 .synb
 .mets (push < item << place )
@@ -24965,6 +24981,19 @@ into the last place.
 
 Finally, the saved original value of the first place is returned.
 
+If any of the places are ranges which index into the same sequence,
+and the behavior is not otherwise unspecified due to the issue
+noted in an earlier paragraph, the effect upon the multiply-stored
+sequence can be inferred from the above-described storage order.
+Note that even if stores take place which change the length of
+the sequence and move some elements, not-yet-processed stores whose ranges
+to refer to these elements are not adjusted.
+
+With regard to the foregoing paragraph, a recommended practice is
+that if subranges of the same sequence object are shifted, they be
+given to the macro in ascending order of starting index. Furthermore, the
+semantics is simpler if the ranges do not overlap.
+
 .coNP Macro @ rotate
 .synb
 .mets (rotate << place *)
@@ -25001,6 +25030,19 @@ forms has the side effect of modifying the value stored in
 a later
 .meta place
 form.
+
+If any of the places are ranges which index into the same sequence,
+and the behavior is not otherwise unspecified due to the issue
+noted in the preceding paragraph, the effect upon the multiply-stored
+sequence can be inferred from the above-described storage order.
+Note that even if stores take place which change the length of
+the sequence and move some elements, not-yet-processed stores whose ranges
+to refer to these elements are not adjusted.
+
+With regard to the foregoing paragraph, a recommended practice is
+that if subranges of the same sequence object are shifted, they be
+given to the macro in ascending order of starting index. Furthermore, the
+semantics is simpler if the ranges do not overlap.
 
 .coNP Macro @ del
 .synb
