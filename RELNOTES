@@ -1,3 +1,47 @@
+                                    TXR 130
+                                   2016-01-05
+
+
+  Features:
+
+  - Interactive listener:
+    - New Ctrl-X Enter command: submit line, but stay in history
+      and advance forward by one line.
+  - I/O:
+    - New record-adapter function creates a "stream adapter" virtual
+      stream object based on an existing stream.
+      - The adapter changes the semantics of get-line to support
+        delimiting of records via a regular expression (which is stored
+        in the adapter), rather than the newline character.
+      - With this, TXR can now process streams delimited in alternative
+        was as if they were line-oriented.
+    - New read-until-match function: extract characters from a stream,
+      accumulated into a string, until a match for a regex occurs in
+      that stream, and discard the match.
+  - OOP:
+    - In defstruct, function slots now initialized before other static
+      slots regardless of order of specifiers.
+  - Library:
+    - New chr-digit and chr-xdigit functions: like chr-isdigit and
+      chr-isxdigit, but returning the digit value instead of the
+      t symbol.
+
+  Bugs:
+
+  - Interactive listener:
+    - Fixed recent regression in Tab completion: missing completion on special
+      operators and macros.
+    - Fixed Ctrl-X commands not recognized in a history search.
+  - OOP:
+    - Access to static slots of a lazy struct was triggering
+      instantiation; this is fixed.
+  - Library:
+    - Recent change in chr-isdigit and chr-isxdigit return value
+      semantics has been reverted, due to potentially breaking code
+      which relies on (eql (chr-isdigit #\0) (chr-isdigit #\1)).
+
+
+
                                     TXR 129
                                    2015-12-30
 
