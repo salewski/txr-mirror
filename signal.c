@@ -365,7 +365,7 @@ int sig_mask(int how, const small_sigset_t *set, small_sigset_t *oldset)
     sig_blocked_cache = *pnew;
     int ret;
 #if HAVE_VALGRIND
-    VALGRIND_MAKE_MEM_DEFINED(real_oldset, sizeof real_oldset);
+    VALGRIND_MAKE_MEM_DEFINED(&real_oldset, sizeof real_oldset);
 #endif
     memcpy(&real_newset, &sig_blocked_cache, sizeof sig_blocked_cache);
     ret = sigprocmask(SIG_SETMASK, &real_newset, &real_oldset);
