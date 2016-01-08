@@ -917,7 +917,7 @@ int main(int argc, char **argv)
 if conftest ; then
   printf "none needed\n"
 else
-  for flag in _BSD_SOURCE __BSD_VISIBLE _GNU_SOURCE _X_OOPS; do
+  for flag in _DEFAULT_SOURCE _BSD_SOURCE __BSD_VISIBLE _GNU_SOURCE _X_OOPS; do
     if [ $flag = _X_OOPS ] ; then
       printf "failed\n"
       break
