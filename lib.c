@@ -2358,6 +2358,14 @@ char *chk_strdup_utf8(const char *str)
   return copy;
 }
 
+mem_t *chk_copy_obj(mem_t *orig, size_t size)
+{
+  mem_t *copy = chk_malloc(size);
+  assert (!async_sig_enabled);
+  memcpy(copy, orig, size);
+  return copy;
+}
+
 val cons(val car, val cdr)
 {
   val obj = make_obj();

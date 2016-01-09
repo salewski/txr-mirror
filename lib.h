@@ -561,6 +561,7 @@ mem_t *chk_manage_vec(mem_t *old, size_t oldfilled, size_t newfilled,
 wchar_t *chk_wmalloc(size_t nwchar);
 wchar_t *chk_strdup(const wchar_t *str);
 char *chk_strdup_utf8(const char *str);
+mem_t *chk_copy_obj(mem_t *orig, size_t size);
 val cons(val car, val cdr);
 val make_lazy_cons(val func);
 val make_half_lazy_cons(val func, val car);
