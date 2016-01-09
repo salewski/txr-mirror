@@ -201,11 +201,17 @@ struct lazy_cons {
  * Lazy string: virtual string which dynamically grows as a catentation
  * of a list of strings.
  */
+
+struct lazy_string_props {
+  val term;
+  val limit;
+};
+
 struct lazy_string {
   obj_common;
   val prefix;           /* actual string part */
   val list;             /* remaining list */
-  val opts;             /* ( separator . limit ) */
+  struct lazy_string_props *props;
 };
 
 struct cobj {

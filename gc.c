@@ -230,7 +230,6 @@ static void finalize(val obj)
   case PKG:
   case FUN:
   case LCONS:
-  case LSTR:
   case ENV:
   case FLNUM:
   case RNG:
@@ -242,6 +241,10 @@ static void finalize(val obj)
   case STR:
     free(obj->st.str);
     obj->st.str = 0;
+    return;
+  case LSTR:
+    free(obj->ls.props);
+    obj->ls.props = 0;
     return;
   case VEC:
     free(obj->v.vec-2);
@@ -351,7 +354,8 @@ tail_call:
     mark_obj_tail(obj->lc.cdr);
   case LSTR:
     mark_obj(obj->ls.prefix);
-    mark_obj(obj->ls.opts);
+    mark_obj(obj->ls.props->limit);
+    mark_obj(obj->ls.props->term);
     mark_obj_tail(obj->ls.list);
   case COBJ:
     obj->co.ops->mark(obj);

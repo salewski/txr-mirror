@@ -3187,8 +3187,9 @@ static val lazy_sub_str(val lstr, val from, val to)
       lsub->ls.type = LSTR;
       lsub->ls.prefix = pfxsub;
       lsub->ls.list = lstr->ls.list;
-      lsub->ls.opts = lstr->ls.opts;
-
+      lsub->ls.props = coerce(struct lazy_string_props *,
+                              chk_copy_obj(coerce(mem_t *, lstr->ls.props),
+                                           sizeof *lstr->ls.props));
       return lsub;
     }
   }
@@ -6107,7 +6108,9 @@ val lazy_str(val lst, val term, val limit)
   obj->ls.type = LSTR;
 
   /* Must init before calling something that can gc! */
-  obj->ls.opts = obj->ls.list = obj->ls.prefix = nil;
+  obj->ls.list = obj->ls.prefix = nil;
+  obj->ls.props = coerce(struct lazy_string_props *,
+                         chk_calloc(1, sizeof *obj->ls.props));
 
   term = default_arg(term, lit("\n"));
   limit = default_bool_arg(limit);
@@ -6121,7 +6124,9 @@ val lazy_str(val lst, val term, val limit)
     limit = if2(limit, minus(limit, one));
   }
 
-  set(mkloc(obj->ls.opts, obj), cons(term, limit));
+
+  set(mkloc(obj->ls.props->term, obj), term);
+  set(mkloc(obj->ls.props->limit, obj), limit);
 
   return obj;
 }
@@ -6130,10 +6135,12 @@ static val copy_lazy_str(val lstr)
 {
   val obj = make_obj();
   obj->ls.type = LSTR;
-  obj->ls.opts = obj->ls.list = obj->ls.prefix = nil;
+  obj->ls.list = obj->ls.prefix = nil;
   obj->ls.prefix = copy_str(lstr->ls.prefix);
   obj->ls.list = lstr->ls.list;
-  obj->ls.opts = lstr->ls.opts;
+  obj->ls.props = coerce(struct lazy_string_props *,
+                         chk_copy_obj(coerce(mem_t *, lstr->ls.props),
+                                      sizeof *lstr->ls.props));
   return obj;
 }
 
@@ -6142,8 +6149,8 @@ val lazy_str_force(val lstr)
   val lim, term;
   list_collect_decl (strlist, ptail);
   type_check(lstr, LSTR);
-  lim = cdr(lstr->ls.opts);
-  term = car(lstr->ls.opts);
+  lim = lstr->ls.props->limit;
+  term = lstr->ls.props->term;
 
   while ((!lim || gt(lim, zero)) && lstr->ls.list) {
     val next = pop(&lstr->ls.list);
@@ -6156,7 +6163,7 @@ val lazy_str_force(val lstr)
   }
 
   if (lim)
-    set(cdr_l(lstr->ls.opts), lim);
+    set(mkloc(lstr->ls.props->limit, lstr), lim);
 
   if (strlist) {
     push(lstr->ls.prefix, &strlist);
@@ -6170,8 +6177,8 @@ val lazy_str_put(val lstr, val stream)
 {
   val lim, term, iter;
   type_check(lstr, LSTR);
-  lim = cdr(lstr->ls.opts);
-  term = car(lstr->ls.opts);
+  lim = lstr->ls.props->limit;
+  term = lstr->ls.props->term;
 
   put_string(lstr->ls.prefix, stream);
 
@@ -6194,8 +6201,8 @@ val lazy_str_force_upto(val lstr, val index)
   val lim, term, ltrm, len, effidx = index;
   list_collect_decl (strlist, ptail);
   type_check(lstr, LSTR);
-  lim = cdr(lstr->ls.opts);
-  term = car(lstr->ls.opts);
+  lim = lstr->ls.props->limit;
+  term = lstr->ls.props->term;
   ltrm = length_str(term);
   len = length_str(lstr->ls.prefix);
 
@@ -6220,7 +6227,7 @@ val lazy_str_force_upto(val lstr, val index)
   }
 
   if (lim)
-    set(cdr_l(lstr->ls.opts), lim);
+    set(mkloc(lstr->ls.props->limit, lstr), lim);
 
   if (strlist) {
     push(lstr->ls.prefix, &strlist);
@@ -6329,7 +6336,7 @@ val lazy_str_get_trailing_list(val lstr, val index)
   {
     uses_or2;
     val split_suffix = split_str(sub_str(lstr->ls.prefix, index, nil),
-                                 or2(car(lstr->ls.opts), lit("\n")));
+                                 or2(lstr->ls.props->term, lit("\n")));
 
     if (!cdr(split_suffix) && equal(car(split_suffix), null_string))
       return lstr->ls.list;
@@ -8237,8 +8244,8 @@ static void out_lazy_str(val lstr, val out)
   const wchar_t *wcterm;
 
   type_check(lstr, LSTR);
-  lim = cdr(lstr->ls.opts);
-  term = car(lstr->ls.opts);
+  lim = lstr->ls.props->limit;
+  term = lstr->ls.props->term;
   wcterm = c_str(term);
 
   put_char(chr('"'), out);
