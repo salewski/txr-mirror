@@ -6135,12 +6135,12 @@ static val copy_lazy_str(val lstr)
 {
   val obj = make_obj();
   obj->ls.type = LSTR;
-  obj->ls.list = obj->ls.prefix = nil;
-  obj->ls.prefix = copy_str(lstr->ls.prefix);
+  obj->ls.prefix = nil;
   obj->ls.list = lstr->ls.list;
   obj->ls.props = coerce(struct lazy_string_props *,
                          chk_copy_obj(coerce(mem_t *, lstr->ls.props),
                                       sizeof *lstr->ls.props));
+  obj->ls.prefix = copy_str(lstr->ls.prefix);
   return obj;
 }
 
