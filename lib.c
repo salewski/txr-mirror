@@ -2344,7 +2344,6 @@ wchar_t *chk_strdup(const wchar_t *str)
 {
   size_t nchar = wcslen(str) + 1;
   wchar_t *copy = chk_wmalloc(nchar);
-  assert (!async_sig_enabled);
   wmemcpy(copy, str, nchar);
   return copy;
 }
@@ -2353,7 +2352,6 @@ char *chk_strdup_utf8(const char *str)
 {
   size_t nchar = strlen(str) + 1;
   char *copy = coerce(char *, chk_malloc(nchar));
-  assert (!async_sig_enabled);
   memcpy(copy, str, nchar);
   return copy;
 }
@@ -2361,7 +2359,6 @@ char *chk_strdup_utf8(const char *str)
 mem_t *chk_copy_obj(mem_t *orig, size_t size)
 {
   mem_t *copy = chk_malloc(size);
-  assert (!async_sig_enabled);
   memcpy(copy, orig, size);
   return copy;
 }
