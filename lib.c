@@ -3395,11 +3395,11 @@ val cat_str(val list, val sep)
 
   for (ptr = str, iter = list; iter != nil; iter = cdr(iter)) {
     val item = car(iter);
-    cnum len;
+
     if (!item)
       continue;
     if (stringp(item)) {
-      len = c_num(length_str(item));
+      cnum len = c_num(length_str(item));
       wmemcpy(ptr, c_str(item), len);
       ptr += len;
     } else {
