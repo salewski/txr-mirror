@@ -223,7 +223,7 @@ val lookup_origin(val form)
 
 static val set_origin(val form, val origin)
 {
-  if (origin)
+  if (origin && form != origin)
     sethash(origin_hash, form, origin);
   return form;
 }
@@ -1619,7 +1619,7 @@ static val expand_macro(val form, val mac_binding, val menv)
     result = eval_progn(body, exp_env, body);
     debug_end;
     set_dyn_env(saved_de);
-    sethash(origin_hash, result, form);
+    set_origin(result, form);
     debug_return(result);
     debug_leave;
   }
