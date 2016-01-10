@@ -2221,8 +2221,8 @@ val format_field(val obj, val modifier, val filter, val eval_fun)
       val padding = mkstring(diff, chr(' '));
 
       return if3(right,
-                 cat_str(list(padding, str, nao), nil),
-                 cat_str(list(str, padding, nao), nil));
+                 scat(nil, padding, str, nao),
+                 scat(nil, str, padding, nao));
     }
   }
 }

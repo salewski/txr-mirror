@@ -3419,6 +3419,86 @@ oflow:
   uw_throwf(error_s, lit("cat-str: string length overflow"), nao);
 }
 
+static val vscat(val sep, va_list vl1, va_list vl2)
+{
+  cnum total = 0;
+  val item, next;
+  wchar_t *str, *ptr;
+  cnum len_sep = (!null_or_missing_p(sep)) ? c_num(length_str(sep)) : 0;
+
+  for (item = va_arg(vl1, val); item != nao; item = next)
+  {
+    next = va_arg(vl1, val);
+
+    if (stringp(item)) {
+      cnum ntotal = total + c_num(length_str(item));
+
+      if (len_sep && next != nao)
+        ntotal += len_sep;
+
+      if (ntotal < total)
+        goto oflow;
+
+      total = ntotal;
+
+      continue;
+    }
+    if (chrp(item)) {
+      cnum ntotal = total + 1;
+
+      if (len_sep && next != nao)
+        ntotal += len_sep;
+
+      if (ntotal < total)
+        goto oflow;
+
+      total = ntotal;
+
+      continue;
+    }
+    uw_throwf(error_s, lit("cat-str: ~s is not a character or string"),
+              item, nao);
+  }
+
+  str = chk_wmalloc(total + 1);
+
+  for (ptr = str, item = va_arg(vl2, val); item != nao; item = next)
+  {
+    next = va_arg(vl2, val);
+
+    if (stringp(item)) {
+      cnum len = c_num(length_str(item));
+      wmemcpy(ptr, c_str(item), len);
+      ptr += len;
+    } else {
+      *ptr++ = c_chr(item);
+    }
+
+    if (len_sep && next != nao) {
+      wmemcpy(ptr, c_str(sep), len_sep);
+      ptr += len_sep;
+    }
+  }
+  *ptr = 0;
+
+  return string_own(str);
+
+oflow:
+  uw_throwf(error_s, lit("vcat: string length overflow"), nao);
+}
+
+val scat(val sep, ...)
+{
+  va_list vl1, vl2;
+  val ret;
+  va_start (vl1, sep);
+  va_start (vl2, sep);
+  ret = vscat(sep, vl1, vl2);
+  va_end (vl1);
+  va_end (vl2);
+  return ret;
+}
+
 val split_str(val str, val sep)
 {
   if (regexp(sep)) {
@@ -6119,11 +6199,11 @@ val lazy_str(val lst, val term, val limit)
     obj->ls.prefix = null_string;
     obj->ls.list = nil;
   } else {
-    set(mkloc(obj->ls.prefix, obj), cat_str(list(first(lst), term, nao), nil));
+    val prefix = scat(nil, first(lst), term, nao);
+    set(mkloc(obj->ls.prefix, obj), prefix);
     set(mkloc(obj->ls.list, obj), rest(lst));
     limit = if2(limit, minus(limit, one));
   }
-
 
   set(mkloc(obj->ls.props->term, obj), term);
   set(mkloc(obj->ls.props->limit, obj), limit);

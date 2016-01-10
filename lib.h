@@ -692,6 +692,7 @@ val match_str_tree(val bigstr, val tree, val pos);
 val replace_str(val str_in, val items, val from, val to);
 val sub_str(val str_in, val from_num, val to_num);
 val cat_str(val list, val sep);
+val scat(val sep, ...);
 val split_str(val str, val sep);
 val split_str_set(val str, val set);
 val tok_str(val str, val tok_regex, val keep_sep);

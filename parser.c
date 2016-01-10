@@ -235,7 +235,7 @@ void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream)
 #endif
 
     if (suffix == none && in == 0 && !*txr_lisp_p) {
-      spec_file_try = cat_str(list(spec_file, lit("txr"), nao), lit("."));
+      spec_file_try = scat(lit("."), spec_file, lit("txr"), nao);
       in = w_fopen(c_str(spec_file_try), L"r");
 #ifdef ENOENT
       if (in == 0 && errno != ENOENT)
@@ -246,7 +246,7 @@ void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream)
 
 
     if (suffix == none && in == 0) {
-      spec_file_try = cat_str(list(spec_file, lit("tl"), nao), lit("."));
+      spec_file_try = scat(lit("."), spec_file, lit("tl"), nao);
       in = w_fopen(c_str(spec_file_try), L"r");
       *txr_lisp_p = t;
     }
@@ -369,7 +369,7 @@ val read_eval_stream(val stream, val error_stream, val hash_bang_support)
     val firstline = get_line(stream);
 
     if (firstline && !match_str(firstline, lit("#!"), nil)) {
-      val flwnl = cat_str(list(firstline, lit("\n"), nao), nil);
+      val flwnl = scat(nil, firstline, lit("\n"), nao);
       val string_stream = make_string_byte_input_stream(flwnl);
       stream = make_catenated_stream(list(string_stream, stream, nao));
     }
