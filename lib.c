@@ -6146,29 +6146,24 @@ static val copy_lazy_str(val lstr)
 
 val lazy_str_force(val lstr)
 {
-  val lim, term;
-  list_collect_decl (strlist, ptail);
+  val lim, term, pfx;
   type_check(lstr, LSTR);
   lim = lstr->ls.props->limit;
   term = lstr->ls.props->term;
+  pfx = lstr->ls.prefix;
 
   while ((!lim || gt(lim, zero)) && lstr->ls.list) {
     val next = pop(&lstr->ls.list);
     if (!next)
       break;
-    ptail = list_collect(ptail, next);
-    ptail = list_collect(ptail, term);
+    string_extend(pfx, next);
+    string_extend(pfx, term);
     if (lim)
       lim = minus(lim, one);
   }
 
   if (lim)
     set(mkloc(lstr->ls.props->limit, lstr), lim);
-
-  if (strlist) {
-    push(lstr->ls.prefix, &strlist);
-    set(mkloc(lstr->ls.prefix, lstr), cat_str(strlist, nil));
-  }
 
   return lstr->ls.prefix;
 }
@@ -6198,28 +6193,22 @@ val lazy_str_put(val lstr, val stream)
 val lazy_str_force_upto(val lstr, val index)
 {
   uses_or2;
-  val lim, term, ltrm, len, effidx = index;
-  list_collect_decl (strlist, ptail);
+  val lim, term, ltrm, pfx, len;
   type_check(lstr, LSTR);
   lim = lstr->ls.props->limit;
   term = lstr->ls.props->term;
   ltrm = length_str(term);
-  len = length_str(lstr->ls.prefix);
+  pfx = lstr->ls.prefix;
+  len = length_str(pfx);
 
-  if (lt(effidx, len))
-    return t;
-
-  if (minus(effidx, len) < num_fast(1024))
-    effidx = plus(len, num_fast(1024));
-
-  while (ge(effidx, len) && lstr->ls.list &&
+  while (ge(index, len) && lstr->ls.list &&
          or2(null(lim),gt(lim,zero)))
   {
     val next = pop(&lstr->ls.list);
     if (!next)
       break;
-    ptail = list_collect(ptail, next);
-    ptail = list_collect(ptail, term);
+    string_extend(pfx, next);
+    string_extend(pfx, term);
     if (lim)
       lim = minus(lim, one);
     len = plus(len, length_str(next));
@@ -6228,11 +6217,6 @@ val lazy_str_force_upto(val lstr, val index)
 
   if (lim)
     set(mkloc(lstr->ls.props->limit, lstr), lim);
-
-  if (strlist) {
-    push(lstr->ls.prefix, &strlist);
-    set(mkloc(lstr->ls.prefix, lstr), cat_str(strlist, nil));
-  }
 
   return lt(index, len);
 }
