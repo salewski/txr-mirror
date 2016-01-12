@@ -2037,7 +2037,7 @@ static void print_class_char(val ch, val first_p, val stream)
     if (!first_p)
       break;
     /* fallthrough */
-  case '-':
+  case '-': case '[': case ']':
     put_char(chr('\\'), stream);
     break;
   }
