@@ -8283,7 +8283,7 @@ static void out_str_char(wchar_t ch, val out, int *semi_flag)
   case '\\': put_string(lit("\\\\"), out); break;
   case 27: put_string(lit("\\e"), out); break;
   default:
-    if (ch >= ' ') {
+    if ((ch >= ' ' && ch != 127 && ch < 0xDC00) || ch > 0xDCFF) {
       put_char(chr(ch), out);
     } else {
       format(out, lit("\\x~,02X"), num(ch), nao);
