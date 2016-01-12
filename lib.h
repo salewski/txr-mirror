@@ -940,6 +940,7 @@ val rangep(val obj);
 val from(val range);
 val to(val range);
 val env(void);
+void out_str_char(wchar_t ch, val out, int *semi_flag);
 val obj_print_impl(val obj, val out, val pretty);
 val obj_print(val obj, val stream);
 val obj_pprint(val obj, val stream);

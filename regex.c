@@ -2029,7 +2029,19 @@ val regexp(val obj)
   return typeof(obj) == regex_s ? t : nil;
 }
 
-static void print_class_char(val ch, val first_p, val stream)
+static void puts_clear_flag(val str, val stream, int *semi_flag)
+{
+  *semi_flag = 0;
+    put_string(str, stream);
+}
+
+static void putc_clear_flag(val ch, val stream, int *semi_flag)
+{
+  *semi_flag = 0;
+  put_char(ch, stream);
+}
+
+static void print_class_char(val ch, val first_p, val stream, int *semi_flag)
 {
   wchar_t c = c_chr(ch);
   switch (c) {
@@ -2038,58 +2050,62 @@ static void print_class_char(val ch, val first_p, val stream)
       break;
     /* fallthrough */
   case '-': case '[': case ']':
-    put_char(chr('\\'), stream);
-    break;
+    putc_clear_flag(chr('\\'), stream, semi_flag);
+    put_char(ch, stream);
+    return;
   }
-  put_char(ch, stream);
+  out_str_char(c_chr(ch), stream, semi_flag);
 }
 
-static void print_rec(val exp, val stream);
+static void print_rec(val exp, val stream, int *semi_flag);
 
-static void paren_print_rec(val exp, val stream)
+static void paren_print_rec(val exp, val stream, int *semi_flag)
 {
-  put_char(chr('('), stream);
-  print_rec(exp, stream);
-  put_char(chr(')'), stream);
+  putc_clear_flag(chr('('), stream, semi_flag);
+  print_rec(exp, stream, semi_flag);
+  putc_clear_flag(chr(')'), stream, semi_flag);
 }
 
-static void print_rec(val exp, val stream)
+static void print_rec(val exp, val stream, int *semi_flag)
 {
   if (exp == space_k) {
-    put_string(lit("\\s"), stream);
+    puts_clear_flag(lit("\\s"), stream, semi_flag);
   } else if (exp == digit_k) {
-    put_string(lit("\\d"), stream);
+    puts_clear_flag(lit("\\d"), stream, semi_flag);
   } else if (exp == word_char_k) {
-    put_string(lit("\\w"), stream);
+    puts_clear_flag(lit("\\w"), stream, semi_flag);
   } else if (exp == cspace_k) {
-    put_string(lit("\\S"), stream);
+    puts_clear_flag(lit("\\S"), stream, semi_flag);
   } else if (exp == cdigit_k) {
-    put_string(lit("\\D"), stream);
+    puts_clear_flag(lit("\\D"), stream, semi_flag);
   } else if (exp == cword_char_k) {
-    put_string(lit("\\W"), stream);
+    puts_clear_flag(lit("\\W"), stream, semi_flag);
   } else if (exp == wild_s) {
-    put_char(chr('.'), stream);
+    putc_clear_flag(chr('.'), stream, semi_flag);
   } else if (chrp(exp)) {
     wchar_t ch = c_chr(exp);
     switch (ch) {
     case '?': case '.': case '*': case '+':
     case '(': case ')': case '|': case '~':
     case '&': case '%': case '/': case '\\':
-      put_char(chr('\\'), stream);
+      putc_clear_flag(chr('\\'), stream, semi_flag);
+      put_char(exp, stream);
       break;
-      }
-    put_char(exp, stream);
+    default:
+      out_str_char(ch, stream, semi_flag);
+    }
   } else if (stringp(exp)) {
     cnum i;
     cnum l = c_num(length(exp));
     for (i = 0; i < l; i++)
-      print_rec(chr_str(exp, num(i)), stream);
+      print_rec(chr_str(exp, num(i)), stream, semi_flag);
   } else if (consp(exp)) {
     val sym = first(exp);
     val args = rest(exp);
 
     if (sym == set_s || sym == cset_s) {
-      put_char(chr('['), stream);
+      putc_clear_flag(chr('['), stream, semi_flag);
+
       val first_p = t;
 
       if (sym == cset_s) {
@@ -2100,78 +2116,78 @@ static void print_rec(val exp, val stream)
       while (args) {
         val arg = pop(&args);
         if (consp(arg)) {
-          print_class_char(car(arg), first_p, stream);
-          put_char(chr('-'), stream);
-          print_class_char(cdr(arg), nil, stream);
+          print_class_char(car(arg), first_p, stream, semi_flag);
+          putc_clear_flag(chr('-'), stream, semi_flag);
+          print_class_char(cdr(arg), nil, stream, semi_flag);
         } else if (symbolp(arg)) {
-          print_rec(arg, stream);
+          print_rec(arg, stream, semi_flag);
         } else {
-          print_class_char(arg, first_p, stream);
+          print_class_char(arg, first_p, stream, semi_flag);
         }
         first_p = nil;
       }
-      put_char(chr(']'), stream);
+      putc_clear_flag(chr(']'), stream, semi_flag);
     } else if (sym == compound_s) {
       for (; args; args = cdr(args)) {
         val arg = car(args);
         if (consp(arg) && car(arg) != zeroplus_s && car(arg) != oneplus_s &&
             car(arg) != optional_s && car (arg) != compound_s)
-          paren_print_rec(arg, stream);
+          paren_print_rec(arg, stream, semi_flag);
         else
-          print_rec(arg, stream);
+          print_rec(arg, stream, semi_flag);
       }
     } else if (sym == zeroplus_s || sym == oneplus_s || sym == optional_s) {
       val arg = pop(&args);
       if (consp(arg) && car(arg) != set_s && car(arg) != cset_s)
-        paren_print_rec(arg, stream);
+        paren_print_rec(arg, stream, semi_flag);
       else
-        print_rec(arg, stream);
+        print_rec(arg, stream, semi_flag);
       if (sym == zeroplus_s)
-        put_char(chr('*'), stream);
+        putc_clear_flag(chr('*'), stream, semi_flag);
       else if (sym == oneplus_s)
-        put_char(chr('+'), stream);
+        putc_clear_flag(chr('+'), stream, semi_flag);
       else
-        put_char(chr('?'), stream);
+        putc_clear_flag(chr('?'), stream, semi_flag);
     } else if (sym == compl_s) {
       val arg = pop(&args);
-      put_char(chr('~'), stream);
+      putc_clear_flag(chr('~'), stream, semi_flag);
       if (consp(arg) && (car(arg) == or_s || car(arg) == and_s))
-        paren_print_rec(arg, stream);
+        paren_print_rec(arg, stream, semi_flag);
       else
-        print_rec(arg, stream);
+        print_rec(arg, stream, semi_flag);
     } else if (sym == and_s) {
       val arg1 = pop(&args);
       val arg2 = pop(&args);
       if (consp(arg1) && car(arg2) == or_s)
-        paren_print_rec(arg1, stream);
+        paren_print_rec(arg1, stream, semi_flag);
       else
-        print_rec(arg1, stream);
-      put_char(chr('&'), stream);
+        print_rec(arg1, stream, semi_flag);
+      putc_clear_flag(chr('&'), stream, semi_flag);
       if (consp(arg2) && car(arg2) == or_s)
-        paren_print_rec(arg2, stream);
+        paren_print_rec(arg2, stream, semi_flag);
       else
-        print_rec(arg2, stream);
+        print_rec(arg2, stream, semi_flag);
     } else if (sym == or_s) {
-      print_rec(pop(&args), stream);
-      put_char(chr('|'), stream);
-      print_rec(pop(&args), stream);
+      print_rec(pop(&args), stream, semi_flag);
+      putc_clear_flag(chr('|'), stream, semi_flag);
+      print_rec(pop(&args), stream, semi_flag);
     } else if (sym == nongreedy_s) {
       val arg1 = pop(&args);
       val arg2 = pop(&args);
       if (consp(arg1) && car(arg1) != set_s && car(arg1) != cset_s)
-        paren_print_rec(arg1, stream);
+        paren_print_rec(arg1, stream, semi_flag);
       else
-        print_rec(arg1, stream);
-      put_char(chr('%'), stream);
+        print_rec(arg1, stream, semi_flag);
+      putc_clear_flag(chr('%'), stream, semi_flag);
       if (consp(arg2) && (car(arg2) == and_s && car(arg2) == or_s))
-        paren_print_rec(arg2, stream);
+        paren_print_rec(arg2, stream, semi_flag);
       else
-        print_rec(arg2, stream);
+        print_rec(arg2, stream, semi_flag);
     } else {
       uw_throwf(error_s, lit("bad operator in regex syntax: ~s"), sym, nao);
     }
   } else if (exp == t) {
-    put_string(lit("[]"), stream);
+    puts_clear_flag(lit("[]"), stream, semi_flag);
   } else if (exp != nil) {
     uw_throwf(error_s, lit("bad object in regex syntax: ~s"), exp, nao);
   }
@@ -2180,10 +2196,11 @@ static void print_rec(val exp, val stream)
 static void regex_print(val obj, val stream, val pretty)
 {
   regex_t *regex = coerce(regex_t *, cobj_handle(obj, regex_s));
+  int semi_flag = 0;
 
   (void) pretty;
   put_string(lit("#/"), stream);
-  print_rec(regex->source, stream);
+  print_rec(regex->source, stream, &semi_flag);
   put_char(chr('/'), stream);
 }
 
