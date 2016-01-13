@@ -1,3 +1,31 @@
+                                    TXR 131
+                                   2016-01-13
+
+
+  Bugs:
+
+  - Configuration with --valgrind now builds again.
+  - Invalid lazy string optimization introduced in TXR 118
+    has been re-worked. This affects the conformance of
+    the @(freeform) directive to documentation.
+  - When a macro declines to perform an expansion by
+    returning the :form, the form was recorded as its own
+    macro ancestor; now, nothing is recorded.
+  - Fixed issues in how regex objects are printed:
+    - Control characters and certain other characters were
+      being dumped literally.
+    - Now certain characters like newline print using
+      the escape codes like \n.
+    - Other control characters, as well as U+7F (ASCII DEL)
+      and characters in the U+DCXX surrogate range are
+      printed as hex codes.
+    - [ and ] in a character class are properly escaped.
+  - Fixed issue in string literals: semicolon character
+    effectively disappearing after control character that
+    is converted to hex escape.
+
+
+
                                     TXR 130
                                    2016-01-05
 
