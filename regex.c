@@ -2087,7 +2087,8 @@ static void print_rec(val exp, val stream, int *semi_flag)
     switch (ch) {
     case '?': case '.': case '*': case '+':
     case '(': case ')': case '|': case '~':
-    case '&': case '%': case '/': case '\\':
+    case '&': case '%': case '/':
+    case '[': case ']': case '\\':
       putc_clear_flag(chr('\\'), stream, semi_flag);
       put_char(exp, stream);
       break;
