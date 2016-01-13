@@ -2235,6 +2235,33 @@ int main(void)
   fi
 fi
 
+printf "Checking for crypt ... "
+
+cat > conftest.c <<!
+#include <unistd.h>
+
+int main(void)
+{
+  char *c = crypt("foo", "bar");
+  return 0;
+}
+!
+
+for try_lcrypt in "" "-lcrypt" "no" ; do
+  if [ "$try_lcrypt" = "no" ] ; then
+    printf "no\n"
+    break
+  fi
+  if conftest EXTRA_LDFLAGS=$try_lcrypt; then
+    printf "yes\n"
+    printf "#define HAVE_CRYPT 1\n" >> $config_h
+    if [ -n "$try_lcrypt" ] ; then
+      conf_ldflags="${conf_ldflags:+"$conf_ldflags "}-lcrypt"
+    fi
+    break;
+  fi
+done
+
 printf "Checking for alloca ... "
 
 for try_header in alloca.h malloc.h ; do

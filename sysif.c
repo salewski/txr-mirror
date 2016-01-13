@@ -1037,6 +1037,21 @@ static val getgrnam_wrap(val wname)
 
 #endif
 
+#if HAVE_CRYPT
+
+static val crypt_wrap(val wkey, val wsalt)
+{
+  char *key = utf8_dup_to(c_str(wkey));
+  char *salt = utf8_dup_to(c_str(wsalt));
+  char *hash = crypt(key, salt);
+  val whash = string_utf8(hash);
+  free(key);
+  free(salt);
+  return whash;
+}
+
+#endif
+
 off_t off_t_num(val num)
 {
   switch (type(num)) {
@@ -1395,6 +1410,10 @@ void sysif_init(void)
   reg_fun(intern(lit("getgrent"), user_package), func_n0(getgrent_wrap));
   reg_fun(intern(lit("getgrgid"), user_package), func_n1(getgrgid_wrap));
   reg_fun(intern(lit("getgrnam"), user_package), func_n1(getgrnam_wrap));
+#endif
+
+#if HAVE_CRYPT
+  reg_fun(intern(lit("crypt"), user_package), func_n2(crypt_wrap));
 #endif
 
 #if HAVE_POLL

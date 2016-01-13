@@ -36030,6 +36030,33 @@ If the search fails,
 .code nil
 is returned.
 
+.SS* Unix Password Hashing
+.coNP Function @ crypt
+.synb
+.mets (crypt < key << salt )
+.syne
+.desc
+The
+.code crypt
+function is a wrapper for the Unix C library function of the same name.
+It calculates a hash over the
+.meta key
+and
+.meta salt
+arguments, which are strings. The hash is returned as a string.
+
+The
+.meta key
+and
+.meta salt
+arguments are converted into UTF-8 prior to being passed into the underlying
+platform function. The hash value is assumed to be UTF-8 and converted to
+Unicode characters, though it is not expected to contain anything but 7
+bit ASCII characters.
+
+Note: the underlying C library function uses a static buffer for its return
+value. The return value of the \*(TL function is a copy of that buffer.
+
 .SS* Unix Signal Handling
 
 On platforms where certain advanced features of POSIX signal handling are
