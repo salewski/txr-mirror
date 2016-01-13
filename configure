@@ -2336,7 +2336,7 @@ fi
 printf "Do we need to set stack size ... "
 
 if uname -a | grep -q -E 'MINGW|CYGWIN' ; then
-  conf_ldflags='-Wl,--stack,16777216'
+  conf_ldflags="-Wl,--stack,16777216${conf_ldflags:+" $conf_ldflags"}"
   printf "yes\n"
 else
   printf "no\n"
