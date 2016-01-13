@@ -8266,7 +8266,7 @@ static val simple_qref_args_p(val args, val pos)
 
 void out_str_char(wchar_t ch, val out, int *semi_flag)
 {
-  if (*semi_flag && iswxdigit(ch))
+  if (*semi_flag && (iswxdigit(ch) || ch == ';'))
     put_char(chr(';'), out);
 
   *semi_flag = 0;
