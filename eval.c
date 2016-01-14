@@ -4674,6 +4674,7 @@ void eval_init(void)
   reg_fun(list_s, list_f);
   reg_fun(intern(lit("list*"), user_package), func_n0v(list_star_intrinsic));
   reg_fun(identity_s, identity_f);
+  reg_fun(intern(lit("use"), user_package), identity_f);
   reg_fun(intern(lit("typeof"), user_package), func_n1(typeof));
   reg_fun(intern(lit("subtypep"), user_package), func_n2(subtypep));
   reg_fun(intern(lit("typep"), user_package), func_n2(typep));

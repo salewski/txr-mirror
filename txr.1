@@ -13905,20 +13905,41 @@ previous clauses match.
 
 .SS* Object Equivalence
 
-.coNP Function @ identity
+.coNP Functions @, identity and @ use
 .synb
 .mets (identity << value )
+.mets (use << value )
 .syne
 .desc
 The
 .code identity
 function returns its argument.
 
+The
+.code use
+function is a synonym.
+
 .TP* Notes:
 The
 .code identity
 function is useful as a functional argument, when a transformation
 function is required, but no transformation is actually desired.
+In this role, the
+.code use
+synonym leads to readable code. For instance:
+.cblk
+  ;; construct a function which returns its integer argument
+  ;; if it is odd, otherwise it returns its successor.
+  ;; "If it's odd, use it, otherwise take its successor".
+
+  [iff oddp use succ]
+
+  ;; Applications of the function:
+
+  [[iff oddp use succ] 3] -> 3  ;; use applied to 3
+
+  [[iff oddp use succ] 2] -> 3  ;; succ applied to 2
+.cble
 
 .coNP Functions @, null @, not and @ false
 .synb
