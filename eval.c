@@ -3466,11 +3466,11 @@ tail:
 
       if (hashform == hashform_ex && resform == resform_ex && body == body_ex)
         return form;
-      return cons(sym, cons(cons(keysym,
-                                 cons(valsym,
-                                      cons(hashform_ex,
-                                           cons(resform_ex, nil)))),
-                            body_ex));
+      return rlcp_tree(cons(sym, cons(cons(keysym,
+                                           cons(valsym,
+                                                cons(hashform_ex,
+                                                     cons(resform_ex, nil)))),
+                                      body_ex)), form);
     } else if (sym == quasi_s) {
       val quasi = rest(form);
       val quasi_ex = expand_quasi(quasi, menv);
