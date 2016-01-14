@@ -2650,6 +2650,23 @@ val mulv(struct args *nlist)
   return nary_op(mul, nlist, one);
 }
 
+val divv(val dividend, struct args *nlist)
+{
+  cnum index = 0;
+  val fi;
+
+  if (!args_more(nlist, 0))
+    return divi(one, dividend);
+
+  fi = args_get(nlist, &index);
+
+  if (!args_more(nlist, 0))
+    return divi(dividend, fi);
+
+  return reduce_left(func_n2(divi), args_get_list(nlist),
+                     divi(dividend, fi), nil);
+}
+
 val logandv(struct args *nlist)
 {
   return nary_op(logand, nlist, negone);

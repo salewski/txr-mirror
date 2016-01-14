@@ -26837,7 +26837,7 @@ A character may not be an operand of multiplication.
 
 .coNP Functions @, / @ trunc, @ mod and @ trunc-rem
 .synb
-.mets (/ <> [ dividend ] << divisor )
+.mets (/ <> [ dividend ] << divisor *)
 .mets (trunc < dividend << divisor )
 .mets (mod < dividend << divisor )
 .mets (trunc-rem < dividend << divisor )
@@ -26853,7 +26853,11 @@ converted to floating-point type, if necessary. If
 is omitted,
 then it is taken to be
 .code 1.0
-and the function calculates the reciprocal.
+and the function calculates the reciprocal. Of these division functions,
+only this one may be called with just one argument, or with more than two
+arguments.  If there are more than two arguments, then each additional argument
+is treated as an additional divisor which further divides the result of the
+division by the previous divisors.
 
 The
 .code trunc

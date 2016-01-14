@@ -602,6 +602,7 @@ val neg(val num);
 val abso(val num);
 val mul(val anum, val bnum);
 val mulv(struct args *);
+val divv(val dividend, struct args *);
 val trunc(val anum, val bnum);
 val mod(val anum, val bnum);
 val trunc_rem(val anum, val bnum);
