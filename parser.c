@@ -615,13 +615,14 @@ static val repl_intr(val signo, val async_p)
   uw_throw(intr_s, lit("intr"));
 }
 
-static val read_eval_ret_last(val env, val in_stream, val out_stream)
+static val read_eval_ret_last(val env, val counter,
+                              val in_stream, val out_stream)
 {
   val lineno = one;
+  val name = format(nil, lit("paste-~a"), counter, nao);
 
   for (;; lineno = succ(lineno)) {
-    val form = lisp_parse(in_stream, out_stream, colon_k,
-                          lit("paste"), lineno);
+    val form = lisp_parse(in_stream, out_stream, colon_k, name, lineno);
     val parser = get_parser(in_stream);
     val value = eval_intrinsic(form, nil);
 
@@ -735,7 +736,8 @@ val repl(val bindings, val in_stream, val out_stream)
       } else {
         val value = if3(form != read_k,
                         eval_intrinsic(form, repl_env),
-                        read_eval_ret_last(repl_env, in_stream, out_stream));
+                        read_eval_ret_last(repl_env, prev_counter,
+                                           in_stream, out_stream));
         reg_varl(var_sym, value);
         sethash(result_hash, var_counter, value);
         prinl(value, out_stream);
