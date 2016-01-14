@@ -2619,18 +2619,25 @@ val numberp(val num)
 
 val nary_op(val (*cfunc)(val, val), struct args *args, val emptyval)
 {
-  val fi, re;
+  val fi, se, re;
   cnum index = 0;
 
-  if (!args_more(args, 0))
+  if (!args_more(args, index))
     return emptyval;
-  else if (!args_two_more(args, 0))
-    return args_atz(args, 0);
 
   fi = args_get(args, &index);
+
+  if (!args_more(args, index))
+    return fi;
+
+  se = args_get(args, &index);
+
+  if (!args_more(args, index))
+    return cfunc(fi, se);
+
   re = args_get_rest(args, index);
 
-  return reduce_left(func_n2(cfunc), re, fi, nil);
+  return reduce_left(func_n2(cfunc), re, cfunc(fi, se), nil);
 }
 
 val plusv(struct args *nlist)
