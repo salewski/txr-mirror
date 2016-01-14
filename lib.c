@@ -8526,6 +8526,8 @@ finish:
     break;
   case NUM:
   case BGNUM:
+    format(out, lit("~s"), obj, nao);
+    break;
   case FLNUM:
     {
       val fmt = cdr(lookup_var(nil, print_flo_format_s));
