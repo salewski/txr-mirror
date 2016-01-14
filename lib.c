@@ -2647,9 +2647,19 @@ val plusv(struct args *nlist)
 
 val minusv(val minuend, struct args *nlist)
 {
-  if (args_more(nlist, 0))
-    return reduce_left(func_n2(minus), args_get_list(nlist), minuend, nil);
-  return neg(minuend);
+  cnum index = 0;
+  val fi;
+
+  if (!args_more(nlist, 0))
+    return neg(minuend);
+
+  fi = args_get(nlist, &index);
+
+  if (!args_more(nlist, 0))
+    return minus(minuend, fi);
+
+  return reduce_left(func_n2(minus), args_get_list(nlist),
+                     minus(minuend, fi), nil);
 }
 
 val mulv(struct args *nlist)
