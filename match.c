@@ -2596,7 +2596,10 @@ static val v_gather(match_files_ctx *c)
   val specs = copy_list(second(first_spec));
   val args = third(first_spec);
   val until_last = fourth(first_spec);
-  val vars = vars_to_bindings(specline, getplist(args, vars_k), c->bindings);
+  val have_vars;
+  val vars = vars_to_bindings(specline,
+                              getplist_f(args, vars_k, mkcloc(have_vars)),
+                              c->bindings);
 
   while (specs && c->data) {
     list_collect_decl (new_specs, ptail);
@@ -2669,7 +2672,7 @@ static val v_gather(match_files_ctx *c)
     }
   }
 
-  if (vars) {
+  if (have_vars) {
     val iter;
 
     for (iter = vars; iter != nil; iter = cdr(iter)) {
