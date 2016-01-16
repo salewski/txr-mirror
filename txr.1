@@ -4451,6 +4451,34 @@ clause has visibility to bindings established in the
 previous clauses in that same iteration, even though those bindings
 end up thrown away.
 
+For consistency, the
+.code :mandatory
+keyword is supported in the
+.cod3 until / last
+clause of
+.codn gather .
+The semantics of using
+.code :mandatory
+in this situation is tricky. In particular, if it is in effect, and the
+.code gather
+terminates successfully by collecting all required matches, it will
+trigger a failure. On the other hand, if the
+.code until
+or
+.code last
+clause activates before all required matches are gathered, a failure
+also occurs, whether or not the clause is
+.codn :mandatory .
+
+Meaningful use of
+.code :mandatory
+requires that the gather be open-ended; it must allow some (or all) variables
+not to be required. The presence of the option means that for the gather
+to succeed, all required variables must be gathered first, but then termination
+must be achieved via the
+.cod3 until / last
+clause before all gather clauses are satisfied.
+
 .coNP Keyword parameters in @ gather
 The
 .code gather
@@ -4998,6 +5026,39 @@ directive used in
 .code @(output)
 clauses; that is a different directive.
 
+.coNP Mandatory @ until and @ last
+
+The
+.cod3 until / last
+clause supports the option keyword
+.codn :mandatory ,
+exemplified by the following:
+
+.cblk
+  @(collect)
+  ...
+  @(last :mandatory)
+  ...
+  @(end)
+.cble
+
+This means that the collect
+.B must
+be terminated by a match for the
+.cod3 until / last
+clause, or else by an explicit
+.codn @(accept) .
+
+Specifically, the collect cannot terminate due to simply running out of data,
+or exceeding a limit on the number of matches that may be collected. In
+those situations, if an
+.code until
+or
+.code last
+clause is present with
+.codn :mandatory ,
+the collect is deemed to have failed.
+
 .dir coll
 
 The
@@ -5056,7 +5117,9 @@ and any bindings from that iteration are discarded.
 Like collect, coll also supports an
 .cod3 until / last
 clause, which propagates variable
-bindings and advances the position.
+bindings and advances the position. The
+.code :mandatory
+keyword is supported.
 
 .code coll
 clauses nest, and variables bound within a coll are available to clauses

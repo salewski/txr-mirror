@@ -474,8 +474,8 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return COLL;
 }
 
-<SPECIAL>\({WS}until{WS}\) {
-  yy_pop_state(yyscanner);
+<SPECIAL>\({WS}until/{ID_END} {
+  yy_push_state(NESTED, yyscanner);
   yylval->lineno = yyextra->lineno;
   return UNTIL;
 }
@@ -491,7 +491,6 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   yylval->lineno = yyextra->lineno;
   return REPEAT;
 }
-
 
 <SPECIAL>\({WS}rep/{ID_END} {
   yy_push_state(NESTED, yyscanner);
@@ -511,8 +510,8 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return FIRST;
 }
 
-<SPECIAL>\({WS}last{WS}\) {
-  yy_pop_state(yyscanner);
+<SPECIAL>\({WS}last/{ID_END} {
+  yy_push_state(NESTED, yyscanner);
   yylval->lineno = yyextra->lineno;
   return LAST;
 }

@@ -290,12 +290,13 @@ gather_clause : GATHER exprs_opt ')'
 
               | GATHER exprs_opt ')'
                 newl gather_parts
-                until_last newl
+                until_last exprs_opt ')' newl
                 clauses
                 END newl                { $$ = list(gather_s,
                                                     append2(mapcar(curry_12_1(func_n2(cons), nil),
                                                                    first($5)), rest($5)),
-                                                    $2, cons(cdr($6), $8), nao);
+                                                    $2, cons(cdr($6),
+                                                             cons($7, $10)), nao);
                                           rl($$, num($1)); }
 
               | GATHER exprs_opt ')'
@@ -320,12 +321,13 @@ collect_clause : collect_repeat exprs_opt ')' newl
                                                              nao);
                                                    rl($$, cdr($1)); }
                | collect_repeat exprs_opt ')'
-                 newl clauses until_last
+                 newl clauses until_last exprs_opt ')'
                  newl clauses END newl    { $$ = list(car($1), $5,
-                                                      cons(cdr($6), $8),
+                                                      cons(cdr($6),
+                                                           cons($7, $10)),
                                                       $2, nao);
                                             rl($$, cdr($1));
-                                            rl($8, car($6)); }
+                                            rl($10, car($6)); }
                | collect_repeat exprs_opt ')'
                  newl error             { $$ = nil;
                                           if (yychar == UNTIL ||
@@ -425,14 +427,19 @@ elem : texts                    { $$ = rlcp(cons(text_s, $1), $1);
      | COLL exprs_opt ')' elems END     { $$ = list(coll_s, $4, nil, $2, nao);
                                           rl($$, num($1)); }
      | COLL exprs_opt ')' elems
-       until_last elems END     { $$ = list(coll_s, $4, cons(cdr($5), $6),
+       until_last exprs_opt ')'
+       elems END                { $$ = list(coll_s, $4, cons(cdr($5),
+                                                             cons($6, $8)),
                                             $2, nao);
                                   rl($$, num($1));
                                   rl($6, car($5)); }
      | REP exprs_opt ')' elems END     { $$ = list(rep_s, $4, nil, $2, nao);
                                          rl($$, num($1)); }
      | REP exprs_opt ')' elems
-       until_last elems END     { $$ = list(rep_s, $4, cons(cdr($5), $6),
+       until_last exprs_opt ')'
+       elems END
+                                { $$ = list(rep_s, $4, cons(cdr($5),
+                                                            cons($6, $8)),
                                             $2, nao);
                                   rl($$, num($1));
                                   rl($6, car($5)); }
@@ -596,9 +603,14 @@ repeat_parts_opt : SINGLE newl
                    out_clauses_opt
                    repeat_parts_opt     { $$ = cons(cons(first_s, $3), $4);
                                           rl($$, num($1)); }
-                 | LAST newl
+                 | LAST exprs_opt ')' newl
                    out_clauses_opt
-                   repeat_parts_opt     { $$ = cons(cons(last_s, $3), $4);
+                   repeat_parts_opt     { if ($2)
+                                            yyerrorf(scnr,
+                                                     lit("last: in output, "
+                                                         "takes no arguments"),
+                                                     nao);
+                                          $$ = cons(cons(last_s, $5), $6);
                                           rl($$, num($1)); }
                  | EMPTY newl
                    out_clauses_opt
@@ -660,8 +672,13 @@ rep_parts_opt : SINGLE o_elems_opt
               | FIRST o_elems_opt
                 rep_parts_opt           { $$ = cons(cons(first_s, $2), $3);
                                           rl($$, num($1)); }
-              | LAST o_elems_opt
-                rep_parts_opt           { $$ = cons(cons(last_s, $2), $3);
+              | LAST exprs_opt ')'
+                o_elems_opt rep_parts_opt { if ($2)
+                                            yyerrorf(scnr,
+                                                     lit("last: in output, "
+                                                         "takes no arguments"),
+                                                     nao);
+                                          $$ = cons(cons(last_s, $4), $5);
                                           rl($$, num($1)); }
               | EMPTY o_elems_opt
                 rep_parts_opt           { $$ = cons(cons(empty_s, $2), $3);

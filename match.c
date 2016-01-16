@@ -65,7 +65,7 @@ val include_s, close_s, require_s;
 val longest_k, shortest_k, greedy_k;
 val vars_k, resolve_k;
 val append_k, into_k, var_k, list_k, string_k, env_k, counter_k;
-val named_k, continue_k, finish_k;
+val named_k, continue_k, finish_k, mandatory_k;
 
 val filter_s;
 
@@ -798,6 +798,9 @@ static val h_coll(match_line_ctx *c)
   val op_sym = first(elem);
   val coll_specline = second(elem);
   val until_last_specline = third(elem);
+  cons_bind (ul_sym, ul_args, until_last_specline);
+  cons_bind (ul_opts, spec, ul_args);
+  val ul_match = nil;
   val args = fourth(elem);
   val bindings_coll = nil;
   val last_bindings = nil;
@@ -848,7 +851,6 @@ static val h_coll(match_line_ctx *c)
 
       if (until_last_specline) {
         uses_or2;
-        cons_bind (sym, spec, until_last_specline);
         cons_bind (until_last_bindings, until_pos,
                    match_line(ml_bindings_specline(*c,
                                                    or2(new_bindings, c->bindings),
@@ -858,11 +860,12 @@ static val h_coll(match_line_ctx *c)
           until_pos = minus(until_pos, c->base);
 
           LOG_MATCH("until/last", until_pos);
-          if (sym == last_s) {
+          if (ul_sym == last_s) {
             last_bindings = set_diff(until_last_bindings,
                                      new_bindings, eq_f, nil);
             c->pos = until_pos;
           }
+          ul_match = t;
           break;
         } else {
           LOG_MISMATCH("until/last");
@@ -937,6 +940,12 @@ next_coll:
   if ((times || mintimes) && timescounter < ctimin) {
     debuglf(elem, lit("fewer than ~d iterations collected"),
             num(ctimin), nao);
+    return nil;
+  }
+
+  if (!ul_match && ul_opts && memq(mandatory_k, ul_opts)) {
+    debuglf(elem, lit("~s didn't match mandatory until/last"),
+            op_sym, nao);
     return nil;
   }
 
@@ -2596,6 +2605,9 @@ static val v_gather(match_files_ctx *c)
   val specs = copy_list(second(first_spec));
   val args = third(first_spec);
   val until_last = fourth(first_spec);
+  cons_bind (ul_sym, ul_args, until_last);
+  cons_bind (ul_opts, ul_spec, ul_args);
+  val ul_match = nil;
   val have_vars;
   val vars = vars_to_bindings(specline,
                               getplist_f(args, vars_k, mkcloc(have_vars)),
@@ -2631,7 +2643,6 @@ static val v_gather(match_files_ctx *c)
 
     if (until_last)
     {
-      cons_bind (sym, ul_spec, until_last);
       cons_bind (until_last_bindings, success,
                  match_files(mf_spec(*c, ul_spec)));
 
@@ -2639,7 +2650,7 @@ static val v_gather(match_files_ctx *c)
         debuglf(specline, lit("until/last matched ~a:~d"),
                 c->curfile, c->data_lineno, nao);
         /* Until discards bindings and position, last keeps them. */
-        if (sym == last_s) {
+        if (ul_sym == last_s) {
           val last_bindings = set_diff(until_last_bindings, c->bindings, eq_f, nil);
           c->bindings = nappend2(last_bindings, orig_bindings);
 
@@ -2651,6 +2662,7 @@ static val v_gather(match_files_ctx *c)
             c->data_lineno = new_line;
           }
         }
+        ul_match = t;
         break;
       }
     }
@@ -2670,6 +2682,11 @@ static val v_gather(match_files_ctx *c)
       c->data = rest(c->data);
       debuglf(specline, lit("gather advancing by one line to ~d"), c->data_lineno, nao);
     }
+  }
+
+  if (!ul_match && ul_opts && memq(mandatory_k, ul_opts)) {
+    debuglf(specline, lit("gather didn't match mandatory until/last"), nao);
+    return nil;
   }
 
   if (have_vars) {
@@ -2706,6 +2723,9 @@ static val v_collect(match_files_ctx *c)
   val op_sym = first(first_spec);
   val coll_spec = second(first_spec);
   val until_last_spec = third(first_spec);
+  cons_bind (ul_sym, ul_args, until_last_spec);
+  cons_bind (ul_opts, ul_spec, ul_args);
+  val ul_match = nil, accept_jump = t;
   val args = fourth(first_spec);
   volatile val bindings_coll = nil;
   volatile val last_bindings = nil;
@@ -2767,7 +2787,6 @@ static val v_collect(match_files_ctx *c)
       if (until_last_spec)
       {
         uses_or2;
-        cons_bind (sym, ul_spec, until_last_spec);
         cons_bind (until_last_bindings, success,
                    match_files(mf_spec_bindings(*c, ul_spec,
                                                 or2(new_bindings, c->bindings))));
@@ -2776,7 +2795,7 @@ static val v_collect(match_files_ctx *c)
           debuglf(specline, lit("until/last matched ~a:~d"),
                   c->curfile, c->data_lineno, nao);
           /* Until discards bindings and position, last keeps them. */
-          if (sym == last_s) {
+          if (ul_sym == last_s) {
             last_bindings = set_diff(until_last_bindings,
                                      new_bindings, eq_f, nil);
             if (success == t) {
@@ -2788,6 +2807,7 @@ static val v_collect(match_files_ctx *c)
               c->data_lineno = new_line;
             }
           }
+          ul_match = t;
           break;
         }
       }
@@ -2869,6 +2889,8 @@ next_collect:
     }
   }
 
+  accept_jump = nil;
+
   uw_block_end;
 
   if (!result) {
@@ -2879,6 +2901,12 @@ next_collect:
   if ((times || mintimes) && timescounter < ctimin) {
     debuglf(specline, lit("fewer than ~d iterations collected"),
             num(ctimin), nao);
+    return nil;
+  }
+
+  if (!ul_match && ul_opts && memq(mandatory_k, ul_opts) && !accept_jump) {
+    debuglf(specline, lit("~s didn't match mandatory until/last"),
+            op_sym, nao);
     return nil;
   }
 
@@ -4076,6 +4104,7 @@ static void syms_init(void)
   named_k = intern(lit("named"), keyword_package);
   continue_k = intern(lit("continue"), keyword_package);
   finish_k = intern(lit("finish"), keyword_package);
+  mandatory_k = intern(lit("mandatory"), keyword_package);
 
   filter_s = intern(lit("filter"), user_package);
   noval_s = intern(lit("noval"), system_package);
