@@ -2,7 +2,7 @@
                                    2016-01-13
 
 
-  Bugs:
+  Bugs
 
   - Configuration with --valgrind now builds again.
   - Invalid lazy string optimization introduced in TXR 118
@@ -30,7 +30,7 @@
                                    2016-01-05
 
 
-  Features:
+  Features
 
   - Interactive listener:
     - New Ctrl-X Enter command: submit line, but stay in history
@@ -54,7 +54,7 @@
       chr-isxdigit, but returning the digit value instead of the
       t symbol.
 
-  Bugs:
+  Bugs
 
   - Interactive listener:
     - Fixed recent regression in Tab completion: missing completion on special
@@ -547,7 +547,7 @@
     abstract syntax by the object t now handled by regex printer,
     and rendered as [].
 
-  Bugs:
+  Bugs
 
   - Fixed a silly delete-previous-word behavior in multi-line mode:
     not treating the line-break as a whitespace character that separates words.
@@ -626,7 +626,7 @@
                                    2015-09-17
 
 
-  Features:
+  Features
 
   * Interactive listener improvements:
     * Ctrl-R reverse search has been implemented.
@@ -653,7 +653,7 @@
     exact allocation of certain arrays and stack allocation is used
     in some cases instead of malloc.
 
-  Bugs:
+  Bugs
 
   * Fixed memory leak of blank lines in listener.
 
@@ -675,7 +675,7 @@
                                    2015-09-11
 
 
-  Features:
+  Features
 
   * Sixth anniversary edition!
 
@@ -710,7 +710,7 @@
   * New functions for working with package objects: package-alist,
     package-name, package-symbols.
 
-  Bugs:
+  Bugs
 
   - Fixed serious problem in implementation of signal handling:
     the function to manipulate the signal mask in a cached way
@@ -765,7 +765,7 @@
                                    2015-09-03
 
 
-  Features:
+  Features
 
   ! Note: TXR code base converted to new way of handling variadic function
     (variable-length struct args, defined on stack).
@@ -788,7 +788,7 @@
 
   * Unix password database functions: getpwent, getpwuid, getpwnam.
 
-  Bugs:
+  Bugs
 
   * Fixed regression: broken treatment of [hash x..y] place.
 
