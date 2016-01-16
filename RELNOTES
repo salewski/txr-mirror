@@ -1,3 +1,25 @@
+                                    TXR 132
+                                   2016-01-16
+
+
+  Features
+
+  - Unix crypt function exposed.
+  - The identity function gets an alias named "use", for a
+    readability improvement in certain functional coding scenarios.
+  - The / function becomes n-ary, allowing forms like (/ 12 3 4).
+  - New :mandatory keyword in until/last clauses, makes them a
+    required match.
+
+  Bugs
+
+  - Fixed lack of location info for unbound variable error in dohash.
+  - *print-flo-format* variable was affecting output of integers.
+  - @(gather :vars ()) was behaving the same as @(gather); that is,
+    as if :vars wasn't specified at all.
+
+
+
                                     TXR 131
                                    2016-01-13
 
