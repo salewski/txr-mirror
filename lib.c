@@ -2012,16 +2012,16 @@ val partition_star(val seq, val indices)
   if (!seq)
     return nil;
 
-  if (!indices)
-    return cons(seq, nil);
-
   if (functionp(indices))
     indices = funcall1(indices, seq);
+
+  if (!indices)
+    return cons(seq, nil);
 
   if (indices == zero)
     return nullify(rest(seq));
 
-  if (atom(indices)) {
+  if (!seqp(indices)) {
     indices = cons(indices, nil);
   } else {
     while (eql(car(indices), base)) {
