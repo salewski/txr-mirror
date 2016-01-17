@@ -177,8 +177,11 @@ static val env_hash(void)
   val hash = make_hash(nil, nil, t);
 
   for (; env_strings; env_strings = cdr(env_strings)) {
-    cons_bind (key, val_cons, split_str(car(env_strings), lit("=")));
-    sethash(hash, key, car(val_cons));
+    val estr = car(env_strings);
+    val eqpos = break_str(estr, lit("="));
+    val key = sub(estr, 0, eqpos);
+    val val = sub(estr, succ(eqpos), t);
+    sethash(hash, key, val);
   }
 
   return hash;
