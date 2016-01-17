@@ -2021,17 +2021,22 @@ val partition_star(val seq, val indices)
   if (indices == zero)
     return cons(nullify(rest(seq)), nil);
 
-  if (!seqp(indices)) {
+  if (!seqp(indices))
     indices = cons(indices, nil);
-  } else {
-    while (eql(car(indices), base)) {
-      seq = nullify(cdr(seq));
-      if (!seq)
-        return nil;
-      base = plus(base, one);
-      pop(&indices);
-    }
+
+  while (indices && lt(car(indices), zero))
+    pop(&indices);
+
+  while (indices && eql(car(indices), base)) {
+    seq = nullify(cdr(seq));
+    if (!seq)
+      return nil;
+    base = plus(base, one);
+    pop(&indices);
   }
+
+  if (!indices)
+    return cons(seq, nil);
 
   return make_lazy_cons(func_f1(cons(seq, cons(indices, base)),
                                 partition_star_func));
