@@ -2019,7 +2019,7 @@ val partition_star(val seq, val indices)
     return cons(seq, nil);
 
   if (indices == zero)
-    return nullify(rest(seq));
+    return cons(nullify(rest(seq)), nil);
 
   if (!seqp(indices)) {
     indices = cons(indices, nil);
