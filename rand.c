@@ -223,34 +223,36 @@ val random(val state, val modulus)
   } else if (fixnump(modulus)) {
     cnum m = c_num(modulus);
     int bits = highest_bit(m);
+    if (m == 1) {
+      return zero;
+    } else if (m > 1) {
 #if SIZEOF_PTR >= 8
-    int rands_needed = (bits + 32 - 1) / 32;
+      int rands_needed = (bits + 32 - 1) / 32;
 #endif
-    int msb_rand_bits = bits % 32;
-    rand32_t msb_rand_mask = convert(rand32_t, -1) >> (32 - msb_rand_bits);
-    if (m <= 0)
-      goto invalid;
-    for (;;) {
-      cnum out = 0;
+      int msb_rand_bits = bits % 32;
+      rand32_t msb_rand_mask = convert(rand32_t, -1) >> (32 - msb_rand_bits);
+      for (;;) {
+        cnum out = 0;
 #if SIZEOF_PTR >= 8
-      int i;
+        int i;
 
-      for (i = 0; i < rands_needed; i++) {
-        rand32_t rnd = rand32(r);
-        out <<= 32;
-        if (i == 0)
-          rnd &= msb_rand_mask;
-        out |= rnd;
-      }
+        for (i = 0; i < rands_needed; i++) {
+          rand32_t rnd = rand32(r);
+          out <<= 32;
+          if (i == 0)
+            rnd &= msb_rand_mask;
+          out |= rnd;
+        }
 #else
-      out = rand32(r) & msb_rand_mask;
+        out = rand32(r) & msb_rand_mask;
 #endif
-      if (out >= m)
-        continue;
-      return num(out);
+        if (out >= m)
+          continue;
+        return num(out);
+      }
     }
   }
-invalid:
+
   uw_throwf(numeric_error_s, lit("random: invalid modulus ~s"),
       modulus, nao);
 }

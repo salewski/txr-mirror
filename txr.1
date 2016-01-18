@@ -34829,6 +34829,13 @@ object is the second argument and is optional. If it is omitted, the global
 .code *random-state*
 object is used.
 
+The
+.meta modulus
+argument must be a positive integer. If
+.meta modulus
+is 1, then the function returns zero without altering the state of the
+pseudo-random number generator.
+
 .SS* Time
 .coNP Functions @ time and @ time-usec
 .synb
