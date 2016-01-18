@@ -185,7 +185,7 @@ val random(val state, val modulus)
 
   if (bignump(modulus)) {
     mp_int *m = mp(modulus);
-    int bits = mp_count_bits(m);
+    int bits = mp_count_bits(m) - mp_is_pow_two(m);
     int rands_needed = (bits + 32 - 1) / 32;
     int msb_rand_bits = bits % 32;
     rand32_t msb_rand_mask = convert(rand32_t, -1) >> (32 - msb_rand_bits);
@@ -222,10 +222,10 @@ val random(val state, val modulus)
     return normalize(out);
   } else if (fixnump(modulus)) {
     cnum m = c_num(modulus);
-    int bits = highest_bit(m);
     if (m == 1) {
       return zero;
     } else if (m > 1) {
+      int bits = highest_bit(m - 1);
 #if SIZEOF_PTR >= 8
       int rands_needed = (bits + 32 - 1) / 32;
 #endif

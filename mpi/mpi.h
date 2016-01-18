@@ -223,6 +223,7 @@ int    mp_unsigned_bin_size(mp_int *mp);
 mp_err mp_to_unsigned_bin(mp_int *mp, unsigned char *str);
 
 int    mp_count_bits(mp_int *mp);
+int    mp_is_pow_two(mp_int *mp);
 
 #if MP_COMPAT_MACROS
 #define mp_read_raw(mp, str, len) mp_read_signed_bin((mp), (str), (len))

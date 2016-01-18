@@ -2998,6 +2998,11 @@ int    mp_count_bits(mp_int *mp)
 
 /* }}} */
 
+int  mp_is_pow_two(mp_int *mp)
+{
+  return s_mp_ispow2(mp) >= 0;
+}
+
 /* {{{ mp_read_radix(mp, str, radix) */
 
 /*
