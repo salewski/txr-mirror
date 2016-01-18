@@ -530,6 +530,7 @@ val partition_by(val func, val seq);
 val partition(val seq, val indices);
 val split(val seq, val indices);
 val partition_star(val seq, val indices);
+val split_star(val seq, val indices);
 val memq(val obj, val list);
 val memql(val obj, val list);
 val memqual(val obj, val list);

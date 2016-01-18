@@ -21889,17 +21889,20 @@ of one element.
                                                     "bc" "bd")
 .cble
 
-.coNP Function @ split
+.coNP Functions @ split and @ split*
 .synb
 .mets (split < sequence >> { index-list >> | index <> | function })
+.mets (split* < sequence >> { index-list >> | index <> | function })
 .syne
 .desc
 
 If
 .meta sequence
-is empty, then
+is empty, then both
 .code split
-returns an empty list, and the
+and
+.code split*
+return an empty list, and the
 second argument is ignored; if it is
 .metn function ,
 it is not called.
@@ -21916,6 +21919,12 @@ A catenation of these pieces in the order they appear would produce
 a sequence that is
 .code equal
 to the original sequence.
+
+The
+.code split*
+function differs from
+.code split
+in that the elements indicated by the split indices are removed.
 
 If the second argument is of the form
 .metn index-list ,
@@ -21978,6 +21987,9 @@ of one element.
 
   ;; triple split at makes two additional empty pieces
   (split "abc" '(1 1 1)) -> ("a" "" "" "bc")
+
+  (split* "abc" 0) -> ("" "bc") ;; "a" is removed
+  (split* "abc" '(0 1 2)) -> ("" "" "" "") ;; all characters removed
 .cble
 
 .coNP Function @ partition*

@@ -1929,7 +1929,44 @@ static val split_func(val env, val lcons)
   return nil;
 }
 
-static val partition_split_common(val seq, val indices, val partition_p)
+static val split_star_func(val env, val lcons)
+{
+  cons_bind (seq, indices_base, env);
+  cons_bind (indices, base, indices_base);
+
+  for (;;) {
+    if (indices) {
+      val index = pop(&indices);
+      val index_rebased = minus(index, base);
+
+      if (lt(index_rebased, zero)) {
+        continue;
+      } else {
+        val first = sub(seq, zero, index_rebased);
+        val rsub = sub(seq, succ(index_rebased), t);
+        val rest = nullify(rsub);
+
+        rplaca(env, rest);
+        rplaca(indices_base, indices);
+        rplacd(indices_base, succ(index));
+
+        rplacd(lcons, if3(rest,
+                          make_lazy_cons(lcons_fun(lcons)),
+                          cons(rsub, nil)));
+
+        rplaca(lcons, first);
+      }
+    } else {
+      rplaca(lcons, seq);
+    }
+    break;
+  }
+
+  return nil;
+}
+
+static val partition_split_common(val seq, val indices,
+                                  val (*split_fptr)(val env, val lcons))
 {
   seq = nullify(seq);
 
@@ -1947,18 +1984,22 @@ static val partition_split_common(val seq, val indices, val partition_p)
   if (!seqp(indices))
     indices = cons(indices, nil);
 
-  return make_lazy_cons(func_f1(cons(seq, cons(indices, zero)),
-                                if3(partition_p, partition_func, split_func)));
+  return make_lazy_cons(func_f1(cons(seq, cons(indices, zero)), split_fptr));
 }
 
 val partition(val seq, val indices)
 {
-  return partition_split_common(seq, indices, t);
+  return partition_split_common(seq, indices, partition_func);
 }
 
 val split(val seq, val indices)
 {
-  return partition_split_common(seq, indices, nil);
+  return partition_split_common(seq, indices, split_func);
+}
+
+val split_star(val seq, val indices)
+{
+  return partition_split_common(seq, indices, split_star_func);
 }
 
 static val partition_star_func(val env, val lcons)
