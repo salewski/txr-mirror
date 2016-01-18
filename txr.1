@@ -34757,8 +34757,10 @@ an object of the same kind as what is stored in the
 .code *random-state*
 variable.
 
-The seed, if specified, must be either an integer value, or an
-existing random state object.
+The seed, if specified, must be either an integer value, an
+existing random state object, or a vector returned from a call
+to the function
+.codn random-state-get-vec .
 
 Note that the sign of the seed is ignored, so that negative seed
 values are equivalent to their additive inverses.
@@ -34779,10 +34781,16 @@ a millisecond apart may predictably produce the same seed.
 If an integer seed is specified, then the integer value is mapped to a
 pseudo-random sequence, in a platform-independent way.
 
-If a random state is specified as a seed, then it is duplicated. The
+If an existing random state is specified as a seed, then it is duplicated. The
 returned random state object is a distinct object which is in the same
 state as the input object. It will produce the same remaining pseudo-random
 number sequence, as will the input object.
+
+If a vector is specified as a seed, then a random state is constructed
+which duplicates the random state object which was captured in that vector
+representation by the
+.code random-state-get-vec
+function.
 
 .coNP Function @ random-state-p
 .synb
@@ -34798,6 +34806,21 @@ if
 is a random state, otherwise it
 returns
 .codn nil .
+
+.coNP Function @ random-state-get-vec
+.synb
+.mets (random-state-get-vec <> [ random-state ])
+.syne
+.desc
+The
+.code random-state-get-vec
+function converts a random state into a vector of integer values.
+If the
+.meta random-state
+argument, which must be a random state object, is omitted,
+then the value of the
+.code *random-state*
+is used.
 
 .coNP Functions @, random-fixnum @ random and @ rand
 .synb

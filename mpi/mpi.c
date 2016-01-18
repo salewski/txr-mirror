@@ -526,19 +526,17 @@ mp_err mp_set_int(mp_int *mp, long z)
 
 /* }}} */
 
-mp_err mp_set_intptr(mp_int *mp, int_ptr_t z)
+mp_err mp_set_uintptr(mp_int *mp, uint_ptr_t z)
 {
-  int_ptr_t v = z > 0 ? z : -z;
-
   if (sizeof z > sizeof (mp_digit)) {
     int            ix, shift;
-    const int      nd = (sizeof v + sizeof (mp_digit) - 1) / sizeof (mp_digit);
+    const int      nd = (sizeof z + sizeof (mp_digit) - 1) / sizeof (mp_digit);
 
     ARGCHK(mp != NULL, MP_BADARG);
 
     mp_zero(mp);
 
-    if(z == 0)
+    if (z == 0)
       return MP_OKAY;  /* shortcut for zero */
 
     s_mp_grow(mp, nd);
@@ -547,24 +545,32 @@ mp_err mp_set_intptr(mp_int *mp, int_ptr_t z)
 
     for (ix = 0, shift = 0; ix < nd; ix++, shift += MP_DIGIT_BIT)
     {
-	DIGIT(mp, ix) = (v >> shift) & MP_DIGIT_MAX;
+	DIGIT(mp, ix) = (z >> shift) & MP_DIGIT_MAX;
     }
-  } else {
-    mp_set(mp, v);
-  }
 
-  if(z < 0)
+  } else {
+    mp_set(mp, z);
+  }
+  return MP_OKAY;
+}
+
+mp_err mp_set_intptr(mp_int *mp, int_ptr_t z)
+{
+  int_ptr_t v = z > 0 ? z : -z;
+  mp_err err = mp_set_uintptr(mp, v);
+
+  if (err == MP_OKAY && z < 0)
     SIGN(mp) = MP_NEG;
 
-  return MP_OKAY;
+  return err;
 }
 
 /*
  * No checks here: assumes that the mp is in range!
  */
-mp_err mp_get_intptr(mp_int *mp, int_ptr_t *z)
+mp_err mp_get_uintptr(mp_int *mp, uint_ptr_t *z)
 {
-  int_ptr_t out = 0;
+  uint_ptr_t out = 0;
 
 #if MP_DIGIT_SIZE < SIZEOF_PTR
   int ix;
@@ -575,6 +581,16 @@ mp_err mp_get_intptr(mp_int *mp, int_ptr_t *z)
   out = DIGIT(mp, 0);
 #endif
 
+  *z = (SIGN(mp) == MP_NEG) ? -out : out;
+  return MP_OKAY;
+}
+
+mp_err mp_get_intptr(mp_int *mp, int_ptr_t *z)
+{
+  uint_ptr_t tmp = 0;
+  int_ptr_t out;
+  mp_get_uintptr(mp, &tmp);
+  out = tmp;
   *z = (SIGN(mp) == MP_NEG) ? -out : out;
   return MP_OKAY;
 }

@@ -48,7 +48,7 @@
 #define CNUM_BIT ((int) sizeof (cnum) * CHAR_BIT)
 #define ABS(A) ((A) < 0 ? -(A) : (A))
 
-static mp_int NUM_MAX_MP, INT_PTR_MAX_MP;
+static mp_int NUM_MAX_MP, INT_PTR_MAX_MP, UINT_PTR_MAX_MP;
 
 val make_bignum(void)
 {
@@ -83,6 +83,13 @@ val bignum_from_long(long l)
 #endif
 }
 
+val bignum_from_uintptr(uint_ptr_t u)
+{
+  val n = make_bignum();
+  mp_set_uintptr(mp(n), u);
+  return n;
+}
+
 #if HAVE_DOUBLE_INTPTR_T
 
 static val bignum_dbl_ipt(double_intptr_t di)
@@ -108,6 +115,35 @@ val normalize(val bignum)
 val in_int_ptr_range(val bignum)
 {
   return (mp_cmp_mag(mp(bignum), &INT_PTR_MAX_MP) == MP_GT) ? nil : t;
+}
+
+static val in_uint_ptr_range(val bignum)
+{
+  return (mp_cmp_z(mp(bignum)) == MP_LT ||
+          mp_cmp_mag(mp(bignum), &UINT_PTR_MAX_MP) == MP_GT) ? nil : t;
+}
+
+uint_ptr_t c_uint_ptr_num(val num)
+{
+  switch (type(num)) {
+  case CHR: case NUM:
+    {
+      cnum n = coerce(cnum, num) >> TAG_SHIFT;
+      if (n >= 0)
+        return n;
+    }
+    goto range;
+  case BGNUM:
+    if (in_uint_ptr_range(num)) {
+      uint_ptr_t out;
+      mp_get_uintptr(mp(num), &out);
+      return out;
+    }
+  range:
+    uw_throwf(error_s, lit("~s is out of uint_ptr_t range"), num, nao);
+  default:
+    type_mismatch(lit("~s is not an integer"), num, nao);
+  }
 }
 
 int highest_bit(int_ptr_t n)
@@ -2275,6 +2311,8 @@ void arith_init(void)
   mp_set_intptr(&NUM_MAX_MP, NUM_MAX);
   mp_init(&INT_PTR_MAX_MP);
   mp_set_intptr(&INT_PTR_MAX_MP, INT_PTR_MAX);
+  mp_init(&UINT_PTR_MAX_MP);
+  mp_set_uintptr(&UINT_PTR_MAX_MP, -1);
   log2_init();
 
   reg_varl(intern(lit("*flo-dig*"), user_package), num_fast(DBL_DIG));

@@ -156,6 +156,18 @@ val make_random_state(val seed)
                                       cobj_handle(seed, random_state_s));
     *r = *rseed;
     copy = 1;
+  } else if (vectorp(seed)) {
+    int i;
+
+    if (length(seed) < num_fast(17))
+      uw_throwf(error_s, lit("make-random-state: vector ~s too short"),
+                seed, nao);
+
+    for (i = 0; i < 16; i++)
+      r->state[i] = c_uint_ptr_num(seed->v.vec[i]);
+
+    r->cur = c_num(seed->v.vec[i]);
+    copy = 1;
   } else {
     uw_throwf(error_s, lit("make-random-state: seed ~s is not a number"),
               seed, nao);
@@ -168,6 +180,22 @@ val make_random_state(val seed)
   }
 
   return rs;
+}
+
+val random_state_get_vec(val state)
+{
+  struct rand_state *r = coerce(struct rand_state *,
+                                cobj_handle(default_arg(state, random_state),
+                                            random_state_s));
+  int i;
+  val vec = vector(num_fast(17), nil);
+
+  for (i = 0; i < 16; i++)
+    vec->v.vec[i] = normalize(bignum_from_uintptr(r->state[i]));
+
+  vec->v.vec[i] = num(r->cur);
+
+  return vec;
 }
 
 val random_fixnum(val state)
