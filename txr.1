@@ -21971,10 +21971,10 @@ of one element.
   (split "abc" 0) -> ("" "abc")
   (split "abc" 3) -> ("abc" "")
   (split "abc" 1) -> ("a" "bc")
-  (split "abc" 0 1 2 3) -> ("" "a" "b" "c" "")
-  (split "abc" 1 2) -> ("a" "b" "c")
+  (split "abc" '(0 1 2 3)) -> ("" "a" "b" "c" "")
+  (split "abc" '(1 2)) -> ("a" "b" "c")
 
-  (split "abc" -1 1 2 15) -> ("a" "b" "c")
+  (split "abc" '(-1 1 2 15)) -> ("a" "b" "c")
 
   ;; triple split at makes two additional empty pieces
   (split "abc" '(1 1 1)) -> ("a" "" "" "bc")
