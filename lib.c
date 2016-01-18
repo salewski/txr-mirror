@@ -5965,10 +5965,7 @@ val vec_list(val list)
 {
   val vec = vector(zero, nil);
 
-  if (!listp(list))
-    uw_throwf(error_s, lit("vector-list: list expected, not ~s"), list, nao);
-
-  for (; consp(list); list = cdr(list))
+  for (; list; list = cdr(list))
     vec_push(vec, car(list));
 
   return vec;
