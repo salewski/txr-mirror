@@ -67,11 +67,11 @@ static int is_cpu_exception(int sig)
   }
 }
 
-static int sig_reload_cache(void)
+static void sig_reload_cache(void)
 {
   sigset_t set;
-  return sigprocmask(SIG_BLOCK, 0, &set);
-  memcpy(&sig_blocked_cache, &set, sizeof sig_blocked_cache);
+  if (sigprocmask(SIG_BLOCK, 0, &set) == 0)
+    memcpy(&sig_blocked_cache, &set, sizeof sig_blocked_cache);
 }
 
 static void sig_handler(int sig)
