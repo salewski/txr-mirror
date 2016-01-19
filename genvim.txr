@@ -29,10 +29,11 @@ static void dir_tables_init(void)
                             ("usr" "")
                             (t `@{pkg-name}:`))))
               (list `@qualif@(symbol-name sym)`))))
-@(do (set [txr-sym 0..0] '("rep" "end" "and" "or"
+@(do (set [txr-sym 0..0] '("end" "and" "or"
                            "catch" "finally"
                            "until" "last"
                            "if" "else" "elif"
+                           "single" "first" "last" "empty" "mod" "modlast"
                            "include")))
 @(set txr-sym @(sort (uniq txr-sym)))
 @(set (txl-sym txl-orig-sym) @(multi-sort (list txl-sym txl-orig-sym)
