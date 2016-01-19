@@ -1292,8 +1292,9 @@ static val string_in_get_char(val stream)
   struct string_in *s = coerce(struct string_in *, stream->co.handle);
 
   if (length_str_gt(s->string, s->pos)) {
-    set(mkloc(s->pos, stream), plus(s->pos, one));
-    return chr_str(s->string, s->pos);
+    val pos = s->pos;
+    set(mkloc(s->pos, stream), plus(pos, one));
+    return chr_str(s->string, pos);
   }
 
   return nil;
