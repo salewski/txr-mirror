@@ -7904,6 +7904,12 @@ character, being in the
 reserved set, encodes to
 .codn %2B .
 
+.coIP :frombase64
+Decode from the Base 64 encoding described in RFC 4648.
+
+.coIP :tobase64
+Encodes to the RFC 4648 Base 64 encoding.
+
 .coIP :tonumber
 Converts strings to numbers. Strings that contain a period,
 .code e
@@ -37200,6 +37206,63 @@ except that it does not encode the single and double quote characters
 be suitable for insertion into a HTML template, depending on the
 context of its insertion. It is suitable as text placed between
 tags but not necessary as tag attribute material.
+
+.coNP Functions @ base64-encode and @ base64-decode
+.synb
+.mets (base64-encode < string <> [ column-width ])
+.mets (base64-decode < string)
+.syne
+.desc
+The
+.code base64-encode
+function converts the UTF-8 representation of
+.meta string
+to Base 64 and returns that representation as a string.
+
+The
+.code base64-decode
+functions performs the opposite conversion; it extracts the
+bytes encoded in a Base 64 string, and decodes them as UTF-8
+to return a character string.
+
+The Base 64 encoding divides the UTF-8 representation into groups of
+six bits, each representing the values 0 to 63. Each value is then
+mapped to the characters
+.code A
+to
+.codn Z,
+.code a
+to
+.codn z,
+the digits
+.code 0
+to
+.code 9
+and the characters
+.code +
+and
+.codn /.
+One or two consecutive occurrences of the character
+.code =
+are added as padding so that the number of
+non-whitespace characters is divisible by four. These characters map to
+the code 0, but are understood not to contribute to the length of the
+encoded message. The
+.code base64-encode
+function enforces this convention, but
+.code base64-decode
+doesn't require these padding characters.
+
+Base64-encoding an empty string results in an empty string.
+
+If the
+.meta column-width
+argument is passed to
+.codn base64-encode ,
+then the Base 64 encoded string, unless empty, contains newline
+characters, which divide it into lines which are
+.meta column-width
+long, except possibly for the last line.
 
 .SS* Filter Module
 The filter module provides a trie (pronounced "try") data structure,

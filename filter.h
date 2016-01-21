@@ -41,5 +41,8 @@ val register_filter(val sym, val table);
 val url_encode(val str, val space_plus);
 val url_decode(val str, val space_plus);
 
+val base64_encode(val str, val wrap_cols);
+val base64_decode(val str);
+
 void filter_init(void);
 
