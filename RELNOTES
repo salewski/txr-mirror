@@ -1,3 +1,30 @@
+                                    TXR 133
+                                   2016-01-21
+
+
+  Features
+
+  - New function, split*; like split* but keep empty pieces.
+  - New function random-state-get-vec to get vector representation
+    of random state.
+  - vec-list now takes sequences as inputs, not just lists.
+  - New functions base64-encode and base64-decode.
+
+  Bugs
+
+  - Bug in env-hash with values containing equal sign.
+  - Bugfixes in partition* function.
+  - More robust handling of invalid modulus values in rand
+    and random.
+  - Internal fixes in rand and random.
+  - Serious regression in get-char on string input streams.
+  - Missing syntax highlighting for some TXR symbols.
+  - Bug in signal handling (synchronizing cached signal mask with
+    OS signal mask) causing signals to be ignored after jumping
+    out of a signal handling lambda with a dynamic control transfer.
+
+
+
                                     TXR 132
                                    2016-01-16
 
