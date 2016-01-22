@@ -16,11 +16,6 @@
 #define MP_IOFUNC 1
 #endif
 
-#if MP_IOFUNC
-#include <stdio.h>
-#include <ctype.h>
-#endif
-
 #include <limits.h>
 
 #define  MP_NEG  1
@@ -60,7 +55,6 @@
 #if MP_ARGCHK == 1
 #define  ARGCHK(X,Y)  {if(!(X)){return (Y);}}
 #elif MP_ARGCHK == 2
-#include <assert.h>
 #define  ARGCHK(X,Y)  assert(X)
 #else
 #define  ARGCHK(X,Y)  /*  */

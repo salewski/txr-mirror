@@ -33,6 +33,7 @@
 #include <wchar.h>
 #include <signal.h>
 #include <time.h>
+#include <assert.h>
 #include "config.h"
 #include ALLOCA_H
 #include "lib.h"

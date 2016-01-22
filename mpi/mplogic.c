@@ -11,6 +11,9 @@
 
 #include "config.h"
 #include "mplogic.h"
+#if MP_ARGCHK == 2
+#include <assert.h>
+#endif
 #include <stdlib.h>
 
 /* Some things from the guts of the MPI library we make use of... */

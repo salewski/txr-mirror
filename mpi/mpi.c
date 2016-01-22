@@ -10,11 +10,18 @@
  */
 
 #include "config.h"
-#include "mpi.h"
+#if MP_IOFUNC
+#include <stdio.h>
+#include <ctype.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <math.h>
+#include "mpi.h"
+#if MP_ARGCHK == 2
+#include <assert.h>
+#endif
 
 #define MAX(A, B) ((A) > (B) ? (A) : (B))
 #define MIN(A, B) ((A) < (B) ? (A) : (B))
