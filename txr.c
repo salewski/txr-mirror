@@ -26,7 +26,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <limits.h>
 #include <dirent.h>
 #include <stdarg.h>
@@ -53,7 +52,6 @@
 #include "eval.h"
 #include "regex.h"
 #include "arith.h"
-#include "lisplib.h"
 #include "sysif.h"
 #include "txr.h"
 

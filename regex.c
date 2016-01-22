@@ -30,7 +30,6 @@
 #include <wchar.h>
 #include <assert.h>
 #include <dirent.h>
-#include <dirent.h>
 #include <limits.h>
 #include <signal.h>
 #include <stdarg.h>

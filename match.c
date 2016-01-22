@@ -27,8 +27,6 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <errno.h>
 #include <dirent.h>
 #include <stdarg.h>
 #include <wchar.h>
@@ -45,7 +43,6 @@
 #include "y.tab.h"
 #include "parser.h"
 #include "txr.h"
-#include "utf8.h"
 #include "filter.h"
 #include "hash.h"
 #include "debug.h"

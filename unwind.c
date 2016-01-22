@@ -40,7 +40,6 @@
 #include "txr.h"
 #include "signal.h"
 #include "eval.h"
-#include "parser.h"
 #include "struct.h"
 #include ALLOCA_H
 #include "unwind.h"

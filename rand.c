@@ -24,16 +24,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <wctype.h>
-#include <limits.h>
 #include <stdarg.h>
-#include <dirent.h>
 #include <wchar.h>
 #include <limits.h>
-#include <time.h>
 #include <signal.h>
 #include "config.h"
 #if HAVE_UNISTD_H
@@ -43,7 +38,6 @@
 #include "signal.h"
 #include "unwind.h"
 #include "arith.h"
-#include "txr.h"
 #include "rand.h"
 #include "eval.h"
 

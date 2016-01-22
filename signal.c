@@ -24,13 +24,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
 #include <errno.h>
 #include <wchar.h>
-#include <dirent.h>
 #include <signal.h>
 #include "config.h"
 #if HAVE_SYS_TIME

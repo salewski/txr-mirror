@@ -25,7 +25,6 @@
  */
 
 #include <stdio.h>
-#include <string.h>
 #include <dirent.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -33,9 +32,6 @@
 #include <signal.h>
 #include "config.h"
 #include "lib.h"
-#include "gc.h"
-#include "signal.h"
-#include "unwind.h"
 #include "eval.h"
 #include "stream.h"
 #include "lisplib.h"

@@ -36,11 +36,8 @@
 #include ALLOCA_H
 #include "lib.h"
 #include "stream.h"
-#include "hash.h"
 #include "gc.h"
 #include "args.h"
-#include "signal.h"
-#include "unwind.h"
 #include "utf8.h"
 #include "eval.h"
 #include "syslog.h"

@@ -31,7 +31,6 @@
 #include "config.h"
 #include "lib.h"
 #include "eval.h"
-#include "parser.h"
 #include "stream.h"
 #include "hash.h"
 #include "gc.h"

@@ -24,18 +24,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <stdarg.h>
 #include <wchar.h>
 #include <signal.h>
 #include <glob.h>
 #include "config.h"
 #include "lib.h"
-#include "hash.h"
 #include "gc.h"
-#include "signal.h"
-#include "unwind.h"
 #include "utf8.h"
 #include "eval.h"
 #include "glob.h"
