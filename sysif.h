@@ -49,4 +49,13 @@ off_t off_t_num(val num);
 val num_off_t(off_t offnum);
 val stdio_ftell(FILE *);
 val stdio_fseek(FILE *, val, int whence);
+#if HAVE_GETEUID
+void repress_privilege(void);
+void drop_privilege(void);
+void simulate_setuid(val open_script);
+#else
+INLINE repress_privilege(void) { }
+INLINE drop_privilege(void) { }
+INLINE void simulate_setuid(val open_script) { }
+#endif
 void sysif_init(void);

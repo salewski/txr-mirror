@@ -39122,6 +39122,52 @@ If multi-line mode is toggled interactively from within the listener,
 the variable is updated to reflect the latest state. This happens
 when the command is submitted for evaluation.
 
+.SH* SETUID OPERATION
+
+On platforms with the Unix security model, \*(TX provides special behaviors
+in situations when the \*(TX executable is running as "setuid" on behalf of
+some user or is running as root (uid 0), and from the command line executes a
+script file which is marked executable and setuid.
+
+The main noteworthy consequence of this functionality is that this feature
+allows TXR interpreter scripts (which use the Unix Hash Bang `#!` mechanism)
+to use the setuid permission bit, even if the underlying operating system
+kernel does not support setuid on interpreter scripts.
+
+Firstly, when \*(TX is invoked as root (meaning that the effective uid is 0,
+regardless of the value of the real uid), and the command line indicates that a
+file is to be executed whose owner execute permission is set, and which is
+marked "setuid", \*(TX will honor that setuid permission. Before processing the
+file, \*(TX changes its effective user ID to the owner of the file.
+
+Secondly, when \*(TX is invoked setuid (meaning that the effective uid
+is different from the real uid), and the command line indicates that
+a file is to be executed whose owner execute permission is set, and which
+is marked "setuid", \*(TX will honor that setuid permission, if possible.
+If the effective uid is 0, then this happens through the previously described
+case. If the effective uid is other than zero, and matches the owner uid of
+the file, then \*(TX maintains its effective uid as-is. Otherwise, \*(TX
+drops its setuid privilege.
+
+Thirdly, when \*(TX is invoked setuid in order to perform computations other
+than opening a script file, it drops privileges.
+
+Dropping privilege means evaluating the C expression `setuid(getuid())`:
+the effective uid, and every other stored uid, are permanently reset back to
+the real uid.
+
+Thus, in summary, when \*(TX is invoked setuid, eventually a decision is made
+whether to drop the privileges, change the effective uid to that indicated
+by a setuid executable script, or simply keep the effective uid. This decision
+is made before executing code supplied as inputs. Thus a setuid \*(TX
+executable will not execute arbitrary code under elevated privilege,
+but grants privilege to properly configured setuid scripts.
+
+Furthermore, as a small precaution, between program startup and the point in
+the execution when this this decision is made, \*(TX temporarily changes its
+effective uid to the real uid, using `seteuid(getuid())`. Just prior to making
+the decision regarding the setuid script, \*(TX restores its effective uid.
+
 .SH* DEBUGGER
 \*(TX has a simple, crude, built-in debugger. The debugger is invoked by adding
 the

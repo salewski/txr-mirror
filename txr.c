@@ -327,6 +327,7 @@ int txr_main(int argc, char **argv);
 int main(int argc, char **argv)
 {
   val stack_bottom = nil;
+  repress_privilege();
   progname = argv[0] ? utf8_dup_from(argv[0]) : progname;
   progname_u8 = argv[0];
   init(progname, oom_realloc_handler, &stack_bottom);
@@ -436,6 +437,7 @@ int txr_main(int argc, char **argv)
   }
 
   if (argc <= 1) {
+    drop_privilege();
 #if HAVE_TERMIOS
     banner();
     goto repl;
@@ -510,6 +512,7 @@ int txr_main(int argc, char **argv)
 
       /* Long opts with no arguments */
       if (org) {
+        drop_privilege();
         format(std_error,
                lit("~a: option --~a takes no argument, ~a given\n"),
                prog_string, opt, org, nao);
@@ -517,23 +520,29 @@ int txr_main(int argc, char **argv)
       }
 
       if (equal(opt, lit("version"))) {
+        drop_privilege();
         format(std_output, lit("~a: version ~a\n"),
                prog_string, static_str(version), nao);
         return 0;
       }
 
       if (equal(opt, lit("help"))) {
+        drop_privilege();
         help();
         return 0;
       }
 
-      if (equal(opt, lit("license")))
+      if (equal(opt, lit("license"))) {
+        drop_privilege();
         return license();
+      }
 
       if (equal(opt, lit("gc-debug"))) {
+        drop_privilege();
         opt_gc_debug = 1;
         continue;
       } else if (equal(opt, lit("vg-debug"))) {
+        drop_privilege();
 #if HAVE_VALGRIND
         opt_vg_debug = 1;
         continue;
@@ -554,6 +563,7 @@ int txr_main(int argc, char **argv)
         txr_lisp_p = t;
         continue;
       } else if (equal(opt, lit("debugger"))) {
+        drop_privilege();
 #if CONFIG_DEBUG_SUPPORT
         opt_debugger = 1;
         continue;
@@ -562,6 +572,7 @@ int txr_main(int argc, char **argv)
         return EXIT_FAILURE;
 #endif
       } else if (equal(opt, lit("debug-autoload"))) {
+        drop_privilege();
 #if CONFIG_DEBUG_SUPPORT
         opt_debugger = 1;
         opt_dbg_autoload = 1;
@@ -571,6 +582,7 @@ int txr_main(int argc, char **argv)
         return EXIT_FAILURE;
 #endif
       } else if (equal(opt, lit("debug-expansion"))) {
+        drop_privilege();
 #if CONFIG_DEBUG_SUPPORT
         opt_debugger = 1;
         opt_dbg_expansion = 1;
@@ -580,6 +592,7 @@ int txr_main(int argc, char **argv)
         return EXIT_FAILURE;
 #endif
       } else if (equal(opt, lit("yydebug"))) {
+        drop_privilege();
         if (have_yydebug) {
           yydebug_onoff(1);
           format(std_error,
@@ -627,6 +640,7 @@ int txr_main(int argc, char **argv)
         spec_file = arg;
         break;
       case 'e':
+        drop_privilege();
         reg_varl(self_path_s, lit("cmdline-expr"));
         reg_var(args_s, arg_list);
 
@@ -645,6 +659,7 @@ int txr_main(int argc, char **argv)
                                             if3(c_chr(opt) == 'P',
                                                 pprinl,
                                                 tprint));
+          drop_privilege();
           reg_varl(self_path_s, lit("cmdline-expr"));
           reg_var(args_s, arg_list);
           pf(eval_intrinsic(lisp_parse(arg, std_error, colon_k,
@@ -683,6 +698,7 @@ int txr_main(int argc, char **argv)
           opt_print_bindings = 1;
           break;
         case 'i':
+          drop_privilege();
 #if HAVE_TERMIOS
           enter_repl = t;
           break;
@@ -693,6 +709,7 @@ int txr_main(int argc, char **argv)
           return EXIT_FAILURE;
 #endif
         case 'd':
+          drop_privilege();
 #if CONFIG_DEBUG_SUPPORT
           opt_debugger = 1;
 #else
@@ -713,14 +730,17 @@ int txr_main(int argc, char **argv)
         case 'C':
         case 't':
         case 'D':
+          drop_privilege();
           format(std_error, lit("~a: option -~a does not clump\n"),
                  prog_string, opch, nao);
           return EXIT_FAILURE;
         case '-':
+          drop_privilege();
           format(std_error, lit("~a: unrecognized long option: --~a\n"),
                  prog_string, cdr(optchars), nao);
           return EXIT_FAILURE;
         default:
+          drop_privilege();
           format(std_error, lit("~a: unrecognized option: -~a\n"),
                  prog_string, opch, nao);
           return EXIT_FAILURE;
@@ -730,12 +750,14 @@ int txr_main(int argc, char **argv)
   }
 
   if (specstring && spec_file) {
+    drop_privilege();
     format(std_error, lit("~a: cannot specify both -f and -c\n"),
            prog_string, nao);
     return EXIT_FAILURE;
   }
 
   if (specstring) {
+    drop_privilege();
     spec_file_str = lit("cmdline");
     if (gt(length_str(specstring), zero) &&
         chr_str(specstring, minus(length_str(specstring), one)) != chr('\n'))
@@ -746,13 +768,16 @@ int txr_main(int argc, char **argv)
   } else if (spec_file) {
     if (wcscmp(c_str(spec_file), L"-") != 0) {
       open_txr_file(spec_file, &txr_lisp_p, &spec_file_str, &parse_stream);
+      simulate_setuid(parse_stream);
     } else {
+      drop_privilege();
       spec_file_str = lit("stdin");
     }
     if (arg)
       arg_list = arg_undo;
   } else {
     if (!arg) {
+      drop_privilege();
       if (enter_repl)
         goto repl;
       if (evaled)
@@ -768,7 +793,9 @@ int txr_main(int argc, char **argv)
 
     if (!equal(arg, lit("-"))) {
       open_txr_file(arg, &txr_lisp_p, &spec_file_str, &parse_stream);
+      simulate_setuid(parse_stream);
     } else {
+      drop_privilege();
       spec_file_str = lit("stdin");
     }
   }

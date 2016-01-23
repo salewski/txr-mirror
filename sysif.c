@@ -861,6 +861,59 @@ static val setegid_wrap(val nval)
   return t;
 }
 
+#define RC_MAGIC 0xbe50c001
+
+static uid_t orig_euid, real_uid;
+static int repress_called = 0, is_setuid = 1;
+
+void repress_privilege(void)
+{
+  real_uid = getuid();
+  orig_euid = geteuid();
+
+  if (real_uid != orig_euid)
+    seteuid(getuid());
+  else
+    is_setuid = 0;
+
+  repress_called = RC_MAGIC;
+}
+
+void drop_privilege(void)
+{
+  if (repress_called != RC_MAGIC || (is_setuid && setuid(getuid()) != 0))
+    abort();
+}
+
+void simulate_setuid(val open_script)
+{
+  if (repress_called != RC_MAGIC || (is_setuid && seteuid(orig_euid) != 0))
+    abort();
+
+  if (!is_setuid && orig_euid != 0)
+    return;
+
+  {
+    val fdv = stream_get_prop(open_script, fd_k);
+
+    if (fdv) {
+      struct stat stb;
+      cnum fd = c_num(fdv);
+
+      if (fstat(fd, &stb) != 0)
+        abort();
+
+      if ((stb.st_mode & (S_ISUID | S_IXUSR)) == (S_ISUID | S_IXUSR)) {
+        seteuid(stb.st_uid);
+        return;
+      }
+    }
+  }
+
+  if (is_setuid)
+    setuid(real_uid);
+}
+
 #endif
 
 #if HAVE_PWUID
