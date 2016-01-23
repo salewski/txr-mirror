@@ -48,6 +48,7 @@ static uw_frame_t *uw_stack;
 static uw_frame_t *uw_env_stack;
 static uw_frame_t *uw_exit_point;
 static uw_frame_t toplevel_env;
+static uw_frame_t unhandled_ex;
 
 static val unhandled_hook_s, types_s, jump_s, sys_cont_s, sys_cont_poison_s;
 static val sys_cont_free_s, sys_capture_cont_s;
@@ -94,10 +95,31 @@ static void uw_unwind_to_exit_point(void)
     }
   }
 
-  if (!uw_stack)
-    abort();
+  if (uw_exit_point == &unhandled_ex) {
+    val sym = unhandled_ex.ca.sym;
+    val args = unhandled_ex.ca.args;
+
+    if (opt_loglevel >= 1) {
+      val prefix = format(nil, lit("~a:"), prog_string, nao);
+
+      format(std_error, lit("~a unhandled exception of type ~a:\n"),
+             prefix, sym, nao);
+
+      error_trace(sym, args, std_error, prefix);
+    }
+    if (uw_exception_subtype_p(sym, query_error_s) ||
+        uw_exception_subtype_p(sym, file_error_s)) {
+      if (opt_print_bindings)
+        put_line(lit("false"), std_output);
+    }
+
+    exit(EXIT_FAILURE);
+  }
 
   uw_exit_point = 0;
+
+  if (!uw_stack)
+    abort();
 
   switch (uw_stack->uw.type) {
   case UW_BLOCK:
@@ -517,33 +539,15 @@ val uw_throw(val sym, val args)
       set(pfun, nil);
 
       if (fun) {
-        if (functionp(fun)) {
+        if (functionp(fun))
           funcall3(fun, sym, args, last_form_evaled);
-        } else {
+        else
           format(std_error, lit("~a: *unhandled-hook* ~s isn't a function\n"),
                             prog_string, fun, nao);
-          abort();
-        }
-
-        exit(EXIT_FAILURE);
       }
     }
 
-    if (opt_loglevel >= 1) {
-      val prefix = format(nil, lit("~a:"), prog_string, nao);
-
-      format(std_error, lit("~a unhandled exception of type ~a:\n"),
-             prefix, sym, nao);
-
-      error_trace(sym, args, std_error, prefix);
-    }
-    if (uw_exception_subtype_p(sym, query_error_s) ||
-        uw_exception_subtype_p(sym, file_error_s)) {
-      if (opt_print_bindings)
-        put_line(lit("false"), std_output);
-    }
-
-    exit(EXIT_FAILURE);
+    ex = &unhandled_ex;
   }
 
   ex->ca.sym = sym;

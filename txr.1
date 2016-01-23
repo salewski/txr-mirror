@@ -28237,14 +28237,17 @@ macro.
 If no catch or accepting handler is found, control is transferred
 to the function stored in the
 .code *unhandled-hook*
-variable. If that function returns, the process terminates.
+variable. If that function returns, then unwinding is performed
+after which the process terminates (unless the unwinding actions
+intercept the control to prevent that).
 .IP -
 If no catch or accepting handler is found and
 .code *unhandled-hook*
 is
 .codn nil ,
 then a built-in strategy for handling the exception is invoked,
-consisting of printing some informational messages and terminating.
+consisting of unwinding, and then printing some informational messages and
+terminating.
 .PP
 
 From the above it should be evident that there are two ways by which exceptions
@@ -28674,24 +28677,24 @@ with the following arguments: the exception type symbol, the exception object,
 and a third value which is either
 .code nil
 or else the form which was being evaluated when the exception was thrown.
+The call occurs before any unwinding takes place.
 
-Otherwise, if the variable is
+If the variable is
+.codn nil ,
+or isn't a function, or the function returns after being called,
+then unwinding takes place, after which some informational messages are printed
+about the exception, and the process exits with a failed termination status.
+
+In the case when the variable contains a object other than
 .code nil
-some informational messages are printed about the exception, and the process
-exits with a failed termination status.
-In the same situation, if the variable contains an object which is not a
-function, the process terminates abnormally as if by a call to the
-.code abort
-function.
+which isn't a function, a diagnostic message is printed on the
+.code *stderr*
+stream prior to unwinding.
 
 Prior to the function being called, the
 .code *unhandled-hook*
 variable is reset to
 .codn nil .
-
-If the function registered in
-.code *unhandled-hook*
-returns, the process exits with a failed termination status.
 
 Note: the functions
 .code source-loc
