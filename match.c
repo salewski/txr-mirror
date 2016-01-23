@@ -3626,8 +3626,10 @@ static val v_require(match_files_ctx *c)
   val args = rest(first_spec);
   val ret;
   ret = eval_progn_with_bindings(args, c->spec, c->bindings, specline);
-  if (!ret)
+  if (!ret) {
+    debuglf(specline, lit("require failed"), nao);
     return ret;
+  }
   return next_spec_k;
 }
 
