@@ -3625,8 +3625,7 @@ static val v_require(match_files_ctx *c)
   spec_bind (specline, first_spec, c->spec);
   val args = rest(first_spec);
   val ret;
-  (void) eval_progn_with_bindings(args, c->spec, c->bindings, specline);
-  ret = eval_progn(args, make_env(c->bindings, nil, nil), specline);
+  ret = eval_progn_with_bindings(args, c->spec, c->bindings, specline);
   if (!ret)
     return ret;
   return next_spec_k;
