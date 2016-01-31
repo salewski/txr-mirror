@@ -44,6 +44,7 @@
 #include "args.h"
 #include "cadr.h"
 #include "txr.h"
+#include "lisplib.h"
 #include "struct.h"
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
@@ -204,7 +205,7 @@ val make_struct_type(val name, val super,
   val self = lit("make-struct-type");
 
   if (super && symbolp(super)) {
-    val supertype = gethash(struct_type_hash, super);
+    val supertype = find_struct_type(super);
     if (!super)
       no_such_struct(self, super);
     super = supertype;
@@ -298,7 +299,10 @@ static val make_struct_type_compat(val name, val super, val slots,
 
 val find_struct_type(val sym)
 {
-  return gethash(struct_type_hash, sym);
+  uses_or2;
+  return or2(gethash(struct_type_hash, sym),
+             if2(lisplib_try_load(sym),
+                 gethash(struct_type_hash, sym)));
 }
 
 val struct_type_p(val obj)
