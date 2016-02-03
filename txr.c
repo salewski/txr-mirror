@@ -474,7 +474,28 @@ int txr_main(int argc, char **argv)
       continue;
     }
 
-    /* Odd case 2: -Dfoo=bar syntax. */
+    /* Odd case 2: --eargs is followed by an arbitrary delimiting
+     * character, not necessarily = */
+    if (match_str(arg, lit("--eargs"), zero) && ge(length(arg), num(8))) {
+      val sep = sub_str(arg, num(7), num(8));
+      val arg2;
+      if (!arg_list) {
+        format(std_error,
+               lit("~a: --eargs=[...] must be followed by an argument\n"),
+               prog_string, nao);
+        return EXIT_FAILURE;
+      }
+      arg = sub_str(arg, num(8), nil);
+      arg2 = upop(&arg_list, &arg_undo);
+      arg_list = append2(mapcar(curry_123_3(func_n3(regsub),
+                                            regex_compile(lit("{}"), nil),
+                                            arg2),
+                                split_str(arg, sep)),
+                         arg_list);
+      continue;
+    }
+
+    /* Odd case 3: -Dfoo=bar syntax. */
     if (equal(sub(arg, zero, two), lit("-D"))) {
       val dopt_arg = sub(arg, two, t);
       cons_bind(var, def, split_str(dopt_arg, lit("=")));

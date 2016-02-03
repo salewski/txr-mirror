@@ -716,6 +716,20 @@ argument, which is useful on some systems which have limitations in
 their implementation of the "hash bang" mechanism. For details about
 its special syntax, See Hash Bang Support below.
 
+.coIP --eargs
+The
+.code --eargs
+option (extended
+.codn --args )
+is like
+.code --args
+but must be followed by an argument. The argument is substituted
+in place of occurrences of
+.code {}
+in the
+.code --eargs
+syntax.
+
 .coIP --lisp
 This option influences the treatment of query files which do not have
 a suffix indicating their type: they are treated as \*(TL source.
@@ -994,7 +1008,9 @@ not work.
 .cble
 
 To support systems like this, \*(TX supports the special argument
-.codn --args .
+.codn --args ,
+as well as as an extended version,
+.codn --eargs .
 With
 .codn --args ,
 it is possible to encode multiple arguments
@@ -1025,6 +1041,70 @@ of that argument,
 .codn -B:-f ,
 is split into the two arguments
 .codn "-B -f" .
+
+The
+.code --eargs
+mechanism allows an additional flexibility. An
+.code --eargs
+argument must be followed by one more argument.
+Occurrences of the two-character sequence
+.code {}
+in the encoded argument string are replaced with that
+following argument. This replacement occurs after
+the argument splitting.
+
+Example:
+
+.cblk
+  #!/usr/bin/txr --eargs:-B:{}:--foo:42
+.cble
+
+This has an effect which cannot be replicated in any known
+implementation of the hash bang mechanism. Suppose
+that this hash bang line is placed in a script called
+.codn script.txr .
+When this script is invoked with arguments, as in:
+
+.cblk
+  script.txr a b c
+.cble
+
+then \*(TX is invoked similarly to:
+
+.cblk
+  /usr/bin/txr --eargs:-B:{}:--foo:42 script.txr a b c
+.cble
+
+Then, when
+.code --eargs
+processing takes place, firstly the argument sequence
+
+.code
+  -B {} --foo 42
+.code
+
+is produced. Then, all occurrences of
+.code {}
+are replaced with
+.codn script.txr ,
+resulting in:
+
+.code
+  -B script.txr --foo 42
+.code
+
+The resulting \*(TX invocation is
+
+.code
+  /usr/bin/txr -B script.txr --foo 42 a b c
+.code
+
+Thus,
+.code --eargs
+allows some arguments to be encoded into the interpreter script, such that
+script name is inserted anywhere among them, possibly multiple times. Arguments
+for the interpreter can be encoded, as well as arguments to be processed by the
+script.
 
 .SS* Whitespace
 Outside of directives, whitespace is significant in \*(TX queries, and represents
