@@ -28,6 +28,8 @@ val make_bignum(void);
 val bignum(cnum cn);
 val bignum_from_long(long l);
 val bignum_from_uintptr(uint_ptr_t u);
+val num_from_buffer(mem_t *buf, int bytes);
+int num_to_buffer(val num, mem_t *buf, int bytes);
 int highest_bit(int_ptr_t n);
 val normalize(val bignum);
 val in_int_ptr_range(val bignum);

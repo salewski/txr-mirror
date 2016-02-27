@@ -3010,6 +3010,32 @@ mp_err mp_to_unsigned_bin(mp_int *mp, unsigned char *str)
 
 /* }}} */
 
+mp_err mp_to_unsigned_buf(mp_int *mp, unsigned char *str, int size)
+{
+  mp_digit      *dp, *end;
+  unsigned char *spos;
+
+  ARGCHK(mp != NULL && str != NULL && size >= 0, MP_BADARG);
+
+  for (spos = str + size, dp = DIGITS(mp), end = dp + USED(mp); dp < end; dp++) {
+    int      ix;
+    mp_digit d = *dp;
+
+    for (ix = 0; ix < (int) sizeof(mp_digit); ++ix) {
+	if (dp + 1 == end && d == 0)
+	  break;
+	ARGCHK(spos >= str, MP_RANGE);
+      *--spos = d & 0xFF;
+      d >>= 8;
+    }
+  }
+
+  while (spos > str)
+    *--spos = 0;
+
+  return MP_OKAY;
+}
+
 /* {{{ mp_count_bits(mp) */
 
 int    mp_count_bits(mp_int *mp)

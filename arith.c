@@ -90,6 +90,37 @@ val bignum_from_uintptr(uint_ptr_t u)
   return n;
 }
 
+val num_from_buffer(mem_t *buf, int bytes)
+{
+  val n = make_bignum();
+  mp_read_unsigned_bin(mp(n), buf, bytes);
+  return normalize(n);
+}
+
+int num_to_buffer(val num, mem_t *buf, int bytes)
+{
+  switch (type(num)) {
+  case CHR: case NUM:
+    {
+      cnum n = coerce(cnum, num) >> TAG_SHIFT;
+      mem_t *ptr = buf + bytes;
+
+      for (; n != 0; n >>= 8) {
+        if (ptr == buf)
+          return 0;
+        *--ptr = n & 0xff;
+      }
+      while (ptr > buf)
+        *--ptr = 0;
+    }
+    return 1;
+  case BGNUM:
+    return mp_to_unsigned_buf(mp(num), buf, bytes) == MP_OKAY ? 1 : 0;
+  default:
+    type_mismatch(lit("~s is not an integer"), num, nao);
+  }
+}
+
 #if HAVE_DOUBLE_INTPTR_T
 
 static val bignum_dbl_ipt(double_intptr_t di)

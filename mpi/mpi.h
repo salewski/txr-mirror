@@ -217,6 +217,7 @@ mp_err mp_to_signed_bin(mp_int *mp, unsigned char *str);
 mp_err mp_read_unsigned_bin(mp_int *mp, unsigned char *str, int len);
 int    mp_unsigned_bin_size(mp_int *mp);
 mp_err mp_to_unsigned_bin(mp_int *mp, unsigned char *str);
+mp_err mp_to_unsigned_buf(mp_int *mp, unsigned char *str, int size);
 
 int    mp_count_bits(mp_int *mp);
 int    mp_is_pow_two(mp_int *mp);
