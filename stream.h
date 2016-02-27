@@ -88,6 +88,8 @@ extern val from_start_k, from_current_k, from_end_k;
 extern val real_time_k, name_k, fd_k;
 extern val format_s;
 
+extern val stdio_stream_s;
+
 extern val stdin_s, stdout_s, stddebug_s, stderr_s, stdnull_s;
 
 extern val print_flo_precision_s, print_flo_digits_s, print_flo_format_s;

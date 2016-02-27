@@ -71,6 +71,8 @@ val from_start_k, from_current_k, from_end_k;
 val real_time_k, name_k, fd_k;
 val format_s;
 
+val stdio_stream_s;
+
 void strm_base_init(struct strm_base *s)
 {
   static struct strm_base init = { indent_off, 60, 10, 0, 0 };
@@ -1106,7 +1108,7 @@ static val set_mode_props(const struct stdio_mode m, val stream)
 static val make_stdio_stream_common(FILE *f, val descr, struct cobj_ops *ops)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, chk_malloc(sizeof *h));
-  val stream = cobj(coerce(mem_t *, h), stream_s, ops);
+  val stream = cobj(coerce(mem_t *, h), stdio_stream_s, ops);
   strm_base_init(&h->a);
   h->f = f;
   h->descr = descr;
@@ -2096,7 +2098,7 @@ val record_adapter(val regex, val stream)
 
 val streamp(val obj)
 {
-  return typeof(obj) == stream_s ? t : nil;
+  return typep(obj, stream_s);
 }
 
 val stream_set_prop(val stream, val ind, val prop)
@@ -3482,6 +3484,7 @@ void stream_init(void)
   name_k = intern(lit("name"), keyword_package);
   fd_k = intern(lit("fd"), keyword_package);
   format_s = intern(lit("format"), user_package);
+  stdio_stream_s = intern(lit("stdio-stream"), user_package);
 
   reg_var(stdin_s = intern(lit("*stdin*"), user_package),
           make_stdio_stream(stdin, lit("stdin")));

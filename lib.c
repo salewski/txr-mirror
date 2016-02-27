@@ -222,6 +222,8 @@ val subtypep(val sub, val sup)
                 sub == list_s);
   } else if (sup == string_s) {
     return tnil(sub == str_s || sub == lit_s || sub == lstr_s);
+  } else if (sup == stream_s) {
+    return tnil(sub == stdio_stream_s);
   } else {
     val sub_struct = find_struct_type(sub);
     val sup_struct = find_struct_type(sup);
@@ -269,7 +271,7 @@ val type_check3(val obj, int t1, int t2, int t3)
 val class_check(val cobj, val class_sym)
 {
   type_assert (is_ptr(cobj) && cobj->t.type == COBJ &&
-               cobj->co.cls == class_sym,
+              (cobj->co.cls == class_sym || subtypep(cobj->co.cls, class_sym)),
                (lit("~s is not of type ~s"), cobj, class_sym, nao));
   return t;
 }
