@@ -95,6 +95,10 @@ extern val stdin_s, stdout_s, stddebug_s, stderr_s, stdnull_s;
 extern val print_flo_precision_s, print_flo_digits_s, print_flo_format_s;
 extern val print_base_s;
 
+#if HAVE_SOCKETS
+extern val socket_error_s;
+#endif
+
 void strm_base_init(struct strm_base *s);
 void strm_base_cleanup(struct strm_base *s);
 void strm_base_mark(struct strm_base *s);
@@ -106,6 +110,14 @@ val make_null_stream(void);
 val make_stdio_stream(FILE *, val descr);
 val make_tail_stream(FILE *, val descr);
 val make_pipe_stream(FILE *, val descr);
+#if HAVE_SOCKETS
+val make_sock_stream(FILE *, val family, val type);
+#endif
+val stream_fd(val stream);
+#if HAVE_SOCKETS
+val sock_family(val stream);
+val sock_type(val stream);
+#endif
 val make_string_input_stream(val);
 val make_string_byte_input_stream(val);
 val make_string_output_stream(void);
@@ -151,6 +163,10 @@ val get_string(val stream, val nchars, val close_after_p);
 val open_directory(val path);
 val open_file(val path, val mode_str);
 val open_fileno(val fd, val mode_str);
+#if HAVE_SOCKETS
+val open_sockfd(val fd, val family, val type, val mode_str);
+val open_socket(val family, val type, val mode_str);
+#endif
 val open_tail(val path, val mode_str, val seek_end_p);
 val open_command(val path, val mode_str);
 val open_process(val path, val mode_str, val args);

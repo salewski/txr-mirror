@@ -51,6 +51,7 @@ OBJS-$(debug_support) += debug.o
 OBJS-$(have_syslog) += syslog.o
 OBJS-$(have_glob) += glob.o
 OBJS-$(have_posix_sigs) += signal.o
+OBJS-$(have_sockets) += socket.o
 OBJS-$(have_termios) += linenoise/linenoise.o
 EXTRA_OBJS-$(add_win_res) += win/txr.res
 

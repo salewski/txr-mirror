@@ -49,6 +49,9 @@
 #if HAVE_WINDOWS_H
 #include <windows.h>
 #endif
+#if HAVE_SOCKETS
+#include <sys/socket.h>
+#endif
 #include ALLOCA_H
 #include "lib.h"
 #include "gc.h"
@@ -72,6 +75,10 @@ val real_time_k, name_k, fd_k;
 val format_s;
 
 val stdio_stream_s;
+
+#if HAVE_SOCKETS
+val socket_error_s;
+#endif
 
 void strm_base_init(struct strm_base *s)
 {
@@ -315,6 +322,10 @@ struct stdio_handle {
   val mode; /* used by tail */
   unsigned is_rotated; /* used by tail */
   unsigned is_real_time;
+#if HAVE_SOCKETS
+  val family;
+  val type;
+#endif
 };
 
 static void stdio_stream_print(val stream, val out, val pretty)
@@ -346,6 +357,10 @@ static void stdio_stream_mark(val stream)
   gc_mark(h->descr);
   gc_mark(h->mode);
   gc_mark(h->err);
+#if HAVE_SOCKETS
+  gc_mark(h->family);
+  gc_mark(h->type);
+#endif
 }
 
 static val errno_to_string(val err)
@@ -1124,6 +1139,10 @@ static val make_stdio_stream_common(FILE *f, val descr, struct cobj_ops *ops)
 #else
   h->is_real_time = 0;
 #endif
+#if HAVE_SOCKETS
+  h->family = nil;
+  h->type = nil;
+#endif
   return stream;
 }
 
@@ -1143,6 +1162,40 @@ val make_pipe_stream(FILE *f, val descr)
 {
   return make_stdio_stream_common(f, descr, &pipe_ops.cobj_ops);
 }
+
+#if HAVE_SOCKETS
+val make_sock_stream(FILE *f, val family, val type)
+{
+  val s = make_stdio_stream_common(f, lit("socket"), &stdio_ops.cobj_ops);
+  struct stdio_handle *h = coerce(struct stdio_handle *, s->co.handle);
+  h->family = family;
+  h->type = type;
+  return s;
+}
+#endif
+
+val stream_fd(val stream)
+{
+  struct stdio_handle *h = coerce(struct stdio_handle *,
+                                  cobj_handle(stream, stdio_stream_s));
+  return h->f ? num(fileno(h->f)) : nil;
+}
+
+#if HAVE_SOCKETS
+val sock_family(val stream)
+{
+  struct stdio_handle *h = coerce(struct stdio_handle *,
+                                  cobj_handle(stream, stdio_stream_s));
+  return h->family;
+}
+
+val sock_type(val stream)
+{
+  struct stdio_handle *h = coerce(struct stdio_handle *,
+                                  cobj_handle(stream, stdio_stream_s));
+  return h->type;
+}
+#endif
 
 #if HAVE_FORK_STUFF
 static val make_pipevp_stream(FILE *f, val descr, pid_t pid)
@@ -3106,6 +3159,35 @@ val open_fileno(val fd, val mode_str)
                                                        fd, nao)));
 }
 
+#if HAVE_SOCKETS
+val open_sockfd(val fd, val family, val type, val mode_str_in)
+{
+  struct stdio_mode m;
+  val mode_str = default_arg(mode_str_in, lit("r+"));
+  FILE *f = (errno = 0, w_fdopen(c_num(fd), c_str(normalize_mode(&m, mode_str))));
+
+  if (!f) {
+    close(c_num(fd));
+    uw_throwf(file_error_s, lit("error creating stream for socket ~a: ~d/~s"),
+              fd, num(errno), string_utf8(strerror(errno)), nao);
+  }
+
+  if (type == num_fast(SOCK_DGRAM))
+    setvbuf(f, (char *) NULL, _IOFBF, 65536);
+  else
+    setvbuf(f, (char *) NULL, _IOLBF, 0);
+
+  return set_mode_props(m, make_sock_stream(f, family, type));
+}
+
+val open_socket(val family, val type, val mode_str)
+{
+  int fd = socket(c_num(family), c_num(type), 0);
+  return open_sockfd(num(fd), family, type, mode_str);
+}
+#endif
+
+
 val open_tail(val path, val mode_str, val seek_end_p)
 {
   struct stdio_mode m;
@@ -3485,6 +3567,9 @@ void stream_init(void)
   fd_k = intern(lit("fd"), keyword_package);
   format_s = intern(lit("format"), user_package);
   stdio_stream_s = intern(lit("stdio-stream"), user_package);
+#if HAVE_SOCKETS
+  socket_error_s = intern(lit("socket-error"), user_package);
+#endif
 
   reg_var(stdin_s = intern(lit("*stdin*"), user_package),
           make_stdio_stream(stdin, lit("stdin")));
@@ -3545,6 +3630,10 @@ void stream_init(void)
   reg_fun(intern(lit("stream-set-prop"), user_package), func_n3(stream_set_prop));
   reg_fun(intern(lit("stream-get-prop"), user_package), func_n2(stream_get_prop));
   reg_fun(intern(lit("fileno"), user_package), curry_12_1(func_n2(stream_get_prop), fd_k));
+#ifdef HAVE_SOCKETS
+  reg_fun(intern(lit("sock-family"), user_package), func_n1(sock_family));
+  reg_fun(intern(lit("sock-type"), user_package), func_n1(sock_type));
+#endif
   reg_fun(intern(lit("make-catenated-stream"), user_package), func_n0v(make_catenated_stream_v));
   reg_fun(intern(lit("cat-streams"), user_package), func_n1(make_catenated_stream));
   reg_fun(intern(lit("catenated-stream-p"), user_package), func_n1(catenated_stream_p));
@@ -3553,6 +3642,9 @@ void stream_init(void)
   reg_fun(intern(lit("open-directory"), user_package), func_n1(open_directory));
   reg_fun(intern(lit("open-file"), user_package), func_n2o(open_file, 1));
   reg_fun(intern(lit("open-fileno"), user_package), func_n2o(open_fileno, 1));
+#ifdef HAVE_SOCKETS
+  reg_fun(intern(lit("open-socket"), user_package), func_n3o(open_socket, 2));
+#endif
   reg_fun(intern(lit("open-tail"), user_package), func_n3o(open_tail, 1));
   reg_fun(intern(lit("open-command"), user_package), func_n2o(open_command, 1));
   reg_fun(intern(lit("open-pipe"), user_package), func_n2(open_command));
@@ -3575,6 +3667,10 @@ void stream_init(void)
   reg_varl(intern(lit("indent-off"), user_package), num_fast(indent_off));
   reg_varl(intern(lit("indent-data"), user_package), num_fast(indent_data));
   reg_varl(intern(lit("indent-code"), user_package), num_fast(indent_code));
+
+#if HAVE_SOCKETS
+  uw_register_subtype(socket_error_s, error_s);
+#endif
 
   fill_stream_ops(&null_ops);
   fill_stream_ops(&stdio_ops);

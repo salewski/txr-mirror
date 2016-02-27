@@ -33,7 +33,7 @@
 #
 
 if test x$txr_shell = x ; then
-  for shell in /usr/xpg4/bin/sh /bin/bash /usr/bin/bash ; do
+  for shell in /bin/bash /usr/bin/bash /usr/xpg4/bin/sh ; do
     if test -x $shell ; then
        txr_shell=$shell
        break
@@ -128,6 +128,7 @@ have_glob=
 have_windows_h=
 have_windres=
 have_posix_sigs=
+have_sockets=
 need_darwin_c_source=
 have_git=
 have_pwuid=
@@ -662,6 +663,7 @@ have_glob := $have_glob
 # do we modern posix signal handling?
 have_posix_sigs := $have_posix_sigs
 
+have_sockets := $have_sockets
 have_termios := $have_termios
 termios_define := $termios_define
 
@@ -2442,6 +2444,82 @@ if [ "$file_offset_define" = none ] ; then
 elif [ -n "$file_offset_define" ] ; then
   lang_flags="$lang_flags -D$file_offset_define"
 fi
+
+printf "Checking for socket API ... "
+
+cat > conftest.c <<!
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/un.h>
+
+int main(int argc, char **argv)
+{
+  static struct sockaddr_in in_addr;
+  static struct sockaddr_un un_addr;
+  static char buf[256];
+  socklen_t len;
+
+  int s = socket(AF_INET, SOCK_STREAM, 0);
+  int e0 = bind(s, (struct sockaddr *) &in_addr, sizeof in_addr);
+  int e1 = listen(s, 42);
+  int e3 = connect(s, (struct sockaddr *) &un_addr, sizeof un_addr);
+  int e4 = send(s, buf, sizeof buf, 0);
+  int e5 = sendto(s, buf, sizeof buf, 0,
+                  (struct sockaddr *) &un_addr, sizeof un_addr);
+  int e6 = recv(s, buf, sizeof buf, 0);
+  int e7 = (len = sizeof in_addr,
+            recvfrom(s, buf, sizeof buf, 0,
+                     (struct sockaddr *) &in_addr, &len));
+  int e8 = shutdown(s, 0);
+  in_addr_t ia = inet_addr("10.0.0.1");
+
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_SOCKETS 1\n" >> $config_h
+  have_sockets=y
+elif conftest EXTRA_LDFLAGS="-lsocket -lnsl" ; then
+  printf "yes\n"
+  printf "#define HAVE_SOCKETS 1\n" >> $config_h
+  have_sockets=y
+  conf_ldflags="${conf_ldflags:+"$conf_ldflags "}-lsocket -lnsl"
+  printf "Need libs for sockets: regenerating %s ..." $config_make
+  gen_config_make
+  printf "done\n"
+else
+  printf "no\n"
+fi
+
+printf "Checking for getaddrinfo ... "
+
+cat > conftest.c <<!
+#include <sys/types.h>
+#include <netdb.h>
+#include <stdio.h>
+
+int main(void)
+{
+  struct addrinfo hints;
+  struct addrinfo *ptr;
+  int res = getaddrinfo("node", "serv", &hints, &ptr);
+  freeaddrinfo(ptr);
+  puts(gai_strerror(res));
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_GETADDRINFO 1\n" >> $config_h
+else
+  printf "no\n"
+fi
+
 
 #
 # Dependent variables

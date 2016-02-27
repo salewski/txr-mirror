@@ -36,6 +36,7 @@
 #include "gc.h"
 #include "debug.h"
 #include "txr.h"
+#include "socket.h"
 #include "lisplib.h"
 
 val dl_table;
@@ -275,6 +276,36 @@ static val yield_instantiate(val set_fun)
   return nil;
 }
 
+#if HAVE_SOCKETS
+
+static val sock_set_entries(val dlt, val fun)
+{
+  val name[] = {
+    lit("sockaddr"), lit("sockaddr-in"), lit("sockaddr-in6"),
+    lit("sockaddr-un"), lit("addrinfo"),
+    lit("getaddrinfo"),
+    lit("af-unspec"), lit("af-unix"), lit("af-inet"), lit("af-inet6"),
+    lit("sock-stream"), lit("sock-dgram"),
+    lit("sock-nonblock"), lit("sock-cloexec"),
+    lit("ai-passive"), lit("ai-canonname"), lit("ai-numerichost"),
+    lit("ai-v4mapped"), lit("ai-all"), lit("ai-addrconfig"),
+    lit("ai-numericserv"),
+    nil
+  };
+  set_dlt_entries(dlt, name, fun);
+  return nil;
+}
+
+static val sock_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(format(nil, lit("~a/socket.tl"), stdlib_path, nao));
+  sock_load_init();
+  return nil;
+}
+
+#endif
+
 val dlt_register(val dlt,
                  val (*instantiate)(val),
                  val (*set_entries)(val, val))
@@ -298,6 +329,9 @@ void lisplib_init(void)
   dlt_register(dl_table, except_instantiate, except_set_entries);
   dlt_register(dl_table, type_instantiate, type_set_entries);
   dlt_register(dl_table, yield_instantiate, yield_set_entries);
+#if HAVE_SOCKETS
+  dlt_register(dl_table, sock_instantiate, sock_set_entries);
+#endif
 }
 
 val lisplib_try_load(val sym)
