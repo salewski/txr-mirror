@@ -267,6 +267,8 @@ static val sock_connect(val sock, val sockaddr)
     uw_throwf(socket_error_s, lit("connect failed: ~d/~s"),
               num(errno), string_utf8(strerror(errno)), nao);
 
+  sock_set_peer(sock, sockaddr);
+
   return t;
 }
 

@@ -117,6 +117,8 @@ val stream_fd(val stream);
 #if HAVE_SOCKETS
 val sock_family(val stream);
 val sock_type(val stream);
+val sock_peer(val stream);
+val sock_set_peer(val stream, val peer);
 #endif
 val make_string_input_stream(val);
 val make_string_byte_input_stream(val);

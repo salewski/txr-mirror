@@ -325,6 +325,7 @@ struct stdio_handle {
 #if HAVE_SOCKETS
   val family;
   val type;
+  val peer;
 #endif
 };
 
@@ -360,6 +361,7 @@ static void stdio_stream_mark(val stream)
 #if HAVE_SOCKETS
   gc_mark(h->family);
   gc_mark(h->type);
+  gc_mark(h->peer);
 #endif
 }
 
@@ -1142,6 +1144,7 @@ static val make_stdio_stream_common(FILE *f, val descr, struct cobj_ops *ops)
 #if HAVE_SOCKETS
   h->family = nil;
   h->type = nil;
+  h->peer = nil;
 #endif
   return stream;
 }
@@ -1194,6 +1197,20 @@ val sock_type(val stream)
   struct stdio_handle *h = coerce(struct stdio_handle *,
                                   cobj_handle(stream, stdio_stream_s));
   return h->type;
+}
+
+val sock_peer(val stream)
+{
+  struct stdio_handle *h = coerce(struct stdio_handle *,
+                                  cobj_handle(stream, stdio_stream_s));
+  return h->peer;
+}
+
+val sock_set_peer(val stream, val peer)
+{
+  struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
+  h->peer = peer;
+  return stream;
 }
 #endif
 
@@ -3635,6 +3652,7 @@ void stream_init(void)
 #ifdef HAVE_SOCKETS
   reg_fun(intern(lit("sock-family"), user_package), func_n1(sock_family));
   reg_fun(intern(lit("sock-type"), user_package), func_n1(sock_type));
+  reg_fun(intern(lit("sock-peer"), user_package), func_n1(sock_peer));
 #endif
   reg_fun(intern(lit("make-catenated-stream"), user_package), func_n0v(make_catenated_stream_v));
   reg_fun(intern(lit("cat-streams"), user_package), func_n1(make_catenated_stream));
