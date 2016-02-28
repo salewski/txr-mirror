@@ -37158,6 +37158,578 @@ function, and the meaning of all the
 .meta flags
 arguments are given in the documentation for the C function.
 
+.SS* Unix Sockets
+
+On platforms where the underlying system interface is available, \*(TX provides
+a sockets library for communicating over Internet networks, or over Unix
+sockets.
+
+Stream as well as datagram sockets are supported.
+
+The classic Version 4 of the Internet protocol is supported, as well
+as IP Version 6.
+
+Sockets are mapped to \*(TX streams. The
+.code open-socket
+function creates a socket of a specified type, in a particular address family.
+This socket is actually a stream (always, even if it isn't used for
+data transfer, but only as a passive contact point).
+
+The functions
+.codn sock-connect ,
+.codn sock-bind ,
+.codn sock-listen ,
+.code sock-accept
+and
+.code sock-shutdown
+are used for enacting socket communication scenarios.
+
+The
+.code getaddrinfo
+function is provided for resolving host names and services to IPv4 and IPv6
+addresses.
+
+Several structure types are provided for representing socket addresses,
+and options for
+.codn getaddrinfo .
+
+Various numeric constants are also provided:
+.codn af-unix ,
+.codn af-inet ,
+.codn af-inet6 ,
+.codn sock-stream ,
+.code sock-dgram
+and others.
+
+.coNP Structure @ sockaddr
+.synb
+.mets (defstruct sockaddr nil)
+.syne
+.desc
+The
+.code sockaddr
+structure represents the abstract base class for socket addresses, from which
+several other types are derived:
+.codn sockaddr-in ,
+.code sockaddr-in6
+and
+.codn sockaddr-un .
+
+.coNP Structure @ sockaddr-in
+.synb
+.mets (defstruct sockaddr-in sockaddr
+.mets \ \  (addr 0) (port 0))
+.syne
+.desc
+The
+.code sockaddr-in
+address represents a socket address used in the context of networking over
+IP Version 4. It may be used with sockets in the
+.code af-inet
+address family.
+
+The
+.code addr
+slot holds an integer denoting an abstract IPv4 address. For instance the hexadecimal
+integer literal constant
+.code #x7F000001
+or its decimal equivalent
+.code 2130706433
+represents the loopback address, whose familiar "dot notation" is
+.codn 127.0.0.1 .
+Conversion of the abstract IP address to four bytes in network order, as
+required, is handled internally.
+
+The
+.code port
+slot holds the TCP or UDP port number, whose value ranges from 0 to 65535.
+Zero isn't a valid port; the value is used for requesting an ephemeral port number
+in active connections. Zero also appears in situations when the port number isn't required:
+for instance, when the
+.code getaddrinfo
+function is used with the aim of looking up the address of a host, without
+caring about the port number.
+
+.coNP Structure @ sockaddr-in6
+.synb
+.mets (defstruct sockaddr-in6 sockaddr
+.mets \ \  (addr 0) (port 0) (flow-info 0) (scope-id 0))
+.syne
+.desc
+The
+.code sockaddr-in6
+address represents a socket address used in the context of networking over
+IP Version 6. It may be used with sockets in the
+.code af-inet6
+address family.
+
+The
+.code addr
+slot holds an integer denoting an abstract IPv6 address. IPv6 addresses are
+pure binary integers up to 128 bits wide.
+
+The
+.code port
+slot holds the TCP or UDP port number, whose value ranges from 0 to 65535.
+In IPv6, the port number functions similarly to IPv6; see
+.codn sockaddr-in .
+
+The
+.code flow-info
+and
+.code scope-id
+are special IPv6 parameters corresponding to the
+.code sin6_flowinfo
+and
+.code sin6_scope_id
+members of the
+.code sockaddr_in6
+C language structure. Their meaning and use are beyond the scope of this document.
+
+.coNP Structure @ sockaddr-un
+.synb
+.mets (defstruct sockaddr-un sockaddr
+.mets \ \  path)
+.syne
+.desc
+The
+.code sockaddr-un
+address represents a socket address used for inter-process communication
+within a single operating system node, using the "Unix domain" sockets
+of the
+.code af-unix
+address family.
+
+This structure has only one slot,
+.code path
+which holds the rendezvous name for connecting pairs of socket endpoints.
+This names appears in the filesystem. Linux systems have support for "abstract"
+names which do not appear in the filesystem. These abstract names are distinguished
+by starting with a null byte. In \*(TX, a null byte can be encoded in a string
+using the pseudo-null code point U+DC00.
+
+.coNP Structure @ addrinfo
+.synb
+.mets (defstruct addrinfo nil
+.mets \ \ (flags 0) (family 0) (socktype 0))
+.syne
+.desc
+The
+.code addrinfo
+structure is used in conjunction with the
+.code getaddrinfo
+function. If that function's
+.meta hints
+argument is specified, it is of this type.
+The purpose of the argument is to narrow down
+or possibly alter the selection of addresses which
+are returned.
+
+The
+.code flags
+slot holds a bitwise or combination (see the
+.code logior
+function) of
+.code getaddrinfo
+flags: values given by the variables.
+.codn ai-passive ,
+.codn ai-numerichost ,
+.codn ai-v4mapped ,
+.codn ai-all ,
+.code ai-addrconfig
+and
+.codn ai-numericserv .
+These correspond to the C constants
+.codn AI_PASSIVE ,
+.codn AI_NUMERICHOST
+and so forth.
+
+The
+.code family
+slot holds an address family, which may be the value of
+.codn af-unspec ,
+.codn af-unix ,
+.code af-inet
+or
+.codn af-inet6 .
+
+The
+.code socktype
+slot holds, a socket type. Socket types are given
+by the variables
+.code sock-dgram
+and
+.codn sock-stream .
+
+.coNP Function @ addrinfo
+.synb
+.mets (getaddrinfo >> [ node >> [ service <> [ hints ]]])
+.syne
+.desc
+The
+.code getaddrinfo
+returns a list of socket addresses based on search criteria expressed
+in its arguments.
+That is to say, the returned list, unless empty, contains objects of type
+.code sockaddr-in
+and
+.codn sockaddr-in6 .
+
+The function is implemented directly in terms of the like-named C library
+function. All parameters are optional.  Omitting any argument causes a null
+pointer to be passed for the corresponding parameter of the C library function.
+
+The
+.meta node
+and
+.meta service
+parameters may be character strings which specify a host name, and service.
+The contents of these strings may be symbolic, like
+.str www.example.com
+and
+.str ssh
+or numeric, like
+.str 10.13.1.5
+and
+.strn 80 .
+
+If an argument is given for the
+.code hints
+parameter, it must be of type
+.codn addrinfo .
+
+The
+.meta node
+and
+.meta service
+parameters may also be given integer arguments.
+An integer argument value in either of these parameters is converted to a null
+pointer when calling the C
+.code getaddrinfo
+function. The integer values are then simply installed into every returned
+address as the IP address or port number, respectively.  However, if both
+arguments are numeric, then no addresses are returned, since the C library
+function is then called with a null node and service.
+
+.coNP Variables @, af-unix @ af-inet and @ af-inet6
+.desc
+These variables hold integers which give the values of address
+families. They correspond to the C constants
+.codn AF_UNIX ,
+.code AF_INET
+and
+.codn AF_INET6 .
+Address family values are used in the
+.meta hints
+argument of the
+.code getaddrinfo
+function, and in the
+.code socket-open
+function.
+Note that unlike the C language socket addressing structures,
+the \*(TX socket addresses do not contain an address family slot.
+That is because they indicate their family via their type.
+That is to say, an object of type
+.code sockaddr-in
+is an address which is implicitly associated with the
+.code af-inet
+family via its type.
+
+.coNP Variables @ sock-stream and @ sock-dgram
+.desc
+These variables hold integers which give the values of address
+families. They correspond to the C constants
+.code SOCK_STREAM
+and
+.codn SOCK_DGRAM .
+
+.coNP Variables @, ai-passive @, ai-numerichost @, ai-v4mapped @, ai-all @ ai-addrconfig and @ ai-numericserv
+.desc
+These variables hold integers which are bitmasks that combine
+together via bitwise or, to express the
+.code flags
+slot of the
+.code addrinfo
+structure. They correspond to the C constants
+.codn AI_PASSIVE ,
+.codn AI_NUMERICHOST ,
+.code AI_V4MAPPED
+and so forth. They influence the behavior of the
+.code getaddrinfo
+function.
+
+.coNP Variables @, inaddr-any @, inaddr-loopback @ in6addr-any and @ in6addr-loopback
+.desc
+These integer-valued variables provide constants for commonly used IPv4
+and IPv6 address values.
+
+The value of
+.code inaddr-any
+and
+.code in6addr-any
+is zero. This address is used in binding a passive socket to all of the
+external interfaces of a host, so that it can accept connections or datagrams
+from all attached networks.
+
+The
+.code inaddr-loopback
+variable is IPv4 loopback address, the same integer as the hexadecimal
+constant
+.code #x7F000001.
+
+The
+.code in6addr-loopback
+is the IPv6 loopback address. Its value is 1.
+
+.TP* Example:
+
+.cblk
+  ;; Construct an IPv6 socket address suitable for binding
+  ;; a socket to the loopback network, port 1234:
+  (new sockaddr-in6 addr in6addr-loopback port 1234)
+
+  ;; Mistake: IPv4 address used with IPv6 sockaddr.
+  (new sockaddr-in6 addr inaddr-loopback)
+.cble
+
+.coNP Function @ open-socket
+.synb
+.mets (open-socket < family < type <> [ mode-string ])
+.syne
+.desc
+The
+.code open-socket
+function creates a socket, which is a kind of stream.
+
+The
+.meta family
+parameter specifies the address family of the socket. One of the
+values
+.codn af-inet ,
+.code af-inet
+or
+.code af-inet6
+should be used to create a Unix domain, Internet IPv4 or Internet IPv6
+socket, respectively.
+
+The
+.meta type
+parameter specifies the socket type, either
+.code sock-stream
+(stream socket) or
+.codn sock-dgram
+(datagram socket).
+
+The
+.meta mode-string
+specifies several properties of the stream; for a description of
+.meta mode-string
+parameters, refer to the
+.code open-file
+function. Note that the defaulting behavior for an omitted
+.meta mode-string
+argument is different under
+.code open-socket
+from other functions. Because sockets are almost always used for bidirectional
+data flow, the default mode string is
+.str r+
+rather than the usual
+.strn r .
+
+Stream sockets are created line-buffered. Therefore, programs which communicate
+using textual, line-oriented protocols over sockets need not execute flush operations
+after each line.
+
+Datagram sockets are fully buffered, with a buffer size of 64 kilobytes.
+
+.coNP Functions @ sock-family and @ sock-type
+.synb
+.mets (sock-family << socket )
+.mets (sock-type << socket )
+.syne
+.desc
+These functions retrieve the integer values representing the address family
+and type of a socket. The argument to the
+.meta socket
+parameter must be a socket stream or a file or process stream. For a file stream,
+both functions return
+.codn nil .
+An exception of type
+.code type-error
+is thrown for other stream types.
+
+.coNP Function @ sock-peer
+.synb
+.mets (sock-peer << socket )
+.syne
+.desc
+If
+.meta socket
+is a socket stream connected to a remote peer, this
+this function returns the socket address representing
+the remote peer. The return value is one of the concrete
+structure types derived from the
+.code sockaddr
+base, the choice depending on the socket's address family.
+
+If
+.meta socket
+is a file or process stream, or a socket without a connected
+peer, then the function returns
+.codn nil .
+
+For any other stream type, the function throws an error of type
+.codn type-error .
+
+A socket is connected to a remote peer if the
+.code sock-connect
+function was successfully applied to it, or if the
+socket was produced as the return value of the
+.code sock-accept
+function. No other socket stream has a peer.
+
+Implementation note: the
+.code sock-peer
+function does not use the
+.code getpeername
+C library function; the association between a stream and
+.code sockaddr
+struct is maintained by \*(TX.
+
+.coNP Function @ sock-connect
+.synb
+.mets (sock-connect < socket << address )
+.syne
+.desc
+The
+.code sock-connect
+function connects a socket stream to a peer address.
+
+The
+.meta address
+argument must be a
+.code sockaddr
+object of type matching the address family of the socket.
+
+If the operation fails, an exception of type
+.code socket-error
+is thrown. Otherwise, the function returns
+.codn t .
+
+.coNP Function @ sock-bind
+.synb
+.mets (sock-bind < socket << address )
+.syne
+.desc
+The
+.code sock-connect
+function binds a socket stream to a local address.
+
+The
+.meta address
+argument must be a
+.code sockaddr
+object of type matching the address family of the socket.
+
+If the operation fails, an exception of type
+.code socket-error
+is thrown. Otherwise, the function returns
+.codn t .
+
+Returns
+.code t
+if successful.
+
+.coNP Function @ sock-listen
+.synb
+.mets (sock-listen < socket <> [ backlog ])
+.syne
+.desc
+The
+.code sock-listen
+function prepares
+.meta socket
+for listening for connections. The
+.meta backlog
+parameter, if specified, requires an integer
+argument. The default value is 16.
+
+.coNP Function @ sock-accept
+.synb
+.mets (sock-accept < socket <> [ mode-string ])
+.syne
+.desc
+The
+.code sock-accept
+function waits for a client connection on
+.metn socket ,
+which must have been prepared for listening for
+connections using
+.code sock-bind
+and
+.codn sock-listen .
+
+If the operation fails, an exception of type
+.code socket-error
+is thrown. Otherwise, the function returns a new socket
+which is connected to the remote peer.
+
+The peer's address may be retrieved from this socket using
+.codn sock-peer .
+
+The
+.code mode-string
+parameter is applied to the new socket just like the
+similar argument in
+.codn socket-open .
+It defaults to
+.strn r+ .
+
+.coNP Variables @, shut-rd @ shut-wr and @ shut-rdwr
+.desc
+The values of these variables are useful as the second argument to the
+.code sock-shutdown
+function.
+
+.coNP Function @ sock-shutdown
+.synb
+.mets (sock-shutdown < sock <> [ direction ])
+.syne
+The
+.code sock-shutdown
+function indicates that no further communication is to take place on
+.meta socket
+in the specified direction(s).
+
+If the operation fails, an exception of type
+.code socket-error
+is thrown. Otherwise, the function returns
+.codn t .
+
+The
+.code direction
+parameter is one of the values given by the variables
+.codn shut-rd ,
+.code shut-rw
+or
+.codn shut-rdwr .
+These values shut down communication in the read direction, write direction,
+or both directions, respectively.
+
+If the argument is omitted,
+.code sock-shutdown
+defaults to closing the write direction.
+
+Notes: shutting down is most commonly requested in the write direction, to perform
+a "half close". The communicating process thereby indicates that it has written
+all the data which it intends to write.  When the shutdown action is processed on the
+remote end, that end is unblocked from waiting on any further data, and
+effectively experiences an "end of stream" condition on its own socket or
+socket-like endpoint, while continuing to be able to transmit data.
+Shutting down in the reading direction is potentially abrupt. If it is executed
+before an "end of stream" indication is received from a peer, it results in an
+abortive close.
+
 .SS* Web Programming Support
 
 .coNP Functions @ url-encode and @ url-decode
