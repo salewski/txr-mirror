@@ -3150,9 +3150,11 @@ val open_fileno(val fd, val mode_str)
   struct stdio_mode m;
   FILE *f = (errno = 0, w_fdopen(c_num(fd), c_str(normalize_mode(&m, mode_str))));
 
-  if (!f)
+  if (!f) {
+    close(c_num(fd));
     uw_throwf(file_error_s, lit("error opening descriptor ~a: ~d/~s"),
               fd, num(errno), string_utf8(strerror(errno)), nao);
+  }
 
   return set_mode_props(m, make_stdio_stream(f, format(nil,
                                                        lit("fd ~d"),
