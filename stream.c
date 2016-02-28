@@ -3148,7 +3148,7 @@ val open_file(val path, val mode_str)
 val open_fileno(val fd, val mode_str)
 {
   struct stdio_mode m;
-  FILE *f = w_fdopen(c_num(fd), c_str(normalize_mode(&m, mode_str)));
+  FILE *f = (errno = 0, w_fdopen(c_num(fd), c_str(normalize_mode(&m, mode_str))));
 
   if (!f)
     uw_throwf(file_error_s, lit("error opening descriptor ~a: ~d/~s"),
