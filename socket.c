@@ -237,14 +237,17 @@ static void sockaddr_in(val sockaddr, val family,
 
 static val sock_bind(val sock, val sockaddr)
 {
-  val sfd = stream_fd(sock);
+  int sfd = c_num(stream_fd(sock));
   val family = sock_family(sock);
   struct sockaddr_storage sa;
   socklen_t salen;
+  int reuse = 1;
+
+  (void) setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
 
   sockaddr_in(sockaddr, family, &sa, &salen);
 
-  if (bind(c_num(sfd), coerce(struct sockaddr *, &sa), salen) != 0)
+  if (bind(sfd, coerce(struct sockaddr *, &sa), salen) != 0)
     uw_throwf(socket_error_s, lit("bind failed: ~d/~s"),
               num(errno), string_utf8(strerror(errno)), nao);
 
