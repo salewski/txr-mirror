@@ -44,3 +44,41 @@
 (defvarl shut-rd 0)
 (defvarl shut-wr 1)
 (defvarl shut-rdwr 2)
+
+(defun str-inaddr (addr : port)
+  (let ((d (logand addr #xFF))
+        (c (logand (ash addr -8) #xFF))
+        (b (logand (ash addr -16) #xFF))
+        (a         (ash addr -24))
+        (p (if port `:@port` "")))
+    (if (or (> a 255) (minusp a))
+      (throwf 'eval-error "str-inaddr: ~a out of range for IPv4 address" addr)
+      `@a.@b.@c.@d@p`)))
+
+(defun str-in6addr (addr : port)
+  (let ((str (if (and (<= (width addr) 48)
+                      (= (ash addr -32) #xFFFF))
+               `::ffff:@(str-inaddr (logtrunc addr 32))`
+               (let* ((pieces (let ((count 8))
+                                (nexpand-left (lambda (val)
+                                                (if (minusp (dec count))
+                                                  (unless (zerop val)
+                                                    (throwf 'eval-error
+                                                            "str-in6addr: \
+                                                            \ ~a out of range \
+                                                            \ for IPv6 address"
+                                                            addr))
+                                                  (cons (logand val #xFFFF)
+                                                        (ash val -16))))
+                                              addr)))
+                      (notyet t)
+                      (texts (append-each ((chunk [partition-by zerop pieces]))
+                               (cond
+                                 ((and notyet (zerop (car chunk)) (cdr chunk))
+                                  (zap notyet)
+                                  '(":"))
+                                 (t (mapcar (op format nil "~x") chunk))))))
+                 `@{texts ":"}`))))
+    (if port
+      `[@str]:@port`
+      str)))

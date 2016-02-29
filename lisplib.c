@@ -290,6 +290,7 @@ static val sock_set_entries(val dlt, val fun)
     lit("ai-passive"), lit("ai-canonname"), lit("ai-numerichost"),
     lit("ai-v4mapped"), lit("ai-all"), lit("ai-addrconfig"),
     lit("ai-numericserv"),
+    lit("str-inaddr"), lit("str-in6addr"),
     nil
   };
   set_dlt_entries(dlt, name, fun);
