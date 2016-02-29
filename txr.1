@@ -16847,7 +16847,7 @@ then the list is terminated, and no more items are produced.
 .desc
 The
 .code expand-right
-is a complement to
+function is a complement to
 .codn reduce-right ,
 with lazy semantics.
 
@@ -16911,6 +16911,78 @@ then the lazy list ends.
        [callf cons identity [iff zerop nilf pred]]] 5]
   --> (5 4 3 2 1 0)
 .cble
+
+.coNP Functions @ expand-left and @ nexpand-left
+.synb
+.mets (expand-left < gen-fun << value )
+.mets (nexpand-left < gen-fun << value )
+.syne
+.desc
+The
+.code expand-left
+function is a companion to
+.codn expand-right .
+
+Unlike
+.codn expand-right ,
+it has eager semantics: it calls
+.code gen-fun
+repeatedly and accumulates an output list, not returning
+until
+.code gen-fun
+returns
+.codn nil .
+
+The semantics is as follows.
+.code expand-left
+initializes an empty accumulation list. Then
+.meta gen-fun
+is called, with
+.meta value
+as its argument.
+
+If
+.meta gen-fun
+it returns a cons cell, then the
+.code car
+of that cons cell is pushed onto the accumulation list,
+and the procedure is repeated:
+.meta gen-fun
+is called again, with
+.code cdr
+taking the place of
+.meta value.
+
+If
+.meta gen-fun
+returns
+.codn nil ,
+then the accumulation list is returned.
+
+If the expression
+.code (expand-right f v)
+produces a terminating list, then the following equivalence holds:
+
+.cblk
+  (expand-left f v) <--> (reverse (expand-right f v))
+.cble
+
+Of course, the equivalence cannot hold for arguments to
+.code expand-left
+which produce an infinite list.
+
+The
+.code nexpand-left
+function is a destructive version of
+.codn expand-left .
+
+The list returned by
+.code nexpand-left
+is composed of the cons cells returned by
+.code gen-fun
+whereas the list returned by
+.code expand-left
+is composed of freshly allocated cons cells.
 
 .coNP Function @ repeat
 .synb

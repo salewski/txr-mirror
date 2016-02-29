@@ -4074,6 +4074,39 @@ static val expand_right(val gen_fun, val init_val)
   return make_lazy_cons(func_f1(cons(pair, gen_fun), expand_right_fun));
 }
 
+static val expand_left(val gen_fun, val init_val)
+{
+  val out = nil;
+
+  for (;;) {
+    val pair = funcall1(gen_fun, init_val);
+    if (pair) {
+      cons_bind (elem, next, pair);
+      init_val = next;
+      out = cons(elem, out);
+      continue;
+    }
+
+    return out;
+  }
+}
+
+static val nexpand_left(val gen_fun, val init_val)
+{
+  val out = nil;
+
+  for (;;) {
+    val pair = funcall1(gen_fun, init_val);
+    if (pair) {
+      init_val = cdr(pair);
+      out = rplacd(pair, out);
+      continue;
+    }
+
+    return out;
+  }
+}
+
 static val repeat_infinite_func(val env, val lcons)
 {
   if (!car(env))
@@ -5169,6 +5202,8 @@ void eval_init(void)
   reg_fun(intern(lit("giterate"), user_package), func_n3o(giterate, 2));
   reg_fun(intern(lit("ginterate"), user_package), func_n3o(ginterate, 2));
   reg_fun(intern(lit("expand-right"), user_package), func_n2(expand_right));
+  reg_fun(intern(lit("expand-left"), user_package), func_n2(expand_left));
+  reg_fun(intern(lit("nexpand-left"), user_package), func_n2(nexpand_left));
   reg_fun(intern(lit("repeat"), user_package), func_n2o(repeat, 1));
   reg_fun(intern(lit("pad"), user_package), func_n3o(pad, 1));
   reg_fun(intern(lit("weave"), user_package), func_n0v(weavev));
