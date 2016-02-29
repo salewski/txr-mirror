@@ -593,7 +593,7 @@ if [ "$source_dir" != "." ] ; then
     ln -sf "$source_dir/$x" .
   done
 else
-  printf "** Note: its recommended to build in a separate directory\n"
+  printf "** Note: it's recommended to build in a separate directory\n"
 fi
 
 gen_config_make()
