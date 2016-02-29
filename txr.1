@@ -3163,6 +3163,7 @@ and takes various arguments, according to these possibilities:
 .mets @(next :env)
 .mets @(next :list << expr )
 .mets @(next :string << expr )
+.mets @(next nil)
 .cble
 
 The lone
@@ -3305,6 +3306,17 @@ the list
 .cble
 which is not an empty input stream, but a stream consisting of
 one empty line.
+
+The
+.code @(next nil)
+variant indicates that the following subquery is applied to empty data,
+and the list of data sources from the command line is considered empty.
+This directive is useful in front of \*(TX code which doesn't process data
+sources from the command line, but takes command line arguments.
+The
+.code @(next nil)
+incantation absolutely prevents \*(TX from trying to open the
+first command line argument as a data source.
 
 Note that the
 .code @(next)

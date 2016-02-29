@@ -2310,9 +2310,7 @@ static val v_next(match_files_ctx *c)
                       if3(c->data, cons(c->data, c->data_lineno), t));
         return nil;
       }
-    }
-
-    if (source == env_k) {
+    } else if (source == env_k) {
       if (rest(args)) {
         sem_error(specline, lit("(next :env) takes no additional arguments"), nao);
       } else {
@@ -2324,12 +2322,18 @@ static val v_next(match_files_ctx *c)
                       if3(c->data, cons(c->data, c->data_lineno), t));
         return nil;
       }
-    }
-
-    if (consp(source)) {
+    } else if (consp(source)) {
       val sym = car(source);
       if (sym == var_s || sym == expr_s)
         meta = t;
+    } else if (!source) {
+      cons_bind (new_bindings, success,
+                 match_files(mf_all(c->spec, nil, c->bindings, nil, lit("empty"))));
+
+      if (success)
+        return cons(new_bindings,
+                    if3(c->data, cons(c->data, c->data_lineno), t));
+      return nil;
     }
 
     if (opt_compat && opt_compat <= 124)
