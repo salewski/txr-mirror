@@ -1402,7 +1402,7 @@ static val op_each(val form, val env)
       if (collect)
         ptail = list_collect(ptail, res);
       else if (append)
-        ptail = list_collect_nconc(ptail, res);
+        ptail = list_collect_append(ptail, res);
     }
   }
 
