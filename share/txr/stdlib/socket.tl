@@ -55,6 +55,19 @@
       (throwf 'eval-error "str-inaddr: ~a out of range for IPv4 address" addr)
       `@a.@b.@c.@d@p`)))
 
+(defun sys:in6addr-condensed-text (numeric-pieces)
+  (let* ((notyet t)
+         (texts (window-mappend
+                  1 nil
+                  (lambda (pre chunk post)
+                    (cond
+                      ((and notyet (zerop (car chunk)) (cdr chunk))
+                       (zap notyet)
+                       (if (and post pre) '("") '(":")))
+                      (t (mapcar (op format nil "~x") chunk))))
+                  [partition-by zerop numeric-pieces])))
+    `@{texts ":"}`))
+
 (defun str-in6addr (addr : port)
   (let ((str (if (and (<= (width addr) 48)
                       (= (ash addr -32) #xFFFF))
@@ -70,15 +83,8 @@
                                                             addr))
                                                   (cons (logand val #xFFFF)
                                                         (ash val -16))))
-                                              addr)))
-                      (notyet t)
-                      (texts (append-each ((chunk [partition-by zerop pieces]))
-                               (cond
-                                 ((and notyet (zerop (car chunk)) (cdr chunk))
-                                  (zap notyet)
-                                  '(":"))
-                                 (t (mapcar (op format nil "~x") chunk))))))
-                 `@{texts ":"}`))))
+                                              addr))))
+                 (sys:in6addr-condensed-text pieces)))))
     (if port
       `[@str]:@port`
       str)))
@@ -133,12 +139,5 @@
                                                  (ash val -16))))
                                        addr)))
              (cand-prefix [pieces 0..(trunc (+ w 15) 16)])
-             (prefix (if (search cand-prefix '(0 0)) pieces cand-prefix))
-             (notyet t)
-             (texts (append-each ((chunk [partition-by zerop prefix]))
-                      (cond
-                        ((and notyet (zerop (car chunk)) (cdr chunk))
-                         (zap notyet)
-                         '(":"))
-                        (t (mapcar (op format nil "~x") chunk))))))
-             `@{texts ":"}/@w`))))
+             (prefix (if (search cand-prefix '(0 0)) pieces cand-prefix)))
+        `@(sys:in6addr-condensed-text prefix)/@w`))))
