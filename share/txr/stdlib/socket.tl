@@ -82,3 +82,63 @@
     (if port
       `[@str]:@port`
       str)))
+
+(defun sys:str-inaddr-net-impl (addr wextra)
+  (let ((mask addr))
+    (set mask (logior mask (ash mask 1)))
+    (set mask (logior mask (ash mask 2)))
+    (set mask (logior mask (ash mask 4)))
+    (set mask (logior mask (ash mask 8)))
+    (set mask (logior mask (ash mask 16)))
+    (let ((w (+ (- 32 (width (lognot mask 32))) wextra))
+          (d (logand addr #xFF))
+          (c (logand (ash addr -8) #xFF))
+          (b (logand (ash addr -16) #xFF))
+          (a         (ash addr -24)))
+      (cond
+        ((or (> a 255) (minusp a))
+         (throwf 'eval-error "str-inaddr-net: ~a out of range for IPv4 address"
+                 addr))
+        ((> w 24) `@a.@b.@c.@d/@w`)
+        ((> w 16) `@a.@b.@c/@w`)
+        ((> w 8) `@a.@b/@w`)
+        (t `@a/@w`)))))
+
+(defun str-inaddr-net (addr)
+  (sys:str-inaddr-net-impl addr 0))
+
+(defun str-in6addr-net (addr)
+  (if (and (<= (width addr) 48)
+           (= (ash addr -32) #xFFFF))
+    `::ffff:@(sys:str-inaddr-net-impl (logtrunc addr 32) 96)`
+    (let ((mask addr))
+      (set mask (logior mask (ash mask 1)))
+      (set mask (logior mask (ash mask 2)))
+      (set mask (logior mask (ash mask 4)))
+      (set mask (logior mask (ash mask 8)))
+      (set mask (logior mask (ash mask 16)))
+      (set mask (logior mask (ash mask 32)))
+      (set mask (logior mask (ash mask 64)))
+      (let* ((w (- 128 (width (lognot mask 128))))
+             (pieces (let ((count 8))
+                       (nexpand-left (lambda (val)
+                                       (if (minusp (dec count))
+                                         (unless (zerop val)
+                                           (throwf 'eval-error
+                                                   "str-in6addr-net: \
+                                                   \ ~a out of range \
+                                                   \ for IPv6 address"
+                                                   addr))
+                                           (cons (logand val #xFFFF)
+                                                 (ash val -16))))
+                                       addr)))
+             (cand-prefix [pieces 0..(trunc (+ w 15) 16)])
+             (prefix (if (search cand-prefix '(0 0)) pieces cand-prefix))
+             (notyet t)
+             (texts (append-each ((chunk [partition-by zerop prefix]))
+                      (cond
+                        ((and notyet (zerop (car chunk)) (cdr chunk))
+                         (zap notyet)
+                         '(":"))
+                        (t (mapcar (op format nil "~x") chunk))))))
+             `@{texts ":"}/@w`))))

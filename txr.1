@@ -37815,6 +37815,54 @@ Shutting down in the reading direction is potentially abrupt. If it is executed
 before an "end of stream" indication is received from a peer, it results in an
 abortive close.
 
+.coNP Functions @ str-inaddr and @ str-in6addr
+.synb
+.mets (str-inaddr address <> [ port ])
+.mets (str-in6addr address <> [ port ])
+.syne
+.desc
+The
+.code str-inaddr
+and
+.code str-in6addr
+functions convert an IPv4 and IPv6 address, respectively, to textual
+notation which is returned as a character string.
+The conversion is done in conformance with RFC 5952, section 4.
+
+IPv6 addresses representing IPv6-mapped IPv4 addresses are printed
+in the hybrid notation exemplified by
+.codn ::ffff:192.168.1.1 .
+
+The
+.meta address
+parameter must be a non-negative integer in the appropriate range
+for the address type.
+
+If the
+.meta port
+number argument is supplied, it is included in the returned character string,
+according to the requirements in section 6 of RFC 5952 pertaining to IPv6
+addresses (including IPv6-mapped IPv6 addresses) and section 3.2.3 of RFC 3986
+for IPv4 addresses. In brief, IPv6 addresses with ports are expressed as
+.code [address]:port
+and IPv6 addresses follow the traditional
+.code address:port
+pattern.
+
+.coNP Functions @ str-inaddr-net and @ str-in6addr-net
+.synb
+.mets (str-inaddr-net address)
+.mets (str-in6addr-net address)
+.syne
+.desc
+The functions
+.code str-inaddr-net
+and
+.code str-in6addr-net
+convert, respectively, IPv4 and IPv6 network prefix addresses to
+the "slash notation". For IPv6 addresses, the requirements of section
+2.3 of RFC 4291 are implemented. For IPv4, section 3.1 of RFC 4632 is followed.
+
 .SS* Web Programming Support
 
 .coNP Functions @ url-encode and @ url-decode
