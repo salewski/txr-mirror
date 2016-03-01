@@ -1,3 +1,33 @@
+                                    TXR 134
+                                   2016-03-01
+
+
+  Features
+
+  - Unhandled exceptions now unwind; so programs which terminate due
+    to an unhandled exception have their cleanup performed.
+  - Setuid support:
+    - A setuid TXR executable supports setuid TXR scripts, even if
+      the underlying OS doesn't allow setuid scripts.
+    - When not running a setuid script, the setuid TXR executable
+      drops privileges early in its execution, reducing the
+      risk that it can be exploited.
+  - New --eargs option, allows script name to be embedded among options
+    in a hash bang line.
+  - Networking support: TXR now supports IPv4, IPv6 and Unix socket
+    communication.
+  - Useful @(next nil) variant of @(next) directive to suppress unwanted
+    treatment of a command line argument as a data source.
+  - New functions expand-left and nexpand-left.
+
+  Bugs
+
+  - Expressions in @(require) were not being evaluated in the
+    correct context.
+  - Fixed destructive append behavior in append-each.
+
+
+
                                     TXR 133
                                    2016-01-21
 

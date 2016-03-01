@@ -51,6 +51,7 @@ section "TXR"
   File METALICENSE
   SetOutPath $INSTDIR\txr\share\txr\stdlib
   File share\txr\stdlib\*.txr
+  File share\txr\stdlib\*.tl
   WriteUninstaller $INSTDIR\txr\uninstall.exe
   CreateDirectory "$SMPROGRAMS\TXR"
   CreateShortCut "$SMPROGRAMS\TXR\txr.lnk" "$INSTDIR\txr"
