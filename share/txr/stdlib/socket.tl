@@ -89,34 +89,35 @@
       `[@str]:@port`
       str)))
 
-(defun sys:str-inaddr-net-impl (addr wextra)
+(defun sys:str-inaddr-net-impl (addr wextra : weff)
   (let ((mask addr))
     (set mask (logior mask (ash mask 1)))
     (set mask (logior mask (ash mask 2)))
     (set mask (logior mask (ash mask 4)))
     (set mask (logior mask (ash mask 8)))
     (set mask (logior mask (ash mask 16)))
-    (let ((w (+ (- 32 (width (lognot mask 32))) wextra))
+    (let ((w (- 32 (width (lognot mask 32))))
           (d (logand addr #xFF))
           (c (logand (ash addr -8) #xFF))
           (b (logand (ash addr -16) #xFF))
-          (a         (ash addr -24)))
+          (a         (ash addr -24))
+          (we (or weff (+ w wextra))))
       (cond
         ((or (> a 255) (minusp a))
          (throwf 'eval-error "str-inaddr-net: ~a out of range for IPv4 address"
                  addr))
-        ((> w 24) `@a.@b.@c.@d/@w`)
-        ((> w 16) `@a.@b.@c/@w`)
-        ((> w 8) `@a.@b/@w`)
-        (t `@a/@w`)))))
+        ((> w 24) `@a.@b.@c.@d/@we`)
+        ((> w 16) `@a.@b.@c/@we`)
+        ((> w 8) `@a.@b/@we`)
+        (t `@a/@we`)))))
 
-(defun str-inaddr-net (addr)
-  (sys:str-inaddr-net-impl addr 0))
+(defun str-inaddr-net (addr : width)
+  (sys:str-inaddr-net-impl addr 0 width))
 
-(defun str-in6addr-net (addr)
+(defun str-in6addr-net (addr : width)
   (if (and (<= (width addr) 48)
            (= (ash addr -32) #xFFFF))
-    `::ffff:@(sys:str-inaddr-net-impl (logtrunc addr 32) 96)`
+    `::ffff:@(sys:str-inaddr-net-impl (logtrunc addr 32) 96 width)`
     (let ((mask addr))
       (set mask (logior mask (ash mask 1)))
       (set mask (logior mask (ash mask 2)))
@@ -140,4 +141,4 @@
                                        addr)))
              (cand-prefix [pieces 0..(trunc (+ w 15) 16)])
              (prefix (if (search cand-prefix '(0 0)) pieces cand-prefix)))
-        `@(sys:in6addr-condensed-text prefix)/@w`))))
+        `@(sys:in6addr-condensed-text prefix)/@(or width w)`))))

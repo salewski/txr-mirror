@@ -37851,8 +37851,8 @@ pattern.
 
 .coNP Functions @ str-inaddr-net and @ str-in6addr-net
 .synb
-.mets (str-inaddr-net address)
-.mets (str-in6addr-net address)
+.mets (str-inaddr-net < address <> [ width ])
+.mets (str-in6addr-net < address <> [ width ])
 .syne
 .desc
 The functions
@@ -37862,6 +37862,26 @@ and
 convert, respectively, IPv4 and IPv6 network prefix addresses to
 the "slash notation". For IPv6 addresses, the requirements of section
 2.3 of RFC 4291 are implemented. For IPv4, section 3.1 of RFC 4632 is followed.
+
+The condensed portion of the IP address is always determined by measuring
+the contiguous extent of all-zero bits in the least significant position
+of the address. For instance an IPv4 address which has at least 24 zero bits
+in the least significant position, so that the only nonzero bits are in the
+highest octet, is always condensed to a single decimal number: the value of
+the first octet.
+
+If the
+.meta width
+parameter is specified, then its value is incorporated into the returned
+textual notation as the width. No check is made whether this width is an
+integer large enough to "covers" all the nonzero bits in the address.
+
+If
+.meta width
+is omitted, then it is calculated as the number of bits in the address,
+excluding the contiguous all-zero bits in the least significant position:
+how many times the address can be shifted to the right before a 1 appears
+in the least significant bit.
 
 .SS* Web Programming Support
 
