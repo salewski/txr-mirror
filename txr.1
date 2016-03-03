@@ -35712,6 +35712,22 @@ For example
 .code (logtest mode s-irgrp)
 tests for the group read permission.
 
+.coNP Functions @ umask
+.synb
+.mets (umask << mask )
+.syne
+.desc
+The
+.code umask
+function provides access to the Unix C library function of the same name,
+which controls which permissions are denied
+when files are newly created. If
+.meta mask
+is a
+.code fixnum
+integer, this succeeds and returns
+.codn t .
+
 .coNP Functions @, makedev @ minor and @ major
 .synb
 .mets (makedev < minor << major )

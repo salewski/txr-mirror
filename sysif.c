@@ -668,6 +668,16 @@ val statf(val stream)
   return stat_impl(stream, w_fstat, lit("fstat"));
 }
 
+#if HAVE_SYS_STAT
+
+static val umask_wrap(val mask)
+{
+  (void) umask(c_num(mask));
+  return t;
+}
+
+#endif
+
 #if HAVE_PIPE
 
 static val pipe_wrap(void)
@@ -1474,5 +1484,9 @@ void sysif_init(void)
 
 #if HAVE_POLL
   reg_fun(intern(lit("poll"), user_package), func_n2o(poll_wrap, 1));
+#endif
+
+#if HAVE_SYS_STAT
+  reg_fun(intern(lit("umask"), user_package), func_n1(umask_wrap));
 #endif
 }
