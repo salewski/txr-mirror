@@ -1167,7 +1167,7 @@ val make_pipe_stream(FILE *f, val descr)
 }
 
 #if HAVE_SOCKETS
-val make_sock_stream(FILE *f, val family, val type)
+static val make_sock_stream(FILE *f, val family, val type)
 {
   val s = make_stdio_stream_common(f, lit("socket"), &stdio_ops.cobj_ops);
   struct stdio_handle *h = coerce(struct stdio_handle *, s->co.handle);

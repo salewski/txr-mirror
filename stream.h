@@ -110,9 +110,6 @@ val make_null_stream(void);
 val make_stdio_stream(FILE *, val descr);
 val make_tail_stream(FILE *, val descr);
 val make_pipe_stream(FILE *, val descr);
-#if HAVE_SOCKETS
-val make_sock_stream(FILE *, val family, val type);
-#endif
 val stream_fd(val stream);
 #if HAVE_SOCKETS
 val sock_family(val stream);
