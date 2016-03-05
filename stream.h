@@ -64,6 +64,10 @@ struct strm_ops {
   val (*get_error)(val);
   val (*get_error_str)(val);
   val (*clear_error)(val);
+  val (*get_sock_family)(val);
+  val (*get_sock_type)(val);
+  val (*get_sock_peer)(val);
+  val (*set_sock_peer)(val, val);
 };
 
 #define strm_ops_init(cobj_init_macro, name, put_string, put_char, put_byte, \
@@ -74,7 +78,7 @@ struct strm_ops {
     cobj_init_macro, name, put_string, put_char, put_byte, get_line,         \
     get_char, get_byte, unget_char, unget_byte,                              \
     close, flush, seek, truncate, get_prop, set_prop,                        \
-    get_error, get_error_str, clear_error                                    \
+    get_error, get_error_str, clear_error, 0, 0, 0, 0,                       \
 }
 
 #define std_input (deref(lookup_var_l(nil, stdin_s)))

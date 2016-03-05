@@ -173,6 +173,26 @@ static noreturn val unimpl_truncate(val stream, val len)
   unimpl(stream, lit("truncate-stream"));
 }
 
+static noreturn val unimpl_get_sock_family(val stream)
+{
+  unimpl(stream, lit("sock-family"));
+}
+
+static noreturn val unimpl_get_sock_type(val stream)
+{
+  unimpl(stream, lit("sock-type"));
+}
+
+static noreturn val unimpl_get_sock_peer(val stream)
+{
+  unimpl(stream, lit("sock-peer"));
+}
+
+static noreturn val unimpl_set_sock_peer(val stream, val peer)
+{
+  unimpl(stream, lit("sock-set-peer"));
+}
+
 static val null_put_string(val stream, val str)
 {
   return nil;
@@ -284,6 +304,14 @@ void fill_stream_ops(struct strm_ops *ops)
     ops->get_error_str = null_get_error_str;
   if (!ops->clear_error)
     ops->clear_error = null_clear_error;
+  if (!ops->get_sock_family)
+    ops->get_sock_family = unimpl_get_sock_family;
+  if (!ops->get_sock_type)
+    ops->get_sock_type = unimpl_get_sock_type;
+  if (!ops->get_sock_peer)
+    ops->get_sock_peer = unimpl_get_sock_peer;
+  if (!ops->set_sock_peer)
+    ops->set_sock_peer = unimpl_set_sock_peer;
 }
 
 static struct strm_ops null_ops =
@@ -704,6 +732,34 @@ static val stdio_truncate(val stream, val len)
 #define stdio_truncate unimpl_truncate
 #endif
 
+#if HAVE_SOCKETS
+
+static val stdio_get_sock_family(val stream)
+{
+  struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
+  return h->family;
+}
+
+static val stdio_get_sock_type(val stream)
+{
+  struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
+  return h->type;
+}
+
+static val stdio_get_sock_peer(val stream)
+{
+  struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
+  return h->peer;
+}
+
+static val stdio_set_sock_peer(val stream, val peer)
+{
+  struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
+  return h->peer = peer;
+}
+
+#endif
+
 static struct strm_ops stdio_ops =
   strm_ops_init(cobj_ops_init(eq,
                               stdio_stream_print,
@@ -728,6 +784,10 @@ static struct strm_ops stdio_ops =
                 stdio_get_error,
                 stdio_get_error_str,
                 stdio_clear_error);
+
+#if HAVE_SOCKETS
+static struct strm_ops stdio_sock_ops;
+#endif
 
 static void tail_calc(unsigned long *state, int *sec, int *mod)
 {
@@ -1169,7 +1229,7 @@ val make_pipe_stream(FILE *f, val descr)
 #if HAVE_SOCKETS
 static val make_sock_stream(FILE *f, val family, val type)
 {
-  val s = make_stdio_stream_common(f, lit("socket"), &stdio_ops.cobj_ops);
+  val s = make_stdio_stream_common(f, lit("socket"), &stdio_sock_ops.cobj_ops);
   struct stdio_handle *h = coerce(struct stdio_handle *, s->co.handle);
   h->family = family;
   h->type = type;
@@ -1187,30 +1247,26 @@ val stream_fd(val stream)
 #if HAVE_SOCKETS
 val sock_family(val stream)
 {
-  struct stdio_handle *h = coerce(struct stdio_handle *,
-                                  cobj_handle(stream, stdio_stream_s));
-  return h->family;
+  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
+  return ops->get_sock_family(stream);
 }
 
 val sock_type(val stream)
 {
-  struct stdio_handle *h = coerce(struct stdio_handle *,
-                                  cobj_handle(stream, stdio_stream_s));
-  return h->type;
+  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
+  return ops->get_sock_type(stream);
 }
 
 val sock_peer(val stream)
 {
-  struct stdio_handle *h = coerce(struct stdio_handle *,
-                                  cobj_handle(stream, stdio_stream_s));
-  return h->peer;
+  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
+  return ops->get_sock_peer(stream);
 }
 
 val sock_set_peer(val stream, val peer)
 {
-  struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
-  h->peer = peer;
-  return stream;
+  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
+  return ops->set_sock_peer(stream, peer);
 }
 #endif
 
@@ -3702,4 +3758,12 @@ void stream_init(void)
   fill_stream_ops(&strlist_out_ops);
   fill_stream_ops(&dir_ops);
   fill_stream_ops(&cat_stream_ops);
+
+#if HAVE_SOCKETS
+  stdio_sock_ops = stdio_ops;
+  stdio_sock_ops.get_sock_family = stdio_get_sock_family;
+  stdio_sock_ops.get_sock_type = stdio_get_sock_type;
+  stdio_sock_ops.get_sock_peer = stdio_get_sock_peer;
+  stdio_sock_ops.set_sock_peer = stdio_set_sock_peer;
+#endif
 }
