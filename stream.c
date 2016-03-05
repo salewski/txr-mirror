@@ -588,22 +588,20 @@ static val stdio_clear_error(val stream)
   return ret;
 }
 
-static wchar_t *snarf_line(struct stdio_handle *h)
+static val generic_get_line(val stream)
 {
+  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
   const size_t min_size = 512;
   size_t size = 0;
   size_t fill = 0;
   wchar_t *buf = 0;
+  val out = nil;
+
+  uw_simple_catch_begin;
 
   for (;;) {
-    wint_t ch;
-
-    if (h->unget_c) {
-      ch = c_chr(h->unget_c);
-      h->unget_c = nil;
-    } else {
-      ch = utf8_decode(&h->ud, stdio_get_char_callback, coerce(mem_t *, h->f));
-    }
+    val chr = ops->get_char(stream);
+    wint_t ch = chr ? c_chr(chr) : WEOF;
 
     if (ch == WEOF && buf == 0)
       break;
@@ -623,23 +621,23 @@ static wchar_t *snarf_line(struct stdio_handle *h)
   }
 
   /* Trim to actual size */
-  if (buf)
-    buf = coerce(wchar_t *, chk_realloc(coerce(mem_t *, buf),
-                                        fill * sizeof *buf));
+  if (buf) {
+    wchar_t *sbuf = coerce(wchar_t *, chk_realloc(coerce(mem_t *, buf),
+                                                  fill * sizeof *buf));
+    if (sbuf)
+      buf = sbuf;
 
-  return buf;
-}
-
-static val stdio_get_line(val stream)
-{
-  struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
-  if (h->f) {
-    wchar_t *line = snarf_line(h);
-    if (line)
-      return string_own(line);
+    out = string_own(buf);
+    buf = 0;
   }
 
-  return stdio_maybe_read_error(stream);
+  uw_unwind {
+    free(buf);
+  }
+
+  uw_catch_end;
+
+  return out;
 }
 
 static val stdio_get_char(val stream)
@@ -770,7 +768,7 @@ static struct strm_ops stdio_ops =
                 stdio_put_string,
                 stdio_put_char,
                 stdio_put_byte,
-                stdio_get_line,
+                generic_get_line,
                 stdio_get_char,
                 stdio_get_byte,
                 stdio_unget_char,
@@ -919,7 +917,7 @@ static val tail_get_line(val stream)
   unsigned long state = 0;
   val ret;
 
-  while ((ret = stdio_get_line(stream)) == nil)
+  while ((ret = generic_get_line(stream)) == nil)
     tail_strategy(stream, &state);
 
   return ret;
@@ -1051,7 +1049,7 @@ static struct strm_ops pipe_ops =
                 stdio_put_string,
                 stdio_put_char,
                 stdio_put_byte,
-                stdio_get_line,
+                generic_get_line,
                 stdio_get_char,
                 stdio_get_byte,
                 stdio_unget_char,
