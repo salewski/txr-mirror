@@ -1064,18 +1064,6 @@ static struct strm_ops pipe_ops =
                 stdio_get_error_str,
                 stdio_clear_error);
 
-struct stdio_mode {
-  int malformed;
-  int read;
-  int write;
-  int create;
-  int append;
-  int binary;
-  int interactive;
-};
-
-#define stdio_mode_init_trivial(read) { 0, read, 0, 0, 0, 0, 0 }
-
 static struct stdio_mode parse_mode(val mode_str)
 {
   struct stdio_mode m = stdio_mode_init_trivial(0);
@@ -1153,7 +1141,7 @@ static val format_mode(const struct stdio_mode m)
   return string(buf);
 }
 
-static val normalize_mode(struct stdio_mode *m, val mode_str)
+val normalize_mode(struct stdio_mode *m, val mode_str)
 {
   struct stdio_mode blank = stdio_mode_init_trivial(1);
 
@@ -1173,7 +1161,7 @@ static val normalize_mode(struct stdio_mode *m, val mode_str)
   }
 }
 
-static val set_mode_props(const struct stdio_mode m, val stream)
+val set_mode_props(const struct stdio_mode m, val stream)
 {
   if (m.interactive)
     stream_set_prop(stream, real_time_k, t);

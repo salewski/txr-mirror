@@ -81,6 +81,18 @@ struct strm_ops {
     get_error, get_error_str, clear_error, 0, 0, 0, 0,                       \
 }
 
+struct stdio_mode {
+  int malformed;
+  int read;
+  int write;
+  int create;
+  int append;
+  int binary;
+  int interactive;
+};
+
+#define stdio_mode_init_trivial(read) { 0, read, 0, 0, 0, 0, 0 }
+
 #define std_input (deref(lookup_var_l(nil, stdin_s)))
 #define std_output (deref(lookup_var_l(nil, stdout_s)))
 #define std_debug (deref(lookup_var_l(nil, stddebug_s)))
@@ -110,6 +122,8 @@ void fill_stream_ops(struct strm_ops *ops);
 void stream_print_op(val stream, val out, val pretty);
 void stream_mark_op(val stream);
 void stream_destroy_op(val stream);
+val normalize_mode(struct stdio_mode *m, val mode_str);
+val set_mode_props(const struct stdio_mode m, val stream);
 val make_null_stream(void);
 val make_stdio_stream(FILE *, val descr);
 val make_tail_stream(FILE *, val descr);
