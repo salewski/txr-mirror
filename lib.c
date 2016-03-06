@@ -2346,7 +2346,7 @@ static size_t bounding_pow_two(size_t s)
     s |= (t >> 16);
   }
 
-  return s ? s + 1 : s;
+  return s + 1;
 }
 
 mem_t *chk_manage_vec(mem_t *old, size_t oldfilled, size_t newfilled,
