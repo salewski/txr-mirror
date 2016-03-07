@@ -406,7 +406,7 @@ static void stdio_stream_mark(val stream)
 #endif
 }
 
-static val errno_to_string(val err)
+val errno_to_string(val err)
 {
   if (err == zero)
     return lit("unspecified error");
@@ -608,7 +608,7 @@ static val stdio_get_fd(val stream)
   return h->f ? num(fileno(h->f)) : nil;
 }
 
-static val generic_get_line(val stream)
+val generic_get_line(val stream)
 {
   struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
   const size_t min_size = 512;
@@ -1233,7 +1233,7 @@ val make_pipe_stream(FILE *f, val descr)
 }
 
 #if HAVE_SOCKETS
-static val make_sock_stream(FILE *f, val family, val type)
+val make_sock_stream(FILE *f, val family, val type)
 {
   val s = make_stdio_stream_common(f, lit("socket"), &stdio_sock_ops.cobj_ops);
   struct stdio_handle *h = coerce(struct stdio_handle *, s->co.handle);
@@ -3248,35 +3248,6 @@ val open_fileno(val fd, val mode_str)
                                                        lit("fd ~d"),
                                                        fd, nao)));
 }
-
-#if HAVE_SOCKETS
-val open_sockfd(val fd, val family, val type, val mode_str_in)
-{
-  struct stdio_mode m;
-  val mode_str = default_arg(mode_str_in, lit("r+"));
-  FILE *f = (errno = 0, w_fdopen(c_num(fd), c_str(normalize_mode(&m, mode_str))));
-
-  if (!f) {
-    close(c_num(fd));
-    uw_throwf(file_error_s, lit("error creating stream for socket ~a: ~d/~s"),
-              fd, num(errno), string_utf8(strerror(errno)), nao);
-  }
-
-  if (type == num_fast(SOCK_DGRAM))
-    setvbuf(f, (char *) NULL, _IOFBF, 65536);
-  else
-    setvbuf(f, (char *) NULL, _IOLBF, 0);
-
-  return set_mode_props(m, make_sock_stream(f, family, type));
-}
-
-val open_socket(val family, val type, val mode_str)
-{
-  int fd = socket(c_num(family), c_num(type), 0);
-  return open_sockfd(num(fd), family, type, mode_str);
-}
-#endif
-
 
 val open_tail(val path, val mode_str, val seek_end_p)
 {

@@ -125,12 +125,15 @@ void stream_mark_op(val stream);
 void stream_destroy_op(val stream);
 val normalize_mode(struct stdio_mode *m, val mode_str);
 val set_mode_props(const struct stdio_mode m, val stream);
+val generic_get_line(val stream);
+val errno_to_string(val err);
 val make_null_stream(void);
 val make_stdio_stream(FILE *, val descr);
 val make_tail_stream(FILE *, val descr);
 val make_pipe_stream(FILE *, val descr);
 val stream_fd(val stream);
 #if HAVE_SOCKETS
+val make_sock_stream(FILE *f, val family, val type);
 val sock_family(val stream);
 val sock_type(val stream);
 val sock_peer(val stream);
