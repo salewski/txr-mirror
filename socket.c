@@ -564,7 +564,7 @@ static val dgram_set_sock_peer(val stream, val peer)
 {
   struct dgram_stream *d = coerce(struct dgram_stream *, stream->co.handle);
   sockaddr_in(peer, d->family, &d->peer_addr, &d->pa_len);
-  return d->peer = peer;
+  return set(mkloc(d->peer, stream), peer);
 }
 
 static_def(struct strm_ops dgram_strm_ops =

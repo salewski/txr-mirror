@@ -770,7 +770,7 @@ static val stdio_get_sock_peer(val stream)
 static val stdio_set_sock_peer(val stream, val peer)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
-  return h->peer = peer;
+  return set(mkloc(h->peer, stream), peer);
 }
 
 #endif
