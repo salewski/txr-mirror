@@ -622,8 +622,8 @@ static val sock_connect(val sock, val sockaddr)
   sockaddr_in(sockaddr, family, &sa, &salen);
 
   if (connect(c_num(sfd), coerce(struct sockaddr *, &sa), salen) != 0)
-    uw_throwf(socket_error_s, lit("sock-connect failed: ~d/~s"),
-              num(errno), string_utf8(strerror(errno)), nao);
+    uw_throwf(socket_error_s, lit("sock-connect ~s to addr ~s: ~d/~s"),
+              sock, sockaddr, num(errno), string_utf8(strerror(errno)), nao);
 
   sock_set_peer(sock, sockaddr);
 
