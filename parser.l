@@ -129,7 +129,8 @@ static void yyerrprepf(scanner_t *scanner, val fmt, ...)
   if (opt_loglevel >= 1) {
     va_list vl;
     va_start (vl, fmt);
-    parser->prepared_msg = vformat_to_string(fmt, vl);
+    set(mkloc(parser->prepared_msg, parser->parser),
+        vformat_to_string(fmt, vl));
     va_end (vl);
   }
 }
