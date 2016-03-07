@@ -690,9 +690,6 @@ static val stdio_unget_char(val stream, val ch)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
 
-  if (!is_chr(ch))
-    type_mismatch(lit("unget-char: ~s is not a character"), ch, nao);
-
   if (h->unget_c)
     uw_throwf(file_error_s, lit("unget-char overflow on ~a: "), stream, nao);
 
@@ -2314,6 +2311,8 @@ val unget_char(val ch, val stream_in)
 {
   val stream = default_arg(stream_in, std_input);
   struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
+  if (!is_chr(ch))
+    type_mismatch(lit("unget-char: ~s is not a character"), ch, nao);
   return ops->unget_char(stream, ch);
 }
 
