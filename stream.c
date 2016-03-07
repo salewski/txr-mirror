@@ -412,7 +412,7 @@ val errno_to_string(val err)
     return lit("unspecified error");
   else if (is_num(err))
     return string_utf8(strerror(c_num(err)));
-  else if (err)
+  else if (!err)
     return lit("no error");
   else if (err == t)
     return lit("eof");
