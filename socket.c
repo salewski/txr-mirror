@@ -248,7 +248,7 @@ static val sock_bind(val sock, val sockaddr)
   sockaddr_in(sockaddr, family, &sa, &salen);
 
   if (bind(sfd, coerce(struct sockaddr *, &sa), salen) != 0)
-    uw_throwf(socket_error_s, lit("bind failed: ~d/~s"),
+    uw_throwf(socket_error_s, lit("sock-bind failed: ~d/~s"),
               num(errno), string_utf8(strerror(errno)), nao);
 
   return t;
@@ -264,7 +264,7 @@ static val sock_connect(val sock, val sockaddr)
   sockaddr_in(sockaddr, family, &sa, &salen);
 
   if (connect(c_num(sfd), coerce(struct sockaddr *, &sa), salen) != 0)
-    uw_throwf(socket_error_s, lit("connect failed: ~d/~s"),
+    uw_throwf(socket_error_s, lit("sock-connect failed: ~d/~s"),
               num(errno), string_utf8(strerror(errno)), nao);
 
   sock_set_peer(sock, sockaddr);
@@ -277,7 +277,7 @@ static val sock_listen(val sock, val backlog)
   val sfd = stream_fd(sock);
 
   if (listen(c_num(sfd), c_num(default_arg(backlog, num_fast(16)))))
-    uw_throwf(socket_error_s, lit("listen failed: ~d/~s"),
+    uw_throwf(socket_error_s, lit("sock-listen failed: ~d/~s"),
               num(errno), string_utf8(strerror(errno)), nao);
 
   return t;
