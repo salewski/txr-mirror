@@ -874,7 +874,7 @@ static val setegid_wrap(val nval)
 #define RC_MAGIC 0xbe50c001
 
 static uid_t orig_euid, real_uid;
-static int repress_called = 0, is_setuid = 1;
+static unsigned int repress_called = 0, is_setuid = 1;
 
 void repress_privilege(void)
 {
