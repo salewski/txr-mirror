@@ -173,6 +173,11 @@ static noreturn val unimpl_truncate(val stream, val len)
   unimpl(stream, lit("truncate-stream"));
 }
 
+static noreturn val unimpl_get_fd(val stream)
+{
+  unimpl(stream, lit("fileno"));
+}
+
 static noreturn val unimpl_get_sock_family(val stream)
 {
   unimpl(stream, lit("sock-family"));
@@ -268,6 +273,11 @@ static val null_clear_error(val stream)
   return nil;
 }
 
+static val null_get_fd(val stream)
+{
+  return nil;
+}
+
 void fill_stream_ops(struct strm_ops *ops)
 {
   if (!ops->put_string)
@@ -304,6 +314,8 @@ void fill_stream_ops(struct strm_ops *ops)
     ops->get_error_str = null_get_error_str;
   if (!ops->clear_error)
     ops->clear_error = null_clear_error;
+  if (!ops->get_fd)
+    ops->get_fd = unimpl_get_fd;
   if (!ops->get_sock_family)
     ops->get_sock_family = unimpl_get_sock_family;
   if (!ops->get_sock_type)
@@ -326,7 +338,8 @@ static struct strm_ops null_ops =
                 unimpl_unget_char, unimpl_unget_byte,
                 null_close, null_flush, null_seek, unimpl_truncate,
                 null_get_prop, null_set_prop,
-                null_get_error, null_get_error_str, null_clear_error);
+                null_get_error, null_get_error_str, null_clear_error,
+                null_get_fd);
 
 val make_null_stream(void)
 {
@@ -588,6 +601,13 @@ static val stdio_clear_error(val stream)
   return ret;
 }
 
+static val stdio_get_fd(val stream)
+{
+  struct stdio_handle *h = coerce(struct stdio_handle *,
+                                  cobj_handle(stream, stdio_stream_s));
+  return h->f ? num(fileno(h->f)) : nil;
+}
+
 static val generic_get_line(val stream)
 {
   struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
@@ -781,7 +801,8 @@ static struct strm_ops stdio_ops =
                 stdio_set_prop,
                 stdio_get_error,
                 stdio_get_error_str,
-                stdio_clear_error);
+                stdio_clear_error,
+                stdio_get_fd);
 
 #if HAVE_SOCKETS
 static struct strm_ops stdio_sock_ops;
@@ -968,7 +989,8 @@ static struct strm_ops tail_ops =
                 stdio_set_prop,
                 stdio_get_error,
                 stdio_get_error_str,
-                stdio_clear_error);
+                stdio_clear_error,
+                stdio_get_fd);
 
 #if HAVE_FORK_STUFF
 static int pipevp_close(FILE *f, pid_t pid)
@@ -1062,7 +1084,8 @@ static struct strm_ops pipe_ops =
                 stdio_set_prop,
                 stdio_get_error,
                 stdio_get_error_str,
-                stdio_clear_error);
+                stdio_clear_error,
+                stdio_get_fd);
 
 static struct stdio_mode parse_mode(val mode_str)
 {
@@ -1225,9 +1248,8 @@ static val make_sock_stream(FILE *f, val family, val type)
 
 val stream_fd(val stream)
 {
-  struct stdio_handle *h = coerce(struct stdio_handle *,
-                                  cobj_handle(stream, stdio_stream_s));
-  return h->f ? num(fileno(h->f)) : nil;
+  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
+  return ops->get_fd(stream);
 }
 
 #if HAVE_SOCKETS
@@ -1353,7 +1375,8 @@ static struct strm_ops dir_ops =
                 0, 0, 0, 0, 0,
                 dir_get_error,
                 dir_get_error_str,
-                dir_clear_error);
+                dir_clear_error,
+                0);
 
 val make_dir_stream(DIR *dir)
 {
@@ -1476,7 +1499,7 @@ static struct strm_ops string_in_ops =
                 0,
                 string_in_get_error,
                 string_in_get_error_str,
-                0);
+                0, 0);
 
 val make_string_input_stream(val string)
 {
@@ -1550,7 +1573,7 @@ static struct strm_ops byte_in_ops =
                 0, 0, 0, 0, 0, 0,
                 byte_in_get_error,
                 byte_in_get_error_str,
-                0);
+                0, 0);
 
 val make_string_byte_input_stream(val string)
 {
@@ -1690,7 +1713,7 @@ static struct strm_ops string_out_ops =
                 0, 0, 0, 0, 0, 0, 0,
                 0, /* TODO: seek; fill-with-spaces semantics if past end. */
                 0,
-                0, 0, 0, 0, 0);
+                0, 0, 0, 0, 0, 0);
 
 val make_string_output_stream(void)
 {
@@ -1807,7 +1830,7 @@ static struct strm_ops strlist_out_ops =
                 wli("strlist-output-stream"),
                 strlist_out_put_string,
                 strlist_out_put_char,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
 val make_strlist_output_stream(void)
 {
@@ -1994,7 +2017,8 @@ static struct strm_ops cat_stream_ops =
                 0,
                 cat_get_error,
                 cat_get_error_str,
-                cat_clear_error);
+                cat_clear_error,
+                0);
 
 val make_catenated_stream(val stream_list)
 {
@@ -2136,6 +2160,12 @@ static val delegate_clear_error(val stream)
   return s->target_ops->clear_error(s->target_stream);
 }
 
+static val delegate_get_fd(val stream)
+{
+  struct delegate_base *s = coerce(struct delegate_base *, stream->co.handle);
+  return s->target_ops->get_fd(s->target_stream);
+}
+
 static val make_delegate_stream(val orig_stream, size_t handle_size,
                                 struct cobj_ops *ops)
 {
@@ -2194,7 +2224,7 @@ static struct strm_ops record_adapter_ops =
                 delegate_close, delegate_flush, delegate_seek,
                 delegate_truncate, delegate_get_prop, delegate_set_prop,
                 delegate_get_error, delegate_get_error_str,
-                delegate_clear_error);
+                delegate_clear_error, delegate_get_fd);
 
 val record_adapter(val regex, val stream)
 {
@@ -3690,7 +3720,7 @@ void stream_init(void)
   reg_fun(intern(lit("real-time-stream-p"), user_package), func_n1(real_time_stream_p));
   reg_fun(intern(lit("stream-set-prop"), user_package), func_n3(stream_set_prop));
   reg_fun(intern(lit("stream-get-prop"), user_package), func_n2(stream_get_prop));
-  reg_fun(intern(lit("fileno"), user_package), curry_12_1(func_n2(stream_get_prop), fd_k));
+  reg_fun(intern(lit("fileno"), user_package), func_n1(stream_fd));
 #ifdef HAVE_SOCKETS
   reg_fun(intern(lit("sock-family"), user_package), func_n1(sock_family));
   reg_fun(intern(lit("sock-type"), user_package), func_n1(sock_type));
