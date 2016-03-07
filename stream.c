@@ -3195,7 +3195,7 @@ val get_string(val stream, val nchars, val close_after_p)
   }
 
   if ((missingp(close_after_p) && (!opt_compat || opt_compat > 102)) ||
-      default_arg(close_after_p, t))
+      default_arg_strict(close_after_p, t))
     close_stream(stream, t);
 
   return get_string_from_stream(strstream);
