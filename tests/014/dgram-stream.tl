@@ -1,0 +1,39 @@
+(load "../sock-common.tl")
+
+(defvar family)
+
+(defun server (svc-sock)
+  (whilet ((acc-sock (sock-accept svc-sock))
+           (query (read acc-sock)))
+    (print query acc-sock)
+    (close-stream acc-sock)))
+
+(defun client (addr)
+  (with-stream (cli-sock (open-socket family sock-dgram))
+    (sock-connect cli-sock addr)
+    (dotimes (i 1000)
+      (print i cli-sock)
+      (flush-stream cli-sock)
+      (unless (equal (read cli-sock) i)
+        (return-from client nil))
+      (clear-error cli-sock))
+    (print nil cli-sock)
+    (flush-stream cli-sock)))
+
+(defun test ()
+  (let* ((svc-sock (open-socket family sock-dgram))
+         (svc-addr (bindfree svc-sock 1025 65535))
+         (server-pid (fork)))
+    (cond
+      ((null server-pid) (error "fork failed"))
+      ((zerop server-pid) (server svc-sock) (exit* t))
+      (t (prog1
+           (client svc-addr)
+           (kill server-pid sig-kill)
+           (wait server-pid))))))
+
+(if (and (fboundp 'open-socket)
+         (fboundp 'fork))
+  (each ((family (list af-inet af-inet6)))
+    (unless (test)
+      (error "test failed"))))
