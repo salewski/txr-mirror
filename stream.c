@@ -2210,6 +2210,30 @@ static val delegate_get_fd(val stream)
   return s->target_ops->get_fd(s->target_stream);
 }
 
+static val delegate_get_sock_family(val stream)
+{
+  struct delegate_base *s = coerce(struct delegate_base *, stream->co.handle);
+  return s->target_ops->get_sock_family(s->target_stream);
+}
+
+static val delegate_get_sock_type(val stream)
+{
+  struct delegate_base *s = coerce(struct delegate_base *, stream->co.handle);
+  return s->target_ops->get_sock_type(s->target_stream);
+}
+
+static val delegate_get_sock_peer(val stream)
+{
+  struct delegate_base *s = coerce(struct delegate_base *, stream->co.handle);
+  return s->target_ops->get_sock_peer(s->target_stream);
+}
+
+static val delegate_set_sock_peer(val stream, val peer)
+{
+  struct delegate_base *s = coerce(struct delegate_base *, stream->co.handle);
+  return s->target_ops->set_sock_peer(s->target_stream, peer);
+}
+
 static val make_delegate_stream(val orig_stream, size_t handle_size,
                                 struct cobj_ops *ops)
 {
@@ -3802,5 +3826,10 @@ void stream_init(void)
   stdio_sock_ops.get_sock_type = stdio_get_sock_type;
   stdio_sock_ops.get_sock_peer = stdio_get_sock_peer;
   stdio_sock_ops.set_sock_peer = stdio_set_sock_peer;
+
+  record_adapter_ops.get_sock_family = delegate_get_sock_family;
+  record_adapter_ops.get_sock_type = delegate_get_sock_type;
+  record_adapter_ops.get_sock_peer = delegate_get_sock_peer;
+  record_adapter_ops.set_sock_peer = delegate_set_sock_peer;
 #endif
 }
