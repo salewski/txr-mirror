@@ -621,52 +621,67 @@ static_def(struct strm_ops dgram_strm_ops =
 
 static val sock_bind(val sock, val sockaddr)
 {
-  int sfd = c_num(stream_fd(sock));
-  val family = sock_family(sock);
-  struct sockaddr_storage sa;
-  socklen_t salen;
-  int reuse = 1;
+  val sfd = stream_fd(sock);
 
-  (void) setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+  if (sfd) {
+    int fd = c_num(sfd);
+    val family = sock_family(sock);
+    struct sockaddr_storage sa;
+    socklen_t salen;
+    int reuse = 1;
 
-  sockaddr_in(sockaddr, family, &sa, &salen);
+    (void) setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
 
-  if (bind(sfd, coerce(struct sockaddr *, &sa), salen) != 0)
-    uw_throwf(socket_error_s, lit("sock-bind failed: ~d/~s"),
-              num(errno), string_utf8(strerror(errno)), nao);
+    sockaddr_in(sockaddr, family, &sa, &salen);
 
-  stream_set_prop(sock, addr_k, sockaddr);
-  return t;
+    if (bind(fd, coerce(struct sockaddr *, &sa), salen) != 0)
+      uw_throwf(socket_error_s, lit("sock-bind failed: ~d/~s"),
+                num(errno), string_utf8(strerror(errno)), nao);
+
+    stream_set_prop(sock, addr_k, sockaddr);
+    return t;
+  }
+
+  uw_throwf(socket_error_s, lit("sock-bind: cannot bind ~s"), sock, nao);
 }
 
 static val sock_connect(val sock, val sockaddr)
 {
   val sfd = stream_fd(sock);
-  val family = sock_family(sock);
-  struct sockaddr_storage sa;
-  socklen_t salen;
 
-  sockaddr_in(sockaddr, family, &sa, &salen);
+  if (sfd) {
+    val family = sock_family(sock);
+    struct sockaddr_storage sa;
+    socklen_t salen;
 
-  if (connect(c_num(sfd), coerce(struct sockaddr *, &sa), salen) != 0)
-    uw_throwf(socket_error_s, lit("sock-connect ~s to addr ~s: ~d/~s"),
-              sock, sockaddr, num(errno), string_utf8(strerror(errno)), nao);
+    sockaddr_in(sockaddr, family, &sa, &salen);
 
-  sock_set_peer(sock, sockaddr);
+    if (connect(c_num(sfd), coerce(struct sockaddr *, &sa), salen) != 0)
+      uw_throwf(socket_error_s, lit("sock-connect ~s to addr ~s: ~d/~s"),
+                sock, sockaddr, num(errno), string_utf8(strerror(errno)), nao);
 
-  return t;
+    sock_set_peer(sock, sockaddr);
+
+    return t;
+  }
+
+  uw_throwf(socket_error_s, lit("sock-connect: cannot connect ~s"), sock, nao);
 }
 
 static val sock_listen(val sock, val backlog)
 {
+  val sfd = stream_fd(sock);
+
+  if (!sfd)
+    uw_throwf(socket_error_s, lit("sock-listen: cannot listen on ~s"),
+              sock, nao);
+
   if (sock_type(sock) == num_fast(SOCK_DGRAM)) {
     if (sock_peer(sock)) {
       errno = EISCONN;
       goto failed;
     }
   } else {
-    val sfd = stream_fd(sock);
-
     if (listen(c_num(sfd), c_num(default_arg(backlog, num_fast(16)))))
       goto failed;
   }
@@ -685,6 +700,10 @@ static val sock_accept(val sock, val mode_str)
   struct sockaddr_storage sa;
   socklen_t salen = sizeof sa;
   val peer = nil;
+
+  if (!sfd)
+    uw_throwf(socket_error_s, lit("sock-accept: cannot accept on ~s"),
+              sock, nao);
 
   if (type == num_fast(SOCK_DGRAM)) {
     ssize_t nbytes = -1;
