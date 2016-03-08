@@ -55,6 +55,7 @@ struct dgram_stream {
   val stream;
   val family;
   val peer;
+  val addr;
   val unget_c;
   utf8_decoder_t ud;
   struct sockaddr_storage peer_addr;
@@ -265,7 +266,7 @@ static val make_dgram_sock_stream(int fd, val family, val peer,
   strm_base_init(&d->a);
   d->stream = nil;
   d->fd = fd;
-  d->family = d->peer = d->unget_c = nil;
+  d->family = d->peer = d->addr = d->unget_c = nil;
   d->err = 0;
   d->rx_buf = dgram;
   d->rx_size = dgram_size;
@@ -285,13 +286,13 @@ static val make_dgram_sock_stream(int fd, val family, val peer,
 
 static void dgram_print(val stream, val out, val pretty)
 {
-  struct dgram_stream *d = coerce(struct dgram_stream *, stream->co.handle);
   struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
   val name = static_str(ops->name);
+  val descr = ops->get_prop(stream, name_k);
 
   (void) pretty;
 
-  format(out, lit("#<~a ~s ~p>"), name, num(d->fd), stream, nao);
+  format(out, lit("#<~a ~a ~p>"), name, descr, stream, nao);
 }
 
 static void dgram_mark(val stream)
@@ -301,6 +302,7 @@ static void dgram_mark(val stream)
   /* h->stream == stream and so no need to mark h->stream */
   gc_mark(d->family);
   gc_mark(d->peer);
+  gc_mark(d->addr);
   gc_mark(d->unget_c);
 }
 
@@ -502,6 +504,30 @@ static val dgram_get_prop(val stream, val ind)
   if (ind == fd_k)
     return num(d->fd);
 
+  if (ind == name_k) {
+    if (d->fd == -1)
+      return lit("closed");
+
+    if (d->addr)
+      return format(nil, lit("passive ~s"), d->addr, nao);
+
+    if (d->peer)
+      return format(nil, lit("connected ~s"), d->peer, nao);
+
+    return lit("disconnected");
+  }
+
+  return nil;
+}
+
+static val dgram_set_prop(val stream, val ind, val prop)
+{
+  if (ind == addr_k) {
+    struct dgram_stream *d = coerce(struct dgram_stream *, stream->co.handle);
+    set(mkloc(d->addr, stream), prop);
+    return t;
+  }
+
   return nil;
 }
 
@@ -573,7 +599,7 @@ static_def(struct strm_ops dgram_strm_ops =
                               dgram_destroy,
                               dgram_mark,
                               cobj_hash_op),
-                wli("dgram-stream"),
+                wli("dgram-sock"),
                 dgram_put_string,
                 dgram_put_char,
                 dgram_put_byte,
@@ -587,7 +613,7 @@ static_def(struct strm_ops dgram_strm_ops =
                 0,
                 0,
                 dgram_get_prop,
-                0,
+                dgram_set_prop,
                 dgram_get_error,
                 dgram_get_error_str,
                 dgram_clear_error,
@@ -609,6 +635,7 @@ static val sock_bind(val sock, val sockaddr)
     uw_throwf(socket_error_s, lit("sock-bind failed: ~d/~s"),
               num(errno), string_utf8(strerror(errno)), nao);
 
+  stream_set_prop(sock, addr_k, sockaddr);
   return t;
 }
 

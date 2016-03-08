@@ -102,7 +102,7 @@ struct stdio_mode {
 loc lookup_var_l(val env, val sym);
 
 extern val from_start_k, from_current_k, from_end_k;
-extern val real_time_k, name_k, fd_k;
+extern val real_time_k, name_k, addr_k, fd_k;
 extern val format_s;
 
 extern val stdio_stream_s;

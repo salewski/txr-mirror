@@ -71,7 +71,7 @@ val print_flo_precision_s, print_flo_digits_s, print_flo_format_s;
 val print_base_s;
 
 val from_start_k, from_current_k, from_end_k;
-val real_time_k, name_k, fd_k;
+val real_time_k, name_k, addr_k, fd_k;
 val format_s;
 
 val stdio_stream_s;
@@ -367,6 +367,7 @@ struct stdio_handle {
   val family;
   val type;
   val peer;
+  val addr;
 #endif
 };
 
@@ -375,13 +376,14 @@ static void stdio_stream_print(val stream, val out, val pretty)
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
   struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
   val name = static_str(ops->name);
+  val descr = ops->get_prop(stream, name_k);
 
   (void) pretty;
 
   if (h->pid)
-    format(out, lit("#<~a ~s ~s ~p>"), name, h->descr, num(h->pid), stream, nao);
+    format(out, lit("#<~a ~a ~a ~p>"), name, descr, num(h->pid), stream, nao);
   else
-    format(out, lit("#<~a ~s ~p>"), name, h->descr, stream, nao);
+    format(out, lit("#<~a ~a ~p>"), name, descr, stream, nao);
 }
 
 static void stdio_stream_destroy(val stream)
@@ -403,6 +405,7 @@ static void stdio_stream_mark(val stream)
   gc_mark(h->family);
   gc_mark(h->type);
   gc_mark(h->peer);
+  gc_mark(h->addr);
 #endif
 }
 
@@ -749,6 +752,48 @@ static val stdio_truncate(val stream, val len)
 
 #if HAVE_SOCKETS
 
+static val sock_get_prop(val stream, val ind)
+{
+  if (ind == addr_k) {
+    struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
+    return h->addr;
+  }
+
+  if (ind == name_k) {
+    struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
+
+    if (!h->f)
+      return h->descr = lit("closed");
+
+    if (h->descr)
+      return h->descr;
+
+    if (h->addr)
+      return set(mkloc(h->descr, stream),
+                 format(nil, lit("passive ~s"), h->addr, nao));
+
+    if (h->peer)
+      return set(mkloc(h->descr, stream),
+                 format(nil, lit("active ~s"), h->peer, nao));
+
+    return h->descr = lit("disconnected");
+  }
+
+  return stdio_get_prop(stream, ind);
+}
+
+static val sock_set_prop(val stream, val ind, val prop)
+{
+  if (ind == addr_k) {
+    struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
+    set(mkloc(h->addr, stream), prop);
+    h->descr = nil;
+    return t;
+  }
+
+  return stdio_set_prop(stream, ind, prop);
+}
+
 static val stdio_get_sock_family(val stream)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
@@ -770,6 +815,7 @@ static val stdio_get_sock_peer(val stream)
 static val stdio_set_sock_peer(val stream, val peer)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
+  h->descr = nil;
   return set(mkloc(h->peer, stream), peer);
 }
 
@@ -1211,6 +1257,7 @@ static val make_stdio_stream_common(FILE *f, val descr, struct cobj_ops *ops)
   h->family = nil;
   h->type = nil;
   h->peer = nil;
+  h->addr = nil;
 #endif
   return stream;
 }
@@ -1235,7 +1282,7 @@ val make_pipe_stream(FILE *f, val descr)
 #if HAVE_SOCKETS
 val make_sock_stream(FILE *f, val family, val type)
 {
-  val s = make_stdio_stream_common(f, lit("socket"), &stdio_sock_ops.cobj_ops);
+  val s = make_stdio_stream_common(f, nil, &stdio_sock_ops.cobj_ops);
   struct stdio_handle *h = coerce(struct stdio_handle *, s->co.handle);
   h->family = family;
   h->type = type;
@@ -3625,6 +3672,7 @@ void stream_init(void)
   from_end_k = intern(lit("from-end"), keyword_package);
   real_time_k = intern(lit("real-time"), keyword_package);
   name_k = intern(lit("name"), keyword_package);
+  addr_k = intern(lit("addr"), keyword_package);
   fd_k = intern(lit("fd"), keyword_package);
   format_s = intern(lit("format"), user_package);
   stdio_stream_s = intern(lit("stdio-stream"), user_package);
@@ -3747,6 +3795,9 @@ void stream_init(void)
 
 #if HAVE_SOCKETS
   stdio_sock_ops = stdio_ops;
+  stdio_sock_ops.name = wli("stream-sock");
+  stdio_sock_ops.get_prop = sock_get_prop;
+  stdio_sock_ops.set_prop = sock_set_prop;
   stdio_sock_ops.get_sock_family = stdio_get_sock_family;
   stdio_sock_ops.get_sock_type = stdio_get_sock_type;
   stdio_sock_ops.get_sock_peer = stdio_get_sock_peer;
