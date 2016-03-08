@@ -35353,6 +35353,19 @@ function creates or modifies the environment variable indicated by
 The
 .meta value
 string argument specifies the new value for the variable.
+If
+.meta value
+is
+.codn nil ,
+then
+.code setenv
+behaves like
+.codn unsetenv ,
+except that it observes the
+.meta overwrite-p
+argument. That is to say, the meaning of a null
+.meta value
+is that the variable is to be removed.
 
 If the
 .meta overwrite-p
@@ -35366,11 +35379,22 @@ effectively giving rise to a two-argument form of
 .code setenv
 which creates or overwrites environment variables.
 
+A variable removal is deemed to be an overwrite.
+Thus if both
+.meta value
+and
+.meta overwrite-p
+are
+.codn nil ,
+then
+.code setenv
+does nothing.
+
 The
 .code setenv
 function unconditionally returns
 .meta value
-regardless of whether or not it overwrites an existing variable.
+regardless of whether or not it overwrites or removes an existing variable.
 
 The
 .code unsetenv
@@ -35379,6 +35403,26 @@ specified by
 .metn name ,
 if it exists. On some platforms, it instead sets the environment variable
 to the empty string.
+
+Note: supporting removal semantics in
+.code setenv
+allows for the following simple save/modify/restore pattern:
+
+.cblk
+  (let* ((old-val (getenv "SOME-VAR")))
+    (unwind-protect
+      (progn (setenv "SOME-VAR" new-val)
+             ...)
+      (setenv "SOME-VAR" old-val)))
+.cble
+
+This works in the case when
+.code SOME-VAR
+exists, as well as in the case that it doesn't exist.
+In both cases, its previous value or, respectively, non-existence,
+is restored by the
+.code unwind-protect
+cleanup form.
 
 .SS* System Programming
 .coNP Accessor @ errno
