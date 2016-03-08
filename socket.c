@@ -656,7 +656,7 @@ static val sock_accept(val sock, val mode_str)
   val family = sock_family(sock);
   val type = sock_type(sock);
   struct sockaddr_storage sa;
-  socklen_t salen;
+  socklen_t salen = sizeof sa;
   val peer = nil;
 
   if (type == num_fast(SOCK_DGRAM)) {
