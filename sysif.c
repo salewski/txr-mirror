@@ -704,7 +704,7 @@ static val setenv_wrap(val name, val value, val overwrite)
 {
   char *nameu8 = utf8_dup_to(c_str(name));
   char *valu8 = value ? utf8_dup_to(c_str(value)) : 0;
-  int ovw = default_arg(overwrite, t) != nil;
+  int ovw = default_arg_strict(overwrite, t) != nil;
   if (valu8)
     setenv(nameu8, valu8, ovw);
   else if (ovw)
