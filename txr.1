@@ -37329,6 +37329,18 @@ and
 .code sock-shutdown
 are used for enacting socket communication scenarios.
 
+Stream sockets use ordinary streams, re-using the same underlying framework
+that is used for file I/O and process types.
+
+Datagram socket streams are implemented using special datagram socket streams.
+Datagram socket streams eliminate the need for operations analogous to the
+.code sendto
+and
+.code recvfrom
+socket API functions, even in server programs which handle multiple
+clients. An overview of datagrams is treated in the following section,
+Datagram Socket Streams.
+
 The
 .code getaddrinfo
 function is provided for resolving host names and services to IPv4 and IPv6
@@ -37345,6 +37357,93 @@ Various numeric constants are also provided:
 .codn sock-stream ,
 .code sock-dgram
 and others.
+
+.NP* Datagram Socket Streams
+
+Datagram socket streams are a new paradigm unique to \*(TX which
+attempts to unify the programming model of stream and datagram
+sockets.
+
+A datagram socket stream is created by the
+.code open-socket
+function, when the
+.code sock-dgram
+socket type is specified. Another way in which a datagram socket
+is created is when
+.code sock-accept
+is invoked on a datagram socket, and returns a new socket.
+
+I/O is performed on datagram sockets using the regular I/O functions.
+None of the functions take or return peer addresses. There are no I/O
+functions which are analogous to the C library
+.code recvfrom
+and
+.code sendto
+functions which are usually used for datagram programming.
+Datagram I/O assumes that the datagram datagram socket is connected to a
+specific remote peer, and that peer is implicitly used for all I/O.
+
+Datagram streams solves the message framing problem essentially by
+considering a single datagram to be an entire stream.  On input, a datagram
+stream holds an entire datagram in a buffer. The stream ends
+(experiences the EOF condition) after the last byte of this buffer
+is removed by an input operation. Another datagram will be received and
+buffered if the EOF condition is first explicitly cleared with the
+.code clear-error
+function, and then another input operation is attempted.
+On output, a datagram stream gathers data into an ever-growing output buffer
+which isn't subject to any automatic flushing. An explicit
+.code flush-stream
+operation sends the buffer contents to the connected peer as a new
+datagram, and empties the buffer. Subsequent output operations prepare
+data for a new datagram. The
+.code close-stream
+function implicitly flushes the stream in the same way, and thus also
+potentially generates a datagram.
+
+A client-style datagram stream is explicitly connected to a peer with the
+.code sock-connect
+function and sends messages to that peer. This is similar to connecting a datagram socket using the
+C library
+.code connect
+function.
+
+A datagram server program which needs
+to communicate using multiple peers is implemented by means of the
+.code sock-accept
+function which, unlike the C library
+.code accept
+function, works with datagram sockets as well as stream sockets.
+The server creates a datagram socket, and uses
+.code sock-bind
+to bind it to a local address. Optionally, it may also call
+.code sock-listen
+which is a no-op on datagram sockets. Supporting this function on datagram
+sockets allows program code to be more easily changed between datagram and
+stream operation.
+The server then uses
+.code sock-accept
+to accept new clients. Note that this is not possible with the C
+library function
+.codn accept ,
+which only works with stream sockets.
+
+The
+.code sock-accept
+function receives a datagram from a client, and creates a new datagram
+socket stream which is connected to that client, and whose input buffer
+contains the received datagram. Input operations on this stream consume
+the datagram. Note that clearing the EOF condition and trying to receive
+another datagram is not recommended on datagram streams returned
+by
+.codn sock-accept ,
+since they share the same underlying operating system socket, which is
+not actually connected to a specific peer. The receive operation could
+receive a datagram from any peer, without any indication which peer that is.
+Datagram servers should issue a new
+.code sock-accept
+call should be issued for each client datagram, treating it as a new
+stream.
 
 .coNP Structure @ sockaddr
 .synb
