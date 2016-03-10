@@ -19,3 +19,7 @@
 
 (defmacro stest (expr expected)
   ^(vtest ,^(tostring ,expr) ,expected))
+
+(defun osname ()
+  (with-stream (u (open-command "(uname -o || uname) 2> /dev/null"))
+    (get-line u)))

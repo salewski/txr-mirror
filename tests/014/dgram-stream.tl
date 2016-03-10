@@ -1,3 +1,4 @@
+(load "../common.tl")
 (load "../sock-common.tl")
 
 (defvar family)
@@ -20,7 +21,7 @@
     (print nil cli-sock)
     (flush-stream cli-sock)))
 
-(defun test ()
+(defun dgram-test ()
   (let* ((svc-sock (open-socket family sock-dgram))
          (svc-addr (bindfree svc-sock 1025 65535))
          (server-pid (fork)))
@@ -34,6 +35,8 @@
 
 (if (and (fboundp 'open-socket)
          (fboundp 'fork))
-  (each ((family (list af-inet af-inet6)))
-    (unless (test)
-      (error "test failed"))))
+  (let ((maybe-ipv6 (if (memqual (osname) '("GNU/Linux" "Darwin" "Cygwin"))
+                      (list af-inet6))))
+    (each ((family ^(,af-inet ,*maybe-ipv6)))
+      (unless (dgram-test)
+        (error "test failed")))))
