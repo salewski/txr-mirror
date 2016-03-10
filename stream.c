@@ -454,7 +454,14 @@ static int se_putc(int ch, FILE *f)
 {
   int ret;
   sig_save_enable;
+#ifdef __CYGWIN__
+  {
+    char out[2] = { ch, 0 };
+    ret = fputs(out, f) == EOF ? EOF : ch;
+  }
+#else
   ret = putc(ch, f);
+#endif
   sig_restore_enable;
   return ret;
 }
