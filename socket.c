@@ -66,6 +66,7 @@ struct dgram_stream {
   mem_t *tx_buf;
   int rx_size, rx_pos;
   int tx_pos;
+  unsigned sock_connected : 1;
 };
 
 val sockaddr_in_s, sockaddr_in6_s, sockaddr_un_s, addrinfo_s;
@@ -281,6 +282,7 @@ static val make_dgram_sock_stream(int fd, val family, val peer,
   d->stream = stream;
   d->family = family;
   d->peer = peer;
+  d->sock_connected = 0;
   return stream;
 }
 
@@ -459,8 +461,11 @@ static val dgram_flush(val stream)
   struct dgram_stream *d = coerce(struct dgram_stream *, stream->co.handle);
   if (d->fd != -1 && d->tx_buf) {
     if (d->peer) {
-      int nwrit = sendto(d->fd, d->tx_buf, d->tx_pos, 0,
-                         coerce(struct sockaddr *, &d->peer_addr), d->pa_len);
+      int nwrit = d->sock_connected
+	          ? send(d->fd, d->tx_buf, d->tx_pos, 0)
+	          : sendto(d->fd, d->tx_buf, d->tx_pos, 0,
+                           coerce(struct sockaddr *, &d->peer_addr),
+                           d->pa_len);
 
       if (nwrit != d->tx_pos) {
         d->err = (nwrit < 0) ? errno : ENOBUFS;
@@ -590,6 +595,7 @@ static val dgram_set_sock_peer(val stream, val peer)
 {
   struct dgram_stream *d = coerce(struct dgram_stream *, stream->co.handle);
   sockaddr_in(peer, d->family, &d->peer_addr, &d->pa_len);
+  d->sock_connected = 1;
   return set(mkloc(d->peer, stream), peer);
 }
 
