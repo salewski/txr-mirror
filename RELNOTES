@@ -1,3 +1,32 @@
+                                    TXR 135
+                                   2016-03-10
+
+
+  Features
+
+  - The umask function is now provided.
+  - Special new stream type for datagram sockets, allowing
+    datagram programming to be very similar to and in some cases
+    identical to stream socket programming.
+  - A nil value in setenv now does unsetenv.
+  - Improvements in sockets:
+    - printed representation of sockets.
+    - error messages.
+    - error handling.
+
+  Bugs
+
+  - The get-string function closing a stream when told not to via a
+    nil value of the close-after-p optional argument.
+  - The setenv function had a similar bug, ignoring the overwrite-p optional
+    argument being passed as nil.
+  - Fixed cases of an incorrect error string from file streams returned by
+    get-error-string.
+  - Fixed gc-related instability caused by mishandling a field in an internal
+    parser structure with regard to the ephemeral gc rules.
+
+
+
                                     TXR 134
                                    2016-03-01
 
