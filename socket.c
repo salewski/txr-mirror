@@ -221,6 +221,7 @@ static void sockaddr_in(val sockaddr, val family,
     struct sockaddr_in *sa = coerce(struct sockaddr_in *, buf);
     if (family != num_fast(AF_INET))
       addr_mismatch(sockaddr, family);
+    memset(sa, 0, sizeof *sa);
     sa->sin_family = AF_INET;
     ipv4_addr_from_num(&sa->sin_addr, addr);
     sa->sin_port = ntohs(c_num(port));
@@ -233,6 +234,7 @@ static void sockaddr_in(val sockaddr, val family,
     struct sockaddr_in6 *sa = coerce(struct sockaddr_in6 *, buf);
     if (family != num_fast(AF_INET6))
       addr_mismatch(sockaddr, family);
+    memset(sa, 0, sizeof *sa);
     sa->sin6_family = AF_INET6;
     ipv6_addr_from_num(&sa->sin6_addr, addr);
     ipv6_flow_info_from_num(sa, flow);
