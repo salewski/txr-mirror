@@ -1236,8 +1236,13 @@ val normalize_mode(struct stdio_mode *m, val mode_str)
 
 val set_mode_props(const struct stdio_mode m, val stream)
 {
-  if (m.interactive)
+  if (m.interactive) {
+    struct stdio_handle *h = coerce(struct stdio_handle *,
+                                    cobj_handle(stream, stdio_stream_s));
+    if (h->f && m.write)
+      setvbuf(h->f, (char *) NULL, _IOLBF, 0);
     stream_set_prop(stream, real_time_k, t);
+  }
   return stream;
 }
 

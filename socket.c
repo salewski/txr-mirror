@@ -829,7 +829,6 @@ val open_sockfd(val fd, val family, val type, val mode_str_in)
                 fd, num(errno), string_utf8(strerror(errno)), nao);
     }
 
-    setvbuf(f, (char *) NULL, _IOLBF, 0);
     return set_mode_props(m, make_sock_stream(f, family, type));
   }
 }

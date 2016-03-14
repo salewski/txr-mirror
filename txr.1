@@ -34398,7 +34398,14 @@ is used.
 The option letter
 .str i
 is supported. If present, it will create a stream which has the real-time
-property set.
+property set. For a description of the semantics, see the
+.code real-time-stream-p
+function. Briefly, this property affects the semantics of lazy lists which draw
+input from the stream.
+In addition, for a stream opened for writing or reading and writing, the
+.str i
+mode letter specifies that the stream will be line-buffered. This means that an
+implicit flush operation takes place whenever the newline character is output.
 
 .coNP Function @ open-tail
 .synb
@@ -37780,9 +37787,13 @@ data flow, the default mode string is
 rather than the usual
 .strn r .
 
-Stream sockets are created line-buffered. Therefore, programs which communicate
-using textual, line-oriented protocols over sockets need not execute flush operations
-after each line.
+Like other stream times, stream sockets are buffered and marked as no
+non-real-time streams. Specifying the
+.str i
+mode in
+.metn mode-string
+marks a socket as a real-time-stream, and, if it is opened for writing
+or reading and writing, changes it to use line buffering.
 
 .coNP Functions @ sock-family and @ sock-type
 .synb
