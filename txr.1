@@ -37857,7 +37857,7 @@ struct is maintained by \*(TX.
 
 .coNP Function @ sock-connect
 .synb
-.mets (sock-connect < socket << address )
+.mets (sock-connect < socket < address <> [ timeout-usec ])
 .syne
 .desc
 The
@@ -37874,6 +37874,15 @@ If the operation fails, an exception of type
 .code socket-error
 is thrown. Otherwise, the function returns
 .metn socket .
+
+If the
+.meta timeout-usec
+argument is specified, it must be a fixnum integer.
+It denotes a connection timeout period in microseconds.
+If the connection doesn't succeed within the specified timeout,
+an exception of type
+.code timeout-error
+is thrown.
 
 .coNP Function @ sock-bind
 .synb

@@ -34,6 +34,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <sys/un.h>
 #include <netdb.h>
 #include "config.h"
@@ -653,7 +654,67 @@ static val sock_bind(val sock, val sockaddr)
   uw_throwf(socket_error_s, lit("sock-bind: cannot bind ~s"), sock, nao);
 }
 
-static val sock_connect(val sock, val sockaddr)
+static int to_connect(int fd, struct sockaddr *addr, socklen_t len,
+		      val sock, val sockaddr, val timeout)
+{
+  if (!timeout) {
+    int res;
+
+    sig_save_enable;
+
+    res = connect(fd, addr, len);
+
+    sig_restore_enable;
+
+    return res;
+  } else {
+    cnum u = c_num(timeout);
+    struct timeval tv;
+    int flags = fcntl(fd, F_GETFL);
+    int res;
+    fd_set rfds;
+
+    if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
+      return -1;
+
+    res = connect(fd, addr, len);
+
+    fcntl(fd, F_SETFL, flags);
+
+    switch (res) {
+    case 0:
+      return 0;
+    case -1:
+      if (errno != EINPROGRESS)
+	return -1;
+      break;
+    }
+
+    tv.tv_sec = u / 1000000;
+    tv.tv_usec = u % 1000000;
+
+    FD_ZERO(&rfds);
+    FD_SET(fd, &rfds);
+
+    sig_save_enable;
+
+    res = select(fd + 1, &rfds, 0, 0, &tv);
+
+    sig_restore_enable;
+
+    switch (res) {
+    case -1:
+      return -1;
+    case 0:
+      uw_throwf(timeout_error_s, lit("sock-connect ~s: timeout on ~s"),
+		sock, sockaddr, nao);
+    default:
+      return 0;
+    }
+  }
+}
+
+static val sock_connect(val sock, val sockaddr, val timeout)
 {
   val sfd = stream_fd(sock);
 
@@ -664,7 +725,8 @@ static val sock_connect(val sock, val sockaddr)
 
     sockaddr_in(sockaddr, family, &sa, &salen);
 
-    if (connect(c_num(sfd), coerce(struct sockaddr *, &sa), salen) != 0)
+    if (to_connect(c_num(sfd), coerce(struct sockaddr *, &sa), salen,
+		   sock, sockaddr, default_bool_arg(timeout)) != 0)
       uw_throwf(socket_error_s, lit("sock-connect ~s to addr ~s: ~d/~s"),
                 sock, sockaddr, num(errno), string_utf8(strerror(errno)), nao);
 
@@ -917,7 +979,7 @@ void sock_load_init(void)
 #endif
 
   reg_fun(intern(lit("sock-bind"), user_package), func_n2(sock_bind));
-  reg_fun(intern(lit("sock-connect"), user_package), func_n2(sock_connect));
+  reg_fun(intern(lit("sock-connect"), user_package), func_n3o(sock_connect, 2));
   reg_fun(intern(lit("sock-listen"), user_package), func_n2o(sock_listen, 1));
   reg_fun(intern(lit("sock-accept"), user_package), func_n2o(sock_accept, 1));
   reg_fun(intern(lit("sock-shutdown"), user_package), func_n2o(sock_shutdown, 1));
