@@ -719,6 +719,7 @@ static val stdio_unget_byte(val stream, int byte)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
 
+  errno = 0;
   return h->f != 0 && ungetc(byte, coerce(FILE *, h->f)) != EOF
          ? num_fast(byte)
          : stdio_maybe_error(stream, lit("pushing back byte into"));
