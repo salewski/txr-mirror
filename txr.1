@@ -37924,7 +37924,7 @@ argument. The default value is 16.
 
 .coNP Function @ sock-accept
 .synb
-.mets (sock-accept < socket <> [ mode-string ])
+.mets (sock-accept < socket >> [ mode-string <> [ timeout-usec ]])
 .syne
 .desc
 The
@@ -37952,6 +37952,15 @@ similar argument in
 .codn socket-open .
 It defaults to
 .strn r+ .
+
+If the
+.meta timeout-usec
+argument is specified, it must be a fixnum integer.
+It denotes a timeout period in microseconds.
+If no peer connects for the specified timeout,
+.code sock-accept
+throws an exception of type
+.codn timeout-error .
 
 .coNP Variables @, shut-rd @ shut-wr and @ shut-rdwr
 .desc

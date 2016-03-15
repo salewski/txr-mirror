@@ -762,18 +762,46 @@ failed:
               num(errno), string_utf8(strerror(errno)), nao);
 }
 
-static val sock_accept(val sock, val mode_str)
+static val sock_accept(val sock, val mode_str, val timeout_in)
 {
   val sfd = stream_fd(sock);
+  int fd = sfd ? c_num(sfd) : -1;
   val family = sock_family(sock);
   val type = sock_type(sock);
   struct sockaddr_storage sa;
   socklen_t salen = sizeof sa;
   val peer = nil;
+  val timeout = default_bool_arg(timeout_in);
 
   if (!sfd)
-    uw_throwf(socket_error_s, lit("sock-accept: cannot accept on ~s"),
-              sock, nao);
+    goto badfd;
+
+  if (timeout) {
+    struct timeval tv;
+    cnum u = c_num(timeout);
+    fd_set rfds;
+    int res;
+
+    tv.tv_sec = u / 1000000;
+    tv.tv_usec = u % 1000000;
+    FD_ZERO(&rfds);
+    FD_SET(fd, &rfds);
+
+    sig_save_enable;
+
+    res = select(fd + 1, &rfds, 0, 0, &tv);
+
+    sig_restore_enable;
+
+    switch (res) {
+    case -1:
+      goto badfd;
+    case 0:
+      uw_throwf(timeout_error_s, lit("sock-accept ~s: timeout"), sock, nao);
+    default:
+      break;
+    }
+  }
 
   if (type == num_fast(SOCK_DGRAM)) {
     ssize_t nbytes = -1;
@@ -790,7 +818,7 @@ static val sock_accept(val sock, val mode_str)
 
     sig_save_enable;
 
-    nbytes = recvfrom(c_num(sfd), dgram, dgram_size, 0,
+    nbytes = recvfrom(fd, dgram, dgram_size, 0,
                       coerce(struct sockaddr *, &sa), &salen);
 
     sig_restore_enable;
@@ -816,7 +844,7 @@ static val sock_accept(val sock, val mode_str)
     uw_catch_end;
 
     {
-      int afd = dup(c_num(sfd));
+      int afd = dup(fd);
       mem_t *shrink = chk_realloc(dgram, nbytes);
       if (shrink)
         dgram = shrink;
@@ -835,7 +863,7 @@ static val sock_accept(val sock, val mode_str)
     int afd = -1;
     sig_save_enable;
 
-    afd = accept(c_num(sfd), coerce(struct sockaddr *, &sa), &salen);
+    afd = accept(fd, coerce(struct sockaddr *, &sa), &salen);
 
     sig_restore_enable;
 
@@ -861,6 +889,9 @@ static val sock_accept(val sock, val mode_str)
 failed:
   uw_throwf(socket_error_s, lit("accept failed: ~d/~s"),
             num(errno), string_utf8(strerror(errno)), nao);
+badfd:
+  uw_throwf(socket_error_s, lit("sock-accept: cannot accept on ~s"),
+	    sock, nao);
 }
 
 static val sock_shutdown(val sock, val how)
@@ -981,7 +1012,7 @@ void sock_load_init(void)
   reg_fun(intern(lit("sock-bind"), user_package), func_n2(sock_bind));
   reg_fun(intern(lit("sock-connect"), user_package), func_n3o(sock_connect, 2));
   reg_fun(intern(lit("sock-listen"), user_package), func_n2o(sock_listen, 1));
-  reg_fun(intern(lit("sock-accept"), user_package), func_n2o(sock_accept, 1));
+  reg_fun(intern(lit("sock-accept"), user_package), func_n3o(sock_accept, 1));
   reg_fun(intern(lit("sock-shutdown"), user_package), func_n2o(sock_shutdown, 1));
 
 #if defined SO_SNDTIMEO && defined SO_RCVTIMEO
