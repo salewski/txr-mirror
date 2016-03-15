@@ -1538,33 +1538,37 @@ static val txeval_allow_ub(val spec, val form, val bindings)
 
 static val complex_open(val name, val output, val append, val nothrow)
 {
-  val fc = car(name);
-  val result = nil;
-
-  if (fc == chr('$') && output)
-    uw_throwf(query_error_s, lit("cannot output to directory: ~a"),
-              name, nao);
-
-  uw_catch_begin (if2(nothrow, cons(error_s, nil)), exc_sym, exc);
-
-  if (fc == chr('-')) {
-    result = output ? std_output : std_input;
-  } else if (fc == chr('!')) {
-    result = open_command(cdr(name), output ? lit("w") : lit("r"));
-  } else if (fc == chr('$')) {
-    result = open_directory(cdr(name));
+  if (streamp(name)) {
+    return name;
   } else {
-    result = open_file(name,
-                       output ? append ? lit("a") : lit("w") : lit("r"));
+    val fc = car(name);
+    val result = nil;
+
+    if (fc == chr('$') && output)
+      uw_throwf(query_error_s, lit("cannot output to directory: ~a"),
+                name, nao);
+
+    uw_catch_begin (if2(nothrow, cons(error_s, nil)), exc_sym, exc);
+
+    if (fc == chr('-')) {
+      result = output ? std_output : std_input;
+    } else if (fc == chr('!')) {
+      result = open_command(cdr(name), output ? lit("w") : lit("r"));
+    } else if (fc == chr('$')) {
+      result = open_directory(cdr(name));
+    } else {
+      result = open_file(name,
+                         output ? append ? lit("a") : lit("w") : lit("r"));
+    }
+
+    uw_catch (exc_sym, exc) { (void) exc; }
+
+    uw_unwind { }
+
+    uw_catch_end;
+
+    return result;
   }
-
-  uw_catch (exc_sym, exc) { (void) exc; }
-
-  uw_unwind { }
-
-  uw_catch_end;
-
-  return result;
 }
 
 static val robust_length(val obj)
@@ -3245,7 +3249,7 @@ static val v_output(match_files_ctx *c)
 
     if (named_var)
       c->bindings = acons(named_var, stream, c->bindings);
-    else
+    else if (!streamp(dest))
       close_stream(stream, t);
   }
 

@@ -7231,18 +7231,24 @@ directive is:
   @(end)
 .cble
 
-The optional
-.meta destination
-is a string which gives the path name of
+If the directive has arguments, then the first one is evaluated.
+If it is an object other than a keyword symbol, then it specifies
+the optional
+.metn destination .
+Any remaining arguments after the optional destination are
+the keyword list. If the destination is missing, then the
+entire argument list is a keyword list.
+
+The destination may be a string which gives the path name of
 a file to open for output. If the name is
 .code -
 it instead denotes standard output, and if it begins with
 .code !
 then the rest of the shell is treated as a shell command
-to which the output is piped.
+to which the output is piped.  The destination string may be specified as a
+variable which holds text, as a string literal or as a quasiliteral
 
-The destination may be specified as a variable
-which holds text, as a string literal or as a quasiliteral
+Alternatively, the destination may be a stream object.
 
 The keyword list consists of a mixture of boolean keywords which
 do not have an argument, or keywords with arguments.
