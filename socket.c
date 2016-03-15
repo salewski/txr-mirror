@@ -670,7 +670,7 @@ static val sock_connect(val sock, val sockaddr)
 
     sock_set_peer(sock, sockaddr);
 
-    return t;
+    return sock;
   }
 
   uw_throwf(socket_error_s, lit("sock-connect: cannot connect ~s"), sock, nao);
