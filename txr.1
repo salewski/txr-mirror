@@ -37990,6 +37990,39 @@ Shutting down in the reading direction is potentially abrupt. If it is executed
 before an "end of stream" indication is received from a peer, it results in an
 abortive close.
 
+.coNP Functions @ sock-recv-timeout and @ sock-send-timeout
+.synb
+.mets (sock-recv-timeout < sock << usec )
+.mets (sock-send-timeout < sock << usec )
+.syne
+.desc
+The
+.code sock-recv-timeout
+and
+.code sock-send-timeout
+functions configure, respectively, receive and send timeouts on socket
+.metn sock .
+
+The
+.meta usec
+parameter specifies the value, in microseconds. It must be a
+.code fixnum
+integer.
+
+When a receive timeout is configured on a socket, then an
+exception of type
+.code timeout-error
+is thrown when an input operation waits for at least
+.code usec
+microseconds without receiving input.
+
+Similarly, when a send timeout is configured, then an
+exception of type
+.code timeout-error
+is thrown when an output operation waits for at least
+.code usec
+microseconds for the availability of buffer space in the socket.
+
 .coNP Functions @ str-inaddr and @ str-in6addr
 .synb
 .mets (str-inaddr address <> [ port ])

@@ -814,6 +814,36 @@ static val sock_shutdown(val sock, val how)
   return t;
 }
 
+#if defined SO_SNDTIMEO && defined SO_RCVTIMEO
+static val sock_timeout(val sock, val usec, val name, int which)
+{
+  cnum fd = c_num(stream_fd(sock));
+  cnum u = c_num(usec);
+  struct timeval tv;
+
+  tv.tv_sec = u / 1000000;
+  tv.tv_usec = u % 1000000;
+
+  if (setsockopt(fd, SOL_SOCKET, which, &tv, sizeof tv) != 0)
+    uw_throwf(socket_error_s, lit("~a failed on ~s: ~d/~s"),
+	      name, sock, num(errno),
+	      string_utf8(strerror(errno)), nao);
+
+  return sock;
+}
+
+static val sock_send_timeout(val sock, val usec)
+{
+  return sock_timeout(sock, usec, lit("sock-send-timeout"), SO_SNDTIMEO);
+}
+
+static val sock_recv_timeout(val sock, val usec)
+{
+  return sock_timeout(sock, usec, lit("sock-recv-timeout"), SO_RCVTIMEO);
+}
+#endif
+
+
 val open_sockfd(val fd, val family, val type, val mode_str_in)
 {
   if (type == num_fast(SOCK_DGRAM)) {
@@ -891,6 +921,11 @@ void sock_load_init(void)
   reg_fun(intern(lit("sock-listen"), user_package), func_n2o(sock_listen, 1));
   reg_fun(intern(lit("sock-accept"), user_package), func_n2o(sock_accept, 1));
   reg_fun(intern(lit("sock-shutdown"), user_package), func_n2o(sock_shutdown, 1));
+
+#if defined SO_SNDTIMEO && defined SO_RCVTIMEO
+  reg_fun(intern(lit("sock-send-timeout"), user_package), func_n2(sock_send_timeout));
+  reg_fun(intern(lit("sock-recv-timeout"), user_package), func_n2(sock_recv_timeout));
+#endif
 
   fill_stream_ops(&dgram_strm_ops);
   dgram_strm_ops.get_sock_family = dgram_get_sock_family;
