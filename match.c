@@ -1617,7 +1617,7 @@ static val extract_vars(val output_spec)
 static val extract_bindings(val bindings, val output_spec, val vars)
 {
   list_collect_decl (bindings_out, ptail);
-  val var_list = nappend2(vars, extract_vars(output_spec));
+  val var_list = nappend2(extract_vars(output_spec), vars);
 
   for (; bindings; bindings = cdr(bindings)) {
     val binding = car(bindings);
