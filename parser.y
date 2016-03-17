@@ -1198,9 +1198,55 @@ static val sym_helper(parser_t *parser, wchar_t *lexeme, val meta_allowed)
   return leading_at ? rl(list(var_s, sym, nao), num(parser->lineno)) : sym;
 }
 
+static val expand_repeat_rep_args(val args)
+{
+  list_collect_decl (out, ptail);
+  val exp_pair = nil, exp_pairs = nil;
+
+  for (; args; args = cdr(args)) {
+    val arg = car(args);
+
+    if (consp(arg)) {
+      if (exp_pairs) {
+        list_collect_decl (iout, iptail);
+        for (; arg; arg = cdr(arg)) {
+          val iarg = car(arg);
+          if (consp(iarg))
+            iptail = list_collect(iptail, list(first(iarg),
+                                               expand(second(iarg), nil),
+                                               nao));
+          else
+            iptail = list_collect(iptail, iarg);
+        }
+        ptail = list_collect(ptail, iout);
+      } else if (exp_pair) {
+        ptail = list_collect(ptail, list(first(arg),
+                                         expand(second(arg), nil),
+                                         nao));
+      } else {
+        ptail = list_collect(ptail, arg);
+      }
+    } else if (arg == counter_k) {
+      exp_pair = t;
+      ptail = list_collect(ptail, arg);
+      continue;
+    } else if (arg == vars_k) {
+      exp_pairs = t;
+      ptail = list_collect(ptail, arg);
+      continue;
+    }
+
+    exp_pair = exp_pairs = nil;
+    ptail = list_collect(ptail, arg);
+  }
+
+  return out;
+}
+
 static val repeat_rep_helper(val sym, val args, val main, val parts)
 {
   uses_or2;
+  val exp_args = expand_repeat_rep_args(args);
   val single_parts = nil, single_parts_p = nil;
   val first_parts = nil, first_parts_p = nil;
   val last_parts = nil, last_parts_p = nil;
@@ -1244,7 +1290,7 @@ static val repeat_rep_helper(val sym, val args, val main, val parts)
   mod_parts = or2(nreverse(mod_parts), mod_parts_p);
   modlast_parts = or2(nreverse(modlast_parts), modlast_parts_p);
 
-  return list(sym, args, main, single_parts, first_parts,
+  return list(sym, exp_args, main, single_parts, first_parts,
               last_parts, empty_parts, nreverse(mod_parts),
               nreverse(modlast_parts), nao);
 }

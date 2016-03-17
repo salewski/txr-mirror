@@ -7650,7 +7650,7 @@ Repeat supports arguments.
 .cblk
 .mets @(repeat
 .mets \ \ \  [:counter >> { symbol | >> ( symbol << expr )}]
-.mets \ \ \  [:vars <> ( symbol *)])
+.mets \ \ \  [:vars >> ({ symbol | >> ( symbol << expr )}*)])
 .cble
 
 The
@@ -7661,7 +7661,7 @@ access to the repetition count, starting at zero, incrementing with each
 repetition. If the the argument is given as
 .cblk
 .meti >> ( symbol << expr )
-.cblk
+.cble
 then
 .meta expr
 is a Lisp expression whose value is taken as a displacement value which
@@ -7673,10 +7673,20 @@ which counts from 1.
 
 The
 .code :vars
-argument specifies a list of variables. The repeat directive
-will pick out from this list those variables which have bindings.
-It will assume that all these variables occur in the repeat block and
-are to be iterated. This syntax is needed for situations in which
+argument specifies a list of variable names, or pairs consisting of a variable
+name and Lisp expression. For every variable paired with a Lisp expression,
+the expression is evaluated, and a binding is introduced, associating
+that variable with the expression's value.
+
+The repeat directive then processes the list of variables, selecting from it
+those which have a binding, either a previously existing binding or one just
+introduced from a Lisp expression. For each selected variable, repeat
+will assume that the variable occur in the repeat block and contains
+a list to be iterated.
+
+Thus
+.code :vars
+Firstly, it is needed for situations in which
 .code @(repeat)
 is not able to deduce the existence of a variable in the block.
 It does not dig very deeply to discover variables, and does not "see"
@@ -7713,6 +7723,25 @@ Now the repeat block iterates over list and the output is:
   <a>
   <b>
   <c>
+.cble
+
+Secondly, The variable binding syntax supported by
+.code :vars
+additionally provides a solution for situations when it is necessary to iterate
+over some list, but that list is the result of an expression, and not stored in
+any variable. A repeat block iterates only over lists emanating from variables;
+it does not iterate over lists pulled from arbitrary expressions.
+
+Example: output all file names matching the
+.code *.txr
+pattern in the current directory:
+
+.cblk
+  @(output)
+  @(repeat :vars (name (glob "*.txr")))
+  @name
+  @(end)
+  @(end)
 .cble
 
 .coNP Nested @ repeat directives

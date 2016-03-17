@@ -47,6 +47,7 @@
 #include "hash.h"
 #include "debug.h"
 #include "eval.h"
+#include "cadr.h"
 #include "match.h"
 
 int opt_print_bindings = 0;
@@ -1617,7 +1618,21 @@ static val extract_vars(val output_spec)
 static val extract_bindings(val bindings, val output_spec, val vars)
 {
   list_collect_decl (bindings_out, ptail);
-  val var_list = nappend2(extract_vars(output_spec), vars);
+  list_collect_decl (var_list, vtail);
+
+  vtail = list_collect_nconc(vtail, extract_vars(output_spec));
+
+  for (; vars; vars = cdr(vars)) {
+    val var = car(vars);
+    if (consp(var)) {
+      val form = cadr(var);
+      val value = eval_with_bindings(form, output_spec, bindings, form);
+      bindings = cons(cons(car(var), value), bindings);
+      vtail = list_collect(vtail, car(var));
+    } else {
+      vtail = list_collect(vtail, var);
+    }
+  }
 
   for (; bindings; bindings = cdr(bindings)) {
     val binding = car(bindings);
