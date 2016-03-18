@@ -37845,9 +37845,18 @@ argument is different under
 .code open-socket
 from other functions. Because sockets are almost always used for bidirectional
 data flow, the default mode string is
-.str r+
+.str r+b
 rather than the usual
 .strn r .
+
+Rationale for including the
+.str b
+flag in the default mode string is that network protocols are usually defined
+in a way that is independent of machine and operating system, down to the byte
+level, even when they are textual. It doesn't make sense for the same \*(TX
+program to see a network stream differently based on what platform it is
+running on. Line ending conversion has to do with how a platform locally stores
+text files, whereas network streams are almost always external formats.
 
 Like other stream times, stream sockets are buffered and marked as no
 non-real-time streams. Specifying the

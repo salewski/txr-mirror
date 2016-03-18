@@ -943,7 +943,7 @@ val open_sockfd(val fd, val family, val type, val mode_str_in)
     return make_dgram_sock_stream(c_num(fd), family, nil, 0, 0, 0, 0);
   } else {
     struct stdio_mode m;
-    val mode_str = default_arg(mode_str_in, lit("r+"));
+    val mode_str = default_arg(mode_str_in, lit("r+b"));
     FILE *f = (errno = 0, w_fdopen(c_num(fd), c_str(normalize_mode(&m, mode_str))));
 
     if (!f) {
