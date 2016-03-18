@@ -34430,17 +34430,44 @@ argument is omitted, mode
 .str r
 is used.
 
+Additional option letters are supported in
+.meta mode-string
+which are not feature of the standard C
+.code fopen
+function. These letters cannot occur anywhere in the string. They can occur in the
+same position as the
+.str b
+option, in any order with respect to that
+.str b
+or each other. Their relative order doesn't matter.
+
+The letter
+.str l
+indicates that the stream will be line buffered.  This means that an implicit
+flush operation takes place whenever the newline character is output.
+
+The letter
+.str u
+indicates that the stream will be unbuffered.
+
+It is erroneous for both
+.str l
+and
+.str u
+to be specified.
+
 The option letter
 .str i
-is supported. If present, it will create a stream which has the real-time
+indicates that the stream will have the real-time
 property set. For a description of the semantics, see the
 .code real-time-stream-p
 function. Briefly, this property affects the semantics of lazy lists which draw
 input from the stream.
 In addition, for a stream opened for writing or reading and writing, the
 .str i
-mode letter specifies that the stream will be line-buffered. This means that an
-implicit flush operation takes place whenever the newline character is output.
+mode letter specifies that the stream will be line buffered, unless
+specified as unbuffered with
+.strn u .
 
 .coNP Function @ open-tail
 .synb

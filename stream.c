@@ -1186,6 +1186,20 @@ static struct stdio_mode parse_mode(val mode_str)
     case 'i':
       m.interactive = 1;
       break;
+    case 'l':
+      if (m.unbuf) {
+        m.malformed = 1;
+        return m;
+      }
+      m.linebuf = 1;
+      break;
+    case 'u':
+      if (m.linebuf) {
+        m.malformed = 1;
+        return m;
+      }
+      m.unbuf = 1;
+      break;
     default:
       m.malformed = 1;
       return m;
@@ -1245,12 +1259,18 @@ val normalize_mode(struct stdio_mode *m, val mode_str)
 
 val set_mode_props(const struct stdio_mode m, val stream)
 {
-  if (m.interactive) {
+  if (m.interactive || m.linebuf || m.unbuf) {
     struct stdio_handle *h = coerce(struct stdio_handle *,
                                     cobj_handle(stream, stdio_stream_s));
-    if (h->f && m.write)
-      setvbuf(h->f, (char *) NULL, _IOLBF, 0);
-    stream_set_prop(stream, real_time_k, t);
+    if (h->f) {
+      if (m.write && (m.linebuf || (m.interactive && !m.unbuf)))
+        setvbuf(h->f, 0, _IOLBF, 0);
+      else if (m.unbuf)
+        setbuf(h->f, 0);
+    }
+
+    if (m.interactive)
+      stream_set_prop(stream, real_time_k, t);
   }
   return stream;
 }
