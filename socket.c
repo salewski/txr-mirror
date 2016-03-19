@@ -465,8 +465,8 @@ static val dgram_flush(val stream)
   if (d->fd != -1 && d->tx_buf) {
     if (d->peer) {
       int nwrit = d->sock_connected
-	          ? send(d->fd, d->tx_buf, d->tx_pos, 0)
-	          : sendto(d->fd, d->tx_buf, d->tx_pos, 0,
+                  ? send(d->fd, d->tx_buf, d->tx_pos, 0)
+                  : sendto(d->fd, d->tx_buf, d->tx_pos, 0,
                            coerce(struct sockaddr *, &d->peer_addr),
                            d->pa_len);
 
@@ -655,7 +655,7 @@ static val sock_bind(val sock, val sockaddr)
 }
 
 static int to_connect(int fd, struct sockaddr *addr, socklen_t len,
-		      val sock, val sockaddr, val timeout)
+                      val sock, val sockaddr, val timeout)
 {
   if (!timeout) {
     int res;
@@ -686,7 +686,7 @@ static int to_connect(int fd, struct sockaddr *addr, socklen_t len,
       return 0;
     case -1:
       if (errno != EINPROGRESS)
-	return -1;
+        return -1;
       break;
     }
 
@@ -707,7 +707,7 @@ static int to_connect(int fd, struct sockaddr *addr, socklen_t len,
       return -1;
     case 0:
       uw_throwf(timeout_error_s, lit("sock-connect ~s: timeout on ~s"),
-		sock, sockaddr, nao);
+                sock, sockaddr, nao);
     default:
       return 0;
     }
@@ -726,7 +726,7 @@ static val sock_connect(val sock, val sockaddr, val timeout)
     sockaddr_in(sockaddr, family, &sa, &salen);
 
     if (to_connect(c_num(sfd), coerce(struct sockaddr *, &sa), salen,
-		   sock, sockaddr, default_bool_arg(timeout)) != 0)
+                   sock, sockaddr, default_bool_arg(timeout)) != 0)
       uw_throwf(socket_error_s, lit("sock-connect ~s to addr ~s: ~d/~s"),
                 sock, sockaddr, num(errno), string_utf8(strerror(errno)), nao);
 
@@ -891,7 +891,7 @@ failed:
             num(errno), string_utf8(strerror(errno)), nao);
 badfd:
   uw_throwf(socket_error_s, lit("sock-accept: cannot accept on ~s"),
-	    sock, nao);
+            sock, nao);
 }
 
 static val sock_shutdown(val sock, val how)
@@ -919,8 +919,8 @@ static val sock_timeout(val sock, val usec, val name, int which)
 
   if (setsockopt(fd, SOL_SOCKET, which, &tv, sizeof tv) != 0)
     uw_throwf(socket_error_s, lit("~a failed on ~s: ~d/~s"),
-	      name, sock, num(errno),
-	      string_utf8(strerror(errno)), nao);
+              name, sock, num(errno),
+              string_utf8(strerror(errno)), nao);
 
   return sock;
 }
