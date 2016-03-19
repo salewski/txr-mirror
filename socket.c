@@ -766,7 +766,7 @@ failed:
               num(errno), string_utf8(strerror(errno)), nao);
 }
 
-static val sock_accept(val sock, val mode_str_in, val timeout_in)
+static val sock_accept(val sock, val mode_str, val timeout_in)
 {
   val sfd = stream_fd(sock);
   int fd = sfd ? c_num(sfd) : -1;
@@ -850,7 +850,7 @@ static val sock_accept(val sock, val mode_str_in, val timeout_in)
 
     {
       int afd = dup(fd);
-      val mode_str = default_arg(mode_str_in, lit("r+b"));
+      struct stdio_mode mode_rpb = stdio_mode_init_rpb;
       mem_t *shrink = chk_realloc(dgram, nbytes);
 
       if (shrink)
@@ -864,7 +864,7 @@ static val sock_accept(val sock, val mode_str_in, val timeout_in)
       }
       return make_dgram_sock_stream(afd, family, peer, dgram, nbytes,
                                     coerce(struct sockaddr *, &sa), salen,
-                                    parse_mode(mode_str), d);
+                                    parse_mode(mode_str, mode_rpb), d);
     }
   } else {
     int afd = -1;
@@ -888,7 +888,7 @@ static val sock_accept(val sock, val mode_str_in, val timeout_in)
                 family, nao);
 
     {
-      val stream = open_sockfd(num(afd), family, num_fast(SOCK_STREAM), mode_str_in);
+      val stream = open_sockfd(num(afd), family, num_fast(SOCK_STREAM), mode_str);
       sock_set_peer(stream, peer);
       return stream;
     }
@@ -944,16 +944,15 @@ static val sock_recv_timeout(val sock, val usec)
 #endif
 
 
-val open_sockfd(val fd, val family, val type, val mode_str_in)
+val open_sockfd(val fd, val family, val type, val mode_str)
 {
-  struct stdio_mode m;
-  val mode_str = default_arg(mode_str_in, lit("r+b"));
+  struct stdio_mode m, m_rpb = stdio_mode_init_rpb;
 
   if (type == num_fast(SOCK_DGRAM)) {
     return make_dgram_sock_stream(c_num(fd), family, nil, 0, 0, 0, 0,
-                                  parse_mode(mode_str), 0);
+                                  parse_mode(mode_str, m_rpb), 0);
   } else {
-    FILE *f = (errno = 0, w_fdopen(c_num(fd), c_str(normalize_mode(&m, mode_str))));
+    FILE *f = (errno = 0, w_fdopen(c_num(fd), c_str(normalize_mode(&m, mode_str, m_rpb))));
 
     if (!f) {
       close(c_num(fd));

@@ -34416,7 +34416,7 @@ The
 argument is a string which uses the same
 conventions as the mode argument of the C language
 .code fopen
-function, with some extensions.
+function, with greater permissiveness, and some extensions.
 The mode string determines whether the stream is an input stream
 or output stream. Note that the
 .str b
@@ -34426,9 +34426,13 @@ are invoked on it.
 
 If the
 .meta mode-string
-argument is omitted, mode
+argument is omitted, the behavior is as if mode
 .str r
-is used.
+were specified. This default is not true of all functions which accepts a
+.meta mode-string
+argument: socket-related functions have a
+.str r+b
+default mode.
 
 Additional option letters are supported in
 .meta mode-string
@@ -34481,6 +34485,30 @@ specifying 524288 bytes. If no such digit is specified, then the
 stream uses a default buffer size. It is erroneous for the
 size order digit to be present together with the option
 .strn u .
+
+\*(TX mode strings are more permissive than the C
+.code fopen
+mode strings in two regards.
+Firstly, the data direction or disposition letter
+.strn r ,
+.str w
+or
+.str a
+may be omitted. If it is missing, and if the optional
+.str +
+is also missing, then the function-specific default mode applies
+(which is
+.str r
+in the case of
+.codn open-file )
+and any remaining options in apply on top of that default.
+This implies that a completely empty mode string is valid,
+and denotes the default mode.
+Secondly, if the
+.str +
+is present, but not preceded by anything, then defaulting is not
+applied; it is taken as equivalent to
+.strn r+ .
 
 .coNP Function @ open-tail
 .synb

@@ -1148,9 +1148,9 @@ static struct strm_ops pipe_ops =
                 stdio_clear_error,
                 stdio_get_fd);
 
-struct stdio_mode parse_mode(val mode_str)
+struct stdio_mode parse_mode(val mode_str, struct stdio_mode m_dfl)
 {
-  struct stdio_mode m = stdio_mode_init_trivial(0);
+  struct stdio_mode m = stdio_mode_init_blank;
   const wchar_t *ms = c_str(mode_str);
 
   switch (*ms) {
@@ -1169,8 +1169,7 @@ struct stdio_mode parse_mode(val mode_str)
     m.append = 1;
     break;
   default:
-    m.malformed = 1;
-    return m;
+    break;
   }
 
   if (*ms == '+') {
@@ -1179,6 +1178,9 @@ struct stdio_mode parse_mode(val mode_str)
       m.write = 1;
     m.read = 1;
   }
+
+  if (!m.read && !m.write)
+    m = m_dfl;
 
   for (; *ms; ms++) {
     switch (*ms) {
@@ -1247,24 +1249,16 @@ static val format_mode(const struct stdio_mode m)
   return string(buf);
 }
 
-val normalize_mode(struct stdio_mode *m, val mode_str)
+val normalize_mode(struct stdio_mode *m, val mode_str_in, struct stdio_mode m_dfl)
 {
-  struct stdio_mode blank = stdio_mode_init_trivial(1);
+  val mode_str = default_arg(mode_str_in, lit(""));
 
-  if (null_or_missing_p(mode_str)) {
-    *m = blank;
-    return lit("r");
-  } else {
-    *m = parse_mode(mode_str);
+  *m = parse_mode(mode_str, m_dfl);
 
-    if (m->malformed)
-      uw_throwf(file_error_s, lit("invalid file open mode ~a"), mode_str, nao);
+  if (m->malformed)
+    uw_throwf(file_error_s, lit("invalid file open mode ~a"), mode_str, nao);
 
-    if (!m->interactive)
-      return mode_str;
-
-    return format_mode(*m);
-  }
+  return format_mode(*m);
 }
 
 val set_mode_props(const struct stdio_mode m, val stream)
@@ -3358,8 +3352,8 @@ val open_directory(val path)
 
 val open_file(val path, val mode_str)
 {
-  struct stdio_mode m;
-  FILE *f = w_fopen(c_str(path), c_str(normalize_mode(&m, mode_str)));
+  struct stdio_mode m, m_r = stdio_mode_init_r;
+  FILE *f = w_fopen(c_str(path), c_str(normalize_mode(&m, mode_str, m_r)));
 
   if (!f)
     uw_throwf(file_error_s, lit("error opening ~a: ~d/~s"),
@@ -3370,8 +3364,8 @@ val open_file(val path, val mode_str)
 
 val open_fileno(val fd, val mode_str)
 {
-  struct stdio_mode m;
-  FILE *f = (errno = 0, w_fdopen(c_num(fd), c_str(normalize_mode(&m, mode_str))));
+  struct stdio_mode m, m_r = stdio_mode_init_r;
+  FILE *f = (errno = 0, w_fdopen(c_num(fd), c_str(normalize_mode(&m, mode_str, m_r))));
 
   if (!f) {
     close(c_num(fd));
@@ -3386,8 +3380,8 @@ val open_fileno(val fd, val mode_str)
 
 val open_tail(val path, val mode_str, val seek_end_p)
 {
-  struct stdio_mode m;
-  val mode = normalize_mode(&m, mode_str);
+  struct stdio_mode m, m_r = stdio_mode_init_r;
+  val mode = normalize_mode(&m, mode_str, m_r);
   FILE *f = w_fopen(c_str(path), c_str(mode));
   struct stdio_handle *h;
   val stream;
@@ -3408,8 +3402,8 @@ val open_tail(val path, val mode_str, val seek_end_p)
 
 val open_command(val path, val mode_str)
 {
-  struct stdio_mode m;
-  FILE *f = w_popen(c_str(path), c_str(normalize_mode(&m, mode_str)));
+  struct stdio_mode m, m_r = stdio_mode_init_r;
+  FILE *f = w_popen(c_str(path), c_str(normalize_mode(&m, mode_str, m_r)));
 
   if (!f)
     uw_throwf(file_error_s, lit("error opening pipe ~a: ~d/~s"),
@@ -3421,8 +3415,8 @@ val open_command(val path, val mode_str)
 #if HAVE_FORK_STUFF
 val open_process(val name, val mode_str, val args)
 {
-  struct stdio_mode m;
-  val mode = normalize_mode(&m, mode_str);
+  struct stdio_mode m, m_r = stdio_mode_init_r;
+  val mode = normalize_mode(&m, mode_str, m_r);
   int input = m.read != 0;
   int fd[2];
   pid_t pid;

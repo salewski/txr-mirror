@@ -95,7 +95,9 @@ struct stdio_mode {
   int buforder : 5;
 };
 
-#define stdio_mode_init_trivial(read) { 0, read, 0, 0, 0, 0, 0, 0, 0, -1 }
+#define stdio_mode_init_blank { 0, 0, 0, 0, 0, 0, 0, 0, 0, -1 }
+#define stdio_mode_init_r     { 0, 1, 0, 0, 0, 0, 0, 0, 0, -1 }
+#define stdio_mode_init_rpb   { 0, 1, 1, 0, 0, 1, 0, 0, 0, -1 }
 
 #define std_input (deref(lookup_var_l(nil, stdin_s)))
 #define std_output (deref(lookup_var_l(nil, stdout_s)))
@@ -126,8 +128,8 @@ void fill_stream_ops(struct strm_ops *ops);
 void stream_print_op(val stream, val out, val pretty);
 void stream_mark_op(val stream);
 void stream_destroy_op(val stream);
-struct stdio_mode parse_mode(val mode_str);
-val normalize_mode(struct stdio_mode *m, val mode_str);
+struct stdio_mode parse_mode(val mode_str, struct stdio_mode m_dfl);
+val normalize_mode(struct stdio_mode *m, val mode_str, struct stdio_mode m_dfl);
 val set_mode_props(const struct stdio_mode m, val stream);
 val generic_get_line(val stream);
 val errno_to_string(val err);
