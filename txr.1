@@ -37527,6 +37527,32 @@ Datagram servers should issue a new
 call should be issued for each client datagram, treating it as a new
 stream.
 
+Datagram sockets ignore almost all aspects of the
+.meta mode-string
+passed in
+.code open-socket
+and
+.codn sock-accept .
+The only attribute not ignored is the buffer size specified
+with a decimal digit character; however, it cannot be the
+only item in the mode string. The string must be syntactically
+valid, as described under the
+.code open-file
+function. The buffer size attribute controls the size used by
+the datagram socket for receiving a datagram: the capture size.
+A datagram socket has obtains a default capture size if one isn't
+specified by the
+.metn mode-string .
+The default capture size is 65536 bytes for a datagram socket created by
+.codn open-socket .
+If a size is not passed to
+.code sock-accept
+via its
+.meta mode-string
+argument when it is invoked on a datagram socket,
+that socket's size is used as the capture size of the
+newly created datagram socket which is returned.
+
 .coNP Structure @ sockaddr
 .synb
 .mets (defstruct sockaddr nil)

@@ -1148,7 +1148,7 @@ static struct strm_ops pipe_ops =
                 stdio_clear_error,
                 stdio_get_fd);
 
-static struct stdio_mode parse_mode(val mode_str)
+struct stdio_mode parse_mode(val mode_str)
 {
   struct stdio_mode m = stdio_mode_init_trivial(0);
   const wchar_t *ms = c_str(mode_str);

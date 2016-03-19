@@ -65,7 +65,7 @@ struct dgram_stream {
   int err;
   mem_t *rx_buf;
   mem_t *tx_buf;
-  int rx_size, rx_pos;
+  int rx_max, rx_size, rx_pos;
   int tx_pos;
   unsigned sock_connected : 1;
 };
@@ -261,7 +261,8 @@ static_forward(struct strm_ops dgram_strm_ops);
 
 static val make_dgram_sock_stream(int fd, val family, val peer,
                                   mem_t *dgram, int dgram_size,
-                                  struct sockaddr *peer_addr, socklen_t pa_len)
+                                  struct sockaddr *peer_addr, socklen_t pa_len,
+                                  struct stdio_mode m, struct dgram_stream *d_proto)
 {
   struct dgram_stream *d = coerce(struct dgram_stream *,
                                   chk_malloc(sizeof *d));
@@ -273,6 +274,9 @@ static val make_dgram_sock_stream(int fd, val family, val peer,
   d->family = d->peer = d->addr = d->unget_c = nil;
   d->err = 0;
   d->rx_buf = dgram;
+  d->rx_max = (m.buforder == -1)
+               ? d_proto ? d_proto->rx_max : 65536
+               : 1024 << m.buforder;
   d->rx_size = dgram_size;
   d->rx_pos = 0;
   d->tx_buf = 0;
@@ -373,7 +377,7 @@ static int dgram_get_byte_callback(mem_t *ctx)
   if (d->rx_buf) {
     return (d->rx_pos < d->rx_size) ? d->rx_buf[d->rx_pos++] : EOF;
   } else {
-    const int dgram_size = 65536;
+    const int dgram_size = d->rx_max;
     mem_t *dgram = chk_malloc(dgram_size);
     ssize_t nbytes = -1;
 
@@ -762,7 +766,7 @@ failed:
               num(errno), string_utf8(strerror(errno)), nao);
 }
 
-static val sock_accept(val sock, val mode_str, val timeout_in)
+static val sock_accept(val sock, val mode_str_in, val timeout_in)
 {
   val sfd = stream_fd(sock);
   int fd = sfd ? c_num(sfd) : -1;
@@ -804,8 +808,9 @@ static val sock_accept(val sock, val mode_str, val timeout_in)
   }
 
   if (type == num_fast(SOCK_DGRAM)) {
+    struct dgram_stream *d = coerce(struct dgram_stream *, sock->co.handle);
     ssize_t nbytes = -1;
-    const int dgram_size = 65536;
+    const int dgram_size = d->rx_max;
     mem_t *dgram = chk_malloc(dgram_size);
 
     if (sock_peer(sock)) {
@@ -845,7 +850,9 @@ static val sock_accept(val sock, val mode_str, val timeout_in)
 
     {
       int afd = dup(fd);
+      val mode_str = default_arg(mode_str_in, lit("r+b"));
       mem_t *shrink = chk_realloc(dgram, nbytes);
+
       if (shrink)
         dgram = shrink;
 
@@ -855,9 +862,9 @@ static val sock_accept(val sock, val mode_str, val timeout_in)
         uw_throwf(socket_error_s, lit("sock-accept: unable to "),
                 family, nao);
       }
-
       return make_dgram_sock_stream(afd, family, peer, dgram, nbytes,
-                                    coerce(struct sockaddr *, &sa), salen);
+                                    coerce(struct sockaddr *, &sa), salen,
+                                    parse_mode(mode_str), d);
     }
   } else {
     int afd = -1;
@@ -881,7 +888,7 @@ static val sock_accept(val sock, val mode_str, val timeout_in)
                 family, nao);
 
     {
-      val stream = open_sockfd(num(afd), family, num_fast(SOCK_STREAM), mode_str);
+      val stream = open_sockfd(num(afd), family, num_fast(SOCK_STREAM), mode_str_in);
       sock_set_peer(stream, peer);
       return stream;
     }
@@ -939,11 +946,13 @@ static val sock_recv_timeout(val sock, val usec)
 
 val open_sockfd(val fd, val family, val type, val mode_str_in)
 {
+  struct stdio_mode m;
+  val mode_str = default_arg(mode_str_in, lit("r+b"));
+
   if (type == num_fast(SOCK_DGRAM)) {
-    return make_dgram_sock_stream(c_num(fd), family, nil, 0, 0, 0, 0);
+    return make_dgram_sock_stream(c_num(fd), family, nil, 0, 0, 0, 0,
+                                  parse_mode(mode_str), 0);
   } else {
-    struct stdio_mode m;
-    val mode_str = default_arg(mode_str_in, lit("r+b"));
     FILE *f = (errno = 0, w_fdopen(c_num(fd), c_str(normalize_mode(&m, mode_str))));
 
     if (!f) {
