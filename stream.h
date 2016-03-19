@@ -92,9 +92,10 @@ struct stdio_mode {
   unsigned interactive : 1;
   unsigned unbuf : 1;
   unsigned linebuf : 1;
+  int buforder : 5;
 };
 
-#define stdio_mode_init_trivial(read) { 0, read, 0, 0, 0, 0, 0, 0, 0 }
+#define stdio_mode_init_trivial(read) { 0, read, 0, 0, 0, 0, 0, 0, 0, -1 }
 
 #define std_input (deref(lookup_var_l(nil, stdin_s)))
 #define std_output (deref(lookup_var_l(nil, stdout_s)))

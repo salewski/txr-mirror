@@ -34469,6 +34469,19 @@ mode letter specifies that the stream will be line buffered, unless
 specified as unbuffered with
 .strn u .
 
+In addition to option letters, decimal digit may be specified, influencing
+the stream buffer size. This digit specifies the buffer size as binary
+exponential buffer size order, such that
+.str 0
+specifies 1024 bytes,
+.str 1
+specifies 2048 and so forth up to
+.str 9
+specifying 524288 bytes. If no such digit is specified, then the
+stream uses a default buffer size. It is erroneous for the
+size order digit to be present together with the option
+.strn u .
+
 .coNP Function @ open-tail
 .synb
 .mets (open-tail < path >> [ mode-string <> [ seek-to-end-p ]])

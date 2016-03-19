@@ -355,6 +355,7 @@ struct stdio_handle {
   val unget_c;
   utf8_decoder_t ud;
   val err;
+  char *buf;
 #if HAVE_FORK_STUFF
   pid_t pid;
 #else
@@ -391,6 +392,7 @@ static void stdio_stream_destroy(val stream)
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
   close_stream(stream, nil);
   strm_base_cleanup(&h->a);
+  free(h->buf);
   free(h);
 }
 
@@ -1200,6 +1202,14 @@ static struct stdio_mode parse_mode(val mode_str)
       }
       m.unbuf = 1;
       break;
+    case '0': case '1': case '2': case '3': case '4':
+    case '5': case '6': case '7': case '8': case '9':
+      if (m.unbuf) {
+        m.malformed = 1;
+        return m;
+      }
+      m.buforder = *ms - '0';
+      break;
     default:
       m.malformed = 1;
       return m;
@@ -1259,14 +1269,26 @@ val normalize_mode(struct stdio_mode *m, val mode_str)
 
 val set_mode_props(const struct stdio_mode m, val stream)
 {
-  if (m.interactive || m.linebuf || m.unbuf) {
+  if (m.interactive || m.linebuf || m.unbuf || m.buforder != -1) {
     struct stdio_handle *h = coerce(struct stdio_handle *,
                                     cobj_handle(stream, stdio_stream_s));
     if (h->f) {
+      int size = m.buforder == -1 ? 0 : 1024 << m.buforder;
+
+      if (h->buf) {
+        free(h->buf);
+        h->buf = 0;
+      }
+
+      if (size)
+        h->buf = coerce(char *, chk_malloc(size));
+
       if (m.write && (m.linebuf || (m.interactive && !m.unbuf)))
-        setvbuf(h->f, 0, _IOLBF, 0);
+        setvbuf(h->f, h->buf, _IOLBF, size);
       else if (m.unbuf)
         setbuf(h->f, 0);
+      else if (size)
+        setvbuf(h->f, h->buf, _IOFBF, size);
     }
 
     if (m.interactive)
@@ -1285,6 +1307,7 @@ static val make_stdio_stream_common(FILE *f, val descr, struct cobj_ops *ops)
   h->unget_c = nil;
   utf8_decoder_init(&h->ud);
   h->err = nil;
+  h->buf = 0;
   h->pid = 0;
   h->mode = nil;
   h->is_rotated = 0;
