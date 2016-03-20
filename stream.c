@@ -896,6 +896,8 @@ static void tail_strategy(val stream, unsigned long *state)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
   int sec = 0, mod = 0;
+  val mode = nil;
+  struct stdio_mode m, m_r = stdio_mode_init_r;
 
   tail_calc(state, &sec, &mod);
 
@@ -926,9 +928,12 @@ static void tail_strategy(val stream, unsigned long *state)
     for (;;) {
       FILE *newf;
 
+      if (!mode)
+        mode = normalize_mode(&m, h->mode, m_r);
+
       /* Try to open the file.
        */
-      if (!(newf = w_fopen(c_str(h->descr), c_str(h->mode)))) {
+      if (!(newf = w_fopen(c_str(h->descr), c_str(mode)))) {
         /* If already have the file open previously, and the name
          * does not open any more, then the file has rotated.
          * Have the caller try to read the last bit of data
@@ -952,6 +957,7 @@ static void tail_strategy(val stream, unsigned long *state)
        */
       if (!h->f) {
         h->f = newf;
+        (void) set_mode_props(m, stream);
         break;
       }
 
@@ -987,6 +993,7 @@ static void tail_strategy(val stream, unsigned long *state)
         fseek(newf, save_pos, SEEK_SET);
       fclose(h->f);
       h->f = newf;
+      (void) set_mode_props(m, stream);
       return;
     }
 
@@ -3394,7 +3401,7 @@ val open_tail(val path, val mode_str, val seek_end_p)
 
   stream = make_tail_stream(f, path);
   h = coerce(struct stdio_handle *, stream->co.handle);
-  h->mode = mode;
+  h->mode = mode_str;
   if (!f)
     tail_strategy(stream, &state);
   return set_mode_props(m, stream);
