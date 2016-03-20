@@ -1,3 +1,40 @@
+                                    TXR 136
+                                   2016-03-20
+
+
+  Features
+
+  - I/O stream mode handling improvements:
+    - "i" interactive mode specifies line buffering
+    - New "l" and "u" mode letters for specifying line buffered
+      and unbuffered mode on streams.
+    - Decimal digit character in mode string specifies stream
+      buffer size as a binary exponent with implicit 1024 multiplier.
+    - Mode strings have a more permissive syntax; everything
+      is optional with defaulting based on stream type.
+  - Sockets:
+    - sock-connect returns socket instead of useless t value.
+    - New functions sock-recv-timeout and sock-send-timeout
+      for setting the timeout options on socket.
+      - I/O timeouts throw exception of type timeout-error
+    - sock-connect and sock-accept have new parameter for
+      timing out.
+    - socket open mode is r+b by default, not r+.
+  - TXR Extraction Language:
+    - @(output) destination can be a stream object now
+    - @(repeat) and @(rep) can now bind new variables, via
+      extension to :vars syntax and semantics.
+
+  Bugs
+
+  - unget-byte sets errno to zero to avoid false errno
+    association with failure.
+  - Bugfix in @(repeat)/@(rep) internals: destructive manipulation of lists.
+  - Tail streams honor all aspects of mode for re-opened
+    stdio streams.
+
+
+
                                     TXR 135
                                    2016-03-10
 
