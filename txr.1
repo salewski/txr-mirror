@@ -34417,98 +34417,107 @@ argument is a string which uses the same
 conventions as the mode argument of the C language
 .code fopen
 function, with greater permissiveness, and some extensions.
-The mode string determines whether the stream is an input stream
-or output stream. Note that the
-.str b
-mode is passed through to the C library, but has no special meaning to \*(TX.
-Whether a stream is text or binary depends on which operations
-are invoked on it.
+
+The syntax of mode-string is described by the following
+grammar. Note that it permits no whitespace characters:
+
+.cblk
+.mets < mode-string := [ < mode ] [ < options ]
+.mets < mode := { < selector [ + ] | + }
+.mets < selector := { r | w | a }
+.mets < options := { b | l | u | < digit }
+.mets < digit := { 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 }
+.cble
 
 If the
 .meta mode-string
-argument is omitted, the behavior is as if mode
-.str r
-were specified. This default is not true of all functions which accepts a
-.meta mode-string
-argument: socket-related functions have a
-.str r+b
-default mode.
+argument is omitted, the behavior is the same as an empty
+mode string.
 
-Additional option letters are supported in
-.meta mode-string
-which are not feature of the standard C
-.code fopen
-function. These letters cannot occur anywhere in the string. They can occur in the
-same position as the
-.str b
-option, in any order with respect to that
-.str b
-or each other. Their relative order doesn't matter.
-
-The letter
-.str l
-indicates that the stream will be line buffered.  This means that an implicit
+The
+.meta mode
+part of the mode string generates the following possibilities:
+.RS
+.meIP empty
+If the
+.meta mode
+is missing, then a default mode is implied. The default
+is specific to the particular stream-opening function. In
+the case of
+.codn open-file ,
+the default mode is
+.codn r .
+.coIP +
+A
+.meta mode
+consisting of just the
+.code +
+character is equivalent to
+.codn r+ .
+.coIP r
+This
+.meta mode
+means that the file is opened for reading.
+.coIP r+
+The file is opened for reading and writing.  It is not created
+if it doesn't exist.
+.coIP w
+The file is opened for writing. If it exists, it is truncated
+to zero length. If it doesn't exist, it is created.
+.coIP w+
+The file is opened for reading and writing. If it exists, it
+is truncated to zero length. If it doesn't exist, it is created.
+.coIP a
+The file is opened for writing. If it doesn't exist, it is
+created. If it exists, the current position is advanced to
+one byte past the end of the file, so that newly written data
+are appended.
+.coIP a+
+The file is opened for reading and writing. If it doesn't exist,
+it is created. The read position is at the beginning of the file,
+but writes are appended to the end regardless of the position.
+.RE
+.IP
+The meanings of the option characters are:
+.RS
+.coIP b
+The file is opened in binary mode: no line ending translation takes place.
+In the absence of this option, files are opened in text mode, in which newline
+characters in the stream are an abstract indication of the end of a line,
+translate to a system-specific way of terminating lines in text files.
+.coIP l
+Specifies that the stream will be line buffered.  This means that an implicit
 flush operation takes place whenever the newline character is output.
-
-The letter
-.str u
-indicates that the stream will be unbuffered.
-
-It is erroneous for both
-.str l
+.coIP u
+Specifies that the stream will be unbuffered.  It is erroneous for both
+.code l
 and
-.str u
+.code u
 to be specified.
-
-The option letter
-.str i
-indicates that the stream will have the real-time
+.coIP i
+Specifies that the stream will have the real-time
 property set. For a description of the semantics, see the
 .code real-time-stream-p
 function. Briefly, this property affects the semantics of lazy lists which draw
 input from the stream.
 In addition, for a stream opened for writing or reading and writing, the
-.str i
+.code i
 mode letter specifies that the stream will be line buffered, unless
 specified as unbuffered with
-.strn u .
-
-In addition to option letters, decimal digit may be specified, influencing
-the stream buffer size. This digit specifies the buffer size as binary
-exponential buffer size order, such that
-.str 0
+.codn u .
+.meIP digit
+A decimal digit specifies the the stream buffer size
+as binary exponential buffer size order, such that
+.code 0
 specifies 1024 bytes,
-.str 1
+.code 1
 specifies 2048 and so forth up to
-.str 9
+.code 9
 specifying 524288 bytes. If no such digit is specified, then the
 stream uses a default buffer size. It is erroneous for the
 size order digit to be present together with the option
-.strn u .
-
-\*(TX mode strings are more permissive than the C
-.code fopen
-mode strings in two regards.
-Firstly, the data direction or disposition letter
-.strn r ,
-.str w
-or
-.str a
-may be omitted. If it is missing, and if the optional
-.str +
-is also missing, then the function-specific default mode applies
-(which is
-.str r
-in the case of
-.codn open-file )
-and any remaining options in apply on top of that default.
-This implies that a completely empty mode string is valid,
-and denotes the default mode.
-Secondly, if the
-.str +
-is present, but not preceded by anything, then defaulting is not
-applied; it is taken as equivalent to
-.strn r+ .
+.codn u .
+.RE
 
 .coNP Function @ open-tail
 .synb
