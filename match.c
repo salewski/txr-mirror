@@ -2243,6 +2243,23 @@ val freeform_prepare(val vals, match_files_ctx *c, match_line_ctx *mlc)
   return limit;
 }
 
+static val maybe_next(match_files_ctx *c, val match_result)
+{
+  cons_bind (new_bindings, success, match_result);
+
+  if (!success) {
+    return nil;
+  } else if (success == t) {
+    c->data = nil;
+  } else {
+    cons_bind (new_data, new_line, success);
+    c->data = new_data;
+    c->data_lineno = new_line;
+  }
+
+  c->bindings = new_bindings;
+  return next_spec_k;
+}
 
 static val v_block(match_files_ctx *c)
 {
@@ -2260,22 +2277,7 @@ static val v_block(match_files_ctx *c)
     result = match_files(mf_spec(*c, spec));
     uw_block_end;
 
-    {
-      cons_bind (new_bindings, success, result);
-
-      if (!success) {
-        return nil;
-      } else if (success == t) {
-        c->data = nil;
-      } else {
-        cons_bind (new_data, new_line, success);
-        c->data = new_data;
-        c->data_lineno = new_line;
-      }
-
-      c->bindings = new_bindings;
-      return next_spec_k;
-    }
+    return maybe_next(c, result);
   }
 }
 
@@ -3663,21 +3665,8 @@ static val v_if(match_files_ctx *c)
 
   for (; args; args = cdr(args)) {
     cons_bind (expr, spec, car(args));
-    if (eval_with_bindings(expr, c->spec, c->bindings, specline)) {
-      cons_bind (new_bindings, success, match_files(mf_spec(*c, spec)));
-      if (!success) {
-        return nil;
-      } else if (success == t) {
-        c->data = nil;
-      } else {
-        cons_bind (new_data, new_line, success);
-        c->data = new_data;
-        c->data_lineno = new_line;
-      }
-
-      c->bindings = new_bindings;
-      return next_spec_k;
-    }
+    if (eval_with_bindings(expr, c->spec, c->bindings, specline))
+      return maybe_next(c, match_files(mf_spec(*c, spec)));
   }
 
   return next_spec_k;
