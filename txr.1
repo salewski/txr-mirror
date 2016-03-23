@@ -2955,11 +2955,8 @@ directive with optional
 .code elif
 and
 .code else
-clauses is a syntactic sugar
-which translates to a combination of
-.code @(cases)
-and
-.codn @(require) .
+clauses allows one of multiple bodies of pattern matching directives to be
+conditionally selected by testing the values of Lisp expressions.
 
 .coIP @(choose)
 Multiple clauses are applied to the same input. The one whose effect persists
@@ -4348,6 +4345,11 @@ Example:
 
 .dir if
 
+The
+.code if
+directive allows for conditional selection of pattern matching clauses,
+based on the Boolean results Lisp expressions.
+
 The syntax of the
 .code if
 directive can be exemplified as follows:
@@ -4411,37 +4413,33 @@ then matching continues with
 otherwise it proceeds with
 .codn {@c} .
 
-The
+More precisely, how the
 .code if
-directive is actually a syntactic sugar which is translated to
-.code @(cases)
-and
-.codn @(require) .
-That is to say, the following pattern:
-
-.cblk
-  @(cases)
-.mets @(require << lisp-expr-1 )
-  A
-  @(or)
-.mets @(require << lisp-expr-2 )
-  B
-  @(or)
-  C
-  @(end)
-.cble
-
-corresponds to the somewhat shorter and clearer:
-
-.cblk
-.mets @(if << lisp-expr-1 )
-  A
-.mets @(elif << lisp-expr-2 )
-  B
-  @(else)
-  C
-  @(end)
-.cble
+directive works is as follows. The Lisp expressions are evaluated in order,
+starting with the
+.code if
+expression, then the
+.code elif
+expressions if any are present. If any Lisp expression yields a true result
+(any value other than
+.codn nil)
+then evaluation of Lisp expressions stops. The corresponding clause of that
+Lisp expression is selected and pattern matching continues
+with that clauses. The result of that clause (its success or failure,
+and any newly bound variables) is then taken as the result of the
+.code if
+directive. If none of the Lisp expressions yield true, and an
+.code else
+clause is present, then that clause is processed and its result determines
+the result of the
+.code if
+directive. If none of the Lisp expressions
+yield true, and there is no
+.code else
+clause, then the
+.code if
+directive is deemed to have trivially succeeded, allowing matching to continue
+with whatever directive follows it.
 
 .dir gather
 
@@ -40636,6 +40634,18 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code -C 103
 selects the behaviors described below for version 105, but not those for 102.
+.IP 136
+A request for compatibility with \*(TX 136 or earlier restores the old behavior
+of the
+.code if
+directive, which in used to be a syntactic sugar for a
+.code cases
+directive with
+.code require
+at the top of each block. Though semantically well-defined and working as
+documented, the behavior was confusing, since failed matching caused potential
+evaluation of multiple clauses, whereas programmers expect an if/elif/else
+ladder to select exactly one clause.
 .IP 128
 Compatibility with \*(TX 128 or earlier brings back the behavior that
 expressions in quasiliterals are evaluated according to \*(TX evaluation

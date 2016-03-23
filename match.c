@@ -3656,6 +3656,33 @@ static val v_require(match_files_ctx *c)
   return next_spec_k;
 }
 
+static val v_if(match_files_ctx *c)
+{
+  spec_bind (specline, first_spec, c->spec);
+  val args = rest(first_spec);
+
+  for (; args; args = cdr(args)) {
+    cons_bind (expr, spec, car(args));
+    if (eval_with_bindings(expr, c->spec, c->bindings, specline)) {
+      cons_bind (new_bindings, success, match_files(mf_spec(*c, spec)));
+      if (!success) {
+        return nil;
+      } else if (success == t) {
+        c->data = nil;
+      } else {
+        cons_bind (new_data, new_line, success);
+        c->data = new_data;
+        c->data_lineno = new_line;
+      }
+
+      c->bindings = new_bindings;
+      return next_spec_k;
+    }
+  }
+
+  return next_spec_k;
+}
+
 static val v_assert(match_files_ctx *c)
 {
   spec_bind (specline, first_spec, c->spec);
@@ -4182,6 +4209,7 @@ static void dir_tables_init(void)
   sethash(v_directive_table, eof_s, cptr(coerce(mem_t *, v_eof)));
   sethash(v_directive_table, do_s, cptr(coerce(mem_t *, v_do)));
   sethash(v_directive_table, require_s, cptr(coerce(mem_t *, v_require)));
+  sethash(v_directive_table, if_s, cptr(coerce(mem_t *, v_if)));
   sethash(v_directive_table, assert_s, cptr(coerce(mem_t *, v_assert)));
   sethash(v_directive_table, load_s, cptr(coerce(mem_t *, v_load)));
   sethash(v_directive_table, close_s, cptr(coerce(mem_t *, v_close)));

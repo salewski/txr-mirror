@@ -100,7 +100,7 @@ int yyparse(scanner_t *, parser_t *);
 %token <lineno> ALL SOME NONE MAYBE CASES BLOCK CHOOSE GATHER
 %token <lineno> AND OR END COLLECT
 %token <lineno> UNTIL COLL OUTPUT REPEAT REP SINGLE FIRST LAST EMPTY
-%token <lineno> MOD MODLAST DEFINE TRY CATCH FINALLY
+%token <lineno> MOD MODLAST DEFINE TRY CATCH FINALLY IF
 %token <lineno> ERRTOK /* deliberately not used in grammar */
 %token <lineno> HASH_BACKSLASH HASH_SLASH DOTDOT HASH_H HASH_S HASH_R
 %token <lineno> WORDS WSPLICE QWORDS QWSPLICE
@@ -358,25 +358,48 @@ if_clause : IF exprs_opt ')'
             newl clauses_opt
             elif_clauses_opt
             else_clause_opt
-            END newl            { val req = rlcp(cons(require_s, $2), $2);
-                                  val iff = rlcp(cons(cons(cons(req, nil), $5), nil), $2);
-                                  val elifs = $6;
-                                  val els = cons($7, nil);
-                                  val cases = nappend2(nappend2(iff, elifs), els);
-                                  $$ = list(cases_s, cases, nao); }
+            END newl            { if (opt_compat && opt_compat <= 136)
+                                  { val req = rlcp(cons(require_s, $2), $2);
+                                    val iff = rlcp(cons(cons(cons(req, nil), $5), nil), $2);
+                                    val elifs = $6;
+                                    val els = cons($7, nil);
+                                    val cases = nappend2(nappend2(iff, elifs), els);
+                                    $$ = list(cases_s, cases, nao); }
+                                  else
+                                  { val expr = car($2);
+                                    val ifs = $5;
+                                    val branch = cons(cons(expr, ifs), nil);
+                                    val elifs = $6;
+                                    val els = $7;
+                                    if (cdr($2))
+                                      yyerr("extra expression in if");
+                                    $$ = cons(if_s,
+                                              nappend2(branch, nappend2(elifs, els)));
+                                    rl($$, num($1)); } }
           | IF exprs_opt ')'
             newl error          { $$ = nil; yybadtok(yychar, lit("if clause")); }
           ;
 
 elif_clauses_opt : ELIF exprs_opt ')' newl
                    clauses_opt
-                   elif_clauses_opt  { val req = rlcp(cons(require_s, $2), $2);
-                                       $$ = cons(cons(cons(req, nil), $5), $6); }
+                   elif_clauses_opt  { if (opt_compat && opt_compat <= 136)
+                                       { val req = rlcp(cons(require_s, $2), $2);
+                                         $$ = cons(cons(cons(req, nil), $5), $6); }
+                                       else
+                                       { val expr = car($2);
+                                         val elifs = $5;
+                                         val branch = cons(cons(expr, elifs), nil);
+                                         if (cdr($2))
+                                           yyerr("extra expression in elif");
+                                         $$ = nappend2(branch, $6); } }
                  |                   { $$ = nil; }
                  ;
 
 else_clause_opt : ELSE newl
-                  clauses_opt        { $$ = $3; }
+                  clauses_opt        { if (opt_compat && opt_compat <= 136)
+                                       { $$ = $3; }
+                                       else
+                                       { $$ = cons(cons(t, $3), nil); } }
                   |                  { $$ = nil; }
                   ;
 
