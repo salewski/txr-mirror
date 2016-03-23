@@ -2229,7 +2229,7 @@ val tofloat(val obj)
   case TAG_CHR:
     {
       cnum ch = c_num(obj);
-      if (isdigit(ch))
+      if (ch >= '0' && ch <= '9')
         return flo(ch - '0');
       return nil;
     }
@@ -2268,8 +2268,8 @@ val toint(val obj, val base)
       if (ch >= '0' && ch <= '9')
         return num(ch - '0');
 
-      if (isalpha(ch)) {
-        cnum n = 10 + toupper(ch) - 'A';
+      if (iswalpha(ch)) {
+        cnum n = 10 + towupper(ch) - 'A';
         cnum b = c_num(default_arg(base, num_fast(10)));
 
         if (n < b)
