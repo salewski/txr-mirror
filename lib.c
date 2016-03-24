@@ -6339,6 +6339,8 @@ val lazy_str_put(val lstr, val stream)
     val str = car(iter);
     if (!str)
       break;
+    if (lim)
+      lim = pred(lim);
     put_string(str, stream);
     put_string(term, stream);
   }
@@ -8401,6 +8403,8 @@ static void out_lazy_str(val lstr, val out)
       break;
     out_str_pretty(c_str(str), out, &semi_flag);
     out_str_pretty(wcterm, out, &semi_flag);
+    if (lim)
+      lim = pred(lim);
   }
 
   put_char(chr('"'), out);
