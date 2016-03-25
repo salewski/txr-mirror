@@ -35159,7 +35159,9 @@ pseudo-random number generator.
 The
 .code time
 function returns the number of seconds that have elapsed since
-midnight, January 1, 1970, in the UTC timezone.
+midnight, January 1, 1970, in the UTC timezone: a point in
+time called
+.IR "the epoch" .
 
 The
 .code time-usec
@@ -35301,6 +35303,41 @@ argument is an integer representing seconds obtained from the
 function or from the
 .code time-usec
 function.
+
+.coNP Methods @ time-local and @ time-utc
+.synb
+.mets << time-struct .(time-local)
+.mets << time-struct .(time-utc)
+.syne
+.desc
+The
+.code time
+structure has two methods called
+.code time-local
+and
+.codn time-utc .
+
+The
+.code time-local
+function considers the slots of the
+.code time
+structure instance
+.meta time-struct
+to be local time, and returns its integer representation
+as the number of seconds since the epoch.
+
+The
+.code time-utc
+function is similar, except it considers
+the slots of
+.meta time-struct
+to be in the UTC time zone.
+
+Note: these functions work by converting the slots into arguments
+which are applied to
+.code make-time
+or
+.codn make-time-utc .
 
 .coNP Functions @ make-time and @ make-time-utc
 .synb
