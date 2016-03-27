@@ -3518,7 +3518,7 @@ tail:
       val mac_expand = expand_macro(form, macro, menv);
       if (mac_expand == form)
         return form;
-      form = rlcp_tree(rlcp_tree(mac_expand, macro), form);
+      form = rlcp_tree(rlcp_tree(mac_expand, form), macro);
       goto tail;
     } else if (sym == progn_s) {
       val args = rest(form);
@@ -3587,7 +3587,7 @@ static val macroexpand_1(val form, val menv)
     val mac_expand = expand_macro(form, macro, menv);
     if (mac_expand == form)
       return form;
-    return rlcp_tree(rlcp_tree(mac_expand, macro), form);
+    return rlcp_tree(rlcp_tree(mac_expand, form), macro);
   }
 
   if (bindable(form) && (macro = lookup_symac(menv, form))) {
