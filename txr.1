@@ -15957,6 +15957,26 @@ is returned, otherwise what is returned is the suffix of
 .meta sequence
 which begins with the matching element.
 
+.coNP Functions @, rmemq @, rmemql @, rmemqual @ rmember and @ rmember-if
+.synb
+.mets (rmemq < object << list )
+.mets (rmemql < object << list )
+.mets (rmemqual < object << list )
+.mets (rmember < key < sequence >> [ testfun <> [ keyfun ]])
+.mets (rmember-if < predfun < sequence <> [ keyfun ])
+.syne
+.desc
+These functions are counterparts to
+.codn memq ,
+.codn memql ,
+.codn memqual ,
+.code member
+and
+.code member-if which look for the right-most
+element which matches
+.metn object ,
+rather than for the left-most element.
+
 .coNP Functions @ conses and @ conses*
 .synb
 .mets (conses << list )
@@ -21419,6 +21439,24 @@ with one argument. If it is not supplied, it defaults to
   [search "abcd" #(#\eC #\eD) : chr-toupper] -> 2
 .cble
 
+.coNP Function @ rsearch
+.synb
+.mets (rsearch < haystack < needle >> [ testfun <> [ keyfun ])
+.syne
+.desc
+The
+.code rsearch
+function is like
+.code search
+except that if
+.meta needle
+matches
+.meta haystack
+in multiple places,
+.code rsearch
+returns the right-most matching position rather than
+the leftmost.
+
 .coNP Functions @ ref and @ refset
 .synb
 .mets (ref < seq << index )
@@ -21687,7 +21725,7 @@ which is identical to
 being
 .codn (fun identity) .
 
-.coNP Functions @, posqual @ posql and @ posq
+.coNP Functions @, posq @ posql and @ posqual
 .synb
 .mets (posq < object << list )
 .mets (posql < object << list )
@@ -21780,6 +21818,25 @@ yields true is returned. If
 no such element is found,
 .code nil
 is returned.
+
+.coNP Functions @, rposq @, rposql @, rposqual @ rpos and @ rpos-if
+.synb
+.mets (rposq < object << list )
+.mets (rposql < object << list )
+.mets (rposqual < object << list )
+.mets (rpos < key < list >> [ testfun <> [ keyfun ]])
+.mets (rpos-if < predfun < list <> [ keyfun ])
+.syne
+.desc
+These functions are counterparts of
+.codn rposq ,
+.codn rposql ,
+.codn rposqual ,
+.code rpos
+and
+.codn rpos-if
+which report position of the right-most matching item,
+rather than the left-most.
 
 .coNP Functions @ pos-max and @ pos-min
 .synb
@@ -22310,6 +22367,27 @@ yields true is returned. If no such
 element is found,
 .code nil
 is returned.
+
+.coNP Functions @ rfind and @ rfind-if
+.synb
+.mets (rfind < key < sequence >> [ testfun <> [ keyfun ]])
+.mets (rfind-if < predfun < sequence <> [ keyfun ])
+.syne
+.desc
+The
+.code rfind
+and
+.code rfind-if
+functions are almost exactly like
+.code find
+and
+.code find-if
+except that if there are multiple matches for
+.meta key
+in
+.metn sequence ,
+they return the right-most element rather than
+the leftmost.
 
 .coNP Functions @ find-max and @ find-min
 .synb

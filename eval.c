@@ -4771,8 +4771,13 @@ void eval_init(void)
   reg_fun(memq_s, func_n2(memq));
   reg_fun(memql_s, func_n2(memql));
   reg_fun(memqual_s, func_n2(memqual));
+  reg_fun(intern(lit("rmemq"), user_package), func_n2(rmemq));
+  reg_fun(intern(lit("rmemql"), user_package), func_n2(rmemql));
+  reg_fun(intern(lit("rmemqual"), user_package), func_n2(rmemqual));
   reg_fun(intern(lit("member"), user_package), func_n4o(member, 2));
+  reg_fun(intern(lit("rmember"), user_package), func_n4o(rmember, 2));
   reg_fun(intern(lit("member-if"), user_package), func_n3o(member_if, 2));
+  reg_fun(intern(lit("rmember-if"), user_package), func_n3o(rmember_if, 2));
   reg_fun(intern(lit("remq"), user_package), func_n2(remq));
   reg_fun(intern(lit("remql"), user_package), func_n2(remql));
   reg_fun(intern(lit("remqual"), user_package), func_n2(remqual));
@@ -4789,10 +4794,15 @@ void eval_init(void)
   reg_fun(intern(lit("countq"), user_package), func_n2(countq));
   reg_fun(intern(lit("count-if"), user_package), func_n3o(count_if, 2));
   reg_fun(intern(lit("posqual"), user_package), func_n2(posqual));
+  reg_fun(intern(lit("rposqual"), user_package), func_n2(rposqual));
   reg_fun(intern(lit("posql"), user_package), func_n2(posql));
+  reg_fun(intern(lit("rposql"), user_package), func_n2(rposql));
   reg_fun(intern(lit("posq"), user_package), func_n2(posq));
+  reg_fun(intern(lit("rposq"), user_package), func_n2(rposq));
   reg_fun(intern(lit("pos"), user_package), func_n4o(pos, 2));
+  reg_fun(intern(lit("rpos"), user_package), func_n4o(rpos, 2));
   reg_fun(intern(lit("pos-if"), user_package), func_n3o(pos_if, 2));
+  reg_fun(intern(lit("rpos-if"), user_package), func_n3o(rpos_if, 2));
   reg_fun(intern(lit("some"), user_package), func_n3o(some_satisfy, 1));
   reg_fun(intern(lit("all"), user_package), func_n3o(all_satisfy, 1));
   reg_fun(intern(lit("none"), user_package), func_n3o(none_satisfy, 1));
@@ -5137,10 +5147,12 @@ void eval_init(void)
   reg_fun(intern(lit("sort"), user_package), func_n3o(sort, 1));
   reg_fun(intern(lit("shuffle"), user_package), func_n1(shuffle));
   reg_fun(intern(lit("find"), user_package), func_n4o(find, 2));
-  reg_fun(intern(lit("multi-sort"), user_package), func_n3o(multi_sort, 2));
+  reg_fun(intern(lit("rfind"), user_package), func_n4o(rfind, 2));
   reg_fun(intern(lit("find-if"), user_package), func_n3o(find_if, 2));
+  reg_fun(intern(lit("rfind-if"), user_package), func_n3o(rfind_if, 2));
   reg_fun(intern(lit("find-max"), user_package), func_n3o(find_max, 1));
   reg_fun(intern(lit("find-min"), user_package), func_n3o(find_min, 1));
+  reg_fun(intern(lit("multi-sort"), user_package), func_n3o(multi_sort, 2));
   reg_fun(intern(lit("set-diff"), user_package), func_n4o(set_diff, 2));
 
   reg_fun(intern(lit("seqp"), user_package), func_n1(seqp));
@@ -5155,6 +5167,7 @@ void eval_init(void)
   reg_fun(intern(lit("dwim-del"), system_package), func_n2(dwim_del));
   reg_fun(intern(lit("update"), user_package), func_n2(update));
   reg_fun(intern(lit("search"), user_package), func_n4o(search, 2));
+  reg_fun(intern(lit("rsearch"), user_package), func_n4o(rsearch, 2));
   reg_fun(intern(lit("where"), user_package), func_n2(where));
   reg_fun(intern(lit("select"), user_package), func_n2(sel));
 

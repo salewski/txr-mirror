@@ -1303,6 +1303,17 @@ val memq(val obj, val list)
   return make_like(list, list_orig);
 }
 
+val rmemq(val obj, val list)
+{
+  val list_orig = list;
+  val found = nil;
+  list = nullify(list);
+  gc_hint(list);
+  while (list && (found = (car(list) != obj ? list : found)))
+    list = cdr(list);
+  return make_like(found, list_orig);
+}
+
 val memql(val obj, val list)
 {
   val list_orig = list;
@@ -1313,6 +1324,17 @@ val memql(val obj, val list)
   return make_like(list, list_orig);
 }
 
+val rmemql(val obj, val list)
+{
+  val list_orig = list;
+  val found = nil;
+  list = nullify(list);
+  gc_hint(list);
+  while (list && (found = (eql(car(list), obj) ? list : found)))
+    list = cdr(list);
+  return make_like(found, list_orig);
+}
+
 val memqual(val obj, val list)
 {
   val list_orig = list;
@@ -1321,6 +1343,17 @@ val memqual(val obj, val list)
   while (list && !equal(car(list), obj))
     list = cdr(list);
   return make_like(list, list_orig);
+}
+
+val rmemqual(val obj, val list)
+{
+  val list_orig = list;
+  val found = nil;
+  list = nullify(list);
+  gc_hint(list);
+  while (list && (found = (equal(car(list), obj) ? list : found)))
+    list = cdr(list);
+  return make_like(found, list_orig);
 }
 
 val member(val item, val list, val testfun, val keyfun)
@@ -1343,6 +1376,27 @@ val member(val item, val list, val testfun, val keyfun)
   return nil;
 }
 
+val rmember(val item, val list, val testfun, val keyfun)
+{
+  val found = nil;
+  testfun = default_arg(testfun, equal_f);
+  keyfun = default_arg(keyfun, identity_f);
+
+  list = nullify(list);
+
+  gc_hint(list);
+
+  for (; list; list = cdr(list)) {
+    val elem = car(list);
+    val key = funcall1(keyfun, elem);
+
+    if (funcall2(testfun, item, key))
+      found = list;
+  }
+
+  return found;
+}
+
 val member_if(val pred, val list, val key)
 {
   key = default_arg(key, identity_f);
@@ -1361,6 +1415,24 @@ val member_if(val pred, val list, val key)
   return nil;
 }
 
+val rmember_if(val pred, val list, val key)
+{
+  val found = nil;
+  key = default_arg(key, identity_f);
+  list = nullify(list);
+
+  gc_hint(list);
+
+  for (; list; list = cdr(list)) {
+    val item = car(list);
+    val subj = funcall1(key, item);
+
+    if (funcall1(pred, subj))
+      found = list;
+  }
+
+  return found;
+}
 
 val remq(val obj, val list)
 {
@@ -7253,6 +7325,27 @@ val find(val item, val list, val testfun, val keyfun)
   return nil;
 }
 
+val rfind(val item, val list, val testfun, val keyfun)
+{
+  val found = nil;
+  testfun = default_arg(testfun, equal_f);
+  keyfun = default_arg(keyfun, identity_f);
+
+  list = nullify(list);
+
+  gc_hint(list);
+
+  for (; list; list = cdr(list)) {
+    val elem = car(list);
+    val key = funcall1(keyfun, elem);
+
+    if (funcall2(testfun, item, key))
+      found = elem;
+  }
+
+  return found;
+}
+
 val find_max(val seq, val testfun, val keyfun)
 {
   val maxkey;
@@ -7306,6 +7399,25 @@ val find_if(val pred, val list, val key)
   return nil;
 }
 
+val rfind_if(val pred, val list, val key)
+{
+  val found = nil;
+  key = default_arg(key, identity_f);
+  list = nullify(list);
+
+  gc_hint(list);
+
+  for (; list; list = cdr(list)) {
+    val item = car(list);
+    val subj = funcall1(key, item);
+
+    if (funcall1(pred, subj))
+      found = item;
+  }
+
+  return found;
+}
+
 val posqual(val obj, val list)
 {
   val pos = zero;
@@ -7319,6 +7431,22 @@ val posqual(val obj, val list)
       return pos;
 
   return nil;
+}
+
+val rposqual(val obj, val list)
+{
+  val pos = zero;
+  val found = nil;
+
+  list = nullify(list);
+
+  gc_hint(list);
+
+  for (; list; list = cdr(list), pos = plus(pos, one))
+    if (equal(car(list), obj))
+      found = pos;
+
+  return found;
 }
 
 val posql(val obj, val list)
@@ -7336,6 +7464,22 @@ val posql(val obj, val list)
   return nil;
 }
 
+val rposql(val obj, val list)
+{
+  val pos = zero;
+  val found = nil;
+
+  list = nullify(list);
+
+  gc_hint(list);
+
+  for (; list; list = cdr(list), pos = plus(pos, one))
+    if (eql(car(list), obj))
+      pos = found;
+
+  return pos;
+}
+
 val posq(val obj, val list)
 {
   val pos = zero;
@@ -7349,6 +7493,22 @@ val posq(val obj, val list)
       return pos;
 
   return nil;
+}
+
+val rposq(val obj, val list)
+{
+  val pos = zero;
+  val found = nil;
+
+  list = nullify(list);
+
+  gc_hint(list);
+
+  for (; list; list = cdr(list), pos = plus(pos, one))
+    if (car(list) == obj)
+      found = pos;
+
+  return found;
 }
 
 val pos(val item, val list, val testfun, val keyfun)
@@ -7371,6 +7531,26 @@ val pos(val item, val list, val testfun, val keyfun)
   return nil;
 }
 
+val rpos(val item, val list, val testfun, val keyfun)
+{
+  val pos = zero;
+  val found = nil;
+  testfun = default_arg(testfun, equal_f);
+  keyfun = default_arg(keyfun, identity_f);
+  list = nullify(list);
+
+  gc_hint(list);
+
+  for (; list; list = cdr(list), pos = plus(pos, one)) {
+    val elem = car(list);
+    val key = funcall1(keyfun, elem);
+
+    if (funcall2(testfun, item, key))
+      found = pos;
+  }
+
+  return found;
+}
 
 val pos_if(val pred, val list, val key)
 {
@@ -7389,6 +7569,26 @@ val pos_if(val pred, val list, val key)
   }
 
   return nil;
+}
+
+val rpos_if(val pred, val list, val key)
+{
+  val pos = zero;
+  val found = nil;
+  key = default_arg(key, identity_f);
+  list = nullify(list);
+
+  gc_hint(list);
+
+  for (; list; list = cdr(list), pos = plus(pos, one)) {
+    val item = car(list);
+    val subj = funcall1(key, item);
+
+    if (funcall1(pred, subj))
+      found = pos;
+  }
+
+  return found;
 }
 
 val pos_max(val seq, val testfun, val keyfun)
@@ -8015,8 +8215,74 @@ val search(val seq, val key, val testfun, val keyfun)
   default:
     type_mismatch(lit("search: ~s is not a sequence"), seq, nao);
   }
+}
 
-  return seq;
+static val rsearch_list(val seq, val key, val testfun, val keyfun)
+{
+  val siter, kiter;
+  val pos = zero;
+  val found = nil;
+
+  switch (type(key)) {
+  case NIL:
+    return pos;
+  case CONS:
+  case LCONS:
+  case LIT:
+  case STR:
+  case LSTR:
+  case VEC:
+    /* TODO: optimize me */
+    gc_hint(seq);
+
+    for (; seq; seq = cdr(seq)) {
+      for (siter = seq, kiter = key;
+           siter && kiter;
+           siter = cdr(siter), kiter = cdr(kiter))
+      {
+        if (!funcall2(testfun,
+                      funcall1(keyfun, car(siter)),
+                      funcall1(keyfun, car(kiter))))
+        {
+          pos = plus(pos, one);
+          break;
+        }
+      }
+
+      if (!kiter)
+        found = pos;
+
+      if (!siter)
+        break;
+    }
+    break;
+  default:
+    type_mismatch(lit("rsearch: ~s is not a sequence"), seq, nao);
+  }
+
+  return found;
+}
+
+val rsearch(val seq, val key, val testfun, val keyfun)
+{
+  testfun = default_arg(testfun, equal_f);
+  keyfun = default_arg(keyfun, identity_f);
+  seq = nullify(seq);
+
+  switch (type(seq)) {
+  case NIL:
+    return if3(length(key) == zero, zero, nil);
+  case CONS:
+  case LCONS:
+  case LIT:
+  case STR:
+  case LSTR:
+  case VEC:
+    /* TODO: optimize me */
+    return rsearch_list(seq, key, testfun, keyfun);
+  default:
+    type_mismatch(lit("rsearch: ~s is not a sequence"), seq, nao);
+  }
 }
 
 val where(val func, val seq)
