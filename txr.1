@@ -12623,11 +12623,7 @@ The
 macro generalizes
 .codn iflet
 
-Arguments to
-.code condlet
-are are pairs.
-
-Each arguments is a compound consisting of at least one item: a list of
+Each argument is a compound consisting of at least one item: a list of
 bindings or
 .metn atom-form .
 This item is followed by zero or more
@@ -12640,7 +12636,9 @@ then the situation is treated as if there were a single
 specified as
 .codn nil .
 
-The pairs of arguments are considered in sequence, starting with the
+The arguments of
+.code condlet
+are considered in sequence, starting with the
 leftmost.
 
 If the argument's left item is an
