@@ -25452,6 +25452,37 @@ place denotes a value stored in a dynamic data set such as a hash table,
 then deletion of that place implies deletion of the entry which holds
 that value. If the entry is identified by a key, that key is also removed.
 
+.coNP Macro @ lset
+.synb
+.mets (lset <> { place }+ << list-expr )
+.syne
+.desc
+The
+.code lset
+operator's parameter list consists of one or more places followed
+by an expression
+.metn list-expr .
+
+The macro evaluates
+.codn list-expr ,
+which is expected to produce a proper list.
+
+Successive elements of the resulting list are then assigned to each
+successive
+.codn place .
+
+If there are fewer elements in the list than places, the
+unmatched places receive the value
+.codn nil .
+
+Excess elements in the list are ignored.
+
+A
+.code lset
+form produces the value of
+.meta list-expr
+as its result value.
+
 .SS* User-Defined Places and Place Operators
 \*(TL provides a number of place-modifying operators such as
 .codn set ,

@@ -295,6 +295,19 @@
   (with-delete-expander (deleter) place env
     ^(,deleter)))
 
+(defmacro lset (. places-source)
+  (let ((places (butlast places-source))
+        (source (last places-source))
+        (orig (gensym))
+        (iter (gensym)))
+    (unless places
+      (sys:eval-err "lset: require one or more places followed by expression"))
+    ^(let* ((,orig ,(car source))
+            (,iter ,orig))
+       ,*(butlast (mappend (ret ^((set ,@1 (car ,iter)) (set ,iter (cdr ,iter))))
+                           places))
+       ,orig)))
+
 (defmacro defplace (place-destructuring-args body-sym
                     (getter-sym setter-sym update-body) :
                     ((ssetter-sym clobber-body))
