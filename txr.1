@@ -33300,6 +33300,205 @@ The behavior is overridden by the
 .code -n
 command line option.
 
+.coNP Function @ open-file
+.synb
+.mets (open-file < path <> [ mode-string ])
+.syne
+.desc
+The
+.code open-file
+function creates a stream connected to the file
+which is located at the given
+.metn path ,
+which is a string.
+
+The
+.meta mode-string
+argument is a string which uses the same
+conventions as the mode argument of the C language
+.code fopen
+function, with greater permissiveness, and some extensions.
+
+The syntax of mode-string is described by the following
+grammar. Note that it permits no whitespace characters:
+
+.cblk
+.mets < mode-string := [ < mode ] [ < options ]
+.mets < mode := { < selector [ + ] | + }
+.mets < selector := { r | w | a }
+.mets < options := { b | l | u | < digit }
+.mets < digit := { 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 }
+.cble
+
+If the
+.meta mode-string
+argument is omitted, the behavior is the same as an empty
+mode string.
+
+The
+.meta mode
+part of the mode string generates the following possibilities:
+.RS
+.meIP empty
+If the
+.meta mode
+is missing, then a default mode is implied. The default
+is specific to the particular stream-opening function. In
+the case of
+.codn open-file ,
+the default mode is
+.codn r .
+.coIP +
+A
+.meta mode
+consisting of just the
+.code +
+character is equivalent to
+.codn r+ .
+.coIP r
+This
+.meta mode
+means that the file is opened for reading.
+.coIP r+
+The file is opened for reading and writing.  It is not created
+if it doesn't exist.
+.coIP w
+The file is opened for writing. If it exists, it is truncated
+to zero length. If it doesn't exist, it is created.
+.coIP w+
+The file is opened for reading and writing. If it exists, it
+is truncated to zero length. If it doesn't exist, it is created.
+.coIP a
+The file is opened for writing. If it doesn't exist, it is
+created. If it exists, the current position is advanced to
+one byte past the end of the file, so that newly written data
+are appended.
+.coIP a+
+The file is opened for reading and writing. If it doesn't exist,
+it is created. The read position is at the beginning of the file,
+but writes are appended to the end regardless of the position.
+.RE
+.IP
+The meanings of the option characters are:
+.RS
+.coIP b
+The file is opened in binary mode: no line ending translation takes place.
+In the absence of this option, files are opened in text mode, in which newline
+characters in the stream are an abstract indication of the end of a line,
+translate to a system-specific way of terminating lines in text files.
+.coIP l
+Specifies that the stream will be line buffered.  This means that an implicit
+flush operation takes place whenever the newline character is output.
+.coIP u
+Specifies that the stream will be unbuffered.  It is erroneous for both
+.code l
+and
+.code u
+to be specified.
+.coIP i
+Specifies that the stream will have the real-time
+property set. For a description of the semantics, see the
+.code real-time-stream-p
+function. Briefly, this property affects the semantics of lazy lists which draw
+input from the stream.
+In addition, for a stream opened for writing or reading and writing, the
+.code i
+mode letter specifies that the stream will be line buffered, unless
+specified as unbuffered with
+.codn u .
+.meIP digit
+A decimal digit specifies the the stream buffer size
+as binary exponential buffer size order, such that
+.code 0
+specifies 1024 bytes,
+.code 1
+specifies 2048 and so forth up to
+.code 9
+specifying 524288 bytes. If no such digit is specified, then the
+stream uses a default buffer size. It is erroneous for the
+size order digit to be present together with the option
+.codn u .
+.RE
+
+.coNP Function @ open-tail
+.synb
+.mets (open-tail < path >> [ mode-string <> [ seek-to-end-p ]])
+.syne
+.desc
+The
+.code open-tail
+function creates a tail stream connected to the file which is
+located at the given
+.metn path .
+The
+.meta mode-string
+argument is a string which uses
+the same conventions as the mode argument of the C language
+.code fopen
+function. If this argument is omitted, then
+.str r
+is used.
+See the
+.code open-file
+function for a discussion of modes.
+
+The
+.code seek-to-end-p
+argument is a boolean which determines whether the initial
+read/write position is at the start of the file, or just past the end.
+It defaults to
+.codn nil .
+This argument only makes a difference if the file exists
+at the time
+.code open-tail
+is called. If the file does not exist, and is later
+created, then the tail stream will follow that file from the beginning.  In
+other words,
+.meta seek-to-end-p
+controls whether the tail stream reads all the
+existing data in the file, if any, or whether it reads only newly added data
+from approximately the time the stream is created.
+
+A tail stream has special semantics with regard to reading at the end
+of file. A tail stream never reports an end-of-file condition; instead
+it polls the file until more data is added. Furthermore, if the file
+is truncated, or replaced with a smaller file, the tail stream follows
+this change: it automatically opens the smaller file and starts reading from
+the beginning (the
+.meta seek-to-end-p
+flag only applies to the initial open).
+In this manner, a tail stream can dynamically growing rotating log files.
+
+Caveat: since a tail stream can re-open a new file which has the same
+name as the original file, it behave incorrectly if the program
+changes the current working directory, and the path name is relative.
+
+.coNP Function @ open-directory
+.synb
+.mets (open-directory << path )
+.syne
+.desc
+The
+.code open-directory
+function tries to create a stream which reads the
+directory given by the string argument
+.metn path .
+If a filesystem object exists
+under the path, is accessible, and is a directory, then the function
+returns a stream. Otherwise, a file error exception is thrown.
+
+The resulting stream supports the get-line operation. Each call to the
+.code get-line
+operation retrieves a string representing the next directory
+entry. The value
+.code nil
+is returned when there are no more directory entries.
+The
+.code .
+and
+.code ..
+entries in Unix filesystems are not skipped.
+
 .coNP Function @ make-string-input-stream
 .synb
 .mets (make-string-input-stream << string )
@@ -34476,243 +34675,6 @@ then the function has no effect at all.
 The return value is always
 .codn t .
 
-.SS* Filesystem Access
-
-.coNP Function @ open-directory
-.synb
-.mets (open-directory << path )
-.syne
-.desc
-The
-.code open-directory
-function tries to create a stream which reads the
-directory given by the string argument
-.metn path .
-If a filesystem object exists
-under the path, is accessible, and is a directory, then the function
-returns a stream. Otherwise, a file error exception is thrown.
-
-The resulting stream supports the get-line operation. Each call to the
-.code get-line
-operation retrieves a string representing the next directory
-entry. The value
-.code nil
-is returned when there are no more directory entries.
-The
-.code .
-and
-.code ..
-entries in Unix filesystems are not skipped.
-
-.coNP Function @ open-file
-.synb
-.mets (open-file < path <> [ mode-string ])
-.syne
-.desc
-The
-.code open-file
-function creates a stream connected to the file
-which is located at the given
-.metn path ,
-which is a string.
-
-The
-.meta mode-string
-argument is a string which uses the same
-conventions as the mode argument of the C language
-.code fopen
-function, with greater permissiveness, and some extensions.
-
-The syntax of mode-string is described by the following
-grammar. Note that it permits no whitespace characters:
-
-.cblk
-.mets < mode-string := [ < mode ] [ < options ]
-.mets < mode := { < selector [ + ] | + }
-.mets < selector := { r | w | a }
-.mets < options := { b | l | u | < digit }
-.mets < digit := { 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 }
-.cble
-
-If the
-.meta mode-string
-argument is omitted, the behavior is the same as an empty
-mode string.
-
-The
-.meta mode
-part of the mode string generates the following possibilities:
-.RS
-.meIP empty
-If the
-.meta mode
-is missing, then a default mode is implied. The default
-is specific to the particular stream-opening function. In
-the case of
-.codn open-file ,
-the default mode is
-.codn r .
-.coIP +
-A
-.meta mode
-consisting of just the
-.code +
-character is equivalent to
-.codn r+ .
-.coIP r
-This
-.meta mode
-means that the file is opened for reading.
-.coIP r+
-The file is opened for reading and writing.  It is not created
-if it doesn't exist.
-.coIP w
-The file is opened for writing. If it exists, it is truncated
-to zero length. If it doesn't exist, it is created.
-.coIP w+
-The file is opened for reading and writing. If it exists, it
-is truncated to zero length. If it doesn't exist, it is created.
-.coIP a
-The file is opened for writing. If it doesn't exist, it is
-created. If it exists, the current position is advanced to
-one byte past the end of the file, so that newly written data
-are appended.
-.coIP a+
-The file is opened for reading and writing. If it doesn't exist,
-it is created. The read position is at the beginning of the file,
-but writes are appended to the end regardless of the position.
-.RE
-.IP
-The meanings of the option characters are:
-.RS
-.coIP b
-The file is opened in binary mode: no line ending translation takes place.
-In the absence of this option, files are opened in text mode, in which newline
-characters in the stream are an abstract indication of the end of a line,
-translate to a system-specific way of terminating lines in text files.
-.coIP l
-Specifies that the stream will be line buffered.  This means that an implicit
-flush operation takes place whenever the newline character is output.
-.coIP u
-Specifies that the stream will be unbuffered.  It is erroneous for both
-.code l
-and
-.code u
-to be specified.
-.coIP i
-Specifies that the stream will have the real-time
-property set. For a description of the semantics, see the
-.code real-time-stream-p
-function. Briefly, this property affects the semantics of lazy lists which draw
-input from the stream.
-In addition, for a stream opened for writing or reading and writing, the
-.code i
-mode letter specifies that the stream will be line buffered, unless
-specified as unbuffered with
-.codn u .
-.meIP digit
-A decimal digit specifies the the stream buffer size
-as binary exponential buffer size order, such that
-.code 0
-specifies 1024 bytes,
-.code 1
-specifies 2048 and so forth up to
-.code 9
-specifying 524288 bytes. If no such digit is specified, then the
-stream uses a default buffer size. It is erroneous for the
-size order digit to be present together with the option
-.codn u .
-.RE
-
-.coNP Function @ open-tail
-.synb
-.mets (open-tail < path >> [ mode-string <> [ seek-to-end-p ]])
-.syne
-.desc
-The
-.code open-tail
-function creates a tail stream connected to the file which is
-located at the given
-.metn path .
-The
-.meta mode-string
-argument is a string which uses
-the same conventions as the mode argument of the C language
-.code fopen
-function. If this argument is omitted, then
-.str r
-is used.
-See the
-.code open-file
-function for a discussion of modes.
-
-The
-.code seek-to-end-p
-argument is a boolean which determines whether the initial
-read/write position is at the start of the file, or just past the end.
-It defaults to
-.codn nil .
-This argument only makes a difference if the file exists
-at the time
-.code open-tail
-is called. If the file does not exist, and is later
-created, then the tail stream will follow that file from the beginning.  In
-other words,
-.meta seek-to-end-p
-controls whether the tail stream reads all the
-existing data in the file, if any, or whether it reads only newly added data
-from approximately the time the stream is created.
-
-A tail stream has special semantics with regard to reading at the end
-of file. A tail stream never reports an end-of-file condition; instead
-it polls the file until more data is added. Furthermore, if the file
-is truncated, or replaced with a smaller file, the tail stream follows
-this change: it automatically opens the smaller file and starts reading from
-the beginning (the
-.meta seek-to-end-p
-flag only applies to the initial open).
-In this manner, a tail stream can dynamically growing rotating log files.
-
-Caveat: since a tail stream can re-open a new file which has the same
-name as the original file, it behave incorrectly if the program
-changes the current working directory, and the path name is relative.
-
-.coNP Function @ remove-path
-.synb
-.mets (remove-path << path )
-.syne
-.desc
-The
-.code remove-path
-function tries to remove the filesystem object named
-by
-.metn path ,
-which may be a file, directory or something else.
-
-If successful, it returns
-.codn t .
-
-A failure to remove the object results in an exception of type
-.codn file-error .
-
-.coNP Function @ rename-path
-.synb
-.mets (rename-path < from-path << to-path )
-.syne
-.desc
-The
-.code remove-path
-function tries to rename filesystem path
-.metn from-path ,
-which may refer to a file, directory or something else, to the path
-.metn to-path .
-
-If successful, it returns
-.codn t .
-
-A failure results in an exception of type
-.codn file-error .
-
 .SS* Coprocesses
 .coNP Functions @ open-command and @ open-process
 .synb
@@ -35839,6 +35801,42 @@ C library function fails with an
 other than
 .codn ERANGE ,
 an exception will be thrown.
+
+.coNP Function @ remove-path
+.synb
+.mets (remove-path << path )
+.syne
+.desc
+The
+.code remove-path
+function tries to remove the filesystem object named
+by
+.metn path ,
+which may be a file, directory or something else.
+
+If successful, it returns
+.codn t .
+
+A failure to remove the object results in an exception of type
+.codn file-error .
+
+.coNP Function @ rename-path
+.synb
+.mets (rename-path < from-path << to-path )
+.syne
+.desc
+The
+.code remove-path
+function tries to rename filesystem path
+.metn from-path ,
+which may refer to a file, directory or something else, to the path
+.metn to-path .
+
+If successful, it returns
+.codn t .
+
+A failure results in an exception of type
+.codn file-error .
 
 .coNP Functions @ sh and @ run
 .synb
