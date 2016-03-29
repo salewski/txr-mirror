@@ -29356,28 +29356,121 @@ created around function bodies, can be used as the delimiting
 .I prompt
 for the capture of a continuation.
 
-A delimited continuation consists of a copy
-of entire activation chain ("call stack") segment between the delimiting
-prompt and the capture point,
+A delimited continuation is section of a possible future of the
+computation, up to a delimiting prompt,
 .I reified
-as a first-class function. The function takes one argument. When the
-continuation function is called, the copy of the evaluation context is
-reinstated and its execution is restarted. Within the reinstated context,
-control resumes at the point where the continuation was originally captured.
+as a first class function.
 
-The argument passed to the continuation function appears as a return value from
-the capture form. Thus the capture form appears to return multiple times: the
-first time it returns, it returns the continuation.  Then each time the
-continuation is called, and thereby resumed, the capture form appears to return
-again, this time returning the value which was passed in.
+.TP* Example:
 
-A restarted continuation can terminate normally: that is, by simply continuing
-to execute and then finally terminating the block which served as its
-delimiting prompt. When this happens, the continuation function terminates
-and returns the block's value.
+.cblk
+  (defun receive (cont)
+    (format t "cont returned ~a\en" (call cont 3)))
 
-Thus, a delimited continuation is an ordinary function. It can be invoked
-multiple times, composed with other functions and so forth.
+  (defun function ()
+    (sys:capture-cont 'abcd (fun receive)))
+
+  (block abcd
+    (format t "function returned ~a\en" (function))
+    4)
+
+  Output:
+
+  function returned 3
+  cont returned 4
+  function returned t
+.cble
+
+.PP
+
+Evaluation begins with the
+.code block
+form. This form calls
+.code function
+which uses
+.code sys:capture-cont
+to capture a continuation up to the
+.code abcd
+prompt.  The continuation is passed to the
+.code receive
+function as an argument.
+
+This captured object represents the continuation of computation
+up to that prompt.  It appears as a one-argument function which, when called,
+resumes the captured computation. Its argument emerges out of the
+.code sys:capture-cont
+call as a return value. When the computation eventually returns all
+the way to the delimiting prompt, the return value of that prompt
+will then appear as the return value of the continuation function.
+
+In this example, the function
+.code receive
+immediately invokes the continuation function which it receives, passing
+it the argument value
+.codn 3.
+And so,
+evaluation now continues in the resumed future represented by the
+continuation. Inside the continuation,
+.code sys:capture-cont
+appears to return, yielding the value
+.codn 3.
+This bubbles up through
+.code function
+up to the
+.code "block abcd"
+where a message is printed:
+.strn "function returned 3" .
+
+The
+.code block
+terminates, yielding the value 4. Thereby, the continuation ends, since
+it is delimited up to that block.  Control now returns to the
+.code receive
+function which invoked the continuation, where the function call form
+.code "(call cont)"
+terminates, yielding the value
+.code 4
+that was returned by the continuation's delimiting
+.code block
+form. The message
+.str "cont returned 4"
+is printed. The
+.code receive
+function returns normally, returning the value
+.code t
+which emerged from the
+.code format
+call. Control is now back in
+.code function
+where the
+.code sys:capture-cont
+form terminates and returns the
+.codn t .
+This bubbles up to
+.code block
+which prints
+.strn "function returned t" .
+
+In summary, a continuation represents, as a function, the subsequent
+computation that is to take place starting at some point, up to some
+recently established, dynamically enclosing delimiting prompt. When
+the continuation is captured, that future doesn't have to take place;
+an alternative future can carry out in which that continuation is
+available as a function. That alternative future can invoke the continuation at
+will.  Invocations (resumptions) of the continuation appear as additional
+returns from the capture operator. A resumption of a continuation terminates
+when the delimiting prompt terminates, and the continuation yields the
+value which emerges from the prompt.
+
+Delimited continuations are implemented by capturing a segment of the
+evaluation stack between the prompt and the capture point. When
+a continuation is resumed, this saved copy of a stack segment is inserted on
+top of the current stack and the procedure context is resumed such
+that evaluation appears to emerge from the capture operator.
+As the continuation runs to completion, it simply pops these inserted
+stack frames naturally. Eventually it pops out of the delimiting prompt,
+at which point control ends up at the point which invoked the continuation
+function.
 
 The low-level operator for capturing a continuation is
 .codn sys:capture-cont .
