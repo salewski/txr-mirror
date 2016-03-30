@@ -60,6 +60,15 @@
 #endif
 #include "linenoise.h"
 
+#ifdef __cplusplus
+#define strip_qual(TYPE, EXPR) (const_cast<TYPE>(EXPR))
+#define convert(TYPE, EXPR) (static_cast<TYPE>(EXPR))
+#define coerce(TYPE, EXPR) (reinterpret_cast<TYPE>(EXPR))
+#else
+#define convert(TYPE, EXPR) ((TYPE) (EXPR))
+#define coerce(TYPE, EXPR) ((TYPE) (EXPR))
+#endif
+
 #define LINENOISE_DEFAULT_HISTORY_MAX_LEN 100
 #define LINENOISE_MAX_LINE 1024
 #define LINENOISE_MAX_DISP (LINENOISE_MAX_LINE * 8)
@@ -312,8 +321,10 @@ static void free_undo_stack(lino_t *l)
 
 static void record_undo(lino_t *l)
 {
-    struct lino_undo *rec = (struct lino_undo *) chk_malloc(sizeof *rec), *iter;
-    char *data = (char *) chk_strdup_utf8(l->data);
+    struct lino_undo *rec = coerce(struct lino_undo *,
+                                   chk_malloc(sizeof *rec));
+    struct lino_undo *iter;
+    char *data = coerce(char *, chk_strdup_utf8(l->data));
     int count;
 
     if (rec == 0 || data == 0) {
@@ -433,8 +444,8 @@ static void sync_data_to_buf(lino_t *l);
 
 static int compare_completions(const void *larg, const void *rarg)
 {
-    const char **lelem = (const char **) larg;
-    const char **relem = (const char **) rarg;
+    const char * const *lelem = convert(const char * const *, larg);
+    const char * const *relem = convert(const char * const *, rarg);
     const char *lstr = *lelem, *rstr = *relem;
     size_t llen = strlen(lstr);
     size_t rlen = strlen(rstr);
@@ -547,11 +558,11 @@ void lino_add_completion(lino_completions_t *lc, const char *str) {
     size_t len = strlen(str);
     char *copy, **cvec;
 
-    copy = (char *) chk_malloc(len+1);
+    copy = coerce(char *, chk_malloc(len+1));
     if (copy == NULL) return;
     memcpy(copy,str,len+1);
-    cvec = (char **) chk_realloc((mem_t *) lc->cvec,
-                                 (lc->len+1) * sizeof *cvec);
+    cvec = coerce(char **, chk_realloc(coerce(mem_t *, lc->cvec),
+                                       (lc->len+1) * sizeof *cvec));
     if (cvec == NULL) {
         free(copy);
         return;
@@ -629,7 +640,7 @@ static int history_search(lino_t *l)
                     if (c < 32)
                         continue;
                 verbatim:
-                    if (hl >= (int) sizeof hpat)
+                    if (hl >= convert(int, sizeof hpat))
                         break;
                     hpat[hl++] = c;
                     /* fallthrough */
@@ -727,7 +738,8 @@ static void ab_init(struct abuf *ab) {
 }
 
 static void ab_append(struct abuf *ab, const char *s, int len) {
-    char *ns = (char *) chk_realloc((mem_t *) ab->b,ab->len+len);
+    char *ns = coerce(char *,
+                      chk_realloc(coerce(mem_t *, ab->b), ab->len+len));
 
     if (ns == NULL) return;
     memcpy(ns+ab->len,s,len);
@@ -751,7 +763,7 @@ static void sync_data_to_buf(lino_t *l)
                          l->prompt);
     }
 
-    while (bptr - l->buf < (ptrdiff_t) sizeof l->buf - 1) {
+    while (bptr - l->buf < convert(ptrdiff_t, sizeof l->buf) - 1) {
         size_t dpos = dptr - l->data;
         size_t pos = bptr - l->buf;
 
@@ -866,7 +878,7 @@ static void refresh_singleline(lino_t *l) {
     snprintf(seq,64,"\x1b[0K");
     ab_append(&ab,seq,strlen(seq));
     /* Move cursor to original position. */
-    snprintf(seq,64,"\r\x1b[%dC", (int)(pos+plen));
+    snprintf(seq,64,"\r\x1b[%dC", convert(int, pos + plen));
     ab_append(&ab,seq,strlen(seq));
     if (write(fd,ab.b,ab.len) == -1) {} /* Can't recover from write error. */
     ab_free(&ab);
@@ -884,7 +896,7 @@ static struct row_values screen_rows(const char *str, size_t pos, int cols)
 
     for (col = 0; ; str++) {
         int ch = *str;
-        int atpos = (str - start == (ptrdiff_t) pos);
+        int atpos = (str - start == convert(ptrdiff_t, pos));
 
         switch (ch) {
         case '\n':
@@ -935,13 +947,14 @@ static void refresh_multiline(lino_t *l) {
     struct abuf ab;
 
     /* Update maxrows if needed. */
-    if (rows > (int)l->maxrows) l->maxrows = rows;
+    if (rows > convert(int, l->maxrows))
+        l->maxrows = rows;
 
     /* First step: clear all the lines used before. To do so start by
      * going to the last row. */
     ab_init(&ab);
     if (oldmaxrows - l->oldrow > 0) {
-        snprintf(seq,64,"\x1b[%dB", oldmaxrows - (int) l->oldrow);
+        snprintf(seq,64,"\x1b[%dB", oldmaxrows - convert(int, l->oldrow));
         ab_append(&ab,seq,strlen(seq));
     }
 
@@ -984,7 +997,7 @@ static void refresh_multiline(lino_t *l) {
     if (nrow > rows) {
         ab_append(&ab, "\r\n", 2);
         rows++;
-        if (rows > (int) l->maxrows)
+        if (rows > convert(int, l->maxrows))
             l->maxrows = rows;
     }
 
@@ -1120,10 +1133,10 @@ static size_t find_nearest_paren(const char *s, size_t i)
 {
     static const char *ope = "([{";
     static const char *clo = ")]}";
-    size_t pre = (size_t) -1, nxt = (size_t) -1;
+    size_t pre = convert(size_t, -1), nxt = convert(size_t, -1);
     size_t j;
 
-    for (j = i; j != (size_t) -1; j--) {
+    for (j = i; j != convert(size_t, -1); j--) {
         if (s[j] && (strchr(ope, s[j]) || strchr(clo, s[j]))) {
             pre = j;
             break;
@@ -1137,10 +1150,10 @@ static size_t find_nearest_paren(const char *s, size_t i)
         }
     }
 
-    if (pre == (size_t) -1)
+    if (pre == convert(size_t, -1))
         return nxt;
 
-    if (nxt == (size_t) -1)
+    if (nxt == convert(size_t, -1))
         return pre;
 
     if (i - pre > nxt - i)
@@ -1185,10 +1198,10 @@ static void paren_jump(lino_t *l)
 {
     size_t pos = scan_rev(l->data, l->dpos - 1);
 
-    if (pos == (size_t) -1)
+    if (pos == convert(size_t, -1))
         pos = scan_fwd(l->data, l->dpos - 1);
 
-    if (pos != (size_t) -1) {
+    if (pos != convert(size_t, -1)) {
         size_t dp = l->dpos;
         l->dpos = pos;
         refresh_line(l);
@@ -1225,7 +1238,7 @@ static void yank_sel(lino_t *l)
 
         if (end - sel > 0) {
             free(l->clip);
-            l->clip = (char *) chk_malloc(end - sel + 1);
+            l->clip = coerce(char *, chk_malloc(end - sel + 1));
             memcpy(l->clip, l->data + sel, end - sel);
             l->clip[end - sel] = 0;
             l->dpos = sel;
@@ -1374,14 +1387,14 @@ static void edit_move_matching_paren(lino_t *l)
 {
     size_t p = find_nearest_paren(l->data, l->dpos);
 
-    if (p != (size_t) -1) {
+    if (p != convert(size_t, -1)) {
         size_t fw = scan_fwd(l->data, p);
         size_t re = scan_rev(l->data, p);
 
-        if (fw != (size_t) -1) {
+        if (fw != convert(size_t, -1)) {
             l->dpos = fw;
             l->need_refresh = 1;
-        } else if (re != (size_t) -1) {
+        } else if (re != convert(size_t, -1)) {
             l->dpos = re;
             l->need_refresh = 1;
         } else {
@@ -1705,7 +1718,7 @@ static int edit(lino_t *l, const char *prompt)
         }
 
         if (nread <= 0) {
-            ret = l->len ? (int) l->len : -1;
+            ret = l->len ? convert(int, l->len) : -1;
             goto out;
         }
 
@@ -1753,12 +1766,12 @@ static int edit(lino_t *l, const char *prompt)
                         extend_num = 1;
 
                     for (; extend_num--; word_end = word_start) {
-                        while (word_end > prev_line && isspace((unsigned char) word_end[-1]))
+                        while (word_end > prev_line && isspace(convert(unsigned char, word_end[-1])))
                             word_end--;
 
                         word_start = word_end;
 
-                        while (word_start > prev_line && !isspace((unsigned char) word_start[-1]))
+                        while (word_start > prev_line && !isspace(convert(unsigned char, word_start[-1])))
                             word_start--;
 
                         if (extend_num == 0)
@@ -1831,7 +1844,7 @@ static int edit(lino_t *l, const char *prompt)
                 l->save_hist_idx = l->history_index;
                 goto out;
             default:
-                if (isdigit((unsigned char) c)) {
+                if (isdigit(convert(unsigned char, c))) {
                     if (extend_num < 0)
                         extend_num = 0;
                     extend_num %= 100;
@@ -2195,7 +2208,7 @@ static void unlink_from_list(lino_t *ls)
 
 lino_t *lino_make(int ifd, int ofd)
 {
-    lino_t *ls = (lino_t *) chk_malloc(sizeof *ls);
+    lino_t *ls = coerce(lino_t *, chk_malloc(sizeof *ls));
 
     if (ls) {
         memset(ls, 0, sizeof *ls);
@@ -2211,7 +2224,7 @@ lino_t *lino_make(int ifd, int ofd)
 
 lino_t *lino_copy(lino_t *le)
 {
-    lino_t *ls = (lino_t *) chk_malloc(sizeof *ls);
+    lino_t *ls = coerce(lino_t *, chk_malloc(sizeof *ls));
 
     if (ls != 0) {
         *ls = *le;
@@ -2305,7 +2318,7 @@ int lino_hist_add(lino_t *ls, const char *line) {
     /* Initialization on first call. */
     if (ls->history == NULL) {
         size_t size = ls->history_max_len * sizeof *ls->history;
-        ls->history = (char **) chk_malloc(size);
+        ls->history = coerce(char **, chk_malloc(size));
         if (ls->history == NULL) return 0;
         memset(ls->history, 0, size);
     }
@@ -2339,7 +2352,7 @@ int lino_hist_set_max_len(lino_t *ls, int len) {
     if (ls->history) {
         int tocopy = ls->history_len;
 
-        nsv = (char **) chk_malloc(len * sizeof *nsv);
+        nsv = coerce(char **, chk_malloc(len * sizeof *nsv));
         if (nsv == NULL) return 0;
 
         /* If we can't copy everything, free the elements we'll not use. */

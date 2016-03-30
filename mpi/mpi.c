@@ -26,6 +26,14 @@
 #define MAX(A, B) ((A) > (B) ? (A) : (B))
 #define MIN(A, B) ((A) < (B) ? (A) : (B))
 
+#ifdef __cplusplus
+#define convert(TYPE, EXPR) (static_cast<TYPE>(EXPR))
+#define coerce(TYPE, EXPR) (reinterpret_cast<TYPE>(EXPR))
+#else
+#define convert(TYPE, EXPR) ((TYPE) (EXPR))
+#define coerce(TYPE, EXPR) ((TYPE) (EXPR))
+#endif
+
 typedef unsigned char mem_t;
 extern mem_t *chk_calloc(size_t n, size_t size);
 
@@ -292,7 +300,8 @@ mp_err mp_init_size(mp_int *mp, mp_size prec)
 {
   ARGCHK(mp != NULL && prec > 0, MP_BADARG);
 
-  if((DIGITS(mp) = (mp_digit *) s_mp_alloc(prec, sizeof(mp_digit))) == NULL)
+  if ((DIGITS(mp) = coerce(mp_digit *,
+                           s_mp_alloc(prec, sizeof (mp_digit)))) == NULL)
     return MP_MEM;
 
   SIGN(mp) = MP_ZPOS;
@@ -322,7 +331,8 @@ mp_err mp_init_copy(mp_int *mp, mp_int *from)
   if(mp == from)
     return MP_OKAY;
 
-  if((DIGITS(mp) = (mp_digit *) s_mp_alloc(USED(from), sizeof(mp_digit))) == NULL)
+  if ((DIGITS(mp) = coerce(mp_digit *,
+                           s_mp_alloc(USED(from), sizeof (mp_digit)))) == NULL)
     return MP_MEM;
 
   s_mp_copy(DIGITS(from), DIGITS(mp), USED(from));
@@ -368,7 +378,8 @@ mp_err mp_copy(mp_int *from, mp_int *to)
       s_mp_copy(DIGITS(from), DIGITS(to), USED(from));
       
     } else {
-      if((tmp = (mp_digit *) s_mp_alloc(USED(from), sizeof(mp_digit))) == NULL)
+      if((tmp = coerce(mp_digit *,
+                       s_mp_alloc(USED(from), sizeof (mp_digit)))) == NULL)
 	return MP_MEM;
 
       s_mp_copy(DIGITS(from), tmp, USED(from));
@@ -517,8 +528,8 @@ mp_err mp_set_int(mp_int *mp, long z)
     if((res = s_mp_mul_2d(mp, CHAR_BIT)) != MP_OKAY)
       return res;
 
-    res = s_mp_add_d(mp, 
-		     (mp_digit)((v >> (ix * CHAR_BIT)) & UCHAR_MAX));
+    res = s_mp_add_d(mp,
+                     convert(mp_digit, ((v >> (ix * CHAR_BIT)) & UCHAR_MAX)));
     if(res != MP_OKAY)
       return res;
 
@@ -793,7 +804,7 @@ mp_err mp_div_d(mp_int *a, mp_digit d, mp_int *q, mp_digit *r)
   if((pow = s_mp_ispow2d(d)) >= 0) {
     mp_digit  mask;
 
-    mask = ((mp_digit) 1 << pow) - 1;
+    mask = (convert(mp_digit, 1) << pow) - 1;
     rem = DIGIT(a, 0) & mask;
 
     if(q) {
@@ -2772,7 +2783,7 @@ mp_err mp_bit(mp_int *a, mp_digit bit)
   mp_err res;
   int a_neg = ISNEG(a);
   int digit = bit / MP_DIGIT_BIT;
-  mp_digit mask = ((mp_digit) 1 << (bit % MP_DIGIT_BIT));
+  mp_digit mask = convert(mp_digit, 1) << (bit % MP_DIGIT_BIT);
 
   if (a_neg) {
     mp_init(&tmp);
@@ -2796,9 +2807,9 @@ mp_err mp_to_double(mp_int *mp, double *d)
   if (!mult)
     mult = pow(2.0, MP_DIGIT_BIT);
 
-  for (ix = (int) used - 2; ix >= 0; ix--) {
+  for (ix = convert(int, used) - 2; ix >= 0; ix--) {
     out = out * mult;
-    out += (double) dp[ix];
+    out += convert(double, dp[ix]);
   }
 
   if (SIGN(mp) == MP_NEG)
@@ -2888,7 +2899,7 @@ mp_err mp_to_signed_bin(mp_int *mp, unsigned char *str)
   ARGCHK(mp != NULL && str != NULL, MP_BADARG);
 
   /* Caller responsible for allocating enough memory (use mp_raw_size(mp)) */
-  str[0] = (char)SIGN(mp);
+  str[0] = convert(char, SIGN(mp));
 
   return mp_to_unsigned_bin(mp, str + 1);
 
@@ -2978,7 +2989,7 @@ mp_err mp_to_unsigned_bin(mp_int *mp, unsigned char *str)
     int      ix;
 
     d = *dp;
-    for(ix = 0; ix < (int) sizeof(mp_digit); ++ix) {
+    for(ix = 0; ix < convert(int, sizeof(mp_digit)); ++ix) {
       *spos = d & UCHAR_MAX;
       d >>= CHAR_BIT;
       ++spos;
@@ -3021,7 +3032,7 @@ mp_err mp_to_unsigned_buf(mp_int *mp, unsigned char *str, int size)
     int      ix;
     mp_digit d = *dp;
 
-    for (ix = 0; ix < (int) sizeof(mp_digit); ++ix) {
+    for (ix = 0; ix < convert(int, sizeof(mp_digit)); ++ix) {
 	if (dp + 1 == end && d == 0)
 	  break;
 	ARGCHK(spos >= str, MP_RANGE);
@@ -3162,7 +3173,7 @@ mp_err mp_toradix_case(mp_int *mp, unsigned char *str, int radix, int low)
     mp_err   res;
     mp_int   tmp;
     mp_sign  sgn;
-    mp_digit rem, rdx = (mp_digit)radix;
+    mp_digit rem, rdx = convert(mp_digit, radix);
     char     ch;
 
     if((res = mp_init_copy(&tmp, mp)) != MP_OKAY)
@@ -3271,7 +3282,7 @@ mp_err   s_mp_grow(mp_int *mp, mp_size min)
     /* Set min to next nearest default precision block size */
     min = ((min + (s_mp_defprec - 1)) / s_mp_defprec) * s_mp_defprec;
 
-    if((tmp = (mp_digit *) s_mp_alloc(min, sizeof(mp_digit))) == NULL)
+    if ((tmp = coerce(mp_digit *, s_mp_alloc(min, sizeof (mp_digit)))) == NULL)
       return MP_MEM;
 
     s_mp_copy(DIGITS(mp), tmp, USED(mp));
@@ -3629,7 +3640,7 @@ mp_err s_mp_set_bit(mp_int *a, int bit)
   if ((res = s_mp_pad(a, nd)) != MP_OKAY)
     return res;
 
-  DIGIT(a, nd - 1) |= ((mp_digit) 1 << nbit);
+  DIGIT(a, nd - 1) |= (convert(mp_digit, 1) << nbit);
   return MP_OKAY;
 }
 
@@ -3789,11 +3800,11 @@ void     s_mp_mod_2d(mp_int *mp, mp_digit d)
   int           ix;
   mp_digit      dmask, *dp = DIGITS(mp);
 
-  if((int) ndig >= USED(mp))
+  if (convert(int, ndig) >= USED(mp))
     return;
 
   /* Flush all the bits above 2^d in its digit */
-  dmask = ((mp_digit) 1 << nbit) - 1;
+  dmask = (convert(mp_digit, 1) << nbit) - 1;
   dp[ndig] &= dmask;
 
   /* Flush all digits above the one with 2^d in it */
@@ -3826,7 +3837,7 @@ mp_err    s_mp_mul_2d(mp_int *mp, mp_digit d)
   dp = DIGITS(mp); used = USED(mp);
   d %= DIGIT_BIT;
 
-  mask = ((mp_digit) 1 << d) - 1;
+  mask = (convert(mp_digit, 1) << d) - 1;
 
   /* If the shift requires another digit, make sure we've got one to
      work with */
@@ -3874,7 +3885,7 @@ void     s_mp_div_2d(mp_int *mp, mp_digit d)
   s_mp_rshd(mp, d / DIGIT_BIT);
   d %= DIGIT_BIT;
 
-  mask = ((mp_digit) 1 << d) - 1;
+  mask = (convert(mp_digit, 1) << d) - 1;
 
   save = 0;
   for(ix = USED(mp) - 1; ix >= 0; ix--) {
@@ -4018,7 +4029,7 @@ mp_err   s_mp_mul_d(mp_int *a, mp_digit d)
     unless absolutely necessary.
    */
   max = USED(a);
-  w = dp[max - 1] * (mp_word) d;
+  w = dp[max - 1] * convert(mp_word, d);
   if(CARRYOUT(w) != 0) {
     if((res = s_mp_pad(a, max + 1)) != MP_OKAY)
       return res;
@@ -4026,7 +4037,7 @@ mp_err   s_mp_mul_d(mp_int *a, mp_digit d)
   }
 
   for(ix = 0; ix < max; ix++) {
-    w = (dp[ix] * (mp_word) d) + k;
+    w = dp[ix] * convert(mp_word, d) + k;
     dp[ix] = ACCUM(w);
     k = CARRYOUT(w);
   }
@@ -4243,7 +4254,7 @@ mp_err   s_mp_mul(mp_int *a, mp_int *b)
     pa = DIGITS(a);
     for(jx = 0; jx < ua; ++jx, ++pa) {
       pt = pbt + ix + jx;
-      w = *pb * (mp_word) *pa + k + *pt;
+      w = *pb * convert(mp_word, *pa) + k + *pt;
       *pt = ACCUM(w);
       k = CARRYOUT(w);
     }
@@ -4325,7 +4336,7 @@ mp_err   s_mp_sqr(mp_int *a)
     if(*pa1 == 0)
       continue;
 
-    w = DIGIT(&tmp, ix + ix) + (*pa1 * (mp_word) *pa1);
+    w = DIGIT(&tmp, ix + ix) + *pa1 * convert(mp_word, *pa1);
 
     pbt[ix + ix] = ACCUM(w);
     k = CARRYOUT(w);
@@ -4347,7 +4358,7 @@ mp_err   s_mp_sqr(mp_int *a)
       pt = pbt + ix + jx;
 
       /* Compute the multiplicative step */
-      w = *pa1 * (mp_word) *pa2;
+      w = *pa1 * convert(mp_word, *pa2);
 
       /* If w is more than half MP_WORD_MAX, the doubling will
 	 overflow, and we need to record a carry out into the next
@@ -4391,7 +4402,7 @@ mp_err   s_mp_sqr(mp_int *a)
      */
     kx = 1;
     while(k) {
-      k = (mp_word) pbt[ix + jx + kx] + 1;
+      k = convert(mp_word, pbt[ix + jx + kx]) + 1;
       pbt[ix + jx + kx] = ACCUM(k);
       k = CARRYOUT(k);
       ++kx;
@@ -4432,8 +4443,8 @@ mp_err   s_mp_div(mp_int *a, mp_int *b)
   /* Shortcut if b is power of two */
   if((ix = s_mp_ispow2(b)) >= 0) {
     mp_copy(a, b);  /* need this for remainder */
-    s_mp_div_2d(a, (mp_digit)ix);
-    s_mp_mod_2d(b, (mp_digit)ix);
+    s_mp_div_2d(a, convert(mp_digit, ix));
+    s_mp_mod_2d(b, convert(mp_digit, ix));
 
     return MP_OKAY;
   }
@@ -4553,7 +4564,7 @@ mp_err   s_mp_2expt(mp_int *a, mp_digit k)
   if((res = s_mp_pad(a, dig + 1)) != MP_OKAY)
     return res;
   
-  DIGIT(a, dig) |= ((mp_digit) 1 << bit);
+  DIGIT(a, dig) |= (convert(mp_digit, 1) << bit);
 
   return MP_OKAY;
 
@@ -4819,7 +4830,7 @@ char     s_mp_todigit(int val, int r, int low)
  */
 int      s_mp_outlen(int bits, int r)
 {
-  return (int)((double)bits * LOG_V_2(r) + 0.5);
+  return convert(int, convert(double, bits) * LOG_V_2(r) + 0.5);
 
 } /* end s_mp_outlen() */
 

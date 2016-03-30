@@ -16,6 +16,12 @@
 #endif
 #include <stdlib.h>
 
+#ifdef __cplusplus
+#define convert(TYPE, EXPR) (static_cast<TYPE>(EXPR))
+#else
+#define convert(TYPE, EXPR) ((TYPE) (EXPR))
+#endif
+
 /* Some things from the guts of the MPI library we make use of... */
 extern mp_err   s_mp_lshd(mp_int *mp, mp_size p);
 extern void     s_mp_rshd(mp_int *mp, mp_size p);
@@ -293,7 +299,7 @@ mp_err mpl_num_set(mp_int *a, int *num)
   for(ix = 0; ix < USED(a); ix++) {
     cur = DIGIT(a, ix);
     
-    for(db = 0; db < (int) sizeof(mp_digit); db++) {
+    for(db = 0; db < convert(int, sizeof(mp_digit)); db++) {
       reg = (cur >> (CHAR_BIT * db)) & UCHAR_MAX;
 
       nset += bitc[reg];
@@ -322,7 +328,7 @@ mp_err mpl_num_clear(mp_int *a, int *num)
   for(ix = 0; ix < USED(a); ix++) {
     cur = DIGIT(a, ix);
     
-    for(db = 0; db < (int) sizeof(mp_digit); db++) {
+    for(db = 0; db < convert(int, sizeof(mp_digit)); db++) {
       reg = (cur >> (CHAR_BIT * db)) & UCHAR_MAX;
 
       nset += bitc[UCHAR_MAX - reg];

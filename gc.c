@@ -931,6 +931,7 @@ void gc_report_copies(val *pvar)
   for (; pvar < gc_stack_bottom; pvar++) {
     if (*pvar == obj)
       printf("%p found at %p (offset %d)\n",
-             (void *) obj, (void *) pvar, (int) (pvar - opvar));
+             convert(void *, obj), convert(void *, pvar),
+             convert(int, pvar - opvar));
   }
 }

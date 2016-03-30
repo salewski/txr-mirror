@@ -757,7 +757,7 @@ static val stdio_truncate(val stream, val len)
   int (*truncfun)(int, long) = chsize;
 #endif
 
-  if ((cnum) (trunc_off_t) l != l)
+  if (convert(cnum, convert(trunc_off_t, l)) != l)
     uw_throwf(error_s, lit("truncate-stream: ~s is too large"), len, nao);
 
   return (h->f != 0 && truncfun(fileno(h->f), l) == 0)
@@ -3254,7 +3254,7 @@ val test_set_indent_mode(val stream, val compare, val mode)
                                cobj_handle(stream, stream_s));
   val oldval = num_fast(s->indent_mode);
   if (oldval == compare)
-    s->indent_mode = (enum indent_mode) c_num(mode);
+    s->indent_mode = convert(enum indent_mode, c_num(mode));
   return oldval;
 }
 
@@ -3263,7 +3263,7 @@ val set_indent_mode(val stream, val mode)
   struct strm_base *s = coerce(struct strm_base *,
                                cobj_handle(stream, stream_s));
   val oldval = num_fast(s->indent_mode);
-  s->indent_mode = (enum indent_mode) c_num(mode);
+  s->indent_mode = convert(enum indent_mode, c_num(mode));
   return oldval;
 }
 
