@@ -37753,12 +37753,19 @@ data for a new datagram. The
 function implicitly flushes the stream in the same way, and thus also
 potentially generates a datagram.
 
-A client-style datagram stream is explicitly connected to a peer with the
+A client-style datagram stream can be explicitly connected to a peer with the
 .code sock-connect
-function and sends messages to that peer. This is similar to connecting a datagram socket using the
-C library
+function. This is equivalent to connecting a
+datagram socket using the C library
 .code connect
-function.
+function. Writes on the stream will be transmitted using the C library function
+.codn send .
+A client-style datagram stream can also be "soft-connected" to a
+peer using the
+.code sock-set-peer
+function. Writes on the stream will transmit data using the C library function
+.code sendto
+to the peer address.
 
 A datagram server program which needs
 to communicate using multiple peers is implemented by means of the
@@ -38191,14 +38198,15 @@ An exception of type
 .code type-error
 is thrown for other stream types.
 
-.coNP Function @ sock-peer
+.coNP Accessor @ sock-peer
 .synb
 .mets (sock-peer << socket )
+.mets (set (sock-peer << socket ) << address )
 .syne
 .desc
 If
 .meta socket
-is a socket stream connected to a remote peer, this
+is a socket stream connected to a remote peer,
 this function returns the socket address representing
 the remote peer. The return value is one of the concrete
 structure types derived from the
@@ -38221,6 +38229,12 @@ socket was produced as the return value of the
 .code sock-accept
 function. No other socket stream has a peer.
 
+Assigning an address to a
+.code sock-peer
+form is equivalent to using
+.code sock-set-peer
+to set the address.
+
 Implementation note: the
 .code sock-peer
 function does not use the
@@ -38228,6 +38242,29 @@ function does not use the
 C library function; the association between a stream and
 .code sockaddr
 struct is maintained by \*(TX.
+
+.coNP Function @ sock-set-peer
+.synb
+.mets (sock-set-peer < socket << address )
+.syne
+.desc
+The
+.code sock-set-peer
+function stores
+.meta address
+into
+.meta socket
+as that socket's peer.
+
+Subsequently, the
+.code sock-peer
+function will retrieve that address.
+
+If
+.meta address
+is not an appropriate address object in the address family of
+.metn socket ,
+the behavior is unspecified.
 
 .coNP Function @ sock-connect
 .synb

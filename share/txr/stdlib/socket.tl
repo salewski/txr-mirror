@@ -142,3 +142,9 @@
              (cand-prefix [pieces 0..(trunc (+ w 15) 16)])
              (prefix (if (search cand-prefix '(0 0)) pieces cand-prefix)))
         `@(sys:in6addr-condensed-text prefix)/@(or width w)`))))
+
+(defplace (sock-peer sock) body
+  (getter setter
+    ^(macrolet ((,getter () ^(sock-peer ',',sock))
+                (,setter (val) ^(sock-set-peer ,',sock ,val)))
+       ,body)))
