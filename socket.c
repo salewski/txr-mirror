@@ -112,7 +112,7 @@ static void ipv6_scope_id_from_num(struct sockaddr_in6 *dst, val scope)
               scope, nao);
 }
 
-static val sockaddr_in_out(struct sockaddr_in *src)
+static val sockaddr_in_unpack(struct sockaddr_in *src)
 {
   args_decl(args, ARGS_MIN);
   val out = make_struct(sockaddr_in_s, nil, args);
@@ -121,7 +121,7 @@ static val sockaddr_in_out(struct sockaddr_in *src)
   return out;
 }
 
-static val sockaddr_in6_out(struct sockaddr_in6 *src)
+static val sockaddr_in6_unpack(struct sockaddr_in6 *src)
 {
   args_decl(args, ARGS_MIN);
   val out = make_struct(sockaddr_in6_s, nil, args);
@@ -130,7 +130,7 @@ static val sockaddr_in6_out(struct sockaddr_in6 *src)
   return out;
 }
 
-static val unix_sockaddr_out(struct sockaddr_un *src)
+static val sockaddr_un_unpack(struct sockaddr_un *src)
 {
   args_decl(args, ARGS_MIN);
   val out = make_struct(sockaddr_un_s, nil, args);
@@ -181,7 +181,7 @@ static val getaddrinfo_wrap(val node_in, val service_in, val hints_in)
             ipv4_addr_from_num(&sa->sin_addr, node);
           if (svc_num_p)
             sa->sin_port = htons(c_num(service));
-          ptail = list_collect(ptail, sockaddr_in_out(sa));
+          ptail = list_collect(ptail, sockaddr_in_unpack(sa));
         }
         break;
       case AF_INET6:
@@ -191,7 +191,7 @@ static val getaddrinfo_wrap(val node_in, val service_in, val hints_in)
             ipv6_addr_from_num(&sa->sin6_addr, node);
           if (svc_num_p)
             sa->sin6_port = ntohs(c_num(service));
-          ptail = list_collect(ptail, sockaddr_in6_out(sa));
+          ptail = list_collect(ptail, sockaddr_in6_unpack(sa));
         }
         break;
       }
@@ -211,8 +211,8 @@ static void addr_mismatch(val addr, val family)
             addr, family, nao);
 }
 
-static void sockaddr_in(val sockaddr, val family,
-                        struct sockaddr_storage *buf, socklen_t *len)
+static void sockaddr_pack(val sockaddr, val family,
+                          struct sockaddr_storage *buf, socklen_t *len)
 {
   val addr_type = typeof(sockaddr);
 
@@ -601,7 +601,7 @@ static val dgram_get_sock_peer(val stream)
 static val dgram_set_sock_peer(val stream, val peer)
 {
   struct dgram_stream *d = coerce(struct dgram_stream *, stream->co.handle);
-  sockaddr_in(peer, d->family, &d->peer_addr, &d->pa_len);
+  sockaddr_pack(peer, d->family, &d->peer_addr, &d->pa_len);
   d->sock_connected = 1;
   return set(mkloc(d->peer, stream), peer);
 }
@@ -645,7 +645,7 @@ static val sock_bind(val sock, val sockaddr)
 
     (void) setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
 
-    sockaddr_in(sockaddr, family, &sa, &salen);
+    sockaddr_pack(sockaddr, family, &sa, &salen);
 
     if (bind(fd, coerce(struct sockaddr *, &sa), salen) != 0)
       uw_throwf(socket_error_s, lit("sock-bind failed: ~d/~s"),
@@ -727,7 +727,7 @@ static val sock_connect(val sock, val sockaddr, val timeout)
     struct sockaddr_storage sa;
     socklen_t salen;
 
-    sockaddr_in(sockaddr, family, &sa, &salen);
+    sockaddr_pack(sockaddr, family, &sa, &salen);
 
     if (to_connect(c_num(sfd), coerce(struct sockaddr *, &sa), salen,
                    sock, sockaddr, default_bool_arg(timeout)) != 0)
@@ -829,11 +829,11 @@ static val sock_accept(val sock, val mode_str, val timeout_in)
     sig_restore_enable;
 
     if (family == num_fast(AF_INET))
-      peer = sockaddr_in_out(coerce(struct sockaddr_in *, &sa));
+      peer = sockaddr_in_unpack(coerce(struct sockaddr_in *, &sa));
     else if (family == num_fast(AF_INET6))
-      peer = sockaddr_in6_out(coerce(struct sockaddr_in6 *, &sa));
+      peer = sockaddr_in6_unpack(coerce(struct sockaddr_in6 *, &sa));
     else if (family == num_fast(AF_UNIX))
-      peer = unix_sockaddr_out(coerce(struct sockaddr_un *, &sa));
+      peer = sockaddr_un_unpack(coerce(struct sockaddr_un *, &sa));
     else {
       free(dgram);
       dgram = 0;
@@ -878,11 +878,11 @@ static val sock_accept(val sock, val mode_str, val timeout_in)
       goto failed;
 
     if (family == num_fast(AF_INET))
-      peer = sockaddr_in_out(coerce(struct sockaddr_in *, &sa));
+      peer = sockaddr_in_unpack(coerce(struct sockaddr_in *, &sa));
     else if (family == num_fast(AF_INET6))
-      peer = sockaddr_in6_out(coerce(struct sockaddr_in6 *, &sa));
+      peer = sockaddr_in6_unpack(coerce(struct sockaddr_in6 *, &sa));
     else if (family == num_fast(AF_UNIX))
-      peer = unix_sockaddr_out(coerce(struct sockaddr_un *, &sa));
+      peer = sockaddr_un_unpack(coerce(struct sockaddr_un *, &sa));
     else
       uw_throwf(socket_error_s, lit("accept: ~s isn't a supported socket family"),
                 family, nao);
