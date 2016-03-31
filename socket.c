@@ -602,7 +602,6 @@ static val dgram_set_sock_peer(val stream, val peer)
 {
   struct dgram_stream *d = coerce(struct dgram_stream *, stream->co.handle);
   sockaddr_pack(peer, d->family, &d->peer_addr, &d->pa_len);
-  d->sock_connected = 1;
   return set(mkloc(d->peer, stream), peer);
 }
 
@@ -735,6 +734,11 @@ static val sock_connect(val sock, val sockaddr, val timeout)
                 sock, sockaddr, num(errno), string_utf8(strerror(errno)), nao);
 
     sock_set_peer(sock, sockaddr);
+
+    if (sock_type(sock) == num_fast(SOCK_DGRAM)) {
+      struct dgram_stream *d = coerce(struct dgram_stream *, sock->co.handle);
+      d->sock_connected = 1;
+    }
 
     return sock;
   }
