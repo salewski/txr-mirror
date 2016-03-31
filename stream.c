@@ -3832,6 +3832,7 @@ void stream_init(void)
   reg_fun(intern(lit("sock-family"), user_package), func_n1(sock_family));
   reg_fun(intern(lit("sock-type"), user_package), func_n1(sock_type));
   reg_fun(intern(lit("sock-peer"), user_package), func_n1(sock_peer));
+  reg_fun(intern(lit("sock-set-peer"), user_package), func_n2(sock_set_peer));
 #endif
   reg_fun(intern(lit("make-catenated-stream"), user_package), func_n0v(make_catenated_stream_v));
   reg_fun(intern(lit("cat-streams"), user_package), func_n1(make_catenated_stream));
