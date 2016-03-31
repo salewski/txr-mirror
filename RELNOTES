@@ -1,3 +1,25 @@
+                                    TXR 137
+                                   2016-03-30
+
+
+  Features
+
+  - Heads up: @(if) directive changes semantics.
+    - no longer a syntactic sugar for @(cases)/@(require).
+  - Rightmost-match variants added for various search
+    functions: rfind, rpos, rmember and numerous others.
+  - New macro lset for assigning consecutive elements of
+    a sequence to multiple places.
+
+  Bugs
+
+  - Fix in lazy string implementation:
+    - printing lazy string was not observing the string's limit
+    - see limit-count param in lazy-str function.
+  - Fix in error location reporting across macro expansions.
+
+
+
                                     TXR 136
                                    2016-03-20
 
