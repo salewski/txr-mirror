@@ -767,7 +767,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 }
 
 <SPECIAL>[\\]. {
-  yyerrorf(yyg, lit("unrecognized escape: \\~a"), chr(yytext[1]), nao);
+  yyerrorf(yyg, lit("unrecognized escape \\~a"), chr(yytext[1]), nao);
 }
 
 <SPECIAL,QSPECIAL,NESTED,BRACED>[;][^\n\r]* {
@@ -775,13 +775,24 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 }
 
 <SPECIAL,QSPECIAL,NESTED,BRACED>{UANYN} {
-  yyerrprepf(yyg, lit("bad character in directive: '~a'"),
-             string_utf8(yytext), nao);
+  val ch = chr_str(string_utf8(yytext), zero);
+  if (chr_isspace(ch))
+    yyerrprepf(yyg, lit("unexpected whitespace character #\\x~02x"),
+               ch, nao);
+  else if (chr_isunisp(ch))
+    yyerrprepf(yyg, lit("unexpected Unicode space character #\\x~02x"),
+               ch, nao);
+  else if (chr_iscntrl(ch))
+    yyerrprepf(yyg, lit("unexpected control character #\\x~02x"),
+               ch, nao);
+  else
+    yyerrprepf(yyg, lit("unexpected character #\\~a"),
+               ch, nao);
   return ERRTOK;
 }
 
 <SPECIAL,QSPECIAL,NESTED,BRACED>. {
-  yyerrprepf(yyg, lit("non-UTF-8 byte in directive: '\\x~02x'"),
+  yyerrprepf(yyg, lit("non-UTF-8 byte #x~02x in directive"),
              num(convert(unsigned char, yytext[0])), nao);
   return ERRTOK;
 }
