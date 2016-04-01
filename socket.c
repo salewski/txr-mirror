@@ -51,6 +51,8 @@
 #include "arith.h"
 #include "socket.h"
 
+#define MIN(A, B) ((A) < (B) ? (A) : (B))
+
 struct dgram_stream {
   struct strm_base a;
   val stream;
@@ -244,11 +246,12 @@ static void sockaddr_pack(val sockaddr, val family,
     *len = sizeof *sa;
   } else if (addr_type == sockaddr_un_s) {
     val path = slot(sockaddr, path_s);
-    char *path_u8 = utf8_dup_to(c_str(path));
     struct sockaddr_un *sa = coerce(struct sockaddr_un *, buf);
+    size_t size;
+    unsigned char *path_u8 = utf8_dup_to_buf(c_str(path), &size, 0);
     memset(sa, 0, sizeof *sa);
     sa->sun_family = AF_UNIX;
-    strncpy(sa->sun_path, path_u8, sizeof sa->sun_path - 1);
+    memcpy(sa->sun_path, path_u8, MIN(size, sizeof sa->sun_path));
     free(path_u8);
     *len = sizeof *sa;
   } else {

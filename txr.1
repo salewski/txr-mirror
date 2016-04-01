@@ -37932,10 +37932,40 @@ address family.
 This structure has only one slot,
 .code path
 which holds the rendezvous name for connecting pairs of socket endpoints.
-This names appears in the filesystem. Linux systems have support for "abstract"
-names which do not appear in the filesystem. These abstract names are distinguished
-by starting with a null byte. In \*(TX, a null byte can be encoded in a string
-using the pseudo-null code point U+DC00.
+This name appears in the filesystem.
+
+When the
+.code sockaddr-un
+structure is converted to the C structure
+.code "struct sockaddr_un" ,
+the
+.code path
+slot undergoes conversion to UTF-8. The resulting bytes are stored in the
+.code sun_path
+member of the C structure. If the resulting UTF-8 byte string
+is larger than the
+.code sun_path
+array, it is silently truncated.
+
+Note: Linux systems have support for "abstract" names which do not appear in
+the filesystem. These abstract names are distinguished by starting with a null
+byte. For more information, consult Linux documentation.
+This convention is supported in the
+.code path
+slot of the
+.code sockaddr-un
+structure. If
+.code path
+contains occurrences of the pseudo-null character U+DC00, these translate
+to null bytes in the
+.code sun_path
+member of the corresponding C structure
+.codn "struct sockaddr_un" .
+For example, the path
+.str "\exDC00;foo"
+is valid and represents an abstract address consisting of the three bytes
+.str "foo"
+followed by null padding bytes.
 
 .coNP Structure @ addrinfo
 .synb
