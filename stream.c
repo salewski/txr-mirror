@@ -2273,6 +2273,8 @@ static val delegate_get_fd(val stream)
   return s->target_ops->get_fd(s->target_stream);
 }
 
+#if HAVE_SOCKETS
+
 static val delegate_get_sock_family(val stream)
 {
   struct delegate_base *s = coerce(struct delegate_base *, stream->co.handle);
@@ -2296,6 +2298,8 @@ static val delegate_set_sock_peer(val stream, val peer)
   struct delegate_base *s = coerce(struct delegate_base *, stream->co.handle);
   return s->target_ops->set_sock_peer(s->target_stream, peer);
 }
+
+#endif
 
 static val make_delegate_stream(val orig_stream, size_t handle_size,
                                 struct cobj_ops *ops)
