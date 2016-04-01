@@ -1690,10 +1690,8 @@ val make_string_byte_input_stream(val string)
 
   {
     struct byte_input *bi = coerce(struct byte_input *, chk_malloc(sizeof *bi));
-    unsigned char *utf8 = utf8_dup_to_uc(c_str(string));
     strm_base_init(&bi->a);
-    bi->buf = utf8;
-    bi->size = strlen(coerce(char *, utf8));
+    bi->buf = utf8_dup_to_buf(c_str(string), &bi->size, 0);
     bi->index = 0;
     return cobj(coerce(mem_t *, bi), stream_s, &byte_in_ops.cobj_ops);
   }

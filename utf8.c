@@ -27,6 +27,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <wchar.h>
 #include <signal.h>
 #include "config.h"
@@ -47,34 +48,27 @@ static void conversion_error(void)
 }
 #endif
 
-size_t utf8_from_uc(wchar_t *wdst, const unsigned char *src)
+size_t utf8_from_buf(wchar_t *wdst, const unsigned char *src, size_t nbytes)
 {
   size_t nchar = 1;
   enum utf8_state state = utf8_init;
   const unsigned char *backtrack = 0;
   wchar_t wch = 0, wch_min = 0;
 
-  for (;;) {
+  while (nbytes-- > 0) {
     int ch = *src++;
-
-    if (ch == 0) {
-      if (state == utf8_init)
-        break;
-      src = backtrack;
-      if (wdst)
-        *wdst++ = 0xDC00 | *src;
-      nchar++;
-      state = utf8_init;
-      continue;
-    }
 
     switch (state) {
     case utf8_init:
       switch (ch >> 4) {
       case 0x0: case 0x1: case 0x2: case 0x3:
       case 0x4: case 0x5: case 0x6: case 0x7:
-        if (wdst)
-          *wdst++ = ch;
+        if (wdst) {
+          if (ch)
+            *wdst++ = ch;
+          else
+            *wdst++ = 0xDC00;
+        }
         nchar++;
         break;
       case 0xC: case 0xD:
@@ -146,12 +140,13 @@ size_t utf8_from_uc(wchar_t *wdst, const unsigned char *src)
 
 size_t utf8_from(wchar_t *wdst, const char *src)
 {
-  return utf8_from_uc(wdst, coerce(const unsigned char *, src));
+  size_t nbytes = strlen(src);
+  return utf8_from_buf(wdst, coerce(const unsigned char *, src), nbytes);
 }
 
-size_t utf8_to_uc(unsigned char *dst, const wchar_t *wsrc)
+size_t utf8_to_buf(unsigned char *dst, const wchar_t *wsrc, int null_term)
 {
-  size_t nbyte = 1;
+  size_t nbyte = 0;
   wchar_t wch;
 
   while ((wch = *wsrc++)) {
@@ -189,22 +184,18 @@ size_t utf8_to_uc(unsigned char *dst, const wchar_t *wsrc)
     }
   }
 
-  if (dst)
-    *dst++ = 0;
+  if (null_term) {
+    if (dst)
+      *dst++ = 0;
+    nbyte++;
+  }
+
   return nbyte;
 }
 
 size_t utf8_to(char *dst, const wchar_t *wsrc)
 {
-  return utf8_to_uc(coerce(unsigned char *, dst), wsrc);
-}
-
-wchar_t *utf8_dup_from_uc(const unsigned char *str)
-{
-  size_t nchar = utf8_from_uc(0, str);
-  wchar_t *wstr = chk_wmalloc(nchar);
-  utf8_from_uc(wstr, str);
-  return wstr;
+  return utf8_to_buf(coerce(unsigned char *, dst), wsrc, 1);
 }
 
 wchar_t *utf8_dup_from(const char *str)
@@ -215,19 +206,27 @@ wchar_t *utf8_dup_from(const char *str)
   return wstr;
 }
 
-unsigned char *utf8_dup_to_uc(const wchar_t *wstr)
+unsigned char *utf8_dup_to_buf(const wchar_t *wstr, size_t *pnbytes,
+                               int null_term)
 {
-  size_t nbyte = utf8_to_uc(0, wstr);
+  size_t nbyte = utf8_to_buf(0, wstr, null_term);
   unsigned char *str = chk_malloc(nbyte);
-  utf8_to_uc(str, wstr);
+  utf8_to_buf(str, wstr, null_term);
+  *pnbytes = nbyte;
   return str;
 }
 
 char *utf8_dup_to(const wchar_t *wstr)
 {
-  size_t nbyte = utf8_to(0, wstr);
-  char *str = coerce(char *, chk_malloc(nbyte));
+  size_t len = utf8_to(0, wstr) - 1;
+  char *str = coerce(char *, chk_malloc(len + 1));
   utf8_to(str, wstr);
+  str[len] = 0;
+  if (strlen(str) != len) {
+    free(str);
+    uw_throw(error_s,
+             lit("Cannot convert string with embedded NUL to UTF-8 string"));
+  }
   return str;
 }
 
