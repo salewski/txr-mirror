@@ -25003,9 +25003,9 @@ operator. Its name is an abbreviation of
 The anonymous function takes a variable number of arguments.
 Its argument list is taken to be the value macro is tested
 against the multiple pattern clauses of an implicit
-.codn tree-bind .
+.codn tree-case .
 The return value of the function is that of the implied
-.codn tree-bind .
+.codn tree-case .
 
 The following equivalence holds, where
 .code args
@@ -25013,7 +25013,7 @@ should be understood to be a globally unique symbol:
 
 .cblk
   (tc clause1 clause2 ...) <--> (lambda (. args)
-                                   (tree-bind args
+                                   (tree-case args
                                       clause1 clause2 ...))
 .cble
 
