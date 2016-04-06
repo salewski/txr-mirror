@@ -74,9 +74,9 @@
                                      (unless (bindable arg)
                                        (sys:bad-slot-syntax slot))
                                      (when instance-init-form
-                                       (throw 'eval-error
-                                              "~s: duplicate :init"
-                                              'defstruct))
+                                       (throwf 'eval-error
+                                               "~s: duplicate :init"
+                                               'defstruct))
                                      (set instance-init-form
                                           (cons arg body))
                                      ^(,word nil nil))
@@ -84,9 +84,9 @@
                                      (unless (bindable arg)
                                        (sys:bad-slot-syntax slot))
                                      (when instance-postinit-form
-                                       (throw 'eval-error
-                                              "~s: duplicate :postinit"
-                                              'defstruct))
+                                       (throwf 'eval-error
+                                               "~s: duplicate :postinit"
+                                               'defstruct))
                                      (set instance-postinit-form
                                           (cons arg body))
                                      ^(,word nil nil))
@@ -94,9 +94,9 @@
                                      (unless (bindable arg)
                                        (sys:bad-slot-syntax slot))
                                      (when instance-fini-form
-                                       (throw 'eval-error
-                                              "~s: duplicate :fini"
-                                              'defstruct))
+                                       (throwf 'eval-error
+                                               "~s: duplicate :fini"
+                                               'defstruct))
                                      (set instance-fini-form
                                           (cons arg body))
                                      ^(,word nil nil))
