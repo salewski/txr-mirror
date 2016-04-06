@@ -112,7 +112,12 @@
                                   ^(:instance ,name nil))
                                 (name
                                   ^(:instance ,name nil)))))
-           (super-type (find-struct-type super))
+           (super-type (if super
+                         (or (find-struct-type super)
+                             (throwf 'eval-error
+                                     "~a: inheritance base ~s \
+                                     \ does not name a struct type"
+                                     'defstruct super))))
            (stat-si-forms [keep-if (op member @1 '(:static :function))
                                    slot-init-forms car])
            (pruned-si-forms (sys:prune-nil-inits stat-si-forms super-type))
