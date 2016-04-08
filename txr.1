@@ -10072,9 +10072,9 @@ Examples:
   (cons a . b)   ;; error: cons isn't variadic.
   (cons a b . c) ;; error: cons requires exactly two arguments.
 
-  [foo a b . c] ;; calls (foo 3 4 5 6 7)
+  [foo a b . c]  ;; calls (foo 3 4 5 6 7)
 
-  [c 1]         ;; indexes into vector #(5 6 7) to yield 6
+  [c 1]          ;; indexes into vector #(5 6 7) to yield 6
 
   (call (op list 1 . @1) 2) ;; yields 2
 .cble
