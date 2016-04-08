@@ -27,7 +27,7 @@
 typedef union uw_frame uw_frame_t;
 typedef enum uw_frtype {
   UW_BLOCK, UW_CAPTURED_BLOCK, UW_ENV, UW_CATCH, UW_HANDLE,
-  UW_CONT_COPY, UW_DBG
+  UW_CONT_COPY, UW_GUARD, UW_DBG
 } uw_frtype_t;
 
 struct uw_common {
@@ -123,6 +123,7 @@ noreturn val uw_errorfv(val fmt, struct args *args);
 val uw_register_subtype(val sub, val super);
 val uw_exception_subtype_p(val sub, val sup);
 void uw_continue(uw_frame_t *curr, uw_frame_t *target);
+void uw_push_guard(uw_frame_t *);
 void uw_push_debug(uw_frame_t *, val func, struct args *,
                    val ub_p_a_pairs, val env, val data,
                    val line, val chr);

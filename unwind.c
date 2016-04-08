@@ -90,6 +90,10 @@ static void uw_unwind_to_exit_point(void)
       /* Maintain consistency of unwind stack pointer */
       uw_env_stack = uw_env_stack->ev.up_env;
       break;
+    case UW_GUARD:
+      format(std_error, lit("~a: cannot unwind across foreign stack frames\n"),
+             prog_string, nao);
+      abort();
     default:
       break;
     }
@@ -224,6 +228,14 @@ val uw_set_match_context(val context)
   uw_frame_t *env = uw_find_env();
   env->ev.match_context = context;
   return context;
+}
+
+void uw_push_guard(uw_frame_t *fr)
+{
+  memset(fr, 0, sizeof *fr);
+  fr->uw.type = UW_GUARD;
+  fr->uw.up = uw_stack;
+  uw_stack = fr;
 }
 
 void uw_push_debug(uw_frame_t *fr, val func, struct args *args,
@@ -826,16 +838,31 @@ static val capture_cont(val tag, val fun, uw_frame_t *block)
 
 val uw_capture_cont(val tag, val fun, val ctx_form)
 {
+  uses_or2;
   uw_frame_t *fr;
 
   for (fr = uw_stack; fr != 0; fr = fr->uw.up) {
-    if ((fr->uw.type == UW_BLOCK || fr->uw.type == UW_CAPTURED_BLOCK)
-        && fr->bl.tag == tag)
+    switch (fr->uw.type) {
+    case UW_BLOCK:
+    case UW_CAPTURED_BLOCK:
+      if (fr->bl.tag != tag)
+        continue;
       break;
+    case UW_GUARD:
+      {
+        val sym = or2(car(default_bool_arg(ctx_form)), sys_capture_cont_s);
+        eval_error(ctx_form, lit("~s: cannot capture continuation "
+                                 "spanning external library stack frames"),
+                   sym, nao);
+      }
+    default:
+      continue;
+    }
+
+    break;
   }
 
   if (!fr) {
-    uses_or2;
     val sym = or2(car(default_bool_arg(ctx_form)), sys_capture_cont_s);
 
     if (tag)
