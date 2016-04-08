@@ -23021,7 +23021,7 @@ with an improper argument list.
   (apply (fun list) '(1 2 3)) -> (1 2 3)
 
   ;; this effectively invokes (list 1 2 3 4)
-  (apply (fun list) 1 2 '(3 4)) -> (1 2 3)
+  (apply (fun list) 1 2 '(3 4)) -> (1 2 3 4)
 
   ;; this effectively invokes (list 1 2 . 3)
   (apply (fun list) 1 2 3)) -> (1 2 . 3)
