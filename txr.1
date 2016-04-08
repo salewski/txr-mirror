@@ -10034,28 +10034,15 @@ namely that the meta-numbers and meta-symbols of the
 .code op
 operator can be used in the dot position).
 
-The value of the expression in the dot position is converted to a list, if it
-is a sequence. Otherwise if it is an non-sequence atom, no conversion is
-applied.  In either case, the resulting list's elements constitute
-additional arguments to the function.
+If the dot position of a compound form is an atom, then the following
+equivalence applies:
 
-If the value emerging from the dot position is an atom (referred to as
-the "sole atom" below) other than
-.codn nil ,
-or an improper list (a list ending in a terminating atom
-other than
-.codn nil ),
-then the function being invoked must be a variadic function, otherwise
-the call is erroneous. Furthermore, all required argument positions of a
-function must be filled before encountering the sole atom or terminating
-atom: such an atom doesn't count as an argument, whether or not it is
-.codn nil ,
-and indicates that no more arguments follow.
-Only the trailing list argument of a variadic function (denoted in the
-.code lambda
-operator's syntax as the optional
-.metn rest-param )
-may take a sole atom or terminating atom as a value.
+.cblk
+  (f a b c ... . x)   <-->  (apply (fun f) a b c ... x)
+.cble
+
+Effectively, the dot notation constitutes a shorthand for
+.codn apply .
 
 The DWIM brackets are similar, except that the first position is an arbitrary
 expression which is evaluated according to the same rules as the remaining
@@ -22985,6 +22972,27 @@ The previous arguments represent leading arguments which are applied to
 .metn function ,
 prior to the arguments taken from
 .metn trailing-args .
+
+Note that if
+.meta trailing-args
+value is an atom or an improper list, the function is then
+invoked with an improper argument list. Only a variadic
+function may be invoked with an improper argument lists.
+Moreover, all of the function's required and optional
+parameters must be satisfied by elements of the
+improper list, such that the terminating atom either
+matches the
+.meta rest-param
+directly (see the
+.code lambda
+operator) or else the
+.meta rest-param
+receives an improper list terminated by that atom.
+To treat the terminating atom of an improper list as an
+ordinary element which can satisfy a required or optional
+function parameter, the
+.code iapply
+function may be used, described next.
 
 The
 .code iapply
