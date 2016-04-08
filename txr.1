@@ -10079,6 +10079,20 @@ Examples:
   (call (op list 1 . @1) 2) ;; yields 2
 .cble
 
+A special consideration is given to symbol macros which occur in the
+dot position. If a symbol macro occurs in this position, then it must not
+expand to a compound form, otherwise a macro-expansion-time error results.
+If it expands to an atom, then it is substituted by that atom, and
+the semantics of the function call proceeds as described above.
+
+.cblk
+  (symacrolet ((x (list 1 2)))
+    (list 1 . x))  ;; error: x expands to form (list 1 2)
+
+  (symacrolet ((x 2))
+    (list 1 . x))  ;; yields (1 . 2)
+.cble
+
 Dialect Note:
 
 In some other Lisp dialects like ANSI Common Lisp, the improper list syntax may

@@ -2459,7 +2459,11 @@ static val me_quasilist(val form, val menv)
 val expand_forms(val form, val menv)
 {
   if (atom(form)) {
-    return form;
+    val ex_f = expand(form, menv);
+    if (consp(ex_f))
+      uw_throwf(error_s, lit("symbol macro ~s in dot position must produce "
+                             "atom form, not compound"), form, nao);
+    return ex_f;
   } else {
     val f = car(form);
     val r = cdr(form);
