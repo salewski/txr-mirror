@@ -10086,6 +10086,42 @@ not be used as a function call; a function called apply (or similar) must be
 used for application even if the expression which gives the trailing arguments
 is a symbol. Moreover, applying sequences other than lists is not supported.
 
+.NP* Improper Lists as Macro Calls
+
+\*(TL allows macros to be called using forms which are improper lists.
+These forms are simply destructured by the usual macro parameter list
+destructuring. To be callable this way, the macro must have an argument
+list which specifies a parameter match in the dot position. This dot position
+must either match the terminating atom of the improper list form,
+or else match the trailing portion of the improper list form.
+
+For instance if a macro mac is defined as
+
+.cblk
+  (defmacro mac (a b . c) ...)
+.cble
+
+then it may not be invoked as
+.code "(mac 1 . 2)"
+because the required argument
+.code b
+is not satisfied, and so the
+.code 2
+argument cannot match the dot position
+.code c
+as required. The macro may be called as
+.code "(mac 1 2 . 3)"
+in which case
+.code c
+receives the form
+.codn 3 .
+If it is called as
+.code "(mac 1 2 3 . 4)"
+then
+.code c
+receives the improper list form
+.codn "3 . 4" .
+
 .NP* Regular Expression Literals
 In \*(TL, the
 .code /
