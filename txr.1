@@ -19196,14 +19196,12 @@ function. This form is a short form for the
 .meti (:instance < name nil)
 .cble
 syntax.
-
 .meIP >> ( symbol << init-form )
 This syntax is a short form for the
 .cblk
 .meti (:instance < name << init-form )
 .cble
 syntax.
-
 .meIP (:instance < name << init-form )
 This syntax specifies an instance slot called
 .meta name
@@ -19213,7 +19211,6 @@ whenever a new instance of the structure is created.
 This evaluation takes place in the original lexical environment in which the
 .code defstruct
 form occurs.
-
 .meIP (:static < name << init-form )
 This syntax specifies a static slot called
 .meta name
@@ -19222,7 +19219,6 @@ whose initial value is obtained by evaluating
 once, during the evaluation of the
 .code defstruct
 form in which it occurs.
-
 .meIP (:method < name <> ( param +) << body-form *)
 This syntax creates a static slot called
 .meta name
@@ -19253,7 +19249,6 @@ Methods are invoked
 using the
 .code instance.(name arg ...)
 syntax, which implicitly inserts the instance into the argument list.
-
 .meIP (:function < name <> ( param *) << body-form *)
 This syntax creates a static slot called
 .meta name
@@ -19284,7 +19279,6 @@ Such functions are called using the
 .code instance.[name arg ...]
 syntax which doesn't insert the instance into
 the argument list.
-
 .meIP (:init <> ( param ) << body-form *)
 The
 .code :init
@@ -19342,7 +19336,6 @@ of an
 .code :init
 specifier are not surrounded by an implicit
 .codn block .
-
 .meIP (:postinit <> ( param ) << body-form *)
 The
 .code :postinit
@@ -19371,7 +19364,6 @@ specific to a derived struct type is called before
 the
 .code :postinit
 of its base type.
-
 .meIP (:fini <> ( param ) << body-form *)
 The
 .code :fini
@@ -19408,8 +19400,7 @@ specifier are not surrounded by an implicit
 Note that an object's finalizers can be called explicitly with
 .codn call-finalizers .
 .RE
-.PP
-
+.IP
 The
 .code with-objects
 macro arranges for finalizers to be called on objects when the execution
