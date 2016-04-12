@@ -212,6 +212,9 @@ noreturn val type_mismatch(val, ...);
       /* prevent looping */             \
       uw_catch.ca.visible = 0;
 
+#define uw_curr_exit_point              \
+  (uw_catch.ca.cont)
+
 #define uw_catch_end                    \
       break;                            \
     default:                            \

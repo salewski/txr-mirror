@@ -27,19 +27,40 @@
 #include <stdarg.h>
 #include <wchar.h>
 #include <signal.h>
+#include <stdlib.h>
 #include <glob.h>
 #include "config.h"
 #include "lib.h"
 #include "gc.h"
 #include "utf8.h"
 #include "eval.h"
+#include "signal.h"
+#include "unwind.h"
 #include "glob.h"
 
 static val s_errfunc;
+static uw_frame_t *s_exit_point;
 
 static int errfunc_thunk(const char *errpath, int errcode)
 {
-  val result = funcall2(s_errfunc, string_utf8(errpath), num(errcode));
+  val result = t;
+  uw_frame_t cont_guard;
+
+  uw_push_guard(&cont_guard);
+
+  uw_simple_catch_begin;
+
+  result = funcall2(s_errfunc, string_utf8(errpath), num(errcode));
+
+  uw_unwind {
+    s_exit_point = uw_curr_exit_point;
+    uw_curr_exit_point = 0; /* stops unwinding */
+  }
+
+  uw_catch_end;
+
+  uw_pop_frame(&cont_guard);
+
   return result ? 1 : 0;
 }
 
@@ -48,10 +69,23 @@ val glob_wrap(val pattern, val flags, val errfunc)
   char *pat_u8 = utf8_dup_to(c_str(pattern));
   glob_t gl;
 
+  if (s_errfunc)
+    uw_throwf(error_s, lit("glob: glob cannot be re-entered from "
+                           "its error callback function"), nao);
+
   s_errfunc = default_bool_arg(errfunc);
 
   (void) glob(pat_u8, c_num(default_arg(flags, zero)),
               s_errfunc ? errfunc_thunk : 0, &gl);
+
+  s_errfunc = nil;
+
+  if (s_exit_point) {
+    uw_frame_t *ep = s_exit_point;
+    s_exit_point = 0;
+    globfree(&gl);
+    uw_continue(ep);
+  }
 
   {
     size_t i;
