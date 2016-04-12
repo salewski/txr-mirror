@@ -76,7 +76,7 @@ static void uw_unwind_to_exit_point(void)
       /* Catches catch everything, so that they
          can do "finally" or "unwind protect" logic.
          If a catch is invoked with a nil exception
-         and symbol, it must excecute the
+         and symbol, it must execute the
          mandatory clean-up code and then
          continue the unwinding by calling uw_continue,
          passing it the ca.cont value. */
