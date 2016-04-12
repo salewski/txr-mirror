@@ -122,7 +122,7 @@ noreturn val uw_errorf(val fmt, ...);
 noreturn val uw_errorfv(val fmt, struct args *args);
 val uw_register_subtype(val sub, val super);
 val uw_exception_subtype_p(val sub, val sup);
-void uw_continue(uw_frame_t *curr, uw_frame_t *target);
+void uw_continue(uw_frame_t *target);
 void uw_push_guard(uw_frame_t *);
 void uw_push_debug(uw_frame_t *, val func, struct args *,
                    val ub_p_a_pairs, val env, val data,
@@ -217,10 +217,9 @@ noreturn val type_mismatch(val, ...);
     default:                            \
       abort();                          \
     }                                   \
-    if (uw_catch.ca.cont)               \
-      uw_continue(&uw_catch,            \
-                  uw_catch.ca.cont);    \
     uw_pop_frame(&uw_catch);            \
+    if (uw_catch.ca.cont)               \
+      uw_continue(uw_catch.ca.cont);    \
   } while(0)
 
 #define internal_error(STR)             \

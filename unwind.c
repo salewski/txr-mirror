@@ -681,9 +681,8 @@ val uw_register_subtype(val sub, val sup)
   return sup;
 }
 
-void uw_continue(uw_frame_t *current, uw_frame_t *cont)
+void uw_continue(uw_frame_t *cont)
 {
-  uw_pop_frame(current);
   uw_exit_point = cont;
   uw_unwind_to_exit_point();
 }
