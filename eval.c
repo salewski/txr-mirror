@@ -87,7 +87,7 @@ val for_s, for_star_s, each_s, each_star_s, collect_each_s, collect_each_star_s;
 val append_each_s, append_each_star_s, while_s, while_star_s, until_star_s;
 val dohash_s;
 val uw_protect_s, return_s, return_from_s, sys_abscond_from_s, block_star_s;
-val list_s, append_s, apply_s, iapply_s;
+val list_s, append_s, apply_s, sys_apply_s, iapply_s;
 val gen_s, gun_s, generate_s, rest_s, plus_s;
 val promise_s, promise_forced_s, promise_inprogress_s, force_s;
 val op_s, ap_s, identity_s, apf_s, ipf_s;
@@ -2456,14 +2456,38 @@ static val me_quasilist(val form, val menv)
   return cons(list_s, cdr(form));
 }
 
+static val imp_list_to_list(val list)
+{
+  list_collect_decl (out, ptail);
+
+  for (; consp(list); list = cdr(list))
+    ptail = list_collect(ptail, car(list));
+
+  list_collect(ptail, list);
+  return out;
+}
+
+static val dot_to_apply(val form, val lisp1_p)
+{
+  if ((opt_compat && opt_compat <= 137) || proper_listp(form)) {
+    return form;
+  } else {
+    val sym = car(form);
+    val args = imp_list_to_list(cdr(form));
+    return cons(sys_apply_s, cons(if3(lisp1_p,
+                                      sym,
+                                      list(fun_s, sym, nao)),
+                                  args));
+  }
+}
+
 val expand_forms(val form, val menv)
 {
   if (atom(form)) {
-    val ex_f = expand(form, menv);
-    if (consp(ex_f))
-      uw_throwf(error_s, lit("symbol macro ~s in dot position must produce "
-                             "atom form, not compound"), form, nao);
-    return ex_f;
+    if (!form || (opt_compat && opt_compat <= 137))
+      return form;
+    uw_throwf(error_s, lit("dotted argument ~!~s "
+                           "was not converted to apply form"), form, nao);
   } else {
     val f = car(form);
     val r = cdr(form);
@@ -2527,7 +2551,10 @@ tail:
 static val expand_forms_lisp1(val form, val menv)
 {
   if (atom(form)) {
-    return form;
+    if (!form || (opt_compat && opt_compat <= 137))
+      return form;
+    uw_throwf(error_s, lit("dotted function call ~!~s "
+                           "was not converted to apply form"), form, nao);
   } else {
     val f = car(form);
     val r = cdr(form);
@@ -3513,7 +3540,7 @@ tail:
       return expand_symacrolet(form, menv);
     } else if (sym == dwim_s) {
       val args = rest(form);
-      val args_ex = expand_forms_lisp1(args, menv);
+      val args_ex = expand_forms_lisp1(dot_to_apply(args, t), menv);
 
       if (args == args_ex)
         return form;
@@ -3547,12 +3574,18 @@ tail:
          also handles: prog1, call, if, and, or,
          unwind-protect, return, dwim, set, inc, dec,
          push, pop, flip, and with-saved-vars. */
-      val args = rest(form);
+      val form_ex = dot_to_apply(form, nil);
+      val sym_ex = first(form_ex);
+      val args = rest(form_ex);
       val args_ex = expand_forms(args, menv);
 
-      if (args == args_ex)
+      if (form_ex == form && args_ex == args)
         return form;
-      return rlcp(cons(sym, args_ex), form);
+
+      if (args_ex == args)
+        return form_ex;
+
+      return rlcp(cons(sym_ex, args_ex), form);
     }
     abort();
   }
@@ -4551,6 +4584,7 @@ void eval_init(void)
   list_s = intern(lit("list"), user_package);
   append_s = intern(lit("append"), user_package);
   apply_s = intern(lit("apply"), user_package);
+  sys_apply_s = intern(lit("apply"), system_package);
   iapply_s = intern(lit("iapply"), user_package);
   gen_s = intern(lit("gen"), user_package);
   gun_s = intern(lit("gun"), user_package);
@@ -4735,7 +4769,11 @@ void eval_init(void)
   reg_fun(intern(lit("mapdo"), user_package), func_n1v(mapdov));
   reg_fun(intern(lit("window-map"), user_package), func_n4(window_map));
   reg_fun(intern(lit("window-mappend"), user_package), func_n4(window_mappend));
-  reg_fun(apply_s, func_n1v(applyv));
+  {
+    val apply_f = func_n1v(applyv);
+    reg_fun(apply_s, apply_f);
+    reg_fun(sys_apply_s, apply_f);
+  }
   reg_fun(iapply_s, func_n1v(iapply));
   reg_fun(call_s, call_f);
   reg_fun(intern(lit("reduce-left"), user_package), func_n4o(reduce_left, 2));

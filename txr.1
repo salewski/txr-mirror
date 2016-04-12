@@ -10034,23 +10034,16 @@ namely that the meta-numbers and meta-symbols of the
 .code op
 operator can be used in the dot position).
 
-If the dot position of a compound form is an atom, then the following
-equivalence applies:
+If the dot position of a compound form is an atom, then the behavior maybe
+understood according to the following transformations:
 
 .cblk
-  (f a b c ... . x)   <-->  (apply (fun f) a b c ... x)
+  (f a b c ... . x)  -->  (apply (fun f) a b c ... x)
+  [f a b c ... . x]  -->  [apply f a b c ... x]
 .cble
 
 Effectively, the dot notation constitutes a shorthand for
 .codn apply .
-
-The DWIM brackets are similar, except that the first position is an arbitrary
-expression which is evaluated according to the same rules as the remaining
-positions. The first expression must evaluate to a function, or else to some
-other object for which the DWIM syntax is defined, such as a vector, string,
-list or hash. Operators are not supported.   The dotted syntax for application
-of additional arguments from a list or vector is supported in the DWIM
-brackets just like in the parentheses.
 
 Examples:
 
@@ -10079,19 +10072,33 @@ Examples:
   (call (op list 1 . @1) 2) ;; yields 2
 .cble
 
-A special consideration is given to symbol macros which occur in the
-dot position. If a symbol macro occurs in this position, then it must not
-expand to a compound form, otherwise a macro-expansion-time error results.
-If it expands to an atom, then it is substituted by that atom, and
-the semantics of the function call proceeds as described above.
+Note that the atom in the dot position of a function call may
+be a symbol macro. Since the semantics works as if by
+transformation to an apply form in which the original dot
+position atom is an ordinary argument, the symbol macro
+may produce a compound form.
+
+Thus:
 
 .cblk
-  (symacrolet ((x (list 1 2)))
-    (list 1 . x))  ;; error: x expands to form (list 1 2)
-
   (symacrolet ((x 2))
     (list 1 . x))  ;; yields (1 . 2)
+
+  (symacrolet ((x (list 1 2)))
+    (list 1 . x))  ;; (yields (1 . 3))
 .cble
+
+That is to say, the expansion of
+.code x
+is not substituted into the form
+.code "(list 1 . x)"
+but rather the transformation to
+.code apply
+syntax takes place first, and
+so the substitution of
+.code x
+takes place in a form resembling
+.codn "(apply (fun list) 1 x)" .
 
 Dialect Note:
 
@@ -40994,6 +41001,40 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code -C 103
 selects the behaviors described below for version 105, but not those for 102.
+.IP 137
+Compatibility with \*(TX 137 restores the behavior of not expanding
+symbol macros in the dot position of a function call form. For instance
+if
+.code x
+is a symbol macro, in this compatibility mode it is not recognized
+in a form like
+.codn "(list 1 2 . x)" .
+This preserves the behavior of code which depends on
+.code x
+in such a form to refer to a variable that is being otherwise shadowed by the
+symbol macro. \*(TX 137 compatibility also restores a particular behavior
+of the global and local macro defining operators
+.code defsymacro
+and
+.codn symacrolet :
+in compatibility mode, these operators macro-expand the replacement forms
+of symbol macros at expansion time, and then bind the resulting expanded
+forms to their respective macro symbols. The forms are then potentially
+expanded again when the symbol macros are substituted. This wrong behavior was
+never implied by the documentation. The
+.codn with-slots
+macro is also affected by this, because it is implemented in terms of
+.codn symacrolet .
+Lastly, \*(TX 137 compatibility mode also restores another behavior
+of the dot position in function call forms: if the dot position of a
+function call form produces a sequence that is not a list, that sequence
+is converted to a list so that
+.code (list\ .\ "abc")
+produces
+.codn "(#\ea #\eb #\ec)" .
+After 137, no such treatment is applied to the value and the same form now
+yields
+.strn abc .
 .IP 136
 A request for compatibility with \*(TX 136 or earlier restores the old behavior
 of the
