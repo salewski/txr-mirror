@@ -312,8 +312,8 @@
                     (getter-sym setter-sym update-body) :
                     ((ssetter-sym clobber-body))
                     ((deleter-sym delete-body)))
-  (symacrolet ((name (car place-destructuring-args))
-               (args (cdr place-destructuring-args)))
+  (let ((name (car place-destructuring-args))
+        (args (cdr place-destructuring-args)))
     (unless (and name
                  (symbolp name)
                  (not (keywordp name))

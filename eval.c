@@ -1712,8 +1712,9 @@ static val expand_symacrolet(val form, val menv)
     val macro = car(symacs);
     val name = pop(&macro);
     val repl = pop(&macro);
-    val repl_ex = expand(repl, menv);
-    env_vbind(new_env, name, repl_ex);
+    env_vbind(new_env, name,
+              if3(opt_compat && opt_compat <= 137,
+                  expand(repl, menv), repl));
   }
 
   return maybe_progn(expand_forms(body, new_env));
@@ -3392,7 +3393,9 @@ tail:
         form_ex = rlcp(cons(sym, cons(name, cons(init_ex, nil))), form);
 
       if (sym == defsymacro_s) {
-        val result = eval(form_ex, make_env(nil, nil, nil), form);
+        val result = eval(if3(opt_compat && opt_compat <= 137,
+                              form_ex, form),
+                          make_env(nil, nil, nil), form);
         return cons(quote_s, cons(result, nil));
       } else {
         mark_special(name);
