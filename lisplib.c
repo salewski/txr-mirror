@@ -89,7 +89,7 @@ static val place_instantiate(val set_fun)
 
 static val ver_set_entries(val dlt, val fun)
 {
-  val name[] = { lit("*lib-version*"), nil };
+  val name[] = { lit("*lib-version*"), lit("lib-version"), nil };
   set_dlt_entries(dlt, name, fun);
   return nil;
 }
