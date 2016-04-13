@@ -932,11 +932,12 @@ static val umethod_fun(val sym, struct args *args)
 {
   val self = lit("umethod");
 
-  if (args->argc == 0) {
+  if (!args_more(args, 0)) {
     uw_throwf(error_s, lit("~a: object argument required to call ~s"),
               self, env, nao);
   } else {
-    val strct = args->arg[0];
+    val strct = args_at(args, 0);
+
     struct struct_inst *si = struct_handle(strct, self);
 
     if (symbolp(sym)) {
