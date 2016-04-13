@@ -22788,18 +22788,16 @@ otherwise a list.
 
 Under
 .codn window-map ,
+values returned by
 .meta function
-is expected to return a sequence. The sequences returned
-by the calls to
-.meta function
-are appended together to form the sequence that, possibly after a conversion to
-the same type as
+are accumulated into a sequence of the same type as
 .meta sequence
-becomes the output sequence.  Under
+and that sequence is returned.  Under
 .codn window-mappend ,
 the values returned by the calls to
 .meta function
-are appended together.
+are expected to be sequence which are appended together to
+form the output sequence.
 
 These functions respectively resemble
 .code mapcar
