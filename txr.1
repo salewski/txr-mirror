@@ -22799,14 +22799,14 @@ the values returned by the calls to
 are expected to be sequence which are appended together to
 form the output sequence.
 
-These functions respectively resemble
+These functions are analogous to
 .code mapcar
 and
-.code mappend
-respectively. However, they operate only on a single sequence.
-Moreover, they perform a
-.IR "window mapping" ,
-explained as follows.
+.codn mappend .
+Unlike these, they operate only on a single sequence, and over this sequence
+they perform a
+.IR "sliding window mapping" ,
+whose description follows.
 
 The argument to the
 .meta range
