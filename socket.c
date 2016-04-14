@@ -763,6 +763,30 @@ static val sock_connect(val sock, val sockaddr, val timeout)
   uw_throwf(socket_error_s, lit("sock-connect: cannot connect ~s"), sock, nao);
 }
 
+static val sock_mark_connected(val sock)
+{
+  val sfd = stream_fd(sock);
+
+  if (sfd) {
+    val family = sock_family(sock);
+    struct sockaddr_storage sa = { 0 };
+    socklen_t salen = sizeof sa;
+
+    (void) getpeername(c_num(sfd), coerce(struct sockaddr *, &sa), &salen);
+
+    sock_set_peer(sock, sockaddr_unpack(c_num(family), &sa));
+
+    if (sock_type(sock) == num_fast(SOCK_DGRAM)) {
+      struct dgram_stream *d = coerce(struct dgram_stream *, sock->co.handle);
+      d->sock_connected = 1;
+    }
+
+    return sock;
+  }
+
+  return nil;
+}
+
 static val sock_listen(val sock, val backlog)
 {
   val sfd = stream_fd(sock);
@@ -980,6 +1004,40 @@ val open_socket(val family, val type, val mode_str)
   return open_sockfd(num(fd), family, type, mode_str);
 }
 
+static val socketpair_wrap(val family, val type, val mode_str)
+{
+  int sv[2] = { -1, -1 };
+  int res = socketpair(c_num(family), c_num(type), 0, sv);
+  val out = nil;
+
+  uw_simple_catch_begin;
+
+  if (res < 0)
+    uw_throwf(socket_error_s, lit("sock-pair failed: ~d/~s"),
+              num(errno), string_utf8(strerror(errno)), nao);
+
+  {
+    val s0 = open_sockfd(num(sv[0]), family, type, mode_str);
+    val s1 = open_sockfd(num(sv[1]), family, type, mode_str); 
+
+    sock_mark_connected(s0);
+    sock_mark_connected(s1);
+
+    out = list(s0, s1, nao);
+  }
+
+  uw_unwind {
+    if (sv[0] != -1)
+      close(sv[0]);
+    if (sv[1] != -1)
+      close(sv[1]);
+  }
+
+  uw_catch_end;
+
+  return out;
+}
+
 void sock_load_init(void)
 {
   sockaddr_in_s = intern(lit("sockaddr-in"), user_package);
@@ -1032,7 +1090,7 @@ void sock_load_init(void)
   reg_fun(intern(lit("sock-listen"), user_package), func_n2o(sock_listen, 1));
   reg_fun(intern(lit("sock-accept"), user_package), func_n3o(sock_accept, 1));
   reg_fun(intern(lit("sock-shutdown"), user_package), func_n2o(sock_shutdown, 1));
-
+  reg_fun(intern(lit("open-socket-pair"), user_package), func_n3o(socketpair_wrap, 2));
 #if defined SO_SNDTIMEO && defined SO_RCVTIMEO
   reg_fun(intern(lit("sock-send-timeout"), user_package), func_n2(sock_send_timeout));
   reg_fun(intern(lit("sock-recv-timeout"), user_package), func_n2(sock_recv_timeout));

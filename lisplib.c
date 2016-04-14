@@ -292,6 +292,7 @@ static val sock_set_entries(val dlt, val fun)
     lit("ai-numericserv"),
     lit("str-inaddr"), lit("str-in6addr"),
     lit("str-inaddr-net"), lit("str-in6addr-net"),
+    lit("open-socket-pair"),
     nil
   };
   set_dlt_entries(dlt, name, fun);

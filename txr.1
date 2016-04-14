@@ -38283,6 +38283,33 @@ mode in
 marks a socket as a real-time-stream, and, if it is opened for writing
 or reading and writing, changes it to use line buffering.
 
+.coNP Function open-socket-pair
+.synb
+.mets (open-socket-pair < family < type <> [ mode-string ])
+.syne
+.desc
+The
+.code open-socket-pair
+function provides an interface to the functionality of the
+.code socketpair
+C library function.
+
+If successful, it creates and returns a list of two stream objects,
+which are sockets that are connected together.
+
+Note: the Internet address families
+.code af-inet
+and
+.code af-inet6
+are not supported.
+
+The
+.code mode-string
+is applied to each stream. For a description, see
+.code open-socket
+and
+.codn open-file .
+
 .coNP Functions @ sock-family and @ sock-type
 .synb
 .mets (sock-family << socket )
