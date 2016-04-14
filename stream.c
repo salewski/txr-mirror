@@ -1155,10 +1155,10 @@ static struct strm_ops pipe_ops =
                 stdio_clear_error,
                 stdio_get_fd);
 
-struct stdio_mode parse_mode(val mode_str, struct stdio_mode m_dfl)
+static struct stdio_mode do_parse_mode(val mode_str, struct stdio_mode m_dfl)
 {
   struct stdio_mode m = stdio_mode_init_blank;
-  const wchar_t *ms = c_str(mode_str);
+  const wchar_t *ms = c_str(default_arg(mode_str, lit("")));
 
   switch (*ms) {
   case 'r':
@@ -1228,6 +1228,14 @@ struct stdio_mode parse_mode(val mode_str, struct stdio_mode m_dfl)
   return m;
 }
 
+struct stdio_mode parse_mode(val mode_str, struct stdio_mode m_dfl)
+{
+  struct stdio_mode m = do_parse_mode(mode_str, m_dfl);
+  if (m.malformed)
+    uw_throwf(file_error_s, lit("invalid mode string ~a"), mode_str, nao);
+  return m;
+}
+
 static val format_mode(const struct stdio_mode m)
 {
   wchar_t buf[8], *ptr = buf;
@@ -1256,11 +1264,9 @@ static val format_mode(const struct stdio_mode m)
   return string(buf);
 }
 
-val normalize_mode(struct stdio_mode *m, val mode_str_in, struct stdio_mode m_dfl)
+val normalize_mode(struct stdio_mode *m, val mode_str, struct stdio_mode m_dfl)
 {
-  val mode_str = default_arg(mode_str_in, lit(""));
-
-  *m = parse_mode(mode_str, m_dfl);
+  *m = do_parse_mode(mode_str, m_dfl);
 
   if (m->malformed)
     uw_throwf(file_error_s, lit("invalid file open mode ~a"), mode_str, nao);
