@@ -140,6 +140,20 @@ static val sockaddr_un_unpack(struct sockaddr_un *src)
   return out;
 }
 
+static val sockaddr_unpack(int family, struct sockaddr_storage *src)
+{
+  switch (family) {
+  case AF_INET:
+   return sockaddr_in_unpack(coerce(struct sockaddr_in *, src));
+  case AF_INET6:
+    return sockaddr_in6_unpack(coerce(struct sockaddr_in6 *, src));
+  case AF_UNIX:
+    return sockaddr_un_unpack(coerce(struct sockaddr_un *, src));
+  default:
+    return nil;
+  }
+}
+
 #ifdef HAVE_GETADDRINFO
 
 static void addrinfo_in(struct addrinfo *dest, val src)
@@ -845,13 +859,7 @@ static val sock_accept(val sock, val mode_str, val timeout_in)
     if (nbytes == -1)
       goto failed;
 
-    if (family == num_fast(AF_INET))
-      peer = sockaddr_in_unpack(coerce(struct sockaddr_in *, &sa));
-    else if (family == num_fast(AF_INET6))
-      peer = sockaddr_in6_unpack(coerce(struct sockaddr_in6 *, &sa));
-    else if (family == num_fast(AF_UNIX))
-      peer = sockaddr_un_unpack(coerce(struct sockaddr_un *, &sa));
-    else {
+    if (nilp(peer = sockaddr_unpack(c_num(family), &sa))) {
       free(dgram);
       uw_throwf(socket_error_s, lit("sock-accept: ~s isn't a supported socket family"),
                 family, nao);
@@ -885,13 +893,7 @@ static val sock_accept(val sock, val mode_str, val timeout_in)
     if (afd < 0)
       goto failed;
 
-    if (family == num_fast(AF_INET))
-      peer = sockaddr_in_unpack(coerce(struct sockaddr_in *, &sa));
-    else if (family == num_fast(AF_INET6))
-      peer = sockaddr_in6_unpack(coerce(struct sockaddr_in6 *, &sa));
-    else if (family == num_fast(AF_UNIX))
-      peer = sockaddr_un_unpack(coerce(struct sockaddr_un *, &sa));
-    else
+    if (nilp(peer = sockaddr_unpack(c_num(family), &sa)))
       uw_throwf(socket_error_s, lit("accept: ~s isn't a supported socket family"),
                 family, nao);
 
