@@ -239,7 +239,6 @@ void error_trace(val exsym, val exvals, val out_stream, val prefix)
 {
   val last = last_form_evaled;
   val info = source_loc_str(last, nil);
-  val ex_info = source_loc_str(last_form_expanded, nil);
 
   if (cdr(exvals) || !stringp(car(exvals)))
     format(out_stream, lit("~a exception args: ~!~s\n"),
@@ -248,9 +247,10 @@ void error_trace(val exsym, val exvals, val out_stream, val prefix)
     format(out_stream, lit("~a ~!~a\n"), prefix, car(exvals), nao);
 
   if (info) {
-    val first, origin, oinfo;
+    val first, origin, oinfo = nil;
 
-    for (first = t; last; last = origin, info = oinfo, first = nil) {
+    for (first = t; last; last = origin, first = nil) {
+      info = oinfo ? oinfo : info;
       origin = lookup_origin(last);
       oinfo = source_loc_str(origin, nil);
 
@@ -280,9 +280,36 @@ void error_trace(val exsym, val exvals, val out_stream, val prefix)
     }
   }
 
-  if (ex_info)
+  if (last_form_expanded) {
+    uses_or2;
+    val ex_info = source_loc_str(last_form_expanded, nil);
+    val form = last_form_expanded;
+
     format(out_stream, lit("~a during expansion at ~a of form ~!~s\n"),
-           prefix, ex_info, last_form_expanded, nao);
+           prefix, or2(info, ex_info), last_form_expanded, nao);
+
+    for (;;) {
+      val origin = lookup_origin(form);
+      val oinfo = source_loc_str(origin, nil);
+
+      if (origin) {
+        if (info)
+          format(out_stream, lit("~a ... an expansion at ~a of ~!~s\n"),
+                 prefix, oinfo, origin, nao);
+        else
+          format(out_stream, lit("~a ... an expansion of ~!~s\n"),
+                 prefix, origin, nao);
+
+        if (origin == form)
+          break;
+
+        form = origin;
+        continue;
+      }
+
+      break;
+    }
+  }
 }
 
 val lookup_global_var(val sym)
