@@ -835,6 +835,16 @@ static val sock_accept(val sock, val mode_str, val timeout_in)
 
     sig_restore_enable;
 
+    uw_unwind {
+      if (nbytes == -1)
+        free(dgram);
+    }
+
+    uw_catch_end;
+
+    if (nbytes == -1)
+      goto failed;
+
     if (family == num_fast(AF_INET))
       peer = sockaddr_in_unpack(coerce(struct sockaddr_in *, &sa));
     else if (family == num_fast(AF_INET6))
@@ -843,17 +853,9 @@ static val sock_accept(val sock, val mode_str, val timeout_in)
       peer = sockaddr_un_unpack(coerce(struct sockaddr_un *, &sa));
     else {
       free(dgram);
-      dgram = 0;
       uw_throwf(socket_error_s, lit("sock-accept: ~s isn't a supported socket family"),
                 family, nao);
     }
-
-    uw_unwind {
-      if (nbytes == -1)
-        free(dgram);
-    }
-
-    uw_catch_end;
 
     {
       int afd = dup(fd);
@@ -866,8 +868,7 @@ static val sock_accept(val sock, val mode_str, val timeout_in)
       if (afd == -1) {
         free(dgram);
         dgram = 0;
-        uw_throwf(socket_error_s, lit("sock-accept: unable to "),
-                family, nao);
+        goto failed;
       }
       return make_dgram_sock_stream(afd, family, peer, dgram, nbytes,
                                     coerce(struct sockaddr *, &sa), salen,
