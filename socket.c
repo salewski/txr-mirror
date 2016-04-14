@@ -998,7 +998,7 @@ static val sock_recv_timeout(val sock, val usec)
 }
 #endif
 
-val open_socket(val family, val type, val mode_str)
+static val open_socket(val family, val type, val mode_str)
 {
   int fd = socket(c_num(family), c_num(type), 0);
   return open_sockfd(num(fd), family, type, mode_str);
@@ -1090,6 +1090,7 @@ void sock_load_init(void)
   reg_fun(intern(lit("sock-listen"), user_package), func_n2o(sock_listen, 1));
   reg_fun(intern(lit("sock-accept"), user_package), func_n3o(sock_accept, 1));
   reg_fun(intern(lit("sock-shutdown"), user_package), func_n2o(sock_shutdown, 1));
+  reg_fun(intern(lit("open-socket"), user_package), func_n3o(open_socket, 2));
   reg_fun(intern(lit("open-socket-pair"), user_package), func_n3o(socketpair_wrap, 2));
 #if defined SO_SNDTIMEO && defined SO_RCVTIMEO
   reg_fun(intern(lit("sock-send-timeout"), user_package), func_n2(sock_send_timeout));
