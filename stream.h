@@ -170,6 +170,7 @@ val vformat(val stream, val string, va_list);
 val vformat_to_string(val string, va_list);
 val format(val stream, val string, ...);
 val formatv(val stream, val string, struct args *args);
+val fmt(val string, struct args *args);
 val put_string(val string, val stream);
 val put_line(val string, val stream);
 val put_char(val ch, val stream);

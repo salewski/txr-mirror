@@ -3095,6 +3095,11 @@ val format(val stream, val str, ...)
   }
 }
 
+val fmt(val string, struct args *args)
+{
+  return formatv(nil, string, args);
+}
+
 static val put_indent(val stream, struct strm_ops *ops, cnum chars)
 {
   while (chars--)
@@ -3800,6 +3805,7 @@ void stream_init(void)
 #endif
 
   reg_fun(format_s, func_n2v(formatv));
+  reg_fun(intern(lit("fmt"), user_package), func_n1v(fmt));
   reg_fun(intern(lit("make-string-input-stream"), user_package), func_n1(make_string_input_stream));
   reg_fun(intern(lit("make-string-byte-input-stream"), user_package), func_n1(make_string_byte_input_stream));
   reg_fun(intern(lit("make-string-output-stream"), user_package), func_n0(make_string_output_stream));

@@ -33202,6 +33202,23 @@ The precision field is processed syntactically, and no error occurs, however.
 
 .PP
 
+.coNP Function @ fmt
+.synb
+.mets (fmt < format-string << format-arg *)
+.syne
+.desc
+The
+.code fmt
+function provides a short-hand for formatting to a string, according
+to the following equivalence which holds between
+.code fmt
+and
+.codn format :
+
+.cblk
+  (fmt s arg ...)  <-->  (format nil s arg ...)
+.cble
+
 .coNP Functions @, print @, pprint @, prinl @, pprinl @ tostring and @ tostringp
 .synb
 .mets (print < obj <> [ stream ])
