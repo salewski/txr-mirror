@@ -3317,7 +3317,6 @@ static val do_expand(val form, val menv)
 
   menv = default_bool_arg(menv);
 
-tail:
   if (nilp(form)) {
     return nil;
   } else if (bindable(form)) {
@@ -3327,8 +3326,7 @@ tail:
       val symac = cdr(symac_bind);
       if (symac == form)
         return form;
-      form = rlcp_tree(symac, form);
-      goto tail;
+      return expand(rlcp_tree(symac, form), menv);
     }
     return form;
   } else if (atom(form)) {
@@ -3552,8 +3550,7 @@ tail:
       val mac_expand = expand_macro(form, macro, menv);
       if (mac_expand == form)
         return form;
-      form = rlcp_tree(rlcp_tree(mac_expand, form), macro);
-      goto tail;
+      return expand(rlcp_tree(rlcp_tree(mac_expand, form), macro), menv);
     } else if (sym == progn_s) {
       val args = rest(form);
 
@@ -3568,8 +3565,7 @@ tail:
 
         return car(args_ex);
       }
-      form = first(args);
-      goto tail;
+      return expand(first(args), menv);
     } else if (sym == sys_lisp1_value_s) {
       return expand_lisp1_value(form, menv);
     } else {
@@ -3602,6 +3598,9 @@ val expand(val form, val menv)
   last_form_expanded = form;
   ret = do_expand(form, menv);
   last_form_expanded = lfe_save;
+
+  if (!lookup_origin(ret))
+    set_origin(ret, form);
 
   return ret;
 }
