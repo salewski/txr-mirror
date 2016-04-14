@@ -1602,6 +1602,7 @@ static val expand_macro(val form, val mac_binding, val menv)
   if (cobjp(expander)) {
     mefun_t fp = coerce(mefun_t, cptr_get(expander));
     val expanded = fp(form, menv);
+    set_origin(expanded, form);
     return expanded;
   } else {
     debug_enter;
