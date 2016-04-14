@@ -734,6 +734,27 @@ static int to_connect(int fd, struct sockaddr *addr, socklen_t len,
   }
 }
 
+static val open_sockfd(val fd, val family, val type, val mode_str)
+{
+  struct stdio_mode m, m_rpb = stdio_mode_init_rpb;
+
+  if (type == num_fast(SOCK_DGRAM)) {
+    return make_dgram_sock_stream(c_num(fd), family, nil, 0, 0, 0, 0,
+                                  parse_mode(mode_str, m_rpb), 0);
+  } else {
+    FILE *f = (errno = 0, w_fdopen(c_num(fd), c_str(normalize_mode(&m, mode_str, m_rpb))));
+
+    if (!f) {
+      close(c_num(fd));
+      uw_throwf(file_error_s, lit("error creating stream for socket ~a: ~d/~s"),
+                fd, num(errno), string_utf8(strerror(errno)), nao);
+    }
+
+    return set_mode_props(m, make_sock_stream(f, family, type));
+  }
+}
+
+
 static val sock_connect(val sock, val sockaddr, val timeout)
 {
   val sfd = stream_fd(sock);
@@ -976,27 +997,6 @@ static val sock_recv_timeout(val sock, val usec)
   return sock_timeout(sock, usec, lit("sock-recv-timeout"), SO_RCVTIMEO);
 }
 #endif
-
-
-val open_sockfd(val fd, val family, val type, val mode_str)
-{
-  struct stdio_mode m, m_rpb = stdio_mode_init_rpb;
-
-  if (type == num_fast(SOCK_DGRAM)) {
-    return make_dgram_sock_stream(c_num(fd), family, nil, 0, 0, 0, 0,
-                                  parse_mode(mode_str, m_rpb), 0);
-  } else {
-    FILE *f = (errno = 0, w_fdopen(c_num(fd), c_str(normalize_mode(&m, mode_str, m_rpb))));
-
-    if (!f) {
-      close(c_num(fd));
-      uw_throwf(file_error_s, lit("error creating stream for socket ~a: ~d/~s"),
-                fd, num(errno), string_utf8(strerror(errno)), nao);
-    }
-
-    return set_mode_props(m, make_sock_stream(f, family, type));
-  }
-}
 
 val open_socket(val family, val type, val mode_str)
 {

@@ -192,7 +192,6 @@ val open_directory(val path);
 val open_file(val path, val mode_str);
 val open_fileno(val fd, val mode_str);
 #if HAVE_SOCKETS
-val open_sockfd(val fd, val family, val type, val mode_str);
 val open_socket(val family, val type, val mode_str);
 #endif
 val open_tail(val path, val mode_str, val seek_end_p);
