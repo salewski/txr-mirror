@@ -69,9 +69,11 @@ val glob_wrap(val pattern, val flags, val errfunc)
   char *pat_u8 = utf8_dup_to(c_str(pattern));
   glob_t gl;
 
-  if (s_errfunc)
+  if (s_errfunc) {
+    free(pat_u8);
     uw_throwf(error_s, lit("glob: glob cannot be re-entered from "
                            "its error callback function"), nao);
+  }
 
   s_errfunc = default_bool_arg(errfunc);
 
@@ -79,6 +81,7 @@ val glob_wrap(val pattern, val flags, val errfunc)
               s_errfunc ? errfunc_thunk : 0, &gl);
 
   s_errfunc = nil;
+  free(pat_u8);
 
   if (s_exit_point) {
     uw_frame_t *ep = s_exit_point;
