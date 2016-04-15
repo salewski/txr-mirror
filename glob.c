@@ -68,6 +68,7 @@ val glob_wrap(val pattern, val flags, val errfunc)
 {
   char *pat_u8 = utf8_dup_to(c_str(pattern));
   glob_t gl;
+  cnum c_flags = c_num(default_arg(flags, zero));
 
   if (s_errfunc) {
     free(pat_u8);
@@ -77,8 +78,7 @@ val glob_wrap(val pattern, val flags, val errfunc)
 
   s_errfunc = default_bool_arg(errfunc);
 
-  (void) glob(pat_u8, c_num(default_arg(flags, zero)),
-              s_errfunc ? errfunc_thunk : 0, &gl);
+  (void) glob(pat_u8, c_flags, s_errfunc ? errfunc_thunk : 0, &gl);
 
   s_errfunc = nil;
   free(pat_u8);
