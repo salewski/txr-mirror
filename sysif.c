@@ -608,7 +608,7 @@ static val stat_to_list(struct stat st)
               nao);
 }
 
-static val stat_to_struct(struct stat st)
+val stat_to_struct(struct stat st)
 {
   args_decl(args, ARGS_MIN);
   val strct = make_struct(stat_s, nil, args);

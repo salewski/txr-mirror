@@ -43,6 +43,10 @@ typedef long off_t;
 #endif
 
 val getenv_wrap(val name);
+#if HAVE_SYS_STAT
+struct stat;
+val stat_to_struct(struct stat st);
+#endif
 val statp(val path);
 val statf(val path);
 off_t off_t_num(val num);
