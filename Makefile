@@ -50,6 +50,7 @@ OBJS += args.o lisplib.o cadr.o struct.o jmp.o
 OBJS-$(debug_support) += debug.o
 OBJS-$(have_syslog) += syslog.o
 OBJS-$(have_glob) += glob.o
+OBJS-$(have_ftw) += ftw.o
 OBJS-$(have_posix_sigs) += signal.o
 OBJS-$(have_sockets) += socket.o
 OBJS-$(have_termios) += linenoise/linenoise.o

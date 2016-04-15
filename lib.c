@@ -62,6 +62,7 @@
 #include "parser.h"
 #include "syslog.h"
 #include "glob.h"
+#include "ftw.h"
 #include "cadr.h"
 #include "struct.h"
 #include "txr.h"
@@ -9328,6 +9329,9 @@ void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),
 #endif
 #if HAVE_GLOB
   glob_init();
+#endif
+#if HAVE_FTW
+  ftw_init();
 #endif
   cadr_init();
   time_init();

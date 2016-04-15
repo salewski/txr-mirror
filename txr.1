@@ -37811,6 +37811,200 @@ function, and the meaning of all the
 .meta flags
 arguments are given in the documentation for the C function.
 
+.SS* Unix Filesystem Traversal
+
+On platforms where the POSIX
+.code nftw
+function is available \*(TX provides this functionality in
+the form of the analogous Lisp function
+.codn ftw ,
+accompanied by some numeric constants.
+
+.coNP Variables @, ftw-phys @, ftw-mount @, ftw-chdir @ ftw-depth and @ ftw-actionretval
+.desc
+These variables hold numeric values that may be combined into a single
+bitmask bitmask value using the
+.code logior
+function. This value is suitable as the
+.meta flags
+argument of the
+.code ftw
+function.
+
+These variables corresponds to the C constants
+.codn FTW_PHYS ,
+.codn FTW_MOUNT ,
+et cetera.
+
+Note that
+.code ftw-actionretval
+is a GNU extension that is not available on all platforms. If the platform's
+.code nftw
+function doesn't have this feature, then this variable is not defined.
+
+.coNP Variables @, ftw-f @, ftw-d @, ftw-dnr @, ftw-ns @, ftw-sl @ ftw-dp and @ ftw-sln
+.desc
+These variables provide symbolic names for the integer values that are
+passed as the
+.code type
+argument of the callback function called by
+.codn ftw .
+This argument classifies the kind of file system node visited, or
+error condition encountered.
+
+These variables correspond to the C constants
+.codn FTW_F ,
+.codn FTW_D ,
+et cetera.
+
+Not all of them are present. If the underlying platform doesn't have
+a given constant, then the corresponding variable doesn't exist in \*(TX.
+
+.coNP Variables @, ftw-continue @, ftw-stop @ ftw-skip-subtree and @ ftw-skip-siblings
+.desc
+These variables are defined if the variable
+.code ftw-actionretval
+is defined.
+
+If the value of
+.code ftw-actionretval
+is included in the
+.meta flags
+argument of
+.codn ftw ,
+then the callback function can use the values of these variables
+as return codes. Ordinarily, the callback returns zero to continue
+the search and nonzero to stop.
+
+These variables correspond to the C constants
+.codn FTW_CONTINUE ,
+.codn FTW_STOP ,
+et cetera.
+
+.coNP Function @ ftw
+.synb
+.mets (ftw < path < callback-func >> [ flags <> [ nopenfd ]])
+.mets >> [ callback-func < path < type < stat-struct < level << base ]
+.syne
+.desc
+The
+.code ftw
+function provides access to the
+.code nftw
+POSIX C library function.
+
+Note that the
+.meta flags
+and
+.meta nopenfd
+arguments are reversed with respect to the C language interface.
+They are both optional;
+.meta flags
+defaults to zero, and
+.meta nopenfd
+defaults to 20.
+
+The
+.code nftw
+function walks the filesystem, as directed by the
+.meta path
+string and
+.meta flags
+bitmask arguments.
+
+For each visited entry, it calls the supplied
+.meta callback-func
+function, which receives five arguments.
+
+This function can continue the traversal by returning any non-integer value,
+or the integer value zero.
+If
+.code ftw-actionretval
+is included in the
+.meta flags
+bitmask, then the only integer code which continues the traversal without
+any special semantics is
+.code ftw-continue
+and only
+.code ftw-stop
+stops the traversal.  (Non-integer return values behave like
+.codn ftw-continue ).
+
+The
+.meta path
+argument of the callback function gives the path of the
+visited filesystem object. 
+
+The
+.meta type
+argument is an integer code which indicates the kind of
+object that is visited, or an error situation in visiting
+that filesystem entry.  See the documentation for
+.code ftw-f
+and
+.code ftw-d
+for possible values.
+
+The
+.meta stat-struct
+argument provides information about the filesystem object
+as a
+.code stat
+structure, the same kind of object as what is returned by the
+.code stat
+function.
+
+The
+.meta level
+argument is an integer value representing the directory level
+depth. This value is obtained from the C structure
+.code FTW
+in the
+.code nftw
+C API.
+
+The
+.meta base
+argument indicates the length of the directory part of the
+.code path
+argument. Characters in excess of this length are thus the base name of the
+visited object, and the expression
+.cblk
+.meti >> [ path << base ..:]
+.cble
+calculates the base name.
+
+The
+.code ftw
+function returns
+.code t
+upon successful completion and
+.code nil
+on failure. If
+.code ftw
+is terminated by a return value from
+.metn callback-func ,
+then that value is returned. Such a value is always a nonzero integer.
+
+The
+.meta callback-func
+may terminate the traversal by a nonlocal exit, such as by throwing
+an exception or performing a block return.
+
+The
+.meta callback-func
+may not re-enter the
+.code ftw
+function. This situation is detected and diagnosed by an exception.
+
+The
+.meta callback-func
+may not capture a continuation across the callback boundary. That is to say,
+code invoked from the callback may not capture a continuation up to a prompt
+which surrounds the
+.code ftw
+call. Such an attempt is detected and diagnosed by an exception.
+
 .SS* Unix Sockets
 
 On platforms where the underlying system interface is available, \*(TX provides
