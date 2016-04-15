@@ -15370,16 +15370,16 @@ For a description of the arguments, semantics and return value, refer to the
 .code replace
 function.
 
-.coNP Functions @ listp and @ proper-listp
+.coNP Functions @ listp and @ proper-list-p
 .synb
 .mets (listp << value )
-.mets (proper-listp << value )
+.mets (proper-list-p << value )
 .syne
 .desc
 The
 .code listp
 and
-.code proper-listp
+.code proper-list-p
 functions test, respectively, whether
 .meta value
 is a list, or a proper list, and return
@@ -15400,7 +15400,7 @@ The empty list
 is a list, and a cons cell is a list.
 
 The
-.code proper-listp
+.code proper-list-p
 function returns
 .code t
 only for proper lists.  A proper list is
@@ -15409,9 +15409,20 @@ either
 or a cons whose
 .code cdr
 is a proper list.
-.code proper-listp
+.code proper-list-p
 traverses the
 list, and its execution will not terminate if the list is circular.
+
+Dialect Note: in \*(TX 137 and older,
+.code proper-list-p
+is called
+.codn proper-listp .
+The name was changed for adherence to conventions and compatibility with other
+Lisp dialects, like Common Lisp. However, the function continues to be
+available under the old name. Code that must run on \*(TX 137 and older
+installations should use
+.codn proper-listp ,
+but its use going forward is deprecated.
 
 .coNP Function @ length-list
 .synb
@@ -40318,7 +40329,7 @@ substring matches. For instance
 is a possible completion for
 .codn list ,
 as is
-.codn proper-listp .
+.codn proper-list-p .
 
 If no completions are found, then the BEL character is sent to the terminal
 to generate a beep or a visual alert indication. The listener returns to

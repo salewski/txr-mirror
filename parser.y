@@ -1346,7 +1346,7 @@ static val define_transform(parser_t *parser, val define_form)
       return define_form;
     }
 
-    if (!proper_listp(params)) {
+    if (!proper_list_p(params)) {
       yyerr("invalid function parameter list");
       return define_form;
     }

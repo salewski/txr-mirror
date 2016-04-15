@@ -584,7 +584,7 @@ val consp(val obj);
 val lconsp(val obj);
 val atom(val obj);
 val listp(val obj);
-val proper_listp(val obj);
+val proper_list_p(val obj);
 val length_list(val list);
 val getplist(val list, val key);
 val getplist_f(val list, val key, loc found);

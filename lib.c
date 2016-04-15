@@ -2571,7 +2571,7 @@ val listp(val obj)
   return if2(obj == nil || consp(obj), t);
 }
 
-val proper_listp(val obj)
+val proper_list_p(val obj)
 {
   while (consp(obj))
     obj = cdr(obj);

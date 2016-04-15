@@ -2498,7 +2498,7 @@ static val imp_list_to_list(val list)
 
 static val dot_to_apply(val form, val lisp1_p)
 {
-  if ((opt_compat && opt_compat <= 137) || proper_listp(form)) {
+  if ((opt_compat && opt_compat <= 137) || proper_list_p(form)) {
     return form;
   } else {
     val sym = car(form);
@@ -2937,7 +2937,7 @@ static val me_op(val form, val menv)
     uses_or2;
     val dwim_body = rlcp_tree(cons(dwim_s,
                                    if3(or4(is_op, has_rest, ssyms,
-                                           null(proper_listp(body_trans))),
+                                           null(proper_list_p(body_trans))),
                                        body_trans,
                                        append2(body_trans, rest_gensym))),
                               body_trans);
@@ -4789,7 +4789,11 @@ void eval_init(void)
   reg_fun(intern(lit("consp"), user_package), func_n1(consp));
   reg_fun(intern(lit("lconsp"), user_package), func_n1(lconsp));
   reg_fun(intern(lit("listp"), user_package), func_n1(listp));
-  reg_fun(intern(lit("proper-listp"), user_package), func_n1(proper_listp));
+  {
+    val proper_list_p_f = func_n1(proper_list_p);
+    reg_fun(intern(lit("proper-listp"), user_package), proper_list_p_f);
+    reg_fun(intern(lit("proper-list-p"), user_package), proper_list_p_f);
+  }
   reg_fun(intern(lit("length-list"), user_package), func_n1(length_list));
 
   reg_fun(intern(lit("mapcar"), user_package), func_n1v(mapcarv));
