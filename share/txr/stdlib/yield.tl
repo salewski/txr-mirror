@@ -54,6 +54,18 @@
 (defmacro obtain-block (name . body)
   ^(obtain (block ,name ,*body)))
 
+(defmacro obtain* (. body)
+  (let ((arg (gensym "arg"))
+        (fun (gensym "fun")))
+    ^(let ((,fun (sys:obtain-impl (lambda (,arg)
+                                    (unless (eq ,arg 'sys:cont-free)
+                                      ,*body)))))
+       (call ,fun nil)
+       ,fun)))
+
+(defmacro obtain*-block (name . body)
+  ^(obtain* (block ,name ,*body)))
+
 (defmacro yield-from (:form ctx-form name : (form nil have-form-p))
   (let ((cont-sym (gensym)))
     ^(sys:capture-cont ',name

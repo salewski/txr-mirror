@@ -30050,6 +30050,82 @@ In other words, the following equivalence holds:
   [f] -> nil
 .cble
 
+.coNP Macros @ obtain* and @ obtain*-block
+.synb
+.mets (obtain* << forms *)
+.mets (obtain*-block < name << forms *)
+.syne
+.desc
+The
+.code obtain*
+and
+.code obtain*-block
+macros implement a useful variation of
+.code obtain
+and
+.codn obtain-block .
+
+The
+.code obtain*
+macro differs from
+.code obtain
+in exactly one regard: prior to returning the function, it invokes
+it one time, with the argument value
+.codn nil .
+
+Thus, the following equivalence holds
+
+.cblk
+  (obtain* forms ...)   <-->  (let ((f (obtain forms ...)))
+                                (call f)
+                                f)
+.cble
+
+In other words, the suspended block is immediately resumed, so that it executes
+either to completion (in which case its value is discarded), or to its first
+.code yield
+or
+.code yield-from
+call (in which case the yielded value is discarded).
+
+Note: the
+.code obtain*
+macro is useful in creating suspensions which accept data rather than
+produce data.
+
+The
+.code obtain*-block
+macro combines
+.code obtain*
+and
+.code block
+in the same manner that
+.code obtain-block
+combines
+.code obtain
+and
+.codn block .
+
+.TP* Example:
+
+.cblk
+  ;; Pass three values into suspended block,
+  ;; which get accumulated into list.
+  (let ((f (obtain*-block nil
+             (list (yield nil) (yield nil) (yield nil)))))
+    (call f 1)
+    (call f 2)
+    (call f 3))  ->  (1 2 3)
+
+  ;; Under obtain, extra call is required:
+  (let ((f (obtain-block nil
+             (list (yield nil) (yield nil) (yield nil)))))
+    (call f nil)  ;; execute block to first yield
+    (call f 1)    ;; resume first yield with 1
+    (call f 2)
+    (call f 3))  ->  (1 2 3)
+.cble
+
 .coNP Macro @ suspend
 .synb
 .mets (suspend < block-name < var-name << body-form *)
