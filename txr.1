@@ -16617,20 +16617,19 @@ only retrieve a cached value.
 .TP* Example:
 
 .cblk
-  @(do
-    ;; list is popped only once: the value is computed
-    ;; just once when force is called on a given promise
-    ;; for the first time.
+  ;; list is popped only once: the value is computed
+  ;; just once when force is called on a given promise
+  ;; for the first time.
 
-    (defun get-it (promise)
-      (format t "*list* is ~s\en" *list*)
-      (format t "item is ~s\en" (force promise))
-      (format t "item is ~s\en" (force promise))
-      (format t "*list* is ~s\en" *list*))
+  (defun get-it (promise)
+    (format t "*list* is ~s\en" *list*)
+    (format t "item is ~s\en" (force promise))
+    (format t "item is ~s\en" (force promise))
+    (format t "*list* is ~s\en" *list*))
 
-    (defvar *list* '(1 2 3))
+  (defvar *list* '(1 2 3))
 
-    (get-it (delay (pop *list*))))
+  (get-it (delay (pop *list*)))
 
   Output:
 
@@ -17281,12 +17280,11 @@ stands for Generate Until Null.
 .TP* Example:
 
 .cblk
-  @(do
-    ;; Make a lazy list of integers up to 1000
-    ;; access and print the first three.
-    (let* ((counter 0)
-           (list (gen (< counter 1000) (inc counter))))
-      (format t "~s ~s ~s\en" (pop list) (pop list) (pop list))))
+  ;; Make a lazy list of integers up to 1000
+  ;; access and print the first three.
+  (let* ((counter 0)
+         (list (gen (< counter 1000) (inc counter))))
+    (format t "~s ~s ~s\en" (pop list) (pop list) (pop list)))
 
   Output:
   1 2 3
