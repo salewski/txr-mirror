@@ -100,6 +100,18 @@ INLINE void args_add4(struct args *args, val arg1, val arg2, val arg3, val arg4)
   *arg++ = arg4;
 }
 
+INLINE void args_add5(struct args *args, val arg1, val arg2, val arg3,
+                      val arg4, val arg5)
+{
+  val *arg = args->arg + args->fill;
+  args->fill += 5;
+  *arg++ = arg1;
+  *arg++ = arg2;
+  *arg++ = arg3;
+  *arg++ = arg4;
+  *arg++ = arg5;
+}
+
 val args_add_checked(val name, struct args *args, val arg);
 
 INLINE void args_add_list(struct args *args, val list)
