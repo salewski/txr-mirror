@@ -20011,8 +20011,8 @@ symbol.
    ;; different types. Both have a method called bark.
 
    (let ((bark-fun (umeth bark)))
-     (bark-fun dog)     ;; same effect as dog.(bark)
-     (bark-fun seal))   ;; same effect as seal.(bark)
+     [bark-fun dog]     ;; same effect as dog.(bark)
+     [bark-fun seal])   ;; same effect as seal.(bark)
 .cble
 
 The
