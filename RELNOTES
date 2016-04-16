@@ -1,3 +1,64 @@
+                                    TXR 138
+                                   2016-04-16
+
+
+  Features
+
+  - New accessor sock-set-peer, and sock-peer becomes
+    an accessor so (set (sock-peer sock) addr) is possible.
+    - Allows "soft connected" datagram sockets:
+      - send to different destinations with same socket
+        by altering sock-peer address.
+  - Dot position in function calls is now defined in terms
+    of transformation to apply:
+    - dot position expr can now be a symbol macro.
+    - value of dot position is no longer applied as
+      a list of arguments if it is a non-list sequence.
+  - Better tracking of form expansion origins, leading to
+    improvement in error diagnostics.
+  - New fmt function for terse formatting to a string,
+    shorthand for (format nil ...).
+  - New open-socket-pair function, providing access to socketpair.
+  - proper-listp function now known as proper-list-p.
+    - old name still there, but deprecated.
+  - New obtain* and obtain*-block macros.
+  - New ftw function for fire tree walking, providing access to POSIX nftw.
+
+  Bugs
+
+  - Fixed issue in the UTF-8 encoding of Unicode strings, which TXR
+    uses when calling API's that require char * strings:
+    - U+DC00 pseudo-null produces the NUL character, which appears
+      to terminate the char * string even if more characters follow,
+      which is a problem.
+    - Now, if U+DC00 occurs in a string that is being converted
+      to UTF-8, an exception is thrown.
+  - "Abstract" UNIX socket addresses properly supported on Linux.
+  - defstruct:
+    - now diagnoses use of nonexistent struct as supertype.
+    - also fixed some minor diagnostic issues in defstruct.
+  - symbol macros:
+    - replacement forms were wrongly being expanded at bind time, and then
+      possibly again at sustitution time.
+    - now replacement forms are only macro-expanded during substitution.
+  - glob function:
+    - error callback hardened against continuation capture,
+      absconding exits and re-entry of glob.
+    - non-local exits allowed from error callback.
+    - possible memory leak fixed.
+  - Access to lib-version variable wasn't triggering its auto-load.
+  - Fixed broken argument handling in umethod, also affecting
+    umeth macro.
+  - Invalid open mode strings in socket functions now diagnosed.
+  - Fixed broken error handling in datagram case of sock-accept.
+  - Source files processed by the load function, @(load) directive
+    or by invocation of txr are now closed immediately after parsing.
+  - TXR language:
+    - fixed bug in data source opening logic leading to a mishandling
+      of a case like @(bind x "a")text at top of script.
+
+
+
                                     TXR 137
                                    2016-03-30
 
