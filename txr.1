@@ -37805,6 +37805,25 @@ boolean. If the function returns true, then
 .code glob
 will terminate.
 
+The
+.meta error-func
+may terminate the traversal by a nonlocal exit, such as by throwing
+an exception or performing a block return.
+
+The
+.meta error-func
+may not re-enter the
+.code glob
+function. This situation is detected and diagnosed by an exception.
+
+The
+.meta error-func
+may not capture a continuation across the error boundary. That is to say,
+code invoked from the error may not capture a continuation up to a prompt
+which surrounds the
+.code glob
+call. Such an attempt is detected and diagnosed by an exception.
+
 Details of the semantics of the
 .code glob
 function, and the meaning of all the
