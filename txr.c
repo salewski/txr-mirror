@@ -831,6 +831,8 @@ int txr_main(int argc, char **argv)
     parse_once(parse_stream, spec_file_str, &parser);
     gc_state(gc);
 
+    close_stream(parse_stream, nil);
+
     if (parser.errors)
       return EXIT_FAILURE;
 
@@ -860,6 +862,8 @@ int txr_main(int argc, char **argv)
 
   {
     val result = read_eval_stream(parse_stream, std_error, t);
+
+    close_stream(parse_stream, nil);
 
     if (!enter_repl)
       return result ? 0 : EXIT_FAILURE;

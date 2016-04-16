@@ -3739,6 +3739,8 @@ static val v_load(match_files_ctx *c)
       parse_once(stream, name, &parser);
       gc_state(gc);
 
+      close_stream(stream, nil);
+
       if (parser.errors)
         sem_error(specline, lit("~s: errors encountered in ~s"), sym, path, nao);
 
@@ -3773,8 +3775,11 @@ static val v_load(match_files_ctx *c)
         }
       }
     } else {
-      if (!read_eval_stream(stream, std_error, nil))
+      if (!read_eval_stream(stream, std_error, nil)){
+        close_stream(stream, nil);
         sem_error(specline, lit("load: ~s contains errors"), path, nao);
+      }
+      close_stream(stream, nil);
       return (sym == include_s) ? nil : next_spec_k;
     }
   }

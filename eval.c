@@ -3261,15 +3261,18 @@ static val sys_load(val target, val sloc)
   open_txr_file(path, &txr_lisp_p, &name, &stream);
 
   if (!txr_lisp_p) {
+    close_stream(stream, nil);
     rlset(sloc, sloc);
     eval_error(sloc, lit("load doesn't process .txr files"), nao);
   }
 
   if (!read_eval_stream(stream, std_error, nil)) {
     rlset(sloc, sloc);
+    close_stream(stream, nil);
     eval_error(sloc, lit("load: ~s contains errors"), path, nao);
   }
 
+  close_stream(stream, nil);
   return nil;
 }
 

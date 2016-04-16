@@ -426,7 +426,10 @@ static void load_rcfile(val name)
     format(std_output, lit("** details: ~a\n"), car(va), nao);
   }
 
-  uw_unwind;
+  uw_unwind {
+    if (stream)
+      close_stream(stream, nil);
+  }
 
   uw_catch_end;
 }
