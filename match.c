@@ -3902,8 +3902,9 @@ static void open_data_source(match_files_ctx *c)
     if (stringp(name)) {
       spec_bind (specline, first_spec, c->spec);
 
-      if (consp(first_spec) && (gethash(non_matching_directive_table,
-                                        first(first_spec))))
+      if (consp(first_spec) &&
+          (gethash(non_matching_directive_table, first(first_spec))) &&
+          !rest(specline))
       {
         debuglf(first_spec, lit("not opening source ~a "
                                 "since query starts with non-matching "
