@@ -435,6 +435,10 @@ val uw_block_abscond(val tag, val result)
   for (ex = uw_stack; ex != 0; ex = ex->uw.up) {
     if (ex->uw.type == UW_BLOCK && ex->bl.tag == tag)
       break;
+    if (ex->uw.type == UW_GUARD)
+      uw_throwf(error_s, lit("~a: cannot abscond via foreign stack frames\n"),
+                prog_string, nao);
+
   }
 
   if (ex == 0)
