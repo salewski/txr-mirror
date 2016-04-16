@@ -38630,30 +38630,31 @@ is thrown for other stream types.
 .mets (set (sock-peer << socket ) << address )
 .syne
 .desc
-If
-.meta socket
-is a socket stream connected to a remote peer,
-this function returns the socket address representing
-the remote peer. The return value is one of the concrete
-structure types derived from the
-.code sockaddr
-base, the choice depending on the socket's address family.
+The
+.code sock-peer
+function retrieves the peer address
+has most recently been assigned to
+.metn socket .
 
-If
-.meta socket
-is a file or process stream, or a socket without a connected
-peer, then the function returns
+Sockets which are not connected initially
+have a peer address value of
 .codn nil .
+A socket which is connected to a remote peer
+receives that peer's address as its
+.codn sock-peer .
 
-For any other stream type, the function throws an error of type
-.codn type-error .
-
-A socket is connected to a remote peer if the
+If a socket is connected to a remote peer via
+a successful use of the
 .code sock-connect
-function was successfully applied to it, or if the
-socket was produced as the return value of the
+function, then its
+.code sock-peer
+address is set to match that of the peer.
+
+Sockets returned by the
 .code sock-accept
-function. No other socket stream has a peer.
+function are connected, and have the remote endpoint address as their
+.code sock-peer
+address.
 
 Assigning an address to a
 .code sock-peer
