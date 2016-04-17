@@ -33,6 +33,9 @@
 #include <stdarg.h>
 #include <signal.h>
 #include "config.h"
+#if HAVE_VALGRIND
+#include <valgrind/memcheck.h>
+#endif
 #include "lib.h"
 #include "gc.h"
 #include "args.h"
@@ -754,11 +757,25 @@ static val revive_cont(val dc, val arg)
     for (ptr = space; ptr < space + cont->size; ptr += sizeof (cnum))
     {
       uint_ptr_t *wordptr = coerce(uint_ptr_t *, ptr);
-      uint_ptr_t word = *wordptr;
+      uint_ptr_t word;
+#if HAVE_VALGRIND
+      uint_ptr_t vbits = 0;
+
+      if (opt_vg_debug) {
+        VALGRIND_GET_VBITS(wordptr, &vbits, sizeof *wordptr);
+        VALGRIND_MAKE_MEM_DEFINED(wordptr, sizeof *wordptr);
+      }
+#endif
+      word = *wordptr;
 
       if (word >= orig_start - frame_slack &&
           word < orig_end && is_ptr(coerce(val, word)))
         *wordptr = word + delta;
+
+#if HAVE_VALGRIND
+      if (opt_vg_debug)
+        VALGRIND_SET_VBITS(wordptr, &vbits, sizeof *wordptr);
+#endif
     }
 
     uw_block_begin (cont->tag, result);
