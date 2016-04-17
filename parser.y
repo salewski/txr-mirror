@@ -1518,7 +1518,7 @@ static wchar_t char_from_name(const wchar_t *name)
 static val make_expr(parser_t *parser, val sym, val rest, val lineno)
 {
   val expr = cons(sym, rest);
-  val ret = cons(expr_s, expr);
+  val ret = cons(expr_s, expand(expr, nil));
 
   if (rest) {
     rlcp(expr, rest);
