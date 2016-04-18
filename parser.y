@@ -366,7 +366,7 @@ if_clause : IF exprs_opt ')'
                                     val cases = nappend2(nappend2(iff, elifs), els);
                                     $$ = list(cases_s, cases, nao); }
                                   else
-                                  { val expr = car($2);
+                                  { val expr = expand(car($2), nil);
                                     val ifs = $5;
                                     val branch = cons(cons(expr, ifs), nil);
                                     val elifs = $6;
@@ -386,7 +386,7 @@ elif_clauses_opt : ELIF exprs_opt ')' newl
                                        { val req = rlcp(cons(require_s, $2), $2);
                                          $$ = cons(cons(cons(req, nil), $5), $6); }
                                        else
-                                       { val expr = car($2);
+                                       { val expr = expand(car($2), nil);
                                          val elifs = $5;
                                          val branch = cons(cons(expr, elifs), nil);
                                          if (cdr($2))
