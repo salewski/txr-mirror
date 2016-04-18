@@ -10925,15 +10925,12 @@ All three forms refer to the function, which lexically shadows the macro.
 
 \*(TL expressions can be embedded in the \*(TX pattern language in various
 ways. Likewise, the pattern language can be invoked from \*(TL. This
-creates the possibility that Lisp code makes references to variables
-bound in the pattern language. The pattern language can also reference
-Lisp variables indirectly using the
-.code @
-escape to evaluate a variable reference as Lisp code. Plain variable
-references in the pattern language do not refer to Lisp variables.
+brings about the possibility that Lisp code attempts to access
+pattern variables bound in the pattern language. The \*(TX pattern language
+can also attempt to access \*(TL variables.
 
-The rules are as follows, but they haven't always been that way.
-See the COMPATIBILITY section.
+The rules are as follows, but they have undergone historic changes.  See the
+COMPATIBILITY section, in particular notes under 138 and 121, and also 124.
 
 A Lisp expression evaluated from the \*(TX pattern language executes
 in a null lexical environment. The current set of pattern variables captured
@@ -10944,10 +10941,29 @@ by
 or
 .codn defvarl ).
 
-The variable bindings are also stored in a dynamic environment frame.
-When \*(TX pattern code is re-entered from Lisp, these bindings are picked
-up from the closest environment frame, allowing the pattern code to
-continue with those bindings.
+In the reverse direction, a variable reference from the \*(TX pattern
+language searches the pattern variable space first. If a variable doesn't
+exist there, then the lookup refers to the \*(TL global variable space.
+The pattern language doesn't see Lisp lexical variables.
+
+When Lisp code is evaluated from the pattern language, the pattern variable
+bindings are not only installed as dynamic variables for the sake of their
+visibility from Lisp, but they are also specially stored in a dynamic
+environment frame.  When \*(TX pattern code is re-entered from Lisp, these
+bindings are picked up from the closest such environment frame, allowing the
+nested invocation of pattern code to continue with the bindings captured by
+outer pattern code.
+
+Concisely, in any context in which a symbol has both a binding as a Lisp global
+variable as well as a pattern variable, that symbol refers to the pattern
+variable. Pattern variables are propagated through Lisp evaluation into
+nested invocations of the pattern language.
+
+The pattern language can also reference
+Lisp variables using the
+.code @
+prefix, which is a consequence of that prefix introducing an expression that is
+evaluated as Lisp, the name of a variable being such an expression.
 
 .SH* LISP OPERATOR, FUNCTION AND MACRO REFERENCE
 
@@ -41333,6 +41349,13 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code -C 103
 selects the behaviors described below for version 105, but not those for 102.
+.IP 138
+After \*(TX 138, the variable name lookup rules in the \*(TX pattern language
+changed for greater utility and consistency. Compatibility with 138 or later
+restores the previous rules under which most accesses to a \*(TL variable from
+\*(TL require the
+.code @
+prefix denoting Lisp evaluation, but some do not.
 .IP 137
 Compatibility with \*(TX 137 restores the behavior of not expanding
 symbol macros in the dot position of a function call form. For instance
