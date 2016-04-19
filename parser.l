@@ -842,7 +842,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
     yylval->chr = yytext[1];
     return REGCHAR;
   }
-    
+
   yyerrprepf(yyg, lit("unrecognized escape in regex"), nao);
   return ERRTOK;
 }
