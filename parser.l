@@ -821,10 +821,16 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   yyextra->lineno++;
 }
 
-<REGEX,SREGEX>{NL} {
+<REGEX>{NL} {
   yyextra->lineno++;
   yyerrprepf(yyg, lit("newline in regex"), nao);
   return ERRTOK;
+}
+
+<SREGEX>{NL} {
+  yyextra->lineno++;
+  yylval->chr = yytext[0];
+  return REGCHAR;
 }
 
 <REGEX,SREGEX>{REGOP} {
