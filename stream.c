@@ -1568,7 +1568,7 @@ static val string_in_unget_char(val stream, val ch)
               lit("unget-char: ~s doesn't match the character that was read"),
               nao);
 
-  set(mkloc(s->pos, stream), plus(pos, one));
+  set(mkloc(s->pos, stream), pos);
   return ch;
 }
 
