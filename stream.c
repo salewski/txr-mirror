@@ -1566,7 +1566,7 @@ static val string_in_unget_char(val stream, val ch)
   if (chr_str(s->string, pos) != ch)
     uw_throwf(file_error_s,
               lit("unget-char: ~s doesn't match the character that was read"),
-              nao);
+              ch, nao);
 
   set(mkloc(s->pos, stream), pos);
   return ch;
