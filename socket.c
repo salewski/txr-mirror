@@ -434,10 +434,9 @@ static int dgram_get_byte_callback(mem_t *ctx)
 static val dgram_get_char(val stream)
 {
   struct dgram_stream *d = coerce(struct dgram_stream *, stream->co.handle);
-  val uc = d->unget_c;
-  if (uc) {
-    d->unget_c = nil;
-    return uc;
+
+  if (d->unget_c) {
+    return pop(&d->unget_c);
   } else {
     wint_t ch = utf8_decode(&d->ud, dgram_get_byte_callback,
                             coerce(mem_t *, d));
@@ -455,13 +454,7 @@ static val dgram_get_byte(val stream)
 static val dgram_unget_char(val stream, val ch)
 {
   struct dgram_stream *d = coerce(struct dgram_stream *, stream->co.handle);
-
-  if (d->unget_c){
-    d->err = EOVERFLOW;
-    uw_throwf(file_error_s, lit("unget-char overflow on ~a: "), stream, nao);
-  }
-
-  d->unget_c = ch;
+  mpush(ch, mkloc(d->unget_c, stream));
   return ch;
 }
 

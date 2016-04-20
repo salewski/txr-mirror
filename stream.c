@@ -683,11 +683,10 @@ val generic_get_line(val stream)
 static val stdio_get_char(val stream)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
-  val uc = h->unget_c;
-  if (uc) {
-    h->unget_c = nil;
-    return uc;
-  }
+
+  if (h->unget_c)
+    return pop(&h->unget_c);
+
   if (h->f) {
     wint_t ch = utf8_decode(&h->ud, stdio_get_char_callback,
                             coerce(mem_t *, h->f));
@@ -709,11 +708,7 @@ static val stdio_get_byte(val stream)
 static val stdio_unget_char(val stream, val ch)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
-
-  if (h->unget_c)
-    uw_throwf(file_error_s, lit("unget-char overflow on ~a: "), stream, nao);
-
-  h->unget_c = ch;
+  mpush(ch, mkloc(h->unget_c, stream));
   return ch;
 }
 
