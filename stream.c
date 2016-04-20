@@ -2325,6 +2325,7 @@ static val make_delegate_stream(val orig_stream, size_t handle_size,
 struct record_adapter_base {
   struct delegate_base db;
   val regex;
+  val include_match;
 };
 
 static void record_adapter_base_mark(struct record_adapter_base *rb)
@@ -2344,7 +2345,7 @@ static val record_adapter_get_line(val stream)
 {
   struct record_adapter_base *rb = coerce(struct record_adapter_base *,
                                          stream->co.handle);
-  return read_until_match(rb->regex, rb->db.target_stream);
+  return read_until_match(rb->regex, rb->db.target_stream, rb->include_match);
 }
 
 static struct strm_ops record_adapter_ops =
@@ -2362,7 +2363,7 @@ static struct strm_ops record_adapter_ops =
                 delegate_get_error, delegate_get_error_str,
                 delegate_clear_error, delegate_get_fd);
 
-val record_adapter(val regex, val stream)
+val record_adapter(val regex, val stream, val include_match)
 {
   val rec_adapter = make_delegate_stream(default_arg(stream, std_input),
                                          sizeof (struct record_adapter_base),
@@ -2371,6 +2372,7 @@ val record_adapter(val regex, val stream)
                                           rec_adapter->co.handle);
 
   rb->regex = regex;
+  rb->include_match = tnil(include_match);
   return rec_adapter;
 }
 
@@ -3847,7 +3849,7 @@ void stream_init(void)
   reg_fun(intern(lit("cat-streams"), user_package), func_n1(make_catenated_stream));
   reg_fun(intern(lit("catenated-stream-p"), user_package), func_n1(catenated_stream_p));
   reg_fun(intern(lit("catenated-stream-push"), user_package), func_n2(catenated_stream_push));
-  reg_fun(intern(lit("record-adapter"), user_package), func_n2o(record_adapter, 1));
+  reg_fun(intern(lit("record-adapter"), user_package), func_n3o(record_adapter, 1));
   reg_fun(intern(lit("open-directory"), user_package), func_n1(open_directory));
   reg_fun(intern(lit("open-file"), user_package), func_n2o(open_file, 1));
   reg_fun(intern(lit("open-fileno"), user_package), func_n2o(open_fileno, 1));

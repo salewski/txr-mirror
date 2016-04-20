@@ -2519,14 +2519,14 @@ val match_regst_right(val str, val regex, val end)
                       sub_str(str, minus(end, len), end)));
 }
 
-val read_until_match(val regex, val stream)
+val read_until_match(val regex, val stream_in, val include_match_in)
 {
   regex_machine_t regm;
   val out = nil;
   val stack = nil;
   val match = nil;
-
-  stream = default_arg(stream, std_input);
+  val stream = default_arg(stream_in, std_input);
+  val include_match = default_bool_arg(include_match_in);
 
   regex_machine_init(&regm, regex);
 
@@ -2537,18 +2537,11 @@ val read_until_match(val regex, val stream)
       switch (regex_machine_feed(&regm, 0)) {
       case REGM_FAIL:
       case REGM_INCOMPLETE:
-        if (match) {
-          while (stack != match)
-            unget_char(pop(&stack), stream);
-          if (!out)
-            out = null_string;
-          break;
-        }
+        if (match)
+          goto out_match;
         break;
       case REGM_MATCH:
-        if (!out)
-          out = null_string;
-        break;
+        goto out_match;
       }
       break;
     }
@@ -2557,13 +2550,8 @@ val read_until_match(val regex, val stream)
     case REGM_FAIL:
       unget_char(ch, stream);
 
-      if (match) {
-        while (stack != match)
-          unget_char(pop(&stack), stream);
-        if (!out)
-          out = null_string;
-        break;
-      }
+      if (match)
+        goto out_match;
 
       while (stack)
         unget_char(pop(&stack), stream);
@@ -2587,6 +2575,16 @@ val read_until_match(val regex, val stream)
     }
 
     break;
+  }
+
+  if (nil) {
+out_match:
+    while (stack != match)
+      unget_char(pop(&stack), stream);
+    if (!out)
+      out = null_string;
+    if (include_match)
+      out = cat_str(cons(out, nreverse(stack)), nil);
   }
 
   regex_machine_cleanup(&regm);
@@ -2674,6 +2672,6 @@ void regex_init(void)
   reg_fun(intern(lit("reg-expand-nongreedy"), system_package),
           func_n1(reg_expand_nongreedy));
   reg_fun(intern(lit("reg-optimize"), system_package), func_n1(reg_optimize));
-  reg_fun(intern(lit("read-until-match"), user_package), func_n2o(read_until_match, 1));
+  reg_fun(intern(lit("read-until-match"), user_package), func_n3o(read_until_match, 1));
   init_special_char_sets();
 }

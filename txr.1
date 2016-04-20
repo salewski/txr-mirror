@@ -30574,7 +30574,7 @@ in the resulting string object that is processed by
 
 .coNP Function @ read-until-match
 .synb
-.mets (read-until-match < regex <> [ stream ])
+.mets (read-until-match < regex >> [ stream <> [ include-match ]])
 .syne
 .desc
 The
@@ -30588,6 +30588,14 @@ If an argument is not specified for
 then the
 .code *std-input*
 stream is used.
+
+The
+.meta include-match
+argument is Boolean, indicating whether the delimiting text
+matched by
+.meta regex
+is included in the returned string. It defaults to
+.codn nil .
 
 The accumulation of characters is terminated by a match on
 .metn regex ,
@@ -30608,12 +30616,11 @@ are accumulated, the function returns
 
 When the accumulation of characters terminates by a match on
 .metn regex ,
-reading characters from the stream continues. The longest
-possible prefix of the stream which matches
-.meta regex
-is read, and discarded. If an error is encountered, the
-matching procedure terminates and returns the previously
-accumulated string.
+the longest possible matching sequence of characters is
+removed from the stream.  If
+.meta include-match
+is true, that matching text is included in
+the returned string. Otherwise, it is discarded.
 
 .SS* Hashing Library
 .coNP Functions @, make-hash and @ hash
@@ -34769,7 +34776,7 @@ terminal to terminate the expression.
 
 .coNP Function @ record-adapter
 .synb
-.mets (record-adapter < regex <> [ stream ])
+.mets (record-adapter < regex >> [ stream <> [ include-match ]])
 .syne
 .desc
 The
@@ -34797,11 +34804,16 @@ function is used on the adapter, it behaves differently. A string is
 extracted from
 .metn stream ,
 and returned. However, the string isn't a line delimited by a newline
-character, but a record delimited by
-.metn regex
-as if using the
+character, but rather a record delimited by
+.metn regex .
+This record is extracted as if by a call to the
 .code read-until-match
-function.
+function, invoked with the
+.metn regex ,
+.meta stream
+and
+.meta include-match
+arguments.
 
 All behavior which is built on the
 .code get-lines
