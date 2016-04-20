@@ -501,6 +501,7 @@ val nthcdr(val pos, val list);
 loc ltail(loc cons);
 val pop(val *plist);
 val upop(val *plist, val *pundo);
+val rcyc_pop(val *plist);
 val push(val v, val *plist);
 val copy_list(val list);
 val make_like(val list, val thatobj);
@@ -577,6 +578,9 @@ mem_t *chk_copy_obj(mem_t *orig, size_t size);
 val cons(val car, val cdr);
 val make_lazy_cons(val func);
 val make_half_lazy_cons(val func, val car);
+void rcyc_cons(val cons);
+void rcyc_list(val list);
+void rcyc_empty(void);
 val lcons_fun(val lcons);
 val list(val first, ...); /* terminated by nao */
 val listv(struct args *);

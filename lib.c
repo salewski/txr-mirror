@@ -118,6 +118,7 @@ val time_s, time_local_s, time_utc_s;
 val year_s, month_s, day_s, hour_s, min_s, sec_s, dst_s;
 
 static val env_list;
+static val recycled_conses;
 
 mem_t *(*oom_realloc)(mem_t *, size_t);
 
@@ -599,6 +600,15 @@ val pop(val *plist)
 {
   val ret = car(*plist);
   *plist = cdr(*plist);
+  return ret;
+}
+
+val rcyc_pop(val *plist)
+{
+  val rcyc = *plist;
+  val ret = car(rcyc);
+  *plist = cdr(rcyc);
+  rcyc_cons(rcyc);
   return ret;
 }
 
@@ -2487,8 +2497,16 @@ mem_t *chk_copy_obj(mem_t *orig, size_t size)
 
 val cons(val car, val cdr)
 {
-  val obj = make_obj();
-  obj->c.type = CONS;
+  val obj;
+
+  if (recycled_conses) {
+    obj = recycled_conses;
+    recycled_conses = recycled_conses->c.cdr;
+  } else {
+    obj = make_obj();
+    obj->c.type = CONS;
+  }
+
   obj->c.car = car;
   obj->c.cdr = cdr;
   return obj;
@@ -2511,6 +2529,33 @@ val make_half_lazy_cons(val func, val car)
   obj->lc.cdr = nil;
   obj->lc.func = func;
   return obj;
+}
+
+void rcyc_cons(val cons)
+{
+  rplacd(cons, recycled_conses);
+  cons->c.car = nil;
+  recycled_conses = cons;
+}
+
+void rcyc_list(val list)
+{
+  if (list) {
+    val rl_orig = recycled_conses;
+    recycled_conses = list;
+    for (; list; list = list->c.cdr) {
+      list->c.car = nil;
+      if (!list->c.cdr) {
+        set(mkloc(list->lc.cdr, list), rl_orig);
+        break;
+      }
+    }
+  }
+}
+
+void rcyc_empty(void)
+{
+  recycled_conses = nil;
 }
 
 val lcons_fun(val lcons)
