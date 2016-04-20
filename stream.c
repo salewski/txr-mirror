@@ -685,7 +685,7 @@ static val stdio_get_char(val stream)
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
 
   if (h->unget_c)
-    return pop(&h->unget_c);
+    return rcyc_pop(&h->unget_c);
 
   if (h->f) {
     wint_t ch = utf8_decode(&h->ud, stdio_get_char_callback,

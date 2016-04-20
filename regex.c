@@ -2554,7 +2554,7 @@ val read_until_match(val regex, val stream_in, val include_match_in)
         goto out_match;
 
       while (stack)
-        unget_char(pop(&stack), stream);
+        unget_char(rcyc_pop(&stack), stream);
 
       ch = get_char(stream);
 
@@ -2580,14 +2580,18 @@ val read_until_match(val regex, val stream_in, val include_match_in)
   if (nil) {
 out_match:
     while (stack != match)
-      unget_char(pop(&stack), stream);
+      unget_char(rcyc_pop(&stack), stream);
     if (!out)
       out = null_string;
     if (include_match)
-      out = cat_str(cons(out, nreverse(stack)), nil);
+      out = cat_str(cons(out, stack = nreverse(stack)), nil);
   }
 
   regex_machine_cleanup(&regm);
+
+  while (stack)
+    rcyc_pop(&stack);
+
   return out;
 }
 

@@ -436,7 +436,7 @@ static val dgram_get_char(val stream)
   struct dgram_stream *d = coerce(struct dgram_stream *, stream->co.handle);
 
   if (d->unget_c) {
-    return pop(&d->unget_c);
+    return rcyc_pop(&d->unget_c);
   } else {
     wint_t ch = utf8_decode(&d->ud, dgram_get_byte_callback,
                             coerce(mem_t *, d));
