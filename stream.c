@@ -3325,8 +3325,9 @@ val width_check(val stream, val alt)
   return t;
 }
 
-val get_string(val stream, val nchars, val close_after_p)
+val get_string(val stream_in, val nchars, val close_after_p)
 {
+  val stream = default_arg(stream_in, std_input);
   val strstream = make_string_output_stream();
   nchars = default_bool_arg(nchars);
   val ch;
