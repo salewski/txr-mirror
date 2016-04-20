@@ -2523,36 +2523,70 @@ val read_until_match(val regex, val stream)
 {
   regex_machine_t regm;
   val out = nil;
-  val ch;
+  val stack = nil;
+  val match = nil;
 
   stream = default_arg(stream, std_input);
 
   regex_machine_init(&regm, regex);
 
-  if ((ch = get_char(stream))) {
-    if (regex_machine_feed(&regm, c_chr(ch)) == REGM_FAIL) {
-      out = mkstring(one, ch);
+  for (;;) {
+    val ch = get_char(stream);
 
-      while (ch && (ch = get_char(stream))) {
-        regex_machine_reset(&regm);
-
-        if (regex_machine_feed(&regm, c_chr(ch)) == REGM_FAIL) {
-          string_extend(out, ch);
-          continue;
+    if (!ch) {
+      switch (regex_machine_feed(&regm, 0)) {
+      case REGM_FAIL:
+      case REGM_INCOMPLETE:
+        if (match) {
+          while (stack != match)
+            unget_char(pop(&stack), stream);
+          if (!out)
+            out = null_string;
+          break;
         }
-
+        break;
+      case REGM_MATCH:
+        if (!out)
+          out = null_string;
         break;
       }
-    } else {
-      out = mkstring(zero, ch);
-    }
-  }
-
-  while (ch && (ch = get_char(stream))) {
-    if (regex_machine_feed(&regm, c_chr(ch)) == REGM_FAIL) {
-      unget_char(ch, stream);
       break;
     }
+
+    switch (regex_machine_feed(&regm, c_chr(ch))) {
+    case REGM_FAIL:
+      unget_char(ch, stream);
+
+      if (match) {
+        while (stack != match)
+          unget_char(pop(&stack), stream);
+        if (!out)
+          out = null_string;
+        break;
+      }
+
+      while (stack)
+        unget_char(pop(&stack), stream);
+
+      ch = get_char(stream);
+
+      if (!out)
+        out = mkstring(one, ch);
+      else
+        string_extend(out, ch);
+
+      regex_machine_reset(&regm);
+      continue;
+    case REGM_MATCH:
+      push(ch, &stack);
+      match = stack;
+      continue;
+    case REGM_INCOMPLETE:
+      push(ch, &stack);
+      continue;
+    }
+
+    break;
   }
 
   regex_machine_cleanup(&regm);
