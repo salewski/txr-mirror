@@ -433,7 +433,7 @@ static void undo_renumber_hist_idx(lino_t *l, int delta)
 
 /* Free a list of completion option populated by lino_add_completion(). */
 static void free_completions(lino_completions_t *lc) {
-    int i;
+    size_t i;
     for (i = 0; i < lc->len; i++)
         free(lc->cvec[i]);
     if (lc->cvec != NULL)
@@ -485,7 +485,8 @@ static int complete_line(lino_t *ls, int substring) {
     if (lc.len == 0) {
         generate_beep(ls);
     } else {
-        int stop = 0, i = 0;
+        int stop = 0;
+        size_t i = 0;
 
         while(!stop) {
             /* Show completion or original buffer */
@@ -1270,7 +1271,7 @@ static void delete_sel(lino_t *l)
  *
  * On error writing to the terminal -1 is returned, otherwise 0. */
 static int edit_insert(lino_t *l, char c) {
-    if (l->dlen < sizeof l->data - 1) {
+    if (l->dlen < (int) sizeof l->data - 1) {
         record_triv_undo(l);
         delete_sel(l);
         if (l->dpos == l->dlen) {
@@ -1299,7 +1300,7 @@ static int edit_insert(lino_t *l, char c) {
 
 static int edit_insert_str(lino_t *l, const char *s, int nchar)
 {
-    if (l->dlen < sizeof l->data - nchar) {
+    if (l->dlen < (int) sizeof l->data - nchar) {
         record_undo(l);
         delete_sel(l);
 
