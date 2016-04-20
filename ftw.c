@@ -29,7 +29,9 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <stddef.h>
+#ifndef __USE_GNU
 #define __USE_GNU
+#endif
 #include <ftw.h>
 #include "config.h"
 #include ALLOCA_H
