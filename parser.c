@@ -281,7 +281,11 @@ val regex_parse(val string, val error_stream)
 
   parser_cleanup(&parser);
   std_error = save_stream;
-  return parser.errors ? nil : parser.syntax_tree;
+
+  if (parser.errors)
+    uw_throw(syntax_error_s, lit("regex-parse: syntax errors in regex"));
+
+  return parser.syntax_tree;
 }
 
 static val lisp_parse_impl(val interactive, val source_in, val error_stream,
