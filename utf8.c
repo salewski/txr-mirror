@@ -252,7 +252,9 @@ int utf8_encode(wchar_t wch, int (*put)(int ch, mem_t *ctx), mem_t *ctx)
            put(0x80 | (wch & 0x3F), ctx);
   }
 
-  return 0;
+  uw_throwf(error_s,
+            lit("cannot convert character value #x~x to UTF-8"),
+            num(wch), nao);
 }
 
 void utf8_decoder_init(utf8_decoder_t *ud)
