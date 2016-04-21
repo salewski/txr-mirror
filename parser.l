@@ -872,6 +872,12 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return REGCHAR;
 }
 
+<SREGEX>. {
+  /* Allow non-UTF-8 byte for regexes scanned from string */
+  yylval->chr = (unsigned char) yytext[0] + 0xDC00;
+  return REGCHAR;
+}
+
 <REGEX>. {
   yyerrprepf(yyg, lit("non-UTF-8 byte in regex: '\\x~02x'"),
              num(convert(unsigned char, yytext[0])), nao);
