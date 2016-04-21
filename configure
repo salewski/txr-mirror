@@ -2135,6 +2135,26 @@ else
   printf "no\n"
 fi
 
+printf "Checking for fnmatch ... "
+
+cat > conftest.c <<!
+#include <fnmatch.h>
+
+int main(int argc, char *argv[])
+{
+  int res = fnmatch("*.txr", "foo.txr", FNM_PATHNAME);
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_FNMATCH 1\n" >> $config_h
+  have_ftw=y
+else
+  printf "no\n"
+fi
+
 printf "Checking for windres ... "
 
 if output=$(windres -V 2> /dev/null) ; then

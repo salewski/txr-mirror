@@ -61,6 +61,12 @@
 #if HAVE_GRGID
 #include <grp.h>
 #endif
+#if HAVE_FNMATCH
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+#include <fnmatch.h>
+#endif
 #include ALLOCA_H
 #include "lib.h"
 #include "stream.h"
@@ -1214,6 +1220,28 @@ val stdio_fseek(FILE *f, val off, int whence)
 #endif
 }
 
+#if HAVE_FNMATCH
+static val fnmatch_wrap(val pattern, val string, val flags)
+{
+  const wchar_t *pattern_ws = c_str(pattern);
+  const wchar_t *string_ws = c_str(string);
+  cnum c_flags = c_num(default_arg(flags, zero));
+  char *pattern_u8 = utf8_dup_to(pattern_ws);
+  char *string_u8 = utf8_dup_to(string_ws);
+  int res = fnmatch(pattern_u8, string_u8, c_flags);
+  free(string_u8);
+  free(pattern_u8);
+  switch (res) {
+  case 0:
+    return t;
+  case FNM_NOMATCH:
+    return nil;
+  default:
+    uw_throwf(error_s, lit("fnmatch: error ~a"), num(res), nao);
+  }
+}
+#endif
+
 void sysif_init(void)
 {
   stat_s = intern(lit("stat"), user_package);
@@ -1492,5 +1520,30 @@ void sysif_init(void)
 
 #if HAVE_SYS_STAT
   reg_fun(intern(lit("umask"), user_package), func_n1(umask_wrap));
+#endif
+
+#if HAVE_FNMATCH
+  reg_fun(intern(lit("fnmatch"), user_package), func_n3o(fnmatch_wrap, 2));
+#endif
+
+#if HAVE_FNMATCH
+#ifdef FNM_PATHNAME
+  reg_varl(intern(lit("fnm-pathname"), user_package), num_fast(FNM_PATHNAME));
+#endif
+#ifdef FNM_NOESCAPE
+  reg_varl(intern(lit("fnm-noescape"), user_package), num_fast(FNM_NOESCAPE));
+#endif
+#ifdef FNM_PERIOD
+  reg_varl(intern(lit("fnm-period"), user_package), num_fast(FNM_PERIOD));
+#endif
+#ifdef FNM_LEADING_DIR
+  reg_varl(intern(lit("fnm-leading-dir"), user_package), num_fast(FNM_LEADING_DIR));
+#endif
+#ifdef FNM_CASEFOLD
+  reg_varl(intern(lit("fnm-casefold"), user_package), num_fast(FNM_CASEFOLD));
+#endif
+#ifdef FNM_ESTMATCH
+  reg_varl(intern(lit("fnm-extmatch"), user_package), num_fast(FNM_EXTMATCH));
+#endif
 #endif
 }

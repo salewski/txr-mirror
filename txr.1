@@ -37777,6 +37777,9 @@ On platforms where the POSIX
 .code glob
 function is available \*(TX provides this functionality in
 the form of a like-named function, and some numeric constants.
+\*(TX also provides access the
+.code fnmatch
+function, where available.
 
 .coNP Variables @, glob-err @, glob-mark @, glob-nosort @, glob-nocheck @, glob-noescape @, glob-period @, glob-altdirfunc @, glob-brace @, glob-nomagic @, glob-tilde @ glob-tilde-check and @ glob-onlydir
 
@@ -37872,6 +37875,57 @@ Details of the semantics of the
 function, and the meaning of all the
 .meta flags
 arguments are given in the documentation for the C function.
+
+.coNP Variables @, fnm-pathname @, fnm-noescape @, fnm-period @, fnm-leading-dir @ fnm-casefold and @ fnm-extmatch
+
+These variables take on the values of the corresponding C preprocessor
+constants from the
+.code <fnmatch.h>
+header:
+.codn FNM_PATHNAME ,
+.codn FNM_NOESCAPE ,
+.codn FNM_PERIOD ,
+etc.
+
+These values are bit masks which may be combined with the
+.code logior
+function to form the optional third
+.meta flags
+argument of the
+.code fnmatch
+function.
+
+Note that the
+.codn fnm-leading-dir ,
+.code fnm-case-fold
+and
+.code fnm-extmatch
+may not be available. They are GNU extensions, found in the GNU C library.
+
+.coNP Function @ fnmatch
+.synb
+.mets (fnmatch < pattern < string <> [ flags ]])
+.syne
+.desc
+The
+.code fnmatch
+function, if available, provides access
+to the like-named POSIX C library function.
+The
+.meta pattern
+argument specifies a POSIX-shell-style file pattern matching expression.
+Its exact features and dialect are controlled by
+.metn flags .
+If
+.meta string
+matches
+.meta pattern
+then
+.code t
+is returned. If there is no match, then
+.code nil
+is returned. If the C function indicates that an error has occurred,
+an exception is thrown.
 
 .SS* Unix Filesystem Traversal
 
