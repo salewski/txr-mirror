@@ -8699,7 +8699,7 @@ void out_str_char(wchar_t ch, val out, int *semi_flag)
   }
 }
 
-static void out_str_pretty(const wchar_t *ptr, val out, int *semi_flag)
+static void out_str_readable(const wchar_t *ptr, val out, int *semi_flag)
 {
   for (; *ptr; ptr++)
     out_str_char(*ptr, out, semi_flag);
@@ -8718,7 +8718,7 @@ static void out_lazy_str(val lstr, val out)
 
   put_char(chr('"'), out);
 
-  out_str_pretty(c_str(lstr->ls.prefix), out, &semi_flag);
+  out_str_readable(c_str(lstr->ls.prefix), out, &semi_flag);
 
   for (iter = lstr->ls.list; (!lim || gt(lim, zero)) && iter;
        iter = cdr(iter))
@@ -8726,8 +8726,8 @@ static void out_lazy_str(val lstr, val out)
     val str = car(iter);
     if (!str)
       break;
-    out_str_pretty(c_str(str), out, &semi_flag);
-    out_str_pretty(wcterm, out, &semi_flag);
+    out_str_readable(c_str(str), out, &semi_flag);
+    out_str_readable(wcterm, out, &semi_flag);
     if (lim)
       lim = pred(lim);
   }
@@ -8863,7 +8863,7 @@ finish:
       int semi_flag = 0;
       put_char(chr('"'), out);
 
-      out_str_pretty(c_str(obj), out, &semi_flag);
+      out_str_readable(c_str(obj), out, &semi_flag);
 
       put_char(chr('"'), out);
     }
