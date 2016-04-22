@@ -3269,7 +3269,7 @@ static val sys_load(val target, val sloc)
   if (!read_eval_stream(stream, std_error, nil)) {
     rlset(sloc, sloc);
     close_stream(stream, nil);
-    eval_error(sloc, lit("load: ~s contains errors"), path, nao);
+    eval_error(sloc, lit("load: ~a contains errors"), path, nao);
   }
 
   close_stream(stream, nil);

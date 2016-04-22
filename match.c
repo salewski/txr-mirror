@@ -3747,7 +3747,7 @@ static val v_load(match_files_ctx *c)
       close_stream(stream, nil);
 
       if (parser.errors)
-        sem_error(specline, lit("~s: errors encountered in ~s"), sym, path, nao);
+        sem_error(specline, lit("~s: errors encountered in ~a"), sym, path, nao);
 
       if (sym == include_s) {
         return parser.syntax_tree;
@@ -3756,7 +3756,7 @@ static val v_load(match_files_ctx *c)
         val result = match_files(mf_spec(*c, spec));
 
         if (!result) {
-          debuglf(specline, lit("load: ~s failed"), path, nao);
+          debuglf(specline, lit("load: ~a failed"), path, nao);
           return nil;
         } else {
           cons_bind (new_bindings, success, result);
@@ -3765,13 +3765,13 @@ static val v_load(match_files_ctx *c)
 
           if (consp(success)) {
             debuglf(specline,
-                    lit("load: ~s matched; "
+                    lit("load: ~a matched; "
                         "advancing from line ~d to ~d"),
                     path, c->data_lineno, cdr(success), nao);
             c->data = car(success);
             c->data_lineno = cdr(success);
           } else {
-            debuglf(specline, lit("load: ~s consumed entire file"), path,
+            debuglf(specline, lit("load: ~a consumed entire file"), path,
                     nao);
             c->data = nil;
           }
@@ -3782,7 +3782,7 @@ static val v_load(match_files_ctx *c)
     } else {
       if (!read_eval_stream(stream, std_error, nil)){
         close_stream(stream, nil);
-        sem_error(specline, lit("load: ~s contains errors"), path, nao);
+        sem_error(specline, lit("load: ~a contains errors"), path, nao);
       }
       close_stream(stream, nil);
       return (sym == include_s) ? nil : next_spec_k;
