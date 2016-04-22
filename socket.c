@@ -174,8 +174,10 @@ static val getaddrinfo_wrap(val node_in, val service_in, val hints_in)
   char *service_u8 = stringp(service) ? utf8_dup_to(c_str(service)) : 0;
   val node_num_p = integerp(node);
   val svc_num_p = integerp(service);
-  int res;
+  int res = 0;
   list_collect_decl (out, ptail);
+
+  uw_simple_catch_begin;
 
   if (hints) {
     memset(&hints_ai, 0, sizeof hints_ai);
@@ -184,8 +186,12 @@ static val getaddrinfo_wrap(val node_in, val service_in, val hints_in)
 
   res = getaddrinfo(node_u8, service_u8, phints, &alist);
 
-  free(node_u8);
-  free(service_u8);
+  uw_unwind {
+    free(node_u8);
+    free(service_u8);
+  }
+
+  uw_catch_end;
 
   if (res == 0) {
     for (aiter = alist; aiter; aiter = aiter->ai_next) {

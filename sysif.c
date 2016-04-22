@@ -196,8 +196,9 @@ static val env_hash(void)
 #if HAVE_MKDIR
 static val mkdir_wrap(val path, val mode)
 {
+  cnum cmode = c_num(default_arg(mode, num_fast(0777)));
   char *u8path = utf8_dup_to(c_str(path));
-  int err = mkdir(u8path, c_num(default_arg(mode, num_fast(0777))));
+  int err = mkdir(u8path, cmode);
   free(u8path);
 
   if (err < 0)
@@ -344,8 +345,10 @@ static val major_wrap(val dev)
 
 static val mknod_wrap(val path, val mode, val dev)
 {
+  cnum cmode = c_num(mode);
+  cnum cdev = c_num(default_arg(dev, zero));
   char *u8path = utf8_dup_to(c_str(path));
-  int err = mknod(u8path, c_num(mode), c_num(default_arg(dev, zero)));
+  int err = mknod(u8path, cmode, cdev);
   free(u8path);
 
   if (err < 0)
@@ -368,8 +371,9 @@ static val mknod_wrap(val path, val mode, val dev)
 
 static val chmod_wrap(val path, val mode)
 {
+  cnum cmode = c_num(mode);
   char *u8path = utf8_dup_to(c_str(path));
-  int err = chmod(u8path, c_num(mode));
+  int err = chmod(u8path, cmode);
   free(u8path);
 
   if (err < 0)
@@ -384,8 +388,10 @@ static val chmod_wrap(val path, val mode)
 
 static val symlink_wrap(val target, val to)
 {
-  char *u8target = utf8_dup_to(c_str(target));
-  char *u8to = utf8_dup_to(c_str(to));
+  const wchar_t *wtarget = c_str(target);
+  const wchar_t *wto = c_str(to);
+  char *u8target = utf8_dup_to(wtarget);
+  char *u8to = utf8_dup_to(wto);
   int err = symlink(u8target, u8to);
   free(u8target);
   free(u8to);
@@ -397,8 +403,10 @@ static val symlink_wrap(val target, val to)
 
 static val link_wrap(val target, val to)
 {
-  char *u8target = utf8_dup_to(c_str(target));
-  char *u8to = utf8_dup_to(c_str(to));
+  const wchar_t *wtarget = c_str(target);
+  const wchar_t *wto = c_str(to);
+  char *u8target = utf8_dup_to(wtarget);
+  char *u8to = utf8_dup_to(wto);
   int err = link(u8target, u8to);
   free(u8target);
   free(u8to);
@@ -708,9 +716,11 @@ val getenv_wrap(val name)
 
 static val setenv_wrap(val name, val value, val overwrite)
 {
-  char *nameu8 = utf8_dup_to(c_str(name));
-  char *valu8 = value ? utf8_dup_to(c_str(value)) : 0;
+  const wchar_t *wname = c_str(name);
+  const wchar_t *wvalu = value ? c_str(value) : 0;
   int ovw = default_arg_strict(overwrite, t) != nil;
+  char *nameu8 = utf8_dup_to(wname);
+  char *valu8 = wvalu ? utf8_dup_to(wvalu) : 0;
   if (valu8)
     setenv(nameu8, valu8, ovw);
   else if (ovw)
@@ -1117,8 +1127,10 @@ static val getgrnam_wrap(val wname)
 
 static val crypt_wrap(val wkey, val wsalt)
 {
-  char *key = utf8_dup_to(c_str(wkey));
-  char *salt = utf8_dup_to(c_str(wsalt));
+  const wchar_t *cwkey = c_str(wkey);
+  const wchar_t *cwsalt = c_str(wsalt);
+  char *key = utf8_dup_to(cwkey);
+  char *salt = utf8_dup_to(cwsalt);
   char *hash = crypt(key, salt);
   val whash = string_utf8(hash);
   free(key);

@@ -1690,9 +1690,10 @@ val make_string_byte_input_stream(val string)
   type_assert (stringp(string), (lit("~a is not a string"), string, nao));
 
   {
+    const wchar_t *wstring = c_str(string);
     struct byte_input *bi = coerce(struct byte_input *, chk_malloc(sizeof *bi));
     strm_base_init(&bi->a);
-    bi->buf = utf8_dup_to_buf(c_str(string), &bi->size, 0);
+    bi->buf = utf8_dup_to_buf(wstring, &bi->size, 0);
     bi->index = 0;
     return cobj(coerce(mem_t *, bi), stream_s, &byte_in_ops.cobj_ops);
   }

@@ -66,9 +66,9 @@ static int errfunc_thunk(const char *errpath, int errcode)
 
 val glob_wrap(val pattern, val flags, val errfunc)
 {
+  cnum c_flags = c_num(default_arg(flags, zero));
   char *pat_u8 = utf8_dup_to(c_str(pattern));
   glob_t gl;
-  cnum c_flags = c_num(default_arg(flags, zero));
 
   if (s_errfunc) {
     free(pat_u8);

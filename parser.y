@@ -421,9 +421,9 @@ text : TEXT                     { $$ = rl(string_own($1), num(parser->lineno)); 
      | SPACE                    { if ($1[0] == ' ' && $1[1] == 0)
                                   { val spaces = list(oneplus_s,
                                                       chr(' '), nao);
+                                    free($1);
                                     $$ = regex_compile(spaces, nil);
-                                    rl($$, num(parser->lineno));
-                                    free($1); }
+                                    rl($$, num(parser->lineno)); }
                                   else
                                   { $$ = rl(string_own($1), num(parser->lineno)); }}
      | regex                    { $$ = $1;
