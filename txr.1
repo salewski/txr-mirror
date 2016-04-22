@@ -38020,6 +38020,12 @@ defaults to zero, and
 .meta nopenfd
 defaults to 20.
 
+Also note that, unlike in the C function, multiple
+paths may be processed by passing a list
+for the
+.meta path
+argument.
+
 The
 .code nftw
 function walks the filesystem, as directed by the
@@ -38101,6 +38107,47 @@ on failure. If
 is terminated by a return value from
 .metn callback-func ,
 then that value is returned. Such a value is always a nonzero integer.
+
+If the
+.meta path
+passed to
+.code ftw
+is a list, then all of the paths contained in that
+list are walked, as if by recursive application of
+.code ftw
+to each element of the list taken as the
+.meta path
+argument, the other argument values being the same.
+The traversal stops when any recursive
+invocation of
+.code ftw
+returns a value other than
+.codn t
+or
+.codn nil ,
+and that value is returned. If
+.code t
+or
+.code nil
+is returned, the traversal continues with the
+application of
+.code ftw
+to the next list element, if any.
+If the list is completely traversed, and some recursive
+invocations of
+.code ftw
+return
+.codn t ,
+then the return value is
+.codn t .
+If all recursive invocations return
+.code nil
+then
+.code nil
+is returned.
+If the list is empty,
+.code t
+is returned.
 
 The
 .meta callback-func

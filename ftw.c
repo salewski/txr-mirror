@@ -91,6 +91,18 @@ val ftw_wrap(val dirpath, val fn, val flags_in, val nopenfd_in)
   if (s_callback) {
     uw_throwf(error_s, lit("ftw: cannot be re-entered from "
                            "ftw callback"), nao);
+  } else if (dirpath == nil) {
+    return t;
+  } else if (consp(dirpath)) {
+    uses_or2;
+    val ret = nil;
+    for (; dirpath; dirpath = cdr(dirpath)) {
+      val res = ftw_wrap(car(dirpath), fn, flags_in, nopenfd_in);
+      if (res != t && res != nil)
+        return res;
+      ret = or2(ret, res);
+    }
+    return ret;
   } else {
     int nopenfd = c_num(default_arg(nopenfd_in, num_fast(20)));
     int flags = c_num(default_arg(flags_in, zero));
