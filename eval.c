@@ -3749,8 +3749,10 @@ val mapcarv(val fun, struct args *lists)
 
       for (iter = lofl; iter; iter = cdr(iter)) {
         val list = car(iter);
-        if (!list)
+        if (!list) {
+          rcyc_list(lofl);
           return make_like(out, list_orig);
+        }
         atail = list_collect(atail, car(list));
         deref(car_l(iter)) = cdr(list);
       }
@@ -3784,8 +3786,10 @@ static val mappendv(val fun, struct args *lists)
 
       for (iter = lofl; iter; iter = cdr(iter)) {
         val list = car(iter);
-        if (!list)
+        if (!list) {
+          rcyc_list(lofl);
           return make_like(out, list_orig);
+        }
         atail = list_collect(atail, car(list));
         deref(car_l(iter)) = cdr(list);
       }
@@ -3877,8 +3881,10 @@ static val mapdov(val fun, struct args *lists)
 
       for (iter = lofl; iter; iter = cdr(iter)) {
         val list = car(iter);
-        if (!list)
+        if (!list) {
+          rcyc_list(lofl);
           return nil;
+        }
         atail = list_collect(atail, car(list));
         deref(car_l(iter)) = cdr(list);
       }
