@@ -8679,11 +8679,22 @@ void out_str_char(wchar_t ch, val out, int *semi_flag)
   case '\\': put_string(lit("\\\\"), out); break;
   case 27: put_string(lit("\\e"), out); break;
   default:
-    if ((ch >= ' ' && ch != 127 && ch < 0xDC00) || ch > 0xDCFF) {
-      put_char(chr(ch), out);
-    } else {
-      format(out, lit("\\x~,02X"), num(ch), nao);
-      *semi_flag = 1;
+    {
+      val fmt = nil;
+
+      if ((ch < 0x20) || (ch >= 0x7F && ch < 0xA0))
+        fmt = lit("\\x~,02X");
+      else if ((ch >= 0xD800 && ch < 0xE000) || ch == 0xFFFE || ch == 0xFFFF)
+        fmt = lit("\\x~,04X");
+      else if (ch >= 0xFFFF)
+        fmt = lit("\\x~,06X");
+      else
+        put_char(chr(ch), out);
+
+      if (fmt) {
+        format(out, fmt, num(ch), nao);
+        *semi_flag = 1;
+      }
     }
   }
 }
@@ -8862,6 +8873,7 @@ finish:
       put_char(obj, out);
     } else {
       wchar_t ch = c_chr(obj);
+      val fmt = nil;
 
       put_string(lit("#\\"), out);
       switch (ch) {
@@ -8877,14 +8889,17 @@ finish:
       case ' ': put_string(lit("space"), out); break;
       case 0xDC00: put_string(lit("pnul"), out); break;
       default:
-        if ((ch < 0x20) || (ch >= 0x80 && ch < 0xA0))
-          format(out, lit("x~,02x"), num(ch), nao);
+        if ((ch < 0x20) || (ch >= 0x7F && ch < 0xA0))
+          fmt = lit("x~,02X");
         else if ((ch >= 0xD800 && ch < 0xE000) || ch == 0xFFFE || ch == 0xFFFF)
-          format(out, lit("x~,04x"), num(ch), nao);
+          fmt = lit("x~,04X");
         else if (ch >= 0xFFFF)
-          format(out, lit("x~,06x"), num(ch), nao);
+          fmt = lit("x~,06X");
         else
           put_char(chr(ch), out);
+
+        if (fmt)
+          format(out, fmt, num(ch), nao);
       }
     }
     break;
