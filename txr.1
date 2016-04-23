@@ -757,7 +757,7 @@ option. The argument of
 is always \*(TX pattern language code. Lisp code can be evaluated using
 the
 .codn -e ,
-.code -p ,
+.codn -p ,
 or
 .code -P
 options.
@@ -1955,7 +1955,7 @@ In the \*(TX pattern language,
 can be used in the variable binding syntax, but does not create a binding;
 it has a special meaning.  It allows the variable matching syntax to be used to
 skip material, in ways similar to the
-.codn skip
+.code skip
 directive.
 
 The
@@ -4422,7 +4422,7 @@ expression, then the
 .code elif
 expressions if any are present. If any Lisp expression yields a true result
 (any value other than
-.codn nil)
+.codn nil )
 then evaluation of Lisp expressions stops. The corresponding clause of that
 Lisp expression is selected and pattern matching continues
 with that clauses. The result of that clause (its success or failure,
@@ -5992,7 +5992,7 @@ The
 has two spellings:
 .code @(forget)
 and
-.codn @(local).
+.codn @(local) .
 
 The arguments are one or more symbols, for example:
 
@@ -6259,7 +6259,7 @@ However,
 if the line
 .code ---
 is matched (by the embedded
-.codn @(maybe)),
+.codn @(maybe) ),
 the collection
 is terminated. Only the lines up to, and not including the
 .code ---
@@ -6616,7 +6616,7 @@ is unbound over the body of the function.  The function body collects the
 words of
 .str Fine summer day
 into the variable
-.codn list,
+.codn list ,
 and then
 yields the that binding.   Then the function call completes by
 noticing that the function parameter
@@ -8059,14 +8059,14 @@ Non-numeric junk results in the object
 Converts strings to floating-point values as if using the function
 .codn flo-str .
 Non-numeric junk results in the object
-.codn nil.
+.codn nil .
 
 .coIP :hextoint
 Converts strings to integers as if using
 .code int-str
 with a radix of 16.
 Non-numeric junk results in the object
-.codn nil.
+.codn nil .
 
 .PP
 
@@ -10421,7 +10421,7 @@ in their naming. For instance
 .code sig-hup are global lexicals, because they provide constant values
 for which overriding doesn't make sense. On the other hand the standard
 output stream variable
-.codn *stdout*
+.code *stdout*
 is special. Overriding it over a dynamic scope is very useful.
 
 .TP* "Dialect Note 3:"
@@ -12681,7 +12681,7 @@ is returned.
 The
 .code condlet
 macro generalizes
-.codn iflet
+.codn iflet .
 
 Each argument is a compound consisting of at least one item: a list of
 bindings or
@@ -13993,7 +13993,7 @@ is the type
 and
 .code nil
 is also a symbol, the
-.codn null
+.code null
 type is a subtype of
 .codn sym .
 
@@ -14104,7 +14104,7 @@ The
 function tests whether the type of
 .meta object
 is a subtype of the type named by
-.meta type-symbol .
+.metn type-symbol .
 
 The following equivalence holds:
 
@@ -14557,7 +14557,7 @@ the
 function,
 .code less
 returns
-.codn nil.
+.codn nil .
 .IP 3.
 If the
 .code car
@@ -16774,7 +16774,7 @@ construct, each
 has each
 .meta sym
 in scope. That is to say, an
-.metn init-form
+.meta init-form
 can refer not only to previous variables, but also to later variables
 as well as to its own variable.
 
@@ -18141,7 +18141,7 @@ is a Unicode whitespace character. This the case for
 all the characters for which
 .code chr-isspace
 returns
-.codn t.
+.codn t .
 It also returns
 .code t
 for these additional characters:
@@ -19152,7 +19152,7 @@ Moreover, the method must never return
 
 When a struct which supports equality substitution is compared using
 .codn equal ,
-.codn less
+.code less
 or
 .codn greater ,
 its
@@ -20643,7 +20643,7 @@ argument must be a symbol.
 
 This function must be called with at least one argument. The leftmost
 argument must be an object of structure type, which has a slot named
-.meta slot-name .
+.metn slot-name .
 The function will retrieve the value of the slot from that object,
 expecting it to be a function, and calls it, passing to it all of its
 arguments.
@@ -21894,7 +21894,7 @@ These functions are counterparts of
 .codn rposqual ,
 .code rpos
 and
-.codn rpos-if
+.code rpos-if
 which report position of the right-most matching item,
 rather than the left-most.
 
@@ -22753,7 +22753,7 @@ of the original sequence. The number of rows returned is limited by the
 shortest column among the sequences.
 
 All of the input sequences (the elements of
-.metn sequence)
+.metn sequence )
 must have elements
 which are compatible with the first sequence. This means that if the first
 element of
@@ -24944,7 +24944,7 @@ The
 operator is similar to
 .code tree-bind
 except that it takes an extra argument,
-.metn context-expr.
+.metn context-expr .
 This argument is an expression which is evaluated. It is expected to
 evaluate to a compound form. If an error occurs during binding, the error
 diagnostic message is based on information obtained from this form.
@@ -25307,7 +25307,7 @@ macro's behavior is somewhat more specified in this regard.
 Thus, although any correct
 .code swap
 expression can be expressed using
-.code rotate ,
+.codn rotate ,
 but the reverse isn't true.
 
 .coNP Macro @ push
@@ -25643,14 +25643,14 @@ macro.
 The programmer who implements a new place update macro likewise does not
 call the expanders directly. Usually, they are invoked via the macros
 .codn with-update-expander ,
-.codn with-clobber-expander
+.code with-clobber-expander
 and
 .codn with-delete-expander .
 These are sufficient for most kind of macros.
 In certain complicated cases, expanders may be invoked using the wrapper
 functions
 .codn call-update-expander ,
-.codn call-clobber-expander
+.code call-clobber-expander
 and
 .codn call-delete-expander .
 These convenience macros and functions perform certain common chores, like
@@ -26380,7 +26380,7 @@ correctly expand
 in its original environment.
 
 The
-.metn body-form
+.meta body-form
 argument represents the source code of a place update operation.
 This code makes references to the local function whose name
 is given by
@@ -26586,7 +26586,7 @@ The
 .metn getter-sym ,
 .metn setter-sym ,
 and
-.metn update-body
+.meta update-body
 parenthesized triplet specify the update expander fragment.
 The
 .code defplace
@@ -29360,7 +29360,7 @@ and
 .code handle-frame
 or the actual structure type objects which these type names denote.
 If any other value is specified, the function returns
-.code nil .
+.codn nil .
 If the argument is omitted, it defaults to the type of the
 .code catch-frame
 structure. That is to say, by default, the function looks for catch
@@ -29486,13 +29486,13 @@ In this example, the function
 .code receive
 immediately invokes the continuation function which it receives, passing
 it the argument value
-.codn 3.
+.codn 3 .
 And so,
 evaluation now continues in the resumed future represented by the
 continuation. Inside the continuation,
 .code sys:capture-cont
 appears to return, yielding the value
-.codn 3.
+.codn 3 .
 This bubbles up through
 .code function
 up to the
@@ -29684,7 +29684,7 @@ be resumed at all; rather, the buffer which holds the saved context
 of the continuation is released. Thereafter, an attempt to resume
 the continuation results in an error exception being thrown.
 After releasing the buffer, the function returns
-.code nil .
+.codn nil .
 
 .TP* Note:
 
@@ -31112,7 +31112,7 @@ newly inserted into
 The
 .code sethash
 function returns the
-.metn value
+.meta value
 argument.
 
 .coNP Function @ pushhash
@@ -31959,7 +31959,7 @@ sees the
 .codn @rest .
 
 This convenient omission of the
-.codn @
+.code @
 character isn't supported for reaching the arguments of an outer
 .code op
 from a quasiliteral within a nested
@@ -32258,7 +32258,7 @@ The
 .code dup
 function returns a one-argument function which calls the two-argument
 function
-.metn func
+.meta func
 by duplicating its argument.
 
 .TP* Example:
@@ -32277,7 +32277,7 @@ The
 .code flipargs
 function returns a two-argument function which calls the two-argument
 function
-.metn func
+.meta func
 with reversed arguments.
 
 .coNP Functions @ chain and @ chand
@@ -32751,7 +32751,7 @@ function is associated with a successive
 .metn arg-function .
 
 Each
-.metn arg-function
+.meta arg-function
 is called, passed the corresponding argument. The return
 values of these functions are then passed as arguments
 to
@@ -32912,7 +32912,7 @@ It applies when the functions
 .codn pprinl ,
 .code tostring
 and
-.codn tostringp
+.code tostringp
 process an integer value.
 It also applies when the
 .code ~a
@@ -33461,7 +33461,7 @@ they look like a hex character code.
 .desc
 
 The
-.codn tprint
+.code tprint
 function prints a representation of
 .meta obj
 on
@@ -33500,7 +33500,7 @@ function calculates the number of places occupied by the printed representation
 of
 .meta char
 or
-.metn string
+.meta string
 on a monospace display which renders certain characters, such as the East Asian
 kanji and other characters, using two places.
 
@@ -35367,7 +35367,7 @@ All symbols are bindable, except for keyword symbols, and the
 special symbols
 .code t
 and
-.codn nil.
+.codn nil .
 
 .SS* Pseudo-random Numbers
 .coNP Special variable @ *random-state*
@@ -36261,7 +36261,7 @@ function can retrieve a file descriptor, otherwise an exception of type
 is thrown.
 
 .coNP Variables @, s-ifmt @, s-iflnk @, s-ifreg @, s-ifblk ... , @ s-ixoth
-
+.desc
 The following variables exist, having integer values. These are bitmasks
 which can be applied against the value given by the
 .code mode
@@ -36379,7 +36379,7 @@ function.
 The function throws a
 .code file-error
 exception if an error occurs, otherwise it returns
-.codn t.
+.codn t .
 
 .TP* Example:
 .cblk
@@ -36783,7 +36783,7 @@ of the same name. They set the real user ID, effective user ID,
 real group ID and effective group ID, respectively, of the calling
 process.
 On success, they return
-.code t .
+.codn t .
 On failure, they throw an exception of type
 .codn system-error .
 
@@ -37243,7 +37243,7 @@ a bitwise combination (via the
 .code logior
 function) of the variables
 .codn w-nohang ,
-.codn w-untraced
+.code w-untraced
 and
 .codn w-continued .
 If
@@ -37290,7 +37290,7 @@ function.
 They are closely based on the
 POSIX macros
 .codn WIFEXITED ,
-.code WEXITSTATUS ,
+.codn WEXITSTATUS ,
 and so on.
 
 The
@@ -37417,7 +37417,7 @@ The
 function returns the underlying file descriptor of
 .metn stream ,
 if it has one. Otherwise, it returns
-.codn nil.
+.codn nil .
 
 This is equivalent to querying the stream using
 .code stream-get-prop
@@ -37782,7 +37782,7 @@ the form of a like-named function, and some numeric constants.
 function, where available.
 
 .coNP Variables @, glob-err @, glob-mark @, glob-nosort @, glob-nocheck @, glob-noescape @, glob-period @, glob-altdirfunc @, glob-brace @, glob-nomagic @, glob-tilde @ glob-tilde-check and @ glob-onlydir
-
+.desc
 These variables take on the values of the corresponding C preprocessor
 constants from the
 .code <glob.h>
@@ -37877,7 +37877,7 @@ function, and the meaning of all the
 arguments are given in the documentation for the C function.
 
 .coNP Variables @, fnm-pathname @, fnm-noescape @, fnm-period @, fnm-leading-dir @ fnm-casefold and @ fnm-extmatch
-
+.desc
 These variables take on the values of the corresponding C preprocessor
 constants from the
 .code <fnmatch.h>
@@ -38122,7 +38122,7 @@ The traversal stops when any recursive
 invocation of
 .code ftw
 returns a value other than
-.codn t
+.code t
 or
 .codn nil ,
 and that value is returned. If
@@ -38513,7 +38513,7 @@ and
 .codn ai-numericserv .
 These correspond to the C constants
 .codn AI_PASSIVE ,
-.codn AI_NUMERICHOST
+.code AI_NUMERICHOST
 and so forth.
 
 The
@@ -38689,7 +38689,7 @@ The
 parameter specifies the socket type, either
 .code sock-stream
 (stream socket) or
-.codn sock-dgram
+.code sock-dgram
 (datagram socket).
 
 The
@@ -38721,7 +38721,7 @@ Like other stream times, stream sockets are buffered and marked as no
 non-real-time streams. Specifying the
 .str i
 mode in
-.metn mode-string
+.meta mode-string
 marks a socket as a real-time-stream, and, if it is opened for writing
 or reading and writing, changes it to use line buffering.
 
@@ -39246,10 +39246,10 @@ six bits, each representing the values 0 to 63. Each value is then
 mapped to the characters
 .code A
 to
-.codn Z,
+.codn Z ,
 .code a
 to
-.codn z,
+.codn z ,
 the digits
 .code 0
 to
@@ -39257,7 +39257,7 @@ to
 and the characters
 .code +
 and
-.codn /.
+.codn / .
 One or two consecutive occurrences of the character
 .code =
 are added as padding so that the number of
@@ -39552,7 +39552,7 @@ in the form of an association list.
 To make it the interface easier to use, \*(TX provides
 the macros
 .codn txr-if ,
-.codn txr-when
+.code txr-when
 and
 .codn txr-case .
 
@@ -39645,7 +39645,7 @@ The data being matched consists of the lines
 and
 .strn omega .
 Inside
-.codn foo,
+.codn foo ,
 .code x
 and
 .code y
@@ -39684,7 +39684,7 @@ it is local inside it.
 The
 .code txr-if
 macro invokes the \*(TX pattern matching function
-.metn name
+.meta name
 on some input given by the
 .meta input
 parameter, which is a list of strings, or a single string.
@@ -40159,7 +40159,7 @@ function invokes and removes the finalizers, if any, registered against
 If any finalizers are called, it returns
 .codn t ,
 otherwise
-.code nil .
+.codn nil .
 
 Note: the behavior is unspecified if a finalizer function calls
 .codn call-finalizers .
@@ -40191,6 +40191,7 @@ whereby \*(TX infers the suffix, then
 holds the suffixed name.
 
 .coNP Variable @ stdlib
+.desc
 The
 .code stdlib
 variable expands to the directory where the \*(TX standard library
@@ -41082,13 +41083,13 @@ helping to prevent avoid parenthesis balancing errors.
 
 When any of the three closing characters
 .codn ) ,
-.codn ]
+.code ]
 or
 .code }
 is inserted, the listener scans backward for the matching opening
 character. Likewise, if any of the three opening characters
 .codn ( ,
-.codn [
+.code [
 or
 .code {
 is inserted in the middle of text, the listener scans forward for the matching
@@ -41505,7 +41506,7 @@ of symbol macros at expansion time, and then bind the resulting expanded
 forms to their respective macro symbols. The forms are then potentially
 expanded again when the symbol macros are substituted. This wrong behavior was
 never implied by the documentation. The
-.codn with-slots
+.code with-slots
 macro is also affected by this, because it is implemented in terms of
 .codn symacrolet .
 Lastly, \*(TX 137 compatibility mode also restores another behavior
