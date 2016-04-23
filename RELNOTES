@@ -1,3 +1,44 @@
+                                    TXR 139
+                                   2016-04-23
+
+
+  Features
+
+  - Change of rules regarding Lisp variable visibility in TXR
+    Pattern language.
+  - unget-char now allows more than one character of pushback.
+  - The POSIX fnmatch function is now available.
+  - Rules used by object printer for deciding which character objects
+    and string constituent characters to print using hex escapes
+    have been harmonized together, with some changes to both.
+  - path-private-to-me function avoids making unnecessary call
+    to getgrgid, which is somewhat heavy-weight.
+  - A list can now be passed as the path argument to the ftw
+    function; it will recurse over it.
+
+  Bugs
+
+  - Issue of certain macros not expanding in @(output) blocks.
+  - Macro not expanding as argument of @(if) directive.
+  - Newline not being allowed in string fed to regex-parse.
+  - Broken unget-char operation over string input streams.
+  - Rewrite of horribly broken read-until-match function,
+    which also fixes broken record streams feature
+    (record-adapter function).
+  - Fixed optional argument in get-string not defaulting
+    properly.
+  - Out of range character escapes are diagnosed better.
+  - regex-parse was silently returning nil upon syntax
+    errors; now throws exception.
+  - regex-parse was not handling non-UTF-8 bytes in the
+    string: are now mapped to U+DCXX block now and
+    incorporated as literal characters.
+  - Numerous memory leaks fixed which could occur in various
+    functions if a type mismatch exception occurs after
+    some local resource has already been allocated.
+
+
+
                                     TXR 138
                                    2016-04-16
 
