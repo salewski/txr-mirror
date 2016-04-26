@@ -59,7 +59,7 @@
 @  (end)
 @(end)
 @;;
-@;; .code, .codn, .cod2, .cod3 checks
+@;; check .code, .codn, .cod2, .cod3, .meta and .metn.
 @;;
 @(define check-code ())
 @  (cases)
@@ -69,9 +69,9 @@
 @  (or)
 .cod3 @(assert bad ln `.cod3 needs three arguments`)@x @y @{z /\S+/}@(eol)
 @  (or)
-.@{type /codn|cod2/} @(assert bad ln `.@type needs two arguments`)@(cases)"@x"@(or)@{x /\S+/}@(end) @{y /\S+/}@(eol)
+.@{type /codn|cod2|metn/} @(assert bad ln `.@type needs two arguments`)@(cases)"@x"@(or)@{x /\S+/}@(end) @{y /\S+/}@(eol)
 @    (assert bad ln `.codn second argument doesn't begin with punctuation`)
-@    (require (or (not (equal type "codn"))
+@    (require (or (not (memqual type '("codn" "metn")))
                   (chr-ispunct [y 0])))
 @  (end)
 @(end)

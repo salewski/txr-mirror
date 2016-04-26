@@ -11318,17 +11318,17 @@ have visibility over the variables established by earlier variables
 in the same let* construct. In plain
 .codn let ,
 the variables are not visible to any of the
-.metn init-form s.
+.metn init-form -s.
 
 When the variables are established, then the
-.metn body-form s
+.metn body-form -s
 are evaluated in order. The value of the last
 .meta body-form
 becomes the return value of the
 .codn let .
 
 If there are no
-.metn body-form s,
+.metn body-form -s,
 then the return value
 .code nil
 is produced.
@@ -11361,7 +11361,7 @@ operator.
 Unlike in
 .codn lambda ,
 the
-.metn body-form s
+.metn body-form -s
 of a
 .code defun
 are surrounded by a block.
@@ -12322,7 +12322,7 @@ operator evaluates as follows. First, a return value is
 established and initialized to the value
 .codn t .
 The
-.metn form s,
+.metn form -s,
 if any, are
 evaluated from left to right.  The return value is overwritten with
 the result of each form. Evaluation stops when all forms are exhausted,
@@ -12379,7 +12379,7 @@ operator evaluates as follows.  First, a return value is
 established and initialized to the value
 .codn nil .
 The
-.metn form s,
+.metn form -s,
 if any,
 are evaluated from left to right. The return value is overwritten
 with the result of each
@@ -12469,7 +12469,7 @@ evaluates true, rather than false.
 
 These operators arrange for the evaluation of all their enclosed forms
 in an anonymous block. Any of the
-.metn form s,
+.metn form -s,
 or
 .metn expression ,
 may use
@@ -13066,12 +13066,12 @@ lists. Each
 .meta init-form
 must evaluate to a list. The lists are then iterated in
 parallel over repeated evaluations of the
-.metn body-form s,
+.metn body-form -s,
 with each
 .meta sym
 variable being assigned to successive elements of its list. The shortest list
 determines the number of iterations, so if any of the
-.metn init-form s
+.metn init-form -s
 evaluate to
 an empty list, the body is not executed.
 
@@ -13124,7 +13124,7 @@ differ from
 and
 .code append-each*
 in the following way. The plain forms evaluate the
-.metn init-form s
+.metn init-form -s
 in an environment in which none of the
 .code sym
 variables are yet visible. By contrast, the alternate
@@ -13232,7 +13232,7 @@ then the loop terminates.  Each
 is evaluated, and the value of the last of these
 forms is is the result value of the loop.
 If there are no
-.metn result-form s
+.metn result-form -s
 then the result value is
 .codn nil .
 If the
@@ -24409,7 +24409,7 @@ Each definition is a form which begins with a
 followed by
 .meta macro-style-params
 which is a macro parameter list, and zero or more
-.metn macro-body-form s.
+.metn macro-body-form -s.
 These macro definitions are similar
 to those globally defined by the
 .code defmacro
@@ -24422,7 +24422,7 @@ The macros specified in the definitions are visible to these
 forms.
 
 Forms inside the macro definitions such as the
-.metn macro-body-form s,
+.metn macro-body-form -s,
 and initializer forms appearing in the
 .meta macro-style-params
 are subject
@@ -24430,7 +24430,7 @@ to macro-expansion in a scope in which none of the new macros being
 defined are yet visible. Once the macro definitions are themselves
 macro-expanded, they are placed into a new macro environment, which
 is then used for macro expanding the
-.metn body-form s.
+.metn body-form -s.
 
 A
 .code macrolet
@@ -24438,7 +24438,7 @@ form is fully processed in the expansion phase of a form, and is
 effectively replaced by
 .code progn
 form which contains expanded versions of
-.metn body-form s.
+.metn body-form -s.
 This expanded structure shows no evidence that any
 macrolet forms ever existed in it. Therefore, it is impossible for the code
 evaluated in the bodies and parameter lists of
@@ -24943,7 +24943,7 @@ and then uses the
 resulting value as a counterpart to a macro-style parameter list.
 If the value has a tree structure which matches the parameters,
 then those parameters are established as bindings, and the
-.metn form s,
+.metn form -s,
 if any, are evaluated in the scope of those bindings.  The value
 of the last
 .meta form
@@ -24993,7 +24993,7 @@ If the object produced by
 matches
 .metn macro-style-params ,
 then the parameters are bound, becoming local variables, and the
-.metn form s,
+.metn form -s,
 if any, are evaluated in order in the environment in which those variables are
 visible.  If there are forms, the value of the last
 .meta form
@@ -28812,19 +28812,19 @@ operator evaluates
 in such a way that no matter how the execution of
 .meta protected-form
 terminates, the
-.metn cleanup-form s
+.metn cleanup-form -s
 will be executed.
 
 The
-.metn cleanup-form s,
+.metn cleanup-form -s,
 however, are not protected. If a
 .meta cleanup-form
 terminates via
 some non-local jump, the subsequent
-.metn cleanup-form s
+.metn cleanup-form -s
 are not evaluated.
 
-.metn cleanup-form s
+.metn cleanup-form -s
 themselves can "hijack" a non-local control transfer such
 as an exception. If a
 .meta cleanup-form
@@ -31404,7 +31404,7 @@ and
 .meta value-var
 arguments must be symbols suitable for use as variable names.
 Bindings are established for these variables over the scope of the
-.metn body-form s
+.metn body-form -s
 and the optional
 .metn result-form .
 
@@ -31428,7 +31428,7 @@ the return value is
 The
 .meta result-form
 and
-.metn body-form s
+.metn body-form -s
 are in the scope of an implicit anonymous
 block, which means that it is possible to terminate the execution of
 dohash early using
@@ -32786,7 +32786,8 @@ are
 .metn arg-function -s,
 then only that many functions are used. Conversely, if the function is
 called with more arguments than there are
-.metn arg-function -s, then those arguments are ignored.
+.metn arg-function -s,
+then those arguments are ignored.
 
 The following equivalence holds:
 
@@ -40044,16 +40045,16 @@ The
 macro is similar to
 .codn progn .
 It evaluates
-.metn form s,
+.metn form -s,
 and returns the rightmost one, or
 .code nil
 if there are no forms.
 
 Over the evaluation of
-.metn form s,
+.metn form -s,
 it counts memory allocations, and measures
 CPU time. If
-.metn form s
+.metn form -s
 terminate normally, then just prior to returning,
 .code pprof
 prints these statistics in a concise report on the
