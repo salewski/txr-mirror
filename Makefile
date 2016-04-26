@@ -433,7 +433,7 @@ txr-manpage.html: txr.1 genman.txr
 	man2html $< | $(TXR) genman.txr - > $@
 
 txr-manpage.pdf: txr.1
-	tbl $< | pdfroff -man --no-toc - > $@
+	tbl $< | pdfroff -ww -man --no-toc - > $@
 
 #
 # Special targets used by ./configure
