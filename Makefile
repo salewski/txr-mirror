@@ -432,7 +432,8 @@ install-tests:
 txr-manpage.html: txr.1 genman.txr
 	man2html $< | $(TXR) genman.txr - > $@
 
-txr-manpage.pdf: txr.1
+txr-manpage.pdf: txr.1 checkman.txr
+	$(TXR) checkman.txr $<
 	tbl $< | pdfroff -ww -man --no-toc - > $@
 
 #

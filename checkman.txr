@@ -1,0 +1,78 @@
+@(name file)
+@;;
+@;; Check syntax block after function
+@;;
+@(define check-synb ())
+.synb
+@  (assert bad ln `bad .synb block`)
+@  (repeat :gap 0 :min 1)
+.mets @(skip)
+@    (maybe)
+@      (repeat :gap 0 :mintimes 1)
+.mets \ \ @(skip)
+@      (last :mandatory)
+
+@      (trailer)
+.mets @(skip)
+@      (end)
+@    (end)
+@  (last :mandatory)
+.syne
+@  (end)
+@  (assert bad ln `missing .desc`)
+.desc
+@(end)
+@;;
+@;; Check variable description headings
+@;;
+@(define check-var ())
+@  (cases)
+@;   exception
+.coNP Variables @@, s-ifmt @(skip)
+@    (or)
+@;   exception
+.coNP Variables @@, *0 @(skip)
+@    (or)
+.coNP Variables@(assert bad ln `bad Variables heading`)@(rep :gap 0) @@, @{x /\S+/}@(last :mandatory) @@ @y and @@ @{z /\S+/}@(end)
+@      (assert bad ln `no .desc after variables heading`)
+.desc
+@    (or)
+.coNP Variable@(assert bad ln `bad Variable heading`) @{x /\S+/}
+@      (assert bad ln `no .desc after variable heading`)
+.desc
+@  (end)
+@(end)
+@;;
+@;; Check function/macro/operator headings
+@;;
+@(define check-func ())
+@  (cases)
+.coNP Operator/function @(skip)
+@    (or)
+.coNP @{type /Function|Operator|Macro/}s@(assert bad ln `bad @{type}s heading`)@(rep :gap 0) @@, @{x /\S+/}@(last :mandatory) @@ @y and @@ @{z /\S+/}@(end)
+@      (assert bad ln `no .synb after @{type}s heading`)
+@      (check-synb)
+@    (or)
+.coNP @{type /Function|Operator|Macro/}@(assert bad ln `bad @type heading`) @{x /\S+/}
+@      (assert bad ln `no .synb after @type heading`)
+@      (check-synb)
+@  (end)
+@(end)
+@;;
+@;; Main
+@;;
+@(bind errors 0)
+@(repeat)
+@  (line ln)
+@  (try)
+@    (cases)
+@      (check-var)
+@    (or)
+@      (check-func)
+@    (end)
+@  (catch bad (line msg))
+@    (do (inc errors)
+         (put-line `@file:@line:@msg`))
+@  (end)
+@(end)
+@(do (exit (zerop errors)))
