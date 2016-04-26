@@ -3702,7 +3702,7 @@ static val v_assert(match_files_ctx *c)
       uw_throw(type, values);
     } else {
       if (c->curfile)
-        typed_error(assert_s, first_spec, lit("assertion (at ~s:~d)"), c->curfile, c->data_lineno, nao);
+        typed_error(assert_s, first_spec, lit("assertion (at ~a:~d)"), c->curfile, c->data_lineno, nao);
       typed_error(assert_s, first_spec, lit("assertion (line ~d)"), c->data_lineno, nao);
     }
   }
@@ -3886,7 +3886,7 @@ static val h_assert(match_line_ctx *c)
     uw_throw(type, values);
   } else {
     if (c->file)
-      typed_error(assert_s, elem, lit("assertion (at ~s:~d)"), c->file, c->data_lineno, nao);
+      typed_error(assert_s, elem, lit("assertion (at ~a:~d)"), c->file, c->data_lineno, nao);
     typed_error(assert_s, elem, lit("assertion (line ~d)"), c->data_lineno, nao);
   }
   abort();
